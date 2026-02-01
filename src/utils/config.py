@@ -239,6 +239,15 @@ class Config:
         # Override with environment variables
         config._update_from_env()
 
+        # Validate configuration
+        try:
+            config.validate()
+        except ValueError as e:
+            logger.error(f"Configuration validation failed: {e}")
+            # In testing or dev, we might want to continue, but in prod it should fail
+            if config.environment == "production":
+                raise
+
         return config
 
     def _update_from_dict(self, data: dict[str, Any]) -> None:

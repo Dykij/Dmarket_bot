@@ -400,9 +400,9 @@ class BotIntegrator:
             return False
 
         try:
-            from src.telegram_bot.notifications.custom_alerts import CustomAlertManager
+            from src.telegram_bot.notifications.custom_alerts import AlertManager
 
-            self._custom_alerts = CustomAlertManager()
+            self._custom_alerts = AlertManager()
 
             self.services.register("custom_alerts", self._custom_alerts)
 
@@ -456,9 +456,9 @@ class BotIntegrator:
             return False
 
         try:
-            from src.ml.smart_recommendations import RecommendationEngine
+            from src.ml.smart_recommendations import SmartRecommendations
 
-            self._smart_recommendations = RecommendationEngine()
+            self._smart_recommendations = SmartRecommendations()
 
             self.services.register(
                 "smart_recommendations",

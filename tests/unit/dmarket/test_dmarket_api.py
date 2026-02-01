@@ -124,7 +124,6 @@ class TestDMarketAPIInitialization:
     def test_init_rate_limiter(self, api_client: DMarketAPI) -> None:
         """Test that rate limiter is initialized."""
         assert api_client.rate_limiter is not None
-        assert api_client.advanced_rate_limiter is not None
 
 
 # ===========================================================================
@@ -273,7 +272,7 @@ class TestDMarketAPIRateLimiting:
 
     def test_advanced_rate_limiter_initialized(self, api_client: DMarketAPI) -> None:
         """Test advanced rate limiter is initialized."""
-        assert api_client.advanced_rate_limiter is not None
+        assert api_client.rate_limiter is not None
 
 
 # ===========================================================================

@@ -27,8 +27,6 @@ from __future__ import annotations
 
 import asyncio
 import sys
-from pathlib import Path
-from typing import Any
 
 import click
 import structlog
@@ -70,6 +68,13 @@ def cli(ctx: click.Context, verbose: bool) -> None:
             wrapper_class=structlog.make_filtering_bound_logger(structlog.DEBUG),
         )
 
+    # Ensure UTF-8 output for emojis on Windows
+    if sys.platform == "win32":
+        try:
+            sys.stdout.reconfigure(encoding="utf-8")
+        except AttributeError:
+            pass  # Older Python versions might not support this
+
 
 @cli.command()
 @click.argument("query")
@@ -93,9 +98,7 @@ async def ask(ctx: click.Context, query: str, context: str | None) -> None:
         if context:
             # Получить контекст файла
             ctx_data = await agent.get_context(context)
-            click.echo(
-                click.style(f"📁 Контекст: {context}", fg="blue")
-            )
+            click.echo(click.style(f"📁 Контекст: {context}", fg="blue"))
             if verbose:
                 click.echo(f"   Instructions: {ctx_data.instructions}")
                 click.echo(f"   Skills: {ctx_data.skills}")
@@ -192,10 +195,9 @@ async def scan(
         opportunities = await scanner.scan_level(level=level, game=game)
 
         # Фильтрация по прибыли
-        filtered = [
-            opp for opp in opportunities
-            if opp.get("profit_percent", 0) >= min_profit
-        ][:limit]
+        filtered = [opp for opp in opportunities if opp.get("profit_percent", 0) >= min_profit][
+            :limit
+        ]
 
         click.echo()
         click.echo(click.style(f"📊 Найдено {len(filtered)} возможностей:", fg="green", bold=True))
@@ -228,7 +230,9 @@ async def scan(
 
 
 @cli.command()
-@click.option("--platform", "-p", default="dmarket", type=click.Choice(["dmarket", "waxpeer", "all"]))
+@click.option(
+    "--platform", "-p", default="dmarket", type=click.Choice(["dmarket", "waxpeer", "all"])
+)
 @click.pass_context
 @async_command
 async def balance(ctx: click.Context, platform: str) -> None:
@@ -276,7 +280,11 @@ async def balance(ctx: click.Context, platform: str) -> None:
             if isinstance(data, dict):
                 for key, value in data.items():
                     if isinstance(value, (int, float)):
-                        click.echo(f"    {key}: ${value:.2f}" if "usd" in key.lower() or key == "balance" else f"    {key}: {value}")
+                        click.echo(
+                            f"    {key}: ${value:.2f}"
+                            if "usd" in key.lower() or key == "balance"
+                            else f"    {key}: {value}"
+                        )
                     else:
                         click.echo(f"    {key}: {value}")
             else:
@@ -326,59 +334,63 @@ async def status(ctx: click.Context) -> None:
 
 # Helper functions
 
+
+from src.copilot_sdk.autonomous_agent import create_autonomous_agent
+
+
 async def _generate_answer(agent: CopilotAgent, query: str, context: str | None) -> str:
     """Генерация ответа на вопрос."""
-    # Простая реализация - в будущем можно подключить LLM
+    context_str = ""
     if context:
         ctx = await agent.get_context(context)
-        return f"""
-На основе контекста файла {context}:
-- Применяемые инструкции: {', '.join(ctx.instructions) or 'нет'}
-- Доступные навыки: {', '.join(ctx.skills) or 'нет'}
-
-Ваш вопрос: {query}
-
-Для полного ответа требуется LLM интеграция (OpenAI/Claude API).
-Пока используйте: python -m src.mcp_server.dmarket_mcp для MCP интеграции.
+        context_str = f"""
+Контекст файла {context}:
+- Инструкции: {", ".join(ctx.instructions) or "нет"}
+- Навыки: {", ".join(ctx.skills) or "нет"}
 """
+
+    # TODO: В будущем здесь будет вызов LLM (OpenAI/Claude)
+    # response = await agent.llm.chat(query, context=context_str)
+
     return f"""
 Ваш вопрос: {query}
+{context_str}
+[MOCK ANSWER]
+Это заглушка для ответа LLM. Интеграция с реальным LLM провайдером
+(OpenAI/Anthropic) должна быть добавлена в CopilotAgent.
 
-Статус агента: {agent.get_status()}
-
-Для полного ответа требуется LLM интеграция (OpenAI/Claude API).
-Используйте MCP сервер для интеграции с AI:
-  python -m src.mcp_server.dmarket_mcp
+Тем не менее, контекст был успешно загружен через CopilotAgent.
+Вы можете использовать 'do' для выполнения автономных задач.
 """
 
 
 async def _execute_task(agent: CopilotAgent, task: str, dry_run: bool = False) -> str:
-    """Выполнение задачи."""
-    # Простая реализация - в будущем autonomous agent
-    if dry_run:
-        return f"""
-[DRY RUN] Задача: {task}
+    """Выполнение задачи с помощью AutonomousAgent."""
 
-Шаги для выполнения:
-1. Анализ задачи через Copilot Agent
-2. Поиск релевантных skills
-3. Выполнение pipeline
-4. Проверка результатов
+    # Создаем автономного агента (он отделен от CopilotAgent, ориентирован на tasks)
+    auto_agent = await create_autonomous_agent(dry_run=dry_run)
 
-Для реального выполнения уберите флаг --dry-run.
-"""
+    # Выполнение плана
+    results = await auto_agent.execute_plan(task)
 
-    return f"""
-Задача: {task}
+    # Формирование отчета
+    report = [f"Задача: {task}", "-" * 20]
 
-Автономное выполнение требует настройки AutonomousAgent.
-См. src/copilot_sdk/autonomous_agent.py для полной реализации.
+    plan = auto_agent.get_current_plan()
+    if plan:
+        report.append(f"Статус: {plan.status}")
+        report.append(f"Прогресс: {plan.progress:.0%}")
+        report.append(f"Корректировки: {plan.adjustments}")
+        report.append("")
 
-Текущие возможности:
-- scan: сканирование арбитража
-- balance: проверка баланса
-- ask: вопросы к AI
-"""
+    for res in results:
+        status_icon = "✅" if res.success else "❌"
+        output_str = str(res.output)[:200] + "..." if len(str(res.output)) > 200 else res.output
+        report.append(f"{status_icon} Результат: {output_str}")
+        if res.error:
+            report.append(f"   Ошибка: {res.error}")
+
+    return "\n".join(report)
 
 
 if __name__ == "__main__":

@@ -57,37 +57,31 @@ class Application:
 
     async def initialize(self) -> None:
         """Initialize all application components."""
-        try:
-            # Phase 1: Load configuration and setup logging
-            await self._init_config_and_logging()
+        # Critical components - if these fail, the app cannot run
+        await self._init_config_and_logging()
+        await self._init_core_services()
+        await self._init_dmarket_api()
+        await self._init_telegram_bot()
 
-            # Phase 2: Initialize core services (Sentry, Database, StateManager)
-            await self._init_core_services()
+        # Optional/Service components - app can run without them
+        init_tasks = [
+            ("Schedulers", self._init_schedulers),
+            ("Scanner Manager", self._init_scanner_manager),
+            ("Inventory & Trading", self._init_inventory_and_trading),
+            ("WebSocket & Health", self._init_websocket_and_health),
+            ("Bot Integrator", self._init_bot_integrator),
+        ]
 
-            # Phase 3: Initialize DMarket API
-            await self._init_dmarket_api()
-
-            # Phase 4: Initialize Telegram Bot
-            await self._init_telegram_bot()
-
-            # Phase 5: Initialize Schedulers (Daily Report, AI Training)
-            await self._init_schedulers()
-
-            # Phase 6: Initialize Scanner Manager
-            await self._init_scanner_manager()
-
-            # Phase 7: Initialize Inventory and Trading components
-            await self._init_inventory_and_trading()
-
-            # Phase 8: Initialize WebSocket and Health Check
-            await self._init_websocket_and_health()
-
-            # Phase 9: Initialize Bot Integrator
-            await self._init_bot_integrator()
-
-        except Exception as e:
-            logger.exception(f"Failed to initialize application: {e}")
-            raise
+        for name, init_method in init_tasks:
+            try:
+                await init_method()
+                logger.info(f"✅ {name} initialized successfully")
+            except Exception as e:
+                logger.error(f"⚠️ Failed to initialize {name}: {e}")
+                if self.config and self.config.environment == "production":
+                    # In production, maybe we want to know about these via Sentry
+                    from src.utils.sentry_integration import capture_exception
+                    capture_exception(e, tags={"component": name, "phase": "initialization"})
 
     async def run(self) -> None:
         """Run the application."""
@@ -663,23 +657,21 @@ class Application:
 
         builder = ApplicationBuilder().token(self.config.bot.token)
 
-        # Enable persistence (best practice) with store_data configuration
+        # Enable database persistence (NEW: optimized for 2026)
         if not self.config.testing:
-            from telegram.ext import PicklePersistence
+            from src.utils.db_persistence import SQLPersistence
 
-            persistence_path = "data/bot_persistence.pickle"
-            os.makedirs("data", exist_ok=True)
-            persistence = PicklePersistence(
-                filepath=persistence_path,
+            persistence = SQLPersistence(
+                db_manager=self.database,
                 store_data=PersistenceInput(
-                    bot_data=False,
+                    bot_data=True,
                     chat_data=True,
                     user_data=True,
                     callback_data=True,
                 ),
             )
             builder.persistence(persistence)
-            logger.info(f"Persistence enabled (bot_data excluded): {persistence_path}")
+            logger.info("✅ Database persistence enabled (SQLAlchemy)")
 
         self.bot = builder.build()
         self.bot.db = self.database

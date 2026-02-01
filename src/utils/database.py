@@ -20,8 +20,18 @@ from sqlalchemy.ext.asyncio import (
 
 # Import all models to ensure they're registered with Base.metadata
 from src.models import (
-    MarketData,  # noqa: F401
+    AnalyticsEvent,
+    CommandLog,
+    MarketData,
+    MarketDataCache,
+    PendingTrade,
+    PriceAlert,
+    Target,
+    TelegramPersistence,
+    TradeHistory,
+    TradingSettings,
     User,
+    UserSettings,
 )
 from src.models.base import Base
 from src.utils.memory_cache import _user_cache, cached, get_all_cache_stats

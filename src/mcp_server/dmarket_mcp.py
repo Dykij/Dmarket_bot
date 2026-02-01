@@ -31,6 +31,19 @@ from src.utils.config import settings
 logger = structlog.get_logger(__name__)
 
 
+import os
+import sys
+
+
+# Windows IO encoding fix
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+        sys.stdin.reconfigure(encoding="utf-8")
+    except AttributeError:
+        pass
+
+
 class DMarketMCPServer:
     """MCP Server для DMarket API."""
 
@@ -48,9 +61,14 @@ class DMarketMCPServer:
             raise RuntimeError("MCP module is not installed. Install it with: pip install mcp")
 
         self.server = Server("dmarket-bot")
+
+        # Robust API key loading
+        public_key = settings.dmarket.public_key or os.getenv("DMARKET_PUBLIC_KEY")
+        secret_key = settings.dmarket.secret_key or os.getenv("DMARKET_SECRET_KEY")
+
         self.api_client = api_client or DMarketAPI(
-            public_key=settings.dmarket.public_key,
-            secret_key=settings.dmarket.secret_key,
+            public_key=public_key,
+            secret_key=secret_key,
         )
         self._setup_handlers()
 

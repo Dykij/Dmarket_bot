@@ -34,6 +34,9 @@ from typing import Any
 
 import structlog
 
+from src.copilot_sdk.file_editor import FileEditor
+from src.copilot_sdk.project_indexer import ProjectIndexer
+
 
 logger = structlog.get_logger(__name__)
 
@@ -92,10 +95,7 @@ class Plan:
     @property
     def is_complete(self) -> bool:
         """План полностью выполнен."""
-        return all(
-            s.status in (StepStatus.COMPLETED, StepStatus.SKIPPED)
-            for s in self.steps
-        )
+        return all(s.status in (StepStatus.COMPLETED, StepStatus.SKIPPED) for s in self.steps)
 
 
 @dataclass
@@ -142,10 +142,36 @@ class AutonomousAgent:
         await self._skill_registry.discover_skills(root / "src")
 
         self._initialized = True
+        # Core skills registration
+        await self._register_core_skills()
+
         logger.info(
             "autonomous_agent_initialized",
             skills_count=len(self._skill_registry.skills),
             dry_run=self.dry_run,
+        )
+
+    async def _register_core_skills(self) -> None:
+        """Register core skills manually."""
+        if not self._skill_registry:
+            return
+
+        # File Editor
+        self._skill_registry.register(
+            id="file-editor",
+            name="File Editor",
+            instance=FileEditor(dry_run=self.dry_run),
+            description="Edit files, apply patches, and manage git commits.",
+            category="development",
+        )
+
+        # Project Indexer
+        self._skill_registry.register(
+            id="project-indexer",
+            name="Project Indexer",
+            instance=ProjectIndexer(),
+            description="Index and search project codebase.",
+            category="development",
         )
 
     async def execute_plan(self, goal: str) -> list[StepResult]:
@@ -262,13 +288,13 @@ class AutonomousAgent:
             Step(
                 id="scan",
                 description="Сканирование рынка",
-                skill="arbitrage-scanner",
-                action="scan_level",
+                skill="ai-arbitrage-predictor",
+                action="predict",
             ),
             Step(
                 id="filter",
                 description="Фильтрация возможностей",
-                skill="arbitrage-scanner",
+                skill="ai-arbitrage-predictor",
                 action="filter_opportunities",
             ),
             Step(
@@ -394,20 +420,19 @@ class AutonomousAgent:
                     success=True,
                     output=f"[DRY RUN] Step '{step.id}' would execute: {step.description}",
                 )
+            # Реальное выполнение
+            elif step.skill and self._skill_registry:
+                output = await self._skill_registry.execute(
+                    step.skill,
+                    step.action or "execute",
+                    **step.args,
+                )
+                result = StepResult(success=True, output=output)
             else:
-                # Реальное выполнение
-                if step.skill and self._skill_registry:
-                    output = await self._skill_registry.execute(
-                        step.skill,
-                        step.action or "execute",
-                        **step.args,
-                    )
-                    result = StepResult(success=True, output=output)
-                else:
-                    result = StepResult(
-                        success=True,
-                        output=f"Step '{step.id}' executed (no skill assigned)",
-                    )
+                result = StepResult(
+                    success=True,
+                    output=f"Step '{step.id}' executed (no skill assigned)",
+                )
 
             step.status = StepStatus.COMPLETED
             step.result = result.output
@@ -490,8 +515,7 @@ class AutonomousAgent:
                 "progress": self._current_plan.progress,
                 "steps_total": len(self._current_plan.steps),
                 "steps_completed": sum(
-                    1 for s in self._current_plan.steps
-                    if s.status == StepStatus.COMPLETED
+                    1 for s in self._current_plan.steps if s.status == StepStatus.COMPLETED
                 ),
                 "adjustments": self._current_plan.adjustments,
             }

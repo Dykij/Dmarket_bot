@@ -12,7 +12,6 @@
             "username": "vscode",
             "userUid": "1000",
             "userGid": "1000"
-        },
         // 2. Git
         "ghcr.io/devcontainers/features/git:1": {
             "version": "latest",

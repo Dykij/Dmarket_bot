@@ -245,13 +245,11 @@ class DMarketAPI:  # noqa: PLR0904
 
         self._signing_executor = ThreadPoolExecutor(max_workers=4, thread_name_prefix="hmac_signer")
 
-        # Initialize legacy RateLimiter (kept for backward compatibility)
-        self.rate_limiter = RateLimiter(
-            is_authorized=bool(public_key and secret_key),
-        )
+        # Initialize per-endpoint RateLimiter (Roadmap Task #3)
+        self.rate_limiter = DMarketRateLimiter()
 
-        # Initialize new per-endpoint RateLimiter (Roadmap Task #3)
-        self.advanced_rate_limiter = DMarketRateLimiter()
+        # Prepare signing key (optimized for performance)
+        self._signing_key = None
 
         # Log initialization with trading mode
         mode = "[DRY-RUN]" if dry_run else "[LIVE]"
@@ -259,7 +257,7 @@ class DMarketAPI:  # noqa: PLR0904
             f"Initialized DMarketAPI client {mode} "
             f"(authorized: {'yes' if public_key and secret_key else 'no'}, "
             f"cache: {'enabled' if enable_cache else 'disabled'}, "
-            f"advanced rate limiter: enabled)",
+            f"rate limiter: advanced per-endpoint)",
         )
 
         if not dry_run:
@@ -417,6 +415,24 @@ class DMarketAPI:  # noqa: PLR0904
         )
         return await self._request("POST", self.ENDPOINT_SELL_CREATE, data=payload)
 
+    def _prepare_signing_key(self) -> None:
+        """Prepare Ed25519 signing key once to optimize performance."""
+        try:
+            secret_key_str = self._secret_key
+            if len(secret_key_str) == 64:
+                secret_key_bytes = bytes.fromhex(secret_key_str)
+            elif len(secret_key_str) == 44 or "=" in secret_key_str:
+                import base64
+                secret_key_bytes = base64.b64decode(secret_key_str)
+            elif len(secret_key_str) >= 64:
+                secret_key_bytes = bytes.fromhex(secret_key_str[:64])
+            else:
+                secret_key_bytes = secret_key_str.encode("utf-8")[:32].ljust(32, b"\0")
+            
+            self._signing_key = nacl.signing.SigningKey(secret_key_bytes)
+        except Exception as e:
+            logger.error(f"Failed to prepare signing key: {e}")
+
     def _generate_signature(
         self,
         method: str,
@@ -445,73 +461,30 @@ class DMarketAPI:  # noqa: PLR0904
             timestamp = str(int(time.time()))
 
             # Build string to sign: method + path + body + timestamp
-            # NOTE: DMarket API format is METHOD + PATH + BODY + TIMESTAMP
             string_to_sign = f"{method.upper()}{path}{body}{timestamp}"
 
-            logger.debug(f"String to sign: {string_to_sign}")
+            # Use prepared signing key if available
+            if self._signing_key is None:
+                self._prepare_signing_key()
+            
+            if self._signing_key:
+                # Sign the message
+                signed = self._signing_key.sign(string_to_sign.encode("utf-8"))
+                signature = signed.signature.hex()
 
-            # Convert secret key from string to bytes
-            # DMarket API keys can be in different formats
-            secret_key_str = self._secret_key
-
-            # Try different formats for secret key
-            try:
-                logger.debug(f"Processing secret key (length: {len(secret_key_str)})")
-
-                # Format 1: HEX format (64 chars = 32 bytes)
-                if len(secret_key_str) == 64:
-                    secret_key_bytes = bytes.fromhex(secret_key_str)
-                    logger.debug("Using HEX format secret key (32 bytes)")
-                # Format 2: Base64 format
-                elif len(secret_key_str) == 44 or "=" in secret_key_str:
-                    import base64
-
-                    secret_key_bytes = base64.b64decode(secret_key_str)
-                    logger.debug(f"Using Base64 format secret key ({len(secret_key_bytes)} bytes)")
-                # Format 3: Raw string - take first 32 bytes
-                # If longer than 64 hex chars, try to take first 64
-                elif len(secret_key_str) >= 64:
-                    # For Ed25519 128-char keys, we need the first 32 bytes (seed)
-                    secret_key_bytes = bytes.fromhex(secret_key_str[:64])
-                    logger.debug(
-                        f"Using first 32 bytes of long HEX key (original len={len(secret_key_str)})"
-                    )
-                else:
-                    # Fallback: encode string to bytes and pad/truncate to 32
-                    secret_key_bytes = secret_key_str.encode("utf-8")[:32].ljust(32, b"\0")
-                    logger.warning("Secret key format unknown, using padded bytes")
-            except Exception as conv_error:
-                logger.exception(f"Error converting secret key: {conv_error}")
-                raise
-
-            # Create Ed25519 signing key
-            try:
-                signing_key = nacl.signing.SigningKey(secret_key_bytes)
-            except Exception as nacl_error:
-                logger.exception(
-                    f"Failed to create SigningKey: {nacl_error}. Key bytes len: {len(secret_key_bytes)}"
-                )
-                raise
-
-            # Sign the message
-            signed = signing_key.sign(string_to_sign.encode("utf-8"))
-
-            # Extract signature in hex format
-            signature = signed.signature.hex()
-
-            logger.debug(f"Generated signature: {signature[:20]}...")
-
-            # Return headers with signature in DMarket format
-            return {
-                "X-Api-Key": self.public_key,
-                "X-Request-Sign": f"dmar ed25519 {signature}",
-                "X-Sign-Date": timestamp,
-                "Content-Type": "application/json",
-            }
+                # Return headers with signature in DMarket format
+                return {
+                    "X-Api-Key": self.public_key,
+                    "X-Request-Sign": f"dmar ed25519 {signature}",
+                    "X-Sign-Date": timestamp,
+                    "Content-Type": "application/json",
+                }
+            
+            # Fallback if key preparation failed
+            return self._generate_signature_hmac(method, path, body)
 
         except Exception as e:
             logger.exception(f"Error generating signature: {e}")
-            logger.exception(f"Traceback: {traceback.format_exc()}")
             # Fallback to old HMAC method if Ed25519 fails
             return self._generate_signature_hmac(method, path, body)
 
@@ -1032,12 +1005,7 @@ class DMarketAPI:  # noqa: PLR0904
         headers = self._generate_signature(method.upper(), path_for_signature, body_json)
 
         # Use advanced per-endpoint rate limiter (Roadmap Task #3)
-        await self.advanced_rate_limiter.acquire(path)
-
-        # Keep legacy rate limiter for backward compatibility
-        await self.rate_limiter.wait_if_needed(
-            "market" if "market" in path else "account",
-        )
+        await self.rate_limiter.acquire(path)
 
         # Переменные для повторных попыток
         retries = 0
@@ -1131,7 +1099,7 @@ class DMarketAPI:  # noqa: PLR0904
 
                     # Record 429 error in advanced rate limiter (Roadmap Task #3)
                     if status_code == 429:
-                        self.advanced_rate_limiter.record_429_error(path)
+                        self.rate_limiter.record_429_error(path)
 
                     # Calculate retry delay (Phase 2 - extracted to helper method)
                     retry_delay = self._calculate_retry_delay(
