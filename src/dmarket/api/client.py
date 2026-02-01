@@ -1,59 +1,95 @@
-"""Base DMarket API client with HTTP handling and authentication.
-
-This module provides the core HTTP client functionality including:
-- Request signing (Ed25519/HMAC)
-- Rate limiting
-- Retry logic
-- Circuit breaker support
-- Response caching
-"""
+"""Base DMarket API client logic."""
 
 import asyncio
+import hashlib
+import hmac
 import logging
 import time
 import traceback
-from typing import TYPE_CHECKING, Any
-
-from circuitbreaker import CircuitBreakerError  # type: ignore[import-untyped]
+from typing import Any, TYPE_CHECKING
 import httpx
-
-from src.dmarket.api.auth import generate_signature_ed25519
-from src.dmarket.api.cache import (
-    clear_cache,
-    clear_cache_for_endpoint,
-    get_cache_key,
-    get_from_cache,
-    is_cacheable,
-    save_to_cache,
-)
-from src.dmarket.api.endpoints import Endpoints
+import nacl.signing
 from src.utils import json_utils as json
 from src.utils.api_circuit_breaker import call_with_circuit_breaker
-from src.utils.rate_limiter import RateLimiter
+from src.utils.rate_limiter import DMarketRateLimiter, RateLimiter
 from src.utils.sentry_breadcrumbs import add_api_breadcrumb
-
 
 if TYPE_CHECKING:
     from src.telegram_bot.notifier import Notifier
 
-
 logger = logging.getLogger(__name__)
 
+CACHE_TTL = {
+    "short": 30,
+    "medium": 300,
+    "long": 1800,
+}
 
-class DMarketAPIClient:
-    """Base DMarket API client with HTTP handling and authentication.
+api_cache: dict[str, Any] = {}
 
-    This class provides:
-    - Ed25519/HMAC request signing
-    - Rate limiting and retry logic
-    - Response caching
-    - Circuit breaker support
-    - Async context manager support
+GAME_MAP: dict[str, str] = {
+    "csgo": "a8db",
+    "cs2": "a8db",
+    "dota2": "9a92",
+    "rust": "rust",
+    "tf2": "tf2",
+}
 
-    Example:
-        async with DMarketAPIClient(public_key, secret_key) as api:
-            response = await api._request("GET", "/account/v1/balance")
-    """
+class BaseDMarketClient:
+    """Core logic for DMarket API communication."""
+    
+    BASE_URL = "https://api.dmarket.com"
+
+    # Баланс и аккаунт
+    ENDPOINT_BALANCE = "/account/v1/balance"
+    ENDPOINT_BALANCE_LEGACY = "/api/v1/account/balance"
+    ENDPOINT_ACCOUNT_DETAILS = "/api/v1/account/details"
+    ENDPOINT_ACCOUNT_OFFERS = "/api/v1/account/offers"
+
+    # Маркет
+    ENDPOINT_MARKET_ITEMS = "/exchange/v1/market/items"
+    ENDPOINT_MARKET_PRICE_AGGREGATED = "/exchange/v1/market/aggregated-prices"
+    ENDPOINT_MARKET_META = "/exchange/v1/market/meta"
+
+    # Пользователь
+    ENDPOINT_USER_INVENTORY = "/inventory/v1/user/items"
+    ENDPOINT_USER_OFFERS = "/marketplace-api/v1/user-offers"
+    ENDPOINT_USER_TARGETS = "/main/v2/user-targets"
+
+    # Операции
+    ENDPOINT_PURCHASE = "/exchange/v1/market/items/buy"
+    ENDPOINT_SELL = "/exchange/v1/user/inventory/sell"
+    ENDPOINT_SELL_CREATE = "/marketplace-api/v1/user-offers/create"
+    ENDPOINT_OFFER_EDIT = "/exchange/v1/user-offers/edit"
+    ENDPOINT_OFFER_DELETE = "/exchange/v1/user-offers/delete"
+
+    # Статистика и аналитика
+    ENDPOINT_SALES_HISTORY = "/account/v1/sales-history"
+    ENDPOINT_ITEM_PRICE_HISTORY = "/exchange/v1/market/price-history"
+    ENDPOINT_LAST_SALES = "/trade-aggregator/v1/last-sales"
+
+    # Новые эндпоинты 2024/2025
+    ENDPOINT_MARKET_BEST_OFFERS = "/exchange/v1/market/best-offers"
+    ENDPOINT_MARKET_SEARCH = "/exchange/v1/market/search"
+    ENDPOINT_AGGREGATED_PRICES_POST = "/marketplace-api/v1/aggregated-prices"
+    ENDPOINT_TARGETS_BY_TITLE = "/marketplace-api/v1/targets-by-title"
+    ENDPOINT_DEPOSIT_ASSETS = "/marketplace-api/v1/deposit-assets"
+    ENDPOINT_DEPOSIT_STATUS = "/marketplace-api/v1/deposit-status"
+    ENDPOINT_WITHDRAW_ASSETS = "/exchange/v1/withdraw-assets"
+    ENDPOINT_INVENTORY_SYNC = "/marketplace-api/v1/user-inventory/sync"
+    ENDPOINT_GAMES_LIST = "/game/v1/games"
+
+    ERROR_CODES = {
+        400: "Неверный запрос или параметры",
+        401: "Неверная аутентификация",
+        403: "Доступ запрещен",
+        404: "Ресурс не найден",
+        429: "Слишком много запросов (rate limit)",
+        500: "Внутренняя ошибка сервера",
+        502: "Bad Gateway",
+        503: "Сервис недоступен",
+        504: "Gateway Timeout",
+    }
 
     def __init__(
         self,
@@ -66,22 +102,8 @@ class DMarketAPIClient:
         retry_codes: list[int] | None = None,
         enable_cache: bool = True,
         dry_run: bool = True,
-        notifier: "Notifier | None" = None,
+        notifier: Any = None,
     ) -> None:
-        """Initialize DMarket API client.
-
-        Args:
-            public_key: DMarket API public key
-            secret_key: DMarket API secret key
-            api_url: API URL (default is https://api.dmarket.com)
-            max_retries: Maximum number of retries for failed requests
-            connection_timeout: Connection timeout in seconds
-            pool_limits: Connection pool limits
-            retry_codes: HTTP status codes to retry on
-            enable_cache: Enable caching of frequent requests
-            dry_run: If True, simulates trading operations without real API calls
-            notifier: Notifier instance for sending alerts on API changes
-        """
         self.public_key = public_key
         self._public_key = public_key
 
@@ -98,472 +120,190 @@ class DMarketAPIClient:
         self.enable_cache = enable_cache
         self.dry_run = dry_run
         self.notifier = notifier
-
-        # Default retry codes: server errors and rate limiting
         self.retry_codes = retry_codes or [429, 500, 502, 503, 504]
-
-        # Connection pool settings
+        
         self.pool_limits = pool_limits or httpx.Limits(
             max_connections=100,
-            max_keepalive_connections=20,
+            max_keepalive_connections=30,
+            keepalive_expiry=60.0,
         )
 
-        # HTTP client
         self._client: httpx.AsyncClient | None = None
+        self._http2_enabled = True
+        self._client_ref_count = 0
+        self._client_lock = asyncio.Lock()
+        self.rate_limiter = DMarketRateLimiter()
+        self._signing_key = None
+        
+        from concurrent.futures import ThreadPoolExecutor
+        self._signing_executor = ThreadPoolExecutor(max_workers=4, thread_name_prefix="hmac_signer")
 
-        # Initialize RateLimiter
-        self.rate_limiter = RateLimiter(
-            is_authorized=bool(public_key and secret_key),
-        )
-
-        # Log initialization
-        mode = "[DRY-RUN]" if dry_run else "[LIVE]"
-        logger.info(
-            f"Initialized DMarketAPIClient {mode} "
-            f"(authorized: {'yes' if public_key and secret_key else 'no'}, "
-            f"cache: {'enabled' if enable_cache else 'disabled'})",
-        )
-
-        if not dry_run:
-            logger.warning(
-                "⚠️  DRY_RUN=false - API client will make REAL TRADES! "
-                "Ensure you understand the risks."
-            )
-
-    async def __aenter__(self) -> "DMarketAPIClient":
-        """Context manager entry."""
-        await self._get_client()
-        return self
-
-    async def __aexit__(
-        self,
-        exc_type: type[BaseException] | None,
-        exc_val: BaseException | None,
-        exc_tb: object | None,
-    ) -> None:
-        """Context manager exit."""
-        _ = (exc_type, exc_val, exc_tb)  # Unused but required by protocol
-        await self._close_client()
+    def _prepare_signing_key(self) -> None:
+        try:
+            secret_key_str = self._secret_key
+            if len(secret_key_str) == 64:
+                secret_key_bytes = bytes.fromhex(secret_key_str)
+            elif len(secret_key_str) == 44 or "=" in secret_key_str:
+                import base64
+                secret_key_bytes = base64.b64decode(secret_key_str)
+            elif len(secret_key_str) >= 64:
+                secret_key_bytes = bytes.fromhex(secret_key_str[:64])
+            else:
+                secret_key_bytes = secret_key_str.encode("utf-8")[:32].ljust(32, b"\0")
+            
+            self._signing_key = nacl.signing.SigningKey(secret_key_bytes)
+        except Exception as e:
+            logger.error(f"Failed to prepare signing key: {e}")
 
     async def _get_client(self) -> httpx.AsyncClient:
-        """Get or create HTTP client."""
         if self._client is None or self._client.is_closed:
-            self._client = httpx.AsyncClient(
-                timeout=self.connection_timeout,
-                limits=self.pool_limits,
-            )
+            try:
+                self._client = httpx.AsyncClient(
+                    timeout=self.connection_timeout,
+                    limits=self.pool_limits,
+                    http2=self._http2_enabled,
+                    follow_redirects=True,
+                    verify=True,
+                )
+            except ImportError:
+                self._http2_enabled = False
+                self._client = httpx.AsyncClient(
+                    timeout=self.connection_timeout,
+                    limits=self.pool_limits,
+                    http2=False,
+                    follow_redirects=True,
+                    verify=True,
+                )
         return self._client
 
     async def _close_client(self) -> None:
-        """Close HTTP client if it exists."""
         if self._client is not None and not self._client.is_closed:
             await self._client.aclose()
             self._client = None
 
-    def _generate_signature(
-        self,
-        method: str,
-        path: str,
-        body: str = "",
-    ) -> dict[str, str]:
-        """Generate signature for API request.
+    def _generate_signature(self, method: str, path: str, body: str = "") -> dict[str, str]:
+        if not self.public_key or not self.secret_key:
+            return {"Content-Type": "application/json"}
+        try:
+            timestamp = str(int(time.time()))
+            string_to_sign = f"{method.upper()}{path}{body}{timestamp}"
+            if self._signing_key is None:
+                self._prepare_signing_key()
+            if self._signing_key:
+                signed = self._signing_key.sign(string_to_sign.encode("utf-8"))
+                signature = signed.signature.hex()
+                return {
+                    "X-Api-Key": self.public_key,
+                    "X-Request-Sign": f"dmar ed25519 {signature}",
+                    "X-Sign-Date": timestamp,
+                    "Content-Type": "application/json",
+                }
+            return self._generate_signature_hmac(method, path, body)
+        except Exception as e:
+            logger.exception(f"Error generating signature: {e}")
+            return self._generate_signature_hmac(method, path, body)
 
-        Args:
-            method: HTTP method
-            path: Request path
-            body: Request body
+    def _generate_signature_hmac(self, method: str, path: str, body: str = "") -> dict[str, str]:
+        timestamp = str(int(time.time()))
+        string_to_sign = timestamp + method + path
+        if body: string_to_sign += body
+        signature = hmac.new(self.secret_key, string_to_sign.encode("utf-8"), hashlib.sha256).hexdigest()
+        return {"X-Api-Key": self.public_key, "X-Request-Sign": signature, "X-Sign-Date": timestamp, "Content-Type": "application/json"}
 
-        Returns:
-            dict: Headers with signature
-        """
-        return generate_signature_ed25519(
-            self.public_key,
-            self._secret_key,
-            method,
-            path,
-            body,
-        )
+    async def _generate_signature_async(self, method: str, path: str, body: str = "") -> dict[str, str]:
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(self._signing_executor, self._generate_signature, method, path, body)
 
-    def _generate_headers(
-        self,
-        method: str,
-        target: str,
-        body: str = "",
-    ) -> dict[str, str]:
-        """Alias for _generate_signature for test compatibility."""
+    def _generate_headers(self, method: str, target: str, body: str = "") -> dict[str, str]:
         return self._generate_signature(method, target, body)
 
-    # ============================================================================
-    # Request helper methods (Phase 2 refactoring)
-    # ============================================================================
+    def _get_cache_key(self, method: str, path: str, params: dict[str, Any] | None = None, data: dict[str, Any] | None = None) -> str:
+        key_parts = [method, path]
+        if params:
+            sorted_params = sorted((str(k), str(v)) for k, v in params.items())
+            key_parts.append(str(sorted_params))
+        if data:
+            try:
+                data_str = json.dumps(data, sort_keys=True)
+                key_parts.append(hashlib.sha256(data_str.encode()).hexdigest())
+            except (TypeError, ValueError):
+                key_parts.append(str(data))
+        return hashlib.sha256("|".join(key_parts).encode()).hexdigest()
 
-    async def _execute_single_http_request(
-        self,
-        client: httpx.AsyncClient,
-        method: str,
-        url: str,
-        params: dict[str, Any] | None,
-        data: dict[str, Any] | None,
-        headers: dict[str, str],
-    ) -> httpx.Response:
-        """Execute a single HTTP request with circuit breaker.
+    def _is_cacheable(self, method: str, path: str) -> tuple[bool, str]:
+        if method.upper() != "GET": return (False, "")
+        if any(e in path for e in ["/meta", "/aggregated"]): return (True, "medium")
+        if any(e in path for e in ["/market/", "/items", "/inventory"]): return (True, "short")
+        if any(e in path for e in ["/balance", "/account/"]): return (True, "short")
+        return (False, "")
 
-        Args:
-            client: HTTP client
-            method: HTTP method
-            url: Full URL
-            params: Query parameters
-            data: Request body data
-            headers: Request headers
+    def _get_from_cache(self, cache_key: str) -> dict[str, Any] | None:
+        if not self.enable_cache: return None
+        entry = api_cache.get(cache_key)
+        if not entry: return None
+        data, expire = entry
+        if time.time() < expire: return data
+        api_cache.pop(cache_key, None)
+        return None
 
-        Returns:
-            HTTP response
+    def _save_to_cache(self, cache_key: str, data: dict[str, Any], ttl_type: str) -> None:
+        if not self.enable_cache: return
+        ttl = CACHE_TTL.get(ttl_type, 30)
+        api_cache[cache_key] = (data, time.time() + ttl)
 
-        Raises:
-            ValueError: If HTTP method is not supported
-        """
-        method_upper = method.upper()
+    def _prepare_sorted_params(self, params: dict[str, Any] | None) -> list[tuple[str, Any]]:
+        return sorted(params.items()) if params else []
 
-        if method_upper == "GET":
-            return await call_with_circuit_breaker(
-                client.get, url, params=params, headers=headers
-            )
-        if method_upper == "POST":
-            return await call_with_circuit_breaker(
-                client.post, url, json=data, headers=headers
-            )
-        if method_upper == "PUT":
-            return await call_with_circuit_breaker(
-                client.put, url, json=data, headers=headers
-            )
-        if method_upper == "DELETE":
-            return await call_with_circuit_breaker(
-                client.delete, url, headers=headers
-            )
+    def _build_path_for_signature(self, method: str, path: str, params_items: list[tuple[str, Any]]) -> str:
+        if method.upper() != "GET" or not params_items: return path
+        from urllib.parse import urlencode
+        qs = urlencode(params_items)
+        return f"{path}?{qs}" if qs else path
 
-        msg = f"Unsupported HTTP method: {method}"
-        raise ValueError(msg)
+    async def _execute_single_http_request(self, client: httpx.AsyncClient, method: str, url: str, params: list[tuple[str, Any]] | None, data: dict[str, Any] | None, headers: dict[str, str]) -> httpx.Response:
+        m = method.upper()
+        if m == "GET": return await call_with_circuit_breaker(client.get, url, params=params, headers=headers)
+        if m == "POST": return await call_with_circuit_breaker(client.post, url, json=data, headers=headers)
+        if m == "PUT": return await call_with_circuit_breaker(client.put, url, json=data, headers=headers)
+        if m == "DELETE": return await call_with_circuit_breaker(client.delete, url, headers=headers)
+        if m == "PATCH": return await call_with_circuit_breaker(client.patch, url, json=data, headers=headers)
+        raise ValueError(f"Unsupported method: {method}")
 
-    def _parse_json_response(
-        self,
-        response: httpx.Response,
-    ) -> dict[str, Any]:
-        """Parse JSON from HTTP response.
+    def _parse_json_response(self, response: httpx.Response, path: str) -> dict[str, Any]:
+        if response.status_code == 204: return {"status": "success", "code": 204}
+        try: return response.json()
+        except: return {"error": "invalid_json", "status_code": response.status_code}
 
-        Args:
-            response: HTTP response
-
-        Returns:
-            Parsed JSON data or fallback dict
-        """
-        try:
-            return response.json()  # type: ignore[no-any-return]
-        except (json.JSONDecodeError, TypeError, Exception):
-            return {
-                "text": response.text,
-                "status_code": response.status_code,
-            }
-
-    def _calculate_retry_delay(
-        self,
-        status_code: int,
-        retries: int,
-        current_delay: float,
-        response: httpx.Response | None = None,
-    ) -> float:
-        """Calculate delay before retry based on error type.
-
-        Args:
-            status_code: HTTP status code
-            retries: Current retry count
-            current_delay: Current delay value
-            response: HTTP response (for Retry-After header)
-
-        Returns:
-            Delay in seconds before next retry
-        """
+    def _calculate_retry_delay(self, status_code: int, retries: int, current_delay: float, response: httpx.Response | None = None) -> float:
         if status_code == 429:
-            retry_after = None
-            if response:
-                try:
-                    retry_after = int(response.headers.get("Retry-After", "0"))
-                except (ValueError, TypeError):
-                    retry_after = None
-
-            if retry_after and retry_after > 0:
-                return float(retry_after)
+            ra = response.headers.get("Retry-After") if response else None
+            if ra: return float(ra)
             return min(current_delay * 2, 30)
-
         return 1.0 + retries * 0.5
 
-    def _parse_http_error_response(
-        self,
-        response: httpx.Response,
-    ) -> dict[str, Any]:
-        """Parse error response and build error dict.
+    def _parse_http_error_response(self, response: httpx.Response) -> dict[str, Any]:
+        try: return response.json()
+        except: return {"error": "Non-JSON response", "status_code": response.status_code}
 
-        Args:
-            response: HTTP response with error
-
-        Returns:
-            Error data dictionary
-        """
-        status_code = response.status_code
-        response_text = response.text
-        error_description = Endpoints.ERROR_CODES.get(status_code, "Unknown error")
-
-        try:
-            error_json = response.json()
-            error_message = error_json.get("message", response_text)
-            error_code = error_json.get("code", status_code)
-        except (json.JSONDecodeError, TypeError, AttributeError):
-            error_message = response_text
-            error_code = status_code
-
-        return {
-            "error": True,
-            "code": error_code,
-            "message": error_message,
-            "status": status_code,
-            "description": error_description,
-        }
-
-    # ============================================================================
-    # End of request helper methods
-    # ============================================================================
-
-    async def _request(
-        self,
-        method: str,
-        path: str,
-        params: dict[str, Any] | None = None,
-        data: dict[str, Any] | None = None,
-        force_refresh: bool = False,
-    ) -> dict[str, Any]:
-        """Execute request to DMarket API with error handling, retries and caching.
-
-        Args:
-            method: HTTP method (GET, POST, etc.)
-            path: API path without base URL
-            params: Query parameters (for GET)
-            data: Request data (for POST/PUT)
-            force_refresh: Force cache refresh
-
-        Returns:
-            API response as dictionary
-
-        Raises:
-            Exception: On request error after all retries
-        """
+    async def _request(self, method: str, path: str, params: dict[str, Any] | None = None, data: dict[str, Any] | None = None, force_refresh: bool = False) -> dict[str, Any]:
         client = await self._get_client()
-
-        params = params or {}
-        data = data or {}
-
         url = f"{self.api_url}{path}"
-
-        # Check cacheability
-        cacheable, ttl_type = is_cacheable(method, path)
-        cache_key = ""
-
-        # Check cache for GET requests
-        body_json = ""
-        if method.upper() == "GET" and self.enable_cache and not force_refresh and cacheable:
-            cache_key = get_cache_key(method, path, params, data)
-            cached_data = get_from_cache(cache_key)
-            if cached_data is not None:
-                logger.debug(f"Using cached data for {path}")
-                return cached_data
-
-        # Build request body for POST/PUT/PATCH
-        if data and method.upper() in {"POST", "PUT", "PATCH"}:
-            body_json = json.dumps(data)
-
-        # Generate headers with signature
-        headers = self._generate_signature(method.upper(), path, body_json)
-
-        # Rate limiting
-        await self.rate_limiter.wait_if_needed(
-            "market" if "market" in path else "account",
-        )
-
-        # Retry loop
+        params_items = self._prepare_sorted_params(params)
+        body_json = json.dumps(data) if data and method.upper() in {"POST", "PUT", "PATCH"} else ""
+        path_for_signature = self._build_path_for_signature(method, path, params_items)
+        headers = self._generate_signature(method.upper(), path_for_signature, body_json)
+        await self.rate_limiter.acquire(path)
+        
         retries = 0
-        last_error: Exception | None = None
         retry_delay = 1.0
-
         while retries <= self.max_retries:
-            start_time = time.time()
             try:
-                add_api_breadcrumb(
-                    endpoint=path,
-                    method=method.upper(),
-                    retry_attempt=retries,
-                    has_cache=cache_key and get_from_cache(cache_key) is not None,
-                )
-
-                # Execute request (Phase 2 - use helper method)
-                response = await self._execute_single_http_request(
-                    client=client,
-                    method=method,
-                    url=url,
-                    params=params,
-                    data=data,
-                    headers=headers,
-                )
-
+                response = await self._execute_single_http_request(client, method, url, params_items, data, headers)
                 response.raise_for_status()
-
-                response_time_ms = (time.time() - start_time) * 1000
-
-                add_api_breadcrumb(
-                    endpoint=path,
-                    method=method.upper(),
-                    status_code=response.status_code,
-                    response_time_ms=response_time_ms,
-                )
-
-                # Parse JSON response (Phase 2 - use helper method)
-                result = self._parse_json_response(response)
-
-                # Save to cache if applicable
-                if method.upper() == "GET" and self.enable_cache and cacheable:
-                    save_to_cache(cache_key, result, ttl_type)
-
-                return result  # type: ignore[no-any-return]
-
-            except CircuitBreakerError as e:
-                logger.warning(f"Circuit breaker open for {method} {path}: {e}")
-                add_api_breadcrumb(
-                    endpoint=path,
-                    method=method.upper(),
-                    error="circuit_breaker_open",
-                    error_message=str(e),
-                )
-                last_error = e
-                break
-
-            except httpx.HTTPStatusError as e:
-                status_code = e.response.status_code
-                response_text = e.response.text
-                response_time_ms = (time.time() - start_time) * 1000
-
-                logger.warning(
-                    f"HTTP error {status_code} for {method} {path}: {response_text}",
-                )
-
-                add_api_breadcrumb(
-                    endpoint=path,
-                    method=method.upper(),
-                    status_code=status_code,
-                    response_time_ms=response_time_ms,
-                    error="http_error",
-                    retry_attempt=retries,
-                )
-
-                error_description = Endpoints.ERROR_CODES.get(status_code, "Unknown error")
-                logger.warning(f"Error description: {error_description}")
-
-                # Check if should retry
-                if status_code in self.retry_codes:
-                    retries += 1
-
-                    # Calculate retry delay (Phase 2 - use helper method)
-                    retry_delay = self._calculate_retry_delay(
-                        status_code=status_code,
-                        retries=retries,
-                        current_delay=retry_delay,
-                        response=e.response,
-                    )
-
-                    if status_code == 429:
-                        logger.info(f"Rate limit exceeded. Retry in {retry_delay} sec.")
-
-                    if retries <= self.max_retries:
-                        logger.info(
-                            f"Retry {retries}/{self.max_retries} in {retry_delay} sec...",
-                        )
-                        await asyncio.sleep(retry_delay)
-                        continue
-
-                # Parse error response (Phase 2 - use helper method)
-                error_data = self._parse_http_error_response(e.response)
-
-                if status_code in {400, 404}:
-                    return error_data
-
-                last_error = Exception(
-                    f"DMarket API error: {error_data['message']} "
-                    f"(code: {error_data['code']}, description: {error_data['description']})",
-                )
-                break
-
-            except (httpx.ConnectError, httpx.ReadError, httpx.WriteError) as e:
-                logger.warning(f"Network error for {method} {path}: {e!s}")
-
-                add_api_breadcrumb(
-                    endpoint=path,
-                    method=method.upper(),
-                    error="network_error",
-                    error_message=str(e),
-                    retry_attempt=retries,
-                )
-
-                retries += 1
-                retry_delay = min(retry_delay * 1.5, 10)
-
-                if retries <= self.max_retries:
-                    logger.info(
-                        f"Retry {retries}/{self.max_retries} in {retry_delay} sec...",
-                    )
-                    await asyncio.sleep(retry_delay)
-                    continue
-
-                last_error = e
-                break
-
+                return self._parse_json_response(response, path)
             except Exception as e:
-                logger.exception(
-                    f"Unexpected error for {method} {path}: {e!s}",
-                )
-                logger.exception(traceback.format_exc())
-
-                add_api_breadcrumb(
-                    endpoint=path,
-                    method=method.upper(),
-                    error="unexpected_error",
-                    error_message=str(e),
-                    retry_attempt=retries,
-                )
-
-                last_error = e
-                break
-
-        # All retries exhausted
-        if last_error:
-            error_message = str(last_error)
-            return {
-                "error": True,
-                "message": error_message,
-                "code": "REQUEST_FAILED",
-            }
-
-        return {
-            "error": True,
-            "message": "Unknown error occurred during API request",
-            "code": "UNKNOWN_ERROR",
-        }
-
-    async def clear_cache(self) -> None:
-        """Clear all API cache."""
-        clear_cache()
-        logger.info("API cache cleared")
-
-    async def clear_cache_for_endpoint(self, endpoint_path: str) -> None:
-        """Clear cache for specific endpoint.
-
-        Args:
-            endpoint_path: Endpoint path to clear cache for
-        """
-        clear_cache_for_endpoint(endpoint_path)
-        logger.info(f"Cache cleared for endpoint: {endpoint_path}")
+                retries += 1
+                if retries > self.max_retries: return {"error": str(e), "code": "REQUEST_FAILED"}
+                await asyncio.sleep(retry_delay)
+                retry_delay *= 2
+        return {}

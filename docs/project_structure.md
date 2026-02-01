@@ -1,123 +1,25 @@
-# 📁 Структура проекта
-
-**Версия**: 1.1.0
-**Последнее обновление: Январь 2026 г.
-
----
-
-## 📋 Обзор
-
-Организация файлов и модулей проекта DMarket Telegram Bot.
-
-## 🏗️ Структура директорий
+# Project Structure (Updated 2026)
 
 ```
 DMarket-Telegram-Bot/
-├── src/                          # Исходный код
-│   ├── dmarket/                  # Модуль DMarket API
-│   │   ├── api/                  # Модульный API клиент
-│   │   │   ├── auth.py           # Ed25519/HMAC подписи
-│   │   │   ├── client.py         # HTTP клиент
-│   │   │   ├── inventory.py      # Операции с инвентарем
-│   │   │   ├── market.py         # Операции с рынком
-│   │   │   └── wallet.py         # Операции с кошельком
-│   │   ├── scanner/              # Модульный сканер
-│   │   │   ├── levels.py         # Конфигурации уровней
-│   │   │   ├── cache.py          # ScannerCache с TTL
-│   │   │   ├── filters.py        # ScannerFilters
-│   │   │   └── tree_filters.py   # Категориальные фильтры
-│   │   ├── targets/              # Модуль таргетов
-│   │   ├── arbitrage/            # Модуль арбитража
-│   │   ├── filters/              # Фильтры по играм
-│   │   ├── dmarket_api.py        # Основной API клиент
-│   │   ├── arbitrage_scanner.py  # Сканер арбитража
-│   │   ├── cross_platform_arbitrage.py # Кросс-платформенный арбитраж
-│   │   ├── parallel_scanner.py   # Параллельное сканирование
-│   │   └── auto_seller.py        # Автопродавец
-│   │
-│   ├── waxpeer/                  # Модуль Waxpeer API (НОВОЕ)
-│   │   ├── waxpeer_api.py        # API клиент Waxpeer
-│   │   └── __init__.py
-│   │
-│   ├── telegram_bot/             # Telegram бот
-│   │   ├── commands/             # Обработчики команд
-│   │   ├── handlers/             # Callback handlers
-│   │   │   ├── waxpeer_handler.py # Waxpeer команды (НОВОЕ)
-│   │   │   └── ...
-│   │   ├── keyboards/            # Inline клавиатуры
-│   │   │   ├── arbitrage.py      # Клавиатуры арбитража
-│   │   │   └── ...
-│   │   ├── notifications/        # Система уведомлений
-│   │   ├── smart_notifications/  # Умные уведомления
-│   │   └── i18n/                 # Интернационализация
-│   │
-│   ├── analytics/                # Модуль аналитики
-│   ├── portfolio/                # Управление портфелем
-│   ├── web_dashboard/            # Веб-дашборд
-│   ├── mcp_server/               # MCP Server для AI
-│   ├── models/                   # Модели данных (SQLAlchemy)
-│   └── utils/                    # Утилиты
-│       ├── memory_cache.py       # In-memory кэш
-│       ├── redis_cache.py        # Redis кэширование
-│       ├── rate_limiter.py       # Rate limiting
-│       ├── api_circuit_breaker.py # Circuit Breaker
-│       └── config.py             # Конфигурация (с Waxpeer)
-│
-├── tests/                        # Тесты (372+ файлов)
-│   ├── integration/              # Интеграционные тесты
-│   ├── e2e/                      # End-to-end тесты
-│   ├── models/                   # Тесты моделей
-│   ├── utils/                    # Тесты утилит
-│   ├── dmarket/                  # Тесты DMarket API
-│   ├── waxpeer/                  # Тесты Waxpeer API (НОВОЕ)
-│   └── fixtures/                 # Общие фикстуры
-│
-├── docs/                         # Документация
-├── config/                       # Конфигурация
-├── alembic/                      # Миграции БД
-├── scripts/                      # Скрипты утилит
-│
-├── pyproject.toml               # Конфигурация проекта
-├── requirements.txt             # Зависимости
-├── Dockerfile                   # Docker образ
-├── docker-compose.yml           # Docker Compose
-└── Makefile                     # Команды сборки
+├── .github/
+│   ├── skills/              # Agent Skills (2026 Standard)
+│   └── workflows/           # CI/CD (GitHub Actions)
+├── src/
+│   ├── dmarket/
+│   │   ├── api/             # Modular Mixin-based API Client
+│   │   ├── scanner/         # Arbitrage Scanning Engine
+│   │   └── targets/         # Buy Order Management
+│   ├── telegram_bot/
+│   │   ├── handlers/
+│   │   │   └── keyboard_parts/ # UI Components
+│   │   └── notifications/
+│   ├── ml/
+│   │   └── parts/           # ML Components (Features, Pipeline)
+│   ├── models/              # SQLAlchemy Models
+│   └── utils/               # Shared Utilities
+├── tests/                   # 150+ Stable Tests
+├── docs/                    # Clean & Updated Documentation
+├── data/                    # SQLite DB & Config Files
+└── scripts/                 # Management Scripts
 ```
-
-## 📦 Основные модули
-
-### src/dmarket/
-
-Модуль для работы с DMarket API:
-
-- **dmarket_api.py** - Основной API клиент с HMAC аутентификацией
-- **arbitrage_scanner.py** - Многоуровневый сканер арбитража (5 уровней)
-- **cross_platform_arbitrage.py** - Арбитраж DMarket ↔ Waxpeer
-- **parallel_scanner.py** - Параллельное сканирование игр
-- **auto_seller.py** - Автоматическая продажа предметов
-
-### src/waxpeer/ (НОВОЕ)
-
-Модуль для интеграции с Waxpeer P2P:
-
-- **waxpeer_api.py** - API клиент (цены в mils, 1 USD = 1000 mils)
-
-### src/telegram_bot/
-
-Telegram бот и интерфейс:
-
-- **commands/** - Обработчики команд (/start, /balance, /arbitrage, /waxpeer)
-- **handlers/** - Callback query handlers
-- **keyboards/** - Inline и reply клавиатуры
-
-### src/utils/
-
-Вспомогательные утилиты:
-
-- **memory_cache.py** - TTL кэш в памяти
-- **rate_limiter.py** - Ограничение запросов
-- **api_circuit_breaker.py** - Паттерн Circuit Breaker
-
----
-
-**Подробнее**: [ARCHITECTURE.md](ARCHITECTURE.md)

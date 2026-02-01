@@ -24,9 +24,9 @@ on:
         default: "3.11"
 
 env:
-  PYTHON_VERSION: "3.11"
+  PYTHON_VERSION: "3.12"
   # Версии для параллельной проверки совместимости
-  PYTHON_VERSIONS: "3.10, 3.11, 3.12"
+  PYTHON_VERSIONS: "3.11, 3.12, 3.13"
   # Кэширование
   CACHE_VERSION: v2
   PIP_CACHE_DIR: ~/.cache/pip
@@ -319,7 +319,11 @@ jobs:
       - name: Install security tools
         run: |
           python -m pip install --upgrade pip
-          pip install bandit safety pip-audit
+          pip install bandit safety pip-audit pyyaml
+
+      - name: Validate Agent Skills
+        run: |
+          python scripts/validate_all_skills.py
 
       - name: Bandit Security Scan
         run: |
