@@ -1166,6 +1166,11 @@ async def main() -> None:
 if __name__ == "__main__":
     # Ensure proper event loop policy on Windows
     if sys.platform.startswith("win"):
+        import sys
+        import io
+        # Force UTF-8 encoding for stdout/stderr to avoid charmap errors in PowerShell
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
         asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 
     # Run the application
