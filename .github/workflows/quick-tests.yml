@@ -2,26 +2,26 @@ name: Quick Tests
 
 on:
   push:
-    branches: [ main, master, develop, feature/* ]
+    branches: [main, master, develop, feature/*]
     paths:
-      - 'src/**/*.py'
-      - 'tests/**/*.py'
-      - 'requirements.txt'
-      - 'pyproject.toml'
+      - "src/**/*.py"
+      - "tests/**/*.py"
+      - "requirements.txt"
+      - "pyproject.toml"
   pull_request:
-    branches: [ main, master, develop ]
+    branches: [main, master, develop]
     paths:
-      - 'src/**/*.py'
-      - 'tests/**/*.py'
-      - 'requirements.txt'
-      - 'pyproject.toml'
+      - "src/**/*.py"
+      - "tests/**/*.py"
+      - "requirements.txt"
+      - "pyproject.toml"
   workflow_dispatch:
     inputs:
       test_filter:
-        description: 'Filter tests by name pattern'
+        description: "Filter tests by name pattern"
         required: false
         type: string
-        default: ''
+        default: ""
 
 env:
   PYTHONUNBUFFERED: "1"
@@ -45,8 +45,8 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
-          cache: 'pip'
+          python-version: "3.13"
+          cache: "pip"
 
       - name: Install dependencies
         continue-on-error: true

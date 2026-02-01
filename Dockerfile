@@ -9,7 +9,7 @@
 # ============================================================================
 # STAGE 1: Builder - Install dependencies and create wheels
 # ============================================================================
-FROM python:3.12-slim AS builder
+FROM python:3.13-slim AS builder
 
 WORKDIR /build
 
@@ -26,12 +26,13 @@ COPY requirements.txt .
 # Create wheels for all dependencies with BuildKit cache mount
 # This caches pip downloads between builds, significantly speeding up rebuilds
 RUN --mount=type=cache,target=/root/.cache/pip \
-    pip wheel --wheel-dir /wheels -r requirements.txt
+    pip wheel --wheel-dir /wheels -r requirements.txt && \
+    cp requirements.txt /wheels/
 
 # ============================================================================
 # STAGE 2: Runtime - Minimal production image
 # ============================================================================
-FROM python:3.12-slim AS runtime
+FROM python:3.13-slim AS runtime
 
 # OCI Image Spec labels (https://github.com/opencontainers/image-spec/blob/main/annotations.md)
 LABEL org.opencontainers.image.title="DMarket Telegram Bot"
@@ -40,10 +41,10 @@ LABEL org.opencontainers.image.version="1.1.0"
 LABEL org.opencontainers.image.authors="DMarket Bot Team"
 LABEL org.opencontainers.image.source="https://github.com/Dykij/DMarket-Telegram-Bot"
 LABEL org.opencontainers.image.licenses="MIT"
-LABEL org.opencontainers.image.base.name="python:3.12-slim"
+LABEL org.opencontainers.image.base.name="python:3.13-slim"
 # Legacy labels for compatibility
 LABEL maintainer="https://github.com/Dykij/DMarket-Telegram-Bot"
-LABEL python.version="3.12"
+LABEL python.version="3.13"
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
@@ -71,8 +72,8 @@ WORKDIR /app
 COPY --from=builder --chown=botuser:botuser /wheels /wheels
 
 # Install dependencies from wheels (much faster than pip install)
-RUN pip install --no-cache-dir --user --no-index --find-links=/wheels -r /wheels/../requirements.txt && \
-    rm -rf /wheels
+RUN pip install --no-cache-dir --user --no-index --find-links=/wheels -r /wheels/requirements.txt && \
+    rm -rf /wheels/*
 
 # Copy application code (only needed files, not entire repo)
 COPY --chown=botuser:botuser src/ ./src/

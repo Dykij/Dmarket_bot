@@ -37,7 +37,7 @@ GAME_MAP: dict[str, str] = {
 
 class BaseDMarketClient:
     """Core logic for DMarket API communication."""
-    
+
     BASE_URL = "https://api.dmarket.com"
 
     # Баланс и аккаунт
@@ -121,7 +121,7 @@ class BaseDMarketClient:
         self.dry_run = dry_run
         self.notifier = notifier
         self.retry_codes = retry_codes or [429, 500, 502, 503, 504]
-        
+
         self.pool_limits = pool_limits or httpx.Limits(
             max_connections=100,
             max_keepalive_connections=30,
@@ -134,7 +134,7 @@ class BaseDMarketClient:
         self._client_lock = asyncio.Lock()
         self.rate_limiter = DMarketRateLimiter()
         self._signing_key = None
-        
+
         from concurrent.futures import ThreadPoolExecutor
         self._signing_executor = ThreadPoolExecutor(max_workers=4, thread_name_prefix="hmac_signer")
 
@@ -150,7 +150,7 @@ class BaseDMarketClient:
                 secret_key_bytes = bytes.fromhex(secret_key_str[:64])
             else:
                 secret_key_bytes = secret_key_str.encode("utf-8")[:32].ljust(32, b"\0")
-            
+
             self._signing_key = nacl.signing.SigningKey(secret_key_bytes)
         except Exception as e:
             logger.error(f"Failed to prepare signing key: {e}")
@@ -293,7 +293,7 @@ class BaseDMarketClient:
         path_for_signature = self._build_path_for_signature(method, path, params_items)
         headers = self._generate_signature(method.upper(), path_for_signature, body_json)
         await self.rate_limiter.acquire(path)
-        
+
         retries = 0
         retry_delay = 1.0
         while retries <= self.max_retries:
@@ -307,3 +307,7 @@ class BaseDMarketClient:
                 await asyncio.sleep(retry_delay)
                 retry_delay *= 2
         return {}
+
+
+# Alias for backward compatibility
+DMarketAPIClient = BaseDMarketClient

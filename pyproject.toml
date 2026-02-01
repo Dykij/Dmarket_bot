@@ -7,7 +7,7 @@ name = "dmarket-bot"
 version = "1.0.0"
 description = "Бот для торговли игровыми предметами на площадках DMarket и Waxpeer"
 readme = "README.md"
-requires-python = ">=3.11"  # Requires Python 3.11+ (3.12+ recommended)
+requires-python = ">=3.12"  # Requires Python 3.12+ (3.13 recommended)
 license = {text = "MIT"}
 authors = [
     {name = "DMarket Bot Team", email = "example@example.com"}
@@ -18,7 +18,6 @@ classifiers = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Framework :: AsyncIO",
@@ -169,7 +168,7 @@ dict_synonyms = ["Enum", "IntEnum", "StrEnum"]
 
 [tool.ruff]
 line-length = 100
-target-version = "py312"  # Python 3.12+ features
+target-version = "py313"  # Python 3.13+ features
 
 # Enable preview rules for latest lint improvements
 preview = true
@@ -499,7 +498,7 @@ docstring-code-format = true
 docstring-code-line-length = 88
 
 [tool.mypy]
-python_version = "3.12"  # Target Python 3.12+
+python_version = "3.13"  # Target Python 3.13+
 
 # ============================================================================
 # СТРОГИЙ РЕЖИМ (ОТКЛЮЧЕН для практичности - включаем нужные опции вручную)
@@ -777,6 +776,15 @@ markers = [
     "timeout(seconds): Set custom timeout for this test",
     "performance: Performance and load tests (auto-marked as slow)",
     "comprehensive: Comprehensive tests (auto-marked as slow)",
+    "property_based: Property-based testing with Hypothesis",
+    "localization: Localization and i18n tests",
+    "critical: Critical path tests that must pass",
+    "security: Security-related tests",
+    "quick: Quick tests for fast feedback",
+    "fuzz: Fuzzing tests",
+    "i18n: Internationalization tests",
+    "high_risk: High-risk feature tests",
+    "regression: Regression tests for bug fixes",
 ]
 asyncio_mode = "auto"  # Auto-detect async tests
 asyncio_default_fixture_loop_scope = "function"

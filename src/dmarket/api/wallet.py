@@ -13,7 +13,7 @@ class WalletMixin:
         try:
             # Standard endpoint
             response = await self._request("GET", "/account/v1/balance")
-            
+
             # Simplified parsing for the mixin (actual logic in main class for now)
             if "usd" in response:
                 usd = float(response.get("usd", 0))
@@ -47,3 +47,7 @@ class WalletMixin:
 
     def _create_balance_response(self, usd_amount: float, usd_available: float, usd_total: float, **kwargs) -> dict[str, Any]:
         return {"balance": usd_amount / 100, "available_balance": usd_available / 100, "total_balance": usd_total / 100, "error": False}
+
+
+# Alias for backward compatibility
+WalletOperationsMixin = WalletMixin

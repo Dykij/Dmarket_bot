@@ -18,15 +18,14 @@ on:
         required: false
         type: choice
         options:
-          - "3.11"
           - "3.12"
           - "3.13"
-        default: "3.11"
+        default: "3.13"
 
 env:
-  PYTHON_VERSION: "3.12"
+  PYTHON_VERSION: "3.13"
   # Версии для параллельной проверки совместимости
-  PYTHON_VERSIONS: "3.11, 3.12, 3.13"
+  PYTHON_VERSIONS: "3.12, 3.13"
   # Кэширование
   CACHE_VERSION: v2
   PIP_CACHE_DIR: ~/.cache/pip
@@ -158,10 +157,10 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        python-version: ["3.11", "3.12", "3.13"]
+        python-version: ["3.12", "3.13"]
         include:
           - os: ubuntu-latest
-            python-version: "3.11"
+            python-version: "3.13"
             coverage: true
 
     steps:
