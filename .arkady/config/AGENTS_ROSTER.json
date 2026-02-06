@@ -1,0 +1,22 @@
+{
+  "agents": [
+    {
+      "id": "ARCHITECT",
+      "model": "google/gemini-3-pro",
+      "role": "Planning, Security, System Design",
+      "capabilities": ["web_search", "gateway_control"]
+    },
+    {
+      "id": "CODER",
+      "model": "google/gemini-3-flash",
+      "role": "Feature Development, Bugfixing, Refactoring",
+      "capabilities": ["exec", "write", "edit"]
+    },
+    {
+      "id": "WATCHER",
+      "model": "google/gemini-3-flash",
+      "role": "Log Analysis, Health Monitoring",
+      "capabilities": ["read", "exec"]
+    }
+  ]
+}

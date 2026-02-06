@@ -39,18 +39,29 @@
 Каждая стратегия реализует общий интерфейс `IFindingStrategy`
 для единообразного использования в боте.
 
+Note: Base types (enums, dataclasses, interface) are now in
+src/dmarket/strategies/base.py for modularity.
+
 Author: DMarket Telegram Bot
 Created: January 2026
 """
 
-from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
-from datetime import UTC, datetime
 from decimal import Decimal
-from enum import StrEnum
 from typing import TYPE_CHECKING, Any
 
 import structlog
+
+# Import base types from strategies package
+from src.dmarket.strategies.base import (
+    ActionType,
+    IFindingStrategy,
+    OpportunityScore,
+    OpportunityStatus,
+    RiskLevel,
+    StrategyConfig,
+    StrategyType,
+    UnifiedOpportunity,
+)
 
 
 if TYPE_CHECKING:
@@ -60,274 +71,26 @@ if TYPE_CHECKING:
 logger = structlog.get_logger(__name__)
 
 
-# ============================================================================
-# Enums and Constants
-# ============================================================================
-
-
-class StrategyType(StrEnum):
-    """Типы стратегий поиска."""
-
-    CROSS_PLATFORM_ARBITRAGE = "cross_platform"
-    INTRAMARKET_ARBITRAGE = "intramarket"
-    FLOAT_VALUE_ARBITRAGE = "float_value"
-    PATTERN_PHASE_ARBITRAGE = "pattern_phase"
-    TARGET_SYSTEM = "target_system"
-    SMART_MARKET_FINDER = "smart_market"
-    ENHANCED_SCANNER = "enhanced_scanner"
-    TRENDING_ITEMS = "trending_items"
-    QUICK_FLIP = "quick_flip"
-
-
-class RiskLevel(StrEnum):
-    """Уровень риска для возможности."""
-
-    VERY_LOW = "very_low"  # Мгновенный арбитраж
-    LOW = "low"  # Арбитраж с коротким локом
-    MEDIUM = "medium"  # Инвестиции 3-7 дней
-    HIGH = "high"  # Редкие предметы, длинный лок
-    VERY_HIGH = "very_high"  # Паттерны, коллекционные
-
-
-class OpportunityStatus(StrEnum):
-    """Статус возможности."""
-
-    ACTIVE = "active"  # Актуальная возможность
-    EXPIRED = "expired"  # Истекла
-    PURCHASED = "purchased"  # Куплено
-    FAILED = "failed"  # Неудачная попытка
-    PENDING = "pending"  # В обработке
-
-
-class ActionType(StrEnum):
-    """Тип рекомендуемого действия."""
-
-    BUY_NOW = "buy_now"  # Купить сейчас
-    CREATE_TARGET = "create_target"  # Создать таргет
-    WATCH = "watch"  # Наблюдать
-    CREATE_ADVANCED_ORDER = "create_advanced_order"  # Расширенный ордер
-    SKIP = "skip"  # Пропустить
-
-
-# ============================================================================
-# Data Classes
-# ============================================================================
-
-
-@dataclass
-class OpportunityScore:
-    """Комплексная оценка возможности."""
-
-    profit_score: float  # 0-100, оценка прибыльности
-    liquidity_score: float  # 0-100, оценка ликвидности
-    risk_score: float  # 0-100, оценка риска (выше = рискованнее)
-    confidence_score: float  # 0-100, уверенность в оценке
-    time_score: float  # 0-100, оценка времени продажи
-
-    @property
-    def total_score(self) -> float:
-        """Общая оценка с весами."""
-        weights = {
-            "profit": 0.30,
-            "liquidity": 0.25,
-            "risk": 0.20,  # Инвертируем (100 - risk)
-            "confidence": 0.15,
-            "time": 0.10,
-        }
-        return (
-            self.profit_score * weights["profit"]
-            + self.liquidity_score * weights["liquidity"]
-            + (100 - self.risk_score) * weights["risk"]
-            + self.confidence_score * weights["confidence"]
-            + self.time_score * weights["time"]
-        )
-
-
-@dataclass
-class UnifiedOpportunity:
-    """Унифицированная структура возможности для всех стратегий."""
-
-    # Идентификация
-    id: str
-    title: str
-    game: str
-
-    # Стратегия и тип
-    strategy_type: StrategyType
-    action_type: ActionType
-
-    # Цены
-    buy_price: Decimal
-    sell_price: Decimal
-    profit_usd: Decimal
-    profit_percent: Decimal
-
-    # Оценки
-    score: OpportunityScore
-    risk_level: RiskLevel
-
-    # Статус
-    status: OpportunityStatus = OpportunityStatus.ACTIVE
-    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
-    expires_at: datetime | None = None
-
-    # Дополнительные данные специфичные для стратегии
-    metadata: dict[str, Any] = field(default_factory=dict)
-
-    # Float Value (для float стратегий)
-    float_value: float | None = None
-    float_min: float | None = None
-    float_max: float | None = None
-
-    # Pattern/Phase (для pattern стратегий)
-    pattern_id: int | None = None
-    phase: str | None = None
-
-    # Trade Lock
-    trade_lock_days: int = 0
-
-    # Ликвидность
-    daily_sales: int | None = None
-    offers_count: int = 0
-    orders_count: int = 0
-
-    # Источники цен
-    source_platform: str = "dmarket"
-    target_platform: str | None = None
-
-    # Рекомендации
-    notes: list[str] = field(default_factory=list)
-
-    def to_dict(self) -> dict[str, Any]:
-        """Конвертация в словарь для сериализации."""
-        return {
-            "id": self.id,
-            "title": self.title,
-            "game": self.game,
-            "strategy_type": self.strategy_type.value,
-            "action_type": self.action_type.value,
-            "buy_price": float(self.buy_price),
-            "sell_price": float(self.sell_price),
-            "profit_usd": float(self.profit_usd),
-            "profit_percent": float(self.profit_percent),
-            "total_score": self.score.total_score,
-            "risk_level": self.risk_level.value,
-            "status": self.status.value,
-            "trade_lock_days": self.trade_lock_days,
-            "float_value": self.float_value,
-            "pattern_id": self.pattern_id,
-            "phase": self.phase,
-            "notes": self.notes,
-            "metadata": self.metadata,
-        }
-
-
-@dataclass
-class StrategyConfig:
-    """Конфигурация стратегии."""
-
-    # Общие параметры
-    game: str = "csgo"
-    min_price: Decimal = Decimal("1.0")
-    max_price: Decimal = Decimal("100.0")
-    min_profit_percent: Decimal = Decimal("5.0")
-    min_profit_usd: Decimal = Decimal("0.30")
-    limit: int = 50
-
-    # Риск и ликвидность
-    max_risk_level: RiskLevel = RiskLevel.MEDIUM
-    min_liquidity_score: float = 30.0
-    min_daily_sales: int = 3
-
-    # Trade Lock
-    max_trade_lock_days: int = 7
-
-    # Float фильтры
-    float_min: float | None = None
-    float_max: float | None = None
-
-    # Pattern фильтры
-    pattern_ids: list[int] | None = None
-    phases: list[str] | None = None
-
-    # Кэширование
-    cache_ttl_seconds: int = 300  # 5 минут
-
-    def to_dict(self) -> dict[str, Any]:
-        """Конвертация в словарь."""
-        return {
-            "game": self.game,
-            "min_price": float(self.min_price),
-            "max_price": float(self.max_price),
-            "min_profit_percent": float(self.min_profit_percent),
-            "min_profit_usd": float(self.min_profit_usd),
-            "limit": self.limit,
-            "max_risk_level": self.max_risk_level.value,
-            "min_liquidity_score": self.min_liquidity_score,
-            "min_daily_sales": self.min_daily_sales,
-            "max_trade_lock_days": self.max_trade_lock_days,
-            "float_min": self.float_min,
-            "float_max": self.float_max,
-            "pattern_ids": self.pattern_ids,
-            "phases": self.phases,
-        }
-
-
-# ============================================================================
-# Strategy Interface
-# ============================================================================
-
-
-class IFindingStrategy(ABC):
-    """Абстрактный интерфейс для всех стратегий поиска."""
-
-    @property
-    @abstractmethod
-    def strategy_type(self) -> StrategyType:
-        """Тип стратегии."""
-
-    @property
-    @abstractmethod
-    def name(self) -> str:
-        """Человекочитаемое имя стратегии."""
-
-    @property
-    @abstractmethod
-    def description(self) -> str:
-        """Описание стратегии."""
-
-    @abstractmethod
-    async def find_opportunities(
-        self,
-        config: StrategyConfig,
-    ) -> list[UnifiedOpportunity]:
-        """Найти возможности по данной конфигурации.
-
-        Args:
-            config: Конфигурация поиска
-
-        Returns:
-            Список унифицированных возможностей
-        """
-
-    @abstractmethod
-    def validate_config(self, config: StrategyConfig) -> bool:
-        """Проверить валидность конфигурации для этой стратегии.
-
-        Args:
-            config: Конфигурация для проверки
-
-        Returns:
-            True если конфигурация валидна
-        """
-
-    def get_default_config(self) -> StrategyConfig:
-        """Получить дефолтную конфигурацию для стратегии.
-
-        Returns:
-            Дефолтная конфигурация
-        """
-        return StrategyConfig()
+# Re-export for backward compatibility
+__all__ = [
+    # Enums
+    "StrategyType",
+    "RiskLevel",
+    "OpportunityStatus",
+    "ActionType",
+    # Dataclasses
+    "OpportunityScore",
+    "UnifiedOpportunity",
+    "StrategyConfig",
+    # Interface
+    "IFindingStrategy",
+    # Strategy implementations
+    "CrossPlatformArbitrageStrategy",
+    "FloatValueArbitrageStrategy",
+    "IntramarketArbitrageStrategy",
+    "SmartMarketFinderStrategy",
+    "UnifiedStrategyManager",
+]
 
 
 # ============================================================================
@@ -369,10 +132,7 @@ class CrossPlatformArbitrageStrategy(IFindingStrategy):
 
     def validate_config(self, config: StrategyConfig) -> bool:
         """Проверка конфигурации."""
-        return not (
-            config.min_price < Decimal("0.5")
-            or config.min_profit_percent < Decimal("3.0")
-        )
+        return not (config.min_price < Decimal("0.5") or config.min_profit_percent < Decimal("3.0"))
 
     async def find_opportunities(
         self,
@@ -935,26 +695,24 @@ class UnifiedStrategyManager:
     def _init_strategies(self) -> None:
         """Инициализировать все доступные стратегии."""
         # Cross-platform (DMarket → Waxpeer)
-        self._strategies[StrategyType.CROSS_PLATFORM_ARBITRAGE] = (
-            CrossPlatformArbitrageStrategy(
-                dmarket_api=self.dmarket_api,
-                waxpeer_api=self.waxpeer_api,
-            )
+        self._strategies[StrategyType.CROSS_PLATFORM_ARBITRAGE] = CrossPlatformArbitrageStrategy(
+            dmarket_api=self.dmarket_api,
+            waxpeer_api=self.waxpeer_api,
         )
 
         # Float Value Arbitrage
-        self._strategies[StrategyType.FLOAT_VALUE_ARBITRAGE] = (
-            FloatValueArbitrageStrategy(dmarket_api=self.dmarket_api)
+        self._strategies[StrategyType.FLOAT_VALUE_ARBITRAGE] = FloatValueArbitrageStrategy(
+            dmarket_api=self.dmarket_api
         )
 
         # Intramarket Arbitrage
-        self._strategies[StrategyType.INTRAMARKET_ARBITRAGE] = (
-            IntramarketArbitrageStrategy(dmarket_api=self.dmarket_api)
+        self._strategies[StrategyType.INTRAMARKET_ARBITRAGE] = IntramarketArbitrageStrategy(
+            dmarket_api=self.dmarket_api
         )
 
         # Smart Market Finder
-        self._strategies[StrategyType.SMART_MARKET_FINDER] = (
-            SmartMarketFinderStrategy(dmarket_api=self.dmarket_api)
+        self._strategies[StrategyType.SMART_MARKET_FINDER] = SmartMarketFinderStrategy(
+            dmarket_api=self.dmarket_api
         )
 
     def get_strategy(self, strategy_type: StrategyType) -> IFindingStrategy | None:

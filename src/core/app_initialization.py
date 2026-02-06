@@ -148,21 +148,11 @@ class ComponentInitializer:
 
         # Enable persistence
         if not self.app.config.testing:
-            from telegram.ext import PicklePersistence
-
-            persistence_path = "data/bot_persistence.pickle"
-            os.makedirs("data", exist_ok=True)
-            persistence = PicklePersistence(
-                filepath=persistence_path,
-                store_data=PersistenceInput(
-                    bot_data=False,
-                    chat_data=True,
-                    user_data=True,
-                    callback_data=True,
-                ),
-            )
+            from src.utils.db_persistence import SQLPersistence
+            
+            persistence = SQLPersistence(db_manager=self.app.database)
             builder.persistence(persistence)
-            logger.info(f"Persistence enabled: {persistence_path}")
+            logger.info("Persistence enabled: SQLPersistence (Database)")
 
         self.app.bot = builder.build()
 

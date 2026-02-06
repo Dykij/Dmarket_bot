@@ -2,11 +2,14 @@
 
 This module contains comprehensive tests for the main entry point
 of the DMarket Telegram Bot application.
+
+Note: The main.py now delegates to src.core.application. These tests
+verify backward compatibility of imports and basic functionality.
+For detailed Application tests, see tests/core/test_application.py
 """
 
 import asyncio
 import logging
-import signal
 import sys
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -64,7 +67,7 @@ class TestApplication:
     """Test cases for Application class."""
 
     def test_init_creates_application_with_default_values(self):
-        """Тест проверяет создание Application с дефолтными значениями."""
+        """Test Application creation with default values."""
         # Arrange & Act
         app = Application()
 
@@ -77,7 +80,7 @@ class TestApplication:
         assert isinstance(app._shutdown_event, asyncio.Event)
 
     def test_init_with_config_path_sets_path_correctly(self):
-        """Тест проверяет установку пути к конфигурации при инициализации."""
+        """Test Application initialization with config path."""
         # Arrange
         config_path = "config/test.yaml"
 
@@ -87,198 +90,68 @@ class TestApplication:
         # Assert
         assert app.config_path == config_path
 
-    @pytest.mark.asyncio()
-    async def test_initialize_sets_all_components_on_success(
-        self, mock_config, mock_dmarket_api, mock_bot
-    ):
-        """Тест проверяет корректную установку всех компонентов при успешной инициализации."""
-        # Arrange
-        app = Application()
+    def test_application_imports_from_core(self):
+        """Test that Application is imported from core module."""
+        from src.core.application import Application as CoreApplication
+        from src.main import Application as MainApplication
 
-        # Act
-        with (
-            patch("src.main.Config.load", return_value=mock_config),
-            patch("src.main.setup_logging"),
-            patch("src.main.DMarketAPI", return_value=mock_dmarket_api),
-            patch("src.main.ApplicationBuilder") as MockBuilder,
-        ):
-            MockBuilder.return_value.token.return_value.build.return_value = mock_bot
-            await app.initialize()
+        # They should be the same class
+        assert MainApplication is CoreApplication
 
-        # Assert
-        assert app.config == mock_config
-        assert app.dmarket_api == mock_dmarket_api
-        assert app.bot == mock_bot
-        mock_bot.initialize.assert_called_once()
+    def test_main_imports_from_core(self):
+        """Test that main function is imported from core module."""
+        from src.core.application import main as core_main
+        from src.main import main as main_func
+
+        # They should be the same function
+        assert main_func is core_main
 
     @pytest.mark.asyncio()
-    async def test_initialize_with_production_mode_initializes_database(
-        self, mock_config, mock_database, mock_dmarket_api, mock_bot
-    ):
-        """Тест проверяет инициализацию базы данных в production режиме."""
-        # Arrange
-        mock_config.testing = False
+    async def test_initialize_calls_initializer(self):
+        """Test that initialize calls component initializer."""
         app = Application()
 
-        # Act
-        with (
-            patch("src.main.Config.load", return_value=mock_config),
-            patch("src.main.setup_logging"),
-            patch("src.main.DatabaseManager", return_value=mock_database),
-            patch("src.main.DMarketAPI", return_value=mock_dmarket_api),
-            patch("src.main.ApplicationBuilder") as MockBuilder,
-        ):
-            MockBuilder.return_value.token.return_value.build.return_value = mock_bot
-            await app.initialize()
+        # Mock the initializer methods
+        app._initializer.initialize_config = AsyncMock()
+        app._initializer.initialize_whitelist = AsyncMock()
+        app._initializer.initialize_sentry = AsyncMock()
+        app._initializer.initialize_database = AsyncMock()
+        app._initializer.initialize_dmarket_api = AsyncMock()
+        app._initializer.initialize_telegram_bot = AsyncMock()
+        app._initializer.initialize_daily_report_scheduler = AsyncMock()
+        app._initializer.initialize_ai_scheduler = AsyncMock()
+        app._initializer.initialize_scanner_manager = AsyncMock()
+        app._initializer.initialize_inventory_manager = AsyncMock()
+        app._initializer.initialize_autopilot = AsyncMock()
+        app._initializer.initialize_websocket_manager = AsyncMock()
+        app._initializer.initialize_health_check_monitor = AsyncMock()
+        app._initializer.initialize_bot_integrator = AsyncMock()
 
-        # Assert
-        assert app.database == mock_database
-        mock_database.init_database.assert_called_once()
+        await app.initialize()
+
+        # Verify core methods were called
+        app._initializer.initialize_config.assert_awaited_once()
+        app._initializer.initialize_database.assert_awaited_once()
+        app._initializer.initialize_telegram_bot.assert_awaited_once()
 
     @pytest.mark.asyncio()
-    async def test_initialize_in_production_mode_tests_api_connection(
-        self, mock_config, mock_dmarket_api, mock_bot
-    ):
-        """Тест проверяет проверку подключения к API в production режиме."""
-        # Arrange
-        mock_config.testing = False
-        mock_dmarket_api.get_balance = AsyncMock(return_value={"balance": 100.0})
+    async def test_initialize_handles_exception(self):
+        """Test initialize handles exceptions properly."""
         app = Application()
+        app._initializer.initialize_config = AsyncMock(side_effect=Exception("Config error"))
 
-        # Act
-        with (
-            patch("src.main.Config.load", return_value=mock_config),
-            patch("src.main.setup_logging"),
-            patch("src.main.DMarketAPI", return_value=mock_dmarket_api),
-            patch("src.main.ApplicationBuilder") as MockBuilder,
-        ):
-            MockBuilder.return_value.token.return_value.build.return_value = mock_bot
-            await app.initialize()
-
-        # Assert
-        mock_dmarket_api.get_balance.assert_called_once()
-
-    @pytest.mark.asyncio()
-    async def test_initialize_continues_when_api_connection_fails(
-        self, mock_config, mock_dmarket_api, mock_bot
-    ):
-        """Тест проверяет продолжение инициализации при ошибке API."""
-        # Arrange
-        mock_config.testing = False
-        mock_dmarket_api.get_balance = AsyncMock(
-            side_effect=Exception("Connection failed")
-        )
-        app = Application()
-
-        # Act
-        with (
-            patch("src.main.Config.load", return_value=mock_config),
-            patch("src.main.setup_logging"),
-            patch("src.main.DMarketAPI", return_value=mock_dmarket_api),
-            patch("src.main.ApplicationBuilder") as MockBuilder,
-        ):
-            MockBuilder.return_value.token.return_value.build.return_value = mock_bot
-            await app.initialize()
-
-        # Assert - должно только залогировать предупреждение
-        assert app.dmarket_api == mock_dmarket_api
-
-    @pytest.mark.asyncio()
-    async def test_initialize_config_validation_error(self):
-        """Test initialization handles config load error."""
-        app = Application()
-
-        # Mock Config.load to raise ValueError directly
-        with (
-            patch("src.main.Config.load", side_effect=ValueError("Invalid config")),
-            pytest.raises(ValueError, match="Invalid config"),
-        ):
+        with pytest.raises(Exception, match="Config error"):
             await app.initialize()
 
     @pytest.mark.asyncio()
-    async def test_run_success(self, mock_config, mock_dmarket_api, mock_bot):
-        """Test successful application run."""
+    async def test_shutdown_calls_lifecycle(self, mock_database, mock_dmarket_api, mock_bot):
+        """Test shutdown delegates to lifecycle manager."""
         app = Application()
+        app._lifecycle.shutdown = AsyncMock()
 
-        # Mock initialize to prevent actual initialization
-        app.initialize = AsyncMock()
-        app.config = mock_config
-        app.bot = mock_bot
+        await app.shutdown(timeout=15.0)
 
-        # Mock shutdown event to trigger immediately
-        app._shutdown_event.set()
-
-        with patch.object(app, "_setup_signal_handlers"):
-            await app.run()
-
-            app.initialize.assert_called_once()
-            mock_bot.start.assert_called_once()
-
-    @pytest.mark.asyncio()
-    async def test_run_keyboard_interrupt(
-        self, mock_config, mock_dmarket_api, mock_bot
-    ):
-        """Тест проверяет обработку KeyboardInterrupt во время запуска."""
-        # Arrange
-        app = Application()
-        app.initialize = AsyncMock()
-        app.config = mock_config
-        app.bot = mock_bot
-        app.shutdown = AsyncMock()
-
-        # Simulate KeyboardInterrupt
-        mock_bot.start = AsyncMock(side_effect=KeyboardInterrupt())
-
-        # Act
-        with patch.object(app, "_setup_signal_handlers"):
-            await app.run()
-
-        # Assert
-        app.shutdown.assert_called_once()
-
-    @pytest.mark.asyncio()
-    async def test_shutdown_all_components(
-        self, mock_database, mock_dmarket_api, mock_bot
-    ):
-        """Test shutdown of all components."""
-        app = Application()
-        app.bot = mock_bot
-        app.dmarket_api = mock_dmarket_api
-        app.database = mock_database
-
-        await app.shutdown()
-
-        mock_bot.stop.assert_called_once()
-        mock_dmarket_api._close_client.assert_called_once()
-        mock_database.close.assert_called_once()
-
-    @pytest.mark.asyncio()
-    async def test_shutdown_with_errors(
-        self, mock_database, mock_dmarket_api, mock_bot
-    ):
-        """Тест проверяет, что shutdown перехватывает ошибки и не падает.
-        
-        Graceful shutdown должен продолжить закрывать оставшиеся компоненты
-        даже если один из них выбросил исключение.
-        """
-        # Arrange
-        app = Application()
-        app.bot = mock_bot
-        app.dmarket_api = mock_dmarket_api
-        app.database = mock_database
-
-        # Make bot.stop raise an exception
-        mock_bot.stop = AsyncMock(side_effect=Exception("Stop failed"))
-
-        # Act - не должно выбрасывать, только логировать
-        await app.shutdown()
-
-        # Assert - проверяем что bot.stop был вызван
-        mock_bot.stop.assert_called_once()
-        # Graceful shutdown продолжает закрывать остальные компоненты
-        # даже после ошибки в одном из них
-        mock_dmarket_api._close_client.assert_called_once()
-        mock_database.close.assert_called_once()
+        app._lifecycle.shutdown.assert_awaited_once_with(15.0)
 
     @pytest.mark.asyncio()
     async def test_shutdown_partial_components(self):
@@ -287,42 +160,17 @@ class TestApplication:
         app.bot = None
         app.dmarket_api = None
         app.database = None
+        app._lifecycle.shutdown = AsyncMock()
 
         # Should not raise any exceptions
         await app.shutdown()
 
-    def test_setup_signal_handlers(self):
-        """Test signal handler setup."""
+    def test_trigger_shutdown_sets_event(self):
+        """Test that trigger_shutdown sets shutdown event."""
         app = Application()
-
-        with patch("signal.signal") as mock_signal:
-            app._setup_signal_handlers()
-
-            # Verify SIGINT and SIGTERM are registered
-            calls = mock_signal.call_args_list
-            signals_registered = [call[0][0] for call in calls]
-
-            assert signal.SIGINT in signals_registered
-            assert signal.SIGTERM in signals_registered
-
-            # SIGQUIT should be registered on non-Windows systems
-            if hasattr(signal, "SIGQUIT"):
-                assert signal.SIGQUIT in signals_registered
-
-    def test_signal_handler_sets_shutdown_event(self):
-        """Test that signal handler sets shutdown event."""
-        app = Application()
-
-        # Setup signal handlers
-        with patch("signal.signal"):
-            app._setup_signal_handlers()
-
-        # Manually call the signal handler
-        # (we can't easily test actual signal delivery)
         assert not app._shutdown_event.is_set()
 
-        # Simulate signal by setting event directly
-        app._shutdown_event.set()
+        app._trigger_shutdown()
         assert app._shutdown_event.is_set()
 
 
@@ -337,7 +185,7 @@ class TestMainFunction:
 
         with (
             patch("sys.argv", ["main.py"]),
-            patch("src.main.Application", return_value=mock_app),
+            patch("src.core.application.Application", return_value=mock_app),
         ):
             await main()
 
@@ -351,7 +199,7 @@ class TestMainFunction:
 
         with (
             patch("sys.argv", ["main.py", "--config", "config/test.yaml"]),
-            patch("src.main.Application", return_value=mock_app) as MockApp,
+            patch("src.core.application.Application", return_value=mock_app) as MockApp,
         ):
             await main()
 
@@ -366,7 +214,7 @@ class TestMainFunction:
 
         with (
             patch("sys.argv", ["main.py", "--debug"]),
-            patch("src.main.Application", return_value=mock_app),
+            patch("src.core.application.Application", return_value=mock_app),
             patch.dict("os.environ", {}, clear=True),
         ):
             await main()
@@ -385,7 +233,7 @@ class TestMainFunction:
 
         with (
             patch("sys.argv", ["main.py", "--log-level", "WARNING"]),
-            patch("src.main.Application", return_value=mock_app),
+            patch("src.core.application.Application", return_value=mock_app),
             patch("logging.basicConfig") as mock_logging,
         ):
             await main()
@@ -403,7 +251,7 @@ class TestMainFunction:
 
         with (
             patch("sys.argv", ["main.py"]),
-            patch("src.main.Application", return_value=mock_app),
+            patch("src.core.application.Application", return_value=mock_app),
             pytest.raises(SystemExit) as exc_info,
         ):
             await main()
@@ -431,32 +279,38 @@ class TestWindowsEventLoopPolicy:
             mock_set_policy.assert_called()
 
 
-class TestLogging:
-    """Test logging configuration."""
+class TestBackwardCompatibility:
+    """Test backward compatibility of main.py after refactoring."""
 
-    @pytest.mark.asyncio()
-    async def test_logging_setup_called(self, mock_config):
-        """Test that logging setup is called during initialization."""
+    def test_application_class_available(self):
+        """Test that Application class is available from src.main."""
+        from src.main import Application
+
+        assert Application is not None
+
+    def test_main_function_available(self):
+        """Test that main function is available from src.main."""
+        from src.main import main
+
+        assert main is not None
+        assert callable(main)
+
+    def test_application_has_required_attributes(self):
+        """Test that Application has all required attributes."""
         app = Application()
+        assert hasattr(app, "config_path")
+        assert hasattr(app, "config")
+        assert hasattr(app, "database")
+        assert hasattr(app, "dmarket_api")
+        assert hasattr(app, "bot")
+        assert hasattr(app, "_shutdown_event")
 
-        with (
-            patch("src.main.Config.load", return_value=mock_config),
-            patch("src.main.setup_logging") as mock_setup_logging,
-            patch("src.main.DMarketAPI", return_value=AsyncMock()),
-            patch("src.main.ApplicationBuilder") as MockBuilder,
-        ):
-            MockBuilder.return_value.token.return_value.build.return_value = AsyncMock()
-            await app.initialize()
-
-            mock_setup_logging.assert_called_once_with(
-                level=mock_config.logging.level,
-                log_file=mock_config.logging.file,
-                format_string=mock_config.logging.format,
-            )
-
-    def test_logger_created(self):
-        """Test that module-level logger is created."""
-        from src.main import logger
-
-        assert isinstance(logger, logging.Logger)
-        assert logger.name == "src.main"
+    def test_application_has_required_methods(self):
+        """Test that Application has all required methods."""
+        app = Application()
+        assert hasattr(app, "initialize")
+        assert hasattr(app, "run")
+        assert hasattr(app, "shutdown")
+        assert callable(app.initialize)
+        assert callable(app.run)
+        assert callable(app.shutdown)

@@ -36,7 +36,10 @@ dependencies = [
     "aiolimiter (>=1.2.1,<2.0.0) ; python_version >= \"3.11\" and python_version < \"4.0\"",
     "structlog>=25.0.0",            # Structured logging
     "cryptography>=45.0.0",         # For JWT/encryption
+    "pandera[pandas]>=0.22.0",      # DataFrame validation for ML pipelines
+    "supermemory>=0.1.0",           # Persistent memory for AI assistants
 ]
+
 
 [project.optional-dependencies]
 monitoring = [

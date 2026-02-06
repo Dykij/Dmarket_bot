@@ -95,7 +95,7 @@ result = await nlp.parse_user_intent("Найди арбитраж в CS:GO до 
 
 ### Документация Skills
 
-📚 **Полное руководство**: [docs/SKILLS_MARKETPLACE_INTEGRATION_ANALYSIS.md](docs/SKILLS_MARKETPLACE_INTEGRATION_ANALYSIS.md)
+📚 **Руководство**: [docs/SKILLSMP_IMPLEMENTATION.md](docs/SKILLSMP_IMPLEMENTATION.md)
 
 Руководство содержит:
 - 🎯 Детальный анализ концепции SkillsMP.com
@@ -123,12 +123,11 @@ cp .env.example .env
 python -m src.main
 ```
 
-📖 **Подробная инструкция**: [ENV_SETUP_GUIDE.md](ENV_SETUP_GUIDE.md)
+📖 **Подробная инструкция**: [docs/QUICK_START.md](docs/QUICK_START.md)
 
 ### Для начинающих
 
 - **[Быстрый старт](docs/QUICK_START.md)** - Запуск бота за 5 минут
-- **[Настройка API ключей](ENV_SETUP_GUIDE.md)** - Как получить и настроить ключи
 - **[Архитектура проекта](docs/ARCHITECTURE.md)** - Понимание структуры проекта
 
 ### Для разработчиков
@@ -136,9 +135,6 @@ python -m src.main
 - **[🚀 GitHub Codespaces](.devcontainer/README.md)** - Разработка в облаке (рекомендуется!)
 - **[🤖 Copilot Space](.github/COPILOT_SPACE_CONFIG.md)** - Настройка GitHub Copilot Space
 - **[Руководство по разработке](CONTRIBUTING.md)** - Как помочь проекту
-- **[Тестирование](docs/testing_guide.md)** - Запуск и написание тестов
-- **[Качество кода](docs/code_quality_tools_guide.md)** - Ruff, MyPy
-- **[VS Code Insiders](docs/VS_CODE_INSIDERS_COMPLETE_GUIDE.md)** - GitHub Copilot и экспериментальные функции
 
 ---
 
@@ -146,12 +142,9 @@ python -m src.main
 
 ### 🚀 Интерфейс бота
 
-- **[Упрощенное меню (NEW!)](docs/SIMPLIFIED_MENU_GUIDE.md)** ⭐ - Быстрый доступ к основным функциям:
+- **[Арбитраж и Таргеты](docs/ARBITRAGE.md)** - Основные функции:
   - 🔍 Арбитраж (все игры сразу или ручной режим)
   - 🎯 Таргеты (ручной и автоматический)
-  - 💰 Баланс одной кнопкой
-  - 📊 Детальная статистика
-  - Команда: `/simple`
 
 ### Торговля и арбитраж
 
@@ -165,12 +158,11 @@ python -m src.main
 
 ### API и интеграции
 
-- **[API Reference](docs/api_reference.md)** - Справочник API методов
+- **[API Reference](docs/API_COMPLETE_REFERENCE.md)** - Справочник API методов
 - **[DMarket API Спецификация](docs/DMARKET_API_FULL_SPEC.md)** - Полная спецификация DMarket API v1.1.0
 - **[Telegram Bot API](docs/TELEGRAM_BOT_API.md)** - Справочник Telegram Bot API 9.2
-- **[Фильтры игр](docs/game_filters_guide.md)** - Фильтры для CS:GO, Dota 2, TF2, Rust
-- **[n8n Workflow Automation Analysis](docs/N8N_INTEGRATION_ANALYSIS.md)** 🆕 - Анализ возможностей n8n интеграции
-- **[SkillsMP.com Integration Analysis](docs/SKILLS_MARKETPLACE_INTEGRATION_ANALYSIS.md)** 🆕⭐ - Модульная AI-архитектура на основе SkillsMP.com
+- **[Фильтры игр](docs/ARBITRAGE.md#фильтры-по-играм)** - Фильтры для CS:GO, Dota 2, TF2, Rust
+- **[SkillsMP Integration](docs/SKILLSMP_IMPLEMENTATION.md)** 🆕⭐ - Модульная AI-архитектура на основе SkillsMP.com
 
 ### Разработка и инфраструктура
 
@@ -178,8 +170,7 @@ python -m src.main
 - **[База данных](docs/DATABASE_MIGRATIONS.md)** - Миграции Alembic
 - **[Развертывание](docs/deployment.md)** - Деплой (Docker, Heroku, AWS, GCP)
 - **[Безопасность](docs/SECURITY.md)** - Защита ключей и данных
-- **[Логирование](docs/logging_and_error_handling.md)** - Логирование и обработка ошибок
-- **[Кэширование](docs/CACHING_GUIDE.md)** - Система кэширования (TTLCache, Redis)
+- **[Проблемы](docs/TROUBLESHOOTING.md)** - Решение проблем
 
 ---
 
@@ -221,7 +212,7 @@ python -m src.main
 - 🎮 Team Fortress 2
 - 🎮 Rust
 
-Подробнее: [docs/game_filters_guide.md](docs/game_filters_guide.md)
+Подробнее: [docs/ARBITRAGE.md#фильтры-по-играм](docs/ARBITRAGE.md#фильтры-по-играм)
 
 ---
 
@@ -265,7 +256,7 @@ mypy src/
 pytest --cov=src --cov-report=html
 ```
 
-Подробнее: [docs/code_quality_tools_guide.md](docs/code_quality_tools_guide.md)
+Подробнее: [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ### Структура проекта
 
@@ -318,7 +309,7 @@ items = await api.get_market_items(game="csgo", limit=100)
 result = await api.buy_item(item_id, price)
 ```
 
-Подробнее: [docs/api_reference.md](docs/api_reference.md)
+Подробнее: [docs/API_COMPLETE_REFERENCE.md](docs/API_COMPLETE_REFERENCE.md)
 
 ### Arbitrage Scanner
 
@@ -425,7 +416,7 @@ tests/
 └── fixtures/             # Общие фикстуры
 ```
 
-Подробнее: [docs/testing_guide.md](docs/testing_guide.md)
+Подробнее: [docs/CONTRACT_TESTING.md](docs/CONTRACT_TESTING.md)
 
 ---
 
@@ -454,7 +445,7 @@ logger.info(
 - `ERROR` - Ошибки
 - `CRITICAL` - Критические ошибки
 
-Подробнее: [docs/logging_and_error_handling.md](docs/logging_and_error_handling.md)
+Подробнее: [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)
 
 ---
 
@@ -512,4 +503,4 @@ logger.info(
 
 ---
 
-**Последнее обновление**: 4 января 2026 г.
+**Последнее обновление**: 4 февраля 2026 г.

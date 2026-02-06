@@ -1,171 +1,27 @@
-# Docker Compose for DMarket Telegram Bot
-# Compose file format version: 3.8+ (Docker Compose v2)
-# Last updated: January 2026
-#
-# Repository Structure:
-# ├── src/          - Application source code
-# ├── config/       - Configuration files (YAML, JSON, hooks, Prometheus)
-# ├── data/         - Runtime data (volumes)
-# ├── logs/         - Application logs (volumes)
-# ├── alembic/      - Database migrations
-# ├── tests/        - Test suite
-# └── docs/         - Documentation
-#
-# Quick Start:
-#   docker-compose up -d          # Start all services
-#   docker-compose logs -f bot    # View bot logs
-#   docker-compose down           # Stop all services
-
 services:
   bot:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.arkady
     container_name: dmarket-bot
     restart: unless-stopped
+    env_file:
+      - .env
     volumes:
+      - .:/app
       - ./data:/app/data
       - ./logs:/app/logs
-      - ./.env:/app/.env
-    environment:
-      - PYTHONUNBUFFERED=1
-      - PYTHONDONTWRITEBYTECODE=1
-    command: python -m src
-    networks:
-      - bot-network
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    # Graceful shutdown configuration (Roadmap Task #4)
-    stop_signal: SIGTERM
-    stop_grace_period: 60s
-    # Health check using aiohttp endpoint (Roadmap Task #5)
-    healthcheck:
-      test: [ "CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/health').read()" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-    ports:
-      - "8080:8080" # Health check endpoint
+      - ./.arkady:/app/.arkady
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10mb"
+        max-file: "3"
 
-  # PostgreSQL database for analytics and user data
-  postgres:
-    image: postgres:16-alpine
-    container_name: dmarket-postgres
-    restart: unless-stopped
-    environment:
-      - POSTGRES_DB=dmarket_bot
-      - POSTGRES_USER=dmarket_user
-      - POSTGRES_PASSWORD=dmarket_password
+  watchtower:
+    image: containrrr/watchtower
+    container_name: dmarket-watchtower
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./scripts/init_db.sql:/docker-entrypoint-initdb.d/init.sql
-    ports:
-      - "5432:5432"
-    networks:
-      - bot-network
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U dmarket_user -d dmarket_bot" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
-
-  # Redis for caching and session storage
-  redis:
-    image: redis:7.4-alpine
-    container_name: dmarket-redis
-    restart: unless-stopped
-    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
-    volumes:
-      - redis_data:/data
-    ports:
-      - "6379:6379"
-    networks:
-      - bot-network
-    healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
-  # n8n Workflow Automation Platform
-  # Provides visual workflow editor for bot automation
-  # Access: http://localhost:5678
-  n8n:
-    image: n8nio/n8n:latest
-    container_name: dmarket-n8n
-    restart: unless-stopped
-    environment:
-      - N8N_BASIC_AUTH_ACTIVE=true
-      - N8N_BASIC_AUTH_USER=${N8N_USER:-admin}
-      - N8N_BASIC_AUTH_PASSWORD=${N8N_PASSWORD:-changeme}
-      - N8N_HOST=${N8N_HOST:-localhost}
-      - N8N_PORT=5678
-      - N8N_PROTOCOL=http
-      - WEBHOOK_URL=http://n8n:5678/
-      - GENERIC_TIMEZONE=UTC
-      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY:-}
-      - DB_TYPE=postgresdb
-      - DB_POSTGRESDB_HOST=postgres
-      - DB_POSTGRESDB_PORT=5432
-      - DB_POSTGRESDB_DATABASE=n8n
-      - DB_POSTGRESDB_USER=n8n_user
-      - DB_POSTGRESDB_PASSWORD=${N8N_DB_PASSWORD:-n8n_password}
-    ports:
-      - "5678:5678"
-    volumes:
-      - n8n_data:/home/node/.n8n
-      - ./n8n/workflows:/home/node/.n8n/workflows:rw
-      - ./n8n/credentials:/home/node/.n8n/credentials:rw
-    networks:
-      - bot-network
-    depends_on:
-      postgres:
-        condition: service_healthy
-    healthcheck:
-      test: [ "CMD-SHELL", "wget --spider -q http://localhost:5678/healthz || exit 1" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
-  # Optional: Monitoring with Prometheus (uncomment if needed)
-  # prometheus:
-  #   image: prom/prometheus:latest
-  #   container_name: dmarket-prometheus
-  #   restart: unless-stopped
-  #   ports:
-  #     - "9090:9090"
-  #   volumes:
-  #     - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
-  #     - prometheus_data:/prometheus
-  #   networks:
-  #     - bot-network
-
-  # Optional: Grafana for dashboards (uncomment if needed)
-  # grafana:
-  #   image: grafana/grafana:latest
-  #   container_name: dmarket-grafana
-  #   restart: unless-stopped
-  #   ports:
-  #     - "3000:3000"
-  #   environment:
-  #     - GF_SECURITY_ADMIN_PASSWORD=admin
-  #   volumes:
-  #     - grafana_data:/var/lib/grafana
-  #   networks:
-  #     - bot-network
-
-networks:
-  bot-network:
-    driver: bridge
-
-volumes:
-  postgres_data:
-  redis_data:
-  n8n_data:
-    # prometheus_data:
-    # grafana_data:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: --interval 3600 --cleanup
+    restart: always

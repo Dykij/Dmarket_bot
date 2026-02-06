@@ -123,3 +123,45 @@ jobs:
           base: ${{ github.event.repository.default_branch }}
           head: HEAD
           extra_args: --only-verified
+
+  dumpsterdiver:
+    name: DumpsterDiver Deep Secrets Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install DumpsterDiver
+        run: pip install DumpsterDiver
+
+      - name: Run DumpsterDiver
+        run: |
+          # Scan for API keys, passwords, tokens in source code
+          DumpsterDiver --path ./src --level 2 --outfile dumpsterdiver-report.json || true
+
+      - name: Process Results
+        run: |
+          echo "## 🔍 DumpsterDiver Deep Secrets Scan" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ -f dumpsterdiver-report.json ] && [ -s dumpsterdiver-report.json ]; then
+            echo "⚠️ Potential secrets found - review report" >> $GITHUB_STEP_SUMMARY
+            cat dumpsterdiver-report.json | head -50 >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ No hardcoded secrets detected" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Upload DumpsterDiver Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dumpsterdiver-report
+          path: dumpsterdiver-report.json
+          if-no-files-found: ignore

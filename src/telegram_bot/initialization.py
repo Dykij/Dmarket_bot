@@ -115,9 +115,13 @@ async def initialize_bot(token: str, setup_persistence: bool = True) -> Applicat
 
     # Добавляем сохранение состояния, если необходимо
     if setup_persistence:
-        from telegram.ext import PicklePersistence
+        from src.utils.db_persistence import SQLPersistence
+        from src.utils.database import DatabaseManager
+        from src.utils.config import get_config
 
-        persistence = PicklePersistence(filepath="data/bot_persistence.pickle")
+        config = get_config()
+        db_manager = DatabaseManager(database_url=config.DATABASE_URL)
+        persistence = SQLPersistence(db_manager=db_manager)
         builder = builder.persistence(persistence)
 
     application = builder.build()
