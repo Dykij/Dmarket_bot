@@ -1,5 +1,5 @@
+from typing import Any, Optional, Union, List
 from pydantic import BaseModel, Field, field_validator
-from typing import Optional, List, Any
 from datetime import datetime
 
 class BalanceResponse(BaseModel):
