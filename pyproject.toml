@@ -786,6 +786,8 @@ markers = [
     "fuzz: Fuzzing tests",
     "i18n: Internationalization tests",
     "high_risk: High-risk feature tests",
+    "medium_risk: Medium-risk feature tests",
+    "low_risk: Low-risk feature tests",
     "regression: Regression tests for bug fixes",
 ]
 asyncio_mode = "auto"  # Auto-detect async tests
