@@ -2074,17 +2074,17 @@ class TestFindProfitableItems:
             },
         ]
 
-        # Патчим get_all_market_items (не get_market_items!) и context manager
+        # Патчим get_market_items (не get_market_items!) и context manager
         with (
             patch.object(
-                trader.api, "get_all_market_items", new_callable=AsyncMock
+                trader.api, "get_market_items", new_callable=AsyncMock
             ) as mock_get_items,
             patch.object(
                 trader.api, "__aenter__", new_callable=AsyncMock
             ) as mock_aenter,
             patch.object(trader.api, "__aexit__", new_callable=AsyncMock) as mock_aexit,
         ):
-            mock_get_items.return_value = mock_items
+            mock_get_items.return_value = {"objects": mock_items}
             mock_aenter.return_value = trader.api
             mock_aexit.return_value = None
 

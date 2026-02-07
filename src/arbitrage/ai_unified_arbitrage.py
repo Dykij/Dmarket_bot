@@ -313,8 +313,8 @@ class AIUnifiedArbitrage:
                     ai_confidence = analysis.price_confidence
                     ai_recommendation = analysis.recommendation.value
                     risk_score = 0.3 if analysis.risk_level.value == "low" else 0.7
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.error(f"Error during AI analysis for {item_name}: {e}")
 
             return ArbitrageOpportunity(
                 item_name=item_name,
@@ -438,8 +438,8 @@ class AIUnifiedArbitrage:
                 try:
                     analysis = await self.ai.analyze_item(dm_item)
                     ai_confidence = analysis.price_confidence
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.error(f"Error during AI analysis for {item_name}: {e}")
 
             return ArbitrageOpportunity(
                 item_name=item_name,

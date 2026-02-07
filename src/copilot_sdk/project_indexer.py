@@ -302,7 +302,7 @@ class ProjectIndexer:
     async def _index_python_file(self, file: Path) -> FileInfo:
         """Индексировать Python файл."""
         content = file.read_text(encoding="utf-8")
-        content_hash = hashlib.md5(content.encode()).hexdigest()
+        content_hash = hashlib.sha256(content.encode()).hexdigest()
 
         symbols = await self._extract_symbols(content, str(file))
 

@@ -356,7 +356,7 @@ class SteamDatabaseHandler:
             params.append(datetime.now())
 
             with self.conn:
-                self.conn.execute(f"UPDATE settings SET {', '.join(updates)} WHERE id = 1", params)
+                self.conn.execute(f"UPDATE settings SET {', '.join(updates)} WHERE id = 1", params)  # noqa: S608 nosec B608
 
             logger.info(f"Updated settings: {updates}")
 

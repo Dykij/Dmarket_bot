@@ -508,6 +508,7 @@ class CommandCenter:
 
         try:
             portfolio_value = 0.0
+            balance_usd = 0.0
             items_count = 0
 
             # Баланс

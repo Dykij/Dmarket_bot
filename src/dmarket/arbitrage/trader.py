@@ -254,13 +254,14 @@ class ArbitrageTrader:
 
         try:
             async with self.api:
-                market_items = await self.api.get_all_market_items(
+                response = await self.api.get_market_items(
                     game=game,
-                    max_items=max_items,
+                    limit=max_items,
                     price_from=min_price,
                     price_to=max_price,
                     sort="price",
                 )
+                market_items = response.get("objects", []) if isinstance(response, dict) else []
 
             if not market_items:
                 return []
