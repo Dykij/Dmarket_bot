@@ -286,6 +286,12 @@ class BaseDMarketClient:
         except: return {"error": "Non-JSON response", "status_code": response.status_code}
 
     async def _request(self, method: str, path: str, params: dict[str, Any] | None = None, data: dict[str, Any] | None = None, force_refresh: bool = False) -> dict[str, Any]:
+        try:
+            from src.utils.prometheus_metrics import dmarket_requests_total
+            dmarket_requests_total.labels(endpoint=path, method=method.upper()).inc()
+        except:
+            pass
+
         client = await self._get_client()
         url = f"{self.api_url}{path}"
         params_items = self._prepare_sorted_params(params)

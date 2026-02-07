@@ -43,6 +43,16 @@ class PrometheusServer:
 
     async def metrics_handler(self, request: web.Request) -> web.Response:
         """Обработчик /metrics endpoint."""
+        try:
+            import psutil
+            from src.utils.prometheus_metrics import cpu_usage, ram_usage
+            cpu_usage.set(psutil.cpu_percent())
+            ram_usage.set(psutil.virtual_memory().percent)
+        except ImportError:
+            logger.warning("psutil_not_found_metrics_degraded")
+        except Exception as e:
+            logger.error("metrics_update_failed", error=str(e))
+
         metrics = MetricsCollector.get_metrics()
         return web.Response(body=metrics, content_type="text/plain", charset="utf-8")
 

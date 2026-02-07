@@ -49,7 +49,7 @@ async def sniper_cycle(
 
             # 2. Get sales history for analysis
             # Using the new aggregator endpoint
-            history_response = await api._request(
+            history_response = await api.buy_item(
                 "GET",
                 f"/trade-aggregator/v1/last-sales?title={title}&gameId=a8db99ca-dc45-4c0e-9989-11ba71ed97a2",
             )
@@ -83,7 +83,7 @@ async def sniper_cycle(
                     logger.warning(f"No offerId for {title}")
                     continue
 
-                buy_res = await api._request(
+                buy_res = await api.buy_item(
                     "POST",
                     api.ENDPOINT_PURCHASE,
                     data={"offers": [{"offerId": offer_id, "price": item.get("price")}]},

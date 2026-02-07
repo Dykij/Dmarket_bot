@@ -189,7 +189,7 @@ class WaxpeerAPI:  # noqa: PLR0904
         """Создание HTTP клиента при входе в контекст."""
         self._client = httpx.AsyncClient(
             timeout=self.timeout,
-            headers={"Accept": "application/json"},
+            headers={"Accept": "application/json", "api-key": self.api_key},
         )
         return self
 
@@ -597,6 +597,31 @@ class WaxpeerAPI:  # noqa: PLR0904
         return data.get("items", {})
 
     # === Steam Inventory ===
+
+    async def fetch_inventory(
+        self,
+        game: WaxpeerGame = WaxpeerGame.CS2,
+    ) -> list[dict[str, Any]]:
+        """
+        Массовое получение инвентаря Steam (Bulk Fetch).
+        API: GET /inventory/fetch
+
+        Более эффективно чем постраничный get_my_inventory.
+
+        Args:
+            game: Игра
+
+        Returns:
+            Список предметов из инвентаря Steam
+        """
+        data = await self._request(
+            "GET",
+            "inventory/fetch",
+            params={
+                "game": game.value,
+            },
+        )
+        return data.get("items", [])
 
     async def get_my_inventory(
         self,

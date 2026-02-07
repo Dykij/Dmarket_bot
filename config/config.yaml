@@ -60,13 +60,13 @@ scanner:
   max_concurrent_scans: ${MAX_CONCURRENT_SCANS:2} # снижено с 5 до 2
 
   # Интервал между сканированиями (секунды)
-  scan_interval_seconds: ${SCAN_INTERVAL:120} # 2 минуты между сканами
+  scan_interval_seconds: ${SCAN_INTERVAL:10.0} # 2 минуты между сканами
 
   # Adaptive scanner settings
   adaptive:
     enabled: ${ADAPTIVE_SCAN_ENABLED:true}
-    min_interval: ${ADAPTIVE_MIN_INTERVAL:60} # 1 минута при высокой волатильности
-    max_interval: ${ADAPTIVE_MAX_INTERVAL:300} # 5 минут при стабильном рынке
+    min_interval: ${ADAPTIVE_MIN_INTERVAL:2.5} # 1 минута при высокой волатильности
+    max_interval: ${ADAPTIVE_MAX_INTERVAL:10.0} # 5 минут при стабильном рынке
 
   # Parallel scanner settings
   parallel:

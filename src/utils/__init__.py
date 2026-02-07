@@ -31,7 +31,8 @@ except ImportError:
     validate_required_env_vars = None
 
 try:
-    from src.utils.shutdown_handler import ShutdownHandler, shutdown_handler
+    from src.utils.extended_shutdown_handler import ExtendedShutdownHandler as ShutdownHandler
+    from src.utils.extended_shutdown_handler import extended_shutdown_handler as shutdown_handler
 except ImportError:
     ShutdownHandler = None
     shutdown_handler = None

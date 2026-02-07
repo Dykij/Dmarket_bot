@@ -12,6 +12,14 @@ import time
 from prometheus_client import Counter, Gauge, Histogram, Info, generate_latest, make_asgi_app
 
 
+# Метрика RPS (DMarket Requests Per Minute/Total)
+dmarket_requests_total = Counter(
+    "dmarket_requests_total",
+    "Total number of DMarket API requests",
+    ["endpoint", "method"]
+)
+
+
 # =============================================================================
 # Bot Metrics (Roadmap Task #8: Enhanced)
 # =============================================================================
@@ -226,6 +234,17 @@ app_uptime_seconds = Gauge(
 bot_uptime_seconds = Gauge(
     "bot_uptime_seconds",
     "Bot uptime in seconds",
+)
+
+# Ryzen 7 5700x Metrics
+cpu_usage = Gauge(
+    "cpu_usage_percent",
+    "CPU usage percentage (Ryzen 7 5700x)",
+)
+
+ram_usage = Gauge(
+    "ram_usage_percent",
+    "RAM usage percentage",
 )
 
 # =============================================================================

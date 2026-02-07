@@ -15,9 +15,40 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+import enum
 from typing import Any, Callable, Generator
 
 import structlog
+
+
+class AuditEventType(enum.StrEnum):
+    """Типы аудит событий."""
+    USER_LOGIN = "user_login"
+    USER_LOGOUT = "user_logout"
+    USER_REGISTER = "user_register"
+    USER_UPDATE = "user_update"
+    USER_DELETE = "user_delete"
+    API_KEY_ADD = "api_key_add"
+    API_KEY_UPDATE = "api_key_update"
+    API_KEY_DELETE = "api_key_delete"
+    API_KEY_VIEW = "api_key_view"
+    TARGET_CREATE = "target_create"
+    TARGET_DELETE = "target_delete"
+    TARGET_UPDATE = "target_update"
+    ITEM_BUY = "item_buy"
+    ITEM_SELL = "item_sell"
+    ARBITRAGE_SCAN = "arbitrage_scan"
+    ARBITRAGE_OPPORTUNITY = "arbitrage_opportunity"
+    SETTINGS_UPDATE = "settings_update"
+    LANGUAGE_CHANGE = "language_change"
+    ADMIN_USER_BAN = "admin_user_ban"
+    ADMIN_USER_UNBAN = "admin_user_unban"
+    ADMIN_RATE_LIMIT_CHANGE = "admin_rate_limit_change"
+    ADMIN_FEATURE_FLAG_CHANGE = "admin_feature_flag_change"
+    SYSTEM_ERROR = "system_error"
+    SYSTEM_WARNING = "system_warning"
+    RATE_LIMIT_EXCEEDED = "rate_limit_exceeded"
+    SECURITY_VIOLATION = "security_violation"
 
 
 # Context variable to hold canonical log data per request
@@ -162,6 +193,29 @@ class CanonicalLogManager:
         ctx = _canonical_context.get()
         ctx.update(kwargs)
         _canonical_context.set(ctx)
+
+    def audit(
+        self,
+        event_type: AuditEventType | str,
+        action: str,
+        user_id: int | None = None,
+        success: bool = True,
+        severity: str = "info",
+        **kwargs: Any,
+    ) -> None:
+        """Emit an audit log entry."""
+        event_type_str = event_type.value if isinstance(event_type, AuditEventType) else event_type
+        log_method = getattr(self._logger, severity.lower(), self._logger.info)
+        log_method(
+            "audit_event",
+            is_audit=True,
+            event_type=event_type_str,
+            action=action,
+            user_id=user_id,
+            success=success,
+            severity=severity,
+            **kwargs,
+        )
 
 
 def canonical_log_processor(

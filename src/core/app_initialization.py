@@ -486,6 +486,26 @@ class ComponentInitializer:
         except Exception as e:
             logger.warning(f"Failed to initialize Bot Integrator: {e}")
 
+    async def initialize_prometheus_exporter(self) -> None:
+        """Initialize Prometheus metrics exporter."""
+        if self.app.config.testing:
+            return
+
+        logger.info("Initializing Prometheus Metrics Exporter...")
+        try:
+            from src.utils.prometheus_server import PrometheusServer
+
+            prometheus_port = int(os.getenv("PROMETHEUS_PORT", "9090"))
+            prometheus_host = os.getenv("PROMETHEUS_HOST", "127.0.0.1")
+
+            self.app.prometheus_server = PrometheusServer(
+                host=prometheus_host,
+                port=prometheus_port,
+            )
+            logger.info(f"Prometheus Exporter initialized on {prometheus_host}:{prometheus_port}")
+        except Exception as e:
+            logger.warning(f"Failed to initialize Prometheus Exporter: {e}")
+
     def _get_admin_users(self) -> list[int]:
         """Get list of admin user IDs."""
         admin_users_raw = (

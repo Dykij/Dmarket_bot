@@ -1,8 +1,0 @@
-{
-  "main_branch": "main",
-  "branch_prefix": "arkady/feat-",
-  "require_pr": true,
-  "auto_merge": false,
-  "gh_cli_support": true,
-  "auto_issue_on_failure": true
-}

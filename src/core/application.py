@@ -56,6 +56,7 @@ class Application:
         self.health_check_monitor: Any = None
         self.ai_scheduler: Any = None
         self.bot_integrator: Any = None
+        self.prometheus_server: Any = None
         self._scanner_task: asyncio.Task | None = None
 
         # Initialize core components
@@ -114,6 +115,9 @@ class Application:
 
             # Step 14: Initialize Bot Integrator
             await self._initializer.initialize_bot_integrator()
+
+            # Step 15: Initialize Prometheus Exporter
+            await self._initializer.initialize_prometheus_exporter()
 
             logger.info("Application initialization complete")
 

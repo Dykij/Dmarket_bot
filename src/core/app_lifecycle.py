@@ -63,6 +63,11 @@ class ApplicationLifecycle:
             await self.app.bot_integrator.start()
             logger.info("✅ Bot Integrator started")
 
+        # Start Prometheus Exporter
+        if hasattr(self.app, "prometheus_server") and self.app.prometheus_server:
+            await self.app.prometheus_server.start()
+            logger.info("✅ Prometheus Metrics Exporter started")
+
     async def _start_scanner(self) -> None:
         """Start the scanner manager."""
         logger.info("Starting Scanner Manager...")
@@ -165,6 +170,16 @@ class ApplicationLifecycle:
     async def _stop_monitoring_components(self) -> None:
         """Stop health check and websocket components."""
         logger.info("Stopping monitoring components...")
+
+        if hasattr(self.app, "prometheus_server") and self.app.prometheus_server:
+            try:
+                await asyncio.wait_for(
+                    self.app.prometheus_server.stop(),
+                    timeout=5.0,
+                )
+                logger.info("✅ Prometheus Metrics Exporter stopped")
+            except Exception as e:
+                logger.warning(f"⚠️ Error stopping Prometheus Exporter: {e}")
 
         if self.app.health_check_monitor:
             try:
