@@ -1,30 +1,31 @@
 # 🧠 DMarket Telegram Bot: Dual Brain Architecture (2026)
 
 <!-- Badges: Project Info -->
-[![Python Version](https://img.shields.io/badge/python-3.11%2B-blue?logo=python&logoColor=white)](https://www.python.org/)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/Dykij/DMarket-Telegram-Bot/ci.yml?branch=main&label=Build&logo=github)](https://github.com/Dykij/DMarket-Telegram-Bot/actions/workflows/ci.yml)
+[![Python Version](https://img.shields.io/badge/python-3.10%2B-blue?logo=python&logoColor=white)](https://www.python.org/)
 [![License](https://img.shields.io/github/license/Dykij/DMarket-Telegram-Bot?color=green)](LICENSE)
+[![Maintained](https://img.shields.io/badge/Maintained%3F-Yes%20(2026)-brightgreen.svg)](https://github.com/Dykij/DMarket-Telegram-Bot/graphs/commit-activity)
 [![Dual Brain](https://img.shields.io/badge/Architecture-Dual%20Brain-purple?logo=openai)](https://github.com/Dykij/DMarket-Telegram-Bot)
-
-<!-- Badges: CI/CD Status -->
-[![CI Status](https://github.com/Dykij/DMarket-Telegram-Bot/actions/workflows/ci.yml/badge.svg)](https://github.com/Dykij/DMarket-Telegram-Bot/actions/workflows/ci.yml)
 
 ---
 
 > 🤖 **Automated Trading System** featuring a revolutionary **Dual Brain Architecture** that combines classic deterministic logic with advanced AI reasoning (Arkady Core).
 
-## 🧠 Dual Brain Architecture
+## 🌟 Key Features (2026 Edition)
 
-The system operates on two parallel cognitive tracks:
+### 🧠 Dual Brain System
+The system dynamically switches cognitive models based on task complexity:
+*   **Gemini 3 Flash:** Handles high-speed, low-latency tasks like market scanning and basic pattern recognition.
+*   **Gemini 3 Pro:** Engages for complex strategic decisions, risk assessment, and code self-optimization.
 
-1.  **Logical Core (Brain A):**
-    *   Deterministic, high-speed execution.
-    *   Handles real-time arbitrage, order placement, and WebSocket monitoring.
-    *   Ensures safety, rate limiting, and exact compliance with market rules.
+### 🛡️ Advanced Resilience
+Built for stability in volatile market conditions:
+*   **Circuit Breaker:** Automatically detects API failures and pauses requests to prevent bans.
+*   **Bulkhead Pattern:** Isolates critical components so a failure in one module (e.g., price history) doesn't crash the trading engine.
 
-2.  **Arkady Intelligence (Brain B):**
-    *   AI-driven decision making and strategic oversight.
-    *   Analyzes market trends, predicts liquidity shifts, and manages risk.
-    *   Self-optimizing code maintenance and DevOps integration.
+### ⚡ Scalable Architecture
+*   **Fully Asynchronous Engine:** Powered by the new `integrated_arbitrage_scanner`, capable of processing thousands of market updates per second without blocking.
+*   **Event-Driven Design:** Decoupled components communicate via an internal event bus for maximum flexibility.
 
 ---
 
@@ -32,13 +33,13 @@ The system operates on two parallel cognitive tracks:
 
 | Metric               | Value                      |
 | -------------------- | -------------------------- |
-| **Version**          | 2026.2.2 (Arkady Edition)  |
+| **Version**          | 2026.2.3 (Arkady Edition)  |
 | **Architecture**     | Dual Brain (Logic + AI)    |
 | **Python**           | 3.11+                      |
 | **Testing**          | Comprehensive CI/CD        |
 | **License**          | MIT                        |
 
-## 🎯 Key Features
+## 🎯 Core Capabilities
 
 - **Multi-Game Arbitrage:** CS2, Dota 2, TF2, Rust.
 - **Advanced Target System:** Smart buy orders with auto-adjustment.
