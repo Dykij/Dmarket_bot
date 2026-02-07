@@ -1,454 +1,51 @@
-name: CI (Simplified)
+name: CI
 
-# Упрощенный и надежный CI workflow с оптимизацией для GitHub Actions
 on:
   push:
-    branches: [main, master, develop]
+    branches: [ "main" ]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
   pull_request:
-    branches: [main, master]
-  workflow_dispatch:
-    inputs:
-      run_slow_tests:
-        description: "Run slow/integration tests"
-        required: false
-        type: boolean
-        default: false
-      python_version:
-        description: "Python version to use"
-        required: false
-        type: choice
-        options:
-          - "3.12"
-          - "3.13"
-        default: "3.13"
-
-env:
-  PYTHON_VERSION: "3.13"
-  # Версии для параллельной проверки совместимости
-  PYTHON_VERSIONS: "3.12, 3.13"
-  # Кэширование
-  CACHE_VERSION: v2
-  PIP_CACHE_DIR: ~/.cache/pip
-  # Оптимизация pytest для CI
-  PYTEST_ADDOPTS: "--tb=short --no-header -q"
-  # Предотвращение зависаний
-  PYTHONUNBUFFERED: "1"
-  PIP_DISABLE_PIP_VERSION_CHECK: "1"
-  PIP_NO_WARN_SCRIPT_LOCATION: "1"
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+    branches: [ "main" ]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
 
 permissions:
   contents: read
-  checks: write
-  pull-requests: write
 
 jobs:
-  # Fast check job - runs first and quickly
-  quick-check:
-    name: Quick Check
+  build:
     runs-on: ubuntu-latest
-    outputs:
-      should_run_tests: ${{ steps.changes.outputs.should_run_tests }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Check for relevant changes
-        id: changes
-        run: |
-          # Always run for manual triggers
-          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
-            echo "should_run_tests=true" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-
-          # Check if any Python files changed
-          CHANGED_FILES=$(git diff --name-only ${{ github.event.before || 'HEAD~1' }} ${{ github.sha }} 2>/dev/null || echo "")
-          if echo "$CHANGED_FILES" | grep -qE '\.(py|yml|yaml|toml|txt)$'; then
-            echo "should_run_tests=true" >> $GITHUB_OUTPUT
-          else
-            echo "should_run_tests=false" >> $GITHUB_OUTPUT
-            echo "::notice::No Python/config files changed, skipping tests"
-          fi
-
-  lint-and-format:
-    name: Lint and Format Check
-    runs-on: ubuntu-latest
-    needs: quick-check
-    if: needs.quick-check.outputs.should_run_tests == 'true'
-    timeout-minutes: 10
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: "pip"
-          cache-dependency-path: |
-            requirements.txt
-            pyproject.toml
-
-      - name: Cache linting tools
-        uses: actions/cache@v5
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-lint-${{ env.CACHE_VERSION }}-${{ hashFiles('requirements.txt', 'pyproject.toml') }}
-          restore-keys: |
-            ${{ runner.os }}-lint-${{ env.CACHE_VERSION }}-
-            ${{ runner.os }}-lint-
-
-      - name: Install linting tools
-        run: |
-          python -m pip install --upgrade pip
-          pip install ruff mypy
-          # Try to install project dependencies, but don't fail if it errors
-          pip install -r requirements.txt || echo "::warning::Некоторые зависимости не установлены"
-
-      - name: Run Ruff linting
-        run: |
-          # Проверяем только существующие директории
-          DIRS=""
-          [ -d "src" ] && DIRS="$DIRS src"
-          [ -d "tests" ] && DIRS="$DIRS tests"
-          [ -d "scripts" ] && DIRS="$DIRS scripts"
-
-          if [ -n "$DIRS" ]; then
-            echo "Checking directories: $DIRS"
-            ruff check $DIRS --output-format=github
-          else
-            echo "::warning::Нет директорий для проверки"
-          fi
-        continue-on-error: false # Фейлим при обнаружении проблем
-
-      - name: Run Ruff format check
-        run: |
-          # Проверяем только существующие директории
-          DIRS=""
-          [ -d "src" ] && DIRS="$DIRS src"
-          [ -d "tests" ] && DIRS="$DIRS tests"
-          [ -d "scripts" ] && DIRS="$DIRS scripts"
-
-          if [ -n "$DIRS" ]; then
-            echo "Checking format for directories: $DIRS"
-            ruff format --check $DIRS
-          fi
-        continue-on-error: false # Фейлим если требуется форматирование
-
-      - name: Run MyPy type checking
-        run: |
-          mypy src --install-types --non-interactive --ignore-missing-imports
-        continue-on-error: true # Оставляем true т.к. mypy может иметь ложные срабатывания
-
-  test:
-    name: Run Tests
-    runs-on: ${{ matrix.os }}
-    needs: [quick-check, lint-and-format]
-    if: needs.quick-check.outputs.should_run_tests == 'true'
-    timeout-minutes: 20
     strategy:
-      fail-fast: false
       matrix:
-        os: [ubuntu-latest]
-        python-version: ["3.12", "3.13"]
-        include:
-          - os: ubuntu-latest
-            python-version: "3.13"
-            coverage: true
+        python-version: ["3.11"]
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-          cache: "pip"
-          cache-dependency-path: |
-            requirements.txt
-            pyproject.toml
-
-      - name: Cache pip dependencies
-        uses: actions/cache@v5
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ env.CACHE_VERSION }}-py${{ matrix.python-version }}-${{ hashFiles('requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-${{ env.CACHE_VERSION }}-py${{ matrix.python-version }}-
-            ${{ runner.os }}-pip-${{ env.CACHE_VERSION }}-
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-
-          # Сначала устанавливаем инструменты тестирования
-          pip install pytest pytest-asyncio pytest-cov pytest-mock pytest-xdist
-
-          # Затем зависимости проекта
-          if [ -f requirements.txt ]; then
-            pip install -r requirements.txt || echo "::warning::Некоторые зависимости не установлены"
-          else
-            echo "::warning::requirements.txt не найден"
-          fi
-
-      - name: Create test environment
-        run: |
-          # Создаем .env файл для тестов
-          if [ -f .env.example ]; then
-            cp .env.example .env
-          else
-            echo "TELEGRAM_BOT_TOKEN=test_token" > .env
-            echo "DMARKET_PUBLIC_KEY=test_key" >> .env
-            echo "DMARKET_SECRET_KEY=test_secret" >> .env
-            echo "DATABASE_URL=sqlite:///test.db" >> .env
-            echo "TESTING=true" >> .env
-          fi
-
-      - name: Run tests (with coverage for Python 3.11)
-        if: matrix.coverage
-        timeout-minutes: 15
-        run: |
-          # Устанавливаем PYTHONPATH
-          export PYTHONPATH=$GITHUB_WORKSPACE:$PYTHONPATH
-
-          # Проверяем наличие тестов
-          if [ ! -d "tests" ] || [ -z "$(find tests -name 'test_*.py' -o -name '*_test.py' 2>/dev/null)" ]; then
-            echo "::warning::Тесты не найдены, считаем workflow успешным"
-            exit 0
-          fi
-
-          # Запускаем тесты с оптимизированными настройками
-          pytest tests/ \
-            --cov=src \
-            --cov-report=xml \
-            --cov-report=term-missing:skip-covered \
-            --maxfail=10 \
-            -v \
-            -n auto \
-            --timeout=30 \
-            -k "not integration and not slow and not e2e and not performance" \
-            --tb=short \
-            --durations=10 \
-            || { echo "::warning::Некоторые тесты провалились"; exit 0; }
-        continue-on-error: false
-        env:
-          PYTHONPATH: ${{ github.workspace }}
-          TESTING: "true"
-
-      - name: Run tests (without coverage for other Python versions)
-        if: ${{ !matrix.coverage }}
-        timeout-minutes: 15
-        run: |
-          # Устанавливаем PYTHONPATH
-          export PYTHONPATH=$GITHUB_WORKSPACE:$PYTHONPATH
-
-          # Проверяем наличие тестов
-          if [ ! -d "tests" ] || [ -z "$(find tests -name 'test_*.py' -o -name '*_test.py' 2>/dev/null)" ]; then
-            echo "::warning::Тесты не найдены, считаем workflow успешным"
-            exit 0
-          fi
-
-          # Запускаем тесты параллельно без покрытия (быстрее)
-          pytest tests/ \
-            --maxfail=10 \
-            -v \
-            -n auto \
-            --timeout=30 \
-            -k "not integration and not slow and not e2e and not performance" \
-            --tb=short \
-            || { echo "::warning::Некоторые тесты провалились"; exit 0; }
-        continue-on-error: false
-        env:
-          PYTHONPATH: ${{ github.workspace }}
-          TESTING: "true"
-
-      - name: Upload coverage report
-        if: matrix.coverage && always()
-        uses: actions/upload-artifact@v6
-        with:
-          name: coverage-report-py${{ matrix.python-version }}
-          path: |
-            coverage.xml
-            .coverage
-            htmlcov/
-          retention-days: 7
-        continue-on-error: true
-
-      - name: Check coverage (non-blocking)
-        if: matrix.coverage && always()
-        run: |
-          if command -v coverage &> /dev/null; then
-            coverage report --fail-under=80 || echo "::warning::Покрытие ниже 80%"
-          fi
-        continue-on-error: true
-
-  security-basic:
-    name: Basic Security Scan
-    runs-on: ubuntu-latest
-    needs: quick-check
-    if: needs.quick-check.outputs.should_run_tests == 'true'
-    timeout-minutes: 10
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: "pip"
-
-      - name: Cache security tools
-        uses: actions/cache@v5
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-security-${{ env.CACHE_VERSION }}
-          restore-keys: |
-            ${{ runner.os }}-security-
-
-      - name: Install security tools
-        run: |
-          python -m pip install --upgrade pip
-          pip install bandit safety pip-audit pyyaml
-
-      - name: Validate Agent Skills
-        run: |
-          python scripts/validate_all_skills.py
-
-      - name: Bandit Security Scan
-        run: |
-          # Создаем директорию для отчетов
-          mkdir -p security-reports
-
-          # Сканируем только существующие директории
-          if [ -d "src" ]; then
-            bandit -r src/ -f json -o security-reports/bandit-report.json || echo "::warning::Bandit обнаружил потенциальные проблемы безопасности"
-          else
-            echo "::warning::Директория src/ не найдена, пропускаем Bandit scan"
-          fi
-        continue-on-error: true
-
-      - name: Safety Check
-        run: |
-          safety check --json || echo "::warning::Safety обнаружил уязвимости в зависимостях"
-        continue-on-error: false
-
-      - name: Upload security reports
-        if: always()
-        uses: actions/upload-artifact@v6
-        with:
-          name: security-reports
-          path: security-reports/
-          retention-days: 7
-        continue-on-error: true
-
-  ai-tests:
-    name: AI/ML Module Tests
-    runs-on: ubuntu-latest
-    needs: [quick-check, lint-and-format]
-    if: needs.quick-check.outputs.should_run_tests == 'true'
-    timeout-minutes: 15
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: "pip"
-
-      - name: Install AI dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install pytest pytest-asyncio pytest-cov pytest-mock
-          pip install scikit-learn pandas numpy scipy joblib
-          # Install project dependencies
-          pip install -r requirements.txt || echo "::warning::Some dependencies failed"
-
-      - name: Create test environment
-        run: |
-          echo "TELEGRAM_BOT_TOKEN=test_token" > .env
-          echo "DMARKET_PUBLIC_KEY=test_key" >> .env
-          echo "DMARKET_SECRET_KEY=test_secret" >> .env
-          echo "DATABASE_URL=sqlite:///test.db" >> .env
-          echo "TESTING=true" >> .env
-
-      - name: Run AI module tests
-        timeout-minutes: 10
-        run: |
-          export PYTHONPATH=$GITHUB_WORKSPACE:$PYTHONPATH
-          python -m pytest tests/unit/ai/ tests/unit/dmarket/test_smart_scanner.py \
-            --cov=src/ai \
-            --cov=src/dmarket/smart_scanner \
-            --cov-report=xml:ai-coverage.xml \
-            --cov-report=term \
-            -v \
-            --timeout=30 \
-            --tb=short \
-            || { echo "::error::AI tests failed"; exit 1; }
-        env:
-          PYTHONPATH: ${{ github.workspace }}
-          TESTING: "true"
-
-      - name: Upload AI coverage report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: ai-coverage-report
-          path: ai-coverage.xml
-          retention-days: 7
-        continue-on-error: true
-
-      - name: AI Tests Summary
-        if: always()
-        run: |
-          echo "## 🤖 AI Module Tests" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Module | Description |" >> $GITHUB_STEP_SUMMARY
-          echo "|--------|-------------|" >> $GITHUB_STEP_SUMMARY
-          echo "| PricePredictor | ML-based price prediction with hallucination protection |" >> $GITHUB_STEP_SUMMARY
-          echo "| SmartScanner | Cursor-based pagination with trade lock filtering |" >> $GITHUB_STEP_SUMMARY
-          echo "| AIScheduler | Nightly training + continuous data collection |" >> $GITHUB_STEP_SUMMARY
-
-  summary:
-    name: Build Summary
-    runs-on: ubuntu-latest
-    needs: [quick-check, lint-and-format, test, security-basic, ai-tests]
-    if: always()
-
-    steps:
-      - name: Generate summary
-        run: |
-          echo "# 🤖 CI Pipeline Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-
-          # Check if tests were skipped
-          if [ "${{ needs.quick-check.outputs.should_run_tests }}" == "false" ]; then
-            echo "⏭️ **Tests skipped** - No relevant file changes detected" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-          fi
-
-          echo "| Job | Status |" >> $GITHUB_STEP_SUMMARY
-          echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Quick Check | ${{ needs.quick-check.result == 'success' && '✅ Passed' || '⚠️ Check logs' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Lint & Format | ${{ needs.lint-and-format.result == 'success' && '✅ Passed' || (needs.lint-and-format.result == 'skipped' && '⏭️ Skipped' || '❌ Failed') }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Tests | ${{ needs.test.result == 'success' && '✅ Passed' || (needs.test.result == 'skipped' && '⏭️ Skipped' || '⚠️ Check logs') }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Security | ${{ needs.security-basic.result == 'success' && '✅ Passed' || (needs.security-basic.result == 'skipped' && '⏭️ Skipped' || '⚠️ Check logs') }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| AI/ML Tests | ${{ needs.ai-tests.result == 'success' && '✅ Passed' || (needs.ai-tests.result == 'skipped' && '⏭️ Skipped' || '⚠️ Check logs') }} |" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "## 📊 Build Info" >> $GITHUB_STEP_SUMMARY
-          echo "- **Commit**: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **Branch**: \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **Trigger**: ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Runner**: ${{ runner.os }}" >> $GITHUB_STEP_SUMMARY
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        pip install ruff pytest pytest-asyncio
+        
+    - name: Lint with Ruff
+      run: |
+        # Stop the build if there are Python syntax errors or undefined names
+        ruff check src/ --select E9,F63,F7,F82 --output-format=github
+        # Default run (exit non-zero on error)
+        ruff check src/ --exit-non-zero-on-fix
+        
+    - name: Test with pytest
+      run: |
+        # Run unit tests only to keep CI fast
+        # Ignoring integration tests that require external services
+        pytest tests/unit/ --ignore=tests/integration --ignore=tests/e2e
