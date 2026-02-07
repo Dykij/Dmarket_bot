@@ -32,6 +32,8 @@ if TYPE_CHECKING:
 logger = structlog.get_logger(__name__)
 
 
+from src.core.trade_fsm import TradeState, TradeStateMachine, PendingTradeStatus
+
 # ============================================================================
 # Configuration and Constants
 # ============================================================================
@@ -213,6 +215,59 @@ class IntegratedArbitrageScanner:
         self.total_scans: int = 0
         self.total_opportunities: int = 0
         self.total_dmarket_opportunities: int = 0
+
+    async def process_arbitrage_item(self, item: dict[str, Any], game: str = "csgo") -> None:
+        """Process a single arbitrage item using the FSM for robust handling.
+        
+        Args:
+            item: Item data dictionary
+            game: Game identifier
+        """
+        fsm = TradeStateMachine(item_data=item)
+        
+        try:
+            # 1. Start Analysis
+            await fsm.transition_to(TradeState.ANALYZING)
+            
+            # ... (Here we would insert the specific profit checks, currently simplified)
+            # Assuming item passed initial scan filters if it reached here
+            
+            # 2. Execution Phase (Critical)
+            # This persists the intent to buy in the DB
+            await fsm.transition_to(TradeState.EXECUTING)
+            
+            # Actual API Call
+            # Note: This is a placeholder for the actual buy call which depends on specific internal API method
+            # For now, we assume success to demonstrate FSM flow or wrap it
+            # purchase_response = await self.dmarket.buy_item(...) 
+            
+            # Simulating purchase for FSM demonstration
+            purchase_successful = True 
+            
+            if purchase_successful:
+                # 3. Verification Phase
+                await fsm.transition_to(TradeState.VERIFYING)
+                
+                # Check inventory/order status...
+                
+                # 4. Completion
+                await fsm.transition_to(TradeState.COMPLETED)
+                
+                # Add to Waxpeer targets if applicable
+                buy_price = Decimal(str(item.get("price", {}).get("USD", 0))) / 100
+                asset_id = item.get("extra", {}).get("assetId")
+                if asset_id:
+                    await self.create_waxpeer_listing_target(
+                        item_name=item.get("title", "Unknown"), 
+                        asset_id=asset_id, 
+                        buy_price=buy_price
+                    )
+            else:
+                await fsm.transition_to(TradeState.FAILED)
+
+        except Exception as e:
+            logger.error(f"❌ Trade processing failed: {e}")
+            await fsm.transition_to(TradeState.FAILED)
 
     async def scan_multi_platform(
         self, game: str = "csgo", limit: int = 50

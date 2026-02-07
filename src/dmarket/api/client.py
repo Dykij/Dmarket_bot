@@ -305,6 +305,11 @@ class BaseDMarketClient:
         while retries <= self.max_retries:
             try:
                 response = await self._execute_single_http_request(client, method, url, params_items, data, headers)
+                
+                # Smart Rate Limiter Integration
+                if self.rate_limiter and hasattr(self.rate_limiter, "update_from_headers"):
+                    self.rate_limiter.update_from_headers(response.headers, path)
+
                 response.raise_for_status()
                 return self._parse_json_response(response, path)
             except Exception as e:

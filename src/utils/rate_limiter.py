@@ -609,6 +609,9 @@ class DMarketRateLimiter:
 
         # Warning flags (to avoid spam)
         self._warning_sent: dict[str, bool] = dict.fromkeys(self._endpoint_limits, False)
+        
+        # Smart Rate Limit: Backoff timestamps
+        self._backoff_until: dict[str, float] = {}
 
         logger.info(
             "✅ DMarketRateLimiter initialized with per-endpoint limits: %s",
@@ -671,6 +674,15 @@ class DMarketRateLimiter:
         """
         # Determine category if full path provided
         category = endpoint if endpoint in self._limiters else self.get_endpoint_category(endpoint)
+
+        # Smart Rate Limit: Check backoff
+        if category in self._backoff_until:
+            wait_time = self._backoff_until[category] - time.time()
+            if wait_time > 0:
+                logger.info(f"⏳ Smart Rate Limit: Waiting {wait_time:.2f}s for {category} cooldown")
+                await asyncio.sleep(wait_time)
+            # Clear backoff after waiting (or if expired)
+            del self._backoff_until[category]
 
         # Get limiter for this category
         limiter = self._limiters.get(category, self._limiters["other"])
@@ -758,4 +770,41 @@ class DMarketRateLimiter:
         self._usage_counts = dict.fromkeys(self._endpoint_limits, 0)
         self._429_counts = dict.fromkeys(self._endpoint_limits, 0)
         self._warning_sent = dict.fromkeys(self._endpoint_limits, False)
+        self._backoff_until.clear()
         logger.info("📊 Rate limiter statistics reset")
+
+    def update_from_headers(self, headers: dict[str, str], endpoint: str) -> None:
+        """Update rate limits based on response headers.
+        
+        Extracts X-RateLimit-Remaining and X-RateLimit-Reset to implement
+        adaptive backoff before hitting 429 errors.
+        
+        Args:
+            headers: Response headers
+            endpoint: API endpoint path
+        """
+        remaining = headers.get("X-RateLimit-Remaining")
+        reset = headers.get("X-RateLimit-Reset")
+        
+        if remaining is not None and reset is not None:
+            try:
+                rem_int = int(remaining)
+                reset_ts = float(reset)
+                category = self.get_endpoint_category(endpoint)
+                
+                # If remaining is less than 10% of limit (approx < 5-10 depending on limit)
+                # Or just absolute safe threshold < 5
+                limit = self._endpoint_limits.get(category, 20)
+                threshold = max(2, int(limit * 0.1))
+                
+                if rem_int <= threshold:
+                    now = time.time()
+                    if reset_ts > now:
+                        # Add a small buffer to reset time
+                        self._backoff_until[category] = reset_ts + 0.5
+                        logger.warning(
+                            f"📉 Smart Rate Limit: {category} low ({rem_int} left). "
+                            f"Backing off until {reset_ts} (wait {reset_ts - now:.2f}s)"
+                        )
+            except (ValueError, TypeError):
+                pass

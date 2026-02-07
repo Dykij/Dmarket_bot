@@ -12,13 +12,16 @@ import logging
 import traceback
 from typing import Any, TypeVar, cast, overload
 
-from src.utils.logging_utils import get_logger
-
+# from src.utils.logging_utils import get_logger # Removed in favor of canonical_logging
 
 # Определение универсального типа для декораторов
 F = TypeVar("F", bound=Callable[..., Any])
 
 logger = logging.getLogger(__name__)
+
+def get_logger(name: str) -> logging.Logger:
+    """Compatibility wrapper to get logger."""
+    return logging.getLogger(name)
 
 
 class ErrorCode(Enum):
