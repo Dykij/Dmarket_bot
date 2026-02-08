@@ -1,0 +1,26 @@
+{
+  "bot": {
+    "token": "",
+    "username": "dmarket_bot"
+  },
+  "dmarket": {
+    "api_url": "https://api.dmarket.com",
+    "rate_limit": 30
+  },
+  "rate_limit": {
+    "market_limit": 2,
+    "trade_limit": 1,
+    "user_limit": 5,
+    "balance_limit": 10,
+    "other_limit": 5,
+    "enabled": true
+  },
+  "fsm": {
+    "enabled": true,
+    "storage": "memory"
+  },
+  "logging": {
+    "level": "INFO",
+    "file": "logs/dmarket_bot.log"
+  }
+}

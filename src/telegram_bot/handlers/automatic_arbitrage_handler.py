@@ -146,7 +146,7 @@ async def _run_fallback_scan(
     Returns:
         Tuple of (results_list, error_message)
     """
-    from src.dmarket.arbitrage_scanner import ArbitrageScanner
+    from src.dmarket.scanner.engine import ArbitrageScanner
 
     scanner = ArbitrageScanner(api_client=api_client)
     try:

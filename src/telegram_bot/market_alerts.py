@@ -455,7 +455,7 @@ class MarketAlertsManager:
 
         try:
             # Используем ArbitrageScanner для поиска возможностей
-            from src.dmarket.arbitrage_scanner import ArbitrageScanner
+            from src.dmarket.scanner.engine import ArbitrageScanner
             from src.dmarket.dmarket_api import DMarketAPI
 
             # Создаем API клиент и сканер

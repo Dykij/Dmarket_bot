@@ -18,11 +18,10 @@ from src.core.app_notifications import NotificationManager
 from src.core.app_recovery import TradeRecovery
 from src.core.app_signals import SignalHandler
 from src.utils.config import Config
-from src.utils.logging_utils import BotLogger
-
+import structlog
 
 logger = logging.getLogger(__name__)
-bot_logger = BotLogger(__name__)
+bot_logger = structlog.get_logger(__name__)
 
 
 class Application:

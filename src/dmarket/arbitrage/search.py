@@ -230,7 +230,7 @@ async def find_arbitrage_opportunities_advanced(
 
     try:
         # Получаем предметы маркета
-        market_items = await api_client.get_all_market_items(
+        market_items = await api_client.get_market_items(
             game=game,
             max_items=max_items,
             price_from=price_lower,

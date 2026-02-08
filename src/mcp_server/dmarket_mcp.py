@@ -281,7 +281,7 @@ class DMarketMCPServer:
         min_profit: float = 0.5,
     ) -> dict[str, Any]:
         """Сканировать арбитраж."""
-        from src.dmarket.arbitrage_scanner import ArbitrageScanner
+        from src.dmarket.scanner.engine import ArbitrageScanner
 
         scanner = ArbitrageScanner(api_client=self.api_client)
         opportunities = await scanner.scan_level(level=level, game=game)

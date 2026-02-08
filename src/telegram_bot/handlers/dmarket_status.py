@@ -6,7 +6,7 @@ from telegram import Update
 from telegram.constants import ChatAction, ParseMode
 from telegram.ext import ContextTypes
 
-from src.dmarket.arbitrage_scanner import check_user_balance
+from src.dmarket.scanner.engine import check_user_balance
 from src.dmarket.dmarket_api import DMarketAPI
 from src.telegram_bot.handlers.settings_handlers import get_localized_text
 from src.telegram_bot.profiles import get_user_profile

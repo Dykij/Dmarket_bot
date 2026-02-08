@@ -11,7 +11,7 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Message, Update
 from telegram.constants import ParseMode
 from telegram.ext import Application, CallbackQueryHandler, ContextTypes
 
-from src.dmarket.arbitrage_scanner import ARBITRAGE_LEVELS
+from src.dmarket.scanner.engine import ARBITRAGE_LEVELS
 from src.telegram_bot.chart_generator import (
     generate_level_distribution_chart,
     generate_profit_comparison_chart,

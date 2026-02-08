@@ -108,7 +108,7 @@ def get_arbitrage_scanner(
         # DMarketAPI implements IDMarketAPI protocol, type mismatch is safe
         api = get_dmarket_api(context)
         if api is not None:
-            from src.dmarket.arbitrage_scanner import ArbitrageScanner
+            from src.dmarket.scanner.engine import ArbitrageScanner
 
             return ArbitrageScanner(api_client=api)  # type: ignore[arg-type]
         return None

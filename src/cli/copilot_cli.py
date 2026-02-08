@@ -182,7 +182,7 @@ async def scan(
     click.echo(click.style(f"🔎 Сканирую {game.upper()} (уровень: {level})...", fg="cyan"))
 
     try:
-        from src.dmarket.arbitrage_scanner import ArbitrageScanner
+        from src.dmarket.scanner.engine import ArbitrageScanner
         from src.dmarket.dmarket_api import DMarketAPI
         from src.utils.config import settings
 

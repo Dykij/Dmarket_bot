@@ -12,7 +12,7 @@ from typing import Any
 
 import structlog
 
-from src.dmarket.arbitrage_scanner import ArbitrageScanner
+from src.dmarket.scanner.engine import ArbitrageScanner
 from src.interfaces import IDMarketAPI
 
 

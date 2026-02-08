@@ -21,7 +21,7 @@ from enum import StrEnum
 import logging
 from typing import Any
 
-from src.dmarket.arbitrage_scanner import ArbitrageScanner
+from src.dmarket.scanner.engine import ArbitrageScanner
 
 
 logger = logging.getLogger(__name__)

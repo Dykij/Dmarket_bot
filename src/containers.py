@@ -23,7 +23,7 @@ from typing import Any
 
 from dependency_injector import containers, providers
 
-from src.dmarket.arbitrage_scanner import ArbitrageScanner
+from src.dmarket.scanner.engine import ArbitrageScanner
 from src.dmarket.dmarket_api import DMarketAPI
 from src.dmarket.targets import TargetManager
 from src.utils.config import Config

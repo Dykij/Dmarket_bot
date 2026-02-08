@@ -1,4 +1,4 @@
-﻿class DMarketAPIError(Exception):
+class DMarketAPIError(Exception):
     pass
 
 class InsufficientFundsError(DMarketAPIError):

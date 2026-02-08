@@ -6,7 +6,7 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import CallbackQueryHandler, ContextTypes
 
 from src.dmarket.arbitrage import GAMES
-from src.dmarket.arbitrage_scanner import ARBITRAGE_LEVELS, ArbitrageScanner
+from src.dmarket.scanner.engine import ARBITRAGE_LEVELS, ArbitrageScanner
 from src.telegram_bot.keyboards import create_pagination_keyboard
 from src.telegram_bot.pagination import pagination_manager
 from src.telegram_bot.utils.api_client import create_api_client_from_env

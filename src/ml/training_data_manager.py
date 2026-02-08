@@ -672,7 +672,9 @@ class TrainingDataManager:
         if cache_path.exists():
             try:
                 with open(cache_path, "rb") as f:
-                    return pickle.load(f)  # noqa: S301
+                    # FIXME: SECURITY - replace pickle with msgpack or json
+                    # Only trusted local data should be loaded
+                    return pickle.load(f)  # noqa: S301 nosec B301
             except Exception as e:
                 logger.warning("cache_load_failed", version_id=version_id, error=str(e))
         return None
