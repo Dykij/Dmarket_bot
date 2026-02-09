@@ -10,13 +10,12 @@ Status: Phase 3 Implementation
 Документация: src/utils/SKILL_THREAT_DETECTION.md
 """
 
+import re
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-import re
 from typing import Any
 
 import structlog
-
 
 logger = structlog.get_logger(__name__)
 

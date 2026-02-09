@@ -8,12 +8,11 @@ from __future__ import annotations
 
 import json
 import logging
-from pathlib import Path
 import time
+from pathlib import Path
 from typing import Any, ClassVar
 
 from .constants import DEFAULT_USER_SETTINGS
-
 
 __all__ = [
     "AlertStorage",

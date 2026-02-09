@@ -12,15 +12,14 @@
 - https://scikit-learn.org/stable/modules/grid_search.html
 """
 
+import logging
+import operator
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import StrEnum
-import logging
-import operator
 from typing import Any
 
 import numpy as np
-
 
 # Minimum MAE threshold to prevent division by zero when calculating weights
 # This prevents infinite weights when a model achieves near-perfect predictions

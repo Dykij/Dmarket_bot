@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import Any
 
 from sqlalchemy import JSON, BigInteger, Column, DateTime, Float, Integer, String
+
 from src.models.base import Base
 
 

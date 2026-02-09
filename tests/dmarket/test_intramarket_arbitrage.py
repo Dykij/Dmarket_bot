@@ -12,7 +12,6 @@ from src.dmarket.intramarket_arbitrage import (
     scan_for_intramarket_opportunities,
 )
 
-
 # ======================== Fixtures ========================
 
 

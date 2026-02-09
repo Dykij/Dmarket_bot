@@ -22,7 +22,6 @@ from telegram.ext import (
     ConversationHandler,
 )
 
-
 if TYPE_CHECKING:
     from src.dmarket.auto_seller import AutoSeller
 

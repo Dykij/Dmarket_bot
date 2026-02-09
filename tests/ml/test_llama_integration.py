@@ -10,20 +10,17 @@ Comprehensive tests for Llama 3.1 8B Integration.
 6. Кэширование и производительность
 """
 
-import asyncio
-import json
-from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 # Импортируем модуль
 from src.ml.llama_integration import (
+    TASK_PROMPTS,
     LlamaConfig,
     LlamaIntegration,
     LlamaResponse,
     LlamaTaskType,
-    TASK_PROMPTS,
     get_llama,
     init_llama,
 )

@@ -12,7 +12,6 @@ import structlog
 from telegram import Update
 from telegram.ext import ContextTypes
 
-
 logger = structlog.get_logger(__name__)
 
 

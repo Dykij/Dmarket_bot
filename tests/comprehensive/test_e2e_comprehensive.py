@@ -17,7 +17,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-
 if TYPE_CHECKING:
     pass
 
@@ -176,8 +175,9 @@ class TestBalanceCheckFlow:
     @pytest.mark.asyncio
     async def test_balance_check_with_api_error_flow(self) -> None:
         """Test balance check flow when API returns error."""
-        from src.dmarket.dmarket_api import DMarketAPI
         import httpx
+
+        from src.dmarket.dmarket_api import DMarketAPI
 
         api = DMarketAPI("public_key", "secret_key")
 
@@ -209,8 +209,9 @@ class TestMarketScanFlow:
     @pytest.mark.asyncio
     async def test_market_scan_complete_flow(self) -> None:
         """Test complete market scan flow."""
-        from src.dmarket.dmarket_api import DMarketAPI
         from src.dmarket.arbitrage_scanner import ArbitrageScanner
+
+        from src.dmarket.dmarket_api import DMarketAPI
 
         api = DMarketAPI("public_key", "secret_key")
         scanner = ArbitrageScanner(api_client=api)
@@ -518,8 +519,9 @@ class TestErrorRecoveryFlow:
     @pytest.mark.asyncio
     async def test_api_timeout_recovery_flow(self) -> None:
         """Test recovery from API timeout."""
-        from src.dmarket.dmarket_api import DMarketAPI
         import httpx
+
+        from src.dmarket.dmarket_api import DMarketAPI
 
         api = DMarketAPI("public_key", "secret_key")
 
@@ -548,8 +550,9 @@ class TestErrorRecoveryFlow:
     @pytest.mark.asyncio
     async def test_rate_limit_handling_flow(self) -> None:
         """Test handling of rate limit errors."""
-        from src.dmarket.dmarket_api import DMarketAPI
         import httpx
+
+        from src.dmarket.dmarket_api import DMarketAPI
 
         api = DMarketAPI("public_key", "secret_key")
 

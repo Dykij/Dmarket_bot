@@ -13,8 +13,9 @@ import asyncio
 import logging
 import time
 import uuid
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import TYPE_CHECKING, Any, AsyncGenerator
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     import redis.asyncio as aioredis
@@ -106,7 +107,7 @@ class RedisDistributedLock:
         self._owner_id = str(uuid.uuid4())
         self._owned_locks: dict[str, str] = {}
 
-    async def _get_client(self) -> "aioredis.Redis":
+    async def _get_client(self) -> aioredis.Redis:
         """Get or create Redis client."""
         if self._client is None:
             if not REDIS_AVAILABLE:

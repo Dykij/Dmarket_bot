@@ -3,8 +3,6 @@
 Tests for EventBus, Event, Subscription, and EventTypes.
 """
 
-import asyncio
-from datetime import UTC, datetime
 
 import pytest
 

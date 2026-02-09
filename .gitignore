@@ -61,6 +61,8 @@ ENV/
 .env
 .env.local
 .env.production
+config.json
+config.json
 
 # Logs
 *.log

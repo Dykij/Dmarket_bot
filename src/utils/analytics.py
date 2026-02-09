@@ -9,7 +9,6 @@ from typing import Any
 
 import matplotlib as mpl
 
-
 mpl.use("Agg")  # Use non-interactive backend
 import logging
 
@@ -18,7 +17,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-
 
 logger = logging.getLogger(__name__)
 

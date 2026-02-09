@@ -19,7 +19,6 @@ from src.dmarket.api.cache import (
     save_to_cache,
 )
 
-
 # TestGetCacheKey
 
 

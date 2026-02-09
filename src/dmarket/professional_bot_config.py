@@ -10,14 +10,13 @@
 Глобальные настройки обеспечивают баланс между скоростью и безопасностью ToS.
 """
 
-from dataclasses import dataclass
-from datetime import UTC, datetime
 import hashlib
 import logging
-from pathlib import Path
 import time
+from dataclasses import dataclass
+from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any
-
 
 logger = logging.getLogger(__name__)
 

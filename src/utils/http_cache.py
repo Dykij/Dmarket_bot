@@ -46,7 +46,6 @@ from typing import Any, ClassVar
 import httpx
 import structlog
 
-
 # Conditional import - hishel is optional
 try:
     import hishel

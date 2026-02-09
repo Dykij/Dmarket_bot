@@ -21,7 +21,6 @@ from src.telegram_bot.utils.formatters import (
 )
 from src.utils.exceptions import APIError
 
-
 # Настройка логирования
 logger = logging.getLogger(__name__)
 

@@ -1,8 +1,8 @@
 """Quick script to analyze and convert collected price data."""
-import json
 import csv
-from pathlib import Path
 import glob
+import json
+from pathlib import Path
 
 # Find the latest collected data file
 data_files = sorted(glob.glob("data/ml_training/real_data/prices_*.json"))

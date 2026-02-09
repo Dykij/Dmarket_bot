@@ -15,12 +15,11 @@ from __future__ import annotations
 
 import asyncio
 from typing import TYPE_CHECKING, Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import httpx
 import pytest
 from circuitbreaker import CircuitBreakerError
-
 
 if TYPE_CHECKING:
     pass

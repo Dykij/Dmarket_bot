@@ -6,12 +6,12 @@ after crashes or restarts without losing progress.
 """
 
 import asyncio
-from collections.abc import Callable
-from datetime import UTC, datetime, timedelta
 import json
-from pathlib import Path
 import signal
 import sys
+from collections.abc import Callable
+from datetime import UTC, datetime, timedelta
+from pathlib import Path
 from typing import Any
 from uuid import UUID
 
@@ -22,8 +22,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.types import JSON
 
-from src.utils.logging_utils import get_logger
-
+from src.utils.canonical_logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -58,7 +57,9 @@ class ScanCheckpoint(StateManagerBase):
     processed_items = Column(Integer, default=0)
     total_items = Column(Integer, nullable=True)
     timestamp = Column(DateTime, default=datetime.utcnow, nullable=False)
-    extra_data = Column(JSON, default={})  # Changed from JSONB to JSON for SQLite compatibility
+    extra_data = Column(
+        JSON, default={}
+    )  # Changed from JSONB to JSON for SQLite compatibility
     status = Column(String(20), default="in_progress")
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(

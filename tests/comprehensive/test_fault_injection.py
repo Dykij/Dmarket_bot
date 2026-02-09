@@ -9,11 +9,11 @@ Tests system behavior when faults are injected:
 - Dependency failures
 """
 import asyncio
-import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
 from typing import Any
-import httpx
+from unittest.mock import MagicMock
 
+import httpx
+import pytest
 
 # =============================================================================
 # NETWORK FAULT INJECTION

@@ -7,9 +7,9 @@ Provides commands for running and viewing backtests:
 
 from __future__ import annotations
 
+import logging
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
-import logging
 from typing import TYPE_CHECKING
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
@@ -21,7 +21,6 @@ from src.analytics import (
     HistoricalDataCollector,
     SimpleArbitrageStrategy,
 )
-
 
 if TYPE_CHECKING:
     from src.interfaces import IDMarketAPI

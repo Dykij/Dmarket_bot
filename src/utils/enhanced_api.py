@@ -56,7 +56,6 @@ from src.utils.stamina_retry import (
     api_retry,
 )
 
-
 logger = structlog.get_logger(__name__)
 
 

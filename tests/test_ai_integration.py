@@ -1,7 +1,9 @@
-import pytest
-import asyncio
 from unittest.mock import AsyncMock, MagicMock
+
+import pytest
+
 from src.ai.router import AIRouter
+
 
 @pytest.mark.asyncio
 async def test_ai_router_balance_intent():

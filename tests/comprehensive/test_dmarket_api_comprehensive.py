@@ -23,9 +23,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import httpx
 import pytest
 
-
 if TYPE_CHECKING:
-    from collections.abc import Generator
+    pass
 
 
 # =============================================================================
@@ -212,7 +211,6 @@ class TestDMarketAPIAuthentication:
         mock_secret_key: str,
     ) -> None:
         """Test HMAC-SHA256 signature generation (fallback)."""
-        from src.dmarket.dmarket_api import DMarketAPI
 
         # Test HMAC signature generation
         string_to_sign = f"GET/test{int(time.time())}"

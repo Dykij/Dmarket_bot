@@ -39,13 +39,13 @@ Created: January 2026
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from enum import StrEnum
-from typing import Any, Callable
+from typing import Any
 
 import structlog
-
 
 logger = structlog.get_logger(__name__)
 

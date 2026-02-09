@@ -11,15 +11,15 @@ Features:
 """
 
 import asyncio
-from datetime import datetime
 import json
-from pathlib import Path
 import signal
-from typing import Any, Callable
+from collections.abc import Callable
+from datetime import datetime
+from pathlib import Path
+from typing import Any
 
 import aiofiles
 import structlog
-
 
 logger = structlog.get_logger(__name__)
 

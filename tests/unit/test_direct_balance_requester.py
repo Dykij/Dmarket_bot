@@ -174,9 +174,8 @@ class TestSignatureGeneration:
 
         with patch.object(
             requester, "_sign_with_ed25519", side_effect=Exception("Ed25519 error")
-        ):
-            with patch.object(requester, "_sign_with_hmac", return_value="hmac_sig"):
-                signature = requester._generate_signature(timestamp)
+        ), patch.object(requester, "_sign_with_hmac", return_value="hmac_sig"):
+            signature = requester._generate_signature(timestamp)
 
         assert signature == "hmac_sig"
 

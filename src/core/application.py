@@ -1,4 +1,4 @@
-"""Main Application class - refactored version.
+﻿"""Main Application class - refactored version.
 
 This module provides the main Application class that orchestrates
 all bot components using the modular core components.
@@ -10,6 +10,7 @@ import sys
 import traceback as tb
 from typing import Any
 
+import structlog
 from telegram.ext import Application as TelegramApplication
 
 from src.core.app_initialization import ComponentInitializer
@@ -18,7 +19,6 @@ from src.core.app_notifications import NotificationManager
 from src.core.app_recovery import TradeRecovery
 from src.core.app_signals import SignalHandler
 from src.utils.config import Config
-import structlog
 
 logger = logging.getLogger(__name__)
 bot_logger = structlog.get_logger(__name__)
@@ -163,7 +163,7 @@ class Application:
 
             # Log crash
             traceback_text = tb.format_exc()
-            bot_logger.log_crash(
+            bot_logger.exception(
                 error=e,
                 traceback_text=traceback_text,
                 context={"component": "main_application"},
@@ -283,3 +283,4 @@ if __name__ == "__main__":
         asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 
     asyncio.run(main())
+

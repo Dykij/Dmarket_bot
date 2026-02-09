@@ -11,13 +11,13 @@ Usage:
 from __future__ import annotations
 
 import argparse
-from datetime import datetime, timedelta
 import os
 import sys
+from datetime import datetime, timedelta
 from typing import Any
 
-from dotenv import load_dotenv
 import requests
+from dotenv import load_dotenv
 
 
 class SentryCleanup:

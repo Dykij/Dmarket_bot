@@ -20,7 +20,6 @@ from src.analytics.backtester import (
 )
 from src.analytics.historical_data import PriceHistory, PricePoint
 
-
 # ============================================================================
 # Test Fixtures
 # ============================================================================

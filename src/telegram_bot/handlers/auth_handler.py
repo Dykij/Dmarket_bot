@@ -12,8 +12,8 @@ Usage:
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
 import logging
+from datetime import UTC, datetime
 from typing import Any
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
@@ -26,7 +26,6 @@ from src.security import (
     create_jwt_auth,
     create_security_manager,
 )
-
 
 logger = logging.getLogger(__name__)
 

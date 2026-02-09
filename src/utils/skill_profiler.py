@@ -34,17 +34,17 @@ Created: January 2026
 from __future__ import annotations
 
 import asyncio
+import statistics
+import time
 from collections import deque
+from collections.abc import Callable
 from contextlib import asynccontextmanager, contextmanager
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from functools import wraps
-import statistics
-import time
-from typing import Any, Callable, TypeVar
+from typing import Any, TypeVar
 
 import structlog
-
 
 logger = structlog.get_logger(__name__)
 

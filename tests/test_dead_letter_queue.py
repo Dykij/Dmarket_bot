@@ -7,8 +7,6 @@
 - Статистика и метрики
 """
 
-import asyncio
-from datetime import UTC, datetime
 
 import pytest
 

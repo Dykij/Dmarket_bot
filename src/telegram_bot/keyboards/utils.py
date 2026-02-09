@@ -18,7 +18,6 @@ from telegram import (
 # Реэкспорт GAMES из arbitrage для обратной совместимости
 from src.dmarket.arbitrage import GAMES
 
-
 if TYPE_CHECKING:
     from collections.abc import Sequence
 

@@ -17,7 +17,6 @@ from unittest.mock import MagicMock, mock_open, patch
 
 import pytest
 
-
 # Module path constant for patching
 PREFERENCES_MODULE = "src.telegram_bot.smart_notifications.preferences"
 

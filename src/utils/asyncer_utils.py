@@ -42,14 +42,13 @@ Documentation: https://asyncer.tiangolo.com/
 """
 
 import asyncio
+import time
 from collections.abc import Awaitable, Callable, Sequence
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
-import time
 from typing import Any, ParamSpec, TypeVar
 
 import structlog
-
 
 # Conditional import - asyncer is optional
 try:

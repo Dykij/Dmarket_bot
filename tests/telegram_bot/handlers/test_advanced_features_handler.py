@@ -5,7 +5,6 @@ Tests the integration of previously unused modules.
 
 import pytest
 
-
 # =============================================================================
 # Integration tests for unused modules (don't require telegram)
 # =============================================================================

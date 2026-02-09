@@ -14,9 +14,8 @@ from src.telegram_bot.handlers.main_keyboard import get_main_keyboard
 from src.telegram_bot.keyboards import (
     get_marketplace_comparison_keyboard,
 )
-from src.utils.logging_utils import get_logger
+from src.utils.canonical_logging import get_logger
 from src.utils.telegram_error_handlers import telegram_error_boundary
-
 
 logger = get_logger(__name__)
 

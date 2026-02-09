@@ -23,7 +23,6 @@ from src.telegram_bot.chart_generator import (
     generate_scan_history_chart,
 )
 
-
 # ============================================================================
 # Test ChartGenerator Class
 # ============================================================================

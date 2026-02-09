@@ -15,12 +15,11 @@ import json
 import time
 from typing import Any
 
-from circuitbreaker import CircuitBreakerError
 import nacl.signing
 import structlog
+from circuitbreaker import CircuitBreakerError
 
 from src.utils.api_circuit_breaker import call_with_circuit_breaker
-
 
 logger = structlog.get_logger(__name__)
 

@@ -21,7 +21,6 @@ from src.telegram_bot.handlers.intramarket_arbitrage_handler import (
     start_intramarket_arbitrage,
 )
 
-
 # ======================== Fixtures ========================
 
 

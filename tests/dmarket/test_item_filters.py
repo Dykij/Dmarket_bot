@@ -9,13 +9,12 @@ This module contains tests for src/dmarket/item_filters.py covering:
 Target: 20+ tests to achieve 70%+ coverage
 """
 
-from pathlib import Path
 import tempfile
+from pathlib import Path
 
 import yaml
 
 from src.dmarket.item_filters import ItemFilters
-
 
 # TestItemFiltersInit
 

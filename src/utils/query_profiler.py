@@ -9,13 +9,13 @@ Based on SkillsMP PostgreSQL/SQLAlchemy recommendations.
 import logging
 import time
 from collections import defaultdict
+from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass, field
-from typing import Any, Callable, Generator
+from typing import Any
 
 from sqlalchemy import event
 from sqlalchemy.engine import Engine
-
 
 logger = logging.getLogger(__name__)
 

@@ -4,20 +4,20 @@ This module tests the UnifiedStrategyHandler class for managing
 unified trading strategies.
 """
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from telegram import Update, Message, User, Chat, CallbackQuery
+import pytest
+from telegram import CallbackQuery, Chat, Message, Update, User
 
 from src.telegram_bot.handlers.unified_strategy_handler import (
-    UnifiedStrategyHandler,
-    SELECTING_STRATEGY,
-    SELECTING_PRESET,
-    SCANNING,
-    CB_STRATEGY,
+    CB_BACK,
     CB_PRESET,
     CB_SCAN,
-    CB_BACK,
+    CB_STRATEGY,
+    SCANNING,
+    SELECTING_PRESET,
+    SELECTING_STRATEGY,
+    UnifiedStrategyHandler,
 )
 
 

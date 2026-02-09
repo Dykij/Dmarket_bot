@@ -3,7 +3,6 @@
 from pathlib import Path
 from typing import Any
 
-
 # Notification types
 NOTIFICATION_TYPES: dict[str, str] = {
     "market_opportunity": "Market Opportunity",

@@ -21,7 +21,6 @@ import pandas as pd
 from src.dmarket.dmarket_api import DMarketAPI
 from src.utils.rate_limiter import RateLimiter
 
-
 logger = logging.getLogger(__name__)
 
 

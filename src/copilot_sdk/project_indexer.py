@@ -26,13 +26,13 @@ from __future__ import annotations
 
 import ast
 import hashlib
+from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, AsyncIterator
+from typing import Any
 
 import structlog
-
 
 logger = structlog.get_logger(__name__)
 

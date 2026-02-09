@@ -17,7 +17,6 @@ import pytest
 
 from src.models.base import Base, SQLiteUUID, UUIDType
 
-
 # ==============================================================================
 # Test SQLiteUUID Type Decorator
 # ==============================================================================

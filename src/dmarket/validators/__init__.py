@@ -12,7 +12,6 @@ from src.dmarket.validators.market_data_schema import (
     validate_market_data,
 )
 
-
 __all__ = [
     "ArbitrageOpportunitySchema",
     "MarketItemSchema",

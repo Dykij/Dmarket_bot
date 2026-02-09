@@ -2,9 +2,9 @@
 """Скрипт для запуска проверки кода с помощью Ruff и MyPy."""
 
 import os
-from pathlib import Path
 import subprocess
 import sys
+from pathlib import Path
 
 
 def run_command(cmd: str, description: str) -> bool:

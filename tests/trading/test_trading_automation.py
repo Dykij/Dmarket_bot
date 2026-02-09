@@ -3,17 +3,15 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
+
 import pytest
 
 from src.trading.trading_automation import (
-    TradingAutomation,
     AutoOrder,
     DCAConfig,
-    RebalanceConfig,
-    ScheduledTask,
-    ExecutionResult,
-    OrderType,
     OrderStatus,
+    OrderType,
+    TradingAutomation,
     create_trading_automation,
 )
 

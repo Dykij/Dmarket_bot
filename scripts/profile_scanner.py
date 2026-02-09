@@ -6,12 +6,11 @@ Profiles scanner performance and generates reports for optimization.
 
 import asyncio
 import cProfile
-from io import StringIO
 import operator
-from pathlib import Path
 import pstats
 import time
-
+from io import StringIO
+from pathlib import Path
 
 # Mock imports for profiling (replace with actual when running)
 # from src.dmarket.arbitrage_scanner import ArbitrageScanner

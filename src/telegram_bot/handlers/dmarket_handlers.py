@@ -7,9 +7,8 @@ from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
 
 from src.dmarket.dmarket_api import DMarketAPI
+from src.utils.canonical_logging import get_logger
 from src.utils.exceptions import handle_exceptions
-from src.utils.logging_utils import get_logger
-
 
 logger = get_logger(__name__)
 

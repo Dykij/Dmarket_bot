@@ -1,8 +1,8 @@
 """Balance command handler."""
 
-from datetime import datetime
 import logging
 import traceback
+from datetime import datetime
 from typing import Any
 
 from telegram import CallbackQuery, Message, Update
@@ -14,7 +14,6 @@ from src.telegram_bot.keyboards import get_back_to_arbitrage_keyboard
 from src.telegram_bot.utils.api_helper import create_dmarket_api_client
 from src.utils.exceptions import APIError, handle_api_error
 from src.utils.sentry_breadcrumbs import add_command_breadcrumb
-
 
 logger = logging.getLogger(__name__)
 

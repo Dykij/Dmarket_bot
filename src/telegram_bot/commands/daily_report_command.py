@@ -11,7 +11,6 @@ from typing import TYPE_CHECKING
 from telegram import Update
 from telegram.ext import ContextTypes
 
-
 if TYPE_CHECKING:
     from src.utils.daily_report_scheduler import DailyReportScheduler
 

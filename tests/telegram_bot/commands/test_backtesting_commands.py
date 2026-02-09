@@ -19,7 +19,6 @@ from src.telegram_bot.commands.backtesting_commands import (
     run_standard_backtest,
 )
 
-
 # ============================================================================
 # Fixtures
 # ============================================================================

@@ -17,7 +17,6 @@ from src.dmarket.liquidity_analyzer import LiquidityAnalyzer
 from src.dmarket.sales_history import SalesHistoryAnalyzer
 from src.interfaces import IDMarketAPI
 
-
 logger = logging.getLogger(__name__)
 
 

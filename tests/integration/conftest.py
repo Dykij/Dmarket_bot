@@ -8,7 +8,6 @@ import httpx
 import pytest
 import pytest_asyncio
 
-
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator, Generator
 

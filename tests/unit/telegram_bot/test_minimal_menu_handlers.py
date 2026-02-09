@@ -1,7 +1,8 @@
 """Tests for minimal menu handlers."""
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 
 from src.telegram_bot.handlers.api_check_handler import handle_api_check
 from src.telegram_bot.handlers.automatic_arbitrage_handler import handle_automatic_arbitrage

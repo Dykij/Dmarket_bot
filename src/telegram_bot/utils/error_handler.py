@@ -5,12 +5,12 @@
 при возникновении проблем.
 """
 
-from collections.abc import Awaitable, Callable
 import html
 import logging
 import os
 import sys
 import traceback
+from collections.abc import Awaitable, Callable
 from typing import Any
 
 from telegram import Bot, Message, Update
@@ -24,7 +24,6 @@ from telegram.error import (
     TimedOut,
 )
 from telegram.ext import Application, ContextTypes
-
 
 logger = logging.getLogger(__name__)
 

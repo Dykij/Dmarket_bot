@@ -1,8 +1,9 @@
 """Modularized Enhanced Price Predictor."""
 
-from typing import Any
 import logging
-from src.ml.parts.features import GameType, EnhancedFeatureExtractor, EnhancedFeatures
+from typing import Any
+
+from src.ml.parts.features import EnhancedFeatureExtractor, GameType
 from src.ml.parts.pipeline import MLPipeline
 
 logger = logging.getLogger(__name__)
@@ -24,4 +25,4 @@ class EnhancedPricePredictor:
         return {"prediction": current_price * 1.05, "confidence": 75.0}
 
 # Maintain backward compatibility
-from src.ml.parts.features import GameType, ItemRarity, ItemCondition, EnhancedFeatures
+from src.ml.parts.features import GameType

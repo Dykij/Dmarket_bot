@@ -5,9 +5,9 @@ Provides commands to run backtests, view results, and analyze historical perform
 
 from __future__ import annotations
 
+import logging
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
-import logging
 from typing import TYPE_CHECKING
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
@@ -15,7 +15,6 @@ from telegram.ext import ContextTypes
 
 from src.analytics.backtester import Backtester, SimpleArbitrageStrategy
 from src.analytics.historical_data import HistoricalDataCollector
-
 
 if TYPE_CHECKING:
     from src.interfaces import IDMarketAPI

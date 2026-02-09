@@ -25,7 +25,6 @@ from src.ml.price_normalizer import (
     PriceSource,
 )
 
-
 if TYPE_CHECKING:
     from src.dmarket.dmarket_api import DMarketAPI
     from src.waxpeer.waxpeer_api import WaxpeerAPI

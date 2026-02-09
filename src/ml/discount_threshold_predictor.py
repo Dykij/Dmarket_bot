@@ -16,16 +16,15 @@ Created: January 2026
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from enum import StrEnum
-import logging
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import joblib
 import numpy as np
-
 
 if TYPE_CHECKING:
     from src.dmarket.dmarket_api import DMarketAPI

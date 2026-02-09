@@ -8,7 +8,6 @@ from telegram.ext import ContextTypes
 
 from src.telegram_bot.user_profiles import profile_manager
 
-
 logger = logging.getLogger(__name__)
 
 # Настройки по умолчанию для фильтров ликвидности

@@ -9,13 +9,12 @@ This module provides a refactored version of scan_game() with:
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import logging
+from dataclasses import dataclass
 from typing import Any
 
 from src.dmarket.arbitrage import arbitrage_boost, arbitrage_mid, arbitrage_pro
 from src.dmarket.arbitrage.trader import ArbitrageTrader
-
 
 try:
     from src.utils.rate_limiter import RateLimiter

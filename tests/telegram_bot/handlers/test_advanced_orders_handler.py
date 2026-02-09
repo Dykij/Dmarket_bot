@@ -4,19 +4,19 @@ This module tests the AdvancedOrderHandler class for managing
 advanced orders with filters (Float, Doppler, Pattern, Sticker).
 """
 
-import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
-from telegram import Update, Message, User, Chat, CallbackQuery
+import pytest
+from telegram import CallbackQuery, Chat, Message, Update, User
 from telegram.ext import ConversationHandler
 
 from src.telegram_bot.handlers.advanced_orders_handler import (
-    AdvancedOrderHandler,
-    SELECTING_ORDER_TYPE,
-    ENTERING_ITEM_TITLE,
-    ENTERING_FLOAT_RANGE,
-    ENTERING_PRICE,
     CONFIRMING_ORDER,
+    ENTERING_FLOAT_RANGE,
+    ENTERING_ITEM_TITLE,
+    ENTERING_PRICE,
+    SELECTING_ORDER_TYPE,
+    AdvancedOrderHandler,
 )
 
 

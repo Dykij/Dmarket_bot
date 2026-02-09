@@ -8,12 +8,12 @@ PostToolUse hook for AI Arbitrage Predictor.
 
 import asyncio
 import json
-from pathlib import Path
 from datetime import datetime
-from typing import Dict, Any
+from pathlib import Path
+from typing import Any
 
 
-async def post_tool_use(context: Dict[str, Any]) -> None:
+async def post_tool_use(context: dict[str, Any]) -> None:
     """
     Log prediction results after arbitrage scan.
     

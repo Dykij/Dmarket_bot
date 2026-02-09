@@ -4,8 +4,8 @@ These tests verify that basic functionality works correctly
 and help identify environment setup issues in CI/CD.
 """
 
-from pathlib import Path
 import sys
+from pathlib import Path
 
 
 class TestEnvironmentSetup:

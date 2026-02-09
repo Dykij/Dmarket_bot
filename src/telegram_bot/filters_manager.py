@@ -7,7 +7,6 @@ for different users.
 
 from typing import Any
 
-
 # Simple in-memory storage for filters (in production, use database)
 _filters_storage: dict[int, dict[str, Any]] = {}
 

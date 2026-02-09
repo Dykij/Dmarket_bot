@@ -32,7 +32,6 @@ from src.telegram_bot.keyboards.webapp import (
     get_webapp_keyboard,
 )
 
-
 # ============================================================================
 # Tests for get_webapp_keyboard
 # ============================================================================

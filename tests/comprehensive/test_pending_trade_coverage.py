@@ -4,8 +4,7 @@ This module provides extensive testing for pending trade model
 to achieve 95%+ coverage.
 """
 
-from datetime import UTC, datetime, timedelta
-from unittest.mock import patch
+from datetime import UTC, datetime
 
 import pytest
 from sqlalchemy import create_engine

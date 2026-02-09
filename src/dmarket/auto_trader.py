@@ -15,7 +15,6 @@ from typing import Any
 
 from src.dmarket.arbitrage import ArbitrageTrader
 
-
 logger = logging.getLogger(__name__)
 
 __all__ = [

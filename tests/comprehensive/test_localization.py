@@ -10,10 +10,9 @@ Tests verify:
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 import pytest
-
 
 if TYPE_CHECKING:
     pass

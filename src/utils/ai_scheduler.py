@@ -15,13 +15,12 @@ Usage:
     ```
 """
 
-from datetime import time
 import logging
+from datetime import time
 from typing import TYPE_CHECKING, Any
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
-
 
 if TYPE_CHECKING:
     from telegram import Bot

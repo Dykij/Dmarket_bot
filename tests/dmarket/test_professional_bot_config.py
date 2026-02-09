@@ -9,9 +9,8 @@
 - SmartScannerConfig
 """
 
-import asyncio
 import time
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -26,7 +25,6 @@ from src.dmarket.professional_bot_config import (
     create_professional_config,
     create_smart_scanner_config,
 )
-
 
 # =============================================================================
 # ProfessionalBotConfig Tests

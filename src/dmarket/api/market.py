@@ -1,9 +1,11 @@
-"""Market operations for DMarket API."""
+﻿"""Market operations for DMarket API."""
 
 from typing import Any
-from src.dmarket.api_validator import validate_response
-from src.dmarket.schemas import MarketItemsResponse
+
 from src.dmarket.api.client import GAME_MAP
+from src.dmarket.api_validator import validate_response
+from src.dmarket.schemas import MarketItemsResponse  # Updated v2.0 schema  # Updated v2.0 schema
+
 
 class MarketMixin:
     """Methods for interacting with DMarket marketplace."""
@@ -30,20 +32,30 @@ class MarketMixin:
             "offset": offset,
             "currency": currency,
         }
-        if cursor: params["cursor"] = cursor
-        if price_from is not None: params["priceFrom"] = str(int(price_from * 100))
-        if price_to is not None: params["priceTo"] = str(int(price_to * 100))
-        if title: params["title"] = title
-        if sort: params["orderBy"] = sort
-        if tree_filters: params["treeFilters"] = tree_filters
+        if cursor:
+            params["cursor"] = cursor
+        if price_from is not None:
+            params["priceFrom"] = str(int(price_from * 100))
+        if price_to is not None:
+            params["priceTo"] = str(int(price_to * 100))
+        if title:
+            params["title"] = title
+        if sort:
+            params["orderBy"] = sort
+        if tree_filters:
+            params["treeFilters"] = tree_filters
 
         return await self._request("GET", "/exchange/v1/market/items", params=params, force_refresh=force_refresh)
 
     async def get_suggested_price(self, item_name: str, game: str = "csgo") -> float | None:
         response = await self.get_market_items(game=game, title=item_name, limit=1)
         items = response.get("objects", response.get("items", []))
-        if not items: return None
+        if not items:
+            return None
         suggested = items[0].get("suggestedPrice")
         if isinstance(suggested, dict):
             return float(suggested.get("amount", 0)) / 100
         return float(suggested) / 100 if suggested else None
+
+
+

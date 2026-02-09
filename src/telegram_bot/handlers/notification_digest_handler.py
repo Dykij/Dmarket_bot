@@ -9,20 +9,19 @@
 
 from __future__ import annotations
 
+import logging
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import StrEnum
-import logging
 from typing import TYPE_CHECKING, Any
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.constants import ParseMode
 from telegram.ext import Application, CallbackQueryHandler, CommandHandler, ContextTypes
 
+from src.utils.canonical_logging import get_logger
 from src.utils.exceptions import handle_exceptions
-from src.utils.logging_utils import get_logger
-
 
 if TYPE_CHECKING:
     import asyncio

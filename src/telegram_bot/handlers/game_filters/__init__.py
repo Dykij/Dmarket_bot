@@ -53,7 +53,6 @@ from .utils import (
     update_filters,
 )
 
-
 __all__ = [
     "CS2_CATEGORIES",
     "CS2_EXTERIORS",

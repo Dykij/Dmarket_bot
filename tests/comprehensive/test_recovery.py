@@ -9,11 +9,10 @@ Tests system's ability to recover from failures:
 - Backup/restore scenarios
 """
 import asyncio
-import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
-from typing import Any
-import httpx
+from unittest.mock import MagicMock
 
+import httpx
+import pytest
 
 # =============================================================================
 # DATABASE RECOVERY TESTS

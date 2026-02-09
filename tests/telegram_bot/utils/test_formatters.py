@@ -7,7 +7,6 @@ from src.telegram_bot.utils.formatters import (
     format_target_item,
 )
 
-
 # === Тесты для format_target_item ===
 
 

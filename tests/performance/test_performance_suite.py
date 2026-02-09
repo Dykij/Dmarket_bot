@@ -11,12 +11,11 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from sqlalchemy import text
-
 from src.dmarket.arbitrage_scanner import ArbitrageScanner
+
 from src.dmarket.dmarket_api import DMarketAPI
 from src.utils.memory_cache import TTLCache
 from src.utils.redis_cache import RedisCache
-
 
 # ============================================================================
 # PART 1: LOAD TESTING (10 tests)

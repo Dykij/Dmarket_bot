@@ -40,7 +40,6 @@ from src.telegram_bot.handlers.notification_digest_handler import (
     toggle_digest,
 )
 
-
 # Test fixtures
 
 

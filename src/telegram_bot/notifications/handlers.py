@@ -13,8 +13,8 @@ This module contains all handlers for notification-related commands and callback
 from __future__ import annotations
 
 import contextlib
-from datetime import datetime
 import logging
+from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
@@ -24,7 +24,6 @@ from .alerts import add_price_alert, get_user_alerts, remove_price_alert, update
 from .constants import NOTIFICATION_TYPES
 from .formatters import format_alert_message
 from .storage import get_storage, load_user_alerts
-
 
 if TYPE_CHECKING:
     from src.dmarket.dmarket_api import DMarketAPI

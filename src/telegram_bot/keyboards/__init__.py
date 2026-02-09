@@ -97,7 +97,6 @@ from src.telegram_bot.keyboards.webapp import (
     get_webapp_keyboard,
 )
 
-
 __all__ = [
     # Constants
     "CB_BACK",

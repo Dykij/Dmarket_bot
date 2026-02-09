@@ -7,7 +7,6 @@ import logging
 import os
 from typing import TYPE_CHECKING, Any
 
-
 if TYPE_CHECKING:
     from src.core.application import Application
 
@@ -28,8 +27,8 @@ class ComponentInitializer:
 
     async def initialize_config(self) -> None:
         """Load and validate configuration."""
+        from src.utils.canonical_logging import setup_logging
         from src.utils.config import Config
-        from src.utils.logging_utils import setup_logging
 
         logger.info("Loading configuration...")
         self.app.config = Config.load(self.app.config_path)
@@ -135,7 +134,7 @@ class ComponentInitializer:
 
     async def initialize_telegram_bot(self) -> None:
         """Initialize Telegram bot."""
-        from telegram.ext import ApplicationBuilder, PersistenceInput
+        from telegram.ext import ApplicationBuilder
 
         from src.telegram_bot.register_all_handlers import register_all_handlers
 

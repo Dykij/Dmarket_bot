@@ -131,9 +131,8 @@ class TestCanonicalLogManager:
     def test_operation_with_error(self, manager):
         """Test operation context manager with error."""
         # Act & Assert
-        with pytest.raises(ValueError):
-            with manager.operation("failing_op") as entry:
-                raise ValueError("Test error")
+        with pytest.raises(ValueError), manager.operation("failing_op") as entry:
+            raise ValueError("Test error")
 
         # Assert - error was recorded
         assert entry.errors == 1

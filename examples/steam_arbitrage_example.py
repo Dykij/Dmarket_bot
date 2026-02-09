@@ -11,6 +11,7 @@ import asyncio
 import logging
 
 from src.dmarket.arbitrage_scanner import ArbitrageScanner
+
 from src.dmarket.dmarket_api import DMarketAPI
 
 # Настройка логирования

@@ -4,15 +4,15 @@ This module tests the Steam commands handlers for statistics
 and settings management.
 """
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from telegram import Update, Message, User
+import pytest
+from telegram import Message, Update, User
 
 from src.telegram_bot.handlers.steam_commands import (
+    steam_settings_command,
     steam_stats_command,
     steam_top_command,
-    steam_settings_command,
 )
 
 

@@ -6,20 +6,19 @@
 Документация DMarket API: https://docs.dmarket.com/v1/swagger.html
 """
 
-from datetime import datetime
 import json
 import logging
 import operator
 import os
-from pathlib import Path
 import time
+from datetime import datetime
+from pathlib import Path
 from typing import Any
 
 from dotenv import load_dotenv
 
 from src.dmarket.dmarket_api import DMarketAPI
 from src.utils.rate_limiter import RateLimiter
-
 
 # Загружаем переменные окружения
 load_dotenv()

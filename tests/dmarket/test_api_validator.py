@@ -9,8 +9,8 @@ Tests for API validation utilities including:
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
-from pydantic import BaseModel, ValidationError
 import pytest
+from pydantic import BaseModel, ValidationError
 
 
 class TestSendApiChangeNotification:

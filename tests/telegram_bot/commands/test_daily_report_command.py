@@ -20,7 +20,6 @@ from telegram.ext import ContextTypes
 
 from src.telegram_bot.commands.daily_report_command import daily_report_command
 
-
 # ============================================================================
 # Test Fixtures
 # ============================================================================

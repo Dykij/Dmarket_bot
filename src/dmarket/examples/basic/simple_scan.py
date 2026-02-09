@@ -8,14 +8,15 @@
 
 import asyncio
 import os
-from pathlib import Path
 
 # Add src to path
 import sys
+from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
-from src.dmarket.dmarket_api import DMarketAPI
 from src.dmarket.ai_arbitrage_predictor import AIArbitragePredictor
+from src.dmarket.dmarket_api import DMarketAPI
 from src.ml.enhanced_predictor import EnhancedPricePredictor
 
 

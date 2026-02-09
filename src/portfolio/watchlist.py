@@ -39,7 +39,6 @@ from uuid import uuid4
 
 import structlog
 
-
 logger = structlog.get_logger(__name__)
 
 

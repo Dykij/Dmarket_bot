@@ -12,7 +12,6 @@ from src.telegram_bot.smart_notifications.alerts import create_alert, deactivate
 from src.telegram_bot.smart_notifications.checkers import start_notification_checker
 from src.telegram_bot.smart_notifications.utils import get_item_by_id, get_item_price
 
-
 logger = logging.getLogger(__name__)
 
 

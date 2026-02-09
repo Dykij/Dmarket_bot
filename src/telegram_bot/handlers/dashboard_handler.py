@@ -17,9 +17,8 @@ from src.telegram_bot.chart_generator import (
     generate_profit_comparison_chart,
     generate_scan_history_chart,
 )
+from src.utils.canonical_logging import get_logger
 from src.utils.exceptions import handle_exceptions
-from src.utils.logging_utils import get_logger
-
 
 logger = get_logger(__name__)
 

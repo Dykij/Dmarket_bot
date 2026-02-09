@@ -203,6 +203,7 @@ class TestPricePredictorEdgeCases:
     def test_predict_no_profit(self) -> None:
         """Test prediction where AI price <= market price."""
         import pandas as pd
+
         from src.ai.price_predictor import PricePredictor
 
         predictor = PricePredictor()

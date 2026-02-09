@@ -10,7 +10,6 @@ from src.dmarket.price_analyzer import PriceAnalyzer
 from src.dmarket.steam_api import get_steam_price, normalize_item_name
 from src.telegram_bot.notifier import send_arbitrage_report
 
-
 logger = logging.getLogger(__name__)
 
 

@@ -22,19 +22,18 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass
-from datetime import UTC, datetime
-from enum import StrEnum
 import logging
 import os
-from pathlib import Path
 import signal
 import subprocess  # noqa: S404 - Required for process management in watchdog
 import sys
+from dataclasses import dataclass
+from datetime import UTC, datetime
+from enum import StrEnum
+from pathlib import Path
 from typing import Any
 
 import aiohttp
-
 
 logger = logging.getLogger(__name__)
 
@@ -292,15 +291,14 @@ class Watchdog:
         self.stats.last_health_check = datetime.now(UTC)
 
         try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(
-                    self.config.health_check_url,
-                    timeout=aiohttp.ClientTimeout(total=self.config.health_check_timeout_seconds),
-                ) as response:
-                    if response.status == 200:
-                        return True
-                    logger.warning(f"Health check returned status {response.status}")
-                    return False
+            async with aiohttp.ClientSession() as session, session.get(
+                self.config.health_check_url,
+                timeout=aiohttp.ClientTimeout(total=self.config.health_check_timeout_seconds),
+            ) as response:
+                if response.status == 200:
+                    return True
+                logger.warning(f"Health check returned status {response.status}")
+                return False
 
         except aiohttp.ClientError as e:
             logger.warning(f"Health check connection error: {e}")

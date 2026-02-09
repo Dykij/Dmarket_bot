@@ -5,13 +5,12 @@
 ответов API и отправки уведомлений при изменении формата API.
 """
 
+import logging
 from collections.abc import Callable
 from functools import wraps
-import logging
 from typing import TYPE_CHECKING, Any, TypeVar
 
 from pydantic import BaseModel, ValidationError
-
 
 if TYPE_CHECKING:
     from src.telegram_bot.notifier import Notifier

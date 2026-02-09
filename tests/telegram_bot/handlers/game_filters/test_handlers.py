@@ -35,7 +35,6 @@ from src.telegram_bot.handlers.game_filters.handlers import (
     handle_set_rarity_callback,
 )
 
-
 # ============================================================================
 # Fixtures
 # ============================================================================

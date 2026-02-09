@@ -11,18 +11,18 @@ SessionEnd hook - cleanup при завершении сессии.
 
 import asyncio
 import sys
-from pathlib import Path
 from datetime import datetime
-from typing import Dict, Any
+from pathlib import Path
+from typing import Any
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from src.utils.logging_utils import setup_logging
+from src.utils.canonical_logging import setup_logging
 
 logger = setup_logging(__name__)
 
 
-async def session_end(context: Dict[str, Any]) -> None:
+async def session_end(context: dict[str, Any]) -> None:
     """
     Cleanup session resources.
     

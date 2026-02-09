@@ -5,10 +5,9 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-
 from src.dmarket.arbitrage_scanner import ArbitrageScanner
-from src.dmarket.liquidity_analyzer import LiquidityAnalyzer
 
+from src.dmarket.liquidity_analyzer import LiquidityAnalyzer
 
 pytestmark = pytest.mark.asyncio
 

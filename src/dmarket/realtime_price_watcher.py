@@ -7,16 +7,15 @@
 """
 
 import asyncio
-from collections import defaultdict
-from collections.abc import Callable, Coroutine
 import contextlib
 import logging
 import time
+from collections import defaultdict
+from collections.abc import Callable, Coroutine
 from typing import Any
 
 from src.dmarket.dmarket_api import DMarketAPI
 from src.utils.websocket_client import DMarketWebSocketClient
-
 
 logger = logging.getLogger(__name__)
 
@@ -715,7 +714,7 @@ class RealtimePriceWatcher:
 """
 async def main():
     from src.dmarket.dmarket_api import DMarketAPI
-    from src.utils.logging_utils import setup_logging
+    from src.utils.canonical_logging import setup_logging
 
     # Настройка логирования
     setup_logging()

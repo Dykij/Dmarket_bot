@@ -91,20 +91,23 @@ from src.ml.real_price_collector import (
     CollectedPrice,
     CollectionResult,
     CollectionStatus,
-    GameType as CollectorGameType,
     RealPriceCollector,
+)
+from src.ml.real_price_collector import (
+    GameType as CollectorGameType,
 )
 from src.ml.smart_recommendations import (
     ItemRecommendation,
     RecommendationBatch,
     RecommendationType,
-    RiskLevel as RecommendationRiskLevel,
     SmartRecommendations,
     create_smart_recommendations,
 )
+from src.ml.smart_recommendations import (
+    RiskLevel as RecommendationRiskLevel,
+)
 from src.ml.trade_classifier import AdaptiveTradeClassifier, RiskLevel, TradeSignal
 from src.ml.training_data_manager import DatasetMetadata, TrainingDataManager, TrainingDataset
-
 
 __all__ = [
     # ═══════════════════════════════════════════════════════════════════

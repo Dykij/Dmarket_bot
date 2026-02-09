@@ -9,11 +9,11 @@
 """
 
 import argparse
+import re
+import subprocess
 from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
-import re
-import subprocess
 
 
 class ChangelogGenerator:

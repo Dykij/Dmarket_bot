@@ -12,8 +12,8 @@ Unit-тесты для Pydantic схем DMarket API (src/dmarket/schemas.py).
 
 from decimal import Decimal
 
-from pydantic import ValidationError
 import pytest
+from pydantic import ValidationError
 
 from src.dmarket.schemas import (
     AggregatedPricesResponse,

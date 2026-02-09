@@ -8,7 +8,6 @@ import time
 
 from prometheus_client import Counter, Gauge, Histogram, Info, generate_latest
 
-
 # Информация о версии
 bot_info = Info("dmarket_bot", "DMarket Telegram Bot информация")
 bot_info.info({

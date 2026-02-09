@@ -17,21 +17,19 @@ Usage:
 
 import argparse
 import asyncio
-from datetime import UTC, datetime
 import json
 import logging
 import os
-from pathlib import Path
 import sys
+from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any
-
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.dmarket.dmarket_api import DMarketAPI
 from src.utils.config import Config
 from src.utils.database import DatabaseManager
-
 
 logger = logging.getLogger(__name__)
 

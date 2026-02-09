@@ -13,13 +13,12 @@ https://info.tacompany.ru/skhemy-zarabotka-v-steam/rasshirennye-ordera-cs-float
 Январь 2026
 """
 
+import logging
 from dataclasses import dataclass, field
 from enum import StrEnum
-import logging
 from typing import TYPE_CHECKING, Any
 
 from src.dmarket.models.target_enhancements import StickerFilter, TargetOperationResult
-
 
 if TYPE_CHECKING:
     from src.dmarket.targets.manager import TargetManager

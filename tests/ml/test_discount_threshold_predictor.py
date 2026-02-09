@@ -4,8 +4,8 @@ Tests the ML-based discount threshold prediction functionality
 including training on real prices and prediction generation.
 """
 
-from pathlib import Path
 import tempfile
+from pathlib import Path
 
 import numpy as np
 import pytest

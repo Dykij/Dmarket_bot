@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """CLI tool for managing DMarket Bot skills."""
 
-import click
 import json
-import yaml
 from pathlib import Path
+
+import click
+import yaml
 from tabulate import tabulate
-from typing import List, Dict, Optional
 
 
 @click.group()
@@ -19,14 +19,14 @@ def cli():
     pass
 
 
-def load_registry() -> Dict:
+def load_registry() -> dict:
     """Load skills registry."""
     registry_path = Path(".vscode/skills.json")
     if not registry_path.exists():
         click.echo("❌ Skills registry not found at .vscode/skills.json", err=True)
         raise click.Abort()
     
-    with open(registry_path, 'r') as f:
+    with open(registry_path) as f:
         return json.load(f)
 
 
@@ -35,7 +35,7 @@ def load_registry() -> Dict:
 @click.option('--status', '-s', help='Filter by status (active, documentation-only)')
 @click.option('--tag', '-t', help='Filter by tag')
 @click.option('--format', '-f', type=click.Choice(['table', 'json', 'compact']), default='table')
-def list(category: Optional[str], status: Optional[str], tag: Optional[str], format: str):
+def list(category: str | None, status: str | None, tag: str | None, format: str):
     """List all available skills."""
     registry = load_registry()
     skills = registry.get("skills", [])
@@ -78,7 +78,7 @@ def list(category: Optional[str], status: Optional[str], tag: Optional[str], for
 @cli.command()
 @click.argument('query')
 @click.option('--category', '-c', help='Filter by category')
-def search(query: str, category: Optional[str]):
+def search(query: str, category: str | None):
     """Search skills by query.
     
     Searches in name, description, tags, and activation triggers.
@@ -142,21 +142,21 @@ def info(skill_id: str):
     if skill.get("subcategories"):
         click.echo(f"Subcategories: {', '.join(skill['subcategories'])}")
     
-    click.echo(f"\nDescription:")
+    click.echo("\nDescription:")
     click.echo(f"  {skill.get('description', 'N/A')}")
     
     if skill.get("tags"):
         click.echo(f"\nTags: {', '.join(skill['tags'])}")
     
     if skill.get("activation_triggers"):
-        click.echo(f"\nActivation Triggers:")
+        click.echo("\nActivation Triggers:")
         for trigger in skill["activation_triggers"][:10]:
             click.echo(f"  • {trigger}")
     
     # Dependencies
     deps = skill.get("dependencies", {})
     if deps:
-        click.echo(f"\nDependencies:")
+        click.echo("\nDependencies:")
         if deps.get("requires"):
             click.echo(f"  Required: {', '.join(deps['requires'])}")
         if deps.get("optional"):
@@ -164,13 +164,13 @@ def info(skill_id: str):
     
     # Performance
     if skill.get("performance"):
-        click.echo(f"\nPerformance:")
+        click.echo("\nPerformance:")
         perf = skill["performance"]
         for key, value in perf.items():
             click.echo(f"  {key}: {value}")
     
     # Files
-    click.echo(f"\nFiles:")
+    click.echo("\nFiles:")
     if skill.get("skill_file"):
         click.echo(f"  Skill: {skill['skill_file']}")
     if skill.get("main_module"):
@@ -216,12 +216,12 @@ def registry(format: str):
         click.echo(yaml.dump(reg, default_flow_style=False, allow_unicode=True))
     else:
         # Summary format
-        click.echo(f"📚 Skills Registry\n")
+        click.echo("📚 Skills Registry\n")
         click.echo(f"Version: {reg.get('version', 'N/A')}")
         click.echo(f"Workspace: {reg.get('workspace', {}).get('name', 'N/A')}")
         
         stats = reg.get('statistics', {})
-        click.echo(f"\nStatistics:")
+        click.echo("\nStatistics:")
         click.echo(f"  Total Skills: {stats.get('total_skills', 0)}")
         click.echo(f"  Active Skills: {stats.get('active_skills', 0)}")
         click.echo(f"  Documentation Only: {stats.get('documentation_only', 0)}")

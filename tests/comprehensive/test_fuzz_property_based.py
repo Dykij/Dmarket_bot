@@ -12,8 +12,8 @@ import string
 from typing import TYPE_CHECKING, Any
 
 import pytest
-from hypothesis import HealthCheck, given, settings, strategies as st
-
+from hypothesis import HealthCheck, given, settings
+from hypothesis import strategies as st
 
 if TYPE_CHECKING:
     pass

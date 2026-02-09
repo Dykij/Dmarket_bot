@@ -25,7 +25,6 @@ from src.telegram_bot.handlers.liquidity_settings_handler import (
     update_liquidity_settings,
 )
 
-
 # ============================================================================
 # Test Fixtures
 # ============================================================================

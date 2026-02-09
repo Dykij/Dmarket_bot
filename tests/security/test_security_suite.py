@@ -16,8 +16,8 @@ import re
 import time
 from typing import Any
 
-from cryptography.fernet import Fernet
 import pytest
+from cryptography.fernet import Fernet
 
 from src.dmarket.dmarket_api import DMarketAPI
 from src.utils.rate_limiter import RateLimiter

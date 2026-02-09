@@ -7,13 +7,12 @@ This module provides:
 - Portfolio analysis
 """
 
-from datetime import UTC, datetime, timedelta
 import logging
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from telegram import Update
 from telegram.ext import CommandHandler, ContextTypes
-
 
 logger = logging.getLogger(__name__)
 

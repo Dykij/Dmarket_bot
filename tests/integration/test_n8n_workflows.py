@@ -5,8 +5,9 @@ These tests validate the integration between n8n workflows,
 API endpoints, and the bot's core functionality.
 """
 
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from unittest.mock import AsyncMock, patch, MagicMock
 
 
 class TestN8NWorkflowIntegration:

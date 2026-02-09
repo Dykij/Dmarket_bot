@@ -4,8 +4,9 @@ This module tests the MultiPlatformAggregator class for aggregating
 prices and opportunities across multiple platforms.
 """
 
+from unittest.mock import AsyncMock, MagicMock
+
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
 
 
 class TestMultiPlatformAggregator:

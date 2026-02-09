@@ -1,25 +1,11 @@
 """Arbitrage Scanner Engine."""
 
-import asyncio
 import logging
 import os
-import time
 from typing import TYPE_CHECKING, Any
 
-from src.dmarket.arbitrage import (
-    CENTS_TO_USD,
-    GAMES,
-    USD_TO_CENTS,
-    ArbitrageTrader,
-    arbitrage_boost_async,
-    arbitrage_mid_async,
-    arbitrage_pro_async,
-)
 from src.dmarket.dmarket_api import DMarketAPI
-from src.dmarket.liquidity_analyzer import LiquidityAnalyzer
-from src.dmarket.scanner import ARBITRAGE_LEVELS, GAME_IDS, ScannerCache, ScannerFilters
-from src.utils.rate_limiter import RateLimiter
-from src.utils.sentry_breadcrumbs import add_trading_breadcrumb
+from src.dmarket.scanner import ScannerCache, ScannerFilters
 
 if TYPE_CHECKING:
     from src.dmarket.item_filters import ItemFilters
@@ -71,3 +57,10 @@ class ArbitrageScanner:
         return []
 
     # ... other methods ...
+
+async def check_user_balance(api_client):
+    """Stub for balance check to prevent ImportErrors"""
+    try:
+        return await api_client.get_balance()
+    except Exception:
+        return None

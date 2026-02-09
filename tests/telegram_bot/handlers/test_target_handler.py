@@ -18,7 +18,6 @@ from src.telegram_bot.handlers.target_handler import (
     start_targets_menu,
 )
 
-
 # ============================================
 # Фикстуры
 # ============================================

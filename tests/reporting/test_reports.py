@@ -2,16 +2,17 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
+
 import pytest
 
 from src.reporting.reports import (
+    ReportFormat,
     ReportGenerator,
-    TradingReport,
+    ReportType,
     TaxReport,
     Trade,
-    ReportType,
-    ReportFormat,
+    TradingReport,
     create_report_generator,
 )
 

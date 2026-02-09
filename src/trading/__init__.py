@@ -41,7 +41,6 @@ from src.trading.trading_automation import (
     create_trading_automation,
 )
 
-
 __all__ = [
     "AdaptiveTrader",
     "AutoOrder",

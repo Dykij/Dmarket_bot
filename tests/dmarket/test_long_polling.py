@@ -3,18 +3,19 @@
 Tests long-polling functionality for DMarket API.
 """
 
+from datetime import UTC, datetime
+from unittest.mock import AsyncMock
+
 import pytest
-from datetime import datetime, UTC
-from unittest.mock import AsyncMock, MagicMock
 
 from src.dmarket.long_polling import (
-    LongPollingClient,
     BatchUpdateChecker,
+    CacheEntry,
+    LongPollingClient,
     MarketUpdate,
     UpdateType,
-    CacheEntry,
-    create_long_polling_client,
     create_batch_checker,
+    create_long_polling_client,
 )
 
 

@@ -16,8 +16,8 @@ from unittest.mock import patch
 
 import pytest
 from httpx import AsyncClient
-
 from src.dmarket.arbitrage_scanner import ArbitrageScanner
+
 from src.dmarket.dmarket_api import DMarketAPI
 from src.dmarket.portfolio_manager import PortfolioManager
 from src.dmarket.targets import TargetManager

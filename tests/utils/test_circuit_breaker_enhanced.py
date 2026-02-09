@@ -10,9 +10,9 @@ Run with:
 import asyncio
 from unittest.mock import MagicMock
 
-from circuitbreaker import CircuitBreakerError
 import httpx
 import pytest
+from circuitbreaker import CircuitBreakerError
 
 from src.utils.api_circuit_breaker import (
     EndpointType,

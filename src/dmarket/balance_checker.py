@@ -7,7 +7,6 @@ Phase 2: Code Readability Improvements - Task 9
 import logging
 from typing import Any
 
-
 logger = logging.getLogger(__name__)
 
 

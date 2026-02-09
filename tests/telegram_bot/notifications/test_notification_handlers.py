@@ -9,7 +9,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-
 # Import module components
 try:
     from src.telegram_bot.notifications.handlers import (
@@ -364,16 +363,15 @@ class TestCreateAlertCommand:
             "src.telegram_bot.notifications.handlers.add_price_alert",
             new_callable=AsyncMock,
             return_value=mock_alert,
+        ), patch(
+            "src.telegram_bot.notifications.handlers.format_alert_message",
+            return_value="Alert message",
         ):
-            with patch(
-                "src.telegram_bot.notifications.handlers.format_alert_message",
-                return_value="Alert message",
-            ):
-                await create_alert_command(mock_update, mock_context, mock_api)
+            await create_alert_command(mock_update, mock_context, mock_api)
 
-                mock_update.message.reply_text.assert_called_once()
-                call_args = mock_update.message.reply_text.call_args
-                assert "оповещение создано" in call_args[0][0].lower()
+            mock_update.message.reply_text.assert_called_once()
+            call_args = mock_update.message.reply_text.call_args
+            assert "оповещение создано" in call_args[0][0].lower()
 
     @pytest.mark.asyncio()
     async def test_item_not_found_shows_error(
@@ -576,17 +574,16 @@ class TestRemoveAlertCommand:
             "src.telegram_bot.notifications.handlers.get_user_alerts",
             new_callable=AsyncMock,
             return_value=mock_alerts,
+        ), patch(
+            "src.telegram_bot.notifications.handlers.remove_price_alert",
+            new_callable=AsyncMock,
+            return_value=True,
         ):
-            with patch(
-                "src.telegram_bot.notifications.handlers.remove_price_alert",
-                new_callable=AsyncMock,
-                return_value=True,
-            ):
-                await remove_alert_command(mock_update, mock_context)
+            await remove_alert_command(mock_update, mock_context)
 
-                mock_update.message.reply_text.assert_called_once()
-                call_args = mock_update.message.reply_text.call_args[0][0]
-                assert "удалено" in call_args.lower()
+            mock_update.message.reply_text.assert_called_once()
+            call_args = mock_update.message.reply_text.call_args[0][0]
+            assert "удалено" in call_args.lower()
 
 
 # Tests for settings_command
@@ -669,15 +666,14 @@ class TestSettingsCommand:
         with patch(
             "src.telegram_bot.notifications.handlers.get_storage",
             return_value=mock_storage,
+        ), patch(
+            "src.telegram_bot.notifications.handlers.update_user_settings",
+            new_callable=AsyncMock,
         ):
-            with patch(
-                "src.telegram_bot.notifications.handlers.update_user_settings",
-                new_callable=AsyncMock,
-            ):
-                await settings_command(mock_update, mock_context)
+            await settings_command(mock_update, mock_context)
 
-                # Should call reply_text at least once (for update and for showing settings)
-                assert mock_update.message.reply_text.call_count >= 1
+            # Should call reply_text at least once (for update and for showing settings)
+            assert mock_update.message.reply_text.call_count >= 1
 
 
 # Tests for register_notification_handlers

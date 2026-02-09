@@ -68,7 +68,6 @@ from src.telegram_bot.notifications import (  # Constants; Storage; Alerts manag
 # Tests patch these on notifier module, so they must be available here
 from src.utils.price_analyzer import calculate_price_trend, get_item_price_history
 
-
 # Backward compatibility: expose _user_alerts at module level
 # for existing code/tests that access notifier._user_alerts
 _storage = get_storage()

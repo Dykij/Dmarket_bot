@@ -20,7 +20,6 @@ from telegram.ext import ContextTypes
 
 from src.interfaces import IDMarketAPI
 
-
 logger = logging.getLogger(__name__)
 
 

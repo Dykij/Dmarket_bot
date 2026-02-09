@@ -1,15 +1,14 @@
 """Throttling logic for smart notifications."""
 
-from datetime import datetime
 import logging
 import time
+from datetime import datetime
 
 from src.telegram_bot.smart_notifications.constants import DEFAULT_COOLDOWN
 from src.telegram_bot.smart_notifications.preferences import (
     get_user_preferences,
     save_user_preferences,
 )
-
 
 logger = logging.getLogger(__name__)
 

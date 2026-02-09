@@ -1,9 +1,8 @@
 """Validate all Agent Skills in the repository."""
 
-import os
 import json
-import yaml
 from pathlib import Path
+
 
 def validate_skills():
     skills_root = Path(".github/skills")
@@ -28,7 +27,7 @@ def validate_skills():
                 try:
                     with open(manifest_file, encoding='utf-8') as f:
                         json.load(f)
-                    print(f"  ✅ Manifest valid")
+                    print("  ✅ Manifest valid")
                 except Exception as e:
                     print(f"  ❌ Manifest invalid: {e}")
                     all_valid = False

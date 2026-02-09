@@ -42,7 +42,6 @@ from src.integration.event_bus import Event, EventBus, EventTypes
 from src.integration.health_aggregator import HealthAggregator
 from src.integration.service_registry import ServiceRegistry
 
-
 if TYPE_CHECKING:
     from src.dmarket.dmarket_api import DMarketAPI
     from src.utils.config import Config

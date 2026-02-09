@@ -9,12 +9,10 @@ Tests system behavior under concurrent access:
 - Resource contention
 """
 import asyncio
-import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
-from typing import Any
 import threading
 import time
 
+import pytest
 
 # =============================================================================
 # ASYNC CONCURRENCY TESTS
@@ -225,17 +223,15 @@ class TestDeadlockPrevention:
 
         async def operation_1():
             # Always acquire locks in same order
-            async with lock_a:
-                async with lock_b:
-                    await asyncio.sleep(0.01)
-                    results.append("op1")
+            async with lock_a, lock_b:
+                await asyncio.sleep(0.01)
+                results.append("op1")
 
         async def operation_2():
             # Same order as operation_1
-            async with lock_a:
-                async with lock_b:
-                    await asyncio.sleep(0.01)
-                    results.append("op2")
+            async with lock_a, lock_b:
+                await asyncio.sleep(0.01)
+                results.append("op2")
 
         await asyncio.gather(operation_1(), operation_2())
 

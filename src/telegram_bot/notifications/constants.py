@@ -8,7 +8,6 @@ from __future__ import annotations
 
 from typing import Final
 
-
 # Типы уведомлений
 NOTIFICATION_TYPES: Final[dict[str, str]] = {
     "price_drop": "📉 Падение цены",

@@ -24,7 +24,6 @@ from src.dmarket.targets.enhanced_validators import (
     validate_target_conditions,
 )
 
-
 if TYPE_CHECKING:
     from src.interfaces import IDMarketAPI
 

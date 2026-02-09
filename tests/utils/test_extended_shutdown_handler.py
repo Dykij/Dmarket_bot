@@ -3,7 +3,6 @@
 import asyncio
 import json
 from datetime import datetime
-from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest

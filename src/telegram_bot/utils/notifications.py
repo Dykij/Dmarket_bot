@@ -7,13 +7,12 @@
 - Красивое форматирование сообщений
 """
 
-from datetime import datetime
 import logging
 import os
+from datetime import datetime
 
 from telegram import Bot
 from telegram.error import TelegramError
-
 
 logger = logging.getLogger(__name__)
 

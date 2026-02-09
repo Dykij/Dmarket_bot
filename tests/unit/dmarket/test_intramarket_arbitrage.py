@@ -7,7 +7,6 @@ trend analysis, pattern recognition, and item key building.
 
 import pytest
 
-
 # Skip tests that require structlog
 structlog = pytest.importorskip("structlog")
 

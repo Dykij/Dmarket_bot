@@ -1,9 +1,8 @@
 """Quick script to check DMarket balance."""
 import asyncio
 import os
-from pathlib import Path
 import sys
-
+from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 from src.dmarket.dmarket_api import DMarketAPI

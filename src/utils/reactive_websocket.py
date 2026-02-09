@@ -5,18 +5,17 @@ Supports balance updates, order events, and market changes with push notificatio
 """
 
 import asyncio
+import json
 from collections.abc import Callable
 from datetime import UTC, datetime
 from enum import StrEnum
-import json
 from typing import Any, Generic, TypeVar
 
 import aiohttp
 from aiohttp import ClientSession
 
 from src.dmarket.dmarket_api import DMarketAPI
-from src.utils.logging_utils import get_logger
-
+from src.utils.canonical_logging import get_logger
 
 logger = get_logger(__name__)
 

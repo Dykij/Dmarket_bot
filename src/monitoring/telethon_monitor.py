@@ -31,14 +31,14 @@ Created: January 23, 2026
 
 from __future__ import annotations
 
+import re
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from enum import StrEnum
-import re
-from typing import Any, Awaitable, Callable
+from typing import Any
 
 import structlog
-
 
 logger = structlog.get_logger(__name__)
 

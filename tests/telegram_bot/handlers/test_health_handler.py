@@ -4,10 +4,10 @@ This module tests the health command functions for system health
 monitoring via Telegram.
 """
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock
 
-from telegram import Update, Message, User, Chat
+import pytest
+from telegram import Chat, Message, Update, User
 
 
 class TestHealthCommands:

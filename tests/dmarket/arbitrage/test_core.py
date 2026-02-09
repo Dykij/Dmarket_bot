@@ -16,7 +16,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-
 # =============================================================================
 # Test fetch_market_items
 # =============================================================================
@@ -69,14 +68,13 @@ class TestFetchMarketItems:
 
         with patch.dict(
             "sys.modules", {"src.dmarket.dmarket_api": mock_dmarket_module}
+        ), patch.dict(
+            "os.environ", {"DMARKET_PUBLIC_KEY": "", "DMARKET_SECRET_KEY": ""}
         ):
-            with patch.dict(
-                "os.environ", {"DMARKET_PUBLIC_KEY": "", "DMARKET_SECRET_KEY": ""}
-            ):
-                from src.dmarket.arbitrage.core import fetch_market_items
+            from src.dmarket.arbitrage.core import fetch_market_items
 
-                result = await fetch_market_items(game="csgo", limit=10)
-                assert result == []
+            result = await fetch_market_items(game="csgo", limit=10)
+            assert result == []
 
     @pytest.mark.asyncio()
     async def test_fetch_market_items_with_price_range(self):

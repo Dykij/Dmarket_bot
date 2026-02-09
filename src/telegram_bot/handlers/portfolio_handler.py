@@ -25,7 +25,6 @@ from telegram.ext import (
 
 from src.portfolio import PortfolioAnalyzer, PortfolioManager, PortfolioMetrics
 
-
 if TYPE_CHECKING:
     from src.interfaces import IDMarketAPI
 

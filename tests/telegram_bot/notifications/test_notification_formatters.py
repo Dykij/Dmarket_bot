@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import pytest
 
-
 # Import module components
 try:
     from src.telegram_bot.notifications.formatters import (

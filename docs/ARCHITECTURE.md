@@ -1,34 +1,41 @@
-# Architecture of DMarket Telegram Bot (2026 Edition)
+﻿# Architecture Overview (v2.0)
 
-## Overview
-The project is built using a modular, mixin-based architecture to ensure scalability and maintainability.
+## Layers
 
-## Core Components
+### 1. Presentation Layer (Telegram)
+- **Path:** `src/telegram_bot`
+- **Role:** Handles user interaction via aiogram 3.x.
+- **Components:** Handlers, Keyboards, Middleware.
+- **Status:** Modular, but relies heavily on global services.
 
-### 1. DMarket API (`src/dmarket/api/`)
-The API client is split into functional mixins:
-- `client.py`: Base HTTP client, signing (Ed25519), and rate limiting.
-- `market.py`: Marketplace search and suggested prices.
-- `wallet.py`: Balance and account details.
-- `trading.py`: Buy, sell, and basic target operations.
-- `inventory.py`: User inventory management.
-- `extended.py`: Compliance with DMarket API v1.1.0 (deposits, history, etc.).
+### 2. Service Layer (Business Logic)
+- **Path:** `src/dmarket` (Legacy Monolith) & `src/trading` (New)
+- **Role:** Trading algorithms, arbitrage, buying/selling logic.
+- **Tech Debt:** `src/dmarket` violates SRP. Contains API clients, db logic, and complex algos mixed together.
+- **Goal:** Extract clean services into `src/trading`.
 
-### 2. Arbitrage Scanner (`src/dmarket/scanner/`)
-The scanning engine is decoupled from filtering logic:
-- `engine.py`: Main `ArbitrageScanner` orchestration.
-- `filters.py`: Advanced liquidity and competition filters.
-- `cache.py`: Efficient caching of API responses.
+### 3. Data Layer (Persistence)
+- **Path:** `src/models`
+- **Role:** SQLAlchemy ORM models.
+- **Key Models:** `MarketData` (Numeric prices), `User`.
+- **Status:** Migrated to Alembic. `MarketData` synced with Pydantic schemas.
 
-### 3. Telegram UI (`src/telegram_bot/handlers/`)
-Keyboard handlers are split into logical parts:
-- `keyboard_parts/trading.py`: Auto-trading controls.
-- `keyboard_parts/targets.py`: Buy order management.
-- `keyboard_parts/info.py`: Balance and inventory views.
-- `keyboard_parts/ml_ai.py`: Machine learning training and status.
+### 4. API Layer (DMarket)
+- **Path:** `src/dmarket/api`
+- **Role:** HTTP Client, Authentication, Pydantic Validation.
+- **Status:** Refactored (market.py + schemas.py). Robust error handling.
 
-### 4. Agent Skills (`.github/skills/`)
-AI-compatible modular extensions following the 2026 SkillsMP.com standard.
+## Tech Debt & Refactoring Candidates
 
-## Data Persistence
-State management has been migrated from `.pickle` files to a robust **PostgreSQL/SQLite** backend using **SQLAlchemy 2.0**.
+### High Priority
+- **`src/dmarket` Monolith:** Needs decomposition.
+- **`src/dmarket/auto_buyer.py`:** Too complex. Should be split into `MarketScannerService` and `OrderExecutionService`.
+- **Validation:** Ensure all API responses pass through `src/dmarket/schemas.py`.
+
+## SkillSMP Alignment
+- **Service Layer Pattern:** Move business logic from Handlers/API to dedicated Services.
+- **Repository Pattern:** Abstract DB access (currently raw SQLAlchemy sessions).
+
+### Recent Refactoring (v2.0)
+- **AutoBuyer:** Split into Controller (src/dmarket/auto_buyer.py) and Service (src/trading/engine.py).
+- **Models:** MarketData uses Numeric for precision.

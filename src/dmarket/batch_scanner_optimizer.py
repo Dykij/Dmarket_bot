@@ -18,7 +18,6 @@ from typing import Any
 
 import structlog
 
-
 logger = structlog.get_logger(__name__)
 
 # Optimal batch size from profiling (50x speedup)

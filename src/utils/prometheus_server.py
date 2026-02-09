@@ -2,11 +2,10 @@
 
 import asyncio
 
-from aiohttp import web
 import structlog
+from aiohttp import web
 
 from src.utils.prometheus_exporter import MetricsCollector
-
 
 logger = structlog.get_logger(__name__)
 
@@ -45,6 +44,7 @@ class PrometheusServer:
         """Обработчик /metrics endpoint."""
         try:
             import psutil
+
             from src.utils.prometheus_metrics import cpu_usage, ram_usage
             cpu_usage.set(psutil.cpu_percent())
             ram_usage.set(psutil.virtual_memory().percent)

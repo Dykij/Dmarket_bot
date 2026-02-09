@@ -1,9 +1,9 @@
 import json
-import logging
-from typing import Any, Dict, Optional
-from src.dmarket.api.wallet import WalletMixin
+from typing import Any
+
+
 # Mock items search for now
-async def mock_search_items(gameId: str, title: Optional[str] = None, limit: int = 5):
+async def mock_search_items(gameId: str, title: str | None = None, limit: int = 5):
     return {"items": [{"itemId": "test-1", "title": title or "AK-47", "price": 15.5}], "game": gameId}
 
 async def mock_get_balance():

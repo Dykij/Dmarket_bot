@@ -28,7 +28,6 @@ from src.utils.knowledge_base import (
     get_knowledge_base,
 )
 
-
 if TYPE_CHECKING:
     from telegram.ext import Application
 

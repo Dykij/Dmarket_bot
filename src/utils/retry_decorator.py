@@ -4,9 +4,9 @@ This module provides a standardized retry mechanism for API calls and other
 operations that may fail temporarily.
 """
 
-from collections.abc import Callable
 import functools
 import logging
+from collections.abc import Callable
 from typing import Any, TypeVar
 
 from tenacity import (
@@ -18,7 +18,6 @@ from tenacity import (
 )
 
 from src.utils.exceptions import NetworkError, RateLimitError
-
 
 logger = logging.getLogger(__name__)
 

@@ -46,7 +46,6 @@ from src.telegram_bot.smart_notifications import (
     update_user_preferences,
 )
 
-
 logger = logging.getLogger(__name__)
 
 # Emit deprecation warning

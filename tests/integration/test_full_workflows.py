@@ -7,7 +7,6 @@ from unittest.mock import patch
 
 import pytest
 
-
 if TYPE_CHECKING:
     from src.dmarket.dmarket_api import DMarketAPI
     from src.utils.database import DatabaseManager
@@ -106,7 +105,6 @@ class TestErrorRecoveryWorkflows:
     ) -> None:
         """Test scan continues after partial API failures."""
         import httpx
-
         from src.dmarket.arbitrage_scanner import ArbitrageScanner
 
         scanner = ArbitrageScanner(api_client=mock_dmarket_api)

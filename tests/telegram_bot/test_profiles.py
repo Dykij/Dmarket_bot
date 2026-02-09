@@ -21,17 +21,16 @@ class TestSaveUserProfiles:
             "456": {"language": "en", "api_key": "key2"},
         }
 
-        with patch.object(profiles, "USER_PROFILES", test_profiles):
-            with patch.object(
-                profiles, "USER_PROFILES_FILE", str(tmp_path / "profiles.json")
-            ):
-                profiles.save_user_profiles()
+        with patch.object(profiles, "USER_PROFILES", test_profiles), patch.object(
+            profiles, "USER_PROFILES_FILE", str(tmp_path / "profiles.json")
+        ):
+            profiles.save_user_profiles()
 
-                # Check file was created and contains correct data
-                with open(tmp_path / "profiles.json", encoding="utf-8") as f:
-                    saved = json.load(f)
+            # Check file was created and contains correct data
+            with open(tmp_path / "profiles.json", encoding="utf-8") as f:
+                saved = json.load(f)
 
-                assert saved == test_profiles
+            assert saved == test_profiles
 
     def test_save_user_profiles_uses_utf8_encoding(self, tmp_path):
         """Test save_user_profiles uses UTF-8 encoding."""
@@ -41,17 +40,16 @@ class TestSaveUserProfiles:
             "123": {"language": "ru", "username": "Пользователь"},
         }
 
-        with patch.object(profiles, "USER_PROFILES", test_profiles):
-            with patch.object(
-                profiles, "USER_PROFILES_FILE", str(tmp_path / "profiles.json")
-            ):
-                profiles.save_user_profiles()
+        with patch.object(profiles, "USER_PROFILES", test_profiles), patch.object(
+            profiles, "USER_PROFILES_FILE", str(tmp_path / "profiles.json")
+        ):
+            profiles.save_user_profiles()
 
-                # Verify UTF-8 content
-                with open(tmp_path / "profiles.json", encoding="utf-8") as f:
-                    saved = json.load(f)
+            # Verify UTF-8 content
+            with open(tmp_path / "profiles.json", encoding="utf-8") as f:
+                saved = json.load(f)
 
-                assert saved["123"]["username"] == "Пользователь"
+            assert saved["123"]["username"] == "Пользователь"
 
     def test_save_user_profiles_formats_with_indent(self, tmp_path):
         """Test save_user_profiles formats JSON with indent."""
@@ -59,18 +57,17 @@ class TestSaveUserProfiles:
 
         test_profiles = {"123": {"key": "value"}}
 
-        with patch.object(profiles, "USER_PROFILES", test_profiles):
-            with patch.object(
-                profiles, "USER_PROFILES_FILE", str(tmp_path / "profiles.json")
-            ):
-                profiles.save_user_profiles()
+        with patch.object(profiles, "USER_PROFILES", test_profiles), patch.object(
+            profiles, "USER_PROFILES_FILE", str(tmp_path / "profiles.json")
+        ):
+            profiles.save_user_profiles()
 
-                content = pathlib.Path(tmp_path / "profiles.json").read_text(
-                    encoding="utf-8"
-                )
+            content = pathlib.Path(tmp_path / "profiles.json").read_text(
+                encoding="utf-8"
+            )
 
-                # Should be formatted with indentation
-                assert "\n" in content
+            # Should be formatted with indentation
+            assert "\n" in content
 
     def test_save_user_profiles_handles_os_error(self):
         """Test save_user_profiles handles OSError gracefully."""
@@ -85,16 +82,15 @@ class TestSaveUserProfiles:
         """Test save_user_profiles with empty profiles dict."""
         from src.telegram_bot import profiles
 
-        with patch.object(profiles, "USER_PROFILES", {}):
-            with patch.object(
-                profiles, "USER_PROFILES_FILE", str(tmp_path / "profiles.json")
-            ):
-                profiles.save_user_profiles()
+        with patch.object(profiles, "USER_PROFILES", {}), patch.object(
+            profiles, "USER_PROFILES_FILE", str(tmp_path / "profiles.json")
+        ):
+            profiles.save_user_profiles()
 
-                with open(tmp_path / "profiles.json", encoding="utf-8") as f:
-                    saved = json.load(f)
+            with open(tmp_path / "profiles.json", encoding="utf-8") as f:
+                saved = json.load(f)
 
-                assert saved == {}
+            assert saved == {}
 
 
 class TestLoadUserProfiles:

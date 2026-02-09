@@ -30,7 +30,6 @@ from src.telegram_bot.handlers.game_filter_handlers import (
     update_filters,
 )
 
-
 # ======================== Fixtures ========================
 
 

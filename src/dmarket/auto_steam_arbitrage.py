@@ -6,15 +6,14 @@
 """
 
 import asyncio
-from datetime import datetime
 import logging
+from datetime import datetime
 from typing import Any
 
 from telegram import Bot
 
 from src.dmarket.dmarket_api import DMarketAPI
 from src.dmarket.steam_arbitrage_enhancer import SteamArbitrageEnhancer
-
 
 logger = logging.getLogger(__name__)
 

@@ -14,7 +14,6 @@ from typing import Any
 
 from src.dmarket.dmarket_api import DMarketAPI
 
-
 logger = logging.getLogger(__name__)
 
 __all__ = [

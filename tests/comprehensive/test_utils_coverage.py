@@ -3,11 +3,9 @@
 Tests to improve coverage of src/utils/ modules.
 """
 
-import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-
 
 # ============================================================================
 # DATABASE.PY TESTS
@@ -186,8 +184,9 @@ class TestMemoryCacheModule:
     def test_memory_cache_expiration(self):
         """Test TTLCache expiration."""
         try:
-            from src.utils.memory_cache import TTLCache
             import time
+
+            from src.utils.memory_cache import TTLCache
 
             cache = TTLCache(ttl=0.1, max_size=100)  # 100ms TTL
             cache.set("key1", "value1")
@@ -217,7 +216,7 @@ class TestLoggingUtilsModule:
     def test_get_logger(self):
         """Test get_logger function."""
         try:
-            from src.utils.logging_utils import get_logger
+            from src.utils.canonical_logging import get_logger
 
             logger = get_logger(__name__)
             assert logger is not None
@@ -455,7 +454,7 @@ class TestUtilsIntegration:
     async def test_logging_with_exception(self):
         """Test logging captures exceptions properly."""
         try:
-            from src.utils.logging_utils import get_logger
+            from src.utils.canonical_logging import get_logger
 
             logger = get_logger("test")
             try:

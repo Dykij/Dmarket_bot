@@ -1,8 +1,7 @@
 """Тесты для PriceAggregator - batch запросы для получения цен."""
 
 import asyncio
-from datetime import datetime, timedelta
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 

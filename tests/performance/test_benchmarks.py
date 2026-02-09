@@ -9,7 +9,6 @@ import time
 
 import pytest
 
-
 # Check if pytest-benchmark is available
 try:
     import pytest_benchmark as _  # noqa: F401

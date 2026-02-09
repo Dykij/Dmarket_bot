@@ -9,8 +9,8 @@
 Документация: docs/TARGET_ENHANCEMENTS_README.md
 """
 
-from datetime import UTC, datetime, timedelta
 import logging
+from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
 from src.dmarket.models.target_enhancements import (
@@ -22,7 +22,6 @@ from src.dmarket.models.target_enhancements import (
     TargetOperationResult,
     TargetOperationStatus,
 )
-
 
 if TYPE_CHECKING:
     from src.interfaces import IDMarketAPI

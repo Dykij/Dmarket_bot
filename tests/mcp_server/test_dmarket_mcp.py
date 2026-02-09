@@ -14,7 +14,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-
 # Mock MCP imports before importing the module
 with patch.dict(
     "sys.modules",

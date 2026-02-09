@@ -1,13 +1,11 @@
 """Tests for Watchlist Module."""
 
-from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
 import pytest
 
 from src.portfolio.watchlist import (
     PriceDirection,
-    PriceUpdate,
     Watchlist,
     WatchlistItem,
     WatchlistManager,

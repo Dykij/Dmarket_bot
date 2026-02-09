@@ -25,15 +25,14 @@ Created: January 2026
 from __future__ import annotations
 
 import asyncio
+import json
 from collections import deque
 from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime
 from enum import StrEnum
-import json
 from typing import TYPE_CHECKING, Any
 
 import structlog
-
 
 if TYPE_CHECKING:
     from redis.asyncio import Redis

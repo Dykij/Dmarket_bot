@@ -12,7 +12,6 @@ import pytest
 
 from src.telegram_bot.health_check import HealthCheckServer, init_health_check_server
 
-
 # ============================================================================
 # Fixtures
 # ============================================================================

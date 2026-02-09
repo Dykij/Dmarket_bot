@@ -12,7 +12,6 @@ from typing import Any
 
 import sentry_sdk
 
-
 logger = logging.getLogger(__name__)
 
 

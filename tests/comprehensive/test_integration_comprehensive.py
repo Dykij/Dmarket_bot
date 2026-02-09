@@ -12,10 +12,9 @@ from __future__ import annotations
 
 import asyncio
 from typing import TYPE_CHECKING, Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
-
 
 if TYPE_CHECKING:
     pass
@@ -48,7 +47,6 @@ class TestAPICircuitBreakerIntegration:
     async def test_api_uses_circuit_breaker(self) -> None:
         """Test API client uses circuit breaker for requests."""
         from src.dmarket.dmarket_api import DMarketAPI
-        from src.utils.api_circuit_breaker import EndpointType, get_circuit_breaker
 
         api = DMarketAPI("public", "secret")
 
@@ -64,13 +62,13 @@ class TestAPICircuitBreakerIntegration:
     @pytest.mark.asyncio
     async def test_circuit_breaker_opens_after_failures(self) -> None:
         """Test circuit breaker opens after multiple failures."""
+        import httpx
+
         from src.dmarket.dmarket_api import DMarketAPI
         from src.utils.api_circuit_breaker import (
             APICircuitBreaker,
-            EndpointType,
             _circuit_breakers,
         )
-        import httpx
 
         api = DMarketAPI("public", "secret")
 
@@ -140,6 +138,7 @@ class TestScannerAPIIntegration:
     async def test_scanner_uses_api_client(self) -> None:
         """Test scanner correctly uses API client."""
         from src.dmarket.arbitrage_scanner import ArbitrageScanner
+
         from src.dmarket.dmarket_api import DMarketAPI
 
         api = DMarketAPI("public", "secret")
@@ -151,6 +150,7 @@ class TestScannerAPIIntegration:
     async def test_scanner_scans_market(self) -> None:
         """Test scanner can scan market through API."""
         from src.dmarket.arbitrage_scanner import ArbitrageScanner
+
         from src.dmarket.dmarket_api import DMarketAPI
 
         api = DMarketAPI("public", "secret")
@@ -180,9 +180,10 @@ class TestScannerAPIIntegration:
     @pytest.mark.asyncio
     async def test_scanner_handles_api_errors(self) -> None:
         """Test scanner handles API errors gracefully."""
-        from src.dmarket.arbitrage_scanner import ArbitrageScanner
-        from src.dmarket.dmarket_api import DMarketAPI
         import httpx
+        from src.dmarket.arbitrage_scanner import ArbitrageScanner
+
+        from src.dmarket.dmarket_api import DMarketAPI
 
         api = DMarketAPI("public", "secret")
         scanner = ArbitrageScanner(api_client=api)
@@ -515,8 +516,9 @@ class TestErrorHandlingIntegration:
     @pytest.mark.asyncio
     async def test_api_error_handling(self) -> None:
         """Test API errors are handled gracefully."""
-        from src.dmarket.dmarket_api import DMarketAPI
         import httpx
+
+        from src.dmarket.dmarket_api import DMarketAPI
 
         api = DMarketAPI("public", "secret")
 
@@ -535,8 +537,9 @@ class TestErrorHandlingIntegration:
     @pytest.mark.asyncio
     async def test_timeout_handling(self) -> None:
         """Test timeout handling across components."""
-        from src.dmarket.dmarket_api import DMarketAPI
         import httpx
+
+        from src.dmarket.dmarket_api import DMarketAPI
 
         api = DMarketAPI("public", "secret")
 

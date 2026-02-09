@@ -11,7 +11,6 @@ from src.telegram_bot.handlers.dmarket_handlers import (
     register_dmarket_handlers,
 )
 
-
 # =============== Фикстуры ===============
 
 

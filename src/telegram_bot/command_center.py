@@ -29,14 +29,13 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import UTC, datetime
 import logging
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 import aiofiles
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes
-
 
 if TYPE_CHECKING:
     from src.dmarket.dmarket_api import DMarketAPI

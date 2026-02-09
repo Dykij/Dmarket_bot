@@ -25,15 +25,14 @@ Created: January 10, 2026
 from __future__ import annotations
 
 import csv
+import io
+import json
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from enum import StrEnum
-import io
-import json
 from typing import Any
 
 import structlog
-
 
 logger = structlog.get_logger(__name__)
 

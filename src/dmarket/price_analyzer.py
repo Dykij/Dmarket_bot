@@ -6,7 +6,6 @@ for arbitrage trading.
 
 import logging
 
-
 logger = logging.getLogger(__name__)
 
 

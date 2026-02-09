@@ -22,7 +22,6 @@ import pytest
 
 from src.dmarket.api.client import DMarketAPIClient
 
-
 # Test fixtures
 
 

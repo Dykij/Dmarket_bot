@@ -2,7 +2,6 @@
 
 from fastapi import FastAPI
 
-
 app = FastAPI(title="DMarket Bot Dashboard API", version="1.0.0")
 
 

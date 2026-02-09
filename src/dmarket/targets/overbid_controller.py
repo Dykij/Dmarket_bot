@@ -13,8 +13,8 @@
 """
 
 import asyncio
-from datetime import UTC, datetime, timedelta
 import logging
+from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
 from src.dmarket.models.target_enhancements import (
@@ -24,7 +24,6 @@ from src.dmarket.models.target_enhancements import (
     TargetOperationStatus,
     TargetOverbidConfig,
 )
-
 
 if TYPE_CHECKING:
     from src.interfaces import IDMarketAPI

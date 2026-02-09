@@ -1,8 +1,6 @@
 """Тесты для CursorPaginator - cursor-based пагинация."""
 
-import asyncio
-from datetime import datetime
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -264,7 +262,6 @@ class TestCursorVsOffset:
 
     def test_benchmark_exists(self):
         """Тест что benchmark документирован в коде."""
-        from src.dmarket.cursor_paginator import CursorPaginator
 
         # Проверяем что есть docstring с benchmark
         import src.dmarket.cursor_paginator as module

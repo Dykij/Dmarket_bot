@@ -8,20 +8,19 @@
 """
 
 import asyncio
-from datetime import datetime
 import os
-from pathlib import Path
 import sys
 import traceback
+from datetime import datetime
+from pathlib import Path
 from typing import Any
 
-from dotenv import load_dotenv
 import httpx
+from dotenv import load_dotenv
 from rich.console import Console
 from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.table import Table
-
 
 console = Console()
 
@@ -189,7 +188,7 @@ class GitHubActionsMonitor:
             except asyncio.CancelledError:
                 console.print("[yellow]⚠️  Запрос прерван пользователем[/yellow]")
                 raise
-            except (httpx.TimeoutException, httpx.NetworkError) as e:
+            except (httpx.TimeoutException, httpx.NetworkError):
                 if attempt == max_retries - 1:
                     console.print(f"[yellow]⚠️  Пропускаем run {run_id} из-за ошибки сети[/yellow]")
                     return []  # Возвращаем пустой список вместо ошибки

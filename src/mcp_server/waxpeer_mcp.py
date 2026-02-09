@@ -11,7 +11,6 @@ from typing import Any
 
 import structlog
 
-
 try:
     from mcp.server import Server
     from mcp.server.stdio import stdio_server
@@ -26,7 +25,6 @@ except ImportError:
     Tool = None
 
 from src.waxpeer.waxpeer_api import WaxpeerAPI
-
 
 logger = structlog.get_logger(__name__)
 

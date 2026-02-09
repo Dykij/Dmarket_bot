@@ -14,7 +14,6 @@ import logging
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes
 
-
 logger = logging.getLogger(__name__)
 
 

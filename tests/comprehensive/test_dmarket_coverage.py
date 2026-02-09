@@ -3,11 +3,9 @@
 Tests to improve coverage of src/dmarket/ modules.
 """
 
-import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-
 
 # ============================================================================
 # DMARKET_API.PY TESTS
@@ -435,6 +433,7 @@ class TestDMarketIntegration:
         """Test scanner integration with API."""
         try:
             from src.dmarket.arbitrage_scanner import ArbitrageScanner
+
             from src.dmarket.dmarket_api import DMarketAPI
 
             # Mock the API

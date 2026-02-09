@@ -1,11 +1,11 @@
 """Target (buy order) handlers for main keyboard."""
 
-import logging
 from typing import Any
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes
-from src.utils.logging_utils import get_logger
+
+from src.utils.canonical_logging import get_logger
 
 logger = get_logger(__name__)
 

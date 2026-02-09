@@ -19,7 +19,6 @@ from src.telegram_bot.smart_notifications.senders import (
     send_price_alert_notification,
 )
 
-
 # Module path constant for patching
 SENDERS_MODULE = "src.telegram_bot.smart_notifications.senders"
 

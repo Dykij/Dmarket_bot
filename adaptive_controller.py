@@ -1,7 +1,6 @@
 import os
-import time
-import yaml
 import re
+import time
 
 CONFIG_PATH = r"D:\DMarket-Telegram-Bot-main\config\config.yaml"
 DEBUG_LOG_PATH = r"D:\DMarket-Telegram-Bot-main\debug.log"
@@ -17,7 +16,7 @@ def get_last_new_item_time():
     last_time = 0
     try:
         # Read last 100 lines for efficiency
-        with open(DEBUG_LOG_PATH, 'r', encoding='utf-8', errors='ignore') as f:
+        with open(DEBUG_LOG_PATH, encoding='utf-8', errors='ignore') as f:
             lines = f.readlines()[-100:]
             for line in reversed(lines):
                 if "New item detected" in line:
@@ -36,7 +35,7 @@ def get_last_new_item_time():
 def update_config_interval(interval):
     """Updates scan_interval_seconds in config.yaml"""
     try:
-        with open(CONFIG_PATH, 'r', encoding='utf-8') as f:
+        with open(CONFIG_PATH, encoding='utf-8') as f:
             content = f.read()
         
         # Simple regex replace to keep comments and structure

@@ -3,18 +3,19 @@
 Tests intelligent polling optimization for DMarket API.
 """
 
-import pytest
-from datetime import datetime, UTC, timedelta
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 from src.dmarket.adaptive_polling import (
     AdaptivePollingEngine,
+    CachedPrice,
+    DeltaTracker,
+    MarketActivity,
     PollConfig,
     PollPriority,
-    MarketActivity,
-    CachedPrice,
     PriceChange,
-    DeltaTracker,
     create_polling_engine,
 )
 

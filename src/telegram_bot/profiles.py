@@ -7,7 +7,6 @@ from typing import Any
 
 from src.telegram_bot.user_profiles import USER_PROFILES_FILE
 
-
 USER_PROFILES: dict[str, dict[str, Any]] = {}
 
 

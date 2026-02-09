@@ -5,9 +5,6 @@ to achieve 95%+ coverage.
 """
 
 import time
-from unittest.mock import MagicMock, patch
-
-import pytest
 
 from src.utils.prometheus_metrics import (
     Timer,

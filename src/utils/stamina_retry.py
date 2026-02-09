@@ -51,12 +51,13 @@ from typing import Any, ParamSpec, TypeVar
 import httpx
 import structlog
 
-
 # Conditional import - stamina is optional
 try:
     import stamina
     from stamina import (
         is_active as stamina_is_active,
+    )
+    from stamina import (
         set_active as stamina_set_active,
     )
 
@@ -74,7 +75,6 @@ from src.utils.exceptions import (
     NetworkError,
     RateLimitError,
 )
-
 
 logger = structlog.get_logger(__name__)
 

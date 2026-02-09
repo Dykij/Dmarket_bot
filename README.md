@@ -9,7 +9,6 @@
 
 ---
 
-> 🤖 **Automated Trading System** featuring a revolutionary **Dual Brain Architecture** that combines classic deterministic logic with advanced AI reasoning (Arkady Core).
 
 ## 🌟 Key Features (2026 Edition)
 
@@ -33,7 +32,6 @@ Built for stability in volatile market conditions:
 
 | Metric               | Value                      |
 | -------------------- | -------------------------- |
-| **Version**          | 2026.2.3 (Arkady Edition)  |
 | **Architecture**     | Dual Brain (Logic + AI)    |
 | **Python**           | 3.11+                      |
 | **Testing**          | Comprehensive CI/CD        |
@@ -108,4 +106,3 @@ We welcome contributions! Please follow the `CONTRIBUTING.md` guidelines.
 
 ---
 
-**Last Updated:** February 7, 2026 (Arkady Protocol)

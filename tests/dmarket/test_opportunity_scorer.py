@@ -4,8 +4,8 @@ This module tests the OpportunityScorer class for ranking
 and scoring arbitrage opportunities.
 """
 
+
 import pytest
-from unittest.mock import MagicMock
 
 from src.dmarket.opportunity_scorer import OpportunityScorer, TradeOpportunity
 

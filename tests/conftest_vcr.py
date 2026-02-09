@@ -26,7 +26,6 @@ from typing import Any
 import pytest
 import vcr
 
-
 # Base directory for cassettes
 CASSETTES_DIR = Path(__file__).parent / "cassettes"
 CASSETTES_DIR.mkdir(exist_ok=True)

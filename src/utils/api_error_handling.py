@@ -5,8 +5,8 @@ from src.utils.api_error_handling. It re-exports key classes and functions
 from the main exceptions module.
 """
 
-from collections.abc import Callable
 import json
+from collections.abc import Callable
 from typing import Any
 
 from src.utils.exceptions import (
@@ -20,7 +20,6 @@ from src.utils.exceptions import (
     handle_api_error,
     retry_async,
 )
-
 
 __all__ = [
     "APIError",

@@ -36,13 +36,11 @@ from typing import TYPE_CHECKING
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import CallbackQueryHandler, CommandHandler, ContextTypes
 
-
 if TYPE_CHECKING:
     from telegram.ext import Application
 
 from src.ml.ai_coordinator import AutonomyLevel
 from src.ml.bot_brain import BotBrain, BotState, create_bot_brain
-
 
 logger = logging.getLogger(__name__)
 

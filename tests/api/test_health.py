@@ -7,9 +7,9 @@ Tests cover:
 - DMarket API health check
 """
 
+from unittest.mock import AsyncMock, MagicMock
+
 import pytest
-from datetime import datetime, UTC
-from unittest.mock import AsyncMock, MagicMock, patch
 
 
 class TestHealthCheckResult:
@@ -84,7 +84,7 @@ class TestDatabaseHealthCheck:
     @pytest.mark.asyncio
     async def test_check_database_healthy(self):
         """Test database health check when healthy."""
-        from src.api.health import check_database, HealthCheckResult
+        from src.api.health import check_database
         
         # Mock async session
         mock_session = AsyncMock()

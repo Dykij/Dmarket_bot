@@ -8,16 +8,15 @@
 - ML-based выбор оптимального порога скидки
 """
 
-from datetime import datetime
 import logging
 import operator
 import statistics
 import time
+from datetime import datetime
 from typing import Any
 
 # Импортируем DMarketAPI для взаимодействия с API
 from src.dmarket.dmarket_api import DMarketAPI
-
 
 # Настраиваем логирование
 logger = logging.getLogger(__name__)

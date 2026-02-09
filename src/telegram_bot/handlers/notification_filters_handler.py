@@ -11,7 +11,6 @@ from telegram.ext import ContextTypes
 
 from src.telegram_bot.filters_manager import get_filters_manager
 
-
 # Constants
 NOTIFY_FILTER = "notify_filter"
 

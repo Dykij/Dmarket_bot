@@ -14,7 +14,6 @@ from __future__ import annotations
 
 from typing import Any
 
-
 # Маппинг кодов игр к ID DMarket API
 GAME_IDS: dict[str, str] = {
     "csgo": "a8db",

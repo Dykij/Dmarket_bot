@@ -22,17 +22,16 @@ Created: January 10, 2026
 from __future__ import annotations
 
 import asyncio
+import hashlib
+import random
 from collections import deque
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from enum import StrEnum
-import hashlib
-import random
 from typing import TYPE_CHECKING, Any
 
 import structlog
-
 
 if TYPE_CHECKING:
     from src.dmarket.dmarket_api import DMarketAPI

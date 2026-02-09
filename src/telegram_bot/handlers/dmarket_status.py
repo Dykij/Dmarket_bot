@@ -1,18 +1,17 @@
 import os
 
-from dotenv import load_dotenv
 import httpx
+from dotenv import load_dotenv
 from telegram import Update
 from telegram.constants import ChatAction, ParseMode
 from telegram.ext import ContextTypes
 
-from src.dmarket.scanner.engine import check_user_balance
 from src.dmarket.dmarket_api import DMarketAPI
+from src.dmarket.scanner.engine import check_user_balance
 from src.telegram_bot.handlers.settings_handlers import get_localized_text
 from src.telegram_bot.profiles import get_user_profile
+from src.utils.canonical_logging import get_logger
 from src.utils.exceptions import APIError
-from src.utils.logging_utils import get_logger
-
 
 logger = get_logger(__name__)
 

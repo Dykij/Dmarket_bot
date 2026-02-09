@@ -17,7 +17,6 @@ from src.integration.event_bus import EventBus
 from src.integration.health_aggregator import HealthAggregator
 from src.integration.service_registry import ServiceRegistry
 
-
 __all__ = [
     "BotIntegrator",
     "EventBus",

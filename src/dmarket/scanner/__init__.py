@@ -48,7 +48,6 @@ from src.dmarket.scanner.tree_filters import (
     get_tree_filters_for_game,
 )
 
-
 # Note: ArbitrageScanner is imported from the original module
 # for backwards compatibility. In future refactoring phases,
 # it will be moved to scanner.py

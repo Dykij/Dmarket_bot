@@ -16,7 +16,6 @@ from src.reporting.reports import (
     create_report_generator,
 )
 
-
 __all__ = [
     "ReportFormat",
     "ReportGenerator",

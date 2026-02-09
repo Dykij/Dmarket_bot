@@ -16,7 +16,6 @@ from telegram.ext import ContextTypes
 
 from src.dmarket.autopilot_orchestrator import AutopilotOrchestrator
 
-
 logger = structlog.get_logger(__name__)
 
 

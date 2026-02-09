@@ -39,7 +39,7 @@ import structlog
 
 # Conditional imports for type checking
 if TYPE_CHECKING:
-    from src.trading.regime_detector import MarketRegime, RegimeDetector
+    from src.trading.regime_detector import RegimeDetector
 
 
 logger = structlog.get_logger(__name__)

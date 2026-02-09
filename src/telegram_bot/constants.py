@@ -9,7 +9,6 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Final
 
-
 # Типы уведомлений
 NOTIFICATION_TYPES: Final[dict[str, str]] = {
     "price_drop": "📉 Падение цены",

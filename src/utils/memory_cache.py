@@ -6,13 +6,12 @@ In-Memory Cache с TTL для оптимизации частых запросо
 """
 
 import asyncio
+import logging
+import time
 from collections import OrderedDict
 from collections.abc import Awaitable, Callable
 from functools import wraps
-import logging
-import time
 from typing import Any, ParamSpec, TypeVar, cast
-
 
 logger = logging.getLogger(__name__)
 

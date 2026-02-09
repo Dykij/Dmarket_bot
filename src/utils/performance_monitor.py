@@ -7,15 +7,15 @@ This module provides:
 """
 
 import asyncio
-from collections import deque
-from dataclasses import dataclass, field
 import functools
 import logging
 import time
-from typing import Any, Callable, TypeVar
+from collections import deque
+from collections.abc import Callable
+from dataclasses import dataclass, field
+from typing import Any, TypeVar
 
 import structlog
-
 
 logger = structlog.get_logger(__name__)
 sync_logger = logging.getLogger(__name__)

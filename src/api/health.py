@@ -3,10 +3,9 @@
 from datetime import UTC, datetime
 from typing import Any
 
+import structlog
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
-import structlog
-
 
 logger = structlog.get_logger(__name__)
 

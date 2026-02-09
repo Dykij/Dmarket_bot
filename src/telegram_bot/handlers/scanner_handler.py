@@ -10,10 +10,9 @@ from src.dmarket.scanner.engine import ARBITRAGE_LEVELS, ArbitrageScanner
 from src.telegram_bot.keyboards import create_pagination_keyboard
 from src.telegram_bot.pagination import pagination_manager
 from src.telegram_bot.utils.api_client import create_api_client_from_env
+from src.utils.canonical_logging import get_logger
 from src.utils.exceptions import handle_exceptions
-from src.utils.logging_utils import get_logger
 from src.utils.sentry_breadcrumbs import add_command_breadcrumb, add_trading_breadcrumb
-
 
 logger = get_logger(__name__)
 

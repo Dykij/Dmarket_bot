@@ -3,10 +3,11 @@ Unit tests for n8n_integration module.
 
 Tests API endpoints and data models for n8n workflow automation.
 """
-import pytest
-from decimal import Decimal
 from datetime import datetime
-from unittest.mock import AsyncMock, MagicMock, patch
+from decimal import Decimal
+from unittest.mock import AsyncMock, patch
+
+import pytest
 
 # NOTE: These tests validate the n8n_integration module design
 # The module is opt-in and not activated by default
@@ -31,10 +32,10 @@ class TestN8nIntegrationModuleExists:
         try:
             from src.api.n8n_integration import (
                 ArbitrageAlert,
-                TargetCreateRequest,
                 DailyStatsResponse,
                 PriceItem,
                 PricesResponse,
+                TargetCreateRequest,
             )
             # Basic validation that models exist
             assert ArbitrageAlert is not None
@@ -138,7 +139,7 @@ class TestN8nWebhookEndpoints:
     async def test_arbitrage_webhook_accepts_alert(self):
         """Test that arbitrage webhook can accept valid alert."""
         try:
-            from src.api.n8n_integration import receive_arbitrage_alert, ArbitrageAlert
+            from src.api.n8n_integration import ArbitrageAlert, receive_arbitrage_alert
             
             alert = ArbitrageAlert(
                 item_name="Test Item",
@@ -203,8 +204,7 @@ class TestN8nCompatibility:
     def test_no_conflicts_with_existing_api_module(self):
         """Test that n8n_integration doesn't conflict with existing API."""
         try:
-            from src.api import health
-            from src.api import n8n_integration
+            from src.api import health, n8n_integration
             
             # Both modules should coexist without conflicts
             assert health is not None

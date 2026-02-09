@@ -6,12 +6,10 @@ These tests should run quickly and catch any major regression issues.
 
 from __future__ import annotations
 
-import asyncio
 from typing import TYPE_CHECKING, Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
-
 
 if TYPE_CHECKING:
     pass
@@ -60,16 +58,15 @@ class TestCoreModuleImports:
 
     def test_models_import(self) -> None:
         """Test data models import successfully."""
-        from src.models.user import User
         from src.models.target import Target
+        from src.models.user import User
 
         assert User is not None
         assert Target is not None
 
     def test_telegram_bot_imports(self) -> None:
         """Test Telegram bot modules import successfully."""
-        from src.telegram_bot import keyboards
-        from src.telegram_bot import localization
+        from src.telegram_bot import keyboards, localization
 
         assert keyboards is not None
         assert localization is not None
@@ -155,6 +152,7 @@ class TestArbitrageScannerBasicFunctionality:
     async def test_scanner_creates_successfully(self) -> None:
         """Test scanner creates without error."""
         from src.dmarket.arbitrage_scanner import ArbitrageScanner
+
         from src.dmarket.dmarket_api import DMarketAPI
 
         api = DMarketAPI("test_public_key", "test_secret_key")
@@ -166,6 +164,7 @@ class TestArbitrageScannerBasicFunctionality:
     def test_scanner_has_scan_method(self) -> None:
         """Test scanner has scan method."""
         from src.dmarket.arbitrage_scanner import ArbitrageScanner
+
         from src.dmarket.dmarket_api import DMarketAPI
 
         api = DMarketAPI("test_public_key", "test_secret_key")
@@ -417,6 +416,7 @@ class TestIntegrationSmoke:
     async def test_api_and_scanner_integrate(self) -> None:
         """Test API client and scanner work together."""
         from src.dmarket.arbitrage_scanner import ArbitrageScanner
+
         from src.dmarket.dmarket_api import DMarketAPI
 
         api = DMarketAPI("test", "test")

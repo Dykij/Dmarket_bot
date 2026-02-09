@@ -7,11 +7,10 @@ This module handles:
 - Panic sell protection (market crash detection)
 """
 
+import logging
 from datetime import UTC, datetime, timedelta
 from enum import StrEnum
-import logging
 from typing import TYPE_CHECKING, Any
-
 
 if TYPE_CHECKING:
     from src.dmarket.dmarket_api import DMarketAPI

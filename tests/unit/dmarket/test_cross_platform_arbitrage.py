@@ -8,7 +8,6 @@ from decimal import Decimal
 
 import pytest
 
-
 # Skip all tests if structlog is not available
 pytest.importorskip("structlog")
 

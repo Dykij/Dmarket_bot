@@ -7,12 +7,11 @@
 для работы бота без необходимости редактировать файлы вручную.
 """
 
-from getpass import getpass
 import os
 import re
 import sys
+from getpass import getpass
 from typing import Any
-
 
 # Определяем необходимые переменные окружения
 ENV_VARS = [
@@ -223,9 +222,9 @@ def verify_api_keys(public_key: str, secret_key: str) -> bool:
         True, если ключи корректны, иначе False
     """
     try:
-        from datetime import datetime
         import hashlib
         import hmac
+        from datetime import datetime
 
         import requests
 

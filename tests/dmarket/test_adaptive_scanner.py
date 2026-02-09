@@ -4,9 +4,9 @@ This module tests the AdaptiveScanner class for intelligent
 market scanning with dynamic intervals based on market volatility.
 """
 
-import pytest
 from datetime import datetime, timedelta
-from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 
 class TestAdaptiveScanner:

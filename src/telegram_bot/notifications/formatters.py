@@ -12,7 +12,6 @@ from __future__ import annotations
 
 from typing import Any
 
-
 __all__ = [
     "format_alert_message",
     "format_item_brief",

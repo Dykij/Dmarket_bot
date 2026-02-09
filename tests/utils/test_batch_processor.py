@@ -15,7 +15,6 @@ import pytest
 
 from src.utils.batch_processor import SimpleBatchProcessor
 
-
 # Test fixtures
 
 

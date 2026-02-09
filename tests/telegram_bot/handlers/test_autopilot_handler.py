@@ -4,10 +4,10 @@ This module tests the autopilot command handlers (function-based)
 for automated trading management via Telegram.
 """
 
-import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
-from telegram import Update, Message, User, Chat, CallbackQuery
+import pytest
+from telegram import CallbackQuery, Chat, Message, Update, User
 
 
 class TestAutopilotCommands:

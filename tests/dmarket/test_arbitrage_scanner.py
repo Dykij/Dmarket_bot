@@ -9,10 +9,9 @@ import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-
 from src.dmarket.arbitrage_scanner import ARBITRAGE_LEVELS, GAME_IDS, ArbitrageScanner
-from src.dmarket.dmarket_api import DMarketAPI
 
+from src.dmarket.dmarket_api import DMarketAPI
 
 # ============================================================================
 # Fixtures

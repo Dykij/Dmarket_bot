@@ -5,17 +5,16 @@ and delivery via Telegram. Reports include trading statistics, errors,
 and other key metrics.
 """
 
-from datetime import datetime, time, timedelta
 import operator
+from datetime import datetime, time, timedelta
 from typing import Any
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 from telegram import Bot
 
+from src.utils.canonical_logging import get_logger
 from src.utils.database import DatabaseManager
-from src.utils.logging_utils import get_logger
-
 
 logger = get_logger(__name__)
 

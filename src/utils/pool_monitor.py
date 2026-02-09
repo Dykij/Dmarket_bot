@@ -4,11 +4,10 @@ Connection pool monitoring and statistics.
 Provides monitoring for database, Redis, and HTTP client connection pools.
 """
 
+import logging
 from dataclasses import dataclass
 from datetime import UTC, datetime
-import logging
 from typing import Any
-
 
 logger = logging.getLogger(__name__)
 

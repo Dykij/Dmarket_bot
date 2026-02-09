@@ -12,14 +12,13 @@
 Основан на официальной документации DMarket API.
 """
 
-from dataclasses import dataclass
-from enum import StrEnum
 import logging
 import operator
+from dataclasses import dataclass
+from enum import StrEnum
 from typing import Any
 
 from src.dmarket.dmarket_api import DMarketAPI
-
 
 logger = logging.getLogger(__name__)
 

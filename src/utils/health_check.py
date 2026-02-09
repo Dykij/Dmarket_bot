@@ -16,7 +16,6 @@ from datetime import datetime
 import psutil
 import structlog
 
-
 logger = structlog.get_logger(__name__)
 
 

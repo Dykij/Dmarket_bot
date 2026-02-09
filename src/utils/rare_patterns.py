@@ -15,8 +15,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from src.utils.logging_utils import get_logger
-
+from src.utils.canonical_logging import get_logger
 
 logger = get_logger(__name__)
 

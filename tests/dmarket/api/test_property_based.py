@@ -4,7 +4,8 @@ This module contains property-based tests that automatically generate
 test cases to find edge cases and validate invariants.
 """
 
-from hypothesis import HealthCheck, assume, given, settings, strategies as st
+from hypothesis import HealthCheck, assume, given, settings
+from hypothesis import strategies as st
 
 from src.dmarket.api.wallet import WalletOperationsMixin
 

@@ -3,7 +3,6 @@
 Based on SkillsMP recommendations for testing database utilities.
 """
 
-from unittest.mock import MagicMock, patch
 
 import pytest
 

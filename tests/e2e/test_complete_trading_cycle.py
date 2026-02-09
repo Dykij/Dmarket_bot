@@ -280,6 +280,7 @@ class TestCompleteTradingCycle:
     ):
         """Test that blacklisted items are rejected."""
         from src.dmarket.arbitrage_scanner import ArbitrageScanner
+
         from src.dmarket.blacklist_filters import ItemBlacklistFilter
 
         # Setup blacklist with sticker items blocked

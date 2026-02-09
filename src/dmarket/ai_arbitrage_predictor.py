@@ -22,7 +22,6 @@ from src.ml import (
     GameType,
 )
 
-
 logger = structlog.get_logger(__name__)
 
 

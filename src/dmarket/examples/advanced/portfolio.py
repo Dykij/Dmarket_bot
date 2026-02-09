@@ -8,15 +8,14 @@
 
 import asyncio
 import os
-from pathlib import Path
 import sys
 from dataclasses import dataclass
-from typing import List
+from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
-from src.dmarket.dmarket_api import DMarketAPI
 from src.dmarket.ai_arbitrage_predictor import AIArbitragePredictor
+from src.dmarket.dmarket_api import DMarketAPI
 from src.ml.enhanced_predictor import EnhancedPricePredictor
 
 
@@ -30,7 +29,7 @@ class PortfolioConfig:
 
 
 async def build_portfolio(api: DMarketAPI, ai_arbitrage: AIArbitragePredictor,
-                         configs: List[PortfolioConfig]) -> dict:
+                         configs: list[PortfolioConfig]) -> dict:
     """Построение диверсифицированного портфеля."""
     
     portfolio = {
@@ -130,7 +129,7 @@ async def main():
     ]
     
     print(f"💰 Общий капитал: ${total_capital:.2f}")
-    print(f"📈 Стратегия: 30% low / 40% medium / 30% high risk\n")
+    print("📈 Стратегия: 30% low / 40% medium / 30% high risk\n")
     
     # Построение портфеля
     portfolio = await build_portfolio(api, ai_arbitrage, portfolio_configs)
@@ -146,7 +145,7 @@ async def main():
     print(f"📈 Ожидаемый ROI: {(portfolio['expected_profit'] / portfolio['total_invested'] * 100):.1f}%")
     print(f"✨ Средняя уверенность: {portfolio['avg_confidence']:.1%}")
     
-    print(f"\n⚠️ Risk Breakdown:")
+    print("\n⚠️ Risk Breakdown:")
     for risk, count in portfolio['risk_breakdown'].items():
         percentage = (count / len(portfolio['positions'])) * 100
         print(f"   {risk.upper()}: {count} позиций ({percentage:.0f}%)")

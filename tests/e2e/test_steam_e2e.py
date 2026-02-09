@@ -7,8 +7,8 @@ Tests the complete workflow from scanning to notification.
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-
 from src.dmarket.arbitrage_scanner import ArbitrageScanner
+
 from src.utils.steam_db_handler import get_steam_db
 
 

@@ -6,11 +6,10 @@ Discovers and runs tests for skills in .github/skills/.
 Part of Phase 3 Week 3-4 implementation.
 """
 
-import sys
-import subprocess
-from pathlib import Path
-from typing import List, Dict, Tuple
 import json
+import subprocess
+import sys
+from pathlib import Path
 
 
 class SkillTestRunner:
@@ -18,9 +17,9 @@ class SkillTestRunner:
 
     def __init__(self, skills_dir: Path = Path(".github/skills")):
         self.skills_dir = skills_dir
-        self.results: Dict[str, Dict] = {}
+        self.results: dict[str, dict] = {}
 
-    def discover_skills(self) -> List[Path]:
+    def discover_skills(self) -> list[Path]:
         """Discover all skills with test directories."""
         skills_with_tests = []
 
@@ -38,7 +37,7 @@ class SkillTestRunner:
 
         return skills_with_tests
 
-    def run_tests(self, skill_dir: Path) -> Dict:
+    def run_tests(self, skill_dir: Path) -> dict:
         """Run tests for a single skill."""
         skill_name = skill_dir.name
         tests_dir = skill_dir / "tests"
@@ -85,7 +84,7 @@ class SkillTestRunner:
             return test_result
 
         except subprocess.TimeoutExpired:
-            print(f"   ⏱️ Timeout (>60s)")
+            print("   ⏱️ Timeout (>60s)")
             return {
                 "skill": skill_name,
                 "passed": 0,
@@ -107,7 +106,7 @@ class SkillTestRunner:
                 "errors": str(e),
             }
 
-    def run_all_tests(self) -> Tuple[int, int, int]:
+    def run_all_tests(self) -> tuple[int, int, int]:
         """Run tests for all skills. Returns (passed, failed, skipped)."""
         skills = self.discover_skills()
 

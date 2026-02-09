@@ -19,7 +19,6 @@ from telegram.ext import ContextTypes
 
 from src.utils.sentry_breadcrumbs import add_command_breadcrumb
 
-
 if TYPE_CHECKING:
     from src.dmarket.dmarket_api import DMarketAPI
 

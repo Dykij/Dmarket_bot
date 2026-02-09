@@ -25,7 +25,6 @@ from src.telegram_bot.smart_notifications.utils import (
 )
 from src.utils.exceptions import APIError, NetworkError
 
-
 # ============================================================================
 # Fixtures
 # ============================================================================

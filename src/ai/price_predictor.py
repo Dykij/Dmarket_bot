@@ -30,7 +30,6 @@ import logging
 import os
 from typing import Any
 
-
 logger = logging.getLogger(__name__)
 
 # Default paths for model and encoder

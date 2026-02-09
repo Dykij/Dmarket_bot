@@ -5,14 +5,14 @@
 """
 
 import asyncio
-from collections.abc import Callable
-from enum import Enum
 import functools
 import logging
 import traceback
+from collections.abc import Callable
+from enum import Enum
 from typing import Any, TypeVar, cast, overload
 
-# from src.utils.logging_utils import get_logger # Removed in favor of canonical_logging
+# from src.utils.canonical_logging import get_logger # Removed in favor of canonical_logging
 
 # Определение универсального типа для декораторов
 F = TypeVar("F", bound=Callable[..., Any])

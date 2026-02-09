@@ -19,7 +19,6 @@ from src.telegram_bot.handlers.price_alerts_handler import (
     PriceAlertsHandler,
 )
 
-
 # ======================== Fixtures ========================
 
 

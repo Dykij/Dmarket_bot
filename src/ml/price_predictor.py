@@ -13,10 +13,10 @@
 Все библиотеки бесплатные (scikit-learn, numpy).
 """
 
+import logging
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from enum import StrEnum
-import logging
 from pathlib import Path
 from typing import Any
 
@@ -24,7 +24,6 @@ import joblib
 import numpy as np
 
 from src.ml.feature_extractor import MarketFeatureExtractor, PriceFeatures
-
 
 logger = logging.getLogger(__name__)
 

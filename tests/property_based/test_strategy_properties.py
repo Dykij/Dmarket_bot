@@ -6,8 +6,8 @@ Tests properties and invariants for:
 - Game-specific filter logic
 """
 
-from hypothesis import HealthCheck, assume, given, settings, strategies as st
-
+from hypothesis import HealthCheck, assume, given, settings
+from hypothesis import strategies as st
 
 # ============================================================================
 # CUSTOM STRATEGIES

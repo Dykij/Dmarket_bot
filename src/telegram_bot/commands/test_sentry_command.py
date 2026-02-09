@@ -12,8 +12,8 @@ import sentry_sdk
 from telegram import Update
 from telegram.ext import ContextTypes
 
+from src.utils.canonical_logging import BotLogger
 from src.utils.config import Config
-from src.utils.logging_utils import BotLogger
 from src.utils.sentry_breadcrumbs import (
     add_api_breadcrumb,
     add_command_breadcrumb,
@@ -21,7 +21,6 @@ from src.utils.sentry_breadcrumbs import (
     add_trading_breadcrumb,
     set_user_context,
 )
-
 
 logger = logging.getLogger(__name__)
 bot_logger = BotLogger(__name__)

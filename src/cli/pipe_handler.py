@@ -15,10 +15,10 @@ from __future__ import annotations
 import asyncio
 import json
 import sys
-from typing import Any, AsyncIterator
+from collections.abc import AsyncIterator
+from typing import Any
 
 import structlog
-
 
 logger = structlog.get_logger(__name__)
 
@@ -36,7 +36,7 @@ class AsyncStdinReader:
         self.buffer_size = buffer_size
         self._reader: asyncio.StreamReader | None = None
 
-    async def __aenter__(self) -> "AsyncStdinReader":
+    async def __aenter__(self) -> AsyncStdinReader:
         """Async context manager entry."""
         import platform
 
@@ -45,8 +45,8 @@ class AsyncStdinReader:
         # Platform-specific stdin handling
         if platform.system() == "Windows":
             # Windows: Use thread-based reading
-            import threading
             import queue
+            import threading
 
             self._queue: queue.Queue = queue.Queue()
 

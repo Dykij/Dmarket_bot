@@ -11,7 +11,6 @@ import pytest
 
 from src.telegram_bot.commands.resume_command import resume_command
 
-
 # ============================================================================
 # Fixtures
 # ============================================================================

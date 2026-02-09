@@ -14,7 +14,6 @@ import structlog
 from src.dmarket.dmarket_api import DMarketAPI
 from src.utils.database import DatabaseManager
 
-
 logger = structlog.get_logger(__name__)
 
 

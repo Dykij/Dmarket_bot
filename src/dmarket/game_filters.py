@@ -14,7 +14,6 @@ from src.dmarket.filters.game_filters import (
     apply_filters_to_items,
 )
 
-
 __all__ = [
     "BaseGameFilter",
     "CS2Filter",

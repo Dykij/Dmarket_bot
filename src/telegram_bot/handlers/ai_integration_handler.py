@@ -5,14 +5,13 @@ AI Integration Handler для Telegram бота.
 Поддержка нескольких моделей: Llama 3.1, Qwen 2.5, Mistral, Gemma 2.
 """
 
-from enum import StrEnum
 import json
+from enum import StrEnum
 from typing import Any
 
 import structlog
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes
-
 
 try:
     import httpx

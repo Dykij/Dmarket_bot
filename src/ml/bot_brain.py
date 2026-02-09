@@ -44,11 +44,12 @@ Created: January 2026
 from __future__ import annotations
 
 import asyncio
+import logging
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from enum import StrEnum
-import logging
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any
 
 from src.ml.ai_coordinator import (
     AICoordinator,
@@ -57,7 +58,6 @@ from src.ml.ai_coordinator import (
     TradeAction,
     TradeDecision,
 )
-
 
 if TYPE_CHECKING:
     from src.dmarket.dmarket_api import DMarketAPI

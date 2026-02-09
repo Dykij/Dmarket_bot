@@ -3,7 +3,6 @@
 Tests for the main Application class and its lifecycle management.
 """
 
-import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest

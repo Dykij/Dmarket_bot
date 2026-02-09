@@ -7,5 +7,4 @@ Waxpeer Integration Module.
 from src.waxpeer.waxpeer_api import WaxpeerAPI
 from src.waxpeer.waxpeer_manager import WaxpeerManager
 
-
 __all__ = ["WaxpeerAPI", "WaxpeerManager"]

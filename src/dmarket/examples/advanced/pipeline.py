@@ -18,9 +18,8 @@ Expected output: Pipeline execution results with metrics
 from __future__ import annotations
 
 import asyncio
-from pathlib import Path
 import sys
-
+from pathlib import Path
 
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))

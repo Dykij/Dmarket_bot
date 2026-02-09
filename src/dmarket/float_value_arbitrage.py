@@ -12,12 +12,11 @@ https://info.tacompany.ru/skhemy-zarabotka-v-steam/rasshirennye-ordera-cs-float
 Январь 2026
 """
 
-from dataclasses import dataclass, field
-from enum import StrEnum
 import logging
 import statistics
+from dataclasses import dataclass, field
+from enum import StrEnum
 from typing import TYPE_CHECKING, Any
-
 
 if TYPE_CHECKING:
     from src.interfaces import IDMarketAPI

@@ -11,14 +11,13 @@ Extracted from notifier.py during R-4 refactoring.
 
 from __future__ import annotations
 
-from datetime import datetime
 import logging
 import time
+from datetime import datetime
 from typing import Any
 
 from .constants import DEFAULT_USER_SETTINGS
 from .storage import get_storage
-
 
 __all__ = [
     "add_price_alert",

@@ -18,7 +18,6 @@ from typing import TYPE_CHECKING, Any
 
 import structlog
 
-
 if TYPE_CHECKING:
     from collections.abc import Mapping
 

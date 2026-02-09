@@ -12,12 +12,11 @@
 Основано на документации DMarket API.
 """
 
+import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import IntEnum
-import logging
 from typing import Any
-
 
 logger = logging.getLogger(__name__)
 

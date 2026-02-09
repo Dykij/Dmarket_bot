@@ -10,7 +10,7 @@
 import json
 import logging
 
-from src.utils.logging_utils import ColoredFormatter, JSONFormatter
+from src.utils.canonical_logging import ColoredFormatter, JSONFormatter
 
 
 class TestJSONFormatter:

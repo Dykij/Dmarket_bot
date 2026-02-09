@@ -37,7 +37,6 @@ import structlog
 from src.copilot_sdk.file_editor import FileEditor
 from src.copilot_sdk.project_indexer import ProjectIndexer
 
-
 logger = structlog.get_logger(__name__)
 
 

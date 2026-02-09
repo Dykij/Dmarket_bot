@@ -14,7 +14,6 @@ from telegram import Update
 from telegram.constants import ParseMode
 from telegram.ext import ContextTypes
 
-
 logger = structlog.get_logger(__name__)
 
 

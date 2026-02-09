@@ -1,7 +1,8 @@
 """Wallet and account operations for DMarket API."""
 
 import logging
-from typing import Any, Optional
+from typing import Any
+
 from src.dmarket.models.pydantic_api import BalanceResponse
 
 logger = logging.getLogger(__name__)

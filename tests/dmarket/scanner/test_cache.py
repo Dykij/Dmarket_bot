@@ -20,7 +20,6 @@ import pytest
 
 from src.dmarket.scanner.cache import ScannerCache, generate_cache_key
 
-
 # ============================================================================
 # Test Fixtures
 # ============================================================================

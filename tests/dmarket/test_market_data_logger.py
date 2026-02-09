@@ -4,11 +4,9 @@ This module tests the MarketDataLogger class for logging
 market data for analysis and ML training.
 """
 
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from unittest.mock import MagicMock, patch, AsyncMock
-import tempfile
-from pathlib import Path
-from datetime import datetime
 
 
 class TestMarketDataLogger:

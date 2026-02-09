@@ -1,13 +1,12 @@
 import asyncio
-from dataclasses import dataclass
-from enum import IntEnum
 import itertools
 import logging
 import time
+from dataclasses import dataclass
+from enum import IntEnum
 
 from telegram import Bot, InlineKeyboardMarkup, ReplyKeyboardMarkup
 from telegram.error import NetworkError, RetryAfter, TimedOut
-
 
 logger = logging.getLogger(__name__)
 

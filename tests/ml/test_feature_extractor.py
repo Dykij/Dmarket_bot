@@ -6,7 +6,6 @@ Tests for MarketFeatureExtractor and PriceFeatures.
 from datetime import UTC, datetime, timedelta
 
 import numpy as np
-import pytest
 
 from src.ml.feature_extractor import (
     MarketFeatureExtractor,

@@ -3,16 +3,15 @@
 from __future__ import annotations
 
 import gzip
-from pathlib import Path
 import sqlite3
 
 # Import will be available after sys.path manipulation in the script
 import sys
 import tempfile
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
-
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 

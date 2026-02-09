@@ -3,8 +3,9 @@
 Tests the Telegram handlers for bot improvements.
 """
 
+from unittest.mock import AsyncMock, MagicMock
+
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
 
 
 @pytest.fixture

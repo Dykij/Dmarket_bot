@@ -11,7 +11,6 @@ from typing import Any, TypeVar
 
 from structlog import get_logger
 
-
 logger = get_logger(__name__)
 
 T = TypeVar("T")

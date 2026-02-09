@@ -1,7 +1,10 @@
 from telegram import Update
 from telegram.ext import ContextTypes, MessageHandler, filters
+
 from src.ai.router import AIRouter
+
 from .tools.gemini_wrapper import get_gemini
+
 
 async def ai_message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """

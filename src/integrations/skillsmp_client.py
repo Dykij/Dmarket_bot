@@ -30,13 +30,12 @@ Created: January 2026
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
 import os
+from dataclasses import dataclass, field
 from typing import Any
 
 import httpx
 import structlog
-
 
 logger = structlog.get_logger(__name__)
 

@@ -22,7 +22,6 @@ from src.dmarket.targets import (
     validate_attributes,
 )
 
-
 # Emit deprecation warning
 warnings.warn(
     "targets.py is deprecated. Import from src.dmarket.targets instead.",

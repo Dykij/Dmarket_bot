@@ -14,8 +14,8 @@ Phase 4 Task #2: Дополнительные тесты для arbitrage_scanne
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-
 from src.dmarket.arbitrage_scanner import ARBITRAGE_LEVELS, ArbitrageScanner
+
 from src.dmarket.dmarket_api import DMarketAPI
 
 

@@ -19,7 +19,6 @@ from typing import Any
 from telegram import Update
 from telegram.ext import Application
 
-
 logger = logging.getLogger(__name__)
 
 

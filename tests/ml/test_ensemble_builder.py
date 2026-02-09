@@ -12,7 +12,6 @@ Enhanced test suite following SkillsMP.com best practices:
 import numpy as np
 import pytest
 
-
 # Check if sklearn is available
 try:
     import sklearn

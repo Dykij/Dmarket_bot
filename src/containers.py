@@ -23,14 +23,13 @@ from typing import Any
 
 from dependency_injector import containers, providers
 
-from src.dmarket.scanner.engine import ArbitrageScanner
 from src.dmarket.dmarket_api import DMarketAPI
+from src.dmarket.scanner.engine import ArbitrageScanner
 from src.dmarket.targets import TargetManager
 from src.utils.config import Config
 from src.utils.database import DatabaseManager
 from src.utils.memory_cache import TTLCache
 from src.utils.redis_cache import RedisCache
-
 
 logger = logging.getLogger(__name__)
 

@@ -20,7 +20,6 @@ from src.dmarket.dmarket_api import DMarketAPI
 from src.utils.database import DatabaseManager
 from src.utils.redis_cache import RedisCache
 
-
 logger = structlog.get_logger(__name__)
 
 

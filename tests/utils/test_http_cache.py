@@ -9,17 +9,16 @@ Tests cover:
 - Fallback behavior when hishel is not available
 """
 
-import asyncio
 from pathlib import Path
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import httpx
 import pytest
 
 from src.utils.http_cache import (
     HISHEL_AVAILABLE,
-    CachedHTTPClient,
     CacheConfig,
+    CachedHTTPClient,
     CacheStats,
     CacheStorageType,
     close_cached_client,

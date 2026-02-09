@@ -1,5 +1,5 @@
-import pytest
 from src.dmarket.models.pydantic_api import BalanceResponse
+
 
 def test_balance_response_validation():
     # Test valid data

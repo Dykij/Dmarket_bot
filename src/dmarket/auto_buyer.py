@@ -8,7 +8,7 @@ This module implements:
 - Persistent storage of purchases (survives restarts)
 
 Created: January 2, 2026
-Updated: January 4, 2026 - Added persistence support
+Updated: February 9, 2026 - Refactored to use Service Layer (TradingEngine)
 """
 
 from datetime import datetime
@@ -16,6 +16,7 @@ from typing import TYPE_CHECKING, Any
 
 import structlog
 
+from src.trading.engine import TradingEngine, TradingConfig
 
 if TYPE_CHECKING:
     from src.utils.trading_persistence import TradingPersistence
@@ -93,7 +94,7 @@ class PurchaseResult:
 
 
 class AutoBuyer:
-    """Automatic item buyer with instant purchase capability."""
+    """Automatic item buyer with instant purchase capability (Controller)."""
 
     def __init__(self, api_client, config: AutoBuyConfig | None = None):
         """Initialize AutoBuyer.
@@ -104,6 +105,17 @@ class AutoBuyer:
         """
         self.api = api_client
         self.config = config or AutoBuyConfig()
+        
+        # Initialize Service Layer (Trading Engine)
+        # This delegates business logic to a specialized service
+        self.engine = TradingEngine(TradingConfig(
+            min_discount_percent=self.config.min_discount_percent,
+            max_price_usd=self.config.max_price_usd,
+            check_sales_history=self.config.check_sales_history,
+            check_trade_lock=self.config.check_trade_lock,
+            max_trade_lock_hours=self.config.max_trade_lock_hours
+        ))
+        
         self.purchase_history: list[PurchaseResult] = []
         self._auto_seller = None  # Will be set via set_auto_seller()
         self._trading_persistence: TradingPersistence | None = None  # Persistence layer
@@ -140,7 +152,7 @@ class AutoBuyer:
         logger.info("auto_seller_linked", has_seller=auto_seller is not None)
 
     async def should_auto_buy(self, item: dict) -> tuple[bool, str]:
-        """Check if item meets auto-buy criteria.
+        """Check if item meets auto-buy criteria using TradingEngine service.
 
         Args:
             item: Item data from DMarket API
@@ -152,60 +164,27 @@ class AutoBuyer:
         if not self.config.enabled:
             return False, "Auto-buy is disabled"
 
-        # Extract item data
-        price_usd = float(item.get("price", {}).get("USD", 0)) / 100
-        suggested_price = item.get("suggestedPrice", {}).get("USD")
-
-        # Early return: No suggested price
-        if not suggested_price:
-            return False, "No suggested price available"
-
-        suggested_price_usd = float(suggested_price) / 100
-
-        # Calculate discount
-        if suggested_price_usd <= 0:
-            return False, "Invalid suggested price"
-
-        discount = ((suggested_price_usd - price_usd) / suggested_price_usd) * 100
-
-        # Early return: Discount too low
-        if discount < self.config.min_discount_percent:
-            return False, f"Discount {discount:.1f}% < {self.config.min_discount_percent}%"
-
-        # Early return: Price too high
-        if price_usd > self.config.max_price_usd:
-            return False, f"Price ${price_usd:.2f} > ${self.config.max_price_usd:.2f}"
-
-        # Check trade lock if enabled
-        if self.config.check_trade_lock:
-            trade_lock = item.get("extra", {}).get("tradeLockDuration", 0)
-            if trade_lock > self.config.max_trade_lock_hours * 3600:
-                return (
-                    False,
-                    f"Trade lock {trade_lock / 3600:.0f}h > {self.config.max_trade_lock_hours}h",
-                )
-
-        # Check liquidity if enabled (sales history)
+        # Delegate logic to Service Layer
+        decision = self.engine.evaluate_deal(item)
+        
+        if not decision.should_buy:
+            return False, decision.reason
+            
+        # Perform Async Liquidity Check (Engine Helper)
+        # Note: We pass self.api because Engine is stateless regarding API connection
         if self.config.check_sales_history:
-            is_liquid = await self._check_liquidity(item)
+            title = item.get("title", "")
+            is_liquid = await self._check_liquidity_proxy(title)
             if not is_liquid:
                 return False, "Low liquidity (< 5 sales/day)"
+                
+        return True, decision.reason
 
-        # All checks passed
-        return True, f"Discount {discount:.1f}% >= {self.config.min_discount_percent}%"
-
-    async def _check_liquidity(self, item: dict) -> bool:
-        """Check item liquidity via sales history.
-
-        Args:
-            item: Item data
-
-        Returns:
-            True if item is liquid (enough sales)
-        """
+    async def _check_liquidity_proxy(self, title: str) -> bool:
+        """Wrapper for liquidity check to maintain compatibility or custom logic."""
+        # This could also move to Engine fully if we pass API client to it
         try:
             # Get item title
-            title = item.get("title", "")
             if not title:
                 return True  # Skip check if no title
 
@@ -270,7 +249,7 @@ class AutoBuyer:
                     item_id=item_id,
                     item_title="Unknown",
                     price_usd=price_usd,
-                    message="❌ Insufficient balance",
+                    message="? Insufficient balance",
                     error="Insufficient funds",
                 )
                 self.purchase_history.append(result)
@@ -283,7 +262,7 @@ class AutoBuyer:
                 item_id=item_id,
                 item_title="DRY_RUN_ITEM",
                 price_usd=price_usd,
-                message="✅ DRY_RUN: Purchase simulated successfully",
+                message="? DRY_RUN: Purchase simulated successfully",
                 order_id=f"DRY_RUN_{item_id}",
             )
             self.purchase_history.append(result)
@@ -317,7 +296,7 @@ class AutoBuyer:
                     item_id=item_id,
                     item_title=item_title,
                     price_usd=price_usd,
-                    message="✅ Purchase completed successfully",
+                    message="? Purchase completed successfully",
                     order_id=response.get("orderId"),
                 )
 
@@ -345,7 +324,7 @@ class AutoBuyer:
                     item_id=item_id,
                     item_title="Unknown",
                     price_usd=price_usd,
-                    message="❌ Purchase failed",
+                    message="? Purchase failed",
                     error=response.get("error", "Unknown error"),
                 )
 
@@ -364,7 +343,7 @@ class AutoBuyer:
                 item_id=item_id,
                 item_title="Unknown",
                 price_usd=price_usd,
-                message=f"❌ Exception during purchase: {e!s}",
+                message=f"? Exception during purchase: {e!s}",
                 error=str(e),
             )
 

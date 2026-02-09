@@ -15,14 +15,13 @@ Created: January 13, 2026
 from __future__ import annotations
 
 import asyncio
+import operator
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from decimal import Decimal
-import operator
 from typing import TYPE_CHECKING, Any
 
 import structlog
-
 
 if TYPE_CHECKING:
     from src.dmarket.dmarket_api import DMarketAPI
@@ -32,7 +31,7 @@ if TYPE_CHECKING:
 logger = structlog.get_logger(__name__)
 
 
-from src.core.trade_fsm import TradeState, TradeStateMachine, PendingTradeStatus
+from src.core.trade_fsm import TradeState, TradeStateMachine
 
 # ============================================================================
 # Configuration and Constants

@@ -18,7 +18,6 @@ import pytest
 
 from src.models.target import Target, TradeHistory, TradingSettings
 
-
 # ============================================================================
 # Test Class: Target Model
 # ============================================================================

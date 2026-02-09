@@ -11,7 +11,6 @@ import structlog
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import CallbackQueryHandler, CommandHandler, ContextTypes
 
-
 logger = structlog.get_logger(__name__)
 
 

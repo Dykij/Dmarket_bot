@@ -28,7 +28,6 @@ from src.telegram_bot.handlers.callback_handlers import (
 from src.telegram_bot.handlers.callback_router import CallbackRouter
 from src.telegram_bot.keyboards import CB_BACK, CB_CANCEL, CB_GAME_PREFIX, CB_HELP
 
-
 logger = logging.getLogger(__name__)
 
 

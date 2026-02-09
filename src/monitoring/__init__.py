@@ -16,7 +16,6 @@ from src.monitoring.telethon_monitor import (
     create_telethon_monitor,
 )
 
-
 __all__ = [
     "DetectedSignal",
     "MessageAnalyzer",

@@ -1,7 +1,6 @@
 """Tests for Enhanced User Rate Limiter."""
 
 from datetime import UTC, datetime, timedelta
-from decimal import Decimal
 
 import pytest
 

@@ -4,17 +4,16 @@ Provides statistical analysis, trend detection, and price prediction algorithms
 for DMarket trading. Implements RSI, MACD, and fair price calculation.
 """
 
+import statistics
 from collections.abc import Sequence
 from datetime import UTC, datetime, timedelta
 from enum import StrEnum
-import statistics
 from typing import Any
 
 import numpy as np
 from numpy.typing import NDArray
 
-from src.utils.logging_utils import get_logger
-
+from src.utils.canonical_logging import get_logger
 
 logger = get_logger(__name__)
 

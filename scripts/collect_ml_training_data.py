@@ -23,9 +23,9 @@ import argparse
 import asyncio
 import json
 import os
+import sys
 from datetime import UTC, datetime
 from pathlib import Path
-import sys
 
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -37,7 +37,6 @@ load_dotenv()
 
 from src.dmarket.dmarket_api import DMarketAPI
 from src.ml.price_normalizer import PriceNormalizer
-
 
 # Output directory for training data
 OUTPUT_DIR = Path("data/ml_training/real_data")

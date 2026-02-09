@@ -8,18 +8,17 @@
 - AutoMLSelector для автоматического выбора модели
 """
 
-import pytest
 import numpy as np
+import pytest
 
 from src.ml.model_tuner import (
-    ModelTuner,
     AutoMLSelector,
     CVStrategy,
+    EvaluationResult,
+    ModelTuner,
     ScoringMetric,
     TuningResult,
-    EvaluationResult,
 )
-
 
 # === Fixtures ===
 

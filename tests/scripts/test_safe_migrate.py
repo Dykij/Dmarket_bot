@@ -3,8 +3,8 @@
 Тесты для safe_migrate.py
 """
 
-from pathlib import Path
 import subprocess
+from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest

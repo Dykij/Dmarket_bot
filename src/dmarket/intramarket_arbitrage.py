@@ -7,14 +7,13 @@ This module provides methods for finding arbitrage opportunities within DMarket 
 - Detection of mispriced rare items
 """
 
-from enum import StrEnum
 import logging
 import operator
+from enum import StrEnum
 from typing import Any
 
 # DMarket API
 from src.dmarket.dmarket_api import DMarketAPI
-
 
 # Logger
 logger = logging.getLogger(__name__)

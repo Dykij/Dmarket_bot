@@ -1,345 +1,239 @@
 # Configuration for development environment
-# Copy this to config/local.yaml for local development
+# Mock configuration for smoke test
 
 bot:
-  token: ${TELEGRAM_BOT_TOKEN}
-  username: ${BOT_USERNAME:dmarket_bot}
+  token: "1234567890:ABCdefGHIjklMNOpqrsTUVwxyz123456789"
+  username: "dmarket_bot"
   webhook:
-    url: ${WEBHOOK_URL:}
-    secret: ${WEBHOOK_SECRET:}
-  # Для локальной работы оставьте WEBHOOK_URL пустым
+    url: ""
+    secret: ""
 
 dmarket:
-  api_url: ${DMARKET_API_URL:https://api.dmarket.com}
-  public_key: ${DMARKET_PUBLIC_KEY}
-  secret_key: ${DMARKET_SECRET_KEY}
-  rate_limit: ${API_RATE_LIMIT:20} # requests per minute (снижено с 30 до 20)
+  api_url: "https://api.dmarket.com"
+  public_key: "aabbccddeeffgghhiijjkkllmmnnooppqqrrsstt"
+  secret_key: "11223344556677889900aabbccddeeffgghhiijj"
+  rate_limit: 30
 
-# Waxpeer P2P Integration (для перепродажи CS2 скинов)
+# Waxpeer P2P Integration
 waxpeer:
-  enabled: ${WAXPEER_ENABLED:false}
-  api_key: ${WAXPEER_API_KEY:} # Получить на waxpeer.com/settings
+  enabled: false
+  api_key: ""
 
-  # Листинг настройки
-  listing:
-    default_markup_percent: ${WAXPEER_MARKUP:10} # +10% по умолчанию
-    undercut_amount_usd: ${WAXPEER_UNDERCUT:0.01} # $0.01 undercut
-    min_profit_percent: ${WAXPEER_MIN_PROFIT:5} # Минимальная прибыль 5%
-    rare_item_markup_percent: ${WAXPEER_RARE_MARKUP:25} # +25% для редких
-    ultra_rare_markup_percent: ${WAXPEER_ULTRA_MARKUP:40} # +40% для JACKPOT
-
-  # Авто-репрайсинг
-  repricing:
-    enabled: ${WAXPEER_REPRICE:true}
-    interval_minutes: ${WAXPEER_REPRICE_INTERVAL:30} # Каждые 30 минут
-    max_price_drops: ${WAXPEER_MAX_DROPS:5} # Макс. 5 снижений цены
-    price_drop_percent: ${WAXPEER_DROP_PCT:2} # 2% за раз
-
-  # Shadow Listing (умное ценообразование)
-  shadow_listing:
-    enabled: ${WAXPEER_SHADOW:true}
-    scarcity_threshold: ${WAXPEER_SCARCITY:3} # < 3 предметов = дефицит
-    scarcity_markup_percent: ${WAXPEER_SCARCITY_MARKUP:15} # +15% при дефиците
-    wait_for_competitor_sale: ${WAXPEER_WAIT_SALE:true} # Ждать пока конкурент продаст
-
-  # Автоматический Hold для редких вещей
-  auto_hold:
-    enabled: ${WAXPEER_AUTO_HOLD:true}
-    send_telegram_alert: ${WAXPEER_ALERT:true}
-    hold_triggers:
-      - "katowice_2014_holo"
-      - "ruby"
-      - "sapphire"
-      - "emerald"
-      - "black_pearl"
-      - "case_hardened_blue_gem"
-
-# Scanner configuration (параллельное сканирование)
+# Scanner configuration
 scanner:
-  # Количество одновременных потоков сканирования
-  max_concurrent_scans: ${MAX_CONCURRENT_SCANS:2} # снижено с 5 до 2
-
-  # Интервал между сканированиями (секунды)
-  scan_interval_seconds: ${SCAN_INTERVAL:10.0} # 2 минуты между сканами
-
-  # Adaptive scanner settings
+  max_concurrent_scans: 2
+  scan_interval_seconds: 10.0
   adaptive:
-    enabled: ${ADAPTIVE_SCAN_ENABLED:true}
-    min_interval: ${ADAPTIVE_MIN_INTERVAL:2.5} # 1 минута при высокой волатильности
-    max_interval: ${ADAPTIVE_MAX_INTERVAL:10.0} # 5 минут при стабильном рынке
-
-  # Parallel scanner settings
+    enabled: true
+    min_interval: 2.5
+    max_interval: 10.0
   parallel:
-    enabled: ${PARALLEL_SCAN_ENABLED:true}
-    max_concurrent: ${PARALLEL_MAX_CONCURRENT:2} # максимум 2 игры одновременно
-
-  # Target cleanup settings
+    enabled: true
+    max_concurrent: 2
   cleanup:
-    enabled: ${TARGET_CLEANUP_ENABLED:true}
-    max_age_hours: ${CLEANUP_MAX_AGE:24}
-    interval_minutes: ${CLEANUP_INTERVAL:60} # проверка раз в час
+    enabled: true
+    max_age_hours: 24
+    interval_minutes: 60
 
 database:
-  url: ${DATABASE_URL:sqlite:///data/dmarket_bot.db}
-  echo: ${DEBUG:false}
+  url: "sqlite:///data/dmarket_bot.db"
+  echo: false
   pool_size: 5
   max_overflow: 10
 
 redis:
-  url: ${REDIS_URL:redis://localhost:6379}
+  url: "redis://localhost:6379"
 
 logging:
-  level: ${LOG_LEVEL:INFO}
-  file: ${LOG_FILE:logs/dmarket_bot.log}
+  level: "INFO"
+  file: "logs/dmarket_bot.log"
   format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
   rotation: "1 week"
   retention: "1 month"
 
 security:
-  allowed_users: ${ALLOWED_USERS:} # comma-separated
-  admin_users: ${ADMIN_USERS:} # comma-separated
+  allowed_users: []
+  admin_users: []
 
 analytics:
-  enabled: ${ANALYTICS_ENABLED:true}
+  enabled: true
 
 monitoring:
-  sentry_dsn: ${SENTRY_DSN:}
-  prometheus_enabled: ${PROMETHEUS_ENABLED:false}
+  sentry_dsn: ""
+  prometheus_enabled: false
 
 cache:
-  ttl: ${CACHE_TTL:300} # seconds
+  ttl: 300
   max_size: 1000
 
-# Advanced arbitrage filters (P1-16)
-# See config/item_filters.yaml for category lists
 arbitrage_filters:
-  enabled: ${ARBITRAGE_FILTERS_ENABLED:true}
-  min_avg_price: ${MIN_AVG_PRICE:0.50}
-  good_points_percent: ${GOOD_POINTS_PERCENT:80}
-  boost_percent: ${BOOST_PERCENT:150}
-  min_sales_volume: ${MIN_SALES_VOLUME:10}
-  min_profit_margin: ${MIN_PROFIT_MARGIN:5.0}
-  outlier_threshold: ${OUTLIER_THRESHOLD:2.0}
-  min_liquidity_score: ${MIN_LIQUIDITY_SCORE:60}
-  max_time_to_sell_days: ${MAX_TIME_TO_SELL_DAYS:7}
+  enabled: true
+  min_avg_price: 0.50
+  good_points_percent: 80
+  boost_percent: 150
+  min_sales_volume: 10
+  min_profit_margin: 5.0
+  outlier_threshold: 2.0
+  min_liquidity_score: 60
+  max_time_to_sell_days: 7
 
-# Market analysis for trend following (auto-update whitelist)
 market_analysis:
-  enabled: ${MARKET_ANALYSIS_ENABLED:true}
-  update_interval: ${MARKET_ANALYSIS_INTERVAL:3600} # Update trends every hour
-  top_items_count: ${TOP_ITEMS_COUNT:100} # Track top 100 most traded items
-  min_daily_volume: ${MIN_DAILY_VOLUME:50} # Minimum daily sales volume
+  enabled: true
+  update_interval: 3600
+  top_items_count: 100
+  min_daily_volume: 50
 
-# Diversification settings (risk management)
 diversification:
-  enabled: ${DIVERSIFICATION_ENABLED:true}
-  max_same_items_in_inventory: ${MAX_SAME_ITEMS:5} # Max duplicates per item type
-  max_single_item_percent: ${MAX_SINGLE_ITEM_PERCENT:25} # Max % of balance per item
-  min_different_items: ${MIN_DIFFERENT_ITEMS:5} # Minimum variety in inventory
-  max_stack_value_percent: ${MAX_STACK_VALUE_PERCENT:15} # Max % of balance per item type ($6.8 for $45)
+  enabled: true
+  max_same_items_in_inventory: 5
+  max_single_item_percent: 25
+  min_different_items: 5
+  max_stack_value_percent: 15
 
-# Game attention distribution (for $45-50 balance)
-# Higher weight = more scanning/buying focus
 game_strategy:
-  enabled: ${GAME_STRATEGY_ENABLED:true}
+  enabled: true
   weights:
-    tf2: 30 # Keys are stable, quick to sell (30%)
-    csgo: 40 # Cases and skins, high volatility (40%)
-    rust: 20 # Doors and boxes, steady demand (20%)
-    dota2: 10 # Only Inscribed/Immortal items (10%)
+    tf2: 30
+    csgo: 40
+    rust: 20
+    dota2: 10
 
-# Whitelist configuration
 whitelist:
-  enabled: ${WHITELIST_ENABLED:true}
-  file_path: ${WHITELIST_PATH:data/whitelist.json}
-  priority_only: ${WHITELIST_PRIORITY_ONLY:false} # If true, only buy from whitelist
-  buy_max_overpay_percent: ${BUY_MAX_OVERPAY:2.0} # Max overpay for whitelist items
+  enabled: true
+  file_path: "data/whitelist.json"
+  priority_only: false
+  buy_max_overpay_percent: 2.0
 
-# Auto-sell configuration (P1-17)
-# Automatic selling after purchase with dynamic pricing
 auto_sell:
-  enabled: ${AUTO_SELL_ENABLED:true}
-  min_margin_percent: ${AUTO_SELL_MIN_MARGIN:4.0} # Minimum acceptable margin
-  max_margin_percent: ${AUTO_SELL_MAX_MARGIN:12.0} # Maximum target margin
-  target_margin_percent: ${AUTO_SELL_TARGET_MARGIN:8.0} # Default target margin
-  undercut_cents: ${AUTO_SELL_UNDERCUT:1} # Undercut top offer by X cents
-  price_check_interval_minutes: ${AUTO_SELL_CHECK_INTERVAL:30} # Price check frequency
-  stop_loss_hours: ${AUTO_SELL_STOP_LOSS_HOURS:48} # Hours before stop-loss trigger
-  stop_loss_percent: ${AUTO_SELL_STOP_LOSS_PERCENT:5.0} # Max loss from buy price
-  max_active_sales: ${AUTO_SELL_MAX_ACTIVE:50} # Max concurrent sales
-  delay_before_list_seconds: ${AUTO_SELL_DELAY:5} # Delay before listing
-  pricing_strategy: ${AUTO_SELL_STRATEGY:undercut} # undercut, match, fixed_margin, dynamic
-  dmarket_fee_percent: ${DMARKET_FEE:7.0} # DMarket commission
+  enabled: true
+  min_margin_percent: 4.0
+  max_margin_percent: 12.0
+  target_margin_percent: 8.0
+  undercut_cents: 1
+  price_check_interval_minutes: 30
+  stop_loss_hours: 48
+  stop_loss_percent: 5.0
+  max_active_sales: 50
+  delay_before_list_seconds: 5
+  pricing_strategy: "undercut"
+  dmarket_fee_percent: 7.0
 
-# Smart Repricing (age-based price adjustments)
 repricing:
-  enabled: ${REPRICING_ENABLED:true}
+  enabled: true
   intervals:
     - hours: 24
-      action: "reduce_to_target" # Reduce to 5% profit after 24h
+      action: "reduce_to_target"
     - hours: 48
-      action: "reduce_to_break_even" # Sell at break-even after 48h
+      action: "reduce_to_break_even"
     - hours: 72
-      action: "liquidate" # Emergency exit after 72h
-  max_price_cut_percent: ${REPRICING_MAX_CUT:15} # Max single price reduction
-  # Night mode (aggressive undercutting during low activity hours, UTC)
+      action: "liquidate"
+  max_price_cut_percent: 15
   night_mode:
-    enabled: ${NIGHT_MODE_ENABLED:true}
-    start_hour: 2 # 02:00 UTC
-    end_hour: 6 # 06:00 UTC
-    undercut_multiplier: 2.0 # 2x undercut step during night
+    enabled: true
+    start_hour: 2
+    end_hour: 6
+    undercut_multiplier: 2.0
 
-# Panic Sell Protection (market crash detection)
 panic_protection:
-  enabled: ${PANIC_PROTECTION_ENABLED:true}
-  threshold_percent: ${PANIC_THRESHOLD:15} # Pause if price drops 15% in 1 hour
+  enabled: true
+  threshold_percent: 15
   check_window_hours: 1
-  action: "pause" # pause, liquidate, or hold
+  action: "pause"
 
-# Blacklist configuration (seller and item filtering)
 blacklist:
-  enabled: ${BLACKLIST_ENABLED:true}
-  file_path: ${BLACKLIST_PATH:data/blacklist.json}
-  auto_blacklist_threshold: ${AUTO_BLACKLIST_THRESHOLD:3} # Failures before auto-ban
-  failure_expiry_hours: 24 # Reset failure counter after 24h
-  # Forbidden keywords in item names (skip these items)
+  enabled: true
+  file_path: "data/blacklist.json"
+  auto_blacklist_threshold: 3
+  failure_expiry_hours: 24
   forbidden_keywords:
-    - "Souvenir" # Low liquidity souvenir skins
-    - "Well-Worn" # Hardest wear to sell
-    - "Inscribed Gem" # Cheap Dota 2 gems
-    - "StatTrak™ Music Kit" # Very niche items
-    - "Autograph" # Unpopular player autographs
+    - "Souvenir"
+    - "Well-Worn"
+    - "Inscribed Gem"
+    - "StatTrak™ Music Kit"
+    - "Autograph"
 
-# Market Sentiment Analysis (X5 Hunt Mode)
 market_sentiment:
-  enabled: ${MARKET_SENTIMENT_ENABLED:true}
-  check_interval_minutes: ${SENTIMENT_CHECK_INTERVAL:15} # Check market health every 15 min
+  enabled: true
+  check_interval_minutes: 15
+  panic_sell_threshold: -0.07
+  high_risk_hunt: true
+  speculative_budget_pct: 0.15
 
-  # Panic protection thresholds
-  panic_sell_threshold: ${PANIC_SELL_THRESHOLD:-0.07} # -7% triggers crash mode
-  crash_roi_multiplier: 2.5 # Require 2.5x higher ROI during crashes
-
-  # X5 Hunt Mode (speculative buying)
-  high_risk_hunt: ${HIGH_RISK_HUNT:true}
-  speculative_budget_pct: ${SPECULATIVE_BUDGET_PCT:0.15} # 15% balance for X5 opportunities
-
-  # Volume spike detection
-  volume_spike_threshold: 5.0 # 5x normal volume = potential opportunity
-  price_dip_threshold: 20.0 # 20% below average = dip opportunity
-
-  # Confidence thresholds
-  min_opportunity_confidence: 60 # Only show opportunities with 60%+ confidence
-
-  # Market indicators (most liquid items to track)
-  market_indicators:
-    - "Fracture Case"
-    - "Recoil Case"
-    - "Dreams & Nightmares Case"
-    - "Mann Co. Supply Crate Key"
-    - "Revolution Case"
-    - "Kilowatt Case"
-    - "Clutch Case"
-    - "Snakebite Case"
-
-# Steam Async Parser (high-performance price fetching)
 steam_parser:
-  enabled: ${STEAM_PARSER_ENABLED:true}
-  cache_ttl: ${STEAM_CACHE_TTL:300} # Cache prices for 5 minutes
-  max_concurrent_requests: ${STEAM_MAX_CONCURRENT:10} # Parallel requests
-  request_timeout: ${STEAM_REQUEST_TIMEOUT:5.0} # Seconds
-  use_proxy: ${STEAM_USE_PROXY:false}
-  proxy_url: ${STEAM_PROXY_URL:}
-
-  # Rate limiting to avoid Steam bans
-  requests_per_minute: ${STEAM_RATE_LIMIT:30}
-  backoff_on_429: 30 # Wait 30s on rate limit
-
-  # Price comparison thresholds
+  enabled: true
+  cache_ttl: 300
+  max_concurrent_requests: 10
+  request_timeout: 5.0
+  use_proxy: false
+  proxy_url: ""
+  requests_per_minute: 30
   arbitrage:
-    min_profit_percent: ${STEAM_ARB_MIN_PROFIT:15} # Min 15% profit
-    max_discount_percent: ${STEAM_ARB_MAX_DISCOUNT:50} # Suspicious if >50% off
-    use_median_price: true # Use median instead of lowest for accuracy
+    min_profit_percent: 15
+    max_discount_percent: 50
 
-# Intelligent Hold (smart inventory retention)
 intelligent_hold:
-  enabled: ${INTELLIGENT_HOLD_ENABLED:true}
-
-  # Hold decision parameters
-  min_expected_gain: ${HOLD_MIN_GAIN:10} # Hold if >10% gain expected
-  max_hold_days: ${HOLD_MAX_DAYS:14} # Maximum hold duration
-  profit_take_threshold: ${HOLD_PROFIT_TAKE:20} # Sell if already +20% ROI
-  loss_cut_days: ${HOLD_LOSS_CUT_DAYS:7} # Cut losses after 7 days
-  loss_cut_threshold: ${HOLD_LOSS_CUT_PERCENT:5} # Cut if <5% ROI after 7 days
-
-  # Event tracking
-  track_majors: true
-  track_steam_sales: true
-  track_operations: true
-
-  # Item categories to watch for events
+  enabled: true
+  min_expected_gain: 10
+  max_hold_days: 14
+  profit_take_threshold: 20
+  loss_cut_days: 7
+  loss_cut_threshold: 5
   event_sensitive_categories:
     - "stickers"
     - "capsules"
     - "cases"
 
-# AI/ML Training Configuration (January 2026)
 ai_training:
-  enabled: ${AI_TRAINING_ENABLED:true}
-  
-  # Real price training (/ai_train_real)
+  enabled: true
   real_prices:
-    default_samples: ${AI_DEFAULT_SAMPLES:500}
+    default_samples: 500
     games: ["csgo", "tf2", "dota2", "rust"]
-    min_price_usd: ${AI_MIN_PRICE:0.50}
-    max_price_usd: ${AI_MAX_PRICE:1000.0}
-  
-  # Liquid item training (/ai_train_liquid)
+    min_price_usd: 0.50
+    max_price_usd: 1000.0
   liquid_training:
-    enabled: ${AI_LIQUID_ENABLED:true}
-    liquidity_threshold: ${AI_LIQUIDITY_THRESHOLD:50}
-    min_offers_dmarket: ${AI_MIN_OFFERS_DMARKET:3}
-    min_offers_waxpeer: ${AI_MIN_OFFERS_WAXPEER:5}
-    whitelist_bonus: ${AI_WHITELIST_BONUS:25}
-    whitelist_threshold: ${AI_WHITELIST_THRESHOLD:40}
-    use_waxpeer: ${AI_USE_WAXPEER:true}
-    use_steam: ${AI_USE_STEAM:true}
-  
-  # Model protection
+    enabled: true
+    liquidity_threshold: 50
+    min_offers_dmarket: 3
+    min_offers_waxpeer: 5
+    whitelist_bonus: 25
+    whitelist_threshold: 40
+    use_waxpeer: true
+    use_steam: true
   hallucination_protection:
-    enabled: ${AI_HALLUCINATION_PROTECTION:true}
-    max_profit_percent: ${AI_MAX_PROFIT:40}
-    outlier_zscore_threshold: ${AI_OUTLIER_ZSCORE:3.0}
-  
-  # Data files
+    enabled: true
+    max_profit_percent: 40
+    outlier_zscore_threshold: 3.0
   data_paths:
-    market_history: ${AI_MARKET_HISTORY:data/market_history.csv}
-    liquid_items: ${AI_LIQUID_ITEMS:data/liquid_items.csv}
-    model_path: ${AI_MODEL_PATH:data/price_model.pkl}
+    market_history: "data/market_history.csv"
+    liquid_items: "data/liquid_items.csv"
+    model_path: "data/price_model.pkl"
 
-# Universal Money Management (scales with any balance)
 money_management:
-  enabled: ${MONEY_MANAGEMENT_ENABLED:true}
-
-  # Dynamic limits based on balance
-  small_balance_threshold: ${SMALL_BALANCE:100} # Under $100 = aggressive
-  medium_balance_threshold: ${MEDIUM_BALANCE:500} # $100-500 = balanced
-  large_balance_threshold: ${LARGE_BALANCE:1000} # Over $1000 = conservative
-
-  # Percentage-based limits (no fixed dollar amounts)
+  enabled: true
+  small_balance_threshold: 100
+  medium_balance_threshold: 500
+  large_balance_threshold: 1000
   max_item_percent:
-    small: 25 # 25% of balance per item when under $100
-    medium: 15 # 15% of balance per item for $100-500
-    large: 10 # 10% of balance per item over $1000
-
-  min_item_percent: ${MIN_ITEM_PERCENT:0.5} # Don't buy items < 0.5% of balance
-  reserve_percent: ${RESERVE_PERCENT:5} # Always keep 5% free for fees
-
-  # Dynamic ROI targets
+    small: 25
+    medium: 15
+    large: 10
+  min_item_percent: 0.5
+  reserve_percent: 5
   target_roi:
-    small: 15.0 # Aggressive 15% ROI when balance is small
-    medium: 12.0 # 12% ROI for medium balances
-    large: 8.0 # Conservative 8% ROI for large balances
+    small: 15.0
+    medium: 12.0
+    large: 8.0
+  balance_spike_threshold: 50
+  balance_spike_action: "pause_and_confirm"
 
-  # Balance change protection
-  balance_spike_threshold: ${BALANCE_SPIKE_THRESHOLD:50} # Pause if balance changes >50%
-  balance_spike_action: "pause_and_confirm" # pause_and_confirm, ignore, or emergency_stop
+rate_limit:
+  warning_threshold: 0.9
+  enable_notifications: true
+  base_retry_delay: 1.0
+  max_backoff_time: 60.0
+  max_retry_attempts: 5
+  market_limit: 2
+  trade_limit: 1
+  user_limit: 5
+  balance_limit: 10
+  other_limit: 5

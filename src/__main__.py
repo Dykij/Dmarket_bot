@@ -3,9 +3,8 @@
 import asyncio
 import logging
 import os
-from pathlib import Path
 import sys
-
+from pathlib import Path
 
 # Configure logging
 logging.basicConfig(

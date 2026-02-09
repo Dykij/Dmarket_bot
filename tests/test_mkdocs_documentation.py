@@ -4,8 +4,9 @@ Tests for MkDocs documentation.
 Validates MkDocs configuration, markdown files, and builds.
 """
 
-import pytest
 from pathlib import Path
+
+import pytest
 import yaml
 
 
@@ -20,7 +21,7 @@ def mkdocs_config(docs_site_dir):
     """Load MkDocs configuration."""
     config_path = docs_site_dir / "mkdocs.yml"
     try:
-        with open(config_path, 'r', encoding='utf-8') as f:
+        with open(config_path, encoding='utf-8') as f:
             return yaml.safe_load(f)
     except yaml.constructor.ConstructorError:
         # MkDocs config may contain special tags for plugins

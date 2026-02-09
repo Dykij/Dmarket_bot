@@ -4,8 +4,9 @@ Tests for Sphinx documentation.
 Validates Sphinx configuration and documentation structure.
 """
 
-import pytest
 from pathlib import Path
+
+import pytest
 
 
 @pytest.fixture

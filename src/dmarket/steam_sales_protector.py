@@ -41,13 +41,12 @@
 
 from __future__ import annotations
 
+import logging
+import operator
 from dataclasses import dataclass, field
 from datetime import UTC, date, datetime, timedelta
 from enum import StrEnum
-import logging
-import operator
 from typing import Any
-
 
 logger = logging.getLogger(__name__)
 

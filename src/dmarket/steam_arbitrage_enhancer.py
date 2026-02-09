@@ -18,7 +18,6 @@ from src.dmarket.steam_api import (
 )
 from src.utils.steam_db_handler import get_steam_db
 
-
 logger = logging.getLogger(__name__)
 
 

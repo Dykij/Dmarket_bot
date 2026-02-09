@@ -14,9 +14,9 @@
 
 import argparse
 import os
-from pathlib import Path
 import subprocess
 import sys
+from pathlib import Path
 
 
 def get_project_root() -> Path:

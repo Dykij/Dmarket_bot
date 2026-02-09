@@ -9,11 +9,10 @@ This module provides a refactored version of find_trending_items() with:
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import logging
 import operator
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
-
 
 if TYPE_CHECKING:
     from src.dmarket.dmarket_api import DMarketAPI

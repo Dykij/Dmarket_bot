@@ -28,7 +28,6 @@ from typing import TYPE_CHECKING, Any, TypeVar
 
 import structlog
 
-
 if TYPE_CHECKING:
     from collections.abc import Callable
 

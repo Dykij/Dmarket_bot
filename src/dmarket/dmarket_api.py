@@ -1,17 +1,17 @@
 """Modular DMarket API client for 2026."""
 
-from typing import Any, TYPE_CHECKING
 import logging
-import time
-from src.dmarket.api.client import BaseDMarketClient, api_cache, CACHE_TTL, GAME_MAP
-from src.dmarket.api.market import MarketMixin
-from src.dmarket.api.wallet import WalletMixin
-from src.dmarket.api.trading import TradingMixin
-from src.dmarket.api.inventory import InventoryMixin
+from typing import TYPE_CHECKING, Any
+
+from src.dmarket.api.client import GAME_MAP, BaseDMarketClient, api_cache
 from src.dmarket.api.extended import ExtendedMixin
+from src.dmarket.api.inventory import InventoryMixin
+from src.dmarket.api.market import MarketMixin
+from src.dmarket.api.trading import TradingMixin
+from src.dmarket.api.wallet import WalletMixin
 
 if TYPE_CHECKING:
-    from src.telegram_bot.notifier import Notifier
+    pass
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +23,6 @@ class DMarketAPI(BaseDMarketClient, MarketMixin, WalletMixin, TradingMixin, Inve
         return await self._request("GET", "/account/v1/balance")
 
     async def get_user_targets(self, game_id: str, status: str | None = None, limit: int = 100, offset: int = 0) -> dict[str, Any]:
-        from src.dmarket.api.client import GAME_MAP
         mapped_game_id = GAME_MAP.get(game_id.lower(), game_id)
         params = {"GameID": mapped_game_id, "Limit": str(limit), "Offset": str(offset)}
         if status: params["BasicFilters.Status"] = status

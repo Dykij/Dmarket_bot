@@ -9,9 +9,8 @@ import asyncio
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, Field
 import structlog
-
+from pydantic import BaseModel, Field
 
 logger = structlog.get_logger(__name__)
 

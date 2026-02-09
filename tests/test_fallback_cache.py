@@ -18,7 +18,6 @@ from src.utils.fallback_cache import (
     CacheStatus,
     FallbackCache,
     cached,
-    get_fallback_cache,
 )
 
 

@@ -17,7 +17,6 @@ from src.utils.bulkhead import (
     BulkheadRegistry,
     BulkheadState,
     get_api_bulkhead,
-    get_bulkhead_registry,
     get_database_bulkhead,
 )
 

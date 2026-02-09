@@ -37,13 +37,12 @@ Configuration via environment variables:
 """
 
 import asyncio
-from dataclasses import dataclass, field
-from decimal import Decimal
 import hashlib
 import logging
 import os
+from dataclasses import dataclass, field
+from decimal import Decimal
 from typing import TYPE_CHECKING, Any
-
 
 if TYPE_CHECKING:
     from src.ai.price_predictor import PricePredictor

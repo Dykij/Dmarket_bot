@@ -3,8 +3,8 @@
 Проверяет функции анализа цен и истории продаж.
 """
 
-from datetime import datetime
 import time
+from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest

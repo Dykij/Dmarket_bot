@@ -15,7 +15,6 @@ from telegram.ext import ContextTypes
 from src.dmarket.steam_arbitrage_enhancer import get_steam_enhancer
 from src.utils.steam_db_handler import get_steam_db
 
-
 logger = logging.getLogger(__name__)
 
 

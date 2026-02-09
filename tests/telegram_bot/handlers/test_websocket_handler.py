@@ -1,7 +1,9 @@
 """Tests for websocket_handler module."""
-import pytest
 from unittest.mock import AsyncMock, MagicMock
-from telegram import Update, Message, User
+
+import pytest
+from telegram import Message, Update, User
+
 
 class TestWebSocketCommands:
     @pytest.fixture

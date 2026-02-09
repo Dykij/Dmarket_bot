@@ -3,11 +3,12 @@
 This module tests the AutoBuyer class for automatic item purchases.
 """
 
-import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
 from datetime import datetime
+from unittest.mock import AsyncMock, MagicMock
 
-from src.dmarket.auto_buyer import AutoBuyer, AutoBuyConfig, PurchaseResult
+import pytest
+
+from src.dmarket.auto_buyer import AutoBuyConfig, AutoBuyer, PurchaseResult
 
 
 class TestAutoBuyConfig:

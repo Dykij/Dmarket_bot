@@ -12,7 +12,6 @@ This module tests notification message formatting functions:
 
 from __future__ import annotations
 
-
 # =============================================================================
 # Test format_price function
 # =============================================================================

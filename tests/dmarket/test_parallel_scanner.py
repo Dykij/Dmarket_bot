@@ -4,9 +4,9 @@ This module tests the ParallelScanner class for concurrent
 market scanning across multiple games.
 """
 
+from unittest.mock import AsyncMock, MagicMock
+
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
-import asyncio
 
 
 class TestParallelScanner:

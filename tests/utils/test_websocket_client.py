@@ -5,8 +5,8 @@ import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import aiohttp
-from aiohttp import WSMessage, WSMsgType
 import pytest
+from aiohttp import WSMessage, WSMsgType
 
 from src.dmarket.dmarket_api import DMarketAPI
 from src.utils.websocket_client import DMarketWebSocketClient

@@ -20,14 +20,13 @@ from __future__ import annotations
 
 import csv
 import sys
-from datetime import UTC, datetime
 from pathlib import Path
 
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.ml.price_predictor import AdaptivePricePredictor
 from src.ml.feature_extractor import MarketFeatureExtractor
+from src.ml.price_predictor import AdaptivePricePredictor
 
 
 def load_training_data(csv_path: Path) -> list[dict]:

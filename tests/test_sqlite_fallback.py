@@ -8,17 +8,18 @@
 - Совместимость моделей с SQLite
 """
 
-from collections.abc import AsyncGenerator
 import os
 import pathlib
 import tempfile
+from collections.abc import AsyncGenerator
 from uuid import uuid4
 
 import pytest
 from sqlalchemy import inspect, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.models.target import Base as TargetBase, Target
+from src.models.target import Base as TargetBase
+from src.models.target import Target
 from src.models.user import User
 from src.utils.database import DatabaseManager
 

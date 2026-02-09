@@ -112,9 +112,8 @@ class TestSkillProfiler:
 
     def test_context_manager_failure(self, profiler):
         """Test synchronous context manager on failure."""
-        with pytest.raises(ValueError):
-            with profiler.profile("test_skill"):
-                raise ValueError("Test error")
+        with pytest.raises(ValueError), profiler.profile("test_skill"):
+            raise ValueError("Test error")
 
         metrics = profiler.get_skill_metrics("test_skill")
         assert metrics["failed_executions"] == 1
@@ -441,12 +440,11 @@ class TestErrorScenarios:
 
     def test_context_manager_with_exception_chain(self, profiler):
         """Test context manager handles exception chains."""
-        with pytest.raises(RuntimeError):
-            with profiler.profile("skill"):
-                try:
-                    raise ValueError("Inner")
-                except ValueError as e:
-                    raise RuntimeError("Outer") from e
+        with pytest.raises(RuntimeError), profiler.profile("skill"):
+            try:
+                raise ValueError("Inner")
+            except ValueError as e:
+                raise RuntimeError("Outer") from e
 
         metrics = profiler.get_skill_metrics("skill")
         assert metrics["failed_executions"] == 1

@@ -4,13 +4,14 @@ This module tests the MoneyManager class and related functionality
 for dynamic balance-based trading limits.
 """
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock
 
+import pytest
+
 from src.dmarket.money_manager import (
-    MoneyManager,
     BalanceTier,
     DynamicLimits,
+    MoneyManager,
 )
 
 

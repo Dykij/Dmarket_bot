@@ -1,8 +1,8 @@
 """Тесты для LockStatusFilter - фильтрация по статусу блокировки."""
 
-import pytest
 from datetime import datetime, timedelta
-from unittest.mock import MagicMock
+
+import pytest
 
 from src.dmarket.lock_status_filter import (
     ItemWithLock,

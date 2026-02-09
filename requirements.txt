@@ -582,3 +582,5 @@ yarl==1.22.0
     # via
     #   aiohttp
     #   pact-python
+aiolimiter
+aiolimiter

@@ -3,17 +3,14 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
-import pytest
 
 from src.security.security import (
-    SecurityManager,
     TOTP,
+    ActionCategory,
     APIKeyEncryption,
     AuditLogEntry,
-    TwoFactorAuth,
     IPWhitelistEntry,
-    SecurityLevel,
-    ActionCategory,
+    SecurityManager,
     create_security_manager,
 )
 

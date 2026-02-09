@@ -3,7 +3,6 @@
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-
 from src.utils.audit_logger import AuditEventType, AuditLog, AuditLogger, AuditSeverity
 
 

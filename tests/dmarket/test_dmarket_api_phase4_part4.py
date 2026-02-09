@@ -86,18 +86,17 @@ class TestBuyItem:
 
         with patch.object(
             dmarket_api, "_request", return_value=mock_response
-        ) as mock_req:
-            with patch.object(
-                dmarket_api, "clear_cache_for_endpoint", new_callable=AsyncMock
-            ):
-                await dmarket_api.buy_item(item_id="item123", price=25.50, game="csgo")
+        ) as mock_req, patch.object(
+            dmarket_api, "clear_cache_for_endpoint", new_callable=AsyncMock
+        ):
+            await dmarket_api.buy_item(item_id="item123", price=25.50, game="csgo")
 
-                # Проверяем что данные переданы
-                call_kwargs = mock_req.call_args.kwargs if mock_req.call_args else {}
-                if "data" in call_kwargs:
-                    data = call_kwargs["data"]
-                    # Цена должна быть в центах
-                    assert "price" in data
+            # Проверяем что данные переданы
+            call_kwargs = mock_req.call_args.kwargs if mock_req.call_args else {}
+            if "data" in call_kwargs:
+                data = call_kwargs["data"]
+                # Цена должна быть в центах
+                assert "price" in data
 
     @pytest.mark.asyncio()
     async def test_buy_item_with_item_name(self, dmarket_api):
@@ -209,17 +208,16 @@ class TestSellItem:
 
         with patch.object(
             dmarket_api, "_request", return_value=mock_response
-        ) as mock_req:
-            with patch.object(
-                dmarket_api, "clear_cache_for_endpoint", new_callable=AsyncMock
-            ):
-                await dmarket_api.sell_item(item_id="item123", price=25.50, game="csgo")
+        ) as mock_req, patch.object(
+            dmarket_api, "clear_cache_for_endpoint", new_callable=AsyncMock
+        ):
+            await dmarket_api.sell_item(item_id="item123", price=25.50, game="csgo")
 
-                # Проверяем данные
-                call_kwargs = mock_req.call_args.kwargs if mock_req.call_args else {}
-                if "data" in call_kwargs:
-                    data = call_kwargs["data"]
-                    assert "price" in data
+            # Проверяем данные
+            call_kwargs = mock_req.call_args.kwargs if mock_req.call_args else {}
+            if "data" in call_kwargs:
+                data = call_kwargs["data"]
+                assert "price" in data
 
     @pytest.mark.asyncio()
     async def test_sell_item_with_buy_price_calculates_profit(self, dmarket_api):

@@ -5,15 +5,14 @@ Provides secure secrets handling with encryption, rotation, and audit logging.
 """
 
 import base64
-from datetime import UTC, datetime
 import json
 import logging
+from datetime import UTC, datetime
 from pathlib import Path
 
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
-
 
 logger = logging.getLogger(__name__)
 

@@ -12,15 +12,14 @@ and load balancers to check if bot is alive and all services are operational.
 Roadmap Task #5: Health Check Endpoint
 """
 
-from datetime import UTC, datetime
 import logging
 import time
+from datetime import UTC, datetime
 from typing import Any
 
 from aiohttp import web
 
 from src.utils.health_monitor import HealthMonitor, ServiceStatus
-
 
 logger = logging.getLogger(__name__)
 

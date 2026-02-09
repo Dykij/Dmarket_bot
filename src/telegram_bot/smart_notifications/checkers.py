@@ -1,9 +1,9 @@
 """Notification checkers for smart notifications."""
 
 import asyncio
-from datetime import datetime
 import logging
 import operator
+from datetime import datetime
 from typing import Any
 
 from telegram import Bot
@@ -29,7 +29,6 @@ from src.telegram_bot.smart_notifications.utils import (
 )
 from src.utils.exceptions import APIError, NetworkError
 from src.utils.market_analyzer import MarketAnalyzer, analyze_market_opportunity
-
 
 logger = logging.getLogger(__name__)
 

@@ -4,9 +4,9 @@ This module tests the ExternalPriceAPI class for fetching
 prices from external sources like Steam Market.
 """
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
-import httpx
+
+import pytest
 
 
 class TestExternalPriceAPI:

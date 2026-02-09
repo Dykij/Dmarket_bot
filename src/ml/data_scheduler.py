@@ -33,7 +33,6 @@ from typing import TYPE_CHECKING, Any
 
 import structlog
 
-
 if TYPE_CHECKING:
     from src.ml.enhanced_predictor import EnhancedPricePredictor
 

@@ -7,13 +7,12 @@ Phase 2 Refactoring: Early returns, small functions, clear responsibilities.
 """
 
 import logging
-from typing import Awaitable, Callable
+from collections.abc import Awaitable, Callable
 
 from telegram import Update
 from telegram.ext import ContextTypes
 
 from src.utils.telegram_error_handlers import telegram_error_boundary
-
 
 logger = logging.getLogger(__name__)
 

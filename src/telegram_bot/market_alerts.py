@@ -20,7 +20,6 @@ from src.dmarket.market_analysis import (
     find_trending_items,
 )
 
-
 # Настройка логирования
 logger = logging.getLogger(__name__)
 
@@ -455,8 +454,8 @@ class MarketAlertsManager:
 
         try:
             # Используем ArbitrageScanner для поиска возможностей
-            from src.dmarket.scanner.engine import ArbitrageScanner
             from src.dmarket.dmarket_api import DMarketAPI
+            from src.dmarket.scanner.engine import ArbitrageScanner
 
             # Создаем API клиент и сканер
             api_client = DMarketAPI()

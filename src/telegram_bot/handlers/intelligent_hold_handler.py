@@ -11,7 +11,6 @@ from typing import TYPE_CHECKING
 from telegram import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import CallbackQueryHandler, CommandHandler, ContextTypes
 
-
 if TYPE_CHECKING:
     from src.dmarket.intelligent_hold import IntelligentHoldManager
 

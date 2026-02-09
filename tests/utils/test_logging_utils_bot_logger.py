@@ -4,14 +4,14 @@ This module adds comprehensive tests for BotLogger class,
 setup_logging function, and Sentry integration.
 """
 
-from datetime import datetime
 import json
 import logging
 import os
 import tempfile
+from datetime import datetime
 from unittest.mock import MagicMock, patch
 
-from src.utils.logging_utils import (
+from src.utils.canonical_logging import (
     BotLogger,
     ColoredFormatter,
     JSONFormatter,
@@ -37,7 +37,7 @@ class TestBotLoggerInit:
 
     def test_init_with_dotted_name(self):
         """Test BotLogger initialization with dotted name."""
-        logger = BotLogger("src.utils.logging_utils.test")
+        logger = BotLogger("src.utils.canonical_logging.test")
         assert logger.logger is not None
 
 
@@ -373,7 +373,7 @@ class TestBotLoggerLogCrash:
                 },
             )
 
-    @patch("src.utils.logging_utils.sentry_sdk")
+    @patch("src.utils.canonical_logging.sentry_sdk")
     def test_log_crash_sends_to_sentry(self, mock_sentry):
         """Test that crash is sent to Sentry if initialized."""
         mock_sentry.is_initialized.return_value = True
@@ -397,8 +397,8 @@ class TestSetupLogging:
 
     def test_setup_logging_default(self):
         """Test setup_logging with default parameters."""
-        with patch("src.utils.logging_utils.setup_sentry"):
-            with patch("src.utils.logging_utils.setup_structlog"):
+        with patch("src.utils.canonical_logging.setup_sentry"):
+            with patch("src.utils.canonical_logging.setup_structlog"):
                 setup_logging(enable_sentry=False)
 
         # Check root logger has handlers
@@ -460,8 +460,8 @@ class TestSetupLogging:
     def test_setup_logging_different_levels(self):
         """Test setup_logging with different log levels."""
         for level in ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]:
-            with patch("src.utils.logging_utils.setup_sentry"):
-                with patch("src.utils.logging_utils.setup_structlog"):
+            with patch("src.utils.canonical_logging.setup_sentry"):
+                with patch("src.utils.canonical_logging.setup_structlog"):
                     setup_logging(
                         level=level,
                         enable_sentry=False,
@@ -483,7 +483,7 @@ class TestSetupSentry:
         setup_sentry()
 
     @patch.dict(os.environ, {"SENTRY_DSN": "https://test@sentry.io/123"})
-    @patch("src.utils.logging_utils.sentry_sdk")
+    @patch("src.utils.canonical_logging.sentry_sdk")
     def test_setup_sentry_with_dsn(self, mock_sentry):
         """Test setup_sentry with DSN configured."""
         setup_sentry(environment="test")
@@ -493,7 +493,7 @@ class TestSetupSentry:
         assert call_kwargs["environment"] == "test"
 
     @patch.dict(os.environ, {"SENTRY_DSN": "https://test@sentry.io/123"})
-    @patch("src.utils.logging_utils.sentry_sdk")
+    @patch("src.utils.canonical_logging.sentry_sdk")
     def test_setup_sentry_with_custom_sample_rate(self, mock_sentry):
         """Test setup_sentry with custom sample rate."""
         setup_sentry(traces_sample_rate=0.1)

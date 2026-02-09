@@ -1,11 +1,11 @@
 
 import asyncio
 import json
+import logging
 import os
 import time
+
 import websockets
-import logging
-from typing import Callable, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +15,7 @@ class DMarketStream:
         self.secret_key = secret_key
         # DMarket Socket.IO эндпоинт (используется большинством ботов)
         self.ws_url = "wss://api.dmarket.com/v2/websocket" 
-        self.ws: Optional[websockets.WebSocketClientProtocol] = None
+        self.ws: websockets.WebSocketClientProtocol | None = None
 
     async def connect(self):
         """Установка соединения и авторизация"""
@@ -66,8 +66,8 @@ async def test_connection():
     try:
         await stream.connect()
         await stream.listen(3)
-    except Exception as e:
-        print(f"Test Final Result: Стрим не отвечает (404/Reject). Требуется активация API-ключа для WebSocket или использование Socket.io.")
+    except Exception:
+        print("Test Final Result: Стрим не отвечает (404/Reject). Требуется активация API-ключа для WebSocket или использование Socket.io.")
 
 if __name__ == "__main__":
     asyncio.run(test_connection())

@@ -6,7 +6,6 @@ This module provides caching functionality for API responses.
 import time
 from typing import Any
 
-
 # TTL for cache in seconds
 CACHE_TTL = {
     "short": 30,  # 30 seconds for frequently changing data

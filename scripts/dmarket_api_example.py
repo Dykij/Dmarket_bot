@@ -21,10 +21,9 @@ from __future__ import annotations
 import argparse
 import asyncio
 import os
-from pathlib import Path
 import sys
+from pathlib import Path
 from typing import Any
-
 
 # Add the project root to the path
 project_root = Path(__file__).parent.parent
@@ -42,7 +41,6 @@ from src.dmarket.api.endpoints import (  # noqa: E402
     price_to_cents,
 )
 from src.dmarket.dmarket_api import DMarketAPI  # noqa: E402
-
 
 # Load environment variables
 try:

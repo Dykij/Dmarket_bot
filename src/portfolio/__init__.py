@@ -12,7 +12,6 @@ from .analyzer import DiversificationReport, PortfolioAnalyzer, RiskReport
 from .manager import PortfolioManager
 from .models import Portfolio, PortfolioItem, PortfolioMetrics, PortfolioSnapshot
 
-
 __all__ = [
     "DiversificationReport",
     "Portfolio",

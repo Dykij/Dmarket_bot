@@ -19,7 +19,6 @@ from src.telegram_bot.notifier import (
     send_sell_success_notification,
 )
 
-
 logger = logging.getLogger(__name__)
 
 

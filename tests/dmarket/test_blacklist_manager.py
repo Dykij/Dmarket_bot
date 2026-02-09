@@ -4,11 +4,8 @@ This module tests the BlacklistManager class for filtering
 problematic sellers and items.
 """
 
+
 import pytest
-from unittest.mock import MagicMock, patch
-import json
-import tempfile
-from pathlib import Path
 
 
 class TestBlacklistManager:

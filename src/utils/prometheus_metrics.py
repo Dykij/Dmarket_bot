@@ -11,7 +11,6 @@ import time
 
 from prometheus_client import Counter, Gauge, Histogram, Info, generate_latest, make_asgi_app
 
-
 # Метрика RPS (DMarket Requests Per Minute/Total)
 dmarket_requests_total = Counter(
     "dmarket_requests_total",

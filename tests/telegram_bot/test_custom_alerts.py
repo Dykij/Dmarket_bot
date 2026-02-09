@@ -8,7 +8,6 @@ import pytest
 from src.telegram_bot.notifications.custom_alerts import (
     Alert,
     AlertCondition,
-    AlertConfig,
     AlertManager,
     AlertPriority,
     AlertStatus,

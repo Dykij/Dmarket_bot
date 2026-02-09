@@ -18,7 +18,6 @@ from typing import TYPE_CHECKING, Any
 from .cache import get_cached_results, save_to_cache
 from .constants import DEFAULT_FEE, DEFAULT_LIMIT, GAMES, HIGH_FEE, LOW_FEE, MAX_RETRIES
 
-
 if TYPE_CHECKING:
     from src.dmarket.dmarket_api import DMarketAPI
 

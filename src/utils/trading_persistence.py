@@ -30,15 +30,14 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
 import logging
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import select, update
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 
 from src.models.pending_trade import PendingTrade, PendingTradeStatus
-
 
 if TYPE_CHECKING:
     from telegram import Bot

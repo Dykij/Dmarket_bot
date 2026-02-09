@@ -1,4 +1,4 @@
-"""Alembic environment configuration.
+﻿"""Alembic environment configuration.
 
 This module configures Alembic for database migrations with:
 - Naming conventions for constraints
@@ -8,15 +8,14 @@ This module configures Alembic for database migrations with:
 - Type and default comparison
 """
 
-from logging.config import fileConfig
 import os
-from pathlib import Path
 import sys
+from logging.config import fileConfig
+from pathlib import Path
 
 from sqlalchemy import MetaData, pool
 
 from alembic import context
-
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -25,7 +24,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 # ruff: noqa: E402
 from src.models.target import Base as TargetBase
 from src.models.user import Base as UserBase
-
+from src.models.market import Base as MarketBase
 
 # Naming conventions for constraints
 # This ensures consistent naming across all migrations
@@ -250,3 +249,4 @@ elif "+asyncpg" in database_url or "+aiosqlite" in database_url:
     run_migrations_online_async()
 else:
     run_migrations_online()
+

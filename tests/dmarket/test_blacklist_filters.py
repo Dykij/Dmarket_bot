@@ -4,7 +4,6 @@ Blacklist is an OBLIGATORY filter - items matching blacklist are NEVER purchased
 This protects against unprofitable trades.
 """
 
-import pytest
 
 from src.dmarket.blacklist_filters import (
     BLACKLIST_KEYWORDS,

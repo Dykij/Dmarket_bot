@@ -21,7 +21,6 @@ from src.dmarket.models.target_enhancements import (
     TargetOperationStatus,
 )
 
-
 logger = logging.getLogger(__name__)
 
 

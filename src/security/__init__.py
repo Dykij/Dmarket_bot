@@ -33,7 +33,6 @@ from src.security.security import (
     create_security_manager,
 )
 
-
 __all__ = [
     "TOTP",
     "APIKeyAuth",

@@ -231,15 +231,14 @@ class TestSmartNotificationsSenders:
         with patch(
             "src.telegram_bot.smart_notifications.senders.format_market_item",
             return_value="Item info",
+        ), patch(
+            "src.telegram_bot.smart_notifications.senders.record_notification"
         ):
-            with patch(
-                "src.telegram_bot.smart_notifications.senders.record_notification"
-            ):
-                await send_price_alert_notification(
-                    mock_bot, 123456, alert, item_data, 12.0, user_prefs
-                )
+            await send_price_alert_notification(
+                mock_bot, 123456, alert, item_data, 12.0, user_prefs
+            )
 
-                mock_bot.send_message.assert_called_once()
+            mock_bot.send_message.assert_called_once()
 
     @pytest.mark.asyncio()
     async def test_send_market_opportunity_notification(self, mock_bot):
@@ -260,15 +259,14 @@ class TestSmartNotificationsSenders:
         with patch(
             "src.telegram_bot.smart_notifications.senders.format_opportunities",
             return_value="Opportunity",
+        ), patch(
+            "src.telegram_bot.smart_notifications.senders.record_notification"
         ):
-            with patch(
-                "src.telegram_bot.smart_notifications.senders.record_notification"
-            ):
-                await send_market_opportunity_notification(
-                    mock_bot, 789012, opportunity, user_prefs
-                )
+            await send_market_opportunity_notification(
+                mock_bot, 789012, opportunity, user_prefs
+            )
 
-                mock_bot.send_message.assert_called_once()
+            mock_bot.send_message.assert_called_once()
 
 
 class TestSmartNotificationsCheckers:

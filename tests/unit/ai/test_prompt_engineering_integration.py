@@ -3,9 +3,10 @@ Unit tests for prompt_engineering_integration module.
 
 Tests AI-powered prompt engineering features using Anthropic's best practices.
 """
-import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
 from decimal import Decimal
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 # NOTE: These tests validate the prompt_engineering module
 # The module is optional and requires Anthropic API key to function
@@ -105,7 +106,7 @@ class TestExplainArbitrageMethod:
     async def test_explain_arbitrage_with_mock_response(self):
         """Test explain_arbitrage with mocked Claude API."""
         try:
-            from src.ai.prompt_engineering_integration import PromptEngineer, ArbitrageOpportunity
+            from src.ai.prompt_engineering_integration import ArbitrageOpportunity, PromptEngineer
             
             engineer = PromptEngineer(api_key="test_key")
             
@@ -190,8 +191,7 @@ class TestPromptEngineeringCompatibility:
     def test_no_conflict_with_existing_ai_modules(self):
         """Test that prompt engineering doesn't conflict with existing AI."""
         try:
-            from src.ai import price_predictor
-            from src.ai import prompt_engineering_integration
+            from src.ai import price_predictor, prompt_engineering_integration
             
             assert price_predictor is not None
             assert prompt_engineering_integration is not None

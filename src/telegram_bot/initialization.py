@@ -5,11 +5,11 @@
 """
 
 import asyncio
-from collections.abc import Callable
 import logging
 import os
 import signal
 import sys
+from collections.abc import Callable
 
 from telegram import Bot, BotCommand
 from telegram.ext import (
@@ -29,7 +29,7 @@ from src.telegram_bot.utils.error_handler import (
     register_global_exception_handlers,
     setup_error_handler,
 )
-
+from src.utils.memory_guard import memory_guard
 
 logger = logging.getLogger(__name__)
 
@@ -115,9 +115,9 @@ async def initialize_bot(token: str, setup_persistence: bool = True) -> Applicat
 
     # Добавляем сохранение состояния, если необходимо
     if setup_persistence:
-        from src.utils.db_persistence import SQLPersistence
-        from src.utils.database import DatabaseManager
         from src.utils.config import get_config
+        from src.utils.database import DatabaseManager
+        from src.utils.db_persistence import SQLPersistence
 
         config = get_config()
         db_manager = DatabaseManager(database_url=config.DATABASE_URL)
@@ -141,6 +141,9 @@ async def initialize_bot(token: str, setup_persistence: bool = True) -> Applicat
 
     # Настраиваем обработчики сигналов для корректного завершения
     setup_signal_handlers(application)
+    
+    # Запуск защиты памяти
+    memory_guard.start(application)
 
     logger.info(f"Бот инициализирован, ID администраторов: {admin_ids}")
 

@@ -9,16 +9,15 @@
 - Анализ ликвидности
 """
 
-import asyncio
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-
 from src.dmarket.arbitrage_scanner import (
     ARBITRAGE_LEVELS,
     GAME_IDS,
     ArbitrageScanner,
 )
+
 from src.dmarket.dmarket_api import DMarketAPI
 
 

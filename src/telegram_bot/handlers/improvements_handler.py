@@ -29,7 +29,6 @@ from telegram.ext import (
     ContextTypes,
 )
 
-
 if TYPE_CHECKING:
     from src.integration.bot_integrator import BotIntegrator
 

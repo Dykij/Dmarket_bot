@@ -2,8 +2,8 @@
 """Generate skills validation report."""
 
 import json
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 
 def generate_report() -> str:
@@ -17,7 +17,7 @@ def generate_report() -> str:
     if not registry_path.exists():
         return "❌ Skills registry not found"
     
-    with open(registry_path, 'r') as f:
+    with open(registry_path) as f:
         registry = json.load(f)
     
     skills = registry.get("skills", [])

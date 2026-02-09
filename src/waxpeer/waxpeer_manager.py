@@ -15,7 +15,6 @@ import structlog
 
 from src.waxpeer.waxpeer_api import WaxpeerAPI, WaxpeerGame
 
-
 logger = structlog.get_logger(__name__)
 
 

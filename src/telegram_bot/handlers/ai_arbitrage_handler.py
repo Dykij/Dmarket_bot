@@ -18,7 +18,6 @@ import structlog
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import CallbackQueryHandler, CommandHandler, ContextTypes
 
-
 if TYPE_CHECKING:
     from src.arbitrage.ai_unified_arbitrage import AIUnifiedArbitrage
 

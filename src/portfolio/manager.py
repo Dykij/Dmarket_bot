@@ -5,14 +5,13 @@ Manages portfolio CRUD operations, price updates, and persistence.
 
 from __future__ import annotations
 
-from decimal import Decimal
 import json
 import logging
+from decimal import Decimal
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 from .models import ItemCategory, ItemRarity, Portfolio, PortfolioItem, PortfolioMetrics
-
 
 if TYPE_CHECKING:
     from src.interfaces import IDMarketAPI

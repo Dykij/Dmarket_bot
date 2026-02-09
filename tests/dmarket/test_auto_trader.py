@@ -4,8 +4,9 @@ This module tests the AutoTrader class and related components
 for automatic trading functionality.
 """
 
+from unittest.mock import AsyncMock, MagicMock
+
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
 
 from src.dmarket.auto_trader import (
     AutoTrader,

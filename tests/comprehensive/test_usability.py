@@ -11,12 +11,9 @@ Covers:
 - Accessibility patterns
 """
 
-import asyncio
 import time
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 

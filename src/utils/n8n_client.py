@@ -40,7 +40,6 @@ from typing import Any
 import httpx
 import structlog
 
-
 logger = structlog.get_logger(__name__)
 
 

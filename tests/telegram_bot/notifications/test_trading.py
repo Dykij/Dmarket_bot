@@ -27,7 +27,6 @@ from src.telegram_bot.notifications.trading import (
     send_sell_success_notification,
 )
 
-
 # ============================================================================
 # Test Fixtures
 # ============================================================================

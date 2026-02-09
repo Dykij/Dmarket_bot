@@ -12,14 +12,13 @@ Features:
 - Natural language queries (запросы на естественном языке)
 """
 
+import json
 from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
-import json
 from typing import Any
 
 import structlog
-
 
 try:
     import httpx

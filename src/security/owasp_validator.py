@@ -26,7 +26,6 @@ Based on: OWASP Top 10 2021, SkillsMP applying-owasp-security skill
 
 from __future__ import annotations
 
-import ast
 import re
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -35,7 +34,6 @@ from pathlib import Path
 from typing import Any
 
 import structlog
-
 
 logger = structlog.get_logger(__name__)
 
@@ -548,8 +546,8 @@ class OWASPValidator:
             "",
             "## Summary",
             "",
-            f"| Severity | Count |",
-            f"|----------|-------|",
+            "| Severity | Count |",
+            "|----------|-------|",
             f"| 🔴 Critical | {sum(1 for i in issues if i.severity == Severity.CRITICAL)} |",
             f"| 🟠 High | {sum(1 for i in issues if i.severity == Severity.HIGH)} |",
             f"| 🟡 Medium | {sum(1 for i in issues if i.severity == Severity.MEDIUM)} |",

@@ -2,14 +2,11 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime, timedelta
-import pytest
-
 from src.ml.anomaly_detection import (
     AnomalyDetector,
     AnomalyResult,
-    AnomalyType,
     AnomalySeverity,
+    AnomalyType,
     create_anomaly_detector,
 )
 

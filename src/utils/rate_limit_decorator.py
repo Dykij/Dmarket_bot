@@ -2,14 +2,13 @@
 Декоратор для применения rate limiting к командам бота.
 """
 
-from collections.abc import Callable
 import functools
+from collections.abc import Callable
 from typing import TYPE_CHECKING, Any
 
 import structlog
 from telegram import Update
 from telegram.ext import ContextTypes
-
 
 if TYPE_CHECKING:
     from src.utils.user_rate_limiter import UserRateLimiter

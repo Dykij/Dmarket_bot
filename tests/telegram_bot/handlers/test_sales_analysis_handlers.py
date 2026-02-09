@@ -20,7 +20,6 @@ from src.telegram_bot.handlers.sales_analysis_handlers import (
 )
 from src.utils.exceptions import APIError
 
-
 # =============================================================================
 # Helper Functions
 # =============================================================================

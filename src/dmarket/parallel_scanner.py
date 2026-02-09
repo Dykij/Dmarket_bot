@@ -15,7 +15,6 @@ import structlog
 from src.dmarket.scanner.engine import ArbitrageScanner
 from src.interfaces import IDMarketAPI
 
-
 logger = structlog.get_logger(__name__)
 
 

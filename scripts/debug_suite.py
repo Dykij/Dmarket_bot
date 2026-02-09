@@ -13,21 +13,19 @@ Debug Suite для DMarket Telegram Bot.
 """
 
 import asyncio
+import sys
 from datetime import UTC, datetime
 from pathlib import Path
-import sys
 
 from sqlalchemy import text
-
 
 # Добавляем корневую директорию в PYTHONPATH
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.dmarket.dmarket_api import DMarketAPI
+from src.utils.canonical_logging import get_logger
 from src.utils.config import Config
 from src.utils.database import DatabaseManager
-from src.utils.logging_utils import get_logger
-
 
 logger = get_logger(__name__)
 

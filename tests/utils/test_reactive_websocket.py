@@ -4,15 +4,15 @@ This module tests the ReactiveDMarketWebSocket class and Observable
 for real-time market data streaming.
 """
 
+from unittest.mock import AsyncMock, MagicMock
+
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
-import asyncio
 
 from src.utils.reactive_websocket import (
-    ReactiveDMarketWebSocket,
-    Observable,
-    Subscription,
     EventType,
+    Observable,
+    ReactiveDMarketWebSocket,
+    Subscription,
     SubscriptionState,
 )
 

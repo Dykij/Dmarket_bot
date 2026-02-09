@@ -13,12 +13,11 @@ Usage:
 """
 
 import argparse
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from pathlib import Path
 import subprocess  # noqa: S404
 import sys
 import time
-
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from pathlib import Path
 
 # Timeout for each step (seconds)
 LINT_TIMEOUT = 30

@@ -5,21 +5,17 @@ Items in whitelist get priority (lower profit threshold), but
 all items are still scanned.
 """
 
-import pytest
-from unittest.mock import patch, MagicMock
 
 from src.dmarket.whitelist_config import (
+    GAME_APP_ID_MAP,
     WHITELIST_ITEMS,
     WHITELIST_SETTINGS,
-    GAME_APP_ID_MAP,
-    GAME_WEIGHTS,
-    WhitelistMode,
     WhitelistChecker,
-    get_whitelist_for_game,
+    WhitelistMode,
     add_to_whitelist,
-    remove_from_whitelist,
     get_game_weight,
-    load_whitelist_from_json,
+    get_whitelist_for_game,
+    remove_from_whitelist,
 )
 
 

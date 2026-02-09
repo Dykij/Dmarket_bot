@@ -4,11 +4,8 @@ This module tests the SecretsManager class for secure
 handling of API keys and sensitive data.
 """
 
+
 import pytest
-from unittest.mock import patch
-import os
-import tempfile
-from pathlib import Path
 
 from src.utils.secrets_manager import SecretsManager
 

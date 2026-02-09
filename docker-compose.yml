@@ -2,7 +2,7 @@ services:
   bot:
     build:
       context: .
-      dockerfile: Dockerfile.arkady
+      dockerfile: Dockerfile
     container_name: dmarket-bot
     restart: unless-stopped
     env_file:
@@ -11,7 +11,7 @@ services:
       - .:/app
       - ./data:/app/data
       - ./logs:/app/logs
-      - ./.arkady:/app/.arkady
+
     logging:
       driver: "json-file"
       options:

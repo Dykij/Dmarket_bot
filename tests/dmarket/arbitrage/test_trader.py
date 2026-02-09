@@ -18,7 +18,6 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-
 # =============================================================================
 # Test ArbitrageTrader Initialization
 # =============================================================================

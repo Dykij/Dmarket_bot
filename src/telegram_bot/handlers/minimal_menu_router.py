@@ -19,7 +19,6 @@ from src.telegram_bot.handlers.api_check_handler import handle_api_check
 from src.telegram_bot.handlers.automatic_arbitrage_handler import handle_automatic_arbitrage
 from src.telegram_bot.handlers.view_items_handler import handle_view_items
 
-
 logger = structlog.get_logger(__name__)
 std_logger = logging.getLogger(__name__)
 

@@ -11,12 +11,10 @@ Security tests verify:
 
 from __future__ import annotations
 
-import os
-from typing import TYPE_CHECKING, Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from typing import TYPE_CHECKING
+from unittest.mock import AsyncMock, patch
 
 import pytest
-
 
 if TYPE_CHECKING:
     pass
@@ -261,7 +259,7 @@ class TestErrorMessageSecurity:
 
             try:
                 await api.get_balance()
-            except Exception as e:
+            except Exception:
                 # Error message handling should not expose secrets
                 pass
 

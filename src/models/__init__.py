@@ -8,7 +8,6 @@ from src.models.target import Target, TradeHistory, TradingSettings
 from src.models.telegram_persistence import TelegramPersistence
 from src.models.user import User, UserSettings
 
-
 __all__ = [
     "AnalyticsEvent",
     "CommandLog",

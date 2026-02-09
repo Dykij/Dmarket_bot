@@ -16,7 +16,6 @@ from src.utils.api_circuit_breaker import (
     _circuit_breakers,
     call_with_circuit_breaker,
     dmarket_api_breaker,
-    reset_all_circuit_breakers,
 )
 
 

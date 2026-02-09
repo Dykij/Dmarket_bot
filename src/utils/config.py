@@ -5,14 +5,13 @@ from various sources including environment variables, YAML files, and defaults.
 """
 
 import contextlib
-from dataclasses import dataclass, field
 import logging
 import os
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
 import yaml
-
 
 # Load environment variables from .env file
 try:
@@ -39,7 +38,7 @@ class DatabaseConfig:
 class BotConfig:
     """Telegram bot configuration."""
 
-    token: str = ""
+    token: str = "1234567890:ABCdefGHIjklMNOpqrsTUVwxyz123456789"
     username: str = "dmarket_bot"
     webhook_url: str = ""
     webhook_secret: str = ""
@@ -52,8 +51,8 @@ class DMarketConfig:
     """DMarket API configuration."""
 
     api_url: str = "https://api.dmarket.com"
-    public_key: str = ""
-    secret_key: str = ""
+    public_key: str = "aabbccddeeffgghhiijjkkllmmnnooppqqrrsstt"
+    secret_key: str = "11223344556677889900aabbccddeeffgghhiijj"
     rate_limit: int = 30
 
 

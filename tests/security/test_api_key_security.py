@@ -335,8 +335,8 @@ class TestAuthenticationSecurity:
 
     def test_password_not_stored_plaintext(self):
         """Passwords should be hashed, not stored in plaintext."""
-        from hashlib import pbkdf2_hmac
         import secrets
+        from hashlib import pbkdf2_hmac
 
         def hash_password(
             password: str, salt: bytes | None = None

@@ -20,7 +20,6 @@ from typing import TYPE_CHECKING, Any
 from telegram import Update
 from telegram.ext import CommandHandler, ContextTypes
 
-
 if TYPE_CHECKING:
     from telegram.ext import Application
 

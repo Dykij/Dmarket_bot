@@ -24,7 +24,6 @@ import traceback
 
 import nacl.signing
 
-
 logger = logging.getLogger(__name__)
 
 

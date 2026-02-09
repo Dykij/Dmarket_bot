@@ -33,12 +33,11 @@ Usage:
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from enum import StrEnum
-import logging
 from typing import TYPE_CHECKING, Any
-
 
 if TYPE_CHECKING:
     from src.dmarket.dmarket_api import DMarketAPI

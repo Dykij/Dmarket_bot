@@ -21,7 +21,6 @@ from telegram.ext import ContextTypes
 
 from src.dmarket.game_filters import FilterFactory
 
-
 logger = logging.getLogger(__name__)
 
 # Константы для фильтров

@@ -22,7 +22,6 @@ from src.arbitrage.ai_unified_arbitrage import (
     create_arbitrage_system,
 )
 
-
 __all__ = [
     "AIUnifiedArbitrage",
     "ArbitrageConfig",

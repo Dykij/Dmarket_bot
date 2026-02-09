@@ -7,8 +7,6 @@
 - Rollback к предыдущим версиям
 """
 
-import asyncio
-from pathlib import Path
 from datetime import UTC, datetime
 
 import pytest

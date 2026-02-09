@@ -236,20 +236,19 @@ class TestCheckPriceAlert:
         with patch(
             "src.telegram_bot.notifications.checker.get_storage",
             return_value=mock_storage,
+        ), patch(
+            "src.telegram_bot.notifications.checker.get_current_price",
+            new_callable=AsyncMock,
+            return_value=12.0,
         ):
-            with patch(
-                "src.telegram_bot.notifications.checker.get_current_price",
-                new_callable=AsyncMock,
-                return_value=12.0,
-            ):
-                result = await check_price_alert(
-                    api=mock_api,
-                    alert=alert,
-                    
-                )
+            result = await check_price_alert(
+                api=mock_api,
+                alert=alert,
+                
+            )
 
-                # Alert should be triggered (price $12 < threshold $15)
-                assert result is True or result is not None
+            # Alert should be triggered (price $12 < threshold $15)
+            assert result is True or result is not None
 
     @pytest.mark.asyncio()
     async def test_check_price_drop_alert_not_triggered(self, mock_api, mock_storage):
@@ -267,20 +266,19 @@ class TestCheckPriceAlert:
         with patch(
             "src.telegram_bot.notifications.checker.get_storage",
             return_value=mock_storage,
+        ), patch(
+            "src.telegram_bot.notifications.checker.get_current_price",
+            new_callable=AsyncMock,
+            return_value=10.0,
         ):
-            with patch(
-                "src.telegram_bot.notifications.checker.get_current_price",
-                new_callable=AsyncMock,
-                return_value=10.0,
-            ):
-                result = await check_price_alert(
-                    api=mock_api,
-                    alert=alert,
-                    
-                )
+            result = await check_price_alert(
+                api=mock_api,
+                alert=alert,
+                
+            )
 
-                # Alert should NOT be triggered (price $10 > threshold $8)
-                assert result is False or result is None
+            # Alert should NOT be triggered (price $10 > threshold $8)
+            assert result is False or result is None
 
     @pytest.mark.asyncio()
     async def test_check_price_rise_alert_triggered(self, mock_api, mock_storage):
@@ -299,20 +297,19 @@ class TestCheckPriceAlert:
         with patch(
             "src.telegram_bot.notifications.checker.get_storage",
             return_value=mock_storage,
+        ), patch(
+            "src.telegram_bot.notifications.checker.get_current_price",
+            new_callable=AsyncMock,
+            return_value=10.0,
         ):
-            with patch(
-                "src.telegram_bot.notifications.checker.get_current_price",
-                new_callable=AsyncMock,
-                return_value=10.0,
-            ):
-                result = await check_price_alert(
-                    api=mock_api,
-                    alert=alert,
-                    
-                )
+            result = await check_price_alert(
+                api=mock_api,
+                alert=alert,
+                
+            )
 
-                # Alert should be triggered (price $10 > threshold $8)
-                assert result is True or result is not None
+            # Alert should be triggered (price $10 > threshold $8)
+            assert result is True or result is not None
 
     @pytest.mark.asyncio()
     async def test_check_inactive_alert(self, mock_api, mock_storage):
@@ -335,21 +332,20 @@ class TestCheckPriceAlert:
         with patch(
             "src.telegram_bot.notifications.checker.get_storage",
             return_value=mock_storage,
+        ), patch(
+            "src.telegram_bot.notifier.get_current_price",
+            new_callable=AsyncMock,
+            return_value=10.0,  # Price below threshold
         ):
-            with patch(
-                "src.telegram_bot.notifier.get_current_price",
-                new_callable=AsyncMock,
-                return_value=10.0,  # Price below threshold
-            ):
-                result = await check_price_alert(
-                    api=mock_api,
-                    alert=alert,
-                    
-                )
+            result = await check_price_alert(
+                api=mock_api,
+                alert=alert,
+                
+            )
 
-                # check_price_alert returns dict when triggered (doesn't check active flag)
-                # The active check is done by check_all_alerts
-                assert result is not None or result is None
+            # check_price_alert returns dict when triggered (doesn't check active flag)
+            # The active check is done by check_all_alerts
+            assert result is not None or result is None
 
     @pytest.mark.asyncio()
     async def test_check_alert_with_none_price(self, mock_api, mock_storage):
@@ -367,20 +363,19 @@ class TestCheckPriceAlert:
         with patch(
             "src.telegram_bot.notifications.checker.get_storage",
             return_value=mock_storage,
+        ), patch(
+            "src.telegram_bot.notifier.get_current_price",
+            new_callable=AsyncMock,
+            return_value=None,
         ):
-            with patch(
-                "src.telegram_bot.notifier.get_current_price",
-                new_callable=AsyncMock,
-                return_value=None,
-            ):
-                result = await check_price_alert(
-                    api=mock_api,
-                    alert=alert,
-                    
-                )
+            result = await check_price_alert(
+                api=mock_api,
+                alert=alert,
+                
+            )
 
-                # Should return None when price is None
-                assert result is None
+            # Should return None when price is None
+            assert result is None
 
 
 # =============================================================================
@@ -412,16 +407,15 @@ class TestCheckAllAlerts:
         with patch(
             "src.telegram_bot.notifications.checker.get_storage",
             return_value=mock_storage,
+        ), patch(
+            "src.telegram_bot.notifications.checker.check_price_alert",
+            new_callable=AsyncMock,
+            return_value=False,
         ):
-            with patch(
-                "src.telegram_bot.notifications.checker.check_price_alert",
-                new_callable=AsyncMock,
-                return_value=False,
-            ):
-                results = await check_all_alerts(api=mock_api, bot=mock_bot)
+            results = await check_all_alerts(api=mock_api, bot=mock_bot)
 
-                # check_all_alerts returns int (count of triggered alerts)
-                assert isinstance(results, int)
+            # check_all_alerts returns int (count of triggered alerts)
+            assert isinstance(results, int)
 
     @pytest.mark.asyncio()
     async def test_check_all_alerts_handles_errors(self, mock_api, mock_storage):
@@ -431,17 +425,16 @@ class TestCheckAllAlerts:
         with patch(
             "src.telegram_bot.notifications.checker.get_storage",
             return_value=mock_storage,
+        ), patch(
+            "src.telegram_bot.notifications.checker.check_price_alert",
+            new_callable=AsyncMock,
+            side_effect=Exception("Test error"),
         ):
-            with patch(
-                "src.telegram_bot.notifications.checker.check_price_alert",
-                new_callable=AsyncMock,
-                side_effect=Exception("Test error"),
-            ):
-                # Should not raise exception
-                try:
-                    await check_all_alerts(api=mock_api, bot=mock_bot)
-                except Exception:
-                    pass  # May or may not raise
+            # Should not raise exception
+            try:
+                await check_all_alerts(api=mock_api, bot=mock_bot)
+            except Exception:
+                pass  # May or may not raise
 
 
 # =============================================================================
@@ -498,30 +491,29 @@ class TestRunAlertsChecker:
         with patch(
             "src.telegram_bot.notifications.checker.get_storage",
             return_value=mock_storage,
+        ), patch(
+            "src.telegram_bot.notifications.checker.check_all_alerts",
+            new_callable=AsyncMock,
+            return_value=None,
         ):
-            with patch(
-                "src.telegram_bot.notifications.checker.check_all_alerts",
-                new_callable=AsyncMock,
-                return_value=None,
-            ):
-                # Run single iteration (would normally be a loop)
-                # We test the function can be called without error
-                try:
-                    task = asyncio.create_task(
-                        run_alerts_checker(
-                            api=mock_api,
-                            bot=mock_bot,
-                            check_interval=0.1,  # Short interval for test
-                        )
+            # Run single iteration (would normally be a loop)
+            # We test the function can be called without error
+            try:
+                task = asyncio.create_task(
+                    run_alerts_checker(
+                        api=mock_api,
+                        bot=mock_bot,
+                        check_interval=0.1,  # Short interval for test
                     )
-                    await asyncio.sleep(0.2)
-                    task.cancel()
-                    try:
-                        await task
-                    except asyncio.CancelledError:
-                        pass
-                except Exception:
-                    pass  # Function might not be implemented
+                )
+                await asyncio.sleep(0.2)
+                task.cancel()
+                try:
+                    await task
+                except asyncio.CancelledError:
+                    pass
+            except Exception:
+                pass  # Function might not be implemented
 
     @pytest.mark.asyncio()
     async def test_run_alerts_checker_respects_interval(self, mock_api, mock_storage):
@@ -536,31 +528,30 @@ class TestRunAlertsChecker:
         with patch(
             "src.telegram_bot.notifications.checker.get_storage",
             return_value=mock_storage,
+        ), patch(
+            "src.telegram_bot.notifications.checker.check_all_alerts",
+            new_callable=AsyncMock,
+            side_effect=count_calls,
         ):
-            with patch(
-                "src.telegram_bot.notifications.checker.check_all_alerts",
-                new_callable=AsyncMock,
-                side_effect=count_calls,
-            ):
-                try:
-                    task = asyncio.create_task(
-                        run_alerts_checker(
-                            api=mock_api,
-                            bot=mock_bot,
-                            check_interval=0.1,
-                        )
+            try:
+                task = asyncio.create_task(
+                    run_alerts_checker(
+                        api=mock_api,
+                        bot=mock_bot,
+                        check_interval=0.1,
                     )
-                    await asyncio.sleep(0.35)  # Should allow ~3 iterations
-                    task.cancel()
-                    try:
-                        await task
-                    except asyncio.CancelledError:
-                        pass
-
-                    # Should have been called multiple times
-                    assert call_count >= 2 or call_count >= 0
-                except Exception:
+                )
+                await asyncio.sleep(0.35)  # Should allow ~3 iterations
+                task.cancel()
+                try:
+                    await task
+                except asyncio.CancelledError:
                     pass
+
+                # Should have been called multiple times
+                assert call_count >= 2 or call_count >= 0
+            except Exception:
+                pass
 
 
 # =============================================================================
@@ -585,21 +576,20 @@ class TestCheckerEdgeCases:
         with patch(
             "src.telegram_bot.notifications.checker.get_storage",
             return_value=mock_storage,
+        ), patch(
+            "src.telegram_bot.notifier.get_current_price",
+            new_callable=AsyncMock,
+            return_value=10.0,
         ):
-            with patch(
-                "src.telegram_bot.notifier.get_current_price",
-                new_callable=AsyncMock,
-                return_value=10.0,
-            ):
-                result = await check_price_alert(
-                    api=mock_api,
-                    alert=alert,
-                    
-                )
+            result = await check_price_alert(
+                api=mock_api,
+                alert=alert,
+                
+            )
 
-                # price_drop triggers when current_price <= threshold
-                # So price exactly at threshold triggers (10.0 <= 10.0)
-                assert result is not None  # Returns dict when triggered
+            # price_drop triggers when current_price <= threshold
+            # So price exactly at threshold triggers (10.0 <= 10.0)
+            assert result is not None  # Returns dict when triggered
 
     @pytest.mark.asyncio()
     async def test_price_with_very_small_difference(self, mock_api, mock_storage):
@@ -617,20 +607,19 @@ class TestCheckerEdgeCases:
         with patch(
             "src.telegram_bot.notifications.checker.get_storage",
             return_value=mock_storage,
+        ), patch(
+            "src.telegram_bot.notifications.checker.get_current_price",
+            new_callable=AsyncMock,
+            return_value=9.999,
         ):
-            with patch(
-                "src.telegram_bot.notifications.checker.get_current_price",
-                new_callable=AsyncMock,
-                return_value=9.999,
-            ):
-                result = await check_price_alert(
-                    api=mock_api,
-                    alert=alert,
-                    
-                )
+            result = await check_price_alert(
+                api=mock_api,
+                alert=alert,
+                
+            )
 
-                # Should trigger (9.999 < 10.0)
-                assert result is True or result is not None
+            # Should trigger (9.999 < 10.0)
+            assert result is True or result is not None
 
     @pytest.mark.asyncio()
     async def test_api_error_handling(self, mock_storage):
@@ -669,20 +658,19 @@ class TestCheckerEdgeCases:
         with patch(
             "src.telegram_bot.notifications.checker.get_storage",
             return_value=mock_storage,
+        ), patch(
+            "src.telegram_bot.notifications.checker.get_current_price",
+            new_callable=AsyncMock,
+            return_value=10.0,
         ):
-            with patch(
-                "src.telegram_bot.notifications.checker.get_current_price",
-                new_callable=AsyncMock,
-                return_value=10.0,
-            ):
-                result = await check_price_alert(
-                    api=mock_api,
-                    alert=alert,
-                    
-                )
+            result = await check_price_alert(
+                api=mock_api,
+                alert=alert,
+                
+            )
 
-                # Implementation may vary for volume alerts
-                assert result is True or result is False or result is None
+            # Implementation may vary for volume alerts
+            assert result is True or result is False or result is None
 
     @pytest.mark.asyncio()
     async def test_trend_change_alert(self, mock_api, mock_storage):
@@ -737,24 +725,23 @@ class TestCheckerIntegration:
         with patch(
             "src.telegram_bot.notifications.checker.get_storage",
             return_value=mock_storage,
+        ), patch(
+            "src.telegram_bot.notifications.checker.get_current_price",
+            new_callable=AsyncMock,
+            return_value=12.0,
         ):
-            with patch(
-                "src.telegram_bot.notifications.checker.get_current_price",
-                new_callable=AsyncMock,
-                return_value=12.0,
-            ):
 
-                alert = mock_storage.get_user_data(12345)["alerts"][0]
+            alert = mock_storage.get_user_data(12345)["alerts"][0]
 
-                # Check individual alert
-                result = await check_price_alert(
-                    api=mock_api,
-                    alert=alert,
-                    
-                )
+            # Check individual alert
+            result = await check_price_alert(
+                api=mock_api,
+                alert=alert,
+                
+            )
 
-                # Threshold is 15, price is 12 - should trigger
-                assert result is True or result is not None
+            # Threshold is 15, price is 12 - should trigger
+            assert result is True or result is not None
 
     @pytest.mark.asyncio()
     async def test_multiple_alerts_check(self, mock_api):
@@ -789,17 +776,15 @@ class TestCheckerIntegration:
 
         with patch(
             "src.telegram_bot.notifications.checker.get_storage", return_value=storage
+        ), patch(
+            "src.telegram_bot.notifier.check_price_alert",
+            new_callable=AsyncMock,
+            return_value=None,
+        ), patch(
+            "src.telegram_bot.notifications.alerts.can_send_notification",
+            return_value=True,
         ):
-            with patch(
-                "src.telegram_bot.notifier.check_price_alert",
-                new_callable=AsyncMock,
-                return_value=None,
-            ):
-                with patch(
-                    "src.telegram_bot.notifications.alerts.can_send_notification",
-                    return_value=True,
-                ):
-                    results = await check_all_alerts(api=mock_api, bot=mock_bot)
+            results = await check_all_alerts(api=mock_api, bot=mock_bot)
 
-                    # check_all_alerts returns int (count of triggered alerts)
-                    assert isinstance(results, int)
+            # check_all_alerts returns int (count of triggered alerts)
+            assert isinstance(results, int)

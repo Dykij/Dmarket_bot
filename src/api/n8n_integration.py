@@ -18,12 +18,11 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import Any
 
+import structlog
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from pydantic import BaseModel, Field, field_validator
-import structlog
 
 from src.utils.database import get_async_session
-
 
 logger = structlog.get_logger(__name__)
 

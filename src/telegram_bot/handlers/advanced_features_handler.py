@@ -40,7 +40,6 @@ from telegram.ext import (
 
 from src.telegram_bot.utils.api_helper import create_dmarket_api_client
 
-
 if TYPE_CHECKING:
     from telegram.ext import Application
 
@@ -112,8 +111,8 @@ async def charts_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     await query.edit_message_text("⏳ Generating chart...")
 
     # Get purchase data from database (mock for now)
-    from datetime import datetime, timedelta
     import random
+    from datetime import datetime, timedelta
 
     # Generate sample data
     base_time = datetime.now()
@@ -217,8 +216,8 @@ async def _generate_visualization(
         visualizer = MarketVisualizer(theme="dark")
 
         # Get price history (mock for now - would fetch from API)
-        from datetime import datetime, timedelta
         import random
+        from datetime import datetime, timedelta
 
         base_price = random.uniform(5, 50)
         base_time = datetime.now()

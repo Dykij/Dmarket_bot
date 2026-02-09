@@ -4,9 +4,9 @@ This module provides database connection management, model definitions,
 and common database operations.
 """
 
-from datetime import UTC, datetime, timedelta
 import json
 import logging
+from datetime import UTC, datetime, timedelta
 from typing import Any
 from uuid import UUID, uuid4
 
@@ -20,22 +20,10 @@ from sqlalchemy.ext.asyncio import (
 
 # Import all models to ensure they're registered with Base.metadata
 from src.models import (
-    AnalyticsEvent,
-    CommandLog,
-    MarketData,
-    MarketDataCache,
-    PendingTrade,
-    PriceAlert,
-    Target,
-    TelegramPersistence,
-    TradeHistory,
-    TradingSettings,
     User,
-    UserSettings,
 )
 from src.models.base import Base
 from src.utils.memory_cache import _user_cache, cached, get_all_cache_stats
-
 
 logger = logging.getLogger(__name__)
 
@@ -878,3 +866,47 @@ class DatabaseManager:  # noqa: PLR0904
                 logger.info("Database vacuumed successfully")
         except Exception as e:
             logger.warning(f"Failed to vacuum database: {e}")
+
+
+# Global database manager instance (lazy initialization)
+_db_manager: DatabaseManager | None = None
+
+
+def get_database_manager() -> DatabaseManager:
+    """Get or create the global DatabaseManager instance.
+
+    Returns:
+        DatabaseManager instance configured from environment.
+    """
+    global _db_manager
+    if _db_manager is None:
+        import os
+
+        database_url = os.getenv("DATABASE_URL", "sqlite:///./bot_database.db")
+        _db_manager = DatabaseManager(database_url)
+    return _db_manager
+
+
+async def get_db_session() -> AsyncSession:
+    """Get a database session (async context manager compatible).
+
+    This is a convenience function for FastAPI Depends() and other uses.
+
+    Returns:
+        AsyncSession that should be used as async context manager.
+
+    Example:
+        async with get_db_session() as session:
+            result = await session.execute(...)
+    """
+    db = get_database_manager()
+    return db.get_async_session()
+
+
+async def get_async_session() -> AsyncSession:
+    """Alias for get_db_session for compatibility.
+
+    Returns:
+        AsyncSession that should be used as async context manager.
+    """
+    return await get_db_session()

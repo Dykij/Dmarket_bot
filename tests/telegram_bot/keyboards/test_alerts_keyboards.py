@@ -21,7 +21,6 @@ from src.telegram_bot.keyboards.alerts import (
 )
 from src.telegram_bot.keyboards.utils import CB_BACK, CB_CANCEL
 
-
 # ============================================================================
 # Tests for get_alert_keyboard
 # ============================================================================

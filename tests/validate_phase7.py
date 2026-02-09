@@ -8,8 +8,8 @@ This script checks:
 3. Type compatibility
 4. Dependency availability
 """
-import sys
 import importlib
+import sys
 from pathlib import Path
 
 # Add src to path

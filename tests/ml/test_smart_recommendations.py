@@ -2,15 +2,14 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
 import pytest
 
 from src.ml.smart_recommendations import (
-    SmartRecommendations,
     ItemRecommendation,
     RecommendationBatch,
     RecommendationType,
     RiskLevel,
+    SmartRecommendations,
     create_smart_recommendations,
 )
 

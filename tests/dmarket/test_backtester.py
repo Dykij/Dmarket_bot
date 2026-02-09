@@ -9,7 +9,6 @@ from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING
 
 import pytest
-
 from src.dmarket.backtester import (
     Backtester,
     BacktestResults,
@@ -23,7 +22,6 @@ from src.dmarket.backtester import (
     TradeStatus,
     TradingStrategy,
 )
-
 
 if TYPE_CHECKING:
     from collections.abc import Sequence

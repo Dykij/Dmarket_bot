@@ -5,17 +5,17 @@ import hashlib
 import hmac
 import logging
 import time
-import traceback
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
+
 import httpx
 import nacl.signing
+
 from src.utils import json_utils as json
 from src.utils.api_circuit_breaker import call_with_circuit_breaker
-from src.utils.rate_limiter import DMarketRateLimiter, RateLimiter
-from src.utils.sentry_breadcrumbs import add_api_breadcrumb
+from src.utils.rate_limiter import DMarketRateLimiter
 
 if TYPE_CHECKING:
-    from src.telegram_bot.notifier import Notifier
+    pass
 
 logger = logging.getLogger(__name__)
 

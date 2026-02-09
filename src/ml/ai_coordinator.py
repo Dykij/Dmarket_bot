@@ -31,10 +31,10 @@ Created: January 2026
 from __future__ import annotations
 
 import asyncio
+import logging
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from enum import StrEnum
-import logging
 from typing import TYPE_CHECKING, Any
 
 from src.ml.anomaly_detection import AnomalyDetector, AnomalyResult
@@ -45,7 +45,6 @@ from src.ml.discount_threshold_predictor import (
     get_discount_threshold_predictor,
 )
 from src.ml.smart_recommendations import RecommendationType, RiskLevel
-
 
 if TYPE_CHECKING:
     from src.dmarket.dmarket_api import DMarketAPI

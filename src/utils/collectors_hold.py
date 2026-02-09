@@ -30,12 +30,11 @@
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from enum import StrEnum
-import logging
 from typing import TYPE_CHECKING, Any
-
 
 if TYPE_CHECKING:
     from src.dmarket.item_value_evaluator import EvaluationResult, ItemValueEvaluator
@@ -93,7 +92,7 @@ class HoldDecision:
     reason_details: str = ""
     estimated_value_multiplier: float = 1.0  # Во сколько раз дороже обычного
     recommended_platforms: list[str] = field(default_factory=list)
-    evaluation_result: "EvaluationResult | None" = None
+    evaluation_result: EvaluationResult | None = None
     timestamp: datetime = field(default_factory=lambda: datetime.now(UTC))
 
     def to_dict(self) -> dict[str, Any]:

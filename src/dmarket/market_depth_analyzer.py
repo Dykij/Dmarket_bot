@@ -12,12 +12,11 @@ import os
 import time
 from typing import Any
 
-from dotenv import load_dotenv
 import structlog
+from dotenv import load_dotenv
 
 from src.dmarket.dmarket_api import DMarketAPI
 from src.utils.rate_limiter import RateLimiter
-
 
 # Load environment variables
 load_dotenv()

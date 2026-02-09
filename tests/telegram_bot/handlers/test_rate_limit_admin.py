@@ -18,7 +18,6 @@ from src.telegram_bot.handlers.rate_limit_admin import (
     rate_limit_whitelist_command,
 )
 
-
 # ============================================================================
 # is_admin Tests
 # ============================================================================

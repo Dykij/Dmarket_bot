@@ -20,7 +20,6 @@ from src.telegram_bot.smart_notifications.checkers import (
     start_notification_checker,
 )
 
-
 # Module path constant for patching
 CHECKERS_MODULE = "src.telegram_bot.smart_notifications.checkers"
 

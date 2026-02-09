@@ -18,9 +18,9 @@ Examples:
 
 import argparse
 import json
-from pathlib import Path
 import subprocess
 import sys
+from pathlib import Path
 
 
 def get_staged_python_files() -> list[str]:

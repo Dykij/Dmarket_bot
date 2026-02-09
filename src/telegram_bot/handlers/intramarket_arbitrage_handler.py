@@ -18,7 +18,6 @@ from src.telegram_bot.pagination import pagination_manager
 from src.telegram_bot.utils.api_client import create_api_client_from_env
 from src.utils.exceptions import handle_exceptions
 
-
 logger = structlog.get_logger(__name__)
 
 # Константы для callback данных

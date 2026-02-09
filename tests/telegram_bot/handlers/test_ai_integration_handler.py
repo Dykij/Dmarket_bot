@@ -2,8 +2,9 @@
 Тесты для AI Integration Handler.
 """
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 
 class TestAIIntegrationHandler:
@@ -110,18 +111,17 @@ class TestAIIntegrationHandler:
 
         with patch(
             "src.telegram_bot.handlers.ai_integration_handler.HTTPX_AVAILABLE", True
-        ):
-            with patch("httpx.AsyncClient") as mock_client:
-                mock_client.return_value.__aenter__.return_value.get = AsyncMock(
-                    return_value=mock_response
-                )
+        ), patch("httpx.AsyncClient") as mock_client:
+            mock_client.return_value.__aenter__.return_value.get = AsyncMock(
+                return_value=mock_response
+            )
 
-                handler = AIIntegrationHandler()
-                status = await handler.check_ollama_status()
+            handler = AIIntegrationHandler()
+            status = await handler.check_ollama_status()
 
-                assert status["available"] is True
-                assert "llama3.1:8b" in status["models"]
-                assert "qwen2.5:7b" in status["models"]
+            assert status["available"] is True
+            assert "llama3.1:8b" in status["models"]
+            assert "qwen2.5:7b" in status["models"]
 
     @pytest.mark.asyncio
     async def test_list_available_models(self):
@@ -166,17 +166,16 @@ class TestAIIntegrationHandler:
 
         with patch(
             "src.telegram_bot.handlers.ai_integration_handler.HTTPX_AVAILABLE", True
-        ):
-            with patch("httpx.AsyncClient") as mock_client:
-                mock_client.return_value.__aenter__.return_value.post = AsyncMock(
-                    return_value=mock_response
-                )
+        ), patch("httpx.AsyncClient") as mock_client:
+            mock_client.return_value.__aenter__.return_value.post = AsyncMock(
+                return_value=mock_response
+            )
 
-                handler = AIIntegrationHandler()
-                response = await handler.chat_with_ai(123, "Test message")
+            handler = AIIntegrationHandler()
+            response = await handler.chat_with_ai(123, "Test message")
 
-                assert response == "Test AI response"
-                assert len(handler.conversation_history[123]) == 2
+            assert response == "Test AI response"
+            assert len(handler.conversation_history[123]) == 2
 
     @pytest.mark.asyncio
     async def test_conversation_history_limit(self):
@@ -196,16 +195,15 @@ class TestAIIntegrationHandler:
 
         with patch(
             "src.telegram_bot.handlers.ai_integration_handler.HTTPX_AVAILABLE", True
-        ):
-            with patch("httpx.AsyncClient") as mock_client:
-                mock_client.return_value.__aenter__.return_value.post = AsyncMock(
-                    return_value=mock_response
-                )
+        ), patch("httpx.AsyncClient") as mock_client:
+            mock_client.return_value.__aenter__.return_value.post = AsyncMock(
+                return_value=mock_response
+            )
 
-                await handler.chat_with_ai(123, "new message")
+            await handler.chat_with_ai(123, "new message")
 
-                # После добавления нового сообщения должно быть обрезано до 20
-                assert len(handler.conversation_history[123]) <= 22
+            # После добавления нового сообщения должно быть обрезано до 20
+            assert len(handler.conversation_history[123]) <= 22
 
 
 class TestAITelegramCommands:
@@ -369,8 +367,8 @@ class TestModelRecommendations:
     def test_llama_recommended_for_general(self):
         """Тест что Llama рекомендуется для общего чата."""
         from src.telegram_bot.handlers.ai_integration_handler import (
-            AIModel,
             MODEL_RECOMMENDATIONS,
+            AIModel,
         )
 
         rec = MODEL_RECOMMENDATIONS["general_chat"]
@@ -379,8 +377,8 @@ class TestModelRecommendations:
     def test_qwen_recommended_for_analysis(self):
         """Тест что Qwen рекомендуется для анализа."""
         from src.telegram_bot.handlers.ai_integration_handler import (
-            AIModel,
             MODEL_RECOMMENDATIONS,
+            AIModel,
         )
 
         rec = MODEL_RECOMMENDATIONS["market_analysis"]

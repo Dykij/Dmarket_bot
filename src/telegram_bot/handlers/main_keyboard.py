@@ -1,16 +1,25 @@
 """Modular main keyboard handler for DMarket Bot."""
 
-import os
-import logging
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.constants import ParseMode
 from telegram.ext import ContextTypes
 
 from src.telegram_bot.handlers.keyboard_parts.info import show_balance, show_inventory
-from src.telegram_bot.handlers.keyboard_parts.targets import targets_menu, target_create, target_auto
-from src.telegram_bot.handlers.keyboard_parts.ml_ai import ml_ai_menu_callback, ml_ai_status_callback
-from src.telegram_bot.handlers.trading_handlers import auto_trade_start, auto_trade_run, auto_trade_stop
-from src.utils.logging_utils import get_logger
+from src.telegram_bot.handlers.keyboard_parts.ml_ai import (
+    ml_ai_menu_callback,
+    ml_ai_status_callback,
+)
+from src.telegram_bot.handlers.keyboard_parts.targets import (
+    target_auto,
+    target_create,
+    targets_menu,
+)
+from src.telegram_bot.handlers.trading_handlers import (
+    auto_trade_run,
+    auto_trade_start,
+    auto_trade_stop,
+)
+from src.utils.canonical_logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -21,6 +30,7 @@ def get_main_keyboard(balance: float | None = None) -> InlineKeyboardMarkup:
         [InlineKeyboardButton("🎯 ТАРГЕТЫ", callback_data="targets_menu")],
         [InlineKeyboardButton("🧠 ML/AI ОБУЧЕНИЕ", callback_data="ml_ai_menu")],
         [InlineKeyboardButton(balance_text, callback_data="show_balance"), InlineKeyboardButton("📦 Инвентарь", callback_data="show_inventory")],
+        [InlineKeyboardButton("🖥️ СИСТЕМА", callback_data="system_status")],
         [InlineKeyboardButton("🛑 ЭКСТРЕННАЯ ОСТАНОВКА", callback_data="emergency_stop")],
     ]
     return InlineKeyboardMarkup(keyboard)

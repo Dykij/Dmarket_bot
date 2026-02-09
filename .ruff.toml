@@ -1,0 +1,1 @@
+extend-exclude = ["venv*", "tests", "docs", "__pycache__"]

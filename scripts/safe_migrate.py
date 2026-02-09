@@ -11,23 +11,21 @@
 
 import argparse
 import asyncio
-from datetime import datetime
-from pathlib import Path
 import subprocess
 import sys
+from datetime import datetime
+from pathlib import Path
 
+import structlog
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
-import structlog
-
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from scripts.backup_database import DatabaseBackup
 from src.utils.config import Config
-
 
 logger = structlog.get_logger(__name__)
 

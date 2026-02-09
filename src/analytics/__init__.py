@@ -14,7 +14,6 @@ from .backtester import (
 )
 from .historical_data import HistoricalDataCollector, PricePoint
 
-
 __all__ = [
     "BacktestResult",
     "Backtester",

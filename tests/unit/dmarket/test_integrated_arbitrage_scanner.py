@@ -3,10 +3,11 @@ Unit tests for integrated_arbitrage_scanner module.
 
 Tests the multi-platform arbitrage scanner with hold-in-DMarket strategy.
 """
-import pytest
-from decimal import Decimal
 from datetime import datetime
-from unittest.mock import AsyncMock, MagicMock, patch
+from decimal import Decimal
+from unittest.mock import MagicMock
+
+import pytest
 
 # NOTE: These tests validate the integrated_arbitrage_scanner module
 # The module is standalone and opt-in, not affecting existing bot logic
@@ -221,8 +222,7 @@ class TestScannerCompatibility:
     def test_no_conflict_with_intramarket_arbitrage(self):
         """Test that scanner doesn't conflict with existing intramarket module."""
         try:
-            from src.dmarket import intramarket_arbitrage
-            from src.dmarket import integrated_arbitrage_scanner
+            from src.dmarket import integrated_arbitrage_scanner, intramarket_arbitrage
             
             # Both modules should be importable
             assert intramarket_arbitrage is not None
@@ -233,8 +233,7 @@ class TestScannerCompatibility:
     def test_no_conflict_with_cross_platform_arbitrage(self):
         """Test compatibility with existing cross-platform module."""
         try:
-            from src.dmarket import cross_platform_arbitrage
-            from src.dmarket import integrated_arbitrage_scanner
+            from src.dmarket import cross_platform_arbitrage, integrated_arbitrage_scanner
             
             assert cross_platform_arbitrage is not None
             assert integrated_arbitrage_scanner is not None

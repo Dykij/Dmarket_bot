@@ -9,10 +9,9 @@ import enum
 import random
 from typing import Any
 
-from redis.asyncio import Redis
 import structlog
 import yaml
-
+from redis.asyncio import Redis
 
 logger = structlog.get_logger(__name__)
 

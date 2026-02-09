@@ -4,7 +4,6 @@ Tests for all handlers in src/telegram_bot/handlers/ to improve coverage to 95%+
 Uses mocks for Telegram API interactions.
 """
 
-import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest

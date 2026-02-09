@@ -4,13 +4,12 @@ Implements a Finite State Machine (FSM) for DMarket trading operations.
 Ensures atomic transitions, persistent state tracking, and crash recovery.
 """
 
-import asyncio
 import logging
-from enum import StrEnum, auto
-from typing import Any, Optional
+from enum import StrEnum
+from typing import Any
 
-from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 
 from src.models.pending_trade import PendingTrade, PendingTradeStatus
 from src.utils.database import get_db_session
@@ -39,7 +38,7 @@ class TradeStateMachine:
         self.item_data = item_data or {}
         self.current_state = TradeState.SEARCHING
         self.trade_id = None  # DB ID of the PendingTrade record
-        self._db_session: Optional[AsyncSession] = None
+        self._db_session: AsyncSession | None = None
 
     async def transition_to(self, new_state: TradeState, context: dict[str, Any] = None) -> None:
         """Execute transition to a new state with DB persistence."""

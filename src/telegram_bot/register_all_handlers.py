@@ -34,7 +34,6 @@ from src.telegram_bot.handlers.commands import (
 from src.telegram_bot.handlers.minimal_menu_router import minimal_menu_router
 from src.telegram_bot.handlers.view_items_handler import handle_view_items_callback
 
-
 if TYPE_CHECKING:
     from telegram.ext import Application
 
@@ -65,8 +64,12 @@ def _register_basic_commands(application: "Application") -> None:
 
         register_main_keyboard_handlers(application)
         logger.info("✅ Main Keyboard Handler зарегистрирован")
+        
+        from src.telegram_bot.handlers.system_handler import register_system_handlers
+        register_system_handlers(application)
+        logger.info("✅ System Handler зарегистрирован")
     except ImportError as e:
-        logger.warning("Не удалось импортировать main_keyboard: %s", e)
+        logger.warning("Не удалось импортировать main_keyboard или system_handler: %s", e)
 
     logger.info("Базовые команды зарегистрированы")
 

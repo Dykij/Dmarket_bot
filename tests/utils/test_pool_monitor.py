@@ -4,8 +4,9 @@ This module tests the PoolMonitor class for connection pool
 monitoring and management.
 """
 
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
 
 from src.utils.pool_monitor import PoolMonitor, PoolStats
 

@@ -3,11 +3,10 @@
 This module tests the Telegram bot middleware components.
 """
 
-import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
-import time
+from unittest.mock import AsyncMock, MagicMock
 
-from telegram import Update, User, Chat, Message, CallbackQuery
+import pytest
+from telegram import CallbackQuery, Chat, Message, Update, User
 
 from src.telegram_bot.middleware import BotMiddleware, middleware
 

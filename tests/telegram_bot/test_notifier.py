@@ -18,7 +18,6 @@ from src.telegram_bot.notifier import (
     update_user_settings,
 )
 
-
 # ============================================================================
 # FIXTURES
 # ============================================================================
@@ -27,7 +26,6 @@ from src.telegram_bot.notifier import (
 @pytest.fixture(autouse=True)
 def reset_user_alerts():
     """Сбрасывает глобальный словарь alerts перед каждым тестом."""
-    import importlib
     import sys
 
     from src.telegram_bot.notifications.storage import AlertStorage
@@ -41,7 +39,6 @@ def reset_user_alerts():
         del sys.modules["src.telegram_bot.notifier"]
 
     # Импортируем заново
-    import src.telegram_bot.notifier
 
     yield
 

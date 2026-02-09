@@ -3,9 +3,8 @@
 from collections import defaultdict
 from datetime import UTC, datetime, timedelta
 
-from aiolimiter import AsyncLimiter
 import structlog
-
+from aiolimiter import AsyncLimiter
 
 logger = structlog.get_logger(__name__)
 
@@ -53,9 +52,8 @@ class RateLimiterMiddleware:
             self._record_violation(user_id)
             raise RateLimitExceeded(retry_after=3600)
 
-        async with user_limiter["minute"]:
-            async with user_limiter["hour"]:
-                logger.debug("rate_limit_passed", user_id=user_id)
+        async with user_limiter["minute"], user_limiter["hour"]:
+            logger.debug("rate_limit_passed", user_id=user_id)
 
     def _record_violation(self, user_id: int) -> None:
         """Record rate limit violation."""

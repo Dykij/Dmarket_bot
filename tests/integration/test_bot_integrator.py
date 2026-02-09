@@ -10,16 +10,14 @@ Created: January 10, 2026
 """
 
 import asyncio
-from datetime import UTC, datetime
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from src.integration.service_registry import ServiceRegistry, ServiceStatus
-from src.integration.event_bus import EventBus, Event, EventPriority, EventTypes
-from src.integration.health_aggregator import HealthAggregator, HealthStatus
 from src.integration.bot_integrator import BotIntegrator, IntegratorConfig
-
+from src.integration.event_bus import Event, EventBus, EventPriority
+from src.integration.health_aggregator import HealthAggregator, HealthStatus
+from src.integration.service_registry import ServiceRegistry, ServiceStatus
 
 # ============================================================================
 # ServiceRegistry Tests

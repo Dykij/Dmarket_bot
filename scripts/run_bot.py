@@ -6,9 +6,8 @@ import argparse
 import asyncio
 import logging
 import os
-from pathlib import Path
 import sys
-
+from pathlib import Path
 
 # Создаем директорию для логов, если её нет (ДО настройки логирования!)
 os.makedirs("logs", exist_ok=True)

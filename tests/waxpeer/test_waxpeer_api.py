@@ -8,9 +8,8 @@ Tests cover:
 - Error handling and rate limiting
 """
 
-import pytest
 from decimal import Decimal
-from unittest.mock import AsyncMock, MagicMock, patch
+
 
 # Test WaxpeerGame enum
 class TestWaxpeerGame:
@@ -61,7 +60,7 @@ class TestWaxpeerItem:
     
     def test_create_item(self):
         """Test creating a WaxpeerItem."""
-        from src.waxpeer.waxpeer_api import WaxpeerItem, WaxpeerGame, ListingStatus
+        from src.waxpeer.waxpeer_api import ListingStatus, WaxpeerGame, WaxpeerItem
         
         item = WaxpeerItem(
             item_id="123",
@@ -80,7 +79,7 @@ class TestWaxpeerItem:
     
     def test_item_with_float_value(self):
         """Test creating item with float value."""
-        from src.waxpeer.waxpeer_api import WaxpeerItem, WaxpeerGame
+        from src.waxpeer.waxpeer_api import WaxpeerGame, WaxpeerItem
         
         item = WaxpeerItem(
             item_id="456",
@@ -186,7 +185,7 @@ class TestWaxpeerConstants:
     def test_commission_rate(self):
         """Test WAXPEER_COMMISSION constant."""
         from src.waxpeer.waxpeer_api import WAXPEER_COMMISSION
-        assert WAXPEER_COMMISSION == Decimal("0.06")
+        assert Decimal("0.06") == WAXPEER_COMMISSION
 
 
 class TestWaxpeerConversions:

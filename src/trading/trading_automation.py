@@ -27,13 +27,13 @@ Created: January 10, 2026
 
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from enum import StrEnum
-from typing import Any, Awaitable, Callable
+from typing import Any
 
 import structlog
-
 
 logger = structlog.get_logger(__name__)
 

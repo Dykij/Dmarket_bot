@@ -4,10 +4,9 @@
 возможности арбитража, баланс и т.д.) в читаемый текст для отправки в сообщениях Telegram.
 """
 
-from datetime import datetime
 import logging
+from datetime import datetime
 from typing import Any
-
 
 logger = logging.getLogger(__name__)
 

@@ -24,11 +24,10 @@ from typing import Any
 import structlog
 
 from src.dmarket.adaptive_scanner import AdaptiveScanner
-from src.dmarket.scanner.engine import ArbitrageScanner
 from src.dmarket.parallel_scanner import ParallelScanner
+from src.dmarket.scanner.engine import ArbitrageScanner
 from src.dmarket.target_cleaner import TargetCleaner
 from src.interfaces import IDMarketAPI
-
 
 logger = structlog.get_logger(__name__)
 

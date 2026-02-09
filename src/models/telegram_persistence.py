@@ -1,7 +1,9 @@
 """Model for Telegram bot persistence storage."""
 
-from sqlalchemy import Column, String, JSON, BigInteger
+from sqlalchemy import JSON, Column, String
+
 from src.models.base import Base
+
 
 class TelegramPersistence(Base):
     """Stores bot_data, chat_data, and user_data for Telegram bot."""

@@ -9,8 +9,7 @@ Tests cover:
 - Fallback behavior when stamina is not available
 """
 
-import asyncio
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import httpx
 import pytest

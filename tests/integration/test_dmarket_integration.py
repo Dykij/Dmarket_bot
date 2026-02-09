@@ -11,7 +11,6 @@ import pytest
 from src.dmarket.dmarket_api import DMarketAPI
 from src.utils.exceptions import APIError, RateLimitExceeded
 
-
 # Alias for backwards compatibility in tests
 RateLimitError = RateLimitExceeded
 

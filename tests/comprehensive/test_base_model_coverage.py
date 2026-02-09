@@ -119,7 +119,7 @@ class TestBaseModel:
     def test_to_dict_method_exists(self) -> None:
         """Test Base has to_dict method."""
         assert hasattr(Base, "to_dict")
-        assert callable(getattr(Base, "to_dict"))
+        assert callable(Base.to_dict)
 
 
 class TestBaseModelIntegration:

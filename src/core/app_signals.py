@@ -6,8 +6,7 @@ This module handles OS signals for graceful shutdown.
 import asyncio
 import logging
 import signal
-from typing import Callable
-
+from collections.abc import Callable
 
 logger = logging.getLogger(__name__)
 

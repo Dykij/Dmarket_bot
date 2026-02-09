@@ -7,7 +7,6 @@ from typing import Any
 from src.dmarket.dmarket_api import DMarketAPI
 from src.utils.exceptions import APIError, NetworkError
 
-
 logger = logging.getLogger(__name__)
 
 

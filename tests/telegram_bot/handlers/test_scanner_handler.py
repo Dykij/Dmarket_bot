@@ -19,7 +19,6 @@ from src.telegram_bot.handlers.scanner_handler import (
     start_scanner_menu,
 )
 
-
 # ======================== Fixtures ========================
 
 

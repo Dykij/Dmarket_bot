@@ -1,8 +1,6 @@
 """Tests for Enhanced Polling Engine."""
 
 import asyncio
-from datetime import UTC, datetime
-from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest

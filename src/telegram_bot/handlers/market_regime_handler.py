@@ -25,7 +25,6 @@ from src.trading.regime_detector import (
     RegimeDetector,
 )
 
-
 if TYPE_CHECKING:
     from src.interfaces import IDMarketAPI
 

@@ -6,8 +6,8 @@ Tests Phase 2 implementation of natural language processing.
 import pytest
 
 from src.telegram_bot.nlp_handler import (
-    NLPCommandHandler,
     IntentResult,
+    NLPCommandHandler,
     create_nlp_handler,
 )
 

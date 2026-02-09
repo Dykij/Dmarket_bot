@@ -1,6 +1,7 @@
-from typing import Any, Optional, Union, List
+from typing import Any
+
 from pydantic import BaseModel, Field, field_validator
-from datetime import datetime
+
 
 class BalanceResponse(BaseModel):
     """Pydantic model for DMarket balance response."""
@@ -9,7 +10,7 @@ class BalanceResponse(BaseModel):
     total_balance: float = Field(..., description="Total balance including protected funds")
     has_funds: bool = False
     error: bool = False
-    error_message: Optional[str] = None
+    error_message: str | None = None
 
     @field_validator("balance", "available_balance", "total_balance", mode="before")
     @classmethod
@@ -27,8 +28,8 @@ class DMarketItem(BaseModel):
     title: str
     price: float
     gameId: str
-    slug: Optional[str] = None
-    image: Optional[str] = None
+    slug: str | None = None
+    image: str | None = None
     
     @field_validator("price", mode="before")
     @classmethod
@@ -42,6 +43,6 @@ class DMarketItem(BaseModel):
 
 class MarketSearchResponse(BaseModel):
     """Structured output for marketplace searches."""
-    items: List[DMarketItem] = []
-    cursor: Optional[str] = None
+    items: list[DMarketItem] = []
+    cursor: str | None = None
     total: int = 0

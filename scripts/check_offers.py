@@ -11,7 +11,6 @@ import sys
 
 from dotenv import load_dotenv
 
-
 # Настройка логирования
 logging.basicConfig(
     level=logging.INFO,

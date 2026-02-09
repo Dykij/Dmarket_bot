@@ -34,7 +34,6 @@ from src.dmarket.money_manager import (
     calculate_universal_limits,
 )
 
-
 if TYPE_CHECKING:
     from src.interfaces import IDMarketAPI
 

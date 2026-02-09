@@ -5,18 +5,17 @@ Based on DMarket API documentation at https://docs.dmarket.com/v1/swagger.html
 """
 
 import asyncio
-from collections.abc import Callable
 import json
 import logging
 import time
-from typing import Any
 import uuid
+from collections.abc import Callable
+from typing import Any
 
 import aiohttp
 from aiohttp import ClientSession
 
 from src.dmarket.dmarket_api import DMarketAPI
-
 
 logger = logging.getLogger(__name__)
 

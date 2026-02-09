@@ -12,15 +12,14 @@ Usage:
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
 import logging
+from datetime import UTC, datetime
 from typing import Any
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import CallbackQueryHandler, CommandHandler, ContextTypes
 
 from src.monitoring import DetectedSignal, MockTelethonMonitor, SignalType, create_telethon_monitor
-
 
 logger = logging.getLogger(__name__)
 

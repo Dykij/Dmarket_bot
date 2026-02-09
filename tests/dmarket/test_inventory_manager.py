@@ -4,8 +4,9 @@ This module tests the InventoryManager class for automatic selling
 and price undercutting.
 """
 
+from unittest.mock import AsyncMock, MagicMock
+
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
 
 
 class TestInventoryManager:

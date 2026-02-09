@@ -11,7 +11,6 @@ import pytest
 
 from src.dmarket.realtime_price_watcher import PriceAlert, RealtimePriceWatcher
 
-
 # ==================== Фикстуры ====================
 
 

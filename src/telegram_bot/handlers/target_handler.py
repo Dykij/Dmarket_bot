@@ -8,9 +8,8 @@ from telegram.ext import CallbackQueryHandler, CommandHandler, ContextTypes
 from src.dmarket.targets import TargetManager
 from src.telegram_bot.utils.api_client import create_api_client_from_env
 from src.telegram_bot.utils.formatters import format_target_competition_analysis
+from src.utils.canonical_logging import get_logger
 from src.utils.exceptions import handle_exceptions
-from src.utils.logging_utils import get_logger
-
 
 logger = get_logger(__name__)
 

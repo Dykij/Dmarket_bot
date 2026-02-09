@@ -5,7 +5,6 @@ import logging
 import time
 from typing import TYPE_CHECKING
 
-
 try:
     from aiolimiter import AsyncLimiter
 
@@ -808,3 +807,4 @@ class DMarketRateLimiter:
                         )
             except (ValueError, TypeError):
                 pass
+from aiolimiter import AsyncLimiter

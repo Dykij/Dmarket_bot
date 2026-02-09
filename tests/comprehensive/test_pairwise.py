@@ -7,10 +7,9 @@ Tests using pairwise/all-pairs combinatorial testing:
 - Input combinations
 - Feature flag combinations
 """
-import pytest
 from typing import Any
-from itertools import combinations, product
 
+import pytest
 
 # =============================================================================
 # PARAMETER COMBINATION TESTS

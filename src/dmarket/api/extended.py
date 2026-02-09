@@ -1,19 +1,16 @@
 """Extended operations for DMarket API."""
 
-from typing import Any, TYPE_CHECKING
 import logging
+from typing import TYPE_CHECKING, Any
+
 from src.dmarket.api_validator import validate_response
 from src.dmarket.schemas import (
     AggregatedPricesResponse,
     BuyOffersResponse,
-    CreateTargetsResponse,
-    SalesHistoryResponse,
-    UserTargetsResponse,
 )
-from src.dmarket.api.client import GAME_MAP
 
 if TYPE_CHECKING:
-    from src.telegram_bot.notifier import Notifier
+    pass
 
 logger = logging.getLogger(__name__)
 

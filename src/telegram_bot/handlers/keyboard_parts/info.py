@@ -1,6 +1,7 @@
 """Info handlers for main keyboard (balance, inventory)."""
 
 import logging
+
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes
 

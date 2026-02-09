@@ -10,13 +10,13 @@
 """
 
 import asyncio
-from dataclasses import dataclass, field
-from datetime import datetime
 import hashlib
 import logging
 import time
-from typing import Any, AsyncIterator
-
+from collections.abc import AsyncIterator
+from dataclasses import dataclass, field
+from datetime import datetime
+from typing import Any
 
 logger = logging.getLogger(__name__)
 

@@ -1,7 +1,7 @@
 """Tests for ScannerManager integration module."""
 
 import asyncio
-from unittest.mock import AsyncMock, patch, MagicMock
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -82,15 +82,14 @@ class TestScannerManager:
             "scan_level",
             new_callable=AsyncMock,
             return_value=[{"item_name": "Item 1", "price": 10.0}],
-        ):
-            with patch.object(scanner_manager.adaptive, "add_snapshot") as mock_add_snapshot:
-                await scanner_manager.scan_single_game("csgo", "high")
+        ), patch.object(scanner_manager.adaptive, "add_snapshot") as mock_add_snapshot:
+            await scanner_manager.scan_single_game("csgo", "high")
 
-                # Verify snapshot was added
-                mock_add_snapshot.assert_called_once()
-                snapshot_items = mock_add_snapshot.call_args[0][0]
-                assert len(snapshot_items) == 1
-                assert snapshot_items[0]["title"] == "Item 1"
+            # Verify snapshot was added
+            mock_add_snapshot.assert_called_once()
+            snapshot_items = mock_add_snapshot.call_args[0][0]
+            assert len(snapshot_items) == 1
+            assert snapshot_items[0]["title"] == "Item 1"
 
     @pytest.mark.asyncio()
     async def test_scan_multiple_games_parallel(self, scanner_manager):

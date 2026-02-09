@@ -63,7 +63,6 @@ from src.dmarket.strategies.base import (
     UnifiedOpportunity,
 )
 
-
 if TYPE_CHECKING:
     from src.dmarket.dmarket_api import DMarketAPI
     from src.waxpeer.waxpeer_api import WaxpeerAPI

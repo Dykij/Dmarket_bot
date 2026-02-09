@@ -9,7 +9,6 @@ from src.integrations.skillsmp_client import (
     get_skillsmp_client,
 )
 
-
 __all__ = [
     "RECOMMENDED_TAGS",
     "SKILL_CATEGORIES",

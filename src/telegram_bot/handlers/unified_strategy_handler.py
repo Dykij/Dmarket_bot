@@ -37,7 +37,6 @@ from src.dmarket.unified_strategy_system import (
     get_strategy_config_preset,
 )
 
-
 logger = logging.getLogger(__name__)
 
 # Conversation states

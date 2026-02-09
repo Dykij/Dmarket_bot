@@ -5,14 +5,13 @@ Provides a framework for testing trading strategies on historical data.
 
 from __future__ import annotations
 
+import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import StrEnum
-import logging
 from typing import TYPE_CHECKING, Any
-
 
 if TYPE_CHECKING:
     from .historical_data import PriceHistory, PricePoint

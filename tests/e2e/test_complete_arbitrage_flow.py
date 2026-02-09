@@ -4,8 +4,9 @@ End-to-End tests for complete arbitrage workflows.
 These tests validate complete user flows from discovery to execution.
 """
 
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from unittest.mock import AsyncMock, patch, MagicMock
 
 
 class TestCompleteArbitrageFlow:

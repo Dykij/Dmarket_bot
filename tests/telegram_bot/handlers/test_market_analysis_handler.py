@@ -21,7 +21,6 @@ from src.telegram_bot.handlers.market_analysis_handler import (
     show_volatility_results,
 )
 
-
 # ======================== Fixtures ========================
 
 

@@ -12,16 +12,15 @@ Created: January 2, 2026
 """
 
 import asyncio
+import json
+import time
 from collections.abc import Callable
 from datetime import datetime
 from enum import StrEnum
-import json
-import time
 from typing import Any
 
 import structlog
 from websockets import WebSocketClientProtocol
-
 
 logger = structlog.get_logger(__name__)
 

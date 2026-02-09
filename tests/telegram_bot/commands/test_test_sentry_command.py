@@ -24,10 +24,13 @@ from src.telegram_bot.commands.test_sentry_command import (
     _test_breadcrumbs,
     _test_division_error,
     _test_simple_error,
+)
+from src.telegram_bot.commands.test_sentry_command import (
     test_sentry_command as sentry_command_handler,
+)
+from src.telegram_bot.commands.test_sentry_command import (
     test_sentry_info as sentry_info_handler,
 )
-
 
 # ============================================================================
 # Test Fixtures

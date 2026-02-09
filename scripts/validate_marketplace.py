@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
 """Validate marketplace.json files in the repository."""
 
-import sys
 import json
-import jsonschema
+import sys
 from pathlib import Path
-from typing import Dict, List, Tuple
 
+import jsonschema
 
 # JSON Schema for marketplace.json v2
 MARKETPLACE_SCHEMA = {
@@ -53,7 +52,7 @@ MARKETPLACE_SCHEMA = {
 }
 
 
-def validate_marketplace_json(file_path: Path) -> Dict:
+def validate_marketplace_json(file_path: Path) -> dict:
     """Validate marketplace.json file structure.
     
     Args:
@@ -63,7 +62,7 @@ def validate_marketplace_json(file_path: Path) -> Dict:
         dict with 'valid' (bool), 'data' (dict), and optional 'error' (str)
     """
     try:
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, encoding='utf-8') as f:
             data = json.load(f)
     except json.JSONDecodeError as e:
         return {
@@ -88,7 +87,7 @@ def validate_marketplace_json(file_path: Path) -> Dict:
     return {"valid": True, "data": data}
 
 
-def find_marketplace_files() -> List[Path]:
+def find_marketplace_files() -> list[Path]:
     """Find all marketplace.json files in the repository.
     
     Returns:
@@ -109,8 +108,8 @@ def main() -> int:
     print(f"🔍 Found {len(marketplace_files)} marketplace.json files")
     print()
     
-    errors: List[Tuple[Path, str]] = []
-    valid_files: List[Path] = []
+    errors: list[tuple[Path, str]] = []
+    valid_files: list[Path] = []
     
     for marketplace_file in sorted(marketplace_files):
         result = validate_marketplace_json(marketplace_file)

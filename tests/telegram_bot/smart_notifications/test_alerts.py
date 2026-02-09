@@ -13,7 +13,6 @@ from unittest.mock import patch
 
 import pytest
 
-
 # Module path constant for patching
 ALERTS_MODULE = "src.telegram_bot.smart_notifications.alerts"
 
@@ -88,8 +87,8 @@ class TestCreateAlert:
     @pytest.mark.asyncio()
     async def test_create_alert_success(self, reset_alerts, sample_user_preferences):
         """Test successful alert creation."""
-        from src.telegram_bot.smart_notifications.alerts import create_alert
         import src.telegram_bot.smart_notifications.preferences as prefs_module
+        from src.telegram_bot.smart_notifications.alerts import create_alert
 
         prefs_module._user_preferences.update(sample_user_preferences)
 
@@ -130,8 +129,8 @@ class TestCreateAlert:
         self, reset_alerts, sample_user_preferences
     ):
         """Test alert creation with all parameters."""
-        from src.telegram_bot.smart_notifications.alerts import create_alert
         import src.telegram_bot.smart_notifications.preferences as prefs_module
+        from src.telegram_bot.smart_notifications.alerts import create_alert
         from src.telegram_bot.smart_notifications.preferences import get_active_alerts
 
         prefs_module._user_preferences.update(sample_user_preferences)
@@ -164,8 +163,8 @@ class TestCreateAlert:
         self, reset_alerts, sample_user_preferences
     ):
         """Test alert creation with default values."""
-        from src.telegram_bot.smart_notifications.alerts import create_alert
         import src.telegram_bot.smart_notifications.preferences as prefs_module
+        from src.telegram_bot.smart_notifications.alerts import create_alert
         from src.telegram_bot.smart_notifications.preferences import get_active_alerts
 
         prefs_module._user_preferences.update(sample_user_preferences)
@@ -188,8 +187,8 @@ class TestCreateAlert:
     @pytest.mark.asyncio()
     async def test_create_multiple_alerts(self, reset_alerts, sample_user_preferences):
         """Test creating multiple alerts for the same user."""
-        from src.telegram_bot.smart_notifications.alerts import create_alert
         import src.telegram_bot.smart_notifications.preferences as prefs_module
+        from src.telegram_bot.smart_notifications.alerts import create_alert
         from src.telegram_bot.smart_notifications.preferences import get_active_alerts
 
         prefs_module._user_preferences.update(sample_user_preferences)
@@ -215,8 +214,8 @@ class TestDeactivateAlert:
     @pytest.mark.asyncio()
     async def test_deactivate_alert_success(self, reset_alerts, sample_alerts):
         """Test successful alert deactivation."""
-        from src.telegram_bot.smart_notifications.alerts import deactivate_alert
         import src.telegram_bot.smart_notifications.preferences as prefs_module
+        from src.telegram_bot.smart_notifications.alerts import deactivate_alert
         from src.telegram_bot.smart_notifications.preferences import get_active_alerts
 
         prefs_module._active_alerts.update(sample_alerts)
@@ -231,8 +230,8 @@ class TestDeactivateAlert:
     @pytest.mark.asyncio()
     async def test_deactivate_alert_not_found(self, reset_alerts, sample_alerts):
         """Test deactivating a non-existent alert."""
-        from src.telegram_bot.smart_notifications.alerts import deactivate_alert
         import src.telegram_bot.smart_notifications.preferences as prefs_module
+        from src.telegram_bot.smart_notifications.alerts import deactivate_alert
 
         prefs_module._active_alerts.update(sample_alerts)
 
@@ -252,8 +251,8 @@ class TestDeactivateAlert:
     @pytest.mark.asyncio()
     async def test_deactivate_correct_alert_multiple(self, reset_alerts):
         """Test deactivating the correct alert when user has multiple."""
-        from src.telegram_bot.smart_notifications.alerts import deactivate_alert
         import src.telegram_bot.smart_notifications.preferences as prefs_module
+        from src.telegram_bot.smart_notifications.alerts import deactivate_alert
         from src.telegram_bot.smart_notifications.preferences import get_active_alerts
 
         multiple_alerts = {
@@ -286,8 +285,8 @@ class TestGetUserAlerts:
     @pytest.mark.asyncio()
     async def test_get_user_alerts_success(self, reset_alerts, sample_alerts):
         """Test getting user's active alerts."""
-        from src.telegram_bot.smart_notifications.alerts import get_user_alerts
         import src.telegram_bot.smart_notifications.preferences as prefs_module
+        from src.telegram_bot.smart_notifications.alerts import get_user_alerts
 
         prefs_module._active_alerts.update(sample_alerts)
 
@@ -308,8 +307,8 @@ class TestGetUserAlerts:
     @pytest.mark.asyncio()
     async def test_get_user_alerts_only_active(self, reset_alerts):
         """Test that only active alerts are returned."""
-        from src.telegram_bot.smart_notifications.alerts import get_user_alerts
         import src.telegram_bot.smart_notifications.preferences as prefs_module
+        from src.telegram_bot.smart_notifications.alerts import get_user_alerts
 
         mixed_alerts = {
             "12345": [
@@ -342,8 +341,8 @@ class TestAlertEdgeCases:
         self, reset_alerts, sample_user_preferences
     ):
         """Test that each alert gets a unique ID."""
-        from src.telegram_bot.smart_notifications.alerts import create_alert
         import src.telegram_bot.smart_notifications.preferences as prefs_module
+        from src.telegram_bot.smart_notifications.alerts import create_alert
 
         prefs_module._user_preferences.update(sample_user_preferences)
 
@@ -361,8 +360,8 @@ class TestAlertEdgeCases:
         self, reset_alerts, sample_user_preferences
     ):
         """Test creating alert with special characters in item name."""
-        from src.telegram_bot.smart_notifications.alerts import create_alert
         import src.telegram_bot.smart_notifications.preferences as prefs_module
+        from src.telegram_bot.smart_notifications.alerts import create_alert
         from src.telegram_bot.smart_notifications.preferences import get_active_alerts
 
         prefs_module._user_preferences.update(sample_user_preferences)
@@ -382,8 +381,8 @@ class TestAlertEdgeCases:
     @pytest.mark.asyncio()
     async def test_alert_timestamp_set(self, reset_alerts, sample_user_preferences):
         """Test that created_at timestamp is set."""
-        from src.telegram_bot.smart_notifications.alerts import create_alert
         import src.telegram_bot.smart_notifications.preferences as prefs_module
+        from src.telegram_bot.smart_notifications.alerts import create_alert
         from src.telegram_bot.smart_notifications.preferences import get_active_alerts
 
         prefs_module._user_preferences.update(sample_user_preferences)
@@ -403,8 +402,8 @@ class TestAlertEdgeCases:
     @pytest.mark.asyncio()
     async def test_alert_initial_state(self, reset_alerts, sample_user_preferences):
         """Test that alert has correct initial state."""
-        from src.telegram_bot.smart_notifications.alerts import create_alert
         import src.telegram_bot.smart_notifications.preferences as prefs_module
+        from src.telegram_bot.smart_notifications.alerts import create_alert
         from src.telegram_bot.smart_notifications.preferences import get_active_alerts
 
         prefs_module._user_preferences.update(sample_user_preferences)

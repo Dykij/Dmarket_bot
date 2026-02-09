@@ -6,12 +6,11 @@ This module handles:
 - Automatic blacklisting based on failed transactions
 """
 
-from datetime import UTC, datetime, timedelta
 import json
 import logging
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
-
 
 logger = logging.getLogger(__name__)
 

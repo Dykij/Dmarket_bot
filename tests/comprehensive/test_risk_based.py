@@ -7,10 +7,8 @@ Tests prioritized by risk assessment:
 - Core functionality
 - Data integrity
 """
-import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
-from typing import Any
 
+import pytest
 
 # =============================================================================
 # CRITICAL RISK: FINANCIAL OPERATIONS

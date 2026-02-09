@@ -9,12 +9,11 @@
 К текущему балансу пользователя (маленький/средний/большой).
 """
 
+import logging
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from enum import StrEnum
-import logging
 from typing import Any
-
 
 logger = logging.getLogger(__name__)
 

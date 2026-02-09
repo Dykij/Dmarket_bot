@@ -2,12 +2,12 @@
 """Validate all SKILL.md files in the repository."""
 
 import sys
-import yaml
 from pathlib import Path
-from typing import Dict, List, Tuple
+
+import yaml
 
 
-def validate_skill_md(file_path: Path) -> Dict:
+def validate_skill_md(file_path: Path) -> dict:
     """Validate SKILL.md file structure and content.
     
     Args:
@@ -82,7 +82,7 @@ def validate_skill_md(file_path: Path) -> Dict:
     return {"valid": True, "metadata": metadata}
 
 
-def find_skill_files() -> List[Path]:
+def find_skill_files() -> list[Path]:
     """Find all SKILL.md files in the repository.
     
     Returns:
@@ -103,8 +103,8 @@ def main() -> int:
     print(f"🔍 Found {len(skill_files)} SKILL.md files")
     print()
     
-    errors: List[Tuple[Path, str]] = []
-    valid_skills: List[Path] = []
+    errors: list[tuple[Path, str]] = []
+    valid_skills: list[Path] = []
     
     for skill_file in sorted(skill_files):
         result = validate_skill_md(skill_file)

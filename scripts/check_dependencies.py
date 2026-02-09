@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
 """Check dependency graph consistency in skills.json."""
 
-import sys
 import json
+import sys
 from pathlib import Path
-from typing import Dict, List, Set
 
 
-def load_skills_registry() -> Dict:
+def load_skills_registry() -> dict:
     """Load skills registry from .vscode/skills.json.
     
     Returns:
@@ -19,11 +18,11 @@ def load_skills_registry() -> Dict:
         print("❌ Skills registry not found at .vscode/skills.json")
         sys.exit(1)
     
-    with open(registry_path, 'r', encoding='utf-8') as f:
+    with open(registry_path, encoding='utf-8') as f:
         return json.load(f)
 
 
-def check_dependency_graph(registry: Dict) -> List[str]:
+def check_dependency_graph(registry: dict) -> list[str]:
     """Check dependency graph for consistency.
     
     Args:
@@ -66,7 +65,7 @@ def check_dependency_graph(registry: Dict) -> List[str]:
                 )
     
     # Check for circular dependencies
-    def has_circular_dependency(skill_id: str, visited: Set[str], stack: List[str]) -> bool:
+    def has_circular_dependency(skill_id: str, visited: set[str], stack: list[str]) -> bool:
         """Check if skill has circular dependency using DFS."""
         if skill_id in stack:
             cycle = " -> ".join(stack[stack.index(skill_id):] + [skill_id])
@@ -89,7 +88,7 @@ def check_dependency_graph(registry: Dict) -> List[str]:
         return False
     
     visited = set()
-    for skill_id in skills.keys():
+    for skill_id in skills:
         if skill_id not in visited:
             has_circular_dependency(skill_id, visited, [])
     
@@ -125,7 +124,7 @@ def main() -> int:
         for deps in dependency_graph.values()
     )
     
-    print(f"📊 Statistics:")
+    print("📊 Statistics:")
     print(f"  • Skills in graph: {len(dependency_graph)}")
     print(f"  • Total dependencies: {total_deps}")
     print()

@@ -1,14 +1,13 @@
 """Модуль для управления пагинацией результатов в Telegram-боте."""
 
-from collections.abc import Callable
 import logging
+from collections.abc import Callable
 from typing import Any
 
 from telegram import InlineKeyboardMarkup
 
 from src.telegram_bot.keyboards import create_pagination_keyboard
 from src.telegram_bot.utils.formatters import format_opportunities
-
 
 logger = logging.getLogger(__name__)
 

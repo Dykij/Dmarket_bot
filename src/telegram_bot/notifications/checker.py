@@ -12,14 +12,13 @@ Extracted from notifier.py during R-4 refactoring.
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime
 import logging
 import time
+from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
 from .constants import _PRICE_CACHE_TTL
 from .storage import get_storage
-
 
 if TYPE_CHECKING:
     from telegram import Bot

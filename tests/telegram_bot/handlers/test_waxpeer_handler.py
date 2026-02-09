@@ -3,15 +3,14 @@
 This module tests the Waxpeer Telegram bot handlers.
 """
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from telegram import Update, Message, User, Chat
+import pytest
+from telegram import Chat, Message, Update, User
 
 from src.telegram_bot.handlers.waxpeer_handler import (
     waxpeer_command,
     waxpeer_scan_command,
-    waxpeer_menu_handler,
 )
 
 
