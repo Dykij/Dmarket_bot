@@ -25,9 +25,12 @@ class InventoryMixin:
 
     async def list_market_items(self, game_id: str = "a8db", limit: int = 100, offset: int = 0, order_by: str = "best_deal", order_dir: str = "desc", price_from: int | None = None, price_to: int | None = None, title: str | None = None) -> dict[str, Any]:
         params = {"GameID": game_id, "Limit": str(limit), "Offset": str(offset), "OrderBy": order_by, "OrderDir": order_dir}
-        if price_from is not None: params["PriceFrom"] = str(price_from)
-        if price_to is not None: params["PriceTo"] = str(price_to)
-        if title: params["Title"] = title
+        if price_from is not None:
+            params["PriceFrom"] = str(price_from)
+        if price_to is not None:
+            params["PriceTo"] = str(price_to)
+        if title:
+            params["Title"] = title
         return await self._request("GET", "/marketplace-api/v1/market-items", params=params)
 
     async def sync_inventory(self, game_id: str = "a8db") -> dict[str, Any]:

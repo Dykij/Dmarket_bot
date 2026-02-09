@@ -1,6 +1,7 @@
 ﻿from typing import Any
-import pandera as pa
-from pandera.typing import DataFrame, Series
+import pandera.pandas as pa
+from pandera.typing.pandas import Series
+from pydantic import BaseModel, Field, field_validator
 
 class MarketItemSchema(pa.DataFrameModel):
     """Схема для валидации списка предметов с DMarket."""
@@ -16,7 +17,6 @@ class MarketItemSchema(pa.DataFrameModel):
         coerce = True  # Try to convert types (e.g. str price to float)
 
 # Pydantic-style wrapper for API responses (compatibility layer)
-from pydantic import BaseModel, Field, field_validator
 
 class MarketItem(BaseModel):
     item_id: str = Field(alias="itemId")

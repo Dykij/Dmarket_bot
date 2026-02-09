@@ -47,7 +47,7 @@ class DMarketStream:
             try:
                 data = json.loads(message)
                 msg_str = str(data)[:100]
-            except:
+            except Exception:
                 msg_str = str(message)[:100]
                 
             process_time = (time.time() - start_time) * 1000

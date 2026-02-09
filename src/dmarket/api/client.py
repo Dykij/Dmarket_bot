@@ -5,7 +5,9 @@ import hashlib
 import hmac
 import logging
 import time
+from concurrent.futures import ThreadPoolExecutor
 from typing import TYPE_CHECKING, Any
+from urllib.parse import urlencode
 
 import httpx
 import nacl.signing
@@ -34,6 +36,7 @@ GAME_MAP: dict[str, str] = {
     "rust": "rust",
     "tf2": "tf2",
 }
+
 
 class BaseDMarketClient:
     """Core logic for DMarket API communication."""
@@ -104,6 +107,7 @@ class BaseDMarketClient:
         dry_run: bool = True,
         notifier: Any = None,
     ) -> None:
+        """Initialize DMarket API client."""
         self.public_key = public_key
         self._public_key = public_key
 
@@ -135,8 +139,9 @@ class BaseDMarketClient:
         self.rate_limiter = DMarketRateLimiter()
         self._signing_key = None
 
-        from concurrent.futures import ThreadPoolExecutor
-        self._signing_executor = ThreadPoolExecutor(max_workers=4, thread_name_prefix="hmac_signer")
+        self._signing_executor = ThreadPoolExecutor(
+            max_workers=4, thread_name_prefix="hmac_signer"
+        )
 
     def _prepare_signing_key(self) -> None:
         try:
@@ -145,11 +150,14 @@ class BaseDMarketClient:
                 secret_key_bytes = bytes.fromhex(secret_key_str)
             elif len(secret_key_str) == 44 or "=" in secret_key_str:
                 import base64
+
                 secret_key_bytes = base64.b64decode(secret_key_str)
             elif len(secret_key_str) >= 64:
                 secret_key_bytes = bytes.fromhex(secret_key_str[:64])
             else:
-                secret_key_bytes = secret_key_str.encode("utf-8")[:32].ljust(32, b"\0")
+                secret_key_bytes = secret_key_str.encode("utf-8")[:32].ljust(
+                    32, b"\0"
+                )
 
             self._signing_key = nacl.signing.SigningKey(secret_key_bytes)
         except Exception as e:
@@ -181,7 +189,9 @@ class BaseDMarketClient:
             await self._client.aclose()
             self._client = None
 
-    def _generate_signature(self, method: str, path: str, body: str = "") -> dict[str, str]:
+    def _generate_signature(
+        self, method: str, path: str, body: str = ""
+    ) -> dict[str, str]:
         if not self.public_key or not self.secret_key:
             return {"Content-Type": "application/json"}
         try:
@@ -203,21 +213,43 @@ class BaseDMarketClient:
             logger.exception(f"Error generating signature: {e}")
             return self._generate_signature_hmac(method, path, body)
 
-    def _generate_signature_hmac(self, method: str, path: str, body: str = "") -> dict[str, str]:
+    def _generate_signature_hmac(
+        self, method: str, path: str, body: str = ""
+    ) -> dict[str, str]:
         timestamp = str(int(time.time()))
         string_to_sign = timestamp + method + path
-        if body: string_to_sign += body
-        signature = hmac.new(self.secret_key, string_to_sign.encode("utf-8"), hashlib.sha256).hexdigest()
-        return {"X-Api-Key": self.public_key, "X-Request-Sign": signature, "X-Sign-Date": timestamp, "Content-Type": "application/json"}
+        if body:
+            string_to_sign += body
+        signature = hmac.new(
+            self.secret_key, string_to_sign.encode("utf-8"), hashlib.sha256
+        ).hexdigest()
+        return {
+            "X-Api-Key": self.public_key,
+            "X-Request-Sign": signature,
+            "X-Sign-Date": timestamp,
+            "Content-Type": "application/json",
+        }
 
-    async def _generate_signature_async(self, method: str, path: str, body: str = "") -> dict[str, str]:
+    async def _generate_signature_async(
+        self, method: str, path: str, body: str = ""
+    ) -> dict[str, str]:
         loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(self._signing_executor, self._generate_signature, method, path, body)
+        return await loop.run_in_executor(
+            self._signing_executor, self._generate_signature, method, path, body
+        )
 
-    def _generate_headers(self, method: str, target: str, body: str = "") -> dict[str, str]:
+    def _generate_headers(
+        self, method: str, target: str, body: str = ""
+    ) -> dict[str, str]:
         return self._generate_signature(method, target, body)
 
-    def _get_cache_key(self, method: str, path: str, params: dict[str, Any] | None = None, data: dict[str, Any] | None = None) -> str:
+    def _get_cache_key(
+        self,
+        method: str,
+        path: str,
+        params: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,
+    ) -> str:
         key_parts = [method, path]
         if params:
             sorted_params = sorted((str(k), str(v)) for k, v in params.items())
@@ -231,90 +263,174 @@ class BaseDMarketClient:
         return hashlib.sha256("|".join(key_parts).encode()).hexdigest()
 
     def _is_cacheable(self, method: str, path: str) -> tuple[bool, str]:
-        if method.upper() != "GET": return (False, "")
-        if any(e in path for e in ["/meta", "/aggregated"]): return (True, "medium")
-        if any(e in path for e in ["/market/", "/items", "/inventory"]): return (True, "short")
-        if any(e in path for e in ["/balance", "/account/"]): return (True, "short")
+        if method.upper() != "GET":
+            return (False, "")
+        if any(e in path for e in ["/meta", "/aggregated"]):
+            return (True, "medium")
+        if any(e in path for e in ["/market/", "/items", "/inventory"]):
+            return (True, "short")
+        if any(e in path for e in ["/balance", "/account/"]):
+            return (True, "short")
         return (False, "")
 
     def _get_from_cache(self, cache_key: str) -> dict[str, Any] | None:
-        if not self.enable_cache: return None
+        if not self.enable_cache:
+            return None
         entry = api_cache.get(cache_key)
-        if not entry: return None
+        if not entry:
+            return None
         data, expire = entry
-        if time.time() < expire: return data
+        if time.time() < expire:
+            return data
         api_cache.pop(cache_key, None)
         return None
 
-    def _save_to_cache(self, cache_key: str, data: dict[str, Any], ttl_type: str) -> None:
-        if not self.enable_cache: return
+    def _save_to_cache(
+        self, cache_key: str, data: dict[str, Any], ttl_type: str
+    ) -> None:
+        if not self.enable_cache:
+            return
         ttl = CACHE_TTL.get(ttl_type, 30)
         api_cache[cache_key] = (data, time.time() + ttl)
 
-    def _prepare_sorted_params(self, params: dict[str, Any] | None) -> list[tuple[str, Any]]:
+    def _prepare_sorted_params(
+        self, params: dict[str, Any] | None
+    ) -> list[tuple[str, Any]]:
         return sorted(params.items()) if params else []
 
-    def _build_path_for_signature(self, method: str, path: str, params_items: list[tuple[str, Any]]) -> str:
-        if method.upper() != "GET" or not params_items: return path
-        from urllib.parse import urlencode
+    def _build_path_for_signature(
+        self, method: str, path: str, params_items: list[tuple[str, Any]]
+    ) -> str:
+        if method.upper() != "GET" or not params_items:
+            return path
         qs = urlencode(params_items)
         return f"{path}?{qs}" if qs else path
 
-    async def _execute_single_http_request(self, client: httpx.AsyncClient, method: str, url: str, params: list[tuple[str, Any]] | None, data: dict[str, Any] | None, headers: dict[str, str]) -> httpx.Response:
+    async def _execute_single_http_request(
+        self,
+        client: httpx.AsyncClient,
+        method: str,
+        url: str,
+        params: list[tuple[str, Any]] | None,
+        data: dict[str, Any] | None,
+        headers: dict[str, str],
+    ) -> httpx.Response:
         m = method.upper()
-        if m == "GET": return await call_with_circuit_breaker(client.get, url, params=params, headers=headers)
-        if m == "POST": return await call_with_circuit_breaker(client.post, url, json=data, headers=headers)
-        if m == "PUT": return await call_with_circuit_breaker(client.put, url, json=data, headers=headers)
-        if m == "DELETE": return await call_with_circuit_breaker(client.delete, url, headers=headers)
-        if m == "PATCH": return await call_with_circuit_breaker(client.patch, url, json=data, headers=headers)
+        if m == "GET":
+            return await call_with_circuit_breaker(
+                client.get, url, params=params, headers=headers
+            )
+        if m == "POST":
+            return await call_with_circuit_breaker(
+                client.post, url, json=data, headers=headers
+            )
+        if m == "PUT":
+            return await call_with_circuit_breaker(
+                client.put, url, json=data, headers=headers
+            )
+        if m == "DELETE":
+            return await call_with_circuit_breaker(
+                client.delete, url, headers=headers
+            )
+        if m == "PATCH":
+            return await call_with_circuit_breaker(
+                client.patch, url, json=data, headers=headers
+            )
         raise ValueError(f"Unsupported method: {method}")
 
-    def _parse_json_response(self, response: httpx.Response, path: str) -> dict[str, Any]:
-        if response.status_code == 204: return {"status": "success", "code": 204}
-        try: return response.json()
-        except: return {"error": "invalid_json", "status_code": response.status_code}
+    def _parse_json_response(
+        self, response: httpx.Response, path: str
+    ) -> dict[str, Any]:
+        if response.status_code == 204:
+            return {"status": "success", "code": 204}
+        try:
+            return response.json()
+        except Exception:
+            return {
+                "error": "invalid_json",
+                "status_code": response.status_code,
+            }
 
-    def _calculate_retry_delay(self, status_code: int, retries: int, current_delay: float, response: httpx.Response | None = None) -> float:
+    def _calculate_retry_delay(
+        self,
+        status_code: int,
+        retries: int,
+        current_delay: float,
+        response: httpx.Response | None = None,
+    ) -> float:
         if status_code == 429:
             ra = response.headers.get("Retry-After") if response else None
-            if ra: return float(ra)
+            if ra:
+                return float(ra)
             return min(current_delay * 2, 30)
         return 1.0 + retries * 0.5
 
-    def _parse_http_error_response(self, response: httpx.Response) -> dict[str, Any]:
-        try: return response.json()
-        except: return {"error": "Non-JSON response", "status_code": response.status_code}
+    def _parse_http_error_response(
+        self, response: httpx.Response
+    ) -> dict[str, Any]:
+        try:
+            return response.json()
+        except Exception:
+            return {
+                "error": "Non-JSON response",
+                "status_code": response.status_code,
+            }
 
-    async def _request(self, method: str, path: str, params: dict[str, Any] | None = None, data: dict[str, Any] | None = None, force_refresh: bool = False) -> dict[str, Any]:
+    async def _request(
+        self,
+        method: str,
+        path: str,
+        params: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,
+        force_refresh: bool = False,
+    ) -> dict[str, Any]:
         try:
             from src.utils.prometheus_metrics import dmarket_requests_total
-            dmarket_requests_total.labels(endpoint=path, method=method.upper()).inc()
-        except:
+
+            dmarket_requests_total.labels(
+                endpoint=path, method=method.upper()
+            ).inc()
+        except Exception:
             pass
 
         client = await self._get_client()
         url = f"{self.api_url}{path}"
         params_items = self._prepare_sorted_params(params)
-        body_json = json.dumps(data) if data and method.upper() in {"POST", "PUT", "PATCH"} else ""
-        path_for_signature = self._build_path_for_signature(method, path, params_items)
-        headers = self._generate_signature(method.upper(), path_for_signature, body_json)
+        body_json = (
+            json.dumps(data)
+            if data and method.upper() in {"POST", "PUT", "PATCH"}
+            else ""
+        )
+        path_for_signature = self._build_path_for_signature(
+            method, path, params_items
+        )
+        headers = self._generate_signature(
+            method.upper(), path_for_signature, body_json
+        )
         await self.rate_limiter.acquire(path)
 
         retries = 0
         retry_delay = 1.0
         while retries <= self.max_retries:
             try:
-                response = await self._execute_single_http_request(client, method, url, params_items, data, headers)
-                
+                response = await self._execute_single_http_request(
+                    client, method, url, params_items, data, headers
+                )
+
                 # Smart Rate Limiter Integration
-                if self.rate_limiter and hasattr(self.rate_limiter, "update_from_headers"):
-                    self.rate_limiter.update_from_headers(response.headers, path)
+                if self.rate_limiter and hasattr(
+                    self.rate_limiter, "update_from_headers"
+                ):
+                    self.rate_limiter.update_from_headers(
+                        response.headers, path
+                    )
 
                 response.raise_for_status()
                 return self._parse_json_response(response, path)
             except Exception as e:
                 retries += 1
-                if retries > self.max_retries: return {"error": str(e), "code": "REQUEST_FAILED"}
+                if retries > self.max_retries:
+                    return {"error": str(e), "code": "REQUEST_FAILED"}
                 await asyncio.sleep(retry_delay)
                 retry_delay *= 2
         return {}

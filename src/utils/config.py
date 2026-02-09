@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 class DatabaseConfig:
     """Database configuration."""
 
-    url: str = "sqlite:///data/dmarket_bot.db"
+    url: str = "sqlite:///data/bot_database.db"
     echo: bool = False
     pool_size: int = 5
     max_overflow: int = 10

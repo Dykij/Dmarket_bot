@@ -15,7 +15,8 @@ async def show_balance(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     await query.answer()
     try:
         dmarket_api = _get_dmarket_api(context)
-        if not dmarket_api: raise ValueError("API not initialized")
+        if not dmarket_api:
+            raise ValueError("API not initialized")
         balance_data = await dmarket_api.get_balance()
         usd = float(balance_data.get("balance", 0)) if isinstance(balance_data, dict) else 0.0
         message = f"💰 <b>ВАШ БАЛАНС</b>\n\n💵 USD: <b>${usd:.2f}</b>"
@@ -29,7 +30,8 @@ async def show_inventory(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     await query.answer()
     try:
         dmarket_api = _get_dmarket_api(context)
-        if not dmarket_api: raise ValueError("API not initialized")
+        if not dmarket_api:
+            raise ValueError("API not initialized")
         inventory = await dmarket_api.get_user_inventory(limit=20)
         items = inventory.get("objects", [])
         if not items:

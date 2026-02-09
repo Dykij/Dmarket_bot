@@ -12,10 +12,14 @@ import os
 import sys
 from logging.config import fileConfig
 from pathlib import Path
+from dotenv import load_dotenv
 
 from sqlalchemy import MetaData, pool
 
 from alembic import context
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -46,7 +50,7 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 # Get database URL from environment variable
-database_url = os.getenv("DATABASE_URL", "sqlite:///bot_database.db")
+database_url = os.getenv("DATABASE_URL", "sqlite:///data/bot_database.db")
 
 # For SQLite, we need to replace sqlite:/// with sqlite+pysqlite:///
 # For async support with alembic

@@ -8,6 +8,9 @@ sys.path.append(os.getcwd())
 
 from src.dmarket.api.client import BaseDMarketClient
 from src.dmarket.api.market import MarketMixin
+from src.utils.database import get_database_manager
+from src.models.market import MarketData
+from sqlalchemy import select
 
 # Load environment variables
 load_dotenv()
@@ -29,7 +32,11 @@ async def main():
     print(f"Initializing client with Public Key: {public_key[:4]}...{public_key[-4:]}")
     
     client = TestClient(public_key=public_key, secret_key=secret_key)
+    db_manager = get_database_manager()
     
+    # Initialize DB (creates tables if missing)
+    await db_manager.init_database()
+
     try:
         print("Fetching top 5 CS2 items...")
         # Using specific params to get popular items
@@ -40,20 +47,54 @@ async def main():
             currency="USD"
         )
         
-        # Check if response is Pydantic model or dict (it should be dict based on market.py return type hint, 
-        # but the decorator might return the model if configured so. 
-        # Wait, the decorator in market.py returns dict[str, Any] per type hint, 
-        # but let's see what actually comes back.)
-        
         if isinstance(response, dict):
              objects = response.get("objects", [])
              print(f"Success! Received {len(objects)} items.")
+             
+             saved_count = 0
+             
              for item in objects:
-                 # item might be a dict or a Pydantic object depending on validation wrapper
-                 if hasattr(item, "title"):
-                     print(f"- {item.title} (${item.price})")
-                 else:
-                     print(f"- {item.get('title')} (${item.get('price', {}).get('USD', 'N/A')})")
+                 # item is likely a dict if validation wrapper didn't run, 
+                 # or a Pydantic model if it did. 
+                 # Let's handle dict primarily as base client returns dict.
+                 
+                 item_data = item if isinstance(item, dict) else item.model_dump()
+                 
+                 title = item_data.get("title")
+                 # DMarket API price handling
+                 price_dict = item_data.get("price", {})
+                 raw_price = price_dict.get("USD", "0")
+                 try:
+                    price_usd = float(raw_price) / 100.0
+                 except (ValueError, TypeError):
+                    price_usd = 0.0
+
+                 item_id = item_data.get("itemId", "unknown")
+                 
+                 print(f"- {title} (Price: ${price_usd:.2f})")
+                 
+                 # Save to DB using raw SQL wrapper provided by manager
+                 await db_manager.save_market_data(
+                     item_id=item_id,
+                     game="csgo",
+                     item_name=title,
+                     price_usd=price_usd,
+                     data_source="test_script"
+                 )
+                 saved_count += 1
+            
+             print(f"\nSaved {saved_count} items to database.")
+
+             # Verify with Select
+             print("\nVerifying data in DB...")
+             async with db_manager.get_async_session() as session:
+                 stmt = select(MarketData).order_by(MarketData.created_at.desc()).limit(saved_count)
+                 result = await session.execute(stmt)
+                 saved_items = result.scalars().all()
+                 
+                 for saved in saved_items:
+                     print(f"[DB] {saved.item_name} -> Price: {saved.price_usd} (Type: {type(saved.price_usd)})")
+                     
         else:
              print("Response type:", type(response))
              print(response)
@@ -64,6 +105,7 @@ async def main():
         traceback.print_exc()
     finally:
         await client._close_client()
+        await db_manager.close()
 
 if __name__ == "__main__":
     try:

@@ -882,7 +882,7 @@ def get_database_manager() -> DatabaseManager:
     if _db_manager is None:
         import os
 
-        database_url = os.getenv("DATABASE_URL", "sqlite:///./bot_database.db")
+        database_url = os.getenv("DATABASE_URL", "sqlite:///data/bot_database.db")
         _db_manager = DatabaseManager(database_url)
     return _db_manager
 

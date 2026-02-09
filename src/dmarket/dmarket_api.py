@@ -15,18 +15,39 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-class DMarketAPI(BaseDMarketClient, MarketMixin, WalletMixin, TradingMixin, InventoryMixin, ExtendedMixin):
+
+class DMarketAPI(
+    BaseDMarketClient,
+    MarketMixin,
+    WalletMixin,
+    TradingMixin,
+    InventoryMixin,
+    ExtendedMixin,
+):
     """Facade for DMarket API v1.1.0."""
-    
+
     async def direct_balance_request(self) -> dict[str, Any]:
         """Direct balance request logic."""
         return await self._request("GET", "/account/v1/balance")
 
-    async def get_user_targets(self, game_id: str, status: str | None = None, limit: int = 100, offset: int = 0) -> dict[str, Any]:
+    async def get_user_targets(
+        self,
+        game_id: str,
+        status: str | None = None,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> dict[str, Any]:
         mapped_game_id = GAME_MAP.get(game_id.lower(), game_id)
-        params = {"GameID": mapped_game_id, "Limit": str(limit), "Offset": str(offset)}
-        if status: params["BasicFilters.Status"] = status
-        return await self._request("GET", "/marketplace-api/v1/user-targets", params=params)
+        params = {
+            "GameID": mapped_game_id,
+            "Limit": str(limit),
+            "Offset": str(offset),
+        }
+        if status:
+            params["BasicFilters.Status"] = status
+        return await self._request(
+            "GET", "/marketplace-api/v1/user-targets", params=params
+        )
 
     async def clear_cache(self) -> None:
         api_cache.clear()
@@ -34,8 +55,11 @@ class DMarketAPI(BaseDMarketClient, MarketMixin, WalletMixin, TradingMixin, Inve
 
     async def clear_cache_for_endpoint(self, endpoint_path: str) -> None:
         keys_to_remove = [k for k in api_cache if endpoint_path in k]
-        for k in keys_to_remove: api_cache.pop(k, None)
-        logger.info(f"Cleared {len(keys_to_remove)} cache entries for {endpoint_path}")
+        for k in keys_to_remove:
+            api_cache.pop(k, None)
+        logger.info(
+            f"Cleared {len(keys_to_remove)} cache entries for {endpoint_path}"
+        )
 
     async def __aenter__(self) -> "DMarketAPI":
         async with self._client_lock:

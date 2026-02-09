@@ -43,7 +43,8 @@ async def _delete_all_targets(dmarket_api: Any) -> int:
             if target_ids:
                 await dmarket_api.delete_targets(target_ids=target_ids)
                 deleted_count += len(target_ids)
-        except: continue
+        except Exception:
+            continue
     return deleted_count
 
 async def target_auto(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
