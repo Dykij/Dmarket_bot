@@ -584,3 +584,6 @@ yarl==1.22.0
     #   pact-python
 aiolimiter
 aiolimiter
+g o o g l e - c l o u d - s e c r e t - m a n a g e r  
+ g o o g l e - c l o u d - l o g g i n g  
+ 

@@ -5,29 +5,35 @@ import subprocess
 import requests
 import jwt  # pip install pyjwt cryptography
 
+from google.cloud import secretmanager
+
 # Configuration
 APP_ID = "2836302"
-KEY_PATH = r"D:\Arkady_Home\arkadiy-bot-manager.2026-02-10.private-key.pem"
+PROJECT_ID = "arkady-bot-dev"
+SECRET_ID = "github-private-key"
 REPO_OWNER = "Dykij"
 REPO_NAME = "DMarket-Telegram-Bot"
+
+def get_private_key_from_gsm():
+    """Fetch private key from Google Secret Manager."""
+    client = secretmanager.SecretManagerServiceClient()
+    name = f"projects/{PROJECT_ID}/secrets/{SECRET_ID}/versions/latest"
+    response = client.access_secret_version(request={"name": name})
+    return response.payload.data.decode("UTF-8")
 
 def install_deps():
     """Ensure dependencies are installed."""
     try:
         import jwt
         import cryptography
+        import google.cloud.secretmanager
     except ImportError:
         print("Installing dependencies...")
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "pyjwt[crypto]", "requests", "cryptography"])
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "pyjwt[crypto]", "requests", "cryptography", "google-cloud-secret-manager"])
 
 def generate_jwt():
     """Generate JWT for GitHub App."""
-    if not os.path.exists(KEY_PATH):
-        print(f"Error: Key file not found at {KEY_PATH}")
-        sys.exit(1)
-
-    with open(KEY_PATH, 'r') as f:
-        private_key = f.read()
+    private_key = get_private_key_from_gsm()
 
     payload = {
         # Issued at time
