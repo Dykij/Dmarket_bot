@@ -22,6 +22,18 @@ class Dota2Strategy(BaseStrategy):
         # Dota items turn faster, so we might accept slightly lower margin per trade
         super().__init__(game_id="dota2", min_profit_percent=min_profit_percent)
 
+    def get_query_filters(self) -> dict[str, str]:
+        """
+        Dota 2 Specific Logic:
+        Focus on high-liquidity rarities: Immortal, Arcana, Legendary.
+        This filters out thousands of common 3-cent items.
+        """
+        # DMarket filters for rarity often use 'rarity[]' or specific IDs. 
+        # Using generic text params for now, can be refined with exact DMarket rarity IDs.
+        return {
+            "treeFilters": "rarity[]=immortal,rarity[]=arcana,rarity[]=legendary"
+        }
+
     async def should_buy(self, item_data: dict[str, Any]) -> bool:
         try:
             dmarket_price = Decimal(str(item_data.get("dmarket_price", 0)))

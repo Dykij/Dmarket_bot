@@ -22,6 +22,15 @@ class TF2Strategy(BaseStrategy):
         # TF2 keys can be traded with very low margin
         super().__init__(game_id="tf2", min_profit_percent=min_profit_percent)
 
+    def get_query_filters(self) -> dict[str, str]:
+        """
+        TF2 Specific Logic:
+        Focus on 'Keys' as the main currency.
+        """
+        return {
+            "title": "Mann Co. Supply Crate Key"
+        }
+
     async def should_buy(self, item_data: dict[str, Any]) -> bool:
         try:
             dmarket_price = Decimal(str(item_data.get("dmarket_price", 0)))

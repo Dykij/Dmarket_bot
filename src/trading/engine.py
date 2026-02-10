@@ -37,10 +37,8 @@ class TradingEngine:
         logger.info(f"Processing {game}...", strategy=strategy.__class__.__name__)
 
         # 1. Fetch DMarket Items (Batch)
-        # Using exterior filters for CS2 to reduce noise
-        filters = {}
-        if game == "csgo":
-            filters = {"treeFilters": "exterior[]=factory new,exterior[]=minimal wear,exterior[]=field-tested"}
+        # Strategy defines specific filters (exterior, rarity, title)
+        filters = strategy.get_query_filters()
         
         # Limit to 50 items for this iteration to avoid rate limits
         market_items = await self.dmarket.list_market_items(
@@ -104,7 +102,6 @@ class TradingEngine:
         roi = (profit / FeeCalculator.calculate_real_cost(buy_price)) * 100
 
         log_data = {
-            "event": "trade_opportunity",
             "game": game,
             "item": item.get("title"),
             "buy_price": float(buy_price),
@@ -116,7 +113,8 @@ class TradingEngine:
         }
 
         # Log with specific tag for Cloud Logging
-        logger.info("PROFITABLE FIND", **log_data)
+        # Note: 'event' is the first positional argument in structlog
+        logger.info("trade_opportunity", **log_data)
 
         if not IS_DRY_RUN:
             # TODO: Implement real buy logic

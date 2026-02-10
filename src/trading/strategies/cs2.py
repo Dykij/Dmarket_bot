@@ -22,6 +22,16 @@ class CS2Strategy(BaseStrategy):
     def __init__(self, min_profit_percent: float = 5.0):
         super().__init__(game_id="csgo", min_profit_percent=min_profit_percent)
 
+    def get_query_filters(self) -> dict[str, str]:
+        """
+        CS2 Specific Logic:
+        Only fetch items with liquid exteriors to ensure resale after 7-day lock.
+        Avoiding 'Battle-Scarred' or 'Well-Worn' for high-tier arbitrage unless specified.
+        """
+        return {
+            "treeFilters": "exterior[]=factory new,exterior[]=minimal wear,exterior[]=field-tested"
+        }
+
     async def should_buy(self, item_data: dict[str, Any]) -> bool:
         """
         Evaluate buy opportunity for CS2 item.

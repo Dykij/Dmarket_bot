@@ -25,14 +25,15 @@ class BaseStrategy(ABC):
     async def should_buy(self, item_data: dict[str, Any]) -> bool:
         """
         Determine if an item is worth buying based on market data.
-        
-        Args:
-            item_data: Dictionary containing DMarket item info, Steam price, and Waxpeer price.
-        
-        Returns:
-            True if the item matches buy criteria.
         """
         pass
+
+    def get_query_filters(self) -> dict[str, str]:
+        """
+        Get game-specific API filters for DMarket requests.
+        Override this in subclasses to define category/exterior logic.
+        """
+        return {}
 
     def calculate_target_sell_price(self, buy_price: float | Decimal) -> Decimal:
         """
