@@ -52,7 +52,7 @@ class DMarketAPI:
         self.client = httpx.AsyncClient(
             timeout=30.0,
             headers={
-                "User-Agent": "OpenClaw-TradingBot/2.0",
+                "User-Agent": "DMarket-TradingBot/2.0",
                 "Accept": "application/json"
             }
         )

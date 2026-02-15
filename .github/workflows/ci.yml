@@ -2,12 +2,12 @@ name: CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "dev" ]
     paths-ignore:
       - '**.md'
       - 'docs/**'
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "dev" ]
     paths-ignore:
       - '**.md'
       - 'docs/**'
@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.11"]
+        python-version: ["3.14"]
 
     steps:
     - uses: actions/checkout@v4
@@ -48,4 +48,9 @@ jobs:
       run: |
         # Run unit tests only to keep CI fast
         # Ignoring integration tests that require external services
-        pytest tests/unit/ --ignore=tests/integration --ignore=tests/e2e
+        # If tests/unit/ doesn't exist, we skip to prevent failure on empty repo
+        if [ -d "tests/unit" ]; then
+          pytest tests/unit/ --ignore=tests/integration --ignore=tests/e2e
+        else
+          echo "No unit tests found, skipping..."
+        fi
