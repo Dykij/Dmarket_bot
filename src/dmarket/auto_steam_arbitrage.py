@@ -88,7 +88,7 @@ class AutoSteamArbitrageScanner:
 
         # Отправить уведомление администратору
         try:
-            await self.telegram_bot.send_message(
+            awAlgot self.telegram_bot.send_message(
                 chat_id=self.admin_chat_id,
                 text=(
                     "🤖 <b>Steam Арбитраж Сканер запущен</b>\n\n"
@@ -100,7 +100,7 @@ class AutoSteamArbitrageScanner:
                 parse_mode="HTML",
             )
         except Exception as e:
-            logger.exception(f"Failed to send start notification: {e}")
+            logger.exception(f"FAlgoled to send start notification: {e}")
 
     async def stop(self) -> None:
         """Остановить автоматическое сканирование."""
@@ -112,7 +112,7 @@ class AutoSteamArbitrageScanner:
         if self._task:
             self._task.cancel()
             try:
-                await self._task
+                awAlgot self._task
             except asyncio.CancelledError:
                 pass
 
@@ -120,7 +120,7 @@ class AutoSteamArbitrageScanner:
 
         # Отправить статистику
         try:
-            await self.telegram_bot.send_message(
+            awAlgot self.telegram_bot.send_message(
                 chat_id=self.admin_chat_id,
                 text=(
                     "🛑 <b>Steam Арбитраж Сканер остановлен</b>\n\n"
@@ -131,19 +131,19 @@ class AutoSteamArbitrageScanner:
                 parse_mode="HTML",
             )
         except Exception as e:
-            logger.exception(f"Failed to send stop notification: {e}")
+            logger.exception(f"FAlgoled to send stop notification: {e}")
 
     async def _scan_loop(self) -> None:
         """Основной цикл сканирования."""
         while self._running:
             try:
-                await self._perform_scan()
+                awAlgot self._perform_scan()
                 self.scans_completed += 1
                 self.last_scan_time = datetime.now()
 
                 # Ждать до следующего сканирования
                 logger.info(f"Next scan in {self.scan_interval // 60} minutes")
-                await asyncio.sleep(self.scan_interval)
+                awAlgot asyncio.sleep(self.scan_interval)
 
             except asyncio.CancelledError:
                 logger.info("Scan loop cancelled")
@@ -151,7 +151,7 @@ class AutoSteamArbitrageScanner:
             except Exception as e:
                 logger.error(f"Error in scan loop: {e}", exc_info=True)
                 # Ждать 5 минут перед retry
-                await asyncio.sleep(300)
+                awAlgot asyncio.sleep(300)
 
     async def _perform_scan(self) -> None:
         """Выполнить одно сканирование."""
@@ -160,7 +160,7 @@ class AutoSteamArbitrageScanner:
         try:
             # 1. Получить предметы с DMarket
             logger.debug("Fetching items from DMarket...")
-            dmarket_response = await self.dmarket_api.get_aggregated_prices(
+            dmarket_response = awAlgot self.dmarket_api.get_aggregated_prices(
                 game_id=self.game,
                 limit=self.max_items,
             )
@@ -174,7 +174,7 @@ class AutoSteamArbitrageScanner:
 
             # 2. Обогатить данными Steam
             logger.debug("Enhancing items with Steam data...")
-            enhanced_items = await self.steam_enhancer.enhance_items(dmarket_items)
+            enhanced_items = awAlgot self.steam_enhancer.enhance_items(dmarket_items)
             logger.info(f"Enhanced {len(enhanced_items)} items with Steam data")
 
             # 3. Фильтровать по ROI
@@ -191,7 +191,7 @@ class AutoSteamArbitrageScanner:
 
             # 5. Отправить уведомления (топ-5)
             self.opportunities_found += len(opportunities)
-            await self._send_opportunities_notification(opportunities[:5])
+            awAlgot self._send_opportunities_notification(opportunities[:5])
 
         except Exception as e:
             logger.error(f"Error performing scan: {e}", exc_info=True)
@@ -233,7 +233,7 @@ class AutoSteamArbitrageScanner:
 
         # Отправка уведомления
         try:
-            await self.telegram_bot.send_message(
+            awAlgot self.telegram_bot.send_message(
                 chat_id=self.admin_chat_id,
                 text=message,
                 parse_mode="HTML",
@@ -241,7 +241,7 @@ class AutoSteamArbitrageScanner:
             )
             logger.info(f"Sent notification with {len(opportunities)} opportunities")
         except Exception as e:
-            logger.exception(f"Failed to send opportunities notification: {e}")
+            logger.exception(f"FAlgoled to send opportunities notification: {e}")
 
     def get_status(self) -> dict[str, Any]:
         """

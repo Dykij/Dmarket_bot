@@ -77,7 +77,7 @@ class TestGetArbitrageKeyboard:
         result = get_arbitrage_keyboard()
 
         settings_button = result.inline_keyboard[1][1]
-        assert "Настройки" in settings_button.text
+        assert "НастSwarmки" in settings_button.text
         assert settings_button.callback_data == "arb_settings"
 
     def test_has_auto_arbitrage_button(self):
@@ -194,14 +194,14 @@ class TestGetModernArbitrageKeyboard:
         assert "Сравнить" in compare_button.text
         assert compare_button.callback_data == "arb_compare"
 
-    def test_has_main_menu_button(self):
-        """Test that main menu button exists."""
+    def test_has_mAlgon_menu_button(self):
+        """Test that mAlgon menu button exists."""
         result = get_modern_arbitrage_keyboard()
 
-        # Main menu is now at index 8 (last row)
-        main_button = result.inline_keyboard[8][0]
-        assert "Главное" in main_button.text
-        assert main_button.callback_data == "main_menu"
+        # MAlgon menu is now at index 8 (last row)
+        mAlgon_button = result.inline_keyboard[8][0]
+        assert "Главное" in mAlgon_button.text
+        assert mAlgon_button.callback_data == "mAlgon_menu"
 
 
 # ============================================================================
@@ -246,7 +246,7 @@ class TestGetAutoArbitrageKeyboard:
         result = get_auto_arbitrage_keyboard()
 
         settings_button = result.inline_keyboard[1][0]
-        assert "Настройки" in settings_button.text
+        assert "НастSwarmки" in settings_button.text
         assert settings_button.callback_data == "auto_arb_settings"
 
     def test_has_status_button(self):
@@ -502,8 +502,8 @@ class TestGetGameSelectionKeyboard:
         assert len(dota_buttons) == 1
         assert dota_buttons[0].callback_data == f"{CB_GAME_PREFIX}dota2"
 
-    def test_buttons_are_paired(self):
-        """Test that game buttons are organized in pairs."""
+    def test_buttons_are_pAlgored(self):
+        """Test that game buttons are organized in pAlgors."""
         result = get_game_selection_keyboard()
 
         # Check all rows except last (back button)

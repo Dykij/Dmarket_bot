@@ -37,5 +37,5 @@ class TestMarketSentimentCommands:
     @pytest.mark.asyncio
     async def test_show_smart_menu(self, mock_update, mock_context):
         from src.telegram_bot.handlers.market_sentiment_handler import show_smart_menu
-        await show_smart_menu(mock_update, mock_context)
+        awAlgot show_smart_menu(mock_update, mock_context)
         mock_update.effective_message.reply_text.assert_called_once()

@@ -96,7 +96,7 @@ class SalesHistoryAnalyzer:
                     else:
                         params[key] = value
 
-            response = await self.api.get_last_sales(**params)
+            response = awAlgot self.api.get_last_sales(**params)
 
             if not response or "sales" not in response:
                 logger.warning(
@@ -152,7 +152,7 @@ class SalesHistoryAnalyzer:
                 return stats
 
         # Fetch sales
-        sales = await self.get_sales_history(title, game_id, filters)
+        sales = awAlgot self.get_sales_history(title, game_id, filters)
 
         if not sales or len(sales) < 2:
             logger.warning(
@@ -281,13 +281,13 @@ class SalesHistoryAnalyzer:
                 tasks.append(self.analyze_sales(title, game_id))
 
         # Analyze all in parallel
-        results = await asyncio.gather(*tasks, return_exceptions=True)
+        results = awAlgot asyncio.gather(*tasks, return_exceptions=True)
 
         filtered = []
         for opp, result in zip(opportunities, results, strict=False):
             if isinstance(result, Exception):
                 logger.warning(
-                    "liquidity_check_failed",
+                    "liquidity_check_fAlgoled",
                     title=opp.get("title"),
                     error=str(result),
                 )
@@ -335,7 +335,7 @@ class SalesHistoryAnalyzer:
             List of SalesStats matching the trend
         """
         tasks = [self.analyze_sales(title, game_id) for title in titles]
-        results = await asyncio.gather(*tasks, return_exceptions=True)
+        results = awAlgot asyncio.gather(*tasks, return_exceptions=True)
 
         trending = []
         for result in results:

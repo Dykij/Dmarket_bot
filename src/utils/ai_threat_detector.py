@@ -1,10 +1,10 @@
-"""AI-Powered Security Threat Detection.
+"""Algo-Powered Security Threat Detection.
 
 Модуль обнаружения угроз безопасности с использованием машинного обучения.
 Анализирует входящие запросы, обнаруживает аномалии и защищает от атак.
 
-SKILL: AI Threat Detection
-Category: Testing & Security, Data & AI
+SKILL: Algo Threat Detection
+Category: Testing & Security, Data & Algo
 Status: Phase 3 Implementation
 
 Документация: src/utils/SKILL_THREAT_DETECTION.md
@@ -41,8 +41,8 @@ class ThreatAnalysis:
     should_block: bool
 
 
-class AIThreatDetector:
-    """AI-powered security threat detection system.
+class AlgoThreatDetector:
+    """Algo-powered security threat detection system.
 
     Detects and analyzes security threats including:
     - SQL injection attempts
@@ -82,7 +82,7 @@ class AIThreatDetector:
         rate_limit_window: int = 60,
         max_requests_per_window: int = 100,
     ):
-        """Initialize AI Threat Detector.
+        """Initialize Algo Threat Detector.
 
         Args:
             anomaly_threshold: Score above which to flag as anomalous (0.0-1.0)
@@ -97,7 +97,7 @@ class AIThreatDetector:
         self._request_history: dict[str, list[datetime]] = {}
 
         logger.info(
-            "ai_threat_detector_initialized",
+            "Algo_threat_detector_initialized",
             anomaly_threshold=anomaly_threshold,
             rate_limit_window=rate_limit_window,
         )
@@ -119,8 +119,8 @@ class AIThreatDetector:
             ThreatAnalysis with detection results
 
         Example:
-            >>> detector = AIThreatDetector()
-            >>> analysis = await detector.analyze_request(
+            >>> detector = AlgoThreatDetector()
+            >>> analysis = awAlgot detector.analyze_request(
             ...     request_data={"text": "Hello world"},
             ...     user_id="user_123",
             ... )
@@ -347,12 +347,12 @@ class AIThreatDetector:
 
 
 # Factory function
-def create_ai_threat_detector(
+def create_Algo_threat_detector(
     anomaly_threshold: float = 0.7,
     rate_limit_window: int = 60,
     max_requests_per_window: int = 100,
-) -> AIThreatDetector:
-    """Create AI Threat Detector with configuration.
+) -> AlgoThreatDetector:
+    """Create Algo Threat Detector with configuration.
 
     Args:
         anomaly_threshold: Score above which to flag as anomalous
@@ -360,13 +360,13 @@ def create_ai_threat_detector(
         max_requests_per_window: Max requests allowed in window
 
     Returns:
-        Initialized AIThreatDetector
+        Initialized AlgoThreatDetector
 
     Example:
-        >>> detector = create_ai_threat_detector(anomaly_threshold=0.8)
-        >>> analysis = await detector.analyze_request(request_data)
+        >>> detector = create_Algo_threat_detector(anomaly_threshold=0.8)
+        >>> analysis = awAlgot detector.analyze_request(request_data)
     """
-    return AIThreatDetector(
+    return AlgoThreatDetector(
         anomaly_threshold=anomaly_threshold,
         rate_limit_window=rate_limit_window,
         max_requests_per_window=max_requests_per_window,

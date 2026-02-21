@@ -4,9 +4,9 @@
 с использованием Dependency Injection.
 
 Example:
-    >>> def test_with_di(test_container, mock_dmarket_api):
-    ...     test_container.dmarket.api.override(mock_dmarket_api)
-    ...     scanner = test_container.dmarket.arbitrage_scanner()
+    >>> def test_with_di(test_contAlgoner, mock_dmarket_api):
+    ...     test_contAlgoner.dmarket.api.override(mock_dmarket_api)
+    ...     scanner = test_contAlgoner.dmarket.arbitrage_scanner()
     ...     assert scanner.api_client is mock_dmarket_api
 """
 
@@ -14,7 +14,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from src.containers import init_container, reset_container
+from src.contAlgoners import init_contAlgoner, reset_contAlgoner
 
 
 @pytest.fixture()
@@ -43,14 +43,14 @@ def di_config():
 
 
 @pytest.fixture()
-def test_container(di_config):
+def test_contAlgoner(di_config):
     """Создать тестовый DI контейнер.
 
     Автоматически сбрасывается после теста.
     """
-    container = init_container(di_config)
-    yield container
-    reset_container()
+    contAlgoner = init_contAlgoner(di_config)
+    yield contAlgoner
+    reset_contAlgoner()
 
 
 @pytest.fixture()
@@ -62,7 +62,7 @@ def mock_dmarket_api():
 
     Example:
         >>> async def test_balance(mock_dmarket_api):
-        ...     balance = await mock_dmarket_api.get_balance()
+        ...     balance = awAlgot mock_dmarket_api.get_balance()
         ...     assert balance["balance"] == 100.0
     """
     mock = AsyncMock()
@@ -120,19 +120,19 @@ def mock_dmarket_api():
 
 
 @pytest.fixture()
-def container_with_mock_api(test_container, mock_dmarket_api):
+def contAlgoner_with_mock_api(test_contAlgoner, mock_dmarket_api):
     """Тестовый контейнер с мокированным API.
 
     Использовать когда нужен полный контейнер, но с mock API.
 
     Example:
-        >>> def test_scanner(container_with_mock_api):
-        ...     scanner = container_with_mock_api.arbitrage_scanner()
+        >>> def test_scanner(contAlgoner_with_mock_api):
+        ...     scanner = contAlgoner_with_mock_api.arbitrage_scanner()
         ...     # scanner использует mock API
     """
-    test_container.dmarket_api.override(mock_dmarket_api)
-    yield test_container
-    test_container.dmarket_api.reset_override()
+    test_contAlgoner.dmarket_api.override(mock_dmarket_api)
+    yield test_contAlgoner
+    test_contAlgoner.dmarket_api.reset_override()
 
 
 @pytest.fixture()
@@ -180,11 +180,11 @@ def mock_telegram_context(mock_dmarket_api):
 
 
 __all__ = [
-    "container_with_mock_api",
+    "contAlgoner_with_mock_api",
     "di_config",
     "mock_dmarket_api",
     "mock_scanner",
     "mock_target_manager",
     "mock_telegram_context",
-    "test_container",
+    "test_contAlgoner",
 ]

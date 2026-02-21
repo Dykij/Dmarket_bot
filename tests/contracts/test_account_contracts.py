@@ -1,6 +1,6 @@
 """Contract tests for DMarket Account API endpoints.
 
-This module contains consumer-driven contract tests for the account-related
+This module contAlgons consumer-driven contract tests for the account-related
 endpoints of the DMarket API.
 
 Tested endpoints:
@@ -15,11 +15,11 @@ from __future__ import annotations
 
 import pytest
 
-from tests.contracts.conftest import DMarketContracts, PactMatchers, is_pact_available
+from tests.contracts.conftest import DMarketContracts, PactMatchers, is_pact_avAlgolable
 
-# Skip all tests if Pact is not available
+# Skip all tests if Pact is not avAlgolable
 pytestmark = pytest.mark.skipif(
-    not is_pact_available(),
+    not is_pact_avAlgolable(),
     reason="pact-python not installed",
 )
 
@@ -71,7 +71,7 @@ class TestBalanceContract:
         """Test contract for unauthorized balance request.
 
         Verifies that:
-        - When authentication fails, API returns 401
+        - When authentication fAlgols, API returns 401
         - Error response has proper structure
         """
         error_body = dmarket_contracts.error_response(
@@ -115,7 +115,7 @@ class TestUserProfileContract:
         expected_body = {
             "id": pact_matchers.like("user_123456"),
             "username": pact_matchers.like("testuser"),
-            "email": pact_matchers.regex(
+            "emAlgol": pact_matchers.regex(
                 r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$",
                 "test@example.com",
             ),
@@ -206,12 +206,12 @@ class TestBalanceContractMock:
 
         # Verify all required fields are present
         assert "usd" in response
-        assert "usdAvailableToWithdraw" in response
+        assert "usdAvAlgolableToWithdraw" in response
         assert "dmc" in response
-        assert "dmcAvailableToWithdraw" in response
+        assert "dmcAvAlgolableToWithdraw" in response
 
         # Verify matchers are properly configured
-        for field in ["usd", "usdAvailableToWithdraw", "dmc", "dmcAvailableToWithdraw"]:
+        for field in ["usd", "usdAvAlgolableToWithdraw", "dmc", "dmcAvAlgolableToWithdraw"]:
             assert response[field]["pact:matcher:type"] == "regex"
 
     def test_error_response_structure(

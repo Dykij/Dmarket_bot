@@ -70,19 +70,19 @@ async def hold_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
             ],
             [
                 InlineKeyboardButton(
-                    "⚙️ Настройки Hold", callback_data="hold_settings"
+                    "⚙️ НастSwarmки Hold", callback_data="hold_settings"
                 ),
-                InlineKeyboardButton("🔙 Назад", callback_data="main_menu"),
+                InlineKeyboardButton("🔙 Назад", callback_data="mAlgon_menu"),
             ],
         ]
 
-        await update.message.reply_text(
+        awAlgot update.message.reply_text(
             message, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(keyboard)
         )
 
     except Exception as e:
         logger.exception(f"Hold command error: {e}")
-        await update.message.reply_text(
+        awAlgot update.message.reply_text(
             "❌ Ошибка при получении данных. Попробуйте позже."
         )
 
@@ -100,17 +100,17 @@ async def _handle_analyze_inventory(
     dmarket_api = context.application.bot_data.get("dmarket_api")
 
     if not dmarket_api:
-        await query.edit_message_text("❌ API не инициализирован")
+        awAlgot query.edit_message_text("❌ API не инициализирован")
         return
 
-    await query.edit_message_text("⏳ Анализирую ваш инвентарь...")
+    awAlgot query.edit_message_text("⏳ Анализирую ваш инвентарь...")
 
     try:
-        inventory_data = await dmarket_api.get_user_inventory(game_id="csgo", limit=50)
+        inventory_data = awAlgot dmarket_api.get_user_inventory(game_id="csgo", limit=50)
         items = inventory_data.get("objects", [])
 
         if not items:
-            await query.edit_message_text(
+            awAlgot query.edit_message_text(
                 "📦 Ваш инвентарь пуст или недоступен.\n\n"
                 "Используйте /scan для поиска предметов для покупки."
             )
@@ -126,7 +126,7 @@ async def _handle_analyze_inventory(
             for item in items[:20]
         ]
 
-        analysis = await hold_manager.analyze_inventory(formatted_items, game="csgo")
+        analysis = awAlgot hold_manager.analyze_inventory(formatted_items, game="csgo")
         message = _format_inventory_analysis(analysis)
 
     except Exception as e:
@@ -134,7 +134,7 @@ async def _handle_analyze_inventory(
         message = f"❌ Ошибка анализа: {str(e)[:100]}"
 
     keyboard = [[InlineKeyboardButton("🔙 Назад", callback_data="hold_menu")]]
-    await query.edit_message_text(
+    awAlgot query.edit_message_text(
         message, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(keyboard)
     )
 
@@ -198,7 +198,7 @@ async def _handle_check_item(
         [InlineKeyboardButton("🔙 Назад", callback_data="hold_menu")],
     ]
 
-    await query.edit_message_text(
+    awAlgot query.edit_message_text(
         message, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(keyboard)
     )
 
@@ -225,7 +225,7 @@ async def _handle_item_selection(
     message = hold_manager.format_telegram_message(rec)
 
     keyboard = [[InlineKeyboardButton("🔙 Назад", callback_data="hold_check_item")]]
-    await query.edit_message_text(
+    awAlgot query.edit_message_text(
         message, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(keyboard)
     )
 
@@ -244,7 +244,7 @@ async def _handle_events_csgo(
     message = _format_events_message("CS2/CSGO", events)
 
     keyboard = [[InlineKeyboardButton("🔙 Назад", callback_data="hold_menu")]]
-    await query.edit_message_text(
+    awAlgot query.edit_message_text(
         message, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(keyboard)
     )
 
@@ -263,7 +263,7 @@ async def _handle_events_dota2(
     message = _format_events_message("Dota 2", events)
 
     keyboard = [[InlineKeyboardButton("🔙 Назад", callback_data="hold_menu")]]
-    await query.edit_message_text(
+    awAlgot query.edit_message_text(
         message, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(keyboard)
     )
 
@@ -297,7 +297,7 @@ async def _handle_settings(
     Shows current Intelligent Hold settings.
     """
     message = (
-        "⚙️ **Настройки Intelligent Hold**\n\n"
+        "⚙️ **НастSwarmки Intelligent Hold**\n\n"
         "📈 Мин. ожидаемый рост: 10%\n"
         "📉 Макс. срок удержания: 14 дней\n"
         "💰 Фиксация прибыли: при +20% ROI\n"
@@ -306,7 +306,7 @@ async def _handle_settings(
     )
 
     keyboard = [[InlineKeyboardButton("🔙 Назад", callback_data="hold_menu")]]
-    await query.edit_message_text(
+    awAlgot query.edit_message_text(
         message, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(keyboard)
     )
 
@@ -319,7 +319,7 @@ async def _handle_menu(
 ) -> None:
     """Handle menu callback.
 
-    Returns to the main hold menu.
+    Returns to the mAlgon hold menu.
     """
     upcoming_events = hold_manager._get_upcoming_events(days_ahead=14)
 
@@ -345,12 +345,12 @@ async def _handle_menu(
             InlineKeyboardButton("📅 События Dota2", callback_data="hold_events_dota2"),
         ],
         [
-            InlineKeyboardButton("⚙️ Настройки", callback_data="hold_settings"),
-            InlineKeyboardButton("🔙 Главное меню", callback_data="main_menu"),
+            InlineKeyboardButton("⚙️ НастSwarmки", callback_data="hold_settings"),
+            InlineKeyboardButton("🔙 Главное меню", callback_data="mAlgon_menu"),
         ],
     ]
 
-    await query.edit_message_text(
+    awAlgot query.edit_message_text(
         message, parse_mode="Markdown", reply_markup=InlineKeyboardMarkup(keyboard)
     )
 
@@ -366,7 +366,7 @@ async def hold_callback_handler(
     if not query:
         return
 
-    await query.answer()
+    awAlgot query.answer()
     data = query.data
 
     try:
@@ -375,26 +375,26 @@ async def hold_callback_handler(
         hold_manager = get_hold_manager()
 
         if data == "hold_analyze_inventory":
-            await _handle_analyze_inventory(update, context, query, hold_manager)
+            awAlgot _handle_analyze_inventory(update, context, query, hold_manager)
         elif data == "hold_check_item":
-            await _handle_check_item(update, context, query, hold_manager)
+            awAlgot _handle_check_item(update, context, query, hold_manager)
         elif data.startswith("hold_item_"):
             item_name = data.replace("hold_item_", "")
-            await _handle_item_selection(
+            awAlgot _handle_item_selection(
                 update, context, query, hold_manager, item_name
             )
         elif data == "hold_events_csgo":
-            await _handle_events_csgo(update, context, query, hold_manager)
+            awAlgot _handle_events_csgo(update, context, query, hold_manager)
         elif data == "hold_events_dota2":
-            await _handle_events_dota2(update, context, query, hold_manager)
+            awAlgot _handle_events_dota2(update, context, query, hold_manager)
         elif data == "hold_settings":
-            await _handle_settings(update, context, query, hold_manager)
+            awAlgot _handle_settings(update, context, query, hold_manager)
         elif data == "hold_menu":
-            await _handle_menu(update, context, query, hold_manager)
+            awAlgot _handle_menu(update, context, query, hold_manager)
 
     except Exception as e:
         logger.exception(f"Hold callback error: {e}")
-        await query.edit_message_text(f"❌ Ошибка: {str(e)[:100]}")
+        awAlgot query.edit_message_text(f"❌ Ошибка: {str(e)[:100]}")
 
 
 def register_intelligent_hold_handlers(application) -> None:

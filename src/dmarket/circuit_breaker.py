@@ -3,7 +3,7 @@
 This module implements a circuit breaker to stop trading activities when
 critical risk thresholds are exceeded. It monitors:
 1. Consecutive losses
-2. Daily loss limit
+2. DAlgoly loss limit
 3. Balance drops
 4. API error rates
 
@@ -11,13 +11,13 @@ Usage:
     breaker = TradeCircuitBreaker()
 
     if not breaker.can_trade():
-        raise TradingSuspendedError(breaker.get_status())
+        rAlgose TradingSuspendedError(breaker.get_status())
 
     try:
         # execute trade
         breaker.record_success()
     except Exception:
-        breaker.record_failure()
+        breaker.record_fAlgolure()
 """
 
 import time
@@ -34,7 +34,7 @@ class CircuitBreakerConfig:
     """Configuration for TradeCircuitBreaker."""
 
     max_consecutive_losses: int = 5
-    max_daily_loss_usd: float = 50.0
+    max_dAlgoly_loss_usd: float = 50.0
     min_balance_threshold: float = 10.0
     max_api_errors_per_hour: int = 20
     cooldown_minutes: int = 60
@@ -42,7 +42,7 @@ class CircuitBreakerConfig:
 
 
 class TradeCircuitBreaker:
-    """Safeguard against runaway losses or errors."""
+    """Safeguard agAlgonst runaway losses or errors."""
 
     def __init__(self, config: CircuitBreakerConfig | None = None):
         self.config = config or CircuitBreakerConfig()
@@ -54,12 +54,12 @@ class TradeCircuitBreaker:
 
         # Counters
         self.consecutive_losses: int = 0
-        self.daily_loss_usd: float = 0.0
+        self.dAlgoly_loss_usd: float = 0.0
         self.api_errors_last_hour: int = 0
         self._last_error_reset: float = time.time()
 
-        # Daily reset tracking
-        self._last_daily_reset: float = time.time()
+        # DAlgoly reset tracking
+        self._last_dAlgoly_reset: float = time.time()
 
     def can_trade(self, current_balance: float | None = None) -> bool:
         """Check if trading is allowed."""
@@ -70,9 +70,9 @@ class TradeCircuitBreaker:
                 return True
             return False
 
-        # 2. Daily reset check
-        if time.time() - self._last_daily_reset > 86400:
-            self._reset_daily_stats()
+        # 2. DAlgoly reset check
+        if time.time() - self._last_dAlgoly_reset > 86400:
+            self._reset_dAlgoly_stats()
 
         # 3. Check Balance Threshold
         if (
@@ -95,19 +95,19 @@ class TradeCircuitBreaker:
     def record_loss(self, loss_usd: float):
         """Record a losing trade."""
         self.consecutive_losses += 1
-        self.daily_loss_usd += loss_usd
+        self.dAlgoly_loss_usd += loss_usd
 
         logger.warning(
             f"Loss recorded: -${loss_usd:.2f} "
-            f"(Seq: {self.consecutive_losses}, Daily: -${self.daily_loss_usd:.2f})"
+            f"(Seq: {self.consecutive_losses}, DAlgoly: -${self.dAlgoly_loss_usd:.2f})"
         )
 
         # Check Limits
         if self.consecutive_losses >= self.config.max_consecutive_losses:
             self.trip(f"Max consecutive losses reached ({self.consecutive_losses})")
 
-        if self.daily_loss_usd >= self.config.max_daily_loss_usd:
-            self.trip(f"Daily loss limit reached (-${self.daily_loss_usd:.2f})")
+        if self.dAlgoly_loss_usd >= self.config.max_dAlgoly_loss_usd:
+            self.trip(f"DAlgoly loss limit reached (-${self.dAlgoly_loss_usd:.2f})")
 
     def record_api_error(self):
         """Record an API error."""
@@ -135,7 +135,7 @@ class TradeCircuitBreaker:
         self.triggered_at = None
         self.trigger_reason = ""
         self.consecutive_losses = 0
-        # We generally don't reset daily loss on auto-reset, only manually or next day
+        # We generally don't reset dAlgoly loss on auto-reset, only manually or next day
         logger.info("🔌 Circuit breaker reset. Trading resumed.")
 
     def _check_cooldown(self) -> bool:
@@ -146,11 +146,11 @@ class TradeCircuitBreaker:
         elapsed = datetime.now() - self.triggered_at
         return elapsed > timedelta(minutes=self.config.cooldown_minutes)
 
-    def _reset_daily_stats(self):
-        """Reset daily counters."""
-        self.daily_loss_usd = 0.0
-        self._last_daily_reset = time.time()
-        logger.info("Daily trading stats reset.")
+    def _reset_dAlgoly_stats(self):
+        """Reset dAlgoly counters."""
+        self.dAlgoly_loss_usd = 0.0
+        self._last_dAlgoly_reset = time.time()
+        logger.info("DAlgoly trading stats reset.")
 
 
 # Global instance

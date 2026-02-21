@@ -75,7 +75,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Compare prices across platforms and find arbitrage opportunities\nconst dmarketItems = $input.all()[0].json.items || [];\nconst waxpeerItems = $input.all()[1].json.items || [];\nconst steamItems = $input.all()[2].json.items || [];\n\n// Create price map by item name\nconst priceMap = new Map();\n\n// Add DMarket prices\ndmarketItems.forEach(item => {\n  const key = item.name.toLowerCase();\n  if (!priceMap.has(key)) {\n    priceMap.set(key, { name: item.name, prices: {} });\n  }\n  priceMap.get(key).prices.dmarket = parseFloat(item.price);\n});\n\n// Add Waxpeer prices (convert mils to USD: 1000 mils = 1 USD)\nwaxpeerItems.forEach(item => {\n  const key = item.name.toLowerCase();\n  if (!priceMap.has(key)) {\n    priceMap.set(key, { name: item.name, prices: {} });\n  }\n  // Waxpeer uses mils: 1000 mils = $1\n  priceMap.get(key).prices.waxpeer = parseFloat(item.price) / 1000;\n});\n\n// Add Steam prices\nsteamItems.forEach(item => {\n  const key = item.name.toLowerCase();\n  if (!priceMap.has(key)) {\n    priceMap.set(key, { name: item.name, prices: {} });\n  }\n  priceMap.get(key).prices.steam = parseFloat(item.price);\n});\n\n// Find arbitrage opportunities\nconst opportunities = [];\nconst minProfitPercent = parseFloat($env.MIN_PROFIT_PERCENT || 5);\n\nfor (const [key, data] of priceMap) {\n  const { name, prices } = data;\n  \n  // Only consider items available on at least 2 platforms\n  const availablePlatforms = Object.keys(prices).length;\n  if (availablePlatforms < 2) continue;\n  \n  // Find best buy and sell platforms\n  const platforms = Object.entries(prices);\n  platforms.sort((a, b) => a[1] - b[1]);\n  \n  const [buyPlatform, buyPrice] = platforms[0];\n  const [sellPlatform, sellPrice] = platforms[platforms.length - 1];\n  \n  // Calculate profit (account for Waxpeer 6% fee)\n  let netSellPrice = sellPrice;\n  if (sellPlatform === 'waxpeer') {\n    netSellPrice = sellPrice * 0.94; // 6% fee\n  }\n  \n  const profit = netSellPrice - buyPrice;\n  const profitMargin = (profit / buyPrice) * 100;\n  \n  // Check if profitable\n  if (profitMargin >= minProfitPercent) {\n    opportunities.push({\n      item_name: name,\n      game: $env.GAME || 'csgo',\n      buy_price: buyPrice,\n      buy_platform: buyPlatform,\n      sell_price: sellPrice,\n      sell_platform: sellPlatform,\n      net_sell_price: netSellPrice,\n      profit: profit,\n      profit_margin: profitMargin,\n      // Liquidity score (higher if available on more platforms)\n      liquidity_score: availablePlatforms,\n      all_prices: prices\n    });\n  }\n}\n\n// Sort by profit margin (highest first)\nopportunities.sort((a, b) => b.profit_margin - a.profit_margin);\n\n// Limit to top 10 opportunities\nconst topOpportunities = opportunities.slice(0, 10);\n\nconsole.log(`Found ${opportunities.length} arbitrage opportunities, showing top ${topOpportunities.length}`);\n\nreturn topOpportunities.map(opp => ({ json: opp }));"
+        "jsCode": "// Compare prices across platforms and find arbitrage opportunities\nconst dmarketItems = $input.all()[0].json.items || [];\nconst waxpeerItems = $input.all()[1].json.items || [];\nconst steamItems = $input.all()[2].json.items || [];\n\n// Create price map by item name\nconst priceMap = new Map();\n\n// Add DMarket prices\ndmarketItems.forEach(item => {\n  const key = item.name.toLowerCase();\n  if (!priceMap.has(key)) {\n    priceMap.set(key, { name: item.name, prices: {} });\n  }\n  priceMap.get(key).prices.dmarket = parseFloat(item.price);\n});\n\n// Add Waxpeer prices (convert mils to USD: 1000 mils = 1 USD)\nwaxpeerItems.forEach(item => {\n  const key = item.name.toLowerCase();\n  if (!priceMap.has(key)) {\n    priceMap.set(key, { name: item.name, prices: {} });\n  }\n  // Waxpeer uses mils: 1000 mils = $1\n  priceMap.get(key).prices.waxpeer = parseFloat(item.price) / 1000;\n});\n\n// Add Steam prices\nsteamItems.forEach(item => {\n  const key = item.name.toLowerCase();\n  if (!priceMap.has(key)) {\n    priceMap.set(key, { name: item.name, prices: {} });\n  }\n  priceMap.get(key).prices.steam = parseFloat(item.price);\n});\n\n// Find arbitrage opportunities\nconst opportunities = [];\nconst minProfitPercent = parseFloat($env.MIN_PROFIT_PERCENT || 5);\n\nfor (const [key, data] of priceMap) {\n  const { name, prices } = data;\n  \n  // Only consider items avAlgolable on at least 2 platforms\n  const avAlgolablePlatforms = Object.keys(prices).length;\n  if (avAlgolablePlatforms < 2) continue;\n  \n  // Find best buy and sell platforms\n  const platforms = Object.entries(prices);\n  platforms.sort((a, b) => a[1] - b[1]);\n  \n  const [buyPlatform, buyPrice] = platforms[0];\n  const [sellPlatform, sellPrice] = platforms[platforms.length - 1];\n  \n  // Calculate profit (account for Waxpeer 6% fee)\n  let netSellPrice = sellPrice;\n  if (sellPlatform === 'waxpeer') {\n    netSellPrice = sellPrice * 0.94; // 6% fee\n  }\n  \n  const profit = netSellPrice - buyPrice;\n  const profitMargin = (profit / buyPrice) * 100;\n  \n  // Check if profitable\n  if (profitMargin >= minProfitPercent) {\n    opportunities.push({\n      item_name: name,\n      game: $env.GAME || 'csgo',\n      buy_price: buyPrice,\n      buy_platform: buyPlatform,\n      sell_price: sellPrice,\n      sell_platform: sellPlatform,\n      net_sell_price: netSellPrice,\n      profit: profit,\n      profit_margin: profitMargin,\n      // Liquidity score (higher if avAlgolable on more platforms)\n      liquidity_score: avAlgolablePlatforms,\n      all_prices: prices\n    });\n  }\n}\n\n// Sort by profit margin (highest first)\nopportunities.sort((a, b) => b.profit_margin - a.profit_margin);\n\n// Limit to top 10 opportunities\nconst topOpportunities = opportunities.slice(0, 10);\n\nconsole.log(`Found ${opportunities.length} arbitrage opportunities, showing top ${topOpportunities.length}`);\n\nreturn topOpportunities.map(opp => ({ json: opp }));"
       },
       "name": "Find Arbitrage Opportunities",
       "type": "n8n-nodes-base.code",
@@ -203,103 +203,103 @@
   ],
   "connections": {
     "Schedule Every 5 Minutes": {
-      "main": [
+      "mAlgon": [
         [
           {
             "node": "Get DMarket Prices",
-            "type": "main",
+            "type": "mAlgon",
             "index": 0
           },
           {
             "node": "Get Waxpeer Prices",
-            "type": "main",
+            "type": "mAlgon",
             "index": 0
           },
           {
             "node": "Get Steam Prices",
-            "type": "main",
+            "type": "mAlgon",
             "index": 0
           }
         ]
       ]
     },
     "Get DMarket Prices": {
-      "main": [
+      "mAlgon": [
         [
           {
             "node": "Merge Platform Data",
-            "type": "main",
+            "type": "mAlgon",
             "index": 0
           }
         ]
       ]
     },
     "Get Waxpeer Prices": {
-      "main": [
+      "mAlgon": [
         [
           {
             "node": "Merge Platform Data",
-            "type": "main",
+            "type": "mAlgon",
             "index": 1
           }
         ]
       ]
     },
     "Get Steam Prices": {
-      "main": [
+      "mAlgon": [
         [
           {
             "node": "Merge Platform Data",
-            "type": "main",
+            "type": "mAlgon",
             "index": 2
           }
         ]
       ]
     },
     "Merge Platform Data": {
-      "main": [
+      "mAlgon": [
         [
           {
             "node": "Find Arbitrage Opportunities",
-            "type": "main",
+            "type": "mAlgon",
             "index": 0
           }
         ]
       ]
     },
     "Find Arbitrage Opportunities": {
-      "main": [
+      "mAlgon": [
         [
           {
             "node": "If Profitable",
-            "type": "main",
+            "type": "mAlgon",
             "index": 0
           }
         ]
       ]
     },
     "If Profitable": {
-      "main": [
+      "mAlgon": [
         [
           {
             "node": "Format Alert Message",
-            "type": "main",
+            "type": "mAlgon",
             "index": 0
           },
           {
             "node": "Log to Bot Database",
-            "type": "main",
+            "type": "mAlgon",
             "index": 0
           }
         ]
       ]
     },
     "Format Alert Message": {
-      "main": [
+      "mAlgon": [
         [
           {
             "node": "Send to Telegram",
-            "type": "main",
+            "type": "mAlgon",
             "index": 0
           }
         ]

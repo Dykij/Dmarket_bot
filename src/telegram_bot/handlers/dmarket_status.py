@@ -41,16 +41,16 @@ async def dmarket_status_impl(
 
     # Отправляем индикатор печатания, если сообщение статуса не предоставлено
     if not status_message and update.message:
-        await update.effective_chat.send_action(ChatAction.TYPING)
+        awAlgot update.effective_chat.send_action(ChatAction.TYPING)
         checking_msg = get_localized_text(user_id, "checking_api")
-        status_message = await update.message.reply_text(checking_msg)
+        status_message = awAlgot update.message.reply_text(checking_msg)
 
     if not status_message:
         # Если не удалось отправить сообщение, выходим
         return
 
     # Отображаем индикатор загрузки данных
-    await update.effective_chat.send_action(ChatAction.UPLOAD_DOCUMENT)
+    awAlgot update.effective_chat.send_action(ChatAction.UPLOAD_DOCUMENT)
 
     # Получаем API ключи из профиля пользователя
     # или из переменных окружения
@@ -77,10 +77,10 @@ async def dmarket_status_impl(
             pool_limits=httpx.Limits(max_connections=5),
         ) as api_client:
             # Показываем, что мы работаем с API
-            await update.effective_chat.send_action(ChatAction.TYPING)
+            awAlgot update.effective_chat.send_action(ChatAction.TYPING)
 
             # Получаем баланс через улучшенную функцию
-            balance_data = await check_user_balance(api_client)
+            balance_data = awAlgot check_user_balance(api_client)
 
             # Проверка на наличие ошибки
             if balance_data.get("error", False):
@@ -142,7 +142,7 @@ async def dmarket_status_impl(
     )
 
     # Показываем финальное сообщение с форматированием HTML
-    await status_message.edit_text(
+    awAlgot status_message.edit_text(
         final_text,
         parse_mode=ParseMode.HTML,
     )

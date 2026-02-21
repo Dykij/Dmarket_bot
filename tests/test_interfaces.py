@@ -1,6 +1,6 @@
 """Unit tests for interfaces module.
 
-This module contains tests for src/interfaces.py covering:
+This module contAlgons tests for src/interfaces.py covering:
 - IDMarketAPI Protocol
 - ICache Protocol
 - IArbitrageScanner Protocol
@@ -74,7 +74,7 @@ class TestIDMarketAPIProtocol:
         )
 
         # Act
-        result = await mock_api.get_balance()
+        result = awAlgot mock_api.get_balance()
 
         # Assert
         assert result["balance"] == 150.50
@@ -93,7 +93,7 @@ class TestIDMarketAPIProtocol:
         )
 
         # Act
-        result = await mock_api.get_market_items("csgo", limit=10, offset=0)
+        result = awAlgot mock_api.get_market_items("csgo", limit=10, offset=0)
 
         # Assert
         assert len(result["objects"]) == 1
@@ -107,7 +107,7 @@ class TestIDMarketAPIProtocol:
         mock_api.buy_item = AsyncMock(return_value={"success": True, "order_id": "123"})
 
         # Act
-        result = await mock_api.buy_item("item_123", 25.50)
+        result = awAlgot mock_api.buy_item("item_123", 25.50)
 
         # Assert
         assert result["success"] is True
@@ -123,7 +123,7 @@ class TestIDMarketAPIProtocol:
         )
 
         # Act
-        result = await mock_api.sell_item("asset_123", 30.00)
+        result = awAlgot mock_api.sell_item("asset_123", 30.00)
 
         # Assert
         assert result["success"] is True
@@ -140,7 +140,7 @@ class TestIDMarketAPIProtocol:
         )
 
         # Act
-        result = await mock_api.create_targets(targets)
+        result = awAlgot mock_api.create_targets(targets)
 
         # Assert
         assert result["created"] == 1
@@ -156,7 +156,7 @@ class TestIDMarketAPIProtocol:
         )
 
         # Act
-        result = await mock_api.get_user_targets(game_id="csgo")
+        result = awAlgot mock_api.get_user_targets(game_id="csgo")
 
         # Assert
         assert len(result["targets"]) == 1
@@ -172,7 +172,7 @@ class TestIDMarketAPIProtocol:
         )
 
         # Act
-        result = await mock_api.get_sales_history("csgo", "AK-47 | Redline", limit=50)
+        result = awAlgot mock_api.get_sales_history("csgo", "AK-47 | Redline", limit=50)
 
         # Assert
         assert len(result["sales"]) == 1
@@ -190,7 +190,7 @@ class TestIDMarketAPIProtocol:
         )
 
         # Act
-        result = await mock_api.get_user_inventory(game_id="csgo", limit=100, offset=0)
+        result = awAlgot mock_api.get_user_inventory(game_id="csgo", limit=100, offset=0)
 
         # Assert
         assert len(result["objects"]) == 1
@@ -232,7 +232,7 @@ class TestICacheProtocol:
         mock_cache.get = AsyncMock(return_value={"data": "cached_value"})
 
         # Act
-        result = await mock_cache.get("test_key")
+        result = awAlgot mock_cache.get("test_key")
 
         # Assert
         assert result == {"data": "cached_value"}
@@ -246,7 +246,7 @@ class TestICacheProtocol:
         mock_cache.get = AsyncMock(return_value=None)
 
         # Act
-        result = await mock_cache.get("nonexistent_key")
+        result = awAlgot mock_cache.get("nonexistent_key")
 
         # Assert
         assert result is None
@@ -259,7 +259,7 @@ class TestICacheProtocol:
         mock_cache.set = AsyncMock(return_value=None)
 
         # Act
-        await mock_cache.set("key", "value", ttl=300)
+        awAlgot mock_cache.set("key", "value", ttl=300)
 
         # Assert
         mock_cache.set.assert_called_once_with("key", "value", ttl=300)
@@ -272,7 +272,7 @@ class TestICacheProtocol:
         mock_cache.delete = AsyncMock(return_value=True)
 
         # Act
-        result = await mock_cache.delete("key_to_delete")
+        result = awAlgot mock_cache.delete("key_to_delete")
 
         # Assert
         assert result is True
@@ -286,7 +286,7 @@ class TestICacheProtocol:
         mock_cache.clear = AsyncMock(return_value=5)
 
         # Act
-        result = await mock_cache.clear(pattern="test:*")
+        result = awAlgot mock_cache.clear(pattern="test:*")
 
         # Assert
         assert result == 5
@@ -326,7 +326,7 @@ class TestIArbitrageScannerProtocol:
         )
 
         # Act
-        result = await mock_scanner.scan_game("csgo", "standard", max_results=10)
+        result = awAlgot mock_scanner.scan_game("csgo", "standard", max_results=10)
 
         # Assert
         assert len(result) == 1
@@ -345,7 +345,7 @@ class TestIArbitrageScannerProtocol:
         )
 
         # Act
-        result = await mock_scanner.find_opportunities(
+        result = awAlgot mock_scanner.find_opportunities(
             games=["csgo", "dota2"], levels=["standard", "medium"]
         )
 
@@ -389,7 +389,7 @@ class TestITargetManagerProtocol:
         )
 
         # Act
-        result = await mock_manager.create_target(
+        result = awAlgot mock_manager.create_target(
             game="csgo",
             title="AK-47 | Redline",
             price=25.0,
@@ -409,7 +409,7 @@ class TestITargetManagerProtocol:
         mock_manager.delete_targets = AsyncMock(return_value={"deleted": 2})
 
         # Act
-        result = await mock_manager.delete_targets(["target_1", "target_2"])
+        result = awAlgot mock_manager.delete_targets(["target_1", "target_2"])
 
         # Assert
         assert result["deleted"] == 2
@@ -424,7 +424,7 @@ class TestITargetManagerProtocol:
         )
 
         # Act
-        result = await mock_manager.get_active_targets(game="csgo")
+        result = awAlgot mock_manager.get_active_targets(game="csgo")
 
         # Assert
         assert len(result) == 1
@@ -464,7 +464,7 @@ class TestIDatabaseProtocol:
         mock_db.init_database = AsyncMock(return_value=None)
 
         # Act
-        await mock_db.init_database()
+        awAlgot mock_db.init_database()
 
         # Assert
         mock_db.init_database.assert_called_once()
@@ -491,7 +491,7 @@ class TestIDatabaseProtocol:
         mock_db.close = AsyncMock(return_value=None)
 
         # Act
-        await mock_db.close()
+        awAlgot mock_db.close()
 
         # Assert
         mock_db.close.assert_called_once()
@@ -506,7 +506,7 @@ class TestModuleExports:
     """Tests for module exports."""
 
     def test_all_exports(self):
-        """Test __all__ contains expected interfaces."""
+        """Test __all__ contAlgons expected interfaces."""
         from src import interfaces
 
         expected = [
@@ -637,13 +637,13 @@ class TestInterfaceEdgeCases:
         mock_api.get_user_inventory = AsyncMock(return_value={"objects": []})
 
         # Act & Assert
-        items = await mock_api.get_market_items("csgo")
+        items = awAlgot mock_api.get_market_items("csgo")
         assert items["objects"] == []
 
-        targets = await mock_api.get_user_targets()
+        targets = awAlgot mock_api.get_user_targets()
         assert targets["targets"] == []
 
-        inventory = await mock_api.get_user_inventory()
+        inventory = awAlgot mock_api.get_user_inventory()
         assert inventory["objects"] == []
 
     @pytest.mark.asyncio()
@@ -655,8 +655,8 @@ class TestInterfaceEdgeCases:
         mock_cache.set = AsyncMock(return_value=None)
 
         # Act
-        result = await mock_cache.get("nonexistent")
-        await mock_cache.set("key", None, ttl=None)
+        result = awAlgot mock_cache.get("nonexistent")
+        awAlgot mock_cache.set("key", None, ttl=None)
 
         # Assert
         assert result is None
@@ -671,8 +671,8 @@ class TestInterfaceEdgeCases:
         mock_scanner.find_opportunities = AsyncMock(return_value=[])
 
         # Act
-        scan_result = await mock_scanner.scan_game("csgo", "pro")
-        opportunities = await mock_scanner.find_opportunities()
+        scan_result = awAlgot mock_scanner.scan_game("csgo", "pro")
+        opportunities = awAlgot mock_scanner.find_opportunities()
 
         # Assert
         assert scan_result == []
@@ -687,8 +687,8 @@ class TestInterfaceEdgeCases:
         mock_manager.get_active_targets = AsyncMock(return_value=[])
 
         # Act
-        delete_result = await mock_manager.delete_targets([])
-        targets = await mock_manager.get_active_targets(game=None)
+        delete_result = awAlgot mock_manager.delete_targets([])
+        targets = awAlgot mock_manager.get_active_targets(game=None)
 
         # Assert
         assert delete_result["deleted"] == 0

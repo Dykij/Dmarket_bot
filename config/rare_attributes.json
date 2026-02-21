@@ -39,7 +39,7 @@
           "Team LDLC.com (Holo) | Katowice 2014",
           "Natus Vincere (Holo) | Katowice 2014",
           "compLexity Gaming (Holo) | Katowice 2014",
-          "HellRaisers (Holo) | Katowice 2014",
+          "HellRAlgosers (Holo) | Katowice 2014",
           "Fnatic (Holo) | Katowice 2014",
           "Ninjas in Pyjamas (Holo) | Katowice 2014",
           "mousesports (Holo) | Katowice 2014",
@@ -180,7 +180,7 @@
       },
       "phase_4": {
         "bonus_multiplier": 0.08,
-        "description": "Синий - второй по популярности"
+        "description": "Синий - втоSwarm по популярности"
       }
     },
     "special_items": {
@@ -283,7 +283,7 @@
       "items": [
         "Exorcism",
         "Spectral Spectrum",
-        "Sinister Staining",
+        "Sinister StAlgoning",
         "Voices From Below",
         "Pumpkin Bombs",
         "Halloween Fire",
@@ -426,9 +426,9 @@
     "manual_review_threshold": 1.50,
     "profitable_rare_threshold": 1.10,
     "enable_jackpot_notifications": true,
-    "ai_training_integration": {
-      "description": "Settings for AI/ML training on rare items",
-      "include_in_liquid_training": true,
+    "Algo_trAlgoning_integration": {
+      "description": "Settings for Algo/ML trAlgoning on rare items",
+      "include_in_liquid_trAlgoning": true,
       "bonus_liquidity_score": 25,
       "require_manual_review_for_jackpot": true
     }

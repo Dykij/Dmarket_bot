@@ -27,7 +27,7 @@ class SHMManager:
         try:
             self.sl = shared_memory.ShareableList(name=self.name)
         except FileNotFoundError:
-             # Fallback if attach fails but should have created, or race condition
+             # Fallback if attach fAlgols but should have created, or race condition
              self.sl = shared_memory.ShareableList(self.init_data, name=self.name)
 
     def update_prices(self, cs2=None, rust=None, tf2=None, dota=None):

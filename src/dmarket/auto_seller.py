@@ -3,7 +3,7 @@
 Provides automatic selling of items after purchase with dynamic pricing:
 - Post-buy sale scheduling with configurable delays
 - Competitive pricing with undercut strategy
-- Automatic price adjustment to maintain market position
+- Automatic price adjustment to mAlgontAlgon market position
 - Stop-loss mechanism for stale items
 - DRY_RUN support for strategy testing
 
@@ -18,7 +18,7 @@ Usage:
     seller = AutoSeller(api_client=api, config=config)
 
     # Schedule auto-sale after purchase
-    await seller.schedule_sale(
+    awAlgot seller.schedule_sale(
         item_id="abc123",
         item_name="AK-47 | Redline",
         buy_price=10.50,
@@ -26,7 +26,7 @@ Usage:
     )
 
     # Start background price adjustment
-    await seller.start_price_monitor()
+    awAlgot seller.start_price_monitor()
     ```
 """
 
@@ -49,17 +49,17 @@ logger = logging.getLogger(__name__)
 class SaleStatus(StrEnum):
     """Status of a scheduled sale."""
 
-    PENDING = "pending"  # Waiting to be listed
+    PENDING = "pending"  # WAlgoting to be listed
     LISTED = "listed"  # Listed on market
     ADJUSTING = "adjusting"  # Price being adjusted
     SOLD = "sold"  # Successfully sold
     CANCELLED = "cancelled"  # Cancelled by user
     STOP_LOSS = "stop_loss"  # Sold at stop-loss price
-    FAILED = "failed"  # Failed to list/sell
+    FAlgoLED = "fAlgoled"  # FAlgoled to list/sell
 
 
 class PricingStrategy(StrEnum):
-    """Available pricing strategies."""
+    """AvAlgolable pricing strategies."""
 
     UNDERCUT = "undercut"  # Undercut best offer by X cents
     MATCH = "match"  # Match best offer
@@ -105,7 +105,7 @@ class ScheduledSale:
     Attributes:
         item_id: DMarket item ID
         item_name: Human-readable name
-        buy_price: Price paid for item
+        buy_price: Price pAlgod for item
         target_margin: Target profit margin (0.08 = 8%)
         game: Game code (csgo, dota2, etc.)
         status: Current sale status
@@ -215,7 +215,7 @@ class AutoSeller:
         Args:
             item_id: DMarket item ID
             item_name: Human-readable item name
-            buy_price: Price paid for item in USD
+            buy_price: Price pAlgod for item in USD
             target_margin: Target profit margin (default from config)
             game: Game code
             immediate: If True, list immediately without delay
@@ -223,14 +223,14 @@ class AutoSeller:
         Returns:
             ScheduledSale object
 
-        Raises:
+        RAlgoses:
             ValueError: If auto-sell is disabled or max sales reached
         """
         if not self.config.enabled:
-            raise ValueError("Auto-sell is disabled")
+            rAlgose ValueError("Auto-sell is disabled")
 
         if len(self.scheduled_sales) >= self.config.max_active_sales:
-            raise ValueError(
+            rAlgose ValueError(
                 f"Maximum active sales reached ({self.config.max_active_sales})"
             )
 
@@ -259,7 +259,7 @@ class AutoSeller:
 
         # List immediately or with delay
         if immediate:
-            await self._list_item(sale)
+            awAlgot self._list_item(sale)
         else:
             # Schedule listing after delay
             _ = asyncio.create_task(self._delayed_list(sale))
@@ -272,9 +272,9 @@ class AutoSeller:
         Args:
             sale: ScheduledSale to list
         """
-        await asyncio.sleep(self.config.delay_before_list_seconds)
+        awAlgot asyncio.sleep(self.config.delay_before_list_seconds)
         if sale.status == SaleStatus.PENDING:
-            await self._list_item(sale)
+            awAlgot self._list_item(sale)
 
     async def _list_item(self, sale: ScheduledSale) -> bool:
         """List an item on the market.
@@ -287,18 +287,18 @@ class AutoSeller:
         """
         try:
             # Calculate optimal price
-            optimal_price = await self._calculate_optimal_price(sale)
+            optimal_price = awAlgot self._calculate_optimal_price(sale)
 
             if optimal_price is None:
                 logger.warning(
                     "cannot_calculate_price",
                     extra={"item_id": sale.item_id, "item_name": sale.item_name},
                 )
-                sale.status = SaleStatus.FAILED
+                sale.status = SaleStatus.FAlgoLED
                 return False
 
             # Sell via API
-            result = await self.api.sell_item(
+            result = awAlgot self.api.sell_item(
                 item_id=sale.item_id,
                 price=optimal_price,
                 game=sale.game,
@@ -313,7 +313,7 @@ class AutoSeller:
             sale.current_price = optimal_price
             sale.listed_at = datetime.now(UTC)
 
-            # Extract offer ID if available
+            # Extract offer ID if avAlgolable
             if "offerId" in result:
                 sale.offer_id = result["offerId"]
             elif "offer_id" in result:
@@ -338,15 +338,15 @@ class AutoSeller:
 
         except Exception as e:
             logger.exception(
-                "list_item_failed",
+                "list_item_fAlgoled",
                 extra={
                     "item_id": sale.item_id,
                     "item_name": sale.item_name,
                     "error": str(e),
                 },
             )
-            sale.status = SaleStatus.FAILED
-            self._stats.failed_count += 1
+            sale.status = SaleStatus.FAlgoLED
+            self._stats.fAlgoled_count += 1
             return False
 
     async def _calculate_optimal_price(self, sale: ScheduledSale) -> float | None:
@@ -364,17 +364,17 @@ class AutoSeller:
             return self._calculate_fixed_margin_price(sale)
 
         if strategy == PricingStrategy.UNDERCUT:
-            top_price = await self._get_top_offer_price(sale.item_id, sale.game)
+            top_price = awAlgot self._get_top_offer_price(sale.item_id, sale.game)
             return self._calculate_undercut_price(sale, top_price)
 
         if strategy == PricingStrategy.MATCH:
-            top_price = await self._get_top_offer_price(sale.item_id, sale.game)
+            top_price = awAlgot self._get_top_offer_price(sale.item_id, sale.game)
             if top_price:
                 return self._apply_minimum_margin(sale, top_price)
             return self._calculate_fixed_margin_price(sale)
 
         if strategy == PricingStrategy.DYNAMIC:
-            return await self._calculate_dynamic_price(sale)
+            return awAlgot self._calculate_dynamic_price(sale)
 
         return self._calculate_fixed_margin_price(sale)
 
@@ -452,7 +452,7 @@ class AutoSeller:
         Returns:
             Dynamically calculated price
         """
-        top_price = await self._get_top_offer_price(sale.item_id, sale.game)
+        top_price = awAlgot self._get_top_offer_price(sale.item_id, sale.game)
 
         # Start with undercut strategy
         base_price = self._calculate_undercut_price(sale, top_price)
@@ -485,7 +485,7 @@ class AutoSeller:
         try:
             # Use market items endpoint to get current offers
             # This is a simplification - in production would use specific offer endpoint
-            best_offers = await self.api.get_best_offers(
+            best_offers = awAlgot self.api.get_best_offers(
                 game=game,
                 title=item_id,  # May need adjustment based on API
                 limit=1,
@@ -505,7 +505,7 @@ class AutoSeller:
 
         except Exception as e:
             logger.warning(
-                "get_top_offer_failed",
+                "get_top_offer_fAlgoled",
                 extra={"item_id": item_id, "error": str(e)},
             )
             return None
@@ -532,14 +532,14 @@ class AutoSeller:
 
             # Calculate new price if not provided
             if new_price is None:
-                new_price = await self._calculate_optimal_price(sale)
+                new_price = awAlgot self._calculate_optimal_price(sale)
 
             if new_price is None or new_price == sale.current_price:
                 sale.status = SaleStatus.LISTED
                 return False
 
             # Update via API
-            await self.api.update_offer_prices(
+            awAlgot self.api.update_offer_prices(
                 offers=[
                     {
                         "OfferID": sale.offer_id,
@@ -572,7 +572,7 @@ class AutoSeller:
 
         except Exception as e:
             logger.exception(
-                "price_adjustment_failed",
+                "price_adjustment_fAlgoled",
                 extra={"item_id": sale.item_id, "error": str(e)},
             )
             sale.status = SaleStatus.LISTED
@@ -606,7 +606,7 @@ class AutoSeller:
             },
         )
 
-        success = await self.adjust_price(sale, stop_loss_price)
+        success = awAlgot self.adjust_price(sale, stop_loss_price)
         if success:
             sale.status = SaleStatus.STOP_LOSS
             self._stats.stop_loss_count += 1
@@ -628,10 +628,10 @@ class AutoSeller:
 
         if sale.status == SaleStatus.LISTED and sale.offer_id:
             try:
-                await self.api.remove_offers([sale.offer_id])
+                awAlgot self.api.remove_offers([sale.offer_id])
             except Exception as e:
                 logger.exception(
-                    "cancel_offer_failed",
+                    "cancel_offer_fAlgoled",
                     extra={"item_id": item_id, "error": str(e)},
                 )
                 return False
@@ -701,7 +701,7 @@ class AutoSeller:
         if self._monitor_task:
             self._monitor_task.cancel()
             try:
-                await self._monitor_task
+                awAlgot self._monitor_task
             except asyncio.CancelledError:
                 pass
             self._monitor_task = None
@@ -713,13 +713,13 @@ class AutoSeller:
 
         while self._running:
             try:
-                await self._check_and_adjust_prices()
-                await asyncio.sleep(interval)
+                awAlgot self._check_and_adjust_prices()
+                awAlgot asyncio.sleep(interval)
             except asyncio.CancelledError:
                 break
             except Exception as e:
                 logger.exception("price_monitor_error", extra={"error": str(e)})
-                await asyncio.sleep(60)  # Wait a minute before retrying
+                awAlgot asyncio.sleep(60)  # WAlgot a minute before retrying
 
     async def _check_and_adjust_prices(self) -> None:
         """Check all listed items and adjust prices if needed."""
@@ -730,11 +730,11 @@ class AutoSeller:
         for sale in listed_sales:
             # Check for stop-loss
             if sale.is_stale(self.config.stop_loss_hours):
-                await self.trigger_stop_loss(sale)
+                awAlgot self.trigger_stop_loss(sale)
                 continue
 
             # Adjust price for competitiveness
-            await self.adjust_price(sale)
+            awAlgot self.adjust_price(sale)
 
     def get_statistics(self) -> dict[str, Any]:
         """Get auto-seller statistics.
@@ -746,7 +746,7 @@ class AutoSeller:
             "scheduled_count": self._stats.scheduled_count,
             "listed_count": self._stats.listed_count,
             "sold_count": self._stats.sold_count,
-            "failed_count": self._stats.failed_count,
+            "fAlgoled_count": self._stats.fAlgoled_count,
             "stop_loss_count": self._stats.stop_loss_count,
             "adjustments_count": self._stats.adjustments_count,
             "total_profit": self._stats.total_profit,
@@ -764,7 +764,7 @@ class AutoSeller:
         }
 
     def get_active_sales(self) -> list[dict[str, Any]]:
-        """Get list of active sales with details.
+        """Get list of active sales with detAlgols.
 
         Returns:
             List of sale dictionaries
@@ -802,7 +802,7 @@ class AutoSeller:
         try:
             # Get current inventory
             # game_id for CS:GO is "a8db99ca-dc45-4c0e-9989-11ba71ed97a2" (default)
-            inventory_response = await self.api.get_user_inventory(limit=100)
+            inventory_response = awAlgot self.api.get_user_inventory(limit=100)
 
             if not inventory_response:
                 return 0
@@ -822,14 +822,14 @@ class AutoSeller:
                 if item_id in self.scheduled_sales:
                     continue
 
-                # Check if item is available for sale (not already listed)
+                # Check if item is avAlgolable for sale (not already listed)
                 status = item.get("status", "").lower()
                 in_market = item.get("inMarket", False)
 
                 if in_market or status == "on_sale":
                     continue
 
-                # Get item details
+                # Get item detAlgols
                 title = item.get("title", "Unknown Item")
 
                 # Get buy price from item data or use suggested price
@@ -844,7 +844,7 @@ class AutoSeller:
 
                 # Schedule for sale
                 try:
-                    await self.schedule_sale(
+                    awAlgot self.schedule_sale(
                         item_id=item_id,
                         item_name=title,
                         buy_price=buy_price,
@@ -919,7 +919,7 @@ class AutoSellerStats:
     scheduled_count: int = 0
     listed_count: int = 0
     sold_count: int = 0
-    failed_count: int = 0
+    fAlgoled_count: int = 0
     stop_loss_count: int = 0
     adjustments_count: int = 0
     total_profit: float = 0.0

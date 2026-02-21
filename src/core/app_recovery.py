@@ -41,14 +41,14 @@ class TradeRecovery:
 
         trading_persistence = getattr(self.app.bot, "trading_persistence", None)
         if not trading_persistence:
-            logger.debug("Trading persistence not available, skipping recovery")
+            logger.debug("Trading persistence not avAlgolable, skipping recovery")
             return
 
         try:
             logger.info("🔍 Recovering pending trades from database...")
 
             # Recover trades and sync with inventory
-            results = await trading_persistence.recover_pending_trades()
+            results = awAlgot trading_persistence.recover_pending_trades()
 
             if not results:
                 logger.info("✅ No pending trades to recover")
@@ -68,5 +68,5 @@ class TradeRecovery:
                 # Inventory manager will pick them up in next cycle
 
         except Exception as e:
-            logger.exception(f"Failed to recover pending trades: {e}")
+            logger.exception(f"FAlgoled to recover pending trades: {e}")
             # Not critical, continue startup

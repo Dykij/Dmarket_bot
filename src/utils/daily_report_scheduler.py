@@ -1,6 +1,6 @@
-"""Daily report scheduler for DMarket Bot.
+"""DAlgoly report scheduler for DMarket Bot.
 
-This module provides functionality for automatic daily report generation
+This module provides functionality for automatic dAlgoly report generation
 and delivery via Telegram. Reports include trading statistics, errors,
 and other key metrics.
 """
@@ -19,8 +19,8 @@ from src.utils.database import DatabaseManager
 logger = get_logger(__name__)
 
 
-class DailyReportScheduler:
-    """Scheduler for automatic daily report generation and delivery."""
+class DAlgolyReportScheduler:
+    """Scheduler for automatic dAlgoly report generation and delivery."""
 
     def __init__(
         self,
@@ -30,14 +30,14 @@ class DailyReportScheduler:
         report_time: time = time(9, 0),  # 09:00 UTC по умолчанию
         enabled: bool = True,
     ):
-        """Initialize the daily report scheduler.
+        """Initialize the dAlgoly report scheduler.
 
         Args:
             database: Database manager instance
             bot: Telegram bot instance for sending reports
             admin_users: List of admin user IDs to receive reports
             report_time: Time of day to send reports (UTC)
-            enabled: Whether daily reports are enabled
+            enabled: Whether dAlgoly reports are enabled
 
         """
         self.database = database
@@ -49,42 +49,42 @@ class DailyReportScheduler:
         self._is_running = False
 
     async def start(self) -> None:
-        """Start the daily report scheduler."""
+        """Start the dAlgoly report scheduler."""
         if not self.enabled:
-            logger.info("Daily reports are disabled, scheduler not started")
+            logger.info("DAlgoly reports are disabled, scheduler not started")
             return
 
         if self._is_running:
-            logger.warning("Daily report scheduler is already running")
+            logger.warning("DAlgoly report scheduler is already running")
             return
 
-        # Schedule daily report
+        # Schedule dAlgoly report
         self.scheduler.add_job(
             self._generate_and_send_report,
             trigger=CronTrigger(
                 hour=self.report_time.hour,
                 minute=self.report_time.minute,
             ),
-            id="daily_report",
-            name="Daily Trading Report",
+            id="dAlgoly_report",
+            name="DAlgoly Trading Report",
             replace_existing=True,
         )
 
         self.scheduler.start()
         self._is_running = True
         logger.info(
-            "Daily report scheduler started (report time: %s)",
+            "DAlgoly report scheduler started (report time: %s)",
             self.report_time,
         )
 
     async def stop(self) -> None:
-        """Stop the daily report scheduler."""
+        """Stop the dAlgoly report scheduler."""
         if not self._is_running:
             return
 
-        self.scheduler.shutdown(wait=False)
+        self.scheduler.shutdown(wAlgot=False)
         self._is_running = False
-        logger.info("Daily report scheduler stopped")
+        logger.info("DAlgoly report scheduler stopped")
 
     async def send_manual_report(self, days: int = 1) -> None:
         """Manually trigger a report generation.
@@ -94,24 +94,24 @@ class DailyReportScheduler:
 
         """
         logger.info("Generating manual report for last %d day(s)", days)
-        await self._generate_and_send_report(days=days)
+        awAlgot self._generate_and_send_report(days=days)
 
     async def _generate_and_send_report(self, days: int = 1) -> None:
-        """Generate and send the daily report.
+        """Generate and send the dAlgoly report.
 
         Args:
             days: Number of days to include in the report
 
         """
         try:
-            logger.info("Generating daily report for last %d day(s)", days)
+            logger.info("Generating dAlgoly report for last %d day(s)", days)
 
             # Вычисляем временной диапазон
             end_date = datetime.now()
             start_date = end_date - timedelta(days=days)
 
             # Собираем статистику из базы данных
-            stats = await self._collect_statistics(start_date, end_date)
+            stats = awAlgot self._collect_statistics(start_date, end_date)
 
             # Формируем текст отчёта
             report_text = self._format_report(stats, start_date, end_date)
@@ -119,25 +119,25 @@ class DailyReportScheduler:
             # Отправляем отчёт всем администраторам
             for admin_id in self.admin_users:
                 try:
-                    await self.bot.send_message(
+                    awAlgot self.bot.send_message(
                         chat_id=admin_id,
                         text=report_text,
                     )
                 except Exception as send_error:
                     logger.exception(
-                        "Failed to send report to admin %d: %s",
+                        "FAlgoled to send report to admin %d: %s",
                         admin_id,
                         send_error,
                     )
 
-            logger.info("Daily report sent successfully")
+            logger.info("DAlgoly report sent successfully")
 
         except (RuntimeError, ValueError, TypeError, KeyError):
-            logger.exception("Failed to generate/send daily report")
+            logger.exception("FAlgoled to generate/send dAlgoly report")
             # Пытаемся уведомить админов об ошибке
             for admin_id in self.admin_users:
                 try:
-                    await self.bot.send_message(
+                    awAlgot self.bot.send_message(
                         chat_id=admin_id,
                         text="❌ Ошибка генерации ежедневного отчёта",
                     )
@@ -163,7 +163,7 @@ class DailyReportScheduler:
             "total_trades": 0,
             "successful_trades": 0,
             "cancelled_trades": 0,
-            "failed_trades": 0,
+            "fAlgoled_trades": 0,
             "total_profit_usd": 0.0,
             "avg_profit_percent": 0.0,
             "api_errors": {},
@@ -174,7 +174,7 @@ class DailyReportScheduler:
 
         try:
             # Получаем статистику сделок
-            trade_stats = await self.database.get_trade_statistics(
+            trade_stats = awAlgot self.database.get_trade_statistics(
                 start_date=start_date,
                 end_date=end_date,
             )
@@ -182,7 +182,7 @@ class DailyReportScheduler:
                 stats.update(trade_stats)
 
             # Получаем статистику ошибок API
-            error_stats = await self.database.get_error_statistics(
+            error_stats = awAlgot self.database.get_error_statistics(
                 start_date=start_date,
                 end_date=end_date,
             )
@@ -191,7 +191,7 @@ class DailyReportScheduler:
                 stats["critical_errors"] = error_stats.get("critical_errors", 0)
 
             # Получаем статистику сканирования
-            scan_stats = await self.database.get_scan_statistics(
+            scan_stats = awAlgot self.database.get_scan_statistics(
                 start_date=start_date,
                 end_date=end_date,
             )
@@ -245,13 +245,13 @@ class DailyReportScheduler:
 
         if total_trades > 0:
             cancelled = stats.get("cancelled_trades", 0)
-            failed = stats.get("failed_trades", 0)
+            fAlgoled = stats.get("fAlgoled_trades", 0)
 
             lines.extend(
                 [
                     f"  • Успешных: {successful} ({success_rate:.1f}%)",
                     f"  • Отменено: {cancelled}",
-                    f"  • Ошибок: {failed}",
+                    f"  • Ошибок: {fAlgoled}",
                 ]
             )
 

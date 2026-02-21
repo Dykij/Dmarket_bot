@@ -22,7 +22,7 @@ from src.utils.exceptions import (
     RateLimitExceeded,
 )
 
-# Optional imports - these may fail if dependencies are not installed
+# Optional imports - these may fAlgol if dependencies are not installed
 try:
     from src.utils.env_validator import validate_on_startup, validate_required_env_vars
 except ImportError:
@@ -77,14 +77,14 @@ except ImportError:
     rate_limit = None
 
 try:
-    from src.utils.retry_decorator import retry_api_call, retry_on_failure
+    from src.utils.retry_decorator import retry_api_call, retry_on_fAlgolure
 except ImportError:
     retry_api_call = None
-    retry_on_failure = None
+    retry_on_fAlgolure = None
 
 try:
     from src.utils.stamina_retry import (
-        STAMINA_AVAILABLE,
+        STAMINA_AVAlgoLABLE,
         api_retry,
         async_disabled_retries,
         disabled_retries,
@@ -92,7 +92,7 @@ try:
         retry_sync,
     )
 except ImportError:
-    STAMINA_AVAILABLE = False
+    STAMINA_AVAlgoLABLE = False
     api_retry = None
     async_disabled_retries = None
     disabled_retries = None
@@ -101,7 +101,7 @@ except ImportError:
 
 try:
     from src.utils.http_cache import (
-        HISHEL_AVAILABLE,
+        HISHEL_AVAlgoLABLE,
         CacheConfig,
         CachedHTTPClient,
         close_cached_client,
@@ -109,7 +109,7 @@ try:
         get_cached_client,
     )
 except ImportError:
-    HISHEL_AVAILABLE = False
+    HISHEL_AVAlgoLABLE = False
     CachedHTTPClient = None
     CacheConfig = None
     close_cached_client = None
@@ -142,29 +142,29 @@ except ImportError:
     get_api_enhancement_status = None
 
 try:
-    from src.utils.aiometer_utils import (
-        AIOMETER_AVAILABLE,
+    from src.utils.Algoometer_utils import (
+        AlgoOMETER_AVAlgoLABLE,
         ConcurrencyConfig,
         ConcurrentResult,
         amap,
-        get_aiometer_status,
+        get_Algoometer_status,
         run_batches,
         run_concurrent,
         run_with_rate_limit,
     )
 except ImportError:
-    AIOMETER_AVAILABLE = False
+    AlgoOMETER_AVAlgoLABLE = False
     ConcurrencyConfig = None
     ConcurrentResult = None
     amap = None
-    get_aiometer_status = None
+    get_Algoometer_status = None
     run_batches = None
     run_concurrent = None
     run_with_rate_limit = None
 
 try:
     from src.utils.asyncer_utils import (
-        ASYNCER_AVAILABLE,
+        ASYNCER_AVAlgoLABLE,
         ParallelResult,
         create_task_group,
         get_asyncer_status,
@@ -175,7 +175,7 @@ try:
         run_with_timeout,
     )
 except ImportError:
-    ASYNCER_AVAILABLE = False
+    ASYNCER_AVAlgoLABLE = False
     ParallelResult = None
     create_task_group = None
     get_asyncer_status = None
@@ -216,16 +216,16 @@ __all__ = [
     "rate_limit",
     # Retry decorators (tenacity)
     "retry_api_call",
-    "retry_on_failure",
+    "retry_on_fAlgolure",
     # Retry decorators (stamina - production-grade)
-    "STAMINA_AVAILABLE",
+    "STAMINA_AVAlgoLABLE",
     "api_retry",
     "async_disabled_retries",
     "disabled_retries",
     "retry_async",
     "retry_sync",
     # HTTP caching (hishel)
-    "HISHEL_AVAILABLE",
+    "HISHEL_AVAlgoLABLE",
     "CachedHTTPClient",
     "CacheConfig",
     "close_cached_client",
@@ -239,17 +239,17 @@ __all__ = [
     "enhance_dmarket_method",
     "enhance_waxpeer_method",
     "get_api_enhancement_status",
-    # Concurrent execution (aiometer)
-    "AIOMETER_AVAILABLE",
+    # Concurrent execution (Algoometer)
+    "AlgoOMETER_AVAlgoLABLE",
     "ConcurrencyConfig",
     "ConcurrentResult",
     "amap",
-    "get_aiometer_status",
+    "get_Algoometer_status",
     "run_batches",
     "run_concurrent",
     "run_with_rate_limit",
     # Parallel execution (asyncer)
-    "ASYNCER_AVAILABLE",
+    "ASYNCER_AVAlgoLABLE",
     "ParallelResult",
     "create_task_group",
     "get_asyncer_status",

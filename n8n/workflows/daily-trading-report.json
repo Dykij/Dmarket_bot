@@ -1,5 +1,5 @@
 {
-  "name": "DMarket Daily Trading Report",
+  "name": "DMarket DAlgoly Trading Report",
   "nodes": [
     {
       "parameters": {
@@ -12,29 +12,29 @@
           ]
         }
       },
-      "name": "Schedule Daily 9AM",
+      "name": "Schedule DAlgoly 9AM",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.1,
       "position": [250, 300],
-      "id": "schedule-daily-trigger"
+      "id": "schedule-dAlgoly-trigger"
     },
     {
       "parameters": {
-        "url": "=http://bot:8080/api/v1/n8n/stats/daily",
+        "url": "=http://bot:8080/api/v1/n8n/stats/dAlgoly",
         "authentication": "none",
         "method": "GET",
         "options": {}
       },
-      "name": "Get Daily Stats from Bot",
+      "name": "Get DAlgoly Stats from Bot",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [470, 300],
-      "id": "get-daily-stats",
+      "id": "get-dAlgoly-stats",
       "notes": "Fetch trading statistics from DMarket Bot API"
     },
     {
       "parameters": {
-        "jsCode": "// Transform stats into readable format\nconst stats = $input.first().json;\n\nreturn {\n  json: {\n    date: stats.date,\n    totalTrades: stats.total_trades,\n    totalProfit: `$${stats.total_profit.toFixed(2)}`,\n    avgROI: `${stats.avg_roi.toFixed(2)}%`,\n    summary: `📊 Daily Report\\n\\n` +\n      `🔢 Trades: ${stats.total_trades}\\n` +\n      `💰 Profit: $${stats.total_profit.toFixed(2)}\\n` +\n      `📈 Avg ROI: ${stats.avg_roi.toFixed(2)}%\\n\\n` +\n      (stats.best_trade ? `🏆 Best Trade: ${stats.best_trade.item}` : '')\n  }\n};"
+        "jsCode": "// Transform stats into readable format\nconst stats = $input.first().json;\n\nreturn {\n  json: {\n    date: stats.date,\n    totalTrades: stats.total_trades,\n    totalProfit: `$${stats.total_profit.toFixed(2)}`,\n    avgROI: `${stats.avg_roi.toFixed(2)}%`,\n    summary: `📊 DAlgoly Report\\n\\n` +\n      `🔢 Trades: ${stats.total_trades}\\n` +\n      `💰 Profit: $${stats.total_profit.toFixed(2)}\\n` +\n      `📈 Avg ROI: ${stats.avg_roi.toFixed(2)}%\\n\\n` +\n      (stats.best_trade ? `🏆 Best Trade: ${stats.best_trade.item}` : '')\n  }\n};"
       },
       "name": "Format Report Data",
       "type": "n8n-nodes-base.code",
@@ -68,34 +68,34 @@
     }
   ],
   "connections": {
-    "Schedule Daily 9AM": {
-      "main": [
+    "Schedule DAlgoly 9AM": {
+      "mAlgon": [
         [
           {
-            "node": "Get Daily Stats from Bot",
-            "type": "main",
+            "node": "Get DAlgoly Stats from Bot",
+            "type": "mAlgon",
             "index": 0
           }
         ]
       ]
     },
-    "Get Daily Stats from Bot": {
-      "main": [
+    "Get DAlgoly Stats from Bot": {
+      "mAlgon": [
         [
           {
             "node": "Format Report Data",
-            "type": "main",
+            "type": "mAlgon",
             "index": 0
           }
         ]
       ]
     },
     "Format Report Data": {
-      "main": [
+      "mAlgon": [
         [
           {
             "node": "Send to Telegram",
-            "type": "main",
+            "type": "mAlgon",
             "index": 0
           }
         ]
@@ -114,7 +114,7 @@
     "templateCredsSetupCompleted": false,
     "instanceId": "dmarket-bot-instance"
   },
-  "id": "daily-trading-report",
+  "id": "dAlgoly-trading-report",
   "tags": [
     {
       "name": "DMarket",

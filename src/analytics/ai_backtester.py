@@ -1,11 +1,11 @@
-"""AI-Powered Automated Backtesting Module.
+"""Algo-Powered Automated Backtesting Module.
 
 Модуль автоматизированного бэктестирования торговых стратегий
 с использованием машинного обучения. Симулирует исторические сделки
 и оценивает эффективность стратегий.
 
-SKILL: AI Backtesting
-Category: Research, Data & AI
+SKILL: Algo Backtesting
+Category: Research, Data & Algo
 Status: Phase 3 Implementation
 
 Документация: src/analytics/SKILL_BACKTESTING.md
@@ -60,8 +60,8 @@ class BacktestResult:
     final_balance: float = 0.0
 
 
-class AIBacktester:
-    """AI-powered backtesting system for trading strategies.
+class AlgoBacktester:
+    """Algo-powered backtesting system for trading strategies.
 
     Simulates trading strategies on historical data with ML enhancement
     to evaluate performance before risking real capital.
@@ -76,7 +76,7 @@ class AIBacktester:
         initial_balance: float = 100.0,
         commission_percent: float = 7.0,
     ):
-        """Initialize AI Backtester.
+        """Initialize Algo Backtester.
 
         Args:
             initial_balance: Starting balance for simulation (USD)
@@ -87,7 +87,7 @@ class AIBacktester:
         self.current_balance = initial_balance
 
         logger.info(
-            "ai_backtester_initialized",
+            "Algo_backtester_initialized",
             initial_balance=initial_balance,
             commission=commission_percent,
         )
@@ -109,8 +109,8 @@ class AIBacktester:
             BacktestResult with performance metrics
 
         Example:
-            >>> backtester = AIBacktester(initial_balance=100.0)
-            >>> result = await backtester.backtest_arbitrage_strategy(
+            >>> backtester = AlgoBacktester(initial_balance=100.0)
+            >>> result = awAlgot backtester.backtest_arbitrage_strategy(
             ...     historical_data=market_history,
             ...     strategy="standard",
             ...     min_profit_percent=5.0
@@ -155,7 +155,7 @@ class AIBacktester:
 
                 if should_buy:
                     # Execute buy
-                    trade = await self._execute_buy(
+                    trade = awAlgot self._execute_buy(
                         timestamp=timestamp,
                         item_id=item_id,
                         title=title,
@@ -184,7 +184,7 @@ class AIBacktester:
                 if should_sell:
                     # Execute sell
                     sell_price = max(suggested_price, current_price)
-                    trade = await self._execute_sell(
+                    trade = awAlgot self._execute_sell(
                         timestamp=timestamp,
                         item_id=item_id,
                         title=position["title"],
@@ -425,24 +425,24 @@ class AIBacktester:
 
 
 # Factory function
-def create_ai_backtester(
+def create_Algo_backtester(
     initial_balance: float = 100.0,
     commission_percent: float = 7.0,
-) -> AIBacktester:
-    """Create AI Backtester with configuration.
+) -> AlgoBacktester:
+    """Create Algo Backtester with configuration.
 
     Args:
         initial_balance: Starting balance for simulations
         commission_percent: Trading commission
 
     Returns:
-        Initialized AIBacktester
+        Initialized AlgoBacktester
 
     Example:
-        >>> backtester = create_ai_backtester(initial_balance=500.0)
-        >>> result = await backtester.backtest_arbitrage_strategy(data)
+        >>> backtester = create_Algo_backtester(initial_balance=500.0)
+        >>> result = awAlgot backtester.backtest_arbitrage_strategy(data)
     """
-    return AIBacktester(
+    return AlgoBacktester(
         initial_balance=initial_balance,
         commission_percent=commission_percent,
     )

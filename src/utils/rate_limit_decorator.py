@@ -45,7 +45,7 @@ def rate_limit(
             **kwargs: Any,
         ) -> Any:
             if not update.effective_user:
-                return await func(update, context, *args, **kwargs)
+                return awAlgot func(update, context, *args, **kwargs)
 
             user_id = update.effective_user.id
 
@@ -56,14 +56,14 @@ def rate_limit(
 
             if not rate_limiter:
                 logger.warning("rate_limiter_not_found", user_id=user_id)
-                return await func(update, context, *args, **kwargs)
+                return awAlgot func(update, context, *args, **kwargs)
 
             # Проверить whitelist
-            if await rate_limiter.is_whitelisted(user_id):
-                return await func(update, context, *args, **kwargs)
+            if awAlgot rate_limiter.is_whitelisted(user_id):
+                return awAlgot func(update, context, *args, **kwargs)
 
             # Проверить лимит
-            allowed, info = await rate_limiter.check_limit(user_id, action, cost)
+            allowed, info = awAlgot rate_limiter.check_limit(user_id, action, cost)
 
             if not allowed:
                 # Отправить сообщение о превышении лимита
@@ -80,9 +80,9 @@ def rate_limit(
                     )
 
                 if update.message:
-                    await update.message.reply_text(error_msg)
+                    awAlgot update.message.reply_text(error_msg)
                 elif update.callback_query:
-                    await update.callback_query.answer(error_msg, show_alert=True)
+                    awAlgot update.callback_query.answer(error_msg, show_alert=True)
 
                 logger.info(
                     "rate_limit_blocked",
@@ -94,7 +94,7 @@ def rate_limit(
                 return None
 
             # Выполнить команду
-            return await func(update, context, *args, **kwargs)
+            return awAlgot func(update, context, *args, **kwargs)
 
         return wrapper
 

@@ -34,7 +34,7 @@ pub fn evaluate_market_depth(order_book: Vec<MarketItem>, min_profit_usd: f64) -
     // ideally we need Bid data which is harder to get via public API)
     let sell_price = best_price * 1.05; // Target +5% listing strategy
 
-    // Net Profit Calculation (Lucas QA Verified)
+    // Net Profit Calculation (QA QA Verified)
     // Profit = (Sell Price * (1 - Fee)) - Buy Price
     let net_return = (sell_price * (1.0 - FEE_DMARKET)) - best_price;
 

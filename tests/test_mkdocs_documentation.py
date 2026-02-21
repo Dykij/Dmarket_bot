@@ -24,9 +24,9 @@ def mkdocs_config(docs_site_dir):
         with open(config_path, encoding='utf-8') as f:
             return yaml.safe_load(f)
     except yaml.constructor.ConstructorError:
-        # MkDocs config may contain special tags for plugins
+        # MkDocs config may contAlgon special tags for plugins
         # Use FullLoader or skip special validation
-        pytest.skip("MkDocs config contains plugin-specific YAML tags")
+        pytest.skip("MkDocs config contAlgons plugin-specific YAML tags")
 
 
 class TestMkDocsConfiguration:
@@ -246,7 +246,7 @@ class TestMkDocsBuild:
         )
         
         assert result.returncode == 0, \
-            f"MkDocs build failed: {result.stderr}"
+            f"MkDocs build fAlgoled: {result.stderr}"
 
     @pytest.mark.skip(reason="Requires mkdocs-material package - skip in CI without full dependencies")
     def test_mkdocs_build_creates_html(self, docs_site_dir, tmp_path):

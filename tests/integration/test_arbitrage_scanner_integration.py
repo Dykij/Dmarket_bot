@@ -61,7 +61,7 @@ async def test_scan_game_with_liquidity_filter_enabled(
         mock_trader_instance.find_profitable_items = AsyncMock(return_value=[])
 
         # Run scan_game
-        results = await scanner.scan_game(game="csgo", mode="medium", max_items=10)
+        results = awAlgot scanner.scan_game(game="csgo", mode="medium", max_items=10)
 
         # Verify results
         assert len(results) == 2
@@ -100,7 +100,7 @@ async def test_scan_game_with_liquidity_filter_disabled(mock_api_client):
         mock_trader_instance = MockTrader.return_value
         mock_trader_instance.find_profitable_items = AsyncMock(return_value=[])
 
-        results = await scanner.scan_game(game="csgo", mode="medium", max_items=10)
+        results = awAlgot scanner.scan_game(game="csgo", mode="medium", max_items=10)
 
         assert len(results) == 2
         assert results == mock_items
@@ -132,7 +132,7 @@ async def test_scan_game_filtering_logic(scanner, mock_liquidity_analyzer):
         mock_trader_instance = MockTrader.return_value
         mock_trader_instance.find_profitable_items = AsyncMock(return_value=[])
 
-        await scanner.scan_game(game="csgo", mode="medium", max_items=10)
+        awAlgot scanner.scan_game(game="csgo", mode="medium", max_items=10)
 
         # Check that items passed to analyzer were sorted
         call_args = mock_liquidity_analyzer.filter_liquid_items.call_args

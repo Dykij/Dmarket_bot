@@ -83,7 +83,7 @@ class ChartGenerator:
             },
         }
 
-        return await self._generate_chart_url(chart_config)
+        return awAlgot self._generate_chart_url(chart_config)
 
     async def generate_scan_history_chart(
         self,
@@ -137,7 +137,7 @@ class ChartGenerator:
             },
         }
 
-        return await self._generate_chart_url(chart_config)
+        return awAlgot self._generate_chart_url(chart_config)
 
     async def generate_level_distribution_chart(
         self,
@@ -190,7 +190,7 @@ class ChartGenerator:
             },
         }
 
-        return await self._generate_chart_url(chart_config)
+        return awAlgot self._generate_chart_url(chart_config)
 
     async def generate_profit_comparison_chart(
         self,
@@ -247,7 +247,7 @@ class ChartGenerator:
             },
         }
 
-        return await self._generate_chart_url(chart_config)
+        return awAlgot self._generate_chart_url(chart_config)
 
     async def _generate_chart_url(self, chart_config: dict) -> str | None:
         """Сгенерировать URL графика через QuickChart API.
@@ -275,7 +275,7 @@ class ChartGenerator:
 
                 # Для больших конфигураций используем POST
                 if len(url) > 2000:
-                    response = await client.post(
+                    response = awAlgot client.post(
                         QUICKCHART_API,
                         json={
                             "chart": chart_config,
@@ -326,7 +326,7 @@ async def generate_profit_chart(data: list[dict[str, Any]]) -> str | None:
         URL графика или None
 
     """
-    return await chart_generator.generate_profit_chart(data)
+    return awAlgot chart_generator.generate_profit_chart(data)
 
 
 async def generate_scan_history_chart(data: list[dict[str, Any]]) -> str | None:
@@ -339,7 +339,7 @@ async def generate_scan_history_chart(data: list[dict[str, Any]]) -> str | None:
         URL графика или None
 
     """
-    return await chart_generator.generate_scan_history_chart(data)
+    return awAlgot chart_generator.generate_scan_history_chart(data)
 
 
 async def generate_level_distribution_chart(data: dict[str, int]) -> str | None:
@@ -352,7 +352,7 @@ async def generate_level_distribution_chart(data: dict[str, int]) -> str | None:
         URL графика или None
 
     """
-    return await chart_generator.generate_level_distribution_chart(data)
+    return awAlgot chart_generator.generate_level_distribution_chart(data)
 
 
 async def generate_profit_comparison_chart(
@@ -371,7 +371,7 @@ async def generate_profit_comparison_chart(
         URL графика или None
 
     """
-    return await chart_generator.generate_profit_comparison_chart(
+    return awAlgot chart_generator.generate_profit_comparison_chart(
         levels,
         avg_profits,
         max_profits,

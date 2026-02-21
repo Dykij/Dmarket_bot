@@ -7,8 +7,8 @@ Usage:
     from src.utils.supermemory_client import SuperMemoryClient
 
     client = SuperMemoryClient()
-    await client.remember("User prefers CS2 arbitrage", user_id=123)
-    results = await client.recall("What games does user prefer?", user_id=123)
+    awAlgot client.remember("User prefers CS2 arbitrage", user_id=123)
+    results = awAlgot client.recall("What games does user prefer?", user_id=123)
 """
 
 from __future__ import annotations
@@ -61,15 +61,15 @@ class SuperMemoryClient:
             )
 
     @property
-    def is_available(self) -> bool:
-        """Check if SuperMemory is available and configured."""
+    def is_avAlgolable(self) -> bool:
+        """Check if SuperMemory is avAlgolable and configured."""
         return self._client is not None
 
     async def remember(
         self,
         content: str,
         user_id: int | str | None = None,
-        container_tag: str = "dmarket_bot",
+        contAlgoner_tag: str = "dmarket_bot",
         metadata: Mapping[str, Any] | None = None,
     ) -> dict[str, Any] | None:
         """Store a memory in SuperMemory.
@@ -77,31 +77,31 @@ class SuperMemoryClient:
         Args:
             content: The content to remember
             user_id: Optional user ID for user-specific memories
-            container_tag: Tag for organizing memories
+            contAlgoner_tag: Tag for organizing memories
             metadata: Additional metadata to store
 
         Returns:
-            Response from SuperMemory API or None if unavailable
+            Response from SuperMemory API or None if unavAlgolable
         """
-        if not self.is_available:
-            logger.debug("supermemory_skip", reason="not_available")
+        if not self.is_avAlgolable:
+            logger.debug("supermemory_skip", reason="not_avAlgolable")
             return None
 
         try:
             full_metadata = dict(metadata) if metadata else {}
             if user_id:
                 full_metadata["user_id"] = str(user_id)
-                container_tag = f"{container_tag}_user_{user_id}"
+                contAlgoner_tag = f"{contAlgoner_tag}_user_{user_id}"
 
             response = self._client.memories.add(
                 content=content,
-                container_tag=container_tag,
+                contAlgoner_tag=contAlgoner_tag,
                 metadata=full_metadata,
             )
 
             logger.info(
                 "supermemory_stored",
-                container=container_tag,
+                contAlgoner=contAlgoner_tag,
                 content_length=len(content),
             )
             return response
@@ -126,8 +126,8 @@ class SuperMemoryClient:
         Returns:
             List of matching memories
         """
-        if not self.is_available:
-            logger.debug("supermemory_skip", reason="not_available")
+        if not self.is_avAlgolable:
+            logger.debug("supermemory_skip", reason="not_avAlgolable")
             return []
 
         try:
@@ -175,10 +175,10 @@ class SuperMemoryClient:
             f" with {profit:.1f}% profit" if profit else ""
         )
 
-        return await self.remember(
+        return awAlgot self.remember(
             content=content,
             user_id=user_id,
-            container_tag=f"trades_{game}",
+            contAlgoner_tag=f"trades_{game}",
             metadata={
                 "item_name": item_name,
                 "game": game,
@@ -206,10 +206,10 @@ class SuperMemoryClient:
         """
         content = f"User preference: {preference_type} = {value}"
 
-        return await self.remember(
+        return awAlgot self.remember(
             content=content,
             user_id=user_id,
-            container_tag="preferences",
+            contAlgoner_tag="preferences",
             metadata={
                 "preference_type": preference_type,
                 "value": value,
@@ -217,25 +217,25 @@ class SuperMemoryClient:
         )
 
     async def get_user_context(self, user_id: int) -> str:
-        """Get aggregated context about a user for AI prompts.
+        """Get aggregated context about a user for Algo Configs.
 
         Args:
             user_id: User ID to get context for
 
         Returns:
-            Formatted context string for AI prompts
+            Formatted context string for Algo Configs
         """
-        if not self.is_available:
+        if not self.is_avAlgolable:
             return ""
 
         try:
             # Get user preferences and recent trades
-            preferences = await self.recall(
+            preferences = awAlgot self.recall(
                 f"preferences for user {user_id}",
                 user_id=user_id,
                 limit=10,
             )
-            trades = await self.recall(
+            trades = awAlgot self.recall(
                 f"recent trades by user {user_id}",
                 user_id=user_id,
                 limit=5,

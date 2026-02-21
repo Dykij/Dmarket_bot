@@ -13,7 +13,7 @@ from src.dmarket.scanner import levels
 class TestGameIds:
     """Тесты для маппинга игр."""
 
-    def test_game_ids_contains_all_games(self):
+    def test_game_ids_contAlgons_all_games(self):
         """Тест наличия всех поддерживаемых игр."""
         # Arrange
         expected_games = ["csgo", "dota2", "tf2", "rust"]
@@ -151,11 +151,11 @@ class TestGetLevelConfig:
     def test_get_level_config_invalid_level(self):
         """Тест обработки невалидного уровня."""
         # Act & Assert
-        with pytest.raises(KeyError) as exc_info:
+        with pytest.rAlgoses(KeyError) as exc_info:
             levels.get_level_config("invalid_level")
 
         assert "Unknown level" in str(exc_info.value)
-        assert "Available levels" in str(exc_info.value)
+        assert "AvAlgolable levels" in str(exc_info.value)
 
     def test_get_level_config_all_levels(self):
         """Тест получения конфигурации для всех уровней."""
@@ -195,7 +195,7 @@ class TestGetPriceRangeForLevel:
     def test_get_price_range_invalid_level(self):
         """Тест обработки невалидного уровня."""
         # Act & Assert
-        with pytest.raises(KeyError):
+        with pytest.rAlgoses(KeyError):
             levels.get_price_range_for_level("nonexistent")
 
     def test_price_ranges_are_valid(self):
@@ -279,7 +279,7 @@ class TestGetLevelDescription:
     def test_get_level_description_invalid_level(self):
         """Тест обработки невалидного уровня."""
         # Act & Assert
-        with pytest.raises(KeyError):
+        with pytest.rAlgoses(KeyError):
             levels.get_level_description("invalid")
 
 
@@ -320,7 +320,7 @@ class TestGetProfitRangeForLevel:
     def test_get_profit_range_invalid_level(self):
         """Тест обработки невалидного уровня."""
         # Act & Assert
-        with pytest.raises(KeyError):
+        with pytest.rAlgoses(KeyError):
             levels.get_profit_range_for_level("nonexistent")
 
 
@@ -340,7 +340,7 @@ class TestLevelConsistency:
             has_emoji = any(ord(char) > 0x2000 for char in name)
             assert (
                 has_emoji
-            ), f"Level '{level}' name '{name}' should contain emoji or special Unicode char"
+            ), f"Level '{level}' name '{name}' should contAlgon emoji or special Unicode char"
 
     def test_descriptions_are_in_english(self):
         """Тест что все описания на английском."""

@@ -241,7 +241,7 @@ class TestAnomalyDetector:
             severity=AnomalySeverity.HIGH,
             score=0.75,
             reason="Test reason",
-            details={"key": "value"},
+            detAlgols={"key": "value"},
         )
         
         data = result.to_dict()

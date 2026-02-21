@@ -74,8 +74,8 @@ class TestProductionReadiness:
         assert checklist["tests_passed"]
 
     def test_rollback_procedure(self):
-        result = {"backup_available": True}
-        assert result["backup_available"]
+        result = {"backup_avAlgolable": True}
+        assert result["backup_avAlgolable"]
 
     def test_load_balancer_configuration(self):
         lb_config = {"health_check": True}

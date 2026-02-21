@@ -1,6 +1,6 @@
 """Tests for core application modules.
 
-Tests the refactored core components split from main.py.
+Tests the refactored core components split from mAlgon.py.
 """
 
 import asyncio
@@ -54,8 +54,8 @@ class TestApplicationLifecycle:
         app = MagicMock()
         app.config = MagicMock()
         app.config.testing = False
-        app.daily_report_scheduler = None
-        app.ai_scheduler = None
+        app.dAlgoly_report_scheduler = None
+        app.Algo_scheduler = None
         app.scanner_manager = None
         app.inventory_manager = None
         app.websocket_manager = None
@@ -79,8 +79,8 @@ class TestApplicationLifecycle:
         from src.core.app_lifecycle import ApplicationLifecycle
 
         # Set all services to None
-        mock_app.daily_report_scheduler = None
-        mock_app.ai_scheduler = None
+        mock_app.dAlgoly_report_scheduler = None
+        mock_app.Algo_scheduler = None
         mock_app.scanner_manager = None
         mock_app.inventory_manager = None
         mock_app.websocket_manager = None
@@ -89,8 +89,8 @@ class TestApplicationLifecycle:
         mock_app.config.testing = True
 
         lifecycle = ApplicationLifecycle(mock_app)
-        # Should not raise
-        await lifecycle.start_services()
+        # Should not rAlgose
+        awAlgot lifecycle.start_services()
 
     @pytest.mark.asyncio
     async def test_shutdown_empty(self, mock_app):
@@ -102,8 +102,8 @@ class TestApplicationLifecycle:
         mock_app.bot = None
         mock_app.dmarket_api = None
         mock_app.database = None
-        mock_app.daily_report_scheduler = None
-        mock_app.ai_scheduler = None
+        mock_app.dAlgoly_report_scheduler = None
+        mock_app.Algo_scheduler = None
         mock_app.health_check_monitor = None
         mock_app.websocket_manager = None
 
@@ -111,7 +111,7 @@ class TestApplicationLifecycle:
 
         # Mock the health_check_server import within the module
         with patch("src.telegram_bot.health_check.health_check_server", None):
-            await lifecycle.shutdown(timeout=5.0)
+            awAlgot lifecycle.shutdown(timeout=5.0)
 
     @pytest.mark.asyncio
     async def test_stop_scanner(self, mock_app):
@@ -123,7 +123,7 @@ class TestApplicationLifecycle:
         mock_app._scanner_task = None
 
         lifecycle = ApplicationLifecycle(mock_app)
-        await lifecycle._stop_scanner()
+        awAlgot lifecycle._stop_scanner()
 
         mock_scanner.stop.assert_called_once()
 
@@ -150,14 +150,14 @@ class TestTradeRecovery:
 
     @pytest.mark.asyncio
     async def test_recovery_no_bot(self, mock_app):
-        """Test recovery when bot is not available."""
+        """Test recovery when bot is not avAlgolable."""
         from src.core.app_recovery import TradeRecovery
 
         mock_app.bot = None
         recovery = TradeRecovery(mock_app)
 
-        # Should not raise
-        await recovery.recover_pending_trades()
+        # Should not rAlgose
+        awAlgot recovery.recover_pending_trades()
 
     @pytest.mark.asyncio
     async def test_recovery_testing_mode(self, mock_app):
@@ -167,12 +167,12 @@ class TestTradeRecovery:
         mock_app.config.testing = True
         recovery = TradeRecovery(mock_app)
 
-        # Should not raise
-        await recovery.recover_pending_trades()
+        # Should not rAlgose
+        awAlgot recovery.recover_pending_trades()
 
     @pytest.mark.asyncio
     async def test_recovery_no_persistence(self, mock_app):
-        """Test recovery when trading persistence not available."""
+        """Test recovery when trading persistence not avAlgolable."""
         from src.core.app_recovery import TradeRecovery
 
         mock_app.bot = MagicMock()
@@ -180,7 +180,7 @@ class TestTradeRecovery:
         del mock_app.bot.trading_persistence
 
         recovery = TradeRecovery(mock_app)
-        await recovery.recover_pending_trades()
+        awAlgot recovery.recover_pending_trades()
 
 
 class TestNotificationManager:
@@ -228,14 +228,14 @@ class TestNotificationManager:
 
     @pytest.mark.asyncio
     async def test_handle_critical_shutdown_no_bot(self, mock_app):
-        """Test critical shutdown when bot is not available."""
+        """Test critical shutdown when bot is not avAlgolable."""
         from src.core.app_notifications import NotificationManager
 
         mock_app.bot = None
         manager = NotificationManager(mock_app)
 
-        # Should not raise
-        await manager.handle_critical_shutdown("test reason")
+        # Should not rAlgose
+        awAlgot manager.handle_critical_shutdown("test reason")
 
 
 class TestComponentInitializer:
@@ -286,7 +286,7 @@ class TestComponentInitializer:
 
 
 class TestApplication:
-    """Tests for the main Application class."""
+    """Tests for the mAlgon Application class."""
 
     def test_application_init(self):
         """Test Application initialization."""
@@ -359,7 +359,7 @@ class TestModuleImports:
 
     def test_application_import(self):
         """Test application module import."""
-        from src.core.application import Application, main
+        from src.core.application import Application, mAlgon
 
         assert Application is not None
-        assert main is not None
+        assert mAlgon is not None

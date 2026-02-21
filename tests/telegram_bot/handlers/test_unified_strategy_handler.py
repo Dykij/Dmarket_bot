@@ -29,7 +29,7 @@ class TestUnifiedStrategyHandler:
         """Create mock strategy manager."""
         manager = MagicMock()
         manager.scan = AsyncMock(return_value=[])
-        manager.get_available_strategies = MagicMock(return_value=[])
+        manager.get_avAlgolable_strategies = MagicMock(return_value=[])
         return manager
 
     @pytest.fixture
@@ -73,7 +73,7 @@ class TestUnifiedStrategyHandler:
     @pytest.mark.asyncio
     async def test_strategies_command(self, handler, mock_update, mock_context):
         """Test /strategies command."""
-        await handler.strategies_command(mock_update, mock_context)
+        awAlgot handler.strategies_command(mock_update, mock_context)
 
         mock_update.message.reply_text.assert_called_once()
         call_args = mock_update.message.reply_text.call_args
@@ -82,7 +82,7 @@ class TestUnifiedStrategyHandler:
     @pytest.mark.asyncio
     async def test_show_strategy_menu(self, handler, mock_update, mock_context):
         """Test showing strategy menu via strategies_command."""
-        result = await handler.strategies_command(mock_update, mock_context)
+        result = awAlgot handler.strategies_command(mock_update, mock_context)
 
         mock_update.message.reply_text.assert_called_once()
         # The method returns SELECTING_STRATEGY state
@@ -96,7 +96,7 @@ class TestUnifiedStrategyHandler:
         mock_update.callback_query.answer = AsyncMock()
         mock_update.callback_query.edit_message_text = AsyncMock()
 
-        result = await handler.strategy_selected(mock_update, mock_context)
+        result = awAlgot handler.strategy_selected(mock_update, mock_context)
 
         mock_update.callback_query.answer.assert_called_once()
         assert result == SELECTING_PRESET
@@ -111,7 +111,7 @@ class TestUnifiedStrategyHandler:
 
         mock_context.user_data["selected_strategy"] = "intramarket"
 
-        result = await handler.preset_selected(mock_update, mock_context)
+        result = awAlgot handler.preset_selected(mock_update, mock_context)
 
         mock_update.callback_query.answer.assert_called_once()
 
@@ -122,7 +122,7 @@ class TestUnifiedStrategyHandler:
         mock_strategy_manager.scan_all_strategies = AsyncMock(return_value={})
         mock_strategy_manager.get_strategy = MagicMock(return_value=None)
 
-        await handler.scan_all_command(mock_update, mock_context)
+        awAlgot handler.scan_all_command(mock_update, mock_context)
 
         # Should be called at least twice: initial "Scanning..." and results
         assert mock_update.message.reply_text.call_count >= 1
@@ -133,15 +133,15 @@ class TestUnifiedStrategyHandler:
         # Mock find_best_opportunities_combined with empty results
         mock_strategy_manager.find_best_opportunities_combined = AsyncMock(return_value=[])
 
-        await handler.best_deals_command(mock_update, mock_context)
+        awAlgot handler.best_deals_command(mock_update, mock_context)
 
         mock_update.message.reply_text.assert_called()
 
     @pytest.mark.asyncio
-    async def test_handle_scan_again(self, handler, mock_update, mock_context, mock_strategy_manager):
-        """Test handling scan again via callback."""
+    async def test_handle_scan_agAlgon(self, handler, mock_update, mock_context, mock_strategy_manager):
+        """Test handling scan agAlgon via callback."""
         mock_update.callback_query = MagicMock(spec=CallbackQuery)
-        mock_update.callback_query.data = f"{CB_SCAN}again"
+        mock_update.callback_query.data = f"{CB_SCAN}agAlgon"
         mock_update.callback_query.answer = AsyncMock()
         mock_update.callback_query.edit_message_text = AsyncMock()
 
@@ -151,7 +151,7 @@ class TestUnifiedStrategyHandler:
         # Mock scan_all_strategies for scan operation
         mock_strategy_manager.scan_all_strategies = AsyncMock(return_value={})
 
-        await handler.handle_scan_again(mock_update, mock_context)
+        awAlgot handler.handle_scan_agAlgon(mock_update, mock_context)
 
         mock_update.callback_query.answer.assert_called()
 

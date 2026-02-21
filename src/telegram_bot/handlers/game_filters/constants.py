@@ -46,7 +46,7 @@ CS2_EXTERIORS = [
 DOTA2_HEROES = [
     "Axe",
     "Anti-Mage",
-    "Crystal Maiden",
+    "Crystal MAlgoden",
     "Drow Ranger",
     "Juggernaut",
     "Pudge",

@@ -1,6 +1,6 @@
 """Contract tests for DMarket User Inventory API endpoints.
 
-This module contains consumer-driven contract tests for inventory
+This module contAlgons consumer-driven contract tests for inventory
 management endpoints of the DMarket API.
 
 Tested endpoints:
@@ -19,11 +19,11 @@ from __future__ import annotations
 
 import pytest
 
-from tests.contracts.conftest import DMarketContracts, PactMatchers, is_pact_available
+from tests.contracts.conftest import DMarketContracts, PactMatchers, is_pact_avAlgolable
 
-# Skip all tests if Pact is not available
+# Skip all tests if Pact is not avAlgolable
 pytestmark = pytest.mark.skipif(
-    not is_pact_available(),
+    not is_pact_avAlgolable(),
     reason="pact-python not installed",
 )
 
@@ -217,7 +217,7 @@ class TestUserOffersContract:
 
         Verifies that:
         - Consumer can list active offers
-        - Response includes offer details
+        - Response includes offer detAlgols
         """
         expected_body = {
             "Items": pact_matchers.each_like(
@@ -388,14 +388,14 @@ class TestBuyItemsContract:
         expected_body = {
             "orderId": pact_matchers.like("order_12345"),
             "status": pact_matchers.regex(
-                r"^(TxPending|TxSuccess|TxFailed)$",
+                r"^(TxPending|TxSuccess|TxFAlgoled)$",
                 "TxPending",
             ),
             "txId": pact_matchers.like("tx_67890"),
             "dmOffersStatus": {
                 "offer_12345": {
                     "status": pact_matchers.regex(
-                        r"^(Success|Failed|InsufficientFunds)$",
+                        r"^(Success|FAlgoled|InsufficientFunds)$",
                         "Success",
                     ),
                 },
@@ -563,7 +563,7 @@ class TestInventoryContractsMock:
         assert "code" in error
         assert "message" in error
 
-        # Verify values - matchers contain 'value' key with actual value
+        # Verify values - matchers contAlgon 'value' key with actual value
         code_matcher = error["code"]
         message_matcher = error["message"]
         assert code_matcher["value"] == "TestError"

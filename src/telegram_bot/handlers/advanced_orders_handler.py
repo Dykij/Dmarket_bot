@@ -99,19 +99,19 @@ class AdvancedOrderHandler:
             "Создавайте ордера с фильтрами как на CS Float:\n\n"
             "• *Float Order* - фильтр по диапазону флоата\n"
             "• *Doppler Order* - фильтр по фазе Doppler\n"
-            "• *Pattern Order* - фильтр по Paint Seed\n"
+            "• *Pattern Order* - фильтр по PAlgont Seed\n"
             "• *Sticker Order* - фильтр по стикерам\n\n"
             "Выберите тип ордера:"
         )
 
         if update.callback_query:
-            await update.callback_query.edit_message_text(
+            awAlgot update.callback_query.edit_message_text(
                 text,
                 reply_markup=reply_markup,
                 parse_mode="Markdown",
             )
         else:
-            await update.message.reply_text(
+            awAlgot update.message.reply_text(
                 text,
                 reply_markup=reply_markup,
                 parse_mode="Markdown",
@@ -126,22 +126,22 @@ class AdvancedOrderHandler:
     ) -> int:
         """Обработать выбор типа ордера."""
         query = update.callback_query
-        await query.answer()
+        awAlgot query.answer()
 
         data = query.data
 
         if data == "adv_order_close":
-            await query.edit_message_text("Меню закрыто.")
+            awAlgot query.edit_message_text("Меню закрыто.")
             return ConversationHandler.END
 
         if data == "adv_order_templates":
-            return await self.show_templates(update, context)
+            return awAlgot self.show_templates(update, context)
 
         if data == "adv_order_my_orders":
-            return await self.show_my_orders(update, context)
+            return awAlgot self.show_my_orders(update, context)
 
         if data == "adv_order_float_scan":
-            return await self.scan_float_opportunities(update, context)
+            return awAlgot self.scan_float_opportunities(update, context)
 
         if data == "adv_order_float":
             context.user_data["order_type"] = "float"
@@ -178,7 +178,7 @@ class AdvancedOrderHandler:
             [InlineKeyboardButton("❌ Отмена", callback_data="adv_order_cancel")]
         ]
 
-        await query.edit_message_text(
+        awAlgot query.edit_message_text(
             text,
             reply_markup=InlineKeyboardMarkup(keyboard),
             parse_mode="Markdown",
@@ -230,7 +230,7 @@ class AdvancedOrderHandler:
                 [InlineKeyboardButton("❌ Отмена", callback_data="adv_order_cancel")],
             ]
 
-            await update.message.reply_text(
+            awAlgot update.message.reply_text(
                 f"💎 *Doppler Order для:*\n`{item_title}`\n\n" "Выберите фазу:",
                 reply_markup=InlineKeyboardMarkup(keyboard),
                 parse_mode="Markdown",
@@ -240,7 +240,7 @@ class AdvancedOrderHandler:
         elif order_type == "pattern":
             text = (
                 f"🎨 *Pattern Order для:*\n`{item_title}`\n\n"
-                "Введите Paint Seed (номера паттернов через пробел):\n\n"
+                "Введите PAlgont Seed (номера паттернов через пробел):\n\n"
                 "Примеры Blue Gem:\n"
                 "• AK-47 CH: `661 670 321 955`\n"
                 "• Karambit CH: `387 269 463`"
@@ -264,7 +264,7 @@ class AdvancedOrderHandler:
             [InlineKeyboardButton("❌ Отмена", callback_data="adv_order_cancel")]
         ]
 
-        await update.message.reply_text(
+        awAlgot update.message.reply_text(
             text,
             reply_markup=InlineKeyboardMarkup(keyboard),
             parse_mode="Markdown",
@@ -283,11 +283,11 @@ class AdvancedOrderHandler:
         if update.callback_query:
             # Обработка выбора фазы Doppler
             query = update.callback_query
-            await query.answer()
+            awAlgot query.answer()
 
             data = query.data
             if data == "adv_order_cancel":
-                await query.edit_message_text("Создание ордера отменено.")
+                awAlgot query.edit_message_text("Создание ордера отменено.")
                 return ConversationHandler.END
 
             if data.startswith("doppler_"):
@@ -317,7 +317,7 @@ class AdvancedOrderHandler:
                         )
                     ]
                 ]
-                await query.edit_message_text(
+                awAlgot query.edit_message_text(
                     text,
                     reply_markup=InlineKeyboardMarkup(keyboard),
                     parse_mode="Markdown",
@@ -331,18 +331,18 @@ class AdvancedOrderHandler:
             try:
                 parts = text.split()
                 if len(parts) != 2:
-                    raise ValueError("Need 2 values")
+                    rAlgose ValueError("Need 2 values")
                 float_min = float(parts[0])
                 float_max = float(parts[1])
 
                 if not (0 <= float_min < float_max <= 1):
-                    raise ValueError("Invalid float range")
+                    rAlgose ValueError("Invalid float range")
 
                 context.user_data["float_min"] = float_min
                 context.user_data["float_max"] = float_max
 
             except ValueError as e:
-                await update.message.reply_text(
+                awAlgot update.message.reply_text(
                     f"❌ Ошибка: {e}\n\nВведите два числа от 0 до 1, например: `0.15 0.155`",
                     parse_mode="Markdown",
                 )
@@ -350,12 +350,12 @@ class AdvancedOrderHandler:
 
         elif order_type == "pattern":
             try:
-                paint_seeds = [int(x) for x in text.split()]
-                if not paint_seeds:
-                    raise ValueError("No patterns provided")
-                context.user_data["paint_seeds"] = paint_seeds
+                pAlgont_seeds = [int(x) for x in text.split()]
+                if not pAlgont_seeds:
+                    rAlgose ValueError("No patterns provided")
+                context.user_data["pAlgont_seeds"] = pAlgont_seeds
             except ValueError:
-                await update.message.reply_text(
+                awAlgot update.message.reply_text(
                     "❌ Ошибка: введите номера паттернов через пробел\n\n"
                     "Пример: `661 670 321`",
                     parse_mode="Markdown",
@@ -371,7 +371,7 @@ class AdvancedOrderHandler:
         if order_type == "float":
             filter_text = f"Float: {context.user_data['float_min']:.3f} - {context.user_data['float_max']:.3f}"
         elif order_type == "pattern":
-            filter_text = f"Patterns: {context.user_data['paint_seeds']}"
+            filter_text = f"Patterns: {context.user_data['pAlgont_seeds']}"
         elif order_type == "sticker":
             filter_text = f"Stickers: {context.user_data['sticker_category']}"
         else:
@@ -381,7 +381,7 @@ class AdvancedOrderHandler:
             [InlineKeyboardButton("❌ Отмена", callback_data="adv_order_cancel")]
         ]
 
-        await update.message.reply_text(
+        awAlgot update.message.reply_text(
             f"📦 *Создание ордера*\n\n"
             f"Предмет: `{item_title}`\n"
             f"Фильтр: {filter_text}\n\n"
@@ -403,16 +403,16 @@ class AdvancedOrderHandler:
                 update.message.text.strip().replace("$", "").replace(",", ".")
             )
             if price <= 0:
-                raise ValueError("Price must be positive")
+                rAlgose ValueError("Price must be positive")
             context.user_data["max_price"] = price
         except ValueError:
-            await update.message.reply_text(
+            awAlgot update.message.reply_text(
                 "❌ Ошибка: введите положительное число\n\nПример: `55.50`",
                 parse_mode="Markdown",
             )
             return ENTERING_PRICE
 
-        return await self.show_confirmation(update, context)
+        return awAlgot self.show_confirmation(update, context)
 
     async def show_confirmation(
         self,
@@ -433,7 +433,7 @@ class AdvancedOrderHandler:
             phase = context.user_data.get("doppler_phase", "Unknown")
             filter_desc = f"Doppler: {phase}"
         elif order_type == "pattern":
-            seeds = context.user_data.get("paint_seeds", [])
+            seeds = context.user_data.get("pAlgont_seeds", [])
             filter_desc = f"Patterns: {seeds}"
         elif order_type == "sticker":
             category = context.user_data.get("sticker_category", "Unknown")
@@ -468,7 +468,7 @@ class AdvancedOrderHandler:
             "Создать ордер?"
         )
 
-        await update.message.reply_text(
+        awAlgot update.message.reply_text(
             text,
             reply_markup=InlineKeyboardMarkup(keyboard),
             parse_mode="Markdown",
@@ -483,18 +483,18 @@ class AdvancedOrderHandler:
     ) -> int:
         """Обработать подтверждение."""
         query = update.callback_query
-        await query.answer()
+        awAlgot query.answer()
 
         if query.data == "adv_order_cancel":
-            await query.edit_message_text("❌ Создание ордера отменено.")
+            awAlgot query.edit_message_text("❌ Создание ордера отменено.")
             return ConversationHandler.END
 
         if query.data == "adv_order_confirm":
             # Создаём ордер
-            result = await self._create_order_from_context(context)
+            result = awAlgot self._create_order_from_context(context)
 
             if result.get("success"):
-                await query.edit_message_text(
+                awAlgot query.edit_message_text(
                     f"✅ *Ордер создан!*\n\n"
                     f"ID: `{result.get('target_id', 'N/A')}`\n"
                     f"Статус: Активен\n\n"
@@ -502,7 +502,7 @@ class AdvancedOrderHandler:
                     parse_mode="Markdown",
                 )
             else:
-                await query.edit_message_text(
+                awAlgot query.edit_message_text(
                     f"❌ *Ошибка создания ордера*\n\n"
                     f"Причина: {result.get('error', 'Unknown')}\n\n"
                     "Попробуйте снова с командой /advanced_orders",
@@ -556,7 +556,7 @@ class AdvancedOrderHandler:
                 )
             elif order_type == "pattern":
                 filter_obj = AdvancedOrderFilter(
-                    paint_seeds=context.user_data.get("paint_seeds", [])
+                    pAlgont_seeds=context.user_data.get("pAlgont_seeds", [])
                 )
             elif order_type == "sticker":
                 filter_obj = AdvancedOrderFilter(
@@ -576,7 +576,7 @@ class AdvancedOrderHandler:
                 filter=filter_obj,
             )
 
-            result = await self.order_manager.create_order(order)
+            result = awAlgot self.order_manager.create_order(order)
 
             return {
                 "success": result.success,
@@ -614,13 +614,13 @@ class AdvancedOrderHandler:
         ]
 
         if update.callback_query:
-            await update.callback_query.edit_message_text(
+            awAlgot update.callback_query.edit_message_text(
                 text,
                 reply_markup=InlineKeyboardMarkup(keyboard),
                 parse_mode="Markdown",
             )
         else:
-            await update.message.reply_text(
+            awAlgot update.message.reply_text(
                 text,
                 reply_markup=InlineKeyboardMarkup(keyboard),
                 parse_mode="Markdown",
@@ -657,13 +657,13 @@ class AdvancedOrderHandler:
         ]
 
         if update.callback_query:
-            await update.callback_query.edit_message_text(
+            awAlgot update.callback_query.edit_message_text(
                 text,
                 reply_markup=InlineKeyboardMarkup(keyboard),
                 parse_mode="Markdown",
             )
         else:
-            await update.message.reply_text(
+            awAlgot update.message.reply_text(
                 text,
                 reply_markup=InlineKeyboardMarkup(keyboard),
                 parse_mode="Markdown",
@@ -678,15 +678,15 @@ class AdvancedOrderHandler:
     ) -> int:
         """Сканировать возможности арбитража на флоате."""
         query = update.callback_query
-        await query.answer("🔍 Сканирование...")
+        awAlgot query.answer("🔍 Сканирование...")
 
         if self.float_arbitrage is None:
-            await query.edit_message_text("❌ Float arbitrage module not initialized")
+            awAlgot query.edit_message_text("❌ Float arbitrage module not initialized")
             return SELECTING_ORDER_TYPE
 
         try:
             opportunities = (
-                await self.float_arbitrage.find_float_arbitrage_opportunities(
+                awAlgot self.float_arbitrage.find_float_arbitrage_opportunities(
                     game="csgo",
                     min_price=10.0,
                     max_price=100.0,
@@ -716,7 +716,7 @@ class AdvancedOrderHandler:
             [InlineKeyboardButton("⬅️ Назад", callback_data="adv_order_back")],
         ]
 
-        await query.edit_message_text(
+        awAlgot query.edit_message_text(
             text,
             reply_markup=InlineKeyboardMarkup(keyboard),
             parse_mode="Markdown",
@@ -731,9 +731,9 @@ class AdvancedOrderHandler:
     ) -> int:
         """Отменить операцию."""
         if update.callback_query:
-            await update.callback_query.edit_message_text("❌ Операция отменена.")
+            awAlgot update.callback_query.edit_message_text("❌ Операция отменена.")
         else:
-            await update.message.reply_text("❌ Операция отменена.")
+            awAlgot update.message.reply_text("❌ Операция отменена.")
 
         context.user_data.clear()
         return ConversationHandler.END

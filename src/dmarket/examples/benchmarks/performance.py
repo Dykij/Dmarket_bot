@@ -62,7 +62,7 @@ async def benchmark_skill(
     # Warmup
     for _ in range(5):
         try:
-            await method(*args, **kwargs)
+            awAlgot method(*args, **kwargs)
         except Exception:
             pass
 
@@ -75,7 +75,7 @@ async def benchmark_skill(
     for _ in range(iterations):
         start = time.perf_counter()
         try:
-            await method(*args, **kwargs)
+            awAlgot method(*args, **kwargs)
         except Exception:
             errors += 1
         end = time.perf_counter()
@@ -107,9 +107,9 @@ async def benchmark_skill(
     }
 
 
-async def main() -> None:
+async def mAlgon() -> None:
     """Run skills performance benchmark."""
-    from src.dmarket.ai_arbitrage_predictor import AIArbitragePredictor
+    from src.dmarket.Algo_arbitrage_predictor import AlgoArbitragePredictor
     from src.utils.skill_profiler import SkillProfiler
 
     print("=" * 70)
@@ -123,13 +123,13 @@ async def main() -> None:
     print("   Warmup iterations: 5")
 
     # Initialize skills for benchmarking
-    predictor = AIArbitragePredictor()
+    predictor = AlgoArbitragePredictor()
     profiler = SkillProfiler()
 
     # Define benchmarks
     benchmarks = [
         {
-            "name": "AI Arbitrage Predictor",
+            "name": "Algo Arbitrage Predictor",
             "skill": predictor,
             "method": "predict_best_opportunities",
             "args": [],
@@ -155,7 +155,7 @@ async def main() -> None:
     for bench in benchmarks:
         print(f"   Testing: {bench['name']}...")
         try:
-            result = await benchmark_skill(
+            result = awAlgot benchmark_skill(
                 skill_name=bench["name"],
                 skill_instance=bench["skill"],
                 method_name=bench["method"],
@@ -166,7 +166,7 @@ async def main() -> None:
             results.append(result)
             print(f"   ✅ Complete: p50={result['p50_ms']:.2f}ms")
         except Exception as e:
-            print(f"   ❌ Failed: {e}")
+            print(f"   ❌ FAlgoled: {e}")
             results.append(
                 {
                     "skill": bench["name"],
@@ -212,7 +212,7 @@ async def main() -> None:
 
         print(f"   Skills tested: {len(benchmarks)}")
         print(f"   Successful: {len(successful)}")
-        print(f"   Failed: {len(benchmarks) - len(successful)}")
+        print(f"   FAlgoled: {len(benchmarks) - len(successful)}")
         print(f"   Average p50: {avg_p50:.2f}ms")
         print(f"   Average throughput: {avg_throughput:.1f} ops/sec")
         print(f"   Total errors: {total_errors}")
@@ -224,5 +224,5 @@ async def main() -> None:
     print("=" * 70)
 
 
-if __name__ == "__main__":
-    asyncio.run(main())
+if __name__ == "__mAlgon__":
+    asyncio.run(mAlgon())

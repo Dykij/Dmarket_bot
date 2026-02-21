@@ -65,7 +65,7 @@ class TestBlueGemDetection:
         """AK-47 Case Hardened seed 661 (Blue Gem) считается редким."""
         item = {
             "title": "AK-47 | Case Hardened (Field-Tested)",
-            "extra": {"paintSeed": 661},
+            "extra": {"pAlgontSeed": 661},
         }
         assert is_item_rare(item) is True
 
@@ -73,7 +73,7 @@ class TestBlueGemDetection:
         """AK-47 Case Hardened с обычным паттерном не считается редким."""
         item = {
             "title": "AK-47 | Case Hardened (Field-Tested)",
-            "extra": {"paintSeed": 123},
+            "extra": {"pAlgontSeed": 123},
         }
         assert is_item_rare(item) is False
 
@@ -81,7 +81,7 @@ class TestBlueGemDetection:
         """Karambit Case Hardened seed 387 считается редким."""
         item = {
             "title": "Karambit | Case Hardened (Minimal Wear)",
-            "extra": {"paintSeed": 387},
+            "extra": {"pAlgontSeed": 387},
         }
         assert is_item_rare(item) is True
 
@@ -107,7 +107,7 @@ class TestRarityReason:
         """Возвращает причину для редкого паттерна."""
         item = {
             "title": "AK-47 | Case Hardened",
-            "extra": {"paintSeed": 661, "floatValue": 0.5},
+            "extra": {"pAlgontSeed": 661, "floatValue": 0.5},
         }
         reason = get_rarity_reason(item)
         assert reason is not None

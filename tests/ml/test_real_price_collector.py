@@ -117,19 +117,19 @@ class TestCollectionResult:
         assert result.items_collected == 10
         assert result.error_message is None
 
-    def test_create_failed_result(self) -> None:
-        """Test creating a failed CollectionResult."""
+    def test_create_fAlgoled_result(self) -> None:
+        """Test creating a fAlgoled CollectionResult."""
         result = CollectionResult(
-            status=CollectionStatus.FAILED,
+            status=CollectionStatus.FAlgoLED,
             source=PriceSource.WAXPEER,
             game=GameType.DOTA2,
             items_requested=5,
             items_collected=0,
-            error_message="API connection failed",
+            error_message="API connection fAlgoled",
         )
 
-        assert result.status == CollectionStatus.FAILED
-        assert result.error_message == "API connection failed"
+        assert result.status == CollectionStatus.FAlgoLED
+        assert result.error_message == "API connection fAlgoled"
         assert result.items_collected == 0
 
     def test_success_rate_property(self) -> None:
@@ -188,7 +188,7 @@ class TestCollectionStatus:
         """Test all expected statuses exist."""
         assert CollectionStatus.SUCCESS is not None
         assert CollectionStatus.PARTIAL is not None
-        assert CollectionStatus.FAILED is not None
+        assert CollectionStatus.FAlgoLED is not None
         assert CollectionStatus.RATE_LIMITED is not None
         assert CollectionStatus.TIMEOUT is not None
         assert CollectionStatus.NO_DATA is not None
@@ -197,7 +197,7 @@ class TestCollectionStatus:
         """Test status string values."""
         assert CollectionStatus.SUCCESS.value == "success"
         assert CollectionStatus.PARTIAL.value == "partial"
-        assert CollectionStatus.FAILED.value == "failed"
+        assert CollectionStatus.FAlgoLED.value == "fAlgoled"
         assert CollectionStatus.RATE_LIMITED.value == "rate_limited"
         assert CollectionStatus.TIMEOUT.value == "timeout"
         assert CollectionStatus.NO_DATA.value == "no_data"
@@ -291,8 +291,8 @@ class TestMultiSourceResult:
             source=PriceSource.DMARKET,
             game=GameType.CSGO,
         )
-        failed_result = CollectionResult(
-            status=CollectionStatus.FAILED,
+        fAlgoled_result = CollectionResult(
+            status=CollectionStatus.FAlgoLED,
             source=PriceSource.WAXPEER,
             game=GameType.CSGO,
         )
@@ -303,7 +303,7 @@ class TestMultiSourceResult:
         )
 
         result = MultiSourceResult(
-            results=[success_result, failed_result, partial_result],
+            results=[success_result, fAlgoled_result, partial_result],
             all_prices=[],
         )
 
@@ -396,7 +396,7 @@ class TestRealPriceCollector:
         """Test collecting prices from DMarket."""
         item_names = ["AK-47 | Redline", "AWP | Asiimov"]
 
-        result = await collector.collect_from_dmarket(item_names, GameType.CSGO)
+        result = awAlgot collector.collect_from_dmarket(item_names, GameType.CSGO)
 
         assert result.source == PriceSource.DMARKET
         assert result.game == GameType.CSGO
@@ -408,7 +408,7 @@ class TestRealPriceCollector:
         """Test collecting prices from Waxpeer."""
         item_names = ["AK-47 | Redline", "AWP | Asiimov"]
 
-        result = await collector.collect_from_waxpeer(item_names, GameType.CSGO)
+        result = awAlgot collector.collect_from_waxpeer(item_names, GameType.CSGO)
 
         assert result.source == PriceSource.WAXPEER
         assert result.game == GameType.CSGO
@@ -432,7 +432,7 @@ class TestRealPriceCollector:
             )
             mock_steam_api_class.return_value = mock_steam_api
 
-            result = await collector.collect_from_steam(item_names, GameType.CSGO)
+            result = awAlgot collector.collect_from_steam(item_names, GameType.CSGO)
 
             assert result.source == PriceSource.STEAM
             assert result.game == GameType.CSGO
@@ -477,7 +477,7 @@ class TestRealPriceCollector:
                         game=GameType.CSGO,
                     )
 
-                    multi_result = await collector.collect_all(
+                    multi_result = awAlgot collector.collect_all(
                         item_names,
                         GameType.CSGO,
                         sources=[PriceSource.DMARKET, PriceSource.WAXPEER, PriceSource.STEAM],
@@ -489,7 +489,7 @@ class TestRealPriceCollector:
     @pytest.mark.asyncio()
     async def test_collect_bulk_prices(self, collector: RealPriceCollector) -> None:
         """Test collecting bulk prices from DMarket."""
-        multi_result = await collector.collect_bulk_prices(GameType.CSGO, limit=10)
+        multi_result = awAlgot collector.collect_bulk_prices(GameType.CSGO, limit=10)
 
         assert isinstance(multi_result, MultiSourceResult)
 
@@ -502,7 +502,7 @@ class TestRealPriceCollector:
 
     def test_reset_statistics(self, collector: RealPriceCollector) -> None:
         """Test resetting collector statistics."""
-        # Should not raise
+        # Should not rAlgose
         collector.reset_statistics()
 
 
@@ -543,29 +543,29 @@ class TestRealPriceCollectorWithoutAPIs:
         assert collector.waxpeer_api is None
 
     @pytest.mark.asyncio()
-    async def test_collect_from_dmarket_returns_failed_when_none(self) -> None:
-        """Test that collect_from_dmarket returns FAILED when API is None."""
+    async def test_collect_from_dmarket_returns_fAlgoled_when_none(self) -> None:
+        """Test that collect_from_dmarket returns FAlgoLED when API is None."""
         collector = RealPriceCollector(
             dmarket_api=None,
             waxpeer_api=AsyncMock(),
         )
 
-        result = await collector.collect_from_dmarket(["Test Item"], GameType.CSGO)
+        result = awAlgot collector.collect_from_dmarket(["Test Item"], GameType.CSGO)
 
-        assert result.status == CollectionStatus.FAILED
+        assert result.status == CollectionStatus.FAlgoLED
         assert len(result.prices) == 0
 
     @pytest.mark.asyncio()
-    async def test_collect_from_waxpeer_returns_failed_when_none(self) -> None:
-        """Test that collect_from_waxpeer returns FAILED when API is None."""
+    async def test_collect_from_waxpeer_returns_fAlgoled_when_none(self) -> None:
+        """Test that collect_from_waxpeer returns FAlgoLED when API is None."""
         collector = RealPriceCollector(
             dmarket_api=AsyncMock(),
             waxpeer_api=None,
         )
 
-        result = await collector.collect_from_waxpeer(["Test Item"], GameType.CSGO)
+        result = awAlgot collector.collect_from_waxpeer(["Test Item"], GameType.CSGO)
 
-        assert result.status == CollectionStatus.FAILED
+        assert result.status == CollectionStatus.FAlgoLED
         assert len(result.prices) == 0
 
 
@@ -586,7 +586,7 @@ class TestCollectPricesConvenienceFunction:
         mock_waxpeer = AsyncMock()
         mock_waxpeer.get_items_for_sale = AsyncMock(return_value={"items": []})
 
-        result = await collect_prices(
+        result = awAlgot collect_prices(
             item_names=["Test Item"],
             game=GameType.CSGO,
             dmarket_api=mock_dmarket,
@@ -598,7 +598,7 @@ class TestCollectPricesConvenienceFunction:
     @pytest.mark.asyncio()
     async def test_collect_prices_with_none_apis(self) -> None:
         """Test collect_prices with None APIs."""
-        result = await collect_prices(
+        result = awAlgot collect_prices(
             item_names=["Test Item"],
             game=GameType.CSGO,
             dmarket_api=None,
@@ -606,4 +606,4 @@ class TestCollectPricesConvenienceFunction:
         )
 
         assert isinstance(result, MultiSourceResult)
-        # Should still return a result, but with failed statuses
+        # Should still return a result, but with fAlgoled statuses

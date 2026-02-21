@@ -81,7 +81,7 @@ def sample_user_prefs():
         "chat_id": 123456789,
         "enabled": True,
         "preferences": {
-            "notification_style": "detailed",
+            "notification_style": "detAlgoled",
         },
     }
 
@@ -131,7 +131,7 @@ class TestSendPriceAlertNotification:
             ),
         ):
             # Act
-            await send_price_alert_notification(
+            awAlgot send_price_alert_notification(
                 mock_bot,
                 123456789,
                 sample_alert,
@@ -164,7 +164,7 @@ class TestSendPriceAlertNotification:
             ),
         ):
             # Act
-            await send_price_alert_notification(
+            awAlgot send_price_alert_notification(
                 mock_bot,
                 123456789,
                 sample_alert,
@@ -209,7 +209,7 @@ class TestSendPriceAlertNotification:
             ),
         ):
             # Act
-            await send_price_alert_notification(
+            awAlgot send_price_alert_notification(
                 mock_bot,
                 123456789,
                 alert,
@@ -219,10 +219,10 @@ class TestSendPriceAlertNotification:
                 mock_notification_queue,
             )
 
-            # Assert - check enqueue was called with message containing price info
+            # Assert - check enqueue was called with message contAlgoning price info
             call_args = mock_notification_queue.enqueue.call_args
             text = call_args.kwargs.get("text", "")
-            # Verify message contains price and item info
+            # Verify message contAlgons price and item info
             assert "25" in text or "20" in text  # Price values present
             mock_notification_queue.enqueue.assert_called_once()
 
@@ -258,7 +258,7 @@ class TestSendPriceAlertNotification:
             ),
         ):
             # Act
-            await send_price_alert_notification(
+            awAlgot send_price_alert_notification(
                 mock_bot,
                 123456789,
                 alert,
@@ -268,10 +268,10 @@ class TestSendPriceAlertNotification:
                 mock_notification_queue,
             )
 
-            # Assert - check message contains price info
+            # Assert - check message contAlgons price info
             call_args = mock_notification_queue.enqueue.call_args
             text = call_args.kwargs.get("text", "")
-            # Verify message contains price values
+            # Verify message contAlgons price values
             assert "15" in text or "20" in text  # Price values present
             mock_notification_queue.enqueue.assert_called_once()
 
@@ -309,7 +309,7 @@ class TestSendPriceAlertNotification:
             patch(f"{SENDERS_MODULE}.save_user_preferences"),
         ):
             # Act
-            await send_price_alert_notification(
+            awAlgot send_price_alert_notification(
                 mock_bot,
                 123456789,
                 alert,
@@ -338,8 +338,8 @@ class TestSendPriceAlertNotification:
             f"{SENDERS_MODULE}.format_market_item",
             return_value="Item info",
         ):
-            # Act - should not raise exception
-            await send_price_alert_notification(
+            # Act - should not rAlgose exception
+            awAlgot send_price_alert_notification(
                 mock_bot,
                 123456789,
                 sample_alert,
@@ -378,7 +378,7 @@ class TestSendMarketOpportunityNotification:
             ),
         ):
             # Act
-            await send_market_opportunity_notification(
+            awAlgot send_market_opportunity_notification(
                 mock_bot,
                 123456789,
                 sample_opportunity,
@@ -409,7 +409,7 @@ class TestSendMarketOpportunityNotification:
             ),
         ):
             # Act
-            await send_market_opportunity_notification(
+            awAlgot send_market_opportunity_notification(
                 mock_bot,
                 123456789,
                 sample_opportunity,
@@ -447,7 +447,7 @@ class TestSendMarketOpportunityNotification:
             ),
         ):
             # Act
-            await send_market_opportunity_notification(
+            awAlgot send_market_opportunity_notification(
                 mock_bot,
                 123456789,
                 sample_opportunity,
@@ -488,7 +488,7 @@ class TestSendMarketOpportunityNotification:
             new_callable=AsyncMock,
         ):
             # Act
-            await send_market_opportunity_notification(
+            awAlgot send_market_opportunity_notification(
                 mock_bot,
                 123456789,
                 opportunity,
@@ -521,8 +521,8 @@ class TestSendMarketOpportunityNotification:
                 return_value=["Message"],
             ),
         ):
-            # Act - should not raise exception
-            await send_market_opportunity_notification(
+            # Act - should not rAlgose exception
+            awAlgot send_market_opportunity_notification(
                 mock_bot,
                 123456789,
                 sample_opportunity,
@@ -550,7 +550,7 @@ class TestSendMarketOpportunityNotification:
             ),
         ):
             # Act
-            await send_market_opportunity_notification(
+            awAlgot send_market_opportunity_notification(
                 mock_bot,
                 123456789,
                 sample_opportunity,
@@ -574,7 +574,7 @@ class TestNotifyUser:
     async def test_notify_user_with_queue(self, mock_bot, mock_notification_queue):
         """Test notify_user with notification queue."""
         # Act
-        result = await notify_user(
+        result = awAlgot notify_user(
             mock_bot,
             123456789,
             "Test message",
@@ -590,7 +590,7 @@ class TestNotifyUser:
     async def test_notify_user_without_queue(self, mock_bot):
         """Test notify_user sends directly via bot."""
         # Act
-        result = await notify_user(
+        result = awAlgot notify_user(
             mock_bot,
             123456789,
             "Test message",
@@ -613,7 +613,7 @@ class TestNotifyUser:
         markup = InlineKeyboardMarkup(keyboard)
 
         # Act
-        result = await notify_user(
+        result = awAlgot notify_user(
             mock_bot,
             123456789,
             "Test message",
@@ -634,7 +634,7 @@ class TestNotifyUser:
         mock_notification_queue.enqueue = AsyncMock(side_effect=Exception("Test error"))
 
         # Act
-        result = await notify_user(
+        result = awAlgot notify_user(
             mock_bot,
             123456789,
             "Test message",
@@ -651,7 +651,7 @@ class TestNotifyUser:
         mock_bot.send_message = AsyncMock(side_effect=Exception("Bot error"))
 
         # Act
-        result = await notify_user(
+        result = awAlgot notify_user(
             mock_bot,
             123456789,
             "Test message",

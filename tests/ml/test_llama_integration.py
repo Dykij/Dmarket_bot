@@ -16,9 +16,9 @@ import pytest
 
 # Импортируем модуль
 from src.ml.llama_integration import (
-    TASK_PROMPTS,
+    TASK_ConfigS,
     LlamaConfig,
-    LlamaIntegration,
+    LlamAlgontegration,
     LlamaResponse,
     LlamaTaskType,
     get_llama,
@@ -79,7 +79,7 @@ class TestLlamaResponse:
         assert response.processing_time_ms == 2500.0
         assert response.error is None
     
-    def test_failed_response(self):
+    def test_fAlgoled_response(self):
         """Тест неудачного ответа."""
         response = LlamaResponse(
             success=False,
@@ -96,10 +96,10 @@ class TestLlamaResponse:
 class TestLlamaTaskType:
     """Тесты типов задач."""
     
-    def test_all_task_types_have_prompts(self):
+    def test_all_task_types_have_Configs(self):
         """Проверяем что для всех типов задач есть промпты."""
         for task_type in LlamaTaskType:
-            assert task_type in TASK_PROMPTS, f"Missing prompt for {task_type}"
+            assert task_type in TASK_ConfigS, f"Missing Config for {task_type}"
     
     def test_task_type_values(self):
         """Тест значений типов задач."""
@@ -112,33 +112,33 @@ class TestLlamaTaskType:
         assert LlamaTaskType.RISK_ASSESSMENT == "risk_assessment"
 
 
-class TestLlamaIntegrationInit:
-    """Тесты инициализации LlamaIntegration."""
+class TestLlamAlgontegrationInit:
+    """Тесты инициализации LlamAlgontegration."""
     
     def test_default_initialization(self):
         """Тест инициализации по умолчанию."""
-        llama = LlamaIntegration()
+        llama = LlamAlgontegration()
         
         assert llama.config.model_name == "llama3.1:8b"
         assert llama._client is None
-        assert llama._is_available is None
+        assert llama._is_avAlgolable is None
         assert llama.stats["total_requests"] == 0
     
     def test_custom_config_initialization(self):
         """Тест инициализации с пользовательской конфигурацией."""
         config = LlamaConfig(model_name="mistral:7b")
-        llama = LlamaIntegration(config)
+        llama = LlamAlgontegration(config)
         
         assert llama.config.model_name == "mistral:7b"
 
 
-class TestLlamaIntegrationAvailability:
+class TestLlamAlgontegrationAvAlgolability:
     """Тесты проверки доступности."""
     
     @pytest.mark.asyncio
-    async def test_check_availability_success(self):
+    async def test_check_avAlgolability_success(self):
         """Тест успешной проверки доступности."""
-        llama = LlamaIntegration()
+        llama = LlamAlgontegration()
         
         mock_response = MagicMock()
         mock_response.status_code = 200
@@ -156,17 +156,17 @@ class TestLlamaIntegrationAvailability:
             mock_client_class.return_value.__aenter__ = AsyncMock(return_value=mock_client)
             mock_client_class.return_value = mock_client
             
-            available = await llama.check_availability(force=True)
+            avAlgolable = awAlgot llama.check_avAlgolability(force=True)
             
-            assert available is True
-            assert llama._is_available is True
+            assert avAlgolable is True
+            assert llama._is_avAlgolable is True
         
-        await llama.close()
+        awAlgot llama.close()
     
     @pytest.mark.asyncio
-    async def test_check_availability_model_not_found(self):
+    async def test_check_avAlgolability_model_not_found(self):
         """Тест когда модель не найдена."""
-        llama = LlamaIntegration()
+        llama = LlamAlgontegration()
         
         mock_response = MagicMock()
         mock_response.status_code = 200
@@ -180,16 +180,16 @@ class TestLlamaIntegrationAvailability:
             mock_client.is_closed = False
             mock_client_class.return_value = mock_client
             
-            available = await llama.check_availability(force=True)
+            avAlgolable = awAlgot llama.check_avAlgolability(force=True)
             
-            assert available is False
+            assert avAlgolable is False
         
-        await llama.close()
+        awAlgot llama.close()
     
     @pytest.mark.asyncio
-    async def test_check_availability_connection_error(self):
+    async def test_check_avAlgolability_connection_error(self):
         """Тест ошибки соединения."""
-        llama = LlamaIntegration()
+        llama = LlamAlgontegration()
         
         with patch("httpx.AsyncClient") as mock_client_class:
             mock_client = AsyncMock()
@@ -197,24 +197,24 @@ class TestLlamaIntegrationAvailability:
             mock_client.is_closed = False
             mock_client_class.return_value = mock_client
             
-            available = await llama.check_availability(force=True)
+            avAlgolable = awAlgot llama.check_avAlgolability(force=True)
             
-            assert available is False
-            assert llama._is_available is False
+            assert avAlgolable is False
+            assert llama._is_avAlgolable is False
         
-        await llama.close()
+        awAlgot llama.close()
 
 
-class TestLlamaIntegrationExecuteTask:
+class TestLlamAlgontegrationExecuteTask:
     """Тесты выполнения задач."""
     
     @pytest.mark.asyncio
     async def test_execute_market_analysis_task(self):
         """Тест задачи анализа рынка."""
-        llama = LlamaIntegration()
+        llama = LlamAlgontegration()
         
         mock_check = AsyncMock(return_value=True)
-        llama.check_availability = mock_check
+        llama.check_avAlgolability = mock_check
         
         mock_response = MagicMock()
         mock_response.status_code = 200
@@ -223,7 +223,7 @@ class TestLlamaIntegrationExecuteTask:
                 "content": "📊 ТРЕНД: восходящий\n📈 СИЛА ТРЕНДА: сильный\n💰 РЕКОМЕНДАЦИЯ: покупать"
             },
             "eval_count": 100,
-            "prompt_eval_count": 50,
+            "Config_eval_count": 50,
         }
         
         with patch("httpx.AsyncClient") as mock_client_class:
@@ -233,7 +233,7 @@ class TestLlamaIntegrationExecuteTask:
             mock_client_class.return_value = mock_client
             llama._client = mock_client
             
-            result = await llama.execute_task(
+            result = awAlgot llama.execute_task(
                 LlamaTaskType.MARKET_ANALYSIS,
                 "Проанализируй рынок CS:GO",
             )
@@ -243,22 +243,22 @@ class TestLlamaIntegrationExecuteTask:
             assert result.task_type == LlamaTaskType.MARKET_ANALYSIS
             assert result.tokens_used == 150
         
-        await llama.close()
+        awAlgot llama.close()
     
     @pytest.mark.asyncio
     async def test_execute_task_with_context(self):
         """Тест выполнения задачи с контекстом."""
-        llama = LlamaIntegration()
+        llama = LlamAlgontegration()
         
         mock_check = AsyncMock(return_value=True)
-        llama.check_availability = mock_check
+        llama.check_avAlgolability = mock_check
         
         mock_response = MagicMock()
         mock_response.status_code = 200
         mock_response.json.return_value = {
             "message": {"content": "Анализ на основе предоставленных данных..."},
             "eval_count": 80,
-            "prompt_eval_count": 120,
+            "Config_eval_count": 120,
         }
         
         with patch("httpx.AsyncClient") as mock_client_class:
@@ -274,7 +274,7 @@ class TestLlamaIntegrationExecuteTask:
                 "trend": "up",
             }
             
-            result = await llama.execute_task(
+            result = awAlgot llama.execute_task(
                 LlamaTaskType.PRICE_PREDICTION,
                 "Дай прогноз цены",
                 context=context,
@@ -289,32 +289,32 @@ class TestLlamaIntegrationExecuteTask:
             user_message = request_body["messages"][-1]["content"]
             assert "AK-47" in user_message
         
-        await llama.close()
+        awAlgot llama.close()
     
     @pytest.mark.asyncio
-    async def test_execute_task_ollama_unavailable(self):
+    async def test_execute_task_ollama_unavAlgolable(self):
         """Тест когда Ollama недоступна."""
-        llama = LlamaIntegration()
+        llama = LlamAlgontegration()
         
         mock_check = AsyncMock(return_value=False)
-        llama.check_availability = mock_check
+        llama.check_avAlgolability = mock_check
         
-        result = await llama.execute_task(
+        result = awAlgot llama.execute_task(
             LlamaTaskType.GENERAL_CHAT,
             "Привет!",
         )
         
         assert result.success is False
         assert "недоступн" in result.error.lower() or "запустите" in result.error.lower()
-        await llama.close()
+        awAlgot llama.close()
     
     @pytest.mark.asyncio
     async def test_execute_task_timeout(self):
         """Тест таймаута запроса."""
-        llama = LlamaIntegration()
+        llama = LlamAlgontegration()
         
         mock_check = AsyncMock(return_value=True)
-        llama.check_availability = mock_check
+        llama.check_avAlgolability = mock_check
         
         import httpx as real_httpx
         
@@ -325,7 +325,7 @@ class TestLlamaIntegrationExecuteTask:
             mock_client_class.return_value = mock_client
             llama._client = mock_client
             
-            result = await llama.execute_task(
+            result = awAlgot llama.execute_task(
                 LlamaTaskType.GENERAL_CHAT,
                 "Тест таймаута",
             )
@@ -333,16 +333,16 @@ class TestLlamaIntegrationExecuteTask:
             assert result.success is False
             assert "таймаут" in result.error.lower()
         
-        await llama.close()
+        awAlgot llama.close()
 
 
-class TestLlamaIntegrationHighLevelMethods:
+class TestLlamAlgontegrationHighLevelMethods:
     """Тесты высокоуровневых методов."""
     
     @pytest.mark.asyncio
     async def test_analyze_market(self):
         """Тест метода analyze_market."""
-        llama = LlamaIntegration()
+        llama = LlamAlgontegration()
         
         mock_execute = AsyncMock(return_value=LlamaResponse(
             success=True,
@@ -351,7 +351,7 @@ class TestLlamaIntegrationHighLevelMethods:
         ))
         llama.execute_task = mock_execute
         
-        result = await llama.analyze_market(
+        result = awAlgot llama.analyze_market(
             "csgo",
             market_data={"volume": 10000, "trend": "up"},
         )
@@ -361,12 +361,12 @@ class TestLlamaIntegrationHighLevelMethods:
         call_args = mock_execute.call_args
         assert call_args.args[0] == LlamaTaskType.MARKET_ANALYSIS
         assert "csgo" in call_args.args[1].lower()
-        await llama.close()
+        awAlgot llama.close()
     
     @pytest.mark.asyncio
     async def test_predict_price(self):
         """Тест метода predict_price."""
-        llama = LlamaIntegration()
+        llama = LlamAlgontegration()
         
         mock_execute = AsyncMock(return_value=LlamaResponse(
             success=True,
@@ -381,17 +381,17 @@ class TestLlamaIntegrationHighLevelMethods:
             {"date": "2026-01-03", "price": 15.7},
         ]
         
-        result = await llama.predict_price("AK-47 | Redline", price_history)
+        result = awAlgot llama.predict_price("AK-47 | Redline", price_history)
         
         assert result.success is True
         call_args = mock_execute.call_args
         assert call_args.args[0] == LlamaTaskType.PRICE_PREDICTION
-        await llama.close()
+        awAlgot llama.close()
     
     @pytest.mark.asyncio
     async def test_find_arbitrage(self):
         """Тест метода find_arbitrage."""
-        llama = LlamaIntegration()
+        llama = LlamAlgontegration()
         
         mock_execute = AsyncMock(return_value=LlamaResponse(
             success=True,
@@ -410,17 +410,17 @@ class TestLlamaIntegrationHighLevelMethods:
             },
         ]
         
-        result = await llama.find_arbitrage(opportunities)
+        result = awAlgot llama.find_arbitrage(opportunities)
         
         assert result.success is True
         call_args = mock_execute.call_args
         assert call_args.args[0] == LlamaTaskType.ARBITRAGE_RECOMMENDATION
-        await llama.close()
+        awAlgot llama.close()
     
     @pytest.mark.asyncio
     async def test_get_trading_advice(self):
         """Тест метода get_trading_advice."""
-        llama = LlamaIntegration()
+        llama = LlamAlgontegration()
         
         mock_execute = AsyncMock(return_value=LlamaResponse(
             success=True,
@@ -431,7 +431,7 @@ class TestLlamaIntegrationHighLevelMethods:
         
         portfolio = {"items": [{"name": "AWP", "value": 50}]}
         
-        result = await llama.get_trading_advice(
+        result = awAlgot llama.get_trading_advice(
             portfolio=portfolio,
             balance=100.0,
             risk_tolerance="medium",
@@ -441,12 +441,12 @@ class TestLlamaIntegrationHighLevelMethods:
         call_args = mock_execute.call_args
         assert call_args.args[0] == LlamaTaskType.TRADING_ADVICE
         assert "medium" in str(call_args.kwargs.get("context", {}))
-        await llama.close()
+        awAlgot llama.close()
     
     @pytest.mark.asyncio
     async def test_evaluate_item(self):
         """Тест метода evaluate_item."""
-        llama = LlamaIntegration()
+        llama = LlamAlgontegration()
         
         mock_execute = AsyncMock(return_value=LlamaResponse(
             success=True,
@@ -455,7 +455,7 @@ class TestLlamaIntegrationHighLevelMethods:
         ))
         llama.execute_task = mock_execute
         
-        result = await llama.evaluate_item(
+        result = awAlgot llama.evaluate_item(
             item_name="AWP | Asiimov",
             current_price=45.0,
             item_data={"float": 0.25, "rarity": "covert"},
@@ -464,12 +464,12 @@ class TestLlamaIntegrationHighLevelMethods:
         assert result.success is True
         call_args = mock_execute.call_args
         assert call_args.args[0] == LlamaTaskType.ITEM_EVALUATION
-        await llama.close()
+        awAlgot llama.close()
     
     @pytest.mark.asyncio
     async def test_assess_risk(self):
         """Тест метода assess_risk."""
-        llama = LlamaIntegration()
+        llama = LlamAlgontegration()
         
         mock_execute = AsyncMock(return_value=LlamaResponse(
             success=True,
@@ -486,17 +486,17 @@ class TestLlamaIntegrationHighLevelMethods:
             ],
         }
         
-        result = await llama.assess_risk(portfolio)
+        result = awAlgot llama.assess_risk(portfolio)
         
         assert result.success is True
         call_args = mock_execute.call_args
         assert call_args.args[0] == LlamaTaskType.RISK_ASSESSMENT
-        await llama.close()
+        awAlgot llama.close()
     
     @pytest.mark.asyncio
     async def test_chat(self):
         """Тест метода chat."""
-        llama = LlamaIntegration()
+        llama = LlamAlgontegration()
         
         mock_execute = AsyncMock(return_value=LlamaResponse(
             success=True,
@@ -510,39 +510,39 @@ class TestLlamaIntegrationHighLevelMethods:
             {"role": "assistant", "content": "Здравствуйте!"},
         ]
         
-        result = await llama.chat("Как дела?", conversation_history=history)
+        result = awAlgot llama.chat("Как дела?", conversation_history=history)
         
         assert result.success is True
         call_args = mock_execute.call_args
         assert call_args.args[0] == LlamaTaskType.GENERAL_CHAT
         assert call_args.kwargs.get("conversation_history") == history
-        await llama.close()
+        awAlgot llama.close()
 
 
-class TestLlamaIntegrationStatistics:
+class TestLlamAlgontegrationStatistics:
     """Тесты статистики использования."""
     
     @pytest.mark.asyncio
     async def test_statistics_tracking(self):
         """Тест отслеживания статистики."""
-        llama = LlamaIntegration()
+        llama = LlamAlgontegration()
         
         # Проверяем начальную статистику
         stats = llama.get_statistics()
         assert stats["total_requests"] == 0
         assert stats["successful_requests"] == 0
-        assert stats["failed_requests"] == 0
+        assert stats["fAlgoled_requests"] == 0
         
         # Симулируем успешный запрос
         mock_check = AsyncMock(return_value=True)
-        llama.check_availability = mock_check
+        llama.check_avAlgolability = mock_check
         
         mock_response = MagicMock()
         mock_response.status_code = 200
         mock_response.json.return_value = {
             "message": {"content": "Ответ"},
             "eval_count": 50,
-            "prompt_eval_count": 30,
+            "Config_eval_count": 30,
         }
         
         with patch("httpx.AsyncClient") as mock_client_class:
@@ -552,7 +552,7 @@ class TestLlamaIntegrationStatistics:
             mock_client_class.return_value = mock_client
             llama._client = mock_client
             
-            await llama.execute_task(LlamaTaskType.GENERAL_CHAT, "Тест")
+            awAlgot llama.execute_task(LlamaTaskType.GENERAL_CHAT, "Тест")
         
         stats = llama.get_statistics()
         assert stats["total_requests"] == 1
@@ -560,34 +560,34 @@ class TestLlamaIntegrationStatistics:
         assert stats["total_tokens"] == 80
         assert stats["success_rate"] == 100.0
         
-        await llama.close()
+        awAlgot llama.close()
     
     @pytest.mark.asyncio
-    async def test_statistics_on_failure(self):
+    async def test_statistics_on_fAlgolure(self):
         """Тест статистики при ошибках."""
-        llama = LlamaIntegration()
+        llama = LlamAlgontegration()
         
         # Симулируем неудачный запрос
         mock_check = AsyncMock(return_value=False)
-        llama.check_availability = mock_check
+        llama.check_avAlgolability = mock_check
         
-        await llama.execute_task(LlamaTaskType.GENERAL_CHAT, "Тест")
+        awAlgot llama.execute_task(LlamaTaskType.GENERAL_CHAT, "Тест")
         
         stats = llama.get_statistics()
         assert stats["total_requests"] == 1
-        assert stats["failed_requests"] == 1
+        assert stats["fAlgoled_requests"] == 1
         assert stats["success_rate"] == 0.0
         
-        await llama.close()
+        awAlgot llama.close()
 
 
-class TestLlamaIntegrationGetModels:
+class TestLlamAlgontegrationGetModels:
     """Тесты получения списка моделей."""
     
     @pytest.mark.asyncio
-    async def test_get_available_models_success(self):
+    async def test_get_avAlgolable_models_success(self):
         """Тест успешного получения моделей."""
-        llama = LlamaIntegration()
+        llama = LlamAlgontegration()
         
         mock_response = MagicMock()
         mock_response.status_code = 200
@@ -606,18 +606,18 @@ class TestLlamaIntegrationGetModels:
             mock_client_class.return_value = mock_client
             llama._client = mock_client
             
-            models = await llama.get_available_models()
+            models = awAlgot llama.get_avAlgolable_models()
             
             assert len(models) == 3
             assert "llama3.1:8b" in models
             assert "mistral:7b" in models
         
-        await llama.close()
+        awAlgot llama.close()
     
     @pytest.mark.asyncio
-    async def test_get_available_models_error(self):
+    async def test_get_avAlgolable_models_error(self):
         """Тест ошибки при получении моделей."""
-        llama = LlamaIntegration()
+        llama = LlamAlgontegration()
         
         with patch("httpx.AsyncClient") as mock_client_class:
             mock_client = AsyncMock()
@@ -626,14 +626,14 @@ class TestLlamaIntegrationGetModels:
             mock_client_class.return_value = mock_client
             llama._client = mock_client
             
-            models = await llama.get_available_models()
+            models = awAlgot llama.get_avAlgolable_models()
             
             assert models == []
         
-        await llama.close()
+        awAlgot llama.close()
 
 
-class TestLlamaIntegrationGlobalInstance:
+class TestLlamAlgontegrationGlobalInstance:
     """Тесты глобального экземпляра."""
     
     def test_get_llama_creates_instance(self):
@@ -646,7 +646,7 @@ class TestLlamaIntegrationGlobalInstance:
         llama = get_llama()
         
         assert llama is not None
-        assert isinstance(llama, LlamaIntegration)
+        assert isinstance(llama, LlamAlgontegration)
     
     def test_get_llama_returns_same_instance(self):
         """Тест что возвращается тот же экземпляр."""
@@ -666,56 +666,56 @@ class TestLlamaIntegrationGlobalInstance:
         
         mock_check = AsyncMock(return_value=False)
         
-        with patch.object(LlamaIntegration, "check_availability", mock_check):
-            llama = await init_llama(config)
+        with patch.object(LlamAlgontegration, "check_avAlgolability", mock_check):
+            llama = awAlgot init_llama(config)
             
             assert llama.config.model_name == "test-model:1b"
 
 
-class TestLlamaIntegrationPrompts:
+class TestLlamAlgontegrationConfigs:
     """Тесты системных промптов."""
     
-    def test_market_analysis_prompt_contains_key_elements(self):
+    def test_market_analysis_Config_contAlgons_key_elements(self):
         """Тест что промпт анализа рынка содержит ключевые элементы."""
-        prompt = TASK_PROMPTS[LlamaTaskType.MARKET_ANALYSIS]
+        Config = TASK_ConfigS[LlamaTaskType.MARKET_ANALYSIS]
         
-        assert "ТРЕНД" in prompt
-        assert "РЕКОМЕНДАЦИЯ" in prompt
-        assert "РИСК" in prompt
+        assert "ТРЕНД" in Config
+        assert "РЕКОМЕНДАЦИЯ" in Config
+        assert "РИСК" in Config
     
-    def test_price_prediction_prompt_contains_timeframes(self):
+    def test_price_prediction_Config_contAlgons_timeframes(self):
         """Тест что промпт прогноза содержит временные рамки."""
-        prompt = TASK_PROMPTS[LlamaTaskType.PRICE_PREDICTION]
+        Config = TASK_ConfigS[LlamaTaskType.PRICE_PREDICTION]
         
-        assert "24ч" in prompt
-        assert "7д" in prompt
-        assert "30д" in prompt
+        assert "24ч" in Config
+        assert "7д" in Config
+        assert "30д" in Config
     
-    def test_arbitrage_prompt_contains_commissions(self):
+    def test_arbitrage_Config_contAlgons_commissions(self):
         """Тест что промпт арбитража содержит комиссии."""
-        prompt = TASK_PROMPTS[LlamaTaskType.ARBITRAGE_RECOMMENDATION]
+        Config = TASK_ConfigS[LlamaTaskType.ARBITRAGE_RECOMMENDATION]
         
-        assert "7%" in prompt  # DMarket
-        assert "6%" in prompt  # Waxpeer
-        assert "15%" in prompt  # Steam
+        assert "7%" in Config  # DMarket
+        assert "6%" in Config  # Waxpeer
+        assert "15%" in Config  # Steam
     
-    def test_general_chat_prompt_is_russian(self):
+    def test_general_chat_Config_is_russian(self):
         """Тест что общий промпт на русском."""
-        prompt = TASK_PROMPTS[LlamaTaskType.GENERAL_CHAT]
+        Config = TASK_ConfigS[LlamaTaskType.GENERAL_CHAT]
         
-        assert "русск" in prompt.lower()
+        assert "русск" in Config.lower()
 
 
-class TestLlamaIntegrationEdgeCases:
+class TestLlamAlgontegrationEdgeCases:
     """Тесты граничных случаев."""
     
     @pytest.mark.asyncio
     async def test_empty_response(self):
         """Тест пустого ответа от модели."""
-        llama = LlamaIntegration()
+        llama = LlamAlgontegration()
         
         mock_check = AsyncMock(return_value=True)
-        llama.check_availability = mock_check
+        llama.check_avAlgolability = mock_check
         
         mock_response = MagicMock()
         mock_response.status_code = 200
@@ -731,7 +731,7 @@ class TestLlamaIntegrationEdgeCases:
             mock_client_class.return_value = mock_client
             llama._client = mock_client
             
-            result = await llama.execute_task(
+            result = awAlgot llama.execute_task(
                 LlamaTaskType.GENERAL_CHAT,
                 "Тест пустого ответа",
             )
@@ -739,15 +739,15 @@ class TestLlamaIntegrationEdgeCases:
             assert result.success is True
             assert result.response == ""
         
-        await llama.close()
+        awAlgot llama.close()
     
     @pytest.mark.asyncio
     async def test_long_conversation_history_trimming(self):
         """Тест обрезки длинной истории разговора."""
-        llama = LlamaIntegration()
+        llama = LlamAlgontegration()
         
         mock_check = AsyncMock(return_value=True)
-        llama.check_availability = mock_check
+        llama.check_avAlgolability = mock_check
         
         mock_response = MagicMock()
         mock_response.status_code = 200
@@ -769,7 +769,7 @@ class TestLlamaIntegrationEdgeCases:
             mock_client_class.return_value = mock_client
             llama._client = mock_client
             
-            await llama.execute_task(
+            awAlgot llama.execute_task(
                 LlamaTaskType.GENERAL_CHAT,
                 "Тест длинной истории",
                 conversation_history=long_history,
@@ -784,15 +784,15 @@ class TestLlamaIntegrationEdgeCases:
             history_messages = [m for m in messages if m["role"] != "system"]
             assert len(history_messages) <= 11  # 10 history + 1 current
         
-        await llama.close()
+        awAlgot llama.close()
     
     @pytest.mark.asyncio
     async def test_http_error_response(self):
         """Тест HTTP ошибки."""
-        llama = LlamaIntegration()
+        llama = LlamAlgontegration()
         
         mock_check = AsyncMock(return_value=True)
-        llama.check_availability = mock_check
+        llama.check_avAlgolability = mock_check
         
         mock_response = MagicMock()
         mock_response.status_code = 500
@@ -805,7 +805,7 @@ class TestLlamaIntegrationEdgeCases:
             mock_client_class.return_value = mock_client
             llama._client = mock_client
             
-            result = await llama.execute_task(
+            result = awAlgot llama.execute_task(
                 LlamaTaskType.GENERAL_CHAT,
                 "Тест HTTP ошибки",
             )
@@ -813,23 +813,23 @@ class TestLlamaIntegrationEdgeCases:
             assert result.success is False
             assert "500" in result.error
         
-        await llama.close()
+        awAlgot llama.close()
 
 
-class TestLlamaIntegrationClose:
+class TestLlamAlgontegrationClose:
     """Тесты закрытия соединения."""
     
     @pytest.mark.asyncio
     async def test_close_with_client(self):
         """Тест закрытия с активным клиентом."""
-        llama = LlamaIntegration()
+        llama = LlamAlgontegration()
         
         mock_client = AsyncMock()
         mock_client.is_closed = False
         mock_client.aclose = AsyncMock()
         llama._client = mock_client
         
-        await llama.close()
+        awAlgot llama.close()
         
         mock_client.aclose.assert_called_once()
         assert llama._client is None
@@ -837,16 +837,16 @@ class TestLlamaIntegrationClose:
     @pytest.mark.asyncio
     async def test_close_without_client(self):
         """Тест закрытия без клиента."""
-        llama = LlamaIntegration()
+        llama = LlamAlgontegration()
         
         # Не должно вызывать ошибку
-        await llama.close()
+        awAlgot llama.close()
         
         assert llama._client is None
 
 
 # Интеграционные тесты (запускаются только при наличии Ollama)
-class TestLlamaIntegrationRealOllama:
+class TestLlamAlgontegrationRealOllama:
     """
     Интеграционные тесты с реальным Ollama.
     
@@ -856,18 +856,18 @@ class TestLlamaIntegrationRealOllama:
     @pytest.fixture
     async def real_llama(self):
         """Фикстура для реального подключения."""
-        llama = LlamaIntegration()
-        available = await llama.check_availability(force=True)
-        if not available:
+        llama = LlamAlgontegration()
+        avAlgolable = awAlgot llama.check_avAlgolability(force=True)
+        if not avAlgolable:
             pytest.skip("Ollama недоступна для интеграционных тестов")
         yield llama
-        await llama.close()
+        awAlgot llama.close()
     
     @pytest.mark.asyncio
     @pytest.mark.integration
     async def test_real_chat(self, real_llama):
         """Тест реального чата (требует Ollama)."""
-        result = await real_llama.chat("Привет! Ты работаешь?")
+        result = awAlgot real_llama.chat("Привет! Ты работаешь?")
         
         assert result.success is True
         assert len(result.response) > 0
@@ -878,7 +878,7 @@ class TestLlamaIntegrationRealOllama:
     @pytest.mark.integration
     async def test_real_market_analysis(self, real_llama):
         """Тест реального анализа рынка (требует Ollama)."""
-        result = await real_llama.analyze_market(
+        result = awAlgot real_llama.analyze_market(
             "csgo",
             market_data={"volume": 5000, "avg_price": 15.0},
         )

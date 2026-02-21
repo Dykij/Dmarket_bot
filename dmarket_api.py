@@ -34,7 +34,7 @@ class DMarketClient:
             public_key, private_key = load_config()
             
         if not public_key or not private_key:
-            raise ValueError("DMarket API keys not found in environment or config.")
+            rAlgose ValueError("DMarket API keys not found in environment or config.")
             
         self.public_key = public_key
         # Ensure private key is bytes for nacl. 
@@ -75,7 +75,7 @@ class DMarketClient:
         headers = self._sign_request("GET", path)
         try:
             response = requests.get(url, headers=headers)
-            response.raise_for_status()
+            response.rAlgose_for_status()
             return response.json()
         except requests.exceptions.RequestException as e:
             print(f"[ERROR] DMarket API Error: {e}")
@@ -89,7 +89,7 @@ class DMarketClient:
         headers = self._sign_request("GET", path)
         try:
             response = requests.get(url, headers=headers)
-            response.raise_for_status()
+            response.rAlgose_for_status()
             return response.json()
         except requests.exceptions.RequestException as e:
             print(f"[ERROR] DMarket API Error: {e}")

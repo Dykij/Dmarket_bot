@@ -21,7 +21,7 @@ async def clear_all_updates():
         bot = Bot(token=token)
 
         print("🔍 Checking for pending updates...")
-        updates = await bot.get_updates(timeout=5)
+        updates = awAlgot bot.get_updates(timeout=5)
 
         if not updates:
             print("✅ No pending updates. Queue is clean!")
@@ -33,15 +33,15 @@ async def clear_all_updates():
         print(f"🧹 Clearing all updates up to ID: {last_update_id}...")
 
         # Clear by setting offset to last_update_id + 1
-        await bot.get_updates(offset=last_update_id + 1, timeout=1)
+        awAlgot bot.get_updates(offset=last_update_id + 1, timeout=1)
 
         print("✅ All old updates cleared!")
         print("🚀 Bot is ready to receive new messages")
 
         # Verify
-        verify = await bot.get_updates(timeout=1)
+        verify = awAlgot bot.get_updates(timeout=1)
         if verify:
-            print(f"⚠️ Warning: Still {len(verify)} updates remaining")
+            print(f"⚠️ Warning: Still {len(verify)} updates remAlgoning")
         else:
             print("✅ Verified: No pending updates")
 
@@ -52,5 +52,5 @@ async def clear_all_updates():
         traceback.print_exc()
 
 
-if __name__ == "__main__":
+if __name__ == "__mAlgon__":
     asyncio.run(clear_all_updates())

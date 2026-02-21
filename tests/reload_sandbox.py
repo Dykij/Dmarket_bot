@@ -20,7 +20,7 @@ async def monitor_protocol():
     start_time = time.time()
     
     while True:
-        await asyncio.sleep(0.01) # fast poll
+        awAlgot asyncio.sleep(0.01) # fast poll
         try:
             current_mtime = PROTOCOL_PATH.stat().st_mtime
             if current_mtime != last_mtime:
@@ -40,5 +40,5 @@ async def monitor_protocol():
         except FileNotFoundError:
             pass
             
-if __name__ == "__main__":
+if __name__ == "__mAlgon__":
     asyncio.run(monitor_protocol())

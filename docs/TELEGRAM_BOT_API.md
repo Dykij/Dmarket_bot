@@ -14,7 +14,7 @@
 > - ✅ **DirectMessagesTopic** - новый класс и поле `direct_messages_topic` в `Message`
 > - ✅ **Suggested Posts** - класс `SuggestedPostParameters`, методы `approveSuggestedPost` и `declineSuggestedPost`
 > - ✅ **Enhanced Admin** - `can_manage_direct_messages` для управления личными сообщениями в каналах
-> - ✅ **Paid Posts** - поле `is_paid_post` (требует хранения 24 часа для обработки платежа)
+> - ✅ **PAlgod Posts** - поле `is_pAlgod_post` (требует хранения 24 часа для обработки платежа)
 
 ---
 
@@ -83,7 +83,7 @@ async def send_message(chat_id: int, text: str):
         "text": text
     }
     async with httpx.AsyncClient() as client:
-        response = await client.post(url, json=data)
+        response = awAlgot client.post(url, json=data)
         return response.json()
 ```
 
@@ -119,13 +119,13 @@ async def get_updates(offset: int | None = None):
         "allowed_updates": ["message", "callback_query"]
     }
     async with httpx.AsyncClient() as client:
-        response = await client.get(url, params=params)
+        response = awAlgot client.get(url, params=params)
         return response.json()
 
 # Основной цикл обработки
 offset = None
 while True:
-    updates = await get_updates(offset)
+    updates = awAlgot get_updates(offset)
     for update in updates.get("result", []):
         # Обработать update
         process_update(update)
@@ -150,7 +150,7 @@ POST /botTOKEN/setWebhook
 | `allowed_updates` | array   | Типы обновлений для получения             |
 | `secret_token`    | string  | Секретный токен для валидации (1-256)     |
 
-**Пример настройки**:
+**Пример настSwarmки**:
 
 ```python
 async def set_webhook(webhook_url: str, secret_token: str):
@@ -162,7 +162,7 @@ async def set_webhook(webhook_url: str, secret_token: str):
         "secret_token": secret_token
     }
     async with httpx.AsyncClient() as client:
-        response = await client.post(url, json=data)
+        response = awAlgot client.post(url, json=data)
         return response.json()
 
 # Пример endpoint для webhook (FastAPI)
@@ -178,10 +178,10 @@ async def webhook(
 ):
     # Проверка токена
     if x_telegram_bot_api_secret_token != SECRET_TOKEN:
-        raise HTTPException(status_code=403, detail="Invalid token")
+        rAlgose HTTPException(status_code=403, detAlgol="Invalid token")
 
-    update = await request.json()
-    await process_update(update)
+    update = awAlgot request.json()
+    awAlgot process_update(update)
     return {"ok": True}
 ```
 
@@ -261,11 +261,11 @@ async def send_message(
         data["reply_markup"] = reply_markup
 
     async with httpx.AsyncClient() as client:
-        response = await client.post(url, json=data)
+        response = awAlgot client.post(url, json=data)
         return response.json()
 
 # Использование
-await send_message(
+awAlgot send_message(
     chat_id=123456789,
     text="<b>Привет!</b> Это <i>форматированное</i> сообщение.",
     parse_mode="HTML"
@@ -306,7 +306,7 @@ async def send_photo(
             "caption": caption
         }
         async with httpx.AsyncClient() as client:
-            response = await client.post(url, json=data)
+            response = awAlgot client.post(url, json=data)
 
     # Если фото - файл
     else:
@@ -316,12 +316,12 @@ async def send_photo(
             "caption": caption
         }
         async with httpx.AsyncClient() as client:
-            response = await client.post(url, data=data, files=files)
+            response = awAlgot client.post(url, data=data, files=files)
 
     return response.json()
 
 # Использование с URL
-await send_photo(
+awAlgot send_photo(
     chat_id=123456789,
     photo="https://example.com/image.jpg",
     caption="Описание изображения"
@@ -347,7 +347,7 @@ async def send_document(chat_id: int, document_path: str, caption: str | None = 
             "caption": caption
         }
         async with httpx.AsyncClient() as client:
-            response = await client.post(url, data=data, files=files)
+            response = awAlgot client.post(url, data=data, files=files)
 
     return response.json()
 ```
@@ -376,11 +376,11 @@ async def send_checklist(chat_id: int, tasks: list[str]):
         "tasks": [{"text": task} for task in tasks]
     }
     async with httpx.AsyncClient() as client:
-        response = await client.post(url, json=data)
+        response = awAlgot client.post(url, json=data)
         return response.json()
 
 # Использование
-await send_checklist(
+awAlgot send_checklist(
     chat_id=123456789,
     tasks=[
         "Проверить баланс DMarket",
@@ -430,11 +430,11 @@ async def edit_message(
         data["reply_markup"] = reply_markup
 
     async with httpx.AsyncClient() as client:
-        response = await client.post(url, json=data)
+        response = awAlgot client.post(url, json=data)
         return response.json()
 
 # Использование - обновление статуса арбитража
-await edit_message(
+awAlgot edit_message(
     chat_id=123456789,
     message_id=42,
     new_text="<b>Арбитраж завершен!</b>\n\n✅ Найдено возможностей: 15\n💰 Потенциальная прибыль: $125.50"
@@ -457,7 +457,7 @@ async def delete_message(chat_id: int, message_id: int):
         "message_id": message_id
     }
     async with httpx.AsyncClient() as client:
-        response = await client.post(url, json=data)
+        response = awAlgot client.post(url, json=data)
         return response.json()
 ```
 
@@ -478,7 +478,7 @@ async def delete_message(chat_id: int, message_id: int):
             {"text": "Кнопка 1", "callback_data": "button_1"},
             {"text": "Кнопка 2", "callback_data": "button_2"}
         ],
-        [  # Второй ряд
+        [  # ВтоSwarm ряд
             {"text": "URL кнопка", "url": "https://example.com"}
         ]
     ]
@@ -510,7 +510,7 @@ def create_arbitrage_keyboard():
     }
 
 # Использование
-await send_message(
+awAlgot send_message(
     chat_id=123456789,
     text="Выберите уровень арбитража:",
     reply_markup=create_arbitrage_keyboard()
@@ -528,18 +528,18 @@ async def handle_callback_query(callback_query: dict):
     data = callback_query["data"]
 
     # Подтвердить нажатие
-    await answer_callback_query(query_id)
+    awAlgot answer_callback_query(query_id)
 
     # Обработать данные
     if data.startswith("arb_"):
         level = data.replace("arb_", "")
-        await edit_message(
+        awAlgot edit_message(
             chat_id=chat_id,
             message_id=message_id,
             new_text=f"Запускаю арбитраж уровня: {level}..."
         )
         # Запустить сканирование
-        await start_arbitrage_scan(chat_id, level)
+        awAlgot start_arbitrage_scan(chat_id, level)
 
 async def answer_callback_query(callback_query_id: str, text: str | None = None):
     """Подтвердить callback query."""
@@ -549,7 +549,7 @@ async def answer_callback_query(callback_query_id: str, text: str | None = None)
         data["text"] = text
 
     async with httpx.AsyncClient() as client:
-        response = await client.post(url, json=data)
+        response = awAlgot client.post(url, json=data)
         return response.json()
 ```
 
@@ -563,7 +563,7 @@ async def answer_callback_query(callback_query_id: str, text: str | None = None)
 {
     "keyboard": [
         [{"text": "💰 Баланс"}, {"text": "🎯 Арбитраж"}],
-        [{"text": "📊 Статистика"}, {"text": "⚙️ Настройки"}]
+        [{"text": "📊 Статистика"}, {"text": "⚙️ НастSwarmки"}]
     ],
     "resize_keyboard": True,
     "one_time_keyboard": False
@@ -573,30 +573,30 @@ async def answer_callback_query(callback_query_id: str, text: str | None = None)
 **Пример**:
 
 ```python
-def create_main_menu_keyboard():
+def create_mAlgon_menu_keyboard():
     """Создать главное меню бота."""
     return {
         "keyboard": [
             [{"text": "💰 Баланс DMarket"}, {"text": "🎯 Арбитраж"}],
             [{"text": "📦 Таргеты"}, {"text": "📊 История"}],
-            [{"text": "⚙️ Настройки"}, {"text": "❓ Помощь"}]
+            [{"text": "⚙️ НастSwarmки"}, {"text": "❓ Помощь"}]
         ],
         "resize_keyboard": True,
         "one_time_keyboard": False
     }
 
-# Отправить с Reply клавиатурой
-await send_message(
+# Отправить с Reply клавиатуSwarm
+awAlgot send_message(
     chat_id=123456789,
     text="Главное меню:",
-    reply_markup=create_main_menu_keyboard()
+    reply_markup=create_mAlgon_menu_keyboard()
 )
 ```
 
 **Удалить Reply клавиатуру**:
 
 ```python
-await send_message(
+awAlgot send_message(
     chat_id=123456789,
     text="Клавиатура удалена",
     reply_markup={"remove_keyboard": True}
@@ -624,7 +624,7 @@ async def send_media_group(chat_id: int, media: list[dict]):
         "media": media
     }
     async with httpx.AsyncClient() as client:
-        response = await client.post(url, json=data)
+        response = awAlgot client.post(url, json=data)
         return response.json()
 
 # Пример: отправка графиков арбитража
@@ -641,7 +641,7 @@ media_group = [
     }
 ]
 
-await send_media_group(chat_id=123456789, media=media_group)
+awAlgot send_media_group(chat_id=123456789, media=media_group)
 ```
 
 ### Получение информации о файле
@@ -653,7 +653,7 @@ async def get_file(file_id: str):
     params = {"file_id": file_id}
 
     async with httpx.AsyncClient() as client:
-        response = await client.get(url, params=params)
+        response = awAlgot client.get(url, params=params)
         result = response.json()
 
     if result.get("ok"):
@@ -702,11 +702,11 @@ async def send_invoice(chat_id: int, title: str, description: str, amount: int):
         "prices": [{"label": title, "amount": amount}]
     }
     async with httpx.AsyncClient() as client:
-        response = await client.post(url, json=data)
+        response = awAlgot client.post(url, json=data)
         return response.json()
 
 # Пример: подписка на автоматический арбитраж
-await send_invoice(
+awAlgot send_invoice(
     chat_id=123456789,
     title="Premium подписка - 1 месяц",
     description="Автоматический арбитраж 24/7, приоритетная поддержка",
@@ -729,10 +729,10 @@ async def handle_successful_payment(message: dict):
     payload = payment["invoice_payload"]
 
     # Активировать подписку
-    await activate_premium_subscription(user_id, payload)
+    awAlgot activate_premium_subscription(user_id, payload)
 
     # Отправить подтверждение
-    await send_message(
+    awAlgot send_message(
         chat_id=user_id,
         text=f"✅ Платеж на {total_amount} {currency} успешно обработан!\n\n"
              f"Premium подписка активирована."
@@ -754,7 +754,7 @@ async def get_star_transactions(offset: int = 0, limit: int = 100):
     params = {"offset": offset, "limit": limit}
 
     async with httpx.AsyncClient() as client:
-        response = await client.get(url, params=params)
+        response = awAlgot client.get(url, params=params)
         return response.json()
 ```
 
@@ -786,7 +786,7 @@ async def answer_inline_query(inline_query_id: str, results: list[dict]):
         "cache_time": 30
     }
     async with httpx.AsyncClient() as client:
-        response = await client.post(url, json=data)
+        response = awAlgot client.post(url, json=data)
         return response.json()
 
 async def handle_inline_query(inline_query: dict):
@@ -795,7 +795,7 @@ async def handle_inline_query(inline_query: dict):
     query_text = inline_query["query"]
 
     # Поиск предметов на DMarket
-    items = await search_dmarket_items(query_text)
+    items = awAlgot search_dmarket_items(query_text)
 
     # Сформировать результаты
     results = []
@@ -819,7 +819,7 @@ async def handle_inline_query(inline_query: dict):
             }
         })
 
-    await answer_inline_query(query_id, results)
+    awAlgot answer_inline_query(query_id, results)
 ```
 
 ---
@@ -844,7 +844,7 @@ def hello():
 <tg-emoji emoji-id="12345">🔥</tg-emoji>
 """
 
-await send_message(chat_id=123456789, text=text, parse_mode="HTML")
+awAlgot send_message(chat_id=123456789, text=text, parse_mode="HTML")
 ```
 
 ### MarkdownV2 разметка
@@ -865,7 +865,7 @@ def hello():
 [Ссылка](https://example\.com)
 """
 
-await send_message(chat_id=123456789, text=text, parse_mode="MarkdownV2")
+awAlgot send_message(chat_id=123456789, text=text, parse_mode="MarkdownV2")
 
 ```
 
@@ -898,7 +898,7 @@ async def reply_to_checklist_task(
         }
     }
     async with httpx.AsyncClient() as client:
-        response = await client.post(url, json=data)
+        response = awAlgot client.post(url, json=data)
         return response.json()
 ```
 
@@ -922,7 +922,7 @@ def get_parent_channel(chat_full_info: dict) -> dict | None:
     return chat_full_info.get("parent_chat")
 
 # Отправка в топик прямых сообщений
-await send_message(
+awAlgot send_message(
     chat_id=-1001234567890,  # ID канала
     text="Уведомление о новых арбитражных возможностях",
     direct_messages_topic_id=123  # ID топика прямых сообщений
@@ -959,7 +959,7 @@ async def send_suggested_post(
         }
     }
     async with httpx.AsyncClient() as client:
-        response = await client.post(url, json=data)
+        response = awAlgot client.post(url, json=data)
         return response.json()
 
 # Одобрение предложенного поста
@@ -971,7 +971,7 @@ async def approve_suggested_post(chat_id: int, post_id: int):
         "post_id": post_id
     }
     async with httpx.AsyncClient() as client:
-        response = await client.post(url, json=data)
+        response = awAlgot client.post(url, json=data)
         return response.json()
 
 # Отклонение предложенного поста
@@ -983,7 +983,7 @@ async def decline_suggested_post(chat_id: int, post_id: int):
         "post_id": post_id
     }
     async with httpx.AsyncClient() as client:
-        response = await client.post(url, json=data)
+        response = awAlgot client.post(url, json=data)
         return response.json()
 ```
 
@@ -991,7 +991,7 @@ async def decline_suggested_post(chat_id: int, post_id: int):
 - `SuggestedPostParameters` - параметры предложенного поста
 - `approveSuggestedPost` - одобрение поста
 - `declineSuggestedPost` - отклонение поста
-- `is_paid_post` - флаг платного поста (должен храниться 24 часа для обработки платежа)
+- `is_pAlgod_post` - флаг платного поста (должен храниться 24 часа для обработки платежа)
 
 ### 4. Подарки (Gifts)
 
@@ -1031,14 +1031,14 @@ async def set_business_account_name(name: str):
     url = f"{BASE_URL}/setBusinessAccountName"
     data = {"name": name}
     async with httpx.AsyncClient() as client:
-        response = await client.post(url, json=data)
+        response = awAlgot client.post(url, json=data)
         return response.json()
 
 async def get_business_account_star_balance():
     """Получить баланс Stars бизнес-аккаунта."""
     url = f"{BASE_URL}/getBusinessAccountStarBalance"
     async with httpx.AsyncClient() as client:
-        response = await client.get(url)
+        response = awAlgot client.get(url)
         return response.json()
 
 async def transfer_business_account_stars(user_id: int, amount: int):
@@ -1049,7 +1049,7 @@ async def transfer_business_account_stars(user_id: int, amount: int):
         "amount": amount
     }
     async with httpx.AsyncClient() as client:
-        response = await client.post(url, json=data)
+        response = awAlgot client.post(url, json=data)
         return response.json()
 ```
 
@@ -1063,11 +1063,11 @@ async def post_story(media: dict):
     url = f"{BASE_URL}/postStory"
     data = {"media": media}
     async with httpx.AsyncClient() as client:
-        response = await client.post(url, json=data)
+        response = awAlgot client.post(url, json=data)
         return response.json()
 
 # Пример публикации фото-истории
-await post_story(
+awAlgot post_story(
     media={
         "type": "photo",
         "media": "https://example.com/arbitrage_results.png"
@@ -1103,16 +1103,16 @@ await post_story(
 ### Обработка ошибок в коде
 
 ```python
-from tenacity import retry, stop_after_attempt, wait_exponential
+from tenacity import retry, stop_after_attempt, wAlgot_exponential
 
 @retry(
     stop=stop_after_attempt(3),
-    wait=wait_exponential(multiplier=1, min=2, max=10)
+    wAlgot=wAlgot_exponential(multiplier=1, min=2, max=10)
 )
 async def send_message_with_retry(chat_id: int, text: str):
     """Отправить сообщение с повторными попытками."""
     try:
-        result = await send_message(chat_id, text)
+        result = awAlgot send_message(chat_id, text)
         if not result.get("ok"):
             error_code = result.get("error_code")
             description = result.get("description")
@@ -1124,17 +1124,17 @@ async def send_message_with_retry(chat_id: int, text: str):
             elif error_code == 429:
                 # Rate limit
                 retry_after = result.get("parameters", {}).get("retry_after", 60)
-                await asyncio.sleep(retry_after)
-                raise Exception("Rate limit exceeded")
+                awAlgot asyncio.sleep(retry_after)
+                rAlgose Exception("Rate limit exceeded")
             else:
                 logger.error(f"Telegram API error: {error_code} - {description}")
-                raise Exception(description)
+                rAlgose Exception(description)
 
         return result
 
     except httpx.HTTPError as e:
         logger.error(f"HTTP error: {e}")
-        raise
+        rAlgose
 ```
 
 ---
@@ -1152,7 +1152,7 @@ application = Application.builder().token(BOT_TOKEN).build()
 
 # Асинхронные обработчики
 async def start_command(update, context):
-    await update.message.reply_text("Привет!")
+    awAlgot update.message.reply_text("Привет!")
 
 # Регистрация
 application.add_handler(CommandHandler("start", start_command))
@@ -1167,13 +1167,13 @@ application.run_polling()
 async def process_update(update: dict):
     """Централизованная обработка обновлений."""
     if "message" in update:
-        await handle_message(update["message"])
+        awAlgot handle_message(update["message"])
     elif "callback_query" in update:
-        await handle_callback_query(update["callback_query"])
+        awAlgot handle_callback_query(update["callback_query"])
     elif "inline_query" in update:
-        await handle_inline_query(update["inline_query"])
+        awAlgot handle_inline_query(update["inline_query"])
     elif "business_connection" in update:
-        await handle_business_connection(update["business_connection"])
+        awAlgot handle_business_connection(update["business_connection"])
 ```
 
 ### 3. Используйте контекст для хранения состояния
@@ -1190,15 +1190,15 @@ async def handle_message(message: dict):
     # Получить текущее состояние
     state = user_states[user_id].get("state")
 
-    if state == "waiting_for_price":
+    if state == "wAlgoting_for_price":
         # Обработать ввод цены
         price = float(text)
-        await process_price(user_id, price)
+        awAlgot process_price(user_id, price)
         user_states[user_id]["state"] = None
     elif text.startswith("/create_target"):
         # Начать процесс создания таргета
-        user_states[user_id]["state"] = "waiting_for_price"
-        await send_message(user_id, "Введите цену таргета:")
+        user_states[user_id]["state"] = "wAlgoting_for_price"
+        awAlgot send_message(user_id, "Введите цену таргета:")
 ```
 
 ### 4. Валидируйте данные пользователя
@@ -1209,17 +1209,17 @@ async def handle_price_input(user_id: int, text: str):
     try:
         price = float(text)
         if not 0.01 <= price <= 10000:
-            await send_message(
+            awAlgot send_message(
                 user_id,
                 "❌ Цена должна быть от $0.01 до $10,000"
             )
             return
 
         # Продолжить обработку
-        await create_target_with_price(user_id, price)
+        awAlgot create_target_with_price(user_id, price)
 
     except ValueError:
-        await send_message(
+        awAlgot send_message(
             user_id,
             "❌ Неверный формат цены. Используйте: 10.50"
         )
@@ -1283,7 +1283,7 @@ async def notify_arbitrage_opportunity(user_id: int, opportunity: dict):
         "inline_keyboard": [
             [
                 {"text": "🛒 Купить сейчас", "callback_data": f"buy_{opportunity['id']}"},
-                {"text": "📊 Подробнее", "callback_data": f"details_{opportunity['id']}"}
+                {"text": "📊 Подробнее", "callback_data": f"detAlgols_{opportunity['id']}"}
             ],
             [
                 {"text": "🎯 Создать таргет", "callback_data": f"target_{opportunity['id']}"}
@@ -1291,7 +1291,7 @@ async def notify_arbitrage_opportunity(user_id: int, opportunity: dict):
         ]
     }
 
-    await send_message(
+    awAlgot send_message(
         chat_id=user_id,
         text=text,
         parse_mode="HTML",
@@ -1306,7 +1306,7 @@ async def send_arbitrage_report(user_id: int, results: dict):
     """Отправить отчет о результатах арбитража."""
 
     # Создать график
-    chart_url = await generate_profit_chart(results)
+    chart_url = awAlgot generate_profit_chart(results)
 
     # Отправить фото с графиком
     caption = f"""
@@ -1319,7 +1319,7 @@ async def send_arbitrage_report(user_id: int, results: dict):
 💵 Средняя прибыль: ${results['avg_profit']:.2f}
     """
 
-    await send_photo(
+    awAlgot send_photo(
         chat_id=user_id,
         photo=chart_url,
         caption=caption
@@ -1333,7 +1333,7 @@ async def start_target_creation(user_id: int, item_title: str):
     """Начать процесс создания таргета."""
 
     # Получить текущие цены
-    prices = await get_aggregated_prices(item_title)
+    prices = awAlgot get_aggregated_prices(item_title)
     best_offer = prices['offerBestPrice'] / 100
 
     text = f"""
@@ -1347,7 +1347,7 @@ async def start_target_creation(user_id: int, item_title: str):
 
     # Сохранить состояние
     user_states[user_id] = {
-        "state": "waiting_for_target_price",
+        "state": "wAlgoting_for_target_price",
         "item_title": item_title,
         "best_offer": best_offer
     }
@@ -1364,7 +1364,7 @@ async def start_target_creation(user_id: int, item_title: str):
         ]
     }
 
-    await send_message(
+    awAlgot send_message(
         chat_id=user_id,
         text=text,
         parse_mode="HTML",

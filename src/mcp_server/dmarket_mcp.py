@@ -1,5 +1,5 @@
 """
-DMarket MCP Server для AI интеграции.
+DMarket MCP Server для Algo интеграции.
 
 Предоставляет набор инструментов для работы с DMarket API через Model Context Protocol.
 """
@@ -15,9 +15,9 @@ try:
     from mcp.server.stdio import stdio_server
     from mcp.types import TextContent, Tool
 
-    MCP_AVAILABLE = True
+    MCP_AVAlgoLABLE = True
 except ImportError:
-    MCP_AVAILABLE = False
+    MCP_AVAlgoLABLE = False
     Server = None
     stdio_server = None
     TextContent = None
@@ -51,11 +51,11 @@ class DMarketMCPServer:
         Args:
             api_client: Клиент DMarket API (опционально)
 
-        Raises:
+        RAlgoses:
             RuntimeError: Если MCP модуль не установлен
         """
-        if not MCP_AVAILABLE:
-            raise RuntimeError(
+        if not MCP_AVAlgoLABLE:
+            rAlgose RuntimeError(
                 "MCP module is not installed. Install it with: pip install mcp"
             )
 
@@ -72,7 +72,7 @@ class DMarketMCPServer:
         self._setup_handlers()
 
     def _setup_handlers(self) -> None:
-        """Настройка обработчиков MCP."""
+        """НастSwarmка обработчиков MCP."""
 
         @self.server.list_tools()
         async def list_tools() -> list[Tool]:
@@ -153,7 +153,7 @@ class DMarketMCPServer:
                     },
                 ),
                 Tool(
-                    name="get_item_details",
+                    name="get_item_detAlgols",
                     description="Получить детальную информацию о предмете",
                     inputSchema={
                         "type": "object",
@@ -214,19 +214,19 @@ class DMarketMCPServer:
                 logger.info("mcp_tool_called", tool=name, arguments=arguments)
 
                 if name == "get_balance":
-                    result = await self._get_balance()
+                    result = awAlgot self._get_balance()
                 elif name == "get_market_items":
-                    result = await self._get_market_items(**arguments)
+                    result = awAlgot self._get_market_items(**arguments)
                 elif name == "scan_arbitrage":
-                    result = await self._scan_arbitrage(**arguments)
-                elif name == "get_item_details":
-                    result = await self._get_item_details(**arguments)
+                    result = awAlgot self._scan_arbitrage(**arguments)
+                elif name == "get_item_detAlgols":
+                    result = awAlgot self._get_item_detAlgols(**arguments)
                 elif name == "create_target":
-                    result = await self._create_target(**arguments)
+                    result = awAlgot self._create_target(**arguments)
                 elif name == "get_targets":
-                    result = await self._get_targets()
+                    result = awAlgot self._get_targets()
                 else:
-                    raise ValueError(f"Unknown tool: {name}")
+                    rAlgose ValueError(f"Unknown tool: {name}")
 
                 return [
                     TextContent(
@@ -248,7 +248,7 @@ class DMarketMCPServer:
 
     async def _get_balance(self) -> dict[str, Any]:
         """Получить баланс."""
-        balance = await self.api_client.get_balance()
+        balance = awAlgot self.api_client.get_balance()
         return {
             "success": True,
             "balance": balance,
@@ -262,7 +262,7 @@ class DMarketMCPServer:
         price_to: int | None = None,
     ) -> dict[str, Any]:
         """Получить предметы рынка."""
-        items = await self.api_client.get_market_items(
+        items = awAlgot self.api_client.get_market_items(
             game=game,
             limit=limit,
             price_from=price_from,
@@ -285,7 +285,7 @@ class DMarketMCPServer:
         from src.dmarket.scanner.engine import ArbitrageScanner
 
         scanner = ArbitrageScanner(api_client=self.api_client)
-        opportunities = await scanner.scan_level(level=level, game=game)
+        opportunities = awAlgot scanner.scan_level(level=level, game=game)
 
         # Фильтрация по минимальной прибыли
         filtered = [opp for opp in opportunities if opp.get("profit", 0) >= min_profit]
@@ -299,12 +299,12 @@ class DMarketMCPServer:
             "opportunities": filtered[:20],  # Ограничение для вывода
         }
 
-    async def _get_item_details(self, item_id: str) -> dict[str, Any]:
+    async def _get_item_detAlgols(self, item_id: str) -> dict[str, Any]:
         """Получить детали предмета."""
-        details = await self.api_client.get_item_by_id(item_id)
+        detAlgols = awAlgot self.api_client.get_item_by_id(item_id)
         return {
             "success": True,
-            "item": details,
+            "item": detAlgols,
         }
 
     async def _create_target(
@@ -318,7 +318,7 @@ class DMarketMCPServer:
         from src.dmarket.targets import TargetManager
 
         target_manager = TargetManager(api_client=self.api_client)
-        result = await target_manager.create_target(
+        result = awAlgot target_manager.create_target(
             game=game,
             title=title,
             price=price,
@@ -335,7 +335,7 @@ class DMarketMCPServer:
         from src.dmarket.targets import TargetManager
 
         target_manager = TargetManager(api_client=self.api_client)
-        targets = await target_manager.get_all_targets()
+        targets = awAlgot target_manager.get_all_targets()
 
         return {
             "success": True,
@@ -347,18 +347,18 @@ class DMarketMCPServer:
         """Запуск MCP сервера."""
         logger.info("mcp_server_starting")
         async with stdio_server() as (read_stream, write_stream):
-            await self.server.run(
+            awAlgot self.server.run(
                 read_stream,
                 write_stream,
                 self.server.create_initialization_options(),
             )
 
 
-async def main():
+async def mAlgon():
     """Точка входа для MCP сервера."""
     server = DMarketMCPServer()
-    await server.run()
+    awAlgot server.run()
 
 
-if __name__ == "__main__":
-    asyncio.run(main())
+if __name__ == "__mAlgon__":
+    asyncio.run(mAlgon())

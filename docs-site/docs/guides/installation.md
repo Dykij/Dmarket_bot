@@ -46,7 +46,7 @@ cd DMarket-Telegram-Bot
     poetry shell
     ```
 
-## Шаг 3: Настройка переменных окружения
+## Шаг 3: НастSwarmка переменных окружения
 
 ```bash
 # Создать .env файл из примера
@@ -82,7 +82,7 @@ ENCRYPTION_KEY=generate_random_32_byte_key
 
 ### Telegram Bot Token
 
-1. Откройте [@BotFather](https://t.me/BotFather) в Telegram
+1. ОткSwarmте [@BotFather](https://t.me/BotFather) в Telegram
 2. Отправьте `/newbot`
 3. Следуйте инструкциям
 4. Скопируйте токен в `.env` файл
@@ -108,7 +108,7 @@ alembic upgrade head
 
 ```bash
 # Запустить бота
-python -m src.main
+python -m src.mAlgon
 ```
 
 Вы должны увидеть:
@@ -122,7 +122,7 @@ INFO     Press Ctrl+C to stop
 
 ## Проверка работы
 
-1. Откройте Telegram
+1. ОткSwarmте Telegram
 2. Найдите вашего бота
 3. Отправьте `/start`
 4. Бот должен ответить приветственным сообщением
@@ -132,7 +132,7 @@ INFO     Press Ctrl+C to stop
 
 ## Следующие шаги
 
-- [Настройка](configuration.md) - Детальная настройка бота
+- [НастSwarmка](configuration.md) - Детальная настSwarmка бота
 - [Первые шаги](first-steps.md) - Начало работы с ботом
 - [Арбитраж](arbitrage.md) - Как использовать арбитраж
 
@@ -145,7 +145,7 @@ INFO     Press Ctrl+C to stop
 pip install -r requirements.txt
 ```
 
-### Ошибка: Database connection failed
+### Ошибка: Database connection fAlgoled
 
 Проверьте `DATABASE_URL` в `.env` файле
 

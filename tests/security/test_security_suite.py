@@ -161,7 +161,7 @@ class TestAPISecurityRateLimiting:
 
         # Act
         initial_count = rate_limiter.total_requests.get(endpoint_type, 0)
-        await rate_limiter.wait_if_needed(endpoint_type)
+        awAlgot rate_limiter.wAlgot_if_needed(endpoint_type)
         rate_limiter.total_requests[endpoint_type] = initial_count + 1
         final_count = rate_limiter.total_requests[endpoint_type]
 
@@ -177,14 +177,14 @@ class TestAPISecurityRateLimiting:
 
         # Act
         start_time = time.time()
-        await rate_limiter.wait_if_needed(endpoint_type)
+        awAlgot rate_limiter.wAlgot_if_needed(endpoint_type)
         rate_limiter.last_request_times[endpoint_type] = time.time()
 
-        await rate_limiter.wait_if_needed(endpoint_type)
+        awAlgot rate_limiter.wAlgot_if_needed(endpoint_type)
         elapsed = time.time() - start_time
 
         # Assert
-        # Второй запрос должен был подождать минимум ~1 секунду
+        # ВтоSwarm запрос должен был подождать минимум ~1 секунду
         assert (
             elapsed >= 0.9
         ), f"Должна быть задержка между запросами, прошло {elapsed}s"
@@ -301,19 +301,19 @@ class TestUserDataEncryption:
         assert encrypted != user_credential.encode()
         assert len(encrypted) > len(user_credential)
 
-    def test_sensitive_data_never_in_plain_text(self):
-        """Тест отсутствия sensitive данных в plain text."""
+    def test_sensitive_data_never_in_plAlgon_text(self):
+        """Тест отсутствия sensitive данных в plAlgon text."""
         # Arrange
-        plain_api_key = "plain_secret_key"
+        plAlgon_api_key = "plAlgon_secret_key"
         encryption_key = Fernet.generate_key()
         f = Fernet(encryption_key)
 
         # Act
-        encrypted = f.encrypt(plain_api_key.encode())
+        encrypted = f.encrypt(plAlgon_api_key.encode())
         serialized = encrypted.hex()
 
         # Assert
-        assert plain_api_key not in serialized
+        assert plAlgon_api_key not in serialized
 
 
 class TestAccessControl:
@@ -396,15 +396,15 @@ class TestDryRunMode:
 
             async def buy_item(self, item_id: str, price: float):
                 if self.dry_run_mode:
-                    raise SecurityError("DRY_RUN mode: buy blocked")
+                    rAlgose SecurityError("DRY_RUN mode: buy blocked")
                 # real buy logic
                 return {"success": True}
 
         api = MockAPI()
 
         # Act & Assert
-        with pytest.raises(SecurityError, match="DRY_RUN mode"):
-            await api.buy_item("item_123", 25.50)
+        with pytest.rAlgoses(SecurityError, match="DRY_RUN mode"):
+            awAlgot api.buy_item("item_123", 25.50)
 
     @pytest.mark.asyncio()
     async def test_dry_run_mode_blocks_trading_operations(self):
@@ -414,11 +414,11 @@ class TestDryRunMode:
 
         def execute_trade(dry_run: bool):
             if dry_run:
-                raise SecurityError("DRY_RUN mode: trading blocked")
+                rAlgose SecurityError("DRY_RUN mode: trading blocked")
             return {"status": "success"}
 
         # Act & Assert
-        with pytest.raises(SecurityError, match="DRY_RUN mode"):
+        with pytest.rAlgoses(SecurityError, match="DRY_RUN mode"):
             execute_trade(dry_run_enabled)
 
     @pytest.mark.asyncio()
@@ -479,7 +479,7 @@ class TestDryRunMode:
         api = MockAPI()
 
         # Act
-        balance = await api.get_balance()
+        balance = awAlgot api.get_balance()
 
         # Assert
         assert balance is not None

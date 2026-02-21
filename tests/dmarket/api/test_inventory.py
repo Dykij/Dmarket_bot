@@ -1,6 +1,6 @@
 """Unit tests for DMarket API inventory operations module.
 
-This module contains tests for src/dmarket/api/inventory.py covering:
+This module contAlgons tests for src/dmarket/api/inventory.py covering:
 - Getting user inventory
 - Listing inventory items
 - Deposit operations
@@ -61,7 +61,7 @@ class TestGetUserInventory:
         }
 
         # Act
-        result = await inventory_mixin.get_user_inventory()
+        result = awAlgot inventory_mixin.get_user_inventory()
 
         # Assert
         assert result is not None
@@ -79,7 +79,7 @@ class TestGetUserInventory:
         mock_request.return_value = {"objects": [], "total": "0"}
 
         # Act
-        await inventory_mixin.get_user_inventory(game="dota2")
+        awAlgot inventory_mixin.get_user_inventory(game="dota2")
 
         # Assert
         call_args = mock_request.call_args
@@ -94,7 +94,7 @@ class TestGetUserInventory:
         mock_request.return_value = {"objects": [], "total": "0"}
 
         # Act
-        await inventory_mixin.get_user_inventory(limit=50, offset=100)
+        awAlgot inventory_mixin.get_user_inventory(limit=50, offset=100)
 
         # Assert
         call_args = mock_request.call_args
@@ -115,7 +115,7 @@ class TestListUserInventory:
         mock_request.return_value = {"objects": [], "total": "0"}
 
         # Act
-        await inventory_mixin.list_user_inventory()
+        awAlgot inventory_mixin.list_user_inventory()
 
         # Assert
         mock_request.assert_called_once()
@@ -132,7 +132,7 @@ class TestListUserInventory:
         mock_request.return_value = {"objects": [], "total": "0"}
 
         # Act
-        await inventory_mixin.list_user_inventory(game_id="custom_game_id")
+        awAlgot inventory_mixin.list_user_inventory(game_id="custom_game_id")
 
         # Assert
         call_args = mock_request.call_args
@@ -147,7 +147,7 @@ class TestListUserInventory:
         mock_request.return_value = {"objects": [], "total": "0"}
 
         # Act
-        await inventory_mixin.list_user_inventory(limit=25, offset=50)
+        awAlgot inventory_mixin.list_user_inventory(limit=25, offset=50)
 
         # Assert
         call_args = mock_request.call_args
@@ -169,7 +169,7 @@ class TestDepositAssets:
         asset_ids = ["asset_1"]
 
         # Act
-        result = await inventory_mixin.deposit_assets(asset_ids=asset_ids)
+        result = awAlgot inventory_mixin.deposit_assets(asset_ids=asset_ids)
 
         # Assert
         assert result is not None
@@ -184,7 +184,7 @@ class TestDepositAssets:
         asset_ids = ["asset_1", "asset_2", "asset_3"]
 
         # Act
-        await inventory_mixin.deposit_assets(asset_ids=asset_ids)
+        awAlgot inventory_mixin.deposit_assets(asset_ids=asset_ids)
 
         # Assert
         mock_request.assert_called_once()
@@ -199,7 +199,7 @@ class TestDepositAssets:
         mock_request.return_value = {"error": True, "message": "No assets provided"}
 
         # Act
-        await inventory_mixin.deposit_assets(asset_ids=[])
+        awAlgot inventory_mixin.deposit_assets(asset_ids=[])
 
         # Assert
         mock_request.assert_called_once()
@@ -219,7 +219,7 @@ class TestGetDepositStatus:
         deposit_id = "deposit_123"
 
         # Act
-        result = await inventory_mixin.get_deposit_status(deposit_id=deposit_id)
+        result = awAlgot inventory_mixin.get_deposit_status(deposit_id=deposit_id)
 
         # Assert
         assert result is not None
@@ -240,7 +240,7 @@ class TestWithdrawAssets:
         asset_ids = ["asset_1", "asset_2"]
 
         # Act
-        result = await inventory_mixin.withdraw_assets(asset_ids=asset_ids)
+        result = awAlgot inventory_mixin.withdraw_assets(asset_ids=asset_ids)
 
         # Assert
         assert result is not None
@@ -260,7 +260,7 @@ class TestSyncInventory:
         mock_request.return_value = {"success": True, "synced": 10}
 
         # Act
-        result = await inventory_mixin.sync_inventory()
+        result = awAlgot inventory_mixin.sync_inventory()
 
         # Assert
         assert result is not None
@@ -280,7 +280,7 @@ class TestInventoryEdgeCasesExtended:
         mock_request.return_value = {"objects": [], "total": "0"}
 
         # Act
-        result = await inventory_mixin.get_user_inventory()
+        result = awAlgot inventory_mixin.get_user_inventory()
 
         # Assert
         assert result["objects"] == []
@@ -292,7 +292,7 @@ class TestInventoryEdgeCasesExtended:
         mock_request.return_value = {"error": True, "message": "Server error"}
 
         # Act
-        result = await inventory_mixin.get_user_inventory()
+        result = awAlgot inventory_mixin.get_user_inventory()
 
         # Assert
         assert result.get("error") is True
@@ -306,7 +306,7 @@ class TestInventoryEdgeCasesExtended:
 
         # Act & Assert
         for game in games:
-            result = await inventory_mixin.get_user_inventory(game=game)
+            result = awAlgot inventory_mixin.get_user_inventory(game=game)
             assert result is not None
 
 
@@ -331,7 +331,7 @@ class TestDepositAssetsExtended:
         }
 
         # Act
-        result = await inventory_mixin.deposit_assets(asset_ids=asset_ids)
+        result = awAlgot inventory_mixin.deposit_assets(asset_ids=asset_ids)
 
         # Assert
         assert result["success"] is True
@@ -345,7 +345,7 @@ class TestDepositAssetsExtended:
         mock_request.return_value = {"success": False, "error": "No assets"}
 
         # Act
-        result = await inventory_mixin.deposit_assets(asset_ids=[])
+        result = awAlgot inventory_mixin.deposit_assets(asset_ids=[])
 
         # Assert
         assert result is not None
@@ -366,7 +366,7 @@ class TestGetDepositStatusExtended:
         }
 
         # Act
-        result = await inventory_mixin.get_deposit_status(deposit_id=deposit_id)
+        result = awAlgot inventory_mixin.get_deposit_status(deposit_id=deposit_id)
 
         # Assert
         assert result["depositId"] == deposit_id
@@ -380,7 +380,7 @@ class TestGetDepositStatusExtended:
         mock_request.return_value = {"status": "pending"}
 
         # Act
-        result = await inventory_mixin.get_deposit_status(deposit_id="dep_456")
+        result = awAlgot inventory_mixin.get_deposit_status(deposit_id="dep_456")
 
         # Assert
         assert result["status"] == "pending"
@@ -400,7 +400,7 @@ class TestWithdrawAssetsExtended:
         }
 
         # Act
-        result = await inventory_mixin.withdraw_assets(asset_ids=asset_ids)
+        result = awAlgot inventory_mixin.withdraw_assets(asset_ids=asset_ids)
 
         # Assert
         assert result["success"] is True
@@ -415,7 +415,7 @@ class TestWithdrawAssetsExtended:
         mock_request.return_value = {"success": True}
 
         # Act
-        result = await inventory_mixin.withdraw_assets(asset_ids=asset_ids)
+        result = awAlgot inventory_mixin.withdraw_assets(asset_ids=asset_ids)
 
         # Assert
         assert result["success"] is True
@@ -435,7 +435,7 @@ class TestSyncInventoryExtended:
         }
 
         # Act
-        result = await inventory_mixin.sync_inventory()
+        result = awAlgot inventory_mixin.sync_inventory()
 
         # Assert
         assert result["success"] is True
@@ -450,7 +450,7 @@ class TestSyncInventoryExtended:
         mock_request.return_value = {"success": True}
 
         # Act
-        await inventory_mixin.sync_inventory(game="dota2")
+        awAlgot inventory_mixin.sync_inventory(game="dota2")
 
         # Assert
         call_args = mock_request.call_args
@@ -474,7 +474,7 @@ class TestGetAllUserInventory:
         ]
 
         # Act
-        result = await inventory_mixin.get_all_user_inventory(game="csgo")
+        result = awAlgot inventory_mixin.get_all_user_inventory(game="csgo")
 
         # Assert
         assert len(result) == 150
@@ -493,7 +493,7 @@ class TestGetAllUserInventory:
         ]
 
         # Act
-        result = await inventory_mixin.get_all_user_inventory(max_items=120)
+        result = awAlgot inventory_mixin.get_all_user_inventory(max_items=120)
 
         # Assert
         assert len(result) <= 120
@@ -505,7 +505,7 @@ class TestGetAllUserInventory:
         mock_request.return_value = {"items": []}
 
         # Act
-        result = await inventory_mixin.get_all_user_inventory()
+        result = awAlgot inventory_mixin.get_all_user_inventory()
 
         # Assert
         assert result == []
@@ -521,7 +521,7 @@ class TestInventoryEdgeCases:
         mock_request.return_value = {"items": []}
 
         # Act
-        result = await inventory_mixin.get_user_inventory(limit=0)
+        result = awAlgot inventory_mixin.get_user_inventory(limit=0)
 
         # Assert
         assert result is not None
@@ -533,7 +533,7 @@ class TestInventoryEdgeCases:
         mock_request.return_value = {"items": []}
 
         # Act
-        result = await inventory_mixin.get_user_inventory(offset=10000)
+        result = awAlgot inventory_mixin.get_user_inventory(offset=10000)
 
         # Assert
         assert result is not None
@@ -549,7 +549,7 @@ class TestInventoryEdgeCases:
         mock_request.return_value = {"items": []}
 
         # Act
-        await inventory_mixin.list_user_inventory(game_id="b57e")
+        awAlgot inventory_mixin.list_user_inventory(game_id="b57e")
 
         # Assert
         call_args = mock_request.call_args
@@ -563,7 +563,7 @@ class TestInventoryEdgeCases:
         mock_request.return_value = {"success": True}
 
         # Act
-        result = await inventory_mixin.deposit_assets(
+        result = awAlgot inventory_mixin.deposit_assets(
             asset_ids=["asset1"],
             metadata={"source": "test"},
         )
@@ -578,7 +578,7 @@ class TestInventoryEdgeCases:
         mock_request.return_value = {"success": True}
 
         # Act
-        result = await inventory_mixin.withdraw_assets(asset_ids=["single_asset"])
+        result = awAlgot inventory_mixin.withdraw_assets(asset_ids=["single_asset"])
 
         # Assert
         assert result["success"] is True

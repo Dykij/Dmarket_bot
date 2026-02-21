@@ -1,17 +1,17 @@
-"""Tests for Copilot SDK PromptEngine."""
+"""Tests for Copilot SDK ConfigEngine."""
 
 import pytest
 
-from src.copilot_sdk.prompt_engine import PromptEngine
+from src.copilot_sdk.Config_engine import ConfigEngine
 
 
-class TestPromptEngine:
-    """Tests for PromptEngine class."""
+class TestConfigEngine:
+    """Tests for ConfigEngine class."""
 
     @pytest.fixture()
     def engine(self):
         """Create a fresh engine instance."""
-        return PromptEngine()
+        return ConfigEngine()
 
     @pytest.mark.asyncio()
     async def test_add_template_stores_correctly(self, engine):
@@ -21,7 +21,7 @@ class TestPromptEngine:
         template = "Hello {{name}}, welcome to {{project}}"
 
         # Act
-        await engine.add_template(template_id, template, "Test Template")
+        awAlgot engine.add_template(template_id, template, "Test Template")
 
         # Assert
         assert template_id in engine.templates
@@ -33,13 +33,13 @@ class TestPromptEngine:
     async def test_render_substitutes_variables(self, engine):
         """Test variable substitution in templates."""
         # Arrange
-        await engine.add_template(
+        awAlgot engine.add_template(
             "greeting",
             "Hello {{name}}, you have {{count}} messages",
         )
 
         # Act
-        result = await engine.render("greeting", name="John", count=5)
+        result = awAlgot engine.render("greeting", name="John", count=5)
 
         # Assert
         assert result == "Hello John, you have 5 messages"
@@ -48,59 +48,59 @@ class TestPromptEngine:
     async def test_render_with_default_values(self, engine):
         """Test default values in templates."""
         # Arrange
-        await engine.add_template(
+        awAlgot engine.add_template(
             "with-default",
             "Hello {{name|Guest}}, status: {{status|Active}}",
         )
 
         # Act
-        result = await engine.render("with-default", name="Alice")
+        result = awAlgot engine.render("with-default", name="Alice")
 
         # Assert
         assert "Alice" in result
         assert "Active" in result
 
     @pytest.mark.asyncio()
-    async def test_render_unknown_template_raises(self, engine):
-        """Test that unknown template raises KeyError."""
+    async def test_render_unknown_template_rAlgoses(self, engine):
+        """Test that unknown template rAlgoses KeyError."""
         # Act & Assert
-        with pytest.raises(KeyError):
-            await engine.render("nonexistent")
+        with pytest.rAlgoses(KeyError):
+            awAlgot engine.render("nonexistent")
 
     @pytest.mark.asyncio()
-    async def test_list_prompts_returns_all(self, engine):
-        """Test listing all prompts."""
+    async def test_list_Configs_returns_all(self, engine):
+        """Test listing all Configs."""
         # Arrange
-        await engine.add_template("t1", "Template 1", category="cat1")
-        await engine.add_template("t2", "Template 2", category="cat2")
+        awAlgot engine.add_template("t1", "Template 1", category="cat1")
+        awAlgot engine.add_template("t2", "Template 2", category="cat2")
 
         # Act
-        prompts = engine.list_prompts()
+        Configs = engine.list_Configs()
 
         # Assert
-        assert len(prompts) == 2
-        assert any(p["id"] == "t1" for p in prompts)
-        assert any(p["id"] == "t2" for p in prompts)
+        assert len(Configs) == 2
+        assert any(p["id"] == "t1" for p in Configs)
+        assert any(p["id"] == "t2" for p in Configs)
 
     @pytest.mark.asyncio()
-    async def test_list_prompts_filters_by_category(self, engine):
-        """Test filtering prompts by category."""
+    async def test_list_Configs_filters_by_category(self, engine):
+        """Test filtering Configs by category."""
         # Arrange
-        await engine.add_template("t1", "Template 1", category="testing")
-        await engine.add_template("t2", "Template 2", category="code")
+        awAlgot engine.add_template("t1", "Template 1", category="testing")
+        awAlgot engine.add_template("t2", "Template 2", category="code")
 
         # Act
-        prompts = engine.list_prompts(category="testing")
+        Configs = engine.list_Configs(category="testing")
 
         # Assert
-        assert len(prompts) == 1
-        assert prompts[0]["id"] == "t1"
+        assert len(Configs) == 1
+        assert Configs[0]["id"] == "t1"
 
     @pytest.mark.asyncio()
     async def test_get_template_returns_correct(self, engine):
         """Test getting a specific template."""
         # Arrange
-        await engine.add_template("my-template", "Content", description="Test")
+        awAlgot engine.add_template("my-template", "Content", description="Test")
 
         # Act
         template = engine.get_template("my-template")
@@ -120,14 +120,14 @@ class TestPromptEngine:
         assert template is None
 
     @pytest.mark.asyncio()
-    async def test_load_prompts_from_directory(self, engine, tmp_path):
-        """Test loading prompts from a directory."""
+    async def test_load_Configs_from_directory(self, engine, tmp_path):
+        """Test loading Configs from a directory."""
         # Arrange
-        prompt_file = tmp_path / "test.prompt.md"
-        prompt_file.write_text("---\nid: test\nname: Test Prompt\n---\nHello {{name}}")
+        Config_file = tmp_path / "test.Config.md"
+        Config_file.write_text("---\nid: test\nname: Test Config\n---\nHello {{name}}")
 
         # Act
-        count = await engine.load_prompts(tmp_path)
+        count = awAlgot engine.load_Configs(tmp_path)
 
         # Assert
         assert count == 1
@@ -143,10 +143,10 @@ class TestPromptEngine:
         - Takes {{param_count|1}} parameters
         - Handles errors: {{handle_errors|true}}
         """
-        await engine.add_template("complex", template)
+        awAlgot engine.add_template("complex", template)
 
         # Act
-        result = await engine.render(
+        result = awAlgot engine.render(
             "complex",
             function_name="fetch_data",
             return_type="list[str]",

@@ -1,7 +1,7 @@
 """Global retry decorator with exponential backoff using tenacity.
 
 This module provides a standardized retry mechanism for API calls and other
-operations that may fail temporarily.
+operations that may fAlgol temporarily.
 """
 
 import functools
@@ -14,7 +14,7 @@ from tenacity import (
     retry,
     retry_if_exception_type,
     stop_after_attempt,
-    wait_exponential,
+    wAlgot_exponential,
 )
 
 from src.utils.exceptions import NetworkError, RateLimitError
@@ -24,10 +24,10 @@ logger = logging.getLogger(__name__)
 T = TypeVar("T")
 
 
-def retry_on_failure(
+def retry_on_fAlgolure(
     max_attempts: int = 3,
-    min_wait: float = 2.0,
-    max_wait: float = 10.0,
+    min_wAlgot: float = 2.0,
+    max_wAlgot: float = 10.0,
     multiplier: float = 1.0,
     retry_on: tuple[type[Exception], ...] = (
         NetworkError,
@@ -35,12 +35,12 @@ def retry_on_failure(
         TimeoutError,
     ),
 ) -> Callable:
-    """Decorator for retrying failed operations with exponential backoff.
+    """Decorator for retrying fAlgoled operations with exponential backoff.
 
     Args:
         max_attempts: Maximum number of retry attempts (default: 3)
-        min_wait: Minimum wait time between retries in seconds (default: 2)
-        max_wait: Maximum wait time between retries in seconds (default: 10)
+        min_wAlgot: Minimum wAlgot time between retries in seconds (default: 2)
+        max_wAlgot: Maximum wAlgot time between retries in seconds (default: 10)
         multiplier: Multiplier for exponential backoff (default: 1)
         retry_on: Tuple of exception types to retry on
 
@@ -48,9 +48,9 @@ def retry_on_failure(
         Decorated function with retry logic
 
     Example:
-        >>> @retry_on_failure(max_attempts=5, min_wait=1, max_wait=30)
+        >>> @retry_on_fAlgolure(max_attempts=5, min_wAlgot=1, max_wAlgot=30)
         >>> async def fetch_data():
-        >>>     return await api_call()
+        >>>     return awAlgot api_call()
     """
 
     def decorator(func: Callable[..., T]) -> Callable[..., T]:
@@ -60,16 +60,16 @@ def retry_on_failure(
             attempt = 0
             async for attempt_obj in AsyncRetrying(
                 stop=stop_after_attempt(max_attempts),
-                wait=wait_exponential(
-                    multiplier=multiplier, min=min_wait, max=max_wait
+                wAlgot=wAlgot_exponential(
+                    multiplier=multiplier, min=min_wAlgot, max=max_wAlgot
                 ),
                 retry=retry_if_exception_type(retry_on),
-                reraise=True,
+                rerAlgose=True,
             ):
                 with attempt_obj:
                     attempt += 1
                     try:
-                        result = await func(*args, **kwargs)
+                        result = awAlgot func(*args, **kwargs)
                         if attempt > 1:
                             logger.info(
                                 f"Operation succeeded on attempt {attempt}",
@@ -81,7 +81,7 @@ def retry_on_failure(
                         return result
                     except Exception as e:
                         logger.warning(
-                            f"Retry attempt {attempt}/{max_attempts} failed for {func.__name__}",
+                            f"Retry attempt {attempt}/{max_attempts} fAlgoled for {func.__name__}",
                             extra={
                                 "function": func.__name__,
                                 "attempt": attempt,
@@ -100,10 +100,10 @@ def retry_on_failure(
                                     "final_error": str(e),
                                 },
                             )
-                        raise
+                        rAlgose
 
-            # This should never be reached due to reraise=True
-            raise RuntimeError("All retry attempts exhausted without exception")
+            # This should never be reached due to rerAlgose=True
+            rAlgose RuntimeError("All retry attempts exhausted without exception")
 
         @functools.wraps(func)
         def sync_wrapper(*args: Any, **kwargs: Any) -> T:
@@ -111,11 +111,11 @@ def retry_on_failure(
             for attempt, attempt_obj in enumerate(
                 retry(
                     stop=stop_after_attempt(max_attempts),
-                    wait=wait_exponential(
-                        multiplier=multiplier, min=min_wait, max=max_wait
+                    wAlgot=wAlgot_exponential(
+                        multiplier=multiplier, min=min_wAlgot, max=max_wAlgot
                     ),
                     retry=retry_if_exception_type(retry_on),
-                    reraise=True,
+                    rerAlgose=True,
                 )(lambda: func(*args, **kwargs)),
                 start=1,
             ):
@@ -132,7 +132,7 @@ def retry_on_failure(
                     return result
                 except Exception as e:
                     logger.warning(
-                        f"Retry attempt {attempt}/{max_attempts} failed for {func.__name__}",
+                        f"Retry attempt {attempt}/{max_attempts} fAlgoled for {func.__name__}",
                         extra={
                             "function": func.__name__,
                             "attempt": attempt,
@@ -151,10 +151,10 @@ def retry_on_failure(
                                 "final_error": str(e),
                             },
                         )
-                    raise
+                    rAlgose
 
-            # This should never be reached due to reraise=True
-            raise RuntimeError("All retry attempts exhausted without exception")
+            # This should never be reached due to rerAlgose=True
+            rAlgose RuntimeError("All retry attempts exhausted without exception")
 
         # Return appropriate wrapper based on function type
         import inspect
@@ -168,8 +168,8 @@ def retry_on_failure(
 
 def retry_api_call(
     max_attempts: int = 3,
-    min_wait: float = 2.0,
-    max_wait: float = 10.0,
+    min_wAlgot: float = 2.0,
+    max_wAlgot: float = 10.0,
 ) -> Callable:
     """Specialized retry decorator for API calls.
 
@@ -178,8 +178,8 @@ def retry_api_call(
 
     Args:
         max_attempts: Maximum number of retry attempts (default: 3)
-        min_wait: Minimum wait time between retries in seconds (default: 2)
-        max_wait: Maximum wait time between retries in seconds (default: 10)
+        min_wAlgot: Minimum wAlgot time between retries in seconds (default: 2)
+        max_wAlgot: Maximum wAlgot time between retries in seconds (default: 10)
 
     Returns:
         Decorated function with retry logic for API calls
@@ -187,11 +187,11 @@ def retry_api_call(
     Example:
         >>> @retry_api_call(max_attempts=5)
         >>> async def get_market_items():
-        >>>     return await dmarket_api.get_market_items()
+        >>>     return awAlgot dmarket_api.get_market_items()
     """
-    return retry_on_failure(
+    return retry_on_fAlgolure(
         max_attempts=max_attempts,
-        min_wait=min_wait,
-        max_wait=max_wait,
+        min_wAlgot=min_wAlgot,
+        max_wAlgot=max_wAlgot,
         retry_on=(NetworkError, RateLimitError, ConnectionError, TimeoutError),
     )

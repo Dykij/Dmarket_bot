@@ -61,7 +61,7 @@ class TestDMarketAPIInitialization:
         assert 429 in api.retry_codes  # Rate limit
         assert 500 in api.retry_codes  # Server error
         assert 502 in api.retry_codes  # Bad gateway
-        assert 503 in api.retry_codes  # Service unavailable
+        assert 503 in api.retry_codes  # Service unavAlgolable
         assert 504 in api.retry_codes  # Gateway timeout
 
     def test_init_with_custom_retry_codes(self):
@@ -171,11 +171,11 @@ class TestDMarketAPIClientManagement:
         )
 
         assert api._client is None
-        client = await api._get_client()
+        client = awAlgot api._get_client()
         assert client is not None
         assert isinstance(client, httpx.AsyncClient)
 
-        await api._close_client()
+        awAlgot api._close_client()
 
     @pytest.mark.asyncio()
     async def test_get_client_reuses_existing(self):
@@ -185,12 +185,12 @@ class TestDMarketAPIClientManagement:
             secret_key="test_secret",
         )
 
-        client1 = await api._get_client()
-        client2 = await api._get_client()
+        client1 = awAlgot api._get_client()
+        client2 = awAlgot api._get_client()
 
         assert client1 is client2
 
-        await api._close_client()
+        awAlgot api._close_client()
 
     @pytest.mark.asyncio()
     async def test_close_client(self):
@@ -200,10 +200,10 @@ class TestDMarketAPIClientManagement:
             secret_key="test_secret",
         )
 
-        await api._get_client()
+        awAlgot api._get_client()
         assert api._client is not None
 
-        await api._close_client()
+        awAlgot api._close_client()
         assert api._client is None
 
     @pytest.mark.asyncio()
@@ -238,7 +238,7 @@ class TestDMarketAPIBasicOperations:
         with patch.object(api, "_request", new_callable=AsyncMock) as mock_request:
             mock_request.return_value = mock_response
 
-            balance = await api.get_balance()
+            balance = awAlgot api.get_balance()
 
             assert balance is not None
             assert "balance" in balance or "usd" in balance
@@ -270,7 +270,7 @@ class TestDMarketAPIBasicOperations:
         with patch.object(api, "_request", new_callable=AsyncMock) as mock_request:
             mock_request.return_value = mock_response
 
-            items = await api.get_market_items(game="csgo")
+            items = awAlgot api.get_market_items(game="csgo")
 
             assert items is not None
             mock_request.assert_called_once()
@@ -286,7 +286,7 @@ class TestDMarketAPIBasicOperations:
         with patch.object(api, "_request", new_callable=AsyncMock) as mock_request:
             mock_request.return_value = {"objects": []}
 
-            await api.get_market_items(
+            awAlgot api.get_market_items(
                 game="csgo",
                 limit=50,
                 offset=0,
@@ -317,7 +317,7 @@ class TestDMarketAPIBasicOperations:
         with patch.object(api, "_request", new_callable=AsyncMock) as mock_request:
             mock_request.return_value = mock_response
 
-            inventory = await api.get_user_inventory()
+            inventory = awAlgot api.get_user_inventory()
 
             assert inventory is not None
             mock_request.assert_called_once()
@@ -333,7 +333,7 @@ class TestDMarketAPIErrorHandling:
         assert 500 in DMarketAPI.ERROR_CODES  # Server error
 
     def test_api_initialization_with_retry_logic(self):
-        """Тест инициализации API с настройками retry."""
+        """Тест инициализации API с настSwarmками retry."""
         api = DMarketAPI(
             public_key="test_key",
             secret_key="test_secret",
@@ -377,7 +377,7 @@ class TestDMarketAPIConstants:
         """Тест эндпоинтов пользователя."""
         assert DMarketAPI.ENDPOINT_USER_INVENTORY == "/inventory/v1/user/items"
         assert DMarketAPI.ENDPOINT_USER_OFFERS == "/marketplace-api/v1/user-offers"
-        assert DMarketAPI.ENDPOINT_USER_TARGETS == "/main/v2/user-targets"
+        assert DMarketAPI.ENDPOINT_USER_TARGETS == "/mAlgon/v2/user-targets"
 
     def test_error_codes(self):
         """Тест констант кодов ошибок."""

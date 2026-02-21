@@ -1,27 +1,27 @@
-"""Tests for AICoordinator - unified ML module coordinator."""
+"""Tests for AlgoCoordinator - unified ML module coordinator."""
 
 
 import pytest
 
-from src.ml.ai_coordinator import (
-    AICoordinator,
+from src.ml.Algo_coordinator import (
+    AlgoCoordinator,
     AutonomyLevel,
     ItemAnalysis,
     SafetyLimits,
     TradeAction,
     TradeDecision,
-    get_ai_coordinator,
-    reset_ai_coordinator,
+    get_Algo_coordinator,
+    reset_Algo_coordinator,
 )
 from src.ml.smart_recommendations import RiskLevel
 
 
-class TestAICoordinatorBasic:
-    """Basic tests for AICoordinator."""
+class TestAlgoCoordinatorBasic:
+    """Basic tests for AlgoCoordinator."""
 
     def test_init_creates_coordinator(self):
-        """Test that AICoordinator can be initialized."""
-        coordinator = AICoordinator()
+        """Test that AlgoCoordinator can be initialized."""
+        coordinator = AlgoCoordinator()
 
         assert coordinator is not None
         assert coordinator.autonomy_level == AutonomyLevel.MANUAL
@@ -30,13 +30,13 @@ class TestAICoordinatorBasic:
 
     def test_init_with_custom_autonomy(self):
         """Test initialization with custom autonomy level."""
-        coordinator = AICoordinator(autonomy_level=AutonomyLevel.SEMI_AUTO)
+        coordinator = AlgoCoordinator(autonomy_level=AutonomyLevel.SEMI_AUTO)
 
         assert coordinator.autonomy_level == AutonomyLevel.SEMI_AUTO
 
     def test_init_with_custom_balance(self):
         """Test initialization with custom balance."""
-        coordinator = AICoordinator(user_balance=500.0)
+        coordinator = AlgoCoordinator(user_balance=500.0)
 
         assert coordinator.user_balance == 500.0
 
@@ -44,13 +44,13 @@ class TestAICoordinatorBasic:
         """Test initialization with custom safety limits."""
         limits = SafetyLimits(
             max_single_trade_usd=100.0,
-            max_daily_volume_usd=500.0,
+            max_dAlgoly_volume_usd=500.0,
             dry_run=False,
         )
-        coordinator = AICoordinator(safety_limits=limits)
+        coordinator = AlgoCoordinator(safety_limits=limits)
 
         assert coordinator.safety_limits.max_single_trade_usd == 100.0
-        assert coordinator.safety_limits.max_daily_volume_usd == 500.0
+        assert coordinator.safety_limits.max_dAlgoly_volume_usd == 500.0
         assert coordinator.safety_limits.dry_run is False
 
 
@@ -59,7 +59,7 @@ class TestAutonomyLevel:
 
     def test_set_autonomy_level(self):
         """Test setting autonomy level."""
-        coordinator = AICoordinator()
+        coordinator = AlgoCoordinator()
 
         coordinator.set_autonomy_level(AutonomyLevel.AUTO)
 
@@ -67,7 +67,7 @@ class TestAutonomyLevel:
 
     def test_set_user_balance(self):
         """Test setting user balance."""
-        coordinator = AICoordinator()
+        coordinator = AlgoCoordinator()
 
         coordinator.set_user_balance(250.0)
 
@@ -75,7 +75,7 @@ class TestAutonomyLevel:
 
     def test_set_negative_balance_clamps_to_zero(self):
         """Test that negative balance is clamped to zero."""
-        coordinator = AICoordinator()
+        coordinator = AlgoCoordinator()
 
         coordinator.set_user_balance(-50.0)
 
@@ -89,7 +89,7 @@ class TestMarketCondition:
         """Test updating market condition."""
         from src.ml.discount_threshold_predictor import MarketCondition
 
-        coordinator = AICoordinator()
+        coordinator = AlgoCoordinator()
 
         coordinator.update_market_condition(MarketCondition.VOLATILE)
 
@@ -104,7 +104,7 @@ class TestSafetyLimits:
         limits = SafetyLimits()
 
         assert limits.max_single_trade_usd == 50.0
-        assert limits.max_daily_volume_usd == 200.0
+        assert limits.max_dAlgoly_volume_usd == 200.0
         assert limits.max_position_percent == 30.0
         assert limits.min_confidence_auto == 0.80
         assert limits.max_trades_per_hour == 10
@@ -215,27 +215,27 @@ class TestGlobalCoordinator:
 
     def setup_method(self):
         """Reset global coordinator before each test."""
-        reset_ai_coordinator()
+        reset_Algo_coordinator()
 
-    def test_get_ai_coordinator(self):
+    def test_get_Algo_coordinator(self):
         """Test getting global coordinator."""
-        coordinator = get_ai_coordinator()
+        coordinator = get_Algo_coordinator()
 
         assert coordinator is not None
-        assert isinstance(coordinator, AICoordinator)
+        assert isinstance(coordinator, AlgoCoordinator)
 
-    def test_get_ai_coordinator_returns_same_instance(self):
-        """Test that get_ai_coordinator returns same instance."""
-        coordinator1 = get_ai_coordinator()
-        coordinator2 = get_ai_coordinator()
+    def test_get_Algo_coordinator_returns_same_instance(self):
+        """Test that get_Algo_coordinator returns same instance."""
+        coordinator1 = get_Algo_coordinator()
+        coordinator2 = get_Algo_coordinator()
 
         assert coordinator1 is coordinator2
 
-    def test_reset_ai_coordinator(self):
+    def test_reset_Algo_coordinator(self):
         """Test resetting global coordinator."""
-        coordinator1 = get_ai_coordinator()
-        reset_ai_coordinator()
-        coordinator2 = get_ai_coordinator()
+        coordinator1 = get_Algo_coordinator()
+        reset_Algo_coordinator()
+        coordinator2 = get_Algo_coordinator()
 
         assert coordinator1 is not coordinator2
 
@@ -246,7 +246,7 @@ class TestMakeDecision:
     @pytest.fixture
     def coordinator(self):
         """Create a coordinator for testing."""
-        return AICoordinator(user_balance=100.0)
+        return AlgoCoordinator(user_balance=100.0)
 
     @pytest.fixture
     def sample_item(self):
@@ -263,7 +263,7 @@ class TestMakeDecision:
     @pytest.mark.asyncio
     async def test_make_decision_returns_trade_decision(self, coordinator, sample_item):
         """Test that make_decision returns a TradeDecision."""
-        decision = await coordinator.make_decision(sample_item)
+        decision = awAlgot coordinator.make_decision(sample_item)
 
         assert isinstance(decision, TradeDecision)
         assert decision.item_name == "AK-47 | Redline (Field-Tested)"
@@ -272,7 +272,7 @@ class TestMakeDecision:
     @pytest.mark.asyncio
     async def test_make_decision_sets_correct_prices(self, coordinator, sample_item):
         """Test that prices are extracted correctly."""
-        decision = await coordinator.make_decision(sample_item)
+        decision = awAlgot coordinator.make_decision(sample_item)
 
         assert decision.current_price == 10.0  # 1000 cents = $10.00
 
@@ -283,7 +283,7 @@ class TestMakeDecision:
         """Test that manual mode always requires confirmation."""
         coordinator.set_autonomy_level(AutonomyLevel.MANUAL)
 
-        decision = await coordinator.make_decision(sample_item)
+        decision = awAlgot coordinator.make_decision(sample_item)
 
         # Non-hold/skip actions should require confirmation
         if decision.action not in {TradeAction.HOLD, TradeAction.SKIP}:
@@ -296,7 +296,7 @@ class TestAnalyzeItem:
     @pytest.fixture
     def coordinator(self):
         """Create a coordinator for testing."""
-        return AICoordinator(user_balance=100.0)
+        return AlgoCoordinator(user_balance=100.0)
 
     @pytest.fixture
     def sample_item(self):
@@ -313,7 +313,7 @@ class TestAnalyzeItem:
     @pytest.mark.asyncio
     async def test_analyze_item_returns_item_analysis(self, coordinator, sample_item):
         """Test that analyze_item returns ItemAnalysis."""
-        analysis = await coordinator.analyze_item(sample_item)
+        analysis = awAlgot coordinator.analyze_item(sample_item)
 
         assert isinstance(analysis, ItemAnalysis)
         assert analysis.item_name == "M4A4 | Howl (Field-Tested)"
@@ -321,18 +321,18 @@ class TestAnalyzeItem:
     @pytest.mark.asyncio
     async def test_analyze_item_calculates_discount(self, coordinator, sample_item):
         """Test that discount is calculated correctly."""
-        analysis = await coordinator.analyze_item(sample_item)
+        analysis = awAlgot coordinator.analyze_item(sample_item)
 
         # Expected discount: (600 - 500) / 600 = 16.7%
         expected_discount = ((600 - 500) / 600) * 100
         assert abs(analysis.actual_discount - expected_discount) < 0.1
 
     @pytest.mark.asyncio
-    async def test_analyze_item_without_llm(self, coordinator, sample_item):
-        """Test analysis without LLM."""
-        analysis = await coordinator.analyze_item(sample_item, include_llm=False)
+    async def test_analyze_item_without_Model(self, coordinator, sample_item):
+        """Test analysis without Model."""
+        analysis = awAlgot coordinator.analyze_item(sample_item, include_Model=False)
 
-        assert analysis.llm_analysis is None
+        assert analysis.Model_analysis is None
 
 
 class TestStatistics:
@@ -340,7 +340,7 @@ class TestStatistics:
 
     def test_get_statistics(self):
         """Test getting statistics."""
-        coordinator = AICoordinator()
+        coordinator = AlgoCoordinator()
 
         stats = coordinator.get_statistics()
 
@@ -356,13 +356,13 @@ class TestModelWeights:
 
     def test_model_weights_sum_to_one(self):
         """Test that default model weights sum to approximately 1.0."""
-        total = sum(AICoordinator.DEFAULT_MODEL_WEIGHTS.values())
+        total = sum(AlgoCoordinator.DEFAULT_MODEL_WEIGHTS.values())
 
         assert abs(total - 1.0) < 0.01
 
     def test_model_weights_all_positive(self):
         """Test that all default model weights are positive."""
-        for weight in AICoordinator.DEFAULT_MODEL_WEIGHTS.values():
+        for weight in AlgoCoordinator.DEFAULT_MODEL_WEIGHTS.values():
             assert weight > 0
 
     def test_custom_model_weights(self):
@@ -374,8 +374,8 @@ class TestModelWeights:
             "anomaly_check": 0.10,
             "balance_fit": 0.10,
         }
-        ai = AICoordinator(model_weights=custom_weights)
-        assert ai.model_weights["price_prediction"] == 0.40
+        Algo = AlgoCoordinator(model_weights=custom_weights)
+        assert Algo.model_weights["price_prediction"] == 0.40
 
     def test_model_weights_normalization(self):
         """Test that non-normalized weights get normalized."""
@@ -386,8 +386,8 @@ class TestModelWeights:
             "anomaly_check": 0.30,
             "balance_fit": 0.20,
         }
-        ai = AICoordinator(model_weights=non_normalized)
-        total = sum(ai.model_weights.values())
+        Algo = AlgoCoordinator(model_weights=non_normalized)
+        total = sum(Algo.model_weights.values())
         assert abs(total - 1.0) < 0.01
 
 
@@ -396,8 +396,8 @@ class TestDriftDetection:
 
     def test_get_drift_status_initial(self):
         """Test initial drift status."""
-        ai = AICoordinator()
-        status = ai.get_drift_status()
+        Algo = AlgoCoordinator()
+        status = Algo.get_drift_status()
 
         assert status["drift_detected"] is False
         assert status["recent_accuracy"] == 0.0
@@ -405,7 +405,7 @@ class TestDriftDetection:
 
     def test_drift_status_updates_with_outcomes(self):
         """Test drift status updates with trade outcomes."""
-        ai = AICoordinator()
+        Algo = AlgoCoordinator()
 
         # Create a test decision
         decision = TradeDecision(
@@ -427,19 +427,19 @@ class TestDriftDetection:
 
         # Add successful outcomes
         for _ in range(10):
-            ai.add_trade_outcome(decision, 2.0, True)
+            Algo.add_trade_outcome(decision, 2.0, True)
 
-        status = ai.get_drift_status()
+        status = Algo.get_drift_status()
         assert status["samples_tracked"] == 10
         assert status["recent_accuracy"] == 1.0
 
     def test_model_version_in_stats(self):
         """Test that model version is included in statistics."""
-        ai = AICoordinator()
-        stats = ai.get_statistics()
+        Algo = AlgoCoordinator()
+        stats = Algo.get_statistics()
 
         assert "model_version" in stats
-        assert stats["model_version"] == AICoordinator.MODEL_VERSION
+        assert stats["model_version"] == AlgoCoordinator.MODEL_VERSION
 
 
 class TestTradeAction:
@@ -461,7 +461,7 @@ class TestAddTradeOutcome:
 
     def test_add_trade_outcome_updates_stats(self):
         """Test that trade outcome updates statistics."""
-        coordinator = AICoordinator()
+        coordinator = AlgoCoordinator()
 
         decision = TradeDecision(
             action=TradeAction.BUY,

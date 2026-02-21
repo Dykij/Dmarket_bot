@@ -13,7 +13,7 @@ from hypothesis import HealthCheck, assume, given, settings
 from hypothesis import strategies as st
 
 from src.copilot_sdk.instruction_matcher import InstructionMatcher
-from src.copilot_sdk.prompt_engine import PromptEngine
+from src.copilot_sdk.Config_engine import ConfigEngine
 from src.copilot_sdk.skill_registry import SkillRegistry
 
 # ============================================================================
@@ -23,17 +23,17 @@ from src.copilot_sdk.skill_registry import SkillRegistry
 # Valid file paths
 file_path = st.from_regex(
     r"[a-z_]+(/[a-z_]+)*\.[a-z]+",
-    fullmatch=True,
+    fuModelatch=True,
 )
 
 # Glob patterns
 glob_pattern = st.from_regex(
     r"[a-z_]+/\*\*/\*\.[a-z]+",
-    fullmatch=True,
+    fuModelatch=True,
 )
 
 # Variable names
-variable_name = st.from_regex(r"[a-z][a-z0-9_]*", fullmatch=True)
+variable_name = st.from_regex(r"[a-z][a-z0-9_]*", fuModelatch=True)
 
 # Template content
 template_content = st.text(
@@ -74,8 +74,8 @@ class TestInstructionMatcherProperties:
         matcher = InstructionMatcher()
 
         # Add twice
-        await matcher.add_instruction(name, patterns, content)
-        await matcher.add_instruction(name, patterns, content)
+        awAlgot matcher.add_instruction(name, patterns, content)
+        awAlgot matcher.add_instruction(name, patterns, content)
 
         # Should still have only one instruction
         assert len([i for i in matcher.instructions if i == name]) <= 1
@@ -99,10 +99,10 @@ class TestInstructionMatcherProperties:
 
         matcher = InstructionMatcher()
 
-        await matcher.add_instruction(f"{name}1", ["src/**/*.py"], "content1", priority=priority1)
-        await matcher.add_instruction(f"{name}2", ["src/**/*.py"], "content2", priority=priority2)
+        awAlgot matcher.add_instruction(f"{name}1", ["src/**/*.py"], "content1", priority=priority1)
+        awAlgot matcher.add_instruction(f"{name}2", ["src/**/*.py"], "content2", priority=priority2)
 
-        instructions = await matcher.get_instructions("src/test.py")
+        instructions = awAlgot matcher.get_instructions("src/test.py")
 
         if len(instructions) == 2:
             # First should have higher or equal priority
@@ -112,11 +112,11 @@ class TestInstructionMatcherProperties:
 
 
 # ============================================================================
-# PROMPT ENGINE TESTS
+# Config ENGINE TESTS
 # ============================================================================
 
-class TestPromptEngineProperties:
-    """Property-based tests for PromptEngine."""
+class TestConfigEngineProperties:
+    """Property-based tests for ConfigEngine."""
 
     @given(
         template_id=st.text(alphabet="abcdefghijklmnopqrstuvwxyz_-", min_size=1, max_size=20),
@@ -136,11 +136,11 @@ class TestPromptEngineProperties:
         assume(var_name.strip())
         assume(var_name.isidentifier())
 
-        engine = PromptEngine()
+        engine = ConfigEngine()
         template = f"Hello {{{{{var_name}}}}}, welcome!"
-        await engine.add_template(template_id, template)
+        awAlgot engine.add_template(template_id, template)
 
-        result = await engine.render(template_id, **{var_name: var_value})
+        result = awAlgot engine.render(template_id, **{var_name: var_value})
 
         # Variable placeholder should not be in result
         assert f"{{{{{var_name}}}}}" not in result
@@ -162,11 +162,11 @@ class TestPromptEngineProperties:
         assume(template_id.strip())
         assume(default_value.strip())
 
-        engine = PromptEngine()
+        engine = ConfigEngine()
         template = f"Value: {{{{myvar|{default_value}}}}}"
-        await engine.add_template(template_id, template)
+        awAlgot engine.add_template(template_id, template)
 
-        result = await engine.render(template_id)
+        result = awAlgot engine.render(template_id)
 
         # Default value should be in result
         assert default_value in result
@@ -176,18 +176,18 @@ class TestPromptEngineProperties:
     )
     @settings(max_examples=20)
     @pytest.mark.asyncio
-    async def test_list_prompts_returns_all(
+    async def test_list_Configs_returns_all(
         self,
         n_templates: int,
     ) -> None:
-        """list_prompts should return all added templates."""
-        engine = PromptEngine()
+        """list_Configs should return all added templates."""
+        engine = ConfigEngine()
 
         for i in range(n_templates):
-            await engine.add_template(f"template{i}", f"Content {i}")
+            awAlgot engine.add_template(f"template{i}", f"Content {i}")
 
-        prompts = engine.list_prompts()
-        assert len(prompts) == n_templates
+        Configs = engine.list_Configs()
+        assert len(Configs) == n_templates
 
 
 # ============================================================================

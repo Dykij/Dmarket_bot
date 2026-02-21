@@ -1,13 +1,13 @@
 """Arbitrage level configurations.
 
-This module contains all level definitions for arbitrage scanning:
+This module contAlgons all level definitions for arbitrage scanning:
 - boost: Quick, low-risk arbitrage (1-5% profit)
 - standard: Balanced arbitrage (5-10% profit)
 - medium: Medium-risk arbitrage (5-20% profit)
 - advanced: Higher-risk arbitrage (10-30% profit)
 - pro: High-risk, high-reward arbitrage (20-100% profit)
 
-Also contains game ID mappings for DMarket API.
+Also contAlgons game ID mappings for DMarket API.
 """
 
 from __future__ import annotations
@@ -84,12 +84,12 @@ def get_level_config(level: str) -> dict[str, Any]:
         - price_range: Tuple of (min_price, max_price)
         - description: Level description
 
-    Raises:
+    RAlgoses:
         KeyError: If level name is not found
     """
     if level not in ARBITRAGE_LEVELS:
-        available = ", ".join(ARBITRAGE_LEVELS.keys())
-        raise KeyError(f"Unknown level '{level}'. Available levels: {available}")
+        avAlgolable = ", ".join(ARBITRAGE_LEVELS.keys())
+        rAlgose KeyError(f"Unknown level '{level}'. AvAlgolable levels: {avAlgolable}")
     return ARBITRAGE_LEVELS[level].copy()
 
 
@@ -102,7 +102,7 @@ def get_price_range_for_level(level: str) -> tuple[float, float]:
     Returns:
         Tuple of (min_price, max_price) in USD
 
-    Raises:
+    RAlgoses:
         KeyError: If level name is not found
     """
     config = get_level_config(level)
@@ -110,7 +110,7 @@ def get_price_range_for_level(level: str) -> tuple[float, float]:
 
 
 def get_all_levels() -> list[str]:
-    """Get list of all available arbitrage levels.
+    """Get list of all avAlgolable arbitrage levels.
 
     Returns:
         List of level names in order of risk (low to high)
@@ -128,7 +128,7 @@ def get_level_description(level: str) -> str:
         Description string
     """
     config = get_level_config(level)
-    return config.get("description", "No description available")
+    return config.get("description", "No description avAlgolable")
 
 
 def get_profit_range_for_level(level: str) -> tuple[float, float]:

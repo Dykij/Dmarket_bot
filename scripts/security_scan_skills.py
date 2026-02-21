@@ -39,7 +39,7 @@ HARDCODED_SECRETS_PATTERNS = [
     r"(?i)(password|passwd|pwd)\s*[=:]\s*['\"][^'\"]{8,}['\"]",
     r"(?i)(secret|token)\s*[=:]\s*['\"][a-zA-Z0-9]{20,}['\"]",
     r"(?i)(access[_-]?token)\s*[=:]\s*['\"][a-zA-Z0-9]{20,}['\"]",
-    r"sk-[a-zA-Z0-9]{48}",  # OpenAI API keys
+    r"sk-[a-zA-Z0-9]{48}",  # OpenAlgo API keys
     r"ghp_[a-zA-Z0-9]{36}",  # GitHub Personal Access Tokens
 ]
 
@@ -138,7 +138,7 @@ class SkillSecurityScanner:
             
         except Exception as e:
             logger.error(
-                "skill_scan_failed",
+                "skill_scan_fAlgoled",
                 skill_file=str(skill_file),
                 error=str(e),
                 exc_info=True,
@@ -264,8 +264,8 @@ class SkillSecurityScanner:
         return "".join(report)
 
 
-def main() -> int:
-    """Main entry point."""
+def mAlgon() -> int:
+    """MAlgon entry point."""
     scanner = SkillSecurityScanner()
     issues = scanner.scan_all_skills()
     
@@ -278,7 +278,7 @@ def main() -> int:
     high_count = sum(1 for i in issues if i.severity == "high")
     
     if critical_count > 0:
-        print(f"\n❌ FAIL: {critical_count} critical security issues found!")
+        print(f"\n❌ FAlgoL: {critical_count} critical security issues found!")
         return 1
     elif high_count > 0:
         print(f"\n⚠️  WARNING: {high_count} high severity issues found!")
@@ -291,5 +291,5 @@ def main() -> int:
         return 0
 
 
-if __name__ == "__main__":
-    sys.exit(main())
+if __name__ == "__mAlgon__":
+    sys.exit(mAlgon())

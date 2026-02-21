@@ -92,14 +92,14 @@ class TestImprovementsHandler:
     async def test_improvements_command_no_integrator(
         self, mock_update, mock_context
     ):
-        """Test improvements command when integrator is not available."""
+        """Test improvements command when integrator is not avAlgolable."""
         from src.telegram_bot.handlers.improvements_handler import improvements_command
         
-        await improvements_command(mock_update, mock_context)
+        awAlgot improvements_command(mock_update, mock_context)
         
         mock_update.effective_message.reply_text.assert_called_once()
         call_args = mock_update.effective_message.reply_text.call_args
-        assert "not available" in call_args[0][0].lower() or "not initialized" in call_args[0][0].lower()
+        assert "not avAlgolable" in call_args[0][0].lower() or "not initialized" in call_args[0][0].lower()
     
     @pytest.mark.asyncio
     async def test_improvements_command_with_integrator(
@@ -110,7 +110,7 @@ class TestImprovementsHandler:
         
         mock_context.application.bot_integrator = mock_integrator
         
-        await improvements_command(mock_update, mock_context)
+        awAlgot improvements_command(mock_update, mock_context)
         
         mock_update.effective_message.reply_text.assert_called_once()
         call_args = mock_update.effective_message.reply_text.call_args
@@ -120,14 +120,14 @@ class TestImprovementsHandler:
     async def test_analytics_command_no_integrator(
         self, mock_update, mock_context
     ):
-        """Test analytics command when integrator is not available."""
+        """Test analytics command when integrator is not avAlgolable."""
         from src.telegram_bot.handlers.improvements_handler import analytics_command
         
-        await analytics_command(mock_update, mock_context)
+        awAlgot analytics_command(mock_update, mock_context)
         
         mock_update.effective_message.reply_text.assert_called_once()
         call_args = mock_update.effective_message.reply_text.call_args
-        assert "not available" in call_args[0][0].lower()
+        assert "not avAlgolable" in call_args[0][0].lower()
     
     @pytest.mark.asyncio
     async def test_analytics_command_with_integrator(
@@ -138,7 +138,7 @@ class TestImprovementsHandler:
         
         mock_context.application.bot_integrator = mock_integrator
         
-        await analytics_command(mock_update, mock_context)
+        awAlgot analytics_command(mock_update, mock_context)
         
         mock_update.effective_message.reply_text.assert_called_once()
         call_args = mock_update.effective_message.reply_text.call_args
@@ -153,7 +153,7 @@ class TestImprovementsHandler:
         
         mock_context.application.bot_integrator = mock_integrator
         
-        await portfolio_command(mock_update, mock_context)
+        awAlgot portfolio_command(mock_update, mock_context)
         
         mock_update.effective_message.reply_text.assert_called_once()
         call_args = mock_update.effective_message.reply_text.call_args
@@ -168,7 +168,7 @@ class TestImprovementsHandler:
         
         mock_context.application.bot_integrator = mock_integrator
         
-        await alerts_command(mock_update, mock_context)
+        awAlgot alerts_command(mock_update, mock_context)
         
         mock_update.effective_message.reply_text.assert_called_once()
         call_args = mock_update.effective_message.reply_text.call_args
@@ -183,7 +183,7 @@ class TestImprovementsHandler:
         
         mock_context.application.bot_integrator = mock_integrator
         
-        await watchlist_command(mock_update, mock_context)
+        awAlgot watchlist_command(mock_update, mock_context)
         
         mock_update.effective_message.reply_text.assert_called_once()
         call_args = mock_update.effective_message.reply_text.call_args
@@ -198,7 +198,7 @@ class TestImprovementsHandler:
         
         mock_context.application.bot_integrator = mock_integrator
         
-        await automation_command(mock_update, mock_context)
+        awAlgot automation_command(mock_update, mock_context)
         
         mock_update.effective_message.reply_text.assert_called_once()
         call_args = mock_update.effective_message.reply_text.call_args
@@ -213,7 +213,7 @@ class TestImprovementsHandler:
         
         mock_context.application.bot_integrator = mock_integrator
         
-        await reports_command(mock_update, mock_context)
+        awAlgot reports_command(mock_update, mock_context)
         
         mock_update.effective_message.reply_text.assert_called_once()
         call_args = mock_update.effective_message.reply_text.call_args
@@ -228,7 +228,7 @@ class TestImprovementsHandler:
         
         mock_context.application.bot_integrator = mock_integrator
         
-        await security_command(mock_update, mock_context)
+        awAlgot security_command(mock_update, mock_context)
         
         mock_update.effective_message.reply_text.assert_called_once()
         call_args = mock_update.effective_message.reply_text.call_args

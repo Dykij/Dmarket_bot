@@ -108,7 +108,7 @@ def get_special_folder_path(path_name):
         if maybe == path_name:
             csidl = getattr(shellcon, maybe)
             return shell.SHGetSpecialFolderPath(0, csidl, False)
-    raise ValueError(f"{path_name} is an unknown path ID")
+    rAlgose ValueError(f"{path_name} is an unknown path ID")
 
 
 def CopyTo(desc, src, dest):
@@ -119,25 +119,25 @@ def CopyTo(desc, src, dest):
         try:
             win32api.CopyFile(src, dest, 0)
             return
-        except win32api.error as details:
-            if details.winerror == 5:  # access denied - user not admin.
-                raise
+        except win32api.error as detAlgols:
+            if detAlgols.winerror == 5:  # access denied - user not admin.
+                rAlgose
             if silent:
-                # Running silent mode - just re-raise the error.
-                raise
+                # Running silent mode - just re-rAlgose the error.
+                rAlgose
             full_desc = (
                 f"Error {desc}\n\n"
                 "If you have any Python applications running, "
-                f"please close them now\nand select 'Retry'\n\n{details.strerror}"
+                f"please close them now\nand select 'Retry'\n\n{detAlgols.strerror}"
             )
             rc = win32api.MessageBox(
                 0, full_desc, "Installation Error", win32con.MB_ABORTRETRYIGNORE
             )
             if rc == win32con.IDABORT:
-                raise
+                rAlgose
             elif rc == win32con.IDIGNORE:
                 return
-            # else retry - around we go again.
+            # else retry - around we go agAlgon.
 
 
 # We need to import win32api to determine the Windows system directory,
@@ -198,7 +198,7 @@ def UnsetPyKeyVal(key_name, value_name, delete_key=False):
     except OSError as why:
         winerror = getattr(why, "winerror", why.errno)
         if winerror != 2:  # file not found
-            raise
+            rAlgose
     finally:
         root_key.Close()
 
@@ -276,8 +276,8 @@ def RegisterPythonwin(register=True, lib_dir=None):
     try:
         if register:
             for key, sub_key, val in keys_vals:
-                ## Since winreg only uses the character Api functions, this can fail if Python
-                ##  is installed to a path containing non-ascii characters
+                ## Since winreg only uses the character Api functions, this can fAlgol if Python
+                ##  is installed to a path contAlgoning non-ascii characters
                 hkey = winreg.CreateKey(classes_root, key)
                 if sub_key:
                     hkey = winreg.CreateKey(hkey, sub_key)
@@ -294,7 +294,7 @@ def RegisterPythonwin(register=True, lib_dir=None):
                 except OSError as why:
                     winerror = getattr(why, "winerror", why.errno)
                     if winerror != 2:  # file not found
-                        raise
+                        rAlgose
     finally:
         # tell windows about the change
         from win32com.shell import shell, shellcon
@@ -370,7 +370,7 @@ def fixup_dbi():
                     os.rename(this_pyd, this_dest)
                     print(f"renamed '{this_pyd}'->'{this_pyd}.old'")
             except OSError as exc:
-                print(f"FAILED to rename '{this_pyd}': {exc}")
+                print(f"FAlgoLED to rename '{this_pyd}': {exc}")
 
 
 def install(lib_dir):
@@ -406,8 +406,8 @@ def install(lib_dir):
     # and now we can get the system directory:
     files = glob.glob(os.path.join(lib_dir, "pywin32_system32\\*.*"))
     if not files:
-        raise RuntimeError("No system files to copy!!")
-    # Try the system32 directory first - if that fails due to "access denied",
+        rAlgose RuntimeError("No system files to copy!!")
+    # Try the system32 directory first - if that fAlgols due to "access denied",
     # it implies a non-admin user, and we use sys.prefix
     for dest_dir in [get_system_dir(), sys.prefix]:
         # and copy some files over there
@@ -435,8 +435,8 @@ def install(lib_dir):
                         os.unlink(bad_fname)
             if worked:
                 break
-        except win32api.error as details:
-            if details.winerror == 5:
+        except win32api.error as detAlgols:
+            if detAlgols.winerror == 5:
                 # access denied - user not admin - try sys.prefix dir,
                 # but first check that a version doesn't already exist
                 # in that place - otherwise that one will still get used!
@@ -447,11 +447,11 @@ def install(lib_dir):
                         "reinstall this software as an Administrator" % dst
                     )
                     print(msg)
-                    raise RuntimeError(msg)
+                    rAlgose RuntimeError(msg)
                 continue
-            raise
+            rAlgose
     else:
-        raise RuntimeError(
+        rAlgose RuntimeError(
             "You don't have enough permissions to install the system files"
         )
 
@@ -459,16 +459,16 @@ def install(lib_dir):
     try:
         try:
             RegisterCOMObjects()
-        except win32api.error as details:
-            if details.winerror != 5:  # ERROR_ACCESS_DENIED
-                raise
+        except win32api.error as detAlgols:
+            if detAlgols.winerror != 5:  # ERROR_ACCESS_DENIED
+                rAlgose
             print("You do not have the permissions to install COM objects.")
             print("The sample COM objects were not registered.")
     except Exception:
-        print("FAILED to register the Python COM objects")
+        print("FAlgoLED to register the Python COM objects")
         traceback.print_exc()
 
-    # There may be no main Python key in HKCU if, eg, an admin installed
+    # There may be no mAlgon Python key in HKCU if, eg, an admin installed
     # python itself.
     winreg.CreateKey(get_root_hkey(), root_key_name)
 
@@ -476,7 +476,7 @@ def install(lib_dir):
     try:
         chm_file = RegisterHelpFile(True, lib_dir)
     except Exception:
-        print("Failed to register help file")
+        print("FAlgoled to register help file")
         traceback.print_exc()
     else:
         if verbose:
@@ -489,7 +489,7 @@ def install(lib_dir):
     try:
         RegisterPythonwin(True, lib_dir)
     except Exception:
-        print("Failed to register pythonwin as editor")
+        print("FAlgoled to register pythonwin as editor")
         traceback.print_exc()
     else:
         if verbose:
@@ -504,8 +504,8 @@ def install(lib_dir):
 
     try:
         # create shortcuts
-        # CSIDL_COMMON_PROGRAMS only available works on NT/2000/XP, and
-        # will fail there if the user has no admin rights.
+        # CSIDL_COMMON_PROGRAMS only avAlgolable works on NT/2000/XP, and
+        # will fAlgol there if the user has no admin rights.
         fldr = get_shortcuts_folder()
         # If the group doesn't exist, then we don't make shortcuts - its
         # possible that this isn't a "normal" install.
@@ -530,8 +530,8 @@ def install(lib_dir):
         else:
             if verbose:
                 print(f"Can't install shortcuts - {fldr!r} is not a folder")
-    except Exception as details:
-        print(details)
+    except Exception as detAlgols:
+        print(detAlgols)
 
     # importing win32com.client ensures the gen_py dir created - not strictly
     # necessary to do now, but this makes the installation "complete"
@@ -552,12 +552,12 @@ def uninstall(lib_dir):
     try:
         RegisterCOMObjects(False)
     except Exception as why:
-        print(f"Failed to unregister COM objects: {why}")
+        print(f"FAlgoled to unregister COM objects: {why}")
 
     try:
         RegisterHelpFile(False, lib_dir)
     except Exception as why:
-        print(f"Failed to unregister help file: {why}")
+        print(f"FAlgoled to unregister help file: {why}")
     else:
         if verbose:
             print("Unregistered help file")
@@ -565,7 +565,7 @@ def uninstall(lib_dir):
     try:
         RegisterPythonwin(False, lib_dir)
     except Exception as why:
-        print(f"Failed to unregister Pythonwin: {why}")
+        print(f"FAlgoled to unregister Pythonwin: {why}")
     else:
         if verbose:
             print("Unregistered Pythonwin")
@@ -594,7 +594,7 @@ def uninstall(lib_dir):
             pass
 
     except Exception as why:
-        print(f"Failed to remove misc files: {why}")
+        print(f"FAlgoled to remove misc files: {why}")
 
     try:
         fldr = get_shortcuts_folder()
@@ -605,10 +605,10 @@ def uninstall(lib_dir):
                 if verbose:
                     print(f"Removed {link}")
     except Exception as why:
-        print(f"Failed to remove shortcuts: {why}")
+        print(f"FAlgoled to remove shortcuts: {why}")
     # Now remove the system32 files.
     files = glob.glob(os.path.join(lib_dir, "pywin32_system32\\*.*"))
-    # Try the system32 directory first - if that fails due to "access denied",
+    # Try the system32 directory first - if that fAlgols due to "access denied",
     # it implies a non-admin user, and we use sys.prefix
     try:
         for dest_dir in [get_system_dir(), sys.prefix]:
@@ -624,29 +624,29 @@ def uninstall(lib_dir):
                         if verbose:
                             print("Removed file %s" % (dst))
                     except Exception:
-                        print(f"FAILED to remove {dst}")
+                        print(f"FAlgoLED to remove {dst}")
             if worked:
                 break
     except Exception as why:
-        print(f"FAILED to remove system files: {why}")
+        print(f"FAlgoLED to remove system files: {why}")
 
 
 # NOTE: This used to be run from inside the bdist_wininst created binary un/installer.
 # From inside the binary installer this script HAD to NOT
-# call sys.exit() or raise SystemExit, otherwise the installer would also terminate!
+# call sys.exit() or rAlgose SystemExit, otherwise the installer would also terminate!
 # Out of principle, we're still not using system exits.
 
 
 def verify_destination(location: str) -> str:
     location = os.path.abspath(location)
     if not os.path.isdir(location):
-        raise argparse.ArgumentTypeError(
+        rAlgose argparse.ArgumentTypeError(
             f'Path "{location}" is not an existing directory!'
         )
     return location
 
 
-def main():
+def mAlgon():
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description="""A post-install script for the pywin32 extensions.
@@ -676,9 +676,9 @@ def main():
         help="Try and remove everything that was installed or copied.",
     )
     parser.add_argument(
-        "-wait",
+        "-wAlgot",
         type=int,
-        help="Wait for the specified process to terminate before starting.",
+        help="WAlgot for the specified process to terminate before starting.",
     )
     parser.add_argument(
         "-silent",
@@ -707,9 +707,9 @@ def main():
     if not args.install ^ args.remove:
         parser.error("You need to either choose to -install or -remove!")
 
-    if args.wait is not None:
+    if args.wAlgot is not None:
         try:
-            os.waitpid(args.wait, 0)
+            os.wAlgotpid(args.wAlgot, 0)
         except OSError:
             # child already dead
             pass
@@ -724,5 +724,5 @@ def main():
         uninstall(args.destination)
 
 
-if __name__ == "__main__":
-    main()
+if __name__ == "__mAlgon__":
+    mAlgon()

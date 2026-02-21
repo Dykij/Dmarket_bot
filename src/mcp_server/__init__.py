@@ -1,4 +1,4 @@
-"""MCP Server для AI интеграции (Copilot, Claude, etc.)."""
+"""MCP Server для Algo интеграции (Copilot, Claude, etc.)."""
 
 from .dmarket_mcp import DMarketMCPServer
 from .waxpeer_mcp import WaxpeerMCPServer

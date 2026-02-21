@@ -1,6 +1,6 @@
 """Тесты для обработчиков команд Telegram бота.
 
-Покрывает главную клавиатуру (main_keyboard.py):
+Покрывает главную клавиатуру (mAlgon_keyboard.py):
 - /start - главное меню
 - Авто-торговля
 - Таргеты
@@ -14,12 +14,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from telegram import InlineKeyboardMarkup
 
-from src.telegram_bot.handlers.main_keyboard import (
+from src.telegram_bot.handlers.mAlgon_keyboard import (
     auto_trade_start,
     auto_trade_status,
     emergency_stop,
-    get_main_keyboard,
-    main_menu_callback,
+    get_mAlgon_keyboard,
+    mAlgon_menu_callback,
     repricing_toggle,
     settings_menu,
     show_balance,
@@ -28,19 +28,19 @@ from src.telegram_bot.handlers.main_keyboard import (
 )
 
 
-class TestMainKeyboard:
+class TestMAlgonKeyboard:
     """Тесты главной клавиатуры."""
 
-    def test_get_main_keyboard_without_balance(self):
+    def test_get_mAlgon_keyboard_without_balance(self):
         """Тест создания клавиатуры без баланса."""
-        keyboard = get_main_keyboard()
+        keyboard = get_mAlgon_keyboard()
 
         assert isinstance(keyboard, InlineKeyboardMarkup)
-        assert len(keyboard.inline_keyboard) == 7  # 7 рядов кнопок (включая ML/AI)
+        assert len(keyboard.inline_keyboard) == 7  # 7 рядов кнопок (включая ML/Algo)
 
-    def test_get_main_keyboard_with_balance(self):
+    def test_get_mAlgon_keyboard_with_balance(self):
         """Тест создания клавиатуры с балансом."""
-        keyboard = get_main_keyboard(balance=45.50)
+        keyboard = get_mAlgon_keyboard(balance=45.50)
 
         assert isinstance(keyboard, InlineKeyboardMarkup)
 
@@ -50,36 +50,36 @@ class TestMainKeyboard:
 
         assert any("$45.50" in text for text in button_texts)
 
-    def test_main_keyboard_has_auto_trade_button(self):
+    def test_mAlgon_keyboard_has_auto_trade_button(self):
         """Тест наличия кнопки авто-торговли."""
-        keyboard = get_main_keyboard()
+        keyboard = get_mAlgon_keyboard()
 
         all_buttons = [btn for row in keyboard.inline_keyboard for btn in row]
         button_texts = [btn.text for btn in all_buttons]
 
         assert any("АВТО-ТОРГОВЛЯ" in text for text in button_texts)
 
-    def test_main_keyboard_has_targets_button(self):
+    def test_mAlgon_keyboard_has_targets_button(self):
         """Тест наличия кнопки таргетов."""
-        keyboard = get_main_keyboard()
+        keyboard = get_mAlgon_keyboard()
 
         all_buttons = [btn for row in keyboard.inline_keyboard for btn in row]
         button_texts = [btn.text for btn in all_buttons]
 
         assert any("ТАРГЕТЫ" in text for text in button_texts)
 
-    def test_main_keyboard_has_emergency_stop(self):
+    def test_mAlgon_keyboard_has_emergency_stop(self):
         """Тест наличия кнопки экстренной остановки."""
-        keyboard = get_main_keyboard()
+        keyboard = get_mAlgon_keyboard()
 
         all_buttons = [btn for row in keyboard.inline_keyboard for btn in row]
         button_texts = [btn.text for btn in all_buttons]
 
         assert any("ЭКСТРЕННАЯ ОСТАНОВКА" in text for text in button_texts)
 
-    def test_main_keyboard_has_whitelist_blacklist(self):
+    def test_mAlgon_keyboard_has_whitelist_blacklist(self):
         """Тест наличия кнопок WhiteList и BlackList."""
-        keyboard = get_main_keyboard()
+        keyboard = get_mAlgon_keyboard()
 
         all_buttons = [btn for row in keyboard.inline_keyboard for btn in row]
         button_texts = [btn.text for btn in all_buttons]
@@ -104,7 +104,7 @@ class TestStartCommand:
         context.application = MagicMock()
         context.application.dmarket_api = None
 
-        await start_command(update, context)
+        awAlgot start_command(update, context)
 
         update.message.reply_text.assert_called_once()
 
@@ -129,7 +129,7 @@ class TestStartCommand:
         context.application = MagicMock()
         context.application.dmarket_api = None
 
-        await start_command(update, context)
+        awAlgot start_command(update, context)
 
         call_kwargs = update.message.reply_text.call_args.kwargs
         assert "reply_markup" in call_kwargs
@@ -148,17 +148,17 @@ class TestStartCommand:
         context.application = MagicMock()
         context.application.dmarket_api = None
 
-        await start_command(update, context)
+        awAlgot start_command(update, context)
 
         call_kwargs = update.message.reply_text.call_args.kwargs
         assert call_kwargs.get("parse_mode") == "HTML"
 
 
-class TestMainMenuCallback:
+class TestMAlgonMenuCallback:
     """Тесты callback главного меню."""
 
     @pytest.mark.asyncio
-    async def test_main_menu_callback_edits_message(self):
+    async def test_mAlgon_menu_callback_edits_message(self):
         """Тест редактирования сообщения."""
         query = MagicMock()
         query.answer = AsyncMock()
@@ -172,7 +172,7 @@ class TestMainMenuCallback:
         context.application = MagicMock()
         context.application.dmarket_api = None
 
-        await main_menu_callback(update, context)
+        awAlgot mAlgon_menu_callback(update, context)
 
         query.answer.assert_called_once()
         query.edit_message_text.assert_called_once()
@@ -197,7 +197,7 @@ class TestAutoTradeStart:
         context.application.auto_buyer = None
         context.application.orchestrator = None
 
-        await auto_trade_start(update, context)
+        awAlgot auto_trade_start(update, context)
 
         query.answer.assert_called_once()
         query.edit_message_text.assert_called_once()
@@ -226,7 +226,7 @@ class TestAutoTradeStart:
         context.application.auto_buyer = MagicMock()
         context.application.orchestrator = MagicMock()
 
-        await auto_trade_start(update, context)
+        awAlgot auto_trade_start(update, context)
 
         call_args = query.edit_message_text.call_args
         message_text = call_args[0][0]
@@ -250,7 +250,7 @@ class TestTargetsMenu:
         context = MagicMock()
         context.bot_data = {}
 
-        await targets_menu(update, context)
+        awAlgot targets_menu(update, context)
 
         query.answer.assert_called_once()
         query.edit_message_text.assert_called_once()
@@ -288,7 +288,7 @@ class TestEmergencyStop:
         context.application.auto_buyer = auto_buyer
         context.application.orchestrator = orchestrator
 
-        await emergency_stop(update, context)
+        awAlgot emergency_stop(update, context)
 
         # Проверяем что всё остановлено
         assert auto_buyer.config.enabled is False
@@ -319,7 +319,7 @@ class TestRepricingToggle:
         context = MagicMock()
         context.bot_data = {"repricing_enabled": False}
 
-        await repricing_toggle(update, context)
+        awAlgot repricing_toggle(update, context)
 
         assert context.bot_data["repricing_enabled"] is True
 
@@ -336,7 +336,7 @@ class TestRepricingToggle:
         context = MagicMock()
         context.bot_data = {"repricing_enabled": True}
 
-        await repricing_toggle(update, context)
+        awAlgot repricing_toggle(update, context)
 
         assert context.bot_data["repricing_enabled"] is False
 
@@ -363,7 +363,7 @@ class TestShowBalance:
         context.application = MagicMock()
         context.application.dmarket_api = dmarket_api
 
-        await show_balance(update, context)
+        awAlgot show_balance(update, context)
 
         call_args = query.edit_message_text.call_args
         message_text = call_args[0][0]
@@ -387,7 +387,7 @@ class TestShowBalance:
         context.application = MagicMock()
         context.application.dmarket_api = None
 
-        await show_balance(update, context)
+        awAlgot show_balance(update, context)
 
         call_args = query.edit_message_text.call_args
         message_text = call_args[0][0]
@@ -412,12 +412,12 @@ class TestSettingsMenu:
         context.bot_data = {}
 
         with patch.dict("os.environ", {"DRY_RUN": "true"}):
-            await settings_menu(update, context)
+            awAlgot settings_menu(update, context)
 
         call_args = query.edit_message_text.call_args
         message_text = call_args[0][0]
 
-        assert "НАСТРОЙКИ" in message_text
+        assert "НАСТSwarmКИ" in message_text
         assert "ТЕСТОВЫЙ" in message_text
 
 
@@ -451,7 +451,7 @@ class TestAutoTradeStatus:
         context.application.dmarket_api = dmarket_api
         context.application.auto_buyer = auto_buyer
 
-        await auto_trade_status(update, context)
+        awAlgot auto_trade_status(update, context)
 
         call_args = query.edit_message_text.call_args
         message_text = call_args[0][0]

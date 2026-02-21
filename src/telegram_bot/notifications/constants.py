@@ -1,7 +1,7 @@
 """Константы и типы для системы уведомлений.
 
 Этот модуль содержит все константы, используемые в системе уведомлений,
-включая типы уведомлений и настройки кэширования.
+включая типы уведомлений и настSwarmки кэширования.
 """
 
 from __future__ import annotations
@@ -18,16 +18,16 @@ NOTIFICATION_TYPES: Final[dict[str, str]] = {
     "trend_change": "📊 Изменение тренда",
     "buy_intent": "🛒 Намерение купить",
     "buy_success": "✅ Успешная покупка",
-    "buy_failed": "❌ Ошибка покупки",
+    "buy_fAlgoled": "❌ Ошибка покупки",
     "sell_success": "✅ Успешная продажа",
-    "sell_failed": "❌ Ошибка продажи",
+    "sell_fAlgoled": "❌ Ошибка продажи",
     "critical_shutdown": "🛑 Критическая остановка",
 }
 
 # TTL кэша цен в секундах
 _PRICE_CACHE_TTL: Final[int] = 300  # 5 минут
 
-# Настройки по умолчанию для пользователей
+# НастSwarmки по умолчанию для пользователей
 DEFAULT_USER_SETTINGS: Final[dict[str, object]] = {
     "enabled": True,
     "language": "ru",
@@ -40,9 +40,9 @@ DEFAULT_USER_SETTINGS: Final[dict[str, object]] = {
 NOTIFICATION_PRIORITIES: Final[dict[str, int]] = {
     "critical_shutdown": 100,
     "buy_success": 90,
-    "buy_failed": 90,
+    "buy_fAlgoled": 90,
     "sell_success": 85,
-    "sell_failed": 85,
+    "sell_fAlgoled": 85,
     "buy_intent": 80,
     "arbitrage": 70,
     "good_deal": 60,

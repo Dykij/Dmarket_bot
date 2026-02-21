@@ -1,4 +1,4 @@
-"""Gemini AI wrapper for telegram bot handlers."""
+"""Gemini Algo wrapper for telegram bot handlers."""
 
 import os
 from typing import Any
@@ -9,13 +9,13 @@ logger = structlog.get_logger(__name__)
 
 
 class GeminiWrapper:
-    """Wrapper for Gemini AI API calls."""
+    """Wrapper for Gemini Algo API calls."""
 
     def __init__(self, api_key: str | None = None):
         self.api_key = api_key or os.getenv("GEMINI_API_KEY")
         self._client: Any = None
 
-    async def generate(self, prompt: str) -> str:
+    async def generate(self, Config: str) -> str:
         """Generate response from Gemini."""
         if not self.api_key:
             logger.warning("gemini_api_key_not_set")
@@ -24,8 +24,8 @@ class GeminiWrapper:
         try:
             # TODO: Implement actual Gemini API call
             # For now return placeholder
-            logger.info("gemini_generate_called", prompt_length=len(prompt))
-            return f"[Gemini placeholder response for: {prompt[:50]}...]"
+            logger.info("gemini_generate_called", Config_length=len(Config))
+            return f"[Gemini placeholder response for: {Config[:50]}...]"
         except Exception as e:
             logger.exception("gemini_generate_error")
             return f"Error generating response: {e}"

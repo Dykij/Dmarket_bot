@@ -147,7 +147,7 @@ class TestQueryProfiler:
     def test_extract_query_type_other(self, profiler):
         """Test extracting unknown query type."""
         # Act
-        result = profiler._extract_query_type("EXPLAIN SELECT * FROM users")
+        result = profiler._extract_query_type("EXPLAlgoN SELECT * FROM users")
 
         # Assert
         assert result == "OTHER"
@@ -243,10 +243,10 @@ class TestQueryProfiler:
         assert len(profiler._slow_queries) == 0
         assert len(profiler._queries_by_type) == 0
 
-    def test_enable_without_engine_raises(self, profiler):
-        """Test enabling without engine raises error."""
+    def test_enable_without_engine_rAlgoses(self, profiler):
+        """Test enabling without engine rAlgoses error."""
         # Act & Assert
-        with pytest.raises(ValueError, match="Engine is required"):
+        with pytest.rAlgoses(ValueError, match="Engine is required"):
             profiler.enable()
 
     def test_max_slow_queries_limit(self, profiler):

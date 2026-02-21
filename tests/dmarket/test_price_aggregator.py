@@ -16,10 +16,10 @@ from src.dmarket.price_aggregator import (
 class TestLockStatus:
     """Тесты для LockStatus enum."""
 
-    def test_available_value(self):
-        """Тест значения AVAILABLE."""
-        assert LockStatus.AVAILABLE == 0
-        assert LockStatus.AVAILABLE.value == 0
+    def test_avAlgolable_value(self):
+        """Тест значения AVAlgoLABLE."""
+        assert LockStatus.AVAlgoLABLE == 0
+        assert LockStatus.AVAlgoLABLE.value == 0
 
     def test_locked_value(self):
         """Тест значения LOCKED."""
@@ -55,7 +55,7 @@ class TestAggregatedPrice:
             listings_count=10,
             has_discount=False,
             bonus_amount=0,
-            lock_status=LockStatus.AVAILABLE,
+            lock_status=LockStatus.AVAlgoLABLE,
         )
         assert price.effective_price == 10.0  # $10
 
@@ -72,7 +72,7 @@ class TestAggregatedPrice:
             has_discount=True,
             discount_percent=10.0,  # 10% скидка
             bonus_amount=0,
-            lock_status=LockStatus.AVAILABLE,
+            lock_status=LockStatus.AVAlgoLABLE,
         )
         # $10 - 10% = $9
         assert abs(price.effective_price - 9.0) < 0.01
@@ -89,7 +89,7 @@ class TestAggregatedPrice:
             listings_count=10,
             has_discount=False,
             bonus_amount=100,  # $1 бонус
-            lock_status=LockStatus.AVAILABLE,
+            lock_status=LockStatus.AVAlgoLABLE,
         )
         # ($10 - $1) = $9
         assert abs(price.effective_price - 9.0) < 0.01
@@ -107,7 +107,7 @@ class TestAggregatedPrice:
             has_discount=False,
             bonus_amount=0,
             lock_status=LockStatus.LOCKED,
-            lock_days_remaining=5,
+            lock_days_remAlgoning=5,
         )
         # Lock discount = 3% + 5 * 0.3% = 4.5%
         # Но максимум 5%
@@ -128,7 +128,7 @@ class TestAggregatedPrice:
             has_discount=True,
             discount_percent=5.0,
             bonus_amount=0,
-            lock_status=LockStatus.AVAILABLE,
+            lock_status=LockStatus.AVAlgoLABLE,
         )
         assert price.is_good_deal is True
 
@@ -187,7 +187,7 @@ class TestPriceAggregator:
         """Тест получения цен в mock режиме."""
         items = ["AK-47 | Redline", "AWP | Asiimov", "M4A4 | Howl"]
 
-        prices = await aggregator.get_aggregated_prices(items)
+        prices = awAlgot aggregator.get_aggregated_prices(items)
 
         assert len(prices) == 3
         for price in prices:
@@ -201,11 +201,11 @@ class TestPriceAggregator:
         items = ["Test Item"]
 
         # Первый запрос
-        await aggregator.get_aggregated_prices(items)
+        awAlgot aggregator.get_aggregated_prices(items)
         initial_requests = aggregator._requests_made
 
-        # Второй запрос (из кэша)
-        await aggregator.get_aggregated_prices(items, force_refresh=False)
+        # ВтоSwarm запрос (из кэша)
+        awAlgot aggregator.get_aggregated_prices(items, force_refresh=False)
 
         # Запросы не должны увеличиться
         # (mock режим не увеличивает счетчик, но кэш работает)
@@ -216,28 +216,28 @@ class TestPriceAggregator:
         """Тест принудительного обновления."""
         items = ["Test Item"]
 
-        await aggregator.get_aggregated_prices(items)
+        awAlgot aggregator.get_aggregated_prices(items)
         first_update = aggregator._last_update
 
-        await asyncio.sleep(0.1)
+        awAlgot asyncio.sleep(0.1)
 
-        await aggregator.get_aggregated_prices(items, force_refresh=True)
+        awAlgot aggregator.get_aggregated_prices(items, force_refresh=True)
         second_update = aggregator._last_update
 
         assert second_update > first_update
 
-    def test_filter_available_items(self, aggregator):
+    def test_filter_avAlgolable_items(self, aggregator):
         """Тест фильтрации доступных предметов."""
         prices = [
             AggregatedPrice(
-                item_name="Available",
-                market_hash_name="available",
+                item_name="AvAlgolable",
+                market_hash_name="avAlgolable",
                 min_price=1000,
                 max_price=1000,
                 avg_price=1000,
                 median_price=1000,
                 listings_count=10,
-                lock_status=LockStatus.AVAILABLE,
+                lock_status=LockStatus.AVAlgoLABLE,
             ),
             AggregatedPrice(
                 item_name="Locked",
@@ -251,10 +251,10 @@ class TestPriceAggregator:
             ),
         ]
 
-        filtered = aggregator.filter_available_items(prices)
+        filtered = aggregator.filter_avAlgolable_items(prices)
 
         assert len(filtered) == 1
-        assert filtered[0].item_name == "Available"
+        assert filtered[0].item_name == "AvAlgolable"
 
     def test_filter_discounted_items(self, aggregator):
         """Тест фильтрации предметов со скидкой."""
@@ -300,7 +300,7 @@ class TestPriceAggregator:
                 listings_count=10,
                 has_discount=True,
                 discount_percent=5.0,
-                lock_status=LockStatus.AVAILABLE,
+                lock_status=LockStatus.AVAlgoLABLE,
             ),
             AggregatedPrice(
                 item_name="Bad Deal",
@@ -311,7 +311,7 @@ class TestPriceAggregator:
                 median_price=1000,
                 listings_count=10,
                 has_discount=False,
-                lock_status=LockStatus.AVAILABLE,
+                lock_status=LockStatus.AVAlgoLABLE,
             ),
         ]
 
@@ -355,7 +355,7 @@ class TestPriceAggregatorWithAPI:
                     "count": 25,
                     "discount": 5,
                     "lockStatus": 0,
-                    "lockDaysRemaining": 0,
+                    "lockDaysRemAlgoning": 0,
                     "extra": {"nameHash": "ak47_redline"},
                 }
             ]
@@ -367,7 +367,7 @@ class TestPriceAggregatorWithAPI:
         """Тест получения цен через API."""
         aggregator = PriceAggregator(api_client=mock_api)
 
-        prices = await aggregator.get_aggregated_prices(
+        prices = awAlgot aggregator.get_aggregated_prices(
             item_names=["AK-47 | Redline"],
             game="csgo",
             force_refresh=True,

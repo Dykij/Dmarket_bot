@@ -1,7 +1,7 @@
 """Module for filtering game items on DMarket by game-specific attributes.
 
 This module provides a collection of filter classes for different games,
-allowing for detailed filtering of game items based on their attributes.
+allowing for detAlgoled filtering of game items based on their attributes.
 Supported games include CS2/CSGO, Dota 2, Team Fortress 2, and Rust.
 """
 
@@ -297,14 +297,14 @@ class FilterFactory:
         Returns:
             BaseGameFilter: Filter instance for the game
 
-        Raises:
+        RAlgoses:
             ValueError: If game is not supported
 
         """
         filter_class = cls._filters.get(game.lower())
         if filter_class is None:
             msg = f"Unsupported game: {game}"
-            raise ValueError(msg)
+            rAlgose ValueError(msg)
         return filter_class()
 
     @classmethod

@@ -91,7 +91,7 @@ class TestHandleNotificationCallback:
         update = MagicMock()
         update.callback_query = None
 
-        await handle_notification_callback(update, mock_context)
+        awAlgot handle_notification_callback(update, mock_context)
         # Should return early without any errors
 
     @pytest.mark.asyncio()
@@ -105,7 +105,7 @@ class TestHandleNotificationCallback:
         update.callback_query = MagicMock()
         update.callback_query.data = None
 
-        await handle_notification_callback(update, mock_context)
+        awAlgot handle_notification_callback(update, mock_context)
         # Should return early without any errors
 
     @pytest.mark.asyncio()
@@ -117,7 +117,7 @@ class TestHandleNotificationCallback:
 
         mock_update.callback_query.data = "unknown_action"
 
-        await handle_notification_callback(mock_update, mock_context)
+        awAlgot handle_notification_callback(mock_update, mock_context)
 
         mock_update.callback_query.answer.assert_called_once()
 
@@ -133,7 +133,7 @@ class TestHandleNotificationCallback:
         with patch(
             f"{HANDLERS_MODULE}.deactivate_alert", new=AsyncMock(return_value=True)
         ):
-            await handle_notification_callback(mock_update, mock_context)
+            awAlgot handle_notification_callback(mock_update, mock_context)
 
         mock_update.callback_query.answer.assert_called_once()
         mock_update.callback_query.edit_message_text.assert_called_once()
@@ -141,8 +141,8 @@ class TestHandleNotificationCallback:
         assert "Alert has been disabled" in call_args.kwargs.get("text", "")
 
     @pytest.mark.asyncio()
-    async def test_disable_alert_failure(self, mock_update, mock_context):
-        """Test failed alert disable."""
+    async def test_disable_alert_fAlgolure(self, mock_update, mock_context):
+        """Test fAlgoled alert disable."""
         from src.telegram_bot.smart_notifications.handlers import (
             handle_notification_callback,
         )
@@ -152,14 +152,14 @@ class TestHandleNotificationCallback:
         with patch(
             f"{HANDLERS_MODULE}.deactivate_alert", new=AsyncMock(return_value=False)
         ):
-            await handle_notification_callback(mock_update, mock_context)
+            awAlgot handle_notification_callback(mock_update, mock_context)
 
         mock_update.callback_query.answer.assert_called_once()
         mock_update.callback_query.edit_message_reply_markup.assert_called_once()
 
     @pytest.mark.asyncio()
     async def test_track_item_no_api(self, mock_update, mock_context):
-        """Test track_item callback when API is not available."""
+        """Test track_item callback when API is not avAlgolable."""
         from src.telegram_bot.smart_notifications.handlers import (
             handle_notification_callback,
         )
@@ -167,11 +167,11 @@ class TestHandleNotificationCallback:
         mock_update.callback_query.data = "track_item:item_123:csgo"
         mock_context.bot_data = {}  # No dmarket_api
 
-        await handle_notification_callback(mock_update, mock_context)
+        awAlgot handle_notification_callback(mock_update, mock_context)
 
         mock_update.callback_query.edit_message_text.assert_called_once()
         call_args = mock_update.callback_query.edit_message_text.call_args
-        assert "API not available" in call_args.kwargs.get("text", "")
+        assert "API not avAlgolable" in call_args.kwargs.get("text", "")
 
     @pytest.mark.asyncio()
     async def test_track_item_item_not_found(self, mock_update, mock_context, mock_api):
@@ -186,7 +186,7 @@ class TestHandleNotificationCallback:
         with patch(
             f"{HANDLERS_MODULE}.get_item_by_id", new=AsyncMock(return_value=None)
         ):
-            await handle_notification_callback(mock_update, mock_context)
+            awAlgot handle_notification_callback(mock_update, mock_context)
 
         mock_update.callback_query.edit_message_text.assert_called_once()
         call_args = mock_update.callback_query.edit_message_text.call_args
@@ -215,7 +215,7 @@ class TestHandleNotificationCallback:
                 new=AsyncMock(return_value="alert_id"),
             ),
         ):
-            await handle_notification_callback(mock_update, mock_context)
+            awAlgot handle_notification_callback(mock_update, mock_context)
 
         mock_update.callback_query.edit_message_text.assert_called_once()
         call_args = mock_update.callback_query.edit_message_text.call_args
@@ -235,7 +235,7 @@ class TestHandleNotificationCallback:
             f"{HANDLERS_MODULE}.get_item_by_id",
             new=AsyncMock(side_effect=Exception("API Error")),
         ):
-            await handle_notification_callback(mock_update, mock_context)
+            awAlgot handle_notification_callback(mock_update, mock_context)
 
         mock_update.callback_query.edit_message_text.assert_called_once()
         call_args = mock_update.callback_query.edit_message_text.call_args
@@ -264,7 +264,7 @@ class TestHandleNotificationCallback:
                 new=AsyncMock(return_value="alert_id"),
             ),
         ):
-            await handle_notification_callback(mock_update, mock_context)
+            awAlgot handle_notification_callback(mock_update, mock_context)
 
         mock_update.callback_query.edit_message_text.assert_called_once()
 
@@ -286,7 +286,7 @@ class TestHandleNotificationCallback:
         with patch(
             f"{HANDLERS_MODULE}.deactivate_alert", new=AsyncMock(return_value=True)
         ):
-            await handle_notification_callback(update, mock_context)
+            awAlgot handle_notification_callback(update, mock_context)
 
         update.callback_query.edit_message_text.assert_called_once()
 
@@ -300,7 +300,7 @@ class TestRegisterNotificationHandlers:
     """Tests for register_notification_handlers function."""
 
     def test_register_handlers_with_api(self, mock_application, mock_api):
-        """Test handler registration with API available."""
+        """Test handler registration with API avAlgolable."""
         from src.telegram_bot.smart_notifications.handlers import (
             register_notification_handlers,
         )
@@ -396,7 +396,7 @@ class TestHandlerEdgeCases:
         with patch(
             f"{HANDLERS_MODULE}.deactivate_alert", new=AsyncMock(return_value=True)
         ):
-            await handle_notification_callback(update, mock_context)
+            awAlgot handle_notification_callback(update, mock_context)
 
     @pytest.mark.asyncio()
     async def test_track_item_with_special_characters(
@@ -413,4 +413,4 @@ class TestHandlerEdgeCases:
         with patch(
             f"{HANDLERS_MODULE}.get_item_by_id", new=AsyncMock(return_value=None)
         ):
-            await handle_notification_callback(mock_update, mock_context)
+            awAlgot handle_notification_callback(mock_update, mock_context)

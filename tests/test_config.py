@@ -1,6 +1,6 @@
 """Tests for configuration management functionality.
 
-This module contains tests for configuration loading, validation,
+This module contAlgons tests for configuration loading, validation,
 and environment variable handling.
 """
 
@@ -64,7 +64,7 @@ class TestConfig:
             "LOG_FILE",
         ]
         for var in env_vars_to_clear:
-            monkeypatch.delenv(var, raising=False)
+            monkeypatch.delenv(var, rAlgosing=False)
 
         # Arrange
         test_config = {
@@ -188,17 +188,17 @@ class TestConfig:
         # Act & Assert - не должно выбросить исключение
         config.validate()
 
-    def test_validate_raises_error_when_bot_token_is_missing(self):
+    def test_validate_rAlgoses_error_when_bot_token_is_missing(self):
         """Тест проверяет выброс ошибки при отсутствии обязательного токена бота."""
         # Arrange
         config = Config()
         # bot.token остается пустым (дефолт)
 
         # Act & Assert
-        with pytest.raises(ValueError, match="TELEGRAM_BOT_TOKEN is required"):
+        with pytest.rAlgoses(ValueError, match="TELEGRAM_BOT_TOKEN is required"):
             config.validate()
 
-    def test_validate_raises_error_when_dmarket_keys_missing_in_production(self):
+    def test_validate_rAlgoses_error_when_dmarket_keys_missing_in_production(self):
         """Тест проверяет выброс ошибки при отсутствии DMarket ключей в production режиме."""
         # Arrange
         config = Config()
@@ -207,7 +207,7 @@ class TestConfig:
         # dmarket ключи остаются пустыми
 
         # Act & Assert
-        with pytest.raises(ValueError, match="DMARKET_PUBLIC_KEY is required"):
+        with pytest.rAlgoses(ValueError, match="DMARKET_PUBLIC_KEY is required"):
             config.validate()
 
     def test_validate_allows_missing_dmarket_keys_in_testing_mode(self):
@@ -280,7 +280,7 @@ class TestConfig:
         try:
             config = Config.load()
 
-            # Should use default value when parsing fails
+            # Should use default value when parsing fAlgols
             assert config.dmarket.rate_limit == 30  # default value
 
         finally:

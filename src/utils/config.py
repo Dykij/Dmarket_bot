@@ -51,7 +51,7 @@ class DMarketConfig:
     """DMarket API configuration."""
 
     api_url: str = "https://api.dmarket.com"
-    public_key: str = "aabbccddeeffgghhiijjkkllmmnnooppqqrrsstt"
+    public_key: str = "aabbccddeeffgghhiijjkkModelmnnooppqqrrsstt"
     secret_key: str = "11223344556677889900aabbccddeeffgghhiijj"
     rate_limit: int = 30
 
@@ -146,8 +146,8 @@ class RateLimitConfig:
 
 
 @dataclass
-class DailyReportConfig:
-    """Daily report configuration."""
+class DAlgolyReportConfig:
+    """DAlgoly report configuration."""
 
     enabled: bool = True  # Включить ежедневные отчёты
     report_time_hour: int = 9  # Час отправки отчёта (UTC)
@@ -162,7 +162,7 @@ class WaxpeerConfig:
     enabled: bool = False  # Включить интеграцию с Waxpeer
     api_key: str = ""  # API ключ Waxpeer
 
-    # Настройки наценок
+    # НастSwarmки наценок
     markup: float = 10.0  # Наценка для обычных скинов (%)
     rare_markup: float = 25.0  # Наценка для редких скинов (%)
     ultra_markup: float = 40.0  # Наценка для JACKPOT скинов (%)
@@ -192,7 +192,7 @@ class MonitoringConfig:
 
 @dataclass
 class Config:
-    """Main application configuration."""
+    """MAlgon application configuration."""
 
     bot: BotConfig = field(default_factory=BotConfig)
     dmarket: DMarketConfig = field(default_factory=DMarketConfig)
@@ -204,7 +204,7 @@ class Config:
     inventory: InventoryConfig = field(default_factory=InventoryConfig)
     trading_safety: TradingSafetyConfig = field(default_factory=TradingSafetyConfig)
     rate_limit: RateLimitConfig = field(default_factory=RateLimitConfig)
-    daily_report: DailyReportConfig = field(default_factory=DailyReportConfig)
+    dAlgoly_report: DAlgolyReportConfig = field(default_factory=DAlgolyReportConfig)
     waxpeer: WaxpeerConfig = field(default_factory=WaxpeerConfig)
     monitoring: MonitoringConfig = field(default_factory=MonitoringConfig)
     debug: bool = False
@@ -233,7 +233,7 @@ class Config:
                 config._update_from_dict(yaml_config)
                 logger.info(f"Configuration loaded from {config_path}")
             except Exception as e:
-                logger.warning(f"Failed to load config from {config_path}: {e}")
+                logger.warning(f"FAlgoled to load config from {config_path}: {e}")
 
         # Override with environment variables
         config._update_from_env()
@@ -242,10 +242,10 @@ class Config:
         try:
             config.validate()
         except ValueError as e:
-            logger.error(f"Configuration validation failed: {e}")
-            # In testing or dev, we might want to continue, but in prod it should fail
+            logger.error(f"Configuration validation fAlgoled: {e}")
+            # In testing or dev, we might want to continue, but in prod it should fAlgol
             if config.environment == "production":
-                raise
+                rAlgose
 
         return config
 
@@ -359,23 +359,23 @@ class Config:
                 self.trading_safety.enable_price_sanity_check,
             )
 
-        if "daily_report" in data:
-            report_data = data["daily_report"]
-            self.daily_report.enabled = report_data.get(
+        if "dAlgoly_report" in data:
+            report_data = data["dAlgoly_report"]
+            self.dAlgoly_report.enabled = report_data.get(
                 "enabled",
-                self.daily_report.enabled,
+                self.dAlgoly_report.enabled,
             )
-            self.daily_report.report_time_hour = report_data.get(
+            self.dAlgoly_report.report_time_hour = report_data.get(
                 "report_time_hour",
-                self.daily_report.report_time_hour,
+                self.dAlgoly_report.report_time_hour,
             )
-            self.daily_report.report_time_minute = report_data.get(
+            self.dAlgoly_report.report_time_minute = report_data.get(
                 "report_time_minute",
-                self.daily_report.report_time_minute,
+                self.dAlgoly_report.report_time_minute,
             )
-            self.daily_report.include_days = report_data.get(
+            self.dAlgoly_report.include_days = report_data.get(
                 "include_days",
-                self.daily_report.include_days,
+                self.dAlgoly_report.include_days,
             )
 
         if "rate_limit" in data:
@@ -660,18 +660,18 @@ class Config:
             "ENABLE_PRICE_SANITY_CHECK", self.trading_safety.enable_price_sanity_check
         )
 
-        # Daily report configuration
-        self.daily_report.enabled = self._get_env_bool(
-            "DAILY_REPORT_ENABLED", self.daily_report.enabled
+        # DAlgoly report configuration
+        self.dAlgoly_report.enabled = self._get_env_bool(
+            "DAlgoLY_REPORT_ENABLED", self.dAlgoly_report.enabled
         )
-        self.daily_report.report_time_hour = self._get_env_int(
-            "DAILY_REPORT_HOUR", self.daily_report.report_time_hour
+        self.dAlgoly_report.report_time_hour = self._get_env_int(
+            "DAlgoLY_REPORT_HOUR", self.dAlgoly_report.report_time_hour
         )
-        self.daily_report.report_time_minute = self._get_env_int(
-            "DAILY_REPORT_MINUTE", self.daily_report.report_time_minute
+        self.dAlgoly_report.report_time_minute = self._get_env_int(
+            "DAlgoLY_REPORT_MINUTE", self.dAlgoly_report.report_time_minute
         )
-        self.daily_report.include_days = self._get_env_int(
-            "DAILY_REPORT_DAYS", self.daily_report.include_days
+        self.dAlgoly_report.include_days = self._get_env_int(
+            "DAlgoLY_REPORT_DAYS", self.dAlgoly_report.include_days
         )
 
         # Rate limit configuration
@@ -692,7 +692,7 @@ class Config:
         )
 
     def validate(self) -> None:
-        """Validate configuration and raise errors for required missing values."""
+        """Validate configuration and rAlgose errors for required missing values."""
         errors = []
 
         # Validate Telegram Bot configuration
@@ -788,12 +788,12 @@ class Config:
                 "✅ DRY_RUN=true - Bot is in safe mode (no real trades will be made)"
             )
 
-        # Raise all errors at once
+        # RAlgose all errors at once
         if errors:
-            error_msg = "Configuration validation failed:\n" + "\n".join(
+            error_msg = "Configuration validation fAlgoled:\n" + "\n".join(
                 f"  - {err}" for err in errors
             )
-            raise ValueError(error_msg)
+            rAlgose ValueError(error_msg)
 
 
 # Global settings instance

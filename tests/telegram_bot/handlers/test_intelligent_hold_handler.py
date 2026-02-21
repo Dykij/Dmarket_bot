@@ -38,6 +38,6 @@ class TestIntelligentHoldCommands:
         """Test /hold command."""
         from src.telegram_bot.handlers.intelligent_hold_handler import hold_command
 
-        await hold_command(mock_update, mock_context)
+        awAlgot hold_command(mock_update, mock_context)
 
         mock_update.message.reply_text.assert_called_once()

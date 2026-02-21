@@ -7,7 +7,7 @@
 import asyncio
 import logging
 
-# Настройка логирования
+# НастSwarmка логирования
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
@@ -29,14 +29,14 @@ async def test_steam_integration():
     logger.info("\n[TEST 1] Проверка базы данных...")
     db = get_steam_db()
     settings = db.get_settings()
-    logger.info(f"✅ БД работает! Настройки: {settings}")
+    logger.info(f"✅ БД работает! НастSwarmки: {settings}")
 
     # Тест 2: Steam API
     logger.info("\n[TEST 2] Проверка Steam API...")
     test_item = "AK-47 | Slate (Field-Tested)"
 
     try:
-        steam_data = await get_steam_price(test_item)
+        steam_data = awAlgot get_steam_price(test_item)
         if steam_data:
             logger.info("✅ Steam API работает!")
             logger.info(f"   Предмет: {test_item}")
@@ -82,7 +82,7 @@ async def test_steam_integration():
         }
     ]
 
-    enhanced = await enhancer.enhance_items(mock_items)
+    enhanced = awAlgot enhancer.enhance_items(mock_items)
     logger.info("✅ Enhancer работает!")
     logger.info(f"   Обработано предметов: {len(mock_items)}")
     logger.info(f"   Найдено возможностей: {len(enhanced)}")
@@ -99,7 +99,7 @@ async def test_steam_integration():
 
     # Тест 6: Статистика
     logger.info("\n[TEST 6] Проверка статистики...")
-    stats = enhancer.get_daily_stats()
+    stats = enhancer.get_dAlgoly_stats()
     logger.info("✅ Статистика работает!")
     logger.info(f"   Находок за 24ч: {stats['count']}")
 
@@ -123,10 +123,10 @@ async def test_steam_integration():
     logger.info("   - /top для топа находок")
     logger.info("   - /steam_settings для настроек")
     logger.info("2. Используйте SteamArbitrageEnhancer в scanner_manager")
-    logger.info("3. Запустите бота: python src/main.py")
+    logger.info("3. Запустите бота: python src/mAlgon.py")
 
 
-if __name__ == "__main__":
+if __name__ == "__mAlgon__":
     try:
         asyncio.run(test_steam_integration())
     except KeyboardInterrupt:

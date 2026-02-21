@@ -91,13 +91,13 @@ def sample_balance_response():
     """Sample balance response.
 
     Note: Uses official DMarket API format (2024):
-    {"usd": "10000", "usdAvailableToWithdraw": "0", ...}
+    {"usd": "10000", "usdAvAlgolableToWithdraw": "0", ...}
     Not the alternative format {"usd": {"amount": "10000"}}
     """
     return {
         "usd": "10000",  # $100.00 in cents (direct string value)
         "dmc": "5000",
-        "usdAvailableToWithdraw": "0",
+        "usdAvAlgolableToWithdraw": "0",
         "usdTradeProtected": "0",
     }
 
@@ -118,7 +118,7 @@ class TestDMarketAPIIntegration:
             mock_request.return_value = sample_market_response
 
             # Call API
-            result = await mock_dmarket_api.get_market_items(
+            result = awAlgot mock_dmarket_api.get_market_items(
                 game="csgo",  # Changed from game_id to game (actual API signature)
                 limit=100,
             )
@@ -140,10 +140,10 @@ class TestDMarketAPIIntegration:
         with patch.object(mock_dmarket_api, "_request", new_callable=AsyncMock) as mock_request:
             mock_request.return_value = sample_balance_response
 
-            result = await mock_dmarket_api.get_balance()
+            result = awAlgot mock_dmarket_api.get_balance()
 
             # get_balance returns dict with balance info:
-            # {'balance': float, 'available_balance': float, 'total_balance': float, ...}
+            # {'balance': float, 'avAlgolable_balance': float, 'total_balance': float, ...}
             # 10000 cents = $100.00
             assert isinstance(result, dict)
             assert result["balance"] == 100.0
@@ -180,7 +180,7 @@ class TestDMarketAPIIntegration:
         with patch.object(mock_dmarket_api, "_request", new_callable=AsyncMock) as mock_request:
             mock_request.return_value = response
 
-            result = await mock_dmarket_api.get_market_items(
+            result = awAlgot mock_dmarket_api.get_market_items(
                 game="csgo",  # Changed from game_id to game (actual API signature)
                 price_from=200,  # $2.00 minimum
                 price_to=8000,  # $80.00 maximum
@@ -205,9 +205,9 @@ class TestDMarketAPIIntegration:
             )
 
             # get_balance() catches exceptions internally and returns error response dict
-            result = await mock_dmarket_api.get_balance()
+            result = awAlgot mock_dmarket_api.get_balance()
 
-            # Should return error response dict, not raise exception
+            # Should return error response dict, not rAlgose exception
             assert isinstance(result, dict)
             assert result.get("error") is True
             assert result.get("status_code") == 401
@@ -226,7 +226,7 @@ class TestDMarketAPIIntegration:
             )
 
             # get_market_items catches exceptions and returns error response dict
-            result = await mock_dmarket_api.get_market_items(game="csgo")
+            result = awAlgot mock_dmarket_api.get_market_items(game="csgo")
 
             # Should return empty result with error flag (method catches exceptions)
             assert isinstance(result, dict)
@@ -255,7 +255,7 @@ class TestDMarketAPIEndpoints:
         with patch.object(mock_dmarket_api, "_request", new_callable=AsyncMock) as mock_request:
             mock_request.return_value = inventory_response
 
-            result = await mock_dmarket_api.get_user_inventory(game_id="a8db")
+            result = awAlgot mock_dmarket_api.get_user_inventory(game_id="a8db")
 
             assert "objects" in result
             assert len(result["objects"]) == 1
@@ -279,7 +279,7 @@ class TestDMarketAPIEndpoints:
                     "Price": {"Amount": 1000, "Currency": "USD"},
                 }
             ]
-            result = await mock_dmarket_api.create_targets(
+            result = awAlgot mock_dmarket_api.create_targets(
                 game_id="csgo",
                 targets=targets,
             )
@@ -299,16 +299,16 @@ class TestDMarketAPIEndpoints:
             mock_request.return_value = delete_response
 
             # Use the actual delete_targets method
-            result = await mock_dmarket_api.delete_targets(target_ids=["target_001"])
+            result = awAlgot mock_dmarket_api.delete_targets(target_ids=["target_001"])
 
             assert "Result" in result
             assert result["Result"][0]["Successful"] is True
 
 
 class TestDMarketAPIWithVCRCassettes:
-    """Tests that can use real VCR cassettes when available.
+    """Tests that can use real VCR cassettes when avAlgolable.
 
-    These tests will fail if cassettes don't exist and record_mode is 'none'.
+    These tests will fAlgol if cassettes don't exist and record_mode is 'none'.
     Set record_mode='all' and provide valid API keys to record cassettes.
     """
 
@@ -331,7 +331,7 @@ class TestDMarketAPIWithVCRCassettes:
                 secret_key="your_secret_key",
             )
 
-            result = await api.get_market_items(
+            result = awAlgot api.get_market_items(
                 game="csgo",  # Changed from game_id to game (actual API signature)
                 limit=10,
             )

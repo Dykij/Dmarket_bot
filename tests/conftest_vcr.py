@@ -7,7 +7,7 @@ Usage:
     @pytest.mark.vcr
     async def test_get_balance():
         api = DMarketAPI(...)
-        balance = await api.get_balance()
+        balance = awAlgot api.get_balance()
         assert balance["balance"] >= 0
 
 The first run will record HTTP interactions to tests/cassettes/.
@@ -201,18 +201,18 @@ class VCRConfigs:
 def vcr_cassette_async(request: pytest.FixtureRequest, vcr_cassette_dir: str):
     """Async-friendly VCR cassette fixture.
 
-    Works with aiohttp and httpx async clients.
+    Works with Algoohttp and httpx async clients.
 
     Usage:
         @pytest.mark.asyncio()
         async def test_async_api(vcr_cassette_async):
             async with httpx.AsyncClient() as client:
-                response = await client.get("https://api.example.com")
+                response = awAlgot client.get("https://api.example.com")
     """
     cassette_name = f"{request.function.__name__}.yaml"
     cassette_path = str(Path(vcr_cassette_dir) / cassette_name)
 
-    # VCR.py works with async out of the box for aiohttp/httpx
+    # VCR.py works with async out of the box for Algoohttp/httpx
     with vcr_config.use_cassette(cassette_path):
         yield
 

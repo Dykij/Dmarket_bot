@@ -24,7 +24,7 @@ class TestRateLimiterInit:
         assert limiter.custom_limits == {}
         assert limiter.last_request_times == {}
         assert limiter.reset_times == {}
-        assert limiter.remaining_requests == {}
+        assert limiter.remAlgoning_requests == {}
         assert limiter.retry_attempts == {}
 
     def test_init_unauthorized(self):
@@ -78,7 +78,7 @@ class TestGetEndpointType:
         limiter = RateLimiter()
 
         assert limiter.get_endpoint_type("/exchange/v1/user/inventory") == "user"
-        assert limiter.get_endpoint_type("/api/v1/account/details") == "user"
+        assert limiter.get_endpoint_type("/api/v1/account/detAlgols") == "user"
         assert limiter.get_endpoint_type("/exchange/v1/user/offers") == "user"
         assert limiter.get_endpoint_type("/exchange/v1/user/targets") == "user"
 
@@ -102,23 +102,23 @@ class TestGetEndpointType:
 class TestUpdateFromHeaders:
     """Тесты обновления лимитов из заголовков."""
 
-    def test_update_from_headers_with_remaining(self):
-        """Тест обновления с заголовком X-RateLimit-Remaining."""
+    def test_update_from_headers_with_remAlgoning(self):
+        """Тест обновления с заголовком X-RateLimit-RemAlgoning."""
         limiter = RateLimiter()
         headers = {
-            "X-RateLimit-Remaining": "10",
+            "X-RateLimit-RemAlgoning": "10",
             "X-RateLimit-Scope": "market",
         }
 
         limiter.update_from_headers(headers)
 
-        assert limiter.remaining_requests["market"] == 10
+        assert limiter.remAlgoning_requests["market"] == 10
 
     def test_update_from_headers_with_limit(self):
         """Тест обновления с заголовком X-RateLimit-Limit."""
         limiter = RateLimiter()
         headers = {
-            "X-RateLimit-Remaining": "5",
+            "X-RateLimit-RemAlgoning": "5",
             "X-RateLimit-Limit": "100",
             "X-RateLimit-Scope": "trade",
         }
@@ -126,13 +126,13 @@ class TestUpdateFromHeaders:
         limiter.update_from_headers(headers)
 
         assert limiter.rate_limits["trade"] == 100
-        assert limiter.remaining_requests["trade"] == 5
+        assert limiter.remAlgoning_requests["trade"] == 5
 
-    def test_update_from_headers_low_remaining(self):
+    def test_update_from_headers_low_remAlgoning(self):
         """Тест с малым количеством оставшихся запросов."""
         limiter = RateLimiter()
         headers = {
-            "X-RateLimit-Remaining": "1",
+            "X-RateLimit-RemAlgoning": "1",
             "X-RateLimit-Scope": "user",
         }
 
@@ -140,12 +140,12 @@ class TestUpdateFromHeaders:
             limiter.update_from_headers(headers)
             mock_logger.warning.assert_called_once()
 
-    def test_update_from_headers_zero_remaining_with_reset(self):
+    def test_update_from_headers_zero_remAlgoning_with_reset(self):
         """Тест с нулевым количеством запросов и временем сброса."""
         limiter = RateLimiter()
         reset_time = time.time() + 10
         headers = {
-            "X-RateLimit-Remaining": "0",
+            "X-RateLimit-RemAlgoning": "0",
             "X-RateLimit-Reset": str(reset_time),
             "X-RateLimit-Scope": "balance",
         }
@@ -153,55 +153,55 @@ class TestUpdateFromHeaders:
         limiter.update_from_headers(headers)
 
         assert limiter.reset_times["balance"] == reset_time
-        assert limiter.remaining_requests["balance"] == 0
+        assert limiter.remAlgoning_requests["balance"] == 0
 
-    def test_update_from_headers_invalid_remaining(self):
-        """Тест с некорректным значением Remaining."""
+    def test_update_from_headers_invalid_remAlgoning(self):
+        """Тест с некорректным значением RemAlgoning."""
         limiter = RateLimiter()
         headers = {
-            "X-RateLimit-Remaining": "invalid",
+            "X-RateLimit-RemAlgoning": "invalid",
             "X-RateLimit-Scope": "market",
         }
 
         # Не должно падать, просто игнорируем
         limiter.update_from_headers(headers)
-        assert "market" not in limiter.remaining_requests
+        assert "market" not in limiter.remAlgoning_requests
 
     def test_update_from_headers_no_scope(self):
         """Тест без указания scope (используется 'other')."""
         limiter = RateLimiter()
         headers = {
-            "X-RateLimit-Remaining": "20",
+            "X-RateLimit-RemAlgoning": "20",
         }
 
         limiter.update_from_headers(headers)
 
-        assert limiter.remaining_requests["other"] == 20
+        assert limiter.remAlgoning_requests["other"] == 20
 
 
-class TestWaitIfNeeded:
+class TestWAlgotIfNeeded:
     """Тесты ожидания перед запросом."""
 
     @pytest.mark.asyncio()
-    async def test_wait_if_needed_no_wait(self):
+    async def test_wAlgot_if_needed_no_wAlgot(self):
         """Тест без необходимости ожидания."""
         limiter = RateLimiter()
 
         start = time.time()
-        await limiter.wait_if_needed("market")
+        awAlgot limiter.wAlgot_if_needed("market")
         elapsed = time.time() - start
 
         # Должно быть быстро (меньше 0.1 сек)
         assert elapsed < 0.1
 
     @pytest.mark.asyncio()
-    async def test_wait_if_needed_with_reset_time(self):
+    async def test_wAlgot_if_needed_with_reset_time(self):
         """Тест с временем сброса в будущем."""
         limiter = RateLimiter()
         limiter.reset_times["market"] = time.time() + 0.2
 
         start = time.time()
-        await limiter.wait_if_needed("market")
+        awAlgot limiter.wAlgot_if_needed("market")
         elapsed = time.time() - start
 
         # Должно подождать хотя бы 0.2 сек
@@ -210,27 +210,27 @@ class TestWaitIfNeeded:
         assert "market" not in limiter.reset_times
 
     @pytest.mark.asyncio()
-    async def test_wait_if_needed_rate_limiting(self):
+    async def test_wAlgot_if_needed_rate_limiting(self):
         """Тест с ограничением скорости."""
         limiter = RateLimiter()
         limiter.last_request_times["market"] = time.time()
 
         # market имеет лимит 2 rps, т.е. минимальный интервал 0.5 сек
         start = time.time()
-        await limiter.wait_if_needed("market")
+        awAlgot limiter.wAlgot_if_needed("market")
         elapsed = time.time() - start
 
         # Должно подождать около 0.5 сек
         assert elapsed >= 0.45
 
     @pytest.mark.asyncio()
-    async def test_wait_if_needed_zero_rate_limit(self):
+    async def test_wAlgot_if_needed_zero_rate_limit(self):
         """Тест с нулевым лимитом (без ограничений)."""
         limiter = RateLimiter()
         limiter.rate_limits["test"] = 0
 
         start = time.time()
-        await limiter.wait_if_needed("test")
+        awAlgot limiter.wAlgot_if_needed("test")
         elapsed = time.time() - start
 
         # Не должно ждать
@@ -246,10 +246,10 @@ class TestHandle429:
         limiter = RateLimiter()
 
         start = time.time()
-        wait_time, attempts = await limiter.handle_429("market", retry_after=1)
+        wAlgot_time, attempts = awAlgot limiter.handle_429("market", retry_after=1)
         elapsed = time.time() - start
 
-        assert wait_time == 1
+        assert wAlgot_time == 1
         assert attempts == 1
         assert elapsed >= 0.99
 
@@ -259,20 +259,20 @@ class TestHandle429:
         limiter = RateLimiter()
 
         # Первая попытка
-        wait1, attempts1 = await limiter.handle_429("trade")
+        wAlgot1, attempts1 = awAlgot limiter.handle_429("trade")
         assert attempts1 == 1
         # Должно быть BASE_RETRY_DELAY * 2^0 = 1.0 сек (+ jitter)
-        assert 0.8 <= wait1 <= 1.2
+        assert 0.8 <= wAlgot1 <= 1.2
 
         # Вторая попытка
-        wait2, attempts2 = await limiter.handle_429("trade")
+        wAlgot2, attempts2 = awAlgot limiter.handle_429("trade")
         assert attempts2 == 2
         # Должно быть BASE_RETRY_DELAY * 2^1 = 2.0 сек (+ jitter)
-        assert 1.8 <= wait2 <= 2.2
+        assert 1.8 <= wAlgot2 <= 2.2
 
     @pytest.mark.slow
     @pytest.mark.asyncio()
-    async def test_handle_429_max_wait_time(self):
+    async def test_handle_429_max_wAlgot_time(self):
         """Тест максимального времени ожидания (60 сек)."""
         import asyncio
         from unittest.mock import patch
@@ -281,12 +281,12 @@ class TestHandle429:
         # Симулируем много попыток
         limiter.retry_attempts["user"] = 10
 
-        # Mock asyncio.sleep to avoid waiting 60 seconds
+        # Mock asyncio.sleep to avoid wAlgoting 60 seconds
         with patch.object(asyncio, "sleep", return_value=None):
-            wait_time, attempts = await limiter.handle_429("user")
+            wAlgot_time, attempts = awAlgot limiter.handle_429("user")
 
         # Максимум 60 секунд (MAX_BACKOFF_TIME)
-        assert wait_time <= 60.0
+        assert wAlgot_time <= 60.0
         assert attempts == 11
 
 
@@ -361,32 +361,32 @@ class TestSetCustomLimit:
         assert limiter.get_rate_limit("market") == 20
 
 
-class TestGetRemainingRequests:
+class TestGetRemAlgoningRequests:
     """Тесты получения оставшихся запросов."""
 
-    def test_get_remaining_requests_known(self):
+    def test_get_remAlgoning_requests_known(self):
         """Тест с известным количеством."""
         limiter = RateLimiter()
-        limiter.remaining_requests["market"] = 50
+        limiter.remAlgoning_requests["market"] = 50
 
-        assert limiter.get_remaining_requests("market") == 50
+        assert limiter.get_remAlgoning_requests("market") == 50
 
-    def test_get_remaining_requests_unknown(self):
+    def test_get_remAlgoning_requests_unknown(self):
         """Тест с неизвестным количеством (оценка)."""
         limiter = RateLimiter()
 
         # Должна вернуться оценка: rate_limit * 60
         # Для market: 2 * 60 = 120
-        assert limiter.get_remaining_requests("market") == 120
+        assert limiter.get_remAlgoning_requests("market") == 120
 
-    def test_get_remaining_requests_under_reset(self):
+    def test_get_remAlgoning_requests_under_reset(self):
         """Тест с активным временем сброса."""
         limiter = RateLimiter()
         limiter.reset_times["trade"] = time.time() + 10
-        limiter.remaining_requests["trade"] = 5
+        limiter.remAlgoning_requests["trade"] = 5
 
         # Должен вернуть 0, т.к. endpoint под ограничением
-        assert limiter.get_remaining_requests("trade") == 0
+        assert limiter.get_remAlgoning_requests("trade") == 0
 
 
 class TestRateLimiterConstants:

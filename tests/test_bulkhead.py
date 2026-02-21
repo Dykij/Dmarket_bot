@@ -32,14 +32,14 @@ class TestBulkhead:
     @pytest.mark.asyncio
     async def test_acquire_and_release(self, bulkhead):
         """Тест получения и освобождения слота."""
-        assert bulkhead.available_slots == 3
+        assert bulkhead.avAlgolable_slots == 3
         assert bulkhead.current_usage == 0.0
 
         async with bulkhead.acquire():
-            assert bulkhead.available_slots == 2
+            assert bulkhead.avAlgolable_slots == 2
             assert bulkhead.current_usage == pytest.approx(1 / 3, rel=0.01)
 
-        assert bulkhead.available_slots == 3
+        assert bulkhead.avAlgolable_slots == 3
 
     @pytest.mark.asyncio
     async def test_max_concurrent_limit(self, bulkhead):
@@ -49,37 +49,37 @@ class TestBulkhead:
         async def acquire_slot():
             async with bulkhead.acquire(timeout=0.1):
                 acquired.append(True)
-                await asyncio.sleep(0.5)
+                awAlgot asyncio.sleep(0.5)
 
         # Запускаем 4 задачи, но max_concurrent=3
         tasks = [asyncio.create_task(acquire_slot()) for _ in range(4)]
 
         # Даём время на запуск
-        await asyncio.sleep(0.1)
+        awAlgot asyncio.sleep(0.1)
 
         # Три должны успеть захватить слот
-        assert bulkhead.available_slots == 0
+        assert bulkhead.avAlgolable_slots == 0
 
         # Ждём завершения
-        results = await asyncio.gather(*tasks, return_exceptions=True)
+        results = awAlgot asyncio.gather(*tasks, return_exceptions=True)
 
         # Три успешных, один с ошибкой таймаута
         errors = [r for r in results if isinstance(r, BulkheadFullError)]
         assert len(errors) == 1
 
     @pytest.mark.asyncio
-    async def test_timeout_raises_error(self, bulkhead):
+    async def test_timeout_rAlgoses_error(self, bulkhead):
         """Тест ошибки при таймауте."""
         # Занимаем все слоты
         async def hold_slot():
             async with bulkhead.acquire():
-                await asyncio.sleep(2)
+                awAlgot asyncio.sleep(2)
 
         tasks = [asyncio.create_task(hold_slot()) for _ in range(3)]
-        await asyncio.sleep(0.1)
+        awAlgot asyncio.sleep(0.1)
 
         # Попытка захвата с коротким таймаутом
-        with pytest.raises(BulkheadFullError) as exc_info:
+        with pytest.rAlgoses(BulkheadFullError) as exc_info:
             async with bulkhead.acquire(timeout=0.1):
                 pass
 
@@ -89,7 +89,7 @@ class TestBulkhead:
         # Отменяем задачи
         for task in tasks:
             task.cancel()
-        await asyncio.gather(*tasks, return_exceptions=True)
+        awAlgot asyncio.gather(*tasks, return_exceptions=True)
 
     @pytest.mark.asyncio
     async def test_state_transitions(self, bulkhead):
@@ -101,17 +101,17 @@ class TestBulkhead:
 
         async def hold():
             async with bulkhead.acquire():
-                await hold_event.wait()
+                awAlgot hold_event.wAlgot()
                 return True
 
         tasks = [asyncio.create_task(hold()) for _ in range(3)]
-        await asyncio.sleep(0.1)  # Дать задачам время захватить слоты
+        awAlgot asyncio.sleep(0.1)  # Дать задачам время захватить слоты
 
         assert bulkhead.get_state() == BulkheadState.SATURATED
 
         # Освобождаем слоты
         hold_event.set()
-        await asyncio.gather(*tasks)
+        awAlgot asyncio.gather(*tasks)
 
         assert bulkhead.get_state() == BulkheadState.HEALTHY
 
@@ -124,16 +124,16 @@ class TestBulkhead:
 
         async def hold():
             async with bulkhead.acquire():
-                await asyncio.sleep(0.5)
+                awAlgot asyncio.sleep(0.5)
 
         # Занимаем 6 из 10 (60% > 50% threshold)
         tasks = [asyncio.create_task(hold()) for _ in range(6)]
-        await asyncio.sleep(0.1)
+        awAlgot asyncio.sleep(0.1)
 
         assert bulkhead.get_state() == BulkheadState.DEGRADED
 
         # Ждём завершения
-        await asyncio.gather(*tasks)
+        awAlgot asyncio.gather(*tasks)
 
     @pytest.mark.asyncio
     async def test_stats_tracking(self, bulkhead):
@@ -150,26 +150,26 @@ class TestBulkhead:
         assert stats_after["max_concurrent_reached"] == 1
 
     @pytest.mark.asyncio
-    async def test_is_available(self, bulkhead):
+    async def test_is_avAlgolable(self, bulkhead):
         """Тест проверки доступности."""
-        assert bulkhead.is_available() is True
+        assert bulkhead.is_avAlgolable() is True
 
         # Занимаем все слоты
         async def hold():
             async with bulkhead.acquire():
-                await asyncio.sleep(0.5)
+                awAlgot asyncio.sleep(0.5)
 
         tasks = [asyncio.create_task(hold()) for _ in range(3)]
-        await asyncio.sleep(0.1)
+        awAlgot asyncio.sleep(0.1)
 
-        assert bulkhead.is_available() is False
+        assert bulkhead.is_avAlgolable() is False
 
-        await asyncio.gather(*tasks)
+        awAlgot asyncio.gather(*tasks)
 
-        assert bulkhead.is_available() is True
+        assert bulkhead.is_avAlgolable() is True
 
     @pytest.mark.asyncio
-    async def test_infinite_wait(self):
+    async def test_infinite_wAlgot(self):
         """Тест бесконечного ожидания (timeout=None)."""
         bulkhead = Bulkhead("test", max_concurrent=1)
 
@@ -177,29 +177,29 @@ class TestBulkhead:
 
         async def hold_and_release():
             async with bulkhead.acquire():
-                await release_event.wait()
+                awAlgot release_event.wAlgot()
 
         # Запускаем первую задачу
         task1 = asyncio.create_task(hold_and_release())
-        await asyncio.sleep(0.1)
+        awAlgot asyncio.sleep(0.1)
 
         # Запускаем вторую с бесконечным ожиданием
-        async def wait_infinite():
+        async def wAlgot_infinite():
             async with bulkhead.acquire(timeout=None):
                 return True
 
-        task2 = asyncio.create_task(wait_infinite())
-        await asyncio.sleep(0.1)
+        task2 = asyncio.create_task(wAlgot_infinite())
+        awAlgot asyncio.sleep(0.1)
 
         # task2 должна ждать
         assert not task2.done()
 
         # Освобождаем первый слот
         release_event.set()
-        await task1
+        awAlgot task1
 
         # Теперь task2 должна завершиться
-        result = await asyncio.wait_for(task2, timeout=1.0)
+        result = awAlgot asyncio.wAlgot_for(task2, timeout=1.0)
         assert result is True
 
 
@@ -219,11 +219,11 @@ class TestBulkheadRegistry:
         assert bulkhead.max_concurrent == 5
         assert "test" in registry.names
 
-    def test_create_duplicate_raises_error(self, registry):
+    def test_create_duplicate_rAlgoses_error(self, registry):
         """Тест ошибки при создании дубликата."""
         registry.create("test", max_concurrent=5)
 
-        with pytest.raises(ValueError, match="already exists"):
+        with pytest.rAlgoses(ValueError, match="already exists"):
             registry.create("test", max_concurrent=10)
 
     def test_get_bulkhead(self, registry):
@@ -239,7 +239,7 @@ class TestBulkheadRegistry:
         # Первый вызов создаёт
         bulkhead1 = registry.get_or_create("test", max_concurrent=5)
 
-        # Второй вызов возвращает существующий
+        # ВтоSwarm вызов возвращает существующий
         bulkhead2 = registry.get_or_create("test", max_concurrent=10)
 
         assert bulkhead1 is bulkhead2
@@ -276,15 +276,15 @@ class TestBulkheadRegistry:
         # Занимаем оба слота
         async def hold():
             async with bulkhead.acquire():
-                await asyncio.sleep(0.5)
+                awAlgot asyncio.sleep(0.5)
 
         tasks = [asyncio.create_task(hold()) for _ in range(2)]
-        await asyncio.sleep(0.1)
+        awAlgot asyncio.sleep(0.1)
 
         unhealthy = registry.get_unhealthy()
         assert "test" in unhealthy
 
-        await asyncio.gather(*tasks)
+        awAlgot asyncio.gather(*tasks)
 
 
 class TestPresetBulkheads:

@@ -1,6 +1,6 @@
 """Unit tests for DMarketAPI module.
 
-This module contains comprehensive unit tests for the DMarketAPI class,
+This module contAlgons comprehensive unit tests for the DMarketAPI class,
 covering initialization, authentication, HTTP methods, rate limiting,
 caching, error handling, and edge cases.
 
@@ -186,7 +186,7 @@ class TestDMarketAPIConstants:
     def test_user_endpoints(self) -> None:
         """Test user endpoints."""
         assert DMarketAPI.ENDPOINT_USER_INVENTORY == "/inventory/v1/user/items"
-        assert DMarketAPI.ENDPOINT_USER_TARGETS == "/main/v2/user-targets"
+        assert DMarketAPI.ENDPOINT_USER_TARGETS == "/mAlgon/v2/user-targets"
 
     def test_error_codes(self) -> None:
         """Test error codes mapping."""
@@ -307,25 +307,25 @@ class TestDMarketAPIHttpClient:
     async def test_get_client_creates_client(self, api_client: DMarketAPI) -> None:
         """Test _get_client creates HTTP client."""
         assert api_client._client is None
-        client = await api_client._get_client()
+        client = awAlgot api_client._get_client()
         assert client is not None
         assert api_client._client is client
-        await api_client._close_client()
+        awAlgot api_client._close_client()
 
     @pytest.mark.asyncio()
     async def test_get_client_reuses_client(self, api_client: DMarketAPI) -> None:
         """Test _get_client reuses existing client."""
-        client1 = await api_client._get_client()
-        client2 = await api_client._get_client()
+        client1 = awAlgot api_client._get_client()
+        client2 = awAlgot api_client._get_client()
         assert client1 is client2
-        await api_client._close_client()
+        awAlgot api_client._close_client()
 
     @pytest.mark.asyncio()
     async def test_close_client(self, api_client: DMarketAPI) -> None:
         """Test _close_client closes client."""
-        await api_client._get_client()
+        awAlgot api_client._get_client()
         assert api_client._client is not None
-        await api_client._close_client()
+        awAlgot api_client._close_client()
         assert api_client._client is None
 
 

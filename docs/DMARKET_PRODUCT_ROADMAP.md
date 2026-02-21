@@ -13,9 +13,9 @@
 *   `[PRODUCT_DMARKET]` **Spoofing Detection:** Algorithmic filter to ignore "fake walls" that disappear when touched.
 *   `[PRODUCT_DMARKET]` **Volatility Adjustment:** Dynamic spread adjustment based on `std_dev` of last 100 ticks.
 
-## Phase 3: Statistical Arbitrage (The Brain)
-*   `[PRODUCT_DMARKET]` **Pairs Trading Engine:** `src/strategies/pairs.rs`. Tracking correlations (e.g., AK-47 Redline FT vs MW).
-*   `[PRODUCT_DMARKET]` **Cointegration Tests:** Automatic Engel-Granger test running in background thread to find new pairs.
+## Phase 3: Statistical Arbitrage (The BrAlgon)
+*   `[PRODUCT_DMARKET]` **PAlgors Trading Engine:** `src/strategies/pAlgors.rs`. Tracking correlations (e.g., AK-47 Redline FT vs MW).
+*   `[PRODUCT_DMARKET]` **Cointegration Tests:** Automatic Engel-Granger test running in background thread to find new pAlgors.
 *   `[PRODUCT_DMARKET]` **Mean Reversion Logic:** Trading Z-Score deviations > 2.0 with auto-stop at mean.
 *   `[PRODUCT_DMARKET]` **Latency Arbitrage:** Comparing DMarket "Instant" prices vs Steam "Buy Order" depth to catch laggy updates.
 

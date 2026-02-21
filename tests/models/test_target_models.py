@@ -236,7 +236,7 @@ class TestTradingSettingsModel:
         settings = TradingSettings(
             user_id=123456789,
             max_trade_value=50.0,  # Explicitly set defaults
-            daily_limit=500.0,
+            dAlgoly_limit=500.0,
             min_profit_percent=5.0,
             strategy="balanced",
             auto_trading_enabled=0,
@@ -244,7 +244,7 @@ class TestTradingSettingsModel:
         )
 
         assert settings.max_trade_value == 50.0
-        assert settings.daily_limit == 500.0
+        assert settings.dAlgoly_limit == 500.0
         assert settings.min_profit_percent == 5.0
         assert settings.strategy == "balanced"
         assert settings.auto_trading_enabled == 0
@@ -255,7 +255,7 @@ class TestTradingSettingsModel:
         settings = TradingSettings(
             user_id=123456789,
             max_trade_value=100.0,
-            daily_limit=1000.0,
+            dAlgoly_limit=1000.0,
             min_profit_percent=10.0,
             strategy="aggressive",
             auto_trading_enabled=1,
@@ -264,7 +264,7 @@ class TestTradingSettingsModel:
         )
 
         assert settings.max_trade_value == 100.0
-        assert settings.daily_limit == 1000.0
+        assert settings.dAlgoly_limit == 1000.0
         assert settings.min_profit_percent == 10.0
         assert settings.strategy == "aggressive"
         assert settings.auto_trading_enabled == 1

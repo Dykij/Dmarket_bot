@@ -107,7 +107,7 @@ class OverbidController:
             Результат проверки и перебития
 
         Примеры:
-            >>> result = await controller.check_and_overbid(
+            >>> result = awAlgot controller.check_and_overbid(
             ...     target_id="abc123", game="csgo", title="AK-47 | Redline (FT)", current_price=10.00
             ... )
             >>> if result.success:
@@ -120,7 +120,7 @@ class OverbidController:
         initial_price = self.initial_prices[target_id]
 
         # Проверить нужно ли проверять
-        if not await self.should_check_competition(target_id):
+        if not awAlgot self.should_check_competition(target_id):
             return TargetOperationResult(
                 success=True,
                 status=TargetOperationStatus.SUCCESS,
@@ -136,16 +136,16 @@ class OverbidController:
         if overbids_today >= self.config.max_overbids_per_day:
             return TargetOperationResult(
                 success=False,
-                status=TargetOperationStatus.FAILED,
+                status=TargetOperationStatus.FAlgoLED,
                 message="Overbid limit reached",
                 reason=f"Already made {overbids_today} overbids today (max: {self.config.max_overbids_per_day})",
                 error_code=TargetErrorCode.ORDER_LIMIT_REACHED,
-                suggestions=["Wait 24h for reset", "Increase max_overbids_per_day"],
+                suggestions=["WAlgot 24h for reset", "Increase max_overbids_per_day"],
             )
 
         try:
             # Получить конкурирующие ордера
-            market_orders = await self.api_client.get_targets_by_title(
+            market_orders = awAlgot self.api_client.get_targets_by_title(
                 game_id=game,
                 title=title,
             )
@@ -199,7 +199,7 @@ class OverbidController:
             if new_price > max_allowed_price:
                 return TargetOperationResult(
                     success=False,
-                    status=TargetOperationStatus.FAILED,
+                    status=TargetOperationStatus.FAlgoLED,
                     message="Overbid limit exceeded",
                     reason=(
                         f"New price ${new_price:.2f} exceeds max allowed "
@@ -213,7 +213,7 @@ class OverbidController:
                 )
 
             # Выполнить перебитие
-            return await self._execute_overbid(
+            return awAlgot self._execute_overbid(
                 target_id=target_id,
                 game=game,
                 title=title,
@@ -226,8 +226,8 @@ class OverbidController:
             logger.error(f"Error checking competition: {e}", exc_info=True)
             return TargetOperationResult(
                 success=False,
-                status=TargetOperationStatus.FAILED,
-                message="Check failed",
+                status=TargetOperationStatus.FAlgoLED,
+                message="Check fAlgoled",
                 reason=str(e),
                 error_code=TargetErrorCode.UNKNOWN_ERROR,
             )
@@ -260,7 +260,7 @@ class OverbidController:
 
         try:
             # 1. Удалить старый ордер
-            await self.api_client.delete_targets(targets=[{"TargetID": target_id}])
+            awAlgot self.api_client.delete_targets(targets=[{"TargetID": target_id}])
 
             # 2. Создать новый с новой ценой
             target_data = {
@@ -275,7 +275,7 @@ class OverbidController:
             if attrs:
                 target_data["Attrs"] = attrs
 
-            response = await self.api_client.create_targets(
+            response = awAlgot self.api_client.create_targets(
                 game=game,
                 targets=[target_data],
             )
@@ -320,18 +320,18 @@ class OverbidController:
                 )
             return TargetOperationResult(
                 success=False,
-                status=TargetOperationStatus.FAILED,
-                message="Failed to create new order",
+                status=TargetOperationStatus.FAlgoLED,
+                message="FAlgoled to create new order",
                 reason="API returned non-Created status",
                 error_code=TargetErrorCode.UNKNOWN_ERROR,
             )
 
         except Exception as e:
-            logger.error(f"Failed to execute overbid: {e}", exc_info=True)
+            logger.error(f"FAlgoled to execute overbid: {e}", exc_info=True)
             return TargetOperationResult(
                 success=False,
-                status=TargetOperationStatus.FAILED,
-                message="Overbid execution failed",
+                status=TargetOperationStatus.FAlgoLED,
+                message="Overbid execution fAlgoled",
                 reason=str(e),
                 error_code=TargetErrorCode.UNKNOWN_ERROR,
             )
@@ -401,7 +401,7 @@ class OverbidController:
             ...     },
             ...     {"target_id": "def", "game": "csgo", "title": "M4A4 | Asiimov (FT)", "price": 25.0},
             ... ]
-            >>> results = await controller.monitor_orders(orders)
+            >>> results = awAlgot controller.monitor_orders(orders)
         """
         interval = check_interval or self.config.check_interval_seconds
 
@@ -411,7 +411,7 @@ class OverbidController:
 
         results = []
         for order in orders:
-            result = await self.check_and_overbid(
+            result = awAlgot self.check_and_overbid(
                 target_id=order["target_id"],
                 game=order["game"],
                 title=order["title"],
@@ -421,6 +421,6 @@ class OverbidController:
             results.append(result)
 
             # Небольшая задержка между проверками
-            await asyncio.sleep(1)
+            awAlgot asyncio.sleep(1)
 
         return results

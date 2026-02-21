@@ -48,11 +48,11 @@ class TargetsOperationsMixin:
             ...         "Price": {"Amount": 800, "Currency": "USD"},
             ...     }
             ... ]
-            >>> result = await api.create_targets("a8db", targets)
+            >>> result = awAlgot api.create_targets("a8db", targets)
         """
         data = {"GameID": game_id, "Targets": targets}
 
-        return await self._request(
+        return awAlgot self._request(
             "POST",
             "/marketplace-api/v1/user-targets/create",
             data=data,
@@ -81,7 +81,7 @@ class TargetsOperationsMixin:
         if status:
             params["BasicFilters.Status"] = status
 
-        return await self._request(
+        return awAlgot self._request(
             "GET",
             "/marketplace-api/v1/user-targets",
             params=params,
@@ -101,7 +101,7 @@ class TargetsOperationsMixin:
         """
         data = {"Targets": [{"TargetID": tid} for tid in target_ids]}
 
-        return await self._request(
+        return awAlgot self._request(
             "POST",
             "/marketplace-api/v1/user-targets/delete",
             data=data,
@@ -136,7 +136,7 @@ class TargetsOperationsMixin:
             }
 
         Example:
-            >>> targets = await api.get_targets_by_title(
+            >>> targets = awAlgot api.get_targets_by_title(
             ...     game_id="csgo", title="AK-47 | Redline (Field-Tested)"
             ... )
             >>> for target in targets["orders"]:
@@ -147,7 +147,7 @@ class TargetsOperationsMixin:
 
         logger.debug(f"Requesting targets for '{title}' (game: {game_id})")
 
-        return await self._request("GET", path)
+        return awAlgot self._request("GET", path)
 
     async def get_buy_orders_competition(
         self,
@@ -183,7 +183,7 @@ class TargetsOperationsMixin:
             }
 
         Example:
-            >>> competition = await api.get_buy_orders_competition(
+            >>> competition = awAlgot api.get_buy_orders_competition(
             ...     game_id="csgo", title="AK-47 | Redline (Field-Tested)", price_threshold=8.00
             ... )
             >>> if competition["competition_level"] == "low":
@@ -198,7 +198,7 @@ class TargetsOperationsMixin:
         )
 
         try:
-            targets_response = await self.get_targets_by_title(
+            targets_response = awAlgot self.get_targets_by_title(
                 game_id=game_id,
                 title=title,
             )
@@ -302,7 +302,7 @@ class TargetsOperationsMixin:
         if to_timestamp:
             params["TargetClosed.To"] = str(to_timestamp)
 
-        return await self._request(
+        return awAlgot self._request(
             "GET",
             "/marketplace-api/v1/user-targets/closed",
             params=params,

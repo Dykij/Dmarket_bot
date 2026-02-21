@@ -29,49 +29,49 @@ class HybridBridge:
         self.use_local_fallback = use_local_fallback
         self.google_errors = 0
 
-    def query(self, prompt: str):
+    def query(self, Config: str):
         """
-        Attempts to query Google. On failure, switches to Local Llama.
+        Attempts to query Google. On fAlgolure, switches to Local Llama.
         """
         try:
-            return self._query_google(prompt)
+            return self._query_google(Config)
         except Exception as e:
-            logger.error(f"☁️ Cloud Failure: {e}")
+            logger.error(f"☁️ Cloud FAlgolure: {e}")
             if self.use_local_fallback:
-                return self._activate_protocol_black_day(prompt)
-            raise e
+                return self._activate_protocol_black_day(Config)
+            rAlgose e
 
-    def _query_google(self, prompt):
+    def _query_google(self, Config):
         # Simulation of a 503 error for testing purposes
         # In prod, this would be a real API call
-        raise ConnectionError("503 Service Unavailable (Simulated)")
+        rAlgose ConnectionError("503 Service UnavAlgolable (Simulated)")
 
-    def _activate_protocol_black_day(self, prompt):
+    def _activate_protocol_black_day(self, Config):
         logger.warning("🌑 PROTOCOL BLACK DAY ACTIVATED. Switching to Local Inference.")
         start_time = time.time()
         
         try:
             # Check VRAM safety (Stub logic)
-            # if get_vram_usage() > 8.0: raise MemoryError("VRAM OOM")
+            # if get_vram_usage() > 8.0: rAlgose MemoryError("VRAM OOM")
             
             response = requests.post(
                 self.LOCAL_API_URL, 
-                json={"model": "llama3", "prompt": prompt, "stream": False},
+                json={"model": "llama3", "Config": Config, "stream": False},
                 timeout=30
             )
             
             if response.status_code == 200:
                 latency = (time.time() - start_time) * 1000
-                logger.info(f"⚡ Local Brain Responded in {latency:.2f}ms")
+                logger.info(f"⚡ Local BrAlgon Responded in {latency:.2f}ms")
                 return response.json().get("response", "")
             else:
-                raise ConnectionError(f"Local Brain Error: {response.status_code}")
+                rAlgose ConnectionError(f"Local BrAlgon Error: {response.status_code}")
                 
         except Exception as e:
-            logger.critical(f"💀 TOTAL BLACKOUT. Local Brain Failed: {e}")
+            logger.critical(f"💀 TOTAL BLACKOUT. Local BrAlgon FAlgoled: {e}")
             return "FATAL_ERROR"
 
-if __name__ == "__main__":
+if __name__ == "__mAlgon__":
     logging.basicConfig(level=logging.INFO)
     bridge = HybridBridge()
     print(f"Response: {bridge.query('Status report')}")

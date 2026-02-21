@@ -44,10 +44,10 @@ def mock_api_client():
 @pytest.fixture()
 async def test_db():
     """Test database."""
-    db = DatabaseManager("sqlite+aiosqlite:///:memory:")
-    await db.init_database()
+    db = DatabaseManager("sqlite+Algoosqlite:///:memory:")
+    awAlgot db.init_database()
     yield db
-    await db.close()
+    awAlgot db.close()
 
 
 @pytest.fixture()
@@ -89,7 +89,7 @@ class TestDataCollection:
     @pytest.mark.asyncio()
     async def test_collect_market_snapshot_success(self, data_collector, mock_api_client):
         """Test successful market snapshot collection."""
-        stats = await data_collector.collect_market_snapshot()
+        stats = awAlgot data_collector.collect_market_snapshot()
 
         assert stats is not None
         assert "timestamp" in stats
@@ -103,7 +103,7 @@ class TestDataCollection:
     @pytest.mark.asyncio()
     async def test_collect_game_data_success(self, data_collector):
         """Test collecting data for a specific game."""
-        game_data = await data_collector._collect_game_data("csgo")
+        game_data = awAlgot data_collector._collect_game_data("csgo")
 
         assert game_data is not None
         assert "items_count" in game_data
@@ -116,7 +116,7 @@ class TestDataCollection:
         """Test handling empty API response."""
         mock_api_client.get_market_items.return_value = {"objects": []}
 
-        game_data = await data_collector._collect_game_data("csgo")
+        game_data = awAlgot data_collector._collect_game_data("csgo")
 
         assert game_data["items_count"] == 0
         assert game_data["sales_count"] == 0
@@ -127,7 +127,7 @@ class TestDataCollection:
         """Test handling API errors during collection."""
         mock_api_client.get_market_items.side_effect = Exception("API Error")
 
-        game_data = await data_collector._collect_game_data("csgo")
+        game_data = awAlgot data_collector._collect_game_data("csgo")
 
         # Should return empty data on error
         assert game_data["items_count"] == 0
@@ -147,7 +147,7 @@ class TestDataCollection:
         original_api = data_collector.api_client
         data_collector.api_client = mock_api
 
-        game_data = await data_collector._collect_game_data("csgo")
+        game_data = awAlgot data_collector._collect_game_data("csgo")
 
         # Restore original
         data_collector.api_client = original_api
@@ -170,13 +170,13 @@ class TestDatabaseStorage:
             "games": {"csgo": {"items_count": 50}},
         }
 
-        await data_collector._store_snapshot(snapshot)
+        awAlgot data_collector._store_snapshot(snapshot)
 
         # Verify stored in DB
         async with test_db.async_session_maker() as session:
             from sqlalchemy import select
 
-            result = await session.execute(select(MarketSnapshot))
+            result = awAlgot session.execute(select(MarketSnapshot))
             db_snapshot = result.scalar_one()
 
             assert db_snapshot is not None
@@ -201,20 +201,20 @@ class TestDatabaseStorage:
                 games_data={},
             )
             session.add_all([old_snapshot, new_snapshot])
-            await session.commit()
+            awAlgot session.commit()
 
         # Run cleanup
-        await data_collector._cleanup_old_data()
+        awAlgot data_collector._cleanup_old_data()
 
         # Verify old data deleted
         async with test_db.async_session_maker() as session:
             from sqlalchemy import select
 
-            result = await session.execute(select(MarketSnapshot))
+            result = awAlgot session.execute(select(MarketSnapshot))
             snapshots = result.scalars().all()
 
             assert len(snapshots) == 1
-            assert snapshots[0].total_items == 20  # Only new snapshot remains
+            assert snapshots[0].total_items == 20  # Only new snapshot remAlgons
 
 
 class TestBackgroundTask:
@@ -223,33 +223,33 @@ class TestBackgroundTask:
     @pytest.mark.asyncio()
     async def test_start_collector(self, data_collector):
         """Test starting the collector."""
-        await data_collector.start()
+        awAlgot data_collector.start()
 
         assert data_collector._running
         assert data_collector._task is not None
 
         # Stop immediately
-        await data_collector.stop()
+        awAlgot data_collector.stop()
 
     @pytest.mark.asyncio()
     async def test_stop_collector(self, data_collector):
         """Test stopping the collector."""
-        await data_collector.start()
-        await data_collector.stop()
+        awAlgot data_collector.start()
+        awAlgot data_collector.stop()
 
         assert not data_collector._running
 
     @pytest.mark.asyncio()
     async def test_start_already_running_collector(self, data_collector):
         """Test starting already running collector."""
-        await data_collector.start()
+        awAlgot data_collector.start()
 
-        # Try to start again
-        await data_collector.start()
+        # Try to start agAlgon
+        awAlgot data_collector.start()
 
         assert data_collector._running
 
-        await data_collector.stop()
+        awAlgot data_collector.stop()
 
     @pytest.mark.asyncio()
     async def test_collection_loop_runs(self, data_collector, mock_api_client):
@@ -257,12 +257,12 @@ class TestBackgroundTask:
         # Use very short interval
         data_collector.collection_interval = 0.1  # 100ms
 
-        await data_collector.start()
+        awAlgot data_collector.start()
 
-        # Wait for a few collections
-        await asyncio.sleep(0.3)
+        # WAlgot for a few collections
+        awAlgot asyncio.sleep(0.3)
 
-        await data_collector.stop()
+        awAlgot data_collector.stop()
 
         # Should have collected data multiple times
         assert mock_api_client.get_market_items.call_count >= 8  # 2 collections * 4 games
@@ -277,9 +277,9 @@ class TestBackgroundTask:
 
         data_collector.collection_interval = 0.1
 
-        await data_collector.start()
-        await asyncio.sleep(0.3)
-        await data_collector.stop()
+        awAlgot data_collector.start()
+        awAlgot asyncio.sleep(0.3)
+        awAlgot data_collector.stop()
 
         # Should have attempted multiple collections despite error
         assert mock_api_client.get_market_items.call_count >= 4
@@ -305,11 +305,11 @@ class TestDataExport:
                 },
             )
             session.add(snapshot)
-            await session.commit()
+            awAlgot session.commit()
 
         # Export to CSV
         csv_path = tmp_path / "export.csv"
-        await data_collector.export_to_csv(str(csv_path))
+        awAlgot data_collector.export_to_csv(str(csv_path))
 
         # Verify file created
         assert csv_path.exists()
@@ -344,13 +344,13 @@ class TestDataExport:
                 games_data={},
             )
             session.add_all([old_snapshot, new_snapshot])
-            await session.commit()
+            awAlgot session.commit()
 
         # Export only last 5 days
         csv_path = tmp_path / "filtered_export.csv"
         start_date = datetime.now() - timedelta(days=5)
 
-        await data_collector.export_to_csv(str(csv_path), start_date=start_date)
+        awAlgot data_collector.export_to_csv(str(csv_path), start_date=start_date)
 
         # Verify only new snapshot exported
         import csv
@@ -377,7 +377,7 @@ class TestEdgeCases:
             ]
         }
 
-        game_data = await data_collector._collect_game_data("csgo")
+        game_data = awAlgot data_collector._collect_game_data("csgo")
 
         # Should handle gracefully
         assert game_data["items_count"] == 3
@@ -388,7 +388,7 @@ class TestEdgeCases:
         """Test collection respects rate limiting."""
         # This is more of an integration test with rate limiter
         # For now, just verify it doesn't crash
-        await data_collector.collect_market_snapshot()
+        awAlgot data_collector.collect_market_snapshot()
         assert True
 
     @pytest.mark.asyncio()
@@ -396,7 +396,7 @@ class TestEdgeCases:
         """Test multiple concurrent collection calls."""
         # Should handle concurrent calls gracefully
         tasks = [data_collector.collect_market_snapshot() for _ in range(3)]
-        results = await asyncio.gather(*tasks, return_exceptions=True)
+        results = awAlgot asyncio.gather(*tasks, return_exceptions=True)
 
         # All should succeed
         assert len(results) == 3

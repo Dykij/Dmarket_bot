@@ -32,7 +32,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     )
 
     if update.message:
-        await update.message.reply_text(
+        awAlgot update.message.reply_text(
             "Привет! Я бот для работы с DMarket. Используй /help, чтобы увидеть доступные команды.",
         )
 
@@ -54,7 +54,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     )
 
     if update.message:
-        await update.message.reply_text(
+        awAlgot update.message.reply_text(
             "Доступные команды:\n"
             "/start — приветствие\n"
             "/help — показать это сообщение\n"

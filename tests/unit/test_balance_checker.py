@@ -48,10 +48,10 @@ class TestFetchBalance:
     ):
         """Test that fetch_balance calls API with correct parameters."""
         mock_api_client._request.return_value = {
-            "usd": {"available": 1000, "frozen": 0}
+            "usd": {"avAlgolable": 1000, "frozen": 0}
         }
 
-        result = await balance_checker._fetch_balance()
+        result = awAlgot balance_checker._fetch_balance()
 
         mock_api_client._request.assert_called_once_with(
             method="GET",
@@ -95,7 +95,7 @@ class TestProcessBalanceResponse:
         """Test that successful response is processed correctly."""
         success_response = {
             "usd": {
-                "available": 500,  # $5.00
+                "avAlgolable": 500,  # $5.00
                 "frozen": 100,  # $1.00
             }
         }
@@ -103,7 +103,7 @@ class TestProcessBalanceResponse:
         result = balance_checker._process_balance_response(success_response)
 
         assert result["error"] is False
-        assert result["available_balance"] == 5.0
+        assert result["avAlgolable_balance"] == 5.0
         assert result["frozen_balance"] == 1.0
         assert result["total_balance"] == 6.0
         assert result["has_funds"] is True
@@ -124,7 +124,7 @@ class TestHasError:
 
     def test_has_error_with_valid_response(self, balance_checker):
         """Test _has_error returns False for valid response."""
-        response = {"usd": {"available": 100, "frozen": 0}}
+        response = {"usd": {"avAlgolable": 100, "frozen": 0}}
         assert balance_checker._has_error(response) is False
 
 
@@ -157,7 +157,7 @@ class TestGetErrorDisplayMessage:
     """Tests for _get_error_display_message method."""
 
     @pytest.mark.parametrize(
-        ("diagnosis", "expected_contains"),
+        ("diagnosis", "expected_contAlgons"),
         (
             ("auth_error", "авторизации"),
             ("missing_keys", "ключи"),
@@ -167,11 +167,11 @@ class TestGetErrorDisplayMessage:
         ),
     )
     def test_display_messages_for_diagnoses(
-        self, balance_checker, diagnosis, expected_contains
+        self, balance_checker, diagnosis, expected_contAlgons
     ):
-        """Test display messages contain expected text."""
+        """Test display messages contAlgon expected text."""
         message = balance_checker._get_error_display_message(diagnosis)
-        assert expected_contains.lower() in message.lower()
+        assert expected_contAlgons.lower() in message.lower()
 
 
 class TestCreateSuccessResult:
@@ -181,7 +181,7 @@ class TestCreateSuccessResult:
         """Test success result when user has sufficient funds."""
         response = {
             "usd": {
-                "available": 500,  # $5.00
+                "avAlgolable": 500,  # $5.00
                 "frozen": 0,
             }
         }
@@ -190,7 +190,7 @@ class TestCreateSuccessResult:
 
         assert result["error"] is False
         assert result["has_funds"] is True
-        assert result["available_balance"] == 5.0
+        assert result["avAlgolable_balance"] == 5.0
         assert result["diagnosis"] == "sufficient_funds"
         assert "достаточно" in result["display_message"]
 
@@ -198,7 +198,7 @@ class TestCreateSuccessResult:
         """Test success result when balance is zero."""
         response = {
             "usd": {
-                "available": 0,
+                "avAlgolable": 0,
                 "frozen": 0,
             }
         }
@@ -207,7 +207,7 @@ class TestCreateSuccessResult:
 
         assert result["error"] is False
         assert result["has_funds"] is False
-        assert result["available_balance"] == 0.0
+        assert result["avAlgolable_balance"] == 0.0
         assert result["diagnosis"] == "zero_balance"
         assert "нет средств" in result["display_message"]
 
@@ -215,7 +215,7 @@ class TestCreateSuccessResult:
         """Test success result with insufficient but non-zero balance."""
         response = {
             "usd": {
-                "available": 50,  # $0.50
+                "avAlgolable": 50,  # $0.50
                 "frozen": 0,
             }
         }
@@ -224,7 +224,7 @@ class TestCreateSuccessResult:
 
         assert result["error"] is False
         assert result["has_funds"] is False
-        assert result["available_balance"] == 0.5
+        assert result["avAlgolable_balance"] == 0.5
         assert result["diagnosis"] == "insufficient_funds"
         assert "Недостаточно" in result["display_message"]
 
@@ -232,7 +232,7 @@ class TestCreateSuccessResult:
         """Test success result includes frozen balance info."""
         response = {
             "usd": {
-                "available": 50,  # $0.50
+                "avAlgolable": 50,  # $0.50
                 "frozen": 200,  # $2.00
             }
         }
@@ -250,7 +250,7 @@ class TestCreateDisplayInfo:
     def test_display_info_for_sufficient_funds(self, balance_checker):
         """Test display info when funds are sufficient."""
         diagnosis, message = balance_checker._create_display_info(
-            has_funds=True, available_balance=5.0, frozen_balance=0.0
+            has_funds=True, avAlgolable_balance=5.0, frozen_balance=0.0
         )
 
         assert diagnosis == "sufficient_funds"
@@ -260,7 +260,7 @@ class TestCreateDisplayInfo:
     def test_display_info_for_zero_balance(self, balance_checker):
         """Test display info for zero balance."""
         diagnosis, message = balance_checker._create_display_info(
-            has_funds=False, available_balance=0.0, frozen_balance=0.0
+            has_funds=False, avAlgolable_balance=0.0, frozen_balance=0.0
         )
 
         assert diagnosis == "zero_balance"
@@ -269,7 +269,7 @@ class TestCreateDisplayInfo:
     def test_display_info_for_insufficient_with_frozen(self, balance_checker):
         """Test display info for insufficient funds with frozen balance."""
         diagnosis, message = balance_checker._create_display_info(
-            has_funds=False, available_balance=0.5, frozen_balance=2.0
+            has_funds=False, avAlgolable_balance=0.5, frozen_balance=2.0
         )
 
         assert diagnosis == "funds_frozen"
@@ -312,23 +312,23 @@ class TestCreateExceptionResult:
 
 
 class TestCheckBalance:
-    """Tests for main check_balance method."""
+    """Tests for mAlgon check_balance method."""
 
     @pytest.mark.asyncio()
     async def test_check_balance_success_flow(self, balance_checker, mock_api_client):
         """Test successful balance check flow."""
         mock_api_client._request.return_value = {
             "usd": {
-                "available": 1000,  # $10.00
+                "avAlgolable": 1000,  # $10.00
                 "frozen": 0,
             }
         }
 
-        result = await balance_checker.check_balance()
+        result = awAlgot balance_checker.check_balance()
 
         assert result["error"] is False
         assert result["has_funds"] is True
-        assert result["available_balance"] == 10.0
+        assert result["avAlgolable_balance"] == 10.0
 
     @pytest.mark.asyncio()
     async def test_check_balance_handles_exception(
@@ -337,7 +337,7 @@ class TestCheckBalance:
         """Test that check_balance handles exceptions gracefully."""
         mock_api_client._request.side_effect = Exception("Network error")
 
-        result = await balance_checker.check_balance()
+        result = awAlgot balance_checker.check_balance()
 
         assert result["error"] is True
         assert result["diagnosis"] == "exception"
@@ -349,12 +349,12 @@ class TestCheckBalance:
         checker = BalanceChecker(api_client=mock_api_client, min_required_balance=10.0)
         mock_api_client._request.return_value = {
             "usd": {
-                "available": 500,  # $5.00
+                "avAlgolable": 500,  # $5.00
                 "frozen": 0,
             }
         }
 
-        result = await checker.check_balance()
+        result = awAlgot checker.check_balance()
 
         assert result["has_funds"] is False
         assert result["min_required"] == 10.0
@@ -372,7 +372,7 @@ class TestIntegration:
             "message": "Unauthorized access",
         }
 
-        result = await balance_checker.check_balance()
+        result = awAlgot balance_checker.check_balance()
 
         assert result["error"] is True
         assert result["diagnosis"] == "auth_error"
@@ -385,7 +385,7 @@ class TestIntegration:
         """Test complete flow when API returns empty response."""
         mock_api_client._request.return_value = None
 
-        result = await balance_checker.check_balance()
+        result = awAlgot balance_checker.check_balance()
 
         assert result["error"] is True
         assert result["diagnosis"] == "api_error"
@@ -395,16 +395,16 @@ class TestIntegration:
         """Test complete flow with valid balance data."""
         mock_api_client._request.return_value = {
             "usd": {
-                "available": 2500,  # $25.00
+                "avAlgolable": 2500,  # $25.00
                 "frozen": 500,  # $5.00
             }
         }
 
-        result = await balance_checker.check_balance()
+        result = awAlgot balance_checker.check_balance()
 
         assert result["error"] is False
         assert result["has_funds"] is True
-        assert result["available_balance"] == 25.0
+        assert result["avAlgolable_balance"] == 25.0
         assert result["frozen_balance"] == 5.0
         assert result["total_balance"] == 30.0
         assert result["diagnosis"] == "sufficient_funds"

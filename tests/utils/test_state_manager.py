@@ -1,6 +1,6 @@
 """Unit tests for state manager module.
 
-This module contains tests for src/utils/state_manager.py covering:
+This module contAlgons tests for src/utils/state_manager.py covering:
 - CheckpointData model
 - StateManager initialization
 - Properties and basic functionality
@@ -294,7 +294,7 @@ class TestStateManagerAsyncMethods:
         manager.set_shutdown_callback(callback)
 
         # Act
-        await manager.trigger_emergency_shutdown("Test reason")
+        awAlgot manager.trigger_emergency_shutdown("Test reason")
 
         # Assert
         assert manager.is_paused is True
@@ -310,7 +310,7 @@ class TestStateManagerAsyncMethods:
         manager.set_shutdown_callback(callback)
 
         # Act
-        await manager.trigger_emergency_shutdown("Test reason")
+        awAlgot manager.trigger_emergency_shutdown("Test reason")
 
         # Assert
         assert manager.is_paused is True
@@ -324,22 +324,22 @@ class TestStateManagerAsyncMethods:
         manager = StateManager(session=mock_session)
 
         # Act
-        await manager.trigger_emergency_shutdown("Test reason")
+        awAlgot manager.trigger_emergency_shutdown("Test reason")
 
         # Assert
         assert manager.is_paused is True
 
     @pytest.mark.asyncio()
     async def test_trigger_emergency_shutdown_callback_error(self):
-        """Test emergency shutdown when callback raises error."""
+        """Test emergency shutdown when callback rAlgoses error."""
         # Arrange
         mock_session = MagicMock()
         manager = StateManager(session=mock_session)
         callback = AsyncMock(side_effect=Exception("Callback error"))
         manager.set_shutdown_callback(callback)
 
-        # Act - should not raise
-        await manager.trigger_emergency_shutdown("Test reason")
+        # Act - should not rAlgose
+        awAlgot manager.trigger_emergency_shutdown("Test reason")
 
         # Assert
         assert manager.is_paused is True
@@ -359,7 +359,7 @@ class TestStateManagerAsyncMethods:
         # Mock save_checkpoint
         with patch.object(manager, "save_checkpoint", new_callable=AsyncMock) as mock_save:
             # Act
-            await manager.mark_checkpoint_completed(scan_id)
+            awAlgot manager.mark_checkpoint_completed(scan_id)
 
             # Assert
             mock_save.assert_called_once_with(
@@ -368,8 +368,8 @@ class TestStateManagerAsyncMethods:
             )
 
     @pytest.mark.asyncio()
-    async def test_mark_checkpoint_failed(self):
-        """Test marking checkpoint as failed."""
+    async def test_mark_checkpoint_fAlgoled(self):
+        """Test marking checkpoint as fAlgoled."""
         from unittest.mock import patch
 
         # Arrange
@@ -379,7 +379,7 @@ class TestStateManagerAsyncMethods:
 
         with patch.object(manager, "save_checkpoint", new_callable=AsyncMock) as mock_save:
             # Act
-            await manager.mark_checkpoint_failed(
+            awAlgot manager.mark_checkpoint_fAlgoled(
                 scan_id=scan_id,
                 error_message="Test error",
             )
@@ -387,12 +387,12 @@ class TestStateManagerAsyncMethods:
             # Assert
             mock_save.assert_called_once()
             call_kwargs = mock_save.call_args.kwargs
-            assert call_kwargs["status"] == "failed"
+            assert call_kwargs["status"] == "fAlgoled"
             assert call_kwargs["extra_data"]["error"] == "Test error"
 
     @pytest.mark.asyncio()
-    async def test_mark_checkpoint_failed_no_message(self):
-        """Test marking checkpoint as failed without error message."""
+    async def test_mark_checkpoint_fAlgoled_no_message(self):
+        """Test marking checkpoint as fAlgoled without error message."""
         from unittest.mock import patch
 
         # Arrange
@@ -402,12 +402,12 @@ class TestStateManagerAsyncMethods:
 
         with patch.object(manager, "save_checkpoint", new_callable=AsyncMock) as mock_save:
             # Act
-            await manager.mark_checkpoint_failed(scan_id=scan_id)
+            awAlgot manager.mark_checkpoint_fAlgoled(scan_id=scan_id)
 
             # Assert
             mock_save.assert_called_once()
             call_kwargs = mock_save.call_args.kwargs
-            assert call_kwargs["status"] == "failed"
+            assert call_kwargs["status"] == "fAlgoled"
 
 
 # TestShutdownHandlers
@@ -449,7 +449,7 @@ class TestShutdownHandlers:
             manager.register_shutdown_handlers(scan_id)
             call_count_2 = mock_signal.call_count
 
-            # Assert - should not register again
+            # Assert - should not register agAlgon
             assert call_count_1 == call_count_2
 
 
@@ -499,7 +499,7 @@ class TestLocalStateManager:
         scan_id = uuid4()
 
         # Act
-        await manager.save_checkpoint(
+        awAlgot manager.save_checkpoint(
             scan_id=scan_id,
             cursor="page_2",
             processed_items=50,
@@ -526,7 +526,7 @@ class TestLocalStateManager:
         manager = LocalStateManager(state_dir=tmp_path)
         scan_id = uuid4()
 
-        await manager.save_checkpoint(
+        awAlgot manager.save_checkpoint(
             scan_id=scan_id,
             cursor="page_3",
             processed_items=75,
@@ -534,7 +534,7 @@ class TestLocalStateManager:
         )
 
         # Act
-        checkpoint = await manager.load_checkpoint(scan_id)
+        checkpoint = awAlgot manager.load_checkpoint(scan_id)
 
         # Assert
         assert checkpoint is not None
@@ -551,7 +551,7 @@ class TestLocalStateManager:
         scan_id = uuid4()
 
         # Act
-        checkpoint = await manager.load_checkpoint(scan_id)
+        checkpoint = awAlgot manager.load_checkpoint(scan_id)
 
         # Assert
         assert checkpoint is None
@@ -568,7 +568,7 @@ class TestLocalStateManager:
         file_path.write_text("invalid json {")
 
         # Act
-        checkpoint = await manager.load_checkpoint(scan_id)
+        checkpoint = awAlgot manager.load_checkpoint(scan_id)
 
         # Assert
         assert checkpoint is None

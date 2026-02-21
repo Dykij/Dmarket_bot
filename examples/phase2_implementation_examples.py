@@ -1,9 +1,9 @@
 """Phase 2 Implementation Examples.
 
-Примеры использования новых AI модулей из Фазы 2.
+Примеры использования новых Algo модулей из Фазы 2.
 
 Показывает как использовать:
-1. AI Arbitrage Predictor
+1. Algo Arbitrage Predictor
 2. NLP Command Handler
 3. Интеграцию обоих модулей
 """
@@ -17,21 +17,21 @@ project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 # Import Phase 2 modules
-from src.dmarket.ai_arbitrage_predictor import AIArbitragePredictor
+from src.dmarket.Algo_arbitrage_predictor import AlgoArbitragePredictor
 from src.telegram_bot.nlp_handler import NLPCommandHandler
 
 
-async def example_1_ai_arbitrage():
-    """Пример 1: Использование AI Arbitrage Predictor.
+async def example_1_Algo_arbitrage():
+    """Пример 1: Использование Algo Arbitrage Predictor.
 
-    Показывает как AI прогнозирует лучшие арбитражные возможности.
+    Показывает как Algo прогнозирует лучшие арбитражные возможности.
     """
     print("\n" + "=" * 60)
-    print("ПРИМЕР 1: AI Arbitrage Predictor")
+    print("ПРИМЕР 1: Algo Arbitrage Predictor")
     print("=" * 60)
 
     # Инициализация
-    predictor = AIArbitragePredictor()
+    predictor = AlgoArbitragePredictor()
 
     # Mock данные рынка (в реальности - из DMarket API)
     market_items = [
@@ -60,7 +60,7 @@ async def example_1_ai_arbitrage():
 
     # Прогнозирование возможностей
     print("\n📊 Анализ рынка...")
-    opportunities = await predictor.predict_best_opportunities(
+    opportunities = awAlgot predictor.predict_best_opportunities(
         items=market_items,
         current_balance=50.0,  # $50 доступно
         risk_level="medium",
@@ -100,7 +100,7 @@ async def example_2_nlp_handler():
 
     print("\n🗣️ Обработка естественных команд:")
     for command, lang_name in test_commands:
-        result = await nlp.parse_user_intent(command, user_id=123)
+        result = awAlgot nlp.parse_user_intent(command, user_id=123)
 
         print(f"\n📝 Команда: \"{command}\" ({lang_name})")
         print(f"   ├─ Intent: {result.intent}")
@@ -111,20 +111,20 @@ async def example_2_nlp_handler():
 
 
 async def example_3_integration():
-    """Пример 3: Интеграция NLP + AI Arbitrage.
+    """Пример 3: Интеграция NLP + Algo Arbitrage.
 
     Показывает полный workflow:
     1. Пользователь отправляет текстовую команду
     2. NLP распознает намерение
-    3. AI Arbitrage ищет возможности
+    3. Algo Arbitrage ищет возможности
     """
     print("\n" + "=" * 60)
-    print("ПРИМЕР 3: NLP + AI Arbitrage Integration")
+    print("ПРИМЕР 3: NLP + Algo Arbitrage Integration")
     print("=" * 60)
 
     # Инициализация модулей
     nlp = NLPCommandHandler()
-    predictor = AIArbitragePredictor()
+    predictor = AlgoArbitragePredictor()
 
     # Симуляция команды пользователя
     user_command = "Найди арбитраж в Dota 2 под $20"
@@ -132,7 +132,7 @@ async def example_3_integration():
 
     # Шаг 1: NLP распознает команду
     print("\n🧠 Шаг 1: NLP анализ...")
-    intent_result = await nlp.parse_user_intent(user_command, user_id=123)
+    intent_result = awAlgot nlp.parse_user_intent(user_command, user_id=123)
 
     if intent_result.intent != "scan_arbitrage":
         print(f"❌ Неожиданное намерение: {intent_result.intent}")
@@ -161,11 +161,11 @@ async def example_3_integration():
         },
     ]
 
-    # Шаг 3: AI прогнозирование
-    print("\n🤖 Шаг 3: AI прогнозирование...")
+    # Шаг 3: Algo прогнозирование
+    print("\n🤖 Шаг 3: Algo прогнозирование...")
     max_price = intent_result.params.get("max_price", 100.0)
 
-    opportunities = await predictor.predict_best_opportunities(
+    opportunities = awAlgot predictor.predict_best_opportunities(
         items=market_items,
         current_balance=max_price,
         risk_level="medium",
@@ -181,30 +181,30 @@ async def example_3_integration():
         print(f"   ⚠️ Риск: {opp.risk_score:.0f}/100")
 
 
-async def main():
+async def mAlgon():
     """Запуск всех примеров."""
     print("\n" + "=" * 60)
     print("🚀 PHASE 2 IMPLEMENTATION EXAMPLES")
     print("=" * 60)
-    print("\nДемонстрация новых AI модулей:")
-    print("1. AI Arbitrage Predictor - ML-прогнозирование арбитража")
+    print("\nДемонстрация новых Algo модулей:")
+    print("1. Algo Arbitrage Predictor - ML-прогнозирование арбитража")
     print("2. NLP Command Handler - Обработка естественного языка")
     print("3. Integration - Полная интеграция модулей")
 
     # Запуск примеров
-    await example_1_ai_arbitrage()
-    await example_2_nlp_handler()
-    await example_3_integration()
+    awAlgot example_1_Algo_arbitrage()
+    awAlgot example_2_nlp_handler()
+    awAlgot example_3_integration()
 
     print("\n" + "=" * 60)
     print("✅ Все примеры выполнены успешно!")
     print("=" * 60)
     print("\n📚 Документация:")
-    print("- AI Arbitrage: src/dmarket/SKILL_AI_ARBITRAGE.md")
+    print("- Algo Arbitrage: src/dmarket/SKILL_Algo_ARBITRAGE.md")
     print("- NLP Handler: src/telegram_bot/SKILL_NLP_HANDLER.md")
     print("- Full Analysis: docs/SKILLS_MARKETPLACE_INTEGRATION_ANALYSIS.md")
     print()
 
 
-if __name__ == "__main__":
-    asyncio.run(main())
+if __name__ == "__mAlgon__":
+    asyncio.run(mAlgon())

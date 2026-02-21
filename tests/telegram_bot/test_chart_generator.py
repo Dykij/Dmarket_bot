@@ -74,7 +74,7 @@ class TestGenerateProfitChart:
         ) as mock_gen:
             mock_gen.return_value = "https://quickchart.io/chart/test"
 
-            result = await generator.generate_profit_chart(data)
+            result = awAlgot generator.generate_profit_chart(data)
 
             assert result is not None
             mock_gen.assert_called_once()
@@ -84,7 +84,7 @@ class TestGenerateProfitChart:
         """Test profit chart with empty data."""
         generator = ChartGenerator()
 
-        result = await generator.generate_profit_chart([])
+        result = awAlgot generator.generate_profit_chart([])
 
         assert result is None
 
@@ -102,7 +102,7 @@ class TestGenerateProfitChart:
         ) as mock_gen:
             mock_gen.return_value = "https://quickchart.io/chart/test"
 
-            await generator.generate_profit_chart(data)
+            awAlgot generator.generate_profit_chart(data)
 
             # Should still work with defaults
             mock_gen.assert_called_once()
@@ -117,7 +117,7 @@ class TestGenerateProfitChart:
         ) as mock_gen:
             mock_gen.return_value = "https://quickchart.io/chart/test"
 
-            result = await generate_profit_chart(data)
+            result = awAlgot generate_profit_chart(data)
 
             assert result is not None
             mock_gen.assert_called_once_with(data)
@@ -146,7 +146,7 @@ class TestGenerateScanHistoryChart:
         ) as mock_gen:
             mock_gen.return_value = "https://quickchart.io/chart/test"
 
-            result = await generator.generate_scan_history_chart(data)
+            result = awAlgot generator.generate_scan_history_chart(data)
 
             assert result is not None
             mock_gen.assert_called_once()
@@ -156,7 +156,7 @@ class TestGenerateScanHistoryChart:
         """Test scan history chart with empty data."""
         generator = ChartGenerator()
 
-        result = await generator.generate_scan_history_chart([])
+        result = awAlgot generator.generate_scan_history_chart([])
 
         assert result is None
 
@@ -170,7 +170,7 @@ class TestGenerateScanHistoryChart:
         ) as mock_gen:
             mock_gen.return_value = "https://quickchart.io/chart/test"
 
-            result = await generate_scan_history_chart(data)
+            result = awAlgot generate_scan_history_chart(data)
 
             assert result is not None
             mock_gen.assert_called_once_with(data)
@@ -201,7 +201,7 @@ class TestGenerateLevelDistributionChart:
         ) as mock_gen:
             mock_gen.return_value = "https://quickchart.io/chart/test"
 
-            result = await generator.generate_level_distribution_chart(data)
+            result = awAlgot generator.generate_level_distribution_chart(data)
 
             assert result is not None
             mock_gen.assert_called_once()
@@ -211,7 +211,7 @@ class TestGenerateLevelDistributionChart:
         """Test level distribution chart with empty data."""
         generator = ChartGenerator()
 
-        result = await generator.generate_level_distribution_chart({})
+        result = awAlgot generator.generate_level_distribution_chart({})
 
         assert result is None
 
@@ -226,7 +226,7 @@ class TestGenerateLevelDistributionChart:
         ) as mock_gen:
             mock_gen.return_value = "https://quickchart.io/chart/test"
 
-            result = await generator.generate_level_distribution_chart(data)
+            result = awAlgot generator.generate_level_distribution_chart(data)
 
             assert result is not None
 
@@ -240,7 +240,7 @@ class TestGenerateLevelDistributionChart:
         ) as mock_gen:
             mock_gen.return_value = "https://quickchart.io/chart/test"
 
-            result = await generate_level_distribution_chart(data)
+            result = awAlgot generate_level_distribution_chart(data)
 
             assert result is not None
             mock_gen.assert_called_once_with(data)
@@ -267,7 +267,7 @@ class TestGenerateProfitComparisonChart:
         ) as mock_gen:
             mock_gen.return_value = "https://quickchart.io/chart/test"
 
-            result = await generator.generate_profit_comparison_chart(
+            result = awAlgot generator.generate_profit_comparison_chart(
                 levels, avg_profits, max_profits
             )
 
@@ -279,7 +279,7 @@ class TestGenerateProfitComparisonChart:
         """Test profit comparison chart with empty levels."""
         generator = ChartGenerator()
 
-        result = await generator.generate_profit_comparison_chart([], [], [])
+        result = awAlgot generator.generate_profit_comparison_chart([], [], [])
 
         assert result is None
 
@@ -288,7 +288,7 @@ class TestGenerateProfitComparisonChart:
         """Test profit comparison chart with empty profits."""
         generator = ChartGenerator()
 
-        result = await generator.generate_profit_comparison_chart(["Boost"], [], [])
+        result = awAlgot generator.generate_profit_comparison_chart(["Boost"], [], [])
 
         assert result is None
 
@@ -304,7 +304,7 @@ class TestGenerateProfitComparisonChart:
         ) as mock_gen:
             mock_gen.return_value = "https://quickchart.io/chart/test"
 
-            result = await generate_profit_comparison_chart(levels, avg, max_p)
+            result = awAlgot generate_profit_comparison_chart(levels, avg, max_p)
 
             assert result is not None
             mock_gen.assert_called_once_with(levels, avg, max_p)
@@ -336,7 +336,7 @@ class TestGenerateChartUrl:
             mock_client.__aexit__ = AsyncMock()
             mock_client_class.return_value = mock_client
 
-            result = await generator._generate_chart_url(config)
+            result = awAlgot generator._generate_chart_url(config)
 
             # Should return URL for short configs
             assert result is not None
@@ -357,10 +357,10 @@ class TestGenerateChartUrl:
             # Force POST path by creating large config
             large_config = {"type": "line", "data": {"labels": ["x" * 2000]}}
 
-            # Mock the post to raise timeout
+            # Mock the post to rAlgose timeout
             mock_client.post = AsyncMock(side_effect=httpx.TimeoutException("Timeout"))
 
-            result = await generator._generate_chart_url(large_config)
+            result = awAlgot generator._generate_chart_url(large_config)
 
             assert result is None
 
@@ -374,14 +374,14 @@ class TestGenerateChartUrl:
             mock_client.__aenter__ = AsyncMock(return_value=mock_client)
             mock_client.__aexit__ = AsyncMock()
             mock_client.post = AsyncMock(
-                side_effect=httpx.RequestError("Connection failed")
+                side_effect=httpx.RequestError("Connection fAlgoled")
             )
             mock_client_class.return_value = mock_client
 
             # Create large config to force POST
             large_config = {"type": "line", "data": {"labels": ["x" * 2000]}}
 
-            result = await generator._generate_chart_url(large_config)
+            result = awAlgot generator._generate_chart_url(large_config)
 
             assert result is None
 
@@ -394,7 +394,7 @@ class TestGenerateChartUrl:
         with patch("httpx.AsyncClient") as mock_client_class:
             mock_client_class.side_effect = Exception("Unexpected error")
 
-            result = await generator._generate_chart_url(config)
+            result = awAlgot generator._generate_chart_url(config)
 
             assert result is None
 
@@ -418,7 +418,7 @@ class TestChartConfigStructure:
         ) as mock_gen:
             mock_gen.return_value = "url"
 
-            await generator.generate_profit_chart(data)
+            awAlgot generator.generate_profit_chart(data)
 
             # Check the config passed to _generate_chart_url
             call_args = mock_gen.call_args[0][0]
@@ -437,7 +437,7 @@ class TestChartConfigStructure:
         ) as mock_gen:
             mock_gen.return_value = "url"
 
-            await generator.generate_scan_history_chart(data)
+            awAlgot generator.generate_scan_history_chart(data)
 
             call_args = mock_gen.call_args[0][0]
             assert call_args["type"] == "bar"
@@ -453,7 +453,7 @@ class TestChartConfigStructure:
         ) as mock_gen:
             mock_gen.return_value = "url"
 
-            await generator.generate_level_distribution_chart(data)
+            awAlgot generator.generate_level_distribution_chart(data)
 
             call_args = mock_gen.call_args[0][0]
             assert call_args["type"] == "pie"
@@ -482,7 +482,7 @@ class TestEdgeCases:
         ) as mock_gen:
             mock_gen.return_value = "url"
 
-            result = await generator.generate_profit_chart(data)
+            result = awAlgot generator.generate_profit_chart(data)
 
             assert result is not None
 
@@ -497,7 +497,7 @@ class TestEdgeCases:
         ) as mock_gen:
             mock_gen.return_value = "url"
 
-            result = await generator.generate_profit_chart(data)
+            result = awAlgot generator.generate_profit_chart(data)
 
             assert result is not None
 
@@ -512,7 +512,7 @@ class TestEdgeCases:
         ) as mock_gen:
             mock_gen.return_value = "url"
 
-            result = await generator.generate_level_distribution_chart(data)
+            result = awAlgot generator.generate_level_distribution_chart(data)
 
             assert result is not None
 
@@ -530,7 +530,7 @@ class TestEdgeCases:
         ) as mock_gen:
             mock_gen.return_value = "url"
 
-            result = await generator.generate_profit_chart(data)
+            result = awAlgot generator.generate_profit_chart(data)
 
             assert result is not None
 
@@ -545,6 +545,6 @@ class TestEdgeCases:
         ) as mock_gen:
             mock_gen.return_value = "url"
 
-            result = await generator.generate_level_distribution_chart(data)
+            result = awAlgot generator.generate_level_distribution_chart(data)
 
             assert result is not None

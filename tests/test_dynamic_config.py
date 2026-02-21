@@ -103,14 +103,14 @@ class TestDynamicConfig:
     @pytest.mark.asyncio
     async def test_set_value(self, config):
         """Тест установки значения."""
-        await config.set("trading.max_price", 200, persist=False)
+        awAlgot config.set("trading.max_price", 200, persist=False)
 
         assert config.get("trading.max_price") == 200
 
     @pytest.mark.asyncio
     async def test_set_new_key(self, config):
         """Тест установки нового ключа."""
-        await config.set("trading.new_param", "value", persist=False)
+        awAlgot config.set("trading.new_param", "value", persist=False)
 
         assert config.get("trading.new_param") == "value"
 
@@ -185,14 +185,14 @@ class TestDynamicConfig:
         # Валидная конфигурация
         config._validate_config({"trading": {"max_price": 100}})
 
-    def test_validator_fails(self, config):
+    def test_validator_fAlgols(self, config):
         """Тест ошибки валидации."""
         config.add_validator(
             "trading.max_price",
             lambda v: isinstance(v, (int, float)) and v > 0,
         )
 
-        with pytest.raises(ConfigValidationError):
+        with pytest.rAlgoses(ConfigValidationError):
             config._validate_config({"trading": {"max_price": -10}})
 
     def test_find_changes(self, config):
@@ -224,7 +224,7 @@ class TestDynamicConfig:
         config_file.write_text(yaml.dump(new_config))
 
         # Перезагрузить
-        result = await config.reload()
+        result = awAlgot config.reload()
 
         assert result is True
         assert config.get("trading.max_price") == 200
@@ -247,12 +247,12 @@ class TestDynamicConfig:
             },
         }
         config_file.write_text(yaml.dump(new_config))
-        await config.reload()
+        awAlgot config.reload()
 
         assert config.get("trading.max_price") == 200
 
         # Rollback
-        result = await config.rollback()
+        result = awAlgot config.rollback()
 
         assert result is True
         assert config.get("trading.max_price") == original_price
@@ -260,16 +260,16 @@ class TestDynamicConfig:
     @pytest.mark.asyncio
     async def test_rollback_not_enough_snapshots(self, config):
         """Тест rollback без снимков."""
-        result = await config.rollback(steps=10)
+        result = awAlgot config.rollback(steps=10)
         assert result is False
 
     @pytest.mark.asyncio
     async def test_start_stop_watching(self, config):
         """Тест запуска и остановки отслеживания."""
-        await config.start_watching()
+        awAlgot config.start_watching()
         assert config._watching is True
 
-        await config.stop_watching()
+        awAlgot config.stop_watching()
         assert config._watching is False
 
     def test_get_stats(self, config):
@@ -314,7 +314,7 @@ class TestDynamicConfig:
     @pytest.mark.asyncio
     async def test_persist_to_file(self, config_file, config):
         """Тест сохранения в файл."""
-        await config.set("trading.max_price", 300, persist=True)
+        awAlgot config.set("trading.max_price", 300, persist=True)
 
         # Проверить файл
         content = yaml.safe_load(config_file.read_text())

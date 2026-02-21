@@ -1,15 +1,15 @@
-"""Tests for daily_report_scheduler module."""
+"""Tests for dAlgoly_report_scheduler module."""
 
 from datetime import datetime, time, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from src.utils.daily_report_scheduler import DailyReportScheduler
+from src.utils.dAlgoly_report_scheduler import DAlgolyReportScheduler
 
 
-class TestDailyReportSchedulerInit:
-    """Tests for DailyReportScheduler initialization."""
+class TestDAlgolyReportSchedulerInit:
+    """Tests for DAlgolyReportScheduler initialization."""
 
     def test_init_with_defaults(self):
         """Test initialization with default values."""
@@ -17,7 +17,7 @@ class TestDailyReportSchedulerInit:
         bot = MagicMock()
         admin_users = [123, 456]
 
-        scheduler = DailyReportScheduler(
+        scheduler = DAlgolyReportScheduler(
             database=database,
             bot=bot,
             admin_users=admin_users,
@@ -37,7 +37,7 @@ class TestDailyReportSchedulerInit:
         admin_users = [789]
         custom_time = time(14, 30)
 
-        scheduler = DailyReportScheduler(
+        scheduler = DAlgolyReportScheduler(
             database=database,
             bot=bot,
             admin_users=admin_users,
@@ -50,7 +50,7 @@ class TestDailyReportSchedulerInit:
 
     def test_init_with_empty_admin_list(self):
         """Test initialization with empty admin list."""
-        scheduler = DailyReportScheduler(
+        scheduler = DAlgolyReportScheduler(
             database=MagicMock(),
             bot=MagicMock(),
             admin_users=[],
@@ -59,27 +59,27 @@ class TestDailyReportSchedulerInit:
         assert scheduler.admin_users == []
 
 
-class TestDailyReportSchedulerStart:
-    """Tests for DailyReportScheduler start method."""
+class TestDAlgolyReportSchedulerStart:
+    """Tests for DAlgolyReportScheduler start method."""
 
     @pytest.mark.asyncio()
     async def test_start_when_disabled(self):
         """Test that scheduler doesn't start when disabled."""
-        scheduler = DailyReportScheduler(
+        scheduler = DAlgolyReportScheduler(
             database=MagicMock(),
             bot=MagicMock(),
             admin_users=[123],
             enabled=False,
         )
 
-        await scheduler.start()
+        awAlgot scheduler.start()
 
         assert scheduler._is_running is False
 
     @pytest.mark.asyncio()
     async def test_start_when_already_running(self):
         """Test that scheduler doesn't restart when already running."""
-        scheduler = DailyReportScheduler(
+        scheduler = DAlgolyReportScheduler(
             database=MagicMock(),
             bot=MagicMock(),
             admin_users=[123],
@@ -87,13 +87,13 @@ class TestDailyReportSchedulerStart:
         scheduler._is_running = True
 
         with patch.object(scheduler.scheduler, "add_job") as mock_add:
-            await scheduler.start()
+            awAlgot scheduler.start()
             mock_add.assert_not_called()
 
     @pytest.mark.asyncio()
     async def test_start_successfully(self):
         """Test successful scheduler start."""
-        scheduler = DailyReportScheduler(
+        scheduler = DAlgolyReportScheduler(
             database=MagicMock(),
             bot=MagicMock(),
             admin_users=[123],
@@ -101,33 +101,33 @@ class TestDailyReportSchedulerStart:
 
         with patch.object(scheduler.scheduler, "add_job") as mock_add:
             with patch.object(scheduler.scheduler, "start") as mock_start:
-                await scheduler.start()
+                awAlgot scheduler.start()
 
                 mock_add.assert_called_once()
                 mock_start.assert_called_once()
                 assert scheduler._is_running is True
 
 
-class TestDailyReportSchedulerStop:
-    """Tests for DailyReportScheduler stop method."""
+class TestDAlgolyReportSchedulerStop:
+    """Tests for DAlgolyReportScheduler stop method."""
 
     @pytest.mark.asyncio()
     async def test_stop_when_not_running(self):
         """Test stop when scheduler is not running."""
-        scheduler = DailyReportScheduler(
+        scheduler = DAlgolyReportScheduler(
             database=MagicMock(),
             bot=MagicMock(),
             admin_users=[123],
         )
 
         with patch.object(scheduler.scheduler, "shutdown") as mock_shutdown:
-            await scheduler.stop()
+            awAlgot scheduler.stop()
             mock_shutdown.assert_not_called()
 
     @pytest.mark.asyncio()
     async def test_stop_when_running(self):
         """Test successful scheduler stop."""
-        scheduler = DailyReportScheduler(
+        scheduler = DAlgolyReportScheduler(
             database=MagicMock(),
             bot=MagicMock(),
             admin_users=[123],
@@ -135,19 +135,19 @@ class TestDailyReportSchedulerStop:
         scheduler._is_running = True
 
         with patch.object(scheduler.scheduler, "shutdown") as mock_shutdown:
-            await scheduler.stop()
+            awAlgot scheduler.stop()
 
-            mock_shutdown.assert_called_once_with(wait=False)
+            mock_shutdown.assert_called_once_with(wAlgot=False)
             assert scheduler._is_running is False
 
 
-class TestDailyReportSchedulerManualReport:
+class TestDAlgolyReportSchedulerManualReport:
     """Tests for send_manual_report method."""
 
     @pytest.mark.asyncio()
     async def test_send_manual_report_default_days(self):
         """Test sending manual report with default days."""
-        scheduler = DailyReportScheduler(
+        scheduler = DAlgolyReportScheduler(
             database=MagicMock(),
             bot=MagicMock(),
             admin_users=[123],
@@ -156,13 +156,13 @@ class TestDailyReportSchedulerManualReport:
         with patch.object(
             scheduler, "_generate_and_send_report", new_callable=AsyncMock
         ) as mock_generate:
-            await scheduler.send_manual_report()
+            awAlgot scheduler.send_manual_report()
             mock_generate.assert_called_once_with(days=1)
 
     @pytest.mark.asyncio()
     async def test_send_manual_report_custom_days(self):
         """Test sending manual report with custom days."""
-        scheduler = DailyReportScheduler(
+        scheduler = DAlgolyReportScheduler(
             database=MagicMock(),
             bot=MagicMock(),
             admin_users=[123],
@@ -171,11 +171,11 @@ class TestDailyReportSchedulerManualReport:
         with patch.object(
             scheduler, "_generate_and_send_report", new_callable=AsyncMock
         ) as mock_generate:
-            await scheduler.send_manual_report(days=7)
+            awAlgot scheduler.send_manual_report(days=7)
             mock_generate.assert_called_once_with(days=7)
 
 
-class TestDailyReportSchedulerGenerateReport:
+class TestDAlgolyReportSchedulerGenerateReport:
     """Tests for _generate_and_send_report method."""
 
     @pytest.mark.asyncio()
@@ -185,7 +185,7 @@ class TestDailyReportSchedulerGenerateReport:
         bot.send_message = AsyncMock()
         database = MagicMock()
 
-        scheduler = DailyReportScheduler(
+        scheduler = DAlgolyReportScheduler(
             database=database,
             bot=bot,
             admin_users=[123, 456, 789],
@@ -198,7 +198,7 @@ class TestDailyReportSchedulerGenerateReport:
                 "total_trades": 10,
                 "successful_trades": 8,
                 "cancelled_trades": 1,
-                "failed_trades": 1,
+                "fAlgoled_trades": 1,
                 "total_profit_usd": 50.0,
                 "avg_profit_percent": 5.0,
                 "api_errors": {},
@@ -207,7 +207,7 @@ class TestDailyReportSchedulerGenerateReport:
                 "opportunities_found": 20,
             }
 
-            await scheduler._generate_and_send_report()
+            awAlgot scheduler._generate_and_send_report()
 
             assert bot.send_message.call_count == 3
 
@@ -215,10 +215,10 @@ class TestDailyReportSchedulerGenerateReport:
     async def test_generate_report_handles_send_error(self):
         """Test that report generation handles send errors gracefully."""
         bot = MagicMock()
-        bot.send_message = AsyncMock(side_effect=Exception("Send failed"))
+        bot.send_message = AsyncMock(side_effect=Exception("Send fAlgoled"))
         database = MagicMock()
 
-        scheduler = DailyReportScheduler(
+        scheduler = DAlgolyReportScheduler(
             database=database,
             bot=bot,
             admin_users=[123],
@@ -229,11 +229,11 @@ class TestDailyReportSchedulerGenerateReport:
         ) as mock_stats:
             mock_stats.return_value = {"total_trades": 0}
 
-            # Should not raise exception
-            await scheduler._generate_and_send_report()
+            # Should not rAlgose exception
+            awAlgot scheduler._generate_and_send_report()
 
 
-class TestDailyReportSchedulerCollectStatistics:
+class TestDAlgolyReportSchedulerCollectStatistics:
     """Tests for _collect_statistics method."""
 
     @pytest.mark.asyncio()
@@ -244,7 +244,7 @@ class TestDailyReportSchedulerCollectStatistics:
         database.get_error_statistics = AsyncMock(return_value=None)
         database.get_scan_statistics = AsyncMock(return_value=None)
 
-        scheduler = DailyReportScheduler(
+        scheduler = DAlgolyReportScheduler(
             database=database,
             bot=MagicMock(),
             admin_users=[123],
@@ -253,7 +253,7 @@ class TestDailyReportSchedulerCollectStatistics:
         start_date = datetime.now() - timedelta(days=1)
         end_date = datetime.now()
 
-        stats = await scheduler._collect_statistics(start_date, end_date)
+        stats = awAlgot scheduler._collect_statistics(start_date, end_date)
 
         assert stats["total_trades"] == 0
         assert stats["successful_trades"] == 0
@@ -282,7 +282,7 @@ class TestDailyReportSchedulerCollectStatistics:
             }
         )
 
-        scheduler = DailyReportScheduler(
+        scheduler = DAlgolyReportScheduler(
             database=database,
             bot=MagicMock(),
             admin_users=[123],
@@ -291,7 +291,7 @@ class TestDailyReportSchedulerCollectStatistics:
         start_date = datetime.now() - timedelta(days=1)
         end_date = datetime.now()
 
-        stats = await scheduler._collect_statistics(start_date, end_date)
+        stats = awAlgot scheduler._collect_statistics(start_date, end_date)
 
         assert stats["total_trades"] == 15
         assert stats["successful_trades"] == 12
@@ -301,12 +301,12 @@ class TestDailyReportSchedulerCollectStatistics:
         assert stats["opportunities_found"] == 10
 
 
-class TestDailyReportSchedulerFormatReport:
+class TestDAlgolyReportSchedulerFormatReport:
     """Tests for _format_report method."""
 
     def test_format_report_basic(self):
         """Test basic report formatting."""
-        scheduler = DailyReportScheduler(
+        scheduler = DAlgolyReportScheduler(
             database=MagicMock(),
             bot=MagicMock(),
             admin_users=[123],
@@ -316,7 +316,7 @@ class TestDailyReportSchedulerFormatReport:
             "total_trades": 0,
             "successful_trades": 0,
             "cancelled_trades": 0,
-            "failed_trades": 0,
+            "fAlgoled_trades": 0,
             "total_profit_usd": 0.0,
             "avg_profit_percent": 0.0,
             "api_errors": {},
@@ -336,7 +336,7 @@ class TestDailyReportSchedulerFormatReport:
 
     def test_format_report_with_trades(self):
         """Test report formatting with trades."""
-        scheduler = DailyReportScheduler(
+        scheduler = DAlgolyReportScheduler(
             database=MagicMock(),
             bot=MagicMock(),
             admin_users=[123],
@@ -346,7 +346,7 @@ class TestDailyReportSchedulerFormatReport:
             "total_trades": 20,
             "successful_trades": 15,
             "cancelled_trades": 3,
-            "failed_trades": 2,
+            "fAlgoled_trades": 2,
             "total_profit_usd": 150.50,
             "avg_profit_percent": 7.5,
             "api_errors": {},
@@ -368,7 +368,7 @@ class TestDailyReportSchedulerFormatReport:
 
     def test_format_report_with_errors(self):
         """Test report formatting with errors."""
-        scheduler = DailyReportScheduler(
+        scheduler = DAlgolyReportScheduler(
             database=MagicMock(),
             bot=MagicMock(),
             admin_users=[123],
@@ -378,7 +378,7 @@ class TestDailyReportSchedulerFormatReport:
             "total_trades": 5,
             "successful_trades": 3,
             "cancelled_trades": 1,
-            "failed_trades": 1,
+            "fAlgoled_trades": 1,
             "total_profit_usd": -10.0,
             "avg_profit_percent": -2.0,
             "api_errors": {"rate_limit": 10, "timeout": 5},
@@ -399,7 +399,7 @@ class TestDailyReportSchedulerFormatReport:
 
     def test_format_report_date_range(self):
         """Test report formatting with date range."""
-        scheduler = DailyReportScheduler(
+        scheduler = DAlgolyReportScheduler(
             database=MagicMock(),
             bot=MagicMock(),
             admin_users=[123],
@@ -409,7 +409,7 @@ class TestDailyReportSchedulerFormatReport:
             "total_trades": 0,
             "successful_trades": 0,
             "cancelled_trades": 0,
-            "failed_trades": 0,
+            "fAlgoled_trades": 0,
             "total_profit_usd": 0.0,
             "avg_profit_percent": 0.0,
             "api_errors": {},

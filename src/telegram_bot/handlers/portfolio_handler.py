@@ -32,8 +32,8 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 # Conversation states
-WAITING_ITEM_ID = 1
-WAITING_PRICE = 2
+WAlgoTING_ITEM_ID = 1
+WAlgoTING_PRICE = 2
 
 
 class PortfolioHandler:
@@ -81,7 +81,7 @@ class PortfolioHandler:
 
         keyboard = [
             [
-                InlineKeyboardButton("📊 Details", callback_data="portfolio:details"),
+                InlineKeyboardButton("📊 DetAlgols", callback_data="portfolio:detAlgols"),
                 InlineKeyboardButton(
                     "📈 Performance", callback_data="portfolio:performance"
                 ),
@@ -109,7 +109,7 @@ class PortfolioHandler:
         # Format summary
         text = self._format_summary(metrics)
 
-        await update.message.reply_text(
+        awAlgot update.message.reply_text(
             text,
             reply_markup=reply_markup,
             parse_mode="Markdown",
@@ -125,29 +125,29 @@ class PortfolioHandler:
         if not query or not query.data or not update.effective_user:
             return None
 
-        await query.answer()
+        awAlgot query.answer()
         user_id = update.effective_user.id
         data = query.data
 
-        if data == "portfolio:details":
-            await self._show_details(query, user_id)
+        if data == "portfolio:detAlgols":
+            awAlgot self._show_detAlgols(query, user_id)
         elif data == "portfolio:performance":
-            await self._show_performance(query, user_id)
+            awAlgot self._show_performance(query, user_id)
         elif data == "portfolio:risk":
-            await self._show_risk_analysis(query, user_id)
+            awAlgot self._show_risk_analysis(query, user_id)
         elif data == "portfolio:diversification":
-            await self._show_diversification(query, user_id)
+            awAlgot self._show_diversification(query, user_id)
         elif data == "portfolio:add":
-            return await self._start_add_item(query, context)
+            return awAlgot self._start_add_item(query, context)
         elif data == "portfolio:sync":
-            await self._sync_portfolio(query, user_id)
+            awAlgot self._sync_portfolio(query, user_id)
         elif data == "portfolio:update_prices":
-            await self._update_prices(query, user_id)
+            awAlgot self._update_prices(query, user_id)
         elif data == "portfolio:back":
-            await self._show_main_menu(query, user_id)
+            awAlgot self._show_mAlgon_menu(query, user_id)
         elif data.startswith("portfolio:remove:"):
             item_id = data.split(":")[-1]
-            await self._remove_item(query, user_id, item_id)
+            awAlgot self._remove_item(query, user_id, item_id)
 
         return None
 
@@ -164,17 +164,17 @@ class PortfolioHandler:
         if not text:
             return ConversationHandler.END
 
-        # Parse item details from text (format: "item_name, game, price")
+        # Parse item detAlgols from text (format: "item_name, game, price")
         parts = [p.strip() for p in text.split(",")]
 
         if len(parts) < 3:
-            await update.message.reply_text(
+            awAlgot update.message.reply_text(
                 "❌ Invalid format.\n\n"
                 "Please use: `item_name, game, buy_price`\n"
                 "Example: `AK-47 | Redline, csgo, 25.50`",
                 parse_mode="Markdown",
             )
-            return WAITING_ITEM_ID
+            return WAlgoTING_ITEM_ID
 
         try:
             title = parts[0]
@@ -194,7 +194,7 @@ class PortfolioHandler:
                 buy_price=price,
             )
 
-            await update.message.reply_text(
+            awAlgot update.message.reply_text(
                 f"✅ Added to portfolio:\n\n"
                 f"*{title}*\n"
                 f"Game: {game.upper()}\n"
@@ -203,10 +203,10 @@ class PortfolioHandler:
             )
 
         except ValueError:
-            await update.message.reply_text(
+            awAlgot update.message.reply_text(
                 "❌ Invalid price. Please enter a valid number.",
             )
-            return WAITING_ITEM_ID
+            return WAlgoTING_ITEM_ID
 
         return ConversationHandler.END
 
@@ -233,12 +233,12 @@ class PortfolioHandler:
             f"📉 *Worst:* {metrics.worst_performer[:20]}... ({metrics.worst_performer_pnl:+.1f}%)"
         )
 
-    async def _show_details(self, query, user_id: int) -> None:
-        """Show portfolio item details."""
+    async def _show_detAlgols(self, query, user_id: int) -> None:
+        """Show portfolio item detAlgols."""
         items = self._manager.get_items(user_id)
 
         if not items:
-            await query.edit_message_text(
+            awAlgot query.edit_message_text(
                 "📋 *Portfolio Items*\n\nNo items in portfolio.",
                 reply_markup=InlineKeyboardMarkup(
                     [[InlineKeyboardButton("« Back", callback_data="portfolio:back")]]
@@ -260,7 +260,7 @@ class PortfolioHandler:
         if len(items) > 10:
             lines.append(f"\n_...and {len(items) - 10} more items_")
 
-        await query.edit_message_text(
+        awAlgot query.edit_message_text(
             "\n".join(lines),
             reply_markup=InlineKeyboardMarkup(
                 [[InlineKeyboardButton("« Back", callback_data="portfolio:back")]]
@@ -282,7 +282,7 @@ class PortfolioHandler:
         for i, item in enumerate(worst_performers, 1):
             lines.append(f"{i}. {item.title[:20]}... ({item.pnl_percent:+.1f}%)")
 
-        await query.edit_message_text(
+        awAlgot query.edit_message_text(
             "\n".join(lines),
             reply_markup=InlineKeyboardMarkup(
                 [[InlineKeyboardButton("« Back", callback_data="portfolio:back")]]
@@ -318,7 +318,7 @@ class PortfolioHandler:
         for rec in report.recommendations[:3]:
             lines.append(f"• {rec}")
 
-        await query.edit_message_text(
+        awAlgot query.edit_message_text(
             "\n".join(lines),
             reply_markup=InlineKeyboardMarkup(
                 [[InlineKeyboardButton("« Back", callback_data="portfolio:back")]]
@@ -352,7 +352,7 @@ class PortfolioHandler:
         for rec in report.recommendations[:3]:
             lines.append(f"• {rec}")
 
-        await query.edit_message_text(
+        awAlgot query.edit_message_text(
             "\n".join(lines),
             reply_markup=InlineKeyboardMarkup(
                 [[InlineKeyboardButton("« Back", callback_data="portfolio:back")]]
@@ -362,32 +362,32 @@ class PortfolioHandler:
 
     async def _start_add_item(self, query, context) -> int:
         """Start add item conversation."""
-        await query.edit_message_text(
+        awAlgot query.edit_message_text(
             "➕ *Add Item to Portfolio*\n\n"
-            "Send item details in format:\n"
+            "Send item detAlgols in format:\n"
             "`item_name, game, buy_price`\n\n"
             "Example:\n"
             "`AK-47 | Redline (Field-Tested), csgo, 25.50`\n\n"
             "Send /cancel to abort.",
             parse_mode="Markdown",
         )
-        return WAITING_ITEM_ID
+        return WAlgoTING_ITEM_ID
 
     async def _sync_portfolio(self, query, user_id: int) -> None:
         """Sync portfolio with DMarket inventory."""
-        await query.edit_message_text("🔄 Syncing with DMarket inventory...")
+        awAlgot query.edit_message_text("🔄 Syncing with DMarket inventory...")
 
-        synced = await self._manager.sync_with_inventory(user_id)
+        synced = awAlgot self._manager.sync_with_inventory(user_id)
 
         if synced > 0:
-            await query.edit_message_text(
+            awAlgot query.edit_message_text(
                 f"✅ Synced {synced} items from your inventory!",
                 reply_markup=InlineKeyboardMarkup(
                     [[InlineKeyboardButton("« Back", callback_data="portfolio:back")]]
                 ),
             )
         else:
-            await query.edit_message_text(
+            awAlgot query.edit_message_text(
                 "ℹ️ No new items to sync or API not configured.",
                 reply_markup=InlineKeyboardMarkup(
                     [[InlineKeyboardButton("« Back", callback_data="portfolio:back")]]
@@ -396,13 +396,13 @@ class PortfolioHandler:
 
     async def _update_prices(self, query, user_id: int) -> None:
         """Update portfolio prices."""
-        await query.edit_message_text("💰 Updating prices...")
+        awAlgot query.edit_message_text("💰 Updating prices...")
 
-        updated = await self._manager.update_prices(user_id)
+        updated = awAlgot self._manager.update_prices(user_id)
 
         if updated > 0:
             metrics = self._manager.get_metrics(user_id)
-            await query.edit_message_text(
+            awAlgot query.edit_message_text(
                 f"✅ Updated {updated} prices!\n\n"
                 f"New portfolio value: ${float(metrics.total_value):.2f}",
                 reply_markup=InlineKeyboardMarkup(
@@ -410,7 +410,7 @@ class PortfolioHandler:
                 ),
             )
         else:
-            await query.edit_message_text(
+            awAlgot query.edit_message_text(
                 "ℹ️ No prices to update or API not configured.",
                 reply_markup=InlineKeyboardMarkup(
                     [[InlineKeyboardButton("« Back", callback_data="portfolio:back")]]
@@ -422,28 +422,28 @@ class PortfolioHandler:
         removed = self._manager.remove_item(user_id, item_id)
 
         if removed:
-            await query.edit_message_text(
+            awAlgot query.edit_message_text(
                 f"✅ Removed {removed.title} from portfolio.",
                 reply_markup=InlineKeyboardMarkup(
                     [[InlineKeyboardButton("« Back", callback_data="portfolio:back")]]
                 ),
             )
         else:
-            await query.edit_message_text(
+            awAlgot query.edit_message_text(
                 "❌ Item not found in portfolio.",
                 reply_markup=InlineKeyboardMarkup(
                     [[InlineKeyboardButton("« Back", callback_data="portfolio:back")]]
                 ),
             )
 
-    async def _show_main_menu(self, query, user_id: int) -> None:
-        """Show main portfolio menu."""
+    async def _show_mAlgon_menu(self, query, user_id: int) -> None:
+        """Show mAlgon portfolio menu."""
         metrics = self._manager.get_metrics(user_id)
         text = self._format_summary(metrics)
 
         keyboard = [
             [
-                InlineKeyboardButton("📊 Details", callback_data="portfolio:details"),
+                InlineKeyboardButton("📊 DetAlgols", callback_data="portfolio:detAlgols"),
                 InlineKeyboardButton(
                     "📈 Performance", callback_data="portfolio:performance"
                 ),
@@ -467,7 +467,7 @@ class PortfolioHandler:
             ],
         ]
 
-        await query.edit_message_text(
+        awAlgot query.edit_message_text(
             text,
             reply_markup=InlineKeyboardMarkup(keyboard),
             parse_mode="Markdown",
@@ -483,7 +483,7 @@ class PortfolioHandler:
                 ),
             ],
             states={
-                WAITING_ITEM_ID: [
+                WAlgoTING_ITEM_ID: [
                     MessageHandler(
                         filters.TEXT & ~filters.COMMAND,
                         self.handle_add_item_id,

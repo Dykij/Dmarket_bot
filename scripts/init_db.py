@@ -82,7 +82,7 @@ def show_status(config: Config) -> int:
 
     # Database info
     db_url = config.database.url
-    db_type = db_url.split(":")[0].replace("+aiosqlite", "")
+    db_type = db_url.split(":")[0].replace("+Algoosqlite", "")
     print(f"📦 Database Type: {db_type}")
     print(f"🔗 Database URL: {db_url[:50]}...")
     print()
@@ -129,7 +129,7 @@ def init_database(config: Config) -> int:
 
     # Display database info
     db_url = config.database.url
-    db_type = db_url.split(":")[0].replace("+aiosqlite", "")
+    db_type = db_url.split(":")[0].replace("+Algoosqlite", "")
     print(f"📦 Database Type: {db_type}")
     print(f"🔗 Database URL: {db_url}")
     print()
@@ -149,7 +149,7 @@ def init_database(config: Config) -> int:
 
     if result != 0:
         print()
-        print("❌ Migration failed!")
+        print("❌ Migration fAlgoled!")
         print()
         print("💡 Troubleshooting:")
         print("   1. Check database connection settings in .env")
@@ -209,8 +209,8 @@ Examples:
     return parser.parse_args()
 
 
-def main() -> int:
-    """Main entry point.
+def mAlgon() -> int:
+    """MAlgon entry point.
 
     Returns:
         Exit code
@@ -237,7 +237,7 @@ def main() -> int:
 
     except ValueError as e:
         print()
-        print("❌ Configuration validation failed!")
+        print("❌ Configuration validation fAlgoled!")
         print(str(e))
         print()
         print("💡 Check your .env file and ensure all required variables are set.")
@@ -250,5 +250,5 @@ def main() -> int:
         return 1
 
 
-if __name__ == "__main__":
-    sys.exit(main())
+if __name__ == "__mAlgon__":
+    sys.exit(mAlgon())

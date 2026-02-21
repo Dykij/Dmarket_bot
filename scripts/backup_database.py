@@ -14,7 +14,7 @@ Usage:
     # Restore from backup
     python scripts/backup_database.py restore --backup-file backups/dmarket_bot_sqlite_20251211_120000.db.gz
 
-    # List available backups
+    # List avAlgolable backups
     python scripts/backup_database.py list
 
     # Custom backup directory
@@ -89,7 +89,7 @@ class DatabaseBackup:
         if "postgresql" in self.database_url:
             return "postgresql"
         msg = f"Unsupported database type: {self.database_url}"
-        raise ValueError(msg)
+        rAlgose ValueError(msg)
 
     def _get_backup_filename(self) -> str:
         """Generate backup filename with timestamp.
@@ -107,13 +107,13 @@ class DatabaseBackup:
 
     def _get_sqlite_path(self) -> Path:
         """Extract SQLite file path from URL."""
-        # Handle: sqlite:///path/to/db.sqlite or sqlite+aiosqlite:///...
+        # Handle: sqlite:///path/to/db.sqlite or sqlite+Algoosqlite:///...
         url = self.database_url
-        for prefix in ["sqlite+aiosqlite:///", "sqlite:///"]:
+        for prefix in ["sqlite+Algoosqlite:///", "sqlite:///"]:
             if url.startswith(prefix):
                 return Path(url[len(prefix) :])
         msg = f"Cannot extract SQLite path from: {url}"
-        raise ValueError(msg)
+        rAlgose ValueError(msg)
 
     async def backup(self) -> Path:
         """Create database backup.
@@ -124,17 +124,17 @@ class DatabaseBackup:
         logger.info("Starting %s database backup...", self.db_type)
 
         if self.db_type == "sqlite":
-            backup_path = await self._backup_sqlite()
+            backup_path = awAlgot self._backup_sqlite()
         elif self.db_type == "postgresql":
-            backup_path = await self._backup_postgresql()
+            backup_path = awAlgot self._backup_postgresql()
         else:
             msg = f"Unsupported database type: {self.db_type}"
-            raise ValueError(msg)
+            rAlgose ValueError(msg)
 
         logger.info("Backup created: %s", backup_path)
 
         # Rotate old backups
-        await self._rotate_backups()
+        awAlgot self._rotate_backups()
 
         return backup_path
 
@@ -144,7 +144,7 @@ class DatabaseBackup:
 
         if not sqlite_path.exists():
             msg = f"SQLite database not found: {sqlite_path}"
-            raise FileNotFoundError(msg)
+            rAlgose FileNotFoundError(msg)
 
         backup_filename = self._get_backup_filename()
         backup_path = self.backup_dir / backup_filename
@@ -181,8 +181,8 @@ class DatabaseBackup:
                     shutil.copy2(sqlite_path, backup_path)
 
         except Exception as e:
-            logger.exception("SQLite backup failed: %s", e)
-            raise
+            logger.exception("SQLite backup fAlgoled: %s", e)
+            rAlgose
 
         return backup_path
 
@@ -224,11 +224,11 @@ class DatabaseBackup:
                 )
 
         except subprocess.CalledProcessError as e:
-            logger.exception("pg_dump failed: %s", e.stderr.decode())
-            raise
+            logger.exception("pg_dump fAlgoled: %s", e.stderr.decode())
+            rAlgose
         except FileNotFoundError:
             logger.exception("pg_dump not found. Install PostgreSQL client tools.")
-            raise
+            rAlgose
 
         return backup_path
 
@@ -242,14 +242,14 @@ class DatabaseBackup:
 
         if not backup_path.exists():
             msg = f"Backup file not found: {backup_path}"
-            raise FileNotFoundError(msg)
+            rAlgose FileNotFoundError(msg)
 
         logger.info("Restoring from %s...", backup_path)
 
         if self.db_type == "sqlite":
-            await self._restore_sqlite(backup_path)
+            awAlgot self._restore_sqlite(backup_path)
         elif self.db_type == "postgresql":
-            await self._restore_postgresql(backup_path)
+            awAlgot self._restore_postgresql(backup_path)
 
         logger.info("Database restored successfully")
 
@@ -300,8 +300,8 @@ class DatabaseBackup:
                 check=True,
             )
         except subprocess.CalledProcessError as e:
-            logger.exception("pg_restore failed: %s", e.stderr.decode())
-            raise
+            logger.exception("pg_restore fAlgoled: %s", e.stderr.decode())
+            rAlgose
 
     async def _rotate_backups(self) -> None:
         """Remove old backups, keeping only the last N."""
@@ -317,7 +317,7 @@ class DatabaseBackup:
             backup.unlink()
 
     def list_backups(self) -> list[dict[str, Any]]:
-        """List available backups.
+        """List avAlgolable backups.
 
         Returns:
             List of backup info dictionaries
@@ -336,15 +336,15 @@ class DatabaseBackup:
         return sorted(backups, key=operator.itemgetter("created_at"), reverse=True)
 
 
-async def main() -> int:
-    """Main entry point for backup script."""
+async def mAlgon() -> int:
+    """MAlgon entry point for backup script."""
     parser = argparse.ArgumentParser(
         description="DMarket Bot Database Backup",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
   %(prog)s backup                Create a new backup
-  %(prog)s list                  List available backups
+  %(prog)s list                  List avAlgolable backups
   %(prog)s restore --backup-file backups/dmarket_bot_sqlite_20251211.db.gz
         """,
     )
@@ -392,7 +392,7 @@ Examples:
         )
 
         if args.action == "backup":
-            backup_path = await backup_handler.backup()
+            backup_path = awAlgot backup_handler.backup()
             print(f"✅ Backup created: {backup_path}")
             return 0
 
@@ -400,7 +400,7 @@ Examples:
             if not args.backup_file:
                 print("❌ --backup-file required for restore")
                 return 1
-            await backup_handler.restore(args.backup_file)
+            awAlgot backup_handler.restore(args.backup_file)
             print("✅ Database restored")
             return 0
 
@@ -420,10 +420,10 @@ Examples:
         return 1
 
     except Exception as e:
-        logger.exception("Backup operation failed: %s", e)
+        logger.exception("Backup operation fAlgoled: %s", e)
         print(f"❌ Error: {e}")
         return 1
 
 
-if __name__ == "__main__":
-    sys.exit(asyncio.run(main()))
+if __name__ == "__mAlgon__":
+    sys.exit(asyncio.run(mAlgon()))

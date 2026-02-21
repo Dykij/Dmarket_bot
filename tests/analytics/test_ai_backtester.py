@@ -1,26 +1,26 @@
-"""Tests for AI Backtester.
+"""Tests for Algo Backtester.
 
-Tests Phase 3 implementation of AI-powered backtesting.
+Tests Phase 3 implementation of Algo-powered backtesting.
 """
 
 from datetime import datetime, timedelta
 
 import pytest
 
-from src.analytics.ai_backtester import (
-    AIBacktester,
+from src.analytics.Algo_backtester import (
+    AlgoBacktester,
     BacktestResult,
     Trade,
-    create_ai_backtester,
+    create_Algo_backtester,
 )
 
 
-class TestAIBacktester:
-    """Tests for AIBacktester class."""
+class TestAlgoBacktester:
+    """Tests for AlgoBacktester class."""
 
     def test_initialization(self):
         """Test backtester initialization."""
-        backtester = AIBacktester(initial_balance=100.0, commission_percent=7.0)
+        backtester = AlgoBacktester(initial_balance=100.0, commission_percent=7.0)
 
         assert backtester.initial_balance == 100.0
         assert backtester.commission_percent == 7.0
@@ -28,17 +28,17 @@ class TestAIBacktester:
 
     def test_factory_function(self):
         """Test factory function creates valid backtester."""
-        backtester = create_ai_backtester(initial_balance=200.0)
+        backtester = create_Algo_backtester(initial_balance=200.0)
 
-        assert isinstance(backtester, AIBacktester)
+        assert isinstance(backtester, AlgoBacktester)
         assert backtester.initial_balance == 200.0
 
     @pytest.mark.asyncio
     async def test_backtest_with_empty_data(self):
         """Test backtesting with empty historical data."""
-        backtester = AIBacktester(initial_balance=100.0)
+        backtester = AlgoBacktester(initial_balance=100.0)
 
-        result = await backtester.backtest_arbitrage_strategy(
+        result = awAlgot backtester.backtest_arbitrage_strategy(
             historical_data=[],
             strategy="standard",
         )
@@ -50,7 +50,7 @@ class TestAIBacktester:
     @pytest.mark.asyncio
     async def test_backtest_profitable_trade(self):
         """Test backtesting with profitable arbitrage opportunity."""
-        backtester = AIBacktester(initial_balance=100.0)
+        backtester = AlgoBacktester(initial_balance=100.0)
 
         # Historical data with good arbitrage opportunity
         now = datetime.now()
@@ -71,7 +71,7 @@ class TestAIBacktester:
             },
         ]
 
-        result = await backtester.backtest_arbitrage_strategy(
+        result = awAlgot backtester.backtest_arbitrage_strategy(
             historical_data=historical_data,
             strategy="standard",
             min_profit_percent=5.0,
@@ -85,7 +85,7 @@ class TestAIBacktester:
     @pytest.mark.asyncio
     async def test_backtest_unprofitable_filtered(self):
         """Test that unprofitable opportunities are filtered."""
-        backtester = AIBacktester(initial_balance=100.0)
+        backtester = AlgoBacktester(initial_balance=100.0)
 
         now = datetime.now()
         historical_data = [
@@ -98,7 +98,7 @@ class TestAIBacktester:
             }
         ]
 
-        result = await backtester.backtest_arbitrage_strategy(
+        result = awAlgot backtester.backtest_arbitrage_strategy(
             historical_data=historical_data,
             strategy="standard",
             min_profit_percent=5.0,  # Requires 5%
@@ -110,7 +110,7 @@ class TestAIBacktester:
     @pytest.mark.asyncio
     async def test_backtest_different_strategies(self):
         """Test different strategy types."""
-        backtester = AIBacktester(initial_balance=200.0)
+        backtester = AlgoBacktester(initial_balance=200.0)
 
         now = datetime.now()
         historical_data = [
@@ -124,7 +124,7 @@ class TestAIBacktester:
         ]
 
         # Test conservative strategy
-        result_conservative = await backtester.backtest_arbitrage_strategy(
+        result_conservative = awAlgot backtester.backtest_arbitrage_strategy(
             historical_data=historical_data,
             strategy="conservative",
             min_profit_percent=5.0,
@@ -134,7 +134,7 @@ class TestAIBacktester:
         backtester.current_balance = backtester.initial_balance
 
         # Test aggressive strategy
-        result_aggressive = await backtester.backtest_arbitrage_strategy(
+        result_aggressive = awAlgot backtester.backtest_arbitrage_strategy(
             historical_data=historical_data,
             strategy="aggressive",
             min_profit_percent=3.0,
@@ -147,7 +147,7 @@ class TestAIBacktester:
     @pytest.mark.asyncio
     async def test_backtest_insufficient_balance(self):
         """Test that trades are skipped when balance insufficient."""
-        backtester = AIBacktester(initial_balance=5.0)  # Very low balance
+        backtester = AlgoBacktester(initial_balance=5.0)  # Very low balance
 
         now = datetime.now()
         historical_data = [
@@ -160,7 +160,7 @@ class TestAIBacktester:
             }
         ]
 
-        result = await backtester.backtest_arbitrage_strategy(
+        result = awAlgot backtester.backtest_arbitrage_strategy(
             historical_data=historical_data,
             strategy="standard",
         )
@@ -172,11 +172,11 @@ class TestAIBacktester:
     @pytest.mark.asyncio
     async def test_execute_buy_reduces_balance(self):
         """Test that buy execution reduces balance correctly."""
-        backtester = AIBacktester(initial_balance=100.0)
+        backtester = AlgoBacktester(initial_balance=100.0)
 
         initial = backtester.current_balance
 
-        trade = await backtester._execute_buy(
+        trade = awAlgot backtester._execute_buy(
             timestamp=datetime.now(),
             item_id="test_item",
             title="Test",
@@ -192,10 +192,10 @@ class TestAIBacktester:
     @pytest.mark.asyncio
     async def test_execute_sell_increases_balance(self):
         """Test that sell execution increases balance correctly."""
-        backtester = AIBacktester(initial_balance=100.0)
+        backtester = AlgoBacktester(initial_balance=100.0)
 
         # First buy
-        await backtester._execute_buy(
+        awAlgot backtester._execute_buy(
             timestamp=datetime.now(),
             item_id="test_item",
             title="Test",
@@ -205,7 +205,7 @@ class TestAIBacktester:
         balance_after_buy = backtester.current_balance
 
         # Then sell
-        trade = await backtester._execute_sell(
+        trade = awAlgot backtester._execute_sell(
             timestamp=datetime.now(),
             item_id="test_item",
             title="Test",
@@ -221,7 +221,7 @@ class TestAIBacktester:
 
     def test_calculate_profit_margin(self):
         """Test profit margin calculation."""
-        backtester = AIBacktester()
+        backtester = AlgoBacktester()
 
         # 50% gross margin, ~40% after 7% commission
         margin = backtester._calculate_profit_margin(10.0, 15.0)
@@ -231,7 +231,7 @@ class TestAIBacktester:
 
     def test_calculate_profit_margin_with_zero_price(self):
         """Test profit margin with zero buy price."""
-        backtester = AIBacktester()
+        backtester = AlgoBacktester()
 
         margin = backtester._calculate_profit_margin(0.0, 15.0)
 
@@ -239,7 +239,7 @@ class TestAIBacktester:
 
     def test_get_price_from_dict(self):
         """Test price extraction from API format."""
-        backtester = AIBacktester()
+        backtester = AlgoBacktester()
 
         price = backtester._get_price({"USD": 1234})
 
@@ -247,7 +247,7 @@ class TestAIBacktester:
 
     def test_get_price_handles_invalid_data(self):
         """Test price extraction with invalid data."""
-        backtester = AIBacktester()
+        backtester = AlgoBacktester()
 
         price = backtester._get_price({})
 
@@ -255,7 +255,7 @@ class TestAIBacktester:
 
     def test_get_strategy_params(self):
         """Test strategy parameter retrieval."""
-        backtester = AIBacktester()
+        backtester = AlgoBacktester()
 
         conservative = backtester._get_strategy_params("conservative")
         standard = backtester._get_strategy_params("standard")
@@ -267,7 +267,7 @@ class TestAIBacktester:
 
     def test_calculate_max_drawdown_empty_trades(self):
         """Test max drawdown calculation with no trades."""
-        backtester = AIBacktester()
+        backtester = AlgoBacktester()
 
         drawdown = backtester._calculate_max_drawdown([])
 
@@ -275,7 +275,7 @@ class TestAIBacktester:
 
     def test_calculate_metrics_with_trades(self):
         """Test metrics calculation with sample trades."""
-        backtester = AIBacktester(initial_balance=100.0)
+        backtester = AlgoBacktester(initial_balance=100.0)
         backtester.current_balance = 110.0  # Simulated profit
 
         trades = [

@@ -1,6 +1,6 @@
 """Additional handler tests for coverage improvement.
 
-Tests for remaining handlers in src/telegram_bot/handlers/.
+Tests for remAlgoning handlers in src/telegram_bot/handlers/.
 """
 
 import asyncio
@@ -76,7 +76,7 @@ class TestCallbacks:
 
             assert callbacks is not None
         except ImportError:
-            pytest.skip("callbacks not available")
+            pytest.skip("callbacks not avAlgolable")
 
 
 # ============================================================================
@@ -102,7 +102,7 @@ class TestDmarketStatus:
             try:
                 from src.telegram_bot.handlers.dmarket_status import dmarket_status_impl
 
-                await dmarket_status_impl(
+                awAlgot dmarket_status_impl(
                     mock_update, mock_context, status_message=mock_update.message
                 )
             except Exception:
@@ -125,7 +125,7 @@ class TestGameFilterHandlers:
 
             assert game_filter_handlers is not None
         except ImportError:
-            pytest.skip("game_filter_handlers not available")
+            pytest.skip("game_filter_handlers not avAlgolable")
 
 
 # ============================================================================
@@ -143,7 +143,7 @@ class TestMarketAnalysisHandler:
 
             assert market_analysis_handler is not None
         except ImportError:
-            pytest.skip("market_analysis_handler not available")
+            pytest.skip("market_analysis_handler not avAlgolable")
 
 
 # ============================================================================
@@ -161,7 +161,7 @@ class TestSalesAnalysisHandlers:
 
             assert sales_analysis_handlers is not None
         except ImportError:
-            pytest.skip("sales_analysis_handlers not available")
+            pytest.skip("sales_analysis_handlers not avAlgolable")
 
 
 # ============================================================================
@@ -179,7 +179,7 @@ class TestLiquiditySettingsHandler:
 
             assert liquidity_settings_handler is not None
         except ImportError:
-            pytest.skip("liquidity_settings_handler not available")
+            pytest.skip("liquidity_settings_handler not avAlgolable")
 
 
 # ============================================================================
@@ -197,7 +197,7 @@ class TestNotificationDigestHandler:
 
             assert notification_digest_handler is not None
         except ImportError:
-            pytest.skip("notification_digest_handler not available")
+            pytest.skip("notification_digest_handler not avAlgolable")
 
 
 # ============================================================================
@@ -215,7 +215,7 @@ class TestNotificationFiltersHandler:
 
             assert notification_filters_handler is not None
         except ImportError:
-            pytest.skip("notification_filters_handler not available")
+            pytest.skip("notification_filters_handler not avAlgolable")
 
 
 # ============================================================================
@@ -233,7 +233,7 @@ class TestExtendedStatsHandler:
 
             assert extended_stats_handler is not None
         except ImportError:
-            pytest.skip("extended_stats_handler not available")
+            pytest.skip("extended_stats_handler not avAlgolable")
 
 
 # ============================================================================
@@ -251,7 +251,7 @@ class TestViewItemsHandler:
 
             assert view_items_handler is not None
         except ImportError:
-            pytest.skip("view_items_handler not available")
+            pytest.skip("view_items_handler not avAlgolable")
 
 
 # ============================================================================
@@ -269,7 +269,7 @@ class TestEnhancedScannerHandler:
 
             assert enhanced_scanner_handler is not None
         except ImportError:
-            pytest.skip("enhanced_scanner_handler not available")
+            pytest.skip("enhanced_scanner_handler not avAlgolable")
 
 
 # ============================================================================
@@ -287,7 +287,7 @@ class TestSmartArbitrageHandler:
 
             assert smart_arbitrage_handler is not None
         except ImportError:
-            pytest.skip("smart_arbitrage_handler not available")
+            pytest.skip("smart_arbitrage_handler not avAlgolable")
 
 
 # ============================================================================
@@ -305,7 +305,7 @@ class TestAutomaticArbitrageHandler:
 
             assert automatic_arbitrage_handler is not None
         except ImportError:
-            pytest.skip("automatic_arbitrage_handler not available")
+            pytest.skip("automatic_arbitrage_handler not avAlgolable")
 
 
 # ============================================================================
@@ -323,7 +323,7 @@ class TestIntramarketArbitrageHandler:
 
             assert intramarket_arbitrage_handler is not None
         except ImportError:
-            pytest.skip("intramarket_arbitrage_handler not available")
+            pytest.skip("intramarket_arbitrage_handler not avAlgolable")
 
 
 # ============================================================================
@@ -341,7 +341,7 @@ class TestAutopilotHandler:
 
             assert autopilot_handler is not None
         except ImportError:
-            pytest.skip("autopilot_handler not available")
+            pytest.skip("autopilot_handler not avAlgolable")
 
 
 # ============================================================================
@@ -359,7 +359,7 @@ class TestBacktestHandler:
 
             assert backtest_handler is not None
         except ImportError:
-            pytest.skip("backtest_handler not available")
+            pytest.skip("backtest_handler not avAlgolable")
 
 
 # ============================================================================
@@ -377,7 +377,7 @@ class TestIntelligentHoldHandler:
 
             assert intelligent_hold_handler is not None
         except ImportError:
-            pytest.skip("intelligent_hold_handler not available")
+            pytest.skip("intelligent_hold_handler not avAlgolable")
 
 
 # ============================================================================
@@ -395,7 +395,7 @@ class TestMarketSentimentHandler:
 
             assert market_sentiment_handler is not None
         except ImportError:
-            pytest.skip("market_sentiment_handler not available")
+            pytest.skip("market_sentiment_handler not avAlgolable")
 
 
 # ============================================================================
@@ -413,7 +413,7 @@ class TestRateLimitAdmin:
 
             assert rate_limit_admin is not None
         except ImportError:
-            pytest.skip("rate_limit_admin not available")
+            pytest.skip("rate_limit_admin not avAlgolable")
 
 
 # ============================================================================
@@ -431,7 +431,7 @@ class TestApiCheckHandler:
 
             assert api_check_handler is not None
         except ImportError:
-            pytest.skip("api_check_handler not available")
+            pytest.skip("api_check_handler not avAlgolable")
 
 
 # ============================================================================
@@ -449,7 +449,7 @@ class TestSteamCommands:
 
             assert steam_commands is not None
         except ImportError:
-            pytest.skip("steam_commands not available")
+            pytest.skip("steam_commands not avAlgolable")
 
 
 # ============================================================================
@@ -467,7 +467,7 @@ class TestMinimalMenuRouter:
 
             assert minimal_menu_router is not None
         except ImportError:
-            pytest.skip("minimal_menu_router not available")
+            pytest.skip("minimal_menu_router not avAlgolable")
 
 
 # ============================================================================
@@ -485,16 +485,16 @@ class TestCallbackRegistry:
 
             assert callback_registry is not None
         except ImportError:
-            pytest.skip("callback_registry not available")
+            pytest.skip("callback_registry not avAlgolable")
 
-    def test_callback_registry_contains_handlers(self):
+    def test_callback_registry_contAlgons_handlers(self):
         """Test callback_registry has registered handlers."""
         try:
             from src.telegram_bot.handlers.callback_registry import CALLBACK_HANDLERS
 
             assert isinstance(CALLBACK_HANDLERS, dict)
         except (ImportError, AttributeError):
-            pytest.skip("CALLBACK_HANDLERS not available")
+            pytest.skip("CALLBACK_HANDLERS not avAlgolable")
 
 
 # ============================================================================
@@ -512,8 +512,8 @@ class TestEdgeCases:
 
         update = MagicMock()
         update.callback_query = None
-        # Should not raise
-        await handle_noop(update, mock_context)
+        # Should not rAlgose
+        awAlgot handle_noop(update, mock_context)
 
     @pytest.mark.asyncio
     async def test_handler_with_empty_text(self, mock_update, mock_context):
@@ -521,18 +521,18 @@ class TestEdgeCases:
         from src.telegram_bot.handlers.commands import handle_text_buttons
 
         mock_update.message.text = ""
-        # Should not raise
-        await handle_text_buttons(mock_update, mock_context)
+        # Should not rAlgose
+        awAlgot handle_text_buttons(mock_update, mock_context)
 
     @pytest.mark.asyncio
     async def test_handler_with_unicode_text(self, mock_update, mock_context):
         """Test handlers handle unicode text."""
         mock_update.message.text = "🎯 Тест 测试"
-        # Should not raise
+        # Should not rAlgose
         try:
             from src.telegram_bot.handlers.commands import handle_text_buttons
 
-            await handle_text_buttons(mock_update, mock_context)
+            awAlgot handle_text_buttons(mock_update, mock_context)
         except Exception:
             pass  # May not match any button
 
@@ -540,11 +540,11 @@ class TestEdgeCases:
     async def test_handler_with_long_text(self, mock_update, mock_context):
         """Test handlers handle long text."""
         mock_update.message.text = "x" * 10000
-        # Should not raise
+        # Should not rAlgose
         try:
             from src.telegram_bot.handlers.commands import handle_text_buttons
 
-            await handle_text_buttons(mock_update, mock_context)
+            awAlgot handle_text_buttons(mock_update, mock_context)
         except Exception:
             pass
 
@@ -564,7 +564,7 @@ class TestHandlerConcurrency:
 
         # Run multiple help_command calls concurrently
         tasks = [help_command(mock_update, mock_context) for _ in range(10)]
-        await asyncio.gather(*tasks)
+        awAlgot asyncio.gather(*tasks)
         # Should have called reply_text 10 times
         assert mock_update.message.reply_text.call_count == 10
 
@@ -575,6 +575,6 @@ class TestHandlerConcurrency:
 
         # Run multiple noop calls concurrently
         tasks = [handle_noop(mock_callback_update, mock_context) for _ in range(10)]
-        await asyncio.gather(*tasks)
+        awAlgot asyncio.gather(*tasks)
         # Should have called answer 10 times
         assert mock_callback_update.callback_query.answer.call_count == 10

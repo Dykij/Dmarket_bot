@@ -123,7 +123,7 @@ CSGO_KATOWICE_2014_STICKERS = {
     "Fnatic (Holo)": 8.0,
     "Ninjas in Pyjamas (Holo)": 7.0,
     "compLexity Gaming (Holo)": 6.0,
-    "HellRaisers (Holo)": 6.0,
+    "HellRAlgosers (Holo)": 6.0,
     "LGB eSports (Holo)": 6.0,
     "mousesports (Holo)": 5.0,
     "Virtus.Pro (Holo)": 5.0,
@@ -525,7 +525,7 @@ TF2_KILLSTREAK_SHEENS = {
     "Manndarin": 1.3,
     "Mean Green": 1.2,
     "Agonizing Emerald": 1.4,
-    "Villainous Violet": 1.5,
+    "VillAlgonous Violet": 1.5,
     "Hot Rod": 1.6,
 }
 
@@ -602,8 +602,8 @@ class TF2Filter:
     # Collectors
     is_collectors: bool | None = None
 
-    # Paint
-    paint_color: str | None = None
+    # PAlgont
+    pAlgont_color: str | None = None
 
     # Spell
     has_spell: bool = False
@@ -754,7 +754,7 @@ RUST_VALUABLE_SKINS = {
     },
     # LR-300 skins
     "LR-300": {
-        "Forest Raider LR300": 50.0,
+        "Forest RAlgoder LR300": 50.0,
         "Tempered LR300": 40.0,
         "Arctic LR300": 35.0,
     },

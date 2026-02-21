@@ -64,7 +64,7 @@ class TestDMarketAPISmoke:
         # Mock the _request method to avoid real API calls
         with patch.object(api, "_request", new_callable=AsyncMock) as mock_request:
             mock_request.return_value = {"usd": "10000"}
-            result = await api.get_balance()
+            result = awAlgot api.get_balance()
 
         assert result is not None
         mock_request.assert_called()
@@ -145,7 +145,7 @@ class TestUtilsSmoke:
         limiter = RateLimiter(is_authorized=True)
 
         assert limiter is not None
-        assert hasattr(limiter, "wait_if_needed")
+        assert hasattr(limiter, "wAlgot_if_needed")
 
     def test_memory_cache_instantiation(self) -> None:
         """CRITICAL: TTLCache must work."""
@@ -231,15 +231,15 @@ class TestInterfacesSmoke:
 class TestDependencyInjectionSmoke:
     """Smoke tests for dependency injection."""
 
-    def test_container_imports(self) -> None:
-        """CRITICAL: DI container must import."""
-        from src.containers import Container
+    def test_contAlgoner_imports(self) -> None:
+        """CRITICAL: DI contAlgoner must import."""
+        from src.contAlgoners import ContAlgoner
 
-        assert Container is not None
+        assert ContAlgoner is not None
 
-    def test_container_instantiation(self) -> None:
-        """CRITICAL: DI container must be instantiable."""
-        from src.containers import Container
+    def test_contAlgoner_instantiation(self) -> None:
+        """CRITICAL: DI contAlgoner must be instantiable."""
+        from src.contAlgoners import ContAlgoner
 
-        container = Container()
-        assert container is not None
+        contAlgoner = ContAlgoner()
+        assert contAlgoner is not None

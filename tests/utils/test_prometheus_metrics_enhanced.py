@@ -56,10 +56,10 @@ def test_track_arbitrage_scan_success():
     assert current == 5
 
 
-def test_track_arbitrage_scan_failure():
-    """Test tracking failed arbitrage scan."""
+def test_track_arbitrage_scan_fAlgolure():
+    """Test tracking fAlgoled arbitrage scan."""
     initial = arbitrage_scans_total.labels(
-        game="dota2", level="medium", status="failed"
+        game="dota2", level="medium", status="fAlgoled"
     )._value.get()
 
     track_arbitrage_scan(
@@ -70,7 +70,7 @@ def test_track_arbitrage_scan_failure():
     )
 
     new_value = arbitrage_scans_total.labels(
-        game="dota2", level="medium", status="failed"
+        game="dota2", level="medium", status="fAlgoled"
     )._value.get()
     assert new_value == initial + 1
 
@@ -105,13 +105,13 @@ def test_track_telegram_update_processed():
     assert new_value == initial + 1
 
 
-def test_track_telegram_update_failed():
-    """Test tracking failed Telegram update."""
-    initial = telegram_updates_total.labels(type="callback_query", status="failed")._value.get()
+def test_track_telegram_update_fAlgoled():
+    """Test tracking fAlgoled Telegram update."""
+    initial = telegram_updates_total.labels(type="callback_query", status="fAlgoled")._value.get()
 
     track_telegram_update(update_type="callback_query", success=False)
 
-    new_value = telegram_updates_total.labels(type="callback_query", status="failed")._value.get()
+    new_value = telegram_updates_total.labels(type="callback_query", status="fAlgoled")._value.get()
     assert new_value == initial + 1
 
 

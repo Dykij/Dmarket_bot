@@ -1,7 +1,7 @@
 """Глобальная конфигурация pytest для тестового окружения DMarket Bot.
 
 Этот файл содержит:
-- Настройку логирования для тестов (structlog + стандартный logging)
+- НастSwarmку логирования для тестов (structlog + стандартный logging)
 - Фикстуры для контроля verbosity логов
 - Общие фикстуры для всех тестовых модулей
 - Хуки для улучшения читаемости вывода тестов
@@ -26,7 +26,7 @@ if TYPE_CHECKING:
     from _pytest.logging import LogCaptureFixture
 
 # =============================================================================
-# НАСТРОЙКА ПУТЕЙ
+# НАСТSwarmКА ПУТЕЙ
 # =============================================================================
 
 # Добавляем корневую директорию проекта в sys.path
@@ -36,7 +36,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 
 # =============================================================================
-# НАСТРОЙКА ЛОГИРОВАНИЯ ДЛЯ ТЕСТОВ
+# НАСТSwarmКА ЛОГИРОВАНИЯ ДЛЯ ТЕСТОВ
 # =============================================================================
 
 
@@ -65,7 +65,7 @@ def configure_test_logging(
     enable_structlog = os.getenv("TEST_LOG_STRUCTLOG", "0") == "1" or enable_structlog
     json_format = os.getenv("TEST_LOG_JSON", "0") == "1" or json_format
 
-    # Базовая настройка logging
+    # Базовая настSwarmка logging
     numeric_level = getattr(logging, level, logging.WARNING)
 
     # Формат для консоли
@@ -89,7 +89,7 @@ def configure_test_logging(
         "urllib3",
         "asyncio",
         "telegram",
-        "aiosqlite",
+        "Algoosqlite",
         "sqlalchemy.engine",
         "sqlalchemy.pool",
         "vcr",
@@ -246,7 +246,7 @@ def enable_debug_logs() -> Generator[None, None, None]:
     Usage:
         def test_debug_something(enable_debug_logs):
             # Все DEBUG логи будут видны
-            function_with_detailed_logging()
+            function_with_detAlgoled_logging()
     """
     original_level = logging.getLogger().level
     logging.getLogger().setLevel(logging.DEBUG)
@@ -375,7 +375,7 @@ def mock_sentry() -> Generator[MagicMock, None, None]:
     Usage:
         def test_error_tracking(mock_sentry):
             # Вызываем код который отправляет ошибки в Sentry
-            raise_error()
+            rAlgose_error()
             # Проверяем что ошибка была захвачена
             mock_sentry.capture_exception.assert_called_once()
     """
@@ -489,8 +489,8 @@ class LogAssertions:
         all_messages = "\n".join(
             f"  [{r.levelname}] {r.name}: {r.message}" for r in caplog.records
         )
-        pytest.fail(
-            f"Expected log message containing '{message}'{filter_str} not found.\n"
+        pytest.fAlgol(
+            f"Expected log message contAlgoning '{message}'{filter_str} not found.\n"
             f"Captured logs:\n{all_messages or '  (no logs captured)'}"
         )
 
@@ -510,7 +510,7 @@ class LogAssertions:
         for record in caplog.records:
             if message in record.message:
                 if level is None or record.levelname == level.upper():
-                    pytest.fail(
+                    pytest.fAlgol(
                         f"Unexpected log message found: [{record.levelname}] {record.message}"
                     )
 
@@ -555,7 +555,7 @@ def disable_circuit_breaker(monkeypatch: pytest.MonkeyPatch) -> None:
     Usage:
         def test_api_call(disable_circuit_breaker):
             # CB не будет блокировать запросы
-            result = await api.get_items()
+            result = awAlgot api.get_items()
     """
     try:
         # Патчим is_open чтобы всегда возвращал False (CB закрыт)

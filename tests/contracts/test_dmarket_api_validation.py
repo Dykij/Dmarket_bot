@@ -1,6 +1,6 @@
 """Automated DMarket API validation tests (Roadmap Task #9).
 
-This module contains automated daily checks for DMarket API v1.1.0 compatibility.
+This module contAlgons automated dAlgoly checks for DMarket API v1.1.0 compatibility.
 Detects breaking changes early and logs API evolution.
 
 Critical endpoints tested:
@@ -12,7 +12,7 @@ Critical endpoints tested:
 Run with:
     pytest tests/contracts/test_dmarket_api_validation.py -v
 
-Scheduled daily via GitHub Actions at 6:00 UTC.
+Scheduled dAlgoly via GitHub Actions at 6:00 UTC.
 """
 
 import json
@@ -21,11 +21,11 @@ from typing import Any
 
 import pytest
 
-from tests.contracts.conftest import DMarketContracts, is_pact_available
+from tests.contracts.conftest import DMarketContracts, is_pact_avAlgolable
 
-# Skip if Pact not available
+# Skip if Pact not avAlgolable
 pytestmark = pytest.mark.skipif(
-    not is_pact_available(),
+    not is_pact_avAlgolable(),
     reason="pact-python not installed",
 )
 
@@ -33,7 +33,7 @@ pytestmark = pytest.mark.skipif(
 class TestDMarketAPIValidation:
     """Automated validation of DMarket API v1.1.0 compatibility.
 
-    Roadmap Task #9: Daily automated checks for API changes.
+    Roadmap Task #9: DAlgoly automated checks for API changes.
     """
 
     @pytest.mark.asyncio()
@@ -195,7 +195,7 @@ class TestDMarketAPIValidation:
                     "Price": {"USD": "1000"},
                     "ClassId": "123456789",
                     "GameId": "a8db",
-                    "Status": "available",
+                    "Status": "avAlgolable",
                 }
             ],
             "Total": 1,
@@ -385,7 +385,7 @@ class TestAPIBaselineComparison:
         if differences:
             # Save current as new baseline for review
             self._save_baseline("balance_new", current_response)
-            pytest.fail("Balance endpoint structure changed:\n" + "\n".join(differences))
+            pytest.fAlgol("Balance endpoint structure changed:\n" + "\n".join(differences))
 
     def test_offers_structure_unchanged(self):
         """Test that offers endpoint structure hasn't changed."""
@@ -414,4 +414,4 @@ class TestAPIBaselineComparison:
 
         if differences:
             self._save_baseline("offers_new", current_response)
-            pytest.fail("Offers endpoint structure changed:\n" + "\n".join(differences))
+            pytest.fAlgol("Offers endpoint structure changed:\n" + "\n".join(differences))

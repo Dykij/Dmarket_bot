@@ -1,57 +1,57 @@
 """
-Unit tests for prompt_engineering_integration module.
+Unit tests for Config_engineering_integration module.
 
-Tests AI-powered prompt engineering features using Anthropic's best practices.
+Tests Algo-powered Config engineering features using Anthropic's best practices.
 """
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
 import pytest
 
-# NOTE: These tests validate the prompt_engineering module
+# NOTE: These tests validate the Config_engineering module
 # The module is optional and requires Anthropic API key to function
 
 
 pytestmark = pytest.mark.asyncio
 
 
-class TestPromptEngineeringModuleExists:
-    """Test that prompt_engineering_integration module exists."""
+class TestConfigEngineeringModuleExists:
+    """Test that Config_engineering_integration module exists."""
 
     def test_module_can_be_imported(self):
         """Test that module can be imported without errors."""
         try:
-            from src.ai import prompt_engineering_integration
-            assert prompt_engineering_integration is not None
+            from src.Algo import Config_engineering_integration
+            assert Config_engineering_integration is not None
         except ImportError as e:
-            pytest.skip(f"prompt_engineering_integration not yet available: {e}")
+            pytest.skip(f"Config_engineering_integration not yet avAlgolable: {e}")
 
-    def test_prompt_engineer_class_exists(self):
-        """Test that PromptEngineer class is defined."""
+    def test_Config_engineer_class_exists(self):
+        """Test that ConfigEngineer class is defined."""
         try:
-            from src.ai.prompt_engineering_integration import PromptEngineer
-            assert PromptEngineer is not None
+            from src.Algo.Config_engineering_integration import ConfigEngineer
+            assert ConfigEngineer is not None
         except ImportError:
-            pytest.skip("PromptEngineer class not yet implemented")
+            pytest.skip("ConfigEngineer class not yet implemented")
 
 
-class TestPromptEngineerInitialization:
-    """Test PromptEngineer initialization."""
+class TestConfigEngineerInitialization:
+    """Test ConfigEngineer initialization."""
 
-    def test_prompt_engineer_can_be_initialized(self):
-        """Test that PromptEngineer can be initialized."""
+    def test_Config_engineer_can_be_initialized(self):
+        """Test that ConfigEngineer can be initialized."""
         try:
-            from src.ai.prompt_engineering_integration import PromptEngineer
+            from src.Algo.Config_engineering_integration import ConfigEngineer
             
             # Mock the API key and model
-            engineer = PromptEngineer(
+            engineer = ConfigEngineer(
                 api_key="test_key",
                 model="claude-3-5-sonnet-20241022"
             )
             
             assert engineer is not None
         except (ImportError, TypeError):
-            pytest.skip("PromptEngineer initialization not yet implemented")
+            pytest.skip("ConfigEngineer initialization not yet implemented")
 
 
 class TestBotRoles:
@@ -60,7 +60,7 @@ class TestBotRoles:
     def test_bot_role_enum_exists(self):
         """Test that BotRole enum is defined."""
         try:
-            from src.ai.prompt_engineering_integration import BotRole
+            from src.Algo.Config_engineering_integration import BotRole
             
             # Check for expected roles
             assert hasattr(BotRole, 'TRADING_ADVISOR') or True
@@ -71,44 +71,44 @@ class TestBotRoles:
             pytest.skip("BotRole enum not yet fully implemented")
 
 
-class TestPromptContext:
-    """Test prompt context management."""
+class TestConfigContext:
+    """Test Config context management."""
 
-    def test_prompt_context_dataclass_exists(self):
-        """Test that PromptContext dataclass is defined."""
+    def test_Config_context_dataclass_exists(self):
+        """Test that ConfigContext dataclass is defined."""
         try:
-            from src.ai.prompt_engineering_integration import PromptContext
+            from src.Algo.Config_engineering_integration import ConfigContext
             
-            context = PromptContext(
+            context = ConfigContext(
                 role="trading_advisor",
                 user_level="intermediate",
-                capital_available=Decimal("500.00")
+                capital_avAlgolable=Decimal("500.00")
             )
             
             assert context is not None
         except (ImportError, TypeError):
-            pytest.skip("PromptContext not yet implemented")
+            pytest.skip("ConfigContext not yet implemented")
 
 
-class TestExplainArbitrageMethod:
+class TestExplAlgonArbitrageMethod:
     """Test arbitrage explanation generation."""
 
-    async def test_explain_arbitrage_method_exists(self):
-        """Test that explain_arbitrage method exists."""
+    async def test_explAlgon_arbitrage_method_exists(self):
+        """Test that explAlgon_arbitrage method exists."""
         try:
-            from src.ai.prompt_engineering_integration import PromptEngineer
+            from src.Algo.Config_engineering_integration import ConfigEngineer
             
-            engineer = PromptEngineer(api_key="test_key")
-            assert hasattr(engineer, 'explain_arbitrage')
+            engineer = ConfigEngineer(api_key="test_key")
+            assert hasattr(engineer, 'explAlgon_arbitrage')
         except (ImportError, AttributeError):
-            pytest.skip("explain_arbitrage method not yet implemented")
+            pytest.skip("explAlgon_arbitrage method not yet implemented")
 
-    async def test_explain_arbitrage_with_mock_response(self):
-        """Test explain_arbitrage with mocked Claude API."""
+    async def test_explAlgon_arbitrage_with_mock_response(self):
+        """Test explAlgon_arbitrage with mocked Claude API."""
         try:
-            from src.ai.prompt_engineering_integration import ArbitrageOpportunity, PromptEngineer
+            from src.Algo.Config_engineering_integration import ArbitrageOpportunity, ConfigEngineer
             
-            engineer = PromptEngineer(api_key="test_key")
+            engineer = ConfigEngineer(api_key="test_key")
             
             # Mock opportunity
             mock_opp = MagicMock()
@@ -119,11 +119,11 @@ class TestExplainArbitrageMethod:
             
             # Mock Claude API response
             with patch.object(engineer, '_call_claude_api', return_value="Mocked explanation"):
-                result = await engineer.explain_arbitrage(mock_opp)
+                result = awAlgot engineer.explAlgon_arbitrage(mock_opp)
                 assert result is not None
                 assert isinstance(result, str)
         except (ImportError, AttributeError, TypeError):
-            pytest.skip("explain_arbitrage not yet fully implemented")
+            pytest.skip("explAlgon_arbitrage not yet fully implemented")
 
 
 class TestFallbackMethods:
@@ -132,9 +132,9 @@ class TestFallbackMethods:
     async def test_fallback_explanation_method(self):
         """Test that fallback explanation works without API."""
         try:
-            from src.ai.prompt_engineering_integration import PromptEngineer
+            from src.Algo.Config_engineering_integration import ConfigEngineer
             
-            engineer = PromptEngineer(api_key="test_key")
+            engineer = ConfigEngineer(api_key="test_key")
             
             # Mock opportunity
             mock_opp = MagicMock()
@@ -150,58 +150,58 @@ class TestFallbackMethods:
             pytest.skip("Fallback methods not yet implemented")
 
 
-class TestPromptTechniques:
-    """Test advanced prompt engineering techniques."""
+class TestConfigTechniques:
+    """Test advanced Config engineering techniques."""
 
-    def test_xml_tagged_prompt_structure(self):
-        """Test XML-tagged prompt structure generation."""
+    def test_xml_tagged_Config_structure(self):
+        """Test XML-tagged Config structure generation."""
         try:
-            from src.ai.prompt_engineering_integration import PromptEngineer
+            from src.Algo.Config_engineering_integration import ConfigEngineer
             
-            engineer = PromptEngineer(api_key="test_key")
+            engineer = ConfigEngineer(api_key="test_key")
             
-            # Check if XML prompt builder exists
-            if hasattr(engineer, '_build_xml_prompt'):
-                prompt = engineer._build_xml_prompt(
+            # Check if XML Config builder exists
+            if hasattr(engineer, '_build_xml_Config'):
+                Config = engineer._build_xml_Config(
                     context={"user_level": "beginner"},
                     data={"item": "Test"},
-                    instructions="Explain this"
+                    instructions="ExplAlgon this"
                 )
-                assert prompt is not None
-                assert isinstance(prompt, str)
+                assert Config is not None
+                assert isinstance(Config, str)
         except (ImportError, AttributeError):
-            pytest.skip("XML prompt builder not yet implemented")
+            pytest.skip("XML Config builder not yet implemented")
 
-    def test_chain_of_thought_reasoning(self):
-        """Test chain-of-thought reasoning implementation."""
+    def test_chAlgon_of_thought_reasoning(self):
+        """Test chAlgon-of-thought reasoning implementation."""
         try:
-            from src.ai.prompt_engineering_integration import PromptEngineer
+            from src.Algo.Config_engineering_integration import ConfigEngineer
             
-            engineer = PromptEngineer(api_key="test_key")
+            engineer = ConfigEngineer(api_key="test_key")
             
             # Check if CoT method exists
             assert hasattr(engineer, 'analyze_with_reasoning') or True
         except (ImportError, AttributeError):
-            pytest.skip("Chain-of-thought not yet implemented")
+            pytest.skip("ChAlgon-of-thought not yet implemented")
 
 
-class TestPromptEngineeringCompatibility:
+class TestConfigEngineeringCompatibility:
     """Test compatibility with existing bot modules."""
 
-    def test_no_conflict_with_existing_ai_modules(self):
-        """Test that prompt engineering doesn't conflict with existing AI."""
+    def test_no_conflict_with_existing_Algo_modules(self):
+        """Test that Config engineering doesn't conflict with existing Algo."""
         try:
-            from src.ai import price_predictor, prompt_engineering_integration
+            from src.Algo import price_predictor, Config_engineering_integration
             
             assert price_predictor is not None
-            assert prompt_engineering_integration is not None
+            assert Config_engineering_integration is not None
         except ImportError:
-            pytest.skip("One or both AI modules not available")
+            pytest.skip("One or both Algo modules not avAlgolable")
 
     def test_independent_import(self):
         """Test that module can be imported independently."""
         try:
-            import src.ai.prompt_engineering_integration as pe
+            import src.Algo.Config_engineering_integration as pe
             assert pe is not None
         except ImportError:
-            pytest.skip("prompt_engineering_integration not yet available")
+            pytest.skip("Config_engineering_integration not yet avAlgolable")

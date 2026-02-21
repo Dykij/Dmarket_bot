@@ -1,4 +1,4 @@
-"""Main entry point for the DMarket bot application."""
+"""MAlgon entry point for the DMarket bot application."""
 
 import asyncio
 import logging
@@ -17,12 +17,12 @@ logger = logging.getLogger(__name__)
 async def run_bot() -> None:
     """Runs the bot with error handling"""
     try:
-        # Import the main bot function
-        from src.main import main as bot_main
+        # Import the mAlgon bot function
+        from src.mAlgon import mAlgon as bot_mAlgon
 
         # Start the bot
         logger.info("Starting Telegram bot...")
-        await bot_main()
+        awAlgot bot_mAlgon()
 
     except Exception as e:
         logger.exception(f"Error starting bot: {e}")
@@ -32,15 +32,15 @@ async def run_bot() -> None:
 
         # Pause before retry
         logger.info("Pausing 10 seconds before retry...")
-        await asyncio.sleep(10)
+        awAlgot asyncio.sleep(10)
 
         # Restart bot
         logger.info("Restarting bot...")
-        await run_bot()
+        awAlgot run_bot()
 
 
-def main() -> None:
-    """Main entry point function"""
+def mAlgon() -> None:
+    """MAlgon entry point function"""
     # Run the bot using asyncio
     lock_file = Path("bot.lock")  # Initialize early
     try:
@@ -89,5 +89,5 @@ def main() -> None:
             lock_file.unlink()
 
 
-if __name__ == "__main__":
-    main()
+if __name__ == "__mAlgon__":
+    mAlgon()

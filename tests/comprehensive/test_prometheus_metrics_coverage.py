@@ -30,7 +30,7 @@ from src.utils.prometheus_metrics import (
     cache_requests_total,
     cache_size_bytes,
     circuit_breaker_calls_total,
-    circuit_breaker_failures_total,
+    circuit_breaker_fAlgolures_total,
     circuit_breaker_state,
     circuit_breaker_state_changes_total,
     create_metrics_app,
@@ -54,7 +54,7 @@ from src.utils.prometheus_metrics import (
     track_cache_operation,
     track_cache_request,
     track_circuit_breaker_call,
-    track_circuit_breaker_failure,
+    track_circuit_breaker_fAlgolure,
     track_circuit_breaker_state,
     track_circuit_breaker_state_change,
     track_command,
@@ -275,10 +275,10 @@ class TestCircuitBreakerMetrics:
         assert circuit_breaker_state is not None
         assert circuit_breaker_state._name == "circuit_breaker_state"
 
-    def test_circuit_breaker_failures_total_exists(self) -> None:
-        """Test circuit_breaker_failures_total counter exists."""
-        assert circuit_breaker_failures_total is not None
-        assert "circuit_breaker_failures" in circuit_breaker_failures_total._name
+    def test_circuit_breaker_fAlgolures_total_exists(self) -> None:
+        """Test circuit_breaker_fAlgolures_total counter exists."""
+        assert circuit_breaker_fAlgolures_total is not None
+        assert "circuit_breaker_fAlgolures" in circuit_breaker_fAlgolures_total._name
 
     def test_circuit_breaker_state_changes_total_exists(self) -> None:
         """Test circuit_breaker_state_changes_total counter exists."""
@@ -299,8 +299,8 @@ class TestTrackCommand:
         track_command("test_command", success=True)
         # Metric should be incremented without error
 
-    def test_track_command_failed(self) -> None:
-        """Test tracking failed command."""
+    def test_track_command_fAlgoled(self) -> None:
+        """Test tracking fAlgoled command."""
         track_command("test_command", success=False)
         # Metric should be incremented without error
 
@@ -375,8 +375,8 @@ class TestTrackArbitrageScan:
             success=True,
         )
 
-    def test_track_arbitrage_scan_failed(self) -> None:
-        """Test tracking failed arbitrage scan."""
+    def test_track_arbitrage_scan_fAlgoled(self) -> None:
+        """Test tracking fAlgoled arbitrage scan."""
         track_arbitrage_scan(
             game="csgo",
             level="boost",
@@ -410,8 +410,8 @@ class TestTrackTelegramUpdate:
         """Test tracking successful Telegram update."""
         track_telegram_update("message", success=True)
 
-    def test_track_telegram_update_failed(self) -> None:
-        """Test tracking failed Telegram update."""
+    def test_track_telegram_update_fAlgoled(self) -> None:
+        """Test tracking fAlgoled Telegram update."""
         track_telegram_update("callback_query", success=False)
 
     def test_track_telegram_update_default(self) -> None:
@@ -527,12 +527,12 @@ class TestTrackCircuitBreakerState:
         track_circuit_breaker_state("test", "unknown")
 
 
-class TestTrackCircuitBreakerFailure:
-    """Tests for track_circuit_breaker_failure function."""
+class TestTrackCircuitBreakerFAlgolure:
+    """Tests for track_circuit_breaker_fAlgolure function."""
 
-    def test_track_circuit_breaker_failure(self) -> None:
-        """Test tracking circuit breaker failure."""
-        track_circuit_breaker_failure("dmarket_market")
+    def test_track_circuit_breaker_fAlgolure(self) -> None:
+        """Test tracking circuit breaker fAlgolure."""
+        track_circuit_breaker_fAlgolure("dmarket_market")
 
 
 class TestTrackCircuitBreakerStateChange:
@@ -562,9 +562,9 @@ class TestTrackCircuitBreakerCall:
         """Test tracking successful call through circuit breaker."""
         track_circuit_breaker_call("dmarket_market", "success")
 
-    def test_track_call_failure(self) -> None:
-        """Test tracking failed call through circuit breaker."""
-        track_circuit_breaker_call("dmarket_market", "failure")
+    def test_track_call_fAlgolure(self) -> None:
+        """Test tracking fAlgoled call through circuit breaker."""
+        track_circuit_breaker_call("dmarket_market", "fAlgolure")
 
     def test_track_call_rejected(self) -> None:
         """Test tracking rejected call by circuit breaker."""
@@ -591,11 +591,11 @@ class TestGetMetrics:
         result = get_metrics()
         assert isinstance(result, bytes)
 
-    def test_get_metrics_contains_metrics(self) -> None:
-        """Test get_metrics output contains metric names."""
+    def test_get_metrics_contAlgons_metrics(self) -> None:
+        """Test get_metrics output contAlgons metric names."""
         result = get_metrics()
         result_str = result.decode("utf-8")
-        # Should contain some of our metrics
+        # Should contAlgon some of our metrics
         assert "bot_commands_total" in result_str or "TYPE" in result_str
 
 
@@ -663,7 +663,7 @@ class TestTimer:
         try:
             with timer:
                 time.sleep(0.01)
-                raise ValueError("Test error")
+                rAlgose ValueError("Test error")
         except ValueError:
             pass
 
@@ -729,8 +729,8 @@ class TestMetricsIntegration:
         # Track successful call
         track_circuit_breaker_call(endpoint, "success")
 
-        # Track failure
-        track_circuit_breaker_failure(endpoint)
+        # Track fAlgolure
+        track_circuit_breaker_fAlgolure(endpoint)
 
         # Track state change
         track_circuit_breaker_state_change(

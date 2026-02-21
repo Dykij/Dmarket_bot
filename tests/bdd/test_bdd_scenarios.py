@@ -3,7 +3,7 @@
 These tests are based on the Gherkin feature files in the features/ directory.
 They test the business requirements from a user's perspective.
 
-Note: This file implements BDD-style tests using plain pytest with structured
+Note: This file implements BDD-style tests using plAlgon pytest with structured
 step functions, as pytest-bdd may not be installed in all environments.
 """
 
@@ -279,28 +279,28 @@ class TestBalanceManagementFeature:
         """
         Scenario: Handle API error gracefully
 
-        Given the API is temporarily unavailable
+        Given the API is temporarily unavAlgolable
         When I execute the /balance command
         Then I should see an error message
-        And I should be advised to try again later
+        And I should be advised to try agAlgon later
         """
         # Given: API error
-        mock_api.get_balance = AsyncMock(side_effect=Exception("API unavailable"))
+        mock_api.get_balance = AsyncMock(side_effect=Exception("API unavAlgolable"))
 
         # When
         def get_balance_with_error_handling(api) -> tuple[str, bool]:
             try:
-                # This would raise an exception
-                raise Exception("API unavailable")
+                # This would rAlgose an exception
+                rAlgose Exception("API unavAlgolable")
             except Exception as e:
-                return f"Error: {e}. Please try again later.", False
+                return f"Error: {e}. Please try agAlgon later.", False
 
         message, success = get_balance_with_error_handling(mock_api)
 
         # Then
         assert not success
         assert "error" in message.lower()
-        assert "try again" in message.lower()
+        assert "try agAlgon" in message.lower()
 
     def test_balance_updates_after_purchase(self, authenticated_user):
         """
@@ -338,7 +338,7 @@ class TestTradingOperationsFeature:
         """
         Scenario: Successful item purchase
 
-        Given an item "AK-47 | Redline" is available for $15.00
+        Given an item "AK-47 | Redline" is avAlgolable for $15.00
         And I have $20.00 USD balance
         When I purchase the item
         Then the purchase should be successful
@@ -363,16 +363,16 @@ class TestTradingOperationsFeature:
         assert "Successfully" in message
         assert new_balance["usd"] == 5.0
 
-    def test_purchase_fails_insufficient_balance(self, authenticated_user):
+    def test_purchase_fAlgols_insufficient_balance(self, authenticated_user):
         """
-        Scenario: Purchase fails due to insufficient balance
+        Scenario: Purchase fAlgols due to insufficient balance
 
-        Given an item "AWP | Dragon Lore" is available for $2000.00
+        Given an item "AWP | Dragon Lore" is avAlgolable for $2000.00
         And I have $100.00 USD balance
         When I attempt to purchase the item
-        Then the purchase should fail
+        Then the purchase should fAlgol
         And I should see "Insufficient balance" message
-        And my balance should remain unchanged
+        And my balance should remAlgon unchanged
         """
         # Given
         initial_balance = 100.0
@@ -566,7 +566,7 @@ class TestNotificationManagementFeature:
         # Given
         authenticated_user["notifications"] = {
             "price_alerts": True,
-            "digest": "daily",
+            "digest": "dAlgoly",
             "market_updates": True,
         }
 
@@ -590,8 +590,8 @@ class TestNotificationManagementFeature:
         """
         Scenario: Configure digest frequency
 
-        Given I want daily digest notifications
-        When I set digest frequency to "daily"
+        Given I want dAlgoly digest notifications
+        When I set digest frequency to "dAlgoly"
         Then my digest preference should be saved
         And I should receive one digest per day
         """
@@ -600,15 +600,15 @@ class TestNotificationManagementFeature:
 
         # When
         def set_digest_frequency(user: dict, frequency: str) -> tuple[str, str]:
-            valid_frequencies = ["disabled", "daily", "weekly", "monthly"]
+            valid_frequencies = ["disabled", "dAlgoly", "weekly", "monthly"]
             if frequency in valid_frequencies:
                 user["notifications"]["digest"] = frequency
                 return f"Digest frequency set to {frequency}", frequency
             return "Invalid frequency", user["notifications"]["digest"]
 
-        message, new_frequency = set_digest_frequency(authenticated_user, "daily")
+        message, new_frequency = set_digest_frequency(authenticated_user, "dAlgoly")
 
         # Then
-        assert "daily" in message
-        assert new_frequency == "daily"
-        assert authenticated_user["notifications"]["digest"] == "daily"
+        assert "dAlgoly" in message
+        assert new_frequency == "dAlgoly"
+        assert authenticated_user["notifications"]["digest"] == "dAlgoly"

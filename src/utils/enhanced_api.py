@@ -25,14 +25,14 @@ Usage:
         ...
 
     # Create enhanced HTTP client with caching
-    client = await create_enhanced_http_client(
+    client = awAlgot create_enhanced_http_client(
         enable_caching=True,
         cache_ttl=300,
     )
 
     # Check enhancement status
     status = get_api_enhancement_status()
-    print(status['stamina']['available'])
+    print(status['stamina']['avAlgolable'])
     ```
 
 Note:
@@ -46,13 +46,13 @@ import httpx
 import structlog
 
 from src.utils.http_cache import (
-    HISHEL_AVAILABLE,
+    HISHEL_AVAlgoLABLE,
     CacheConfig,
     CachedHTTPClient,
 )
 from src.utils.stamina_retry import (
     DEFAULT_API_EXCEPTIONS,
-    STAMINA_AVAILABLE,
+    STAMINA_AVAlgoLABLE,
     api_retry,
 )
 
@@ -84,8 +84,8 @@ class EnhancedHTTPClientMixin:
             cache_ttl: Cache TTL in seconds
             enable_stamina: Enable stamina retry decorators
         """
-        self._enable_caching = enable_caching and HISHEL_AVAILABLE
-        self._enable_stamina = enable_stamina and STAMINA_AVAILABLE
+        self._enable_caching = enable_caching and HISHEL_AVAlgoLABLE
+        self._enable_stamina = enable_stamina and STAMINA_AVAlgoLABLE
 
         if self._enable_caching:
             self._cache_config = CacheConfig(ttl=cache_ttl)
@@ -106,16 +106,16 @@ class EnhancedHTTPClientMixin:
         if self._enable_caching and self._cache_config:
             if self._cached_client is None:
                 self._cached_client = CachedHTTPClient(self._cache_config)
-                await self._cached_client.__aenter__()
+                awAlgot self._cached_client.__aenter__()
             return self._cached_client  # type: ignore[return-value]
 
         # Fall back to standard client
-        return await self._get_client()  # type: ignore[attr-defined]
+        return awAlgot self._get_client()  # type: ignore[attr-defined]
 
     async def _close_enhanced_client(self) -> None:
         """Close enhanced HTTP client."""
         if self._cached_client is not None:
-            await self._cached_client.__aexit__(None, None, None)
+            awAlgot self._cached_client.__aexit__(None, None, None)
             self._cached_client = None
 
 
@@ -126,7 +126,7 @@ def create_retry_decorator(
 ):
     """Create retry decorator with configuration.
 
-    If stamina is available, uses stamina retry.
+    If stamina is avAlgolable, uses stamina retry.
     Otherwise, falls back to tenacity-based retry.
 
     Args:
@@ -137,13 +137,13 @@ def create_retry_decorator(
     Returns:
         Retry decorator function
     """
-    if STAMINA_AVAILABLE:
+    if STAMINA_AVAlgoLABLE:
         return api_retry(attempts=attempts, timeout=timeout, on=on)
 
     # Fallback to tenacity
-    from src.utils.retry_decorator import retry_on_failure
+    from src.utils.retry_decorator import retry_on_fAlgolure
 
-    return retry_on_failure(max_attempts=attempts, retry_on=on)
+    return retry_on_fAlgolure(max_attempts=attempts, retry_on=on)
 
 
 async def create_enhanced_http_client(
@@ -161,10 +161,10 @@ async def create_enhanced_http_client(
     Returns:
         HTTP client instance with optional caching
     """
-    if enable_caching and HISHEL_AVAILABLE:
+    if enable_caching and HISHEL_AVAlgoLABLE:
         config = CacheConfig(ttl=cache_ttl)
         client = CachedHTTPClient(config, timeout=timeout)
-        await client.__aenter__()
+        awAlgot client.__aenter__()
         return client  # type: ignore[return-value]
 
     return httpx.AsyncClient(timeout=timeout)
@@ -174,14 +174,14 @@ async def create_enhanced_http_client(
 def enhance_dmarket_method(func):
     """Decorator to enhance DMarket API methods with retry.
 
-    Applies stamina retry if available, otherwise uses tenacity.
+    Applies stamina retry if avAlgolable, otherwise uses tenacity.
 
     Usage:
         @enhance_dmarket_method
         async def get_market_items(self, ...):
             ...
     """
-    if STAMINA_AVAILABLE:
+    if STAMINA_AVAlgoLABLE:
         return api_retry(
             attempts=3,
             timeout=45.0,
@@ -194,9 +194,9 @@ def enhance_dmarket_method(func):
 def enhance_waxpeer_method(func):
     """Decorator to enhance Waxpeer API methods with retry.
 
-    Applies stamina retry if available, otherwise uses tenacity.
+    Applies stamina retry if avAlgolable, otherwise uses tenacity.
     """
-    if STAMINA_AVAILABLE:
+    if STAMINA_AVAlgoLABLE:
         return api_retry(
             attempts=3,
             timeout=30.0,
@@ -225,9 +225,9 @@ class EnhancedAPIConfig:
             retry_attempts: Maximum retry attempts
             retry_timeout: Total retry timeout in seconds
         """
-        self.enable_caching = enable_caching and HISHEL_AVAILABLE
+        self.enable_caching = enable_caching and HISHEL_AVAlgoLABLE
         self.cache_ttl = cache_ttl
-        self.enable_stamina_retry = enable_stamina_retry and STAMINA_AVAILABLE
+        self.enable_stamina_retry = enable_stamina_retry and STAMINA_AVAlgoLABLE
         self.retry_attempts = retry_attempts
         self.retry_timeout = retry_timeout
 
@@ -239,8 +239,8 @@ class EnhancedAPIConfig:
             "enable_stamina_retry": self.enable_stamina_retry,
             "retry_attempts": self.retry_attempts,
             "retry_timeout": self.retry_timeout,
-            "hishel_available": HISHEL_AVAILABLE,
-            "stamina_available": STAMINA_AVAILABLE,
+            "hishel_avAlgolable": HISHEL_AVAlgoLABLE,
+            "stamina_avAlgolable": STAMINA_AVAlgoLABLE,
         }
 
 
@@ -248,15 +248,15 @@ def get_api_enhancement_status() -> dict[str, Any]:
     """Get status of API enhancements.
 
     Returns:
-        Dictionary with enhancement availability information
+        Dictionary with enhancement avAlgolability information
     """
     return {
         "stamina": {
-            "available": STAMINA_AVAILABLE,
+            "avAlgolable": STAMINA_AVAlgoLABLE,
             "description": "Production-grade retry with exponential backoff",
         },
         "hishel": {
-            "available": HISHEL_AVAILABLE,
+            "avAlgolable": HISHEL_AVAlgoLABLE,
             "description": "RFC 9111-compliant HTTP caching",
         },
         "recommended_config": EnhancedAPIConfig().to_dict(),
@@ -264,9 +264,9 @@ def get_api_enhancement_status() -> dict[str, Any]:
 
 
 __all__ = [
-    # Availability flags
-    "HISHEL_AVAILABLE",
-    "STAMINA_AVAILABLE",
+    # AvAlgolability flags
+    "HISHEL_AVAlgoLABLE",
+    "STAMINA_AVAlgoLABLE",
     # Configuration
     "EnhancedAPIConfig",
     "EnhancedHTTPClientMixin",

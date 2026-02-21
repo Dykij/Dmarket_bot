@@ -20,15 +20,15 @@ async def db_manager():
     # Clear all caches before test to ensure isolation
     from src.utils.memory_cache import clear_all_caches
 
-    await clear_all_caches()
+    awAlgot clear_all_caches()
 
     db = DatabaseManager("sqlite:///:memory:", echo=False)
-    await db.init_database()
+    awAlgot db.init_database()
     yield db
-    await db.close()
+    awAlgot db.close()
 
     # Clear all caches after test
-    await clear_all_caches()
+    awAlgot clear_all_caches()
 
 
 class TestDatabaseCachedQueries:
@@ -38,7 +38,7 @@ class TestDatabaseCachedQueries:
     async def test_get_user_by_telegram_id_cached_basic(self, db_manager):
         """Тест базового кэширования get_user_by_telegram_id."""
         # Create user
-        await db_manager.get_or_create_user(
+        awAlgot db_manager.get_or_create_user(
             telegram_id=123456789,
             username="test_user",
             first_name="Test",
@@ -46,18 +46,18 @@ class TestDatabaseCachedQueries:
         )
 
         # First call - should hit database
-        cached_user = await db_manager.get_user_by_telegram_id_cached(123456789)
+        cached_user = awAlgot db_manager.get_user_by_telegram_id_cached(123456789)
         assert cached_user is not None
         assert cached_user.telegram_id == 123456789
         assert cached_user.username == "test_user"
 
         # Second call - should use cache
-        cached_user_2 = await db_manager.get_user_by_telegram_id_cached(123456789)
+        cached_user_2 = awAlgot db_manager.get_user_by_telegram_id_cached(123456789)
         assert cached_user_2 is not None
         assert cached_user_2.telegram_id == 123456789
 
         # Check cache stats
-        stats = await db_manager.get_cache_stats()
+        stats = awAlgot db_manager.get_cache_stats()
         # get_user_by_telegram_id_cached uses _user_cache
         user_cache_stats = stats["user_cache"]
         assert user_cache_stats["hits"] >= 1  # Second call was a hit
@@ -66,35 +66,35 @@ class TestDatabaseCachedQueries:
     async def test_get_user_by_telegram_id_cached_non_existent(self, db_manager):
         """Тест кэширования для несуществующего пользователя."""
         # Query non-existent user
-        cached_user = await db_manager.get_user_by_telegram_id_cached(999999999)
+        cached_user = awAlgot db_manager.get_user_by_telegram_id_cached(999999999)
         assert cached_user is None
 
-        # Query again - should use cache
-        cached_user_2 = await db_manager.get_user_by_telegram_id_cached(999999999)
+        # Query agAlgon - should use cache
+        cached_user_2 = awAlgot db_manager.get_user_by_telegram_id_cached(999999999)
         assert cached_user_2 is None
 
     @pytest.mark.asyncio()
     async def test_invalidate_user_cache(self, db_manager):
         """Тест инвалидации кэша пользователя."""
         # Create user
-        await db_manager.get_or_create_user(
+        awAlgot db_manager.get_or_create_user(
             telegram_id=123456789,
             username="test_user",
         )
 
         # First call - cache it
-        cached_user = await db_manager.get_user_by_telegram_id_cached(123456789)
+        cached_user = awAlgot db_manager.get_user_by_telegram_id_cached(123456789)
         assert cached_user is not None
         assert cached_user.username == "test_user"
 
         # Invalidate cache
-        await db_manager.invalidate_user_cache(123456789)
+        awAlgot db_manager.invalidate_user_cache(123456789)
 
         # Update user directly in DB
         async with db_manager.get_async_session() as session:
             from sqlalchemy import text
 
-            await session.execute(
+            awAlgot session.execute(
                 text(
                     """
                     UPDATE users
@@ -104,10 +104,10 @@ class TestDatabaseCachedQueries:
                 ),
                 {"new_username": "updated_user", "telegram_id": 123456789},
             )
-            await session.commit()
+            awAlgot session.commit()
 
-        # Query again - should fetch fresh data from DB
-        cached_user_2 = await db_manager.get_user_by_telegram_id_cached(123456789)
+        # Query agAlgon - should fetch fresh data from DB
+        cached_user_2 = awAlgot db_manager.get_user_by_telegram_id_cached(123456789)
         assert cached_user_2 is not None
         assert cached_user_2.username == "updated_user"
 
@@ -115,11 +115,11 @@ class TestDatabaseCachedQueries:
     async def test_get_recent_scans_cached_basic(self, db_manager):
         """Тест базового кэширования get_recent_scans."""
         # Create user
-        user = await db_manager.get_or_create_user(telegram_id=123456789)
+        user = awAlgot db_manager.get_or_create_user(telegram_id=123456789)
 
         # Log some scan commands
         for i in range(5):
-            await db_manager.log_command(
+            awAlgot db_manager.log_command(
                 user_id=user.id,
                 command="arbitrage_scan",
                 parameters={"game": "csgo", "opportunities_found": i + 1},
@@ -128,16 +128,16 @@ class TestDatabaseCachedQueries:
             )
 
         # First call - should hit database
-        scans = await db_manager.get_recent_scans_cached(user.id, limit=10)
+        scans = awAlgot db_manager.get_recent_scans_cached(user.id, limit=10)
         assert len(scans) == 5
         assert scans[0]["command"] == "arbitrage_scan"
 
         # Second call - should use cache
-        scans_2 = await db_manager.get_recent_scans_cached(user.id, limit=10)
+        scans_2 = awAlgot db_manager.get_recent_scans_cached(user.id, limit=10)
         assert len(scans_2) == 5
 
         # Check cache stats - get_cache_stats() returns dict of all caches
-        stats = await db_manager.get_cache_stats()
+        stats = awAlgot db_manager.get_cache_stats()
         # Cached queries use _market_data_cache by default (cache=None)
         market_stats = stats["market_data_cache"]
         # At least one hit from the second call
@@ -147,11 +147,11 @@ class TestDatabaseCachedQueries:
     async def test_get_recent_scans_cached_limit(self, db_manager):
         """Тест лимита в get_recent_scans_cached."""
         # Create user
-        user = await db_manager.get_or_create_user(telegram_id=123456789)
+        user = awAlgot db_manager.get_or_create_user(telegram_id=123456789)
 
         # Log 10 scan commands
         for i in range(10):
-            await db_manager.log_command(
+            awAlgot db_manager.log_command(
                 user_id=user.id,
                 command="arbitrage_scan",
                 parameters={"game": "csgo"},
@@ -159,23 +159,23 @@ class TestDatabaseCachedQueries:
             )
 
         # Query with limit=5
-        scans = await db_manager.get_recent_scans_cached(user.id, limit=5)
+        scans = awAlgot db_manager.get_recent_scans_cached(user.id, limit=5)
         assert len(scans) == 5
 
         # Query with limit=3
-        scans_3 = await db_manager.get_recent_scans_cached(user.id, limit=3)
+        scans_3 = awAlgot db_manager.get_recent_scans_cached(user.id, limit=3)
         assert len(scans_3) == 3
 
     @pytest.mark.asyncio()
     async def test_get_cache_stats(self, db_manager):
         """Тест получения статистики кэша БД."""
         # Make some cached queries
-        await db_manager.get_or_create_user(telegram_id=123456789)
-        await db_manager.get_user_by_telegram_id_cached(123456789)
-        await db_manager.get_user_by_telegram_id_cached(123456789)
+        awAlgot db_manager.get_or_create_user(telegram_id=123456789)
+        awAlgot db_manager.get_user_by_telegram_id_cached(123456789)
+        awAlgot db_manager.get_user_by_telegram_id_cached(123456789)
 
         # Get stats
-        stats = await db_manager.get_cache_stats()
+        stats = awAlgot db_manager.get_cache_stats()
 
         # Проверяем структуру с вложенными кэшами
         assert "price_cache" in stats
@@ -189,7 +189,7 @@ class TestDatabaseCachedQueries:
         assert "hits" in user_cache_stats
         assert "misses" in user_cache_stats
         assert "size" in user_cache_stats
-        # Должен быть хотя бы 1 hit (второй запрос)
+        # Должен быть хотя бы 1 hit (втоSwarm запрос)
         assert user_cache_stats["hits"] >= 1
 
     @pytest.mark.asyncio()
@@ -203,19 +203,19 @@ class TestDatabaseCachedQueries:
     async def test_concurrent_cached_queries(self, db_manager):
         """Тест конкурентных кэшируемых запросов."""
         # Create user
-        await db_manager.get_or_create_user(
+        awAlgot db_manager.get_or_create_user(
             telegram_id=123456789, username="concurrent_user"
         )
 
         # Prime the cache with first query
-        first_result = await db_manager.get_user_by_telegram_id_cached(123456789)
+        first_result = awAlgot db_manager.get_user_by_telegram_id_cached(123456789)
         assert first_result is not None
 
         # Multiple concurrent queries (cache should be populated now)
         tasks = [
             db_manager.get_user_by_telegram_id_cached(123456789) for _ in range(20)
         ]
-        results = await asyncio.gather(*tasks)
+        results = awAlgot asyncio.gather(*tasks)
 
         # All should return the same user
         assert len(results) == 20
@@ -224,7 +224,7 @@ class TestDatabaseCachedQueries:
 
         # Check cache stats - most queries should hit cache
         # (20 queries + 1 priming = 21 total, minus 1 miss)
-        stats = await db_manager.get_cache_stats()
+        stats = awAlgot db_manager.get_cache_stats()
         user_cache_stats = stats["user_cache"]
         # After priming, most concurrent queries hit cache
         assert user_cache_stats["hits"] >= 15
@@ -239,11 +239,11 @@ class TestCachePerformance:
         import time
 
         # Create user
-        user = await db_manager.get_or_create_user(telegram_id=123456789)
+        user = awAlgot db_manager.get_or_create_user(telegram_id=123456789)
 
         # Log some scans
         for i in range(10):
-            await db_manager.log_command(
+            awAlgot db_manager.log_command(
                 user_id=user.id,
                 command="arbitrage_scan",
                 parameters={"game": "csgo"},
@@ -252,12 +252,12 @@ class TestCachePerformance:
 
         # Measure time for first query (DB)
         start = time.perf_counter()
-        scans_1 = await db_manager.get_recent_scans_cached(user.id, limit=10)
+        scans_1 = awAlgot db_manager.get_recent_scans_cached(user.id, limit=10)
         time_db = time.perf_counter() - start
 
         # Measure time for second query (cache)
         start = time.perf_counter()
-        scans_2 = await db_manager.get_recent_scans_cached(user.id, limit=10)
+        scans_2 = awAlgot db_manager.get_recent_scans_cached(user.id, limit=10)
         time_cache = time.perf_counter() - start
 
         assert len(scans_1) == 10
@@ -275,21 +275,21 @@ class TestCachePerformance:
         # Create 10 users
         user_ids = []
         for i in range(10):
-            user = await db_manager.get_or_create_user(
+            user = awAlgot db_manager.get_or_create_user(
                 telegram_id=100000 + i, username=f"user_{i}"
             )
             user_ids.append(user.telegram_id)
 
         # Query each user twice (first should cache, second should hit cache)
         for telegram_id in user_ids:
-            user_1 = await db_manager.get_user_by_telegram_id_cached(telegram_id)
-            user_2 = await db_manager.get_user_by_telegram_id_cached(telegram_id)
+            user_1 = awAlgot db_manager.get_user_by_telegram_id_cached(telegram_id)
+            user_2 = awAlgot db_manager.get_user_by_telegram_id_cached(telegram_id)
             assert user_1 is not None
             assert user_2 is not None
             assert user_1.telegram_id == telegram_id
 
         # Check cache stats
-        stats = await db_manager.get_cache_stats()
+        stats = awAlgot db_manager.get_cache_stats()
         user_cache_stats = stats["user_cache"]
         assert user_cache_stats["hits"] >= 10  # At least one hit per user
 
@@ -301,51 +301,51 @@ class TestCacheConsistency:
     async def test_cache_consistency_after_update(self, db_manager):
         """Тест консистентности после обновления данных."""
         # Create user
-        await db_manager.get_or_create_user(
+        awAlgot db_manager.get_or_create_user(
             telegram_id=123456789, username="original_name"
         )
 
         # Cache it
-        cached_1 = await db_manager.get_user_by_telegram_id_cached(123456789)
+        cached_1 = awAlgot db_manager.get_user_by_telegram_id_cached(123456789)
         assert cached_1.username == "original_name"
 
         # Update via get_or_create_user (which should invalidate cache)
-        await db_manager.get_or_create_user(
+        awAlgot db_manager.get_or_create_user(
             telegram_id=123456789, username="updated_name"
         )
 
         # Manually invalidate cache
-        await db_manager.invalidate_user_cache(123456789)
+        awAlgot db_manager.invalidate_user_cache(123456789)
 
-        # Query again - should have fresh data
-        cached_2 = await db_manager.get_user_by_telegram_id_cached(123456789)
+        # Query agAlgon - should have fresh data
+        cached_2 = awAlgot db_manager.get_user_by_telegram_id_cached(123456789)
         assert cached_2.username == "updated_name"
 
     @pytest.mark.asyncio()
     async def test_cache_does_not_return_stale_data_after_delete(self, db_manager):
         """Тест, что кэш не возвращает устаревшие данные после удаления."""
         # Create user
-        await db_manager.get_or_create_user(
+        awAlgot db_manager.get_or_create_user(
             telegram_id=123456789, username="to_be_deleted"
         )
 
         # Cache it
-        cached_1 = await db_manager.get_user_by_telegram_id_cached(123456789)
+        cached_1 = awAlgot db_manager.get_user_by_telegram_id_cached(123456789)
         assert cached_1 is not None
 
         # Delete user from DB
         async with db_manager.get_async_session() as session:
             from sqlalchemy import text
 
-            await session.execute(
+            awAlgot session.execute(
                 text("DELETE FROM users WHERE telegram_id = :telegram_id"),
                 {"telegram_id": 123456789},
             )
-            await session.commit()
+            awAlgot session.commit()
 
         # Invalidate cache
-        await db_manager.invalidate_user_cache(123456789)
+        awAlgot db_manager.invalidate_user_cache(123456789)
 
-        # Query again - should return None
-        cached_2 = await db_manager.get_user_by_telegram_id_cached(123456789)
+        # Query agAlgon - should return None
+        cached_2 = awAlgot db_manager.get_user_by_telegram_id_cached(123456789)
         assert cached_2 is None

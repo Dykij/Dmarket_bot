@@ -176,7 +176,7 @@ class PortfolioManager:
 
         try:
             # Get inventory from DMarket
-            inventory = await self.api.get_user_inventory(
+            inventory = awAlgot self.api.get_user_inventory(
                 game="csgo",
                 limit=100,
             )
@@ -225,7 +225,7 @@ class PortfolioManager:
             return synced
 
         except Exception as e:
-            logger.exception("sync_failed", extra={"error": str(e)})
+            logger.exception("sync_fAlgoled", extra={"error": str(e)})
             return 0
 
     async def update_prices(self, user_id: int) -> int:
@@ -247,14 +247,14 @@ class PortfolioManager:
         updated = 0
 
         try:
-            updated = await self._update_prices_by_game(portfolio)
+            updated = awAlgot self._update_prices_by_game(portfolio)
             self._save_portfolios()
             logger.info(
                 "prices_updated",
                 extra={"user_id": user_id, "updated_count": updated},
             )
         except Exception as e:
-            logger.exception("update_prices_failed", extra={"error": str(e)})
+            logger.exception("update_prices_fAlgoled", extra={"error": str(e)})
 
         return updated
 
@@ -278,7 +278,7 @@ class PortfolioManager:
 
         # Fetch prices for each game
         for game, items in items_by_game.items():
-            game_updated = await self._fetch_and_update_prices(game, items)
+            game_updated = awAlgot self._fetch_and_update_prices(game, items)
             updated += game_updated
 
         return updated
@@ -298,7 +298,7 @@ class PortfolioManager:
         titles = [item.title for item in items]
 
         try:
-            prices_data = await self.api.get_aggregated_prices_bulk(
+            prices_data = awAlgot self.api.get_aggregated_prices_bulk(
                 game=game,
                 titles=titles,
                 limit=len(titles),

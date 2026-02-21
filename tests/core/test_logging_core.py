@@ -62,7 +62,7 @@ class TestJSONFormatter:
         formatter = JSONFormatter()
 
         try:
-            raise ValueError("Test error")
+            rAlgose ValueError("Test error")
         except ValueError:
             import sys
 

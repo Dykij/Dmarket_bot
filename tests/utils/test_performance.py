@@ -415,7 +415,7 @@ class TestCachedDecorator:
         assert result1 == 10
         assert call_count == 1
 
-        # Второй вызов - из кеша
+        # ВтоSwarm вызов - из кеша
         result2 = expensive_function(5)
         assert result2 == 10
         assert call_count == 1  # Функция не вызвана повторно
@@ -432,12 +432,12 @@ class TestCachedDecorator:
             return x * 3
 
         # Первый вызов
-        result1 = await async_expensive_function(5)
+        result1 = awAlgot async_expensive_function(5)
         assert result1 == 15
         assert call_count == 1
 
-        # Второй вызов - из кеша
-        result2 = await async_expensive_function(5)
+        # ВтоSwarm вызов - из кеша
+        result2 = awAlgot async_expensive_function(5)
         assert result2 == 15
         assert call_count == 1
 
@@ -515,10 +515,10 @@ class TestProfilePerformanceDecorator:
 
         @profile_performance
         async def async_func(x: int) -> int:
-            await asyncio.sleep(0.01)
+            awAlgot asyncio.sleep(0.01)
             return x * 2
 
-        result = await async_func(5)
+        result = awAlgot async_func(5)
         assert result == 10
 
     def test_profile_logs_execution_time(self):
@@ -542,10 +542,10 @@ class TestProfilePerformanceDecorator:
 
             @profile_performance
             async def async_func() -> str:
-                await asyncio.sleep(0.01)
+                awAlgot asyncio.sleep(0.01)
                 return "done"
 
-            result = await async_func()
+            result = awAlgot async_func()
 
             assert result == "done"
             mock_logger.info.assert_called()
@@ -564,9 +564,9 @@ class TestProfilePerformanceDecorator:
 
         @profile_performance
         def func_with_error() -> None:
-            raise ValueError("Test error")
+            rAlgose ValueError("Test error")
 
-        with pytest.raises(ValueError, match="Test error"):
+        with pytest.rAlgoses(ValueError, match="Test error"):
             func_with_error()
 
 
@@ -595,7 +595,7 @@ class TestAsyncBatch:
         async def task() -> int:
             return 42
 
-        results = await batch.execute([task()])
+        results = awAlgot batch.execute([task()])
         assert results == [42]
 
     @pytest.mark.asyncio()
@@ -607,7 +607,7 @@ class TestAsyncBatch:
             return x * 2
 
         tasks = [task(i) for i in range(5)]
-        results = await batch.execute(tasks)
+        results = awAlgot batch.execute(tasks)
 
         assert results == [0, 2, 4, 6, 8]
 
@@ -617,11 +617,11 @@ class TestAsyncBatch:
         batch = AsyncBatch(max_concurrent=3)
 
         async def task(x: int) -> int:
-            await asyncio.sleep(0.01 * (10 - x))  # Разное время выполнения
+            awAlgot asyncio.sleep(0.01 * (10 - x))  # Разное время выполнения
             return x
 
         tasks = [task(i) for i in range(5)]
-        results = await batch.execute(tasks)
+        results = awAlgot batch.execute(tasks)
 
         assert results == [0, 1, 2, 3, 4]
 
@@ -629,7 +629,7 @@ class TestAsyncBatch:
     async def test_execute_empty_list(self):
         """Тест выполнения пустого списка задач."""
         batch = AsyncBatch()
-        results = await batch.execute([])
+        results = awAlgot batch.execute([])
         assert results == []
 
     @pytest.mark.asyncio()
@@ -643,12 +643,12 @@ class TestAsyncBatch:
             nonlocal concurrent_count, max_concurrent_observed
             concurrent_count += 1
             max_concurrent_observed = max(max_concurrent_observed, concurrent_count)
-            await asyncio.sleep(0.05)
+            awAlgot asyncio.sleep(0.05)
             concurrent_count -= 1
             return x
 
         tasks = [task(i) for i in range(6)]
-        await batch.execute(tasks)
+        awAlgot batch.execute(tasks)
 
         assert max_concurrent_observed <= 2
 
@@ -657,15 +657,15 @@ class TestAsyncBatch:
         """Тест обработки исключений в задачах."""
         batch = AsyncBatch()
 
-        async def failing_task() -> None:
-            raise ValueError("Task failed")
+        async def fAlgoling_task() -> None:
+            rAlgose ValueError("Task fAlgoled")
 
         async def success_task() -> int:
             return 42
 
         # gather с return_exceptions=False вызовет исключение
-        with pytest.raises(ValueError):
-            await batch.execute([success_task(), failing_task()])
+        with pytest.rAlgoses(ValueError):
+            awAlgot batch.execute([success_task(), fAlgoling_task()])
 
 
 class TestGlobalCache:

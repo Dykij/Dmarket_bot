@@ -16,14 +16,14 @@ Usage:
     manager = AlertManager(user_id=123456)
 
     # Create price alert
-    alert = await manager.create_price_alert(
+    alert = awAlgot manager.create_price_alert(
         item_name="AK-47 | Redline",
         target_price=15.0,
         condition="below",
     )
 
     # Check alerts
-    triggered = await manager.check_alerts(current_prices)
+    triggered = awAlgot manager.check_alerts(current_prices)
     ```
 
 Created: January 10, 2026
@@ -61,7 +61,7 @@ class AlertCondition(StrEnum):
     BELOW = "below"
     EQUALS = "equals"
     CHANGE_PERCENT = "change_percent"
-    AVAILABLE = "available"
+    AVAlgoLABLE = "avAlgolable"
 
 
 class AlertPriority(StrEnum):
@@ -435,7 +435,7 @@ class AlertManager:
             return []
 
         alert_ids = self._user_alerts.get(user_id, set())
-        alerts = [self._alerts[aid] for aid in alert_ids if aid in self._alerts]
+        alerts = [self._alerts[Algod] for Algod in alert_ids if Algod in self._alerts]
 
         if status:
             alerts = [a for a in alerts if a.status == status]
@@ -530,7 +530,7 @@ class AlertManager:
         prices: dict[str, Decimal],
         user_id: int | None = None,
     ) -> list[TriggeredAlert]:
-        """Check alerts against current prices.
+        """Check alerts agAlgonst current prices.
 
         Args:
             prices: Dict of item_name -> current_price

@@ -103,7 +103,7 @@ class PaginationManager:
         # Ограничиваем значение между 1 и 20
         value = max(1, min(value, 20))
 
-        # Инициализируем настройки пользователя, если их еще нет
+        # Инициализируем настSwarmки пользователя, если их еще нет
         if user_id not in self.user_settings:
             self.user_settings[user_id] = {}
 

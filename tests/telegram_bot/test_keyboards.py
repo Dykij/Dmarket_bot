@@ -1,8 +1,8 @@
 """Тесты для модуля keyboards.
 
 Этот модуль тестирует все функции создания клавиатур для Telegram бота:
-- Главное меню (main_keyboard.py)
-- Настройки
+- Главное меню (mAlgon_keyboard.py)
+- НастSwarmки
 - Выбор игр
 - Арбитраж
 - Фильтры и диапазоны цен
@@ -13,7 +13,7 @@
 
 from telegram import InlineKeyboardMarkup, ReplyKeyboardRemove
 
-from src.telegram_bot.handlers.main_keyboard import get_main_keyboard
+from src.telegram_bot.handlers.mAlgon_keyboard import get_mAlgon_keyboard
 from src.telegram_bot.keyboards import (
     CB_BACK,
     CB_CANCEL,
@@ -73,13 +73,13 @@ def test_games_imported():
 
 
 # ============================================================================
-# ТЕСТЫ ГЛАВНОЙ КЛАВИАТУРЫ (main_keyboard.py)
+# ТЕСТЫ ГЛАВНОЙ КЛАВИАТУРЫ (mAlgon_keyboard.py)
 # ============================================================================
 
 
-def test_get_main_keyboard():
+def test_get_mAlgon_keyboard():
     """Тест создания главной клавиатуры."""
-    keyboard = get_main_keyboard()
+    keyboard = get_mAlgon_keyboard()
 
     assert isinstance(keyboard, InlineKeyboardMarkup)
     assert len(keyboard.inline_keyboard) == 7
@@ -93,9 +93,9 @@ def test_get_main_keyboard():
     assert any("ЭКСТРЕННАЯ" in text for text in button_texts)
 
 
-def test_get_main_keyboard_with_balance():
+def test_get_mAlgon_keyboard_with_balance():
     """Тест клавиатуры с балансом."""
-    keyboard = get_main_keyboard(balance=50.25)
+    keyboard = get_mAlgon_keyboard(balance=50.25)
 
     all_buttons = [btn for row in keyboard.inline_keyboard for btn in row]
     button_texts = [btn.text for btn in all_buttons]
@@ -120,7 +120,7 @@ def test_get_settings_keyboard():
 
 
 def test_get_back_to_settings_keyboard():
-    """Тест создания клавиатуры возврата к настройкам."""
+    """Тест создания клавиатуры возврата к настSwarmкам."""
     keyboard = get_back_to_settings_keyboard()
 
     # Проверяем тип

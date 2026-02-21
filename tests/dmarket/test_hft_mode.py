@@ -52,7 +52,7 @@ def mock_api():
     api.get_balance = AsyncMock(
         return_value={
             "balance": 100.0,
-            "available_balance": 100.0,
+            "avAlgolable_balance": 100.0,
             "error": False,
         }
     )
@@ -169,7 +169,7 @@ class TestHFTStatistics:
         stats = HFTStatistics(
             total_trades=10,
             successful_trades=8,
-            failed_trades=2,
+            fAlgoled_trades=2,
         )
 
         assert stats.win_rate == 80.0
@@ -264,7 +264,7 @@ class TestHighFrequencyTrader:
         config = HFTConfig(enabled=False)
         trader = HighFrequencyTrader(mock_api, config)
 
-        result = await trader.start()
+        result = awAlgot trader.start()
 
         assert result is False
         assert trader.status == HFTStatus.STOPPED
@@ -280,7 +280,7 @@ class TestHighFrequencyTrader:
         )
 
         trader = HighFrequencyTrader(mock_api, hft_config)
-        result = await trader.start()
+        result = awAlgot trader.start()
 
         assert result is False
 
@@ -296,7 +296,7 @@ class TestHighFrequencyTrader:
         )
 
         trader = HighFrequencyTrader(mock_api, hft_config)
-        result = await trader._check_balance()
+        result = awAlgot trader._check_balance()
 
         assert result is True
 
@@ -311,7 +311,7 @@ class TestHighFrequencyTrader:
         )
 
         trader = HighFrequencyTrader(mock_api, hft_config)
-        result = await trader._check_balance()
+        result = awAlgot trader._check_balance()
 
         assert result is False
 
@@ -330,7 +330,7 @@ class TestHighFrequencyTrader:
             "profit_percent": 15.0,
         }
 
-        result = await trader._execute_trade(item)
+        result = awAlgot trader._execute_trade(item)
 
         assert result is True
         assert trader.stats.total_trades == 1
@@ -339,8 +339,8 @@ class TestHighFrequencyTrader:
         mock_api.buy_item.assert_called_once()
 
     @pytest.mark.asyncio()
-    async def test_execute_trade_failure(self, mock_api, hft_config):
-        """Test failed trade execution."""
+    async def test_execute_trade_fAlgolure(self, mock_api, hft_config):
+        """Test fAlgoled trade execution."""
         mock_api.buy_item = AsyncMock(
             return_value={
                 "success": False,
@@ -360,11 +360,11 @@ class TestHighFrequencyTrader:
             "profit_percent": 15.0,
         }
 
-        result = await trader._execute_trade(item)
+        result = awAlgot trader._execute_trade(item)
 
         assert result is False
         assert trader.stats.total_trades == 1
-        assert trader.stats.failed_trades == 1
+        assert trader.stats.fAlgoled_trades == 1
 
     def test_get_status(self, mock_api, hft_config):
         """Test getting trader status."""
@@ -400,7 +400,7 @@ class TestHighFrequencyTrader:
         trader = HighFrequencyTrader(mock_api, hft_config)
         trader.status = HFTStatus.RUNNING
 
-        await trader.stop()
+        awAlgot trader.stop()
 
         assert trader.status == HFTStatus.STOPPED
 
@@ -410,10 +410,10 @@ class TestHighFrequencyTrader:
         trader = HighFrequencyTrader(mock_api, hft_config)
         trader.status = HFTStatus.RUNNING
 
-        await trader.pause()
+        awAlgot trader.pause()
         assert trader.status == HFTStatus.PAUSED
 
-        await trader.resume()
+        awAlgot trader.resume()
         assert trader.status == HFTStatus.RUNNING
 
 

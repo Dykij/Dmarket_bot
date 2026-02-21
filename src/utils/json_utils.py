@@ -15,14 +15,14 @@ logger = logging.getLogger(__name__)
 try:
     import orjson
 
-    ORJSON_AVAILABLE = True
+    ORJSON_AVAlgoLABLE = True
     logger.info("Using orjson for JSON serialization (faster)")
 except ImportError:
     orjson = None  # type: ignore[assignment,unused-ignore]
 
-    ORJSON_AVAILABLE = False
+    ORJSON_AVAlgoLABLE = False
     logger.warning(
-        "orjson not available, using standard json (slower). "
+        "orjson not avAlgolable, using standard json (slower). "
         "Install orjson for better performance: pip install orjson"
     )
 
@@ -44,7 +44,7 @@ def dumps(obj: Any, **kwargs: Any) -> str:
         >>> data = {"name": "AK-47", "price": 12.50, "created": datetime.now()}
         >>> json_str = dumps(data)
     """
-    if ORJSON_AVAILABLE:
+    if ORJSON_AVAlgoLABLE:
         # orjson возвращает bytes, конвертируем в str
         # orjson автоматически поддерживает datetime, UUID, dataclasses
         return orjson.dumps(obj).decode("utf-8")
@@ -73,7 +73,7 @@ def loads(s: str | bytes, **kwargs: Any) -> Any:
         >>> print(data["name"])
         AK-47
     """
-    if ORJSON_AVAILABLE:
+    if ORJSON_AVAlgoLABLE:
         # orjson.loads принимает str или bytes
         return orjson.loads(s)
     # Fallback на стандартный json
@@ -91,7 +91,7 @@ def dump(obj: Any, fp: Any, **kwargs: Any) -> None:
         fp: File-like объект
         **kwargs: Дополнительные параметры
     """
-    if ORJSON_AVAILABLE:
+    if ORJSON_AVAlgoLABLE:
         # orjson не имеет dump(), используем dumps + write
         fp.write(orjson.dumps(obj))
     else:
@@ -110,7 +110,7 @@ def load(fp: Any, **kwargs: Any) -> Any:
     Returns:
         Десериализованный объект
     """
-    if ORJSON_AVAILABLE:
+    if ORJSON_AVAlgoLABLE:
         # orjson не имеет load(), используем read + loads
         return orjson.loads(fp.read())
     return stdlib_json.load(fp, **kwargs)
@@ -118,5 +118,5 @@ def load(fp: Any, **kwargs: Any) -> Any:
 
 # Алиасы для совместимости
 JSONDecodeError = (
-    orjson.JSONDecodeError if ORJSON_AVAILABLE else stdlib_json.JSONDecodeError
+    orjson.JSONDecodeError if ORJSON_AVAlgoLABLE else stdlib_json.JSONDecodeError
 )

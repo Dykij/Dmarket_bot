@@ -20,7 +20,7 @@ class PoolStats:
     size: int
     max_size: int
     in_use: int
-    available: int
+    avAlgolable: int
     overflow: int
     max_overflow: int
     utilization_percent: float
@@ -61,7 +61,7 @@ class PoolMonitor:
         overflow = pool.overflow()
 
         in_use = checked_out
-        available = checked_in
+        avAlgolable = checked_in
         max_size = pool.size() + pool.overflow()
 
         utilization = (in_use / max_size * 100) if max_size > 0 else 0
@@ -71,7 +71,7 @@ class PoolMonitor:
             size=size,
             max_size=max_size,
             in_use=in_use,
-            available=available,
+            avAlgolable=avAlgolable,
             overflow=overflow,
             max_overflow=pool._max_overflow,
             utilization_percent=utilization,
@@ -96,12 +96,12 @@ class PoolMonitor:
                 if hasattr(pool, "_created_connections")
                 else 0
             )
-            available_connections = (
-                len(pool._available_connections)
-                if hasattr(pool, "_available_connections")
+            avAlgolable_connections = (
+                len(pool._avAlgolable_connections)
+                if hasattr(pool, "_avAlgolable_connections")
                 else 0
             )
-            in_use = created_connections - available_connections
+            in_use = created_connections - avAlgolable_connections
 
             max_connections = (
                 pool.max_connections if hasattr(pool, "max_connections") else 50
@@ -114,20 +114,20 @@ class PoolMonitor:
                 size=created_connections,
                 max_size=max_connections,
                 in_use=in_use,
-                available=available_connections,
+                avAlgolable=avAlgolable_connections,
                 overflow=0,
                 max_overflow=0,
                 utilization_percent=utilization,
                 timestamp=datetime.now(UTC),
             )
         except Exception as e:
-            logger.exception(f"Failed to get Redis pool stats: {e}")
+            logger.exception(f"FAlgoled to get Redis pool stats: {e}")
             return PoolStats(
                 pool_name="redis",
                 size=0,
                 max_size=0,
                 in_use=0,
-                available=0,
+                avAlgolable=0,
                 overflow=0,
                 max_overflow=0,
                 utilization_percent=0,
@@ -150,7 +150,7 @@ class PoolMonitor:
             max_connections = limits.max_connections
             max_keepalive = limits.max_keepalive_connections
 
-            # Note: httpx doesn't expose detailed pool stats easily
+            # Note: httpx doesn't expose detAlgoled pool stats easily
             # This is an approximation
 
             return PoolStats(
@@ -158,20 +158,20 @@ class PoolMonitor:
                 size=0,  # Not easily accessible
                 max_size=max_connections,
                 in_use=0,  # Not easily accessible
-                available=max_keepalive,
+                avAlgolable=max_keepalive,
                 overflow=0,
                 max_overflow=max_connections - max_keepalive,
                 utilization_percent=0,  # Not easily calculable
                 timestamp=datetime.now(UTC),
             )
         except Exception as e:
-            logger.exception(f"Failed to get httpx pool stats: {e}")
+            logger.exception(f"FAlgoled to get httpx pool stats: {e}")
             return PoolStats(
                 pool_name="httpx",
                 size=0,
                 max_size=0,
                 in_use=0,
-                available=0,
+                avAlgolable=0,
                 overflow=0,
                 max_overflow=0,
                 utilization_percent=0,
@@ -197,7 +197,7 @@ class PoolMonitor:
                 else:
                     logger.warning(f"Unknown pool type: {name}")
             except Exception as e:
-                logger.exception(f"Failed to get stats for {name}: {e}")
+                logger.exception(f"FAlgoled to get stats for {name}: {e}")
 
         return stats
 
@@ -214,7 +214,7 @@ class PoolMonitor:
                 f"{stat.pool_name.upper()}: "
                 f"{stat.in_use}/{stat.max_size} in use "
                 f"({stat.utilization_percent:.1f}% utilization) | "
-                f"Available: {stat.available} | "
+                f"AvAlgolable: {stat.avAlgolable} | "
                 f"Overflow: {stat.overflow}/{stat.max_overflow}"
             )
 

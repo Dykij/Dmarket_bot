@@ -239,7 +239,7 @@ class BalanceAdaptiveStrategy:
             recs.extend(
                 [
                     "Focus on cheap items ($0.10-$5) with high profit margin",
-                    "Wait for 15%+ profit opportunities only",
+                    "WAlgot for 15%+ profit opportunities only",
                     "Make one trade at a time",
                     "Reinvest all profits to grow balance quickly",
                     "Consider depositing more to unlock better opportunities",
@@ -278,7 +278,7 @@ class BalanceAdaptiveStrategy:
                 [
                     "Maximum diversification recommended (10+ items)",
                     "Focus on capital preservation over growth",
-                    "3%+ profit is sustainable at this volume",
+                    "3%+ profit is sustAlgonable at this volume",
                     "Consider market making strategies",
                     "Use intelligent hold during market events",
                     "Allocate portion to tournament sticker investments",
@@ -477,7 +477,7 @@ class AdaptivePortfolioAllocator:
 
         recommendation = self.strategy.get_recommendation()
         max_positions = recommendation.max_concurrent_positions
-        available_balance = self.strategy.user_balance
+        avAlgolable_balance = self.strategy.user_balance
 
         # Сортируем по ожидаемой прибыли / риск (лучшие первые)
         sorted_opps = sorted(
@@ -509,18 +509,18 @@ class AdaptivePortfolioAllocator:
                 current_positions=positions_taken,
             )
 
-            if should_buy and price <= available_balance:
+            if should_buy and price <= avAlgolable_balance:
                 allocation = self.strategy.calculate_position_size(
                     item_price=price,
                     confidence_score=confidence,
                     risk_score=risk_score,
                 )
-                allocation = min(allocation, available_balance)
+                allocation = min(allocation, avAlgolable_balance)
 
                 opp["allocation"] = allocation
                 opp["allocation_reason"] = "Allocated"
 
-                available_balance -= allocation
+                avAlgolable_balance -= allocation
                 positions_taken += 1
             else:
                 opp["allocation"] = 0.0

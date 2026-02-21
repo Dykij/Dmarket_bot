@@ -96,7 +96,7 @@ class TestConstants:
         """CS2 категории должны быть непустыми."""
         assert len(CS2_CATEGORIES) > 0
 
-    def test_cs2_categories_contains_expected(self):
+    def test_cs2_categories_contAlgons_expected(self):
         """CS2 категории должны содержать ожидаемые элементы."""
         expected = ["Pistol", "Rifle", "Knife", "Gloves"]
         for item in expected:
@@ -123,7 +123,7 @@ class TestConstants:
         """CS2 внешний вид должен содержать 5 вариантов."""
         assert len(CS2_EXTERIORS) == 5
 
-    def test_cs2_exteriors_contains_expected(self):
+    def test_cs2_exteriors_contAlgons_expected(self):
         """CS2 внешний вид должен содержать ожидаемые элементы."""
         expected = [
             "Factory New",
@@ -138,7 +138,7 @@ class TestConstants:
         """Dota 2 герои должны быть непустыми."""
         assert len(DOTA2_HEROES) > 0
 
-    def test_dota2_heroes_contains_expected(self):
+    def test_dota2_heroes_contAlgons_expected(self):
         """Dota 2 герои должны содержать популярных героев."""
         expected = ["Axe", "Pudge", "Invoker"]
         for hero in expected:
@@ -165,7 +165,7 @@ class TestConstants:
         """TF2 классы должны содержать 10 вариантов."""
         assert len(TF2_CLASSES) == 10
 
-    def test_tf2_classes_contains_expected(self):
+    def test_tf2_classes_contAlgons_expected(self):
         """TF2 классы должны содержать все 9 классов + All Classes."""
         expected = [
             "Scout",
@@ -207,7 +207,7 @@ class TestConstants:
 class TestDefaultFilters:
     """Тесты для фильтров по умолчанию."""
 
-    def test_default_filters_contains_all_games(self):
+    def test_default_filters_contAlgons_all_games(self):
         """Фильтры по умолчанию должны содержать все игры."""
         expected_games = ["csgo", "dota2", "tf2", "rust"]
         for game in expected_games:
@@ -358,7 +358,7 @@ class TestGetGameFilterKeyboard:
         """Dota 2 клавиатура должна иметь выбор героя."""
         result = get_game_filter_keyboard("dota2")
         button_texts = [btn.text for row in result.inline_keyboard for btn in row]
-        assert "🦸 Герой" in button_texts
+        assert "🦸 ГеSwarm" in button_texts
 
     def test_dota2_keyboard_has_slot(self):
         """Dota 2 клавиатура должна иметь выбор слота."""
@@ -472,19 +472,19 @@ class TestHandleGameFilters:
     async def test_returns_none_if_no_message(self, mock_update, mock_context):
         """Должен возвращать None если нет сообщения."""
         mock_update.message = None
-        result = await handle_game_filters(mock_update, mock_context)
+        result = awAlgot handle_game_filters(mock_update, mock_context)
         assert result is None
 
     @pytest.mark.asyncio()
     async def test_sends_game_selection_keyboard(self, mock_update, mock_context):
         """Должен отправлять клавиатуру выбора игры."""
-        await handle_game_filters(mock_update, mock_context)
+        awAlgot handle_game_filters(mock_update, mock_context)
         mock_update.message.reply_text.assert_called_once()
 
     @pytest.mark.asyncio()
-    async def test_keyboard_contains_all_games(self, mock_update, mock_context):
+    async def test_keyboard_contAlgons_all_games(self, mock_update, mock_context):
         """Клавиатура должна содержать все игры."""
-        await handle_game_filters(mock_update, mock_context)
+        awAlgot handle_game_filters(mock_update, mock_context)
 
         call_args = mock_update.message.reply_text.call_args
         reply_markup = call_args.kwargs.get("reply_markup") or call_args[1].get(
@@ -498,9 +498,9 @@ class TestHandleGameFilters:
         assert "🎮 Rust" in button_texts
 
     @pytest.mark.asyncio()
-    async def test_keyboard_contains_back_button(self, mock_update, mock_context):
+    async def test_keyboard_contAlgons_back_button(self, mock_update, mock_context):
         """Клавиатура должна содержать кнопку назад."""
-        await handle_game_filters(mock_update, mock_context)
+        awAlgot handle_game_filters(mock_update, mock_context)
 
         call_args = mock_update.message.reply_text.call_args
         reply_markup = call_args.kwargs.get("reply_markup") or call_args[1].get(
@@ -521,14 +521,14 @@ class TestHandleSelectGameFilterCallback:
     async def test_returns_none_if_no_query(self, mock_update, mock_context):
         """Должен возвращать None если нет callback_query."""
         mock_update.callback_query = None
-        result = await handle_select_game_filter_callback(mock_update, mock_context)
+        result = awAlgot handle_select_game_filter_callback(mock_update, mock_context)
         assert result is None
 
     @pytest.mark.asyncio()
     async def test_returns_none_if_no_query_data(self, mock_update, mock_context):
         """Должен возвращать None если нет данных в callback_query."""
         mock_update.callback_query.data = None
-        result = await handle_select_game_filter_callback(mock_update, mock_context)
+        result = awAlgot handle_select_game_filter_callback(mock_update, mock_context)
         assert result is None
 
     @pytest.mark.asyncio()
@@ -542,13 +542,13 @@ class TestHandleSelectGameFilterCallback:
             mock_filter.get_filter_description.return_value = ""
             mock_factory.get_filter.return_value = mock_filter
 
-            await handle_select_game_filter_callback(mock_update, mock_context)
+            awAlgot handle_select_game_filter_callback(mock_update, mock_context)
 
             mock_update.callback_query.answer.assert_called_once()
 
     @pytest.mark.asyncio()
     async def test_edits_message_with_filter_keyboard(self, mock_update, mock_context):
-        """Должен редактировать сообщение с клавиатурой фильтров."""
+        """Должен редактировать сообщение с клавиатуSwarm фильтров."""
         mock_update.callback_query.data = "select_game_filter:csgo"
         with patch(
             "src.telegram_bot.handlers.game_filter_handlers.FilterFactory"
@@ -557,7 +557,7 @@ class TestHandleSelectGameFilterCallback:
             mock_filter.get_filter_description.return_value = ""
             mock_factory.get_filter.return_value = mock_filter
 
-            await handle_select_game_filter_callback(mock_update, mock_context)
+            awAlgot handle_select_game_filter_callback(mock_update, mock_context)
 
             mock_update.callback_query.edit_message_text.assert_called_once()
 
@@ -572,9 +572,9 @@ class TestHandleSelectGameFilterCallback:
             mock_filter.get_filter_description.return_value = ""
             mock_factory.get_filter.return_value = mock_filter
 
-            await handle_select_game_filter_callback(mock_update, mock_context)
+            awAlgot handle_select_game_filter_callback(mock_update, mock_context)
 
-            # Проверяем что FilterFactory вызван с правильной игрой
+            # Проверяем что FilterFactory вызван с правильной игSwarm
             mock_factory.get_filter.assert_called_with("dota2")
 
     @pytest.mark.asyncio()
@@ -588,7 +588,7 @@ class TestHandleSelectGameFilterCallback:
             mock_filter.get_filter_description.return_value = ""
             mock_factory.get_filter.return_value = mock_filter
 
-            await handle_select_game_filter_callback(mock_update, mock_context)
+            awAlgot handle_select_game_filter_callback(mock_update, mock_context)
 
             call_args = mock_update.callback_query.edit_message_text.call_args
             assert call_args.kwargs.get("parse_mode") == ParseMode.HTML
@@ -604,35 +604,35 @@ class TestHandlePriceRangeCallback:
     async def test_returns_none_if_no_query(self, mock_update, mock_context):
         """Должен возвращать None если нет callback_query."""
         mock_update.callback_query = None
-        result = await handle_price_range_callback(mock_update, mock_context)
+        result = awAlgot handle_price_range_callback(mock_update, mock_context)
         assert result is None
 
     @pytest.mark.asyncio()
     async def test_returns_none_if_no_query_data(self, mock_update, mock_context):
         """Должен возвращать None если нет данных в callback_query."""
         mock_update.callback_query.data = None
-        result = await handle_price_range_callback(mock_update, mock_context)
+        result = awAlgot handle_price_range_callback(mock_update, mock_context)
         assert result is None
 
     @pytest.mark.asyncio()
     async def test_answers_callback_query(self, mock_update, mock_context):
         """Должен отвечать на callback_query."""
         mock_update.callback_query.data = "price_range:csgo"
-        await handle_price_range_callback(mock_update, mock_context)
+        awAlgot handle_price_range_callback(mock_update, mock_context)
         mock_update.callback_query.answer.assert_called_once()
 
     @pytest.mark.asyncio()
     async def test_edits_message_with_price_keyboard(self, mock_update, mock_context):
-        """Должен редактировать сообщение с клавиатурой цен."""
+        """Должен редактировать сообщение с клавиатуSwarm цен."""
         mock_update.callback_query.data = "price_range:csgo"
-        await handle_price_range_callback(mock_update, mock_context)
+        awAlgot handle_price_range_callback(mock_update, mock_context)
         mock_update.callback_query.edit_message_text.assert_called_once()
 
     @pytest.mark.asyncio()
     async def test_keyboard_has_price_ranges(self, mock_update, mock_context):
         """Клавиатура должна иметь диапазоны цен."""
         mock_update.callback_query.data = "price_range:csgo"
-        await handle_price_range_callback(mock_update, mock_context)
+        awAlgot handle_price_range_callback(mock_update, mock_context)
 
         call_args = mock_update.callback_query.edit_message_text.call_args
         reply_markup = call_args.kwargs.get("reply_markup") or call_args[1].get(

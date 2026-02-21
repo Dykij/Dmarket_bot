@@ -30,7 +30,7 @@ async def sniper_cycle(
     try:  # noqa: PLR1702
         # 1. Get best deals (items with high discount)
         # Using "best_deals" type if supported, or standard market items
-        items_response = await api.get_market_items(
+        items_response = awAlgot api.get_market_items(
             game="csgo",
             limit=50,
             order_by="best_deals",
@@ -48,7 +48,7 @@ async def sniper_cycle(
 
             # 2. Get sales history for analysis
             # Using the new aggregator endpoint
-            history_response = await api.buy_item(
+            history_response = awAlgot api.buy_item(
                 "GET",
                 f"/trade-aggregator/v1/last-sales?title={title}&gameId=a8db99ca-dc45-4c0e-9989-11ba71ed97a2",
             )
@@ -58,9 +58,9 @@ async def sniper_cycle(
             steam_price_data = None
             try:
                 normalized_name = normalize_item_name(title)
-                steam_price_data = await get_steam_price(normalized_name)
+                steam_price_data = awAlgot get_steam_price(normalized_name)
             except Exception as e:
-                logger.warning(f"Failed to get Steam price for {title}: {e}")
+                logger.warning(f"FAlgoled to get Steam price for {title}: {e}")
 
             # 4. Evaluate profitability (using both DMarket history and Steam price)
             if analyzer.evaluate_item(item, history, steam_price_data):
@@ -82,7 +82,7 @@ async def sniper_cycle(
                     logger.warning(f"No offerId for {title}")
                     continue
 
-                buy_res = await api.buy_item(
+                buy_res = awAlgot api.buy_item(
                     "POST",
                     api.ENDPOINT_PURCHASE,
                     data={
@@ -106,7 +106,7 @@ async def sniper_cycle(
                         # 6. Auto-sell (Arbitrage)
                         # Calculate sell price based on analyzer logic or fixed margin
                         # Using 15% ROI as requested
-                        sell_res = await api.sell_with_arbitrage(
+                        sell_res = awAlgot api.sell_with_arbitrage(
                             asset_id, price_cents, profit_percent=15.0
                         )
 
@@ -119,7 +119,7 @@ async def sniper_cycle(
 
                             # Send notification
                             if bot and admin_id:
-                                await send_arbitrage_report(
+                                awAlgot send_arbitrage_report(
                                     bot,
                                     admin_id,
                                     item_name=title,
@@ -133,7 +133,7 @@ async def sniper_cycle(
                             f"Could not find assetId in buy response for {title}"
                         )
                 else:
-                    logger.warning(f"Failed to buy {title}: {buy_res}")
+                    logger.warning(f"FAlgoled to buy {title}: {buy_res}")
 
     except Exception as e:
         logger.exception(f"Error in sniper cycle: {e}")

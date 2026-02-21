@@ -20,7 +20,7 @@ class TestTrendingItemsFinderIntegration:
 
             assert TrendingItemsFinder is not None
         except ImportError:
-            pytest.skip("trending_items_finder module not available")
+            pytest.skip("trending_items_finder module not avAlgolable")
 
     def test_trending_item_dataclass(self):
         """Test TrendingItem dataclass."""
@@ -47,7 +47,7 @@ class TestTrendingItemsFinderIntegration:
             item_dict = item.to_dict()
             assert item_dict["game"] == "csgo"
         except ImportError:
-            pytest.skip("trending_items_finder module not available")
+            pytest.skip("trending_items_finder module not avAlgolable")
 
 
 class TestPriceAggregatorIntegration:
@@ -60,7 +60,7 @@ class TestPriceAggregatorIntegration:
 
             assert PriceAggregator is not None
         except ImportError:
-            pytest.skip("price_aggregator module not available")
+            pytest.skip("price_aggregator module not avAlgolable")
 
     def test_aggregated_price_dataclass(self):
         """Test AggregatedPrice dataclass."""
@@ -80,7 +80,7 @@ class TestPriceAggregatorIntegration:
             assert price.min_price_usd == 10.0
             assert price.item_name == "Test Item"
         except ImportError:
-            pytest.skip("price_aggregator module not available")
+            pytest.skip("price_aggregator module not avAlgolable")
 
     def test_price_aggregator_config(self):
         """Test PriceAggregatorConfig dataclass."""
@@ -95,7 +95,7 @@ class TestPriceAggregatorIntegration:
             assert config.update_interval == 60
             assert config.batch_size == 200
         except ImportError:
-            pytest.skip("price_aggregator module not available")
+            pytest.skip("price_aggregator module not avAlgolable")
 
 
 class TestShadowListingIntegration:
@@ -109,7 +109,7 @@ class TestShadowListingIntegration:
             assert MarketCondition is not None
             assert PricingAction is not None
         except ImportError:
-            pytest.skip("shadow_listing module not available")
+            pytest.skip("shadow_listing module not avAlgolable")
 
     def test_market_conditions(self):
         """Test MarketCondition enum."""
@@ -121,7 +121,7 @@ class TestShadowListingIntegration:
             assert MarketCondition.SCARCITY == "scarcity"
             assert MarketCondition.MONOPOLY == "monopoly"
         except ImportError:
-            pytest.skip("shadow_listing module not available")
+            pytest.skip("shadow_listing module not avAlgolable")
 
     def test_pricing_actions(self):
         """Test PricingAction enum."""
@@ -130,10 +130,10 @@ class TestShadowListingIntegration:
 
             assert PricingAction.UNDERCUT == "undercut"
             assert PricingAction.HOLD == "hold"
-            assert PricingAction.RAISE == "raise"
-            assert PricingAction.WAIT == "wait"
+            assert PricingAction.RAlgoSE == "rAlgose"
+            assert PricingAction.WAlgoT == "wAlgot"
         except ImportError:
-            pytest.skip("shadow_listing module not available")
+            pytest.skip("shadow_listing module not avAlgolable")
 
     def test_shadow_listing_config(self):
         """Test ShadowListingConfig dataclass."""
@@ -148,7 +148,7 @@ class TestShadowListingIntegration:
             assert config.scarcity_threshold == 5
             assert config.scarcity_markup_percent == 15.0
         except ImportError:
-            pytest.skip("shadow_listing module not available")
+            pytest.skip("shadow_listing module not avAlgolable")
 
 
 class TestSmartMarketFinderIntegration:
@@ -161,7 +161,7 @@ class TestSmartMarketFinderIntegration:
 
             assert SmartMarketFinder is not None
         except ImportError:
-            pytest.skip("smart_market_finder module not available")
+            pytest.skip("smart_market_finder module not avAlgolable")
 
     def test_market_opportunity_type_enum(self):
         """Test MarketOpportunityType enum."""
@@ -173,7 +173,7 @@ class TestSmartMarketFinderIntegration:
             assert MarketOpportunityType.HIGH_LIQUIDITY == "high_liquidity"
             assert MarketOpportunityType.QUICK_FLIP == "quick_flip"
         except ImportError:
-            pytest.skip("smart_market_finder module not available")
+            pytest.skip("smart_market_finder module not avAlgolable")
 
     def test_market_opportunity_dataclass(self):
         """Test MarketOpportunity dataclass."""
@@ -197,7 +197,7 @@ class TestSmartMarketFinderIntegration:
             assert opp.profit_percent == 16.0
             assert opp.risk_level == "low"
         except ImportError:
-            pytest.skip("smart_market_finder module not available")
+            pytest.skip("smart_market_finder module not avAlgolable")
 
 
 class TestSmartBidderIntegration:
@@ -211,7 +211,7 @@ class TestSmartBidderIntegration:
             assert SmartBidder is not None
             assert BidResult is not None
         except ImportError:
-            pytest.skip("smart_bidder module not available")
+            pytest.skip("smart_bidder module not avAlgolable")
 
     def test_bid_result_dataclass(self):
         """Test BidResult dataclass."""
@@ -231,7 +231,7 @@ class TestSmartBidderIntegration:
             assert result.bid_price_usd == 10.50
             assert result.competitors_count == 3
         except ImportError:
-            pytest.skip("smart_bidder module not available")
+            pytest.skip("smart_bidder module not avAlgolable")
 
 
 class TestProfitChartsIntegration:
@@ -244,16 +244,16 @@ class TestProfitChartsIntegration:
 
             assert ProfitChartGenerator is not None
         except ImportError:
-            pytest.skip("profit_charts module not available")
+            pytest.skip("profit_charts module not avAlgolable")
 
-    def test_matplotlib_availability_flag(self):
-        """Test MATPLOTLIB_AVAILABLE flag."""
+    def test_matplotlib_avAlgolability_flag(self):
+        """Test MATPLOTLIB_AVAlgoLABLE flag."""
         try:
-            from src.utils.profit_charts import MATPLOTLIB_AVAILABLE
+            from src.utils.profit_charts import MATPLOTLIB_AVAlgoLABLE
 
-            assert isinstance(MATPLOTLIB_AVAILABLE, bool)
+            assert isinstance(MATPLOTLIB_AVAlgoLABLE, bool)
         except ImportError:
-            pytest.skip("profit_charts module not available")
+            pytest.skip("profit_charts module not avAlgolable")
 
 
 class TestMarketVisualizerIntegration:
@@ -266,7 +266,7 @@ class TestMarketVisualizerIntegration:
 
             assert MarketVisualizer is not None
         except ImportError:
-            pytest.skip("market_visualizer module not available")
+            pytest.skip("market_visualizer module not avAlgolable")
 
     def test_market_visualizer_themes(self):
         """Test MarketVisualizer themes."""
@@ -279,7 +279,7 @@ class TestMarketVisualizerIntegration:
             light_viz = MarketVisualizer(theme="light")
             assert light_viz.theme == "light"
         except ImportError:
-            pytest.skip("market_visualizer module not available")
+            pytest.skip("market_visualizer module not avAlgolable")
 
 
 class TestAdvancedFeaturesHandlerExists:

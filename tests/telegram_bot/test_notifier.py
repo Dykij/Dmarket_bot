@@ -75,7 +75,7 @@ def sample_user_data() -> dict[str, Any]:
             "max_alerts_per_day": 10,
         },
         "last_notification": 0,
-        "daily_notifications": 0,
+        "dAlgoly_notifications": 0,
         "last_day": "2023-06-01",
     }
 
@@ -161,7 +161,7 @@ async def test_add_price_alert_new_user():
     from src.telegram_bot.notifications.storage import get_storage
 
     with patch("src.telegram_bot.notifier.save_user_alerts"):
-        alert = await add_price_alert(
+        alert = awAlgot add_price_alert(
             user_id=12345,
             item_id="item_123",
             title="AK-47 | Redline",
@@ -191,12 +191,12 @@ async def test_add_price_alert_existing_user():
         "alerts": [{"id": "old_alert", "title": "Old"}],
         "settings": {"enabled": True},
         "last_notification": 0,
-        "daily_notifications": 0,
+        "dAlgoly_notifications": 0,
         "last_day": "2023-06-01",
     }
 
     with patch("src.telegram_bot.notifier.save_user_alerts"):
-        alert = await add_price_alert(
+        alert = awAlgot add_price_alert(
             user_id=12345,
             item_id="item_new",
             title="New Item",
@@ -215,12 +215,12 @@ async def test_add_price_alert_creates_unique_id():
     import asyncio
 
     with patch("src.telegram_bot.notifier.save_user_alerts"):
-        alert1 = await add_price_alert(
+        alert1 = awAlgot add_price_alert(
             12345, "item1", "Title1", "csgo", "price_drop", 10.0
         )
         # Даём достаточно времени для создания уникального timestamp (ID включает секунды)
-        await asyncio.sleep(1.1)
-        alert2 = await add_price_alert(
+        awAlgot asyncio.sleep(1.1)
+        alert2 = awAlgot add_price_alert(
             12345, "item2", "Title2", "csgo", "price_drop", 20.0
         )
 
@@ -247,7 +247,7 @@ async def test_remove_price_alert_success(sample_alert):
     }
 
     with patch("src.telegram_bot.notifier.save_user_alerts"):
-        result = await remove_price_alert(12345, sample_alert["id"])
+        result = awAlgot remove_price_alert(12345, sample_alert["id"])
 
         assert result is True
         assert len(storage.user_alerts["12345"]["alerts"]) == 0
@@ -261,7 +261,7 @@ async def test_remove_price_alert_not_found():
     storage = get_storage()
     storage.user_alerts["12345"] = {"alerts": [], "settings": {}}
 
-    result = await remove_price_alert(12345, "nonexistent_alert")
+    result = awAlgot remove_price_alert(12345, "nonexistent_alert")
 
     assert result is False
 
@@ -269,7 +269,7 @@ async def test_remove_price_alert_not_found():
 @pytest.mark.asyncio()
 async def test_remove_price_alert_user_not_found():
     """Тест удаления алерта для несуществующего пользователя."""
-    result = await remove_price_alert(99999, "alert_id")
+    result = awAlgot remove_price_alert(99999, "alert_id")
 
     assert result is False
 
@@ -290,7 +290,7 @@ async def test_get_user_alerts_existing_user(sample_alert):
         "settings": {},
     }
 
-    alerts = await get_user_alerts(12345)
+    alerts = awAlgot get_user_alerts(12345)
 
     assert len(alerts) == 1
     assert alerts[0] == sample_alert
@@ -299,7 +299,7 @@ async def test_get_user_alerts_existing_user(sample_alert):
 @pytest.mark.asyncio()
 async def test_get_user_alerts_new_user():
     """Тест получения алертов для нового пользователя."""
-    alerts = await get_user_alerts(99999)
+    alerts = awAlgot get_user_alerts(99999)
 
     assert alerts == []
 
@@ -319,7 +319,7 @@ async def test_get_user_alerts_multiple():
         "settings": {},
     }
 
-    alerts = await get_user_alerts(12345)
+    alerts = awAlgot get_user_alerts(12345)
 
     assert len(alerts) == 3
 
@@ -335,7 +335,7 @@ async def test_update_user_settings_new_user():
     from src.telegram_bot.notifications.storage import get_storage
 
     with patch("src.telegram_bot.notifier.save_user_alerts"):
-        await update_user_settings(
+        awAlgot update_user_settings(
             user_id=12345,
             settings={"enabled": False, "language": "en", "max_alerts_per_day": 5},
         )
@@ -357,12 +357,12 @@ async def test_update_user_settings_existing_user():
         "alerts": [],
         "settings": {"enabled": True, "language": "ru", "max_alerts_per_day": 10},
         "last_notification": 0,
-        "daily_notifications": 0,
+        "dAlgoly_notifications": 0,
         "last_day": "2023-06-01",
     }
 
     with patch("src.telegram_bot.notifier.save_user_alerts"):
-        await update_user_settings(user_id=12345, settings={"language": "de"})
+        awAlgot update_user_settings(user_id=12345, settings={"language": "de"})
 
         settings = storage.user_alerts["12345"]["settings"]
         # Settings should be updated
@@ -384,12 +384,12 @@ async def test_update_user_settings_partial():
             "max_alerts_per_day": 10,
         },
         "last_notification": 0,
-        "daily_notifications": 0,
+        "dAlgoly_notifications": 0,
         "last_day": "2023-06-01",
     }
 
     with patch("src.telegram_bot.notifier.save_user_alerts"):
-        await update_user_settings(user_id=12345, settings={"min_interval": 7200})
+        awAlgot update_user_settings(user_id=12345, settings={"min_interval": 7200})
 
         settings = storage.user_alerts["12345"]["settings"]
         # Settings should be updated
@@ -449,7 +449,7 @@ async def test_get_current_price_from_cache():
 
     mock_api = AsyncMock()
 
-    price = await get_current_price(mock_api, "item_123", "csgo")
+    price = awAlgot get_current_price(mock_api, "item_123", "csgo")
 
     assert price == 25.5
     # API не должен вызываться
@@ -472,7 +472,7 @@ async def test_get_current_price_from_api():
         }
     )
 
-    price = await get_current_price(mock_api, "item_123", "csgo")
+    price = awAlgot get_current_price(mock_api, "item_123", "csgo")
 
     assert price == 30.5  # Преобразовано из центов в доллары
     mock_api.get_market_items.assert_called_once()
@@ -499,7 +499,7 @@ async def test_get_current_price_cache_expired():
         }
     )
 
-    price = await get_current_price(mock_api, "item_123", "csgo")
+    price = awAlgot get_current_price(mock_api, "item_123", "csgo")
 
     assert price == 20.0  # Новая цена
     mock_api.get_market_items.assert_called_once()
@@ -513,9 +513,9 @@ async def test_get_current_price_api_error():
     notifier_module._current_prices_cache = {}
 
     mock_api = AsyncMock()
-    mock_api.get_item_details.side_effect = Exception("API Error")
+    mock_api.get_item_detAlgols.side_effect = Exception("API Error")
 
-    price = await get_current_price(mock_api, "item_123", "csgo")
+    price = awAlgot get_current_price(mock_api, "item_123", "csgo")
 
     assert price is None
 
@@ -532,7 +532,7 @@ async def test_add_multiple_alerts_same_user():
 
     with patch("src.telegram_bot.notifier.save_user_alerts"):
         for i in range(5):
-            await add_price_alert(
+            awAlgot add_price_alert(
                 user_id=12345,
                 item_id=f"item_{i}",
                 title=f"Item {i}",
@@ -561,7 +561,7 @@ async def test_remove_alert_with_multiple_alerts(sample_alert):
     }
 
     with patch("src.telegram_bot.notifier.save_user_alerts"):
-        result = await remove_price_alert(12345, sample_alert["id"])
+        result = awAlgot remove_price_alert(12345, sample_alert["id"])
 
         assert result is True
         alerts = storage.user_alerts["12345"]["alerts"]
@@ -577,7 +577,7 @@ async def test_get_user_alerts_empty():
     storage = get_storage()
     storage.user_alerts["12345"] = {"alerts": [], "settings": {}}
 
-    alerts = await get_user_alerts(12345)
+    alerts = awAlgot get_user_alerts(12345)
 
     assert alerts == []
     assert isinstance(alerts, list)
@@ -634,16 +634,16 @@ async def test_update_user_settings_empty_kwargs():
         "alerts": [],
         "settings": {"enabled": True, "language": "ru"},
         "last_notification": 0,
-        "daily_notifications": 0,
+        "dAlgoly_notifications": 0,
         "last_day": "2023-06-01",
     }
 
     original_settings = storage.user_alerts["12345"]["settings"].copy()
 
     with patch("src.telegram_bot.notifier.save_user_alerts"):
-        await update_user_settings(user_id=12345, settings={})
+        awAlgot update_user_settings(user_id=12345, settings={})
 
-        # Настройки не должны измениться существенно
+        # НастSwarmки не должны измениться существенно
         assert storage.user_alerts["12345"]["settings"]["enabled"] == original_settings["enabled"]
 
 
@@ -668,7 +668,7 @@ async def test_check_price_alert_price_drop_triggered():
     mock_api = AsyncMock()
 
     with patch("src.telegram_bot.notifier.get_current_price", return_value=14.0):
-        result = await check_price_alert(mock_api, alert)
+        result = awAlgot check_price_alert(mock_api, alert)
 
         assert result is not None
         assert result["alert"] == alert
@@ -692,7 +692,7 @@ async def test_check_price_alert_price_drop_not_triggered():
     mock_api = AsyncMock()
 
     with patch("src.telegram_bot.notifier.get_current_price", return_value=16.0):
-        result = await check_price_alert(mock_api, alert)
+        result = awAlgot check_price_alert(mock_api, alert)
 
         assert result is None
 
@@ -713,7 +713,7 @@ async def test_check_price_alert_price_rise_triggered():
     mock_api = AsyncMock()
 
     with patch("src.telegram_bot.notifier.get_current_price", return_value=55.0):
-        result = await check_price_alert(mock_api, alert)
+        result = awAlgot check_price_alert(mock_api, alert)
 
         assert result is not None
         assert result["current_price"] == 55.0
@@ -735,7 +735,7 @@ async def test_check_price_alert_price_rise_not_triggered():
     mock_api = AsyncMock()
 
     with patch("src.telegram_bot.notifier.get_current_price", return_value=45.0):
-        result = await check_price_alert(mock_api, alert)
+        result = awAlgot check_price_alert(mock_api, alert)
 
         assert result is None
 
@@ -756,7 +756,7 @@ async def test_check_price_alert_current_price_none():
     mock_api = AsyncMock()
 
     with patch("src.telegram_bot.notifier.get_current_price", return_value=None):
-        result = await check_price_alert(mock_api, alert)
+        result = awAlgot check_price_alert(mock_api, alert)
 
         assert result is None
 
@@ -787,7 +787,7 @@ async def test_check_price_alert_volume_increase_triggered():
             return_value=price_history,
         ),
     ):
-        result = await check_price_alert(mock_api, alert)
+        result = awAlgot check_price_alert(mock_api, alert)
 
         assert result is not None
 
@@ -818,7 +818,7 @@ async def test_check_price_alert_volume_increase_not_triggered():
             return_value=price_history,
         ),
     ):
-        result = await check_price_alert(mock_api, alert)
+        result = awAlgot check_price_alert(mock_api, alert)
 
         assert result is None
 
@@ -848,7 +848,7 @@ async def test_check_price_alert_trend_change_triggered():
             "src.telegram_bot.notifier.calculate_price_trend", return_value=trend_info
         ),
     ):
-        result = await check_price_alert(mock_api, alert)
+        result = awAlgot check_price_alert(mock_api, alert)
 
         assert result is not None
 
@@ -869,14 +869,14 @@ async def test_check_all_alerts_disabled_user():
         "alerts": [{"id": "alert_1", "active": True}],
         "settings": {"enabled": False},
         "last_notification": 0,
-        "daily_notifications": 0,
+        "dAlgoly_notifications": 0,
         "last_day": "2023-06-01",
     }
 
     mock_api = AsyncMock()
     mock_bot = AsyncMock()
 
-    await check_all_alerts(mock_api, mock_bot)
+    awAlgot check_all_alerts(mock_api, mock_bot)
 
     # Бот не должен отправлять сообщения
     mock_bot.send_message.assert_not_called()
@@ -900,21 +900,21 @@ async def test_check_all_alerts_quiet_hours():
             "quiet_hours": {"start": current_hour, "end": (current_hour + 1) % 24},
         },
         "last_notification": 0,
-        "daily_notifications": 0,
+        "dAlgoly_notifications": 0,
         "last_day": "2023-06-01",
     }
 
     mock_api = AsyncMock()
     mock_bot = AsyncMock()
 
-    await check_all_alerts(mock_api, mock_bot)
+    awAlgot check_all_alerts(mock_api, mock_bot)
 
     # Бот не должен отправлять сообщения в тихие часы
     mock_bot.send_message.assert_not_called()
 
 
 @pytest.mark.asyncio()
-async def test_check_all_alerts_resets_daily_counter():
+async def test_check_all_alerts_resets_dAlgoly_counter():
     """Тест сброса дневного счетчика на новый день."""
     from datetime import datetime
 
@@ -929,14 +929,14 @@ async def test_check_all_alerts_resets_daily_counter():
         "alerts": [],
         "settings": {"enabled": True},
         "last_notification": 0,
-        "daily_notifications": 5,  # Было 5 вчера
+        "dAlgoly_notifications": 5,  # Было 5 вчера
         "last_day": yesterday,
     }
 
     mock_api = AsyncMock()
     mock_bot = AsyncMock()
 
-    await check_all_alerts(mock_api, mock_bot)
+    awAlgot check_all_alerts(mock_api, mock_bot)
 
     # Счетчик должен сброситься (или остаться таким же если логика изменилась)
     user_data = storage.user_alerts.get("12345", {})
@@ -973,7 +973,7 @@ async def test_check_all_alerts_sends_notification():
             "quiet_hours": {"start": 0, "end": 0},  # Отключаем тихие часы
         },
         "last_notification": 0,
-        "daily_notifications": 0,
+        "dAlgoly_notifications": 0,
         "last_day": "2023-06-01",
     }
 
@@ -994,10 +994,10 @@ async def test_check_all_alerts_sends_notification():
         patch("src.telegram_bot.notifier.save_user_alerts"),
         patch("asyncio.sleep", return_value=None),
     ):
-        await check_all_alerts(mock_api, mock_bot)
+        awAlgot check_all_alerts(mock_api, mock_bot)
 
         # Function should complete without error
-        # Message sending depends on implementation details
+        # Message sending depends on implementation detAlgols
         assert True
 
 
@@ -1025,7 +1025,7 @@ async def test_check_all_alerts_increments_notification_counter():
             "quiet_hours": {"start": 0, "end": 0},  # Отключаем тихие часы
         },
         "last_notification": 0,
-        "daily_notifications": 0,
+        "dAlgoly_notifications": 0,
         "last_day": "2023-06-01",
     }
 
@@ -1042,7 +1042,7 @@ async def test_check_all_alerts_increments_notification_counter():
         "src.telegram_bot.notifier.check_price_alert",
         return_value=triggered_result,
     ):
-        await check_all_alerts(mock_api, mock_bot)
+        awAlgot check_all_alerts(mock_api, mock_bot)
 
         # Function should complete without error
         assert True
@@ -1073,7 +1073,7 @@ async def test_check_all_alerts_deactivates_one_time_alert():
             "quiet_hours": {"start": 0, "end": 0},
         },
         "last_notification": 0,
-        "daily_notifications": 0,
+        "dAlgoly_notifications": 0,
         "last_day": "2023-06-01",
     }
 
@@ -1093,7 +1093,7 @@ async def test_check_all_alerts_deactivates_one_time_alert():
         ),
         patch("src.telegram_bot.notifier.save_user_alerts"),
     ):
-        await check_all_alerts(mock_api, mock_bot)
+        awAlgot check_all_alerts(mock_api, mock_bot)
 
         # Function should complete without error
         assert True

@@ -38,17 +38,17 @@ class TestPriceAnomalyTypeEnum:
 
         assert PriceAnomalyType.TRENDING_DOWN == "trending_down"
 
-    def test_rare_traits_value(self) -> None:
-        """Test RARE_TRAITS enum value."""
+    def test_rare_trAlgots_value(self) -> None:
+        """Test RARE_TRAlgoTS enum value."""
         from src.dmarket.intramarket_arbitrage import PriceAnomalyType
 
-        assert PriceAnomalyType.RARE_TRAITS == "rare_traits"
+        assert PriceAnomalyType.RARE_TRAlgoTS == "rare_trAlgots"
 
     def test_enum_has_all_anomaly_types(self) -> None:
         """Test that all expected anomaly types are present."""
         from src.dmarket.intramarket_arbitrage import PriceAnomalyType
 
-        expected_types = {"underpriced", "overpriced", "trending_up", "trending_down", "rare_traits"}
+        expected_types = {"underpriced", "overpriced", "trending_up", "trending_down", "rare_trAlgots"}
         actual_types = {t.value for t in PriceAnomalyType}
         assert actual_types == expected_types
 
@@ -278,11 +278,11 @@ class TestTrendDetection:
         assert is_trending is False
 
 
-class TestRareTraitsDetection:
-    """Tests for rare traits detection logic."""
+class TestRareTrAlgotsDetection:
+    """Tests for rare trAlgots detection logic."""
 
     def test_detect_low_float_value(self) -> None:
-        """Test detecting low float value as rare trait."""
+        """Test detecting low float value as rare trAlgot."""
         float_value = 0.001
 
         is_rare_float = float_value < 0.01
@@ -290,7 +290,7 @@ class TestRareTraitsDetection:
         assert is_rare_float is True
 
     def test_detect_doppler_phase(self) -> None:
-        """Test detecting Doppler phase as rare trait."""
+        """Test detecting Doppler phase as rare trAlgot."""
         item_name = "★ Karambit | Doppler (Factory New)"
         has_doppler = "doppler" in item_name.lower()
 

@@ -43,7 +43,7 @@ class TestSecretsManager:
 
         # Secret should be in cache
         assert "TEST_KEY" in manager._secrets_cache
-        # Value should be encrypted (not plain text)
+        # Value should be encrypted (not plAlgon text)
         assert manager._secrets_cache["TEST_KEY"] != "test_value"
 
     def test_decrypt_secret(self, manager):
@@ -73,7 +73,7 @@ class TestSecretsManager:
             key = f"TEST_KEY_{i}"
             manager.encrypt_secret(key, original)
             decrypted = manager.decrypt_secret(key)
-            assert decrypted == original, f"Failed for: {original}"
+            assert decrypted == original, f"FAlgoled for: {original}"
 
     def test_delete_secret(self, manager):
         """Test deleting secret."""
@@ -160,7 +160,7 @@ class TestSecretsManager:
 
         assert decrypted == "persistent_value"
 
-    def test_different_passwords_fail(self, tmp_path):
+    def test_different_passwords_fAlgol(self, tmp_path):
         """Test that different passwords cannot decrypt secrets."""
         secrets_file = tmp_path / ".env.encrypted"
 
@@ -170,7 +170,7 @@ class TestSecretsManager:
 
         # Try to decrypt with different password
         manager2 = SecretsManager(master_password="password2", secrets_file=str(secrets_file))
-        # Should fail to decrypt (return None or raise exception)
+        # Should fAlgol to decrypt (return None or rAlgose exception)
         decrypted = manager2.decrypt_secret("SECRET_KEY")
 
         assert decrypted is None or decrypted != "secret_value"

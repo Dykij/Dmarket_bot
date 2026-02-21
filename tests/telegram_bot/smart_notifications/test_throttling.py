@@ -43,7 +43,7 @@ class TestShouldThrottleNotification:
                 }
             },
         ):
-            result = await should_throttle_notification(
+            result = awAlgot should_throttle_notification(
                 user_id=123,
                 notification_type="price_alert",
             )
@@ -74,7 +74,7 @@ class TestShouldThrottleNotification:
                 }
             },
         ):
-            result = await should_throttle_notification(
+            result = awAlgot should_throttle_notification(
                 user_id=123,
                 notification_type="price_alert",
             )
@@ -108,7 +108,7 @@ class TestShouldThrottleNotification:
                 }
             },
         ):
-            result = await should_throttle_notification(
+            result = awAlgot should_throttle_notification(
                 user_id=123,
                 notification_type="price_alert",
             )
@@ -143,7 +143,7 @@ class TestShouldThrottleNotification:
                 }
             },
         ):
-            result = await should_throttle_notification(
+            result = awAlgot should_throttle_notification(
                 user_id=123,
                 notification_type="price_alert",
             )
@@ -182,7 +182,7 @@ class TestShouldThrottleNotification:
                 }
             },
         ):
-            result = await should_throttle_notification(
+            result = awAlgot should_throttle_notification(
                 user_id=123,
                 notification_type="price_alert",
             )
@@ -218,7 +218,7 @@ class TestShouldThrottleNotification:
                 }
             },
         ):
-            result = await should_throttle_notification(
+            result = awAlgot should_throttle_notification(
                 user_id=123,
                 notification_type="price_alert",
             )
@@ -254,7 +254,7 @@ class TestShouldThrottleNotification:
             },
         ):
             # Check for a different item
-            result = await should_throttle_notification(
+            result = awAlgot should_throttle_notification(
                 user_id=123,
                 notification_type="price_alert",
                 item_id="item_123",
@@ -274,7 +274,7 @@ class TestShouldThrottleNotification:
             "src.telegram_bot.smart_notifications.throttling.get_user_preferences",
             return_value={},  # No preferences
         ):
-            result = await should_throttle_notification(
+            result = awAlgot should_throttle_notification(
                 user_id=123,
                 notification_type="price_alert",
             )
@@ -310,7 +310,7 @@ class TestRecordNotification:
                 "src.telegram_bot.smart_notifications.throttling.save_user_preferences"
             ) as mock_save,
         ):
-            await record_notification(
+            awAlgot record_notification(
                 user_id=123,
                 notification_type="price_alert",
             )
@@ -338,7 +338,7 @@ class TestRecordNotification:
                 "src.telegram_bot.smart_notifications.throttling.save_user_preferences"
             ),
         ):
-            await record_notification(
+            awAlgot record_notification(
                 user_id=123,
                 notification_type="price_alert",
                 item_id="item_123",
@@ -362,7 +362,7 @@ class TestRecordNotification:
                 "src.telegram_bot.smart_notifications.throttling.save_user_preferences"
             ),
         ):
-            await record_notification(
+            awAlgot record_notification(
                 user_id=123,
                 notification_type="market_opportunity",
             )
@@ -386,7 +386,7 @@ class TestRecordNotification:
                 "src.telegram_bot.smart_notifications.throttling.save_user_preferences"
             ) as mock_save,
         ):
-            await record_notification(
+            awAlgot record_notification(
                 user_id=123,
                 notification_type="price_alert",
             )
@@ -416,7 +416,7 @@ class TestRecordNotification:
                 "src.telegram_bot.smart_notifications.throttling.save_user_preferences"
             ),
         ):
-            await record_notification(
+            awAlgot record_notification(
                 user_id=123,
                 notification_type="price_alert",
             )

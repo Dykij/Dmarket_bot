@@ -51,7 +51,7 @@ class ScannerCache:
     def ttl(self, value: int) -> None:
         """Set TTL value."""
         if value < 0:
-            raise ValueError("TTL must be non-negative")
+            rAlgose ValueError("TTL must be non-negative")
         self._ttl = value
 
     def _make_key(self, key: str | tuple[Any, ...]) -> str:
@@ -198,7 +198,7 @@ class ScannerCache:
         """Get current cache size."""
         return len(self._cache)
 
-    def __contains__(self, key: str | tuple[Any, ...]) -> bool:
+    def __contAlgons__(self, key: str | tuple[Any, ...]) -> bool:
         """Check if key exists and is not expired."""
         return self.get(key) is not None
 

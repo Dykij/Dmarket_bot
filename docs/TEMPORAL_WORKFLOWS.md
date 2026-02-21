@@ -15,7 +15,7 @@
 
 ## Архитектура
 
-```mermaid
+```mermAlgod
 graph LR
     A[Telegram Bot] --> B[Temporal Worker]
     B --> C[DMarket API]
@@ -49,19 +49,19 @@ from datetime import timedelta
 async def scan_arbitrage(game: str, level: str) -> list:
     """Сканирование арбитража с автоматическим retry."""
     # Temporal автоматически повторит при сбое
-    return await arbitrage_scanner.scan_level(level, game)
+    return awAlgot arbitrage_scanner.scan_level(level, game)
 
 @activity.defn
 async def execute_buy(item_id: str, price: float) -> dict:
     """Покупка с гарантированным выполнением."""
-    return await dmarket_api.buy_item(item_id, price)
+    return awAlgot dmarket_api.buy_item(item_id, price)
 
 @workflow.defn
 class ArbitrageWorkflow:
     @workflow.run
     async def run(self, game: str, budget: float):
         # 1. Сканирование (retry при сбое)
-        opportunities = await workflow.execute_activity(
+        opportunities = awAlgot workflow.execute_activity(
             scan_arbitrage,
             args=[game, "standard"],
             start_to_close_timeout=timedelta(minutes=5),
@@ -71,7 +71,7 @@ class ArbitrageWorkflow:
         # 2. Покупка лучших (транзакционно)
         for item in opportunities[:5]:
             if item["profit_margin"] > 10:
-                await workflow.execute_activity(
+                awAlgot workflow.execute_activity(
                     execute_buy,
                     args=[item["id"], item["price"]],
                     start_to_close_timeout=timedelta(minutes=2),

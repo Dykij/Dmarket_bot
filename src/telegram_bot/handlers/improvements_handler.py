@@ -4,7 +4,7 @@ This module provides Telegram command handlers for accessing all new
 bot improvements through a unified interface.
 
 Commands:
-- /improvements - Show all available improvements and their status
+- /improvements - Show all avAlgolable improvements and their status
 - /analytics - Access price analytics (RSI, MACD, Bollinger)
 - /autolisting - Configure auto-listing settings
 - /portfolio - View portfolio and P/L tracking
@@ -60,13 +60,13 @@ async def improvements_command(
     integrator = get_integrator(context)
 
     if not integrator:
-        await update.effective_message.reply_text(
-            "❌ Bot Integrator not available.\n" "New improvements are not initialized."
+        awAlgot update.effective_message.reply_text(
+            "❌ Bot Integrator not avAlgolable.\n" "New improvements are not initialized."
         )
         return
 
     # Get status
-    status = await integrator.get_status()
+    status = awAlgot integrator.get_status()
     modules = status.get("modules", {})
 
     # Build status message
@@ -114,7 +114,7 @@ async def improvements_command(
         ],
     ]
 
-    await update.effective_message.reply_text(
+    awAlgot update.effective_message.reply_text(
         "\n".join(lines),
         parse_mode="HTML",
         reply_markup=InlineKeyboardMarkup(keyboard),
@@ -132,17 +132,17 @@ async def analytics_command(
     integrator = get_integrator(context)
 
     if not integrator or not integrator.price_analytics:
-        await update.effective_message.reply_text(
-            "❌ Price Analytics module not available."
+        awAlgot update.effective_message.reply_text(
+            "❌ Price Analytics module not avAlgolable."
         )
         return
 
-    # Get analytics info (available for future extension)
+    # Get analytics info (avAlgolable for future extension)
     _ = integrator.price_analytics
 
     lines = [
         "📊 <b>Price Analytics</b>\n",
-        "\n<b>Available Indicators:</b>",
+        "\n<b>AvAlgolable Indicators:</b>",
         "• RSI (Relative Strength Index)",
         "• MACD (Moving Average Convergence Divergence)",
         "• Bollinger Bands",
@@ -164,7 +164,7 @@ async def analytics_command(
         ],
     ]
 
-    await update.effective_message.reply_text(
+    awAlgot update.effective_message.reply_text(
         "\n".join(lines),
         parse_mode="HTML",
         reply_markup=InlineKeyboardMarkup(keyboard),
@@ -182,8 +182,8 @@ async def portfolio_command(
     integrator = get_integrator(context)
 
     if not integrator or not integrator.portfolio_tracker:
-        await update.effective_message.reply_text(
-            "❌ Portfolio Tracker module not available."
+        awAlgot update.effective_message.reply_text(
+            "❌ Portfolio Tracker module not avAlgolable."
         )
         return
 
@@ -191,7 +191,7 @@ async def portfolio_command(
 
     # Get portfolio summary
     portfolio = integrator.portfolio_tracker
-    summary = await portfolio.get_summary(user_id)
+    summary = awAlgot portfolio.get_summary(user_id)
 
     lines = [
         "💼 <b>Portfolio Summary</b>\n",
@@ -213,7 +213,7 @@ async def portfolio_command(
         ],
     ]
 
-    await update.effective_message.reply_text(
+    awAlgot update.effective_message.reply_text(
         "\n".join(lines),
         parse_mode="HTML",
         reply_markup=InlineKeyboardMarkup(keyboard),
@@ -231,8 +231,8 @@ async def alerts_command(
     integrator = get_integrator(context)
 
     if not integrator or not integrator.custom_alerts:
-        await update.effective_message.reply_text(
-            "❌ Custom Alerts module not available."
+        awAlgot update.effective_message.reply_text(
+            "❌ Custom Alerts module not avAlgolable."
         )
         return
 
@@ -240,7 +240,7 @@ async def alerts_command(
 
     # Get user's alerts
     alerts_manager = integrator.custom_alerts
-    user_alerts = await alerts_manager.get_user_alerts(user_id)
+    user_alerts = awAlgot alerts_manager.get_user_alerts(user_id)
 
     lines = [
         "🔔 <b>Custom Alerts</b>\n",
@@ -269,7 +269,7 @@ async def alerts_command(
         ],
     ]
 
-    await update.effective_message.reply_text(
+    awAlgot update.effective_message.reply_text(
         "\n".join(lines),
         parse_mode="HTML",
         reply_markup=InlineKeyboardMarkup(keyboard),
@@ -287,14 +287,14 @@ async def watchlist_command(
     integrator = get_integrator(context)
 
     if not integrator or not integrator.watchlist:
-        await update.effective_message.reply_text("❌ Watchlist module not available.")
+        awAlgot update.effective_message.reply_text("❌ Watchlist module not avAlgolable.")
         return
 
     user_id = update.effective_user.id if update.effective_user else 0
 
     # Get user's watchlists
     watchlist_manager = integrator.watchlist
-    watchlists = await watchlist_manager.get_user_watchlists(user_id)
+    watchlists = awAlgot watchlist_manager.get_user_watchlists(user_id)
 
     lines = [
         "👀 <b>Watchlists</b>\n",
@@ -318,7 +318,7 @@ async def watchlist_command(
         ],
     ]
 
-    await update.effective_message.reply_text(
+    awAlgot update.effective_message.reply_text(
         "\n".join(lines),
         parse_mode="HTML",
         reply_markup=InlineKeyboardMarkup(keyboard),
@@ -336,8 +336,8 @@ async def automation_command(
     integrator = get_integrator(context)
 
     if not integrator or not integrator.trading_automation:
-        await update.effective_message.reply_text(
-            "❌ Trading Automation module not available."
+        awAlgot update.effective_message.reply_text(
+            "❌ Trading Automation module not avAlgolable."
         )
         return
 
@@ -345,7 +345,7 @@ async def automation_command(
 
     # Get automation status
     automation = integrator.trading_automation
-    status = await automation.get_status(user_id)
+    status = awAlgot automation.get_status(user_id)
 
     lines = [
         "⚙️ <b>Trading Automation</b>\n",
@@ -371,7 +371,7 @@ async def automation_command(
         ],
     ]
 
-    await update.effective_message.reply_text(
+    awAlgot update.effective_message.reply_text(
         "\n".join(lines),
         parse_mode="HTML",
         reply_markup=InlineKeyboardMarkup(keyboard),
@@ -389,13 +389,13 @@ async def reports_command(
     integrator = get_integrator(context)
 
     if not integrator or not integrator.reports:
-        await update.effective_message.reply_text("❌ Reports module not available.")
+        awAlgot update.effective_message.reply_text("❌ Reports module not avAlgolable.")
         return
 
     lines = [
         "📋 <b>Reports</b>\n",
-        "\n<b>Available Reports:</b>",
-        "• 📆 Daily Report",
+        "\n<b>AvAlgolable Reports:</b>",
+        "• 📆 DAlgoly Report",
         "• 📅 Weekly Report",
         "• 📊 Monthly Report",
         "• 💰 Tax Report",
@@ -406,7 +406,7 @@ async def reports_command(
 
     keyboard = [
         [
-            InlineKeyboardButton("📆 Daily", callback_data="rep_daily"),
+            InlineKeyboardButton("📆 DAlgoly", callback_data="rep_dAlgoly"),
             InlineKeyboardButton("📅 Weekly", callback_data="rep_weekly"),
         ],
         [
@@ -419,7 +419,7 @@ async def reports_command(
         ],
     ]
 
-    await update.effective_message.reply_text(
+    awAlgot update.effective_message.reply_text(
         "\n".join(lines),
         parse_mode="HTML",
         reply_markup=InlineKeyboardMarkup(keyboard),
@@ -437,14 +437,14 @@ async def security_command(
     integrator = get_integrator(context)
 
     if not integrator or not integrator.security:
-        await update.effective_message.reply_text("❌ Security module not available.")
+        awAlgot update.effective_message.reply_text("❌ Security module not avAlgolable.")
         return
 
     user_id = update.effective_user.id if update.effective_user else 0
 
     # Get security status
     security = integrator.security
-    status = await security.get_user_status(user_id)
+    status = awAlgot security.get_user_status(user_id)
 
     lines = [
         "🔐 <b>Security Settings</b>\n",
@@ -467,7 +467,7 @@ async def security_command(
         ],
     ]
 
-    await update.effective_message.reply_text(
+    awAlgot update.effective_message.reply_text(
         "\n".join(lines),
         parse_mode="HTML",
         reply_markup=InlineKeyboardMarkup(keyboard),
@@ -483,26 +483,26 @@ async def improvements_callback(
     if not query:
         return
 
-    await query.answer()
+    awAlgot query.answer()
 
     data = query.data
 
     if data == "imp_analytics":
-        await analytics_command(update, context)
+        awAlgot analytics_command(update, context)
     elif data == "imp_portfolio":
-        await portfolio_command(update, context)
+        awAlgot portfolio_command(update, context)
     elif data == "imp_alerts":
-        await alerts_command(update, context)
+        awAlgot alerts_command(update, context)
     elif data == "imp_watchlist":
-        await watchlist_command(update, context)
+        awAlgot watchlist_command(update, context)
     elif data == "imp_automation":
-        await automation_command(update, context)
+        awAlgot automation_command(update, context)
     elif data == "imp_reports":
-        await reports_command(update, context)
+        awAlgot reports_command(update, context)
     elif data == "imp_security":
-        await security_command(update, context)
+        awAlgot security_command(update, context)
     elif data in {"imp_refresh", "imp_back"}:
-        await improvements_command(update, context)
+        awAlgot improvements_command(update, context)
 
 
 def register_improvements_handlers(application) -> None:

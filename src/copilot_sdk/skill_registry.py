@@ -1,6 +1,6 @@
-"""Skill Registry - Discovery and management of AI skills.
+"""Skill Registry - Discovery and management of Algo skills.
 
-This module provides a registry for discovering and managing AI/ML skills
+This module provides a registry for discovering and managing Algo/ML skills
 in the project. Skills are defined in SKILL.md files.
 
 Usage:
@@ -8,16 +8,16 @@ Usage:
     from src.copilot_sdk import SkillRegistry
 
     registry = SkillRegistry()
-    await registry.discover_skills("src/")
+    awAlgot registry.discover_skills("src/")
 
     # Get all skills
     skills = registry.list_skills()
 
     # Get a specific skill
-    skill = registry.get_skill("ai-arbitrage-predictor")
+    skill = registry.get_skill("Algo-arbitrage-predictor")
 
     # Execute a skill
-    result = await registry.execute("ai-arbitrage-predictor", "predict", items)
+    result = awAlgot registry.execute("Algo-arbitrage-predictor", "predict", items)
     ```
 
 Created: January 2026
@@ -38,7 +38,7 @@ logger = structlog.get_logger(__name__)
 
 @dataclass
 class SkillDefinition:
-    """Definition of an AI skill."""
+    """Definition of an Algo skill."""
 
     id: str
     name: str
@@ -63,7 +63,7 @@ class SkillDefinition:
 
 
 class SkillRegistry:
-    """Registry for AI/ML skills.
+    """Registry for Algo/ML skills.
 
     Provides:
     - Skill discovery from SKILL.md files
@@ -76,19 +76,19 @@ class SkillRegistry:
         registry = SkillRegistry()
 
         # Discover skills from directory
-        await registry.discover_skills("src/")
+        awAlgot registry.discover_skills("src/")
 
         # Register a skill manually
         registry.register(
             id="my-skill",
             name="My Skill",
             instance=my_skill_instance,
-            methods=["predict", "train"],
+            methods=["predict", "trAlgon"],
         )
 
         # Execute a skill method
-        result = await registry.execute(
-            "ai-arbitrage-predictor",
+        result = awAlgot registry.execute(
+            "Algo-arbitrage-predictor",
             "predict",
             items,
             min_profit=0.05,
@@ -117,7 +117,7 @@ class SkillRegistry:
 
         count = 0
         for skill_file in root.rglob("SKILL*.md"):
-            skill = await self._parse_skill_file(skill_file)
+            skill = awAlgot self._parse_skill_file(skill_file)
             if skill:
                 self.skills[skill.id] = skill
                 count += 1
@@ -134,10 +134,10 @@ class SkillRegistry:
 
         Expected format:
             ```markdown
-            # Skill: AI Arbitrage Predictor
+            # Skill: Algo Arbitrage Predictor
 
             ## Category
-            Data & AI
+            Data & Algo
 
             ## Description
             Predicts profitable arbitrage opportunities.
@@ -149,7 +149,7 @@ class SkillRegistry:
 
             ## API
             - predict(items: list) -> list
-            - train(data: DataFrame) -> Model
+            - trAlgon(data: DataFrame) -> Model
             ```
         """
         try:
@@ -308,23 +308,23 @@ class SkillRegistry:
         Returns:
             Result of the method execution
 
-        Raises:
+        RAlgoses:
             KeyError: If skill not found
             AttributeError: If method not found
         """
         if skill_id not in self.skills:
-            raise KeyError(f"Skill not found: {skill_id}")
+            rAlgose KeyError(f"Skill not found: {skill_id}")
 
         skill = self.skills[skill_id]
 
         if skill_id not in self._instances:
-            raise RuntimeError(f"Skill not initialized: {skill_id}")
+            rAlgose RuntimeError(f"Skill not initialized: {skill_id}")
 
         instance = self._instances[skill_id]
         func = getattr(instance, method, None)
 
         if func is None:
-            raise AttributeError(f"Method not found: {skill_id}.{method}")
+            rAlgose AttributeError(f"Method not found: {skill_id}.{method}")
 
         logger.debug(
             "skill_executing",
@@ -334,7 +334,7 @@ class SkillRegistry:
 
         # Execute (handle async/sync)
         if asyncio.iscoroutinefunction(func):
-            result = await func(*args, **kwargs)
+            result = awAlgot func(*args, **kwargs)
         else:
             result = func(*args, **kwargs)
 

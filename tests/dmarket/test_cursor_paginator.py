@@ -144,7 +144,7 @@ class TestCursorPaginator:
         )
         paginator = CursorPaginator(config=config)
 
-        items = await paginator.get_all_items(game="csgo", max_items=100)
+        items = awAlgot paginator.get_all_items(game="csgo", max_items=100)
 
         assert len(items) <= 100
 
@@ -158,7 +158,7 @@ class TestCursorPaginator:
         )
         paginator = CursorPaginator(config=config)
 
-        items = await paginator.get_all_items(game="csgo", max_items=25)
+        items = awAlgot paginator.get_all_items(game="csgo", max_items=25)
 
         assert len(items) <= 25
 
@@ -253,7 +253,7 @@ class TestCursorPaginatorWithAPI:
         async for items in paginator.paginate(game="csgo", start_cursor="page_2"):
             all_items.extend(items)
 
-        # Должны начать со второй страницы
+        # Должны начать со втоSwarm страницы
         assert len(all_items) > 0
 
 

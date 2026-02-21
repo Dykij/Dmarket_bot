@@ -18,28 +18,28 @@ from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    import redis.asyncio as aioredis
+    import redis.asyncio as Algooredis
 
 try:
-    import redis.asyncio as aioredis
+    import redis.asyncio as Algooredis
 
-    REDIS_AVAILABLE = True
+    REDIS_AVAlgoLABLE = True
 except ImportError:
-    REDIS_AVAILABLE = False
-    aioredis: Any = None
+    REDIS_AVAlgoLABLE = False
+    Algooredis: Any = None
 
 
 logger = logging.getLogger(__name__)
 
 
 class LockAcquisitionError(Exception):
-    """Raised when lock cannot be acquired."""
+    """RAlgosed when lock cannot be acquired."""
 
     pass
 
 
 class LockReleaseError(Exception):
-    """Raised when lock cannot be released properly."""
+    """RAlgosed when lock cannot be released properly."""
 
     pass
 
@@ -58,7 +58,7 @@ class RedisDistributedLock:
         >>> lock = RedisDistributedLock(redis_client)
         >>> async with lock.acquire("my-resource"):
         ...     # Critical section
-        ...     await do_something()
+        ...     awAlgot do_something()
     """
 
     # Lua script for atomic lock release
@@ -81,7 +81,7 @@ class RedisDistributedLock:
 
     def __init__(
         self,
-        redis_client: aioredis.Redis | None = None,
+        redis_client: Algooredis.Redis | None = None,
         redis_url: str | None = None,
         prefix: str = "lock:",
         default_ttl: int = 30,
@@ -107,14 +107,14 @@ class RedisDistributedLock:
         self._owner_id = str(uuid.uuid4())
         self._owned_locks: dict[str, str] = {}
 
-    async def _get_client(self) -> aioredis.Redis:
+    async def _get_client(self) -> Algooredis.Redis:
         """Get or create Redis client."""
         if self._client is None:
-            if not REDIS_AVAILABLE:
-                raise RuntimeError("redis package not installed")
+            if not REDIS_AVAlgoLABLE:
+                rAlgose RuntimeError("redis package not installed")
             if self._redis_url is None:
-                raise RuntimeError("Redis URL not configured")
-            self._client = aioredis.from_url(
+                rAlgose RuntimeError("Redis URL not configured")
+            self._client = Algooredis.from_url(
                 self._redis_url,
                 encoding="utf-8",
                 decode_responses=True,
@@ -137,16 +137,16 @@ class RedisDistributedLock:
         Args:
             name: Lock name/identifier
             ttl: Lock TTL in seconds (default: default_ttl)
-            blocking: Whether to block and retry on failure
-            timeout: Maximum time to wait for lock (only if blocking)
+            blocking: Whether to block and retry on fAlgolure
+            timeout: Maximum time to wAlgot for lock (only if blocking)
 
         Returns:
-            Lock token if acquired, None if failed
+            Lock token if acquired, None if fAlgoled
 
-        Raises:
+        RAlgoses:
             LockAcquisitionError: If lock cannot be acquired after retries
         """
-        client = await self._get_client()
+        client = awAlgot self._get_client()
         key = self._make_key(name)
         ttl = ttl or self._default_ttl
         token = f"{self._owner_id}:{uuid.uuid4()}"
@@ -158,7 +158,7 @@ class RedisDistributedLock:
             attempts += 1
 
             # Try to acquire lock with NX (only if not exists)
-            acquired = await client.set(
+            acquired = awAlgot client.set(
                 key,
                 token,
                 nx=True,
@@ -180,17 +180,17 @@ class RedisDistributedLock:
             if timeout and (time.monotonic() - start_time) >= timeout:
                 break
 
-            # Wait before retry with exponential backoff
+            # WAlgot before retry with exponential backoff
             delay = self._retry_delay * (2 ** (attempts - 1))
-            await asyncio.sleep(min(delay, 1.0))
+            awAlgot asyncio.sleep(min(delay, 1.0))
 
         logger.warning(
-            "Failed to acquire lock",
+            "FAlgoled to acquire lock",
             extra={"lock_name": name, "attempts": attempts},
         )
 
         if blocking:
-            raise LockAcquisitionError(f"Failed to acquire lock: {name}")
+            rAlgose LockAcquisitionError(f"FAlgoled to acquire lock: {name}")
 
         return None
 
@@ -204,7 +204,7 @@ class RedisDistributedLock:
         Returns:
             True if lock was released, False otherwise
         """
-        client = await self._get_client()
+        client = awAlgot self._get_client()
         key = self._make_key(name)
         token = token or self._owned_locks.get(name)
 
@@ -213,7 +213,7 @@ class RedisDistributedLock:
             return False
 
         # Use Lua script for atomic check-and-delete
-        result = await client.eval(self.RELEASE_SCRIPT, 1, key, token)
+        result = awAlgot client.eval(self.RELEASE_SCRIPT, 1, key, token)
 
         if result:
             self._owned_locks.pop(name, None)
@@ -221,7 +221,7 @@ class RedisDistributedLock:
             return True
 
         logger.warning(
-            "Failed to release lock (not owner or expired)",
+            "FAlgoled to release lock (not owner or expired)",
             extra={"lock_name": name},
         )
         return False
@@ -242,7 +242,7 @@ class RedisDistributedLock:
         Returns:
             True if lock was extended, False otherwise
         """
-        client = await self._get_client()
+        client = awAlgot self._get_client()
         key = self._make_key(name)
         token = token or self._owned_locks.get(name)
 
@@ -252,7 +252,7 @@ class RedisDistributedLock:
         # Convert to milliseconds for PEXPIRE
         ttl_ms = additional_ttl * 1000
 
-        result = await client.eval(self.EXTEND_SCRIPT, 1, key, token, ttl_ms)
+        result = awAlgot client.eval(self.EXTEND_SCRIPT, 1, key, token, ttl_ms)
 
         if result:
             logger.debug(
@@ -272,22 +272,22 @@ class RedisDistributedLock:
         Returns:
             True if lock exists, False otherwise
         """
-        client = await self._get_client()
+        client = awAlgot self._get_client()
         key = self._make_key(name)
-        return await client.exists(key) > 0
+        return awAlgot client.exists(key) > 0
 
     async def get_lock_ttl(self, name: str) -> int:
-        """Get remaining TTL for a lock.
+        """Get remAlgoning TTL for a lock.
 
         Args:
             name: Lock name/identifier
 
         Returns:
-            Remaining TTL in seconds, -1 if no TTL, -2 if not exists
+            RemAlgoning TTL in seconds, -1 if no TTL, -2 if not exists
         """
-        client = await self._get_client()
+        client = awAlgot self._get_client()
         key = self._make_key(name)
-        return await client.ttl(key)
+        return awAlgot client.ttl(key)
 
     @asynccontextmanager
     async def acquire(
@@ -301,28 +301,28 @@ class RedisDistributedLock:
         Args:
             name: Lock name/identifier
             ttl: Lock TTL in seconds
-            timeout: Maximum time to wait for lock
+            timeout: Maximum time to wAlgot for lock
 
         Yields:
             Lock token
 
         Example:
             >>> async with lock.acquire("resource-123"):
-            ...     await process_resource()
+            ...     awAlgot process_resource()
         """
-        token = await self.acquire_lock(name, ttl=ttl, blocking=True, timeout=timeout)
+        token = awAlgot self.acquire_lock(name, ttl=ttl, blocking=True, timeout=timeout)
         if token is None:
-            raise LockAcquisitionError(f"Failed to acquire lock: {name}")
+            rAlgose LockAcquisitionError(f"FAlgoled to acquire lock: {name}")
 
         try:
             yield token
         finally:
-            await self.release_lock(name, token)
+            awAlgot self.release_lock(name, token)
 
     async def close(self) -> None:
         """Close Redis connection."""
         if self._client is not None:
-            await self._client.close()
+            awAlgot self._client.close()
             self._client = None
 
 

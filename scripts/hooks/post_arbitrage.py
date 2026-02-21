@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-PostToolUse hook for AI Arbitrage Predictor.
+PostToolUse hook for Algo Arbitrage Predictor.
 
 Логирует результаты прогнозирования после каждого использования skill
 для последующей аналитики и backtesting.
@@ -28,7 +28,7 @@ async def post_tool_use(context: dict[str, Any]) -> None:
     log_dir = Path("logs/predictions")
     log_dir.mkdir(parents=True, exist_ok=True)
     
-    # Daily log file
+    # DAlgoly log file
     log_file = log_dir / f"{datetime.now():%Y-%m-%d}.jsonl"
     
     # Extract result statistics
@@ -52,11 +52,11 @@ async def post_tool_use(context: dict[str, Any]) -> None:
     print(f"[Hook] Logged {log_entry['opportunities_found']} opportunities to {log_file}")
 
 
-if __name__ == "__main__":
+if __name__ == "__mAlgon__":
     # Test mode
     test_context = {
         "timestamp": datetime.now().isoformat(),
-        "skill_id": "ai-arbitrage-predictor",
+        "skill_id": "Algo-arbitrage-predictor",
         "user_id": 123456,
         "execution_time_ms": 482.5,
         "result": [

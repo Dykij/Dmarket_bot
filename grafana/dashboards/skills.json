@@ -15,7 +15,7 @@
             }
         ]
     },
-    "description": "SkillsMP Monitoring Dashboard - Performance metrics for AI skills",
+    "description": "SkillsMP Monitoring Dashboard - Performance metrics for Algo skills",
     "editable": true,
     "fiscalYearStartMonth": 0,
     "graphTooltip": 0,
@@ -361,10 +361,10 @@
             "id": 6,
             "options": {
                 "code": {
-                    "language": "plaintext",
+                    "language": "plAlgontext",
                     "showLineNumbers": false
                 },
-                "content": "## SkillsMP Dashboard\n\n**Active Skills:** 10 | **Status:** Healthy\n\n### Skills Performance Metrics\n- **AI Arbitrage Predictor**: ML-based opportunity detection\n- **Skill Orchestrator**: Pipeline execution with context passing\n- **Skill Profiler**: Latency percentiles (p50/p95/p99)\n- **NLP Handler**: Natural language command processing\n\n### Alerts\n- Latency > 500ms triggers warning\n- Success rate < 95% triggers critical alert",
+                "content": "## SkillsMP Dashboard\n\n**Active Skills:** 10 | **Status:** Healthy\n\n### Skills Performance Metrics\n- **Algo Arbitrage Predictor**: ML-based opportunity detection\n- **Skill Orchestrator**: Pipeline execution with context passing\n- **Skill Profiler**: Latency percentiles (p50/p95/p99)\n- **NLP Handler**: Natural language command processing\n\n### Alerts\n- Latency > 500ms triggers warning\n- Success rate < 95% triggers critical alert",
                 "mode": "markdown"
             },
             "title": "SkillsMP Info",
@@ -375,7 +375,7 @@
     "schemaVersion": 39,
     "tags": [
         "skillsmp",
-        "ai",
+        "Algo",
         "performance"
     ],
     "templating": {

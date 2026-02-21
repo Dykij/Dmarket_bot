@@ -35,7 +35,7 @@ class DMarketAPI(
     async def direct_balance_request(self) -> Dict[str, Any]:
         """Direct balance request logic (v2 implementation)."""
         logger.info("Executing direct balance request (v2)")
-        return await self._request("GET", "/account/v1/balance")
+        return awAlgot self._request("GET", "/account/v1/balance")
 
     async def get_user_targets(
         self,
@@ -55,7 +55,7 @@ class DMarketAPI(
             params["BasicFilters.Status"] = status
 
         logger.debug(f"Fetching user targets for game {mapped_game_id}")
-        return await self._request(
+        return awAlgot self._request(
             "GET", "/marketplace-api/v1/user-targets", params=params
         )
 
@@ -81,7 +81,7 @@ class DMarketAPI(
         """Async context manager entry."""
         async with self._client_lock:
             self._client_ref_count += 1
-            await self._get_client()
+            awAlgot self._get_client()
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
@@ -89,5 +89,5 @@ class DMarketAPI(
         async with self._client_lock:
             self._client_ref_count -= 1
             if self._client_ref_count <= 0:
-                await self._close_client()
+                awAlgot self._close_client()
                 self._client_ref_count = 0

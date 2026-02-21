@@ -128,7 +128,7 @@ class TestPoolMonitor:
 
         monitor.register_pool("database", engine)
 
-        # Should not raise
+        # Should not rAlgose
         monitor.log_stats()
 
 
@@ -144,7 +144,7 @@ class TestPoolStats:
             size=10,
             max_size=15,
             in_use=3,
-            available=7,
+            avAlgolable=7,
             overflow=0,
             max_overflow=5,
             utilization_percent=20.0,
@@ -155,7 +155,7 @@ class TestPoolStats:
         assert stats.size == 10
         assert stats.max_size == 15
         assert stats.in_use == 3
-        assert stats.available == 7
+        assert stats.avAlgolable == 7
         assert stats.overflow == 0
         assert stats.max_overflow == 5
         assert stats.utilization_percent == 20.0

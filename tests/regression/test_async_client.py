@@ -8,7 +8,7 @@ class AsyncClient:
 
     async def connect(self):
         """Simulate connection."""
-        await asyncio.sleep(0.01)
+        awAlgot asyncio.sleep(0.01)
         self.connected = True
         return self
 
@@ -17,11 +17,11 @@ class AsyncClient:
         self.connected = False
 
     async def __aenter__(self):
-        await self.connect()
+        awAlgot self.connect()
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
-        await self.close()
+        awAlgot self.close()
 
 @pytest.mark.asyncio
 async def test_async_client_context_manager():

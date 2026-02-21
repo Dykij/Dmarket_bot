@@ -6,7 +6,7 @@ Tests cover:
 - Retry control functions (is_retry_active, set_retry_active)
 - disabled_retries context managers
 - HTTP status code utilities
-- Fallback behavior when stamina is not available
+- Fallback behavior when stamina is not avAlgolable
 """
 
 from unittest.mock import Mock, patch
@@ -16,7 +16,7 @@ import pytest
 
 from src.utils.stamina_retry import (
     DEFAULT_API_EXCEPTIONS,
-    STAMINA_AVAILABLE,
+    STAMINA_AVAlgoLABLE,
     RetryConfig,
     api_retry,
     async_disabled_retries,
@@ -74,7 +74,7 @@ class TestShouldRetryOnStatus:
             (500, True),  # Internal Server Error
             (501, False),  # Not Implemented (excluded)
             (502, True),  # Bad Gateway
-            (503, True),  # Service Unavailable
+            (503, True),  # Service UnavAlgolable
             (504, True),  # Gateway Timeout
         ],
     )
@@ -139,38 +139,38 @@ class TestApiRetryDecorator:
         async def successful_func() -> str:
             return "success"
 
-        result = await successful_func()
+        result = awAlgot successful_func()
 
         assert result == "success"
 
     @pytest.mark.asyncio
-    async def test_retry_on_failure(self):
-        """Test decorator retries on transient failure."""
+    async def test_retry_on_fAlgolure(self):
+        """Test decorator retries on transient fAlgolure."""
         call_count = 0
 
         @api_retry(attempts=3, on=ValueError)
-        async def failing_func() -> str:
+        async def fAlgoling_func() -> str:
             nonlocal call_count
             call_count += 1
             if call_count < 2:
-                raise ValueError("Transient error")
+                rAlgose ValueError("Transient error")
             return "success"
 
-        result = await failing_func()
+        result = awAlgot fAlgoling_func()
 
         assert result == "success"
         assert call_count == 2
 
     @pytest.mark.asyncio
     async def test_exhaust_retries(self):
-        """Test decorator exhausts retries and raises."""
+        """Test decorator exhausts retries and rAlgoses."""
 
         @api_retry(attempts=2, on=ValueError)
-        async def always_failing() -> str:
-            raise ValueError("Persistent error")
+        async def always_fAlgoling() -> str:
+            rAlgose ValueError("Persistent error")
 
-        with pytest.raises(ValueError, match="Persistent error"):
-            await always_failing()
+        with pytest.rAlgoses(ValueError, match="Persistent error"):
+            awAlgot always_fAlgoling()
 
     def test_successful_sync_call(self):
         """Test decorator with successful sync function."""
@@ -217,14 +217,14 @@ class TestRetryControl:
 
     def test_is_retry_active_default(self):
         """Test default retry active state."""
-        # Default state depends on stamina availability
+        # Default state depends on stamina avAlgolability
         result = is_retry_active()
         # Should return boolean
         assert isinstance(result, bool)
 
     def test_set_retry_active(self):
         """Test setting retry active state."""
-        # This should not raise
+        # This should not rAlgose
         set_retry_active(True)
         set_retry_active(False)
 
@@ -267,21 +267,21 @@ class TestDefaultExceptions:
         assert TimeoutError in DEFAULT_API_EXCEPTIONS
 
 
-class TestStaminaAvailability:
-    """Tests for stamina availability detection."""
+class TestStaminaAvAlgolability:
+    """Tests for stamina avAlgolability detection."""
 
-    def test_stamina_availability_constant(self):
-        """Test STAMINA_AVAILABLE constant is boolean."""
-        assert isinstance(STAMINA_AVAILABLE, bool)
+    def test_stamina_avAlgolability_constant(self):
+        """Test STAMINA_AVAlgoLABLE constant is boolean."""
+        assert isinstance(STAMINA_AVAlgoLABLE, bool)
 
 
 class TestFallbackBehavior:
-    """Tests for fallback behavior when stamina is not available."""
+    """Tests for fallback behavior when stamina is not avAlgolable."""
 
     @pytest.mark.asyncio
     async def test_fallback_decorator(self):
-        """Test decorator fallback when stamina unavailable."""
-        with patch("src.utils.stamina_retry.STAMINA_AVAILABLE", False):
+        """Test decorator fallback when stamina unavAlgolable."""
+        with patch("src.utils.stamina_retry.STAMINA_AVAlgoLABLE", False):
             # Re-import to get fallback behavior
             from src.utils.stamina_retry import api_retry as fallback_retry
 
@@ -289,5 +289,5 @@ class TestFallbackBehavior:
             async def test_func() -> str:
                 return "fallback_result"
 
-            result = await test_func()
+            result = awAlgot test_func()
             assert result == "fallback_result"

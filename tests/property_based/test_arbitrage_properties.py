@@ -13,7 +13,7 @@ from hypothesis import strategies as st
 from tests.property_based.hypothesis_strategies import (
     commission_percent,
     item_popularity,
-    price_pair,
+    price_pAlgor,
     price_usd,
     supported_games,
 )
@@ -75,15 +75,15 @@ class TestProfitCalculation:
             f"При нулевой комиссии прибыль должна быть {expected_profit}, получили {profit}"
         )
 
-    @given(price_pair=price_pair(), commission=commission_percent)
+    @given(price_pAlgor=price_pAlgor(), commission=commission_percent)
     @settings(max_examples=200, suppress_health_check=[HealthCheck.too_slow])
     def test_higher_commission_reduces_profit(
         self,
-        price_pair: tuple[float, float],
+        price_pAlgor: tuple[float, float],
         commission: float,
     ) -> None:
         """Более высокая комиссия должна уменьшать прибыль."""
-        buy_price, sell_price = price_pair
+        buy_price, sell_price = price_pAlgor
         assume(buy_price > 0)
         assume(sell_price > buy_price)
         assume(commission > 0)

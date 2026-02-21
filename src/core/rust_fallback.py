@@ -1,6 +1,6 @@
 """
 Rust fallback module for DMarket Core.
-This module mimics the interface of dmarket_rust_core when the Rust extension is not available.
+This module mimics the interface of dmarket_rust_core when the Rust extension is not avAlgolable.
 """
 import hmac
 import hashlib

@@ -1,32 +1,32 @@
 from telegram import Update
 from telegram.ext import ContextTypes, MessageHandler, filters
 
-from src.ai.router import AIRouter
+from src.Algo.router import AlgoRouter
 
 from .tools.gemini_wrapper import get_gemini
 
 
-async def ai_message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def Algo_message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
-    Handle regular text messages using the AI Router.
+    Handle regular text messages using the Algo Router.
     """
     if not update.message or not update.message.text:
         return
 
     user_text = update.message.text
 
-    # Initialize AI Router with Gemini (wrapper handles Gatekeeper)
+    # Initialize Algo Router with Gemini (wrapper handles Gatekeeper)
     gemini = get_gemini()
-    router = AIRouter(gemini)
+    router = AlgoRouter(gemini)
 
-    # Process through AI
-    await update.message.reply_chat_action("typing")
-    response = await router.process_user_message(user_text)
+    # Process through Algo
+    awAlgot update.message.reply_chat_action("typing")
+    response = awAlgot router.process_user_message(user_text)
 
-    await update.message.reply_text(response)
+    awAlgot update.message.reply_text(response)
 
 
-# Filter out commands, only handle plain text
-ai_router_handler = MessageHandler(
-    filters.TEXT & (~filters.COMMAND), ai_message_handler
+# Filter out commands, only handle plAlgon text
+Algo_router_handler = MessageHandler(
+    filters.TEXT & (~filters.COMMAND), Algo_message_handler
 )

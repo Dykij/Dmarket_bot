@@ -558,7 +558,7 @@ class TestTF2Filter:
     def test_filter_matches_quality(self):
         """Test filter matches quality."""
         filter = TF2Filter(qualities=[TF2Quality.UNUSUAL])
-        item = {"quality": "unusual", "title": "Unusual Team Captain"}
+        item = {"quality": "unusual", "title": "Unusual Team CaptAlgon"}
         assert filter.matches(item) is True
 
     def test_filter_matches_australium(self):
@@ -594,7 +594,7 @@ class TestTF2Filter:
     def test_calculate_premium_unusual_effect(self):
         """Test premium calculation with unusual effect."""
         filter = TF2Filter()
-        item = {"effect": "Burning Flames", "quality": "unusual", "title": "Team Captain"}
+        item = {"effect": "Burning Flames", "quality": "unusual", "title": "Team CaptAlgon"}
         premium = filter.calculate_premium(item)
         # Premium should be calculated based on effect
         assert premium >= 1.0
@@ -952,7 +952,7 @@ class TestPresetFiltersUsage:
         """Test TF2 Unusual God preset matches."""
         filter = get_preset_filter("tf2", "unusual_god")
         # Filter needs quality to be in the right format and effect in unusual_effect field
-        item = {"quality": "unusual", "unusual_effect": "Burning Flames", "title": "Unusual Team Captain"}
+        item = {"quality": "unusual", "unusual_effect": "Burning Flames", "title": "Unusual Team CaptAlgon"}
         assert filter.matches(item) is True
 
     def test_rust_garage_doors_matches(self):

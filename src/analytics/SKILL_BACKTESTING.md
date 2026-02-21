@@ -1,11 +1,11 @@
 ---
-name: "AI-Powered Automated Backtesting"
+name: "Algo-Powered Automated Backtesting"
 description: "Бэктестирование торговых стратегий с ML на исторических данных DMarket"
 version: "1.0.0"
 author: "DMarket Bot Team"
 license: "MIT"
 category: "Business"
-subcategories: ["Research", "Data & AI", "Finance", "Testing"]
+subcategories: ["Research", "Data & Algo", "Finance", "Testing"]
 tags: ["backtesting", "simulation", "trading-strategies", "ml", "analytics"]
 status: "approved"
 team: "@trading-team"
@@ -14,7 +14,7 @@ approval_date: "2026-01-25"
 review_required: true
 last_review: "2026-01-25"
 python_version: ">=3.11"
-main_module: "ai_backtester.py"
+mAlgon_module: "Algo_backtester.py"
 dependencies:
   - "pandas>=2.0"
   - "numpy>=1.24"
@@ -24,14 +24,14 @@ optional_dependencies:
 performance:
   latency_ms: 100
   throughput_per_sec: 10
-ai_compatible: true
+Algo_compatible: true
 allowed_tools:
   - "github-copilot"
   - "claude-code"
   - "chatgpt"
 ---
 
-# Skill: AI-Powered Automated Backtesting
+# Skill: Algo-Powered Automated Backtesting
 
 ## Описание
 
@@ -39,7 +39,7 @@ allowed_tools:
 
 ## Категория
 
-- **Primary**: Research, Data & AI
+- **Primary**: Research, Data & Algo
 - **Secondary**: Finance, Testing
 - **Tags**: `backtesting`, `simulation`, `trading-strategies`, `ml`, `analytics`
 
@@ -58,7 +58,7 @@ allowed_tools:
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│              AIBacktester                           │
+│              AlgoBacktester                           │
 ├─────────────────────────────────────────────────────┤
 │                                                     │
 │  Historical Data                                    │
@@ -119,18 +119,18 @@ pip install -e src/analytics/
 ### Базовое использование
 
 ```python
-from src.analytics.ai_backtester import AIBacktester
+from src.analytics.Algo_backtester import AlgoBacktester
 from datetime import datetime, timedelta
 
 # Инициализация
-backtester = AIBacktester()
+backtester = AlgoBacktester()
 
 # Период тестирования
 end_date = datetime.now()
 start_date = end_date - timedelta(days=30)
 
 # Запуск бэктеста
-results = await backtester.run_backtest(
+results = awAlgot backtester.run_backtest(
     strategy="arbitrage_5_percent",
     game="csgo",
     start_date=start_date.isoformat(),
@@ -162,7 +162,7 @@ ML Accuracy: 78.5%
 
 ## API Reference
 
-### `class AIBacktester`
+### `class AlgoBacktester`
 
 #### `async run_backtest(strategy, game, start_date, end_date, initial_balance=100.0)`
 
@@ -216,7 +216,7 @@ strategies = ["arbitrage_5_percent", "arbitrage_10_percent", "ml_enhanced"]
 results_comparison = {}
 
 for strategy in strategies:
-    results = await backtester.run_backtest(
+    results = awAlgot backtester.run_backtest(
         strategy=strategy,
         game="csgo",
         start_date="2025-12-01",
@@ -240,7 +240,7 @@ games = ["csgo", "dota2", "tf2", "rust"]
 multi_game_results = {}
 
 for game in games:
-    results = await backtester.run_backtest(
+    results = awAlgot backtester.run_backtest(
         strategy="ml_enhanced",
         game=game,
         start_date="2025-12-01",
@@ -258,7 +258,7 @@ print(f"Total profit across all games: ${total_profit:.2f}")
 
 ```python
 # Генерация графиков
-await backtester.generate_charts(results, output_dir="./charts/")
+awAlgot backtester.generate_charts(results, output_dir="./charts/")
 
 # Создаются следующие графики:
 # - equity_curve.png - кривая прибыли
@@ -290,4 +290,4 @@ MIT License
 
 **Last Updated**: 2026-01-19  
 **Status**: ✅ Production Ready  
-**Skill Type**: Research, Data & AI
+**Skill Type**: Research, Data & Algo

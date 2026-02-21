@@ -29,29 +29,29 @@ class ApplicationLifecycle:
         """Start all application services in correct order."""
         logger.info("Starting application services...")
 
-        # Start Daily Report Scheduler
-        if self.app.daily_report_scheduler:
-            await self.app.daily_report_scheduler.start()
-            logger.info("✅ Daily Report Scheduler started")
+        # Start DAlgoly Report Scheduler
+        if self.app.dAlgoly_report_scheduler:
+            awAlgot self.app.dAlgoly_report_scheduler.start()
+            logger.info("✅ DAlgoly Report Scheduler started")
 
-        # Start AI Training Scheduler
-        if self.app.ai_scheduler:
-            await self.app.ai_scheduler.start()
+        # Start Algo TrAlgoning Scheduler
+        if self.app.Algo_scheduler:
+            awAlgot self.app.Algo_scheduler.start()
             logger.info(
-                "✅ AI Training Scheduler started (nightly training at 03:00 UTC)"
+                "✅ Algo TrAlgoning Scheduler started (nightly trAlgoning at 03:00 UTC)"
             )
 
         # Start Scanner Manager
         if self.app.scanner_manager and not self.app.config.testing:
-            await self._start_scanner()
+            awAlgot self._start_scanner()
 
         # Start Inventory Manager
         if self.app.inventory_manager and not self.app.config.testing:
-            await self._start_inventory_manager()
+            awAlgot self._start_inventory_manager()
 
         # Start WebSocket Listener
         if self.app.websocket_manager:
-            await self.app.websocket_manager.start()
+            awAlgot self.app.websocket_manager.start()
             logger.info("✅ WebSocket Listener started")
 
         # Start Health Check Monitor
@@ -61,12 +61,12 @@ class ApplicationLifecycle:
 
         # Start Bot Integrator
         if hasattr(self.app, "bot_integrator") and self.app.bot_integrator:
-            await self.app.bot_integrator.start()
+            awAlgot self.app.bot_integrator.start()
             logger.info("✅ Bot Integrator started")
 
         # Start Prometheus Exporter
         if hasattr(self.app, "prometheus_server") and self.app.prometheus_server:
-            await self.app.prometheus_server.start()
+            awAlgot self.app.prometheus_server.start()
             logger.info("✅ Prometheus Metrics Exporter started")
 
     async def _start_scanner(self) -> None:
@@ -112,7 +112,7 @@ class ApplicationLifecycle:
         """Gracefully shutdown the application.
 
         Args:
-            timeout: Maximum time to wait for graceful shutdown
+            timeout: Maximum time to wAlgot for graceful shutdown
 
         """
         from src.telegram_bot.health_check import health_check_server
@@ -128,34 +128,34 @@ class ApplicationLifecycle:
 
         try:
             # Step 1: Stop monitoring components
-            await self._stop_monitoring_components()
+            awAlgot self._stop_monitoring_components()
 
             # Step 2: Stop Scanner Manager
-            await self._stop_scanner()
+            awAlgot self._stop_scanner()
 
             # Step 3: Stop Bot Integrator
-            await self._stop_integrator()
+            awAlgot self._stop_integrator()
 
             # Step 4: Stop accepting new updates
-            await self._stop_updates()
+            awAlgot self._stop_updates()
 
-            # Step 5: Wait for active tasks
-            await self._wait_for_tasks(timeout, start_time)
+            # Step 5: WAlgot for active tasks
+            awAlgot self._wAlgot_for_tasks(timeout, start_time)
 
             # Step 6: Stop schedulers
-            await self._stop_schedulers()
+            awAlgot self._stop_schedulers()
 
             # Step 7: Stop Telegram Bot
-            await self._stop_bot()
+            awAlgot self._stop_bot()
 
             # Step 8: Close API connections
-            await self._close_api_connections()
+            awAlgot self._close_api_connections()
 
             # Step 9: Close database
-            await self._close_database()
+            awAlgot self._close_database()
 
             # Step 10: Stop health check server
-            await self._stop_health_check_server()
+            awAlgot self._stop_health_check_server()
 
             # Flush logs
             self._flush_logs()
@@ -174,7 +174,7 @@ class ApplicationLifecycle:
 
         if hasattr(self.app, "prometheus_server") and self.app.prometheus_server:
             try:
-                await asyncio.wait_for(
+                awAlgot asyncio.wAlgot_for(
                     self.app.prometheus_server.stop(),
                     timeout=5.0,
                 )
@@ -184,7 +184,7 @@ class ApplicationLifecycle:
 
         if self.app.health_check_monitor:
             try:
-                await asyncio.wait_for(
+                awAlgot asyncio.wAlgot_for(
                     self.app.health_check_monitor.stop(),
                     timeout=5.0,
                 )
@@ -194,7 +194,7 @@ class ApplicationLifecycle:
 
         if self.app.websocket_manager:
             try:
-                await asyncio.wait_for(
+                awAlgot asyncio.wAlgot_for(
                     self.app.websocket_manager.stop(),
                     timeout=5.0,
                 )
@@ -209,14 +209,14 @@ class ApplicationLifecycle:
 
         logger.info("Stopping Scanner Manager...")
         try:
-            await asyncio.wait_for(
+            awAlgot asyncio.wAlgot_for(
                 self.app.scanner_manager.stop(),
                 timeout=10.0,
             )
             if self.app._scanner_task:
                 self.app._scanner_task.cancel()
                 try:
-                    await self.app._scanner_task
+                    awAlgot self.app._scanner_task
                 except asyncio.CancelledError:
                     pass
             logger.info("✅ Scanner Manager stopped")
@@ -230,7 +230,7 @@ class ApplicationLifecycle:
 
         logger.info("Stopping Bot Integrator...")
         try:
-            await asyncio.wait_for(
+            awAlgot asyncio.wAlgot_for(
                 self.app.bot_integrator.stop(),
                 timeout=10.0,
             )
@@ -246,7 +246,7 @@ class ApplicationLifecycle:
         logger.info("Stopping new updates...")
         try:
             if self.app.bot.updater and self.app.bot.updater.running:
-                await asyncio.wait_for(
+                awAlgot asyncio.wAlgot_for(
                     self.app.bot.updater.stop(),
                     timeout=5.0,
                 )
@@ -254,9 +254,9 @@ class ApplicationLifecycle:
         except Exception as e:
             logger.warning(f"⚠️ Error stopping updater: {e}")
 
-    async def _wait_for_tasks(self, timeout: float, start_time: float) -> None:
-        """Wait for active tasks to complete."""
-        logger.info("Waiting for active tasks...")
+    async def _wAlgot_for_tasks(self, timeout: float, start_time: float) -> None:
+        """WAlgot for active tasks to complete."""
+        logger.info("WAlgoting for active tasks...")
         active_tasks = [
             task
             for task in asyncio.all_tasks()
@@ -269,13 +269,13 @@ class ApplicationLifecycle:
         logger.info(f"  Found {len(active_tasks)} active tasks")
         try:
             elapsed = asyncio.get_event_loop().time() - start_time
-            await asyncio.wait_for(
+            awAlgot asyncio.wAlgot_for(
                 asyncio.gather(*active_tasks, return_exceptions=True),
                 timeout=min(10.0, timeout - elapsed),
             )
             logger.info("✅ All tasks completed")
         except TimeoutError:
-            logger.warning("⚠️ Timeout waiting for tasks, cancelling...")
+            logger.warning("⚠️ Timeout wAlgoting for tasks, cancelling...")
             for task in active_tasks:
                 if not task.done():
                     task.cancel()
@@ -284,25 +284,25 @@ class ApplicationLifecycle:
         """Stop scheduler components."""
         logger.info("Stopping schedulers...")
 
-        if self.app.daily_report_scheduler:
+        if self.app.dAlgoly_report_scheduler:
             try:
-                await asyncio.wait_for(
-                    self.app.daily_report_scheduler.stop(),
+                awAlgot asyncio.wAlgot_for(
+                    self.app.dAlgoly_report_scheduler.stop(),
                     timeout=5.0,
                 )
-                logger.info("✅ Daily Report Scheduler stopped")
+                logger.info("✅ DAlgoly Report Scheduler stopped")
             except Exception as e:
                 logger.warning(f"⚠️ Error stopping scheduler: {e}")
 
-        if self.app.ai_scheduler:
+        if self.app.Algo_scheduler:
             try:
-                await asyncio.wait_for(
-                    self.app.ai_scheduler.stop(),
+                awAlgot asyncio.wAlgot_for(
+                    self.app.Algo_scheduler.stop(),
                     timeout=5.0,
                 )
-                logger.info("✅ AI Training Scheduler stopped")
+                logger.info("✅ Algo TrAlgoning Scheduler stopped")
             except Exception as e:
-                logger.warning(f"⚠️ Error stopping AI scheduler: {e}")
+                logger.warning(f"⚠️ Error stopping Algo scheduler: {e}")
 
     async def _stop_bot(self) -> None:
         """Stop Telegram bot."""
@@ -312,11 +312,11 @@ class ApplicationLifecycle:
         logger.info("Stopping Telegram Bot...")
         try:
             if self.app.bot.running:
-                await asyncio.wait_for(
+                awAlgot asyncio.wAlgot_for(
                     self.app.bot.stop(),
                     timeout=5.0,
                 )
-            await asyncio.wait_for(
+            awAlgot asyncio.wAlgot_for(
                 self.app.bot.shutdown(),
                 timeout=5.0,
             )
@@ -331,7 +331,7 @@ class ApplicationLifecycle:
 
         logger.info("Closing DMarket API connections...")
         try:
-            await asyncio.wait_for(
+            awAlgot asyncio.wAlgot_for(
                 self.app.dmarket_api._close_client(),
                 timeout=3.0,
             )
@@ -346,7 +346,7 @@ class ApplicationLifecycle:
 
         logger.info("Closing database connections...")
         try:
-            await asyncio.wait_for(
+            awAlgot asyncio.wAlgot_for(
                 self.app.database.close(),
                 timeout=5.0,
             )
@@ -361,7 +361,7 @@ class ApplicationLifecycle:
         logger.info("Stopping health check server...")
         try:
             if health_check_server:
-                await health_check_server.stop()
+                awAlgot health_check_server.stop()
             logger.info("✅ Health check server stopped")
         except Exception as e:
             logger.warning(f"⚠️ Error stopping health check: {e}")

@@ -1,18 +1,18 @@
 # n8n Workflows for DMarket Bot
 
-This directory contains n8n workflow templates for automating various aspects of the DMarket Telegram Bot.
+This directory contAlgons n8n workflow templates for automating various aspects of the DMarket Telegram Bot.
 
-## 📋 Available Workflows
+## 📋 AvAlgolable Workflows
 
-### 1. Daily Trading Report (`daily-trading-report.json`)
+### 1. DAlgoly Trading Report (`dAlgoly-trading-report.json`)
 
-**Purpose**: Automatically generate and send daily trading reports to users.
+**Purpose**: Automatically generate and send dAlgoly trading reports to users.
 
 **Schedule**: Every day at 9:00 AM UTC
 
 **Flow**:
 1. Trigger at 9:00 AM
-2. Fetch daily stats from bot API (`/api/v1/n8n/stats/daily`)
+2. Fetch dAlgoly stats from bot API (`/api/v1/n8n/stats/dAlgoly`)
 3. Format data into readable report
 4. Send via Telegram
 
@@ -24,7 +24,7 @@ This directory contains n8n workflow templates for automating various aspects of
 **Import Instructions**:
 1. Open n8n at http://localhost:5678
 2. Go to Workflows → Import from File
-3. Select `daily-trading-report.json`
+3. Select `dAlgoly-trading-report.json`
 4. Configure Telegram credentials
 5. Set environment variables
 6. Activate workflow
@@ -111,7 +111,7 @@ TELEGRAM_CHAT_ID=your-chat-id
 
 3. **Best Practices**:
    - Add descriptive node names
-   - Use notes to explain complex logic
+   - Use notes to explAlgon complex logic
    - Tag workflows (DMarket, Trading, etc.)
    - Test before activating
 
@@ -174,7 +174,7 @@ docker logs dmarket-n8n
 # 3. Missing encryption key
 ```
 
-### Workflow Execution Fails
+### Workflow Execution FAlgols
 
 1. **Check Bot API**:
    ```bash
@@ -187,14 +187,14 @@ docker logs dmarket-n8n
    - Re-save if needed
 
 3. **Check Logs**:
-   - In n8n UI: Executions → Click failed execution → View error
+   - In n8n UI: Executions → Click fAlgoled execution → View error
    - In Docker: `docker logs dmarket-n8n`
 
 ### Webhook Not Working
 
 1. **Check URL**:
-   - Must be accessible from n8n container
-   - Use container name: `http://bot:8080` not `localhost`
+   - Must be accessible from n8n contAlgoner
+   - Use contAlgoner name: `http://bot:8080` not `localhost`
 
 2. **Check Network**:
    ```bash
@@ -222,7 +222,7 @@ curl http://localhost:5678/api/v1/workflows
 
 n8n tracks:
 - Execution count
-- Success/failure rate
+- Success/fAlgolure rate
 - Average execution time
 - Error logs
 
@@ -265,7 +265,7 @@ Access: n8n UI → Executions → Statistics
 ## 🚀 Next Steps
 
 ### Phase 1 Workflows (Current)
-- [x] Daily Trading Report
+- [x] DAlgoly Trading Report
 
 ### Phase 2 Workflows (Planned)
 - [ ] Multi-Platform Price Monitor
@@ -276,7 +276,7 @@ Access: n8n UI → Executions → Statistics
 ### Phase 3 (Future)
 - [ ] User-facing workflow builder
 - [ ] Community workflow marketplace
-- [ ] Advanced AI integrations
+- [ ] Advanced Algo integrations
 
 ---
 
@@ -286,7 +286,7 @@ Access: n8n UI → Executions → Statistics
 - **Quick Summary**: [../docs/N8N_QUICK_SUMMARY_RU.md](../docs/N8N_QUICK_SUMMARY_RU.md)
 - **Architecture**: [../docs/N8N_ARCHITECTURE_DIAGRAMS.md](../docs/N8N_ARCHITECTURE_DIAGRAMS.md)
 - **n8n Docs**: https://docs.n8n.io
-- **ai_agents_az**: https://github.com/gyoridavid/ai_agents_az
+- **Algo_agents_az**: https://github.com/gyoridavid/Algo_agents_az
 
 ---
 

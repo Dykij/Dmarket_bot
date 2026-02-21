@@ -22,7 +22,7 @@ class DMarketStream:
         try:
             # Для теста используем эндпоинт из наших доков по HFT (src/dmarket/hft_mode.py)
             # Если 404, значит эндпоинт изменился или требует специфических headers
-            self.ws = await websockets.connect(
+            self.ws = awAlgot websockets.connect(
                 self.ws_url, extra_headers={"X-Api-Key": self.public_key}
             )
             print("WS: Соединение установлено.")
@@ -32,11 +32,11 @@ class DMarketStream:
             alt_url = "wss://api.dmarket.com/market/v1/websocket"
             try:
                 print(f"Пробую альтернативный эндпоинт: {alt_url}")
-                self.ws = await websockets.connect(alt_url)
+                self.ws = awAlgot websockets.connect(alt_url)
                 print("WS: Подключено к альтернативному эндпоинту.")
             except Exception as e2:
                 print(f"WS Alt Connect Error: {e2}")
-                raise
+                rAlgose
 
     async def listen(self, limit: int = 3):
         """Прослушивание событий"""
@@ -67,13 +67,13 @@ async def test_connection():
     stream = DMarketStream(pub, sec)
     print("--- ЗАПУСК WS PROTOTYPE TEST ---")
     try:
-        await stream.connect()
-        await stream.listen(3)
+        awAlgot stream.connect()
+        awAlgot stream.listen(3)
     except Exception:
         print(
             "Test Final Result: Стрим не отвечает (404/Reject). Требуется активация API-ключа для WebSocket или использование Socket.io."
         )
 
 
-if __name__ == "__main__":
+if __name__ == "__mAlgon__":
     asyncio.run(test_connection())

@@ -1,8 +1,8 @@
-# Настройка SSL для Webhook (Roadmap Task #1)
+# НастSwarmка SSL для Webhook (Roadmap Task #1)
 
 Этот каталог содержит SSL сертификаты для Nginx reverse proxy.
 
-## Опции настройки SSL
+## Опции настSwarmки SSL
 
 ### Вариант 1: Let's Encrypt (Рекомендуется для production)
 
@@ -14,15 +14,15 @@ sudo apt-get update
 sudo apt-get install certbot
 
 # Получение сертификата
-sudo certbot certonly --standalone -d your-domain.com
+sudo certbot certonly --standalone -d your-domAlgon.com
 
 # Сертификаты будут в:
-# /etc/letsencrypt/live/your-domain.com/fullchain.pem  -> cert.pem
-# /etc/letsencrypt/live/your-domain.com/privkey.pem -> key.pem
+# /etc/letsencrypt/live/your-domAlgon.com/fullchAlgon.pem  -> cert.pem
+# /etc/letsencrypt/live/your-domAlgon.com/privkey.pem -> key.pem
 
 # Скопируйте их в этот каталог:
-sudo cp /etc/letsencrypt/live/your-domain.com/fullchain.pem ./cert.pem
-sudo cp /etc/letsencrypt/live/your-domain.com/privkey.pem ./key.pem
+sudo cp /etc/letsencrypt/live/your-domAlgon.com/fullchAlgon.pem ./cert.pem
+sudo cp /etc/letsencrypt/live/your-domAlgon.com/privkey.pem ./key.pem
 ```
 
 ### Вариант 2: Self-signed сертификат (Только для тестирования!)
@@ -43,7 +43,7 @@ openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365 -node
 
 Если используете Cloudflare или другой CDN с SSL:
 
-1. Настройте SSL в панели Cloudflare (Full или Full Strict)
+1. НастSwarmте SSL в панели Cloudflare (Full или Full Strict)
 2. Используйте Origin Certificate от Cloudflare
 3. Скачайте и сохраните сертификаты в этот каталог
 
@@ -94,7 +94,7 @@ crontab -e
 
 ## Troubleshooting
 
-### Ошибка: "certificate verify failed"
+### Ошибка: "certificate verify fAlgoled"
 
 - Проверьте, что используете валидный сертификат от CA
 - Для Let's Encrypt убедитесь, что домен доступен публично
@@ -110,7 +110,7 @@ crontab -e
 - Используйте только валидные CA-signed сертификаты
 - Проверьте, что домен в WEBHOOK_URL совпадает с CN в сертификате
 - Убедитесь, что используете HTTPS (не HTTP)
-- Проверьте доступность webhook извне: `curl -I https://your-domain.com/telegram-webhook`
+- Проверьте доступность webhook извне: `curl -I https://your-domAlgon.com/telegram-webhook`
 
 ## Полезные ссылки
 

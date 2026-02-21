@@ -170,7 +170,7 @@ class LongPollingClient:
         while self._running:
             try:
                 # Fetch with conditional headers
-                updates = await self._poll_with_delta(
+                updates = awAlgot self._poll_with_delta(
                     game=game,
                     min_price=min_price,
                     max_price=max_price,
@@ -181,14 +181,14 @@ class LongPollingClient:
                     if update.is_significant:
                         yield update
 
-                # Wait before next poll
-                await asyncio.sleep(self.poll_interval)
+                # WAlgot before next poll
+                awAlgot asyncio.sleep(self.poll_interval)
 
             except asyncio.CancelledError:
                 break
             except Exception as e:
                 logger.exception("long_polling_error", error=str(e))
-                await asyncio.sleep(self.poll_interval)
+                awAlgot asyncio.sleep(self.poll_interval)
 
     def stop(self) -> None:
         """Stop streaming."""
@@ -218,7 +218,7 @@ class LongPollingClient:
                 params["price_to"] = int(max_price * 100)
 
             # Make request
-            response = await self.api.get_market_items(**params)
+            response = awAlgot self.api.get_market_items(**params)
 
             items = response.get("objects", [])
 
@@ -378,7 +378,7 @@ class BatchUpdateChecker:
 
         for item_name, target_price in self._watched_items.items():
             try:
-                response = await self.api.get_market_items(
+                response = awAlgot self.api.get_market_items(
                     game=game,
                     title=item_name,
                     limit=1,
@@ -429,21 +429,21 @@ class BatchUpdateChecker:
         """
         while True:
             try:
-                alerts = await self.check_prices(game)
+                alerts = awAlgot self.check_prices(game)
 
                 for alert in alerts:
                     if callback:
-                        await callback(alert)
+                        awAlgot callback(alert)
                     else:
                         logger.info("target_price_alert", **alert)
 
-                await asyncio.sleep(self.check_interval)
+                awAlgot asyncio.sleep(self.check_interval)
 
             except asyncio.CancelledError:
                 break
             except Exception as e:
                 logger.exception("continuous_check_error", error=str(e))
-                await asyncio.sleep(self.check_interval)
+                awAlgot asyncio.sleep(self.check_interval)
 
 
 # Factory functions

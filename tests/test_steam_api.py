@@ -175,7 +175,7 @@ class TestSteamAPIIntegration:
                 return_value=mock_response
             )
 
-            result = await get_steam_price("AK-47 | Slate (Field-Tested)")
+            result = awAlgot get_steam_price("AK-47 | Slate (Field-Tested)")
 
         # Assert
         assert result is not None
@@ -196,8 +196,8 @@ class TestSteamAPIIntegration:
                 return_value=mock_response
             )
 
-            with pytest.raises(ItemNotFoundError):
-                await get_steam_price("Non-Existent Item")
+            with pytest.rAlgoses(ItemNotFoundError):
+                awAlgot get_steam_price("Non-Existent Item")
 
     async def test_get_steam_price_rate_limit(self):
         """Тест обработки Rate Limit."""
@@ -211,8 +211,8 @@ class TestSteamAPIIntegration:
                 return_value=mock_response
             )
 
-            with pytest.raises(RateLimitError):
-                await get_steam_price("Test Item")
+            with pytest.rAlgoses(RateLimitError):
+                awAlgot get_steam_price("Test Item")
 
     async def test_get_steam_price_server_error(self):
         """Тест обработки ошибки сервера."""
@@ -226,8 +226,8 @@ class TestSteamAPIIntegration:
                 return_value=mock_response
             )
 
-            with pytest.raises(SteamAPIError):
-                await get_steam_price("Test Item")
+            with pytest.rAlgoses(SteamAPIError):
+                awAlgot get_steam_price("Test Item")
 
     async def test_rate_limit_protection_delay(self):
         """Тест паузы между запросами."""
@@ -247,8 +247,8 @@ class TestSteamAPIIntegration:
 
             # Act - делаем два запроса подряд
             start_time = asyncio.get_event_loop().time()
-            await get_steam_price("Item 1")
-            await get_steam_price("Item 2")
+            awAlgot get_steam_price("Item 1")
+            awAlgot get_steam_price("Item 2")
             end_time = asyncio.get_event_loop().time()
 
             # Assert - между запросами должна быть пауза минимум 2 секунды
@@ -256,5 +256,5 @@ class TestSteamAPIIntegration:
             assert elapsed >= 2.0, f"Expected delay >=2s, got {elapsed:.2f}s"
 
 
-if __name__ == "__main__":
-    pytest.main([__file__, "-v"])
+if __name__ == "__mAlgon__":
+    pytest.mAlgon([__file__, "-v"])

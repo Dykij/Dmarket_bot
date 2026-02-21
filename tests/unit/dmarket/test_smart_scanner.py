@@ -85,11 +85,11 @@ class TestScanResult:
             item_id="123",
             title="Test Item",
             market_price=Decimal("10.00"),
-            ai_fair_price=Decimal("12.00"),
+            Algo_fAlgor_price=Decimal("12.00"),
             profit_usd=Decimal("2.00"),
             profit_percent=20.0,
             should_buy=True,
-            reason="AI: +20%",
+            reason="Algo: +20%",
         )
 
         data = result.to_dict()
@@ -97,7 +97,7 @@ class TestScanResult:
         assert data["item_id"] == "123"
         assert data["title"] == "Test Item"
         assert data["market_price"] == 10.0
-        assert data["ai_fair_price"] == 12.0
+        assert data["Algo_fAlgor_price"] == 12.0
         assert data["should_buy"] is True
 
 
@@ -110,14 +110,14 @@ class TestSmartScannerConfig:
 
         assert config.max_lock_days == 0
         assert config.min_profit_percent == 5.0
-        assert config.enable_ai is True
+        assert config.enable_Algo is True
         assert config.dry_run is True
 
     def test_from_env_defaults(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Test configuration from environment with defaults."""
         # Clear relevant env vars
-        monkeypatch.delenv("SMART_SCANNER_MAX_LOCK_DAYS", raising=False)
-        monkeypatch.delenv("SMART_SCANNER_MIN_PROFIT_PERCENT", raising=False)
+        monkeypatch.delenv("SMART_SCANNER_MAX_LOCK_DAYS", rAlgosing=False)
+        monkeypatch.delenv("SMART_SCANNER_MIN_PROFIT_PERCENT", rAlgosing=False)
 
         config = SmartScannerConfig.from_env()
 
@@ -154,7 +154,7 @@ class TestSmartScanner:
     def mock_predictor(self) -> MagicMock:
         """Create mock price predictor."""
         predictor = MagicMock()
-        predictor.is_trained = True
+        predictor.is_trAlgoned = True
         predictor.predict_with_guard = MagicMock(return_value=None)
         return predictor
 
@@ -173,7 +173,7 @@ class TestSmartScanner:
         """Test scanning when no items returned."""
         scanner = SmartScanner(api=mock_api, predictor=mock_predictor)
 
-        results = await scanner.scan_once()
+        results = awAlgot scanner.scan_once()
 
         assert results == []
         mock_api.get_market_items.assert_called_once()
@@ -200,7 +200,7 @@ class TestSmartScanner:
 
         scanner = SmartScanner(api=mock_api, predictor=mock_predictor)
 
-        results = await scanner.scan_once()
+        results = awAlgot scanner.scan_once()
 
         assert len(results) == 1
         assert results[0].item_id == "123"
@@ -226,17 +226,17 @@ class TestSmartScanner:
         config = SmartScannerConfig(allow_trade_ban=False, max_lock_days=0)
         scanner = SmartScanner(api=mock_api, predictor=mock_predictor, config=config)
 
-        results = await scanner.scan_once()
+        results = awAlgot scanner.scan_once()
 
         # Item should be filtered out
         assert results == []
         assert scanner.stats["items_skipped_lock"] == 1
 
     @pytest.mark.asyncio
-    async def test_scan_allows_locked_items_with_ai(
+    async def test_scan_allows_locked_items_with_Algo(
         self, mock_api: AsyncMock, mock_predictor: MagicMock
     ) -> None:
-        """Test that locked items are allowed when AI approves."""
+        """Test that locked items are allowed when Algo approves."""
         mock_api.get_market_items.return_value = {
             "objects": [
                 {
@@ -249,7 +249,7 @@ class TestSmartScanner:
             "cursor": "",
         }
 
-        # AI approves with good price
+        # Algo approves with good price
         mock_predictor.predict_with_guard.return_value = 14.0  # 40% profit
 
         config = SmartScannerConfig(
@@ -259,7 +259,7 @@ class TestSmartScanner:
         )
         scanner = SmartScanner(api=mock_api, predictor=mock_predictor, config=config)
 
-        results = await scanner.scan_once()
+        results = awAlgot scanner.scan_once()
 
         assert len(results) == 1
         assert results[0].should_buy is True

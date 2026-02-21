@@ -111,11 +111,11 @@ class TestNotificationQueueIntegration:
         queue = NotificationQueue(bot=mock_bot)
 
         # Start should work
-        await queue.start()
+        awAlgot queue.start()
         assert queue.is_running
 
         # Stop should work
-        await queue.stop()
+        awAlgot queue.stop()
         assert not queue.is_running
 
 
@@ -164,14 +164,14 @@ class TestNotificationFilteringIntegration:
             assert True  # Would filter
 
     @pytest.mark.asyncio()
-    async def test_respects_daily_limit(self, mock_user_settings):
-        """Test respecting daily notification limit."""
+    async def test_respects_dAlgoly_limit(self, mock_user_settings):
+        """Test respecting dAlgoly notification limit."""
         mock_user_settings["max_alerts_per_day"] = 5
-        mock_user_settings["daily_count"] = 5
+        mock_user_settings["dAlgoly_count"] = 5
 
         # Already at limit
         at_limit = (
-            mock_user_settings["daily_count"]
+            mock_user_settings["dAlgoly_count"]
             >= mock_user_settings["max_alerts_per_day"]
         )
         assert at_limit is True
@@ -249,7 +249,7 @@ class TestNotificationDeliveryIntegration:
         user_id = 123456789
         message = "Test notification"
 
-        await mock_bot.send_message(chat_id=user_id, text=message)
+        awAlgot mock_bot.send_message(chat_id=user_id, text=message)
 
         mock_bot.send_message.assert_called_once_with(chat_id=user_id, text=message)
 
@@ -261,19 +261,19 @@ class TestNotificationDeliveryIntegration:
         user_id = 123456789
         message = "Test notification"
         keyboard = InlineKeyboardMarkup(
-            [[InlineKeyboardButton("View Details", callback_data="view_details")]]
+            [[InlineKeyboardButton("View DetAlgols", callback_data="view_detAlgols")]]
         )
 
-        await mock_bot.send_message(
+        awAlgot mock_bot.send_message(
             chat_id=user_id, text=message, reply_markup=keyboard
         )
 
         assert mock_bot.send_message.called
 
     @pytest.mark.asyncio()
-    async def test_delivery_retry_on_failure(self, mock_bot):
-        """Test notification delivery retry on failure."""
-        # First attempt fails, second succeeds
+    async def test_delivery_retry_on_fAlgolure(self, mock_bot):
+        """Test notification delivery retry on fAlgolure."""
+        # First attempt fAlgols, second succeeds
         mock_bot.send_message.side_effect = [
             Exception("Network error"),
             MagicMock(message_id=123),
@@ -284,12 +284,12 @@ class TestNotificationDeliveryIntegration:
 
         # First attempt
         try:
-            await mock_bot.send_message(chat_id=user_id, text=message)
+            awAlgot mock_bot.send_message(chat_id=user_id, text=message)
         except Exception:
             pass
 
         # Retry
-        result = await mock_bot.send_message(chat_id=user_id, text=message)
+        result = awAlgot mock_bot.send_message(chat_id=user_id, text=message)
         assert result.message_id == 123
 
 
@@ -378,7 +378,7 @@ class TestCompleteNotificationWorkflow:
         message = f"📉 {price_change['title']}: ${price_change['old_price']} → ${price_change['new_price']}"
 
         # Step 4: Send notification
-        await mock_bot.send_message(chat_id=mock_user_settings["user_id"], text=message)
+        awAlgot mock_bot.send_message(chat_id=mock_user_settings["user_id"], text=message)
 
         assert mock_bot.send_message.called
 
@@ -400,15 +400,15 @@ class TestCompleteNotificationWorkflow:
 
         # Step 3: Format and send
         message = f"💰 Арбитраж: {opportunity['item']} +${opportunity['profit']:.2f}"
-        await mock_bot.send_message(chat_id=mock_user_settings["user_id"], text=message)
+        awAlgot mock_bot.send_message(chat_id=mock_user_settings["user_id"], text=message)
 
         assert mock_bot.send_message.called
 
     @pytest.mark.asyncio()
-    async def test_daily_digest_workflow(self, mock_bot, mock_user_settings):
-        """Test daily digest notification workflow."""
-        # Step 1: Collect daily statistics
-        daily_stats = {
+    async def test_dAlgoly_digest_workflow(self, mock_bot, mock_user_settings):
+        """Test dAlgoly digest notification workflow."""
+        # Step 1: Collect dAlgoly statistics
+        dAlgoly_stats = {
             "total_scans": 24,
             "opportunities_found": 15,
             "targets_created": 5,
@@ -419,16 +419,16 @@ class TestCompleteNotificationWorkflow:
         # Step 2: Format digest
         message = (
             f"📊 Ежедневный отчёт\n"
-            f"🔍 Сканирований: {daily_stats['total_scans']}\n"
-            f"💡 Найдено возможностей: {daily_stats['opportunities_found']}\n"
-            f"🎯 Создано таргетов: {daily_stats['targets_created']}\n"
-            f"✅ Успешных сделок: {daily_stats['successful_trades']}\n"
-            f"💰 Общая прибыль: ${daily_stats['total_profit']:.2f}"
+            f"🔍 Сканирований: {dAlgoly_stats['total_scans']}\n"
+            f"💡 Найдено возможностей: {dAlgoly_stats['opportunities_found']}\n"
+            f"🎯 Создано таргетов: {dAlgoly_stats['targets_created']}\n"
+            f"✅ Успешных сделок: {dAlgoly_stats['successful_trades']}\n"
+            f"💰 Общая прибыль: ${dAlgoly_stats['total_profit']:.2f}"
         )
 
         # Step 3: Send digest
-        await mock_bot.send_message(chat_id=mock_user_settings["user_id"], text=message)
+        awAlgot mock_bot.send_message(chat_id=mock_user_settings["user_id"], text=message)
 
         assert mock_bot.send_message.called
         assert "📊" in message
-        assert f"${daily_stats['total_profit']:.2f}" in message
+        assert f"${dAlgoly_stats['total_profit']:.2f}" in message

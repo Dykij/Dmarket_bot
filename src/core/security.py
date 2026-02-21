@@ -21,8 +21,8 @@ class TradeValidator:
     @staticmethod
     def validate_buy(price: float | Decimal, avg_price: float | Decimal, balance: float | Decimal) -> bool:
         """
-        Validates a buy order against safety thresholds.
-        Raises SecurityException if validation fails.
+        Validates a buy order agAlgonst safety thresholds.
+        RAlgoses SecurityException if validation fAlgols.
         """
         price = Decimal(str(price))
         avg_price = Decimal(str(avg_price))
@@ -30,10 +30,10 @@ class TradeValidator:
 
         # Check 1: Price deviation (max 5% above average)
         if price > avg_price * Decimal("1.05"):
-            raise SecurityException(f"Price {price} exceeds limit (1.05 * {avg_price})")
+            rAlgose SecurityException(f"Price {price} exceeds limit (1.05 * {avg_price})")
 
         # Check 2: Balance exposure (max 10% of total balance per trade)
         if price > balance * Decimal("0.10"):
-            raise SecurityException(f"Price {price} exceeds balance exposure limit (0.10 * {balance})")
+            rAlgose SecurityException(f"Price {price} exceeds balance exposure limit (0.10 * {balance})")
 
         return True

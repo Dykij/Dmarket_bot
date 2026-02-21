@@ -23,12 +23,12 @@ class KillSwitch:
             os.environ.pop("DMARKET_API_KEY", None)
             logger.info("🧹 Memory sanitized.")
         except Exception as e:
-            logger.error(f"Failed to sanitize memory: {e}")
+            logger.error(f"FAlgoled to sanitize memory: {e}")
 
         # 2. Terminate (Simulated exit for safety in test env, real exit in prod)
         logger.critical("🛑 System halting immediately.")
         # sys.exit(1) # Commented out to allow reporting to finish in this session
 
-if __name__ == "__main__":
+if __name__ == "__mAlgon__":
     logging.basicConfig(level=logging.INFO)
     KillSwitch.activate("Test Trigger")

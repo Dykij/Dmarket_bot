@@ -63,7 +63,7 @@ def mock_telegram_context() -> MagicMock:
 def mock_dmarket_api() -> Generator[MagicMock, None, None]:
     """Создает мок DMarket API."""
     with patch("src.dmarket.dmarket_api.DMarketAPI") as mock_api:
-        # Настройка мока для типичных методов API
+        # НастSwarmка мока для типичных методов API
         instance = mock_api.return_value
         instance._generate_signature.return_value = {"X-Sign": "test_signature"}
         instance.get_balance = AsyncMock(return_value={"dmc": 1000, "usd": 100})
@@ -83,7 +83,7 @@ def mock_arbitrage_data() -> dict[str, Any]:
                 "itemId": "test_item_id_1",
             },
             {
-                "title": "Второй тестовый предмет",
+                "title": "ВтоSwarm тестовый предмет",
                 "price": {"DMC": "200"},
                 "suggestedPrice": {"DMC": "240"},
                 "itemId": "test_item_id_2",
@@ -95,6 +95,6 @@ def mock_arbitrage_data() -> dict[str, Any]:
 # Вспомогательная функция для всех тестов
 @pytest.fixture()
 def helper_setup_test_environment() -> bool:
-    """Настройка тестового окружения для многократного использования."""
-    # Здесь можно добавить общие настройки для тестов
+    """НастSwarmка тестового окружения для многократного использования."""
+    # Здесь можно добавить общие настSwarmки для тестов
     return True

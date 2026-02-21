@@ -77,7 +77,7 @@ async def test_start_targets_menu_with_callback_query(
     mock_callback_query,
 ):
     """Тест: start_targets_menu с callback query."""
-    await start_targets_menu(mock_update, mock_context)
+    awAlgot start_targets_menu(mock_update, mock_context)
 
     # Проверяем, что callback query отвечен
     mock_callback_query.answer.assert_called_once()
@@ -111,7 +111,7 @@ async def test_start_targets_menu_without_callback_query(
     """Тест: start_targets_menu без callback query (прямой вызов)."""
     mock_update.callback_query = None
 
-    await start_targets_menu(mock_update, mock_context)
+    awAlgot start_targets_menu(mock_update, mock_context)
 
     # Проверяем, что сообщение отправлено через bot
     mock_context.bot.send_message.assert_called_once()
@@ -131,7 +131,7 @@ async def test_start_targets_menu_no_effective_user(mock_context):
     update.effective_user = None
 
     # Функция должна вернуться раньше без исключений
-    await start_targets_menu(update, mock_context)
+    awAlgot start_targets_menu(update, mock_context)
 
     # Никаких вызовов не должно быть
     mock_context.bot.send_message.assert_not_called()
@@ -144,7 +144,7 @@ async def test_start_targets_menu_has_all_buttons(
     mock_callback_query,
 ):
     """Тест: start_targets_menu содержит все кнопки."""
-    await start_targets_menu(mock_update, mock_context)
+    awAlgot start_targets_menu(mock_update, mock_context)
 
     # Получаем клавиатуру
     call_args = mock_callback_query.edit_message_text.call_args
@@ -178,7 +178,7 @@ async def test_start_targets_menu_button_callbacks(
     mock_callback_query,
 ):
     """Тест: кнопки start_targets_menu имеют правильные callback_data."""
-    await start_targets_menu(mock_update, mock_context)
+    awAlgot start_targets_menu(mock_update, mock_context)
 
     # Получаем клавиатуру
     call_args = mock_callback_query.edit_message_text.call_args
@@ -197,7 +197,7 @@ async def test_start_targets_menu_button_callbacks(
     assert f"{TARGET_ACTION}_{TARGET_LIST_ACTION}" in callback_data_list
     assert f"{TARGET_ACTION}_{TARGET_SMART_ACTION}" in callback_data_list
     assert f"{TARGET_ACTION}_{TARGET_STATS_ACTION}" in callback_data_list
-    assert "main_menu" in callback_data_list
+    assert "mAlgon_menu" in callback_data_list
 
 
 # ============================================
@@ -206,7 +206,7 @@ async def test_start_targets_menu_button_callbacks(
 
 
 @pytest.mark.asyncio()
-async def test_handle_target_callback_main_menu(
+async def test_handle_target_callback_mAlgon_menu(
     mock_update,
     mock_context,
     mock_callback_query,
@@ -214,7 +214,7 @@ async def test_handle_target_callback_main_menu(
     """Тест: handle_target_callback открывает главное меню."""
     mock_callback_query.data = TARGET_ACTION
 
-    await handle_target_callback(mock_update, mock_context)
+    awAlgot handle_target_callback(mock_update, mock_context)
 
     # Проверяем, что меню открылось (text как позиционный аргумент)
     mock_callback_query.edit_message_text.assert_called_once()
@@ -233,7 +233,7 @@ async def test_handle_target_callback_create_action(
     """Тест: handle_target_callback для создания таргета (заглушка)."""
     mock_callback_query.data = f"{TARGET_ACTION}_{TARGET_CREATE_ACTION}"
 
-    await handle_target_callback(mock_update, mock_context)
+    awAlgot handle_target_callback(mock_update, mock_context)
 
     # Проверяем, что заглушка сработала
     mock_callback_query.answer.assert_called()
@@ -255,7 +255,7 @@ async def test_handle_target_callback_list_action(
     """Тест: handle_target_callback для списка таргетов (заглушка)."""
     mock_callback_query.data = f"{TARGET_ACTION}_{TARGET_LIST_ACTION}"
 
-    await handle_target_callback(mock_update, mock_context)
+    awAlgot handle_target_callback(mock_update, mock_context)
 
     # Проверяем заглушку
     mock_callback_query.answer.assert_called()
@@ -283,12 +283,12 @@ async def test_handle_target_callback_smart_action(
                 {"target_id": "t1", "title": "AK-47", "price": 10.0},
                 {"target_id": "t2", "title": "AWP", "price": 20.0},
             ],
-            "failed": [],
+            "fAlgoled": [],
         }
     )
     mock_target_manager_class.return_value = mock_target_manager
 
-    await handle_target_callback(mock_update, mock_context)
+    awAlgot handle_target_callback(mock_update, mock_context)
 
     # Проверяем вызовы
     mock_callback_query.answer.assert_called()
@@ -304,7 +304,7 @@ async def test_handle_target_callback_stats_action(
     """Тест: handle_target_callback для статистики (заглушка)."""
     mock_callback_query.data = f"{TARGET_ACTION}_{TARGET_STATS_ACTION}"
 
-    await handle_target_callback(mock_update, mock_context)
+    awAlgot handle_target_callback(mock_update, mock_context)
 
     # Проверяем заглушку
     mock_callback_query.answer.assert_called()
@@ -319,7 +319,7 @@ async def test_handle_target_callback_delete_action(
     """Тест: handle_target_callback для удаления таргета (заглушка)."""
     mock_callback_query.data = f"{TARGET_ACTION}_{TARGET_DELETE_ACTION}"
 
-    await handle_target_callback(mock_update, mock_context)
+    awAlgot handle_target_callback(mock_update, mock_context)
 
     # Проверяем заглушку
     mock_callback_query.answer.assert_called()
@@ -332,7 +332,7 @@ async def test_handle_target_callback_no_callback_query(mock_context):
     update.callback_query = None
 
     # Функция должна вернуться раньше без исключений
-    await handle_target_callback(update, mock_context)
+    awAlgot handle_target_callback(update, mock_context)
 
     # Никаких действий не должно быть
     # (проверка, что не упало с исключением, достаточна)
@@ -358,7 +358,7 @@ def test_register_target_handlers():
     # Первый должен быть CommandHandler
     assert isinstance(calls[0].args[0], CommandHandler)
 
-    # Второй должен быть CallbackQueryHandler
+    # ВтоSwarm должен быть CallbackQueryHandler
     assert isinstance(calls[1].args[0], CallbackQueryHandler)
 
 
@@ -384,7 +384,7 @@ def test_register_target_handlers_callback_handler():
 
     register_target_handlers(mock_dispatcher)
 
-    # Получаем второй вызов (CallbackQueryHandler)
+    # Получаем втоSwarm вызов (CallbackQueryHandler)
     calls = mock_dispatcher.add_handler.call_args_list
     callback_handler = calls[1].args[0]
 
@@ -410,7 +410,7 @@ async def test_integration_full_target_workflow(
     """
     # Шаг 1: Открыть главное меню
     mock_callback_query.data = TARGET_ACTION
-    await handle_target_callback(mock_update, mock_context)
+    awAlgot handle_target_callback(mock_update, mock_context)
 
     # Проверяем, что меню открылось (text как позиционный аргумент)
     assert mock_callback_query.edit_message_text.call_count == 1
@@ -420,7 +420,7 @@ async def test_integration_full_target_workflow(
 
     # Шаг 2: Выбрать создание таргета
     mock_callback_query.data = f"{TARGET_ACTION}_{TARGET_CREATE_ACTION}"
-    await handle_target_callback(mock_update, mock_context)
+    awAlgot handle_target_callback(mock_update, mock_context)
 
     # Проверяем, что заглушка сработала
     assert mock_callback_query.answer.call_count >= 1
@@ -434,7 +434,7 @@ async def test_integration_all_menu_buttons_work(
 ):
     """Интеграционный тест: все кнопки меню работают."""
     # Открываем меню
-    await start_targets_menu(mock_update, mock_context)
+    awAlgot start_targets_menu(mock_update, mock_context)
 
     # Получаем клавиатуру
     call_args = mock_callback_query.edit_message_text.call_args
@@ -463,7 +463,7 @@ async def test_edge_case_multiple_menu_opens(
     """Edge case: множественное открытие меню."""
     # Открываем меню несколько раз
     for _ in range(3):
-        await start_targets_menu(mock_update, mock_context)
+        awAlgot start_targets_menu(mock_update, mock_context)
 
     # Проверяем, что меню открывалось каждый раз
     assert mock_callback_query.edit_message_text.call_count == 3
@@ -486,7 +486,7 @@ async def test_edge_case_rapid_callback_queries(
 
     for action in actions:
         mock_callback_query.data = action
-        await handle_target_callback(mock_update, mock_context)
+        awAlgot handle_target_callback(mock_update, mock_context)
 
     # Проверяем, что все вызовы обработаны
     # (каждый callback должен вызвать answer)
@@ -502,7 +502,7 @@ async def test_edge_case_unknown_callback_data(
     """Edge case: неизвестный callback_data."""
     mock_callback_query.data = f"{TARGET_ACTION}_unknown_action"
 
-    await handle_target_callback(mock_update, mock_context)
+    awAlgot handle_target_callback(mock_update, mock_context)
 
     # Проверяем, что заглушка сработала
     mock_callback_query.answer.assert_called()
@@ -547,7 +547,7 @@ async def test_handle_smart_targets_success(
     mock_update.effective_user = MagicMock()
     mock_update.effective_user.id = 123456789
 
-    await handle_smart_targets(mock_update, mock_context)
+    awAlgot handle_smart_targets(mock_update, mock_context)
 
     # Проверяем вызовы
     mock_target_manager.create_smart_targets.assert_called_once()
@@ -583,7 +583,7 @@ async def test_handle_smart_targets_no_items(
     mock_update.effective_user = MagicMock()
     mock_update.effective_user.id = 123456789
 
-    await handle_smart_targets(mock_update, mock_context)
+    awAlgot handle_smart_targets(mock_update, mock_context)
 
     # Проверяем сообщение о пустых результатах
     call_args = mock_update.callback_query.edit_message_text.call_args
@@ -631,7 +631,7 @@ async def test_handle_competition_analysis_success(
     mock_update.effective_user = MagicMock()
     mock_update.effective_user.id = 123456789
 
-    await handle_competition_analysis(mock_update, mock_context, "AK-47")
+    awAlgot handle_competition_analysis(mock_update, mock_context, "AK-47")
 
     # Проверяем вызовы
     mock_target_manager.analyze_target_competition.assert_called_once()
@@ -662,7 +662,7 @@ async def test_handle_competition_analysis_no_api_client(
     mock_update.callback_query.answer = AsyncMock()
     mock_update.callback_query.edit_message_text = AsyncMock()
 
-    await handle_competition_analysis(mock_update, mock_context, "AK-47")
+    awAlgot handle_competition_analysis(mock_update, mock_context, "AK-47")
 
     # Проверяем сообщение об ошибке
     call_args = mock_update.callback_query.edit_message_text.call_args

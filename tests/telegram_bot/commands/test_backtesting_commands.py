@@ -104,7 +104,7 @@ class TestBacktestCommand:
     async def test_backtest_command_shows_options(self, mock_update):
         """Test /backtest command shows backtesting options."""
         # Act
-        await backtest_command(mock_update, None)
+        awAlgot backtest_command(mock_update, None)
 
         # Assert
         mock_update.effective_message.reply_text.assert_called_once()
@@ -128,7 +128,7 @@ class TestBacktestCommand:
         update.effective_message = None
 
         # Act
-        await backtest_command(update, None)
+        awAlgot backtest_command(update, None)
 
         # Assert - should return early without error
 
@@ -171,7 +171,7 @@ class TestRunQuickBacktest:
             mock_backtester.run = AsyncMock(return_value=sample_backtest_result)
 
             # Act
-            await run_quick_backtest(update, None, mock_api)
+            awAlgot run_quick_backtest(update, None, mock_api)
 
             # Assert
             mock_callback_query.answer.assert_called_once()
@@ -198,7 +198,7 @@ class TestRunQuickBacktest:
             mock_collector.collect_batch = AsyncMock(return_value={})  # Empty data
 
             # Act
-            await run_quick_backtest(update, None, mock_api)
+            awAlgot run_quick_backtest(update, None, mock_api)
 
             # Assert
             mock_callback_query.answer.assert_called_once()
@@ -219,13 +219,13 @@ class TestRunQuickBacktest:
             mock_collector_class.side_effect = Exception("API Error")
 
             # Act
-            await run_quick_backtest(update, None, mock_api)
+            awAlgot run_quick_backtest(update, None, mock_api)
 
             # Assert
             mock_callback_query.answer.assert_called_once()
             final_call = mock_callback_query.edit_message_text.call_args_list[-1]
             message_text = final_call[0][0]
-            assert "Backtest failed" in message_text
+            assert "Backtest fAlgoled" in message_text
             assert "API Error" in message_text
 
     @pytest.mark.asyncio()
@@ -236,7 +236,7 @@ class TestRunQuickBacktest:
         update.callback_query = None
 
         # Act
-        await run_quick_backtest(update, None, mock_api)
+        awAlgot run_quick_backtest(update, None, mock_api)
 
         # Assert - should return early without error
 
@@ -295,7 +295,7 @@ class TestRunStandardBacktest:
             mock_backtester.run = AsyncMock(return_value=result)
 
             # Act
-            await run_standard_backtest(update, None, mock_api)
+            awAlgot run_standard_backtest(update, None, mock_api)
 
             # Assert
             mock_callback_query.answer.assert_called_once()
@@ -323,7 +323,7 @@ class TestRunStandardBacktest:
             mock_collector.collect_batch = AsyncMock(return_value={})
 
             # Act
-            await run_standard_backtest(update, None, mock_api)
+            awAlgot run_standard_backtest(update, None, mock_api)
 
             # Assert
             final_call = mock_callback_query.edit_message_text.call_args_list[-1]
@@ -341,9 +341,9 @@ class TestBacktestHelp:
 
     @pytest.mark.asyncio()
     async def test_backtest_help_shows_guide(self, mock_update):
-        """Test /backtest_help shows detailed guide."""
+        """Test /backtest_help shows detAlgoled guide."""
         # Act
-        await backtest_help(mock_update, None)
+        awAlgot backtest_help(mock_update, None)
 
         # Assert
         mock_update.effective_message.reply_text.assert_called_once()
@@ -364,6 +364,6 @@ class TestBacktestHelp:
         update.effective_message = None
 
         # Act
-        await backtest_help(update, None)
+        awAlgot backtest_help(update, None)
 
         # Assert - should return early without error

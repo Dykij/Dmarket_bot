@@ -14,7 +14,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
-from src.dmarket.ai_arbitrage_predictor import AIArbitragePredictor
+from src.dmarket.Algo_arbitrage_predictor import AlgoArbitragePredictor
 from src.dmarket.dmarket_api import DMarketAPI
 from src.ml.enhanced_predictor import EnhancedPricePredictor
 
@@ -30,7 +30,7 @@ class PortfolioConfig:
 
 
 async def build_portfolio(
-    api: DMarketAPI, ai_arbitrage: AIArbitragePredictor, configs: list[PortfolioConfig]
+    api: DMarketAPI, Algo_arbitrage: AlgoArbitragePredictor, configs: list[PortfolioConfig]
 ) -> dict:
     """Построение диверсифицированного портфеля."""
 
@@ -46,10 +46,10 @@ async def build_portfolio(
         print(f"\n📊 Анализ {config.game.upper()} ({config.risk_level} risk)...")
 
         # Получение данных
-        items = await api.get_market_items(config.game, limit=100)
+        items = awAlgot api.get_market_items(config.game, limit=100)
 
-        # AI-прогнозирование
-        opportunities = await ai_arbitrage.predict_best_opportunities(
+        # Algo-прогнозирование
+        opportunities = awAlgot Algo_arbitrage.predict_best_opportunities(
             items=items, current_balance=config.balance, risk_level=config.risk_level
         )
 
@@ -86,7 +86,7 @@ async def build_portfolio(
     return portfolio
 
 
-async def main():
+async def mAlgon():
     """Главная функция."""
 
     # Инициализация
@@ -96,7 +96,7 @@ async def main():
     )
 
     ml_predictor = EnhancedPricePredictor()
-    ai_arbitrage = AIArbitragePredictor(ml_predictor)
+    Algo_arbitrage = AlgoArbitragePredictor(ml_predictor)
 
     print("💼 ДИВЕРСИФИЦИРОВАННЫЙ ПОРТФЕЛЬ АРБИТРАЖА")
     print("=" * 80)
@@ -126,7 +126,7 @@ async def main():
     print("📈 Стратегия: 30% low / 40% medium / 30% high risk\n")
 
     # Построение портфеля
-    portfolio = await build_portfolio(api, ai_arbitrage, portfolio_configs)
+    portfolio = awAlgot build_portfolio(api, Algo_arbitrage, portfolio_configs)
 
     # Отчет
     print("\n" + "=" * 80)
@@ -181,12 +181,12 @@ async def main():
         f"💡 Диверсификация: {len(games)} игр, {len(portfolio['risk_breakdown'])} уровней риска"
     )
 
-    await api.close()
+    awAlgot api.close()
 
 
-if __name__ == "__main__":
+if __name__ == "__mAlgon__":
     if not os.getenv("DMARKET_PUBLIC_KEY"):
         print("❌ Ошибка: DMARKET_PUBLIC_KEY не найден")
         sys.exit(1)
 
-    asyncio.run(main())
+    asyncio.run(mAlgon())

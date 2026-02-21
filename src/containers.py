@@ -6,22 +6,22 @@
 Пример использования:
 
     # Инициализация контейнера
-    from src.containers import init_container, get_container
+    from src.contAlgoners import init_contAlgoner, get_contAlgoner
 
-    container = init_container(config)
+    contAlgoner = init_contAlgoner(config)
 
     # Получение зависимостей
-    api = container.dmarket_api()
-    scanner = container.arbitrage_scanner()
+    api = contAlgoner.dmarket_api()
+    scanner = contAlgoner.arbitrage_scanner()
 
     # Переопределение для тестов
-    container.dmarket_api.override(mock_api)
+    contAlgoner.dmarket_api.override(mock_api)
 """
 
 import logging
 from typing import Any
 
-from dependency_injector import containers, providers
+from dependency_injector import contAlgoners, providers
 
 from src.dmarket.dmarket_api import DMarketAPI
 from src.dmarket.scanner.engine import ArbitrageScanner
@@ -34,7 +34,7 @@ from src.utils.redis_cache import RedisCache
 logger = logging.getLogger(__name__)
 
 
-class Container(containers.DeclarativeContainer):
+class ContAlgoner(contAlgoners.DeclarativeContAlgoner):
     """Главный DI контейнер приложения.
 
     Предоставляет все зависимости приложения как плоскую структуру
@@ -50,10 +50,10 @@ class Container(containers.DeclarativeContainer):
         redis_cache: Redis кэш (singleton)
 
     Example:
-        >>> container = Container()
-        >>> container.config.from_dict({"dmarket": {"public_key": "xxx"}})
-        >>> api = container.dmarket_api()
-        >>> scanner = container.arbitrage_scanner()
+        >>> contAlgoner = ContAlgoner()
+        >>> contAlgoner.config.from_dict({"dmarket": {"public_key": "xxx"}})
+        >>> api = contAlgoner.dmarket_api()
+        >>> scanner = contAlgoner.arbitrage_scanner()
     """
 
     # Configuration provider
@@ -111,55 +111,55 @@ class Container(containers.DeclarativeContainer):
     )
 
 
-# Global container instance
-_container: Container | None = None
+# Global contAlgoner instance
+_contAlgoner: ContAlgoner | None = None
 
 
-def get_container() -> Container:
+def get_contAlgoner() -> ContAlgoner:
     """Получить глобальный экземпляр контейнера.
 
     Returns:
-        Container: Настроенный DI контейнер
+        ContAlgoner: Настроенный DI контейнер
 
-    Raises:
+    RAlgoses:
         RuntimeError: Если контейнер не инициализирован
     """
-    global _container
-    if _container is None:
-        raise RuntimeError(
-            "DI Container not initialized. Call init_container() first.",
+    global _contAlgoner
+    if _contAlgoner is None:
+        rAlgose RuntimeError(
+            "DI ContAlgoner not initialized. Call init_contAlgoner() first.",
         )
-    return _container
+    return _contAlgoner
 
 
-def init_container(config: Config | dict[str, Any] | None = None) -> Container:
+def init_contAlgoner(config: Config | dict[str, Any] | None = None) -> ContAlgoner:
     """Инициализировать глобальный DI контейнер.
 
     Args:
         config: Конфигурация приложения (Config object или dict)
 
     Returns:
-        Container: Инициализированный контейнер
+        ContAlgoner: Инициализированный контейнер
 
     Example:
         >>> config = {"dmarket": {"public_key": "xxx", "secret_key": "yyy"}}
-        >>> container = init_container(config)
-        >>> api = container.dmarket_api()
+        >>> contAlgoner = init_contAlgoner(config)
+        >>> api = contAlgoner.dmarket_api()
     """
-    global _container
+    global _contAlgoner
 
-    _container = Container()
+    _contAlgoner = ContAlgoner()
 
     if config is not None:
         # Convert Config to dict for dependency-injector
         config_dict = _config_to_dict(config) if isinstance(config, Config) else config
 
-        _container.config.from_dict(config_dict)
+        _contAlgoner.config.from_dict(config_dict)
 
         # Configure DMarket API with actual values
         dmarket_config = config_dict.get("dmarket", {})
-        _container.dmarket_api.reset()
-        _container.dmarket_api = providers.Singleton(
+        _contAlgoner.dmarket_api.reset()
+        _contAlgoner.dmarket_api = providers.Singleton(
             DMarketAPI,
             public_key=dmarket_config.get("public_key", ""),
             secret_key=dmarket_config.get("secret_key", ""),
@@ -167,23 +167,23 @@ def init_container(config: Config | dict[str, Any] | None = None) -> Container:
         )
 
         # Reconnect scanner and target_manager to use the new API
-        _container.arbitrage_scanner = providers.Factory(
+        _contAlgoner.arbitrage_scanner = providers.Factory(
             ArbitrageScanner,
-            api_client=_container.dmarket_api,
+            api_client=_contAlgoner.dmarket_api,
             enable_liquidity_filter=True,
             enable_competition_filter=True,
         )
 
-        _container.target_manager = providers.Factory(
+        _contAlgoner.target_manager = providers.Factory(
             TargetManager,
-            api_client=_container.dmarket_api,
+            api_client=_contAlgoner.dmarket_api,
             enable_liquidity_filter=True,
         )
 
         # Configure database
         db_config = config_dict.get("database", {})
-        _container.database.reset()
-        _container.database = providers.Singleton(
+        _contAlgoner.database.reset()
+        _contAlgoner.database = providers.Singleton(
             DatabaseManager,
             database_url=db_config.get("url", "sqlite:///:memory:"),
             echo=config_dict.get("debug", False),
@@ -191,24 +191,24 @@ def init_container(config: Config | dict[str, Any] | None = None) -> Container:
 
         # Configure caches
         cache_config = config_dict.get("cache", {})
-        _container.memory_cache.reset()
-        _container.memory_cache = providers.Singleton(
+        _contAlgoner.memory_cache.reset()
+        _contAlgoner.memory_cache = providers.Singleton(
             TTLCache,
             max_size=cache_config.get("max_size", 1000),
             default_ttl=cache_config.get("default_ttl", 300),
         )
 
         redis_config = config_dict.get("redis", {})
-        _container.redis_cache.reset()
-        _container.redis_cache = providers.Singleton(
+        _contAlgoner.redis_cache.reset()
+        _contAlgoner.redis_cache = providers.Singleton(
             RedisCache,
             redis_url=redis_config.get("url"),
             default_ttl=redis_config.get("default_ttl", 300),
             fallback_to_memory=True,
         )
 
-    logger.info("DI Container initialized successfully")
-    return _container
+    logger.info("DI ContAlgoner initialized successfully")
+    return _contAlgoner
 
 
 def _config_to_dict(config: Config) -> dict[str, Any]:
@@ -242,23 +242,23 @@ def _config_to_dict(config: Config) -> dict[str, Any]:
     }
 
 
-def reset_container() -> None:
+def reset_contAlgoner() -> None:
     """Сбросить глобальный контейнер (для тестов).
 
     Вызывает reset_singletons() для очистки кэшированных экземпляров.
     """
-    global _container
-    if _container is not None:
+    global _contAlgoner
+    if _contAlgoner is not None:
         try:
             # Reset all singletons
-            _container.dmarket_api.reset()
-            _container.database.reset()
-            _container.memory_cache.reset()
-            _container.redis_cache.reset()
+            _contAlgoner.dmarket_api.reset()
+            _contAlgoner.database.reset()
+            _contAlgoner.memory_cache.reset()
+            _contAlgoner.redis_cache.reset()
         except Exception as e:
-            logger.debug("Error resetting container singletons: %s", e)
-    _container = None
-    logger.debug("DI Container reset")
+            logger.debug("Error resetting contAlgoner singletons: %s", e)
+    _contAlgoner = None
+    logger.debug("DI ContAlgoner reset")
 
 
 def override_dmarket_api(mock_api: Any) -> None:
@@ -272,21 +272,21 @@ def override_dmarket_api(mock_api: Any) -> None:
         >>> mock = AsyncMock()
         >>> override_dmarket_api(mock)
     """
-    container = get_container()
-    container.dmarket_api.override(mock_api)
+    contAlgoner = get_contAlgoner()
+    contAlgoner.dmarket_api.override(mock_api)
 
 
 def reset_dmarket_api_override() -> None:
     """Сбросить переопределение DMarket API."""
-    container = get_container()
-    container.dmarket_api.reset_override()
+    contAlgoner = get_contAlgoner()
+    contAlgoner.dmarket_api.reset_override()
 
 
 __all__ = [
-    "Container",
-    "get_container",
-    "init_container",
+    "ContAlgoner",
+    "get_contAlgoner",
+    "init_contAlgoner",
     "override_dmarket_api",
-    "reset_container",
+    "reset_contAlgoner",
     "reset_dmarket_api_override",
 ]

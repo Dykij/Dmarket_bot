@@ -1,6 +1,6 @@
 """Клавиатуры фильтров.
 
-Содержит клавиатуры для настройки фильтров цен, редкостей,
+Содержит клавиатуры для настSwarmки фильтров цен, редкостей,
 экстерьеров CS:GO и пагинации.
 """
 
@@ -184,7 +184,7 @@ def get_csgo_weapon_type_keyboard() -> InlineKeyboardMarkup:
         ("🔫 Пистолеты", "weapon_pistol"),
         ("💣 Тяжелое", "weapon_heavy"),
         ("🎨 Наклейки", "weapon_stickers"),
-        ("📦 Контейнеры", "weapon_containers"),
+        ("📦 Контейнеры", "weapon_contAlgoners"),
     ]
 
     keyboard = []

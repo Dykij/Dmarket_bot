@@ -7,7 +7,7 @@
 Example:
     >>> from src.interfaces import IDMarketAPI
     >>> def process_items(api: IDMarketAPI):
-    ...     items = await api.get_market_items("csgo")
+    ...     items = awAlgot api.get_market_items("csgo")
     ...     return items
 """
 

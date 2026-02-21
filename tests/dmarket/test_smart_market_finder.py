@@ -75,7 +75,7 @@ def test_smart_market_finder_custom_settings(mock_api_client):
     """Тест изменения настроек SmartMarketFinder."""
     finder = SmartMarketFinder(mock_api_client)
 
-    # Изменяем настройки
+    # Изменяем настSwarmки
     finder.min_profit_percent = 10.0
     finder.min_confidence = 70.0
     finder.max_price = 200.0
@@ -100,7 +100,7 @@ async def test_find_best_opportunities_success(
     sample_market_item,
 ):
     """Тест успешного поиска лучших возможностей."""
-    # Настройка моков
+    # НастSwarmка моков
     mock_get_items.return_value = [sample_market_item]
 
     mock_opportunity = MarketOpportunity(
@@ -119,7 +119,7 @@ async def test_find_best_opportunities_success(
 
     # Создаем finder и вызываем метод
     finder = SmartMarketFinder(mock_api_client)
-    opportunities = await finder.find_best_opportunities(
+    opportunities = awAlgot finder.find_best_opportunities(
         game="csgo",
         min_price=10.0,
         max_price=100.0,
@@ -141,11 +141,11 @@ async def test_find_best_opportunities_no_items(
     mock_api_client,
 ):
     """Тест поиска возможностей когда предметов нет."""
-    # Настройка мока - возвращаем пустой список
+    # НастSwarmка мока - возвращаем пустой список
     mock_get_items.return_value = []
 
     finder = SmartMarketFinder(mock_api_client)
-    opportunities = await finder.find_best_opportunities(game="csgo")
+    opportunities = awAlgot finder.find_best_opportunities(game="csgo")
 
     # Проверки
     assert opportunities == []
@@ -159,11 +159,11 @@ async def test_find_best_opportunities_api_error(
     mock_api_client,
 ):
     """Тест обработки ошибки API при поиске возможностей."""
-    # Настройка мока - выбрасываем исключение
+    # НастSwarmка мока - выбрасываем исключение
     mock_get_items.side_effect = Exception("API Error")
 
     finder = SmartMarketFinder(mock_api_client)
-    opportunities = await finder.find_best_opportunities(game="csgo")
+    opportunities = awAlgot finder.find_best_opportunities(game="csgo")
 
     # Проверки - должен вернуть пустой список при ошибке
     assert opportunities == []
@@ -175,13 +175,13 @@ async def test_find_underpriced_items_success(
     sample_market_item,
 ):
     """Тест успешного поиска предметов с заниженной ценой."""
-    # Настройка мока API
+    # НастSwarmка мока API
     mock_api_client._request = AsyncMock(
         return_value={"objects": [sample_market_item]},
     )
 
     finder = SmartMarketFinder(mock_api_client)
-    underpriced = await finder.find_underpriced_items(
+    underpriced = awAlgot finder.find_underpriced_items(
         game="csgo",
         min_price=10.0,
         max_price=100.0,
@@ -197,11 +197,11 @@ async def test_find_underpriced_items_success(
 @pytest.mark.asyncio()
 async def test_find_underpriced_items_no_results(mock_api_client):
     """Тест поиска предметов с заниженной ценой когда нет результатов."""
-    # Настройка мока API - пустой ответ
+    # НастSwarmка мока API - пустой ответ
     mock_api_client._request = AsyncMock(return_value={"objects": []})
 
     finder = SmartMarketFinder(mock_api_client)
-    underpriced = await finder.find_underpriced_items(game="csgo")
+    underpriced = awAlgot finder.find_underpriced_items(game="csgo")
 
     # Проверки
     assert underpriced == []
@@ -321,14 +321,14 @@ def test_estimate_time_to_sell(mock_api_client):
 @patch.object(SmartMarketFinder, "find_best_opportunities")
 async def test_find_best_deals(mock_method):
     """Тест автономной функции find_best_deals."""
-    # Настройка мока - возвращаем пустой список
+    # НастSwarmка мока - возвращаем пустой список
     mock_method.return_value = []
 
     # Создаем мок API
     mock_api = AsyncMock()
 
     # Вызываем функцию
-    results = await find_best_deals(mock_api, game="csgo")
+    results = awAlgot find_best_deals(mock_api, game="csgo")
 
     # Проверки
     assert isinstance(results, list)
@@ -339,7 +339,7 @@ async def test_find_best_deals(mock_method):
 @patch("src.dmarket.smart_market_finder.SmartMarketFinder")
 async def test_find_quick_profits(mock_finder_class):
     """Тест автономной функции find_quick_profits."""
-    # Настройка мока
+    # НастSwarmка мока
     mock_finder = AsyncMock()
     mock_finder.find_quick_flip_opportunities = AsyncMock(return_value=[])
     mock_finder_class.return_value = mock_finder
@@ -348,7 +348,7 @@ async def test_find_quick_profits(mock_finder_class):
     mock_api = AsyncMock()
 
     # Вызываем функцию
-    results = await find_quick_profits(mock_api, game="csgo")
+    results = awAlgot find_quick_profits(mock_api, game="csgo")
 
     # Проверки
     assert isinstance(results, list)
@@ -403,12 +403,12 @@ async def test_find_target_opportunities_success(
     sample_market_item,
 ):
     """Тест поиска возможностей для таргетов."""
-    # Настройка моков
+    # НастSwarmка моков
     mock_api_client._request = AsyncMock(
         side_effect=[
             # Первый вызов - market items
             {"objects": [sample_market_item]},
-            # Второй вызов - aggregated prices
+            # ВтоSwarm вызов - aggregated prices
             {
                 "aggregatedPrices": [
                     {
@@ -424,7 +424,7 @@ async def test_find_target_opportunities_success(
     )
 
     finder = SmartMarketFinder(mock_api_client)
-    opportunities = await finder.find_target_opportunities(
+    opportunities = awAlgot finder.find_target_opportunities(
         game="csgo",
         min_price=10.0,
         max_price=100.0,
@@ -446,7 +446,7 @@ async def test_find_target_opportunities_success(
 @pytest.mark.asyncio()
 async def test_find_target_opportunities_no_spread(mock_api_client):
     """Тест когда нет спреда между ценами."""
-    # Настройка моков - цены одинаковые
+    # НастSwarmка моков - цены одинаковые
     mock_api_client._request = AsyncMock(
         side_effect=[
             {"objects": [{"title": "Test", "price": {"USD": "5000"}}]},
@@ -465,7 +465,7 @@ async def test_find_target_opportunities_no_spread(mock_api_client):
     )
 
     finder = SmartMarketFinder(mock_api_client)
-    opportunities = await finder.find_target_opportunities(
+    opportunities = awAlgot finder.find_target_opportunities(
         game="csgo",
         min_spread_percent=5.0,
     )
@@ -480,7 +480,7 @@ async def test_find_target_opportunities_api_error(mock_api_client):
     mock_api_client._request = AsyncMock(side_effect=Exception("API Error"))
 
     finder = SmartMarketFinder(mock_api_client)
-    opportunities = await finder.find_target_opportunities(game="csgo")
+    opportunities = awAlgot finder.find_target_opportunities(game="csgo")
 
     # Должен вернуть пустой список при ошибке
     assert opportunities == []
@@ -497,7 +497,7 @@ async def test_find_quick_flip_opportunities_success(
     mock_find_underpriced,
     mock_api_client,
 ):
-    """Тест поиска возможностей быстрой перепродажи."""
+    """Тест поиска возможностей быстSwarm перепродажи."""
     # Создаем возможности с высокой ликвидностью
     mock_opportunities = [
         MarketOpportunity(
@@ -528,7 +528,7 @@ async def test_find_quick_flip_opportunities_success(
     mock_find_underpriced.return_value = mock_opportunities
 
     finder = SmartMarketFinder(mock_api_client)
-    opportunities = await finder.find_quick_flip_opportunities(
+    opportunities = awAlgot finder.find_quick_flip_opportunities(
         game="csgo",
         min_price=5.0,
         max_price=30.0,
@@ -559,7 +559,7 @@ async def test_find_quick_flip_no_liquidity(
     mock_get_items.return_value = []
 
     finder = SmartMarketFinder(mock_api_client)
-    opportunities = await finder.find_quick_flip_opportunities(game="csgo")
+    opportunities = awAlgot finder.find_quick_flip_opportunities(game="csgo")
 
     # Не должно быть возможностей
     assert opportunities == []
@@ -576,13 +576,13 @@ async def test_get_market_items_with_aggregated_prices(
     sample_market_item,
 ):
     """Тест получения предметов с агрегированными ценами."""
-    # Настройка моков для метода _request напрямую
+    # НастSwarmка моков для метода _request напрямую
     mock_api_client._request = AsyncMock(
         return_value={"objects": [sample_market_item], "cursor": None}
     )
 
     finder = SmartMarketFinder(mock_api_client)
-    items = await finder._get_market_items_with_aggregated_prices(
+    items = awAlgot finder._get_market_items_with_aggregated_prices(
         game="csgo",
         min_price=10.0,
         max_price=100.0,
@@ -600,7 +600,7 @@ async def test_get_market_items_with_aggregated_prices_cache(
     mock_api_client,
 ):
     """Тест кэширования при получении предметов."""
-    # Настройка моков
+    # НастSwarmка моков
     mock_api_client.get_market_items = AsyncMock(
         return_value={"objects": [{"itemId": "cached_item"}]}
     )
@@ -611,14 +611,14 @@ async def test_get_market_items_with_aggregated_prices_cache(
     finder = SmartMarketFinder(mock_api_client)
 
     # Первый вызов
-    _ = await finder._get_market_items_with_aggregated_prices(
+    _ = awAlgot finder._get_market_items_with_aggregated_prices(
         game="csgo",
         min_price=10.0,
         max_price=100.0,
     )
 
-    # Второй вызов (должен использовать кэш)
-    _ = await finder._get_market_items_with_aggregated_prices(
+    # ВтоSwarm вызов (должен использовать кэш)
+    _ = awAlgot finder._get_market_items_with_aggregated_prices(
         game="csgo",
         min_price=10.0,
         max_price=100.0,
@@ -653,7 +653,7 @@ async def test_analyze_item_opportunity_underpriced(
         },
     }
 
-    opportunity = await finder._analyze_item_opportunity(
+    opportunity = awAlgot finder._analyze_item_opportunity(
         item_data,
         game="csgo",
     )
@@ -681,7 +681,7 @@ async def test_analyze_item_opportunity_no_suggested_price(
         # Нет suggestedPrice
     }
 
-    opportunity = await finder._analyze_item_opportunity(
+    opportunity = awAlgot finder._analyze_item_opportunity(
         item_data,
         game="csgo",
     )
@@ -710,7 +710,7 @@ async def test_analyze_item_opportunity_no_title(mock_api_client):
         "price": {"USD": "5000"},
     }
 
-    opportunity = await finder._analyze_item_opportunity(item_data, game="csgo")
+    opportunity = awAlgot finder._analyze_item_opportunity(item_data, game="csgo")
 
     # Должен вернуть None
     assert opportunity is None
@@ -728,7 +728,7 @@ async def test_analyze_item_opportunity_zero_price(mock_api_client):
         "price": {"USD": "0"},
     }
 
-    opportunity = await finder._analyze_item_opportunity(item_data, game="csgo")
+    opportunity = awAlgot finder._analyze_item_opportunity(item_data, game="csgo")
 
     # Должен вернуть None
     assert opportunity is None
@@ -754,7 +754,7 @@ async def test_analyze_item_opportunity_with_aggregated(mock_api_client):
         "extra": {"popularity": 0.7},
     }
 
-    opportunity = await finder._analyze_item_opportunity(item_data, game="csgo")
+    opportunity = awAlgot finder._analyze_item_opportunity(item_data, game="csgo")
 
     # Проверки
     assert opportunity is not None
@@ -776,7 +776,7 @@ async def test_analyze_item_opportunity_exception_handling(mock_api_client):
         "price": "invalid",  # Неверный формат
     }
 
-    opportunity = await finder._analyze_item_opportunity(item_data, game="csgo")
+    opportunity = awAlgot finder._analyze_item_opportunity(item_data, game="csgo")
 
     # Должен обработать исключение и вернуть None
     assert opportunity is None
@@ -840,7 +840,7 @@ async def test_find_best_opportunities_filters_low_confidence(
     mock_api_client, sample_market_item
 ):
     """Тест фильтрации возможностей с низкой уверенностью."""
-    # Настройка моков
+    # НастSwarmка моков
     mock_api_client._request = AsyncMock(
         side_effect=[
             {"objects": [sample_market_item]},
@@ -849,7 +849,7 @@ async def test_find_best_opportunities_filters_low_confidence(
     )
 
     finder = SmartMarketFinder(mock_api_client)
-    opportunities = await finder.find_best_opportunities(
+    opportunities = awAlgot finder.find_best_opportunities(
         game="csgo",
         min_confidence=95.0,  # Очень высокий порог
     )
@@ -864,7 +864,7 @@ async def test_find_best_opportunities_filters_by_type(
     mock_api_client, sample_market_item
 ):
     """Тест фильтрации возможностей по типу."""
-    # Настройка моков
+    # НастSwarmка моков
     mock_api_client._request = AsyncMock(
         side_effect=[
             {"objects": [sample_market_item]},
@@ -873,7 +873,7 @@ async def test_find_best_opportunities_filters_by_type(
     )
 
     finder = SmartMarketFinder(mock_api_client)
-    opportunities = await finder.find_best_opportunities(
+    opportunities = awAlgot finder.find_best_opportunities(
         game="csgo",
         opportunity_types=[MarketOpportunityType.UNDERPRICED],
     )
@@ -897,7 +897,7 @@ async def test_find_underpriced_items_with_discount(mock_api_client):
     mock_api_client._request = AsyncMock(return_value={"objects": [item]})
 
     finder = SmartMarketFinder(mock_api_client)
-    underpriced = await finder.find_underpriced_items(
+    underpriced = awAlgot finder.find_underpriced_items(
         game="csgo", min_discount_percent=30.0
     )
 
@@ -918,7 +918,7 @@ async def test_find_target_opportunities_no_aggregated_prices(mock_api_client):
     )
 
     finder = SmartMarketFinder(mock_api_client)
-    opportunities = await finder.find_target_opportunities(game="csgo")
+    opportunities = awAlgot finder.find_target_opportunities(game="csgo")
 
     assert opportunities == []
 
@@ -946,7 +946,7 @@ async def test_find_target_opportunities_no_profit(mock_api_client):
     )
 
     finder = SmartMarketFinder(mock_api_client)
-    opportunities = await finder.find_target_opportunities(
+    opportunities = awAlgot finder.find_target_opportunities(
         game="csgo", min_spread_percent=1.0
     )
 
@@ -976,7 +976,7 @@ async def test_find_quick_flip_filters_high_risk(mock_api_client):
 
     with patch.object(finder, "find_underpriced_items", return_value=[high_risk_opp]):
         # Запрашиваем только низкий риск
-        opportunities = await finder.find_quick_flip_opportunities(
+        opportunities = awAlgot finder.find_quick_flip_opportunities(
             game="csgo", max_risk="low"
         )
 
@@ -1004,7 +1004,7 @@ async def test_find_quick_flip_sets_estimated_time(mock_api_client):
     )
 
     with patch.object(finder, "find_underpriced_items", return_value=[high_liq_opp]):
-        opportunities = await finder.find_quick_flip_opportunities(game="csgo")
+        opportunities = awAlgot finder.find_quick_flip_opportunities(game="csgo")
 
         if opportunities:
             # Должно быть установлено время продажи
@@ -1015,7 +1015,7 @@ async def test_find_quick_flip_sets_estimated_time(mock_api_client):
 @pytest.mark.asyncio()
 async def test_get_market_items_aggregated_prices_error(mock_api_client):
     """Тест обработки ошибки при получении агрегированных цен."""
-    # Первый вызов успешен, второй выбрасывает ошибку
+    # Первый вызов успешен, втоSwarm выбрасывает ошибку
     mock_api_client._request = AsyncMock(
         side_effect=[
             {"objects": [{"title": "Test", "price": {"USD": "5000"}}]},
@@ -1024,7 +1024,7 @@ async def test_get_market_items_aggregated_prices_error(mock_api_client):
     )
 
     finder = SmartMarketFinder(mock_api_client)
-    items = await finder._get_market_items_with_aggregated_prices(
+    items = awAlgot finder._get_market_items_with_aggregated_prices(
         game="csgo", min_price=1.0, max_price=100.0
     )
 
@@ -1039,7 +1039,7 @@ async def test_get_market_items_no_objects(mock_api_client):
     mock_api_client._request = AsyncMock(return_value={"invalid_key": []})
 
     finder = SmartMarketFinder(mock_api_client)
-    items = await finder._get_market_items_with_aggregated_prices(
+    items = awAlgot finder._get_market_items_with_aggregated_prices(
         game="csgo", min_price=1.0, max_price=100.0
     )
 
@@ -1052,7 +1052,7 @@ async def test_get_market_items_exception(mock_api_client):
     mock_api_client._request = AsyncMock(side_effect=Exception("API Error"))
 
     finder = SmartMarketFinder(mock_api_client)
-    items = await finder._get_market_items_with_aggregated_prices(
+    items = awAlgot finder._get_market_items_with_aggregated_prices(
         game="csgo", min_price=1.0, max_price=100.0
     )
 
@@ -1136,7 +1136,7 @@ async def test_find_underpriced_invalid_response(mock_api_client):
     mock_api_client._request = AsyncMock(return_value=None)
 
     finder = SmartMarketFinder(mock_api_client)
-    underpriced = await finder.find_underpriced_items(game="csgo")
+    underpriced = awAlgot finder.find_underpriced_items(game="csgo")
 
     assert underpriced == []
 
@@ -1150,7 +1150,7 @@ async def test_find_target_opportunities_empty_titles(mock_api_client):
     )
 
     finder = SmartMarketFinder(mock_api_client)
-    opportunities = await finder.find_target_opportunities(game="csgo")
+    opportunities = awAlgot finder.find_target_opportunities(game="csgo")
 
     assert opportunities == []
 
@@ -1181,7 +1181,7 @@ async def test_find_best_opportunities_sorts_by_confidence(mock_api_client):
     )
 
     finder = SmartMarketFinder(mock_api_client)
-    opportunities = await finder.find_best_opportunities(game="csgo", limit=10)
+    opportunities = awAlgot finder.find_best_opportunities(game="csgo", limit=10)
 
     # Первая возможность должна иметь самую высокую уверенность
     if len(opportunities) > 1:

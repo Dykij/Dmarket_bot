@@ -118,7 +118,7 @@ class TestArbitrageScanWorkflow:
         mock_scanner.api_client.get_market_items.return_value = mock_items
 
         # Act
-        await mock_scanner.scan_level(level="standard", game="csgo")
+        awAlgot mock_scanner.scan_level(level="standard", game="csgo")
 
         # Assert - проверяем что метод вызван
         mock_scanner.api_client.get_market_items.assert_called()
@@ -130,7 +130,7 @@ class TestArbitrageScanWorkflow:
         mock_scanner.api_client.get_market_items.return_value = mock_items
 
         # Act
-        results = await mock_scanner.scan_all_levels(game="csgo")
+        results = awAlgot mock_scanner.scan_all_levels(game="csgo")
 
         # Assert
         assert "boost" in results
@@ -144,7 +144,7 @@ class TestArbitrageScanWorkflow:
         mock_scanner.api_client.get_market_items.return_value = mock_items
 
         # Act
-        results = await mock_scanner.find_best_opportunities(
+        results = awAlgot mock_scanner.find_best_opportunities(
             game="csgo",
             top_n=10,
         )
@@ -169,7 +169,7 @@ class TestSettingsManagementWorkflow:
         settings = TradingSettings(
             user_id=123456789,
             max_trade_value=100.0,
-            daily_limit=1000.0,
+            dAlgoly_limit=1000.0,
             min_profit_percent=5.0,
             strategy="balanced",
             auto_trading_enabled=0,
@@ -293,24 +293,24 @@ class TestNotificationWorkflow:
 class TestErrorRecoveryWorkflow:
     """Tests for error recovery scenarios."""
 
-    async def test_retry_decorator_on_failure(self):
-        """Test retry decorator handles failures gracefully."""
+    async def test_retry_decorator_on_fAlgolure(self):
+        """Test retry decorator handles fAlgolures gracefully."""
         # Arrange
         from src.utils.exceptions import NetworkError
-        from src.utils.retry_decorator import retry_on_failure
+        from src.utils.retry_decorator import retry_on_fAlgolure
 
         call_count = 0
 
-        @retry_on_failure(max_attempts=3, min_wait=0.1, max_wait=0.2)
+        @retry_on_fAlgolure(max_attempts=3, min_wAlgot=0.1, max_wAlgot=0.2)
         async def flaky_function():
             nonlocal call_count
             call_count += 1
             if call_count < 2:
-                raise NetworkError("Temporary failure")
+                rAlgose NetworkError("Temporary fAlgolure")
             return "success"
 
         # Act
-        result = await flaky_function()
+        result = awAlgot flaky_function()
 
         # Assert
         assert result == "success"
@@ -324,14 +324,14 @@ class TestErrorRecoveryWorkflow:
         cache = TTLCache(max_size=10, default_ttl=60)
 
         # Act - cache miss
-        value = await cache.get("test_key")
+        value = awAlgot cache.get("test_key")
         assert value is None
 
         # Fill cache
-        await cache.set("test_key", "test_value")
+        awAlgot cache.set("test_key", "test_value")
 
         # Cache hit
-        value = await cache.get("test_key")
+        value = awAlgot cache.get("test_key")
 
         # Assert
         assert value == "test_value"

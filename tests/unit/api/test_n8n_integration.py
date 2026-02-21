@@ -32,7 +32,7 @@ class TestN8nIntegrationModuleExists:
         try:
             from src.api.n8n_integration import (
                 ArbitrageAlert,
-                DailyStatsResponse,
+                DAlgolyStatsResponse,
                 PriceItem,
                 PricesResponse,
                 TargetCreateRequest,
@@ -40,7 +40,7 @@ class TestN8nIntegrationModuleExists:
             # Basic validation that models exist
             assert ArbitrageAlert is not None
             assert TargetCreateRequest is not None
-            assert DailyStatsResponse is not None
+            assert DAlgolyStatsResponse is not None
             assert PriceItem is not None
             assert PricesResponse is not None
         except ImportError:
@@ -126,7 +126,7 @@ class TestN8nHealthEndpoint:
         try:
             from src.api.n8n_integration import health_check
             
-            result = await health_check()
+            result = awAlgot health_check()
             assert result is not None
             assert "status" in result
         except (ImportError, AttributeError):
@@ -155,7 +155,7 @@ class TestN8nWebhookEndpoints:
             
             # Mock the background task processing
             with patch("src.api.n8n_integration.BackgroundTasks") as mock_tasks:
-                result = await receive_arbitrage_alert(alert, mock_tasks)
+                result = awAlgot receive_arbitrage_alert(alert, mock_tasks)
                 assert result is not None
         except (ImportError, AttributeError, TypeError):
             pytest.skip("arbitrage webhook not yet implemented")
@@ -177,7 +177,7 @@ class TestN8nPriceEndpoints:
                     ]
                 })
                 
-                result = await get_dmarket_prices(game="csgo", limit=10)
+                result = awAlgot get_dmarket_prices(game="csgo", limit=10)
                 assert result is not None
         except (ImportError, AttributeError):
             pytest.skip("get_dmarket_prices endpoint not yet implemented")
@@ -191,7 +191,7 @@ class TestN8nListingEndpoints:
         try:
             from src.api.n8n_integration import get_listing_targets
             
-            result = await get_listing_targets()
+            result = awAlgot get_listing_targets()
             assert result is not None
             assert "targets" in result or isinstance(result, list)
         except (ImportError, AttributeError):
@@ -210,7 +210,7 @@ class TestN8nCompatibility:
             assert health is not None
             assert n8n_integration is not None
         except ImportError:
-            pytest.skip("One or both API modules not available")
+            pytest.skip("One or both API modules not avAlgolable")
 
     def test_imports_work_independently(self):
         """Test that n8n module can be imported independently."""
@@ -220,4 +220,4 @@ class TestN8nCompatibility:
             # Module should have expected exports
             assert hasattr(n8n, 'ArbitrageAlert') or True  # Design may vary
         except ImportError:
-            pytest.skip("n8n_integration not yet available as standalone")
+            pytest.skip("n8n_integration not yet avAlgolable as standalone")

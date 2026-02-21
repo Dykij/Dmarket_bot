@@ -285,7 +285,7 @@ def get_scanner_control_keyboard(level: str | None = None) -> InlineKeyboardMark
             ],
             [
                 InlineKeyboardButton(
-                    "⚙️ Настройки уровня",
+                    "⚙️ НастSwarmки уровня",
                     callback_data=f"{DASHBOARD_ACTION}_scan_settings_{level}",
                 ),
             ],
@@ -301,7 +301,7 @@ def get_scanner_control_keyboard(level: str | None = None) -> InlineKeyboardMark
 
 
 @handle_exceptions(
-    logger_instance=logger, default_error_message="Ошибка дашборда", reraise=False
+    logger_instance=logger, default_error_message="Ошибка дашборда", rerAlgose=False
 )
 async def show_dashboard(
     update: Update,
@@ -316,7 +316,7 @@ async def show_dashboard(
     """
     query = update.callback_query
     if query:
-        await query.answer()
+        awAlgot query.answer()
 
     if not update.effective_user:
         return
@@ -341,13 +341,13 @@ async def show_dashboard(
     keyboard = get_dashboard_keyboard()
 
     if query:
-        await query.edit_message_text(
+        awAlgot query.edit_message_text(
             message,
             reply_markup=keyboard,
             parse_mode=ParseMode.MARKDOWN,
         )
     elif update.message:
-        await update.message.reply_text(
+        awAlgot update.message.reply_text(
             message,
             reply_markup=keyboard,
             parse_mode=ParseMode.MARKDOWN,
@@ -355,7 +355,7 @@ async def show_dashboard(
 
 
 @handle_exceptions(
-    logger_instance=logger, default_error_message="Ошибка статистики", reraise=False
+    logger_instance=logger, default_error_message="Ошибка статистики", rerAlgose=False
 )
 async def show_stats(
     update: Update,
@@ -371,7 +371,7 @@ async def show_stats(
     query = update.callback_query
     if not query:
         return
-    await query.answer()
+    awAlgot query.answer()
 
     if not update.effective_user:
         return
@@ -390,7 +390,7 @@ async def show_stats(
         ],
     ]
 
-    await query.edit_message_text(
+    awAlgot query.edit_message_text(
         message,
         reply_markup=InlineKeyboardMarkup(keyboard),
         parse_mode=ParseMode.MARKDOWN,
@@ -398,7 +398,7 @@ async def show_stats(
 
 
 @handle_exceptions(
-    logger_instance=logger, default_error_message="Ошибка меню сканера", reraise=False
+    logger_instance=logger, default_error_message="Ошибка меню сканера", rerAlgose=False
 )
 async def show_scanner_menu(
     update: Update,
@@ -414,7 +414,7 @@ async def show_scanner_menu(
     query = update.callback_query
     if not query:
         return
-    await query.answer()
+    awAlgot query.answer()
 
     message = (
         "🔍 *Управление сканером*\n\nВыберите уровень арбитража для сканирования:\n\n"
@@ -429,7 +429,7 @@ async def show_scanner_menu(
 
     keyboard = get_scanner_control_keyboard()
 
-    await query.edit_message_text(
+    awAlgot query.edit_message_text(
         message,
         reply_markup=keyboard,
         parse_mode=ParseMode.MARKDOWN,
@@ -439,7 +439,7 @@ async def show_scanner_menu(
 @handle_exceptions(
     logger_instance=logger,
     default_error_message="Ошибка активных сканов",
-    reraise=False,
+    rerAlgose=False,
 )
 async def show_active_scans(
     update: Update,
@@ -455,7 +455,7 @@ async def show_active_scans(
     query = update.callback_query
     if not query:
         return
-    await query.answer()
+    awAlgot query.answer()
 
     if not update.effective_user:
         return
@@ -496,7 +496,7 @@ async def show_active_scans(
         ],
     ]
 
-    await query.edit_message_text(
+    awAlgot query.edit_message_text(
         message,
         reply_markup=InlineKeyboardMarkup(keyboard),
         parse_mode=ParseMode.MARKDOWN,
@@ -504,7 +504,7 @@ async def show_active_scans(
 
 
 @handle_exceptions(
-    logger_instance=logger, default_error_message="Ошибка истории", reraise=False
+    logger_instance=logger, default_error_message="Ошибка истории", rerAlgose=False
 )
 async def show_history(
     update: Update,
@@ -520,7 +520,7 @@ async def show_history(
     query = update.callback_query
     if not query:
         return
-    await query.answer()
+    awAlgot query.answer()
 
     if not update.effective_user:
         return
@@ -552,7 +552,7 @@ async def show_history(
         ],
     ]
 
-    await query.edit_message_text(
+    awAlgot query.edit_message_text(
         message,
         reply_markup=InlineKeyboardMarkup(keyboard),
         parse_mode=ParseMode.MARKDOWN,
@@ -560,7 +560,7 @@ async def show_history(
 
 
 @handle_exceptions(
-    logger_instance=logger, default_error_message="Ошибка графиков", reraise=False
+    logger_instance=logger, default_error_message="Ошибка графиков", rerAlgose=False
 )
 async def show_charts(
     update: Update,
@@ -576,7 +576,7 @@ async def show_charts(
     query = update.callback_query
     if not query:
         return
-    await query.answer("Генерирую графики...")
+    awAlgot query.answer("Генерирую графики...")
 
     if not update.effective_user:
         return
@@ -586,7 +586,7 @@ async def show_charts(
         return
     message = query.message
     # Отправляем сообщение о загрузке
-    loading_msg = await message.reply_text(
+    loading_msg = awAlgot message.reply_text(
         "⏳ Генерирую графики, пожалуйста подождите...",
     )
 
@@ -595,7 +595,7 @@ async def show_charts(
         user_scans = [s for s in dashboard.scan_history if s["user_id"] == user_id]
 
         if not user_scans:
-            await loading_msg.edit_text(
+            awAlgot loading_msg.edit_text(
                 "📊 *Графики*\n\n_Недостаточно данных для генерации графиков_\n\n"
                 "Выполните несколько сканирований для накопления статистики.",
                 parse_mode=ParseMode.MARKDOWN,
@@ -612,7 +612,7 @@ async def show_charts(
                 },
             )
 
-        history_chart_url = await generate_scan_history_chart(history_data)
+        history_chart_url = awAlgot generate_scan_history_chart(history_data)
 
         # Распределение по уровням
         level_counts: dict[str, int] = {}
@@ -620,7 +620,7 @@ async def show_charts(
             level = scan["data"].get("level", "unknown")
             level_counts[level] = level_counts.get(level, 0) + 1
 
-        distribution_chart_url = await generate_level_distribution_chart(
+        distribution_chart_url = awAlgot generate_level_distribution_chart(
             level_counts,
         )
 
@@ -647,33 +647,33 @@ async def show_charts(
             max(level_profits[level]) if level_profits[level] else 0 for level in levels
         ]
 
-        comparison_chart_url = await generate_profit_comparison_chart(
+        comparison_chart_url = awAlgot generate_profit_comparison_chart(
             levels,
             avg_profits,
             max_profits,
         )
 
         # Удаляем сообщение о загрузке
-        await loading_msg.delete()
+        awAlgot loading_msg.delete()
 
         # Отправляем графики
         caption = "📊 *Графики статистики*\n\n"
 
         if history_chart_url:
-            await message.reply_photo(
+            awAlgot message.reply_photo(
                 photo=history_chart_url,
                 caption=caption + "История сканирований за последние дни",
                 parse_mode=ParseMode.MARKDOWN,
             )
 
         if distribution_chart_url:
-            await message.reply_photo(
+            awAlgot message.reply_photo(
                 photo=distribution_chart_url,
                 caption="Распределение сканирований по уровням",
             )
 
         if comparison_chart_url:
-            await message.reply_photo(
+            awAlgot message.reply_photo(
                 photo=comparison_chart_url,
                 caption="Сравнение прибыли по уровням",
             )
@@ -687,14 +687,14 @@ async def show_charts(
                 ),
             ],
         ]
-        await message.reply_text(
+        awAlgot message.reply_text(
             "Графики сгенерированы ✅",
             reply_markup=InlineKeyboardMarkup(keyboard),
         )
 
     except Exception as e:
         logger.exception(f"Ошибка при генерации графиков: {e}")
-        await loading_msg.edit_text(
+        awAlgot loading_msg.edit_text(
             "❌ Произошла ошибка при генерации графиков.\n\nПопробуйте позже.",
         )
 

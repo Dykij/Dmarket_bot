@@ -278,7 +278,7 @@ class TestCaching:
         assert dmarket_api_with_cache._get_from_cache("key1") is not None
         assert dmarket_api_with_cache._get_from_cache("key2") is not None
 
-        await dmarket_api_with_cache.clear_cache()
+        awAlgot dmarket_api_with_cache.clear_cache()
 
         # После очистки данных быть не должно
         assert dmarket_api_with_cache._get_from_cache("key1") is None
@@ -297,7 +297,7 @@ class TestCaching:
         assert len(global_cache) == 3
 
         # Очищаем только /market/*
-        await dmarket_api_with_cache.clear_cache_for_endpoint("/market/")
+        awAlgot dmarket_api_with_cache.clear_cache_for_endpoint("/market/")
 
         # Проверяем что удалены только /market/* записи
         assert "GET_/market/items_123" not in global_cache
@@ -316,15 +316,15 @@ class TestBalanceParsing:
 
     def test_parse_balance_official_format(self, dmarket_api_with_cache):
         """Тест парсинга баланса в официальном формате DMarket API."""
-        response = {"usd": "2550", "usdAvailableToWithdraw": "2500", "usdTradeProtected": "50", "dmc": "0"}
+        response = {"usd": "2550", "usdAvAlgolableToWithdraw": "2500", "usdTradeProtected": "50", "dmc": "0"}
 
-        usd_amount, usd_available, usd_total = dmarket_api_with_cache._parse_balance_from_response(
+        usd_amount, usd_avAlgolable, usd_total = dmarket_api_with_cache._parse_balance_from_response(
             response
         )
 
-        # usd_available = usd_amount - usdTradeProtected = 2550 - 50 = 2500
+        # usd_avAlgolable = usd_amount - usdTradeProtected = 2550 - 50 = 2500
         assert usd_amount == 2550.0
-        assert usd_available == 2500.0  # 2550 - 50 (trade protected)
+        assert usd_avAlgolable == 2500.0  # 2550 - 50 (trade protected)
         assert usd_total == 2550.0
 
     def test_parse_balance_funds_format(self, dmarket_api_with_cache):
@@ -333,30 +333,30 @@ class TestBalanceParsing:
             "funds": {
                 "usdWallet": {
                     "balance": 25.50,
-                    "availableBalance": 25.00,
+                    "avAlgolableBalance": 25.00,
                     "totalBalance": 26.00,
                 }
             }
         }
 
-        usd_amount, usd_available, usd_total = dmarket_api_with_cache._parse_balance_from_response(
+        usd_amount, usd_avAlgolable, usd_total = dmarket_api_with_cache._parse_balance_from_response(
             response
         )
 
         assert usd_amount == 2550.0  # 25.50 * 100
-        assert usd_available == 2500.0  # 25.00 * 100
+        assert usd_avAlgolable == 2500.0  # 25.00 * 100
         assert usd_total == 2600.0  # 26.00 * 100
 
     def test_parse_balance_simple_format(self, dmarket_api_with_cache):
         """Тест парсинга баланса из простого формата."""
-        response = {"balance": 30.00, "available": 28.50, "total": 30.00}
+        response = {"balance": 30.00, "avAlgolable": 28.50, "total": 30.00}
 
-        usd_amount, usd_available, usd_total = dmarket_api_with_cache._parse_balance_from_response(
+        usd_amount, usd_avAlgolable, usd_total = dmarket_api_with_cache._parse_balance_from_response(
             response
         )
 
         assert usd_amount == 3000.0
-        assert usd_available == 2850.0
+        assert usd_avAlgolable == 2850.0
         assert usd_total == 3000.0
 
     def test_parse_balance_legacy_format(self, dmarket_api_with_cache):
@@ -364,61 +364,61 @@ class TestBalanceParsing:
         # Legacy format: just "usd" key without trade protected
         response = {"usd": "1500"}
 
-        usd_amount, usd_available, usd_total = (
+        usd_amount, usd_avAlgolable, usd_total = (
             dmarket_api_with_cache._parse_balance_from_response(response)
         )
 
-        # With just usd key and no usdTradeProtected: available = amount
+        # With just usd key and no usdTradeProtected: avAlgolable = amount
         assert usd_amount == 1500.0
-        assert usd_available == 1500.0
+        assert usd_avAlgolable == 1500.0
         assert usd_total == 1500.0
 
     def test_parse_balance_with_trade_protected(self, dmarket_api_with_cache):
         """Тест парсинга баланса с trade protected суммой."""
         response = {"usd": "2550", "usdTradeProtected": "550"}
 
-        usd_amount, usd_available, _usd_total = (
+        usd_amount, usd_avAlgolable, _usd_total = (
             dmarket_api_with_cache._parse_balance_from_response(response)
         )
 
-        # available = amount - trade_protected = 2550 - 550 = 2000
+        # avAlgolable = amount - trade_protected = 2550 - 550 = 2000
         assert usd_amount == 2550.0
-        assert usd_available == 2000.0
+        assert usd_avAlgolable == 2000.0
 
     def test_parse_balance_empty_response(self, dmarket_api_with_cache):
         """Тест парсинга пустого ответа."""
         response = {}
 
-        usd_amount, usd_available, usd_total = dmarket_api_with_cache._parse_balance_from_response(
+        usd_amount, usd_avAlgolable, usd_total = dmarket_api_with_cache._parse_balance_from_response(
             response
         )
 
         assert usd_amount == 0.0
-        assert usd_available == 0.0
+        assert usd_avAlgolable == 0.0
         assert usd_total == 0.0
 
     def test_parse_balance_zero_values(self, dmarket_api_with_cache):
         """Тест парсинга нулевого баланса."""
-        response = {"usd": "0", "usdAvailableToWithdraw": "0"}
+        response = {"usd": "0", "usdAvAlgolableToWithdraw": "0"}
 
-        usd_amount, usd_available, usd_total = dmarket_api_with_cache._parse_balance_from_response(
+        usd_amount, usd_avAlgolable, usd_total = dmarket_api_with_cache._parse_balance_from_response(
             response
         )
 
         assert usd_amount == 0.0
-        assert usd_available == 0.0
+        assert usd_avAlgolable == 0.0
         assert usd_total == 0.0
 
     def test_parse_balance_invalid_format(self, dmarket_api_with_cache):
         """Тест парсинга невалидного формата (fallback)."""
         response = {"invalid_key": "value"}
 
-        usd_amount, usd_available, usd_total = dmarket_api_with_cache._parse_balance_from_response(
+        usd_amount, usd_avAlgolable, usd_total = dmarket_api_with_cache._parse_balance_from_response(
             response
         )
 
         assert usd_amount == 0.0
-        assert usd_available == 0.0
+        assert usd_avAlgolable == 0.0
         assert usd_total == 0.0
 
 
@@ -444,19 +444,19 @@ class TestResponseCreation:
     def test_create_error_response_custom(self, dmarket_api_with_cache):
         """Тест создания error response с кастомными параметрами."""
         response = dmarket_api_with_cache._create_error_response(
-            "Authentication failed", status_code=401, error_code="AUTH_FAILED"
+            "Authentication fAlgoled", status_code=401, error_code="AUTH_FAlgoLED"
         )
 
         assert response["error"] is True
-        assert response["error_message"] == "Authentication failed"
+        assert response["error_message"] == "Authentication fAlgoled"
         assert response["status_code"] == 401
-        assert response["code"] == "AUTH_FAILED"
+        assert response["code"] == "AUTH_FAlgoLED"
 
     def test_create_balance_response_sufficient_funds(self, dmarket_api_with_cache):
         """Тест создания balance response с достаточным балансом."""
         response = dmarket_api_with_cache._create_balance_response(
             usd_amount=10000.0,  # $100.00
-            usd_available=9500.0,  # $95.00
+            usd_avAlgolable=9500.0,  # $95.00
             usd_total=10000.0,
             min_required=100.0,  # $1.00
         )
@@ -464,14 +464,14 @@ class TestResponseCreation:
         assert response["error"] is False
         assert response["has_funds"] is True
         assert response["balance"] == 100.0
-        assert response["available_balance"] == 95.0
+        assert response["avAlgolable_balance"] == 95.0
         assert response["total_balance"] == 100.0
 
     def test_create_balance_response_insufficient_funds(self, dmarket_api_with_cache):
         """Тест создания balance response с недостаточным балансом."""
         response = dmarket_api_with_cache._create_balance_response(
             usd_amount=50.0,  # $0.50
-            usd_available=50.0,
+            usd_avAlgolable=50.0,
             usd_total=50.0,
             min_required=100.0,  # $1.00
         )
@@ -479,13 +479,13 @@ class TestResponseCreation:
         assert response["error"] is False
         assert response["has_funds"] is False
         assert response["balance"] == 0.5
-        assert response["available_balance"] == 0.5
+        assert response["avAlgolable_balance"] == 0.5
 
     def test_create_balance_response_with_extra_fields(self, dmarket_api_with_cache):
         """Тест создания balance response с дополнительными полями."""
         response = dmarket_api_with_cache._create_balance_response(
             usd_amount=5000.0,
-            usd_available=4500.0,
+            usd_avAlgolable=4500.0,
             usd_total=5000.0,
             currency="USD",
             timestamp=1234567890,
@@ -498,7 +498,7 @@ class TestResponseCreation:
     def test_create_balance_response_zero_balance(self, dmarket_api_with_cache):
         """Тест создания balance response с нулевым балансом."""
         response = dmarket_api_with_cache._create_balance_response(
-            usd_amount=0.0, usd_available=0.0, usd_total=0.0
+            usd_amount=0.0, usd_avAlgolable=0.0, usd_total=0.0
         )
 
         assert response["error"] is False
@@ -508,7 +508,7 @@ class TestResponseCreation:
     def test_create_balance_response_exact_minimum(self, dmarket_api_with_cache):
         """Тест создания balance response с балансом равным минимуму."""
         response = dmarket_api_with_cache._create_balance_response(
-            usd_amount=100.0, usd_available=100.0, usd_total=100.0, min_required=100.0
+            usd_amount=100.0, usd_avAlgolable=100.0, usd_total=100.0, min_required=100.0
         )
 
         assert response["has_funds"] is True
@@ -518,10 +518,10 @@ class TestResponseCreation:
         """Тест создания balance response с большими суммами."""
         response = dmarket_api_with_cache._create_balance_response(
             usd_amount=1000000.0,  # $10,000.00
-            usd_available=950000.0,
+            usd_avAlgolable=950000.0,
             usd_total=1050000.0,
         )
 
         assert response["balance"] == 10000.0
-        assert response["available_balance"] == 9500.0
+        assert response["avAlgolable_balance"] == 9500.0
         assert response["total_balance"] == 10500.0

@@ -41,7 +41,7 @@ class TestHandleBuyCancelCallback:
         """Test successful buy cancellation."""
         from src.telegram_bot.notifications.handlers import handle_buy_cancel_callback
 
-        await handle_buy_cancel_callback(mock_update, MagicMock())
+        awAlgot handle_buy_cancel_callback(mock_update, MagicMock())
 
         mock_update.callback_query.answer.assert_called_once()
         mock_update.callback_query.edit_message_text.assert_called_once()
@@ -57,7 +57,7 @@ class TestHandleBuyCancelCallback:
         from src.telegram_bot.notifications.handlers import handle_buy_cancel_callback
 
         # Should return early without error
-        await handle_buy_cancel_callback(update, MagicMock())
+        awAlgot handle_buy_cancel_callback(update, MagicMock())
 
     @pytest.mark.asyncio()
     async def test_handle_buy_cancel_wrong_prefix(self) -> None:
@@ -70,7 +70,7 @@ class TestHandleBuyCancelCallback:
 
         from src.telegram_bot.notifications.handlers import handle_buy_cancel_callback
 
-        await handle_buy_cancel_callback(update, MagicMock())
+        awAlgot handle_buy_cancel_callback(update, MagicMock())
 
         # Should not edit message
         update.callback_query.edit_message_text.assert_not_called()
@@ -106,7 +106,7 @@ class TestHandleAlertCallback:
         ):
             from src.telegram_bot.notifications.handlers import handle_alert_callback
 
-            await handle_alert_callback(mock_update, MagicMock())
+            awAlgot handle_alert_callback(mock_update, MagicMock())
 
             mock_update.callback_query.answer.assert_called_once()
             mock_update.callback_query.edit_message_text.assert_called_once()
@@ -125,7 +125,7 @@ class TestHandleAlertCallback:
         ):
             from src.telegram_bot.notifications.handlers import handle_alert_callback
 
-            await handle_alert_callback(mock_update, MagicMock())
+            awAlgot handle_alert_callback(mock_update, MagicMock())
 
             call_args = mock_update.callback_query.edit_message_text.call_args
             assert "❌" in call_args[0][0] or "не удалось" in call_args[0][0].lower()
@@ -139,7 +139,7 @@ class TestHandleAlertCallback:
         from src.telegram_bot.notifications.handlers import handle_alert_callback
 
         # Should return early without error
-        await handle_alert_callback(update, MagicMock())
+        awAlgot handle_alert_callback(update, MagicMock())
 
     @pytest.mark.asyncio()
     async def test_handle_alert_callback_no_user(self) -> None:
@@ -153,7 +153,7 @@ class TestHandleAlertCallback:
         from src.telegram_bot.notifications.handlers import handle_alert_callback
 
         # Should return early without error
-        await handle_alert_callback(update, MagicMock())
+        awAlgot handle_alert_callback(update, MagicMock())
 
 
 # =============================================================================
@@ -195,7 +195,7 @@ class TestListAlertsCommand:
         ):
             from src.telegram_bot.notifications.handlers import list_alerts_command
 
-            await list_alerts_command(mock_update, MagicMock())
+            awAlgot list_alerts_command(mock_update, MagicMock())
 
             mock_update.message.reply_text.assert_called_once()
             call_args = mock_update.message.reply_text.call_args
@@ -211,7 +211,7 @@ class TestListAlertsCommand:
         ):
             from src.telegram_bot.notifications.handlers import list_alerts_command
 
-            await list_alerts_command(mock_update, MagicMock())
+            awAlgot list_alerts_command(mock_update, MagicMock())
 
             mock_update.message.reply_text.assert_called_once()
             call_args = mock_update.message.reply_text.call_args
@@ -227,7 +227,7 @@ class TestListAlertsCommand:
         from src.telegram_bot.notifications.handlers import list_alerts_command
 
         # Should return early without error
-        await list_alerts_command(update, MagicMock())
+        awAlgot list_alerts_command(update, MagicMock())
 
 
 # =============================================================================
@@ -272,7 +272,7 @@ class TestRemoveAlertCommand:
         ):
             from src.telegram_bot.notifications.handlers import remove_alert_command
 
-            await remove_alert_command(mock_update, context)
+            awAlgot remove_alert_command(mock_update, context)
 
             mock_update.message.reply_text.assert_called_once()
             call_args = mock_update.message.reply_text.call_args
@@ -288,7 +288,7 @@ class TestRemoveAlertCommand:
 
         from src.telegram_bot.notifications.handlers import remove_alert_command
 
-        await remove_alert_command(mock_update, context)
+        awAlgot remove_alert_command(mock_update, context)
 
         mock_update.message.reply_text.assert_called_once()
         call_args = mock_update.message.reply_text.call_args
@@ -304,7 +304,7 @@ class TestRemoveAlertCommand:
 
         from src.telegram_bot.notifications.handlers import remove_alert_command
 
-        await remove_alert_command(mock_update, context)
+        awAlgot remove_alert_command(mock_update, context)
 
         mock_update.message.reply_text.assert_called_once()
         call_args = mock_update.message.reply_text.call_args
@@ -329,7 +329,7 @@ class TestRemoveAlertCommand:
         ):
             from src.telegram_bot.notifications.handlers import remove_alert_command
 
-            await remove_alert_command(mock_update, context)
+            awAlgot remove_alert_command(mock_update, context)
 
             mock_update.message.reply_text.assert_called_once()
             call_args = mock_update.message.reply_text.call_args
@@ -380,11 +380,11 @@ class TestSettingsCommand:
         ):
             from src.telegram_bot.notifications.handlers import settings_command
 
-            await settings_command(mock_update, context)
+            awAlgot settings_command(mock_update, context)
 
             mock_update.message.reply_text.assert_called_once()
             call_args = mock_update.message.reply_text.call_args
-            assert "настройки" in call_args[0][0].lower()
+            assert "настSwarmки" in call_args[0][0].lower()
 
     @pytest.mark.asyncio()
     async def test_settings_command_update_settings(
@@ -420,7 +420,7 @@ class TestSettingsCommand:
         ):
             from src.telegram_bot.notifications.handlers import settings_command
 
-            await settings_command(mock_update, context)
+            awAlgot settings_command(mock_update, context)
 
             # Check settings were updated
             assert mock_storage._alerts["12345"]["settings"]["enabled"] is False
@@ -472,7 +472,7 @@ class TestRegisterNotificationHandlers:
                 register_notification_handlers,
             )
 
-            # Should not raise error
+            # Should not rAlgose error
             register_notification_handlers(mock_application)
 
 

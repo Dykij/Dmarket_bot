@@ -140,7 +140,7 @@ def get_game_filter_keyboard(game: str) -> InlineKeyboardMarkup:
     elif game == "dota2":
         keyboard.extend(
             [
-                [InlineKeyboardButton("🦸 Герой", callback_data=f"set_hero:{game}")],
+                [InlineKeyboardButton("🦸 ГеSwarm", callback_data=f"set_hero:{game}")],
                 [
                     InlineKeyboardButton(
                         "⭐ Редкость",
@@ -221,7 +221,7 @@ def get_game_filter_keyboard(game: str) -> InlineKeyboardMarkup:
                     callback_data=f"filter:reset:{game}",
                 ),
             ],
-            [InlineKeyboardButton("⬅️ Назад", callback_data="back_to_filters:main")],
+            [InlineKeyboardButton("⬅️ Назад", callback_data="back_to_filters:mAlgon")],
         ],
     )
 

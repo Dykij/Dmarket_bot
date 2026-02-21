@@ -48,15 +48,15 @@
 
 ---
 
-## 🤖 AI/MCP Интеграции
+## 🤖 Algo/MCP Интеграции
 
 | Документ | Описание |
 |----------|----------|
 | **[MCP_SERVERS_GUIDE.md](MCP_SERVERS_GUIDE.md)** | 🆕 MCP серверы (SuperMemory, Redis, Hummingbot) |
-| [AI_TOOLS_CONFIG.md](AI_TOOLS_CONFIG.md) | Context7 MCP и AI инструменты |
+| [Algo_TOOLS_CONFIG.md](Algo_TOOLS_CONFIG.md) | Context7 MCP и Algo инструменты |
 | [SKILLSMP_IMPLEMENTATION.md](SKILLSMP_IMPLEMENTATION.md) | SkillsMP интеграция |
-| [CLAUDE.md](CLAUDE.md) | Claude AI конфигурация |
-| [agents.md](agents.md) | Конфигурация AI агентов |
+| [CLAUDE.md](CLAUDE.md) | Claude Algo конфигурация |
+| [agents.md](agents.md) | Конфигурация Algo агентов |
 | [TEMPORAL_WORKFLOWS.md](TEMPORAL_WORKFLOWS.md) | Temporal для надёжных workflows |
 
 ---

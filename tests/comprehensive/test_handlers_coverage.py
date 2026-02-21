@@ -80,14 +80,14 @@ class TestCommandsHandlers:
     async def test_start_command_success(self, mock_update, mock_context):
         """Test /start command executes successfully."""
         with patch(
-            "src.telegram_bot.handlers.main_keyboard.start_command",
+            "src.telegram_bot.handlers.mAlgon_keyboard.start_command",
             new_callable=AsyncMock,
-        ) as mock_main:
+        ) as mock_mAlgon:
             from src.telegram_bot.handlers.commands import start_command
 
-            await start_command(mock_update, mock_context)
-            # Should delegate to main_start
-            mock_main.assert_called_once()
+            awAlgot start_command(mock_update, mock_context)
+            # Should delegate to mAlgon_start
+            mock_mAlgon.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_start_command_no_message(self, mock_context):
@@ -96,15 +96,15 @@ class TestCommandsHandlers:
 
         update = MagicMock()
         update.message = None
-        # Should not raise
-        await start_command(update, mock_context)
+        # Should not rAlgose
+        awAlgot start_command(update, mock_context)
 
     @pytest.mark.asyncio
     async def test_help_command_success(self, mock_update, mock_context):
         """Test /help command shows help text."""
         from src.telegram_bot.handlers.commands import help_command
 
-        await help_command(mock_update, mock_context)
+        awAlgot help_command(mock_update, mock_context)
         mock_update.message.reply_text.assert_called_once()
         call_args = mock_update.message.reply_text.call_args
         assert "Доступные команды" in call_args[0][0]
@@ -116,8 +116,8 @@ class TestCommandsHandlers:
 
         update = MagicMock()
         update.message = None
-        await help_command(update, mock_context)
-        # Should not raise
+        awAlgot help_command(update, mock_context)
+        # Should not rAlgose
 
     @pytest.mark.asyncio
     async def test_webapp_command_success(self, mock_update, mock_context):
@@ -128,7 +128,7 @@ class TestCommandsHandlers:
         ):
             from src.telegram_bot.handlers.commands import webapp_command
 
-            await webapp_command(mock_update, mock_context)
+            awAlgot webapp_command(mock_update, mock_context)
             mock_update.message.reply_text.assert_called_once()
 
     @pytest.mark.asyncio
@@ -138,7 +138,7 @@ class TestCommandsHandlers:
 
         update = MagicMock()
         update.message = None
-        await webapp_command(update, mock_context)
+        awAlgot webapp_command(update, mock_context)
 
     @pytest.mark.asyncio
     async def test_dashboard_command_calls_show_dashboard(self, mock_update, mock_context):
@@ -149,7 +149,7 @@ class TestCommandsHandlers:
         ) as mock_show:
             from src.telegram_bot.handlers.commands import dashboard_command
 
-            await dashboard_command(mock_update, mock_context)
+            awAlgot dashboard_command(mock_update, mock_context)
             mock_show.assert_called_once_with(mock_update, mock_context)
 
     @pytest.mark.asyncio
@@ -157,7 +157,7 @@ class TestCommandsHandlers:
         """Test /markets command shows comparison keyboard."""
         from src.telegram_bot.handlers.commands import markets_command
 
-        await markets_command(mock_update, mock_context)
+        awAlgot markets_command(mock_update, mock_context)
         mock_update.message.reply_text.assert_called_once()
 
     @pytest.mark.asyncio
@@ -167,7 +167,7 @@ class TestCommandsHandlers:
 
         update = MagicMock()
         update.message = None
-        await markets_command(update, mock_context)
+        awAlgot markets_command(update, mock_context)
 
     @pytest.mark.asyncio
     async def test_dmarket_status_command_calls_impl(self, mock_update, mock_context):
@@ -178,7 +178,7 @@ class TestCommandsHandlers:
         ) as mock_impl:
             from src.telegram_bot.handlers.commands import dmarket_status_command
 
-            await dmarket_status_command(mock_update, mock_context)
+            awAlgot dmarket_status_command(mock_update, mock_context)
             mock_impl.assert_called_once()
 
     @pytest.mark.asyncio
@@ -186,7 +186,7 @@ class TestCommandsHandlers:
         """Test /arbitrage command shows menu."""
         from src.telegram_bot.handlers.commands import arbitrage_command
 
-        await arbitrage_command(mock_update, mock_context)
+        awAlgot arbitrage_command(mock_update, mock_context)
         mock_update.effective_chat.send_action.assert_called_once()
         mock_update.message.reply_text.assert_called_once()
 
@@ -198,19 +198,19 @@ class TestCommandsHandlers:
         update = MagicMock()
         update.effective_chat = None
         update.message = MagicMock()
-        await arbitrage_command(update, mock_context)
+        awAlgot arbitrage_command(update, mock_context)
 
     @pytest.mark.asyncio
     async def test_handle_text_buttons_simple_menu(self, mock_update, mock_context):
         """Test text button handler for simple menu."""
         mock_update.message.text = "⚡ Упрощенное меню"
         with patch(
-            "src.telegram_bot.handlers.main_keyboard.start_command",
+            "src.telegram_bot.handlers.mAlgon_keyboard.start_command",
             new_callable=AsyncMock,
         ):
             from src.telegram_bot.handlers.commands import handle_text_buttons
 
-            await handle_text_buttons(mock_update, mock_context)
+            awAlgot handle_text_buttons(mock_update, mock_context)
 
     @pytest.mark.asyncio
     async def test_handle_text_buttons_balance(self, mock_update, mock_context):
@@ -222,7 +222,7 @@ class TestCommandsHandlers:
         ):
             from src.telegram_bot.handlers.commands import handle_text_buttons
 
-            await handle_text_buttons(mock_update, mock_context)
+            awAlgot handle_text_buttons(mock_update, mock_context)
 
     @pytest.mark.asyncio
     async def test_handle_text_buttons_statistics(self, mock_update, mock_context):
@@ -234,19 +234,19 @@ class TestCommandsHandlers:
         ):
             from src.telegram_bot.handlers.commands import handle_text_buttons
 
-            await handle_text_buttons(mock_update, mock_context)
+            awAlgot handle_text_buttons(mock_update, mock_context)
 
     @pytest.mark.asyncio
     async def test_handle_text_buttons_arbitrage(self, mock_update, mock_context):
         """Test text button handler for arbitrage."""
         mock_update.message.text = "📊 Арбитраж"
         with patch(
-            "src.telegram_bot.handlers.main_keyboard.start_command",
+            "src.telegram_bot.handlers.mAlgon_keyboard.start_command",
             new_callable=AsyncMock,
         ):
             from src.telegram_bot.handlers.commands import handle_text_buttons
 
-            await handle_text_buttons(mock_update, mock_context)
+            awAlgot handle_text_buttons(mock_update, mock_context)
 
     @pytest.mark.asyncio
     async def test_handle_text_buttons_targets(self, mock_update, mock_context):
@@ -254,7 +254,7 @@ class TestCommandsHandlers:
         mock_update.message.text = "🎯 Таргеты"
         from src.telegram_bot.handlers.commands import handle_text_buttons
 
-        await handle_text_buttons(mock_update, mock_context)
+        awAlgot handle_text_buttons(mock_update, mock_context)
         mock_update.message.reply_text.assert_called_once()
 
     @pytest.mark.asyncio
@@ -263,7 +263,7 @@ class TestCommandsHandlers:
         mock_update.message.text = "📦 Инвентарь"
         from src.telegram_bot.handlers.commands import handle_text_buttons
 
-        await handle_text_buttons(mock_update, mock_context)
+        awAlgot handle_text_buttons(mock_update, mock_context)
         mock_update.message.reply_text.assert_called_once()
 
     @pytest.mark.asyncio
@@ -272,7 +272,7 @@ class TestCommandsHandlers:
         mock_update.message.text = "📈 Аналитика"
         from src.telegram_bot.handlers.commands import handle_text_buttons
 
-        await handle_text_buttons(mock_update, mock_context)
+        awAlgot handle_text_buttons(mock_update, mock_context)
         mock_update.message.reply_text.assert_called_once()
 
     @pytest.mark.asyncio
@@ -281,7 +281,7 @@ class TestCommandsHandlers:
         mock_update.message.text = "🔔 Оповещения"
         from src.telegram_bot.handlers.commands import handle_text_buttons
 
-        await handle_text_buttons(mock_update, mock_context)
+        awAlgot handle_text_buttons(mock_update, mock_context)
         mock_update.message.reply_text.assert_called_once()
 
     @pytest.mark.asyncio
@@ -294,15 +294,15 @@ class TestCommandsHandlers:
         ):
             from src.telegram_bot.handlers.commands import handle_text_buttons
 
-            await handle_text_buttons(mock_update, mock_context)
+            awAlgot handle_text_buttons(mock_update, mock_context)
 
     @pytest.mark.asyncio
     async def test_handle_text_buttons_settings(self, mock_update, mock_context):
         """Test text button handler for settings."""
-        mock_update.message.text = "⚙️ Настройки"
+        mock_update.message.text = "⚙️ НастSwarmки"
         from src.telegram_bot.handlers.commands import handle_text_buttons
 
-        await handle_text_buttons(mock_update, mock_context)
+        awAlgot handle_text_buttons(mock_update, mock_context)
         mock_update.message.reply_text.assert_called_once()
 
     @pytest.mark.asyncio
@@ -315,7 +315,7 @@ class TestCommandsHandlers:
         ):
             from src.telegram_bot.handlers.commands import handle_text_buttons
 
-            await handle_text_buttons(mock_update, mock_context)
+            awAlgot handle_text_buttons(mock_update, mock_context)
 
     @pytest.mark.asyncio
     async def test_handle_text_buttons_no_message(self, mock_context):
@@ -324,7 +324,7 @@ class TestCommandsHandlers:
 
         update = MagicMock()
         update.message = None
-        await handle_text_buttons(update, mock_context)
+        awAlgot handle_text_buttons(update, mock_context)
 
     @pytest.mark.asyncio
     async def test_handle_text_buttons_no_text(self, mock_context):
@@ -334,7 +334,7 @@ class TestCommandsHandlers:
         update = MagicMock()
         update.message = MagicMock()
         update.message.text = None
-        await handle_text_buttons(update, mock_context)
+        awAlgot handle_text_buttons(update, mock_context)
 
 
 # ============================================================================
@@ -349,12 +349,12 @@ class TestCallbackHandlers:
     async def test_handle_simple_menu(self, mock_callback_update, mock_context):
         """Test simple_menu callback handler."""
         with patch(
-            "src.telegram_bot.handlers.callback_handlers.main_menu_callback",
+            "src.telegram_bot.handlers.callback_handlers.mAlgon_menu_callback",
             new_callable=AsyncMock,
         ):
             from src.telegram_bot.handlers.callback_handlers import handle_simple_menu
 
-            await handle_simple_menu(mock_callback_update, mock_context)
+            awAlgot handle_simple_menu(mock_callback_update, mock_context)
 
     @pytest.mark.asyncio
     async def test_handle_balance(self, mock_callback_update, mock_context):
@@ -365,7 +365,7 @@ class TestCallbackHandlers:
         ):
             from src.telegram_bot.handlers.callback_handlers import handle_balance
 
-            await handle_balance(mock_callback_update, mock_context)
+            awAlgot handle_balance(mock_callback_update, mock_context)
 
     @pytest.mark.asyncio
     async def test_handle_balance_no_callback(self, mock_context):
@@ -374,14 +374,14 @@ class TestCallbackHandlers:
 
         update = MagicMock()
         update.callback_query = None
-        await handle_balance(update, mock_context)
+        awAlgot handle_balance(update, mock_context)
 
     @pytest.mark.asyncio
     async def test_handle_search(self, mock_callback_update, mock_context):
         """Test search callback handler."""
         from src.telegram_bot.handlers.callback_handlers import handle_search
 
-        await handle_search(mock_callback_update, mock_context)
+        awAlgot handle_search(mock_callback_update, mock_context)
         mock_callback_update.callback_query.edit_message_text.assert_called_once()
 
     @pytest.mark.asyncio
@@ -391,14 +391,14 @@ class TestCallbackHandlers:
 
         update = MagicMock()
         update.callback_query = None
-        await handle_search(update, mock_context)
+        awAlgot handle_search(update, mock_context)
 
     @pytest.mark.asyncio
     async def test_handle_settings(self, mock_callback_update, mock_context):
         """Test settings callback handler."""
         from src.telegram_bot.handlers.callback_handlers import handle_settings
 
-        await handle_settings(mock_callback_update, mock_context)
+        awAlgot handle_settings(mock_callback_update, mock_context)
         mock_callback_update.callback_query.edit_message_text.assert_called_once()
 
     @pytest.mark.asyncio
@@ -406,7 +406,7 @@ class TestCallbackHandlers:
         """Test market_trends callback handler."""
         from src.telegram_bot.handlers.callback_handlers import handle_market_trends
 
-        await handle_market_trends(mock_callback_update, mock_context)
+        awAlgot handle_market_trends(mock_callback_update, mock_context)
         mock_callback_update.callback_query.edit_message_text.assert_called_once()
 
     @pytest.mark.asyncio
@@ -414,23 +414,23 @@ class TestCallbackHandlers:
         """Test alerts callback handler."""
         from src.telegram_bot.handlers.callback_handlers import handle_alerts
 
-        await handle_alerts(mock_callback_update, mock_context)
+        awAlgot handle_alerts(mock_callback_update, mock_context)
         mock_callback_update.callback_query.edit_message_text.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_handle_back_to_main(self, mock_callback_update, mock_context):
-        """Test back_to_main callback handler."""
-        from src.telegram_bot.handlers.callback_handlers import handle_back_to_main
+    async def test_handle_back_to_mAlgon(self, mock_callback_update, mock_context):
+        """Test back_to_mAlgon callback handler."""
+        from src.telegram_bot.handlers.callback_handlers import handle_back_to_mAlgon
 
-        await handle_back_to_main(mock_callback_update, mock_context)
+        awAlgot handle_back_to_mAlgon(mock_callback_update, mock_context)
         mock_callback_update.callback_query.edit_message_text.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_handle_main_menu(self, mock_callback_update, mock_context):
-        """Test main_menu callback handler."""
-        from src.telegram_bot.handlers.callback_handlers import handle_main_menu
+    async def test_handle_mAlgon_menu(self, mock_callback_update, mock_context):
+        """Test mAlgon_menu callback handler."""
+        from src.telegram_bot.handlers.callback_handlers import handle_mAlgon_menu
 
-        await handle_main_menu(mock_callback_update, mock_context)
+        awAlgot handle_mAlgon_menu(mock_callback_update, mock_context)
         mock_callback_update.callback_query.edit_message_text.assert_called_once()
 
     @pytest.mark.asyncio
@@ -442,7 +442,7 @@ class TestCallbackHandlers:
         ):
             from src.telegram_bot.handlers.callback_handlers import handle_arbitrage_menu
 
-            await handle_arbitrage_menu(mock_callback_update, mock_context)
+            awAlgot handle_arbitrage_menu(mock_callback_update, mock_context)
 
     @pytest.mark.asyncio
     async def test_handle_auto_arbitrage(self, mock_callback_update, mock_context):
@@ -453,7 +453,7 @@ class TestCallbackHandlers:
         ):
             from src.telegram_bot.handlers.callback_handlers import handle_auto_arbitrage
 
-            await handle_auto_arbitrage(mock_callback_update, mock_context)
+            awAlgot handle_auto_arbitrage(mock_callback_update, mock_context)
 
     @pytest.mark.asyncio
     async def test_handle_dmarket_arbitrage(self, mock_callback_update, mock_context):
@@ -464,7 +464,7 @@ class TestCallbackHandlers:
         ):
             from src.telegram_bot.handlers.callback_handlers import handle_dmarket_arbitrage
 
-            await handle_dmarket_arbitrage(mock_callback_update, mock_context)
+            awAlgot handle_dmarket_arbitrage(mock_callback_update, mock_context)
 
     @pytest.mark.asyncio
     async def test_handle_best_opportunities(self, mock_callback_update, mock_context):
@@ -475,14 +475,14 @@ class TestCallbackHandlers:
         ):
             from src.telegram_bot.handlers.callback_handlers import handle_best_opportunities
 
-            await handle_best_opportunities(mock_callback_update, mock_context)
+            awAlgot handle_best_opportunities(mock_callback_update, mock_context)
 
     @pytest.mark.asyncio
     async def test_handle_game_selection(self, mock_callback_update, mock_context):
         """Test game_selection callback handler."""
         from src.telegram_bot.handlers.callback_handlers import handle_game_selection
 
-        await handle_game_selection(mock_callback_update, mock_context)
+        awAlgot handle_game_selection(mock_callback_update, mock_context)
         mock_callback_update.callback_query.edit_message_text.assert_called_once()
 
     @pytest.mark.asyncio
@@ -490,7 +490,7 @@ class TestCallbackHandlers:
         """Test market_analysis callback handler."""
         from src.telegram_bot.handlers.callback_handlers import handle_market_analysis
 
-        await handle_market_analysis(mock_callback_update, mock_context)
+        awAlgot handle_market_analysis(mock_callback_update, mock_context)
         mock_callback_update.callback_query.edit_message_text.assert_called_once()
 
     @pytest.mark.asyncio
@@ -498,32 +498,32 @@ class TestCallbackHandlers:
         """Test open_webapp callback handler."""
         from src.telegram_bot.handlers.callback_handlers import handle_open_webapp
 
-        await handle_open_webapp(mock_callback_update, mock_context)
+        awAlgot handle_open_webapp(mock_callback_update, mock_context)
         mock_callback_update.callback_query.edit_message_text.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_handle_temporary_unavailable(self, mock_callback_update, mock_context):
-        """Test temporary_unavailable handler."""
-        from src.telegram_bot.handlers.callback_handlers import handle_temporary_unavailable
+    async def test_handle_temporary_unavAlgolable(self, mock_callback_update, mock_context):
+        """Test temporary_unavAlgolable handler."""
+        from src.telegram_bot.handlers.callback_handlers import handle_temporary_unavAlgolable
 
-        await handle_temporary_unavailable(mock_callback_update, mock_context, "Test Feature")
+        awAlgot handle_temporary_unavAlgolable(mock_callback_update, mock_context, "Test Feature")
         mock_callback_update.callback_query.answer.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_handle_temporary_unavailable_no_callback(self, mock_context):
-        """Test temporary_unavailable with no callback_query."""
-        from src.telegram_bot.handlers.callback_handlers import handle_temporary_unavailable
+    async def test_handle_temporary_unavAlgolable_no_callback(self, mock_context):
+        """Test temporary_unavAlgolable with no callback_query."""
+        from src.telegram_bot.handlers.callback_handlers import handle_temporary_unavAlgolable
 
         update = MagicMock()
         update.callback_query = None
-        await handle_temporary_unavailable(update, mock_context)
+        awAlgot handle_temporary_unavAlgolable(update, mock_context)
 
     @pytest.mark.asyncio
     async def test_handle_noop(self, mock_callback_update, mock_context):
         """Test noop callback handler."""
         from src.telegram_bot.handlers.callback_handlers import handle_noop
 
-        await handle_noop(mock_callback_update, mock_context)
+        awAlgot handle_noop(mock_callback_update, mock_context)
         mock_callback_update.callback_query.answer.assert_called_once()
 
     @pytest.mark.asyncio
@@ -533,14 +533,14 @@ class TestCallbackHandlers:
 
         update = MagicMock()
         update.callback_query = None
-        await handle_noop(update, mock_context)
+        awAlgot handle_noop(update, mock_context)
 
     @pytest.mark.asyncio
     async def test_handle_help(self, mock_callback_update, mock_context):
         """Test help callback handler."""
         from src.telegram_bot.handlers.callback_handlers import handle_help
 
-        await handle_help(mock_callback_update, mock_context)
+        awAlgot handle_help(mock_callback_update, mock_context)
         mock_callback_update.callback_query.edit_message_text.assert_called_once()
         call_args = mock_callback_update.callback_query.edit_message_text.call_args
         assert "Помощь по боту" in call_args[0][0]
@@ -561,7 +561,7 @@ class TestErrorHandlers:
         from src.utils.exceptions import APIError
 
         mock_context.error = APIError(message="Rate limited", status_code=429)
-        await error_handler(mock_update, mock_context)
+        awAlgot error_handler(mock_update, mock_context)
         mock_update.effective_message.reply_text.assert_called_once()
         call_args = mock_update.effective_message.reply_text.call_args
         assert "Превышен лимит" in call_args[0][0]
@@ -574,7 +574,7 @@ class TestErrorHandlers:
 
         mock_context.error = APIError(message="Unauthorized", status_code=401)
         mock_update.effective_message = mock_update.message
-        await error_handler(mock_update, mock_context)
+        awAlgot error_handler(mock_update, mock_context)
         call_args = mock_update.effective_message.reply_text.call_args
         assert "авторизации" in call_args[0][0]
 
@@ -586,7 +586,7 @@ class TestErrorHandlers:
 
         mock_context.error = APIError(message="Not found", status_code=404)
         mock_update.effective_message = mock_update.message
-        await error_handler(mock_update, mock_context)
+        awAlgot error_handler(mock_update, mock_context)
         call_args = mock_update.effective_message.reply_text.call_args
         assert "не найден" in call_args[0][0]
 
@@ -598,7 +598,7 @@ class TestErrorHandlers:
 
         mock_context.error = APIError(message="Server error", status_code=500)
         mock_update.effective_message = mock_update.message
-        await error_handler(mock_update, mock_context)
+        awAlgot error_handler(mock_update, mock_context)
         call_args = mock_update.effective_message.reply_text.call_args
         assert "Серверная ошибка" in call_args[0][0]
 
@@ -610,7 +610,7 @@ class TestErrorHandlers:
 
         mock_context.error = APIError(message="Bad request", status_code=400)
         mock_update.effective_message = mock_update.message
-        await error_handler(mock_update, mock_context)
+        awAlgot error_handler(mock_update, mock_context)
         call_args = mock_update.effective_message.reply_text.call_args
         assert "400" in call_args[0][0]
 
@@ -621,7 +621,7 @@ class TestErrorHandlers:
 
         mock_context.error = Exception("Generic error")
         mock_update.effective_message = mock_update.message
-        await error_handler(mock_update, mock_context)
+        awAlgot error_handler(mock_update, mock_context)
         call_args = mock_update.effective_message.reply_text.call_args
         assert "Произошла ошибка" in call_args[0][0]
 
@@ -631,7 +631,7 @@ class TestErrorHandlers:
         from src.telegram_bot.handlers.error_handlers import error_handler
 
         mock_context.error = Exception("Error")
-        await error_handler(None, mock_context)
+        awAlgot error_handler(None, mock_context)
 
     @pytest.mark.asyncio
     async def test_error_handler_no_effective_message(self, mock_context):
@@ -641,20 +641,20 @@ class TestErrorHandlers:
         update = MagicMock()
         update.effective_message = None
         mock_context.error = Exception("Error")
-        await error_handler(update, mock_context)
+        awAlgot error_handler(update, mock_context)
 
     @pytest.mark.asyncio
-    async def test_error_handler_reply_fails(self, mock_update, mock_context):
-        """Test error handler when reply fails."""
+    async def test_error_handler_reply_fAlgols(self, mock_update, mock_context):
+        """Test error handler when reply fAlgols."""
         from src.telegram_bot.handlers.error_handlers import error_handler
 
         mock_context.error = Exception("Error")
         mock_update.effective_message = mock_update.message
         mock_update.effective_message.reply_text = AsyncMock(
-            side_effect=Exception("Reply failed")
+            side_effect=Exception("Reply fAlgoled")
         )
-        # Should not raise
-        await error_handler(mock_update, mock_context)
+        # Should not rAlgose
+        awAlgot error_handler(mock_update, mock_context)
 
 
 # ============================================================================
@@ -673,38 +673,38 @@ class TestCallbackRouter:
 
             assert callback_router is not None
         except ImportError:
-            pytest.skip("callback_router not available")
+            pytest.skip("callback_router not avAlgolable")
 
 
 # ============================================================================
-# MAIN_KEYBOARD.PY TESTS
+# MAlgoN_KEYBOARD.PY TESTS
 # ============================================================================
 
 
-class TestMainKeyboard:
-    """Tests for main_keyboard.py."""
+class TestMAlgonKeyboard:
+    """Tests for mAlgon_keyboard.py."""
 
-    def test_get_main_keyboard(self):
-        """Test get_main_keyboard returns valid keyboard."""
-        from src.telegram_bot.handlers.main_keyboard import get_main_keyboard
+    def test_get_mAlgon_keyboard(self):
+        """Test get_mAlgon_keyboard returns valid keyboard."""
+        from src.telegram_bot.handlers.mAlgon_keyboard import get_mAlgon_keyboard
 
-        keyboard = get_main_keyboard()
+        keyboard = get_mAlgon_keyboard()
         assert keyboard is not None
 
     @pytest.mark.asyncio
     async def test_start_command(self, mock_update, mock_context):
-        """Test start_command from main_keyboard."""
-        from src.telegram_bot.handlers.main_keyboard import start_command
+        """Test start_command from mAlgon_keyboard."""
+        from src.telegram_bot.handlers.mAlgon_keyboard import start_command
 
-        await start_command(mock_update, mock_context)
+        awAlgot start_command(mock_update, mock_context)
         mock_update.message.reply_text.assert_called()
 
     @pytest.mark.asyncio
-    async def test_main_menu_callback(self, mock_callback_update, mock_context):
-        """Test main_menu_callback."""
-        from src.telegram_bot.handlers.main_keyboard import main_menu_callback
+    async def test_mAlgon_menu_callback(self, mock_callback_update, mock_context):
+        """Test mAlgon_menu_callback."""
+        from src.telegram_bot.handlers.mAlgon_keyboard import mAlgon_menu_callback
 
-        await main_menu_callback(mock_callback_update, mock_context)
+        awAlgot mAlgon_menu_callback(mock_callback_update, mock_context)
         mock_callback_update.callback_query.edit_message_text.assert_called()
 
 
@@ -724,7 +724,7 @@ class TestScannerHandler:
 
             assert scanner_handler is not None
         except ImportError:
-            pytest.skip("scanner_handler not available")
+            pytest.skip("scanner_handler not avAlgolable")
 
 
 # ============================================================================
@@ -743,7 +743,7 @@ class TestTargetHandler:
 
             assert target_handler is not None
         except ImportError:
-            pytest.skip("target_handler not available")
+            pytest.skip("target_handler not avAlgolable")
 
 
 # ============================================================================
@@ -762,7 +762,7 @@ class TestDmarketHandlers:
 
             assert dmarket_handlers is not None
         except ImportError:
-            pytest.skip("dmarket_handlers not available")
+            pytest.skip("dmarket_handlers not avAlgolable")
 
 
 # ============================================================================
@@ -781,7 +781,7 @@ class TestSettingsHandlers:
 
             assert settings_handlers is not None
         except ImportError:
-            pytest.skip("settings_handlers not available")
+            pytest.skip("settings_handlers not avAlgolable")
 
 
 # ============================================================================
@@ -800,7 +800,7 @@ class TestHealthHandler:
 
             assert health_handler is not None
         except ImportError:
-            pytest.skip("health_handler not available")
+            pytest.skip("health_handler not avAlgolable")
 
 
 # ============================================================================
@@ -821,7 +821,7 @@ class TestDashboardHandler:
             try:
                 from src.telegram_bot.handlers.dashboard_handler import show_dashboard
 
-                await show_dashboard(mock_update, mock_context)
+                awAlgot show_dashboard(mock_update, mock_context)
             except Exception:
                 # Dashboard may have additional dependencies
                 pass
@@ -843,7 +843,7 @@ class TestWaxpeerHandler:
 
             assert waxpeer_handler is not None
         except ImportError:
-            pytest.skip("waxpeer_handler not available")
+            pytest.skip("waxpeer_handler not avAlgolable")
 
 
 # ============================================================================
@@ -862,26 +862,26 @@ class TestPanicHandler:
 
             assert panic_handler is not None
         except ImportError:
-            pytest.skip("panic_handler not available")
+            pytest.skip("panic_handler not avAlgolable")
 
 
 # ============================================================================
-# AI_HANDLER.PY TESTS
+# Algo_HANDLER.PY TESTS
 # ============================================================================
 
 
-class TestAIHandler:
-    """Tests for ai_handler.py."""
+class TestAlgoHandler:
+    """Tests for Algo_handler.py."""
 
     @pytest.mark.asyncio
-    async def test_ai_handler_import(self):
-        """Test ai_handler can be imported."""
+    async def test_Algo_handler_import(self):
+        """Test Algo_handler can be imported."""
         try:
-            from src.telegram_bot.handlers import ai_handler
+            from src.telegram_bot.handlers import Algo_handler
 
-            assert ai_handler is not None
+            assert Algo_handler is not None
         except ImportError:
-            pytest.skip("ai_handler not available")
+            pytest.skip("Algo_handler not avAlgolable")
 
 
 # ============================================================================
@@ -900,7 +900,7 @@ class TestPortfolioHandler:
 
             assert portfolio_handler is not None
         except ImportError:
-            pytest.skip("portfolio_handler not available")
+            pytest.skip("portfolio_handler not avAlgolable")
 
 
 # ============================================================================
@@ -919,7 +919,7 @@ class TestAutoBuyHandler:
 
             assert auto_buy_handler is not None
         except ImportError:
-            pytest.skip("auto_buy_handler not available")
+            pytest.skip("auto_buy_handler not avAlgolable")
 
 
 # ============================================================================
@@ -938,7 +938,7 @@ class TestAutoSellHandler:
 
             assert auto_sell_handler is not None
         except ImportError:
-            pytest.skip("auto_sell_handler not available")
+            pytest.skip("auto_sell_handler not avAlgolable")
 
 
 # ============================================================================
@@ -957,7 +957,7 @@ class TestPriceAlertsHandler:
 
             assert price_alerts_handler is not None
         except ImportError:
-            pytest.skip("price_alerts_handler not available")
+            pytest.skip("price_alerts_handler not avAlgolable")
 
 
 # ============================================================================
@@ -976,7 +976,7 @@ class TestMarketAlertsHandler:
 
             assert market_alerts_handler is not None
         except ImportError:
-            pytest.skip("market_alerts_handler not available")
+            pytest.skip("market_alerts_handler not avAlgolable")
 
 
 # ============================================================================
@@ -995,4 +995,4 @@ class TestWebsocketHandler:
 
             assert websocket_handler is not None
         except ImportError:
-            pytest.skip("websocket_handler not available")
+            pytest.skip("websocket_handler not avAlgolable")

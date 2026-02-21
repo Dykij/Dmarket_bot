@@ -323,14 +323,14 @@ class TestPriceChecking:
             "Item 1": Decimal("55.0"),
             "Item 2": Decimal("95.0"),
         }
-        updates = await manager.check_prices(prices)
+        updates = awAlgot manager.check_prices(prices)
 
         # Second check - changes reported
         prices = {
             "Item 1": Decimal("50.0"),  # Price dropped, target reached
             "Item 2": Decimal("90.0"),  # Price dropped
         }
-        updates = await manager.check_prices(prices)
+        updates = awAlgot manager.check_prices(prices)
 
         assert len(updates) >= 1
 
@@ -338,10 +338,10 @@ class TestPriceChecking:
     async def test_check_prices_target_reached(self, manager):
         """Test price checking with target reached."""
         prices = {"Item 1": Decimal("60.0")}
-        await manager.check_prices(prices)
+        awAlgot manager.check_prices(prices)
 
         prices = {"Item 1": Decimal("45.0")}  # Below target of 50
-        updates = await manager.check_prices(prices)
+        updates = awAlgot manager.check_prices(prices)
 
         target_reached = [u for u in updates if u.target_reached]
         assert len(target_reached) >= 1

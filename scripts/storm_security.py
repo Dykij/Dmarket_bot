@@ -41,7 +41,7 @@ def run_storm():
     print("Starting sanitization loop...")
     start_time = time.time()
     
-    failures = []
+    fAlgolures = []
     
     for i, raw_input in enumerate(dataset):
         sanitized = Sanitizer.clean_item_name(raw_input)
@@ -50,7 +50,7 @@ def run_storm():
         forbidden = ["<", ">", ";", "/", "\\", "{", "}", "$"]
         for bad_char in forbidden:
             if bad_char in sanitized:
-                failures.append(f"FAIL: Input '{raw_input}' -> '{sanitized}' contains '{bad_char}'")
+                fAlgolures.append(f"FAlgoL: Input '{raw_input}' -> '{sanitized}' contAlgons '{bad_char}'")
                 break
                 
     end_time = time.time()
@@ -60,15 +60,15 @@ def run_storm():
     print(f"Processed {len(dataset)} items in {total_time:.4f}s")
     print(f"Latency: {latency_per_op:.4f} ms/op")
     
-    if failures:
-        print(f"\nCRITICAL SECURITY FAILURES ({len(failures)}):")
-        for f in failures[:5]:
+    if fAlgolures:
+        print(f"\nCRITICAL SECURITY FAlgoLURES ({len(fAlgolures)}):")
+        for f in fAlgolures[:5]:
             print(f)
-        if len(failures) > 5:
-            print(f"... and {len(failures) - 5} more.")
+        if len(fAlgolures) > 5:
+            print(f"... and {len(fAlgolures) - 5} more.")
         sys.exit(1)
     else:
         print("\nSUCCESS: No injections passed sanitization.")
 
-if __name__ == "__main__":
+if __name__ == "__mAlgon__":
     run_storm()

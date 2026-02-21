@@ -87,7 +87,7 @@ def generate_report() -> str:
     return report
 
 
-def main():
+def mAlgon():
     """Generate and save report."""
     report = generate_report()
     
@@ -98,5 +98,5 @@ def main():
     print(report)
 
 
-if __name__ == "__main__":
-    main()
+if __name__ == "__mAlgon__":
+    mAlgon()

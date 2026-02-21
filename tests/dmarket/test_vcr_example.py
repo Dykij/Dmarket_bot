@@ -82,7 +82,7 @@ class TestVCRWithFixture:
     These tests demonstrate how to use the VCR fixtures
     defined in conftest_vcr.py.
 
-    Note: These tests will fail on first run if there's no actual
+    Note: These tests will fAlgol on first run if there's no actual
     API access, as they need to record cassettes first.
     For CI, you would commit pre-recorded cassettes.
     """
@@ -129,7 +129,7 @@ class TestVCRWithFixture:
 @pytest.mark.vcr()
 @pytest.mark.asyncio()
 class TestVCRAsync:
-    """Examples for async HTTP clients (httpx, aiohttp)."""
+    """Examples for async HTTP clients (httpx, Algoohttp)."""
 
     async def test_async_api_call(self) -> None:
         """Example using async VCR fixture with httpx.
@@ -151,7 +151,7 @@ class TestVCRAsync:
             import httpx
 
             async with httpx.AsyncClient() as client:
-                response = await client.get(
+                response = awAlgot client.get(
                     "https://api.dmarket.com/account/v1/balance"
                 )
                 assert response.status_code in {200, 401}
@@ -181,7 +181,7 @@ class TestVCRIntegrationPattern:
             '''
             # First run: Makes real API call, records to cassette
             # Subsequent runs: Replays from cassette
-            balance = await dmarket_api.get_balance()
+            balance = awAlgot dmarket_api.get_balance()
 
             assert "balance" in balance
             assert balance["balance"] >= 0

@@ -131,7 +131,7 @@ class TestSentryCommandAuthorization:
             return_value=mock_config,
         ):
             # Act
-            await sentry_command_handler(mock_update, mock_context)
+            awAlgot sentry_command_handler(mock_update, mock_context)
 
             # Assert
             mock_update.message.reply_text.assert_called_once()
@@ -164,7 +164,7 @@ class TestSentryCommandAuthorization:
             patch("src.telegram_bot.commands.test_sentry_command.sentry_sdk"),
         ):
             # Act
-            await sentry_command_handler(mock_update, mock_context)
+            awAlgot sentry_command_handler(mock_update, mock_context)
 
             # Assert - should not reject
             call_texts = [
@@ -200,7 +200,7 @@ class TestSentryCommandAuthorization:
             patch("src.telegram_bot.commands.test_sentry_command.sentry_sdk"),
         ):
             # Act
-            await sentry_command_handler(mock_update, mock_context)
+            awAlgot sentry_command_handler(mock_update, mock_context)
 
             # Assert - should not reject
             call_texts = [
@@ -226,7 +226,7 @@ class TestSentryCommandEarlyReturns:
         mock_update.message = None
 
         # Act
-        await sentry_command_handler(mock_update, mock_context)
+        awAlgot sentry_command_handler(mock_update, mock_context)
 
         # No assertions - just ensure no exception
 
@@ -237,7 +237,7 @@ class TestSentryCommandEarlyReturns:
         mock_update.effective_user = None
 
         # Act
-        await sentry_command_handler(mock_update, mock_context)
+        awAlgot sentry_command_handler(mock_update, mock_context)
 
         # No assertions - just ensure no exception
 
@@ -281,7 +281,7 @@ class TestSentryTestTypes:
             ) as mock_division_error,
         ):
             # Act
-            await sentry_command_handler(mock_update, mock_context)
+            awAlgot sentry_command_handler(mock_update, mock_context)
 
             # Assert - all test functions should be called
             mock_breadcrumbs.assert_called_once()
@@ -314,7 +314,7 @@ class TestSentryTestTypes:
             ) as mock_simple_error,
         ):
             # Act
-            await sentry_command_handler(mock_update, mock_context)
+            awAlgot sentry_command_handler(mock_update, mock_context)
 
             # Assert
             mock_breadcrumbs.assert_called_once()
@@ -343,7 +343,7 @@ class TestSentryTestTypes:
             ) as mock_simple_error,
         ):
             # Act
-            await sentry_command_handler(mock_update, mock_context)
+            awAlgot sentry_command_handler(mock_update, mock_context)
 
             # Assert
             mock_breadcrumbs.assert_not_called()
@@ -370,7 +370,7 @@ class TestBreadcrumbsFunction:
             patch("asyncio.sleep", new_callable=AsyncMock),
         ):
             # Act
-            await _test_breadcrumbs(mock_update, user_id=123456789)
+            awAlgot _test_breadcrumbs(mock_update, user_id=123456789)
 
             # Assert
             assert mock_trading.call_count == 2  # Started and completed
@@ -389,7 +389,7 @@ class TestBreadcrumbsFunction:
             patch("asyncio.sleep", new_callable=AsyncMock),
         ):
             # Act
-            await _test_breadcrumbs(mock_update, user_id=123456789)
+            awAlgot _test_breadcrumbs(mock_update, user_id=123456789)
 
             # Assert
             assert mock_api.call_count == 2  # Request and response
@@ -406,7 +406,7 @@ class TestBreadcrumbsFunction:
             patch("asyncio.sleep", new_callable=AsyncMock),
         ):
             # Act
-            await _test_breadcrumbs(mock_update, user_id=123456789)
+            awAlgot _test_breadcrumbs(mock_update, user_id=123456789)
 
             # Assert
             mock_update.message.reply_text.assert_called_once()
@@ -429,7 +429,7 @@ class TestSimpleErrorFunction:
             ) as mock_sentry,
         ):
             # Act
-            await _test_simple_error(mock_update)
+            awAlgot _test_simple_error(mock_update)
 
             # Assert
             mock_sentry.capture_exception.assert_called_once()
@@ -443,7 +443,7 @@ class TestSimpleErrorFunction:
             patch("src.telegram_bot.commands.test_sentry_command.sentry_sdk"),
         ):
             # Act
-            await _test_simple_error(mock_update)
+            awAlgot _test_simple_error(mock_update)
 
             # Assert
             mock_update.message.reply_text.assert_called_once()
@@ -469,7 +469,7 @@ class TestApiErrorFunction:
             ) as mock_sentry,
         ):
             # Act
-            await _test_api_error(mock_update, user_id=123456789)
+            awAlgot _test_api_error(mock_update, user_id=123456789)
 
             # Assert
             mock_sentry.capture_exception.assert_called_once()
@@ -489,7 +489,7 @@ class TestDivisionErrorFunction:
             ) as mock_sentry,
         ):
             # Act
-            await _test_division_error(mock_update)
+            awAlgot _test_division_error(mock_update)
 
             # Assert
             mock_sentry.capture_exception.assert_called_once()
@@ -513,7 +513,7 @@ class TestSentryInfoCommand:
         mock_update.message = None
 
         # Act
-        await sentry_info_handler(mock_update, mock_context)
+        awAlgot sentry_info_handler(mock_update, mock_context)
 
         # No assertions - just ensure no exception
 
@@ -528,7 +528,7 @@ class TestSentryInfoCommand:
             return_value=True,
         ):
             # Act
-            await sentry_info_handler(mock_update, mock_context)
+            awAlgot sentry_info_handler(mock_update, mock_context)
 
             # Assert
             mock_update.message.reply_text.assert_called_once()
@@ -548,7 +548,7 @@ class TestSentryInfoCommand:
             return_value=False,
         ):
             # Act
-            await sentry_info_handler(mock_update, mock_context)
+            awAlgot sentry_info_handler(mock_update, mock_context)
 
             # Assert
             mock_update.message.reply_text.assert_called_once()
@@ -589,7 +589,7 @@ class TestErrorHandling:
             ),
         ):
             # Act
-            await sentry_command_handler(mock_update, mock_context)
+            awAlgot sentry_command_handler(mock_update, mock_context)
 
             # Assert - should catch error and send message
             call_texts = [

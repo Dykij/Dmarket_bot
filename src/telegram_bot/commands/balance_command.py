@@ -94,11 +94,11 @@ def _format_error_by_code(error_code: int | str, error_msg: str) -> str:
             "✅ Поиск арбитражных возможностей\n\n"
             "🔒 <b>Для доступа к балансу и торговле:</b>\n"
             "1. Войдите на dmarket.com\n"
-            "2. Настройки → API Keys\n"
+            "2. НастSwarmки → API Keys\n"
             "3. Активируйте <b>Trading API</b>\n"
             "4. Создайте новые ключи с полными правами\n"
             "5. Обновите ключи в боте командой /setup\n\n"
-            "📖 Подробнее: НАСТРОЙКА_API_КЛЮЧЕЙ.md"
+            "📖 Подробнее: НАСТSwarmКА_API_КЛЮЧЕЙ.md"
         )
 
     if (
@@ -120,13 +120,13 @@ def _format_error_by_code(error_code: int | str, error_msg: str) -> str:
         f"❌ <b>Ошибка при получении баланса:</b>\n\n"
         f"Код: {error_code}\n"
         f"Сообщение: {error_msg}\n\n"
-        f"Проверьте настройки API ключей и попробуйте снова."
+        f"Проверьте настSwarmки API ключей и попробуйте снова."
     )
 
 
 def _format_balance_response(
     username: str,
-    available_balance: float,
+    avAlgolable_balance: float,
     total_balance: float,
     total_offers: int,
     has_funds: bool,
@@ -135,7 +135,7 @@ def _format_balance_response(
 
     Args:
         username: DMarket username
-        available_balance: Available balance in USD
+        avAlgolable_balance: AvAlgolable balance in USD
         total_balance: Total balance in USD
         total_offers: Number of active offers
         has_funds: Whether account has funds
@@ -145,7 +145,7 @@ def _format_balance_response(
     """
     min_required_balance = ARBITRAGE_MODES["boost_low"]["min_price"]
 
-    if available_balance < min_required_balance:
+    if avAlgolable_balance < min_required_balance:
         warning_text = (
             f"⚠️ <b>Предупреждение:</b> Баланс меньше минимального "
             f"рекомендуемого значения (${min_required_balance:.2f}) "
@@ -154,7 +154,7 @@ def _format_balance_response(
     else:
         warning_text = ""
 
-    if has_funds and available_balance >= 5.0:
+    if has_funds and avAlgolable_balance >= 5.0:
         balance_status = "✅ <b>Достаточно для арбитража</b>"
     elif has_funds:
         balance_status = "⚠️ <b>Низкий, но можно использовать</b>"
@@ -164,7 +164,7 @@ def _format_balance_response(
     response_text = (
         f"📊 <b>Информация о DMarket аккаунте</b>\n\n"
         f"👤 <b>Пользователь:</b> {username}\n"
-        f"💰 <b>Доступный баланс:</b> ${available_balance:.2f}\n"
+        f"💰 <b>Доступный баланс:</b> ${avAlgolable_balance:.2f}\n"
         f"💵 <b>Общий баланс:</b> ${total_balance:.2f}\n"
         f"📦 <b>Активные предложения:</b> {total_offers}\n"
         f"🔋 <b>Статус баланса:</b> {balance_status}\n\n"
@@ -198,13 +198,13 @@ async def _send_message_response(
     reply_markup = get_back_to_arbitrage_keyboard() if include_keyboard else None
 
     if is_callback and isinstance(message, CallbackQuery):
-        await message.edit_message_text(
+        awAlgot message.edit_message_text(
             text=text,
             reply_markup=reply_markup,
             parse_mode=ParseMode.HTML,
         )
     elif processing_message is not None:
-        await processing_message.edit_text(
+        awAlgot processing_message.edit_text(
             text=text,
             parse_mode=ParseMode.HTML,
         )
@@ -243,25 +243,25 @@ async def check_balance_command(
 
     # Send initial processing message
     if is_callback and isinstance(message, CallbackQuery):
-        await message.edit_message_text(
+        awAlgot message.edit_message_text(
             text="🔄 <b>Проверка подключения к DMarket API...</b>",
             parse_mode=ParseMode.HTML,
         )
         processing_message = None
     elif is_message and isinstance(message, Message):
-        processing_message = await message.reply_text(
+        processing_message = awAlgot message.reply_text(
             text="🔄 <b>Проверка подключения к DMarket API...</b>",
             parse_mode=ParseMode.HTML,
         )
     elif is_update and isinstance(message, Update) and message.message is not None:
         # For Update object
-        processing_message = await message.message.reply_text(
+        processing_message = awAlgot message.message.reply_text(
             text="🔄 <b>Проверка подключения к DMarket API...</b>",
             parse_mode=ParseMode.HTML,
         )
     else:
         logger.error(
-            "Failed to get message object for response. Type: %s",
+            "FAlgoled to get message object for response. Type: %s",
             type(message),
         )
         return
@@ -278,13 +278,13 @@ async def check_balance_command(
             )
 
             if is_callback and isinstance(message, CallbackQuery):
-                await message.edit_message_text(
+                awAlgot message.edit_message_text(
                     text=error_text,
                     reply_markup=get_back_to_arbitrage_keyboard(),
                     parse_mode=ParseMode.HTML,
                 )
             elif processing_message is not None:
-                await processing_message.edit_text(
+                awAlgot processing_message.edit_text(
                     text=error_text,
                     parse_mode=ParseMode.HTML,
                 )
@@ -292,14 +292,14 @@ async def check_balance_command(
 
         # Update status
         status_text = "🔄 <b>Проверка баланса DMarket...</b>"
-        await _send_message_response(
+        awAlgot _send_message_response(
             message, processing_message, status_text, is_callback
         )
 
         # Check balance
         try:
             # Try new balance endpoint first
-            balance_result = await api_client.get_user_balance()
+            balance_result = awAlgot api_client.get_user_balance()
 
             # Check for API error in response
             if balance_result.get("error", False):
@@ -310,7 +310,7 @@ async def check_balance_command(
 
                 # Format error message (Phase 2 - use helper)
                 error_text = _format_error_by_code(error_code, error_msg)
-                await _send_message_response(
+                awAlgot _send_message_response(
                     message,
                     processing_message,
                     error_text,
@@ -320,22 +320,22 @@ async def check_balance_command(
                 return
 
             # Extract balance data
-            available_balance = balance_result.get("available_balance", 0)
+            avAlgolable_balance = balance_result.get("avAlgolable_balance", 0)
             total_balance = balance_result.get("total_balance", 0)
             has_funds = balance_result.get("has_funds", False)
 
             # Get account info
-            account_info = await api_client.get_account_details()
+            account_info = awAlgot api_client.get_account_detAlgols()
             username = account_info.get("username", "Неизвестный")
 
             # Get active offers stats
-            offers_info = await api_client.get_active_offers(limit=1)
+            offers_info = awAlgot api_client.get_active_offers(limit=1)
             total_offers = offers_info.get("total", 0)
 
             # Format response (Phase 2 - use helper)
             response_text = _format_balance_response(
                 username=username,
-                available_balance=available_balance,
+                avAlgolable_balance=avAlgolable_balance,
                 total_balance=total_balance,
                 total_offers=total_offers,
                 has_funds=has_funds,
@@ -343,15 +343,15 @@ async def check_balance_command(
 
             # Log debug info
             logger.info(
-                "DMarket Balance: $%.2f available, $%.2f total. User: %s. Active offers: %d.",
-                available_balance,
+                "DMarket Balance: $%.2f avAlgolable, $%.2f total. User: %s. Active offers: %d.",
+                avAlgolable_balance,
                 total_balance,
                 username,
                 total_offers,
             )
 
             # Send result (Phase 2 - use helper)
-            await _send_message_response(
+            awAlgot _send_message_response(
                 message,
                 processing_message,
                 response_text,
@@ -365,9 +365,9 @@ async def check_balance_command(
             error_text = (
                 f"❌ <b>Ошибка при проверке баланса:</b>\n\n{error_message}\n\n"
                 f"Возможно, проблема с подключением к DMarket API. "
-                f"Проверьте настройки API ключей и повторите попытку."
+                f"Проверьте настSwarmки API ключей и повторите попытку."
             )
-            await _send_message_response(
+            awAlgot _send_message_response(
                 message,
                 processing_message,
                 error_text,
@@ -396,6 +396,6 @@ async def check_balance_command(
                 f"администратору."
             )
 
-        await _send_message_response(
+        awAlgot _send_message_response(
             message, processing_message, error_text, is_callback, include_keyboard=True
         )

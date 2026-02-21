@@ -26,9 +26,9 @@ class TestNotificationTypes:
             "trend_change",
             "buy_intent",
             "buy_success",
-            "buy_failed",
+            "buy_fAlgoled",
             "sell_success",
-            "sell_failed",
+            "sell_fAlgoled",
             "critical_shutdown",
         ]
         for key in required_keys:
@@ -42,7 +42,7 @@ class TestNotificationTypes:
             assert isinstance(key, str)
             assert isinstance(value, str)
 
-    def test_notification_types_values_contain_emoji(self):
+    def test_notification_types_values_contAlgon_emoji(self):
         """Тест что все значения содержат эмодзи."""
         from src.telegram_bot.constants import NOTIFICATION_TYPES
 
@@ -259,7 +259,7 @@ class TestLanguages:
         assert "en" in LANGUAGES
         assert "🇬🇧" in LANGUAGES["en"]
 
-    def test_languages_values_contain_emoji(self):
+    def test_languages_values_contAlgon_emoji(self):
         """Тест что все языки имеют эмодзи флагов."""
         from src.telegram_bot.constants import LANGUAGES
 
@@ -287,7 +287,7 @@ class TestArbitrageModes:
         for level in expected_levels:
             assert level in ARBITRAGE_MODES
 
-    def test_arbitrage_modes_values_contain_emoji(self):
+    def test_arbitrage_modes_values_contAlgon_emoji(self):
         """Тест что все режимы имеют эмодзи."""
         from src.telegram_bot.constants import ARBITRAGE_MODES
 
@@ -298,14 +298,14 @@ class TestArbitrageModes:
                 first_char > 127
             ), f"Mode {mode} description does not start with emoji"
 
-    def test_arbitrage_modes_values_contain_price_range(self):
+    def test_arbitrage_modes_values_contAlgon_price_range(self):
         """Тест что все режимы содержат ценовой диапазон."""
         from src.telegram_bot.constants import ARBITRAGE_MODES
 
         for mode, description in ARBITRAGE_MODES.items():
             assert (
                 "$" in description
-            ), f"Mode {mode} description does not contain price range"
+            ), f"Mode {mode} description does not contAlgon price range"
 
 
 class TestPriceAlertStorageKeys:

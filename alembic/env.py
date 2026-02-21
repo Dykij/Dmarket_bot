@@ -1,7 +1,7 @@
 ﻿"""Alembic environment configuration.
 
 This module configures Alembic for database migrations with:
-- Naming conventions for constraints
+- Naming conventions for constrAlgonts
 - Include/exclude logic for autogenerate
 - Async SQLAlchemy 2.0 support
 - Batch operations for SQLite
@@ -30,12 +30,12 @@ from src.models.target import Base as TargetBase
 from src.models.user import Base as UserBase
 from src.models.market import Base as MarketBase
 
-# Naming conventions for constraints
+# Naming conventions for constrAlgonts
 # This ensures consistent naming across all migrations
 NAMING_CONVENTION = {
     "ix": "ix_%(column_0_label)s",
     "uq": "uq_%(table_name)s_%(column_0_name)s",
-    "ck": "ck_%(table_name)s_%(constraint_name)s",
+    "ck": "ck_%(table_name)s_%(constrAlgont_name)s",
     "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
     "pk": "pk_%(table_name)s",
 }
@@ -57,7 +57,7 @@ database_url = os.getenv("DATABASE_URL", "sqlite:///data/bot_database.db")
 if database_url.startswith("sqlite:///"):
     database_url = database_url.replace("sqlite:///", "sqlite+pysqlite:///")
 
-config.set_main_option("sqlalchemy.url", database_url)
+config.set_mAlgon_option("sqlalchemy.url", database_url)
 
 # add your model's MetaData object here
 # for 'autogenerate' support
@@ -117,13 +117,13 @@ def run_migrations_offline() -> None:
     This configures the context with just a URL
     and not an Engine, though an Engine is acceptable
     here as well.  By skipping the Engine creation
-    we don't even need a DBAPI to be available.
+    we don't even need a DBAPI to be avAlgolable.
 
     Calls to context.execute() here emit the given string to the
     script output.
 
     """
-    url = config.get_main_option("sqlalchemy.url")
+    url = config.get_mAlgon_option("sqlalchemy.url")
 
     # Determine if we should use batch operations (for SQLite)
     render_as_batch = url and url.startswith(("sqlite", "sqlite+"))
@@ -222,7 +222,7 @@ async def run_async_migrations() -> None:
     from sqlalchemy.ext.asyncio import create_async_engine
 
     # Get async database URL
-    async_url = config.get_main_option("sqlalchemy.url")
+    async_url = config.get_mAlgon_option("sqlalchemy.url")
 
     # Create async engine
     connectable = create_async_engine(
@@ -231,9 +231,9 @@ async def run_async_migrations() -> None:
     )
 
     async with connectable.connect() as connection:
-        await connection.run_sync(do_run_migrations)
+        awAlgot connection.run_sync(do_run_migrations)
 
-    await connectable.dispose()
+    awAlgot connectable.dispose()
 
 
 def run_migrations_online_async() -> None:
@@ -248,8 +248,8 @@ def run_migrations_online_async() -> None:
 
 if context.is_offline_mode():
     run_migrations_offline()
-# Use async migrations if DATABASE_URL contains asyncpg or aiosqlite
-elif "+asyncpg" in database_url or "+aiosqlite" in database_url:
+# Use async migrations if DATABASE_URL contAlgons asyncpg or Algoosqlite
+elif "+asyncpg" in database_url or "+Algoosqlite" in database_url:
     run_migrations_online_async()
 else:
     run_migrations_online()

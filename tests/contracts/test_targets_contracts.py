@@ -1,6 +1,6 @@
 """Contract tests for DMarket User Targets API endpoints.
 
-This module contains consumer-driven contract tests for target (buy order)
+This module contAlgons consumer-driven contract tests for target (buy order)
 management endpoints of the DMarket API.
 
 Tested endpoints:
@@ -17,11 +17,11 @@ from __future__ import annotations
 
 import pytest
 
-from tests.contracts.conftest import DMarketContracts, PactMatchers, is_pact_available
+from tests.contracts.conftest import DMarketContracts, PactMatchers, is_pact_avAlgolable
 
-# Skip all tests if Pact is not available
+# Skip all tests if Pact is not avAlgolable
 pytestmark = pytest.mark.skipif(
-    not is_pact_available(),
+    not is_pact_avAlgolable(),
     reason="pact-python not installed",
 )
 
@@ -165,7 +165,7 @@ class TestCreateTargetsContract:
 
         Verifies that:
         - Multiple targets can be created in a single request
-        - Response contains status for each target
+        - Response contAlgons status for each target
         """
         expected_body = {
             "Result": pact_matchers.each_like(
@@ -346,7 +346,7 @@ class TestTargetsByTitleContract:
 
         Verifies that:
         - Consumer can query existing buy orders for an item
-        - Response contains aggregated target information
+        - Response contAlgons aggregated target information
         """
         expected_body = {
             "orders": pact_matchers.each_like(

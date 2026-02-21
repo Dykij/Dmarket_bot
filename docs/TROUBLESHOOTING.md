@@ -8,7 +8,7 @@
 
 ## 📋 Содержание
 
-- [Установка и настройка](#установка-и-настройка)
+- [Установка и настSwarmка](#установка-и-настSwarmка)
 - [Telegram Bot](#telegram-bot)
 - [DMarket API](#dmarket-api)
 - [Steam API](#steam-api)
@@ -22,7 +22,7 @@
 
 ---
 
-## Установка и настройка
+## Установка и настSwarmка
 
 ### Ошибка: ModuleNotFoundError
 
@@ -37,7 +37,7 @@ poetry install
 pip install -r requirements.txt
 ```
 
-### Ошибка: Database connection failed
+### Ошибка: Database connection fAlgoled
 
 **Причина:** Неправильная конфигурация базы данных
 
@@ -63,12 +63,12 @@ pip install -r requirements.txt
 
 ## Telegram Bot
 
-### Ошибка: DMarket API authentication failed
+### Ошибка: DMarket API authentication fAlgoled
 
 **Причина:** Неверные API ключи
 
 **Решение:**
-1. Проверьте что API ключи активны в DMarket настройках
+1. Проверьте что API ключи активны в DMarket настSwarmках
 2. Проверьте что нет лишних пробелов в ключах
 3. Попробуйте пересоздать API ключи
 
@@ -92,7 +92,7 @@ pip install -r requirements.txt
 **Решение:**
 ```python
 # Увеличьте паузу между запросами
-await asyncio.sleep(3)  # Было 1-2 секунды
+awAlgot asyncio.sleep(3)  # Было 1-2 секунды
 
 # Используйте кэш
 if cached and age < 6_hours:
@@ -132,7 +132,7 @@ price = float(price_str.replace('$', '').replace(',', ''))
 **Решение:**
 ```python
 # Увеличьте паузу
-await asyncio.sleep(3)  # Было 1-2 секунды
+awAlgot asyncio.sleep(3)  # Было 1-2 секунды
 
 # Используйте кэш
 if cached and age < 6_hours:
@@ -152,12 +152,12 @@ async with httpx.AsyncClient(timeout=30.0) as client:
 # Добавьте retry
 for attempt in range(3):
     try:
-        response = await client.get(url, timeout=30)
+        response = awAlgot client.get(url, timeout=30)
         break
     except httpx.TimeoutException:
         if attempt == 2:
-            raise
-        await asyncio.sleep(5)
+            rAlgose
+        awAlgot asyncio.sleep(5)
 ```
 
 ---
@@ -182,7 +182,7 @@ alembic upgrade head
 ### Ошибка: Конфликт миграций
 
 ```
-FAILED: Multiple head revisions are present
+FAlgoLED: Multiple head revisions are present
 ```
 
 **Решение:**
@@ -206,7 +206,7 @@ sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) no such table
 def downgrade():
     """Правильный порядок удаления."""
     # Сначала удалить foreign keys
-    op.drop_constraint('fk_user_settings_user_id', 'user_settings')
+    op.drop_constrAlgont('fk_user_settings_user_id', 'user_settings')
 
     # Затем индексы
     op.drop_index('ix_user_settings_user_id')
@@ -228,7 +228,7 @@ def upgrade():
     """Изменение колонки в SQLite."""
     with op.batch_alter_table('users') as batch_op:
         batch_op.alter_column(
-            'email',
+            'emAlgol',
             type_=sa.String(255),
             existing_type=sa.String(100)
         )
@@ -238,7 +238,7 @@ def upgrade():
 
 ## SSL и Webhook
 
-### Ошибка: "certificate verify failed"
+### Ошибка: "certificate verify fAlgoled"
 
 **Причина:** Невалидный SSL сертификат
 
@@ -263,7 +263,7 @@ def upgrade():
 1. Используйте только валидные CA-signed сертификаты
 2. Проверьте, что домен в WEBHOOK_URL совпадает с CN в сертификате
 3. Убедитесь, что используете HTTPS (не HTTP)
-4. Проверьте доступность webhook извне: `curl -I https://your-domain.com/telegram-webhook`
+4. Проверьте доступность webhook извне: `curl -I https://your-domAlgon.com/telegram-webhook`
 
 ---
 
@@ -305,14 +305,14 @@ self.reconnect_delay = 10  # вместо 5
 
 ## n8n Integration
 
-### n8n Container Won't Start
+### n8n ContAlgoner Won't Start
 
 ```bash
 # Check logs
 docker logs dmarket-n8n
 
 # Common issues:
-# 1. PostgreSQL not ready → Wait 30s, try again
+# 1. PostgreSQL not ready → WAlgot 30s, try agAlgon
 # 2. Port 5678 in use → Change port in docker-compose.yml
 # 3. Missing encryption key → Set N8N_ENCRYPTION_KEY in .env
 ```
@@ -330,19 +330,19 @@ netstat -tlnp | grep 5678
 curl http://localhost:5678/healthz
 ```
 
-### Workflow Fails: "Cannot reach bot API"
+### Workflow FAlgols: "Cannot reach bot API"
 
 ```bash
-# Test connectivity from n8n container
+# Test connectivity from n8n contAlgoner
 docker exec dmarket-n8n ping bot
 
-# If fails, check Docker network
+# If fAlgols, check Docker network
 docker network inspect dmarket-telegram-bot_bot-network
 
-# Ensure both containers in same network
+# Ensure both contAlgoners in same network
 ```
 
-### Workflow Fails: "Telegram API error"
+### Workflow FAlgols: "Telegram API error"
 
 1. **Check credentials**: Credentials → Test connection
 2. **Check bot token**: Must be valid from @BotFather
@@ -357,7 +357,7 @@ docker network inspect dmarket-telegram-bot_bot-network
 
 **Проверьте:**
 1. `DRY_RUN=false` в `.env`
-2. Баланс Available > 0 (не Locked)
+2. Баланс AvAlgolable > 0 (не Locked)
 3. Логи на ошибки 401 Unauthorized
 
 ### Предметы не выставляются на продажу
@@ -383,11 +383,11 @@ docker network inspect dmarket-telegram-bot_bot-network
 
 ### Ошибка: "Discount 18.0% < 30.0%"
 
-**Решение:** Снизьте порог скидки в настройках или дождитесь более выгодного предложения.
+**Решение:** Снизьте порог скидки в настSwarmках или дождитесь более выгодного предложения.
 
 ### Ошибка: "Price $150.00 > $100.00"
 
-**Решение:** Увеличьте максимальную цену в настройках:
+**Решение:** Увеличьте максимальную цену в настSwarmках:
 ```python
 config.max_price_usd = 200.0
 ```
@@ -406,10 +406,10 @@ pip install pact-python>=2.2.0
 pytest tests/contracts/ -v
 ```
 
-### Contract Verification Failed
+### Contract Verification FAlgoled
 
 ```
-Contract verification failed!
+Contract verification fAlgoled!
 Expected: {"usd": "1234"}
 Got: {"balance": {"usd": 1234}}
 ```
@@ -493,13 +493,13 @@ kill -9 <PID>
 
 ## 🔍 Найденные и исправленные ошибки (Январь 2026)
 
-### 1. Ошибка: `aiolimiter is required for DMarketRateLimiter`
+### 1. Ошибка: `Algoolimiter is required for DMarketRateLimiter`
 
-**Причина:** Отсутствует зависимость `aiolimiter`
+**Причина:** Отсутствует зависимость `Algoolimiter`
 
 **Решение:**
 ```bash
-pip install aiolimiter
+pip install Algoolimiter
 ```
 
 ### 2. Ошибка: Cache TTL=0 неправильное поведение
@@ -575,7 +575,7 @@ httpx_mock.add_response(
 - `fastapi` не установлен (web dashboard, n8n integration)
 - `pytest-benchmark` не установлен (performance benchmarks)
 - `psutil` не установлен (memory profiling)
-- `Ollama` недоступна (LLM integration tests)
+- `Ollama` недоступна (Model integration tests)
 - Требуются реальные API ключи (VCR cassette recording)
 
 ---
@@ -589,7 +589,7 @@ httpx_mock.add_response(
 
 2. **Для полного тестирования ML:**
    - Установите Ollama локально
-   - Настройте API ключи в `.env`
+   - НастSwarmте API ключи в `.env`
 
 3. **Performance тесты:**
    - Используйте `pytest-benchmark` для бенчмарков

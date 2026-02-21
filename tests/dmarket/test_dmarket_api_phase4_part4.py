@@ -72,7 +72,7 @@ class TestBuyItem:
             with patch.object(
                 dmarket_api, "clear_cache_for_endpoint", new_callable=AsyncMock
             ):
-                result = await dmarket_api.buy_item(
+                result = awAlgot dmarket_api.buy_item(
                     item_id="item123", price=10.0, game="csgo"
                 )
 
@@ -89,7 +89,7 @@ class TestBuyItem:
         ) as mock_req, patch.object(
             dmarket_api, "clear_cache_for_endpoint", new_callable=AsyncMock
         ):
-            await dmarket_api.buy_item(item_id="item123", price=25.50, game="csgo")
+            awAlgot dmarket_api.buy_item(item_id="item123", price=25.50, game="csgo")
 
             # Проверяем что данные переданы
             call_kwargs = mock_req.call_args.kwargs if mock_req.call_args else {}
@@ -107,7 +107,7 @@ class TestBuyItem:
             with patch.object(
                 dmarket_api, "clear_cache_for_endpoint", new_callable=AsyncMock
             ):
-                result = await dmarket_api.buy_item(
+                result = awAlgot dmarket_api.buy_item(
                     item_id="item123",
                     price=10.0,
                     game="csgo",
@@ -126,7 +126,7 @@ class TestBuyItem:
                 dmarket_api, "clear_cache_for_endpoint", new_callable=AsyncMock
             ):
                 for game in ["csgo", "dota2", "tf2", "rust"]:
-                    result = await dmarket_api.buy_item(
+                    result = awAlgot dmarket_api.buy_item(
                         item_id="item123", price=10.0, game=game
                     )
                     assert result is not None
@@ -140,7 +140,7 @@ class TestBuyItem:
             with patch.object(
                 dmarket_api, "clear_cache_for_endpoint", new_callable=AsyncMock
             ):
-                result = await dmarket_api.buy_item(
+                result = awAlgot dmarket_api.buy_item(
                     item_id="item123", price=0.50, game="csgo"
                 )
 
@@ -155,7 +155,7 @@ class TestBuyItem:
             with patch.object(
                 dmarket_api, "clear_cache_for_endpoint", new_callable=AsyncMock
             ):
-                result = await dmarket_api.buy_item(
+                result = awAlgot dmarket_api.buy_item(
                     item_id="item123", price=500.00, game="csgo"
                 )
 
@@ -170,7 +170,7 @@ class TestBuyItem:
             with patch.object(
                 dmarket_api, "clear_cache_for_endpoint", new_callable=AsyncMock
             ):
-                result = await dmarket_api.buy_item(
+                result = awAlgot dmarket_api.buy_item(
                     item_id="item123", price=10.0, game="csgo", source="arbitrage"
                 )
 
@@ -194,7 +194,7 @@ class TestSellItem:
             with patch.object(
                 dmarket_api, "clear_cache_for_endpoint", new_callable=AsyncMock
             ):
-                result = await dmarket_api.sell_item(
+                result = awAlgot dmarket_api.sell_item(
                     item_id="item123", price=15.0, game="csgo"
                 )
 
@@ -211,7 +211,7 @@ class TestSellItem:
         ) as mock_req, patch.object(
             dmarket_api, "clear_cache_for_endpoint", new_callable=AsyncMock
         ):
-            await dmarket_api.sell_item(item_id="item123", price=25.50, game="csgo")
+            awAlgot dmarket_api.sell_item(item_id="item123", price=25.50, game="csgo")
 
             # Проверяем данные
             call_kwargs = mock_req.call_args.kwargs if mock_req.call_args else {}
@@ -228,7 +228,7 @@ class TestSellItem:
             with patch.object(
                 dmarket_api, "clear_cache_for_endpoint", new_callable=AsyncMock
             ):
-                result = await dmarket_api.sell_item(
+                result = awAlgot dmarket_api.sell_item(
                     item_id="item123", price=15.0, game="csgo", buy_price=10.0
                 )
 
@@ -244,7 +244,7 @@ class TestSellItem:
             with patch.object(
                 dmarket_api, "clear_cache_for_endpoint", new_callable=AsyncMock
             ):
-                result = await dmarket_api.sell_item(
+                result = awAlgot dmarket_api.sell_item(
                     item_id="item123",
                     price=15.0,
                     game="csgo",
@@ -263,7 +263,7 @@ class TestSellItem:
                 dmarket_api, "clear_cache_for_endpoint", new_callable=AsyncMock
             ):
                 for game in ["csgo", "dota2", "tf2", "rust"]:
-                    result = await dmarket_api.sell_item(
+                    result = awAlgot dmarket_api.sell_item(
                         item_id="item123", price=15.0, game=game
                     )
                     assert result is not None
@@ -277,7 +277,7 @@ class TestSellItem:
             with patch.object(
                 dmarket_api, "clear_cache_for_endpoint", new_callable=AsyncMock
             ):
-                result = await dmarket_api.sell_item(
+                result = awAlgot dmarket_api.sell_item(
                     item_id="item123", price=15.0, game="csgo", source="auto_sell"
                 )
 
@@ -292,7 +292,7 @@ class TestSellItem:
             with patch.object(
                 dmarket_api, "clear_cache_for_endpoint", new_callable=AsyncMock
             ):
-                result = await dmarket_api.sell_item(
+                result = awAlgot dmarket_api.sell_item(
                     item_id="item123", price=0.75, game="csgo"
                 )
 
@@ -311,7 +311,7 @@ class TestDryRunMode:
     async def test_buy_item_dry_run_does_not_call_api(self, dmarket_api_dry_run):
         """Тест что buy_item в DRY_RUN не вызывает API."""
         with patch.object(dmarket_api_dry_run, "_request") as mock_req:
-            result = await dmarket_api_dry_run.buy_item(
+            result = awAlgot dmarket_api_dry_run.buy_item(
                 item_id="item123", price=10.0, game="csgo"
             )
 
@@ -325,7 +325,7 @@ class TestDryRunMode:
     async def test_sell_item_dry_run_does_not_call_api(self, dmarket_api_dry_run):
         """Тест что sell_item в DRY_RUN не вызывает API."""
         with patch.object(dmarket_api_dry_run, "_request") as mock_req:
-            result = await dmarket_api_dry_run.sell_item(
+            result = awAlgot dmarket_api_dry_run.sell_item(
                 item_id="item123", price=15.0, game="csgo"
             )
 
@@ -338,7 +338,7 @@ class TestDryRunMode:
     @pytest.mark.asyncio()
     async def test_dry_run_buy_returns_success(self, dmarket_api_dry_run):
         """Тест что DRY_RUN buy всегда возвращает success."""
-        result = await dmarket_api_dry_run.buy_item(
+        result = awAlgot dmarket_api_dry_run.buy_item(
             item_id="item123", price=10.0, game="csgo"
         )
 
@@ -348,7 +348,7 @@ class TestDryRunMode:
     @pytest.mark.asyncio()
     async def test_dry_run_sell_returns_success(self, dmarket_api_dry_run):
         """Тест что DRY_RUN sell всегда возвращает success."""
-        result = await dmarket_api_dry_run.sell_item(
+        result = awAlgot dmarket_api_dry_run.sell_item(
             item_id="item123", price=15.0, game="csgo"
         )
 

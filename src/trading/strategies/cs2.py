@@ -13,7 +13,7 @@ class CS2Strategy(BaseStrategy):
     """
     Strategy for Counter-Strike 2.
 
-    Constraints:
+    ConstrAlgonts:
     - 7-day trade lock after purchase.
     - High volatility.
     - Requires 3% risk premium (handled in FeeCalculator).
@@ -62,7 +62,7 @@ class CS2Strategy(BaseStrategy):
                 return False
 
             # 2. Steam Liquidity/Value Check (Reference)
-            # If Steam price is available, ensure we aren't buying significantly above Steam
+            # If Steam price is avAlgolable, ensure we aren't buying significantly above Steam
             # (which would imply inflated DMarket price or very rare item)
             if steam_price > 0:
                 # Safety: Don't buy if DMarket is > 110% of Steam (unless you trust Waxpeer price heavily)

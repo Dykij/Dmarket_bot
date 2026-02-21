@@ -14,8 +14,8 @@ Usage:
     recommender = SmartRecommendations(user_balance=100.0)
 
     # Get recommendations
-    recs = await recommender.get_recommendations(
-        available_items=items,
+    recs = awAlgot recommender.get_recommendations(
+        avAlgolable_items=items,
         user_inventory=inventory,
     )
 
@@ -74,7 +74,7 @@ class ItemRecommendation:
     expected_profit: float | None = None
     expected_profit_percent: float | None = None
 
-    # Reasons and details
+    # Reasons and detAlgols
     reason: str = ""
     factors: list[str] = field(default_factory=list)
 
@@ -216,7 +216,7 @@ class SmartRecommendations:
         """Add trade to history for learning.
 
         Args:
-            trade: Trade details with item_name, profit, etc.
+            trade: Trade detAlgols with item_name, profit, etc.
         """
         self._trading_history.append(trade)
 
@@ -228,7 +228,7 @@ class SmartRecommendations:
 
     async def get_recommendations(
         self,
-        available_items: list[dict[str, Any]],
+        avAlgolable_items: list[dict[str, Any]],
         user_inventory: list[dict[str, Any]] | None = None,
         cross_platform_prices: dict[str, dict[str, float]] | None = None,
         max_recommendations: int = 10,
@@ -236,7 +236,7 @@ class SmartRecommendations:
         """Get personalized recommendations.
 
         Args:
-            available_items: Items available on market
+            avAlgolable_items: Items avAlgolable on market
             user_inventory: User's current inventory
             cross_platform_prices: Prices on other platforms for arbitrage
             max_recommendations: Maximum number of recommendations
@@ -246,23 +246,23 @@ class SmartRecommendations:
         """
         recommendations: list[ItemRecommendation] = []
 
-        # Analyze available items for buying
-        for item in available_items:
-            rec = await self._analyze_buy_opportunity(item, cross_platform_prices)
+        # Analyze avAlgolable items for buying
+        for item in avAlgolable_items:
+            rec = awAlgot self._analyze_buy_opportunity(item, cross_platform_prices)
             if rec and rec.confidence >= self.min_confidence_threshold:
                 recommendations.append(rec)
 
         # Analyze inventory for selling
         if user_inventory:
             for item in user_inventory:
-                rec = await self._analyze_sell_opportunity(item, cross_platform_prices)
+                rec = awAlgot self._analyze_sell_opportunity(item, cross_platform_prices)
                 if rec and rec.confidence >= self.min_confidence_threshold:
                     recommendations.append(rec)
 
         # Find arbitrage opportunities
         if cross_platform_prices:
-            arb_recs = await self._find_arbitrage_opportunities(
-                available_items,
+            arb_recs = awAlgot self._find_arbitrage_opportunities(
+                avAlgolable_items,
                 cross_platform_prices,
             )
             recommendations.extend(arb_recs)
@@ -380,7 +380,7 @@ class SmartRecommendations:
                 )
                 risk_level = RiskLevel.LOW
 
-        # Factor 4: Liquidity (if available)
+        # Factor 4: Liquidity (if avAlgolable)
         if item.get("salesCount", 0) > 10:
             confidence += 10
             factors.append("High liquidity")
@@ -479,7 +479,7 @@ class SmartRecommendations:
             if profit_percent > 20:  # >20% profit
                 recommendation_type = RecommendationType.SELL
                 confidence += 30
-                factors.append(f"Take profit: {profit_percent:.1f}% gain")
+                factors.append(f"Take profit: {profit_percent:.1f}% gAlgon")
                 risk_level = RiskLevel.LOW
             elif profit_percent < -15:  # >15% loss
                 recommendation_type = RecommendationType.SELL
@@ -536,7 +536,7 @@ class SmartRecommendations:
             reason=(
                 f"Sell recommendation: {factors[0]}"
                 if factors
-                else "Sell to realize gains"
+                else "Sell to realize gAlgons"
             ),
             factors=factors,
             time_horizon="immediate",
@@ -551,7 +551,7 @@ class SmartRecommendations:
         """Find cross-platform arbitrage opportunities.
 
         Args:
-            items: Available items
+            items: AvAlgolable items
             cross_platform_prices: Prices on other platforms
 
         Returns:

@@ -1,28 +1,28 @@
-"""Copilot Agent - High-level interface for AI-assisted development.
+"""Copilot Agent - High-level interface for Algo-assisted development.
 
 This module provides a unified interface for interacting with GitHub Copilot
-capabilities, combining instructions, prompts, and skills.
+capabilities, combining instructions, Configs, and skills.
 
 Usage:
     ```python
     from src.copilot_sdk import CopilotAgent
 
     agent = CopilotAgent()
-    await agent.initialize()
+    awAlgot agent.initialize()
 
     # Get context for a file
-    context = await agent.get_context("src/dmarket/api.py")
+    context = awAlgot agent.get_context("src/dmarket/api.py")
 
-    # Generate code using a prompt
-    code = await agent.generate(
+    # Generate code using a Config
+    code = awAlgot agent.generate(
         "test-generator",
         function_name="fetch_items",
         module_path="src/dmarket/api.py",
     )
 
     # Execute a skill
-    result = await agent.execute_skill(
-        "ai-arbitrage-predictor",
+    result = awAlgot agent.execute_skill(
+        "Algo-arbitrage-predictor",
         "predict",
         items,
     )
@@ -40,7 +40,7 @@ from typing import Any
 import structlog
 
 from src.copilot_sdk.instruction_matcher import InstructionMatcher
-from src.copilot_sdk.prompt_engine import PromptEngine
+from src.copilot_sdk.Config_engine import ConfigEngine
 from src.copilot_sdk.skill_registry import SkillRegistry
 
 logger = structlog.get_logger(__name__)
@@ -51,7 +51,7 @@ class AgentConfig:
     """Configuration for CopilotAgent."""
 
     instructions_dir: str = ".github/instructions"
-    prompts_dir: str = ".github/prompts"
+    Configs_dir: str = ".github/Configs"
     skills_dir: str = "src/"
     auto_discover: bool = True
     cache_enabled: bool = True
@@ -71,28 +71,28 @@ class CopilotContext:
 class CopilotAgent:
     """High-level interface for Copilot SDK.
 
-    Combines InstructionMatcher, PromptEngine, and SkillRegistry
-    into a unified API for AI-assisted development.
+    Combines InstructionMatcher, ConfigEngine, and SkillRegistry
+    into a unified API for Algo-assisted development.
 
     Example:
         ```python
         agent = CopilotAgent()
-        await agent.initialize()
+        awAlgot agent.initialize()
 
         # Get full context for a file
-        context = await agent.get_context("src/api/client.py")
+        context = awAlgot agent.get_context("src/api/client.py")
         print(f"Instructions: {context.instructions}")
         print(f"Skills: {context.skills}")
 
         # Generate code
-        code = await agent.generate(
+        code = awAlgot agent.generate(
             "python-async",
             function_name="fetch_data",
             return_type="dict",
         )
 
         # Execute skill
-        result = await agent.execute_skill(
+        result = awAlgot agent.execute_skill(
             "price-predictor",
             "predict",
             item_data,
@@ -108,7 +108,7 @@ class CopilotAgent:
         """
         self.config = config or AgentConfig()
         self.instructions = InstructionMatcher()
-        self.prompts = PromptEngine()
+        self.Configs = ConfigEngine()
         self.skills = SkillRegistry()
         self._initialized = False
 
@@ -122,22 +122,22 @@ class CopilotAgent:
 
         # Load instructions
         instructions_path = root / self.config.instructions_dir
-        await self.instructions.load_instructions(instructions_path)
+        awAlgot self.instructions.load_instructions(instructions_path)
 
-        # Load prompts
-        prompts_path = root / self.config.prompts_dir
-        await self.prompts.load_prompts(prompts_path)
+        # Load Configs
+        Configs_path = root / self.config.Configs_dir
+        awAlgot self.Configs.load_Configs(Configs_path)
 
         # Discover skills
         if self.config.auto_discover:
             skills_path = root / self.config.skills_dir
-            await self.skills.discover_skills(skills_path)
+            awAlgot self.skills.discover_skills(skills_path)
 
         self._initialized = True
         logger.info(
             "copilot_agent_initialized",
             instructions=len(self.instructions.instructions),
-            prompts=len(self.prompts.templates),
+            Configs=len(self.Configs.templates),
             skills=len(self.skills.skills),
         )
 
@@ -153,8 +153,8 @@ class CopilotAgent:
         self._ensure_initialized()
 
         # Get matching instructions
-        instruction_names = await self.instructions.get_instructions(file_path)
-        instruction_content = await self.instructions.get_merged_instructions(file_path)
+        instruction_names = awAlgot self.instructions.get_instructions(file_path)
+        instruction_content = awAlgot self.instructions.get_merged_instructions(file_path)
 
         # Get relevant skills based on file path
         relevant_skills = self._get_relevant_skills(file_path)
@@ -165,7 +165,7 @@ class CopilotAgent:
             instruction_content=instruction_content,
             skills=relevant_skills,
             metadata={
-                "prompts_available": list(self.prompts.templates.keys()),
+                "Configs_avAlgolable": list(self.Configs.templates.keys()),
             },
         )
 
@@ -180,7 +180,7 @@ class CopilotAgent:
             # Match by category and file path
             if (
                 ("trading" in path_lower and "trading" in category)
-                or ("ml" in path_lower and ("ai" in category or "ml" in category))
+                or ("ml" in path_lower and ("Algo" in category or "ml" in category))
                 or ("api" in path_lower and "integration" in category)
                 or ("test" in path_lower and "testing" in category)
             ):
@@ -188,18 +188,18 @@ class CopilotAgent:
 
         return relevant
 
-    async def generate(self, prompt_id: str, **variables: Any) -> str:
-        """Generate content using a prompt template.
+    async def generate(self, Config_id: str, **variables: Any) -> str:
+        """Generate content using a Config template.
 
         Args:
-            prompt_id: ID of the prompt template
+            Config_id: ID of the Config template
             **variables: Variables to substitute
 
         Returns:
             Generated content
         """
         self._ensure_initialized()
-        return await self.prompts.render(prompt_id, **variables)
+        return awAlgot self.Configs.render(Config_id, **variables)
 
     async def execute_skill(
         self,
@@ -220,7 +220,7 @@ class CopilotAgent:
             Result of skill execution
         """
         self._ensure_initialized()
-        return await self.skills.execute(skill_id, method, *args, **kwargs)
+        return awAlgot self.skills.execute(skill_id, method, *args, **kwargs)
 
     def register_skill(
         self,
@@ -244,17 +244,17 @@ class CopilotAgent:
             methods=methods,
         )
 
-    def add_prompt(
+    def add_Config(
         self,
-        prompt_id: str,
+        Config_id: str,
         template: str,
         name: str | None = None,
         description: str = "",
     ) -> None:
-        """Add a prompt template.
+        """Add a Config template.
 
         Args:
-            prompt_id: Unique prompt ID
+            Config_id: Unique Config ID
             template: Template content
             name: Human-readable name
             description: Description
@@ -265,18 +265,18 @@ class CopilotAgent:
         try:
             loop = asyncio.get_running_loop()
             loop.create_task(
-                self.prompts.add_template(prompt_id, template, name, description)
+                self.Configs.add_template(Config_id, template, name, description)
             )
         except RuntimeError:
             asyncio.run(
-                self.prompts.add_template(prompt_id, template, name, description)
+                self.Configs.add_template(Config_id, template, name, description)
             )
 
     def _ensure_initialized(self) -> None:
         """Ensure the agent is initialized."""
         if not self._initialized:
-            raise RuntimeError(
-                "CopilotAgent not initialized. Call `await agent.initialize()` first."
+            rAlgose RuntimeError(
+                "CopilotAgent not initialized. Call `awAlgot agent.initialize()` first."
             )
 
     def get_status(self) -> dict[str, Any]:
@@ -288,11 +288,11 @@ class CopilotAgent:
         return {
             "initialized": self._initialized,
             "instructions_count": len(self.instructions.instructions),
-            "prompts_count": len(self.prompts.templates),
+            "Configs_count": len(self.Configs.templates),
             "skills_count": len(self.skills.skills),
             "config": {
                 "instructions_dir": self.config.instructions_dir,
-                "prompts_dir": self.config.prompts_dir,
+                "Configs_dir": self.config.Configs_dir,
                 "skills_dir": self.config.skills_dir,
             },
         }
@@ -309,5 +309,5 @@ async def create_agent(project_root: str | Path | None = None) -> CopilotAgent:
         Initialized CopilotAgent
     """
     agent = CopilotAgent()
-    await agent.initialize(project_root)
+    awAlgot agent.initialize(project_root)
     return agent

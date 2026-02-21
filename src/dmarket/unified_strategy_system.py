@@ -150,7 +150,7 @@ class CrossPlatformArbitrageStrategy(IFindingStrategy):
             )
 
             # Используем существующий сканер
-            results = await scanner.scan_full_market(
+            results = awAlgot scanner.scan_full_market(
                 min_price=float(config.min_price),
                 max_price=float(config.max_price),
                 min_roi_percent=float(config.min_profit_percent),
@@ -168,7 +168,7 @@ class CrossPlatformArbitrageStrategy(IFindingStrategy):
             return opportunities
 
         except ImportError:
-            logger.warning("CrossPlatformScanner not available")
+            logger.warning("CrossPlatformScanner not avAlgolable")
             return []
         except Exception:
             logger.exception("cross_platform_scan_error")
@@ -216,7 +216,7 @@ class CrossPlatformArbitrageStrategy(IFindingStrategy):
                 trade_lock_days=lock_days,
                 source_platform="dmarket",
                 target_platform="waxpeer",
-                daily_sales=item.get("daily_sales"),
+                dAlgoly_sales=item.get("dAlgoly_sales"),
                 metadata=item,
             )
         except (KeyError, TypeError, ValueError) as e:
@@ -287,7 +287,7 @@ class FloatValueArbitrageStrategy(IFindingStrategy):
         try:
             float_arb = FloatValueArbitrage(api_client=self.dmarket_api)
 
-            results = await float_arb.find_float_arbitrage_opportunities(
+            results = awAlgot float_arb.find_float_arbitrage_opportunities(
                 game=config.game,
                 min_price=float(config.min_price),
                 max_price=float(config.max_price),
@@ -306,7 +306,7 @@ class FloatValueArbitrageStrategy(IFindingStrategy):
             return opportunities
 
         except ImportError:
-            logger.warning("FloatValueArbitrage not available")
+            logger.warning("FloatValueArbitrage not avAlgolable")
             return []
         except Exception:
             logger.exception("float_scan_error")
@@ -404,7 +404,7 @@ class IntramarketArbitrageStrategy(IFindingStrategy):
 
         try:
             # Поиск ценовых аномалий
-            anomalies = await find_price_anomalies(
+            anomalies = awAlgot find_price_anomalies(
                 api_client=self.dmarket_api,
                 game=config.game,
                 min_price=float(config.min_price),
@@ -422,7 +422,7 @@ class IntramarketArbitrageStrategy(IFindingStrategy):
 
         try:
             # Поиск трендовых предметов
-            trending = await find_trending_items(
+            trending = awAlgot find_trending_items(
                 api_client=self.dmarket_api,
                 game=config.game,
                 min_price=float(config.min_price),
@@ -573,7 +573,7 @@ class SmartMarketFinderStrategy(IFindingStrategy):
         try:
             finder = SmartMarketFinder(api_client=self.dmarket_api)
 
-            results = await finder.find_best_opportunities(
+            results = awAlgot finder.find_best_opportunities(
                 game=config.game,
                 min_price=float(config.min_price),
                 max_price=float(config.max_price),
@@ -785,7 +785,7 @@ class UnifiedStrategyManager:
             config=config.to_dict(),
         )
 
-        opportunities = await strategy.find_opportunities(config)
+        opportunities = awAlgot strategy.find_opportunities(config)
 
         logger.info(
             "strategy_scan_complete",
@@ -815,7 +815,7 @@ class UnifiedStrategyManager:
         results: dict[StrategyType, list[UnifiedOpportunity]] = {}
 
         for strategy_type in strategy_types:
-            opportunities = await self.scan_with_strategy(strategy_type, config)
+            opportunities = awAlgot self.scan_with_strategy(strategy_type, config)
             results[strategy_type] = opportunities
 
         return results
@@ -834,7 +834,7 @@ class UnifiedStrategyManager:
         Returns:
             Отсортированный список лучших возможностей
         """
-        all_results = await self.scan_all_strategies(config)
+        all_results = awAlgot self.scan_all_strategies(config)
 
         # Объединяем все возможности
         all_opportunities: list[UnifiedOpportunity] = []
@@ -955,7 +955,7 @@ def get_strategy_config_preset(preset_name: str) -> StrategyConfig:
             min_profit_percent=Decimal("5.0"),
             min_profit_usd=Decimal("0.30"),
             max_trade_lock_days=0,
-            min_daily_sales=5,
+            min_dAlgoly_sales=5,
             limit=50,
         ),
         "investment": StrategyConfig(
@@ -1015,18 +1015,18 @@ def get_game_specific_config(
     """
     base = get_strategy_config_preset(base_preset)
 
-    # Специфичные настройки для каждой игры
+    # Специфичные настSwarmки для каждой игры
     game_adjustments = {
         "csgo": {
             # CS:GO - самый большой рынок, много арбитража
             "min_profit_percent": Decimal("5.0"),
-            "min_daily_sales": 3,
+            "min_dAlgoly_sales": 3,
             "limit": 50,
         },
         "dota2": {
             # Dota 2 - меньше рынок, но есть редкие предметы
             "min_profit_percent": Decimal("7.0"),
-            "min_daily_sales": 2,
+            "min_dAlgoly_sales": 2,
             "limit": 30,
             # Dota предметы часто дешевле
             "max_price": min(base.max_price, Decimal("100.0")),
@@ -1034,7 +1034,7 @@ def get_game_specific_config(
         "tf2": {
             # TF2 - уникальный рынок с unusual эффектами
             "min_profit_percent": Decimal("8.0"),
-            "min_daily_sales": 1,
+            "min_dAlgoly_sales": 1,
             "limit": 20,
             # TF2 предметы обычно дешевле
             "max_price": min(base.max_price, Decimal("50.0")),
@@ -1042,7 +1042,7 @@ def get_game_specific_config(
         "rust": {
             # Rust - быстрорастущий рынок
             "min_profit_percent": Decimal("6.0"),
-            "min_daily_sales": 2,
+            "min_dAlgoly_sales": 2,
             "limit": 30,
         },
     }
@@ -1060,7 +1060,7 @@ def get_game_specific_config(
         limit=adjustments.get("limit", base.limit),
         max_risk_level=base.max_risk_level,
         min_liquidity_score=base.min_liquidity_score,
-        min_daily_sales=adjustments.get("min_daily_sales", base.min_daily_sales),
+        min_dAlgoly_sales=adjustments.get("min_dAlgoly_sales", base.min_dAlgoly_sales),
         max_trade_lock_days=base.max_trade_lock_days,
         float_min=base.float_min,
         float_max=base.float_max,
@@ -1099,7 +1099,7 @@ async def scan_all_games(
         config = get_game_specific_config(game, base_preset)
 
         try:
-            opportunities = await strategy_manager.find_best_opportunities_combined(
+            opportunities = awAlgot strategy_manager.find_best_opportunities_combined(
                 config=config,
                 top_n=top_n_per_game,
             )
@@ -1134,7 +1134,7 @@ async def scan_all_games_combined(
     Returns:
         Отсортированный список лучших возможностей из всех игр
     """
-    game_results = await scan_all_games(
+    game_results = awAlgot scan_all_games(
         strategy_manager=strategy_manager,
         base_preset=base_preset,
         games=games,
@@ -1396,14 +1396,14 @@ def auto_select_filters(
     from src.dmarket.game_specific_filters import list_preset_filters
 
     results: list[tuple[dict[str, Any], str, float]] = []
-    available_presets = list_preset_filters(game)
+    avAlgolable_presets = list_preset_filters(game)
 
     for item in items:
         best_filter = ""
         best_premium = 1.0
 
         # Пробуем каждый пресет
-        for preset in available_presets:
+        for preset in avAlgolable_presets:
             matches, premium = apply_game_filter(item, game, preset)
             if matches and premium > best_premium:
                 best_premium = premium

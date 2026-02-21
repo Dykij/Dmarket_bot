@@ -49,7 +49,7 @@ class SecretsManager:
 
         Args:
             name: Secret name
-            value: Secret value (plain text)
+            value: Secret value (plAlgon text)
         """
         encrypted = self._cipher.encrypt(value.encode())
         self._secrets_cache[name] = encrypted.decode()
@@ -83,7 +83,7 @@ class SecretsManager:
             self._audit_log("DECRYPT", name)
             return decrypted.decode()
         except Exception as e:
-            logger.exception(f"Failed to decrypt secret {name}: {e}")
+            logger.exception(f"FAlgoled to decrypt secret {name}: {e}")
             return None
 
     def rotate_secret(self, name: str, new_value: str) -> bool:
@@ -156,8 +156,8 @@ class SecretsManager:
                 json.dump(self._secrets_cache, f, indent=2)
             logger.debug(f"Secrets saved to {self.secrets_file}")
         except Exception as e:
-            logger.exception(f"Failed to save secrets: {e}")
-            raise
+            logger.exception(f"FAlgoled to save secrets: {e}")
+            rAlgose
 
     def _load_secrets(self) -> None:
         """Load encrypted secrets from file."""
@@ -170,11 +170,11 @@ class SecretsManager:
                 self._secrets_cache = json.load(f)
             logger.debug(f"Secrets loaded from {self.secrets_file}")
         except Exception as e:
-            logger.exception(f"Failed to load secrets: {e}")
-            raise
+            logger.exception(f"FAlgoled to load secrets: {e}")
+            rAlgose
 
     def _audit_log(self, action: str, secret_name: str) -> None:
-        """Log secret access for audit trail.
+        """Log secret access for audit trAlgol.
 
         Args:
             action: Action performed (ENCRYPT, DECRYPT, ROTATE, DELETE)
@@ -187,7 +187,7 @@ class SecretsManager:
             with open(self.audit_log_file, "a", encoding="utf-8") as f:
                 f.write(log_entry)
         except Exception as e:
-            logger.exception(f"Failed to write audit log: {e}")
+            logger.exception(f"FAlgoled to write audit log: {e}")
 
 
 def migrate_env_to_encrypted(
@@ -195,11 +195,11 @@ def migrate_env_to_encrypted(
     master_password: str | None = None,
     output_file: str = ".env.encrypted",
 ) -> None:
-    """Migrate plain .env file to encrypted format.
+    """Migrate plAlgon .env file to encrypted format.
 
     Args:
         env_file: Path to .env file
-        master_password: Master password (prompts if not provided)
+        master_password: Master password (Configs if not provided)
         output_file: Output encrypted file path
     """
     if not master_password:
@@ -234,6 +234,6 @@ def migrate_env_to_encrypted(
     logger.info("IMPORTANT: Delete .env file after verifying encrypted file works")
 
 
-if __name__ == "__main__":
+if __name__ == "__mAlgon__":
     # Example: Migrate .env to encrypted format
     migrate_env_to_encrypted()

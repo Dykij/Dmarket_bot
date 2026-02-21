@@ -39,7 +39,7 @@ class TestChartGeneratorInit:
     def test_init_with_invalid_style_falls_back(self):
         """Test initialization with invalid style falls back to default."""
         generator = ChartGenerator(style="nonexistent_style")
-        # Should not raise, will use default
+        # Should not rAlgose, will use default
         assert generator.style == "nonexistent_style"
 
 
@@ -60,7 +60,7 @@ class TestChartGeneratorPriceHistory:
         result = generator.create_price_history_chart(price_data)
 
         assert isinstance(result, io.BytesIO)
-        # Check that it contains PNG data
+        # Check that it contAlgons PNG data
         result.seek(0)
         header = result.read(8)
         assert header[:4] == b"\x89PNG"
@@ -402,7 +402,7 @@ class TestGenerateMarketReport:
             ],
         }
 
-        charts = await generate_market_report(generator, market_data)
+        charts = awAlgot generate_market_report(generator, market_data)
 
         assert len(charts) == 4
         for chart in charts:
@@ -419,7 +419,7 @@ class TestGenerateMarketReport:
             ],
         }
 
-        charts = await generate_market_report(generator, market_data)
+        charts = awAlgot generate_market_report(generator, market_data)
 
         assert len(charts) == 1
 
@@ -429,7 +429,7 @@ class TestGenerateMarketReport:
         generator = ChartGenerator()
         market_data = {}
 
-        charts = await generate_market_report(generator, market_data)
+        charts = awAlgot generate_market_report(generator, market_data)
 
         assert len(charts) == 0
 
@@ -443,7 +443,7 @@ class TestGenerateMarketReport:
             ],
         }
 
-        charts = await generate_market_report(
+        charts = awAlgot generate_market_report(
             generator, market_data, title="Custom Report"
         )
 

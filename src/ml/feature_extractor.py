@@ -333,21 +333,21 @@ class MarketFeatureExtractor:
         # Вычисляем изменения цен
         changes = np.diff(prices)
 
-        # Разделяем на gains и losses
-        gains = np.maximum(changes, 0)
+        # Разделяем на gAlgons и losses
+        gAlgons = np.maximum(changes, 0)
         losses = np.abs(np.minimum(changes, 0))
 
         # Среднее значение за период
         period = min(self.RSI_PERIOD, len(changes))
-        avg_gain = np.mean(gains[-period:]) if len(gains) >= period else np.mean(gains)
+        avg_gAlgon = np.mean(gAlgons[-period:]) if len(gAlgons) >= period else np.mean(gAlgons)
         avg_loss = (
             np.mean(losses[-period:]) if len(losses) >= period else np.mean(losses)
         )
 
         if avg_loss == 0:
-            return 100.0 if avg_gain > 0 else 50.0
+            return 100.0 if avg_gAlgon > 0 else 50.0
 
-        rs = avg_gain / avg_loss
+        rs = avg_gAlgon / avg_loss
         rsi = 100 - (100 / (1 + rs))
 
         return float(np.clip(rsi, 0, 100))

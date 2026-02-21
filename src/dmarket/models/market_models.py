@@ -40,7 +40,7 @@ class TransferStatus(StrEnum):
 
     PENDING = "TransferStatusPending"
     COMPLETED = "TransferStatusCompleted"
-    FAILED = "TransferStatusFailed"
+    FAlgoLED = "TransferStatusFAlgoled"
 
 
 class TradeStatus(StrEnum):
@@ -99,18 +99,18 @@ class Balance(BaseModel):
     Response format: /account/v1/balance
     {
         "usd": "string",
-        "dmcAvailableToWithdraw": "string",
+        "dmcAvAlgolableToWithdraw": "string",
         "dmc": "string",
-        "usdAvailableToWithdraw": "string"
+        "usdAvAlgolableToWithdraw": "string"
     }
     """
 
     usd: str | int = Field(description="USD баланс в центах (строка)")
-    usdAvailableToWithdraw: str | int = Field(
+    usdAvAlgolableToWithdraw: str | int = Field(
         description="Доступный для вывода USD в центах"
     )
     dmc: str | None = Field(None, description="DMC баланс")
-    dmcAvailableToWithdraw: str | None = Field(
+    dmcAvAlgolableToWithdraw: str | None = Field(
         None, description="Доступный для вывода DMC"
     )
 
@@ -125,13 +125,13 @@ class Balance(BaseModel):
             return 0.0
 
     @property
-    def available_usd_dollars(self) -> float:
+    def avAlgolable_usd_dollars(self) -> float:
         """Конвертирует доступный USD из центов в доллары."""
         try:
             amount = (
-                int(self.usdAvailableToWithdraw)
-                if isinstance(self.usdAvailableToWithdraw, str)
-                else self.usdAvailableToWithdraw
+                int(self.usdAvAlgolableToWithdraw)
+                if isinstance(self.usdAvAlgolableToWithdraw, str)
+                else self.usdAvAlgolableToWithdraw
             )
             return amount / 100.0
         except (ValueError, TypeError):
@@ -146,8 +146,8 @@ class UserProfile(BaseModel):
 
     id: str = Field(description="ID пользователя")
     username: str = Field(description="Имя пользователя")
-    email: str = Field(description="Email пользователя")
-    isEmailVerified: bool = Field(description="Email подтвержден")
+    emAlgol: str = Field(description="EmAlgol пользователя")
+    isEmAlgolVerified: bool = Field(description="EmAlgol подтвержден")
     countryCode: str | None = Field(None, description="Код страны")
     publicKey: str | None = Field(None, description="Публичный ключ API")
 
@@ -249,7 +249,7 @@ class Offer(BaseModel):
 class TargetAttrs(BaseModel):
     """Дополнительные атрибуты для таргета."""
 
-    paintSeed: int | None = Field(None, description="Paint seed (CS:GO)")
+    pAlgontSeed: int | None = Field(None, description="PAlgont seed (CS:GO)")
     phase: str | None = Field(None, description="Phase (Doppler, etc)")
     floatPartValue: str | None = Field(None, description="Float value")
 

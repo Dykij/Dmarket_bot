@@ -17,7 +17,7 @@ Usage:
     filter = AdvancedArbitrageFilter()
 
     # Check if item passes all filters
-    is_good, reasons = await filter.evaluate_item(item_data, api_client)
+    is_good, reasons = awAlgot filter.evaluate_item(item_data, api_client)
 
     # Get filter statistics
     stats = filter.get_statistics()
@@ -44,7 +44,7 @@ class FilterResult(StrEnum):
     """Result of filter evaluation."""
 
     PASS = "pass"  # noqa: S105 - not a password, filter result
-    FAIL = "fail"
+    FAlgoL = "fAlgol"
     SKIP = "skip"  # Not enough data
 
 
@@ -87,11 +87,11 @@ class FilterStatistics:
 
     total_evaluated: int = 0
     passed: int = 0
-    failed_category: int = 0
-    failed_liquidity: int = 0
-    failed_sales_history: int = 0
-    failed_outlier: int = 0
-    failed_price: int = 0
+    fAlgoled_category: int = 0
+    fAlgoled_liquidity: int = 0
+    fAlgoled_sales_history: int = 0
+    fAlgoled_outlier: int = 0
+    fAlgoled_price: int = 0
     skipped_no_data: int = 0
 
 
@@ -108,7 +108,7 @@ DEFAULT_BAD_CATEGORIES: set[str] = {
     "Pass",
     "Key",
     "Capsule",
-    "Container",
+    "ContAlgoner",
 }
 
 DEFAULT_GOOD_CATEGORIES: set[str] = {
@@ -126,7 +126,7 @@ DEFAULT_GOOD_CATEGORIES: set[str] = {
 class AdvancedArbitrageFilter:
     """Advanced filtering system for arbitrage items.
 
-    Evaluates items against multiple criteria to reduce risk
+    Evaluates items agAlgonst multiple criteria to reduce risk
     and improve arbitrage success rate.
     """
 
@@ -155,7 +155,7 @@ class AdvancedArbitrageFilter:
         api_client: DMarketAPI | None = None,
         game: str = "csgo",
     ) -> tuple[bool, list[str]]:
-        """Evaluate item against all filters.
+        """Evaluate item agAlgonst all filters.
 
         Args:
             item: Item data from DMarket API
@@ -172,15 +172,15 @@ class AdvancedArbitrageFilter:
         # 1. Category filter
         if self.config.enable_category_filter:
             result, reason = self._check_category(item_name, item)
-            if result == FilterResult.FAIL:
-                self.statistics.failed_category += 1
+            if result == FilterResult.FAlgoL:
+                self.statistics.fAlgoled_category += 1
                 reasons.append(reason)
                 return False, reasons
 
         # 2. Basic price check
         price = self._extract_price(item)
         if price < self.config.min_avg_price:
-            self.statistics.failed_price += 1
+            self.statistics.fAlgoled_price += 1
             reasons.append(
                 f"Price ${price:.2f} below minimum ${self.config.min_avg_price:.2f}"
             )
@@ -188,11 +188,11 @@ class AdvancedArbitrageFilter:
 
         # 3. Sales history analysis (requires API client)
         if self.config.enable_sales_history_filter and api_client:
-            result, reason = await self._check_sales_history(
+            result, reason = awAlgot self._check_sales_history(
                 item_name, price, api_client, game
             )
-            if result == FilterResult.FAIL:
-                self.statistics.failed_sales_history += 1
+            if result == FilterResult.FAlgoL:
+                self.statistics.fAlgoled_sales_history += 1
                 reasons.append(reason)
                 return False, reasons
             if result == FilterResult.SKIP:
@@ -202,18 +202,18 @@ class AdvancedArbitrageFilter:
         # 4. Liquidity filter
         if self.config.enable_liquidity_filter:
             result, reason = self._check_liquidity(item)
-            if result == FilterResult.FAIL:
-                self.statistics.failed_liquidity += 1
+            if result == FilterResult.FAlgoL:
+                self.statistics.fAlgoled_liquidity += 1
                 reasons.append(reason)
                 return False, reasons
 
         # 5. Outlier detection
         if self.config.enable_outlier_filter:
-            result, reason = await self._check_outlier(
+            result, reason = awAlgot self._check_outlier(
                 item_name, price, api_client, game
             )
-            if result == FilterResult.FAIL:
-                self.statistics.failed_outlier += 1
+            if result == FilterResult.FAlgoL:
+                self.statistics.fAlgoled_outlier += 1
                 reasons.append(reason)
                 return False, reasons
 
@@ -232,18 +232,18 @@ class AdvancedArbitrageFilter:
         Returns:
             Filter result and reason
         """
-        # Check against bad categories
+        # Check agAlgonst bad categories
         item_name_lower = item_name.lower()
         for bad_cat in self.bad_categories:
             if bad_cat.lower() in item_name_lower:
-                return FilterResult.FAIL, f"Item in excluded category: {bad_cat}"
+                return FilterResult.FAlgoL, f"Item in excluded category: {bad_cat}"
 
         # Check item type from API data
         item_type = item.get("type", "") or item.get("itemType", "")
         if item_type:
             for bad_cat in self.bad_categories:
                 if bad_cat.lower() in item_type.lower():
-                    return FilterResult.FAIL, f"Item type excluded: {item_type}"
+                    return FilterResult.FAlgoL, f"Item type excluded: {item_type}"
 
         return FilterResult.PASS, ""
 
@@ -302,7 +302,7 @@ class AdvancedArbitrageFilter:
             if cache_key in self._sales_cache:
                 sales_data = self._sales_cache[cache_key]
             else:
-                sales_data = await self._fetch_sales_history(
+                sales_data = awAlgot self._fetch_sales_history(
                     item_name, api_client, game
                 )
                 self._sales_cache[cache_key] = sales_data
@@ -313,7 +313,7 @@ class AdvancedArbitrageFilter:
             # Check minimum sales volume
             if sales_data["num_sales"] < self.config.min_sales_volume:
                 return (
-                    FilterResult.FAIL,
+                    FilterResult.FAlgoL,
                     f"Sales volume {sales_data['num_sales']} below minimum {self.config.min_sales_volume}",
                 )
 
@@ -323,14 +323,14 @@ class AdvancedArbitrageFilter:
                 price_ratio = (current_price / avg_price) * 100
                 if price_ratio > self.config.boost_percent:
                     return (
-                        FilterResult.FAIL,
+                        FilterResult.FAlgoL,
                         f"Price {price_ratio:.0f}% of average exceeds {self.config.boost_percent}%",
                     )
 
             # Check average price minimum
             if avg_price < self.config.min_avg_price:
                 return (
-                    FilterResult.FAIL,
+                    FilterResult.FAlgoL,
                     f"Average price ${avg_price:.2f} below minimum ${self.config.min_avg_price:.2f}",
                 )
 
@@ -338,7 +338,7 @@ class AdvancedArbitrageFilter:
             good_points = sales_data.get("good_points_percent", 0)
             if good_points < self.config.good_points_percent:
                 return (
-                    FilterResult.FAIL,
+                    FilterResult.FAlgoL,
                     f"Only {good_points:.0f}% profitable sales (min {self.config.good_points_percent}%)",
                 )
 
@@ -366,7 +366,7 @@ class AdvancedArbitrageFilter:
         """
         try:
             # Get price history from API
-            history = await api_client.get_item_price_history(
+            history = awAlgot api_client.get_item_price_history(
                 title=item_name,
                 game=game,
                 period="7d",
@@ -418,16 +418,16 @@ class AdvancedArbitrageFilter:
         Returns:
             Filter result and reason
         """
-        # Check available offers count (market depth)
+        # Check avAlgolable offers count (market depth)
         offers_count = item.get("offersCount", 0) or item.get("inMarket", 0)
         if offers_count == 0:
-            return FilterResult.FAIL, "No active market offers"
+            return FilterResult.FAlgoL, "No active market offers"
 
         # If item has explicit liquidity score
         liquidity_score = item.get("liquidityScore", -1)
         if 0 <= liquidity_score < self.config.min_liquidity_score:
             return (
-                FilterResult.FAIL,
+                FilterResult.FAlgoL,
                 f"Liquidity score {liquidity_score} below minimum {self.config.min_liquidity_score}",
             )
 
@@ -476,7 +476,7 @@ class AdvancedArbitrageFilter:
             if z_score > self.config.outlier_threshold:
                 direction = "above" if current_price > avg_price else "below"
                 return (
-                    FilterResult.FAIL,
+                    FilterResult.FAlgoL,
                     f"Price is outlier ({z_score:.1f}σ {direction} average)",
                 )
 
@@ -527,11 +527,11 @@ class AdvancedArbitrageFilter:
             "total_evaluated": total,
             "passed": self.statistics.passed,
             "pass_rate": (self.statistics.passed / total * 100) if total > 0 else 0,
-            "failed_category": self.statistics.failed_category,
-            "failed_liquidity": self.statistics.failed_liquidity,
-            "failed_sales_history": self.statistics.failed_sales_history,
-            "failed_outlier": self.statistics.failed_outlier,
-            "failed_price": self.statistics.failed_price,
+            "fAlgoled_category": self.statistics.fAlgoled_category,
+            "fAlgoled_liquidity": self.statistics.fAlgoled_liquidity,
+            "fAlgoled_sales_history": self.statistics.fAlgoled_sales_history,
+            "fAlgoled_outlier": self.statistics.fAlgoled_outlier,
+            "fAlgoled_price": self.statistics.fAlgoled_price,
             "skipped_no_data": self.statistics.skipped_no_data,
         }
 

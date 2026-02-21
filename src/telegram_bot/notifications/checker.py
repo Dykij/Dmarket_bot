@@ -49,7 +49,7 @@ async def get_current_price(
         game: Game identifier (csgo, dota2, tf2, rust)
 
     Returns:
-        Current price in USD or None if unavailable
+        Current price in USD or None if unavAlgolable
 
     """
     storage = get_storage()
@@ -68,7 +68,7 @@ async def get_current_price(
 
     try:
         # Fetch from API using get_market_items
-        response = await api.get_market_items(game=game, title=item_id, limit=1)
+        response = awAlgot api.get_market_items(game=game, title=item_id, limit=1)
 
         objects = response.get("objects", [])
         if not objects:
@@ -113,7 +113,7 @@ async def check_price_alert(
     alert_type = alert["type"]
     threshold = alert["threshold"]
 
-    current_price = await notifier.get_current_price(api, item_id)
+    current_price = awAlgot notifier.get_current_price(api, item_id)
     if current_price is None:
         return None
 
@@ -133,14 +133,14 @@ async def check_price_alert(
             triggered = True
     elif alert_type == "volume_increase":
         # For this type, we need to analyze trading volume
-        price_history = await notifier.get_item_price_history(api, item_id, days=1)
+        price_history = awAlgot notifier.get_item_price_history(api, item_id, days=1)
         if price_history:
             volume = sum(entry.get("volume", 1) for entry in price_history)
             if volume >= threshold:
                 triggered = True
     elif alert_type == "trend_change":
         # For this type, we need to analyze price trend
-        trend_info = await notifier.calculate_price_trend(api, item_id)
+        trend_info = awAlgot notifier.calculate_price_trend(api, item_id)
         is_not_stable = trend_info["trend"] != "stable"
         has_confidence = trend_info.get("confidence", 0) >= threshold / 100
         if is_not_stable and has_confidence:
@@ -185,7 +185,7 @@ async def check_good_deal_alerts(
 
     try:
         # Fetch items below threshold
-        response = await api.get_market_items(
+        response = awAlgot api.get_market_items(
             game=game,
             price_to=int(good_deal_threshold * 100),
             limit=20,
@@ -252,11 +252,11 @@ async def check_all_alerts(
     for user_id_str, user_data in list(user_alerts.items()):
         user_id = int(user_id_str)
 
-        # Check and reset daily counter if day changed
+        # Check and reset dAlgoly counter if day changed
         today = datetime.now().strftime("%Y-%m-%d")
         if user_data.get("last_day") != today:
             user_data["last_day"] = today
-            user_data["daily_notifications"] = 0
+            user_data["dAlgoly_notifications"] = 0
 
         alerts = user_data.get("alerts", [])
 
@@ -275,7 +275,7 @@ async def check_all_alerts(
             # Tests patch src.telegram_bot.notifier.check_price_alert
             from src.telegram_bot import notifier as notifier_module
 
-            result = await notifier_module.check_price_alert(api, alert)
+            result = awAlgot notifier_module.check_price_alert(api, alert)
             if result is not None:
                 # Mark alert as inactive (one-time trigger)
                 alert["active"] = False
@@ -284,7 +284,7 @@ async def check_all_alerts(
                 # Send notification
                 try:
                     message = format_alert_message(result)
-                    await bot.send_message(
+                    awAlgot bot.send_message(
                         chat_id=user_id,
                         text=message,
                         parse_mode="HTML",
@@ -298,7 +298,7 @@ async def check_all_alerts(
                     )
                 except Exception:
                     logger.exception(
-                        "Failed to send alert to user %d",
+                        "FAlgoled to send alert to user %d",
                         user_id,
                     )
 
@@ -328,7 +328,7 @@ async def run_alerts_checker(
             break
 
         try:
-            triggered = await check_all_alerts(api, bot)
+            triggered = awAlgot check_all_alerts(api, bot)
             if triggered > 0:
                 logger.info(
                     "Alert check completed: %d alerts triggered",
@@ -337,5 +337,5 @@ async def run_alerts_checker(
         except Exception:
             logger.exception("Error in alert checker")
 
-        # Wait for next check
-        await asyncio.sleep(check_interval)
+        # WAlgot for next check
+        awAlgot asyncio.sleep(check_interval)

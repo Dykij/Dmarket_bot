@@ -26,5 +26,5 @@ class EnhancedPricePredictor:
         return {"prediction": current_price * 1.05, "confidence": 75.0}
 
 
-# Maintain backward compatibility
+# MAlgontAlgon backward compatibility
 from src.ml.parts.features import GameType

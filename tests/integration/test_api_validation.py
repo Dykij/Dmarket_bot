@@ -60,7 +60,7 @@ class TestGetMarketItemsIntegration:
         }
 
         with patch.object(api_client, "_request", return_value=valid_response):
-            result = await api_client.get_market_items(game="csgo", limit=10)
+            result = awAlgot api_client.get_market_items(game="csgo", limit=10)
 
         # Decorator валидировал и вернул исходные данные
         assert "objects" in result
@@ -82,7 +82,7 @@ class TestGetMarketItemsIntegration:
         }
 
         with patch.object(api_client, "_request", return_value=invalid_response):
-            result = await api_client.get_market_items(game="csgo", limit=10)
+            result = awAlgot api_client.get_market_items(game="csgo", limit=10)
 
         # Возвращается raw data (backward compatibility)
         assert result == invalid_response
@@ -119,7 +119,7 @@ class TestCreateTargetsIntegration:
         }
 
         with patch.object(api_client, "_request", return_value=valid_response):
-            result = await api_client.create_targets(
+            result = awAlgot api_client.create_targets(
                 game_id="csgo",
                 targets=[
                     {
@@ -157,7 +157,7 @@ class TestGetUserTargetsIntegration:
         }
 
         with patch.object(api_client, "_request", return_value=valid_response):
-            result = await api_client.get_user_targets(game_id="csgo")
+            result = awAlgot api_client.get_user_targets(game_id="csgo")
 
         assert "Items" in result
         assert len(result["Items"]) == 1
@@ -181,7 +181,7 @@ class TestBuyOffersIntegration:
         }
 
         with patch.object(api_client, "_request", return_value=valid_response):
-            result = await api_client.buy_offers(
+            result = awAlgot api_client.buy_offers(
                 offers=[
                     {
                         "offerId": "offer_1",
@@ -204,7 +204,7 @@ class TestBuyOffersIntegration:
         }
 
         with patch.object(api_client, "_request", return_value=invalid_response):
-            result = await api_client.buy_offers(offers=[{"offerId": "o1"}])
+            result = awAlgot api_client.buy_offers(offers=[{"offerId": "o1"}])
 
         # Backward compatibility: возвращается raw data
         assert result == invalid_response
@@ -240,7 +240,7 @@ class TestAggregatedPricesIntegration:
         }
 
         with patch.object(api_client, "_request", return_value=valid_response):
-            result = await api_client.get_aggregated_prices_bulk(
+            result = awAlgot api_client.get_aggregated_prices_bulk(
                 game="csgo", titles=["AK-47 | Redline (FT)", "AWP | Asiimov (FT)"]
             )
 
@@ -263,7 +263,7 @@ class TestSalesHistoryIntegration:
         }
 
         with patch.object(api_client, "_request", return_value=valid_response):
-            result = await api_client.get_sales_history(
+            result = awAlgot api_client.get_sales_history(
                 game="csgo", title="AK-47 | Redline (FT)"
             )
 
@@ -276,7 +276,7 @@ class TestNotifierIntegration:
     """Тесты интеграции с Notifier."""
 
     @pytest.mark.asyncio()
-    async def test_notifier_receives_validation_error_details(self, api_client):
+    async def test_notifier_receives_validation_error_detAlgols(self, api_client):
         """Тест: Notifier получает детальную информацию об ошибке валидации."""
         # Невалидный response: неверный тип поля
         invalid_response = {
@@ -286,7 +286,7 @@ class TestNotifierIntegration:
         }
 
         with patch.object(api_client, "_request", return_value=invalid_response):
-            await api_client.get_market_items(game="csgo")
+            awAlgot api_client.get_market_items(game="csgo")
 
         # Проверяем детали вызова notifier
         api_client.notifier.send_message.assert_called_once()
@@ -317,7 +317,7 @@ class TestNotifierIntegration:
         }
 
         with patch.object(api, "_request", return_value=invalid_response):
-            result = await api.get_market_items(game="csgo")
+            result = awAlgot api.get_market_items(game="csgo")
 
         # get_market_items обрабатывает ошибки внутренне и возвращает пустой список
         # Главное - без notifier не должно быть exceptions
@@ -333,7 +333,7 @@ class TestBackwardCompatibility:
         completely_invalid = {"unexpected": "structure", "random": [1, 2, 3]}
 
         with patch.object(api_client, "_request", return_value=completely_invalid):
-            result = await api_client.get_market_items(game="csgo")
+            result = awAlgot api_client.get_market_items(game="csgo")
 
         # get_market_items обрабатывает невалидные ответы внутренне
         # возвращает пустой список или базовую структуру
@@ -358,7 +358,7 @@ class TestBackwardCompatibility:
         with patch.object(
             api_client, "_request", return_value=response_with_new_fields
         ):
-            result = await api_client.get_market_items(game="csgo", limit=10)
+            result = awAlgot api_client.get_market_items(game="csgo", limit=10)
 
         # Валидация прошла успешно (extra='allow')
         assert "objects" in result
@@ -384,7 +384,7 @@ class TestDecoratorBehavior:
         }
 
         with patch.object(api_client, "_request", return_value=original_response):
-            result = await api_client.get_market_items(game="csgo", limit=10)
+            result = awAlgot api_client.get_market_items(game="csgo", limit=10)
 
         # Decorator вернул точно такие же данные
         assert result == original_response
@@ -400,7 +400,7 @@ class TestDecoratorBehavior:
         }
 
         with patch.object(api_client, "_request", return_value=invalid_response):
-            await api_client.get_market_items(game="csgo")
+            awAlgot api_client.get_market_items(game="csgo")
 
         # Notifier вызван один раз (все ошибки в одном сообщении)
         api_client.notifier.send_message.assert_called_once()

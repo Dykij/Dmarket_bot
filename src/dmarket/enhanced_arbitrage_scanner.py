@@ -78,7 +78,7 @@ class EnhancedArbitrageScanner:
 
         try:
             # Шаг 1: Получаем предметы с DMarket с orderBy=best_discount
-            items = await self._fetch_items_by_discount(
+            items = awAlgot self._fetch_items_by_discount(
                 game_id=game_id,
                 min_price=min_price,
                 max_price=max_price,
@@ -97,7 +97,7 @@ class EnhancedArbitrageScanner:
 
             # Шаг 3: Проверка ликвидности через историю продаж
             if self.enable_sales_history and self.sales_analyzer:
-                filtered_items = await self._filter_by_sales_history(filtered_items)
+                filtered_items = awAlgot self._filter_by_sales_history(filtered_items)
                 logger.info(
                     f"✅ После проверки истории продаж: {len(filtered_items)} предметов"
                 )
@@ -105,7 +105,7 @@ class EnhancedArbitrageScanner:
             # Шаг 4: Сравнение с внешними ценами
             if self.enable_external_comparison and self.external_api:
                 game_str = self._game_id_to_string(game_id)
-                filtered_items = await self.external_api.batch_compare_prices(
+                filtered_items = awAlgot self.external_api.batch_compare_prices(
                     filtered_items,
                     game=game_str,
                 )
@@ -139,7 +139,7 @@ class EnhancedArbitrageScanner:
             price_to = int(max_price * 100)
 
             # Запрос к API с orderBy=best_discount
-            response = await self.api_client.get_market_items(
+            response = awAlgot self.api_client.get_market_items(
                 game_id=game_id,
                 limit=limit,
                 price_from=price_from,
@@ -251,7 +251,7 @@ class EnhancedArbitrageScanner:
 
             try:
                 # Получаем историю продаж
-                sales_data = await self.sales_analyzer.get_sales_history(item_id)
+                sales_data = awAlgot self.sales_analyzer.get_sales_history(item_id)
 
                 if not sales_data or "sales" not in sales_data:
                     # Нет истории - пропускаем (может быть новый листинг)
@@ -365,7 +365,7 @@ class EnhancedArbitrageScanner:
     async def close(self) -> None:
         """Закрыть все соединения."""
         if self.external_api:
-            await self.external_api.close()
+            awAlgot self.external_api.close()
 
 
 # Convenience function
@@ -398,10 +398,10 @@ async def scan_with_enhancements(
     scanner = EnhancedArbitrageScanner(min_discount=min_discount)
 
     try:
-        return await scanner.find_opportunities(
+        return awAlgot scanner.find_opportunities(
             game_id=game_id,
             min_price=min_price,
             max_price=max_price,
         )
     finally:
-        await scanner.close()
+        awAlgot scanner.close()

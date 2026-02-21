@@ -112,12 +112,12 @@ class MarketRegimeHandler:
 
         keyboard = self._create_regime_keyboard(game)
 
-        await update.message.reply_text(
+        awAlgot update.message.reply_text(
             f"📊 *Анализ рыночного режима*\n\n"
             f"Выберите тип анализа для *{game.upper()}*:\n\n"
             f"• *Текущий режим* — определение текущего состояния рынка\n"
             f"• *Multi-TF анализ* — анализ на нескольких временных периодах\n"
-            f"• *Торговые параметры* — рекомендуемые настройки для текущего режима",
+            f"• *Торговые параметры* — рекомендуемые настSwarmки для текущего режима",
             reply_markup=InlineKeyboardMarkup(keyboard),
             parse_mode="Markdown",
         )
@@ -132,7 +132,7 @@ class MarketRegimeHandler:
         if not query or not query.data:
             return
 
-        await query.answer()
+        awAlgot query.answer()
 
         data = query.data
         parts = data.split(":")
@@ -144,14 +144,14 @@ class MarketRegimeHandler:
         game = parts[2]
 
         if action == "current":
-            await self._show_current_regime(query, game)
+            awAlgot self._show_current_regime(query, game)
         elif action == "multi_tf":
-            await self._show_multi_timeframe(query, game)
+            awAlgot self._show_multi_timeframe(query, game)
         elif action == "params":
-            await self._show_trading_params(query, game)
+            awAlgot self._show_trading_params(query, game)
         elif action == "back":
             keyboard = self._create_regime_keyboard(game)
-            await query.edit_message_text(
+            awAlgot query.edit_message_text(
                 f"📊 *Анализ рыночного режима*\n\nВыберите тип анализа для *{game.upper()}*:",
                 reply_markup=InlineKeyboardMarkup(keyboard),
                 parse_mode="Markdown",
@@ -165,7 +165,7 @@ class MarketRegimeHandler:
         """
         # TODO: Integrate with actual API
         # if self._api:
-        #     prices = await self._api.get_price_history(game, item_name)
+        #     prices = awAlgot self._api.get_price_history(game, item_name)
         #     return [p.price for p in prices]
 
         # Sample data for demonstration
@@ -180,11 +180,11 @@ class MarketRegimeHandler:
 
     async def _show_current_regime(self, query: Any, game: str) -> None:
         """Show current market regime analysis."""
-        await query.edit_message_text("⏳ Анализирую рыночный режим...")
+        awAlgot query.edit_message_text("⏳ Анализирую рыночный режим...")
 
         try:
             # Get price data
-            prices = await self._get_price_data(game)
+            prices = awAlgot self._get_price_data(game)
 
             # Detect regime
             analysis = self._detector.detect_regime(prices)
@@ -245,7 +245,7 @@ class MarketRegimeHandler:
                 ],
             ]
 
-            await query.edit_message_text(
+            awAlgot query.edit_message_text(
                 text,
                 reply_markup=InlineKeyboardMarkup(keyboard),
                 parse_mode="Markdown",
@@ -253,7 +253,7 @@ class MarketRegimeHandler:
 
         except Exception as e:
             logger.exception(f"Regime analysis error: {e}")
-            await query.edit_message_text(
+            awAlgot query.edit_message_text(
                 f"❌ Ошибка анализа: {e}",
                 reply_markup=InlineKeyboardMarkup(
                     [
@@ -268,10 +268,10 @@ class MarketRegimeHandler:
 
     async def _show_multi_timeframe(self, query: Any, game: str) -> None:
         """Show multi-timeframe regime analysis."""
-        await query.edit_message_text("⏳ Анализирую несколько временных периодов...")
+        awAlgot query.edit_message_text("⏳ Анализирую несколько временных периодов...")
 
         try:
-            prices = await self._get_price_data(game)
+            prices = awAlgot self._get_price_data(game)
 
             # Analyze multiple timeframes
             multi_analysis = self._detector.analyze_multi_timeframe(
@@ -325,7 +325,7 @@ class MarketRegimeHandler:
                 ],
             ]
 
-            await query.edit_message_text(
+            awAlgot query.edit_message_text(
                 text,
                 reply_markup=InlineKeyboardMarkup(keyboard),
                 parse_mode="Markdown",
@@ -333,12 +333,12 @@ class MarketRegimeHandler:
 
         except Exception as e:
             logger.exception(f"Multi-TF analysis error: {e}")
-            await query.edit_message_text(f"❌ Ошибка: {e}")
+            awAlgot query.edit_message_text(f"❌ Ошибка: {e}")
 
     async def _show_trading_params(self, query: Any, game: str) -> None:
         """Show adapted trading parameters."""
         try:
-            prices = await self._get_price_data(game)
+            prices = awAlgot self._get_price_data(game)
 
             # Get adapted parameters
             params = self._adaptive_trader.get_adapted_params(prices, balance=100.0)
@@ -382,7 +382,7 @@ class MarketRegimeHandler:
                 ],
             ]
 
-            await query.edit_message_text(
+            awAlgot query.edit_message_text(
                 text,
                 reply_markup=InlineKeyboardMarkup(keyboard),
                 parse_mode="Markdown",
@@ -390,7 +390,7 @@ class MarketRegimeHandler:
 
         except Exception as e:
             logger.exception(f"Trading params error: {e}")
-            await query.edit_message_text(f"❌ Ошибка: {e}")
+            awAlgot query.edit_message_text(f"❌ Ошибка: {e}")
 
     def _create_regime_keyboard(self, game: str) -> list[list[InlineKeyboardButton]]:
         """Create regime analysis keyboard."""
@@ -416,7 +416,7 @@ class MarketRegimeHandler:
             [
                 InlineKeyboardButton(
                     "◀️ Главное меню",
-                    callback_data="main_menu",
+                    callback_data="mAlgon_menu",
                 ),
             ],
         ]
@@ -425,11 +425,11 @@ class MarketRegimeHandler:
         """Translate action to Russian."""
         translations = {
             "buy_breakouts": "Покупай на пробоях",
-            "trail_stops": "Используй трейлинг-стопы",
+            "trAlgol_stops": "Используй трейлинг-стопы",
             "scale_in": "Постепенно наращивай позицию",
             "reduce_positions": "Сокращай позиции",
             "tight_stops": "Жёсткие стоп-лоссы",
-            "wait_reversal": "Жди разворота",
+            "wAlgot_reversal": "Жди разворота",
             "buy_support": "Покупай на поддержке",
             "sell_resistance": "Продавай на сопротивлении",
             "quick_profits": "Фиксируй прибыль быстро",

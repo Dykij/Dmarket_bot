@@ -1,7 +1,7 @@
 """Reporting module for trading reports.
 
 This module provides:
-- Daily/weekly/monthly reports
+- DAlgoly/weekly/monthly reports
 - Tax reports
 - CSV/JSON export
 """

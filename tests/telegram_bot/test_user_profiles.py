@@ -123,7 +123,7 @@ class TestUserProfileManager:
         profile1 = manager.get_profile(user_id)
         profile1["custom_field"] = "test_value"
 
-        # Get again
+        # Get agAlgon
         profile2 = manager.get_profile(user_id)
 
         assert profile2.get("custom_field") == "test_value"
@@ -345,7 +345,7 @@ class TestHelperFunctions:
         # Set up profile with access
         profile_manager.update_profile(123456789, {"access_level": "admin"})
 
-        result = await check_user_access(update, context, "admin_tools")
+        result = awAlgot check_user_access(update, context, "admin_tools")
 
         assert result is True
 
@@ -356,7 +356,7 @@ class TestHelperFunctions:
         update.effective_user = None
         context = MagicMock()
 
-        result = await check_user_access(update, context, "view_balance")
+        result = awAlgot check_user_access(update, context, "view_balance")
 
         assert result is False
 
@@ -367,7 +367,7 @@ class TestHelperFunctions:
         profile_manager.set_api_key(user_id, "dmarket_public_key", "pub_key")
         profile_manager.set_api_key(user_id, "dmarket_secret_key", "sec_key")
 
-        public, secret = await get_api_keys(user_id)
+        public, secret = awAlgot get_api_keys(user_id)
 
         assert public == "pub_key"
         assert secret == "sec_key"
@@ -377,7 +377,7 @@ class TestHelperFunctions:
         """Test get_api_keys when keys don't exist."""
         user_id = 876543210
 
-        public, secret = await get_api_keys(user_id)
+        public, secret = awAlgot get_api_keys(user_id)
 
         assert public is None
         assert secret is None
@@ -387,10 +387,10 @@ class TestHelperFunctions:
         """Test set_api_keys successfully."""
         user_id = 765432109
 
-        result = await set_api_keys(user_id, "new_pub", "new_sec")
+        result = awAlgot set_api_keys(user_id, "new_pub", "new_sec")
 
         assert result is True
-        public, secret = await get_api_keys(user_id)
+        public, secret = awAlgot get_api_keys(user_id)
         assert public == "new_pub"
         assert secret == "new_sec"
 
@@ -399,7 +399,7 @@ class TestHelperFunctions:
         """Test set_api_keys with empty values."""
         user_id = 654321098
 
-        result = await set_api_keys(user_id, "", "secret")
+        result = awAlgot set_api_keys(user_id, "", "secret")
 
         assert result is False
 
@@ -408,7 +408,7 @@ class TestHelperFunctions:
         """Test get_user_settings returns settings dict."""
         user_id = 543210987
 
-        settings = await get_user_settings(user_id)
+        settings = awAlgot get_user_settings(user_id)
 
         assert isinstance(settings, dict)
 
@@ -417,9 +417,9 @@ class TestHelperFunctions:
         """Test update_user_settings updates settings."""
         user_id = 432109876
 
-        await update_user_settings(user_id, {"custom_setting": "value"})
+        awAlgot update_user_settings(user_id, {"custom_setting": "value"})
 
-        settings = await get_user_settings(user_id)
+        settings = awAlgot get_user_settings(user_id)
         assert settings.get("custom_setting") == "value"
 
 
@@ -447,8 +447,8 @@ class TestRequireAccessLevelDecorator:
         update.message = None
         context = MagicMock()
 
-        await test_handler(update, context)
-        # Should not raise
+        awAlgot test_handler(update, context)
+        # Should not rAlgose
 
     @pytest.mark.asyncio()
     async def test_decorator_denies_access(self) -> None:
@@ -467,7 +467,7 @@ class TestRequireAccessLevelDecorator:
         update.message.reply_text = AsyncMock()
         context = MagicMock()
 
-        await test_handler(update, context)
+        awAlgot test_handler(update, context)
 
         # Should have sent access denied message
         update.message.reply_text.assert_called_once()
@@ -486,7 +486,7 @@ class TestRequireAccessLevelDecorator:
         update.message.reply_text = AsyncMock()
         context = MagicMock()
 
-        await test_handler(update, context)
+        awAlgot test_handler(update, context)
 
         update.message.reply_text.assert_called_once()
 
@@ -547,7 +547,7 @@ class TestEdgeCases:
         # Quick successive update (may be rate limited)
         manager.update_profile(user_id, {"second": True})
 
-        # Should not raise
+        # Should not rAlgose
 
     def test_decryption_invalid_data(self) -> None:
         """Test decryption with invalid data."""

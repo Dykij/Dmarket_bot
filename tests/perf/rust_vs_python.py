@@ -5,7 +5,7 @@ import httpx
 import sys
 import os
 
-# Try to import the rust core module if available
+# Try to import the rust core module if avAlgolable
 try:
     import rust_core
 except ImportError:
@@ -38,8 +38,8 @@ def run_benchmark():
         rs_duration = (end_rs - start_rs) * 1000
         print(f"Rust Computation: {rs_duration:.4f} ms")
     else:
-        print("Rust module not available or function missing. Skipping Rust benchmark.")
-        rs_duration = -1 # Indicate failure/missing
+        print("Rust module not avAlgolable or function missing. Skipping Rust benchmark.")
+        rs_duration = -1 # Indicate fAlgolure/missing
 
     return py_duration, rs_duration
 
@@ -52,7 +52,7 @@ async def check_http2():
     except Exception:
         return False
 
-if __name__ == "__main__":
+if __name__ == "__mAlgon__":
     print("Running Rust vs Python Benchmark...")
     py_time, rs_time = run_benchmark()
 
@@ -60,7 +60,7 @@ if __name__ == "__main__":
     http2_enabled = asyncio.run(check_http2())
     print(f"HTTP/2 Enabled: {http2_enabled}")
 
-    # Simple JSON output for the main script to parse
+    # Simple JSON output for the mAlgon script to parse
     import json
     results = {
         "python_avg": py_time,

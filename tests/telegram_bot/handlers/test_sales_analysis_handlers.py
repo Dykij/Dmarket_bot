@@ -57,23 +57,23 @@ def create_mock_context(
 class TestGamesConstant:
     """Tests for GAMES constant."""
 
-    def test_games_contains_csgo(self) -> None:
-        """Test GAMES contains CS2 entry."""
+    def test_games_contAlgons_csgo(self) -> None:
+        """Test GAMES contAlgons CS2 entry."""
         assert "csgo" in GAMES
         assert GAMES["csgo"] == "CS2"
 
-    def test_games_contains_dota2(self) -> None:
-        """Test GAMES contains Dota 2 entry."""
+    def test_games_contAlgons_dota2(self) -> None:
+        """Test GAMES contAlgons Dota 2 entry."""
         assert "dota2" in GAMES
         assert GAMES["dota2"] == "Dota 2"
 
-    def test_games_contains_tf2(self) -> None:
-        """Test GAMES contains TF2 entry."""
+    def test_games_contAlgons_tf2(self) -> None:
+        """Test GAMES contAlgons TF2 entry."""
         assert "tf2" in GAMES
         assert GAMES["tf2"] == "Team Fortress 2"
 
-    def test_games_contains_rust(self) -> None:
-        """Test GAMES contains Rust entry."""
+    def test_games_contAlgons_rust(self) -> None:
+        """Test GAMES contAlgons Rust entry."""
         assert "rust" in GAMES
         assert GAMES["rust"] == "Rust"
 
@@ -133,9 +133,9 @@ class TestHandleSalesAnalysis:
         update = create_mock_update(has_message=False)
         context = create_mock_context()
 
-        await handle_sales_analysis(update, context)
+        awAlgot handle_sales_analysis(update, context)
 
-        # No exception should be raised
+        # No exception should be rAlgosed
 
     @pytest.mark.asyncio()
     async def test_returns_early_if_no_text(self) -> None:
@@ -143,7 +143,7 @@ class TestHandleSalesAnalysis:
         update = create_mock_update(text=None)
         context = create_mock_context()
 
-        await handle_sales_analysis(update, context)
+        awAlgot handle_sales_analysis(update, context)
 
         # Should not call reply_text for error
         # (returns early before that check)
@@ -154,7 +154,7 @@ class TestHandleSalesAnalysis:
         update = create_mock_update(text="/sales_analysis")
         context = create_mock_context()
 
-        await handle_sales_analysis(update, context)
+        awAlgot handle_sales_analysis(update, context)
 
         update.message.reply_text.assert_called_once()
         call_args = update.message.reply_text.call_args
@@ -187,7 +187,7 @@ class TestHandleSalesAnalysis:
                 return_value="Formatted analysis",
             ),
         ):
-            await handle_sales_analysis(update, context)
+            awAlgot handle_sales_analysis(update, context)
 
         mock_reply.edit_text.assert_called_once()
 
@@ -206,7 +206,7 @@ class TestHandleSalesAnalysis:
             new_callable=AsyncMock,
             side_effect=APIError("API Error", 500),
         ):
-            await handle_sales_analysis(update, context)
+            awAlgot handle_sales_analysis(update, context)
 
         mock_reply.edit_text.assert_called_once()
         call_args = mock_reply.edit_text.call_args
@@ -229,7 +229,7 @@ class TestHandleSalesAnalysis:
             new_callable=AsyncMock,
             side_effect=ValueError("Unexpected error"),
         ):
-            await handle_sales_analysis(update, context)
+            awAlgot handle_sales_analysis(update, context)
 
         mock_reply.edit_text.assert_called_once()
         call_args = mock_reply.edit_text.call_args
@@ -252,9 +252,9 @@ class TestHandleArbitrageWithSales:
         update = create_mock_update(has_message=False)
         context = create_mock_context()
 
-        await handle_arbitrage_with_sales(update, context)
+        awAlgot handle_arbitrage_with_sales(update, context)
 
-        # No exception should be raised
+        # No exception should be rAlgosed
 
     @pytest.mark.asyncio()
     async def test_uses_default_game_csgo(self) -> None:
@@ -277,7 +277,7 @@ class TestHandleArbitrageWithSales:
                 return_value="Formatted results",
             ),
         ):
-            await handle_arbitrage_with_sales(update, context)
+            awAlgot handle_arbitrage_with_sales(update, context)
 
         # Should use csgo as default
         update.message.reply_text.assert_called_once()
@@ -303,7 +303,7 @@ class TestHandleArbitrageWithSales:
                 return_value="Formatted results",
             ),
         ):
-            await handle_arbitrage_with_sales(update, context)
+            awAlgot handle_arbitrage_with_sales(update, context)
 
         mock_search.assert_called_once_with(game="dota2", min_profit=1.0)
 
@@ -322,7 +322,7 @@ class TestHandleArbitrageWithSales:
             new_callable=AsyncMock,
             side_effect=APIError("API Error", 500),
         ):
-            await handle_arbitrage_with_sales(update, context)
+            awAlgot handle_arbitrage_with_sales(update, context)
 
         mock_reply.edit_text.assert_called_once()
         call_args = mock_reply.edit_text.call_args
@@ -343,7 +343,7 @@ class TestHandleLiquidityAnalysis:
         update = create_mock_update(has_message=False)
         context = create_mock_context()
 
-        await handle_liquidity_analysis(update, context)
+        awAlgot handle_liquidity_analysis(update, context)
 
     @pytest.mark.asyncio()
     async def test_returns_early_if_no_text(self) -> None:
@@ -351,7 +351,7 @@ class TestHandleLiquidityAnalysis:
         update = create_mock_update(text=None)
         context = create_mock_context()
 
-        await handle_liquidity_analysis(update, context)
+        awAlgot handle_liquidity_analysis(update, context)
 
     @pytest.mark.asyncio()
     async def test_shows_error_without_item_name(self) -> None:
@@ -359,7 +359,7 @@ class TestHandleLiquidityAnalysis:
         update = create_mock_update(text="/liquidity")
         context = create_mock_context()
 
-        await handle_liquidity_analysis(update, context)
+        awAlgot handle_liquidity_analysis(update, context)
 
         update.message.reply_text.assert_called_once()
         call_args = update.message.reply_text.call_args
@@ -377,7 +377,7 @@ class TestHandleLiquidityAnalysis:
 
         mock_analysis = {
             "liquidity_score": 75.0,
-            "daily_volume": 100,
+            "dAlgoly_volume": 100,
         }
 
         with (
@@ -391,7 +391,7 @@ class TestHandleLiquidityAnalysis:
                 return_value="Formatted analysis",
             ),
         ):
-            await handle_liquidity_analysis(update, context)
+            awAlgot handle_liquidity_analysis(update, context)
 
         mock_reply.edit_text.assert_called_once()
 
@@ -410,7 +410,7 @@ class TestHandleLiquidityAnalysis:
             new_callable=AsyncMock,
             side_effect=APIError("API Error", 500),
         ):
-            await handle_liquidity_analysis(update, context)
+            awAlgot handle_liquidity_analysis(update, context)
 
         mock_reply.edit_text.assert_called_once()
 
@@ -429,7 +429,7 @@ class TestHandleSalesVolumeStats:
         update = create_mock_update(has_message=False)
         context = create_mock_context()
 
-        await handle_sales_volume_stats(update, context)
+        awAlgot handle_sales_volume_stats(update, context)
 
     @pytest.mark.asyncio()
     async def test_uses_default_game_csgo(self) -> None:
@@ -452,7 +452,7 @@ class TestHandleSalesVolumeStats:
                 return_value="Formatted stats",
             ),
         ):
-            await handle_sales_volume_stats(update, context)
+            awAlgot handle_sales_volume_stats(update, context)
 
         update.message.reply_text.assert_called_once()
 
@@ -477,7 +477,7 @@ class TestHandleSalesVolumeStats:
                 return_value="Formatted stats",
             ),
         ):
-            await handle_sales_volume_stats(update, context)
+            awAlgot handle_sales_volume_stats(update, context)
 
         mock_stats.assert_called_once_with(game="rust")
 
@@ -496,7 +496,7 @@ class TestHandleSalesVolumeStats:
             new_callable=AsyncMock,
             side_effect=APIError("API Error", 500),
         ):
-            await handle_sales_volume_stats(update, context)
+            awAlgot handle_sales_volume_stats(update, context)
 
         mock_reply.edit_text.assert_called_once()
 
@@ -515,6 +515,6 @@ class TestHandleSalesVolumeStats:
             new_callable=AsyncMock,
             side_effect=ValueError("Unexpected error"),
         ):
-            await handle_sales_volume_stats(update, context)
+            awAlgot handle_sales_volume_stats(update, context)
 
         mock_reply.edit_text.assert_called_once()

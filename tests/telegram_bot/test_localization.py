@@ -23,22 +23,22 @@ from src.telegram_bot.localization import LANGUAGES, LOCALIZATIONS
 class TestLanguageDefinitions:
     """Tests for LANGUAGES dictionary."""
 
-    def test_languages_contains_russian(self):
+    def test_languages_contAlgons_russian(self):
         """Test that Russian is a supported language."""
         assert "ru" in LANGUAGES
         assert LANGUAGES["ru"] == "Русский"
 
-    def test_languages_contains_english(self):
+    def test_languages_contAlgons_english(self):
         """Test that English is a supported language."""
         assert "en" in LANGUAGES
         assert LANGUAGES["en"] == "English"
 
-    def test_languages_contains_spanish(self):
+    def test_languages_contAlgons_spanish(self):
         """Test that Spanish is a supported language."""
         assert "es" in LANGUAGES
         assert LANGUAGES["es"] == "Español"
 
-    def test_languages_contains_german(self):
+    def test_languages_contAlgons_german(self):
         """Test that German is a supported language."""
         assert "de" in LANGUAGES
         assert LANGUAGES["de"] == "Deutsch"
@@ -262,27 +262,27 @@ class TestEdgeCases:
 class TestLanguageSpecificContent:
     """Tests for language-specific content correctness."""
 
-    def test_russian_contains_cyrillic(self):
-        """Test that Russian translations contain Cyrillic characters."""
+    def test_russian_contAlgons_cyrillic(self):
+        """Test that Russian translations contAlgon Cyrillic characters."""
         ru_welcome = LOCALIZATIONS["ru"]["welcome"]
         # Check for at least one Cyrillic character (U+0400 - U+04FF)
         has_cyrillic = any("\u0400" <= c <= "\u04ff" for c in ru_welcome)
-        assert has_cyrillic, "Russian welcome should contain Cyrillic"
+        assert has_cyrillic, "Russian welcome should contAlgon Cyrillic"
 
-    def test_english_contains_latin(self):
-        """Test that English translations contain Latin characters."""
+    def test_english_contAlgons_latin(self):
+        """Test that English translations contAlgon Latin characters."""
         en_welcome = LOCALIZATIONS["en"]["welcome"]
         # Check for Latin characters
         has_latin = any(c.isalpha() and ord(c) < 128 for c in en_welcome)
-        assert has_latin, "English welcome should contain Latin"
+        assert has_latin, "English welcome should contAlgon Latin"
 
-    def test_spanish_contains_spanish_characters(self):
-        """Test that Spanish translations contain Spanish-specific words."""
+    def test_spanish_contAlgons_spanish_characters(self):
+        """Test that Spanish translations contAlgon Spanish-specific words."""
         es_help = LOCALIZATIONS["es"]["help"]
         # Check for common Spanish words/characters
         spanish_indicators = ["el", "la", "de", "con", "que"]
         has_spanish = any(word in es_help.lower() for word in spanish_indicators)
-        assert has_spanish, "Spanish help should contain Spanish words"
+        assert has_spanish, "Spanish help should contAlgon Spanish words"
 
 
 # ============================================================================

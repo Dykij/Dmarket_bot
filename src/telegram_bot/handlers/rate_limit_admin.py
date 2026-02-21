@@ -32,7 +32,7 @@ async def rate_limit_stats_command(
         return
 
     if not is_admin(update.effective_user.id):
-        await update.message.reply_text(
+        awAlgot update.message.reply_text(
             "❌ Эта команда доступна только администраторам"
         )
         return
@@ -42,7 +42,7 @@ async def rate_limit_stats_command(
     )
 
     if not rate_limiter:
-        await update.message.reply_text("❌ Rate limiter не настроен")
+        awAlgot update.message.reply_text("❌ Rate limiter не настроен")
         return
 
     # Получить user_id из аргументов или использовать свой
@@ -50,28 +50,28 @@ async def rate_limit_stats_command(
     user_id = int(args[0]) if args and args[0].isdigit() else update.effective_user.id
 
     try:
-        stats = await rate_limiter.get_user_stats(user_id)
+        stats = awAlgot rate_limiter.get_user_stats(user_id)
 
         # Форматировать статистику
         lines = [f"📊 **Статистика rate limits для пользователя {user_id}**\n"]
 
         for action, info in stats.items():
-            remaining = info.get("remaining", 0)
+            remAlgoning = info.get("remAlgoning", 0)
             limit = info.get("limit", 0)
-            usage_percent = ((limit - remaining) / limit * 100) if limit > 0 else 0
+            usage_percent = ((limit - remAlgoning) / limit * 100) if limit > 0 else 0
 
             emoji = "🟢" if usage_percent < 50 else "🟡" if usage_percent < 80 else "🔴"
 
             lines.append(
-                f"{emoji} **{action}**: {limit - remaining}/{limit} ({usage_percent:.0f}%)"
+                f"{emoji} **{action}**: {limit - remAlgoning}/{limit} ({usage_percent:.0f}%)"
             )
 
         message = "\n".join(lines)
-        await update.message.reply_text(message, parse_mode="Markdown")
+        awAlgot update.message.reply_text(message, parse_mode="Markdown")
 
     except Exception as e:
         logger.exception("rate_limit_stats_error", user_id=user_id)
-        await update.message.reply_text(f"❌ Ошибка получения статистики: {e}")
+        awAlgot update.message.reply_text(f"❌ Ошибка получения статистики: {e}")
 
 
 async def rate_limit_reset_command(
@@ -87,7 +87,7 @@ async def rate_limit_reset_command(
         return
 
     if not is_admin(update.effective_user.id):
-        await update.message.reply_text(
+        awAlgot update.message.reply_text(
             "❌ Эта команда доступна только администраторам"
         )
         return
@@ -97,12 +97,12 @@ async def rate_limit_reset_command(
     )
 
     if not rate_limiter:
-        await update.message.reply_text("❌ Rate limiter не настроен")
+        awAlgot update.message.reply_text("❌ Rate limiter не настроен")
         return
 
     args = context.args
     if not args or not args[0].isdigit():
-        await update.message.reply_text(
+        awAlgot update.message.reply_text(
             "⚠️ Использование: `/ratelimit_reset <user_id> [action]`",
             parse_mode="Markdown",
         )
@@ -112,16 +112,16 @@ async def rate_limit_reset_command(
     action = args[1] if len(args) > 1 else None
 
     try:
-        await rate_limiter.reset_user_limits(user_id, action)
+        awAlgot rate_limiter.reset_user_limits(user_id, action)
 
         message = f"✅ Лимиты сброшены для пользователя {user_id}" + (
             f" (действие: {action})" if action else " (все действия)"
         )
-        await update.message.reply_text(message)
+        awAlgot update.message.reply_text(message)
 
     except Exception as e:
         logger.exception("rate_limit_reset_error", user_id=user_id)
-        await update.message.reply_text(f"❌ Ошибка сброса лимитов: {e}")
+        awAlgot update.message.reply_text(f"❌ Ошибка сброса лимитов: {e}")
 
 
 async def rate_limit_whitelist_command(
@@ -140,7 +140,7 @@ async def rate_limit_whitelist_command(
         return
 
     if not is_admin(update.effective_user.id):
-        await update.message.reply_text(
+        awAlgot update.message.reply_text(
             "❌ Эта команда доступна только администраторам"
         )
         return
@@ -150,12 +150,12 @@ async def rate_limit_whitelist_command(
     )
 
     if not rate_limiter:
-        await update.message.reply_text("❌ Rate limiter не настроен")
+        awAlgot update.message.reply_text("❌ Rate limiter не настроен")
         return
 
     args = context.args
     if len(args) < 2 or not args[1].isdigit():
-        await update.message.reply_text(
+        awAlgot update.message.reply_text(
             "⚠️ Использование:\n"
             "`/ratelimit_whitelist add <user_id>`\n"
             "`/ratelimit_whitelist remove <user_id>`\n"
@@ -169,30 +169,30 @@ async def rate_limit_whitelist_command(
 
     try:
         if action == "add":
-            await rate_limiter.add_whitelist(user_id)
-            await update.message.reply_text(
+            awAlgot rate_limiter.add_whitelist(user_id)
+            awAlgot update.message.reply_text(
                 f"✅ Пользователь {user_id} добавлен в whitelist"
             )
 
         elif action == "remove":
-            await rate_limiter.remove_whitelist(user_id)
-            await update.message.reply_text(
+            awAlgot rate_limiter.remove_whitelist(user_id)
+            awAlgot update.message.reply_text(
                 f"✅ Пользователь {user_id} удален из whitelist"
             )
 
         elif action == "check":
-            is_whitelisted = await rate_limiter.is_whitelisted(user_id)
+            is_whitelisted = awAlgot rate_limiter.is_whitelisted(user_id)
             status = "в whitelist" if is_whitelisted else "не в whitelist"
-            await update.message.reply_text(f"ℹ️ Пользователь {user_id} {status}")
+            awAlgot update.message.reply_text(f"ℹ️ Пользователь {user_id} {status}")
 
         else:
-            await update.message.reply_text(
+            awAlgot update.message.reply_text(
                 "❌ Неизвестное действие. Используйте: add, remove, check"
             )
 
     except Exception as e:
         logger.exception("rate_limit_whitelist_error", user_id=user_id)
-        await update.message.reply_text(f"❌ Ошибка управления whitelist: {e}")
+        awAlgot update.message.reply_text(f"❌ Ошибка управления whitelist: {e}")
 
 
 async def rate_limit_config_command(
@@ -200,7 +200,7 @@ async def rate_limit_config_command(
     context: ContextTypes.DEFAULT_TYPE,
 ) -> None:
     """
-    Команда /ratelimit_config - настройка лимитов.
+    Команда /ratelimit_config - настSwarmка лимитов.
 
     Usage: /ratelimit_config <action> <requests> <window>
     Example: /ratelimit_config scan 5 60
@@ -209,7 +209,7 @@ async def rate_limit_config_command(
         return
 
     if not is_admin(update.effective_user.id):
-        await update.message.reply_text(
+        awAlgot update.message.reply_text(
             "❌ Эта команда доступна только администраторам"
         )
         return
@@ -219,7 +219,7 @@ async def rate_limit_config_command(
     )
 
     if not rate_limiter:
-        await update.message.reply_text("❌ Rate limiter не настроен")
+        awAlgot update.message.reply_text("❌ Rate limiter не настроен")
         return
 
     args = context.args
@@ -234,12 +234,12 @@ async def rate_limit_config_command(
             )
 
         message = "\n".join(lines)
-        await update.message.reply_text(message, parse_mode="Markdown")
+        awAlgot update.message.reply_text(message, parse_mode="Markdown")
         return
 
     # Обновить лимит
     if len(args) < 3 or not args[1].isdigit() or not args[2].isdigit():
-        await update.message.reply_text(
+        awAlgot update.message.reply_text(
             "⚠️ Использование: `/ratelimit_config <action> <requests> <window> [burst]`\n"
             "Пример: `/ratelimit_config scan 5 60`",
             parse_mode="Markdown",
@@ -263,8 +263,8 @@ async def rate_limit_config_command(
         if burst:
             message += f"\n**Burst**: {burst}"
 
-        await update.message.reply_text(message, parse_mode="Markdown")
+        awAlgot update.message.reply_text(message, parse_mode="Markdown")
 
     except Exception as e:
         logger.exception("rate_limit_config_error", action=action)
-        await update.message.reply_text(f"❌ Ошибка обновления лимита: {e}")
+        awAlgot update.message.reply_text(f"❌ Ошибка обновления лимита: {e}")

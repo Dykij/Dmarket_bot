@@ -4,7 +4,7 @@
 
 This diagram illustrates the flow of data from a Telegram update through the bot's internal logic to external APIs and back.
 
-```mermaid
+```mermAlgod
 sequenceDiagram
     participant User as Telegram User
     participant TG as Telegram API
@@ -52,8 +52,8 @@ sequenceDiagram
 **Selection:** LangFuse (Self-hosted via Docker)
 **Why:** 
 - Open-source and Docker-compatible.
-- Easy integration with Python SDK (no LangChain lock-in).
-- Captures LLM inputs/outputs (if AI features are used) + standard traces.
+- Easy integration with Python SDK (no LangChAlgon lock-in).
+- Captures Model inputs/outputs (if Algo features are used) + standard traces.
 
 **Integration:**
 ```bash
@@ -80,7 +80,7 @@ opentelemetry-bootstrap -a install
 ```
 Run the bot with:
 ```bash
-opentelemetry-instrument python src/main.py
+opentelemetry-instrument python src/mAlgon.py
 ```
 
 ### C. Dashboard: Streamlit
@@ -97,7 +97,7 @@ streamlit run src/web_dashboard/dashboard.py
 
 This graph shows the internal dependencies of the core trading logic.
 
-```mermaid
+```mermAlgod
 classDiagram
   class trading {
   }

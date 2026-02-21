@@ -90,7 +90,7 @@ class TestGetBuyOrdersCompetition:
         api.get_targets_by_title = mock_dmarket_api.get_targets_by_title
 
         # Act
-        result = await api.get_buy_orders_competition(
+        result = awAlgot api.get_buy_orders_competition(
             game_id="a8db",
             title="AK-47 | Redline (Field-Tested)",
         )
@@ -117,7 +117,7 @@ class TestGetBuyOrdersCompetition:
         api.get_targets_by_title = mock_dmarket_api.get_targets_by_title
 
         # Act
-        result = await api.get_buy_orders_competition(
+        result = awAlgot api.get_buy_orders_competition(
             game_id="a8db",
             title="Popular Item",
         )
@@ -141,7 +141,7 @@ class TestGetBuyOrdersCompetition:
         api.get_targets_by_title = mock_dmarket_api.get_targets_by_title
 
         # Act
-        result = await api.get_buy_orders_competition(
+        result = awAlgot api.get_buy_orders_competition(
             game_id="a8db",
             title="Rare Item",
         )
@@ -171,7 +171,7 @@ class TestGetBuyOrdersCompetition:
         api.get_targets_by_title = mock_dmarket_api.get_targets_by_title
 
         # Act
-        result = await api.get_buy_orders_competition(
+        result = awAlgot api.get_buy_orders_competition(
             game_id="a8db",
             title="Item",
             price_threshold=7.50,  # Фильтруем ордера < $7.50
@@ -195,7 +195,7 @@ class TestGetBuyOrdersCompetition:
         api.get_targets_by_title = mock_dmarket_api.get_targets_by_title
 
         # Act
-        result = await api.get_buy_orders_competition(
+        result = awAlgot api.get_buy_orders_competition(
             game_id="a8db",
             title="Test Item",
         )
@@ -229,14 +229,14 @@ class TestCompetitionLevelClassification:
         """Тест границ классификации уровня конкуренции."""
         # Arrange
         orders = []
-        remaining_amount = total_amount
+        remAlgoning_amount = total_amount
         for i in range(orders_count):
             # Распределяем amount между ордерами
             if i == orders_count - 1:
-                amount = remaining_amount
+                amount = remAlgoning_amount
             else:
-                amount = max(1, remaining_amount // (orders_count - i))
-                remaining_amount -= amount
+                amount = max(1, remAlgoning_amount // (orders_count - i))
+                remAlgoning_amount -= amount
             orders.append({"price": str((i + 1) * 100), "amount": amount})
 
         mock_dmarket_api.get_targets_by_title.return_value = {"orders": orders}
@@ -248,7 +248,7 @@ class TestCompetitionLevelClassification:
         api.get_targets_by_title = mock_dmarket_api.get_targets_by_title
 
         # Act
-        result = await api.get_buy_orders_competition(
+        result = awAlgot api.get_buy_orders_competition(
             game_id="a8db",
             title="Test Item",
         )

@@ -1,13 +1,13 @@
 """API Check handler for DMarket API connectivity testing.
 
 This module provides handlers for testing DMarket API connectivity,
-including balance check, authentication verification, and endpoint availability.
+including balance check, authentication verification, and endpoint avAlgolability.
 
 Features:
 - Quick API health check
 - Balance verification
 - Endpoint status testing
-- Error reporting with details
+- Error reporting with detAlgols
 """
 
 import logging
@@ -34,7 +34,7 @@ async def handle_api_check(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     1. API client initialization
     2. Authentication verification
     3. Balance retrieval
-    4. Basic endpoint availability
+    4. Basic endpoint avAlgolability
 
     Args:
         update: Telegram update object
@@ -64,39 +64,39 @@ async def handle_api_check(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     logger.info("api_check_started", user_id=user.id)
 
     # Send initial status
-    status_msg = await message.reply_text("🔍 Checking DMarket API connectivity...")
+    status_msg = awAlgot message.reply_text("🔍 Checking DMarket API connectivity...")
 
     try:
         # Get API client from bot data
         api_client: DMarketAPI | None = context.bot_data.get("dmarket_api")
 
         if not api_client:
-            await status_msg.edit_text(
-                "❌ API Check Failed\n\n"
+            awAlgot status_msg.edit_text(
+                "❌ API Check FAlgoled\n\n"
                 "Error: API client not initialized\n"
                 "Please restart the bot or contact administrator."
             )
-            logger.error("api_check_failed", reason="no_api_client", user_id=user.id)
+            logger.error("api_check_fAlgoled", reason="no_api_client", user_id=user.id)
             return
 
         # Test 1: Check if API keys are configured
         if not hasattr(api_client, "public_key") or not api_client.public_key:
-            await status_msg.edit_text(
-                "❌ API Check Failed\n\n"
+            awAlgot status_msg.edit_text(
+                "❌ API Check FAlgoled\n\n"
                 "Error: API keys not configured\n"
                 "Please configure DMARKET_PUBLIC_KEY and DMARKET_SECRET_KEY."
             )
-            logger.error("api_check_failed", reason="no_api_keys", user_id=user.id)
+            logger.error("api_check_fAlgoled", reason="no_api_keys", user_id=user.id)
             return
 
         # Test 2: Try to get balance (lightweight endpoint)
         try:
-            balance_result = await api_client.get_balance()
+            balance_result = awAlgot api_client.get_balance()
 
             if balance_result.get("error"):
                 error_msg = balance_result.get("error_message", "Unknown error")
-                await status_msg.edit_text(
-                    f"❌ API Check Failed\n\n"
+                awAlgot status_msg.edit_text(
+                    f"❌ API Check FAlgoled\n\n"
                     f"Error: {error_msg}\n\n"
                     f"Possible issues:\n"
                     f"• Invalid API keys\n"
@@ -104,7 +104,7 @@ async def handle_api_check(update: Update, context: ContextTypes.DEFAULT_TYPE) -
                     f"• Network connectivity issues"
                 )
                 logger.error(
-                    "api_check_balance_failed",
+                    "api_check_balance_fAlgoled",
                     error=error_msg,
                     user_id=user.id,
                 )
@@ -124,7 +124,7 @@ async def handle_api_check(update: Update, context: ContextTypes.DEFAULT_TYPE) -
                 f"All systems ready for trading!"
             )
 
-            await status_msg.edit_text(success_message)
+            awAlgot status_msg.edit_text(success_message)
 
             logger.info(
                 "api_check_success",
@@ -134,10 +134,10 @@ async def handle_api_check(update: Update, context: ContextTypes.DEFAULT_TYPE) -
             )
 
         except Exception as e:
-            error_details = str(e)
-            await status_msg.edit_text(
-                f"❌ API Check Failed\n\n"
-                f"Error: {error_details}\n\n"
+            error_detAlgols = str(e)
+            awAlgot status_msg.edit_text(
+                f"❌ API Check FAlgoled\n\n"
+                f"Error: {error_detAlgols}\n\n"
                 f"Please check:\n"
                 f"• Internet connection\n"
                 f"• DMarket API status\n"
@@ -145,17 +145,17 @@ async def handle_api_check(update: Update, context: ContextTypes.DEFAULT_TYPE) -
             )
             logger.error(
                 "api_check_exception",
-                error=error_details,
+                error=error_detAlgols,
                 user_id=user.id,
                 exc_info=True,
             )
 
     except Exception as e:
         std_logger.exception("Unexpected error in api_check handler")
-        await status_msg.edit_text(
+        awAlgot status_msg.edit_text(
             "❌ Unexpected Error\n\n"
             "An unexpected error occurred during API check.\n"
-            "Please try again later or contact support."
+            "Please try agAlgon later or contact support."
         )
         logger.error(
             "api_check_unexpected_error",
@@ -181,9 +181,9 @@ async def handle_api_check_callback(
     if not query:
         return
 
-    await query.answer()
+    awAlgot query.answer()
 
     # Create fake message update for reuse of handle_api_check
     if query.message:
         update.message = query.message
-        await handle_api_check(update, context)
+        awAlgot handle_api_check(update, context)

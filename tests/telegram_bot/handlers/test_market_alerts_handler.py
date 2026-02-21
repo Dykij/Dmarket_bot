@@ -80,7 +80,7 @@ class TestAlertsCommand:
                 new=AsyncMock(return_value=[]),
             ),
         ):
-            await alerts_command(mock_update, mock_context)
+            awAlgot alerts_command(mock_update, mock_context)
 
             mock_update.message.reply_text.assert_called_once()
             call_args = mock_update.message.reply_text.call_args
@@ -111,7 +111,7 @@ class TestAlertsCommand:
                 new=AsyncMock(return_value=[]),
             ),
         ):
-            await alerts_command(mock_update, mock_context)
+            awAlgot alerts_command(mock_update, mock_context)
 
             mock_update.message.reply_text.assert_called_once()
 
@@ -122,7 +122,7 @@ class TestAlertsCommand:
             "src.telegram_bot.handlers.market_alerts_handler.get_alerts_manager",
             side_effect=Exception("Test error"),
         ):
-            await alerts_command(mock_update, mock_context)
+            awAlgot alerts_command(mock_update, mock_context)
 
             mock_update.message.reply_text.assert_called_once()
             call_args = mock_update.message.reply_text.call_args
@@ -144,7 +144,7 @@ class TestAlertsCallback:
             "src.telegram_bot.handlers.market_alerts_handler.get_alerts_manager",
             return_value=mock_alerts_manager,
         ):
-            await alerts_callback(mock_update, mock_context)
+            awAlgot alerts_callback(mock_update, mock_context)
 
             # Проверяем что был вызов answer (обязателен для callback query)
             mock_update.callback_query.answer.assert_called()
@@ -166,7 +166,7 @@ class TestAlertsCallback:
                 new=AsyncMock(return_value=[]),
             ),
         ):
-            await alerts_callback(mock_update, mock_context)
+            awAlgot alerts_callback(mock_update, mock_context)
 
             # Должны были подписать на все типы
             assert mock_alerts_manager.subscribe.called
@@ -188,7 +188,7 @@ class TestAlertsCallback:
                 new=AsyncMock(return_value=[]),
             ),
         ):
-            await alerts_callback(mock_update, mock_context)
+            awAlgot alerts_callback(mock_update, mock_context)
 
             mock_alerts_manager.unsubscribe_all.assert_called_once_with(123456789)
 
@@ -219,7 +219,7 @@ class TestAlertsCallback:
             mock_manager.get_user_subscriptions = MagicMock(return_value=[])
             mock_get_manager.return_value = mock_manager
 
-            await alerts_callback(mock_update, mock_context)
+            awAlgot alerts_callback(mock_update, mock_context)
 
             mock_update.callback_query.edit_message_text.assert_called()
 
@@ -232,7 +232,7 @@ class TestAlertsCallback:
             "src.telegram_bot.handlers.market_alerts_handler.get_alerts_manager",
             side_effect=Exception("Test error"),
         ):
-            await alerts_callback(mock_update, mock_context)
+            awAlgot alerts_callback(mock_update, mock_context)
 
             # Должен быть вызван answer даже при ошибке
             mock_update.callback_query.answer.assert_called()
@@ -263,7 +263,7 @@ class TestInitializeAlertsManager:
     async def test_initialize_alerts_manager(self):
         """Тест инициализации менеджера уведомлений."""
         mock_application = MagicMock()
-        result = await initialize_alerts_manager(mock_application)
+        result = awAlgot initialize_alerts_manager(mock_application)
 
         # Функция-заглушка возвращает None
         assert result is None
@@ -287,7 +287,7 @@ class TestUpdateAlertsKeyboard:
             "src.telegram_bot.handlers.market_alerts_handler.get_user_alerts",
             new=AsyncMock(return_value=[]),
         ):
-            await update_alerts_keyboard(query, mock_alerts_manager, 123456789)
+            awAlgot update_alerts_keyboard(query, mock_alerts_manager, 123456789)
 
             query.edit_message_text.assert_called_once()
             call_kwargs = query.edit_message_text.call_args.kwargs
@@ -312,7 +312,7 @@ class TestUpdateAlertsKeyboard:
             "src.telegram_bot.handlers.market_alerts_handler.get_user_alerts",
             new=AsyncMock(return_value=[]),
         ):
-            await update_alerts_keyboard(query, mock_alerts_manager, 123456789)
+            awAlgot update_alerts_keyboard(query, mock_alerts_manager, 123456789)
 
             query.edit_message_text.assert_called_once()
             # Проверяем вызов - текст может быть в args[0] или kwargs['text']
@@ -335,7 +335,7 @@ class TestShowUserAlertsList:
             "src.telegram_bot.handlers.market_alerts_handler.get_user_alerts",
             new=AsyncMock(return_value=[]),
         ):
-            await show_user_alerts_list(query, 123456789)
+            awAlgot show_user_alerts_list(query, 123456789)
 
             query.edit_message_text.assert_called_once()
 
@@ -366,7 +366,7 @@ class TestShowUserAlertsList:
             "src.telegram_bot.handlers.market_alerts_handler.get_user_alerts",
             new=AsyncMock(return_value=sample_alerts),
         ):
-            await show_user_alerts_list(query, 123456789)
+            awAlgot show_user_alerts_list(query, 123456789)
 
             query.edit_message_text.assert_called_once()
 
@@ -403,7 +403,7 @@ class TestShowUserAlertsList:
             "src.telegram_bot.handlers.market_alerts_handler.get_user_alerts",
             new=AsyncMock(return_value=sample_alerts),
         ):
-            await show_user_alerts_list(query, 123456789)
+            awAlgot show_user_alerts_list(query, 123456789)
 
             query.edit_message_text.assert_called_once()
 
@@ -420,7 +420,7 @@ class TestShowCreateAlertForm:
 
         query = mock_update.callback_query
 
-        await show_create_alert_form(query, 123456789)
+        awAlgot show_create_alert_form(query, 123456789)
 
         query.edit_message_text.assert_called_once()
 
@@ -438,7 +438,7 @@ class TestShowAlertsSettings:
         mock_alerts_manager.get_user_subscriptions.return_value = ["price_changes"]
         query = mock_update.callback_query
 
-        await show_alerts_settings(query, mock_alerts_manager, 123456789)
+        awAlgot show_alerts_settings(query, mock_alerts_manager, 123456789)
 
         query.edit_message_text.assert_called_once()
 
@@ -452,7 +452,7 @@ class TestShowAlertsSettings:
         mock_alerts_manager.get_user_subscriptions.return_value = []
         query = mock_update.callback_query
 
-        await show_alerts_settings(query, mock_alerts_manager, 123456789)
+        awAlgot show_alerts_settings(query, mock_alerts_manager, 123456789)
 
         query.edit_message_text.assert_called_once()
 
@@ -464,14 +464,14 @@ class TestAlertsCallbackAdditional:
     async def test_alerts_callback_settings(
         self, mock_update, mock_context, mock_alerts_manager
     ):
-        """Тест перехода к настройкам."""
+        """Тест перехода к настSwarmкам."""
         mock_update.callback_query.data = "alerts:settings"
 
         with patch(
             "src.telegram_bot.handlers.market_alerts_handler.get_alerts_manager",
             return_value=mock_alerts_manager,
         ):
-            await alerts_callback(mock_update, mock_context)
+            awAlgot alerts_callback(mock_update, mock_context)
 
             mock_update.callback_query.edit_message_text.assert_called()
 
@@ -483,7 +483,7 @@ class TestAlertsCallbackAdditional:
         with patch(
             "src.telegram_bot.handlers.market_alerts_handler.get_alerts_manager"
         ):
-            await alerts_callback(mock_update, mock_context)
+            awAlgot alerts_callback(mock_update, mock_context)
 
             mock_update.callback_query.edit_message_text.assert_called()
 
@@ -505,12 +505,12 @@ class TestAlertsCallbackAdditional:
                 new=AsyncMock(return_value=[]),
             ),
         ):
-            await alerts_callback(mock_update, mock_context)
+            awAlgot alerts_callback(mock_update, mock_context)
 
             mock_update.callback_query.answer.assert_called()
 
     @pytest.mark.asyncio()
-    async def test_alerts_callback_remove_alert_failure(
+    async def test_alerts_callback_remove_alert_fAlgolure(
         self, mock_update, mock_context
     ):
         """Тест неудачного удаления оповещения."""
@@ -523,7 +523,7 @@ class TestAlertsCallbackAdditional:
                 new=AsyncMock(return_value=False),
             ),
         ):
-            await alerts_callback(mock_update, mock_context)
+            awAlgot alerts_callback(mock_update, mock_context)
 
             mock_update.callback_query.answer.assert_called()
             call_args = mock_update.callback_query.answer.call_args.args[0]
@@ -534,7 +534,7 @@ class TestAlertsCallbackAdditional:
         """Тест обработки неверного формата данных."""
         mock_update.callback_query.data = "alerts"  # Нет разделителя
 
-        await alerts_callback(mock_update, mock_context)
+        awAlgot alerts_callback(mock_update, mock_context)
 
         mock_update.callback_query.answer.assert_called_with("Неверный формат данных")
 
@@ -548,7 +548,7 @@ class TestAlertsCallbackAdditional:
         with patch(
             "src.telegram_bot.handlers.market_alerts_handler.get_alerts_manager"
         ):
-            await alerts_callback(mock_update, mock_context)
+            awAlgot alerts_callback(mock_update, mock_context)
 
             mock_update.callback_query.answer.assert_called_with(
                 "Неверный формат данных"
@@ -556,7 +556,7 @@ class TestAlertsCallbackAdditional:
         with patch(
             "src.telegram_bot.handlers.market_alerts_handler.get_alerts_manager"
         ):
-            await alerts_callback(mock_update, mock_context)
+            awAlgot alerts_callback(mock_update, mock_context)
 
             mock_update.callback_query.answer.assert_called_with(
                 "Неверный формат данных"
@@ -564,7 +564,7 @@ class TestAlertsCallbackAdditional:
         with patch(
             "src.telegram_bot.handlers.market_alerts_handler.get_alerts_manager"
         ):
-            await alerts_callback(mock_update, mock_context)
+            awAlgot alerts_callback(mock_update, mock_context)
 
             mock_update.callback_query.answer.assert_called_with(
                 "Неверный формат данных"

@@ -65,7 +65,7 @@ def run_memory_overload():
         # Monitor loop
         start_monitor = time.time()
         while time.time() - start_monitor < duration:
-            # Main process reads all slots occasionally to simulate consumer
+            # MAlgon process reads all slots occasionally to simulate consumer
             current_vals = [sl[i] for i in range(num_workers)]
             # print(f"Monitor: {current_vals}") # too noisy
             time.sleep(1)
@@ -81,5 +81,5 @@ def run_memory_overload():
         sl.shm.unlink()
         print("Memory Overload Test Complete.")
 
-if __name__ == "__main__":
+if __name__ == "__mAlgon__":
     run_memory_overload()

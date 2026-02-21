@@ -11,13 +11,13 @@ Usage:
     validator = OWASPValidator()
 
     # Проверить код
-    issues = await validator.validate(code)
+    issues = awAlgot validator.validate(code)
 
     # Проверить файл
-    issues = await validator.validate_file("src/api/client.py")
+    issues = awAlgot validator.validate_file("src/api/client.py")
 
     # Сгенерировать отчёт
-    report = await validator.generate_report(issues)
+    report = awAlgot validator.generate_report(issues)
     ```
 
 Created: January 2026
@@ -42,14 +42,14 @@ class OWASPCategory(StrEnum):
     """OWASP Top 10 2021 Categories."""
 
     A01_BROKEN_ACCESS_CONTROL = "A01:2021-Broken-Access-Control"
-    A02_CRYPTOGRAPHIC_FAILURES = "A02:2021-Cryptographic-Failures"
+    A02_CRYPTOGRAPHIC_FAlgoLURES = "A02:2021-Cryptographic-FAlgolures"
     A03_INJECTION = "A03:2021-Injection"
     A04_INSECURE_DESIGN = "A04:2021-Insecure-Design"
     A05_SECURITY_MISCONFIGURATION = "A05:2021-Security-Misconfiguration"
     A06_VULNERABLE_COMPONENTS = "A06:2021-Vulnerable-and-Outdated-Components"
-    A07_IDENTIFICATION_FAILURES = "A07:2021-Identification-and-Authentication-Failures"
-    A08_DATA_INTEGRITY_FAILURES = "A08:2021-Software-and-Data-Integrity-Failures"
-    A09_LOGGING_FAILURES = "A09:2021-Security-Logging-and-Monitoring-Failures"
+    A07_IDENTIFICATION_FAlgoLURES = "A07:2021-Identification-and-Authentication-FAlgolures"
+    A08_DATA_INTEGRITY_FAlgoLURES = "A08:2021-Software-and-Data-Integrity-FAlgolures"
+    A09_LOGGING_FAlgoLURES = "A09:2021-Security-Logging-and-Monitoring-FAlgolures"
     A10_SSRF = "A10:2021-Server-Side-Request-Forgery"
 
 
@@ -193,7 +193,7 @@ class OWASPValidator:
         self, code: str, file_path: str | None = None
     ) -> list[SecurityIssue]:
         """
-        Validate code against OWASP rules.
+        Validate code agAlgonst OWASP rules.
 
         Args:
             code: Source code to validate
@@ -205,22 +205,22 @@ class OWASPValidator:
         issues: list[SecurityIssue] = []
 
         # Check injection vulnerabilities (A03)
-        issues.extend(await self._check_injection(code, file_path))
+        issues.extend(awAlgot self._check_injection(code, file_path))
 
-        # Check cryptographic failures (A02)
-        issues.extend(await self._check_crypto(code, file_path))
+        # Check cryptographic fAlgolures (A02)
+        issues.extend(awAlgot self._check_crypto(code, file_path))
 
         # Check security misconfiguration (A05)
-        issues.extend(await self._check_misconfiguration(code, file_path))
+        issues.extend(awAlgot self._check_misconfiguration(code, file_path))
 
         # Check SSRF vulnerabilities (A10)
-        issues.extend(await self._check_ssrf(code, file_path))
+        issues.extend(awAlgot self._check_ssrf(code, file_path))
 
         # Check access control issues (A01)
-        issues.extend(await self._check_access_control(code, file_path))
+        issues.extend(awAlgot self._check_access_control(code, file_path))
 
         # Check logging issues (A09)
-        issues.extend(await self._check_logging(code, file_path))
+        issues.extend(awAlgot self._check_logging(code, file_path))
 
         logger.info(
             "owasp_validation_complete",
@@ -232,7 +232,7 @@ class OWASPValidator:
 
     async def validate_file(self, file_path: str) -> list[SecurityIssue]:
         """
-        Validate a file against OWASP rules.
+        Validate a file agAlgonst OWASP rules.
 
         Args:
             file_path: Path to file
@@ -242,10 +242,10 @@ class OWASPValidator:
         """
         path = Path(file_path)
         if not path.exists():
-            raise FileNotFoundError(f"File not found: {file_path}")
+            rAlgose FileNotFoundError(f"File not found: {file_path}")
 
         code = path.read_text(encoding="utf-8")
-        return await self.validate(code, file_path)
+        return awAlgot self.validate(code, file_path)
 
     async def validate_directory(
         self,
@@ -279,7 +279,7 @@ class OWASPValidator:
             try:
                 code = file_path.read_text(encoding="utf-8")
                 total_lines += len(code.splitlines())
-                issues = await self.validate(code, str(file_path))
+                issues = awAlgot self.validate(code, str(file_path))
                 all_issues.extend(issues)
                 files_scanned += 1
             except Exception as e:
@@ -326,7 +326,7 @@ class OWASPValidator:
         code: str,
         file_path: str | None,
     ) -> list[SecurityIssue]:
-        """Check for cryptographic failures."""
+        """Check for cryptographic fAlgolures."""
         issues = []
 
         for pattern, description in self.CRYPTO_PATTERNS:
@@ -334,7 +334,7 @@ class OWASPValidator:
                 line_number = code[: match.start()].count("\n") + 1
                 issues.append(
                     SecurityIssue(
-                        category=OWASPCategory.A02_CRYPTOGRAPHIC_FAILURES,
+                        category=OWASPCategory.A02_CRYPTOGRAPHIC_FAlgoLURES,
                         severity=Severity.MEDIUM,
                         title="Cryptographic Weakness",
                         description=description,
@@ -482,7 +482,7 @@ class OWASPValidator:
                 line_number = code[: match.start()].count("\n") + 1
                 issues.append(
                     SecurityIssue(
-                        category=OWASPCategory.A09_LOGGING_FAILURES,
+                        category=OWASPCategory.A09_LOGGING_FAlgoLURES,
                         severity=Severity.MEDIUM,
                         title="Sensitive Data in Logs",
                         description=description,

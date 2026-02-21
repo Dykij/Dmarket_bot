@@ -22,7 +22,7 @@ class TestSlidingWindowRateLimiter:
         """Create mock Redis client."""
         mock = AsyncMock()
         mock.script_load = AsyncMock(return_value="test_sha")
-        mock.evalsha = AsyncMock(return_value=[1, 99])  # allowed, remaining
+        mock.evalsha = AsyncMock(return_value=[1, 99])  # allowed, remAlgoning
         mock.zremrangebyscore = AsyncMock()
         mock.zcard = AsyncMock(return_value=5)
         mock.delete = AsyncMock()
@@ -47,7 +47,7 @@ class TestSlidingWindowRateLimiter:
         identifier = "user:123:api"
 
         # Act
-        result = await rate_limiter.is_allowed(identifier)
+        result = awAlgot rate_limiter.is_allowed(identifier)
 
         # Assert
         assert result is True
@@ -61,7 +61,7 @@ class TestSlidingWindowRateLimiter:
         identifier = "user:456:api"
 
         # Act
-        result = await rate_limiter.is_allowed(identifier)
+        result = awAlgot rate_limiter.is_allowed(identifier)
 
         # Assert
         assert result is False
@@ -73,13 +73,13 @@ class TestSlidingWindowRateLimiter:
         identifier = "user:123:api"
 
         # Act
-        is_allowed, remaining, retry_after = await rate_limiter.check_and_increment(
+        is_allowed, remAlgoning, retry_after = awAlgot rate_limiter.check_and_increment(
             identifier
         )
 
         # Assert
         assert is_allowed is True
-        assert remaining == 99
+        assert remAlgoning == 99
         assert retry_after == 0.0
 
     @pytest.mark.asyncio
@@ -90,13 +90,13 @@ class TestSlidingWindowRateLimiter:
         identifier = "user:456:api"
 
         # Act
-        is_allowed, remaining, retry_after = await rate_limiter.check_and_increment(
+        is_allowed, remAlgoning, retry_after = awAlgot rate_limiter.check_and_increment(
             identifier
         )
 
         # Assert
         assert is_allowed is False
-        assert remaining == 0
+        assert remAlgoning == 0
         assert retry_after == 30.0
 
     @pytest.mark.asyncio
@@ -106,7 +106,7 @@ class TestSlidingWindowRateLimiter:
         identifier = "user:123:api"
 
         # Act
-        usage = await rate_limiter.get_current_usage(identifier)
+        usage = awAlgot rate_limiter.get_current_usage(identifier)
 
         # Assert
         assert usage == 5
@@ -119,7 +119,7 @@ class TestSlidingWindowRateLimiter:
         identifier = "user:123:api"
 
         # Act
-        result = await rate_limiter.reset(identifier)
+        result = awAlgot rate_limiter.reset(identifier)
 
         # Assert
         assert result is True
@@ -129,7 +129,7 @@ class TestSlidingWindowRateLimiter:
     async def test_close(self, rate_limiter, mock_redis):
         """Test closing connection."""
         # Act
-        await rate_limiter.close()
+        awAlgot rate_limiter.close()
 
         # Assert
         mock_redis.close.assert_called_once()
@@ -150,7 +150,7 @@ class TestSlidingWindowRateLimiter:
         identifier = "user:123:api"
 
         # Act
-        await rate_limiter.is_allowed(identifier, limit=50, window=30)
+        awAlgot rate_limiter.is_allowed(identifier, limit=50, window=30)
 
         # Assert
         call_args = mock_redis.evalsha.call_args
@@ -160,16 +160,16 @@ class TestSlidingWindowRateLimiter:
         assert 30 in call_args[0] or 30 in call_args.args
 
     @pytest.mark.asyncio
-    async def test_fail_open_on_redis_error(self, rate_limiter, mock_redis):
-        """Test that requests are allowed when Redis fails."""
+    async def test_fAlgol_open_on_redis_error(self, rate_limiter, mock_redis):
+        """Test that requests are allowed when Redis fAlgols."""
         # Arrange
         mock_redis.evalsha = AsyncMock(side_effect=Exception("Redis error"))
         identifier = "user:123:api"
 
         # Act
-        result = await rate_limiter.is_allowed(identifier)
+        result = awAlgot rate_limiter.is_allowed(identifier)
 
-        # Assert - fail open, allow request
+        # Assert - fAlgol open, allow request
         assert result is True
 
 

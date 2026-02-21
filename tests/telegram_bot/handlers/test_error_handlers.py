@@ -35,7 +35,7 @@ async def test_error_handler_rate_limit_error(mock_update, mock_context):
     mock_context.error = APIError("Rate limit exceeded", status_code=429)
 
     # Вызываем тестируемую функцию
-    await error_handler(mock_update, mock_context)
+    awAlgot error_handler(mock_update, mock_context)
 
     # Проверяем, что был вызван reply_text с правильным сообщением
     mock_update.effective_message.reply_text.assert_called_once()
@@ -54,7 +54,7 @@ async def test_error_handler_auth_error(mock_update, mock_context):
     mock_context.error = APIError("Unauthorized", status_code=401)
 
     # Вызываем тестируемую функцию
-    await error_handler(mock_update, mock_context)
+    awAlgot error_handler(mock_update, mock_context)
 
     # Проверяем содержимое сообщения
     args, _kwargs = mock_update.effective_message.reply_text.call_args
@@ -70,7 +70,7 @@ async def test_error_handler_not_found_error(mock_update, mock_context):
     mock_context.error = APIError("Resource not found", status_code=404)
 
     # Вызываем тестируемую функцию
-    await error_handler(mock_update, mock_context)
+    awAlgot error_handler(mock_update, mock_context)
 
     # Проверяем содержимое сообщения
     args, _kwargs = mock_update.effective_message.reply_text.call_args
@@ -85,7 +85,7 @@ async def test_error_handler_server_error(mock_update, mock_context):
     mock_context.error = APIError("Internal server error", status_code=500)
 
     # Вызываем тестируемую функцию
-    await error_handler(mock_update, mock_context)
+    awAlgot error_handler(mock_update, mock_context)
 
     # Проверяем содержимое сообщения
     args, _kwargs = mock_update.effective_message.reply_text.call_args
@@ -102,7 +102,7 @@ async def test_error_handler_other_api_error(mock_update, mock_context):
     mock_context.error = APIError(error_message, status_code=400)
 
     # Вызываем тестируемую функцию
-    await error_handler(mock_update, mock_context)
+    awAlgot error_handler(mock_update, mock_context)
 
     # Проверяем содержимое сообщения
     args, _kwargs = mock_update.effective_message.reply_text.call_args
@@ -118,7 +118,7 @@ async def test_error_handler_generic_error(mock_update, mock_context):
     mock_context.error = Exception("Generic error")
 
     # Вызываем тестируемую функцию
-    await error_handler(mock_update, mock_context)
+    awAlgot error_handler(mock_update, mock_context)
 
     # Проверяем содержимое сообщения
     args, _kwargs = mock_update.effective_message.reply_text.call_args
@@ -134,7 +134,7 @@ async def test_error_handler_no_update(mock_context):
     mock_context.error = Exception("Error without update")
 
     # Вызываем тестируемую функцию с update=None
-    await error_handler(None, mock_context)
+    awAlgot error_handler(None, mock_context)
 
     # Убеждаемся, что обработчик отработал без ошибок
     # В этом случае сообщение не отправляется, поэтому нет assert для reply_text
@@ -150,6 +150,6 @@ async def test_error_handler_no_effective_message(mock_update, mock_context):
     mock_update.effective_message = None
 
     # Вызываем тестируемую функцию
-    await error_handler(mock_update, mock_context)
+    awAlgot error_handler(mock_update, mock_context)
 
     # Убеждаемся, что обработчик отработал без ошибок

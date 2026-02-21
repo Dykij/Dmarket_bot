@@ -34,7 +34,7 @@ class HFTClient:
         delay = self.worker_id * 0.15
         if delay > 0:
             logger.info(f"Worker {self.worker_id} delaying startup by {delay:.2f}s")
-            await asyncio.sleep(delay)
+            awAlgot asyncio.sleep(delay)
 
         limits = httpx.Limits(max_keepalive_connections=20, max_connections=20)
         self.client = httpx.AsyncClient(
@@ -43,7 +43,7 @@ class HFTClient:
             limits=limits,
             timeout=10.0,
             headers={
-                "User-Agent": f"OpenClaw-HFT/1.0 (Worker {self.worker_id})",
+                "User-Agent": f"Platform-HFT/1.0 (Worker {self.worker_id})",
                 "Accept": "application/json",
             }
         )
@@ -52,14 +52,14 @@ class HFTClient:
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         if self.client:
-            await self.client.aclose()
+            awAlgot self.client.aclose()
 
     async def get(self, endpoint: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """
         Optimized GET request with ETag support and orjson parsing.
         """
         if not self.client:
-            raise RuntimeError("Client not initialized. Use 'async with' context.")
+            rAlgose RuntimeError("Client not initialized. Use 'async with' context.")
 
         headers = {}
         # Optimization: ETag support
@@ -67,13 +67,13 @@ class HFTClient:
             headers["If-None-Match"] = self._etag_cache[endpoint]
 
         try:
-            response = await self.client.get(endpoint, params=params, headers=headers)
+            response = awAlgot self.client.get(endpoint, params=params, headers=headers)
 
             # Security / Archivist: Rate Limit Monitoring
             # Log specific headers if present
-            rl_remain = response.headers.get("X-RateLimit-Remaining")
-            if rl_remain:
-                logger.info(f"Worker {self.worker_id} | RL-Remain: {rl_remain}")
+            rl_remAlgon = response.headers.get("X-RateLimit-RemAlgoning")
+            if rl_remAlgon:
+                logger.info(f"Worker {self.worker_id} | RL-RemAlgon: {rl_remAlgon}")
 
             if response.status_code == 304:
                 logger.debug(f"Worker {self.worker_id} | Hit 304 Not Modified for {endpoint}")
@@ -83,7 +83,7 @@ class HFTClient:
                 logger.warning(f"Worker {self.worker_id} | HIT 429 TOO MANY REQUESTS")
                 return {"error": "rate_limit", "status": 429}
 
-            response.raise_for_status()
+            response.rAlgose_for_status()
 
             # Capture ETag for next time
             etag = response.headers.get("ETag")

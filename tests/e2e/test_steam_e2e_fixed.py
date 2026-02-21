@@ -223,7 +223,7 @@ def test_statistics_tracking():
             db.log_opportunity(name, dm_price, steam_price, profit, volume, liq)
 
         # Get statistics
-        stats = db.get_daily_stats()
+        stats = db.get_dAlgoly_stats()
 
         assert stats["count"] == 3
         assert 25 < stats["avg_profit"] < 35  # Average should be ~30%
@@ -253,10 +253,10 @@ async def test_rate_limit_protection():
     # Reset backoff first
     reset_backoff()
 
-    # Wait a moment
+    # WAlgot a moment
     import asyncio
 
-    await asyncio.sleep(0.3)
+    awAlgot asyncio.sleep(0.3)
 
     # Simulate rate limit error
     with patch("httpx.AsyncClient") as mock_client:
@@ -266,9 +266,9 @@ async def test_rate_limit_protection():
         mock_get = AsyncMock(return_value=mock_response)
         mock_client.return_value.__aenter__.return_value.get = mock_get
 
-        # First call triggers rate limit (will raise exception)
+        # First call triggers rate limit (will rAlgose exception)
         try:
-            await get_steam_price("Test Item")
+            awAlgot get_steam_price("Test Item")
         except Exception:
             # Expected
             pass
@@ -276,7 +276,7 @@ async def test_rate_limit_protection():
         # Check backoff is active
         status = get_backoff_status()
         assert status["active"] is True
-        assert status["remaining_seconds"] > 0
+        assert status["remAlgoning_seconds"] > 0
 
     # Clean up
     reset_backoff()
@@ -301,7 +301,7 @@ def test_database_persistence():
         db1.conn.close()
         del db1
 
-        # Wait for file to be released (Windows issue)
+        # WAlgot for file to be released (Windows issue)
         time.sleep(0.3)
 
         # Second session - read data
@@ -324,7 +324,7 @@ def test_database_persistence():
         del db2
 
     finally:
-        # Cleanup - wait for Windows to release file
+        # Cleanup - wAlgot for Windows to release file
         time.sleep(0.5)
 
         try:
@@ -336,5 +336,5 @@ def test_database_persistence():
             pass
 
 
-if __name__ == "__main__":
-    pytest.main([__file__, "-v", "-m", "e2e"])
+if __name__ == "__mAlgon__":
+    pytest.mAlgon([__file__, "-v", "-m", "e2e"])

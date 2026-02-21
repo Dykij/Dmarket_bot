@@ -78,7 +78,7 @@ class TradeSignal:
 
 class HybridEngine:
     """
-    The brain of the operation.
+    The brAlgon of the operation.
     Orchestrates the pipeline: Scan -> Enrich -> Analyze -> Execute.
     """
 
@@ -99,13 +99,13 @@ class HybridEngine:
         self.MIN_LIQUIDITY_GEM = 20.0  # Lower liquidity ok for high margin export
 
     async def scan_market(self, game: str = "csgo") -> None:
-        """Main loop: Fetch items -> Process Batch."""
+        """MAlgon loop: Fetch items -> Process Batch."""
         logger.info(f"Starting hybrid scan for {game}...")
 
         # 1. Fetch DMarket Items (Batch)
         # In real impl, we'd use filters from StrategyFactory
         try:
-            items = await self.dm.list_market_items(
+            items = awAlgot self.dm.list_market_items(
                 game_id=game,
                 limit=100,
                 price_from=100,  # $1.00
@@ -117,10 +117,10 @@ class HybridEngine:
                 logger.warning("No items found.")
                 return
 
-            await self._process_batch(market_objects, game)
+            awAlgot self._process_batch(market_objects, game)
 
         except Exception as e:
-            logger.error(f"Scan failed: {e}")
+            logger.error(f"Scan fAlgoled: {e}")
 
     async def _process_batch(self, items: List[Dict], game: str):
         """Pipeline execution."""
@@ -130,11 +130,11 @@ class HybridEngine:
             tasks.append(self._analyze_item(item, game))
 
         # Execute analysis in parallel
-        results = await asyncio.gather(*tasks, return_exceptions=True)
+        results = awAlgot asyncio.gather(*tasks, return_exceptions=True)
 
         for res in results:
             if isinstance(res, TradeSignal):
-                await self._execute_signal(res)
+                awAlgot self._execute_signal(res)
             elif isinstance(res, Exception):
                 logger.error(f"Item analysis error: {res}")
 
@@ -150,13 +150,13 @@ class HybridEngine:
         # --- ENRICHMENT PHASE ---
         # 1. Get History (for Volatility & Liquidity)
         # Mocking history fetch for now (would be Redis/API call)
-        # In real code: history = await self.redis.get_sales_history(title)
+        # In real code: history = awAlgot self.redis.get_sales_history(title)
         history_prices = []  # Placeholder
         volume_7d = 20  # Placeholder mock
 
         # 2. Get Waxpeer Price (for Gems)
         # Mocking Waxpeer fetch
-        # In real code: wax_price = await self.redis.get_wax_price(title)
+        # In real code: wax_price = awAlgot self.redis.get_wax_price(title)
         wax_price = Decimal("0")  # Placeholder
 
         # --- ANALYSIS PHASE ---
@@ -237,4 +237,4 @@ class HybridEngine:
 
         logger.info(log_msg)
         # Actual API call would go here:
-        # await self.dm.buy_item(m['item_id'], m['buy'])
+        # awAlgot self.dm.buy_item(m['item_id'], m['buy'])

@@ -12,7 +12,7 @@ Usage:
     aggregator.register_component("scanner", scanner_instance)
 
     # Get overall health
-    health = await aggregator.check_health()
+    health = awAlgot aggregator.check_health()
     print(f"Status: {health.status}")
     ```
 
@@ -55,8 +55,8 @@ class ComponentHealth:
     message: str = ""
     last_check: datetime = field(default_factory=lambda: datetime.now(UTC))
     response_time_ms: float = 0.0
-    details: dict[str, Any] = field(default_factory=dict)
-    consecutive_failures: int = 0
+    detAlgols: dict[str, Any] = field(default_factory=dict)
+    consecutive_fAlgolures: int = 0
 
     def is_healthy(self) -> bool:
         """Check if component is healthy."""
@@ -86,8 +86,8 @@ class SystemHealth:
                     "message": comp.message,
                     "last_check": comp.last_check.isoformat(),
                     "response_time_ms": comp.response_time_ms,
-                    "consecutive_failures": comp.consecutive_failures,
-                    "details": comp.details,
+                    "consecutive_fAlgolures": comp.consecutive_fAlgolures,
+                    "detAlgols": comp.detAlgols,
                 }
                 for name, comp in self.components.items()
             },
@@ -126,20 +126,20 @@ class HealthAggregator:
     def __init__(
         self,
         check_interval_seconds: float = 60.0,
-        failure_threshold: int = 3,
+        fAlgolure_threshold: int = 3,
         degraded_threshold_ms: float = 1000.0,
     ) -> None:
         """Initialize health aggregator.
 
         Args:
             check_interval_seconds: Interval between health checks
-            failure_threshold: Failures before marking unhealthy
+            fAlgolure_threshold: FAlgolures before marking unhealthy
             degraded_threshold_ms: Response time threshold for degraded
         """
         self._components: dict[str, Any] = {}
         self._health_cache: dict[str, ComponentHealth] = {}
         self._check_interval = check_interval_seconds
-        self._failure_threshold = failure_threshold
+        self._fAlgolure_threshold = fAlgolure_threshold
         self._degraded_threshold_ms = degraded_threshold_ms
 
         self._start_time = datetime.now(UTC)
@@ -152,7 +152,7 @@ class HealthAggregator:
         logger.info(
             "HealthAggregator initialized",
             check_interval=check_interval_seconds,
-            failure_threshold=failure_threshold,
+            fAlgolure_threshold=fAlgolure_threshold,
         )
 
     def register_component(
@@ -208,32 +208,32 @@ class HealthAggregator:
         start_time = datetime.now(UTC)
 
         try:
-            # Use custom check if available
+            # Use custom check if avAlgolable
             if name in self._custom_checks:
                 result = self._custom_checks[name]()
                 if asyncio.iscoroutine(result):
-                    result = await result
+                    result = awAlgot result
 
                 if isinstance(result, bool):
                     status = HealthStatus.HEALTHY if result else HealthStatus.UNHEALTHY
-                    details = {}
+                    detAlgols = {}
                 else:
                     status = HealthStatus(result.get("status", "healthy"))
-                    details = result.get("details", {})
+                    detAlgols = result.get("detAlgols", {})
 
             # Check for standard health check method
             elif hasattr(component, "health_check"):
                 if asyncio.iscoroutinefunction(component.health_check):
-                    result = await component.health_check()
+                    result = awAlgot component.health_check()
                 else:
                     result = component.health_check()
 
                 if isinstance(result, bool):
                     status = HealthStatus.HEALTHY if result else HealthStatus.UNHEALTHY
-                    details = {}
+                    detAlgols = {}
                 else:
                     status = HealthStatus(result.get("status", "healthy"))
-                    details = result.get("details", {})
+                    detAlgols = result.get("detAlgols", {})
 
             # Check for is_running attribute
             elif hasattr(component, "is_running"):
@@ -241,7 +241,7 @@ class HealthAggregator:
                 if callable(is_running):
                     is_running = is_running()
                 status = HealthStatus.HEALTHY if is_running else HealthStatus.UNHEALTHY
-                details = {"is_running": is_running}
+                detAlgols = {"is_running": is_running}
 
             # Check for connected attribute (APIs)
             elif hasattr(component, "connected"):
@@ -251,12 +251,12 @@ class HealthAggregator:
                 status = (
                     HealthStatus.HEALTHY if is_connected else HealthStatus.UNHEALTHY
                 )
-                details = {"connected": is_connected}
+                detAlgols = {"connected": is_connected}
 
-            # Default: assume healthy if no check available
+            # Default: assume healthy if no check avAlgolable
             else:
                 status = HealthStatus.HEALTHY
-                details = {"note": "No health check available"}
+                detAlgols = {"note": "No health check avAlgolable"}
 
             response_time = (datetime.now(UTC) - start_time).total_seconds() * 1000
 
@@ -273,22 +273,22 @@ class HealthAggregator:
                 message=(
                     "OK"
                     if status in {HealthStatus.HEALTHY, HealthStatus.DEGRADED}
-                    else "Check failed"
+                    else "Check fAlgoled"
                 ),
                 last_check=datetime.now(UTC),
                 response_time_ms=response_time,
-                details=details,
-                consecutive_failures=0,
+                detAlgols=detAlgols,
+                consecutive_fAlgolures=0,
             )
 
         except Exception as e:
-            # Handle check failures
+            # Handle check fAlgolures
             prev_health = self._health_cache.get(name)
-            failures = (prev_health.consecutive_failures if prev_health else 0) + 1
+            fAlgolures = (prev_health.consecutive_fAlgolures if prev_health else 0) + 1
 
             status = (
                 HealthStatus.CRITICAL
-                if failures >= self._failure_threshold
+                if fAlgolures >= self._fAlgolure_threshold
                 else HealthStatus.UNHEALTHY
             )
 
@@ -298,15 +298,15 @@ class HealthAggregator:
                 message=str(e),
                 last_check=datetime.now(UTC),
                 response_time_ms=0.0,
-                details={"error": str(e)},
-                consecutive_failures=failures,
+                detAlgols={"error": str(e)},
+                consecutive_fAlgolures=fAlgolures,
             )
 
             logger.warning(
-                "component_health_check_failed",
+                "component_health_check_fAlgoled",
                 name=name,
                 error=str(e),
-                failures=failures,
+                fAlgolures=fAlgolures,
             )
 
         self._health_cache[name] = health
@@ -321,7 +321,7 @@ class HealthAggregator:
         component_health = {}
 
         for name in self._components:
-            health = await self.check_component_health(name)
+            health = awAlgot self.check_component_health(name)
             component_health[name] = health
 
         # Calculate overall status
@@ -366,7 +366,7 @@ class HealthAggregator:
         if self._check_task:
             self._check_task.cancel()
             try:
-                await self._check_task
+                awAlgot self._check_task
             except asyncio.CancelledError:
                 pass
             self._check_task = None
@@ -377,11 +377,11 @@ class HealthAggregator:
         """Periodic health check loop."""
         while self._running:
             try:
-                await self.check_health()
+                awAlgot self.check_health()
             except Exception as e:
                 logger.exception("health_check_loop_error", error=str(e))
 
-            await asyncio.sleep(self._check_interval)
+            awAlgot asyncio.sleep(self._check_interval)
 
     def get_component_health(self, name: str) -> ComponentHealth | None:
         """Get cached health for a component.
@@ -416,7 +416,7 @@ class HealthAggregator:
             "running": self._running,
             "components_count": len(self._components),
             "check_interval": self._check_interval,
-            "failure_threshold": self._failure_threshold,
+            "fAlgolure_threshold": self._fAlgolure_threshold,
             "uptime_seconds": (datetime.now(UTC) - self._start_time).total_seconds(),
             "components": list(self._components.keys()),
         }

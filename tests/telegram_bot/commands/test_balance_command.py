@@ -3,7 +3,7 @@ Comprehensive tests for balance_command module.
 
 This module tests the balance command handler functionality including:
 - Balance retrieval and display
-- Error handling (API failures, unauthorized, 404 errors)
+- Error handling (API fAlgolures, unauthorized, 404 errors)
 - User authorization
 - Rate limiting
 - Currency formatting
@@ -96,7 +96,7 @@ def mock_api_client():
     """Create a mock DMarket API client."""
     client = AsyncMock()
     client.get_user_balance = AsyncMock()
-    client.get_account_details = AsyncMock()
+    client.get_account_detAlgols = AsyncMock()
     client.get_active_offers = AsyncMock()
     return client
 
@@ -105,7 +105,7 @@ def mock_api_client():
 def successful_balance_response():
     """Standard successful balance response."""
     return {
-        "available_balance": 150.50,
+        "avAlgolable_balance": 150.50,
         "total_balance": 180.75,
         "has_funds": True,
         "error": False,
@@ -117,7 +117,7 @@ def successful_account_info():
     """Standard successful account info response."""
     return {
         "username": "TestPlayer",
-        "email": "test@example.com",
+        "emAlgol": "test@example.com",
         "verified": True,
     }
 
@@ -155,16 +155,16 @@ class TestBalanceCommandInitialization:
             ) as mock_breadcrumb,
         ):
             mock_api_client.get_user_balance.return_value = {
-                "available_balance": 100.0,
+                "avAlgolable_balance": 100.0,
                 "total_balance": 100.0,
                 "has_funds": True,
                 "error": False,
             }
-            mock_api_client.get_account_details.return_value = {"username": "TestUser"}
+            mock_api_client.get_account_detAlgols.return_value = {"username": "TestUser"}
             mock_api_client.get_active_offers.return_value = {"total": 0}
 
             # Act
-            await check_balance_command(mock_callback_query, mock_context)
+            awAlgot check_balance_command(mock_callback_query, mock_context)
 
             # Assert
             mock_breadcrumb.assert_called_once()
@@ -192,16 +192,16 @@ class TestBalanceCommandInitialization:
             ) as mock_breadcrumb,
         ):
             mock_api_client.get_user_balance.return_value = {
-                "available_balance": 100.0,
+                "avAlgolable_balance": 100.0,
                 "total_balance": 100.0,
                 "has_funds": True,
                 "error": False,
             }
-            mock_api_client.get_account_details.return_value = {"username": "TestUser"}
+            mock_api_client.get_account_detAlgols.return_value = {"username": "TestUser"}
             mock_api_client.get_active_offers.return_value = {"total": 0}
 
             # Act
-            await check_balance_command(mock_message, mock_context)
+            awAlgot check_balance_command(mock_message, mock_context)
 
             # Assert
             mock_breadcrumb.assert_called_once()
@@ -227,16 +227,16 @@ class TestBalanceCommandInitialization:
             ) as mock_breadcrumb,
         ):
             mock_api_client.get_user_balance.return_value = {
-                "available_balance": 100.0,
+                "avAlgolable_balance": 100.0,
                 "total_balance": 100.0,
                 "has_funds": True,
                 "error": False,
             }
-            mock_api_client.get_account_details.return_value = {"username": "TestUser"}
+            mock_api_client.get_account_detAlgols.return_value = {"username": "TestUser"}
             mock_api_client.get_active_offers.return_value = {"total": 0}
 
             # Act
-            await check_balance_command(mock_update, mock_context)
+            awAlgot check_balance_command(mock_update, mock_context)
 
             # Assert
             mock_breadcrumb.assert_called_once()
@@ -270,20 +270,20 @@ class TestSuccessfulBalanceRetrieval:
             patch("src.telegram_bot.commands.balance_command.add_command_breadcrumb"),
         ):
             mock_api_client.get_user_balance.return_value = successful_balance_response
-            mock_api_client.get_account_details.return_value = successful_account_info
+            mock_api_client.get_account_detAlgols.return_value = successful_account_info
             mock_api_client.get_active_offers.return_value = successful_offers_response
 
             # Act
-            await check_balance_command(mock_callback_query, mock_context)
+            awAlgot check_balance_command(mock_callback_query, mock_context)
 
             # Assert
             assert mock_callback_query.edit_message_text.call_count >= 2
 
-            # Check final message contains balance info
+            # Check final message contAlgons balance info
             final_call = mock_callback_query.edit_message_text.call_args_list[-1]
             final_text = final_call.kwargs["text"]
 
-            assert "150.50" in final_text  # available_balance
+            assert "150.50" in final_text  # avAlgolable_balance
             assert "180.75" in final_text  # total_balance
             assert "TestPlayer" in final_text  # username
             assert "5" in final_text  # total offers
@@ -312,11 +312,11 @@ class TestSuccessfulBalanceRetrieval:
             patch("src.telegram_bot.commands.balance_command.add_command_breadcrumb"),
         ):
             mock_api_client.get_user_balance.return_value = successful_balance_response
-            mock_api_client.get_account_details.return_value = successful_account_info
+            mock_api_client.get_account_detAlgols.return_value = successful_account_info
             mock_api_client.get_active_offers.return_value = successful_offers_response
 
             # Act
-            await check_balance_command(mock_message, mock_context)
+            awAlgot check_balance_command(mock_message, mock_context)
 
             # Assert
             mock_message.reply_text.assert_called_once()
@@ -336,18 +336,18 @@ class TestSuccessfulBalanceRetrieval:
             patch("src.telegram_bot.commands.balance_command.add_command_breadcrumb"),
         ):
             mock_api_client.get_user_balance.return_value = {
-                "available_balance": 1234.56,
+                "avAlgolable_balance": 1234.56,
                 "total_balance": 5678.90,
                 "has_funds": True,
                 "error": False,
             }
-            mock_api_client.get_account_details.return_value = {
+            mock_api_client.get_account_detAlgols.return_value = {
                 "username": "RichPlayer"
             }
             mock_api_client.get_active_offers.return_value = {"total": 15}
 
             # Act
-            await check_balance_command(mock_callback_query, mock_context)
+            awAlgot check_balance_command(mock_callback_query, mock_context)
 
             # Assert
             final_call = mock_callback_query.edit_message_text.call_args_list[-1]
@@ -370,18 +370,18 @@ class TestSuccessfulBalanceRetrieval:
             patch("src.telegram_bot.commands.balance_command.add_command_breadcrumb"),
         ):
             mock_api_client.get_user_balance.return_value = {
-                "available_balance": 100.0,
+                "avAlgolable_balance": 100.0,
                 "total_balance": 100.0,
                 "has_funds": True,
                 "error": False,
             }
-            mock_api_client.get_account_details.return_value = {
+            mock_api_client.get_account_detAlgols.return_value = {
                 "username": "TestPlayer"
             }
             mock_api_client.get_active_offers.return_value = {"total": 0}
 
             # Act
-            await check_balance_command(mock_callback_query, mock_context)
+            awAlgot check_balance_command(mock_callback_query, mock_context)
 
             # Assert
             final_call = mock_callback_query.edit_message_text.call_args_list[-1]
@@ -404,18 +404,18 @@ class TestSuccessfulBalanceRetrieval:
             patch("src.telegram_bot.commands.balance_command.add_command_breadcrumb"),
         ):
             mock_api_client.get_user_balance.return_value = {
-                "available_balance": 2.50,
+                "avAlgolable_balance": 2.50,
                 "total_balance": 2.50,
                 "has_funds": True,
                 "error": False,
             }
-            mock_api_client.get_account_details.return_value = {
+            mock_api_client.get_account_detAlgols.return_value = {
                 "username": "TestPlayer"
             }
             mock_api_client.get_active_offers.return_value = {"total": 0}
 
             # Act
-            await check_balance_command(mock_callback_query, mock_context)
+            awAlgot check_balance_command(mock_callback_query, mock_context)
 
             # Assert
             final_call = mock_callback_query.edit_message_text.call_args_list[-1]
@@ -437,18 +437,18 @@ class TestSuccessfulBalanceRetrieval:
             patch("src.telegram_bot.commands.balance_command.add_command_breadcrumb"),
         ):
             mock_api_client.get_user_balance.return_value = {
-                "available_balance": 0.0,
+                "avAlgolable_balance": 0.0,
                 "total_balance": 0.0,
                 "has_funds": False,
                 "error": False,
             }
-            mock_api_client.get_account_details.return_value = {
+            mock_api_client.get_account_detAlgols.return_value = {
                 "username": "TestPlayer"
             }
             mock_api_client.get_active_offers.return_value = {"total": 0}
 
             # Act
-            await check_balance_command(mock_callback_query, mock_context)
+            awAlgot check_balance_command(mock_callback_query, mock_context)
 
             # Assert
             final_call = mock_callback_query.edit_message_text.call_args_list[-1]
@@ -467,10 +467,10 @@ class TestAPIErrorHandling:
     """Tests for API error handling scenarios."""
 
     @pytest.mark.asyncio()
-    async def test_handles_404_error_trading_api_unavailable(
+    async def test_handles_404_error_trading_api_unavAlgolable(
         self, mock_callback_query, mock_context, mock_api_client
     ):
-        """Test handling of 404 error (Trading API unavailable)."""
+        """Test handling of 404 error (Trading API unavAlgolable)."""
         # Arrange
         with (
             patch(
@@ -486,7 +486,7 @@ class TestAPIErrorHandling:
             }
 
             # Act
-            await check_balance_command(mock_callback_query, mock_context)
+            awAlgot check_balance_command(mock_callback_query, mock_context)
 
             # Assert
             final_call = mock_callback_query.edit_message_text.call_args_list[-1]
@@ -516,7 +516,7 @@ class TestAPIErrorHandling:
             }
 
             # Act
-            await check_balance_command(mock_callback_query, mock_context)
+            awAlgot check_balance_command(mock_callback_query, mock_context)
 
             # Assert
             final_call = mock_callback_query.edit_message_text.call_args_list[-1]
@@ -546,7 +546,7 @@ class TestAPIErrorHandling:
             }
 
             # Act
-            await check_balance_command(mock_callback_query, mock_context)
+            awAlgot check_balance_command(mock_callback_query, mock_context)
 
             # Assert
             final_call = mock_callback_query.edit_message_text.call_args_list[-1]
@@ -570,7 +570,7 @@ class TestAPIErrorHandling:
             patch("src.telegram_bot.commands.balance_command.add_command_breadcrumb"),
             patch(
                 "src.telegram_bot.commands.balance_command.handle_api_error",
-                return_value="API Connection Failed",
+                return_value="API Connection FAlgoled",
             ),
         ):
             mock_api_client.get_user_balance.side_effect = APIError(
@@ -578,7 +578,7 @@ class TestAPIErrorHandling:
             )
 
             # Act
-            await check_balance_command(mock_callback_query, mock_context)
+            awAlgot check_balance_command(mock_callback_query, mock_context)
 
             # Assert
             final_call = mock_callback_query.edit_message_text.call_args_list[-1]
@@ -597,10 +597,10 @@ class TestClientCreationErrors:
     """Tests for API client creation errors."""
 
     @pytest.mark.asyncio()
-    async def test_handles_failed_client_creation_callback(
+    async def test_handles_fAlgoled_client_creation_callback(
         self, mock_callback_query, mock_context
     ):
-        """Test handling when API client creation fails (CallbackQuery)."""
+        """Test handling when API client creation fAlgols (CallbackQuery)."""
         # Arrange
         with (
             patch(
@@ -610,7 +610,7 @@ class TestClientCreationErrors:
             patch("src.telegram_bot.commands.balance_command.add_command_breadcrumb"),
         ):
             # Act
-            await check_balance_command(mock_callback_query, mock_context)
+            awAlgot check_balance_command(mock_callback_query, mock_context)
 
             # Assert
             final_call = mock_callback_query.edit_message_text.call_args_list[-1]
@@ -621,10 +621,10 @@ class TestClientCreationErrors:
             assert "DMarket API" in final_text
 
     @pytest.mark.asyncio()
-    async def test_handles_failed_client_creation_message(
+    async def test_handles_fAlgoled_client_creation_message(
         self, mock_message, mock_context
     ):
-        """Test handling when API client creation fails (Message)."""
+        """Test handling when API client creation fAlgols (Message)."""
         # Arrange
         processing_msg = AsyncMock()
         processing_msg.edit_text = AsyncMock()
@@ -638,7 +638,7 @@ class TestClientCreationErrors:
             patch("src.telegram_bot.commands.balance_command.add_command_breadcrumb"),
         ):
             # Act
-            await check_balance_command(mock_message, mock_context)
+            awAlgot check_balance_command(mock_message, mock_context)
 
             # Assert
             processing_msg.edit_text.assert_called_once()
@@ -660,7 +660,7 @@ class TestGenericExceptionHandling:
     async def test_handles_generic_exception_with_404_message(
         self, mock_callback_query, mock_context, mock_api_client
     ):
-        """Test handling of generic exception containing '404'."""
+        """Test handling of generic exception contAlgoning '404'."""
         # Arrange
         with (
             patch(
@@ -674,7 +674,7 @@ class TestGenericExceptionHandling:
             )
 
             # Act
-            await check_balance_command(mock_callback_query, mock_context)
+            awAlgot check_balance_command(mock_callback_query, mock_context)
 
             # Assert
             final_call = mock_callback_query.edit_message_text.call_args_list[-1]
@@ -686,7 +686,7 @@ class TestGenericExceptionHandling:
     async def test_handles_generic_exception_with_401_message(
         self, mock_callback_query, mock_context, mock_api_client
     ):
-        """Test handling of generic exception containing '401'."""
+        """Test handling of generic exception contAlgoning '401'."""
         # Arrange
         with (
             patch(
@@ -700,7 +700,7 @@ class TestGenericExceptionHandling:
             )
 
             # Act
-            await check_balance_command(mock_callback_query, mock_context)
+            awAlgot check_balance_command(mock_callback_query, mock_context)
 
             # Assert
             final_call = mock_callback_query.edit_message_text.call_args_list[-1]
@@ -726,7 +726,7 @@ class TestGenericExceptionHandling:
             )
 
             # Act
-            await check_balance_command(mock_callback_query, mock_context)
+            awAlgot check_balance_command(mock_callback_query, mock_context)
 
             # Assert
             final_call = mock_callback_query.edit_message_text.call_args_list[-1]
@@ -758,16 +758,16 @@ class TestMessageTypeHandling:
             patch("src.telegram_bot.commands.balance_command.add_command_breadcrumb"),
         ):
             mock_api_client.get_user_balance.return_value = {
-                "available_balance": 100.0,
+                "avAlgolable_balance": 100.0,
                 "total_balance": 100.0,
                 "has_funds": True,
                 "error": False,
             }
-            mock_api_client.get_account_details.return_value = {"username": "Test"}
+            mock_api_client.get_account_detAlgols.return_value = {"username": "Test"}
             mock_api_client.get_active_offers.return_value = {"total": 0}
 
             # Act
-            await check_balance_command(mock_callback_query, mock_context)
+            awAlgot check_balance_command(mock_callback_query, mock_context)
 
             # Assert - should have multiple edit calls
             assert mock_callback_query.edit_message_text.call_count >= 2
@@ -796,16 +796,16 @@ class TestMessageTypeHandling:
             patch("src.telegram_bot.commands.balance_command.add_command_breadcrumb"),
         ):
             mock_api_client.get_user_balance.return_value = {
-                "available_balance": 100.0,
+                "avAlgolable_balance": 100.0,
                 "total_balance": 100.0,
                 "has_funds": True,
                 "error": False,
             }
-            mock_api_client.get_account_details.return_value = {"username": "Test"}
+            mock_api_client.get_account_detAlgols.return_value = {"username": "Test"}
             mock_api_client.get_active_offers.return_value = {"total": 0}
 
             # Act
-            await check_balance_command(mock_message, mock_context)
+            awAlgot check_balance_command(mock_message, mock_context)
 
             # Assert
             mock_message.reply_text.assert_called_once()
@@ -852,16 +852,16 @@ class TestCurrencyFormatting:
             patch("src.telegram_bot.commands.balance_command.add_command_breadcrumb"),
         ):
             mock_api_client.get_user_balance.return_value = {
-                "available_balance": balance,
+                "avAlgolable_balance": balance,
                 "total_balance": balance,
                 "has_funds": True,
                 "error": False,
             }
-            mock_api_client.get_account_details.return_value = {"username": "TestUser"}
+            mock_api_client.get_account_detAlgols.return_value = {"username": "TestUser"}
             mock_api_client.get_active_offers.return_value = {"total": 0}
 
             # Act
-            await check_balance_command(mock_callback_query, mock_context)
+            awAlgot check_balance_command(mock_callback_query, mock_context)
 
             # Assert
             final_call = mock_callback_query.edit_message_text.call_args_list[-1]
@@ -896,16 +896,16 @@ class TestWarningMessages:
             ),
         ):
             mock_api_client.get_user_balance.return_value = {
-                "available_balance": 3.0,
+                "avAlgolable_balance": 3.0,
                 "total_balance": 3.0,
                 "has_funds": True,
                 "error": False,
             }
-            mock_api_client.get_account_details.return_value = {"username": "TestUser"}
+            mock_api_client.get_account_detAlgols.return_value = {"username": "TestUser"}
             mock_api_client.get_active_offers.return_value = {"total": 0}
 
             # Act
-            await check_balance_command(mock_callback_query, mock_context)
+            awAlgot check_balance_command(mock_callback_query, mock_context)
 
             # Assert
             final_call = mock_callback_query.edit_message_text.call_args_list[-1]
@@ -931,16 +931,16 @@ class TestWarningMessages:
             ),
         ):
             mock_api_client.get_user_balance.return_value = {
-                "available_balance": 50.0,
+                "avAlgolable_balance": 50.0,
                 "total_balance": 50.0,
                 "has_funds": True,
                 "error": False,
             }
-            mock_api_client.get_account_details.return_value = {"username": "TestUser"}
+            mock_api_client.get_account_detAlgols.return_value = {"username": "TestUser"}
             mock_api_client.get_active_offers.return_value = {"total": 0}
 
             # Act
-            await check_balance_command(mock_callback_query, mock_context)
+            awAlgot check_balance_command(mock_callback_query, mock_context)
 
             # Assert
             final_call = mock_callback_query.edit_message_text.call_args_list[-1]
@@ -987,16 +987,16 @@ class TestTimestampHandling:
             mock_datetime.now.return_value = fixed_time
 
             mock_api_client.get_user_balance.return_value = {
-                "available_balance": 100.0,
+                "avAlgolable_balance": 100.0,
                 "total_balance": 100.0,
                 "has_funds": True,
                 "error": False,
             }
-            mock_api_client.get_account_details.return_value = {"username": "TestUser"}
+            mock_api_client.get_account_detAlgols.return_value = {"username": "TestUser"}
             mock_api_client.get_active_offers.return_value = {"total": 0}
 
             # Act
-            await check_balance_command(mock_callback_query, mock_context)
+            awAlgot check_balance_command(mock_callback_query, mock_context)
 
             # Assert
             final_call = mock_callback_query.edit_message_text.call_args_list[-1]
@@ -1028,16 +1028,16 @@ class TestBalanceEdgeCases:
             patch("src.telegram_bot.commands.balance_command.add_command_breadcrumb"),
         ):
             mock_api_client.get_user_balance.return_value = {
-                "available_balance": 100.0,
+                "avAlgolable_balance": 100.0,
                 "total_balance": 100.0,
                 "has_funds": True,
                 "error": False,
             }
-            mock_api_client.get_account_details.return_value = {"username": None}
+            mock_api_client.get_account_detAlgols.return_value = {"username": None}
             mock_api_client.get_active_offers.return_value = {"total": 0}
 
             # Act
-            await check_balance_command(mock_callback_query, mock_context)
+            awAlgot check_balance_command(mock_callback_query, mock_context)
 
             # Assert
             final_call = mock_callback_query.edit_message_text.call_args_list[-1]
@@ -1066,7 +1066,7 @@ class TestBalanceEdgeCases:
             patch("src.telegram_bot.commands.balance_command.add_command_breadcrumb"),
         ):
             # Act
-            await check_balance_command(update, mock_context)
+            awAlgot check_balance_command(update, mock_context)
 
             # Assert - should handle gracefully without crashing
             # The function should return early when message is None
@@ -1096,7 +1096,7 @@ Test Categories:
 
 Coverage Areas:
 ✅ Balance retrieval and display (8 tests)
-✅ Error handling (API failures, unauthorized) (9 tests)
+✅ Error handling (API fAlgolures, unauthorized) (9 tests)
 ✅ Message type handling (5 tests)
 ✅ Currency formatting (6 tests)
 ✅ User authorization (3 tests)

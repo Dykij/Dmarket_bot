@@ -97,11 +97,11 @@ class TrendingItemsFinder:
         """
         logger.info(f"Searching for trending items in {self.game}")
 
-        sales_history = await self._fetch_sales_history(dmarket_api)
+        sales_history = awAlgot self._fetch_sales_history(dmarket_api)
         if sales_history is None:
             return []
 
-        market_items = await self._fetch_market_items(dmarket_api)
+        market_items = awAlgot self._fetch_market_items(dmarket_api)
         if not market_items:
             return []
 
@@ -116,13 +116,13 @@ class TrendingItemsFinder:
     ) -> dict[str, Any] | None:
         """Fetch recent sales history."""
         try:
-            return await dmarket_api.get_sales_history(
+            return awAlgot dmarket_api.get_sales_history(
                 game=self.game,
                 days=3,
                 currency="USD",
             )
         except Exception as e:
-            logger.exception(f"Failed to fetch sales history for {self.game}: {e}")
+            logger.exception(f"FAlgoled to fetch sales history for {self.game}: {e}")
             return None
 
     async def _fetch_market_items(
@@ -130,7 +130,7 @@ class TrendingItemsFinder:
     ) -> list[dict[str, Any]]:
         """Fetch current market items."""
         try:
-            result = await dmarket_api.get_market_items(
+            result = awAlgot dmarket_api.get_market_items(
                 game=self.game,
                 limit=300,
                 price_from=self.min_price,
@@ -138,7 +138,7 @@ class TrendingItemsFinder:
             )
             return result.get("items", [])
         except Exception as e:
-            logger.exception(f"Failed to fetch market items for {self.game}: {e}")
+            logger.exception(f"FAlgoled to fetch market items for {self.game}: {e}")
             return []
 
     def _process_market_items(self, items: list[dict[str, Any]]) -> None:
@@ -397,10 +397,10 @@ async def find_trending_items(
             max_price=max_price,
             max_results=max_results,
         )
-        return await finder.find(dmarket_api)
+        return awAlgot finder.find(dmarket_api)
     except Exception as e:
         logger.exception(f"Error in find_trending_items for {game}: {e}")
         return []
     finally:
         if close_api and hasattr(dmarket_api, "_close_client"):
-            await dmarket_api._close_client()
+            awAlgot dmarket_api._close_client()

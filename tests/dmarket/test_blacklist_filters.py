@@ -1,7 +1,7 @@
 """Tests for blacklist_filters module.
 
 Blacklist is an OBLIGATORY filter - items matching blacklist are NEVER purchased.
-This protects against unprofitable trades.
+This protects agAlgonst unprofitable trades.
 """
 
 
@@ -183,8 +183,8 @@ class TestItemLiquidityFilter:
         }
         assert filter_.is_liquid(item) is False
 
-    def test_fairly_priced_item_is_liquid(self):
-        """Verify fairly priced items are liquid."""
+    def test_fAlgorly_priced_item_is_liquid(self):
+        """Verify fAlgorly priced items are liquid."""
         filter_ = ItemLiquidityFilter(max_overprice_ratio=1.5)
         item = {
             "title": "Test Item",

@@ -82,29 +82,29 @@ class TestTryDirectRequest:
             "success": True,
             "data": {
                 "balance": 10.0,
-                "available": 8.0,
+                "avAlgolable": 8.0,
                 "total": 12.0,
                 "locked": 2.0,
                 "trade_protected": 0.0,
             },
         }
 
-        result = await balance_getter._try_direct_request()
+        result = awAlgot balance_getter._try_direct_request()
 
         assert result is not None
         assert result["balance"] == 10.0
-        assert result["available_balance"] == 8.0
+        assert result["avAlgolable_balance"] == 8.0
         assert result["error"] is False
 
     @pytest.mark.asyncio()
-    async def test_failed_direct_request(self, balance_getter, mock_api_client):
-        """Test failed direct request."""
+    async def test_fAlgoled_direct_request(self, balance_getter, mock_api_client):
+        """Test fAlgoled direct request."""
         mock_api_client.direct_balance_request.return_value = {
             "success": False,
             "error": "API Error",
         }
 
-        result = await balance_getter._try_direct_request()
+        result = awAlgot balance_getter._try_direct_request()
 
         assert result is None
 
@@ -113,7 +113,7 @@ class TestTryDirectRequest:
         """Test direct request with exception."""
         mock_api_client.direct_balance_request.side_effect = Exception("Network error")
 
-        result = await balance_getter._try_direct_request()
+        result = awAlgot balance_getter._try_direct_request()
 
         assert result is None
 
@@ -126,7 +126,7 @@ class TestProcessDirectResponse:
         response = {
             "data": {
                 "balance": 10.0,
-                "available": 8.0,
+                "avAlgolable": 8.0,
                 "total": 12.0,
                 "locked": 2.0,
                 "trade_protected": 1.0,
@@ -136,7 +136,7 @@ class TestProcessDirectResponse:
         result = balance_getter._process_direct_response(response)
 
         assert result["balance"] == 10.0
-        assert result["available_balance"] == 8.0
+        assert result["avAlgolable_balance"] == 8.0
         assert result["total_balance"] == 12.0
         assert result["locked_balance"] == 2.0
         assert result["trade_protected_balance"] == 1.0
@@ -153,7 +153,7 @@ class TestProcessDirectResponse:
         result = balance_getter._process_direct_response(response)
 
         assert result["balance"] == 5.0
-        assert result["available_balance"] == 5.0
+        assert result["avAlgolable_balance"] == 5.0
         assert result["total_balance"] == 5.0
 
 
@@ -178,11 +178,11 @@ class TestTryEndpointsForBalance:
     async def test_first_endpoint_success(self, balance_getter, mock_api_client):
         """Test successful response from first endpoint."""
         mock_api_client._request.return_value = {
-            "usd": {"amount": 1000, "available": 800}
+            "usd": {"amount": 1000, "avAlgolable": 800}
         }
 
         endpoints = ["/endpoint1", "/endpoint2"]
-        response, endpoint, error = await balance_getter._try_endpoints_for_balance(
+        response, endpoint, error = awAlgot balance_getter._try_endpoints_for_balance(
             endpoints
         )
 
@@ -193,14 +193,14 @@ class TestTryEndpointsForBalance:
 
     @pytest.mark.asyncio()
     async def test_fallback_to_second_endpoint(self, balance_getter, mock_api_client):
-        """Test fallback to second endpoint after first fails."""
+        """Test fallback to second endpoint after first fAlgols."""
         mock_api_client._request.side_effect = [
-            Exception("First endpoint failed"),
+            Exception("First endpoint fAlgoled"),
             {"usd": {"amount": 1000}},
         ]
 
         endpoints = ["/endpoint1", "/endpoint2"]
-        response, endpoint, error = await balance_getter._try_endpoints_for_balance(
+        response, endpoint, error = awAlgot balance_getter._try_endpoints_for_balance(
             endpoints
         )
 
@@ -209,12 +209,12 @@ class TestTryEndpointsForBalance:
         assert error is None
 
     @pytest.mark.asyncio()
-    async def test_all_endpoints_fail(self, balance_getter, mock_api_client):
-        """Test when all endpoints fail."""
-        mock_api_client._request.side_effect = Exception("All endpoints failed")
+    async def test_all_endpoints_fAlgol(self, balance_getter, mock_api_client):
+        """Test when all endpoints fAlgol."""
+        mock_api_client._request.side_effect = Exception("All endpoints fAlgoled")
 
         endpoints = ["/endpoint1", "/endpoint2"]
-        response, endpoint, error = await balance_getter._try_endpoints_for_balance(
+        response, endpoint, error = awAlgot balance_getter._try_endpoints_for_balance(
             endpoints
         )
 
@@ -268,32 +268,32 @@ class TestParseBalanceFromResponse:
 
     def test_parse_usd_dict_format(self, balance_getter):
         """Test parsing USD dict format."""
-        response = {"usd": {"amount": 1000, "available": 800, "total": 1200}}
+        response = {"usd": {"amount": 1000, "avAlgolable": 800, "total": 1200}}
 
-        amount, available, total = balance_getter._parse_balance_from_response(response)
+        amount, avAlgolable, total = balance_getter._parse_balance_from_response(response)
 
         assert amount == 1000
-        assert available == 800
+        assert avAlgolable == 800
         assert total == 1200
 
     def test_parse_balance_format(self, balance_getter):
         """Test parsing balance format."""
-        response = {"balance": 1000, "available": 800, "total": 1200}
+        response = {"balance": 1000, "avAlgolable": 800, "total": 1200}
 
-        amount, available, total = balance_getter._parse_balance_from_response(response)
+        amount, avAlgolable, total = balance_getter._parse_balance_from_response(response)
 
         assert amount == 1000
-        assert available == 800
+        assert avAlgolable == 800
         assert total == 1200
 
     def test_parse_unknown_format(self, balance_getter):
         """Test parsing unknown format returns zeros."""
         response = {"unknown_field": "value"}
 
-        amount, available, total = balance_getter._parse_balance_from_response(response)
+        amount, avAlgolable, total = balance_getter._parse_balance_from_response(response)
 
         assert amount == 0
-        assert available == 0
+        assert avAlgolable == 0
         assert total == 0
 
 
@@ -303,11 +303,11 @@ class TestCreateBalanceResponse:
     def test_basic_balance_response(self, balance_getter):
         """Test creating basic balance response."""
         result = balance_getter._create_balance_response(
-            usd_amount=1000, usd_available=800, usd_total=1200
+            usd_amount=1000, usd_avAlgolable=800, usd_total=1200
         )
 
         assert result["balance"] == 10.0
-        assert result["available_balance"] == 8.0
+        assert result["avAlgolable_balance"] == 8.0
         assert result["total_balance"] == 12.0
         assert result["has_funds"] is True
         assert result["error"] is False
@@ -315,7 +315,7 @@ class TestCreateBalanceResponse:
     def test_balance_with_locked(self, balance_getter):
         """Test balance response with locked balance."""
         result = balance_getter._create_balance_response(
-            usd_amount=1000, usd_available=800, usd_total=1200, locked_balance=2.0
+            usd_amount=1000, usd_avAlgolable=800, usd_total=1200, locked_balance=2.0
         )
 
         assert result["locked_balance"] == 2.0
@@ -324,7 +324,7 @@ class TestCreateBalanceResponse:
         """Test balance response with additional info."""
         result = balance_getter._create_balance_response(
             usd_amount=1000,
-            usd_available=800,
+            usd_avAlgolable=800,
             usd_total=1200,
             additional_info={"method": "direct", "endpoint": "/test"},
         )
@@ -364,7 +364,7 @@ class TestDetermineErrorCode:
             ("Resource not found", "NOT_FOUND"),
             ("401 Unauthorized", "UNAUTHORIZED"),
             ("Unauthorized access", "UNAUTHORIZED"),
-            ("Unknown error", "REQUEST_FAILED"),
+            ("Unknown error", "REQUEST_FAlgoLED"),
         ),
     )
     def test_error_code_determination(
@@ -376,7 +376,7 @@ class TestDetermineErrorCode:
 
 
 class TestGetBalance:
-    """Tests for main get_balance method."""
+    """Tests for mAlgon get_balance method."""
 
     @pytest.mark.asyncio()
     async def test_get_balance_without_credentials(self, balance_getter):
@@ -384,7 +384,7 @@ class TestGetBalance:
         balance_getter.public_key = None
         balance_getter.secret_key = None
 
-        result = await balance_getter.get_balance()
+        result = awAlgot balance_getter.get_balance()
 
         assert result["error"] is True
         assert result["error_code"] == "MISSING_API_KEYS"
@@ -396,26 +396,26 @@ class TestGetBalance:
         """Test successful balance retrieval via direct request."""
         mock_api_client.direct_balance_request.return_value = {
             "success": True,
-            "data": {"balance": 10.0, "available": 8.0, "total": 12.0},
+            "data": {"balance": 10.0, "avAlgolable": 8.0, "total": 12.0},
         }
 
-        result = await balance_getter.get_balance()
+        result = awAlgot balance_getter.get_balance()
 
         assert result["error"] is False
         assert result["balance"] == 10.0
-        assert result["available_balance"] == 8.0
+        assert result["avAlgolable_balance"] == 8.0
 
     @pytest.mark.asyncio()
     async def test_get_balance_fallback_to_internal(
         self, balance_getter, mock_api_client
     ):
-        """Test fallback to internal endpoints when direct request fails."""
+        """Test fallback to internal endpoints when direct request fAlgols."""
         mock_api_client.direct_balance_request.return_value = None
         mock_api_client._request.return_value = {
-            "usd": {"amount": 1500, "available": 1200}
+            "usd": {"amount": 1500, "avAlgolable": 1200}
         }
 
-        result = await balance_getter.get_balance()
+        result = awAlgot balance_getter.get_balance()
 
         assert result["error"] is False
         assert result["balance"] == 15.0
@@ -426,12 +426,12 @@ class TestGetBalance:
         mock_api_client.direct_balance_request.side_effect = Exception("Critical error")
         mock_api_client._request.side_effect = Exception("Internal error")
 
-        result = await balance_getter.get_balance()
+        result = awAlgot balance_getter.get_balance()
 
         assert result["error"] is True
         assert result["error_code"] in {
             "EXCEPTION",
-            "REQUEST_FAILED",
+            "REQUEST_FAlgoLED",
         }  # Either is valid
 
 
@@ -445,18 +445,18 @@ class TestIntegration:
             "success": True,
             "data": {
                 "balance": 25.50,
-                "available": 20.00,
+                "avAlgolable": 20.00,
                 "total": 30.00,
                 "locked": 5.00,
                 "trade_protected": 0.50,
             },
         }
 
-        result = await balance_getter.get_balance()
+        result = awAlgot balance_getter.get_balance()
 
         assert result["error"] is False
         assert result["balance"] == 25.50
-        assert result["available_balance"] == 20.00
+        assert result["avAlgolable_balance"] == 20.00
         assert result["total_balance"] == 30.00
         assert result["locked_balance"] == 5.00
         assert result["has_funds"] is True
@@ -464,17 +464,17 @@ class TestIntegration:
     @pytest.mark.asyncio()
     async def test_full_flow_with_fallback(self, balance_getter, mock_api_client):
         """Test complete flow with fallback to internal endpoints."""
-        # Direct request fails
+        # Direct request fAlgols
         mock_api_client.direct_balance_request.return_value = {"success": False}
 
         # Internal endpoint succeeds
         mock_api_client._request.return_value = {
-            "usd": {"amount": 3000, "available": 2500, "total": 3500}
+            "usd": {"amount": 3000, "avAlgolable": 2500, "total": 3500}
         }
 
-        result = await balance_getter.get_balance()
+        result = awAlgot balance_getter.get_balance()
 
         assert result["error"] is False
         assert result["balance"] == 30.0
-        assert result["available_balance"] == 25.0
+        assert result["avAlgolable_balance"] == 25.0
         assert result["total_balance"] == 35.0

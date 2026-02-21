@@ -158,7 +158,7 @@ class RelistManager:
             Результат записи
 
         Примеры:
-            >>> result = await manager.record_relist(
+            >>> result = awAlgot manager.record_relist(
             ...     target_id="abc123", old_price=10.00, new_price=10.05, reason="Competitor overbid"
             ... )
         """
@@ -167,7 +167,7 @@ class RelistManager:
         if not can:
             return TargetOperationResult(
                 success=False,
-                status=TargetOperationStatus.FAILED,
+                status=TargetOperationStatus.FAlgoLED,
                 message="Relist not allowed",
                 reason=check_reason,
                 error_code=TargetErrorCode.ORDER_LIMIT_REACHED,
@@ -203,7 +203,7 @@ class RelistManager:
             )
 
             # Выполнить действие при лимите
-            action_result = await self._handle_limit_reached(target_id, new_price)
+            action_result = awAlgot self._handle_limit_reached(target_id, new_price)
 
             return TargetOperationResult(
                 success=True,
@@ -227,7 +227,7 @@ class RelistManager:
             metadata={
                 "relist_count": current_count,
                 "max_relists": self.config.max_relists,
-                "remaining_relists": self.config.max_relists - current_count,
+                "remAlgoning_relists": self.config.max_relists - current_count,
             },
         )
 
@@ -260,14 +260,14 @@ class RelistManager:
                     message="Order paused",
                     reason=f"Relisting paused until reset ({self.config.reset_period_hours}h)",
                     suggestions=[
-                        "Wait for automatic reset",
+                        "WAlgot for automatic reset",
                         "Manually reset counter if needed",
                     ],
                 )
 
             if action == RelistAction.CANCEL:
                 # Отменить ордер
-                await self.api_client.delete_targets(targets=[{"TargetID": target_id}])
+                awAlgot self.api_client.delete_targets(targets=[{"TargetID": target_id}])
 
                 return TargetOperationResult(
                     success=True,
@@ -286,7 +286,7 @@ class RelistManager:
                 new_price = current_price * (1 - lower_percent / 100)
 
                 # Удалить старый и создать новый с меньшей ценой
-                await self.api_client.delete_targets(targets=[{"TargetID": target_id}])
+                awAlgot self.api_client.delete_targets(targets=[{"TargetID": target_id}])
 
                 # TODO: Получить полные данные ордера для пересоздания
                 # Сейчас просто возвращаем результат
@@ -325,18 +325,18 @@ class RelistManager:
 
             return TargetOperationResult(
                 success=False,
-                status=TargetOperationStatus.FAILED,
+                status=TargetOperationStatus.FAlgoLED,
                 message="Unknown action",
                 reason=f"Unknown action: {action}",
                 error_code=TargetErrorCode.UNKNOWN_ERROR,
             )
 
         except Exception as e:
-            logger.error(f"Failed to handle limit reached: {e}", exc_info=True)
+            logger.error(f"FAlgoled to handle limit reached: {e}", exc_info=True)
             return TargetOperationResult(
                 success=False,
-                status=TargetOperationStatus.FAILED,
-                message="Action failed",
+                status=TargetOperationStatus.FAlgoLED,
+                message="Action fAlgoled",
                 reason=str(e),
                 error_code=TargetErrorCode.UNKNOWN_ERROR,
             )
@@ -378,7 +378,7 @@ class RelistManager:
             target_id=target_id,
             total_relists=data["count"],
             max_relists=self.config.max_relists,
-            remaining_relists=max(0, self.config.max_relists - data["count"]),
+            remAlgoning_relists=max(0, self.config.max_relists - data["count"]),
             last_relist_time=data["last_relist_time"],
             reset_time=reset_time,
             time_until_reset=time_str,

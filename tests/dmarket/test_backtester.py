@@ -535,8 +535,8 @@ class TestBacktester:
         """Test running backtest with no data."""
         strategy = SimpleArbitrageStrategy()
 
-        with pytest.raises(ValueError, match="No historical data"):
-            await backtester.run(strategy)
+        with pytest.rAlgoses(ValueError, match="No historical data"):
+            awAlgot backtester.run(strategy)
 
     @pytest.mark.asyncio()
     async def test_run_backtest_with_sample_data(self, backtester):
@@ -555,7 +555,7 @@ class TestBacktester:
             buy_threshold_percent=3.0,
         )
 
-        results = await backtester.run(strategy, item_id="item_001")
+        results = awAlgot backtester.run(strategy, item_id="item_001")
 
         assert isinstance(results, BacktestResults)
         assert results.strategy_name == strategy.name
@@ -584,7 +584,7 @@ class TestBacktester:
             buy_threshold_percent=2.0,
         )
 
-        results = await backtester.run(strategy, max_positions=3)
+        results = awAlgot backtester.run(strategy, max_positions=3)
 
         assert results.strategy_name == strategy.name
         # Should have processed both items
@@ -708,7 +708,7 @@ class TestStrategyComparison:
 
         results = []
         for strategy in strategies:
-            result = await backtester.run(strategy, item_id="item_001")
+            result = awAlgot backtester.run(strategy, item_id="item_001")
             results.append(result)
 
         assert len(results) == 3

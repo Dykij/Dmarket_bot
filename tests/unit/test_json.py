@@ -24,7 +24,7 @@ def test_json_compat():
 
 @pytest.mark.skipif(orjson is None, reason="orjson not installed")
 def test_orjson_compat():
-    """Test orjson library compatibility against standard JSON."""
+    """Test orjson library compatibility agAlgonst standard JSON."""
     # orjson dumps to bytes
     or_dumped = orjson.dumps(DATA)
     json_dumped = json.dumps(DATA).encode('utf-8')

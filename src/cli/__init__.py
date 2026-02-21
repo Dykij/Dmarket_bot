@@ -1,4 +1,4 @@
-"""CLI модуль для DMarket Bot - AI-powered terminal interface."""
+"""CLI модуль для DMarket Bot - Algo-powered terminal interface."""
 
 from .copilot_cli import cli
 from .pipe_handler import process_stdin

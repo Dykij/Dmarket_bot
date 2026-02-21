@@ -1,6 +1,6 @@
 """Unit tests for DMarket API targets operations module.
 
-This module contains tests for src/dmarket/api/targets_api.py covering:
+This module contAlgons tests for src/dmarket/api/targets_api.py covering:
 - Creating targets (buy orders)
 - Getting user targets
 - Deleting targets
@@ -61,7 +61,7 @@ class TestCreateTargets:
         ]
 
         # Act
-        result = await targets_mixin.create_targets(game_id=game_id, targets=targets)
+        result = awAlgot targets_mixin.create_targets(game_id=game_id, targets=targets)
 
         # Assert
         assert result is not None
@@ -93,7 +93,7 @@ class TestCreateTargets:
         ]
 
         # Act
-        await targets_mixin.create_targets(game_id="a8db", targets=targets)
+        awAlgot targets_mixin.create_targets(game_id="a8db", targets=targets)
 
         # Assert
         call_args = mock_request.call_args
@@ -106,7 +106,7 @@ class TestCreateTargets:
         mock_request.return_value = {"success": True, "targets": []}
 
         # Act
-        await targets_mixin.create_targets(game_id="a8db", targets=[])
+        awAlgot targets_mixin.create_targets(game_id="a8db", targets=[])
 
         # Assert
         mock_request.assert_called_once()
@@ -125,7 +125,7 @@ class TestGetUserTargets:
         mock_request.return_value = {"targets": [], "total": 0}
 
         # Act
-        await targets_mixin.get_user_targets(game_id="a8db")
+        awAlgot targets_mixin.get_user_targets(game_id="a8db")
 
         # Assert
         mock_request.assert_called_once()
@@ -142,7 +142,7 @@ class TestGetUserTargets:
         mock_request.return_value = {"targets": [], "total": 0}
 
         # Act
-        await targets_mixin.get_user_targets(
+        awAlgot targets_mixin.get_user_targets(
             game_id="a8db", limit=50, offset=100
         )
 
@@ -158,7 +158,7 @@ class TestGetUserTargets:
         mock_request.return_value = {"targets": [], "total": 0}
 
         # Act
-        await targets_mixin.get_user_targets(
+        awAlgot targets_mixin.get_user_targets(
             game_id="a8db", status="TargetStatusActive"
         )
 
@@ -175,7 +175,7 @@ class TestGetUserTargets:
 
         # Act & Assert
         for game in games:
-            await targets_mixin.get_user_targets(game_id=game)
+            awAlgot targets_mixin.get_user_targets(game_id=game)
             call_args = mock_request.call_args
             assert call_args[1]["params"]["GameID"] == game
 
@@ -194,7 +194,7 @@ class TestDeleteTargets:
         target_ids = ["target_123"]
 
         # Act
-        await targets_mixin.delete_targets(target_ids=target_ids)
+        awAlgot targets_mixin.delete_targets(target_ids=target_ids)
 
         # Assert
         mock_request.assert_called_once()
@@ -211,7 +211,7 @@ class TestDeleteTargets:
         target_ids = ["target_1", "target_2", "target_3"]
 
         # Act
-        await targets_mixin.delete_targets(target_ids=target_ids)
+        awAlgot targets_mixin.delete_targets(target_ids=target_ids)
 
         # Assert
         call_args = mock_request.call_args
@@ -224,7 +224,7 @@ class TestDeleteTargets:
         mock_request.return_value = {"success": True}
 
         # Act
-        await targets_mixin.delete_targets(target_ids=[])
+        awAlgot targets_mixin.delete_targets(target_ids=[])
 
         # Assert
         mock_request.assert_called_once()
@@ -255,7 +255,7 @@ class TestGetTargetsByTitle:
         title = "AK-47 | Redline (Field-Tested)"
 
         # Act
-        result = await targets_mixin.get_targets_by_title(game_id=game_id, title=title)
+        result = awAlgot targets_mixin.get_targets_by_title(game_id=game_id, title=title)
 
         # Assert
         mock_request.assert_called_once()
@@ -270,11 +270,11 @@ class TestGetTargetsByTitle:
         title = "Item Name With Spaces & Special Chars"
 
         # Act
-        await targets_mixin.get_targets_by_title(game_id="csgo", title=title)
+        awAlgot targets_mixin.get_targets_by_title(game_id="csgo", title=title)
 
         # Assert
         call_args = mock_request.call_args
-        # The path should contain encoded title
+        # The path should contAlgon encoded title
         path = call_args[0][1]
         assert "Item%20Name" in path or "%20" in path
 
@@ -285,7 +285,7 @@ class TestGetTargetsByTitle:
         mock_request.return_value = {"orders": []}
 
         # Act
-        result = await targets_mixin.get_targets_by_title(
+        result = awAlgot targets_mixin.get_targets_by_title(
             game_id="csgo", title="NonExistent Item"
         )
 
@@ -311,7 +311,7 @@ class TestGetBuyOrdersCompetition:
         }
 
         # Act
-        result = await targets_mixin.get_buy_orders_competition(
+        result = awAlgot targets_mixin.get_buy_orders_competition(
             game_id="csgo", title="Test Item"
         )
 
@@ -327,7 +327,7 @@ class TestGetBuyOrdersCompetition:
         mock_request.return_value = {"orders": []}
 
         # Act
-        await targets_mixin.get_buy_orders_competition(
+        awAlgot targets_mixin.get_buy_orders_competition(
             game_id="csgo", title="Test Item", price_threshold=10.00
         )
 
@@ -357,7 +357,7 @@ class TestTargetsEdgeCases:
         ]
 
         # Act
-        await targets_mixin.create_targets(game_id="a8db", targets=targets)
+        awAlgot targets_mixin.create_targets(game_id="a8db", targets=targets)
 
         # Assert
         mock_request.assert_called_once()
@@ -370,14 +370,14 @@ class TestTargetsEdgeCases:
         title = "Нож | Тест 🔪"
 
         # Act
-        await targets_mixin.get_targets_by_title(game_id="csgo", title=title)
+        awAlgot targets_mixin.get_targets_by_title(game_id="csgo", title=title)
 
         # Assert
         mock_request.assert_called_once()
 
 
 # =============================================================================
-# FINAL COVERAGE PUSH - Quick tests for remaining modules
+# FINAL COVERAGE PUSH - Quick tests for remAlgoning modules
 # =============================================================================
 
 
@@ -398,7 +398,7 @@ class TestTargetsAPIAdditional:
         ]
 
         # Act
-        result = await targets_mixin.create_targets(
+        result = awAlgot targets_mixin.create_targets(
             game_id="a8db",
             targets=targets,
         )
@@ -413,7 +413,7 @@ class TestTargetsAPIAdditional:
         mock_request.return_value = {"success": True}
 
         # Act
-        result = await targets_mixin.delete_targets(target_ids=["tgt_123", "tgt_456"])
+        result = awAlgot targets_mixin.delete_targets(target_ids=["tgt_123", "tgt_456"])
 
         # Assert
         assert result["success"] is True
@@ -427,7 +427,7 @@ class TestTargetsAPIAdditional:
         mock_request.return_value = {"Items": [], "Total": "0"}
 
         # Act
-        result = await targets_mixin.get_user_targets(
+        result = awAlgot targets_mixin.get_user_targets(
             game_id="a8db",
             status="TargetStatusActive",
             limit=50,

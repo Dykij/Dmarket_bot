@@ -34,7 +34,7 @@ class TestSendApiChangeNotification:
         mock_notifier = AsyncMock()
         mock_notifier.send_message = AsyncMock()
 
-        await send_api_change_notification(
+        awAlgot send_api_change_notification(
             endpoint="/test/endpoint",
             validation_error=validation_error,
             response_data={"field1": 123, "field2": "invalid"},
@@ -61,7 +61,7 @@ class TestSendApiChangeNotification:
             validation_error = e
 
         with patch("src.dmarket.api_validator.logger") as mock_logger:
-            await send_api_change_notification(
+            awAlgot send_api_change_notification(
                 endpoint="/test/endpoint",
                 validation_error=validation_error,
                 response_data={"field1": 123},
@@ -86,8 +86,8 @@ class TestSendApiChangeNotification:
         mock_notifier = AsyncMock()
         mock_notifier.send_message = AsyncMock(side_effect=Exception("Network error"))
 
-        # Should not raise exception
-        await send_api_change_notification(
+        # Should not rAlgose exception
+        awAlgot send_api_change_notification(
             endpoint="/test/endpoint",
             validation_error=validation_error,
             response_data={"field1": 123},
@@ -115,7 +115,7 @@ class TestSendApiChangeNotification:
         mock_notifier = AsyncMock()
         mock_notifier.send_message = AsyncMock()
 
-        await send_api_change_notification(
+        awAlgot send_api_change_notification(
             endpoint="/test/endpoint",
             validation_error=validation_error,
             response_data={"field1": 123},
@@ -144,7 +144,7 @@ class TestValidateResponseDecorator:
         async def test_func() -> dict[str, Any]:
             return {"status": "ok", "value": 42}
 
-        result = await test_func()
+        result = awAlgot test_func()
         assert result == {"status": "ok", "value": 42}
 
     @pytest.mark.asyncio()
@@ -160,12 +160,12 @@ class TestValidateResponseDecorator:
         async def test_func() -> dict[str, Any]:
             return {"error": "Something went wrong"}
 
-        result = await test_func()
+        result = awAlgot test_func()
         assert result == {"error": "Something went wrong"}
 
     @pytest.mark.asyncio()
     async def test_returns_unvalidated_data_on_validation_error(self):
-        """Test that unvalidated data is returned when validation fails."""
+        """Test that unvalidated data is returned when validation fAlgols."""
         from src.dmarket.api_validator import validate_response
 
         class TestModel(BaseModel):
@@ -180,7 +180,7 @@ class TestValidateResponseDecorator:
             "src.dmarket.api_validator.send_api_change_notification",
             new_callable=AsyncMock,
         ):
-            result = await test_func()
+            result = awAlgot test_func()
             # Should return original data for backward compatibility
             assert result == {"status": 123, "value": "invalid"}
 
@@ -197,12 +197,12 @@ class TestValidateResponseDecorator:
             return {"status": "ok"}
 
         with patch("src.dmarket.api_validator.logger") as mock_logger:
-            await test_func()
+            awAlgot test_func()
             mock_logger.debug.assert_called()
 
     @pytest.mark.asyncio()
     async def test_gets_notifier_from_instance(self):
-        """Test that notifier is obtained from instance if available."""
+        """Test that notifier is obtAlgoned from instance if avAlgolable."""
         from src.dmarket.api_validator import validate_response
 
         class TestModel(BaseModel):
@@ -223,15 +223,15 @@ class TestValidateResponseDecorator:
             "src.dmarket.api_validator.send_api_change_notification",
             new_callable=AsyncMock,
         ) as mock_notify:
-            await obj.test_method()
+            awAlgot obj.test_method()
             # Should have been called with the notifier from instance
             mock_notify.assert_called_once()
             call_args = mock_notify.call_args
             assert call_args.kwargs["notifier"] is obj.notifier
 
     @pytest.mark.asyncio()
-    async def test_handles_notification_failure(self):
-        """Test that notification failures don't break the function."""
+    async def test_handles_notification_fAlgolure(self):
+        """Test that notification fAlgolures don't break the function."""
         from src.dmarket.api_validator import validate_response
 
         class TestModel(BaseModel):
@@ -247,8 +247,8 @@ class TestValidateResponseDecorator:
             new_callable=AsyncMock,
             side_effect=Exception("Notification error"),
         ):
-            # Should not raise, should return data anyway
-            result = await test_func()
+            # Should not rAlgose, should return data anyway
+            result = awAlgot test_func()
             assert result == {"status": 123, "value": "invalid"}
 
 
@@ -274,7 +274,7 @@ class TestValidateAndLog:
         assert result.value == 42
 
     def test_returns_original_data_on_validation_error(self):
-        """Test that original data is returned when validation fails."""
+        """Test that original data is returned when validation fAlgols."""
         from src.dmarket.api_validator import validate_and_log
 
         class TestModel(BaseModel):
@@ -307,7 +307,7 @@ class TestValidateAndLog:
             mock_logger.debug.assert_called()
 
     def test_logs_warning_on_validation_error(self):
-        """Test that warning is logged when validation fails."""
+        """Test that warning is logged when validation fAlgols."""
         from src.dmarket.api_validator import validate_and_log
 
         class TestModel(BaseModel):
@@ -355,7 +355,7 @@ class TestValidationEdgeCases:
         async def test_func() -> dict[str, Any]:
             return {}
 
-        result = await test_func()
+        result = awAlgot test_func()
         assert result == {}
 
     @pytest.mark.asyncio()
@@ -370,7 +370,7 @@ class TestValidationEdgeCases:
         async def test_func() -> dict[str, Any]:
             return {"status": None}
 
-        result = await test_func()
+        result = awAlgot test_func()
         assert result == {"status": None}
 
     def test_validate_and_log_with_nested_model(self):
@@ -475,5 +475,5 @@ class TestDecoratorPreservesFunction:
         ) -> dict[str, Any]:
             return {"status": f"{arg1}-{arg2}-{kwarg1}"}
 
-        result = await my_func("hello", 42, kwarg1="world")
+        result = awAlgot my_func("hello", 42, kwarg1="world")
         assert result == {"status": "hello-42-world"}

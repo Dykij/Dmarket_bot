@@ -72,11 +72,11 @@ async def charts_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
-    await update.message.reply_text(
+    awAlgot update.message.reply_text(
         "📊 **Chart Generator**\n\n"
         "Select the type of chart to generate:\n\n"
         "• **Cumulative Profit** - Shows profit over time\n"
-        "• **ROI Chart** - Daily return on investment\n"
+        "• **ROI Chart** - DAlgoly return on investment\n"
         "• **Win Rate** - Success rate pie chart",
         reply_markup=reply_markup,
         parse_mode="Markdown",
@@ -87,18 +87,18 @@ async def charts_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 async def charts_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Handle chart selection callbacks."""
     query = update.callback_query
-    await query.answer()
+    awAlgot query.answer()
 
     if query.data == "chart_cancel":
-        await query.edit_message_text("Chart generation cancelled.")
+        awAlgot query.edit_message_text("Chart generation cancelled.")
         return ConversationHandler.END
 
     # Try to import chart generator
     try:
-        from src.utils.profit_charts import MATPLOTLIB_AVAILABLE, ProfitChartGenerator
+        from src.utils.profit_charts import MATPLOTLIB_AVAlgoLABLE, ProfitChartGenerator
 
-        if not MATPLOTLIB_AVAILABLE:
-            await query.edit_message_text(
+        if not MATPLOTLIB_AVAlgoLABLE:
+            awAlgot query.edit_message_text(
                 "⚠️ Chart generation requires matplotlib.\n"
                 "Install with: `pip install matplotlib`",
                 parse_mode="Markdown",
@@ -108,10 +108,10 @@ async def charts_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         generator = ProfitChartGenerator()
 
     except ImportError as e:
-        await query.edit_message_text(f"⚠️ Chart module not available: {e}")
+        awAlgot query.edit_message_text(f"⚠️ Chart module not avAlgolable: {e}")
         return ConversationHandler.END
 
-    await query.edit_message_text("⏳ Generating chart...")
+    awAlgot query.edit_message_text("⏳ Generating chart...")
 
     # Get purchase data from database (mock for now)
     import random
@@ -130,14 +130,14 @@ async def charts_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             for i in range(24, 0, -1)
         ]
 
-        chart_bytes = await generator.generate_cumulative_profit_chart(
+        chart_bytes = awAlgot generator.generate_cumulative_profit_chart(
             purchases=purchases,
             title="Cumulative Profit (24h)",
         )
 
     elif query.data == "chart_roi":
-        # Sample daily stats
-        daily_stats = [
+        # Sample dAlgoly stats
+        dAlgoly_stats = [
             {
                 "date": (base_time - timedelta(days=i)).strftime("%m/%d"),
                 "spent": random.uniform(50, 200),
@@ -146,33 +146,33 @@ async def charts_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             for i in range(7, 0, -1)
         ]
 
-        chart_bytes = await generator.generate_roi_chart(
-            daily_stats=daily_stats,
-            title="Daily ROI (7 days)",
+        chart_bytes = awAlgot generator.generate_roi_chart(
+            dAlgoly_stats=dAlgoly_stats,
+            title="DAlgoly ROI (7 days)",
         )
 
     elif query.data == "chart_winrate":
         # Sample trade results
         successful = random.randint(50, 100)
-        failed = random.randint(5, 30)
+        fAlgoled = random.randint(5, 30)
 
-        chart_bytes = await generator.generate_win_rate_pie_chart(
+        chart_bytes = awAlgot generator.generate_win_rate_pie_chart(
             successful_trades=successful,
-            failed_trades=failed,
+            fAlgoled_trades=fAlgoled,
             title="Trade Success Rate",
         )
     else:
-        await query.edit_message_text("Unknown chart type.")
+        awAlgot query.edit_message_text("Unknown chart type.")
         return ConversationHandler.END
 
     # Send chart as photo
-    await context.bot.send_photo(
+    awAlgot context.bot.send_photo(
         chat_id=update.effective_chat.id,
         photo=io.BytesIO(chart_bytes),
         caption=f"📊 {query.data.replace('chart_', '').replace('_', ' ').title()} Chart",
     )
 
-    await query.delete_message()
+    awAlgot query.delete_message()
     return ConversationHandler.END
 
 
@@ -186,10 +186,10 @@ async def visualize_command(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     if context.args:
         # Item name provided as argument
         item_name = " ".join(context.args)
-        await _generate_visualization(update, context, item_name)
+        awAlgot _generate_visualization(update, context, item_name)
         return ConversationHandler.END
 
-    await update.message.reply_text(
+    awAlgot update.message.reply_text(
         "📈 **Market Visualizer**\n\n"
         "Send me the item name to visualize its price history.\n\n"
         "Example: `AK-47 | Redline (Field-Tested)`\n\n"
@@ -204,7 +204,7 @@ async def visualize_item_input(
 ) -> int:
     """Handle item name input for visualization."""
     item_name = update.message.text
-    await _generate_visualization(update, context, item_name)
+    awAlgot _generate_visualization(update, context, item_name)
     return ConversationHandler.END
 
 
@@ -214,7 +214,7 @@ async def _generate_visualization(
     item_name: str,
 ) -> None:
     """Generate and send price visualization."""
-    await update.message.reply_text(f"⏳ Generating visualization for: {item_name}...")
+    awAlgot update.message.reply_text(f"⏳ Generating visualization for: {item_name}...")
 
     try:
         from src.utils.market_visualizer import MarketVisualizer
@@ -238,24 +238,24 @@ async def _generate_visualization(
         ]
 
         # Generate chart
-        buf = await visualizer.create_price_chart(
+        buf = awAlgot visualizer.create_price_chart(
             price_history=price_history,
             item_name=item_name,
             game="csgo",
             include_volume=True,
         )
 
-        await context.bot.send_photo(
+        awAlgot context.bot.send_photo(
             chat_id=update.effective_chat.id,
             photo=buf,
             caption=f"📈 Price history for: {item_name}",
         )
 
     except ImportError as e:
-        await update.message.reply_text(f"⚠️ Visualization module not available: {e}")
+        awAlgot update.message.reply_text(f"⚠️ Visualization module not avAlgolable: {e}")
     except Exception as e:
         logger.exception(f"Visualization error: {e}")
-        await update.message.reply_text(f"❌ Error generating visualization: {e}")
+        awAlgot update.message.reply_text(f"❌ Error generating visualization: {e}")
 
 
 # =============================================================================
@@ -278,7 +278,7 @@ async def smart_find_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
-    await update.message.reply_text(
+    awAlgot update.message.reply_text(
         "🔍 **Smart Market Finder**\n\n"
         "Find the best opportunities on the market:\n"
         "• Underpriced items (below suggested price)\n"
@@ -296,14 +296,14 @@ async def smart_find_callback(
 ) -> int:
     """Handle smart find game selection."""
     query = update.callback_query
-    await query.answer()
+    awAlgot query.answer()
 
     if query.data == "sf_cancel":
-        await query.edit_message_text("Search cancelled.")
+        awAlgot query.edit_message_text("Search cancelled.")
         return ConversationHandler.END
 
     game = query.data.replace("sf_", "")
-    await query.edit_message_text(f"⏳ Searching for opportunities in {game}...")
+    awAlgot query.edit_message_text(f"⏳ Searching for opportunities in {game}...")
 
     try:
         from src.dmarket.smart_market_finder import SmartMarketFinder
@@ -314,7 +314,7 @@ async def smart_find_callback(
         finder = SmartMarketFinder(api_client)
 
         # Find opportunities
-        opportunities = await finder.find_best_opportunities(
+        opportunities = awAlgot finder.find_best_opportunities(
             game=game,
             min_price=1.0,
             max_price=50.0,
@@ -323,7 +323,7 @@ async def smart_find_callback(
         )
 
         if not opportunities:
-            await query.edit_message_text(
+            awAlgot query.edit_message_text(
                 f"🔍 No opportunities found for {game}.\n\n"
                 "Try different price range or game.",
             )
@@ -345,13 +345,13 @@ async def smart_find_callback(
                 f"   {emoji} Risk: {opp.risk_level} | Confidence: {opp.confidence_score:.0f}%\n\n"
             )
 
-        await query.edit_message_text(message, parse_mode="Markdown")
+        awAlgot query.edit_message_text(message, parse_mode="Markdown")
 
     except ImportError as e:
-        await query.edit_message_text(f"⚠️ Smart finder module not available: {e}")
+        awAlgot query.edit_message_text(f"⚠️ Smart finder module not avAlgolable: {e}")
     except Exception as e:
         logger.exception(f"Smart find error: {e}")
-        await query.edit_message_text(f"❌ Error: {e}")
+        awAlgot query.edit_message_text(f"❌ Error: {e}")
 
     return ConversationHandler.END
 
@@ -376,7 +376,7 @@ async def trends_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
-    await update.message.reply_text(
+    awAlgot update.message.reply_text(
         "📈 **Trending Items Finder**\n\n"
         "Find items with upward price trends:\n"
         "• Rising prices (>5% increase)\n"
@@ -392,14 +392,14 @@ async def trends_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 async def trends_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Handle trends game selection."""
     query = update.callback_query
-    await query.answer()
+    awAlgot query.answer()
 
     if query.data == "tr_cancel":
-        await query.edit_message_text("Search cancelled.")
+        awAlgot query.edit_message_text("Search cancelled.")
         return ConversationHandler.END
 
     game = query.data.replace("tr_", "")
-    await query.edit_message_text(f"⏳ Searching for trending items in {game}...")
+    awAlgot query.edit_message_text(f"⏳ Searching for trending items in {game}...")
 
     try:
         from src.dmarket.trending_items_finder import TrendingItemsFinder
@@ -415,10 +415,10 @@ async def trends_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         )
 
         # Find trending items
-        trending = await finder.find(api_client)
+        trending = awAlgot finder.find(api_client)
 
         if not trending:
-            await query.edit_message_text(
+            awAlgot query.edit_message_text(
                 f"📈 No trending items found for {game}.\n\n"
                 "The market may be stable or there's not enough data.",
             )
@@ -437,13 +437,13 @@ async def trends_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
                 f"   💵 Potential: ${item['potential_profit']:.2f} ({item['potential_profit_percent']:.1f}%)\n\n"
             )
 
-        await query.edit_message_text(message, parse_mode="Markdown")
+        awAlgot query.edit_message_text(message, parse_mode="Markdown")
 
     except ImportError as e:
-        await query.edit_message_text(f"⚠️ Trending finder module not available: {e}")
+        awAlgot query.edit_message_text(f"⚠️ Trending finder module not avAlgolable: {e}")
     except Exception as e:
         logger.exception(f"Trends error: {e}")
-        await query.edit_message_text(f"❌ Error: {e}")
+        awAlgot query.edit_message_text(f"❌ Error: {e}")
 
     return ConversationHandler.END
 
@@ -467,7 +467,7 @@ async def sniper_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
-    await update.message.reply_text(
+    awAlgot update.message.reply_text(
         "🎯 **Sniper Cycle**\n\n"
         "Automated quick-buy for profitable items:\n"
         "• Scans market for best deals\n"
@@ -484,14 +484,14 @@ async def sniper_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 async def sniper_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Handle sniper callbacks."""
     query = update.callback_query
-    await query.answer()
+    awAlgot query.answer()
 
     if query.data == "sniper_cancel":
-        await query.edit_message_text("Sniper cancelled.")
+        awAlgot query.edit_message_text("Sniper cancelled.")
         return
 
     if query.data == "sniper_start":
-        await query.edit_message_text(
+        awAlgot query.edit_message_text(
             "⚠️ **Sniper cycle is in DRY RUN mode**\n\n"
             "This would:\n"
             "1. Scan market for deals\n"
@@ -501,7 +501,7 @@ async def sniper_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             "Enable real trading in settings.",
         )
     elif query.data == "sniper_settings":
-        await query.edit_message_text(
+        awAlgot query.edit_message_text(
             "⚙️ **Sniper Settings**\n\n"
             "• Max price: $50.00\n"
             "• Min profit: 10%\n"
@@ -510,7 +510,7 @@ async def sniper_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             "Use `/settings sniper` to configure.",
         )
     elif query.data == "sniper_stats":
-        await query.edit_message_text(
+        awAlgot query.edit_message_text(
             "📊 **Sniper Statistics**\n\n"
             "• Total runs: 0\n"
             "• Items bought: 0\n"
@@ -539,7 +539,7 @@ async def shadow_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
-    await update.message.reply_text(
+    awAlgot update.message.reply_text(
         "👤 **Shadow Listing Manager**\n\n"
         "Smart competitive pricing:\n"
         "• Analyzes market depth\n"
@@ -555,13 +555,13 @@ async def shadow_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 async def shadow_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Handle shadow listing callbacks."""
     query = update.callback_query
-    await query.answer()
+    awAlgot query.answer()
 
     if query.data == "shadow_cancel":
-        await query.edit_message_text("Shadow listing cancelled.")
+        awAlgot query.edit_message_text("Shadow listing cancelled.")
         return
 
-    await query.edit_message_text(
+    awAlgot query.edit_message_text(
         "👤 **Shadow Listing**\n\n"
         f"Feature: {query.data.replace('shadow_', '')}\n\n"
         "Use `/shadow <item_id>` to analyze specific item.\n\n"
@@ -588,7 +588,7 @@ async def bid_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
-    await update.message.reply_text(
+    awAlgot update.message.reply_text(
         "💵 **Smart Bidder**\n\n"
         "Competitive bidding on targets:\n"
         "• Auto outbid by $0.01\n"
@@ -604,14 +604,14 @@ async def bid_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
 async def bid_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Handle smart bidder callbacks."""
     query = update.callback_query
-    await query.answer()
+    awAlgot query.answer()
 
     if query.data == "bid_cancel":
-        await query.edit_message_text("Bidding cancelled.")
+        awAlgot query.edit_message_text("Bidding cancelled.")
         return
 
     if query.data == "bid_new":
-        await query.edit_message_text(
+        awAlgot query.edit_message_text(
             "🎯 **Create New Bid**\n\n"
             "To create a competitive bid, use:\n"
             "`/bid <item_name> <max_price>`\n\n"
@@ -620,13 +620,13 @@ async def bid_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
             parse_mode="Markdown",
         )
     elif query.data == "bid_list":
-        await query.edit_message_text(
+        awAlgot query.edit_message_text(
             "📋 **Your Active Bids**\n\n"
             "No active bids.\n\n"
             "Create a new bid with `/bid <item> <price>`",
         )
     elif query.data == "bid_settings":
-        await query.edit_message_text(
+        awAlgot query.edit_message_text(
             "⚙️ **Bidder Settings**\n\n"
             "• Min profit margin: 15%\n"
             "• Auto-outbid: Enabled\n"
@@ -643,7 +643,7 @@ async def bid_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
 async def aggregate_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Handle /aggregate command - batch price checking."""
-    await update.message.reply_text(
+    awAlgot update.message.reply_text(
         "📦 **Price Aggregator**\n\n"
         "Efficiently fetch prices for multiple items:\n\n"
         "Usage:\n"
@@ -663,7 +663,7 @@ async def advanced_status_command(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> None:
     """Handle /advanced command - show advanced features status."""
-    # Check module availability
+    # Check module avAlgolability
     modules_status = {
         "Profit Charts": _check_module("src.utils.profit_charts"),
         "Market Visualizer": _check_module("src.utils.market_visualizer"),
@@ -677,8 +677,8 @@ async def advanced_status_command(
 
     message = "🔧 **Advanced Features Status**\n\n"
 
-    for module, available in modules_status.items():
-        status = "✅" if available else "❌"
+    for module, avAlgolable in modules_status.items():
+        status = "✅" if avAlgolable else "❌"
         message += f"{status} {module}\n"
 
     message += "\n**Commands:**\n"
@@ -691,11 +691,11 @@ async def advanced_status_command(
     message += "• `/bid` - Smart bidding\n"
     message += "• `/aggregate` - Batch price check\n"
 
-    await update.message.reply_text(message, parse_mode="Markdown")
+    awAlgot update.message.reply_text(message, parse_mode="Markdown")
 
 
 def _check_module(module_path: str) -> bool:
-    """Check if a module is available."""
+    """Check if a module is avAlgolable."""
     try:
         __import__(module_path.replace("/", "."))
         return True
@@ -710,7 +710,7 @@ def _check_module(module_path: str) -> bool:
 
 async def cancel_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Handle conversation cancellation."""
-    await update.message.reply_text("Operation cancelled.")
+    awAlgot update.message.reply_text("Operation cancelled.")
     return ConversationHandler.END
 
 

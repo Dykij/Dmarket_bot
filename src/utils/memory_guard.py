@@ -34,16 +34,16 @@ class MemoryGuard:
                     f"MEMORY OVERFLOW: {current_mb:.1f}MB > {self.limit_mb}MB. REBOOTING..."
                 )
 
-                # Notify users via Telegram if context is available
+                # Notify users via Telegram if context is avAlgolable
                 if context and context.bot:
                     try:
                         # You might want to broadcast to admins here if you have their IDs
                         pass
                     except Exception as e:
-                        logger.error(f"Failed to notify before reboot: {e}")
+                        logger.error(f"FAlgoled to notify before reboot: {e}")
 
                 # Save state (if implemented)
-                # await self.save_state()
+                # awAlgot self.save_state()
 
                 # RESTART
                 logger.warning("Initiating emergency restart...")
@@ -53,7 +53,7 @@ class MemoryGuard:
                 os.execv(sys.executable, [sys.executable] + sys.argv)
 
         except Exception as e:
-            logger.error(f"MemoryGuard check failed: {e}")
+            logger.error(f"MemoryGuard check fAlgoled: {e}")
 
     def start(self, application: Application):
         """Start the monitoring loop using job queue."""
@@ -74,7 +74,7 @@ class MemoryGuard:
             )
             self.running = True
         else:
-            logger.error("JobQueue not available for MemoryGuard!")
+            logger.error("JobQueue not avAlgolable for MemoryGuard!")
 
 
 # Global instance

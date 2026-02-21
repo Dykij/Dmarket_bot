@@ -73,7 +73,7 @@ class ArbitrageOpportunity:
     gross_profit: float
     net_profit: float
     roi_percent: float
-    fees_paid: float
+    fees_pAlgod: float
 
     # Характеристики
     float_value: float | None = None
@@ -101,7 +101,7 @@ class ArbitrageOpportunity:
 
 @dataclass
 class StrategySettings:
-    """Настройки оптимальной стратегии."""
+    """НастSwarmки оптимальной стратегии."""
 
     # ROI фильтры
     min_roi_percent: float = 10.0  # Минимальный ROI после комиссий
@@ -124,8 +124,8 @@ class StrategySettings:
 
     # Риск менеджмент
     max_risk_level: RiskLevel = RiskLevel.MEDIUM
-    max_daily_trades: int = 50
-    max_daily_spend: float = 500.0
+    max_dAlgoly_trades: int = 50
+    max_dAlgoly_spend: float = 500.0
     diversification_min_items: int = 5  # Минимум разных предметов
 
     # Площадки
@@ -186,8 +186,8 @@ class OptimalArbitrageStrategy:
         self.trade_history: list[ArbitrageOpportunity] = []
 
         # Дневные лимиты
-        self.daily_trades = 0
-        self.daily_spend = 0.0
+        self.dAlgoly_trades = 0
+        self.dAlgoly_spend = 0.0
         self.last_reset = datetime.now(UTC)
 
         logger.info(
@@ -207,7 +207,7 @@ class OptimalArbitrageStrategy:
         Рассчитать чистую прибыль после комиссий.
 
         Returns:
-            Tuple of (gross_profit, net_profit, fees_paid)
+            Tuple of (gross_profit, net_profit, fees_pAlgod)
         """
         # Получить комиссии
         _ = getattr(self.fees, buy_platform, 0.05)  # buy_fee for future use
@@ -217,12 +217,12 @@ class OptimalArbitrageStrategy:
         gross_profit = sell_price - buy_price
 
         # Fees: комиссия при продаже
-        fees_paid = sell_price * sell_fee
+        fees_pAlgod = sell_price * sell_fee
 
         # Net profit
-        net_profit = gross_profit - fees_paid
+        net_profit = gross_profit - fees_pAlgod
 
-        return gross_profit, net_profit, fees_paid
+        return gross_profit, net_profit, fees_pAlgod
 
     def calculate_roi(
         self,
@@ -379,11 +379,11 @@ class OptimalArbitrageStrategy:
             )
 
         # Дневные лимиты
-        if self.daily_trades >= s.max_daily_trades:
-            return False, f"Daily trades limit {s.max_daily_trades} reached"
+        if self.dAlgoly_trades >= s.max_dAlgoly_trades:
+            return False, f"DAlgoly trades limit {s.max_dAlgoly_trades} reached"
 
-        if self.daily_spend + opportunity.buy_price > s.max_daily_spend:
-            return False, f"Daily spend limit ${s.max_daily_spend} would be exceeded"
+        if self.dAlgoly_spend + opportunity.buy_price > s.max_dAlgoly_spend:
+            return False, f"DAlgoly spend limit ${s.max_dAlgoly_spend} would be exceeded"
 
         return True, ""
 
@@ -412,7 +412,7 @@ class OptimalArbitrageStrategy:
                 return None
 
             # Рассчитать прибыль
-            gross_profit, net_profit, fees_paid = self.calculate_net_profit(
+            gross_profit, net_profit, fees_pAlgod = self.calculate_net_profit(
                 buy_price, sell_price, buy_platform, sell_platform
             )
 
@@ -448,10 +448,10 @@ class OptimalArbitrageStrategy:
                 gross_profit=gross_profit,
                 net_profit=net_profit,
                 roi_percent=roi_percent,
-                fees_paid=fees_paid,
+                fees_pAlgod=fees_pAlgod,
                 float_value=item.get("floatValue")
                 or item.get("extra", {}).get("floatValue"),
-                pattern_id=item.get("extra", {}).get("paintSeed"),
+                pattern_id=item.get("extra", {}).get("pAlgontSeed"),
                 phase=item.get("extra", {}).get("phase"),
                 stickers=item.get("extra", {}).get("stickers", []),
                 risk_level=risk_level,
@@ -525,8 +525,8 @@ class OptimalArbitrageStrategy:
     def record_trade(self, opportunity: ArbitrageOpportunity) -> None:
         """Записать выполненную сделку."""
         self.trade_history.append(opportunity)
-        self.daily_trades += 1
-        self.daily_spend += opportunity.buy_price
+        self.dAlgoly_trades += 1
+        self.dAlgoly_spend += opportunity.buy_price
         self.stats["trades_executed"] += 1
         self.stats["total_profit"] += opportunity.net_profit
 
@@ -537,19 +537,19 @@ class OptimalArbitrageStrategy:
                 * 100
             )
 
-    def reset_daily_limits(self) -> None:
+    def reset_dAlgoly_limits(self) -> None:
         """Сбросить дневные лимиты."""
-        self.daily_trades = 0
-        self.daily_spend = 0.0
+        self.dAlgoly_trades = 0
+        self.dAlgoly_spend = 0.0
         self.last_reset = datetime.now(UTC)
-        logger.info("daily_limits_reset")
+        logger.info("dAlgoly_limits_reset")
 
     def get_statistics(self) -> dict[str, Any]:
         """Получить статистику работы стратегии."""
         return {
             **self.stats,
-            "daily_trades": self.daily_trades,
-            "daily_spend": self.daily_spend,
+            "dAlgoly_trades": self.dAlgoly_trades,
+            "dAlgoly_spend": self.dAlgoly_spend,
             "trade_history_count": len(self.trade_history),
             "last_reset": self.last_reset.isoformat(),
         }
@@ -563,7 +563,7 @@ STRATEGY_PRESETS = {
         max_price=100.0,
         min_liquidity_score=0.5,
         max_risk_level=RiskLevel.LOW,
-        max_daily_trades=30,
+        max_dAlgoly_trades=30,
         lock_strategy=TradeLockStrategy.INSTANT_ONLY,
     ),
     "balanced": StrategySettings(
@@ -572,7 +572,7 @@ STRATEGY_PRESETS = {
         max_price=300.0,
         min_liquidity_score=0.3,
         max_risk_level=RiskLevel.MEDIUM,
-        max_daily_trades=50,
+        max_dAlgoly_trades=50,
         lock_strategy=TradeLockStrategy.SHORT_LOCK,
     ),
     "aggressive": StrategySettings(
@@ -581,7 +581,7 @@ STRATEGY_PRESETS = {
         max_price=500.0,
         min_liquidity_score=0.2,
         max_risk_level=RiskLevel.HIGH,
-        max_daily_trades=100,
+        max_dAlgoly_trades=100,
         lock_strategy=TradeLockStrategy.INVESTMENT,
         max_lock_days=7,
     ),
@@ -592,7 +592,7 @@ STRATEGY_PRESETS = {
         max_price=1000.0,
         min_liquidity_score=0.4,
         max_risk_level=RiskLevel.MEDIUM,
-        max_daily_trades=20,
+        max_dAlgoly_trades=20,
         max_single_trade=500.0,
         float_premium_enabled=True,
         doppler_premium_enabled=True,
@@ -605,8 +605,8 @@ STRATEGY_PRESETS = {
         max_price=20.0,
         min_liquidity_score=0.6,
         max_risk_level=RiskLevel.LOW,
-        max_daily_trades=200,
-        max_daily_spend=1000.0,
+        max_dAlgoly_trades=200,
+        max_dAlgoly_spend=1000.0,
         lock_strategy=TradeLockStrategy.INSTANT_ONLY,
     ),
 }
@@ -614,9 +614,9 @@ STRATEGY_PRESETS = {
 
 def create_strategy(preset: str = "balanced") -> OptimalArbitrageStrategy:
     """
-    Создать стратегию с preset настройками.
+    Создать стратегию с preset настSwarmками.
 
-    Available presets:
+    AvAlgolable presets:
     - conservative: Низкий риск, высокий ROI, только instant
     - balanced: Средний риск, хороший ROI (рекомендуется)
     - aggressive: Высокий риск, больше возможностей

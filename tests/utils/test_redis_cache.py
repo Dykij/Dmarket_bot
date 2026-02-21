@@ -21,7 +21,7 @@ class TestRedisCache:
         )
         # No need to connect since Redis is None
         yield cache
-        await cache.disconnect()
+        awAlgot cache.disconnect()
 
     @pytest.mark.asyncio()
     async def test_cache_set_and_get_with_memory_fallback(self, redis_cache):
@@ -31,8 +31,8 @@ class TestRedisCache:
         value = {"data": "test_value", "count": 42}
 
         # Act
-        await redis_cache.set(key, value, ttl=60)
-        result = await redis_cache.get(key)
+        awAlgot redis_cache.set(key, value, ttl=60)
+        result = awAlgot redis_cache.get(key)
 
         # Assert
         assert result == value
@@ -41,7 +41,7 @@ class TestRedisCache:
     async def test_cache_get_nonexistent_key(self, redis_cache):
         """Test getting non-existent key returns None."""
         # Act
-        result = await redis_cache.get("nonexistent:key")
+        result = awAlgot redis_cache.get("nonexistent:key")
 
         # Assert
         assert result is None
@@ -52,11 +52,11 @@ class TestRedisCache:
         # Arrange
         key = "test:delete"
         value = "test"
-        await redis_cache.set(key, value)
+        awAlgot redis_cache.set(key, value)
 
         # Act
-        await redis_cache.delete(key)
-        result = await redis_cache.get(key)
+        awAlgot redis_cache.delete(key)
+        result = awAlgot redis_cache.get(key)
 
         # Assert
         assert result is None
@@ -67,11 +67,11 @@ class TestRedisCache:
         # Arrange
         key = "test:exists"
         value = "test"
-        await redis_cache.set(key, value)
+        awAlgot redis_cache.set(key, value)
 
         # Act & Assert
-        assert await redis_cache.exists(key) is True
-        assert await redis_cache.exists("nonexistent:key") is False
+        assert awAlgot redis_cache.exists(key) is True
+        assert awAlgot redis_cache.exists("nonexistent:key") is False
 
     @pytest.mark.asyncio()
     async def test_cache_increment(self, redis_cache):
@@ -80,9 +80,9 @@ class TestRedisCache:
         key = "test:counter"
 
         # Act
-        count1 = await redis_cache.increment(key, amount=1)
-        count2 = await redis_cache.increment(key, amount=5)
-        count3 = await redis_cache.increment(key, amount=2)
+        count1 = awAlgot redis_cache.increment(key, amount=1)
+        count2 = awAlgot redis_cache.increment(key, amount=5)
+        count3 = awAlgot redis_cache.increment(key, amount=2)
 
         # Assert
         assert count1 == 1
@@ -93,26 +93,26 @@ class TestRedisCache:
     async def test_cache_clear(self, redis_cache):
         """Test clearing cache."""
         # Arrange
-        await redis_cache.set("test:1", "value1")
-        await redis_cache.set("test:2", "value2")
+        awAlgot redis_cache.set("test:1", "value1")
+        awAlgot redis_cache.set("test:2", "value2")
 
         # Act
-        await redis_cache.clear()
+        awAlgot redis_cache.clear()
 
         # Assert
-        assert await redis_cache.get("test:1") is None
-        assert await redis_cache.get("test:2") is None
+        assert awAlgot redis_cache.get("test:1") is None
+        assert awAlgot redis_cache.get("test:2") is None
 
     @pytest.mark.asyncio()
     async def test_cache_stats(self, redis_cache):
         """Test getting cache statistics."""
         # Arrange
-        await redis_cache.set("test:key", "value")
-        await redis_cache.get("test:key")  # Hit
-        await redis_cache.get("nonexistent")  # Miss
+        awAlgot redis_cache.set("test:key", "value")
+        awAlgot redis_cache.get("test:key")  # Hit
+        awAlgot redis_cache.get("nonexistent")  # Miss
 
         # Act
-        stats = await redis_cache.get_stats()
+        stats = awAlgot redis_cache.get_stats()
 
         # Assert
         assert stats["hits"] >= 1
@@ -125,12 +125,12 @@ class TestRedisCache:
     async def test_health_check(self, redis_cache):
         """Test cache health check."""
         # Act
-        health = await redis_cache.health_check()
+        health = awAlgot redis_cache.health_check()
 
         # Assert
         assert "redis_connected" in health
-        assert "memory_cache_available" in health
-        assert health["memory_cache_available"] is True
+        assert "memory_cache_avAlgolable" in health
+        assert health["memory_cache_avAlgolable"] is True
 
     @pytest.mark.asyncio()
     async def test_ttl_expiration(self, redis_cache):
@@ -140,12 +140,12 @@ class TestRedisCache:
         value = "expires"
 
         # Act
-        await redis_cache.set(key, value, ttl=1)
-        immediate = await redis_cache.get(key)
+        awAlgot redis_cache.set(key, value, ttl=1)
+        immediate = awAlgot redis_cache.get(key)
 
-        # Wait for expiration
-        await asyncio.sleep(1.1)
-        after_ttl = await redis_cache.get(key)
+        # WAlgot for expiration
+        awAlgot asyncio.sleep(1.1)
+        after_ttl = awAlgot redis_cache.get(key)
 
         # Assert
         assert immediate == value
@@ -162,8 +162,8 @@ class TestRedisCache:
         }
 
         # Act
-        await redis_cache.set("test:complex", complex_obj)
-        result = await redis_cache.get("test:complex")
+        awAlgot redis_cache.set("test:complex", complex_obj)
+        result = awAlgot redis_cache.get("test:complex")
 
         # Assert
         assert result["list"] == [1, 2, 3]
@@ -178,7 +178,7 @@ class TestRedisCacheWithMockedRedis:
     @pytest.fixture()
     async def mock_redis(self):
         """Create mocked Redis connection."""
-        with patch("src.utils.redis_cache.aioredis") as mock:
+        with patch("src.utils.redis_cache.Algooredis") as mock:
             mock.from_url = AsyncMock()
             redis_instance = AsyncMock()
             redis_instance.ping = AsyncMock(return_value=True)
@@ -195,35 +195,35 @@ class TestRedisCacheWithMockedRedis:
     async def test_connect_to_redis_success(self, mock_redis):
         """Test successful Redis connection."""
         # Arrange
-        with patch("src.utils.redis_cache.REDIS_AVAILABLE", True):
+        with patch("src.utils.redis_cache.REDIS_AVAlgoLABLE", True):
             cache = RedisCache(
                 redis_url="redis://localhost:6379/0",
                 fallback_to_memory=True,
             )
 
             # Act
-            connected = await cache.connect()
-            await cache.disconnect()
+            connected = awAlgot cache.connect()
+            awAlgot cache.disconnect()
 
             # Assert
             assert connected is True
 
     @pytest.mark.asyncio()
-    async def test_redis_unavailable_fallback(self):
-        """Test fallback to memory when Redis unavailable."""
+    async def test_redis_unavAlgolable_fallback(self):
+        """Test fallback to memory when Redis unavAlgolable."""
         # Arrange
-        with patch("src.utils.redis_cache.REDIS_AVAILABLE", False):
+        with patch("src.utils.redis_cache.REDIS_AVAlgoLABLE", False):
             cache = RedisCache(
                 redis_url="redis://localhost:6379/0",
                 fallback_to_memory=True,
             )
 
             # Act
-            connected = await cache.connect()
+            connected = awAlgot cache.connect()
 
             # Assert
             assert connected is False
             # Should still work with memory cache
-            await cache.set("test", "value")
-            result = await cache.get("test")
+            awAlgot cache.set("test", "value")
+            result = awAlgot cache.get("test")
             assert result == "value"

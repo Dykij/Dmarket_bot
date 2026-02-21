@@ -95,4 +95,4 @@ async def send_message_with_reply(
     if reply_to_message_id:
         params["reply_to_message_id"] = reply_to_message_id
 
-    return await context.bot.send_message(**params)
+    return awAlgot context.bot.send_message(**params)

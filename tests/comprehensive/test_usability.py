@@ -22,7 +22,7 @@ class TaskResult(Enum):
     """Task completion results."""
 
     SUCCESS = "success"
-    FAILURE = "failure"
+    FAlgoLURE = "fAlgolure"
     ABANDONED = "abandoned"
     TIMEOUT = "timeout"
 
@@ -104,9 +104,9 @@ class TestTaskCompletion:
         """Test tracking of task with errors."""
         task_tracker.start_task("task_2", "create_target")
         task_tracker.record_step("task_2")
-        task_tracker.record_error("task_2")  # First attempt failed
+        task_tracker.record_error("task_2")  # First attempt fAlgoled
         task_tracker.record_step("task_2")
-        task_tracker.record_error("task_2")  # Second attempt failed
+        task_tracker.record_error("task_2")  # Second attempt fAlgoled
         task_tracker.record_step("task_2")
         task_tracker.complete_task("task_2", TaskResult.SUCCESS)
 
@@ -116,10 +116,10 @@ class TestTaskCompletion:
 
     def test_success_rate_calculation(self, task_tracker):
         """Test success rate calculation."""
-        # 3 successful, 2 failed
+        # 3 successful, 2 fAlgoled
         for i in range(5):
             task_tracker.start_task(f"task_{i}", "test_task")
-            result = TaskResult.SUCCESS if i < 3 else TaskResult.FAILURE
+            result = TaskResult.SUCCESS if i < 3 else TaskResult.FAlgoLURE
             task_tracker.complete_task(f"task_{i}", result)
 
         assert task_tracker.get_success_rate() == 0.6
@@ -135,20 +135,20 @@ class TestErrorMessageClarity:
             "invalid_price": {
                 "code": "INVALID_PRICE",
                 "message": "Invalid price format",
-                "detail": "Price must be a positive number with up to 2 decimal places",
+                "detAlgol": "Price must be a positive number with up to 2 decimal places",
                 "example": "Example: 10.50",
                 "action": "Please enter a valid price",
             },
             "api_error": {
                 "code": "API_ERROR",
-                "message": "Service temporarily unavailable",
-                "detail": "The DMarket API is not responding",
-                "action": "Please try again in a few minutes",
+                "message": "Service temporarily unavAlgolable",
+                "detAlgol": "The DMarket API is not responding",
+                "action": "Please try agAlgon in a few minutes",
             },
             "auth_error": {
                 "code": "AUTH_ERROR",
-                "message": "Authentication failed",
-                "detail": "Your API key may be invalid or expired",
+                "message": "Authentication fAlgoled",
+                "detAlgol": "Your API key may be invalid or expired",
                 "action": "Please check your API settings with /settings",
             },
         }
@@ -213,8 +213,8 @@ class TestNavigationFlow:
 
         assert all_screens.issubset(reachable)
 
-    def test_back_navigation_available(self, navigation_graph):
-        """Test that back navigation is available from sub-screens."""
+    def test_back_navigation_avAlgolable(self, navigation_graph):
+        """Test that back navigation is avAlgolable from sub-screens."""
         for screen, destinations in navigation_graph.items():
             if screen != "/start":
                 # Every non-start screen should be able to go back to /start
@@ -265,7 +265,7 @@ class TestInputValidation:
                 if len(value) > 200:
                     return False, "Item name too long (max 200 characters)"
                 if any(c in value for c in ["<", ">", "&", '"', "'"]):
-                    return False, "Item name contains invalid characters"
+                    return False, "Item name contAlgons invalid characters"
                 return True, ""
 
             @staticmethod
@@ -401,16 +401,16 @@ class TestResponseTime:
                 return {
                     "status": "timeout",
                     "message": f"Operation '{operation_name}' timed out",
-                    "action": "Please try again or contact support if the issue persists",
-                    "retry_available": True,
+                    "action": "Please try agAlgon or contact support if the issue persists",
+                    "retry_avAlgolable": True,
                 }
 
         handler = TimeoutHandler()
         response = handler.with_timeout("scan_market")
 
         assert response["status"] == "timeout"
-        assert response["retry_available"]
-        assert "try again" in response["action"].lower()
+        assert response["retry_avAlgolable"]
+        assert "try agAlgon" in response["action"].lower()
 
 
 class TestHelpAndDocumentation:
@@ -489,16 +489,16 @@ class TestFeedbackMechanisms:
             messages = {
                 "target_created": {
                     "title": "✅ Target Created",
-                    "detail": "Your target has been created successfully",
+                    "detAlgol": "Your target has been created successfully",
                     "next_action": "View your targets with /targets",
                 },
                 "balance_loaded": {
                     "title": "💰 Balance Updated",
-                    "detail": "Your balance has been refreshed",
+                    "detAlgol": "Your balance has been refreshed",
                     "amount": "$100.00",
                 },
             }
-            return messages.get(action, {"title": "✅ Success", "detail": "Operation completed"})
+            return messages.get(action, {"title": "✅ Success", "detAlgol": "Operation completed"})
 
         # Test various success messages
         msg = get_success_message("target_created")
@@ -516,18 +516,18 @@ class TestFeedbackMechanisms:
             messages = {
                 "invalid_api_key": {
                     "title": "❌ Invalid API Key",
-                    "detail": "The API key you entered is not valid",
+                    "detAlgol": "The API key you entered is not valid",
                     "action": "Please check your key at https://dmarket.com/account/api",
                     "help_command": "/help api_setup",
                 },
                 "rate_limited": {
                     "title": "⏳ Rate Limited",
-                    "detail": "Too many requests. Please wait.",
+                    "detAlgol": "Too many requests. Please wAlgot.",
                     "retry_after": "60 seconds",
-                    "action": "Wait and try again",
+                    "action": "WAlgot and try agAlgon",
                 },
             }
-            return messages.get(error_code, {"title": "❌ Error", "detail": "An error occurred", "action": "Try again"})
+            return messages.get(error_code, {"title": "❌ Error", "detAlgol": "An error occurred", "action": "Try agAlgon"})
 
         # All error messages should have action
         for code in ["invalid_api_key", "rate_limited", "unknown"]:

@@ -102,8 +102,8 @@ class TestWorkflowExecutionResult:
         assert result.data == {"output": "value"}
         assert result.error is None
 
-    def test_failure_result(self) -> None:
-        """Test failed execution result."""
+    def test_fAlgolure_result(self) -> None:
+        """Test fAlgoled execution result."""
         result = WorkflowExecutionResult(
             success=False,
             error="Connection refused",
@@ -142,8 +142,8 @@ class TestN8NClientInit:
         assert client.api_key == "my-key"
         assert client.timeout == 60.0
 
-    def test_init_strips_trailing_slash(self) -> None:
-        """Test that trailing slash is stripped from URL."""
+    def test_init_strips_trAlgoling_slash(self) -> None:
+        """Test that trAlgoling slash is stripped from URL."""
         client = N8NClient(base_url="http://localhost:5678///")
         assert client.base_url == "http://localhost:5678"
 
@@ -167,11 +167,11 @@ class TestContextManager:
         assert c._client is None
 
     @pytest.mark.asyncio()
-    async def test_ensure_client_raises_without_context(
+    async def test_ensure_client_rAlgoses_without_context(
         self, n8n_client: N8NClient
     ) -> None:
-        """Test _ensure_client raises when not in context."""
-        with pytest.raises(RuntimeError, match="not initialized"):
+        """Test _ensure_client rAlgoses when not in context."""
+        with pytest.rAlgoses(RuntimeError, match="not initialized"):
             n8n_client._ensure_client()
 
 
@@ -190,7 +190,7 @@ class TestWorkflowOperations:
             mock_client = AsyncMock()
             mock_response = MagicMock()
             mock_response.json.return_value = {"executionId": "exec-789"}
-            mock_response.raise_for_status = MagicMock()
+            mock_response.rAlgose_for_status = MagicMock()
             mock_client.post = AsyncMock(return_value=mock_response)
             mock_client.aclose = AsyncMock()
             mock_class.return_value = mock_client
@@ -199,7 +199,7 @@ class TestWorkflowOperations:
             async with client:
                 client._client = mock_client
 
-                result = await client.trigger_workflow(
+                result = awAlgot client.trigger_workflow(
                     workflow_id="test-workflow",
                     data={"key": "value"},
                 )
@@ -217,7 +217,7 @@ class TestWorkflowOperations:
             mock_response = MagicMock()
             mock_response.status_code = 404
             mock_response.text = "Workflow not found"
-            mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
+            mock_response.rAlgose_for_status.side_effect = httpx.HTTPStatusError(
                 "Not found",
                 request=MagicMock(),
                 response=mock_response,
@@ -230,7 +230,7 @@ class TestWorkflowOperations:
             async with client:
                 client._client = mock_client
 
-                result = await client.trigger_workflow("nonexistent")
+                result = awAlgot client.trigger_workflow("nonexistent")
 
             assert result.success is False
             assert "404" in result.error
@@ -243,7 +243,7 @@ class TestWorkflowOperations:
             mock_response = MagicMock()
             mock_response.json.return_value = {"received": True}
             mock_response.text = '{"received": true}'
-            mock_response.raise_for_status = MagicMock()
+            mock_response.rAlgose_for_status = MagicMock()
             mock_client.post = AsyncMock(return_value=mock_response)
             mock_client.aclose = AsyncMock()
             mock_class.return_value = mock_client
@@ -252,7 +252,7 @@ class TestWorkflowOperations:
             async with client:
                 client._client = mock_client
 
-                result = await client.send_webhook(
+                result = awAlgot client.send_webhook(
                     webhook_path="my-webhook",
                     data={"alert": "test"},
                 )
@@ -272,7 +272,7 @@ class TestWorkflowOperations:
                     {"id": "wf-2", "name": "Workflow 2", "active": False},
                 ]
             }
-            mock_response.raise_for_status = MagicMock()
+            mock_response.rAlgose_for_status = MagicMock()
             mock_client.get = AsyncMock(return_value=mock_response)
             mock_client.aclose = AsyncMock()
             mock_class.return_value = mock_client
@@ -281,7 +281,7 @@ class TestWorkflowOperations:
             async with client:
                 client._client = mock_client
 
-                workflows = await client.list_workflows()
+                workflows = awAlgot client.list_workflows()
 
             assert len(workflows) == 2
             assert workflows[0].id == "wf-1"
@@ -299,7 +299,7 @@ class TestWorkflowOperations:
                     {"id": "wf-2", "name": "Inactive", "active": False},
                 ]
             }
-            mock_response.raise_for_status = MagicMock()
+            mock_response.rAlgose_for_status = MagicMock()
             mock_client.get = AsyncMock(return_value=mock_response)
             mock_client.aclose = AsyncMock()
             mock_class.return_value = mock_client
@@ -308,7 +308,7 @@ class TestWorkflowOperations:
             async with client:
                 client._client = mock_client
 
-                workflows = await client.list_workflows(active_only=True)
+                workflows = awAlgot client.list_workflows(active_only=True)
 
             assert len(workflows) == 1
             assert workflows[0].id == "wf-1"
@@ -324,7 +324,7 @@ class TestWorkflowOperations:
                 "name": "My Workflow",
                 "active": True,
             }
-            mock_response.raise_for_status = MagicMock()
+            mock_response.rAlgose_for_status = MagicMock()
             mock_client.get = AsyncMock(return_value=mock_response)
             mock_client.aclose = AsyncMock()
             mock_class.return_value = mock_client
@@ -333,7 +333,7 @@ class TestWorkflowOperations:
             async with client:
                 client._client = mock_client
 
-                workflow = await client.get_workflow("wf-123")
+                workflow = awAlgot client.get_workflow("wf-123")
 
             assert workflow is not None
             assert workflow.id == "wf-123"
@@ -345,7 +345,7 @@ class TestWorkflowOperations:
         with patch("httpx.AsyncClient") as mock_class:
             mock_client = AsyncMock()
             mock_response = MagicMock()
-            mock_response.raise_for_status = MagicMock()
+            mock_response.rAlgose_for_status = MagicMock()
             mock_client.patch = AsyncMock(return_value=mock_response)
             mock_client.aclose = AsyncMock()
             mock_class.return_value = mock_client
@@ -354,7 +354,7 @@ class TestWorkflowOperations:
             async with client:
                 client._client = mock_client
 
-                result = await client.activate_workflow("wf-123")
+                result = awAlgot client.activate_workflow("wf-123")
 
             assert result is True
             mock_client.patch.assert_called_once()
@@ -365,7 +365,7 @@ class TestWorkflowOperations:
         with patch("httpx.AsyncClient") as mock_class:
             mock_client = AsyncMock()
             mock_response = MagicMock()
-            mock_response.raise_for_status = MagicMock()
+            mock_response.rAlgose_for_status = MagicMock()
             mock_client.patch = AsyncMock(return_value=mock_response)
             mock_client.aclose = AsyncMock()
             mock_class.return_value = mock_client
@@ -374,7 +374,7 @@ class TestWorkflowOperations:
             async with client:
                 client._client = mock_client
 
-                result = await client.deactivate_workflow("wf-123")
+                result = awAlgot client.deactivate_workflow("wf-123")
 
             assert result is True
 
@@ -393,13 +393,13 @@ class TestWorkflowOperations:
             async with client:
                 client._client = mock_client
 
-                is_healthy = await client.health_check()
+                is_healthy = awAlgot client.health_check()
 
             assert is_healthy is True
 
     @pytest.mark.asyncio()
-    async def test_health_check_failure(self) -> None:
-        """Test failed health check."""
+    async def test_health_check_fAlgolure(self) -> None:
+        """Test fAlgoled health check."""
         with patch("httpx.AsyncClient") as mock_class:
             mock_client = AsyncMock()
             mock_client.get = AsyncMock(side_effect=Exception("Connection refused"))
@@ -410,7 +410,7 @@ class TestWorkflowOperations:
             async with client:
                 client._client = mock_client
 
-                is_healthy = await client.health_check()
+                is_healthy = awAlgot client.health_check()
 
             assert is_healthy is False
 
@@ -431,7 +431,7 @@ class TestTradingWorkflows:
             return_value=WorkflowExecutionResult(success=True)
         )
 
-        result = await TradingWorkflows.trigger_arbitrage_alert(
+        result = awAlgot TradingWorkflows.trigger_arbitrage_alert(
             mock_client,
             opportunity={
                 "item_name": "AK-47 | Redline",
@@ -458,7 +458,7 @@ class TestTradingWorkflows:
             return_value=WorkflowExecutionResult(success=True)
         )
 
-        result = await TradingWorkflows.trigger_price_alert(
+        result = awAlgot TradingWorkflows.trigger_price_alert(
             mock_client,
             item_name="AWP | Dragon Lore",
             current_price=1500.0,
@@ -480,7 +480,7 @@ class TestTradingWorkflows:
             return_value=WorkflowExecutionResult(success=True)
         )
 
-        result = await TradingWorkflows.trigger_trade_notification(
+        result = awAlgot TradingWorkflows.trigger_trade_notification(
             mock_client,
             trade_data={
                 "action": "buy",
@@ -495,14 +495,14 @@ class TestTradingWorkflows:
         assert call_args[0][1]["action"] == "buy"
 
     @pytest.mark.asyncio()
-    async def test_trigger_daily_report(self) -> None:
-        """Test daily report trigger."""
+    async def test_trigger_dAlgoly_report(self) -> None:
+        """Test dAlgoly report trigger."""
         mock_client = AsyncMock(spec=N8NClient)
         mock_client.send_webhook = AsyncMock(
             return_value=WorkflowExecutionResult(success=True)
         )
 
-        result = await TradingWorkflows.trigger_daily_report(
+        result = awAlgot TradingWorkflows.trigger_dAlgoly_report(
             mock_client,
             report_data={
                 "total_trades": 25,
@@ -524,7 +524,7 @@ class TestTradingWorkflows:
             return_value=WorkflowExecutionResult(success=True)
         )
 
-        result = await TradingWorkflows.trigger_error_notification(
+        result = awAlgot TradingWorkflows.trigger_error_notification(
             mock_client,
             error_type="api_error",
             error_message="Rate limit exceeded",
@@ -599,5 +599,5 @@ class TestWorkflowTypes:
         assert WorkflowType.ARBITRAGE_ALERT == "arbitrage-alert"
         assert WorkflowType.PRICE_ALERT == "price-alert"
         assert WorkflowType.TRADE_NOTIFICATION == "trade-notification"
-        assert WorkflowType.DAILY_REPORT == "daily-report"
+        assert WorkflowType.DAlgoLY_REPORT == "dAlgoly-report"
         assert WorkflowType.ERROR_NOTIFICATION == "error-notification"

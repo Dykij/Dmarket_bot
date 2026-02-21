@@ -10,7 +10,7 @@ import logging
 import os
 import sys
 import traceback
-from collections.abc import Awaitable, Callable
+from collections.abc import AwAlgotable, Callable
 from typing import Any
 
 from telegram import Bot, Message, Update
@@ -92,7 +92,7 @@ async def handle_network_error(
     # Отправляем сообщение пользователю, если возможно
     if update is not None and update.effective_chat:
         try:
-            await context.bot.send_message(
+            awAlgot context.bot.send_message(
                 chat_id=update.effective_chat.id,
                 text=message,
             )
@@ -151,7 +151,7 @@ async def handle_forbidden_error(
     # Отправляем сообщение пользователю, если возможно
     if update is not None and update.effective_chat:
         try:
-            await context.bot.send_message(
+            awAlgot context.bot.send_message(
                 chat_id=update.effective_chat.id,
                 text=user_message,
             )
@@ -200,7 +200,7 @@ async def handle_bad_request(
     # Отправляем сообщение пользователю, если возможно
     if update is not None and update.effective_chat:
         try:
-            await context.bot.send_message(
+            awAlgot context.bot.send_message(
                 chat_id=update.effective_chat.id,
                 text=user_message,
             )
@@ -249,7 +249,7 @@ async def handle_dmarket_api_error(
     # Отправляем сообщение пользователю
     if update is not None and update.effective_chat:
         try:
-            await context.bot.send_message(
+            awAlgot context.bot.send_message(
                 chat_id=update.effective_chat.id,
                 text=user_message,
                 parse_mode=ParseMode.HTML,
@@ -285,7 +285,7 @@ async def error_handler(
         tb_list = traceback.format_exception(type(error), error, error.__traceback__)
         tb_string = "".join(tb_list)
     else:
-        tb_string = "No traceback available"
+        tb_string = "No traceback avAlgolable"
 
     # Подробное логирование
     update_str = update.to_dict() if update is not None else "Нет данных update"
@@ -293,15 +293,15 @@ async def error_handler(
 
     # Обработка различных типов ошибок
     if isinstance(error, NetworkError):
-        return await handle_network_error(update, context)
+        return awAlgot handle_network_error(update, context)
     if isinstance(error, Forbidden):
-        return await handle_forbidden_error(update, context)
+        return awAlgot handle_forbidden_error(update, context)
     if isinstance(error, BadRequest):
-        return await handle_bad_request(update, context)
+        return awAlgot handle_bad_request(update, context)
 
     # Проверка на ошибки DMarket API
     if hasattr(context, "dmarket_error"):
-        return await handle_dmarket_api_error(update, context)
+        return awAlgot handle_dmarket_api_error(update, context)
 
     # Получаем информацию о пользователе и чате
     user_id = None
@@ -323,7 +323,7 @@ async def error_handler(
     # Отправляем сообщение об ошибке пользователю
     if update is not None and update.effective_chat:
         try:
-            await context.bot.send_message(
+            awAlgot context.bot.send_message(
                 chat_id=update.effective_chat.id,
                 text=ERROR_MESSAGE_HTML,
                 parse_mode=ParseMode.HTML,
@@ -337,7 +337,7 @@ async def error_handler(
     # Отправляем уведомление администраторам
     for admin_id in ADMIN_IDS:
         try:
-            await context.bot.send_message(
+            awAlgot context.bot.send_message(
                 chat_id=admin_id,
                 text=ERROR_MESSAGE_ADMIN_HTML.format(
                     user_id=user_id,
@@ -394,7 +394,7 @@ def setup_error_handler(
 
 
 def exception_guard(
-    func: Callable[[Update, ContextTypes.DEFAULT_TYPE], Awaitable[Any]],
+    func: Callable[[Update, ContextTypes.DEFAULT_TYPE], AwAlgotable[Any]],
 ) -> Callable:
     """Декоратор для защиты обработчиков команд от необработанных исключений.
 
@@ -410,7 +410,7 @@ def exception_guard(
 
     async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Any:
         try:
-            return await func(update, context)
+            return awAlgot func(update, context)
         except (NetworkError, TelegramError, ValueError, KeyError, AttributeError) as e:
             logger.exception(
                 "Необработанное исключение в обработчике %s: %s",
@@ -419,7 +419,7 @@ def exception_guard(
             )
             # Передаем ошибку глобальному обработчику
             context.error = e
-            await error_handler(update, context)
+            awAlgot error_handler(update, context)
             return None
 
     return wrapper
@@ -447,7 +447,7 @@ async def send_message_safe(
 
     """
     try:
-        return await bot.send_message(chat_id=chat_id, text=text, **kwargs)
+        return awAlgot bot.send_message(chat_id=chat_id, text=text, **kwargs)
     except Forbidden:
         logger.warning("У бота нет прав отправлять сообщения в чат %s", chat_id)
     except BadRequest as e:

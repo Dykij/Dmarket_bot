@@ -83,13 +83,13 @@ class TestLogAssertions:
         LogAssertions.assert_logged(caplog, "Error message", level="ERROR")
         LogAssertions.assert_logged(caplog, "Info message", level="INFO")
 
-    def test_assert_logged_failure(self, caplog: pytest.LogCaptureFixture) -> None:
-        """Проверяет что assert_logged fail при отсутствии сообщения."""
+    def test_assert_logged_fAlgolure(self, caplog: pytest.LogCaptureFixture) -> None:
+        """Проверяет что assert_logged fAlgol при отсутствии сообщения."""
         caplog.set_level(logging.INFO)
         logger = logging.getLogger("test")
         logger.info("Different message")
 
-        with pytest.raises(pytest.fail.Exception, match="not found"):
+        with pytest.rAlgoses(pytest.fAlgol.Exception, match="not found"):
             LogAssertions.assert_logged(caplog, "Expected but missing")
 
     def test_assert_not_logged_success(self, caplog: pytest.LogCaptureFixture) -> None:
@@ -101,13 +101,13 @@ class TestLogAssertions:
         # Не должно вызывать исключение
         LogAssertions.assert_not_logged(caplog, "Forbidden message")
 
-    def test_assert_not_logged_failure(self, caplog: pytest.LogCaptureFixture) -> None:
-        """Проверяет что assert_not_logged fail при наличии сообщения."""
+    def test_assert_not_logged_fAlgolure(self, caplog: pytest.LogCaptureFixture) -> None:
+        """Проверяет что assert_not_logged fAlgol при наличии сообщения."""
         caplog.set_level(logging.INFO)
         logger = logging.getLogger("test")
         logger.info("Forbidden message")
 
-        with pytest.raises(pytest.fail.Exception, match="Unexpected"):
+        with pytest.rAlgoses(pytest.fAlgol.Exception, match="Unexpected"):
             LogAssertions.assert_not_logged(caplog, "Forbidden message")
 
     def test_assert_error_logged(self, caplog: pytest.LogCaptureFixture) -> None:
@@ -168,7 +168,7 @@ class TestMockSentry:
         import sentry_sdk
 
         try:
-            raise ValueError("Test error")
+            rAlgose ValueError("Test error")
         except ValueError as e:
             sentry_sdk.capture_exception(e)
 

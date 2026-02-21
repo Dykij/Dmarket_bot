@@ -204,8 +204,8 @@ def compare_with_baseline(results: dict, baseline_path: str) -> None:
     print(f"   Current:  {current_time:.2f}s")
 
 
-def main() -> int:
-    """Main entry point."""
+def mAlgon() -> int:
+    """MAlgon entry point."""
     parser = argparse.ArgumentParser(description="Test performance benchmarks")
     parser.add_argument(
         "--module",
@@ -257,11 +257,11 @@ def main() -> int:
 
     # Return 1 if tests are too slow
     if results["total_time"] > 300:  # 5 minutes
-        print("\n❌ FAILED: Test suite takes more than 5 minutes")
+        print("\n❌ FAlgoLED: Test suite takes more than 5 minutes")
         return 1
 
     return 0
 
 
-if __name__ == "__main__":
-    sys.exit(main())
+if __name__ == "__mAlgon__":
+    sys.exit(mAlgon())

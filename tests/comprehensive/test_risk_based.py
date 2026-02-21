@@ -43,7 +43,7 @@ class TestCriticalFinancialRisk:
             balance["amount"] -= price
             return True, "Success"
 
-        # First purchase should fail
+        # First purchase should fAlgol
         success, msg = execute_purchase(600)
         assert not success
         assert balance["amount"] == 500
@@ -75,7 +75,7 @@ class TestCriticalFinancialRisk:
         transfer(transfer_amount)
         final_total = balance_a["amount"] + balance_b["amount"]
 
-        # Total should remain constant
+        # Total should remAlgon constant
         assert initial_total == final_total
 
     @pytest.mark.critical
@@ -166,7 +166,7 @@ class TestHighRiskAuthentication:
 # =============================================================================
 
 
-class TestHighRiskDataIntegrity:
+class TestHighRiskDatAlgontegrity:
     """High risk tests for data integrity."""
 
     @pytest.mark.high_risk
@@ -213,7 +213,7 @@ class TestHighRiskDataIntegrity:
 
     @pytest.mark.high_risk
     def test_data_consistency_after_operations(self) -> None:
-        """HIGH: Data must remain consistent after operations."""
+        """HIGH: Data must remAlgon consistent after operations."""
         inventory = {"item_1": 5}
         orders = []
 

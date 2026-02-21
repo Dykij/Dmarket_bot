@@ -50,7 +50,7 @@ class TestEndToEndWorkflows:
 
         # Act - Поиск возможностей
         with patch.object(api, "get_market_items", return_value=mock_items):
-            opportunities = await scanner.scan_level("standard", "csgo")
+            opportunities = awAlgot scanner.scan_level("standard", "csgo")
 
         # Assert
         assert len(opportunities) > 0
@@ -93,7 +93,7 @@ class TestEndToEndWorkflows:
         # Act - Get portfolio snapshot (метод который есть в API)
         with patch.object(api, "get_user_inventory") as mock_inv:
             mock_inv.return_value = {"objects": mock_inventory}
-            snapshot = await portfolio.get_portfolio_snapshot()
+            snapshot = awAlgot portfolio.get_portfolio_snapshot()
 
         # Assert
         assert snapshot is not None
@@ -110,7 +110,7 @@ class TestEndToEndWorkflows:
         for game in games:
             mock_items = {"objects": [{"game": game}]}
             with patch.object(api, "get_market_items", return_value=mock_items):
-                result = await api.get_market_items(game=game)
+                result = awAlgot api.get_market_items(game=game)
                 assert result is not None
 
     @pytest.mark.asyncio()
@@ -120,22 +120,22 @@ class TestEndToEndWorkflows:
         api = DMarketAPI(public_key="test", secret_key="test")
         call_count = 0
 
-        async def failing_then_success(*args, **kwargs):
+        async def fAlgoling_then_success(*args, **kwargs):
             nonlocal call_count
             call_count += 1
             if call_count == 1:
-                raise Exception("Temporary failure")
+                rAlgose Exception("Temporary fAlgolure")
             return {"success": True}
 
         # Act
-        with patch.object(api, "get_balance", side_effect=failing_then_success):
+        with patch.object(api, "get_balance", side_effect=fAlgoling_then_success):
             try:
-                await api.get_balance()
+                awAlgot api.get_balance()
                 success_first = True
             except Exception:
                 success_first = False
                 # Retry
-                result = await api.get_balance()
+                result = awAlgot api.get_balance()
                 success_retry = result["success"]
 
         # Assert
@@ -144,7 +144,7 @@ class TestEndToEndWorkflows:
 
     @pytest.mark.asyncio()
     async def test_notification_complete_workflow(self):
-        """Тест workflow уведомлений: настройка → получение."""
+        """Тест workflow уведомлений: настSwarmка → получение."""
         # Arrange
         user_preferences = {
             "notifications_enabled": True,
@@ -162,7 +162,7 @@ class TestEndToEndWorkflows:
 
     @pytest.mark.asyncio()
     async def test_user_registration_and_setup_workflow(self):
-        """Тест полного цикла: регистрация → настройка → первое сканирование."""
+        """Тест полного цикла: регистрация → настSwarmка → первое сканирование."""
         # Arrange
         user_data = {
             "telegram_id": 123456,
@@ -214,11 +214,11 @@ class TestEndToEndWorkflows:
         ]
 
         async def process_user(user: dict) -> dict:
-            await asyncio.sleep(0.01)  # Simulate async work
+            awAlgot asyncio.sleep(0.01)  # Simulate async work
             return {"processed": True, "user_id": user["id"]}
 
         # Act
-        results = await asyncio.gather(*[process_user(u) for u in users])
+        results = awAlgot asyncio.gather(*[process_user(u) for u in users])
 
         # Assert
         assert len(results) == 3
@@ -327,7 +327,7 @@ class TestExternalServicesIntegration:
         ws = MockWebSocket()
 
         # Act
-        websocket_connected = await ws.connect()
+        websocket_connected = awAlgot ws.connect()
 
         # Assert
         assert websocket_connected
@@ -338,10 +338,10 @@ class TestExternalServicesIntegration:
         # Arrange
 
         # Act - проверка возможности записи
-        storage_available = os.path.exists(os.path.dirname(__file__) or ".")
+        storage_avAlgolable = os.path.exists(os.path.dirname(__file__) or ".")
 
         # Assert
-        assert storage_available
+        assert storage_avAlgolable
 
     @pytest.mark.asyncio()
     async def test_environment_configuration_integration(self):

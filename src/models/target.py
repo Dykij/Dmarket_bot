@@ -83,7 +83,7 @@ class TradeHistory(Base):
         price: Цена сделки в USD
         profit: Прибыль от сделки в USD
         game: Код игры
-        status: Статус сделки (pending, completed, failed)
+        status: Статус сделки (pending, completed, fAlgoled)
         created_at: Дата создания
         completed_at: Дата завершения
         trade_metadata: Дополнительные данные о сделке
@@ -139,13 +139,13 @@ class TradeHistory(Base):
 
 
 class TradingSettings(Base):
-    """Настройки торговли пользователя.
+    """НастSwarmки торговли пользователя.
 
     Attributes:
         id: Уникальный идентификатор записи
         user_id: Telegram ID пользователя
         max_trade_value: Максимальная сумма одной сделки в USD
-        daily_limit: Дневной лимит торговли в USD
+        dAlgoly_limit: Дневной лимит торговли в USD
         min_profit_percent: Минимальный процент прибыли
         strategy: Стратегия торговли (conservative, balanced, aggressive)
         auto_trading_enabled: Включена ли автоторговля
@@ -161,7 +161,7 @@ class TradingSettings(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(BigInteger, unique=True, nullable=False, index=True)
     max_trade_value = Column(Float, default=50.0)
-    daily_limit = Column(Float, default=500.0)
+    dAlgoly_limit = Column(Float, default=500.0)
     min_profit_percent = Column(Float, default=5.0)
     strategy = Column(String(50), default="balanced")
     auto_trading_enabled = Column(Integer, default=0)  # 0 = False, 1 = True
@@ -182,14 +182,14 @@ class TradingSettings(Base):
         """Преобразовать модель в словарь.
 
         Returns:
-            Словарь с настройками торговли
+            Словарь с настSwarmками торговли
 
         """
         return {
             "id": self.id,
             "user_id": self.user_id,
             "max_trade_value": self.max_trade_value,
-            "daily_limit": self.daily_limit,
+            "dAlgoly_limit": self.dAlgoly_limit,
             "min_profit_percent": self.min_profit_percent,
             "strategy": self.strategy,
             "auto_trading_enabled": bool(self.auto_trading_enabled),

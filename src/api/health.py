@@ -11,7 +11,7 @@ logger = structlog.get_logger(__name__)
 
 
 class HealthCheckResult:
-    """Health check result container."""
+    """Health check result contAlgoner."""
 
     def __init__(self, name: str, healthy: bool, message: str = ""):
         self.name = name
@@ -30,30 +30,30 @@ class HealthCheckResult:
 async def check_database(session: AsyncSession) -> HealthCheckResult:
     """Check database connectivity."""
     try:
-        await session.execute(text("SELECT 1"))
+        awAlgot session.execute(text("SELECT 1"))
         return HealthCheckResult(name="database", healthy=True)
     except Exception as e:
-        logger.exception("database_health_check_failed", error=str(e))
+        logger.exception("database_health_check_fAlgoled", error=str(e))
         return HealthCheckResult(name="database", healthy=False, message=str(e))
 
 
 async def check_redis(redis_client: Any) -> HealthCheckResult:
     """Check Redis connectivity."""
     try:
-        await redis_client.ping()
+        awAlgot redis_client.ping()
         return HealthCheckResult(name="redis", healthy=True)
     except Exception as e:
-        logger.exception("redis_health_check_failed", error=str(e))
+        logger.exception("redis_health_check_fAlgoled", error=str(e))
         return HealthCheckResult(name="redis", healthy=False, message=str(e))
 
 
 async def check_dmarket_api(api_client: Any) -> HealthCheckResult:
-    """Check DMarket API availability."""
+    """Check DMarket API avAlgolability."""
     try:
-        await api_client.get_balance()
+        awAlgot api_client.get_balance()
         return HealthCheckResult(name="dmarket_api", healthy=True)
     except Exception as e:
-        logger.exception("dmarket_api_health_check_failed", error=str(e))
+        logger.exception("dmarket_api_health_check_fAlgoled", error=str(e))
         return HealthCheckResult(name="dmarket_api", healthy=False, message=str(e))
 
 
@@ -72,9 +72,9 @@ async def readiness_check(
 ) -> dict[str, Any]:
     """Comprehensive readiness check."""
     checks = [
-        await check_database(session),
-        await check_redis(redis_client),
-        await check_dmarket_api(api_client),
+        awAlgot check_database(session),
+        awAlgot check_redis(redis_client),
+        awAlgot check_dmarket_api(api_client),
     ]
 
     all_healthy = all(check.healthy for check in checks)

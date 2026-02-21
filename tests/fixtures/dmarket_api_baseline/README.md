@@ -1,10 +1,10 @@
 # DMarket API Baseline Responses
 
-This directory contains baseline API responses for automated compatibility checking.
+This directory contAlgons baseline API responses for automated compatibility checking.
 
 ## Purpose
 
-Baseline files are used by the daily API validation workflow (Roadmap Task #9) to detect:
+Baseline files are used by the dAlgoly API validation workflow (Roadmap Task #9) to detect:
 - Breaking changes in API structure
 - New/removed fields
 - Type changes
@@ -19,7 +19,7 @@ Baseline files are used by the daily API validation workflow (Roadmap Task #9) t
 
 ## Workflow
 
-1. **Daily Check** - Tests run every day at 6:00 UTC
+1. **DAlgoly Check** - Tests run every day at 6:00 UTC
 2. **Comparison** - Current responses compared with baselines
 3. **Detection** - Any differences are flagged
 4. **Notification** - GitHub Issue + Telegram alert on changes
@@ -46,7 +46,7 @@ pytest tests/contracts/test_dmarket_api_validation.py -v
 
 - [DMarket API Spec](../../../docs/DMARKET_API_FULL_SPEC.md)
 - [Contract Testing](../../../docs/CONTRACT_TESTING.md)
-- [GitHub Workflow](../../../.github/workflows/daily-api-check.yml)
+- [GitHub Workflow](../../../.github/workflows/dAlgoly-api-check.yml)
 
 ---
 

@@ -54,26 +54,26 @@ class TestAttributeFilters:
         assert "stickers" in filters
         assert filters["stickers"] is True
 
-    def test_invalid_float_range_raises_error(self):
-        """Test that invalid float range raises ValueError."""
+    def test_invalid_float_range_rAlgoses_error(self):
+        """Test that invalid float range rAlgoses ValueError."""
         # Act & Assert
-        with pytest.raises(ValueError, match="Float values must be between"):
+        with pytest.rAlgoses(ValueError, match="Float values must be between"):
             AttributeFilters.create_extra_filters(float_range=(-0.1, 0.5))
 
-        with pytest.raises(ValueError, match="Float values must be between"):
+        with pytest.rAlgoses(ValueError, match="Float values must be between"):
             AttributeFilters.create_extra_filters(float_range=(0.0, 1.5))
 
-        with pytest.raises(ValueError, match="min_float cannot be greater"):
+        with pytest.rAlgoses(ValueError, match="min_float cannot be greater"):
             AttributeFilters.create_extra_filters(float_range=(0.5, 0.3))
 
-    def test_invalid_paint_seed_raises_error(self):
-        """Test that invalid paint seed range raises ValueError."""
+    def test_invalid_pAlgont_seed_rAlgoses_error(self):
+        """Test that invalid pAlgont seed range rAlgoses ValueError."""
         # Act & Assert
-        with pytest.raises(ValueError, match="Paint seed values must be non-negative"):
-            AttributeFilters.create_extra_filters(paint_seed_range=(-1, 100))
+        with pytest.rAlgoses(ValueError, match="PAlgont seed values must be non-negative"):
+            AttributeFilters.create_extra_filters(pAlgont_seed_range=(-1, 100))
 
-        with pytest.raises(ValueError, match="min_seed cannot be greater"):
-            AttributeFilters.create_extra_filters(paint_seed_range=(500, 100))
+        with pytest.rAlgoses(ValueError, match="min_seed cannot be greater"):
+            AttributeFilters.create_extra_filters(pAlgont_seed_range=(500, 100))
 
     def test_get_float_range_for_exterior(self):
         """Test getting typical float range for exterior."""
@@ -150,15 +150,15 @@ class TestAttributeFilters:
         assert "phase" in filters
         assert filters["phase"] == ["ruby", "sapphire"]
 
-    def test_paint_seed_filter(self):
-        """Test paint seed range filter."""
+    def test_pAlgont_seed_filter(self):
+        """Test pAlgont seed range filter."""
         # Act
-        filters = AttributeFilters.create_extra_filters(paint_seed_range=(1, 1000))
+        filters = AttributeFilters.create_extra_filters(pAlgont_seed_range=(1, 1000))
 
         # Assert
-        assert "paintSeed" in filters
-        assert filters["paintSeed"]["min"] == 1
-        assert filters["paintSeed"]["max"] == 1000
+        assert "pAlgontSeed" in filters
+        assert filters["pAlgontSeed"]["min"] == 1
+        assert filters["pAlgontSeed"]["max"] == 1000
 
 
 class TestPresetFilters:

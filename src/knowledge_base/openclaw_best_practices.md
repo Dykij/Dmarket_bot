@@ -1,4 +1,4 @@
-# OpenClaw Best Practices
+# Platform Best Practices
 *Harvested from the collective wisdom of pashov and mberman84.*
 
 ## Core Principles
@@ -20,6 +20,6 @@
 - **Precision:** Use `edit` for small changes in large files; use `write` for creating or overwriting small files.
 - **Narration:** Only narrate complex logic. Routine tool calls should be silent to save tokens and reduce noise.
 
-## specific "Lucas" & "Benjamin" Protocols
-- **Lucas (Security):** Whitelist/Blacklist checks are mandatory for shell execution.
-- **Benjamin (Coding):** Plan -> Code. No blind coding.
+## specific "QA" & "Core" Protocols
+- **QA (Security):** Whitelist/Blacklist checks are mandatory for shell execution.
+- **Core (Coding):** Plan -> Code. No blind coding.

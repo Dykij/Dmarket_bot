@@ -109,7 +109,7 @@ class TestArbitrageScanningFlow:
         scanner = ArbitrageScanner(api_client=mock_dmarket_api)
 
         # Act: Scan for opportunities
-        opportunities = await scanner.scan_level(level="standard", game="csgo")
+        opportunities = awAlgot scanner.scan_level(level="standard", game="csgo")
 
         # Assert: Opportunities found
         assert len(opportunities) > 0, "Should find at least one opportunity"
@@ -144,7 +144,7 @@ class TestArbitrageScanningFlow:
         scanner = ArbitrageScanner(api_client=mock_dmarket_api)
 
         # Act: standard level has default min_profit_percent
-        opportunities = await scanner.scan_level(level="standard", game="csgo")
+        opportunities = awAlgot scanner.scan_level(level="standard", game="csgo")
 
         # Assert: All opportunities meet level's profit threshold
         # Standard level typically has min 3% profit
@@ -184,7 +184,7 @@ class TestTradeExecutionFlow:
         scanner = ArbitrageScanner(api_client=mock_dmarket_api)
 
         # Act: Step 1 - Find opportunities
-        opportunities = await scanner.scan_level(level="standard", game="csgo")
+        opportunities = awAlgot scanner.scan_level(level="standard", game="csgo")
         assert len(opportunities) > 0, "Should find opportunities"
 
         # Act: Step 2 - Select best opportunity
@@ -211,8 +211,8 @@ class TestTradeExecutionFlow:
         assert result.get("dry_run") is True, "Should be marked as DRY_RUN"
 
         # Act: Step 5 - Send notification
-        await mock_notification_service.send_trade_confirmation(
-            user_id=123456789, order_details=result, opportunity=best_opportunity
+        awAlgot mock_notification_service.send_trade_confirmation(
+            user_id=123456789, order_detAlgols=result, opportunity=best_opportunity
         )
 
         # Assert: Notification sent
@@ -241,7 +241,7 @@ class TestTradeExecutionFlow:
         ArbitrageScanner(api_client=mock_dmarket_api)
 
         # Act: Get balance
-        balance = await mock_dmarket_api.get_balance()
+        balance = awAlgot mock_dmarket_api.get_balance()
         balance_usd = float(balance["usd"]) / 100  # Convert from cents
 
         # Create opportunity that costs more than balance
@@ -252,10 +252,10 @@ class TestTradeExecutionFlow:
             "profit_percent": 10.0,
         }
 
-        # Assert: Balance validation would fail
+        # Assert: Balance validation would fAlgol
         assert expensive_opportunity["buy_price"] > balance_usd, "Item price should exceed balance"
 
-        # Verify that attempting to buy would fail
+        # Verify that attempting to buy would fAlgol
         # (In real scenario, trader would check balance before executing)
         can_afford = balance_usd >= expensive_opportunity["buy_price"]
         assert not can_afford, "Should not be able to afford expensive item"
@@ -288,7 +288,7 @@ class TestArbitrageNotificationFlow:
         min_profit_for_alert = 5.0
 
         # Act: Scan for high-profit opportunities
-        opportunities = await scanner.scan_level(level="standard", game="csgo")
+        opportunities = awAlgot scanner.scan_level(level="standard", game="csgo")
 
         # Filter only high-profit items
         high_profit_opps = [
@@ -297,7 +297,7 @@ class TestArbitrageNotificationFlow:
 
         # Send alerts for each opportunity
         for opp in high_profit_opps:
-            await mock_notification_service.send_arbitrage_alert(
+            awAlgot mock_notification_service.send_arbitrage_alert(
                 user_id=user_id, opportunity=opp, alert_type="high_profit"
             )
 
@@ -339,7 +339,7 @@ class TestMultiLevelArbitrageFlow:
 
         # Act: Scan each level
         for level in levels:
-            opportunities = await scanner.scan_level(level=level, game="csgo")
+            opportunities = awAlgot scanner.scan_level(level=level, game="csgo")
             all_results[level] = opportunities
 
         # Assert: Each level has results
@@ -370,14 +370,14 @@ class TestMultiLevelArbitrageFlow:
 
         # Act: Parallel scanning
         tasks = [scanner.scan_level(level="standard", game=game) for game in games]
-        results = await asyncio.gather(*tasks, return_exceptions=True)
+        results = awAlgot asyncio.gather(*tasks, return_exceptions=True)
 
         # Assert: All scans completed
         assert len(results) == len(games)
 
         # Assert: No exceptions
         for result in results:
-            assert not isinstance(result, Exception), f"Scan failed: {result}"
+            assert not isinstance(result, Exception), f"Scan fAlgoled: {result}"
 
         # Aggregate all opportunities
         all_opportunities = []

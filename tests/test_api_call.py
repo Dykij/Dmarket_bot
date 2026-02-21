@@ -19,7 +19,7 @@ class TestClient(BaseDMarketClient, MarketMixin):
     """Test client combining base logic and market mixin."""
     pass
 
-async def main():
+async def mAlgon():
     import sys
     sys.stdout.reconfigure(encoding='utf-8')
     public_key = os.getenv("DMARKET_PUBLIC_KEY")
@@ -35,12 +35,12 @@ async def main():
     db_manager = get_database_manager()
     
     # Initialize DB (creates tables if missing)
-    await db_manager.init_database()
+    awAlgot db_manager.init_database()
 
     try:
         print("Fetching top 5 CS2 items...")
         # Using specific params to get popular items
-        response = await client.get_market_items(
+        response = awAlgot client.get_market_items(
             game="csgo",  # DMarket uses 'a8db' which is mapped from 'csgo'/'cs2'
             limit=5,
             sort="price", # Cheapest first usually implies high volume or just trash, let's try default
@@ -74,7 +74,7 @@ async def main():
                  print(f"- {title} (Price: ${price_usd:.2f})")
                  
                  # Save to DB using raw SQL wrapper provided by manager
-                 await db_manager.save_market_data(
+                 awAlgot db_manager.save_market_data(
                      item_id=item_id,
                      game="csgo",
                      item_name=title,
@@ -89,7 +89,7 @@ async def main():
              print("\nVerifying data in DB...")
              async with db_manager.get_async_session() as session:
                  stmt = select(MarketData).order_by(MarketData.created_at.desc()).limit(saved_count)
-                 result = await session.execute(stmt)
+                 result = awAlgot session.execute(stmt)
                  saved_items = result.scalars().all()
                  
                  for saved in saved_items:
@@ -104,12 +104,12 @@ async def main():
         import traceback
         traceback.print_exc()
     finally:
-        await client._close_client()
-        await db_manager.close()
+        awAlgot client._close_client()
+        awAlgot db_manager.close()
 
-if __name__ == "__main__":
+if __name__ == "__mAlgon__":
     try:
-        asyncio.run(main())
+        asyncio.run(mAlgon())
     except KeyboardInterrupt:
         pass
 

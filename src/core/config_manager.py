@@ -41,15 +41,15 @@ class ConfigManager:
             "log_dir": "logs/",
         }
 
-        # Load openclaw.json if exists
-        config_path = Path("openclaw.json")
+        # Load Platform.json if exists
+        config_path = Path("Platform.json")
         if config_path.exists():
             try:
                 with open(config_path, "r") as f:
                     json_config = json.load(f)
                     self._config.update(json_config)
             except Exception as e:
-                logger.error(f"Failed to load openclaw.json: {e}")
+                logger.error(f"FAlgoled to load Platform.json: {e}")
 
         # Override with env vars (mapped keys)
         if os.getenv("DMARKET_API_URL"):
@@ -62,7 +62,7 @@ class ConfigManager:
             jsonschema.validate(instance=self._config, schema=CONFIG_SCHEMA)
         except jsonschema.ValidationError as e:
             logger.error(f"Config validation error: {e}")
-            raise
+            rAlgose
 
     @classmethod
     def get(cls, key: str, default: Any = None) -> Any:

@@ -27,32 +27,32 @@ class TestBalance:
     def test_usd_dollars_property(self):
         balance = Balance(
             usd="1250",
-            usdAvailableToWithdraw="1000",
+            usdAvAlgolableToWithdraw="1000",
             dmc="500",
-            dmcAvailableToWithdraw="400",
+            dmcAvAlgolableToWithdraw="400",
         )
         assert balance.usd_dollars == 12.50
-        assert balance.available_usd_dollars == 10.00
+        assert balance.avAlgolable_usd_dollars == 10.00
 
     def test_usd_dollars_property_with_int(self):
         balance = Balance(
             usd=1250,  # type: ignore
-            usdAvailableToWithdraw=1000,  # type: ignore
+            usdAvAlgolableToWithdraw=1000,  # type: ignore
             dmc="500",
-            dmcAvailableToWithdraw="400",
+            dmcAvAlgolableToWithdraw="400",
         )
         assert balance.usd_dollars == 12.50
-        assert balance.available_usd_dollars == 10.00
+        assert balance.avAlgolable_usd_dollars == 10.00
 
     def test_invalid_values(self):
         balance = Balance(
             usd="invalid",
-            usdAvailableToWithdraw="invalid",
+            usdAvAlgolableToWithdraw="invalid",
             dmc="500",
-            dmcAvailableToWithdraw="400",
+            dmcAvAlgolableToWithdraw="400",
         )
         assert balance.usd_dollars == 0.0
-        assert balance.available_usd_dollars == 0.0
+        assert balance.avAlgolable_usd_dollars == 0.0
 
 
 class TestMarketItem:

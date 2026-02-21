@@ -121,7 +121,7 @@ class TestItemValueEvaluator:
         item_data = {
             "gameId": "csgo",
             "title": "AK-47 | Case Hardened (Factory New)",
-            "extra": {"paintSeed": 661},  # Известный Blue Gem паттерн
+            "extra": {"pAlgontSeed": 661},  # Известный Blue Gem паттерн
         }
 
         result = evaluator.evaluate(item_data)
@@ -207,7 +207,7 @@ class TestItemValueEvaluator:
         """Тест обнаружения топового Unusual эффекта."""
         item_data = {
             "gameId": "tf2",
-            "title": "Unusual Team Captain",
+            "title": "Unusual Team CaptAlgon",
             "extra": {"effect": "Burning Flames"},
         }
 

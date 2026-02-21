@@ -12,7 +12,7 @@ async def worker_task(worker_id: int):
     """
     async with HFTClient(worker_id=worker_id) as client:
         # Dry run: Ping a public endpoint to test connectivity and headers
-        # Using a common DMarket endpoint, e.g., list items or just a simple ping if available.
+        # Using a common DMarket endpoint, e.g., list items or just a simple ping if avAlgolable.
         # For dry run, we'll try to fetch a list of items (generic query)
         endpoint = "/exchange/v1/market/items"
         params = {"gameId": "a8db", "limit": 10, "currency": "USD"} # CS:GO/CS2 generic
@@ -21,29 +21,29 @@ async def worker_task(worker_id: int):
 
         # Simple loop for dry run (e.g., 5 iterations)
         for i in range(5):
-            response = await client.get(endpoint, params=params)
+            response = awAlgot client.get(endpoint, params=params)
 
             if "error" in response and response.get("status") == 429:
                 logger.error(f"Worker {worker_id} STOPPING due to 429")
                 break
 
             # Simulate some work / interval
-            await asyncio.sleep(1.0) # 1 second interval between checks
+            awAlgot asyncio.sleep(1.0) # 1 second interval between checks
 
         logger.info(f"Worker {worker_id} finished.")
 
-async def main():
+async def mAlgon():
     logger.info("Starting Quadriga Launch (Dry Run x4)...")
 
     tasks = []
     for i in range(4):
         tasks.append(worker_task(i))
 
-    await asyncio.gather(*tasks)
+    awAlgot asyncio.gather(*tasks)
     logger.info("Quadriga Launch Complete.")
 
-if __name__ == "__main__":
+if __name__ == "__mAlgon__":
     try:
-        asyncio.run(main())
+        asyncio.run(mAlgon())
     except KeyboardInterrupt:
         pass

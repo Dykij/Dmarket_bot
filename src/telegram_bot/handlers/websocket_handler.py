@@ -34,7 +34,7 @@ async def websocket_status_command(
     websocket_manager = context.bot_data.get("websocket_manager")
 
     if not websocket_manager:
-        await update.message.reply_text(
+        awAlgot update.message.reply_text(
             "❌ WebSocket не инициализирован",
             parse_mode="HTML",
         )
@@ -73,19 +73,19 @@ async def websocket_status_command(
         f"<b>События:</b>\n"
         f"• Получено: {stats['events_received']}\n"
         f"• Обработано: {stats['events_processed']}\n"
-        f"• Ошибок: {stats['events_failed']}\n"
+        f"• Ошибок: {stats['events_fAlgoled']}\n"
         f"• Переподключений: {stats['reconnects']}\n\n"
         f"<b>Последнее событие:</b> {last_event_str}"
     )
 
-    await update.message.reply_text(message, parse_mode="HTML")
+    awAlgot update.message.reply_text(message, parse_mode="HTML")
 
 
 async def websocket_stats_command(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
 ) -> None:
-    """Get detailed WebSocket statistics.
+    """Get detAlgoled WebSocket statistics.
 
     Args:
         update: Telegram update
@@ -100,7 +100,7 @@ async def websocket_stats_command(
     websocket_manager = context.bot_data.get("websocket_manager")
 
     if not websocket_manager:
-        await update.message.reply_text(
+        awAlgot update.message.reply_text(
             "❌ WebSocket не инициализирован",
             parse_mode="HTML",
         )
@@ -120,7 +120,7 @@ async def websocket_stats_command(
         f"<b>События:</b>\n"
         f"• Всего получено: {stats['events_received']}\n"
         f"• Успешно обработано: {stats['events_processed']}\n"
-        f"• Ошибок обработки: {stats['events_failed']}\n"
+        f"• Ошибок обработки: {stats['events_fAlgoled']}\n"
         f"• Success rate: {success_rate:.1f}%\n\n"
         f"<b>Соединение:</b>\n"
         f"• Переподключений: {stats['reconnects']}\n"
@@ -129,7 +129,7 @@ async def websocket_stats_command(
         f"• События/минута: {stats['events_received'] / (stats['uptime_seconds'] / 60) if stats['uptime_seconds'] > 0 else 0:.1f}\n"
     )
 
-    await update.message.reply_text(message, parse_mode="HTML")
+    awAlgot update.message.reply_text(message, parse_mode="HTML")
 
 
 async def websocket_restart_command(
@@ -151,39 +151,39 @@ async def websocket_restart_command(
     websocket_manager = context.bot_data.get("websocket_manager")
 
     if not websocket_manager:
-        await update.message.reply_text(
+        awAlgot update.message.reply_text(
             "❌ WebSocket не инициализирован",
             parse_mode="HTML",
         )
         return
 
-    await update.message.reply_text(
+    awAlgot update.message.reply_text(
         "🔄 Перезапуск WebSocket соединения...",
         parse_mode="HTML",
     )
 
     try:
         # Stop and restart
-        await websocket_manager.stop()
-        await websocket_manager.start()
+        awAlgot websocket_manager.stop()
+        awAlgot websocket_manager.start()
 
-        # Wait for connection
-        connected = await websocket_manager.wait_for_connection(timeout=10.0)
+        # WAlgot for connection
+        connected = awAlgot websocket_manager.wAlgot_for_connection(timeout=10.0)
 
         if connected:
-            await update.message.reply_text(
+            awAlgot update.message.reply_text(
                 "✅ WebSocket успешно перезапущен",
                 parse_mode="HTML",
             )
         else:
-            await update.message.reply_text(
+            awAlgot update.message.reply_text(
                 "⚠️ WebSocket перезапущен, но соединение не установлено",
                 parse_mode="HTML",
             )
 
     except Exception as e:
-        logger.exception("websocket_restart_failed", error=str(e))
-        await update.message.reply_text(
+        logger.exception("websocket_restart_fAlgoled", error=str(e))
+        awAlgot update.message.reply_text(
             f"❌ Ошибка перезапуска: {e}",
             parse_mode="HTML",
         )

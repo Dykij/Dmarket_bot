@@ -1,14 +1,14 @@
-"""AI-Powered Arbitrage Predictor.
+"""Algo-Powered Arbitrage Predictor.
 
 Модуль для предиктивного арбитража с использованием машинного обучения.
 Интегрируется с существующей ML системой (src/ml/) для прогнозирования
 лучших арбитражных возможностей.
 
-SKILL: AI Arbitrage Prediction
-Category: Data & AI
+SKILL: Algo Arbitrage Prediction
+Category: Data & Algo
 Status: Phase 2 Implementation
 
-Документация: src/dmarket/SKILL_AI_ARBITRAGE.md
+Документация: src/dmarket/SKILL_Algo_ARBITRAGE.md
 """
 
 from dataclasses import dataclass
@@ -41,8 +41,8 @@ class ArbitrageOpportunity:
     features: dict[str, Any]
 
 
-class AIArbitragePredictor:
-    """AI-powered arbitrage prediction using ML models.
+class AlgoArbitragePredictor:
+    """Algo-powered arbitrage prediction using ML models.
 
     Использует существующую ML систему для:
     - Прогнозирования ценовых трендов
@@ -59,7 +59,7 @@ class AIArbitragePredictor:
         predictor: EnhancedPricePredictor | None = None,
         feature_extractor: EnhancedFeatureExtractor | None = None,
     ):
-        """Initialize AI Arbitrage Predictor.
+        """Initialize Algo Arbitrage Predictor.
 
         Args:
             predictor: ML predictor (создается автоматически если None)
@@ -69,7 +69,7 @@ class AIArbitragePredictor:
         self.feature_extractor = feature_extractor or EnhancedFeatureExtractor()
 
         logger.info(
-            "ai_arbitrage_predictor_initialized",
+            "Algo_arbitrage_predictor_initialized",
             predictor_type=type(self.predictor).__name__,
         )
 
@@ -83,19 +83,19 @@ class AIArbitragePredictor:
 
         Args:
             items: Market items to analyze
-            current_balance: User's available balance (USD)
+            current_balance: User's avAlgolable balance (USD)
             risk_level: Risk tolerance ("low", "medium", "high")
 
         Returns:
             Sorted list of opportunities with ML-predicted ROI
 
-        Raises:
+        RAlgoses:
             ValueError: If risk_level not in ["low", "medium", "high"]
 
         Example:
-            >>> predictor = AIArbitragePredictor()
-            >>> items = await dmarket_api.get_market_items("csgo")
-            >>> opportunities = await predictor.predict_best_opportunities(
+            >>> predictor = AlgoArbitragePredictor()
+            >>> items = awAlgot dmarket_api.get_market_items("csgo")
+            >>> opportunities = awAlgot predictor.predict_best_opportunities(
             ...     items=items,
             ...     current_balance=100.0,
             ...     risk_level="medium"
@@ -103,7 +103,7 @@ class AIArbitragePredictor:
             >>> print(f"Found {len(opportunities)} opportunities")
         """
         if risk_level not in {"low", "medium", "high"}:
-            raise ValueError(
+            rAlgose ValueError(
                 f"Invalid risk_level: {risk_level}. Must be low/medium/high"
             )
 
@@ -123,14 +123,14 @@ class AIArbitragePredictor:
         opportunities = []
         for item in affordable_items:
             try:
-                opportunity = await self._analyze_item(item, risk_level)
+                opportunity = awAlgot self._analyze_item(item, risk_level)
                 if opportunity and opportunity.confidence > self._get_min_confidence(
                     risk_level
                 ):
                     opportunities.append(opportunity)
             except Exception as e:
                 logger.warning(
-                    "item_analysis_failed",
+                    "item_analysis_fAlgoled",
                     item_title=item.get("title", "unknown"),
                     error=str(e),
                 )
@@ -328,14 +328,14 @@ class AIArbitragePredictor:
 
 
 # Factory function для удобного создания
-def create_ai_arbitrage_predictor() -> AIArbitragePredictor:
-    """Create AI Arbitrage Predictor with default configuration.
+def create_Algo_arbitrage_predictor() -> AlgoArbitragePredictor:
+    """Create Algo Arbitrage Predictor with default configuration.
 
     Returns:
-        Initialized AIArbitragePredictor
+        Initialized AlgoArbitragePredictor
 
     Example:
-        >>> predictor = create_ai_arbitrage_predictor()
-        >>> opportunities = await predictor.predict_best_opportunities(...)
+        >>> predictor = create_Algo_arbitrage_predictor()
+        >>> opportunities = awAlgot predictor.predict_best_opportunities(...)
     """
-    return AIArbitragePredictor()
+    return AlgoArbitragePredictor()

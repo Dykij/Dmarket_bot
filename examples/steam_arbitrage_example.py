@@ -14,7 +14,7 @@ from src.dmarket.arbitrage_scanner import ArbitrageScanner
 
 from src.dmarket.dmarket_api import DMarketAPI
 
-# Настройка логирования
+# НастSwarmка логирования
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
@@ -40,7 +40,7 @@ async def example_steam_arbitrage():
     # 3. Сканируем CS:GO рынок
     logger.info("Scanning CS:GO market for arbitrage opportunities...")
 
-    results = await scanner.scan_game(
+    results = awAlgot scanner.scan_game(
         game="csgo",
         mode="medium",
         max_items=10,
@@ -88,7 +88,7 @@ async def example_steam_arbitrage():
             # Без Steam данных
             profit = item.get("profit", 0)
             print(f"   📈 Estimated Profit: {profit:.1f}%")
-            print("   ⚠️  Steam data not available")
+            print("   ⚠️  Steam data not avAlgolable")
 
         print()
 
@@ -109,7 +109,7 @@ async def example_compare_with_without_steam():
 
     scanner_without_steam = ArbitrageScanner(api_client=api_client, enable_steam_check=False)
 
-    results_without = await scanner_without_steam.scan_game("csgo", "medium", 10)
+    results_without = awAlgot scanner_without_steam.scan_game("csgo", "medium", 10)
     print(f"Found {len(results_without)} items without Steam check")
 
     # Сканирование С Steam
@@ -119,7 +119,7 @@ async def example_compare_with_without_steam():
 
     scanner_with_steam = ArbitrageScanner(api_client=api_client, enable_steam_check=True)
 
-    results_with = await scanner_with_steam.scan_game("csgo", "medium", 10)
+    results_with = awAlgot scanner_with_steam.scan_game("csgo", "medium", 10)
     print(f"Found {len(results_with)} items with Steam check")
 
     # Сравнение
@@ -139,7 +139,7 @@ async def example_compare_with_without_steam():
 
 
 async def example_settings_control():
-    """Пример управления настройками Steam."""
+    """Пример управления настSwarmками Steam."""
 
     from src.utils.steam_db_handler import get_steam_db
 
@@ -149,21 +149,21 @@ async def example_settings_control():
     print("⚙️ STEAM SETTINGS CONTROL")
     print("=" * 80 + "\n")
 
-    # Получаем текущие настройки
+    # Получаем текущие настSwarmки
     settings = db.get_settings()
     print("Current settings:")
     print(f"  • Min Profit: {settings['min_profit']:.1f}%")
     print(f"  • Min Volume: {settings['min_volume']} sales/day")
     print(f"  • Status: {'⏸️ Paused' if settings['is_paused'] else '▶️ Active'}")
 
-    # Обновляем настройки
+    # Обновляем настSwarmки
     print("\nUpdating settings...")
     db.update_settings(
         min_profit=15.0,  # Требуем минимум 15% профита
         min_volume=100,  # Требуем минимум 100 продаж/день
     )
 
-    # Проверяем обновленные настройки
+    # Проверяем обновленные настSwarmки
     updated = db.get_settings()
     print("\nUpdated settings:")
     print(f"  • Min Profit: {updated['min_profit']:.1f}%")
@@ -172,7 +172,7 @@ async def example_settings_control():
     print("=" * 80)
 
 
-if __name__ == "__main__":
+if __name__ == "__mAlgon__":
     print("""
 ╔══════════════════════════════════════════════════════════════╗
 ║                                                              ║
@@ -192,7 +192,7 @@ if __name__ == "__main__":
         # Пример 2: Сравнение (закомментировано для экономии времени)
         # asyncio.run(example_compare_with_without_steam())
 
-        # Пример 3: Управление настройками
+        # Пример 3: Управление настSwarmками
         asyncio.run(example_settings_control())
 
     except KeyboardInterrupt:

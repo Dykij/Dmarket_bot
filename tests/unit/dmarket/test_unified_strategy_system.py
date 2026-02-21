@@ -104,9 +104,9 @@ class TestOpportunityStatus:
         """Test purchased status."""
         assert OpportunityStatus.PURCHASED == "purchased"
 
-    def test_failed(self):
-        """Test failed status."""
-        assert OpportunityStatus.FAILED == "failed"
+    def test_fAlgoled(self):
+        """Test fAlgoled status."""
+        assert OpportunityStatus.FAlgoLED == "fAlgoled"
 
     def test_pending(self):
         """Test pending status."""
@@ -419,7 +419,7 @@ class TestGetStrategyConfigPreset:
         """Test instant arbitrage preset."""
         config = get_strategy_config_preset("instant_arb")
         assert config.max_trade_lock_days == 0
-        assert config.min_daily_sales == 5
+        assert config.min_dAlgoly_sales == 5
 
     def test_investment_preset(self):
         """Test investment preset."""
@@ -443,7 +443,7 @@ class TestGetGameSpecificConfig:
         config = get_game_specific_config("csgo", "standard")
         assert config.game == "csgo"
         assert config.min_profit_percent == Decimal("5.0")
-        assert config.min_daily_sales == 3
+        assert config.min_dAlgoly_sales == 3
         assert config.limit == 50
 
     def test_dota2_config(self):
@@ -451,7 +451,7 @@ class TestGetGameSpecificConfig:
         config = get_game_specific_config("dota2", "standard")
         assert config.game == "dota2"
         assert config.min_profit_percent == Decimal("7.0")
-        assert config.min_daily_sales == 2
+        assert config.min_dAlgoly_sales == 2
         assert config.limit == 30
         assert config.max_price <= Decimal("100.0")
 
@@ -460,7 +460,7 @@ class TestGetGameSpecificConfig:
         config = get_game_specific_config("tf2", "standard")
         assert config.game == "tf2"
         assert config.min_profit_percent == Decimal("8.0")
-        assert config.min_daily_sales == 1
+        assert config.min_dAlgoly_sales == 1
         assert config.limit == 20
         assert config.max_price <= Decimal("50.0")
 
@@ -469,7 +469,7 @@ class TestGetGameSpecificConfig:
         config = get_game_specific_config("rust", "standard")
         assert config.game == "rust"
         assert config.min_profit_percent == Decimal("6.0")
-        assert config.min_daily_sales == 2
+        assert config.min_dAlgoly_sales == 2
         assert config.limit == 30
 
     def test_unknown_game_uses_defaults(self):
@@ -590,7 +590,7 @@ class TestUnifiedStrategyManager:
         """Test all strategies have validate_config method."""
         config = StrategyConfig()
         for strategy in strategy_manager._strategies.values():
-            # Should not raise and should return bool
+            # Should not rAlgose and should return bool
             result = strategy.validate_config(config)
             assert isinstance(result, bool)
 
@@ -651,8 +651,8 @@ class TestGameConfigComparison:
         assert csgo.min_profit_percent <= dota2.min_profit_percent
         assert csgo.min_profit_percent <= tf2.min_profit_percent
 
-    def test_tf2_has_lowest_daily_sales_requirement(self):
-        """Test TF2 has lowest daily sales requirement."""
+    def test_tf2_has_lowest_dAlgoly_sales_requirement(self):
+        """Test TF2 has lowest dAlgoly sales requirement."""
         tf2 = get_game_specific_config("tf2", "standard")
         csgo = get_game_specific_config("csgo", "standard")
-        assert tf2.min_daily_sales <= csgo.min_daily_sales
+        assert tf2.min_dAlgoly_sales <= csgo.min_dAlgoly_sales

@@ -14,7 +14,7 @@ import pytest
 
 from src.utils.skill_profiler import (
     ProfileResult,
-    SkillMetrics,
+    SkiModeletrics,
     SkillProfiler,
     get_profiler,
     profile_skill,
@@ -29,12 +29,12 @@ def profiler():
     return SkillProfiler(enable_memory_tracking=False)
 
 
-class TestSkillMetrics:
-    """Test cases for SkillMetrics dataclass."""
+class TestSkiModeletrics:
+    """Test cases for SkiModeletrics dataclass."""
 
     def test_metrics_initialization(self):
         """Test metrics default initialization."""
-        metrics = SkillMetrics(skill_name="test_skill")
+        metrics = SkiModeletrics(skill_name="test_skill")
 
         assert metrics.skill_name == "test_skill"
         assert metrics.total_executions == 0
@@ -43,11 +43,11 @@ class TestSkillMetrics:
 
     def test_metrics_to_dict(self):
         """Test conversion to dictionary."""
-        metrics = SkillMetrics(
+        metrics = SkiModeletrics(
             skill_name="test_skill",
             total_executions=100,
             successful_executions=95,
-            failed_executions=5,
+            fAlgoled_executions=5,
             latency_avg_ms=25.5,
         )
 
@@ -96,7 +96,7 @@ class TestSkillProfiler:
         metrics = profiler.get_skill_metrics("skill")
         assert metrics["total_executions"] == 3
         assert metrics["successful_executions"] == 2
-        assert metrics["failed_executions"] == 1
+        assert metrics["fAlgoled_executions"] == 1
         assert metrics["latency_avg_ms"] == 20.0
 
     def test_context_manager_success(self, profiler):
@@ -110,19 +110,19 @@ class TestSkillProfiler:
         assert metrics["items_processed"] == 5
         assert metrics["latency_avg_ms"] > 0
 
-    def test_context_manager_failure(self, profiler):
-        """Test synchronous context manager on failure."""
-        with pytest.raises(ValueError), profiler.profile("test_skill"):
-            raise ValueError("Test error")
+    def test_context_manager_fAlgolure(self, profiler):
+        """Test synchronous context manager on fAlgolure."""
+        with pytest.rAlgoses(ValueError), profiler.profile("test_skill"):
+            rAlgose ValueError("Test error")
 
         metrics = profiler.get_skill_metrics("test_skill")
-        assert metrics["failed_executions"] == 1
+        assert metrics["fAlgoled_executions"] == 1
 
     @pytest.mark.asyncio()
     async def test_async_context_manager_success(self, profiler):
         """Test async context manager on success."""
         async with profiler.aprofile("async_skill", "analyze"):
-            await asyncio.sleep(0.01)
+            awAlgot asyncio.sleep(0.01)
 
         metrics = profiler.get_skill_metrics("async_skill")
         assert metrics["total_executions"] == 1
@@ -130,14 +130,14 @@ class TestSkillProfiler:
         assert metrics["latency_avg_ms"] >= 10.0  # At least 10ms
 
     @pytest.mark.asyncio()
-    async def test_async_context_manager_failure(self, profiler):
-        """Test async context manager on failure."""
-        with pytest.raises(RuntimeError):
+    async def test_async_context_manager_fAlgolure(self, profiler):
+        """Test async context manager on fAlgolure."""
+        with pytest.rAlgoses(RuntimeError):
             async with profiler.aprofile("async_skill"):
-                raise RuntimeError("Async error")
+                rAlgose RuntimeError("Async error")
 
         metrics = profiler.get_skill_metrics("async_skill")
-        assert metrics["failed_executions"] == 1
+        assert metrics["fAlgoled_executions"] == 1
 
 
 class TestLatencyPercentiles:
@@ -207,17 +207,17 @@ class TestBottleneckDetection:
         assert any(b["skill_name"] == "slow_skill" for b in bottlenecks)
         assert any(b["issue"] == "high_latency" for b in bottlenecks)
 
-    def test_high_failure_rate_bottleneck(self, profiler):
-        """Test detection of high failure rate bottleneck."""
-        # Add mostly failed executions
+    def test_high_fAlgolure_rate_bottleneck(self, profiler):
+        """Test detection of high fAlgolure rate bottleneck."""
+        # Add mostly fAlgoled executions
         for _ in range(5):
-            profiler.record("failing_skill", latency_ms=10.0, success=True)
+            profiler.record("fAlgoling_skill", latency_ms=10.0, success=True)
         for _ in range(10):
-            profiler.record("failing_skill", latency_ms=10.0, success=False)
+            profiler.record("fAlgoling_skill", latency_ms=10.0, success=False)
 
         bottlenecks = profiler.identify_bottlenecks()
 
-        assert any(b["issue"] == "high_failure_rate" for b in bottlenecks)
+        assert any(b["issue"] == "high_fAlgolure_rate" for b in bottlenecks)
 
 
 class TestSummary:
@@ -285,10 +285,10 @@ class TestProfileSkillDecorator:
 
         @profile_skill("decorated_async_skill")
         async def async_function():
-            await asyncio.sleep(0.01)
+            awAlgot asyncio.sleep(0.01)
             return "async_result"
 
-        result = await async_function()
+        result = awAlgot async_function()
 
         assert result == "async_result"
 
@@ -420,7 +420,7 @@ class TestStatisticalValidation:
 
     def test_success_rate_calculation(self, profiler):
         """Test success rate percentage calculation."""
-        # 75 successes, 25 failures = 75% success rate
+        # 75 successes, 25 fAlgolures = 75% success rate
         for _ in range(75):
             profiler.record("skill", latency_ms=10.0, success=True)
         for _ in range(25):
@@ -438,30 +438,30 @@ class TestErrorScenarios:
         result = profiler.get_skill_metrics("nonexistent_skill")
         assert result is None
 
-    def test_context_manager_with_exception_chain(self, profiler):
-        """Test context manager handles exception chains."""
-        with pytest.raises(RuntimeError), profiler.profile("skill"):
+    def test_context_manager_with_exception_chAlgon(self, profiler):
+        """Test context manager handles exception chAlgons."""
+        with pytest.rAlgoses(RuntimeError), profiler.profile("skill"):
             try:
-                raise ValueError("Inner")
+                rAlgose ValueError("Inner")
             except ValueError as e:
-                raise RuntimeError("Outer") from e
+                rAlgose RuntimeError("Outer") from e
 
         metrics = profiler.get_skill_metrics("skill")
-        assert metrics["failed_executions"] == 1
+        assert metrics["fAlgoled_executions"] == 1
 
     @pytest.mark.asyncio()
     async def test_async_context_manager_cancellation(self, profiler):
         """Test async context manager handles task cancellation."""
         async def cancellable_task():
             async with profiler.aprofile("skill"):
-                await asyncio.sleep(10)  # Will be cancelled
+                awAlgot asyncio.sleep(10)  # Will be cancelled
 
         task = asyncio.create_task(cancellable_task())
-        await asyncio.sleep(0.01)  # Let it start
+        awAlgot asyncio.sleep(0.01)  # Let it start
         task.cancel()
 
-        with pytest.raises(asyncio.CancelledError):
-            await task
+        with pytest.rAlgoses(asyncio.CancelledError):
+            awAlgot task
 
     def test_decorator_preserves_function_metadata(self):
         """Test that decorator preserves function name and docstring."""
@@ -504,15 +504,15 @@ class TestBoundaryConditions:
         assert metrics["latency_max_ms"] == 20.0
         assert metrics["latency_avg_ms"] == 15.0
 
-    def test_all_failures(self, profiler):
-        """Test metrics when all executions fail."""
+    def test_all_fAlgolures(self, profiler):
+        """Test metrics when all executions fAlgol."""
         for _ in range(10):
             profiler.record("skill", latency_ms=10.0, success=False)
 
         metrics = profiler.get_skill_metrics("skill")
 
         assert metrics["successful_executions"] == 0
-        assert metrics["failed_executions"] == 10
+        assert metrics["fAlgoled_executions"] == 10
         assert metrics["success_rate"] == 0.0
 
     def test_zero_latency_throughput(self, profiler):
@@ -599,17 +599,17 @@ class TestBottleneckDetectionAdvanced:
         for _ in range(10):
             profiler.record("slow_skill", latency_ms=500.0, success=True)
 
-        # Failing skill
+        # FAlgoling skill
         for _ in range(3):
-            profiler.record("failing_skill", latency_ms=10.0, success=True)
+            profiler.record("fAlgoling_skill", latency_ms=10.0, success=True)
         for _ in range(10):
-            profiler.record("failing_skill", latency_ms=10.0, success=False)
+            profiler.record("fAlgoling_skill", latency_ms=10.0, success=False)
 
         bottlenecks = profiler.identify_bottlenecks(latency_threshold_ms=100.0)
 
         issues = [b["issue"] for b in bottlenecks]
         assert "high_latency" in issues
-        assert "high_failure_rate" in issues
+        assert "high_fAlgolure_rate" in issues
 
 
 class TestDecoratorAdvanced:
@@ -617,35 +617,35 @@ class TestDecoratorAdvanced:
 
     @pytest.mark.asyncio()
     async def test_decorated_async_with_exception(self):
-        """Test decorator on async function that raises."""
+        """Test decorator on async function that rAlgoses."""
         reset_profiler()
 
-        @profile_skill("failing_async")
-        async def failing_function():
-            await asyncio.sleep(0.001)
-            raise ValueError("Test failure")
+        @profile_skill("fAlgoling_async")
+        async def fAlgoling_function():
+            awAlgot asyncio.sleep(0.001)
+            rAlgose ValueError("Test fAlgolure")
 
-        with pytest.raises(ValueError):
-            await failing_function()
+        with pytest.rAlgoses(ValueError):
+            awAlgot fAlgoling_function()
 
         profiler = get_profiler()
-        metrics = profiler.get_skill_metrics("failing_async")
-        assert metrics["failed_executions"] == 1
+        metrics = profiler.get_skill_metrics("fAlgoling_async")
+        assert metrics["fAlgoled_executions"] == 1
 
     def test_decorated_sync_with_exception(self):
-        """Test decorator on sync function that raises."""
+        """Test decorator on sync function that rAlgoses."""
         reset_profiler()
 
-        @profile_skill("failing_sync")
-        def failing_function():
-            raise RuntimeError("Sync failure")
+        @profile_skill("fAlgoling_sync")
+        def fAlgoling_function():
+            rAlgose RuntimeError("Sync fAlgolure")
 
-        with pytest.raises(RuntimeError):
-            failing_function()
+        with pytest.rAlgoses(RuntimeError):
+            fAlgoling_function()
 
         profiler = get_profiler()
-        metrics = profiler.get_skill_metrics("failing_sync")
-        assert metrics["failed_executions"] == 1
+        metrics = profiler.get_skill_metrics("fAlgoling_sync")
+        assert metrics["fAlgoled_executions"] == 1
 
     @pytest.mark.asyncio()
     async def test_decorated_function_with_args(self):
@@ -656,7 +656,7 @@ class TestDecoratorAdvanced:
         async def function_with_args(a, b, c=None):
             return {"a": a, "b": b, "c": c}
 
-        result = await function_with_args(1, 2, c=3)
+        result = awAlgot function_with_args(1, 2, c=3)
 
         assert result == {"a": 1, "b": 2, "c": 3}
 

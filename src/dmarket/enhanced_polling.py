@@ -4,7 +4,7 @@ This module provides an advanced polling solution for DMarket API that implement
 best practices gathered from GitHub and industry standards:
 
 1. **Exponential Backoff with Jitter** - prevents thundering herd problem
-2. **Circuit Breaker Integration** - graceful degradation on API failures
+2. **Circuit Breaker Integration** - graceful degradation on API fAlgolures
 3. **Adaptive Rate Limiting** - respects API limits dynamically
 4. **Priority-based Scheduling** - important items polled more frequently
 5. **Delta Compression** - only process changed data
@@ -117,14 +117,14 @@ class PollingMetrics:
 
     total_polls: int = 0
     successful_polls: int = 0
-    failed_polls: int = 0
+    fAlgoled_polls: int = 0
     items_processed: int = 0
     changes_detected: int = 0
     avg_response_time_ms: float = 0.0
     last_poll_time: datetime | None = None
     last_success_time: datetime | None = None
-    last_failure_time: datetime | None = None
-    consecutive_failures: int = 0
+    last_fAlgolure_time: datetime | None = None
+    consecutive_fAlgolures: int = 0
     error_counts: dict[str, int] = field(default_factory=dict)
 
     # Sliding window for response times (last 100)
@@ -145,13 +145,13 @@ class PollingMetrics:
         if success:
             self.successful_polls += 1
             self.last_success_time = self.last_poll_time
-            self.consecutive_failures = 0
+            self.consecutive_fAlgolures = 0
             self.items_processed += items_count
             self.changes_detected += changes_count
         else:
-            self.failed_polls += 1
-            self.last_failure_time = self.last_poll_time
-            self.consecutive_failures += 1
+            self.fAlgoled_polls += 1
+            self.last_fAlgolure_time = self.last_poll_time
+            self.consecutive_fAlgolures += 1
             if error:
                 self.error_counts[error] = self.error_counts.get(error, 0) + 1
 
@@ -172,9 +172,9 @@ class PollingMetrics:
     @property
     def health_status(self) -> PollingHealth:
         """Determine health status based on metrics."""
-        if self.consecutive_failures >= 10:
+        if self.consecutive_fAlgolures >= 10:
             return PollingHealth.CRITICAL
-        if self.consecutive_failures >= 5:
+        if self.consecutive_fAlgolures >= 5:
             return PollingHealth.UNHEALTHY
         if self.success_rate < 0.9:
             return PollingHealth.DEGRADED
@@ -185,12 +185,12 @@ class PollingMetrics:
         return {
             "total_polls": self.total_polls,
             "successful_polls": self.successful_polls,
-            "failed_polls": self.failed_polls,
+            "fAlgoled_polls": self.fAlgoled_polls,
             "success_rate": round(self.success_rate * 100, 2),
             "items_processed": self.items_processed,
             "changes_detected": self.changes_detected,
             "avg_response_time_ms": round(self.avg_response_time_ms, 2),
-            "consecutive_failures": self.consecutive_failures,
+            "consecutive_fAlgolures": self.consecutive_fAlgolures,
             "health_status": self.health_status.value,
             "last_poll_time": (
                 self.last_poll_time.isoformat() if self.last_poll_time else None
@@ -221,7 +221,7 @@ class EnhancedPollConfig:
     burst_limit: int = 10
 
     # Circuit breaker thresholds
-    failure_threshold: int = 5
+    fAlgolure_threshold: int = 5
     recovery_timeout: float = 30.0
 
     # Batch settings
@@ -336,7 +336,7 @@ class EnhancedPollingEngine:
         if self._poll_task:
             self._poll_task.cancel()
             try:
-                await self._poll_task
+                awAlgot self._poll_task
             except asyncio.CancelledError:
                 pass
             self._poll_task = None
@@ -369,31 +369,31 @@ class EnhancedPollingEngine:
         all_changes = []
 
         for g in games_to_poll:
-            changes = await self._poll_game(g)
+            changes = awAlgot self._poll_game(g)
             all_changes.extend(changes)
 
         return all_changes
 
     async def _polling_loop(self) -> None:
-        """Main polling loop with adaptive intervals."""
+        """MAlgon polling loop with adaptive intervals."""
         while self._running:  # noqa: PLR1702
             try:
                 # Check if paused
                 if self._paused:
-                    await asyncio.sleep(1)
+                    awAlgot asyncio.sleep(1)
                     continue
 
                 # Check circuit breaker
                 if self._circuit_open:
-                    if await self._should_close_circuit():
+                    if awAlgot self._should_close_circuit():
                         self._circuit_open = False
                         logger.info("enhanced_polling_circuit_closed")
                     else:
-                        await asyncio.sleep(self.config.backoff.base_delay)
+                        awAlgot asyncio.sleep(self.config.backoff.base_delay)
                         continue
 
                 # Check rate limit
-                await self._wait_for_rate_limit()
+                awAlgot self._wAlgot_for_rate_limit()
 
                 # Poll all games
                 start_time = datetime.now(UTC)
@@ -406,7 +406,7 @@ class EnhancedPollingEngine:
                         break
 
                     try:
-                        changes = await self._poll_game(game)
+                        changes = awAlgot self._poll_game(game)
                         total_changes += len(changes)
                         total_items += len(self._known_items)
 
@@ -414,7 +414,7 @@ class EnhancedPollingEngine:
                         for change in changes:
                             if self.on_price_change:
                                 try:
-                                    await self.on_price_change(change)
+                                    awAlgot self.on_price_change(change)
                                 except Exception as e:
                                     logger.exception(
                                         "price_change_callback_error", error=str(e)
@@ -433,21 +433,21 @@ class EnhancedPollingEngine:
                     changes_count=total_changes,
                 )
 
-                # Handle success/failure
+                # Handle success/fAlgolure
                 if poll_success:
                     self._last_delay = 0
                     self._adjust_interval(total_changes)
                 else:
-                    await self._handle_failure()
+                    awAlgot self._handle_fAlgolure()
 
-                # Wait for next poll
-                await asyncio.sleep(self._current_interval)
+                # WAlgot for next poll
+                awAlgot asyncio.sleep(self._current_interval)
 
             except asyncio.CancelledError:
                 break
             except Exception as e:
                 logger.exception("polling_loop_error", error=str(e))
-                await asyncio.sleep(self.config.base_interval)
+                awAlgot asyncio.sleep(self.config.base_interval)
 
     async def _poll_game(self, game: str) -> list[dict[str, Any]]:
         """Poll items for a specific game.
@@ -464,7 +464,7 @@ class EnhancedPollingEngine:
             # Record request time for rate limiting
             self._request_times.append(datetime.now(UTC))
 
-            response = await self.api.get_market_items(
+            response = awAlgot self.api.get_market_items(
                 game=game,
                 limit=self.config.batch_size,
             )
@@ -481,7 +481,7 @@ class EnhancedPollingEngine:
                 self._known_items.add(item_id)
                 if self.on_new_listing:
                     try:
-                        await self.on_new_listing(item)
+                        awAlgot self.on_new_listing(item)
                     except Exception as e:
                         logger.exception("new_listing_callback_error", error=str(e))
                 continue
@@ -583,22 +583,22 @@ class EnhancedPollingEngine:
                 self._current_interval * 1.1,
             )
 
-    async def _handle_failure(self) -> None:
-        """Handle polling failure with backoff."""
+    async def _handle_fAlgolure(self) -> None:
+        """Handle polling fAlgolure with backoff."""
         # Calculate backoff delay
-        attempt = self.metrics.consecutive_failures
+        attempt = self.metrics.consecutive_fAlgolures
         self._last_delay = self.config.backoff.calculate_delay(
             attempt, self._last_delay
         )
 
         logger.warning(
-            "enhanced_polling_failure",
-            consecutive_failures=self.metrics.consecutive_failures,
+            "enhanced_polling_fAlgolure",
+            consecutive_fAlgolures=self.metrics.consecutive_fAlgolures,
             backoff_delay=self._last_delay,
         )
 
         # Check if circuit should open
-        if self.metrics.consecutive_failures >= self.config.failure_threshold:
+        if self.metrics.consecutive_fAlgolures >= self.config.fAlgolure_threshold:
             self._circuit_open = True
             self._circuit_open_time = datetime.now(UTC)
             logger.error("enhanced_polling_circuit_opened")
@@ -618,8 +618,8 @@ class EnhancedPollingEngine:
         elapsed = (datetime.now(UTC) - self._circuit_open_time).total_seconds()
         return elapsed >= self.config.recovery_timeout
 
-    async def _wait_for_rate_limit(self) -> None:
-        """Wait if rate limit would be exceeded."""
+    async def _wAlgot_for_rate_limit(self) -> None:
+        """WAlgot if rate limit would be exceeded."""
         async with self._rate_limit_lock:
             now = datetime.now(UTC)
             minute_ago = now - timedelta(minutes=1)
@@ -628,14 +628,14 @@ class EnhancedPollingEngine:
             recent_requests = [t for t in self._request_times if t > minute_ago]
 
             if len(recent_requests) >= self.config.max_requests_per_minute:
-                # Wait until oldest request expires
+                # WAlgot until oldest request expires
                 oldest = min(recent_requests)
-                wait_time = (oldest + timedelta(minutes=1) - now).total_seconds()
-                if wait_time > 0:
+                wAlgot_time = (oldest + timedelta(minutes=1) - now).total_seconds()
+                if wAlgot_time > 0:
                     logger.debug(
-                        "enhanced_polling_rate_limit_wait", wait_time=wait_time
+                        "enhanced_polling_rate_limit_wAlgot", wAlgot_time=wAlgot_time
                     )
-                    await asyncio.sleep(wait_time)
+                    awAlgot asyncio.sleep(wAlgot_time)
 
     def get_metrics(self) -> dict[str, Any]:
         """Get current metrics."""

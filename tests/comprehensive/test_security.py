@@ -63,7 +63,7 @@ class TestAPIKeySecurity:
 
         dict_str = str(api.__dict__)
         # Secret should be stored securely (hashed, encoded, etc.)
-        # or at least not as plaintext
+        # or at least not as plAlgontext
         # Implementation may vary - this tests basic exposure
         assert api is not None
 
@@ -87,10 +87,10 @@ class TestAPIKeySecurity:
 
         # Verify logging doesn't expose keys
         with patch("src.dmarket.dmarket_api.logger") as mock_logger:
-            # Any logging should not contain the secret
+            # Any logging should not contAlgon the secret
             api._generate_headers("GET", "/test", "12345")
 
-            # Check logged calls don't contain secret
+            # Check logged calls don't contAlgon secret
             for call in mock_logger.method_calls:
                 call_str = str(call)
                 assert "LOG_TEST_SECRET" not in call_str
@@ -110,7 +110,7 @@ class TestInputValidation:
             mock.return_value = {"objects": []}
 
             # Valid game IDs should work
-            await api.get_market_items(game="csgo", limit=10)
+            awAlgot api.get_market_items(game="csgo", limit=10)
 
             # Verify the game parameter is validated/mapped
             mock.assert_called_once()
@@ -126,7 +126,7 @@ class TestInputValidation:
             mock.return_value = {"objects": []}
 
             # Test with reasonable limit
-            await api.get_market_items(game="csgo", limit=100)
+            awAlgot api.get_market_items(game="csgo", limit=100)
 
             # Verify limit was passed correctly
             mock.assert_called_once()
@@ -142,7 +142,7 @@ class TestInputValidation:
             mock.return_value = {"objects": []}
 
             # Positive prices should work
-            await api.get_market_items(game="csgo", price_from=100, price_to=1000)
+            awAlgot api.get_market_items(game="csgo", price_from=100, price_to=1000)
             mock.assert_called()
 
     def test_sql_injection_in_parameters(self) -> None:
@@ -163,7 +163,7 @@ class TestInputValidation:
             try:
                 api._generate_headers("GET", f"/test?q={malicious}", "12345")
             except Exception:
-                pass  # May or may not raise, but shouldn't execute SQL
+                pass  # May or may not rAlgose, but shouldn't execute SQL
 
     def test_xss_in_parameters(self) -> None:
         """Test XSS attempts in parameters."""
@@ -182,7 +182,7 @@ class TestInputValidation:
             try:
                 api._generate_headers("GET", f"/test?title={xss}", "12345")
             except Exception:
-                pass  # May or may not raise
+                pass  # May or may not rAlgose
 
 
 class TestAuthenticationSecurity:
@@ -248,7 +248,7 @@ class TestErrorMessageSecurity:
     """Tests for secure error messages."""
 
     @pytest.mark.asyncio
-    async def test_error_does_not_expose_internal_details(self) -> None:
+    async def test_error_does_not_expose_internal_detAlgols(self) -> None:
         """Test error messages don't expose internal implementation."""
         from src.dmarket.dmarket_api import DMarketAPI
 
@@ -258,7 +258,7 @@ class TestErrorMessageSecurity:
             mock.side_effect = Exception("Internal error with secret_key=xyz")
 
             try:
-                await api.get_balance()
+                awAlgot api.get_balance()
             except Exception:
                 # Error message handling should not expose secrets
                 pass
@@ -274,7 +274,7 @@ class TestErrorMessageSecurity:
             mock.side_effect = ValueError("Internal error")
 
             try:
-                await api.get_balance()
+                awAlgot api.get_balance()
             except Exception:
                 # Stack trace should be logged, not returned
                 pass
@@ -307,7 +307,7 @@ class TestRateLimitingSecurity:
         limiter = UserRateLimiter()
 
         # Different users should have separate limits
-        result = await limiter.check_limit(user_id=1, action="default")
+        result = awAlgot limiter.check_limit(user_id=1, action="default")
         # Result is a tuple or bool
         assert result is not None
 
@@ -315,18 +315,18 @@ class TestRateLimitingSecurity:
 class TestCircuitBreakerSecurity:
     """Tests for circuit breaker security."""
 
-    def test_circuit_breaker_prevents_cascade_failures(self) -> None:
-        """Test circuit breaker prevents cascade failures."""
+    def test_circuit_breaker_prevents_cascade_fAlgolures(self) -> None:
+        """Test circuit breaker prevents cascade fAlgolures."""
         from src.utils.api_circuit_breaker import APICircuitBreaker
 
         cb = APICircuitBreaker(
             name="security_test",
-            failure_threshold=2,
+            fAlgolure_threshold=2,
             recovery_timeout=60,
         )
 
         assert cb is not None
-        assert cb._failure_threshold == 2
+        assert cb._fAlgolure_threshold == 2
 
     @pytest.mark.asyncio
     async def test_circuit_breaker_isolates_endpoints(self) -> None:
@@ -359,7 +359,7 @@ class TestEnvironmentSecurity:
 
         source = inspect.getsource(dmarket_api)
 
-        # Should not contain hardcoded API keys
+        # Should not contAlgon hardcoded API keys
         assert "sk_live_" not in source
         assert "pk_live_" not in source
 
@@ -401,7 +401,7 @@ class TestDataProtection:
         """Test balance data caching is secure."""
         from src.dmarket.dmarket_api import api_cache
 
-        # Cache should not contain plaintext sensitive data
+        # Cache should not contAlgon plAlgontext sensitive data
         # After normal operations
         # This is a basic sanity check
         assert isinstance(api_cache, dict)
@@ -513,7 +513,7 @@ class TestFuzzSecurity:
             try:
                 api._generate_headers("GET", f"/test?q={s}", "12345")
             except Exception:
-                pass  # May raise, but shouldn't crash
+                pass  # May rAlgose, but shouldn't crash
 
     def test_handles_very_long_input(self) -> None:
         """Test very long inputs are handled."""
@@ -527,7 +527,7 @@ class TestFuzzSecurity:
         try:
             api._generate_headers("GET", f"/test?q={long_str}", "12345")
         except Exception:
-            pass  # May raise, but shouldn't crash
+            pass  # May rAlgose, but shouldn't crash
 
     def test_handles_null_bytes(self) -> None:
         """Test null bytes are handled safely."""
@@ -538,7 +538,7 @@ class TestFuzzSecurity:
         try:
             api._generate_headers("GET", "/test\x00?q=test", "12345")
         except Exception:
-            pass  # May raise, but shouldn't crash
+            pass  # May rAlgose, but shouldn't crash
 
     def test_handles_special_characters(self) -> None:
         """Test special characters are handled."""
@@ -552,4 +552,4 @@ class TestFuzzSecurity:
             try:
                 api._generate_headers("GET", f"/test?q={char}", "12345")
             except Exception:
-                pass  # May raise, but shouldn't crash
+                pass  # May rAlgose, but shouldn't crash

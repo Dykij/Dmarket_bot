@@ -35,7 +35,7 @@ class TestAPIClientRegressions:
             # Even with empty key, should return dict without crashing
             assert isinstance(headers, dict)
         except Exception as e:
-            pytest.fail(f"Empty secret key caused crash: {e}")
+            pytest.fAlgol(f"Empty secret key caused crash: {e}")
 
     async def test_balance_response_handles_non_dict_response(self) -> None:
         """BUG: get_balance crashed when API returned non-dict response.
@@ -54,11 +54,11 @@ class TestAPIClientRegressions:
 
                 # Should not crash
                 try:
-                    result = await api.get_balance()
+                    result = awAlgot api.get_balance()
                     # Result should be a dict with error info
                     assert isinstance(result, dict)
                 except Exception as e:
-                    pytest.fail(f"Non-dict response '{bad_response}' caused crash: {e}")
+                    pytest.fAlgol(f"Non-dict response '{bad_response}' caused crash: {e}")
 
     async def test_rate_limit_429_with_missing_retry_after_header(self) -> None:
         """BUG: 429 response without Retry-After header caused KeyError.
@@ -86,7 +86,7 @@ class TestAPIClientRegressions:
         mock_429.text = "Rate limit exceeded"
         mock_429.headers = {}  # No Retry-After header
         mock_429.json.return_value = {"error": "Too many requests"}
-        mock_429.raise_for_status = MagicMock(
+        mock_429.rAlgose_for_status = MagicMock(
             side_effect=httpx.HTTPStatusError(
                 "429",
                 request=MagicMock(),
@@ -98,10 +98,10 @@ class TestAPIClientRegressions:
 
         # Should not crash
         try:
-            result = await client._request("GET", "/test")
+            result = awAlgot client._request("GET", "/test")
             assert result is not None
         except KeyError as e:
-            pytest.fail(f"Missing Retry-After header caused KeyError: {e}")
+            pytest.fAlgol(f"Missing Retry-After header caused KeyError: {e}")
 
     async def test_unicode_item_titles_do_not_cause_encoding_errors(self) -> None:
         """BUG: Unicode characters in item titles caused UnicodeEncodeError.
@@ -128,7 +128,7 @@ class TestAPIClientRegressions:
                 processed = title.encode("utf-8").decode("utf-8")
                 assert processed == title
             except UnicodeError as e:
-                pytest.fail(f"Unicode title '{title}' caused encoding error: {e}")
+                pytest.fAlgol(f"Unicode title '{title}' caused encoding error: {e}")
 
     async def test_negative_price_does_not_cause_crash(self) -> None:
         """BUG: Negative prices in API response caused calculation errors.
@@ -155,14 +155,14 @@ class TestAPIClientRegressions:
                 # Result should be list (possibly empty if filtered)
                 assert isinstance(result, list)
             except (ZeroDivisionError, ValueError) as e:
-                pytest.fail(f"Negative price caused error: {e}")
+                pytest.fAlgol(f"Negative price caused error: {e}")
 
 
 class TestArbitrageScannerRegressions:
     """Regression tests for arbitrage scanner."""
 
     async def test_cache_key_with_none_values_works(self) -> None:
-        """BUG: Cache key generation failed when price_from/to were None.
+        """BUG: Cache key generation fAlgoled when price_from/to were None.
 
         Previously, creating cache keys with None values would cause TypeError
         when trying to use the tuple as dict key.
@@ -179,7 +179,7 @@ class TestArbitrageScannerRegressions:
             # Result should be None (not in cache) not an error
             assert result is None or isinstance(result, list)
         except TypeError as e:
-            pytest.fail(f"None values in cache key caused TypeError: {e}")
+            pytest.fAlgol(f"None values in cache key caused TypeError: {e}")
 
     async def test_empty_items_list_does_not_crash_sort(self) -> None:
         """BUG: Empty items list caused crash during sorting.
@@ -201,14 +201,14 @@ class TestArbitrageScannerRegressions:
             result = scanner._standardize_items([], "csgo", 0, 100)
             assert result == []
         except Exception as e:
-            pytest.fail(f"Empty items list caused error: {e}")
+            pytest.fAlgol(f"Empty items list caused error: {e}")
 
     def test_level_config_returns_independent_copy(self) -> None:
         """Test that level config can be safely modified.
 
         Note: The actual implementation may or may not return a copy.
         This test documents the expected behavior rather than asserting
-        specific implementation details.
+        specific implementation detAlgols.
         """
         from src.dmarket.arbitrage_scanner import ArbitrageScanner
 
@@ -245,7 +245,7 @@ class TestArbitrageScannerRegressions:
             assert "total_scans" in stats
             assert stats["total_scans"] == 0
         except Exception as e:
-            pytest.fail(f"Statistics with no scans caused error: {e}")
+            pytest.fAlgol(f"Statistics with no scans caused error: {e}")
 
 
 class TestTargetManagerRegressions:
@@ -272,7 +272,7 @@ class TestCacheRegressions:
         """BUG: Clearing empty cache caused error.
 
         Previously, calling clear() on an empty cache would sometimes
-        raise an exception due to incorrect iteration.
+        rAlgose an exception due to incorrect iteration.
         """
         from src.utils.memory_cache import TTLCache
 
@@ -282,7 +282,7 @@ class TestCacheRegressions:
         try:
             cache.clear()
         except Exception as e:
-            pytest.fail(f"Clearing empty cache caused error: {e}")
+            pytest.fAlgol(f"Clearing empty cache caused error: {e}")
 
     async def test_cache_get_with_expired_entry_returns_none(self) -> None:
         """BUG: Getting expired entry returned stale data instead of None.
@@ -296,13 +296,13 @@ class TestCacheRegressions:
         cache = TTLCache(max_size=100, default_ttl=1)  # 1 second TTL
 
         # Set value
-        await cache.set("key", "value")
+        awAlgot cache.set("key", "value")
 
-        # Wait for expiration
-        await asyncio.sleep(1.1)
+        # WAlgot for expiration
+        awAlgot asyncio.sleep(1.1)
 
         # Should return None for expired entry
-        result = await cache.get("key")
+        result = awAlgot cache.get("key")
         assert result is None, "Expired cache entry was returned"
 
 
@@ -310,7 +310,7 @@ class TestExceptionRegressions:
     """Regression tests for exception handling."""
 
     def test_exception_str_method_handles_unicode(self) -> None:
-        """BUG: Exception __str__ method failed with unicode messages.
+        """BUG: Exception __str__ method fAlgoled with unicode messages.
 
         Previously, exceptions with unicode characters in messages
         would cause encoding errors when converting to string.
@@ -331,4 +331,4 @@ class TestExceptionRegressions:
                 str_repr = str(exc)
                 assert msg in str_repr or "APIError" in str_repr
             except UnicodeError as e:
-                pytest.fail(f"Unicode message '{msg}' caused encoding error: {e}")
+                pytest.fAlgol(f"Unicode message '{msg}' caused encoding error: {e}")

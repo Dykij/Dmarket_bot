@@ -12,7 +12,7 @@
 
 ## Opportunities
 - Cloud expansion.
-- AI Agent federation.
+- Algo Agent federation.
 
 ## Threats
 - Security vulnerabilities in legacy code.

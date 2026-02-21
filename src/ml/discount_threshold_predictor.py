@@ -6,9 +6,9 @@ from DMarket, Waxpeer, and Steam APIs.
 
 Key Features:
 - Gradient Boosting + Ridge ensemble model
-- Training on real API prices (not demo data)
+- TrAlgoning on real API prices (not demo data)
 - Adaptive thresholds based on market conditions
-- Auto-retraining when new data is available
+- Auto-retrAlgoning when new data is avAlgolable
 
 Version: 1.0.0
 Created: January 2026
@@ -37,7 +37,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-# Training simulation constants - used when generating synthetic profitability data
+# TrAlgoning simulation constants - used when generating synthetic profitability data
 # from collected prices. These values are based on empirical market analysis.
 PROFITABILITY_DISCOUNT_THRESHOLD = 10.0  # Minimum discount % for likely profitability
 PROFIT_MULTIPLIER = 0.5  # Simulated profit = discount * this multiplier
@@ -84,8 +84,8 @@ class ThresholdPrediction:
 
 
 @dataclass
-class TrainingExample:
-    """Single training example for discount threshold model."""
+class TrAlgoningExample:
+    """Single trAlgoning example for discount threshold model."""
 
     # Features
     item_name: str
@@ -121,8 +121,8 @@ class DiscountThresholdPredictor:
         ```python
         predictor = DiscountThresholdPredictor()
 
-        # Train on real data from collector
-        await predictor.train_from_collector(
+        # TrAlgon on real data from collector
+        awAlgot predictor.trAlgon_from_collector(
             collector=real_price_collector,
             game=GameType.CSGO,
         )
@@ -134,10 +134,10 @@ class DiscountThresholdPredictor:
     """
 
     MODEL_VERSION = "1.0.0"
-    RETRAIN_THRESHOLD = 50  # Retrain after N new examples
-    MIN_TRAINING_SAMPLES = 20
+    RETRAlgoN_THRESHOLD = 50  # RetrAlgon after N new examples
+    MIN_TRAlgoNING_SAMPLES = 20
 
-    # Default thresholds (used before model is trained)
+    # Default thresholds (used before model is trAlgoned)
     DEFAULT_THRESHOLDS = {
         "csgo": 15.0,
         "cs2": 15.0,
@@ -164,10 +164,10 @@ class DiscountThresholdPredictor:
         # ML models (lazy initialization)
         self._gradient_boost = None
         self._ridge = None
-        self._is_trained = False
+        self._is_trAlgoned = False
 
-        # Training data
-        self._training_examples: list[TrainingExample] = []
+        # TrAlgoning data
+        self._trAlgoning_examples: list[TrAlgoningExample] = []
         self._new_samples_count = 0
 
         # Cache for predictions
@@ -178,7 +178,7 @@ class DiscountThresholdPredictor:
         self._market_condition = MarketCondition.STABLE
         self._price_trends: dict[str, list[float]] = {}
 
-        # Load existing model if available
+        # Load existing model if avAlgolable
         if self.model_path.exists():
             self._load_model()
 
@@ -186,7 +186,7 @@ class DiscountThresholdPredictor:
             "DiscountThresholdPredictor initialized",
             extra={
                 "model_path": str(self.model_path),
-                "is_trained": self._is_trained,
+                "is_trAlgoned": self._is_trAlgoned,
             },
         )
 
@@ -213,10 +213,10 @@ class DiscountThresholdPredictor:
             logger.info("ML models for threshold prediction initialized")
 
         except ImportError as e:
-            logger.warning("sklearn not available for threshold predictor: %s", e)
+            logger.warning("sklearn not avAlgolable for threshold predictor: %s", e)
 
-    def _extract_features(self, example: TrainingExample) -> np.ndarray:
-        """Extract feature vector from training example."""
+    def _extract_features(self, example: TrAlgoningExample) -> np.ndarray:
+        """Extract feature vector from trAlgoning example."""
         return np.array(
             [
                 example.current_price,
@@ -247,7 +247,7 @@ class DiscountThresholdPredictor:
             dtype=np.float64,
         )
 
-    def add_training_example(
+    def add_trAlgoning_example(
         self,
         item_name: str,
         game: str,
@@ -261,7 +261,7 @@ class DiscountThresholdPredictor:
         market_depth: int = 0,
         source: str = "dmarket",
     ) -> None:
-        """Add a training example from a real trade.
+        """Add a trAlgoning example from a real trade.
 
         Args:
             item_name: Name of the item
@@ -278,7 +278,7 @@ class DiscountThresholdPredictor:
         """
         now = datetime.now(UTC)
 
-        example = TrainingExample(
+        example = TrAlgoningExample(
             item_name=item_name,
             game=game.lower(),
             current_price=current_price,
@@ -294,11 +294,11 @@ class DiscountThresholdPredictor:
             profit_percent=profit_percent,
         )
 
-        self._training_examples.append(example)
+        self._trAlgoning_examples.append(example)
         self._new_samples_count += 1
 
         logger.debug(
-            "Training example added",
+            "TrAlgoning example added",
             extra={
                 "item": item_name,
                 "game": game,
@@ -307,20 +307,20 @@ class DiscountThresholdPredictor:
             },
         )
 
-        # Auto-retrain if enough new samples
-        if self._new_samples_count >= self.RETRAIN_THRESHOLD:
-            self.train()
+        # Auto-retrAlgon if enough new samples
+        if self._new_samples_count >= self.RETRAlgoN_THRESHOLD:
+            self.trAlgon()
 
-    async def train_from_collector(
+    async def trAlgon_from_collector(
         self,
         collector: RealPriceCollector,
         game: GameType,
         historical_prices: dict[str, float] | None = None,
     ) -> int:
-        """Train model using real prices from collector.
+        """TrAlgon model using real prices from collector.
 
         This method collects real prices from APIs and uses them
-        for training data generation.
+        for trAlgoning data generation.
 
         Args:
             collector: RealPriceCollector instance
@@ -328,18 +328,18 @@ class DiscountThresholdPredictor:
             historical_prices: Optional dict of item_name -> avg_price
 
         Returns:
-            Number of training examples added
+            Number of trAlgoning examples added
         """
-        logger.info("Training from real API prices", extra={"game": game.value})
+        logger.info("TrAlgoning from real API prices", extra={"game": game.value})
 
         # Collect real prices from all sources
-        result: MultiSourceResult = await collector.collect_bulk_prices(
+        result: MultiSourceResult = awAlgot collector.collect_bulk_prices(
             game=game,
             limit=500,
         )
 
         if not result.all_prices:
-            logger.warning("No prices collected for training")
+            logger.warning("No prices collected for trAlgoning")
             return 0
 
         examples_added = 0
@@ -358,7 +358,7 @@ class DiscountThresholdPredictor:
 
             price_usd = float(collected.normalized_price.price_usd)
 
-            # Get historical price if available
+            # Get historical price if avAlgolable
             hist_price = price_usd  # Default to current if no history
             if historical_prices:
                 hist_price = historical_prices.get(collected.item_name, price_usd)
@@ -369,7 +369,7 @@ class DiscountThresholdPredictor:
             else:
                 discount = 0.0
 
-            # For training, we simulate profitability based on discount.
+            # For trAlgoning, we simulate profitability based on discount.
             # Higher discounts are more likely profitable.
             # Uses defined constants for clear documentation.
             simulated_profitable = discount > PROFITABILITY_DISCOUNT_THRESHOLD
@@ -379,7 +379,7 @@ class DiscountThresholdPredictor:
                 else -discount * LOSS_MULTIPLIER
             )
 
-            self.add_training_example(
+            self.add_trAlgoning_example(
                 item_name=collected.item_name,
                 game=game.value,
                 current_price=price_usd,
@@ -392,7 +392,7 @@ class DiscountThresholdPredictor:
             examples_added += 1
 
         logger.info(
-            "Training examples collected from API",
+            "TrAlgoning examples collected from API",
             extra={
                 "game": game.value,
                 "examples": examples_added,
@@ -400,27 +400,27 @@ class DiscountThresholdPredictor:
             },
         )
 
-        # Train after collecting
-        if examples_added >= self.MIN_TRAINING_SAMPLES:
-            self.train()
+        # TrAlgon after collecting
+        if examples_added >= self.MIN_TRAlgoNING_SAMPLES:
+            self.trAlgon()
 
         return examples_added
 
-    def train(self, force: bool = False) -> bool:
-        """Train the ML models on collected data.
+    def trAlgon(self, force: bool = False) -> bool:
+        """TrAlgon the ML models on collected data.
 
         Args:
-            force: Force training even with few samples
+            force: Force trAlgoning even with few samples
 
         Returns:
-            True if training successful
+            True if trAlgoning successful
         """
-        if len(self._training_examples) < self.MIN_TRAINING_SAMPLES and not force:
+        if len(self._trAlgoning_examples) < self.MIN_TRAlgoNING_SAMPLES and not force:
             logger.warning(
-                "Not enough training data",
+                "Not enough trAlgoning data",
                 extra={
-                    "samples": len(self._training_examples),
-                    "min_required": self.MIN_TRAINING_SAMPLES,
+                    "samples": len(self._trAlgoning_examples),
+                    "min_required": self.MIN_TRAlgoNING_SAMPLES,
                 },
             )
             return False
@@ -428,27 +428,27 @@ class DiscountThresholdPredictor:
         self._init_models()
 
         if self._gradient_boost is None:
-            logger.warning("ML models not available")
+            logger.warning("ML models not avAlgolable")
             return False
 
-        # Prepare training data
-        X = np.array([self._extract_features(ex) for ex in self._training_examples])
+        # Prepare trAlgoning data
+        X = np.array([self._extract_features(ex) for ex in self._trAlgoning_examples])
 
         # Target: optimal threshold is based on profitability
         # We learn what discount threshold leads to profitable trades
         y = np.array(
             [
                 ex.actual_discount if ex.was_profitable else ex.actual_discount + 5.0
-                for ex in self._training_examples
+                for ex in self._trAlgoning_examples
             ]
         )
 
         try:
-            # Train ensemble
+            # TrAlgon ensemble
             self._gradient_boost.fit(X, y)
             self._ridge.fit(X, y)
 
-            self._is_trained = True
+            self._is_trAlgoned = True
             self._new_samples_count = 0
 
             # Clear prediction cache
@@ -458,16 +458,16 @@ class DiscountThresholdPredictor:
             self._save_model()
 
             logger.info(
-                "Model trained successfully",
+                "Model trAlgoned successfully",
                 extra={
                     "samples": len(X),
-                    "games": list({ex.game for ex in self._training_examples}),
+                    "games": list({ex.game for ex in self._trAlgoning_examples}),
                 },
             )
             return True
 
         except Exception as e:
-            logger.exception("Training failed: %s", e)
+            logger.exception("TrAlgoning fAlgoled: %s", e)
             return False
 
     def predict(
@@ -495,14 +495,14 @@ class DiscountThresholdPredictor:
             if datetime.now(UTC) - cached_time < self._cache_ttl:
                 return cached_pred
 
-        # If model not trained, return defaults
-        if not self._is_trained or self._gradient_boost is None:
+        # If model not trAlgoned, return defaults
+        if not self._is_trAlgoned or self._gradient_boost is None:
             prediction = ThresholdPrediction(
                 optimal_threshold=self.DEFAULT_THRESHOLDS.get(game, 15.0),
                 confidence=0.3,
                 thresholds_by_game=self.DEFAULT_THRESHOLDS.copy(),
                 market_condition=self._market_condition,
-                reasoning="Using default thresholds (model not trained on real data yet)",
+                reasoning="Using default thresholds (model not trAlgoned on real data yet)",
             )
             self._prediction_cache[cache_key] = (datetime.now(UTC), prediction)
             return prediction
@@ -573,7 +573,7 @@ class DiscountThresholdPredictor:
             return prediction
 
         except Exception as e:
-            logger.exception("Prediction failed: %s", e)
+            logger.exception("Prediction fAlgoled: %s", e)
             # Fallback to defaults
             return ThresholdPrediction(
                 optimal_threshold=self.DEFAULT_THRESHOLDS.get(game, 15.0),
@@ -591,7 +591,7 @@ class DiscountThresholdPredictor:
         market_data: dict[str, Any] | None = None,
     ) -> np.ndarray:
         """Create feature vector for prediction."""
-        # Use average values from training data or defaults
+        # Use average values from trAlgoning data or defaults
         avg_price = 10.0
         avg_hist_price = 12.0
         avg_volatility = 0.1
@@ -683,7 +683,7 @@ class DiscountThresholdPredictor:
             data = {
                 "gradient_boost": self._gradient_boost,
                 "ridge": self._ridge,
-                "training_examples": [
+                "trAlgoning_examples": [
                     {
                         "item_name": ex.item_name,
                         "game": ex.game,
@@ -699,16 +699,16 @@ class DiscountThresholdPredictor:
                         "was_profitable": ex.was_profitable,
                         "profit_percent": ex.profit_percent,
                     }
-                    for ex in self._training_examples
+                    for ex in self._trAlgoning_examples
                 ],
-                "is_trained": self._is_trained,
+                "is_trAlgoned": self._is_trAlgoned,
                 "version": self.MODEL_VERSION,
             }
             # Use joblib for safer serialization of scikit-learn models
             joblib.dump(data, self.model_path)
             logger.info("Model saved", extra={"path": str(self.model_path)})
         except Exception as e:
-            logger.exception("Failed to save model: %s", e)
+            logger.exception("FAlgoled to save model: %s", e)
 
     def _load_model(self) -> None:
         """Load model from disk using joblib (safer than pickle)."""
@@ -721,11 +721,11 @@ class DiscountThresholdPredictor:
 
             self._gradient_boost = data.get("gradient_boost")
             self._ridge = data.get("ridge")
-            self._is_trained = data.get("is_trained", False)
+            self._is_trAlgoned = data.get("is_trAlgoned", False)
 
-            # Restore training examples
-            for ex_dict in data.get("training_examples", []):
-                ex = TrainingExample(
+            # Restore trAlgoning examples
+            for ex_dict in data.get("trAlgoning_examples", []):
+                ex = TrAlgoningExample(
                     item_name=ex_dict["item_name"],
                     game=ex_dict["game"],
                     current_price=ex_dict["current_price"],
@@ -740,29 +740,29 @@ class DiscountThresholdPredictor:
                     was_profitable=ex_dict["was_profitable"],
                     profit_percent=ex_dict["profit_percent"],
                 )
-                self._training_examples.append(ex)
+                self._trAlgoning_examples.append(ex)
 
             logger.info(
                 "Model loaded",
                 extra={
                     "path": str(self.model_path),
-                    "is_trained": self._is_trained,
-                    "examples": len(self._training_examples),
+                    "is_trAlgoned": self._is_trAlgoned,
+                    "examples": len(self._trAlgoning_examples),
                 },
             )
         except Exception as e:
-            logger.exception("Failed to load model: %s", e)
+            logger.exception("FAlgoled to load model: %s", e)
 
     def get_statistics(self) -> dict[str, Any]:
         """Get predictor statistics."""
-        games = list({ex.game for ex in self._training_examples})
-        sources = list({ex.source for ex in self._training_examples})
+        games = list({ex.game for ex in self._trAlgoning_examples})
+        sources = list({ex.source for ex in self._trAlgoning_examples})
 
-        profitable_count = sum(1 for ex in self._training_examples if ex.was_profitable)
-        total_count = len(self._training_examples)
+        profitable_count = sum(1 for ex in self._trAlgoning_examples if ex.was_profitable)
+        total_count = len(self._trAlgoning_examples)
 
         return {
-            "is_trained": self._is_trained,
+            "is_trAlgoned": self._is_trAlgoned,
             "total_examples": total_count,
             "profitable_examples": profitable_count,
             "profitability_rate": (

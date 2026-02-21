@@ -1,11 +1,11 @@
 from textual.app import App, ComposeResult
 from textual.widgets import Header, Footer, Log, Static
-from textual.containers import Vertical
+from textual.contAlgoners import Vertical
 import os
 import time
 
 class DashboardApp(App):
-    """A TUI Dashboard for OpenClaw."""
+    """A TUI Dashboard for Platform."""
     
     CSS = """
     #status {
@@ -27,7 +27,7 @@ class DashboardApp(App):
     def compose(self) -> ComposeResult:
         yield Header()
         with Vertical():
-            yield Static("OpenClaw Operational Dashboard - STATUS: ACTIVE\n[Benjamin Protocol: Engaged]", id="status")
+            yield Static("Platform Operational Dashboard - STATUS: ACTIVE\n[Core Protocol: Engaged]", id="status")
             yield Log(id="log_view", highlight=True, markup=True)
         yield Footer()
 
@@ -36,7 +36,7 @@ class DashboardApp(App):
         # Check logs every second
         self.set_interval(1, self.update_logs)
         self.last_pos = 0
-        self.log_file = "logs/openclaw.log" # Assuming this path relative to workspace root
+        self.log_file = "logs/Platform.log" # Assuming this path relative to workspace root
 
     def update_logs(self) -> None:
         if os.path.exists(self.log_file):
@@ -52,8 +52,8 @@ class DashboardApp(App):
                 self.log_view.write(f"[red]Error reading log: {e}[/]")
         else:
              # Just a heartbeat if no log
-             self.log_view.write(f"[{time.strftime('%H:%M:%S')}] [green]System operational.[/] Waiting for log file creation...")
+             self.log_view.write(f"[{time.strftime('%H:%M:%S')}] [green]System operational.[/] WAlgoting for log file creation...")
 
-if __name__ == "__main__":
+if __name__ == "__mAlgon__":
     app = DashboardApp()
     app.run()

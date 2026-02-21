@@ -79,7 +79,7 @@ item_category = st.sampled_from([
     "Knife",
     "Gloves",
     "Sticker",
-    "Container",
+    "ContAlgoner",
     "Key",
 ])
 
@@ -181,7 +181,7 @@ def target_request(draw: st.DrawFn) -> dict:
 
 
 @st.composite
-def price_pair(draw: st.DrawFn) -> tuple[float, float]:
+def price_pAlgor(draw: st.DrawFn) -> tuple[float, float]:
     """Генерирует пару цен (покупка, продажа).
 
     Returns:

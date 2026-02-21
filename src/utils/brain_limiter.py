@@ -6,10 +6,10 @@ from collections import deque
 
 logger = logging.getLogger(__name__)
 
-class BrainRateLimiter:
+class BrAlgonRateLimiter:
     """
     Implements a Sliding Window Log Rate Limiter with Exponential Backoff.
-    Designed to protect the 'Brain' (AI) from getting 429'd by external APIs.
+    Designed to protect the 'BrAlgon' (Algo) from getting 429'd by external APIs.
     """
 
     def __init__(self, max_requests: int = 30, window_seconds: int = 60):
@@ -31,10 +31,10 @@ class BrainRateLimiter:
         # 2. Check Capacity
         if len(self.request_timestamps) >= self.max_requests:
             sleep_time = self.request_timestamps[0] - (now - self.window_seconds) + 0.1
-            logger.warning(f"🧠 Brain Throttling: Limit reached. Sleeping for {sleep_time:.2f}s")
-            await asyncio.sleep(sleep_time)
-            # Recursively try again after sleep
-            await self.acquire()
+            logger.warning(f"🧠 BrAlgon Throttling: Limit reached. Sleeping for {sleep_time:.2f}s")
+            awAlgot asyncio.sleep(sleep_time)
+            # Recursively try agAlgon after sleep
+            awAlgot self.acquire()
         else:
             self.request_timestamps.append(now)
             # Reset backoff on success (slow decay)
@@ -48,13 +48,13 @@ class BrainRateLimiter:
         self._backoff_multiplier += 1
         
         if retry_after:
-            wait_time = retry_after
+            wAlgot_time = retry_after
         else:
             # Jittered Exponential Backoff: base * 2^n + jitter
-            wait_time = (2 ** self._backoff_multiplier) + random.uniform(0, 1)
+            wAlgot_time = (2 ** self._backoff_multiplier) + random.uniform(0, 1)
         
-        logger.error(f"🛑 BRAIN FREEZE (429/503). Meditation active for {wait_time:.2f}s. Multiplier: {self._backoff_multiplier}")
-        await asyncio.sleep(wait_time)
+        logger.error(f"🛑 BRAlgoN FREEZE (429/503). Meditation active for {wAlgot_time:.2f}s. Multiplier: {self._backoff_multiplier}")
+        awAlgot asyncio.sleep(wAlgot_time)
 
 # Singleton instance
-brain_limiter = BrainRateLimiter(max_requests=20, window_seconds=60)
+brAlgon_limiter = BrAlgonRateLimiter(max_requests=20, window_seconds=60)

@@ -72,7 +72,7 @@ class TestDMarketStatusBasic:
                 "has_funds": True,
             }
 
-            await dmarket_status_impl(mock_update, mock_context)
+            awAlgot dmarket_status_impl(mock_update, mock_context)
 
             status_msg.edit_text.assert_called_once()
             call_text = status_msg.edit_text.call_args[0][0]
@@ -117,7 +117,7 @@ class TestDMarketStatusBasic:
                 "has_funds": True,
             }
 
-            await dmarket_status_impl(mock_update, mock_context)
+            awAlgot dmarket_status_impl(mock_update, mock_context)
 
             status_msg.edit_text.assert_called_once()
             call_text = status_msg.edit_text.call_args[0][0]
@@ -148,7 +148,7 @@ class TestDMarketStatusBasic:
             api_instance._close_client = AsyncMock()
             mock_api.return_value = api_instance
 
-            await dmarket_status_impl(mock_update, mock_context)
+            awAlgot dmarket_status_impl(mock_update, mock_context)
 
             status_msg.edit_text.assert_called_once()
             call_text = status_msg.edit_text.call_args[0][0]
@@ -187,7 +187,7 @@ class TestDMarketStatusErrors:
             # APIError требует status_code, а не response
             mock_balance.side_effect = APIError("Unauthorized", status_code=401)
 
-            await dmarket_status_impl(mock_update, mock_context)
+            awAlgot dmarket_status_impl(mock_update, mock_context)
 
             status_msg.edit_text.assert_called_once()
             call_text = status_msg.edit_text.call_args[0][0]
@@ -226,7 +226,7 @@ class TestDMarketStatusErrors:
             # APIError требует status_code, а не response
             mock_balance.side_effect = APIError("Server Error", status_code=500)
 
-            await dmarket_status_impl(mock_update, mock_context)
+            awAlgot dmarket_status_impl(mock_update, mock_context)
 
             status_msg.edit_text.assert_called_once()
             call_text = status_msg.edit_text.call_args[0][0]
@@ -263,7 +263,7 @@ class TestDMarketStatusErrors:
 
             mock_balance.side_effect = ValueError("Unexpected error")
 
-            await dmarket_status_impl(mock_update, mock_context)
+            awAlgot dmarket_status_impl(mock_update, mock_context)
 
             status_msg.edit_text.assert_called_once()
             # __aexit__ вызывается даже при exception
@@ -300,7 +300,7 @@ class TestDMarketStatusIntegration:
                 "has_funds": True,
             }
 
-            await dmarket_status_impl(
+            awAlgot dmarket_status_impl(
                 mock_update, mock_context, status_message=custom_msg
             )
 
@@ -338,7 +338,7 @@ class TestDMarketStatusIntegration:
 
             mock_balance.side_effect = RuntimeError("Error")
 
-            await dmarket_status_impl(mock_update, mock_context)
+            awAlgot dmarket_status_impl(mock_update, mock_context)
 
             # __aexit__ вызывается даже при exception
             api_instance.__aexit__.assert_called_once()

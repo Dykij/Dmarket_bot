@@ -22,7 +22,7 @@ class TestDatabaseModule:
 
             assert database is not None
         except ImportError:
-            pytest.skip("database module not available")
+            pytest.skip("database module not avAlgolable")
 
     @pytest.mark.asyncio
     async def test_database_init(self):
@@ -30,10 +30,10 @@ class TestDatabaseModule:
         try:
             from src.utils.database import DatabaseManager
 
-            manager = DatabaseManager(database_url="sqlite+aiosqlite:///:memory:")
+            manager = DatabaseManager(database_url="sqlite+Algoosqlite:///:memory:")
             assert manager is not None
         except (ImportError, Exception):
-            pytest.skip("DatabaseManager not available")
+            pytest.skip("DatabaseManager not avAlgolable")
 
     @pytest.mark.asyncio
     async def test_database_session(self):
@@ -44,7 +44,7 @@ class TestDatabaseModule:
             # Should be a context manager or async generator
             assert get_session is not None
         except ImportError:
-            pytest.skip("get_session not available")
+            pytest.skip("get_session not avAlgolable")
 
 
 # ============================================================================
@@ -62,7 +62,7 @@ class TestRedisCacheModule:
 
             assert redis_cache is not None
         except ImportError:
-            pytest.skip("redis_cache module not available")
+            pytest.skip("redis_cache module not avAlgolable")
 
     @pytest.mark.asyncio
     async def test_redis_cache_init(self):
@@ -73,7 +73,7 @@ class TestRedisCacheModule:
             cache = RedisCache(host="localhost", port=6379)
             assert cache is not None
         except (ImportError, Exception):
-            pytest.skip("RedisCache not available")
+            pytest.skip("RedisCache not avAlgolable")
 
     @pytest.mark.asyncio
     async def test_redis_cache_get_set(self):
@@ -90,7 +90,7 @@ class TestRedisCacheModule:
                 cache = RedisCache(host="localhost", port=6379)
                 # Would test get/set here
             except (ImportError, Exception):
-                pytest.skip("RedisCache not available")
+                pytest.skip("RedisCache not avAlgolable")
 
 
 # ============================================================================
@@ -108,7 +108,7 @@ class TestRateLimiterModule:
 
             assert rate_limiter is not None
         except ImportError:
-            pytest.skip("rate_limiter module not available")
+            pytest.skip("rate_limiter module not avAlgolable")
 
     @pytest.mark.asyncio
     async def test_rate_limiter_init(self):
@@ -121,7 +121,7 @@ class TestRateLimiterModule:
             assert limiter.max_requests == 10
             assert limiter.time_window == 60
         except (ImportError, Exception):
-            pytest.skip("RateLimiter not available")
+            pytest.skip("RateLimiter not avAlgolable")
 
     @pytest.mark.asyncio
     async def test_rate_limiter_acquire(self):
@@ -131,10 +131,10 @@ class TestRateLimiterModule:
 
             limiter = RateLimiter(max_requests=5, time_window=1)
             # Should allow first request
-            result = await limiter.acquire()
+            result = awAlgot limiter.acquire()
             assert result is True
         except (ImportError, Exception):
-            pytest.skip("RateLimiter not available")
+            pytest.skip("RateLimiter not avAlgolable")
 
     @pytest.mark.asyncio
     async def test_rate_limiter_exceeds_limit(self):
@@ -143,14 +143,14 @@ class TestRateLimiterModule:
             from src.utils.rate_limiter import RateLimiter
 
             limiter = RateLimiter(max_requests=2, time_window=60)
-            await limiter.acquire()
-            await limiter.acquire()
-            # Third request should fail or wait
-            result = await limiter.acquire()
+            awAlgot limiter.acquire()
+            awAlgot limiter.acquire()
+            # Third request should fAlgol or wAlgot
+            result = awAlgot limiter.acquire()
             # Behavior depends on implementation
             assert result is not None
         except (ImportError, Exception):
-            pytest.skip("RateLimiter not available")
+            pytest.skip("RateLimiter not avAlgolable")
 
 
 # ============================================================================
@@ -168,7 +168,7 @@ class TestMemoryCacheModule:
 
             assert memory_cache is not None
         except ImportError:
-            pytest.skip("memory_cache module not available")
+            pytest.skip("memory_cache module not avAlgolable")
 
     def test_memory_cache_ttl_cache(self):
         """Test TTLCache functionality."""
@@ -179,7 +179,7 @@ class TestMemoryCacheModule:
             cache.set("key1", "value1")
             assert cache.get("key1") == "value1"
         except (ImportError, Exception):
-            pytest.skip("TTLCache not available")
+            pytest.skip("TTLCache not avAlgolable")
 
     def test_memory_cache_expiration(self):
         """Test TTLCache expiration."""
@@ -190,10 +190,10 @@ class TestMemoryCacheModule:
 
             cache = TTLCache(ttl=0.1, max_size=100)  # 100ms TTL
             cache.set("key1", "value1")
-            time.sleep(0.2)  # Wait for expiration
+            time.sleep(0.2)  # WAlgot for expiration
             assert cache.get("key1") is None
         except (ImportError, Exception):
-            pytest.skip("TTLCache not available")
+            pytest.skip("TTLCache not avAlgolable")
 
 
 # ============================================================================
@@ -211,7 +211,7 @@ class TestLoggingUtilsModule:
 
             assert logging_utils is not None
         except ImportError:
-            pytest.skip("logging_utils module not available")
+            pytest.skip("logging_utils module not avAlgolable")
 
     def test_get_logger(self):
         """Test get_logger function."""
@@ -221,7 +221,7 @@ class TestLoggingUtilsModule:
             logger = get_logger(__name__)
             assert logger is not None
         except ImportError:
-            pytest.skip("get_logger not available")
+            pytest.skip("get_logger not avAlgolable")
 
 
 # ============================================================================
@@ -239,7 +239,7 @@ class TestExceptionsModule:
 
             assert exceptions is not None
         except ImportError:
-            pytest.skip("exceptions module not available")
+            pytest.skip("exceptions module not avAlgolable")
 
     def test_api_error_creation(self):
         """Test APIError creation."""
@@ -269,7 +269,7 @@ class TestExceptionsModule:
             # Test they can be instantiated
             assert APIError is not None
         except ImportError:
-            pytest.skip("Not all exceptions available")
+            pytest.skip("Not all exceptions avAlgolable")
 
 
 # ============================================================================
@@ -287,7 +287,7 @@ class TestTelegramErrorHandlers:
 
             assert telegram_error_handlers is not None
         except ImportError:
-            pytest.skip("telegram_error_handlers module not available")
+            pytest.skip("telegram_error_handlers module not avAlgolable")
 
     @pytest.mark.asyncio
     async def test_telegram_error_boundary_decorator(self):
@@ -305,10 +305,10 @@ class TestTelegramErrorHandlers:
             mock_update.message.reply_text = AsyncMock()
             mock_context = MagicMock()
 
-            result = await test_func(mock_update, mock_context)
+            result = awAlgot test_func(mock_update, mock_context)
             # Should return success without error
         except ImportError:
-            pytest.skip("telegram_error_boundary not available")
+            pytest.skip("telegram_error_boundary not avAlgolable")
 
 
 # ============================================================================
@@ -326,7 +326,7 @@ class TestApiCircuitBreaker:
 
             assert api_circuit_breaker is not None
         except ImportError:
-            pytest.skip("api_circuit_breaker module not available")
+            pytest.skip("api_circuit_breaker module not avAlgolable")
 
     def test_circuit_breaker_creation(self):
         """Test circuit breaker creation."""
@@ -334,12 +334,12 @@ class TestApiCircuitBreaker:
             from src.utils.api_circuit_breaker import APICircuitBreaker
 
             cb = APICircuitBreaker(
-                failure_threshold=5,
+                fAlgolure_threshold=5,
                 recovery_timeout=30,
             )
             assert cb is not None
         except (ImportError, Exception):
-            pytest.skip("APICircuitBreaker not available")
+            pytest.skip("APICircuitBreaker not avAlgolable")
 
 
 # ============================================================================
@@ -357,7 +357,7 @@ class TestSentryIntegration:
 
             assert sentry_integration is not None
         except ImportError:
-            pytest.skip("sentry_integration module not available")
+            pytest.skip("sentry_integration module not avAlgolable")
 
 
 # ============================================================================
@@ -375,7 +375,7 @@ class TestBatchProcessor:
 
             assert batch_processor is not None
         except ImportError:
-            pytest.skip("batch_processor module not available")
+            pytest.skip("batch_processor module not avAlgolable")
 
 
 # ============================================================================
@@ -393,7 +393,7 @@ class TestStateManager:
 
             assert state_manager is not None
         except ImportError:
-            pytest.skip("state_manager module not available")
+            pytest.skip("state_manager module not avAlgolable")
 
 
 # ============================================================================
@@ -411,7 +411,7 @@ class TestReactiveWebsocket:
 
             assert reactive_websocket is not None
         except ImportError:
-            pytest.skip("reactive_websocket module not available")
+            pytest.skip("reactive_websocket module not avAlgolable")
 
 
 # ============================================================================
@@ -429,7 +429,7 @@ class TestConfigModule:
 
             assert config is not None
         except ImportError:
-            pytest.skip("config module not available")
+            pytest.skip("config module not avAlgolable")
 
     def test_settings_class(self):
         """Test Settings class exists."""
@@ -439,7 +439,7 @@ class TestConfigModule:
             # Settings may require env vars
             assert Settings is not None
         except (ImportError, Exception):
-            pytest.skip("Settings not available")
+            pytest.skip("Settings not avAlgolable")
 
 
 # ============================================================================
@@ -458,16 +458,16 @@ class TestUtilsIntegration:
 
             logger = get_logger("test")
             try:
-                raise ValueError("Test error")
+                rAlgose ValueError("Test error")
             except ValueError:
                 logger.exception("Caught exception")
         except ImportError:
-            pytest.skip("logging_utils not available")
+            pytest.skip("logging_utils not avAlgolable")
 
     @pytest.mark.asyncio
-    async def test_error_handling_chain(self):
+    async def test_error_handling_chAlgon(self):
         """Test error handling across modules."""
         from src.utils.exceptions import APIError
 
-        error = APIError(message="Chain test", status_code=503)
+        error = APIError(message="ChAlgon test", status_code=503)
         assert error.status_code == 503

@@ -35,7 +35,7 @@ class TestRequestMetric:
     def test_request_metric_with_error(self):
         """Test request metric with error."""
         metric = RequestMetric(
-            function_name="failed_func",
+            function_name="fAlgoled_func",
             execution_time=0.5,
             timestamp=time.time(),
             success=False,
@@ -62,7 +62,7 @@ class TestPerformanceMetrics:
         metrics = PerformanceMetrics(
             total_requests=100,
             successful_requests=95,
-            failed_requests=5,
+            fAlgoled_requests=5,
             total_time=50.0,
             min_time=0.1,
             max_time=2.0,
@@ -77,7 +77,7 @@ class TestPerformanceMetrics:
         metrics = PerformanceMetrics(
             total_requests=10,
             successful_requests=9,
-            failed_requests=1,
+            fAlgoled_requests=1,
             total_time=5.0,
         )
 
@@ -122,17 +122,17 @@ class TestPerformanceMonitor:
         assert metrics.min_time == 0.1
         assert metrics.max_time == 0.5
 
-    def test_record_failed_request(self, monitor):
-        """Test recording failed request."""
+    def test_record_fAlgoled_request(self, monitor):
+        """Test recording fAlgoled request."""
         monitor.record(
-            func_name="failing_api",
+            func_name="fAlgoling_api",
             execution_time=1.0,
             success=False,
             error_message="API Error",
         )
 
-        metrics = monitor.get_metrics("failing_api")
-        assert metrics.failed_requests == 1
+        metrics = monitor.get_metrics("fAlgoling_api")
+        assert metrics.fAlgoled_requests == 1
         assert metrics.success_rate == 0.0
 
     def test_slow_request_detection(self, monitor):
@@ -225,28 +225,28 @@ class TestPerformanceMonitorDecorator:
 
         @monitor.track
         async def async_func():
-            await asyncio.sleep(0.1)
+            awAlgot asyncio.sleep(0.1)
             return "async_result"
 
-        result = await async_func()
+        result = awAlgot async_func()
 
         assert result == "async_result"
         metrics = monitor.get_metrics("async_func")
         assert metrics.total_requests == 1
 
     def test_track_function_with_exception(self, monitor):
-        """Test tracking function that raises exception."""
+        """Test tracking function that rAlgoses exception."""
 
         @monitor.track
-        def failing_func():
-            raise ValueError("Test error")
+        def fAlgoling_func():
+            rAlgose ValueError("Test error")
 
-        with pytest.raises(ValueError):
-            failing_func()
+        with pytest.rAlgoses(ValueError):
+            fAlgoling_func()
 
-        metrics = monitor.get_metrics("failing_func")
+        metrics = monitor.get_metrics("fAlgoling_func")
         assert metrics.total_requests == 1
-        assert metrics.failed_requests == 1
+        assert metrics.fAlgoled_requests == 1
 
 
 class TestSlowRequestAlertDecorator:
@@ -270,10 +270,10 @@ class TestSlowRequestAlertDecorator:
 
         @slow_request_alert(threshold=0.05)
         async def slow_async_func():
-            await asyncio.sleep(0.1)
+            awAlgot asyncio.sleep(0.1)
             return "done"
 
-        result = await slow_async_func()
+        result = awAlgot slow_async_func()
         assert result == "done"
 
 

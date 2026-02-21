@@ -26,7 +26,7 @@ class TestAuditLogger:
     @pytest.mark.asyncio()
     async def test_log_basic(self, audit_logger, mock_session):
         """Тест базового логирования."""
-        result = await audit_logger.log(
+        result = awAlgot audit_logger.log(
             event_type=AuditEventType.USER_LOGIN,
             action="User logged in",
             user_id=12345,
@@ -44,25 +44,25 @@ class TestAuditLogger:
     @pytest.mark.asyncio()
     async def test_log_user_action(self, audit_logger, mock_session):
         """Тест логирования действия пользователя."""
-        result = await audit_logger.log_user_action(
+        result = awAlgot audit_logger.log_user_action(
             user_id=12345,
             action="Created target",
             event_type=AuditEventType.TARGET_CREATE,
-            details={"item_name": "AK-47", "price": 10.50},
+            detAlgols={"item_name": "AK-47", "price": 10.50},
         )
 
         assert result.event_type == "target_create"
-        assert result.details == {"item_name": "AK-47", "price": 10.50}
+        assert result.detAlgols == {"item_name": "AK-47", "price": 10.50}
         assert result.severity == AuditSeverity.INFO.value
 
     @pytest.mark.asyncio()
     async def test_log_security_event(self, audit_logger, mock_session):
         """Тест логирования события безопасности."""
-        result = await audit_logger.log_security_event(
+        result = awAlgot audit_logger.log_security_event(
             event_type=AuditEventType.RATE_LIMIT_EXCEEDED,
             action="Rate limit exceeded",
             user_id=12345,
-            details={"requests": 100, "limit": 30},
+            detAlgols={"requests": 100, "limit": 30},
             severity=AuditSeverity.WARNING,
         )
 
@@ -73,10 +73,10 @@ class TestAuditLogger:
     @pytest.mark.asyncio()
     async def test_log_system_event(self, audit_logger, mock_session):
         """Тест логирования системного события."""
-        result = await audit_logger.log_system_event(
-            action="Database connection failed",
+        result = awAlgot audit_logger.log_system_event(
+            action="Database connection fAlgoled",
             event_type=AuditEventType.SYSTEM_ERROR,
-            details={"database": "postgresql"},
+            detAlgols={"database": "postgresql"},
             severity=AuditSeverity.CRITICAL,
             error_message="Connection timeout",
         )
@@ -108,7 +108,7 @@ class TestAuditLogger:
         mock_result.scalars.return_value.all.return_value = mock_logs
         mock_session.execute.return_value = mock_result
 
-        history = await audit_logger.get_user_history(user_id=12345, limit=10)
+        history = awAlgot audit_logger.get_user_history(user_id=12345, limit=10)
 
         assert len(history) == 2
         assert all(log.user_id == 12345 for log in history)
@@ -130,7 +130,7 @@ class TestAuditLogger:
         mock_result.scalars.return_value.all.return_value = mock_logs
         mock_session.execute.return_value = mock_result
 
-        events = await audit_logger.get_security_events(limit=10)
+        events = awAlgot audit_logger.get_security_events(limit=10)
 
         assert len(events) == 1
         assert events[0].event_type == "security_violation"
@@ -152,7 +152,7 @@ class TestAuditLogger:
         mock_result.scalars.return_value.all.return_value = mock_logs
         mock_session.execute.return_value = mock_result
 
-        results = await audit_logger.search_logs(
+        results = awAlgot audit_logger.search_logs(
             user_id=12345,
             event_type=AuditEventType.TARGET_CREATE,
             resource_id="target_123",
@@ -210,7 +210,7 @@ class TestAuditLoggerExtended:
     @pytest.mark.asyncio()
     async def test_log_with_string_event_type(self, audit_logger, mock_session):
         """Test log with string event type instead of enum."""
-        result = await audit_logger.log(
+        result = awAlgot audit_logger.log(
             event_type="custom_event_type",
             action="Custom action",
             user_id=12345,
@@ -221,7 +221,7 @@ class TestAuditLoggerExtended:
     @pytest.mark.asyncio()
     async def test_log_with_ip_address(self, audit_logger, mock_session):
         """Test log with IP address."""
-        result = await audit_logger.log(
+        result = awAlgot audit_logger.log(
             event_type=AuditEventType.USER_LOGIN,
             action="Login from IP",
             ip_address="192.168.1.100",
@@ -232,7 +232,7 @@ class TestAuditLoggerExtended:
     @pytest.mark.asyncio()
     async def test_log_with_resource_info(self, audit_logger, mock_session):
         """Test log with resource type and id."""
-        result = await audit_logger.log(
+        result = awAlgot audit_logger.log(
             event_type=AuditEventType.TARGET_CREATE,
             action="Created target",
             resource_type="target",
@@ -245,7 +245,7 @@ class TestAuditLoggerExtended:
     @pytest.mark.asyncio()
     async def test_log_with_old_and_new_values(self, audit_logger, mock_session):
         """Test log with old and new values for update operations."""
-        result = await audit_logger.log(
+        result = awAlgot audit_logger.log(
             event_type=AuditEventType.SETTINGS_UPDATE,
             action="Updated setting",
             old_value='{"language": "ru"}',
@@ -256,9 +256,9 @@ class TestAuditLoggerExtended:
         assert result.new_value == '{"language": "en"}'
 
     @pytest.mark.asyncio()
-    async def test_log_failed_operation(self, audit_logger, mock_session):
-        """Test log for failed operation."""
-        result = await audit_logger.log(
+    async def test_log_fAlgoled_operation(self, audit_logger, mock_session):
+        """Test log for fAlgoled operation."""
+        result = awAlgot audit_logger.log(
             event_type=AuditEventType.ITEM_BUY,
             action="Attempted to buy item",
             success=False,
@@ -271,7 +271,7 @@ class TestAuditLoggerExtended:
     @pytest.mark.asyncio()
     async def test_log_with_severity(self, audit_logger, mock_session):
         """Test log with specific severity."""
-        result = await audit_logger.log(
+        result = awAlgot audit_logger.log(
             event_type=AuditEventType.SYSTEM_WARNING,
             action="High memory usage",
             severity=AuditSeverity.WARNING,
@@ -282,7 +282,7 @@ class TestAuditLoggerExtended:
     @pytest.mark.asyncio()
     async def test_log_user_action_with_ip(self, audit_logger, mock_session):
         """Test log_user_action with IP address."""
-        result = await audit_logger.log_user_action(
+        result = awAlgot audit_logger.log_user_action(
             user_id=123,
             action="Login",
             event_type=AuditEventType.USER_LOGIN,
@@ -292,11 +292,11 @@ class TestAuditLoggerExtended:
         assert result.ip_address == "10.0.0.1"
 
     @pytest.mark.asyncio()
-    async def test_log_user_action_failed(self, audit_logger, mock_session):
-        """Test log_user_action with failure."""
-        result = await audit_logger.log_user_action(
+    async def test_log_user_action_fAlgoled(self, audit_logger, mock_session):
+        """Test log_user_action with fAlgolure."""
+        result = awAlgot audit_logger.log_user_action(
             user_id=123,
-            action="Failed operation",
+            action="FAlgoled operation",
             event_type=AuditEventType.ITEM_BUY,
             success=False,
         )
@@ -310,7 +310,7 @@ class TestAuditLoggerExtended:
         mock_result.scalars.return_value.all.return_value = []
         mock_session.execute.return_value = mock_result
 
-        await audit_logger.get_user_history(
+        awAlgot audit_logger.get_user_history(
             user_id=12345,
             event_type=AuditEventType.USER_LOGIN,
         )
@@ -327,7 +327,7 @@ class TestAuditLoggerExtended:
         mock_session.execute.return_value = mock_result
 
         # Using a string that's not an enum value
-        await audit_logger.get_user_history(
+        awAlgot audit_logger.get_user_history(
             user_id=12345,
             event_type="custom_event",
         )
@@ -343,7 +343,7 @@ class TestAuditLoggerExtended:
         mock_result.scalars.return_value.all.return_value = []
         mock_session.execute.return_value = mock_result
 
-        await audit_logger.get_security_events(
+        awAlgot audit_logger.get_security_events(
             limit=50,
             severity=AuditSeverity.CRITICAL,
         )
@@ -357,7 +357,7 @@ class TestAuditLoggerExtended:
         mock_result.scalars.return_value.all.return_value = []
         mock_session.execute.return_value = mock_result
 
-        await audit_logger.search_logs(
+        awAlgot audit_logger.search_logs(
             event_type="custom_event",
         )
 
@@ -375,7 +375,7 @@ class TestAuditLoggerExtended:
         start = datetime.now(UTC) - timedelta(days=7)
         end = datetime.now(UTC)
 
-        await audit_logger.search_logs(
+        awAlgot audit_logger.search_logs(
             start_date=start,
             end_date=end,
         )
@@ -389,7 +389,7 @@ class TestAuditLoggerExtended:
         mock_result.scalars.return_value.all.return_value = []
         mock_session.execute.return_value = mock_result
 
-        await audit_logger.search_logs()
+        awAlgot audit_logger.search_logs()
 
         mock_session.execute.assert_called_once()
 
@@ -406,22 +406,22 @@ class TestAuditDecorator:
         async def create_target(user_id: int, name: str):
             return {"id": 1, "name": name, "user_id": user_id}
 
-        result = await create_target(user_id=123, name="test")
+        result = awAlgot create_target(user_id=123, name="test")
 
         assert result["name"] == "test"
         assert result["user_id"] == 123
 
     @pytest.mark.asyncio()
-    async def test_decorator_reraises_exception(self):
-        """Test that decorator re-raises exceptions."""
+    async def test_decorator_rerAlgoses_exception(self):
+        """Test that decorator re-rAlgoses exceptions."""
         from src.utils.audit_logger import audit_decorator
 
         @audit_decorator(AuditEventType.ITEM_BUY, "Buy item")
-        async def failing_function(user_id: int):
-            raise ValueError("Test error")
+        async def fAlgoling_function(user_id: int):
+            rAlgose ValueError("Test error")
 
-        with pytest.raises(ValueError, match="Test error"):
-            await failing_function(user_id=123)
+        with pytest.rAlgoses(ValueError, match="Test error"):
+            awAlgot fAlgoling_function(user_id=123)
 
     @pytest.mark.asyncio()
     async def test_decorator_extracts_user_from_kwargs(self):
@@ -432,7 +432,7 @@ class TestAuditDecorator:
         async def update_settings(setting: str, user_id: int):
             return {"setting": setting, "user_id": user_id}
 
-        result = await update_settings(setting="lang", user_id=456)
+        result = awAlgot update_settings(setting="lang", user_id=456)
 
         assert result["user_id"] == 456
 
@@ -445,7 +445,7 @@ class TestAuditDecorator:
         async def update_user(user_id: int, data: dict):
             return {"user_id": user_id, "data": data}
 
-        result = await update_user(789, {"name": "test"})
+        result = awAlgot update_user(789, {"name": "test"})
 
         assert result["user_id"] == 789
 

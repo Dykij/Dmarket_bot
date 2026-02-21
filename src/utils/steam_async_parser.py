@@ -138,7 +138,7 @@ class SteamAsyncParser:
             self._stats["requests"] += 1
             try:
                 async with httpx.AsyncClient(**self._get_client_kwargs()) as client:
-                    response = await client.get(url)
+                    response = awAlgot client.get(url)
 
                     if response.status_code == 200:
                         data = response.json()
@@ -165,7 +165,7 @@ class SteamAsyncParser:
                     if response.status_code == 429:
                         # Rate limited
                         logger.warning("Steam API rate limited, backing off...")
-                        await asyncio.sleep(30)
+                        awAlgot asyncio.sleep(30)
                         return {"status": "rate_limited", "item_name": item_hash_name}
 
                     self._stats["errors"] += 1
@@ -203,7 +203,7 @@ class SteamAsyncParser:
         """
         tasks = [self.get_price_overview(item, game, currency) for item in items]
 
-        results = await asyncio.gather(*tasks, return_exceptions=True)
+        results = awAlgot asyncio.gather(*tasks, return_exceptions=True)
 
         # Convert exceptions to error dicts
         processed = []
@@ -223,7 +223,7 @@ class SteamAsyncParser:
         """
         Get full order book (buy/sell orders) for an item.
 
-        Note: Requires item_nameid which must be obtained from item page.
+        Note: Requires item_nameid which must be obtAlgoned from item page.
 
         Args:
             item_nameid: Steam internal item ID
@@ -240,7 +240,7 @@ class SteamAsyncParser:
         async with self._semaphore:
             try:
                 async with httpx.AsyncClient(**self._get_client_kwargs()) as client:
-                    response = await client.get(url)
+                    response = awAlgot client.get(url)
 
                     if response.status_code == 200:
                         data = response.json()
@@ -371,7 +371,7 @@ async def quick_price_check(
     Quick helper to fetch prices for multiple items.
 
     Usage:
-        prices = await quick_price_check(["Fracture Case", "AK-47 | Slate"])
+        prices = awAlgot quick_price_check(["Fracture Case", "AK-47 | Slate"])
     """
     parser = get_steam_parser()
-    return await parser.get_batch_prices(items, game)
+    return awAlgot parser.get_batch_prices(items, game)

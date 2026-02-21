@@ -13,10 +13,10 @@ Example:
     >>> scheduler = MLDataScheduler(predictor)
     >>>
     >>> # Запуск планировщика
-    >>> await scheduler.start()
+    >>> awAlgot scheduler.start()
     >>>
     >>> # Остановка
-    >>> await scheduler.stop()
+    >>> awAlgot scheduler.stop()
 
 Note:
     Планировщик работает в фоновом режиме и не блокирует основной поток.
@@ -58,7 +58,7 @@ class TaskType(Enum):
     """Типы задач планировщика."""
 
     DATA_COLLECTION = "data_collection"
-    MODEL_TRAINING = "model_training"
+    MODEL_TRAlgoNING = "model_trAlgoning"
     DATA_CLEANUP = "data_cleanup"
     HEALTH_CHECK = "health_check"
 
@@ -69,37 +69,37 @@ class SchedulerConfig:
 
     Attributes:
         collection_interval_hours: Интервал сбора данных (часы).
-        training_interval_hours: Интервал переобучения модели (часы).
+        trAlgoning_interval_hours: Интервал переобучения модели (часы).
         cleanup_interval_hours: Интервал очистки старых данных (часы).
         health_check_interval_minutes: Интервал проверки здоровья (минуты).
         max_data_age_days: Максимальный возраст данных (дни).
         max_dataset_age_days: Алиас для max_data_age_days (дни).
         items_per_collection: Предметов за один сбор.
-        min_samples_for_training: Минимум сэмплов для обучения.
+        min_samples_for_trAlgoning: Минимум сэмплов для обучения.
         enable_dmarket: Включить сбор с DMarket.
         enable_waxpeer: Включить сбор с Waxpeer.
         enable_steam: Включить сбор со Steam.
-        retry_on_failure: Повторять при ошибках.
+        retry_on_fAlgolure: Повторять при ошибках.
         max_retries: Максимум повторов.
         retry_delay_minutes: Задержка между повторами (минуты).
-        retraining_interval_hours: Алиас для training_interval_hours (часы).
+        retrAlgoning_interval_hours: Алиас для trAlgoning_interval_hours (часы).
     """
 
     collection_interval_hours: float = 6.0
-    training_interval_hours: float = 24.0
+    trAlgoning_interval_hours: float = 24.0
     cleanup_interval_hours: float = 48.0
     health_check_interval_minutes: float = 30.0
     max_data_age_days: int = 30
     max_dataset_age_days: int = 30  # Алиас для совместимости
     items_per_collection: int = 100
-    min_samples_for_training: int = 50
+    min_samples_for_trAlgoning: int = 50
     enable_dmarket: bool = True
     enable_waxpeer: bool = True
     enable_steam: bool = True
-    retry_on_failure: bool = True
+    retry_on_fAlgolure: bool = True
     max_retries: int = 3
     retry_delay_minutes: float = 5.0
-    retraining_interval_hours: float = 24.0  # Алиас для совместимости
+    retrAlgoning_interval_hours: float = 24.0  # Алиас для совместимости
 
 
 @dataclass
@@ -114,7 +114,7 @@ class TaskResult:
         duration_seconds: Длительность в секундах.
         items_processed: Обработано элементов.
         error_message: Сообщение об ошибке (если есть).
-        details: Дополнительные детали.
+        detAlgols: Дополнительные детали.
     """
 
     task_type: TaskType
@@ -124,7 +124,7 @@ class TaskResult:
     duration_seconds: float
     items_processed: int = 0
     error_message: str | None = None
-    details: dict[str, Any] = field(default_factory=dict)
+    detAlgols: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -135,39 +135,39 @@ class SchedulerStats:
         started_at: Время запуска.
         total_collections: Всего сборов данных.
         successful_collections: Успешных сборов.
-        total_trainings: Всего обучений.
-        successful_trainings: Успешных обучений.
+        total_trAlgonings: Всего обучений.
+        successful_trAlgonings: Успешных обучений.
         total_cleanups: Всего очисток.
         last_collection: Время последнего сбора.
-        last_training: Время последнего обучения.
+        last_trAlgoning: Время последнего обучения.
         last_error: Последняя ошибка.
         total_items_collected: Всего собрано элементов.
         samples_collected: Алиас для total_items_collected.
         errors_count: Количество ошибок.
         last_collection_time: Алиас для last_collection.
-        last_training_time: Алиас для last_training.
+        last_trAlgoning_time: Алиас для last_trAlgoning.
         last_cleanup_time: Время последней очистки.
     """
 
     started_at: datetime | None = None
     total_collections: int = 0
     successful_collections: int = 0
-    total_trainings: int = 0
-    successful_trainings: int = 0
+    total_trAlgonings: int = 0
+    successful_trAlgonings: int = 0
     total_cleanups: int = 0
     last_collection: datetime | None = None
-    last_training: datetime | None = None
+    last_trAlgoning: datetime | None = None
     last_error: str | None = None
     total_items_collected: int = 0
     samples_collected: int = 0  # Алиас для совместимости
     errors_count: int = 0  # Для совместимости
     last_collection_time: datetime | None = None  # Алиас
-    last_training_time: datetime | None = None  # Алиас
+    last_trAlgoning_time: datetime | None = None  # Алиас
     last_cleanup_time: datetime | None = None  # Для совместимости
 
 
 # ═══════════════════════════════════════════════════════════════════════════
-# MAIN SCHEDULER CLASS
+# MAlgoN SCHEDULER CLASS
 # ═══════════════════════════════════════════════════════════════════════════
 
 
@@ -188,9 +188,9 @@ class MLDataScheduler:
 
     Example:
         >>> scheduler = MLDataScheduler(predictor)
-        >>> await scheduler.start()
+        >>> awAlgot scheduler.start()
         >>> # ... бот работает ...
-        >>> await scheduler.stop()
+        >>> awAlgot scheduler.stop()
 
     Note:
         Планировщик безопасен для использования в async контексте
@@ -227,13 +227,13 @@ class MLDataScheduler:
 
         # Callback'и для уведомлений
         self._on_collection_complete: list[Any] = []
-        self._on_training_complete: list[Any] = []
+        self._on_trAlgoning_complete: list[Any] = []
         self._on_error: list[Any] = []
 
         logger.info(
             "scheduler_initialized",
             collection_interval=self.config.collection_interval_hours,
-            training_interval=self.config.training_interval_hours,
+            trAlgoning_interval=self.config.trAlgoning_interval_hours,
         )
 
     # ═══════════════════════════════════════════════════════════════════════
@@ -249,7 +249,7 @@ class MLDataScheduler:
             True если успешно запущен, False если уже запущен или ошибка.
 
         Example:
-            >>> success = await scheduler.start()
+            >>> success = awAlgot scheduler.start()
             >>> if success:
             ...     print("Планировщик запущен")
         """
@@ -268,8 +268,8 @@ class MLDataScheduler:
                     name="data_collection_loop",
                 ),
                 asyncio.create_task(
-                    self._training_loop(),
-                    name="model_training_loop",
+                    self._trAlgoning_loop(),
+                    name="model_trAlgoning_loop",
                 ),
                 asyncio.create_task(
                     self._cleanup_loop(),
@@ -293,7 +293,7 @@ class MLDataScheduler:
 
         except Exception as e:
             self.state = SchedulerState.ERROR
-            logger.error("scheduler_start_failed", error=str(e))
+            logger.error("scheduler_start_fAlgoled", error=str(e))
             return False
 
     async def stop(self, timeout: float = 30.0) -> bool:
@@ -308,7 +308,7 @@ class MLDataScheduler:
             True если успешно остановлен.
 
         Example:
-            >>> await scheduler.stop(timeout=10.0)
+            >>> awAlgot scheduler.stop(timeout=10.0)
         """
         if self.state == SchedulerState.STOPPED:
             logger.warning("scheduler_already_stopped")
@@ -325,7 +325,7 @@ class MLDataScheduler:
 
             # Ожидание завершения
             if self._tasks:
-                await asyncio.wait(
+                awAlgot asyncio.wAlgot(
                     self._tasks,
                     timeout=timeout,
                     return_when=asyncio.ALL_COMPLETED,
@@ -339,7 +339,7 @@ class MLDataScheduler:
 
         except Exception as e:
             self.state = SchedulerState.ERROR
-            logger.error("scheduler_stop_failed", error=str(e))
+            logger.error("scheduler_stop_fAlgoled", error=str(e))
             return False
 
     async def trigger_collection(
@@ -355,25 +355,25 @@ class MLDataScheduler:
             Результат выполнения задачи.
 
         Example:
-            >>> result = await scheduler.trigger_collection(["csgo", "dota2"])
+            >>> result = awAlgot scheduler.trigger_collection(["csgo", "dota2"])
             >>> print(f"Собрано: {result.items_processed}")
         """
         logger.info("manual_collection_triggered", games=game_types)
-        return await self._run_collection(game_types)
+        return awAlgot self._run_collection(game_types)
 
-    async def trigger_training(self) -> TaskResult:
+    async def trigger_trAlgoning(self) -> TaskResult:
         """Принудительно запустить обучение модели.
 
         Returns:
             Результат выполнения задачи.
 
         Example:
-            >>> result = await scheduler.trigger_training()
+            >>> result = awAlgot scheduler.trigger_trAlgoning()
             >>> if result.success:
             ...     print("Модель обучена")
         """
-        logger.info("manual_training_triggered")
-        return await self._run_training()
+        logger.info("manual_trAlgoning_triggered")
+        return awAlgot self._run_trAlgoning()
 
     def get_stats(self) -> dict[str, Any]:
         """Получить статистику работы планировщика.
@@ -402,11 +402,11 @@ class MLDataScheduler:
                 if self.stats.total_collections > 0
                 else 0.0
             ),
-            "total_trainings": self.stats.total_trainings,
-            "successful_trainings": self.stats.successful_trainings,
-            "training_success_rate": (
-                self.stats.successful_trainings / self.stats.total_trainings
-                if self.stats.total_trainings > 0
+            "total_trAlgonings": self.stats.total_trAlgonings,
+            "successful_trAlgonings": self.stats.successful_trAlgonings,
+            "trAlgoning_success_rate": (
+                self.stats.successful_trAlgonings / self.stats.total_trAlgonings
+                if self.stats.total_trAlgonings > 0
                 else 0.0
             ),
             "total_cleanups": self.stats.total_cleanups,
@@ -415,16 +415,16 @@ class MLDataScheduler:
                 if self.stats.last_collection
                 else None
             ),
-            "last_training": (
-                self.stats.last_training.isoformat()
-                if self.stats.last_training
+            "last_trAlgoning": (
+                self.stats.last_trAlgoning.isoformat()
+                if self.stats.last_trAlgoning
                 else None
             ),
             "last_error": self.stats.last_error,
             "total_items_collected": self.stats.total_items_collected,
             "config": {
                 "collection_interval_hours": self.config.collection_interval_hours,
-                "training_interval_hours": self.config.training_interval_hours,
+                "trAlgoning_interval_hours": self.config.trAlgoning_interval_hours,
                 "items_per_collection": self.config.items_per_collection,
                 "enable_dmarket": self.config.enable_dmarket,
                 "enable_waxpeer": self.config.enable_waxpeer,
@@ -465,7 +465,7 @@ class MLDataScheduler:
                 "duration_seconds": r.duration_seconds,
                 "items_processed": r.items_processed,
                 "error_message": r.error_message,
-                "details": r.details,
+                "detAlgols": r.detAlgols,
             }
             for r in filtered[-limit:]
         ]
@@ -479,14 +479,14 @@ class MLDataScheduler:
         """
         self._on_collection_complete.append(callback)
 
-    def on_training_complete(self, callback: Any) -> None:
+    def on_trAlgoning_complete(self, callback: Any) -> None:
         """Зарегистрировать callback для завершения обучения.
 
         Args:
             callback: Async функция, вызываемая после обучения.
                      Получает TaskResult как аргумент.
         """
-        self._on_training_complete.append(callback)
+        self._on_trAlgoning_complete.append(callback)
 
     def on_error(self, callback: Any) -> None:
         """Зарегистрировать callback для ошибок.
@@ -520,14 +520,14 @@ class MLDataScheduler:
         Args:
             task_type: Тип задачи для добавления.
         """
-        self._task_queue.put_nowait(task_type)
+        self._task_queue.put_nowAlgot(task_type)
         logger.debug("task_scheduled", task_type=task_type.value)
 
     def clear_queue(self) -> None:
         """Очистить очередь задач."""
         while not self._task_queue.empty():
             try:
-                self._task_queue.get_nowait()
+                self._task_queue.get_nowAlgot()
             except asyncio.QueueEmpty:
                 break
         logger.debug("task_queue_cleared")
@@ -542,13 +542,13 @@ class MLDataScheduler:
             "state": self.state.value,
             "config": {
                 "collection_interval_hours": self.config.collection_interval_hours,
-                "training_interval_hours": self.config.training_interval_hours,
+                "trAlgoning_interval_hours": self.config.trAlgoning_interval_hours,
                 "cleanup_interval_hours": self.config.cleanup_interval_hours,
-                "min_samples_for_training": self.config.min_samples_for_training,
+                "min_samples_for_trAlgoning": self.config.min_samples_for_trAlgoning,
             },
             "stats": {
                 "total_collections": self.stats.total_collections,
-                "total_trainings": self.stats.total_trainings,
+                "total_trAlgonings": self.stats.total_trAlgonings,
                 "total_cleanups": self.stats.total_cleanups,
                 "samples_collected": self.stats.samples_collected,
             },
@@ -556,15 +556,15 @@ class MLDataScheduler:
 
     async def _run_task_collection(self) -> TaskResult:
         """Выполнить задачу сбора данных (для тестов)."""
-        return await self._run_collection()
+        return awAlgot self._run_collection()
 
-    async def _run_task_training(self) -> TaskResult:
+    async def _run_task_trAlgoning(self) -> TaskResult:
         """Выполнить задачу обучения (для тестов)."""
-        return await self._run_training()
+        return awAlgot self._run_trAlgoning()
 
     async def _run_task_cleanup(self) -> TaskResult:
         """Выполнить задачу очистки (для тестов)."""
-        return await self._run_cleanup()
+        return awAlgot self._run_cleanup()
 
     # ═══════════════════════════════════════════════════════════════════════
     # BACKGROUND LOOPS
@@ -577,54 +577,54 @@ class MLDataScheduler:
         while not self._stop_event.is_set():
             try:
                 # Выполнить сбор
-                result = await self._run_collection()
+                result = awAlgot self._run_collection()
                 self._add_to_history(result)
 
                 # Уведомить callback'и
-                await self._notify_collection_complete(result)
+                awAlgot self._notify_collection_complete(result)
 
             except asyncio.CancelledError:
                 logger.info("collection_loop_cancelled")
                 break
             except Exception as e:
                 logger.error("collection_loop_error", error=str(e))
-                await self._notify_error(TaskType.DATA_COLLECTION, e)
+                awAlgot self._notify_error(TaskType.DATA_COLLECTION, e)
 
             # Ожидание следующего запуска
             try:
-                await asyncio.wait_for(
-                    self._stop_event.wait(),
+                awAlgot asyncio.wAlgot_for(
+                    self._stop_event.wAlgot(),
                     timeout=interval,
                 )
                 break  # Остановка запрошена
             except TimeoutError:
                 pass  # Время для следующего сбора
 
-    async def _training_loop(self) -> None:
+    async def _trAlgoning_loop(self) -> None:
         """Фоновый цикл обучения модели."""
-        interval = self.config.training_interval_hours * 3600
+        interval = self.config.trAlgoning_interval_hours * 3600
 
         # Начальная задержка, чтобы накопить данные
         initial_delay = min(interval / 4, 3600)  # Максимум 1 час
-        await asyncio.sleep(initial_delay)
+        awAlgot asyncio.sleep(initial_delay)
 
         while not self._stop_event.is_set():
             try:
-                result = await self._run_training()
+                result = awAlgot self._run_trAlgoning()
                 self._add_to_history(result)
 
-                await self._notify_training_complete(result)
+                awAlgot self._notify_trAlgoning_complete(result)
 
             except asyncio.CancelledError:
-                logger.info("training_loop_cancelled")
+                logger.info("trAlgoning_loop_cancelled")
                 break
             except Exception as e:
-                logger.error("training_loop_error", error=str(e))
-                await self._notify_error(TaskType.MODEL_TRAINING, e)
+                logger.error("trAlgoning_loop_error", error=str(e))
+                awAlgot self._notify_error(TaskType.MODEL_TRAlgoNING, e)
 
             try:
-                await asyncio.wait_for(
-                    self._stop_event.wait(),
+                awAlgot asyncio.wAlgot_for(
+                    self._stop_event.wAlgot(),
                     timeout=interval,
                 )
                 break
@@ -637,7 +637,7 @@ class MLDataScheduler:
 
         while not self._stop_event.is_set():
             try:
-                result = await self._run_cleanup()
+                result = awAlgot self._run_cleanup()
                 self._add_to_history(result)
 
             except asyncio.CancelledError:
@@ -645,11 +645,11 @@ class MLDataScheduler:
                 break
             except Exception as e:
                 logger.error("cleanup_loop_error", error=str(e))
-                await self._notify_error(TaskType.DATA_CLEANUP, e)
+                awAlgot self._notify_error(TaskType.DATA_CLEANUP, e)
 
             try:
-                await asyncio.wait_for(
-                    self._stop_event.wait(),
+                awAlgot asyncio.wAlgot_for(
+                    self._stop_event.wAlgot(),
                     timeout=interval,
                 )
                 break
@@ -662,7 +662,7 @@ class MLDataScheduler:
 
         while not self._stop_event.is_set():
             try:
-                result = await self._run_health_check()
+                result = awAlgot self._run_health_check()
                 self._add_to_history(result)
 
             except asyncio.CancelledError:
@@ -672,8 +672,8 @@ class MLDataScheduler:
                 logger.error("health_check_loop_error", error=str(e))
 
             try:
-                await asyncio.wait_for(
-                    self._stop_event.wait(),
+                awAlgot asyncio.wAlgot_for(
+                    self._stop_event.wAlgot(),
                     timeout=interval,
                 )
                 break
@@ -699,7 +699,7 @@ class MLDataScheduler:
         started_at = datetime.now()
         items_collected = 0
         error_message = None
-        details: dict[str, Any] = {}
+        detAlgols: dict[str, Any] = {}
 
         try:
             # Определить игры для сбора
@@ -711,20 +711,20 @@ class MLDataScheduler:
                 items_per_game=self.config.items_per_collection,
             )
 
-            # Проверить наличие метода train_from_real_data
-            if not hasattr(self.predictor, "train_from_real_data"):
-                raise AttributeError(
-                    "EnhancedPricePredictor не имеет метода train_from_real_data. "
+            # Проверить наличие метода trAlgon_from_real_data
+            if not hasattr(self.predictor, "trAlgon_from_real_data"):
+                rAlgose AttributeError(
+                    "EnhancedPricePredictor не имеет метода trAlgon_from_real_data. "
                     "Убедитесь, что используется обновлённая версия."
                 )
 
             # Собрать данные через predictor
-            # Используем train_from_real_data, но без обучения
+            # Используем trAlgon_from_real_data, но без обучения
             # (только сбор и сохранение данных)
-            result = await self._collect_data_only(games_to_collect)
+            result = awAlgot self._collect_data_only(games_to_collect)
 
             items_collected = result.get("total_samples", 0)
-            details = {
+            detAlgols = {
                 "games_collected": result.get("games_collected", []),
                 "sources_used": result.get("sources", {}),
                 "collection_duration": result.get("duration", 0),
@@ -745,19 +745,19 @@ class MLDataScheduler:
             error_message = str(e)
             self.stats.total_collections += 1
             self.stats.last_error = error_message
-            logger.error("collection_failed", error=error_message)
+            logger.error("collection_fAlgoled", error=error_message)
 
             # Retry logic
-            if self.config.retry_on_failure:
+            if self.config.retry_on_fAlgolure:
                 for attempt in range(self.config.max_retries):
                     logger.info(
                         "collection_retry",
                         attempt=attempt + 1,
                         max_retries=self.config.max_retries,
                     )
-                    await asyncio.sleep(self.config.retry_delay_minutes * 60)
+                    awAlgot asyncio.sleep(self.config.retry_delay_minutes * 60)
                     try:
-                        result = await self._collect_data_only(game_types or ["csgo"])
+                        result = awAlgot self._collect_data_only(game_types or ["csgo"])
                         items_collected = result.get("total_samples", 0)
                         error_message = None
                         self.stats.successful_collections += 1
@@ -776,7 +776,7 @@ class MLDataScheduler:
             duration_seconds=duration,
             items_processed=items_collected,
             error_message=error_message,
-            details=details,
+            detAlgols=detAlgols,
         )
 
     async def _collect_data_only(
@@ -792,7 +792,7 @@ class MLDataScheduler:
             Информация о собранных данных.
         """
         from src.ml.real_price_collector import GameType, RealPriceCollector
-        from src.ml.training_data_manager import TrainingDataManager
+        from src.ml.trAlgoning_data_manager import TrAlgoningDataManager
 
         # Маппинг строк в GameType enum
         game_type_map = {
@@ -815,7 +815,7 @@ class MLDataScheduler:
 
         # Инициализировать коллектор и менеджер данных
         collector = RealPriceCollector()
-        data_manager = TrainingDataManager()
+        data_manager = TrAlgoningDataManager()
 
         collected_info: dict[str, Any] = {
             "total_samples": 0,
@@ -829,7 +829,7 @@ class MLDataScheduler:
         for game_type in games:
             try:
                 # Собрать цены
-                prices = await collector.collect_prices(
+                prices = awAlgot collector.collect_prices(
                     game_type=game_type,
                     max_items=self.config.items_per_collection,
                     include_dmarket=self.config.enable_dmarket,
@@ -838,7 +838,7 @@ class MLDataScheduler:
                 )
 
                 if prices:
-                    # Сохранить в TrainingDataManager
+                    # Сохранить в TrAlgoningDataManager
                     for price in prices:
                         data_manager.add_price_sample(
                             item_id=price.item_id,
@@ -868,7 +868,7 @@ class MLDataScheduler:
 
             except Exception as e:
                 logger.warning(
-                    "game_collection_failed",
+                    "game_collection_fAlgoled",
                     game=game_type.value,
                     error=str(e),
                 )
@@ -880,7 +880,7 @@ class MLDataScheduler:
 
         return collected_info
 
-    async def _run_training(self) -> TaskResult:
+    async def _run_trAlgoning(self) -> TaskResult:
         """Выполнить обучение модели.
 
         Returns:
@@ -888,75 +888,75 @@ class MLDataScheduler:
         """
         started_at = datetime.now()
         error_message = None
-        details: dict[str, Any] = {}
+        detAlgols: dict[str, Any] = {}
         samples_used = 0
 
         try:
-            logger.info("training_started")
+            logger.info("trAlgoning_started")
 
             # Проверить наличие метода
-            if hasattr(self.predictor, "train_from_real_data"):
+            if hasattr(self.predictor, "trAlgon_from_real_data"):
                 # Использовать новый метод обучения на реальных данных
-                result = await self.predictor.train_from_real_data(
+                result = awAlgot self.predictor.trAlgon_from_real_data(
                     game_types=["csgo", "dota2"],
                     items_per_game=self.config.items_per_collection,
-                    min_samples=self.config.min_samples_for_training,
+                    min_samples=self.config.min_samples_for_trAlgoning,
                     include_dmarket=self.config.enable_dmarket,
                     include_waxpeer=self.config.enable_waxpeer,
                     include_steam=self.config.enable_steam,
                 )
 
                 samples_used = result.get("total_samples", 0)
-                details = {
-                    "models_trained": result.get("models_trained", []),
+                detAlgols = {
+                    "models_trAlgoned": result.get("models_trAlgoned", []),
                     "metrics": result.get("metrics", {}),
                     "data_sources": result.get("data_sources", {}),
                 }
 
             else:
                 # Fallback: использовать старый метод обучения
-                from src.ml.training_data_manager import TrainingDataManager
+                from src.ml.trAlgoning_data_manager import TrAlgoningDataManager
 
-                data_manager = TrainingDataManager()
-                X, y = data_manager.prepare_training_data()
+                data_manager = TrAlgoningDataManager()
+                X, y = data_manager.prepare_trAlgoning_data()
 
-                if len(X) >= self.config.min_samples_for_training:
-                    self.predictor.train(X, y)
+                if len(X) >= self.config.min_samples_for_trAlgoning:
+                    self.predictor.trAlgon(X, y)
                     samples_used = len(X)
-                    details = {"method": "legacy_training"}
+                    detAlgols = {"method": "legacy_trAlgoning"}
                 else:
-                    raise ValueError(
+                    rAlgose ValueError(
                         f"Недостаточно данных для обучения: "
-                        f"{len(X)} < {self.config.min_samples_for_training}"
+                        f"{len(X)} < {self.config.min_samples_for_trAlgoning}"
                     )
 
-            self.stats.total_trainings += 1
-            self.stats.successful_trainings += 1
-            self.stats.last_training = datetime.now()
+            self.stats.total_trAlgonings += 1
+            self.stats.successful_trAlgonings += 1
+            self.stats.last_trAlgoning = datetime.now()
 
             logger.info(
-                "training_completed",
+                "trAlgoning_completed",
                 samples_used=samples_used,
             )
 
         except Exception as e:
             error_message = str(e)
-            self.stats.total_trainings += 1
+            self.stats.total_trAlgonings += 1
             self.stats.last_error = error_message
-            logger.error("training_failed", error=error_message)
+            logger.error("trAlgoning_fAlgoled", error=error_message)
 
         completed_at = datetime.now()
         duration = (completed_at - started_at).total_seconds()
 
         return TaskResult(
-            task_type=TaskType.MODEL_TRAINING,
+            task_type=TaskType.MODEL_TRAlgoNING,
             success=error_message is None,
             started_at=started_at,
             completed_at=completed_at,
             duration_seconds=duration,
             items_processed=samples_used,
             error_message=error_message,
-            details=details,
+            detAlgols=detAlgols,
         )
 
     async def _run_cleanup(self) -> TaskResult:
@@ -968,12 +968,12 @@ class MLDataScheduler:
         started_at = datetime.now()
         error_message = None
         items_cleaned = 0
-        details: dict[str, Any] = {}
+        detAlgols: dict[str, Any] = {}
 
         try:
-            from src.ml.training_data_manager import TrainingDataManager
+            from src.ml.trAlgoning_data_manager import TrAlgoningDataManager
 
-            data_manager = TrainingDataManager()
+            data_manager = TrAlgoningDataManager()
 
             # Получить текущий размер данных
             stats_before = data_manager.get_statistics()
@@ -987,7 +987,7 @@ class MLDataScheduler:
             stats_after = data_manager.get_statistics()
             total_after = stats_after.get("total_samples", 0)
 
-            details = {
+            detAlgols = {
                 "samples_before": total_before,
                 "samples_after": total_after,
                 "cutoff_date": cutoff_date.isoformat(),
@@ -1004,7 +1004,7 @@ class MLDataScheduler:
 
         except Exception as e:
             error_message = str(e)
-            logger.error("cleanup_failed", error=error_message)
+            logger.error("cleanup_fAlgoled", error=error_message)
 
         completed_at = datetime.now()
         duration = (completed_at - started_at).total_seconds()
@@ -1017,7 +1017,7 @@ class MLDataScheduler:
             duration_seconds=duration,
             items_processed=items_cleaned,
             error_message=error_message,
-            details=details,
+            detAlgols=detAlgols,
         )
 
     async def _run_health_check(self) -> TaskResult:
@@ -1028,7 +1028,7 @@ class MLDataScheduler:
         """
         started_at = datetime.now()
         error_message = None
-        details: dict[str, Any] = {}
+        detAlgols: dict[str, Any] = {}
 
         try:
             checks_passed = 0
@@ -1037,41 +1037,41 @@ class MLDataScheduler:
             # 1. Проверка предиктора
             if self.predictor is not None:
                 checks_passed += 1
-                details["predictor"] = "ok"
+                detAlgols["predictor"] = "ok"
             else:
-                details["predictor"] = "not_initialized"
+                detAlgols["predictor"] = "not_initialized"
 
             # 2. Проверка наличия обученной модели
-            if hasattr(self.predictor, "is_trained") and self.predictor.is_trained:
+            if hasattr(self.predictor, "is_trAlgoned") and self.predictor.is_trAlgoned:
                 checks_passed += 1
-                details["model_trained"] = True
+                detAlgols["model_trAlgoned"] = True
             else:
-                details["model_trained"] = False
+                detAlgols["model_trAlgoned"] = False
 
             # 3. Проверка доступности API (простая проверка)
             try:
                 from src.ml.real_price_collector import RealPriceCollector
 
                 _ = RealPriceCollector()  # Just check if it can be instantiated
-                details["collector_available"] = True
+                detAlgols["collector_avAlgolable"] = True
                 checks_passed += 1
             except Exception:
-                details["collector_available"] = False
+                detAlgols["collector_avAlgolable"] = False
 
             # 4. Проверка data manager
             try:
-                from src.ml.training_data_manager import TrainingDataManager
+                from src.ml.trAlgoning_data_manager import TrAlgoningDataManager
 
-                data_manager = TrainingDataManager()
+                data_manager = TrAlgoningDataManager()
                 stats = data_manager.get_statistics()
-                details["data_samples"] = stats.get("total_samples", 0)
+                detAlgols["data_samples"] = stats.get("total_samples", 0)
                 checks_passed += 1
             except Exception:
-                details["data_samples"] = 0
+                detAlgols["data_samples"] = 0
 
-            details["checks_passed"] = checks_passed
-            details["total_checks"] = total_checks
-            details["health_score"] = checks_passed / total_checks
+            detAlgols["checks_passed"] = checks_passed
+            detAlgols["total_checks"] = total_checks
+            detAlgols["health_score"] = checks_passed / total_checks
 
             logger.debug(
                 "health_check_completed",
@@ -1080,7 +1080,7 @@ class MLDataScheduler:
 
         except Exception as e:
             error_message = str(e)
-            logger.error("health_check_failed", error=error_message)
+            logger.error("health_check_fAlgoled", error=error_message)
 
         completed_at = datetime.now()
         duration = (completed_at - started_at).total_seconds()
@@ -1091,9 +1091,9 @@ class MLDataScheduler:
             started_at=started_at,
             completed_at=completed_at,
             duration_seconds=duration,
-            items_processed=details.get("checks_passed", 0),
+            items_processed=detAlgols.get("checks_passed", 0),
             error_message=error_message,
-            details=details,
+            detAlgols=detAlgols,
         )
 
     # ═══════════════════════════════════════════════════════════════════════
@@ -1111,29 +1111,29 @@ class MLDataScheduler:
         for callback in self._on_collection_complete:
             try:
                 if asyncio.iscoroutinefunction(callback):
-                    await callback(result)
+                    awAlgot callback(result)
                 else:
                     callback(result)
             except Exception as e:
                 logger.warning("callback_error", callback="collection", error=str(e))
 
-    async def _notify_training_complete(self, result: TaskResult) -> None:
+    async def _notify_trAlgoning_complete(self, result: TaskResult) -> None:
         """Уведомить о завершении обучения."""
-        for callback in self._on_training_complete:
+        for callback in self._on_trAlgoning_complete:
             try:
                 if asyncio.iscoroutinefunction(callback):
-                    await callback(result)
+                    awAlgot callback(result)
                 else:
                     callback(result)
             except Exception as e:
-                logger.warning("callback_error", callback="training", error=str(e))
+                logger.warning("callback_error", callback="trAlgoning", error=str(e))
 
     async def _notify_error(self, task_type: TaskType, error: Exception) -> None:
         """Уведомить об ошибке."""
         for callback in self._on_error:
             try:
                 if asyncio.iscoroutinefunction(callback):
-                    await callback(task_type, error)
+                    awAlgot callback(task_type, error)
                 else:
                     callback(task_type, error)
             except Exception as e:
@@ -1148,7 +1148,7 @@ class MLDataScheduler:
 def create_scheduler(
     predictor: EnhancedPricePredictor,
     collection_interval_hours: float = 6.0,
-    training_interval_hours: float = 24.0,
+    trAlgoning_interval_hours: float = 24.0,
     enable_dmarket: bool = True,
     enable_waxpeer: bool = True,
     enable_steam: bool = True,
@@ -1158,7 +1158,7 @@ def create_scheduler(
     Args:
         predictor: Экземпляр EnhancedPricePredictor.
         collection_interval_hours: Интервал сбора данных (часы).
-        training_interval_hours: Интервал обучения (часы).
+        trAlgoning_interval_hours: Интервал обучения (часы).
         enable_dmarket: Включить DMarket.
         enable_waxpeer: Включить Waxpeer.
         enable_steam: Включить Steam.
@@ -1170,13 +1170,13 @@ def create_scheduler(
         >>> scheduler = create_scheduler(
         ...     predictor,
         ...     collection_interval_hours=4.0,
-        ...     training_interval_hours=12.0,
+        ...     trAlgoning_interval_hours=12.0,
         ... )
-        >>> await scheduler.start()
+        >>> awAlgot scheduler.start()
     """
     config = SchedulerConfig(
         collection_interval_hours=collection_interval_hours,
-        training_interval_hours=training_interval_hours,
+        trAlgoning_interval_hours=trAlgoning_interval_hours,
         enable_dmarket=enable_dmarket,
         enable_waxpeer=enable_waxpeer,
         enable_steam=enable_steam,
@@ -1188,7 +1188,7 @@ def create_scheduler(
 async def quick_start_scheduler(
     predictor: EnhancedPricePredictor,
 ) -> MLDataScheduler:
-    """Быстро создать и запустить планировщик с настройками по умолчанию.
+    """Быстро создать и запустить планировщик с настSwarmками по умолчанию.
 
     Args:
         predictor: Экземпляр EnhancedPricePredictor.
@@ -1197,10 +1197,10 @@ async def quick_start_scheduler(
         Запущенный экземпляр MLDataScheduler.
 
     Example:
-        >>> scheduler = await quick_start_scheduler(predictor)
+        >>> scheduler = awAlgot quick_start_scheduler(predictor)
         >>> # ... бот работает ...
-        >>> await scheduler.stop()
+        >>> awAlgot scheduler.stop()
     """
     scheduler = MLDataScheduler(predictor)
-    await scheduler.start()
+    awAlgot scheduler.start()
     return scheduler

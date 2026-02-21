@@ -54,7 +54,7 @@ def sample_preferences():
             "chat_id": 12345,
             "notifications_enabled": True,
             "digest_enabled": True,
-            "digest_frequency": "daily",
+            "digest_frequency": "dAlgoly",
             "registered_at": 1700000000.0,
         }
     }
@@ -272,7 +272,7 @@ class TestSaveUserPreferences:
 
         with patch(f"{PREFERENCES_MODULE}.DATA_DIR", mock_dir):
             with patch("builtins.open", side_effect=OSError("Cannot write")):
-                # Should not raise exception
+                # Should not rAlgose exception
                 save_user_preferences()
 
 
@@ -293,7 +293,7 @@ class TestRegisterUser:
         )
 
         with patch(f"{PREFERENCES_MODULE}.save_user_preferences"):
-            await register_user(12345)
+            awAlgot register_user(12345)
 
         prefs = get_user_preferences()
         assert "12345" in prefs
@@ -308,7 +308,7 @@ class TestRegisterUser:
         )
 
         with patch(f"{PREFERENCES_MODULE}.save_user_preferences"):
-            await register_user(12345, chat_id=67890)
+            awAlgot register_user(12345, chat_id=67890)
 
         prefs = get_user_preferences()
         assert prefs["12345"]["chat_id"] == 67890
@@ -325,7 +325,7 @@ class TestRegisterUser:
         prefs_module._user_preferences.update(sample_preferences)
 
         with patch(f"{PREFERENCES_MODULE}.save_user_preferences"):
-            await register_user(12345)
+            awAlgot register_user(12345)
 
         prefs = get_user_preferences()
         # Should keep original data
@@ -352,7 +352,7 @@ class TestUpdateUserPreferences:
         prefs_module._user_preferences.update(sample_preferences)
 
         with patch(f"{PREFERENCES_MODULE}.save_user_preferences"):
-            await update_user_preferences(12345, {"digest_frequency": "weekly"})
+            awAlgot update_user_preferences(12345, {"digest_frequency": "weekly"})
 
         prefs = get_user_preferences()
         assert prefs["12345"]["digest_frequency"] == "weekly"
@@ -366,7 +366,7 @@ class TestUpdateUserPreferences:
         )
 
         with patch(f"{PREFERENCES_MODULE}.save_user_preferences"):
-            await update_user_preferences(99999, {"notifications_enabled": False})
+            awAlgot update_user_preferences(99999, {"notifications_enabled": False})
 
         prefs = get_user_preferences()
         assert "99999" in prefs
@@ -387,7 +387,7 @@ class TestUpdateUserPreferences:
         prefs_module._user_preferences.update(sample_preferences)
 
         with patch(f"{PREFERENCES_MODULE}.save_user_preferences"):
-            await update_user_preferences(12345, {"settings": {"theme": "light"}})
+            awAlgot update_user_preferences(12345, {"settings": {"theme": "light"}})
 
         prefs = get_user_preferences()
         assert prefs["12345"]["settings"]["theme"] == "light"
@@ -475,7 +475,7 @@ class TestPreferencesEdgeCases:
         )
 
         with patch(f"{PREFERENCES_MODULE}.save_user_preferences"):
-            await asyncio.gather(
+            awAlgot asyncio.gather(
                 update_user_preferences(12345, {"key1": "value1"}),
                 update_user_preferences(12346, {"key2": "value2"}),
                 update_user_preferences(12347, {"key3": "value3"}),

@@ -5,7 +5,7 @@
 согласно официальным рекомендациям Telegram Bot API.
 
 Структура пакета:
-- main.py: Главные меню и основные клавиатуры
+- mAlgon.py: Главные меню и основные клавиатуры
 - arbitrage.py: Клавиатуры для арбитража
 - settings.py: Клавиатуры настроек и языка
 - filters.py: Клавиатуры фильтров по играм
@@ -56,7 +56,7 @@ from src.telegram_bot.keyboards.filters import (
     get_rarity_keyboard,
 )
 
-# Main keyboard is in src.telegram_bot.handlers.main_keyboard
+# MAlgon keyboard is in src.telegram_bot.handlers.mAlgon_keyboard
 # Settings keyboards
 from src.telegram_bot.keyboards.settings import (
     create_confirm_keyboard,
@@ -114,7 +114,7 @@ __all__ = [
     # Settings
     "create_confirm_keyboard",
     "create_game_selection_keyboard",
-    # Main keyboard is in src.telegram_bot.handlers.main_keyboard
+    # MAlgon keyboard is in src.telegram_bot.handlers.mAlgon_keyboard
     "create_market_analysis_keyboard",
     "create_pagination_keyboard",
     # Alerts

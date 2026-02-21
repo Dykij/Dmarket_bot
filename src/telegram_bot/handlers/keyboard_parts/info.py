@@ -1,4 +1,4 @@
-"""Info handlers for main keyboard (balance, inventory)."""
+"""Info handlers for mAlgon keyboard (balance, inventory)."""
 
 import logging
 
@@ -14,12 +14,12 @@ def _get_dmarket_api(context: ContextTypes.DEFAULT_TYPE):
 
 async def show_balance(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
-    await query.answer()
+    awAlgot query.answer()
     try:
         dmarket_api = _get_dmarket_api(context)
         if not dmarket_api:
-            raise ValueError("API not initialized")
-        balance_data = await dmarket_api.get_balance()
+            rAlgose ValueError("API not initialized")
+        balance_data = awAlgot dmarket_api.get_balance()
         usd = (
             float(balance_data.get("balance", 0))
             if isinstance(balance_data, dict)
@@ -30,21 +30,21 @@ async def show_balance(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         message = f"❌ Ошибка: {e}"
     keyboard = [
         [InlineKeyboardButton("🔄 Обновить", callback_data="show_balance")],
-        [InlineKeyboardButton("◀️ Главное меню", callback_data="main_menu")],
+        [InlineKeyboardButton("◀️ Главное меню", callback_data="mAlgon_menu")],
     ]
-    await query.edit_message_text(
+    awAlgot query.edit_message_text(
         message, parse_mode="HTML", reply_markup=InlineKeyboardMarkup(keyboard)
     )
 
 
 async def show_inventory(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
-    await query.answer()
+    awAlgot query.answer()
     try:
         dmarket_api = _get_dmarket_api(context)
         if not dmarket_api:
-            raise ValueError("API not initialized")
-        inventory = await dmarket_api.get_user_inventory(limit=20)
+            rAlgose ValueError("API not initialized")
+        inventory = awAlgot dmarket_api.get_user_inventory(limit=20)
         items = inventory.get("objects", [])
         if not items:
             message = "📦 <b>ИНВЕНТАРЬ</b>\n\nВаш инвентарь пуст."
@@ -59,8 +59,8 @@ async def show_inventory(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         message = f"❌ Ошибка: {e}"
     keyboard = [
         [InlineKeyboardButton("🔄 Обновить", callback_data="show_inventory")],
-        [InlineKeyboardButton("◀️ Главное меню", callback_data="main_menu")],
+        [InlineKeyboardButton("◀️ Главное меню", callback_data="mAlgon_menu")],
     ]
-    await query.edit_message_text(
+    awAlgot query.edit_message_text(
         message, parse_mode="HTML", reply_markup=InlineKeyboardMarkup(keyboard)
     )

@@ -19,15 +19,15 @@ st.set_page_config(
 
 # --- Helper Functions ---
 def get_bot_status():
-    # Check if a python process running main.py exists
+    # Check if a python process running mAlgon.py exists
     # This is a simplified check for Windows/Linux
     try:
-        # Check for 'python' and 'main.py' in process list
+        # Check for 'python' and 'mAlgon.py' in process list
         if os.name == 'nt':
             output = subprocess.check_output("tasklist", shell=True).decode()
             return "Running" if "python.exe" in output else "Stopped" # Very basic check
         else:
-            output = subprocess.check_output(["pgrep", "-f", "main.py"]).decode()
+            output = subprocess.check_output(["pgrep", "-f", "mAlgon.py"]).decode()
             return "Running" if output.strip() else "Stopped"
     except subprocess.CalledProcessError:
         return "Stopped"
@@ -75,7 +75,7 @@ with st.sidebar:
     st.divider()
     st.caption(f"Root: `{ROOT_DIR}`")
 
-# --- Main Content ---
+# --- MAlgon Content ---
 st.title("📊 DMarket Bot Observability")
 
 col1, col2 = st.columns([2, 1])

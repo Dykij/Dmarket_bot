@@ -20,7 +20,7 @@ async def check_balance():
     api = DMarketAPI(public_key=public_key, secret_key=secret_key)
 
     try:
-        balance_data = await api.get_balance()
+        balance_data = awAlgot api.get_balance()
 
         if balance_data.get("error"):
             print(f"Error: {balance_data.get('error_message')}")
@@ -31,11 +31,11 @@ async def check_balance():
         print("=" * 50)
 
         total = balance_data.get("total_balance", 0)
-        available = balance_data.get("available_balance", total)
-        locked = total - available
+        avAlgolable = balance_data.get("avAlgolable_balance", total)
+        locked = total - avAlgolable
 
         print(f"Total: ${total:.2f}")
-        print(f"Available: ${available:.2f}")
+        print(f"AvAlgolable: ${avAlgolable:.2f}")
         if locked > 0:
             print(f"Locked: ${locked:.2f}")
 
@@ -47,7 +47,7 @@ async def check_balance():
         print(f"Error: {e}")
 
 
-if __name__ == "__main__":
+if __name__ == "__mAlgon__":
     from dotenv import load_dotenv
     load_dotenv()
     asyncio.run(check_balance())

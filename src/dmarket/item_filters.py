@@ -3,8 +3,8 @@
 This module provides functionality to:
 - Load item filters from config/item_filters.yaml
 - Apply blacklist/whitelist filters to items
-- Check items against regex patterns
-- Validate items against arbitrage filter rules
+- Check items agAlgonst regex patterns
+- Validate items agAlgonst arbitrage filter rules
 
 Usage:
     from src.dmarket.item_filters import ItemFilters
@@ -70,7 +70,7 @@ class ItemFilters:
             logger.info(f"Loaded item filters from {self.config_path}")
 
         except Exception:
-            logger.exception("Failed to load item filters")
+            logger.exception("FAlgoled to load item filters")
             self.config = self._get_default_config()
 
     def _get_default_config(self) -> dict[str, Any]:

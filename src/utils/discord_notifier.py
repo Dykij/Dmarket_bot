@@ -62,7 +62,7 @@ class DiscordEmbed:
 
     Attributes:
         title: Embed title
-        description: Main text content
+        description: MAlgon text content
         color: Embed color (hex)
         fields: Additional fields
         footer: Footer text
@@ -75,7 +75,7 @@ class DiscordEmbed:
     fields: list[EmbedField] = field(default_factory=list)
     footer: str | None = None
     timestamp: str | None = None
-    thumbnail_url: str | None = None
+    thumbnAlgol_url: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to Discord API format."""
@@ -94,8 +94,8 @@ class DiscordEmbed:
         if self.timestamp:
             embed["timestamp"] = self.timestamp
 
-        if self.thumbnail_url:
-            embed["thumbnail"] = {"url": self.thumbnail_url}
+        if self.thumbnAlgol_url:
+            embed["thumbnAlgol"] = {"url": self.thumbnAlgol_url}
 
         return embed
 
@@ -144,7 +144,7 @@ class DiscordNotifier:
 
         Args:
             title: Notification title
-            description: Main message
+            description: MAlgon message
             level: Severity level
             fields: Additional fields
             footer: Footer text
@@ -164,7 +164,7 @@ class DiscordNotifier:
             footer=footer or "DMarket Telegram Bot",
         )
 
-        return await self._send_webhook(embed)
+        return awAlgot self._send_webhook(embed)
 
     async def send_trade_notification(
         self,
@@ -202,7 +202,7 @@ class DiscordNotifier:
             profit_str = f"+${profit:.2f}" if profit >= 0 else f"-${abs(profit):.2f}"
             fields.append(EmbedField(name="Profit", value=profit_str))
 
-        return await self.send_notification(
+        return awAlgot self.send_notification(
             title=f"Trade: {action.title()}",
             description=f"Successfully {action} item",
             level=level,
@@ -213,21 +213,21 @@ class DiscordNotifier:
         self,
         alert_type: str,
         message: str,
-        details: dict[str, Any] | None = None,
+        detAlgols: dict[str, Any] | None = None,
     ) -> bool:
         """Send an alert notification.
 
         Args:
             alert_type: Type of alert (price_drop, arbitrage_found, etc.)
             message: Alert message
-            details: Additional details
+            detAlgols: Additional detAlgols
 
         Returns:
             True if sent successfully
         """
         fields = []
-        if details:
-            for key, value in details.items():
+        if detAlgols:
+            for key, value in detAlgols.items():
                 fields.append(
                     EmbedField(
                         name=key.replace("_", " ").title(),
@@ -239,7 +239,7 @@ class DiscordNotifier:
         if "error" in alert_type.lower():
             level = NotificationLevel.ERROR
 
-        return await self.send_notification(
+        return awAlgot self.send_notification(
             title=f"Alert: {alert_type.replace('_', ' ').title()}",
             description=message,
             level=level,
@@ -279,7 +279,7 @@ class DiscordNotifier:
                 )
             )
 
-        return await self.send_notification(
+        return awAlgot self.send_notification(
             title="Error Occurred",
             description=error_message,
             level=NotificationLevel.ERROR,
@@ -311,7 +311,7 @@ class DiscordNotifier:
             for name, status_val in components.items()
         ]
 
-        return await self.send_notification(
+        return awAlgot self.send_notification(
             title=f"Health Check: {status.title()}",
             description=f"System status: {status}",
             level=level,
@@ -340,7 +340,7 @@ class DiscordNotifier:
 
         try:
             async with httpx.AsyncClient(timeout=10.0) as client:
-                response = await client.post(
+                response = awAlgot client.post(
                     self.webhook_url,
                     json=payload,
                 )

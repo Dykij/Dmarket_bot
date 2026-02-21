@@ -50,12 +50,12 @@ class UniversalBalanceGetter:
 
         try:
             # Try direct REST API request first
-            direct_result = await self._try_direct_request()
+            direct_result = awAlgot self._try_direct_request()
             if direct_result:
                 return direct_result
 
             # Fallback to internal API client with multiple endpoints
-            return await self._try_internal_endpoints()
+            return awAlgot self._try_internal_endpoints()
 
         except Exception as e:
             return self._handle_exception(e)
@@ -76,12 +76,12 @@ class UniversalBalanceGetter:
         """Try to get balance via direct REST API request.
 
         Returns:
-            Balance response dict if successful, None if failed
+            Balance response dict if successful, None if fAlgoled
 
         """
         try:
             logger.debug("🔍 Trying to get balance via direct REST API request...")
-            direct_response = await self.api_client.direct_balance_request()
+            direct_response = awAlgot self.api_client.direct_balance_request()
             logger.debug(f"🔍 Direct API response: {direct_response}")
 
             # Early return: unsuccessful direct request
@@ -91,7 +91,7 @@ class UniversalBalanceGetter:
                     if direct_response
                     else "No response"
                 )
-                logger.warning(f"⚠️ Direct REST API request failed: {error_message}")
+                logger.warning(f"⚠️ Direct REST API request fAlgoled: {error_message}")
                 logger.debug(f"🔍 Full error response: {direct_response}")
                 return None
 
@@ -101,7 +101,7 @@ class UniversalBalanceGetter:
 
         except Exception as e:
             logger.warning(f"⚠️ Error during direct REST API request: {e!s}")
-            logger.exception(f"📋 Exception details: {e}")
+            logger.exception(f"📋 Exception detAlgols: {e}")
             return None
 
     def _process_direct_response(self, response: dict[str, Any]) -> dict[str, Any]:
@@ -119,8 +119,8 @@ class UniversalBalanceGetter:
 
         # Extract amounts (convert from USD to cents)
         usd_amount = balance_data.get("balance", 0) * 100
-        usd_available = (
-            balance_data.get("available", balance_data.get("balance", 0)) * 100
+        usd_avAlgolable = (
+            balance_data.get("avAlgolable", balance_data.get("balance", 0)) * 100
         )
         usd_total = balance_data.get("total", balance_data.get("balance", 0)) * 100
         usd_locked = balance_data.get("locked", 0) * 100
@@ -128,7 +128,7 @@ class UniversalBalanceGetter:
 
         result = self._create_balance_response(
             usd_amount=usd_amount,
-            usd_available=usd_available,
+            usd_avAlgolable=usd_avAlgolable,
             usd_total=usd_total,
             locked_balance=usd_locked / 100,
             trade_protected_balance=usd_trade_protected / 100,
@@ -140,7 +140,7 @@ class UniversalBalanceGetter:
 
         logger.info(
             f"💰 Final balance (direct request): ${result['balance']:.2f} USD "
-            f"(available: ${result['available_balance']:.2f}, locked: ${result.get('locked_balance', 0):.2f})"
+            f"(avAlgolable: ${result['avAlgolable_balance']:.2f}, locked: ${result.get('locked_balance', 0):.2f})"
         )
         return result
 
@@ -154,7 +154,7 @@ class UniversalBalanceGetter:
         endpoints = self._get_balance_endpoints()
 
         response, successful_endpoint, last_error = (
-            await self._try_endpoints_for_balance(endpoints)
+            awAlgot self._try_endpoints_for_balance(endpoints)
         )
 
         # Early return: no response from any endpoint
@@ -162,7 +162,7 @@ class UniversalBalanceGetter:
             error_message = (
                 str(last_error)
                 if last_error
-                else "Failed to get balance from any endpoint"
+                else "FAlgoled to get balance from any endpoint"
             )
             logger.error(f"Critical error getting balance: {error_message}")
             return self._create_error_from_message(error_message)
@@ -205,7 +205,7 @@ class UniversalBalanceGetter:
         for endpoint in endpoints:
             try:
                 logger.debug(f"Trying endpoint: {endpoint}")
-                response = await self.api_client._request(
+                response = awAlgot self.api_client._request(
                     method="GET",
                     path=endpoint,
                     params={},
@@ -216,13 +216,13 @@ class UniversalBalanceGetter:
                     return response, endpoint, None
 
             except Exception as e:
-                logger.debug(f"Failed to get balance from {endpoint}: {e!s}")
+                logger.debug(f"FAlgoled to get balance from {endpoint}: {e!s}")
                 last_error = e
 
         return None, None, last_error
 
     def _response_has_error(self, response: dict[str, Any]) -> bool:
-        """Check if response contains an error.
+        """Check if response contAlgons an error.
 
         Args:
             response: API response
@@ -293,26 +293,26 @@ class UniversalBalanceGetter:
         logger.info(f"🔍 RAW BALANCE API RESPONSE (get_balance): {response}")
         logger.info(f"Analyzing balance response from {endpoint}: {response}")
 
-        usd_amount, usd_available, usd_total = self._parse_balance_from_response(
+        usd_amount, usd_avAlgolable, usd_total = self._parse_balance_from_response(
             response
         )
 
         # Warn if unable to parse
-        if usd_amount == 0 and usd_available == 0 and usd_total == 0:
+        if usd_amount == 0 and usd_avAlgolable == 0 and usd_total == 0:
             logger.warning(
                 f"Could not parse balance data from known formats: {response}"
             )
 
         result = self._create_balance_response(
             usd_amount=usd_amount,
-            usd_available=usd_available,
+            usd_avAlgolable=usd_avAlgolable,
             usd_total=usd_total,
             additional_info={"endpoint": endpoint},
         )
 
         logger.info(
             f"Final balance: ${result['balance']:.2f} USD "
-            f"(available: ${result['available_balance']:.2f}, total: ${result['total_balance']:.2f})"
+            f"(avAlgolable: ${result['avAlgolable_balance']:.2f}, total: ${result['total_balance']:.2f})"
         )
         return result
 
@@ -325,30 +325,30 @@ class UniversalBalanceGetter:
             response: API response
 
         Returns:
-            Tuple of (amount, available, total) in cents
+            Tuple of (amount, avAlgolable, total) in cents
 
         """
         # Try parsing from different response formats
         if "usd" in response and isinstance(response["usd"], dict):
             usd_data = response["usd"]
             usd_amount = usd_data.get("amount", 0)
-            usd_available = usd_data.get("available", usd_amount)
+            usd_avAlgolable = usd_data.get("avAlgolable", usd_amount)
             usd_total = usd_data.get("total", usd_amount)
         elif "balance" in response:
             usd_amount = response.get("balance", 0)
-            usd_available = response.get("available", usd_amount)
+            usd_avAlgolable = response.get("avAlgolable", usd_amount)
             usd_total = response.get("total", usd_amount)
         else:
             usd_amount = 0
-            usd_available = 0
+            usd_avAlgolable = 0
             usd_total = 0
 
-        return usd_amount, usd_available, usd_total
+        return usd_amount, usd_avAlgolable, usd_total
 
     def _create_balance_response(
         self,
         usd_amount: float,
-        usd_available: float,
+        usd_avAlgolable: float,
         usd_total: float,
         locked_balance: float = 0.0,
         trade_protected_balance: float = 0.0,
@@ -358,7 +358,7 @@ class UniversalBalanceGetter:
 
         Args:
             usd_amount: Balance amount in cents
-            usd_available: Available balance in cents
+            usd_avAlgolable: AvAlgolable balance in cents
             usd_total: Total balance in cents
             locked_balance: Locked balance in dollars
             trade_protected_balance: Trade protected balance in dollars
@@ -369,14 +369,14 @@ class UniversalBalanceGetter:
 
         """
         balance_usd = usd_amount / 100
-        available_usd = usd_available / 100
+        avAlgolable_usd = usd_avAlgolable / 100
         total_usd = usd_total / 100
 
         result = {
             "usd": {"amount": usd_amount},
             "has_funds": balance_usd >= 1.0,
             "balance": balance_usd,
-            "available_balance": available_usd,
+            "avAlgolable_balance": avAlgolable_usd,
             "total_balance": total_usd,
             "error": False,
             "error_message": "",
@@ -411,7 +411,7 @@ class UniversalBalanceGetter:
             "usd": {"amount": 0},
             "has_funds": False,
             "balance": 0.0,
-            "available_balance": 0.0,
+            "avAlgolable_balance": 0.0,
             "total_balance": 0.0,
             "error": True,
             "error_message": error_message,
@@ -471,7 +471,7 @@ class UniversalBalanceGetter:
         if "401" in error_message or "unauthorized" in error_lower:
             return "UNAUTHORIZED"
 
-        return "REQUEST_FAILED"
+        return "REQUEST_FAlgoLED"
 
     def _handle_exception(self, exception: Exception) -> dict[str, Any]:
         """Handle unexpected exception.

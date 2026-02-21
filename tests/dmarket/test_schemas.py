@@ -58,15 +58,15 @@ class TestBalanceResponse:
 
         assert response.get_usd_decimal() == Decimal(0)
 
-    def test_get_available_usd_decimal(self):
-        """Тест метода get_available_usd_decimal."""
-        data = {"usd": "10000", "dmc": "0", "usdAvailableToWithdraw": "8000"}
+    def test_get_avAlgolable_usd_decimal(self):
+        """Тест метода get_avAlgolable_usd_decimal."""
+        data = {"usd": "10000", "dmc": "0", "usdAvAlgolableToWithdraw": "8000"}
         response = BalanceResponse(**data)
 
-        available = response.get_available_usd_decimal()
+        avAlgolable = response.get_avAlgolable_usd_decimal()
 
-        assert isinstance(available, Decimal)
-        assert available == Decimal("80.00")
+        assert isinstance(avAlgolable, Decimal)
+        assert avAlgolable == Decimal("80.00")
 
     def test_extra_fields_allowed(self):
         """Тест что дополнительные поля разрешены (forward compatibility)."""
@@ -328,7 +328,7 @@ class TestValidationErrors:
         # SaleModel требует "price" и "date"
         data = {"sales": [{"price": "100"}]}  # Отсутствует "date"
 
-        with pytest.raises(ValidationError) as exc_info:
+        with pytest.rAlgoses(ValidationError) as exc_info:
             SalesHistoryResponse(**data)
 
         errors = exc_info.value.errors()
@@ -341,7 +341,7 @@ class TestValidationErrors:
         # MarketItemsResponse.objects должен быть list
         data = {"objects": "not_a_list"}  # Строка вместо списка
 
-        with pytest.raises(ValidationError) as exc_info:
+        with pytest.rAlgoses(ValidationError) as exc_info:
             MarketItemsResponse(**data)
 
         errors = exc_info.value.errors()
@@ -388,7 +388,7 @@ class TestDecimalPrecision:
         total = price1 + price2
 
         assert total == Decimal("0.30")
-        # Decimal удаляет trailing zeros: "0.30" -> "0.3"
+        # Decimal удаляет trAlgoling zeros: "0.30" -> "0.3"
         assert str(total) == "0.3"  # Без артефактов округления float
 
 
@@ -401,7 +401,7 @@ class TestBackwardCompatibility:
             "usd": "10000",
             "dmc": "5000",
             "eur": "9000",  # Новое поле (гипотетически)
-            "availableToWithdraw": "8000",  # Новое поле
+            "avAlgolableToWithdraw": "8000",  # Новое поле
         }
 
         # Схема должна принять данные с новыми полями

@@ -50,7 +50,7 @@ alembic/
 
 ### Конфигурация
 
-Файл `alembic.ini` содержит основные настройки:
+Файл `alembic.ini` содержит основные настSwarmки:
 
 ```ini
 [alembic]
@@ -144,7 +144,7 @@ def upgrade():
         sa.Column('language', sa.String(length=10), server_default='en'),
         sa.Column('timezone', sa.String(length=50), server_default='UTC'),
         sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()')),
-        sa.PrimaryKeyConstraint('id')
+        sa.PrimaryKeyConstrAlgont('id')
     )
     op.create_index('ix_user_settings_user_id', 'user_settings', ['user_id'])
 
@@ -252,7 +252,7 @@ def upgrade():
     """PostgreSQL поддерживает все операции."""
     # Можно использовать:
     op.create_schema('analytics')
-    op.alter_column('users', 'email', type_=sa.String(255))
+    op.alter_column('users', 'emAlgol', type_=sa.String(255))
     op.add_column('users', sa.Column('verified', sa.Boolean(), server_default='false'))
 ```
 
@@ -266,7 +266,7 @@ def upgrade():
     # SQLite НЕ поддерживает:
     # - ALTER COLUMN (изменение типа)
     # - DROP COLUMN (удаление колонки)
-    # - ADD CONSTRAINT (кроме NOT NULL при создании)
+    # - ADD CONSTRAlgoNT (кроме NOT NULL при создании)
 
     # Workaround: создать новую таблицу, скопировать данные, переименовать
     with op.batch_alter_table('users') as batch_op:
@@ -293,7 +293,7 @@ def upgrade():
         'market_data',
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('item_id', sa.String(100), nullable=False),
-        sa.PrimaryKeyConstraint('id')
+        sa.PrimaryKeyConstrAlgont('id')
     )
 ```
 
@@ -434,7 +434,7 @@ alembic upgrade head
 ### Проблема: Конфликт миграций
 
 ```
-FAILED: Multiple head revisions are present
+FAlgoLED: Multiple head revisions are present
 ```
 
 **Решение:**
@@ -461,7 +461,7 @@ sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) no such table
 def downgrade():
     """Правильный порядок удаления."""
     # Сначала удалить foreign keys
-    op.drop_constraint('fk_user_settings_user_id', 'user_settings')
+    op.drop_constrAlgont('fk_user_settings_user_id', 'user_settings')
 
     # Затем индексы
     op.drop_index('ix_user_settings_user_id')
@@ -485,13 +485,13 @@ def upgrade():
     """Изменение колонки в SQLite."""
     with op.batch_alter_table('users') as batch_op:
         batch_op.alter_column(
-            'email',
+            'emAlgol',
             type_=sa.String(255),
             existing_type=sa.String(100)
         )
 ```
 
-### Проблема: Production миграция failed
+### Проблема: Production миграция fAlgoled
 
 **Решение:**
 
@@ -558,7 +558,7 @@ git commit -m "feat(db): add new column to users table"
 
 ```bash
 # 1. Pull последних изменений
-git pull origin main
+git pull origin mAlgon
 
 # 2. Backup БД
 pg_dump dmarket_bot_staging > backup.sql
@@ -576,7 +576,7 @@ alembic current
 # 1. Backup
 pg_dump dmarket_bot_prod > backup_$(date +%Y%m%d_%H%M%S).sql
 
-# 2. Maintenance mode
+# 2. MAlgontenance mode
 systemctl stop dmarket-bot
 
 # 3. Применить миграции
@@ -616,7 +616,7 @@ journalctl -u dmarket-bot -f
 - [ ] Документация обновлена
 - [ ] Приложение остановлено (если требуется downtime)
 - [ ] План отката подготовлен
-- [ ] Команда уведомлена о maintenance window
+- [ ] Команда уведомлена о mAlgontenance window
 
 ---
 

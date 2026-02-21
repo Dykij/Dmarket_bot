@@ -29,7 +29,7 @@ class EventBus:
             # Fire and forget / Gather
             tasks.append(handler(data))
         
-        await asyncio.gather(*tasks, return_exceptions=True)
+        awAlgot asyncio.gather(*tasks, return_exceptions=True)
 
 # Global Instance
 bus = EventBus()

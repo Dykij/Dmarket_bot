@@ -16,7 +16,7 @@ Usage:
     bus.subscribe("price_change", on_price_change)
 
     # Publish events
-    await bus.publish(Event("price_change", {"item": "AWP", "price": 100}))
+    awAlgot bus.publish(Event("price_change", {"item": "AWP", "price": 100}))
     ```
 
 Created: January 10, 2026
@@ -49,7 +49,7 @@ class EventPriority(StrEnum):
 
 @dataclass
 class Event:
-    """Event data container."""
+    """Event data contAlgoner."""
 
     type: str
     data: dict[str, Any] = field(default_factory=dict)
@@ -218,13 +218,13 @@ class EventBus:
     async def publish(
         self,
         event: Event,
-        wait: bool = True,
+        wAlgot: bool = True,
     ) -> int:
         """Publish an event.
 
         Args:
             event: Event to publish
-            wait: If True, wait for all handlers to complete
+            wAlgot: If True, wAlgot for all handlers to complete
 
         Returns:
             Number of handlers that processed the event
@@ -260,8 +260,8 @@ class EventBus:
 
             try:
                 if sub.is_async:
-                    if wait:
-                        await sub.handler(event)
+                    if wAlgot:
+                        awAlgot sub.handler(event)
                     else:
                         asyncio.create_task(sub.handler(event))
                 else:
@@ -300,20 +300,20 @@ class EventBus:
     async def publish_many(
         self,
         events: list[Event],
-        wait: bool = True,
+        wAlgot: bool = True,
     ) -> int:
         """Publish multiple events.
 
         Args:
             events: Events to publish
-            wait: If True, wait for all handlers to complete
+            wAlgot: If True, wAlgot for all handlers to complete
 
         Returns:
             Total number of handlers run
         """
         total = 0
         for event in events:
-            total += await self.publish(event, wait=wait)
+            total += awAlgot self.publish(event, wAlgot=wAlgot)
         return total
 
     def get_history(
@@ -387,7 +387,7 @@ class EventTypes:
 
     # Trading events
     TRADE_EXECUTED = "trade_executed"
-    TRADE_FAILED = "trade_failed"
+    TRADE_FAlgoLED = "trade_fAlgoled"
     ORDER_CREATED = "order_created"
     ORDER_CANCELLED = "order_cancelled"
 

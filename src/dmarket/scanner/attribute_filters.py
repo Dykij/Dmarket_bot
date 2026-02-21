@@ -21,7 +21,7 @@ Example:
     )
 
     # Use in API call
-    items = await api.get_market_items(game="csgo", extra=extra)
+    items = awAlgot api.get_market_items(game="csgo", extra=extra)
 """
 
 import logging
@@ -76,7 +76,7 @@ class AttributeFilters:
         has_stickers: bool | None = None,
         has_gems: bool | None = None,
         phase: list[str] | None = None,
-        paint_seed_range: tuple[int, int] | None = None,
+        pAlgont_seed_range: tuple[int, int] | None = None,
     ) -> dict[str, Any]:
         """Create 'extra' field filters for API requests.
 
@@ -87,7 +87,7 @@ class AttributeFilters:
             has_stickers: Filter items with stickers (True/False)
             has_gems: Filter items with gems (True/False)
             phase: Doppler phases for knives (e.g., ["ruby", "sapphire"])
-            paint_seed_range: Paint seed range for patterns (e.g., (1, 1000))
+            pAlgont_seed_range: PAlgont seed range for patterns (e.g., (1, 1000))
 
         Returns:
             Dictionary of filters for `extra` parameter in API calls
@@ -113,9 +113,9 @@ class AttributeFilters:
         if float_range:
             min_float, max_float = float_range
             if not (0.0 <= min_float <= 1.0 and 0.0 <= max_float <= 1.0):
-                raise ValueError("Float values must be between 0.0 and 1.0")
+                rAlgose ValueError("Float values must be between 0.0 and 1.0")
             if min_float > max_float:
-                raise ValueError("min_float cannot be greater than max_float")
+                rAlgose ValueError("min_float cannot be greater than max_float")
 
             filters["floatValue"] = {"min": min_float, "max": max_float}
             logger.debug("float_filter_added", range=filters["floatValue"])
@@ -138,15 +138,15 @@ class AttributeFilters:
             filters["phase"] = [p.lower() for p in phase]
             logger.debug("phase_filter_added", phases=filters["phase"])
 
-        if paint_seed_range:
-            min_seed, max_seed = paint_seed_range
+        if pAlgont_seed_range:
+            min_seed, max_seed = pAlgont_seed_range
             if min_seed < 0 or max_seed < 0:
-                raise ValueError("Paint seed values must be non-negative")
+                rAlgose ValueError("PAlgont seed values must be non-negative")
             if min_seed > max_seed:
-                raise ValueError("min_seed cannot be greater than max_seed")
+                rAlgose ValueError("min_seed cannot be greater than max_seed")
 
-            filters["paintSeed"] = {"min": min_seed, "max": max_seed}
-            logger.debug("paint_seed_filter_added", range=filters["paintSeed"])
+            filters["pAlgontSeed"] = {"min": min_seed, "max": max_seed}
+            logger.debug("pAlgont_seed_filter_added", range=filters["pAlgontSeed"])
 
         logger.info("extra_filters_created", filter_count=len(filters))
         return filters
@@ -250,8 +250,8 @@ class AttributeFilters:
             phase_str = ", ".join(p.title() for p in filters["phase"])
             parts.append(f"Phase: {phase_str}")
 
-        if "paintSeed" in filters:
-            ps = filters["paintSeed"]
+        if "pAlgontSeed" in filters:
+            ps = filters["pAlgontSeed"]
             parts.append(f"Pattern: {ps['min']}-{ps['max']}")
 
         return ", ".join(parts) if parts else "No filters"

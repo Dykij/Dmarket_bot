@@ -6,7 +6,7 @@
 Преимущества:
 - Один запрос для всего whitelist каждые 30 секунд
 - Не тратит лимиты на тяжелый поиск с фильтрами
-- Быстрое обновление рыночной базы для ML/AI
+- Быстрое обновление рыночной базы для ML/Algo
 
 Основано на документации DMarket API.
 """
@@ -35,7 +35,7 @@ class LockStatus(int, Enum):
     lockStatus: 1 = заблокирован на 7 дней (трейд-бан)
     """
 
-    AVAILABLE = 0
+    AVAlgoLABLE = 0
     LOCKED = 1
 
 
@@ -61,8 +61,8 @@ class AggregatedPrice:
     bonus_amount: int = 0  # price.bonus из API
 
     # Lock status
-    lock_status: LockStatus = LockStatus.AVAILABLE
-    lock_days_remaining: int = 0
+    lock_status: LockStatus = LockStatus.AVAlgoLABLE
+    lock_days_remAlgoning: int = 0
 
     # Время обновления
     updated_at: datetime = field(default_factory=datetime.now)
@@ -85,7 +85,7 @@ class AggregatedPrice:
 
         # Дисконт за lock (3-5% в зависимости от срока)
         if self.lock_status == LockStatus.LOCKED:
-            lock_discount = min(0.05, 0.03 + (self.lock_days_remaining * 0.003))
+            lock_discount = min(0.05, 0.03 + (self.lock_days_remAlgoning * 0.003))
             base_price *= 1 - lock_discount
 
         return base_price / 100  # Возвращаем в USD
@@ -101,7 +101,7 @@ class AggregatedPrice:
         """
         below_avg = self.min_price < self.avg_price * 0.95
         has_bonus = self.bonus_amount > 0 or self.has_discount
-        not_locked = self.lock_status == LockStatus.AVAILABLE
+        not_locked = self.lock_status == LockStatus.AVAlgoLABLE
 
         return below_avg and has_bonus and not_locked
 
@@ -134,7 +134,7 @@ class PriceAggregator:
 
     Example:
         >>> aggregator = PriceAggregator(api_client)
-        >>> prices = await aggregator.get_whitelist_prices(whitelist_items)
+        >>> prices = awAlgot aggregator.get_whitelist_prices(whitelist_items)
         >>> for item in prices:
         ...     if item.is_good_deal:
         ...         print(f"{item.item_name}: ${item.effective_price:.2f}")
@@ -195,7 +195,7 @@ class PriceAggregator:
         )
 
         if needs_update:
-            await self._fetch_prices(item_names, game)
+            awAlgot self._fetch_prices(item_names, game)
         else:
             self._cache_hits += 1
 
@@ -218,7 +218,7 @@ class PriceAggregator:
         """
         if not self.api:
             # Mock режим для тестов
-            await self._mock_fetch_prices(item_names)
+            awAlgot self._mock_fetch_prices(item_names)
             return
 
         try:
@@ -230,7 +230,7 @@ class PriceAggregator:
 
             for batch in batches:
                 # Запрос к API
-                response = await self._call_price_api(batch, game)
+                response = awAlgot self._call_price_api(batch, game)
 
                 # Парсим ответ
                 for item_data in response.get("objects", []):
@@ -250,8 +250,8 @@ class PriceAggregator:
             )
 
         except Exception as e:
-            logger.exception(f"Failed to fetch aggregated prices: {e}")
-            raise
+            logger.exception(f"FAlgoled to fetch aggregated prices: {e}")
+            rAlgose
 
     async def _call_price_api(
         self,
@@ -263,7 +263,7 @@ class PriceAggregator:
         Endpoint: /price-aggregator/v1/aggregated-prices
         """
         if hasattr(self.api, "get_aggregated_prices"):
-            return await self.api.get_aggregated_prices(
+            return awAlgot self.api.get_aggregated_prices(
                 titles=item_names,
                 game_id=game,
             )
@@ -275,7 +275,7 @@ class PriceAggregator:
             "currency": "USD",
         }
 
-        return await self.api._request(
+        return awAlgot self.api._request(
             method="GET",
             path="/price-aggregator/v1/aggregated-prices",
             params=params,
@@ -290,7 +290,7 @@ class PriceAggregator:
 
         # Lock status
         lock_status = LockStatus(data.get("lockStatus", 0))
-        lock_days = data.get("lockDaysRemaining", 0)
+        lock_days = data.get("lockDaysRemAlgoning", 0)
 
         return AggregatedPrice(
             item_name=data.get("title", ""),
@@ -304,7 +304,7 @@ class PriceAggregator:
             discount_percent=discount,
             bonus_amount=bonus,
             lock_status=lock_status,
-            lock_days_remaining=lock_days,
+            lock_days_remAlgoning=lock_days,
             updated_at=datetime.now(),
         )
 
@@ -327,16 +327,16 @@ class PriceAggregator:
                 discount_percent=random.uniform(1, 10) if random.random() > 0.8 else 0,
                 bonus_amount=random.randint(0, 50) if random.random() > 0.7 else 0,
                 lock_status=(
-                    LockStatus.AVAILABLE if random.random() > 0.2 else LockStatus.LOCKED
+                    LockStatus.AVAlgoLABLE if random.random() > 0.2 else LockStatus.LOCKED
                 ),
-                lock_days_remaining=(
+                lock_days_remAlgoning=(
                     random.randint(1, 7) if random.random() > 0.8 else 0
                 ),
             )
 
         self._last_update = datetime.now()
 
-    def filter_available_items(
+    def filter_avAlgolable_items(
         self,
         prices: list[AggregatedPrice],
     ) -> list[AggregatedPrice]:
@@ -348,7 +348,7 @@ class PriceAggregator:
         Returns:
             Только предметы с lockStatus: 0
         """
-        return [p for p in prices if p.lock_status == LockStatus.AVAILABLE]
+        return [p for p in prices if p.lock_status == LockStatus.AVAlgoLABLE]
 
     def filter_discounted_items(
         self,

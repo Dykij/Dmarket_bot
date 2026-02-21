@@ -23,7 +23,7 @@ def get_arbitrage_keyboard() -> InlineKeyboardMarkup:
         │ Меню арбитража                  │
         ├─────────────────────────────────┤
         │ [🔍 Сканировать] [🎮 Выбор игры]│
-        │ [📊 Уровни] [⚙️ Настройки]      │
+        │ [📊 Уровни] [⚙️ НастSwarmки]      │
         │ [🤖 Авто-арбитраж]              │
         │ [◀️ Назад]                      │
         └─────────────────────────────────┘
@@ -35,7 +35,7 @@ def get_arbitrage_keyboard() -> InlineKeyboardMarkup:
         ],
         [
             InlineKeyboardButton(text="📊 Уровни", callback_data="arb_levels"),
-            InlineKeyboardButton(text="⚙️ Настройки", callback_data="arb_settings"),
+            InlineKeyboardButton(text="⚙️ НастSwarmки", callback_data="arb_settings"),
         ],
         [
             InlineKeyboardButton(text="🤖 Авто-арбитраж", callback_data="arb_auto"),
@@ -111,9 +111,9 @@ def get_modern_arbitrage_keyboard() -> InlineKeyboardMarkup:
             ),
             InlineKeyboardButton(text="📊 Статистика", callback_data="arb_stats"),
         ],
-        # NEW: AI Arbitrage (main feature)
+        # NEW: Algo Arbitrage (mAlgon feature)
         [
-            InlineKeyboardButton(text="🤖 AI АРБИТРАЖ", callback_data="ai_arb:menu"),
+            InlineKeyboardButton(text="🤖 Algo АРБИТРАЖ", callback_data="Algo_arb:menu"),
         ],
         # NEW: Regime & Backtest
         [
@@ -134,7 +134,7 @@ def get_modern_arbitrage_keyboard() -> InlineKeyboardMarkup:
             InlineKeyboardButton(text="📡 Мониторинг", callback_data="monitor:status"),
         ],
         [
-            InlineKeyboardButton(text="◀️ Главное меню", callback_data="main_menu"),
+            InlineKeyboardButton(text="◀️ Главное меню", callback_data="mAlgon_menu"),
         ],
     ]
     return InlineKeyboardMarkup(keyboard)
@@ -144,14 +144,14 @@ def get_auto_arbitrage_keyboard() -> InlineKeyboardMarkup:
     """Создать клавиатуру авто-арбитража.
 
     Returns:
-        InlineKeyboardMarkup с настройками авто-арбитража
+        InlineKeyboardMarkup с настSwarmками авто-арбитража
 
     Telegram UI:
         ┌─────────────────────────────────┐
         │ Авто-арбитраж                   │
         ├─────────────────────────────────┤
         │ [▶️ Запустить] [⏹️ Остановить]  │
-        │ [⚙️ Настройки] [📊 Статистика]  │
+        │ [⚙️ НастSwarmки] [📊 Статистика]  │
         │ [◀️ Назад]                      │
         └─────────────────────────────────┘
     """
@@ -162,7 +162,7 @@ def get_auto_arbitrage_keyboard() -> InlineKeyboardMarkup:
         ],
         [
             InlineKeyboardButton(
-                text="⚙️ Настройки", callback_data="auto_arb_settings"
+                text="⚙️ НастSwarmки", callback_data="auto_arb_settings"
             ),
             InlineKeyboardButton(text="📊 Статус", callback_data="auto_arb_status"),
         ],
@@ -358,7 +358,7 @@ def get_smart_trading_keyboard(
             InlineKeyboardButton(text="✅ WhiteList", callback_data="manage_whitelist"),
             InlineKeyboardButton(text="🚫 BlackList", callback_data="manage_blacklist"),
         ],
-        # Настройки и репрайсинг
+        # НастSwarmки и репрайсинг
         [
             InlineKeyboardButton(
                 text="♻️ Репрайсинг", callback_data="toggle_repricing"
@@ -373,7 +373,7 @@ def get_smart_trading_keyboard(
         ],
         # Назад в главное меню
         [
-            InlineKeyboardButton(text="◀️ Главное меню", callback_data="main_menu"),
+            InlineKeyboardButton(text="◀️ Главное меню", callback_data="mAlgon_menu"),
         ],
     ]
     return InlineKeyboardMarkup(keyboard)
@@ -393,7 +393,7 @@ def get_x5_opportunities_keyboard() -> InlineKeyboardMarkup:
             ),
         ],
         [
-            InlineKeyboardButton(text="⚙️ Настройки X5", callback_data="x5_settings"),
+            InlineKeyboardButton(text="⚙️ НастSwarmки X5", callback_data="x5_settings"),
             InlineKeyboardButton(text="📈 История X5", callback_data="x5_history"),
         ],
         [
@@ -414,7 +414,7 @@ def get_market_status_keyboard() -> InlineKeyboardMarkup:
             InlineKeyboardButton(
                 text="🔄 Обновить статус", callback_data="refresh_market"
             ),
-            InlineKeyboardButton(text="📊 Детали", callback_data="market_details"),
+            InlineKeyboardButton(text="📊 Детали", callback_data="market_detAlgols"),
         ],
         [
             InlineKeyboardButton(
@@ -457,7 +457,7 @@ def get_waxpeer_keyboard() -> InlineKeyboardMarkup:
             InlineKeyboardButton(text="📊 Статистика", callback_data="waxpeer_stats"),
         ],
         [
-            InlineKeyboardButton(text="⚙️ Настройки", callback_data="waxpeer_settings"),
+            InlineKeyboardButton(text="⚙️ НастSwarmки", callback_data="waxpeer_settings"),
         ],
         [
             InlineKeyboardButton(text="◀️ Назад", callback_data="arbitrage"),
@@ -606,7 +606,7 @@ def get_float_arbitrage_keyboard() -> InlineKeyboardMarkup:
         ],
         [
             InlineKeyboardButton(
-                text="⚙️ Настройки Float", callback_data="float_settings"
+                text="⚙️ НастSwarmки Float", callback_data="float_settings"
             ),
         ],
         [
@@ -653,7 +653,7 @@ def get_advanced_orders_keyboard() -> InlineKeyboardMarkup:
         ],
         [
             InlineKeyboardButton(
-                text="⚙️ Настройки", callback_data="adv_order_settings"
+                text="⚙️ НастSwarmки", callback_data="adv_order_settings"
             ),
         ],
         [

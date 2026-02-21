@@ -13,7 +13,7 @@ class TF2Strategy(BaseStrategy):
     """
     Strategy for Team Fortress 2.
 
-    Constraints:
+    ConstrAlgonts:
     - Keys are liquid currency.
     - Low margins but high volume.
     """
@@ -25,7 +25,7 @@ class TF2Strategy(BaseStrategy):
     def get_query_filters(self) -> dict[str, str]:
         """
         TF2 Specific Logic:
-        Focus on 'Keys' as the main currency.
+        Focus on 'Keys' as the mAlgon currency.
         """
         return {"title": "Mann Co. Supply Crate Key"}
 

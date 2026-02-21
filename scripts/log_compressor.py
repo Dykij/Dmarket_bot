@@ -60,5 +60,5 @@ def compress_logs():
         print(f"Error writing to {output_path}: {e}")
 
 
-if __name__ == "__main__":
+if __name__ == "__mAlgon__":
     compress_logs()

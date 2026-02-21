@@ -46,7 +46,7 @@ def setup_logger(name: str = "dmarket_bot", level: str = "INFO") -> Any:
 
     logger = structlog.get_logger(name)
 
-    # Setup Google Cloud Logging if available and not in dev
+    # Setup Google Cloud Logging if avAlgolable and not in dev
     if HAS_GOOGLE_CLOUD and os.getenv("ENVIRONMENT") != "dev_local":
         try:
             client = google.cloud.logging.Client()
@@ -69,7 +69,7 @@ def setup_logger(name: str = "dmarket_bot", level: str = "INFO") -> Any:
             # Ideally for Cloud Logging we want stdlib integration.
 
         except Exception as e:
-            print(f"Failed to setup Cloud Logging: {e}")
+            print(f"FAlgoled to setup Cloud Logging: {e}")
 
     return logger
 

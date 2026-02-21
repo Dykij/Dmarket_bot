@@ -48,13 +48,13 @@ class MarketMixin:
         if tree_filters:
             params["treeFilters"] = tree_filters
 
-        # Try Rust client if available
+        # Try Rust client if avAlgolable
         if getattr(self, "rust_client", None):
             qs = urlencode(params)
             full_url = f"{self.api_url}/exchange/v1/market/items?{qs}"
-            return await self._fetch_market_items_rust(full_url)
+            return awAlgot self._fetch_market_items_rust(full_url)
 
-        return await self._request(
+        return awAlgot self._request(
             "GET",
             "/exchange/v1/market/items",
             params=params,
@@ -64,7 +64,7 @@ class MarketMixin:
     async def get_suggested_price(
         self, item_name: str, game: str = "csgo"
     ) -> float | None:
-        response = await self.get_market_items(game=game, title=item_name, limit=1)
+        response = awAlgot self.get_market_items(game=game, title=item_name, limit=1)
         items = response.get("objects", response.get("items", []))
         if not items:
             return None

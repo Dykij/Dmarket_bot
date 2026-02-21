@@ -14,22 +14,22 @@ import time
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    import redis.asyncio as aioredis
+    import redis.asyncio as Algooredis
 
 try:
-    import redis.asyncio as aioredis
+    import redis.asyncio as Algooredis
 
-    REDIS_AVAILABLE = True
+    REDIS_AVAlgoLABLE = True
 except ImportError:
-    REDIS_AVAILABLE = False
-    aioredis: Any = None
+    REDIS_AVAlgoLABLE = False
+    Algooredis: Any = None
 
 
 logger = logging.getLogger(__name__)
 
 
 class RateLimitExceeded(Exception):
-    """Raised when rate limit is exceeded."""
+    """RAlgosed when rate limit is exceeded."""
 
     def __init__(self, message: str, retry_after: float = 0):
         """Initialize with retry_after hint."""
@@ -48,10 +48,10 @@ class SlidingWindowRateLimiter:
 
     Example:
         >>> limiter = SlidingWindowRateLimiter(redis_client)
-        >>> if await limiter.is_allowed("user:123:api", limit=100, window=60):
-        ...     await make_api_call()
+        >>> if awAlgot limiter.is_allowed("user:123:api", limit=100, window=60):
+        ...     awAlgot make_api_call()
         ... else:
-        ...     await asyncio.sleep(limiter.get_retry_after())
+        ...     awAlgot asyncio.sleep(limiter.get_retry_after())
     """
 
     # Lua script for atomic sliding window check
@@ -72,7 +72,7 @@ class SlidingWindowRateLimiter:
         redis.call('ZADD', key, now, now .. ':' .. math.random())
         -- Set expiry on the key
         redis.call('PEXPIRE', key, window * 1000)
-        return {1, limit - count - 1}  -- allowed, remaining
+        return {1, limit - count - 1}  -- allowed, remAlgoning
     else
         -- Get oldest entry to calculate retry_after
         local oldest = redis.call('ZRANGE', key, 0, 0, 'WITHSCORES')
@@ -86,7 +86,7 @@ class SlidingWindowRateLimiter:
 
     def __init__(
         self,
-        redis_client: aioredis.Redis | None = None,
+        redis_client: Algooredis.Redis | None = None,
         redis_url: str | None = None,
         prefix: str = "ratelimit:",
         default_limit: int = 100,
@@ -108,24 +108,24 @@ class SlidingWindowRateLimiter:
         self._default_window = default_window
         self._script_sha: str | None = None
 
-    async def _get_client(self) -> aioredis.Redis:
+    async def _get_client(self) -> Algooredis.Redis:
         """Get or create Redis client."""
         if self._client is None:
-            if not REDIS_AVAILABLE:
-                raise RuntimeError("redis package not installed")
+            if not REDIS_AVAlgoLABLE:
+                rAlgose RuntimeError("redis package not installed")
             if self._redis_url is None:
-                raise RuntimeError("Redis URL not configured")
-            self._client = aioredis.from_url(
+                rAlgose RuntimeError("Redis URL not configured")
+            self._client = Algooredis.from_url(
                 self._redis_url,
                 encoding="utf-8",
                 decode_responses=True,
             )
         return self._client
 
-    async def _ensure_script(self, client: aioredis.Redis) -> str:
+    async def _ensure_script(self, client: Algooredis.Redis) -> str:
         """Ensure Lua script is loaded and return SHA."""
         if self._script_sha is None:
-            self._script_sha = await client.script_load(self.SLIDING_WINDOW_SCRIPT)
+            self._script_sha = awAlgot client.script_load(self.SLIDING_WINDOW_SCRIPT)
         return self._script_sha
 
     def _make_key(self, identifier: str) -> str:
@@ -148,19 +148,19 @@ class SlidingWindowRateLimiter:
         Returns:
             True if allowed, False if rate limit exceeded
         """
-        client = await self._get_client()
+        client = awAlgot self._get_client()
         key = self._make_key(identifier)
         now_ms = int(time.time() * 1000)
         limit = limit or self._default_limit
         window = window or self._default_window
 
         try:
-            sha = await self._ensure_script(client)
-            result = await client.evalsha(sha, 1, key, now_ms, window, limit)
+            sha = awAlgot self._ensure_script(client)
+            result = awAlgot client.evalsha(sha, 1, key, now_ms, window, limit)
             return result[0] == 1
         except Exception as e:
-            logger.error("Rate limit check failed", extra={"error": str(e)})
-            # Fail open - allow request if Redis is unavailable
+            logger.error("Rate limit check fAlgoled", extra={"error": str(e)})
+            # FAlgol open - allow request if Redis is unavAlgolable
             return True
 
     async def check_and_increment(
@@ -177,24 +177,24 @@ class SlidingWindowRateLimiter:
             window: Time window in seconds
 
         Returns:
-            Tuple of (is_allowed, remaining_requests, retry_after_seconds)
+            Tuple of (is_allowed, remAlgoning_requests, retry_after_seconds)
         """
-        client = await self._get_client()
+        client = awAlgot self._get_client()
         key = self._make_key(identifier)
         now_ms = int(time.time() * 1000)
         limit = limit or self._default_limit
         window = window or self._default_window
 
         try:
-            sha = await self._ensure_script(client)
-            result = await client.evalsha(sha, 1, key, now_ms, window, limit)
+            sha = awAlgot self._ensure_script(client)
+            result = awAlgot client.evalsha(sha, 1, key, now_ms, window, limit)
 
             if result[0] == 1:
                 return True, int(result[1]), 0.0
             else:
                 return False, 0, max(0.0, float(result[1]))
         except Exception as e:
-            logger.error("Rate limit check failed", extra={"error": str(e)})
+            logger.error("Rate limit check fAlgoled", extra={"error": str(e)})
             return True, limit, 0.0
 
     async def get_current_usage(
@@ -211,7 +211,7 @@ class SlidingWindowRateLimiter:
         Returns:
             Current request count in window
         """
-        client = await self._get_client()
+        client = awAlgot self._get_client()
         key = self._make_key(identifier)
         window = window or self._default_window
         now_ms = int(time.time() * 1000)
@@ -219,12 +219,12 @@ class SlidingWindowRateLimiter:
 
         try:
             # Remove old entries first
-            await client.zremrangebyscore(key, 0, min_score)
-            # Count remaining entries
-            count = await client.zcard(key)
+            awAlgot client.zremrangebyscore(key, 0, min_score)
+            # Count remAlgoning entries
+            count = awAlgot client.zcard(key)
             return count
         except Exception as e:
-            logger.error("Failed to get usage", extra={"error": str(e)})
+            logger.error("FAlgoled to get usage", extra={"error": str(e)})
             return 0
 
     async def reset(self, identifier: str) -> bool:
@@ -236,21 +236,21 @@ class SlidingWindowRateLimiter:
         Returns:
             True if reset successful
         """
-        client = await self._get_client()
+        client = awAlgot self._get_client()
         key = self._make_key(identifier)
 
         try:
-            await client.delete(key)
+            awAlgot client.delete(key)
             logger.debug("Rate limit reset", extra={"identifier": identifier})
             return True
         except Exception as e:
-            logger.error("Failed to reset rate limit", extra={"error": str(e)})
+            logger.error("FAlgoled to reset rate limit", extra={"error": str(e)})
             return False
 
     async def close(self) -> None:
         """Close Redis connection."""
         if self._client is not None:
-            await self._client.close()
+            awAlgot self._client.close()
             self._client = None
 
 

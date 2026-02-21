@@ -5,7 +5,7 @@ use std::num::NonZeroU32;
 use std::time::Duration;
 use tokio::time::sleep;
 
-/// The Iron Shield against 429 Bans.
+/// The Iron Shield agAlgonst 429 Bans.
 /// Uses Token Bucket algorithm to mathematically guarantee compliance.
 pub struct DMarketLimiter {
     limiter: RateLimiter<NotKeyed, InMemoryState, DefaultClock>,
@@ -21,9 +21,9 @@ impl DMarketLimiter {
         }
     }
 
-    /// Asynchronously waits until a token is available.
+    /// Asynchronously wAlgots until a token is avAlgolable.
     /// If the bucket is empty, the thread sleeps.
     pub async fn acquire(&self) {
-        self.limiter.until_ready().await;
+        self.limiter.until_ready().awAlgot;
     }
 }

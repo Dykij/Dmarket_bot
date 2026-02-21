@@ -75,7 +75,7 @@ async def find_arbitrage_items(
 
     """
     if mode in {"low", "boost"}:
-        results = await arbitrage_boost_async(
+        results = awAlgot arbitrage_boost_async(
             game,
             min_price,
             max_price,
@@ -83,7 +83,7 @@ async def find_arbitrage_items(
             api_client,
         )
     elif mode == "mid":
-        results = await arbitrage_mid_async(
+        results = awAlgot arbitrage_mid_async(
             game,
             min_price,
             max_price,
@@ -91,7 +91,7 @@ async def find_arbitrage_items(
             api_client,
         )
     elif mode == "pro":
-        results = await arbitrage_pro_async(
+        results = awAlgot arbitrage_pro_async(
             game,
             min_price,
             max_price,
@@ -100,7 +100,7 @@ async def find_arbitrage_items(
         )
     else:
         # По умолчанию используем средний режим
-        results = await arbitrage_mid_async(
+        results = awAlgot arbitrage_mid_async(
             game,
             min_price,
             max_price,
@@ -183,7 +183,7 @@ async def find_arbitrage_opportunities_advanced(
         logger.warning(
             "unknown_game_fallback_to_csgo",
             game=game,
-            available_games=list(GAMES.keys()),
+            avAlgolable_games=list(GAMES.keys()),
         )
         game = "csgo"
 
@@ -192,7 +192,7 @@ async def find_arbitrage_opportunities_advanced(
         logger.warning(
             "unknown_mode_fallback_to_medium",
             mode=mode,
-            available_modes=list(MIN_PROFIT_PERCENT.keys()),
+            avAlgolable_modes=list(MIN_PROFIT_PERCENT.keys()),
         )
         mode = "medium"
 
@@ -229,7 +229,7 @@ async def find_arbitrage_opportunities_advanced(
 
     try:
         # Получаем предметы маркета
-        market_items = await api_client.get_market_items(
+        market_items = awAlgot api_client.get_market_items(
             game=game,
             max_items=max_items,
             price_from=price_lower,

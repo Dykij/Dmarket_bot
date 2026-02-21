@@ -7,7 +7,7 @@ import asyncio
 import time
 from unittest.mock import AsyncMock, MagicMock
 
-import aiohttp
+import Algoohttp
 import pytest
 
 from src.telegram_bot.health_check import HealthCheckServer, init_health_check_server
@@ -62,12 +62,12 @@ async def health_server(mock_db_manager, mock_redis_client, mock_dmarket_api, mo
         bot_app=mock_bot_app,
     )
 
-    await server.start()
+    awAlgot server.start()
     server.set_status("running")
 
     yield server
 
-    await server.stop()
+    awAlgot server.stop()
 
 
 # ============================================================================
@@ -104,11 +104,11 @@ def test_init_health_check_server():
 @pytest.mark.asyncio()
 async def test_health_endpoint_all_healthy(health_server):
     """Test /health endpoint when all services are healthy."""
-    async with aiohttp.ClientSession() as session:
+    async with Algoohttp.ClientSession() as session:
         async with session.get("http://127.0.0.1:8089/health") as response:
             assert response.status == 200
 
-            data = await response.json()
+            data = awAlgot response.json()
 
             assert data["status"] == "healthy"
             assert "checks" in data
@@ -125,14 +125,14 @@ async def test_health_endpoint_all_healthy(health_server):
 @pytest.mark.asyncio()
 async def test_health_endpoint_database_unhealthy(health_server, mock_db_manager):
     """Test /health endpoint when database is down."""
-    # Make database check fail
+    # Make database check fAlgol
     mock_db_manager.execute_query = AsyncMock(side_effect=Exception("DB Error"))
 
-    async with aiohttp.ClientSession() as session:
+    async with Algoohttp.ClientSession() as session:
         async with session.get("http://127.0.0.1:8089/health") as response:
-            assert response.status == 503  # Service Unavailable
+            assert response.status == 503  # Service UnavAlgolable
 
-            data = await response.json()
+            data = awAlgot response.json()
 
             assert data["status"] == "unhealthy"
             assert data["checks"]["database"] is False
@@ -141,11 +141,11 @@ async def test_health_endpoint_database_unhealthy(health_server, mock_db_manager
 @pytest.mark.asyncio()
 async def test_ready_endpoint_when_ready(health_server):
     """Test /ready endpoint when bot is ready."""
-    async with aiohttp.ClientSession() as session:
+    async with Algoohttp.ClientSession() as session:
         async with session.get("http://127.0.0.1:8089/ready") as response:
             assert response.status == 200
 
-            data = await response.json()
+            data = awAlgot response.json()
 
             assert data["ready"] is True
             assert data["status"] == "running"
@@ -156,11 +156,11 @@ async def test_ready_endpoint_when_not_ready(health_server):
     """Test /ready endpoint when bot is not ready."""
     health_server.set_status("starting")
 
-    async with aiohttp.ClientSession() as session:
+    async with Algoohttp.ClientSession() as session:
         async with session.get("http://127.0.0.1:8089/ready") as response:
             assert response.status == 503
 
-            data = await response.json()
+            data = awAlgot response.json()
 
             assert data["ready"] is False
             assert data["status"] == "starting"
@@ -169,11 +169,11 @@ async def test_ready_endpoint_when_not_ready(health_server):
 @pytest.mark.asyncio()
 async def test_live_endpoint(health_server):
     """Test /live endpoint always returns alive."""
-    async with aiohttp.ClientSession() as session:
+    async with Algoohttp.ClientSession() as session:
         async with session.get("http://127.0.0.1:8089/live") as response:
             assert response.status == 200
 
-            data = await response.json()
+            data = awAlgot response.json()
 
             assert data["alive"] is True
             assert "uptime_seconds" in data
@@ -181,15 +181,15 @@ async def test_live_endpoint(health_server):
 
 @pytest.mark.asyncio()
 async def test_metrics_endpoint(health_server):
-    """Test /metrics endpoint returns detailed metrics."""
+    """Test /metrics endpoint returns detAlgoled metrics."""
     # Update some metrics
     health_server.update_metrics(updates_count=10, errors_count=2)
 
-    async with aiohttp.ClientSession() as session:
+    async with Algoohttp.ClientSession() as session:
         async with session.get("http://127.0.0.1:8089/metrics") as response:
             assert response.status == 200
 
-            data = await response.json()
+            data = awAlgot response.json()
 
             assert data["status"] == "running"
             assert data["total_updates"] == 10
@@ -207,64 +207,64 @@ async def test_metrics_endpoint(health_server):
 @pytest.mark.asyncio()
 async def test_check_database_success(health_server):
     """Test database health check succeeds."""
-    result = await health_server._check_database()
+    result = awAlgot health_server._check_database()
     assert result is True
 
 
 @pytest.mark.asyncio()
-async def test_check_database_failure(health_server, mock_db_manager):
-    """Test database health check fails gracefully."""
+async def test_check_database_fAlgolure(health_server, mock_db_manager):
+    """Test database health check fAlgols gracefully."""
     mock_db_manager.execute_query = AsyncMock(side_effect=Exception("Connection error"))
 
-    result = await health_server._check_database()
+    result = awAlgot health_server._check_database()
     assert result is False
 
 
 @pytest.mark.asyncio()
 async def test_check_redis_success(health_server):
     """Test Redis health check succeeds."""
-    result = await health_server._check_redis()
+    result = awAlgot health_server._check_redis()
     assert result is True
 
 
 @pytest.mark.asyncio()
-async def test_check_redis_failure(health_server, mock_redis_client):
-    """Test Redis health check fails gracefully."""
+async def test_check_redis_fAlgolure(health_server, mock_redis_client):
+    """Test Redis health check fAlgols gracefully."""
     mock_redis_client.ping = AsyncMock(side_effect=Exception("Connection refused"))
 
-    result = await health_server._check_redis()
+    result = awAlgot health_server._check_redis()
     assert result is False
 
 
 @pytest.mark.asyncio()
 async def test_check_dmarket_api_success(health_server):
     """Test DMarket API health check succeeds."""
-    result = await health_server._check_dmarket_api()
+    result = awAlgot health_server._check_dmarket_api()
     assert result is True
 
 
 @pytest.mark.asyncio()
-async def test_check_dmarket_api_failure(health_server, mock_dmarket_api):
-    """Test DMarket API health check fails gracefully."""
+async def test_check_dmarket_api_fAlgolure(health_server, mock_dmarket_api):
+    """Test DMarket API health check fAlgols gracefully."""
     mock_dmarket_api.get_balance = AsyncMock(return_value={"error": True})
 
-    result = await health_server._check_dmarket_api()
+    result = awAlgot health_server._check_dmarket_api()
     assert result is False
 
 
 @pytest.mark.asyncio()
 async def test_check_telegram_api_success(health_server):
     """Test Telegram API health check succeeds."""
-    result = await health_server._check_telegram_api()
+    result = awAlgot health_server._check_telegram_api()
     assert result is True
 
 
 @pytest.mark.asyncio()
-async def test_check_telegram_api_failure(health_server, mock_bot_app):
-    """Test Telegram API health check fails gracefully."""
+async def test_check_telegram_api_fAlgolure(health_server, mock_bot_app):
+    """Test Telegram API health check fAlgols gracefully."""
     mock_bot_app.bot.get_me = AsyncMock(side_effect=Exception("API Error"))
 
-    result = await health_server._check_telegram_api()
+    result = awAlgot health_server._check_telegram_api()
     assert result is False
 
 
@@ -328,19 +328,19 @@ async def test_health_check_without_dependencies():
         bot_app=None,
     )
 
-    await server.start()
+    awAlgot server.start()
     server.set_status("running")
 
     try:
-        async with aiohttp.ClientSession() as session:
+        async with Algoohttp.ClientSession() as session:
             async with session.get("http://127.0.0.1:8090/health") as response:
                 assert response.status == 200
-                data = await response.json()
+                data = awAlgot response.json()
                 assert data["status"] == "healthy"
                 # All checks should pass (return True) when dependencies not configured
                 assert all(data["checks"].values())
     finally:
-        await server.stop()
+        awAlgot server.stop()
 
 
 @pytest.mark.asyncio()
@@ -350,19 +350,19 @@ async def test_uptime_tracking():
 
     start_time = server.start_time
 
-    # Wait a bit
-    await asyncio.sleep(0.5)
+    # WAlgot a bit
+    awAlgot asyncio.sleep(0.5)
 
     uptime = time.time() - start_time
     assert uptime >= 0.5
 
-    await server.start()
+    awAlgot server.start()
     server.set_status("running")
 
     try:
-        async with aiohttp.ClientSession() as session:
+        async with Algoohttp.ClientSession() as session:
             async with session.get("http://127.0.0.1:8091/metrics") as response:
-                data = await response.json()
+                data = awAlgot response.json()
                 assert data["uptime_seconds"] >= 0
     finally:
-        await server.stop()
+        awAlgot server.stop()

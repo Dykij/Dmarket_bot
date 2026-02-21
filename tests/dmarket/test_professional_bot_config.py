@@ -5,7 +5,7 @@
 - SilentModeLogger
 - LocalDeltaTracker
 - AdaptiveRateLimiter
-- AIProtectionSettings
+- AlgoProtectionSettings
 - SmartScannerConfig
 """
 
@@ -16,12 +16,12 @@ import pytest
 
 from src.dmarket.professional_bot_config import (
     AdaptiveRateLimiter,
-    AIProtectionSettings,
+    AlgoProtectionSettings,
     LocalDeltaTracker,
     ProfessionalBotConfig,
     SilentModeLogger,
     SmartScannerConfig,
-    create_ai_protection_settings,
+    create_Algo_protection_settings,
     create_professional_config,
     create_smart_scanner_config,
 )
@@ -81,7 +81,7 @@ class TestCreateProfessionalConfig:
         """Тест конфигурации для маленького баланса."""
         config = create_professional_config(balance=30.0)
 
-        # Консервативные настройки
+        # Консервативные настSwarmки
         assert config.min_profit_pct == 0.10  # 10%
         assert config.max_item_lock_days == 0
         assert config.max_balance_percent_per_item == 0.5
@@ -114,7 +114,7 @@ class TestCreateProfessionalConfig:
         """Тест консервативного профиля риска."""
         config = create_professional_config(balance=100.0, risk_profile="conservative")
 
-        # Более строгие настройки
+        # Более строгие настSwarmки
         assert config.max_item_lock_days == 0
         assert config.silent_mode is False
 
@@ -122,7 +122,7 @@ class TestCreateProfessionalConfig:
         """Тест агрессивного профиля риска."""
         config = create_professional_config(balance=100.0, risk_profile="aggressive")
 
-        # Более агрессивные настройки
+        # Более агрессивные настSwarmки
         assert config.max_item_lock_days > 0
 
 
@@ -153,7 +153,7 @@ class TestLocalDeltaTracker:
         # Первый раз
         tracker.is_changed("item_1", item_data)
 
-        # Второй раз с теми же данными
+        # ВтоSwarm раз с теми же данными
         result = tracker.is_changed("item_1", item_data)
 
         assert result is False
@@ -311,9 +311,9 @@ class TestAdaptiveRateLimiter:
         config = ProfessionalBotConfig()
         limiter = AdaptiveRateLimiter(config)
 
-        wait_time = limiter.record_429_error(retry_after=30)
+        wAlgot_time = limiter.record_429_error(retry_after=30)
 
-        assert wait_time == 30.0
+        assert wAlgot_time == 30.0
 
     def test_stats_tracking(self):
         """Тест отслеживания статистики."""
@@ -332,24 +332,24 @@ class TestAdaptiveRateLimiter:
 
     @pytest.mark.asyncio()
     async def test_disabled_limiter(self):
-        """При отключенном limiter wait не вызывается."""
+        """При отключенном limiter wAlgot не вызывается."""
         config = ProfessionalBotConfig(enable_adaptive_limiter=False)
         limiter = AdaptiveRateLimiter(config)
 
-        # wait_before_request должен просто вернуться без блокировки
-        await limiter.wait_before_request()
+        # wAlgot_before_request должен просто вернуться без блокировки
+        awAlgot limiter.wAlgot_before_request()
 
 
 # =============================================================================
-# AIProtectionSettings Tests
+# AlgoProtectionSettings Tests
 # =============================================================================
 
-class TestAIProtectionSettings:
-    """Тесты для AIProtectionSettings."""
+class TestAlgoProtectionSettings:
+    """Тесты для AlgoProtectionSettings."""
 
     def test_default_settings(self):
         """Тест значений по умолчанию."""
-        settings = AIProtectionSettings()
+        settings = AlgoProtectionSettings()
 
         assert settings.min_samples_leaf == 5
         assert settings.min_samples_split == 10
@@ -358,7 +358,7 @@ class TestAIProtectionSettings:
 
     def test_get_random_forest_params(self):
         """Тест параметров RandomForest."""
-        settings = AIProtectionSettings()
+        settings = AlgoProtectionSettings()
         params = settings.get_random_forest_params()
 
         assert params["min_samples_leaf"] == 5
@@ -369,7 +369,7 @@ class TestAIProtectionSettings:
 
     def test_get_gradient_boosting_params(self):
         """Тест параметров GradientBoosting."""
-        settings = AIProtectionSettings()
+        settings = AlgoProtectionSettings()
         params = settings.get_gradient_boosting_params()
 
         assert params["min_samples_leaf"] == 5
@@ -378,7 +378,7 @@ class TestAIProtectionSettings:
 
     def test_validate_prediction_low_confidence(self):
         """Тест валидации при низкой уверенности."""
-        settings = AIProtectionSettings(min_prediction_confidence=0.5)
+        settings = AlgoProtectionSettings(min_prediction_confidence=0.5)
 
         is_valid, reason = settings.validate_prediction(
             predicted_price=100.0,
@@ -391,7 +391,7 @@ class TestAIProtectionSettings:
 
     def test_validate_prediction_large_change(self):
         """Тест валидации при большом изменении цены."""
-        settings = AIProtectionSettings(max_price_change_percent=20.0)
+        settings = AlgoProtectionSettings(max_price_change_percent=20.0)
 
         is_valid, reason = settings.validate_prediction(
             predicted_price=200.0,  # 100% изменение
@@ -404,7 +404,7 @@ class TestAIProtectionSettings:
 
     def test_validate_prediction_success(self):
         """Тест успешной валидации."""
-        settings = AIProtectionSettings()
+        settings = AlgoProtectionSettings()
 
         is_valid, reason = settings.validate_prediction(
             predicted_price=110.0,  # 10% изменение
@@ -416,12 +416,12 @@ class TestAIProtectionSettings:
         assert reason == "OK"
 
 
-class TestCreateAIProtectionSettings:
-    """Тесты для create_ai_protection_settings."""
+class TestCreateAlgoProtectionSettings:
+    """Тесты для create_Algo_protection_settings."""
 
     def test_strict_settings(self):
         """Тест строгих настроек."""
-        settings = create_ai_protection_settings(strict=True)
+        settings = create_Algo_protection_settings(strict=True)
 
         assert settings.min_samples_leaf == 5
         assert settings.max_depth == 8
@@ -429,7 +429,7 @@ class TestCreateAIProtectionSettings:
 
     def test_lenient_settings(self):
         """Тест менее строгих настроек."""
-        settings = create_ai_protection_settings(strict=False)
+        settings = create_Algo_protection_settings(strict=False)
 
         assert settings.min_samples_leaf == 3
         assert settings.max_depth == 12
@@ -514,7 +514,7 @@ class TestSilentModeLogger:
         notifier = AsyncMock()
         logger_instance = SilentModeLogger(config, notifier=notifier)
 
-        await logger_instance.log_purchase(
+        awAlgot logger_instance.log_purchase(
             item_name="Test Item",
             buy_price=10.0,
             expected_profit=1.0,
@@ -530,9 +530,9 @@ class TestSilentModeLogger:
         notifier = AsyncMock()
         logger_instance = SilentModeLogger(config, notifier=notifier)
 
-        await logger_instance.log_error(
+        awAlgot logger_instance.log_error(
             error_type="API_ERROR",
-            error_message="Connection failed",
+            error_message="Connection fAlgoled",
             critical=True,
         )
 
@@ -545,7 +545,7 @@ class TestSilentModeLogger:
         notifier = AsyncMock()
         logger_instance = SilentModeLogger(config, notifier=notifier)
 
-        await logger_instance.log_error(
+        awAlgot logger_instance.log_error(
             error_type="WARNING",
             error_message="Minor issue",
             critical=False,
@@ -566,14 +566,14 @@ class TestIntegration:
         # 1. Создаём конфигурацию
         config = create_professional_config(balance=45.50)
 
-        # 2. Проверяем настройки
+        # 2. Проверяем настSwarmки
         assert config.min_profit_pct == 0.10  # 10% для маленького баланса
         assert config.max_item_lock_days == 0
         assert config.silent_mode is True
 
-        # 3. Создаём AI protection
-        ai_settings = create_ai_protection_settings(strict=True)
-        assert ai_settings.min_samples_leaf == 5
+        # 3. Создаём Algo protection
+        Algo_settings = create_Algo_protection_settings(strict=True)
+        assert Algo_settings.min_samples_leaf == 5
 
         # 4. Создаём scanner config
         scanner_config = create_smart_scanner_config(for_small_balance=True)

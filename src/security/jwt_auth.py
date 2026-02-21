@@ -4,7 +4,7 @@ Provides JWT-based authentication for API endpoints:
 - Token generation and validation
 - Refresh token support
 - Token revocation (blacklist)
-- Claims management
+- ClAlgoms management
 
 Based on SkillsMP `auth-module-builder` skill best practices.
 
@@ -82,13 +82,13 @@ class TokenPayload:
     iat: int  # Issued at (timestamp)
     exp: int  # Expiration (timestamp)
 
-    # Optional claims
+    # Optional clAlgoms
     roles: list[str] = field(default_factory=list)
     scopes: list[str] = field(default_factory=list)
     session_id: str | None = None
     ip_address: str | None = None
     user_agent: str | None = None
-    custom_claims: dict[str, Any] = field(default_factory=dict)
+    custom_clAlgoms: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
@@ -106,8 +106,8 @@ class TokenPayload:
             payload["scopes"] = self.scopes
         if self.session_id:
             payload["sid"] = self.session_id
-        if self.custom_claims:
-            payload["custom"] = self.custom_claims
+        if self.custom_clAlgoms:
+            payload["custom"] = self.custom_clAlgoms
 
         return payload
 
@@ -123,7 +123,7 @@ class TokenPayload:
             roles=data.get("roles", []),
             scopes=data.get("scopes", []),
             session_id=data.get("sid"),
-            custom_claims=data.get("custom", {}),
+            custom_clAlgoms=data.get("custom", {}),
         )
 
     def is_expired(self) -> bool:
@@ -136,8 +136,8 @@ class TokenPayload:
 
 
 @dataclass
-class TokenPair:
-    """Access and refresh token pair."""
+class TokenPAlgor:
+    """Access and refresh token pAlgor."""
 
     access_token: str
     refresh_token: str
@@ -168,7 +168,7 @@ class JWTAuth:
     - Token expiration
     - Refresh token support
     - Token revocation (blacklist)
-    - Claims validation
+    - ClAlgoms validation
     """
 
     # Default token lifetimes
@@ -190,8 +190,8 @@ class JWTAuth:
             secret_key: Secret key for signing tokens
             access_lifetime: Access token lifetime
             refresh_lifetime: Refresh token lifetime
-            issuer: Token issuer (iss claim)
-            audience: Token audience (aud claim)
+            issuer: Token issuer (iss clAlgom)
+            audience: Token audience (aud clAlgom)
         """
         self._secret_key = secret_key.encode()
         self._access_lifetime = access_lifetime or self.ACCESS_TOKEN_LIFETIME
@@ -212,7 +212,7 @@ class JWTAuth:
         roles: list[str] | None = None,
         scopes: list[str] | None = None,
         session_id: str | None = None,
-        custom_claims: dict[str, Any] | None = None,
+        custom_clAlgoms: dict[str, Any] | None = None,
         lifetime: timedelta | None = None,
     ) -> str:
         """Create a JWT token.
@@ -223,7 +223,7 @@ class JWTAuth:
             roles: User roles
             scopes: Permission scopes
             session_id: Session ID
-            custom_claims: Custom claims
+            custom_clAlgoms: Custom clAlgoms
             lifetime: Custom lifetime
 
         Returns:
@@ -254,7 +254,7 @@ class JWTAuth:
             roles=roles or [],
             scopes=scopes or [],
             session_id=session_id,
-            custom_claims=custom_claims or {},
+            custom_clAlgoms=custom_clAlgoms or {},
         )
 
         token = self._encode_token(payload)
@@ -268,15 +268,15 @@ class JWTAuth:
 
         return token
 
-    def create_token_pair(
+    def create_token_pAlgor(
         self,
         user_id: int,
         roles: list[str] | None = None,
         scopes: list[str] | None = None,
         ip_address: str | None = None,
         user_agent: str | None = None,
-    ) -> TokenPair:
-        """Create access and refresh token pair.
+    ) -> TokenPAlgor:
+        """Create access and refresh token pAlgor.
 
         Args:
             user_id: User ID
@@ -286,7 +286,7 @@ class JWTAuth:
             user_agent: Client user agent
 
         Returns:
-            TokenPair with both tokens
+            TokenPAlgor with both tokens
         """
         session_id = secrets.token_urlsafe(16)
 
@@ -314,7 +314,7 @@ class JWTAuth:
 
         now = datetime.now(UTC)
 
-        return TokenPair(
+        return TokenPAlgor(
             access_token=access_token,
             refresh_token=refresh_token,
             access_expires_at=now + self._access_lifetime,
@@ -337,7 +337,7 @@ class JWTAuth:
         Returns:
             TokenPayload
 
-        Raises:
+        RAlgoses:
             TokenExpiredError: Token has expired
             TokenInvalidError: Token is invalid
             TokenRevokedError: Token has been revoked
@@ -345,19 +345,19 @@ class JWTAuth:
         try:
             payload = self._decode_token(token)
         except Exception as e:
-            raise TokenInvalidError(f"Invalid token: {e}") from e
+            rAlgose TokenInvalidError(f"Invalid token: {e}") from e
 
         # Check if revoked
         if payload.jti in self._blacklist:
-            raise TokenRevokedError("Token has been revoked")
+            rAlgose TokenRevokedError("Token has been revoked")
 
         # Check expiration
         if payload.is_expired():
-            raise TokenExpiredError("Token has expired")
+            rAlgose TokenExpiredError("Token has expired")
 
         # Check type
         if expected_type and payload.token_type != expected_type:
-            raise TokenInvalidError(
+            rAlgose TokenInvalidError(
                 f"Expected {expected_type.value} token, got {payload.token_type.value}"
             )
 
@@ -365,7 +365,7 @@ class JWTAuth:
         if verify_scopes:
             missing = set(verify_scopes) - set(payload.scopes)
             if missing:
-                raise TokenInvalidError(f"Missing required scopes: {missing}")
+                rAlgose TokenInvalidError(f"Missing required scopes: {missing}")
 
         return payload
 
@@ -385,7 +385,7 @@ class JWTAuth:
         Returns:
             New access token
 
-        Raises:
+        RAlgoses:
             TokenError: If refresh token is invalid
         """
         payload = self.verify_token(refresh_token, expected_type=TokenType.REFRESH)
@@ -493,12 +493,12 @@ class JWTAuth:
         Returns:
             TokenPayload
 
-        Raises:
+        RAlgoses:
             ValueError: If token is invalid
         """
         parts = token.split(".")
         if len(parts) != 3:
-            raise ValueError("Invalid token format")
+            rAlgose ValueError("Invalid token format")
 
         header_b64, payload_b64, signature_b64 = parts
 
@@ -512,7 +512,7 @@ class JWTAuth:
         actual_sig = self._base64url_decode_bytes(signature_b64)
 
         if not hmac.compare_digest(expected_sig, actual_sig):
-            raise ValueError("Invalid signature")
+            rAlgose ValueError("Invalid signature")
 
         # Decode payload
         payload_json = self._base64url_decode(payload_b64)
@@ -520,9 +520,9 @@ class JWTAuth:
 
         # Verify issuer and audience
         if payload_dict.get("iss") != self._issuer:
-            raise ValueError("Invalid issuer")
+            rAlgose ValueError("Invalid issuer")
         if payload_dict.get("aud") != self._audience:
-            raise ValueError("Invalid audience")
+            rAlgose ValueError("Invalid audience")
 
         return TokenPayload.from_dict(payload_dict)
 
@@ -652,7 +652,7 @@ class APIKeyAuth:
         Returns:
             TokenPayload
 
-        Raises:
+        RAlgoses:
             TokenError: If key is invalid
         """
         return self._jwt_auth.verify_token(api_key, expected_type=TokenType.API_KEY)

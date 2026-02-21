@@ -166,18 +166,18 @@ class CursorPaginator:
             start_time = time.time()
 
             try:
-                items, next_cursor, total = await self._fetch_page(
+                items, next_cursor, total = awAlgot self._fetch_page(
                     game=game,
                     filters=filters,
                 )
             except Exception:
                 if self.config.auto_retry:
-                    items, next_cursor, total = await self._retry_fetch(
+                    items, next_cursor, total = awAlgot self._retry_fetch(
                         game=game,
                         filters=filters,
                     )
                 else:
-                    raise
+                    rAlgose
 
             # Обновление состояния
             response_time = (time.time() - start_time) * 1000
@@ -203,7 +203,7 @@ class CursorPaginator:
 
             # Задержка между запросами
             if self.state.has_more and self.config.request_delay > 0:
-                await asyncio.sleep(self.config.request_delay)
+                awAlgot asyncio.sleep(self.config.request_delay)
 
         # Финальное логирование
         if self.config.log_progress:
@@ -225,7 +225,7 @@ class CursorPaginator:
         """
         if not self.api:
             # Mock режим для тестов
-            return await self._mock_fetch_page()
+            return awAlgot self._mock_fetch_page()
 
         # Формируем параметры запроса
         params = {
@@ -243,7 +243,7 @@ class CursorPaginator:
             params.update(filters)
 
         # Запрос к API
-        response = await self.api._request(
+        response = awAlgot self.api._request(
             method="GET",
             path="/exchange/v1/market/items",
             params=params,
@@ -263,12 +263,12 @@ class CursorPaginator:
         """Повторная попытка загрузки с экспоненциальным backoff."""
         for attempt in range(self.config.max_retries):
             try:
-                await asyncio.sleep(2**attempt)  # Экспоненциальный backoff
-                return await self._fetch_page(game, filters)
+                awAlgot asyncio.sleep(2**attempt)  # Экспоненциальный backoff
+                return awAlgot self._fetch_page(game, filters)
             except Exception as e:
                 logger.warning(f"Retry {attempt + 1}/{self.config.max_retries}: {e}")
                 if attempt == self.config.max_retries - 1:
-                    raise
+                    rAlgose
 
         return [], None, None
 
@@ -279,7 +279,7 @@ class CursorPaginator:
         import random
 
         # Симуляция задержки API
-        await asyncio.sleep(0.05)
+        awAlgot asyncio.sleep(0.05)
 
         # Генерируем mock данные
         items = []

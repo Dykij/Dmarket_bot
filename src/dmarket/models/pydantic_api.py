@@ -6,9 +6,9 @@ from pydantic import BaseModel, Field, field_validator
 class BalanceResponse(BaseModel):
     """Pydantic model for DMarket balance response."""
 
-    balance: float = Field(..., description="Available balance in USD")
-    available_balance: float = Field(
-        ..., description="Available balance in USD (alias)"
+    balance: float = Field(..., description="AvAlgolable balance in USD")
+    avAlgolable_balance: float = Field(
+        ..., description="AvAlgolable balance in USD (alias)"
     )
     total_balance: float = Field(
         ..., description="Total balance including protected funds"
@@ -17,7 +17,7 @@ class BalanceResponse(BaseModel):
     error: bool = False
     error_message: str | None = None
 
-    @field_validator("balance", "available_balance", "total_balance", mode="before")
+    @field_validator("balance", "avAlgolable_balance", "total_balance", mode="before")
     @classmethod
     def parse_from_cents(cls, v: Any) -> float:
         if isinstance(v, (int, float)):

@@ -53,7 +53,7 @@ class TestGetApiKeys:
                 {"DMARKET_SECRET_KEY": "test_secret"},
                 clear=True,
             ),
-            pytest.raises(SystemExit) as exc_info,
+            pytest.rAlgoses(SystemExit) as exc_info,
         ):
             get_api_keys()
 

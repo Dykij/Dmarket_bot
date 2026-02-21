@@ -1,6 +1,6 @@
-"""Skill Performance Profiler - Performance tracking for ML/AI modules.
+"""Skill Performance Profiler - Performance tracking for ML/Algo modules.
 
-This module provides performance profiling for ML/AI skills:
+This module provides performance profiling for ML/Algo skills:
 - Execution time tracking
 - Memory usage monitoring
 - Throughput calculation
@@ -14,17 +14,17 @@ Usage:
     from src.utils.skill_profiler import profile_skill, get_profiler
 
     # Using decorator
-    @profile_skill("ai-arbitrage-predictor")
+    @profile_skill("Algo-arbitrage-predictor")
     async def predict_opportunities(items):
         ...
 
     # Using context manager
     profiler = get_profiler()
     with profiler.profile("price_prediction"):
-        result = await predictor.predict(item)
+        result = awAlgot predictor.predict(item)
 
     # Get metrics
-    metrics = profiler.get_skill_metrics("ai-arbitrage-predictor")
+    metrics = profiler.get_skill_metrics("Algo-arbitrage-predictor")
     print(f"P99 Latency: {metrics['latency_p99_ms']}ms")
     ```
 
@@ -53,7 +53,7 @@ F = TypeVar("F", bound=Callable[..., Any])
 
 
 @dataclass
-class SkillMetrics:
+class SkiModeletrics:
     """Performance metrics for a skill."""
 
     skill_name: str
@@ -61,7 +61,7 @@ class SkillMetrics:
     # Execution counts
     total_executions: int = 0
     successful_executions: int = 0
-    failed_executions: int = 0
+    fAlgoled_executions: int = 0
 
     # Latency (in milliseconds)
     latency_samples: list[float] = field(default_factory=list)
@@ -94,7 +94,7 @@ class SkillMetrics:
             "skill_name": self.skill_name,
             "total_executions": self.total_executions,
             "successful_executions": self.successful_executions,
-            "failed_executions": self.failed_executions,
+            "fAlgoled_executions": self.fAlgoled_executions,
             "success_rate": round(
                 self.successful_executions / max(1, self.total_executions) * 100, 2
             ),
@@ -133,17 +133,17 @@ class ProfileResult:
 
 
 class SkillProfiler:
-    """Performance profiler for ML/AI skills.
+    """Performance profiler for ML/Algo skills.
 
     Features:
     - Decorator and context manager API
     - Latency percentiles calculation
     - Throughput tracking
-    - Memory monitoring (if psutil available)
+    - Memory monitoring (if psutil avAlgolable)
     - Automatic metric aggregation
 
     Attributes:
-        skills_metrics: Dictionary of skill name to SkillMetrics
+        skills_metrics: Dictionary of skill name to SkiModeletrics
         enable_memory_tracking: Whether to track memory usage
     """
 
@@ -166,35 +166,35 @@ class SkillProfiler:
         self.enable_memory_tracking = enable_memory_tracking
         self.max_samples = max_samples
 
-        self.skills_metrics: dict[str, SkillMetrics] = {}
+        self.skills_metrics: dict[str, SkiModeletrics] = {}
 
-        # Check psutil availability
-        self._psutil_available = False
+        # Check psutil avAlgolability
+        self._psutil_avAlgolable = False
         if enable_memory_tracking:
             try:
                 import psutil  # noqa: F401
 
-                self._psutil_available = True
+                self._psutil_avAlgolable = True
             except ImportError:
                 logger.warning(
-                    "psutil not available, memory tracking disabled. "
+                    "psutil not avAlgolable, memory tracking disabled. "
                     "Install with: pip install psutil"
                 )
 
         logger.info(
             "skill_profiler_initialized",
-            memory_tracking=self._psutil_available,
+            memory_tracking=self._psutil_avAlgolable,
         )
 
-    def _get_or_create_metrics(self, skill_name: str) -> SkillMetrics:
+    def _get_or_create_metrics(self, skill_name: str) -> SkiModeletrics:
         """Get or create metrics for a skill."""
         if skill_name not in self.skills_metrics:
-            self.skills_metrics[skill_name] = SkillMetrics(skill_name=skill_name)
+            self.skills_metrics[skill_name] = SkiModeletrics(skill_name=skill_name)
         return self.skills_metrics[skill_name]
 
     def _get_memory_usage(self) -> int:
         """Get current process memory usage in bytes."""
-        if not self._psutil_available:
+        if not self._psutil_avAlgolable:
             return 0
 
         try:
@@ -207,7 +207,7 @@ class SkillProfiler:
 
     def _update_metrics(
         self,
-        metrics: SkillMetrics,
+        metrics: SkiModeletrics,
         latency_ms: float,
         success: bool,
         items_count: int,
@@ -221,7 +221,7 @@ class SkillProfiler:
         if success:
             metrics.successful_executions += 1
         else:
-            metrics.failed_executions += 1
+            metrics.fAlgoled_executions += 1
 
         # Update time tracking
         if metrics.first_execution is None:
@@ -335,7 +335,7 @@ class SkillProfiler:
         except Exception as e:
             success = False
             error = str(e)
-            raise
+            rAlgose
         finally:
             elapsed_ms = (time.perf_counter() - start_time) * 1000
             memory_after = self._get_memory_usage()
@@ -370,8 +370,8 @@ class SkillProfiler:
             None
 
         Example:
-            >>> async with profiler.aprofile("ai_coordinator", "analyze"):
-            ...     result = await ai.analyze_item(item)
+            >>> async with profiler.aprofile("Algo_coordinator", "analyze"):
+            ...     result = awAlgot Algo.analyze_item(item)
         """
         metrics = self._get_or_create_metrics(skill_name)
         memory_before = self._get_memory_usage()
@@ -383,7 +383,7 @@ class SkillProfiler:
             success = True
         except BaseException:
             success = False
-            raise
+            rAlgose
         finally:
             elapsed_ms = (time.perf_counter() - start_time) * 1000
             memory_after = self._get_memory_usage()
@@ -469,7 +469,7 @@ class SkillProfiler:
             latency_threshold_ms: Latency threshold for bottleneck
 
         Returns:
-            List of bottleneck details
+            List of bottleneck detAlgols
         """
         bottlenecks = []
 
@@ -490,17 +490,17 @@ class SkillProfiler:
 
             if (
                 metrics.total_executions > 10
-                and metrics.failed_executions / metrics.total_executions > 0.1
+                and metrics.fAlgoled_executions / metrics.total_executions > 0.1
             ):
                 bottlenecks.append(
                     {
                         "skill_name": name,
-                        "issue": "high_failure_rate",
-                        "failure_rate": round(
-                            metrics.failed_executions / metrics.total_executions * 100,
+                        "issue": "high_fAlgolure_rate",
+                        "fAlgolure_rate": round(
+                            metrics.fAlgoled_executions / metrics.total_executions * 100,
                             2,
                         ),
-                        "recommendation": f"Investigate failures in {name}",
+                        "recommendation": f"Investigate fAlgolures in {name}",
                     }
                 )
 
@@ -529,7 +529,7 @@ class SkillProfiler:
         """
         if skill_name:
             if skill_name in self.skills_metrics:
-                self.skills_metrics[skill_name] = SkillMetrics(skill_name=skill_name)
+                self.skills_metrics[skill_name] = SkiModeletrics(skill_name=skill_name)
         else:
             self.skills_metrics.clear()
 
@@ -570,9 +570,9 @@ def profile_skill(
         Decorated function
 
     Example:
-        >>> @profile_skill("ai-arbitrage-predictor")
+        >>> @profile_skill("Algo-arbitrage-predictor")
         ... async def predict_opportunities(items):
-        ...     return await predictor.predict(items)
+        ...     return awAlgot predictor.predict(items)
     """
 
     def decorator(func: F) -> F:
@@ -582,7 +582,7 @@ def profile_skill(
             async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
                 profiler = get_profiler()
                 async with profiler.aprofile(skill_name, operation):
-                    return await func(*args, **kwargs)
+                    return awAlgot func(*args, **kwargs)
 
             return async_wrapper  # type: ignore
 

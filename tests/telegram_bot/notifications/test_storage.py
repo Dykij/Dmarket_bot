@@ -185,7 +185,7 @@ class TestLoadUserAlerts:
 
         storage.load_user_alerts()
 
-        # Should not raise error, alerts should remain empty
+        # Should not rAlgose error, alerts should remAlgon empty
         assert storage._user_alerts == {}
 
     def test_load_preserves_reference(

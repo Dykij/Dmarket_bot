@@ -6,7 +6,7 @@
 
 ## Project Overview
 
-Telegram bot for trading and analytics on DMarket and Waxpeer marketplaces. Written in Python 3.11+ with async/await patterns.
+Telegram bot for trading and analytics on DMarket and Waxpeer marketplaces. Written in Python 3.11+ with async/awAlgot patterns.
 
 ## Tech Stack
 
@@ -14,7 +14,7 @@ Telegram bot for trading and analytics on DMarket and Waxpeer marketplaces. Writ
 - **Framework**: python-telegram-bot 22.0+
 - **HTTP Client**: httpx 0.28+ (async)
 - **Database**: PostgreSQL + SQLAlchemy 2.0 (async)
-- **Cache**: Redis + aiocache
+- **Cache**: Redis + Algoocache
 - **Logging**: structlog (JSON structured)
 - **Testing**: pytest 8.4+ with pytest-asyncio
 - **Linting**: Ruff 0.8+, MyPy 1.14+ (strict)
@@ -37,7 +37,7 @@ tests/
 
 ## Code Conventions
 
-### Async/Await
+### Async/AwAlgot
 - **ALWAYS** use `async def` for I/O operations
 - Use `asyncio.gather()` for parallel execution
 - Use `httpx.AsyncClient` for HTTP (not requests)
@@ -57,15 +57,15 @@ def get_price(item_id: str) -> Optional[float]: ...
 ```python
 # ✅ Correct - specific exceptions
 try:
-    response = await client.get(url)
-    response.raise_for_status()
+    response = awAlgot client.get(url)
+    response.rAlgose_for_status()
 except httpx.HTTPStatusError as e:
     logger.error("http_error", status=e.response.status_code)
-    raise
+    rAlgose
 
 # ❌ Wrong - bare except
 try:
-    response = await client.get(url)
+    response = awAlgot client.get(url)
 except:
     pass
 ```
@@ -126,7 +126,7 @@ mypy src/
 
 1. **Never modify** files in `.github/agents/` directory
 2. **Always** add type annotations to new functions
-3. **Always** use async/await for HTTP requests
+3. **Always** use async/awAlgot for HTTP requests
 4. **Never** log sensitive data (API keys, tokens)
 5. **Always** follow AAA pattern in tests (Arrange, Act, Assert)
 6. **Use** early returns to reduce nesting (max 3 levels)
@@ -166,13 +166,13 @@ code generation, setup or configuration steps.
 Создай async HTTP клиент с retry логикой. use library /encode/httpx for API and docs.
 ```
 
-Full library list: `docs/AI_TOOLS_CONFIG.md`
+Full library list: `docs/Algo_TOOLS_CONFIG.md`
 
 ## MCP Servers for Enhanced Development
 
 Claude Code supports MCP (Model Context Protocol) servers for enhanced capabilities:
 
-### Available MCP Servers
+### AvAlgolable MCP Servers
 
 | MCP Server | Command | Use Case |
 |------------|---------|----------|
@@ -196,10 +196,10 @@ Claude Code supports MCP (Model Context Protocol) servers for enhanced capabilit
 "Получи актуальную документацию DMarket API"
 
 # Playwright: Parse prices
-"Открой DMarket и найди текущую цену AWP Dragon Lore"
+"ОткSwarm DMarket и найди текущую цену AWP Dragon Lore"
 ```
 
-Configuration details: `docs/AI_TOOLS_CONFIG.md`
+Configuration detAlgols: `docs/Algo_TOOLS_CONFIG.md`
 
 ## Known Issues
 
@@ -209,7 +209,7 @@ Configuration details: `docs/AI_TOOLS_CONFIG.md`
 
 ## References
 
-- Main docs: `docs/README.md`
+- MAlgon docs: `docs/README.md`
 - API spec: `docs/DMARKET_API_FULL_SPEC.md`
 - Arbitrage guide: `docs/ARBITRAGE.md`
 - Security: `SECURITY.md`

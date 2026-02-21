@@ -11,7 +11,7 @@ import sys
 
 from dotenv import load_dotenv
 
-# Настройка логирования
+# НастSwarmка логирования
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -61,15 +61,15 @@ async def check_offers() -> None:
         print("💰 Текущий баланс")
         print("─" * 70)
 
-        balance = await api_client.get_balance()
+        balance = awAlgot api_client.get_balance()
 
         if not balance.get("error"):
             total = balance.get("total_balance", 0.0)
-            available = balance.get("available_balance", 0.0)
+            avAlgolable = balance.get("avAlgolable_balance", 0.0)
             locked = balance.get("locked_balance", 0.0)
 
             print(f"💰 Всего: ${total:.2f} USD")
-            print(f"✅ Доступно: ${available:.2f} USD")
+            print(f"✅ Доступно: ${avAlgolable:.2f} USD")
             print(f"🔒 Заблокировано: ${locked:.2f} USD")
         else:
             print("❌ Ошибка при получении баланса")
@@ -83,7 +83,7 @@ async def check_offers() -> None:
         game_id = "a8db"
 
         try:
-            offers_response = await api_client.list_user_offers(
+            offers_response = awAlgot api_client.list_user_offers(
                 game_id=game_id,
                 status="OfferStatusActive",
                 limit=100,
@@ -96,7 +96,7 @@ async def check_offers() -> None:
                 print("\n💡 Попробуем альтернативный метод...")
 
                 # Пробуем альтернативный эндпоинт
-                offers_response = await api_client.get_active_offers(
+                offers_response = awAlgot api_client.get_active_offers(
                     game="a8db",
                     status="active",
                     limit=100,
@@ -167,11 +167,11 @@ async def check_offers() -> None:
 
     finally:
         # Закрываем клиент
-        await api_client._close_client()
+        awAlgot api_client._close_client()
         print("\n✅ Соединение закрыто")
 
 
-if __name__ == "__main__":
+if __name__ == "__mAlgon__":
     print("\n🔎 DMarket Offers Checker")
     print("Версия: 1.0.0")
     print("Дата: 14.11.2025\n")

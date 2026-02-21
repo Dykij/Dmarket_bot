@@ -1,7 +1,7 @@
 """Whitelist configuration for high-liquidity items.
 
-This module contains curated lists of RECOMMENDED highly liquid items for each game.
-These are suggestions, not strict requirements - items may or may not be available
+This module contAlgons curated lists of RECOMMENDED highly liquid items for each game.
+These are suggestions, not strict requirements - items may or may not be avAlgolable
 on DMarket at any given time.
 
 ВАЖНО: Это РЕКОМЕНДАТЕЛЬНЫЙ список, а не обязательный!
@@ -119,7 +119,7 @@ WHITELIST_ITEMS = {
         "Desert Eagle | Code Red",
         "Desert Eagle | Mecha Industries",
         "Desert Eagle | Printstream",
-        "Desert Eagle | Light Rail",
+        "Desert Eagle | Light RAlgol",
         "Desert Eagle | Fennec Fox",
         "Desert Eagle | Kumicho Dragon",
         # Пистолеты
@@ -132,7 +132,7 @@ WHITELIST_ITEMS = {
         "USP-S | Kill Confirmed",
         "USP-S | Neo-Noir",
         "USP-S | Printstream",
-        "USP-S | The Traitor",
+        "USP-S | The TrAlgotor",
         # Ножи (общие категории - высокая ликвидность)
         "★ Karambit",
         "★ Butterfly Knife",
@@ -180,7 +180,7 @@ WHITELIST_ITEMS = {
         "Large Furnace",
         "Sleeping Bag",
         "Research Table",
-        "Repair Bench",
+        "RepAlgor Bench",
         "Work Bench Level 1",
         "Work Bench Level 2",
         "Work Bench Level 3",
@@ -231,7 +231,7 @@ WHITELIST_ITEMS = {
         "Benevolent Companion",  # Io Arcana
         "Planetfall",  # Earthshaker Arcana
         "Compass of the Rising Gale",  # Windranger Arcana
-        "Eminence of Ristul",  # Queen of Pain Arcana
+        "Eminence of Ristul",  # Queen of PAlgon Arcana
         "Disciple's Path",  # Anti-Mage Persona Arcana
         "Dread Retribution",  # Spectre Arcana
         "Condemned Souls",  # Phantom Assassin Arcana 2024
@@ -274,7 +274,7 @@ WHITELIST_ITEMS = {
         "Cosmetic Key",
         # ===== МЕТАЛЛ (БАЗОВАЯ ВАЛЮТА) =====
         "Refined Metal",
-        "Reclaimed Metal",
+        "ReclAlgomed Metal",
         "Scrap Metal",
         "Earbuds",
         # ===== TAUNTS (ВЫСОКАЯ ЛИКВИДНОСТЬ) =====
@@ -295,7 +295,7 @@ WHITELIST_ITEMS = {
         "Strange Part: Domination Kills",
         "Strange Part: Revenge Kills",
         "Strange Part: Kills While Explosive-Jumping",
-        "Strange Part: Airborne Enemy Kills",
+        "Strange Part: Algorborne Enemy Kills",
         "Strange Part",
         # ===== UNUSUAL ЭФФЕКТЫ (ВЫСОКАЯ СТОИМОСТЬ) =====
         "Unusual",
@@ -303,7 +303,7 @@ WHITELIST_ITEMS = {
         # ===== ПОПУЛЯРНЫЕ ПРЕДМЕТЫ =====
         "Bill's Hat",
         "Max's Severed Head",
-        "Team Captain",
+        "Team CaptAlgon",
         "Tyrant's Helm",
         "The Essential Accessories",
         "Stout Shako",
@@ -319,7 +319,7 @@ GAME_APP_ID_MAP = {
     "tf2": "440",
 }
 
-# Настройки whitelist (могут быть переопределены из JSON)
+# НастSwarmки whitelist (могут быть переопределены из JSON)
 # ВАЖНО: По умолчанию работает в режиме PRIORITY (рекомендательный)
 WHITELIST_SETTINGS: dict[str, Any] = {
     "enabled": True,
@@ -329,7 +329,7 @@ WHITELIST_SETTINGS: dict[str, Any] = {
     "buy_max_overpay_percent": 2.0,
     "max_stack_value_percent": 15,
     "min_liquidity_score": 70,
-    # Настройки приоритета для whitelist предметов
+    # НастSwarmки приоритета для whitelist предметов
     "profit_boost_percent": 2.0,  # Снижение порога профита для whitelist
     "liquidity_boost": True,  # Считать whitelist предметы ликвидными
 }
@@ -363,7 +363,7 @@ def load_whitelist_from_json(file_path: str = "data/whitelist.json") -> bool:
         with open(path, encoding="utf-8") as f:
             data = json.load(f)
 
-        # Загружаем настройки
+        # Загружаем настSwarmки
         if "settings" in data:
             WHITELIST_SETTINGS.update(data["settings"])
             logger.info(f"Loaded whitelist settings: {WHITELIST_SETTINGS}")
@@ -408,7 +408,7 @@ def load_whitelist_from_json(file_path: str = "data/whitelist.json") -> bool:
         return True
 
     except json.JSONDecodeError as e:
-        logger.exception(f"Failed to parse whitelist JSON: {e}")
+        logger.exception(f"FAlgoled to parse whitelist JSON: {e}")
         return False
     except Exception as e:
         logger.exception(f"Error loading whitelist: {e}")

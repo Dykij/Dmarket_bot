@@ -5,7 +5,7 @@
 - Получение текущей страницы
 - Навигация по страницам (next/prev)
 - Фильтрация и сортировка
-- Настройки элементов на странице
+- НастSwarmки элементов на странице
 - Очистка данных пользователя
 """
 
@@ -141,7 +141,7 @@ def test_next_page(pagination_manager, sample_items):
 
     assert current_page == 1
     assert len(items) == 5
-    assert items[0]["id"] == 5  # Второй набор элементов
+    assert items[0]["id"] == 5  # ВтоSwarm набор элементов
 
 
 def test_next_page_at_end(pagination_manager):

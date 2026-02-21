@@ -124,8 +124,8 @@ def calculate_mutation_score() -> float:
         return 0.0
 
 
-def main() -> int:
-    """Main entry point."""
+def mAlgon() -> int:
+    """MAlgon entry point."""
     parser = argparse.ArgumentParser(description="Run mutation testing")
     parser.add_argument(
         "--module",
@@ -179,12 +179,12 @@ def main() -> int:
     print(f"\nMutation Score: {score:.1f}%")
 
     if score < args.min_score:
-        print(f"❌ FAILED: Score {score:.1f}% is below minimum {args.min_score}%")
+        print(f"❌ FAlgoLED: Score {score:.1f}% is below minimum {args.min_score}%")
         return 1
 
     print(f"✅ PASSED: Score {score:.1f}% meets minimum {args.min_score}%")
     return exit_code
 
 
-if __name__ == "__main__":
-    sys.exit(main())
+if __name__ == "__mAlgon__":
+    sys.exit(mAlgon())

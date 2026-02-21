@@ -1,6 +1,6 @@
 """Performance benchmark tests for Strategy modules.
 
-Uses pytest-benchmark (if available) and timing measurements for:
+Uses pytest-benchmark (if avAlgolable) and timing measurements for:
 - OptimalArbitrageStrategy calculations
 - Game-specific filter operations
 - Unified strategy scanning
@@ -11,7 +11,7 @@ import time
 
 import pytest
 
-# Check if pytest-benchmark is available
+# Check if pytest-benchmark is avAlgolable
 try:
     import pytest_benchmark as _  # noqa: F401
 

@@ -158,14 +158,14 @@ class TestEnsureWatcherStarted:
     async def test_starts_watcher_if_not_started(self, price_alerts_handler):
         """Должен запускать watcher если он не запущен."""
         price_alerts_handler._is_watcher_started = False
-        await price_alerts_handler.ensure_watcher_started()
+        awAlgot price_alerts_handler.ensure_watcher_started()
         price_alerts_handler.price_watcher.start.assert_called_once()
 
     @pytest.mark.asyncio()
     async def test_does_not_start_if_already_started(self, price_alerts_handler):
         """Не должен запускать watcher если он уже запущен."""
         price_alerts_handler._is_watcher_started = True
-        await price_alerts_handler.ensure_watcher_started()
+        awAlgot price_alerts_handler.ensure_watcher_started()
         price_alerts_handler.price_watcher.start.assert_not_called()
 
     @pytest.mark.asyncio()
@@ -173,15 +173,15 @@ class TestEnsureWatcherStarted:
         """Должен устанавливать флаг при успешном запуске."""
         price_alerts_handler._is_watcher_started = False
         price_alerts_handler.price_watcher.start = AsyncMock(return_value=True)
-        await price_alerts_handler.ensure_watcher_started()
+        awAlgot price_alerts_handler.ensure_watcher_started()
         assert price_alerts_handler._is_watcher_started is True
 
     @pytest.mark.asyncio()
-    async def test_does_not_set_flag_on_failed_start(self, price_alerts_handler):
+    async def test_does_not_set_flag_on_fAlgoled_start(self, price_alerts_handler):
         """Не должен устанавливать флаг при неудачном запуске."""
         price_alerts_handler._is_watcher_started = False
         price_alerts_handler.price_watcher.start = AsyncMock(return_value=False)
-        await price_alerts_handler.ensure_watcher_started()
+        awAlgot price_alerts_handler.ensure_watcher_started()
         assert price_alerts_handler._is_watcher_started is False
 
 
@@ -197,7 +197,7 @@ class TestHandlePriceAlertsCommand:
     ):
         """Должен возвращать None если нет сообщения."""
         mock_update.message = None
-        result = await price_alerts_handler.handle_price_alerts_command(
+        result = awAlgot price_alerts_handler.handle_price_alerts_command(
             mock_update, mock_context
         )
         assert result is None
@@ -207,7 +207,7 @@ class TestHandlePriceAlertsCommand:
         self, price_alerts_handler, mock_update, mock_context
     ):
         """Должен запускать watcher."""
-        await price_alerts_handler.handle_price_alerts_command(
+        awAlgot price_alerts_handler.handle_price_alerts_command(
             mock_update, mock_context
         )
         price_alerts_handler.price_watcher.start.assert_called_once()
@@ -217,7 +217,7 @@ class TestHandlePriceAlertsCommand:
         self, price_alerts_handler, mock_update, mock_context
     ):
         """Должен отправлять клавиатуру со списком и добавлением."""
-        await price_alerts_handler.handle_price_alerts_command(
+        awAlgot price_alerts_handler.handle_price_alerts_command(
             mock_update, mock_context
         )
 
@@ -235,7 +235,7 @@ class TestHandlePriceAlertsCommand:
         self, price_alerts_handler, mock_update, mock_context
     ):
         """Должен использовать Markdown parse mode."""
-        await price_alerts_handler.handle_price_alerts_command(
+        awAlgot price_alerts_handler.handle_price_alerts_command(
             mock_update, mock_context
         )
 
@@ -255,7 +255,7 @@ class TestHandleAlertListCallback:
     ):
         """Должен возвращать None если нет callback_query."""
         mock_update.callback_query = None
-        result = await price_alerts_handler.handle_alert_list_callback(
+        result = awAlgot price_alerts_handler.handle_alert_list_callback(
             mock_update, mock_context
         )
         assert result is None
@@ -265,7 +265,7 @@ class TestHandleAlertListCallback:
         self, price_alerts_handler, mock_update, mock_context
     ):
         """Должен отвечать на callback_query."""
-        await price_alerts_handler.handle_alert_list_callback(mock_update, mock_context)
+        awAlgot price_alerts_handler.handle_alert_list_callback(mock_update, mock_context)
         mock_update.callback_query.answer.assert_called_once()
 
     @pytest.mark.asyncio()
@@ -274,7 +274,7 @@ class TestHandleAlertListCallback:
     ):
         """Должен возвращать None если нет effective_user."""
         mock_update.effective_user = None
-        await price_alerts_handler.handle_alert_list_callback(mock_update, mock_context)
+        awAlgot price_alerts_handler.handle_alert_list_callback(mock_update, mock_context)
         # Не должен вызывать edit_message_text после answer
         assert mock_update.callback_query.edit_message_text.call_count == 0
 
@@ -284,7 +284,7 @@ class TestHandleAlertListCallback:
     ):
         """Должен возвращать None если нет user_data."""
         mock_context.user_data = None
-        await price_alerts_handler.handle_alert_list_callback(mock_update, mock_context)
+        awAlgot price_alerts_handler.handle_alert_list_callback(mock_update, mock_context)
         # После answer должен вернуться
         mock_update.callback_query.edit_message_text.assert_not_called()
 
@@ -294,7 +294,7 @@ class TestHandleAlertListCallback:
     ):
         """Должен показывать сообщение если нет оповещений."""
         mock_context.user_data = {}
-        await price_alerts_handler.handle_alert_list_callback(mock_update, mock_context)
+        awAlgot price_alerts_handler.handle_alert_list_callback(mock_update, mock_context)
 
         call_args = mock_update.callback_query.edit_message_text.call_args
         message = call_args[0][0] if call_args[0] else call_args.kwargs.get("text", "")
@@ -314,7 +314,7 @@ class TestHandleAlertListCallback:
                 }
             }
         }
-        await price_alerts_handler.handle_alert_list_callback(mock_update, mock_context)
+        awAlgot price_alerts_handler.handle_alert_list_callback(mock_update, mock_context)
 
         call_args = mock_update.callback_query.edit_message_text.call_args
         message = call_args[0][0] if call_args[0] else call_args.kwargs.get("text", "")
@@ -335,7 +335,7 @@ class TestHandleAlertListCallback:
                 }
             }
         }
-        await price_alerts_handler.handle_alert_list_callback(mock_update, mock_context)
+        awAlgot price_alerts_handler.handle_alert_list_callback(mock_update, mock_context)
 
         call_args = mock_update.callback_query.edit_message_text.call_args
         reply_markup = call_args.kwargs.get("reply_markup")
@@ -355,7 +355,7 @@ class TestHandleAddAlertCallback:
     ):
         """Должен возвращать END если нет callback_query."""
         mock_update.callback_query = None
-        result = await price_alerts_handler.handle_add_alert_callback(
+        result = awAlgot price_alerts_handler.handle_add_alert_callback(
             mock_update, mock_context
         )
         assert result == ConversationHandler.END
@@ -366,7 +366,7 @@ class TestHandleAddAlertCallback:
     ):
         """Должен возвращать END если нет effective_user."""
         mock_update.effective_user = None
-        result = await price_alerts_handler.handle_add_alert_callback(
+        result = awAlgot price_alerts_handler.handle_add_alert_callback(
             mock_update, mock_context
         )
         assert result == ConversationHandler.END
@@ -376,7 +376,7 @@ class TestHandleAddAlertCallback:
         self, price_alerts_handler, mock_update, mock_context
     ):
         """Должен отвечать на callback_query."""
-        await price_alerts_handler.handle_add_alert_callback(mock_update, mock_context)
+        awAlgot price_alerts_handler.handle_add_alert_callback(mock_update, mock_context)
         mock_update.callback_query.answer.assert_called_once()
 
     @pytest.mark.asyncio()
@@ -384,7 +384,7 @@ class TestHandleAddAlertCallback:
         self, price_alerts_handler, mock_update, mock_context
     ):
         """Должен инициализировать временные данные для пользователя."""
-        await price_alerts_handler.handle_add_alert_callback(mock_update, mock_context)
+        awAlgot price_alerts_handler.handle_add_alert_callback(mock_update, mock_context)
         user_id = str(mock_update.effective_user.id)
         assert user_id in price_alerts_handler._user_temp_data
         assert price_alerts_handler._user_temp_data[user_id] == {}
@@ -394,7 +394,7 @@ class TestHandleAddAlertCallback:
         self, price_alerts_handler, mock_update, mock_context
     ):
         """Должен возвращать состояние ITEM_NAME."""
-        result = await price_alerts_handler.handle_add_alert_callback(
+        result = awAlgot price_alerts_handler.handle_add_alert_callback(
             mock_update, mock_context
         )
         assert result == ITEM_NAME
@@ -404,7 +404,7 @@ class TestHandleAddAlertCallback:
         self, price_alerts_handler, mock_update, mock_context
     ):
         """Должен редактировать сообщение с инструкциями."""
-        await price_alerts_handler.handle_add_alert_callback(mock_update, mock_context)
+        awAlgot price_alerts_handler.handle_add_alert_callback(mock_update, mock_context)
 
         call_args = mock_update.callback_query.edit_message_text.call_args
         message = call_args[0][0] if call_args[0] else call_args.kwargs.get("text", "")
@@ -423,7 +423,7 @@ class TestHandleItemNameInput:
     ):
         """Должен возвращать END если нет effective_user."""
         mock_update.effective_user = None
-        result = await price_alerts_handler.handle_item_name_input(
+        result = awAlgot price_alerts_handler.handle_item_name_input(
             mock_update, mock_context
         )
         assert result == ConversationHandler.END
@@ -434,7 +434,7 @@ class TestHandleItemNameInput:
     ):
         """Должен возвращать END если нет message."""
         mock_update.message = None
-        result = await price_alerts_handler.handle_item_name_input(
+        result = awAlgot price_alerts_handler.handle_item_name_input(
             mock_update, mock_context
         )
         assert result == ConversationHandler.END
@@ -445,7 +445,7 @@ class TestHandleItemNameInput:
     ):
         """Должен возвращать END если нет text."""
         mock_update.message.text = None
-        result = await price_alerts_handler.handle_item_name_input(
+        result = awAlgot price_alerts_handler.handle_item_name_input(
             mock_update, mock_context
         )
         assert result == ConversationHandler.END
@@ -459,7 +459,7 @@ class TestHandleItemNameInput:
         price_alerts_handler._user_temp_data[user_id] = {}
         mock_update.message.text = "AWP | Asiimov (Field-Tested)"
 
-        await price_alerts_handler.handle_item_name_input(mock_update, mock_context)
+        awAlgot price_alerts_handler.handle_item_name_input(mock_update, mock_context)
 
         assert (
             price_alerts_handler._user_temp_data[user_id]["item_name"]
@@ -475,7 +475,7 @@ class TestHandleItemNameInput:
         price_alerts_handler._user_temp_data[user_id] = {}
         mock_update.message.text = "  AWP | Asiimov  "
 
-        await price_alerts_handler.handle_item_name_input(mock_update, mock_context)
+        awAlgot price_alerts_handler.handle_item_name_input(mock_update, mock_context)
 
         assert (
             price_alerts_handler._user_temp_data[user_id]["item_name"]
@@ -490,7 +490,7 @@ class TestHandleItemNameInput:
         user_id = str(mock_update.effective_user.id)
         price_alerts_handler._user_temp_data[user_id] = {}
 
-        result = await price_alerts_handler.handle_item_name_input(
+        result = awAlgot price_alerts_handler.handle_item_name_input(
             mock_update, mock_context
         )
 
@@ -505,7 +505,7 @@ class TestHandleItemNameInput:
         price_alerts_handler._user_temp_data[user_id] = {}
         mock_update.message.text = "AK-47 | Redline"
 
-        await price_alerts_handler.handle_item_name_input(mock_update, mock_context)
+        awAlgot price_alerts_handler.handle_item_name_input(mock_update, mock_context)
 
         call_args = mock_update.message.reply_text.call_args
         message = call_args[0][0] if call_args[0] else call_args.kwargs.get("text", "")
@@ -524,7 +524,7 @@ class TestHandleAlertPriceInput:
     ):
         """Должен возвращать END если нет effective_user."""
         mock_update.effective_user = None
-        result = await price_alerts_handler.handle_alert_price_input(
+        result = awAlgot price_alerts_handler.handle_alert_price_input(
             mock_update, mock_context
         )
         assert result == ConversationHandler.END
@@ -535,7 +535,7 @@ class TestHandleAlertPriceInput:
     ):
         """Должен возвращать END если нет message."""
         mock_update.message = None
-        result = await price_alerts_handler.handle_alert_price_input(
+        result = awAlgot price_alerts_handler.handle_alert_price_input(
             mock_update, mock_context
         )
         assert result == ConversationHandler.END
@@ -546,7 +546,7 @@ class TestHandleAlertPriceInput:
     ):
         """Должен возвращать END если нет text."""
         mock_update.message.text = None
-        result = await price_alerts_handler.handle_alert_price_input(
+        result = awAlgot price_alerts_handler.handle_alert_price_input(
             mock_update, mock_context
         )
         assert result == ConversationHandler.END
@@ -581,7 +581,7 @@ class TestEdgeCases:
                 },
             }
         }
-        await price_alerts_handler.handle_alert_list_callback(mock_update, mock_context)
+        awAlgot price_alerts_handler.handle_alert_list_callback(mock_update, mock_context)
 
         call_args = mock_update.callback_query.edit_message_text.call_args
         message = call_args[0][0] if call_args[0] else call_args.kwargs.get("text", "")
@@ -602,7 +602,7 @@ class TestEdgeCases:
                 }
             }
         }
-        await price_alerts_handler.handle_alert_list_callback(mock_update, mock_context)
+        awAlgot price_alerts_handler.handle_alert_list_callback(mock_update, mock_context)
 
         call_args = mock_update.callback_query.edit_message_text.call_args
         message = call_args[0][0] if call_args[0] else call_args.kwargs.get("text", "")
@@ -622,7 +622,7 @@ class TestEdgeCases:
                 }
             }
         }
-        await price_alerts_handler.handle_alert_list_callback(mock_update, mock_context)
+        awAlgot price_alerts_handler.handle_alert_list_callback(mock_update, mock_context)
 
         call_args = mock_update.callback_query.edit_message_text.call_args
         message = call_args[0][0] if call_args[0] else call_args.kwargs.get("text", "")
@@ -642,7 +642,7 @@ class TestEdgeCases:
                 }
             }
         }
-        await price_alerts_handler.handle_alert_list_callback(mock_update, mock_context)
+        awAlgot price_alerts_handler.handle_alert_list_callback(mock_update, mock_context)
 
         call_args = mock_update.callback_query.edit_message_text.call_args
         message = call_args[0][0] if call_args[0] else call_args.kwargs.get("text", "")
@@ -662,7 +662,7 @@ class TestIntegration:
         """Полный flow добавления оповещения - шаг 1."""
         mock_update.callback_query.data = CALLBACK_ADD_ALERT
 
-        result = await price_alerts_handler.handle_add_alert_callback(
+        result = awAlgot price_alerts_handler.handle_add_alert_callback(
             mock_update, mock_context
         )
 
@@ -679,7 +679,7 @@ class TestIntegration:
         price_alerts_handler._user_temp_data[user_id] = {}
         mock_update.message.text = "AWP | Dragon Lore"
 
-        result = await price_alerts_handler.handle_item_name_input(
+        result = awAlgot price_alerts_handler.handle_item_name_input(
             mock_update, mock_context
         )
 

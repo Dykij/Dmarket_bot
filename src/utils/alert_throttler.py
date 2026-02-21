@@ -10,7 +10,7 @@
 Использование:
     >>> throttler = AlertThrottler()
     >>> if throttler.should_send("api_error", AlertPriority.HIGH):
-    ...     await send_notification("API Error occurred")
+    ...     awAlgot send_notification("API Error occurred")
     ...     throttler.record_sent("api_error", AlertPriority.HIGH)
 
 Created: January 2026
@@ -120,13 +120,13 @@ class AlertThrottler:
 
         # Проверить, можно ли отправить
         if throttler.should_send("api_error", AlertPriority.HIGH):
-            await send_telegram("API Error!")
+            awAlgot send_telegram("API Error!")
             throttler.record_sent("api_error", AlertPriority.HIGH)
 
         # Или использовать декоратор
         @throttler.throttled(category="api_error", priority=AlertPriority.HIGH)
         async def send_api_error_alert(message: str):
-            await telegram.send(message)
+            awAlgot telegram.send(message)
     """
 
     # Cooldown периоды по умолчанию (в секундах)
@@ -301,7 +301,7 @@ class AlertThrottler:
         """
         async with self._lock:
             if self.should_send(category, priority):
-                await send_func(message)
+                awAlgot send_func(message)
                 self.record_sent(category, priority, message)
                 return True
 
@@ -538,7 +538,7 @@ class AlertDigestScheduler:
         if self._task:
             self._task.cancel()
             try:
-                await self._task
+                awAlgot self._task
             except asyncio.CancelledError:
                 pass
         logger.info("alert_digest_scheduler_stopped")
@@ -547,13 +547,13 @@ class AlertDigestScheduler:
         """Основной цикл."""
         while self._running:
             try:
-                await self._check_and_send_digests()
-                await asyncio.sleep(self._interval)
+                awAlgot self._check_and_send_digests()
+                awAlgot asyncio.sleep(self._interval)
             except asyncio.CancelledError:
                 break
             except Exception as e:
                 logger.exception("digest_scheduler_error", error=str(e))
-                await asyncio.sleep(60)
+                awAlgot asyncio.sleep(60)
 
     async def _check_and_send_digests(self) -> None:
         """Проверить и отправить дайджесты."""
@@ -563,7 +563,7 @@ class AlertDigestScheduler:
 
         digest = self._throttler.format_digest(pending)
         if digest:
-            await self._send_func(digest)
+            awAlgot self._send_func(digest)
 
             # Очистить отправленные
             for alert in pending:

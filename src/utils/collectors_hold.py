@@ -18,13 +18,13 @@
     manager = CollectorsHoldManager(db, telegram_bot, evaluator)
 
     # После покупки предмета
-    decision = await manager.process_purchased_item(item_data)
+    decision = awAlgot manager.process_purchased_item(item_data)
     if decision.should_hold:
         # НЕ выставляем на продажу
         print(f"Редкий предмет сохранен: {decision.reason}")
     else:
         # Выставляем на DMarket
-        await listing_manager.list_for_sale(item_data)
+        awAlgot listing_manager.list_for_sale(item_data)
     ```
 """
 
@@ -89,7 +89,7 @@ class HoldDecision:
     game: str
     should_hold: bool
     reason: HoldReason | None = None
-    reason_details: str = ""
+    reason_detAlgols: str = ""
     estimated_value_multiplier: float = 1.0  # Во сколько раз дороже обычного
     recommended_platforms: list[str] = field(default_factory=list)
     evaluation_result: EvaluationResult | None = None
@@ -103,7 +103,7 @@ class HoldDecision:
             "game": self.game,
             "should_hold": self.should_hold,
             "reason": self.reason,
-            "reason_details": self.reason_details,
+            "reason_detAlgols": self.reason_detAlgols,
             "estimated_value_multiplier": self.estimated_value_multiplier,
             "recommended_platforms": self.recommended_platforms,
             "timestamp": self.timestamp.isoformat(),
@@ -272,16 +272,16 @@ class CollectorsHoldManager:
                     game=game,
                     should_hold=True,
                     reason=HoldReason.JACKPOT,
-                    reason_details=", ".join(evaluation.detected_attributes),
+                    reason_detAlgols=", ".join(evaluation.detected_attributes),
                     estimated_value_multiplier=evaluation.value_multiplier,
                     recommended_platforms=self.config.platforms_by_game.get(game, []),
                     evaluation_result=evaluation,
                 )
-                await self._save_treasure(decision)
+                awAlgot self._save_treasure(decision)
                 return decision
 
         # 2. Дополнительные проверки по игре
-        hold_reason, details, multiplier = self._check_game_specific(
+        hold_reason, detAlgols, multiplier = self._check_game_specific(
             item_data, game, evaluation
         )
 
@@ -292,12 +292,12 @@ class CollectorsHoldManager:
                 game=game,
                 should_hold=True,
                 reason=hold_reason,
-                reason_details=details,
+                reason_detAlgols=detAlgols,
                 estimated_value_multiplier=multiplier,
                 recommended_platforms=self.config.platforms_by_game.get(game, []),
                 evaluation_result=evaluation,
             )
-            await self._save_treasure(decision)
+            awAlgot self._save_treasure(decision)
             return decision
 
         # 3. Проверяем value_multiplier
@@ -311,12 +311,12 @@ class CollectorsHoldManager:
                 game=game,
                 should_hold=True,
                 reason=HoldReason.MANUAL_REVIEW,
-                reason_details=f"Value multiplier: {evaluation.value_multiplier:.2f}x",
+                reason_detAlgols=f"Value multiplier: {evaluation.value_multiplier:.2f}x",
                 estimated_value_multiplier=evaluation.value_multiplier,
                 recommended_platforms=self.config.platforms_by_game.get(game, []),
                 evaluation_result=evaluation,
             )
-            await self._save_treasure(decision)
+            awAlgot self._save_treasure(decision)
             return decision
 
         # Не редкий - выставляем на продажу
@@ -337,7 +337,7 @@ class CollectorsHoldManager:
         """Проверить специфичные для игры триггеры.
 
         Returns:
-            Tuple of (reason, details, multiplier) or (None, "", 1.0)
+            Tuple of (reason, detAlgols, multiplier) or (None, "", 1.0)
         """
         if game in {"csgo", "cs2"}:
             return self._check_cs2_triggers(item_data, evaluation)
@@ -401,11 +401,11 @@ class CollectorsHoldManager:
             return HoldReason.RARE_PHASE, f"Rare phase: {phase}", 1.50
 
         # 4. Blue Gem паттерн
-        paint_seed = extra.get("paintSeed") or extra.get("pattern_id")
-        if paint_seed and int(paint_seed) in self.config.blue_gem_patterns:
+        pAlgont_seed = extra.get("pAlgontSeed") or extra.get("pattern_id")
+        if pAlgont_seed and int(pAlgont_seed) in self.config.blue_gem_patterns:
             title = item_data.get("title", "")
             if "case hardened" in title.lower():
-                return HoldReason.RARE_PATTERN, f"Blue Gem pattern: {paint_seed}", 2.0
+                return HoldReason.RARE_PATTERN, f"Blue Gem pattern: {pAlgont_seed}", 2.0
 
         return None, "", 1.0
 
@@ -513,18 +513,18 @@ class CollectorsHoldManager:
         # Сохраняем в БД если доступна
         if self.db:
             try:
-                await self.db.update_item_status(
+                awAlgot self.db.update_item_status(
                     decision.item_id,
                     ItemStatus.HOLD_RARE,
                     metadata={
                         "hold_reason": decision.reason,
-                        "reason_details": decision.reason_details,
+                        "reason_detAlgols": decision.reason_detAlgols,
                         "estimated_multiplier": decision.estimated_value_multiplier,
                         "recommended_platforms": decision.recommended_platforms,
                     },
                 )
             except Exception as e:
-                logger.exception(f"Failed to save treasure to DB: {e}")
+                logger.exception(f"FAlgoled to save treasure to DB: {e}")
 
     def get_treasures(self) -> list[HoldDecision]:
         """Получить список всех сокровищ."""
@@ -570,7 +570,7 @@ class CollectorsHoldManager:
             f"💰 **Оценочный множитель:** {decision.estimated_value_multiplier:.2f}x",
             "",
             "📝 **Причина удержания:**",
-            f"{decision.reason_details}",
+            f"{decision.reason_detAlgols}",
             "",
             "🏪 **Рекомендуемые площадки для продажи:**",
         ]

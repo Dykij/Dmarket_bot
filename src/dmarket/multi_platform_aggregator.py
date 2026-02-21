@@ -17,7 +17,7 @@ Usage:
         waxpeer_api=waxpeer_client,
     )
 
-    prices = await aggregator.get_best_prices("AK-47 | Redline (Field-Tested)")
+    prices = awAlgot aggregator.get_best_prices("AK-47 | Redline (Field-Tested)")
 
     if prices.best_buy.platform != prices.best_sell.platform:
         # Cross-platform arbitrage opportunity!
@@ -233,12 +233,12 @@ class MultiPlatformAggregator:
         # Fetch from each platform
         for platform in self.enabled_platforms:
             try:
-                price = await self._fetch_platform_price(platform, item_name, game)
+                price = awAlgot self._fetch_platform_price(platform, item_name, game)
                 if price:
                     result.prices[platform] = price
             except Exception as e:
                 logger.warning(
-                    "platform_fetch_failed",
+                    "platform_fetch_fAlgoled",
                     platform=platform,
                     item=item_name,
                     error=str(e),
@@ -276,7 +276,7 @@ class MultiPlatformAggregator:
         opportunities = []
 
         for item_name in items:
-            prices = await self.get_prices(item_name, game)
+            prices = awAlgot self.get_prices(item_name, game)
 
             if not prices.has_arbitrage_opportunity:
                 continue
@@ -308,11 +308,11 @@ class MultiPlatformAggregator:
     ) -> PlatformPrice | None:
         """Fetch price from a specific platform."""
         if platform == Platform.DMARKET:
-            return await self._fetch_dmarket_price(item_name, game)
+            return awAlgot self._fetch_dmarket_price(item_name, game)
         if platform == Platform.WAXPEER:
-            return await self._fetch_waxpeer_price(item_name, game)
+            return awAlgot self._fetch_waxpeer_price(item_name, game)
         if platform == Platform.STEAM:
-            return await self._fetch_steam_price(item_name, game)
+            return awAlgot self._fetch_steam_price(item_name, game)
         return None
 
     async def _fetch_dmarket_price(
@@ -325,7 +325,7 @@ class MultiPlatformAggregator:
             return None
 
         try:
-            response = await self.dmarket_api.get_market_items(
+            response = awAlgot self.dmarket_api.get_market_items(
                 game=game,
                 title=item_name,
                 limit=10,
@@ -377,7 +377,7 @@ class MultiPlatformAggregator:
             # Waxpeer uses different game identifiers
             waxpeer_game = "csgo" if game == "csgo" else game
 
-            response = await self.waxpeer_api.get_items(
+            response = awAlgot self.waxpeer_api.get_items(
                 game=waxpeer_game,
                 search=item_name,
                 limit=10,
@@ -424,7 +424,7 @@ class MultiPlatformAggregator:
         try:
             from src.dmarket.steam_api import get_steam_price
 
-            price = await get_steam_price(item_name)
+            price = awAlgot get_steam_price(item_name)
 
             if price and price > 0:
                 return PlatformPrice(
@@ -454,7 +454,7 @@ class MultiPlatformAggregator:
             Tuple of (platform, price) or None
 
         """
-        prices = await self.get_prices(item_name, game)
+        prices = awAlgot self.get_prices(item_name, game)
         best = prices.best_buy
 
         if best:
@@ -476,7 +476,7 @@ class MultiPlatformAggregator:
             Tuple of (platform, net_price) or None
 
         """
-        prices = await self.get_prices(item_name, game)
+        prices = awAlgot self.get_prices(item_name, game)
         best = prices.best_sell
 
         if best:

@@ -1,23 +1,23 @@
-"""Tests for AI Arbitrage Predictor.
+"""Tests for Algo Arbitrage Predictor.
 
-Tests Phase 2 implementation of AI-powered arbitrage prediction.
+Tests Phase 2 implementation of Algo-powered arbitrage prediction.
 """
 
 import pytest
 
-from src.dmarket.ai_arbitrage_predictor import (
-    AIArbitragePredictor,
+from src.dmarket.Algo_arbitrage_predictor import (
+    AlgoArbitragePredictor,
     ArbitrageOpportunity,
-    create_ai_arbitrage_predictor,
+    create_Algo_arbitrage_predictor,
 )
 
 
-class TestAIArbitragePredictor:
-    """Tests for AIArbitragePredictor class."""
+class TestAlgoArbitragePredictor:
+    """Tests for AlgoArbitragePredictor class."""
 
     def test_initialization(self):
         """Test predictor initialization."""
-        predictor = AIArbitragePredictor()
+        predictor = AlgoArbitragePredictor()
 
         assert predictor is not None
         assert predictor.predictor is not None
@@ -25,16 +25,16 @@ class TestAIArbitragePredictor:
 
     def test_factory_function(self):
         """Test factory function creates valid predictor."""
-        predictor = create_ai_arbitrage_predictor()
+        predictor = create_Algo_arbitrage_predictor()
 
-        assert isinstance(predictor, AIArbitragePredictor)
+        assert isinstance(predictor, AlgoArbitragePredictor)
 
     @pytest.mark.asyncio
     async def test_predict_best_opportunities_empty_list(self):
         """Test prediction with empty item list."""
-        predictor = AIArbitragePredictor()
+        predictor = AlgoArbitragePredictor()
 
-        opportunities = await predictor.predict_best_opportunities(
+        opportunities = awAlgot predictor.predict_best_opportunities(
             items=[],
             current_balance=100.0,
             risk_level="medium",
@@ -45,7 +45,7 @@ class TestAIArbitragePredictor:
     @pytest.mark.asyncio
     async def test_predict_best_opportunities_with_valid_items(self):
         """Test prediction with valid arbitrage items."""
-        predictor = AIArbitragePredictor()
+        predictor = AlgoArbitragePredictor()
 
         # Mock items with arbitrage opportunity
         items = [
@@ -65,7 +65,7 @@ class TestAIArbitragePredictor:
             },
         ]
 
-        opportunities = await predictor.predict_best_opportunities(
+        opportunities = awAlgot predictor.predict_best_opportunities(
             items=items,
             current_balance=50.0,  # Can only afford first item
             risk_level="medium",
@@ -79,11 +79,11 @@ class TestAIArbitragePredictor:
 
     @pytest.mark.asyncio
     async def test_predict_with_invalid_risk_level(self):
-        """Test prediction with invalid risk level raises error."""
-        predictor = AIArbitragePredictor()
+        """Test prediction with invalid risk level rAlgoses error."""
+        predictor = AlgoArbitragePredictor()
 
-        with pytest.raises(ValueError, match="Invalid risk_level"):
-            await predictor.predict_best_opportunities(
+        with pytest.rAlgoses(ValueError, match="Invalid risk_level"):
+            awAlgot predictor.predict_best_opportunities(
                 items=[],
                 current_balance=100.0,
                 risk_level="invalid",
@@ -92,7 +92,7 @@ class TestAIArbitragePredictor:
     @pytest.mark.asyncio
     async def test_predict_filters_unprofitable_items(self):
         """Test that unprofitable items are filtered out."""
-        predictor = AIArbitragePredictor()
+        predictor = AlgoArbitragePredictor()
 
         # Item with no profit (suggested <= current)
         items = [
@@ -105,7 +105,7 @@ class TestAIArbitragePredictor:
             }
         ]
 
-        opportunities = await predictor.predict_best_opportunities(
+        opportunities = awAlgot predictor.predict_best_opportunities(
             items=items,
             current_balance=100.0,
             risk_level="medium",
@@ -116,7 +116,7 @@ class TestAIArbitragePredictor:
     @pytest.mark.asyncio
     async def test_risk_levels_affect_filtering(self):
         """Test that different risk levels filter differently."""
-        predictor = AIArbitragePredictor()
+        predictor = AlgoArbitragePredictor()
 
         # Item with moderate confidence
         items = [
@@ -130,14 +130,14 @@ class TestAIArbitragePredictor:
         ]
 
         # Low risk should filter more aggressively
-        low_risk_opps = await predictor.predict_best_opportunities(
+        low_risk_opps = awAlgot predictor.predict_best_opportunities(
             items=items,
             current_balance=100.0,
             risk_level="low",
         )
 
         # High risk should be more permissive
-        high_risk_opps = await predictor.predict_best_opportunities(
+        high_risk_opps = awAlgot predictor.predict_best_opportunities(
             items=items,
             current_balance=100.0,
             risk_level="high",
@@ -148,7 +148,7 @@ class TestAIArbitragePredictor:
 
     def test_get_price_usd_converts_cents(self):
         """Test price conversion from cents to USD."""
-        predictor = AIArbitragePredictor()
+        predictor = AlgoArbitragePredictor()
 
         item = {"price": {"USD": 1234}}
 
@@ -158,7 +158,7 @@ class TestAIArbitragePredictor:
 
     def test_get_price_usd_handles_missing_data(self):
         """Test price conversion with missing data."""
-        predictor = AIArbitragePredictor()
+        predictor = AlgoArbitragePredictor()
 
         item = {}
 
@@ -168,7 +168,7 @@ class TestAIArbitragePredictor:
 
     def test_calculate_risk_returns_valid_range(self):
         """Test risk calculation returns 0-100."""
-        predictor = AIArbitragePredictor()
+        predictor = AlgoArbitragePredictor()
 
         item = {"title": "Test"}
 
@@ -185,7 +185,7 @@ class TestAIArbitragePredictor:
 
     def test_map_game_id_handles_all_games(self):
         """Test game ID mapping for all supported games."""
-        predictor = AIArbitragePredictor()
+        predictor = AlgoArbitragePredictor()
 
         from src.ml import GameType
 
@@ -197,7 +197,7 @@ class TestAIArbitragePredictor:
 
     def test_get_min_confidence_for_risk_levels(self):
         """Test minimum confidence thresholds for risk levels."""
-        predictor = AIArbitragePredictor()
+        predictor = AlgoArbitragePredictor()
 
         low_threshold = predictor._get_min_confidence("low")
         medium_threshold = predictor._get_min_confidence("medium")

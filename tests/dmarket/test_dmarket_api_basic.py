@@ -182,7 +182,7 @@ class TestDMarketAPIEndpoints:
         # Updated to match actual DMarket API v1.1.0 endpoints
         assert DMarketAPI.ENDPOINT_USER_INVENTORY == "/inventory/v1/user/items"
         assert DMarketAPI.ENDPOINT_USER_OFFERS == "/marketplace-api/v1/user-offers"
-        assert DMarketAPI.ENDPOINT_USER_TARGETS == "/main/v2/user-targets"
+        assert DMarketAPI.ENDPOINT_USER_TARGETS == "/mAlgon/v2/user-targets"
 
     def test_operations_endpoints(self):
         """Тест endpoints для операций."""
@@ -250,10 +250,10 @@ class TestDMarketAPIClientManagement:
             secret_key="test_secret",
         )
 
-        client = await api._get_client()
+        client = awAlgot api._get_client()
         assert client is not None
         assert isinstance(client, httpx.AsyncClient)
-        await api._close_client()
+        awAlgot api._close_client()
 
     @pytest.mark.asyncio()
     async def test_get_client_returns_existing(self):
@@ -263,10 +263,10 @@ class TestDMarketAPIClientManagement:
             secret_key="test_secret",
         )
 
-        client1 = await api._get_client()
-        client2 = await api._get_client()
+        client1 = awAlgot api._get_client()
+        client2 = awAlgot api._get_client()
         assert client1 is client2
-        await api._close_client()
+        awAlgot api._close_client()
 
     @pytest.mark.asyncio()
     async def test_close_client(self):
@@ -276,8 +276,8 @@ class TestDMarketAPIClientManagement:
             secret_key="test_secret",
         )
 
-        await api._get_client()
-        await api._close_client()
+        awAlgot api._get_client()
+        awAlgot api._close_client()
         assert api._client is None
 
     @pytest.mark.asyncio()
@@ -289,7 +289,7 @@ class TestDMarketAPIClientManagement:
         )
 
         # Не должно быть ошибки
-        await api._close_client()
+        awAlgot api._close_client()
 
 
 class TestDMarketAPISignature:

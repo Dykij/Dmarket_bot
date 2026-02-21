@@ -248,14 +248,14 @@ class TestFormatAlertMessage:
 
         alert = {
             "type": "good_deal",
-            "title": "Bargain Item",
+            "title": "BargAlgon Item",
             "threshold": 5.0,
             "game": "dota2",
         }
 
         result = format_alert_message(alert)
 
-        assert "Bargain Item" in result
+        assert "BargAlgon Item" in result
 
     def test_format_alert_message_no_current_price(self) -> None:
         """Test alert message without current price."""
@@ -378,7 +378,7 @@ class TestFormatUserSettings:
 
         settings = {
             "notifications_enabled": True,
-            "daily_limit": 50,
+            "dAlgoly_limit": 50,
             "quiet_hours": {"enabled": False},
             "min_profit_percent": 5.0,
         }
@@ -394,7 +394,7 @@ class TestFormatUserSettings:
 
         settings = {
             "notifications_enabled": False,
-            "daily_limit": 50,
+            "dAlgoly_limit": 50,
             "quiet_hours": {"enabled": False},
         }
 
@@ -408,7 +408,7 @@ class TestFormatUserSettings:
 
         settings = {
             "notifications_enabled": True,
-            "daily_limit": 50,
+            "dAlgoly_limit": 50,
             "quiet_hours": {
                 "enabled": True,
                 "start": 23,

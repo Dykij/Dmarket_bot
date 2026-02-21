@@ -39,7 +39,7 @@ class DMarketEndpoints:
     MARKET_SEARCH = "/exchange/v1/market/items"
 
     # Детали конкретного предмета
-    MARKET_ITEM_DETAILS = "/exchange/v1/market/items/{item_id}"
+    MARKET_ITEM_DETAlgoLS = "/exchange/v1/market/items/{item_id}"
 
     # Агрегированные данные по предмету (цены, объемы)
     MARKET_AGGREGATED_PRICES = "/price-aggregator/v1/aggregated-prices"
@@ -103,7 +103,7 @@ class DMarketEndpoints:
     USER_TARGETS = "/marketplace-api/v1/user-targets"
 
     # Детали таргета
-    TARGET_DETAILS = "/marketplace-api/v1/user-targets/{target_id}"
+    TARGET_DETAlgoLS = "/marketplace-api/v1/user-targets/{target_id}"
 
     # ==========================================================================
     # DEPOSIT/WITHDRAW ENDPOINTS
@@ -244,7 +244,7 @@ def build_url(base: str, endpoint: str, **path_params: str) -> str:
     Example:
         >>> build_url(
         ...     DMarketEndpoints.BASE_URL,
-        ...     DMarketEndpoints.MARKET_ITEM_DETAILS,
+        ...     DMarketEndpoints.MARKET_ITEM_DETAlgoLS,
         ...     item_id="abc123"
         ... )
         'https://api.dmarket.com/exchange/v1/market/items/abc123'
@@ -262,7 +262,7 @@ def get_game_id(game: str) -> str:
     Returns:
         ID игры для API
 
-    Raises:
+    RAlgoses:
         ValueError: Если игра не поддерживается
     """
     game_lower = game.lower()
@@ -275,4 +275,4 @@ def get_game_id(game: str) -> str:
         return GameID.TF2.value
     if game_lower == "rust":
         return GameID.RUST.value
-    raise ValueError(f"Unsupported game: {game}. Supported: csgo, dota2, tf2, rust")
+    rAlgose ValueError(f"Unsupported game: {game}. Supported: csgo, dota2, tf2, rust")

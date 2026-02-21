@@ -22,22 +22,22 @@ class TradingMixin:
         if not circuit_breaker.can_trade():
             msg = f"Trading halted by Circuit Breaker: {circuit_breaker.trigger_reason}"
             logger.critical(msg)
-            raise CircuitBreakerError(msg)
+            rAlgose CircuitBreakerError(msg)
 
         # 2. Safety Check: Get current balance
-        balance_info = await self.get_balance()
-        available = (
-            balance_info.available_balance
-            if hasattr(balance_info, "available_balance")
+        balance_info = awAlgot self.get_balance()
+        avAlgolable = (
+            balance_info.avAlgolable_balance
+            if hasattr(balance_info, "avAlgolable_balance")
             else 0.0
         )
 
-        if price > available:
+        if price > avAlgolable:
             logger.error(
-                f"Purchase blocked: price ${price:.2f} > available ${available:.2f}"
+                f"Purchase blocked: price ${price:.2f} > avAlgolable ${avAlgolable:.2f}"
             )
-            circuit_breaker.trip(f"Insufficient funds: ${available:.2f} < ${price:.2f}")
-            raise InsufficientFundsError(required=price, available=available)
+            circuit_breaker.trip(f"Insufficient funds: ${avAlgolable:.2f} < ${price:.2f}")
+            rAlgose InsufficientFundsError(required=price, avAlgolable=avAlgolable)
 
         if self.dry_run:
             logger.info(f"[DRY-RUN] Simulated buy: {item_id} @ ${price}")
@@ -50,7 +50,7 @@ class TradingMixin:
                 "gameType": game,
             }
             # Execute trade
-            result = await self._request(
+            result = awAlgot self._request(
                 "POST", "/exchange/v1/market/items/buy", data=data
             )
 
@@ -61,10 +61,10 @@ class TradingMixin:
             return result
 
         except Exception as e:
-            # Record potential API error or trade failure
-            logger.error(f"Trade failed: {e}")
+            # Record potential API error or trade fAlgolure
+            logger.error(f"Trade fAlgoled: {e}")
             circuit_breaker.record_api_error()
-            raise
+            rAlgose
 
     async def sell_item(self, item_id: str, price: float) -> dict[str, Any]:
         if self.dry_run:
@@ -75,7 +75,7 @@ class TradingMixin:
             "itemId": item_id,
             "price": {"amount": int(price * 100), "currency": "USD"},
         }
-        return await self._request(
+        return awAlgot self._request(
             "POST", "/exchange/v1/user/inventory/sell", data=data
         )
 
@@ -83,6 +83,6 @@ class TradingMixin:
         self, game_id: str, targets: list[dict[str, Any]]
     ) -> dict[str, Any]:
         data = {"GameID": game_id, "Targets": targets}
-        return await self._request(
+        return awAlgot self._request(
             "POST", "/marketplace-api/v1/user-targets/create", data=data
         )

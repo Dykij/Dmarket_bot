@@ -5,7 +5,7 @@
 - Комиссии (стандартные, низкие, высокие)
 - Минимальные проценты прибыли для разных режимов
 - Ценовые диапазоны для уровней арбитража
-- Лимиты и настройки кэша
+- Лимиты и настSwarmки кэша
 """
 
 from __future__ import annotations
@@ -65,7 +65,7 @@ MAX_RETRIES: int = 3
 """Максимальное количество повторных попыток при ошибках API."""
 
 # =============================================================================
-# Настройки кэша
+# НастSwarmки кэша
 # =============================================================================
 
 CACHE_TTL: int = 300
@@ -113,7 +113,7 @@ PRICE_RANGES: dict[str, tuple[float, float]] = {
 DEFAULT_MAX_TRADE_VALUE: float = 100.0
 """Максимальная сумма одной сделки по умолчанию ($100)."""
 
-DEFAULT_DAILY_LIMIT: float = 500.0
+DEFAULT_DAlgoLY_LIMIT: float = 500.0
 """Дневной лимит торговли по умолчанию ($500)."""
 
 DEFAULT_MIN_BALANCE: float = 10.0
@@ -122,11 +122,11 @@ DEFAULT_MIN_BALANCE: float = 10.0
 DEFAULT_MIN_PROFIT_PERCENTAGE: float = 5.0
 """Минимальный процент прибыли по умолчанию (5%)."""
 
-DAILY_LIMIT_RESET_SECONDS: int = 86400
+DAlgoLY_LIMIT_RESET_SECONDS: int = 86400
 """Время сброса дневного лимита в секундах (24 часа)."""
 
 # =============================================================================
-# Настройки обработки ошибок
+# НастSwarmки обработки ошибок
 # =============================================================================
 
 MAX_CONSECUTIVE_ERRORS: int = 10
@@ -145,7 +145,7 @@ ERROR_THRESHOLD_LONG: int = 10
 """Порог ошибок для длинной паузы."""
 
 # =============================================================================
-# Настройки автоторговли
+# НастSwarmки автоторговли
 # =============================================================================
 
 AUTO_TRADING_INTERVAL: int = 60
@@ -196,7 +196,7 @@ HIGH_VALUE_ITEM_TYPES: frozenset[str] = frozenset(
 LOW_VALUE_ITEM_TYPES: frozenset[str] = frozenset(
     {
         "sticker",
-        "container",
+        "contAlgoner",
         "key",
     }
 )
@@ -237,9 +237,9 @@ __all__ = [
     "CACHE_TTL",
     # Currency
     "CENTS_TO_USD",
-    "DAILY_LIMIT_RESET_SECONDS",
+    "DAlgoLY_LIMIT_RESET_SECONDS",
     # Торговля
-    "DEFAULT_DAILY_LIMIT",
+    "DEFAULT_DAlgoLY_LIMIT",
     # Комиссии
     "DEFAULT_FEE",
     # Лимиты API

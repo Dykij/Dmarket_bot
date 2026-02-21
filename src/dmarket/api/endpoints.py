@@ -1,6 +1,6 @@
 """DMarket API endpoints constants and utilities.
 
-This module contains all API endpoint constants for DMarket API v1.1.0.
+This module contAlgons all API endpoint constants for DMarket API v1.1.0.
 Organized by category: account, market, user, operations, analytics.
 
 Features:
@@ -94,7 +94,7 @@ class Endpoints:
 
     Organized by category:
     - BASE_URL: Base API URL
-    - Account: Balance, details, offers, user profile
+    - Account: Balance, detAlgols, offers, user profile
     - Market: Items, search, prices, best offers
     - User: Inventory, offers, targets
     - Operations: Buy, sell, edit, delete
@@ -130,7 +130,7 @@ class Endpoints:
     # ========================================
     BALANCE = "/account/v1/balance"
     BALANCE_LEGACY = "/api/v1/account/balance"
-    ACCOUNT_DETAILS = "/api/v1/account/details"
+    ACCOUNT_DETAlgoLS = "/api/v1/account/detAlgols"
     ACCOUNT_OFFERS = "/api/v1/account/offers"
     USER_PROFILE = "/account/v1/user"
 
@@ -242,7 +242,7 @@ class Endpoints:
         429: "Rate limit exceeded - use Retry-After header",
         500: "Internal server error",
         502: "Bad Gateway",
-        503: "Service unavailable",
+        503: "Service unavAlgolable",
         504: "Gateway timeout",
     }
 
@@ -267,7 +267,7 @@ class Endpoints:
     # ========================================
     TRANSFER_STATUS_PENDING = "TransferStatusPending"
     TRANSFER_STATUS_COMPLETED = "TransferStatusCompleted"
-    TRANSFER_STATUS_FAILED = "TransferStatusFailed"
+    TRANSFER_STATUS_FAlgoLED = "TransferStatusFAlgoled"
 
     # ========================================
     # Order directions for pagination
@@ -489,7 +489,7 @@ class Endpoints:
         Returns:
             DMarket game ID
 
-        Raises:
+        RAlgoses:
             ValueError: If game name is not recognized
 
         Example:
@@ -502,7 +502,7 @@ class Endpoints:
         # Check if it's already a game ID
         if game_name_lower in cls.GAME_ID_TO_NAME:
             return game_name_lower
-        raise ValueError(
+        rAlgose ValueError(
             f"Unknown game: {game_name}. Supported: {list(cls.GAME_NAME_TO_ID.keys())}"
         )
 
@@ -604,7 +604,7 @@ class Endpoints:
         Returns:
             Price in cents (e.g., 1250)
 
-        Raises:
+        RAlgoses:
             ValueError: If price is negative
 
         Example:
@@ -612,7 +612,7 @@ class Endpoints:
             cents = Endpoints.price_to_cents(0.01)  # => 1
         """
         if price_usd < 0:
-            raise ValueError(f"Price cannot be negative: {price_usd}")
+            rAlgose ValueError(f"Price cannot be negative: {price_usd}")
         from decimal import ROUND_HALF_UP, Decimal
 
         # Use Decimal for precise conversion
@@ -634,7 +634,7 @@ class Endpoints:
         Returns:
             Price in USD (e.g., 12.50)
 
-        Raises:
+        RAlgoses:
             ValueError: If cents value is invalid
 
         Example:
@@ -644,5 +644,5 @@ class Endpoints:
         try:
             cents_int = int(cents)
         except (ValueError, TypeError) as e:
-            raise ValueError(f"Invalid cents value: {cents}") from e
+            rAlgose ValueError(f"Invalid cents value: {cents}") from e
         return cents_int / 100.0

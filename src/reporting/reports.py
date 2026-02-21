@@ -1,7 +1,7 @@
 """Reporting Module for Trading Reports.
 
 Provides comprehensive reporting features:
-- Daily/Weekly profit reports
+- DAlgoly/Weekly profit reports
 - Performance analytics
 - Tax-friendly export
 - CSV/Excel export
@@ -12,8 +12,8 @@ Usage:
 
     generator = ReportGenerator()
 
-    # Generate daily report
-    report = await generator.generate_daily_report(user_id, trades)
+    # Generate dAlgoly report
+    report = awAlgot generator.generate_dAlgoly_report(user_id, trades)
 
     # Export to CSV
     csv_data = generator.export_to_csv(trades)
@@ -40,7 +40,7 @@ logger = structlog.get_logger(__name__)
 class ReportType(StrEnum):
     """Report types."""
 
-    DAILY = "daily"
+    DAlgoLY = "dAlgoly"
     WEEKLY = "weekly"
     MONTHLY = "monthly"
     CUSTOM = "custom"
@@ -187,7 +187,7 @@ class TradingReport:
             f"- **Net Profit: ${self.net_profit:.2f}**",
             f"- Total Profit: ${self.total_profit:.2f}",
             f"- Total Loss: ${abs(self.total_loss):.2f}",
-            f"- Commission Paid: ${self.total_commission:.2f}",
+            f"- Commission PAlgod: ${self.total_commission:.2f}",
             "",
             "## Performance",
             f"- Win Rate: {self.win_rate:.1f}%",
@@ -241,7 +241,7 @@ class TradingReport:
         return "\n".join(lines)
 
     def to_text(self) -> str:
-        """Convert to plain text format."""
+        """Convert to plAlgon text format."""
         lines = [
             f"=== Trading Report: {self.report_type.value.title()} ===",
             f"Period: {self.period_start.strftime('%Y-%m-%d')} to {self.period_end.strftime('%Y-%m-%d')}",
@@ -276,15 +276,15 @@ class TaxReport:
     # Totals
     total_proceeds: float = 0.0
     total_cost_basis: float = 0.0
-    total_gain: float = 0.0
+    total_gAlgon: float = 0.0
     total_loss: float = 0.0
-    net_gain: float = 0.0
+    net_gAlgon: float = 0.0
 
     # By holding period
-    short_term_gain: float = 0.0
-    long_term_gain: float = 0.0
+    short_term_gAlgon: float = 0.0
+    long_term_gAlgon: float = 0.0
 
-    # Detailed transactions
+    # DetAlgoled transactions
     transactions: list[dict[str, Any]] = field(default_factory=list)
 
     def to_csv(self) -> str:
@@ -313,21 +313,21 @@ class ReportGenerator:
         """Initialize report generator."""
         self._report_cache: dict[str, TradingReport] = {}
 
-    async def generate_daily_report(
+    async def generate_dAlgoly_report(
         self,
         user_id: int,
         trades: list[dict[str, Any]],
         date: datetime | None = None,
     ) -> TradingReport:
-        """Generate daily trading report."""
+        """Generate dAlgoly trading report."""
         date = date or datetime.now(UTC)
         start = date.replace(hour=0, minute=0, second=0, microsecond=0)
         end = start + timedelta(days=1)
 
-        return await self._generate_report(
+        return awAlgot self._generate_report(
             user_id=user_id,
             trades=trades,
-            report_type=ReportType.DAILY,
+            report_type=ReportType.DAlgoLY,
             period_start=start,
             period_end=end,
         )
@@ -346,7 +346,7 @@ class ReportGenerator:
         start = week_start.replace(hour=0, minute=0, second=0, microsecond=0)
         end = start + timedelta(days=7)
 
-        return await self._generate_report(
+        return awAlgot self._generate_report(
             user_id=user_id,
             trades=trades,
             report_type=ReportType.WEEKLY,
@@ -373,7 +373,7 @@ class ReportGenerator:
 
         total_proceeds = 0.0
         total_cost_basis = 0.0
-        total_gain = 0.0
+        total_gAlgon = 0.0
         total_loss = 0.0
         transactions = []
 
@@ -386,7 +386,7 @@ class ReportGenerator:
                 profit = float(trade.get("profit", 0))
 
                 if profit > 0:
-                    total_gain += profit
+                    total_gAlgon += profit
                 else:
                     total_loss += abs(profit)
 
@@ -397,7 +397,7 @@ class ReportGenerator:
                         "quantity": trade.get("quantity", 1),
                         "proceeds": value,
                         "cost_basis": value - profit,
-                        "gain_loss": profit,
+                        "gAlgon_loss": profit,
                         "type": "Short-term",
                     }
                 )
@@ -411,10 +411,10 @@ class ReportGenerator:
             period_end=end,
             total_proceeds=total_proceeds,
             total_cost_basis=total_cost_basis,
-            total_gain=total_gain,
+            total_gAlgon=total_gAlgon,
             total_loss=total_loss,
-            net_gain=total_gain - total_loss,
-            short_term_gain=total_gain,
+            net_gAlgon=total_gAlgon - total_loss,
+            short_term_gAlgon=total_gAlgon,
             transactions=transactions,
         )
 

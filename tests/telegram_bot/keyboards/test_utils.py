@@ -284,7 +284,7 @@ class TestButtonCreation:
         assert result[0][0].text == "1"
         assert result[0][1].text == "2"
         assert result[0][2].text == "3"
-        # Проверяем порядок во второй строке
+        # Проверяем порядок во втоSwarm строке
         assert result[1][0].text == "4"
         assert result[1][1].text == "5"
         assert result[1][2].text == "6"

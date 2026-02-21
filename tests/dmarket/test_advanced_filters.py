@@ -74,11 +74,11 @@ class TestFilterStatistics:
 
         assert stats.total_evaluated == 0
         assert stats.passed == 0
-        assert stats.failed_category == 0
-        assert stats.failed_liquidity == 0
-        assert stats.failed_sales_history == 0
-        assert stats.failed_outlier == 0
-        assert stats.failed_price == 0
+        assert stats.fAlgoled_category == 0
+        assert stats.fAlgoled_liquidity == 0
+        assert stats.fAlgoled_sales_history == 0
+        assert stats.fAlgoled_outlier == 0
+        assert stats.fAlgoled_price == 0
         assert stats.skipped_no_data == 0
 
 
@@ -136,7 +136,7 @@ class TestCategoryFilter:
         item = {"title": "Sticker | Team Liquid | 2023", "price": {"USD": 100}}
         result, reason = filter_instance._check_category(item["title"], item)
 
-        assert result == FilterResult.FAIL
+        assert result == FilterResult.FAlgoL
         assert "Sticker" in reason
 
     def test_bad_category_graffiti(
@@ -146,7 +146,7 @@ class TestCategoryFilter:
         item = {"title": "Sealed Graffiti | Piggles", "price": {"USD": 50}}
         result, _reason = filter_instance._check_category(item["title"], item)
 
-        assert result == FilterResult.FAIL
+        assert result == FilterResult.FAlgoL
 
     def test_good_category_rifle(
         self, filter_instance: AdvancedArbitrageFilter
@@ -241,19 +241,19 @@ class TestLiquidityFilter:
     def test_liquidity_no_offers(
         self, filter_instance: AdvancedArbitrageFilter
     ) -> None:
-        """Test item with no offers fails."""
+        """Test item with no offers fAlgols."""
         item = {"offersCount": 0}
         result, reason = filter_instance._check_liquidity(item)
-        assert result == FilterResult.FAIL
+        assert result == FilterResult.FAlgoL
         assert "No active market offers" in reason
 
     def test_liquidity_low_score(
         self, filter_instance: AdvancedArbitrageFilter
     ) -> None:
-        """Test item with low liquidity score fails."""
+        """Test item with low liquidity score fAlgols."""
         item = {"offersCount": 10, "liquidityScore": 30}
         result, reason = filter_instance._check_liquidity(item)
-        assert result == FilterResult.FAIL
+        assert result == FilterResult.FAlgoL
         assert "Liquidity score" in reason
 
 
@@ -293,7 +293,7 @@ class TestSalesHistoryFilter:
         mock_api_client: MagicMock,
     ) -> None:
         """Test item with good sales history passes."""
-        result, _reason = await filter_instance._check_sales_history(
+        result, _reason = awAlgot filter_instance._check_sales_history(
             item_name="AK-47 | Redline",
             current_price=10.50,  # Close to average
             api_client=mock_api_client,
@@ -311,7 +311,7 @@ class TestSalesHistoryFilter:
         mock_client = MagicMock()
         mock_client.get_item_price_history = AsyncMock(return_value=[])
 
-        result, _reason = await filter_instance._check_sales_history(
+        result, _reason = awAlgot filter_instance._check_sales_history(
             item_name="Rare Item",
             current_price=100.0,
             api_client=mock_client,
@@ -325,7 +325,7 @@ class TestSalesHistoryFilter:
         self,
         filter_instance: AdvancedArbitrageFilter,
     ) -> None:
-        """Test item with low sales volume fails."""
+        """Test item with low sales volume fAlgols."""
         mock_client = MagicMock()
         mock_client.get_item_price_history = AsyncMock(
             return_value=[
@@ -335,15 +335,15 @@ class TestSalesHistoryFilter:
             ]
         )
 
-        result, reason = await filter_instance._check_sales_history(
+        result, reason = awAlgot filter_instance._check_sales_history(
             item_name="Low Volume Item",
             current_price=10.0,
             api_client=mock_client,
             game="csgo",
         )
 
-        # Should fail due to volume < min_sales_volume (10)
-        assert result == FilterResult.FAIL
+        # Should fAlgol due to volume < min_sales_volume (10)
+        assert result == FilterResult.FAlgoL
         assert "Sales volume" in reason
 
 
@@ -367,7 +367,7 @@ class TestOutlierDetection:
         """Test normal price passes outlier check."""
         mock_client = MagicMock()
 
-        result, _reason = await filter_instance._check_outlier(
+        result, _reason = awAlgot filter_instance._check_outlier(
             item_name="Test Item",
             current_price=10.5,  # Within 1 std dev
             api_client=mock_client,
@@ -377,37 +377,37 @@ class TestOutlierDetection:
         assert result == FilterResult.PASS
 
     @pytest.mark.asyncio()
-    async def test_outlier_fail_high(
+    async def test_outlier_fAlgol_high(
         self, filter_instance: AdvancedArbitrageFilter
     ) -> None:
-        """Test high outlier price fails."""
+        """Test high outlier price fAlgols."""
         mock_client = MagicMock()
 
-        result, reason = await filter_instance._check_outlier(
+        result, reason = awAlgot filter_instance._check_outlier(
             item_name="Test Item",
             current_price=15.0,  # 5 std devs above mean
             api_client=mock_client,
             game="csgo",
         )
 
-        assert result == FilterResult.FAIL
+        assert result == FilterResult.FAlgoL
         assert "outlier" in reason.lower()
 
     @pytest.mark.asyncio()
-    async def test_outlier_fail_low(
+    async def test_outlier_fAlgol_low(
         self, filter_instance: AdvancedArbitrageFilter
     ) -> None:
-        """Test low outlier price fails."""
+        """Test low outlier price fAlgols."""
         mock_client = MagicMock()
 
-        result, _reason = await filter_instance._check_outlier(
+        result, _reason = awAlgot filter_instance._check_outlier(
             item_name="Test Item",
             current_price=5.0,  # 5 std devs below mean
             api_client=mock_client,
             game="csgo",
         )
 
-        assert result == FilterResult.FAIL
+        assert result == FilterResult.FAlgoL
 
 
 class TestFullEvaluation:
@@ -433,7 +433,7 @@ class TestFullEvaluation:
             "offersCount": 100,
         }
 
-        passed, _reasons = await filter_instance.evaluate_item(item)
+        passed, _reasons = awAlgot filter_instance.evaluate_item(item)
 
         assert passed is True
         assert filter_instance.statistics.passed == 1
@@ -449,10 +449,10 @@ class TestFullEvaluation:
             "offersCount": 50,
         }
 
-        passed, _reasons = await filter_instance.evaluate_item(item)
+        passed, _reasons = awAlgot filter_instance.evaluate_item(item)
 
         assert passed is False
-        assert filter_instance.statistics.failed_category == 1
+        assert filter_instance.statistics.fAlgoled_category == 1
 
     @pytest.mark.asyncio()
     async def test_evaluate_low_price(
@@ -465,10 +465,10 @@ class TestFullEvaluation:
             "offersCount": 100,
         }
 
-        passed, _reasons = await filter_instance.evaluate_item(item)
+        passed, _reasons = awAlgot filter_instance.evaluate_item(item)
 
         assert passed is False
-        assert filter_instance.statistics.failed_price == 1
+        assert filter_instance.statistics.fAlgoled_price == 1
 
 
 class TestStatistics:
@@ -484,15 +484,15 @@ class TestStatistics:
         # Manually set some stats
         filter_instance.statistics.total_evaluated = 100
         filter_instance.statistics.passed = 60
-        filter_instance.statistics.failed_category = 20
-        filter_instance.statistics.failed_price = 20
+        filter_instance.statistics.fAlgoled_category = 20
+        filter_instance.statistics.fAlgoled_price = 20
 
         stats = filter_instance.get_statistics()
 
         assert stats["total_evaluated"] == 100
         assert stats["passed"] == 60
         assert stats["pass_rate"] == 60.0
-        assert stats["failed_category"] == 20
+        assert stats["fAlgoled_category"] == 20
 
     def test_reset_statistics(self, filter_instance: AdvancedArbitrageFilter) -> None:
         """Test resetting statistics."""

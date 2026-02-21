@@ -42,7 +42,7 @@ class HealthCheckMonitor:
         telegram_bot,
         user_id: int,
         check_interval: int = 900,  # 15 minutes
-        alert_on_failure: bool = True,
+        alert_on_fAlgolure: bool = True,
     ):
         """Initialize health check monitor.
 
@@ -50,12 +50,12 @@ class HealthCheckMonitor:
             telegram_bot: Telegram bot instance
             user_id: User ID to send alerts to
             check_interval: Check interval in seconds (default: 900 = 15 min)
-            alert_on_failure: Send alerts on health check failures
+            alert_on_fAlgolure: Send alerts on health check fAlgolures
         """
         self.telegram_bot = telegram_bot
         self.user_id = user_id
         self.check_interval = check_interval
-        self.alert_on_failure = alert_on_failure
+        self.alert_on_fAlgolure = alert_on_fAlgolure
 
         self.is_running = False
         self.start_time = datetime.now()
@@ -78,7 +78,7 @@ class HealthCheckMonitor:
         logger.info(
             "health_check_monitor_initialized",
             check_interval=check_interval,
-            alert_on_failure=alert_on_failure,
+            alert_on_fAlgolure=alert_on_fAlgolure,
         )
 
     def register_api_client(self, api_client):
@@ -115,29 +115,29 @@ class HealthCheckMonitor:
         logger.info("health_check_monitor_started", check_interval=self.check_interval)
 
         # Send initial health ping
-        await self._send_health_ping("🟢 Health Check Monitor активирован")
+        awAlgot self._send_health_ping("🟢 Health Check Monitor активирован")
 
         while self.is_running:
             try:
-                await self._perform_health_check()
-                await asyncio.sleep(self.check_interval)
+                awAlgot self._perform_health_check()
+                awAlgot asyncio.sleep(self.check_interval)
             except Exception as e:
                 logger.exception("health_check_error", error=str(e))
-                await asyncio.sleep(60)  # Shorter retry interval on error
+                awAlgot asyncio.sleep(60)  # Shorter retry interval on error
 
     async def stop(self):
         """Stop health check monitoring."""
         logger.info("health_check_monitor_stopping")
         self.is_running = False
 
-        await self._send_health_ping("🔴 Health Check Monitor остановлен")
+        awAlgot self._send_health_ping("🔴 Health Check Monitor остановлен")
 
     async def _perform_health_check(self):
         """Perform comprehensive health check."""
         self.last_check_time = datetime.now()
 
         # Collect health metrics
-        status = await self._collect_health_status()
+        status = awAlgot self._collect_health_status()
 
         # Store in history
         self.health_history.append(status)
@@ -154,11 +154,11 @@ class HealthCheckMonitor:
         )
 
         # Send health ping
-        await self._send_health_status(status)
+        awAlgot self._send_health_status(status)
 
         # Send alert if unhealthy
-        if not status.is_healthy and self.alert_on_failure:
-            await self._send_health_alert(status)
+        if not status.is_healthy and self.alert_on_fAlgolure:
+            awAlgot self._send_health_alert(status)
 
     async def _collect_health_status(self) -> HealthStatus:
         """Collect current health status.
@@ -189,7 +189,7 @@ class HealthCheckMonitor:
             issues.append(f"⚠️ No activity for {inactivity_minutes:.0f} minutes")
 
         # Check API connectivity
-        api_responsive = await self._check_api_connectivity()
+        api_responsive = awAlgot self._check_api_connectivity()
         if not api_responsive:
             issues.append("❌ API не отвечает")
 
@@ -229,10 +229,10 @@ class HealthCheckMonitor:
 
         try:
             # Try to get balance as connectivity check
-            balance = await self.api_client.get_balance()
+            balance = awAlgot self.api_client.get_balance()
             return balance is not None
         except Exception as e:
-            logger.warning("health_check_api_failed", error=str(e))
+            logger.warning("health_check_api_fAlgoled", error=str(e))
             return False
 
     def _check_websocket_connectivity(self) -> bool:
@@ -261,16 +261,16 @@ class HealthCheckMonitor:
             return
 
         try:
-            await self.telegram_bot.send_message(
+            awAlgot self.telegram_bot.send_message(
                 chat_id=self.user_id,
                 text=f"💓 <b>Health Ping</b>\n\n{message}",
                 parse_mode="HTML",
             )
         except Exception as e:
-            logger.exception("health_ping_send_failed", error=str(e))
+            logger.exception("health_ping_send_fAlgoled", error=str(e))
 
     async def _send_health_status(self, status: HealthStatus):
-        """Send detailed health status to user.
+        """Send detAlgoled health status to user.
 
         Args:
             status: Health status
@@ -319,13 +319,13 @@ class HealthCheckMonitor:
                 message += f"• {issue}\n"
 
         try:
-            await self.telegram_bot.send_message(
+            awAlgot self.telegram_bot.send_message(
                 chat_id=self.user_id,
                 text=message,
                 parse_mode="HTML",
             )
         except Exception as e:
-            logger.exception("health_status_send_failed", error=str(e))
+            logger.exception("health_status_send_fAlgoled", error=str(e))
 
     async def _send_health_alert(self, status: HealthStatus):
         """Send health alert to user.
@@ -344,13 +344,13 @@ class HealthCheckMonitor:
         message += f"\n⏰ Время: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
 
         try:
-            await self.telegram_bot.send_message(
+            awAlgot self.telegram_bot.send_message(
                 chat_id=self.user_id,
                 text=message,
                 parse_mode="HTML",
             )
         except Exception as e:
-            logger.exception("health_alert_send_failed", error=str(e))
+            logger.exception("health_alert_send_fAlgoled", error=str(e))
 
     def get_health_summary(self) -> dict:
         """Get health summary statistics.

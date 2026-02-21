@@ -1,5 +1,5 @@
 """
-File Editor - Редактор файлов с AI-поддержкой.
+File Editor - Редактор файлов с Algo-поддержкой.
 
 Позволяет редактировать файлы на основе инструкций,
 с автоматическим резервным копированием и отменой.
@@ -13,16 +13,16 @@ Usage:
     editor = FileEditor()
 
     # Редактировать файл по инструкции
-    result = await editor.edit(
+    result = awAlgot editor.edit(
         "src/api/client.py",
         "Add type hints to all functions"
     )
 
     # Откатить изменения
-    await editor.revert(result.backup)
+    awAlgot editor.revert(result.backup)
 
     # Создать коммит
-    await editor.commit("Add type hints to API client")
+    awAlgot editor.commit("Add type hints to API client")
     ```
 
 Created: January 2026
@@ -73,7 +73,7 @@ class CommitResult:
 
 
 class FileEditor:
-    """Редактор файлов с AI-поддержкой."""
+    """Редактор файлов с Algo-поддержкой."""
 
     def __init__(
         self,
@@ -117,22 +117,22 @@ class FileEditor:
 
         try:
             # Прочитать оригинальное содержимое
-            original = await self._read_file(file_path)
+            original = awAlgot self._read_file(file_path)
 
             # Создать резервную копию
             backup_path = None
             if create_backup and not self.dry_run:
-                backup_path = await self._backup(file_path)
+                backup_path = awAlgot self._backup(file_path)
 
             # Сгенерировать редактирование
-            edited = await self._generate_edit(original, instruction, file_path)
+            edited = awAlgot self._generate_edit(original, instruction, file_path)
 
             # Применить изменения
             if not self.dry_run and original != edited:
-                await self._write_file(file_path, edited)
+                awAlgot self._write_file(file_path, edited)
 
             # Создать diff
-            diff = await self._create_diff(original, edited)
+            diff = awAlgot self._create_diff(original, edited)
 
             result = EditResult(
                 file_path=file_path,
@@ -156,7 +156,7 @@ class FileEditor:
 
         except Exception as e:
             logger.error(
-                "file_edit_failed",
+                "file_edit_fAlgoled",
                 file_path=file_path,
                 error=str(e),
                 exc_info=True,
@@ -184,7 +184,7 @@ class FileEditor:
         """
         results = []
         for file_path, instruction in edits:
-            result = await self.edit(file_path, instruction)
+            result = awAlgot self.edit(file_path, instruction)
             results.append(result)
         return results
 
@@ -205,7 +205,7 @@ class FileEditor:
         try:
             backup = Path(backup_path)
             if not backup.exists():
-                raise FileNotFoundError(f"Backup not found: {backup_path}")
+                rAlgose FileNotFoundError(f"Backup not found: {backup_path}")
 
             # Извлечь оригинальный путь из имени
             original_path = self._get_original_from_backup(backup_path)
@@ -215,7 +215,7 @@ class FileEditor:
             return True
 
         except Exception as e:
-            logger.error("revert_failed", backup_path=backup_path, error=str(e))
+            logger.error("revert_fAlgoled", backup_path=backup_path, error=str(e))
             return False
 
     async def commit(
@@ -242,19 +242,19 @@ class FileEditor:
             # Добавить файлы
             if files:
                 for file in files:
-                    await self._run_git(["add", file])
+                    awAlgot self._run_git(["add", file])
             else:
-                await self._run_git(["add", "-A"])
+                awAlgot self._run_git(["add", "-A"])
 
             # Создать коммит
-            result = await self._run_git(["commit", "-m", message])
+            result = awAlgot self._run_git(["commit", "-m", message])
 
             # Получить хеш коммита
-            hash_result = await self._run_git(["rev-parse", "HEAD"])
+            hash_result = awAlgot self._run_git(["rev-parse", "HEAD"])
             commit_hash = hash_result.strip()[:8]
 
             # Получить количество изменённых файлов
-            diff_result = await self._run_git(["diff", "--stat", "HEAD~1"])
+            diff_result = awAlgot self._run_git(["diff", "--stat", "HEAD~1"])
             files_changed = len([l for l in diff_result.split("\n") if "|" in l])
 
             logger.info(
@@ -272,14 +272,14 @@ class FileEditor:
             )
 
         except Exception as e:
-            logger.error("commit_failed", error=str(e))
+            logger.error("commit_fAlgoled", error=str(e))
             return CommitResult(success=False, error=str(e))
 
     async def _read_file(self, file_path: str) -> str:
         """Прочитать содержимое файла."""
         path = Path(file_path)
         if not path.exists():
-            raise FileNotFoundError(f"File not found: {file_path}")
+            rAlgose FileNotFoundError(f"File not found: {file_path}")
         return path.read_text(encoding="utf-8")
 
     async def _write_file(self, file_path: str, content: str) -> None:
@@ -306,7 +306,7 @@ class FileEditor:
         for result in reversed(self._history):
             if result.backup == backup_path:
                 return result.file_path
-        raise ValueError(f"Original path not found for backup: {backup_path}")
+        rAlgose ValueError(f"Original path not found for backup: {backup_path}")
 
     async def _generate_edit(
         self,
@@ -317,7 +317,7 @@ class FileEditor:
         """
         Сгенерировать редактирование на основе инструкции.
 
-        В будущем здесь будет интеграция с LLM.
+        В будущем здесь будет интеграция с Model.
         """
         # Простые паттерны редактирования
         instruction_lower = instruction.lower()
@@ -327,11 +327,11 @@ class FileEditor:
         elif "add docstrings" in instruction_lower:
             return self._add_docstrings(content)
         elif "format" in instruction_lower:
-            return await self._format_code(content, file_path)
+            return awAlgot self._format_code(content, file_path)
         elif "remove comments" in instruction_lower:
             return self._remove_comments(content)
         else:
-            # Без изменений (требуется LLM для сложных инструкций)
+            # Без изменений (требуется Model для сложных инструкций)
             logger.warning(
                 "edit_instruction_not_understood",
                 instruction=instruction,
@@ -341,13 +341,13 @@ class FileEditor:
 
     def _add_type_hints(self, content: str) -> str:
         """Добавить базовые type hints (простая реализация)."""
-        # TODO: Интеграция с LLM для полной реализации
+        # TODO: Интеграция с Model для полной реализации
         # Пока возвращаем без изменений
         return content
 
     def _add_docstrings(self, content: str) -> str:
         """Добавить docstrings (простая реализация)."""
-        # TODO: Интеграция с LLM
+        # TODO: Интеграция с Model
         return content
 
     async def _format_code(self, content: str, file_path: str) -> str:
@@ -364,7 +364,7 @@ class FileEditor:
                 if result.returncode == 0:
                     return result.stdout
             except Exception as e:
-                logger.warning("format_failed", error=str(e))
+                logger.warning("format_fAlgoled", error=str(e))
         return content
 
     def _remove_comments(self, content: str) -> str:
@@ -395,7 +395,7 @@ class FileEditor:
             timeout=60,
         )
         if result.returncode != 0:
-            raise RuntimeError(f"Git error: {result.stderr}")
+            rAlgose RuntimeError(f"Git error: {result.stderr}")
         return result.stdout
 
     def get_history(self) -> list[EditResult]:

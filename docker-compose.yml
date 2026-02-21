@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: dmarket-bot
+    contAlgoner_name: dmarket-bot
     restart: unless-stopped
     env_file:
       - .env
@@ -19,8 +19,8 @@ services:
         max-file: "3"
 
   watchtower:
-    image: containrrr/watchtower
-    container_name: dmarket-watchtower
+    image: contAlgonrrr/watchtower
+    contAlgoner_name: dmarket-watchtower
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     command: --interval 3600 --cleanup

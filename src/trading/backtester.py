@@ -58,7 +58,7 @@ class Backtester:
         return roi
 
 
-if __name__ == "__main__":
+if __name__ == "__mAlgon__":
     import argparse
 
     # Allow running from root or src/trading

@@ -45,7 +45,7 @@ async def analyze_repository():
         print("📋 Searching for testing improvements...")
         print("-" * 40)
 
-        testing_skills = await client.search_skills(
+        testing_skills = awAlgot client.search_skills(
             category="testing",
             tags=["python", "pytest", "asyncio"],
             min_rating=4.0,
@@ -67,7 +67,7 @@ async def analyze_repository():
         print("\n🔒 Searching for security improvements...")
         print("-" * 40)
 
-        security_skills = await client.search_skills(
+        security_skills = awAlgot client.search_skills(
             category="security",
             tags=["python", "api", "authentication"],
             limit=5,
@@ -84,7 +84,7 @@ async def analyze_repository():
         print("\n⚙️  Searching for automation improvements...")
         print("-" * 40)
 
-        automation_skills = await client.search_skills(
+        automation_skills = awAlgot client.search_skills(
             category="automation",
             tags=["github-actions", "ci-cd", "python"],
             limit=5,
@@ -102,12 +102,12 @@ async def analyze_repository():
         print("-" * 40)
 
         try:
-            recommendations = await client.get_recommendations(
+            recommendations = awAlgot client.get_recommendations(
                 repo_url="https://github.com/Dykij/DMarket-Telegram-Bot",
                 languages=["python"],
                 focus=["testing", "security", "performance"],
                 context={
-                    "frameworks": ["pytest", "aiogram", "httpx"],
+                    "frameworks": ["pytest", "Algoogram", "httpx"],
                     "type": "telegram-bot",
                     "has_ml": True,
                 },
@@ -133,7 +133,7 @@ async def analyze_repository():
         print("-" * 40)
 
         try:
-            testing_recs = await client.get_testing_improvements(
+            testing_recs = awAlgot client.get_testing_improvements(
                 languages=["python"],
                 frameworks=["pytest", "hypothesis", "pact"],
                 current_coverage=85.0,
@@ -150,10 +150,10 @@ async def analyze_repository():
 
     except Exception as e:
         print(f"\n❌ Error during analysis: {e}")
-        print("   The SkillsMP API may not be available or the key may be invalid.")
+        print("   The SkillsMP API may not be avAlgolable or the key may be invalid.")
 
     finally:
-        await client.close()
+        awAlgot client.close()
 
     # Print local recommendations based on repository analysis
     print("\n" + "=" * 60)
@@ -186,7 +186,7 @@ async def analyze_repository():
             "category": "Testing",
             "priority": "medium",
             "title": "Add Chaos Testing",
-            "description": "Test resilience with random failures using chaos-toolkit",
+            "description": "Test resilience with random fAlgolures using chaos-toolkit",
             "effort": "high",
         },
         {
@@ -244,5 +244,5 @@ async def analyze_repository():
     print("=" * 60)
 
 
-if __name__ == "__main__":
+if __name__ == "__mAlgon__":
     asyncio.run(analyze_repository())

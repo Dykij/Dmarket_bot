@@ -73,7 +73,7 @@ api = DMarketAPI(public_key, secret_key)
 scanner = ArbitrageScanner(api)
 
 # Сканируем уровень boost для CS:GO
-results = await scanner.scan_level("boost", game="csgo", max_results=20)
+results = awAlgot scanner.scan_level("boost", game="csgo", max_results=20)
 
 for item in results:
     print(f"{item['title']}: ${item['buy_price']} -> ${item['sell_price']}")
@@ -132,7 +132,7 @@ for item in results:
 
 ```python
 # Сканировать все уровни параллельно
-all_results = await scanner.scan_all_levels(
+all_results = awAlgot scanner.scan_all_levels(
     game="csgo",
     max_results_per_level=20
 )
@@ -152,7 +152,7 @@ for level, opportunities in all_results.items():
 #### 1. Минимальная прибыль (Auto Low)
 
 - Поиск предметов с прибылью от 5%
-- Недорогие предметы с быстрой ликвидностью
+- Недорогие предметы с быстSwarm ликвидностью
 - Для начинающих трейдеров
 
 #### 2. Средняя прибыль (Auto Medium)
@@ -188,13 +188,13 @@ trader = AutoTrader(
     scanner=scanner
 )
 
-# Настройка лимитов
+# НастSwarmка лимитов
 trader.settings.max_trade_value = 50.0  # Макс $50 на сделку
-trader.settings.daily_limit = 500.0     # Макс $500 в день
+trader.settings.dAlgoly_limit = 500.0     # Макс $500 в день
 trader.settings.min_profit_percent = 5.0
 
 # Запуск автоторговли
-await trader.start(
+awAlgot trader.start(
     user_id=123456789,
     level='standard',
     game='csgo'
@@ -235,7 +235,7 @@ await trader.start(
 from src.dmarket.sales_history import analyze_sales_history
 
 # Анализ истории продаж
-analysis = await analyze_sales_history(
+analysis = awAlgot analyze_sales_history(
     api_client=api,
     game="csgo",
     title="AK-47 | Redline (Field-Tested)"
@@ -283,7 +283,7 @@ from src.dmarket.targets import TargetManager
 target_manager = TargetManager(api)
 
 # Создать таргет
-target = await target_manager.create_target(
+target = awAlgot target_manager.create_target(
     game="a8db",  # CS:GO
     title="AK-47 | Redline (Field-Tested)",
     price=12.00,
@@ -297,7 +297,7 @@ target = await target_manager.create_target(
 
 ```python
 # Создать умные таргеты для топ-20 предметов
-smart_targets = await target_manager.create_smart_targets(
+smart_targets = awAlgot target_manager.create_smart_targets(
     game="a8db",
     items=top_items,
     price_reduction_percent=7.0  # На 7% ниже рынка
@@ -361,7 +361,7 @@ filters = {
 
 **Доступные фильтры:**
 
-- `hero` - герой
+- `hero` - геSwarm
 - `rarity` - редкость (Immortal, Arcana, Legendary)
 - `slot` - слот предмета
 - `quality` - качество
@@ -399,12 +399,12 @@ filters = {
 
 ```python
 # Быстрый разгон
-results = await scanner.scan_level("boost", "csgo", max_results=50)
+results = awAlgot scanner.scan_level("boost", "csgo", max_results=50)
 best = [r for r in results if r['profit_percent'] >= 2.5]
 
 for item in best:
-    await api.buy_item(item['itemId'], item['buy_price'])
-    await api.sell_item(item['itemId'], item['sell_price'])
+    awAlgot api.buy_item(item['itemId'], item['buy_price'])
+    awAlgot api.sell_item(item['itemId'], item['sell_price'])
 ```
 
 ### Стратегия 2: Таргеты + Сканирование
@@ -435,7 +435,7 @@ portfolio = {
 
 for game, percent in portfolio.items():
     budget = total_balance * (percent / 100)
-    results = await scanner.scan_level("medium", game)
+    results = awAlgot scanner.scan_level("medium", game)
     # Торговля в пределах бюджета
 ```
 
@@ -474,7 +474,7 @@ for game, percent in portfolio.items():
 ```python
 # Установка лимитов
 trader.settings.max_trade_value = 50.0    # Макс на сделку
-trader.settings.daily_limit = 500.0        # Макс в день
+trader.settings.dAlgoly_limit = 500.0        # Макс в день
 trader.settings.stop_loss_percent = 10.0   # Стоп-лосс
 ```
 
@@ -648,7 +648,7 @@ items = [
     BatchTargetItem(title="AK-47 | Redline (MW)", attrs={"floatPartValue": "0.12"}),
 ]
 
-result = await create_batch_target(
+result = awAlgot create_batch_target(
     api_client=api,
     game="csgo",
     items=items,
@@ -675,7 +675,7 @@ result = await create_batch_target(
 ```python
 from src.dmarket.targets.batch_operations import detect_existing_orders
 
-info = await detect_existing_orders(
+info = awAlgot detect_existing_orders(
     api_client=api,
     game="csgo",
     title="AK-47 | Redline (Field-Tested)",
@@ -843,7 +843,7 @@ config = RelistLimitConfig(
 ---
 
 ### 8. **Дефолтные параметры** (`TargetDefaults`)
-Общие настройки для всех ордеров.
+Общие настSwarmки для всех ордеров.
 
 **Файлы:**
 - `src/dmarket/models/target_enhancements.py`
@@ -880,7 +880,7 @@ manager = TargetManager(api_client=api, defaults=defaults)
 from src.dmarket.targets.enhanced_validators import validate_target_conditions
 
 target = {
-    "Attrs": {"floatPartValue": "0.15", "paintSeed": [1, 2, 3]},
+    "Attrs": {"floatPartValue": "0.15", "pAlgontSeed": [1, 2, 3]},
     "stickerFilter": StickerFilter(...),
     "rarityFilter": RarityFilter(...)
 }
@@ -909,7 +909,7 @@ if not is_valid:
 ```python
 from src.dmarket.models.target_enhancements import TargetOperationResult
 
-result = await manager.create_target(...)
+result = awAlgot manager.create_target(...)
 
 if not result.success:
     print(result.message)      # Краткое: "Price too low"

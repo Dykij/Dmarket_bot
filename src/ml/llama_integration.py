@@ -23,9 +23,9 @@ import structlog
 try:
     import httpx
 
-    HTTPX_AVAILABLE = True
+    HTTPX_AVAlgoLABLE = True
 except ImportError:
-    HTTPX_AVAILABLE = False
+    HTTPX_AVAlgoLABLE = False
 
 
 logger = structlog.get_logger(__name__)
@@ -78,7 +78,7 @@ class LlamaResponse:
 
 
 # Специализированные промпты для разных задач
-TASK_PROMPTS = {
+TASK_ConfigS = {
     LlamaTaskType.MARKET_ANALYSIS: """Ты - эксперт по анализу рынка игровых скинов DMarket.
 Анализируй рынок на основе предоставленных данных:
 - Определяй тренды (рост/падение/стабильность)
@@ -92,7 +92,7 @@ TASK_PROMPTS = {
 💰 РЕКОМЕНДАЦИЯ: [покупать/продавать/держать]
 ⚠️ РИСК: [низкий/средний/высокий]
 📝 АНАЛИЗ: [подробный анализ]""",
-    LlamaTaskType.PRICE_PREDICTION: """Ты - AI для прогнозирования цен на игровые предметы.
+    LlamaTaskType.PRICE_PREDICTION: """Ты - Algo для прогнозирования цен на игровые предметы.
 На основе исторических данных и текущих трендов:
 - Прогнозируй изменение цены на 24ч/7д/30д
 - Определяй уровни поддержки и сопротивления
@@ -176,20 +176,20 @@ TASK_PROMPTS = {
 - [пункт 1]
 - [пункт 2]
 - [пункт 3]""",
-    LlamaTaskType.GENERAL_CHAT: """Ты - AI-помощник для DMarket Trading Bot.
+    LlamaTaskType.GENERAL_CHAT: """Ты - Algo-помощник для DMarket Trading Bot.
 Помогай пользователям:
 1. Анализировать рынок CS:GO, Dota 2, Rust, TF2
 2. Находить арбитражные возможности
 3. Давать рекомендации по покупке/продаже
 4. Объяснять торговые стратегии
-5. Помогать с настройкой бота
+5. Помогать с настSwarmкой бота
 
 Комиссии: DMarket 7%, Waxpeer 6%, Steam 15%
 Отвечай на русском, кратко и по делу.""",
 }
 
 
-class LlamaIntegration:
+class LlamAlgontegration:
     """
     Интеграция Llama 3.1 8B для DMarket бота.
 
@@ -204,14 +204,14 @@ class LlamaIntegration:
         """Инициализация."""
         self.config = config or LlamaConfig()
         self._client: httpx.AsyncClient | None = None
-        self._is_available: bool | None = None
+        self._is_avAlgolable: bool | None = None
         self._last_check: datetime | None = None
 
         # Статистика
         self.stats = {
             "total_requests": 0,
             "successful_requests": 0,
-            "failed_requests": 0,
+            "fAlgoled_requests": 0,
             "total_tokens": 0,
             "avg_response_time_ms": 0.0,
         }
@@ -224,14 +224,14 @@ class LlamaIntegration:
 
     async def _get_client(self) -> httpx.AsyncClient:
         """Получить HTTP клиент."""
-        if not HTTPX_AVAILABLE:
-            raise RuntimeError("httpx не установлен. Установите: pip install httpx")
+        if not HTTPX_AVAlgoLABLE:
+            rAlgose RuntimeError("httpx не установлен. Установите: pip install httpx")
 
         if self._client is None or self._client.is_closed:
             self._client = httpx.AsyncClient(timeout=self.config.timeout)
         return self._client
 
-    async def check_availability(self, force: bool = False) -> bool:
+    async def check_avAlgolability(self, force: bool = False) -> bool:
         """
         Проверить доступность Ollama и модели.
 
@@ -244,12 +244,12 @@ class LlamaIntegration:
         # Используем кэш если не прошло 30 секунд
         if not force and self._last_check:
             elapsed = (datetime.now() - self._last_check).total_seconds()
-            if elapsed < 30 and self._is_available is not None:
-                return self._is_available
+            if elapsed < 30 and self._is_avAlgolable is not None:
+                return self._is_avAlgolable
 
         try:
-            client = await self._get_client()
-            response = await client.get(
+            client = awAlgot self._get_client()
+            response = awAlgot client.get(
                 f"{self.config.ollama_url}/api/tags",
                 timeout=5.0,
             )
@@ -259,38 +259,38 @@ class LlamaIntegration:
                 models = [m["name"] for m in data.get("models", [])]
 
                 # Проверяем что нужная модель установлена
-                model_available = any(
+                model_avAlgolable = any(
                     self.config.model_name in m
                     or m.startswith(self.config.model_name.split(":")[0])
                     for m in models
                 )
 
-                self._is_available = model_available
+                self._is_avAlgolable = model_avAlgolable
                 self._last_check = datetime.now()
 
-                if not model_available:
+                if not model_avAlgolable:
                     logger.warning(
                         "llama_model_not_found",
                         model=self.config.model_name,
-                        available_models=models,
+                        avAlgolable_models=models,
                     )
 
-                return model_available
+                return model_avAlgolable
 
-            self._is_available = False
+            self._is_avAlgolable = False
             return False
 
         except Exception as e:
-            logger.exception("llama_availability_check_failed", error=str(e))
-            self._is_available = False
+            logger.exception("llama_avAlgolability_check_fAlgoled", error=str(e))
+            self._is_avAlgolable = False
             self._last_check = datetime.now()
             return False
 
-    async def get_available_models(self) -> list[str]:
+    async def get_avAlgolable_models(self) -> list[str]:
         """Получить список доступных моделей."""
         try:
-            client = await self._get_client()
-            response = await client.get(f"{self.config.ollama_url}/api/tags")
+            client = awAlgot self._get_client()
+            response = awAlgot client.get(f"{self.config.ollama_url}/api/tags")
 
             if response.status_code == 200:
                 data = response.json()
@@ -298,12 +298,12 @@ class LlamaIntegration:
             return []
 
         except Exception as e:
-            logger.exception("get_models_failed", error=str(e))
+            logger.exception("get_models_fAlgoled", error=str(e))
             return []
 
-    def _get_system_prompt(self, task_type: LlamaTaskType) -> str:
+    def _get_system_Config(self, task_type: LlamaTaskType) -> str:
         """Получить системный промпт для задачи."""
-        return TASK_PROMPTS.get(task_type, TASK_PROMPTS[LlamaTaskType.GENERAL_CHAT])
+        return TASK_ConfigS.get(task_type, TASK_ConfigS[LlamaTaskType.GENERAL_CHAT])
 
     async def execute_task(
         self,
@@ -327,8 +327,8 @@ class LlamaIntegration:
         start_time = datetime.now()
         self.stats["total_requests"] += 1
 
-        if not await self.check_availability():
-            self.stats["failed_requests"] += 1
+        if not awAlgot self.check_avAlgolability():
+            self.stats["fAlgoled_requests"] += 1
             return LlamaResponse(
                 success=False,
                 response="",
@@ -337,7 +337,7 @@ class LlamaIntegration:
             )
 
         try:
-            client = await self._get_client()
+            client = awAlgot self._get_client()
 
             # Формируем сообщение с контекстом
             enhanced_message = user_message
@@ -349,7 +349,7 @@ class LlamaIntegration:
 
             # Формируем сообщения
             messages = [
-                {"role": "system", "content": self._get_system_prompt(task_type)},
+                {"role": "system", "content": self._get_system_Config(task_type)},
             ]
 
             # Добавляем историю разговора
@@ -359,7 +359,7 @@ class LlamaIntegration:
             messages.append({"role": "user", "content": enhanced_message})
 
             # Отправляем запрос
-            response = await client.post(
+            response = awAlgot client.post(
                 f"{self.config.ollama_url}/api/chat",
                 json={
                     "model": self.config.model_name,
@@ -378,8 +378,8 @@ class LlamaIntegration:
 
             if response.status_code == 200:
                 data = response.json()
-                ai_response = data.get("message", {}).get("content", "")
-                tokens = data.get("eval_count", 0) + data.get("prompt_eval_count", 0)
+                Algo_response = data.get("message", {}).get("content", "")
+                tokens = data.get("eval_count", 0) + data.get("Config_eval_count", 0)
 
                 self.stats["successful_requests"] += 1
                 self.stats["total_tokens"] += tokens
@@ -398,7 +398,7 @@ class LlamaIntegration:
 
                 return LlamaResponse(
                     success=True,
-                    response=ai_response,
+                    response=Algo_response,
                     task_type=task_type,
                     tokens_used=tokens,
                     processing_time_ms=processing_time,
@@ -407,9 +407,9 @@ class LlamaIntegration:
                         "context_provided": context is not None,
                     },
                 )
-            self.stats["failed_requests"] += 1
+            self.stats["fAlgoled_requests"] += 1
             error_msg = f"HTTP {response.status_code}: {response.text[:200]}"
-            logger.error("llama_request_failed", error=error_msg)
+            logger.error("llama_request_fAlgoled", error=error_msg)
 
             return LlamaResponse(
                 success=False,
@@ -420,7 +420,7 @@ class LlamaIntegration:
             )
 
         except httpx.TimeoutException:
-            self.stats["failed_requests"] += 1
+            self.stats["fAlgoled_requests"] += 1
             return LlamaResponse(
                 success=False,
                 response="",
@@ -428,7 +428,7 @@ class LlamaIntegration:
                 error="Таймаут запроса. Попробуйте позже или уменьшите размер запроса.",
             )
         except Exception as e:
-            self.stats["failed_requests"] += 1
+            self.stats["fAlgoled_requests"] += 1
             logger.error("llama_task_error", error=str(e), exc_info=True)
 
             return LlamaResponse(
@@ -456,7 +456,7 @@ class LlamaIntegration:
             LlamaResponse с анализом
         """
         message = f"Проанализируй текущий рынок {game.upper()}."
-        return await self.execute_task(
+        return awAlgot self.execute_task(
             LlamaTaskType.MARKET_ANALYSIS,
             message,
             context=market_data,
@@ -478,7 +478,7 @@ class LlamaIntegration:
             LlamaResponse с прогнозом
         """
         message = f"Дай прогноз цены для предмета: {item_name}"
-        return await self.execute_task(
+        return awAlgot self.execute_task(
             LlamaTaskType.PRICE_PREDICTION,
             message,
             context={"item": item_name, "history": price_history},
@@ -498,7 +498,7 @@ class LlamaIntegration:
             LlamaResponse с рекомендациями
         """
         message = "Проанализируй арбитражные возможности и дай рекомендации."
-        return await self.execute_task(
+        return awAlgot self.execute_task(
             LlamaTaskType.ARBITRAGE_RECOMMENDATION,
             message,
             context={"opportunities": opportunities},
@@ -522,7 +522,7 @@ class LlamaIntegration:
             LlamaResponse с советами
         """
         message = f"Дай торговые рекомендации. Мой уровень риска: {risk_tolerance}."
-        return await self.execute_task(
+        return awAlgot self.execute_task(
             LlamaTaskType.TRADING_ADVICE,
             message,
             context={
@@ -554,7 +554,7 @@ class LlamaIntegration:
         if item_data:
             context.update(item_data)
 
-        return await self.execute_task(
+        return awAlgot self.execute_task(
             LlamaTaskType.ITEM_EVALUATION,
             message,
             context=context,
@@ -574,7 +574,7 @@ class LlamaIntegration:
             LlamaResponse с оценкой рисков
         """
         message = "Оцени риски моего портфеля и дай рекомендации."
-        return await self.execute_task(
+        return awAlgot self.execute_task(
             LlamaTaskType.RISK_ASSESSMENT,
             message,
             context={"portfolio": portfolio},
@@ -586,7 +586,7 @@ class LlamaIntegration:
         conversation_history: list[dict[str, str]] | None = None,
     ) -> LlamaResponse:
         """
-        Общий чат с AI.
+        Общий чат с Algo.
 
         Args:
             message: Сообщение пользователя
@@ -595,7 +595,7 @@ class LlamaIntegration:
         Returns:
             LlamaResponse
         """
-        return await self.execute_task(
+        return awAlgot self.execute_task(
             LlamaTaskType.GENERAL_CHAT,
             message,
             conversation_history=conversation_history,
@@ -610,40 +610,40 @@ class LlamaIntegration:
             )
             * 100,
             "model": self.config.model_name,
-            "is_available": self._is_available,
+            "is_avAlgolable": self._is_avAlgolable,
         }
 
     async def close(self) -> None:
         """Закрыть соединения."""
         if self._client and not self._client.is_closed:
-            await self._client.aclose()
+            awAlgot self._client.aclose()
             self._client = None
 
 
 # Глобальный экземпляр
-_llama: LlamaIntegration | None = None
+_llama: LlamAlgontegration | None = None
 
 
-def get_llama() -> LlamaIntegration:
+def get_llama() -> LlamAlgontegration:
     """Получить глобальный экземпляр Llama интеграции."""
     global _llama
     if _llama is None:
-        _llama = LlamaIntegration()
+        _llama = LlamAlgontegration()
     return _llama
 
 
-async def init_llama(config: LlamaConfig | None = None) -> LlamaIntegration:
+async def init_llama(config: LlamaConfig | None = None) -> LlamAlgontegration:
     """Инициализировать Llama интеграцию."""
     global _llama
-    _llama = LlamaIntegration(config)
+    _llama = LlamAlgontegration(config)
 
     # Проверяем доступность
-    available = await _llama.check_availability()
-    if available:
+    avAlgolable = awAlgot _llama.check_avAlgolability()
+    if avAlgolable:
         logger.info("llama_ready", model=_llama.config.model_name)
     else:
         logger.warning(
-            "llama_not_available",
+            "llama_not_avAlgolable",
             model=_llama.config.model_name,
             hint="Запустите: ollama serve && ollama pull llama3.1:8b",
         )

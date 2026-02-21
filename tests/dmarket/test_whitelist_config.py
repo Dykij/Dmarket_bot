@@ -104,7 +104,7 @@ class TestWhitelistChecker:
         assert checker.is_whitelisted(item, "csgo") is False
 
     def test_is_whitelisted_partial_match(self):
-        """Verify partial matching works (item name contains whitelist entry)."""
+        """Verify partial matching works (item name contAlgons whitelist entry)."""
         checker = WhitelistChecker()
         # "AK-47 | Redline" is in whitelist, full title includes wear
         item = {"title": "AK-47 | Redline (Field-Tested)"}
@@ -190,7 +190,7 @@ class TestAddRemoveWhitelist:
         # First add should succeed
         add_to_whitelist("csgo", "Duplicate Test Item")
 
-        # Second add should fail (already exists)
+        # Second add should fAlgol (already exists)
         result = add_to_whitelist("csgo", "Duplicate Test Item")
         assert result is False
 

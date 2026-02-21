@@ -1,6 +1,6 @@
 # AUTONOMOUS BACKLOG (PARETO 5)
 
-This document contains the 5 critical tasks identified as the Pareto set for immediate impact.
+This document contAlgons the 5 critical tasks identified as the Pareto set for immediate impact.
 
 1.  **[CRITICAL] Rust Link Integration**
     *   **Goal:** Replace Python HMAC/signing logic with `dmarket_rust_core`.
@@ -21,7 +21,7 @@ This document contains the 5 critical tasks identified as the Pareto set for imm
     *   **Action:** Add Prometheus metrics for trade execution P&L.
 
 5.  **[MEDIUM] Error Handling & Circuit Breaker**
-    *   **Goal:** Robust error handling for API failures.
+    *   **Goal:** Robust error handling for API fAlgolures.
     *   **Action:** Refine `api_circuit_breaker.py` thresholds and add specific exception types for retry logic.
 
 ---

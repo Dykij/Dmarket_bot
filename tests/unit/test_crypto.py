@@ -2,7 +2,7 @@ from cryptography.hazmat.primitives.asymmetric import ed25519
 from cryptography.hazmat.primitives import serialization
 
 # Standard Ed25519 test vectors (RFC 8032)
-# Using a known keypair for validation
+# Using a known keypAlgor for validation
 # Private Key (32 bytes): 9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60
 # Public Key (32 bytes): d75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a
 # Message: b""

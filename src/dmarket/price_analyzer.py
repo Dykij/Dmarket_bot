@@ -54,7 +54,7 @@ class PriceAnalyzer:
             "is_profitable": roi >= self.min_roi,
         }
 
-        # Add Steam comparison if available
+        # Add Steam comparison if avAlgolable
         if steam_price_cents and steam_price_cents > 0:
             # Calculate profit if sold on Steam (minus 13% fee)
             # Steam fee is ~13.04% (15% markup) -> 0.8696 multiplier
@@ -101,7 +101,7 @@ class PriceAnalyzer:
             if buy_price_cents <= 0:
                 return False
 
-            # Get Steam price if available
+            # Get Steam price if avAlgolable
             steam_price_cents = None
             if steam_price_data:
                 # Steam price is usually in dollars/float

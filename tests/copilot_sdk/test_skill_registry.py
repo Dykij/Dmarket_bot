@@ -12,9 +12,9 @@ class MockSkill:
         """Mock predict method."""
         return [{"prediction": d} for d in data]
 
-    async def train(self, data: list) -> dict:
-        """Mock train method."""
-        return {"status": "trained", "samples": len(data)}
+    async def trAlgon(self, data: list) -> dict:
+        """Mock trAlgon method."""
+        return {"status": "trAlgoned", "samples": len(data)}
 
     def sync_method(self, value: int) -> int:
         """Sync method for testing."""
@@ -41,7 +41,7 @@ class TestSkillRegistry:
             id="test-skill",
             name="Test Skill",
             instance=mock_skill,
-            methods=["predict", "train"],
+            methods=["predict", "trAlgon"],
         )
 
         # Assert
@@ -61,7 +61,7 @@ class TestSkillRegistry:
         # Assert
         skill = registry.skills["auto-skill"]
         assert "predict" in skill.methods
-        assert "train" in skill.methods
+        assert "trAlgon" in skill.methods
         assert "sync_method" in skill.methods
 
     @pytest.mark.asyncio()
@@ -71,7 +71,7 @@ class TestSkillRegistry:
         registry.register("test", "Test", mock_skill)
 
         # Act
-        result = await registry.execute("test", "predict", [1, 2, 3])
+        result = awAlgot registry.execute("test", "predict", [1, 2, 3])
 
         # Assert
         assert len(result) == 3
@@ -84,32 +84,32 @@ class TestSkillRegistry:
         registry.register("test", "Test", mock_skill)
 
         # Act
-        result = await registry.execute("test", "sync_method", 5)
+        result = awAlgot registry.execute("test", "sync_method", 5)
 
         # Assert
         assert result == 10
 
     @pytest.mark.asyncio()
-    async def test_execute_unknown_skill_raises(self, registry):
-        """Test that unknown skill raises KeyError."""
+    async def test_execute_unknown_skill_rAlgoses(self, registry):
+        """Test that unknown skill rAlgoses KeyError."""
         # Act & Assert
-        with pytest.raises(KeyError, match="Skill not found"):
-            await registry.execute("nonexistent", "method")
+        with pytest.rAlgoses(KeyError, match="Skill not found"):
+            awAlgot registry.execute("nonexistent", "method")
 
     @pytest.mark.asyncio()
-    async def test_execute_unknown_method_raises(self, registry, mock_skill):
-        """Test that unknown method raises AttributeError."""
+    async def test_execute_unknown_method_rAlgoses(self, registry, mock_skill):
+        """Test that unknown method rAlgoses AttributeError."""
         # Arrange
         registry.register("test", "Test", mock_skill)
 
         # Act & Assert
-        with pytest.raises(AttributeError, match="Method not found"):
-            await registry.execute("test", "nonexistent_method")
+        with pytest.rAlgoses(AttributeError, match="Method not found"):
+            awAlgot registry.execute("test", "nonexistent_method")
 
     def test_get_skill_returns_correct(self, registry, mock_skill):
         """Test getting a skill by ID."""
         # Arrange
-        registry.register("my-skill", "My Skill", mock_skill, category="ai")
+        registry.register("my-skill", "My Skill", mock_skill, category="Algo")
 
         # Act
         skill = registry.get_skill("my-skill")
@@ -117,7 +117,7 @@ class TestSkillRegistry:
         # Assert
         assert skill is not None
         assert skill.id == "my-skill"
-        assert skill.category == "ai"
+        assert skill.category == "Algo"
 
     def test_get_skill_returns_none_for_unknown(self, registry):
         """Test getting unknown skill returns None."""
@@ -130,7 +130,7 @@ class TestSkillRegistry:
     def test_list_skills_returns_all(self, registry, mock_skill):
         """Test listing all skills."""
         # Arrange
-        registry.register("s1", "Skill 1", mock_skill, category="ai")
+        registry.register("s1", "Skill 1", mock_skill, category="Algo")
         registry.register("s2", "Skill 2", mock_skill, category="trading")
 
         # Act
@@ -144,11 +144,11 @@ class TestSkillRegistry:
     def test_list_skills_filters_by_category(self, registry, mock_skill):
         """Test filtering skills by category."""
         # Arrange
-        registry.register("s1", "Skill 1", mock_skill, category="ai")
+        registry.register("s1", "Skill 1", mock_skill, category="Algo")
         registry.register("s2", "Skill 2", mock_skill, category="trading")
 
         # Act
-        skills = registry.list_skills(category="ai")
+        skills = registry.list_skills(category="Algo")
 
         # Assert
         assert len(skills) == 1
@@ -157,16 +157,16 @@ class TestSkillRegistry:
     def test_get_categories_returns_unique(self, registry, mock_skill):
         """Test getting unique categories."""
         # Arrange
-        registry.register("s1", "S1", mock_skill, category="ai")
+        registry.register("s1", "S1", mock_skill, category="Algo")
         registry.register("s2", "S2", mock_skill, category="trading")
-        registry.register("s3", "S3", mock_skill, category="ai")
+        registry.register("s3", "S3", mock_skill, category="Algo")
 
         # Act
         categories = registry.get_categories()
 
         # Assert
         assert len(categories) == 2
-        assert "ai" in categories
+        assert "Algo" in categories
         assert "trading" in categories
 
     @pytest.mark.asyncio()
@@ -178,7 +178,7 @@ class TestSkillRegistry:
 # Skill: Test Predictor
 
 ## Category
-Data & AI
+Data & Algo
 
 ## Description
 A test skill for predictions.
@@ -190,16 +190,16 @@ A test skill for predictions.
 
 ## API
 - predict(data: list) -> list
-- train(samples: list) -> Model
+- trAlgon(samples: list) -> Model
         """)
 
         # Act
-        count = await registry.discover_skills(tmp_path)
+        count = awAlgot registry.discover_skills(tmp_path)
 
         # Assert
         assert count == 1
         skill = registry.get_skill("test-predictor")
         assert skill is not None
-        assert skill.category == "Data & AI"
+        assert skill.category == "Data & Algo"
         assert "predict" in skill.methods
         assert skill.performance.get("accuracy") == 95.0

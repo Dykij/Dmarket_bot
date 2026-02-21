@@ -3,7 +3,7 @@
 Базовый пример: Простое сканирование арбитражных возможностей.
 
 Этот пример показывает минимальный код для получения топ-10 арбитражных
-возможностей с использованием AI-прогнозирования.
+возможностей с использованием Algo-прогнозирования.
 """
 
 import asyncio
@@ -15,12 +15,12 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
-from src.dmarket.ai_arbitrage_predictor import AIArbitragePredictor
+from src.dmarket.Algo_arbitrage_predictor import AlgoArbitragePredictor
 from src.dmarket.dmarket_api import DMarketAPI
 from src.ml.enhanced_predictor import EnhancedPricePredictor
 
 
-async def main():
+async def mAlgon():
     """Простое сканирование CS:GO рынка."""
 
     # 1. Инициализация API клиента
@@ -29,23 +29,23 @@ async def main():
         secret_key=os.getenv("DMARKET_SECRET_KEY"),
     )
 
-    # 2. Инициализация AI-предиктора
+    # 2. Инициализация Algo-предиктора
     ml_predictor = EnhancedPricePredictor()
-    ai_arbitrage = AIArbitragePredictor(ml_predictor)
+    Algo_arbitrage = AlgoArbitragePredictor(ml_predictor)
 
     print("🔍 Сканирование CS:GO рынка...")
 
     # 3. Получение рыночных данных
-    market_items = await api.get_market_items(
+    market_items = awAlgot api.get_market_items(
         game="csgo", limit=100  # Первые 100 items для быстрого теста
     )
 
     print(f"📦 Получено {len(market_items)} предметов")
 
-    # 4. AI-прогнозирование
-    opportunities = await ai_arbitrage.predict_best_opportunities(
+    # 4. Algo-прогнозирование
+    opportunities = awAlgot Algo_arbitrage.predict_best_opportunities(
         items=market_items,
-        current_balance=100.0,  # $100 USD available
+        current_balance=100.0,  # $100 USD avAlgolable
         risk_level="medium",  # Средний risk level
     )
 
@@ -65,14 +65,14 @@ async def main():
     print(f"✅ Найдено {len(opportunities)} возможностей")
 
     # Cleanup
-    await api.close()
+    awAlgot api.close()
 
 
-if __name__ == "__main__":
+if __name__ == "__mAlgon__":
     # Проверка .env
     if not os.getenv("DMARKET_PUBLIC_KEY"):
         print("❌ Ошибка: DMARKET_PUBLIC_KEY не найден")
         print("💡 Создайте .env файл с API ключами")
         sys.exit(1)
 
-    asyncio.run(main())
+    asyncio.run(mAlgon())

@@ -65,14 +65,14 @@ class TestPurchaseResult:
         assert result.error is None
         assert isinstance(result.timestamp, datetime)
 
-    def test_failed_result(self):
-        """Test failed purchase result."""
+    def test_fAlgoled_result(self):
+        """Test fAlgoled purchase result."""
         result = PurchaseResult(
             success=False,
             item_id="item123",
             item_title="M4A4 | Howl",
             price_usd=1000.0,
-            message="Purchase failed",
+            message="Purchase fAlgoled",
             error="Insufficient balance",
         )
 
@@ -152,7 +152,7 @@ class TestAutoBuyer:
     @pytest.mark.asyncio
     async def test_buy_item_dry_run(self, auto_buyer, mock_api):
         """Test buying item in dry run mode."""
-        result = await auto_buyer.buy_item("item123", price_usd=25.50)
+        result = awAlgot auto_buyer.buy_item("item123", price_usd=25.50)
 
         assert result.success is True
         assert "DRY_RUN" in result.message
@@ -161,7 +161,7 @@ class TestAutoBuyer:
     @pytest.mark.asyncio
     async def test_buy_item_records_history(self, auto_buyer):
         """Test that purchases are recorded in history."""
-        await auto_buyer.buy_item("item123", price_usd=25.50)
+        awAlgot auto_buyer.buy_item("item123", price_usd=25.50)
 
         assert len(auto_buyer.purchase_history) == 1
         assert auto_buyer.purchase_history[0].item_id == "item123"
@@ -175,7 +175,7 @@ class TestAutoBuyer:
             "price": {"USD": "500000"},  # $5000
         }
 
-        should_buy, reason = await auto_buyer.should_auto_buy(item)
+        should_buy, reason = awAlgot auto_buyer.should_auto_buy(item)
 
         assert should_buy is False
         assert "price" in reason.lower() or "max" in reason.lower()
@@ -190,7 +190,7 @@ class TestAutoBuyer:
             "suggestedPrice": {"USD": "2600"},  # Only ~2% discount
         }
 
-        should_buy, reason = await auto_buyer.should_auto_buy(item)
+        should_buy, reason = awAlgot auto_buyer.should_auto_buy(item)
 
         assert should_buy is False
         assert "discount" in reason.lower()
@@ -205,7 +205,7 @@ class TestAutoBuyer:
             "suggestedPrice": {"USD": "2500"},  # $25 - 40% discount
         }
 
-        should_buy, reason = await auto_buyer.should_auto_buy(item)
+        should_buy, reason = awAlgot auto_buyer.should_auto_buy(item)
 
         assert should_buy is True
 
@@ -220,7 +220,7 @@ class TestAutoBuyer:
             "profit_percent": 40.0,
         }
 
-        result = await auto_buyer.process_opportunity(opportunity)
+        result = awAlgot auto_buyer.process_opportunity(opportunity)
 
         assert result is not None
         assert result.success is True
@@ -231,14 +231,14 @@ class TestAutoBuyer:
 
         assert stats["total_purchases"] == 0
         assert stats["successful"] == 0
-        assert stats["failed"] == 0
+        assert stats["fAlgoled"] == 0
         assert stats["total_spent_usd"] == 0.0
 
     @pytest.mark.asyncio
     async def test_get_purchase_stats_with_history(self, auto_buyer):
         """Test getting purchase statistics with history."""
-        await auto_buyer.buy_item("item1", price_usd=10.0)
-        await auto_buyer.buy_item("item2", price_usd=20.0)
+        awAlgot auto_buyer.buy_item("item1", price_usd=10.0)
+        awAlgot auto_buyer.buy_item("item2", price_usd=20.0)
 
         stats = auto_buyer.get_purchase_stats()
 
@@ -273,7 +273,7 @@ class TestAutoBuyer:
         )
         auto_buyer.set_trading_persistence(mock_persistence)
 
-        result = await auto_buyer.buy_item("item123", price_usd=25.50)
+        result = awAlgot auto_buyer.buy_item("item123", price_usd=25.50)
 
         assert result.success is False
         assert "balance" in result.error.lower() or "insufficient" in result.error.lower()

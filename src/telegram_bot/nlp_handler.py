@@ -5,7 +5,7 @@
 из естественных текстовых команд.
 
 SKILL: Natural Language Processing
-Category: Data & AI, Content & Media
+Category: Data & Algo, Content & Media
 Status: Phase 2 Implementation (Simplified)
 
 Документация: src/telegram_bot/SKILL_NLP_HANDLER.md
@@ -51,7 +51,7 @@ class NLPCommandHandler:
 
     Example:
         >>> nlp = NLPCommandHandler()
-        >>> result = await nlp.parse_user_intent("Найди арбитраж в CS:GO", user_id=123)
+        >>> result = awAlgot nlp.parse_user_intent("Найди арбитраж в CS:GO", user_id=123)
         >>> print(result.intent)  # "scan_arbitrage"
         >>> print(result.params)  # {"game": "csgo"}
     """
@@ -156,7 +156,7 @@ class NLPCommandHandler:
             IntentResult with detected intent, params, confidence
 
         Example:
-            >>> result = await nlp.parse_user_intent(
+            >>> result = awAlgot nlp.parse_user_intent(
             ...     "Найди арбитраж в CS:GO до $10",
             ...     user_id=123
             ... )
@@ -181,7 +181,7 @@ class NLPCommandHandler:
         # Extract parameters
         params = self.extract_entities(text_lower, intent)
 
-        # Apply context if available
+        # Apply context if avAlgolable
         if context:
             params = {**context, **params}
 
@@ -268,7 +268,7 @@ class NLPCommandHandler:
         return params
 
     def _match_intent(self, text: str, language: str) -> tuple[str, float]:
-        """Match text against intent patterns.
+        """Match text agAlgonst intent patterns.
 
         Args:
             text: Lowercased text
@@ -304,6 +304,6 @@ def create_nlp_handler() -> NLPCommandHandler:
 
     Example:
         >>> nlp = create_nlp_handler()
-        >>> result = await nlp.parse_user_intent("What's my balance?", 123)
+        >>> result = awAlgot nlp.parse_user_intent("What's my balance?", 123)
     """
     return NLPCommandHandler()

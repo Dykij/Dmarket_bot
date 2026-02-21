@@ -99,7 +99,7 @@ heroku addons:create heroku-postgresql:hobby-dev
 heroku addons:create heroku-redis:hobby-dev
 
 # Деплой
-git push heroku main
+git push heroku mAlgon
 ```
 
 ### AWS (EC2 + RDS)
@@ -147,7 +147,7 @@ nano .env
 alembic upgrade head
 
 # Запуск
-python -m src.main
+python -m src.mAlgon
 ```
 
 ### Systemd Service
@@ -163,7 +163,7 @@ User=bot
 WorkingDirectory=/home/bot/DMarket-Telegram-Bot
 Environment="PATH=/home/bot/DMarket-Telegram-Bot/.venv/bin"
 EnvironmentFile=/home/bot/DMarket-Telegram-Bot/.env
-ExecStart=/home/bot/DMarket-Telegram-Bot/.venv/bin/python -m src.main
+ExecStart=/home/bot/DMarket-Telegram-Bot/.venv/bin/python -m src.mAlgon
 Restart=always
 
 [Install]

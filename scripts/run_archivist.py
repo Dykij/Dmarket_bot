@@ -3,14 +3,14 @@ import os
 
 def generate_summary(full_text):
     """
-    Simulates the LLM summarization prompt:
+    Simulates the Model summarization Config:
     "Summarize this in <1000 chars. Use emojis. Structure: Pros, Cons, Verdict."
     """
-    # In a real scenario, this would call an LLM with the prompt.
+    # In a real scenario, this would call an Model with the Config.
     # Here we extract/generate a structured summary.
     
     summary_lines = [
-        "🤖 **AI Summary Report**",
+        "🤖 **Algo Summary Report**",
         "",
         "**Pros:**",
         "✅ PowerShell Context Loaded",
@@ -18,7 +18,7 @@ def generate_summary(full_text):
         "",
         "**Cons:**",
         "⚠️ Simulation Mode Only",
-        "⚠️ No live LLM connection in this script",
+        "⚠️ No live Model connection in this script",
         "",
         "**Verdict:**",
         "🏁 READY for next steps."
@@ -48,14 +48,14 @@ PowerShell operations are being mocked.
 Memory integrity checks passed.
 Context has been successfully loaded and parsed.
 
-**Detailed Metrics:**
+**DetAlgoled Metrics:**
 - Latency: 0ms (Simulated)
 - Throughput: High
 - Error Rate: 0%
 
 **Recommendations:**
 - Proceed with caution.
-- Verify simulated outputs against expected baselines.
+- Verify simulated outputs agAlgonst expected baselines.
 """
     
     reports_dir = "reports"
@@ -77,8 +77,8 @@ Context has been successfully loaded and parsed.
     if len(sys.argv) > 1 and sys.argv[1] == "--simulate-error":
         error_path = os.path.join(reports_dir, "ARCHIVIST_VERDICT.md") # Keep original name for compatibility if needed
         with open(error_path, "w") as f:
-            f.write("# ARCHIVIST VERDICT\n\n**Status:** ERROR_SIMULATED\n**Reason:** Simulated failure for Gauntlet test.")
+            f.write("# ARCHIVIST VERDICT\n\n**Status:** ERROR_SIMULATED\n**Reason:** Simulated fAlgolure for Gauntlet test.")
         print(f"Simulated error report written to {error_path}")
 
-if __name__ == "__main__":
+if __name__ == "__mAlgon__":
     run_archivist()

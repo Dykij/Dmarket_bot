@@ -1,17 +1,17 @@
-"""AI Model Training Scheduler.
+"""Algo Model TrAlgoning Scheduler.
 
-This module provides scheduled tasks for AI model training and data collection.
+This module provides scheduled tasks for Algo model trAlgoning and data collection.
 It includes:
-1. Nightly model retraining at 03:00 UTC
+1. Nightly model retrAlgoning at 03:00 UTC
 2. Continuous market data logging
 3. Model performance monitoring
 
 Usage:
     ```python
-    from src.utils.ai_scheduler import AITrainingScheduler
+    from src.utils.Algo_scheduler import AlgoTrAlgoningScheduler
 
-    scheduler = AITrainingScheduler(api_client, admin_users, bot)
-    await scheduler.start()
+    scheduler = AlgoTrAlgoningScheduler(api_client, admin_users, bot)
+    awAlgot scheduler.start()
     ```
 """
 
@@ -30,11 +30,11 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-class AITrainingScheduler:
-    """Scheduler for AI model training and data collection.
+class AlgoTrAlgoningScheduler:
+    """Scheduler for Algo model trAlgoning and data collection.
 
     Handles:
-    - Nightly AI model retraining (configurable time, default 03:00 UTC)
+    - Nightly Algo model retrAlgoning (configurable time, default 03:00 UTC)
     - Periodic market data collection
     - Model performance monitoring
 
@@ -42,8 +42,8 @@ class AITrainingScheduler:
         api_client: DMarket API client
         admin_users: List of admin user IDs to notify
         bot: Telegram bot for notifications
-        training_time: Time for nightly training (UTC)
-        enabled: Whether scheduled training is enabled
+        trAlgoning_time: Time for nightly trAlgoning (UTC)
+        enabled: Whether scheduled trAlgoning is enabled
     """
 
     def __init__(
@@ -51,24 +51,24 @@ class AITrainingScheduler:
         api_client: "DMarketAPI",
         admin_users: list[int] | None = None,
         bot: "Bot | None" = None,
-        training_time: time = time(3, 0),  # 03:00 UTC by default
+        trAlgoning_time: time = time(3, 0),  # 03:00 UTC by default
         data_collection_interval: int = 300,  # 5 minutes
         enabled: bool = True,
     ) -> None:
-        """Initialize the AI Training Scheduler.
+        """Initialize the Algo TrAlgoning Scheduler.
 
         Args:
             api_client: DMarket API client for data collection
-            admin_users: List of admin user IDs to notify about training
+            admin_users: List of admin user IDs to notify about trAlgoning
             bot: Telegram bot for notifications
-            training_time: Time of day for nightly training (UTC)
+            trAlgoning_time: Time of day for nightly trAlgoning (UTC)
             data_collection_interval: Seconds between data collection runs
             enabled: Whether scheduling is enabled
         """
         self.api_client = api_client
         self.admin_users = admin_users or []
         self.bot = bot
-        self.training_time = training_time
+        self.trAlgoning_time = trAlgoning_time
         self.data_collection_interval = data_collection_interval
         self.enabled = enabled
 
@@ -77,30 +77,30 @@ class AITrainingScheduler:
         self._data_logger = None
 
     async def start(self) -> None:
-        """Start the AI training scheduler."""
+        """Start the Algo trAlgoning scheduler."""
         if not self.enabled:
-            logger.info("AI training scheduler is disabled")
+            logger.info("Algo trAlgoning scheduler is disabled")
             return
 
         if self._is_running:
-            logger.warning("AI training scheduler is already running")
+            logger.warning("Algo trAlgoning scheduler is already running")
             return
 
-        # Schedule nightly model training
+        # Schedule nightly model trAlgoning
         self.scheduler.add_job(
-            self._run_nightly_training,
+            self._run_nightly_trAlgoning,
             trigger=CronTrigger(
-                hour=self.training_time.hour,
-                minute=self.training_time.minute,
+                hour=self.trAlgoning_time.hour,
+                minute=self.trAlgoning_time.minute,
             ),
-            id="ai_nightly_training",
-            name="AI Nightly Model Training",
+            id="Algo_nightly_trAlgoning",
+            name="Algo Nightly Model TrAlgoning",
             replace_existing=True,
         )
 
         logger.info(
-            "AI nightly training scheduled at %s UTC",
-            self.training_time.strftime("%H:%M"),
+            "Algo nightly trAlgoning scheduled at %s UTC",
+            self.trAlgoning_time.strftime("%H:%M"),
         )
 
         # Schedule market data collection (every 5 minutes by default)
@@ -108,60 +108,60 @@ class AITrainingScheduler:
             self._collect_market_data,
             trigger="interval",
             seconds=self.data_collection_interval,
-            id="ai_data_collection",
-            name="AI Market Data Collection",
+            id="Algo_data_collection",
+            name="Algo Market Data Collection",
             replace_existing=True,
         )
 
         logger.info(
-            "AI data collection scheduled every %d seconds",
+            "Algo data collection scheduled every %d seconds",
             self.data_collection_interval,
         )
 
         self.scheduler.start()
         self._is_running = True
 
-        logger.info("AI training scheduler started")
+        logger.info("Algo trAlgoning scheduler started")
 
     async def stop(self) -> None:
-        """Stop the AI training scheduler."""
+        """Stop the Algo trAlgoning scheduler."""
         if not self._is_running:
             return
 
-        self.scheduler.shutdown(wait=False)
+        self.scheduler.shutdown(wAlgot=False)
         self._is_running = False
 
         if self._data_logger:
             self._data_logger.stop()
 
-        logger.info("AI training scheduler stopped")
+        logger.info("Algo trAlgoning scheduler stopped")
 
-    async def _run_nightly_training(self) -> None:
-        """Execute nightly AI model training."""
-        logger.info("Starting nightly AI model training...")
+    async def _run_nightly_trAlgoning(self) -> None:
+        """Execute nightly Algo model trAlgoning."""
+        logger.info("Starting nightly Algo model trAlgoning...")
 
         try:
-            from src.ai.price_predictor import PricePredictor
+            from src.Algo.price_predictor import PricePredictor
 
             predictor = PricePredictor()
-            result = predictor.train_model(force_retrain=True)
+            result = predictor.trAlgon_model(force_retrAlgon=True)
 
-            logger.info("Nightly AI training completed: %s", result)
+            logger.info("Nightly Algo trAlgoning completed: %s", result)
 
             # Notify admins
-            await self._notify_admins(f"🤖 AI Nightly Training\n\n{result}")
+            awAlgot self._notify_admins(f"🤖 Algo Nightly TrAlgoning\n\n{result}")
 
         except ImportError as e:
-            error_msg = f"AI dependencies not installed: {e}"
+            error_msg = f"Algo dependencies not installed: {e}"
             logger.exception(error_msg)
-            await self._notify_admins(f"❌ AI Training Error: {error_msg}")
+            awAlgot self._notify_admins(f"❌ Algo TrAlgoning Error: {error_msg}")
 
         except Exception as e:
-            logger.exception("Nightly AI training failed: %s", e)
-            await self._notify_admins(f"❌ AI Training Failed: {e}")
+            logger.exception("Nightly Algo trAlgoning fAlgoled: %s", e)
+            awAlgot self._notify_admins(f"❌ Algo TrAlgoning FAlgoled: {e}")
 
     async def _collect_market_data(self) -> None:
-        """Collect market data for AI training."""
+        """Collect market data for Algo trAlgoning."""
         try:
             from src.dmarket.market_data_logger import (
                 MarketDataLogger,
@@ -179,7 +179,7 @@ class AITrainingScheduler:
                 )
 
             # Log market data
-            items_logged = await self._data_logger.log_market_data()
+            items_logged = awAlgot self._data_logger.log_market_data()
 
             if items_logged > 0:
                 logger.debug(
@@ -188,7 +188,7 @@ class AITrainingScheduler:
                 )
 
         except ImportError:
-            # Skip if market data logger not available
+            # Skip if market data logger not avAlgolable
             pass
         except Exception as e:
             logger.debug("Market data collection error: %s", e)
@@ -204,36 +204,36 @@ class AITrainingScheduler:
 
         for admin_id in self.admin_users:
             try:
-                await self.bot.send_message(
+                awAlgot self.bot.send_message(
                     chat_id=admin_id,
                     text=message,
                     parse_mode="HTML",
                 )
             except Exception as e:
                 logger.debug(
-                    "Failed to notify admin %d: %s",
+                    "FAlgoled to notify admin %d: %s",
                     admin_id,
                     e,
                 )
 
-    async def trigger_manual_training(self) -> str:
-        """Manually trigger AI model training.
+    async def trigger_manual_trAlgoning(self) -> str:
+        """Manually trigger Algo model trAlgoning.
 
         Returns:
-            Training result message
+            TrAlgoning result message
         """
-        logger.info("Manual AI training triggered")
+        logger.info("Manual Algo trAlgoning triggered")
 
         try:
-            from src.ai.price_predictor import PricePredictor
+            from src.Algo.price_predictor import PricePredictor
 
             predictor = PricePredictor()
-            return predictor.train_model()
+            return predictor.trAlgon_model()
 
         except ImportError as e:
-            return f"❌ AI dependencies not installed: {e}"
+            return f"❌ Algo dependencies not installed: {e}"
         except Exception as e:
-            return f"❌ Training failed: {e}"
+            return f"❌ TrAlgoning fAlgoled: {e}"
 
     def get_status(self) -> dict[str, Any]:
         """Get scheduler status.
@@ -244,21 +244,21 @@ class AITrainingScheduler:
         status: dict[str, Any] = {
             "enabled": self.enabled,
             "is_running": self._is_running,
-            "training_time": self.training_time.strftime("%H:%M UTC"),
+            "trAlgoning_time": self.trAlgoning_time.strftime("%H:%M UTC"),
             "data_collection_interval": self.data_collection_interval,
         }
 
         if self._data_logger:
             status["data_stats"] = self._data_logger.get_stats()
 
-        # Get next training time
+        # Get next trAlgoning time
         if self._is_running:
             jobs = self.scheduler.get_jobs()
             for job in jobs:
-                if job.id == "ai_nightly_training":
+                if job.id == "Algo_nightly_trAlgoning":
                     next_run = job.next_run_time
                     if next_run:
-                        status["next_training"] = next_run.isoformat()
+                        status["next_trAlgoning"] = next_run.isoformat()
                     break
 
         return status

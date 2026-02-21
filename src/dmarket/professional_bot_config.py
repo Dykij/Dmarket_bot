@@ -1,13 +1,13 @@
 """Профессиональная конфигурация бота (BOT_ULTIMATE_V3).
 
-Оптимизированные настройки для эффективного арбитража:
-- AI Predictor: Защита от галлюцинаций с min_samples_leaf=5
+Оптимизированные настSwarmки для эффективного арбитража:
+- Algo Predictor: Защита от галлюцинаций с min_samples_leaf=5
 - Smart Scanner: Cursor навигация + lockStatus фильтр
 - Silent Mode: Логирование в файл вместо спама в Telegram
 - Adaptive Limiter: Защита от 429 ошибки с экспоненциальным backoff
 - Local Delta: Пропуск дубликатов для экономии CPU
 
-Глобальные настройки обеспечивают баланс между скоростью и безопасностью ToS.
+Глобальные настSwarmки обеспечивают баланс между скоростью и безопасностью ToS.
 """
 
 import hashlib
@@ -22,18 +22,18 @@ logger = logging.getLogger(__name__)
 
 
 # =============================================================================
-# ГЛОБАЛЬНЫЕ НАСТРОЙКИ БОТА (Config)
+# ГЛОБАЛЬНЫЕ НАСТSwarmКИ БОТА (Config)
 # =============================================================================
 
 
 @dataclass
 class ProfessionalBotConfig:
-    """Профессиональные настройки бота для арбитража.
+    """Профессиональные настSwarmки бота для арбитража.
 
     Эти параметры обеспечивают баланс между скоростью и безопасностью ToS.
     """
 
-    # === Настройки прибыли и ликвидности ===
+    # === НастSwarmки прибыли и ликвидности ===
     min_profit_pct: float = 0.05  # Минимум 5% чистой прибыли
     min_profit_usd: float = 0.50  # Минимум $0.50 абсолютной прибыли
     max_item_price: float = 100.0  # Максимальная цена предмета
@@ -68,7 +68,7 @@ class ProfessionalBotConfig:
     delta_cache_ttl_seconds: int = 300  # TTL кэша дельты (5 минут)
     delta_hash_algorithm: str = "md5"  # Алгоритм хэширования (md5 быстрее)
 
-    # === AI Predictor ===
+    # === Algo Predictor ===
     min_samples_leaf: int = 5  # Защита от галлюцинаций (переобучения)
     min_samples_for_prediction: int = 10  # Минимум данных для прогноза
     max_prediction_confidence: float = (
@@ -121,7 +121,7 @@ class SilentModeLogger:
         self._setup_file_logger()
 
     def _setup_file_logger(self) -> None:
-        """Настройка файлового логгера."""
+        """НастSwarmка файлового логгера."""
         if not self.config.log_to_file:
             return
 
@@ -198,7 +198,7 @@ class SilentModeLogger:
 
         # В Telegram отправляем всегда
         if self.notifier and self.config.telegram_notify_on_buy:
-            await self.notifier.send_message(msg, priority="high")
+            awAlgot self.notifier.send_message(msg, priority="high")
 
     async def log_error(
         self,
@@ -222,7 +222,7 @@ class SilentModeLogger:
 
         # Критические ошибки всегда в Telegram
         if self.notifier and self.config.telegram_notify_on_error and critical:
-            await self.notifier.send_message(msg, priority="critical")
+            awAlgot self.notifier.send_message(msg, priority="critical")
 
     async def send_summary_if_needed(self) -> None:
         """Отправляет сводку, если прошло достаточно времени."""
@@ -240,7 +240,7 @@ class SilentModeLogger:
 
         # Формируем сводку
         summary = self._format_summary()
-        await self.notifier.send_message(summary, priority="low")
+        awAlgot self.notifier.send_message(summary, priority="low")
 
         self._last_summary_time = now
         self._pending_events.clear()
@@ -424,7 +424,7 @@ class AdaptiveRateLimiter:
         self._total_requests = 0
         self._total_429s = 0
 
-    async def wait_before_request(self) -> None:
+    async def wAlgot_before_request(self) -> None:
         """Ожидание перед следующим запросом."""
         if not self.config.enable_adaptive_limiter:
             return
@@ -434,8 +434,8 @@ class AdaptiveRateLimiter:
 
         # Если с последнего запроса прошло меньше текущей задержки
         if elapsed < self._current_delay:
-            wait_time = self._current_delay - elapsed
-            await self._async_sleep(wait_time)
+            wAlgot_time = self._current_delay - elapsed
+            awAlgot self._async_sleep(wAlgot_time)
 
         self._last_request_time = time.time()
         self._total_requests += 1
@@ -448,7 +448,7 @@ class AdaptiveRateLimiter:
         """
         import asyncio
 
-        await asyncio.sleep(seconds)
+        awAlgot asyncio.sleep(seconds)
 
     def record_success(self) -> None:
         """Фиксирует успешный запрос."""
@@ -521,19 +521,19 @@ class AdaptiveRateLimiter:
 
 
 # =============================================================================
-# AI PREDICTOR SETTINGS - Защита от галлюцинаций
+# Algo PREDICTOR SETTINGS - Защита от галлюцинаций
 # =============================================================================
 
 
 @dataclass
-class AIProtectionSettings:
-    """Настройки защиты AI от галлюцинаций и переобучения.
+class AlgoProtectionSettings:
+    """НастSwarmки защиты Algo от галлюцинаций и переобучения.
 
     min_samples_leaf=5 предотвращает модель от принятия решений
     на основе слишком малого количества примеров.
     """
 
-    # === RandomForest/GradientBoosting настройки ===
+    # === RandomForest/GradientBoosting настSwarmки ===
     min_samples_leaf: int = 5  # Минимум примеров в листе
     min_samples_split: int = 10  # Минимум примеров для разделения
     max_depth: int = 10  # Максимальная глубина дерева (защита от переобучения)
@@ -587,7 +587,7 @@ class AIProtectionSettings:
         current_price: float,
         confidence: float,
     ) -> tuple[bool, str]:
-        """Валидирует предсказание AI.
+        """Валидирует предсказание Algo.
 
         Args:
             predicted_price: Предсказанная цена
@@ -658,7 +658,7 @@ class SmartScannerConfig:
         """Конвертирует в словарь.
 
         Returns:
-            Словарь с настройками
+            Словарь с настSwarmками
         """
         return {
             "navigation": {
@@ -708,7 +708,7 @@ def create_professional_config(
 
     # Адаптация к балансу
     if balance < 50:
-        # Маленький баланс - консервативные настройки
+        # Маленький баланс - консервативные настSwarmки
         config.min_profit_pct = 0.10  # 10% минимальный профит
         config.max_item_price = balance * 0.5  # Макс 50% баланса на предмет
         config.max_item_lock_days = 0  # Только без блокировки
@@ -745,16 +745,16 @@ def create_professional_config(
     return config
 
 
-def create_ai_protection_settings(strict: bool = True) -> AIProtectionSettings:
-    """Создает настройки защиты AI.
+def create_Algo_protection_settings(strict: bool = True) -> AlgoProtectionSettings:
+    """Создает настSwarmки защиты Algo.
 
     Args:
-        strict: Использовать строгие настройки
+        strict: Использовать строгие настSwarmки
 
     Returns:
-        Настройки защиты
+        НастSwarmки защиты
     """
-    settings = AIProtectionSettings()
+    settings = AlgoProtectionSettings()
 
     if strict:
         settings.min_samples_leaf = 5
@@ -805,5 +805,5 @@ def create_smart_scanner_config(
 
 # Дефолтная конфигурация (можно переопределить)
 DEFAULT_BOT_CONFIG = ProfessionalBotConfig()
-DEFAULT_AI_PROTECTION = AIProtectionSettings()
+DEFAULT_Algo_PROTECTION = AlgoProtectionSettings()
 DEFAULT_SCANNER_CONFIG = SmartScannerConfig()

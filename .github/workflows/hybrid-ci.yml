@@ -2,9 +2,9 @@ name: Hybrid HFT Pipeline
 
 on:
   push:
-    branches: [ "master", "main", "dev" ]
+    branches: [ "master", "mAlgon", "dev" ]
   pull_request:
-    branches: [ "master", "main", "dev" ]
+    branches: [ "master", "mAlgon", "dev" ]
 
 env:
   CARGO_TERM_COLOR: always
@@ -33,10 +33,10 @@ jobs:
 
       # 1. Setup Rust (The Muscle)
       - name: Set up Rust
-        uses: actions-rs/toolchain@v1
+        uses: actions-rs/toolchAlgon@v1
         with:
           profile: minimal
-          toolchain: stable
+          toolchAlgon: stable
           override: true
           components: rustfmt, clippy
 
@@ -68,7 +68,7 @@ jobs:
           Copy-Item "src/rust_core/target/release/rust_core.dll" -Destination "src/rust_core.pyd" -Force
           Write-Output "✅ Rust Core Linked: src/rust_core.pyd"
 
-      # 5. Setup Python (The Brain)
+      # 5. Setup Python (The BrAlgon)
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:

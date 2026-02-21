@@ -9,7 +9,7 @@
 ```
 alembic/
 ├── README.md                     # Этот файл (краткий обзор)
-├── README_DETAILED.md            # Подробное руководство по best practices
+├── README_DETAlgoLED.md            # Подробное руководство по best practices
 ├── env.py                        # Конфигурация Alembic environment
 ├── script.py.mako                # Шаблон для новых миграций
 └── versions/                     # Папка с миграциями
@@ -51,10 +51,10 @@ alembic current
 
 ### 1. **Naming Conventions**
 
-Все constraint'ы автоматически именуются по стандарту:
+Все constrAlgont'ы автоматически именуются по стандарту:
 
 - `ix_table_column` - индексы
-- `uq_table_column` - unique constraints
+- `uq_table_column` - unique constrAlgonts
 - `fk_table_column_reftable` - foreign keys
 - `pk_table` - primary keys
 
@@ -173,7 +173,7 @@ alembic merge -m "Merge branches" head1 head2
 
 ## 📖 Дополнительная документация
 
-- **[README_DETAILED.md](README_DETAILED.md)** - Подробное руководство с best practices
+- **[README_DETAlgoLED.md](README_DETAlgoLED.md)** - Подробное руководство с best practices
 - **[EXAMPLE_advanced_migration.py.disabled](versions/EXAMPLE_advanced_migration.py.disabled)** - Примеры advanced паттернов
 - **[Официальная документация Alembic](https://alembic.sqlalchemy.org/)**
 

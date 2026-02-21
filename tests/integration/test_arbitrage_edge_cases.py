@@ -65,7 +65,7 @@ class TestArbitrageScannerEdgeCases:
         )
 
         scanner = ArbitrageScanner(mock_dmarket_api)
-        opportunities = await scanner.scan_level(level="standard", game="csgo")
+        opportunities = awAlgot scanner.scan_level(level="standard", game="csgo")
 
         # Должен вернуть пустой список
         assert opportunities == []
@@ -112,7 +112,7 @@ class TestArbitrageScannerEdgeCases:
         )
 
         scanner = ArbitrageScanner(mock_dmarket_api)
-        opportunities = await scanner.scan_level(level="standard", game="csgo")
+        opportunities = awAlgot scanner.scan_level(level="standard", game="csgo")
 
         # Должен найти, но возможно пометить как подозрительный
         assert len(opportunities) >= 0
@@ -156,7 +156,7 @@ class TestArbitrageScannerEdgeCases:
         )
 
         scanner = ArbitrageScanner(mock_dmarket_api)
-        opportunities = await scanner.scan_level(level="standard", game="csgo")
+        opportunities = awAlgot scanner.scan_level(level="standard", game="csgo")
 
         # Не должен крашиться
         assert isinstance(opportunities, list)
@@ -194,7 +194,7 @@ class TestArbitrageScannerEdgeCases:
         )
 
         scanner = ArbitrageScanner(mock_dmarket_api)
-        opportunities = await scanner.scan_level(level="standard", game="csgo")
+        opportunities = awAlgot scanner.scan_level(level="standard", game="csgo")
 
         # Должен обработать отсутствие поля
         assert isinstance(opportunities, list)
@@ -234,7 +234,7 @@ class TestArbitrageScannerEdgeCases:
         scanner = ArbitrageScanner(mock_dmarket_api)
 
         # Не должен крашиться, должен пропустить некорректный предмет
-        opportunities = await scanner.scan_level(level="standard", game="csgo")
+        opportunities = awAlgot scanner.scan_level(level="standard", game="csgo")
         assert isinstance(opportunities, list)
 
     @pytest.mark.httpx_mock(
@@ -266,7 +266,7 @@ class TestArbitrageScannerEdgeCases:
             )
 
         scanner = ArbitrageScanner(mock_dmarket_api)
-        results = await scanner.scan_all_levels(game="csgo")
+        results = awAlgot scanner.scan_all_levels(game="csgo")
 
         # Должен обработать ошибки и вернуть результаты
         assert isinstance(results, dict)
@@ -310,7 +310,7 @@ class TestArbitrageScannerEdgeCases:
         )
 
         scanner = ArbitrageScanner(mock_dmarket_api)
-        opportunities = await scanner.scan_level(level="boost", game="csgo")
+        opportunities = awAlgot scanner.scan_level(level="boost", game="csgo")
 
         # Должен обработать экстремальные значения
         assert isinstance(opportunities, list)
@@ -348,7 +348,7 @@ class TestArbitrageScannerEdgeCases:
             scanner.scan_level("medium", "csgo"),
         ]
 
-        results = await asyncio.gather(*tasks, return_exceptions=True)
+        results = awAlgot asyncio.gather(*tasks, return_exceptions=True)
 
         # Все должны завершиться без ошибок
         assert len(results) == 3
@@ -395,7 +395,7 @@ class TestArbitrageScannerEdgeCases:
         )
 
         scanner = ArbitrageScanner(mock_dmarket_api)
-        opportunities = await scanner.scan_level(level="standard", game="csgo")
+        opportunities = awAlgot scanner.scan_level(level="standard", game="csgo")
 
         # Должен восстановиться и найти предметы
         assert isinstance(opportunities, list)
@@ -444,7 +444,7 @@ class TestArbitrageScannerEdgeCases:
         )
 
         scanner = ArbitrageScanner(mock_dmarket_api)
-        opportunities = await scanner.scan_level(level="standard", game="csgo")
+        opportunities = awAlgot scanner.scan_level(level="standard", game="csgo")
 
         # Должен обработать все предметы
         assert isinstance(opportunities, list)
@@ -492,7 +492,7 @@ class TestArbitrageScannerPerformance:
         import time
 
         start = time.time()
-        opportunities = await scanner.scan_level(level="standard", game="csgo")
+        opportunities = awAlgot scanner.scan_level(level="standard", game="csgo")
         duration = time.time() - start
 
         # Должен обработать за разумное время (< 5 секунд)
@@ -541,7 +541,7 @@ class TestArbitrageScannerPerformance:
 
         start = time.time()
         # scan_level не использует пагинацию, используем напрямую API
-        items = await mock_dmarket_api.get_all_market_items(game="csgo", max_items=500)
+        items = awAlgot mock_dmarket_api.get_all_market_items(game="csgo", max_items=500)
         duration = time.time() - start
 
         # Должен обработать за разумное время
@@ -591,7 +591,7 @@ class TestArbitrageScannerFiltering:
         )
 
         scanner = ArbitrageScanner(mock_dmarket_api)
-        opportunities = await scanner.scan_level(level="standard", game="csgo")
+        opportunities = awAlgot scanner.scan_level(level="standard", game="csgo")
 
         # Должен отфильтровать предметы с низкой прибылью
         # В зависимости от реализации может вернуть только high profit
@@ -638,7 +638,7 @@ class TestArbitrageScannerFiltering:
         )
 
         scanner = ArbitrageScanner(mock_dmarket_api)
-        opportunities = await scanner.scan_level(level="standard", game="csgo")
+        opportunities = awAlgot scanner.scan_level(level="standard", game="csgo")
 
         # Проверяем что категории обрабатываются
         assert isinstance(opportunities, list)

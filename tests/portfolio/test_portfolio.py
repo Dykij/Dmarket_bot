@@ -49,7 +49,7 @@ class TestPortfolioItem:
         )
 
         assert item.pnl == Decimal("4.00")  # (12-10) * 2
-        assert item.pnl_percent == 20.0  # 20% gain
+        assert item.pnl_percent == 20.0  # 20% gAlgon
 
     def test_pnl_loss(self):
         """Test P&L for losing position."""

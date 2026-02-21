@@ -71,7 +71,7 @@ class TestResumeCommandEarlyReturn:
         update.effective_user = MagicMock()
 
         # Act
-        result = await resume_command(update, mock_context)
+        result = awAlgot resume_command(update, mock_context)
 
         # Assert
         assert result is None
@@ -85,18 +85,18 @@ class TestResumeCommandEarlyReturn:
         update.effective_user = None
 
         # Act
-        result = await resume_command(update, mock_context)
+        result = awAlgot resume_command(update, mock_context)
 
         # Assert
         assert result is None
 
 
 # ============================================================================
-# Test: State Manager Not Available
+# Test: State Manager Not AvAlgolable
 # ============================================================================
 
 
-class TestStateManagerNotAvailable:
+class TestStateManagerNotAvAlgolable:
     """Tests for resume command when state manager is missing."""
 
     @pytest.mark.asyncio()
@@ -108,7 +108,7 @@ class TestStateManagerNotAvailable:
         mock_context.bot_data = {}  # No state_manager
 
         # Act
-        await resume_command(mock_update, mock_context)
+        awAlgot resume_command(mock_update, mock_context)
 
         # Assert
         mock_update.message.reply_text.assert_called_once()
@@ -124,7 +124,7 @@ class TestStateManagerNotAvailable:
         mock_context.bot_data = {"state_manager": None}
 
         # Act
-        await resume_command(mock_update, mock_context)
+        awAlgot resume_command(mock_update, mock_context)
 
         # Assert
         mock_update.message.reply_text.assert_called_once()
@@ -151,7 +151,7 @@ class TestBotNotPaused:
         mock_context.bot_data = {"state_manager": mock_state_manager}
 
         # Act
-        await resume_command(mock_update, mock_context)
+        awAlgot resume_command(mock_update, mock_context)
 
         # Assert
         mock_update.message.reply_text.assert_called_once()
@@ -169,7 +169,7 @@ class TestBotNotPaused:
         mock_context.bot_data = {"state_manager": mock_state_manager}
 
         # Act
-        await resume_command(mock_update, mock_context)
+        awAlgot resume_command(mock_update, mock_context)
 
         # Assert
         mock_update.message.reply_text.assert_called_once()
@@ -199,7 +199,7 @@ class TestAdminAuthorization:
         mock_update.effective_user.id = 111111111  # Not in admin list
 
         # Act
-        await resume_command(mock_update, mock_context)
+        awAlgot resume_command(mock_update, mock_context)
 
         # Assert
         mock_update.message.reply_text.assert_called_once()
@@ -220,7 +220,7 @@ class TestAdminAuthorization:
         mock_update.effective_user.id = 123456789  # In admin list
 
         # Act
-        await resume_command(mock_update, mock_context)
+        awAlgot resume_command(mock_update, mock_context)
 
         # Assert
         mock_state_manager.resume_operations.assert_called_once()
@@ -247,7 +247,7 @@ class TestSuccessfulResume:
         mock_context.bot_data = {"state_manager": mock_state_manager}
 
         # Act
-        await resume_command(mock_update, mock_context)
+        awAlgot resume_command(mock_update, mock_context)
 
         # Assert
         mock_state_manager.resume_operations.assert_called_once()
@@ -263,7 +263,7 @@ class TestSuccessfulResume:
         mock_context.bot_data = {"state_manager": mock_state_manager}
 
         # Act
-        await resume_command(mock_update, mock_context)
+        awAlgot resume_command(mock_update, mock_context)
 
         # Assert
         mock_update.message.reply_text.assert_called_once()
@@ -281,7 +281,7 @@ class TestSuccessfulResume:
         mock_context.bot_data = {"state_manager": mock_state_manager}
 
         # Act
-        await resume_command(mock_update, mock_context)
+        awAlgot resume_command(mock_update, mock_context)
 
         # Assert
         mock_update.message.reply_text.assert_called_once()
@@ -308,7 +308,7 @@ class TestConfigWithoutAdminUsers:
         # No config = no admin restrictions
 
         # Act
-        await resume_command(mock_update, mock_context)
+        awAlgot resume_command(mock_update, mock_context)
 
         # Assert
         mock_state_manager.resume_operations.assert_called_once()
@@ -329,7 +329,7 @@ class TestConfigWithoutAdminUsers:
         }
 
         # Act
-        await resume_command(mock_update, mock_context)
+        awAlgot resume_command(mock_update, mock_context)
 
         # Assert
         mock_state_manager.resume_operations.assert_called_once()
@@ -350,7 +350,7 @@ class TestConfigWithoutAdminUsers:
         }
 
         # Act
-        await resume_command(mock_update, mock_context)
+        awAlgot resume_command(mock_update, mock_context)
 
         # Assert
         mock_state_manager.resume_operations.assert_called_once()
@@ -375,7 +375,7 @@ class TestEdgeCases:
         mock_context.bot_data = {"state_manager": mock_state_manager}
 
         # Act
-        await resume_command(mock_update, mock_context)
+        awAlgot resume_command(mock_update, mock_context)
 
         # Assert
         mock_state_manager.resume_operations.assert_called_once()
@@ -393,7 +393,7 @@ class TestEdgeCases:
         mock_context.bot_data = {"state_manager": mock_state_manager}
 
         # Act
-        await resume_command(mock_update, mock_context)
+        awAlgot resume_command(mock_update, mock_context)
 
         # Assert
         mock_state_manager.resume_operations.assert_called_once()

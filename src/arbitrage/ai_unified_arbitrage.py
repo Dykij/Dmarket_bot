@@ -1,12 +1,12 @@
-"""AI Unified Arbitrage System.
+"""Algo Unified Arbitrage System.
 
-Автоматический арбитраж с использованием AI:
+Автоматический арбитраж с использованием Algo:
 - DMarket внутренний арбитраж (покупка дешево -> продажа дорого)
 - DMarket <-> Waxpeer кросс-платформенный арбитраж
 - Проверка цен на Steam для лучших решений
 
 Features:
-- AI-оценка каждой возможности
+- Algo-оценка каждой возможности
 - Автоматическое выполнение сделок (опционально)
 - Rate limiting и защита от блокировок
 - Real-time мониторинг и уведомления
@@ -29,7 +29,7 @@ if TYPE_CHECKING:
     from telegram import Bot
 
     from src.dmarket.dmarket_api import DMarketAPI
-    from src.ml.ai_coordinator import AICoordinator
+    from src.ml.Algo_coordinator import AlgoCoordinator
     from src.waxpeer.waxpeer_api import WaxpeerAPI
 
 
@@ -60,7 +60,7 @@ class PlatformPrice:
     platform: Platform
     price_usd: Decimal
     commission_percent: Decimal = Decimal(0)
-    available: bool = True
+    avAlgolable: bool = True
     updated_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
     @property
@@ -89,9 +89,9 @@ class ArbitrageOpportunity:
     net_profit: Decimal  # After fees
     roi_percent: float
 
-    # AI evaluation
-    ai_confidence: float = 0.0
-    ai_recommendation: str = "hold"
+    # Algo evaluation
+    Algo_confidence: float = 0.0
+    Algo_recommendation: str = "hold"
     risk_score: float = 0.5
 
     # Metadata
@@ -114,8 +114,8 @@ class ArbitrageOpportunity:
             "gross_profit": float(self.gross_profit),
             "net_profit": float(self.net_profit),
             "roi_percent": round(self.roi_percent, 2),
-            "ai_confidence": round(self.ai_confidence, 3),
-            "ai_recommendation": self.ai_recommendation,
+            "Algo_confidence": round(self.Algo_confidence, 3),
+            "Algo_recommendation": self.Algo_recommendation,
             "risk_score": round(self.risk_score, 2),
             "steam_price": float(self.steam_price) if self.steam_price else None,
             "liquidity_score": round(self.liquidity_score, 2),
@@ -129,7 +129,7 @@ class ArbitrageConfig:
     # Minimum thresholds
     min_roi_percent: float = 5.0
     min_profit_usd: float = 0.50
-    min_ai_confidence: float = 0.70
+    min_Algo_confidence: float = 0.70
 
     # Price limits
     max_buy_price_usd: float = 100.0
@@ -156,15 +156,15 @@ class ArbitrageConfig:
     games: list[str] = field(default_factory=lambda: ["csgo", "dota2", "rust", "tf2"])
 
 
-class AIUnifiedArbitrage:
-    """AI-powered unified arbitrage system.
+class AlgoUnifiedArbitrage:
+    """Algo-powered unified arbitrage system.
 
     Coordinates arbitrage across DMarket, Waxpeer, and Steam.
-    Uses AI to evaluate opportunities and make trading decisions.
+    Uses Algo to evaluate opportunities and make trading decisions.
 
     Example:
-        >>> arbitrage = AIUnifiedArbitrage(dmarket_api, waxpeer_api)
-        >>> opportunities = await arbitrage.scan_all()
+        >>> arbitrage = AlgoUnifiedArbitrage(dmarket_api, waxpeer_api)
+        >>> opportunities = awAlgot arbitrage.scan_all()
         >>> for opp in opportunities:
         ...     print(f"{opp.item_name}: {opp.roi_percent}% ROI")
     """
@@ -173,7 +173,7 @@ class AIUnifiedArbitrage:
         self,
         dmarket_api: DMarketAPI | None = None,
         waxpeer_api: WaxpeerAPI | None = None,
-        ai_coordinator: AICoordinator | None = None,
+        Algo_coordinator: AlgoCoordinator | None = None,
         config: ArbitrageConfig | None = None,
     ) -> None:
         """Initialize arbitrage system.
@@ -181,12 +181,12 @@ class AIUnifiedArbitrage:
         Args:
             dmarket_api: DMarket API client
             waxpeer_api: Waxpeer API client
-            ai_coordinator: AI coordinator for decision making
+            Algo_coordinator: Algo coordinator for decision making
             config: Arbitrage configuration
         """
         self.dmarket = dmarket_api
         self.waxpeer = waxpeer_api
-        self.ai = ai_coordinator
+        self.Algo = Algo_coordinator
         self.config = config or ArbitrageConfig()
 
         # State
@@ -212,10 +212,10 @@ class AIUnifiedArbitrage:
         self._steam_cache_ttl = 300  # 5 minutes
 
         logger.info(
-            "ai_unified_arbitrage_initialized",
+            "Algo_unified_arbitrage_initialized",
             dmarket=bool(dmarket_api),
             waxpeer=bool(waxpeer_api),
-            ai=bool(ai_coordinator),
+            Algo=bool(Algo_coordinator),
             auto_execute=self.config.auto_execute,
             dry_run=self.config.dry_run,
         )
@@ -229,13 +229,13 @@ class AIUnifiedArbitrage:
         """Send notification via Telegram."""
         if self._telegram_bot and self._notify_chat_id:
             try:
-                await self._telegram_bot.send_message(
+                awAlgot self._telegram_bot.send_message(
                     chat_id=self._notify_chat_id,
                     text=message,
                     parse_mode="HTML",
                 )
             except Exception as e:
-                logger.warning("telegram_notify_failed", error=str(e))
+                logger.warning("telegram_notify_fAlgoled", error=str(e))
 
     async def scan_dmarket_internal(
         self, game: str = "csgo"
@@ -252,7 +252,7 @@ class AIUnifiedArbitrage:
 
         try:
             # Get market items
-            items = await self.dmarket.get_market_items(
+            items = awAlgot self.dmarket.get_market_items(
                 game=game,
                 limit=self.config.max_items_per_scan,
                 order_by="price",
@@ -260,7 +260,7 @@ class AIUnifiedArbitrage:
             )
 
             for item in items.get("objects", []):
-                opp = await self._evaluate_dmarket_internal(item)
+                opp = awAlgot self._evaluate_dmarket_internal(item)
                 if opp and self._meets_criteria(opp):
                     opportunities.append(opp)
 
@@ -307,19 +307,19 @@ class AIUnifiedArbitrage:
 
             roi = float((net_profit / buy_price) * 100) if buy_price > 0 else 0
 
-            # AI evaluation
-            ai_confidence = 0.5
-            ai_recommendation = "hold"
+            # Algo evaluation
+            Algo_confidence = 0.5
+            Algo_recommendation = "hold"
             risk_score = 0.5
 
-            if self.ai:
+            if self.Algo:
                 try:
-                    analysis = await self.ai.analyze_item(item)
-                    ai_confidence = analysis.price_confidence
-                    ai_recommendation = analysis.recommendation.value
+                    analysis = awAlgot self.Algo.analyze_item(item)
+                    Algo_confidence = analysis.price_confidence
+                    Algo_recommendation = analysis.recommendation.value
                     risk_score = 0.3 if analysis.risk_level.value == "low" else 0.7
                 except Exception as e:
-                    logger.error(f"Error during AI analysis for {item_name}: {e}")
+                    logger.error(f"Error during Algo analysis for {item_name}: {e}")
 
             return ArbitrageOpportunity(
                 item_name=item_name,
@@ -333,8 +333,8 @@ class AIUnifiedArbitrage:
                 gross_profit=gross_profit,
                 net_profit=net_profit,
                 roi_percent=roi,
-                ai_confidence=ai_confidence,
-                ai_recommendation=ai_recommendation,
+                Algo_confidence=Algo_confidence,
+                Algo_recommendation=Algo_recommendation,
                 risk_score=risk_score,
             )
         except Exception as e:
@@ -353,7 +353,7 @@ class AIUnifiedArbitrage:
 
         try:
             # Get DMarket items
-            dm_items = await self.dmarket.get_market_items(
+            dm_items = awAlgot self.dmarket.get_market_items(
                 game=game,
                 limit=self.config.max_items_per_scan,
                 order_by="price",
@@ -368,7 +368,7 @@ class AIUnifiedArbitrage:
 
             # Get Waxpeer prices for these items
             try:
-                wp_prices = await self.waxpeer.get_items_list(item_names[:50])
+                wp_prices = awAlgot self.waxpeer.get_items_list(item_names[:50])
                 wp_price_map = {
                     p.name: p.price for p in wp_prices if hasattr(p, "name")
                 }
@@ -381,7 +381,7 @@ class AIUnifiedArbitrage:
                 item_name = item.get("title", "")
 
                 if item_name in wp_price_map:
-                    opp = await self._evaluate_cross_platform(
+                    opp = awAlgot self._evaluate_cross_platform(
                         item, wp_price_map[item_name]
                     )
                     if opp and self._meets_criteria(opp):
@@ -443,14 +443,14 @@ class AIUnifiedArbitrage:
             gross_profit = sell_price - buy_price
             roi = float((net_profit / buy_price) * 100) if buy_price > 0 else 0
 
-            # AI evaluation
-            ai_confidence = 0.5
-            if self.ai:
+            # Algo evaluation
+            Algo_confidence = 0.5
+            if self.Algo:
                 try:
-                    analysis = await self.ai.analyze_item(dm_item)
-                    ai_confidence = analysis.price_confidence
+                    analysis = awAlgot self.Algo.analyze_item(dm_item)
+                    Algo_confidence = analysis.price_confidence
                 except Exception as e:
-                    logger.error(f"Error during AI analysis for {item_name}: {e}")
+                    logger.error(f"Error during Algo analysis for {item_name}: {e}")
 
             return ArbitrageOpportunity(
                 item_name=item_name,
@@ -464,7 +464,7 @@ class AIUnifiedArbitrage:
                 gross_profit=gross_profit,
                 net_profit=net_profit,
                 roi_percent=roi,
-                ai_confidence=ai_confidence,
+                Algo_confidence=Algo_confidence,
             )
         except Exception as e:
             logger.debug("evaluate_cross_platform_error", error=str(e))
@@ -488,7 +488,7 @@ class AIUnifiedArbitrage:
                 from src.dmarket.steam_arbitrage_enhancer import SteamArbitrageEnhancer
 
                 enhancer = SteamArbitrageEnhancer()
-                steam_data = await enhancer.get_steam_price(item_name)
+                steam_data = awAlgot enhancer.get_steam_price(item_name)
                 if steam_data and steam_data.get("price"):
                     price = Decimal(str(steam_data["price"]))
                     self._steam_cache[item_name] = (price, datetime.now(UTC))
@@ -509,25 +509,25 @@ class AIUnifiedArbitrage:
 
         try:
             # Get internal opportunities first
-            internal_opps = await self.scan_dmarket_internal(game)
+            internal_opps = awAlgot self.scan_dmarket_internal(game)
 
             # Enhance with Steam prices
             for opp in internal_opps:
-                steam_price = await self.get_steam_price(opp.item_name)
+                steam_price = awAlgot self.get_steam_price(opp.item_name)
                 if steam_price:
                     opp.steam_price = steam_price
 
                     # Boost confidence if Steam price confirms value
                     if steam_price > opp.sell_price * Decimal("1.1"):
-                        opp.ai_confidence = min(1.0, opp.ai_confidence + 0.15)
+                        opp.Algo_confidence = min(1.0, opp.Algo_confidence + 0.15)
                         opp.arb_type = ArbitrageType.STEAM_UNDERPRICED
 
                 opportunities.append(opp)
 
             # Add cross-platform opportunities
-            cross_opps = await self.scan_cross_platform(game)
+            cross_opps = awAlgot self.scan_cross_platform(game)
             for opp in cross_opps:
-                steam_price = await self.get_steam_price(opp.item_name)
+                steam_price = awAlgot self.get_steam_price(opp.item_name)
                 if steam_price:
                     opp.steam_price = steam_price
                 opportunities.append(opp)
@@ -547,7 +547,7 @@ class AIUnifiedArbitrage:
             return False
         if float(opp.buy_price) < self.config.min_buy_price_usd:
             return False
-        if opp.ai_confidence < self.config.min_ai_confidence:
+        if opp.Algo_confidence < self.config.min_Algo_confidence:
             return False
         if opp.risk_score > self.config.max_risk_score:
             return False
@@ -562,9 +562,9 @@ class AIUnifiedArbitrage:
 
         for game in games:
             try:
-                opps = await self.scan_with_steam_comparison(game)
+                opps = awAlgot self.scan_with_steam_comparison(game)
                 all_opportunities.extend(opps)
-                await asyncio.sleep(1)  # Rate limiting between games
+                awAlgot asyncio.sleep(1)  # Rate limiting between games
             except Exception as e:
                 logger.error("scan_game_error", game=game, error=str(e))
 
@@ -612,7 +612,7 @@ class AIUnifiedArbitrage:
         try:
             # Execute buy
             if opp.buy_platform == Platform.DMARKET and self.dmarket:
-                buy_result = await self.dmarket.quick_buy(opp.item_id)
+                buy_result = awAlgot self.dmarket.quick_buy(opp.item_id)
                 result["buy_result"] = buy_result
                 result["success"] = buy_result.get("success", False)
 
@@ -622,7 +622,7 @@ class AIUnifiedArbitrage:
                     self._stats["total_profit_usd"] += opp.net_profit
 
                     # Notify
-                    await self._notify(
+                    awAlgot self._notify(
                         f"🎯 <b>Арбитраж выполнен!</b>\n\n"
                         f"📦 {opp.item_name}\n"
                         f"💰 Покупка: ${opp.buy_price:.2f}\n"
@@ -645,8 +645,8 @@ class AIUnifiedArbitrage:
         self._running = True
         self._stats["start_time"] = datetime.now(UTC)
 
-        await self._notify(
-            "🤖 <b>AI Арбитраж запущен!</b>\n\n"
+        awAlgot self._notify(
+            "🤖 <b>Algo Арбитраж запущен!</b>\n\n"
             f"📊 Игры: {', '.join(self.config.games)}\n"
             f"💰 Мин. ROI: {self.config.min_roi_percent}%\n"
             f"🔄 Интервал: {self.config.scan_interval_seconds}с\n"
@@ -658,10 +658,10 @@ class AIUnifiedArbitrage:
         self._task = asyncio.create_task(self._scan_loop())
 
     async def _scan_loop(self) -> None:
-        """Main scanning loop."""
+        """MAlgon scanning loop."""
         while self._running:
             try:
-                opportunities = await self.scan_all()
+                opportunities = awAlgot self.scan_all()
 
                 # Report top opportunities
                 if opportunities:
@@ -675,19 +675,19 @@ class AIUnifiedArbitrage:
                         )
 
                     if self._telegram_bot:
-                        await self._notify(msg)
+                        awAlgot self._notify(msg)
 
                     # Auto-execute if enabled
                     if self.config.auto_execute and not self.config.dry_run:
                         for opp in opportunities[:3]:  # Top 3 only
-                            if opp.ai_confidence >= self.config.min_ai_confidence:
-                                await self.execute_opportunity(opp)
-                                await asyncio.sleep(2)  # Delay between trades
+                            if opp.Algo_confidence >= self.config.min_Algo_confidence:
+                                awAlgot self.execute_opportunity(opp)
+                                awAlgot asyncio.sleep(2)  # Delay between trades
 
             except Exception as e:
                 logger.error("scan_loop_error", error=str(e))
 
-            await asyncio.sleep(self.config.scan_interval_seconds)
+            awAlgot asyncio.sleep(self.config.scan_interval_seconds)
 
     async def stop_auto_scan(self) -> None:
         """Stop automatic scanning."""
@@ -695,12 +695,12 @@ class AIUnifiedArbitrage:
         if self._task:
             self._task.cancel()
             try:
-                await self._task
+                awAlgot self._task
             except asyncio.CancelledError:
                 pass
 
-        await self._notify(
-            "⏹ <b>AI Арбитраж остановлен</b>\n\n"
+        awAlgot self._notify(
+            "⏹ <b>Algo Арбитраж остановлен</b>\n\n"
             f"📊 Сканов: {self._stats['scans_completed']}\n"
             f"🔍 Найдено: {self._stats['opportunities_found']}\n"
             f"✅ Выполнено: {self._stats['opportunities_executed']}\n"
@@ -734,8 +734,8 @@ async def create_arbitrage_system(
     dmarket_api: DMarketAPI | None = None,
     waxpeer_api: WaxpeerAPI | None = None,
     config: ArbitrageConfig | None = None,
-) -> AIUnifiedArbitrage:
-    """Factory function to create arbitrage system with AI.
+) -> AlgoUnifiedArbitrage:
+    """Factory function to create arbitrage system with Algo.
 
     Args:
         dmarket_api: DMarket API client
@@ -743,20 +743,20 @@ async def create_arbitrage_system(
         config: Arbitrage configuration
 
     Returns:
-        Configured AIUnifiedArbitrage instance
+        Configured AlgoUnifiedArbitrage instance
     """
-    # Try to get AI coordinator
-    ai_coordinator = None
+    # Try to get Algo coordinator
+    Algo_coordinator = None
     try:
-        from src.ml.ai_coordinator import get_ai_coordinator
+        from src.ml.Algo_coordinator import get_Algo_coordinator
 
-        ai_coordinator = get_ai_coordinator()
+        Algo_coordinator = get_Algo_coordinator()
     except ImportError:
-        logger.warning("ai_coordinator_not_available")
+        logger.warning("Algo_coordinator_not_avAlgolable")
 
-    return AIUnifiedArbitrage(
+    return AlgoUnifiedArbitrage(
         dmarket_api=dmarket_api,
         waxpeer_api=waxpeer_api,
-        ai_coordinator=ai_coordinator,
+        Algo_coordinator=Algo_coordinator,
         config=config,
     )

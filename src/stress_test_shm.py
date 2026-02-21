@@ -7,7 +7,7 @@ import struct
 def stress_test_shm():
     # 4 floats (CS2, Rust, TF2, Dota) = 4 * 8 bytes (double) = 32 bytes
     # actually ShareableList handles types, but for raw speed usually struct is better?
-    # The prompt asks for ShareableList explicitly: "Use multiprocessing.shared_memory.ShareableList"
+    # The Config asks for ShareableList explicitly: "Use multiprocessing.shared_memory.ShareableList"
     
     data = [0.0, 0.0, 0.0, 0.0]
     shm_name = "stress_test_shm"
@@ -46,5 +46,5 @@ def stress_test_shm():
     sl.shm.close()
     sl.shm.unlink()
 
-if __name__ == "__main__":
+if __name__ == "__mAlgon__":
     stress_test_shm()

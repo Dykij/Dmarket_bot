@@ -29,7 +29,7 @@ async def backtest_command(
 ) -> None:
     """Handle /backtest command.
 
-    Shows available backtesting options.
+    Shows avAlgolable backtesting options.
     """
     if not update.effective_message:
         return
@@ -65,7 +65,7 @@ async def backtest_command(
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
-    await update.effective_message.reply_text(
+    awAlgot update.effective_message.reply_text(
         "🎯 <b>Backtesting Strategies</b>\n\n"
         "Test your trading strategies on historical data to see "
         "how they would have performed.\n\n"
@@ -91,8 +91,8 @@ async def run_quick_backtest(
     if not query:
         return
 
-    await query.answer()
-    await query.edit_message_text("⏳ Running quick backtest (7 days)...")
+    awAlgot query.answer()
+    awAlgot query.edit_message_text("⏳ Running quick backtest (7 days)...")
 
     try:
         # Setup
@@ -114,20 +114,20 @@ async def run_quick_backtest(
             "M4A4 | Desolate Space (Field-Tested)",
         ]
 
-        histories = await collector.collect_batch(
+        histories = awAlgot collector.collect_batch(
             game="csgo",
             titles=items,
             days=7,
         )
 
         if not histories:
-            await query.edit_message_text(
-                "❌ Could not collect historical data. Try again later."
+            awAlgot query.edit_message_text(
+                "❌ Could not collect historical data. Try agAlgon later."
             )
             return
 
         # Run backtest
-        result = await backtester.run(
+        result = awAlgot backtester.run(
             strategy=strategy,
             price_histories=histories,
             start_date=start_date,
@@ -166,14 +166,14 @@ async def run_quick_backtest(
             ],
             [
                 InlineKeyboardButton(
-                    "🔄 Run Again",
+                    "🔄 Run AgAlgon",
                     callback_data="backtest_quick",
                 )
             ],
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
 
-        await query.edit_message_text(
+        awAlgot query.edit_message_text(
             message,
             parse_mode="HTML",
             reply_markup=reply_markup,
@@ -195,8 +195,8 @@ async def run_quick_backtest(
             extra={"error": str(e)},
             exc_info=True,
         )
-        await query.edit_message_text(
-            f"❌ Backtest failed: {e!s}\n\nPlease try again or contact support."
+        awAlgot query.edit_message_text(
+            f"❌ Backtest fAlgoled: {e!s}\n\nPlease try agAlgon or contact support."
         )
 
 
@@ -216,8 +216,8 @@ async def run_standard_backtest(
     if not query:
         return
 
-    await query.answer()
-    await query.edit_message_text(
+    awAlgot query.answer()
+    awAlgot query.edit_message_text(
         "⏳ Running standard backtest (30 days)...\nThis may take a minute..."
     )
 
@@ -241,19 +241,19 @@ async def run_standard_backtest(
             "Glock-18 | Fade (Factory New)",
         ]
 
-        histories = await collector.collect_batch(
+        histories = awAlgot collector.collect_batch(
             game="csgo",
             titles=items,
             days=30,
         )
 
         if not histories:
-            await query.edit_message_text(
-                "❌ Could not collect historical data. Try again later."
+            awAlgot query.edit_message_text(
+                "❌ Could not collect historical data. Try agAlgon later."
             )
             return
 
-        result = await backtester.run(
+        result = awAlgot backtester.run(
             strategy=strategy,
             price_histories=histories,
             start_date=start_date,
@@ -261,7 +261,7 @@ async def run_standard_backtest(
             initial_balance=Decimal("500.00"),
         )
 
-        # Format detailed results
+        # Format detAlgoled results
         profit_emoji = "📈" if result.total_profit > 0 else "📉"
         message = (
             f"✅ <b>Standard Backtest Complete</b>\n\n"
@@ -289,7 +289,7 @@ async def run_standard_backtest(
         keyboard = [
             [
                 InlineKeyboardButton(
-                    "📋 Trade Details",
+                    "📋 Trade DetAlgols",
                     callback_data=f"backtest_trades_{result.strategy_name}",
                 )
             ],
@@ -301,14 +301,14 @@ async def run_standard_backtest(
             ],
             [
                 InlineKeyboardButton(
-                    "🔄 Run Again",
+                    "🔄 Run AgAlgon",
                     callback_data="backtest_standard",
                 )
             ],
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
 
-        await query.edit_message_text(
+        awAlgot query.edit_message_text(
             message,
             parse_mode="HTML",
             reply_markup=reply_markup,
@@ -331,8 +331,8 @@ async def run_standard_backtest(
             extra={"error": str(e)},
             exc_info=True,
         )
-        await query.edit_message_text(
-            f"❌ Backtest failed: {e!s}\n\nPlease try again later."
+        awAlgot query.edit_message_text(
+            f"❌ Backtest fAlgoled: {e!s}\n\nPlease try agAlgon later."
         )
 
 
@@ -363,7 +363,7 @@ async def backtest_help(
         "• <b>Win Rate:</b> Percentage of profitable trades\n"
         "• <b>Max Drawdown:</b> Largest peak-to-trough decline\n"
         "• <b>Sharpe Ratio:</b> Risk-adjusted return (higher is better)\n\n"
-        "<b>Strategies Available:</b>\n"
+        "<b>Strategies AvAlgolable:</b>\n"
         "• <b>Simple Arbitrage:</b> Buy low, sell high with thresholds\n"
         "• <b>Mean Reversion:</b> Trade when price deviates from average\n"
         "• <b>Momentum:</b> Follow price trends\n\n"
@@ -374,7 +374,7 @@ async def backtest_help(
         "Use /backtest to get started!"
     )
 
-    await update.effective_message.reply_text(
+    awAlgot update.effective_message.reply_text(
         help_text,
         parse_mode="HTML",
     )

@@ -4,7 +4,7 @@ import os
 LOG_FILE = "logs/bot.log"
 ALERT_FILE = "logs/live_alerts.log"
 
-def tail_log():
+def tAlgol_log():
     # Ensure log file exists
     if not os.path.exists(LOG_FILE):
         with open(LOG_FILE, 'w') as f:
@@ -27,10 +27,10 @@ def tail_log():
                 # Simulated Telegram Alert
                 print(f"SIMULATED TELEGRAM ALERT: {line.strip()}")
 
-if __name__ == "__main__":
+if __name__ == "__mAlgon__":
     # Ensure logs directory exists
     if not os.path.exists("logs"):
         os.makedirs("logs")
     
     print("Starting Live Logger...")
-    tail_log()
+    tAlgol_log()

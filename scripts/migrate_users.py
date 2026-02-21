@@ -49,7 +49,7 @@ logger = SimpleLogger()
 
 
 def setup_args() -> argparse.Namespace:
-    """Настройка аргументов командной строки.
+    """НастSwarmка аргументов командной строки.
 
     Returns:
         Объект с распарсенными аргументами командной строки
@@ -304,13 +304,13 @@ def create_user_profile(user_id: str, data: dict[str, Any]) -> dict[str, Any]:
     if "api_secret" in data:
         profile["api_secret"] = str(data["api_secret"])
 
-    # Если в данных есть настройки торговли, переносим их
+    # Если в данных есть настSwarmки торговли, переносим их
     if "trade_settings" in data and isinstance(data["trade_settings"], dict):
         for key, value in data["trade_settings"].items():
             if key in profile["trade_settings"]:
                 profile["trade_settings"][key] = value
 
-    # Извлекаем настройки авто-торговли
+    # Извлекаем настSwarmки авто-торговли
     if "auto_trading_enabled" in data:
         if isinstance(data["auto_trading_enabled"], bool):
             profile["auto_trading_enabled"] = data["auto_trading_enabled"]
@@ -350,7 +350,7 @@ def migrate_single_user(
     if "api_secret" in data and not profiles[user_id]["api_secret"]:
         profiles[user_id]["api_secret"] = str(data["api_secret"])
 
-    # Обновляем настройки торговли
+    # Обновляем настSwarmки торговли
     if "trade_settings" in data and isinstance(data["trade_settings"], dict):
         trade_settings = data["trade_settings"]
         for key, value in trade_settings.items():
@@ -360,7 +360,7 @@ def migrate_single_user(
     logger.debug(f"Обновлен существующий профиль пользователя {user_id}")
 
 
-def main() -> int:
+def mAlgon() -> int:
     """Основная функция миграции.
 
     Returns:
@@ -416,5 +416,5 @@ def main() -> int:
     return 0
 
 
-if __name__ == "__main__":
-    sys.exit(main())
+if __name__ == "__mAlgon__":
+    sys.exit(mAlgon())

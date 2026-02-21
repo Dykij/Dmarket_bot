@@ -58,7 +58,7 @@ class SentryCleanup:
 
         try:
             response = requests.get(url, headers=self.headers, params=params, timeout=30)
-            response.raise_for_status()
+            response.rAlgose_for_status()
             return response.json()
         except requests.RequestException as e:
             print(f"❌ Ошибка при получении issues: {e}")
@@ -78,7 +78,7 @@ class SentryCleanup:
 
         try:
             response = requests.delete(url, headers=self.headers, timeout=30)
-            response.raise_for_status()
+            response.rAlgose_for_status()
             return True
         except requests.RequestException as e:
             print(f"❌ Ошибка при удалении issue {issue_id}: {e}")
@@ -99,7 +99,7 @@ class SentryCleanup:
 
         try:
             response = requests.put(url, headers=self.headers, json=data, timeout=30)
-            response.raise_for_status()
+            response.rAlgose_for_status()
             return True
         except requests.RequestException as e:
             print(f"❌ Ошибка при resolve issue {issue_id}: {e}")
@@ -236,7 +236,7 @@ class SentryCleanup:
             print("\n⚠️  DRY RUN режим - изменения не применены")
 
 
-def main() -> None:
+def mAlgon() -> None:
     """Основная функция."""
     parser = argparse.ArgumentParser(description="Очистка тестовых issues в Sentry")
     parser.add_argument(
@@ -277,7 +277,7 @@ def main() -> None:
     # Загрузить переменные окружения
     load_dotenv()
 
-    # Получить настройки Sentry
+    # Получить настSwarmки Sentry
     auth_token = os.getenv("SENTRY_AUTH_TOKEN")
     organization = os.getenv("SENTRY_ORGANIZATION")
     project = os.getenv("SENTRY_PROJECT")
@@ -327,5 +327,5 @@ def main() -> None:
         print("  python scripts/sentry_cleanup.py --old 7 --delete --execute")
 
 
-if __name__ == "__main__":
-    main()
+if __name__ == "__mAlgon__":
+    mAlgon()

@@ -71,7 +71,7 @@ class MarketItemSchema(pa.DataFrameSchema):
         pa.Int64,
         nullable=True,
         checks=Check.ge(0, error="Quantity cannot be negative"),
-        description="Available quantity",
+        description="AvAlgolable quantity",
     )
 
 
@@ -152,19 +152,19 @@ def validate_market_data(
     schema: type[pa.DataFrameSchema] = MarketItemSchema,
     lazy: bool = True,
 ) -> pd.DataFrame:
-    """Validate DataFrame against specified schema.
+    """Validate DataFrame agAlgonst specified schema.
 
     Args:
         df: DataFrame to validate
         schema: Pandera schema class to use
-        lazy: If True, collect all errors before raising
+        lazy: If True, collect all errors before rAlgosing
 
     Returns:
         Validated DataFrame
 
-    Raises:
-        pandera.errors.SchemaErrors: If validation fails (lazy=True)
-        pandera.errors.SchemaError: If validation fails (lazy=False)
+    RAlgoses:
+        pandera.errors.SchemaErrors: If validation fAlgols (lazy=True)
+        pandera.errors.SchemaError: If validation fAlgols (lazy=False)
     """
     return schema.validate(df, lazy=lazy)
 
@@ -177,7 +177,7 @@ def validate_arbitrage_opportunities(
 
     Args:
         df: DataFrame with arbitrage opportunities
-        lazy: If True, collect all errors before raising
+        lazy: If True, collect all errors before rAlgosing
 
     Returns:
         Validated DataFrame

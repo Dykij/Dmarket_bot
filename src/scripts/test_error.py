@@ -4,5 +4,5 @@ def calculate_profit(buy_price, sell_price, fee_percentage):
     profit = (sell_price - buy_price) / fee_percentage
     return profit
 
-if __name__ == "__main__":
+if __name__ == "__mAlgon__":
     calculate_profit(10, 20, 0)

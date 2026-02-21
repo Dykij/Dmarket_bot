@@ -3,7 +3,7 @@
 This module identifies mispriced rare items with:
 - Early returns pattern for validation
 - Smaller focused functions (<50 lines each)
-- Clear data structures for rare traits
+- Clear data structures for rare trAlgots
 - Better separation of concerns
 
 Phase 2 Refactoring (January 1, 2026)
@@ -18,15 +18,15 @@ logger = logging.getLogger(__name__)
 
 __all__ = [
     "RarePricingAnalyzer",
-    "RarityTraits",
+    "RarityTrAlgots",
     "ScoredItem",
 ]
 
 
-class RarityTraits:
-    """Rare traits configuration for different games."""
+class RarityTrAlgots:
+    """Rare trAlgots configuration for different games."""
 
-    TRAITS = {
+    TRAlgoTS = {
         "csgo": {
             "Knife": 100,
             "Gloves": 90,
@@ -62,7 +62,7 @@ class RarityTraits:
             "Golden Frying Pan": 100,
             "Burning Flames": 95,
             "Sunbeams": 90,
-            "Team Captain": 70,
+            "Team CaptAlgon": 70,
         },
         "rust": {
             "Glowing": 70,
@@ -81,16 +81,16 @@ class RarityTraits:
     }
 
     @classmethod
-    def get_traits(cls, game: str) -> dict[str, int]:
-        """Get rare traits for specific game.
+    def get_trAlgots(cls, game: str) -> dict[str, int]:
+        """Get rare trAlgots for specific game.
 
         Args:
             game: Game code
 
         Returns:
-            Dictionary of trait -> weight
+            Dictionary of trAlgot -> weight
         """
-        return cls.TRAITS.get(game, {})
+        return cls.TRAlgoTS.get(game, {})
 
 
 class ScoredItem:
@@ -100,7 +100,7 @@ class ScoredItem:
         self,
         item: dict[str, Any],
         rarity_score: int,
-        rare_traits: list[str],
+        rare_trAlgots: list[str],
         current_price: float,
         estimated_value: float,
     ):
@@ -109,13 +109,13 @@ class ScoredItem:
         Args:
             item: Original item data
             rarity_score: Calculated rarity score
-            rare_traits: Detected rare traits
+            rare_trAlgots: Detected rare trAlgots
             current_price: Current market price
             estimated_value: Estimated true value
         """
         self.item = item
         self.rarity_score = rarity_score
-        self.rare_traits = rare_traits
+        self.rare_trAlgots = rare_trAlgots
         self.current_price = current_price
         self.estimated_value = estimated_value
         self.price_difference = estimated_value - current_price
@@ -152,7 +152,7 @@ class ScoredItem:
         return {
             "item": self.item,
             "rarity_score": self.rarity_score,
-            "rare_traits": self.rare_traits,
+            "rare_trAlgots": self.rare_trAlgots,
             "current_price": self.current_price,
             "estimated_value": self.estimated_value,
             "price_difference": self.price_difference,
@@ -185,7 +185,7 @@ class RarePricingAnalyzer:
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         """Async context manager exit."""
         if self._close_api and hasattr(self.api_client, "_close_client"):
-            await self.api_client._close_client()
+            awAlgot self.api_client._close_client()
 
     async def find_mispriced_rare_items(
         self,
@@ -209,7 +209,7 @@ class RarePricingAnalyzer:
 
         try:
             # Fetch market items
-            items = await self._fetch_market_items(
+            items = awAlgot self._fetch_market_items(
                 game=game,
                 min_price=min_price,
                 max_price=max_price,
@@ -218,7 +218,7 @@ class RarePricingAnalyzer:
             if not items:
                 return []
 
-            # Analyze items for rare traits
+            # Analyze items for rare trAlgots
             scored_items = self._analyze_items(
                 items=items,
                 game=game,
@@ -249,7 +249,7 @@ class RarePricingAnalyzer:
         Returns:
             List of market items
         """
-        items_response = await self.api_client.get_market_items(
+        items_response = awAlgot self.api_client.get_market_items(
             game=game,
             limit=500,
             offset=0,
@@ -266,7 +266,7 @@ class RarePricingAnalyzer:
         min_price: float,
         max_price: float,
     ) -> list[ScoredItem]:
-        """Analyze items for rare traits and pricing.
+        """Analyze items for rare trAlgots and pricing.
 
         Args:
             items: List of items to analyze
@@ -320,7 +320,7 @@ class RarePricingAnalyzer:
             return None
 
         # Calculate rarity score
-        rarity_score, detected_traits = self._calculate_rarity_score(
+        rarity_score, detected_trAlgots = self._calculate_rarity_score(
             item=item,
             title=title,
             game=game,
@@ -341,7 +341,7 @@ class RarePricingAnalyzer:
         return ScoredItem(
             item=item,
             rarity_score=rarity_score,
-            rare_traits=detected_traits,
+            rare_trAlgots=detected_trAlgots,
             current_price=price,
             estimated_value=estimated_value,
         )
@@ -395,7 +395,7 @@ class RarePricingAnalyzer:
         title: str,
         game: str,
     ) -> tuple[int, list[str]]:
-        """Calculate rarity score based on traits.
+        """Calculate rarity score based on trAlgots.
 
         Args:
             item: Item data
@@ -403,26 +403,26 @@ class RarePricingAnalyzer:
             game: Game code
 
         Returns:
-            Tuple of (rarity_score, detected_traits)
+            Tuple of (rarity_score, detected_trAlgots)
         """
         rarity_score = 0
-        detected_traits = []
+        detected_trAlgots = []
 
-        # Check title for rare traits
-        traits = RarityTraits.get_traits(game)
-        for trait, weight in traits.items():
-            if trait in title:
+        # Check title for rare trAlgots
+        trAlgots = RarityTrAlgots.get_trAlgots(game)
+        for trAlgot, weight in trAlgots.items():
+            if trAlgot in title:
                 rarity_score += weight
-                detected_traits.append(trait)
+                detected_trAlgots.append(trAlgot)
 
         # Add CS:GO float value bonus
         if game == "csgo":
-            float_bonus, float_trait = self._get_float_bonus(item)
+            float_bonus, float_trAlgot = self._get_float_bonus(item)
             rarity_score += float_bonus
-            if float_trait:
-                detected_traits.append(float_trait)
+            if float_trAlgot:
+                detected_trAlgots.append(float_trAlgot)
 
-        return rarity_score, detected_traits
+        return rarity_score, detected_trAlgots
 
     def _get_float_bonus(self, item: dict[str, Any]) -> tuple[int, str | None]:
         """Calculate bonus score for CS:GO float value.
@@ -431,7 +431,7 @@ class RarePricingAnalyzer:
             item: Item data
 
         Returns:
-            Tuple of (bonus_score, trait_description)
+            Tuple of (bonus_score, trAlgot_description)
         """
         if "float" not in item:
             return 0, None
@@ -478,7 +478,7 @@ class RarePricingAnalyzer:
 
         Args:
             price: Current market price
-            suggested_price: Suggested price (if available)
+            suggested_price: Suggested price (if avAlgolable)
             rarity_score: Calculated rarity score
 
         Returns:
@@ -542,7 +542,7 @@ async def find_mispriced_rare_items(
         List of mispriced rare items
     """
     async with RarePricingAnalyzer(api_client=dmarket_api) as analyzer:
-        return await analyzer.find_mispriced_rare_items(
+        return awAlgot analyzer.find_mispriced_rare_items(
             game=game,
             min_price=min_price,
             max_price=max_price,

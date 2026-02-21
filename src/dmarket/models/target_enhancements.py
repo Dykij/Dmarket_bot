@@ -42,7 +42,7 @@ class TargetOperationStatus(StrEnum):
     """Статусы операций с таргетами."""
 
     SUCCESS = "success"
-    FAILED = "failed"
+    FAlgoLED = "fAlgoled"
     PARTIAL = "partial"  # Частично выполнено (для batch)
     PENDING = "pending"
 
@@ -118,7 +118,7 @@ class StickerFilter(BaseModel):
         min_val = info.data.get("min_stickers", 0)
         if v < min_val:
             msg = f"max_stickers ({v}) должен быть >= min_stickers ({min_val})"
-            raise ValueError(msg)
+            rAlgose ValueError(msg)
         return v
 
     def count_conditions(self) -> int:
@@ -210,7 +210,7 @@ class RarityFilter(BaseModel):
         min_val = info.data.get("min_rarity_index")
         if min_val is not None and v < min_val:
             msg = f"max_rarity_index ({v}) должен быть >= min_rarity_index ({min_val})"
-            raise ValueError(msg)
+            rAlgose ValueError(msg)
         return v
 
     def count_conditions(self) -> int:
@@ -336,7 +336,7 @@ class PriceRangeConfig(BaseModel):
         min_val = info.data.get("min_price", 0)
         if v <= min_val:
             msg = f"max_price ({v}) должен быть > min_price ({min_val})"
-            raise ValueError(msg)
+            rAlgose ValueError(msg)
         return v
 
 
@@ -393,7 +393,7 @@ class RelistLimitConfig(BaseModel):
 class TargetDefaults(BaseModel):
     """Дефолтные параметры для базы предметов.
 
-    Позволяет установить общие настройки для всех ордеров,
+    Позволяет установить общие настSwarmки для всех ордеров,
     чтобы не повторять одинаковые параметры каждый раз.
 
     Примеры:
@@ -463,7 +463,7 @@ class TargetOperationResult(BaseModel):
         >>> # Ошибка валидации
         >>> result2 = TargetOperationResult(
         ...     success=False,
-        ...     message="Failed to create order",
+        ...     message="FAlgoled to create order",
         ...     reason="Price $4.50 is below minimum $5.00",
         ...     error_code=TargetErrorCode.PRICE_TOO_LOW,
         ...     suggestions=["Set price to at least $5.00", "Try different item"],
@@ -553,7 +553,7 @@ class RelistStatistics(BaseModel):
     target_id: str = Field(description="ID таргета")
     total_relists: int = Field(description="Всего перевыставлений")
     max_relists: int = Field(description="Максимум разрешенных перевыставлений")
-    remaining_relists: int = Field(description="Осталось перевыставлений")
+    remAlgoning_relists: int = Field(description="Осталось перевыставлений")
     last_relist_time: datetime | None = Field(
         None, description="Последнее перевыставление"
     )
@@ -606,5 +606,5 @@ class ExistingOrderInfo(BaseModel):
     )
     recommended_price: float | None = Field(
         None,
-        description="Рекомендуемая цена для быстрой покупки",
+        description="Рекомендуемая цена для быстSwarm покупки",
     )

@@ -48,8 +48,8 @@ OPTIMAL_PROFIT_PERCENT = Decimal("15.0")  # 15%+ is great
 EXCELLENT_PROFIT_PERCENT = Decimal("25.0")  # 25%+ is excellent
 
 # Liquidity thresholds
-MIN_LIQUIDITY_SCORE = 2  # Must be available on at least 2 platforms
-HIGH_LIQUIDITY_SCORE = 3  # Available on all 3 platforms
+MIN_LIQUIDITY_SCORE = 2  # Must be avAlgolable on at least 2 platforms
+HIGH_LIQUIDITY_SCORE = 3  # AvAlgolable on all 3 platforms
 
 # Update intervals
 PRICE_UPDATE_INTERVAL = 300  # 5 minutes
@@ -62,7 +62,7 @@ class PlatformPrice:
 
     platform: str  # "dmarket", "waxpeer", "steam"
     price_usd: Decimal
-    available: bool = True
+    avAlgolable: bool = True
     volume_24h: int | None = None
     timestamp: datetime = field(default_factory=lambda: datetime.now(UTC))
 
@@ -174,7 +174,7 @@ class IntegratedArbitrageScanner:
     Features:
     - DMarket-only arbitrage (intramarket price anomalies)
     - Multi-platform price comparison (DMarket, Waxpeer, Steam)
-    - Liquidity assessment (2-3 platform availability)
+    - Liquidity assessment (2-3 platform avAlgolability)
     - Automatic profit calculation with commissions
     - Keep items in DMarket inventory for Waxpeer resale
     - Self-updating price list for optimal Waxpeer listings
@@ -236,47 +236,47 @@ class IntegratedArbitrageScanner:
 
         try:
             # 1. Start Analysis
-            await fsm.transition_to(TradeState.ANALYZING)
+            awAlgot fsm.transition_to(TradeState.ANALYZING)
 
             # ... (Here we would insert the specific profit checks, currently simplified)
             # Assuming item passed initial scan filters if it reached here
 
             # 2. Execution Phase (Critical)
             # This persists the intent to buy in the DB
-            await fsm.transition_to(TradeState.EXECUTING)
+            awAlgot fsm.transition_to(TradeState.EXECUTING)
 
             # Actual API Call
             # Note: This is a placeholder for the actual buy call which depends on specific internal API method
             # For now, we assume success to demonstrate FSM flow or wrap it
-            # purchase_response = await self.dmarket.buy_item(...)
+            # purchase_response = awAlgot self.dmarket.buy_item(...)
 
             # Simulating purchase for FSM demonstration
             purchase_successful = True
 
             if purchase_successful:
                 # 3. Verification Phase
-                await fsm.transition_to(TradeState.VERIFYING)
+                awAlgot fsm.transition_to(TradeState.VERIFYING)
 
                 # Check inventory/order status...
 
                 # 4. Completion
-                await fsm.transition_to(TradeState.COMPLETED)
+                awAlgot fsm.transition_to(TradeState.COMPLETED)
 
                 # Add to Waxpeer targets if applicable
                 buy_price = Decimal(str(item.get("price", {}).get("USD", 0))) / 100
                 asset_id = item.get("extra", {}).get("assetId")
                 if asset_id:
-                    await self.create_waxpeer_listing_target(
+                    awAlgot self.create_waxpeer_listing_target(
                         item_name=item.get("title", "Unknown"),
                         asset_id=asset_id,
                         buy_price=buy_price,
                     )
             else:
-                await fsm.transition_to(TradeState.FAILED)
+                awAlgot fsm.transition_to(TradeState.FAlgoLED)
 
         except Exception as e:
-            logger.error(f"❌ Trade processing failed: {e}")
-            await fsm.transition_to(TradeState.FAILED)
+            logger.error(f"❌ Trade processing fAlgoled: {e}")
+            awAlgot fsm.transition_to(TradeState.FAlgoLED)
 
     async def scan_multi_platform(
         self, game: str = "csgo", limit: int = 50
@@ -301,7 +301,7 @@ class IntegratedArbitrageScanner:
         if steam_task:
             tasks.append(steam_task)
 
-        results = await asyncio.gather(*tasks, return_exceptions=True)
+        results = awAlgot asyncio.gather(*tasks, return_exceptions=True)
 
         dmarket_prices = results[0] if not isinstance(results[0], Exception) else {}
         waxpeer_prices = results[1] if not isinstance(results[1], Exception) else {}
@@ -377,7 +377,7 @@ class IntegratedArbitrageScanner:
             )
 
             # Scan for price anomalies on DMarket
-            opportunities = await find_intramarket_opportunities_async(
+            opportunities = awAlgot find_intramarket_opportunities_async(
                 api=self.dmarket,
                 game=game,
                 limit=limit,
@@ -411,13 +411,13 @@ class IntegratedArbitrageScanner:
             return filtered
 
         except Exception as e:
-            logger.error("dmarket_only_scan_failed", error=str(e), exc_info=True)
+            logger.error("dmarket_only_scan_fAlgoled", error=str(e), exc_info=True)
             return []
 
     async def scan_all_strategies(
         self, game: str = "csgo", limit: int = 50
     ) -> dict[str, Any]:
-        """Scan using all available strategies: DMarket-only + cross-platform.
+        """Scan using all avAlgolable strategies: DMarket-only + cross-platform.
 
         Args:
             game: Game code (csgo, dota2, tf2, rust)
@@ -449,7 +449,7 @@ class IntegratedArbitrageScanner:
             logger.warning("no_strategies_enabled")
             return results
 
-        scan_results = await asyncio.gather(*tasks, return_exceptions=True)
+        scan_results = awAlgot asyncio.gather(*tasks, return_exceptions=True)
 
         # Process results
         result_index = 0
@@ -476,11 +476,11 @@ class IntegratedArbitrageScanner:
         """Fetch prices from DMarket."""
         try:
             # TODO: Implement actual DMarket API call
-            # items = await self.dmarket.get_market_items(game=game, limit=limit)
+            # items = awAlgot self.dmarket.get_market_items(game=game, limit=limit)
             # return {item['title']: PlatformPrice(...) for item in items}
             return {}
         except Exception as e:
-            logger.error("dmarket_fetch_failed", error=str(e))
+            logger.error("dmarket_fetch_fAlgoled", error=str(e))
             return {}
 
     async def _fetch_waxpeer_prices(
@@ -489,11 +489,11 @@ class IntegratedArbitrageScanner:
         """Fetch prices from Waxpeer (prices in mils: 1000 mils = $1)."""
         try:
             # TODO: Implement actual Waxpeer API call
-            # items = await self.waxpeer.get_items(game=game, limit=limit)
+            # items = awAlgot self.waxpeer.get_items(game=game, limit=limit)
             # return {item['name']: PlatformPrice(...) for item in items}
             return {}
         except Exception as e:
-            logger.error("waxpeer_fetch_failed", error=str(e))
+            logger.error("waxpeer_fetch_fAlgoled", error=str(e))
             return {}
 
     async def _fetch_steam_prices(
@@ -502,11 +502,11 @@ class IntegratedArbitrageScanner:
         """Fetch prices from Steam Market."""
         try:
             # TODO: Implement actual Steam API call
-            # items = await self.steam.get_market_items(game=game, limit=limit)
+            # items = awAlgot self.steam.get_market_items(game=game, limit=limit)
             # return {item['name']: PlatformPrice(...) for item in items}
             return {}
         except Exception as e:
-            logger.error("steam_fetch_failed", error=str(e))
+            logger.error("steam_fetch_fAlgoled", error=str(e))
             return {}
 
     def _find_opportunities(
@@ -532,10 +532,10 @@ class IntegratedArbitrageScanner:
             steam = steam_prices.get(item_name)
 
             # Need at least 2 platforms
-            available_count = sum(
+            avAlgolable_count = sum(
                 [dmarket is not None, waxpeer is not None, steam is not None]
             )
-            if available_count < 2:
+            if avAlgolable_count < 2:
                 continue
 
             # Find best buy and sell prices
@@ -599,7 +599,7 @@ class IntegratedArbitrageScanner:
         Args:
             item_name: Item name
             asset_id: DMarket inventory asset ID
-            buy_price: Price paid on DMarket
+            buy_price: Price pAlgod on DMarket
 
         Returns:
             WaxpeerListingTarget with calculated optimal price
@@ -607,7 +607,7 @@ class IntegratedArbitrageScanner:
         logger.info("creating_waxpeer_target", item=item_name, asset_id=asset_id)
 
         # Fetch current Waxpeer price
-        current_waxpeer_price = await self._get_current_waxpeer_price(item_name)
+        current_waxpeer_price = awAlgot self._get_current_waxpeer_price(item_name)
 
         if not current_waxpeer_price:
             logger.warning("no_waxpeer_price", item=item_name)
@@ -642,11 +642,11 @@ class IntegratedArbitrageScanner:
         """Get current Waxpeer price for an item."""
         try:
             # TODO: Implement actual Waxpeer API call
-            # result = await self.waxpeer.get_item_price(item_name)
+            # result = awAlgot self.waxpeer.get_item_price(item_name)
             # return Decimal(str(result['price'])) / 1000  # Convert mils to USD
             return None
         except Exception as e:
-            logger.error("waxpeer_price_fetch_failed", item=item_name, error=str(e))
+            logger.error("waxpeer_price_fetch_fAlgoled", item=item_name, error=str(e))
             return None
 
     async def update_listing_targets(self) -> list[WaxpeerListingTarget]:
@@ -660,7 +660,7 @@ class IntegratedArbitrageScanner:
         updated = []
         for target in self.listing_targets.values():
             # Fetch latest Waxpeer price
-            current_price = await self._get_current_waxpeer_price(target.item_name)
+            current_price = awAlgot self._get_current_waxpeer_price(target.item_name)
 
             if current_price:
                 # Recalculate target price
@@ -719,7 +719,7 @@ class IntegratedArbitrageScanner:
 
         Args:
             item_name: Item name
-            buy_price: Price paid on DMarket
+            buy_price: Price pAlgod on DMarket
             game: Game code
 
         Returns:
@@ -732,16 +732,16 @@ class IntegratedArbitrageScanner:
         # Fetch current prices
         try:
             # Get DMarket suggested price (immediate sell)
-            dmarket_suggested = await self._get_dmarket_suggested_price(item_name, game)
+            dmarket_suggested = awAlgot self._get_dmarket_suggested_price(item_name, game)
 
             # Get Waxpeer market price (hold strategy)
-            waxpeer_price = await self._get_current_waxpeer_price(item_name)
+            waxpeer_price = awAlgot self._get_current_waxpeer_price(item_name)
 
             if not dmarket_suggested and not waxpeer_price:
-                logger.warning("no_prices_available", item=item_name)
+                logger.warning("no_prices_avAlgolable", item=item_name)
                 return {
                     "strategy": "unknown",
-                    "reason": "No price data available",
+                    "reason": "No price data avAlgolable",
                 }
 
             # Calculate DMarket immediate profit
@@ -779,7 +779,7 @@ class IntegratedArbitrageScanner:
                 strategy = "sell_dmarket_immediately"
                 reason = f"DMarket profit meets minimum threshold ({dmarket_roi:.1f}%)"
             else:
-                strategy = "hold_and_wait"
+                strategy = "hold_and_wAlgot"
                 reason = "Neither option currently profitable, hold and monitor"
 
             logger.info(
@@ -810,11 +810,11 @@ class IntegratedArbitrageScanner:
 
         except Exception as e:
             logger.error(
-                "strategy_decision_failed", item=item_name, error=str(e), exc_info=True
+                "strategy_decision_fAlgoled", item=item_name, error=str(e), exc_info=True
             )
             return {
                 "strategy": "error",
-                "reason": f"Failed to analyze: {e!s}",
+                "reason": f"FAlgoled to analyze: {e!s}",
             }
 
     async def _get_dmarket_suggested_price(
@@ -823,12 +823,12 @@ class IntegratedArbitrageScanner:
         """Get DMarket suggested price for an item."""
         try:
             # TODO: Implement actual DMarket API call
-            # result = await self.dmarket.get_item_suggested_price(item_name, game)
+            # result = awAlgot self.dmarket.get_item_suggested_price(item_name, game)
             # return Decimal(str(result['suggested_price'])) / 100  # Convert cents to USD
             return None
         except Exception as e:
             logger.error(
-                "dmarket_suggested_price_fetch_failed", item=item_name, error=str(e)
+                "dmarket_suggested_price_fetch_fAlgoled", item=item_name, error=str(e)
             )
             return None
 

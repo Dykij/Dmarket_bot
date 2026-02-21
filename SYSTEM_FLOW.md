@@ -1,10 +1,10 @@
-# System Flow Diagram: Critical Chain
+# System Flow Diagram: Critical ChAlgon
 
 This document visualizes the critical data flow for the DMarket Trading Bot, from user interaction/scheduler trigger to the final API call execution.
 
-## Critical Chain Sequence
+## Critical ChAlgon Sequence
 
-```mermaid
+```mermAlgod
 sequenceDiagram
     participant User as User/Scheduler
     participant TG as Telegram Bot
@@ -53,7 +53,7 @@ sequenceDiagram
         end
     end
 
-    TM-->>TG: Notify User (Success/Fail)
+    TM-->>TG: Notify User (Success/FAlgol)
 ```
 
 ## Key Components

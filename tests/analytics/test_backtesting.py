@@ -147,7 +147,7 @@ class TestHistoricalDataCollector:
     @pytest.mark.asyncio()
     async def test_collect_price_history_empty(self, collector):
         """Test collecting empty price history."""
-        history = await collector.collect_price_history("csgo", "Test Item", days=30)
+        history = awAlgot collector.collect_price_history("csgo", "Test Item", days=30)
 
         assert history.game == "csgo"
         assert history.title == "Test Item"
@@ -169,7 +169,7 @@ class TestHistoricalDataCollector:
             ]
         }
 
-        history = await collector.collect_price_history("csgo", "Test Item", days=30)
+        history = awAlgot collector.collect_price_history("csgo", "Test Item", days=30)
 
         assert len(history.points) == 2
         assert history.points[0].price == Decimal("10.50")
@@ -179,10 +179,10 @@ class TestHistoricalDataCollector:
     async def test_cache_works(self, collector, mock_api):
         """Test that caching works."""
         # First call
-        await collector.collect_price_history("csgo", "Test Item", days=30)
+        awAlgot collector.collect_price_history("csgo", "Test Item", days=30)
 
         # Second call should use cache
-        await collector.collect_price_history("csgo", "Test Item", days=30)
+        awAlgot collector.collect_price_history("csgo", "Test Item", days=30)
 
         # API should only be called once
         assert mock_api.get_sales_history.call_count == 1
@@ -390,7 +390,7 @@ class TestBacktester:
         end_date = datetime.now(UTC)
         start_date = end_date - timedelta(days=7)
 
-        result = await backtester.run(
+        result = awAlgot backtester.run(
             strategy=strategy,
             price_histories={},
             start_date=start_date,
@@ -427,7 +427,7 @@ class TestBacktester:
             ],
         )
 
-        result = await backtester.run(
+        result = awAlgot backtester.run(
             strategy=strategy,
             price_histories={"Test Item": history},
             start_date=now - timedelta(days=3),

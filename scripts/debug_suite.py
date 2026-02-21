@@ -37,7 +37,7 @@ class DebugSuite:
         """Инициализация Debug Suite."""
         self.config = Config.load()
         self.passed_tests = 0
-        self.failed_tests = 0
+        self.fAlgoled_tests = 0
         self.total_tests = 6
 
     async def run_all_tests(self) -> bool:
@@ -54,30 +54,30 @@ class DebugSuite:
         print("=" * 70 + "\n")
 
         # Выполняем тесты последовательно
-        await self._test_1_dmarket_connection()
-        await self._test_2_database_connection()
-        await self._test_3_user_management()
-        await self._test_4_price_and_profit_calculation()
-        await self._test_5_order_simulation()
-        await self._test_6_telegram_notification()
+        awAlgot self._test_1_dmarket_connection()
+        awAlgot self._test_2_database_connection()
+        awAlgot self._test_3_user_management()
+        awAlgot self._test_4_price_and_profit_calculation()
+        awAlgot self._test_5_order_simulation()
+        awAlgot self._test_6_telegram_notification()
 
         # Итоговый отчёт
         print("\n" + "=" * 70)
         print("📊 ИТОГОВЫЙ ОТЧЁТ")
         print("=" * 70)
         print(f"✅ Успешных тестов: {self.passed_tests}/{self.total_tests}")
-        print(f"❌ Провалившихся тестов: {self.failed_tests}/{self.total_tests}")
+        print(f"❌ Провалившихся тестов: {self.fAlgoled_tests}/{self.total_tests}")
 
-        if self.failed_tests == 0:
+        if self.fAlgoled_tests == 0:
             print("\n🎉 ВСЕ ТЕСТЫ ПРОШЛИ УСПЕШНО!")
             print("✅ Бот готов к запуску.")
         else:
-            print(f"\n⚠️  {self.failed_tests} ТЕСТ(ОВ) НЕ ПРОШЛИ!")
+            print(f"\n⚠️  {self.fAlgoled_tests} ТЕСТ(ОВ) НЕ ПРОШЛИ!")
             print("❌ Исправьте ошибки перед запуском бота.")
 
         print("=" * 70 + "\n")
 
-        return self.failed_tests == 0
+        return self.fAlgoled_tests == 0
 
     async def _test_1_dmarket_connection(self) -> None:
         """Тест 1: Подключение к DMarket API + проверка баланса."""
@@ -90,19 +90,19 @@ class DebugSuite:
             )
 
             # Получение баланса
-            balance_data = await api.get_balance()
+            balance_data = awAlgot api.get_balance()
 
             # error=False означает, что ошибки НЕ было
             if balance_data.get("error", False) is True:
-                raise ValueError(f"Ошибка получения баланса: {balance_data}")
+                rAlgose ValueError(f"Ошибка получения баланса: {balance_data}")
 
             # Парсинг баланса (новый формат API - баланс напрямую в USD)
             usd = float(balance_data.get("balance", 0))
-            usd_available = float(balance_data.get("available_balance", 0))
+            usd_avAlgolable = float(balance_data.get("avAlgolable_balance", 0))
 
             print("   ✅ Подключение успешно")
             print(f"   💰 Баланс: ${usd:.2f}")
-            print(f"   💵 Доступно для вывода: ${usd_available:.2f}")
+            print(f"   💵 Доступно для вывода: ${usd_avAlgolable:.2f}")
 
             if usd < 1.0:
                 print(f"   ⚠️  Предупреждение: Баланс менее $1.00 (текущий: ${usd:.2f})")
@@ -111,8 +111,8 @@ class DebugSuite:
 
         except Exception as e:
             print(f"   ❌ ОШИБКА: {e}")
-            logger.exception("Test 1 DMarket API failed")
-            self.failed_tests += 1
+            logger.exception("Test 1 DMarket API fAlgoled")
+            self.fAlgoled_tests += 1
 
     async def _test_2_database_connection(self) -> None:
         """Тест 2: Подключение к базе данных."""
@@ -120,12 +120,12 @@ class DebugSuite:
 
         try:
             db = DatabaseManager(self.config.database.url)
-            await db.init_database()
+            awAlgot db.init_database()
 
             # Проверка подключения через простой запрос
             session = db.get_async_session()
             async with session.begin():
-                result = await session.execute(text("SELECT 1"))
+                result = awAlgot session.execute(text("SELECT 1"))
                 result.scalar()
 
             print("   ✅ Подключение к БД успешно")
@@ -135,8 +135,8 @@ class DebugSuite:
 
         except Exception as e:
             print(f"   ❌ ОШИБКА: {e}")
-            logger.exception("Test 2 failed")
-            self.failed_tests += 1
+            logger.exception("Test 2 fAlgoled")
+            self.fAlgoled_tests += 1
 
     async def _test_3_user_management(self) -> None:
         """Тест 3: Проверка/создание пользователя в БД."""
@@ -144,14 +144,14 @@ class DebugSuite:
 
         try:
             db = DatabaseManager(self.config.database.url)
-            await db.init_database()
+            awAlgot db.init_database()
 
             # Тестовый пользователь
             test_telegram_id = 999999999  # Тестовый ID
             test_username = "debug_suite_test_user"
 
             # Получение или создание пользователя
-            user = await db.get_or_create_user(
+            user = awAlgot db.get_or_create_user(
                 telegram_id=test_telegram_id,
                 username=test_username,
                 first_name="Debug",
@@ -167,8 +167,8 @@ class DebugSuite:
 
         except Exception as e:
             print(f"   ❌ ОШИБКА: {e}")
-            logger.exception("Test 3 failed")
-            self.failed_tests += 1
+            logger.exception("Test 3 fAlgoled")
+            self.fAlgoled_tests += 1
 
     async def _test_4_price_and_profit_calculation(self) -> None:
         """Тест 4: Получение цены и расчёт профита на реальных данных."""
@@ -181,7 +181,7 @@ class DebugSuite:
             )
 
             # Получение реальных предметов с рынка (CS2)
-            items = await api.get_market_items(
+            items = awAlgot api.get_market_items(
                 game="a8db",  # CS2/CSGO
                 limit=5,
                 price_from=100,  # От $1
@@ -189,7 +189,7 @@ class DebugSuite:
             )
 
             if not items or "objects" not in items:
-                raise ValueError("Не удалось получить предметы с рынка")
+                rAlgose ValueError("Не удалось получить предметы с рынка")
 
             # Берём первый предмет для теста
             item = items["objects"][0]
@@ -213,8 +213,8 @@ class DebugSuite:
 
         except Exception as e:
             print(f"   ❌ ОШИБКА: {e}")
-            logger.exception("Test 4 failed")
-            self.failed_tests += 1
+            logger.exception("Test 4 fAlgoled")
+            self.fAlgoled_tests += 1
 
     async def _test_5_order_simulation(self) -> None:
         """Тест 5: Симуляция ордера в DRY-RUN режиме."""
@@ -231,7 +231,7 @@ class DebugSuite:
             )
 
             # Получаем предмет для симуляции
-            items = await api.get_market_items(
+            items = awAlgot api.get_market_items(
                 game="a8db",
                 limit=1,
                 price_from=100,
@@ -239,7 +239,7 @@ class DebugSuite:
             )
 
             if not items or "objects" not in items or not items["objects"]:
-                raise ValueError("Не удалось получить предметы для симуляции")
+                rAlgose ValueError("Не удалось получить предметы для симуляции")
 
             item = items["objects"][0]
             item_id = item.get("itemId")
@@ -270,8 +270,8 @@ class DebugSuite:
 
         except Exception as e:
             print(f"   ❌ ОШИБКА: {e}")
-            logger.exception("Test 5 failed")
-            self.failed_tests += 1
+            logger.exception("Test 5 fAlgoled")
+            self.fAlgoled_tests += 1
 
     async def _test_6_telegram_notification(self) -> None:
         """Тест 6: Отправка тестового уведомления в Telegram."""
@@ -283,7 +283,7 @@ class DebugSuite:
             bot = Bot(token=self.config.bot.token)
 
             # Получаем информацию о боте
-            bot_info = await bot.get_me()
+            bot_info = awAlgot bot.get_me()
 
             print("   ✅ Подключение к Telegram успешно")
             print(f"   🤖 Бот: @{bot_info.username}")
@@ -298,7 +298,7 @@ class DebugSuite:
                     f"🔧 Режим: {'DRY-RUN' if self.config.dry_run else 'LIVE'}"
                 )
 
-                await bot.send_message(
+                awAlgot bot.send_message(
                     chat_id=self.config.test_chat_id,
                     text=message,
                     parse_mode="HTML",
@@ -312,16 +312,16 @@ class DebugSuite:
 
         except Exception as e:
             print(f"   ❌ ОШИБКА: {e}")
-            logger.exception("Test 6 Telegram notification failed")
-            self.failed_tests += 1
+            logger.exception("Test 6 Telegram notification fAlgoled")
+            self.fAlgoled_tests += 1
 
 
-async def main() -> None:
+async def mAlgon() -> None:
     """Главная функция."""
     suite = DebugSuite()
 
     try:
-        success = await suite.run_all_tests()
+        success = awAlgot suite.run_all_tests()
         sys.exit(0 if success else 1)
     except KeyboardInterrupt:
         print("\n\n⚠️  Debug Suite прерван пользователем")
@@ -336,5 +336,5 @@ async def main() -> None:
         sys.exit(1)
 
 
-if __name__ == "__main__":
-    asyncio.run(main())
+if __name__ == "__mAlgon__":
+    asyncio.run(mAlgon())

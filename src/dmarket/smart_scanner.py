@@ -1,15 +1,15 @@
-"""Smart Scanner Module with AI Price Prediction and Trade Lock Analysis.
+"""Smart Scanner Module with Algo Price Prediction and Trade Lock Analysis.
 
 This module implements an optimized market scanner that:
 1. Uses cursor-based pagination for efficient API traversal
 2. Filters items by trade lock duration (lockStatus)
 3. Applies local delta filtering to skip already-seen items
-4. Uses AI price prediction to validate arbitrage opportunities
+4. Uses Algo price prediction to validate arbitrage opportunities
 5. Supports both DMarket and Waxpeer cross-platform arbitrage
 
 Key Features:
 - Smart filtering: Skip items with trade lock > configurable days
-- AI validation: Use ML model to predict fair price
+- Algo validation: Use ML model to predict fAlgor price
 - Duplicate detection: Hash-based deduplication
 - Silent mode: Configurable logging verbosity
 - Cross-platform: Compare DMarket prices with Waxpeer
@@ -18,13 +18,13 @@ Usage:
     ```python
     from src.dmarket.smart_scanner import SmartScanner
     from src.dmarket.dmarket_api import DMarketAPI
-    from src.ai import PricePredictor
+    from src.Algo import PricePredictor
 
     api = DMarketAPI(public_key, secret_key)
     predictor = PricePredictor()
 
     scanner = SmartScanner(api, predictor)
-    await scanner.scan()  # Start continuous scanning
+    awAlgot scanner.scan()  # Start continuous scanning
     ```
 
 Configuration via environment variables:
@@ -32,7 +32,7 @@ Configuration via environment variables:
 - SMART_SCANNER_MIN_PROFIT_PERCENT: Minimum profit % to trigger buy (default: 5.0)
 - SMART_SCANNER_PRICE_MAX_CENTS: Maximum item price in cents (default: 4550)
 - SMART_SCANNER_SILENT_MODE: Reduce logging noise (default: true)
-- SMART_SCANNER_ENABLE_AI: Enable AI price validation (default: true)
+- SMART_SCANNER_ENABLE_Algo: Enable Algo price validation (default: true)
 - SMART_SCANNER_ALLOW_TRADE_BAN: Allow items with trade ban (default: false)
 """
 
@@ -45,7 +45,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from src.ai.price_predictor import PricePredictor
+    from src.Algo.price_predictor import PricePredictor
     from src.dmarket.dmarket_api import DMarketAPI
     from src.waxpeer.waxpeer_api import WaxpeerAPI
 
@@ -71,8 +71,8 @@ class SmartScannerConfig:
         scan_limit: Number of items per API request
         scan_delay: Delay between scan iterations in seconds
         silent_mode: If True, suppress non-essential logging
-        enable_ai: If True, use AI price prediction
-        allow_trade_ban: If True, allow items with trade ban (requires AI analysis)
+        enable_Algo: If True, use Algo price prediction
+        allow_trade_ban: If True, allow items with trade ban (requires Algo analysis)
         dry_run: If True, don't execute actual purchases
     """
 
@@ -82,7 +82,7 @@ class SmartScannerConfig:
     scan_limit: int = DEFAULT_SCAN_LIMIT
     scan_delay: float = DEFAULT_SCAN_DELAY
     silent_mode: bool = DEFAULT_SILENT_MODE
-    enable_ai: bool = True
+    enable_Algo: bool = True
     allow_trade_ban: bool = False
     dry_run: bool = True
     game_id: str = "a8db"  # CS:GO/CS2 by default
@@ -104,7 +104,7 @@ class SmartScannerConfig:
             ),
             silent_mode=os.getenv("SMART_SCANNER_SILENT_MODE", "true").lower()
             == "true",
-            enable_ai=os.getenv("SMART_SCANNER_ENABLE_AI", "true").lower() == "true",
+            enable_Algo=os.getenv("SMART_SCANNER_ENABLE_Algo", "true").lower() == "true",
             allow_trade_ban=os.getenv("SMART_SCANNER_ALLOW_TRADE_BAN", "false").lower()
             == "true",
             dry_run=os.getenv("DRY_RUN", "true").lower() == "true",
@@ -120,7 +120,7 @@ class ScanResult:
         item_id: DMarket item ID
         title: Item name
         market_price: Current market price in USD
-        ai_fair_price: AI-predicted fair price (if available)
+        Algo_fAlgor_price: Algo-predicted fAlgor price (if avAlgolable)
         waxpeer_price: Waxpeer price (if cross-platform enabled)
         profit_usd: Expected profit in USD
         profit_percent: Expected profit percentage
@@ -132,7 +132,7 @@ class ScanResult:
     item_id: str
     title: str
     market_price: Decimal
-    ai_fair_price: Decimal | None = None
+    Algo_fAlgor_price: Decimal | None = None
     waxpeer_price: Decimal | None = None
     profit_usd: Decimal = Decimal(0)
     profit_percent: float = 0.0
@@ -147,7 +147,7 @@ class ScanResult:
             "item_id": self.item_id,
             "title": self.title,
             "market_price": float(self.market_price),
-            "ai_fair_price": float(self.ai_fair_price) if self.ai_fair_price else None,
+            "Algo_fAlgor_price": float(self.Algo_fAlgor_price) if self.Algo_fAlgor_price else None,
             "waxpeer_price": float(self.waxpeer_price) if self.waxpeer_price else None,
             "profit_usd": float(self.profit_usd),
             "profit_percent": self.profit_percent,
@@ -218,18 +218,18 @@ class LocalDeltaFilter:
 
 
 class SmartScanner:
-    """Smart Scanner with AI Price Prediction and Trade Lock Analysis.
+    """Smart Scanner with Algo Price Prediction and Trade Lock Analysis.
 
     This scanner implements an optimized market scanning strategy:
     1. Fetches items using cursor-based pagination
     2. Filters by trade lock duration
     3. Skips already-processed items using delta filter
-    4. Validates prices with AI prediction (optional, requires trained model)
+    4. Validates prices with Algo prediction (optional, requires trAlgoned model)
     5. Optionally compares with Waxpeer for cross-platform arbitrage
        (requires waxpeer_api parameter to be provided)
 
     Note:
-        - AI prediction requires a trained PricePredictor model
+        - Algo prediction requires a trAlgoned PricePredictor model
         - Waxpeer integration is optional and only active when waxpeer_api is provided
         - Trade lock analysis is enabled via allow_trade_ban config option
 
@@ -238,13 +238,13 @@ class SmartScanner:
         scanner = SmartScanner(api, predictor, config)
 
         # Single scan
-        results = await scanner.scan_once()
+        results = awAlgot scanner.scan_once()
         for result in results:
             if result.should_buy:
                 print(f"Buy: {result.title} for ${result.market_price}")
 
         # Continuous scanning (with auto-buy)
-        await scanner.run_continuous()
+        awAlgot scanner.run_continuous()
         ```
     """
 
@@ -259,7 +259,7 @@ class SmartScanner:
 
         Args:
             api: DMarket API client
-            predictor: AI Price Predictor (optional, enables AI validation)
+            predictor: Algo Price Predictor (optional, enables Algo validation)
             waxpeer_api: Waxpeer API client (optional, enables cross-platform)
             config: Scanner configuration (uses defaults if not provided)
         """
@@ -277,7 +277,7 @@ class SmartScanner:
             "items_analyzed": 0,
             "items_skipped_lock": 0,
             "items_skipped_duplicate": 0,
-            "items_skipped_ai": 0,
+            "items_skipped_Algo": 0,
             "opportunities_found": 0,
             "purchases_made": 0,
         }
@@ -292,7 +292,7 @@ class SmartScanner:
                 "max_lock_days": self.config.max_lock_days,
                 "min_profit_percent": self.config.min_profit_percent,
                 "price_max_cents": self.config.price_max_cents,
-                "enable_ai": self.config.enable_ai,
+                "enable_Algo": self.config.enable_Algo,
                 "allow_trade_ban": self.config.allow_trade_ban,
                 "dry_run": self.config.dry_run,
             },
@@ -327,7 +327,7 @@ class SmartScanner:
                 params["priceTo"] = str(self.config.price_max_cents)
 
             # Fetch items from DMarket
-            response = await self.api.get_market_items(**params)
+            response = awAlgot self.api.get_market_items(**params)
             items = response.get("objects", [])
 
             # Update cursor for next iteration
@@ -340,13 +340,13 @@ class SmartScanner:
 
             # Process each item
             for item in items:
-                result = await self._analyze_item(item)
+                result = awAlgot self._analyze_item(item)
                 if result:
                     results.append(result)
 
                     # Execute buy if recommended
                     if result.should_buy and not self.config.dry_run:
-                        await self._execute_buy(result)
+                        awAlgot self._execute_buy(result)
 
             self.stats["scans_completed"] += 1
             self.stats["items_analyzed"] += len(items)
@@ -363,7 +363,7 @@ class SmartScanner:
             return results
 
         except Exception as e:
-            logger.exception("scan_failed", error=str(e))
+            logger.exception("scan_fAlgoled", error=str(e))
             return results
 
     async def _analyze_item(self, item: dict[str, Any]) -> ScanResult | None:
@@ -412,9 +412,9 @@ class SmartScanner:
                             lock_days=lock_days,
                         )
                     return None
-            # Trade ban allowed, but must pass AI check
-            elif lock_days > 0 and not self.config.enable_ai:
-                # Can't analyze locked items without AI
+            # Trade ban allowed, but must pass Algo check
+            elif lock_days > 0 and not self.config.enable_Algo:
+                # Can't analyze locked items without Algo
                 self.stats["items_skipped_lock"] += 1
                 return None
 
@@ -432,46 +432,46 @@ class SmartScanner:
                 offer_id=extra.get("offerId", ""),
             )
 
-            # FILTER 3: AI Price Prediction (if enabled)
-            if self.config.enable_ai and self.predictor:
+            # FILTER 3: Algo Price Prediction (if enabled)
+            if self.config.enable_Algo and self.predictor:
                 float_value = extra.get("floatValue") or extra.get("float", 0.5)
 
-                # For locked items, AI must confirm profitability
-                ai_price = self.predictor.predict_with_guard(
+                # For locked items, Algo must confirm profitability
+                Algo_price = self.predictor.predict_with_guard(
                     item_name=title,
                     market_price=float(market_price),
                     current_float=float_value,
                 )
 
-                if ai_price:
-                    result.ai_fair_price = Decimal(str(ai_price))
+                if Algo_price:
+                    result.Algo_fAlgor_price = Decimal(str(Algo_price))
 
-                    # Calculate profit from AI prediction
-                    ai_profit = result.ai_fair_price - market_price
-                    ai_profit_percent = float(ai_profit / market_price * 100)
+                    # Calculate profit from Algo prediction
+                    Algo_profit = result.Algo_fAlgor_price - market_price
+                    Algo_profit_percent = float(Algo_profit / market_price * 100)
 
-                    if ai_profit_percent >= self.config.min_profit_percent:
-                        result.profit_usd = ai_profit
-                        result.profit_percent = ai_profit_percent
+                    if Algo_profit_percent >= self.config.min_profit_percent:
+                        result.profit_usd = Algo_profit
+                        result.profit_percent = Algo_profit_percent
                         result.should_buy = True
-                        result.reason = f"AI: +{ai_profit_percent:.1f}%"
+                        result.reason = f"Algo: +{Algo_profit_percent:.1f}%"
 
                         self.stats["opportunities_found"] += 1
                     else:
-                        result.reason = f"AI profit too low: {ai_profit_percent:.1f}%"
+                        result.reason = f"Algo profit too low: {Algo_profit_percent:.1f}%"
                 else:
-                    # AI couldn't validate or rejected the item
-                    self.stats["items_skipped_ai"] += 1
+                    # Algo couldn't validate or rejected the item
+                    self.stats["items_skipped_Algo"] += 1
 
-                    # For locked items, we MUST have AI approval
+                    # For locked items, we MUST have Algo approval
                     if lock_days > 0:
-                        result.reason = "AI rejected (locked item requires validation)"
+                        result.reason = "Algo rejected (locked item requires validation)"
                         return result
-                    result.reason = "AI: no prediction available"
+                    result.reason = "Algo: no prediction avAlgolable"
 
             # FILTER 4: Waxpeer Cross-Platform (if enabled)
             if self.waxpeer_api:
-                wax_price = await self._get_waxpeer_price(title)
+                wax_price = awAlgot self._get_waxpeer_price(title)
                 if wax_price:
                     result.waxpeer_price = wax_price
 
@@ -480,7 +480,7 @@ class SmartScanner:
                     cross_profit = net_wax_price - market_price
                     cross_profit_percent = float(cross_profit / market_price * 100)
 
-                    # Update result if Waxpeer profit is better than AI
+                    # Update result if Waxpeer profit is better than Algo
                     if cross_profit_percent >= self.config.min_profit_percent:
                         if cross_profit > result.profit_usd:
                             result.profit_usd = cross_profit
@@ -492,7 +492,7 @@ class SmartScanner:
 
         except Exception as e:
             logger.exception(
-                "item_analysis_failed",
+                "item_analysis_fAlgoled",
                 item_id=item.get("itemId", ""),
                 error=str(e),
             )
@@ -511,12 +511,12 @@ class SmartScanner:
             return None
 
         try:
-            price_info = await self.waxpeer_api.get_item_price_info(item_name)
+            price_info = awAlgot self.waxpeer_api.get_item_price_info(item_name)
             if price_info:
                 return price_info.price_usd
             return None
         except Exception as e:
-            logger.debug("waxpeer_price_failed", item=item_name, error=str(e))
+            logger.debug("waxpeer_price_fAlgoled", item=item_name, error=str(e))
             return None
 
     async def _execute_buy(self, result: ScanResult) -> bool:
@@ -540,7 +540,7 @@ class SmartScanner:
 
         try:
             # Build buy request
-            buy_data = await self.api.buy_offers(
+            buy_data = awAlgot self.api.buy_offers(
                 [
                     {
                         "offerId": result.offer_id or result.item_id,
@@ -571,7 +571,7 @@ class SmartScanner:
             return success
 
         except Exception as e:
-            logger.exception("purchase_failed", title=result.title, error=str(e))
+            logger.exception("purchase_fAlgoled", title=result.title, error=str(e))
             return False
 
     async def run_continuous(self, max_iterations: int | None = None) -> None:
@@ -595,10 +595,10 @@ class SmartScanner:
 
                 # Perform scan
                 cursor = self._current_cursor
-                await self.scan_once(cursor=cursor)
+                awAlgot self.scan_once(cursor=cursor)
 
-                # Wait before next iteration
-                await asyncio.sleep(self.config.scan_delay)
+                # WAlgot before next iteration
+                awAlgot asyncio.sleep(self.config.scan_delay)
 
                 iterations += 1
 
@@ -657,14 +657,14 @@ async def analyze_trade_ban_item(
 ) -> dict[str, Any]:
     """Analyze an item with trade ban to determine if it's worth buying.
 
-    This function provides detailed analysis for items with trade lock:
-    1. AI price prediction for DMarket resale
+    This function provides detAlgoled analysis for items with trade lock:
+    1. Algo price prediction for DMarket resale
     2. Waxpeer price comparison for cross-platform arbitrage
     3. Combined recommendation based on multiple factors
 
     Args:
         api: DMarket API client
-        predictor: AI Price Predictor
+        predictor: Algo Price Predictor
         waxpeer_api: Waxpeer API client (optional)
         item: Item data from DMarket
         min_profit_percent: Minimum profit % to recommend (higher for locked items)
@@ -706,35 +706,35 @@ async def analyze_trade_ban_item(
         "reason": "",
     }
 
-    # 1. AI Analysis for DMarket
-    ai_price = predictor.predict_with_guard(
+    # 1. Algo Analysis for DMarket
+    Algo_price = predictor.predict_with_guard(
         item_name=title,
         market_price=market_price,
         current_float=float_value,
     )
 
-    if ai_price:
-        ai_profit = ai_price - market_price
-        ai_profit_percent = (ai_profit / market_price) * 100
+    if Algo_price:
+        Algo_profit = Algo_price - market_price
+        Algo_profit_percent = (Algo_profit / market_price) * 100
 
         result["dmarket_analysis"] = {
-            "ai_fair_price": ai_price,
-            "profit_usd": ai_profit,
-            "profit_percent": ai_profit_percent,
-            "is_profitable": ai_profit_percent >= min_profit_percent,
+            "Algo_fAlgor_price": Algo_price,
+            "profit_usd": Algo_profit,
+            "profit_percent": Algo_profit_percent,
+            "is_profitable": Algo_profit_percent >= min_profit_percent,
         }
 
-        if ai_profit_percent >= min_profit_percent:
+        if Algo_profit_percent >= min_profit_percent:
             result["can_resell_profit"] = True
             result["recommendation"] = "buy"
             result["reason"] = (
-                f"AI предсказывает профит +{ai_profit_percent:.1f}% на DMarket"
+                f"Algo предсказывает профит +{Algo_profit_percent:.1f}% на DMarket"
             )
 
-    # 2. Waxpeer Analysis (if available)
+    # 2. Waxpeer Analysis (if avAlgolable)
     if waxpeer_api:
         try:
-            wax_info = await waxpeer_api.get_item_price_info(title)
+            wax_info = awAlgot waxpeer_api.get_item_price_info(title)
             if wax_info:
                 wax_price = float(wax_info.price_usd)
                 # Account for 6% Waxpeer commission
@@ -766,7 +766,7 @@ async def analyze_trade_ban_item(
                         )
 
         except Exception as e:
-            logger.debug("waxpeer_analysis_failed", error=str(e))
+            logger.debug("waxpeer_analysis_fAlgoled", error=str(e))
 
     # 3. Final recommendation
     if not result["can_resell_profit"]:

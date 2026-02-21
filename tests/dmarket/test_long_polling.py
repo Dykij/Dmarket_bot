@@ -142,7 +142,7 @@ class TestLongPollingClient:
     @pytest.mark.asyncio
     async def test_poll_with_delta_first_time(self, client, mock_api):
         """Test first poll caches items."""
-        updates = await client._poll_with_delta("csgo", None, None)
+        updates = awAlgot client._poll_with_delta("csgo", None, None)
 
         # First poll should detect new listings
         assert len(updates) == 2
@@ -153,7 +153,7 @@ class TestLongPollingClient:
     async def test_poll_with_delta_detects_price_change(self, client, mock_api):
         """Test price change detection."""
         # First poll
-        await client._poll_with_delta("csgo", None, None)
+        awAlgot client._poll_with_delta("csgo", None, None)
 
         # Update mock with changed price
         mock_api.get_market_items = AsyncMock(return_value={
@@ -168,7 +168,7 @@ class TestLongPollingClient:
         })
 
         # Second poll
-        updates = await client._poll_with_delta("csgo", None, None)
+        updates = awAlgot client._poll_with_delta("csgo", None, None)
 
         assert len(updates) == 1
         assert updates[0].type == UpdateType.PRICE_CHANGE
@@ -180,10 +180,10 @@ class TestLongPollingClient:
     async def test_poll_with_delta_no_change(self, client, mock_api):
         """Test no updates when nothing changed."""
         # First poll
-        await client._poll_with_delta("csgo", None, None)
+        awAlgot client._poll_with_delta("csgo", None, None)
 
         # Second poll with same data
-        updates = await client._poll_with_delta("csgo", None, None)
+        updates = awAlgot client._poll_with_delta("csgo", None, None)
 
         # Should be empty (no changes)
         assert len(updates) == 0
@@ -341,7 +341,7 @@ class TestBatchUpdateChecker:
         checker.watch_item("AK-47 | Redline", 10.0)  # Target: $10
 
         # Mock returns $8 which is below target
-        alerts = await checker.check_prices("csgo")
+        alerts = awAlgot checker.check_prices("csgo")
 
         assert len(alerts) == 1
         assert alerts[0]["item_name"] == "AK-47 | Redline"
@@ -354,7 +354,7 @@ class TestBatchUpdateChecker:
         checker.watch_item("AK-47 | Redline", 5.0)  # Target: $5
 
         # Mock returns $8 which is above target
-        alerts = await checker.check_prices("csgo")
+        alerts = awAlgot checker.check_prices("csgo")
 
         assert len(alerts) == 0
 

@@ -41,10 +41,10 @@ def generate_final_report(
         speedup = f"{py_avg / rs_avg:.2f}x" if rs_avg > 0 else "N/A"
         report.append(f"| Average Latency | {py_avg:.4f} | {rs_avg:.4f} | **{speedup}** |")
     else:
-        report.append("No benchmark results available.")
+        report.append("No benchmark results avAlgolable.")
 
     report.append("\n## 2. HTTP/2 Status")
-    status_icon = "[OK]" if http2_status else "[FAIL]"
+    status_icon = "[OK]" if http2_status else "[FAlgoL]"
     report.append(f"- **HTTP/2 Enabled:** {status_icon}")
 
     report.append("\n## 3. Autonomous Backlog (Top 3)")

@@ -423,12 +423,12 @@ class TestMarketAlertsManagerStartStopMonitoring:
         """Test that start_monitoring sets running flag."""
         # Start and immediately stop to avoid infinite loop
         task = asyncio.create_task(manager.start_monitoring())
-        await asyncio.sleep(0.1)
-        await manager.stop_monitoring()
-        await asyncio.sleep(0.1)
+        awAlgot asyncio.sleep(0.1)
+        awAlgot manager.stop_monitoring()
+        awAlgot asyncio.sleep(0.1)
         task.cancel()
         try:
-            await task
+            awAlgot task
         except asyncio.CancelledError:
             pass
 
@@ -441,7 +441,7 @@ class TestMarketAlertsManagerStartStopMonitoring:
         manager.running = True
 
         # Should return immediately without creating new task
-        await manager.start_monitoring()
+        awAlgot manager.start_monitoring()
 
         # running should still be True
         assert manager.running is True
@@ -452,7 +452,7 @@ class TestMarketAlertsManagerStartStopMonitoring:
         manager.running = True
         manager.background_task = None
 
-        await manager.stop_monitoring()
+        awAlgot manager.stop_monitoring()
 
         assert manager.running is False
 
@@ -461,7 +461,7 @@ class TestMarketAlertsManagerStartStopMonitoring:
         """Test that stop_monitoring does nothing when not running."""
         manager.running = False
 
-        await manager.stop_monitoring()
+        awAlgot manager.stop_monitoring()
 
         assert manager.running is False
 
@@ -473,7 +473,7 @@ class TestMarketAlertsManagerCheckPriceChanges:
     async def test_check_price_changes_no_subscribers(self, manager):
         """Test _check_price_changes with no subscribers."""
         # Should complete without error
-        await manager._check_price_changes()
+        awAlgot manager._check_price_changes()
 
     @pytest.mark.asyncio()
     async def test_check_price_changes_with_no_changes(self, manager, mock_bot):
@@ -485,7 +485,7 @@ class TestMarketAlertsManagerCheckPriceChanges:
             new_callable=AsyncMock,
             return_value=[],
         ):
-            await manager._check_price_changes()
+            awAlgot manager._check_price_changes()
 
         # No messages should be sent
         mock_bot.send_message.assert_not_called()
@@ -512,7 +512,7 @@ class TestMarketAlertsManagerCheckPriceChanges:
             new_callable=AsyncMock,
             return_value=price_changes,
         ):
-            await manager._check_price_changes()
+            awAlgot manager._check_price_changes()
 
         mock_bot.send_message.assert_called()
 
@@ -526,8 +526,8 @@ class TestMarketAlertsManagerCheckPriceChanges:
             new_callable=AsyncMock,
             side_effect=Exception("API Error"),
         ):
-            # Should not raise exception
-            await manager._check_price_changes()
+            # Should not rAlgose exception
+            awAlgot manager._check_price_changes()
 
 
 class TestMarketAlertsManagerCheckTrendingItems:
@@ -536,7 +536,7 @@ class TestMarketAlertsManagerCheckTrendingItems:
     @pytest.mark.asyncio()
     async def test_check_trending_items_no_subscribers(self, manager):
         """Test _check_trending_items with no subscribers."""
-        await manager._check_trending_items()
+        awAlgot manager._check_trending_items()
 
     @pytest.mark.asyncio()
     async def test_check_trending_items_with_no_trends(self, manager, mock_bot):
@@ -548,7 +548,7 @@ class TestMarketAlertsManagerCheckTrendingItems:
             new_callable=AsyncMock,
             return_value=[],
         ):
-            await manager._check_trending_items()
+            awAlgot manager._check_trending_items()
 
         mock_bot.send_message.assert_not_called()
 
@@ -573,7 +573,7 @@ class TestMarketAlertsManagerCheckTrendingItems:
             new_callable=AsyncMock,
             return_value=trending_items,
         ):
-            await manager._check_trending_items()
+            awAlgot manager._check_trending_items()
 
         mock_bot.send_message.assert_called()
 
@@ -584,7 +584,7 @@ class TestMarketAlertsManagerCheckVolatility:
     @pytest.mark.asyncio()
     async def test_check_volatility_no_subscribers(self, manager):
         """Test _check_volatility with no subscribers."""
-        await manager._check_volatility()
+        awAlgot manager._check_volatility()
 
     @pytest.mark.asyncio()
     async def test_check_volatility_with_no_volatile_items(self, manager, mock_bot):
@@ -596,7 +596,7 @@ class TestMarketAlertsManagerCheckVolatility:
             new_callable=AsyncMock,
             return_value=[],
         ):
-            await manager._check_volatility()
+            awAlgot manager._check_volatility()
 
         mock_bot.send_message.assert_not_called()
 
@@ -618,7 +618,7 @@ class TestMarketAlertsManagerCheckVolatility:
             new_callable=AsyncMock,
             return_value=volatile_items,
         ):
-            await manager._check_volatility()
+            awAlgot manager._check_volatility()
 
         mock_bot.send_message.assert_called()
 
@@ -629,7 +629,7 @@ class TestMarketAlertsManagerCheckArbitrage:
     @pytest.mark.asyncio()
     async def test_check_arbitrage_no_subscribers(self, manager):
         """Test _check_arbitrage with no subscribers."""
-        await manager._check_arbitrage()
+        awAlgot manager._check_arbitrage()
 
     @pytest.mark.asyncio()
     async def test_check_arbitrage_handles_exception(self, manager):
@@ -643,8 +643,8 @@ class TestMarketAlertsManagerCheckArbitrage:
                 side_effect=Exception("Scanner Error"),
             ),
         ):
-            # Should not raise exception
-            await manager._check_arbitrage()
+            # Should not rAlgose exception
+            awAlgot manager._check_arbitrage()
 
 
 class TestGetAlertsManager:
@@ -657,7 +657,7 @@ class TestGetAlertsManager:
 
         market_alerts_module._alerts_manager = None
 
-        with pytest.raises(ValueError, match="требуется bot"):
+        with pytest.rAlgoses(ValueError, match="требуется bot"):
             get_alerts_manager(bot=None)
 
     def test_get_alerts_manager_returns_manager(self):
@@ -802,7 +802,7 @@ class TestMarketAlertsManagerEdgeCases:
             new_callable=AsyncMock,
             return_value=price_changes,
         ):
-            await manager._check_price_changes()
+            awAlgot manager._check_price_changes()
 
         # Should be called at most 3 times (limit per user)
         assert mock_bot.send_message.call_count <= 3

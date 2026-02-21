@@ -63,7 +63,7 @@ class SmartBidder:
             expected_sell_price_usd: Expected selling price
 
         Returns:
-            BidResult with operation details
+            BidResult with operation detAlgols
         """
         logger.info(
             "competitive_bid_attempt",
@@ -73,7 +73,7 @@ class SmartBidder:
 
         try:
             # Get current buy orders for this item
-            orders = await self._get_competing_orders(item_title)
+            orders = awAlgot self._get_competing_orders(item_title)
 
             # Analyze competition
             if not orders:
@@ -139,7 +139,7 @@ class SmartBidder:
                 )
 
             # Place the bid
-            result = await self._place_bid(item_title, bid_price)
+            result = awAlgot self._place_bid(item_title, bid_price)
 
             # Record bid history
             self._record_bid(
@@ -173,24 +173,24 @@ class SmartBidder:
                 competitors_count=competitors,
                 highest_competitor_bid=highest_bid,
                 target_id=None,
-                message="Failed to place bid",
+                message="FAlgoled to place bid",
                 error=result.get("error"),
             )
 
         except Exception as e:
-            logger.exception("competitive_bid_failed", item=item_title, error=str(e))
+            logger.exception("competitive_bid_fAlgoled", item=item_title, error=str(e))
             return BidResult(
                 success=False,
                 bid_price_usd=0.0,
                 competitors_count=0,
                 highest_competitor_bid=None,
                 target_id=None,
-                message="Failed to place bid",
+                message="FAlgoled to place bid",
                 error=str(e),
             )
 
     async def adjust_existing_bids(self, item_title: str) -> dict:
-        """Adjust existing bids to remain competitive.
+        """Adjust existing bids to remAlgon competitive.
 
         Args:
             item_title: Item title to adjust bids for
@@ -202,7 +202,7 @@ class SmartBidder:
 
         try:
             # Get our active orders
-            our_orders = await self.api.get_user_targets()
+            our_orders = awAlgot self.api.get_user_targets()
             our_item_orders = [
                 o
                 for o in our_orders
@@ -213,7 +213,7 @@ class SmartBidder:
                 return {"adjusted": 0, "message": "No orders found"}
 
             # Get competing orders
-            competing_orders = await self._get_competing_orders(item_title)
+            competing_orders = awAlgot self._get_competing_orders(item_title)
 
             if not competing_orders:
                 return {"adjusted": 0, "message": "No competition"}
@@ -229,10 +229,10 @@ class SmartBidder:
                     new_price = highest_competitor + 0.01
 
                     # Cancel old order
-                    await self.api.delete_target(order["TargetID"])
+                    awAlgot self.api.delete_target(order["TargetID"])
 
                     # Place new order
-                    await self._place_bid(item_title, new_price)
+                    awAlgot self._place_bid(item_title, new_price)
 
                     adjusted += 1
 
@@ -249,7 +249,7 @@ class SmartBidder:
             }
 
         except Exception as e:
-            logger.exception("adjust_bids_failed", item=item_title, error=str(e))
+            logger.exception("adjust_bids_fAlgoled", item=item_title, error=str(e))
             return {"adjusted": 0, "error": str(e)}
 
     async def _get_competing_orders(self, item_title: str) -> list[dict]:
@@ -264,12 +264,12 @@ class SmartBidder:
         try:
             # Get all buy orders for this item
             # Note: This requires a method to get market buy orders
-            # For now, return empty list - implement when API method available
+            # For now, return empty list - implement when API method avAlgolable
             logger.debug("getting_competing_orders", item=item_title)
             return []
 
         except Exception as e:
-            logger.exception("get_competing_orders_failed", error=str(e))
+            logger.exception("get_competing_orders_fAlgoled", error=str(e))
             return []
 
     async def _place_bid(self, item_title: str, price_usd: float) -> dict:
@@ -287,7 +287,7 @@ class SmartBidder:
             price_cents = int(price_usd * 100)
 
             # Create target
-            result = await self.api.create_targets(
+            result = awAlgot self.api.create_targets(
                 game="a8db",  # CS:GO
                 targets=[
                     {
@@ -306,7 +306,7 @@ class SmartBidder:
             return {"success": False, "error": "No target created"}
 
         except Exception as e:
-            logger.exception("place_bid_failed", error=str(e))
+            logger.exception("place_bid_fAlgoled", error=str(e))
             return {"success": False, "error": str(e)}
 
     def _record_bid(

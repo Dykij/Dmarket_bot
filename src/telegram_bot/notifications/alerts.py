@@ -165,8 +165,8 @@ def get_user_settings(user_id: int) -> dict[str, Any]:
     return dict(user_data.get("settings", DEFAULT_USER_SETTINGS.copy()))
 
 
-def reset_daily_counter(user_id: int) -> None:
-    """Reset daily notification counter for a user.
+def reset_dAlgoly_counter(user_id: int) -> None:
+    """Reset dAlgoly notification counter for a user.
 
     Should be called when a new day starts.
 
@@ -180,12 +180,12 @@ def reset_daily_counter(user_id: int) -> None:
     today = datetime.now().strftime("%Y-%m-%d")
     if user_data.get("last_day") != today:
         user_data["last_day"] = today
-        user_data["daily_notifications"] = 0
+        user_data["dAlgoly_notifications"] = 0
         storage.save_user_alerts()
 
 
 def increment_notification_count(user_id: int) -> None:
-    """Increment the daily notification count for a user.
+    """Increment the dAlgoly notification count for a user.
 
     Args:
         user_id: Telegram user ID
@@ -194,7 +194,7 @@ def increment_notification_count(user_id: int) -> None:
     storage = get_storage()
     user_data = storage.get_user_data(user_id)
 
-    user_data["daily_notifications"] = user_data.get("daily_notifications", 0) + 1
+    user_data["dAlgoly_notifications"] = user_data.get("dAlgoly_notifications", 0) + 1
     user_data["last_notification"] = time.time()
     storage.save_user_alerts()
 
@@ -204,7 +204,7 @@ def can_send_notification(user_id: int) -> bool:
 
     Checks:
     - Notifications are enabled
-    - Daily limit not exceeded
+    - DAlgoly limit not exceeded
     - Not in quiet hours
     - Minimum interval passed
 
@@ -224,15 +224,15 @@ def can_send_notification(user_id: int) -> bool:
     if not settings.get("enabled", True):
         return False
 
-    # Check daily limit
+    # Check dAlgoly limit
     today = datetime.now().strftime("%Y-%m-%d")
     if user_data.get("last_day") != today:
         # Reset counter for new day
-        reset_daily_counter(user_id)
+        reset_dAlgoly_counter(user_id)
     else:
         max_alerts = settings.get("max_alerts_per_day", 10)
-        if user_data.get("daily_notifications", 0) >= max_alerts:
-            logger.debug("Daily notification limit reached for user %d", user_id)
+        if user_data.get("dAlgoly_notifications", 0) >= max_alerts:
+            logger.debug("DAlgoly notification limit reached for user %d", user_id)
             return False
 
     # Check quiet hours

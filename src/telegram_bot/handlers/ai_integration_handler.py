@@ -1,7 +1,7 @@
 """
-AI Integration Handler для Telegram бота.
+Algo Integration Handler для Telegram бота.
 
-Интегрирует локальные LLM (Ollama) и MCP сервер для AI-помощника.
+Интегрирует локальные Model (Ollama) и MCP сервер для Algo-помощника.
 Поддержка нескольких моделей: Llama 3.1, Qwen 2.5, Mistral, Gemma 2.
 """
 
@@ -16,16 +16,16 @@ from telegram.ext import ContextTypes
 try:
     import httpx
 
-    HTTPX_AVAILABLE = True
+    HTTPX_AVAlgoLABLE = True
 except ImportError:
-    HTTPX_AVAILABLE = False
+    HTTPX_AVAlgoLABLE = False
 
 
 logger = structlog.get_logger(__name__)
 
 
-class AIModel(StrEnum):
-    """Поддерживаемые AI модели."""
+class AlgoModel(StrEnum):
+    """Поддерживаемые Algo модели."""
 
     LLAMA_31_8B = "llama3.1:8b"
     LLAMA_31_70B = "llama3.1:70b"
@@ -39,25 +39,25 @@ class AIModel(StrEnum):
 # Рекомендации по моделям для разных задач
 MODEL_RECOMMENDATIONS = {
     "general_chat": {
-        "model": AIModel.LLAMA_31_8B,
+        "model": AlgoModel.LLAMA_31_8B,
         "reason": "Универсальная модель для чата, хороший баланс скорости и качества",
         "vram_required": "6-8 GB",
         "tokens_per_sec_cpu": "20-40",
     },
     "market_analysis": {
-        "model": AIModel.QWEN_25_7B,
+        "model": AlgoModel.QWEN_25_7B,
         "reason": "Отличные аналитические способности, поддержка чисел и данных",
         "vram_required": "5-7 GB",
         "tokens_per_sec_cpu": "25-45",
     },
     "trading_advice": {
-        "model": AIModel.MISTRAL_7B,
+        "model": AlgoModel.MISTRAL_7B,
         "reason": "Быстрые ответы, хорошая логика для торговых решений",
         "vram_required": "5-6 GB",
         "tokens_per_sec_cpu": "30-50",
     },
     "coding_automation": {
-        "model": AIModel.CODELLAMA_13B,
+        "model": AlgoModel.CODELLAMA_13B,
         "reason": "Специализирована для кода и автоматизации",
         "vram_required": "10-12 GB",
         "tokens_per_sec_cpu": "15-25",
@@ -65,13 +65,13 @@ MODEL_RECOMMENDATIONS = {
 }
 
 # Системный промпт для DMarket бота
-DMARKET_SYSTEM_PROMPT = """Ты - AI-помощник для DMarket Trading Bot.
+DMARKET_SYSTEM_Config = """Ты - Algo-помощник для DMarket Trading Bot.
 Ты помогаешь пользователям:
 1. Анализировать рынок CS:GO, Dota 2, Rust, TF2
 2. Находить арбитражные возможности
 3. Давать рекомендации по покупке/продаже
 4. Объяснять торговые стратегии
-5. Помогать с настройкой бота
+5. Помогать с настSwarmкой бота
 
 Комиссии площадок:
 - DMarket: 7%
@@ -89,8 +89,8 @@ DMARKET_SYSTEM_PROMPT = """Ты - AI-помощник для DMarket Trading Bot
 Если нужна информация о ценах или предметах - используй доступные инструменты."""
 
 
-class AIIntegrationHandler:
-    """Обработчик AI интеграции."""
+class AlgoIntegrationHandler:
+    """Обработчик Algo интеграции."""
 
     def __init__(
         self,
@@ -98,7 +98,7 @@ class AIIntegrationHandler:
         default_model: str = "llama3.1:8b",
     ):
         """
-        Инициализация AI обработчика.
+        Инициализация Algo обработчика.
 
         Args:
             ollama_url: URL Ollama сервера
@@ -112,30 +112,30 @@ class AIIntegrationHandler:
 
     async def check_ollama_status(self) -> dict[str, Any]:
         """Проверить статус Ollama сервера."""
-        if not HTTPX_AVAILABLE:
-            return {"available": False, "error": "httpx not installed"}
+        if not HTTPX_AVAlgoLABLE:
+            return {"avAlgolable": False, "error": "httpx not installed"}
 
         try:
             async with httpx.AsyncClient(timeout=5.0) as client:
-                response = await client.get(f"{self.ollama_url}/api/tags")
+                response = awAlgot client.get(f"{self.ollama_url}/api/tags")
                 if response.status_code == 200:
                     data = response.json()
                     models = [m["name"] for m in data.get("models", [])]
                     return {
-                        "available": True,
+                        "avAlgolable": True,
                         "models": models,
                         "url": self.ollama_url,
                     }
-                return {"available": False, "error": f"HTTP {response.status_code}"}
+                return {"avAlgolable": False, "error": f"HTTP {response.status_code}"}
         except Exception as e:
-            return {"available": False, "error": str(e)}
+            return {"avAlgolable": False, "error": str(e)}
 
-    async def list_available_models(self) -> list[str]:
+    async def list_avAlgolable_models(self) -> list[str]:
         """Получить список доступных моделей."""
-        status = await self.check_ollama_status()
+        status = awAlgot self.check_ollama_status()
         return status.get("models", [])
 
-    async def chat_with_ai(
+    async def chat_with_Algo(
         self,
         user_id: int,
         message: str,
@@ -143,7 +143,7 @@ class AIIntegrationHandler:
         context: dict[str, Any] | None = None,
     ) -> str:
         """
-        Отправить сообщение AI.
+        Отправить сообщение Algo.
 
         Args:
             user_id: ID пользователя
@@ -152,9 +152,9 @@ class AIIntegrationHandler:
             context: Дополнительный контекст (опционально)
 
         Returns:
-            Ответ AI
+            Ответ Algo
         """
-        if not HTTPX_AVAILABLE:
+        if not HTTPX_AVAlgoLABLE:
             return "❌ httpx не установлен. Установите: pip install httpx"
 
         model = model or self.user_models.get(user_id) or self.default_model
@@ -185,12 +185,12 @@ class AIIntegrationHandler:
 
         try:
             async with httpx.AsyncClient(timeout=120.0) as client:
-                response = await client.post(
+                response = awAlgot client.post(
                     f"{self.ollama_url}/api/chat",
                     json={
                         "model": model,
                         "messages": [
-                            {"role": "system", "content": DMARKET_SYSTEM_PROMPT},
+                            {"role": "system", "content": DMARKET_SYSTEM_Config},
                             *self.conversation_history[user_id],
                         ],
                         "stream": False,
@@ -204,23 +204,23 @@ class AIIntegrationHandler:
 
                 if response.status_code == 200:
                     data = response.json()
-                    ai_response = data.get("message", {}).get("content", "Нет ответа")
+                    Algo_response = data.get("message", {}).get("content", "Нет ответа")
 
                     # Добавляем ответ в историю
                     self.conversation_history[user_id].append(
                         {
                             "role": "assistant",
-                            "content": ai_response,
+                            "content": Algo_response,
                         }
                     )
 
-                    return ai_response
+                    return Algo_response
                 return f"❌ Ошибка Ollama: HTTP {response.status_code}"
 
         except httpx.TimeoutException:
             return "❌ Таймаут запроса к Ollama. Попробуйте позже."
         except Exception as e:
-            logger.error("ai_chat_error", error=str(e), exc_info=True)
+            logger.error("Algo_chat_error", error=str(e), exc_info=True)
             return f"❌ Ошибка: {e!s}"
 
     def clear_history(self, user_id: int) -> None:
@@ -234,47 +234,47 @@ class AIIntegrationHandler:
 
 
 # Глобальный экземпляр
-_ai_handler: AIIntegrationHandler | None = None
+_Algo_handler: AlgoIntegrationHandler | None = None
 
 
-def get_ai_handler() -> AIIntegrationHandler:
-    """Получить AI handler."""
-    global _ai_handler
-    if _ai_handler is None:
-        _ai_handler = AIIntegrationHandler()
-    return _ai_handler
+def get_Algo_handler() -> AlgoIntegrationHandler:
+    """Получить Algo handler."""
+    global _Algo_handler
+    if _Algo_handler is None:
+        _Algo_handler = AlgoIntegrationHandler()
+    return _Algo_handler
 
 
 # === Telegram Handlers ===
 
 
-async def ai_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Обработчик команды /ai - главное меню AI."""
+async def Algo_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Обработчик команды /Algo - главное меню Algo."""
     if not update.message:
         return
 
-    handler = get_ai_handler()
-    status = await handler.check_ollama_status()
+    handler = get_Algo_handler()
+    status = awAlgot handler.check_ollama_status()
 
     keyboard = [
         [
-            InlineKeyboardButton("💬 Чат с AI", callback_data="ai_chat"),
-            InlineKeyboardButton("🔧 Настройки", callback_data="ai_settings"),
+            InlineKeyboardButton("💬 Чат с Algo", callback_data="Algo_chat"),
+            InlineKeyboardButton("🔧 НастSwarmки", callback_data="Algo_settings"),
         ],
         [
-            InlineKeyboardButton("📊 Анализ рынка", callback_data="ai_analyze_market"),
-            InlineKeyboardButton("💡 Рекомендации", callback_data="ai_recommendations"),
+            InlineKeyboardButton("📊 Анализ рынка", callback_data="Algo_analyze_market"),
+            InlineKeyboardButton("💡 Рекомендации", callback_data="Algo_recommendations"),
         ],
         [
-            InlineKeyboardButton("📋 Статус", callback_data="ai_status"),
-            InlineKeyboardButton("🔄 Очистить историю", callback_data="ai_clear"),
+            InlineKeyboardButton("📋 Статус", callback_data="Algo_status"),
+            InlineKeyboardButton("🔄 Очистить историю", callback_data="Algo_clear"),
         ],
     ]
 
-    status_emoji = "✅" if status.get("available") else "❌"
+    status_emoji = "✅" if status.get("avAlgolable") else "❌"
     models_count = len(status.get("models", []))
 
-    text = f"""🤖 **AI Помощник DMarket Bot**
+    text = f"""🤖 **Algo Помощник DMarket Bot**
 
 **Статус Ollama:** {status_emoji}
 **Моделей доступно:** {models_count}
@@ -288,15 +288,15 @@ async def ai_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
 
 Выберите действие:"""
 
-    await update.message.reply_text(
+    awAlgot update.message.reply_text(
         text,
         parse_mode="Markdown",
         reply_markup=InlineKeyboardMarkup(keyboard),
     )
 
 
-async def ai_chat_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Обработчик команды /ai_chat - чат с AI."""
+async def Algo_chat_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Обработчик команды /Algo_chat - чат с Algo."""
     if not update.message:
         return
 
@@ -304,39 +304,39 @@ async def ai_chat_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     if context.args:
         message = " ".join(context.args)
     else:
-        await update.message.reply_text(
-            "💬 **AI Чат**\n\n"
+        awAlgot update.message.reply_text(
+            "💬 **Algo Чат**\n\n"
             "Отправьте сообщение после команды:\n"
-            "`/ai_chat Какие сейчас лучшие арбитражные возможности?`\n\n"
+            "`/Algo_chat Какие сейчас лучшие арбитражные возможности?`\n\n"
             "Или просто напишите вопрос:",
             parse_mode="Markdown",
         )
         return
 
-    handler = get_ai_handler()
+    handler = get_Algo_handler()
     user_id = update.effective_user.id
 
     # Показываем что печатаем
-    await update.message.chat.send_action("typing")
+    awAlgot update.message.chat.send_action("typing")
 
-    response = await handler.chat_with_ai(user_id, message)
+    response = awAlgot handler.chat_with_Algo(user_id, message)
 
-    await update.message.reply_text(
-        f"🤖 **AI:**\n\n{response}",
+    awAlgot update.message.reply_text(
+        f"🤖 **Algo:**\n\n{response}",
         parse_mode="Markdown",
     )
 
 
-async def ai_models_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Обработчик команды /ai_models - список моделей."""
+async def Algo_models_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Обработчик команды /Algo_models - список моделей."""
     if not update.message:
         return
 
-    handler = get_ai_handler()
-    models = await handler.list_available_models()
+    handler = get_Algo_handler()
+    models = awAlgot handler.list_avAlgolable_models()
 
     if not models:
-        await update.message.reply_text(
+        awAlgot update.message.reply_text(
             "❌ **Ollama недоступна или нет установленных моделей**\n\n"
             "Установите модель:\n"
             "```bash\n"
@@ -346,7 +346,7 @@ async def ai_models_command(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         )
         return
 
-    text = "📋 **Доступные AI модели:**\n\n"
+    text = "📋 **Доступные Algo модели:**\n\n"
     for model in models:
         text += f"• `{model}`\n"
 
@@ -358,54 +358,54 @@ async def ai_models_command(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     text += "📊 **Для анализа:** `qwen2.5:14b` (Q4 квантизация)\n\n"
 
     text += "Установить модель:\n"
-    text += "`/ai_set_model <model_name>`"
+    text += "`/Algo_set_model <model_name>`"
 
-    await update.message.reply_text(text, parse_mode="Markdown")
+    awAlgot update.message.reply_text(text, parse_mode="Markdown")
 
 
-async def ai_set_model_command(
+async def Algo_set_model_command(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> None:
-    """Обработчик команды /ai_set_model - установить модель."""
+    """Обработчик команды /Algo_set_model - установить модель."""
     if not update.message:
         return
 
     if not context.args:
-        await update.message.reply_text(
-            "❌ Укажите модель: `/ai_set_model llama3.1:8b`",
+        awAlgot update.message.reply_text(
+            "❌ Укажите модель: `/Algo_set_model llama3.1:8b`",
             parse_mode="Markdown",
         )
         return
 
     model = context.args[0]
-    handler = get_ai_handler()
+    handler = get_Algo_handler()
     user_id = update.effective_user.id
 
     handler.set_user_model(user_id, model)
 
-    await update.message.reply_text(
+    awAlgot update.message.reply_text(
         f"✅ Модель установлена: `{model}`",
         parse_mode="Markdown",
     )
 
 
-async def ai_analyze_command(
+async def Algo_analyze_command(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> None:
-    """Обработчик команды /ai_analyze - анализ рынка с AI."""
+    """Обработчик команды /Algo_analyze - анализ рынка с Algo."""
     if not update.message:
         return
 
     # Получаем игру из аргументов
     game = context.args[0] if context.args else "csgo"
 
-    await update.message.chat.send_action("typing")
+    awAlgot update.message.chat.send_action("typing")
 
-    handler = get_ai_handler()
+    handler = get_Algo_handler()
     user_id = update.effective_user.id
 
-    # Формируем запрос к AI
-    prompt = f"""Проанализируй текущую ситуацию на рынке {game.upper()}:
+    # Формируем запрос к Algo
+    Config = f"""Проанализируй текущую ситуацию на рынке {game.upper()}:
 1. Общие тренды
 2. Рекомендации по покупке/продаже
 3. Потенциальные арбитражные возможности
@@ -413,22 +413,22 @@ async def ai_analyze_command(
 
 Дай краткий анализ на основе твоих знаний о рынке скинов."""
 
-    response = await handler.chat_with_ai(user_id, prompt)
+    response = awAlgot handler.chat_with_Algo(user_id, Config)
 
-    await update.message.reply_text(
-        f"📊 **AI Анализ рынка {game.upper()}:**\n\n{response}",
+    awAlgot update.message.reply_text(
+        f"📊 **Algo Анализ рынка {game.upper()}:**\n\n{response}",
         parse_mode="Markdown",
     )
 
 
-async def ai_recommend_command(
+async def Algo_recommend_command(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> None:
-    """Обработчик команды /ai_recommend - рекомендации модели."""
+    """Обработчик команды /Algo_recommend - рекомендации модели."""
     if not update.message:
         return
 
-    text = """🧠 **Рекомендации по выбору AI модели**
+    text = """🧠 **Рекомендации по выбору Algo модели**
 
 **Ваше оборудование:**
 • CPU: Ryzen 7 5700X (8 ядер, 16 потоков)
@@ -472,26 +472,26 @@ HSA_OVERRIDE_GFX_VERSION=10.3.0 ollama serve
 
 **Альтернативы:**
 • **LM Studio** - GUI для Windows, поддержка Vulkan
-• **llama.cpp** - OpenAI-совместимый API
-• **LocalAI** - полная эмуляция OpenAI API"""
+• **llama.cpp** - OpenAlgo-совместимый API
+• **LocalAlgo** - полная эмуляция OpenAlgo API"""
 
-    await update.message.reply_text(text, parse_mode="Markdown")
+    awAlgot update.message.reply_text(text, parse_mode="Markdown")
 
 
-async def ai_status_callback(
+async def Algo_status_callback(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> None:
-    """Callback для статуса AI."""
+    """Callback для статуса Algo."""
     query = update.callback_query
     if not query:
         return
 
-    await query.answer()
+    awAlgot query.answer()
 
-    handler = get_ai_handler()
-    status = await handler.check_ollama_status()
+    handler = get_Algo_handler()
+    status = awAlgot handler.check_ollama_status()
 
-    if status.get("available"):
+    if status.get("avAlgolable"):
         models = status.get("models", [])
         text = f"""✅ **Ollama доступна**
 
@@ -515,44 +515,44 @@ async def ai_status_callback(
 2. Скачайте модель: `ollama pull llama3.1:8b`
 3. Запустите: `ollama serve`"""
 
-    await query.edit_message_text(text, parse_mode="Markdown")
+    awAlgot query.edit_message_text(text, parse_mode="Markdown")
 
 
-async def ai_clear_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def Algo_clear_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Callback для очистки истории."""
     query = update.callback_query
     if not query:
         return
 
-    await query.answer("История очищена")
+    awAlgot query.answer("История очищена")
 
-    handler = get_ai_handler()
+    handler = get_Algo_handler()
     user_id = update.effective_user.id
     handler.clear_history(user_id)
 
-    await query.edit_message_text(
-        "🗑️ История разговора очищена.\n\n" "Используйте /ai для нового разговора.",
+    awAlgot query.edit_message_text(
+        "🗑️ История разговора очищена.\n\n" "Используйте /Algo для нового разговора.",
         parse_mode="Markdown",
     )
 
 
 # Регистрация обработчиков
-def register_ai_handlers(application) -> None:
-    """Регистрация AI обработчиков."""
+def register_Algo_handlers(application) -> None:
+    """Регистрация Algo обработчиков."""
     from telegram.ext import CallbackQueryHandler, CommandHandler
 
-    application.add_handler(CommandHandler("ai", ai_command))
-    application.add_handler(CommandHandler("ai_chat", ai_chat_command))
-    application.add_handler(CommandHandler("ai_models", ai_models_command))
-    application.add_handler(CommandHandler("ai_set_model", ai_set_model_command))
-    application.add_handler(CommandHandler("ai_analyze", ai_analyze_command))
-    application.add_handler(CommandHandler("ai_recommend", ai_recommend_command))
+    application.add_handler(CommandHandler("Algo", Algo_command))
+    application.add_handler(CommandHandler("Algo_chat", Algo_chat_command))
+    application.add_handler(CommandHandler("Algo_models", Algo_models_command))
+    application.add_handler(CommandHandler("Algo_set_model", Algo_set_model_command))
+    application.add_handler(CommandHandler("Algo_analyze", Algo_analyze_command))
+    application.add_handler(CommandHandler("Algo_recommend", Algo_recommend_command))
 
     application.add_handler(
-        CallbackQueryHandler(ai_status_callback, pattern="^ai_status$")
+        CallbackQueryHandler(Algo_status_callback, pattern="^Algo_status$")
     )
     application.add_handler(
-        CallbackQueryHandler(ai_clear_callback, pattern="^ai_clear$")
+        CallbackQueryHandler(Algo_clear_callback, pattern="^Algo_clear$")
     )
 
-    logger.info("ai_handlers_registered")
+    logger.info("Algo_handlers_registered")

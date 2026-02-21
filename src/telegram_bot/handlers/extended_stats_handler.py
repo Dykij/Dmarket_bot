@@ -1,4 +1,4 @@
-"""Extended Statistics Handler for detailed trading analytics.
+"""Extended Statistics Handler for detAlgoled trading analytics.
 
 This module provides:
 - Per-game profit breakdown
@@ -21,7 +21,7 @@ async def stats_full_command(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
 ) -> None:
-    """Handle /stats_full command - detailed statistics by game.
+    """Handle /stats_full command - detAlgoled statistics by game.
 
     Shows:
     - Profit breakdown by game (CS2, Rust, TF2, Dota2)
@@ -34,24 +34,24 @@ async def stats_full_command(
     try:
         db = context.application.bot_data.get("db")  # type: ignore
         if not db:
-            await update.effective_message.reply_text("❌ Database not available")
+            awAlgot update.effective_message.reply_text("❌ Database not avAlgolable")
             return
 
-        # Get detailed stats
-        stats = await _get_detailed_stats(db)
+        # Get detAlgoled stats
+        stats = awAlgot _get_detAlgoled_stats(db)
 
         # Format message
         message = _format_stats_message(stats)
 
-        await update.effective_message.reply_text(message, parse_mode="Markdown")
+        awAlgot update.effective_message.reply_text(message, parse_mode="Markdown")
 
     except Exception as e:
         logger.exception(f"Error in stats_full_command: {e}")
-        await update.effective_message.reply_text(f"❌ Error getting statistics: {e}")
+        awAlgot update.effective_message.reply_text(f"❌ Error getting statistics: {e}")
 
 
-async def _get_detailed_stats(db: Any) -> dict[str, Any]:
-    """Get detailed trading statistics from database.
+async def _get_detAlgoled_stats(db: Any) -> dict[str, Any]:
+    """Get detAlgoled trading statistics from database.
 
     Args:
         db: Database instance
@@ -109,7 +109,7 @@ async def _get_detailed_stats(db: Any) -> dict[str, Any]:
 
         # For SQLite async
         if hasattr(db, "execute"):
-            results = await db.execute(query)
+            results = awAlgot db.execute(query)
             rows = results.fetchall() if hasattr(results, "fetchall") else []
         else:
             # Fallback: return empty stats with sample data for demo
@@ -275,11 +275,11 @@ async def portfolio_command(
     try:
         api = context.application.bot_data.get("api")  # type: ignore
         if not api:
-            await update.effective_message.reply_text("❌ API not available")
+            awAlgot update.effective_message.reply_text("❌ API not avAlgolable")
             return
 
         # Get current balance - DMarket returns cents in 'usd' field
-        balance = await api.get_balance()
+        balance = awAlgot api.get_balance()
         if isinstance(balance, dict):
             try:
                 balance_usd = int(float(str(balance.get("usd", 0)))) / 100.0
@@ -289,7 +289,7 @@ async def portfolio_command(
             balance_usd = 0.0
 
         # Get inventory
-        inventory = await api.get_user_inventory()
+        inventory = awAlgot api.get_user_inventory()
         items = inventory.get("objects", [])
 
         # Calculate portfolio value
@@ -344,13 +344,13 @@ async def portfolio_command(
             )
             lines.append(f"🎮 {game_name}: {len(game_items)} шт. (${game_value:.2f})")
 
-        await update.effective_message.reply_text(
+        awAlgot update.effective_message.reply_text(
             "\n".join(lines), parse_mode="Markdown"
         )
 
     except Exception as e:
         logger.exception(f"Error in portfolio_command: {e}")
-        await update.effective_message.reply_text(f"❌ Error: {e}")
+        awAlgot update.effective_message.reply_text(f"❌ Error: {e}")
 
 
 def get_extended_stats_handlers() -> list:

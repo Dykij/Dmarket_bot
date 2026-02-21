@@ -34,7 +34,7 @@ class TestMarketAlertsBasicFunctionality:
 
             assert True
         except ImportError:
-            pytest.fail("Failed to import market_alerts module")
+            pytest.fAlgol("FAlgoled to import market_alerts module")
 
 
 class TestNotificationQueue:

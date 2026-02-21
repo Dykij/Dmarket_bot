@@ -40,7 +40,7 @@ async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
                 "Пожалуйста, подождите немного перед следующим запросом."
             )
         elif error.status_code == 401:
-            error_message = "🔐 <b>Ошибка авторизации DMarket API.</b>\n\nПроверьте API-ключи в настройках."
+            error_message = "🔐 <b>Ошибка авторизации DMarket API.</b>\n\nПроверьте API-ключи в настSwarmках."
         elif error.status_code == 404:
             error_message = "🔍 <b>Ресурс не найден.</b>\n\nЗапрашиваемый объект не найден на DMarket."
         elif error.status_code >= 500:
@@ -61,7 +61,7 @@ async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     # Отправляем сообщение, если это возможно
     if update and update.effective_message:
         try:
-            await update.effective_message.reply_text(
+            awAlgot update.effective_message.reply_text(
                 error_message,
                 parse_mode=ParseMode.HTML,
                 reply_markup=(

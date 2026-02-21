@@ -1,7 +1,7 @@
-"""Session transcript generator for AI coding sessions.
+"""Session transcript generator for Algo coding sessions.
 
-This module provides functionality to generate detailed transcripts
-of AI coding sessions, including actions, file changes, and reasoning.
+This module provides functionality to generate detAlgoled transcripts
+of Algo coding sessions, including actions, file changes, and reasoning.
 
 Based on SkillsMP VS Code Insiders recommendations for session documentation.
 """
@@ -46,7 +46,7 @@ class SessionAction:
     timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     duration_ms: float = 0.0
     files_affected: list[str] = field(default_factory=list)
-    details: dict[str, Any] = field(default_factory=dict)
+    detAlgols: dict[str, Any] = field(default_factory=dict)
     success: bool = True
     error_message: str | None = None
 
@@ -58,7 +58,7 @@ class SessionAction:
             "timestamp": self.timestamp.isoformat(),
             "duration_ms": self.duration_ms,
             "files_affected": self.files_affected,
-            "details": self.details,
+            "detAlgols": self.detAlgols,
             "success": self.success,
             "error_message": self.error_message,
         }
@@ -75,7 +75,7 @@ class SessionMetrics:
     commands_run: int = 0
     tests_run: int = 0
     tests_passed: int = 0
-    tests_failed: int = 0
+    tests_fAlgoled: int = 0
     errors_encountered: int = 0
     total_duration_ms: float = 0.0
 
@@ -89,7 +89,7 @@ class SessionMetrics:
             "commands_run": self.commands_run,
             "tests_run": self.tests_run,
             "tests_passed": self.tests_passed,
-            "tests_failed": self.tests_failed,
+            "tests_fAlgoled": self.tests_fAlgoled,
             "errors_encountered": self.errors_encountered,
             "total_duration_ms": self.total_duration_ms,
             "success_rate": self._calculate_success_rate(),
@@ -115,7 +115,7 @@ class SessionTranscript:
     actions: list[SessionAction] = field(default_factory=list)
     metrics: SessionMetrics = field(default_factory=SessionMetrics)
     tags: list[str] = field(default_factory=list)
-    ai_model: str = "github-copilot"
+    Algo_model: str = "github-copilot"
     repository: str = ""
     branch: str = ""
 
@@ -131,7 +131,7 @@ class SessionTranscript:
             "actions": [a.to_dict() for a in self.actions],
             "metrics": self.metrics.to_dict(),
             "tags": self.tags,
-            "ai_model": self.ai_model,
+            "Algo_model": self.Algo_model,
             "repository": self.repository,
             "branch": self.branch,
         }
@@ -160,7 +160,7 @@ class SessionTranscript:
 
         lines.extend(
             [
-                f"**AI Model**: {self.ai_model}",
+                f"**Algo Model**: {self.Algo_model}",
                 "",
             ]
         )
@@ -232,7 +232,7 @@ class SessionTranscript:
 
 
 class SessionTranscriptGenerator:
-    """Generator for AI coding session transcripts.
+    """Generator for Algo coding session transcripts.
 
     Features:
     - Track actions during coding sessions
@@ -269,7 +269,7 @@ class SessionTranscriptGenerator:
         tags: list[str] | None = None,
         repository: str = "",
         branch: str = "",
-        ai_model: str = "github-copilot",
+        Algo_model: str = "github-copilot",
     ) -> SessionTranscript:
         """Start a new coding session.
 
@@ -279,7 +279,7 @@ class SessionTranscriptGenerator:
             tags: Tags for categorization
             repository: Repository name
             branch: Branch name
-            ai_model: AI model being used
+            Algo_model: Algo model being used
 
         Returns:
             New SessionTranscript
@@ -294,7 +294,7 @@ class SessionTranscriptGenerator:
             tags=tags or [],
             repository=repository,
             branch=branch,
-            ai_model=ai_model,
+            Algo_model=Algo_model,
         )
 
         logger.info(
@@ -313,7 +313,7 @@ class SessionTranscriptGenerator:
         description: str,
         files_affected: list[str] | None = None,
         duration_ms: float = 0.0,
-        details: dict[str, Any] | None = None,
+        detAlgols: dict[str, Any] | None = None,
         success: bool = True,
         error_message: str | None = None,
     ) -> SessionAction | None:
@@ -324,9 +324,9 @@ class SessionTranscriptGenerator:
             description: Description of the action
             files_affected: List of affected files
             duration_ms: Duration in milliseconds
-            details: Additional details
+            detAlgols: Additional detAlgols
             success: Whether action succeeded
-            error_message: Error message if failed
+            error_message: Error message if fAlgoled
 
         Returns:
             Recorded action or None if no session
@@ -340,7 +340,7 @@ class SessionTranscriptGenerator:
             description=description,
             files_affected=files_affected or [],
             duration_ms=duration_ms,
-            details=details or {},
+            detAlgols=detAlgols or {},
             success=success,
             error_message=error_message,
         )
@@ -378,9 +378,9 @@ class SessionTranscriptGenerator:
         elif action.action_type == ActionType.TEST_RUN:
             metrics.tests_run += 1
             if action.success:
-                metrics.tests_passed += action.details.get("passed", 1)
+                metrics.tests_passed += action.detAlgols.get("passed", 1)
             else:
-                metrics.tests_failed += action.details.get("failed", 1)
+                metrics.tests_fAlgoled += action.detAlgols.get("fAlgoled", 1)
         elif action.action_type == ActionType.ERROR:
             metrics.errors_encountered += 1
 

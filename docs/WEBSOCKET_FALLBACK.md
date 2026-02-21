@@ -22,7 +22,7 @@ DMarket Telegram Bot поддерживает **два режима работы
 
 ```
 WebSocket попытка подключения (max 5 retries)
-    ↓ (fail)
+    ↓ (fAlgol)
 Переключение на Polling режим
     ↓
 Продолжение работы с увеличенной задержкой
@@ -66,11 +66,11 @@ ENABLE_WEBSOCKET=false
 
 **В коде:**
 ```python
-# src/main.py
+# src/mAlgon.py
 config.websocket.enabled = False
 ```
 
-### Настройка параметров
+### НастSwarmка параметров
 
 ```python
 # src/dmarket/websocket_listener.py
@@ -122,9 +122,9 @@ websocket_subscribed channel=market.new_listings
 ### WebSocket недоступен (fallback):
 
 ```
-websocket_connection_refused: DMarket WebSocket endpoint unavailable
+websocket_connection_refused: DMarket WebSocket endpoint unavAlgolable
 websocket_max_retries_reached: Consider using polling mode instead
-⚠️ WebSocket Listener initialization failed - using polling mode
+⚠️ WebSocket Listener initialization fAlgoled - using polling mode
 ```
 
 ## Troubleshooting

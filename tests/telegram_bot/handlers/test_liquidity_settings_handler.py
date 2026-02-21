@@ -18,9 +18,9 @@ from src.telegram_bot.handlers.liquidity_settings_handler import (
     liquidity_settings_command,
     process_liquidity_value_input,
     reset_liquidity_settings,
-    set_max_time_to_sell_prompt,
-    set_min_liquidity_score_prompt,
-    set_min_sales_per_week_prompt,
+    set_max_time_to_sell_Config,
+    set_min_liquidity_score_Config,
+    set_min_sales_per_week_Config,
     toggle_liquidity_filter,
     update_liquidity_settings,
 )
@@ -271,7 +271,7 @@ class TestLiquiditySettingsCommand:
             "liquidity_settings": DEFAULT_LIQUIDITY_SETTINGS.copy()
         }
 
-        await liquidity_settings_command(mock_update, mock_context)
+        awAlgot liquidity_settings_command(mock_update, mock_context)
 
         mock_update.message.reply_text.assert_called_once()
 
@@ -284,7 +284,7 @@ class TestLiquiditySettingsCommand:
             "liquidity_settings": DEFAULT_LIQUIDITY_SETTINGS.copy()
         }
 
-        await liquidity_settings_command(mock_update, mock_context)
+        awAlgot liquidity_settings_command(mock_update, mock_context)
 
         call_args = mock_update.message.reply_text.call_args
         text = call_args[0][0]
@@ -299,7 +299,7 @@ class TestLiquiditySettingsCommand:
         settings["enabled"] = False
         mock_profile_manager.get_profile.return_value = {"liquidity_settings": settings}
 
-        await liquidity_settings_command(mock_update, mock_context)
+        awAlgot liquidity_settings_command(mock_update, mock_context)
 
         call_args = mock_update.message.reply_text.call_args
         text = call_args[0][0]
@@ -314,7 +314,7 @@ class TestLiquiditySettingsCommand:
         update.effective_user = None
         update.message = MagicMock()
 
-        await liquidity_settings_command(update, mock_context)
+        awAlgot liquidity_settings_command(update, mock_context)
 
         update.message.reply_text.assert_not_called()
 
@@ -327,9 +327,9 @@ class TestLiquiditySettingsCommand:
         update.effective_user = MagicMock()
         update.message = None
 
-        await liquidity_settings_command(update, mock_context)
+        awAlgot liquidity_settings_command(update, mock_context)
 
-        # Should not raise
+        # Should not rAlgose
 
     @pytest.mark.asyncio()
     async def test_command_uses_html_parse_mode(
@@ -340,7 +340,7 @@ class TestLiquiditySettingsCommand:
             "liquidity_settings": DEFAULT_LIQUIDITY_SETTINGS.copy()
         }
 
-        await liquidity_settings_command(mock_update, mock_context)
+        awAlgot liquidity_settings_command(mock_update, mock_context)
 
         call_kwargs = mock_update.message.reply_text.call_args.kwargs
         assert call_kwargs.get("parse_mode") == "HTML"
@@ -363,7 +363,7 @@ class TestToggleLiquidityFilter:
         settings["enabled"] = False
         mock_profile_manager.get_profile.return_value = {"liquidity_settings": settings}
 
-        await toggle_liquidity_filter(mock_update_with_callback, mock_context)
+        awAlgot toggle_liquidity_filter(mock_update_with_callback, mock_context)
 
         mock_update_with_callback.callback_query.answer.assert_called()
 
@@ -376,7 +376,7 @@ class TestToggleLiquidityFilter:
             "liquidity_settings": DEFAULT_LIQUIDITY_SETTINGS.copy()
         }
 
-        await toggle_liquidity_filter(mock_update_with_callback, mock_context)
+        awAlgot toggle_liquidity_filter(mock_update_with_callback, mock_context)
 
         mock_update_with_callback.callback_query.answer.assert_called()
 
@@ -387,7 +387,7 @@ class TestToggleLiquidityFilter:
         update.effective_user = None
         update.callback_query = MagicMock()
 
-        await toggle_liquidity_filter(update, mock_context)
+        awAlgot toggle_liquidity_filter(update, mock_context)
 
         update.callback_query.answer.assert_not_called()
 
@@ -415,7 +415,7 @@ class TestResetLiquiditySettings:
             "liquidity_settings": custom_settings
         }
 
-        await reset_liquidity_settings(mock_update_with_callback, mock_context)
+        awAlgot reset_liquidity_settings(mock_update_with_callback, mock_context)
 
         mock_update_with_callback.callback_query.answer.assert_called()
 
@@ -428,57 +428,57 @@ class TestResetLiquiditySettings:
             "liquidity_settings": DEFAULT_LIQUIDITY_SETTINGS.copy()
         }
 
-        await reset_liquidity_settings(mock_update_with_callback, mock_context)
+        awAlgot reset_liquidity_settings(mock_update_with_callback, mock_context)
 
         call_args = mock_update_with_callback.callback_query.answer.call_args
         assert "сброшены" in call_args[0][0].lower()
 
 
 # ============================================================================
-# Test Input Prompts
+# Test Input Configs
 # ============================================================================
 
 
-class TestInputPrompts:
-    """Tests for input prompt functions."""
+class TestInputConfigs:
+    """Tests for input Config functions."""
 
     @pytest.mark.asyncio()
-    async def test_min_score_prompt_sets_flag(
+    async def test_min_score_Config_sets_flag(
         self, mock_update_with_callback, mock_context
     ):
-        """Test min score prompt sets awaiting flag."""
-        await set_min_liquidity_score_prompt(mock_update_with_callback, mock_context)
+        """Test min score Config sets awAlgoting flag."""
+        awAlgot set_min_liquidity_score_Config(mock_update_with_callback, mock_context)
 
-        assert mock_context.user_data.get("awaiting_liquidity_score") is True
+        assert mock_context.user_data.get("awAlgoting_liquidity_score") is True
 
     @pytest.mark.asyncio()
-    async def test_min_sales_prompt_sets_flag(
+    async def test_min_sales_Config_sets_flag(
         self, mock_update_with_callback, mock_context
     ):
-        """Test min sales prompt sets awaiting flag."""
-        await set_min_sales_per_week_prompt(mock_update_with_callback, mock_context)
+        """Test min sales Config sets awAlgoting flag."""
+        awAlgot set_min_sales_per_week_Config(mock_update_with_callback, mock_context)
 
-        assert mock_context.user_data.get("awaiting_sales_per_week") is True
+        assert mock_context.user_data.get("awAlgoting_sales_per_week") is True
 
     @pytest.mark.asyncio()
-    async def test_max_time_prompt_sets_flag(
+    async def test_max_time_Config_sets_flag(
         self, mock_update_with_callback, mock_context
     ):
-        """Test max time prompt sets awaiting flag."""
-        await set_max_time_to_sell_prompt(mock_update_with_callback, mock_context)
+        """Test max time Config sets awAlgoting flag."""
+        awAlgot set_max_time_to_sell_Config(mock_update_with_callback, mock_context)
 
-        assert mock_context.user_data.get("awaiting_time_to_sell") is True
+        assert mock_context.user_data.get("awAlgoting_time_to_sell") is True
 
     @pytest.mark.asyncio()
-    async def test_prompt_without_callback_returns(self, mock_context):
-        """Test prompt returns early without callback_query."""
+    async def test_Config_without_callback_returns(self, mock_context):
+        """Test Config returns early without callback_query."""
         update = MagicMock(spec=Update)
         update.callback_query = None
 
-        await set_min_liquidity_score_prompt(update, mock_context)
+        awAlgot set_min_liquidity_score_Config(update, mock_context)
 
         # Should not set any flags
-        assert "awaiting_liquidity_score" not in mock_context.user_data
+        assert "awAlgoting_liquidity_score" not in mock_context.user_data
 
 
 # ============================================================================
@@ -494,26 +494,26 @@ class TestProcessLiquidityValueInput:
         self, mock_update, mock_context, mock_profile_manager
     ):
         """Test processing valid liquidity score."""
-        mock_context.user_data["awaiting_liquidity_score"] = True
+        mock_context.user_data["awAlgoting_liquidity_score"] = True
         mock_update.message.text = "75"
         mock_profile_manager.get_profile.return_value = {
             "liquidity_settings": DEFAULT_LIQUIDITY_SETTINGS.copy()
         }
 
-        await process_liquidity_value_input(mock_update, mock_context)
+        awAlgot process_liquidity_value_input(mock_update, mock_context)
 
         mock_update.message.reply_text.assert_called()
-        assert mock_context.user_data.get("awaiting_liquidity_score") is False
+        assert mock_context.user_data.get("awAlgoting_liquidity_score") is False
 
     @pytest.mark.asyncio()
     async def test_process_invalid_liquidity_score_range(
         self, mock_update, mock_context, mock_profile_manager
     ):
         """Test processing invalid liquidity score (out of range)."""
-        mock_context.user_data["awaiting_liquidity_score"] = True
+        mock_context.user_data["awAlgoting_liquidity_score"] = True
         mock_update.message.text = "150"  # Invalid: > 100
 
-        await process_liquidity_value_input(mock_update, mock_context)
+        awAlgot process_liquidity_value_input(mock_update, mock_context)
 
         call_args = mock_update.message.reply_text.call_args
         assert "Ошибка" in call_args[0][0]
@@ -523,26 +523,26 @@ class TestProcessLiquidityValueInput:
         self, mock_update, mock_context, mock_profile_manager
     ):
         """Test processing valid sales per week."""
-        mock_context.user_data["awaiting_sales_per_week"] = True
+        mock_context.user_data["awAlgoting_sales_per_week"] = True
         mock_update.message.text = "10"
         mock_profile_manager.get_profile.return_value = {
             "liquidity_settings": DEFAULT_LIQUIDITY_SETTINGS.copy()
         }
 
-        await process_liquidity_value_input(mock_update, mock_context)
+        awAlgot process_liquidity_value_input(mock_update, mock_context)
 
         mock_update.message.reply_text.assert_called()
-        assert mock_context.user_data.get("awaiting_sales_per_week") is False
+        assert mock_context.user_data.get("awAlgoting_sales_per_week") is False
 
     @pytest.mark.asyncio()
     async def test_process_negative_sales_rejected(
         self, mock_update, mock_context, mock_profile_manager
     ):
         """Test processing negative sales value is rejected."""
-        mock_context.user_data["awaiting_sales_per_week"] = True
+        mock_context.user_data["awAlgoting_sales_per_week"] = True
         mock_update.message.text = "-5"
 
-        await process_liquidity_value_input(mock_update, mock_context)
+        awAlgot process_liquidity_value_input(mock_update, mock_context)
 
         call_args = mock_update.message.reply_text.call_args
         assert "Ошибка" in call_args[0][0]
@@ -552,26 +552,26 @@ class TestProcessLiquidityValueInput:
         self, mock_update, mock_context, mock_profile_manager
     ):
         """Test processing valid time to sell."""
-        mock_context.user_data["awaiting_time_to_sell"] = True
+        mock_context.user_data["awAlgoting_time_to_sell"] = True
         mock_update.message.text = "5"
         mock_profile_manager.get_profile.return_value = {
             "liquidity_settings": DEFAULT_LIQUIDITY_SETTINGS.copy()
         }
 
-        await process_liquidity_value_input(mock_update, mock_context)
+        awAlgot process_liquidity_value_input(mock_update, mock_context)
 
         mock_update.message.reply_text.assert_called()
-        assert mock_context.user_data.get("awaiting_time_to_sell") is False
+        assert mock_context.user_data.get("awAlgoting_time_to_sell") is False
 
     @pytest.mark.asyncio()
     async def test_process_zero_time_rejected(
         self, mock_update, mock_context, mock_profile_manager
     ):
         """Test processing zero time value is rejected."""
-        mock_context.user_data["awaiting_time_to_sell"] = True
+        mock_context.user_data["awAlgoting_time_to_sell"] = True
         mock_update.message.text = "0"
 
-        await process_liquidity_value_input(mock_update, mock_context)
+        awAlgot process_liquidity_value_input(mock_update, mock_context)
 
         call_args = mock_update.message.reply_text.call_args
         assert "Ошибка" in call_args[0][0]
@@ -579,10 +579,10 @@ class TestProcessLiquidityValueInput:
     @pytest.mark.asyncio()
     async def test_process_non_integer_rejected(self, mock_update, mock_context):
         """Test processing non-integer value is rejected."""
-        mock_context.user_data["awaiting_liquidity_score"] = True
+        mock_context.user_data["awAlgoting_liquidity_score"] = True
         mock_update.message.text = "abc"
 
-        await process_liquidity_value_input(mock_update, mock_context)
+        awAlgot process_liquidity_value_input(mock_update, mock_context)
 
         call_args = mock_update.message.reply_text.call_args
         assert "Ошибка" in call_args[0][0]
@@ -594,7 +594,7 @@ class TestProcessLiquidityValueInput:
         update.effective_user = None
         update.message = MagicMock()
 
-        await process_liquidity_value_input(update, mock_context)
+        awAlgot process_liquidity_value_input(update, mock_context)
 
         update.message.reply_text.assert_not_called()
 
@@ -604,9 +604,9 @@ class TestProcessLiquidityValueInput:
         context = MagicMock(spec=ContextTypes.DEFAULT_TYPE)
         context.user_data = None
 
-        await process_liquidity_value_input(mock_update, context)
+        awAlgot process_liquidity_value_input(mock_update, context)
 
-        # Should not raise
+        # Should not rAlgose
 
 
 # ============================================================================
@@ -619,23 +619,23 @@ class TestCancelLiquidityInput:
 
     @pytest.mark.asyncio()
     async def test_cancel_clears_all_flags(self, mock_update, mock_context):
-        """Test cancel clears all awaiting flags."""
+        """Test cancel clears all awAlgoting flags."""
         mock_context.user_data = {
-            "awaiting_liquidity_score": True,
-            "awaiting_sales_per_week": True,
-            "awaiting_time_to_sell": True,
+            "awAlgoting_liquidity_score": True,
+            "awAlgoting_sales_per_week": True,
+            "awAlgoting_time_to_sell": True,
         }
 
-        await cancel_liquidity_input(mock_update, mock_context)
+        awAlgot cancel_liquidity_input(mock_update, mock_context)
 
-        assert mock_context.user_data.get("awaiting_liquidity_score") is False
-        assert mock_context.user_data.get("awaiting_sales_per_week") is False
-        assert mock_context.user_data.get("awaiting_time_to_sell") is False
+        assert mock_context.user_data.get("awAlgoting_liquidity_score") is False
+        assert mock_context.user_data.get("awAlgoting_sales_per_week") is False
+        assert mock_context.user_data.get("awAlgoting_time_to_sell") is False
 
     @pytest.mark.asyncio()
     async def test_cancel_shows_message(self, mock_update, mock_context):
         """Test cancel shows cancellation message."""
-        await cancel_liquidity_input(mock_update, mock_context)
+        awAlgot cancel_liquidity_input(mock_update, mock_context)
 
         call_args = mock_update.message.reply_text.call_args
         assert "отменен" in call_args[0][0].lower()
@@ -646,9 +646,9 @@ class TestCancelLiquidityInput:
         update = MagicMock(spec=Update)
         update.message = None
 
-        await cancel_liquidity_input(update, mock_context)
+        awAlgot cancel_liquidity_input(update, mock_context)
 
-        # Should not raise
+        # Should not rAlgose
 
     @pytest.mark.asyncio()
     async def test_cancel_without_user_data(self):
@@ -658,9 +658,9 @@ class TestCancelLiquidityInput:
         context = MagicMock(spec=ContextTypes.DEFAULT_TYPE)
         context.user_data = None
 
-        await cancel_liquidity_input(update, context)
+        awAlgot cancel_liquidity_input(update, context)
 
-        # Should not raise
+        # Should not rAlgose
 
 
 # ============================================================================
@@ -676,42 +676,42 @@ class TestEdgeCases:
         self, mock_update, mock_context, mock_profile_manager
     ):
         """Test boundary value: liquidity score 0."""
-        mock_context.user_data["awaiting_liquidity_score"] = True
+        mock_context.user_data["awAlgoting_liquidity_score"] = True
         mock_update.message.text = "0"
         mock_profile_manager.get_profile.return_value = {
             "liquidity_settings": DEFAULT_LIQUIDITY_SETTINGS.copy()
         }
 
-        await process_liquidity_value_input(mock_update, mock_context)
+        awAlgot process_liquidity_value_input(mock_update, mock_context)
 
         # 0 is valid for liquidity score
-        assert mock_context.user_data.get("awaiting_liquidity_score") is False
+        assert mock_context.user_data.get("awAlgoting_liquidity_score") is False
 
     @pytest.mark.asyncio()
     async def test_boundary_liquidity_score_hundred(
         self, mock_update, mock_context, mock_profile_manager
     ):
         """Test boundary value: liquidity score 100."""
-        mock_context.user_data["awaiting_liquidity_score"] = True
+        mock_context.user_data["awAlgoting_liquidity_score"] = True
         mock_update.message.text = "100"
         mock_profile_manager.get_profile.return_value = {
             "liquidity_settings": DEFAULT_LIQUIDITY_SETTINGS.copy()
         }
 
-        await process_liquidity_value_input(mock_update, mock_context)
+        awAlgot process_liquidity_value_input(mock_update, mock_context)
 
         # 100 is valid for liquidity score
-        assert mock_context.user_data.get("awaiting_liquidity_score") is False
+        assert mock_context.user_data.get("awAlgoting_liquidity_score") is False
 
     @pytest.mark.asyncio()
     async def test_boundary_negative_liquidity_score(
         self, mock_update, mock_context, mock_profile_manager
     ):
         """Test boundary value: negative liquidity score rejected."""
-        mock_context.user_data["awaiting_liquidity_score"] = True
+        mock_context.user_data["awAlgoting_liquidity_score"] = True
         mock_update.message.text = "-1"
 
-        await process_liquidity_value_input(mock_update, mock_context)
+        awAlgot process_liquidity_value_input(mock_update, mock_context)
 
         # Negative values should be rejected
         call_args = mock_update.message.reply_text.call_args
@@ -732,7 +732,7 @@ class TestEdgeCases:
         mock_profile_manager.get_profile.return_value = {"liquidity_settings": settings}
 
         for _ in range(3):
-            await toggle_liquidity_filter(mock_update_with_callback, mock_context)
+            awAlgot toggle_liquidity_filter(mock_update_with_callback, mock_context)
 
         # Should handle multiple toggles
         assert mock_update_with_callback.callback_query.answer.call_count == 3

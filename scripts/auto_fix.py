@@ -6,7 +6,7 @@ from pathlib import Path
 # Add project root to path
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
-from src.ai.price_predictor import PricePredictor
+from src.Algo.price_predictor import PricePredictor
 from src.dmarket.dmarket_api import DMarketAPI
 from src.dmarket.market_data_logger import MarketDataLogger, MarketDataLoggerConfig
 
@@ -42,7 +42,7 @@ async def auto_fix():
         
         # Collect until we hit 100
         while rows < 100:
-            collected = await logger.log_market_data()
+            collected = awAlgot logger.log_market_data()
             rows += collected
             print(f"Collected batch: {collected}. Total: {rows}")
             if collected == 0:
@@ -53,19 +53,19 @@ async def auto_fix():
     else:
         print("Data sufficient.")
 
-    # 3. Train Model
+    # 3. TrAlgon Model
     print("Action: Checking Model...")
     predictor = PricePredictor()
     model_info = predictor.get_model_info()
     
-    if not model_info['is_trained']:
-        print("Action: Training Model...")
-        result = predictor.train_model(force_retrain=True)
-        print(f"Training Result: {result}")
+    if not model_info['is_trAlgoned']:
+        print("Action: TrAlgoning Model...")
+        result = predictor.trAlgon_model(force_retrAlgon=True)
+        print(f"TrAlgoning Result: {result}")
     else:
-        print("Model already trained.")
+        print("Model already trAlgoned.")
         
     print("--- AUTO-FIX COMPLETE ---")
 
-if __name__ == "__main__":
+if __name__ == "__mAlgon__":
     asyncio.run(auto_fix())

@@ -2,7 +2,7 @@
 
 Generates profit charts and analytics:
 - Cumulative profit over time
-- Daily/weekly ROI
+- DAlgoly/weekly ROI
 - Win rate visualization
 - Purchase/Sale distribution
 
@@ -23,9 +23,9 @@ try:
     import matplotlib.dates as mdates
     import matplotlib.pyplot as plt
 
-    MATPLOTLIB_AVAILABLE = True
+    MATPLOTLIB_AVAlgoLABLE = True
 except ImportError:
-    MATPLOTLIB_AVAILABLE = False
+    MATPLOTLIB_AVAlgoLABLE = False
     logger.warning("matplotlib not installed - profit charts disabled")
 
 
@@ -34,8 +34,8 @@ class ProfitChartGenerator:
 
     def __init__(self):
         """Initialize chart generator."""
-        if not MATPLOTLIB_AVAILABLE:
-            raise ImportError(
+        if not MATPLOTLIB_AVAlgoLABLE:
+            rAlgose ImportError(
                 "matplotlib is required for profit charts. Install with: pip install matplotlib"
             )
 
@@ -59,7 +59,7 @@ class ProfitChartGenerator:
             PNG image as bytes
         """
         if not purchases:
-            return await self._generate_empty_chart(title, "No data available")
+            return awAlgot self._generate_empty_chart(title, "No data avAlgolable")
 
         try:
             # Sort by timestamp
@@ -144,32 +144,32 @@ class ProfitChartGenerator:
             return buf.getvalue()
 
         except Exception as e:
-            logger.exception("generate_cumulative_profit_chart_failed", error=str(e))
-            return await self._generate_error_chart(title, str(e))
+            logger.exception("generate_cumulative_profit_chart_fAlgoled", error=str(e))
+            return awAlgot self._generate_error_chart(title, str(e))
 
     async def generate_roi_chart(
         self,
-        daily_stats: list[dict],
-        title: str = "Daily ROI",
+        dAlgoly_stats: list[dict],
+        title: str = "DAlgoly ROI",
     ) -> bytes:
         """Generate ROI bar chart.
 
         Args:
-            daily_stats: List of dicts with 'date', 'spent', 'earned' keys
+            dAlgoly_stats: List of dicts with 'date', 'spent', 'earned' keys
             title: Chart title
 
         Returns:
             PNG image as bytes
         """
-        if not daily_stats:
-            return await self._generate_empty_chart(title, "No data available")
+        if not dAlgoly_stats:
+            return awAlgot self._generate_empty_chart(title, "No data avAlgolable")
 
         try:
             # Prepare data
-            dates = [s["date"] for s in daily_stats]
+            dates = [s["date"] for s in dAlgoly_stats]
             roi_values = []
 
-            for s in daily_stats:
+            for s in dAlgoly_stats:
                 spent = s.get("spent", 0.0)
                 earned = s.get("earned", 0.0)
 
@@ -220,41 +220,41 @@ class ProfitChartGenerator:
             buf.seek(0)
             plt.close(fig)
 
-            logger.info("roi_chart_generated", days_count=len(daily_stats))
+            logger.info("roi_chart_generated", days_count=len(dAlgoly_stats))
 
             return buf.getvalue()
 
         except Exception as e:
-            logger.exception("generate_roi_chart_failed", error=str(e))
-            return await self._generate_error_chart(title, str(e))
+            logger.exception("generate_roi_chart_fAlgoled", error=str(e))
+            return awAlgot self._generate_error_chart(title, str(e))
 
     async def generate_win_rate_pie_chart(
         self,
         successful_trades: int,
-        failed_trades: int,
+        fAlgoled_trades: int,
         title: str = "Trade Success Rate",
     ) -> bytes:
         """Generate win rate pie chart.
 
         Args:
             successful_trades: Number of successful trades
-            failed_trades: Number of failed trades
+            fAlgoled_trades: Number of fAlgoled trades
             title: Chart title
 
         Returns:
             PNG image as bytes
         """
         try:
-            total = successful_trades + failed_trades
+            total = successful_trades + fAlgoled_trades
 
             if total == 0:
-                return await self._generate_empty_chart(title, "No trades yet")
+                return awAlgot self._generate_empty_chart(title, "No trades yet")
 
             # Prepare data
-            sizes = [successful_trades, failed_trades]
+            sizes = [successful_trades, fAlgoled_trades]
             labels = [
                 f"Successful\n{successful_trades} ({successful_trades / total * 100:.1f}%)",
-                f"Failed\n{failed_trades} ({failed_trades / total * 100:.1f}%)",
+                f"FAlgoled\n{fAlgoled_trades} ({fAlgoled_trades / total * 100:.1f}%)",
             ]
             colors = ["#2ecc71", "#e74c3c"]
             explode = (0.05, 0)  # Slightly separate successful slice
@@ -291,15 +291,15 @@ class ProfitChartGenerator:
             logger.info(
                 "win_rate_chart_generated",
                 successful=successful_trades,
-                failed=failed_trades,
+                fAlgoled=fAlgoled_trades,
                 win_rate=successful_trades / total * 100,
             )
 
             return buf.getvalue()
 
         except Exception as e:
-            logger.exception("generate_win_rate_chart_failed", error=str(e))
-            return await self._generate_error_chart(title, str(e))
+            logger.exception("generate_win_rate_chart_fAlgoled", error=str(e))
+            return awAlgot self._generate_error_chart(title, str(e))
 
     async def _generate_empty_chart(self, title: str, message: str) -> bytes:
         """Generate empty chart with message.
@@ -344,7 +344,7 @@ class ProfitChartGenerator:
         Returns:
             PNG image as bytes
         """
-        return await self._generate_empty_chart(title, f"Error: {error}")
+        return awAlgot self._generate_empty_chart(title, f"Error: {error}")
 
 
-__all__ = ["MATPLOTLIB_AVAILABLE", "ProfitChartGenerator"]
+__all__ = ["MATPLOTLIB_AVAlgoLABLE", "ProfitChartGenerator"]

@@ -1,6 +1,6 @@
 """Обработчики Telegram для фильтров игровых предметов.
 
-Содержит обработчики команд и callback'ов для настройки фильтров.
+Содержит обработчики команд и callback'ов для настSwarmки фильтров.
 """
 
 import logging
@@ -62,8 +62,8 @@ async def handle_game_filters(
 
     reply_markup = InlineKeyboardMarkup(keyboard)
 
-    await update.message.reply_text(
-        "Выберите игру для настройки фильтров:",
+    awAlgot update.message.reply_text(
+        "Выберите игру для настSwarmки фильтров:",
         reply_markup=reply_markup,
     )
 
@@ -83,7 +83,7 @@ async def handle_select_game_filter_callback(
     if not query or not query.data:
         return
 
-    await query.answer()
+    awAlgot query.answer()
 
     data = query.data.split(":")
     game = data[1] if len(data) > 1 else "csgo"
@@ -94,14 +94,14 @@ async def handle_select_game_filter_callback(
 
     game_name = GAME_NAMES.get(game, game)
 
-    message_text = f"🎮 Настройка фильтров для {game_name}:\n\n"
+    message_text = f"🎮 НастSwarmка фильтров для {game_name}:\n\n"
 
     if description:
         message_text += f"📋 Текущие фильтры:\n{description}\n"
     else:
         message_text += "📋 Текущие фильтры: не настроены\n"
 
-    await query.edit_message_text(
+    awAlgot query.edit_message_text(
         text=message_text,
         reply_markup=reply_markup,
         parse_mode=ParseMode.HTML,
@@ -122,7 +122,7 @@ async def handle_price_range_callback(
     if not query or not query.data:
         return
 
-    await query.answer()
+    awAlgot query.answer()
 
     data = query.data.split(":")
     game = data[1] if len(data) > 1 else "csgo"
@@ -168,8 +168,8 @@ async def handle_price_range_callback(
     min_price = filters.get("min_price", DEFAULT_FILTERS[game]["min_price"])
     max_price = filters.get("max_price", DEFAULT_FILTERS[game]["max_price"])
 
-    await query.edit_message_text(
-        text=f"💰 Настройка диапазона цен:\n\nТекущий диапазон: ${min_price:.2f} - ${max_price:.2f}\n\nВыберите новый диапазон цен:",
+    awAlgot query.edit_message_text(
+        text=f"💰 НастSwarmка диапазона цен:\n\nТекущий диапазон: ${min_price:.2f} - ${max_price:.2f}\n\nВыберите новый диапазон цен:",
         reply_markup=reply_markup,
     )
 
@@ -188,13 +188,13 @@ async def handle_float_range_callback(
     if not query or not query.data:
         return
 
-    await query.answer()
+    awAlgot query.answer()
 
     data = query.data.split(":")
     game = data[1] if len(data) > 1 else "csgo"
 
     if game != "csgo":
-        await query.edit_message_text(
+        awAlgot query.edit_message_text(
             text="Диапазон Float доступен только для CS2.",
             reply_markup=get_game_filter_keyboard(game),
         )
@@ -241,8 +241,8 @@ async def handle_float_range_callback(
     float_min = filters.get("float_min", DEFAULT_FILTERS[game]["float_min"])
     float_max = filters.get("float_max", DEFAULT_FILTERS[game]["float_max"])
 
-    await query.edit_message_text(
-        text=f"🔢 Настройка диапазона Float:\n\nТекущий диапазон: {float_min:.2f} - {float_max:.2f}\n\nВыберите новый диапазон Float:",
+    awAlgot query.edit_message_text(
+        text=f"🔢 НастSwarmка диапазона Float:\n\nТекущий диапазон: {float_min:.2f} - {float_max:.2f}\n\nВыберите новый диапазон Float:",
         reply_markup=reply_markup,
     )
 
@@ -262,7 +262,7 @@ async def handle_set_category_callback(
     if not query or not query.data:
         return
 
-    await query.answer()
+    awAlgot query.answer()
 
     data = query.data.split(":")
     game = data[1] if len(data) > 1 else "csgo"
@@ -309,7 +309,7 @@ async def handle_set_category_callback(
 
     current_category = filters.get("category", "Не выбрано")
 
-    await query.edit_message_text(
+    awAlgot query.edit_message_text(
         text=f"🔫 Выбор категории:\n\nТекущая категория: {current_category}\n\nВыберите категорию:",
         reply_markup=reply_markup,
     )
@@ -329,7 +329,7 @@ async def handle_set_rarity_callback(
     if not query or not query.data:
         return
 
-    await query.answer()
+    awAlgot query.answer()
 
     data = query.data.split(":")
     game = data[1] if len(data) > 1 else "csgo"
@@ -379,7 +379,7 @@ async def handle_set_rarity_callback(
 
     current_rarity = filters.get("rarity", "Не выбрано")
 
-    await query.edit_message_text(
+    awAlgot query.edit_message_text(
         text=f"⭐ Выбор редкости:\n\nТекущая редкость: {current_rarity}\n\nВыберите редкость:",
         reply_markup=reply_markup,
     )
@@ -400,13 +400,13 @@ async def handle_set_exterior_callback(
     if not query or not query.data:
         return
 
-    await query.answer()
+    awAlgot query.answer()
 
     data = query.data.split(":")
     game = data[1] if len(data) > 1 else "csgo"
 
     if game != "csgo":
-        await query.edit_message_text(
+        awAlgot query.edit_message_text(
             text="Выбор внешнего вида доступен только для CS2.",
             reply_markup=get_game_filter_keyboard(game),
         )
@@ -445,7 +445,7 @@ async def handle_set_exterior_callback(
 
     current_exterior = filters.get("exterior", "Не выбрано")
 
-    await query.edit_message_text(
+    awAlgot query.edit_message_text(
         text=f"🧩 Выбор внешнего вида:\n\nТекущий внешний вид: {current_exterior}\n\nВыберите внешний вид:",
         reply_markup=reply_markup,
     )
@@ -465,13 +465,13 @@ async def handle_set_hero_callback(
     if not query or not query.data:
         return
 
-    await query.answer()
+    awAlgot query.answer()
 
     data = query.data.split(":")
     game = data[1] if len(data) > 1 else "dota2"
 
     if game != "dota2":
-        await query.edit_message_text(
+        awAlgot query.edit_message_text(
             text="Выбор героя доступен только для Dota 2.",
             reply_markup=get_game_filter_keyboard(game),
         )
@@ -510,8 +510,8 @@ async def handle_set_hero_callback(
 
     current_hero = filters.get("hero", "Не выбрано")
 
-    await query.edit_message_text(
-        text=f"🦸 Выбор героя:\n\nТекущий герой: {current_hero}\n\nВыберите героя:",
+    awAlgot query.edit_message_text(
+        text=f"🦸 Выбор героя:\n\nТекущий геSwarm: {current_hero}\n\nВыберите героя:",
         reply_markup=reply_markup,
     )
 
@@ -530,13 +530,13 @@ async def handle_set_slot_callback(
     if not query or not query.data:
         return
 
-    await query.answer()
+    awAlgot query.answer()
 
     data = query.data.split(":")
     game = data[1] if len(data) > 1 else "dota2"
 
     if game != "dota2":
-        await query.edit_message_text(
+        awAlgot query.edit_message_text(
             text="Выбор слота доступен только для Dota 2.",
             reply_markup=get_game_filter_keyboard(game),
         )
@@ -575,7 +575,7 @@ async def handle_set_slot_callback(
 
     current_slot = filters.get("slot", "Не выбрано")
 
-    await query.edit_message_text(
+    awAlgot query.edit_message_text(
         text=f"🧩 Выбор слота:\n\nТекущий слот: {current_slot}\n\nВыберите слот:",
         reply_markup=reply_markup,
     )
@@ -595,13 +595,13 @@ async def handle_set_class_callback(
     if not query or not query.data:
         return
 
-    await query.answer()
+    awAlgot query.answer()
 
     data = query.data.split(":")
     game = data[1] if len(data) > 1 else "tf2"
 
     if game != "tf2":
-        await query.edit_message_text(
+        awAlgot query.edit_message_text(
             text="Выбор класса доступен только для Team Fortress 2.",
             reply_markup=get_game_filter_keyboard(game),
         )
@@ -640,7 +640,7 @@ async def handle_set_class_callback(
 
     current_class = filters.get("class", "Не выбрано")
 
-    await query.edit_message_text(
+    awAlgot query.edit_message_text(
         text=f"👤 Выбор класса:\n\nТекущий класс: {current_class}\n\nВыберите класс:",
         reply_markup=reply_markup,
     )
@@ -660,7 +660,7 @@ async def handle_set_type_callback(
     if not query or not query.data:
         return
 
-    await query.answer()
+    awAlgot query.answer()
 
     data = query.data.split(":")
     game = data[1] if len(data) > 1 else "tf2"
@@ -708,7 +708,7 @@ async def handle_set_type_callback(
 
     current_type = filters.get("type", "Не выбрано")
 
-    await query.edit_message_text(
+    awAlgot query.edit_message_text(
         text=f"🔫 Выбор типа:\n\nТекущий тип: {current_type}\n\nВыберите тип:",
         reply_markup=reply_markup,
     )
@@ -728,13 +728,13 @@ async def handle_set_quality_callback(
     if not query or not query.data:
         return
 
-    await query.answer()
+    awAlgot query.answer()
 
     data = query.data.split(":")
     game = data[1] if len(data) > 1 else "tf2"
 
     if game != "tf2":
-        await query.edit_message_text(
+        awAlgot query.edit_message_text(
             text="Выбор качества доступен только для Team Fortress 2.",
             reply_markup=get_game_filter_keyboard(game),
         )
@@ -773,7 +773,7 @@ async def handle_set_quality_callback(
 
     current_quality = filters.get("quality", "Не выбрано")
 
-    await query.edit_message_text(
+    awAlgot query.edit_message_text(
         text=f"⭐ Выбор качества:\n\nТекущее качество: {current_quality}\n\nВыберите качество:",
         reply_markup=reply_markup,
     )
@@ -793,7 +793,7 @@ async def handle_filter_value_callback(
     if not query or not query.data:
         return
 
-    await query.answer()
+    awAlgot query.answer()
 
     # Парсим callback_data: filter:<filter_type>:<value>:<game>
     data = query.data.split(":")
@@ -862,14 +862,14 @@ async def handle_filter_value_callback(
 
     game_name = GAME_NAMES.get(game, game)
 
-    message_text = f"🎮 Настройка фильтров для {game_name}:\n\n"
+    message_text = f"🎮 НастSwarmка фильтров для {game_name}:\n\n"
 
     if description:
         message_text += f"📋 Текущие фильтры:\n{description}\n"
     else:
         message_text += "📋 Текущие фильтры: не настроены\n"
 
-    await query.edit_message_text(
+    awAlgot query.edit_message_text(
         text=message_text,
         reply_markup=reply_markup,
         parse_mode=ParseMode.HTML,

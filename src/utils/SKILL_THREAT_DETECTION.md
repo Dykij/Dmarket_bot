@@ -1,11 +1,11 @@
 ---
-name: "AI-Powered Security Threat Detection"
+name: "Algo-Powered Security Threat Detection"
 description: "ML-детекция угроз безопасности: SQL injection, XSS, rate limit abuse (92% accuracy)"
 version: "1.0.0"
 author: "DMarket Bot Team"
 license: "MIT"
 category: "Security"
-subcategories: ["Testing & Security", "Data & AI"]
+subcategories: ["Testing & Security", "Data & Algo"]
 tags: ["security", "threat-detection", "anomaly-detection", "ml", "protection"]
 status: "approved"
 team: "@security-team"
@@ -14,7 +14,7 @@ approval_date: "2026-01-25"
 review_required: true
 last_review: "2026-01-25"
 python_version: ">=3.11"
-main_module: "ai_threat_detector.py"
+mAlgon_module: "Algo_threat_detector.py"
 dependencies:
   - "scikit-learn>=1.3"
 optional_dependencies:
@@ -24,14 +24,14 @@ performance:
   latency_ms: 10
   throughput_per_sec: 10000
   false_positive_rate: "<5%"
-ai_compatible: true
+Algo_compatible: true
 allowed_tools:
   - "github-copilot"
   - "claude-code"
   - "chatgpt"
 ---
 
-# Skill: AI-Powered Security Threat Detection
+# Skill: Algo-Powered Security Threat Detection
 
 ## Описание
 
@@ -40,7 +40,7 @@ allowed_tools:
 ## Категория
 
 - **Primary**: Testing & Security
-- **Secondary**: Data & AI
+- **Secondary**: Data & Algo
 - **Tags**: `security`, `threat-detection`, `anomaly-detection`, `ml`, `protection`
 
 ## Возможности
@@ -58,7 +58,7 @@ allowed_tools:
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│         AIThreatDetector                            │
+│         AlgoThreatDetector                            │
 ├─────────────────────────────────────────────────────┤
 │                                                     │
 │  Incoming Request                                   │
@@ -119,10 +119,10 @@ pip install -e src/utils/
 ### Базовое использование
 
 ```python
-from src.utils.ai_threat_detector import AIThreatDetector
+from src.utils.Algo_threat_detector import AlgoThreatDetector
 
 # Инициализация
-threat_detector = AIThreatDetector()
+threat_detector = AlgoThreatDetector()
 
 # Анализ запроса
 request_data = {
@@ -133,7 +133,7 @@ request_data = {
     "source_ip": "192.168.1.1"
 }
 
-result = await threat_detector.analyze_request(request_data)
+result = awAlgot threat_detector.analyze_request(request_data)
 
 if result["is_threat"]:
     print(f"⚠️ Threat detected!")
@@ -141,11 +141,11 @@ if result["is_threat"]:
     print(f"Anomaly Score: {result['anomaly_score']:.2f}")
     print(f"Reasons: {', '.join(result['reasons'])}")
     # Блокировать запрос
-    await block_request(request_data)
+    awAlgot block_request(request_data)
 else:
     print(f"✅ Request is safe")
     # Обработать запрос
-    await process_request(request_data)
+    awAlgot process_request(request_data)
 ```
 
 ### Пример вывода (угроза обнаружена)
@@ -159,7 +159,7 @@ Reasons: Abnormal request rate, Suspicious payload pattern, Unknown source IP
 
 ## API Reference
 
-### `class AIThreatDetector`
+### `class AlgoThreatDetector`
 
 #### `async analyze_request(request: dict) -> dict`
 
@@ -210,11 +210,11 @@ async def check_rate_limit(user_id: int, endpoint: str):
         "timestamp": datetime.now().isoformat()
     }
     
-    result = await threat_detector.analyze_request(request_data)
+    result = awAlgot threat_detector.analyze_request(request_data)
     
     if result["threat_level"] == "high":
         # Заблокировать пользователя на 5 минут
-        await redis.setex(f"blocked:{user_id}", 300, "1")
+        awAlgot redis.setex(f"blocked:{user_id}", 300, "1")
         
         # Отправить алерт в Sentry
         sentry_sdk.capture_message(
@@ -232,11 +232,11 @@ async def validate_user_input(input_data: str):
         "data": input_data
     }
     
-    result = await threat_detector.analyze_request(request)
+    result = awAlgot threat_detector.analyze_request(request)
     
     if "SQL Injection" in result["reasons"]:
         # Отклонить ввод
-        raise SecurityException("Suspicious input detected")
+        rAlgose SecurityException("Suspicious input detected")
 ```
 
 ## Интеграция с Sentry
@@ -279,4 +279,4 @@ MIT License
 
 **Last Updated**: 2026-01-19  
 **Status**: ✅ Production Ready  
-**Skill Type**: Testing & Security, Data & AI
+**Skill Type**: Testing & Security, Data & Algo

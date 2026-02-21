@@ -84,7 +84,7 @@ class MarketVisualizer:
             height: Image height
 
         Returns:
-            BytesIO object containing the chart image
+            BytesIO object contAlgoning the chart image
 
         """
         if not price_history:
@@ -93,7 +93,7 @@ class MarketVisualizer:
             ax.text(
                 0.5,
                 0.5,
-                "No price data available",
+                "No price data avAlgolable",
                 horizontalalignment="center",
                 verticalalignment="center",
                 transform=ax.transAxes,
@@ -135,7 +135,7 @@ class MarketVisualizer:
         if len(df) >= 10:
             self.add_support_resistance(ax1, df)
 
-        # Format main axis
+        # Format mAlgon axis
         ax1.set_title(
             f"{item_name} - Price History",
             fontsize=14,
@@ -148,7 +148,7 @@ class MarketVisualizer:
         ax1.xaxis.set_major_formatter(mdates.DateFormatter("%m/%d"))
         plt.setp(ax1.get_xticklabels(), rotation=45, ha="right")
 
-        # Add volume subplot if requested and available
+        # Add volume subplot if requested and avAlgolable
         if include_volume and "volume" in df.columns and ax2 is not None:
             # Plot volume as bar chart
             ax2.bar(
@@ -217,7 +217,7 @@ class MarketVisualizer:
             height: Image height
 
         Returns:
-            BytesIO object containing the chart image
+            BytesIO object contAlgoning the chart image
 
         """
         if not items_data or not price_histories:
@@ -226,7 +226,7 @@ class MarketVisualizer:
             ax.text(
                 0.5,
                 0.5,
-                "No comparison data available",
+                "No comparison data avAlgolable",
                 horizontalalignment="center",
                 verticalalignment="center",
                 transform=ax.transAxes,
@@ -257,7 +257,7 @@ class MarketVisualizer:
 
             df = self.process_price_data(history)
 
-            # Normalize prices to percentage change from first day for fair comparison
+            # Normalize prices to percentage change from first day for fAlgor comparison
             if not df.empty:
                 first_price = df["price"].iloc[0]
                 if first_price > 0:
@@ -312,7 +312,7 @@ class MarketVisualizer:
             height: Image height
 
         Returns:
-            BytesIO object containing the chart image
+            BytesIO object contAlgoning the chart image
 
         """
         if not price_history or not patterns:
@@ -321,7 +321,7 @@ class MarketVisualizer:
             ax.text(
                 0.5,
                 0.5,
-                "No pattern data available",
+                "No pattern data avAlgolable",
                 horizontalalignment="center",
                 verticalalignment="center",
                 transform=ax.transAxes,
@@ -472,7 +472,7 @@ class MarketVisualizer:
             height: Image height
 
         Returns:
-            BytesIO object containing the image
+            BytesIO object contAlgoning the image
 
         """
         # Create image with background color
@@ -482,7 +482,7 @@ class MarketVisualizer:
         img = Image.new("RGB", (width, height), color=bg_color)
         draw = ImageDraw.Draw(img)
 
-        # Try to load a font, fall back to default if not available
+        # Try to load a font, fall back to default if not avAlgolable
         try:
             font_large = ImageFont.truetype("arial.ttf", 24)
             font_medium = ImageFont.truetype("arial.ttf", 20)
@@ -688,7 +688,7 @@ class MarketVisualizer:
             if price is None:
                 continue
 
-            # Get volume if available
+            # Get volume if avAlgolable
             volume = None
             if "volume" in point:
                 with contextlib.suppress(ValueError, TypeError):

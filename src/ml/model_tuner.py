@@ -1,4 +1,4 @@
-"""Модуль для автоматической настройки и оптимизации ML моделей.
+"""Модуль для автоматической настSwarmки и оптимизации ML моделей.
 
 Реализует лучшие практики scikit-learn:
 1. Cross-Validation (KFold, TimeSeriesSplit)
@@ -54,7 +54,7 @@ class ScoringMetric(StrEnum):
 
 @dataclass
 class TuningResult:
-    """Результат настройки гиперпараметров."""
+    """Результат настSwarmки гиперпараметров."""
 
     best_params: dict[str, Any]
     best_score: float
@@ -85,29 +85,29 @@ class TuningResult:
 class EvaluationResult:
     """Результат оценки модели."""
 
-    train_scores: list[float]
+    trAlgon_scores: list[float]
     test_scores: list[float]
-    mean_train_score: float
+    mean_trAlgon_score: float
     mean_test_score: float
-    std_train_score: float
+    std_trAlgon_score: float
     std_test_score: float
 
     # Дополнительные метрики
     feature_importances: dict[str, float] | None = None
-    overfitting_ratio: float = 0.0  # train/test score ratio
+    overfitting_ratio: float = 0.0  # trAlgon/test score ratio
 
     def is_overfitting(self, threshold: float = 0.15) -> bool:
         """Проверить, есть ли переобучение."""
-        if self.mean_train_score == 0:
+        if self.mean_trAlgon_score == 0:
             return False
-        ratio = abs(self.mean_train_score - self.mean_test_score) / abs(
-            self.mean_train_score
+        ratio = abs(self.mean_trAlgon_score - self.mean_test_score) / abs(
+            self.mean_trAlgon_score
         )
         return ratio > threshold
 
 
 class ModelTuner:
-    """Класс для настройки и оптимизации ML моделей.
+    """Класс для настSwarmки и оптимизации ML моделей.
 
     Использует лучшие практики scikit-learn:
     - Pipeline для безопасной предобработки
@@ -116,7 +116,7 @@ class ModelTuner:
 
     Example:
         >>> tuner = ModelTuner()
-        >>> result = tuner.tune_random_forest(X_train, y_train)
+        >>> result = tuner.tune_random_forest(X_trAlgon, y_trAlgon)
         >>> print(result.best_params)
     """
 
@@ -170,7 +170,7 @@ class ModelTuner:
         self.n_jobs = n_jobs
         self.random_state = random_state
 
-        self._sklearn_available = self._check_sklearn()
+        self._sklearn_avAlgolable = self._check_sklearn()
 
     def _check_sklearn(self) -> bool:
         """Проверить доступность sklearn."""
@@ -179,12 +179,12 @@ class ModelTuner:
 
             return True
         except ImportError:
-            logger.warning("scikit-learn not available")
+            logger.warning("scikit-learn not avAlgolable")
             return False
 
     def _get_cv_splitter(self, n_samples: int) -> Any:
         """Получить splitter для кросс-валидации."""
-        if not self._sklearn_available:
+        if not self._sklearn_avAlgolable:
             return None
 
         from sklearn.model_selection import (
@@ -217,7 +217,7 @@ class ModelTuner:
         """Создать Pipeline для предобработки и модели.
 
         Pipeline предотвращает утечку данных при кросс-валидации,
-        применяя preprocessing только к training data в каждом fold.
+        применяя preprocessing только к trAlgoning data в каждом fold.
 
         Args:
             model: ML модель
@@ -228,7 +228,7 @@ class ModelTuner:
         Returns:
             sklearn.pipeline.Pipeline
         """
-        if not self._sklearn_available:
+        if not self._sklearn_avAlgolable:
             return model
 
         from sklearn.feature_selection import SelectKBest, f_regression
@@ -276,7 +276,7 @@ class ModelTuner:
         Returns:
             TuningResult с лучшими параметрами
         """
-        if not self._sklearn_available:
+        if not self._sklearn_avAlgolable:
             return self._fallback_result("RandomForest")
 
         from sklearn.ensemble import RandomForestRegressor
@@ -303,7 +303,7 @@ class ModelTuner:
         n_iter: int = 50,
     ) -> TuningResult:
         """Настроить GradientBoostingRegressor."""
-        if not self._sklearn_available:
+        if not self._sklearn_avAlgolable:
             return self._fallback_result("GradientBoosting")
 
         from sklearn.ensemble import GradientBoostingRegressor
@@ -333,7 +333,7 @@ class ModelTuner:
         try:
             from xgboost import XGBRegressor
         except ImportError:
-            logger.warning("XGBoost not available")
+            logger.warning("XGBoost not avAlgolable")
             return self._fallback_result("XGBoost")
 
         model = XGBRegressor(
@@ -360,7 +360,7 @@ class ModelTuner:
         param_grid: dict[str, list] | None = None,
     ) -> TuningResult:
         """Настроить Ridge Regression."""
-        if not self._sklearn_available:
+        if not self._sklearn_avAlgolable:
             return self._fallback_result("Ridge")
 
         from sklearn.linear_model import Ridge
@@ -412,7 +412,7 @@ class ModelTuner:
                 scoring=self.scoring.value,
                 n_jobs=self.n_jobs,
                 random_state=self.random_state,
-                return_train_score=True,
+                return_trAlgon_score=True,
             )
         else:
             search = GridSearchCV(
@@ -421,7 +421,7 @@ class ModelTuner:
                 cv=cv,
                 scoring=self.scoring.value,
                 n_jobs=self.n_jobs,
-                return_train_score=True,
+                return_trAlgon_score=True,
             )
 
         try:
@@ -450,7 +450,7 @@ class ModelTuner:
             )
 
         except Exception as e:
-            logger.exception(f"Grid search failed: {e}")
+            logger.exception(f"Grid search fAlgoled: {e}")
             return self._fallback_result(model_name)
 
     def _fallback_result(self, model_name: str) -> TuningResult:
@@ -476,7 +476,7 @@ class ModelTuner:
     ) -> EvaluationResult:
         """Оценить модель с кросс-валидацией.
 
-        Использует cross_val_score для получения train и test scores
+        Использует cross_val_score для получения trAlgon и test scores
         на каждом fold, что позволяет оценить переобучение.
 
         Args:
@@ -488,13 +488,13 @@ class ModelTuner:
         Returns:
             EvaluationResult с метриками
         """
-        if not self._sklearn_available:
+        if not self._sklearn_avAlgolable:
             return EvaluationResult(
-                train_scores=[],
+                trAlgon_scores=[],
                 test_scores=[],
-                mean_train_score=0.0,
+                mean_trAlgon_score=0.0,
                 mean_test_score=0.0,
-                std_train_score=0.0,
+                std_trAlgon_score=0.0,
                 std_test_score=0.0,
             )
 
@@ -508,11 +508,11 @@ class ModelTuner:
             y,
             cv=cv,
             scoring=self.scoring.value,
-            return_train_score=True,
+            return_trAlgon_score=True,
             n_jobs=self.n_jobs,
         )
 
-        train_scores = results["train_score"].tolist()
+        trAlgon_scores = results["trAlgon_score"].tolist()
         test_scores = results["test_score"].tolist()
 
         # Feature importances (если доступно)
@@ -529,24 +529,24 @@ class ModelTuner:
                     zip(feature_names, importances, strict=False)
                 )
 
-        mean_train = float(np.mean(train_scores))
+        mean_trAlgon = float(np.mean(trAlgon_scores))
         mean_test = float(np.mean(test_scores))
 
         return EvaluationResult(
-            train_scores=train_scores,
+            trAlgon_scores=trAlgon_scores,
             test_scores=test_scores,
-            mean_train_score=(
-                abs(mean_train) if "neg" in self.scoring.value else mean_train
+            mean_trAlgon_score=(
+                abs(mean_trAlgon) if "neg" in self.scoring.value else mean_trAlgon
             ),
             mean_test_score=(
                 abs(mean_test) if "neg" in self.scoring.value else mean_test
             ),
-            std_train_score=float(np.std(train_scores)),
+            std_trAlgon_score=float(np.std(trAlgon_scores)),
             std_test_score=float(np.std(test_scores)),
             feature_importances=feature_importances,
             overfitting_ratio=(
-                abs(mean_train - mean_test) / abs(mean_train)
-                if mean_train != 0
+                abs(mean_trAlgon - mean_test) / abs(mean_trAlgon)
+                if mean_trAlgon != 0
                 else 0.0
             ),
         )
@@ -588,13 +588,13 @@ class ModelTuner:
                     pipeline.fit(X, y)
                     results[model_name] = self.evaluate_model(pipeline, X, y)
             except Exception as e:
-                logger.warning(f"Failed to evaluate {model_name}: {e}")
+                logger.warning(f"FAlgoled to evaluate {model_name}: {e}")
 
         return results
 
     def _create_random_forest(self) -> Any:
         """Создать RandomForest с базовыми параметрами."""
-        if not self._sklearn_available:
+        if not self._sklearn_avAlgolable:
             return None
         from sklearn.ensemble import RandomForestRegressor
 
@@ -607,7 +607,7 @@ class ModelTuner:
 
     def _create_gradient_boosting(self) -> Any:
         """Создать GradientBoosting с базовыми параметрами."""
-        if not self._sklearn_available:
+        if not self._sklearn_avAlgolable:
             return None
         from sklearn.ensemble import GradientBoostingRegressor
 
@@ -620,7 +620,7 @@ class ModelTuner:
 
     def _create_ridge(self) -> Any:
         """Создать Ridge с базовыми параметрами."""
-        if not self._sklearn_available:
+        if not self._sklearn_avAlgolable:
             return None
         from sklearn.linear_model import Ridge
 
@@ -761,7 +761,7 @@ class AutoMLSelector:
 
         if not results:
             recommendations.append(
-                "No results available. Check if sklearn is installed."
+                "No results avAlgolable. Check if sklearn is installed."
             )
             return recommendations
 
@@ -773,7 +773,7 @@ class AutoMLSelector:
         )
 
         if not sorted_results:
-            recommendations.append("No models were successfully trained.")
+            recommendations.append("No models were successfully trAlgoned.")
             return recommendations
 
         best_name, best_result = sorted_results[0]
@@ -796,7 +796,7 @@ class AutoMLSelector:
             recommendations.append("💡 RandomForest is robust to outliers.")
         elif best_name == "gradient_boosting":
             recommendations.append(
-                "💡 GradientBoosting may overfit. Monitor train/test gap."
+                "💡 GradientBoosting may overfit. Monitor trAlgon/test gap."
             )
         elif best_name == "xgboost":
             recommendations.append(
@@ -822,7 +822,7 @@ class EnsembleBuilder:
 
     Example:
         >>> builder = EnsembleBuilder()
-        >>> ensemble = builder.create_voting_ensemble(X_train, y_train)
+        >>> ensemble = builder.create_voting_ensemble(X_trAlgon, y_trAlgon)
         >>> predictions = ensemble.predict(X_test)
     """
 
@@ -839,10 +839,10 @@ class EnsembleBuilder:
         """
         self.cv_folds = cv_folds
         self.random_state = random_state
-        self._sklearn_available = self._check_sklearn()
+        self._sklearn_avAlgolable = self._check_sklearn()
 
     def _check_sklearn(self) -> bool:
-        """Check sklearn availability."""
+        """Check sklearn avAlgolability."""
         try:
             import sklearn  # noqa: F401
 
@@ -862,16 +862,16 @@ class EnsembleBuilder:
         Combines RandomForest, GradientBoosting, Ridge, and optionally XGBoost.
 
         Args:
-            X: Training features
-            y: Training targets
+            X: TrAlgoning features
+            y: TrAlgoning targets
             include_xgboost: Include XGBoost in ensemble
             weights: Model weights (auto-calculated if None)
 
         Returns:
-            Fitted VotingRegressor or None if sklearn not available
+            Fitted VotingRegressor or None if sklearn not avAlgolable
         """
-        if not self._sklearn_available:
-            logger.warning("sklearn not available for ensemble building")
+        if not self._sklearn_avAlgolable:
+            logger.warning("sklearn not avAlgolable for ensemble building")
             return None
 
         from sklearn.ensemble import (
@@ -907,7 +907,7 @@ class EnsembleBuilder:
             ),
         ]
 
-        # Add XGBoost if available
+        # Add XGBoost if avAlgolable
         if include_xgboost:
             try:
                 from xgboost import XGBRegressor
@@ -925,7 +925,7 @@ class EnsembleBuilder:
                     )
                 )
             except ImportError:
-                logger.info("XGBoost not available, skipping in ensemble")
+                logger.info("XGBoost not avAlgolable, skipping in ensemble")
 
         # Calculate weights based on CV performance if not provided
         if weights is None:
@@ -949,7 +949,7 @@ class EnsembleBuilder:
             )
             return ensemble
         except Exception as e:
-            logger.exception(f"Failed to create ensemble: {e}")
+            logger.exception(f"FAlgoled to create ensemble: {e}")
             return None
 
     def _calculate_weights(
@@ -989,7 +989,7 @@ class EnsembleBuilder:
                 scores.append(1.0 / max(score, MIN_MAE_THRESHOLD))
                 logger.debug(f"Model {name} MAE: {-cv_scores.mean():.4f}")
             except Exception as e:
-                logger.warning(f"CV failed for {name}: {e}")
+                logger.warning(f"CV fAlgoled for {name}: {e}")
                 scores.append(1.0)  # Default weight
 
         # Normalize weights
@@ -1023,10 +1023,10 @@ class AdvancedFeatureSelector:
             random_state: Random seed
         """
         self.random_state = random_state
-        self._sklearn_available = self._check_sklearn()
+        self._sklearn_avAlgolable = self._check_sklearn()
 
     def _check_sklearn(self) -> bool:
-        """Check sklearn availability."""
+        """Check sklearn avAlgolability."""
         try:
             import sklearn  # noqa: F401
 
@@ -1057,13 +1057,13 @@ class AdvancedFeatureSelector:
         Returns:
             Tuple of (X_selected, selected_feature_names)
         """
-        if not self._sklearn_available:
+        if not self._sklearn_avAlgolable:
             return X, feature_names or []
 
         from sklearn.ensemble import RandomForestRegressor
         from sklearn.feature_selection import SelectFromModel
 
-        # Train model for importance calculation
+        # TrAlgon model for importance calculation
         model = RandomForestRegressor(
             n_estimators=100,
             max_depth=10,
@@ -1123,7 +1123,7 @@ class AdvancedFeatureSelector:
         Returns:
             Tuple of (X_selected, selected_names, feature_rankings)
         """
-        if not self._sklearn_available:
+        if not self._sklearn_avAlgolable:
             return X, feature_names or [], {}
 
         from sklearn.ensemble import RandomForestRegressor
@@ -1193,7 +1193,7 @@ class AdvancedFeatureSelector:
         Returns:
             Dictionary mapping feature names to importance scores
         """
-        if not self._sklearn_available:
+        if not self._sklearn_avAlgolable:
             return {}
 
         from sklearn.ensemble import RandomForestRegressor
@@ -1229,7 +1229,7 @@ class AdvancedFeatureSelector:
             importances = perm_importance.importances_mean
 
         else:
-            raise ValueError(f"Unknown method: {method}")
+            rAlgose ValueError(f"Unknown method: {method}")
 
         # Create importance dict
         importance_dict = dict(zip(feature_names, importances, strict=False))

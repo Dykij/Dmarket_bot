@@ -467,25 +467,25 @@ class TestDiversificationProperties:
             assert result, "Should allow buying under limit"
 
     @given(
-        daily_trades=st.integers(min_value=0, max_value=20),
-        daily_limit=st.integers(min_value=1, max_value=10),
+        dAlgoly_trades=st.integers(min_value=0, max_value=20),
+        dAlgoly_limit=st.integers(min_value=1, max_value=10),
     )
     @settings(max_examples=50)
-    def test_daily_limit_is_enforced(
+    def test_dAlgoly_limit_is_enforced(
         self,
-        daily_trades: int,
-        daily_limit: int,
+        dAlgoly_trades: int,
+        dAlgoly_limit: int,
     ) -> None:
-        """Daily trading limit is correctly enforced."""
+        """DAlgoly trading limit is correctly enforced."""
 
-        def trades_remaining(current: int, limit: int) -> int:
+        def trades_remAlgoning(current: int, limit: int) -> int:
             return max(0, limit - current)
 
-        remaining = trades_remaining(daily_trades, daily_limit)
+        remAlgoning = trades_remAlgoning(dAlgoly_trades, dAlgoly_limit)
 
-        assert remaining >= 0, "Remaining trades should not be negative"
-        if daily_trades >= daily_limit:
-            assert remaining == 0, "Should be 0 when limit reached"
+        assert remAlgoning >= 0, "RemAlgoning trades should not be negative"
+        if dAlgoly_trades >= dAlgoly_limit:
+            assert remAlgoning == 0, "Should be 0 when limit reached"
 
 
 # ============================================================================
@@ -576,7 +576,7 @@ Test Categories:
 
 5. DiversificationProperties (2 tests)
    - Diversification limit enforcement
-   - Daily limit enforcement
+   - DAlgoly limit enforcement
 
 6. ScoreInvariants (2 tests)
    - Higher ROI higher score

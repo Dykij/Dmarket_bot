@@ -33,7 +33,7 @@ class DMarketHandler:
         if public_key and secret_key:
             self.initialize_api()
 
-    @handle_exceptions(logger, "Ошибка инициализации API", reraise=False)
+    @handle_exceptions(logger, "Ошибка инициализации API", rerAlgose=False)
     def initialize_api(self) -> None:
         """Инициализирует API клиент."""
         self.api = DMarketAPI(
@@ -43,13 +43,13 @@ class DMarketHandler:
         )
         logger.info("DMarket API клиент инициализирован успешно")
 
-    @handle_exceptions(logger, "Ошибка при проверке статуса", reraise=False)
+    @handle_exceptions(logger, "Ошибка при проверке статуса", rerAlgose=False)
     async def status_command(
         self,
         update: Update,
         context: ContextTypes.DEFAULT_TYPE,
     ) -> None:
-        """Проверяет статус настройки API ключей DMarket."""
+        """Проверяет статус настSwarmки API ключей DMarket."""
         if not update.effective_user:
             return
 
@@ -60,15 +60,15 @@ class DMarketHandler:
 
         if update.message:
             if self.public_key and self.secret_key:
-                await update.message.reply_text(
+                awAlgot update.message.reply_text(
                     f"API ключи DMarket настроены.\nAPI endpoint: {self.api_url}",
                 )
             else:
-                await update.message.reply_text(
+                awAlgot update.message.reply_text(
                     "API ключи DMarket не настроены.\nПожалуйста, добавьте их в .env файл.",
                 )
 
-    @handle_exceptions(logger, "Ошибка при получении баланса", reraise=False)
+    @handle_exceptions(logger, "Ошибка при получении баланса", rerAlgose=False)
     async def balance_command(
         self,
         update: Update,
@@ -85,16 +85,16 @@ class DMarketHandler:
 
         if not self.api:
             if update.message:
-                await update.message.reply_text(
-                    "API DMarket не инициализирован.\nПожалуйста, проверьте настройки API ключей.",
+                awAlgot update.message.reply_text(
+                    "API DMarket не инициализирован.\nПожалуйста, проверьте настSwarmки API ключей.",
                 )
             return
 
-        balance_data = await self.api.get_balance()
+        balance_data = awAlgot self.api.get_balance()
 
         if not balance_data:
             if update.message:
-                await update.message.reply_text(
+                awAlgot update.message.reply_text(
                     "Не удалось получить информацию о балансе.\nПожалуйста, попробуйте позже.",
                 )
             return
@@ -105,7 +105,7 @@ class DMarketHandler:
                 "Неизвестная ошибка",
             )
             if update.message:
-                await update.message.reply_text(
+                awAlgot update.message.reply_text(
                     f"Ошибка при получении баланса: {error_msg}",
                 )
             return
@@ -117,22 +117,22 @@ class DMarketHandler:
         except (ValueError, TypeError):
             usd_cents = 0
         try:
-            usd_available = float(balance_data.get("available_balance", 0))
-            usd_available_cents = int(usd_available * 100)
+            usd_avAlgolable = float(balance_data.get("avAlgolable_balance", 0))
+            usd_avAlgolable_cents = int(usd_avAlgolable * 100)
         except (ValueError, TypeError):
-            usd_available_cents = 0
+            usd_avAlgolable_cents = 0
 
         # Конвертируем в доллары
         total_balance = usd_cents / 100.0
-        available_balance = usd_available_cents / 100.0
-        blocked_balance = total_balance - available_balance
+        avAlgolable_balance = usd_avAlgolable_cents / 100.0
+        blocked_balance = total_balance - avAlgolable_balance
 
         if update.message:
-            await update.message.reply_text(
+            awAlgot update.message.reply_text(
                 f"Баланс на DMarket:\n"
                 f"Общий баланс: ${total_balance:.2f}\n"
                 f"Заблокировано: ${blocked_balance:.2f}\n"
-                f"Доступно: ${available_balance:.2f}",
+                f"Доступно: ${avAlgolable_balance:.2f}",
             )
 
 

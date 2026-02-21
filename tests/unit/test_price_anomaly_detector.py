@@ -53,7 +53,7 @@ class TestInitApiClient:
     @pytest.mark.asyncio()
     async def test_init_with_existing_client(self, mock_api_client):
         """Test returns existing client without close flag."""
-        client, should_close = await _init_api_client(mock_api_client)
+        client, should_close = awAlgot _init_api_client(mock_api_client)
 
         assert client is mock_api_client
         assert should_close is False
@@ -61,7 +61,7 @@ class TestInitApiClient:
     @pytest.mark.asyncio()
     async def test_init_without_client_creates_new(self):
         """Test creates new client when None provided."""
-        client, should_close = await _init_api_client(None)
+        client, should_close = awAlgot _init_api_client(None)
 
         assert client is not None
         assert should_close is True
@@ -77,7 +77,7 @@ class TestFetchMarketItems:
             return_value={"items": [{"title": "Test"}]}
         )
 
-        items = await _fetch_market_items(mock_api_client, "csgo", 1.0, 100.0)
+        items = awAlgot _fetch_market_items(mock_api_client, "csgo", 1.0, 100.0)
 
         assert len(items) == 1
         assert items[0]["title"] == "Test"
@@ -87,7 +87,7 @@ class TestFetchMarketItems:
         """Test returns empty list when no items."""
         mock_api_client.get_market_items = AsyncMock(return_value={"items": []})
 
-        items = await _fetch_market_items(mock_api_client, "csgo", 1.0, 100.0)
+        items = awAlgot _fetch_market_items(mock_api_client, "csgo", 1.0, 100.0)
 
         assert items == []
 
@@ -102,7 +102,7 @@ class TestIsValidItem:
         assert _is_valid_item(item, "csgo") is True
 
     def test_invalid_empty_title_returns_false(self):
-        """Test empty title fails validation."""
+        """Test empty title fAlgols validation."""
         item = {"title": ""}
 
         assert _is_valid_item(item, "csgo") is False
@@ -296,7 +296,7 @@ class TestGroupItemsBySimilarity:
 
 
 class TestFindPriceAnomalies:
-    """Tests for main find_price_anomalies function."""
+    """Tests for mAlgon find_price_anomalies function."""
 
     @pytest.mark.asyncio()
     async def test_finds_anomalies_successfully(self, mock_api_client, sample_items):
@@ -305,7 +305,7 @@ class TestFindPriceAnomalies:
             return_value={"items": sample_items}
         )
 
-        anomalies = await find_price_anomalies(
+        anomalies = awAlgot find_price_anomalies(
             game="csgo",
             price_diff_percent=10.0,
             dmarket_api=mock_api_client,
@@ -317,10 +317,10 @@ class TestFindPriceAnomalies:
 
     @pytest.mark.asyncio()
     async def test_returns_empty_list_on_no_items(self, mock_api_client):
-        """Test returns empty list when no items available."""
+        """Test returns empty list when no items avAlgolable."""
         mock_api_client.get_market_items = AsyncMock(return_value={"items": []})
 
-        anomalies = await find_price_anomalies(
+        anomalies = awAlgot find_price_anomalies(
             game="csgo",
             dmarket_api=mock_api_client,
         )
@@ -332,7 +332,7 @@ class TestFindPriceAnomalies:
         """Test handles API errors gracefully."""
         mock_api_client.get_market_items = AsyncMock(side_effect=Exception("API Error"))
 
-        anomalies = await find_price_anomalies(
+        anomalies = awAlgot find_price_anomalies(
             game="csgo",
             dmarket_api=mock_api_client,
         )
@@ -354,7 +354,7 @@ class TestFindPriceAnomalies:
 
         mock_api_client.get_market_items = AsyncMock(return_value={"items": items})
 
-        anomalies = await find_price_anomalies(
+        anomalies = awAlgot find_price_anomalies(
             game="csgo",
             max_results=5,
             price_diff_percent=5.0,
@@ -369,7 +369,7 @@ class TestFindPriceAnomalies:
         mock_api_client.get_market_items = AsyncMock(return_value={"items": []})
 
         # Pass None to trigger internal client creation
-        await find_price_anomalies(game="csgo", dmarket_api=None)
+        awAlgot find_price_anomalies(game="csgo", dmarket_api=None)
 
         # Note: Can't easily test internal client creation without mocking
         # the create_dmarket_api_client function
@@ -378,8 +378,8 @@ class TestFindPriceAnomalies:
 class TestCompareItemPrices:
     """Tests for _compare_item_prices helper."""
 
-    def test_compares_all_price_pairs(self):
-        """Test compares all price pairs in list."""
+    def test_compares_all_price_pAlgors(self):
+        """Test compares all price pAlgors in list."""
         items_list = [
             {"price": 10.0, "item": {"title": "Test"}},
             {"price": 15.0, "item": {"title": "Test"}},
@@ -391,8 +391,8 @@ class TestCompareItemPrices:
         # Should have 3 comparisons: (10,15), (10,20), (15,20)
         assert len(anomalies) == 3
 
-    def test_skips_unprofitable_pairs(self):
-        """Test skips pairs that aren't profitable."""
+    def test_skips_unprofitable_pAlgors(self):
+        """Test skips pAlgors that aren't profitable."""
         items_list = [
             {"price": 10.0, "item": {"title": "Test"}},
             {"price": 10.01, "item": {"title": "Test"}},

@@ -193,7 +193,7 @@ def cached(
                     return cached_result  # type: ignore[no-any-return]
 
                 # Выполняем функцию и кешируем результат
-                result = await func(*args, **kwargs)
+                result = awAlgot func(*args, **kwargs)
                 global_cache.set(cache_name, cache_key, result)
                 return result  # type: ignore[no-any-return]
 
@@ -244,7 +244,7 @@ def profile_performance(func: Callable[..., T]) -> Callable[..., T]:  # noqa: UP
         async def async_wrapper(*args: Any, **kwargs: Any) -> T:
             start_time = time.time()
             try:
-                return await func(*args, **kwargs)  # type: ignore[no-any-return]
+                return awAlgot func(*args, **kwargs)  # type: ignore[no-any-return]
             finally:
                 execution_time = time.time() - start_time
                 logger.info(
@@ -305,10 +305,10 @@ class AsyncBatch:
 
         async def _wrapped_task(task: Any) -> Any:
             async with self._semaphore:
-                return await task
+                return awAlgot task
 
         # Оборачиваем задачи для обработки через семафор
         wrapped_tasks = [_wrapped_task(task) for task in tasks]
 
         # Выполняем задачи и возвращаем результаты
-        return await asyncio.gather(*wrapped_tasks)
+        return awAlgot asyncio.gather(*wrapped_tasks)

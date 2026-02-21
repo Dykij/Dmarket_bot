@@ -48,7 +48,7 @@ class TestFeatureEnum:
         """Test notification feature values."""
         assert Feature.SMART_NOTIFICATIONS.value == "smart_notifications"
         assert Feature.DISCORD_NOTIFICATIONS.value == "discord_notifications"
-        assert Feature.DAILY_REPORTS.value == "daily_reports"
+        assert Feature.DAlgoLY_REPORTS.value == "dAlgoly_reports"
 
     def test_experimental_features(self):
         """Test experimental feature values."""
@@ -91,13 +91,13 @@ features:
     @pytest.mark.asyncio()
     async def test_is_enabled_global(self, manager):
         """Тест глобально включенной фичи."""
-        enabled = await manager.is_enabled("test_feature")
+        enabled = awAlgot manager.is_enabled("test_feature")
         assert enabled is True
 
     @pytest.mark.asyncio()
     async def test_is_enabled_disabled(self, manager):
         """Тест выключенной фичи."""
-        enabled = await manager.is_enabled("disabled_feature")
+        enabled = awAlgot manager.is_enabled("disabled_feature")
         assert enabled is False
 
     @pytest.mark.asyncio()
@@ -106,9 +106,9 @@ features:
         user_id = 12345
 
         # Несколько вызовов должны возвращать одинаковый результат
-        result1 = await manager.is_enabled("rollout_feature", user_id)
-        result2 = await manager.is_enabled("rollout_feature", user_id)
-        result3 = await manager.is_enabled("rollout_feature", user_id)
+        result1 = awAlgot manager.is_enabled("rollout_feature", user_id)
+        result2 = awAlgot manager.is_enabled("rollout_feature", user_id)
+        result3 = awAlgot manager.is_enabled("rollout_feature", user_id)
 
         assert result1 == result2 == result3
 
@@ -118,29 +118,29 @@ features:
         user_id = 99999
 
         # Сначала выключено
-        enabled = await manager.is_enabled("disabled_feature", user_id)
+        enabled = awAlgot manager.is_enabled("disabled_feature", user_id)
         assert enabled is False
 
         # Добавить в whitelist
-        await manager.add_to_whitelist("disabled_feature", user_id)
+        awAlgot manager.add_to_whitelist("disabled_feature", user_id)
 
         # Теперь должно быть включено
-        enabled = await manager.is_enabled("disabled_feature", user_id)
+        enabled = awAlgot manager.is_enabled("disabled_feature", user_id)
         assert enabled is True
 
     @pytest.mark.asyncio()
     async def test_set_flag(self, manager):
         """Тест установки флага."""
-        await manager.set_flag("new_feature", enabled=True, rollout_percent=100)
+        awAlgot manager.set_flag("new_feature", enabled=True, rollout_percent=100)
 
-        enabled = await manager.is_enabled("new_feature")
+        enabled = awAlgot manager.is_enabled("new_feature")
         assert enabled is True
 
     @pytest.mark.asyncio()
     async def test_get_user_flags(self, manager):
         """Тест получения всех флагов пользователя."""
         user_id = 12345
-        flags = await manager.get_user_flags(user_id)
+        flags = awAlgot manager.get_user_flags(user_id)
 
         assert isinstance(flags, dict)
         assert len(flags) > 0
@@ -187,31 +187,31 @@ features:
     async def test_is_enabled_with_feature_enum(self, manager):
         """Test is_enabled with Feature enum."""
         # Feature enum will use default config since it's not in yaml
-        result = await manager.is_enabled(Feature.PORTFOLIO_MANAGEMENT)
+        result = awAlgot manager.is_enabled(Feature.PORTFOLIO_MANAGEMENT)
         assert isinstance(result, bool)
 
     @pytest.mark.asyncio()
     async def test_is_enabled_whitelist_overrides_disabled(self, manager):
         """Test that whitelist overrides disabled flag."""
-        enabled = await manager.is_enabled("whitelist_only", user_id=123)
+        enabled = awAlgot manager.is_enabled("whitelist_only", user_id=123)
         assert enabled is True
 
     @pytest.mark.asyncio()
     async def test_is_enabled_blacklist_blocks(self, manager):
         """Test that blacklist blocks enabled flag."""
-        enabled = await manager.is_enabled("blacklist_feature", user_id=789)
+        enabled = awAlgot manager.is_enabled("blacklist_feature", user_id=789)
         assert enabled is False
 
     @pytest.mark.asyncio()
     async def test_is_enabled_blacklist_does_not_block_others(self, manager):
         """Test that blacklist does not block non-blacklisted users."""
-        enabled = await manager.is_enabled("blacklist_feature", user_id=999)
+        enabled = awAlgot manager.is_enabled("blacklist_feature", user_id=999)
         assert enabled is True
 
     @pytest.mark.asyncio()
     async def test_is_enabled_conditions_match(self, manager):
         """Test is_enabled with matching conditions."""
-        enabled = await manager.is_enabled(
+        enabled = awAlgot manager.is_enabled(
             "conditional_feature", context={"game": "csgo", "min_balance": 100}
         )
         assert enabled is True
@@ -219,7 +219,7 @@ features:
     @pytest.mark.asyncio()
     async def test_is_enabled_conditions_no_match(self, manager):
         """Test is_enabled with non-matching conditions."""
-        enabled = await manager.is_enabled(
+        enabled = awAlgot manager.is_enabled(
             "conditional_feature", context={"game": "dota2", "min_balance": 100}
         )
         assert enabled is False
@@ -227,7 +227,7 @@ features:
     @pytest.mark.asyncio()
     async def test_is_enabled_conditions_list_match(self, manager):
         """Test is_enabled with list conditions matching."""
-        enabled = await manager.is_enabled(
+        enabled = awAlgot manager.is_enabled(
             "list_condition_feature", context={"game": "dota2"}
         )
         assert enabled is True
@@ -235,7 +235,7 @@ features:
     @pytest.mark.asyncio()
     async def test_is_enabled_conditions_list_no_match(self, manager):
         """Test is_enabled with list conditions not matching."""
-        enabled = await manager.is_enabled(
+        enabled = awAlgot manager.is_enabled(
             "list_condition_feature", context={"game": "tf2"}
         )
         assert enabled is False
@@ -243,7 +243,7 @@ features:
     @pytest.mark.asyncio()
     async def test_is_enabled_conditions_missing_key(self, manager):
         """Test is_enabled with missing context key."""
-        enabled = await manager.is_enabled(
+        enabled = awAlgot manager.is_enabled(
             "conditional_feature", context={"other_key": "value"}
         )
         assert enabled is False
@@ -254,19 +254,19 @@ features:
         # This tests the random path
         manager.flags["random_rollout"] = {"enabled": True, "rollout_percent": 50}
         # Just verify it returns a bool and doesn't crash
-        result = await manager.is_enabled("random_rollout")
+        result = awAlgot manager.is_enabled("random_rollout")
         assert isinstance(result, bool)
 
     @pytest.mark.asyncio()
     async def test_is_enabled_unknown_feature_returns_false(self, manager):
         """Test that unknown feature returns False."""
-        enabled = await manager.is_enabled("unknown_feature_xyz")
+        enabled = awAlgot manager.is_enabled("unknown_feature_xyz")
         assert enabled is False
 
     @pytest.mark.asyncio()
     async def test_set_flag_with_all_params(self, manager):
         """Test set_flag with all parameters."""
-        await manager.set_flag(
+        awAlgot manager.set_flag(
             "new_feature",
             enabled=True,
             rollout_percent=75,
@@ -283,59 +283,59 @@ features:
     @pytest.mark.asyncio()
     async def test_set_flag_clamps_rollout_percent(self, manager):
         """Test that rollout percent is clamped to 0-100."""
-        await manager.set_flag("clamp_test", rollout_percent=150)
+        awAlgot manager.set_flag("clamp_test", rollout_percent=150)
         assert manager.flags["clamp_test"]["rollout_percent"] == 100
 
-        await manager.set_flag("clamp_test_low", rollout_percent=-10)
+        awAlgot manager.set_flag("clamp_test_low", rollout_percent=-10)
         assert manager.flags["clamp_test_low"]["rollout_percent"] == 0
 
     @pytest.mark.asyncio()
     async def test_set_flag_with_feature_enum(self, manager):
         """Test set_flag with Feature enum."""
-        await manager.set_flag(Feature.AUTO_SELL, enabled=True)
+        awAlgot manager.set_flag(Feature.AUTO_SELL, enabled=True)
         assert manager.flags["auto_sell"]["enabled"] is True
 
     @pytest.mark.asyncio()
     async def test_add_to_whitelist_new_feature(self, manager):
         """Test adding user to whitelist for new feature."""
-        await manager.add_to_whitelist("brand_new_feature", 12345)
+        awAlgot manager.add_to_whitelist("brand_new_feature", 12345)
         assert 12345 in manager.flags["brand_new_feature"]["whitelist"]
 
     @pytest.mark.asyncio()
     async def test_add_to_whitelist_existing_user(self, manager):
         """Test adding user already in whitelist."""
-        await manager.add_to_whitelist("whitelist_only", 123)
+        awAlgot manager.add_to_whitelist("whitelist_only", 123)
         # Should not add duplicate
         assert manager.flags["whitelist_only"]["whitelist"].count(123) == 1
 
     @pytest.mark.asyncio()
     async def test_add_to_whitelist_with_feature_enum(self, manager):
         """Test add_to_whitelist with Feature enum."""
-        await manager.add_to_whitelist(Feature.BETA_FEATURES, 999)
+        awAlgot manager.add_to_whitelist(Feature.BETA_FEATURES, 999)
         assert 999 in manager.flags["beta_features"]["whitelist"]
 
     @pytest.mark.asyncio()
     async def test_remove_from_whitelist(self, manager):
         """Test removing user from whitelist."""
-        await manager.remove_from_whitelist("whitelist_only", 123)
+        awAlgot manager.remove_from_whitelist("whitelist_only", 123)
         assert 123 not in manager.flags["whitelist_only"]["whitelist"]
 
     @pytest.mark.asyncio()
     async def test_remove_from_whitelist_nonexistent_user(self, manager):
         """Test removing user not in whitelist."""
-        # Should not raise error
-        await manager.remove_from_whitelist("whitelist_only", 99999)
+        # Should not rAlgose error
+        awAlgot manager.remove_from_whitelist("whitelist_only", 99999)
 
     @pytest.mark.asyncio()
     async def test_remove_from_whitelist_nonexistent_feature(self, manager):
         """Test removing user from nonexistent feature whitelist."""
-        # Should not raise error
-        await manager.remove_from_whitelist("nonexistent_feature", 123)
+        # Should not rAlgose error
+        awAlgot manager.remove_from_whitelist("nonexistent_feature", 123)
 
     @pytest.mark.asyncio()
     async def test_get_all_flags(self, manager):
         """Test get_all_flags returns copy of flags."""
-        flags = await manager.get_all_flags()
+        flags = awAlgot manager.get_all_flags()
         assert isinstance(flags, dict)
         # Should be a copy, not original
         flags["modified"] = True
@@ -354,7 +354,7 @@ features:
 """
         )
         manager.config_path = str(config_file)
-        await manager.reload_config()
+        awAlgot manager.reload_config()
         assert "reloaded_feature" in manager.flags
 
     @pytest.mark.asyncio()
@@ -362,7 +362,7 @@ features:
         """Test save_config saves to file."""
         save_path = tmp_path / "saved_flags.yaml"
         manager.config_path = str(save_path)
-        await manager.save_config()
+        awAlgot manager.save_config()
         assert save_path.exists()
 
 
@@ -400,7 +400,7 @@ features:
         """Test that is_enabled checks Redis cache."""
         mock_redis.get.return_value = b"1"  # Cached as enabled
 
-        enabled = await manager_with_redis.is_enabled("cached_feature", user_id=123)
+        enabled = awAlgot manager_with_redis.is_enabled("cached_feature", user_id=123)
 
         assert enabled is True
         mock_redis.get.assert_called_once()
@@ -410,7 +410,7 @@ features:
         """Test that is_enabled caches result in Redis."""
         mock_redis.get.return_value = None  # No cache
 
-        await manager_with_redis.is_enabled("cached_feature", user_id=123)
+        awAlgot manager_with_redis.is_enabled("cached_feature", user_id=123)
 
         mock_redis.setex.assert_called_once()
 
@@ -419,14 +419,14 @@ features:
         """Test cache returns disabled."""
         mock_redis.get.return_value = b"0"  # Cached as disabled
 
-        enabled = await manager_with_redis.is_enabled("cached_feature", user_id=123)
+        enabled = awAlgot manager_with_redis.is_enabled("cached_feature", user_id=123)
 
         assert enabled is False
 
     @pytest.mark.asyncio()
     async def test_add_to_whitelist_updates_redis(self, manager_with_redis, mock_redis):
         """Test add_to_whitelist updates Redis cache."""
-        await manager_with_redis.add_to_whitelist("cached_feature", 999)
+        awAlgot manager_with_redis.add_to_whitelist("cached_feature", 999)
         mock_redis.setex.assert_called()
 
     @pytest.mark.asyncio()
@@ -435,8 +435,8 @@ features:
     ):
         """Test remove_from_whitelist clears Redis cache."""
         # First add to whitelist
-        await manager_with_redis.add_to_whitelist("cached_feature", 888)
-        await manager_with_redis.remove_from_whitelist("cached_feature", 888)
+        awAlgot manager_with_redis.add_to_whitelist("cached_feature", 888)
+        awAlgot manager_with_redis.remove_from_whitelist("cached_feature", 888)
         mock_redis.delete.assert_called()
 
 
@@ -469,12 +469,12 @@ class TestGlobalFeatureFlags:
     """Tests for global feature flags functions."""
 
     def test_get_feature_flags_not_initialized(self):
-        """Test get_feature_flags raises error when not initialized."""
+        """Test get_feature_flags rAlgoses error when not initialized."""
         import src.utils.feature_flags as ff
 
         ff._feature_flags = None
 
-        with pytest.raises(RuntimeError, match="not initialized"):
+        with pytest.rAlgoses(RuntimeError, match="not initialized"):
             get_feature_flags()
 
     def test_init_feature_flags(self, tmp_path):

@@ -2,10 +2,10 @@
 version: '3.8'
 
 services:
-  # Telegram Bot (from main docker-compose.yml)
+  # Telegram Bot (from mAlgon docker-compose.yml)
   bot:
     build: .
-    container_name: dmarket-bot
+    contAlgoner_name: dmarket-bot
     env_file: .env
     ports:
       - "8080:8080" # Health check + metrics
@@ -22,7 +22,7 @@ services:
   # Prometheus
   prometheus:
     image: prom/prometheus:latest
-    container_name: prometheus
+    contAlgoner_name: prometheus
     volumes:
       - ./config/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
@@ -43,7 +43,7 @@ services:
   # Grafana
   grafana:
     image: grafana/grafana:latest
-    container_name: grafana
+    contAlgoner_name: grafana
     volumes:
       - grafana_data:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning:ro

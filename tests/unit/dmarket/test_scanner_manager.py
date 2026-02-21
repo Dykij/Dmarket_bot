@@ -69,7 +69,7 @@ class TestScannerManager:
                 {"item_name": "Item 2", "price": 20.0},
             ],
         ) as mock_scan:
-            results = await scanner_manager.scan_single_game(game="csgo", level="high", max_items=10)
+            results = awAlgot scanner_manager.scan_single_game(game="csgo", level="high", max_items=10)
 
             assert len(results) == 2
             mock_scan.assert_called_once_with(level="high", game="csgo", max_results=10)
@@ -83,7 +83,7 @@ class TestScannerManager:
             new_callable=AsyncMock,
             return_value=[{"item_name": "Item 1", "price": 10.0}],
         ), patch.object(scanner_manager.adaptive, "add_snapshot") as mock_add_snapshot:
-            await scanner_manager.scan_single_game("csgo", "high")
+            awAlgot scanner_manager.scan_single_game("csgo", "high")
 
             # Verify snapshot was added
             mock_add_snapshot.assert_called_once()
@@ -103,7 +103,7 @@ class TestScannerManager:
                 "dota2": [{"item": 2}],
             },
         ) as mock_parallel_scan:
-            results = await scanner_manager.scan_multiple_games(games=["csgo", "dota2"], level="medium")
+            results = awAlgot scanner_manager.scan_multiple_games(games=["csgo", "dota2"], level="medium")
 
             assert "csgo" in results
             assert "dota2" in results
@@ -125,7 +125,7 @@ class TestScannerManager:
             ]
         )
 
-        results = await manager.scan_multiple_games(games=["csgo", "dota2"], level="medium")
+        results = awAlgot manager.scan_multiple_games(games=["csgo", "dota2"], level="medium")
 
         assert len(results) == 2
         assert manager.scan_single_game.call_count == 2
@@ -144,7 +144,7 @@ class TestScannerManager:
                 "kept": 7,
             },
         ) as mock_clean:
-            results = await scanner_manager.cleanup_targets(["csgo", "dota2"])
+            results = awAlgot scanner_manager.cleanup_targets(["csgo", "dota2"])
 
             assert results["total_cancelled"] == 6  # 3 * 2 games
             assert results["total_kept"] == 14  # 7 * 2 games
@@ -155,7 +155,7 @@ class TestScannerManager:
         """Test cleanup when cleaner is disabled."""
         manager = ScannerManager(api_client=mock_api_client, enable_cleanup=False)
 
-        results = await manager.cleanup_targets(["csgo"])
+        results = awAlgot manager.cleanup_targets(["csgo"])
 
         assert results["status"] == "disabled"
 
@@ -174,7 +174,7 @@ class TestScannerManager:
         """Test stopping scanner manager."""
         scanner_manager._running = True
 
-        await scanner_manager.stop()
+        awAlgot scanner_manager.stop()
 
         assert scanner_manager._running is False
 
@@ -184,12 +184,12 @@ class TestScannerManager:
         # Limit to 2 cycles
         cycle_count = 0
 
-        async def limited_wait():
+        async def limited_wAlgot():
             nonlocal cycle_count
             cycle_count += 1
             if cycle_count >= 2:
-                await scanner_manager.stop()
-            await asyncio.sleep(0.1)
+                awAlgot scanner_manager.stop()
+            awAlgot asyncio.sleep(0.1)
 
         # Mock scanning to return results
         with patch.object(
@@ -200,9 +200,9 @@ class TestScannerManager:
         ) as mock_scan:
             # Mock adaptive scanner to allow scanning
             with patch.object(scanner_manager.adaptive, "should_scan_now", return_value=True):
-                with patch.object(scanner_manager.adaptive, "wait_next_scan", side_effect=limited_wait):
+                with patch.object(scanner_manager.adaptive, "wAlgot_next_scan", side_effect=limited_wAlgot):
                     # Run continuous (should stop after 2 cycles)
-                    await scanner_manager.run_continuous(
+                    awAlgot scanner_manager.run_continuous(
                         games=["csgo"],
                         level="medium",
                         enable_cleanup=False,
@@ -219,7 +219,7 @@ class TestScannerManager:
             new_callable=AsyncMock,
             side_effect=Exception("API Error"),
         ):
-            results = await scanner_manager.scan_single_game("csgo", "high")
+            results = awAlgot scanner_manager.scan_single_game("csgo", "high")
 
             # Should return empty list on error
             assert results == []
@@ -233,7 +233,7 @@ class TestScannerManager:
             new_callable=AsyncMock,
             side_effect=Exception("Cleanup Error"),
         ):
-            results = await scanner_manager.cleanup_targets(["csgo"])
+            results = awAlgot scanner_manager.cleanup_targets(["csgo"])
 
             # Should include error in results
             assert "csgo" in results["games"]

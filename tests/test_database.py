@@ -1,6 +1,6 @@
 """Tests for database functionality.
 
-This module contains tests for database models, operations,
+This module contAlgons tests for database models, operations,
 and connection management.
 """
 
@@ -24,7 +24,7 @@ class TestDatabaseManager:
     async def db_manager(self) -> DatabaseManager:
         """Create test database manager."""
         db = DatabaseManager("sqlite:///:memory:")
-        await db.init_database()
+        awAlgot db.init_database()
         return db
 
     @pytest.mark.asyncio()
@@ -38,7 +38,7 @@ class TestDatabaseManager:
     @pytest.mark.asyncio()
     async def test_get_or_create_user_new(self, db_manager: DatabaseManager):
         """Test creating new user."""
-        user = await db_manager.get_or_create_user(
+        user = awAlgot db_manager.get_or_create_user(
             telegram_id=123456789,
             username="testuser",
             first_name="Test",
@@ -61,15 +61,15 @@ class TestDatabaseManager:
     async def test_get_or_create_user_existing(self, db_manager: DatabaseManager):
         """Test getting existing user."""
         # Create user first
-        user1 = await db_manager.get_or_create_user(
+        user1 = awAlgot db_manager.get_or_create_user(
             telegram_id=123456789,
             username="testuser",
             first_name="Test",
             last_name="User",
         )
 
-        # Get the same user again
-        user2 = await db_manager.get_or_create_user(
+        # Get the same user agAlgon
+        user2 = awAlgot db_manager.get_or_create_user(
             telegram_id=123456789,
             username="updateduser",  # Updated username
             first_name="Updated",  # Updated first name
@@ -85,13 +85,13 @@ class TestDatabaseManager:
     async def test_log_command(self, db_manager: DatabaseManager):
         """Test command logging."""
         # Create a user first
-        user = await db_manager.get_or_create_user(
+        user = awAlgot db_manager.get_or_create_user(
             telegram_id=123456789,
             username="testuser",
         )
 
         # Log a command
-        await db_manager.log_command(
+        awAlgot db_manager.log_command(
             user_id=user.id,
             command="/start",
             parameters={"test": "param"},
@@ -105,7 +105,7 @@ class TestDatabaseManager:
     @pytest.mark.asyncio()
     async def test_save_market_data(self, db_manager: DatabaseManager):
         """Test saving market data."""
-        await db_manager.save_market_data(
+        awAlgot db_manager.save_market_data(
             item_id="test_item_123",
             game="csgo",
             item_name="AK-47 | Redline (Field-Tested)",
@@ -124,13 +124,13 @@ class TestDatabaseManager:
         # Test asynchronous session (DatabaseManager is now async-only)
         async_session = db_manager.get_async_session()
         assert async_session is not None
-        await async_session.close()
+        awAlgot async_session.close()
 
     @pytest.mark.asyncio()
     async def test_database_close(self, db_manager: DatabaseManager):
         """Test database connection closing."""
         # Should close without errors
-        await db_manager.close()
+        awAlgot db_manager.close()
 
 
 class TestDatabaseModels:
@@ -248,8 +248,8 @@ class TestDatabaseEngines:
         # Access async engine to trigger conversion
         async_engine = db_manager.async_engine
 
-        # URL should be converted to aiosqlite
-        assert "sqlite+aiosqlite://" in str(async_engine.url)
+        # URL should be converted to Algoosqlite
+        assert "sqlite+Algoosqlite://" in str(async_engine.url)
 
 
 class TestDatabaseOperationsEdgeCases:
@@ -259,11 +259,11 @@ class TestDatabaseOperationsEdgeCases:
     async def test_get_or_create_user_minimal_info(self):
         """Test creating user with minimal information."""
         db_manager = DatabaseManager("sqlite:///:memory:")
-        await db_manager.init_database()
+        awAlgot db_manager.init_database()
 
         try:
             # Create user with only telegram_id
-            user = await db_manager.get_or_create_user(telegram_id=111222333)
+            user = awAlgot db_manager.get_or_create_user(telegram_id=111222333)
 
             assert user.telegram_id == 111222333
             assert user.username is None
@@ -271,17 +271,17 @@ class TestDatabaseOperationsEdgeCases:
             assert user.last_name is None
             assert user.language_code == "en"  # default
         finally:
-            await db_manager.close()
+            awAlgot db_manager.close()
 
     @pytest.mark.asyncio()
     async def test_get_or_create_user_update_partial_info(self):
         """Test updating user with partial information."""
         db_manager = DatabaseManager("sqlite:///:memory:")
-        await db_manager.init_database()
+        awAlgot db_manager.init_database()
 
         try:
             # Create user with full info
-            await db_manager.get_or_create_user(
+            awAlgot db_manager.get_or_create_user(
                 telegram_id=444555666,
                 username="original",
                 first_name="John",
@@ -289,7 +289,7 @@ class TestDatabaseOperationsEdgeCases:
             )
 
             # Update with only first name
-            user2 = await db_manager.get_or_create_user(
+            user2 = awAlgot db_manager.get_or_create_user(
                 telegram_id=444555666, first_name="Jane"
             )
 
@@ -298,33 +298,33 @@ class TestDatabaseOperationsEdgeCases:
             # Username from second call is None, so original is kept
             assert user2.username == "original"
         finally:
-            await db_manager.close()
+            awAlgot db_manager.close()
 
     @pytest.mark.asyncio()
     async def test_log_command_without_parameters(self):
         """Test logging command without parameters."""
         db_manager = DatabaseManager("sqlite:///:memory:")
-        await db_manager.init_database()
+        awAlgot db_manager.init_database()
 
         try:
-            user = await db_manager.get_or_create_user(telegram_id=777888999)
+            user = awAlgot db_manager.get_or_create_user(telegram_id=777888999)
 
             # Log command without parameters
-            await db_manager.log_command(user_id=user.id, command="/help")
+            awAlgot db_manager.log_command(user_id=user.id, command="/help")
 
             # Should complete successfully
         finally:
-            await db_manager.close()
+            awAlgot db_manager.close()
 
     @pytest.mark.asyncio()
     async def test_save_market_data_minimal_fields(self):
         """Test saving market data with minimal fields."""
         db_manager = DatabaseManager("sqlite:///:memory:")
-        await db_manager.init_database()
+        awAlgot db_manager.init_database()
 
         try:
             # Save with only required fields
-            await db_manager.save_market_data(
+            awAlgot db_manager.save_market_data(
                 item_id="minimal_item",
                 game="csgo",
                 item_name="Minimal Test Item",
@@ -333,7 +333,7 @@ class TestDatabaseOperationsEdgeCases:
 
             # Should complete successfully with defaults
         finally:
-            await db_manager.close()
+            awAlgot db_manager.close()
 
 
 class TestDatabaseIntegration:
@@ -343,11 +343,11 @@ class TestDatabaseIntegration:
     async def test_user_workflow(self):
         """Test complete user workflow."""
         db_manager = DatabaseManager("sqlite:///:memory:")
-        await db_manager.init_database()
+        awAlgot db_manager.init_database()
 
         try:
             # Create user
-            user = await db_manager.get_or_create_user(
+            user = awAlgot db_manager.get_or_create_user(
                 telegram_id=987654321,
                 username="workflowuser",
                 first_name="Workflow",
@@ -355,14 +355,14 @@ class TestDatabaseIntegration:
             )
 
             # Log some commands for the user
-            await db_manager.log_command(
+            awAlgot db_manager.log_command(
                 user_id=user.id,
                 command="/balance",
                 success=True,
                 execution_time_ms=200,
             )
 
-            await db_manager.log_command(
+            awAlgot db_manager.log_command(
                 user_id=user.id,
                 command="/market",
                 parameters={"game": "csgo"},
@@ -372,7 +372,7 @@ class TestDatabaseIntegration:
             )
 
             # Save some market data
-            await db_manager.save_market_data(
+            awAlgot db_manager.save_market_data(
                 item_id="workflow_item",
                 game="csgo",
                 item_name="Test Workflow Item",
@@ -382,7 +382,7 @@ class TestDatabaseIntegration:
             # All operations should complete successfully
 
         finally:
-            await db_manager.close()
+            awAlgot db_manager.close()
 
     @pytest.mark.asyncio()
     async def test_concurrent_operations(self):
@@ -390,7 +390,7 @@ class TestDatabaseIntegration:
         import asyncio
 
         db_manager = DatabaseManager("sqlite:///:memory:")
-        await db_manager.init_database()
+        awAlgot db_manager.init_database()
 
         try:
             # Create multiple users concurrently
@@ -403,7 +403,7 @@ class TestDatabaseIntegration:
                 )
                 tasks.append(task)
 
-            users = await asyncio.gather(*tasks)
+            users = awAlgot asyncio.gather(*tasks)
 
             # All users should be created successfully
             assert len(users) == 10
@@ -411,4 +411,4 @@ class TestDatabaseIntegration:
             assert len({user.telegram_id for user in users}) == 10  # All unique
 
         finally:
-            await db_manager.close()
+            awAlgot db_manager.close()

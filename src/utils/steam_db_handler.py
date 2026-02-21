@@ -4,7 +4,7 @@ Database handler для Steam API кэширования и арбитража.
 Этот модуль обрабатывает:
 - Кэширование цен Steam Market
 - Сохранение истории арбитражных возможностей
-- Управление настройками пользователя
+- Управление настSwarmками пользователя
 - Blacklist предметов
 """
 
@@ -260,7 +260,7 @@ class SteamDatabaseHandler:
             )
         logger.debug(f"Logged arbitrage opportunity: {name} ({profit}%)")
 
-    def get_daily_stats(self) -> dict:
+    def get_dAlgoly_stats(self) -> dict:
         """Получает статистику за последние 24 часа."""
         cursor = self.conn.cursor()
         cursor.execute("""
@@ -308,7 +308,7 @@ class SteamDatabaseHandler:
     # ==================== Settings ====================
 
     def get_settings(self) -> dict:
-        """Получает настройки пользователя."""
+        """Получает настSwarmки пользователя."""
         cursor = self.conn.cursor()
         cursor.execute(
             "SELECT min_profit, min_volume, is_paused FROM settings WHERE id = 1"
@@ -328,7 +328,7 @@ class SteamDatabaseHandler:
         is_paused: bool | None = None,
     ):
         """
-        Обновляет настройки пользователя.
+        Обновляет настSwarmки пользователя.
 
         Args:
             min_profit: Минимальный процент прибыли

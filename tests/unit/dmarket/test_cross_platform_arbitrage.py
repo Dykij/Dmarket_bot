@@ -8,7 +8,7 @@ from decimal import Decimal
 
 import pytest
 
-# Skip all tests if structlog is not available
+# Skip all tests if structlog is not avAlgolable
 pytest.importorskip("structlog")
 
 
@@ -71,7 +71,7 @@ class TestCrossPlatformArbitrageConstants:
         assert DEFAULT_MAX_LOCK_DAYS == 8
 
     def test_default_min_liquidity(self) -> None:
-        """Test DEFAULT_MIN_LIQUIDITY is 5 daily sales."""
+        """Test DEFAULT_MIN_LIQUIDITY is 5 dAlgoly sales."""
         from src.dmarket.cross_platform_arbitrage import DEFAULT_MIN_LIQUIDITY
 
         assert DEFAULT_MIN_LIQUIDITY == 5
@@ -162,32 +162,32 @@ class TestItemCategoryEnum:
 class TestAllowedCategories:
     """Tests for ALLOWED_CATEGORIES set."""
 
-    def test_allowed_categories_contains_case(self) -> None:
-        """Test ALLOWED_CATEGORIES contains CASE."""
+    def test_allowed_categories_contAlgons_case(self) -> None:
+        """Test ALLOWED_CATEGORIES contAlgons CASE."""
         from src.dmarket.cross_platform_arbitrage import ALLOWED_CATEGORIES, ItemCategory
 
         assert ItemCategory.CASE in ALLOWED_CATEGORIES
 
-    def test_allowed_categories_contains_key(self) -> None:
-        """Test ALLOWED_CATEGORIES contains KEY."""
+    def test_allowed_categories_contAlgons_key(self) -> None:
+        """Test ALLOWED_CATEGORIES contAlgons KEY."""
         from src.dmarket.cross_platform_arbitrage import ALLOWED_CATEGORIES, ItemCategory
 
         assert ItemCategory.KEY in ALLOWED_CATEGORIES
 
-    def test_allowed_categories_contains_weapon(self) -> None:
-        """Test ALLOWED_CATEGORIES contains WEAPON."""
+    def test_allowed_categories_contAlgons_weapon(self) -> None:
+        """Test ALLOWED_CATEGORIES contAlgons WEAPON."""
         from src.dmarket.cross_platform_arbitrage import ALLOWED_CATEGORIES, ItemCategory
 
         assert ItemCategory.WEAPON in ALLOWED_CATEGORIES
 
-    def test_allowed_categories_contains_knife(self) -> None:
-        """Test ALLOWED_CATEGORIES contains KNIFE."""
+    def test_allowed_categories_contAlgons_knife(self) -> None:
+        """Test ALLOWED_CATEGORIES contAlgons KNIFE."""
         from src.dmarket.cross_platform_arbitrage import ALLOWED_CATEGORIES, ItemCategory
 
         assert ItemCategory.KNIFE in ALLOWED_CATEGORIES
 
-    def test_allowed_categories_not_contains_graffiti(self) -> None:
-        """Test ALLOWED_CATEGORIES does not contain GRAFFITI."""
+    def test_allowed_categories_not_contAlgons_graffiti(self) -> None:
+        """Test ALLOWED_CATEGORIES does not contAlgon GRAFFITI."""
         from src.dmarket.cross_platform_arbitrage import ALLOWED_CATEGORIES, ItemCategory
 
         assert ItemCategory.GRAFFITI not in ALLOWED_CATEGORIES
@@ -202,14 +202,14 @@ class TestAllowedCategories:
 class TestBlacklistedCategories:
     """Tests for BLACKLISTED_CATEGORIES set."""
 
-    def test_blacklisted_contains_graffiti(self) -> None:
-        """Test BLACKLISTED_CATEGORIES contains GRAFFITI."""
+    def test_blacklisted_contAlgons_graffiti(self) -> None:
+        """Test BLACKLISTED_CATEGORIES contAlgons GRAFFITI."""
         from src.dmarket.cross_platform_arbitrage import BLACKLISTED_CATEGORIES, ItemCategory
 
         assert ItemCategory.GRAFFITI in BLACKLISTED_CATEGORIES
 
-    def test_blacklisted_contains_souvenir(self) -> None:
-        """Test BLACKLISTED_CATEGORIES contains SOUVENIR."""
+    def test_blacklisted_contAlgons_souvenir(self) -> None:
+        """Test BLACKLISTED_CATEGORIES contAlgons SOUVENIR."""
         from src.dmarket.cross_platform_arbitrage import BLACKLISTED_CATEGORIES, ItemCategory
 
         assert ItemCategory.SOUVENIR in BLACKLISTED_CATEGORIES
@@ -224,20 +224,20 @@ class TestBlacklistedCategories:
 class TestBlacklistedKeywords:
     """Tests for BLACKLISTED_KEYWORDS frozenset."""
 
-    def test_blacklisted_keywords_contains_graffiti(self) -> None:
-        """Test BLACKLISTED_KEYWORDS contains 'graffiti'."""
+    def test_blacklisted_keywords_contAlgons_graffiti(self) -> None:
+        """Test BLACKLISTED_KEYWORDS contAlgons 'graffiti'."""
         from src.dmarket.cross_platform_arbitrage import BLACKLISTED_KEYWORDS
 
         assert "graffiti" in BLACKLISTED_KEYWORDS
 
-    def test_blacklisted_keywords_contains_souvenir(self) -> None:
-        """Test BLACKLISTED_KEYWORDS contains 'souvenir'."""
+    def test_blacklisted_keywords_contAlgons_souvenir(self) -> None:
+        """Test BLACKLISTED_KEYWORDS contAlgons 'souvenir'."""
         from src.dmarket.cross_platform_arbitrage import BLACKLISTED_KEYWORDS
 
         assert "souvenir" in BLACKLISTED_KEYWORDS
 
-    def test_blacklisted_keywords_contains_sealed_graffiti(self) -> None:
-        """Test BLACKLISTED_KEYWORDS contains 'sealed graffiti'."""
+    def test_blacklisted_keywords_contAlgons_sealed_graffiti(self) -> None:
+        """Test BLACKLISTED_KEYWORDS contAlgons 'sealed graffiti'."""
         from src.dmarket.cross_platform_arbitrage import BLACKLISTED_KEYWORDS
 
         assert "sealed graffiti" in BLACKLISTED_KEYWORDS
@@ -381,9 +381,9 @@ class TestLiquidityThresholds:
             ArbitrageDecision,
         )
 
-        daily_sales = 3  # Below 5 minimum
+        dAlgoly_sales = 3  # Below 5 minimum
 
-        if daily_sales < DEFAULT_MIN_LIQUIDITY:
+        if dAlgoly_sales < DEFAULT_MIN_LIQUIDITY:
             decision = ArbitrageDecision.INSUFFICIENT_LIQUIDITY
         else:
             decision = ArbitrageDecision.BUY_INSTANT
@@ -394,9 +394,9 @@ class TestLiquidityThresholds:
         """Test above minimum liquidity should be sufficient."""
         from src.dmarket.cross_platform_arbitrage import DEFAULT_MIN_LIQUIDITY
 
-        daily_sales = 10  # Above 5 minimum
+        dAlgoly_sales = 10  # Above 5 minimum
 
-        is_liquid = daily_sales >= DEFAULT_MIN_LIQUIDITY
+        is_liquid = dAlgoly_sales >= DEFAULT_MIN_LIQUIDITY
 
         assert is_liquid is True
 
@@ -504,7 +504,7 @@ class TestDecimalPrecision:
     """Tests for Decimal precision in calculations."""
 
     def test_decimal_precision_in_profit(self) -> None:
-        """Test Decimal precision is maintained in profit calculation."""
+        """Test Decimal precision is mAlgontAlgoned in profit calculation."""
         buy_price = Decimal("9.99")
         sell_price = Decimal("11.50")
         multiplier = Decimal("0.94")

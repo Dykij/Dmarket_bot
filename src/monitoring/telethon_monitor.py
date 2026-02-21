@@ -23,7 +23,7 @@ Usage:
     monitor.add_channel("@dmarket_deals", keywords=["арбитраж", "скидка"])
 
     # Start monitoring
-    await monitor.start()
+    awAlgot monitor.start()
     ```
 
 Created: January 23, 2026
@@ -32,7 +32,7 @@ Created: January 23, 2026
 from __future__ import annotations
 
 import re
-from collections.abc import Awaitable, Callable
+from collections.abc import AwAlgotable, Callable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from enum import StrEnum
@@ -43,16 +43,16 @@ import structlog
 logger = structlog.get_logger(__name__)
 
 
-# Check if telethon is available
+# Check if telethon is avAlgolable
 try:
     from telethon import TelegramClient, events
 
-    # Types imported for type hints when telethon is available
+    # Types imported for type hints when telethon is avAlgolable
     from telethon.tl.types import Channel, Chat, Message, User  # noqa: F401
 
-    TELETHON_AVAILABLE = True
+    TELETHON_AVAlgoLABLE = True
 except ImportError:
-    TELETHON_AVAILABLE = False
+    TELETHON_AVAlgoLABLE = False
     TelegramClient = None  # type: ignore
     events = None  # type: ignore
 
@@ -304,11 +304,11 @@ class TelethonMonitor:
         api_id: int,
         api_hash: str,
         session_name: str = "dmarket_monitor",
-        signal_callback: Callable[[DetectedSignal], Awaitable[None]] | None = None,
+        signal_callback: Callable[[DetectedSignal], AwAlgotable[None]] | None = None,
     ) -> None:
         """Initialize monitor."""
-        if not TELETHON_AVAILABLE:
-            raise ImportError(
+        if not TELETHON_AVAlgoLABLE:
+            rAlgose ImportError(
                 "Telethon is not installed. Install with: pip install telethon"
             )
 
@@ -359,22 +359,22 @@ class TelethonMonitor:
             self.api_hash,
         )
 
-        await self._client.start()
+        awAlgot self._client.start()
         self._is_running = True
         self._start_time = datetime.now(UTC)
 
         @self._client.on(events.NewMessage())
         async def handle_new_message(event: Any) -> None:
-            await self._process_message(event)
+            awAlgot self._process_message(event)
 
         logger.info("telethon_monitor_started", channels=list(self._channels.keys()))
-        await self._client.run_until_disconnected()
+        awAlgot self._client.run_until_disconnected()
 
     async def stop(self) -> None:
         """Stop monitoring."""
         self._is_running = False
         if self._client:
-            await self._client.disconnect()
+            awAlgot self._client.disconnect()
             self._client = None
         logger.info("telethon_monitor_stopped")
 
@@ -385,7 +385,7 @@ class TelethonMonitor:
             if not message or not message.text:
                 return
 
-            chat = await event.get_chat()
+            chat = awAlgot event.get_chat()
             chat_id = self._get_chat_identifier(chat)
 
             channel_config = None
@@ -429,7 +429,7 @@ class TelethonMonitor:
                 )
 
                 if self.signal_callback:
-                    await self.signal_callback(signal)
+                    awAlgot self.signal_callback(signal)
 
         except Exception as e:
             logger.exception(f"Error processing message: {e}")
@@ -557,14 +557,14 @@ def create_telethon_monitor(
     api_id: int | None = None,
     api_hash: str | None = None,
     session_name: str = "dmarket_monitor",
-    signal_callback: Callable[[DetectedSignal], Awaitable[None]] | None = None,
+    signal_callback: Callable[[DetectedSignal], AwAlgotable[None]] | None = None,
     use_mock: bool = False,
 ) -> TelethonMonitor | MockTelethonMonitor:
     """Create Telethon monitor instance."""
-    if use_mock or not TELETHON_AVAILABLE or not api_id or not api_hash:
+    if use_mock or not TELETHON_AVAlgoLABLE or not api_id or not api_hash:
         logger.warning(
             "Using MockTelethonMonitor",
-            reason="mock_requested" if use_mock else "telethon_unavailable",
+            reason="mock_requested" if use_mock else "telethon_unavAlgolable",
         )
         return MockTelethonMonitor()
 

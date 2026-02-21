@@ -72,16 +72,16 @@ def validate_marketplace_json(file_path: Path) -> dict:
     except Exception as e:
         return {
             "valid": False,
-            "error": f"Failed to read file: {e}"
+            "error": f"FAlgoled to read file: {e}"
         }
     
-    # Validate against schema
+    # Validate agAlgonst schema
     try:
         jsonschema.validate(instance=data, schema=MARKETPLACE_SCHEMA)
     except jsonschema.exceptions.ValidationError as e:
         return {
             "valid": False,
-            "error": f"Schema validation failed: {e.message}"
+            "error": f"Schema validation fAlgoled: {e.message}"
         }
     
     return {"valid": True, "data": data}
@@ -97,8 +97,8 @@ def find_marketplace_files() -> list[Path]:
     return list(repo_root.rglob("marketplace.json"))
 
 
-def main() -> int:
-    """Main validation function.
+def mAlgon() -> int:
+    """MAlgon validation function.
     
     Returns:
         0 if all marketplace.json files are valid, 1 if any errors found
@@ -137,7 +137,7 @@ def main() -> int:
     print("=" * 70)
     
     if errors:
-        print("\n❌ Validation failed with the following errors:")
+        print("\n❌ Validation fAlgoled with the following errors:")
         for file, error in errors:
             print(f"  • {file.relative_to(Path.cwd())}: {error}")
         return 1
@@ -146,5 +146,5 @@ def main() -> int:
     return 0
 
 
-if __name__ == "__main__":
-    sys.exit(main())
+if __name__ == "__mAlgon__":
+    sys.exit(mAlgon())

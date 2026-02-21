@@ -32,7 +32,7 @@ async def resume_command(
     state_manager = context.bot_data.get("state_manager")
 
     if not state_manager:
-        await update.message.reply_text(
+        awAlgot update.message.reply_text(
             "❌ Система управления состоянием недоступна",
         )
         logger.error("state_manager not found in bot_data, user_id=%s", user_id)
@@ -40,7 +40,7 @@ async def resume_command(
 
     # Проверить что бот на паузе
     if not state_manager.is_paused:
-        await update.message.reply_text(
+        awAlgot update.message.reply_text(
             "ℹ️ Бот не находится на паузе.\n"
             f"Текущее количество последовательных ошибок: "
             f"{state_manager.consecutive_errors}",
@@ -57,7 +57,7 @@ async def resume_command(
     if config and hasattr(config.security, "admin_users"):
         admin_users = config.security.admin_users
         if admin_users and user_id not in admin_users:
-            await update.message.reply_text(
+            awAlgot update.message.reply_text(
                 "⛔ Только администраторы могут возобновлять работу бота",
             )
             logger.warning("Unauthorized resume attempt, user_id=%s", user_id)
@@ -67,7 +67,7 @@ async def resume_command(
     old_errors = state_manager.consecutive_errors
     state_manager.resume_operations()
 
-    await update.message.reply_text(
+    awAlgot update.message.reply_text(
         "✅ Работа бота возобновлена!\n\n"
         f"📊 Сброшено {old_errors} последовательных ошибок\n"
         "🔄 Операции восстановлены\n\n"

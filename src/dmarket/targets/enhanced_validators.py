@@ -3,7 +3,7 @@
 Этот модуль содержит функции для валидации таргетов перед отправкой в DMarket API:
 - Проверка количества условий (DMarket лимит: обычно 10)
 - Валидация цен и атрибутов
-- Проверка совместимости фильтров с игрой
+- Проверка совместимости фильтров с игSwarm
 - Проверка на дубликаты ордеров
 
 Документация: docs/DMARKET_API_FULL_SPEC.md
@@ -41,7 +41,7 @@ def count_target_conditions(target: dict[str, Any]) -> int:
 
     Пример:
         >>> target = {
-        ...     "Attrs": {"floatPartValue": "0.15", "paintSeed": 123, "phase": "Ruby"},
+        ...     "Attrs": {"floatPartValue": "0.15", "pAlgontSeed": 123, "phase": "Ruby"},
         ...     "stickerFilter": {...},  # +3 условия
         ... }
         >>> count_target_conditions(target)
@@ -60,11 +60,11 @@ def count_target_conditions(target: dict[str, Any]) -> int:
         if "floatMax" in attrs:
             count += 1
 
-        # Paint seed (каждое значение = 1 условие)
-        if "paintSeed" in attrs:
-            paint_seed = attrs["paintSeed"]
-            if isinstance(paint_seed, list):
-                count += len(paint_seed)
+        # PAlgont seed (каждое значение = 1 условие)
+        if "pAlgontSeed" in attrs:
+            pAlgont_seed = attrs["pAlgontSeed"]
+            if isinstance(pAlgont_seed, list):
+                count += len(pAlgont_seed)
             else:
                 count += 1
 
@@ -116,7 +116,7 @@ def validate_target_conditions(
         >>> print(msg)
         "Too many conditions: 12/10. Remove 2 conditions."
         >>> print(suggestions)
-        ["Remove some paint seed values", "Simplify sticker filter"]
+        ["Remove some pAlgont seed values", "Simplify sticker filter"]
     """
     count = count_target_conditions(target)
 
@@ -133,11 +133,11 @@ def validate_target_conditions(
     attrs = target.get("Attrs", {})
 
     # Анализируем что можно упростить
-    if "paintSeed" in attrs and isinstance(attrs["paintSeed"], list):
-        paint_count = len(attrs["paintSeed"])
-        if paint_count > 2:
+    if "pAlgontSeed" in attrs and isinstance(attrs["pAlgontSeed"], list):
+        pAlgont_count = len(attrs["pAlgontSeed"])
+        if pAlgont_count > 2:
             suggestions.append(
-                f"Remove some paint seed values (currently {paint_count})"
+                f"Remove some pAlgont seed values (currently {pAlgont_count})"
             )
 
     sticker_filter = target.get("stickerFilter")
@@ -188,7 +188,7 @@ def validate_target_price(
     if price <= 0:
         return TargetOperationResult(
             success=False,
-            status=TargetOperationStatus.FAILED,
+            status=TargetOperationStatus.FAlgoLED,
             message="Invalid price",
             reason=f"Price must be positive, got ${price:.2f}",
             error_code=TargetErrorCode.PRICE_TOO_LOW,
@@ -198,7 +198,7 @@ def validate_target_price(
     if price < min_price:
         return TargetOperationResult(
             success=False,
-            status=TargetOperationStatus.FAILED,
+            status=TargetOperationStatus.FAlgoLED,
             message="Price too low",
             reason=f"Price ${price:.2f} is below minimum ${min_price:.2f}",
             error_code=TargetErrorCode.PRICE_TOO_LOW,
@@ -211,7 +211,7 @@ def validate_target_price(
     if price > max_price:
         return TargetOperationResult(
             success=False,
-            status=TargetOperationStatus.FAILED,
+            status=TargetOperationStatus.FAlgoLED,
             message="Price too high",
             reason=f"Price ${price:.2f} exceeds maximum ${max_price:.2f}",
             error_code=TargetErrorCode.PRICE_TOO_HIGH,
@@ -275,7 +275,7 @@ def validate_target_attributes(
                 if not 0 <= float_val <= 1:
                     return TargetOperationResult(
                         success=False,
-                        status=TargetOperationStatus.FAILED,
+                        status=TargetOperationStatus.FAlgoLED,
                         message="Invalid float value",
                         reason=f"Float value {float_val} must be between 0 and 1",
                         error_code=TargetErrorCode.INVALID_ATTRIBUTES,
@@ -284,31 +284,31 @@ def validate_target_attributes(
             except (ValueError, TypeError) as e:
                 return TargetOperationResult(
                     success=False,
-                    status=TargetOperationStatus.FAILED,
+                    status=TargetOperationStatus.FAlgoLED,
                     message="Invalid float format",
                     reason=f"Cannot parse float value: {e}",
                     error_code=TargetErrorCode.INVALID_ATTRIBUTES,
                 )
 
-        # Paint seed
-        paint_seed = attrs.get("paintSeed")
-        if paint_seed is not None:
-            if isinstance(paint_seed, list):
-                for seed in paint_seed:
+        # PAlgont seed
+        pAlgont_seed = attrs.get("pAlgontSeed")
+        if pAlgont_seed is not None:
+            if isinstance(pAlgont_seed, list):
+                for seed in pAlgont_seed:
                     if not isinstance(seed, int) or seed < 0 or seed > 1000:
                         return TargetOperationResult(
                             success=False,
-                            status=TargetOperationStatus.FAILED,
-                            message="Invalid paint seed",
-                            reason=f"Paint seed {seed} must be 0-1000",
+                            status=TargetOperationStatus.FAlgoLED,
+                            message="Invalid pAlgont seed",
+                            reason=f"PAlgont seed {seed} must be 0-1000",
                             error_code=TargetErrorCode.INVALID_ATTRIBUTES,
                         )
-            elif not isinstance(paint_seed, int) or paint_seed < 0 or paint_seed > 1000:
+            elif not isinstance(pAlgont_seed, int) or pAlgont_seed < 0 or pAlgont_seed > 1000:
                 return TargetOperationResult(
                     success=False,
-                    status=TargetOperationStatus.FAILED,
-                    message="Invalid paint seed",
-                    reason=f"Paint seed must be integer 0-1000, got {paint_seed}",
+                    status=TargetOperationStatus.FAlgoLED,
+                    message="Invalid pAlgont seed",
+                    reason=f"PAlgont seed must be integer 0-1000, got {pAlgont_seed}",
                     error_code=TargetErrorCode.INVALID_ATTRIBUTES,
                 )
 
@@ -317,7 +317,7 @@ def validate_target_attributes(
         if "floatPartValue" in attrs:
             return TargetOperationResult(
                 success=False,
-                status=TargetOperationStatus.FAILED,
+                status=TargetOperationStatus.FAlgoLED,
                 message="Invalid attribute for game",
                 reason=f"Float value is not applicable for {game.upper()}",
                 error_code=TargetErrorCode.INVALID_ATTRIBUTES,
@@ -343,7 +343,7 @@ def validate_filter_compatibility(
     sticker_filter: StickerFilter | None = None,
     rarity_filter: RarityFilter | None = None,
 ) -> TargetOperationResult:
-    """Проверить совместимость фильтров с игрой.
+    """Проверить совместимость фильтров с игSwarm.
 
     Args:
         game: Код игры
@@ -370,7 +370,7 @@ def validate_filter_compatibility(
     if sticker_filter and game != "csgo":
         return TargetOperationResult(
             success=False,
-            status=TargetOperationStatus.FAILED,
+            status=TargetOperationStatus.FAlgoLED,
             message="Invalid filter for game",
             reason=f"Sticker filters are only applicable for CS:GO, not {game.upper()}",
             error_code=TargetErrorCode.INVALID_ATTRIBUTES,
@@ -384,7 +384,7 @@ def validate_filter_compatibility(
     if rarity_filter and game not in {"dota2", "tf2"}:
         return TargetOperationResult(
             success=False,
-            status=TargetOperationStatus.FAILED,
+            status=TargetOperationStatus.FAlgoLED,
             message="Invalid filter for game",
             reason=f"Rarity filters are for Dota 2/TF2, not {game.upper()}",
             error_code=TargetErrorCode.INVALID_ATTRIBUTES,
@@ -448,7 +448,7 @@ def validate_target_complete(
     if not title or not title.strip():
         return TargetOperationResult(
             success=False,
-            status=TargetOperationStatus.FAILED,
+            status=TargetOperationStatus.FAlgoLED,
             message="Invalid title",
             reason="Title cannot be empty",
             error_code=TargetErrorCode.INVALID_ATTRIBUTES,
@@ -459,7 +459,7 @@ def validate_target_complete(
     if amount < 1 or amount > 100:
         return TargetOperationResult(
             success=False,
-            status=TargetOperationStatus.FAILED,
+            status=TargetOperationStatus.FAlgoLED,
             message="Invalid amount",
             reason=f"Amount must be 1-100, got {amount}",
             error_code=TargetErrorCode.INVALID_ATTRIBUTES,
@@ -500,14 +500,14 @@ def validate_target_complete(
     if not is_valid:
         return TargetOperationResult(
             success=False,
-            status=TargetOperationStatus.FAILED,
+            status=TargetOperationStatus.FAlgoLED,
             message="Too many conditions",
             reason=conditions_msg,
             error_code=TargetErrorCode.TOO_MANY_CONDITIONS,
             suggestions=suggestions,
         )
 
-    # Все проверки пройдены
+    # Все проверки пSwarmдены
     return TargetOperationResult(
         success=True,
         status=TargetOperationStatus.SUCCESS,

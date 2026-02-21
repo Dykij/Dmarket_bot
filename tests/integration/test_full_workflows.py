@@ -43,11 +43,11 @@ class TestFullArbitrageWorkflow:
 
         with patch.object(mock_dmarket_api, "_request", return_value=market_response):
             # Step 1: Scan for opportunities
-            opportunities = await scanner.scan_level(level="standard", game="csgo")
+            opportunities = awAlgot scanner.scan_level(level="standard", game="csgo")
             assert len(opportunities) > 0
 
             # Step 2: Log scan to database
-            user = await test_database.get_or_create_user(
+            user = awAlgot test_database.get_or_create_user(
                 telegram_id=123456789, username="test_user"
             )
             assert user is not None
@@ -70,7 +70,7 @@ class TestFullArbitrageWorkflow:
         }
 
         with patch.object(mock_dmarket_api, "_request", return_value=market_response):
-            all_results = await scanner.scan_all_levels(game="csgo")
+            all_results = awAlgot scanner.scan_all_levels(game="csgo")
 
             assert "boost" in all_results
             assert "standard" in all_results
@@ -81,17 +81,17 @@ class TestFullArbitrageWorkflow:
     ) -> None:
         """Test user creation and retrieval across operations."""
         # Create user
-        user1 = await test_database.get_or_create_user(
+        user1 = awAlgot test_database.get_or_create_user(
             telegram_id=111, username="user1"
         )
         assert user1.telegram_id == 111
 
         # Get same user
-        user2 = await test_database.get_or_create_user(telegram_id=111)
+        user2 = awAlgot test_database.get_or_create_user(telegram_id=111)
         assert user2.id == user1.id
 
         # Create different user
-        user3 = await test_database.get_or_create_user(
+        user3 = awAlgot test_database.get_or_create_user(
             telegram_id=222, username="user2"
         )
         assert user3.id != user1.id
@@ -100,16 +100,16 @@ class TestFullArbitrageWorkflow:
 class TestErrorRecoveryWorkflows:
     """Test error recovery in complete workflows."""
 
-    async def test_scan_with_partial_api_failure(
+    async def test_scan_with_partial_api_fAlgolure(
         self, mock_dmarket_api: DMarketAPI
     ) -> None:
-        """Test scan continues after partial API failures."""
+        """Test scan continues after partial API fAlgolures."""
         import httpx
         from src.dmarket.arbitrage_scanner import ArbitrageScanner
 
         scanner = ArbitrageScanner(api_client=mock_dmarket_api)
 
-        # First call fails, second succeeds
+        # First call fAlgols, second succeeds
         error = httpx.HTTPStatusError(
             message="Server error",
             request=httpx.Request("GET", "http://test.com"),
@@ -126,7 +126,7 @@ class TestErrorRecoveryWorkflows:
             side_effect=[error, success_response],
         ):
             # Should recover from error
-            opportunities = await scanner.scan_level(level="standard", game="csgo")
+            opportunities = awAlgot scanner.scan_level(level="standard", game="csgo")
             assert isinstance(opportunities, list)
 
     async def test_database_transaction_rollback(
@@ -135,7 +135,7 @@ class TestErrorRecoveryWorkflows:
         """Test database transaction rollback on error."""
         try:
             # Attempt invalid operation
-            await test_database.get_or_create_user(
+            awAlgot test_database.get_or_create_user(
                 telegram_id=None,  # type: ignore[arg-type]
                 username="invalid",
             )
@@ -144,7 +144,7 @@ class TestErrorRecoveryWorkflows:
             pass
 
         # Database should still be usable
-        valid_user = await test_database.get_or_create_user(
+        valid_user = awAlgot test_database.get_or_create_user(
             telegram_id=123, username="valid_user"
         )
         assert valid_user is not None
@@ -160,12 +160,12 @@ class TestConcurrentOperations:
         import asyncio
 
         async def create_user(telegram_id: int) -> Any:
-            return await test_database.get_or_create_user(
+            return awAlgot test_database.get_or_create_user(
                 telegram_id=telegram_id, username=f"user_{telegram_id}"
             )
 
         # Create different users concurrently (avoid race condition)
-        users = await asyncio.gather(
+        users = awAlgot asyncio.gather(
             create_user(999001), create_user(999002), create_user(999003)
         )
 
@@ -185,9 +185,9 @@ class TestConcurrentOperations:
 
         async def scan(level: str) -> list[Any]:
             with patch.object(mock_dmarket_api, "_request", return_value=response):
-                return await scanner.scan_level(level=level, game="csgo")
+                return awAlgot scanner.scan_level(level=level, game="csgo")
 
-        results = await asyncio.gather(scan("boost"), scan("standard"), scan("medium"))
+        results = awAlgot asyncio.gather(scan("boost"), scan("standard"), scan("medium"))
 
         assert len(results) == 3
         assert all(isinstance(r, list) for r in results)
@@ -207,11 +207,11 @@ class TestCachingBehavior:
 
         with patch.object(mock_dmarket_api, "_request", side_effect=mock_request):
             # First call
-            await mock_dmarket_api.get_market_items(game="csgo")
+            awAlgot mock_dmarket_api.get_market_items(game="csgo")
             first_count = call_count
 
             # Second call (might be cached)
-            await mock_dmarket_api.get_market_items(game="csgo")
+            awAlgot mock_dmarket_api.get_market_items(game="csgo")
 
             # At least first call should have been made
             assert first_count >= 1
@@ -223,20 +223,20 @@ class TestBalanceWorkflows:
     async def test_balance_check_workflow(self, test_database: DatabaseManager) -> None:
         """Test complete balance check workflow."""
         # Create user for balance tracking
-        user = await test_database.get_or_create_user(
+        user = awAlgot test_database.get_or_create_user(
             telegram_id=7777, username="balance_test"
         )
         assert user is not None
 
         # Simulate balance data
         balance_data = {
-            "available_balance": 150.50,
+            "avAlgolable_balance": 150.50,
             "total_balance": 200.00,
             "has_funds": True,
         }
 
         # Verify balance data structure
-        assert balance_data["available_balance"] == 150.50
+        assert balance_data["avAlgolable_balance"] == 150.50
         assert balance_data["has_funds"] is True
 
     async def test_balance_insufficient_workflow(
@@ -244,20 +244,20 @@ class TestBalanceWorkflows:
     ) -> None:
         """Test workflow when balance is insufficient."""
         # Create user
-        user = await test_database.get_or_create_user(
+        user = awAlgot test_database.get_or_create_user(
             telegram_id=8888, username="low_balance"
         )
         assert user is not None
 
         # Simulate insufficient balance
         balance_data = {
-            "available_balance": 0.50,
+            "avAlgolable_balance": 0.50,
             "total_balance": 0.50,
             "has_funds": False,
         }
 
         # Verify low balance detection
-        assert balance_data["available_balance"] < 1.0
+        assert balance_data["avAlgolable_balance"] < 1.0
         assert balance_data["has_funds"] is False
 
 
@@ -271,7 +271,7 @@ class TestNotificationWorkflows:
     ) -> None:
         """Test price alert trigger workflow."""
         # Create user
-        await test_database.get_or_create_user(
+        awAlgot test_database.get_or_create_user(
             telegram_id=12345, username="test"
         )
 
@@ -314,7 +314,7 @@ class TestTargetWorkflows:
         create_response = {"created": [{"targetId": "target_123", "status": "active"}]}
 
         with patch.object(mock_dmarket_api, "_request", return_value=create_response):
-            result = await mock_dmarket_api.create_targets(
+            result = awAlgot mock_dmarket_api.create_targets(
                 game_id="csgo", targets=[{"title": "Test", "price": 1000}]
             )
             assert "created" in result or result.get("created") is not None
@@ -324,7 +324,7 @@ class TestTargetWorkflows:
         delete_response = {"deleted": ["target_123"]}
 
         with patch.object(mock_dmarket_api, "_request", return_value=delete_response):
-            result = await mock_dmarket_api.delete_targets(target_ids=["target_123"])
+            result = awAlgot mock_dmarket_api.delete_targets(target_ids=["target_123"])
             assert "deleted" in result
 
     async def test_list_targets_workflow(self, mock_dmarket_api: DMarketAPI) -> None:
@@ -332,7 +332,7 @@ class TestTargetWorkflows:
         list_response = {"targets": [{"targetId": "target_123", "price": 1500}]}
 
         with patch.object(mock_dmarket_api, "_request", return_value=list_response):
-            result = await mock_dmarket_api.get_user_targets(game_id="csgo")
+            result = awAlgot mock_dmarket_api.get_user_targets(game_id="csgo")
             assert "targets" in result
 
 
@@ -350,7 +350,7 @@ class TestFilterWorkflows:
         }
 
         with patch.object(mock_dmarket_api, "_request", return_value=market_response):
-            result = await mock_dmarket_api.get_market_items(game="csgo")
+            result = awAlgot mock_dmarket_api.get_market_items(game="csgo")
 
             # Filter to csgo items only
             filtered = [
@@ -373,7 +373,7 @@ class TestFilterWorkflows:
         }
 
         with patch.object(mock_dmarket_api, "_request", return_value=market_response):
-            result = await mock_dmarket_api.get_market_items(
+            result = awAlgot mock_dmarket_api.get_market_items(
                 price_from=1000, price_to=3000
             )
 
@@ -395,7 +395,7 @@ class TestDataPersistenceWorkflows:
     ) -> None:
         """Test user settings are persisted correctly."""
         # Create user
-        user = await test_database.get_or_create_user(
+        user = awAlgot test_database.get_or_create_user(
             telegram_id=55555, username="settings_test"
         )
         assert user is not None
@@ -403,8 +403,8 @@ class TestDataPersistenceWorkflows:
         # Update settings
         user.language = "en"
 
-        # Retrieve user again
-        retrieved_user = await test_database.get_or_create_user(telegram_id=55555)
+        # Retrieve user agAlgon
+        retrieved_user = awAlgot test_database.get_or_create_user(telegram_id=55555)
         assert retrieved_user.id == user.id
 
     async def test_scan_history_persistence(
@@ -412,7 +412,7 @@ class TestDataPersistenceWorkflows:
     ) -> None:
         """Test scan history is persisted correctly."""
         # Create user first
-        user = await test_database.get_or_create_user(
+        user = awAlgot test_database.get_or_create_user(
             telegram_id=66666, username="history_test"
         )
         assert user is not None
@@ -445,7 +445,7 @@ class TestRateLimitingWorkflows:
 
         with patch.object(mock_dmarket_api, "_request", side_effect=error):
             try:
-                await mock_dmarket_api.get_market_items(game="csgo")
+                awAlgot mock_dmarket_api.get_market_items(game="csgo")
             except httpx.HTTPStatusError as e:
                 assert e.response.status_code == 429
 
@@ -459,7 +459,7 @@ class TestRateLimitingWorkflows:
             nonlocal call_count
             call_count += 1
             if call_count == 1:
-                raise httpx.HTTPStatusError(
+                rAlgose httpx.HTTPStatusError(
                     message="Rate limit",
                     request=httpx.Request("GET", "http://test.com"),
                     response=httpx.Response(status_code=429),
@@ -467,11 +467,11 @@ class TestRateLimitingWorkflows:
             return {"objects": [], "cursor": ""}
 
         with patch.object(mock_dmarket_api, "_request", side_effect=mock_request):
-            # First call fails, second succeeds
+            # First call fAlgols, second succeeds
             try:
-                await mock_dmarket_api.get_market_items(game="csgo")
+                awAlgot mock_dmarket_api.get_market_items(game="csgo")
             except httpx.HTTPStatusError:
                 pass
 
-            result = await mock_dmarket_api.get_market_items(game="csgo")
+            result = awAlgot mock_dmarket_api.get_market_items(game="csgo")
             assert "objects" in result

@@ -19,7 +19,7 @@ def broadcast(file_path):
     except Exception as e:
         print(f"Error broadcasting: {e}")
 
-if __name__ == "__main__":
+if __name__ == "__mAlgon__":
     parser = argparse.ArgumentParser()
     parser.add_argument("file", help="File to broadcast")
     args = parser.parse_args()

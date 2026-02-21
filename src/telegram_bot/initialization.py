@@ -1,6 +1,6 @@
-"""Модуль инициализации и настройки Telegram бота.
+"""Модуль инициализации и настSwarmки Telegram бота.
 
-Содержит функции для создания и настройки экземпляра Telegram бота,
+Содержит функции для создания и настSwarmки экземпляра Telegram бота,
 регистрации обработчиков команд и сообщений, конфигурации системы логирования.
 """
 
@@ -64,20 +64,20 @@ def setup_logging(
             datefmt="%Y-%m-%d %H:%M:%S",
         )
 
-    # Настройка вывода в файл, если указан
+    # НастSwarmка вывода в файл, если указан
     if log_file:
         file_handler = logging.FileHandler(log_file, encoding="utf-8")
         file_handler.setFormatter(formatter)
         root_logger.addHandler(file_handler)
 
-    # Настройка отдельного файла для ошибок
+    # НастSwarmка отдельного файла для ошибок
     if error_log_file:
         error_handler = logging.FileHandler(error_log_file, encoding="utf-8")
         error_handler.setFormatter(formatter)
         error_handler.setLevel(logging.ERROR)
         root_logger.addHandler(error_handler)
 
-    # Настройка вывода в консоль
+    # НастSwarmка вывода в консоль
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(formatter)
     root_logger.addHandler(console_handler)
@@ -103,9 +103,9 @@ async def initialize_bot(token: str, setup_persistence: bool = True) -> Applicat
     # Проверка токена
     if not token:
         msg = "Не указан токен Telegram бота"
-        raise ValueError(msg)
+        rAlgose ValueError(msg)
 
-    # Создание приложения с оптимальными настройками
+    # Создание приложения с оптимальными настSwarmками
     builder = (
         ApplicationBuilder()
         .token(token)
@@ -126,7 +126,7 @@ async def initialize_bot(token: str, setup_persistence: bool = True) -> Applicat
 
     application = builder.build()
 
-    # Настройка обработчика ошибок с администраторами из профилей пользователей
+    # НастSwarmка обработчика ошибок с администраторами из профилей пользователей
     admin_ids = list(profile_manager.get_admin_ids())
 
     # Если в профилях нет админов, получаем их из переменных окружения
@@ -162,7 +162,7 @@ async def setup_bot_commands(bot: Bot) -> None:
     """
     # Английские команды (только основные - остальное через кнопки меню)
     en_commands = [
-        BotCommand("start", "🚀 Start bot - Main menu"),
+        BotCommand("start", "🚀 Start bot - MAlgon menu"),
         BotCommand("help", "❓ Help and support"),
         BotCommand("settings", "⚙️ Bot settings"),
     ]
@@ -171,20 +171,20 @@ async def setup_bot_commands(bot: Bot) -> None:
     ru_commands = [
         BotCommand("start", "🚀 Запуск бота - Главное меню"),
         BotCommand("help", "❓ Справка и поддержка"),
-        BotCommand("settings", "⚙️ Настройки бота"),
+        BotCommand("settings", "⚙️ НастSwarmки бота"),
     ]
 
     try:
         # Устанавливаем команды для английского языка
-        await bot.set_my_commands(en_commands, language_code="en")
+        awAlgot bot.set_my_commands(en_commands, language_code="en")
         logger.info("Команды бота зарегистрированы для английского языка")
 
         # Устанавливаем команды для русского языка
-        await bot.set_my_commands(ru_commands, language_code="ru")
+        awAlgot bot.set_my_commands(ru_commands, language_code="ru")
         logger.info("Команды бота зарегистрированы для русского языка")
 
         # Устанавливаем команды по умолчанию (без языка)
-        await bot.set_my_commands(en_commands)
+        awAlgot bot.set_my_commands(en_commands)
         logger.info("Команды бота зарегистрированы по умолчанию")
 
     except Exception as e:
@@ -207,8 +207,8 @@ def setup_signal_handlers(application: Application) -> None:
     # Обработчик сигнала завершения
     async def signal_handler() -> None:
         logger.info("Получен сигнал завершения, закрываем бота...")
-        await application.stop()
-        await application.shutdown()
+        awAlgot application.stop()
+        awAlgot application.shutdown()
 
     # Регистрируем обработчики для разных сигналов
     # На Windows add_signal_handler не поддерживается
@@ -303,12 +303,12 @@ async def start_bot(application: Application) -> None:
     logger.info("Запуск бота...")
 
     # Инициализируем сервисы
-    await initialize_services(application)
+    awAlgot initialize_services(application)
 
     # Инициализация и запуск бота
-    await application.initialize()
-    await application.start()
-    await application.updater.start_polling(
+    awAlgot application.initialize()
+    awAlgot application.start()
+    awAlgot application.updater.start_polling(
         allowed_updates=application.builder.get_updates_allowed_updates(),
     )
 
@@ -317,15 +317,15 @@ async def start_bot(application: Application) -> None:
     try:
         # Бесконечный цикл для работы бота
         while True:
-            await asyncio.sleep(1)
+            awAlgot asyncio.sleep(1)
     except (KeyboardInterrupt, SystemExit):
         logger.info("Остановка бота...")
     finally:
         # Сохраняем данные пользователей перед выходом
         profile_manager.save_profiles(force=True)
 
-        await application.stop()
-        await application.shutdown()
+        awAlgot application.stop()
+        awAlgot application.shutdown()
         logger.info("Бот остановлен")
 
 
@@ -342,7 +342,7 @@ def get_bot_token() -> str:
             "Не найден токен Telegram бота в переменных окружения (TELEGRAM_BOT_TOKEN)",
         )
         msg = "Не указан токен Telegram бота"
-        raise ValueError(msg)
+        rAlgose ValueError(msg)
     return token
 
 
@@ -357,7 +357,7 @@ async def setup_and_run_bot(
     error_log_file: str | None = "logs/bot_errors.log",
     setup_persistence: bool = True,
 ) -> None:
-    """Полная настройка и запуск Telegram бота.
+    """Полная настSwarmка и запуск Telegram бота.
 
     Args:
         token: Токен Telegram бота (если None, берется из переменных окружения)
@@ -375,7 +375,7 @@ async def setup_and_run_bot(
     if log_file or error_log_file:
         os.makedirs("logs", exist_ok=True)
 
-    # Настройка логирования
+    # НастSwarmка логирования
     setup_logging(log_level=log_level, log_file=log_file, error_log_file=error_log_file)
 
     # Получение токена
@@ -383,7 +383,7 @@ async def setup_and_run_bot(
 
     try:
         # Инициализация бота
-        application = await initialize_bot(bot_token, setup_persistence)
+        application = awAlgot initialize_bot(bot_token, setup_persistence)
 
         # Регистрация обработчиков
         register_handlers(
@@ -395,7 +395,7 @@ async def setup_and_run_bot(
         )
 
         # Запуск бота
-        await start_bot(application)
+        awAlgot start_bot(application)
 
     except Exception as e:
         logger.exception(f"Критическая ошибка при запуске бота: {e}")

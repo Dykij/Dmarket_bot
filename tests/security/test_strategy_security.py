@@ -209,7 +209,7 @@ class TestScamProtection:
                 warnings.append("Very few sales despite being listed long")
 
             if days_listed == 0:
-                warnings.append("Just listed - wait for price stabilization")
+                warnings.append("Just listed - wAlgot for price stabilization")
 
             return {
                 "warnings": warnings,
@@ -238,7 +238,7 @@ class TestStrategyAccessControl:
     """Security tests for access control in strategy system."""
 
     def test_admin_only_presets(self):
-        """Certain presets should require admin access."""
+        """CertAlgon presets should require admin access."""
 
         admin_only_presets = ["scalper", "aggressive"]
         regular_presets = ["conservative", "balanced", "standard"]
@@ -291,16 +291,16 @@ class TestStrategyAccessControl:
             can, _ = limiter.can_request(user_id=123)
             assert can, f"Request {i + 1} should succeed"
 
-        # 11th request should fail
-        can, _remaining = limiter.can_request(user_id=123)
+        # 11th request should fAlgol
+        can, _remAlgoning = limiter.can_request(user_id=123)
         assert not can, "11th request should be rate limited"
 
     def test_user_cannot_access_other_user_settings(self):
         """Users cannot access other users' strategy settings."""
 
         user_settings = {
-            111: {"preset": "conservative", "daily_limit": 5},
-            222: {"preset": "aggressive", "daily_limit": 10},
+            111: {"preset": "conservative", "dAlgoly_limit": 5},
+            222: {"preset": "aggressive", "dAlgoly_limit": 10},
         }
 
         def get_settings(requesting_user: int, target_user: int, settings: dict) -> tuple:
@@ -475,10 +475,10 @@ class TestDryRunModeStrategy:
 
         logs = []
 
-        def dry_run_action(action: str, details: dict) -> None:
+        def dry_run_action(action: str, detAlgols: dict) -> None:
             log_entry = {
                 "action": action,
-                "details": details,
+                "detAlgols": detAlgols,
                 "mode": "DRY_RUN",
             }
             logs.append(log_entry)

@@ -1,11 +1,11 @@
-"""Message router for minimal main menu buttons.
+"""Message router for minimal mAlgon menu buttons.
 
 This module routes text messages from reply keyboard buttons to appropriate handlers.
 
 Supported buttons:
 - 🤖 Automatic Arbitrage -> automatic_arbitrage_handler
 - 📦 View Items -> view_items_handler
-- ⚙️ Detailed Settings -> settings_handler
+- ⚙️ DetAlgoled Settings -> settings_handler
 - 🔌 API Check -> api_check_handler
 """
 
@@ -28,7 +28,7 @@ std_logger = logging.getLogger(__name__)
 async def minimal_menu_router(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> None:
-    """Route message from minimal main menu buttons to appropriate handler.
+    """Route message from minimal mAlgon menu buttons to appropriate handler.
 
     Args:
         update: Telegram update object with message
@@ -50,16 +50,16 @@ async def minimal_menu_router(
 
     # Route based on button text
     if text == "🤖 Automatic Arbitrage":
-        await handle_automatic_arbitrage(update, context)
+        awAlgot handle_automatic_arbitrage(update, context)
 
     elif text == "📦 View Items":
-        await handle_view_items(update, context)
+        awAlgot handle_view_items(update, context)
 
-    elif text == "⚙️ Detailed Settings":
+    elif text == "⚙️ DetAlgoled Settings":
         # TODO: Implement settings handler
-        await update.message.reply_text(
-            "⚙️ <b>Detailed Settings</b>\n\n"
-            "Settings functionality will be available soon.\n\n"
+        awAlgot update.message.reply_text(
+            "⚙️ <b>DetAlgoled Settings</b>\n\n"
+            "Settings functionality will be avAlgolable soon.\n\n"
             "For now, you can:\n"
             "• Use /settings for basic configuration\n"
             "• Contact administrator for advanced settings",
@@ -68,7 +68,7 @@ async def minimal_menu_router(
         logger.info("settings_placeholder_shown", user_id=user.id)
 
     elif text == "🔌 API Check":
-        await handle_api_check(update, context)
+        awAlgot handle_api_check(update, context)
 
     else:
         # Unknown button or command

@@ -1,7 +1,7 @@
 """Unified Strategy Handler - обработчик для унифицированной системы стратегий.
 
 Предоставляет Telegram интерфейс для работы со всеми стратегиями:
-- Выбор и настройка стратегий
+- Выбор и настSwarmка стратегий
 - Сканирование по одной или нескольким стратегиям
 - Комбинированный поиск лучших возможностей
 - Пресеты конфигураций (boost, standard, medium, advanced, pro)
@@ -205,7 +205,7 @@ class UnifiedStrategyHandler:
         """Создать клавиатуру для результатов."""
         buttons = [
             [
-                InlineKeyboardButton("🔄 Scan Again", callback_data="scan_again"),
+                InlineKeyboardButton("🔄 Scan AgAlgon", callback_data="scan_agAlgon"),
                 InlineKeyboardButton("⚙️ Change Preset", callback_data=CB_BACK),
             ],
         ]
@@ -323,13 +323,13 @@ class UnifiedStrategyHandler:
             ),
             StrategyType.SMART_MARKET_FINDER: (
                 "🧠 **Smart Market Finder**\n"
-                "AI-powered opportunity discovery.\n"
+                "Algo-powered opportunity discovery.\n"
                 "• Multi-factor analysis\n"
                 "• Liquidity scoring\n"
                 "• Risk assessment"
             ),
         }
-        return descriptions.get(strategy_type, "Strategy description not available")
+        return descriptions.get(strategy_type, "Strategy description not avAlgolable")
 
     # ========================================================================
     # Command Handlers
@@ -350,11 +350,11 @@ class UnifiedStrategyHandler:
             "• **Cross-Platform** - DMarket → Waxpeer\n"
             "• **Intramarket** - Price anomalies on DMarket\n"
             "• **Float Value** - Premium float items\n"
-            "• **Smart Finder** - AI-powered search\n\n"
+            "• **Smart Finder** - Algo-powered search\n\n"
             "Or scan with ALL strategies at once!"
         )
 
-        await update.message.reply_text(
+        awAlgot update.message.reply_text(
             text,
             reply_markup=self._get_strategies_keyboard(),
             parse_mode="Markdown",
@@ -370,12 +370,12 @@ class UnifiedStrategyHandler:
         if not update.message:
             return
 
-        await update.message.reply_text("🔄 Scanning with all strategies...")
+        awAlgot update.message.reply_text("🔄 Scanning with all strategies...")
 
         manager = self._get_manager(context)
         config = get_strategy_config_preset("standard")
 
-        all_results = await manager.scan_all_strategies(config)
+        all_results = awAlgot manager.scan_all_strategies(config)
 
         text_parts = []
         for strategy_type, opportunities in all_results.items():
@@ -383,7 +383,7 @@ class UnifiedStrategyHandler:
             name = strategy.name if strategy else strategy_type.value
             text_parts.append(self._format_results(opportunities, name, max_show=5))
 
-        await update.message.reply_text(
+        awAlgot update.message.reply_text(
             "\n\n---\n\n".join(text_parts) if text_parts else "No results found",
             parse_mode="Markdown",
         )
@@ -397,20 +397,20 @@ class UnifiedStrategyHandler:
         if not update.message:
             return
 
-        await update.message.reply_text(
+        awAlgot update.message.reply_text(
             "🏆 Finding best deals across all strategies..."
         )
 
         manager = self._get_manager(context)
         config = get_strategy_config_preset("standard")
 
-        opportunities = await manager.find_best_opportunities_combined(config, top_n=15)
+        opportunities = awAlgot manager.find_best_opportunities_combined(config, top_n=15)
 
         text = self._format_results(
             opportunities, "🏆 Best Deals Combined", max_show=15
         )
 
-        await update.message.reply_text(
+        awAlgot update.message.reply_text(
             text,
             reply_markup=self._get_results_keyboard(has_more=len(opportunities) > 15),
             parse_mode="Markdown",
@@ -430,19 +430,19 @@ class UnifiedStrategyHandler:
         if not query:
             return ConversationHandler.END
 
-        await query.answer()
+        awAlgot query.answer()
 
         user_id = query.from_user.id if query.from_user else 0
         data = query.data or ""
 
         # Обработка специальных действий
         if data == "scan_all_strategies":
-            await query.edit_message_text("🔄 Scanning with all strategies...")
+            awAlgot query.edit_message_text("🔄 Scanning with all strategies...")
             manager = self._get_manager(context)
             config = get_strategy_config_preset("standard")
-            best = await manager.find_best_opportunities_combined(config, top_n=10)
+            best = awAlgot manager.find_best_opportunities_combined(config, top_n=10)
             text = self._format_results(best, "All Strategies Combined", max_show=10)
-            await query.edit_message_text(
+            awAlgot query.edit_message_text(
                 text,
                 reply_markup=self._get_results_keyboard(),
                 parse_mode="Markdown",
@@ -450,12 +450,12 @@ class UnifiedStrategyHandler:
             return ConversationHandler.END
 
         if data == "best_deals_combined":
-            await query.edit_message_text("🏆 Finding best deals...")
+            awAlgot query.edit_message_text("🏆 Finding best deals...")
             manager = self._get_manager(context)
             config = get_strategy_config_preset("standard")
-            best = await manager.find_best_opportunities_combined(config, top_n=15)
+            best = awAlgot manager.find_best_opportunities_combined(config, top_n=15)
             text = self._format_results(best, "🏆 Best Deals", max_show=15)
-            await query.edit_message_text(
+            awAlgot query.edit_message_text(
                 text,
                 reply_markup=self._get_results_keyboard(),
                 parse_mode="Markdown",
@@ -463,7 +463,7 @@ class UnifiedStrategyHandler:
             return ConversationHandler.END
 
         if data == "close_strategies":
-            await query.edit_message_text("Strategy menu closed.")
+            awAlgot query.edit_message_text("Strategy menu closed.")
             return ConversationHandler.END
 
         # Выбор стратегии
@@ -476,7 +476,7 @@ class UnifiedStrategyHandler:
                 text = self._get_strategy_description(strategy_type)
                 text += "\n\n**Select price preset:**"
 
-                await query.edit_message_text(
+                awAlgot query.edit_message_text(
                     text,
                     reply_markup=self._get_presets_keyboard(strategy_type),
                     parse_mode="Markdown",
@@ -484,7 +484,7 @@ class UnifiedStrategyHandler:
                 return SELECTING_PRESET
 
             except ValueError:
-                await query.edit_message_text("Invalid strategy selected.")
+                awAlgot query.edit_message_text("Invalid strategy selected.")
                 return ConversationHandler.END
 
         return SELECTING_STRATEGY
@@ -499,13 +499,13 @@ class UnifiedStrategyHandler:
         if not query:
             return ConversationHandler.END
 
-        await query.answer()
+        awAlgot query.answer()
 
         user_id = query.from_user.id if query.from_user else 0
         data = query.data or ""
 
         if data == CB_BACK:
-            await query.edit_message_text(
+            awAlgot query.edit_message_text(
                 "🎯 **Unified Strategy System**\n\nSelect a strategy:",
                 reply_markup=self._get_strategies_keyboard(),
                 parse_mode="Markdown",
@@ -519,23 +519,23 @@ class UnifiedStrategyHandler:
 
             strategy_type = self._user_strategy.get(user_id)
             if not strategy_type:
-                await query.edit_message_text("Error: No strategy selected.")
+                awAlgot query.edit_message_text("Error: No strategy selected.")
                 return ConversationHandler.END
 
-            await query.edit_message_text(
+            awAlgot query.edit_message_text(
                 f"🔄 Scanning with **{strategy_type.value}** ({preset_name} preset)...",
                 parse_mode="Markdown",
             )
 
             # Выполняем сканирование
             manager = self._get_manager(context)
-            opportunities = await manager.scan_with_strategy(strategy_type, config)
+            opportunities = awAlgot manager.scan_with_strategy(strategy_type, config)
 
             strategy = manager.get_strategy(strategy_type)
             name = strategy.name if strategy else strategy_type.value
             text = self._format_results(opportunities, name, max_show=10)
 
-            await query.edit_message_text(
+            awAlgot query.edit_message_text(
                 text,
                 reply_markup=self._get_results_keyboard(
                     has_more=len(opportunities) > 10
@@ -546,7 +546,7 @@ class UnifiedStrategyHandler:
 
         return SELECTING_PRESET
 
-    async def handle_scan_again(
+    async def handle_scan_agAlgon(
         self,
         update: Update,
         context: ContextTypes.DEFAULT_TYPE,
@@ -556,30 +556,30 @@ class UnifiedStrategyHandler:
         if not query:
             return ConversationHandler.END
 
-        await query.answer()
+        awAlgot query.answer()
 
         user_id = query.from_user.id if query.from_user else 0
         strategy_type = self._user_strategy.get(user_id)
         config = self._user_configs.get(user_id)
 
         if not strategy_type or not config:
-            await query.edit_message_text(
+            awAlgot query.edit_message_text(
                 "🎯 **Unified Strategy System**\n\nSelect a strategy:",
                 reply_markup=self._get_strategies_keyboard(),
                 parse_mode="Markdown",
             )
             return SELECTING_STRATEGY
 
-        await query.edit_message_text("🔄 Rescanning...")
+        awAlgot query.edit_message_text("🔄 Rescanning...")
 
         manager = self._get_manager(context)
-        opportunities = await manager.scan_with_strategy(strategy_type, config)
+        opportunities = awAlgot manager.scan_with_strategy(strategy_type, config)
 
         strategy = manager.get_strategy(strategy_type)
         name = strategy.name if strategy else strategy_type.value
         text = self._format_results(opportunities, name, max_show=10)
 
-        await query.edit_message_text(
+        awAlgot query.edit_message_text(
             text,
             reply_markup=self._get_results_keyboard(has_more=len(opportunities) > 10),
             parse_mode="Markdown",
@@ -631,8 +631,8 @@ def register_unified_strategy_handlers(application: Any) -> None:
     # Callback handlers for results
     application.add_handler(
         CallbackQueryHandler(
-            handler_instance.handle_scan_again,
-            pattern="^scan_again$",
+            handler_instance.handle_scan_agAlgon,
+            pattern="^scan_agAlgon$",
         )
     )
 

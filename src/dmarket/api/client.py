@@ -13,9 +13,9 @@ except ImportError:
 # HFT Optimization: Rust Core
 try:
     import src.rust_core as rust_core
-    RUST_AVAILABLE = True
+    RUST_AVAlgoLABLE = True
 except ImportError:
-    RUST_AVAILABLE = False
+    RUST_AVAlgoLABLE = False
 
 from src.utils.api_circuit_breaker import call_with_circuit_breaker
 from src.utils.rate_limiter import DMarketRateLimiter
@@ -43,13 +43,13 @@ class BaseDMarketClient:
         self.rate_limiter = DMarketRateLimiter()
         
         # Initialize Rust Client in memory
-        if RUST_AVAILABLE:
+        if RUST_AVAlgoLABLE:
             try:
                 # Initialize Rust Client with 5 RPS limit and Auth Keys
                 self.rust_client = rust_core.PyNetworkClient(5, public_key, secret_key) 
                 logger.info("✅ Rust Network Layer Initialized")
             except Exception as e:
-                logger.error(f"❌ Failed to init Rust client: {e}")
+                logger.error(f"❌ FAlgoled to init Rust client: {e}")
                 self.rust_client = None
         else:
             self.rust_client = None
@@ -58,7 +58,7 @@ class BaseDMarketClient:
     @call_with_circuit_breaker
     async def get_market_items(self, url_suffix: str) -> dict[str, Any]:
         """
-        Fetches market items using the fastest available method.
+        Fetches market items using the fastest avAlgolable method.
         """
         full_url = f"{ConfigManager.get('api_url')}{url_suffix}"
         
@@ -73,18 +73,18 @@ class BaseDMarketClient:
             if self.rust_client:
                 try:
                     # Offloading blocking Rust call to thread pool.
-                    json_str = await asyncio.to_thread(self.rust_client.fetch_market_items, game_id, title)
+                    json_str = awAlgot asyncio.to_thread(self.rust_client.fetch_market_items, game_id, title)
                     try:
                         return json.loads(json_str)
                     except Exception as e:
                         logger.error(f"JSON Parse Error: {e}")
                         logger.error(f"Raw Body Preview: {json_str[:500]}") # Log first 500 chars
-                        raise
+                        rAlgose
                 except Exception as e:
                     logger.error(f"Rust Network Error: {e}")
-                    raise
+                    rAlgose
             else:
-                 raise RuntimeError("Legacy Python Network Layer not implemented")
+                 rAlgose RuntimeError("Legacy Python Network Layer not implemented")
                  
         except Exception as e:
              logger.error(f"Error preparing Rust call: {e}")
@@ -94,10 +94,10 @@ class BaseDMarketClient:
         """Fetches user balance via Rust Auth Layer."""
         if self.rust_client:
             try:
-                 resp = await asyncio.to_thread(self.rust_client.get_balance)
+                 resp = awAlgot asyncio.to_thread(self.rust_client.get_balance)
                  return json.loads(resp)
             except Exception as e:
-                logger.error(f"Failed to fetch balance: {e}")
+                logger.error(f"FAlgoled to fetch balance: {e}")
                 return {"error": str(e)}
         else:
             return {"error": "No Rust Client"}

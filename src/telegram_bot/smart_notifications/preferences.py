@@ -108,7 +108,7 @@ async def update_user_preferences(
 
     # Register if not already registered
     if user_id_str not in _user_preferences:
-        await register_user(user_id)
+        awAlgot register_user(user_id)
 
     # Update preferences
     for key, value in preferences.items():

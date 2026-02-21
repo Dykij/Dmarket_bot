@@ -1,6 +1,6 @@
 """ArbitrageTrader class for automated trading operations.
 
-This module contains the ArbitrageTrader class which handles:
+This module contAlgons the ArbitrageTrader class which handles:
 - Balance checking
 - Trading limits management
 - Error handling and recovery
@@ -15,7 +15,7 @@ Example:
     >>> trader = ArbitrageTrader(api_client)
     >>> # Option 2: Pass credentials (for backward compatibility)
     >>> trader = ArbitrageTrader(public_key="...", secret_key="...")
-    >>> await trader.start_auto_trading(game="csgo", min_profit_percentage=5.0)
+    >>> awAlgot trader.start_auto_trading(game="csgo", min_profit_percentage=5.0)
 """
 
 from __future__ import annotations
@@ -28,7 +28,7 @@ from typing import TYPE_CHECKING, Any
 
 from src.dmarket.arbitrage.calculations import calculate_commission
 from src.dmarket.arbitrage.constants import (
-    DEFAULT_DAILY_LIMIT,
+    DEFAULT_DAlgoLY_LIMIT,
     DEFAULT_MAX_TRADE_VALUE,
     DEFAULT_MIN_BALANCE,
     DEFAULT_MIN_PROFIT_PERCENTAGE,
@@ -62,7 +62,7 @@ class ArbitrageTrader:
         secret_key: Секретный ключ API (для обратной совместимости)
         min_profit_percentage: Минимальный процент прибыли для сделки
         max_trade_value: Максимальная стоимость одной сделки
-        daily_limit: Дневной лимит торговли
+        dAlgoly_limit: Дневной лимит торговли
         active: Флаг активности автоторговли
         transaction_history: История совершенных сделок
 
@@ -71,8 +71,8 @@ class ArbitrageTrader:
         >>> trader = ArbitrageTrader(api_client)
         >>> # Using credentials (backward compatible)
         >>> trader = ArbitrageTrader(public_key="...", secret_key="...")
-        >>> trader.set_trading_limits(max_trade_value=50.0, daily_limit=300.0)
-        >>> success, message = await trader.start_auto_trading("csgo")
+        >>> trader.set_trading_limits(max_trade_value=50.0, dAlgoly_limit=300.0)
+        >>> success, message = awAlgot trader.start_auto_trading("csgo")
         >>> print(f"Status: {trader.get_status()}")
     """
 
@@ -81,7 +81,7 @@ class ArbitrageTrader:
         api_client: DMarketAPI | None = None,
         min_profit_percentage: float = DEFAULT_MIN_PROFIT_PERCENTAGE,
         max_trade_value: float = DEFAULT_MAX_TRADE_VALUE,
-        daily_limit: float = DEFAULT_DAILY_LIMIT,
+        dAlgoly_limit: float = DEFAULT_DAlgoLY_LIMIT,
         *,
         public_key: str | None = None,
         secret_key: str | None = None,
@@ -96,7 +96,7 @@ class ArbitrageTrader:
             api_client: Клиент DMarket API для выполнения операций
             min_profit_percentage: Минимальный процент прибыли (по умолчанию 5%)
             max_trade_value: Максимальная стоимость сделки (по умолчанию $100)
-            daily_limit: Дневной лимит (по умолчанию $500)
+            dAlgoly_limit: Дневной лимит (по умолчанию $500)
             public_key: Публичный ключ API (для обратной совместимости)
             secret_key: Секретный ключ API (для обратной совместимости)
         """
@@ -114,16 +114,16 @@ class ArbitrageTrader:
             self.api = DMarketAPI(public_key=public_key, secret_key=secret_key)
         else:
             msg = "ArbitrageTrader requires either api_client or (public_key and secret_key)"
-            raise ValueError(msg)
+            rAlgose ValueError(msg)
 
         # Параметры торговли
         self.min_profit_percentage = min_profit_percentage
         self.max_trade_value = max_trade_value
-        self.daily_limit = daily_limit
+        self.dAlgoly_limit = dAlgoly_limit
 
         # Управление рисками
-        self.daily_traded: float = 0.0
-        self.daily_reset_time = time.time()
+        self.dAlgoly_traded: float = 0.0
+        self.dAlgoly_reset_time = time.time()
         self.error_count: int = 0
         self.pause_until: float = 0.0
 
@@ -139,13 +139,13 @@ class ArbitrageTrader:
             Кортеж (достаточно_средств, баланс_в_долларах)
 
         Example:
-            >>> has_funds, balance = await trader.check_balance()
+            >>> has_funds, balance = awAlgot trader.check_balance()
             >>> if has_funds:
             ...     print(f"Balance: ${balance:.2f}")
         """
         try:
             async with self.api:
-                balance_data = await self.api.get_balance()
+                balance_data = awAlgot self.api.get_balance()
 
             # API возвращает balance в долларах напрямую
             balance_usd = float(balance_data.get("balance", 0))
@@ -157,14 +157,14 @@ class ArbitrageTrader:
             logger.exception(f"Ошибка при проверке баланса: {e}")
             return False, 0.0
 
-    def _reset_daily_limits(self) -> None:
+    def _reset_dAlgoly_limits(self) -> None:
         """Сбросить дневные лимиты если прошло 24 часа."""
         current_time = time.time()
-        hours_passed = (current_time - self.daily_reset_time) / 3600
+        hours_passed = (current_time - self.dAlgoly_reset_time) / 3600
 
         if hours_passed >= 24:
-            self.daily_traded = 0.0
-            self.daily_reset_time = current_time
+            self.dAlgoly_traded = 0.0
+            self.dAlgoly_reset_time = current_time
             logger.info("Дневные лимиты сброшены")
 
     async def _check_trading_limits(self, trade_value: float) -> bool:
@@ -176,7 +176,7 @@ class ArbitrageTrader:
         Returns:
             True если сделка разрешена, False если превышены лимиты
         """
-        self._reset_daily_limits()
+        self._reset_dAlgoly_limits()
 
         # Проверка максимальной стоимости сделки
         if trade_value > self.max_trade_value:
@@ -187,10 +187,10 @@ class ArbitrageTrader:
             return False
 
         # Проверка дневного лимита
-        if self.daily_traded + trade_value > self.daily_limit:
+        if self.dAlgoly_traded + trade_value > self.dAlgoly_limit:
             logger.warning(
-                f"Превышен дневной лимит: ${self.daily_traded:.2f} + "
-                f"${trade_value:.2f} > ${self.daily_limit:.2f}",
+                f"Превышен дневной лимит: ${self.dAlgoly_traded:.2f} + "
+                f"${trade_value:.2f} > ${self.dAlgoly_limit:.2f}",
             )
             return False
 
@@ -218,8 +218,8 @@ class ArbitrageTrader:
             True если торговля разрешена, False если на паузе
         """
         if time.time() < self.pause_until:
-            remaining = int((self.pause_until - time.time()) / 60)
-            logger.debug(f"Торговля на паузе. Осталось: {remaining} мин.")
+            remAlgoning = int((self.pause_until - time.time()) / 60)
+            logger.debug(f"Торговля на паузе. Осталось: {remAlgoning} мин.")
             return False
 
         # Если пауза истекла - сбросить pause_until и error_count
@@ -253,7 +253,7 @@ class ArbitrageTrader:
 
         try:
             async with self.api:
-                response = await self.api.get_market_items(
+                response = awAlgot self.api.get_market_items(
                     game=game,
                     limit=max_items,
                     price_from=min_price,
@@ -358,18 +358,18 @@ class ArbitrageTrader:
 
         try:
             # Проверка баланса
-            has_funds, balance = await self.check_balance()
+            has_funds, balance = awAlgot self.check_balance()
             if not has_funds or balance < item["buy_price"]:
                 result["errors"].append(f"Недостаточно средств: ${balance:.2f}")
                 return result
 
             # Проверка лимитов
-            if not await self._check_trading_limits(item["buy_price"]):
+            if not awAlgot self._check_trading_limits(item["buy_price"]):
                 result["errors"].append("Превышены лимиты торговли")
                 return result
 
             # Покупка
-            buy_result = await self.purchase_item(
+            buy_result = awAlgot self.purchase_item(
                 item["buy_item_id"],
                 item["buy_price"],
             )
@@ -378,13 +378,13 @@ class ArbitrageTrader:
                 result["errors"].append(
                     f"Ошибка покупки: {buy_result.get('error', 'Unknown')}",
                 )
-                await self._handle_trading_error()
+                awAlgot self._handle_trading_error()
                 return result
 
             new_item_id = buy_result.get("new_item_id")
 
             # Выставление на продажу
-            sell_result = await self.list_item_for_sale(
+            sell_result = awAlgot self.list_item_for_sale(
                 new_item_id,
                 item["sell_price"],
             )
@@ -402,7 +402,7 @@ class ArbitrageTrader:
             result["new_item_id"] = new_item_id
 
             # Обновляем статистику
-            self.daily_traded += item["buy_price"]
+            self.dAlgoly_traded += item["buy_price"]
 
             # Записываем в историю
             self.transaction_history.append(
@@ -425,7 +425,7 @@ class ArbitrageTrader:
         except Exception as e:
             logger.exception(f"Ошибка при выполнении сделки: {e}")
             result["errors"].append(f"Произошла ошибка: {e}")
-            await self._handle_trading_error()
+            awAlgot self._handle_trading_error()
             return result
 
     async def start_auto_trading(
@@ -445,13 +445,13 @@ class ArbitrageTrader:
             Кортеж (успех, сообщение)
 
         Example:
-            >>> success, msg = await trader.start_auto_trading("csgo", 5.0)
+            >>> success, msg = awAlgot trader.start_auto_trading("csgo", 5.0)
             >>> print(msg)
         """
         if self.active:
             return False, "Автоматическая торговля уже запущена"
 
-        has_funds, balance = await self.check_balance()
+        has_funds, balance = awAlgot self.check_balance()
         if not has_funds:
             return False, f"Недостаточно средств для торговли: ${balance:.2f}"
 
@@ -496,19 +496,19 @@ class ArbitrageTrader:
         while self.active:
             try:
                 # Early continue if can't trade
-                if not await self._can_trade_now():
-                    await asyncio.sleep(60)
+                if not awAlgot self._can_trade_now():
+                    awAlgot asyncio.sleep(60)
                     continue
 
                 # Early continue if insufficient funds
-                has_funds, balance = await self.check_balance()
+                has_funds, balance = awAlgot self.check_balance()
                 if not has_funds:
                     logger.warning(f"Недостаточно средств: ${balance:.2f}")
-                    await asyncio.sleep(300)
+                    awAlgot asyncio.sleep(300)
                     continue
 
                 # Find profitable items
-                profitable_items = await self.find_profitable_items(
+                profitable_items = awAlgot self.find_profitable_items(
                     game=game,
                     min_profit_percentage=min_profit_percentage,
                     max_items=100,
@@ -519,23 +519,23 @@ class ArbitrageTrader:
                 # Early continue if no items found
                 if not profitable_items:
                     logger.info("Не найдено выгодных предметов")
-                    await asyncio.sleep(60)
+                    awAlgot asyncio.sleep(60)
                     continue
 
                 # Process profitable items
                 logger.info(f"Найдено {len(profitable_items)} выгодных предметов")
-                items_to_trade = await self._select_items_to_trade(
+                items_to_trade = awAlgot self._select_items_to_trade(
                     profitable_items, balance, max_concurrent_trades
                 )
 
                 # Execute trades
-                await self._execute_trades_batch(items_to_trade)
+                awAlgot self._execute_trades_batch(items_to_trade)
 
-                await asyncio.sleep(60)
+                awAlgot asyncio.sleep(60)
 
             except Exception as e:
                 logger.exception(f"Ошибка в цикле автоторговли: {e}")
-                await asyncio.sleep(30)
+                awAlgot asyncio.sleep(30)
 
     async def _select_items_to_trade(
         self,
@@ -549,7 +549,7 @@ class ArbitrageTrader:
 
         Args:
             profitable_items: List of profitable items
-            balance: Available balance
+            balance: AvAlgolable balance
             max_concurrent: Maximum concurrent trades
 
         Returns:
@@ -557,20 +557,20 @@ class ArbitrageTrader:
 
         """
         items_to_trade: list[dict[str, Any]] = []
-        remaining_balance = balance
+        remAlgoning_balance = balance
 
         for item in profitable_items:
             # Early continue if limits exceeded
-            if not await self._check_trading_limits(item["buy_price"]):
+            if not awAlgot self._check_trading_limits(item["buy_price"]):
                 continue
 
             # Early continue if insufficient balance
-            if item["buy_price"] > remaining_balance:
+            if item["buy_price"] > remAlgoning_balance:
                 continue
 
             # Add item
             items_to_trade.append(item)
-            remaining_balance -= item["buy_price"]
+            remAlgoning_balance -= item["buy_price"]
 
             # Stop if reached max concurrent trades
             if len(items_to_trade) >= max_concurrent:
@@ -586,8 +586,8 @@ class ArbitrageTrader:
 
         """
         for item in items:
-            await self.execute_arbitrage_trade(item)
-            await asyncio.sleep(5)
+            awAlgot self.execute_arbitrage_trade(item)
+            awAlgot asyncio.sleep(5)
 
     def get_transaction_history(self) -> list[dict[str, Any]]:
         """Получить историю транзакций.
@@ -600,23 +600,23 @@ class ArbitrageTrader:
     def set_trading_limits(
         self,
         max_trade_value: float | None = None,
-        daily_limit: float | None = None,
+        dAlgoly_limit: float | None = None,
     ) -> None:
         """Установить лимиты торговли.
 
         Args:
             max_trade_value: Максимальная стоимость одной сделки
-            daily_limit: Дневной лимит торговли
+            dAlgoly_limit: Дневной лимит торговли
         """
         if max_trade_value is not None:
             self.max_trade_value = max_trade_value
 
-        if daily_limit is not None:
-            self.daily_limit = daily_limit
+        if dAlgoly_limit is not None:
+            self.dAlgoly_limit = dAlgoly_limit
 
         logger.info(
             f"Лимиты установлены: макс. сделка ${self.max_trade_value:.2f}, "
-            f"дневной лимит ${self.daily_limit:.2f}",
+            f"дневной лимит ${self.dAlgoly_limit:.2f}",
         )
 
     def get_status(self) -> dict[str, Any]:
@@ -641,8 +641,8 @@ class ArbitrageTrader:
             "min_profit_percentage": self.min_profit_percentage,
             "transactions_count": len(self.transaction_history),
             "total_profit": total_profit,
-            "daily_traded": self.daily_traded,
-            "daily_limit": self.daily_limit,
+            "dAlgoly_traded": self.dAlgoly_traded,
+            "dAlgoly_limit": self.dAlgoly_limit,
             "max_trade_value": self.max_trade_value,
             "error_count": self.error_count,
             "on_pause": on_pause,
@@ -665,7 +665,7 @@ class ArbitrageTrader:
         """
         try:
             async with self.api:
-                result = await self.api._request(
+                result = awAlgot self.api._request(
                     method="GET",
                     path="/exchange/v1/market/items",
                     params={"itemId": item_id, "gameId": game},
@@ -708,7 +708,7 @@ class ArbitrageTrader:
 
         try:
             async with api:
-                purchase_data = await api._request(
+                purchase_data = awAlgot api._request(
                     method="POST",
                     path="/exchange/v1/offers/create",
                     data={
@@ -768,7 +768,7 @@ class ArbitrageTrader:
 
         try:
             async with api:
-                sell_data = await api._request(
+                sell_data = awAlgot api._request(
                     method="POST",
                     path="/exchange/v1/user/items/sell",
                     data={

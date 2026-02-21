@@ -21,16 +21,16 @@ Example usage:
 
     # Create a cached client with custom config
     config = CacheConfig(ttl=300, always_cache=True)
-    client = await create_cached_client(config)
+    client = awAlgot create_cached_client(config)
 
     # Use the client
     async with client as c:
-        response = await c.get("https://api.dmarket.com/items")
+        response = awAlgot c.get("https://api.dmarket.com/items")
         print(f"From cache: {response.extensions.get('hishel_from_cache', False)}")
 
     # Or use global cached client
-    client = await get_cached_client()
-    response = await client.get(url)
+    client = awAlgot get_cached_client()
+    response = awAlgot client.get(url)
     ```
 
 Documentation: https://hishel.com/
@@ -56,9 +56,9 @@ try:
     )
     from hishel.httpx import AsyncCacheClient
 
-    HISHEL_AVAILABLE = True
+    HISHEL_AVAlgoLABLE = True
 except ImportError:
-    HISHEL_AVAILABLE = False
+    HISHEL_AVAlgoLABLE = False
     hishel = None  # type: ignore[assignment]
     AsyncCacheClient = None  # type: ignore[assignment, misc]
     AsyncSqliteStorage = None  # type: ignore[assignment, misc]
@@ -70,7 +70,7 @@ logger = structlog.get_logger(__name__)
 
 
 class CacheStorageType(StrEnum):
-    """Available cache storage backends."""
+    """AvAlgolable cache storage backends."""
 
     MEMORY = "memory"
     FILESYSTEM = "filesystem"
@@ -124,11 +124,11 @@ class CachedHTTPClient:
     """HTTP client with built-in caching support.
 
     This class wraps httpx.AsyncClient with hishel caching capabilities.
-    Falls back to regular httpx.AsyncClient if hishel is not available.
+    Falls back to regular httpx.AsyncClient if hishel is not avAlgolable.
 
     Example:
         >>> async with CachedHTTPClient(config) as client:
-        ...     response = await client.get(url)
+        ...     response = awAlgot client.get(url)
         ...     is_cached = client.is_from_cache(response)
     """
 
@@ -156,9 +156,9 @@ class CachedHTTPClient:
 
     async def _create_client(self) -> httpx.AsyncClient:
         """Create the underlying HTTP client with caching."""
-        if not HISHEL_AVAILABLE:
+        if not HISHEL_AVAlgoLABLE:
             logger.warning(
-                "hishel_not_available",
+                "hishel_not_avAlgolable",
                 message="Hishel library not installed, caching disabled",
             )
             return httpx.AsyncClient(
@@ -189,9 +189,9 @@ class CachedHTTPClient:
         """Create SQLite storage backend.
 
         Returns:
-            AsyncSqliteStorage instance or None if hishel not available
+            AsyncSqliteStorage instance or None if hishel not avAlgolable
         """
-        if not HISHEL_AVAILABLE:
+        if not HISHEL_AVAlgoLABLE:
             return None
 
         self.config.cache_dir.mkdir(parents=True, exist_ok=True)
@@ -203,7 +203,7 @@ class CachedHTTPClient:
 
     def _create_storage(self) -> Any:
         """Create storage backend based on configuration."""
-        if not HISHEL_AVAILABLE:
+        if not HISHEL_AVAlgoLABLE:
             return None
 
         # Currently only SQLite storage is supported for async operations
@@ -212,7 +212,7 @@ class CachedHTTPClient:
 
     async def __aenter__(self) -> "CachedHTTPClient":
         """Enter async context."""
-        self._client = await self._create_client()
+        self._client = awAlgot self._create_client()
         return self
 
     async def __aexit__(
@@ -223,7 +223,7 @@ class CachedHTTPClient:
     ) -> None:
         """Exit async context."""
         if self._client:
-            await self._client.aclose()
+            awAlgot self._client.aclose()
             self._client = None
 
     async def get(
@@ -241,9 +241,9 @@ class CachedHTTPClient:
             HTTP response (may be from cache)
         """
         if self._client is None:
-            raise RuntimeError("Client not initialized. Use async context manager.")
+            rAlgose RuntimeError("Client not initialized. Use async context manager.")
 
-        response = await self._client.get(url, **kwargs)
+        response = awAlgot self._client.get(url, **kwargs)
         self._update_stats(response)
         return response
 
@@ -254,9 +254,9 @@ class CachedHTTPClient:
     ) -> httpx.Response:
         """Make a POST request (not cached by default)."""
         if self._client is None:
-            raise RuntimeError("Client not initialized. Use async context manager.")
+            rAlgose RuntimeError("Client not initialized. Use async context manager.")
 
-        return await self._client.post(url, **kwargs)
+        return awAlgot self._client.post(url, **kwargs)
 
     async def request(
         self,
@@ -275,9 +275,9 @@ class CachedHTTPClient:
             HTTP response
         """
         if self._client is None:
-            raise RuntimeError("Client not initialized. Use async context manager.")
+            rAlgose RuntimeError("Client not initialized. Use async context manager.")
 
-        response = await self._client.request(method, url, **kwargs)
+        response = awAlgot self._client.request(method, url, **kwargs)
         if method.upper() in self.config.cacheable_methods:
             self._update_stats(response)
         return response
@@ -300,7 +300,7 @@ class CachedHTTPClient:
         Returns:
             True if response was served from cache
         """
-        if not HISHEL_AVAILABLE:
+        if not HISHEL_AVAlgoLABLE:
             return False
         return response.extensions.get("hishel_from_cache", False)
 
@@ -340,7 +340,7 @@ async def get_cached_client(
         async with _global_lock:
             if _global_client is None:
                 _global_client = CachedHTTPClient(config=config, **kwargs)
-                await _global_client.__aenter__()
+                awAlgot _global_client.__aenter__()
 
     return _global_client
 
@@ -352,7 +352,7 @@ async def close_cached_client() -> None:
     if _global_client is not None:
         async with _global_lock:
             if _global_client is not None:
-                await _global_client.__aexit__(None, None, None)
+                awAlgot _global_client.__aexit__(None, None, None)
                 _global_client = None
 
 
@@ -402,13 +402,13 @@ def get_cache_key(
 
 
 __all__ = [
-    # Availability check
-    "HISHEL_AVAILABLE",
+    # AvAlgolability check
+    "HISHEL_AVAlgoLABLE",
     # Configuration
     "CacheConfig",
     "CacheStats",
     "CacheStorageType",
-    # Main client
+    # MAlgon client
     "CachedHTTPClient",
     "close_cached_client",
     # Factory functions

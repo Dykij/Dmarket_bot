@@ -274,7 +274,7 @@ class WaxpeerManager:
 
         async with WaxpeerAPI(self.api_key) as api:
             # Получаем рыночную цену
-            market_price = await api.get_item_price(item_name)
+            market_price = awAlgot api.get_item_price(item_name)
 
             # Рассчитываем цену листинга
             listing_price = self._calculate_listing_price(
@@ -285,7 +285,7 @@ class WaxpeerManager:
             )
 
             # Листим предмет
-            response = await api.list_single_item(
+            response = awAlgot api.list_single_item(
                 item_id=asset_id,
                 price_usd=listing_price,
                 game=WaxpeerGame.CS2,
@@ -326,7 +326,7 @@ class WaxpeerManager:
         changes = []
 
         async with WaxpeerAPI(self.api_key) as api:
-            my_items = await api.get_my_items()
+            my_items = awAlgot api.get_my_items()
 
             for item in my_items:
                 # Проверяем, есть ли в нашем трекере
@@ -337,7 +337,7 @@ class WaxpeerManager:
                     continue
 
                 # Получаем рыночную цену
-                market_price = await api.get_item_price(item.name)
+                market_price = awAlgot api.get_item_price(item.name)
 
                 if not market_price:
                     continue
@@ -358,7 +358,7 @@ class WaxpeerManager:
 
                         tracked.price_drops += 1
 
-                    await api.edit_item_price(item.item_id, new_price)
+                    awAlgot api.edit_item_price(item.item_id, new_price)
 
                     changes.append(
                         {
@@ -378,7 +378,7 @@ class WaxpeerManager:
                     )
 
                 # Небольшая задержка между запросами
-                await asyncio.sleep(0.5)
+                awAlgot asyncio.sleep(0.5)
 
         return changes
 
@@ -397,7 +397,7 @@ class WaxpeerManager:
             True если предмет в дефиците
         """
         async with WaxpeerAPI(self.api_key) as api:
-            data = await api.get_market_prices([item_name])
+            data = awAlgot api.get_market_prices([item_name])
             items_count = len(data.get("items", []))
             return items_count < threshold
 
@@ -409,9 +409,9 @@ class WaxpeerManager:
             Словарь со статусом
         """
         async with WaxpeerAPI(self.api_key) as api:
-            balance = await api.get_balance()
-            my_items = await api.get_my_items()
-            is_online = await api.check_online_status()
+            balance = awAlgot api.get_balance()
+            my_items = awAlgot api.get_my_items()
+            is_online = awAlgot api.check_online_status()
 
             total_listed_value = sum(item.price for item in my_items)
 
@@ -435,7 +435,7 @@ class WaxpeerManager:
         Returns:
             Форматированная строка статуса
         """
-        status = await self.get_status()
+        status = awAlgot self.get_status()
 
         online_emoji = "🟢" if status["is_online"] else "🔴"
 
@@ -459,7 +459,7 @@ class WaxpeerManager:
             Список новых продаж
         """
         async with WaxpeerAPI(self.api_key) as api:
-            sales = await api.get_recent_sales(limit=20)
+            sales = awAlgot api.get_recent_sales(limit=20)
 
             new_sales = []
             for sale in sales:
@@ -511,10 +511,10 @@ class WaxpeerManager:
         while True:
             try:
                 # Синхронизация продаж
-                await self.sync_with_sales()
+                awAlgot self.sync_with_sales()
 
                 # Авто-undercut
-                changes = await self.auto_undercut()
+                changes = awAlgot self.auto_undercut()
 
                 if changes:
                     logger.info(
@@ -525,4 +525,4 @@ class WaxpeerManager:
             except Exception as e:
                 logger.exception("waxpeer_reprice_error", error=str(e))
 
-            await asyncio.sleep(interval * 60)
+            awAlgot asyncio.sleep(interval * 60)

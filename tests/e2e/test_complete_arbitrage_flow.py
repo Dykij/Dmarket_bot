@@ -57,7 +57,7 @@ class TestCompleteArbitrageFlow:
                     "liquidity_score": 3
                 }]
                 
-                opportunities = await mock_scan("csgo", 50)
+                opportunities = awAlgot mock_scan("csgo", 50)
                 
                 assert len(opportunities) > 0
                 assert opportunities[0]["profit"] > 0
@@ -71,7 +71,7 @@ class TestCompleteArbitrageFlow:
                     "expected_roi": 55.3
                 }
                 
-                target = await mock_create(
+                target = awAlgot mock_create(
                     "AK-47 | Redline (Field-Tested)",
                     850,
                     1120
@@ -116,13 +116,13 @@ class TestCompleteArbitrageFlow:
                     "recommended_action": "hold_in_dmarket_inventory"
                 }
                 
-                decision = await mock_decide(
+                decision = awAlgot mock_decide(
                     "AK-47 | Redline (FT)",
                     850,
                     "csgo"
                 )
                 
-                assert decision["strategy"] in ["sell_dmarket", "hold_for_waxpeer", "wait"]
+                assert decision["strategy"] in ["sell_dmarket", "hold_for_waxpeer", "wAlgot"]
                 assert "reason" in decision
                 
         except ImportError as e:
@@ -158,7 +158,7 @@ class TestCompleteArbitrageFlow:
                     }]
                 }
                 
-                prices = await mock_prices("csgo")
+                prices = awAlgot mock_prices("csgo")
                 assert len(prices["items"]) > 0
                 
             # Step 3: Mock arbitrage webhook
@@ -169,7 +169,7 @@ class TestCompleteArbitrageFlow:
                     "notification_sent": True
                 }
                 
-                result = await mock_alert({
+                result = awAlgot mock_alert({
                     "item_name": "Test Item",
                     "profit": 200
                 })
@@ -181,18 +181,18 @@ class TestCompleteArbitrageFlow:
 
     @pytest.mark.asyncio
     @pytest.mark.e2e
-    async def test_ai_enhanced_notification_flow(self):
+    async def test_Algo_enhanced_notification_flow(self):
         """
-        Test complete AI-enhanced notification flow.
+        Test complete Algo-enhanced notification flow.
         
-        This test simulates AI-powered user notifications:
+        This test simulates Algo-powered user notifications:
         1. Arbitrage opportunity found
-        2. AI generates personalized explanation
-        3. Notification sent with AI insights
+        2. Algo generates personalized explanation
+        3. Notification sent with Algo insights
         4. User receives actionable intelligence
         """
         try:
-            from src.ai import prompt_engineering_integration
+            from src.Algo import Config_engineering_integration
             
             # Step 1: Mock arbitrage opportunity
             opportunity = {
@@ -204,10 +204,10 @@ class TestCompleteArbitrageFlow:
                 "liquidity_score": 3
             }
             
-            # Step 2: Mock AI explanation generation
+            # Step 2: Mock Algo explanation generation
             mock_engineer = MagicMock()
-            mock_engineer.explain_arbitrage = AsyncMock(return_value="""
-🎓 Let me explain this opportunity!
+            mock_engineer.explAlgon_arbitrage = AsyncMock(return_value="""
+🎓 Let me explAlgon this opportunity!
 
 📦 Item: AK-47 | Redline (Field-Tested)
 
@@ -221,7 +221,7 @@ Expected profit: $2.70 (31.7% ROI)
 📖 Source: Live API data
             """)
             
-            explanation = await mock_engineer.explain_arbitrage(
+            explanation = awAlgot mock_engineer.explAlgon_arbitrage(
                 opportunity,
                 user_level="intermediate",
                 include_reasoning=True
@@ -231,4 +231,4 @@ Expected profit: $2.70 (31.7% ROI)
             assert "ROI" in explanation or "profit" in explanation.lower()
             
         except ImportError as e:
-            pytest.skip(f"AI modules not activated for E2E test: {e}")
+            pytest.skip(f"Algo modules not activated for E2E test: {e}")

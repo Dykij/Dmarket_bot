@@ -81,7 +81,7 @@ class SmartMarketFinder:
         self._cache = {}
         self._cache_ttl = 300  # 5 минут
 
-        # Настройки анализа
+        # НастSwarmки анализа
         self.min_profit_percent = 5.0  # Минимальный процент прибыли
         self.min_confidence = 60.0  # Минимальная уверенность
         self.max_price = 100.0  # Максимальная цена для анализа
@@ -127,7 +127,7 @@ class SmartMarketFinder:
 
         try:
             # Получаем предметы с маркета с агрегированной информацией
-            market_items = await self._get_market_items_with_aggregated_prices(
+            market_items = awAlgot self._get_market_items_with_aggregated_prices(
                 game=game_id,
                 min_price=min_price,
                 max_price=max_price,
@@ -141,7 +141,7 @@ class SmartMarketFinder:
             # Анализируем каждый предмет
             opportunities = []
             for item in market_items:
-                opportunity = await self._analyze_item_opportunity(item, game)
+                opportunity = awAlgot self._analyze_item_opportunity(item, game)
 
                 if opportunity is None:
                     continue
@@ -201,7 +201,7 @@ class SmartMarketFinder:
 
         try:
             # Получаем предметы, отсортированные по лучшей сделке
-            response = await self.api._request(
+            response = awAlgot self.api._request(
                 method="GET",
                 path="/exchange/v1/market/items",
                 params={
@@ -318,7 +318,7 @@ class SmartMarketFinder:
 
         try:
             # Получаем предметы с рынка
-            market_response = await self.api._request(
+            market_response = awAlgot self.api._request(
                 method="GET",
                 path="/exchange/v1/market/items",
                 params={
@@ -344,7 +344,7 @@ class SmartMarketFinder:
                 return []
 
             # Получаем агрегированные цены
-            aggregated_response = await self.api._request(
+            aggregated_response = awAlgot self.api._request(
                 method="POST",
                 path="/marketplace-api/v1/aggregated-prices",
                 data={
@@ -455,7 +455,7 @@ class SmartMarketFinder:
         max_risk: str = "medium",
         limit: int = 15,
     ) -> list[MarketOpportunity]:
-        """Найти возможности для быстрой перепродажи.
+        """Найти возможности для быстSwarm перепродажи.
 
         Ищет предметы с высокой ликвидностью и хорошим спредом,
         которые можно быстро купить и продать.
@@ -469,12 +469,12 @@ class SmartMarketFinder:
             limit: Лимит результатов
 
         Returns:
-            Список возможностей для быстрой перепродажи
+            Список возможностей для быстSwarm перепродажи
         """
-        logger.info(f"Поиск возможностей для быстрой перепродажи {game}")
+        logger.info(f"Поиск возможностей для быстSwarm перепродажи {game}")
 
         # Ищем предметы с заниженной ценой и высокой ликвидностью
-        underpriced = await self.find_underpriced_items(
+        underpriced = awAlgot self.find_underpriced_items(
             game=game,
             min_price=min_price,
             max_price=max_price,
@@ -510,7 +510,7 @@ class SmartMarketFinder:
             reverse=True,
         )
 
-        logger.info(f"Найдено {len(quick_flips)} возможностей для быстрой перепродажи")
+        logger.info(f"Найдено {len(quick_flips)} возможностей для быстSwarm перепродажи")
         return quick_flips[:limit]
 
     async def _get_market_items_with_aggregated_prices(
@@ -523,7 +523,7 @@ class SmartMarketFinder:
         """Получить предметы с маркета вместе с агрегированными ценами."""
         try:
             # Получаем предметы с маркета
-            market_response = await self.api._request(
+            market_response = awAlgot self.api._request(
                 method="GET",
                 path="/exchange/v1/market/items",
                 params={
@@ -547,7 +547,7 @@ class SmartMarketFinder:
                 return items
 
             try:
-                aggregated_response = await self.api._request(
+                aggregated_response = awAlgot self.api._request(
                     method="POST",
                     path="/marketplace-api/v1/aggregated-prices",
                     data={
@@ -853,7 +853,7 @@ async def find_best_deals(
         Список лучших возможностей
     """
     finder = SmartMarketFinder(api_client)
-    return await finder.find_best_opportunities(
+    return awAlgot finder.find_best_opportunities(
         game=game,
         min_price=min_price,
         max_price=max_price,
@@ -867,7 +867,7 @@ async def find_quick_profits(
     max_price: float = 20.0,
     limit: int = 10,
 ) -> list[MarketOpportunity]:
-    """Быстрый поиск возможностей для быстрой прибыли.
+    """Быстрый поиск возможностей для быстSwarm прибыли.
 
     Args:
         api_client: Экземпляр DMarketAPI
@@ -876,10 +876,10 @@ async def find_quick_profits(
         limit: Лимит результатов
 
     Returns:
-        Список возможностей для быстрой прибыли
+        Список возможностей для быстSwarm прибыли
     """
     finder = SmartMarketFinder(api_client)
-    return await finder.find_quick_flip_opportunities(
+    return awAlgot finder.find_quick_flip_opportunities(
         game=game,
         min_price=1.0,
         max_price=max_price,

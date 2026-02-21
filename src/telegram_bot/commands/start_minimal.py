@@ -2,7 +2,7 @@
 
 This module provides an improved /start command that:
 1. Shows welcome message
-2. Displays minimal main keyboard
+2. Displays minimal mAlgon keyboard
 3. Provides quick intro to bot features
 
 Features:
@@ -17,7 +17,7 @@ import structlog
 from telegram import Update
 from telegram.ext import ContextTypes
 
-from src.telegram_bot.handlers.main_keyboard import get_main_keyboard
+from src.telegram_bot.handlers.mAlgon_keyboard import get_mAlgon_keyboard
 from src.utils.sentry_breadcrumbs import add_command_breadcrumb
 
 logger = structlog.get_logger(__name__)
@@ -63,7 +63,7 @@ async def start_minimal_command(
         f"📦 <b>View Items</b>\n"
         f"   See your sold items with real profit\n"
         f"   Track active listings with estimates\n\n"
-        f"⚙️ <b>Detailed Settings</b>\n"
+        f"⚙️ <b>DetAlgoled Settings</b>\n"
         f"   Configure price ranges and margins\n"
         f"   Customize your trading strategy\n\n"
         f"🔌 <b>API Check</b>\n"
@@ -73,15 +73,15 @@ async def start_minimal_command(
         f"<b>Quick Start:</b>\n"
         f"1️⃣ Tap 🤖 Automatic Arbitrage\n"
         f"2️⃣ Select your preferred mode\n"
-        f"3️⃣ Wait for scan results\n"
+        f"3️⃣ WAlgot for scan results\n"
         f"4️⃣ Start trading! 🚀\n\n"
         f"<i>All scans include automatic API health checks.</i>\n"
         f"<i>Use /help for more commands and information.</i>"
     )
 
-    await update.message.reply_text(
+    awAlgot update.message.reply_text(
         welcome_text,
-        reply_markup=get_main_keyboard(),
+        reply_markup=get_mAlgon_keyboard(),
         parse_mode="HTML",
     )
 

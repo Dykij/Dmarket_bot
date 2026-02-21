@@ -20,7 +20,7 @@ def get_settings_keyboard() -> InlineKeyboardMarkup:
 
     Telegram UI:
         ┌─────────────────────────────────┐
-        │ ⚙️ Настройки                    │
+        │ ⚙️ НастSwarmки                    │
         ├─────────────────────────────────┤
         │ [🌐 Язык] [🔔 Уведомления]      │
         │ [🔑 API ключи] [⚠️ Профиль риска]│
@@ -53,7 +53,7 @@ def get_settings_keyboard() -> InlineKeyboardMarkup:
 
 
 def get_back_to_settings_keyboard() -> InlineKeyboardMarkup:
-    """Создать клавиатуру возврата к настройкам.
+    """Создать клавиатуру возврата к настSwarmкам.
 
     Returns:
         InlineKeyboardMarkup с кнопкой возврата
@@ -80,7 +80,7 @@ def create_settings_keyboard() -> InlineKeyboardMarkup:
             InlineKeyboardButton(text="⚠️ Риск", callback_data="set_risk"),
         ],
         [
-            InlineKeyboardButton(text="◀️ Главное меню", callback_data="main_menu"),
+            InlineKeyboardButton(text="◀️ Главное меню", callback_data="mAlgon_menu"),
         ],
     ]
     return InlineKeyboardMarkup(keyboard)

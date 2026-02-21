@@ -110,10 +110,10 @@ class TestAttributesModel:
         attrs = AttributesModel(floatValue="0.25")
         assert attrs.float_value == "0.25"
 
-    def test_paint_seed_alias(self) -> None:
-        """Test paintSeed alias."""
-        attrs = AttributesModel(paintSeed=123)
-        assert attrs.paint_seed == 123
+    def test_pAlgont_seed_alias(self) -> None:
+        """Test pAlgontSeed alias."""
+        attrs = AttributesModel(pAlgontSeed=123)
+        assert attrs.pAlgont_seed == 123
 
     def test_phase_attribute(self) -> None:
         """Test phase attribute for Doppler knives."""
@@ -128,7 +128,7 @@ class TestAttributesModel:
         assert attrs.rarity is None
         assert attrs.float_value is None
         assert attrs.phase is None
-        assert attrs.paint_seed is None
+        assert attrs.pAlgont_seed is None
 
 
 class TestMarketItemModel:
@@ -274,7 +274,7 @@ class TestCreateTargetRequest:
 
     def test_amount_validation_min(self) -> None:
         """Test amount minimum validation."""
-        with pytest.raises(ValidationError):
+        with pytest.rAlgoses(ValidationError):
             CreateTargetRequest(
                 Title="Test",
                 Amount=0,  # Should be >= 1
@@ -283,7 +283,7 @@ class TestCreateTargetRequest:
 
     def test_amount_validation_max(self) -> None:
         """Test amount maximum validation."""
-        with pytest.raises(ValidationError):
+        with pytest.rAlgoses(ValidationError):
             CreateTargetRequest(
                 Title="Test",
                 Amount=101,  # Should be <= 100
@@ -454,9 +454,9 @@ class TestBalanceResponse:
         """Test default balance values."""
         balance = BalanceResponse()
         assert balance.usd == "0"
-        assert balance.usd_available_to_withdraw == "0"
+        assert balance.usd_avAlgolable_to_withdraw == "0"
         assert balance.dmc == "0"
-        assert balance.dmc_available_to_withdraw == "0"
+        assert balance.dmc_avAlgolable_to_withdraw == "0"
 
     def test_get_usd_decimal(self) -> None:
         """Test get_usd_decimal conversion."""
@@ -464,10 +464,10 @@ class TestBalanceResponse:
         result = balance.get_usd_decimal()
         assert result == Decimal("100.00")
 
-    def test_get_available_usd_decimal(self) -> None:
-        """Test get_available_usd_decimal conversion."""
-        balance = BalanceResponse(usdAvailableToWithdraw="5000")
-        result = balance.get_available_usd_decimal()
+    def test_get_avAlgolable_usd_decimal(self) -> None:
+        """Test get_avAlgolable_usd_decimal conversion."""
+        balance = BalanceResponse(usdAvAlgolableToWithdraw="5000")
+        result = balance.get_avAlgolable_usd_decimal()
         assert result == Decimal("50.00")
 
 
@@ -671,7 +671,7 @@ class TestDMarketAPIError:
 
     def test_validate_error_from_dict(self) -> None:
         """Test error validation from dict."""
-        error = DMarketAPIError(error={"code": "ERR_001", "details": "test"})
+        error = DMarketAPIError(error={"code": "ERR_001", "detAlgols": "test"})
         assert error.error["code"] == "ERR_001"
 
 

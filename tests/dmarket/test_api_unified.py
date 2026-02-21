@@ -91,7 +91,7 @@ async def test_api_initialization():
     api = DMarketAPI(TEST_PUBLIC_KEY, TEST_SECRET_KEY)
     assert api._public_key == TEST_PUBLIC_KEY
     assert api._secret_key == TEST_SECRET_KEY
-    await api._close_client()  # Закрываем клиент после теста
+    awAlgot api._close_client()  # Закрываем клиент после теста
 
 
 @pytest.mark.asyncio()
@@ -116,13 +116,13 @@ async def test_get_user_balance(api, mock_httpx_client, balance_response):
     mock_response = MagicMock(spec=httpx.Response)
     mock_response.status_code = 200
     mock_response.json.return_value = balance_response
-    mock_response.raise_for_status = MagicMock()
+    mock_response.rAlgose_for_status = MagicMock()
 
     # Настраиваем мок клиента для возврата нашего ответа
     mock_httpx_client.get = AsyncMock(return_value=mock_response)
 
     # Вызываем тестируемый метод
-    result = await api.get_user_balance()
+    result = awAlgot api.get_user_balance()
 
     # Проверяем результат
     assert result is not None
@@ -139,7 +139,7 @@ async def test_get_user_balance_error(api, mock_httpx_client):
     mock_response.status_code = 401
     mock_response.json.return_value = {"error": {"message": "Unauthorized"}}
     mock_response.text = "Unauthorized"
-    mock_response.raise_for_status = MagicMock(
+    mock_response.rAlgose_for_status = MagicMock(
         side_effect=httpx.HTTPStatusError(
             "401 Unauthorized", request=MagicMock(), response=mock_response
         )
@@ -148,7 +148,7 @@ async def test_get_user_balance_error(api, mock_httpx_client):
     mock_httpx_client.get = AsyncMock(return_value=mock_response)
 
     # Вызываем тестируемый метод - не ожидаем исключения, API возвращает error в ответе
-    result = await api.get_user_balance()
+    result = awAlgot api.get_user_balance()
     # Проверяем что результат содержит ошибку или пустой баланс
     assert result.get("error") is not None or result.get("balance") == 0.0
 
@@ -163,13 +163,13 @@ async def test_get_market_items(api, mock_httpx_client, market_items_response):
     mock_response = MagicMock(spec=httpx.Response)
     mock_response.status_code = 200
     mock_response.json.return_value = market_items_response
-    mock_response.raise_for_status = MagicMock()
+    mock_response.rAlgose_for_status = MagicMock()
 
     # Настраиваем мок клиента
     mock_httpx_client.get = AsyncMock(return_value=mock_response)
 
     # Вызываем тестируемый метод
-    result = await api.get_market_items(game="csgo", limit=2)
+    result = awAlgot api.get_market_items(game="csgo", limit=2)
 
     # Проверяем результат
     assert result is not None
@@ -190,7 +190,7 @@ async def test_handle_rate_limit(api, mock_httpx_client):
     mock_response_429.json.return_value = {"error": {"message": "Rate limit exceeded"}}
     mock_response_429.text = "Rate limit exceeded"
     mock_response_429.headers = {"Retry-After": "1"}
-    mock_response_429.raise_for_status = MagicMock(
+    mock_response_429.rAlgose_for_status = MagicMock(
         side_effect=httpx.HTTPStatusError(
             "429 Too Many Requests",
             request=MagicMock(),
@@ -201,7 +201,7 @@ async def test_handle_rate_limit(api, mock_httpx_client):
     mock_response_200 = MagicMock(spec=httpx.Response)
     mock_response_200.status_code = 200
     mock_response_200.json.return_value = {"success": True}
-    mock_response_200.raise_for_status = MagicMock()
+    mock_response_200.rAlgose_for_status = MagicMock()
 
     # Настраиваем последовательность ответов
     mock_httpx_client.get = AsyncMock(
@@ -210,15 +210,15 @@ async def test_handle_rate_limit(api, mock_httpx_client):
 
     # Настраиваем API для быстрых повторных попыток
     api.max_retries = 1
-    original_limiter = api.rate_limiter.wait_if_needed
+    original_limiter = api.rate_limiter.wAlgot_if_needed
     # Отключаем rate limiter для теста
-    api.rate_limiter.wait_if_needed = AsyncMock()
+    api.rate_limiter.wAlgot_if_needed = AsyncMock()
 
     # Вызываем метод
-    result = await api._request("GET", "/test", {})
+    result = awAlgot api._request("GET", "/test", {})
 
     # Восстанавливаем rate limiter
-    api.rate_limiter.wait_if_needed = original_limiter
+    api.rate_limiter.wAlgot_if_needed = original_limiter
 
     # Проверяем результат
     assert mock_httpx_client.get.call_count >= 1
@@ -236,7 +236,7 @@ async def test_api_timeout(api, mock_httpx_client):
     api.max_retries = 0
 
     # Вызываем метод и проверяем результат с ошибкой
-    result = await api._request("GET", "/test", {})
+    result = awAlgot api._request("GET", "/test", {})
     # API обрабатывает timeout и возвращает пустой результат или ошибку
     assert result == {} or "error" in result
 
@@ -256,11 +256,11 @@ async def test_parse_balance_format1(api, mock_httpx_client):
     mock_response = MagicMock(spec=httpx.Response)
     mock_response.status_code = 200
     mock_response.json.return_value = balance_data
-    mock_response.raise_for_status = MagicMock()
+    mock_response.rAlgose_for_status = MagicMock()
 
     mock_httpx_client.get = AsyncMock(return_value=mock_response)
 
-    result = await api.get_user_balance()
+    result = awAlgot api.get_user_balance()
     assert result is not None
     # API парсит баланс и возвращает в нужном формате
     assert "balance" in result or "usd" in result
@@ -277,11 +277,11 @@ async def test_parse_balance_format2(api, mock_httpx_client):
     mock_response = MagicMock(spec=httpx.Response)
     mock_response.status_code = 200
     mock_response.json.return_value = balance_data
-    mock_response.raise_for_status = MagicMock()
+    mock_response.rAlgose_for_status = MagicMock()
 
     mock_httpx_client.get = AsyncMock(return_value=mock_response)
 
-    result = await api.get_user_balance()
+    result = awAlgot api.get_user_balance()
     assert result is not None
     assert "balance" in result or "USD" in result
 
@@ -295,11 +295,11 @@ async def test_parse_balance_empty(api, mock_httpx_client):
     mock_response = MagicMock(spec=httpx.Response)
     mock_response.status_code = 200
     mock_response.json.return_value = balance_data
-    mock_response.raise_for_status = MagicMock()
+    mock_response.rAlgose_for_status = MagicMock()
 
     mock_httpx_client.get = AsyncMock(return_value=mock_response)
 
-    result = await api.get_user_balance()
+    result = awAlgot api.get_user_balance()
     # Проверяем что возвращается результат
     # (API парсит пустой ответ и возвращает дефолтные значения)
     assert result is not None

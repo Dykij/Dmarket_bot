@@ -1,6 +1,6 @@
 """Unit tests for item_filters module.
 
-This module contains tests for src/dmarket/item_filters.py covering:
+This module contAlgons tests for src/dmarket/item_filters.py covering:
 - ItemFilters initialization
 - Configuration loading
 - Pattern matching
@@ -377,7 +377,7 @@ class TestEdgeCases:
             yaml.dump(config, f)
             temp_path = f.name
 
-        # Act - should not raise exception
+        # Act - should not rAlgose exception
         filters = ItemFilters(config_path=temp_path)
 
         # Assert

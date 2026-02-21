@@ -241,7 +241,7 @@ https://api.waxpeer.com/v1
 {
   "success": true,
   "listed": 1,
-  "failed": 0
+  "fAlgoled": 0
 }
 ```
 
@@ -452,7 +452,7 @@ BASE_URL = "https://api.waxpeer.com/v1"
 
 async def get_balance():
     async with httpx.AsyncClient() as client:
-        response = await client.get(
+        response = awAlgot client.get(
             f"{BASE_URL}/user",
             params={"api": API_KEY}
         )
@@ -462,7 +462,7 @@ async def get_balance():
 
 async def get_item_price(item_name: str):
     async with httpx.AsyncClient() as client:
-        response = await client.get(
+        response = awAlgot client.get(
             f"{BASE_URL}/get-items-list",
             params={
                 "api": API_KEY,
@@ -477,7 +477,7 @@ async def get_item_price(item_name: str):
 async def list_item(item_id: str, price_usd: float):
     price_mils = int(price_usd * 1000)
     async with httpx.AsyncClient() as client:
-        response = await client.post(
+        response = awAlgot client.post(
             f"{BASE_URL}/list-items-steam",
             params={"api": API_KEY},
             json={
@@ -498,7 +498,7 @@ async def check_arbitrage(dmarket_price: Decimal, item_name: str):
     """Проверка арбитражной возможности DMarket -> Waxpeer."""
 
     # Получаем цену на Waxpeer
-    waxpeer_price = await get_item_price(item_name)
+    waxpeer_price = awAlgot get_item_price(item_name)
 
     if not waxpeer_price:
         return None
@@ -553,9 +553,9 @@ async def check_arbitrage(dmarket_price: Decimal, item_name: str):
 **Обработка ошибок:**
 ```python
 try:
-    data = await waxpeer_api.get_user()
+    data = awAlgot waxpeer_api.get_user()
 except WaxpeerRateLimitError:
-    await asyncio.sleep(60)  # Подождать минуту
+    awAlgot asyncio.sleep(60)  # Подождать минуту
 except WaxpeerAuthError:
     logger.error("Invalid API key")
 except WaxpeerAPIError as e:
@@ -573,7 +573,7 @@ except WaxpeerAPIError as e:
 WAXPEER_ENABLED=true
 WAXPEER_API_KEY=your_api_key_here
 
-# Настройки наценок
+# НастSwarmки наценок
 WAXPEER_MARKUP=10       # Обычные скины (%)
 WAXPEER_RARE_MARKUP=25  # Редкие скины (%)
 WAXPEER_ULTRA_MARKUP=40 # JACKPOT скины (%)
@@ -598,14 +598,14 @@ config = Config.load()
 
 async with WaxpeerAPI(api_key=config.waxpeer.api_key) as api:
     # Получить баланс
-    balance = await api.get_balance()
+    balance = awAlgot api.get_balance()
     print(f"Баланс: ${balance.wallet}")
 
     # Получить цены
-    prices = await api.get_items_list(["AK-47 | Redline (Field-Tested)"])
+    prices = awAlgot api.get_items_list(["AK-47 | Redline (Field-Tested)"])
 
     # Выставить предмет
-    await api.list_single_item("12345", price_usd=10.50)
+    awAlgot api.list_single_item("12345", price_usd=10.50)
 ```
 
 ---

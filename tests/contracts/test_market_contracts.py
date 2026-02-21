@@ -1,6 +1,6 @@
 """Contract tests for DMarket Marketplace API endpoints.
 
-This module contains consumer-driven contract tests for marketplace-related
+This module contAlgons consumer-driven contract tests for marketplace-related
 endpoints of the DMarket API.
 
 Tested endpoints:
@@ -16,11 +16,11 @@ from __future__ import annotations
 
 import pytest
 
-from tests.contracts.conftest import DMarketContracts, PactMatchers, is_pact_available
+from tests.contracts.conftest import DMarketContracts, PactMatchers, is_pact_avAlgolable
 
-# Skip all tests if Pact is not available
+# Skip all tests if Pact is not avAlgolable
 pytestmark = pytest.mark.skipif(
-    not is_pact_available(),
+    not is_pact_avAlgolable(),
     reason="pact-python not installed",
 )
 
@@ -75,7 +75,7 @@ class TestMarketItemsContract:
 
         Verifies that:
         - Price filters (priceFrom, priceTo) are accepted
-        - Response structure remains consistent
+        - Response structure remAlgons consistent
         """
         expected_body = dmarket_contracts.market_items_response()
 
@@ -203,7 +203,7 @@ class TestAggregatedPricesContract:
 
         Verifies that:
         - Multiple items can be queried in single request
-        - Response contains data for each requested item
+        - Response contAlgons data for each requested item
         """
         expected_body = {
             "aggregatedPrices": pact_matchers.each_like(
@@ -266,7 +266,7 @@ class TestOffersByTitleContract:
 
         Verifies that:
         - Consumer can query offers for a specific item title
-        - Response contains list of offers with prices
+        - Response contAlgons list of offers with prices
         """
         expected_body = {
             "objects": pact_matchers.each_like(

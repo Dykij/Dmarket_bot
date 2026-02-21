@@ -47,7 +47,7 @@ class TestSmartBidder:
             return_value={"objects": [{"title": "AK-47 | Redline", "price": {"USD": "2500"}}]}
         )
 
-        result = await bidder.place_competitive_bid(
+        result = awAlgot bidder.place_competitive_bid(
             item_title="AK-47 | Redline",
             max_price_usd=25.0,
             expected_sell_price_usd=30.0,
@@ -63,7 +63,7 @@ class TestSmartBidder:
             return_value={"objects": [{"title": "AK-47 | Redline", "price": {"USD": "2500"}}]}
         )
 
-        result = await bidder.adjust_existing_bids("AK-47 | Redline")
+        result = awAlgot bidder.adjust_existing_bids("AK-47 | Redline")
         assert isinstance(result, dict)
 
     def test_get_bid_stats(self, bidder):

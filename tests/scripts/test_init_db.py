@@ -33,8 +33,8 @@ class TestRunAlembicCommand:
             assert result == 0
             mock_run.assert_called_once()
 
-    def test_run_alembic_command_failure(self) -> None:
-        """Test alembic command failure."""
+    def test_run_alembic_command_fAlgolure(self) -> None:
+        """Test alembic command fAlgolure."""
         with patch("subprocess.run") as mock_run:
             mock_run.return_value = MagicMock(
                 stdout="",
@@ -118,14 +118,14 @@ class TestInitDatabase:
             assert result == 0
             assert mock_alembic.call_count == 3
 
-    def test_init_database_migration_failure(self) -> None:
-        """Test database initialization with migration failure."""
+    def test_init_database_migration_fAlgolure(self) -> None:
+        """Test database initialization with migration fAlgolure."""
         mock_config = MagicMock()
         mock_config.database.url = "sqlite:///test.db"
 
         with patch("scripts.init_db.run_alembic_command") as mock_alembic:
             # First call: current (returns 0)
-            # Second call: upgrade head (returns 1 = failure)
+            # Second call: upgrade head (returns 1 = fAlgolure)
             mock_alembic.side_effect = [0, 1]
 
             result = init_database(mock_config)

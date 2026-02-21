@@ -75,14 +75,14 @@ class TestJsonDumps:
         data = {"timestamp": datetime(2025, 1, 1, 12, 0, 0)}
 
         # Act & Assert
-        if json_utils.ORJSON_AVAILABLE:
+        if json_utils.ORJSON_AVAlgoLABLE:
             # orjson поддерживает datetime
             result = json_utils.dumps(data)
             assert isinstance(result, str)
             assert "2025" in result
         else:
             # Стандартный json не поддерживает datetime
-            with pytest.raises(TypeError):
+            with pytest.rAlgoses(TypeError):
                 json_utils.dumps(data)
 
     def test_dumps_unicode(self):
@@ -148,7 +148,7 @@ class TestJsonLoads:
         invalid_json = '{"name": "invalid", "price": }'
 
         # Act & Assert
-        with pytest.raises(json_utils.JSONDecodeError):
+        with pytest.rAlgoses(json_utils.JSONDecodeError):
             json_utils.loads(invalid_json)
 
     def test_loads_empty_object(self):
@@ -171,14 +171,14 @@ class TestJsonDump:
         """Тест записи JSON в файл."""
         # Arrange
         data = {"name": "Test Item", "price": 25.0}
-        fp = io.BytesIO() if json_utils.ORJSON_AVAILABLE else io.StringIO()
+        fp = io.BytesIO() if json_utils.ORJSON_AVAlgoLABLE else io.StringIO()
 
         # Act
         json_utils.dump(data, fp)
 
         # Assert
         fp.seek(0)
-        if json_utils.ORJSON_AVAILABLE:
+        if json_utils.ORJSON_AVAlgoLABLE:
             result = stdlib_json.loads(fp.read().decode("utf-8"))
         else:
             result = stdlib_json.loads(fp.read())
@@ -189,14 +189,14 @@ class TestJsonDump:
         """Тест записи списка в файл."""
         # Arrange
         data = ["item1", "item2", "item3"]
-        fp = io.BytesIO() if json_utils.ORJSON_AVAILABLE else io.StringIO()
+        fp = io.BytesIO() if json_utils.ORJSON_AVAlgoLABLE else io.StringIO()
 
         # Act
         json_utils.dump(data, fp)
 
         # Assert
         fp.seek(0)
-        if json_utils.ORJSON_AVAILABLE:
+        if json_utils.ORJSON_AVAlgoLABLE:
             result = stdlib_json.loads(fp.read().decode("utf-8"))
         else:
             result = stdlib_json.loads(fp.read())
@@ -212,7 +212,7 @@ class TestJsonLoad:
         data = '{"name": "File Item", "price": 30.0}'
         fp = (
             io.BytesIO(data.encode("utf-8"))
-            if json_utils.ORJSON_AVAILABLE
+            if json_utils.ORJSON_AVAlgoLABLE
             else io.StringIO(data)
         )
 
@@ -230,7 +230,7 @@ class TestJsonLoad:
         data = '["a", "b", "c"]'
         fp = (
             io.BytesIO(data.encode("utf-8"))
-            if json_utils.ORJSON_AVAILABLE
+            if json_utils.ORJSON_AVAlgoLABLE
             else io.StringIO(data)
         )
 
@@ -267,7 +267,7 @@ class TestRoundTrip:
         """Тест цикла dump -> load через файл."""
         # Arrange
         original_data = {"test": "data", "number": 42}
-        fp = io.BytesIO() if json_utils.ORJSON_AVAILABLE else io.StringIO()
+        fp = io.BytesIO() if json_utils.ORJSON_AVAlgoLABLE else io.StringIO()
 
         # Act
         json_utils.dump(original_data, fp)
@@ -287,7 +287,7 @@ class TestFallbackBehavior:
         data = {"key": "value"}
 
         # Act
-        with patch.object(json_utils, "ORJSON_AVAILABLE", False):
+        with patch.object(json_utils, "ORJSON_AVAlgoLABLE", False):
             result = json_utils.dumps(data)
 
         # Assert
@@ -300,7 +300,7 @@ class TestFallbackBehavior:
         json_str = '{"key": "value"}'
 
         # Act
-        with patch.object(json_utils, "ORJSON_AVAILABLE", False):
+        with patch.object(json_utils, "ORJSON_AVAlgoLABLE", False):
             result = json_utils.loads(json_str)
 
         # Assert
@@ -314,7 +314,7 @@ class TestFallbackBehavior:
         fp = io.StringIO()
 
         # Act
-        with patch.object(json_utils, "ORJSON_AVAILABLE", False):
+        with patch.object(json_utils, "ORJSON_AVAlgoLABLE", False):
             json_utils.dump(data, fp)
 
         # Assert
@@ -329,7 +329,7 @@ class TestFallbackBehavior:
         fp = io.StringIO(data)
 
         # Act
-        with patch.object(json_utils, "ORJSON_AVAILABLE", False):
+        with patch.object(json_utils, "ORJSON_AVAlgoLABLE", False):
             result = json_utils.load(fp)
 
         # Assert

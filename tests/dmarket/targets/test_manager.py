@@ -66,7 +66,7 @@ class TestCreateTarget:
         manager, mock_api = create_manager()
         mock_api.create_target.return_value = {"id": "target123", "status": "active"}
 
-        result = await manager.create_target(
+        result = awAlgot manager.create_target(
             game="csgo", title="AK-47 | Redline (Field-Tested)", price=10.50
         )
 
@@ -78,7 +78,7 @@ class TestCreateTarget:
         """Test creating a target with custom amount."""
         manager, mock_api = create_manager()
 
-        await manager.create_target(
+        awAlgot manager.create_target(
             game="csgo", title="AK-47 | Redline", price=10.50, amount=5
         )
 
@@ -86,46 +86,46 @@ class TestCreateTarget:
         assert call_args["amount"] == "5"
 
     @pytest.mark.asyncio()
-    async def test_create_target_empty_title_raises_error(self) -> None:
-        """Test that empty title raises ValueError."""
+    async def test_create_target_empty_title_rAlgoses_error(self) -> None:
+        """Test that empty title rAlgoses ValueError."""
         manager, _ = create_manager()
 
-        with pytest.raises(ValueError, match="Название предмета не может быть пустым"):
-            await manager.create_target(game="csgo", title="", price=10.0)
+        with pytest.rAlgoses(ValueError, match="Название предмета не может быть пустым"):
+            awAlgot manager.create_target(game="csgo", title="", price=10.0)
 
     @pytest.mark.asyncio()
-    async def test_create_target_zero_price_raises_error(self) -> None:
-        """Test that zero price raises ValueError."""
+    async def test_create_target_zero_price_rAlgoses_error(self) -> None:
+        """Test that zero price rAlgoses ValueError."""
         manager, _ = create_manager()
 
-        with pytest.raises(ValueError, match="Цена должна быть больше 0"):
-            await manager.create_target(game="csgo", title="AK-47", price=0)
+        with pytest.rAlgoses(ValueError, match="Цена должна быть больше 0"):
+            awAlgot manager.create_target(game="csgo", title="AK-47", price=0)
 
     @pytest.mark.asyncio()
-    async def test_create_target_negative_price_raises_error(self) -> None:
-        """Test that negative price raises ValueError."""
+    async def test_create_target_negative_price_rAlgoses_error(self) -> None:
+        """Test that negative price rAlgoses ValueError."""
         manager, _ = create_manager()
 
-        with pytest.raises(ValueError, match="Цена должна быть больше 0"):
-            await manager.create_target(game="csgo", title="AK-47", price=-5.0)
+        with pytest.rAlgoses(ValueError, match="Цена должна быть больше 0"):
+            awAlgot manager.create_target(game="csgo", title="AK-47", price=-5.0)
 
     @pytest.mark.asyncio()
     async def test_create_target_invalid_amount_too_low(self) -> None:
-        """Test that amount < 1 raises ValueError."""
+        """Test that amount < 1 rAlgoses ValueError."""
         manager, _ = create_manager()
 
-        with pytest.raises(ValueError, match="Количество должно быть от 1 до 100"):
-            await manager.create_target(
+        with pytest.rAlgoses(ValueError, match="Количество должно быть от 1 до 100"):
+            awAlgot manager.create_target(
                 game="csgo", title="AK-47", price=10.0, amount=0
             )
 
     @pytest.mark.asyncio()
     async def test_create_target_invalid_amount_too_high(self) -> None:
-        """Test that amount > 100 raises ValueError."""
+        """Test that amount > 100 rAlgoses ValueError."""
         manager, _ = create_manager()
 
-        with pytest.raises(ValueError, match="Количество должно быть от 1 до 100"):
-            await manager.create_target(
+        with pytest.rAlgoses(ValueError, match="Количество должно быть от 1 до 100"):
+            awAlgot manager.create_target(
                 game="csgo", title="AK-47", price=10.0, amount=101
             )
 
@@ -134,7 +134,7 @@ class TestCreateTarget:
         """Test that price is converted to cents."""
         manager, mock_api = create_manager()
 
-        await manager.create_target(game="csgo", title="AK-47 | Redline", price=10.50)
+        awAlgot manager.create_target(game="csgo", title="AK-47 | Redline", price=10.50)
 
         call_args = mock_api.create_target.call_args[0][0]
         assert call_args["price"] == "1050"
@@ -144,7 +144,7 @@ class TestCreateTarget:
         """Test that game code is converted to gameId."""
         manager, mock_api = create_manager()
 
-        await manager.create_target(game="csgo", title="AK-47", price=10.0)
+        awAlgot manager.create_target(game="csgo", title="AK-47", price=10.0)
 
         call_args = mock_api.create_target.call_args[0][0]
         assert "gameId" in call_args
@@ -155,8 +155,8 @@ class TestCreateTarget:
         manager, mock_api = create_manager()
         mock_api.create_target.side_effect = Exception("API Error")
 
-        with pytest.raises(Exception, match="API Error"):
-            await manager.create_target(game="csgo", title="AK-47", price=10.0)
+        with pytest.rAlgoses(Exception, match="API Error"):
+            awAlgot manager.create_target(game="csgo", title="AK-47", price=10.0)
 
 
 class TestGetUserTargets:
@@ -170,7 +170,7 @@ class TestGetUserTargets:
             "items": [{"id": "target1"}, {"id": "target2"}]
         }
 
-        result = await manager.get_user_targets()
+        result = awAlgot manager.get_user_targets()
 
         assert isinstance(result, list)
         assert len(result) == 2
@@ -180,7 +180,7 @@ class TestGetUserTargets:
         """Test get_user_targets with game filter."""
         manager, mock_api = create_manager()
 
-        await manager.get_user_targets(game="csgo")
+        awAlgot manager.get_user_targets(game="csgo")
 
         call_args = mock_api.get_user_targets.call_args[0][0]
         assert "gameId" in call_args
@@ -190,7 +190,7 @@ class TestGetUserTargets:
         """Test get_user_targets with status filter."""
         manager, mock_api = create_manager()
 
-        await manager.get_user_targets(status="inactive")
+        awAlgot manager.get_user_targets(status="inactive")
 
         call_args = mock_api.get_user_targets.call_args[0][0]
         assert call_args["status"] == "inactive"
@@ -200,7 +200,7 @@ class TestGetUserTargets:
         """Test get_user_targets with 'all' status doesn't add status param."""
         manager, mock_api = create_manager()
 
-        await manager.get_user_targets(status="all")
+        awAlgot manager.get_user_targets(status="all")
 
         call_args = mock_api.get_user_targets.call_args[0][0]
         assert "status" not in call_args
@@ -211,7 +211,7 @@ class TestGetUserTargets:
         manager, mock_api = create_manager()
         mock_api.get_user_targets.side_effect = Exception("API Error")
 
-        result = await manager.get_user_targets()
+        result = awAlgot manager.get_user_targets()
 
         assert result == []
 
@@ -224,18 +224,18 @@ class TestDeleteTarget:
         """Test successful target deletion."""
         manager, mock_api = create_manager()
 
-        result = await manager.delete_target("target123")
+        result = awAlgot manager.delete_target("target123")
 
         assert result is True
         mock_api.delete_target.assert_called_once_with("target123")
 
     @pytest.mark.asyncio()
-    async def test_delete_target_failure(self) -> None:
-        """Test failed target deletion."""
+    async def test_delete_target_fAlgolure(self) -> None:
+        """Test fAlgoled target deletion."""
         manager, mock_api = create_manager()
         mock_api.delete_target.side_effect = Exception("API Error")
 
-        result = await manager.delete_target("target123")
+        result = awAlgot manager.delete_target("target123")
 
         assert result is False
 
@@ -251,7 +251,7 @@ class TestDeleteAllTargets:
             "items": [{"id": "t1"}, {"id": "t2"}, {"id": "t3"}]
         }
 
-        result = await manager.delete_all_targets(dry_run=True)
+        result = awAlgot manager.delete_all_targets(dry_run=True)
 
         assert result["dry_run"] is True
         assert result["would_delete"] == 3
@@ -263,10 +263,10 @@ class TestDeleteAllTargets:
         manager, mock_api = create_manager()
         mock_api.get_user_targets.return_value = {"items": [{"id": "t1"}, {"id": "t2"}]}
 
-        result = await manager.delete_all_targets(dry_run=False)
+        result = awAlgot manager.delete_all_targets(dry_run=False)
 
         assert result["deleted"] == 2
-        assert result["failed"] == 0
+        assert result["fAlgoled"] == 0
         assert result["total"] == 2
 
 
@@ -281,7 +281,7 @@ class TestGetTargetsByTitle:
             "items": [{"id": "t1", "price": 1000}]
         }
 
-        result = await manager.get_targets_by_title(
+        result = awAlgot manager.get_targets_by_title(
             game="csgo", title="AK-47 | Redline"
         )
 
@@ -294,7 +294,7 @@ class TestGetTargetsByTitle:
         manager, mock_api = create_manager()
         mock_api.get_targets_by_title.side_effect = Exception("API Error")
 
-        result = await manager.get_targets_by_title(game="csgo", title="AK-47")
+        result = awAlgot manager.get_targets_by_title(game="csgo", title="AK-47")
 
         assert result == []
 
@@ -309,7 +309,7 @@ class TestCreateSmartTargets:
         items = [{"title": "AK-47", "price": 10.0}]
 
         with patch.object(manager, "_delay", new_callable=AsyncMock):
-            results = await manager.create_smart_targets(
+            results = awAlgot manager.create_smart_targets(
                 game="csgo", items=items, check_competition=False
             )
 
@@ -322,7 +322,7 @@ class TestCreateSmartTargets:
         items = [{"title": f"Item {i}", "price": 10.0} for i in range(20)]
 
         with patch.object(manager, "_delay", new_callable=AsyncMock):
-            results = await manager.create_smart_targets(
+            results = awAlgot manager.create_smart_targets(
                 game="csgo", items=items, max_targets=5, check_competition=False
             )
 
@@ -339,7 +339,7 @@ class TestCreateSmartTargets:
         ]
 
         with patch.object(manager, "_delay", new_callable=AsyncMock):
-            results = await manager.create_smart_targets(
+            results = awAlgot manager.create_smart_targets(
                 game="csgo", items=items, check_competition=False
             )
 
@@ -354,7 +354,7 @@ class TestCreateSmartTargets:
         items = [{"title": "AK-47", "price": 10.0}]
 
         with patch.object(manager, "_delay", new_callable=AsyncMock):
-            results = await manager.create_smart_targets(
+            results = awAlgot manager.create_smart_targets(
                 game="csgo", items=items, check_competition=False
             )
 
@@ -380,7 +380,7 @@ class TestGetClosedTargets:
             ]
         }
 
-        result = await manager.get_closed_targets(limit=50, days=7)
+        result = awAlgot manager.get_closed_targets(limit=50, days=7)
 
         assert isinstance(result, list)
         assert len(result) == 1
@@ -393,7 +393,7 @@ class TestGetClosedTargets:
         manager, mock_api = create_manager()
         mock_api.get_closed_targets.side_effect = Exception("API Error")
 
-        result = await manager.get_closed_targets()
+        result = awAlgot manager.get_closed_targets()
 
         assert result == []
 
@@ -410,11 +410,11 @@ class TestGetTargetStatistics:
             "trades": [
                 {"TargetID": "t3", "Status": "successful", "Price": 1000},
                 {"TargetID": "t4", "Status": "successful", "Price": 2000},
-                {"TargetID": "t5", "Status": "failed", "Price": 500},
+                {"TargetID": "t5", "Status": "fAlgoled", "Price": 500},
             ]
         }
 
-        result = await manager.get_target_statistics(game="csgo", days=7)
+        result = awAlgot manager.get_target_statistics(game="csgo", days=7)
 
         assert result["game"] == "csgo"
         assert result["active_count"] == 2
@@ -427,7 +427,7 @@ class TestGetTargetStatistics:
         mock_api.get_user_targets.return_value = {"items": []}
         mock_api.get_closed_targets.return_value = {"trades": []}
 
-        result = await manager.get_target_statistics(game="csgo")
+        result = awAlgot manager.get_target_statistics(game="csgo")
 
         assert result["active_count"] == 0
         assert result["closed_count"] == 0
@@ -448,7 +448,7 @@ class TestAnalyzeTargetCompetition:
         ) as mock_analyze:
             mock_analyze.return_value = {"competition_count": 5}
 
-            result = await manager.analyze_target_competition(
+            result = awAlgot manager.analyze_target_competition(
                 game="csgo", title="AK-47"
             )
 
@@ -468,7 +468,7 @@ class TestAssessCompetition:
         ) as mock_assess:
             mock_assess.return_value = {"should_proceed": True}
 
-            result = await manager.assess_competition(
+            result = awAlgot manager.assess_competition(
                 game="csgo", title="AK-47", max_competition=3
             )
 
@@ -490,7 +490,7 @@ class TestFilterLowCompetitionItems:
             mock_filter.return_value = [{"title": "Item1"}]
 
             items = [{"title": "Item1"}, {"title": "Item2"}]
-            result = await manager.filter_low_competition_items(
+            result = awAlgot manager.filter_low_competition_items(
                 game="csgo", items=items, max_competition=3
             )
 
@@ -506,5 +506,5 @@ class TestDelay:
         manager, _ = create_manager()
 
         with patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
-            await manager._delay(0.5)
+            awAlgot manager._delay(0.5)
             mock_sleep.assert_called_once_with(0.5)

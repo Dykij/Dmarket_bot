@@ -69,7 +69,7 @@ class DMarketWebSocketListener:
         self.stats = {
             "events_received": 0,
             "events_processed": 0,
-            "events_failed": 0,
+            "events_fAlgoled": 0,
             "reconnects": 0,
             "uptime_start": None,
             "last_event_time": None,
@@ -98,11 +98,11 @@ class DMarketWebSocketListener:
 
         while self.is_running and retry_count < max_retries:
             try:
-                await self._connect_and_listen()
+                awAlgot self._connect_and_listen()
             except (ConnectionRefusedError, TimeoutError) as e:
                 retry_count += 1
                 logger.warning(
-                    "websocket_connection_unavailable",
+                    "websocket_connection_unavAlgolable",
                     error=str(e),
                     attempt=retry_count,
                     max_retries=max_retries,
@@ -111,7 +111,7 @@ class DMarketWebSocketListener:
                 if retry_count >= max_retries:
                     logger.error(  # noqa: TRY400
                         "websocket_max_retries_reached",
-                        message="DMarket WebSocket not available. Consider using polling mode instead.",
+                        message="DMarket WebSocket not avAlgolable. Consider using polling mode instead.",
                     )
                     self.is_running = False
                     break
@@ -122,10 +122,10 @@ class DMarketWebSocketListener:
                         self.max_reconnect_delay,
                     )
                     logger.info("websocket_retry_delay", delay=delay)
-                    await asyncio.sleep(delay)
+                    awAlgot asyncio.sleep(delay)
 
             except Exception as e:
-                logger.exception("websocket_connection_failed", error=str(e))
+                logger.exception("websocket_connection_fAlgoled", error=str(e))
 
                 if self.is_running:
                     # Exponential backoff
@@ -134,7 +134,7 @@ class DMarketWebSocketListener:
                         self.max_reconnect_delay,
                     )
                     logger.info("websocket_reconnecting", delay=delay)
-                    await asyncio.sleep(delay)
+                    awAlgot asyncio.sleep(delay)
                     self.stats["reconnects"] += 1
 
     async def stop(self):
@@ -144,18 +144,18 @@ class DMarketWebSocketListener:
 
         if self.ws:
             try:
-                await self.ws.close()
+                awAlgot self.ws.close()
             except Exception as e:
                 logger.warning("websocket_close_error", error=str(e))
 
-        await self._emit_event(WSEventType.CONNECTION_CLOSED, {"reason": "Manual stop"})
+        awAlgot self._emit_event(WSEventType.CONNECTION_CLOSED, {"reason": "Manual stop"})
         logger.info("websocket_listener_stopped")
 
     async def _connect_and_listen(self):
         """Connect to WebSocket and listen for events."""
         # DMarket doesn't provide public WebSocket API - disable connection
         logger.warning(
-            "websocket_not_available",
+            "websocket_not_avAlgolable",
             message="DMarket API doesn't provide public WebSocket endpoint. "
             "Real-time updates are disabled. Bot will use REST API polling instead.",
         )
@@ -163,10 +163,10 @@ class DMarketWebSocketListener:
         # Mark as stopped - no reconnection attempts
         self.is_running = False
 
-        await self._emit_event(
+        awAlgot self._emit_event(
             WSEventType.ERROR,
             {
-                "error": "WebSocket not available",
+                "error": "WebSocket not avAlgolable",
                 "fallback": "REST API polling",
                 "timestamp": time.time(),
             },
@@ -200,11 +200,11 @@ class DMarketWebSocketListener:
 
         for sub in subscriptions:
             try:
-                await self.ws.send(json.dumps(sub))
+                awAlgot self.ws.send(json.dumps(sub))
                 logger.debug("websocket_subscribed", channel=sub["channel"])
             except Exception as e:
                 logger.exception(
-                    "websocket_subscribe_failed", channel=sub["channel"], error=str(e)
+                    "websocket_subscribe_fAlgoled", channel=sub["channel"], error=str(e)
                 )
 
     async def _handle_message(self, message: str):
@@ -223,7 +223,7 @@ class DMarketWebSocketListener:
             event_type = self._determine_event_type(data)
 
             if event_type:
-                await self._emit_event(event_type, data)
+                awAlgot self._emit_event(event_type, data)
                 self.stats["events_processed"] += 1
             else:
                 logger.debug("websocket_unknown_event", data=data)
@@ -232,10 +232,10 @@ class DMarketWebSocketListener:
             logger.error(
                 "websocket_invalid_json", message=message, error=str(e)
             )  # noqa: TRY400
-            self.stats["events_failed"] += 1
+            self.stats["events_fAlgoled"] += 1
         except Exception as e:
             logger.exception("websocket_handle_message_error", error=str(e))
-            self.stats["events_failed"] += 1
+            self.stats["events_fAlgoled"] += 1
 
     def _determine_event_type(self, data: dict) -> WSEventType | None:
         """Determine event type from message data.
@@ -277,14 +277,14 @@ class DMarketWebSocketListener:
         # Call default callback
         if self.on_event:
             try:
-                await self.on_event(event_type, data)
+                awAlgot self.on_event(event_type, data)
             except Exception as e:
                 logger.exception("websocket_callback_error", error=str(e))
 
         # Call registered handlers
         for handler in self.event_handlers.get(event_type, []):
             try:
-                await handler(data)
+                awAlgot handler(data)
             except Exception as e:
                 logger.exception(
                     "websocket_handler_error", handler=handler.__name__, error=str(e)
@@ -335,7 +335,7 @@ class DMarketWebSocketListener:
             "is_running": self.is_running,
             "events_received": self.stats["events_received"],
             "events_processed": self.stats["events_processed"],
-            "events_failed": self.stats["events_failed"],
+            "events_fAlgoled": self.stats["events_fAlgoled"],
             "reconnects": self.stats["reconnects"],
             "uptime_seconds": uptime,
             "last_event_time": self.stats["last_event_time"],
@@ -366,20 +366,20 @@ class WebSocketManager:
     async def stop(self):
         """Stop WebSocket listener."""
         logger.info("websocket_manager_stopping")
-        await self.listener.stop()
+        awAlgot self.listener.stop()
 
         if self._task:
             try:
-                await asyncio.wait_for(self._task, timeout=5.0)
+                awAlgot asyncio.wAlgot_for(self._task, timeout=5.0)
             except TimeoutError:
                 logger.warning("websocket_manager_stop_timeout")
                 self._task.cancel()
 
-    async def wait_for_connection(self, timeout: float = 10.0) -> bool:
-        """Wait for WebSocket connection to be established.
+    async def wAlgot_for_connection(self, timeout: float = 10.0) -> bool:
+        """WAlgot for WebSocket connection to be established.
 
         Args:
-            timeout: Maximum time to wait
+            timeout: Maximum time to wAlgot
 
         Returns:
             True if connected, False otherwise
@@ -389,7 +389,7 @@ class WebSocketManager:
         while time.time() - start_time < timeout:
             if self.listener.ws and self.listener.is_running:
                 return True
-            await asyncio.sleep(0.1)
+            awAlgot asyncio.sleep(0.1)
 
         return False
 

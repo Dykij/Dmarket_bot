@@ -1,23 +1,23 @@
-# ROADMAP V8.0: ENGINEERING SWARM EVOLUTION (THE BRAIN)
+# ROADMAP V8.0: ENGINEERING SWARM EVOLUTION (THE BRAlgoN)
 > **Manifesto:** "План развития Инженерного Роя. Цель: Стать совершенным инструментом разработки. Мы не торгуем, мы строим."
 
-## Phase 1: AI Evolution (The Cognitive Core)
+## Phase 1: Algo Evolution (The Cognitive Core)
 *   `[SYSTEM_CORE]` **Vector Database:** [x] Integration of ChromaDB/Qdrant for Instant RAG strategy retrieval.
 *   `[SYSTEM_CORE]` **MCP Integration:** [ ] Implement Model Context Protocol server for N8N/External tools connection.
 *   `[SYSTEM_CORE]` **Swarm Orchestration:** [x] Dynamic graph-based execution (Event Bus implemented).
 
 ## Phase 2: Fortress & Security (Immune System)
-*   `[SYSTEM_CORE]` **Prompt Worm Defense:** [x] Maintenance of `security.py` regex firewall against injection.
-*   `[SYSTEM_CORE]` **Anti-Optimism Filter:** [x] Lucas (QA) validation protocols for "breakthrough" claims.
+*   `[SYSTEM_CORE]` **Config Worm Defense:** [x] MAlgontenance of `security.py` regex firewall agAlgonst injection.
+*   `[SYSTEM_CORE]` **Anti-Optimism Filter:** [x] QA (QA) validation protocols for "breakthrough" clAlgoms.
 *   `[SYSTEM_CORE]` **The Scout:** [x] Autonomous monitoring of Habr/ClawHub for new vulnerabilities.
 
 ## Phase 3: Cognitive Singularity (Total Recall)
 *   `[SYSTEM_CORE]` **The Integrator:** [x] Agent dedicated to automatic GitHub Issue creation upon crash.
 *   `[SYSTEM_CORE]` **Vector Memory Migration:** [x] Moving `long_term_memory.md` to vector storage.
-*   `[SYSTEM_CORE]` **Brain Rate Limiter:** [x] Self-regulation logic to prevent 429 errors on external knowledge hubs.
+*   `[SYSTEM_CORE]` **BrAlgon Rate Limiter:** [x] Self-regulation logic to prevent 429 errors on external knowledge hubs.
 
 ## Phase 4: GitHub Forge (DevOps)
-*   `[SYSTEM_CORE]` **CI/CD Pipeline:** [x] Maintenance of Rust testing, Python linting, and Security Scanning workflows.
+*   `[SYSTEM_CORE]` **CI/CD Pipeline:** [x] MAlgontenance of Rust testing, Python linting, and Security Scanning workflows.
 *   `[SYSTEM_CORE]` **Wiki Auto-Export:** [x] Syncing `knowledge_base` to GitHub Wiki.
 *   `[SYSTEM_CORE]` **PR Auto-Review:** [ ] Automated performance impact analysis on Pull Requests.
 
@@ -30,7 +30,7 @@
 *   `[SYSTEM_CORE]` **The "Kill Switch" Protocol:** [x] A hardware-based or crypto-signed signal that instantly wipes sensitive keys from memory in case of a breach.
 
 ## Phase 9: Sovereign Roy (Cloud Infrastructure & Graph Intelligence)
-*   `[SYSTEM_CORE]` **Docker Encapsulation:** Full containerization of the Swarm (Roy Core, Chroma, Redis) for OS-agnostic deployment.
+*   `[SYSTEM_CORE]` **Docker Encapsulation:** Full contAlgonerization of the Swarm (Roy Core, Chroma, Redis) for OS-agnostic deployment.
 *   `[SYSTEM_CORE]` **Graph Intelligence (Neo4j):** Transition from flat files to a causal graph memory (Issues -> Fixes -> Skills).
-*   `[SYSTEM_CORE]` **N8N Native Integration:** Deployed N8N container orchestrating Roy via webhooks/MCP.
+*   `[SYSTEM_CORE]` **N8N Native Integration:** Deployed N8N contAlgoner orchestrating Roy via webhooks/MCP.
 *   `[SYSTEM_CORE]` **VPS Sentinel:** Automated resource monitoring (Grafana/Prometheus) for the cloud instance.

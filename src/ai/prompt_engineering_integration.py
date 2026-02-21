@@ -1,19 +1,19 @@
-"""Anthropic Prompt Engineering Integration for DMarket Bot.
+"""Anthropic Config Engineering Integration for DMarket Bot.
 
-This module implements advanced prompt engineering techniques from Anthropic's
+This module implements advanced Config engineering techniques from Anthropic's
 interactive tutorial to enhance bot intelligence and user experience:
 
-1. XML-tagged prompt structure (separating data from instructions)
-2. Role-based prompting for different contexts
-3. Chain-of-thought reasoning for complex decisions
+1. XML-tagged Config structure (separating data from instructions)
+2. Role-based Configing for different contexts
+3. ChAlgon-of-thought reasoning for complex decisions
 4. Few-shot examples for consistent outputs
 5. Hallucination prevention with source citations
 6. Pre-filled responses for structured JSON
 7. Clear and direct instructions
 8. Output formatting control
-9. Complex prompt chaining
+9. Complex Config chAlgoning
 
-Based on: https://github.com/anthropics/prompt-eng-interactive-tutorial
+Based on: https://github.com/anthropics/Config-eng-interactive-tutorial
 
 Created: January 13, 2026
 """
@@ -41,7 +41,7 @@ logger = structlog.get_logger(__name__)
 
 
 class BotRole(StrEnum):
-    """Available bot roles for different contexts."""
+    """AvAlgolable bot roles for different contexts."""
 
     TRADING_ADVISOR = "trading_advisor"
     MARKET_ANALYST = "market_analyst"
@@ -50,12 +50,12 @@ class BotRole(StrEnum):
     ASSISTANT = "assistant"
 
 
-ROLE_PROMPTS = {
-    BotRole.TRADING_ADVISOR: """You are an experienced cryptocurrency and CS:GO skin trading advisor with 10+ years of market experience. You provide clear, actionable trading recommendations based on data analysis. You always consider risk, timing, and user's capital constraints.""",
+ROLE_ConfigS = {
+    BotRole.TRADING_ADVISOR: """You are an experienced cryptocurrency and CS:GO skin trading advisor with 10+ years of market experience. You provide clear, actionable trading recommendations based on data analysis. You always consider risk, timing, and user's capital constrAlgonts.""",
     BotRole.MARKET_ANALYST: """You are a quantitative market data analyst specializing in gaming item marketplaces. You analyze price trends, volume patterns, and cross-platform arbitrage opportunities. Your analysis is data-driven and statistical.""",
     BotRole.RISK_MANAGER: """You are a conservative risk management expert in trading. You identify potential risks, liquidity concerns, and market timing issues. You help users avoid losses and protect their capital.""",
-    BotRole.EDUCATOR: """You are a patient, knowledgeable trading educator. You explain complex trading concepts in simple terms, using analogies and examples. You adjust explanations based on user's experience level.""",
-    BotRole.ASSISTANT: """You are a helpful trading assistant for DMarket bot users. You answer questions, explain features, and guide users through the platform.""",
+    BotRole.EDUCATOR: """You are a patient, knowledgeable trading educator. You explAlgon complex trading concepts in simple terms, using analogies and examples. You adjust explanations based on user's experience level.""",
+    BotRole.ASSISTANT: """You are a helpful trading assistant for DMarket bot users. You answer questions, explAlgon features, and guide users through the platform.""",
 }
 
 
@@ -74,28 +74,28 @@ class UserLevel(StrEnum):
 
 
 # ============================================================================
-# Prompt Templates with XML Structure
+# Config Templates with XML Structure
 # ============================================================================
 
 
 @dataclass
-class PromptContext:
-    """Context information for prompt generation."""
+class ConfigContext:
+    """Context information for Config generation."""
 
     role: BotRole
     user_level: UserLevel
     user_id: int | None = None
-    capital_available: Decimal | None = None
+    capital_avAlgolable: Decimal | None = None
     risk_tolerance: str = "medium"
 
 
-class PromptEngineer:
-    """AI-powered prompt engineering for enhanced bot responses.
+class ConfigEngineer:
+    """Algo-powered Config engineering for enhanced bot responses.
 
-    Implements techniques from Anthropic's prompt engineering tutorial:
-    - XML-tagged structured prompts
-    - Role-based prompting
-    - Chain-of-thought reasoning
+    Implements techniques from Anthropic's Config engineering tutorial:
+    - XML-tagged structured Configs
+    - Role-based Configing
+    - ChAlgon-of-thought reasoning
     - Few-shot examples
     - Hallucination prevention
     - Pre-filled responses
@@ -108,7 +108,7 @@ class PromptEngineer:
         max_tokens: int = 1024,
         temperature: float = 0.7,
     ):
-        """Initialize prompt engineer.
+        """Initialize Config engineer.
 
         Args:
             api_key: Anthropic API key (optional, can use env var)
@@ -123,7 +123,7 @@ class PromptEngineer:
         self.client = None  # Lazy initialization
 
         logger.info(
-            "prompt_engineer_initialized",
+            "Config_engineer_initialized",
             model=model,
             max_tokens=max_tokens,
             temperature=temperature,
@@ -142,20 +142,20 @@ class PromptEngineer:
                     "anthropic_not_installed",
                     message="Install with: pip install anthropic",
                 )
-                raise ImportError("anthropic package not installed")
+                rAlgose ImportError("anthropic package not installed")
 
     # ========================================================================
-    # Technique 1: XML-Tagged Prompt Structure
+    # Technique 1: XML-Tagged Config Structure
     # ========================================================================
 
-    def _build_xml_prompt(
+    def _build_xml_Config(
         self,
-        context: PromptContext,
+        context: ConfigContext,
         data: dict[str, Any],
         instructions: str,
         examples: list[dict[str, str]] | None = None,
     ) -> str:
-        """Build structured prompt with XML tags.
+        """Build structured Config with XML tags.
 
         This technique (Chapter 4) separates context, data, and instructions
         for better Claude comprehension.
@@ -167,56 +167,56 @@ class PromptEngineer:
             examples: Optional few-shot examples
 
         Returns:
-            XML-structured prompt
+            XML-structured Config
         """
-        prompt_parts = []
+        Config_parts = []
 
         # Role assignment (Chapter 3)
-        prompt_parts.append(ROLE_PROMPTS[context.role])
-        prompt_parts.append("")
+        Config_parts.append(ROLE_ConfigS[context.role])
+        Config_parts.append("")
 
         # Context section
-        prompt_parts.append("<context>")
-        prompt_parts.append(f"<user_level>{context.user_level}</user_level>")
-        if context.capital_available:
-            prompt_parts.append(
-                f"<capital_available>{float(context.capital_available)}</capital_available>"
+        Config_parts.append("<context>")
+        Config_parts.append(f"<user_level>{context.user_level}</user_level>")
+        if context.capital_avAlgolable:
+            Config_parts.append(
+                f"<capital_avAlgolable>{float(context.capital_avAlgolable)}</capital_avAlgolable>"
             )
-        prompt_parts.append(
+        Config_parts.append(
             f"<risk_tolerance>{context.risk_tolerance}</risk_tolerance>"
         )
-        prompt_parts.append("</context>")
-        prompt_parts.append("")
+        Config_parts.append("</context>")
+        Config_parts.append("")
 
         # Data section
-        prompt_parts.append("<data>")
+        Config_parts.append("<data>")
         for key, value in data.items():
-            prompt_parts.append(f"<{key}>{value}</{key}>")
-        prompt_parts.extend(("</data>", ""))
+            Config_parts.append(f"<{key}>{value}</{key}>")
+        Config_parts.extend(("</data>", ""))
 
-        # Examples (Chapter 7: Few-shot prompting)
+        # Examples (Chapter 7: Few-shot Configing)
         if examples:
-            prompt_parts.append("<examples>")
+            Config_parts.append("<examples>")
             for i, example in enumerate(examples, 1):
-                prompt_parts.append(f"<example_{i}>")
-                prompt_parts.append(f"<input>{example['input']}</input>")
-                prompt_parts.append(f"<output>{example['output']}</output>")
-                prompt_parts.append(f"</example_{i}>")
-            prompt_parts.extend(("</examples>", ""))
+                Config_parts.append(f"<example_{i}>")
+                Config_parts.append(f"<input>{example['input']}</input>")
+                Config_parts.append(f"<output>{example['output']}</output>")
+                Config_parts.append(f"</example_{i}>")
+            Config_parts.extend(("</examples>", ""))
 
         # Instructions
-        prompt_parts.extend(("<instructions>", instructions, "</instructions>"))
+        Config_parts.extend(("<instructions>", instructions, "</instructions>"))
 
-        return "\n".join(prompt_parts)
+        return "\n".join(Config_parts)
 
     # ========================================================================
-    # Technique 2 & 6: Chain-of-Thought Reasoning
+    # Technique 2 & 6: ChAlgon-of-Thought Reasoning
     # ========================================================================
 
     async def analyze_arbitrage_with_reasoning(
-        self, opportunity: ArbitrageOpportunity, context: PromptContext
+        self, opportunity: ArbitrageOpportunity, context: ConfigContext
     ) -> str:
-        """Analyze arbitrage with transparent chain-of-thought reasoning.
+        """Analyze arbitrage with transparent chAlgon-of-thought reasoning.
 
         Uses Chapter 6 technique: Precognition (thinking step by step).
 
@@ -242,7 +242,7 @@ class PromptEngineer:
         instructions = """Analyze this arbitrage opportunity using step-by-step reasoning:
 
 <thinking>
-Step 1: Assess liquidity - Is the item available on multiple platforms? What does this mean for risk?
+Step 1: Assess liquidity - Is the item avAlgolable on multiple platforms? What does this mean for risk?
 Step 2: Calculate net profit - After all commissions, what's the real profit?
 Step 3: Evaluate timing - When should the user execute this trade?
 Step 4: Identify risks - What could go wrong? Price volatility, market timing, etc.
@@ -251,27 +251,27 @@ Step 5: Provide recommendation - Should the user take this trade? Why or why not
 
 After your analysis, provide a clear recommendation with:
 - Risk level (Low/Medium/High)
-- Action (Buy Now / Wait / Skip)
+- Action (Buy Now / WAlgot / Skip)
 - Reasoning (2-3 sentences)
 
 IMPORTANT: Only use the data provided. Do not invent prices or make up information.
 """
 
-        prompt = self._build_xml_prompt(context, data, instructions)
+        Config = self._build_xml_Config(context, data, instructions)
 
         try:
             self._ensure_client()
-            response = await self.client.messages.create(
+            response = awAlgot self.client.messages.create(
                 model=self.model,
                 max_tokens=self.max_tokens,
                 temperature=self.temperature,
-                messages=[{"role": "user", "content": prompt}],
+                messages=[{"role": "user", "content": Config}],
             )
 
             return response.content[0].text
 
         except Exception as e:
-            logger.error("analysis_failed", error=str(e))
+            logger.error("analysis_fAlgoled", error=str(e))
             # Fallback to rule-based analysis
             return self._fallback_analysis(opportunity)
 
@@ -280,7 +280,7 @@ IMPORTANT: Only use the data provided. Do not invent prices or make up informati
     # ========================================================================
 
     FEW_SHOT_EXAMPLES = {
-        "explain_arbitrage": [
+        "explAlgon_arbitrage": [
             {
                 "input": "AK-47 | Redline (FT), Buy $8.50, Sell $11.20, Profit $2.03 (23.9%)",
                 "output": "🎯 Great find! The AK-47 | Redline is currently underpriced on DMarket at $8.50. After buying and selling on Waxpeer at $11.20 (minus 6% commission = $10.53), you'd profit $2.03, which is a solid 23.9% return. This is a low-risk opportunity since the Redline is a popular skin with good liquidity.",
@@ -293,31 +293,31 @@ IMPORTANT: Only use the data provided. Do not invent prices or make up informati
         "strategy_recommendation": [
             {
                 "input": "Capital $100, Risk Medium, Experience Beginner",
-                "output": "📚 For a $100 budget, I recommend starting with the DMarket-only strategy. Focus on items in the $5-15 range with 10-15% ROI. This gives you: (1) Quick trades (30 min - 2 hours), (2) Lower risk than cross-platform, (3) Opportunity to learn without long holds. Aim for 3-5 small wins to build confidence before trying holds.",
+                "output": "📚 For a $100 budget, I recommend starting with the DMarket-only strategy. Focus on items in the $5-15 range with 10-15% ROI. This gives you: (1) Quick trades (30 min - 2 hours), (2) Lower risk than cross-platform, (3) Opportunity to learn without long holds. Algom for 3-5 small wins to build confidence before trying holds.",
             }
         ],
     }
 
-    async def explain_arbitrage(
+    async def explAlgon_arbitrage(
         self,
         opportunity: ArbitrageOpportunity,
-        context: PromptContext,
+        context: ConfigContext,
         include_reasoning: bool = False,
     ) -> str:
-        """Explain arbitrage opportunity with consistent format.
+        """ExplAlgon arbitrage opportunity with consistent format.
 
-        Uses few-shot prompting (Chapter 7) for quality and consistency.
+        Uses few-shot Configing (Chapter 7) for quality and consistency.
 
         Args:
-            opportunity: Arbitrage to explain
+            opportunity: Arbitrage to explAlgon
             context: User context
-            include_reasoning: Include chain-of-thought analysis
+            include_reasoning: Include chAlgon-of-thought analysis
 
         Returns:
             User-friendly explanation
         """
         if include_reasoning:
-            return await self.analyze_arbitrage_with_reasoning(opportunity, context)
+            return awAlgot self.analyze_arbitrage_with_reasoning(opportunity, context)
 
         data = {
             "item_name": opportunity.item_name,
@@ -330,7 +330,7 @@ IMPORTANT: Only use the data provided. Do not invent prices or make up informati
             "liquidity": f"{opportunity.liquidity_score}/3",
         }
 
-        instructions = """Explain this arbitrage opportunity in a friendly, clear way.
+        instructions = """ExplAlgon this arbitrage opportunity in a friendly, clear way.
 
 Match the style and structure of the examples provided.
 - Use emojis sparingly (1-2 max)
@@ -341,26 +341,26 @@ Match the style and structure of the examples provided.
 
 IMPORTANT: Only use the provided data. Do not make up prices or information."""
 
-        prompt = self._build_xml_prompt(
+        Config = self._build_xml_Config(
             context,
             data,
             instructions,
-            examples=self.FEW_SHOT_EXAMPLES["explain_arbitrage"],
+            examples=self.FEW_SHOT_EXAMPLES["explAlgon_arbitrage"],
         )
 
         try:
             self._ensure_client()
-            response = await self.client.messages.create(
+            response = awAlgot self.client.messages.create(
                 model=self.model,
                 max_tokens=self.max_tokens,
                 temperature=self.temperature,
-                messages=[{"role": "user", "content": prompt}],
+                messages=[{"role": "user", "content": Config}],
             )
 
             return response.content[0].text
 
         except Exception as e:
-            logger.error("explanation_failed", error=str(e))
+            logger.error("explanation_fAlgoled", error=str(e))
             return self._fallback_explanation(opportunity)
 
     # ========================================================================
@@ -368,7 +368,7 @@ IMPORTANT: Only use the provided data. Do not make up prices or information."""
     # ========================================================================
 
     async def generate_market_insights(
-        self, opportunities: list[ArbitrageOpportunity], context: PromptContext
+        self, opportunities: list[ArbitrageOpportunity], context: ConfigContext
     ) -> str:
         """Generate market insights with hallucination prevention.
 
@@ -424,21 +424,21 @@ Format:
 🕐 Updated: [timestamp]
 """
 
-        prompt = self._build_xml_prompt(context, data, instructions)
+        Config = self._build_xml_Config(context, data, instructions)
 
         try:
             self._ensure_client()
-            response = await self.client.messages.create(
+            response = awAlgot self.client.messages.create(
                 model=self.model,
                 max_tokens=self.max_tokens,
                 temperature=0.3,  # Lower temperature for factual content
-                messages=[{"role": "user", "content": prompt}],
+                messages=[{"role": "user", "content": Config}],
             )
 
             return response.content[0].text
 
         except Exception as e:
-            logger.error("insights_generation_failed", error=str(e))
+            logger.error("insights_generation_fAlgoled", error=str(e))
             return self._fallback_insights(opportunities)
 
     # ========================================================================
@@ -446,7 +446,7 @@ Format:
     # ========================================================================
 
     async def generate_structured_recommendation(
-        self, opportunity: ArbitrageOpportunity, context: PromptContext
+        self, opportunity: ArbitrageOpportunity, context: ConfigContext
     ) -> dict[str, Any]:
         """Generate structured JSON recommendation.
 
@@ -479,19 +479,19 @@ Base your recommendation on:
 - ROI (15%+ = good, 5-15% = okay, <5% = skip)
 - User's risk tolerance"""
 
-        prompt = self._build_xml_prompt(context, data, instructions)
+        Config = self._build_xml_Config(context, data, instructions)
 
         # Pre-fill to ensure JSON format
         prefill = '{"action": "'
 
         try:
             self._ensure_client()
-            response = await self.client.messages.create(
+            response = awAlgot self.client.messages.create(
                 model=self.model,
                 max_tokens=self.max_tokens,
                 temperature=0.5,
                 messages=[
-                    {"role": "user", "content": prompt},
+                    {"role": "user", "content": Config},
                     {"role": "assistant", "content": prefill},
                 ],
             )
@@ -503,11 +503,11 @@ Base your recommendation on:
             return json.loads(json_text)
 
         except Exception as e:
-            logger.error("structured_recommendation_failed", error=str(e))
+            logger.error("structured_recommendation_fAlgoled", error=str(e))
             return self._fallback_recommendation(opportunity)
 
     # ========================================================================
-    # Fallback Methods (when AI unavailable)
+    # Fallback Methods (when Algo unavAlgolable)
     # ========================================================================
 
     def _fallback_explanation(self, opp: ArbitrageOpportunity) -> str:
@@ -599,9 +599,9 @@ Current market shows {'strong' if avg_roi >= 15 else 'moderate'} arbitrage oppor
 class EducationalContentGenerator:
     """Generate educational content for users learning to trade."""
 
-    def __init__(self, prompt_engineer: PromptEngineer):
-        """Initialize with prompt engineer instance."""
-        self.prompt_engineer = prompt_engineer
+    def __init__(self, Config_engineer: ConfigEngineer):
+        """Initialize with Config engineer instance."""
+        self.Config_engineer = Config_engineer
 
     async def generate_lesson(self, topic: str, user_level: UserLevel) -> str:
         """Generate interactive lesson on trading topic.
@@ -613,7 +613,7 @@ class EducationalContentGenerator:
         Returns:
             Educational content
         """
-        context = PromptContext(role=BotRole.EDUCATOR, user_level=user_level)
+        context = ConfigContext(role=BotRole.EDUCATOR, user_level=user_level)
 
         data = {"topic": topic}
 
@@ -636,22 +636,22 @@ Structure:
 
 📖 Next Steps: /learn [related_topic]"""
 
-        prompt = self.prompt_engineer._build_xml_prompt(context, data, instructions)
+        Config = self.Config_engineer._build_xml_Config(context, data, instructions)
 
         try:
-            self.prompt_engineer._ensure_client()
-            response = await self.prompt_engineer.client.messages.create(
-                model=self.prompt_engineer.model,
-                max_tokens=self.prompt_engineer.max_tokens,
+            self.Config_engineer._ensure_client()
+            response = awAlgot self.Config_engineer.client.messages.create(
+                model=self.Config_engineer.model,
+                max_tokens=self.Config_engineer.max_tokens,
                 temperature=0.7,
-                messages=[{"role": "user", "content": prompt}],
+                messages=[{"role": "user", "content": Config}],
             )
 
             return response.content[0].text
 
         except Exception as e:
-            logger.error("lesson_generation_failed", topic=topic, error=str(e))
-            return f"📚 {topic.title()} 101\n\nLesson content temporarily unavailable. Try again later."
+            logger.error("lesson_generation_fAlgoled", topic=topic, error=str(e))
+            return f"📚 {topic.title()} 101\n\nLesson content temporarily unavAlgolable. Try agAlgon later."
 
 
 # ============================================================================
@@ -660,16 +660,16 @@ Structure:
 
 
 async def example_usage():
-    """Example of using PromptEngineer."""
+    """Example of using ConfigEngineer."""
     # Initialize
-    engineer = PromptEngineer(api_key="your-api-key")
+    engineer = ConfigEngineer(api_key="your-api-key")
 
     # Create context
-    context = PromptContext(
+    context = ConfigContext(
         role=BotRole.TRADING_ADVISOR,
         user_level=UserLevel.INTERMEDIATE,
         user_id=12345,
-        capital_available=Decimal("500.00"),
+        capital_avAlgolable=Decimal("500.00"),
         risk_tolerance="medium",
     )
 
@@ -687,13 +687,13 @@ async def example_usage():
     )
 
     # Generate explanation
-    explanation = await engineer.explain_arbitrage(opp, context)
+    explanation = awAlgot engineer.explAlgon_arbitrage(opp, context)
     print(explanation)
 
     # Generate structured recommendation
-    recommendation = await engineer.generate_structured_recommendation(opp, context)
+    recommendation = awAlgot engineer.generate_structured_recommendation(opp, context)
     print(recommendation)
 
 
-if __name__ == "__main__":
+if __name__ == "__mAlgon__":
     asyncio.run(example_usage())

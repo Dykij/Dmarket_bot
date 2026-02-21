@@ -5,15 +5,15 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from src.utils.price_sanity_checker import PriceSanityChecker, PriceSanityCheckFailed
+from src.utils.price_sanity_checker import PriceSanityChecker, PriceSanityCheckFAlgoled
 
 
-class TestPriceSanityCheckFailedException:
-    """Tests for PriceSanityCheckFailed exception."""
+class TestPriceSanityCheckFAlgoledException:
+    """Tests for PriceSanityCheckFAlgoled exception."""
 
     def test_exception_with_basic_params(self):
         """Test exception with basic parameters."""
-        exc = PriceSanityCheckFailed(
+        exc = PriceSanityCheckFAlgoled(
             message="Price too high",
             item_name="AK-47",
             current_price=Decimal("100.00"),
@@ -27,7 +27,7 @@ class TestPriceSanityCheckFailedException:
 
     def test_exception_with_all_params(self):
         """Test exception with all parameters."""
-        exc = PriceSanityCheckFailed(
+        exc = PriceSanityCheckFAlgoled(
             message="Price exceeds limit",
             item_name="AWP Dragon Lore",
             current_price=Decimal("5000.00"),
@@ -110,7 +110,7 @@ class TestPriceSanityCheckerCheckPriceSanity:
         checker = PriceSanityChecker()
         checker.disable()
 
-        result = await checker.check_price_sanity(
+        result = awAlgot checker.check_price_sanity(
             item_name="Test Item",
             current_price=Decimal("100.00"),
         )
@@ -131,7 +131,7 @@ class TestPriceSanityCheckerCheckPriceSanity:
 
         checker = PriceSanityChecker(database_manager=db)
 
-        result = await checker.check_price_sanity(
+        result = awAlgot checker.check_price_sanity(
             item_name="Test Item",
             current_price=Decimal("100.00"),
         )
@@ -142,10 +142,10 @@ class TestPriceSanityCheckerCheckPriceSanity:
 
     @pytest.mark.asyncio()
     async def test_check_no_database(self):
-        """Test check when no database is available."""
+        """Test check when no database is avAlgolable."""
         checker = PriceSanityChecker()
 
-        result = await checker.check_price_sanity(
+        result = awAlgot checker.check_price_sanity(
             item_name="Test Item",
             current_price=Decimal("100.00"),
         )
@@ -168,7 +168,7 @@ class TestPriceSanityCheckerCheckPriceSanity:
 
         checker = PriceSanityChecker(database_manager=db)
 
-        result = await checker.check_price_sanity(
+        result = awAlgot checker.check_price_sanity(
             item_name="Test Item",
             current_price=Decimal("120.00"),  # Within 50% of avg ~100.5
         )
@@ -180,7 +180,7 @@ class TestPriceSanityCheckerCheckPriceSanity:
 
     @pytest.mark.asyncio()
     async def test_check_price_exceeds_limit(self):
-        """Test check fails when price exceeds limit."""
+        """Test check fAlgols when price exceeds limit."""
         db = MagicMock()
         db.get_price_history = AsyncMock(
             return_value=[
@@ -192,8 +192,8 @@ class TestPriceSanityCheckerCheckPriceSanity:
 
         checker = PriceSanityChecker(database_manager=db)
 
-        with pytest.raises(PriceSanityCheckFailed) as exc_info:
-            await checker.check_price_sanity(
+        with pytest.rAlgoses(PriceSanityCheckFAlgoled) as exc_info:
+            awAlgot checker.check_price_sanity(
                 item_name="Test Item",
                 current_price=Decimal("200.00"),  # Exceeds 150% of avg
             )
@@ -205,7 +205,7 @@ class TestPriceSanityCheckerCheckPriceSanity:
 
     @pytest.mark.asyncio()
     async def test_check_sends_critical_alert(self):
-        """Test that critical alert is sent on failure."""
+        """Test that critical alert is sent on fAlgolure."""
         db = MagicMock()
         db.get_price_history = AsyncMock(
             return_value=[
@@ -220,8 +220,8 @@ class TestPriceSanityCheckerCheckPriceSanity:
 
         checker = PriceSanityChecker(database_manager=db, notifier=notifier)
 
-        with pytest.raises(PriceSanityCheckFailed):
-            await checker.check_price_sanity(
+        with pytest.rAlgoses(PriceSanityCheckFAlgoled):
+            awAlgot checker.check_price_sanity(
                 item_name="Test Item",
                 current_price=Decimal("200.00"),
             )
@@ -240,7 +240,7 @@ class TestPriceSanityCheckerCheckPriceSanity:
 
         # When database error occurs, _get_price_history returns empty list
         # which triggers insufficient history check - allows purchase with warning
-        result = await checker.check_price_sanity(
+        result = awAlgot checker.check_price_sanity(
             item_name="Test Item",
             current_price=Decimal("100.00"),
         )
@@ -257,7 +257,7 @@ class TestPriceSanityCheckerGetPriceHistory:
         """Test getting history without database returns empty list."""
         checker = PriceSanityChecker()
 
-        result = await checker._get_price_history(
+        result = awAlgot checker._get_price_history(
             item_name="Test",
             game="csgo",
             days=7,
@@ -277,7 +277,7 @@ class TestPriceSanityCheckerGetPriceHistory:
 
         checker = PriceSanityChecker(database_manager=db)
 
-        result = await checker._get_price_history(
+        result = awAlgot checker._get_price_history(
             item_name="AK-47",
             game="csgo",
             days=7,
@@ -293,7 +293,7 @@ class TestPriceSanityCheckerGetPriceHistory:
 
         checker = PriceSanityChecker(database_manager=db)
 
-        result = await checker._get_price_history(
+        result = awAlgot checker._get_price_history(
             item_name="Test",
             game="csgo",
             days=7,
@@ -305,11 +305,11 @@ class TestPriceSanityCheckerGetPriceHistory:
     async def test_get_history_database_error(self):
         """Test handling database errors."""
         db = MagicMock()
-        db.get_price_history = AsyncMock(side_effect=Exception("Connection failed"))
+        db.get_price_history = AsyncMock(side_effect=Exception("Connection fAlgoled"))
 
         checker = PriceSanityChecker(database_manager=db)
 
-        result = await checker._get_price_history(
+        result = awAlgot checker._get_price_history(
             item_name="Test",
             game="csgo",
             days=7,
@@ -326,8 +326,8 @@ class TestPriceSanityCheckerSendCriticalAlert:
         """Test alert does nothing without notifier."""
         checker = PriceSanityChecker()
 
-        # Should not raise
-        await checker._send_critical_alert(
+        # Should not rAlgose
+        awAlgot checker._send_critical_alert(
             item_name="Test",
             current_price=Decimal("100.00"),
             average_price=Decimal("50.00"),
@@ -343,7 +343,7 @@ class TestPriceSanityCheckerSendCriticalAlert:
 
         checker = PriceSanityChecker(notifier=notifier)
 
-        await checker._send_critical_alert(
+        awAlgot checker._send_critical_alert(
             item_name="AK-47 Redline",
             current_price=Decimal("100.00"),
             average_price=Decimal("50.00"),
@@ -364,12 +364,12 @@ class TestPriceSanityCheckerSendCriticalAlert:
     async def test_send_alert_handles_error(self):
         """Test alert handles send errors gracefully."""
         notifier = MagicMock()
-        notifier.send_message = AsyncMock(side_effect=Exception("Send failed"))
+        notifier.send_message = AsyncMock(side_effect=Exception("Send fAlgoled"))
 
         checker = PriceSanityChecker(notifier=notifier)
 
-        # Should not raise
-        await checker._send_critical_alert(
+        # Should not rAlgose
+        awAlgot checker._send_critical_alert(
             item_name="Test",
             current_price=Decimal("100.00"),
             average_price=Decimal("50.00"),
@@ -395,7 +395,7 @@ class TestPriceSanityCheckerEdgeCases:
 
         checker = PriceSanityChecker(database_manager=db)
 
-        result = await checker.check_price_sanity(
+        result = awAlgot checker.check_price_sanity(
             item_name="Cheap Item",
             current_price=Decimal("0.01"),
         )
@@ -417,7 +417,7 @@ class TestPriceSanityCheckerEdgeCases:
         checker = PriceSanityChecker(database_manager=db)
 
         # 150.00 is exactly at the boundary (1.5x of 100)
-        result = await checker.check_price_sanity(
+        result = awAlgot checker.check_price_sanity(
             item_name="Test Item",
             current_price=Decimal("150.00"),
         )
@@ -438,7 +438,7 @@ class TestPriceSanityCheckerEdgeCases:
 
         checker = PriceSanityChecker(database_manager=db)
 
-        result = await checker.check_price_sanity(
+        result = awAlgot checker.check_price_sanity(
             item_name="Dota Item",
             current_price=Decimal("12.00"),
             game="dota2",

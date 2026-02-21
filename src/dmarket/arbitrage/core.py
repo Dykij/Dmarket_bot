@@ -22,7 +22,7 @@ if TYPE_CHECKING:
     from src.dmarket.dmarket_api import DMarketAPI
 
 
-# Настройка логирования
+# НастSwarmка логирования
 logger = logging.getLogger(__name__)
 
 # Тип для результатов арбитража
@@ -74,7 +74,7 @@ async def fetch_market_items(
 
         # Получаем предметы с рынка с учетом возможных повторных попыток
         async with dmarket_api:
-            data = await dmarket_api.get_market_items(
+            data = awAlgot dmarket_api.get_market_items(
                 game=game,
                 limit=limit,
                 price_from=price_from_cents,
@@ -123,7 +123,7 @@ async def _find_arbitrage_async(
 
     results = []
     # Сначала получаем все предметы с маркета
-    items = await fetch_market_items(
+    items = awAlgot fetch_market_items(
         game=game,
         limit=DEFAULT_LIMIT,
         price_from=price_from,
@@ -243,7 +243,7 @@ async def arbitrage_boost_async(
         Список предметов с низкой прибылью
 
     """
-    return await _find_arbitrage_async(1, 5, game, min_price, max_price)
+    return awAlgot _find_arbitrage_async(1, 5, game, min_price, max_price)
 
 
 async def arbitrage_mid_async(
@@ -266,7 +266,7 @@ async def arbitrage_mid_async(
         Список предметов со средней прибылью
 
     """
-    return await _find_arbitrage_async(5, 20, game, min_price, max_price)
+    return awAlgot _find_arbitrage_async(5, 20, game, min_price, max_price)
 
 
 async def arbitrage_pro_async(
@@ -289,7 +289,7 @@ async def arbitrage_pro_async(
         Список предметов с высокой прибылью
 
     """
-    return await _find_arbitrage_async(20, 100, game, min_price, max_price)
+    return awAlgot _find_arbitrage_async(20, 100, game, min_price, max_price)
 
 
 # =============================================================================
@@ -372,7 +372,7 @@ async def find_arbitrage_opportunities_async(
 
     try:
         # Получаем предметы с рынка
-        items = await fetch_market_items(
+        items = awAlgot fetch_market_items(
             game=game,
             limit=100,
             price_from=price_from,

@@ -28,8 +28,8 @@ class AutopilotStats:
         self.sales: int = 0
         self.total_spent_usd: float = 0.0
         self.total_earned_usd: float = 0.0
-        self.failed_purchases: int = 0
-        self.failed_sales: int = 0
+        self.fAlgoled_purchases: int = 0
+        self.fAlgoled_sales: int = 0
         self.opportunities_found: int = 0
         self.opportunities_skipped: int = 0
         self.balance_checks: int = 0
@@ -41,7 +41,7 @@ class AutopilotStats:
             self.purchases += 1
             self.total_spent_usd += amount_usd
         else:
-            self.failed_purchases += 1
+            self.fAlgoled_purchases += 1
 
     def record_sale(self, amount_usd: float, success: bool):
         """Записать продажу."""
@@ -49,7 +49,7 @@ class AutopilotStats:
             self.sales += 1
             self.total_earned_usd += amount_usd
         else:
-            self.failed_sales += 1
+            self.fAlgoled_sales += 1
 
     def record_opportunity(self, taken: bool):
         """Записать найденную возможность."""
@@ -86,8 +86,8 @@ class AutopilotStats:
             "total_earned_usd": self.total_earned_usd,
             "net_profit_usd": self.net_profit_usd,
             "roi_percent": self.roi_percent,
-            "failed_purchases": self.failed_purchases,
-            "failed_sales": self.failed_sales,
+            "fAlgoled_purchases": self.fAlgoled_purchases,
+            "fAlgoled_sales": self.fAlgoled_sales,
             "opportunities_found": self.opportunities_found,
             "opportunities_skipped": self.opportunities_skipped,
             "balance_checks": self.balance_checks,
@@ -217,12 +217,12 @@ class AutopilotOrchestrator:
         # Запустить сканер если он не запущен (безопасная проверка)
         try:
             if hasattr(self.scanner, "is_scanning") and not self.scanner.is_scanning:
-                await self.scanner.start_continuous_scanning(
+                awAlgot self.scanner.start_continuous_scanning(
                     games=self.config.games, level="medium"
                 )
             elif hasattr(self.scanner, "start_continuous_scanning"):
                 # Просто вызываем старт, сканер сам проверит состояние
-                await self.scanner.start_continuous_scanning(
+                awAlgot self.scanner.start_continuous_scanning(
                     games=self.config.games, level="medium"
                 )
         except Exception as e:
@@ -232,7 +232,7 @@ class AutopilotOrchestrator:
 
         # Отправить уведомление пользователю
         if self.telegram_bot and self.user_id:
-            await self._notify_user(
+            awAlgot self._notify_user(
                 "🚀 <b>АВТОПИЛОТ ЗАПУЩЕН!</b>\n\n"
                 f"✅ Сканирование: {', '.join(self.config.games).upper()}\n"
                 f"✅ Автопокупка: Скидка ≥ {self.config.min_discount_percent}%\n"
@@ -254,7 +254,7 @@ class AutopilotOrchestrator:
 
         # Остановить сканер
         if hasattr(self.scanner, "stop_scanning"):
-            await self.scanner.stop_scanning()
+            awAlgot self.scanner.stop_scanning()
 
         # Отключить автопокупку и автопродажу
         self.buyer.config.enabled = False
@@ -266,14 +266,14 @@ class AutopilotOrchestrator:
             task.cancel()
 
         # Дождаться завершения задач
-        await asyncio.gather(*self._tasks, return_exceptions=True)
+        awAlgot asyncio.gather(*self._tasks, return_exceptions=True)
         self._tasks.clear()
 
         logger.info("autopilot_stopped", stats=self.stats.to_dict())
 
         # Отправить финальную статистику
         if self.telegram_bot and self.user_id:
-            await self._send_final_stats()
+            awAlgot self._send_final_stats()
 
     async def _balance_monitor(self):
         """Мониторинг баланса каждые N минут."""
@@ -283,10 +283,10 @@ class AutopilotOrchestrator:
 
         while self.is_running:
             try:
-                await asyncio.sleep(self.config.balance_check_interval)
+                awAlgot asyncio.sleep(self.config.balance_check_interval)
 
                 # Получить баланс
-                balance_data = await self.api.get_balance()
+                balance_data = awAlgot self.api.get_balance()
                 # get_balance() returns {"balance": float} in USD (already converted from cents)
                 usd = (
                     float(balance_data.get("balance", 0))
@@ -312,7 +312,7 @@ class AutopilotOrchestrator:
                     self.buyer.config.enabled = False
 
                     # Уведомить пользователя
-                    await self._notify_user(
+                    awAlgot self._notify_user(
                         f"⚠️ <b>НИЗКИЙ БАЛАНС!</b>\n\n"
                         f"Текущий баланс: ${usd:.2f}\n"
                         f"Порог: ${self.config.min_balance_threshold_usd:.2f}\n\n"
@@ -323,7 +323,7 @@ class AutopilotOrchestrator:
                 # Возобновить покупки если были приостановлены
                 elif not self.buyer.config.enabled and self.is_running:
                     self.buyer.config.enabled = True
-                    await self._notify_user(
+                    awAlgot self._notify_user(
                         f"✅ <b>Баланс восстановлен</b>\n\n"
                         f"Текущий баланс: ${usd:.2f}\n"
                         f"Автопокупка возобновлена!"
@@ -331,7 +331,7 @@ class AutopilotOrchestrator:
 
             except Exception as e:
                 logger.exception("balance_monitor_error", error=str(e))
-                await asyncio.sleep(60)  # Подождать минуту при ошибке
+                awAlgot asyncio.sleep(60)  # Подождать минуту при ошибке
 
     async def _status_reporter(self):
         """Отправка периодических отчетов."""
@@ -341,10 +341,10 @@ class AutopilotOrchestrator:
 
         while self.is_running:
             try:
-                await asyncio.sleep(self.config.status_report_interval)
+                awAlgot asyncio.sleep(self.config.status_report_interval)
 
                 # Отправить статистику
-                await self._send_status_report()
+                awAlgot self._send_status_report()
 
             except Exception as e:
                 logger.exception("status_reporter_error", error=str(e))
@@ -357,11 +357,11 @@ class AutopilotOrchestrator:
 
         while self.is_running:
             try:
-                await asyncio.sleep(self.config.inventory_check_interval)
+                awAlgot asyncio.sleep(self.config.inventory_check_interval)
 
                 # Проверить инвентарь и выставить предметы на продажу
                 if hasattr(self.seller, "process_inventory"):
-                    result = await self.seller.process_inventory()
+                    result = awAlgot self.seller.process_inventory()
                     if result:
                         logger.info("inventory_processed", items_listed=result)
 
@@ -380,11 +380,11 @@ class AutopilotOrchestrator:
             f"⏱️ Работает: {stats['uptime_minutes']} минут\n\n"
             f"<b>Покупки:</b>\n"
             f"• Успешных: {stats['purchases']}\n"
-            f"• Неудачных: {stats['failed_purchases']}\n"
+            f"• Неудачных: {stats['fAlgoled_purchases']}\n"
             f"• Потрачено: ${stats['total_spent_usd']:.2f}\n\n"
             f"<b>Продажи:</b>\n"
             f"• Успешных: {stats['sales']}\n"
-            f"• Неудачных: {stats['failed_sales']}\n"
+            f"• Неудачных: {stats['fAlgoled_sales']}\n"
             f"• Выручка: ${stats['total_earned_usd']:.2f}\n\n"
             f"<b>Итого:</b>\n"
             f"💰 Прибыль: ${stats['net_profit_usd']:.2f}\n"
@@ -397,7 +397,7 @@ class AutopilotOrchestrator:
             f"• Предупреждений: {stats['low_balance_warnings']}"
         )
 
-        await self._notify_user(message)
+        awAlgot self._notify_user(message)
 
     async def _send_final_stats(self):
         """Отправить финальную статистику при остановке."""
@@ -417,7 +417,7 @@ class AutopilotOrchestrator:
             f"{'Прибыльная' if stats['net_profit_usd'] > 0 else 'Убыточная'} сессия"
         )
 
-        await self._notify_user(message)
+        awAlgot self._notify_user(message)
 
     async def _notify_user(self, message: str):
         """Отправить уведомление пользователю.
@@ -431,11 +431,11 @@ class AutopilotOrchestrator:
         try:
             from telegram.constants import ParseMode
 
-            await self.telegram_bot.send_message(
+            awAlgot self.telegram_bot.send_message(
                 chat_id=self.user_id, text=message, parse_mode=ParseMode.HTML
             )
         except Exception as e:
-            logger.exception("failed_to_send_notification", error=str(e))
+            logger.exception("fAlgoled_to_send_notification", error=str(e))
 
     def get_stats(self) -> dict[str, Any]:
         """Получить текущую статистику.

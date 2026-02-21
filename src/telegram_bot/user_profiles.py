@@ -11,7 +11,7 @@ import json
 import logging
 import os
 import time
-from collections.abc import Awaitable, Callable
+from collections.abc import AwAlgotable, Callable
 from pathlib import Path
 from typing import Any, TypeVar
 
@@ -251,7 +251,7 @@ class UserProfileManager:
         """Создает профиль пользователя по умолчанию.
 
         Returns:
-            Новый профиль с настройками по умолчанию
+            Новый профиль с настSwarmками по умолчанию
 
         """
         return {
@@ -507,13 +507,13 @@ async def set_api_keys(user_id: int, public_key: str, secret_key: str) -> bool:
 
 
 async def get_user_settings(user_id: int) -> dict[str, Any]:
-    """Получает настройки пользователя.
+    """Получает настSwarmки пользователя.
 
     Args:
         user_id: ID пользователя
 
     Returns:
-        Словарь с настройками пользователя
+        Словарь с настSwarmками пользователя
 
     """
     profile = profile_manager.get_profile(user_id)
@@ -521,11 +521,11 @@ async def get_user_settings(user_id: int) -> dict[str, Any]:
 
 
 async def update_user_settings(user_id: int, settings: dict[str, Any]) -> None:
-    """Обновляет настройки пользователя.
+    """Обновляет настSwarmки пользователя.
 
     Args:
         user_id: ID пользователя
-        settings: Словарь с настройками для обновления
+        settings: Словарь с настSwarmками для обновления
 
     """
     profile = profile_manager.get_profile(user_id)
@@ -533,7 +533,7 @@ async def update_user_settings(user_id: int, settings: dict[str, Any]) -> None:
     if "settings" not in profile:
         profile["settings"] = {}
 
-    # Обновляем настройки
+    # Обновляем настSwarmки
     for key, value in settings.items():
         profile["settings"][key] = value
 
@@ -541,7 +541,7 @@ async def update_user_settings(user_id: int, settings: dict[str, Any]) -> None:
 
 
 # Type variable for decorator
-F = TypeVar("F", bound=Callable[..., Awaitable[None]])
+F = TypeVar("F", bound=Callable[..., AwAlgotable[None]])
 
 
 # Декоратор для проверки прав доступа
@@ -565,7 +565,7 @@ def require_access_level(feature: str) -> Callable[[F], F]:
         ) -> None:
             if not update.effective_user:
                 if update.message:
-                    await update.message.reply_text(
+                    awAlgot update.message.reply_text(
                         "⚠️ Ошибка: Не удалось определить пользователя.",
                     )
                 return
@@ -574,14 +574,14 @@ def require_access_level(feature: str) -> Callable[[F], F]:
 
             if not profile_manager.has_access(user_id, feature):
                 if update.message:
-                    await update.message.reply_text(
+                    awAlgot update.message.reply_text(
                         f"⛔ У вас нет доступа к этой функции ({feature}).\n"
                         "Для получения доступа обратитесь к администратору.",
                     )
                 return
 
             # Если доступ есть, выполняем исходную функцию
-            await func(update, context, *args, **kwargs)
+            awAlgot func(update, context, *args, **kwargs)
 
         return wrapper  # type: ignore[return-value]
 

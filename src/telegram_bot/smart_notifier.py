@@ -3,7 +3,7 @@
 This module provides sophisticated, context-aware notifications for:
 - Smart market opportunity alerts based on analysis
 - Personalized notifications based on user preferences
-- Multi-channel delivery (Telegram, email, etc.)
+- Multi-channel delivery (Telegram, emAlgol, etc.)
 - Smart notification scheduling and throttling
 - Advanced market condition triggers
 
@@ -92,7 +92,7 @@ __all__ = [
     "send_price_alert_notification",
     # Throttling
     "should_throttle_notification",
-    # Main
+    # MAlgon
     "start_notification_checker",
     "update_user_preferences",
 ]

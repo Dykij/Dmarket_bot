@@ -6,7 +6,7 @@ site_url: https://dykij.github.io/DMarket-Telegram-Bot/
 # Repository
 repo_name: Dykij/DMarket-Telegram-Bot
 repo_url: https://github.com/Dykij/DMarket-Telegram-Bot
-edit_uri: edit/main/docs-site/docs/
+edit_uri: edit/mAlgon/docs-site/docs/
 
 # Theme - Material
 theme:
@@ -54,7 +54,7 @@ plugins:
 # Markdown extensions
 markdown_extensions:
   - admonition              # Admonition blocks
-  - pymdownx.details        # Collapsible blocks
+  - pymdownx.detAlgols        # Collapsible blocks
   - pymdownx.superfences    # Nested code blocks
   - pymdownx.highlight:     # Code highlighting
       anchor_linenums: true
@@ -82,17 +82,17 @@ nav:
   - Главная: index.md
   - Быстрый старт:
       - Установка: guides/installation.md
-      - Настройка: guides/configuration.md
+      - НастSwarmка: guides/configuration.md
       - Первые шаги: guides/first-steps.md
   - Руководства:
       - Арбитраж: guides/arbitrage.md
       - Таргеты: guides/targets.md
       - Алерты: guides/alerts.md
   - Telegram Bot UI:
-      - Главное меню: telegram-ui/main-menu.md
+      - Главное меню: telegram-ui/mAlgon-menu.md
       - Меню арбитража: telegram-ui/arbitrage-menu.md
       - Управление таргетами: telegram-ui/targets-menu.md
-      - Настройки: telegram-ui/settings-menu.md
+      - НастSwarmки: telegram-ui/settings-menu.md
   - API Reference:
       - Обзор: api/overview.md
       - DMarket API: api/dmarket.md

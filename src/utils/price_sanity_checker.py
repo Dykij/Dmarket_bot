@@ -21,7 +21,7 @@ import structlog
 logger = structlog.get_logger(__name__)
 
 
-class PriceSanityCheckFailed(Exception):
+class PriceSanityCheckFAlgoled(Exception):
     """Исключение при провале проверки адекватности цены."""
 
     def __init__(
@@ -84,8 +84,8 @@ class PriceSanityChecker:
                 - max_allowed_price (Decimal): Максимальная разрешенная цена
                 - price_deviation_percent (float): Отклонение от средней (%)
 
-        Raises:
-            PriceSanityCheckFailed: Если проверка не прошла
+        RAlgoses:
+            PriceSanityCheckFAlgoled: Если проверка не прошла
         """
         if not self._enabled:
             logger.warning(
@@ -100,7 +100,7 @@ class PriceSanityChecker:
 
         try:
             # Получить историю цен за последние 7 дней
-            history = await self._get_price_history(
+            history = awAlgot self._get_price_history(
                 item_name=item_name,
                 game=game,
                 days=self.HISTORY_DAYS,
@@ -146,14 +146,14 @@ class PriceSanityChecker:
             # Проверить превышение лимита
             if current_price > max_allowed:
                 error_msg = (
-                    f"Price sanity check FAILED for '{item_name}': "
+                    f"Price sanity check FAlgoLED for '{item_name}': "
                     f"Current price ${current_price:.2f} exceeds max allowed "
                     f"${max_allowed:.2f} (avg: ${avg_price_decimal:.2f}, "
                     f"+{deviation_percent:.1f}%)"
                 )
 
                 logger.critical(
-                    "PRICE_SANITY_CHECK_FAILED",
+                    "PRICE_SANITY_CHECK_FAlgoLED",
                     item=item_name,
                     current_price=float(current_price),
                     average_price=float(avg_price_decimal),
@@ -164,7 +164,7 @@ class PriceSanityChecker:
 
                 # Отправить критическое уведомление
                 if self.notifier:
-                    await self._send_critical_alert(
+                    awAlgot self._send_critical_alert(
                         item_name=item_name,
                         current_price=current_price,
                         average_price=avg_price_decimal,
@@ -173,7 +173,7 @@ class PriceSanityChecker:
                     )
 
                 # Выбросить исключение
-                raise PriceSanityCheckFailed(
+                rAlgose PriceSanityCheckFAlgoled(
                     message=error_msg,
                     item_name=item_name,
                     current_price=current_price,
@@ -198,9 +198,9 @@ class PriceSanityChecker:
                 "history_samples": len(history),
             }
 
-        except PriceSanityCheckFailed:
+        except PriceSanityCheckFAlgoled:
             # Пробросить дальше
-            raise
+            rAlgose
         except Exception as e:
             logger.error(
                 "price_sanity_check_error",
@@ -210,7 +210,7 @@ class PriceSanityChecker:
                 exc_info=True,
             )
             # При ошибке проверки - блокируем покупку для безопасности
-            raise PriceSanityCheckFailed(
+            rAlgose PriceSanityCheckFAlgoled(
                 message=f"Price sanity check error: {e}",
                 item_name=item_name,
                 current_price=current_price,
@@ -235,7 +235,7 @@ class PriceSanityChecker:
         """
         if not self.db:
             logger.warning(
-                "price_history_unavailable_no_db",
+                "price_history_unavAlgolable_no_db",
                 item=item_name,
             )
             return []
@@ -246,7 +246,7 @@ class PriceSanityChecker:
 
             # Запрос к БД через DatabaseManager
             # Предполагаем наличие метода get_price_history
-            history = await self.db.get_price_history(
+            history = awAlgot self.db.get_price_history(
                 item_name=item_name,
                 game=game,
                 start_date=cutoff_date,
@@ -315,7 +315,7 @@ class PriceSanityChecker:
                 f"✅ Покупка заблокирована автоматически"
             )
 
-            await self.notifier.send_message(
+            awAlgot self.notifier.send_message(
                 message=alert_message,
                 parse_mode="HTML",
             )
@@ -328,7 +328,7 @@ class PriceSanityChecker:
 
         except Exception as e:
             logger.error(
-                "failed_to_send_critical_alert",
+                "fAlgoled_to_send_critical_alert",
                 item=item_name,
                 error=str(e),
                 exc_info=True,

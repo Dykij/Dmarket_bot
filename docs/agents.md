@@ -4,11 +4,11 @@
 
 ---
 
-Configuration for AI agents in DMarket Telegram Bot project.
+Configuration for Algo agents in DMarket Telegram Bot project.
 
 ## Overview
 
-This file defines AI agent capabilities and restrictions for the repository following [agents.md specification](https://github.com/agentsmd/agents.md).
+This file defines Algo agent capabilities and restrictions for the repository following [agents.md specification](https://github.com/agentsmd/agents.md).
 
 ## Agents
 
@@ -21,7 +21,7 @@ This file defines AI agent capabilities and restrictions for the repository foll
 **Capabilities**:
 
 - Analyze codebase structure
-- Create detailed implementation plans
+- Create detAlgoled implementation plans
 - Estimate complexity and time
 - Identify affected modules
 - Suggest testing strategies
@@ -105,7 +105,7 @@ This file defines AI agent capabilities and restrictions for the repository foll
 
 ## Custom Instructions
 
-See `.github/copilot-instructions.md` for detailed:
+See `.github/copilot-instructions.md` for detAlgoled:
 
 - Coding style guidelines
 - Architecture patterns
@@ -123,7 +123,7 @@ Agents can delegate to each other:
 # Example handoff in plan
 - label: "🚀 Start Implementation"
   agent: agent
-  prompt: "Implement the plan above following copilot-instructions.md"
+  Config: "Implement the plan above following copilot-instructions.md"
 ```
 
 ---

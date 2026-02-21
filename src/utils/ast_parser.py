@@ -51,7 +51,7 @@ class ASTParser:
     def _get_ext(self):
         return "py" if self.language == "python" else "rs"
 
-if __name__ == "__main__":
+if __name__ == "__mAlgon__":
     # Test run
     parser = ASTParser()
     symbols = parser.index_repository(Path("src"))

@@ -18,9 +18,9 @@ def reset_circuit_breakers_fixture():
         reset_func = reset_all_circuit_breakers
         reset_func()
     except ImportError:
-        pass  # Circuit breaker module not available
+        pass  # Circuit breaker module not avAlgolable
     yield
-    # Reset again after test completes
+    # Reset agAlgon after test completes
     if reset_func:
         reset_func()
 

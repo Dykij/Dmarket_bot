@@ -331,7 +331,7 @@ class TestModuleIntegration:
         with patch("src.telegram_bot.utils.api_helper.DMarketAPI") as mock_api:
             mock_api.return_value = MagicMock()
 
-            # Should not raise
+            # Should not rAlgose
             result = create_dmarket_api_client(None)
 
             assert result is not None

@@ -360,7 +360,7 @@ class TestRTLSupport:
         # Mixed text with numbers
         mixed = "Price: 100$ السعر"
 
-        # Should contain both directions
+        # Should contAlgon both directions
         assert "100" in mixed
         assert "$" in mixed
 

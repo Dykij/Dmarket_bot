@@ -13,19 +13,19 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
-from src.dmarket.ai_arbitrage_predictor import AIArbitragePredictor
+from src.dmarket.Algo_arbitrage_predictor import AlgoArbitragePredictor
 from src.dmarket.dmarket_api import DMarketAPI
 from src.ml.enhanced_predictor import EnhancedPricePredictor
 
 
 async def scan_game(
-    api: DMarketAPI, ai_arbitrage: AIArbitragePredictor, game: str, balance: float
+    api: DMarketAPI, Algo_arbitrage: AlgoArbitragePredictor, game: str, balance: float
 ) -> list[dict]:
     """Сканирование одной игры."""
     print(f"  🎮 Сканирование {game.upper()}...")
 
-    items = await api.get_market_items(game=game, limit=50)
-    opportunities = await ai_arbitrage.predict_best_opportunities(
+    items = awAlgot api.get_market_items(game=game, limit=50)
+    opportunities = awAlgot Algo_arbitrage.predict_best_opportunities(
         items=items, current_balance=balance, risk_level="medium"
     )
 
@@ -33,7 +33,7 @@ async def scan_game(
     return opportunities
 
 
-async def main():
+async def mAlgon():
     """Мультиигровой анализ."""
 
     # Инициализация
@@ -43,7 +43,7 @@ async def main():
     )
 
     ml_predictor = EnhancedPricePredictor()
-    ai_arbitrage = AIArbitragePredictor(ml_predictor)
+    Algo_arbitrage = AlgoArbitragePredictor(ml_predictor)
 
     # Список игр для сканирования
     games = ["csgo", "dota2", "tf2", "rust"]
@@ -57,7 +57,7 @@ async def main():
 
     for game in games:
         try:
-            opps = await scan_game(api, ai_arbitrage, game, balance_per_game)
+            opps = awAlgot scan_game(api, Algo_arbitrage, game, balance_per_game)
             # Добавляем game_id для каждой возможности
             for opp in opps:
                 opp["scanned_game"] = game
@@ -120,12 +120,12 @@ async def main():
         f"✅ Всего найдено {len(all_opportunities)} возможностей в {len(games)} играх"
     )
 
-    await api.close()
+    awAlgot api.close()
 
 
-if __name__ == "__main__":
+if __name__ == "__mAlgon__":
     if not os.getenv("DMARKET_PUBLIC_KEY"):
         print("❌ Ошибка: DMARKET_PUBLIC_KEY не найден")
         sys.exit(1)
 
-    asyncio.run(main())
+    asyncio.run(mAlgon())

@@ -86,10 +86,10 @@ class LiquidityAnalyzer:
         )
 
         # Получить историю продаж
-        sales_history = await self._get_sales_history(item_title, game, days_history)
+        sales_history = awAlgot self._get_sales_history(item_title, game, days_history)
 
         # Получить текущие предложения
-        active_offers = await self._get_active_offers(item_title, game)
+        active_offers = awAlgot self._get_active_offers(item_title, game)
 
         # Рассчитать метрики
         sales_per_week = self._calculate_sales_per_week(sales_history, days_history)
@@ -157,7 +157,7 @@ class LiquidityAnalyzer:
             item_title = item.get("title", "")
 
             try:
-                metrics = await self.analyze_item_liquidity(item_title, game)
+                metrics = awAlgot self.analyze_item_liquidity(item_title, game)
 
                 if metrics.is_liquid:
                     # Добавить метрики ликвидности к предмету
@@ -175,7 +175,7 @@ class LiquidityAnalyzer:
 
             except Exception as e:
                 logger.warning(
-                    "failed_to_analyze_item_liquidity",
+                    "fAlgoled_to_analyze_item_liquidity",
                     item_title=item_title,
                     error=str(e),
                 )
@@ -220,7 +220,7 @@ class LiquidityAnalyzer:
 
             while len(all_sales) < max_items:
                 # Используем метод API для получения истории продаж из агрегатора
-                sales_data = await self.api.get_sales_history_aggregator(
+                sales_data = awAlgot self.api.get_sales_history_aggregator(
                     game_id=game,
                     title=item_title,
                     limit=limit,
@@ -253,7 +253,7 @@ class LiquidityAnalyzer:
 
         except Exception as e:
             logger.exception(
-                "failed_to_get_sales_history",
+                "fAlgoled_to_get_sales_history",
                 item_title=item_title,
                 game=game,
                 error=str(e),
@@ -276,7 +276,7 @@ class LiquidityAnalyzer:
         """
         try:
             # Используем метод API для получения лучших предложений
-            offers = await self.api.get_market_best_offers(
+            offers = awAlgot self.api.get_market_best_offers(
                 game=game,
                 title=item_title,
                 limit=100,
@@ -289,7 +289,7 @@ class LiquidityAnalyzer:
 
         except Exception as e:
             logger.exception(
-                "failed_to_get_active_offers",
+                "fAlgoled_to_get_active_offers",
                 item_title=item_title,
                 game=game,
                 error=str(e),

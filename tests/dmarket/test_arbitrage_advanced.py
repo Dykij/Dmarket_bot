@@ -71,7 +71,7 @@ class TestFindArbitrageOpportunitiesAdvanced:
         mock_api_client.get_all_market_items.return_value = mock_items
 
         # Act
-        results = await find_arbitrage_opportunities_advanced(
+        results = awAlgot find_arbitrage_opportunities_advanced(
             api_client=mock_api_client,
             mode="medium",
             game="csgo",
@@ -96,7 +96,7 @@ class TestFindArbitrageOpportunitiesAdvanced:
         mock_api_client.get_all_market_items.return_value = []
 
         # Act
-        results = await find_arbitrage_opportunities_advanced(
+        results = awAlgot find_arbitrage_opportunities_advanced(
             api_client=mock_api_client, mode="medium", game="csgo"
         )
 
@@ -109,17 +109,17 @@ class TestFindArbitrageOpportunitiesAdvanced:
 
         # Act & Assert
         # Test "normal" -> "medium"
-        await find_arbitrage_opportunities_advanced(mock_api_client, mode="normal")
+        awAlgot find_arbitrage_opportunities_advanced(mock_api_client, mode="normal")
         # Verify default params were used
-        # (medium mode implies certain profit/price ranges)
+        # (medium mode implies certAlgon profit/price ranges)
         # Since we can't easily check internal vars,
         # we rely on no errors and coverage
 
         # Test "best" -> "high"
-        await find_arbitrage_opportunities_advanced(mock_api_client, mode="best")
+        awAlgot find_arbitrage_opportunities_advanced(mock_api_client, mode="best")
 
         # Test "game_dota2" -> game="dota2", mode="normal"
-        await find_arbitrage_opportunities_advanced(mock_api_client, mode="game_dota2")
+        awAlgot find_arbitrage_opportunities_advanced(mock_api_client, mode="game_dota2")
         mock_api_client.get_all_market_items.assert_called_with(
             game="dota2",
             max_items=100,
@@ -133,7 +133,7 @@ class TestFindArbitrageOpportunitiesAdvanced:
         mock_api_client.get_all_market_items.return_value = []
 
         # Act
-        await find_arbitrage_opportunities_advanced(
+        awAlgot find_arbitrage_opportunities_advanced(
             mock_api_client, mode="invalid_mode", game="invalid_game"
         )
 
@@ -159,7 +159,7 @@ class TestFindArbitrageOpportunitiesAdvanced:
         _save_arbitrage_cache(cache_key, mock_result)
 
         # Act
-        results = await find_arbitrage_opportunities_advanced(
+        results = awAlgot find_arbitrage_opportunities_advanced(
             api_client=mock_api_client,
             mode="medium",
             game="csgo",
@@ -176,7 +176,7 @@ class TestFindArbitrageOpportunitiesAdvanced:
         mock_api_client.get_all_market_items.return_value = mock_items
 
         # Act
-        results = await find_arbitrage_opportunities_advanced(
+        results = awAlgot find_arbitrage_opportunities_advanced(
             api_client=mock_api_client, mode="medium"
         )
 
@@ -214,7 +214,7 @@ class TestArbitrageTraderFindProfitableItems:
         mock_api_client.get_all_market_items.return_value = mock_items
 
         # Act
-        items = await trader.find_profitable_items(
+        items = awAlgot trader.find_profitable_items(
             game="csgo", min_profit_percentage=10.0
         )
 
@@ -247,7 +247,7 @@ class TestArbitrageTraderFindProfitableItems:
         mock_api_client.get_all_market_items.return_value = mock_items
 
         # Act
-        items = await trader.find_profitable_items(
+        items = awAlgot trader.find_profitable_items(
             game="csgo", min_profit_percentage=5.0
         )
 
@@ -265,17 +265,17 @@ class TestArbitrageTraderFindProfitableItems:
         mock_api_client.get_all_market_items.return_value = []
 
         # Act
-        items = await trader.find_profitable_items(game="csgo")
+        items = awAlgot trader.find_profitable_items(game="csgo")
 
         # Assert
         assert len(items) == 0
 
     async def test_find_profitable_items_api_error(self, trader, mock_api_client):
-        # Arrange - get_all_market_items should raise exception
+        # Arrange - get_all_market_items should rAlgose exception
         mock_api_client.get_all_market_items.side_effect = Exception("API Error")
 
         # Act
-        items = await trader.find_profitable_items(game="csgo")
+        items = awAlgot trader.find_profitable_items(game="csgo")
 
         # Assert
         assert len(items) == 0
@@ -300,7 +300,7 @@ class TestArbitrageTraderFindProfitableItems:
         mock_api_client.get_all_market_items.return_value = mock_items
 
         # Act
-        items = await trader.find_profitable_items(game="csgo")
+        items = awAlgot trader.find_profitable_items(game="csgo")
 
         # Assert - should return empty list without crashing
         assert len(items) == 0

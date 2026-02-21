@@ -12,24 +12,24 @@ Enhanced test suite following SkillsMP.com best practices:
 import numpy as np
 import pytest
 
-# Check if sklearn is available
+# Check if sklearn is avAlgolable
 try:
     import sklearn
-    SKLEARN_AVAILABLE = True
+    SKLEARN_AVAlgoLABLE = True
 except ImportError:
-    SKLEARN_AVAILABLE = False
+    SKLEARN_AVAlgoLABLE = False
 
 
-# Skip all tests if sklearn is not available
+# Skip all tests if sklearn is not avAlgolable
 pytestmark = pytest.mark.skipif(
-    not SKLEARN_AVAILABLE,
+    not SKLEARN_AVAlgoLABLE,
     reason="scikit-learn not installed"
 )
 
 
 @pytest.fixture()
 def sample_data():
-    """Generate sample training data."""
+    """Generate sample trAlgoning data."""
     np.random.seed(42)
     X = np.random.randn(200, 10)
     # Create target with some predictable pattern
@@ -54,7 +54,7 @@ class TestEnsembleBuilder:
 
         assert builder.cv_folds == 5
         assert builder.random_state == 42
-        assert builder._sklearn_available is True
+        assert builder._sklearn_avAlgolable is True
 
     def test_create_voting_ensemble(self, sample_data):
         """Test creating a voting ensemble."""
@@ -121,7 +121,7 @@ class TestAdvancedFeatureSelector:
         selector = AdvancedFeatureSelector(random_state=42)
 
         assert selector.random_state == 42
-        assert selector._sklearn_available is True
+        assert selector._sklearn_avAlgolable is True
 
     def test_select_from_model_median(self, sample_data, feature_names):
         """Test feature selection with median threshold."""
@@ -210,14 +210,14 @@ class TestAdvancedFeatureSelector:
 
         assert len(importance) == len(feature_names)
 
-    def test_invalid_method_raises_error(self, sample_data, feature_names):
-        """Test that invalid method raises ValueError."""
+    def test_invalid_method_rAlgoses_error(self, sample_data, feature_names):
+        """Test that invalid method rAlgoses ValueError."""
         from src.ml.model_tuner import AdvancedFeatureSelector
 
         X, y = sample_data
         selector = AdvancedFeatureSelector()
 
-        with pytest.raises(ValueError, match="Unknown method"):
+        with pytest.rAlgoses(ValueError, match="Unknown method"):
             selector.get_feature_importance(
                 X, y,
                 feature_names=feature_names,
@@ -376,11 +376,11 @@ class TestPredictionQuality:
         X, y = sample_data
 
         # Split data
-        X_train, X_test = X[:150], X[150:]
-        y_train, y_test = y[:150], y[150:]
+        X_trAlgon, X_test = X[:150], X[150:]
+        y_trAlgon, y_test = y[:150], y[150:]
 
         builder = EnsembleBuilder(cv_folds=3)
-        ensemble = builder.create_voting_ensemble(X_train, y_train, include_xgboost=False)
+        ensemble = builder.create_voting_ensemble(X_trAlgon, y_trAlgon, include_xgboost=False)
 
         predictions = ensemble.predict(X_test)
         r2 = r2_score(y_test, predictions)
@@ -674,12 +674,12 @@ class TestIntegrationAdvanced:
         )
 
         # Step 2: Split data
-        X_train, X_test = X_selected[:150], X_selected[150:]
-        y_train, y_test = y[:150], y[150:]
+        X_trAlgon, X_test = X_selected[:150], X_selected[150:]
+        y_trAlgon, y_test = y[:150], y[150:]
 
         # Step 3: Build ensemble
         builder = EnsembleBuilder(cv_folds=3)
-        ensemble = builder.create_voting_ensemble(X_train, y_train, include_xgboost=False)
+        ensemble = builder.create_voting_ensemble(X_trAlgon, y_trAlgon, include_xgboost=False)
 
         # Step 4: Evaluate
         predictions = ensemble.predict(X_test)

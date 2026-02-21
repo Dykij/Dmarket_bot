@@ -5,14 +5,14 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
 try:
-    from src.ai.price_predictor import PricePredictor
+    from src.Algo.price_predictor import PricePredictor
     from src.dmarket.market_data_logger import MarketDataLoggerConfig
     
     # 1. Check Model Status
     print("--- DIAGNOSTICS START ---")
     predictor = PricePredictor()
     model_info = predictor.get_model_info()
-    print(f"MODEL_TRAINED: {model_info['is_trained']}")
+    print(f"MODEL_TRAlgoNED: {model_info['is_trAlgoned']}")
     print(f"KNOWN_ITEMS: {model_info.get('known_items_count', 0)}")
 
     # 2. Check Data Status
@@ -31,14 +31,14 @@ try:
     print(f"DATA_PATH: {data_path}")
 
     # 3. Action Logic (Self-Correction)
-    if not model_info['is_trained']:
+    if not model_info['is_trAlgoned']:
         if rows >= 100:
-            print("ACTION: TRAINING_MODEL...")
+            print("ACTION: TRAlgoNING_MODEL...")
             try:
-                result = predictor.train_model()
-                print(f"TRAINING_RESULT: {result}")
+                result = predictor.trAlgon_model()
+                print(f"TRAlgoNING_RESULT: {result}")
             except Exception as e:
-                print(f"TRAINING_ERROR: {e}")
+                print(f"TRAlgoNING_ERROR: {e}")
         else:
             print("ACTION: NEED_DATA_COLLECTION")
             print(f"MISSING_ROWS: {100 - rows}")

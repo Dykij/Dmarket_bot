@@ -4,7 +4,7 @@ Implements emergency liquidation functionality:
 - Cancel all active orders
 - List all inventory items at market -5% for quick sale
 - Stop autopilot and auto-buyer
-- Send detailed report
+- Send detAlgoled report
 
 Created: January 2, 2026
 """
@@ -26,7 +26,7 @@ async def panic_button_command(
     1. Stop autopilot and auto-buyer
     2. Cancel all active Buy Orders
     3. List all inventory items at market -5% for quick sale
-    4. Send detailed report
+    4. Send detAlgoled report
 
     Usage:
         /panic - Execute emergency exit
@@ -43,7 +43,7 @@ async def panic_button_command(
 
     if not instant:
         # Show confirmation message
-        await update.message.reply_text(
+        awAlgot update.message.reply_text(
             "🚨 <b>PANIC BUTTON - Предупреждение</b>\n\n"
             "Эта команда выполнит аварийный выход в кэш:\n"
             "• Остановит автопилот\n"
@@ -57,7 +57,7 @@ async def panic_button_command(
         return
 
     # Show processing message
-    processing_msg = await update.message.reply_text(
+    processing_msg = awAlgot update.message.reply_text(
         "🚨 <b>ВЫПОЛНЯЕТСЯ АВАРИЙНЫЙ ВЫХОД...</b>\n\n⏳ Останавливаю системы...",
         parse_mode=ParseMode.HTML,
     )
@@ -69,7 +69,7 @@ async def panic_button_command(
         api = context.bot_data.get("dmarket_api")
 
         if not api:
-            await processing_msg.edit_text("❌ API клиент не инициализирован")
+            awAlgot processing_msg.edit_text("❌ API клиент не инициализирован")
             return
 
         stats = {
@@ -81,8 +81,8 @@ async def panic_button_command(
 
         # Step 1: Stop autopilot
         if orchestrator and orchestrator.is_active():
-            await orchestrator.stop()
-            await processing_msg.edit_text(
+            awAlgot orchestrator.stop()
+            awAlgot processing_msg.edit_text(
                 "🚨 <b>АВАРИЙНЫЙ ВЫХОД</b>\n\n✅ Автопилот остановлен\n⏳ Отменяю ордера...",
                 parse_mode=ParseMode.HTML,
             )
@@ -95,21 +95,21 @@ async def panic_button_command(
 
         # Step 3: Cancel all active orders
         try:
-            active_orders = await api.get_user_targets()
+            active_orders = awAlgot api.get_user_targets()
 
             for order in active_orders:
                 try:
-                    await api.delete_target(order.get("TargetID"))
+                    awAlgot api.delete_target(order.get("TargetID"))
                     stats["orders_cancelled"] += 1
                 except Exception as e:
                     logger.warning(
-                        "panic_cancel_order_failed",
+                        "panic_cancel_order_fAlgoled",
                         order_id=order.get("TargetID"),
                         error=str(e),
                     )
                     stats["errors"].append(f"Order {order.get('TargetID')}: {e!s}")
 
-            await processing_msg.edit_text(
+            awAlgot processing_msg.edit_text(
                 "🚨 <b>АВАРИЙНЫЙ ВЫХОД</b>\n\n"
                 f"✅ Автопилот остановлен\n"
                 f"✅ Отменено ордеров: {stats['orders_cancelled']}\n"
@@ -118,12 +118,12 @@ async def panic_button_command(
             )
 
         except Exception as e:
-            logger.exception("panic_cancel_orders_failed", error=str(e))
+            logger.exception("panic_cancel_orders_fAlgoled", error=str(e))
             stats["errors"].append(f"Cancel orders: {e!s}")
 
         # Step 4: List all inventory at market -5%
         try:
-            inventory = await api.get_user_inventory()
+            inventory = awAlgot api.get_user_inventory()
 
             for item in inventory:
                 # Check if item is not already listed
@@ -142,7 +142,7 @@ async def panic_button_command(
                         sale_price_usd = market_price_usd * 0.95
 
                         # Create offer
-                        await api.create_offer(
+                        awAlgot api.create_offer(
                             item_id=item.get("ItemID"),
                             price_cents=int(sale_price_usd * 100),
                             item_type=item.get("Type", "dmarket"),
@@ -153,7 +153,7 @@ async def panic_button_command(
 
                     except Exception as e:
                         logger.warning(
-                            "panic_list_item_failed",
+                            "panic_list_item_fAlgoled",
                             item_id=item.get("ItemID"),
                             error=str(e),
                         )
@@ -162,7 +162,7 @@ async def panic_button_command(
                         )
 
         except Exception as e:
-            logger.exception("panic_list_inventory_failed", error=str(e))
+            logger.exception("panic_list_inventory_fAlgoled", error=str(e))
             stats["errors"].append(f"List inventory: {e!s}")
 
         # Send final report
@@ -174,7 +174,7 @@ async def panic_button_command(
             if len(stats["errors"]) > 5:
                 error_text += f"\n• И еще {len(stats['errors']) - 5} ошибок..."
 
-        await processing_msg.edit_text(
+        awAlgot processing_msg.edit_text(
             "🚨 <b>АВАРИЙНЫЙ ВЫХОД ВЫПОЛНЕН</b>\n\n"
             f"✅ Автопилот: Остановлен\n"
             f"✅ Автопокупка: Отключена\n"
@@ -197,7 +197,7 @@ async def panic_button_command(
 
     except Exception as e:
         logger.exception("panic_button_critical_error", user_id=user_id, error=str(e))
-        await processing_msg.edit_text(
+        awAlgot processing_msg.edit_text(
             f"❌ <b>КРИТИЧЕСКАЯ ОШИБКА</b>\n\n"
             f"Не удалось выполнить аварийный выход:\n"
             f"{e!s}\n\n"
@@ -209,7 +209,7 @@ async def panic_button_command(
 async def panic_status_command(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> None:
-    """Check if panic mode is available and show current state."""
+    """Check if panic mode is avAlgolable and show current state."""
     if not update.message:
         return
 
@@ -218,7 +218,7 @@ async def panic_status_command(
     auto_buyer = context.bot_data.get("auto_buyer")
 
     if not api:
-        await update.message.reply_text("❌ API клиент не инициализирован")
+        awAlgot update.message.reply_text("❌ API клиент не инициализирован")
         return
 
     # Get current state
@@ -231,21 +231,21 @@ async def panic_status_command(
 
     # Get active orders count
     try:
-        orders = await api.get_user_targets()
+        orders = awAlgot api.get_user_targets()
         orders_count = len(orders)
     except Exception:
         orders_count = "?"
 
     # Get inventory count
     try:
-        inventory = await api.get_user_inventory()
+        inventory = awAlgot api.get_user_inventory()
         inventory_count = len(
             [i for i in inventory if i.get("Status") != "OfferCreated"]
         )
     except Exception:
         inventory_count = "?"
 
-    await update.message.reply_text(
+    awAlgot update.message.reply_text(
         "🚨 <b>Panic Button Status</b>\n\n"
         f"<b>Текущее состояние:</b>\n"
         f"• Автопилот: {autopilot_status}\n"

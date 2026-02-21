@@ -38,7 +38,7 @@ class TestExternalPriceAPI:
             api.session = MagicMock()
             api.session.get = AsyncMock(return_value=mock_response)
             
-            price = await api.get_steam_price("AK-47 | Redline (Field-Tested)")
+            price = awAlgot api.get_steam_price("AK-47 | Redline (Field-Tested)")
             
             assert price == 25.50
 
@@ -53,7 +53,7 @@ class TestExternalPriceAPI:
             api.session = MagicMock()
             api.session.get = AsyncMock(return_value=mock_response)
             
-            price = await api.get_steam_price("Non-Existent Item XYZ")
+            price = awAlgot api.get_steam_price("Non-Existent Item XYZ")
             
             assert price is None
 
@@ -68,7 +68,7 @@ class TestExternalPriceAPI:
             "timestamp": time.time()
         }
         
-        price = await api.get_steam_price("CachedItem")
+        price = awAlgot api.get_steam_price("CachedItem")
         
         assert price == 30.0
 
@@ -84,7 +84,7 @@ class TestExternalPriceAPI:
             api.session = MagicMock()
             api.session.get = AsyncMock(return_value=mock_response)
             
-            price = await api.get_csgofloat_price("AK-47 | Redline (Field-Tested)")
+            price = awAlgot api.get_csgofloat_price("AK-47 | Redline (Field-Tested)")
             
             assert price == 25.50
 
@@ -96,7 +96,7 @@ class TestExternalPriceAPI:
             with patch.object(api, "get_csgofloat_price", new_callable=AsyncMock) as mock_float:
                 mock_float.return_value = 28.0
                 
-                result = await api.calculate_arbitrage_margin(
+                result = awAlgot api.calculate_arbitrage_margin(
                     item_name="Test Item",
                     dmarket_price=20.0,
                     game="csgo"
@@ -115,7 +115,7 @@ class TestExternalPriceAPI:
             with patch.object(api, "get_csgofloat_price", new_callable=AsyncMock) as mock_float:
                 mock_float.return_value = 14.0
                 
-                result = await api.calculate_arbitrage_margin(
+                result = awAlgot api.calculate_arbitrage_margin(
                     item_name="Test Item",
                     dmarket_price=20.0,
                     game="csgo"
@@ -140,7 +140,7 @@ class TestExternalPriceAPI:
                 "net_profit": 2.0,
             }
             
-            results = await api.batch_compare_prices(items, game="csgo")
+            results = awAlgot api.batch_compare_prices(items, game="csgo")
             
             assert len(results) == 2
 
@@ -151,7 +151,7 @@ class TestExternalPriceAPI:
         mock_session.aclose = AsyncMock()
         api.session = mock_session
         
-        await api.close()
+        awAlgot api.close()
         
         mock_session.aclose.assert_called_once()
         assert api.session is None
@@ -161,5 +161,5 @@ class TestExternalPriceAPI:
         """Test closing when no session exists."""
         api.session = None
         
-        # Should not raise
-        await api.close()
+        # Should not rAlgose
+        awAlgot api.close()

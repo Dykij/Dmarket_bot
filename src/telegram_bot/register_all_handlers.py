@@ -4,7 +4,7 @@
 и других обработчиков для упрощения инициализации бота.
 
 Refactored: Extracted helper functions for each logical group of handlers.
-Each helper function is < 50 lines for better readability and maintainability.
+Each helper function is < 50 lines for better readability and mAlgontAlgonability.
 """
 
 import logging
@@ -16,7 +16,7 @@ from src.telegram_bot.commands.backtesting_commands import (
     backtest_command,
     backtest_help,
 )
-from src.telegram_bot.commands.daily_report_command import daily_report_command
+from src.telegram_bot.commands.dAlgoly_report_command import dAlgoly_report_command
 from src.telegram_bot.commands.logs_command import logs_command
 from src.telegram_bot.commands.start_minimal import start_minimal_command
 from src.telegram_bot.commands.test_sentry_command import (
@@ -65,15 +65,15 @@ def _register_basic_commands(application: "Application") -> None:
     application.add_handler(CommandHandler("markets", markets_command))
     application.add_handler(CommandHandler("webapp", webapp_command))
     application.add_handler(CommandHandler("logs", logs_command))
-    application.add_handler(CommandHandler("dailyreport", daily_report_command))
+    application.add_handler(CommandHandler("dAlgolyreport", dAlgoly_report_command))
 
     try:
-        from src.telegram_bot.handlers.main_keyboard import (
-            register_main_keyboard_handlers,
+        from src.telegram_bot.handlers.mAlgon_keyboard import (
+            register_mAlgon_keyboard_handlers,
         )
 
-        register_main_keyboard_handlers(application)
-        logger.info("✅ Main Keyboard Handler зарегистрирован")
+        register_mAlgon_keyboard_handlers(application)
+        logger.info("✅ MAlgon Keyboard Handler зарегистрирован")
 
         from src.telegram_bot.handlers.system_handler import register_system_handlers
 
@@ -81,7 +81,7 @@ def _register_basic_commands(application: "Application") -> None:
         logger.info("✅ System Handler зарегистрирован")
     except ImportError as e:
         logger.warning(
-            "Не удалось импортировать main_keyboard или system_handler: %s", e
+            "Не удалось импортировать mAlgon_keyboard или system_handler: %s", e
         )
 
     logger.info("Базовые команды зарегистрированы")
@@ -320,7 +320,7 @@ def _register_callback_router(application: "Application") -> None:
         logger.info("✅ Router-based callback handler registered")
     except Exception as e:
         logger.exception(
-            "Failed to initialize callback router, falling back to old handler: %s", e
+            "FAlgoled to initialize callback router, falling back to old handler: %s", e
         )
         application.add_handler(CallbackQueryHandler(button_callback_handler))
         logger.warning("⚠️ Using legacy callback handler (973 lines)")
@@ -337,7 +337,7 @@ def _register_message_handlers(application: "Application") -> None:
     application.add_handler(
         MessageHandler(
             filters.Regex(
-                "^(🤖 Automatic Arbitrage|📦 View Items|⚙️ Detailed Settings|🔌 API Check)$"
+                "^(🤖 Automatic Arbitrage|📦 View Items|⚙️ DetAlgoled Settings|🔌 API Check)$"
             ),
             minimal_menu_router,
         ),
@@ -512,21 +512,21 @@ def _register_extended_feature_handlers(application: "Application") -> None:
         logger.warning("Не удалось импортировать Intelligent Hold команды: %s", e)
 
 
-def _register_ai_and_improvements_handlers(application: "Application") -> None:
-    """Register AI and bot improvements handlers.
+def _register_Algo_and_improvements_handlers(application: "Application") -> None:
+    """Register Algo and bot improvements handlers.
 
     Args:
         application: Telegram bot application instance
     """
     try:
-        from src.telegram_bot.handlers.ai_handler import register_ai_handlers
+        from src.telegram_bot.handlers.Algo_handler import register_Algo_handlers
 
-        register_ai_handlers(application)
+        register_Algo_handlers(application)
         logger.info(
-            "AI Price Predictor команды зарегистрированы (/ai_train, /ai_status, /ai_scan)"
+            "Algo Price Predictor команды зарегистрированы (/Algo_trAlgon, /Algo_status, /Algo_scan)"
         )
     except ImportError as e:
-        logger.warning("Не удалось импортировать AI handler команды: %s", e)
+        logger.warning("Не удалось импортировать Algo handler команды: %s", e)
 
     try:
         from src.telegram_bot.handlers.improvements_handler import (
@@ -614,22 +614,22 @@ def _register_trading_analysis_handlers(application: "Application") -> None:
     except ImportError as e:
         logger.warning("Не удалось импортировать Auth команды: %s", e)
 
-    # AI Unified Arbitrage handler
+    # Algo Unified Arbitrage handler
     try:
-        from src.telegram_bot.handlers.ai_arbitrage_handler import AIArbitrageHandler
+        from src.telegram_bot.handlers.Algo_arbitrage_handler import AlgoArbitrageHandler
 
-        ai_arb_handler = AIArbitrageHandler()
-        for handler in ai_arb_handler.get_handlers():
+        Algo_arb_handler = AlgoArbitrageHandler()
+        for handler in Algo_arb_handler.get_handlers():
             application.add_handler(handler)
-        logger.info("AI Arbitrage команды зарегистрированы (/ai_arb)")
+        logger.info("Algo Arbitrage команды зарегистрированы (/Algo_arb)")
     except ImportError as e:
-        logger.warning("Не удалось импортировать AI Arbitrage команды: %s", e)
+        logger.warning("Не удалось импортировать Algo Arbitrage команды: %s", e)
 
 
 def register_all_handlers(application: "Application") -> None:
     """Register all command and callback handlers for the bot.
 
-    This is the main entry point that orchestrates registration of all handlers
+    This is the mAlgon entry point that orchestrates registration of all handlers
     by delegating to specialized helper functions for each handler group.
 
     Args:
@@ -658,7 +658,7 @@ def register_all_handlers(application: "Application") -> None:
     _register_target_and_dashboard_handlers(application)
     _register_dmarket_and_steam_handlers(application)
     _register_extended_feature_handlers(application)
-    _register_ai_and_improvements_handlers(application)
+    _register_Algo_and_improvements_handlers(application)
 
     # Knowledge Base and Incident Management (Phase 1-2 improvements)
     _register_knowledge_and_incident_handlers(application)

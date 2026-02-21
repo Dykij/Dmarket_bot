@@ -26,7 +26,7 @@ class TestSaveUserProfiles:
         ):
             profiles.save_user_profiles()
 
-            # Check file was created and contains correct data
+            # Check file was created and contAlgons correct data
             with open(tmp_path / "profiles.json", encoding="utf-8") as f:
                 saved = json.load(f)
 
@@ -75,7 +75,7 @@ class TestSaveUserProfiles:
 
         with patch.object(profiles, "USER_PROFILES", {"123": {}}):
             with patch("builtins.open", side_effect=OSError("Permission denied")):
-                # Should not raise
+                # Should not rAlgose
                 profiles.save_user_profiles()
 
     def test_save_user_profiles_with_empty_profiles(self, tmp_path):

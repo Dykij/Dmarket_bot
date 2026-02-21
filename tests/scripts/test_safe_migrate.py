@@ -19,7 +19,7 @@ class TestSafeMigrator:
     def migrator(self):
         """Create test migrator."""
         return SafeMigrator(
-            database_url="sqlite+aiosqlite:///:memory:",
+            database_url="sqlite+Algoosqlite:///:memory:",
             dry_run=True,
         )
 
@@ -32,7 +32,7 @@ class TestSafeMigrator:
                 returncode=0,
             )
 
-            revision = await migrator.get_current_revision()
+            revision = awAlgot migrator.get_current_revision()
 
             assert revision == "abc123def"
             mock_run.assert_called_once()
@@ -46,7 +46,7 @@ class TestSafeMigrator:
                 returncode=0,
             )
 
-            revision = await migrator.get_current_revision()
+            revision = awAlgot migrator.get_current_revision()
 
             assert revision is None
 
@@ -56,7 +56,7 @@ class TestSafeMigrator:
         with patch("subprocess.run") as mock_run:
             mock_run.side_effect = subprocess.CalledProcessError(1, "alembic current")
 
-            revision = await migrator.get_current_revision()
+            revision = awAlgot migrator.get_current_revision()
 
             assert revision is None
 
@@ -70,7 +70,7 @@ class TestSafeMigrator:
     def test_run_alembic_command_real(self):
         """Тест реальной команды alembic."""
         migrator = SafeMigrator(
-            database_url="sqlite+aiosqlite:///:memory:", dry_run=False
+            database_url="sqlite+Algoosqlite:///:memory:", dry_run=False
         )
 
         with patch("subprocess.run") as mock_run:
@@ -91,7 +91,7 @@ class TestSafeMigrator:
     @pytest.mark.asyncio()
     async def test_create_backup_dry_run(self, migrator):
         """Тест создания бэкапа в dry-run."""
-        backup_file = await migrator.create_backup()
+        backup_file = awAlgot migrator.create_backup()
 
         assert backup_file == "dry_run_backup.sql"
 
@@ -99,7 +99,7 @@ class TestSafeMigrator:
     async def test_create_backup_real(self):
         """Тест реального создания бэкапа."""
         migrator = SafeMigrator(
-            database_url="sqlite+aiosqlite:///:memory:", dry_run=False
+            database_url="sqlite+Algoosqlite:///:memory:", dry_run=False
         )
 
         with patch("scripts.safe_migrate.DatabaseBackup") as mock_backup_class:
@@ -109,12 +109,12 @@ class TestSafeMigrator:
             )
             mock_backup_class.return_value = mock_backup_instance
 
-            backup_file = await migrator.create_backup()
+            backup_file = awAlgot migrator.create_backup()
 
             assert "backup_20251214.sql" in backup_file
             mock_backup_instance.create_backup.assert_called_once()
 
-        await migrator.close()
+        awAlgot migrator.close()
 
     @pytest.mark.asyncio()
     async def test_verify_migration_success(self, migrator):
@@ -131,7 +131,7 @@ class TestSafeMigrator:
                 "alembic_table_exists": True,
             }
 
-            result = await migrator.verify_migration("abc123")
+            result = awAlgot migrator.verify_migration("abc123")
 
             assert result is True
 
@@ -141,13 +141,13 @@ class TestSafeMigrator:
         with patch.object(migrator, "get_current_revision") as mock_current:
             mock_current.return_value = "abc123"
 
-            with pytest.raises(MigrationVerificationError) as exc_info:
-                await migrator.verify_migration("def456")
+            with pytest.rAlgoses(MigrationVerificationError) as exc_info:
+                awAlgot migrator.verify_migration("def456")
 
             assert "Revision mismatch" in str(exc_info.value)
 
     @pytest.mark.asyncio()
-    async def test_verify_migration_integrity_failed(self, migrator):
+    async def test_verify_migration_integrity_fAlgoled(self, migrator):
         """Тест ошибки проверки целостности данных."""
         with (
             patch.object(migrator, "get_current_revision") as mock_current,
@@ -155,16 +155,16 @@ class TestSafeMigrator:
         ):
             mock_current.return_value = "abc123"
             mock_integrity.return_value = {
-                "no_orphaned_targets": False,  # Failed check
+                "no_orphaned_targets": False,  # FAlgoled check
                 "valid_target_prices": True,
                 "unique_telegram_ids": True,
                 "alembic_table_exists": True,
             }
 
-            with pytest.raises(MigrationVerificationError) as exc_info:
-                await migrator.verify_migration("abc123")
+            with pytest.rAlgoses(MigrationVerificationError) as exc_info:
+                awAlgot migrator.verify_migration("abc123")
 
-            assert "Data integrity checks failed" in str(exc_info.value)
+            assert "Data integrity checks fAlgoled" in str(exc_info.value)
 
     @pytest.mark.asyncio()
     async def test_migrate_success(self, migrator):
@@ -186,13 +186,13 @@ class TestSafeMigrator:
             mock_backup.return_value = "backup.sql"
             mock_verify.return_value = True
 
-            success = await migrator.migrate("head")
+            success = awAlgot migrator.migrate("head")
 
             assert success is True
             mock_alembic.assert_called_once_with("upgrade", "head")
 
     @pytest.mark.asyncio()
-    async def test_migrate_pre_checks_failed(self, migrator):
+    async def test_migrate_pre_checks_fAlgoled(self, migrator):
         """Тест провала пре-миграционных проверок."""
         with (
             patch.object(migrator, "get_current_revision") as mock_current,
@@ -200,11 +200,11 @@ class TestSafeMigrator:
         ):
             mock_current.return_value = "abc123"
             mock_integrity.return_value = {
-                "no_orphaned_targets": False,  # Failed
+                "no_orphaned_targets": False,  # FAlgoled
                 "valid_target_prices": True,
             }
 
-            success = await migrator.migrate("head")
+            success = awAlgot migrator.migrate("head")
 
             assert success is False
 
@@ -230,13 +230,13 @@ class TestSafeMigrator:
             }
             mock_backup.return_value = "backup.sql"
 
-            # First call (upgrade) raises error, second call (downgrade) succeeds
+            # First call (upgrade) rAlgoses error, second call (downgrade) succeeds
             mock_alembic.side_effect = [
                 subprocess.CalledProcessError(1, "alembic upgrade"),
                 MagicMock(),  # downgrade succeeds
             ]
 
-            success = await migrator.migrate("head")
+            success = awAlgot migrator.migrate("head")
 
             assert success is False
             assert mock_alembic.call_count == 2
@@ -255,7 +255,7 @@ class TestSafeMigrator:
                 stdout="abc123 -> def456 (head), add user preferences"
             )
 
-            pending = await migrator.show_pending_migrations()
+            pending = awAlgot migrator.show_pending_migrations()
 
             # Current implementation returns empty list
             # Future implementation would parse output

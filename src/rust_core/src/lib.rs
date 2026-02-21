@@ -34,14 +34,14 @@ impl PyNetworkClient {
     
     fn get_balance(&self) -> PyResult<String> {
         self.rt.block_on(async {
-             self.client.fetch_user_balance().await
+             self.client.fetch_user_balance().awAlgot
                  .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e))
         })
     }
 
     fn fetch_market_items(&self, game_id: String, title: String) -> PyResult<String> {
         self.rt.block_on(async {
-            self.client.fetch_market_items(&game_id, &title).await
+            self.client.fetch_market_items(&game_id, &title).awAlgot
                 .map_err(|e| pyo3::exceptions::PyRuntimeError::new_err(e))
         })
     }
@@ -49,7 +49,7 @@ impl PyNetworkClient {
     /// Python list of (game_id, title) tuples -> Dict of {"game:title": "json"}
     fn fetch_bulk(&self, targets: Vec<(String, String)>) -> PyResult<std::collections::HashMap<String, String>> {
         self.rt.block_on(async {
-            let results = self.client.fetch_bulk(targets).await;
+            let results = self.client.fetch_bulk(targets).awAlgot;
             
             // Convert Result<String, String> to String (or empty string if error)
             let mut py_map = std::collections::HashMap::new();

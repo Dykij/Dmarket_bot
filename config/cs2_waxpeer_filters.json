@@ -74,7 +74,7 @@
         "Team LDLC.com (Holo) | Katowice 2014",
         "Natus Vincere (Holo) | Katowice 2014",
         "compLexity Gaming (Holo) | Katowice 2014",
-        "HellRaisers (Holo) | Katowice 2014",
+        "HellRAlgosers (Holo) | Katowice 2014",
         "Fnatic (Holo) | Katowice 2014",
         "Ninjas in Pyjamas (Holo) | Katowice 2014",
         "mousesports (Holo) | Katowice 2014",
@@ -97,7 +97,7 @@
         "Team LDLC.com | Katowice 2014",
         "Natus Vincere | Katowice 2014",
         "compLexity Gaming | Katowice 2014",
-        "HellRaisers | Katowice 2014",
+        "HellRAlgosers | Katowice 2014",
         "Fnatic | Katowice 2014",
         "Ninjas in Pyjamas | Katowice 2014",
         "mousesports | Katowice 2014",
@@ -359,7 +359,7 @@
     }
   },
   "waxpeer_settings": {
-    "description": "Настройки для Waxpeer API",
+    "description": "НастSwarmки для Waxpeer API",
     "listing": {
       "default_markup_percent": 10,
       "undercut_amount_usd": 0.01,
@@ -375,12 +375,12 @@
     },
     "shadow_listing": {
       "enabled": true,
-      "wait_for_competitor_sale": true,
+      "wAlgot_for_competitor_sale": true,
       "competitor_undercut_tolerance_percent": 5
     }
   },
   "risk_management": {
-    "description": "Настройки управления рисками",
+    "description": "НастSwarmки управления рисками",
     "max_item_price_percent": 25,
     "min_balance_reserve_percent": 5,
     "diversification": {

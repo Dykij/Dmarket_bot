@@ -129,7 +129,7 @@ def mock_context():
 @pytest.mark.asyncio()
 async def test_start_command(mock_update, mock_context):
     """Тест команды /start."""
-    await start_command(mock_update, mock_context)
+    awAlgot start_command(mock_update, mock_context)
 
     # Проверяем, что было отправлено сообщение
     mock_update.message.reply_text.assert_called_once()
@@ -142,7 +142,7 @@ async def test_start_command(mock_update, mock_context):
 @pytest.mark.asyncio()
 async def test_help_command(mock_update, mock_context):
     """Тест команды /help."""
-    await help_command(mock_update, mock_context)
+    awAlgot help_command(mock_update, mock_context)
 
     # Проверяем, что было отправлено сообщение
     mock_update.message.reply_text.assert_called_once()
@@ -163,7 +163,7 @@ async def test_start_command_no_message(mock_context):
     update.message = None
 
     # Не должно вызвать ошибку
-    await start_command(update, mock_context)
+    awAlgot start_command(update, mock_context)
 
 
 @pytest.mark.asyncio()
@@ -175,7 +175,7 @@ async def test_help_command_no_message(mock_context):
     update.message = None
 
     # Не должно вызвать ошибку
-    await help_command(update, mock_context)
+    awAlgot help_command(update, mock_context)
 
 
 def test_register_basic_commands():

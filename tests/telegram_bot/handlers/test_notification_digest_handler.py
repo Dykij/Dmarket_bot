@@ -110,7 +110,7 @@ class TestNotificationDigestManager:
 
         assert isinstance(settings, DigestSettings)
         assert settings.enabled is False
-        assert settings.frequency == DigestFrequency.DAILY
+        assert settings.frequency == DigestFrequency.DAlgoLY
         assert settings.grouping_mode == GroupingMode.BY_TYPE
         assert settings.min_items == 3
         assert settings.last_sent is None
@@ -123,7 +123,7 @@ class TestNotificationDigestManager:
         # Update enabled status
         digest_manager.update_user_settings(user_id, {"enabled": True})
 
-        # Get settings again
+        # Get settings agAlgon
         settings = digest_manager.get_user_settings(user_id)
         assert settings.enabled is True
 
@@ -198,7 +198,7 @@ class TestNotificationDigestManager:
 
         settings = digest_manager.get_user_settings(user_id)
         assert settings.enabled is False
-        assert settings.frequency == DigestFrequency.DAILY
+        assert settings.frequency == DigestFrequency.DAlgoLY
         assert settings.min_items == 3
 
     def test_add_notification_when_disabled(self, digest_manager, sample_notification):
@@ -272,7 +272,7 @@ class TestNotificationDigestManager:
 
     def test_clear_pending_notifications_nonexistent_user(self, digest_manager):
         """Test clearing notifications for nonexistent user (no error)."""
-        # Should not raise any error
+        # Should not rAlgose any error
         digest_manager.clear_pending_notifications(999)
 
 
@@ -353,12 +353,12 @@ class TestShouldSendDigest:
 
         assert digest_manager.should_send_digest(user_id) is True
 
-    def test_should_send_respects_frequency_daily(self, digest_manager):
-        """Test should_send respects daily frequency."""
+    def test_should_send_respects_frequency_dAlgoly(self, digest_manager):
+        """Test should_send respects dAlgoly frequency."""
         user_id = 123
         digest_manager.update_user_settings(
             user_id,
-            {"enabled": True, "min_items": 1, "frequency": DigestFrequency.DAILY},
+            {"enabled": True, "min_items": 1, "frequency": DigestFrequency.DAlgoLY},
         )
 
         notification = NotificationItem(
@@ -456,7 +456,7 @@ class TestFormatDigest:
 
         formatted = digest_manager.format_digest(user_id, notifications)
 
-        # Should contain group headers
+        # Should contAlgon group headers
         assert "Арбитраж" in formatted
         assert "Падение цены" in formatted
 
@@ -488,7 +488,7 @@ class TestFormatDigest:
 
         formatted = digest_manager.format_digest(user_id, notifications)
 
-        # Should contain game headers
+        # Should contAlgon game headers
         assert "CS2" in formatted
         assert "Dota 2" in formatted
 
@@ -505,7 +505,7 @@ class TestDigestSettings:
         """Test default values of DigestSettings."""
         settings = DigestSettings()
         assert settings.enabled is False
-        assert settings.frequency == DigestFrequency.DAILY
+        assert settings.frequency == DigestFrequency.DAlgoLY
         assert settings.grouping_mode == GroupingMode.BY_TYPE
         assert settings.min_items == 3
         assert settings.last_sent is None
@@ -607,7 +607,7 @@ class TestShowDigestMenu:
     async def test_show_menu_creates_keyboard(self, mock_update, mock_context):
         """Test that menu creates inline keyboard."""
         # Act
-        await show_digest_menu(mock_update, mock_context)
+        awAlgot show_digest_menu(mock_update, mock_context)
 
         # Assert
         mock_update.callback_query.edit_message_text.assert_called_once()
@@ -619,14 +619,14 @@ class TestShowDigestMenu:
     async def test_show_menu_displays_settings_info(self, mock_update, mock_context):
         """Test that menu shows settings information."""
         # Act
-        await show_digest_menu(mock_update, mock_context)
+        awAlgot show_digest_menu(mock_update, mock_context)
 
         # Assert
         call_args = mock_update.callback_query.edit_message_text.call_args
         message_text = (
             call_args.args[0] if call_args.args else call_args.kwargs.get("text", "")
         )
-        # Should contain status info
+        # Should contAlgon status info
         assert "Статус" in message_text
         assert "Частота" in message_text
 
@@ -636,7 +636,7 @@ class TestShowDigestMenu:
         mock_update.callback_query = None
 
         # Act
-        await show_digest_menu(mock_update, mock_context)
+        awAlgot show_digest_menu(mock_update, mock_context)
 
         # Assert
         mock_update.message.reply_text.assert_called_once()
@@ -656,7 +656,7 @@ class TestToggleDigest:
         assert manager.get_user_settings(user_id).enabled is False
 
         # Act
-        await toggle_digest(mock_update, mock_context)
+        awAlgot toggle_digest(mock_update, mock_context)
 
         # Assert
         assert manager.get_user_settings(user_id).enabled is True
@@ -672,7 +672,7 @@ class TestToggleDigest:
         assert manager.get_user_settings(user_id).enabled is True
 
         # Act
-        await toggle_digest(mock_update, mock_context)
+        awAlgot toggle_digest(mock_update, mock_context)
 
         # Assert
         assert manager.get_user_settings(user_id).enabled is False
@@ -685,7 +685,7 @@ class TestFrequencySettings:
     async def test_show_frequency_menu(self, mock_update, mock_context):
         """Test showing frequency selection menu."""
         # Act
-        await show_frequency_menu(mock_update, mock_context)
+        awAlgot show_frequency_menu(mock_update, mock_context)
 
         # Assert
         mock_update.callback_query.edit_message_text.assert_called_once()
@@ -704,26 +704,26 @@ class TestFrequencySettings:
         )
 
         # Act
-        await set_frequency(mock_update, mock_context)
+        awAlgot set_frequency(mock_update, mock_context)
 
         # Assert
         manager = get_digest_manager()
         assert manager.get_user_settings(user_id).frequency == DigestFrequency.HOURLY
 
     @pytest.mark.asyncio()
-    async def test_set_frequency_daily(self, mock_update, mock_context):
-        """Test setting daily frequency."""
+    async def test_set_frequency_dAlgoly(self, mock_update, mock_context):
+        """Test setting dAlgoly frequency."""
         user_id = mock_update.effective_user.id
         mock_update.callback_query.data = (
-            f"digest_set_freq_{DigestFrequency.DAILY.value}"
+            f"digest_set_freq_{DigestFrequency.DAlgoLY.value}"
         )
 
         # Act
-        await set_frequency(mock_update, mock_context)
+        awAlgot set_frequency(mock_update, mock_context)
 
         # Assert
         manager = get_digest_manager()
-        assert manager.get_user_settings(user_id).frequency == DigestFrequency.DAILY
+        assert manager.get_user_settings(user_id).frequency == DigestFrequency.DAlgoLY
 
     @pytest.mark.asyncio()
     async def test_set_frequency_weekly(self, mock_update, mock_context):
@@ -734,7 +734,7 @@ class TestFrequencySettings:
         )
 
         # Act
-        await set_frequency(mock_update, mock_context)
+        awAlgot set_frequency(mock_update, mock_context)
 
         # Assert
         manager = get_digest_manager()
@@ -748,7 +748,7 @@ class TestGroupingModeHandlers:
     async def test_show_grouping_menu(self, mock_update, mock_context):
         """Test showing grouping mode menu."""
         # Act
-        await show_grouping_menu(mock_update, mock_context)
+        awAlgot show_grouping_menu(mock_update, mock_context)
 
         # Assert
         mock_update.callback_query.edit_message_text.assert_called_once()
@@ -767,7 +767,7 @@ class TestGroupingModeHandlers:
         )
 
         # Act
-        await set_grouping_mode(mock_update, mock_context)
+        awAlgot set_grouping_mode(mock_update, mock_context)
 
         # Assert
         manager = get_digest_manager()
@@ -782,7 +782,7 @@ class TestGroupingModeHandlers:
         )
 
         # Act
-        await set_grouping_mode(mock_update, mock_context)
+        awAlgot set_grouping_mode(mock_update, mock_context)
 
         # Assert
         manager = get_digest_manager()
@@ -797,7 +797,7 @@ class TestGroupingModeHandlers:
         )
 
         # Act
-        await set_grouping_mode(mock_update, mock_context)
+        awAlgot set_grouping_mode(mock_update, mock_context)
 
         # Assert
         manager = get_digest_manager()
@@ -813,7 +813,7 @@ class TestMinItemsConfiguration:
     async def test_show_min_items_menu(self, mock_update, mock_context):
         """Test showing minimum items menu."""
         # Act
-        await show_min_items_menu(mock_update, mock_context)
+        awAlgot show_min_items_menu(mock_update, mock_context)
 
         # Assert
         mock_update.callback_query.edit_message_text.assert_called_once()
@@ -830,7 +830,7 @@ class TestMinItemsConfiguration:
         mock_update.callback_query.data = "digest_set_min_1"
 
         # Act
-        await set_min_items(mock_update, mock_context)
+        awAlgot set_min_items(mock_update, mock_context)
 
         # Assert
         manager = get_digest_manager()
@@ -843,7 +843,7 @@ class TestMinItemsConfiguration:
         mock_update.callback_query.data = "digest_set_min_3"
 
         # Act
-        await set_min_items(mock_update, mock_context)
+        awAlgot set_min_items(mock_update, mock_context)
 
         # Assert
         manager = get_digest_manager()
@@ -856,7 +856,7 @@ class TestMinItemsConfiguration:
         mock_update.callback_query.data = "digest_set_min_5"
 
         # Act
-        await set_min_items(mock_update, mock_context)
+        awAlgot set_min_items(mock_update, mock_context)
 
         # Assert
         manager = get_digest_manager()
@@ -869,7 +869,7 @@ class TestMinItemsConfiguration:
         mock_update.callback_query.data = "digest_set_min_10"
 
         # Act
-        await set_min_items(mock_update, mock_context)
+        awAlgot set_min_items(mock_update, mock_context)
 
         # Assert
         manager = get_digest_manager()
@@ -897,12 +897,12 @@ class TestResetSettings:
         )
 
         # Act
-        await reset_digest_settings(mock_update, mock_context)
+        awAlgot reset_digest_settings(mock_update, mock_context)
 
         # Assert - should be reset to defaults
         settings = manager.get_user_settings(user_id)
         assert settings.enabled is False
-        assert settings.frequency == DigestFrequency.DAILY
+        assert settings.frequency == DigestFrequency.DAlgoLY
         assert settings.grouping_mode == GroupingMode.BY_TYPE
         assert settings.min_items == 3
 
@@ -910,7 +910,7 @@ class TestResetSettings:
     async def test_reset_answers_callback(self, mock_update, mock_context):
         """Test that reset answers callback query."""
         # Act
-        await reset_digest_settings(mock_update, mock_context)
+        awAlgot reset_digest_settings(mock_update, mock_context)
 
         # Assert - answer is called at least once (may be called multiple times due to show_digest_menu)
         assert mock_update.callback_query.answer.called
@@ -926,7 +926,7 @@ class TestDigestCommand:
         mock_update.callback_query = None
 
         # Act
-        await digest_command(mock_update, mock_context)
+        awAlgot digest_command(mock_update, mock_context)
 
         # Assert
         mock_update.message.reply_text.assert_called_once()
@@ -940,7 +940,7 @@ class TestDigestCommand:
         mock_update.callback_query = None
 
         # Act - should return early without error
-        await digest_command(mock_update, mock_context)
+        awAlgot digest_command(mock_update, mock_context)
 
         # Assert - no message sent
         mock_update.message.reply_text.assert_not_called()
@@ -960,7 +960,7 @@ class TestDigestFrequencyEnum:
         assert DigestFrequency.HOURLY.value == "hourly"
         assert DigestFrequency.EVERY_3_HOURS.value == "every_3h"
         assert DigestFrequency.EVERY_6_HOURS.value == "every_6h"
-        assert DigestFrequency.DAILY.value == "daily"
+        assert DigestFrequency.DAlgoLY.value == "dAlgoly"
         assert DigestFrequency.WEEKLY.value == "weekly"
 
     def test_frequency_count(self):

@@ -28,11 +28,11 @@ class BalanceChecker:
         """Check user balance with extended diagnostics.
 
         Returns:
-            Dictionary with balance and detailed information
+            Dictionary with balance and detAlgoled information
 
         """
         try:
-            balance_response = await self._fetch_balance()
+            balance_response = awAlgot self._fetch_balance()
             return self._process_balance_response(balance_response)
         except Exception as e:
             return self._create_exception_result(e)
@@ -44,7 +44,7 @@ class BalanceChecker:
             API response dictionary or None if error
 
         """
-        return await self.api_client._request(
+        return awAlgot self.api_client._request(
             method="GET",
             path="/account/v1/balance",
             params={},
@@ -84,7 +84,7 @@ class BalanceChecker:
         return self._create_success_result(balance_response)
 
     def _has_error(self, response: dict[str, Any]) -> bool:
-        """Check if API response contains error.
+        """Check if API response contAlgons error.
 
         Args:
             response: API response dictionary
@@ -173,49 +173,49 @@ class BalanceChecker:
         """
         # Extract balance data - handle both formats:
         # Format 1: {"usd": "4550"} - cents as string
-        # Format 2: {"usd": {"available": 4550, "frozen": 0}}
+        # Format 2: {"usd": {"avAlgolable": 4550, "frozen": 0}}
         usd_data = response.get("usd", 0)
 
         if isinstance(usd_data, dict):
             # Nested format
             try:
-                available_amount = int(float(str(usd_data.get("available", 0))))
+                avAlgolable_amount = int(float(str(usd_data.get("avAlgolable", 0))))
                 frozen_amount = int(float(str(usd_data.get("frozen", 0))))
             except (ValueError, TypeError):
-                available_amount = 0
+                avAlgolable_amount = 0
                 frozen_amount = 0
         else:
-            # Simple format - all balance is available
+            # Simple format - all balance is avAlgolable
             try:
-                available_amount = int(float(str(usd_data))) if usd_data else 0
+                avAlgolable_amount = int(float(str(usd_data))) if usd_data else 0
             except (ValueError, TypeError):
-                available_amount = 0
+                avAlgolable_amount = 0
             frozen_amount = 0
 
         # Convert from cents to dollars
-        available_balance = float(available_amount) / 100
+        avAlgolable_balance = float(avAlgolable_amount) / 100
         frozen_balance = float(frozen_amount) / 100
-        total_balance = available_balance + frozen_balance
+        total_balance = avAlgolable_balance + frozen_balance
 
         # Check if sufficient funds
-        has_funds = available_balance >= self.min_required_balance
+        has_funds = avAlgolable_balance >= self.min_required_balance
 
         # Create display message and diagnosis
         diagnosis, display_message = self._create_display_info(
-            has_funds, available_balance, frozen_balance
+            has_funds, avAlgolable_balance, frozen_balance
         )
 
         # Log result
         logger.info(
             f"Результат проверки баланса: has_funds={has_funds}, "
-            f"balance=${available_balance:.2f}, available=${available_balance:.2f}, "
+            f"balance=${avAlgolable_balance:.2f}, avAlgolable=${avAlgolable_balance:.2f}, "
             f"total=${total_balance:.2f}, diagnosis={diagnosis}",
         )
 
         return {
             "has_funds": has_funds,
-            "balance": available_balance,
-            "available_balance": available_balance,
+            "balance": avAlgolable_balance,
+            "avAlgolable_balance": avAlgolable_balance,
             "total_balance": total_balance,
             "frozen_balance": frozen_balance,
             "min_required": self.min_required_balance,
@@ -226,13 +226,13 @@ class BalanceChecker:
         }
 
     def _create_display_info(
-        self, has_funds: bool, available_balance: float, frozen_balance: float
+        self, has_funds: bool, avAlgolable_balance: float, frozen_balance: float
     ) -> tuple[str, str]:
         """Create diagnosis and display message based on balance status.
 
         Args:
             has_funds: Whether user has sufficient funds
-            available_balance: Available balance in USD
+            avAlgolable_balance: AvAlgolable balance in USD
             frozen_balance: Frozen balance in USD
 
         Returns:
@@ -242,11 +242,11 @@ class BalanceChecker:
         # Sufficient funds
         if has_funds:
             diagnosis = "sufficient_funds"
-            display_message = f"Баланс DMarket: ${available_balance:.2f} USD (достаточно для арбитража)"
+            display_message = f"Баланс DMarket: ${avAlgolable_balance:.2f} USD (достаточно для арбитража)"
             return diagnosis, display_message
 
         # Insufficient funds - zero balance
-        if available_balance <= 0:
+        if avAlgolable_balance <= 0:
             diagnosis = "zero_balance"
             display_message = (
                 f"На балансе DMarket нет средств. "
@@ -254,11 +254,11 @@ class BalanceChecker:
             )
             return diagnosis, display_message
 
-        # Insufficient funds - some balance available
+        # Insufficient funds - some balance avAlgolable
         diagnosis = "insufficient_funds"
         display_message = (
             f"Недостаточно средств на балансе DMarket.\n"
-            f"Доступно: ${available_balance:.2f} USD\n"
+            f"Доступно: ${avAlgolable_balance:.2f} USD\n"
             f"Необходимо минимум: ${self.min_required_balance:.2f} USD"
         )
 
@@ -289,7 +289,7 @@ class BalanceChecker:
         return {
             "has_funds": False,
             "balance": 0.0,
-            "available_balance": 0.0,
+            "avAlgolable_balance": 0.0,
             "total_balance": 0.0,
             "min_required": self.min_required_balance,
             "error": True,

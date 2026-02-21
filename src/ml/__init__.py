@@ -1,15 +1,15 @@
-"""ML/AI модуль для прогнозирования цен на DMarket.
+"""ML/Algo модуль для прогнозирования цен на DMarket.
 
 Этот модуль предоставляет адаптивные ML модели для:
 - Прогнозирования цен предметов
 - Определения оптимального времени покупки/продажи
 - Классификации рисков сделок
 - Адаптации к текущему балансу пользователя
-- Автоматической настройки гиперпараметров (ModelTuner)
+- Автоматической настSwarmки гиперпараметров (ModelTuner)
 - Обнаружения аномалий и манипуляций
 - Умных рекомендаций по покупке/продаже
 - ML-based выбор оптимального порога скидки
-- Автономное управление ботом (AICoordinator, BotBrain)
+- Автономное управление ботом (AlgoCoordinator, BotBrAlgon)
 
 Используемые библиотеки (все бесплатные):
 - scikit-learn: основные ML модели (RandomForest, GradientBoosting, Ridge)
@@ -25,19 +25,19 @@
 - Rust
 
 Документация:
-- docs/ML_AI_GUIDE.md
-- docs/AI_BOT_CONTROL_PLAN.md
+- docs/ML_Algo_GUIDE.md
+- docs/Algo_BOT_CONTROL_PLAN.md
 """
 
-from src.ml.ai_coordinator import (
-    AICoordinator,
+from src.ml.Algo_coordinator import (
+    AlgoCoordinator,
     AutonomyLevel,
     ItemAnalysis,
     SafetyLimits,
     TradeAction,
     TradeDecision,
-    get_ai_coordinator,
-    reset_ai_coordinator,
+    get_Algo_coordinator,
+    reset_Algo_coordinator,
 )
 from src.ml.anomaly_detection import (
     AnomalyDetector,
@@ -47,14 +47,14 @@ from src.ml.anomaly_detection import (
     create_anomaly_detector,
 )
 from src.ml.balance_adapter import BalanceAdaptiveStrategy, StrategyRecommendation
-from src.ml.bot_brain import (
+from src.ml.bot_brAlgon import (
     Alert,
     AlertLevel,
     AutonomyConfig,
-    BotBrain,
+    BotBrAlgon,
     BotState,
     CycleResult,
-    create_bot_brain,
+    create_bot_brAlgon,
 )
 from src.ml.data_scheduler import (
     MLDataScheduler,
@@ -66,7 +66,7 @@ from src.ml.discount_threshold_predictor import (
     DiscountThresholdPredictor,
     MarketCondition,
     ThresholdPrediction,
-    TrainingExample,
+    TrAlgoningExample,
     get_discount_threshold_predictor,
     predict_discount_threshold,
 )
@@ -89,7 +89,7 @@ from src.ml.model_tuner import (
     TuningResult,
 )
 
-# Real Data Training Modules (новые модули для обучения на реальных данных API)
+# Real Data TrAlgoning Modules (новые модули для обучения на реальных данных API)
 from src.ml.price_normalizer import NormalizedPrice, PriceNormalizer, PriceSource
 from src.ml.price_predictor import (
     AdaptivePricePredictor,
@@ -116,23 +116,23 @@ from src.ml.smart_recommendations import (
     RiskLevel as RecommendationRiskLevel,
 )
 from src.ml.trade_classifier import AdaptiveTradeClassifier, RiskLevel, TradeSignal
-from src.ml.training_data_manager import (
+from src.ml.trAlgoning_data_manager import (
     DatasetMetadata,
-    TrainingDataManager,
-    TrainingDataset,
+    TrAlgoningDataManager,
+    TrAlgoningDataset,
 )
 
 __all__ = [
     # ═══════════════════════════════════════════════════════════════════
-    # AI Coordinator - Unified ML module coordinator
+    # Algo Coordinator - Unified ML module coordinator
     # ═══════════════════════════════════════════════════════════════════
-    "AICoordinator",
+    "AlgoCoordinator",
     # Price Predictor (базовый)
     "AdaptivePricePredictor",
     # Trade Classifier
     "AdaptiveTradeClassifier",
     # ═══════════════════════════════════════════════════════════════════
-    # BotBrain - Autonomous decision-making module
+    # BotBrAlgon - Autonomous decision-making module
     # ═══════════════════════════════════════════════════════════════════
     "Alert",
     "AlertLevel",
@@ -146,7 +146,7 @@ __all__ = [
     "AutonomyLevel",
     # Balance Adapter
     "BalanceAdaptiveStrategy",
-    "BotBrain",
+    "BotBrAlgon",
     "BotState",
     "CVStrategy",
     "CollectedPrice",
@@ -175,13 +175,13 @@ __all__ = [
     "MarketCondition",
     # Feature Extractor
     "MarketFeatureExtractor",
-    # Model Tuner (автонастройка)
+    # Model Tuner (автонастSwarmка)
     "ModelTuner",
     "NormalizedPrice",
     "PredictionConfidence",
     "PriceFeatures",
     # ═══════════════════════════════════════════════════════════════════
-    # Real Data Training (обучение на реальных данных с API)
+    # Real Data TrAlgoning (обучение на реальных данных с API)
     # ═══════════════════════════════════════════════════════════════════
     # Price Normalizer - нормализация цен с разных платформ
     "PriceNormalizer",
@@ -205,16 +205,16 @@ __all__ = [
     "TradeAction",
     "TradeDecision",
     "TradeSignal",
-    # Training Data Manager - управление обучающими данными
-    "TrainingDataManager",
-    "TrainingDataset",
-    "TrainingExample",
+    # TrAlgoning Data Manager - управление обучающими данными
+    "TrAlgoningDataManager",
+    "TrAlgoningDataset",
+    "TrAlgoningExample",
     "TuningResult",
     "create_anomaly_detector",
-    "create_bot_brain",
+    "create_bot_brAlgon",
     "create_smart_recommendations",
-    "get_ai_coordinator",
+    "get_Algo_coordinator",
     "get_discount_threshold_predictor",
     "predict_discount_threshold",
-    "reset_ai_coordinator",
+    "reset_Algo_coordinator",
 ]

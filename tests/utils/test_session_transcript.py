@@ -68,7 +68,7 @@ class TestSessionAction:
         # Act
         action = SessionAction(
             action_type=ActionType.ERROR,
-            description="Build failed",
+            description="Build fAlgoled",
             success=False,
             error_message="Compilation error on line 42",
         )
@@ -134,7 +134,7 @@ class TestSessionTranscript:
         assert transcript.session_id == "test-session-123"
         assert transcript.title == "Test Session"
         assert transcript.actions == []
-        assert transcript.ai_model == "github-copilot"
+        assert transcript.Algo_model == "github-copilot"
 
     def test_transcript_to_dict(self):
         """Test converting transcript to dictionary."""
@@ -288,7 +288,7 @@ class TestSessionTranscriptGenerator:
             ActionType.TEST_RUN,
             "Run tests",
             success=True,
-            details={"passed": 10},
+            detAlgols={"passed": 10},
         )
 
         # Assert
@@ -310,7 +310,7 @@ class TestSessionTranscriptGenerator:
 
         # Assert
         session = generator.get_current_session()
-        # Error action + failed action = 2 errors
+        # Error action + fAlgoled action = 2 errors
         assert session.metrics.errors_encountered >= 1
 
     def test_end_session(self, generator):

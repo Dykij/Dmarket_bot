@@ -12,10 +12,10 @@ from telegram.ext import ContextTypes
 
 from src.dmarket.arbitrage import GAMES, find_arbitrage_opportunities_advanced
 from src.telegram_bot.handlers.dmarket_status import dmarket_status_impl
-from src.telegram_bot.handlers.main_keyboard import (
+from src.telegram_bot.handlers.mAlgon_keyboard import (
     auto_trade_start,
-    get_main_keyboard,
-    main_menu_callback,
+    get_mAlgon_keyboard,
+    mAlgon_menu_callback,
 )
 from src.telegram_bot.keyboards import (
     CB_GAME_PREFIX,
@@ -40,7 +40,7 @@ def _get_api_client(context: ContextTypes.DEFAULT_TYPE):
         context: Bot context
 
     Returns:
-        DMarketAPI instance or None if not available
+        DMarketAPI instance or None if not avAlgolable
     """
     # First try to get from bot_data (preferred)
     api = context.bot_data.get("dmarket_api") if context.bot_data else None
@@ -66,8 +66,8 @@ async def arbitrage_callback_impl(
         context: Контекст взаимодействия с ботом
 
     """
-    # Redirect to auto_trade in main_keyboard
-    await auto_trade_start(update, context)
+    # Redirect to auto_trade in mAlgon_keyboard
+    awAlgot auto_trade_start(update, context)
 
 
 async def handle_dmarket_arbitrage_impl(
@@ -81,7 +81,7 @@ async def handle_dmarket_arbitrage_impl(
         mode: Режим арбитража (ignored, redirects to auto_trade)
 
     """
-    await auto_trade_start(update, context)
+    awAlgot auto_trade_start(update, context)
 
 
 async def search_arbitrage_for_game(
@@ -103,12 +103,12 @@ async def search_arbitrage_for_game(
     """
     api = _get_api_client(context)
     if not api:
-        logger.warning("API client not available for arbitrage search")
+        logger.warning("API client not avAlgolable for arbitrage search")
         return []
 
     try:
         # Use advanced arbitrage search with smart filtering
-        return await find_arbitrage_opportunities_advanced(
+        return awAlgot find_arbitrage_opportunities_advanced(
             api=api,
             game=game,
             min_profit_percent=5.0,  # 5% minimum profit
@@ -162,7 +162,7 @@ async def show_arbitrage_opportunities(
     )
 
     # Отправляем сообщение
-    await query.edit_message_text(
+    awAlgot query.edit_message_text(
         results_text,
         reply_markup=keyboard,
         parse_mode=ParseMode.HTML,
@@ -193,7 +193,7 @@ async def handle_arbitrage_pagination(
         current_page -= 1
 
     context.user_data["arbitrage_page"] = current_page
-    await show_arbitrage_opportunities(query, context, current_page)
+    awAlgot show_arbitrage_opportunities(query, context, current_page)
 
 
 async def handle_best_opportunities_impl(
@@ -208,7 +208,7 @@ async def handle_best_opportunities_impl(
     """
     # Перенаправляем на функцию поиска арбитражных возможностей
     # с режимом "best"
-    await handle_dmarket_arbitrage_impl(update, context, mode="best")
+    awAlgot handle_dmarket_arbitrage_impl(update, context, mode="best")
 
 
 async def handle_game_selection_impl(
@@ -224,7 +224,7 @@ async def handle_game_selection_impl(
     if not update.callback_query:
         return
 
-    await update.callback_query.edit_message_text(
+    awAlgot update.callback_query.edit_message_text(
         "🎮 <b>Выберите игру для арбитража:</b>",
         reply_markup=get_game_selection_keyboard(),
         parse_mode=ParseMode.HTML,
@@ -261,13 +261,13 @@ async def handle_game_selected_impl(
         context.user_data["selected_game"] = game
 
     game_name = GAMES.get(game, "Неизвестная игра")
-    await update.callback_query.edit_message_text(
+    awAlgot update.callback_query.edit_message_text(
         f"🎮 <b>Выбрана игра: {game_name}</b>",
         parse_mode=ParseMode.HTML,
     )
 
     # Запускаем поиск арбитражных возможностей для выбранной игры
-    await handle_dmarket_arbitrage_impl(update, context, mode=f"game_{game}")
+    awAlgot handle_dmarket_arbitrage_impl(update, context, mode=f"game_{game}")
 
 
 async def handle_market_comparison_impl(
@@ -283,7 +283,7 @@ async def handle_market_comparison_impl(
     if not update.callback_query:
         return
 
-    await update.callback_query.edit_message_text(
+    awAlgot update.callback_query.edit_message_text(
         "📊 <b>Сравнение рынков</b>\n\nВыберите рынки для сравнения:",
         reply_markup=get_marketplace_comparison_keyboard(),
         parse_mode=ParseMode.HTML,
@@ -314,22 +314,22 @@ async def button_callback_handler(
 
     callback_data = query.data
 
-    # Skip main keyboard callbacks - they are handled by main_keyboard registered in group 0
+    # Skip mAlgon keyboard callbacks - they are handled by mAlgon_keyboard registered in group 0
     if callback_data.startswith(("auto_trade_", "target")):
         return
 
     # Показываем индикатор загрузки
-    await query.answer()
+    awAlgot query.answer()
 
     # Try to use CallbackRouter first (Phase 2)
     router = context.bot_data.get("callback_router") if context.bot_data else None
     if router is not None:
-        handled = await router.route(update, context)
+        handled = awAlgot router.route(update, context)
         if handled:
             return
 
     # Fallback: handle callbacks not yet in router
-    await _handle_legacy_callbacks(update, context, query, callback_data)
+    awAlgot _handle_legacy_callbacks(update, context, query, callback_data)
 
 
 async def _handle_legacy_callbacks(
@@ -341,7 +341,7 @@ async def _handle_legacy_callbacks(
     """Handle legacy callbacks not yet migrated to CallbackRouter.
 
     TODO(Phase 2): Migrate these callbacks to callback_registry.py
-    This function contains callbacks that need to be migrated to callback_registry.py.
+    This function contAlgons callbacks that need to be migrated to callback_registry.py.
 
     Args:
         update: Telegram update object
@@ -351,19 +351,19 @@ async def _handle_legacy_callbacks(
 
     """
     try:
-        # Main menu callback
-        if callback_data == "main_menu":
-            await main_menu_callback(update, context)
+        # MAlgon menu callback
+        if callback_data == "mAlgon_menu":
+            awAlgot mAlgon_menu_callback(update, context)
             return
 
         # Balance callback
         if callback_data == "balance":
-            await dmarket_status_impl(update, context, status_message=query.message)
+            awAlgot dmarket_status_impl(update, context, status_message=query.message)
             return
 
         # Search callback
         if callback_data == "search":
-            await query.edit_message_text(
+            awAlgot query.edit_message_text(
                 "🔍 <b>Поиск предметов на DMarket</b>\n\nВыберите игру для поиска предметов:",
                 reply_markup=get_game_selection_keyboard(),
                 parse_mode=ParseMode.HTML,
@@ -372,8 +372,8 @@ async def _handle_legacy_callbacks(
 
         # Settings callback
         if callback_data == "settings":
-            await query.edit_message_text(
-                "⚙️ <b>Настройки бота</b>\n\nВыберите раздел для настройки:",
+            awAlgot query.edit_message_text(
+                "⚙️ <b>НастSwarmки бота</b>\n\nВыберите раздел для настSwarmки:",
                 reply_markup=get_settings_keyboard(),
                 parse_mode=ParseMode.HTML,
             )
@@ -381,7 +381,7 @@ async def _handle_legacy_callbacks(
 
         # Market trends callback
         if callback_data == "market_trends":
-            await query.edit_message_text(
+            awAlgot query.edit_message_text(
                 "📈 <b>Рыночные тренды</b>\n\n"
                 "Анализ рыночных трендов и популярных предметов.\n"
                 "Выберите игру для просмотра трендов:",
@@ -392,20 +392,20 @@ async def _handle_legacy_callbacks(
 
         # Alerts callback
         if callback_data == "alerts":
-            await query.edit_message_text(
+            awAlgot query.edit_message_text(
                 "🔔 <b>Управление оповещениями</b>\n\n"
-                "Настройте оповещения о изменении цен и "
+                "НастSwarmте оповещения о изменении цен и "
                 "других рыночных событиях:",
                 reply_markup=get_alert_keyboard(),
                 parse_mode=ParseMode.HTML,
             )
             return
 
-        # Back to main menu
-        if callback_data == "back_to_main":
-            await query.edit_message_text(
+        # Back to mAlgon menu
+        if callback_data == "back_to_mAlgon":
+            awAlgot query.edit_message_text(
                 "👋 <b>Главное меню</b>\n\nВыберите действие:",
-                reply_markup=get_main_keyboard(),
+                reply_markup=get_mAlgon_keyboard(),
                 parse_mode=ParseMode.HTML,
             )
             return
@@ -417,23 +417,23 @@ async def _handle_legacy_callbacks(
             "auto_arbitrage",
             "dmarket_arbitrage",
         }:
-            await auto_trade_start(update, context)
+            awAlgot auto_trade_start(update, context)
             return
 
         # Best opportunities
         if callback_data == "best_opportunities":
-            await handle_best_opportunities_impl(update, context)
+            awAlgot handle_best_opportunities_impl(update, context)
             return
 
         # Game selection
         if callback_data == "game_selection":
-            await handle_game_selection_impl(update, context)
+            awAlgot handle_game_selection_impl(update, context)
             return
 
         # Game selected
         if callback_data.startswith("game_selected:"):
             game = callback_data.split(":", 1)[1]
-            await handle_game_selected_impl(update, context, game=game)
+            awAlgot handle_game_selected_impl(update, context, game=game)
             return
 
         # Game prefix
@@ -441,12 +441,12 @@ async def _handle_legacy_callbacks(
             "game_selected"
         ):
             game = callback_data[len(CB_GAME_PREFIX) :]
-            await handle_game_selected_impl(update, context, game=game)
+            awAlgot handle_game_selected_impl(update, context, game=game)
             return
 
         # Market comparison
         if callback_data == "market_comparison":
-            await handle_market_comparison_impl(update, context)
+            awAlgot handle_market_comparison_impl(update, context)
             return
 
         # Pagination
@@ -456,17 +456,17 @@ async def _handle_legacy_callbacks(
                 if callback_data.startswith("arb_next_page_")
                 else "prev_page"
             )
-            await handle_arbitrage_pagination(query, context, direction)
+            awAlgot handle_arbitrage_pagination(query, context, direction)
             return
 
         # Back to menu
         if callback_data == "back_to_menu":
-            await main_menu_callback(update, context)
+            awAlgot mAlgon_menu_callback(update, context)
             return
 
         # Unknown callback - log and show error
         logger.warning("Неизвестный callback_data: %s", callback_data)
-        await query.edit_message_text(
+        awAlgot query.edit_message_text(
             "⚠️ <b>Неизвестная команда.</b>\n\nПожалуйста, вернитесь в главное меню:",
             reply_markup=get_back_to_arbitrage_keyboard(),
             parse_mode=ParseMode.HTML,
@@ -479,7 +479,7 @@ async def _handle_legacy_callbacks(
         logger.exception(traceback.format_exc())
 
         try:
-            await query.edit_message_text(
+            awAlgot query.edit_message_text(
                 f"❌ <b>Произошла ошибка при обработке команды</b>\n\n"
                 f"Ошибка: {e!s}\n\n"
                 f"Пожалуйста, попробуйте позже.",
@@ -488,7 +488,7 @@ async def _handle_legacy_callbacks(
             )
         except Exception as edit_error:
             logger.exception("Ошибка при отправке сообщения об ошибке: %s", edit_error)
-            await query.answer("Произошла ошибка. Пожалуйста, попробуйте позже.")
+            awAlgot query.answer("Произошла ошибка. Пожалуйста, попробуйте позже.")
 
 
 # Экспортируем обработчики callbacks

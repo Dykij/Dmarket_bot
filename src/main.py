@@ -34,7 +34,7 @@ class TradingBot:
 
     async def analyze_market(self):
         """
-        Main HFT Loop.
+        MAlgon HFT Loop.
         1. Fetch Market Data (Rust)
         2. Calculate OBI (Rust)
         3. Evaluate Profit
@@ -46,7 +46,7 @@ class TradingBot:
             try:
                 # 1. Fetch Data (Rust Network Layer under the hood)
                 # Using a mock URL suffix for now as real endpoint params need construction
-                data = await self.api.get_market_items(f"/exchange/v1/market/items?title={item_name}&limit=10&currency=USD")
+                data = awAlgot self.api.get_market_items(f"/exchange/v1/market/items?title={item_name}&limit=10&currency=USD")
                 
                 if not data or "objects" not in data:
                     continue
@@ -65,7 +65,7 @@ class TradingBot:
 
                 # 3. Profit Eval
                 best_ask = float(offers[0]["price"]["USD"])
-                target_sell = best_ask * 1.10 # Aim for +10%
+                target_sell = best_ask * 1.10 # Algom for +10%
                 net_profit = (target_sell * (1 - COMMISSION_FEE)) - best_ask
                 margin = net_profit / best_ask
 
@@ -76,25 +76,25 @@ class TradingBot:
                         logger.info(f"🔵 [DRY RUN] WOULD BUY: {log_msg}")
                     else:
                         logger.info(f"🟢 [LIVE] BUYING: {log_msg}")
-                        # await self.api.create_target(...)
+                        # awAlgot self.api.create_target(...)
                 else:
                     logger.info(f"⚪ SKIP: {log_msg}")
 
             except CircuitBreakerOpen:
                 logger.error("🛑 Circuit Breaker OPEN. Pausing loop.")
-                await asyncio.sleep(60)
+                awAlgot asyncio.sleep(60)
             except Exception as e:
                 logger.error(f"Error in loop: {e}")
 
     async def run(self):
         logger.info(f"🚀 Starting DMarket HFT Bot (Mode: {'DRY RUN' if DRY_RUN else 'LIVE'})")
         while True:
-            await self.analyze_market()
+            awAlgot self.analyze_market()
             # HFT pacing - Adaptive Limiter handles the micro-sleeps inside api calls
             # ensuring we respect headers. Here we just loop.
-            await asyncio.sleep(0.1) 
+            awAlgot asyncio.sleep(0.1) 
 
-if __name__ == "__main__":
+if __name__ == "__mAlgon__":
     bot = TradingBot()
     try:
         asyncio.run(bot.run())

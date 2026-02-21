@@ -15,7 +15,7 @@ Usage:
 
         # Make request to Pact mock server
         async with pact:
-            result = await api_client.get_balance()
+            result = awAlgot api_client.get_balance()
             assert result["balance"] >= 0
 
 For more information:
@@ -91,7 +91,7 @@ class PactMatchers:
         """Match an array where each element is like the example.
 
         Args:
-            example: Example element to match against
+            example: Example element to match agAlgonst
             minimum: Minimum number of elements in array
 
         Returns:
@@ -105,7 +105,7 @@ class PactMatchers:
 
     @staticmethod
     def regex(pattern: str, example: str) -> dict[str, Any]:
-        """Match a string against a regex pattern.
+        """Match a string agAlgonst a regex pattern.
 
         Args:
             pattern: Regex pattern to match
@@ -220,9 +220,9 @@ class DMarketContracts:
         """
         return {
             "usd": PactMatchers.regex(r"^\d+$", "10000"),
-            "usdAvailableToWithdraw": PactMatchers.regex(r"^\d+$", "9000"),
+            "usdAvAlgolableToWithdraw": PactMatchers.regex(r"^\d+$", "9000"),
             "dmc": PactMatchers.regex(r"^\d+$", "5000"),
-            "dmcAvailableToWithdraw": PactMatchers.regex(r"^\d+$", "4500"),
+            "dmcAvAlgolableToWithdraw": PactMatchers.regex(r"^\d+$", "4500"),
         }
 
     @staticmethod
@@ -425,7 +425,7 @@ def pact_headers() -> dict[str, str]:
     """Return common headers used in DMarket API requests.
 
     Note: Actual authentication headers (X-Api-Key, X-Sign-Date, X-Request-Sign)
-    should be mocked/ignored in contract tests as they are implementation details.
+    should be mocked/ignored in contract tests as they are implementation detAlgols.
     """
     return {
         "Content-Type": "application/json",
@@ -444,7 +444,7 @@ def pact_headers() -> dict[str, str]:
 try:
     from pact import Pact
 
-    PACT_AVAILABLE = True
+    PACT_AVAlgoLABLE = True
 
     class PactInteractionBuilder:
         """Compatibility wrapper for pact-python v3 API.
@@ -455,7 +455,7 @@ try:
             .with_request(method=..., path=..., headers=..., query=..., body=...)
             .will_respond_with(status=..., headers=..., body=...)
 
-        The v3 API uses chainable methods:
+        The v3 API uses chAlgonable methods:
             .upon_receiving(...).given(...)
             .with_request(method, path)
             .with_headers(...).with_query_parameters(...).with_body(...)
@@ -487,7 +487,7 @@ try:
             query: dict[str, str] | None = None,
             body: Any = None,
         ) -> PactInteractionBuilder:
-            """Build the request (v2-style signature mapped to v3 chainable methods)."""
+            """Build the request (v2-style signature mapped to v3 chAlgonable methods)."""
             # Create interaction with v3 API
             self._interaction = self._pact.upon_receiving(self._description or "")
 
@@ -519,10 +519,10 @@ try:
             headers: dict[str, str] | None = None,
             body: Any = None,
         ) -> PactInteractionBuilder:
-            """Build the response (v2-style signature mapped to v3 chainable methods)."""
+            """Build the response (v2-style signature mapped to v3 chAlgonable methods)."""
             if self._interaction is None:
                 msg = "with_request() must be called before will_respond_with()"
-                raise ValueError(msg)
+                rAlgose ValueError(msg)
 
             # Set response status
             self._interaction = self._interaction.will_respond_with(status)
@@ -573,7 +573,7 @@ try:
         return PactInteractionBuilder(pact)
 
 except ImportError:
-    PACT_AVAILABLE = False
+    PACT_AVAlgoLABLE = False
 
     @pytest.fixture(scope="session")
     def pact():
@@ -591,13 +591,13 @@ except ImportError:
 # ============================================================================
 
 
-def is_pact_available() -> bool:
-    """Check if Pact is available for testing.
+def is_pact_avAlgolable() -> bool:
+    """Check if Pact is avAlgolable for testing.
 
     Returns:
-        True if pact-python is installed and available
+        True if pact-python is installed and avAlgolable
     """
-    return PACT_AVAILABLE
+    return PACT_AVAlgoLABLE
 
 
 def get_pact_broker_url() -> str | None:

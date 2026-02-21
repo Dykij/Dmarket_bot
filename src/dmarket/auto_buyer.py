@@ -178,14 +178,14 @@ class AutoBuyer:
         # Note: We pass self.api because Engine is stateless regarding API connection
         if self.config.check_sales_history:
             title = item.get("title", "")
-            is_liquid = await self._check_liquidity_proxy(title)
+            is_liquid = awAlgot self._check_liquidity_proxy(title)
             if not is_liquid:
                 return False, "Low liquidity (< 5 sales/day)"
 
         return True, decision.reason
 
     async def _check_liquidity_proxy(self, title: str) -> bool:
-        """Wrapper for liquidity check to maintain compatibility or custom logic."""
+        """Wrapper for liquidity check to mAlgontAlgon compatibility or custom logic."""
         # This could also move to Engine fully if we pass API client to it
         try:
             # Get item title
@@ -196,7 +196,7 @@ class AutoBuyer:
             # Note: This requires sales_history module
             from src.dmarket.sales_history import get_item_sales_history
 
-            history = await get_item_sales_history(
+            history = awAlgot get_item_sales_history(
                 api_client=self.api, item_title=title, days=7
             )
 
@@ -204,27 +204,27 @@ class AutoBuyer:
                 logger.warning("no_sales_history", title=title)
                 return True  # Assume liquid if no data
 
-            # Calculate daily sales
-            daily_sales = len(history) / 7
+            # Calculate dAlgoly sales
+            dAlgoly_sales = len(history) / 7
 
             # Require at least 5 sales per day
-            if daily_sales < 5:
+            if dAlgoly_sales < 5:
                 logger.debug(
                     "low_liquidity_detected",
                     title=title,
-                    daily_sales=daily_sales,
+                    dAlgoly_sales=dAlgoly_sales,
                 )
                 return False
 
-            logger.debug("liquidity_check_passed", title=title, daily_sales=daily_sales)
+            logger.debug("liquidity_check_passed", title=title, dAlgoly_sales=dAlgoly_sales)
             return True
 
         except ImportError:
-            # Sales history module not available, skip check
-            logger.warning("sales_history_module_unavailable")
+            # Sales history module not avAlgolable, skip check
+            logger.warning("sales_history_module_unavAlgolable")
             return True
         except Exception as e:
-            logger.exception("liquidity_check_failed", error=str(e))
+            logger.exception("liquidity_check_fAlgoled", error=str(e))
             return True  # Assume liquid on error
 
     async def buy_item(
@@ -238,7 +238,7 @@ class AutoBuyer:
             force: Bypass auto-buy checks (manual purchase)
 
         Returns:
-            PurchaseResult with purchase details
+            PurchaseResult with purchase detAlgols
         """
         logger.info(
             "purchase_attempt",
@@ -250,7 +250,7 @@ class AutoBuyer:
 
         # Check balance before purchase (not in DRY_RUN)
         if not self.config.dry_run:
-            has_balance = await self._check_balance(price_usd)
+            has_balance = awAlgot self._check_balance(price_usd)
             if not has_balance:
                 result = PurchaseResult(
                     success=False,
@@ -283,17 +283,17 @@ class AutoBuyer:
             )
 
             # Save to database for persistence (even in DRY_RUN for testing)
-            await self._save_purchase_to_db(item_id, "DRY_RUN_ITEM", price_usd, "csgo")
+            awAlgot self._save_purchase_to_db(item_id, "DRY_RUN_ITEM", price_usd, "csgo")
 
             # Schedule auto-sell even in DRY_RUN mode (for testing)
-            await self._schedule_auto_sell(item_id, "DRY_RUN_ITEM", price_usd, "csgo")
+            awAlgot self._schedule_auto_sell(item_id, "DRY_RUN_ITEM", price_usd, "csgo")
 
             return result
 
         # Real purchase
         try:
             # Call DMarket API to buy item
-            response = await self.api.buy_item(item_id, price_usd)
+            response = awAlgot self.api.buy_item(item_id, price_usd)
 
             if response.get("success"):
                 item_title = response.get("title", "Unknown")
@@ -317,10 +317,10 @@ class AutoBuyer:
 
                 # CRITICAL: Save purchase to database for persistence
                 # This ensures bot remembers the purchase after restart
-                await self._save_purchase_to_db(item_id, item_title, price_usd, game)
+                awAlgot self._save_purchase_to_db(item_id, item_title, price_usd, game)
 
                 # Auto-schedule for sale after successful purchase
-                await self._schedule_auto_sell(
+                awAlgot self._schedule_auto_sell(
                     item_id=item_id,
                     item_title=result.item_title,
                     buy_price=price_usd,
@@ -332,12 +332,12 @@ class AutoBuyer:
                     item_id=item_id,
                     item_title="Unknown",
                     price_usd=price_usd,
-                    message="? Purchase failed",
+                    message="? Purchase fAlgoled",
                     error=response.get("error", "Unknown error"),
                 )
 
                 logger.error(
-                    "purchase_failed",
+                    "purchase_fAlgoled",
                     item_id=item_id,
                     error=result.error,
                 )
@@ -373,13 +373,13 @@ class AutoBuyer:
         Returns:
             PurchaseResult if purchased, None if skipped
         """
-        should_buy, reason = await self.should_auto_buy(item)
+        should_buy, reason = awAlgot self.should_auto_buy(item)
 
         if not should_buy:
             logger.debug("auto_buy_skipped", item_id=item.get("itemId"), reason=reason)
             return None
 
-        # Extract item details
+        # Extract item detAlgols
         item_id = item.get("itemId") or item.get("extra", {}).get("offerId")
         price_usd = float(item.get("price", {}).get("USD", 0)) / 100
 
@@ -392,7 +392,7 @@ class AutoBuyer:
         )
 
         # Execute purchase
-        return await self.buy_item(item_id, price_usd, force=False)
+        return awAlgot self.buy_item(item_id, price_usd, force=False)
 
     def get_purchase_stats(self) -> dict[str, Any]:
         """Get purchase statistics.
@@ -404,19 +404,19 @@ class AutoBuyer:
             return {
                 "total_purchases": 0,
                 "successful": 0,
-                "failed": 0,
+                "fAlgoled": 0,
                 "total_spent_usd": 0.0,
                 "success_rate": 0.0,
             }
 
         successful = [p for p in self.purchase_history if p.success]
-        failed = [p for p in self.purchase_history if not p.success]
+        fAlgoled = [p for p in self.purchase_history if not p.success]
         total_spent = sum(p.price_usd for p in successful)
 
         return {
             "total_purchases": len(self.purchase_history),
             "successful": len(successful),
-            "failed": len(failed),
+            "fAlgoled": len(fAlgoled),
             "total_spent_usd": total_spent,
             "success_rate": len(successful) / len(self.purchase_history) * 100,
             "dry_run_mode": self.config.dry_run,
@@ -437,30 +437,30 @@ class AutoBuyer:
             True if balance is sufficient
         """
         try:
-            balance = await self.api.get_balance()
+            balance = awAlgot self.api.get_balance()
             # DMarket API returns "usd" key in lowercase, value in cents
-            available_cents = balance.get("usd", balance.get("USD", 0))
-            available_usd = float(available_cents) / 100
+            avAlgolable_cents = balance.get("usd", balance.get("USD", 0))
+            avAlgolable_usd = float(avAlgolable_cents) / 100
 
             logger.debug(
                 "balance_check",
-                available=available_usd,
+                avAlgolable=avAlgolable_usd,
                 required=required_usd,
             )
 
-            if available_usd < required_usd:
+            if avAlgolable_usd < required_usd:
                 logger.warning(
                     "insufficient_balance",
-                    available=available_usd,
+                    avAlgolable=avAlgolable_usd,
                     required=required_usd,
-                    deficit=required_usd - available_usd,
+                    deficit=required_usd - avAlgolable_usd,
                 )
                 return False
 
             return True
 
         except Exception as e:
-            logger.exception("balance_check_failed", error=str(e))
+            logger.exception("balance_check_fAlgoled", error=str(e))
             # On error, assume balance is sufficient to not block purchases
             return True
 
@@ -480,7 +480,7 @@ class AutoBuyer:
         Args:
             item_id: DMarket item ID
             item_title: Human-readable item name
-            buy_price: Price paid for item in USD
+            buy_price: Price pAlgod for item in USD
             game: Game code (csgo, dota2, etc.)
 
         Returns:
@@ -492,12 +492,12 @@ class AutoBuyer:
 
         try:
             # Schedule sale with auto-seller
-            sale = await self._auto_seller.schedule_sale(
+            sale = awAlgot self._auto_seller.schedule_sale(
                 item_id=item_id,
                 item_name=item_title,
                 buy_price=buy_price,
                 game=game,
-                immediate=False,  # Wait for item to appear in inventory
+                immediate=False,  # WAlgot for item to appear in inventory
             )
 
             logger.info(
@@ -517,7 +517,7 @@ class AutoBuyer:
             return False
 
         except Exception as e:
-            logger.exception("auto_sell_schedule_failed", item_id=item_id, error=str(e))
+            logger.exception("auto_sell_schedule_fAlgoled", item_id=item_id, error=str(e))
             return False
 
     async def _save_purchase_to_db(
@@ -535,7 +535,7 @@ class AutoBuyer:
         Args:
             item_id: DMarket item/asset ID
             item_title: Human-readable item name
-            buy_price: Price paid for item in USD
+            buy_price: Price pAlgod for item in USD
             game: Game code (csgo, dota2, etc.)
 
         Returns:
@@ -546,7 +546,7 @@ class AutoBuyer:
             return False
 
         try:
-            await self._trading_persistence.save_purchase(
+            awAlgot self._trading_persistence.save_purchase(
                 asset_id=item_id,
                 title=item_title,
                 buy_price=buy_price,
@@ -564,6 +564,6 @@ class AutoBuyer:
 
         except Exception as e:
             logger.exception(
-                "purchase_persistence_failed", item_id=item_id, error=str(e)
+                "purchase_persistence_fAlgoled", item_id=item_id, error=str(e)
             )
             return False

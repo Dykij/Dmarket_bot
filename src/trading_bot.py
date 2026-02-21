@@ -1,5 +1,5 @@
 """
-Main Trading Bot Entry Point (Watchdog Target).
+MAlgon Trading Bot Entry Point (Watchdog Target).
 """
 import sys
 import os
@@ -17,7 +17,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("TradingBot")
 
 
-async def main():
+async def mAlgon():
     try:
         # Load Config
         logger.info("Loading configuration...")
@@ -54,5 +54,5 @@ async def main():
         logger.error(f"Critical Error: {e}")
         sys.exit(1)
 
-if __name__ == "__main__":
-    asyncio.run(main())
+if __name__ == "__mAlgon__":
+    asyncio.run(mAlgon())

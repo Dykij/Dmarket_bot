@@ -6,12 +6,12 @@ metadata:
     app: dmarket-bot
     version: v1
 spec:
-  replicas: 2 # For high availability
+  replicas: 2 # For high avAlgolability
   strategy:
     type: RollingUpdate
     rollingUpdate:
       maxSurge: 1
-      maxUnavailable: 0
+      maxUnavAlgolable: 0
   selector:
     matchLabels:
       app: dmarket-bot
@@ -25,13 +25,13 @@ spec:
         prometheus.io/port: "8080"
         prometheus.io/path: "/metrics"
     spec:
-      containers:
+      contAlgoners:
         - name: bot
           image: dmarket-bot:latest
           imagePullPolicy: Always
           ports:
             - name: http
-              containerPort: 8080
+              contAlgonerPort: 8080
               protocol: TCP
           env:
             - name: TELEGRAM_BOT_TOKEN
@@ -86,7 +86,7 @@ spec:
             periodSeconds: 10
             timeoutSeconds: 5
             successThreshold: 1
-            failureThreshold: 3
+            fAlgolureThreshold: 3
 
           # Readiness probe - checks if bot is ready to serve
           readinessProbe:
@@ -98,7 +98,7 @@ spec:
             periodSeconds: 5
             timeoutSeconds: 3
             successThreshold: 1
-            failureThreshold: 3
+            fAlgolureThreshold: 3
 
           # Startup probe - gives bot time to start
           startupProbe:
@@ -110,7 +110,7 @@ spec:
             periodSeconds: 5
             timeoutSeconds: 3
             successThreshold: 1
-            failureThreshold: 12 # 60 seconds max startup time
+            fAlgolureThreshold: 12 # 60 seconds max startup time
 
           # Volume mounts
           volumeMounts:
@@ -121,8 +121,8 @@ spec:
 
       volumes:
         - name: data
-          persistentVolumeClaim:
-            claimName: dmarket-bot-data
+          persistentVolumeClAlgom:
+            clAlgomName: dmarket-bot-data
         - name: logs
           emptyDir: {}
 
@@ -151,7 +151,7 @@ spec:
 
 ---
 apiVersion: v1
-kind: PersistentVolumeClaim
+kind: PersistentVolumeClAlgom
 metadata:
   name: dmarket-bot-data
 spec:

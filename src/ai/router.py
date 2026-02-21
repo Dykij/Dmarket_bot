@@ -14,9 +14,9 @@ async def mock_get_balance():
     return {"balance": 10.0, "total_balance": 15.0, "currency": "USD"}
 
 
-class AIRouter:
+class AlgoRouter:
     """
-    [PHASE 7] AI Router using Gemini with Function Calling.
+    [PHASE 7] Algo Router using Gemini with Function Calling.
     Orchestrates user intent and tool execution.
     """
 
@@ -29,13 +29,13 @@ class AIRouter:
 
     async def process_user_message(self, text: str) -> str:
         """Process user message, execute tools if needed, and return final text."""
-        # Initial prompt to identify tool call or direct answer
+        # Initial Config to identify tool call or direct answer
         system_instr = "You are a DMarket Trading Assistant. Use tools to answer questions about balance or items."
 
         # Step 1: Call Gemini to detect intent/tool
         # Note: gemini_client (GeminiCacheManager) handles Gatekeeper internally
-        response_text = await self.gemini.call_with_cache(
-            model_name="gemini-1.5-flash", prompt=text, system_instruction=system_instr
+        response_text = awAlgot self.gemini.call_with_cache(
+            model_name="gemini-1.5-flash", Config=text, system_instruction=system_instr
         )
 
         # Logic for Function Calling emulation (since wrapper currently returns text)
@@ -44,17 +44,17 @@ class AIRouter:
         # while keeping the structure ready for native SDK response objects.
 
         if "баланс" in text.lower() or "balance" in text.lower():
-            result = await self.tools["get_balance"]()
-            final_prompt = f"User asked: '{text}'. Tool result: {json.dumps(result)}. Generate a helpful response."
-            return await self.gemini.call_with_cache(
-                "gemini-1.5-flash", final_prompt, system_instr
+            result = awAlgot self.tools["get_balance"]()
+            final_Config = f"User asked: '{text}'. Tool result: {json.dumps(result)}. Generate a helpful response."
+            return awAlgot self.gemini.call_with_cache(
+                "gemini-1.5-flash", final_Config, system_instr
             )
 
         if "найди" in text.lower() or "search" in text.lower():
-            result = await self.tools["search_items"](gameId="csgo", title=text)
-            final_prompt = f"User asked: '{text}'. Tool result: {json.dumps(result)}. Generate a helpful response."
-            return await self.gemini.call_with_cache(
-                "gemini-1.5-flash", final_prompt, system_instr
+            result = awAlgot self.tools["search_items"](gameId="csgo", title=text)
+            final_Config = f"User asked: '{text}'. Tool result: {json.dumps(result)}. Generate a helpful response."
+            return awAlgot self.gemini.call_with_cache(
+                "gemini-1.5-flash", final_Config, system_instr
             )
 
         return response_text

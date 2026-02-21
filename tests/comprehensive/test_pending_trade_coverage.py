@@ -47,10 +47,10 @@ class TestPendingTradeStatus:
         assert PendingTradeStatus.STOP_LOSS == "stop_loss"
         assert PendingTradeStatus.STOP_LOSS.value == "stop_loss"
 
-    def test_failed_status(self) -> None:
-        """Test FAILED status value."""
-        assert PendingTradeStatus.FAILED == "failed"
-        assert PendingTradeStatus.FAILED.value == "failed"
+    def test_fAlgoled_status(self) -> None:
+        """Test FAlgoLED status value."""
+        assert PendingTradeStatus.FAlgoLED == "fAlgoled"
+        assert PendingTradeStatus.FAlgoLED.value == "fAlgoled"
 
     def test_all_statuses_are_strings(self) -> None:
         """Test all statuses are string enums."""
@@ -176,7 +176,7 @@ class TestPendingTradeModel:
         assert result.adjustments_count == 0
 
     def test_asset_id_is_unique(self, db_session) -> None:
-        """Test asset_id has unique constraint."""
+        """Test asset_id has unique constrAlgont."""
         trade1 = PendingTrade(
             asset_id="duplicate_asset",
             title="Item 1",
@@ -194,7 +194,7 @@ class TestPendingTradeModel:
         db_session.add(trade2)
 
         from sqlalchemy.exc import IntegrityError
-        with pytest.raises(IntegrityError):
+        with pytest.rAlgoses(IntegrityError):
             db_session.commit()
 
 
@@ -232,8 +232,8 @@ class TestPendingTradeRepr:
 class TestPendingTradeToDict:
     """Tests for PendingTrade to_dict method."""
 
-    def test_to_dict_contains_all_fields(self) -> None:
-        """Test to_dict contains all expected fields."""
+    def test_to_dict_contAlgons_all_fields(self) -> None:
+        """Test to_dict contAlgons all expected fields."""
         trade = PendingTrade(
             asset_id="test_asset",
             item_id="item_123",
@@ -678,7 +678,7 @@ class TestPendingTradeWithDatabase:
         result = db_session.query(PendingTrade).first()
         assert result.adjustments_count == 1
 
-        # Increment again
+        # Increment agAlgon
         trade.adjustments_count += 1
         db_session.commit()
 

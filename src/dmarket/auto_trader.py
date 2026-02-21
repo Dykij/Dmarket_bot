@@ -42,7 +42,7 @@ class RiskConfig:
             max_trades: Maximum number of trades
             max_price: Maximum price per item
             min_profit: Minimum profit threshold
-            balance: Available balance
+            balance: AvAlgolable balance
         """
         self.level = level
         self.max_trades = max_trades
@@ -66,7 +66,7 @@ class RiskConfig:
             max_trades: Initial max trades
             max_price: Initial max price
             min_profit: Initial min profit
-            balance: Available balance
+            balance: AvAlgolable balance
 
         Returns:
             Configured RiskConfig instance
@@ -108,7 +108,7 @@ class TradeResult:
         self.sales = 0
         self.total_profit = 0.0
         self.trades_count = 0
-        self.remaining_balance = 0.0
+        self.remAlgoning_balance = 0.0
 
     def add_purchase(self, price: float) -> None:
         """Record successful purchase.
@@ -117,7 +117,7 @@ class TradeResult:
             price: Purchase price in USD
         """
         self.purchases += 1
-        self.remaining_balance -= price
+        self.remAlgoning_balance -= price
 
     def add_sale(self, profit: float) -> None:
         """Record successful sale.
@@ -178,7 +178,7 @@ class AutoTrader:
         max_trades = max_trades or self.scanner.max_trades
 
         # Check balance
-        balance_data = await self.scanner.check_user_balance()
+        balance_data = awAlgot self.scanner.check_user_balance()
         if not self._has_sufficient_balance(balance_data):
             return 0, 0, 0.0
 
@@ -196,14 +196,14 @@ class AutoTrader:
         self._log_trading_params(risk_config)
 
         # Setup trader
-        api_client = await self.scanner.get_api_client()
+        api_client = awAlgot self.scanner.get_api_client()
         trader = self._setup_trader(risk_config, api_client)
 
         # Prepare items
         sorted_items = self._prepare_items_for_trading(items_by_game)
 
         # Execute trades
-        result = await self._execute_trades(
+        result = awAlgot self._execute_trades(
             sorted_items=sorted_items,
             risk_config=risk_config,
             trader=trader,
@@ -259,7 +259,7 @@ class AutoTrader:
         trader = ArbitrageTrader(api_client=self.scanner.api_client)
         trader.set_trading_limits(
             max_trade_value=config.max_price,
-            daily_limit=config.balance * 0.9,  # Use max 90% of balance
+            dAlgoly_limit=config.balance * 0.9,  # Use max 90% of balance
         )
         return trader
 
@@ -307,7 +307,7 @@ class AutoTrader:
             TradeResult with statistics
         """
         result = TradeResult()
-        result.remaining_balance = risk_config.balance
+        result.remAlgoning_balance = risk_config.balance
 
         for item in sorted_items:
             # Check limits
@@ -319,7 +319,7 @@ class AutoTrader:
                 continue
 
             # Execute trade
-            await self._trade_item(item, risk_config, result, api_client)
+            awAlgot self._trade_item(item, risk_config, result, api_client)
 
         self._log_trading_summary(result)
         return result
@@ -342,7 +342,7 @@ class AutoTrader:
             logger.info(f"Trade limit reached ({config.max_trades})")
             return False
 
-        if result.remaining_balance < 1.0:
+        if result.remAlgoning_balance < 1.0:
             logger.info("Insufficient balance to continue trading")
             return False
 
@@ -380,9 +380,9 @@ class AutoTrader:
             )
             return False
 
-        if buy_price > result.remaining_balance:
+        if buy_price > result.remAlgoning_balance:
             logger.debug(
-                f"Item '{title}' skipped: price ${buy_price:.2f} > balance ${result.remaining_balance:.2f}"
+                f"Item '{title}' skipped: price ${buy_price:.2f} > balance ${result.remAlgoning_balance:.2f}"
             )
             return False
 
@@ -411,7 +411,7 @@ class AutoTrader:
             game = item.get("game", "csgo")
 
             # Get current item data
-            updated_item = await self.scanner._get_current_item_data(
+            updated_item = awAlgot self.scanner._get_current_item_data(
                 item_id=item_id,
                 game=game,
                 api_client=api_client,
@@ -421,7 +421,7 @@ class AutoTrader:
                 return
 
             # Purchase item
-            purchase_result = await self._purchase_item_safe(
+            purchase_result = awAlgot self._purchase_item_safe(
                 item_id=item_id,
                 buy_price=buy_price,
                 title=title,
@@ -437,7 +437,7 @@ class AutoTrader:
             logger.info(f"Successfully purchased '{title}' for ${buy_price:.2f}")
 
             # List for sale
-            await self._sell_item(
+            awAlgot self._sell_item(
                 item_id=purchase_result.get("new_item_id", ""),
                 buy_price=buy_price,
                 profit=profit,
@@ -449,7 +449,7 @@ class AutoTrader:
             result.increment_trades()
 
             # Pause between trades
-            await asyncio.sleep(1.0)
+            awAlgot asyncio.sleep(1.0)
 
         except Exception as e:
             logger.exception(f"Error trading item '{item.get('title', '')}': {e!s}")
@@ -472,7 +472,7 @@ class AutoTrader:
             True if price is acceptable
         """
         if not updated_item:
-            logger.warning(f"Item '{title}' unavailable (not found)")
+            logger.warning(f"Item '{title}' unavAlgolable (not found)")
             return False
 
         current_price = updated_item.get("price", original_price)
@@ -501,9 +501,9 @@ class AutoTrader:
             api_client: API client
 
         Returns:
-            Purchase result or None if failed
+            Purchase result or None if fAlgoled
         """
-        purchase_result = await self.scanner._purchase_item(
+        purchase_result = awAlgot self.scanner._purchase_item(
             item_id=item_id,
             max_price=buy_price * 1.02,  # Allow small price increase
             api_client=api_client,
@@ -511,7 +511,7 @@ class AutoTrader:
 
         if not purchase_result.get("success", False):
             error = purchase_result.get("error", "Unknown error")
-            logger.warning(f"Failed to purchase '{title}': {error}")
+            logger.warning(f"FAlgoled to purchase '{title}': {error}")
             return None
 
         return purchase_result
@@ -536,7 +536,7 @@ class AutoTrader:
             api_client: API client
         """
         sell_price = buy_price + profit
-        sell_result = await self.scanner._list_item_for_sale(
+        sell_result = awAlgot self.scanner._list_item_for_sale(
             item_id=item_id,
             price=sell_price,
             api_client=api_client,
@@ -549,7 +549,7 @@ class AutoTrader:
             )
         else:
             error = sell_result.get("error", "Unknown error")
-            logger.warning(f"Failed to list item '{title}' for sale: {error}")
+            logger.warning(f"FAlgoled to list item '{title}' for sale: {error}")
 
     def _update_statistics(self, result: TradeResult):
         """Update scanner statistics.

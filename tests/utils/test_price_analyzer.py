@@ -98,7 +98,7 @@ class TestGetItemPriceHistory:
             ]
         }
 
-        result = await get_item_price_history(mock_api, "item123", days=7)
+        result = awAlgot get_item_price_history(mock_api, "item123", days=7)
 
         assert len(result) == 1
         assert result[0]["price"] == 10.0  # Конвертировано из центов
@@ -109,7 +109,7 @@ class TestGetItemPriceHistory:
         """Тест пустого ответа."""
         mock_api._request.return_value = {}
 
-        result = await get_item_price_history(mock_api, "item123")
+        result = awAlgot get_item_price_history(mock_api, "item123")
 
         assert result == []
 
@@ -118,7 +118,7 @@ class TestGetItemPriceHistory:
         """Тест ответа без продаж."""
         mock_api._request.return_value = {"sales": []}
 
-        result = await get_item_price_history(mock_api, "item123")
+        result = awAlgot get_item_price_history(mock_api, "item123")
 
         assert result == []
 
@@ -127,7 +127,7 @@ class TestGetItemPriceHistory:
         """Тест обработки ошибки API."""
         mock_api._request.side_effect = Exception("API Error")
 
-        result = await get_item_price_history(mock_api, "item123")
+        result = awAlgot get_item_price_history(mock_api, "item123")
 
         assert result == []
 
@@ -139,10 +139,10 @@ class TestGetItemPriceHistory:
             "sales": [{"date": "2024-01-01T00:00:00", "price": 1000, "volume": 1}]
         }
 
-        result1 = await get_item_price_history(mock_api, "item123", days=7)
+        result1 = awAlgot get_item_price_history(mock_api, "item123", days=7)
 
-        # Второй запрос (должен использовать кэш)
-        result2 = await get_item_price_history(mock_api, "item123", days=7)
+        # ВтоSwarm запрос (должен использовать кэш)
+        result2 = awAlgot get_item_price_history(mock_api, "item123", days=7)
 
         # API должен быть вызван только один раз
         assert mock_api._request.call_count == 1
@@ -156,14 +156,14 @@ class TestGetItemPriceHistory:
         }
 
         # Первый запрос
-        await get_item_price_history(mock_api, "item123", days=7)
+        awAlgot get_item_price_history(mock_api, "item123", days=7)
 
         # Искусственно устанавливаем старый timestamp
         cache_key = "item123_7"
         _price_history_cache[cache_key]["last_update"] = time.time() - _CACHE_TTL - 1
 
-        # Второй запрос (кэш истек)
-        await get_item_price_history(mock_api, "item123", days=7)
+        # ВтоSwarm запрос (кэш истек)
+        awAlgot get_item_price_history(mock_api, "item123", days=7)
 
         # API должен быть вызван дважды
         assert mock_api._request.call_count == 2
@@ -173,8 +173,8 @@ class TestGetItemPriceHistory:
         """Тест с разным количеством дней."""
         mock_api._request.return_value = {"sales": []}
 
-        await get_item_price_history(mock_api, "item123", days=7)
-        await get_item_price_history(mock_api, "item123", days=30)
+        awAlgot get_item_price_history(mock_api, "item123", days=7)
+        awAlgot get_item_price_history(mock_api, "item123", days=30)
 
         # Должно быть два вызова для разных периодов
         assert mock_api._request.call_count == 2
@@ -186,7 +186,7 @@ class TestGetItemPriceHistory:
             "sales": [{"date": "2024-01-01T00:00:00", "price": 2500, "volume": 1}]
         }
 
-        result = await get_item_price_history(mock_api, "item123")
+        result = awAlgot get_item_price_history(mock_api, "item123")
 
         assert result[0]["price"] == 25.0
 
@@ -197,7 +197,7 @@ class TestGetItemPriceHistory:
             "sales": [{"date": "invalid_date", "price": 1000, "volume": 1}]
         }
 
-        result = await get_item_price_history(mock_api, "item123")
+        result = awAlgot get_item_price_history(mock_api, "item123")
 
         # Запись с невалидной датой должна быть пропущена
         assert len(result) == 0
@@ -209,7 +209,7 @@ class TestGetItemPriceHistory:
             "sales": [{"date": "2024-01-01T00:00:00"}]  # Нет price и volume
         }
 
-        result = await get_item_price_history(mock_api, "item123")
+        result = awAlgot get_item_price_history(mock_api, "item123")
 
         # Запись должна быть обработана с дефолтными значениями или пропущена
         assert isinstance(result, list)
@@ -338,7 +338,7 @@ class TestPriceConversion:
             "sales": [{"date": "2024-01-01T00:00:00", "price": 100, "volume": 1}]
         }
 
-        result = await get_item_price_history(mock_api, "item123")
+        result = awAlgot get_item_price_history(mock_api, "item123")
 
         assert result[0]["price"] == 1.0
 
@@ -349,7 +349,7 @@ class TestPriceConversion:
             "sales": [{"date": "2024-01-01T00:00:00", "price": 0, "volume": 1}]
         }
 
-        result = await get_item_price_history(mock_api, "item123")
+        result = awAlgot get_item_price_history(mock_api, "item123")
 
         assert result[0]["price"] == 0.0
 
@@ -364,7 +364,7 @@ class TestEdgeCases:
             "sales": [{"date": "2024-01-01T00:00:00", "price": 1000000, "volume": 1}]
         }
 
-        result = await get_item_price_history(mock_api, "item123")
+        result = awAlgot get_item_price_history(mock_api, "item123")
 
         assert result[0]["price"] == 10000.0
 
@@ -375,7 +375,7 @@ class TestEdgeCases:
             "sales": [{"date": "2024-01-01T00:00:00", "price": 1000, "volume": 999999}]
         }
 
-        result = await get_item_price_history(mock_api, "item123")
+        result = awAlgot get_item_price_history(mock_api, "item123")
 
         assert result[0]["volume"] == 999999
 
@@ -419,7 +419,7 @@ class TestCalculatePriceTrend:
         }
 
         # Act
-        result = await calculate_price_trend(mock_api, "item123", days=7)
+        result = awAlgot calculate_price_trend(mock_api, "item123", days=7)
 
         # Assert
         assert result["trend"] == "upward"
@@ -444,7 +444,7 @@ class TestCalculatePriceTrend:
         }
 
         # Act
-        result = await calculate_price_trend(mock_api, "item123", days=7)
+        result = awAlgot calculate_price_trend(mock_api, "item123", days=7)
 
         # Assert
         assert result["trend"] == "downward"
@@ -468,7 +468,7 @@ class TestCalculatePriceTrend:
         }
 
         # Act
-        result = await calculate_price_trend(mock_api, "item123", days=7)
+        result = awAlgot calculate_price_trend(mock_api, "item123", days=7)
 
         # Assert - trend should be stable or show minimal change
         assert result["trend"] in {"stable", "upward", "downward"}
@@ -483,7 +483,7 @@ class TestCalculatePriceTrend:
         mock_api._request.return_value = {}
 
         # Act
-        result = await calculate_price_trend(mock_api, "item123", days=7)
+        result = awAlgot calculate_price_trend(mock_api, "item123", days=7)
 
         # Assert
         assert result["trend"] == "unknown"
@@ -500,7 +500,7 @@ class TestCalculatePriceTrend:
         }
 
         # Act
-        result = await calculate_price_trend(mock_api, "item123", days=7)
+        result = awAlgot calculate_price_trend(mock_api, "item123", days=7)
 
         # Assert
         assert result["trend"] == "stable"
@@ -520,7 +520,7 @@ class TestCalculatePriceTrend:
         }
 
         # Act
-        result = await calculate_price_trend(mock_api, "item123", days=7)
+        result = awAlgot calculate_price_trend(mock_api, "item123", days=7)
 
         # Assert
         assert "period_prices" in result
@@ -541,7 +541,7 @@ class TestCalculatePriceTrend:
         }
 
         # Act
-        result = await calculate_price_trend(mock_api, "item123", days=7)
+        result = awAlgot calculate_price_trend(mock_api, "item123", days=7)
 
         # Assert
         assert "absolute_change" in result
@@ -581,7 +581,7 @@ class TestFindUndervaluedItems:
         )
 
         # Act
-        result = await find_undervalued_items(
+        result = awAlgot find_undervalued_items(
             mock_api,
             game="csgo",
             price_from=1.0,
@@ -600,7 +600,7 @@ class TestFindUndervaluedItems:
         mock_api.get_market_items = AsyncMock(return_value={})
 
         # Act
-        result = await find_undervalued_items(mock_api, game="csgo")
+        result = awAlgot find_undervalued_items(mock_api, game="csgo")
 
         # Assert
         assert result == []
@@ -612,7 +612,7 @@ class TestFindUndervaluedItems:
         mock_api.get_market_items = AsyncMock(return_value={"objects": []})
 
         # Act
-        result = await find_undervalued_items(mock_api, game="csgo")
+        result = awAlgot find_undervalued_items(mock_api, game="csgo")
 
         # Assert
         assert result == []
@@ -624,7 +624,7 @@ class TestFindUndervaluedItems:
         mock_api.get_market_items = AsyncMock(side_effect=Exception("API Error"))
 
         # Act
-        result = await find_undervalued_items(mock_api, game="csgo")
+        result = awAlgot find_undervalued_items(mock_api, game="csgo")
 
         # Assert
         assert result == []
@@ -657,7 +657,7 @@ class TestFindUndervaluedItems:
         )
 
         # Act
-        result = await find_undervalued_items(
+        result = awAlgot find_undervalued_items(
             mock_api,
             game="csgo",
             discount_threshold=30.0,  # Looking for > 30% discount
@@ -689,7 +689,7 @@ class TestFindUndervaluedItems:
         )
 
         # Act
-        result = await find_undervalued_items(
+        result = awAlgot find_undervalued_items(
             mock_api,
             game="csgo",
             max_results=5,
@@ -715,7 +715,7 @@ class TestAnalyzeSupplyDemand:
         )
 
         # Act
-        result = await analyze_supply_demand(mock_api, "item123")
+        result = awAlgot analyze_supply_demand(mock_api, "item123")
 
         # Assert
         assert result["liquidity"] == "high"
@@ -739,7 +739,7 @@ class TestAnalyzeSupplyDemand:
         # Spread: (10-9)/10 * 100 = 10% < 20%, so medium liquidity
 
         # Act
-        result = await analyze_supply_demand(mock_api, "item123")
+        result = awAlgot analyze_supply_demand(mock_api, "item123")
 
         # Assert
         assert result["liquidity"] == "medium"
@@ -756,7 +756,7 @@ class TestAnalyzeSupplyDemand:
         )
 
         # Act
-        result = await analyze_supply_demand(mock_api, "item123")
+        result = awAlgot analyze_supply_demand(mock_api, "item123")
 
         # Assert
         assert result["liquidity"] == "low"
@@ -768,7 +768,7 @@ class TestAnalyzeSupplyDemand:
         mock_api._request = AsyncMock(return_value=None)
 
         # Act
-        result = await analyze_supply_demand(mock_api, "item123")
+        result = awAlgot analyze_supply_demand(mock_api, "item123")
 
         # Assert
         assert result["liquidity"] == "unknown"
@@ -782,7 +782,7 @@ class TestAnalyzeSupplyDemand:
         mock_api._request = AsyncMock(side_effect=Exception("API Error"))
 
         # Act
-        result = await analyze_supply_demand(mock_api, "item123")
+        result = awAlgot analyze_supply_demand(mock_api, "item123")
 
         # Assert
         assert result["liquidity"] == "unknown"
@@ -804,7 +804,7 @@ class TestAnalyzeSupplyDemand:
         )
 
         # Act
-        result = await analyze_supply_demand(mock_api, "item123")
+        result = awAlgot analyze_supply_demand(mock_api, "item123")
 
         # Assert
         assert result["min_sell_price"] == 10.0
@@ -823,7 +823,7 @@ class TestGetInvestmentRecommendations:
         mock_api.get_market_items = AsyncMock(return_value={"objects": []})
 
         # Act
-        result = await get_investment_recommendations(
+        result = awAlgot get_investment_recommendations(
             mock_api,
             game="csgo",
             budget=100.0,
@@ -840,7 +840,7 @@ class TestGetInvestmentRecommendations:
         mock_api.get_market_items = AsyncMock(return_value={"objects": []})
 
         # Act
-        result = await get_investment_recommendations(
+        result = awAlgot get_investment_recommendations(
             mock_api,
             game="csgo",
             budget=100.0,
@@ -857,7 +857,7 @@ class TestGetInvestmentRecommendations:
         mock_api.get_market_items = AsyncMock(return_value={"objects": []})
 
         # Act
-        result = await get_investment_recommendations(
+        result = awAlgot get_investment_recommendations(
             mock_api,
             game="csgo",
             budget=100.0,
@@ -874,7 +874,7 @@ class TestGetInvestmentRecommendations:
         mock_api.get_market_items = AsyncMock(return_value={"objects": []})
 
         # Act
-        result = await get_investment_recommendations(
+        result = awAlgot get_investment_recommendations(
             mock_api,
             game="csgo",
             budget=10.0,
@@ -891,7 +891,7 @@ class TestGetInvestmentRecommendations:
         mock_api.get_market_items = AsyncMock(return_value={"objects": []})
 
         # Act
-        result = await get_investment_recommendations(
+        result = awAlgot get_investment_recommendations(
             mock_api,
             game="csgo",
             budget=50.0,

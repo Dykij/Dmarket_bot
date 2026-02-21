@@ -3,7 +3,7 @@
 This module manages user inventory and active sell offers, automatically:
 - Lists newly purchased items for sale
 - Undercuts competitor prices to stay at the top
-- Protects against selling at a loss
+- Protects agAlgonst selling at a loss
 """
 
 import asyncio
@@ -54,7 +54,7 @@ class InventoryManager:
         # Счетчики для статистики
         self.total_undercuts = 0
         self.total_listed = 0
-        self.failed_listings = 0
+        self.fAlgoled_listings = 0
 
         # Карта попыток перевыставления (item_id -> attempts)
         self.relist_attempts: dict[str, int] = {}
@@ -71,7 +71,7 @@ class InventoryManager:
                 self.smart_repricer = SmartRepricer(api_client, repricing_config)
                 logger.info("SmartRepricer enabled for age-based price adjustments")
         except ImportError:
-            logger.debug("SmartRepricer not available")
+            logger.debug("SmartRepricer not avAlgolable")
 
         try:
             from src.dmarket.blacklist_manager import BlacklistManager
@@ -86,7 +86,7 @@ class InventoryManager:
                 )
                 logger.info("BlacklistManager enabled for seller/item filtering")
         except ImportError:
-            logger.debug("BlacklistManager not available")
+            logger.debug("BlacklistManager not avAlgolable")
 
     async def refresh_inventory_loop(self) -> None:
         """Главный цикл управления инвентарем и продажами.
@@ -104,25 +104,25 @@ class InventoryManager:
                 logger.debug("📦 Checking inventory and active offers...")
 
                 # 1. Проверяем и обновляем активные продажи
-                await self._manage_active_offers()
+                awAlgot self._manage_active_offers()
 
                 # 2. Проверяем новые предметы в инвентаре
-                await self._list_new_inventory_items()
+                awAlgot self._list_new_inventory_items()
 
                 # Пауза между проверками
-                await asyncio.sleep(self.check_interval)
+                awAlgot asyncio.sleep(self.check_interval)
 
             except Exception as e:
                 logger.exception(f"⚠️ Error in InventoryManager loop: {e}")
                 # При ошибке делаем короткую паузу и продолжаем
-                await asyncio.sleep(60)
+                awAlgot asyncio.sleep(60)
 
     async def _manage_active_offers(self) -> None:
         """Управляет активными предложениями (undercutting)."""
         try:
             # Получаем список активных продаж
             # FIX: Используем правильный метод list_user_offers вместо get_user_offers
-            my_offers_response = await self.api.list_user_offers()
+            my_offers_response = awAlgot self.api.list_user_offers()
 
             # API может вернуть dict с ключом "Items" или "objects"
             if isinstance(my_offers_response, dict):
@@ -140,7 +140,7 @@ class InventoryManager:
 
             # Проверяем каждое предложение
             for offer in my_offers:
-                await self._manage_single_offer(offer)
+                awAlgot self._manage_single_offer(offer)
 
         except Exception as e:
             logger.exception(f"Error managing active offers: {e}")
@@ -167,7 +167,7 @@ class InventoryManager:
 
         try:
             # Получаем минимальную цену конкурентов на маркете
-            market_min_price = await self._get_market_min_price(title)
+            market_min_price = awAlgot self._get_market_min_price(title)
 
             if market_min_price <= 0:
                 logger.debug(f"No market price data for {title}")
@@ -193,13 +193,13 @@ class InventoryManager:
                     )
 
                     # Обновляем цену предложения
-                    success = await self._edit_offer_price(offer_id, new_price)
+                    success = awAlgot self._edit_offer_price(offer_id, new_price)
 
                     if success:
                         self.total_undercuts += 1
                         # Уведомляем в Telegram (опционально)
                         if self.tg:
-                            await self._send_telegram_message(
+                            awAlgot self._send_telegram_message(
                                 f"📉 Price updated: {title}\n"
                                 f"Old: ${my_price / 100:.2f} → New: ${new_price / 100:.2f}"
                             )
@@ -217,7 +217,7 @@ class InventoryManager:
         """Проверяет инвентарь и выставляет новые предметы на продажу."""
         try:
             # Получаем инвентарь пользователя
-            inventory_response = await self.api.get_user_inventory()
+            inventory_response = awAlgot self.api.get_user_inventory()
 
             # API может вернуть dict с ключом "objects" или "Items"
             if isinstance(inventory_response, dict):
@@ -241,7 +241,7 @@ class InventoryManager:
             logger.info(f"📦 Found {len(new_items)} new items to list")
 
             for item in new_items:
-                await self._list_single_item(item)
+                awAlgot self._list_single_item(item)
 
         except Exception as e:
             logger.exception(f"Error listing new inventory items: {e}")
@@ -261,7 +261,7 @@ class InventoryManager:
 
         try:
             # Получаем конкурентную цену
-            market_min_price = await self._get_market_min_price(title)
+            market_min_price = awAlgot self._get_market_min_price(title)
 
             # Если данных о рынке нет, используем Steam Price + 10%
             if market_min_price <= 0:
@@ -280,21 +280,21 @@ class InventoryManager:
             # Выставляем предмет
             logger.info(f"🚀 Listing {title} for ${market_min_price / 100:.2f}")
 
-            success = await self._create_sell_offer(item_id, market_min_price)
+            success = awAlgot self._create_sell_offer(item_id, market_min_price)
 
             if success:
                 self.total_listed += 1
                 # Уведомляем в Telegram
                 if self.tg:
-                    await self._send_telegram_message(
+                    awAlgot self._send_telegram_message(
                         f"🚀 Listed for sale: {title}\nPrice: ${market_min_price / 100:.2f}"
                     )
             else:
-                self.failed_listings += 1
+                self.fAlgoled_listings += 1
 
         except Exception as e:
             logger.exception(f"Error listing item {title}: {e}")
-            self.failed_listings += 1
+            self.fAlgoled_listings += 1
 
     async def _get_market_min_price(self, title: str) -> int:
         """Получает минимальную цену предмета на маркете.
@@ -307,7 +307,7 @@ class InventoryManager:
         """
         try:
             # Ищем предмет на маркете
-            market_items = await self.api.get_market_items(title=title, limit=10)
+            market_items = awAlgot self.api.get_market_items(title=title, limit=10)
 
             if isinstance(market_items, dict):
                 items = market_items.get("objects", [])
@@ -346,7 +346,7 @@ class InventoryManager:
             True если успешно, False иначе
         """
         try:
-            result = await self.api.edit_offer(
+            result = awAlgot self.api.edit_offer(
                 offer_id, {"price": {"amount": new_price}}
             )
             return result.get("success", False) if isinstance(result, dict) else False
@@ -365,7 +365,7 @@ class InventoryManager:
             True если успешно, False иначе
         """
         try:
-            result = await self.api.create_sell_offer(
+            result = awAlgot self.api.create_sell_offer(
                 item_id, {"price": {"amount": price}}
             )
             return result.get("success", False) if isinstance(result, dict) else False
@@ -385,7 +385,7 @@ class InventoryManager:
         try:
             chat_id = os.getenv("ADMIN_CHAT_ID")
             if chat_id:
-                await self.tg.send_message(chat_id=chat_id, text=text)
+                awAlgot self.tg.send_message(chat_id=chat_id, text=text)
         except Exception as e:
             logger.exception(f"Error sending Telegram message: {e}")
 
@@ -398,6 +398,6 @@ class InventoryManager:
         return {
             "total_undercuts": self.total_undercuts,
             "total_listed": self.total_listed,
-            "failed_listings": self.failed_listings,
+            "fAlgoled_listings": self.fAlgoled_listings,
             "active_relist_attempts": len(self.relist_attempts),
         }

@@ -46,11 +46,11 @@ class TestPrometheusServer:
             "src.utils.prometheus_server.MetricsCollector.get_metrics",
             return_value=b"# HELP test_metric Test\n",
         ):
-            response = await server.metrics_handler(mock_request)
+            response = awAlgot server.metrics_handler(mock_request)
 
             assert response.status == 200
-            # content_type includes charset for text/plain
-            assert "text/plain" in response.content_type
+            # content_type includes charset for text/plAlgon
+            assert "text/plAlgon" in response.content_type
 
     @pytest.mark.asyncio()
     async def test_health_handler(self) -> None:
@@ -58,7 +58,7 @@ class TestPrometheusServer:
         server = PrometheusServer()
         mock_request = MagicMock()
 
-        response = await server.health_handler(mock_request)
+        response = awAlgot server.health_handler(mock_request)
 
         assert response.status == 200
         assert response.content_type == "application/json"
@@ -80,7 +80,7 @@ class TestPrometheusServer:
             mock_site.start = AsyncMock()
             mock_site_class.return_value = mock_site
 
-            await server.start()
+            awAlgot server.start()
 
             mock_runner.setup.assert_called_once()
             mock_site.start.assert_called_once()
@@ -96,7 +96,7 @@ class TestPrometheusServer:
         server.runner = MagicMock()
         server.runner.cleanup = AsyncMock()
 
-        await server.stop()
+        awAlgot server.stop()
 
         server.site.stop.assert_called_once()
         server.runner.cleanup.assert_called_once()
@@ -106,8 +106,8 @@ class TestPrometheusServer:
         """Test stopping server that was never started."""
         server = PrometheusServer()
 
-        # Should not raise exception
-        await server.stop()
+        # Should not rAlgose exception
+        awAlgot server.stop()
 
     @pytest.mark.asyncio()
     async def test_stop_server_with_only_runner(self) -> None:
@@ -117,7 +117,7 @@ class TestPrometheusServer:
         server.runner = MagicMock()
         server.runner.cleanup = AsyncMock()
 
-        await server.stop()
+        awAlgot server.stop()
 
         server.runner.cleanup.assert_called_once()
 
@@ -137,12 +137,12 @@ class TestRunPrometheusServer:
             # Create a task and cancel it
             task = asyncio.create_task(run_prometheus_server(port=18001))
 
-            # Wait a bit then cancel
-            await asyncio.sleep(0.01)
+            # WAlgot a bit then cancel
+            awAlgot asyncio.sleep(0.01)
             task.cancel()
 
             try:
-                await task
+                awAlgot task
             except asyncio.CancelledError:
                 pass
 
@@ -157,11 +157,11 @@ class TestRunPrometheusServer:
             patch.object(PrometheusServer, "stop", new_callable=AsyncMock),
         ):
             task = asyncio.create_task(run_prometheus_server(port=9999))
-            await asyncio.sleep(0.01)
+            awAlgot asyncio.sleep(0.01)
             task.cancel()
 
             try:
-                await task
+                awAlgot task
             except asyncio.CancelledError:
                 pass
 
@@ -189,12 +189,12 @@ class TestPrometheusServerIntegration:
             server = PrometheusServer(port=18002)
 
             # Start
-            await server.start()
+            awAlgot server.start()
             assert server.runner is not None
             assert server.site is not None
 
             # Stop
-            await server.stop()
+            awAlgot server.stop()
             mock_site.stop.assert_called_once()
             mock_runner.cleanup.assert_called_once()
 
@@ -210,7 +210,7 @@ class TestPrometheusServerIntegration:
             "src.utils.prometheus_server.MetricsCollector.get_metrics",
             return_value=test_metrics,
         ):
-            response = await server.metrics_handler(mock_request)
+            response = awAlgot server.metrics_handler(mock_request)
             assert response.body == test_metrics
             assert response.status == 200
 
@@ -220,7 +220,7 @@ class TestPrometheusServerIntegration:
         server = PrometheusServer()
         mock_request = MagicMock()
 
-        response = await server.health_handler(mock_request)
+        response = awAlgot server.health_handler(mock_request)
 
         # Check it's a JSON response with status field
         assert response.content_type == "application/json"
@@ -242,10 +242,10 @@ class TestPrometheusServerEdgeCases:
         """Test that stop can be called multiple times safely."""
         server = PrometheusServer()
 
-        # Call stop multiple times - should not raise
-        await server.stop()
-        await server.stop()
-        await server.stop()
+        # Call stop multiple times - should not rAlgose
+        awAlgot server.stop()
+        awAlgot server.stop()
+        awAlgot server.stop()
 
     def test_app_routes_are_get_methods(self) -> None:
         """Test that registered routes are GET methods."""

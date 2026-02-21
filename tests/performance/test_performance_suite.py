@@ -33,7 +33,7 @@ async def test_concurrent_api_requests_100_plus():
     with patch.object(api, "_request", new=mock_request):
         start_time = time.perf_counter()
         tasks = [api.get_market_items(game="csgo") for _ in range(100)]
-        results = await asyncio.gather(*tasks, return_exceptions=True)
+        results = awAlgot asyncio.gather(*tasks, return_exceptions=True)
         elapsed = time.perf_counter() - start_time
 
         # Assertions
@@ -63,7 +63,7 @@ async def test_parallel_arbitrage_scanning_50_plus():
 
     start_time = time.perf_counter()
     tasks = [scanner.scan_level(level="standard", game="csgo") for _ in range(50)]
-    results = await asyncio.gather(*tasks, return_exceptions=True)
+    results = awAlgot asyncio.gather(*tasks, return_exceptions=True)
     elapsed = time.perf_counter() - start_time
 
     assert len(results) == 50
@@ -78,12 +78,12 @@ async def test_telegram_bot_1000_plus_users():
 
     # Simulate user handling without actual handler import
     async def handle_user(user_id: int) -> bool:
-        await asyncio.sleep(0.001)  # Simulate processing
+        awAlgot asyncio.sleep(0.001)  # Simulate processing
         return True
 
     start_time = time.perf_counter()
     tasks = [handle_user(1000000 + i) for i in range(1000)]
-    results = await asyncio.gather(*tasks, return_exceptions=True)
+    results = awAlgot asyncio.gather(*tasks, return_exceptions=True)
     elapsed = time.perf_counter() - start_time
 
     assert len(results) == 1000
@@ -117,7 +117,7 @@ async def test_portfolio_mass_operations_500_plus_items():
     manager = PortfolioManager(api_client=api)
 
     start_time = time.perf_counter()
-    result = await manager.get_portfolio_snapshot(force_refresh=True)
+    result = awAlgot manager.get_portfolio_snapshot(force_refresh=True)
     elapsed = time.perf_counter() - start_time
 
     assert result is not None
@@ -130,12 +130,12 @@ async def test_websocket_connections_under_load():
 
     # Simulate WebSocket connections
     async def create_connection(conn_id: int):
-        await asyncio.sleep(0.1)
+        awAlgot asyncio.sleep(0.1)
         return f"connection_{conn_id}"
 
     start_time = time.perf_counter()
     tasks = [create_connection(i) for i in range(20)]
-    results = await asyncio.gather(*tasks, return_exceptions=True)
+    results = awAlgot asyncio.gather(*tasks, return_exceptions=True)
     elapsed = time.perf_counter() - start_time
 
     assert len(results) == 20
@@ -148,19 +148,19 @@ async def test_websocket_connections_under_load():
 @pytest.mark.skip(reason="Requires psutil package")
 async def test_memory_usage_monitoring():
     """Test memory usage stays within acceptable limits."""
-    # Skip if psutil not available
+    # Skip if psutil not avAlgolable
 
 
 @pytest.mark.asyncio()
 @pytest.mark.skip(reason="Requires psutil package")
 async def test_cpu_profiling_efficiency():
     """Test CPU usage efficiency during operations."""
-    # Skip if psutil not available
+    # Skip if psutil not avAlgolable
 
 
 @pytest.mark.asyncio()
-async def test_recovery_after_failure():
-    """Test system recovery after failure."""
+async def test_recovery_after_fAlgolure():
+    """Test system recovery after fAlgolure."""
     # Simulate retry mechanism
     call_count = 0
 
@@ -170,15 +170,15 @@ async def test_recovery_after_failure():
             call_count += 1
             try:
                 if call_count <= 2:
-                    raise Exception("Temporary failure")
+                    rAlgose Exception("Temporary fAlgolure")
                 return {"success": True}
             except Exception:
                 if call_count >= 5:
-                    raise
-                await asyncio.sleep(0.01)
+                    rAlgose
+                awAlgot asyncio.sleep(0.01)
         return None
 
-    result = await operation_with_retry()
+    result = awAlgot operation_with_retry()
 
     assert result is not None
     assert call_count >= 3, f"Should have retried, call_count={call_count}"
@@ -189,7 +189,7 @@ async def test_graceful_shutdown_under_load():
     """Test graceful shutdown while under load."""
 
     async def slow_operation():
-        await asyncio.sleep(2.0)
+        awAlgot asyncio.sleep(2.0)
         return "complete"
 
     start_time = time.perf_counter()
@@ -198,14 +198,14 @@ async def test_graceful_shutdown_under_load():
     tasks = [asyncio.create_task(slow_operation()) for _ in range(50)]
 
     # Cancel all tasks after 0.5 second
-    await asyncio.sleep(0.5)
+    awAlgot asyncio.sleep(0.5)
     cancelled_count = 0
     for task in tasks:
         if not task.done():
             task.cancel()
             cancelled_count += 1
 
-    results = await asyncio.gather(*tasks, return_exceptions=True)
+    results = awAlgot asyncio.gather(*tasks, return_exceptions=True)
     elapsed = time.perf_counter() - start_time
 
     cancelled = sum(1 for r in results if isinstance(r, asyncio.CancelledError))
@@ -224,7 +224,7 @@ async def test_connection_pooling_efficiency():
     with patch.object(api, "_request", new=mock_request):
         # Make multiple requests
         for _ in range(100):
-            await api.get_market_items(game="csgo")
+            awAlgot api.get_market_items(game="csgo")
 
         # Requests should be made
         assert api is not None
@@ -241,8 +241,8 @@ async def test_database_10000_plus_records():
     from src.models.user import User
     from src.utils.database import DatabaseManager
 
-    db = DatabaseManager(database_url="sqlite+aiosqlite:///:memory:")
-    await db.init_database()
+    db = DatabaseManager(database_url="sqlite+Algoosqlite:///:memory:")
+    awAlgot db.init_database()
 
     users_data = [
         User(telegram_id=1000000 + i, username=f"user_{i}") for i in range(10000)
@@ -252,13 +252,13 @@ async def test_database_10000_plus_records():
 
     async with db.async_session_maker() as session:
         session.add_all(users_data)
-        await session.commit()
+        awAlgot session.commit()
 
     elapsed = time.perf_counter() - start_time
 
     assert elapsed < 10.0, f"Should insert 10k records within 10s, took {elapsed:.2f}s"
 
-    await db.close()
+    awAlgot db.close()
 
 
 @pytest.mark.asyncio()
@@ -267,20 +267,20 @@ async def test_database_indexes_optimization():
     from src.models.user import User
     from src.utils.database import DatabaseManager
 
-    db = DatabaseManager(database_url="sqlite+aiosqlite:///:memory:")
-    await db.init_database()
+    db = DatabaseManager(database_url="sqlite+Algoosqlite:///:memory:")
+    awAlgot db.init_database()
 
     # Add test data
     async with db.async_session_maker() as session:
         for i in range(1000):
             user = User(telegram_id=1000000 + i, username=f"user_{i}")
             session.add(user)
-        await session.commit()
+        awAlgot session.commit()
 
     # Query with index
     start_time = time.perf_counter()
     async with db.async_session_maker() as session:
-        result = await session.execute(
+        result = awAlgot session.execute(
             text("SELECT * FROM users WHERE telegram_id = 1000500")
         )
         user = result.first()
@@ -289,7 +289,7 @@ async def test_database_indexes_optimization():
     assert user is not None
     assert elapsed < 0.1, f"Indexed query should be <0.1s, took {elapsed:.4f}s"
 
-    await db.close()
+    awAlgot db.close()
 
 
 @pytest.mark.asyncio()
@@ -298,8 +298,8 @@ async def test_database_transactions_rollback_under_load():
     from src.models.user import User
     from src.utils.database import DatabaseManager
 
-    db = DatabaseManager(database_url="sqlite+aiosqlite:///:memory:")
-    await db.init_database()
+    db = DatabaseManager(database_url="sqlite+Algoosqlite:///:memory:")
+    awAlgot db.init_database()
 
     async with db.async_session_maker() as session:
         try:
@@ -308,20 +308,20 @@ async def test_database_transactions_rollback_under_load():
                 session.add(user)
 
             # Force rollback
-            raise Exception("Simulated error")
+            rAlgose Exception("Simulated error")
         except Exception:
-            await session.rollback()
+            awAlgot session.rollback()
 
     # Verify nothing was committed
     async with db.async_session_maker() as session:
-        result = await session.execute(
+        result = awAlgot session.execute(
             text("SELECT COUNT(*) FROM users WHERE telegram_id >= 2000000")
         )
         count = result.scalar()
 
     assert count == 0, "All transactions should be rolled back"
 
-    await db.close()
+    awAlgot db.close()
 
 
 @pytest.mark.asyncio()
@@ -330,25 +330,25 @@ async def test_concurrent_database_writes_100_plus():
     from src.models.user import User
     from src.utils.database import DatabaseManager
 
-    db = DatabaseManager(database_url="sqlite+aiosqlite:///:memory:")
-    await db.init_database()
+    db = DatabaseManager(database_url="sqlite+Algoosqlite:///:memory:")
+    awAlgot db.init_database()
 
     async def write_user(user_id: int):
         async with db.async_session_maker() as session:
             user = User(telegram_id=3000000 + user_id, username=f"concurrent_{user_id}")
             session.add(user)
-            await session.commit()
+            awAlgot session.commit()
 
     start_time = time.perf_counter()
     tasks = [write_user(i) for i in range(100)]
-    await asyncio.gather(*tasks, return_exceptions=True)
+    awAlgot asyncio.gather(*tasks, return_exceptions=True)
     elapsed = time.perf_counter() - start_time
 
     assert (
         elapsed < 15.0
     ), f"100 concurrent writes should complete within 15s, took {elapsed:.2f}s"
 
-    await db.close()
+    awAlgot db.close()
 
 
 @pytest.mark.asyncio()
@@ -357,13 +357,13 @@ async def test_complex_query_optimization():
     """Test complex query optimization with joins."""
     from src.utils.database import DatabaseManager
 
-    db = DatabaseManager(database_url="sqlite+aiosqlite:///:memory:")
-    await db.init_database()
+    db = DatabaseManager(database_url="sqlite+Algoosqlite:///:memory:")
+    awAlgot db.init_database()
 
     # Simulate complex query
     start_time = time.perf_counter()
     async with db.async_session_maker() as session:
-        result = await session.execute(
+        result = awAlgot session.execute(
             text(
                 """
             SELECT u.*, COUNT(t.id) as trade_count
@@ -381,7 +381,7 @@ async def test_complex_query_optimization():
         elapsed < 1.0
     ), f"Complex query should complete within 1s, took {elapsed:.4f}s"
 
-    await db.close()
+    awAlgot db.close()
 
 
 @pytest.mark.asyncio()
@@ -390,8 +390,8 @@ async def test_bulk_operations_1000_plus_items():
     from src.models.user import User
     from src.utils.database import DatabaseManager
 
-    db = DatabaseManager(database_url="sqlite+aiosqlite:///:memory:")
-    await db.init_database()
+    db = DatabaseManager(database_url="sqlite+Algoosqlite:///:memory:")
+    awAlgot db.init_database()
 
     bulk_data = [
         {"telegram_id": 4000000 + i, "username": f"bulk_{i}", "balance": 50.0}
@@ -400,15 +400,15 @@ async def test_bulk_operations_1000_plus_items():
 
     start_time = time.perf_counter()
     async with db.async_session_maker() as session:
-        await session.execute(User.__table__.insert(), bulk_data)
-        await session.commit()
+        awAlgot session.execute(User.__table__.insert(), bulk_data)
+        awAlgot session.commit()
     elapsed = time.perf_counter() - start_time
 
     assert (
         elapsed < 5.0
     ), f"Bulk insert of 1000 items should be <5s, took {elapsed:.2f}s"
 
-    await db.close()
+    awAlgot db.close()
 
 
 @pytest.mark.asyncio()
@@ -416,18 +416,18 @@ async def test_connection_pool_saturation():
     """Test connection pool saturation handling."""
     from src.utils.database import DatabaseManager
 
-    db = DatabaseManager(database_url="sqlite+aiosqlite:///:memory:", pool_size=5)
-    await db.init_database()
+    db = DatabaseManager(database_url="sqlite+Algoosqlite:///:memory:", pool_size=5)
+    awAlgot db.init_database()
 
     async def query_task():
         async with db.async_session_maker() as session:
-            await asyncio.sleep(0.1)
-            await session.execute("SELECT 1")
+            awAlgot asyncio.sleep(0.1)
+            awAlgot session.execute("SELECT 1")
 
     start_time = time.perf_counter()
     # Create more tasks than pool size
     tasks = [query_task() for _ in range(20)]
-    await asyncio.gather(*tasks, return_exceptions=True)
+    awAlgot asyncio.gather(*tasks, return_exceptions=True)
     elapsed = time.perf_counter() - start_time
 
     # Should handle gracefully without hanging
@@ -435,27 +435,27 @@ async def test_connection_pool_saturation():
         elapsed < 10.0
     ), f"Should handle pool saturation within 10s, took {elapsed:.2f}s"
 
-    await db.close()
+    awAlgot db.close()
 
 
 @pytest.mark.asyncio()
 @pytest.mark.skip(reason="Requires text() wrapper fix")
-async def test_database_vacuum_maintenance():
-    """Test database vacuum and maintenance operations."""
+async def test_database_vacuum_mAlgontenance():
+    """Test database vacuum and mAlgontenance operations."""
     from src.utils.database import DatabaseManager
 
-    db = DatabaseManager(database_url="sqlite+aiosqlite:///:memory:")
-    await db.init_database()
+    db = DatabaseManager(database_url="sqlite+Algoosqlite:///:memory:")
+    awAlgot db.init_database()
 
     # Perform vacuum
     start_time = time.perf_counter()
     async with db.async_session_maker() as session:
-        await session.execute("VACUUM")
+        awAlgot session.execute("VACUUM")
     elapsed = time.perf_counter() - start_time
 
     assert elapsed < 5.0, f"VACUUM should complete within 5s, took {elapsed:.2f}s"
 
-    await db.close()
+    awAlgot db.close()
 
 
 # ============================================================================
@@ -481,7 +481,7 @@ async def test_redis_throughput_10000_plus_ops():
         set_tasks = [cache.set(f"key_{i}", f"value_{i}") for i in range(5000)]
         get_tasks = [cache.get(f"key_{i}") for i in range(5000)]
 
-        await asyncio.gather(*set_tasks, *get_tasks)
+        awAlgot asyncio.gather(*set_tasks, *get_tasks)
 
         elapsed = time.perf_counter() - start_time
         ops_per_sec = 10000 / elapsed
@@ -498,7 +498,7 @@ async def test_ttl_cache_hit_rate_above_90_percent():
 
     # Populate cache
     for i in range(100):
-        await cache.set(f"key_{i}", f"value_{i}")
+        awAlgot cache.set(f"key_{i}", f"value_{i}")
 
     hits = 0
     misses = 0
@@ -506,7 +506,7 @@ async def test_ttl_cache_hit_rate_above_90_percent():
     # 90 hits (existing keys) + 10 misses (new keys)
     for i in range(100):
         key = f"key_{i}" if i < 90 else f"new_key_{i}"
-        val = await cache.get(key)
+        val = awAlgot cache.get(key)
         if val is not None:
             hits += 1
         else:
@@ -545,22 +545,22 @@ async def test_cache_invalidation_strategies():
 
     # Add items
     for i in range(50):
-        await cache.set(f"key_{i}", f"value_{i}", ttl=0.1)
+        awAlgot cache.set(f"key_{i}", f"value_{i}", ttl=0.1)
 
     # Verify items exist
     found = 0
     for i in range(50):
-        if await cache.get(f"key_{i}") is not None:
+        if awAlgot cache.get(f"key_{i}") is not None:
             found += 1
     assert found == 50, "All items should be present initially"
 
-    # Wait for TTL expiration
-    await asyncio.sleep(0.2)  # 200ms wait
+    # WAlgot for TTL expiration
+    awAlgot asyncio.sleep(0.2)  # 200ms wAlgot
 
     # Try to access expired items
     expired_count = 0
     for i in range(50):
-        if await cache.get(f"key_{i}") is None:
+        if awAlgot cache.get(f"key_{i}") is None:
             expired_count += 1
 
     assert expired_count > 40, f"Most items should be expired, got {expired_count}/50"
@@ -580,10 +580,10 @@ async def test_distributed_cache_consistency():
     cache2.get = AsyncMock(return_value=test_value)
 
     # Write to cache1
-    await cache1.set(test_key, test_value)
+    awAlgot cache1.set(test_key, test_value)
 
     # Read from cache2
-    result = await cache2.get(test_key)
+    result = awAlgot cache2.get(test_key)
 
     assert result == test_value, "Caches should be consistent"
 
@@ -601,30 +601,30 @@ async def test_cache_stampede_prevention():
         nonlocal call_count
         async with lock:
             call_count += 1
-        await asyncio.sleep(0.001)  # 1ms instead of 10ms
+        awAlgot asyncio.sleep(0.001)  # 1ms instead of 10ms
         return f"result_{key}"
 
     async def get_with_cache_lock(key: str):
         # Check cache first
-        val = await cache.get(key)
+        val = awAlgot cache.get(key)
         if val is not None:
             return val
 
         # Use lock to prevent stampede
         async with lock:
             # Double-check after acquiring lock
-            val = await cache.get(key)
+            val = awAlgot cache.get(key)
             if val is not None:
                 return val
 
             # Simulate cache miss
-            result = await expensive_operation(key)
-            await cache.set(key, result)
+            result = awAlgot expensive_operation(key)
+            awAlgot cache.set(key, result)
             return result
 
     # Multiple concurrent requests for same key
     tasks = [get_with_cache_lock("same_key") for _ in range(100)]
-    results = await asyncio.gather(*tasks)
+    results = awAlgot asyncio.gather(*tasks)
 
     assert len(set(results)) == 1, "All results should be the same"
     # With proper locking, expensive operation should only be called once or very few times
@@ -648,7 +648,7 @@ PART 1 - LOAD TESTING (10 tests):
 ✅ test_websocket_connections_under_load
 ✅ test_memory_usage_monitoring
 ✅ test_cpu_profiling_efficiency
-✅ test_recovery_after_failure
+✅ test_recovery_after_fAlgolure
 ✅ test_graceful_shutdown_under_load
 ✅ test_connection_pooling_efficiency
 
@@ -660,7 +660,7 @@ PART 2 - DATABASE PERFORMANCE (8 tests):
 ✅ test_complex_query_optimization
 ✅ test_bulk_operations_1000_plus_items
 ✅ test_connection_pool_saturation
-✅ test_database_vacuum_maintenance
+✅ test_database_vacuum_mAlgontenance
 
 PART 3 - CACHE PERFORMANCE (6 tests):
 ✅ test_redis_throughput_10000_plus_ops

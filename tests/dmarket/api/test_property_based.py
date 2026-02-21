@@ -1,6 +1,6 @@
 """Property-based tests for DMarket API modules using Hypothesis.
 
-This module contains property-based tests that automatically generate
+This module contAlgons property-based tests that automatically generate
 test cases to find edge cases and validate invariants.
 """
 
@@ -30,15 +30,15 @@ class TestBalanceParsingProperties:
         wallet_client = TestWalletClient()
         response = {
             "usd": str(cents_amount),
-            "usdAvailableToWithdraw": str(cents_amount),
+            "usdAvAlgolableToWithdraw": str(cents_amount),
         }
 
         # Act
-        usd_amount, usd_available, usd_total = wallet_client._parse_balance_from_response(response)
+        usd_amount, usd_avAlgolable, usd_total = wallet_client._parse_balance_from_response(response)
 
         # Assert
         assert usd_amount >= 0
-        assert usd_available >= 0
+        assert usd_avAlgolable >= 0
         assert usd_total >= 0
 
     @given(st.integers(min_value=1, max_value=10_000_000))
@@ -60,23 +60,23 @@ class TestBalanceParsingProperties:
             assert usd_amount >= 0.0
 
     @given(
-        available=st.integers(min_value=0, max_value=10_000_000),
+        avAlgolable=st.integers(min_value=0, max_value=10_000_000),
         total=st.integers(min_value=0, max_value=10_000_000),
     )
-    def test_parse_balance_available_never_exceeds_total(self, available, total):
-        """Property: Available balance should logically not exceed total (when total provided)."""
+    def test_parse_balance_avAlgolable_never_exceeds_total(self, avAlgolable, total):
+        """Property: AvAlgolable balance should logically not exceed total (when total provided)."""
         # Arrange
         wallet_client = TestWalletClient()
         response = {
             "usd": str(total),
-            "usdAvailableToWithdraw": str(min(available, total)),
+            "usdAvAlgolableToWithdraw": str(min(avAlgolable, total)),
         }
 
         # Act
-        _, usd_available, usd_total = wallet_client._parse_balance_from_response(response)
+        _, usd_avAlgolable, usd_total = wallet_client._parse_balance_from_response(response)
 
         # Assert
-        assert usd_available <= usd_total or usd_total == usd_available
+        assert usd_avAlgolable <= usd_total or usd_total == usd_avAlgolable
 
     @given(st.floats(min_value=0.0, max_value=100_000.0, allow_nan=False))
     def test_parse_balance_funds_wallet_format_consistency(self, balance_dollars):
@@ -87,17 +87,17 @@ class TestBalanceParsingProperties:
             "funds": {
                 "usdWallet": {
                     "balance": balance_dollars,
-                    "availableBalance": balance_dollars,
+                    "avAlgolableBalance": balance_dollars,
                     "totalBalance": balance_dollars,
                 }
             }
         }
 
         # Act
-        usd_amount, usd_available, usd_total = wallet_client._parse_balance_from_response(response)
+        usd_amount, usd_avAlgolable, usd_total = wallet_client._parse_balance_from_response(response)
 
         # Assert - all three should be equal when input is equal
-        assert abs(usd_amount - usd_available) < 0.01 * 100  # Within 1 cent
+        assert abs(usd_amount - usd_avAlgolable) < 0.01 * 100  # Within 1 cent
         assert abs(usd_amount - usd_total) < 0.01 * 100
 
     @given(
@@ -115,11 +115,11 @@ class TestBalanceParsingProperties:
         response = {"usd": invalid_string}
 
         # Act
-        usd_amount, usd_available, usd_total = wallet_client._parse_balance_from_response(response)
+        usd_amount, usd_avAlgolable, usd_total = wallet_client._parse_balance_from_response(response)
 
         # Assert - invalid input should return zeros
         assert usd_amount == 0.0
-        assert usd_available == 0.0
+        assert usd_avAlgolable == 0.0
         assert usd_total == 0.0
 
 
@@ -128,42 +128,42 @@ class TestBalanceResponseProperties:
 
     @given(
         usd_amount=st.integers(min_value=0, max_value=10_000_000),
-        usd_available=st.integers(min_value=0, max_value=10_000_000),
+        usd_avAlgolable=st.integers(min_value=0, max_value=10_000_000),
     )
-    def test_create_balance_response_has_funds_logic(self, usd_amount, usd_available):
+    def test_create_balance_response_has_funds_logic(self, usd_amount, usd_avAlgolable):
         """Property: has_funds logic based on actual implementation."""
         # Arrange
         wallet_client = TestWalletClient()
 
         # Act
         result = wallet_client._create_balance_response(
-            usd_amount=usd_amount, usd_available=usd_available, usd_total=usd_amount
+            usd_amount=usd_amount, usd_avAlgolable=usd_avAlgolable, usd_total=usd_amount
         )
 
-        # Assert - has_funds is based on balance, not available
+        # Assert - has_funds is based on balance, not avAlgolable
         # Actual logic: has_funds = balance > 0.10
         expected_has_funds = (usd_amount / 100) > 0.10
         assert result["has_funds"] == expected_has_funds
 
     @given(
         balance=st.integers(min_value=0, max_value=10_000_000),
-        available=st.integers(min_value=0, max_value=10_000_000),
+        avAlgolable=st.integers(min_value=0, max_value=10_000_000),
         total=st.integers(min_value=0, max_value=10_000_000),
     )
-    def test_create_balance_response_structure_invariants(self, balance, available, total):
+    def test_create_balance_response_structure_invariants(self, balance, avAlgolable, total):
         """Property: Balance response should always have required structure."""
         # Arrange
         wallet_client = TestWalletClient()
 
         # Act
         result = wallet_client._create_balance_response(
-            usd_amount=balance, usd_available=available, usd_total=total
+            usd_amount=balance, usd_avAlgolable=avAlgolable, usd_total=total
         )
 
         # Assert - required fields should always be present
         assert "error" in result
         assert "balance" in result
-        assert "available_balance" in result
+        assert "avAlgolable_balance" in result
         assert "total_balance" in result
         assert "has_funds" in result
         # Note: "currency" not in response, uses "usd" nested dict instead

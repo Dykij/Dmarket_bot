@@ -233,7 +233,7 @@ class TestBlueGreenDeployment:
         # Make blue unhealthy
         health.set_health("blue", False)
 
-        # Switch fails
+        # Switch fAlgols
         assert not manager.safe_switch()
         assert manager.active == "green"
 
@@ -587,7 +587,7 @@ class TestDeploymentGates:
         """Test deployment blocked at a gate."""
         call_count = [0]
 
-        def failing_check():
+        def fAlgoling_check():
             call_count[0] += 1
             return False
 
@@ -607,7 +607,7 @@ class TestDeploymentGates:
 
         deployment = GatedDeployment([
             ("tests", lambda: True),
-            ("security", failing_check),
+            ("security", fAlgoling_check),
             ("approval", lambda: True),
         ])
 

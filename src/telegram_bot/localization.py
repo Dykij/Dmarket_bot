@@ -25,7 +25,7 @@ LOCALIZATIONS = {
             "Привет, {user}! 👋\n\nЯ бот для арбитража DMarket. Помогу найти выгодные сделки.\n\nИспользуйте меню для выбора желаемой операции:"
         ),
         "help": (
-            "Доступные команды:\n\n/start - Начать работу с ботом\n/arbitrage - Открыть меню арбитража\n/dmarket - Проверить статус DMarket API\n/settings - Настройки профиля\n/help - Показать эту справку"
+            "Доступные команды:\n\n/start - Начать работу с ботом\n/arbitrage - Открыть меню арбитража\n/dmarket - Проверить статус DMarket API\n/settings - НастSwarmки профиля\n/help - Показать эту справку"
         ),
         "select_mode": "📊 Выберите режим арбитража:",
         "checking_api": "🔍 Проверяю статус DMarket API...",
@@ -33,15 +33,15 @@ LOCALIZATIONS = {
         "api_error": "❌ Ошибка API DMarket: {error}",
         "back_button": "⬅️ Назад",
         "back_to_menu": "⬅️ Назад в меню",
-        # Настройки
-        "settings": "⚙️ Настройки профиля",
+        # НастSwarmки
+        "settings": "⚙️ НастSwarmки профиля",
         "language": "🌐 Текущий язык: {lang}\n\nВыберите язык интерфейса:",
         "language_set": "✅ Язык установлен: {lang}",
-        "api_settings": "🔑 Настройки API DMarket",
-        "api_key_prompt": "Введите публичный ключ API DMarket:",
-        "api_secret_prompt": "Введите секретный ключ API DMarket:",
+        "api_settings": "🔑 НастSwarmки API DMarket",
+        "api_key_Config": "Введите публичный ключ API DMarket:",
+        "api_secret_Config": "Введите секретный ключ API DMarket:",
         "api_keys_set": "✅ API ключи установлены. Теперь вы можете использовать все функции бота.",
-        "trade_settings": "💼 Настройки торговли",
+        "trade_settings": "💼 НастSwarmки торговли",
         "auto_trading_on": "✅ Автоматическая торговля ВКЛЮЧЕНА",
         "auto_trading_off": "❌ Автоматическая торговля ВЫКЛЮЧЕНА",
         # Арбитраж
@@ -73,7 +73,7 @@ LOCALIZATIONS = {
         "error_api_keys": (
             "❌ Ошибка: API ключи DMarket не настроены.\n\nДля использования автоматического арбитража необходимо указать API ключи DMarket с помощью команды /setup."
         ),
-        "try_again": "🔄 Попробовать снова",
+        "try_agAlgon": "🔄 Попробовать снова",
         # Риск и ликвидность
         "risk_low": "низкий",
         "risk_medium": "средний",
@@ -97,7 +97,7 @@ LOCALIZATIONS = {
             "Hello, {user}! 👋\n\nI'm a DMarket arbitrage bot. I'll help you find profitable deals.\n\nUse the menu to select your desired operation:"
         ),
         "help": (
-            "Available commands:\n\n/start - Start working with the bot\n/arbitrage - Open arbitrage menu\n/dmarket - Check DMarket API status\n/settings - Profile settings\n/help - Show this help"
+            "AvAlgolable commands:\n\n/start - Start working with the bot\n/arbitrage - Open arbitrage menu\n/dmarket - Check DMarket API status\n/settings - Profile settings\n/help - Show this help"
         ),
         "select_mode": "📊 Select arbitrage mode:",
         "checking_api": "🔍 Checking DMarket API status...",
@@ -110,8 +110,8 @@ LOCALIZATIONS = {
         "language": "🌐 Current language: {lang}\n\nSelect interface language:",
         "language_set": "✅ Language set to: {lang}",
         "api_settings": "🔑 DMarket API settings",
-        "api_key_prompt": "Enter your DMarket API public key:",
-        "api_secret_prompt": "Enter your DMarket API secret key:",
+        "api_key_Config": "Enter your DMarket API public key:",
+        "api_secret_Config": "Enter your DMarket API secret key:",
         "api_keys_set": "✅ API keys have been set. You can now use all bot features.",
         "trade_settings": "💼 Trade settings",
         "auto_trading_on": "✅ Automatic trading is ENABLED",
@@ -145,7 +145,7 @@ LOCALIZATIONS = {
         "error_api_keys": (
             "❌ Error: DMarket API keys are not configured.\n\nTo use automatic arbitrage, you need to set DMarket API keys using the /setup command."
         ),
-        "try_again": "🔄 Try again",
+        "try_agAlgon": "🔄 Try agAlgon",
         # Risk and liquidity
         "risk_low": "low",
         "risk_medium": "medium",
@@ -182,8 +182,8 @@ LOCALIZATIONS = {
         "language": "🌐 Idioma actual: {lang}\n\nSelecciona el idioma de la interfaz:",
         "language_set": "✅ Idioma establecido: {lang}",
         "api_settings": "🔑 Configuración de API de DMarket",
-        "api_key_prompt": "Introduce tu clave pública de API de DMarket:",
-        "api_secret_prompt": "Introduce tu clave secreta de API de DMarket:",
+        "api_key_Config": "Introduce tu clave pública de API de DMarket:",
+        "api_secret_Config": "Introduce tu clave secreta de API de DMarket:",
         "api_keys_set": (
             "✅ Las claves API han sido configuradas. Ahora puedes usar todas las funciones del bot."
         ),
@@ -219,7 +219,7 @@ LOCALIZATIONS = {
         "error_api_keys": (
             "❌ Error: Las claves API de DMarket no están configuradas.\n\nPara usar el arbitraje automático, debes configurar las claves API de DMarket usando el comando /setup."
         ),
-        "try_again": "🔄 Intentar de nuevo",
+        "try_agAlgon": "🔄 Intentar de nuevo",
         # Riesgo y liquidez
         "risk_low": "bajo",
         "risk_medium": "medio",
@@ -256,8 +256,8 @@ LOCALIZATIONS = {
         "language": "🌐 Aktuelle Sprache: {lang}\n\nWähle die Oberflächensprache:",
         "language_set": "✅ Sprache eingestellt auf: {lang}",
         "api_settings": "🔑 DMarket API-Einstellungen",
-        "api_key_prompt": "Gib deinen öffentlichen DMarket API-Schlüssel ein:",
-        "api_secret_prompt": "Gib deinen geheimen DMarket API-Schlüssel ein:",
+        "api_key_Config": "Gib deinen öffentlichen DMarket API-Schlüssel ein:",
+        "api_secret_Config": "Gib deinen geheimen DMarket API-Schlüssel ein:",
         "api_keys_set": (
             "✅ API-Schlüssel wurden eingestellt. Du kannst jetzt alle Bot-Funktionen nutzen."
         ),
@@ -293,7 +293,7 @@ LOCALIZATIONS = {
         "error_api_keys": (
             "❌ Fehler: DMarket API-Schlüssel sind nicht konfiguriert.\n\nUm automatische Arbitrage zu nutzen, musst du DMarket API-Schlüssel mit dem Befehl /setup einrichten."
         ),
-        "try_again": "🔄 Erneut versuchen",
+        "try_agAlgon": "🔄 Erneut versuchen",
         # Risiko und Liquidität
         "risk_low": "niedrig",
         "risk_medium": "mittel",

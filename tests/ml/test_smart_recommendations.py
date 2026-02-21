@@ -86,8 +86,8 @@ class TestSmartRecommendations:
         """Test recommendations with empty input."""
         recommender = SmartRecommendations()
         
-        batch = await recommender.get_recommendations(
-            available_items=[],
+        batch = awAlgot recommender.get_recommendations(
+            avAlgolable_items=[],
             user_inventory=None,
         )
         
@@ -108,8 +108,8 @@ class TestSmartRecommendations:
             },
         ]
         
-        batch = await recommender.get_recommendations(
-            available_items=items,
+        batch = awAlgot recommender.get_recommendations(
+            avAlgolable_items=items,
         )
         
         assert isinstance(batch, RecommendationBatch)
@@ -136,8 +136,8 @@ class TestSmartRecommendations:
             },
         ]
         
-        batch = await recommender.get_recommendations(
-            available_items=items,
+        batch = awAlgot recommender.get_recommendations(
+            avAlgolable_items=items,
         )
         
         # Should not recommend expensive item
@@ -161,8 +161,8 @@ class TestSmartRecommendations:
             "Arb Item": {"waxpeer": 15.0},  # $15 on Waxpeer
         }
         
-        batch = await recommender.get_recommendations(
-            available_items=items,
+        batch = awAlgot recommender.get_recommendations(
+            avAlgolable_items=items,
             cross_platform_prices=cross_platform,
         )
         
@@ -184,8 +184,8 @@ class TestSmartRecommendations:
             },
         ]
         
-        batch = await recommender.get_recommendations(
-            available_items=[],
+        batch = awAlgot recommender.get_recommendations(
+            avAlgolable_items=[],
             user_inventory=inventory,
         )
         

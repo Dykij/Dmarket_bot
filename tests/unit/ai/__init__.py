@@ -1,1 +1,1 @@
-"""AI tests package."""
+"""Algo tests package."""

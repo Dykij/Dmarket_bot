@@ -65,6 +65,6 @@ class ArbitrageScanner:
 async def check_user_balance(api_client):
     """Stub for balance check to prevent ImportErrors"""
     try:
-        return await api_client.get_balance()
+        return awAlgot api_client.get_balance()
     except Exception:
         return None

@@ -1,7 +1,7 @@
 """Tests for market_data_logger module.
 
 This module tests the MarketDataLogger class for logging
-market data for analysis and ML training.
+market data for analysis and ML trAlgoning.
 """
 
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -94,7 +94,7 @@ class TestMarketDataLogger:
         )
         with patch("src.dmarket.market_data_logger.logger"):
             data_logger = MarketDataLogger(api=mock_api, config=config)
-            count = await data_logger.log_market_data()
+            count = awAlgot data_logger.log_market_data()
 
         assert count >= 0
 

@@ -1,10 +1,10 @@
 """
-Tests for TrainingDataManager - ML dataset management.
+Tests for TrAlgoningDataManager - ML dataset management.
 
-Based on actual implementation in src/ml/training_data_manager.py:
+Based on actual implementation in src/ml/trAlgoning_data_manager.py:
 - DatasetMetadata dataclass (version_id, game, total_samples, sources, etc.)
-- TrainingDataset dataclass (features, labels, item_names, metadata, feature_names)
-- TrainingDataManager class (create_dataset, save_version, load_version, etc.)
+- TrAlgoningDataset dataclass (features, labels, item_names, metadata, feature_names)
+- TrAlgoningDataManager class (create_dataset, save_version, load_version, etc.)
 """
 
 from __future__ import annotations
@@ -18,7 +18,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from src.ml.training_data_manager import DatasetMetadata, TrainingDataManager, TrainingDataset
+from src.ml.trAlgoning_data_manager import DatasetMetadata, TrAlgoningDataManager, TrAlgoningDataset
 
 # ============================================================================
 # Test DatasetMetadata
@@ -117,12 +117,12 @@ class TestDatasetMetadata:
 
 
 # ============================================================================
-# Test TrainingDataset
+# Test TrAlgoningDataset
 # ============================================================================
 
 
-class TestTrainingDataset:
-    """Tests for TrainingDataset dataclass."""
+class TestTrAlgoningDataset:
+    """Tests for TrAlgoningDataset dataclass."""
 
     @pytest.fixture()
     def sample_metadata(self) -> DatasetMetadata:
@@ -145,7 +145,7 @@ class TestTrainingDataset:
         item_names = ["item1", "item2", "item3", "item4", "item5"]
         feature_names = ["f1", "f2", "f3"]
 
-        dataset = TrainingDataset(
+        dataset = TrAlgoningDataset(
             features=features,
             labels=labels,
             item_names=item_names,
@@ -164,7 +164,7 @@ class TestTrainingDataset:
         features = np.random.rand(10, 5)
         labels = np.random.rand(10)
 
-        dataset = TrainingDataset(
+        dataset = TrAlgoningDataset(
             features=features,
             labels=labels,
             item_names=["item" + str(i) for i in range(10)],
@@ -174,12 +174,12 @@ class TestTrainingDataset:
 
         assert dataset.shape == (10, 5)
 
-    def test_dataset_train_test_split(self, sample_metadata: DatasetMetadata) -> None:
-        """Test train/test split functionality."""
+    def test_dataset_trAlgon_test_split(self, sample_metadata: DatasetMetadata) -> None:
+        """Test trAlgon/test split functionality."""
         features = np.random.rand(100, 5)
         labels = np.random.rand(100)
 
-        dataset = TrainingDataset(
+        dataset = TrAlgoningDataset(
             features=features,
             labels=labels,
             item_names=["item" + str(i) for i in range(100)],
@@ -187,22 +187,22 @@ class TestTrainingDataset:
             feature_names=["f" + str(i) for i in range(5)],
         )
 
-        train, test = dataset.train_test_split(test_size=0.2)
+        trAlgon, test = dataset.trAlgon_test_split(test_size=0.2)
 
         # Check split sizes (approximately)
-        assert train.features.shape[0] == 80
+        assert trAlgon.features.shape[0] == 80
         assert test.features.shape[0] == 20
-        assert train.labels.shape[0] == 80
+        assert trAlgon.labels.shape[0] == 80
         assert test.labels.shape[0] == 20
 
 
 # ============================================================================
-# Test TrainingDataManager
+# Test TrAlgoningDataManager
 # ============================================================================
 
 
-class TestTrainingDataManager:
-    """Tests for TrainingDataManager class."""
+class TestTrAlgoningDataManager:
+    """Tests for TrAlgoningDataManager class."""
 
     @pytest.fixture()
     def temp_dir(self) -> Path:
@@ -212,16 +212,16 @@ class TestTrainingDataManager:
         shutil.rmtree(temp, ignore_errors=True)
 
     @pytest.fixture()
-    def manager(self, temp_dir: Path) -> TrainingDataManager:
-        """Create TrainingDataManager instance for tests."""
-        return TrainingDataManager(
+    def manager(self, temp_dir: Path) -> TrAlgoningDataManager:
+        """Create TrAlgoningDataManager instance for tests."""
+        return TrAlgoningDataManager(
             data_dir=temp_dir,
             max_versions=5,
             enable_cache=True,
         )
 
     @pytest.fixture()
-    def sample_dataset(self) -> TrainingDataset:
+    def sample_dataset(self) -> TrAlgoningDataset:
         """Create sample dataset for tests."""
         metadata = DatasetMetadata(
             version_id="test_v1",
@@ -233,7 +233,7 @@ class TestTrainingDataManager:
             features_count=5,
             checksum="dataset_checksum",
         )
-        return TrainingDataset(
+        return TrAlgoningDataset(
             features=np.random.rand(10, 5),
             labels=np.random.rand(10),
             item_names=["item" + str(i) for i in range(10)],
@@ -243,7 +243,7 @@ class TestTrainingDataManager:
 
     def test_manager_initialization(self, temp_dir: Path) -> None:
         """Test manager initialization."""
-        manager = TrainingDataManager(
+        manager = TrAlgoningDataManager(
             data_dir=temp_dir,
             max_versions=10,
             enable_cache=True,
@@ -251,7 +251,7 @@ class TestTrainingDataManager:
         assert manager is not None
 
     def test_save_and_load_version(
-        self, manager: TrainingDataManager, sample_dataset: TrainingDataset
+        self, manager: TrAlgoningDataManager, sample_dataset: TrAlgoningDataset
     ) -> None:
         """Test saving and loading dataset version."""
         # Save version
@@ -266,7 +266,7 @@ class TestTrainingDataManager:
         assert loaded.labels.shape == sample_dataset.labels.shape
 
     def test_list_versions(
-        self, manager: TrainingDataManager, sample_dataset: TrainingDataset
+        self, manager: TrAlgoningDataManager, sample_dataset: TrAlgoningDataset
     ) -> None:
         """Test listing dataset versions."""
         # Save multiple versions
@@ -283,7 +283,7 @@ class TestTrainingDataManager:
             features_count=3,
             checksum="list_versions_checksum2",
         )
-        dataset2 = TrainingDataset(
+        dataset2 = TrAlgoningDataset(
             features=np.random.rand(5, 3),
             labels=np.random.rand(5),
             item_names=["item" + str(i) for i in range(5)],
@@ -301,7 +301,7 @@ class TestTrainingDataManager:
         assert all(v.game == "csgo" for v in csgo_versions)
 
     def test_delete_version(
-        self, manager: TrainingDataManager, sample_dataset: TrainingDataset
+        self, manager: TrAlgoningDataManager, sample_dataset: TrAlgoningDataset
     ) -> None:
         """Test deleting dataset version."""
         version_id = manager.save_version(sample_dataset)
@@ -315,11 +315,11 @@ class TestTrainingDataManager:
         assert result is True
 
         # Verify deleted
-        with pytest.raises(Exception):
+        with pytest.rAlgoses(Exception):
             manager.load_version(version_id)
 
     def test_get_latest_version(
-        self, manager: TrainingDataManager, sample_dataset: TrainingDataset
+        self, manager: TrAlgoningDataManager, sample_dataset: TrAlgoningDataset
     ) -> None:
         """Test getting latest version for a game."""
         manager.save_version(sample_dataset)
@@ -328,13 +328,13 @@ class TestTrainingDataManager:
         assert latest is not None
         assert latest.game == "csgo"
 
-    def test_get_latest_version_no_data(self, manager: TrainingDataManager) -> None:
+    def test_get_latest_version_no_data(self, manager: TrAlgoningDataManager) -> None:
         """Test getting latest version when no data exists."""
         result = manager.get_latest_version("nonexistent_game")
         assert result is None
 
     def test_get_statistics(
-        self, manager: TrainingDataManager, sample_dataset: TrainingDataset
+        self, manager: TrAlgoningDataManager, sample_dataset: TrAlgoningDataset
     ) -> None:
         """Test getting manager statistics."""
         manager.save_version(sample_dataset)
@@ -343,14 +343,14 @@ class TestTrainingDataManager:
         assert "datasets_created" in stats or "versions_count" in stats
         assert isinstance(stats, dict)
 
-    def test_clear_cache(self, manager: TrainingDataManager) -> None:
+    def test_clear_cache(self, manager: TrAlgoningDataManager) -> None:
         """Test clearing cache."""
         result = manager.clear_cache()
         assert isinstance(result, int)
         assert result >= 0
 
 
-class TestTrainingDataManagerCreateDataset:
+class TestTrAlgoningDataManagerCreateDataset:
     """Tests for create_dataset methods."""
 
     @pytest.fixture()
@@ -361,11 +361,11 @@ class TestTrainingDataManagerCreateDataset:
         shutil.rmtree(temp, ignore_errors=True)
 
     @pytest.fixture()
-    def manager(self, temp_dir: Path) -> TrainingDataManager:
-        """Create TrainingDataManager instance."""
-        return TrainingDataManager(data_dir=temp_dir)
+    def manager(self, temp_dir: Path) -> TrAlgoningDataManager:
+        """Create TrAlgoningDataManager instance."""
+        return TrAlgoningDataManager(data_dir=temp_dir)
 
-    def test_create_dataset_from_dataframe(self, manager: TrainingDataManager) -> None:
+    def test_create_dataset_from_dataframe(self, manager: TrAlgoningDataManager) -> None:
         """Test creating dataset from pandas DataFrame."""
         df = pd.DataFrame({
             "price": [10.0, 20.0, 30.0, 40.0, 50.0],
@@ -388,7 +388,7 @@ class TestTrainingDataManagerCreateDataset:
         assert dataset.metadata.game == "csgo"
 
 
-class TestTrainingDataManagerMerge:
+class TestTrAlgoningDataManagerMerge:
     """Tests for merge_datasets functionality."""
 
     @pytest.fixture()
@@ -399,11 +399,11 @@ class TestTrainingDataManagerMerge:
         shutil.rmtree(temp, ignore_errors=True)
 
     @pytest.fixture()
-    def manager(self, temp_dir: Path) -> TrainingDataManager:
-        """Create TrainingDataManager instance."""
-        return TrainingDataManager(data_dir=temp_dir)
+    def manager(self, temp_dir: Path) -> TrAlgoningDataManager:
+        """Create TrAlgoningDataManager instance."""
+        return TrAlgoningDataManager(data_dir=temp_dir)
 
-    def test_merge_datasets(self, manager: TrainingDataManager) -> None:
+    def test_merge_datasets(self, manager: TrAlgoningDataManager) -> None:
         """Test merging multiple datasets."""
         # Create first dataset
         metadata1 = DatasetMetadata(
@@ -416,7 +416,7 @@ class TestTrainingDataManagerMerge:
             features_count=3,
             checksum="merge_checksum1",
         )
-        dataset1 = TrainingDataset(
+        dataset1 = TrAlgoningDataset(
             features=np.random.rand(5, 3),
             labels=np.random.rand(5),
             item_names=["item" + str(i) for i in range(5)],
@@ -436,7 +436,7 @@ class TestTrainingDataManagerMerge:
             features_count=3,
             checksum="merge_checksum2",
         )
-        dataset2 = TrainingDataset(
+        dataset2 = TrAlgoningDataset(
             features=np.random.rand(5, 3),
             labels=np.random.rand(5),
             item_names=["item" + str(i + 5) for i in range(5)],
@@ -455,7 +455,7 @@ class TestTrainingDataManagerMerge:
         assert merged.features.shape[0] == 10  # 5 + 5
 
 
-class TestTrainingDataManagerExport:
+class TestTrAlgoningDataManagerExport:
     """Tests for export functionality."""
 
     @pytest.fixture()
@@ -466,11 +466,11 @@ class TestTrainingDataManagerExport:
         shutil.rmtree(temp, ignore_errors=True)
 
     @pytest.fixture()
-    def manager(self, temp_dir: Path) -> TrainingDataManager:
-        """Create TrainingDataManager instance."""
-        return TrainingDataManager(data_dir=temp_dir)
+    def manager(self, temp_dir: Path) -> TrAlgoningDataManager:
+        """Create TrAlgoningDataManager instance."""
+        return TrAlgoningDataManager(data_dir=temp_dir)
 
-    def test_export_to_csv(self, manager: TrainingDataManager, temp_dir: Path) -> None:
+    def test_export_to_csv(self, manager: TrAlgoningDataManager, temp_dir: Path) -> None:
         """Test exporting dataset to CSV."""
         # Create and save dataset
         metadata = DatasetMetadata(
@@ -483,7 +483,7 @@ class TestTrainingDataManagerExport:
             features_count=3,
             checksum="export_checksum",
         )
-        dataset = TrainingDataset(
+        dataset = TrAlgoningDataset(
             features=np.random.rand(5, 3),
             labels=np.random.rand(5),
             item_names=["item" + str(i) for i in range(5)],
@@ -504,8 +504,8 @@ class TestTrainingDataManagerExport:
         assert len(df) == 5
 
 
-class TestTrainingDataManagerIntegration:
-    """Integration tests for TrainingDataManager."""
+class TestTrAlgoningDataManagerIntegration:
+    """Integration tests for TrAlgoningDataManager."""
 
     @pytest.fixture()
     def temp_dir(self) -> Path:
@@ -516,7 +516,7 @@ class TestTrainingDataManagerIntegration:
 
     def test_full_workflow(self, temp_dir: Path) -> None:
         """Test complete workflow: create, save, load, modify, export."""
-        manager = TrainingDataManager(data_dir=temp_dir)
+        manager = TrAlgoningDataManager(data_dir=temp_dir)
 
         # Create from DataFrame
         df = pd.DataFrame({
@@ -562,8 +562,8 @@ class TestTrainingDataManagerIntegration:
         manager.delete_version(version_id)
 
 
-class TestTrainingDataManagerEdgeCases:
-    """Edge case tests for TrainingDataManager."""
+class TestTrAlgoningDataManagerEdgeCases:
+    """Edge case tests for TrAlgoningDataManager."""
 
     @pytest.fixture()
     def temp_dir(self) -> Path:
@@ -573,26 +573,26 @@ class TestTrainingDataManagerEdgeCases:
         shutil.rmtree(temp, ignore_errors=True)
 
     @pytest.fixture()
-    def manager(self, temp_dir: Path) -> TrainingDataManager:
-        """Create TrainingDataManager instance."""
-        return TrainingDataManager(data_dir=temp_dir)
+    def manager(self, temp_dir: Path) -> TrAlgoningDataManager:
+        """Create TrAlgoningDataManager instance."""
+        return TrAlgoningDataManager(data_dir=temp_dir)
 
-    def test_load_nonexistent_version(self, manager: TrainingDataManager) -> None:
-        """Test loading non-existent version raises error."""
-        with pytest.raises(Exception):
+    def test_load_nonexistent_version(self, manager: TrAlgoningDataManager) -> None:
+        """Test loading non-existent version rAlgoses error."""
+        with pytest.rAlgoses(Exception):
             manager.load_version("nonexistent_version_id")
 
-    def test_delete_nonexistent_version(self, manager: TrainingDataManager) -> None:
+    def test_delete_nonexistent_version(self, manager: TrAlgoningDataManager) -> None:
         """Test deleting non-existent version."""
         result = manager.delete_version("nonexistent_version_id")
         assert result is False
 
-    def test_empty_list_versions(self, manager: TrainingDataManager) -> None:
+    def test_empty_list_versions(self, manager: TrAlgoningDataManager) -> None:
         """Test listing versions when none exist."""
         versions = manager.list_versions()
         assert versions == []
 
-    def test_list_versions_with_tags(self, manager: TrainingDataManager) -> None:
+    def test_list_versions_with_tags(self, manager: TrAlgoningDataManager) -> None:
         """Test listing versions filtered by tags."""
         metadata = DatasetMetadata(
             version_id="tagged_v1",
@@ -605,7 +605,7 @@ class TestTrainingDataManagerEdgeCases:
             checksum="tagged_checksum",
             tags=["test", "important"],
         )
-        dataset = TrainingDataset(
+        dataset = TrAlgoningDataset(
             features=np.random.rand(5, 3),
             labels=np.random.rand(5),
             item_names=["item" + str(i) for i in range(5)],

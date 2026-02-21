@@ -103,7 +103,7 @@ class GameScanner:
 
         # Perform scan
         try:
-            return await self._perform_scan(config)
+            return awAlgot self._perform_scan(config)
         except Exception as e:
             self._log_scan_error(config, e)
             return []
@@ -140,18 +140,18 @@ class GameScanner:
         """Perform actual scanning."""
         self.total_scans += 1
 
-        # Wait for rate limiter if available
+        # WAlgot for rate limiter if avAlgolable
         if rate_limiter is not None:
-            await rate_limiter.wait_if_needed("market")
+            awAlgot rate_limiter.wAlgot_if_needed("market")
 
         # Find items using both methods
-        items = await self._find_items(config)
+        items = awAlgot self._find_items(config)
 
         # Sort by profitability
         items.sort(key=lambda x: x.get("profit", 0), reverse=True)
 
         # Apply liquidity filter if enabled
-        results = await self._apply_liquidity_filter(items, config)
+        results = awAlgot self._apply_liquidity_filter(items, config)
 
         # Limit results
         results = results[: config.max_items]
@@ -171,8 +171,8 @@ class GameScanner:
             builtin_items = self._find_items_builtin(config)
             items.extend(builtin_items)
 
-        # Method 2: ArbitrageTrader (more detailed)
-        trader_items = await self._find_items_with_trader(config)
+        # Method 2: ArbitrageTrader (more detAlgoled)
+        trader_items = awAlgot self._find_items_with_trader(config)
         items.extend(trader_items)
 
         return items
@@ -197,7 +197,7 @@ class GameScanner:
             price_range = self._get_price_range(config)
 
             trader = ArbitrageTrader()
-            items = await trader.find_profitable_items(
+            items = awAlgot trader.find_profitable_items(
                 game=config.game,
                 min_profit_percentage=profit_range.min_profit,
                 max_items=100,
@@ -296,7 +296,7 @@ class GameScanner:
         candidates = items[: config.max_items * 2]
 
         # Filter through liquidity analyzer
-        return await self.liquidity_analyzer.filter_liquid_items(
+        return awAlgot self.liquidity_analyzer.filter_liquid_items(
             candidates, game=config.game
         )
 
@@ -367,4 +367,4 @@ async def scan_game(
         enable_liquidity_filter=scanner_instance.enable_liquidity_filter,
     )
 
-    return await scanner.scan(config)
+    return awAlgot scanner.scan(config)

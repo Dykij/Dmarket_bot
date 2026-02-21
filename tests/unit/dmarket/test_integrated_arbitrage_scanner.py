@@ -25,7 +25,7 @@ class TestIntegratedArbitrageScannerExists:
             from src.dmarket import integrated_arbitrage_scanner
             assert integrated_arbitrage_scanner is not None
         except ImportError as e:
-            pytest.skip(f"integrated_arbitrage_scanner not yet available: {e}")
+            pytest.skip(f"integrated_arbitrage_scanner not yet avAlgolable: {e}")
 
     def test_scanner_class_exists(self):
         """Test that IntegratedArbitrageScanner class is defined."""
@@ -228,7 +228,7 @@ class TestScannerCompatibility:
             assert intramarket_arbitrage is not None
             assert integrated_arbitrage_scanner is not None
         except ImportError:
-            pytest.skip("One or both arbitrage modules not available")
+            pytest.skip("One or both arbitrage modules not avAlgolable")
 
     def test_no_conflict_with_cross_platform_arbitrage(self):
         """Test compatibility with existing cross-platform module."""
@@ -238,4 +238,4 @@ class TestScannerCompatibility:
             assert cross_platform_arbitrage is not None
             assert integrated_arbitrage_scanner is not None
         except ImportError:
-            pytest.skip("One or both modules not available")
+            pytest.skip("One or both modules not avAlgolable")

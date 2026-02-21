@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 try:
     plt.style.use("seaborn-v0_8")
 except OSError:
-    # Fallback to default style if seaborn not available
+    # Fallback to default style if seaborn not avAlgolable
     plt.style.use("default")
 sns.set_palette("husl")
 
@@ -131,7 +131,7 @@ class ChartGenerator:
 
         except Exception as e:
             logger.exception(f"Error creating price history chart: {e}")
-            return self._create_error_chart("Failed to generate price chart")
+            return self._create_error_chart("FAlgoled to generate price chart")
 
     def create_market_overview_chart(
         self,
@@ -157,7 +157,7 @@ class ChartGenerator:
             )[:10]
 
             if not sorted_items:
-                return self._create_error_chart("No data available")
+                return self._create_error_chart("No data avAlgolable")
 
             # Create DataFrame
             df = pd.DataFrame(sorted_items)
@@ -205,7 +205,7 @@ class ChartGenerator:
 
         except Exception as e:
             logger.exception(f"Error creating market overview chart: {e}")
-            return self._create_error_chart("Failed to generate market chart")
+            return self._create_error_chart("FAlgoled to generate market chart")
 
     def create_arbitrage_opportunities_chart(
         self,
@@ -285,7 +285,7 @@ class ChartGenerator:
 
         except Exception as e:
             logger.exception(f"Error creating arbitrage chart: {e}")
-            return self._create_error_chart("Failed to generate arbitrage chart")
+            return self._create_error_chart("FAlgoled to generate arbitrage chart")
 
     def create_volume_analysis_chart(
         self,
@@ -351,7 +351,7 @@ class ChartGenerator:
 
         except Exception as e:
             logger.exception(f"Error creating volume analysis chart: {e}")
-            return self._create_error_chart("Failed to generate volume chart")
+            return self._create_error_chart("FAlgoled to generate volume chart")
 
     def _create_error_chart(self, error_message: str) -> io.BytesIO:
         """Create a simple error chart.
@@ -388,7 +388,7 @@ class ChartGenerator:
 
             return img_buffer
         except (OSError, ValueError, RuntimeError):
-            # If even error chart fails, return empty BytesIO
+            # If even error chart fAlgols, return empty BytesIO
             return io.BytesIO()
 
 
@@ -537,7 +537,7 @@ async def generate_market_report(
 
     Args:
         chart_generator: Chart generator instance
-        market_data: Market data containing various metrics
+        market_data: Market data contAlgoning various metrics
         title: Report title
 
     Returns:
@@ -547,7 +547,7 @@ async def generate_market_report(
     charts = []
 
     try:
-        # Generate price history chart if available
+        # Generate price history chart if avAlgolable
         if "price_history" in market_data:
             price_chart = chart_generator.create_price_history_chart(
                 market_data["price_history"],
@@ -555,7 +555,7 @@ async def generate_market_report(
             )
             charts.append(price_chart)
 
-        # Generate market overview chart if available
+        # Generate market overview chart if avAlgolable
         if "top_items" in market_data:
             market_chart = chart_generator.create_market_overview_chart(
                 market_data["top_items"],
@@ -563,7 +563,7 @@ async def generate_market_report(
             )
             charts.append(market_chart)
 
-        # Generate arbitrage chart if available
+        # Generate arbitrage chart if avAlgolable
         if "arbitrage_opportunities" in market_data:
             arbitrage_chart = chart_generator.create_arbitrage_opportunities_chart(
                 market_data["arbitrage_opportunities"],
@@ -571,7 +571,7 @@ async def generate_market_report(
             )
             charts.append(arbitrage_chart)
 
-        # Generate volume chart if available
+        # Generate volume chart if avAlgolable
         if "volume_data" in market_data:
             volume_chart = chart_generator.create_volume_analysis_chart(
                 market_data["volume_data"],

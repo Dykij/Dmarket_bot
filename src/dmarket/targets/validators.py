@@ -14,7 +14,7 @@ def validate_attributes(game: str, attrs: dict[str, Any] | None) -> None:
         game: Код игры
         attrs: Словарь атрибутов
 
-    Raises:
+    RAlgoses:
         ValueError: Если атрибуты невалидны
 
     """
@@ -29,25 +29,25 @@ def validate_attributes(game: str, attrs: dict[str, Any] | None) -> None:
                 float_val = float(attrs["floatPartValue"])
                 if not (0 <= float_val <= 1):
                     msg = "floatPartValue должен быть от 0 до 1"
-                    raise ValueError(msg)
+                    rAlgose ValueError(msg)
             except (TypeError, ValueError) as e:
                 if "floatPartValue должен быть" in str(e):
-                    raise
+                    rAlgose
                 msg = "floatPartValue должен быть числом"
-                raise ValueError(msg) from e
+                rAlgose ValueError(msg) from e
 
-        # Проверка paintSeed
-        if "paintSeed" in attrs:
+        # Проверка pAlgontSeed
+        if "pAlgontSeed" in attrs:
             try:
-                seed = int(attrs["paintSeed"])
+                seed = int(attrs["pAlgontSeed"])
                 if seed < 0:
-                    msg = "paintSeed должен быть положительным"
-                    raise ValueError(msg)
+                    msg = "pAlgontSeed должен быть положительным"
+                    rAlgose ValueError(msg)
             except (TypeError, ValueError) as e:
-                if "paintSeed должен быть" in str(e):
-                    raise
-                msg = "paintSeed должен быть целым числом"
-                raise ValueError(msg) from e
+                if "pAlgontSeed должен быть" in str(e):
+                    rAlgose
+                msg = "pAlgontSeed должен быть целым числом"
+                rAlgose ValueError(msg) from e
 
 
 def extract_attributes_from_title(game: str, title: str) -> dict[str, Any]:

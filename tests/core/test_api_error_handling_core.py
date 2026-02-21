@@ -31,7 +31,7 @@ class TestAPIErrorHandling:
         response.status = 200  # Используем status вместо status_code
         response.json = AsyncMock(return_value={"result": "success"})
 
-        result = await handle_response(response)
+        result = awAlgot handle_response(response)
 
         assert result == {"result": "success"}
 
@@ -42,7 +42,7 @@ class TestAPIErrorHandling:
         response.status = 201
         response.json = AsyncMock(return_value={"created": True})
 
-        result = await handle_response(response)
+        result = awAlgot handle_response(response)
 
         assert result == {"created": True}
 
@@ -53,8 +53,8 @@ class TestAPIErrorHandling:
         response.status = 400
         response.text = "Bad request"
 
-        with pytest.raises(APIError):
-            await handle_response(response)
+        with pytest.rAlgoses(APIError):
+            awAlgot handle_response(response)
 
     @pytest.mark.asyncio()
     async def test_handle_response_error_500(self):
@@ -63,8 +63,8 @@ class TestAPIErrorHandling:
         response.status = 500
         response.text = "Internal server error"
 
-        with pytest.raises(APIError):
-            await handle_response(response)
+        with pytest.rAlgoses(APIError):
+            awAlgot handle_response(response)
 
 
 class TestErrorCodeEnum:
@@ -116,7 +116,7 @@ class TestAPIErrorClasses:
 
     def test_network_error_creation(self):
         """Тест создания NetworkError."""
-        error = NetworkError("Connection failed")
+        error = NetworkError("Connection fAlgoled")
 
         assert isinstance(error, Exception)
 

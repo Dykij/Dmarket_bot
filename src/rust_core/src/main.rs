@@ -2,7 +2,7 @@ mod memory;
 mod parser;
 mod rate_limiter;
 mod obi;
-mod strategy; // Contains TradeSignal
+mod strategy; // ContAlgons TradeSignal
 mod network;
 mod executor;
 #[path = "math/cointegration.rs"] mod cointegration;
@@ -13,8 +13,8 @@ use network::RustNetworkClient;
 use executor::OrderExecutor;
 use std::sync::Arc;
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+#[tokio::mAlgon]
+async fn mAlgon() -> Result<(), Box<dyn std::error::Error>> {
     println!("🚀 Starting DMarket HFT Core (Rust Native)...");
 
     // 1. Initialize Memory Arenas (Bumpalo)

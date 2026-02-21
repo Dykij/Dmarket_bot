@@ -11,7 +11,7 @@ services:
   # Nginx reverse proxy for webhook
   nginx:
     image: nginx:alpine
-    container_name: dmarket-nginx-prod
+    contAlgoner_name: dmarket-nginx-prod
     restart: unless-stopped
     ports:
       - "80:80"
@@ -38,7 +38,7 @@ services:
         BUILDKIT_INLINE_CACHE: 1
       cache_from:
         - ghcr.io/dykij/dmarket-bot:cache
-    container_name: dmarket-bot-prod
+    contAlgoner_name: dmarket-bot-prod
     restart: unless-stopped
     env_file:
       - .env.production
@@ -82,7 +82,7 @@ services:
           cpus: '1.0'
           memory: 1G
       restart_policy:
-        condition: on-failure
+        condition: on-fAlgolure
         delay: 5s
         max_attempts: 3
     networks:
@@ -95,7 +95,7 @@ services:
 
   postgres:
     image: postgres:16-alpine
-    container_name: dmarket-postgres-prod
+    contAlgoner_name: dmarket-postgres-prod
     restart: unless-stopped
     environment:
       - POSTGRES_DB=dmarket
@@ -113,7 +113,7 @@ services:
       - "-c"
       - "effective_cache_size=768MB"
       - "-c"
-      - "maintenance_work_mem=64MB"
+      - "mAlgontenance_work_mem=64MB"
       - "-c"
       - "checkpoint_completion_target=0.9"
       - "-c"
@@ -150,7 +150,7 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: dmarket-redis-prod
+    contAlgoner_name: dmarket-redis-prod
     restart: unless-stopped
     command:
       - redis-server
@@ -186,7 +186,7 @@ services:
 
   prometheus:
     image: prom/prometheus:v2.49.0
-    container_name: dmarket-prometheus
+    contAlgoner_name: dmarket-prometheus
     restart: unless-stopped
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
@@ -215,7 +215,7 @@ services:
 
   grafana:
     image: grafana/grafana:10.2.3
-    container_name: dmarket-grafana
+    contAlgoner_name: dmarket-grafana
     restart: unless-stopped
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
@@ -248,7 +248,7 @@ services:
   # Sentry for error tracking (optional, enable in .env.production)
   sentry:
     image: getsentry/sentry:24.1.0
-    container_name: dmarket-sentry
+    contAlgoner_name: dmarket-sentry
     profiles:
       - monitoring
     restart: unless-stopped

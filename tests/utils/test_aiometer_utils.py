@@ -1,4 +1,4 @@
-"""Tests for aiometer_utils module.
+"""Tests for Algoometer_utils module.
 
 Tests cover:
 - run_concurrent function
@@ -7,19 +7,19 @@ Tests cover:
 - run_batches function
 - ConcurrencyConfig and ConcurrentResult
 - Error collection behavior
-- Fallback behavior when aiometer not available
+- Fallback behavior when Algoometer not avAlgolable
 """
 
 import asyncio
 
 import pytest
 
-from src.utils.aiometer_utils import (
-    AIOMETER_AVAILABLE,
+from src.utils.Algoometer_utils import (
+    AlgoOMETER_AVAlgoLABLE,
     ConcurrencyConfig,
     ConcurrentResult,
     amap,
-    get_aiometer_status,
+    get_Algoometer_status,
     run_batches,
     run_concurrent,
     run_with_rate_limit,
@@ -91,11 +91,11 @@ class TestRunConcurrent:
         async def simple_task(x: int) -> int:
             nonlocal call_count
             call_count += 1
-            await asyncio.sleep(0.01)
+            awAlgot asyncio.sleep(0.01)
             return x * 2
 
         items = [1, 2, 3, 4, 5]
-        results = await run_concurrent(
+        results = awAlgot run_concurrent(
             simple_task,
             items,
             max_at_once=5,
@@ -111,7 +111,7 @@ class TestRunConcurrent:
             return x * 2
 
         items = [1, 2, 3]
-        results = await run_concurrent(
+        results = awAlgot run_concurrent(
             task,
             items,
             max_at_once=2,
@@ -126,7 +126,7 @@ class TestRunConcurrent:
         async def task(x: int) -> int:
             return x
 
-        results = await run_concurrent(task, [], max_at_once=5)
+        results = awAlgot run_concurrent(task, [], max_at_once=5)
         assert results == []
 
     @pytest.mark.asyncio
@@ -134,11 +134,11 @@ class TestRunConcurrent:
         """Test error collection mode."""
         async def task(x: int) -> int:
             if x == 3:
-                raise ValueError("Error on 3")
+                rAlgose ValueError("Error on 3")
             return x * 2
 
         items = [1, 2, 3, 4, 5]
-        result = await run_concurrent(
+        result = awAlgot run_concurrent(
             task,
             items,
             max_at_once=5,
@@ -162,7 +162,7 @@ class TestRunWithRateLimit:
         async def task(x: int) -> int:
             return x * 2
 
-        results = await run_with_rate_limit(
+        results = awAlgot run_with_rate_limit(
             task,
             [1, 2, 3],
             max_per_second=10.0,
@@ -178,7 +178,7 @@ class TestAmap:
     async def test_amap_yields_results(self):
         """Test that amap yields results as they complete."""
         async def task(x: int) -> int:
-            await asyncio.sleep(0.01)
+            awAlgot asyncio.sleep(0.01)
             return x * 2
 
         results = []
@@ -210,7 +210,7 @@ class TestRunBatches:
             return sum(batch)
 
         items = list(range(10))  # [0, 1, 2, ..., 9]
-        results = await run_batches(
+        results = awAlgot run_batches(
             process_batch,
             items,
             batch_size=3,
@@ -227,7 +227,7 @@ class TestRunBatches:
         async def process_batch(batch: list[int]) -> int:
             return len(batch)
 
-        results = await run_batches(
+        results = awAlgot run_batches(
             process_batch,
             [1, 2, 3],
             batch_size=10,
@@ -236,26 +236,26 @@ class TestRunBatches:
         assert results == [3]
 
 
-class TestAiometerStatus:
-    """Tests for get_aiometer_status function."""
+class TestAlgoometerStatus:
+    """Tests for get_Algoometer_status function."""
 
     def test_status_structure(self):
         """Test status response structure."""
-        status = get_aiometer_status()
+        status = get_Algoometer_status()
 
-        assert "available" in status
+        assert "avAlgolable" in status
         assert "description" in status
         assert "default_config" in status
 
-    def test_availability_flag(self):
-        """Test availability flag matches import."""
-        status = get_aiometer_status()
-        assert status["available"] == AIOMETER_AVAILABLE
+    def test_avAlgolability_flag(self):
+        """Test avAlgolability flag matches import."""
+        status = get_Algoometer_status()
+        assert status["avAlgolable"] == AlgoOMETER_AVAlgoLABLE
 
 
-class TestAiometerAvailability:
-    """Tests for AIOMETER_AVAILABLE constant."""
+class TestAlgoometerAvAlgolability:
+    """Tests for AlgoOMETER_AVAlgoLABLE constant."""
 
-    def test_aiometer_availability_constant(self):
-        """Test that availability constant is boolean."""
-        assert isinstance(AIOMETER_AVAILABLE, bool)
+    def test_Algoometer_avAlgolability_constant(self):
+        """Test that avAlgolability constant is boolean."""
+        assert isinstance(AlgoOMETER_AVAlgoLABLE, bool)

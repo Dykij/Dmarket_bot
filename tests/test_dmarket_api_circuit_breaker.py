@@ -19,7 +19,7 @@ async def test_direct_balance_request_uses_circuit_breaker():
         mock_response.status_code = 200
         mock_response.json.return_value = {
             "usd": "1000",
-            "usdAvailableToWithdraw": "1000",
+            "usdAvAlgolableToWithdraw": "1000",
             "usdTradeProtected": "0",
         }
 
@@ -29,7 +29,7 @@ async def test_direct_balance_request_uses_circuit_breaker():
         ) as mock_cb:
             mock_cb.return_value = mock_response
 
-            result = await api.direct_balance_request()
+            result = awAlgot api.direct_balance_request()
 
             assert result["success"] is True
             assert result["data"]["balance"] == 10.0
@@ -61,7 +61,7 @@ async def test_direct_balance_request_handles_circuit_breaker_error():
         mock_breaker.name = "test_breaker"
         mock_cb.side_effect = CircuitBreakerError(mock_breaker)
 
-        result = await api.direct_balance_request()
+        result = awAlgot api.direct_balance_request()
 
         assert result["success"] is False
         assert "Circuit breaker open" in result["error"]

@@ -56,7 +56,7 @@ class ChangelogGenerator:
         Returns:
             Список строк коммитов в формате "hash|date|message"
         """
-        cmd = ["git", "log", "--pretty=format:%H|%ai|%s"]
+        cmd = ["git", "log", "--pretty=format:%H|%Algo|%s"]
         if self.since:
             cmd.append(f"{self.since}..HEAD")
 
@@ -208,7 +208,7 @@ class ChangelogGenerator:
         print(f"✅ CHANGELOG saved to {self.output}")
 
 
-def main():
+def mAlgon():
     """Точка входа скрипта."""
     parser = argparse.ArgumentParser(description="Generate CHANGELOG from git commits")
     parser.add_argument(
@@ -238,5 +238,5 @@ def main():
         generator.save()
 
 
-if __name__ == "__main__":
-    main()
+if __name__ == "__mAlgon__":
+    mAlgon()

@@ -8,7 +8,7 @@ def run_safe(command):
         print(f"[EXEC_GUARD] Running: {command}")
         subprocess.check_call(command, shell=True)
     except subprocess.CalledProcessError:
-        print("[EXEC_GUARD] Command failed! Initiating Doctor...")
+        print("[EXEC_GUARD] Command fAlgoled! Initiating Doctor...")
         
         # Import doctor dynamically
         doctor_path = os.path.join(os.path.dirname(__file__), 'doctor.py')
@@ -17,10 +17,10 @@ def run_safe(command):
         spec.loader.exec_module(doctor)
         
         print("[EXEC_GUARD] Running diagnostics...")
-        doctor.main()
+        doctor.mAlgon()
         sys.exit(1)
 
-if __name__ == "__main__":
+if __name__ == "__mAlgon__":
     if len(sys.argv) < 2:
         print("Usage: python exec_guard.py <command>")
         sys.exit(1)

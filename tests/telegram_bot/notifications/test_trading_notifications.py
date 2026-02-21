@@ -3,7 +3,7 @@
 Comprehensive tests for trading notification functions:
 - send_buy_intent_notification
 - send_buy_success_notification
-- send_buy_failed_notification
+- send_buy_fAlgoled_notification
 - send_sell_success_notification
 - send_critical_shutdown_notification
 - send_crash_notification
@@ -14,7 +14,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from src.telegram_bot.notifications.trading import (
-    send_buy_failed_notification,
+    send_buy_fAlgoled_notification,
     send_buy_intent_notification,
     send_buy_success_notification,
     send_crash_notification,
@@ -57,7 +57,7 @@ class TestSendBuyIntentNotification:
                 "src.telegram_bot.notifications.trading.increment_notification_count"
             ) as mock_increment,
         ):
-            result = await send_buy_intent_notification(
+            result = awAlgot send_buy_intent_notification(
                 bot=mock_bot,
                 user_id=123456,
                 item=sample_item,
@@ -76,7 +76,7 @@ class TestSendBuyIntentNotification:
             "src.telegram_bot.notifications.trading.can_send_notification",
             return_value=False,
         ):
-            result = await send_buy_intent_notification(
+            result = awAlgot send_buy_intent_notification(
                 bot=mock_bot, user_id=123456, item=sample_item
             )
 
@@ -95,7 +95,7 @@ class TestSendBuyIntentNotification:
                 "src.telegram_bot.notifications.trading.increment_notification_count"
             ),
         ):
-            await send_buy_intent_notification(
+            awAlgot send_buy_intent_notification(
                 bot=mock_bot, user_id=123456, item=sample_item, reason="Test reason"
             )
 
@@ -120,7 +120,7 @@ class TestSendBuyIntentNotification:
                 "src.telegram_bot.notifications.trading.increment_notification_count"
             ),
         ):
-            await send_buy_intent_notification(
+            awAlgot send_buy_intent_notification(
                 bot=mock_bot,
                 user_id=123456,
                 item=sample_item,
@@ -144,7 +144,7 @@ class TestSendBuyIntentNotification:
                 "src.telegram_bot.notifications.trading.increment_notification_count"
             ),
         ):
-            await send_buy_intent_notification(
+            awAlgot send_buy_intent_notification(
                 bot=mock_bot, user_id=123456, item=sample_item, callback_data=None
             )
 
@@ -162,7 +162,7 @@ class TestSendBuyIntentNotification:
             "src.telegram_bot.notifications.trading.can_send_notification",
             return_value=True,
         ):
-            result = await send_buy_intent_notification(
+            result = awAlgot send_buy_intent_notification(
                 bot=mock_bot, user_id=123456, item=sample_item
             )
 
@@ -182,7 +182,7 @@ class TestSendBuyIntentNotification:
                 "src.telegram_bot.notifications.trading.increment_notification_count"
             ),
         ):
-            await send_buy_intent_notification(bot=mock_bot, user_id=123456, item=item)
+            awAlgot send_buy_intent_notification(bot=mock_bot, user_id=123456, item=item)
 
             call_args = mock_bot.send_message.call_args
             message = call_args.kwargs["text"]
@@ -199,7 +199,7 @@ class TestSendBuySuccessNotification:
         with patch(
             "src.telegram_bot.notifications.trading.increment_notification_count"
         ):
-            result = await send_buy_success_notification(
+            result = awAlgot send_buy_success_notification(
                 bot=mock_bot, user_id=123456, item=sample_item, buy_price=15.50
             )
 
@@ -212,7 +212,7 @@ class TestSendBuySuccessNotification:
         with patch(
             "src.telegram_bot.notifications.trading.increment_notification_count"
         ):
-            await send_buy_success_notification(
+            awAlgot send_buy_success_notification(
                 bot=mock_bot,
                 user_id=123456,
                 item=sample_item,
@@ -231,7 +231,7 @@ class TestSendBuySuccessNotification:
         with patch(
             "src.telegram_bot.notifications.trading.increment_notification_count"
         ):
-            await send_buy_success_notification(
+            awAlgot send_buy_success_notification(
                 bot=mock_bot, user_id=123456, item=sample_item, buy_price=15.50
             )
 
@@ -247,23 +247,23 @@ class TestSendBuySuccessNotification:
         """Test buy success handles send errors."""
         mock_bot.send_message.side_effect = Exception("Network error")
 
-        result = await send_buy_success_notification(
+        result = awAlgot send_buy_success_notification(
             bot=mock_bot, user_id=123456, item=sample_item, buy_price=15.50
         )
 
         assert result is False
 
 
-class TestSendBuyFailedNotification:
-    """Tests for send_buy_failed_notification function."""
+class TestSendBuyFAlgoledNotification:
+    """Tests for send_buy_fAlgoled_notification function."""
 
     @pytest.mark.asyncio()
-    async def test_send_buy_failed_basic(self, mock_bot, sample_item):
-        """Test basic buy failed notification."""
+    async def test_send_buy_fAlgoled_basic(self, mock_bot, sample_item):
+        """Test basic buy fAlgoled notification."""
         with patch(
             "src.telegram_bot.notifications.trading.increment_notification_count"
         ):
-            result = await send_buy_failed_notification(
+            result = awAlgot send_buy_fAlgoled_notification(
                 bot=mock_bot,
                 user_id=123456,
                 item=sample_item,
@@ -274,12 +274,12 @@ class TestSendBuyFailedNotification:
             mock_bot.send_message.assert_called_once()
 
     @pytest.mark.asyncio()
-    async def test_send_buy_failed_message_format(self, mock_bot, sample_item):
-        """Test buy failed message formatting."""
+    async def test_send_buy_fAlgoled_message_format(self, mock_bot, sample_item):
+        """Test buy fAlgoled message formatting."""
         with patch(
             "src.telegram_bot.notifications.trading.increment_notification_count"
         ):
-            await send_buy_failed_notification(
+            awAlgot send_buy_fAlgoled_notification(
                 bot=mock_bot,
                 user_id=123456,
                 item=sample_item,
@@ -294,11 +294,11 @@ class TestSendBuyFailedNotification:
             assert "AK-47 | Redline" in message
 
     @pytest.mark.asyncio()
-    async def test_send_buy_failed_error_handling(self, mock_bot, sample_item):
-        """Test buy failed handles send errors."""
+    async def test_send_buy_fAlgoled_error_handling(self, mock_bot, sample_item):
+        """Test buy fAlgoled handles send errors."""
         mock_bot.send_message.side_effect = Exception("Network error")
 
-        result = await send_buy_failed_notification(
+        result = awAlgot send_buy_fAlgoled_notification(
             bot=mock_bot,
             user_id=123456,
             item=sample_item,
@@ -317,7 +317,7 @@ class TestSendSellSuccessNotification:
         with patch(
             "src.telegram_bot.notifications.trading.increment_notification_count"
         ):
-            result = await send_sell_success_notification(
+            result = awAlgot send_sell_success_notification(
                 bot=mock_bot,
                 user_id=123456,
                 item=sample_item,
@@ -333,7 +333,7 @@ class TestSendSellSuccessNotification:
         with patch(
             "src.telegram_bot.notifications.trading.increment_notification_count"
         ):
-            await send_sell_success_notification(
+            awAlgot send_sell_success_notification(
                 bot=mock_bot,
                 user_id=123456,
                 item=sample_item,
@@ -354,7 +354,7 @@ class TestSendSellSuccessNotification:
         with patch(
             "src.telegram_bot.notifications.trading.increment_notification_count"
         ):
-            await send_sell_success_notification(
+            awAlgot send_sell_success_notification(
                 bot=mock_bot,
                 user_id=123456,
                 item=sample_item,
@@ -374,7 +374,7 @@ class TestSendSellSuccessNotification:
         with patch(
             "src.telegram_bot.notifications.trading.increment_notification_count"
         ):
-            await send_sell_success_notification(
+            awAlgot send_sell_success_notification(
                 bot=mock_bot,
                 user_id=123456,
                 item=sample_item,
@@ -393,7 +393,7 @@ class TestSendSellSuccessNotification:
         with patch(
             "src.telegram_bot.notifications.trading.increment_notification_count"
         ):
-            await send_sell_success_notification(
+            awAlgot send_sell_success_notification(
                 bot=mock_bot,
                 user_id=123456,
                 item=sample_item,
@@ -411,7 +411,7 @@ class TestSendSellSuccessNotification:
         """Test sell success handles send errors."""
         mock_bot.send_message.side_effect = Exception("Network error")
 
-        result = await send_sell_success_notification(
+        result = awAlgot send_sell_success_notification(
             bot=mock_bot,
             user_id=123456,
             item=sample_item,
@@ -427,23 +427,23 @@ class TestSendCriticalShutdownNotification:
     @pytest.mark.asyncio()
     async def test_send_critical_shutdown_basic(self, mock_bot):
         """Test basic critical shutdown notification."""
-        result = await send_critical_shutdown_notification(
+        result = awAlgot send_critical_shutdown_notification(
             bot=mock_bot,
             user_id=123456,
-            reason="API connection failed",
+            reason="API connection fAlgoled",
         )
 
         assert result is True
         mock_bot.send_message.assert_called_once()
 
     @pytest.mark.asyncio()
-    async def test_send_critical_shutdown_with_details(self, mock_bot):
-        """Test critical shutdown with details."""
-        await send_critical_shutdown_notification(
+    async def test_send_critical_shutdown_with_detAlgols(self, mock_bot):
+        """Test critical shutdown with detAlgols."""
+        awAlgot send_critical_shutdown_notification(
             bot=mock_bot,
             user_id=123456,
-            reason="API connection failed",
-            details={"last_error": "timeout", "retries": 3},
+            reason="API connection fAlgoled",
+            detAlgols={"last_error": "timeout", "retries": 3},
         )
 
         call_args = mock_bot.send_message.call_args
@@ -456,7 +456,7 @@ class TestSendCriticalShutdownNotification:
     @pytest.mark.asyncio()
     async def test_send_critical_shutdown_message_format(self, mock_bot):
         """Test critical shutdown message formatting."""
-        await send_critical_shutdown_notification(
+        awAlgot send_critical_shutdown_notification(
             bot=mock_bot,
             user_id=123456,
             reason="Maximum losses exceeded",
@@ -474,7 +474,7 @@ class TestSendCriticalShutdownNotification:
         """Test critical shutdown handles send errors."""
         mock_bot.send_message.side_effect = Exception("Network error")
 
-        result = await send_critical_shutdown_notification(
+        result = awAlgot send_critical_shutdown_notification(
             bot=mock_bot,
             user_id=123456,
             reason="Test reason",
@@ -489,7 +489,7 @@ class TestSendCrashNotification:
     @pytest.mark.asyncio()
     async def test_send_crash_basic(self, mock_bot):
         """Test basic crash notification."""
-        result = await send_crash_notification(
+        result = awAlgot send_crash_notification(
             bot=mock_bot,
             user_id=123456,
             error_type="ValueError",
@@ -504,12 +504,12 @@ class TestSendCrashNotification:
         """Test crash notification with traceback."""
         traceback_str = (
             "Traceback (most recent call last):\n"
-            '  File "main.py", line 10, in <module>\n'
-            "    raise ValueError('test')\n"
+            '  File "mAlgon.py", line 10, in <module>\n'
+            "    rAlgose ValueError('test')\n"
             "ValueError: test"
         )
 
-        await send_crash_notification(
+        awAlgot send_crash_notification(
             bot=mock_bot,
             user_id=123456,
             error_type="ValueError",
@@ -527,7 +527,7 @@ class TestSendCrashNotification:
         """Test crash notification truncates long traceback."""
         long_traceback = "x" * 2000  # Very long traceback
 
-        await send_crash_notification(
+        awAlgot send_crash_notification(
             bot=mock_bot,
             user_id=123456,
             error_type="ValueError",
@@ -543,7 +543,7 @@ class TestSendCrashNotification:
     @pytest.mark.asyncio()
     async def test_send_crash_message_format(self, mock_bot):
         """Test crash notification message formatting."""
-        await send_crash_notification(
+        awAlgot send_crash_notification(
             bot=mock_bot,
             user_id=123456,
             error_type="RuntimeError",
@@ -562,7 +562,7 @@ class TestSendCrashNotification:
         """Test crash notification handles send errors."""
         mock_bot.send_message.side_effect = Exception("Network error")
 
-        result = await send_crash_notification(
+        result = awAlgot send_crash_notification(
             bot=mock_bot,
             user_id=123456,
             error_type="ValueError",
@@ -587,7 +587,7 @@ class TestHTMLParsing:
                 "src.telegram_bot.notifications.trading.increment_notification_count"
             ),
         ):
-            await send_buy_intent_notification(
+            awAlgot send_buy_intent_notification(
                 bot=mock_bot, user_id=123456, item=sample_item
             )
 
@@ -600,7 +600,7 @@ class TestHTMLParsing:
         with patch(
             "src.telegram_bot.notifications.trading.increment_notification_count"
         ):
-            await send_buy_success_notification(
+            awAlgot send_buy_success_notification(
                 bot=mock_bot, user_id=123456, item=sample_item, buy_price=15.50
             )
 
@@ -625,7 +625,7 @@ class TestEdgeCases:
                 "src.telegram_bot.notifications.trading.increment_notification_count"
             ),
         ):
-            await send_buy_intent_notification(bot=mock_bot, user_id=123456, item=item)
+            awAlgot send_buy_intent_notification(bot=mock_bot, user_id=123456, item=item)
 
             call_args = mock_bot.send_message.call_args
             message = call_args.kwargs["text"]
@@ -646,7 +646,7 @@ class TestEdgeCases:
                 "src.telegram_bot.notifications.trading.increment_notification_count"
             ),
         ):
-            await send_buy_intent_notification(bot=mock_bot, user_id=123456, item=item)
+            awAlgot send_buy_intent_notification(bot=mock_bot, user_id=123456, item=item)
 
             call_args = mock_bot.send_message.call_args
             message = call_args.kwargs["text"]
@@ -659,7 +659,7 @@ class TestEdgeCases:
         with patch(
             "src.telegram_bot.notifications.trading.increment_notification_count"
         ):
-            await send_sell_success_notification(
+            awAlgot send_sell_success_notification(
                 bot=mock_bot,
                 user_id=123456,
                 item=sample_item,
@@ -667,16 +667,16 @@ class TestEdgeCases:
                 buy_price=0.0,  # Zero buy price
             )
 
-            # Should not raise division by zero
+            # Should not rAlgose division by zero
             mock_bot.send_message.assert_called_once()
 
     @pytest.mark.asyncio()
     async def test_empty_error_message(self, mock_bot, sample_item):
-        """Test buy failed with empty error message."""
+        """Test buy fAlgoled with empty error message."""
         with patch(
             "src.telegram_bot.notifications.trading.increment_notification_count"
         ):
-            await send_buy_failed_notification(
+            awAlgot send_buy_fAlgoled_notification(
                 bot=mock_bot, user_id=123456, item=sample_item, error=""
             )
 

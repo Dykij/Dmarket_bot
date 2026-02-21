@@ -1,28 +1,28 @@
-"""AI Price Predictor Module.
+"""Algo Price Predictor Module.
 
 This module implements machine learning-based price prediction for DMarket items.
-It uses RandomForest regression with protection against anomalies and "hallucinations".
+It uses RandomForest regression with protection agAlgonst anomalies and "hallucinations".
 
 Key features:
 - LabelEncoder for item name encoding
 - RandomForest with min_samples_leaf=5 to prevent overfitting on single outliers
-- Z-score filtering for anomaly detection during training
-- Prediction guard to reject unrealistic AI outputs (max 40% deviation)
+- Z-score filtering for anomaly detection during trAlgoning
+- Prediction guard to reject unrealistic Algo outputs (max 40% deviation)
 
 Usage:
     ```python
     predictor = PricePredictor()
 
-    # Train model (requires at least 100 data points)
-    result = predictor.train_model("data/market_history.csv")
+    # TrAlgon model (requires at least 100 data points)
+    result = predictor.trAlgon_model("data/market_history.csv")
 
-    # Predict fair price with protection
-    fair_price = predictor.predict_with_guard(
+    # Predict fAlgor price with protection
+    fAlgor_price = predictor.predict_with_guard(
         item_name="AK-47 | Redline (Field-Tested)", market_price=10.0, current_float=0.25
     )
 
-    if fair_price and fair_price > market_price:
-        print(f"Good deal! Fair price: ${fair_price:.2f}")
+    if fAlgor_price and fAlgor_price > market_price:
+        print(f"Good deal! FAlgor price: ${fAlgor_price:.2f}")
     ```
 """
 
@@ -40,28 +40,28 @@ DEFAULT_HISTORY_PATH = "data/market_history.csv"
 # Protection thresholds
 MAX_PROFIT_DEVIATION = 0.40  # Max 40% profit to prevent hallucinations
 MAX_ZSCORE = 3.0  # Z-score threshold for outlier detection
-MIN_TRAINING_SAMPLES = 100  # Minimum samples required for training
+MIN_TRAlgoNING_SAMPLES = 100  # Minimum samples required for trAlgoning
 
 
 class PricePredictor:
-    """AI-based price predictor with hallucination protection.
+    """Algo-based price predictor with hallucination protection.
 
     This class implements a RandomForest-based price prediction model
-    that learns from historical market data and provides fair price
+    that learns from historical market data and provides fAlgor price
     estimates for CS:GO/CS2 items.
 
     The model includes multiple safety mechanisms:
-    1. Z-score filtering during training to remove anomalies
+    1. Z-score filtering during trAlgoning to remove anomalies
     2. min_samples_leaf=5 to prevent overfitting on outliers
     3. Prediction guard limiting profit deviation to 40%
-    4. Market price sanity check (AI price must exceed market price for profit)
+    4. Market price sanity check (Algo price must exceed market price for profit)
 
     Attributes:
-        model_path: Path to save/load the trained model
+        model_path: Path to save/load the trAlgoned model
         encoder_path: Path to save/load the label encoder
         model: RandomForestRegressor model (None if not loaded)
         encoder: LabelEncoder for item names (None if not loaded)
-        is_trained: Whether the model is trained and ready
+        is_trAlgoned: Whether the model is trAlgoned and ready
     """
 
     def __init__(
@@ -72,14 +72,14 @@ class PricePredictor:
         """Initialize the price predictor.
 
         Args:
-            model_path: Path to save/load the trained model (.pkl)
+            model_path: Path to save/load the trAlgoned model (.pkl)
             encoder_path: Path to save/load the label encoder (.pkl)
         """
         self.model_path = model_path
         self.encoder_path = encoder_path
         self.model: Any = None
         self.encoder: Any = None
-        self.is_trained = False
+        self.is_trAlgoned = False
 
         # Try to load existing model
         self._try_load_model()
@@ -92,7 +92,7 @@ class PricePredictor:
             if os.path.exists(self.model_path) and os.path.exists(self.encoder_path):
                 self.model = joblib.load(self.model_path)
                 self.encoder = joblib.load(self.encoder_path)
-                self.is_trained = True
+                self.is_trAlgoned = True
                 logger.info(
                     "price_predictor_loaded: model_path=%s",
                     self.model_path,
@@ -103,27 +103,27 @@ class PricePredictor:
             )
         except Exception as e:
             logger.warning(
-                "price_predictor_load_failed: error=%s",
+                "price_predictor_load_fAlgoled: error=%s",
                 e,
             )
 
-    def train_model(
+    def trAlgon_model(
         self,
         history_path: str = DEFAULT_HISTORY_PATH,
-        force_retrain: bool = False,
+        force_retrAlgon: bool = False,
     ) -> str:
-        """Train the price prediction model on historical data.
+        """TrAlgon the price prediction model on historical data.
 
         This method:
         1. Loads historical market data from CSV
         2. Removes anomalies using Z-score filtering
         3. Encodes item names with LabelEncoder
-        4. Trains RandomForest with overfitting protection
+        4. TrAlgons RandomForest with overfitting protection
         5. Saves model and encoder to disk
 
         Args:
             history_path: Path to market history CSV file
-            force_retrain: Force retraining even if model exists
+            force_retrAlgon: Force retrAlgoning even if model exists
 
         Returns:
             Status message describing the result
@@ -150,7 +150,7 @@ class PricePredictor:
         # Check if history file exists
         if not os.path.exists(history_path):
             error_msg = f"❌ Нет данных для обучения. Файл не найден: {history_path}"
-            logger.error("training_data_not_found: path=%s", history_path)
+            logger.error("trAlgoning_data_not_found: path=%s", history_path)
             return error_msg
 
         try:
@@ -158,14 +158,14 @@ class PricePredictor:
             df = pd.read_csv(history_path)
 
             # Validate minimum samples
-            if len(df) < MIN_TRAINING_SAMPLES:
+            if len(df) < MIN_TRAlgoNING_SAMPLES:
                 return (
-                    f"⚠️ Недостаточно данных для обучения: {len(df)}/{MIN_TRAINING_SAMPLES} строк. "
+                    f"⚠️ Недостаточно данных для обучения: {len(df)}/{MIN_TRAlgoNING_SAMPLES} строк. "
                     f"Бот должен накопить данные минимум 48 часов."
                 )
 
             logger.info(
-                "training_started: samples_before_cleaning=%d",
+                "trAlgoning_started: samples_before_cleaning=%d",
                 len(df),
             )
 
@@ -184,13 +184,13 @@ class PricePredictor:
             removed_count = original_len - len(df)
             if removed_count > 0:
                 logger.info(
-                    "outliers_removed: removed=%d, remaining=%d",
+                    "outliers_removed: removed=%d, remAlgoning=%d",
                     removed_count,
                     len(df),
                 )
 
             # Ensure we still have enough data after cleaning
-            if len(df) < MIN_TRAINING_SAMPLES // 2:
+            if len(df) < MIN_TRAlgoNING_SAMPLES // 2:
                 return (
                     f"⚠️ Слишком много выбросов. После очистки осталось {len(df)} строк. "
                     "Попробуйте собрать более качественные данные."
@@ -217,7 +217,7 @@ class PricePredictor:
             X = df[feature_columns].astype(float)
             y = df["price"].astype(float)
 
-            # Train RandomForest with overfitting protection
+            # TrAlgon RandomForest with overfitting protection
             # min_samples_leaf=5 prevents the model from memorizing single outliers
             self.model = RandomForestRegressor(
                 n_estimators=100,
@@ -234,7 +234,7 @@ class PricePredictor:
             joblib.dump(self.model, self.model_path)
             joblib.dump(self.encoder, self.encoder_path)
 
-            self.is_trained = True
+            self.is_trAlgoned = True
 
             unique_items = len(self.encoder.classes_)
             result_msg = (
@@ -245,7 +245,7 @@ class PricePredictor:
             )
 
             logger.info(
-                "training_completed: samples=%d, unique_items=%d, outliers_removed=%d",
+                "trAlgoning_completed: samples=%d, unique_items=%d, outliers_removed=%d",
                 len(df),
                 unique_items,
                 removed_count,
@@ -255,7 +255,7 @@ class PricePredictor:
 
         except Exception as e:
             error_msg = f"❌ Ошибка обучения модели: {e}"
-            logger.exception("training_failed: error=%s", e)
+            logger.exception("trAlgoning_fAlgoled: error=%s", e)
             return error_msg
 
     def predict_with_guard(
@@ -265,7 +265,7 @@ class PricePredictor:
         current_float: float | None = None,
         is_stat_trak: bool = False,
     ) -> float | None:
-        """Predict fair price with hallucination protection.
+        """Predict fAlgor price with hallucination protection.
 
         This method provides safe price predictions by:
         1. Checking if item is known to the model
@@ -280,22 +280,22 @@ class PricePredictor:
             is_stat_trak: Whether item is StatTrak
 
         Returns:
-            Predicted fair price in USD, or None if:
-            - Model not trained
+            Predicted fAlgor price in USD, or None if:
+            - Model not trAlgoned
             - Item unknown to model
             - Prediction is suspicious (hallucination detected)
             - Prediction shows no profit opportunity
 
         Example:
             >>> predictor = PricePredictor()
-            >>> fair_price = predictor.predict_with_guard("AK-47 | Redline (FT)", 10.0, 0.25)
-            >>> if fair_price:
-            ...     profit = fair_price - 10.0
+            >>> fAlgor_price = predictor.predict_with_guard("AK-47 | Redline (FT)", 10.0, 0.25)
+            >>> if fAlgor_price:
+            ...     profit = fAlgor_price - 10.0
             ...     print(f"Expected profit: ${profit:.2f}")
         """
         try:
             # Check if model is loaded
-            if not self.is_trained or self.model is None or self.encoder is None:
+            if not self.is_trAlgoned or self.model is None or self.encoder is None:
                 logger.debug("model_not_loaded")
                 return None
 
@@ -322,44 +322,44 @@ class PricePredictor:
             )
 
             # Make prediction
-            ai_price = float(self.model.predict(input_df)[0])
+            Algo_price = float(self.model.predict(input_df)[0])
 
             # SAFETY GUARD 1: No profit = no recommendation
-            if ai_price <= market_price:
+            if Algo_price <= market_price:
                 logger.debug(
-                    "no_profit_opportunity: item=%s, market=%.2f, ai=%.2f",
+                    "no_profit_opportunity: item=%s, market=%.2f, Algo=%.2f",
                     item_name,
                     market_price,
-                    ai_price,
+                    Algo_price,
                 )
                 return None
 
             # SAFETY GUARD 2: Hallucination detection
-            # If AI predicts > 40% profit, it's likely wrong
-            profit_percent = (ai_price - market_price) / market_price
+            # If Algo predicts > 40% profit, it's likely wrong
+            profit_percent = (Algo_price - market_price) / market_price
             if profit_percent > MAX_PROFIT_DEVIATION:
                 logger.warning(
-                    "hallucination_detected: item=%s, market=%.2f, ai=%.2f, profit=%.1f%%",
+                    "hallucination_detected: item=%s, market=%.2f, Algo=%.2f, profit=%.1f%%",
                     item_name,
                     market_price,
-                    ai_price,
+                    Algo_price,
                     profit_percent * 100,
                 )
                 return None
 
             logger.debug(
-                "price_predicted: item=%s, market=%.2f, ai=%.2f, profit=%.1f%%",
+                "price_predicted: item=%s, market=%.2f, Algo=%.2f, profit=%.1f%%",
                 item_name,
                 market_price,
-                ai_price,
+                Algo_price,
                 profit_percent * 100,
             )
 
-            return ai_price
+            return Algo_price
 
         except Exception as e:
             logger.exception(
-                "prediction_failed: item=%s, error=%s",
+                "prediction_fAlgoled: item=%s, error=%s",
                 item_name,
                 e,
             )
@@ -382,10 +382,10 @@ class PricePredictor:
             is_stat_trak: Whether item is StatTrak
 
         Returns:
-            Raw predicted price or None if prediction fails
+            Raw predicted price or None if prediction fAlgols
         """
         try:
-            if not self.is_trained or self.model is None or self.encoder is None:
+            if not self.is_trAlgoned or self.model is None or self.encoder is None:
                 return None
 
             if item_name not in self.encoder.classes_:
@@ -414,17 +414,17 @@ class PricePredictor:
             Dictionary with model status and statistics
         """
         info: dict[str, Any] = {
-            "is_trained": self.is_trained,
+            "is_trAlgoned": self.is_trAlgoned,
             "model_path": self.model_path,
             "encoder_path": self.encoder_path,
             "model_exists": os.path.exists(self.model_path),
             "encoder_exists": os.path.exists(self.encoder_path),
         }
 
-        if self.is_trained and self.encoder is not None:
+        if self.is_trAlgoned and self.encoder is not None:
             info["known_items_count"] = len(self.encoder.classes_)
 
-        if self.is_trained and self.model is not None:
+        if self.is_trAlgoned and self.model is not None:
             info["n_estimators"] = self.model.n_estimators
             info["min_samples_leaf"] = self.model.min_samples_leaf
 

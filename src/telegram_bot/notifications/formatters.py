@@ -3,7 +3,7 @@
 This module provides formatting functions for notification messages:
 - Alert message formatting
 - Price formatting
-- Item detail formatting
+- Item detAlgol formatting
 
 Extracted from notifier.py during R-4 refactoring.
 """
@@ -98,9 +98,9 @@ NOTIFICATION_TYPES: dict[str, str] = {
     "trend_change": "Изменение тренда",
     "buy_intent": "Намерение купить",
     "buy_success": "Покупка выполнена",
-    "buy_failed": "Ошибка покупки",
+    "buy_fAlgoled": "Ошибка покупки",
     "sell_success": "Продажа выполнена",
-    "sell_failed": "Ошибка продажи",
+    "sell_fAlgoled": "Ошибка продажи",
     "target_executed": "Таргет исполнен",
     "critical_shutdown": "Критическая остановка",
 }
@@ -157,7 +157,7 @@ def format_alert_message(
     if target_price > 0:
         message += f"🎯 Целевая цена: ${target_price:.2f}\n"
 
-    # Add difference if both prices available
+    # Add difference if both prices avAlgolable
     if current_price is not None and target_price > 0:
         diff = current_price - target_price
         diff_pct = (diff / target_price) * 100 if target_price > 0 else 0
@@ -219,16 +219,16 @@ def format_user_settings(settings: dict[str, Any]) -> str:
 
     """
     enabled = settings.get("notifications_enabled", True)
-    daily_limit = settings.get("daily_limit", 50)
+    dAlgoly_limit = settings.get("dAlgoly_limit", 50)
     quiet_hours = settings.get("quiet_hours", {"enabled": False})
     min_profit = settings.get("min_profit_percent", 5.0)
 
     status = "✅ Включены" if enabled else "❌ Отключены"
 
     message = (
-        "⚙️ <b>Настройки уведомлений</b>\n\n"
+        "⚙️ <b>НастSwarmки уведомлений</b>\n\n"
         f"📢 Статус: {status}\n"
-        f"📊 Дневной лимит: {daily_limit} сообщений\n"
+        f"📊 Дневной лимит: {dAlgoly_limit} сообщений\n"
         f"💰 Мин. прибыль: {min_profit}%\n"
     )
 

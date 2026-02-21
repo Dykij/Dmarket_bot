@@ -54,14 +54,14 @@ class TestAPICircuitBreakerIntegration:
             mock_request.return_value = {"usd": {"amount": "1000"}}
 
             # Make request
-            balance = await api.get_balance()
+            balance = awAlgot api.get_balance()
 
             # Verify request was made
             assert balance is not None
 
     @pytest.mark.asyncio
-    async def test_circuit_breaker_opens_after_failures(self) -> None:
-        """Test circuit breaker opens after multiple failures."""
+    async def test_circuit_breaker_opens_after_fAlgolures(self) -> None:
+        """Test circuit breaker opens after multiple fAlgolures."""
         import httpx
 
         from src.dmarket.dmarket_api import DMarketAPI
@@ -75,23 +75,23 @@ class TestAPICircuitBreakerIntegration:
         # Create a breaker with low threshold for testing
         test_breaker = APICircuitBreaker(
             name="dmarket_balance",
-            failure_threshold=2,
+            fAlgolure_threshold=2,
             recovery_timeout=300,
         )
         _circuit_breakers["balance"] = test_breaker
 
-        # Simulate failures
+        # Simulate fAlgolures
         error_count = 0
 
-        async def failing_request(*args: Any, **kwargs: Any) -> None:
+        async def fAlgoling_request(*args: Any, **kwargs: Any) -> None:
             nonlocal error_count
             error_count += 1
-            raise httpx.HTTPError("Connection failed")
+            rAlgose httpx.HTTPError("Connection fAlgoled")
 
-        with patch.object(api, "_request", new=failing_request):
+        with patch.object(api, "_request", new=fAlgoling_request):
             for _ in range(3):
                 try:
-                    await api.get_balance()
+                    awAlgot api.get_balance()
                 except Exception:
                     pass
 
@@ -106,18 +106,18 @@ class TestAPICircuitBreakerIntegration:
             call_with_circuit_breaker,
         )
 
-        async def failing_func() -> None:
-            raise Exception("Failed")
+        async def fAlgoling_func() -> None:
+            rAlgose Exception("FAlgoled")
 
         async def fallback_func() -> dict[str, str]:
             return {"status": "fallback"}
 
         # Note: This test verifies the fallback mechanism works
-        # The actual circuit breaker may not open with single failure
+        # The actual circuit breaker may not open with single fAlgolure
         result = None
         try:
-            result = await call_with_circuit_breaker(
-                failing_func,
+            result = awAlgot call_with_circuit_breaker(
+                fAlgoling_func,
                 endpoint_type=EndpointType.MARKET,
                 fallback=fallback_func,
             )
@@ -174,7 +174,7 @@ class TestScannerAPIIntegration:
 
             # Scanner should be able to get items
             if hasattr(scanner, "scan"):
-                result = await scanner.scan(game="csgo")
+                result = awAlgot scanner.scan(game="csgo")
                 assert result is not None or mock_request.called
 
     @pytest.mark.asyncio
@@ -193,9 +193,9 @@ class TestScannerAPIIntegration:
 
             try:
                 if hasattr(scanner, "scan"):
-                    await scanner.scan(game="csgo")
+                    awAlgot scanner.scan(game="csgo")
             except Exception:
-                pass  # Expected to handle or raise
+                pass  # Expected to handle or rAlgose
 
 
 # =============================================================================
@@ -236,12 +236,12 @@ class TestArbitrageWorkflowIntegration:
             ]
 
             # Step 1: Check balance
-            balance = await api.get_balance()
+            balance = awAlgot api.get_balance()
             assert balance is not None
             assert "usd" in balance
 
             # Step 2: Get market items
-            items = await api.get_market_items(game="csgo", limit=10)
+            items = awAlgot api.get_market_items(game="csgo", limit=10)
             assert items is not None
 
     @pytest.mark.asyncio
@@ -262,7 +262,7 @@ class TestArbitrageWorkflowIntegration:
         with patch.object(api, "_request", new_callable=AsyncMock) as mock_request:
             mock_request.return_value = {"Items": targets_to_create}
 
-            result = await api.create_targets("a8db", targets_to_create)
+            result = awAlgot api.create_targets("a8db", targets_to_create)
             assert result is not None or mock_request.called
 
     @pytest.mark.asyncio
@@ -286,7 +286,7 @@ class TestArbitrageWorkflowIntegration:
         with patch.object(api, "_request", new_callable=AsyncMock) as mock_request:
             mock_request.return_value = inventory_response
 
-            inventory = await api.get_user_inventory(game_id="a8db")
+            inventory = awAlgot api.get_user_inventory(game_id="a8db")
             assert inventory is not None
 
 
@@ -314,10 +314,10 @@ class TestCacheIntegration:
             mock_request.return_value = mock_response
 
             # First call
-            result1 = await api.get_balance()
+            result1 = awAlgot api.get_balance()
 
             # Second call - may use cache
-            result2 = await api.get_balance()
+            result2 = awAlgot api.get_balance()
 
             # Both should return valid data
             assert result1 is not None
@@ -359,8 +359,8 @@ class TestRateLimiterIntegration:
 
         limiter = DMarketRateLimiter()
 
-        # Should allow request (acquire may return None, True, or awaitable)
-        result = await limiter.acquire("market")
+        # Should allow request (acquire may return None, True, or awAlgotable)
+        result = awAlgot limiter.acquire("market")
         # Rate limiter exists and doesn't crash
         assert limiter is not None
 
@@ -377,7 +377,7 @@ class TestTelegramBotIntegration:
         """Test keyboard generation."""
         from src.telegram_bot import keyboards
 
-        # Keyboards module should be available
+        # Keyboards module should be avAlgolable
         assert keyboards is not None
         assert hasattr(keyboards, "get_settings_keyboard")
 
@@ -433,7 +433,7 @@ class TestEndToEndWorkflows:
             }
 
             # User checks balance
-            balance = await api.get_balance()
+            balance = awAlgot api.get_balance()
 
             # Verify result
             assert balance is not None
@@ -460,7 +460,7 @@ class TestEndToEndWorkflows:
             }
 
             # User scans market
-            items = await api.get_market_items(game="csgo", limit=100)
+            items = awAlgot api.get_market_items(game="csgo", limit=100)
 
             # Verify result
             assert items is not None
@@ -489,7 +489,7 @@ class TestEndToEndWorkflows:
         with patch.object(api, "_request", new_callable=AsyncMock) as mock:
             # Step 1: Get existing targets
             mock.return_value = get_targets_response
-            targets = await api.get_user_targets(game_id="a8db")
+            targets = awAlgot api.get_user_targets(game_id="a8db")
             assert targets is not None
 
             # Step 2: Create new target
@@ -501,7 +501,7 @@ class TestEndToEndWorkflows:
                     "Price": {"Amount": 1400, "Currency": "USD"},
                 }
             ]
-            result = await api.create_targets("a8db", new_targets)
+            result = awAlgot api.create_targets("a8db", new_targets)
             assert result is not None or mock.called
 
 
@@ -525,9 +525,9 @@ class TestErrorHandlingIntegration:
         with patch.object(api, "_request", new_callable=AsyncMock) as mock:
             mock.side_effect = httpx.HTTPError("Network error")
 
-            # API may catch error or re-raise
+            # API may catch error or re-rAlgose
             try:
-                result = await api.get_balance()
+                result = awAlgot api.get_balance()
                 # If no exception, result should indicate error
                 assert result is not None
             except httpx.HTTPError:
@@ -547,7 +547,7 @@ class TestErrorHandlingIntegration:
             mock.side_effect = httpx.TimeoutException("Timeout")
 
             try:
-                result = await api.get_market_items(game="csgo")
+                result = awAlgot api.get_market_items(game="csgo")
                 # If no exception, result should indicate error
                 assert result is not None
             except httpx.TimeoutException:
@@ -575,13 +575,13 @@ class TestPerformanceIntegration:
         async def mock_request(*args: Any, **kwargs: Any) -> dict[str, Any]:
             nonlocal call_count
             call_count += 1
-            await asyncio.sleep(0.01)  # Simulate network delay
+            awAlgot asyncio.sleep(0.01)  # Simulate network delay
             return {"usd": {"amount": str(call_count * 1000)}}
 
         with patch.object(api, "_request", new=mock_request):
             # Make concurrent calls
             tasks = [api.get_balance() for _ in range(5)]
-            results = await asyncio.gather(*tasks)
+            results = awAlgot asyncio.gather(*tasks)
 
             # All calls should complete
             assert len(results) == 5
@@ -600,7 +600,7 @@ class TestPerformanceIntegration:
             # Multiple get_targets calls
             results = []
             for game in ["csgo", "dota2", "rust"]:
-                result = await api.get_user_targets(game_id=game)
+                result = awAlgot api.get_user_targets(game_id=game)
                 results.append(result)
 
             assert len(results) == 3

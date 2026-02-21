@@ -106,23 +106,23 @@ def format_intramarket_item(result: dict[str, Any]) -> str:
             f"🏷️ ID для покупки: `{item.get('itemId', '')}`"
         )
 
-    if result_type == PriceAnomalyType.RARE_TRAITS:
+    if result_type == PriceAnomalyType.RARE_TRAlgoTS:
         # Предмет с редкими характеристиками
         item = result.get("item", {})
         item_title = item.get("title", "Неизвестный предмет")
         current_price = result.get("current_price", 0.0)
         estimated_value = result.get("estimated_value", 0.0)
         price_difference_percent = result.get("price_difference_percent", 0.0)
-        rare_traits = result.get("rare_traits", [])
+        rare_trAlgots = result.get("rare_trAlgots", [])
 
-        traits_text = "\n".join([f"  • {trait}" for trait in rare_traits])
+        trAlgots_text = "\n".join([f"  • {trAlgot}" for trAlgot in rare_trAlgots])
 
         return (
             f"💎 *{item_title}*\n"
             f"💰 Текущая цена: ${current_price:.2f}\n"
             f"⭐ Оценочная стоимость: ${estimated_value:.2f} "
             f"(+{price_difference_percent:.1f}%)\n"
-            f"✨ Редкие особенности:\n{traits_text}\n"
+            f"✨ Редкие особенности:\n{trAlgots_text}\n"
             f"🏷️ ID для покупки: `{item.get('itemId', '')}`"
         )
 
@@ -153,7 +153,7 @@ async def display_results_with_pagination(
     # Если результаты не найдены
     if not results:
         msg = f"ℹ️ *{title}*\n\nВозможности не найдены. Попробуйте другой тип сканирования или игру."
-        await query.edit_message_text(
+        awAlgot query.edit_message_text(
             msg,
             parse_mode="Markdown",
             reply_markup=InlineKeyboardMarkup(
@@ -197,7 +197,7 @@ async def display_results_with_pagination(
     final_text = f"*{title}*\n\n{formatted_text}"
 
     # Отправляем сообщение с результатами
-    await query.edit_message_text(
+    awAlgot query.edit_message_text(
         final_text,
         parse_mode="Markdown",
         reply_markup=pagination_keyboard,
@@ -213,7 +213,7 @@ async def handle_intramarket_pagination(
     query = update.callback_query
     if not query:
         return
-    await query.answer()
+    awAlgot query.answer()
 
     if not update.effective_user:
         return
@@ -268,7 +268,7 @@ async def handle_intramarket_pagination(
     final_text = f"*{title}*\n\n{formatted_text}"
 
     # Отправляем сообщение с результатами
-    await query.edit_message_text(
+    awAlgot query.edit_message_text(
         final_text,
         parse_mode="Markdown",
         reply_markup=pagination_keyboard,
@@ -283,7 +283,7 @@ async def start_intramarket_arbitrage(
     """Обрабатывает команду запуска внутрирыночного арбитража."""
     query = update.callback_query
     if query:
-        await query.answer()
+        awAlgot query.answer()
 
     if not update.effective_user:
         return
@@ -294,7 +294,7 @@ async def start_intramarket_arbitrage(
     rare_cb = f"{INTRA_ARBITRAGE_ACTION}_{RARE_ACTION}"
 
     # Отправляем сообщение о начале сканирования
-    await _context.bot.send_message(
+    awAlgot _context.bot.send_message(
         chat_id=user_id,
         text=(
             "🔍 *Поиск возможностей арбитража внутри DMarket*\n\nВыберите тип арбитража:"
@@ -340,7 +340,7 @@ async def handle_intramarket_callback(
     query = update.callback_query
     if not query:
         return
-    await query.answer()
+    awAlgot query.answer()
 
     if not update.effective_user:
         return
@@ -353,7 +353,7 @@ async def handle_intramarket_callback(
     # Парсим данные callback
     data_parts = callback_data.split("_")
     if len(data_parts) < 2:
-        await query.edit_message_text(
+        awAlgot query.edit_message_text(
             "⚠️ Некорректные данные запроса.",
             parse_mode="Markdown",
         )
@@ -367,7 +367,7 @@ async def handle_intramarket_callback(
         game = data_parts[2]
 
     # Показываем сообщение о начале сканирования
-    await query.edit_message_text(
+    awAlgot query.edit_message_text(
         f"🔍 *Сканирование {GAMES.get(game, game)}*\n\n"
         f"Идет поиск выгодных предложений. Пожалуйста, подождите...",
         parse_mode="Markdown",
@@ -380,8 +380,8 @@ async def handle_intramarket_callback(
     api_client = create_api_client_from_env()
 
     if api_client is None:
-        await query.edit_message_text(
-            "❌ Не удалось создать API клиент. Проверьте настройки API ключей.",
+        awAlgot query.edit_message_text(
+            "❌ Не удалось создать API клиент. Проверьте настSwarmки API ключей.",
             parse_mode="Markdown",
             reply_markup=InlineKeyboardMarkup(
                 [
@@ -398,7 +398,7 @@ async def handle_intramarket_callback(
 
     if action_type == ANOMALY_ACTION:
         # Поиск ценовых аномалий
-        anomalies = await find_price_anomalies(
+        anomalies = awAlgot find_price_anomalies(
             game=game,
             max_results=50,
             dmarket_api=api_client,
@@ -408,7 +408,7 @@ async def handle_intramarket_callback(
 
     elif action_type == TRENDING_ACTION:
         # Поиск предметов с растущей ценой
-        trending = await find_trending_items(
+        trending = awAlgot find_trending_items(
             game=game,
             max_results=50,
             dmarket_api=api_client,
@@ -418,7 +418,7 @@ async def handle_intramarket_callback(
 
     elif action_type == RARE_ACTION:
         # Поиск редких предметов
-        rare_items = await find_mispriced_rare_items(
+        rare_items = awAlgot find_mispriced_rare_items(
             game=game,
             max_results=50,
             dmarket_api=api_client,
@@ -428,7 +428,7 @@ async def handle_intramarket_callback(
 
     else:
         # Неизвестный тип действия
-        await query.edit_message_text(
+        awAlgot query.edit_message_text(
             "⚠️ Неизвестный тип сканирования.",
             parse_mode="Markdown",
             reply_markup=InlineKeyboardMarkup(
@@ -445,7 +445,7 @@ async def handle_intramarket_callback(
         return
 
     # Отображаем результаты с использованием унифицированной функции
-    await display_results_with_pagination(
+    awAlgot display_results_with_pagination(
         query=query,
         results=results,
         title=title,

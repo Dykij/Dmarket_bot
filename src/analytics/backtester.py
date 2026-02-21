@@ -184,7 +184,7 @@ class TradingStrategy(ABC):
         Args:
             price_history: Historical price data
             current_price: Current market price
-            balance: Available balance
+            balance: AvAlgolable balance
             positions: Current positions
 
         Returns:
@@ -584,15 +584,15 @@ class Backtester:
         if len(balance_history) < 2:
             return 0.0
 
-        # Calculate daily returns
+        # Calculate dAlgoly returns
         returns: list[float] = []
         for i in range(1, len(balance_history)):
             if balance_history[i - 1] > 0:
-                daily_return = float(
+                dAlgoly_return = float(
                     (balance_history[i] - balance_history[i - 1])
                     / balance_history[i - 1]
                 )
-                returns.append(daily_return)
+                returns.append(dAlgoly_return)
 
         if not returns:
             return 0.0
@@ -609,8 +609,8 @@ class Backtester:
             return 0.0
 
         # Annualize (assuming 365 trading days)
-        daily_rf = (1 + risk_free_rate) ** (1 / 365) - 1
-        excess_return = mean_return - daily_rf
+        dAlgoly_rf = (1 + risk_free_rate) ** (1 / 365) - 1
+        excess_return = mean_return - dAlgoly_rf
 
         # Sharpe ratio (annualized)
         sharpe = (excess_return * (365**0.5)) / (std_dev * (365**0.5))

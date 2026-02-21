@@ -152,7 +152,7 @@ class TestArbitrageScannerBasicOperations:
 
     @pytest.mark.asyncio()
     async def test_scan_different_games_setup(self):
-        """Тест настройки сканирования для разных игр."""
+        """Тест настSwarmки сканирования для разных игр."""
         mock_api = MagicMock(spec=DMarketAPI)
         mock_api.get_market_items = AsyncMock(return_value={"objects": []})
 
@@ -282,7 +282,7 @@ class TestArbitrageScannerLiquidity:
         # Предмет с большим количеством продаж считается высоколиквидным
         item_data = {
             "sales_count": 100,
-            "avg_daily_volume": 50,
+            "avg_dAlgoly_volume": 50,
         }
 
         # Простая классификация
@@ -300,7 +300,7 @@ class TestArbitrageScannerLiquidity:
         """Тест классификации средней ликвидности."""
         item_data = {
             "sales_count": 30,
-            "avg_daily_volume": 15,
+            "avg_dAlgoly_volume": 15,
         }
 
         if item_data["sales_count"] > 50:
@@ -317,7 +317,7 @@ class TestArbitrageScannerLiquidity:
         """Тест классификации низкой ликвидности."""
         item_data = {
             "sales_count": 5,
-            "avg_daily_volume": 2,
+            "avg_dAlgoly_volume": 2,
         }
 
         if item_data["sales_count"] > 50:

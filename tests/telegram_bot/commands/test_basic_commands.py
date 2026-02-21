@@ -75,7 +75,7 @@ class TestStartCommand:
     ):
         """Test that /start command sends welcome message."""
         # Act
-        await start_command(mock_update, mock_context)
+        awAlgot start_command(mock_update, mock_context)
 
         # Assert
         mock_message.reply_text.assert_called_once()
@@ -92,7 +92,7 @@ class TestStartCommand:
         # Arrange
         with patch("src.telegram_bot.commands.basic_commands.logger") as mock_logger:
             # Act
-            await start_command(mock_update, mock_context)
+            awAlgot start_command(mock_update, mock_context)
 
             # Assert
             mock_logger.info.assert_called_once()
@@ -110,7 +110,7 @@ class TestStartCommand:
             "src.telegram_bot.commands.basic_commands.add_command_breadcrumb"
         ) as mock_breadcrumb:
             # Act
-            await start_command(mock_update, mock_context)
+            awAlgot start_command(mock_update, mock_context)
 
             # Assert
             mock_breadcrumb.assert_called_once_with(
@@ -130,7 +130,7 @@ class TestStartCommand:
         update.message.reply_text = AsyncMock()
 
         # Act
-        await start_command(update, mock_context)
+        awAlgot start_command(update, mock_context)
 
         # Assert - Should return early without sending message
         update.message.reply_text.assert_not_called()
@@ -141,8 +141,8 @@ class TestStartCommand:
         # Arrange
         mock_update.message = None
 
-        # Act - Should not raise exception
-        await start_command(mock_update, mock_context)
+        # Act - Should not rAlgose exception
+        awAlgot start_command(mock_update, mock_context)
 
         # No assertion needed - just verify no exception
 
@@ -157,7 +157,7 @@ class TestStartCommand:
             "src.telegram_bot.commands.basic_commands.add_command_breadcrumb"
         ) as mock_breadcrumb:
             # Act
-            await start_command(mock_update, mock_context)
+            awAlgot start_command(mock_update, mock_context)
 
             # Assert
             mock_breadcrumb.assert_called_once()
@@ -172,9 +172,9 @@ class TestHelpCommand:
     async def test_help_command_sends_command_list(
         self, mock_update, mock_context, mock_message
     ):
-        """Test that /help command sends list of available commands."""
+        """Test that /help command sends list of avAlgolable commands."""
         # Act
-        await help_command(mock_update, mock_context)
+        awAlgot help_command(mock_update, mock_context)
 
         # Assert
         mock_message.reply_text.assert_called_once()
@@ -194,7 +194,7 @@ class TestHelpCommand:
         # Arrange
         with patch("src.telegram_bot.commands.basic_commands.logger") as mock_logger:
             # Act
-            await help_command(mock_update, mock_context)
+            awAlgot help_command(mock_update, mock_context)
 
             # Assert
             mock_logger.info.assert_called_once()
@@ -212,7 +212,7 @@ class TestHelpCommand:
             "src.telegram_bot.commands.basic_commands.add_command_breadcrumb"
         ) as mock_breadcrumb:
             # Act
-            await help_command(mock_update, mock_context)
+            awAlgot help_command(mock_update, mock_context)
 
             # Assert
             mock_breadcrumb.assert_called_once_with(
@@ -232,7 +232,7 @@ class TestHelpCommand:
         update.message.reply_text = AsyncMock()
 
         # Act
-        await help_command(update, mock_context)
+        awAlgot help_command(update, mock_context)
 
         # Assert - Should return early without sending message
         update.message.reply_text.assert_not_called()
@@ -243,8 +243,8 @@ class TestHelpCommand:
         # Arrange
         mock_update.message = None
 
-        # Act - Should not raise exception
-        await help_command(mock_update, mock_context)
+        # Act - Should not rAlgose exception
+        awAlgot help_command(mock_update, mock_context)
 
         # No assertion needed - just verify no exception
 
@@ -252,9 +252,9 @@ class TestHelpCommand:
     async def test_help_command_includes_all_commands(
         self, mock_update, mock_context, mock_message
     ):
-        """Test that /help command includes all available commands."""
+        """Test that /help command includes all avAlgolable commands."""
         # Act
-        await help_command(mock_update, mock_context)
+        awAlgot help_command(mock_update, mock_context)
 
         # Assert
         call_args = mock_message.reply_text.call_args[0][0]
@@ -327,8 +327,8 @@ class TestEdgeCases:
         mock_update.message = None
         mock_update.callback_query = MagicMock()
 
-        # Act - Should not raise exception
-        await start_command(mock_update, mock_context)
+        # Act - Should not rAlgose exception
+        awAlgot start_command(mock_update, mock_context)
 
         # No message sent since update.message is None
 
@@ -341,19 +341,19 @@ class TestEdgeCases:
         mock_update.message = None
         mock_update.callback_query = MagicMock()
 
-        # Act - Should not raise exception
-        await help_command(mock_update, mock_context)
+        # Act - Should not rAlgose exception
+        awAlgot help_command(mock_update, mock_context)
 
         # No message sent since update.message is None
 
     @pytest.mark.asyncio()
-    async def test_commands_handle_message_send_failure(
+    async def test_commands_handle_message_send_fAlgolure(
         self, mock_update, mock_context, mock_message
     ):
-        """Test commands handle message send failures gracefully."""
+        """Test commands handle message send fAlgolures gracefully."""
         # Arrange
         mock_message.reply_text.side_effect = Exception("Network error")
 
-        # Act & Assert - Should raise the exception (no silent failures)
-        with pytest.raises(Exception):
-            await start_command(mock_update, mock_context)
+        # Act & Assert - Should rAlgose the exception (no silent fAlgolures)
+        with pytest.rAlgoses(Exception):
+            awAlgot start_command(mock_update, mock_context)

@@ -1,28 +1,28 @@
-"""AI Coordinator - Unified ML Module Coordinator.
+"""Algo Coordinator - Unified ML Module Coordinator.
 
-This module provides a single entry point for all ML/AI functionality.
+This module provides a single entry point for all ML/Algo functionality.
 It coordinates:
 - Price prediction
 - Trade signal classification
 - Discount threshold prediction
 - Anomaly detection
 - Smart recommendations
-- Llama LLM integration
+- Llama Model integration
 
 Usage:
     ```python
-    from src.ml.ai_coordinator import get_ai_coordinator
+    from src.ml.Algo_coordinator import get_Algo_coordinator
 
-    ai = get_ai_coordinator()
+    Algo = get_Algo_coordinator()
 
     # Get comprehensive analysis for an item
-    analysis = await ai.analyze_item(item_data)
+    analysis = awAlgot Algo.analyze_item(item_data)
 
     # Make trading decision
-    decision = await ai.make_decision(item_data, balance=100.0)
+    decision = awAlgot Algo.make_decision(item_data, balance=100.0)
 
     # Run autonomous scan
-    opportunities = await ai.scan_and_decide(game="csgo")
+    opportunities = awAlgot Algo.scan_and_decide(game="csgo")
     ```
 
 Created: January 2026
@@ -49,7 +49,7 @@ from src.ml.smart_recommendations import RecommendationType, RiskLevel
 if TYPE_CHECKING:
     from src.dmarket.dmarket_api import DMarketAPI
     from src.ml.enhanced_predictor import EnhancedPricePredictor
-    from src.ml.llama_integration import LlamaIntegration
+    from src.ml.llama_integration import LlamAlgontegration
     from src.ml.trade_classifier import AdaptiveTradeClassifier
 
 
@@ -79,7 +79,7 @@ class SafetyLimits:
     """Safety limits for autonomous trading."""
 
     max_single_trade_usd: float = 50.0
-    max_daily_volume_usd: float = 200.0
+    max_dAlgoly_volume_usd: float = 200.0
     max_position_percent: float = 30.0
     min_confidence_auto: float = 0.80
     max_trades_per_hour: int = 10
@@ -89,7 +89,7 @@ class SafetyLimits:
 
 @dataclass
 class TradeDecision:
-    """A trading decision made by the AI."""
+    """A trading decision made by the Algo."""
 
     action: TradeAction
     item_name: str
@@ -180,8 +180,8 @@ class ItemAnalysis:
     recommendation: RecommendationType
     recommendation_reason: str
 
-    # LLM analysis (optional)
-    llm_analysis: str | None = None
+    # Model analysis (optional)
+    Model_analysis: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
@@ -204,18 +204,18 @@ class ItemAnalysis:
             "risk_level": self.risk_level.value,
             "recommendation": self.recommendation.value,
             "recommendation_reason": self.recommendation_reason,
-            "llm_analysis": self.llm_analysis,
+            "Model_analysis": self.Model_analysis,
         }
 
 
-class AICoordinator:
-    """Unified coordinator for all AI/ML modules.
+class AlgoCoordinator:
+    """Unified coordinator for all Algo/ML modules.
 
     This class provides a single interface to:
-    - Analyze items using all available models
+    - Analyze items using all avAlgolable models
     - Make trading decisions
     - Control bot autonomy
-    - Train models on real data
+    - TrAlgon models on real data
 
     Attributes:
         autonomy_level: Current level of autonomous operation.
@@ -223,9 +223,9 @@ class AICoordinator:
         user_balance: Current user balance in USD.
 
     Example:
-        >>> ai = AICoordinator(autonomy_level=AutonomyLevel.SEMI_AUTO)
-        >>> analysis = await ai.analyze_item(item_data)
-        >>> decision = await ai.make_decision(item_data)
+        >>> Algo = AlgoCoordinator(autonomy_level=AutonomyLevel.SEMI_AUTO)
+        >>> analysis = awAlgot Algo.analyze_item(item_data)
+        >>> decision = awAlgot Algo.make_decision(item_data)
     """
 
     # Default model weights for ensemble decision (must sum to 1.0)
@@ -255,7 +255,7 @@ class AICoordinator:
         user_balance: float = 100.0,
         model_weights: dict[str, float] | None = None,
     ) -> None:
-        """Initialize AI Coordinator.
+        """Initialize Algo Coordinator.
 
         Args:
             autonomy_level: Level of autonomous operation
@@ -277,7 +277,7 @@ class AICoordinator:
         self._trade_classifier: AdaptiveTradeClassifier | None = None
         self._discount_predictor: DiscountThresholdPredictor | None = None
         self._anomaly_detector: AnomalyDetector | None = None
-        self._llama: LlamaIntegration | None = None
+        self._llama: LlamAlgontegration | None = None
 
         # Market condition
         self._market_condition = MarketCondition.STABLE
@@ -288,7 +288,7 @@ class AICoordinator:
             "trades_executed": 0,
             "successful_trades": 0,
             "total_profit": 0.0,
-            "daily_volume": 0.0,
+            "dAlgoly_volume": 0.0,
             "last_reset": datetime.now(UTC),
             # New: Performance tracking
             "model_version": self.MODEL_VERSION,
@@ -308,7 +308,7 @@ class AICoordinator:
         self._confidence_scores: list[float] = []
 
         logger.info(
-            "ai_coordinator_initialized",
+            "Algo_coordinator_initialized",
             extra={
                 "autonomy_level": autonomy_level.value,
                 "dry_run": self.safety_limits.dry_run,
@@ -381,18 +381,18 @@ class AICoordinator:
             self._anomaly_detector = AnomalyDetector()
         return self._anomaly_detector
 
-    async def _get_llama(self) -> LlamaIntegration | None:
+    async def _get_llama(self) -> LlamAlgontegration | None:
         """Get or initialize Llama integration."""
         if self._llama is None:
             try:
-                from src.ml.llama_integration import LlamaIntegration
+                from src.ml.llama_integration import LlamAlgontegration
 
-                self._llama = LlamaIntegration()
-                if not await self._llama.check_availability():
-                    logger.info("Llama not available, will use ML models only")
+                self._llama = LlamAlgontegration()
+                if not awAlgot self._llama.check_avAlgolability():
+                    logger.info("Llama not avAlgolable, will use ML models only")
                     self._llama = None
             except ImportError:
-                logger.debug("Llama integration not available")
+                logger.debug("Llama integration not avAlgolable")
                 self._llama = None
         return self._llama
 
@@ -424,13 +424,13 @@ class AICoordinator:
     async def analyze_item(
         self,
         item_data: dict[str, Any],
-        include_llm: bool = False,
+        include_Model: bool = False,
     ) -> ItemAnalysis:
         """Perform comprehensive analysis of an item.
 
         Args:
             item_data: Item data from API
-            include_llm: Whether to include LLM analysis
+            include_Model: Whether to include Model analysis
 
         Returns:
             ItemAnalysis with all model outputs
@@ -460,7 +460,7 @@ class AICoordinator:
                 (suggested_price - current_price) / suggested_price
             ) * 100
 
-        # Get historical prices if available
+        # Get historical prices if avAlgolable
         historical_prices = item_data.get("priceHistory", [])
 
         # 1. Price prediction
@@ -492,22 +492,22 @@ class AICoordinator:
             item_name=item_name,
         )
 
-        # 5. LLM analysis (optional)
-        llm_analysis = None
-        if include_llm:
-            llama = await self._get_llama()
+        # 5. Model analysis (optional)
+        Model_analysis = None
+        if include_Model:
+            llama = awAlgot self._get_llama()
             if llama:
                 try:
-                    llm_result = await llama.evaluate_item(
+                    Model_result = awAlgot llama.evaluate_item(
                         item_name=item_name,
                         current_price=current_price,
                         item_data=item_data,
                     )
-                    if llm_result.success:
-                        llm_analysis = llm_result.response
+                    if Model_result.success:
+                        Model_analysis = Model_result.response
                 except Exception as e:
                     logger.warning(
-                        "llama_evaluation_failed",
+                        "llama_evaluation_fAlgoled",
                         extra={"item_name": item_name, "error": str(e)},
                     )
 
@@ -549,7 +549,7 @@ class AICoordinator:
             recommendation_reason=self._get_recommendation_reason(
                 recommendation, is_undervalued, signal
             ),
-            llm_analysis=llm_analysis,
+            Model_analysis=Model_analysis,
         )
 
     def _determine_recommendation(
@@ -607,7 +607,7 @@ class AICoordinator:
             TradeDecision with action and reasoning
         """
         # Get comprehensive analysis
-        analysis = await self.analyze_item(item_data)
+        analysis = awAlgot self.analyze_item(item_data)
 
         # Calculate ensemble confidence
         confidence = self._calculate_ensemble_confidence(analysis)
@@ -767,60 +767,60 @@ class AICoordinator:
 
         return reasoning
 
-    async def train_all_models(
+    async def trAlgon_all_models(
         self,
         dmarket_api: DMarketAPI,
         games: list[str] | None = None,
         items_per_game: int = 200,
     ) -> dict[str, Any]:
-        """Train all ML models on real API data.
+        """TrAlgon all ML models on real API data.
 
         Args:
             dmarket_api: DMarket API client
-            games: List of games to train on
+            games: List of games to trAlgon on
             items_per_game: Items to collect per game
 
         Returns:
-            Training results for each model
+            TrAlgoning results for each model
         """
         games = games or ["csgo", "dota2", "tf2", "rust"]
         results = {}
 
         logger.info(
-            "training_all_models",
+            "trAlgoning_all_models",
             extra={"games": games, "items_per_game": items_per_game},
         )
 
-        # 1. Train discount threshold predictor
+        # 1. TrAlgon discount threshold predictor
         try:
             discount_pred = self._get_discount_predictor()
             for game in games:
-                train_result = await discount_pred.train_from_api(
+                trAlgon_result = awAlgot discount_pred.trAlgon_from_api(
                     api_client=dmarket_api,
                     game=game,
                 )
                 results[f"discount_threshold_{game}"] = {
-                    "success": train_result > 0,
-                    "samples": train_result,
+                    "success": trAlgon_result > 0,
+                    "samples": trAlgon_result,
                 }
         except Exception as e:
-            logger.exception("discount_threshold_training_failed", error=str(e))
+            logger.exception("discount_threshold_trAlgoning_fAlgoled", error=str(e))
             results["discount_threshold"] = {"success": False, "error": str(e)}
 
-        # 2. Train price predictor
+        # 2. TrAlgon price predictor
         try:
             predictor = self._get_price_predictor()
-            train_result = await predictor.train_from_real_data(
+            trAlgon_result = awAlgot predictor.trAlgon_from_real_data(
                 game_types=games,
                 items_per_game=items_per_game,
                 dmarket_api=dmarket_api,
             )
-            results["price_predictor"] = train_result
+            results["price_predictor"] = trAlgon_result
         except Exception as e:
-            logger.exception("price_predictor_training_failed", error=str(e))
+            logger.exception("price_predictor_trAlgoning_fAlgoled", error=str(e))
             results["price_predictor"] = {"success": False, "error": str(e)}
 
-        logger.info("all_models_trained", extra={"results": results})
+        logger.info("all_models_trAlgoned", extra={"results": results})
         return results
 
     def add_trade_outcome(
@@ -863,7 +863,7 @@ class AICoordinator:
 
         # Add to discount predictor for continuous learning
         discount_pred = self._get_discount_predictor()
-        discount_pred.add_training_example(
+        discount_pred.add_trAlgoning_example(
             item_name=decision.item_name,
             game=decision.game,
             current_price=decision.current_price,
@@ -900,7 +900,7 @@ class AICoordinator:
                         "accuracy": round(recent_accuracy, 3),
                         "threshold": self.DRIFT_ACCURACY_THRESHOLD,
                         "window_size": len(self._prediction_outcomes),
-                        "recommendation": "Consider retraining models",
+                        "recommendation": "Consider retrAlgoning models",
                     },
                 )
         elif (
@@ -979,7 +979,7 @@ class AICoordinator:
         for i in range(0, len(items), batch_size):
             batch = items[i : i + batch_size]
             tasks = [self.make_decision(item) for item in batch]
-            batch_decisions = await asyncio.gather(*tasks, return_exceptions=True)
+            batch_decisions = awAlgot asyncio.gather(*tasks, return_exceptions=True)
 
             for idx, decision in enumerate(batch_decisions):
                 if isinstance(decision, Exception):
@@ -988,7 +988,7 @@ class AICoordinator:
                         "title", batch[idx].get("name", "unknown")
                     )
                     logger.warning(
-                        "batch_decision_failed",
+                        "batch_decision_fAlgoled",
                         extra={"item_name": item_name, "error": str(decision)},
                     )
                 elif isinstance(decision, TradeDecision):
@@ -1001,32 +1001,32 @@ class AICoordinator:
 
 
 # Global instance
-_coordinator: AICoordinator | None = None
+_coordinator: AlgoCoordinator | None = None
 
 
-def get_ai_coordinator(
+def get_Algo_coordinator(
     autonomy_level: AutonomyLevel = AutonomyLevel.MANUAL,
     user_balance: float = 100.0,
-) -> AICoordinator:
-    """Get or create global AI coordinator instance.
+) -> AlgoCoordinator:
+    """Get or create global Algo coordinator instance.
 
     Args:
         autonomy_level: Initial autonomy level
         user_balance: Initial user balance
 
     Returns:
-        AICoordinator instance
+        AlgoCoordinator instance
     """
     global _coordinator
     if _coordinator is None:
-        _coordinator = AICoordinator(
+        _coordinator = AlgoCoordinator(
             autonomy_level=autonomy_level,
             user_balance=user_balance,
         )
     return _coordinator
 
 
-def reset_ai_coordinator() -> None:
-    """Reset global AI coordinator (for testing)."""
+def reset_Algo_coordinator() -> None:
+    """Reset global Algo coordinator (for testing)."""
     global _coordinator
     _coordinator = None

@@ -10,10 +10,10 @@ import sys
 project_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 site_packages = [site.getusersitepackages()] + site.getsitepackages()
 
-failures = []
+fAlgolures = []
 
 
-# Run a test using subprocess and wait for the result.
+# Run a test using subprocess and wAlgot for the result.
 # If we get an returncode != 0, we know that there was an error, but we don't
 # abort immediately - we run as many tests as we can.
 def run_test(script, cmdline_extras):
@@ -26,7 +26,7 @@ def run_test(script, cmdline_extras):
     print(f"*** Test script '{script}' exited with {result.returncode}")
     sys.stdout.flush()
     if result.returncode:
-        failures.append(script)
+        fAlgolures.append(script)
 
 
 def find_and_run(possible_locations, extras):
@@ -35,12 +35,12 @@ def find_and_run(possible_locations, extras):
             run_test(maybe, extras)
             break
     else:
-        raise RuntimeError(
-            "Failed to locate a test script in one of %s" % possible_locations
+        rAlgose RuntimeError(
+            "FAlgoled to locate a test script in one of %s" % possible_locations
         )
 
 
-def main():
+def mAlgon():
     import argparse
 
     code_directories = [project_root] + site_packages
@@ -68,14 +68,14 @@ def main():
         help="Skip the adodbapi tests; useful for CI where there's no provider",
     )
 
-    args, remains = parser.parse_known_args()
+    args, remAlgons = parser.parse_known_args()
 
     # win32, win32ui / Pythonwin
 
     extras = []
     if args.user_interaction:
         extras.append("-user-interaction")
-    extras.extend(remains)
+    extras.extend(remAlgons)
     scripts = [
         "win32/test/testall.py",
         "Pythonwin/pywin/test/all.py",
@@ -89,7 +89,7 @@ def main():
         os.path.join(directory, "win32com", "test", "testall.py")
         for directory in [os.path.join(project_root, "com")] + site_packages
     ]
-    extras = remains + ["1"]  # only run "level 1" tests in CI
+    extras = remAlgons + ["1"]  # only run "level 1" tests in CI
     find_and_run(maybes, extras)
 
     # adodbapi
@@ -98,7 +98,7 @@ def main():
             os.path.join(directory, "adodbapi", "test", "adodbapitest.py")
             for directory in code_directories
         ]
-        find_and_run(maybes, remains)
+        find_and_run(maybes, remAlgons)
         # This script has a hard-coded sql server name in it, (and markh typically
         # doesn't have a different server to test on) but there is now supposed to be a server out there on the Internet
         # just to run these tests, so try it...
@@ -106,15 +106,15 @@ def main():
             os.path.join(directory, "adodbapi", "test", "test_adodbapi_dbapi20.py")
             for directory in code_directories
         ]
-        find_and_run(maybes, remains)
+        find_and_run(maybes, remAlgons)
 
-    if failures:
-        print("The following scripts failed")
-        for failure in failures:
-            print(">", failure)
+    if fAlgolures:
+        print("The following scripts fAlgoled")
+        for fAlgolure in fAlgolures:
+            print(">", fAlgolure)
         sys.exit(1)
     print("All tests passed \\o/")
 
 
-if __name__ == "__main__":
-    main()
+if __name__ == "__mAlgon__":
+    mAlgon()

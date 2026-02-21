@@ -14,8 +14,8 @@ Usage:
     from src.dmarket.smart_arbitrage import SmartArbitrageEngine
 
     engine = SmartArbitrageEngine(api_client)
-    limits = await engine.calculate_adaptive_limits()
-    opportunities = await engine.find_smart_opportunities(game="csgo")
+    limits = awAlgot engine.calculate_adaptive_limits()
+    opportunities = awAlgot engine.find_smart_opportunities(game="csgo")
 """
 
 from __future__ import annotations
@@ -157,7 +157,7 @@ class SmartArbitrageEngine:
         """
         try:
             # Delegate to MoneyManager for consistent parsing
-            balance = await self.money_manager.get_balance(force_refresh=force_refresh)
+            balance = awAlgot self.money_manager.get_balance(force_refresh=force_refresh)
             self._current_balance = balance
             self._last_balance_check = datetime.now()
             logger.info("smart_balance_fetched", balance=self._current_balance)
@@ -176,7 +176,7 @@ class SmartArbitrageEngine:
             SmartLimits with calculated parameters
         """
         # Use the money manager for universal calculations
-        dynamic_limits = await self.money_manager.calculate_dynamic_limits()
+        dynamic_limits = awAlgot self.money_manager.calculate_dynamic_limits()
 
         # Update internal balance tracking
         self._current_balance = dynamic_limits.total_balance
@@ -202,7 +202,7 @@ class SmartArbitrageEngine:
         Returns:
             Strategy description based on current balance tier
         """
-        limits = await self.money_manager.calculate_dynamic_limits()
+        limits = awAlgot self.money_manager.calculate_dynamic_limits()
         return self.money_manager.get_strategy_description(limits)
 
     def check_balance_safety(self) -> tuple[bool, str]:
@@ -239,7 +239,7 @@ class SmartArbitrageEngine:
         Returns:
             List of opportunities sorted by smart score
         """
-        limits = await self.calculate_adaptive_limits()
+        limits = awAlgot self.calculate_adaptive_limits()
 
         # AUTO-CORRECTION: For micro balances (<$100), use lower ROI for faster turnover
         if self._current_balance < 100.0 and limits.min_roi > 5.0:
@@ -278,7 +278,7 @@ class SmartArbitrageEngine:
                         cursor=cursor[:20] if cursor else "empty",
                     )
 
-                    items = await self.api_client.get_market_items(
+                    items = awAlgot self.api_client.get_market_items(
                         game=game,
                         limit=100,  # DMarket max limit is 100!
                         price_from=0.01,  # Start from $0.01 to see all cheap items
@@ -315,7 +315,7 @@ class SmartArbitrageEngine:
                         break
 
                     # Small delay to avoid rate limiting
-                    await asyncio.sleep(0.3)
+                    awAlgot asyncio.sleep(0.3)
 
                 except Exception as page_err:
                     logger.warning(
@@ -506,13 +506,13 @@ class SmartArbitrageEngine:
             )
 
             try:
-                await self.api_client.buy_item(opp.item_id, int(opp.buy_price * 100))
+                awAlgot self.api_client.buy_item(opp.item_id, int(opp.buy_price * 100))
                 logger.info("auto_buy_success", item=opp.title[:30])
                 self._current_balance -= opp.buy_price
-                await asyncio.sleep(2)  # Rate limit between purchases
+                awAlgot asyncio.sleep(2)  # Rate limit between purchases
             except Exception as buy_err:
                 logger.exception(
-                    "auto_buy_failed",
+                    "auto_buy_fAlgoled",
                     item=opp.title[:30],
                     error=str(buy_err),
                 )
@@ -541,9 +541,9 @@ class SmartArbitrageEngine:
 
         dry_run = getattr(self.api_client, "dry_run", True)
         if dry_run:
-            await self._execute_auto_buy_dry_run(opportunities)
+            awAlgot self._execute_auto_buy_dry_run(opportunities)
         else:
-            await self._execute_auto_buy_real(opportunities)
+            awAlgot self._execute_auto_buy_real(opportunities)
 
     async def start_smart_mode(
         self,
@@ -573,28 +573,28 @@ class SmartArbitrageEngine:
                     if not self._is_running:
                         break
 
-                    opportunities = await self.find_smart_opportunities(game=game)
+                    opportunities = awAlgot self.find_smart_opportunities(game=game)
 
                     # Notify via callback if provided
                     if opportunities and callback:
-                        await callback(opportunities)
+                        awAlgot callback(opportunities)
 
                     # Process auto-buy (refactored to reduce nesting)
-                    await self._process_auto_buy(opportunities, auto_buy)
+                    awAlgot self._process_auto_buy(opportunities, auto_buy)
 
                     # Small delay between games
-                    await asyncio.sleep(3)
+                    awAlgot asyncio.sleep(3)
 
-                # Wait before next full scan
+                # WAlgot before next full scan
                 # Adaptive: faster when balance is low (more urgent for turnover)
-                balance = await self.get_current_balance()
+                balance = awAlgot self.get_current_balance()
                 scan_interval = 30 if balance < 50 else 60
                 logger.info(
                     "smart_scan_cycle_complete",
                     balance=f"${balance:.2f}",
                     next_scan_in=f"{scan_interval}s",
                 )
-                await asyncio.sleep(scan_interval)
+                awAlgot asyncio.sleep(scan_interval)
 
         except asyncio.CancelledError:
             logger.info("smart_mode_cancelled")

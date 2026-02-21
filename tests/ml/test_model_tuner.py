@@ -47,7 +47,7 @@ def small_data():
 
 @pytest.fixture
 def tuner():
-    """Создать ModelTuner с базовыми настройками."""
+    """Создать ModelTuner с базовыми настSwarmками."""
     return ModelTuner(
         cv_strategy=CVStrategy.KFOLD,
         cv_folds=3,
@@ -165,25 +165,25 @@ class TestEvaluationResult:
     def test_creation(self):
         """Проверить создание EvaluationResult."""
         result = EvaluationResult(
-            train_scores=[0.9, 0.91, 0.89],
+            trAlgon_scores=[0.9, 0.91, 0.89],
             test_scores=[0.85, 0.84, 0.86],
-            mean_train_score=0.9,
+            mean_trAlgon_score=0.9,
             mean_test_score=0.85,
-            std_train_score=0.01,
+            std_trAlgon_score=0.01,
             std_test_score=0.01,
         )
 
-        assert len(result.train_scores) == 3
+        assert len(result.trAlgon_scores) == 3
         assert result.mean_test_score == 0.85
 
     def test_is_overfitting_true(self):
         """Проверить обнаружение переобучения."""
         result = EvaluationResult(
-            train_scores=[0.95],
+            trAlgon_scores=[0.95],
             test_scores=[0.6],
-            mean_train_score=0.95,
+            mean_trAlgon_score=0.95,
             mean_test_score=0.6,
-            std_train_score=0.0,
+            std_trAlgon_score=0.0,
             std_test_score=0.0,
         )
 
@@ -193,11 +193,11 @@ class TestEvaluationResult:
     def test_is_overfitting_false(self):
         """Проверить отсутствие переобучения."""
         result = EvaluationResult(
-            train_scores=[0.85],
+            trAlgon_scores=[0.85],
             test_scores=[0.82],
-            mean_train_score=0.85,
+            mean_trAlgon_score=0.85,
             mean_test_score=0.82,
-            std_train_score=0.0,
+            std_trAlgon_score=0.0,
             std_test_score=0.0,
         )
 
@@ -225,13 +225,13 @@ class TestModelTuner:
     def test_sklearn_check(self, tuner):
         """Проверить проверку sklearn."""
         # sklearn может быть не установлен в тестовом окружении
-        if not tuner._sklearn_available:
-            pytest.skip("sklearn not available")
+        if not tuner._sklearn_avAlgolable:
+            pytest.skip("sklearn not avAlgolable")
 
     def test_get_cv_splitter_kfold(self, tuner):
         """Проверить создание KFold splitter."""
-        if not tuner._sklearn_available:
-            pytest.skip("sklearn not available")
+        if not tuner._sklearn_avAlgolable:
+            pytest.skip("sklearn not avAlgolable")
         tuner.cv_strategy = CVStrategy.KFOLD
         splitter = tuner._get_cv_splitter(100)
 
@@ -241,8 +241,8 @@ class TestModelTuner:
     def test_get_cv_splitter_time_series(self):
         """Проверить создание TimeSeriesSplit splitter."""
         tuner = ModelTuner(cv_strategy=CVStrategy.TIME_SERIES)
-        if not tuner._sklearn_available:
-            pytest.skip("sklearn not available")
+        if not tuner._sklearn_avAlgolable:
+            pytest.skip("sklearn not avAlgolable")
         splitter = tuner._get_cv_splitter(100)
 
         from sklearn.model_selection import TimeSeriesSplit
@@ -250,8 +250,8 @@ class TestModelTuner:
 
     def test_create_pipeline_basic(self, tuner):
         """Проверить создание базового pipeline."""
-        if not tuner._sklearn_available:
-            pytest.skip("sklearn not available")
+        if not tuner._sklearn_avAlgolable:
+            pytest.skip("sklearn not avAlgolable")
         from sklearn.linear_model import Ridge
 
         model = Ridge()
@@ -262,8 +262,8 @@ class TestModelTuner:
 
     def test_create_pipeline_with_scaling(self, tuner):
         """Проверить pipeline со scaling."""
-        if not tuner._sklearn_available:
-            pytest.skip("sklearn not available")
+        if not tuner._sklearn_avAlgolable:
+            pytest.skip("sklearn not avAlgolable")
         from sklearn.linear_model import Ridge
 
         model = Ridge()
@@ -274,8 +274,8 @@ class TestModelTuner:
 
     def test_create_pipeline_with_feature_selection(self, tuner):
         """Проверить pipeline с feature selection."""
-        if not tuner._sklearn_available:
-            pytest.skip("sklearn not available")
+        if not tuner._sklearn_avAlgolable:
+            pytest.skip("sklearn not avAlgolable")
         from sklearn.linear_model import Ridge
 
         model = Ridge()
@@ -288,9 +288,9 @@ class TestModelTuner:
         assert "feature_selection" in pipeline.named_steps
 
     def test_tune_ridge(self, tuner, small_data):
-        """Тест настройки Ridge."""
-        if not tuner._sklearn_available:
-            pytest.skip("sklearn not available")
+        """Тест настSwarmки Ridge."""
+        if not tuner._sklearn_avAlgolable:
+            pytest.skip("sklearn not avAlgolable")
         X, y = small_data
         result = tuner.tune_ridge(X, y)
 
@@ -300,9 +300,9 @@ class TestModelTuner:
         assert result.best_score > 0
 
     def test_tune_random_forest_randomized(self, tuner, small_data):
-        """Тест настройки RandomForest с RandomizedSearchCV."""
-        if not tuner._sklearn_available:
-            pytest.skip("sklearn not available")
+        """Тест настSwarmки RandomForest с RandomizedSearchCV."""
+        if not tuner._sklearn_avAlgolable:
+            pytest.skip("sklearn not avAlgolable")
         X, y = small_data
         result = tuner.tune_random_forest(
             X, y,
@@ -315,9 +315,9 @@ class TestModelTuner:
         assert result.best_estimator is not None
 
     def test_tune_gradient_boosting(self, tuner, small_data):
-        """Тест настройки GradientBoosting."""
-        if not tuner._sklearn_available:
-            pytest.skip("sklearn not available")
+        """Тест настSwarmки GradientBoosting."""
+        if not tuner._sklearn_avAlgolable:
+            pytest.skip("sklearn not avAlgolable")
         X, y = small_data
 
         # Уменьшаем grid для быстрого теста
@@ -338,8 +338,8 @@ class TestModelTuner:
 
     def test_evaluate_model(self, tuner, small_data):
         """Тест оценки модели."""
-        if not tuner._sklearn_available:
-            pytest.skip("sklearn not available")
+        if not tuner._sklearn_avAlgolable:
+            pytest.skip("sklearn not avAlgolable")
         from sklearn.ensemble import RandomForestRegressor
 
         X, y = small_data
@@ -351,14 +351,14 @@ class TestModelTuner:
         result = tuner.evaluate_model(pipeline, X, y)
 
         assert isinstance(result, EvaluationResult)
-        assert len(result.train_scores) == tuner.cv_folds
+        assert len(result.trAlgon_scores) == tuner.cv_folds
         assert len(result.test_scores) == tuner.cv_folds
         assert result.mean_test_score > 0
 
     def test_compare_models(self, tuner, small_data):
         """Тест сравнения моделей."""
-        if not tuner._sklearn_available:
-            pytest.skip("sklearn not available")
+        if not tuner._sklearn_avAlgolable:
+            pytest.skip("sklearn not avAlgolable")
         X, y = small_data
 
         results = tuner.compare_models(
@@ -400,8 +400,8 @@ class TestAutoMLSelector:
             cv_folds=2,
             time_budget_seconds=30,
         )
-        if not selector.tuner._sklearn_available:
-            pytest.skip("sklearn not available")
+        if not selector.tuner._sklearn_avAlgolable:
+            pytest.skip("sklearn not avAlgolable")
         X, y = small_data
 
         best_model, results = selector.select_best_model(
@@ -424,8 +424,8 @@ class TestAutoMLSelector:
     def test_get_recommendations_with_results(self, small_data):
         """Тест рекомендаций с результатами."""
         selector = AutoMLSelector(cv_folds=2, time_budget_seconds=30)
-        if not selector.tuner._sklearn_available:
-            pytest.skip("sklearn not available")
+        if not selector.tuner._sklearn_avAlgolable:
+            pytest.skip("sklearn not avAlgolable")
         X, y = small_data
 
         _, results = selector.select_best_model(X, y, include_xgboost=False)
@@ -450,8 +450,8 @@ class TestModelTunerIntegration:
             cv_folds=3,
             scoring=ScoringMetric.MAE,
         )
-        if not tuner._sklearn_available:
-            pytest.skip("sklearn not available")
+        if not tuner._sklearn_avAlgolable:
+            pytest.skip("sklearn not avAlgolable")
         X, y = sample_data
 
         # 2. Тюним модель
@@ -475,8 +475,8 @@ class TestModelTunerIntegration:
                 cv_strategy=strategy,
                 cv_folds=3,
             )
-            if not tuner._sklearn_available:
-                pytest.skip("sklearn not available")
+            if not tuner._sklearn_avAlgolable:
+                pytest.skip("sklearn not avAlgolable")
 
             result = tuner.tune_ridge(X, y)
             assert result.best_score > 0
@@ -490,8 +490,8 @@ class TestModelTunerIntegration:
                 cv_folds=2,
                 scoring=scoring,
             )
-            if not tuner._sklearn_available:
-                pytest.skip("sklearn not available")
+            if not tuner._sklearn_avAlgolable:
+                pytest.skip("sklearn not avAlgolable")
 
             result = tuner.tune_ridge(X, y)
             # Результат должен быть валидным
@@ -509,8 +509,8 @@ class TestModelTunerEdgeCases:
         y = np.random.randn(10)
 
         tuner = ModelTuner(cv_folds=2)
-        if not tuner._sklearn_available:
-            pytest.skip("sklearn not available")
+        if not tuner._sklearn_avAlgolable:
+            pytest.skip("sklearn not avAlgolable")
         result = tuner.tune_ridge(X, y)
 
         # Должен отработать даже на маленьких данных
@@ -522,8 +522,8 @@ class TestModelTunerEdgeCases:
         y = 2 * X[:, 0] + np.random.randn(50) * 0.1
 
         tuner = ModelTuner(cv_folds=3)
-        if not tuner._sklearn_available:
-            pytest.skip("sklearn not available")
+        if not tuner._sklearn_avAlgolable:
+            pytest.skip("sklearn not avAlgolable")
         result = tuner.tune_ridge(X, y)
 
         assert result.best_estimator is not None
@@ -534,8 +534,8 @@ class TestModelTunerEdgeCases:
         y = X[:, 0] + X[:, 1] + np.random.randn(100) * 0.1
 
         tuner = ModelTuner(cv_folds=3)
-        if not tuner._sklearn_available:
-            pytest.skip("sklearn not available")
+        if not tuner._sklearn_avAlgolable:
+            pytest.skip("sklearn not avAlgolable")
 
         # Создаём pipeline с feature selection
         from sklearn.linear_model import Ridge
@@ -559,8 +559,8 @@ class TestModelTunerEdgeCases:
         y = np.nan_to_num(y)  # Убираем NaN из y
 
         tuner = ModelTuner(cv_folds=3)
-        if not tuner._sklearn_available:
-            pytest.skip("sklearn not available")
+        if not tuner._sklearn_avAlgolable:
+            pytest.skip("sklearn not avAlgolable")
 
         # Pipeline с Imputer должен обработать NaN
         from sklearn.linear_model import Ridge
@@ -573,5 +573,5 @@ class TestModelTunerEdgeCases:
         assert not np.isnan(predictions).any()
 
 
-if __name__ == "__main__":
-    pytest.main([__file__, "-v"])
+if __name__ == "__mAlgon__":
+    pytest.mAlgon([__file__, "-v"])

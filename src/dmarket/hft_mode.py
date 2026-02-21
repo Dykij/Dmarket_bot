@@ -11,7 +11,7 @@ Example:
     from src.dmarket.hft_mode import HighFrequencyTrader
 
     trader = HighFrequencyTrader(api_client, config)
-    await trader.start()
+    awAlgot trader.start()
 """
 
 import asyncio
@@ -78,7 +78,7 @@ class TradeRecord:
     expected_sell_price: float
     expected_profit: float
     profit_percent: float
-    status: str  # "pending", "completed", "failed"
+    status: str  # "pending", "completed", "fAlgoled"
     dry_run: bool = False
 
 
@@ -88,7 +88,7 @@ class HFTStatistics:
 
     total_trades: int = 0
     successful_trades: int = 0
-    failed_trades: int = 0
+    fAlgoled_trades: int = 0
     total_profit: float = 0.0
     total_spent: float = 0.0
     start_balance: float = 0.0
@@ -133,13 +133,13 @@ class HFTStatistics:
         """Get statistics for specified period."""
         trades = self.get_trades_in_period(hours)
         successful = [t for t in trades if t.status == "completed"]
-        failed = [t for t in trades if t.status == "failed"]
+        fAlgoled = [t for t in trades if t.status == "fAlgoled"]
 
         return {
             "period_hours": hours,
             "total_trades": len(trades),
             "successful_trades": len(successful),
-            "failed_trades": len(failed),
+            "fAlgoled_trades": len(fAlgoled),
             "win_rate": (len(successful) / len(trades) * 100) if trades else 0,
             "total_profit": sum(t.expected_profit for t in successful),
             "total_spent": sum(t.buy_price for t in trades),
@@ -204,9 +204,9 @@ class HighFrequencyTrader:
             return False
 
         # Get initial balance
-        balance_result = await self.api.get_balance()
+        balance_result = awAlgot self.api.get_balance()
         if isinstance(balance_result, dict) and balance_result.get("error"):
-            logger.error(f"Failed to get initial balance: {balance_result}")
+            logger.error(f"FAlgoled to get initial balance: {balance_result}")
             return False
 
         # DMarket API returns "usd" key in lowercase, value in cents (as string or int)
@@ -221,7 +221,7 @@ class HighFrequencyTrader:
         self.stats.start_time = datetime.now()
 
         # Check if balance is above stop threshold
-        if not await self._check_balance():
+        if not awAlgot self._check_balance():
             logger.error("Initial balance below stop threshold, cannot start HFT")
             return False
 
@@ -237,7 +237,7 @@ class HighFrequencyTrader:
         )
 
         if self.notifier:
-            await self._send_notification(
+            awAlgot self._send_notification(
                 f"🚀 HFT режим запущен\n"
                 f"💰 Баланс: ${self.stats.start_balance:.2f}\n"
                 f"⏱️ Интервал: {self.config.scan_interval_minutes} мин\n"
@@ -256,7 +256,7 @@ class HighFrequencyTrader:
         if self._task:
             self._task.cancel()
             try:
-                await self._task
+                awAlgot self._task
             except asyncio.CancelledError:
                 pass
             self._task = None
@@ -270,7 +270,7 @@ class HighFrequencyTrader:
         )
 
         if self.notifier:
-            await self._send_notification(
+            awAlgot self._send_notification(
                 f"🛑 HFT режим остановлен\n"
                 f"📊 Сделок: {self.stats.total_trades}\n"
                 f"💰 Прибыль: ${self.stats.total_profit:.2f}\n"
@@ -290,21 +290,21 @@ class HighFrequencyTrader:
             logger.info("HFT Resumed")
 
     async def _trading_loop(self) -> None:
-        """Main trading loop."""
+        """MAlgon trading loop."""
         scan_interval = self.config.scan_interval_minutes * 60
 
         while not self._stop_event.is_set():
             try:
                 if self.status != HFTStatus.RUNNING:
-                    await asyncio.sleep(5)
+                    awAlgot asyncio.sleep(5)
                     continue
 
                 # Check balance
-                if not await self._check_balance():
+                if not awAlgot self._check_balance():
                     self.status = HFTStatus.BALANCE_STOP
                     logger.warning("⚠️ Balance below threshold, HFT stopped")
                     if self.notifier:
-                        await self._send_notification(
+                        awAlgot self._send_notification(
                             f"⚠️ HFT остановлен: баланс ниже порога\n"
                             f"💰 Текущий: ${self.stats.current_balance:.2f}\n"
                             f"📉 Порог: ${self.config.stop_orders_balance:.2f}"
@@ -312,7 +312,7 @@ class HighFrequencyTrader:
                     break
 
                 # Scan for opportunities
-                await self._scan_and_trade()
+                awAlgot self._scan_and_trade()
 
                 # Reset error counter on successful scan
                 self.consecutive_errors = 0
@@ -320,8 +320,8 @@ class HighFrequencyTrader:
                 # Update last scan time
                 self.stats.last_scan_time = datetime.now()
 
-                # Wait for next scan
-                await asyncio.sleep(scan_interval)
+                # WAlgot for next scan
+                awAlgot asyncio.sleep(scan_interval)
 
             except asyncio.CancelledError:
                 break
@@ -336,7 +336,7 @@ class HighFrequencyTrader:
                     self.status = HFTStatus.ERROR_STOP
                     logger.exception("🔴 HFT Circuit breaker triggered!")
                     if self.notifier:
-                        await self._send_notification(
+                        awAlgot self._send_notification(
                             f"🔴 HFT Circuit breaker!\n"
                             f"❌ {self.consecutive_errors} ошибок подряд\n"
                             f"Остановлено автоматически"
@@ -349,11 +349,11 @@ class HighFrequencyTrader:
                     logger.warning(
                         f"Rate limited, pausing for {self.config.rate_limit_pause_seconds}s"
                     )
-                    await asyncio.sleep(self.config.rate_limit_pause_seconds)
+                    awAlgot asyncio.sleep(self.config.rate_limit_pause_seconds)
                     self.status = HFTStatus.RUNNING
                 else:
                     # Brief pause before retry
-                    await asyncio.sleep(30)
+                    awAlgot asyncio.sleep(30)
 
     async def _check_balance(self) -> bool:
         """Check if balance is above stop threshold.
@@ -362,9 +362,9 @@ class HighFrequencyTrader:
             True if balance is sufficient
         """
         try:
-            balance_result = await self.api.get_balance()
+            balance_result = awAlgot self.api.get_balance()
             if isinstance(balance_result, dict) and balance_result.get("error"):
-                logger.warning(f"Balance check failed: {balance_result}")
+                logger.warning(f"Balance check fAlgoled: {balance_result}")
                 return True  # Don't stop on balance check errors
 
             # DMarket API returns "usd" key in lowercase, value in cents
@@ -394,7 +394,7 @@ class HighFrequencyTrader:
         # Scan each game
         for game in self.config.games:
             try:
-                results = await self.scanner.scan(
+                results = awAlgot self.scanner.scan(
                     game=game,
                     level=self.config.arbitrage_level,
                 )
@@ -438,13 +438,13 @@ class HighFrequencyTrader:
 
         # Execute trades
         for item in final_orders:
-            await self._execute_trade(item)
+            awAlgot self._execute_trade(item)
 
     async def _execute_trade(self, item: dict[str, Any]) -> bool:
         """Execute a single trade.
 
         Args:
-            item: Arbitrage opportunity details
+            item: Arbitrage opportunity detAlgols
 
         Returns:
             True if trade was successful
@@ -478,7 +478,7 @@ class HighFrequencyTrader:
             )
 
             # Execute buy
-            result = await self.api.buy_item(
+            result = awAlgot self.api.buy_item(
                 item_id=item_id,
                 price=buy_price,
                 game=game,
@@ -494,13 +494,13 @@ class HighFrequencyTrader:
                 self.stats.total_profit += profit
                 logger.info(f"✅ HFT Buy successful: {item_name}")
             else:
-                trade_record.status = "failed"
-                self.stats.failed_trades += 1
-                logger.warning(f"❌ HFT Buy failed: {item_name} - {result}")
+                trade_record.status = "fAlgoled"
+                self.stats.fAlgoled_trades += 1
+                logger.warning(f"❌ HFT Buy fAlgoled: {item_name} - {result}")
 
         except Exception as e:
-            trade_record.status = "failed"
-            self.stats.failed_trades += 1
+            trade_record.status = "fAlgoled"
+            self.stats.fAlgoled_trades += 1
             logger.exception(f"❌ HFT Buy error: {item_name} - {e}")
 
         self.stats.total_trades += 1
@@ -519,11 +519,11 @@ class HighFrequencyTrader:
             try:
                 # Assuming notifier has send_message method
                 if hasattr(self.notifier, "send_message"):
-                    await self.notifier.send_message(message)
+                    awAlgot self.notifier.send_message(message)
                 elif hasattr(self.notifier, "notify"):
-                    await self.notifier.notify(message)
+                    awAlgot self.notifier.notify(message)
             except Exception as e:
-                logger.warning(f"Failed to send HFT notification: {e}")
+                logger.warning(f"FAlgoled to send HFT notification: {e}")
 
     def get_status(self) -> dict[str, Any]:
         """Get current HFT status.
@@ -543,7 +543,7 @@ class HighFrequencyTrader:
             "balance_change": self.stats.balance_change,
             "total_trades": self.stats.total_trades,
             "successful_trades": self.stats.successful_trades,
-            "failed_trades": self.stats.failed_trades,
+            "fAlgoled_trades": self.stats.fAlgoled_trades,
             "win_rate": self.stats.win_rate,
             "total_profit": self.stats.total_profit,
             "total_spent": self.stats.total_spent,
@@ -572,7 +572,7 @@ class HighFrequencyTrader:
         return {
             "total_trades": self.stats.total_trades,
             "successful_trades": self.stats.successful_trades,
-            "failed_trades": self.stats.failed_trades,
+            "fAlgoled_trades": self.stats.fAlgoled_trades,
             "win_rate": self.stats.win_rate,
             "total_profit": self.stats.total_profit,
             "total_spent": self.stats.total_spent,

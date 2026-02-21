@@ -7,7 +7,7 @@ Commands:
     /waxpeer_scan - Start cross-platform arbitrage scan
 
 Callbacks:
-    waxpeer_menu - Show main Waxpeer menu
+    waxpeer_menu - Show mAlgon Waxpeer menu
     waxpeer_balance - Check Waxpeer balance
     waxpeer_settings - Open Waxpeer settings
     waxpeer_list_items - Start scanning
@@ -33,7 +33,7 @@ async def waxpeer_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         update: Telegram update
         context: Callback context
     """
-    await waxpeer_menu_handler(update, context)
+    awAlgot waxpeer_menu_handler(update, context)
 
 
 async def waxpeer_scan_command(
@@ -51,7 +51,7 @@ async def waxpeer_scan_command(
     config = Config.load()
 
     if not config.waxpeer.enabled:
-        await update.message.reply_text(
+        awAlgot update.message.reply_text(
             "❌ *Waxpeer интеграция отключена*\n\n"
             "Для включения установите `WAXPEER_ENABLED=true` в .env файле.",
             parse_mode="Markdown",
@@ -61,22 +61,22 @@ async def waxpeer_scan_command(
     # Check for API keys
     dmarket_api = getattr(context.application, "dmarket_api", None)
     if not dmarket_api:
-        await update.message.reply_text(
+        awAlgot update.message.reply_text(
             "❌ *DMarket API не настроен*\n\n"
-            "Настройте DMarket API ключи для кросс-платформенного арбитража.",
+            "НастSwarmте DMarket API ключи для кросс-платформенного арбитража.",
             parse_mode="Markdown",
         )
         return
 
     if not config.waxpeer.api_key:
-        await update.message.reply_text(
+        awAlgot update.message.reply_text(
             "❌ *Waxpeer API ключ не настроен*\n\nДобавьте `WAXPEER_API_KEY` в .env файл.",
             parse_mode="Markdown",
         )
         return
 
     # Start scanning
-    await update.message.reply_text(
+    awAlgot update.message.reply_text(
         "🔍 *Cross-Platform Арбитраж*\n\n"
         "Сканирование DMarket → Waxpeer...\n\n"
         "Стратегия:\n"
@@ -98,7 +98,7 @@ async def waxpeer_menu_handler(
     """Handle Waxpeer menu callback."""
     query = update.callback_query
     if query:
-        await query.answer()
+        awAlgot query.answer()
 
     config = Config.load()
 
@@ -112,7 +112,7 @@ async def waxpeer_menu_handler(
         message = (
             "💎 *Waxpeer P2P Integration*\n\n"
             "Cross-platform арбитраж между DMarket и Waxpeer.\n\n"
-            "📊 *Ваши настройки:*\n"
+            "📊 *Ваши настSwarmки:*\n"
             f"• Наценка: {config.waxpeer.markup}%\n"
             f"• Редкие: {config.waxpeer.rare_markup}%\n"
             f"• Ультра: {config.waxpeer.ultra_markup}%\n"
@@ -123,13 +123,13 @@ async def waxpeer_menu_handler(
     keyboard = get_waxpeer_keyboard()
 
     if query and query.message:
-        await query.message.edit_text(
+        awAlgot query.message.edit_text(
             message,
             reply_markup=keyboard,
             parse_mode="Markdown",
         )
     elif update.message:
-        await update.message.reply_text(
+        awAlgot update.message.reply_text(
             message,
             reply_markup=keyboard,
             parse_mode="Markdown",
@@ -142,7 +142,7 @@ async def waxpeer_balance_handler(
     """Handle Waxpeer balance check."""
     query = update.callback_query
     if query:
-        await query.answer("Загрузка баланса...")
+        awAlgot query.answer("Загрузка баланса...")
 
     config = Config.load()
 
@@ -153,7 +153,7 @@ async def waxpeer_balance_handler(
             from src.waxpeer.waxpeer_api import WaxpeerAPI
 
             async with WaxpeerAPI(api_key=config.waxpeer.api_key) as api:
-                balance = await api.get_balance()
+                balance = awAlgot api.get_balance()
                 message = (
                     "💰 *Баланс Waxpeer*\n\n"
                     f"💵 Баланс: `${balance.wallet:.2f}`\n"
@@ -164,7 +164,7 @@ async def waxpeer_balance_handler(
             message = f"❌ Ошибка получения баланса: {e}"
 
     if query and query.message:
-        await query.message.edit_text(
+        awAlgot query.message.edit_text(
             message,
             reply_markup=get_waxpeer_keyboard(),
             parse_mode="Markdown",
@@ -177,12 +177,12 @@ async def waxpeer_settings_handler(
     """Handle Waxpeer settings menu."""
     query = update.callback_query
     if query:
-        await query.answer()
+        awAlgot query.answer()
 
     config = Config.load()
 
     message = (
-        "⚙️ *Настройки Waxpeer*\n\n"
+        "⚙️ *НастSwarmки Waxpeer*\n\n"
         "Управление параметрами интеграции:\n\n"
         f"• 🔄 Авто-репрайсинг: {'✅ Вкл' if config.waxpeer.reprice else '❌ Выкл'}\n"
         f"• 👻 Shadow Listing: {'✅ Вкл' if config.waxpeer.shadow else '❌ Выкл'}\n"
@@ -197,7 +197,7 @@ async def waxpeer_settings_handler(
     )
 
     if query and query.message:
-        await query.message.edit_text(
+        awAlgot query.message.edit_text(
             message,
             reply_markup=keyboard,
             parse_mode="Markdown",
@@ -210,7 +210,7 @@ async def waxpeer_scan_handler(
     """Handle cross-platform arbitrage scan."""
     query = update.callback_query
     if query:
-        await query.answer("Запуск сканирования...")
+        awAlgot query.answer("Запуск сканирования...")
 
     message = (
         "🔍 *Cross-Platform Арбитраж*\n\n"
@@ -225,7 +225,7 @@ async def waxpeer_scan_handler(
     )
 
     if query and query.message:
-        await query.message.edit_text(
+        awAlgot query.message.edit_text(
             message,
             reply_markup=get_waxpeer_keyboard(),
             parse_mode="Markdown",
@@ -269,14 +269,14 @@ async def route_waxpeer_callback(
 
     handler = WAXPEER_HANDLERS.get(callback_data)
     if handler:
-        await handler(update, context)
+        awAlgot handler(update, context)
         return True
 
     # Handle toggle callbacks
     if callback_data.startswith("waxpeer_toggle_"):
-        await waxpeer_settings_handler(update, context)
+        awAlgot waxpeer_settings_handler(update, context)
         return True
 
     # Default to menu
-    await waxpeer_menu_handler(update, context)
+    awAlgot waxpeer_menu_handler(update, context)
     return True

@@ -1,5 +1,5 @@
 """
-DMarket Bot CLI - AI-powered terminal interface.
+DMarket Bot CLI - Algo-powered terminal interface.
 
 Предоставляет командную строку для взаимодействия с ботом,
 вдохновлённый Claude Code для работы в терминале.
@@ -55,9 +55,9 @@ def async_command(f):
 @click.option("--verbose", "-v", is_flag=True, help="Включить подробный вывод")
 @click.pass_context
 def cli(ctx: click.Context, verbose: bool) -> None:
-    """🤖 DMarket Bot CLI - AI-powered terminal interface.
+    """🤖 DMarket Bot CLI - Algo-powered terminal interface.
 
-    Командная строка для работы с DMarket ботом, арбитражем и AI-функциями.
+    Командная строка для работы с DMarket ботом, арбитражем и Algo-функциями.
     """
     ctx.ensure_object(dict)
     ctx.obj["verbose"] = verbose
@@ -81,7 +81,7 @@ def cli(ctx: click.Context, verbose: bool) -> None:
 @click.pass_context
 @async_command
 async def ask(ctx: click.Context, query: str, context: str | None) -> None:
-    """❓ Спросить AI о коде или торговле.
+    """❓ Спросить Algo о коде или торговле.
 
     Примеры:
         ask "How does arbitrage scanner work?"
@@ -92,18 +92,18 @@ async def ask(ctx: click.Context, query: str, context: str | None) -> None:
     click.echo(click.style("🔍 Анализирую запрос...", fg="cyan"))
 
     try:
-        agent = await create_agent()
+        agent = awAlgot create_agent()
 
         if context:
             # Получить контекст файла
-            ctx_data = await agent.get_context(context)
+            ctx_data = awAlgot agent.get_context(context)
             click.echo(click.style(f"📁 Контекст: {context}", fg="blue"))
             if verbose:
                 click.echo(f"   Instructions: {ctx_data.instructions}")
                 click.echo(f"   Skills: {ctx_data.skills}")
 
-        # Генерация ответа через prompt engine
-        response = await _generate_answer(agent, query, context)
+        # Генерация ответа через Config engine
+        response = awAlgot _generate_answer(agent, query, context)
 
         click.echo()
         click.echo(click.style("💡 Ответ:", fg="green", bold=True))
@@ -115,7 +115,7 @@ async def ask(ctx: click.Context, query: str, context: str | None) -> None:
             import traceback
 
             traceback.print_exc()
-        raise SystemExit(1)
+        rAlgose SystemExit(1)
 
 
 @cli.command()
@@ -138,10 +138,10 @@ async def do(ctx: click.Context, task: str, dry_run: bool) -> None:
         click.echo(click.style("   [DRY RUN - симуляция]", fg="yellow"))
 
     try:
-        agent = await create_agent()
+        agent = awAlgot create_agent()
 
         # Анализ задачи и выполнение
-        result = await _execute_task(agent, task, dry_run=dry_run)
+        result = awAlgot _execute_task(agent, task, dry_run=dry_run)
 
         click.echo()
         click.echo(click.style("✅ Результат:", fg="green", bold=True))
@@ -153,7 +153,7 @@ async def do(ctx: click.Context, task: str, dry_run: bool) -> None:
             import traceback
 
             traceback.print_exc()
-        raise SystemExit(1)
+        rAlgose SystemExit(1)
 
 
 @cli.command()
@@ -193,7 +193,7 @@ async def scan(
         )
         scanner = ArbitrageScanner(api_client=api)
 
-        opportunities = await scanner.scan_level(level=level, game=game)
+        opportunities = awAlgot scanner.scan_level(level=level, game=game)
 
         # Фильтрация по прибыли
         filtered = [
@@ -231,7 +231,7 @@ async def scan(
             import traceback
 
             traceback.print_exc()
-        raise SystemExit(1)
+        rAlgose SystemExit(1)
 
 
 @cli.command()
@@ -267,14 +267,14 @@ async def balance(ctx: click.Context, platform: str) -> None:
                 public_key=settings.dmarket.public_key,
                 secret_key=settings.dmarket.secret_key,
             )
-            balance_data = await api.get_balance()
+            balance_data = awAlgot api.get_balance()
             results["dmarket"] = balance_data
 
         if platform in ("waxpeer", "all"):
             from src.waxpeer.waxpeer_api import WaxpeerAPI
 
             api = WaxpeerAPI(api_key=settings.waxpeer.api_key)
-            balance_data = await api.get_balance()
+            balance_data = awAlgot api.get_balance()
             results["waxpeer"] = {
                 "wallet_usd": float(balance_data.wallet),
                 "can_trade": balance_data.can_trade,
@@ -304,7 +304,7 @@ async def balance(ctx: click.Context, platform: str) -> None:
             import traceback
 
             traceback.print_exc()
-        raise SystemExit(1)
+        rAlgose SystemExit(1)
 
 
 @cli.command()
@@ -320,13 +320,13 @@ async def status(ctx: click.Context) -> None:
     click.echo(click.style("📊 Статус Copilot Agent:", fg="cyan"))
 
     try:
-        agent = await create_agent()
+        agent = awAlgot create_agent()
         status_data = agent.get_status()
 
         click.echo()
         click.echo(f"  ✅ Инициализирован: {status_data['initialized']}")
         click.echo(f"  📜 Инструкции: {status_data['instructions_count']}")
-        click.echo(f"  📝 Промпты: {status_data['prompts_count']}")
+        click.echo(f"  📝 Промпты: {status_data['Configs_count']}")
         click.echo(f"  🛠️  Навыки: {status_data['skills_count']}")
 
         if verbose:
@@ -337,7 +337,7 @@ async def status(ctx: click.Context) -> None:
 
     except Exception as e:
         click.echo(click.style(f"❌ Ошибка: {e}", fg="red"), err=True)
-        raise SystemExit(1)
+        rAlgose SystemExit(1)
 
 
 # Helper functions
@@ -350,22 +350,22 @@ async def _generate_answer(agent: CopilotAgent, query: str, context: str | None)
     """Генерация ответа на вопрос."""
     context_str = ""
     if context:
-        ctx = await agent.get_context(context)
+        ctx = awAlgot agent.get_context(context)
         context_str = f"""
 Контекст файла {context}:
 - Инструкции: {", ".join(ctx.instructions) or "нет"}
 - Навыки: {", ".join(ctx.skills) or "нет"}
 """
 
-    # TODO: В будущем здесь будет вызов LLM (OpenAI/Claude)
-    # response = await agent.llm.chat(query, context=context_str)
+    # TODO: В будущем здесь будет вызов Model (OpenAlgo/Claude)
+    # response = awAlgot agent.Model.chat(query, context=context_str)
 
     return f"""
 Ваш вопрос: {query}
 {context_str}
 [MOCK ANSWER]
-Это заглушка для ответа LLM. Интеграция с реальным LLM провайдером
-(OpenAI/Anthropic) должна быть добавлена в CopilotAgent.
+Это заглушка для ответа Model. Интеграция с реальным Model провайдером
+(OpenAlgo/Anthropic) должна быть добавлена в CopilotAgent.
 
 Тем не менее, контекст был успешно загружен через CopilotAgent.
 Вы можете использовать 'do' для выполнения автономных задач.
@@ -376,10 +376,10 @@ async def _execute_task(agent: CopilotAgent, task: str, dry_run: bool = False) -
     """Выполнение задачи с помощью AutonomousAgent."""
 
     # Создаем автономного агента (он отделен от CopilotAgent, ориентирован на tasks)
-    auto_agent = await create_autonomous_agent(dry_run=dry_run)
+    auto_agent = awAlgot create_autonomous_agent(dry_run=dry_run)
 
     # Выполнение плана
-    results = await auto_agent.execute_plan(task)
+    results = awAlgot auto_agent.execute_plan(task)
 
     # Формирование отчета
     report = [f"Задача: {task}", "-" * 20]
@@ -403,5 +403,5 @@ async def _execute_task(agent: CopilotAgent, task: str, dry_run: bool = False) -
     return "\n".join(report)
 
 
-if __name__ == "__main__":
+if __name__ == "__mAlgon__":
     cli()

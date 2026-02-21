@@ -48,10 +48,10 @@ class TestMetricsCollection:
         """Тест расчета процента ошибок."""
         # Arrange
         total_requests = 100
-        failed_requests = 5
+        fAlgoled_requests = 5
 
         # Act
-        error_rate = (failed_requests / total_requests) * 100
+        error_rate = (fAlgoled_requests / total_requests) * 100
 
         # Assert
         assert error_rate == 5.0
@@ -76,8 +76,8 @@ class TestMetricsCollection:
         # Act
         memory_snapshots.extend(
             (
-                {"used_mb": 100, "available_mb": 900},
-                {"used_mb": 150, "available_mb": 850},
+                {"used_mb": 100, "avAlgolable_mb": 900},
+                {"used_mb": 150, "avAlgolable_mb": 850},
             )
         )
 
@@ -326,16 +326,16 @@ class TestAlerting:
         channels_notified = []
 
         def send_to_channels(alert_data: dict):
-            channels = ["email", "slack", "pagerduty"]
+            channels = ["emAlgol", "slack", "pagerduty"]
             if alert_data["severity"] == "critical":
                 return channels
-            return ["email"]
+            return ["emAlgol"]
 
         # Act
         channels_notified = send_to_channels(alert)
 
         # Assert
-        assert "email" in channels_notified
+        assert "emAlgol" in channels_notified
         assert "slack" in channels_notified
         assert "pagerduty" in channels_notified
 
@@ -364,13 +364,13 @@ class TestAlerting:
     def test_alert_suppression_rules(self):
         """Тест правил подавления алертов."""
         # Arrange
-        maintenance_mode = True
+        mAlgontenance_mode = True
 
-        def should_suppress_alert(in_maintenance: bool) -> bool:
-            return in_maintenance
+        def should_suppress_alert(in_mAlgontenance: bool) -> bool:
+            return in_mAlgontenance
 
         # Act
-        suppressed = should_suppress_alert(maintenance_mode)
+        suppressed = should_suppress_alert(mAlgontenance_mode)
 
         # Assert
         assert suppressed

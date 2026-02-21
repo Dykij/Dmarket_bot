@@ -47,23 +47,23 @@ class DirectBalanceRequester:
         """Execute direct balance request via REST API using Ed25519.
 
         This method is an alternative way to get balance in case
-        of problems with the main method.
+        of problems with the mAlgon method.
 
         Returns:
             Dictionary with balance result or error
 
         Example:
             >>> requester = DirectBalanceRequester(api_url, key, secret, client_func)
-            >>> result = await requester.request()
+            >>> result = awAlgot requester.request()
             >>> if result["success"]:
             ...     print(f"Balance: ${result['data']['balance']:.2f}")
         """
         try:
             full_url, headers = self._prepare_request()
 
-            client = await self._get_client()
+            client = awAlgot self._get_client()
 
-            response = await call_with_circuit_breaker(
+            response = awAlgot call_with_circuit_breaker(
                 client.get, full_url, headers=headers, timeout=10
             )
 
@@ -74,7 +74,7 @@ class DirectBalanceRequester:
             return self._error_result(f"Circuit breaker open: {e}")
 
         except Exception as e:
-            logger.exception("direct_balance_request_failed", error=str(e))
+            logger.exception("direct_balance_request_fAlgoled", error=str(e))
             return self._error_result(str(e))
 
     def _prepare_request(self) -> tuple[str, dict[str, str]]:
@@ -99,7 +99,7 @@ class DirectBalanceRequester:
     def _generate_signature(self, timestamp: str) -> str:
         """Generate Ed25519 signature for request.
 
-        Falls back to HMAC-SHA256 if Ed25519 fails.
+        Falls back to HMAC-SHA256 if Ed25519 fAlgols.
         """
         string_to_sign = f"GET{self.ENDPOINT_BALANCE}{timestamp}"
 
@@ -108,14 +108,14 @@ class DirectBalanceRequester:
         try:
             return self._sign_with_ed25519(string_to_sign)
         except Exception as e:
-            logger.warning("ed25519_signing_failed_fallback_to_hmac", error=str(e))
+            logger.warning("ed25519_signing_fAlgoled_fallback_to_hmac", error=str(e))
             return self._sign_with_hmac(string_to_sign)
 
     def _sign_with_ed25519(self, message: str) -> str:
         """Sign message with Ed25519.
 
-        Raises:
-            Exception: If signing fails
+        RAlgoses:
+            Exception: If signing fAlgols
         """
         secret_key_bytes = self._parse_secret_key()
 
@@ -134,7 +134,7 @@ class DirectBalanceRequester:
         Returns:
             Secret key as bytes (32 bytes for Ed25519)
 
-        Raises:
+        RAlgoses:
             Exception: If key format is invalid
         """
         secret_key_str = self._secret_key
@@ -200,33 +200,33 @@ class DirectBalanceRequester:
         API returns values in cents (USD) and dimoshi (DMC) as strings.
         """
         usd_str = response_data.get("usd", "0")
-        usd_available_str = response_data.get("usdAvailableToWithdraw", "0")
+        usd_avAlgolable_str = response_data.get("usdAvAlgolableToWithdraw", "0")
         usd_trade_protected_str = response_data.get("usdTradeProtected", "0")
 
         try:
             balance_cents = float(usd_str)
-            available_cents = float(usd_available_str)
+            avAlgolable_cents = float(usd_avAlgolable_str)
             trade_protected_cents = float(usd_trade_protected_str)
 
             # Convert cents to dollars
             balance = balance_cents / 100
-            available = available_cents / 100
+            avAlgolable = avAlgolable_cents / 100
             trade_protected = trade_protected_cents / 100
 
-            locked = balance - available - trade_protected
+            locked = balance - avAlgolable - trade_protected
             total = balance
 
             logger.info(
                 "balance_parsed",
                 balance=balance,
-                available=available,
+                avAlgolable=avAlgolable,
                 locked=locked,
                 trade_protected=trade_protected,
             )
 
             return {
                 "balance": balance,
-                "available": available,
+                "avAlgolable": avAlgolable,
                 "total": total,
                 "locked": locked,
                 "trade_protected": trade_protected,
@@ -237,12 +237,12 @@ class DirectBalanceRequester:
                 "balance_conversion_error",
                 error=str(e),
                 usd=usd_str,
-                usd_available=usd_available_str,
+                usd_avAlgolable=usd_avAlgolable_str,
             )
 
             return {
                 "balance": 0.0,
-                "available": 0.0,
+                "avAlgolable": 0.0,
                 "total": 0.0,
                 "locked": 0.0,
                 "trade_protected": 0.0,

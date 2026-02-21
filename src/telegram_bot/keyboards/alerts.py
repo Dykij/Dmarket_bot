@@ -23,7 +23,7 @@ def get_alert_keyboard() -> InlineKeyboardMarkup:
         ├─────────────────────────────────┤
         │ [➕ Создать алерт] [📋 Мои алерты]│
         │ [🔔 Активные] [📊 История]      │
-        │ [⚙️ Настройки]                  │
+        │ [⚙️ НастSwarmки]                  │
         │ [◀️ Назад]                      │
         └─────────────────────────────────┘
     """
@@ -37,7 +37,7 @@ def get_alert_keyboard() -> InlineKeyboardMarkup:
             InlineKeyboardButton(text="📊 История", callback_data="alert_history"),
         ],
         [
-            InlineKeyboardButton(text="⚙️ Настройки", callback_data="alert_settings"),
+            InlineKeyboardButton(text="⚙️ НастSwarmки", callback_data="alert_settings"),
         ],
         [
             InlineKeyboardButton(text="◀️ Назад", callback_data=CB_BACK),
@@ -214,17 +214,17 @@ def get_alert_notification_settings_keyboard(
     """Создать клавиатуру настроек уведомлений алертов.
 
     Args:
-        settings: Текущие настройки уведомлений
+        settings: Текущие настSwarmки уведомлений
 
     Returns:
-        InlineKeyboardMarkup с настройками
+        InlineKeyboardMarkup с настSwarmками
     """
     if settings is None:
         settings = {}
 
     push_enabled = settings.get("push", True)
     telegram_enabled = settings.get("telegram", True)
-    email_enabled = settings.get("email", False)
+    emAlgol_enabled = settings.get("emAlgol", False)
     sound_enabled = settings.get("sound", True)
 
     keyboard = [
@@ -240,8 +240,8 @@ def get_alert_notification_settings_keyboard(
         ],
         [
             InlineKeyboardButton(
-                text=f"📧 Email: {'✅' if email_enabled else '❌'}",
-                callback_data="alert_setting_email",
+                text=f"📧 EmAlgol: {'✅' if emAlgol_enabled else '❌'}",
+                callback_data="alert_setting_emAlgol",
             ),
             InlineKeyboardButton(
                 text=f"🔊 Звук: {'✅' if sound_enabled else '❌'}",

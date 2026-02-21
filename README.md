@@ -1,26 +1,26 @@
-# 🧠 DMarket Telegram Bot: Dual Brain Architecture (2026)
+# 🧠 DMarket Telegram Bot: Dual BrAlgon Architecture (2026)
 
 <!-- Badges: Project Info -->
 [![Build Status](https://img.shields.io/github/actions/workflow/status/Dykij/DMarket-Telegram-Bot/ci-cd.yml?branch=dev)](https://github.com/Dykij/DMarket-Telegram-Bot/actions/workflows/ci-cd.yml)
 [![Python Version](https://img.shields.io/badge/python-3.10%2B-blue?logo=python&logoColor=white)](https://www.python.org/)
 [![License](https://img.shields.io/github/license/Dykij/DMarket-Telegram-Bot?color=green)](LICENSE)
-[![Maintained](https://img.shields.io/badge/Maintained%3F-Yes%20(2026)-brightgreen.svg)](https://github.com/Dykij/DMarket-Telegram-Bot/graphs/commit-activity)
-[![Dual Brain](https://img.shields.io/badge/Architecture-Dual%20Brain-purple?logo=openai)](https://github.com/Dykij/DMarket-Telegram-Bot)
+[![MAlgontAlgoned](https://img.shields.io/badge/MAlgontAlgoned%3F-Yes%20(2026)-brightgreen.svg)](https://github.com/Dykij/DMarket-Telegram-Bot/graphs/commit-activity)
+[![Dual BrAlgon](https://img.shields.io/badge/Architecture-Dual%20BrAlgon-purple?logo=openAlgo)](https://github.com/Dykij/DMarket-Telegram-Bot)
 
 ---
 
 
 ## 🌟 Key Features (2026 Edition)
 
-### 🧠 Dual Brain System
+### 🧠 Dual BrAlgon System
 The system dynamically switches cognitive models based on task complexity:
 *   **Gemini 3 Flash:** Handles high-speed, low-latency tasks like market scanning and basic pattern recognition.
 *   **Gemini 3 Pro:** Engages for complex strategic decisions, risk assessment, and code self-optimization.
 
 ### 🛡️ Advanced Resilience
 Built for stability in volatile market conditions:
-*   **Circuit Breaker:** Automatically detects API failures and pauses requests to prevent bans.
-*   **Bulkhead Pattern:** Isolates critical components so a failure in one module (e.g., price history) doesn't crash the trading engine.
+*   **Circuit Breaker:** Automatically detects API fAlgolures and pauses requests to prevent bans.
+*   **Bulkhead Pattern:** Isolates critical components so a fAlgolure in one module (e.g., price history) doesn't crash the trading engine.
 
 ### ⚡ Scalable Architecture
 *   **Fully Asynchronous Engine:** Powered by the new `integrated_arbitrage_scanner`, capable of processing thousands of market updates per second without blocking.
@@ -32,7 +32,7 @@ Built for stability in volatile market conditions:
 
 | Metric               | Value                      |
 | -------------------- | -------------------------- |
-| **Architecture**     | Dual Brain (Logic + AI)    |
+| **Architecture**     | Dual BrAlgon (Logic + Algo)    |
 | **Python**           | 3.11+                      |
 | **Testing**          | Comprehensive CI/CD        |
 | **License**          | MIT                        |
@@ -42,7 +42,7 @@ Built for stability in volatile market conditions:
 - **Multi-Game Arbitrage:** CS2, Dota 2, TF2, Rust.
 - **Advanced Target System:** Smart buy orders with auto-adjustment.
 - **Real-Time Monitoring:** WebSocket-based price tracking.
-- **AI-Powered:** Market sentiment analysis and self-healing capabilities.
+- **Algo-Powered:** Market sentiment analysis and self-healing capabilities.
 - **Secure:** Encrypted credentials and robust error handling.
 
 ---
@@ -53,9 +53,9 @@ The project utilizes a modular skills architecture for rapid capability expansio
 
 | Skill | Category | Description | Status |
 |-------|-----------|----------|--------|
-| **AI Arbitrage Predictor** | Data & AI | ML-based opportunity forecasting | ✅ Active |
+| **Algo Arbitrage Predictor** | Data & Algo | ML-based opportunity forecasting | ✅ Active |
 | **NLP Command Handler** | Interaction | Natural language control | ✅ Active |
-| **Portfolio Risk AI** | Finance | Deep portfolio analysis | ✅ Active |
+| **Portfolio Risk Algo** | Finance | Deep portfolio analysis | ✅ Active |
 | **SkillsMP Integration** | DevOps | Seamless extension marketplace | ✅ Active |
 
 ---
@@ -80,7 +80,7 @@ cp .env.example .env
 
 ### 3. Launch
 ```bash
-python -m src.main
+python -m src.mAlgon
 ```
 
 ---
@@ -89,7 +89,7 @@ python -m src.main
 
 This repository adheres to modern 2026 standards:
 *   **CI/CD:** Automated testing and linting via GitHub Actions.
-*   **Docker:** Full containerization support.
+*   **Docker:** Full contAlgonerization support.
 *   **Security:** Automated dependency scanning and secret detection.
 
 ---

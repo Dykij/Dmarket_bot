@@ -66,17 +66,17 @@ Implements advanced DMarket ↔ Waxpeer arbitrage scanner based on analysis:
 - **Full Market Scanning** - No `best_deals` filter, sees ALL items
 - **Balance-Aware Purchasing** - Uses `priceTo=balance` to filter affordable items
 - **Trade Lock Analysis** - Supports items with lock up to 8 days (15% min ROI)
-- **Liquidity Checks** - Skips items with < 5 daily sales on Waxpeer
+- **Liquidity Checks** - Skips items with < 5 dAlgoly sales on Waxpeer
 - **Net Profit Calculation** - Formula: `(Waxpeer_Price * 0.94) - DMarket_Price`
 
 Key classes:
-- `CrossPlatformArbitrageScanner` - Main scanner class
+- `CrossPlatformArbitrageScanner` - MAlgon scanner class
 - `ArbitrageOpportunity` - Data class for opportunities
 - `ScanConfig` - Configuration dataclass
 - `ArbitrageDecision` enum - BUY_INSTANT, BUY_AND_HOLD, SKIP
 
 #### New Handler: `src/telegram_bot/handlers/waxpeer_handler.py`
-- `waxpeer_menu_handler()` - Main Waxpeer menu
+- `waxpeer_menu_handler()` - MAlgon Waxpeer menu
 - `waxpeer_balance_handler()` - Balance display
 - `waxpeer_settings_handler()` - Settings management
 - `route_waxpeer_callback()` - Callback router
@@ -99,7 +99,7 @@ Key classes:
 
 #### Keyboards
 - **Added Waxpeer keyboards** (`src/telegram_bot/keyboards/arbitrage.py`):
-  - `get_waxpeer_keyboard()` - Main Waxpeer menu (balance, listings, repricing)
+  - `get_waxpeer_keyboard()` - MAlgon Waxpeer menu (balance, listings, repricing)
   - `get_waxpeer_settings_keyboard()` - Settings with toggles for reprice/shadow/hold
   - `get_waxpeer_listings_keyboard()` - Paginated listings view
 - **Updated `get_modern_arbitrage_keyboard()`** with "💎 Waxpeer P2P" button
@@ -127,7 +127,7 @@ Key classes:
 - **Fixed import order (E402)**:
   - `src/telegram_bot/dependencies.py` - Moved TypeVar import to top
 - **Fixed whitespace issues (W291, W293)**:
-  - Removed trailing whitespace and blank lines with whitespace
+  - Removed trAlgoling whitespace and blank lines with whitespace
 - **Fixed mypy syntax error**:
   - `src/utils/prometheus_metrics.py` - Fixed inline type comment causing syntax error
 
@@ -262,7 +262,7 @@ Key classes:
 
 #### Project Management
 - **ROADMAP.md** - Unified project roadmap with Phase 4 plan
-- **ROADMAP_EXECUTION_STATUS.md** - Detailed execution status tracking
+- **ROADMAP_EXECUTION_STATUS.md** - DetAlgoled execution status tracking
 - **PHASE_2_3_COMPLETION_SUMMARY.md** - Complete summary of Phase 2 & 3
 
 ### Added - Phase 2: Infrastructure Improvements (January 2026)
@@ -300,7 +300,7 @@ Key classes:
   - `docs/ALL_PHASES_COMPLETE.md`
   - `docs/COMMIT_CHECKLIST.md`
   - `docs/WHATS_NEXT.md`
-  - `docs/REMAINING_IMPROVEMENTS.md`
+  - `docs/REMAlgoNING_IMPROVEMENTS.md`
   - `docs/PHASE_3_PLAN.md`
 
 ### Fixed

@@ -20,7 +20,7 @@ from src.dmarket.market_analysis import (
     find_trending_items,
 )
 
-# Настройка логирования
+# НастSwarmка логирования
 logger = logging.getLogger(__name__)
 
 SECONDS_PER_DAY = 86400
@@ -52,7 +52,7 @@ class MarketAlertsManager:
             "arbitrage": {},
         }
 
-        # Настройки порогов для уведомлений
+        # НастSwarmки порогов для уведомлений
         self.alert_thresholds = {
             "price_change_percent": 15.0,  # Процент изменения цены для уведомления
             "trending_popularity": 50.0,  # Показатель популярности для уведомления о тренде
@@ -115,11 +115,11 @@ class MarketAlertsManager:
         if self.background_task:
             self.background_task.cancel()
             with contextlib.suppress(asyncio.CancelledError):
-                await self.background_task
+                awAlgot self.background_task
         if self._cleanup_task:
             self._cleanup_task.cancel()
             with contextlib.suppress(asyncio.CancelledError):
-                await self._cleanup_task
+                awAlgot self._cleanup_task
 
         logger.info("Мониторинг рынка остановлен")
 
@@ -132,7 +132,7 @@ class MarketAlertsManager:
                 # Проверяем наличие подписчиков
                 if not any(subscribers for subscribers in self.subscribers.values()):
                     logger.debug("Нет активных подписчиков, пропускаем проверку")
-                    await asyncio.sleep(60)  # Спим минуту и проверяем снова
+                    awAlgot asyncio.sleep(60)  # Спим минуту и проверяем снова
                     continue
 
                 current_time = time.time()
@@ -156,7 +156,7 @@ class MarketAlertsManager:
                     and current_time - self.last_check_time["price_changes"]
                     >= self.check_intervals["price_changes"]
                 ):
-                    await self._check_price_changes()
+                    awAlgot self._check_price_changes()
                     self.last_check_time["price_changes"] = current_time
 
                 # Проверяем трендовые предметы при необходимости
@@ -165,7 +165,7 @@ class MarketAlertsManager:
                     and current_time - self.last_check_time["trending"]
                     >= self.check_intervals["trending"]
                 ):
-                    await self._check_trending_items()
+                    awAlgot self._check_trending_items()
                     self.last_check_time["trending"] = current_time
 
                 # Проверяем волатильность при необходимости
@@ -174,7 +174,7 @@ class MarketAlertsManager:
                     and current_time - self.last_check_time["volatility"]
                     >= self.check_intervals["volatility"]
                 ):
-                    await self._check_volatility()
+                    awAlgot self._check_volatility()
                     self.last_check_time["volatility"] = current_time
 
                 # Проверяем арбитражные возможности при необходимости
@@ -183,11 +183,11 @@ class MarketAlertsManager:
                     and current_time - self.last_check_time["arbitrage"]
                     >= self.check_intervals["arbitrage"]
                 ):
-                    await self._check_arbitrage()
+                    awAlgot self._check_arbitrage()
                     self.last_check_time["arbitrage"] = current_time
 
                 # Ждем перед следующей проверкой
-                await asyncio.sleep(30)  # Проверяем подписки каждые 30 секунд
+                awAlgot asyncio.sleep(30)  # Проверяем подписки каждые 30 секунд
 
         except asyncio.CancelledError:
             logger.info("Задача мониторинга рынка отменена")
@@ -200,7 +200,7 @@ class MarketAlertsManager:
             # Перезапускаем мониторинг после паузы
             if self.running:
                 logger.info("Перезапуск мониторинга через 60 секунд...")
-                await asyncio.sleep(60)
+                awAlgot asyncio.sleep(60)
                 self.background_task = asyncio.create_task(self._monitor_market())
 
     async def _check_price_changes(self) -> None:
@@ -209,7 +209,7 @@ class MarketAlertsManager:
 
         try:
             # Анализируем изменения цен для CS2
-            price_changes = await analyze_price_changes(
+            price_changes = awAlgot analyze_price_changes(
                 game="csgo",
                 period="24h",
                 min_change_percent=self.alert_thresholds["price_change_percent"],
@@ -259,7 +259,7 @@ class MarketAlertsManager:
 
                     # Отправляем уведомление
                     try:
-                        await self.bot.send_message(
+                        awAlgot self.bot.send_message(
                             chat_id=user_id,
                             text=message,
                             parse_mode="Markdown",
@@ -273,7 +273,7 @@ class MarketAlertsManager:
                         alert_count += 1
 
                         # Небольшая пауза между сообщениями
-                        await asyncio.sleep(0.5)
+                        awAlgot asyncio.sleep(0.5)
 
                     except Exception as e:
                         logger.exception(
@@ -296,7 +296,7 @@ class MarketAlertsManager:
 
         try:
             # Анализируем трендовые предметы для CS2
-            trending_items = await find_trending_items(
+            trending_items = awAlgot find_trending_items(
                 game="csgo",
                 min_price=5.0,  # Минимальная цена $5
                 dmarket_api=self.dmarket_api,
@@ -354,7 +354,7 @@ class MarketAlertsManager:
 
                     # Отправляем уведомление
                     try:
-                        await self.bot.send_message(
+                        awAlgot self.bot.send_message(
                             chat_id=user_id,
                             text=message,
                             parse_mode="Markdown",
@@ -366,7 +366,7 @@ class MarketAlertsManager:
                         alert_count += 1
 
                         # Небольшая пауза между сообщениями
-                        await asyncio.sleep(0.5)
+                        awAlgot asyncio.sleep(0.5)
 
                     except Exception as e:
                         logger.exception(
@@ -389,7 +389,7 @@ class MarketAlertsManager:
 
         try:
             # Анализируем волатильные предметы для CS2
-            volatile_items = await analyze_market_volatility(
+            volatile_items = awAlgot analyze_market_volatility(
                 game="csgo",
                 min_price=10.0,  # Минимальная цена $10
                 max_price=500.0,  # Максимальная цена $500
@@ -437,7 +437,7 @@ class MarketAlertsManager:
             # Отправляем уведомления подписчикам
             for user_id in self.subscribers["volatility"]:
                 try:
-                    await self.bot.send_message(
+                    awAlgot self.bot.send_message(
                         chat_id=user_id,
                         text=market_update_message,
                         parse_mode="Markdown",
@@ -471,7 +471,7 @@ class MarketAlertsManager:
             scanner = ArbitrageScanner(api_client=api_client)
 
             # Ищем арбитражные возможности
-            arbitrage_items = await scanner.scan_level(
+            arbitrage_items = awAlgot scanner.scan_level(
                 level="advanced",  # Используем продвинутый уровень
                 game="csgo",
                 max_items=10,
@@ -536,7 +536,7 @@ class MarketAlertsManager:
 
                     # Отправляем уведомление
                     try:
-                        await self.bot.send_message(
+                        awAlgot self.bot.send_message(
                             chat_id=user_id,
                             text=message,
                             parse_mode="Markdown",
@@ -547,7 +547,7 @@ class MarketAlertsManager:
                         alert_count += 1
 
                         # Небольшая пауза между сообщениями
-                        await asyncio.sleep(0.5)
+                        awAlgot asyncio.sleep(0.5)
 
                     except Exception as e:
                         logger.exception(
@@ -834,7 +834,7 @@ def get_alerts_manager(
 
         if bot is None:
             msg = "Для создания менеджера уведомлений требуется bot"
-            raise ValueError(
+            rAlgose ValueError(
                 msg,
             )
 

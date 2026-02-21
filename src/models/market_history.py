@@ -1,7 +1,7 @@
 """
 Market History Models - Database models for historical market data.
 
-Stores snapshots of market data for ML training and backtesting.
+Stores snapshots of market data for ML trAlgoning and backtesting.
 """
 
 from datetime import datetime
@@ -52,7 +52,7 @@ class ItemPriceHistory(Base):
 
     in_market: Mapped[int] = mapped_column(
         Integer, nullable=False, default=0
-    )  # Items available
+    )  # Items avAlgolable
     timestamp: Mapped[datetime] = mapped_column(DateTime, nullable=False, index=True)
 
     created_at: Mapped[datetime] = mapped_column(
@@ -69,7 +69,7 @@ class ItemPriceHistory(Base):
 
 
 class ArbitrageTrade(Base):
-    """Historical record of arbitrage trades (for ML training)."""
+    """Historical record of arbitrage trades (for ML trAlgoning)."""
 
     __tablename__ = "arbitrage_trades"
 

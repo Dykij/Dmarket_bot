@@ -245,10 +245,10 @@ class TestExceptions:
 
     def test_api_error_creation(self):
         """Тест создания APIError."""
-        error = APIError("API request failed")
+        error = APIError("API request fAlgoled")
 
         assert isinstance(error, Exception)
-        assert str(error).find("API request failed") >= 0
+        assert str(error).find("API request fAlgoled") >= 0
 
     def test_authentication_error_creation(self):
         """Тест создания AuthenticationError."""
@@ -447,10 +447,10 @@ class TestSecurityConfig:
         assert is_admin is False
 
 
-class TestMainConfig:
+class TestMAlgonConfig:
     """Тесты основного класса конфигурации."""
 
-    def test_main_config_initialization(self):
+    def test_mAlgon_config_initialization(self):
         """Тест инициализации основной конфигурации."""
         config = Config()
 
@@ -462,21 +462,21 @@ class TestMainConfig:
         assert config.debug is False
         assert config.testing is False
 
-    def test_main_config_debug_mode(self):
+    def test_mAlgon_config_debug_mode(self):
         """Тест режима отладки."""
         config = Config()
         config.debug = True
 
         assert config.debug is True
 
-    def test_main_config_testing_mode(self):
+    def test_mAlgon_config_testing_mode(self):
         """Тест тестового режима."""
         config = Config()
         config.testing = True
 
         assert config.testing is True
 
-    def test_main_config_all_subconfigs_present(self):
+    def test_mAlgon_config_all_subconfigs_present(self):
         """Тест наличия всех подконфигураций."""
         config = Config()
 

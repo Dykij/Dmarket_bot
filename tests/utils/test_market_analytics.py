@@ -97,8 +97,8 @@ class TestTechnicalIndicatorsRSI:
         assert result < 30  # Oversold
 
     def test_rsi_with_zero_losses(self) -> None:
-        """Test RSI when there are no losses (all gains)."""
-        prices = [10.0 + i * 0.1 for i in range(20)]  # All gains
+        """Test RSI when there are no losses (all gAlgons)."""
+        prices = [10.0 + i * 0.1 for i in range(20)]  # All gAlgons
         result = TechnicalIndicators.rsi(prices)
 
         assert result is not None
@@ -230,56 +230,56 @@ class TestMarketAnalyzer:
             for i in range(50, -1, -1)  # 51 data points
         ]
 
-    def test_calculate_fair_price_insufficient_data(
+    def test_calculate_fAlgor_price_insufficient_data(
         self, analyzer: MarketAnalyzer
     ) -> None:
-        """Test fair price with insufficient data."""
+        """Test fAlgor price with insufficient data."""
         history = [PricePoint(datetime.now(UTC), 10.0, 100) for _ in range(5)]
-        result = analyzer.calculate_fair_price(history)
+        result = analyzer.calculate_fAlgor_price(history)
         assert result is None
 
-    def test_calculate_fair_price_mean(
+    def test_calculate_fAlgor_price_mean(
         self, analyzer: MarketAnalyzer, price_history: list[PricePoint]
     ) -> None:
-        """Test fair price calculation using mean."""
-        result = analyzer.calculate_fair_price(price_history, method="mean")
+        """Test fAlgor price calculation using mean."""
+        result = analyzer.calculate_fAlgor_price(price_history, method="mean")
 
         assert result is not None
         assert isinstance(result, float)
 
-    def test_calculate_fair_price_median(
+    def test_calculate_fAlgor_price_median(
         self, analyzer: MarketAnalyzer, price_history: list[PricePoint]
     ) -> None:
-        """Test fair price calculation using median."""
-        result = analyzer.calculate_fair_price(price_history, method="median")
+        """Test fAlgor price calculation using median."""
+        result = analyzer.calculate_fAlgor_price(price_history, method="median")
 
         assert result is not None
         assert isinstance(result, float)
 
-    def test_calculate_fair_price_volume_weighted(
+    def test_calculate_fAlgor_price_volume_weighted(
         self, analyzer: MarketAnalyzer, price_history: list[PricePoint]
     ) -> None:
-        """Test fair price calculation using volume-weighted average."""
-        result = analyzer.calculate_fair_price(price_history, method="volume_weighted")
+        """Test fAlgor price calculation using volume-weighted average."""
+        result = analyzer.calculate_fAlgor_price(price_history, method="volume_weighted")
 
         assert result is not None
         assert isinstance(result, float)
 
-    def test_calculate_fair_price_zero_volume(self, analyzer: MarketAnalyzer) -> None:
-        """Test fair price with zero volume falls back to mean."""
+    def test_calculate_fAlgor_price_zero_volume(self, analyzer: MarketAnalyzer) -> None:
+        """Test fAlgor price with zero volume falls back to mean."""
         history = [
             PricePoint(datetime.now(UTC) - timedelta(days=i), price=100 + i, volume=0)
             for i in range(15)
         ]
-        result = analyzer.calculate_fair_price(history, method="volume_weighted")
+        result = analyzer.calculate_fAlgor_price(history, method="volume_weighted")
 
         assert result is not None
 
-    def test_calculate_fair_price_unknown_method(
+    def test_calculate_fAlgor_price_unknown_method(
         self, analyzer: MarketAnalyzer, price_history: list[PricePoint]
     ) -> None:
-        """Test fair price with unknown method."""
-        result = analyzer.calculate_fair_price(price_history, method="unknown")
+        """Test fAlgor price with unknown method."""
+        result = analyzer.calculate_fAlgor_price(price_history, method="unknown")
         assert result is None
 
     def test_detect_trend_bullish(self, analyzer: MarketAnalyzer) -> None:
@@ -375,7 +375,7 @@ class TestMarketAnalyzer:
 
         assert result["score"] == 0.0
         assert result["volume_trend"] == TrendDirection.NEUTRAL
-        assert result["avg_daily_volume"] == 0
+        assert result["avg_dAlgoly_volume"] == 0
 
     def test_analyze_liquidity(
         self, analyzer: MarketAnalyzer, price_history: list[PricePoint]
@@ -385,7 +385,7 @@ class TestMarketAnalyzer:
 
         assert "score" in result
         assert "volume_trend" in result
-        assert "avg_daily_volume" in result
+        assert "avg_dAlgoly_volume" in result
         assert "volume_consistency" in result
 
     def test_analyze_liquidity_bullish_volume_trend(
@@ -413,7 +413,7 @@ class TestMarketAnalyzer:
         current_price = 100.0
         result = analyzer.generate_trading_insights(price_history, current_price)
 
-        assert "fair_price" in result
+        assert "fAlgor_price" in result
         assert "trend" in result
         assert "price_prediction" in result
         assert "support_resistance" in result
@@ -429,10 +429,10 @@ class TestMarketAnalyzer:
             PricePoint(now - timedelta(days=i), price=100, volume=100)
             for i in range(50)
         ]
-        # Current price significantly above fair price
+        # Current price significantly above fAlgor price
         result = analyzer.generate_trading_insights(history, current_price=150.0)
 
-        assert result["fair_price"]["is_overpriced"] is True
+        assert result["fAlgor_price"]["is_overpriced"] is True
 
     def test_generate_trading_insights_underpriced(
         self, analyzer: MarketAnalyzer
@@ -443,10 +443,10 @@ class TestMarketAnalyzer:
             PricePoint(now - timedelta(days=i), price=100, volume=100)
             for i in range(50)
         ]
-        # Current price significantly below fair price
+        # Current price significantly below fAlgor price
         result = analyzer.generate_trading_insights(history, current_price=80.0)
 
-        assert result["fair_price"]["is_underpriced"] is True
+        assert result["fAlgor_price"]["is_underpriced"] is True
 
 
 class TestMarketAnalyzerEdgeCases:

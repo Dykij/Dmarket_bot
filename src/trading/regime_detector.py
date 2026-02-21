@@ -87,14 +87,14 @@ REGIME_STRATEGIES: dict[MarketRegime, dict[str, Any]] = {
     MarketRegime.TRENDING_UP: {
         "strategy": "momentum_long",
         "description": "Follow the trend, buy dips, hold winners",
-        "actions": ["buy_breakouts", "trail_stops", "scale_in"],
+        "actions": ["buy_breakouts", "trAlgol_stops", "scale_in"],
         "risk_level": "medium",
         "hold_duration": "medium-long",
     },
     MarketRegime.TRENDING_DOWN: {
         "strategy": "defensive",
         "description": "Reduce exposure, sell rallies, preserve capital",
-        "actions": ["reduce_positions", "tight_stops", "wait_reversal"],
+        "actions": ["reduce_positions", "tight_stops", "wAlgot_reversal"],
         "risk_level": "low",
         "hold_duration": "short",
     },
@@ -114,7 +114,7 @@ REGIME_STRATEGIES: dict[MarketRegime, dict[str, Any]] = {
     },
     MarketRegime.UNKNOWN: {
         "strategy": "cautious",
-        "description": "Wait for clarity, paper trade, small positions",
+        "description": "WAlgot for clarity, paper trade, small positions",
         "actions": ["observe", "paper_trade", "small_test"],
         "risk_level": "low",
         "hold_duration": "none",
@@ -302,14 +302,14 @@ class RegimeDetector:
             data_points=data_points,
         )
 
-    def get_strategy_details(self, regime: MarketRegime) -> dict[str, Any]:
-        """Get detailed strategy for regime.
+    def get_strategy_detAlgols(self, regime: MarketRegime) -> dict[str, Any]:
+        """Get detAlgoled strategy for regime.
 
         Args:
             regime: Market regime
 
         Returns:
-            Strategy details
+            Strategy detAlgols
         """
         return REGIME_STRATEGIES.get(regime, REGIME_STRATEGIES[MarketRegime.UNKNOWN])
 
@@ -374,7 +374,7 @@ class RegimeDetector:
             else 0
         )
 
-        strategy = self.get_strategy_details(dominant_regime)
+        strategy = self.get_strategy_detAlgols(dominant_regime)
 
         return {
             "dominant_regime": dominant_regime,
@@ -471,7 +471,7 @@ class AdaptiveTrader:
         if balance:
             adapted_position = min(adapted_position, balance * 0.2)  # Max 20% per trade
 
-        strategy_info = self.detector.get_strategy_details(regime)
+        strategy_info = self.detector.get_strategy_detAlgols(regime)
 
         return {
             "regime": regime.value,
@@ -507,25 +507,25 @@ class AdaptiveTrader:
 
         # Don't trade unknown regimes
         if analysis.regime == MarketRegime.UNKNOWN:
-            return False, "Market regime unclear, waiting for clarity"
+            return False, "Market regime unclear, wAlgoting for clarity"
 
         # Don't trade low confidence
         if analysis.confidence < min_confidence:
             return (
                 False,
-                f"Low confidence ({analysis.confidence:.0%}), waiting for confirmation",
+                f"Low confidence ({analysis.confidence:.0%}), wAlgoting for confirmation",
             )
 
         # Caution in volatile markets
         if analysis.regime == MarketRegime.VOLATILE and analysis.volatility > 0.1:
-            return False, "Extreme volatility detected, waiting for stability"
+            return False, "Extreme volatility detected, wAlgoting for stability"
 
         # Caution in strong downtrends
         if (
             analysis.regime == MarketRegime.TRENDING_DOWN
             and analysis.trend_strength > 0.05
         ):
-            return False, "Strong downtrend detected, waiting for reversal"
+            return False, "Strong downtrend detected, wAlgoting for reversal"
 
         return True, f"Trading conditions favorable ({analysis.regime.value})"
 

@@ -121,7 +121,7 @@
       "item_id": "02768a29-f003-56fc-a449-80b65caf9e6e",
       "trade_lock_hours": 124.83638888888889,
       "category": "stattrak™",
-      "exterior": "not painted",
+      "exterior": "not pAlgonted",
       "float_value": 0.1400030553340912
     },
     {
@@ -167,7 +167,7 @@
       "float_value": 0.8095008134841919
     },
     {
-      "item_name": "MP9 | Food Chain (Field-Tested)",
+      "item_name": "MP9 | Food ChAlgon (Field-Tested)",
       "game": "csgo",
       "source": "dmarket",
       "price_usd": 100.0,
@@ -797,7 +797,7 @@
       "float_value": null
     },
     {
-      "item_name": "USP-S | The Traitor (Field-Tested)",
+      "item_name": "USP-S | The TrAlgotor (Field-Tested)",
       "game": "csgo",
       "source": "dmarket",
       "price_usd": 100.0,
@@ -979,7 +979,7 @@
       "float_value": 0.10997481644153595
     },
     {
-      "item_name": "StatTrak™ USP-S | Stainless (Minimal Wear)",
+      "item_name": "StatTrak™ USP-S | StAlgonless (Minimal Wear)",
       "game": "csgo",
       "source": "dmarket",
       "price_usd": 100.0,
@@ -1567,7 +1567,7 @@
       "float_value": null
     },
     {
-      "item_name": "Forest Raiders Roadsign Pants",
+      "item_name": "Forest RAlgoders Roadsign Pants",
       "game": "rust",
       "source": "dmarket",
       "price_usd": 96.0,
@@ -1581,7 +1581,7 @@
       "float_value": null
     },
     {
-      "item_name": "Forest Raiders Roadsign Pants",
+      "item_name": "Forest RAlgoders Roadsign Pants",
       "game": "rust",
       "source": "dmarket",
       "price_usd": 96.0,
@@ -1623,7 +1623,7 @@
       "float_value": null
     },
     {
-      "item_name": "Forest Raiders Roadsign Pants",
+      "item_name": "Forest RAlgoders Roadsign Pants",
       "game": "rust",
       "source": "dmarket",
       "price_usd": 95.0,
@@ -1637,7 +1637,7 @@
       "float_value": null
     },
     {
-      "item_name": "Forest Raiders Roadsign Pants",
+      "item_name": "Forest RAlgoders Roadsign Pants",
       "game": "rust",
       "source": "dmarket",
       "price_usd": 95.0,
@@ -1679,7 +1679,7 @@
       "float_value": null
     },
     {
-      "item_name": "Forest Raiders Roadsign Pants",
+      "item_name": "Forest RAlgoders Roadsign Pants",
       "game": "rust",
       "source": "dmarket",
       "price_usd": 94.0,
@@ -1819,7 +1819,7 @@
       "float_value": null
     },
     {
-      "item_name": "Forest Raiders Roadsign Pants",
+      "item_name": "Forest RAlgoders Roadsign Pants",
       "game": "rust",
       "source": "dmarket",
       "price_usd": 91.0,
@@ -1847,7 +1847,7 @@
       "float_value": null
     },
     {
-      "item_name": "Forest Raiders Roadsign Pants",
+      "item_name": "Forest RAlgoders Roadsign Pants",
       "game": "rust",
       "source": "dmarket",
       "price_usd": 89.78,
@@ -1861,7 +1861,7 @@
       "float_value": null
     },
     {
-      "item_name": "Forest Raiders Roadsign Pants",
+      "item_name": "Forest RAlgoders Roadsign Pants",
       "game": "rust",
       "source": "dmarket",
       "price_usd": 89.78,
@@ -1875,7 +1875,7 @@
       "float_value": null
     },
     {
-      "item_name": "Forest Raiders Roadsign Pants",
+      "item_name": "Forest RAlgoders Roadsign Pants",
       "game": "rust",
       "source": "dmarket",
       "price_usd": 89.76,
@@ -1889,7 +1889,7 @@
       "float_value": null
     },
     {
-      "item_name": "Forest Raiders Roadsign Pants",
+      "item_name": "Forest RAlgoders Roadsign Pants",
       "game": "rust",
       "source": "dmarket",
       "price_usd": 89.76,
@@ -1987,7 +1987,7 @@
       "float_value": null
     },
     {
-      "item_name": "Forest Raiders Roadsign Pants",
+      "item_name": "Forest RAlgoders Roadsign Pants",
       "game": "rust",
       "source": "dmarket",
       "price_usd": 86.37,
@@ -2099,7 +2099,7 @@
       "float_value": null
     },
     {
-      "item_name": "Forest Raiders Roadsign Pants",
+      "item_name": "Forest RAlgoders Roadsign Pants",
       "game": "rust",
       "source": "dmarket",
       "price_usd": 81.65,
@@ -2113,7 +2113,7 @@
       "float_value": null
     },
     {
-      "item_name": "Forest Raiders Roadsign Pants",
+      "item_name": "Forest RAlgoders Roadsign Pants",
       "game": "rust",
       "source": "dmarket",
       "price_usd": 80.9,
@@ -2127,7 +2127,7 @@
       "float_value": null
     },
     {
-      "item_name": "Forest Raiders Roadsign Vest",
+      "item_name": "Forest RAlgoders Roadsign Vest",
       "game": "rust",
       "source": "dmarket",
       "price_usd": 80.0,
@@ -2141,7 +2141,7 @@
       "float_value": null
     },
     {
-      "item_name": "Stainless Facemask",
+      "item_name": "StAlgonless Facemask",
       "game": "rust",
       "source": "dmarket",
       "price_usd": 79.95,
@@ -2155,7 +2155,7 @@
       "float_value": null
     },
     {
-      "item_name": "Forest Raiders Roadsign Pants",
+      "item_name": "Forest RAlgoders Roadsign Pants",
       "game": "rust",
       "source": "dmarket",
       "price_usd": 79.45,
@@ -2169,7 +2169,7 @@
       "float_value": null
     },
     {
-      "item_name": "Stainless Facemask",
+      "item_name": "StAlgonless Facemask",
       "game": "rust",
       "source": "dmarket",
       "price_usd": 79.0,
@@ -2183,7 +2183,7 @@
       "float_value": null
     },
     {
-      "item_name": "Stainless Facemask",
+      "item_name": "StAlgonless Facemask",
       "game": "rust",
       "source": "dmarket",
       "price_usd": 79.0,
@@ -2197,7 +2197,7 @@
       "float_value": null
     },
     {
-      "item_name": "Stainless Facemask",
+      "item_name": "StAlgonless Facemask",
       "game": "rust",
       "source": "dmarket",
       "price_usd": 79.0,
@@ -2211,7 +2211,7 @@
       "float_value": null
     },
     {
-      "item_name": "Forest Raiders Roadsign Pants",
+      "item_name": "Forest RAlgoders Roadsign Pants",
       "game": "rust",
       "source": "dmarket",
       "price_usd": 79.0,
@@ -2225,7 +2225,7 @@
       "float_value": null
     },
     {
-      "item_name": "Forest Raiders Roadsign Pants",
+      "item_name": "Forest RAlgoders Roadsign Pants",
       "game": "rust",
       "source": "dmarket",
       "price_usd": 78.75,
@@ -2239,7 +2239,7 @@
       "float_value": null
     },
     {
-      "item_name": "Forest Raiders Roadsign Pants",
+      "item_name": "Forest RAlgoders Roadsign Pants",
       "game": "rust",
       "source": "dmarket",
       "price_usd": 78.74,
@@ -2379,7 +2379,7 @@
       "float_value": null
     },
     {
-      "item_name": "Stainless Facemask",
+      "item_name": "StAlgonless Facemask",
       "game": "rust",
       "source": "dmarket",
       "price_usd": 74.98,
@@ -2393,7 +2393,7 @@
       "float_value": null
     },
     {
-      "item_name": "Forest Raiders Roadsign Pants",
+      "item_name": "Forest RAlgoders Roadsign Pants",
       "game": "rust",
       "source": "dmarket",
       "price_usd": 74.0,
@@ -2407,7 +2407,7 @@
       "float_value": null
     },
     {
-      "item_name": "Forest Raiders Roadsign Pants",
+      "item_name": "Forest RAlgoders Roadsign Pants",
       "game": "rust",
       "source": "dmarket",
       "price_usd": 74.0,
@@ -2421,7 +2421,7 @@
       "float_value": null
     },
     {
-      "item_name": "Forest Raiders Roadsign Pants",
+      "item_name": "Forest RAlgoders Roadsign Pants",
       "game": "rust",
       "source": "dmarket",
       "price_usd": 73.96,
@@ -2435,7 +2435,7 @@
       "float_value": null
     },
     {
-      "item_name": "Forest Raiders Roadsign Pants",
+      "item_name": "Forest RAlgoders Roadsign Pants",
       "game": "rust",
       "source": "dmarket",
       "price_usd": 73.71,
@@ -2449,7 +2449,7 @@
       "float_value": null
     },
     {
-      "item_name": "Forest Raiders Roadsign Pants",
+      "item_name": "Forest RAlgoders Roadsign Pants",
       "game": "rust",
       "source": "dmarket",
       "price_usd": 73.5,
@@ -2463,7 +2463,7 @@
       "float_value": null
     },
     {
-      "item_name": "Forest Raiders Roadsign Pants",
+      "item_name": "Forest RAlgoders Roadsign Pants",
       "game": "rust",
       "source": "dmarket",
       "price_usd": 73.5,
@@ -2533,7 +2533,7 @@
       "float_value": null
     },
     {
-      "item_name": "Stainless Facemask",
+      "item_name": "StAlgonless Facemask",
       "game": "rust",
       "source": "dmarket",
       "price_usd": 71.09,
@@ -2561,7 +2561,7 @@
       "float_value": null
     },
     {
-      "item_name": "Stainless Facemask",
+      "item_name": "StAlgonless Facemask",
       "game": "rust",
       "source": "dmarket",
       "price_usd": 70.69,
@@ -2575,7 +2575,7 @@
       "float_value": null
     },
     {
-      "item_name": "Stainless Facemask",
+      "item_name": "StAlgonless Facemask",
       "game": "rust",
       "source": "dmarket",
       "price_usd": 70.66,
@@ -2589,7 +2589,7 @@
       "float_value": null
     },
     {
-      "item_name": "Stainless Facemask",
+      "item_name": "StAlgonless Facemask",
       "game": "rust",
       "source": "dmarket",
       "price_usd": 70.64,
@@ -2673,7 +2673,7 @@
       "float_value": null
     },
     {
-      "item_name": "Stainless Facemask",
+      "item_name": "StAlgonless Facemask",
       "game": "rust",
       "source": "dmarket",
       "price_usd": 68.93,
@@ -2729,7 +2729,7 @@
       "float_value": null
     },
     {
-      "item_name": "Desert Raiders Facemask",
+      "item_name": "Desert RAlgoders Facemask",
       "game": "rust",
       "source": "dmarket",
       "price_usd": 67.37,
@@ -2743,7 +2743,7 @@
       "float_value": null
     },
     {
-      "item_name": "Desert Raiders Facemask",
+      "item_name": "Desert RAlgoders Facemask",
       "game": "rust",
       "source": "dmarket",
       "price_usd": 66.95,
@@ -2757,7 +2757,7 @@
       "float_value": null
     },
     {
-      "item_name": "Desert Raiders Facemask",
+      "item_name": "Desert RAlgoders Facemask",
       "game": "rust",
       "source": "dmarket",
       "price_usd": 66.94,
@@ -2771,7 +2771,7 @@
       "float_value": null
     },
     {
-      "item_name": "Desert Raiders Facemask",
+      "item_name": "Desert RAlgoders Facemask",
       "game": "rust",
       "source": "dmarket",
       "price_usd": 66.66,
@@ -2785,7 +2785,7 @@
       "float_value": null
     },
     {
-      "item_name": "Desert Raiders Facemask",
+      "item_name": "Desert RAlgoders Facemask",
       "game": "rust",
       "source": "dmarket",
       "price_usd": 66.65,
@@ -2799,7 +2799,7 @@
       "float_value": null
     },
     {
-      "item_name": "Desert Raiders Facemask",
+      "item_name": "Desert RAlgoders Facemask",
       "game": "rust",
       "source": "dmarket",
       "price_usd": 66.65,
@@ -4199,7 +4199,7 @@
       "float_value": null
     },
     {
-      "item_name": "Genuine Rainmaker",
+      "item_name": "Genuine RAlgonmaker",
       "game": "dota2",
       "source": "dmarket",
       "price_usd": 81.41,
@@ -5473,7 +5473,7 @@
       "float_value": null
     },
     {
-      "item_name": "Unusual Pure Tin Capotain",
+      "item_name": "Unusual Pure Tin CapotAlgon",
       "game": "tf2",
       "source": "dmarket",
       "price_usd": 77.78,
@@ -5557,7 +5557,7 @@
       "float_value": null
     },
     {
-      "item_name": "Unusual Brain-Warming Wear",
+      "item_name": "Unusual BrAlgon-Warming Wear",
       "game": "tf2",
       "source": "dmarket",
       "price_usd": 75.83,

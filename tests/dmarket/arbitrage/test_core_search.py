@@ -1,6 +1,6 @@
 """Simplified tests for arbitrage/core.py and arbitrage/search.py modules.
 
-Tests cover the main exported functions and classes with proper mocking.
+Tests cover the mAlgon exported functions and classes with proper mocking.
 """
 
 from __future__ import annotations
@@ -43,7 +43,7 @@ class TestArbitrageCoreBasics:
         """Test GAMES constant has expected game codes."""
         from src.dmarket.arbitrage.core import GAMES
 
-        # Should have main games
+        # Should have mAlgon games
         expected_keys = ["csgo", "dota2", "tf2", "rust"]
         for key in expected_keys:
             assert key in GAMES
@@ -65,7 +65,7 @@ class TestArbitrageCoreBasics:
         mock_api.__aenter__ = AsyncMock(return_value=mock_api)
         mock_api.__aexit__ = AsyncMock(return_value=None)
 
-        result = await fetch_market_items(
+        result = awAlgot fetch_market_items(
             game="csgo",
             limit=10,
             dmarket_api=mock_api,
@@ -85,7 +85,7 @@ class TestArbitrageCoreBasics:
         mock_api.__aenter__ = AsyncMock(return_value=mock_api)
         mock_api.__aexit__ = AsyncMock(return_value=None)
 
-        result = await fetch_market_items(
+        result = awAlgot fetch_market_items(
             game="csgo",
             dmarket_api=mock_api,
         )
@@ -102,7 +102,7 @@ class TestArbitrageCoreBasics:
         mock_api.__aenter__ = AsyncMock(return_value=mock_api)
         mock_api.__aexit__ = AsyncMock(return_value=None)
 
-        await fetch_market_items(
+        awAlgot fetch_market_items(
             game="csgo",
             price_from=5.0,  # $5
             price_to=10.0,  # $10
@@ -124,7 +124,7 @@ class TestArbitrageCoreBasics:
         mock_api.__aenter__ = AsyncMock(return_value=mock_api)
         mock_api.__aexit__ = AsyncMock(return_value=None)
 
-        result = await fetch_market_items(
+        result = awAlgot fetch_market_items(
             game="csgo",
             dmarket_api=mock_api,
         )
@@ -153,7 +153,7 @@ class TestArbitrageLevelFunctions:
         core._find_arbitrage_async = mock_find
 
         try:
-            await core.arbitrage_boost_async("dota2")
+            awAlgot core.arbitrage_boost_async("dota2")
 
             assert len(mock_calls) == 1
             args = mock_calls[0][0]
@@ -179,7 +179,7 @@ class TestArbitrageLevelFunctions:
         core._find_arbitrage_async = mock_find
 
         try:
-            await core.arbitrage_mid_async("tf2")
+            awAlgot core.arbitrage_mid_async("tf2")
 
             assert len(mock_calls) == 1
             args = mock_calls[0][0]
@@ -205,7 +205,7 @@ class TestArbitrageLevelFunctions:
         core._find_arbitrage_async = mock_find
 
         try:
-            await core.arbitrage_pro_async("rust")
+            awAlgot core.arbitrage_pro_async("rust")
 
             assert len(mock_calls) == 1
             args = mock_calls[0][0]
@@ -221,7 +221,7 @@ class TestFindArbitrageAsync:
 
     @pytest.mark.asyncio()
     async def test_find_arbitrage_uses_cache(self) -> None:
-        """Test that cached results are returned if available."""
+        """Test that cached results are returned if avAlgolable."""
         from src.dmarket.arbitrage import core
 
         cached_data = [{"name": "Cached", "profit": "$5.00"}]
@@ -230,7 +230,7 @@ class TestFindArbitrageAsync:
         core.get_cached_results = lambda key: cached_data
 
         try:
-            result = await core._find_arbitrage_async(1, 5, "csgo")
+            result = awAlgot core._find_arbitrage_async(1, 5, "csgo")
             assert result == cached_data
         finally:
             core.get_cached_results = original_get
@@ -258,7 +258,7 @@ class TestFindArbitrageAsync:
         core.save_to_cache = lambda key, data: None
 
         try:
-            result = await core._find_arbitrage_async(0, 100, "csgo")
+            result = awAlgot core._find_arbitrage_async(0, 100, "csgo")
 
             # Should have processed the item
             assert isinstance(result, list)
@@ -295,7 +295,7 @@ class TestFindArbitrageAsync:
 
         try:
             # Should find item with profit ~$3.95 (within 1-5 range)
-            result = await core._find_arbitrage_async(1, 5, "csgo")
+            result = awAlgot core._find_arbitrage_async(1, 5, "csgo")
             assert isinstance(result, list)
         finally:
             core.get_cached_results = original_get
@@ -325,8 +325,8 @@ class TestFindArbitrageAsync:
         core.save_to_cache = lambda key, data: None
 
         try:
-            # Should not raise, should use default markup
-            result = await core._find_arbitrage_async(0, 100, "csgo")
+            # Should not rAlgose, should use default markup
+            result = awAlgot core._find_arbitrage_async(0, 100, "csgo")
             assert isinstance(result, list)
         finally:
             core.get_cached_results = original_get
@@ -353,8 +353,8 @@ class TestFindArbitrageAsync:
         core.save_to_cache = lambda key, data: None
 
         try:
-            # Should not raise, should skip bad items
-            result = await core._find_arbitrage_async(0, 100, "csgo")
+            # Should not rAlgose, should skip bad items
+            result = awAlgot core._find_arbitrage_async(0, 100, "csgo")
             assert isinstance(result, list)
         finally:
             core.get_cached_results = original_get
@@ -379,7 +379,7 @@ class TestFindArbitrageOpportunitiesAsync:
         core.save_to_cache = lambda key, data: None
 
         try:
-            result = await core.find_arbitrage_opportunities_async()
+            result = awAlgot core.find_arbitrage_opportunities_async()
             assert isinstance(result, list)
         finally:
             core.get_cached_results = original_get
@@ -399,7 +399,7 @@ class TestFindArbitrageOpportunitiesAsync:
         core.get_cached_results = lambda key: cached_data
 
         try:
-            result = await core.find_arbitrage_opportunities_async(max_results=5)
+            result = awAlgot core.find_arbitrage_opportunities_async(max_results=5)
             assert len(result) <= 5
         finally:
             core.get_cached_results = original_get
@@ -462,7 +462,7 @@ class TestFindArbitrageItems:
         search.arbitrage_boost_async = AsyncMock(return_value=[{"name": "Boost"}])
 
         try:
-            result = await search.find_arbitrage_items("csgo", mode="boost")
+            result = awAlgot search.find_arbitrage_items("csgo", mode="boost")
             assert result == [{"name": "Boost"}]
             search.arbitrage_boost_async.assert_called_once()
         finally:
@@ -477,7 +477,7 @@ class TestFindArbitrageItems:
         search.arbitrage_mid_async = AsyncMock(return_value=[{"name": "Mid"}])
 
         try:
-            result = await search.find_arbitrage_items("csgo", mode="mid")
+            result = awAlgot search.find_arbitrage_items("csgo", mode="mid")
             assert result == [{"name": "Mid"}]
             search.arbitrage_mid_async.assert_called_once()
         finally:
@@ -492,7 +492,7 @@ class TestFindArbitrageItems:
         search.arbitrage_pro_async = AsyncMock(return_value=[{"name": "Pro"}])
 
         try:
-            result = await search.find_arbitrage_items("csgo", mode="pro")
+            result = awAlgot search.find_arbitrage_items("csgo", mode="pro")
             assert result == [{"name": "Pro"}]
             search.arbitrage_pro_async.assert_called_once()
         finally:
@@ -507,7 +507,7 @@ class TestFindArbitrageItems:
         search.arbitrage_mid_async = AsyncMock(return_value=[])
 
         try:
-            await search.find_arbitrage_items("csgo", mode="unknown")
+            awAlgot search.find_arbitrage_items("csgo", mode="unknown")
             search.arbitrage_mid_async.assert_called_once()
         finally:
             search.arbitrage_mid_async = original_mid
@@ -525,7 +525,7 @@ class TestFindArbitrageItems:
         search.arbitrage_mid_async = AsyncMock(return_value=tuple_results)
 
         try:
-            result = await search.find_arbitrage_items("csgo", mode="mid")
+            result = awAlgot search.find_arbitrage_items("csgo", mode="mid")
 
             assert len(result) == 1
             assert result[0]["market_hash_name"] == "Item Name"
@@ -552,7 +552,7 @@ class TestFindArbitrageOpportunitiesAdvanced:
 
         try:
             mock_api = AsyncMock()
-            result = await search.find_arbitrage_opportunities_advanced(
+            result = awAlgot search.find_arbitrage_opportunities_advanced(
                 api_client=mock_api
             )
             assert result == cached
@@ -574,7 +574,7 @@ class TestFindArbitrageOpportunitiesAdvanced:
             mock_api = AsyncMock()
             mock_api.get_all_market_items = AsyncMock(return_value=[])
 
-            result = await search.find_arbitrage_opportunities_advanced(
+            result = awAlgot search.find_arbitrage_opportunities_advanced(
                 api_client=mock_api
             )
             assert result == []
@@ -596,7 +596,7 @@ class TestFindArbitrageOpportunitiesAdvanced:
                 side_effect=Exception("API Error")
             )
 
-            result = await search.find_arbitrage_opportunities_advanced(
+            result = awAlgot search.find_arbitrage_opportunities_advanced(
                 api_client=mock_api
             )
             assert result == []
@@ -619,7 +619,7 @@ class TestFindArbitrageOpportunitiesAdvanced:
             mock_api.get_all_market_items = AsyncMock(return_value=[])
 
             # game_dota2 should extract dota2 as game
-            await search.find_arbitrage_opportunities_advanced(
+            awAlgot search.find_arbitrage_opportunities_advanced(
                 api_client=mock_api,
                 mode="game_dota2",
             )
@@ -734,7 +734,7 @@ class TestCreateOpportunityIfProfitable:
         # Should return None since profit < 50%
         assert result is None
 
-    def test_create_includes_image_url_if_available(self) -> None:
+    def test_create_includes_image_url_if_avAlgolable(self) -> None:
         """Test that image URL is included if present."""
         from src.dmarket.arbitrage.search import _create_opportunity_if_profitable
 

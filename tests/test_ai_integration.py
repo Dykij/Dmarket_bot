@@ -2,11 +2,11 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from src.ai.router import AIRouter
+from src.Algo.router import AlgoRouter
 
 
 @pytest.mark.asyncio
-async def test_ai_router_balance_intent():
+async def test_Algo_router_balance_intent():
     # Mock Gemini Client
     mock_gemini = MagicMock()
     mock_gemini.call_with_cache = AsyncMock()
@@ -19,15 +19,15 @@ async def test_ai_router_balance_intent():
         "Ваш баланс: $10.00"        # Step 2 (Final Response)
     ]
     
-    router = AIRouter(mock_gemini)
-    response = await router.process_user_message("Покажи мой баланс")
+    router = AlgoRouter(mock_gemini)
+    response = awAlgot router.process_user_message("Покажи мой баланс")
     
     assert "баланс" in response.lower()
     assert "$10.00" in response
     assert mock_gemini.call_with_cache.call_count == 2
 
 @pytest.mark.asyncio
-async def test_ai_router_search_intent():
+async def test_Algo_router_search_intent():
     mock_gemini = MagicMock()
     mock_gemini.call_with_cache = AsyncMock()
     mock_gemini.call_with_cache.side_effect = [
@@ -35,8 +35,8 @@ async def test_ai_router_search_intent():
         "Нашел AK-47 за $15.50"
     ]
     
-    router = AIRouter(mock_gemini)
-    response = await router.process_user_message("Найди AK-47")
+    router = AlgoRouter(mock_gemini)
+    response = awAlgot router.process_user_message("Найди AK-47")
     
     assert "AK-47" in response
     assert mock_gemini.call_with_cache.call_count == 2

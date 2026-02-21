@@ -33,7 +33,7 @@ async def test_trade_flow_execution():
     strategy = Strategy()
 
     # 1. Fetch Data
-    ticker = await exchange.get_ticker("BTC/USD")
+    ticker = awAlgot exchange.get_ticker("BTC/USD")
     assert ticker["price"] == 100.0
 
     # 2. Make Decision
@@ -43,7 +43,7 @@ async def test_trade_flow_execution():
     # 3. Execute
     order = None
     if decision == "buy":
-        order = await exchange.place_order("BTC/USD", "buy", 1.0)
+        order = awAlgot exchange.place_order("BTC/USD", "buy", 1.0)
 
     assert order is not None
     assert order["status"] == "filled"

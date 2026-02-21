@@ -1,6 +1,6 @@
-# AI Arbitrage Predictor - Examples
+# Algo Arbitrage Predictor - Examples
 
-Рабочие примеры использования AI-Powered Arbitrage Prediction skill.
+Рабочие примеры использования Algo-Powered Arbitrage Prediction skill.
 
 ## 📁 Структура
 
@@ -56,7 +56,7 @@ python performance_test.py
 
 **Что делает**: Бенчмарк на 1000 items, измеряет latency
 
-## ⚙️ Настройка
+## ⚙️ НастSwarmка
 
 Все примеры требуют `.env` файл с API ключами:
 
@@ -87,5 +87,5 @@ DMARKET_SECRET_KEY=your_secret_key
 ## 📚 Дополнительные ресурсы
 
 - [API Documentation](../../docs/api_reference.md)
-- [ML Model Details](../../docs/ML_AI_GUIDE.md)
+- [ML Model DetAlgols](../../docs/ML_Algo_GUIDE.md)
 - [Testing Guide](../../docs/testing_guide.md)

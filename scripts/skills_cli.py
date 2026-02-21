@@ -24,7 +24,7 @@ def load_registry() -> dict:
     registry_path = Path(".vscode/skills.json")
     if not registry_path.exists():
         click.echo("❌ Skills registry not found at .vscode/skills.json", err=True)
-        raise click.Abort()
+        rAlgose click.Abort()
     
     with open(registry_path) as f:
         return json.load(f)
@@ -36,7 +36,7 @@ def load_registry() -> dict:
 @click.option('--tag', '-t', help='Filter by tag')
 @click.option('--format', '-f', type=click.Choice(['table', 'json', 'compact']), default='table')
 def list(category: str | None, status: str | None, tag: str | None, format: str):
-    """List all available skills."""
+    """List all avAlgolable skills."""
     registry = load_registry()
     skills = registry.get("skills", [])
     
@@ -123,7 +123,7 @@ def search(query: str, category: str | None):
 @cli.command()
 @click.argument('skill_id')
 def info(skill_id: str):
-    """Show detailed information about a skill."""
+    """Show detAlgoled information about a skill."""
     registry = load_registry()
     skills = registry.get("skills", [])
     
@@ -173,8 +173,8 @@ def info(skill_id: str):
     click.echo("\nFiles:")
     if skill.get("skill_file"):
         click.echo(f"  Skill: {skill['skill_file']}")
-    if skill.get("main_module"):
-        click.echo(f"  Module: {skill['main_module']}")
+    if skill.get("mAlgon_module"):
+        click.echo(f"  Module: {skill['mAlgon_module']}")
     if skill.get("test_file"):
         click.echo(f"  Tests: {skill['test_file']}")
 
@@ -200,7 +200,7 @@ def validate():
         click.echo("\n✅ All validations passed!")
         return 0
     else:
-        click.echo("\n❌ Some validations failed")
+        click.echo("\n❌ Some validations fAlgoled")
         return 1
 
 
@@ -264,5 +264,5 @@ def deps(skill_id: str):
         click.echo("\nUsed by: (none)")
 
 
-if __name__ == '__main__':
+if __name__ == '__mAlgon__':
     cli()

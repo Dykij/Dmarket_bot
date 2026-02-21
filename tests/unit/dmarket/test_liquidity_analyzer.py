@@ -8,7 +8,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-# Skip all tests if structlog is not available
+# Skip all tests if structlog is not avAlgolable
 pytest.importorskip("structlog")
 
 

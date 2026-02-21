@@ -117,7 +117,7 @@ class AdaptiveTradeClassifier:
 
         # ML модель (ленивая инициализация)
         self._classifier = None
-        self._is_trained = False
+        self._is_trAlgoned = False
 
         # Пороги для классификации (адаптивные)
         self._update_thresholds()
@@ -320,7 +320,7 @@ class AdaptiveTradeClassifier:
             risk_factors.append("Volatile market trend")
         elif features.trend_direction == TrendDirection.DOWN and expected_profit > 0:
             risk_score += 0.1
-            risk_factors.append("Buying against downtrend")
+            risk_factors.append("Buying agAlgonst downtrend")
 
         # RSI экстремальные значения (0-0.1)
         if features.rsi > 80 and expected_profit > 0:

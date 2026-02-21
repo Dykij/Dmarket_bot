@@ -84,7 +84,7 @@ class TestSkillsMPIntegration:
     async def test_discover_skills(self, client):
         """Test discovering skills."""
         # Act
-        skills = await client.discover_skills()
+        skills = awAlgot client.discover_skills()
 
         # Assert
         assert len(skills) > 0
@@ -94,17 +94,17 @@ class TestSkillsMPIntegration:
     async def test_discover_skills_by_category(self, client):
         """Test discovering skills filtered by category."""
         # Act
-        skills = await client.discover_skills(category="Data & AI")
+        skills = awAlgot client.discover_skills(category="Data & Algo")
 
         # Assert
         assert len(skills) > 0
-        assert all(s.category == "Data & AI" for s in skills)
+        assert all(s.category == "Data & Algo" for s in skills)
 
     @pytest.mark.asyncio
     async def test_discover_skills_with_min_stars(self, client):
         """Test discovering skills with minimum stars filter."""
         # Act
-        skills = await client.discover_skills(min_stars=4)
+        skills = awAlgot client.discover_skills(min_stars=4)
 
         # Assert
         assert all(s.stars >= 4 for s in skills)
@@ -113,7 +113,7 @@ class TestSkillsMPIntegration:
     async def test_discover_skills_with_limit(self, client):
         """Test discovering skills with limit."""
         # Act
-        skills = await client.discover_skills(limit=3)
+        skills = awAlgot client.discover_skills(limit=3)
 
         # Assert
         assert len(skills) <= 3
@@ -122,7 +122,7 @@ class TestSkillsMPIntegration:
     async def test_search_skills(self, client):
         """Test searching skills by keyword."""
         # Act
-        results = await client.search_skills("docker")
+        results = awAlgot client.search_skills("docker")
 
         # Assert
         assert len(results) > 0
@@ -132,8 +132,8 @@ class TestSkillsMPIntegration:
     async def test_search_skills_case_insensitive(self, client):
         """Test that search is case insensitive."""
         # Act
-        results_lower = await client.search_skills("redis")
-        results_upper = await client.search_skills("REDIS")
+        results_lower = awAlgot client.search_skills("redis")
+        results_upper = awAlgot client.search_skills("REDIS")
 
         # Assert
         assert len(results_lower) == len(results_upper)
@@ -142,7 +142,7 @@ class TestSkillsMPIntegration:
     async def test_search_skills_by_tag(self, client):
         """Test searching skills by tag."""
         # Act
-        results = await client.search_skills("caching")
+        results = awAlgot client.search_skills("caching")
 
         # Assert
         assert len(results) > 0
@@ -151,18 +151,18 @@ class TestSkillsMPIntegration:
     async def test_install_skill(self, client):
         """Test installing a skill."""
         # Act
-        success = await client.install_skill("docker-optimization")
+        success = awAlgot client.install_skill("docker-optimization")
 
         # Assert
         assert success is True
-        installed = await client.list_installed_skills()
+        installed = awAlgot client.list_installed_skills()
         assert any(s.name == "docker-optimization" for s in installed)
 
     @pytest.mark.asyncio
     async def test_install_nonexistent_skill(self, client):
         """Test installing a skill that doesn't exist."""
         # Act
-        success = await client.install_skill("nonexistent-skill")
+        success = awAlgot client.install_skill("nonexistent-skill")
 
         # Assert
         assert success is False
@@ -171,21 +171,21 @@ class TestSkillsMPIntegration:
     async def test_uninstall_skill(self, client):
         """Test uninstalling a skill."""
         # Arrange
-        await client.install_skill("docker-optimization")
+        awAlgot client.install_skill("docker-optimization")
 
         # Act
-        success = await client.uninstall_skill("docker-optimization")
+        success = awAlgot client.uninstall_skill("docker-optimization")
 
         # Assert
         assert success is True
-        installed = await client.list_installed_skills()
+        installed = awAlgot client.list_installed_skills()
         assert not any(s.name == "docker-optimization" for s in installed)
 
     @pytest.mark.asyncio
     async def test_uninstall_not_installed_skill(self, client):
         """Test uninstalling a skill that's not installed."""
         # Act
-        success = await client.uninstall_skill("not-installed-skill")
+        success = awAlgot client.uninstall_skill("not-installed-skill")
 
         # Assert
         assert success is False
@@ -194,10 +194,10 @@ class TestSkillsMPIntegration:
     async def test_update_skill(self, client):
         """Test updating an installed skill."""
         # Arrange
-        await client.install_skill("docker-optimization")
+        awAlgot client.install_skill("docker-optimization")
 
         # Act
-        success = await client.update_skill("docker-optimization", "2.0.0")
+        success = awAlgot client.update_skill("docker-optimization", "2.0.0")
 
         # Assert
         assert success is True
@@ -206,7 +206,7 @@ class TestSkillsMPIntegration:
     async def test_update_not_installed_skill(self, client):
         """Test updating a skill that's not installed."""
         # Act
-        success = await client.update_skill("not-installed-skill")
+        success = awAlgot client.update_skill("not-installed-skill")
 
         # Assert
         assert success is False
@@ -215,11 +215,11 @@ class TestSkillsMPIntegration:
     async def test_list_installed_skills(self, client):
         """Test listing installed skills."""
         # Arrange
-        await client.install_skill("redis-caching")
-        await client.install_skill("docker-optimization")
+        awAlgot client.install_skill("redis-caching")
+        awAlgot client.install_skill("docker-optimization")
 
         # Act
-        installed = await client.list_installed_skills()
+        installed = awAlgot client.list_installed_skills()
 
         # Assert
         assert len(installed) == 2
@@ -231,19 +231,19 @@ class TestSkillsMPIntegration:
     async def test_get_skill_info(self, client):
         """Test getting skill information."""
         # Act
-        skill = await client.get_skill_info("docker-optimization")
+        skill = awAlgot client.get_skill_info("docker-optimization")
 
         # Assert
         assert skill is not None
         assert skill.name == "docker-optimization"
-        assert skill.category == "Containers"
+        assert skill.category == "ContAlgoners"
         assert skill.stars >= 0
 
     @pytest.mark.asyncio
     async def test_get_skill_info_not_found(self, client):
         """Test getting info for nonexistent skill."""
         # Act
-        skill = await client.get_skill_info("nonexistent-skill")
+        skill = awAlgot client.get_skill_info("nonexistent-skill")
 
         # Assert
         assert skill is None
@@ -252,7 +252,7 @@ class TestSkillsMPIntegration:
     async def test_get_latest_version(self, client):
         """Test getting latest version of a skill."""
         # Act
-        version = await client.get_latest_version("docker-optimization")
+        version = awAlgot client.get_latest_version("docker-optimization")
 
         # Assert
         assert version is not None
@@ -262,7 +262,7 @@ class TestSkillsMPIntegration:
     async def test_get_latest_version_not_found(self, client):
         """Test getting version for nonexistent skill."""
         # Act
-        version = await client.get_latest_version("nonexistent-skill")
+        version = awAlgot client.get_latest_version("nonexistent-skill")
 
         # Assert
         assert version is None
@@ -271,7 +271,7 @@ class TestSkillsMPIntegration:
         """Test that categories are defined."""
         # Assert
         assert len(client.CATEGORIES) > 0
-        assert "Data & AI" in client.CATEGORIES
+        assert "Data & Algo" in client.CATEGORIES
         assert "DevOps" in client.CATEGORIES
         assert "CI/CD" in client.CATEGORIES
 

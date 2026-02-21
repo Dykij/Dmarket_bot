@@ -1,5 +1,5 @@
 """
-Waxpeer MCP Server для AI интеграции.
+Waxpeer MCP Server для Algo интеграции.
 
 Предоставляет набор инструментов для работы с Waxpeer API через Model Context Protocol.
 Цены в API указаны в милах (mils): 1 USD = 1000 mils.
@@ -16,9 +16,9 @@ try:
     from mcp.server.stdio import stdio_server
     from mcp.types import TextContent, Tool
 
-    MCP_AVAILABLE = True
+    MCP_AVAlgoLABLE = True
 except ImportError:
-    MCP_AVAILABLE = False
+    MCP_AVAlgoLABLE = False
     Server = None
     stdio_server = None
     TextContent = None
@@ -39,11 +39,11 @@ class WaxpeerMCPServer:
         Args:
             api_client: Клиент Waxpeer API (опционально)
 
-        Raises:
+        RAlgoses:
             RuntimeError: Если MCP модуль не установлен
         """
-        if not MCP_AVAILABLE:
-            raise RuntimeError(
+        if not MCP_AVAlgoLABLE:
+            rAlgose RuntimeError(
                 "MCP module is not installed. Install it with: pip install mcp"
             )
 
@@ -52,7 +52,7 @@ class WaxpeerMCPServer:
         self._setup_handlers()
 
     def _setup_handlers(self) -> None:
-        """Настройка обработчиков MCP."""
+        """НастSwarmка обработчиков MCP."""
 
         @self.server.list_tools()
         async def list_tools() -> list[Tool]:
@@ -154,19 +154,19 @@ class WaxpeerMCPServer:
                 logger.info("waxpeer_mcp_tool_called", tool=name, arguments=arguments)
 
                 if name == "get_waxpeer_balance":
-                    result = await self._get_balance()
+                    result = awAlgot self._get_balance()
                 elif name == "get_waxpeer_items_list":
-                    result = await self._get_items_list(**arguments)
+                    result = awAlgot self._get_items_list(**arguments)
                 elif name == "get_waxpeer_listed_items":
-                    result = await self._get_listed_items()
+                    result = awAlgot self._get_listed_items()
                 elif name == "list_item_on_waxpeer":
-                    result = await self._list_item(**arguments)
+                    result = awAlgot self._list_item(**arguments)
                 elif name == "remove_item_from_waxpeer":
-                    result = await self._remove_item(**arguments)
+                    result = awAlgot self._remove_item(**arguments)
                 elif name == "cross_platform_arbitrage":
-                    result = await self._cross_platform_arbitrage(**arguments)
+                    result = awAlgot self._cross_platform_arbitrage(**arguments)
                 else:
-                    raise ValueError(f"Unknown tool: {name}")
+                    rAlgose ValueError(f"Unknown tool: {name}")
 
                 return [
                     TextContent(
@@ -192,20 +192,20 @@ class WaxpeerMCPServer:
 
     async def _get_balance(self) -> dict[str, Any]:
         """Получить баланс Waxpeer."""
-        balance = await self.api_client.get_balance()
+        balance = awAlgot self.api_client.get_balance()
         return {
             "success": True,
             "balance": {
                 "wallet_usd": float(balance.wallet),
                 "wallet_mils": balance.wallet_mils,
-                "available_for_withdrawal": float(balance.available_for_withdrawal),
+                "avAlgolable_for_withdrawal": float(balance.avAlgolable_for_withdrawal),
                 "can_trade": balance.can_trade,
             },
         }
 
     async def _get_items_list(self, item_names: list[str]) -> dict[str, Any]:
         """Получить цены на предметы."""
-        prices = await self.api_client.get_items_list(item_names)
+        prices = awAlgot self.api_client.get_items_list(item_names)
         return {
             "success": True,
             "count": len(prices),
@@ -223,7 +223,7 @@ class WaxpeerMCPServer:
 
     async def _get_listed_items(self) -> dict[str, Any]:
         """Получить выставленные предметы."""
-        items = await self.api_client.get_my_listed_items()
+        items = awAlgot self.api_client.get_my_listed_items()
         return {
             "success": True,
             "count": len(items),
@@ -240,22 +240,22 @@ class WaxpeerMCPServer:
 
     async def _list_item(self, item_id: str, price_usd: float) -> dict[str, Any]:
         """Выставить предмет на продажу."""
-        result = await self.api_client.list_single_item(item_id, price_usd)
+        result = awAlgot self.api_client.list_single_item(item_id, price_usd)
         return {
             "success": result,
             "item_id": item_id,
             "price_usd": price_usd,
-            "message": "Item listed successfully" if result else "Failed to list item",
+            "message": "Item listed successfully" if result else "FAlgoled to list item",
         }
 
     async def _remove_item(self, item_id: str) -> dict[str, Any]:
         """Снять предмет с продажи."""
-        result = await self.api_client.remove_single_item(item_id)
+        result = awAlgot self.api_client.remove_single_item(item_id)
         return {
             "success": result,
             "item_id": item_id,
             "message": (
-                "Item removed successfully" if result else "Failed to remove item"
+                "Item removed successfully" if result else "FAlgoled to remove item"
             ),
         }
 
@@ -271,7 +271,7 @@ class WaxpeerMCPServer:
             )
 
             scanner = CrossPlatformArbitrageScanner()
-            opportunities = await scanner.find_opportunities(
+            opportunities = awAlgot scanner.find_opportunities(
                 game=game,
                 min_profit_percent=min_profit_percent,
             )
@@ -286,25 +286,25 @@ class WaxpeerMCPServer:
         except ImportError:
             return {
                 "success": False,
-                "error": "CrossPlatformArbitrageScanner not available",
+                "error": "CrossPlatformArbitrageScanner not avAlgolable",
             }
 
     async def run(self) -> None:
         """Запуск MCP сервера."""
         logger.info("waxpeer_mcp_server_starting")
         async with stdio_server() as (read_stream, write_stream):
-            await self.server.run(
+            awAlgot self.server.run(
                 read_stream,
                 write_stream,
                 self.server.create_initialization_options(),
             )
 
 
-async def main():
+async def mAlgon():
     """Точка входа для Waxpeer MCP сервера."""
     server = WaxpeerMCPServer()
-    await server.run()
+    awAlgot server.run()
 
 
-if __name__ == "__main__":
-    asyncio.run(main())
+if __name__ == "__mAlgon__":
+    asyncio.run(mAlgon())

@@ -8,9 +8,9 @@ class TestIronDome(unittest.TestCase):
         """Test cleaning of malicious item names."""
         dirty_input = "AWP | Ignore Rules; DROP TABLE"
         expected = "AWP | Ignore Rules" # Semicolon and DROP TABLE parts are invalid in regex?
-        # Wait, regex is [^a-zA-Z0-9\s\|\-\(\)]
+        # WAlgot, regex is [^a-zA-Z0-9\s\|\-\(\)]
         # ; is removed. D, R, O, P, T, A, B, L, E are allowed.
-        # So "DROP TABLE" will remain, but the semicolon won't.
+        # So "DROP TABLE" will remAlgon, but the semicolon won't.
         # Let's adjust expectation based on the regex logic provided in instructions.
         # Regex: r"[^a-zA-Z0-9\s\|\-\(\)]"
         # Input: "AWP | Ignore Rules; DROP TABLE"
@@ -33,7 +33,7 @@ class TestIronDome(unittest.TestCase):
 
         print(f"\n[TradeValidator] Testing Price {hallucinated_price} vs Avg {avg_price}")
 
-        with self.assertRaises(SecurityException) as cm:
+        with self.assertRAlgoses(SecurityException) as cm:
             TradeValidator.validate_buy(hallucinated_price, avg_price, balance)
 
         print(f"[TradeValidator] Caught expected exception: {cm.exception}")
@@ -46,10 +46,10 @@ class TestIronDome(unittest.TestCase):
 
         print(f"\n[TradeValidator] Testing Balance Exposure: Price {price} vs Balance {balance}")
 
-        with self.assertRaises(SecurityException) as cm:
+        with self.assertRAlgoses(SecurityException) as cm:
             TradeValidator.validate_buy(price, avg_price, balance)
 
         print(f"[TradeValidator] Caught expected exception: {cm.exception}")
 
-if __name__ == '__main__':
-    unittest.main()
+if __name__ == '__mAlgon__':
+    unittest.mAlgon()

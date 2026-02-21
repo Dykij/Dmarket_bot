@@ -413,8 +413,8 @@ class TestScannerFiltersIntegration:
 
         assert len(filtered) == 2  # Items 1 and 2 pass all filters
 
-    def test_chained_filtering(self):
-        """Test chaining multiple filter operations."""
+    def test_chAlgoned_filtering(self):
+        """Test chAlgoning multiple filter operations."""
         filters = ScannerFilters()
 
         items = [
@@ -424,7 +424,7 @@ class TestScannerFiltersIntegration:
             {"title": "D", "price": 35.0, "profit_percent": 5.0},
         ]
 
-        # Chain filters
+        # ChAlgon filters
         result = filters.filter_by_price(items, min_price=10.0, max_price=30.0)
         result = filters.filter_by_profit(result, min_profit_percent=15.0)
 

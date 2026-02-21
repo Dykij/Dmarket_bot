@@ -1,9 +1,9 @@
-"""Concurrent request utilities using aiometer library.
+"""Concurrent request utilities using Algoometer library.
 
 This module provides utilities for managing concurrent async operations
-with rate limiting and concurrency control using aiometer.
+with rate limiting and concurrency control using Algoometer.
 
-aiometer is perfect for:
+Algoometer is perfect for:
 - Making bulk API requests without overwhelming servers
 - Respecting API rate limits
 - Processing large batches of items concurrently
@@ -12,12 +12,12 @@ Features:
 - Concurrency limiting (max_at_once)
 - Rate limiting (max_per_second)
 - Batch processing with throttling
-- Error handling for failed requests
+- Error handling for fAlgoled requests
 - Progress tracking
 
 Example usage:
     ```python
-    from src.utils.aiometer_utils import (
+    from src.utils.Algoometer_utils import (
         run_concurrent,
         run_with_rate_limit,
         ConcurrencyConfig,
@@ -26,13 +26,13 @@ Example usage:
     # Process URLs with rate limiting
     async def fetch_item(item_id: str) -> dict:
         async with httpx.AsyncClient() as client:
-            resp = await client.get(f"https://api.example.com/items/{item_id}")
+            resp = awAlgot client.get(f"https://api.example.com/items/{item_id}")
             return resp.json()
 
     item_ids = ["id1", "id2", "id3", ...]
 
     # Run with max 10 concurrent requests, 5 per second
-    results = await run_concurrent(
+    results = awAlgot run_concurrent(
         fetch_item,
         item_ids,
         max_at_once=10,
@@ -40,24 +40,24 @@ Example usage:
     )
     ```
 
-Documentation: https://github.com/florimondmanca/aiometer
+Documentation: https://github.com/florimondmanca/Algoometer
 """
 
 import functools
-from collections.abc import AsyncIterator, Awaitable, Callable, Iterable
+from collections.abc import AsyncIterator, AwAlgotable, Callable, Iterable
 from dataclasses import dataclass, field
 from typing import Any, TypeVar
 
 import structlog
 
-# Conditional import - aiometer is optional
+# Conditional import - Algoometer is optional
 try:
-    import aiometer
+    import Algoometer
 
-    AIOMETER_AVAILABLE = True
+    AlgoOMETER_AVAlgoLABLE = True
 except ImportError:
-    AIOMETER_AVAILABLE = False
-    aiometer = None  # type: ignore[assignment]
+    AlgoOMETER_AVAlgoLABLE = False
+    Algoometer = None  # type: ignore[assignment]
 
 
 logger = structlog.get_logger(__name__)
@@ -73,7 +73,7 @@ class ConcurrencyConfig:
     Attributes:
         max_at_once: Maximum number of concurrent tasks
         max_per_second: Maximum tasks started per second (rate limit)
-        collect_errors: Whether to collect errors instead of raising
+        collect_errors: Whether to collect errors instead of rAlgosing
         on_error: Callback for handling individual errors
     """
 
@@ -89,10 +89,10 @@ class ConcurrentResult:
 
     Attributes:
         results: List of successful results
-        errors: List of (input, error) tuples for failed items
+        errors: List of (input, error) tuples for fAlgoled items
         total_count: Total number of items processed
         success_count: Number of successful items
-        error_count: Number of failed items
+        error_count: Number of fAlgoled items
     """
 
     results: list[Any] = field(default_factory=list)
@@ -110,7 +110,7 @@ class ConcurrentResult:
 
 
 async def run_concurrent(
-    func: Callable[[T], Awaitable[R]],
+    func: Callable[[T], AwAlgotable[R]],
     items: Iterable[T],
     max_at_once: int = 10,
     max_per_second: float | None = None,
@@ -123,7 +123,7 @@ async def run_concurrent(
         items: Iterable of items to process
         max_at_once: Maximum concurrent tasks
         max_per_second: Maximum tasks per second (rate limit)
-        collect_errors: If True, collect errors; if False, raise on first error
+        collect_errors: If True, collect errors; if False, rAlgose on first error
 
     Returns:
         List of results if collect_errors=False,
@@ -132,9 +132,9 @@ async def run_concurrent(
     Example:
         >>> async def fetch(url: str) -> dict:
         ...     async with httpx.AsyncClient() as client:
-        ...         return (await client.get(url)).json()
+        ...         return (awAlgot client.get(url)).json()
         ...
-        >>> results = await run_concurrent(
+        >>> results = awAlgot run_concurrent(
         ...     fetch,
         ...     ["https://api.example.com/1", "https://api.example.com/2"],
         ...     max_at_once=5,
@@ -143,23 +143,23 @@ async def run_concurrent(
     """
     items_list = list(items)
 
-    if not AIOMETER_AVAILABLE:
+    if not AlgoOMETER_AVAlgoLABLE:
         logger.warning(
-            "aiometer_not_available",
-            message="aiometer not installed, using fallback sequential execution",
+            "Algoometer_not_avAlgolable",
+            message="Algoometer not installed, using fallback sequential execution",
         )
-        return await _fallback_sequential(func, items_list, collect_errors)
+        return awAlgot _fallback_sequential(func, items_list, collect_errors)
 
     if collect_errors:
-        return await _run_with_error_collection(
+        return awAlgot _run_with_error_collection(
             func, items_list, max_at_once, max_per_second
         )
 
     # Create partial functions for each item
     jobs = [functools.partial(func, item) for item in items_list]
 
-    # Run with aiometer
-    results = await aiometer.run_all(
+    # Run with Algoometer
+    results = awAlgot Algoometer.run_all(
         jobs,
         max_at_once=max_at_once,
         max_per_second=max_per_second,
@@ -176,24 +176,24 @@ async def run_concurrent(
 
 
 async def _run_with_error_collection(
-    func: Callable[[T], Awaitable[R]],
+    func: Callable[[T], AwAlgotable[R]],
     items: list[T],
     max_at_once: int,
     max_per_second: float | None,
 ) -> ConcurrentResult:
-    """Run with error collection instead of raising."""
+    """Run with error collection instead of rAlgosing."""
     result = ConcurrentResult(total_count=len(items))
 
     async def safe_execute(item: T) -> tuple[T, R | None, Exception | None]:
         try:
-            res = await func(item)
+            res = awAlgot func(item)
             return (item, res, None)
         except Exception as e:
             return (item, None, e)
 
     jobs = [functools.partial(safe_execute, item) for item in items]
 
-    outcomes = await aiometer.run_all(
+    outcomes = awAlgot Algoometer.run_all(
         jobs,
         max_at_once=max_at_once,
         max_per_second=max_per_second,
@@ -207,7 +207,7 @@ async def _run_with_error_collection(
             result.errors.append((item, error))
             result.error_count += 1
             logger.warning(
-                "concurrent_item_failed",
+                "concurrent_item_fAlgoled",
                 item=str(item)[:100],
                 error=str(error),
             )
@@ -224,16 +224,16 @@ async def _run_with_error_collection(
 
 
 async def _fallback_sequential(
-    func: Callable[[T], Awaitable[R]],
+    func: Callable[[T], AwAlgotable[R]],
     items: list[T],
     collect_errors: bool,
 ) -> list[R] | ConcurrentResult:
-    """Fallback to sequential execution when aiometer not available."""
+    """Fallback to sequential execution when Algoometer not avAlgolable."""
     if collect_errors:
         result = ConcurrentResult(total_count=len(items))
         for item in items:
             try:
-                res = await func(item)
+                res = awAlgot func(item)
                 result.results.append(res)
                 result.success_count += 1
             except Exception as e:
@@ -243,12 +243,12 @@ async def _fallback_sequential(
 
     results = []
     for item in items:
-        results.append(await func(item))
+        results.append(awAlgot func(item))
     return results
 
 
 async def run_with_rate_limit(
-    func: Callable[..., Awaitable[R]],
+    func: Callable[..., AwAlgotable[R]],
     items: Iterable[T],
     max_per_second: float = 5.0,
     max_at_once: int | None = None,
@@ -269,7 +269,7 @@ async def run_with_rate_limit(
     if max_at_once is None:
         max_at_once = int(max_per_second) or 1
 
-    return await run_concurrent(
+    return awAlgot run_concurrent(
         func,
         items,
         max_at_once=max_at_once,
@@ -279,15 +279,15 @@ async def run_with_rate_limit(
 
 
 async def amap(
-    func: Callable[[T], Awaitable[R]],
+    func: Callable[[T], AwAlgotable[R]],
     items: Iterable[T],
     max_at_once: int = 10,
     max_per_second: float | None = None,
 ) -> AsyncIterator[R]:
     """Async map with concurrency control, yielding results as they complete.
 
-    Unlike run_concurrent which waits for all results, this yields
-    results as soon as they are available.
+    Unlike run_concurrent which wAlgots for all results, this yields
+    results as soon as they are avAlgolable.
 
     Args:
         func: Async function to run
@@ -304,15 +304,15 @@ async def amap(
     """
     items_list = list(items)
 
-    if not AIOMETER_AVAILABLE:
+    if not AlgoOMETER_AVAlgoLABLE:
         # Fallback: yield results sequentially
         for item in items_list:
-            yield await func(item)
+            yield awAlgot func(item)
         return
 
     jobs = [functools.partial(func, item) for item in items_list]
 
-    async with aiometer.amap(
+    async with Algoometer.amap(
         lambda job: job(),
         jobs,
         max_at_once=max_at_once,
@@ -323,7 +323,7 @@ async def amap(
 
 
 async def run_batches(
-    func: Callable[[list[T]], Awaitable[R]],
+    func: Callable[[list[T]], AwAlgotable[R]],
     items: Iterable[T],
     batch_size: int = 100,
     max_concurrent_batches: int = 3,
@@ -345,9 +345,9 @@ async def run_batches(
 
     Example:
         >>> async def process_batch(item_ids: list[str]) -> list[dict]:
-        ...     return await api.get_items_batch(item_ids)
+        ...     return awAlgot api.get_items_batch(item_ids)
         ...
-        >>> results = await run_batches(
+        >>> results = awAlgot run_batches(
         ...     process_batch,
         ...     item_ids,
         ...     batch_size=50,
@@ -366,7 +366,7 @@ async def run_batches(
         num_batches=len(batches),
     )
 
-    return await run_concurrent(
+    return awAlgot run_concurrent(
         func,
         batches,
         max_at_once=max_concurrent_batches,
@@ -374,14 +374,14 @@ async def run_batches(
     )
 
 
-def get_aiometer_status() -> dict[str, Any]:
-    """Get aiometer availability and configuration status.
+def get_Algoometer_status() -> dict[str, Any]:
+    """Get Algoometer avAlgolability and configuration status.
 
     Returns:
-        Dictionary with aiometer status information
+        Dictionary with Algoometer status information
     """
     return {
-        "available": AIOMETER_AVAILABLE,
+        "avAlgolable": AlgoOMETER_AVAlgoLABLE,
         "description": "Concurrent task throttling and rate limiting",
         "default_config": {
             "max_at_once": 10,
@@ -391,16 +391,16 @@ def get_aiometer_status() -> dict[str, Any]:
 
 
 __all__ = [
-    # Availability flag
-    "AIOMETER_AVAILABLE",
+    # AvAlgolability flag
+    "AlgoOMETER_AVAlgoLABLE",
     # Configuration
     "ConcurrencyConfig",
     "ConcurrentResult",
     "amap",
     # Status
-    "get_aiometer_status",
+    "get_Algoometer_status",
     "run_batches",
-    # Main functions
+    # MAlgon functions
     "run_concurrent",
     "run_with_rate_limit",
 ]

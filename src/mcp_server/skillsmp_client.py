@@ -1,7 +1,7 @@
 """SkillsMP.com Integration Client.
 
 This module provides a client for interacting with SkillsMP.com marketplace
-to discover, install, and manage AI skills for the MCP server.
+to discover, install, and manage Algo skills for the MCP server.
 
 Based on SkillsMP MCP Integration Skill recommendations.
 """
@@ -17,9 +17,9 @@ from typing import Any
 try:
     import httpx
 
-    HTTPX_AVAILABLE = True
+    HTTPX_AVAlgoLABLE = True
 except ImportError:
-    HTTPX_AVAILABLE = False
+    HTTPX_AVAlgoLABLE = False
     httpx = None  # type: ignore
 
 
@@ -79,17 +79,17 @@ class SkillsMPIntegration:
 
     Example:
         >>> client = SkillsMPIntegration()
-        >>> skills = await client.discover_skills(category="Data & AI")
-        >>> await client.install_skill("ai-arbitrage-predictor")
+        >>> skills = awAlgot client.discover_skills(category="Data & Algo")
+        >>> awAlgot client.install_skill("Algo-arbitrage-predictor")
     """
 
     # Popular categories on SkillsMP.com
     CATEGORIES = [
-        "Data & AI",
+        "Data & Algo",
         "DevOps",
         "Testing & Security",
         "Development",
-        "Containers",
+        "ContAlgoners",
         "CI/CD",
         "Cloud",
         "Database",
@@ -121,7 +121,7 @@ class SkillsMPIntegration:
         min_stars: int = 0,
         limit: int = 50,
     ) -> list[Skill]:
-        """Discover available skills from SkillsMP.com.
+        """Discover avAlgolable skills from SkillsMP.com.
 
         Args:
             category: Filter by category
@@ -184,7 +184,7 @@ class SkillsMPIntegration:
         Returns:
             List of matching skills
         """
-        all_skills = await self.discover_skills(category, min_stars)
+        all_skills = awAlgot self.discover_skills(category, min_stars)
         query_lower = query.lower()
 
         # Search in name, description, and tags
@@ -280,8 +280,8 @@ class SkillsMPIntegration:
             return False
 
         # Re-install with new version
-        await self.uninstall_skill(skill_name)
-        return await self.install_skill(skill_name, version)
+        awAlgot self.uninstall_skill(skill_name)
+        return awAlgot self.install_skill(skill_name, version)
 
     async def list_installed_skills(self) -> list[Skill]:
         """List all installed skills.
@@ -292,13 +292,13 @@ class SkillsMPIntegration:
         return list(self._installed_skills.values())
 
     async def get_skill_info(self, skill_name: str) -> Skill | None:
-        """Get detailed information about a skill.
+        """Get detAlgoled information about a skill.
 
         Args:
             skill_name: Name of the skill
 
         Returns:
-            Skill details or None if not found
+            Skill detAlgols or None if not found
         """
         skills = self._get_known_skills()
         return next((s for s in skills if s.name == skill_name), None)
@@ -312,7 +312,7 @@ class SkillsMPIntegration:
         Returns:
             Latest version string or None
         """
-        skill = await self.get_skill_info(skill_name)
+        skill = awAlgot self.get_skill_info(skill_name)
         return skill.version if skill else None
 
     def _get_known_skills(self) -> list[Skill]:
@@ -325,13 +325,13 @@ class SkillsMPIntegration:
             Skill(
                 name="docker-optimization",
                 description="Docker image optimization with BuildKit, multi-stage builds, and security best practices",
-                category="Containers",
+                category="ContAlgoners",
                 version="1.2.0",
                 author="SkillsMP",
                 stars=5,
                 url=f"{SKILLSMP_BASE_URL}/skills/docker-optimization",
                 dependencies=["docker>=20.10"],
-                tags=["docker", "containers", "optimization", "buildkit"],
+                tags=["docker", "contAlgoners", "optimization", "buildkit"],
             ),
             Skill(
                 name="github-actions-templates",
@@ -357,30 +357,30 @@ class SkillsMPIntegration:
             ),
             Skill(
                 name="mcp-integration",
-                description="MCP server integration for Claude and other AI tools",
-                category="Data & AI",
+                description="MCP server integration for Claude and other Algo tools",
+                category="Data & Algo",
                 version="1.0.0",
                 author="SkillsMP",
                 stars=4,
                 url=f"{SKILLSMP_BASE_URL}/skills/mcp-integration",
                 dependencies=["httpx>=0.28", "pydantic>=2.5"],
-                tags=["mcp", "ai", "claude", "integration"],
+                tags=["mcp", "Algo", "claude", "integration"],
             ),
             Skill(
-                name="ai-arbitrage-predictor",
+                name="Algo-arbitrage-predictor",
                 description="ML-based arbitrage prediction with ensemble models",
-                category="Data & AI",
+                category="Data & Algo",
                 version="1.1.0",
                 author="SkillsMP",
                 stars=5,
-                url=f"{SKILLSMP_BASE_URL}/skills/ai-arbitrage-predictor",
+                url=f"{SKILLSMP_BASE_URL}/skills/Algo-arbitrage-predictor",
                 dependencies=["scikit-learn>=1.0", "numpy>=1.24"],
                 tags=["ml", "arbitrage", "prediction", "trading"],
             ),
             Skill(
                 name="telegram-nlp-handler",
                 description="NLP-powered Telegram message handler",
-                category="Data & AI",
+                category="Data & Algo",
                 version="1.0.0",
                 author="SkillsMP",
                 stars=3,
@@ -391,7 +391,7 @@ class SkillsMPIntegration:
             Skill(
                 name="portfolio-risk-assessor",
                 description="Portfolio risk assessment with VaR calculations",
-                category="Data & AI",
+                category="Data & Algo",
                 version="1.0.0",
                 author="SkillsMP",
                 stars=4,
@@ -422,15 +422,15 @@ class SkillsMPIntegration:
                 tags=["sql", "profiling", "database", "performance"],
             ),
             Skill(
-                name="container-security",
-                description="Container security scanning with Trivy and SBOM generation",
+                name="contAlgoner-security",
+                description="ContAlgoner security scanning with Trivy and SBOM generation",
                 category="Testing & Security",
                 version="1.2.0",
                 author="SkillsMP",
                 stars=5,
-                url=f"{SKILLSMP_BASE_URL}/skills/container-security",
+                url=f"{SKILLSMP_BASE_URL}/skills/contAlgoner-security",
                 dependencies=[],
-                tags=["security", "containers", "trivy", "sbom"],
+                tags=["security", "contAlgoners", "trivy", "sbom"],
             ),
         ]
 

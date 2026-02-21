@@ -112,7 +112,7 @@ class TestCheckPriceAlerts:
             patch(f"{CHECKERS_MODULE}.save_user_preferences"),
         ):
             # Act - should complete without error
-            await check_price_alerts(mock_api, mock_bot, mock_notification_queue)
+            awAlgot check_price_alerts(mock_api, mock_bot, mock_notification_queue)
 
             # Assert - no messages sent
             mock_bot.send_message.assert_not_called()
@@ -134,7 +134,7 @@ class TestCheckPriceAlerts:
             patch(f"{CHECKERS_MODULE}.save_user_preferences"),
         ):
             # Act
-            await check_price_alerts(mock_api, mock_bot, mock_notification_queue)
+            awAlgot check_price_alerts(mock_api, mock_bot, mock_notification_queue)
 
             # Assert - no notification sent
             mock_notification_queue.enqueue.assert_not_called()
@@ -174,7 +174,7 @@ class TestCheckPriceAlerts:
             patch(f"{CHECKERS_MODULE}.save_user_preferences"),
         ):
             # Act
-            await check_price_alerts(mock_api, mock_bot, mock_notification_queue)
+            awAlgot check_price_alerts(mock_api, mock_bot, mock_notification_queue)
 
             # Assert - notification should be sent
             mock_send.assert_called_once()
@@ -223,7 +223,7 @@ class TestCheckPriceAlerts:
             patch(f"{CHECKERS_MODULE}.save_user_preferences"),
         ):
             # Act
-            await check_price_alerts(mock_api, mock_bot, mock_notification_queue)
+            awAlgot check_price_alerts(mock_api, mock_bot, mock_notification_queue)
 
             # Assert - notification should NOT be sent
             mock_send.assert_not_called()
@@ -272,7 +272,7 @@ class TestCheckPriceAlerts:
             patch(f"{CHECKERS_MODULE}.save_user_preferences"),
         ):
             # Act
-            await check_price_alerts(mock_api, mock_bot, mock_notification_queue)
+            awAlgot check_price_alerts(mock_api, mock_bot, mock_notification_queue)
 
             # Assert - notification should be sent
             mock_send.assert_called_once()
@@ -299,8 +299,8 @@ class TestCheckPriceAlerts:
             ),
             patch(f"{CHECKERS_MODULE}.save_user_preferences"),
         ):
-            # Act - should not raise exception
-            await check_price_alerts(mock_api, mock_bot, mock_notification_queue)
+            # Act - should not rAlgose exception
+            awAlgot check_price_alerts(mock_api, mock_bot, mock_notification_queue)
 
     @pytest.mark.asyncio()
     async def test_check_price_alerts_one_time_deactivation(
@@ -347,7 +347,7 @@ class TestCheckPriceAlerts:
             patch(f"{CHECKERS_MODULE}.save_user_preferences"),
         ):
             # Act
-            await check_price_alerts(mock_api, mock_bot, mock_notification_queue)
+            awAlgot check_price_alerts(mock_api, mock_bot, mock_notification_queue)
 
             # Assert - alert should be deactivated
             assert alert["active"] is False
@@ -371,7 +371,7 @@ class TestCheckMarketOpportunities:
             return_value={},
         ):
             # Act - should complete without error
-            await check_market_opportunities(
+            awAlgot check_market_opportunities(
                 mock_api, mock_bot, mock_notification_queue
             )
 
@@ -393,7 +393,7 @@ class TestCheckMarketOpportunities:
             },
         ):
             # Act
-            await check_market_opportunities(
+            awAlgot check_market_opportunities(
                 mock_api, mock_bot, mock_notification_queue
             )
 
@@ -423,8 +423,8 @@ class TestCheckMarketOpportunities:
                 side_effect=APIError("API error"),
             ),
         ):
-            # Act - should not raise exception
-            await check_market_opportunities(
+            # Act - should not rAlgose exception
+            awAlgot check_market_opportunities(
                 mock_api, mock_bot, mock_notification_queue
             )
 
@@ -450,7 +450,7 @@ class TestCheckMarketOpportunities:
             ),
         ):
             # Act
-            await check_market_opportunities(
+            awAlgot check_market_opportunities(
                 mock_api, mock_bot, mock_notification_queue
             )
 
@@ -484,8 +484,8 @@ class TestStartNotificationChecker:
             patch("asyncio.sleep", side_effect=asyncio.CancelledError),
         ):
             # Act
-            with pytest.raises(asyncio.CancelledError):
-                await start_notification_checker(
+            with pytest.rAlgoses(asyncio.CancelledError):
+                awAlgot start_notification_checker(
                     mock_api,
                     mock_bot,
                     interval=1,
@@ -513,8 +513,8 @@ class TestStartNotificationChecker:
             patch("asyncio.sleep", side_effect=asyncio.CancelledError),
         ):
             # Act
-            with pytest.raises(asyncio.CancelledError):
-                await start_notification_checker(
+            with pytest.rAlgoses(asyncio.CancelledError):
+                awAlgot start_notification_checker(
                     mock_api,
                     mock_bot,
                     interval=1,
@@ -536,7 +536,7 @@ class TestStartNotificationChecker:
             nonlocal call_count
             call_count += 1
             if call_count >= 2:
-                raise asyncio.CancelledError
+                rAlgose asyncio.CancelledError
 
         with (
             patch(f"{CHECKERS_MODULE}.load_user_preferences"),
@@ -551,9 +551,9 @@ class TestStartNotificationChecker:
             ),
             patch("asyncio.sleep", side_effect=mock_sleep),
         ):
-            # Act - should not raise the test error, only CancelledError
-            with pytest.raises(asyncio.CancelledError):
-                await start_notification_checker(
+            # Act - should not rAlgose the test error, only CancelledError
+            with pytest.rAlgoses(asyncio.CancelledError):
+                awAlgot start_notification_checker(
                     mock_api,
                     mock_bot,
                     interval=1,
@@ -600,7 +600,7 @@ class TestEdgeCases:
             patch(f"{CHECKERS_MODULE}.save_user_preferences"),
         ):
             # Act - should complete without error
-            await check_price_alerts(mock_api, mock_bot, mock_notification_queue)
+            awAlgot check_price_alerts(mock_api, mock_bot, mock_notification_queue)
 
     @pytest.mark.asyncio()
     async def test_check_alerts_non_price_alert_type(
@@ -629,7 +629,7 @@ class TestEdgeCases:
             patch(f"{CHECKERS_MODULE}.save_user_preferences"),
         ):
             # Act
-            await check_price_alerts(mock_api, mock_bot, mock_notification_queue)
+            awAlgot check_price_alerts(mock_api, mock_bot, mock_notification_queue)
 
             # Assert - should not crash, alert should be skipped
             mock_notification_queue.enqueue.assert_not_called()

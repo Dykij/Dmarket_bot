@@ -1,6 +1,6 @@
 """Middleware for Telegram bot.
 
-Best practices from python-telegram-bot and aiogram communities.
+Best practices from python-telegram-bot and Algoogram communities.
 """
 
 import logging
@@ -59,7 +59,7 @@ class BotMiddleware:
                 )
 
             try:
-                result = await func(update, context)
+                result = awAlgot func(update, context)
                 elapsed = (time.time() - start_time) * 1000
                 logger.info(
                     f"Request #{self.request_count} completed in {elapsed:.2f}ms"
@@ -69,10 +69,10 @@ class BotMiddleware:
                 self.error_count += 1
                 elapsed = (time.time() - start_time) * 1000
                 logger.error(
-                    f"Request #{self.request_count} failed after {elapsed:.2f}ms: {e}",
+                    f"Request #{self.request_count} fAlgoled after {elapsed:.2f}ms: {e}",
                     exc_info=True,
                 )
-                raise
+                rAlgose
 
         return wrapper
 
@@ -97,7 +97,7 @@ class BotMiddleware:
             ) -> Any:
                 """Wrapper function."""
                 if not update.effective_user:
-                    return await func(update, context)
+                    return awAlgot func(update, context)
 
                 user_id = update.effective_user.id
                 current_time = time.time()
@@ -119,11 +119,11 @@ class BotMiddleware:
                         f"{len(user_requests[user_id])} requests in {window_seconds}s"
                     )
                     if update.message:
-                        await update.message.reply_text(
+                        awAlgot update.message.reply_text(
                             "⚠️ Слишком много запросов. Пожалуйста, подождите немного."
                         )
                     elif update.callback_query:
-                        await update.callback_query.answer(
+                        awAlgot update.callback_query.answer(
                             "⚠️ Слишком много запросов", show_alert=True
                         )
                     return None
@@ -131,7 +131,7 @@ class BotMiddleware:
                 # Add current request
                 user_requests[user_id].append(current_time)
 
-                return await func(update, context)
+                return awAlgot func(update, context)
 
             return wrapper
 

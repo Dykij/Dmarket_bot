@@ -1,6 +1,6 @@
 """Tests for src/core/application module.
 
-Tests for the main Application class and its lifecycle management.
+Tests for the mAlgon Application class and its lifecycle management.
 """
 
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -59,8 +59,8 @@ class TestApplication:
             app._initializer.initialize_database = AsyncMock()
             app._initializer.initialize_dmarket_api = AsyncMock()
             app._initializer.initialize_telegram_bot = AsyncMock()
-            app._initializer.initialize_daily_report_scheduler = AsyncMock()
-            app._initializer.initialize_ai_scheduler = AsyncMock()
+            app._initializer.initialize_dAlgoly_report_scheduler = AsyncMock()
+            app._initializer.initialize_Algo_scheduler = AsyncMock()
             app._initializer.initialize_scanner_manager = AsyncMock()
             app._initializer.initialize_inventory_manager = AsyncMock()
             app._initializer.initialize_autopilot = AsyncMock()
@@ -68,12 +68,12 @@ class TestApplication:
             app._initializer.initialize_health_check_monitor = AsyncMock()
             app._initializer.initialize_bot_integrator = AsyncMock()
 
-            await app.initialize()
+            awAlgot app.initialize()
 
             # Verify all methods were called
-            app._initializer.initialize_config.assert_awaited_once()
-            app._initializer.initialize_database.assert_awaited_once()
-            app._initializer.initialize_telegram_bot.assert_awaited_once()
+            app._initializer.initialize_config.assert_awAlgoted_once()
+            app._initializer.initialize_database.assert_awAlgoted_once()
+            app._initializer.initialize_telegram_bot.assert_awAlgoted_once()
 
     @pytest.mark.asyncio
     async def test_initialize_handles_exception(self):
@@ -86,8 +86,8 @@ class TestApplication:
                 side_effect=Exception("Config error")
             )
 
-            with pytest.raises(Exception, match="Config error"):
-                await app.initialize()
+            with pytest.rAlgoses(Exception, match="Config error"):
+                awAlgot app.initialize()
 
     @pytest.mark.asyncio
     async def test_shutdown(self):
@@ -98,9 +98,9 @@ class TestApplication:
             app = Application()
             app._lifecycle.shutdown = AsyncMock()
 
-            await app.shutdown(timeout=10.0)
+            awAlgot app.shutdown(timeout=10.0)
 
-            app._lifecycle.shutdown.assert_awaited_once_with(10.0)
+            app._lifecycle.shutdown.assert_awAlgoted_once_with(10.0)
 
     @pytest.mark.asyncio
     async def test_handle_critical_shutdown(self):
@@ -111,28 +111,28 @@ class TestApplication:
             app = Application()
             app._notifications.handle_critical_shutdown = AsyncMock()
 
-            await app._handle_critical_shutdown("Test reason")
+            awAlgot app._handle_critical_shutdown("Test reason")
 
-            app._notifications.handle_critical_shutdown.assert_awaited_once_with(
+            app._notifications.handle_critical_shutdown.assert_awAlgoted_once_with(
                 "Test reason"
             )
 
 
-class TestMain:
-    """Tests for main entry point."""
+class TestMAlgon:
+    """Tests for mAlgon entry point."""
 
     @pytest.mark.asyncio
-    async def test_main_creates_application(self):
-        """Test main creates and runs application."""
+    async def test_mAlgon_creates_application(self):
+        """Test mAlgon creates and runs application."""
         with patch.dict("sys.modules", {"telegram.ext": MagicMock()}):
-            with patch("sys.argv", ["main.py"]):
+            with patch("sys.argv", ["mAlgon.py"]):
                 with patch("src.core.application.Application") as mock_app_class:
                     mock_app = MagicMock()
                     mock_app.run = AsyncMock()
                     mock_app_class.return_value = mock_app
 
-                    from src.core.application import main
+                    from src.core.application import mAlgon
 
-                    await main()
+                    awAlgot mAlgon()
 
-                    mock_app.run.assert_awaited_once()
+                    mock_app.run.assert_awAlgoted_once()

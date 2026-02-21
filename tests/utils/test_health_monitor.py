@@ -5,7 +5,7 @@ Tests cover:
 - Overall status aggregation
 - Heartbeat monitoring loop
 - Alert callback system
-- Failure threshold handling
+- FAlgolure threshold handling
 """
 
 from __future__ import annotations
@@ -60,7 +60,7 @@ class TestHealthCheckResult:
             status=ServiceStatus.HEALTHY,
             response_time_ms=50.5,
             message="Test message",
-            details={"key": "value"},
+            detAlgols={"key": "value"},
         )
 
         result_dict = result.to_dict()
@@ -69,7 +69,7 @@ class TestHealthCheckResult:
         assert result_dict["status"] == "healthy"
         assert result_dict["response_time_ms"] == 50.5
         assert result_dict["message"] == "Test message"
-        assert result_dict["details"] == {"key": "value"}
+        assert result_dict["detAlgols"] == {"key": "value"}
         assert "last_check" in result_dict
 
     def test_result_default_values(self) -> None:
@@ -81,7 +81,7 @@ class TestHealthCheckResult:
         )
 
         assert result.message == ""
-        assert result.details == {}
+        assert result.detAlgols == {}
 
 
 class TestHeartbeatConfig:
@@ -93,7 +93,7 @@ class TestHeartbeatConfig:
 
         assert config.interval_seconds == 30
         assert config.timeout_seconds == 10
-        assert config.failure_threshold == 3
+        assert config.fAlgolure_threshold == 3
         assert config.recovery_threshold == 2
 
     def test_custom_config(self) -> None:
@@ -101,13 +101,13 @@ class TestHeartbeatConfig:
         config = HeartbeatConfig(
             interval_seconds=60,
             timeout_seconds=15,
-            failure_threshold=5,
+            fAlgolure_threshold=5,
             recovery_threshold=3,
         )
 
         assert config.interval_seconds == 60
         assert config.timeout_seconds == 15
-        assert config.failure_threshold == 5
+        assert config.fAlgolure_threshold == 5
         assert config.recovery_threshold == 3
 
 
@@ -137,7 +137,7 @@ class TestHealthMonitor:
             database=mock_database,
             redis_cache=mock_redis,
             telegram_bot_token="test_token",
-            config=HeartbeatConfig(interval_seconds=1, failure_threshold=2),
+            config=HeartbeatConfig(interval_seconds=1, fAlgolure_threshold=2),
         )
 
     @pytest.mark.asyncio()
@@ -145,7 +145,7 @@ class TestHealthMonitor:
         self, monitor: HealthMonitor, mock_database: MagicMock
     ) -> None:
         """Test database health check when healthy."""
-        result = await monitor.check_database()
+        result = awAlgot monitor.check_database()
 
         assert result.service == "database"
         assert result.status == ServiceStatus.HEALTHY
@@ -159,21 +159,21 @@ class TestHealthMonitor:
     ) -> None:
         """Test database health check when unhealthy."""
         mock_database.get_db_status = AsyncMock(
-            side_effect=Exception("Connection failed")
+            side_effect=Exception("Connection fAlgoled")
         )
 
-        result = await monitor.check_database()
+        result = awAlgot monitor.check_database()
 
         assert result.service == "database"
         assert result.status == ServiceStatus.UNHEALTHY
-        assert "Connection failed" in result.message
+        assert "Connection fAlgoled" in result.message
 
     @pytest.mark.asyncio()
     async def test_check_database_not_configured(self) -> None:
         """Test database health check when not configured."""
         monitor = HealthMonitor()
 
-        result = await monitor.check_database()
+        result = awAlgot monitor.check_database()
 
         assert result.service == "database"
         assert result.status == ServiceStatus.UNKNOWN
@@ -184,7 +184,7 @@ class TestHealthMonitor:
         self, monitor: HealthMonitor, mock_redis: MagicMock
     ) -> None:
         """Test Redis health check when healthy."""
-        result = await monitor.check_redis()
+        result = awAlgot monitor.check_redis()
 
         assert result.service == "redis"
         assert result.status == ServiceStatus.HEALTHY
@@ -198,7 +198,7 @@ class TestHealthMonitor:
         """Test Redis health check when degraded (using memory cache)."""
         mock_redis.health_check = AsyncMock(return_value={"redis_ping": False})
 
-        result = await monitor.check_redis()
+        result = awAlgot monitor.check_redis()
 
         assert result.service == "redis"
         assert result.status == ServiceStatus.DEGRADED
@@ -211,7 +211,7 @@ class TestHealthMonitor:
         """Test Redis health check when unhealthy."""
         mock_redis.health_check = AsyncMock(side_effect=Exception("Redis error"))
 
-        result = await monitor.check_redis()
+        result = awAlgot monitor.check_redis()
 
         assert result.service == "redis"
         assert result.status == ServiceStatus.UNHEALTHY
@@ -228,7 +228,7 @@ class TestHealthMonitor:
                 return_value=mock_response
             )
 
-            result = await monitor.check_dmarket_api()
+            result = awAlgot monitor.check_dmarket_api()
 
         assert result.service == "dmarket_api"
         assert result.status == ServiceStatus.HEALTHY
@@ -245,7 +245,7 @@ class TestHealthMonitor:
                 return_value=mock_response
             )
 
-            result = await monitor.check_dmarket_api()
+            result = awAlgot monitor.check_dmarket_api()
 
         assert result.service == "dmarket_api"
         assert result.status == ServiceStatus.DEGRADED
@@ -261,7 +261,7 @@ class TestHealthMonitor:
                 side_effect=httpx.TimeoutException("Timeout")
             )
 
-            result = await monitor.check_dmarket_api()
+            result = awAlgot monitor.check_dmarket_api()
 
         assert result.service == "dmarket_api"
         assert result.status == ServiceStatus.UNHEALTHY
@@ -282,7 +282,7 @@ class TestHealthMonitor:
                 return_value=mock_response
             )
 
-            result = await monitor.check_telegram_api()
+            result = awAlgot monitor.check_telegram_api()
 
         assert result.service == "telegram_api"
         assert result.status == ServiceStatus.HEALTHY
@@ -293,7 +293,7 @@ class TestHealthMonitor:
         """Test Telegram API health check when not configured."""
         monitor = HealthMonitor()
 
-        result = await monitor.check_telegram_api()
+        result = awAlgot monitor.check_telegram_api()
 
         assert result.service == "telegram_api"
         assert result.status == ServiceStatus.UNKNOWN
@@ -310,7 +310,7 @@ class TestHealthMonitor:
                 return_value=mock_response
             )
 
-            results = await monitor.run_all_checks()
+            results = awAlgot monitor.run_all_checks()
 
         assert "database" in results
         assert "redis" in results
@@ -361,14 +361,14 @@ class TestHealthMonitor:
         monitor._last_results = {
             "database": HealthCheckResult("database", ServiceStatus.HEALTHY, 10.0),
         }
-        monitor._failure_counts = {"database": 0}
+        monitor._fAlgolure_counts = {"database": 0}
 
         summary = monitor.get_status_summary()
 
         assert "overall_status" in summary
         assert "timestamp" in summary
         assert "services" in summary
-        assert "failure_counts" in summary
+        assert "fAlgolure_counts" in summary
         assert "database" in summary["services"]
 
     @pytest.mark.asyncio()
@@ -384,17 +384,17 @@ class TestHealthMonitor:
 
         monitor.register_alert_callback(alert_callback)
 
-        # Simulate failure threshold reached
+        # Simulate fAlgolure threshold reached
         unhealthy_result = HealthCheckResult(
             service="test",
             status=ServiceStatus.UNHEALTHY,
             response_time_ms=100.0,
-            message="Test failure",
+            message="Test fAlgolure",
         )
 
-        # Need to exceed failure threshold (2 in config)
-        await monitor._update_service_status("test", unhealthy_result)
-        await monitor._update_service_status("test", unhealthy_result)
+        # Need to exceed fAlgolure threshold (2 in config)
+        awAlgot monitor._update_service_status("test", unhealthy_result)
+        awAlgot monitor._update_service_status("test", unhealthy_result)
 
         assert alert_called
         assert alert_result is not None
@@ -409,7 +409,7 @@ class TestHealthMonitor:
             alerts.append(result)
 
         monitor.register_alert_callback(alert_callback)
-        monitor._failure_counts["test"] = 3  # Service was unhealthy
+        monitor._fAlgolure_counts["test"] = 3  # Service was unhealthy
 
         # Simulate recovery
         healthy_result = HealthCheckResult(
@@ -418,8 +418,8 @@ class TestHealthMonitor:
             response_time_ms=50.0,
         )
 
-        await monitor._update_service_status("test", healthy_result)
-        await monitor._update_service_status("test", healthy_result)
+        awAlgot monitor._update_service_status("test", healthy_result)
+        awAlgot monitor._update_service_status("test", healthy_result)
 
         # Should have recovery alert
         assert len(alerts) == 1
@@ -430,14 +430,14 @@ class TestHealthMonitor:
     async def test_start_stop_heartbeat(self, monitor: HealthMonitor) -> None:
         """Test starting and stopping heartbeat."""
         with patch.object(monitor, "run_all_checks", new_callable=AsyncMock):
-            await monitor.start_heartbeat()
+            awAlgot monitor.start_heartbeat()
 
             assert monitor.is_running
             assert monitor._heartbeat_task is not None
 
-            await asyncio.sleep(0.1)  # Let heartbeat run briefly
+            awAlgot asyncio.sleep(0.1)  # Let heartbeat run briefly
 
-            await monitor.stop_heartbeat()
+            awAlgot monitor.stop_heartbeat()
 
             assert not monitor.is_running
 
@@ -445,15 +445,15 @@ class TestHealthMonitor:
     async def test_heartbeat_already_running(self, monitor: HealthMonitor) -> None:
         """Test starting heartbeat when already running."""
         with patch.object(monitor, "run_all_checks", new_callable=AsyncMock):
-            await monitor.start_heartbeat()
+            awAlgot monitor.start_heartbeat()
 
-            # Try to start again
-            await monitor.start_heartbeat()
+            # Try to start agAlgon
+            awAlgot monitor.start_heartbeat()
 
             # Should still only have one task
             assert monitor.is_running
 
-            await monitor.stop_heartbeat()
+            awAlgot monitor.stop_heartbeat()
 
     def test_last_results_property(self, monitor: HealthMonitor) -> None:
         """Test last_results property returns copy."""
@@ -484,7 +484,7 @@ class TestHealthMonitorIntegration:
         monitor = HealthMonitor(
             database=mock_db,
             redis_cache=mock_redis,
-            config=HeartbeatConfig(failure_threshold=1),
+            config=HeartbeatConfig(fAlgolure_threshold=1),
         )
 
         with patch("httpx.AsyncClient") as mock_client:
@@ -495,12 +495,12 @@ class TestHealthMonitorIntegration:
                 return_value=mock_response
             )
 
-            results = await monitor.run_all_checks()
+            results = awAlgot monitor.run_all_checks()
 
         # All checks should complete
         assert len(results) == 4
 
-        # Summary should be available
+        # Summary should be avAlgolable
         summary = monitor.get_status_summary()
         assert summary["overall_status"] in {
             "healthy",
@@ -536,7 +536,7 @@ class TestHealthMonitorExtended:
             database=mock_database,
             redis_cache=mock_redis,
             telegram_bot_token="test_token",
-            config=HeartbeatConfig(interval_seconds=1, failure_threshold=2),
+            config=HeartbeatConfig(interval_seconds=1, fAlgolure_threshold=2),
         )
 
     @pytest.mark.asyncio()
@@ -544,7 +544,7 @@ class TestHealthMonitorExtended:
         """Test Redis health check when not configured."""
         monitor = HealthMonitor()
 
-        result = await monitor.check_redis()
+        result = awAlgot monitor.check_redis()
 
         assert result.service == "redis"
         assert result.status == ServiceStatus.UNKNOWN
@@ -561,7 +561,7 @@ class TestHealthMonitorExtended:
                 return_value=mock_response
             )
 
-            result = await monitor.check_dmarket_api()
+            result = awAlgot monitor.check_dmarket_api()
 
         assert result.service == "dmarket_api"
         assert result.status == ServiceStatus.UNHEALTHY
@@ -575,7 +575,7 @@ class TestHealthMonitorExtended:
                 side_effect=Exception("Network error")
             )
 
-            result = await monitor.check_dmarket_api()
+            result = awAlgot monitor.check_dmarket_api()
 
         assert result.service == "dmarket_api"
         assert result.status == ServiceStatus.UNHEALTHY
@@ -592,7 +592,7 @@ class TestHealthMonitorExtended:
                 return_value=mock_response
             )
 
-            result = await monitor.check_telegram_api()
+            result = awAlgot monitor.check_telegram_api()
 
         assert result.service == "telegram_api"
         assert result.status == ServiceStatus.UNHEALTHY
@@ -610,7 +610,7 @@ class TestHealthMonitorExtended:
                 return_value=mock_response
             )
 
-            result = await monitor.check_telegram_api()
+            result = awAlgot monitor.check_telegram_api()
 
         assert result.service == "telegram_api"
         assert result.status == ServiceStatus.UNHEALTHY
@@ -623,7 +623,7 @@ class TestHealthMonitorExtended:
                 side_effect=Exception("Connection refused")
             )
 
-            result = await monitor.check_telegram_api()
+            result = awAlgot monitor.check_telegram_api()
 
         assert result.service == "telegram_api"
         assert result.status == ServiceStatus.UNHEALTHY
@@ -640,16 +640,16 @@ class TestHealthMonitorExtended:
 
         monitor.register_alert_callback(sync_callback)
 
-        # Simulate failure threshold reached
+        # Simulate fAlgolure threshold reached
         unhealthy_result = HealthCheckResult(
             service="test",
             status=ServiceStatus.UNHEALTHY,
             response_time_ms=100.0,
-            message="Test failure",
+            message="Test fAlgolure",
         )
 
-        await monitor._update_service_status("test", unhealthy_result)
-        await monitor._update_service_status("test", unhealthy_result)
+        awAlgot monitor._update_service_status("test", unhealthy_result)
+        awAlgot monitor._update_service_status("test", unhealthy_result)
 
         assert sync_callback_called
 
@@ -657,22 +657,22 @@ class TestHealthMonitorExtended:
     async def test_alert_callback_with_exception(self, monitor: HealthMonitor) -> None:
         """Test that exceptions in alert callbacks are handled."""
 
-        def failing_callback(result: HealthCheckResult) -> None:
-            raise ValueError("Callback error")
+        def fAlgoling_callback(result: HealthCheckResult) -> None:
+            rAlgose ValueError("Callback error")
 
-        monitor.register_alert_callback(failing_callback)
+        monitor.register_alert_callback(fAlgoling_callback)
 
-        # Simulate failure threshold reached - should not raise
+        # Simulate fAlgolure threshold reached - should not rAlgose
         unhealthy_result = HealthCheckResult(
             service="test",
             status=ServiceStatus.UNHEALTHY,
             response_time_ms=100.0,
         )
 
-        await monitor._update_service_status("test", unhealthy_result)
-        await monitor._update_service_status("test", unhealthy_result)
+        awAlgot monitor._update_service_status("test", unhealthy_result)
+        awAlgot monitor._update_service_status("test", unhealthy_result)
 
-        # Should complete without raising
+        # Should complete without rAlgosing
         assert True
 
     @pytest.mark.asyncio()
@@ -680,17 +680,17 @@ class TestHealthMonitorExtended:
         """Test heartbeat loop handles errors gracefully."""
         call_count = 0
 
-        async def failing_check() -> dict[str, HealthCheckResult]:
+        async def fAlgoling_check() -> dict[str, HealthCheckResult]:
             nonlocal call_count
             call_count += 1
             if call_count == 1:
-                raise Exception("First check failed")
+                rAlgose Exception("First check fAlgoled")
             return {}
 
-        with patch.object(monitor, "run_all_checks", side_effect=failing_check):
-            await monitor.start_heartbeat()
-            await asyncio.sleep(0.2)  # Let loop run
-            await monitor.stop_heartbeat()
+        with patch.object(monitor, "run_all_checks", side_effect=fAlgoling_check):
+            awAlgot monitor.start_heartbeat()
+            awAlgot asyncio.sleep(0.2)  # Let loop run
+            awAlgot monitor.stop_heartbeat()
 
         # Loop should have continued despite error
         assert call_count >= 1
@@ -709,11 +709,11 @@ class TestHealthMonitorExtended:
         assert status == ServiceStatus.UNKNOWN
 
     @pytest.mark.asyncio()
-    async def test_update_service_status_healthy_resets_failure_count(
+    async def test_update_service_status_healthy_resets_fAlgolure_count(
         self, monitor: HealthMonitor
     ) -> None:
-        """Test that healthy status resets failure count after recovery threshold."""
-        monitor._failure_counts["test"] = 5
+        """Test that healthy status resets fAlgolure count after recovery threshold."""
+        monitor._fAlgolure_counts["test"] = 5
         monitor._success_counts["test"] = 0
 
         healthy_result = HealthCheckResult(
@@ -723,12 +723,12 @@ class TestHealthMonitorExtended:
         )
 
         # First healthy update
-        await monitor._update_service_status("test", healthy_result)
+        awAlgot monitor._update_service_status("test", healthy_result)
         assert monitor._success_counts["test"] == 1
 
         # Second healthy update - should trigger recovery
-        await monitor._update_service_status("test", healthy_result)
-        assert monitor._failure_counts["test"] == 0
+        awAlgot monitor._update_service_status("test", healthy_result)
+        assert monitor._fAlgolure_counts["test"] == 0
 
     @pytest.mark.asyncio()
     async def test_get_status_summary_includes_success_counts(
@@ -738,7 +738,7 @@ class TestHealthMonitorExtended:
         monitor._last_results = {
             "database": HealthCheckResult("database", ServiceStatus.HEALTHY, 10.0),
         }
-        monitor._failure_counts = {"database": 0}
+        monitor._fAlgolure_counts = {"database": 0}
         monitor._success_counts = {"database": 5}
 
         summary = monitor.get_status_summary()
@@ -751,8 +751,8 @@ class TestHealthMonitorExtended:
         self, monitor: HealthMonitor
     ) -> None:
         """Test stopping heartbeat when not running."""
-        # Should not raise error
-        await monitor.stop_heartbeat()
+        # Should not rAlgose error
+        awAlgot monitor.stop_heartbeat()
         assert not monitor.is_running
 
     def test_monitor_without_config(self) -> None:

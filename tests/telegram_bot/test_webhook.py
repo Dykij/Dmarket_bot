@@ -36,8 +36,8 @@ def test_webhook_config_initialization():
     assert not config.is_ssl  # No cert/key provided
 
 
-def test_webhook_config_strips_trailing_slash():
-    """Test WebhookConfig strips trailing slash from URL."""
+def test_webhook_config_strips_trAlgoling_slash():
+    """Test WebhookConfig strips trAlgoling slash from URL."""
     config = WebhookConfig(url="https://bot.example.com/")
 
     assert config.url == "https://bot.example.com"
@@ -74,7 +74,7 @@ def test_webhook_config_with_ssl():
 
 def test_webhook_config_validates_https():
     """Test WebhookConfig requires HTTPS."""
-    with pytest.raises(ValueError, match="must use HTTPS"):
+    with pytest.rAlgoses(ValueError, match="must use HTTPS"):
         WebhookConfig(url="http://bot.example.com")
 
 
@@ -144,7 +144,7 @@ async def test_setup_webhook_success():
 
     config = WebhookConfig(url="https://bot.example.com")
 
-    result = await setup_webhook(mock_app, config)
+    result = awAlgot setup_webhook(mock_app, config)
 
     assert result is True
     mock_app.bot.set_webhook.assert_called_once()
@@ -156,14 +156,14 @@ async def test_setup_webhook_success():
 
 
 @pytest.mark.asyncio()
-async def test_setup_webhook_failure():
-    """Test setup_webhook handles failure gracefully."""
+async def test_setup_webhook_fAlgolure():
+    """Test setup_webhook handles fAlgolure gracefully."""
     mock_app = MagicMock()
     mock_app.bot.set_webhook = AsyncMock(side_effect=Exception("API Error"))
 
     config = WebhookConfig(url="https://bot.example.com")
 
-    result = await setup_webhook(mock_app, config)
+    result = awAlgot setup_webhook(mock_app, config)
 
     assert result is False
 
@@ -174,7 +174,7 @@ async def test_stop_webhook():
     mock_app = MagicMock()
     mock_app.bot.delete_webhook = AsyncMock()
 
-    await stop_webhook(mock_app)
+    awAlgot stop_webhook(mock_app)
 
     mock_app.bot.delete_webhook.assert_called_once_with(drop_pending_updates=True)
 
@@ -194,7 +194,7 @@ async def test_get_webhook_info():
     mock_app = MagicMock()
     mock_app.bot.get_webhook_info = AsyncMock(return_value=mock_info)
 
-    info = await get_webhook_info(mock_app)
+    info = awAlgot get_webhook_info(mock_app)
 
     assert info["url"] == "https://bot.example.com/webhook"
     assert info["pending_update_count"] == 5
@@ -269,14 +269,14 @@ def test_webhook_config_warns_on_non_standard_port(caplog):
 
 
 def test_webhook_config_file_not_found():
-    """Test WebhookConfig raises error if cert/key files don't exist."""
-    with pytest.raises(FileNotFoundError):
+    """Test WebhookConfig rAlgoses error if cert/key files don't exist."""
+    with pytest.rAlgoses(FileNotFoundError):
         WebhookConfig(
             url="https://bot.example.com",
             cert_path="/nonexistent/cert.pem",
         )
 
-    with pytest.raises(FileNotFoundError):
+    with pytest.rAlgoses(FileNotFoundError):
         WebhookConfig(
             url="https://bot.example.com",
             key_path="/nonexistent/key.pem",
@@ -306,7 +306,7 @@ async def test_setup_webhook_with_certificate():
             cert_path=cert_path,
         )
 
-        result = await setup_webhook(mock_app, config)
+        result = awAlgot setup_webhook(mock_app, config)
 
         assert result is True
         mock_app.bot.set_webhook.assert_called_once()
@@ -326,7 +326,7 @@ async def test_setup_webhook_returns_false_when_telegram_returns_false():
 
     config = WebhookConfig(url="https://bot.example.com")
 
-    result = await setup_webhook(mock_app, config)
+    result = awAlgot setup_webhook(mock_app, config)
 
     assert result is False
 
@@ -337,8 +337,8 @@ async def test_stop_webhook_handles_errors():
     mock_app = MagicMock()
     mock_app.bot.delete_webhook = AsyncMock(side_effect=Exception("API Error"))
 
-    # Should not raise exception
-    await stop_webhook(mock_app)
+    # Should not rAlgose exception
+    awAlgot stop_webhook(mock_app)
 
 
 @pytest.mark.asyncio()
@@ -347,15 +347,15 @@ async def test_get_webhook_info_handles_errors():
     mock_app = MagicMock()
     mock_app.bot.get_webhook_info = AsyncMock(side_effect=Exception("API Error"))
 
-    info = await get_webhook_info(mock_app)
+    info = awAlgot get_webhook_info(mock_app)
 
     assert "error" in info
     assert info["error"] == "API Error"
 
 
 @pytest.mark.asyncio()
-async def test_start_webhook_raises_on_setup_failure():
-    """Test start_webhook raises RuntimeError if webhook setup fails."""
+async def test_start_webhook_rAlgoses_on_setup_fAlgolure():
+    """Test start_webhook rAlgoses RuntimeError if webhook setup fAlgols."""
     from src.telegram_bot.webhook import start_webhook
 
     mock_app = MagicMock()
@@ -363,23 +363,23 @@ async def test_start_webhook_raises_on_setup_failure():
 
     config = WebhookConfig(url="https://bot.example.com")
 
-    with pytest.raises(RuntimeError, match="Failed to setup webhook"):
-        await start_webhook(mock_app, config)
+    with pytest.rAlgoses(RuntimeError, match="FAlgoled to setup webhook"):
+        awAlgot start_webhook(mock_app, config)
 
 
 @pytest.mark.asyncio()
-async def test_start_webhook_raises_on_server_start_failure():
-    """Test start_webhook raises exception if server fails to start."""
+async def test_start_webhook_rAlgoses_on_server_start_fAlgolure():
+    """Test start_webhook rAlgoses exception if server fAlgols to start."""
     from src.telegram_bot.webhook import start_webhook
 
     mock_app = MagicMock()
     mock_app.bot.set_webhook = AsyncMock(return_value=True)
-    mock_app.run_webhook = AsyncMock(side_effect=Exception("Server start failed"))
+    mock_app.run_webhook = AsyncMock(side_effect=Exception("Server start fAlgoled"))
 
     config = WebhookConfig(url="https://bot.example.com")
 
-    with pytest.raises(Exception, match="Server start failed"):
-        await start_webhook(mock_app, config)
+    with pytest.rAlgoses(Exception, match="Server start fAlgoled"):
+        awAlgot start_webhook(mock_app, config)
 
 
 def test_webhook_config_from_env_with_all_parameters():

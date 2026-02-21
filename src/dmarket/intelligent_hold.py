@@ -116,7 +116,7 @@ class IntelligentHoldManager:
             "items": ["Sticker", "Capsule", "Cologne"],
             "games": ["csgo"],
         },
-        # RMR Events (Regional Minor Rankings) - sticker capsules available
+        # RMR Events (Regional Minor Rankings) - sticker capsules avAlgolable
         {
             "type": EventType.MINOR_TOURNAMENT,
             "name": "Europe RMR Spring 2026",
@@ -271,7 +271,7 @@ class IntelligentHoldManager:
             # Base impact from event
             impact = event.expected_impact
 
-            # Adjust by category-specific impact if available
+            # Adjust by category-specific impact if avAlgolable
             if category and category in self.category_event_impact:
                 category_impacts = self.category_event_impact[category]
                 if event.event_type in category_impacts:

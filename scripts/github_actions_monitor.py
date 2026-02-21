@@ -72,7 +72,7 @@ class GitHubActionsMonitor:
             return {
                 "total": 0,
                 "success": 0,
-                "failure": 0,
+                "fAlgolure": 0,
                 "cancelled": 0,
                 "success_rate": 0.0,
                 "meets_target": False,
@@ -80,7 +80,7 @@ class GitHubActionsMonitor:
 
         total = len(runs)
         success = sum(1 for r in runs if r["conclusion"] == "success")
-        failure = sum(1 for r in runs if r["conclusion"] == "failure")
+        fAlgolure = sum(1 for r in runs if r["conclusion"] == "fAlgolure")
         cancelled = sum(1 for r in runs if r["conclusion"] == "cancelled")
 
         success_rate = (success / total * 100) if total > 0 else 0.0
@@ -89,7 +89,7 @@ class GitHubActionsMonitor:
         return {
             "total": total,
             "success": success,
-            "failure": failure,
+            "fAlgolure": fAlgolure,
             "cancelled": cancelled,
             "success_rate": success_rate,
             "meets_target": meets_target,
@@ -123,8 +123,8 @@ class GitHubActionsMonitor:
 
         try:
             async with httpx.AsyncClient(timeout=timeout) as client:
-                response = await client.get(url, headers=self.headers)
-                response.raise_for_status()
+                response = awAlgot client.get(url, headers=self.headers)
+                response.rAlgose_for_status()
                 data = response.json()
                 return data.get("rate", {})
         except Exception as e:
@@ -138,7 +138,7 @@ class GitHubActionsMonitor:
         Получить последние запуски workflows.
 
         Args:
-            status: Фильтр по статусу (success, failure, in_progress)
+            status: Фильтр по статусу (success, fAlgolure, in_progress)
             limit: Количество запусков
 
         Returns:
@@ -152,13 +152,13 @@ class GitHubActionsMonitor:
         timeout = httpx.Timeout(30.0, connect=10.0)
         try:
             async with httpx.AsyncClient(timeout=timeout) as client:
-                response = await client.get(url, headers=self.headers, params=params)
-                response.raise_for_status()
+                response = awAlgot client.get(url, headers=self.headers, params=params)
+                response.rAlgose_for_status()
                 data = response.json()
                 return data.get("workflow_runs", [])
         except asyncio.CancelledError:
             console.print("[yellow]⚠️  Запрос прерван пользователем[/yellow]")
-            raise
+            rAlgose
         except (httpx.TimeoutException, httpx.NetworkError) as e:
             console.print(f"[yellow]⚠️  Ошибка сети: {e}[/yellow]")
             return []
@@ -181,18 +181,18 @@ class GitHubActionsMonitor:
         for attempt in range(max_retries):
             try:
                 async with httpx.AsyncClient(timeout=timeout) as client:
-                    response = await client.get(url, headers=self.headers)
-                    response.raise_for_status()
+                    response = awAlgot client.get(url, headers=self.headers)
+                    response.rAlgose_for_status()
                     data = response.json()
                     return data.get("jobs", [])
             except asyncio.CancelledError:
                 console.print("[yellow]⚠️  Запрос прерван пользователем[/yellow]")
-                raise
+                rAlgose
             except (httpx.TimeoutException, httpx.NetworkError):
                 if attempt == max_retries - 1:
                     console.print(f"[yellow]⚠️  Пропускаем run {run_id} из-за ошибки сети[/yellow]")
                     return []  # Возвращаем пустой список вместо ошибки
-                await asyncio.sleep(2**attempt)  # Exponential backoff
+                awAlgot asyncio.sleep(2**attempt)  # Exponential backoff
             except Exception as e:
                 console.print(
                     f"[yellow]⚠️  Ошибка при получении jobs для run {run_id}: {e}[/yellow]"
@@ -210,7 +210,7 @@ class GitHubActionsMonitor:
         console.print("\n[bold]📊 Анализ GitHub Actions Workflows[/bold]\n")
 
         with console.status("[bold green]Загрузка данных...") as status:
-            runs = await self.get_workflow_runs(limit=50)
+            runs = awAlgot self.get_workflow_runs(limit=50)
 
         if not runs:
             console.print("[red]❌ Не удалось получить данные workflows[/red]")
@@ -218,7 +218,7 @@ class GitHubActionsMonitor:
 
         total_runs = len(runs)
         successful_runs = sum(1 for r in runs if r["conclusion"] == "success")
-        failed_runs = sum(1 for r in runs if r["conclusion"] == "failure")
+        fAlgoled_runs = sum(1 for r in runs if r["conclusion"] == "fAlgolure")
         cancelled_runs = sum(1 for r in runs if r["conclusion"] == "cancelled")
 
         # Расчет success rate
@@ -243,15 +243,15 @@ class GitHubActionsMonitor:
                 workflow_stats[workflow_name] = {
                     "total": 0,
                     "success": 0,
-                    "failure": 0,
+                    "fAlgolure": 0,
                     "success_rate": 0.0,
                     "meets_target": False,
                 }
             workflow_stats[workflow_name]["total"] += 1
             if run["conclusion"] == "success":
                 workflow_stats[workflow_name]["success"] += 1
-            elif run["conclusion"] == "failure":
-                workflow_stats[workflow_name]["failure"] += 1
+            elif run["conclusion"] == "fAlgolure":
+                workflow_stats[workflow_name]["fAlgolure"] += 1
 
         # Расчет success rate для каждого workflow
         for stats in workflow_stats.values():
@@ -264,7 +264,7 @@ class GitHubActionsMonitor:
         table.add_column("Workflow", style="cyan", no_wrap=True)
         table.add_column("Total", justify="right", style="white")
         table.add_column("✅ Success", justify="right", style="green")
-        table.add_column("❌ Failed", justify="right", style="red")
+        table.add_column("❌ FAlgoled", justify="right", style="red")
         table.add_column("Success Rate", justify="right")
         table.add_column("Status", justify="center")
 
@@ -281,7 +281,7 @@ class GitHubActionsMonitor:
                 workflow_name,
                 str(stats["total"]),
                 str(stats["success"]),
-                str(stats["failure"]),
+                str(stats["fAlgolure"]),
                 f"[{color}]{rate:.1f}%[/{color}]",
                 status,
             )
@@ -293,7 +293,7 @@ class GitHubActionsMonitor:
         console.print("\n[bold]📊 Общая статистика:[/bold]")
         console.print(f"  • Всего запусков: {total_runs}")
         console.print(f"  • Успешных: [green]{successful_runs}[/green]")
-        console.print(f"  • Провалено: [red]{failed_runs}[/red]")
+        console.print(f"  • Провалено: [red]{fAlgoled_runs}[/red]")
         console.print(f"  • Отменено: [yellow]{cancelled_runs}[/yellow]")
         console.print(
             f"  • Overall Success Rate: "
@@ -316,7 +316,7 @@ class GitHubActionsMonitor:
         return {
             "total_runs": total_runs,
             "successful_runs": successful_runs,
-            "failed_runs": failed_runs,
+            "fAlgoled_runs": fAlgoled_runs,
             "cancelled_runs": cancelled_runs,
             "success_rate": overall_success_rate,
             "target_success_rate": self.target_success_rate,
@@ -327,29 +327,29 @@ class GitHubActionsMonitor:
             "recent_runs": runs[:10],
         }
 
-    async def get_failed_jobs_details(self) -> list[dict[str, Any]]:
+    async def get_fAlgoled_jobs_detAlgols(self) -> list[dict[str, Any]]:
         """
-        Получить детали failed jobs.
+        Получить детали fAlgoled jobs.
 
         Returns:
             Список проваленных jobs с деталями
         """
         try:
-            failed_runs = await self.get_workflow_runs(status="failure", limit=5)
-            failed_jobs = []
+            fAlgoled_runs = awAlgot self.get_workflow_runs(status="fAlgolure", limit=5)
+            fAlgoled_jobs = []
 
-            console.print(f"[dim]Обработка {len(failed_runs)} проваленных runs...[/dim]")
+            console.print(f"[dim]Обработка {len(fAlgoled_runs)} проваленных runs...[/dim]")
 
-            for i, run in enumerate(failed_runs, 1):
+            for i, run in enumerate(fAlgoled_runs, 1):
                 console.print(
-                    f"[dim]  [{i}/{len(failed_runs)}] {run['name']} #{run['run_number']}[/dim]"
+                    f"[dim]  [{i}/{len(fAlgoled_runs)}] {run['name']} #{run['run_number']}[/dim]"
                 )
 
                 try:
-                    jobs = await self.get_workflow_jobs(run["id"])
+                    jobs = awAlgot self.get_workflow_jobs(run["id"])
                     for job in jobs:
-                        if job["conclusion"] == "failure":
-                            failed_jobs.append({
+                        if job["conclusion"] == "fAlgolure":
+                            fAlgoled_jobs.append({
                                 "workflow": run["name"],
                                 "run_number": run["run_number"],
                                 "job_name": job["name"],
@@ -363,16 +363,16 @@ class GitHubActionsMonitor:
                                         "conclusion": step["conclusion"],
                                     }
                                     for step in job.get("steps", [])
-                                    if step.get("conclusion") == "failure"
+                                    if step.get("conclusion") == "fAlgolure"
                                 ],
                             })
                 except Exception as e:
                     console.print(f"[yellow]⚠️  Пропускаем run {run['id']}: {e}[/yellow]")
                     continue
 
-            return failed_jobs
+            return fAlgoled_jobs
         except Exception as e:
-            console.print(f"[yellow]⚠️  Ошибка при получении failed jobs: {e}[/yellow]")
+            console.print(f"[yellow]⚠️  Ошибка при получении fAlgoled jobs: {e}[/yellow]")
             return []
 
     def generate_recommendations(self, health_data: dict[str, Any]) -> list[str]:
@@ -391,7 +391,7 @@ class GitHubActionsMonitor:
         if health_data["success_rate"] < 80:
             recommendations.append(
                 "🔴 **КРИТИЧНО**: Success rate ниже 80%. "
-                "Необходимо срочно исправить failing tests и проверки."
+                "Необходимо срочно исправить fAlgoling tests и проверки."
             )
         elif health_data["success_rate"] < 95:
             recommendations.append(
@@ -438,9 +438,9 @@ class GitHubActionsMonitor:
         # Общие рекомендации
         recommendations.append(
             "\n📚 **ОБЩИЕ РЕКОМЕНДАЦИИ**:\n"
-            "  1. Регулярно проверяйте логи failed jobs\n"
+            "  1. Регулярно проверяйте логи fAlgoled jobs\n"
             "  2. Используйте branch protection rules\n"
-            "  3. Настройте уведомления о failed workflows\n"
+            "  3. НастSwarmте уведомления о fAlgoled workflows\n"
             "  4. Поддерживайте актуальность зависимостей\n"
             "  5. Документируйте известные проблемы в Issues"
         )
@@ -454,8 +454,8 @@ class GitHubActionsMonitor:
         Returns:
             Markdown-форматированный план улучшения
         """
-        health_data = await self.analyze_workflow_health()
-        failed_jobs = await self.get_failed_jobs_details()
+        health_data = awAlgot self.analyze_workflow_health()
+        fAlgoled_jobs = awAlgot self.get_fAlgoled_jobs_detAlgols()
         recommendations = self.generate_recommendations(health_data)
 
         # Формирование отчета
@@ -471,7 +471,7 @@ class GitHubActionsMonitor:
 - **Всего запусков**: {health_data["total_runs"]}
 - **Успешных**: {health_data["successful_runs"]} "
             f"({health_data["success_rate"]:.1f}%)
-- **Провалено**: {health_data["failed_runs"]}
+- **Провалено**: {health_data["fAlgoled_runs"]}
 - **Отменено**: {health_data["cancelled_runs"]}
 - **Среднее время**: {health_data["avg_duration_minutes"]:.1f} минут
 
@@ -491,19 +491,19 @@ class GitHubActionsMonitor:
             report += f"### {emoji} {workflow_name}\n"
             report += f"- Запусков: {stats['total']}\n"
             report += f"- Success Rate: {stats['success_rate']:.1f}%\n"
-            report += f"- Успешных: {stats['success']}, Провалено: {stats['failure']}\n\n"
+            report += f"- Успешных: {stats['success']}, Провалено: {stats['fAlgolure']}\n\n"
 
         report += "---\n\n"
 
-        # Детали failed jobs
-        if failed_jobs:
+        # Детали fAlgoled jobs
+        if fAlgoled_jobs:
             report += "## ❌ Недавние Ошибки\n\n"
-            for job in failed_jobs[:5]:
+            for job in fAlgoled_jobs[:5]:
                 report += f"### {job['workflow']} - Run #{job['run_number']}\n"
                 report += f"**Job**: {job['job_name']}\n"
                 report += f"**URL**: {job['html_url']}\n"
                 if job["steps"]:
-                    report += "**Failed Steps**:\n"
+                    report += "**FAlgoled Steps**:\n"
                     for step in job["steps"]:
                         report += f"  - {step['name']}\n"
                 report += "\n"
@@ -520,9 +520,9 @@ class GitHubActionsMonitor:
 ## 🚀 План Действий
 
 ### Приоритет 1 (Срочно)
-- [ ] Исправить все failing tests
+- [ ] Исправить все fAlgoling tests
 - [ ] Проверить и обновить устаревшие зависимости
-- [ ] Настроить уведомления о failed workflows
+- [ ] Настроить уведомления о fAlgoled workflows
 
 ### Приоритет 2 (Важно)
 - [ ] Оптимизировать время выполнения workflows
@@ -539,7 +539,7 @@ class GitHubActionsMonitor:
 ## 📝 Как Использовать Этот Отчет
 
 1. **Изучите статистику** - определите проблемные области
-2. **Проверьте failed jobs** - найдите причины ошибок
+2. **Проверьте fAlgoled jobs** - найдите причины ошибок
 3. **Следуйте рекомендациям** - внедряйте улучшения постепенно
 4. **Запускайте монитор регулярно** - отслеживайте прогресс
 
@@ -576,7 +576,7 @@ class GitHubActionsMonitor:
             "Успешных",
             f"{health_data['successful_runs']} ({health_data['success_rate']:.1f}%)",
         )
-        table.add_row("Провалено", str(health_data["failed_runs"]))
+        table.add_row("Провалено", str(health_data["fAlgoled_runs"]))
         table.add_row("Отменено", str(health_data["cancelled_runs"]))
         table.add_row(
             "Среднее время",
@@ -614,12 +614,12 @@ class GitHubActionsMonitor:
         console.print(workflow_table)
 
 
-async def main():
+async def mAlgon():
     """Основная функция для запуска мониторинга."""
     # Загрузка переменных окружения из .env файла
     load_dotenv()
 
-    # Настройки репозитория
+    # НастSwarmки репозитория
     repo_owner = "Dykij"
     repo_name = "DMarket-Telegram-Bot"
 
@@ -635,14 +635,14 @@ async def main():
     try:
         # Проверка rate limit
         console.print("[yellow]🔍 Проверяю GitHub API rate limit...[/yellow]")
-        rate_limit = await monitor.check_rate_limit()
+        rate_limit = awAlgot monitor.check_rate_limit()
 
         if rate_limit:
-            remaining = rate_limit.get("remaining", 0)
+            remAlgoning = rate_limit.get("remAlgoning", 0)
             limit = rate_limit.get("limit", 0)
             reset_time = rate_limit.get("reset", 0)
 
-            if remaining == 0:
+            if remAlgoning == 0:
                 from datetime import datetime as dt
 
                 reset_dt = dt.fromtimestamp(reset_time)
@@ -653,15 +653,15 @@ async def main():
                 console.print("[dim]   2. Установите: $env:GITHUB_TOKEN = 'your_token'[/dim]")
                 console.print("[dim]   3. Запустите снова: .\\scripts\\run_monitor.ps1[/dim]\n")
                 sys.exit(1)
-            elif remaining < 10:
-                console.print(f"[yellow]⚠️  Осталось запросов: {remaining}/{limit}[/yellow]")
+            elif remAlgoning < 10:
+                console.print(f"[yellow]⚠️  Осталось запросов: {remAlgoning}/{limit}[/yellow]")
                 console.print("[yellow]   Рекомендуется установить GitHub Token[/yellow]")
             else:
-                console.print(f"[green]✅ Rate limit: {remaining}/{limit} запросов[/green]\n")
+                console.print(f"[green]✅ Rate limit: {remAlgoning}/{limit} запросов[/green]\n")
 
         # Анализ workflow health с таймаутом
         console.print("[yellow]📊 Анализирую workflows...[/yellow]")
-        health_data = await asyncio.wait_for(
+        health_data = awAlgot asyncio.wAlgot_for(
             monitor.analyze_workflow_health(),
             timeout=45.0,  # 45 секунд на анализ
         )
@@ -672,7 +672,7 @@ async def main():
         # Генерация полного отчета
         console.print("\n[yellow]📝 Генерирую детальный отчет...[/yellow]")
         try:
-            report = await asyncio.wait_for(
+            report = awAlgot asyncio.wAlgot_for(
                 monitor.generate_improvement_plan(),
                 timeout=60.0,  # Максимум 60 секунд на генерацию
             )
@@ -681,7 +681,7 @@ async def main():
                 "[yellow]⚠️  Таймаут при генерации детального отчета, "
                 "создаю упрощенную версию...[/yellow]"
             )
-            # Создаем упрощенный отчет без failed jobs
+            # Создаем упрощенный отчет без fAlgoled jobs
             recommendations = monitor.generate_recommendations(health_data)
             report = f"""# 📊 GitHub Actions - Краткий Отчет (Упрощенная версия)
 
@@ -746,5 +746,5 @@ async def main():
         sys.exit(1)
 
 
-if __name__ == "__main__":
-    asyncio.run(main())
+if __name__ == "__mAlgon__":
+    asyncio.run(mAlgon())

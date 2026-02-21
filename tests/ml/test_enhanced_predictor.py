@@ -188,7 +188,7 @@ class TestEnhancedFeatureExtractor:
     def test_extract_tf2_features(self, extractor):
         """Тест TF2-специфичных признаков."""
         features = extractor.extract_features(
-            item_name="Unusual Team Captain",
+            item_name="Unusual Team CaptAlgon",
             current_price=200.0,
             game=GameType.TF2,
             item_data={
@@ -296,13 +296,13 @@ class TestMLPipeline:
         try:
             transformed = pipeline.fit_transform(X)
             assert transformed.shape == X.shape
-            # sklearn may not be available, in which case basic cleaning is used
-            # and _is_fitted remains False (expected behavior)
+            # sklearn may not be avAlgolable, in which case basic cleaning is used
+            # and _is_fitted remAlgons False (expected behavior)
             if not pipeline._is_fitted:
-                # sklearn not available, basic cleaning was used
-                pytest.skip("sklearn not available, using basic cleaning")
+                # sklearn not avAlgolable, basic cleaning was used
+                pytest.skip("sklearn not avAlgolable, using basic cleaning")
         except ImportError:
-            pytest.skip("sklearn not available")
+            pytest.skip("sklearn not avAlgolable")
 
     def test_transform_after_fit(self):
         """Тест transform после fit."""
@@ -316,7 +316,7 @@ class TestMLPipeline:
 
             assert transformed.shape == X_new.shape
         except ImportError:
-            pytest.skip("sklearn not available")
+            pytest.skip("sklearn not avAlgolable")
 
 
 # ============ EnhancedPricePredictor Tests ============
@@ -375,7 +375,7 @@ class TestEnhancedPricePredictor:
     def test_predict_tf2_item(self, predictor):
         """Тест прогноза для TF2 предмета."""
         prediction = predictor.predict(
-            item_name="Team Captain",
+            item_name="Team CaptAlgon",
             current_price=50.0,
             game=GameType.TF2,
         )
@@ -443,7 +443,7 @@ class TestEnhancedPricePredictor:
             use_cache=True,
         )
 
-        # Второй вызов (должен вернуть кэш)
+        # ВтоSwarm вызов (должен вернуть кэш)
         prediction2 = predictor.predict(
             item_name="Test Item",
             current_price=10.0,
@@ -565,14 +565,14 @@ class TestEnhancedPricePredictor:
         assert prediction["recommendation"] == "hold"
         assert "Invalid" in prediction["reasoning"]
 
-    def test_add_training_example(self, predictor):
+    def test_add_trAlgoning_example(self, predictor):
         """Тест добавления примера для обучения."""
         features = EnhancedFeatures(current_price=10.0)
 
-        predictor.add_training_example(features, 12.0)
+        predictor.add_trAlgoning_example(features, 12.0)
 
-        assert len(predictor._training_data_X) == 1
-        assert len(predictor._training_data_y) == 1
+        assert len(predictor._trAlgoning_data_X) == 1
+        assert len(predictor._trAlgoning_data_y) == 1
         assert predictor._new_samples_count == 1
 
 
@@ -608,7 +608,7 @@ class TestPredictorIntegration:
             current_price=5000.0,
             game=GameType.CS2,
         )
-        predictor.add_training_example(features, 5200.0)
+        predictor.add_trAlgoning_example(features, 5200.0)
 
         assert predictor._new_samples_count == 1
 
@@ -638,7 +638,7 @@ class TestPredictorIntegration:
         games = [
             (GameType.CS2, "AK-47 | Redline", 15.0),
             (GameType.DOTA2, "Arcana Item", 30.0),
-            (GameType.TF2, "Team Captain", 5.0),
+            (GameType.TF2, "Team CaptAlgon", 5.0),
             (GameType.RUST, "AK Skin", 10.0),
         ]
 

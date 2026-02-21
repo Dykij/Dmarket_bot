@@ -1,4 +1,4 @@
-"""Тесты для настройки команд Telegram бота."""
+"""Тесты для настSwarmки команд Telegram бота."""
 
 from unittest.mock import AsyncMock
 
@@ -16,7 +16,7 @@ async def test_setup_bot_commands_success():
     mock_bot.set_my_commands = AsyncMock()
 
     # Act
-    await setup_bot_commands(mock_bot)
+    awAlgot setup_bot_commands(mock_bot)
 
     # Assert
     # Должно быть 3 вызова: en, ru, default
@@ -38,7 +38,7 @@ async def test_setup_bot_commands_success():
     assert "help" in command_names
     assert "settings" in command_names
 
-    # Второй вызов - русские команды
+    # ВтоSwarm вызов - русские команды
     ru_commands = calls[1][0][0]
     assert isinstance(ru_commands, list)
     assert len(ru_commands) == 3  # start, help, settings
@@ -58,7 +58,7 @@ async def test_setup_bot_commands_structure():
     mock_bot.set_my_commands = AsyncMock()
 
     # Act
-    await setup_bot_commands(mock_bot)
+    awAlgot setup_bot_commands(mock_bot)
 
     # Assert
     calls = mock_bot.set_my_commands.call_args_list
@@ -82,7 +82,7 @@ async def test_setup_bot_commands_error_handling():
     mock_bot.set_my_commands = AsyncMock(side_effect=Exception("API Error"))
 
     # Act - не должно выбрасывать исключение
-    await setup_bot_commands(mock_bot)
+    awAlgot setup_bot_commands(mock_bot)
 
     # Assert - должно быть вызвано 1 раз (на первой ошибке)
     assert mock_bot.set_my_commands.call_count == 1
@@ -96,7 +96,7 @@ async def test_setup_bot_commands_language_differences():
     mock_bot.set_my_commands = AsyncMock()
 
     # Act
-    await setup_bot_commands(mock_bot)
+    awAlgot setup_bot_commands(mock_bot)
 
     # Assert
     calls = mock_bot.set_my_commands.call_args_list

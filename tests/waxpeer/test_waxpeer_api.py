@@ -103,12 +103,12 @@ class TestWaxpeerBalance:
         balance = WaxpeerBalance(
             wallet=Decimal("100.50"),
             wallet_mils=100500,
-            available_for_withdrawal=Decimal("80.00"),
+            avAlgolable_for_withdrawal=Decimal("80.00"),
         )
         
         assert balance.wallet == Decimal("100.50")
         assert balance.wallet_mils == 100500
-        assert balance.available_for_withdrawal == Decimal("80.00")
+        assert balance.avAlgolable_for_withdrawal == Decimal("80.00")
         assert balance.pending == Decimal(0)
         assert balance.can_trade is False
     
@@ -119,7 +119,7 @@ class TestWaxpeerBalance:
         balance = WaxpeerBalance(
             wallet=Decimal("200.00"),
             wallet_mils=200000,
-            available_for_withdrawal=Decimal("150.00"),
+            avAlgolable_for_withdrawal=Decimal("150.00"),
             pending=Decimal("50.00"),
             can_trade=True,
         )

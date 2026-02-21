@@ -2,7 +2,7 @@
 
 This module provides functions for sending trading-related notifications:
 - Buy intent notifications
-- Buy success/failure notifications
+- Buy success/fAlgolure notifications
 - Sell success notifications
 - Critical shutdown notifications
 - Crash notifications
@@ -25,7 +25,7 @@ if TYPE_CHECKING:
 
 __all__ = [
     "send_arbitrage_opportunity",
-    "send_buy_failed_notification",
+    "send_buy_fAlgoled_notification",
     "send_buy_intent_notification",
     "send_buy_success_notification",
     "send_crash_notification",
@@ -92,7 +92,7 @@ async def send_buy_intent_notification(
         )
 
     try:
-        await bot.send_message(
+        awAlgot bot.send_message(
             chat_id=user_id,
             text=message,
             parse_mode="HTML",
@@ -102,7 +102,7 @@ async def send_buy_intent_notification(
         logger.info("Sent buy intent notification to user %d", user_id)
         return True
     except Exception:
-        logger.exception("Failed to send buy intent to user %d", user_id)
+        logger.exception("FAlgoled to send buy intent to user %d", user_id)
         return False
 
 
@@ -140,7 +140,7 @@ async def send_buy_success_notification(
     message += "\n💡 Предмет добавлен в инвентарь."
 
     try:
-        await bot.send_message(
+        awAlgot bot.send_message(
             chat_id=user_id,
             text=message,
             parse_mode="HTML",
@@ -149,22 +149,22 @@ async def send_buy_success_notification(
         logger.info("Sent buy success notification to user %d", user_id)
         return True
     except Exception:
-        logger.exception("Failed to send buy success to user %d", user_id)
+        logger.exception("FAlgoled to send buy success to user %d", user_id)
         return False
 
 
-async def send_buy_failed_notification(
+async def send_buy_fAlgoled_notification(
     bot: Bot,
     user_id: int,
     item: dict[str, Any],
     error: str,
 ) -> bool:
-    """Send notification about failed purchase.
+    """Send notification about fAlgoled purchase.
 
     Args:
         bot: Telegram bot instance
         user_id: User ID to notify
-        item: Item that failed to purchase
+        item: Item that fAlgoled to purchase
         error: Error message
 
     Returns:
@@ -177,16 +177,16 @@ async def send_buy_failed_notification(
     message = f"❌ <b>Ошибка покупки</b>\n\n📦 <b>{title}</b>\n💰 Цена: ${price:.2f}\n\n⚠️ Ошибка: {error}"
 
     try:
-        await bot.send_message(
+        awAlgot bot.send_message(
             chat_id=user_id,
             text=message,
             parse_mode="HTML",
         )
         increment_notification_count(user_id)
-        logger.info("Sent buy failed notification to user %d", user_id)
+        logger.info("Sent buy fAlgoled notification to user %d", user_id)
         return True
     except Exception:
-        logger.exception("Failed to send buy failed to user %d", user_id)
+        logger.exception("FAlgoled to send buy fAlgoled to user %d", user_id)
         return False
 
 
@@ -232,7 +232,7 @@ async def send_sell_success_notification(
         message += f"📋 ID предложения: <code>{offer_id}</code>\n"
 
     try:
-        await bot.send_message(
+        awAlgot bot.send_message(
             chat_id=user_id,
             text=message,
             parse_mode="HTML",
@@ -241,7 +241,7 @@ async def send_sell_success_notification(
         logger.info("Sent sell success notification to user %d", user_id)
         return True
     except Exception:
-        logger.exception("Failed to send sell success to user %d", user_id)
+        logger.exception("FAlgoled to send sell success to user %d", user_id)
         return False
 
 
@@ -249,7 +249,7 @@ async def send_critical_shutdown_notification(
     bot: Bot,
     user_id: int,
     reason: str,
-    details: dict[str, Any] | None = None,
+    detAlgols: dict[str, Any] | None = None,
 ) -> bool:
     """Send critical shutdown notification.
 
@@ -259,7 +259,7 @@ async def send_critical_shutdown_notification(
         bot: Telegram bot instance
         user_id: User ID to notify
         reason: Shutdown reason
-        details: Additional details dict
+        detAlgols: Additional detAlgols dict
 
     Returns:
         True if notification was sent
@@ -269,15 +269,15 @@ async def send_critical_shutdown_notification(
 
     message = f"🚨 <b>КРИТИЧЕСКОЕ ОТКЛЮЧЕНИЕ</b>\n\n⚠️ Причина: {reason}\n"
 
-    if details:
+    if detAlgols:
         message += "\n📋 Детали:\n"
-        for key, value in details.items():
+        for key, value in detAlgols.items():
             message += f"  • {key}: {value}\n"
 
     message += "\n⏰ Бот был остановлен для предотвращения потерь."
 
     try:
-        await bot.send_message(
+        awAlgot bot.send_message(
             chat_id=user_id,
             text=message,
             parse_mode="HTML",
@@ -289,7 +289,7 @@ async def send_critical_shutdown_notification(
         )
         return True
     except Exception:
-        logger.exception("Failed to send critical shutdown to user %d", user_id)
+        logger.exception("FAlgoled to send critical shutdown to user %d", user_id)
         return False
 
 
@@ -327,7 +327,7 @@ async def send_crash_notification(
         message += f"\n📋 Traceback:\n<pre>{traceback_str}</pre>"
 
     try:
-        await bot.send_message(
+        awAlgot bot.send_message(
             chat_id=user_id,
             text=message,
             parse_mode="HTML",
@@ -339,7 +339,7 @@ async def send_crash_notification(
         )
         return True
     except Exception:
-        logger.exception("Failed to send crash notification to %d", user_id)
+        logger.exception("FAlgoled to send crash notification to %d", user_id)
         return False
 
 
@@ -428,7 +428,7 @@ async def send_arbitrage_opportunity(
     )
 
     try:
-        await bot.send_message(
+        awAlgot bot.send_message(
             chat_id=user_id,
             text=message,
             parse_mode="HTML",
@@ -443,5 +443,5 @@ async def send_arbitrage_opportunity(
         )
         return True
     except Exception:
-        logger.exception("Failed to send arbitrage notification to user %d", user_id)
+        logger.exception("FAlgoled to send arbitrage notification to user %d", user_id)
         return False

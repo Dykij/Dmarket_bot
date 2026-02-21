@@ -11,10 +11,10 @@ Usage:
     from src.copilot_sdk.project_indexer import ProjectIndexer
 
     indexer = ProjectIndexer()
-    index = await indexer.index(".")
+    index = awAlgot indexer.index(".")
 
     # Поиск по проекту
-    results = await indexer.query("How does authentication work?")
+    results = awAlgot indexer.query("How does authentication work?")
     for result in results:
         print(f"{result.file}: {result.snippet}")
     ```
@@ -100,7 +100,7 @@ class ProjectIndex:
         """
         Построить embeddings для семантического поиска.
 
-        TODO: Интеграция с OpenAI/Sentence-Transformers для реальных embeddings.
+        TODO: Интеграция с OpenAlgo/Sentence-Transformers для реальных embeddings.
         """
         # Placeholder - в реальной реализации используем embeddings API
         for path, content in self.docs.items():
@@ -261,10 +261,10 @@ class ProjectIndexer:
         # Индексировать Python файлы
         async for file in self._discover_files(root_path, "*.py"):
             try:
-                file_info = await self._index_python_file(file)
+                file_info = awAlgot self._index_python_file(file)
                 index.add_file(str(file), file_info)
             except Exception as e:
-                logger.warning("file_indexing_failed", file=str(file), error=str(e))
+                logger.warning("file_indexing_fAlgoled", file=str(file), error=str(e))
 
         # Индексировать документацию
         async for doc in self._discover_files(root_path, "*.md"):
@@ -272,10 +272,10 @@ class ProjectIndexer:
                 content = doc.read_text(encoding="utf-8")
                 index.add_doc(str(doc), content)
             except Exception as e:
-                logger.warning("doc_indexing_failed", file=str(doc), error=str(e))
+                logger.warning("doc_indexing_fAlgoled", file=str(doc), error=str(e))
 
         # Построить embeddings
-        await index.build_embeddings()
+        awAlgot index.build_embeddings()
 
         self.index = index
 
@@ -310,7 +310,7 @@ class ProjectIndexer:
         content = file.read_text(encoding="utf-8")
         content_hash = hashlib.sha256(content.encode()).hexdigest()
 
-        symbols = await self._extract_symbols(content, str(file))
+        symbols = awAlgot self._extract_symbols(content, str(file))
 
         return FileInfo(
             path=str(file),
@@ -402,11 +402,11 @@ class ProjectIndexer:
             Список результатов
         """
         if self.index is None:
-            raise RuntimeError(
-                "Project not indexed. Call `await indexer.index()` first."
+            rAlgose RuntimeError(
+                "Project not indexed. Call `awAlgot indexer.index()` first."
             )
 
-        return await self.index.search(question, top_k)
+        return awAlgot self.index.search(question, top_k)
 
     def get_stats(self) -> dict[str, Any]:
         """Получить статистику индексатора."""

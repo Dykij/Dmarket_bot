@@ -227,7 +227,7 @@ class TestAutoSellerScheduling:
     @pytest.mark.asyncio()
     async def test_schedule_sale_basic(self, auto_seller: AutoSeller) -> None:
         """Test basic sale scheduling."""
-        sale = await auto_seller.schedule_sale(
+        sale = awAlgot auto_seller.schedule_sale(
             item_id="item_123",
             item_name="AK-47 | Redline",
             buy_price=10.00,
@@ -245,7 +245,7 @@ class TestAutoSellerScheduling:
         self, auto_seller: AutoSeller
     ) -> None:
         """Test scheduling with custom target margin."""
-        sale = await auto_seller.schedule_sale(
+        sale = awAlgot auto_seller.schedule_sale(
             item_id="item_456",
             item_name="M4A1-S | Hyper Beast",
             buy_price=20.00,
@@ -259,12 +259,12 @@ class TestAutoSellerScheduling:
     async def test_schedule_sale_disabled(
         self, mock_api: AsyncMock, sale_config: SaleConfig
     ) -> None:
-        """Test that scheduling fails when disabled."""
+        """Test that scheduling fAlgols when disabled."""
         sale_config.enabled = False
         seller = AutoSeller(api=mock_api, config=sale_config)
 
-        with pytest.raises(ValueError, match="disabled"):
-            await seller.schedule_sale(
+        with pytest.rAlgoses(ValueError, match="disabled"):
+            awAlgot seller.schedule_sale(
                 item_id="item_123",
                 item_name="Test Item",
                 buy_price=10.00,
@@ -272,7 +272,7 @@ class TestAutoSellerScheduling:
 
     @pytest.mark.asyncio()
     async def test_schedule_sale_max_reached(self, auto_seller: AutoSeller) -> None:
-        """Test that scheduling fails when max sales reached."""
+        """Test that scheduling fAlgols when max sales reached."""
         # Fill up to max
         auto_seller.config.max_active_sales = 2
         for i in range(2):
@@ -283,8 +283,8 @@ class TestAutoSellerScheduling:
                 target_margin=0.08,
             )
 
-        with pytest.raises(ValueError, match="Maximum active sales"):
-            await auto_seller.schedule_sale(
+        with pytest.rAlgoses(ValueError, match="Maximum active sales"):
+            awAlgot auto_seller.schedule_sale(
                 item_id="item_new",
                 item_name="New Item",
                 buy_price=10.00,
@@ -338,7 +338,7 @@ class TestAutoSellerPricing:
 
         adjusted = auto_seller._apply_minimum_margin(sample_sale, too_low_price)
 
-        # Should be raised to meet 4% minimum margin after fees
+        # Should be rAlgosed to meet 4% minimum margin after fees
         # 10 * 1.04 / 0.93 = $11.18
         assert adjusted >= 11.18
 
@@ -349,7 +349,7 @@ class TestAutoSellerPricing:
         """Test optimal price calculation with undercut strategy."""
         auto_seller.config.pricing_strategy = PricingStrategy.UNDERCUT
 
-        price = await auto_seller._calculate_optimal_price(sample_sale)
+        price = awAlgot auto_seller._calculate_optimal_price(sample_sale)
 
         # Should get top offer and undercut
         assert price is not None
@@ -362,7 +362,7 @@ class TestAutoSellerPricing:
         """Test optimal price with fixed margin strategy."""
         auto_seller.config.pricing_strategy = PricingStrategy.FIXED_MARGIN
 
-        price = await auto_seller._calculate_optimal_price(sample_sale)
+        price = awAlgot auto_seller._calculate_optimal_price(sample_sale)
 
         assert price == 11.61
         # Should not call API for fixed margin
@@ -388,7 +388,7 @@ class TestAutoSellerPriceAdjustment:
         auto_seller.scheduled_sales[sample_sale.item_id] = sample_sale
 
         # Adjust to new price
-        success = await auto_seller.adjust_price(sample_sale, 11.50)
+        success = awAlgot auto_seller.adjust_price(sample_sale, 11.50)
 
         assert success is True
         assert sample_sale.current_price == 11.50
@@ -402,7 +402,7 @@ class TestAutoSellerPriceAdjustment:
         """Test that non-listed items cannot be adjusted."""
         sample_sale.status = SaleStatus.PENDING
 
-        success = await auto_seller.adjust_price(sample_sale, 11.50)
+        success = awAlgot auto_seller.adjust_price(sample_sale, 11.50)
 
         assert success is False
         auto_seller.api.update_offer_prices.assert_not_called()
@@ -418,7 +418,7 @@ class TestAutoSellerPriceAdjustment:
         auto_seller.scheduled_sales[sample_sale.item_id] = sample_sale
 
         # Try to adjust to same price
-        success = await auto_seller.adjust_price(sample_sale, 11.50)
+        success = awAlgot auto_seller.adjust_price(sample_sale, 11.50)
 
         assert success is False
         auto_seller.api.update_offer_prices.assert_not_called()
@@ -442,7 +442,7 @@ class TestAutoSellerStopLoss:
         sample_sale.current_price = 12.00
         auto_seller.scheduled_sales[sample_sale.item_id] = sample_sale
 
-        success = await auto_seller.trigger_stop_loss(sample_sale)
+        success = awAlgot auto_seller.trigger_stop_loss(sample_sale)
 
         assert success is True
         assert sample_sale.status == SaleStatus.STOP_LOSS
@@ -456,7 +456,7 @@ class TestAutoSellerStopLoss:
         """Test that stop-loss doesn't trigger for non-listed items."""
         sample_sale.status = SaleStatus.PENDING
 
-        success = await auto_seller.trigger_stop_loss(sample_sale)
+        success = awAlgot auto_seller.trigger_stop_loss(sample_sale)
 
         assert success is False
 
@@ -478,7 +478,7 @@ class TestAutoSellerSaleManagement:
         sample_sale.offer_id = "offer_123"
         auto_seller.scheduled_sales[sample_sale.item_id] = sample_sale
 
-        success = await auto_seller.cancel_sale(sample_sale.item_id)
+        success = awAlgot auto_seller.cancel_sale(sample_sale.item_id)
 
         assert success is True
         assert sample_sale.item_id not in auto_seller.scheduled_sales
@@ -492,7 +492,7 @@ class TestAutoSellerSaleManagement:
         sample_sale.status = SaleStatus.PENDING
         auto_seller.scheduled_sales[sample_sale.item_id] = sample_sale
 
-        success = await auto_seller.cancel_sale(sample_sale.item_id)
+        success = awAlgot auto_seller.cancel_sale(sample_sale.item_id)
 
         assert success is True
         assert sample_sale.item_id not in auto_seller.scheduled_sales
@@ -537,7 +537,7 @@ class TestAutoSellerStatistics:
         assert "scheduled_count" in stats
         assert "listed_count" in stats
         assert "sold_count" in stats
-        assert "failed_count" in stats
+        assert "fAlgoled_count" in stats
         assert "stop_loss_count" in stats
         assert "total_profit" in stats
         assert "active_sales" in stats
@@ -546,7 +546,7 @@ class TestAutoSellerStatistics:
     async def test_statistics_tracking(self, auto_seller: AutoSeller) -> None:
         """Test that statistics are tracked correctly."""
         # Schedule a sale
-        await auto_seller.schedule_sale(
+        awAlgot auto_seller.schedule_sale(
             item_id="item_123",
             item_name="Test Item",
             buy_price=10.00,
@@ -591,11 +591,11 @@ class TestAutoSellerPriceMonitor:
     @pytest.mark.asyncio()
     async def test_start_stop_price_monitor(self, auto_seller: AutoSeller) -> None:
         """Test starting and stopping price monitor."""
-        await auto_seller.start_price_monitor()
+        awAlgot auto_seller.start_price_monitor()
         assert auto_seller._running is True
         assert auto_seller._monitor_task is not None
 
-        await auto_seller.stop_price_monitor()
+        awAlgot auto_seller.stop_price_monitor()
         assert auto_seller._running is False
         assert auto_seller._monitor_task is None
 
@@ -604,15 +604,15 @@ class TestAutoSellerPriceMonitor:
         self, auto_seller: AutoSeller
     ) -> None:
         """Test that starting multiple times doesn't create multiple tasks."""
-        await auto_seller.start_price_monitor()
+        awAlgot auto_seller.start_price_monitor()
         task1 = auto_seller._monitor_task
 
-        await auto_seller.start_price_monitor()
+        awAlgot auto_seller.start_price_monitor()
         task2 = auto_seller._monitor_task
 
         assert task1 is task2
 
-        await auto_seller.stop_price_monitor()
+        awAlgot auto_seller.stop_price_monitor()
 
 
 # ============================================================================
@@ -670,7 +670,7 @@ class TestAutoSellerStats:
         assert stats.scheduled_count == 0
         assert stats.listed_count == 0
         assert stats.sold_count == 0
-        assert stats.failed_count == 0
+        assert stats.fAlgoled_count == 0
         assert stats.stop_loss_count == 0
         assert stats.adjustments_count == 0
         assert stats.total_profit == 0.0

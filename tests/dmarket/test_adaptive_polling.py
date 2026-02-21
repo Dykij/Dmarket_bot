@@ -159,7 +159,7 @@ class TestAdaptivePollingEngine:
     @pytest.mark.asyncio
     async def test_force_poll(self, engine, mock_api):
         """Test forced polling."""
-        changes = await engine.force_poll("csgo")
+        changes = awAlgot engine.force_poll("csgo")
 
         # First poll should not detect changes (just caching)
         assert isinstance(changes, list)
@@ -175,10 +175,10 @@ class TestAdaptivePollingEngine:
         3. Third poll: price change can be detected
         """
         # First poll - items added to known_item_ids
-        await engine.force_poll("csgo")
+        awAlgot engine.force_poll("csgo")
 
         # Second poll - items added to price cache
-        await engine.force_poll("csgo")
+        awAlgot engine.force_poll("csgo")
 
         # Update mock to return different price
         mock_api.get_market_items = AsyncMock(return_value={
@@ -193,7 +193,7 @@ class TestAdaptivePollingEngine:
         })
 
         # Third poll - should detect change
-        changes = await engine.force_poll("csgo")
+        changes = awAlgot engine.force_poll("csgo")
         assert len(changes) == 1
         assert changes[0].old_price == 10.0
         assert changes[0].new_price == 11.0

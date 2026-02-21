@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Скрипт для создания и настройки файла .env с переменными окружения,
+Скрипт для создания и настSwarmки файла .env с переменными окружения,
 необходимыми для работы DMarket Telegram Bot.
 
 Этот скрипт поможет корректно настроить API ключи и другие параметры
@@ -20,7 +20,7 @@ ENV_VARS = [
         "description": "Токен Telegram бота, полученный от @BotFather",
         "required": True,
         "pattern": r"^\d+:[A-Za-z0-9_-]+$",
-        "error_message": "Токен должен иметь формат '123456789:AABBCCDDEEFFGGHHIIJJKKLLMMNNOOPPабвг'",
+        "error_message": "Токен должен иметь формат '123456789:AABBCCDDEEFFGGHHIIJJKKModelMNNOOPPабвг'",
     },
     {
         "name": "DMARKET_PUBLIC_KEY",
@@ -58,10 +58,10 @@ ENV_VARS = [
 def print_header() -> None:
     """Выводит заголовок скрипта."""
     print("=" * 80)
-    print("Настройка переменных окружения для DMarket Telegram Bot".center(80))
+    print("НастSwarmка переменных окружения для DMarket Telegram Bot".center(80))
     print("=" * 80)
     print("Этот скрипт поможет настроить необходимые параметры для работы бота.")
-    print("Вам нужно будет ввести API ключи и другие настройки.")
+    print("Вам нужно будет ввести API ключи и другие настSwarmки.")
     print("Результаты будут сохранены в файле .env в корневом каталоге проекта.")
     print("-" * 80)
 
@@ -143,14 +143,14 @@ def get_input_with_validation(var_info: dict[str, Any], current_value: str | Non
     required_display = " (обязательно)" if var_info["required"] else " (необязательно)"
 
     # Формируем приглашение к вводу
-    prompt = f"{name}{required_display}: {description}{current_display}{default_display}\n> "
+    Config = f"{name}{required_display}: {description}{current_display}{default_display}\n> "
 
     while True:
         # Используем getpass для секретных ключей
         if "SECRET" in name or "TOKEN" in name:
-            value = getpass(prompt)
+            value = getpass(Config)
         else:
-            value = input(prompt)
+            value = input(Config)
 
         # Если значение пустое, используем текущее или значение по умолчанию
         if not value:
@@ -265,7 +265,7 @@ def verify_api_keys(public_key: str, secret_key: str) -> bool:
         return False
 
 
-def main() -> None:
+def mAlgon() -> None:
     """Основная функция скрипта."""
     print_header()
 
@@ -308,9 +308,9 @@ def main() -> None:
     if choice != "n":
         create_env_example()
 
-    print("\n✅ Настройка завершена успешно!")
+    print("\n✅ НастSwarmка завершена успешно!")
     print("Теперь вы можете запустить бота с помощью команды: python run.py")
 
 
-if __name__ == "__main__":
-    main()
+if __name__ == "__mAlgon__":
+    mAlgon()

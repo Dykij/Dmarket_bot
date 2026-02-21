@@ -33,7 +33,7 @@ class TestNLPCommandHandler:
         """Test parsing Russian balance command."""
         nlp = NLPCommandHandler()
 
-        result = await nlp.parse_user_intent("Какой мой баланс?", user_id=123)
+        result = awAlgot nlp.parse_user_intent("Какой мой баланс?", user_id=123)
 
         assert result.intent == "show_balance"
         assert result.language == "ru"
@@ -44,7 +44,7 @@ class TestNLPCommandHandler:
         """Test parsing English balance command."""
         nlp = NLPCommandHandler()
 
-        result = await nlp.parse_user_intent("What's my balance?", user_id=123)
+        result = awAlgot nlp.parse_user_intent("What's my balance?", user_id=123)
 
         assert result.intent == "show_balance"
         assert result.language == "en"
@@ -55,7 +55,7 @@ class TestNLPCommandHandler:
         """Test parsing arbitrage command with game (Russian)."""
         nlp = NLPCommandHandler()
 
-        result = await nlp.parse_user_intent(
+        result = awAlgot nlp.parse_user_intent(
             "Найди арбитраж в CS:GO", user_id=123
         )
 
@@ -68,7 +68,7 @@ class TestNLPCommandHandler:
         """Test parsing arbitrage command with game (English)."""
         nlp = NLPCommandHandler()
 
-        result = await nlp.parse_user_intent(
+        result = awAlgot nlp.parse_user_intent(
             "Find arbitrage in Dota 2", user_id=123
         )
 
@@ -81,7 +81,7 @@ class TestNLPCommandHandler:
         """Test parsing arbitrage with price limit."""
         nlp = NLPCommandHandler()
 
-        result = await nlp.parse_user_intent(
+        result = awAlgot nlp.parse_user_intent(
             "Найди арбитраж в CS:GO до $10", user_id=123
         )
 
@@ -94,7 +94,7 @@ class TestNLPCommandHandler:
         """Test parsing create target command (Russian)."""
         nlp = NLPCommandHandler()
 
-        result = await nlp.parse_user_intent(
+        result = awAlgot nlp.parse_user_intent(
             "Создай таргет для AK-47 за $15", user_id=123
         )
 
@@ -108,7 +108,7 @@ class TestNLPCommandHandler:
         """Test parsing create target command (English)."""
         nlp = NLPCommandHandler()
 
-        result = await nlp.parse_user_intent(
+        result = awAlgot nlp.parse_user_intent(
             "Create target for AWP Dragon Lore at $20", user_id=123
         )
 
@@ -121,7 +121,7 @@ class TestNLPCommandHandler:
         """Test parsing list targets command."""
         nlp = NLPCommandHandler()
 
-        result = await nlp.parse_user_intent("Покажи все таргеты", user_id=123)
+        result = awAlgot nlp.parse_user_intent("Покажи все таргеты", user_id=123)
 
         assert result.intent == "list_targets"
         assert result.language == "ru"
@@ -131,7 +131,7 @@ class TestNLPCommandHandler:
         """Test parsing delete target command."""
         nlp = NLPCommandHandler()
 
-        result = await nlp.parse_user_intent("Delete target", user_id=123)
+        result = awAlgot nlp.parse_user_intent("Delete target", user_id=123)
 
         assert result.intent == "delete_target"
         assert result.language == "en"
@@ -141,7 +141,7 @@ class TestNLPCommandHandler:
         """Test parsing statistics command."""
         nlp = NLPCommandHandler()
 
-        result = await nlp.parse_user_intent("Покажи статистику", user_id=123)
+        result = awAlgot nlp.parse_user_intent("Покажи статистику", user_id=123)
 
         assert result.intent == "show_stats"
         assert result.language == "ru"
@@ -151,7 +151,7 @@ class TestNLPCommandHandler:
         """Test parsing help command."""
         nlp = NLPCommandHandler()
 
-        result = await nlp.parse_user_intent("Помощь", user_id=123)
+        result = awAlgot nlp.parse_user_intent("Помощь", user_id=123)
 
         assert result.intent == "help"
         assert result.language == "ru"
@@ -161,7 +161,7 @@ class TestNLPCommandHandler:
         """Test parsing unknown command."""
         nlp = NLPCommandHandler()
 
-        result = await nlp.parse_user_intent(
+        result = awAlgot nlp.parse_user_intent(
             "Random gibberish xyz123", user_id=123
         )
 
@@ -176,7 +176,7 @@ class TestNLPCommandHandler:
         # First message establishes context
         context = {"previous_game": "csgo"}
 
-        result = await nlp.parse_user_intent(
+        result = awAlgot nlp.parse_user_intent(
             "Найди арбитраж", user_id=123, context=context
         )
 

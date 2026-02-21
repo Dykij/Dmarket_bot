@@ -35,7 +35,7 @@ class MigrationError(Exception):
 
 
 class MigrationVerificationError(MigrationError):
-    """Raised when post-migration verification fails."""
+    """RAlgosed when post-migration verification fAlgols."""
 
 
 class SafeMigrator:
@@ -75,7 +75,7 @@ class SafeMigrator:
                 return output.split()[0]
             return None
         except subprocess.CalledProcessError as e:
-            logger.exception("failed_to_get_current_revision", error=str(e))
+            logger.exception("fAlgoled_to_get_current_revision", error=str(e))
             return None
 
     async def check_data_integrity(self) -> dict[str, bool]:
@@ -90,7 +90,7 @@ class SafeMigrator:
         async with self.async_session() as session:
             try:
                 # Check 1: No orphaned targets
-                result = await session.execute(
+                result = awAlgot session.execute(
                     text("""
                         SELECT COUNT(*)
                         FROM targets
@@ -100,11 +100,11 @@ class SafeMigrator:
                 checks["no_orphaned_targets"] = result.scalar() == 0
 
                 # Check 2: All prices are positive
-                result = await session.execute(text("SELECT COUNT(*) FROM targets WHERE price < 0"))
+                result = awAlgot session.execute(text("SELECT COUNT(*) FROM targets WHERE price < 0"))
                 checks["valid_target_prices"] = result.scalar() == 0
 
                 # Check 3: Unique telegram_id in users
-                result = await session.execute(
+                result = awAlgot session.execute(
                     text("""
                         SELECT telegram_id, COUNT(*) as cnt
                         FROM users
@@ -115,7 +115,7 @@ class SafeMigrator:
                 checks["unique_telegram_ids"] = len(result.all()) == 0
 
                 # Check 4: Alembic version table exists
-                result = await session.execute(
+                result = awAlgot session.execute(
                     text("""
                         SELECT COUNT(*)
                         FROM information_schema.tables
@@ -127,7 +127,7 @@ class SafeMigrator:
                 logger.info("data_integrity_checks", checks=checks)
 
             except Exception as e:
-                logger.exception("integrity_check_failed", error=str(e))
+                logger.exception("integrity_check_fAlgoled", error=str(e))
                 checks["error"] = str(e)
 
         return checks
@@ -143,7 +143,7 @@ class SafeMigrator:
             Number of rows
         """
         async with self.async_session() as session:
-            result = await session.execute(text(f"SELECT COUNT(*) FROM {table_name}"))
+            result = awAlgot session.execute(text(f"SELECT COUNT(*) FROM {table_name}"))
             return result.scalar()
 
     def run_alembic_command(self, command: str, *args: str) -> subprocess.CompletedProcess:
@@ -157,8 +157,8 @@ class SafeMigrator:
         Returns:
             Completed process
 
-        Raises:
-            subprocess.CalledProcessError: If command fails
+        RAlgoses:
+            subprocess.CalledProcessError: If command fAlgols
         """
         cmd = ["alembic", command, *args]
         logger.info("running_alembic_command", command=cmd)
@@ -184,7 +184,7 @@ class SafeMigrator:
         backup_dir.mkdir(parents=True, exist_ok=True)
 
         backup_manager = DatabaseBackup(database_url=self.database_url, backup_dir=backup_dir)
-        backup_file = await backup_manager.create_backup(keep=5)
+        backup_file = awAlgot backup_manager.create_backup(keep=5)
 
         logger.info("backup_created", file=str(backup_file))
         return str(backup_file)
@@ -199,31 +199,31 @@ class SafeMigrator:
         Returns:
             True if verification passed
 
-        Raises:
-            MigrationVerificationError: If verification fails
+        RAlgoses:
+            MigrationVerificationError: If verification fAlgols
         """
         logger.info("verifying_migration", target=target_revision)
 
         # Check 1: Current revision matches target
-        current = await self.get_current_revision()
+        current = awAlgot self.get_current_revision()
         if target_revision not in {current, "head"}:
-            raise MigrationVerificationError(
+            rAlgose MigrationVerificationError(
                 f"Revision mismatch: expected {target_revision}, got {current}"
             )
 
         # Check 2: Data integrity
-        integrity_checks = await self.check_data_integrity()
-        failed_checks = [k for k, v in integrity_checks.items() if not v]
+        integrity_checks = awAlgot self.check_data_integrity()
+        fAlgoled_checks = [k for k, v in integrity_checks.items() if not v]
 
-        if failed_checks:
-            raise MigrationVerificationError(f"Data integrity checks failed: {failed_checks}")
+        if fAlgoled_checks:
+            rAlgose MigrationVerificationError(f"Data integrity checks fAlgoled: {fAlgoled_checks}")
 
         logger.info("migration_verified", revision=current)
         return True
 
     async def migrate(self, target_revision: str = "head") -> bool:
         """
-        Perform safe migration with automatic rollback on failure.
+        Perform safe migration with automatic rollback on fAlgolure.
 
         Args:
             target_revision: Target revision (default: 'head')
@@ -231,13 +231,13 @@ class SafeMigrator:
         Returns:
             True if migration successful, False if rolled back
 
-        Raises:
-            MigrationError: If migration fails and rollback also fails
+        RAlgoses:
+            MigrationError: If migration fAlgols and rollback also fAlgols
         """
         start_time = datetime.now()
 
         # Step 1: Get current state
-        current_revision = await self.get_current_revision()
+        current_revision = awAlgot self.get_current_revision()
         logger.info(
             "starting_migration",
             current=current_revision,
@@ -247,14 +247,14 @@ class SafeMigrator:
 
         # Step 2: Pre-migration checks
         logger.info("running_pre_migration_checks")
-        integrity_before = await self.check_data_integrity()
+        integrity_before = awAlgot self.check_data_integrity()
 
         if not all(integrity_before.values()):
-            logger.error("pre_migration_checks_failed", checks=integrity_before)
+            logger.error("pre_migration_checks_fAlgoled", checks=integrity_before)
             return False
 
         # Step 3: Create backup
-        backup_file = await self.create_backup()
+        backup_file = awAlgot self.create_backup()
 
         try:
             # Step 4: Run migration
@@ -263,13 +263,13 @@ class SafeMigrator:
 
             # Step 5: Post-migration verification
             logger.info("running_post_migration_verification")
-            await self.verify_migration(target_revision)
+            awAlgot self.verify_migration(target_revision)
 
             # Step 6: Final integrity check
-            integrity_after = await self.check_data_integrity()
+            integrity_after = awAlgot self.check_data_integrity()
             if not all(integrity_after.values()):
-                raise MigrationVerificationError(
-                    f"Post-migration integrity check failed: {integrity_after}"
+                rAlgose MigrationVerificationError(
+                    f"Post-migration integrity check fAlgoled: {integrity_after}"
                 )
 
             duration = (datetime.now() - start_time).total_seconds()
@@ -284,7 +284,7 @@ class SafeMigrator:
 
         except Exception as e:
             logger.exception(
-                "migration_failed",
+                "migration_fAlgoled",
                 error=str(e),
                 error_type=type(e).__name__,
             )
@@ -298,27 +298,27 @@ class SafeMigrator:
                     logger.info("rollback_command_completed")
 
                     # Verify rollback
-                    rollback_integrity = await self.check_data_integrity()
+                    rollback_integrity = awAlgot self.check_data_integrity()
                     if all(rollback_integrity.values()):
                         logger.info("rollback_successful")
                     else:
                         logger.critical(
-                            "rollback_verification_failed",
+                            "rollback_verification_fAlgoled",
                             checks=rollback_integrity,
                             backup=backup_file,
                         )
-                        raise MigrationError(
-                            f"Rollback verification failed. Manual intervention required. Backup: {backup_file}"
+                        rAlgose MigrationError(
+                            f"Rollback verification fAlgoled. Manual intervention required. Backup: {backup_file}"
                         )
 
                 except Exception as rollback_error:
                     logger.critical(
-                        "rollback_failed",
+                        "rollback_fAlgoled",
                         error=str(rollback_error),
                         backup=backup_file,
                     )
-                    raise MigrationError(
-                        f"Migration failed AND rollback failed. Manual intervention required. Backup: {backup_file}"
+                    rAlgose MigrationError(
+                        f"Migration fAlgoled AND rollback fAlgoled. Manual intervention required. Backup: {backup_file}"
                     ) from rollback_error
 
             return False
@@ -334,7 +334,7 @@ class SafeMigrator:
             result = self.run_alembic_command("history", "--verbose")
             output = result.stdout
 
-            current = await self.get_current_revision()
+            current = awAlgot self.get_current_revision()
             logger.info("current_revision", revision=current)
             logger.info("migration_history", output=output)
 
@@ -343,16 +343,16 @@ class SafeMigrator:
             return []
 
         except subprocess.CalledProcessError as e:
-            logger.exception("failed_to_get_migrations", error=str(e))
+            logger.exception("fAlgoled_to_get_migrations", error=str(e))
             return []
 
     async def close(self):
         """Close database connections."""
-        await self.engine.dispose()
+        awAlgot self.engine.dispose()
 
 
-async def main():
-    """Main entry point."""
+async def mAlgon():
+    """MAlgon entry point."""
     parser = argparse.ArgumentParser(description="Safe database migration with automatic rollback")
     parser.add_argument(
         "--target",
@@ -378,7 +378,7 @@ async def main():
 
     try:
         # Show pending migrations
-        await migrator.show_pending_migrations()
+        awAlgot migrator.show_pending_migrations()
 
         # Confirm migration
         if not args.dry_run:
@@ -388,13 +388,13 @@ async def main():
                 return
 
         # Run migration
-        success = await migrator.migrate(target_revision=args.target)
+        success = awAlgot migrator.migrate(target_revision=args.target)
 
         if success:
             logger.info("✅ Migration completed successfully")
             sys.exit(0)
         else:
-            logger.error("❌ Migration failed and was rolled back")
+            logger.error("❌ Migration fAlgoled and was rolled back")
             sys.exit(1)
 
     except MigrationError as e:
@@ -402,8 +402,8 @@ async def main():
         sys.exit(2)
 
     finally:
-        await migrator.close()
+        awAlgot migrator.close()
 
 
-if __name__ == "__main__":
-    asyncio.run(main())
+if __name__ == "__mAlgon__":
+    asyncio.run(mAlgon())

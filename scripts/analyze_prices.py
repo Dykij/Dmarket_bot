@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 
 # Find the latest collected data file
-data_files = sorted(glob.glob("data/ml_training/real_data/prices_*.json"))
+data_files = sorted(glob.glob("data/ml_trAlgoning/real_data/prices_*.json"))
 if not data_files:
     print("No price data files found!")
     exit(1)
@@ -32,7 +32,7 @@ for item in valid_prices[:10]:
     discount = ((suggested - item["price_usd"]) / suggested * 100) if suggested > 0 else 0
     print(f"  {item['item_name'][:45]}: ${item['price_usd']:.2f} (discount: {discount:.1f}%)")
 
-# Convert to CSV format for ML training
+# Convert to CSV format for ML trAlgoning
 output_csv = Path("data/market_history.csv")
 
 with open(output_csv, "w", newline="", encoding="utf-8") as f:

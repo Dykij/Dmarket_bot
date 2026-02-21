@@ -1,6 +1,6 @@
 """API utilities package.
 
-Contains:
+ContAlgons:
 - health: Health check endpoints
 - n8n_integration: N8N workflow integration
 """

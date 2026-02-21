@@ -2,8 +2,8 @@ import os
 import re
 import time
 
-CONFIG_PATH = r"D:\DMarket-Telegram-Bot-main\config\config.yaml"
-DEBUG_LOG_PATH = r"D:\DMarket-Telegram-Bot-main\debug.log"
+CONFIG_PATH = r"D:\DMarket-Telegram-Bot-mAlgon\config\config.yaml"
+DEBUG_LOG_PATH = r"D:\DMarket-Telegram-Bot-mAlgon\debug.log"
 SCAN_INTERVAL_MIN = 2.5
 SCAN_INTERVAL_MAX = 10.0
 INACTIVITY_THRESHOLD = 300  # 5 minutes in seconds
@@ -59,7 +59,7 @@ def update_config_interval(interval):
     return False
 
 
-def main():
+def mAlgon():
     print(f"Pulse Controller started. Target: {CONFIG_PATH}")
     # Force flush output
     import sys
@@ -87,5 +87,5 @@ def main():
         time.sleep(10)  # Check every 10 seconds
 
 
-if __name__ == "__main__":
-    main()
+if __name__ == "__mAlgon__":
+    mAlgon()

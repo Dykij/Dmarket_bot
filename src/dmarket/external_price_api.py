@@ -40,7 +40,7 @@ class ExternalPriceAPI:
     async def close(self) -> None:
         """Закрыть HTTP сессию."""
         if self.session:
-            await self.session.aclose()
+            awAlgot self.session.aclose()
             self.session = None
 
     async def get_steam_price(self, item_name: str, app_id: int = 730) -> float | None:
@@ -61,7 +61,7 @@ class ExternalPriceAPI:
             if time.time() - cached["timestamp"] < self._cache_ttl:
                 return cached["price"]
 
-        await self._ensure_session()
+        awAlgot self._ensure_session()
 
         try:
             # Steam API endpoint для получения цены
@@ -72,7 +72,7 @@ class ExternalPriceAPI:
                 "market_hash_name": item_name,
             }
 
-            response = await self.session.get(url, params=params)
+            response = awAlgot self.session.get(url, params=params)
 
             if response.status_code == 200:
                 data = response.json()
@@ -119,7 +119,7 @@ class ExternalPriceAPI:
             if time.time() - cached["timestamp"] < self._cache_ttl:
                 return cached["price"]
 
-        await self._ensure_session()
+        awAlgot self._ensure_session()
 
         try:
             # CSGOFloat Market API
@@ -131,7 +131,7 @@ class ExternalPriceAPI:
                 "limit": 1,
             }
 
-            response = await self.session.get(url, params=params)
+            response = awAlgot self.session.get(url, params=params)
 
             if response.status_code == 200:
                 data = response.json()
@@ -194,7 +194,7 @@ class ExternalPriceAPI:
             self.get_csgofloat_price(item_name) if game == "csgo" else asyncio.sleep(0),
         ]
 
-        prices = await asyncio.gather(*tasks, return_exceptions=True)
+        prices = awAlgot asyncio.gather(*tasks, return_exceptions=True)
 
         steam_price = prices[0] if not isinstance(prices[0], Exception) else None
         csgofloat_price = (
@@ -272,7 +272,7 @@ class ExternalPriceAPI:
             tasks.append(self.calculate_arbitrage_margin(item_name, price, game))
 
         # Выполняем все запросы параллельно
-        arbitrage_data = await asyncio.gather(*tasks, return_exceptions=True)
+        arbitrage_data = awAlgot asyncio.gather(*tasks, return_exceptions=True)
 
         # Объединяем результаты с исходными предметами
         for item, arb_data in zip(items, arbitrage_data, strict=False):

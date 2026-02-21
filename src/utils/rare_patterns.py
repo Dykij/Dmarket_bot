@@ -1,6 +1,6 @@
 """Конфигурация и логика для определения редких предметов (Rare Hold).
 
-Модуль содержит настройки и функции для автоматического определения
+Модуль содержит настSwarmки и функции для автоматического определения
 редких предметов, которые не должны продаваться по обычной цене:
 - Низкий float (Double Zero и т.д.)
 - Редкие фазы Doppler (Ruby, Sapphire, Black Pearl и др.)
@@ -38,7 +38,7 @@ RARE_CONFIG: dict[str, Any] = {
         "Phase 4",  # Много синего
     ],
     # Редкие паттерны по названию предмета
-    # Формат: {название: [список редких paint_seed]}
+    # Формат: {название: [список редких pAlgont_seed]}
     "rare_patterns": {
         # AK-47 Blue Gem паттерны
         "AK-47 | Case Hardened": [661, 670, 321, 955, 387, 151, 179, 695, 809, 868],
@@ -65,7 +65,7 @@ RARE_CONFIG: dict[str, Any] = {
         "IBuyPower",
         "Titan",
         "Reason Gaming",
-        "HellRaisers (Holo)",
+        "HellRAlgosers (Holo)",
         "compLexity Gaming (Holo)",
         "Crown (Foil)",
         "Howling Dawn",
@@ -131,10 +131,10 @@ def _extract_attributes(item_data: dict[str, Any]) -> dict[str, str]:
         if extra:
             # Используем None-безопасные значения
             float_val = extra.get("floatValue")
-            paint_seed = extra.get("paintSeed")
+            pAlgont_seed = extra.get("pAlgontSeed")
             return {
                 "float_value": str(float_val) if float_val is not None else "",
-                "paint_seed": str(paint_seed) if paint_seed is not None else "-1",
+                "pAlgont_seed": str(pAlgont_seed) if pAlgont_seed is not None else "-1",
                 "phase": extra.get("phase", ""),
             }
         return {}
@@ -206,8 +206,8 @@ def _is_rare_pattern(title: str, attributes: dict[str, str]) -> bool:
     Returns:
         True если редкий паттерн
     """
-    # Получаем paint_seed
-    seed_str = attributes.get("paint_seed") or attributes.get("paintSeed", "-1")
+    # Получаем pAlgont_seed
+    seed_str = attributes.get("pAlgont_seed") or attributes.get("pAlgontSeed", "-1")
 
     try:
         pattern_index = int(seed_str)
@@ -284,7 +284,7 @@ def get_rarity_reason(item_data: dict[str, Any]) -> str | None:
         return "Редкая фаза Doppler"
 
     if _is_rare_pattern(title, attributes):
-        seed = attributes.get("paint_seed") or attributes.get("paintSeed", "")
+        seed = attributes.get("pAlgont_seed") or attributes.get("pAlgontSeed", "")
         return f"Редкий паттерн (seed: {seed})"
 
     if RARE_CONFIG["check_stickers"] and _has_valuable_stickers(item_data):
@@ -303,7 +303,7 @@ def add_rare_pattern(item_name: str, pattern_seed: int) -> None:
 
     Args:
         item_name: Полное название предмета
-        pattern_seed: Номер паттерна (paint_seed)
+        pattern_seed: Номер паттерна (pAlgont_seed)
     """
     if item_name not in RARE_CONFIG["rare_patterns"]:
         RARE_CONFIG["rare_patterns"][item_name] = []

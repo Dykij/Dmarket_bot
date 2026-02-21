@@ -8,23 +8,23 @@ class DMarketError(Exception):
 
 
 class InsufficientFundsError(DMarketError):
-    """Raised when account balance is too low for operation."""
+    """RAlgosed when account balance is too low for operation."""
 
-    def __init__(self, required: float, available: float):
+    def __init__(self, required: float, avAlgolable: float):
         self.required = required
-        self.available = available
+        self.avAlgolable = avAlgolable
         super().__init__(
-            f"Insufficient funds: required ${required:.2f}, available ${available:.2f}"
+            f"Insufficient funds: required ${required:.2f}, avAlgolable ${avAlgolable:.2f}"
         )
 
 
 class CircuitBreakerError(DMarketError):
-    """Raised when trading is suspended by Circuit Breaker."""
+    """RAlgosed when trading is suspended by Circuit Breaker."""
 
     pass
 
 
 class RateLimitError(DMarketError):
-    """Raised when API rate limit is exceeded."""
+    """RAlgosed when API rate limit is exceeded."""
 
     pass

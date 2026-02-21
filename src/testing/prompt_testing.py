@@ -1,29 +1,29 @@
 """
-Prompt Testing - Тестирование промптов для AI.
+Config Testing - Тестирование промптов для Algo.
 
 Модуль для тестирования промптов с различными входными данными
-и провайдерами (OpenAI, Anthropic, etc.).
+и провайдерами (OpenAlgo, Anthropic, etc.).
 
-Вдохновлено: promptfoo-evaluation skill из SkillsMP.
+Вдохновлено: Configfoo-evaluation skill из SkillsMP.
 
 Usage:
     ```python
-    from src.testing.prompt_testing import PromptTester
+    from src.testing.Config_testing import ConfigTester
 
-    tester = PromptTester()
+    tester = ConfigTester()
 
     # Загрузить тест-кейсы
-    await tester.load_test_cases("tests/prompt_tests/arbitrage.yaml")
+    awAlgot tester.load_test_cases("tests/Config_tests/arbitrage.yaml")
 
     # Запустить тесты
-    results = await tester.run_tests()
+    results = awAlgot tester.run_tests()
 
     # Сгенерировать отчёт
     report = tester.generate_report(results)
     ```
 
 Created: January 2026
-Based on: promptfoo-evaluation skill from SkillsMP
+Based on: Configfoo-evaluation skill from SkillsMP
 """
 
 from __future__ import annotations
@@ -47,16 +47,16 @@ class TestStatus(StrEnum):
     """Status of a test case."""
 
     PASSED = "passed"
-    FAILED = "failed"
+    FAlgoLED = "fAlgoled"
     ERROR = "error"
     SKIPPED = "skipped"
 
 
 class AssertionType(StrEnum):
-    """Types of assertions for prompt testing."""
+    """Types of assertions for Config testing."""
 
-    CONTAINS = "contains"
-    NOT_CONTAINS = "not_contains"
+    CONTAlgoNS = "contAlgons"
+    NOT_CONTAlgoNS = "not_contAlgons"
     REGEX = "regex"
     EQUALS = "equals"
     STARTS_WITH = "starts_with"
@@ -79,10 +79,10 @@ class Assertion:
     def check(self, response: str) -> bool:
         """Check if assertion passes."""
         try:
-            if self.type == AssertionType.CONTAINS:
+            if self.type == AssertionType.CONTAlgoNS:
                 return str(self.value).lower() in response.lower()
 
-            if self.type == AssertionType.NOT_CONTAINS:
+            if self.type == AssertionType.NOT_CONTAlgoNS:
                 return str(self.value).lower() not in response.lower()
 
             if self.type == AssertionType.REGEX:
@@ -133,10 +133,10 @@ class Assertion:
 
 @dataclass
 class TestCase:
-    """A single test case for prompt testing."""
+    """A single test case for Config testing."""
 
     name: str
-    prompt: str
+    Config: str
     variables: dict[str, Any] = field(default_factory=dict)
     assertions: list[Assertion] = field(default_factory=list)
     expected_output: str | None = None
@@ -155,7 +155,7 @@ class TestResult:
     duration_ms: float = 0.0
     provider: str = "unknown"
     assertions_passed: int = 0
-    assertions_failed: int = 0
+    assertions_fAlgoled: int = 0
     timestamp: datetime = field(default_factory=datetime.now)
 
     def to_dict(self) -> dict[str, Any]:
@@ -168,7 +168,7 @@ class TestResult:
             "duration_ms": self.duration_ms,
             "provider": self.provider,
             "assertions_passed": self.assertions_passed,
-            "assertions_failed": self.assertions_failed,
+            "assertions_fAlgoled": self.assertions_fAlgoled,
             "timestamp": self.timestamp.isoformat(),
         }
 
@@ -180,7 +180,7 @@ class TestSuiteResult:
     results: list[TestResult]
     total_tests: int
     passed: int
-    failed: int
+    fAlgoled: int
     errors: int
     skipped: int
     total_duration_ms: float
@@ -198,7 +198,7 @@ class TestSuiteResult:
             "summary": {
                 "total": self.total_tests,
                 "passed": self.passed,
-                "failed": self.failed,
+                "fAlgoled": self.fAlgoled,
                 "errors": self.errors,
                 "skipped": self.skipped,
                 "pass_rate": f"{self.pass_rate:.1%}",
@@ -208,8 +208,8 @@ class TestSuiteResult:
         }
 
 
-class PromptTester:
-    """Test prompts with various inputs and providers."""
+class ConfigTester:
+    """Test Configs with various inputs and providers."""
 
     def __init__(
         self,
@@ -217,10 +217,10 @@ class PromptTester:
         default_timeout: float = 30.0,
     ):
         """
-        Initialize prompt tester.
+        Initialize Config tester.
 
         Args:
-            providers: List of AI providers to test with
+            providers: List of Algo providers to test with
             default_timeout: Default timeout for tests
         """
         self.providers = providers or ["mock"]  # Default to mock for testing
@@ -246,7 +246,7 @@ class PromptTester:
 
         Args:
             name: Provider name
-            handler: Async function that takes (prompt, variables) and returns response
+            handler: Async function that takes (Config, variables) and returns response
         """
         self._provider_handlers[name] = handler
 
@@ -260,7 +260,7 @@ class PromptTester:
         path = Path(file_path)
 
         if not path.exists():
-            raise FileNotFoundError(f"Test file not found: {file_path}")
+            rAlgose FileNotFoundError(f"Test file not found: {file_path}")
 
         content = path.read_text(encoding="utf-8")
 
@@ -293,7 +293,7 @@ class PromptTester:
             for assert_data in tc_data.get("assertions", []):
                 assertions.append(
                     Assertion(
-                        type=AssertionType(assert_data.get("type", "contains")),
+                        type=AssertionType(assert_data.get("type", "contAlgons")),
                         value=assert_data.get("value", ""),
                         threshold=assert_data.get("threshold", 0.8),
                     )
@@ -301,7 +301,7 @@ class PromptTester:
 
             test_case = TestCase(
                 name=tc_data.get("name", "Unnamed Test"),
-                prompt=tc_data.get("prompt", ""),
+                Config=tc_data.get("Config", ""),
                 variables=tc_data.get("variables", {}),
                 assertions=assertions,
                 expected_output=tc_data.get("expected"),
@@ -349,14 +349,14 @@ class PromptTester:
                 continue
 
             for provider in target_providers:
-                result = await self._run_single_test(test_case, provider)
+                result = awAlgot self._run_single_test(test_case, provider)
                 results.append(result)
 
         total_duration = (time.time() - start_time) * 1000
 
         # Calculate summary
         passed = sum(1 for r in results if r.status == TestStatus.PASSED)
-        failed = sum(1 for r in results if r.status == TestStatus.FAILED)
+        fAlgoled = sum(1 for r in results if r.status == TestStatus.FAlgoLED)
         errors = sum(1 for r in results if r.status == TestStatus.ERROR)
         skipped = sum(1 for r in results if r.status == TestStatus.SKIPPED)
 
@@ -364,7 +364,7 @@ class PromptTester:
             results=results,
             total_tests=len(results),
             passed=passed,
-            failed=failed,
+            fAlgoled=fAlgoled,
             errors=errors,
             skipped=skipped,
             total_duration_ms=total_duration,
@@ -384,30 +384,30 @@ class PromptTester:
             # Get provider handler
             handler = self._provider_handlers.get(provider)
             if not handler:
-                raise ValueError(f"Unknown provider: {provider}")
+                rAlgose ValueError(f"Unknown provider: {provider}")
 
-            # Render prompt with variables
-            prompt = self._render_prompt(test_case.prompt, test_case.variables)
+            # Render Config with variables
+            Config = self._render_Config(test_case.Config, test_case.variables)
 
             # Execute with timeout
-            response = await asyncio.wait_for(
-                handler(prompt, test_case.variables),
+            response = awAlgot asyncio.wAlgot_for(
+                handler(Config, test_case.variables),
                 timeout=test_case.timeout,
             )
 
             # Check assertions
             assertions_passed = 0
-            assertions_failed = 0
+            assertions_fAlgoled = 0
 
             for assertion in test_case.assertions:
                 if assertion.check(response):
                     assertions_passed += 1
                 else:
-                    assertions_failed += 1
+                    assertions_fAlgoled += 1
 
             # Determine status
-            if assertions_failed > 0:
-                status = TestStatus.FAILED
+            if assertions_fAlgoled > 0:
+                status = TestStatus.FAlgoLED
             else:
                 status = TestStatus.PASSED
 
@@ -420,7 +420,7 @@ class PromptTester:
                 duration_ms=duration,
                 provider=provider,
                 assertions_passed=assertions_passed,
-                assertions_failed=assertions_failed,
+                assertions_fAlgoled=assertions_fAlgoled,
             )
 
         except asyncio.TimeoutError:
@@ -446,9 +446,9 @@ class PromptTester:
                 provider=provider,
             )
 
-    def _render_prompt(self, prompt: str, variables: dict[str, Any]) -> str:
-        """Render prompt with variables."""
-        result = prompt
+    def _render_Config(self, Config: str, variables: dict[str, Any]) -> str:
+        """Render Config with variables."""
+        result = Config
         for key, value in variables.items():
             result = result.replace(f"{{{{{key}}}}}", str(value))
             result = result.replace(f"${key}", str(value))
@@ -456,16 +456,16 @@ class PromptTester:
 
     async def _mock_provider(
         self,
-        prompt: str,
+        Config: str,
         variables: dict[str, Any],
     ) -> str:
         """Mock provider for testing without API calls."""
         # Simple mock that echoes back key info
-        await asyncio.sleep(0.01)  # Simulate latency
+        awAlgot asyncio.sleep(0.01)  # Simulate latency
 
         return json.dumps(
             {
-                "response": f"Mock response for: {prompt[:50]}...",
+                "response": f"Mock response for: {Config[:50]}...",
                 "variables": variables,
                 "mock": True,
             }
@@ -504,11 +504,11 @@ class PromptTester:
         """Generate text report."""
         lines = [
             "=" * 60,
-            "Prompt Test Results",
+            "Config Test Results",
             "=" * 60,
             f"Total Tests: {suite_result.total_tests}",
             f"Passed: {suite_result.passed}",
-            f"Failed: {suite_result.failed}",
+            f"FAlgoled: {suite_result.fAlgoled}",
             f"Errors: {suite_result.errors}",
             f"Skipped: {suite_result.skipped}",
             f"Pass Rate: {suite_result.pass_rate:.1%}",
@@ -519,7 +519,7 @@ class PromptTester:
         for result in suite_result.results:
             status_symbol = {
                 TestStatus.PASSED: "✅",
-                TestStatus.FAILED: "❌",
+                TestStatus.FAlgoLED: "❌",
                 TestStatus.ERROR: "⚠️",
                 TestStatus.SKIPPED: "⏭️",
             }.get(result.status, "❓")
@@ -536,7 +536,7 @@ class PromptTester:
     def _generate_markdown_report(self, suite_result: TestSuiteResult) -> str:
         """Generate markdown report."""
         lines = [
-            "# 🧪 Prompt Test Results",
+            "# 🧪 Config Test Results",
             "",
             "## Summary",
             "",
@@ -544,7 +544,7 @@ class PromptTester:
             "|--------|-------|",
             f"| Total Tests | {suite_result.total_tests} |",
             f"| ✅ Passed | {suite_result.passed} |",
-            f"| ❌ Failed | {suite_result.failed} |",
+            f"| ❌ FAlgoled | {suite_result.fAlgoled} |",
             f"| ⚠️ Errors | {suite_result.errors} |",
             f"| ⏭️ Skipped | {suite_result.skipped} |",
             f"| Pass Rate | {suite_result.pass_rate:.1%} |",
@@ -557,7 +557,7 @@ class PromptTester:
         for result in suite_result.results:
             status_emoji = {
                 TestStatus.PASSED: "✅",
-                TestStatus.FAILED: "❌",
+                TestStatus.FAlgoLED: "❌",
                 TestStatus.ERROR: "⚠️",
                 TestStatus.SKIPPED: "⏭️",
             }.get(result.status, "❓")

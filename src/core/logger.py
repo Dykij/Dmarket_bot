@@ -9,7 +9,7 @@ class RustDedupHandler(logging.StreamHandler):
     
     Logic:
     - Uses rust.validate_checksum(msg) to generate a fast hash.
-    - Checks against _dedup_cache to prevent spamming identical logs.
+    - Checks agAlgonst _dedup_cache to prevent spamming identical logs.
     - Target overhead: < 1μs per log.
     """
     _dedup_cache: Set[str] = set()

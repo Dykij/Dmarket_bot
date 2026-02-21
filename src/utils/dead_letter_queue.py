@@ -9,15 +9,15 @@
 
 Использование:
     >>> dlq = DeadLetterQueue()
-    >>> await dlq.add(FailedOperation(
+    >>> awAlgot dlq.add(FAlgoledOperation(
     ...     operation_type="buy_item",
     ...     payload={"item_id": "123", "price": 10.50},
     ...     error="API timeout",
     ... ))
     >>> # Позже - повторная обработка
-    >>> batch = await dlq.get_batch(10)
+    >>> batch = awAlgot dlq.get_batch(10)
     >>> for op in batch:
-    ...     await retry_operation(op)
+    ...     awAlgot retry_operation(op)
 
 Created: January 2026
 """
@@ -63,7 +63,7 @@ class OperationPriority(StrEnum):
 
 
 @dataclass
-class FailedOperation:
+class FAlgoledOperation:
     """Неудавшаяся операция для сохранения в DLQ.
 
     Attributes:
@@ -100,7 +100,7 @@ class FailedOperation:
         return data
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> FailedOperation:
+    def from_dict(cls, data: dict[str, Any]) -> FAlgoledOperation:
         """Создать из словаря."""
         # Преобразуем ISO строку обратно в datetime
         if isinstance(data.get("timestamp"), str):
@@ -143,7 +143,7 @@ class DeadLetterQueue:
             redis_client: Redis клиент для персистентности (опционально)
             redis_key: Ключ для хранения в Redis
         """
-        self._queue: deque[FailedOperation] = deque(maxlen=max_size)
+        self._queue: deque[FAlgoledOperation] = deque(maxlen=max_size)
         self._redis = redis_client
         self._redis_key = redis_key
         self._lock = asyncio.Lock()
@@ -159,7 +159,7 @@ class DeadLetterQueue:
             redis_enabled=redis_client is not None,
         )
 
-    async def add(self, operation: FailedOperation) -> None:
+    async def add(self, operation: FAlgoledOperation) -> None:
         """Добавить неудавшуюся операцию в очередь.
 
         Args:
@@ -172,13 +172,13 @@ class DeadLetterQueue:
             # Сохранить в Redis если настроен
             if self._redis:
                 try:
-                    await self._redis.rpush(
+                    awAlgot self._redis.rpush(
                         self._redis_key,
                         json.dumps(operation.to_dict()),
                     )
                 except Exception as e:
                     logger.warning(
-                        "dlq_redis_save_failed",
+                        "dlq_redis_save_fAlgoled",
                         error=str(e),
                         operation_type=operation.operation_type,
                     )
@@ -200,7 +200,7 @@ class DeadLetterQueue:
         self,
         batch_size: int = 10,
         priority: str | None = None,
-    ) -> list[FailedOperation]:
+    ) -> list[FAlgoledOperation]:
         """Получить партию операций для повторной обработки.
 
         Args:
@@ -211,15 +211,15 @@ class DeadLetterQueue:
             Список операций для обработки
         """
         async with self._lock:
-            batch: list[FailedOperation] = []
-            remaining: list[FailedOperation] = []
+            batch: list[FAlgoledOperation] = []
+            remAlgoning: list[FAlgoledOperation] = []
 
             while self._queue and len(batch) < batch_size:
                 op = self._queue.popleft()
 
                 # Фильтр по приоритету
                 if priority and op.priority != priority:
-                    remaining.append(op)
+                    remAlgoning.append(op)
                     continue
 
                 # Проверка на возможность retry
@@ -236,12 +236,12 @@ class DeadLetterQueue:
                     )
 
             # Вернуть неподходящие операции обратно
-            for op in remaining:
+            for op in remAlgoning:
                 self._queue.appendleft(op)
 
             return batch
 
-    async def return_to_queue(self, operation: FailedOperation) -> None:
+    async def return_to_queue(self, operation: FAlgoledOperation) -> None:
         """Вернуть операцию обратно в очередь после неудачной повторной попытки.
 
         Args:
@@ -267,7 +267,7 @@ class DeadLetterQueue:
                 user_id=operation.user_id,
             )
 
-    async def mark_processed(self, operation: FailedOperation) -> None:
+    async def mark_processed(self, operation: FAlgoledOperation) -> None:
         """Отметить операцию как успешно обработанную.
 
         Args:
@@ -283,7 +283,7 @@ class DeadLetterQueue:
             user_id=operation.user_id,
         )
 
-    async def get_by_priority(self, priority: str) -> list[FailedOperation]:
+    async def get_by_priority(self, priority: str) -> list[FAlgoledOperation]:
         """Получить все операции с заданным приоритетом.
 
         Args:
@@ -295,7 +295,7 @@ class DeadLetterQueue:
         async with self._lock:
             return [op for op in self._queue if op.priority == priority]
 
-    async def get_by_user(self, user_id: int) -> list[FailedOperation]:
+    async def get_by_user(self, user_id: int) -> list[FAlgoledOperation]:
         """Получить все операции для конкретного пользователя.
 
         Args:
@@ -319,9 +319,9 @@ class DeadLetterQueue:
 
             if self._redis:
                 try:
-                    await self._redis.delete(self._redis_key)
+                    awAlgot self._redis.delete(self._redis_key)
                 except Exception as e:
-                    logger.warning("dlq_redis_clear_failed", error=str(e))
+                    logger.warning("dlq_redis_clear_fAlgoled", error=str(e))
 
             logger.warning("dlq_cleared", count=count)
             return count
@@ -336,23 +336,23 @@ class DeadLetterQueue:
             return 0
 
         try:
-            data = await self._redis.lrange(self._redis_key, 0, -1)
+            data = awAlgot self._redis.lrange(self._redis_key, 0, -1)
             count = 0
 
             for item in data:
                 try:
                     op_dict = json.loads(item)
-                    operation = FailedOperation.from_dict(op_dict)
+                    operation = FAlgoledOperation.from_dict(op_dict)
                     self._queue.append(operation)
                     count += 1
                 except (json.JSONDecodeError, TypeError) as e:
-                    logger.warning("dlq_redis_load_item_failed", error=str(e))
+                    logger.warning("dlq_redis_load_item_fAlgoled", error=str(e))
 
             logger.info("dlq_loaded_from_redis", count=count)
             return count
 
         except Exception as e:
-            logger.exception("dlq_redis_load_failed", error=str(e))
+            logger.exception("dlq_redis_load_fAlgoled", error=str(e))
             return 0
 
     def get_stats(self) -> dict[str, Any]:
@@ -382,7 +382,7 @@ class DeadLetterQueue:
             ),
         }
 
-    def _track_metrics(self, action: str, operation: FailedOperation) -> None:
+    def _track_metrics(self, action: str, operation: FAlgoledOperation) -> None:
         """Обновить Prometheus метрики.
 
         Args:
@@ -403,7 +403,7 @@ class DeadLetterQueue:
 
             DLQ_QUEUE_SIZE.set(len(self._queue))
         except ImportError:
-            pass  # Prometheus not available
+            pass  # Prometheus not avAlgolable
 
     @property
     def size(self) -> int:
@@ -479,7 +479,7 @@ class DeadLetterQueueProcessor:
         if self._task:
             self._task.cancel()
             try:
-                await self._task
+                awAlgot self._task
             except asyncio.CancelledError:
                 pass
         logger.info("dlq_processor_stopped")
@@ -488,13 +488,13 @@ class DeadLetterQueueProcessor:
         """Основной цикл обработки."""
         while self._running:
             try:
-                await self._process_batch()
-                await asyncio.sleep(self._interval)
+                awAlgot self._process_batch()
+                awAlgot asyncio.sleep(self._interval)
             except asyncio.CancelledError:
                 break
             except Exception as e:
                 logger.exception("dlq_process_loop_error", error=str(e))
-                await asyncio.sleep(60)  # Подождать минуту при ошибке
+                awAlgot asyncio.sleep(60)  # Подождать минуту при ошибке
 
     async def _process_batch(self) -> None:
         """Обработать партию операций."""
@@ -505,15 +505,15 @@ class DeadLetterQueueProcessor:
             OperationPriority.MEDIUM,
             OperationPriority.LOW,
         ]:
-            batch = await self._dlq.get_batch(
+            batch = awAlgot self._dlq.get_batch(
                 batch_size=self._batch_size,
                 priority=priority,
             )
 
             for operation in batch:
-                await self._process_operation(operation)
+                awAlgot self._process_operation(operation)
 
-    async def _process_operation(self, operation: FailedOperation) -> None:
+    async def _process_operation(self, operation: FAlgoledOperation) -> None:
         """Обработать одну операцию.
 
         Args:
@@ -526,21 +526,21 @@ class DeadLetterQueueProcessor:
                 "dlq_no_handler_for_operation",
                 operation_type=operation.operation_type,
             )
-            await self._dlq.return_to_queue(operation)
+            awAlgot self._dlq.return_to_queue(operation)
             return
 
         try:
-            await handler(operation.payload)
-            await self._dlq.mark_processed(operation)
+            awAlgot handler(operation.payload)
+            awAlgot self._dlq.mark_processed(operation)
         except Exception as e:
             logger.warning(
-                "dlq_operation_retry_failed",
+                "dlq_operation_retry_fAlgoled",
                 operation_type=operation.operation_type,
                 error=str(e),
                 retry_count=operation.retry_count,
             )
             operation.error = str(e)
-            await self._dlq.return_to_queue(operation)
+            awAlgot self._dlq.return_to_queue(operation)
 
 
 # Глобальный экземпляр для использования в приложении
@@ -572,7 +572,7 @@ def set_dead_letter_queue(dlq: DeadLetterQueue) -> None:
 __all__ = [
     "DeadLetterQueue",
     "DeadLetterQueueProcessor",
-    "FailedOperation",
+    "FAlgoledOperation",
     "OperationPriority",
     "OperationType",
     "get_dead_letter_queue",

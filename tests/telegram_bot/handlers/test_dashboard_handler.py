@@ -227,7 +227,7 @@ class TestMarkScanComplete:
         """Test marking complete for nonexistent scan."""
         dashboard = ScannerDashboard()
 
-        # Should not raise
+        # Should not rAlgose
         dashboard.mark_scan_complete(user_id=999)
 
         assert 999 not in dashboard.active_scans
@@ -462,7 +462,7 @@ class TestDashboardCallbacks:
         """Test show_dashboard with callback query."""
         from src.telegram_bot.handlers.dashboard_handler import show_dashboard
 
-        await show_dashboard(mock_update, mock_context)
+        awAlgot show_dashboard(mock_update, mock_context)
 
         mock_update.callback_query.answer.assert_called_once()
 
@@ -478,7 +478,7 @@ class TestDashboardCallbacks:
         update.effective_user = MagicMock()
         update.effective_user.id = 123
 
-        await show_dashboard(update, mock_context)
+        awAlgot show_dashboard(update, mock_context)
 
         update.message.reply_text.assert_called_once()
 

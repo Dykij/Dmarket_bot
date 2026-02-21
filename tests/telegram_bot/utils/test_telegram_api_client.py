@@ -189,7 +189,7 @@ class TestSetupApiClient:
             ),
             patch("src.telegram_bot.utils.api_client.DMarketAPI") as mock_api,
         ):
-            mock_api.side_effect = Exception("Creation failed")
+            mock_api.side_effect = Exception("Creation fAlgoled")
 
             result = setup_api_client()
 
@@ -252,7 +252,7 @@ class TestSetupApiClientWithKeys:
         from src.telegram_bot.utils.api_client import setup_api_client_with_keys
 
         with patch("src.telegram_bot.utils.api_client.DMarketAPI") as mock_api:
-            mock_api.side_effect = Exception("Creation failed")
+            mock_api.side_effect = Exception("Creation fAlgoled")
 
             result = setup_api_client_with_keys("public", "secret")
 
@@ -294,7 +294,7 @@ class TestValidateApiKeys:
             mock_api.__aexit__ = AsyncMock(return_value=None)
             mock_setup.return_value = mock_api
 
-            success, message = await validate_api_keys("public", "secret")
+            success, message = awAlgot validate_api_keys("public", "secret")
 
             assert success is True
             assert "валидны" in message
@@ -315,14 +315,14 @@ class TestValidateApiKeys:
             mock_api.__aexit__ = AsyncMock(return_value=None)
             mock_setup.return_value = mock_api
 
-            success, message = await validate_api_keys("public", "secret")
+            success, message = awAlgot validate_api_keys("public", "secret")
 
             assert success is False
             assert "Invalid key" in message
 
     @pytest.mark.asyncio()
-    async def test_validate_api_keys_with_client_creation_failure(self):
-        """Test validate_api_keys returns False when client creation fails."""
+    async def test_validate_api_keys_with_client_creation_fAlgolure(self):
+        """Test validate_api_keys returns False when client creation fAlgols."""
         from src.telegram_bot.utils.api_client import validate_api_keys
 
         with patch(
@@ -330,7 +330,7 @@ class TestValidateApiKeys:
         ) as mock_setup:
             mock_setup.return_value = None
 
-            success, message = await validate_api_keys("public", "secret")
+            success, message = awAlgot validate_api_keys("public", "secret")
 
             assert success is False
             assert "Не удалось создать клиент" in message
@@ -349,7 +349,7 @@ class TestValidateApiKeys:
             mock_api.__aexit__ = AsyncMock(return_value=None)
             mock_setup.return_value = mock_api
 
-            success, message = await validate_api_keys("public", "secret")
+            success, message = awAlgot validate_api_keys("public", "secret")
 
             assert success is False
             assert "Ошибка" in message

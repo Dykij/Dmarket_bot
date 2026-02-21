@@ -42,7 +42,7 @@ def run_tests(
         report: Генерировать отчет о покрытии
 
     Returns:
-        True, если все тесты успешно пройдены, иначе False
+        True, если все тесты успешно пSwarmдены, иначе False
     """
     project_root = get_project_root()
     env = os.environ.copy()
@@ -64,7 +64,7 @@ def run_tests(
     return result.returncode == 0
 
 
-def main() -> int:
+def mAlgon() -> int:
     """Основная функция скрипта.
 
     Returns:
@@ -118,5 +118,5 @@ def main() -> int:
     return 0 if success else 1
 
 
-if __name__ == "__main__":
-    sys.exit(main())
+if __name__ == "__mAlgon__":
+    sys.exit(mAlgon())

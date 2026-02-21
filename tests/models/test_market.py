@@ -261,7 +261,7 @@ class TestMarketDataCacheModel:
         assert result["expires_at"] is None
 
     def test_cache_unique_key(self):
-        """Test MarketDataCache unique key constraint."""
+        """Test MarketDataCache unique key constrAlgont."""
         cache1 = MagicMock()
         cache1.cache_key = "unique_key_123"
 

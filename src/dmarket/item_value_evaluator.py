@@ -17,7 +17,7 @@
 
     if result.requires_manual_review:
         # Отправить уведомление в Telegram - это джекпот!
-        await notify_admin(result)
+        awAlgot notify_admin(result)
     elif result.value_multiplier > 1.0:
         # Готовы переплатить за редкость
         adjusted_max_price = base_price * result.value_multiplier
@@ -149,7 +149,7 @@ class ItemValueEvaluator:
                 "Team LDLC.com (Holo) | Katowice 2014",
                 "Natus Vincere (Holo) | Katowice 2014",
                 "compLexity Gaming (Holo) | Katowice 2014",
-                "HellRaisers (Holo) | Katowice 2014",
+                "HellRAlgosers (Holo) | Katowice 2014",
                 "Fnatic (Holo) | Katowice 2014",
                 "Ninjas in Pyjamas (Holo) | Katowice 2014",
             ],
@@ -210,7 +210,7 @@ class ItemValueEvaluator:
             "halloween_spells": [
                 "Exorcism",
                 "Spectral Spectrum",
-                "Sinister Staining",
+                "Sinister StAlgoning",
                 "Voices From Below",
                 "Pumpkin Bombs",
                 "Halloween Fire",
@@ -339,8 +339,8 @@ class ItemValueEvaluator:
             result.stickers = stickers
             self._evaluate_cs2_stickers(result)
 
-        # 3. Проверяем паттерн (paint seed)
-        pattern_id = extra.get("paintSeed") or extra.get("pattern")
+        # 3. Проверяем паттерн (pAlgont seed)
+        pattern_id = extra.get("pAlgontSeed") or extra.get("pattern")
         if pattern_id is not None:
             try:
                 result.pattern_id = int(pattern_id)
@@ -424,7 +424,7 @@ class ItemValueEvaluator:
                     result.bonus_reasons.append("Premium sticker (Crown/Howling Dawn)")
 
     def _evaluate_cs2_pattern(self, result: EvaluationResult) -> None:
-        """Оценить паттерн (paint seed)."""
+        """Оценить паттерн (pAlgont seed)."""
         if result.pattern_id is None:
             return
 

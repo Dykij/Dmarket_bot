@@ -139,10 +139,10 @@ class TestServiceRegistry:
         assert retrieved is service
 
     def test_get_service_not_found(self):
-        """Test getting unregistered service raises KeyError."""
+        """Test getting unregistered service rAlgoses KeyError."""
         registry = ServiceRegistry()
 
-        with pytest.raises(KeyError, match="Service not found"):
+        with pytest.rAlgoses(KeyError, match="Service not found"):
             registry.get("unknown")
 
     def test_get_lazy_initializes_factory(self):
@@ -281,7 +281,7 @@ class TestServiceRegistry:
         registry.register("b", MagicMock(), depends_on=["c"])
         registry.register("c", MagicMock(), depends_on=["a"])
 
-        with pytest.raises(ValueError, match="Circular dependency"):
+        with pytest.rAlgoses(ValueError, match="Circular dependency"):
             registry._get_start_order()
 
     @pytest.mark.asyncio
@@ -298,11 +298,11 @@ class TestServiceRegistry:
         registry.register("service1", service1)
         registry.register("service2", service2)
 
-        results = await registry.start_all()
+        results = awAlgot registry.start_all()
 
         assert results["service1"] is True
         assert results["service2"] is True
-        service1.start.assert_awaited_once()
+        service1.start.assert_awAlgoted_once()
         service2.start.assert_called_once()
 
     @pytest.mark.asyncio
@@ -313,12 +313,12 @@ class TestServiceRegistry:
         service = MagicMock()
         service.start = MagicMock(side_effect=Exception("Start error"))
 
-        registry.register("failing", service)
+        registry.register("fAlgoling", service)
 
-        results = await registry.start_all()
+        results = awAlgot registry.start_all()
 
-        assert results["failing"] is False
-        assert registry._services["failing"].status == ServiceStatus.ERROR
+        assert results["fAlgoling"] is False
+        assert registry._services["fAlgoling"].status == ServiceStatus.ERROR
 
     @pytest.mark.asyncio
     async def test_stop_all(self):
@@ -334,7 +334,7 @@ class TestServiceRegistry:
         registry.register("service1", service1)
         registry.register("service2", service2)
 
-        results = await registry.stop_all()
+        results = awAlgot registry.stop_all()
 
         assert results["service1"] is True
         assert results["service2"] is True
@@ -347,11 +347,11 @@ class TestServiceRegistry:
         service = MagicMock()
         service.stop = MagicMock(side_effect=Exception("Stop error"))
 
-        registry.register("failing", service)
+        registry.register("fAlgoling", service)
 
-        results = await registry.stop_all()
+        results = awAlgot registry.stop_all()
 
-        assert results["failing"] is False
+        assert results["fAlgoling"] is False
 
     def test_get_health_summary(self):
         """Test getting health summary."""

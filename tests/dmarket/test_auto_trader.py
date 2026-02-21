@@ -90,17 +90,17 @@ class TestTradeResult:
         assert result.sales == 0
         assert result.total_profit == 0.0
         assert result.trades_count == 0
-        assert result.remaining_balance == 0.0
+        assert result.remAlgoning_balance == 0.0
 
     def test_add_purchase(self):
         """Test recording a purchase."""
         result = TradeResult()
-        result.remaining_balance = 100.0
+        result.remAlgoning_balance = 100.0
 
         result.add_purchase(25.0)
 
         assert result.purchases == 1
-        assert result.remaining_balance == 75.0
+        assert result.remAlgoning_balance == 75.0
 
     def test_add_sale(self):
         """Test recording a sale."""
@@ -160,7 +160,7 @@ class TestAutoTrader:
     @pytest.mark.asyncio
     async def test_auto_trade_items_empty_input(self, auto_trader):
         """Test auto trading with empty items."""
-        result = await auto_trader.auto_trade_items(items_by_game={})
+        result = awAlgot auto_trader.auto_trade_items(items_by_game={})
 
         assert result == (0, 0, 0.0)
 
@@ -169,7 +169,7 @@ class TestAutoTrader:
         """Test auto trading with insufficient balance."""
         mock_scanner.check_user_balance = AsyncMock(return_value={"balance": 0.0})
 
-        result = await auto_trader.auto_trade_items(
+        result = awAlgot auto_trader.auto_trade_items(
             items_by_game={"csgo": [{"item": "test"}]}
         )
 
@@ -181,7 +181,7 @@ class TestAutoTrader:
         mock_scanner.check_user_balance = AsyncMock(return_value={"balance": 100.0})
 
         # Low risk should use conservative settings
-        result = await auto_trader.auto_trade_items(
+        result = awAlgot auto_trader.auto_trade_items(
             items_by_game={},
             risk_level="low"
         )
@@ -248,9 +248,9 @@ class TestAutoTrader:
             balance=100.0,
         )
         result = TradeResult()
-        result.remaining_balance = 50.0
+        result.remAlgoning_balance = 50.0
 
-        # Should continue with remaining balance and trades
+        # Should continue with remAlgoning balance and trades
         assert auto_trader._should_continue_trading(result, config) is True
 
         # Exhaust trades

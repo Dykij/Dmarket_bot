@@ -4,14 +4,14 @@
 
 ### 1. Presentation Layer (Telegram)
 - **Path:** `src/telegram_bot`
-- **Role:** Handles user interaction via aiogram 3.x.
+- **Role:** Handles user interaction via Algoogram 3.x.
 - **Components:** Handlers, Keyboards, Middleware.
 - **Status:** Modular, but relies heavily on global services.
 
 ### 2. Service Layer (Business Logic)
 - **Path:** `src/dmarket` (Legacy Monolith) & `src/trading` (New)
 - **Role:** Trading algorithms, arbitrage, buying/selling logic.
-- **Tech Debt:** `src/dmarket` violates SRP. Contains API clients, db logic, and complex algos mixed together.
+- **Tech Debt:** `src/dmarket` violates SRP. ContAlgons API clients, db logic, and complex algos mixed together.
 - **Goal:** Extract clean services into `src/trading`.
 
 ### 3. Data Layer (Persistence)

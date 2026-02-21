@@ -74,7 +74,7 @@ class TestArbitrageOpportunity:
             gross_profit=2.0,
             net_profit=1.28,
             roi_percent=12.8,
-            fees_paid=0.72,
+            fees_pAlgod=0.72,
         )
         assert opp.item_id == "test123"
         assert opp.buy_price == 10.0
@@ -93,7 +93,7 @@ class TestArbitrageOpportunity:
             gross_profit=2.0,
             net_profit=1.28,
             roi_percent=12.8,
-            fees_paid=0.72,
+            fees_pAlgod=0.72,
             float_value=0.15,
         )
         assert opp.float_value == 0.15
@@ -111,7 +111,7 @@ class TestArbitrageOpportunity:
             gross_profit=2.0,
             net_profit=1.28,
             roi_percent=12.8,
-            fees_paid=0.72,
+            fees_pAlgod=0.72,
             has_trade_lock=True,
             lock_days=7,
         )
@@ -137,7 +137,7 @@ class TestOptimalArbitrageStrategy:  # noqa: PLR0904
         assert strategy.settings is not None
         assert strategy.fees is not None
         assert strategy.stats["total_scans"] == 0
-        assert strategy.daily_trades == 0
+        assert strategy.dAlgoly_trades == 0
 
     def test_calculate_net_profit(self, strategy):
         """Test net profit calculation."""
@@ -221,7 +221,7 @@ class TestOptimalArbitrageStrategy:  # noqa: PLR0904
             gross_profit=20.0,
             net_profit=12.8,
             roi_percent=12.8,
-            fees_paid=7.2,
+            fees_pAlgod=7.2,
             liquidity_score=0.6,
             risk_level=RiskLevel.MEDIUM,
         )
@@ -242,7 +242,7 @@ class TestOptimalArbitrageStrategy:  # noqa: PLR0904
             gross_profit=20.0,
             net_profit=12.8,
             roi_percent=12.8,
-            fees_paid=7.2,
+            fees_pAlgod=7.2,
             liquidity_score=0.6,
             risk_level=RiskLevel.MEDIUM,
             float_value=0.01,  # Very low float
@@ -267,7 +267,7 @@ class TestOptimalArbitrageStrategy:  # noqa: PLR0904
             gross_profit=10.0,
             net_profit=6.4,
             roi_percent=12.8,
-            fees_paid=3.6,
+            fees_pAlgod=3.6,
             liquidity_score=0.5,
             sales_per_day=1.0,
             days_to_sell=7.0,
@@ -290,7 +290,7 @@ class TestOptimalArbitrageStrategy:  # noqa: PLR0904
             gross_profit=5.0,
             net_profit=2.0,
             roi_percent=2.0,  # Below min 10%
-            fees_paid=3.0,
+            fees_pAlgod=3.0,
             liquidity_score=0.5,
             risk_level=RiskLevel.HIGH,
         )
@@ -311,7 +311,7 @@ class TestOptimalArbitrageStrategy:  # noqa: PLR0904
             gross_profit=10.0,
             net_profit=9.0,
             roi_percent=90.0,  # Above max 50% - possible scam
-            fees_paid=1.0,
+            fees_pAlgod=1.0,
             liquidity_score=0.5,
             risk_level=RiskLevel.LOW,
         )
@@ -332,7 +332,7 @@ class TestOptimalArbitrageStrategy:  # noqa: PLR0904
             gross_profit=10.0,
             net_profit=6.4,
             roi_percent=12.8,
-            fees_paid=3.6,
+            fees_pAlgod=3.6,
             liquidity_score=0.1,  # Below min 0.3
             sales_per_day=0.1,
             risk_level=RiskLevel.HIGH,
@@ -354,7 +354,7 @@ class TestOptimalArbitrageStrategy:  # noqa: PLR0904
             gross_profit=10.0,
             net_profit=6.4,
             roi_percent=15.0,
-            fees_paid=3.6,
+            fees_pAlgod=3.6,
             liquidity_score=0.6,
             sales_per_day=2.0,
             risk_level=RiskLevel.LOW,
@@ -380,7 +380,7 @@ class TestOptimalArbitrageStrategy:  # noqa: PLR0904
                 gross_profit=10.0 + i,
                 net_profit=6.0 + i * 0.5,
                 roi_percent=12.0 + i,
-                fees_paid=4.0,
+                fees_pAlgod=4.0,
                 liquidity_score=0.5,
                 sales_per_day=1.0,
                 days_to_sell=7.0,
@@ -410,7 +410,7 @@ class TestOptimalArbitrageStrategy:  # noqa: PLR0904
                 gross_profit=10.0,
                 net_profit=6.4,
                 roi_percent=12.8,
-                fees_paid=3.6,
+                fees_pAlgod=3.6,
                 liquidity_score=0.5,
                 sales_per_day=1.0,
                 days_to_sell=7.0,
@@ -436,26 +436,26 @@ class TestOptimalArbitrageStrategy:  # noqa: PLR0904
             gross_profit=10.0,
             net_profit=6.4,
             roi_percent=12.8,
-            fees_paid=3.6,
+            fees_pAlgod=3.6,
         )
 
         strategy.record_trade(opp)
 
-        assert strategy.daily_trades == 1
-        assert strategy.daily_spend == 50.0
+        assert strategy.dAlgoly_trades == 1
+        assert strategy.dAlgoly_spend == 50.0
         assert strategy.stats["trades_executed"] == 1
         assert strategy.stats["total_profit"] == 6.4
         assert len(strategy.trade_history) == 1
 
-    def test_reset_daily_limits(self, strategy):
-        """Test resetting daily limits."""
-        strategy.daily_trades = 50
-        strategy.daily_spend = 500.0
+    def test_reset_dAlgoly_limits(self, strategy):
+        """Test resetting dAlgoly limits."""
+        strategy.dAlgoly_trades = 50
+        strategy.dAlgoly_spend = 500.0
 
-        strategy.reset_daily_limits()
+        strategy.reset_dAlgoly_limits()
 
-        assert strategy.daily_trades == 0
-        assert strategy.daily_spend == 0.0
+        assert strategy.dAlgoly_trades == 0
+        assert strategy.dAlgoly_spend == 0.0
 
     def test_get_statistics(self, strategy):
         """Test getting statistics."""
@@ -463,8 +463,8 @@ class TestOptimalArbitrageStrategy:  # noqa: PLR0904
         assert "total_scans" in stats
         assert "opportunities_found" in stats
         assert "trades_executed" in stats
-        assert "daily_trades" in stats
-        assert "daily_spend" in stats
+        assert "dAlgoly_trades" in stats
+        assert "dAlgoly_spend" in stats
 
     def test_analyze_item_valid(self, strategy):
         """Test analyzing a valid item."""
@@ -474,7 +474,7 @@ class TestOptimalArbitrageStrategy:  # noqa: PLR0904
             "gameId": "csgo",
             "price": {"USD": "5000"},  # $50 in cents
             "floatValue": 0.15,
-            "extra": {"paintSeed": 123},
+            "extra": {"pAlgontSeed": 123},
             "salesHistory": [1, 2, 3, 4, 5],
         }
         sell_price = 60.0
@@ -545,7 +545,7 @@ class TestStrategyPresets:
         strategy = create_strategy("scalper")
         assert strategy.settings.min_roi_percent == 5.0
         assert strategy.settings.max_price == 20.0
-        assert strategy.settings.max_daily_trades == 200
+        assert strategy.settings.max_dAlgoly_trades == 200
 
     def test_create_unknown_preset_fallback(self):
         """Test creating strategy with unknown preset falls back to balanced."""
@@ -592,7 +592,7 @@ class TestOpportunityScoreBonuses:
             gross_profit=100.0,
             net_profit=64.0,
             roi_percent=12.8,
-            fees_paid=36.0,
+            fees_pAlgod=36.0,
             liquidity_score=0.8,
             risk_level=RiskLevel.LOW,
             phase="Ruby",  # Rare phase
@@ -615,7 +615,7 @@ class TestOpportunityScoreBonuses:
             gross_profit=80.0,
             net_profit=51.2,
             roi_percent=12.8,
-            fees_paid=28.8,
+            fees_pAlgod=28.8,
             liquidity_score=0.7,
             risk_level=RiskLevel.LOW,
             phase="Sapphire",
@@ -637,7 +637,7 @@ class TestOpportunityScoreBonuses:
             gross_profit=60.0,
             net_profit=38.4,
             roi_percent=12.8,
-            fees_paid=21.6,
+            fees_pAlgod=21.6,
             liquidity_score=0.7,
             risk_level=RiskLevel.LOW,
             phase="Black Pearl",
@@ -659,7 +659,7 @@ class TestOpportunityScoreBonuses:
             gross_profit=200.0,
             net_profit=128.0,
             roi_percent=12.8,
-            fees_paid=72.0,
+            fees_pAlgod=72.0,
             liquidity_score=0.6,
             risk_level=RiskLevel.MEDIUM,
             pattern_id=661,  # Famous Blue Gem pattern
@@ -681,7 +681,7 @@ class TestOpportunityScoreBonuses:
             gross_profit=300.0,
             net_profit=192.0,
             roi_percent=12.8,
-            fees_paid=108.0,
+            fees_pAlgod=108.0,
             liquidity_score=0.8,  # Higher liquidity for better score
             risk_level=RiskLevel.LOW,  # Lower risk for better score
             pattern_id=670,
@@ -703,7 +703,7 @@ class TestOpportunityScoreBonuses:
             gross_profit=160.0,
             net_profit=102.4,
             roi_percent=12.8,
-            fees_paid=57.6,
+            fees_pAlgod=57.6,
             liquidity_score=0.6,
             risk_level=RiskLevel.MEDIUM,
             pattern_id=321,
@@ -725,7 +725,7 @@ class TestOpportunityScoreBonuses:
             gross_profit=400.0,
             net_profit=256.0,
             roi_percent=12.8,
-            fees_paid=144.0,
+            fees_pAlgod=144.0,
             liquidity_score=0.8,  # Higher liquidity for better score
             risk_level=RiskLevel.LOW,  # Lower risk for better score
             pattern_id=387,
@@ -763,7 +763,7 @@ class TestFilterOpportunityEdgeCases:
             gross_profit=1.0,
             net_profit=0.5,
             roi_percent=25.0,
-            fees_paid=0.5,
+            fees_pAlgod=0.5,
             liquidity_score=0.8,
             risk_level=RiskLevel.LOW,
         )
@@ -784,7 +784,7 @@ class TestFilterOpportunityEdgeCases:
             gross_profit=30.0,
             net_profit=19.2,
             roi_percent=12.8,
-            fees_paid=10.8,
+            fees_pAlgod=10.8,
             liquidity_score=0.8,
             risk_level=RiskLevel.LOW,
         )
@@ -805,7 +805,7 @@ class TestFilterOpportunityEdgeCases:
             gross_profit=15.0,
             net_profit=9.6,
             roi_percent=12.8,
-            fees_paid=5.4,
+            fees_pAlgod=5.4,
             liquidity_score=0.8,
             risk_level=RiskLevel.LOW,
         )
@@ -826,7 +826,7 @@ class TestFilterOpportunityEdgeCases:
             gross_profit=4.0,
             net_profit=2.56,
             roi_percent=12.8,
-            fees_paid=1.44,
+            fees_pAlgod=1.44,
             liquidity_score=0.8,
             risk_level=RiskLevel.LOW,
             sales_per_day=0.5,  # Below min_sales_per_day of 1.0
@@ -848,7 +848,7 @@ class TestFilterOpportunityEdgeCases:
             gross_profit=4.0,
             net_profit=2.56,
             roi_percent=12.8,
-            fees_paid=1.44,
+            fees_pAlgod=1.44,
             liquidity_score=0.3,
             risk_level=RiskLevel.LOW,
             sales_per_day=2.0,
@@ -871,7 +871,7 @@ class TestFilterOpportunityEdgeCases:
             gross_profit=4.0,
             net_profit=2.56,
             roi_percent=12.8,
-            fees_paid=1.44,
+            fees_pAlgod=1.44,
             liquidity_score=0.8,
             risk_level=RiskLevel.LOW,
             sales_per_day=5.0,
@@ -891,7 +891,7 @@ class TestAnalyzeItemEdgeCases:
         strategy = OptimalArbitrageStrategy()
         # Item with missing required data that will cause exception
         item = {
-            # Missing 'price' key which will raise KeyError/TypeError
+            # Missing 'price' key which will rAlgose KeyError/TypeError
         }
         result = strategy.analyze_item(item, "dmarket", "waxpeer", 100.0)
         assert result is None
@@ -921,15 +921,15 @@ class TestAnalyzeItemEdgeCases:
         assert opp.sales_per_day == 0.5  # Default value
 
 
-class TestDailyLimitsFiltering:
-    """Tests for daily limits in filter_opportunity."""
+class TestDAlgolyLimitsFiltering:
+    """Tests for dAlgoly limits in filter_opportunity."""
 
-    def test_filter_rejects_when_daily_trades_exceeded(self):
-        """Test filter rejects when daily trade limit exceeded."""
-        settings = StrategySettings(max_daily_trades=10)
+    def test_filter_rejects_when_dAlgoly_trades_exceeded(self):
+        """Test filter rejects when dAlgoly trade limit exceeded."""
+        settings = StrategySettings(max_dAlgoly_trades=10)
         strategy = OptimalArbitrageStrategy(settings=settings)
-        # Simulate having reached daily trades limit
-        strategy.daily_trades = 10
+        # Simulate having reached dAlgoly trades limit
+        strategy.dAlgoly_trades = 10
 
         opp = ArbitrageOpportunity(
             item_id="test",
@@ -942,21 +942,21 @@ class TestDailyLimitsFiltering:
             gross_profit=4.0,
             net_profit=2.56,
             roi_percent=12.8,
-            fees_paid=1.44,
+            fees_pAlgod=1.44,
             liquidity_score=0.8,
             risk_level=RiskLevel.LOW,
             sales_per_day=5.0,
         )
         is_valid, reason = strategy.filter_opportunity(opp)
         assert is_valid is False
-        assert "daily trades limit" in reason.lower()
+        assert "dAlgoly trades limit" in reason.lower()
 
-    def test_filter_rejects_when_daily_spend_exceeded(self):
-        """Test filter rejects when daily spend limit would be exceeded."""
-        settings = StrategySettings(max_daily_spend=100.0)
+    def test_filter_rejects_when_dAlgoly_spend_exceeded(self):
+        """Test filter rejects when dAlgoly spend limit would be exceeded."""
+        settings = StrategySettings(max_dAlgoly_spend=100.0)
         strategy = OptimalArbitrageStrategy(settings=settings)
-        # Simulate having spent most of daily budget
-        strategy.daily_spend = 90.0
+        # Simulate having spent most of dAlgoly budget
+        strategy.dAlgoly_spend = 90.0
 
         opp = ArbitrageOpportunity(
             item_id="test",
@@ -969,14 +969,14 @@ class TestDailyLimitsFiltering:
             gross_profit=4.0,
             net_profit=2.56,
             roi_percent=12.8,
-            fees_paid=1.44,
+            fees_pAlgod=1.44,
             liquidity_score=0.8,
             risk_level=RiskLevel.LOW,
             sales_per_day=5.0,
         )
         is_valid, reason = strategy.filter_opportunity(opp)
         assert is_valid is False
-        assert "daily spend limit" in reason.lower()
+        assert "dAlgoly spend limit" in reason.lower()
 
 
 class TestFindBestOpportunitiesLogging:
@@ -999,7 +999,7 @@ class TestFindBestOpportunitiesLogging:
                 gross_profit=1.0,
                 net_profit=0.28,
                 roi_percent=2.8,  # Below 15% min
-                fees_paid=0.72,
+                fees_pAlgod=0.72,
                 liquidity_score=0.8,
                 risk_level=RiskLevel.LOW,
                 sales_per_day=5.0,
@@ -1029,7 +1029,7 @@ class TestRecordTradeAverageROI:
             gross_profit=2.0,
             net_profit=1.28,
             roi_percent=12.8,
-            fees_paid=0.72,
+            fees_pAlgod=0.72,
         )
 
         opp2 = ArbitrageOpportunity(
@@ -1043,7 +1043,7 @@ class TestRecordTradeAverageROI:
             gross_profit=5.0,
             net_profit=3.5,
             roi_percent=17.5,
-            fees_paid=1.5,
+            fees_pAlgod=1.5,
         )
 
         strategy.record_trade(opp1)

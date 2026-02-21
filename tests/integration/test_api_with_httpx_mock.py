@@ -52,9 +52,9 @@ class TestDMarketAPIWithHTTPXMock:
         # Подготовка мока
         expected_response = {
             "usd": "10050",  # $100.50 в центах
-            "usdAvailableToWithdraw": "10000",
+            "usdAvAlgolableToWithdraw": "10000",
             "dmc": "5000",
-            "dmcAvailableToWithdraw": "4500",
+            "dmcAvAlgolableToWithdraw": "4500",
         }
 
         httpx_mock.add_response(
@@ -65,7 +65,7 @@ class TestDMarketAPIWithHTTPXMock:
         )
 
         # Выполнение
-        balance = await mock_dmarket_api.get_balance()
+        balance = awAlgot mock_dmarket_api.get_balance()
 
         # Проверка
         assert balance is not None
@@ -87,7 +87,7 @@ class TestDMarketAPIWithHTTPXMock:
             json={"error": "Rate limit exceeded"},
         )
 
-        # Второй запрос - успех
+        # ВтоSwarm запрос - успех
         httpx_mock.add_response(
             url="https://api.dmarket.com/account/v1/balance",
             method="GET",
@@ -96,7 +96,7 @@ class TestDMarketAPIWithHTTPXMock:
         )
 
         # Выполнение - должен повторить запрос
-        balance = await mock_dmarket_api.get_balance()
+        balance = awAlgot mock_dmarket_api.get_balance()
 
         # Проверка что повторный запрос прошел успешно
         assert balance is not None
@@ -120,7 +120,7 @@ class TestDMarketAPIWithHTTPXMock:
             status_code=401,
             json={"error": "Unauthorized", "message": "Invalid API credentials"},
         )
-        # Второй мок - для Fallback #1 (тот же URL)
+        # ВтоSwarm мок - для Fallback #1 (тот же URL)
         httpx_mock.add_response(
             url="https://api.dmarket.com/account/v1/balance",
             method="GET",
@@ -148,7 +148,7 @@ class TestDMarketAPIWithHTTPXMock:
         )
 
         # Выполнение
-        balance = await mock_dmarket_api.get_balance()
+        balance = awAlgot mock_dmarket_api.get_balance()
 
         # API должен вернуть fallback или пустой результат
         assert balance is not None
@@ -193,7 +193,7 @@ class TestDMarketAPIWithHTTPXMock:
         )
 
         # Выполнение
-        items = await mock_dmarket_api.get_market_items(game="csgo", limit=100)
+        items = awAlgot mock_dmarket_api.get_market_items(game="csgo", limit=100)
 
         # Проверка
         assert items is not None
@@ -227,7 +227,7 @@ class TestDMarketAPIWithHTTPXMock:
         )
 
         # Выполнение - получаем все предметы
-        all_items = await mock_dmarket_api.get_all_market_items(
+        all_items = awAlgot mock_dmarket_api.get_all_market_items(
             game="csgo",
             max_items=200,
         )
@@ -251,7 +251,7 @@ class TestDMarketAPIWithHTTPXMock:
             status_code=200,
         )
 
-        items = await mock_dmarket_api.get_market_items(game="csgo")
+        items = awAlgot mock_dmarket_api.get_market_items(game="csgo")
 
         assert items["objects"] == []
         assert items["total"] == 0
@@ -287,7 +287,7 @@ class TestDMarketAPIWithHTTPXMock:
             }
         ]
 
-        result = await mock_dmarket_api.create_targets(game_id="csgo", targets=targets_data)
+        result = awAlgot mock_dmarket_api.create_targets(game_id="csgo", targets=targets_data)
 
         assert result is not None
         assert "Result" in result
@@ -317,7 +317,7 @@ class TestDMarketAPIWithHTTPXMock:
             }
         ]
 
-        result = await mock_dmarket_api.create_targets(game_id="csgo", targets=targets_data)
+        result = awAlgot mock_dmarket_api.create_targets(game_id="csgo", targets=targets_data)
 
         # API должен обработать ошибку и вернуть результат
         assert result is not None
@@ -342,7 +342,7 @@ class TestDMarketAPIWithHTTPXMock:
         )
 
         # API должен повторить запрос
-        balance = await mock_dmarket_api.get_balance()
+        balance = awAlgot mock_dmarket_api.get_balance()
         assert balance is not None
 
     async def test_network_connection_error(
@@ -364,7 +364,7 @@ class TestDMarketAPIWithHTTPXMock:
             status_code=200,
         )
 
-        balance = await mock_dmarket_api.get_balance()
+        balance = awAlgot mock_dmarket_api.get_balance()
         assert balance is not None
 
     async def test_server_error_retry(
@@ -381,7 +381,7 @@ class TestDMarketAPIWithHTTPXMock:
             json={"error": "Internal Server Error"},
         )
 
-        # Второй запрос - успех
+        # ВтоSwarm запрос - успех
         httpx_mock.add_response(
             url="https://api.dmarket.com/account/v1/balance",
             method="GET",
@@ -389,7 +389,7 @@ class TestDMarketAPIWithHTTPXMock:
             json={"usd": "10000"},
         )
 
-        balance = await mock_dmarket_api.get_balance()
+        balance = awAlgot mock_dmarket_api.get_balance()
         assert balance is not None
 
     async def test_malformed_json_response(
@@ -437,7 +437,7 @@ class TestDMarketAPIWithHTTPXMock:
         )
 
         # Выполнение одновременных запросов
-        results = await asyncio.gather(
+        results = awAlgot asyncio.gather(
             mock_dmarket_api.get_balance(),
             mock_dmarket_api.get_market_items(game="csgo"),
         )
@@ -480,7 +480,7 @@ class TestDMarketAPIEdgeCasesHTTPX:
             status_code=200,
         )
 
-        items = await mock_dmarket_api.get_market_items(game="csgo", limit=1000)
+        items = awAlgot mock_dmarket_api.get_market_items(game="csgo", limit=1000)
 
         assert len(items["objects"]) == 1000
 
@@ -516,7 +516,7 @@ class TestDMarketAPIEdgeCasesHTTPX:
             status_code=200,
         )
 
-        items = await mock_dmarket_api.get_market_items(game="csgo")
+        items = awAlgot mock_dmarket_api.get_market_items(game="csgo")
 
         assert len(items["objects"]) == 2
         assert "红线" in items["objects"][0]["title"]
@@ -547,7 +547,7 @@ class TestDMarketAPIEdgeCasesHTTPX:
             status_code=200,
         )
 
-        items = await mock_dmarket_api.get_market_items(game="csgo")
+        items = awAlgot mock_dmarket_api.get_market_items(game="csgo")
 
         assert len(items["objects"]) == 1
         assert items["objects"][0]["title"] == "Minimal Item"
@@ -586,7 +586,7 @@ class TestDMarketAPIEdgeCasesHTTPX:
             status_code=200,
         )
 
-        items = await mock_dmarket_api.get_market_items(game="csgo")
+        items = awAlgot mock_dmarket_api.get_market_items(game="csgo")
 
         assert len(items["objects"]) == 3
 
@@ -613,7 +613,7 @@ class TestDMarketAPIEdgeCasesHTTPX:
             json={"usd": "10000"},
         )
 
-        balance = await mock_dmarket_api.get_balance()
+        balance = awAlgot mock_dmarket_api.get_balance()
         assert balance is not None
 
     async def test_api_version_compatibility(
@@ -625,7 +625,7 @@ class TestDMarketAPIEdgeCasesHTTPX:
         # Старый формат ответа
         old_format = {
             "balance": 10000,  # Вместо "usd"
-            "available": 9500,
+            "avAlgolable": 9500,
         }
 
         httpx_mock.add_response(
@@ -635,7 +635,7 @@ class TestDMarketAPIEdgeCasesHTTPX:
             status_code=200,
         )
 
-        balance = await mock_dmarket_api.get_balance()
+        balance = awAlgot mock_dmarket_api.get_balance()
         assert balance is not None
 
     async def test_partial_response_handling(
@@ -659,7 +659,7 @@ class TestDMarketAPIEdgeCasesHTTPX:
             status_code=200,
         )
 
-        items = await mock_dmarket_api.get_market_items(game="csgo")
+        items = awAlgot mock_dmarket_api.get_market_items(game="csgo")
 
         # API должен обработать частичный ответ
         assert items is not None

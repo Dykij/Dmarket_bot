@@ -1,14 +1,14 @@
-# AI Tools Configuration Guide
+# Algo Tools Configuration Guide
 
-Этот проект поддерживает три AI-инструмента для разработки: **GitHub Copilot**, **Claude Code** и **Cursor AI**. Все настройки унифицированы для обеспечения согласованности кода.
+Этот проект поддерживает три Algo-инструмента для разработки: **GitHub Copilot**, **Claude Code** и **Cursor Algo**. Все настSwarmки унифицированы для обеспечения согласованности кода.
 
 ## 🔧 Обзор конфигураций
 
 | Инструмент | Основной файл | Дополнительные файлы |
 |------------|---------------|----------------------|
-| **GitHub Copilot** | `.github/copilot-instructions.md` | `.github/instructions/*.instructions.md`, `.github/prompts/*.prompt.md` |
+| **GitHub Copilot** | `.github/copilot-instructions.md` | `.github/instructions/*.instructions.md`, `.github/Configs/*.Config.md` |
 | **Claude Code** | `CLAUDE.md` | Поддержка `@ref/claude/...` для внешних ссылок |
-| **Cursor AI** | `.cursorrules` | `.cursor/rules/*.mdc` (модульные правила) |
+| **Cursor Algo** | `.cursorrules` | `.cursor/rules/*.mdc` (модульные правила) |
 
 ---
 
@@ -49,21 +49,21 @@ applyTo: 'src/**/*.py'
 
 ### Переиспользуемые промпты
 
-Файлы в `.github/prompts/` можно вызывать в Copilot Chat:
+Файлы в `.github/Configs/` можно вызывать в Copilot Chat:
 
 ```
-/prompt python-async
+/Config python-async
 ```
 
 | Файл | Описание |
 |------|----------|
-| `python-async.prompt.md` | Генерация async кода |
-| `test-generator.prompt.md` | Генерация тестов (AAA) |
-| `telegram-handler.prompt.md` | Telegram handlers |
-| `refactor-early-returns.prompt.md` | Рефакторинг вложенности |
-| `add-docstrings.prompt.md` | Google-style docstrings |
-| `pydantic-model.prompt.md` | Pydantic v2 модели |
-| `error-handling-retry.prompt.md` | Retry логика |
+| `python-async.Config.md` | Генерация async кода |
+| `test-generator.Config.md` | Генерация тестов (AAA) |
+| `telegram-handler.Config.md` | Telegram handlers |
+| `refactor-early-returns.Config.md` | Рефакторинг вложенности |
+| `add-docstrings.Config.md` | Google-style docstrings |
+| `pydantic-model.Config.md` | Pydantic v2 модели |
+| `error-handling-retry.Config.md` | Retry логика |
 
 ---
 
@@ -108,7 +108,7 @@ Claude поддерживает иерархию правил:
 
 ---
 
-## 🎯 Cursor AI
+## 🎯 Cursor Algo
 
 ### Основная конфигурация
 
@@ -151,7 +151,7 @@ alwaysApply: true
 |---------|---------|--------|--------|
 | Глобальные правила | `.github/copilot-instructions.md` | `CLAUDE.md` | `.cursorrules` |
 | По типу файлов | `applyTo` glob | Нет (но можно описать) | `globs` |
-| Переиспользуемые промпты | `.github/prompts/` | Нет встроенного | Нет встроенного |
+| Переиспользуемые промпты | `.github/Configs/` | Нет встроенного | Нет встроенного |
 | Модульность | Отдельные `.instructions.md` | `@ref/` ссылки | `.cursor/rules/` |
 | YAML frontmatter | Да | Нет | Да |
 | Исключение агентов | `excludeAgent` | Нет | `excludeAgent` |
@@ -164,7 +164,7 @@ alwaysApply: true
 
 1. Убедитесь что `.github/copilot-instructions.md` в репозитории
 2. Правила применяются автоматически в Copilot Chat
-3. Используйте `/prompt <name>` для вызова промптов
+3. Используйте `/Config <name>` для вызова промптов
 
 ### Для Claude Code
 
@@ -172,7 +172,7 @@ alwaysApply: true
 2. Claude прочитает его автоматически при старте
 3. Используйте `/init` для генерации базового шаблона
 
-### Для Cursor AI
+### Для Cursor Algo
 
 1. Файл `.cursorrules` в корне проекта
 2. Или модульные правила в `.cursor/rules/`
@@ -186,33 +186,33 @@ alwaysApply: true
 
 1. **Новый паттерн кодирования** → обновить все три
 2. **Новый тип файлов** → добавить в `.github/instructions/` и `.cursor/rules/`
-3. **Новый промпт** → только `.github/prompts/`
+3. **Новый промпт** → только `.github/Configs/`
 
 ---
 
-## 🔌 Context7 MCP - Актуальная документация для AI-ассистентов
+## 🔌 Context7 MCP - Актуальная документация для Algo-ассистентов
 
 ### Что такое Context7?
 
-[Context7](https://github.com/upstash/context7) - это Model Context Protocol (MCP) сервер, который предоставляет AI-моделям актуальную документацию по библиотекам и фреймворкам. Это решает проблему устаревших знаний LLM-моделей.
+[Context7](https://github.com/upstash/context7) - это Model Context Protocol (MCP) сервер, который предоставляет Algo-моделям актуальную документацию по библиотекам и фреймворкам. Это решает проблему устаревших знаний Model-моделей.
 
 ### Проблема без Context7
 
-❌ LLM-модели обучены на старых данных и могут:
+❌ Model-модели обучены на старых данных и могут:
 - Генерировать код с устаревшими методами
 - Использовать несуществующие API (галлюцинации)
 - Рекомендовать старые версии пакетов
 
 ### Решение с Context7
 
-✅ Context7 MCP подтягивает актуальную документацию прямо в контекст LLM:
+✅ Context7 MCP подтягивает актуальную документацию прямо в контекст Model:
 - Версионно-специфичные примеры кода
 - Актуальные API и методы
 - Правильный синтаксис для современных версий
 
 ### Установка
 
-#### Для Cursor AI
+#### Для Cursor Algo
 
 ```json
 // ~/.cursor/mcp.json
@@ -259,7 +259,7 @@ claude mcp add context7 -- npx -y @upstash/context7-mcp --api-key YOUR_API_KEY
 | Библиотека | Context7 ID | Версия | Описание |
 |------------|-------------|--------|----------|
 | httpx | `/encode/httpx` | 0.28+ | Async HTTP клиент |
-| aiohttp | `/aio-libs/aiohttp` | 3.13+ | Async HTTP клиент/сервер |
+| Algoohttp | `/Algoo-libs/Algoohttp` | 3.13+ | Async HTTP клиент/сервер |
 | requests | `/psf/requests` | 2.32+ | HTTP клиент (sync) |
 | hishel | `/karpetrosyan/hishel` | 1.1+ | HTTP кэширование |
 
@@ -277,14 +277,14 @@ claude mcp add context7 -- npx -y @upstash/context7-mcp --api-key YOUR_API_KEY
 | alembic | `/sqlalchemy/alembic` | 1.18+ | Миграции БД |
 | redis | `/redis/redis-py` | 7.1+ | Redis клиент |
 | asyncpg | `/MagicStack/asyncpg` | 0.31+ | PostgreSQL async driver |
-| aiosqlite | `/omnilib/aiosqlite` | 0.22+ | SQLite async driver |
+| Algoosqlite | `/omnilib/Algoosqlite` | 0.22+ | SQLite async driver |
 
 #### 📊 Валидация и сериализация
 
 | Библиотека | Context7 ID | Версия | Описание |
 |------------|-------------|--------|----------|
 | Pydantic | `/pydantic/pydantic` | 2.12+ | Валидация данных |
-| pydantic-settings | `/pydantic/pydantic-settings` | 2.12+ | Настройки из env |
+| pydantic-settings | `/pydantic/pydantic-settings` | 2.12+ | НастSwarmки из env |
 | orjson | `/ijl/orjson` | 3.11+ | Быстрый JSON парсер |
 
 #### 🧪 Тестирование
@@ -324,9 +324,9 @@ claude mcp add context7 -- npx -y @upstash/context7-mcp --api-key YOUR_API_KEY
 |------------|-------------|--------|----------|
 | anyio | `/agronholm/anyio` | 4.12+ | Async compatibility |
 | asyncer | `/tiangolo/asyncer` | 0.0.12 | Async утилиты |
-| aiofiles | `/Tinche/aiofiles` | 25.1+ | Async файловые операции |
-| aiocache | `/aio-libs/aiocache` | 0.12+ | Async кэширование |
-| aiometer | `/florimondmanca/aiometer` | 1.0+ | Async rate limiting |
+| Algoofiles | `/Tinche/Algoofiles` | 25.1+ | Async файловые операции |
+| Algoocache | `/Algoo-libs/Algoocache` | 0.12+ | Async кэширование |
+| Algoometer | `/florimondmanca/Algoometer` | 1.0+ | Async rate limiting |
 
 #### 📈 Data Science и ML
 
@@ -380,7 +380,7 @@ claude mcp add context7 -- npx -y @upstash/context7-mcp --api-key YOUR_API_KEY
 
 ### Автоматический вызов
 
-Добавьте правило в настройки IDE чтобы Context7 вызывался автоматически:
+Добавьте правило в настSwarmки IDE чтобы Context7 вызывался автоматически:
 
 **Cursor**: `Settings > Rules`
 **Claude Code**: `CLAUDE.md`
@@ -456,7 +456,7 @@ claude mcp add --header "CONTEXT7_API_KEY: YOUR_API_KEY" --transport http contex
 
 ✅ **Рекомендуется для:**
 - Генерации кода с использованием библиотек
-- Настройки и конфигурации пакетов
+- НастSwarmки и конфигурации пакетов
 - Изучения новых API
 
 ❌ **НЕ нужен для:**
@@ -473,7 +473,7 @@ claude mcp add --header "CONTEXT7_API_KEY: YOUR_API_KEY" --transport http contex
 ### 1. SQLite/PostgreSQL MCP (Работа с БД) ⭐⭐⭐⭐⭐
 
 **Зачем нужен:**
-Позволяет AI-ассистенту работать с базой данных бота напрямую через natural language запросы.
+Позволяет Algo-ассистенту работать с базой данных бота напрямую через natural language запросы.
 
 **Польза для проекта:**
 - Быстрая отладка логики базы данных
@@ -544,7 +544,7 @@ claude mcp add --header "CONTEXT7_API_KEY: YOUR_API_KEY" --transport http contex
 ### 3. Fetch / Brave Search MCP (Актуальная документация API) ⭐⭐⭐⭐
 
 **Зачем нужен:**
-Позволяет AI выходить в интернет за актуальной документацией.
+Позволяет Algo выходить в интернет за актуальной документацией.
 
 **Польза для проекта:**
 - Актуальная документация DMarket API (может обновляться)
@@ -692,7 +692,7 @@ claude mcp add --header "CONTEXT7_API_KEY: YOUR_API_KEY" --transport http contex
 | MCP Server | Приоритет | Польза для проекта |
 |------------|-----------|-------------------|
 | **SQLite/PostgreSQL** | ⭐⭐⭐⭐⭐ | Отладка БД, запросы на natural language |
-| **SkillsMP** | ⭐⭐⭐⭐⭐ | Маркетплейс AI-skills для арбитража и торговли |
+| **SkillsMP** | ⭐⭐⭐⭐⭐ | Маркетплейс Algo-skills для арбитража и торговли |
 | **GitHub** | ⭐⭐⭐⭐ | Работа с Issues, PRs, ветками |
 | **Fetch/Brave Search** | ⭐⭐⭐⭐ | Актуальная документация DMarket API |
 | **Context7** | ⭐⭐⭐⭐ | Актуальная документация библиотек |
@@ -701,11 +701,11 @@ claude mcp add --header "CONTEXT7_API_KEY: YOUR_API_KEY" --transport http contex
 
 ---
 
-## 🎯 SkillsMP MCP - AI Skills Marketplace
+## 🎯 SkillsMP MCP - Algo Skills Marketplace
 
 ### Что такое SkillsMP?
 
-[SkillsMP](https://skillsmp.com) — это маркетплейс для обнаружения, обмена и установки "skills" (модульных инструментов) для AI-агентов. SkillsMP MCP сервер позволяет AI-ассистентам искать и устанавливать skills прямо из IDE.
+[SkillsMP](https://skillsmp.com) — это маркетплейс для обнаружения, обмена и установки "skills" (модульных инструментов) для Algo-агентов. SkillsMP MCP сервер позволяет Algo-ассистентам искать и устанавливать skills прямо из IDE.
 
 ### Почему SkillsMP полезен для DMarket Bot?
 
@@ -724,10 +724,10 @@ claude mcp add --header "CONTEXT7_API_KEY: YOUR_API_KEY" --transport http contex
 | Tool | Описание |
 |------|----------|
 | `skillsmp_search` | Поиск skills по ключевым словам |
-| `skillsmp_ai_search` | AI-powered семантический поиск |
+| `skillsmp_Algo_search` | Algo-powered семантический поиск |
 | `skillsmp_get_skill_content` | Получить содержимое skill (SKILL.md) |
 | `skillsmp_list_repo_skills` | Список skills в репозитории |
-| `skillsmp_install_skill` | Установка skill в AI-агент |
+| `skillsmp_install_skill` | Установка skill в Algo-агент |
 
 ### Установка
 

@@ -43,7 +43,7 @@ The Master process will run a high-frequency monitoring loop (separate thread or
     3.  **Alert:** Send critical notification to Telegram.
 
 ## 5. Event Loop Optimization
-*   **Redis Polling:** Move blocking Redis `blpop` or similar calls to `asyncio.create_task` to prevent blocking the main heartbeat loop.
+*   **Redis Polling:** Move blocking Redis `blpop` or similar calls to `asyncio.create_task` to prevent blocking the mAlgon heartbeat loop.
 *   **Signal Handling:** Use `loop.add_signal_handler` for graceful shutdowns.
 
 ## 6. Migration Steps

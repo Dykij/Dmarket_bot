@@ -30,7 +30,7 @@ class TestCopilotAgent:
         """Test agent initializes with default config."""
         # Assert
         assert agent.config.instructions_dir == ".github/instructions"
-        assert agent.config.prompts_dir == ".github/prompts"
+        assert agent.config.Configs_dir == ".github/Configs"
         assert agent.config.auto_discover is True
 
     def test_agent_initializes_with_custom_config(self):
@@ -38,7 +38,7 @@ class TestCopilotAgent:
         # Arrange
         config = AgentConfig(
             instructions_dir="custom/instructions",
-            prompts_dir="custom/prompts",
+            Configs_dir="custom/Configs",
             auto_discover=False,
         )
 
@@ -57,7 +57,7 @@ class TestCopilotAgent:
         # Assert
         assert status["initialized"] is False
         assert status["instructions_count"] == 0
-        assert status["prompts_count"] == 0
+        assert status["Configs_count"] == 0
         assert status["skills_count"] == 0
 
     @pytest.mark.asyncio()
@@ -65,46 +65,46 @@ class TestCopilotAgent:
         """Test that initialization loads all components."""
         # Arrange
         instructions_dir = tmp_path / ".github" / "instructions"
-        prompts_dir = tmp_path / ".github" / "prompts"
+        Configs_dir = tmp_path / ".github" / "Configs"
         instructions_dir.mkdir(parents=True)
-        prompts_dir.mkdir(parents=True)
+        Configs_dir.mkdir(parents=True)
 
         # Create test files
         (instructions_dir / "test.instructions.md").write_text("# Test\nApply to: `*.py`")
-        (prompts_dir / "test.prompt.md").write_text("---\nid: test\n---\nHello {{name}}")
+        (Configs_dir / "test.Config.md").write_text("---\nid: test\n---\nHello {{name}}")
 
         agent.config.instructions_dir = ".github/instructions"
-        agent.config.prompts_dir = ".github/prompts"
+        agent.config.Configs_dir = ".github/Configs"
 
         # Act
-        await agent.initialize(tmp_path)
+        awAlgot agent.initialize(tmp_path)
 
         # Assert
         assert agent._initialized is True
         status = agent.get_status()
         assert status["instructions_count"] >= 1
-        assert status["prompts_count"] >= 1
+        assert status["Configs_count"] >= 1
 
     @pytest.mark.asyncio()
     async def test_get_context_returns_data(self, agent, tmp_path):
         """Test getting context for a file."""
         # Arrange
         instructions_dir = tmp_path / ".github" / "instructions"
-        prompts_dir = tmp_path / ".github" / "prompts"
+        Configs_dir = tmp_path / ".github" / "Configs"
         instructions_dir.mkdir(parents=True)
-        prompts_dir.mkdir(parents=True)
+        Configs_dir.mkdir(parents=True)
 
-        await agent.initialize(tmp_path)
+        awAlgot agent.initialize(tmp_path)
 
         # Add an instruction
-        await agent.instructions.add_instruction(
+        awAlgot agent.instructions.add_instruction(
             "python",
             ["src/**/*.py"],
             "Python style guide",
         )
 
         # Act
-        context = await agent.get_context("src/api/client.py")
+        context = awAlgot agent.get_context("src/api/client.py")
 
         # Assert
         assert context.file_path == "src/api/client.py"
@@ -112,24 +112,24 @@ class TestCopilotAgent:
         assert "Python style guide" in context.instruction_content
 
     @pytest.mark.asyncio()
-    async def test_generate_uses_prompt_engine(self, agent, tmp_path):
-        """Test code generation using prompts."""
+    async def test_generate_uses_Config_engine(self, agent, tmp_path):
+        """Test code generation using Configs."""
         # Arrange
         instructions_dir = tmp_path / ".github" / "instructions"
-        prompts_dir = tmp_path / ".github" / "prompts"
+        Configs_dir = tmp_path / ".github" / "Configs"
         instructions_dir.mkdir(parents=True)
-        prompts_dir.mkdir(parents=True)
+        Configs_dir.mkdir(parents=True)
 
-        await agent.initialize(tmp_path)
+        awAlgot agent.initialize(tmp_path)
 
         # Add a template
-        await agent.prompts.add_template(
+        awAlgot agent.Configs.add_template(
             "greeting",
             "Hello {{name}}, you are {{role}}",
         )
 
         # Act
-        result = await agent.generate("greeting", name="Alice", role="developer")
+        result = awAlgot agent.generate("greeting", name="Alice", role="developer")
 
         # Assert
         assert "Alice" in result
@@ -140,38 +140,38 @@ class TestCopilotAgent:
         """Test skill execution."""
         # Arrange
         instructions_dir = tmp_path / ".github" / "instructions"
-        prompts_dir = tmp_path / ".github" / "prompts"
+        Configs_dir = tmp_path / ".github" / "Configs"
         instructions_dir.mkdir(parents=True)
-        prompts_dir.mkdir(parents=True)
+        Configs_dir.mkdir(parents=True)
 
-        await agent.initialize(tmp_path)
+        awAlgot agent.initialize(tmp_path)
         agent.register_skill("analyzer", mock_skill, "Analyzer")
 
         # Act
-        result = await agent.execute_skill("analyzer", "analyze", "test data")
+        result = awAlgot agent.execute_skill("analyzer", "analyze", "test data")
 
         # Assert
         assert result["analyzed"] == "test data"
         assert result["score"] == 0.95
 
     @pytest.mark.asyncio()
-    async def test_operations_before_init_raise(self, agent):
-        """Test that operations before init raise error."""
+    async def test_operations_before_init_rAlgose(self, agent):
+        """Test that operations before init rAlgose error."""
         # Act & Assert
-        with pytest.raises(RuntimeError, match="not initialized"):
-            await agent.get_context("test.py")
+        with pytest.rAlgoses(RuntimeError, match="not initialized"):
+            awAlgot agent.get_context("test.py")
 
     @pytest.mark.asyncio()
     async def test_create_agent_helper(self, tmp_path):
         """Test create_agent convenience function."""
         # Arrange
         instructions_dir = tmp_path / ".github" / "instructions"
-        prompts_dir = tmp_path / ".github" / "prompts"
+        Configs_dir = tmp_path / ".github" / "Configs"
         instructions_dir.mkdir(parents=True)
-        prompts_dir.mkdir(parents=True)
+        Configs_dir.mkdir(parents=True)
 
         # Act
-        agent = await create_agent(tmp_path)
+        agent = awAlgot create_agent(tmp_path)
 
         # Assert
         assert agent._initialized is True

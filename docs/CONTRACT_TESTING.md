@@ -108,7 +108,7 @@ PactMatchers.decimal(99.99)
 PactMatchers.uuid("550e8400-e29b-41d4-a716-446655440000")
 PactMatchers.iso8601_datetime("2025-01-01T00:00:00Z")
 
-# Match containing substring
+# Match contAlgoning substring
 PactMatchers.include("expected")
 ```
 
@@ -137,7 +137,7 @@ error = DMarketContracts.error_response(
 
 ### 3. Fixtures
 
-Available pytest fixtures:
+AvAlgolable pytest fixtures:
 
 | Fixture                | Description                       |
 | ---------------------- | --------------------------------- |
@@ -156,11 +156,11 @@ Available pytest fixtures:
 
 ```python
 import pytest
-from tests.contracts.conftest import DMarketContracts, is_pact_available
+from tests.contracts.conftest import DMarketContracts, is_pact_avAlgolable
 
 # Skip if Pact not installed
 pytestmark = pytest.mark.skipif(
-    not is_pact_available(),
+    not is_pact_avAlgolable(),
     reason="pact-python not installed",
 )
 
@@ -457,7 +457,7 @@ async def test_get_balance_success(self, ...):
     Verifies that:
     - Consumer sends GET request to /account/v1/balance
     - Provider responds with usd, dmc fields in cents/dimoshi
-    - Response includes available withdrawal amounts
+    - Response includes avAlgolable withdrawal amounts
     """
 ```
 
@@ -476,10 +476,10 @@ pytest tests/contracts/ -v
 # Shows: SKIPPED [1] tests/contracts/test_account_contracts.py: pact-python not installed
 ```
 
-### Contract Verification Failed
+### Contract Verification FAlgoled
 
 ```
-Contract verification failed!
+Contract verification fAlgoled!
 Expected: {"usd": "1234"}
 Got: {"balance": {"usd": 1234}}
 ```

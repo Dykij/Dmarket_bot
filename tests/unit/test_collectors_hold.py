@@ -44,7 +44,7 @@ class TestCollectorsHoldManager:
             "extra": {"floatValue": 0.25},
         }
 
-        decision = await manager.process_purchased_item(item_data)
+        decision = awAlgot manager.process_purchased_item(item_data)
 
         assert decision.should_hold is False
         assert decision.reason is None
@@ -59,7 +59,7 @@ class TestCollectorsHoldManager:
             "extra": {"floatValue": 0.005},
         }
 
-        decision = await manager.process_purchased_item(item_data)
+        decision = awAlgot manager.process_purchased_item(item_data)
 
         assert decision.should_hold is True
         assert decision.reason.value == "rare_float"
@@ -80,7 +80,7 @@ class TestCollectorsHoldManager:
             },
         }
 
-        decision = await manager.process_purchased_item(item_data)
+        decision = awAlgot manager.process_purchased_item(item_data)
 
         assert decision.should_hold is True
         assert decision.reason.value == "valuable_sticker"
@@ -99,7 +99,7 @@ class TestCollectorsHoldManager:
             },
         }
 
-        decision = await manager.process_purchased_item(item_data)
+        decision = awAlgot manager.process_purchased_item(item_data)
 
         assert decision.should_hold is True
         assert decision.reason.value == "rare_phase"
@@ -113,11 +113,11 @@ class TestCollectorsHoldManager:
             "gameId": "csgo",
             "extra": {
                 "floatValue": 0.05,
-                "paintSeed": 661,  # Известный Blue Gem
+                "pAlgontSeed": 661,  # Известный Blue Gem
             },
         }
 
-        decision = await manager.process_purchased_item(item_data)
+        decision = awAlgot manager.process_purchased_item(item_data)
 
         assert decision.should_hold is True
         assert decision.reason.value == "rare_pattern"
@@ -136,7 +136,7 @@ class TestCollectorsHoldManager:
             },
         }
 
-        decision = await manager.process_purchased_item(item_data)
+        decision = awAlgot manager.process_purchased_item(item_data)
 
         assert decision.should_hold is True
         assert decision.reason.value == "rare_gem"
@@ -158,7 +158,7 @@ class TestCollectorsHoldManager:
             },
         }
 
-        decision = await manager.process_purchased_item(item_data)
+        decision = awAlgot manager.process_purchased_item(item_data)
 
         assert decision.should_hold is True
         assert decision.reason.value == "multi_gem"
@@ -168,14 +168,14 @@ class TestCollectorsHoldManager:
         """Тест: TF2 предмет с Halloween Spell удерживается."""
         item_data = {
             "itemId": "item123",
-            "title": "Haunted Team Captain",
+            "title": "Haunted Team CaptAlgon",
             "gameId": "tf2",
             "extra": {
                 "spells": [{"name": "Exorcism"}],
             },
         }
 
-        decision = await manager.process_purchased_item(item_data)
+        decision = awAlgot manager.process_purchased_item(item_data)
 
         assert decision.should_hold is True
         assert decision.reason.value == "halloween_spell"
@@ -189,7 +189,7 @@ class TestCollectorsHoldManager:
             "gameId": "rust",
         }
 
-        decision = await manager.process_purchased_item(item_data)
+        decision = awAlgot manager.process_purchased_item(item_data)
 
         assert decision.should_hold is True
         assert decision.reason.value == "glow_item"
@@ -203,7 +203,7 @@ class TestCollectorsHoldManager:
             "gameId": "rust",
         }
 
-        decision = await manager.process_purchased_item(item_data)
+        decision = awAlgot manager.process_purchased_item(item_data)
 
         assert decision.should_hold is True
         assert decision.reason.value == "limited_edition"
@@ -228,7 +228,7 @@ class TestCollectorsHoldManager:
             "extra": {"floatValue": 0.00005},
         }
 
-        decision = await manager_with_eval.process_purchased_item(item_data)
+        decision = awAlgot manager_with_eval.process_purchased_item(item_data)
 
         assert decision.should_hold is True
         assert decision.reason.value == "jackpot"
@@ -248,7 +248,7 @@ class TestCollectorsHoldManager:
             "gameId": "rust",
         }
 
-        await manager.process_purchased_item(item_data)
+        awAlgot manager.process_purchased_item(item_data)
 
         treasures = manager.get_treasures()
         assert len(treasures) == 1
@@ -272,7 +272,7 @@ class TestCollectorsHoldManager:
             game="csgo",
             should_hold=True,
             reason=HoldReason.RARE_FLOAT,
-            reason_details="Low float: 0.005",
+            reason_detAlgols="Low float: 0.005",
             estimated_value_multiplier=1.50,
             recommended_platforms=["Buff163", "CSFloat"],
         )
@@ -294,7 +294,7 @@ class TestWatchdog:
         from src.utils.watchdog import WatchdogConfig
 
         return WatchdogConfig(
-            main_script="test_script.py",
+            mAlgon_script="test_script.py",
             health_check_interval_seconds=5,
             max_restart_attempts=3,
         )
@@ -379,7 +379,7 @@ class TestHoldDecision:
             game="csgo",
             should_hold=True,
             reason=HoldReason.RARE_FLOAT,
-            reason_details="Low float",
+            reason_detAlgols="Low float",
             estimated_value_multiplier=1.25,
         )
 
@@ -402,6 +402,6 @@ class TestHoldDecision:
         )
 
         assert decision.reason is None
-        assert decision.reason_details == ""
+        assert decision.reason_detAlgols == ""
         assert decision.estimated_value_multiplier == 1.0
         assert decision.recommended_platforms == []

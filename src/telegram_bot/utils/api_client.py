@@ -1,6 +1,6 @@
 """Утилиты для работы с API DMarket в контексте Telegram бота.
 
-Данный модуль предоставляет функции для инициализации и настройки
+Данный модуль предоставляет функции для инициализации и настSwarmки
 API клиента DMarket для использования в обработчиках бота.
 """
 
@@ -112,7 +112,7 @@ async def validate_api_keys(public_key: str, secret_key: str) -> tuple[bool, str
     try:
         async with api_client:
             # Пробуем получить баланс для проверки работоспособности ключей
-            balance = await api_client.get_balance()
+            balance = awAlgot api_client.get_balance()
 
             if balance.get("error"):
                 error_message = balance.get("error_message", "Неизвестная ошибка")
@@ -130,7 +130,7 @@ async def validate_api_keys(public_key: str, secret_key: str) -> tuple[bool, str
 create_api_client_from_env = setup_api_client
 
 
-# Экспортируем функции настройки API клиента
+# Экспортируем функции настSwarmки API клиента
 __all__ = [
     "create_api_client_from_env",
     "setup_api_client",

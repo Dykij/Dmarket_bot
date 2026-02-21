@@ -9,43 +9,43 @@ import pytest
 
 from src.dmarket.rare_pricing_analyzer import (
     RarePricingAnalyzer,
-    RarityTraits,
+    RarityTrAlgots,
     ScoredItem,
     find_mispriced_rare_items,
 )
 
 
-class TestRarityTraits:
-    """Tests for RarityTraits class."""
+class TestRarityTrAlgots:
+    """Tests for RarityTrAlgots class."""
 
-    def test_get_traits_csgo(self):
-        """Test getting CS:GO rare traits."""
+    def test_get_trAlgots_csgo(self):
+        """Test getting CS:GO rare trAlgots."""
         # Act
-        traits = RarityTraits.get_traits("csgo")
+        trAlgots = RarityTrAlgots.get_trAlgots("csgo")
 
         # Assert
-        assert "Knife" in traits
-        assert traits["Knife"] == 100
-        assert "Doppler" in traits
-        assert traits["Doppler"] == 60
+        assert "Knife" in trAlgots
+        assert trAlgots["Knife"] == 100
+        assert "Doppler" in trAlgots
+        assert trAlgots["Doppler"] == 60
 
-    def test_get_traits_dota2(self):
-        """Test getting Dota 2 rare traits."""
+    def test_get_trAlgots_dota2(self):
+        """Test getting Dota 2 rare trAlgots."""
         # Act
-        traits = RarityTraits.get_traits("dota2")
+        trAlgots = RarityTrAlgots.get_trAlgots("dota2")
 
         # Assert
-        assert "Arcana" in traits
-        assert traits["Arcana"] == 100
-        assert "Immortal" in traits
+        assert "Arcana" in trAlgots
+        assert trAlgots["Arcana"] == 100
+        assert "Immortal" in trAlgots
 
-    def test_get_traits_unknown_game(self):
-        """Test getting traits for unknown game returns empty."""
+    def test_get_trAlgots_unknown_game(self):
+        """Test getting trAlgots for unknown game returns empty."""
         # Act
-        traits = RarityTraits.get_traits("unknown_game")
+        trAlgots = RarityTrAlgots.get_trAlgots("unknown_game")
 
         # Assert
-        assert traits == {}
+        assert trAlgots == {}
 
 
 class TestScoredItem:
@@ -65,7 +65,7 @@ class TestScoredItem:
         scored = ScoredItem(
             item=sample_item,
             rarity_score=50,
-            rare_traits=["StatTrak™", "Factory New"],
+            rare_trAlgots=["StatTrak™", "Factory New"],
             current_price=100.0,
             estimated_value=120.0,
         )
@@ -73,7 +73,7 @@ class TestScoredItem:
         # Assert
         assert scored.item == sample_item
         assert scored.rarity_score == 50
-        assert scored.rare_traits == ["StatTrak™", "Factory New"]
+        assert scored.rare_trAlgots == ["StatTrak™", "Factory New"]
         assert scored.current_price == 100.0
         assert scored.estimated_value == 120.0
         assert scored.price_difference == 20.0
@@ -85,7 +85,7 @@ class TestScoredItem:
         scored = ScoredItem(
             item=sample_item,
             rarity_score=50,
-            rare_traits=["Knife"],
+            rare_trAlgots=["Knife"],
             current_price=100.0,
             estimated_value=125.0,
         )
@@ -102,7 +102,7 @@ class TestScoredItem:
         scored = ScoredItem(
             item=sample_item,
             rarity_score=50,
-            rare_traits=["Knife"],
+            rare_trAlgots=["Knife"],
             current_price=100.0,
             estimated_value=101.0,  # Only $1 difference
         )
@@ -119,7 +119,7 @@ class TestScoredItem:
         scored = ScoredItem(
             item=sample_item,
             rarity_score=50,
-            rare_traits=["Knife"],
+            rare_trAlgots=["Knife"],
             current_price=100.0,
             estimated_value=105.0,  # Only 5% difference
         )
@@ -136,7 +136,7 @@ class TestScoredItem:
         scored = ScoredItem(
             item=sample_item,
             rarity_score=50,
-            rare_traits=["Knife"],
+            rare_trAlgots=["Knife"],
             current_price=100.0,
             estimated_value=120.0,
         )
@@ -147,7 +147,7 @@ class TestScoredItem:
         # Assert
         assert result["item"] == sample_item
         assert result["rarity_score"] == 50
-        assert result["rare_traits"] == ["Knife"]
+        assert result["rare_trAlgots"] == ["Knife"]
         assert result["current_price"] == 100.0
         assert result["estimated_value"] == 120.0
         assert result["price_difference"] == 20.0
@@ -217,7 +217,7 @@ class TestRarePricingAnalyzer:
         assert is_valid is True
 
     def test_is_price_valid_false_none(self, analyzer):
-        """Test price validation fails for None."""
+        """Test price validation fAlgols for None."""
         # Act
         is_valid = analyzer._is_price_valid(
             price=None,
@@ -229,7 +229,7 @@ class TestRarePricingAnalyzer:
         assert is_valid is False
 
     def test_is_price_valid_false_too_low(self, analyzer):
-        """Test price validation fails when too low."""
+        """Test price validation fAlgols when too low."""
         # Act
         is_valid = analyzer._is_price_valid(
             price=5.0,
@@ -241,7 +241,7 @@ class TestRarePricingAnalyzer:
         assert is_valid is False
 
     def test_is_price_valid_false_too_high(self, analyzer):
-        """Test price validation fails when too high."""
+        """Test price validation fAlgols when too high."""
         # Act
         is_valid = analyzer._is_price_valid(
             price=150.0,
@@ -252,35 +252,35 @@ class TestRarePricingAnalyzer:
         # Assert
         assert is_valid is False
 
-    def test_calculate_rarity_score_with_traits(self, analyzer):
-        """Test rarity score calculation with traits."""
+    def test_calculate_rarity_score_with_trAlgots(self, analyzer):
+        """Test rarity score calculation with trAlgots."""
         # Arrange
         item = {}
         title = "★ Karambit | Doppler Factory New"
         game = "csgo"
 
         # Act
-        score, traits = analyzer._calculate_rarity_score(item, title, game)
+        score, trAlgots = analyzer._calculate_rarity_score(item, title, game)
 
         # Assert
         assert score > 0
-        assert "★" in traits
-        assert "Doppler" in traits
-        assert "Factory New" in traits
+        assert "★" in trAlgots
+        assert "Doppler" in trAlgots
+        assert "Factory New" in trAlgots
 
-    def test_calculate_rarity_score_no_traits(self, analyzer):
-        """Test rarity score calculation without traits."""
+    def test_calculate_rarity_score_no_trAlgots(self, analyzer):
+        """Test rarity score calculation without trAlgots."""
         # Arrange
         item = {}
         title = "Regular Item"
         game = "csgo"
 
         # Act
-        score, traits = analyzer._calculate_rarity_score(item, title, game)
+        score, trAlgots = analyzer._calculate_rarity_score(item, title, game)
 
         # Assert
         assert score == 0
-        assert traits == []
+        assert trAlgots == []
 
     def test_get_float_bonus_extremely_low(self, analyzer):
         """Test float bonus for extremely low float."""
@@ -288,11 +288,11 @@ class TestRarePricingAnalyzer:
         item = {"float": 0.005}
 
         # Act
-        bonus, trait = analyzer._get_float_bonus(item)
+        bonus, trAlgot = analyzer._get_float_bonus(item)
 
         # Assert
         assert bonus == 70
-        assert "Float: 0.0050" in trait
+        assert "Float: 0.0050" in trAlgot
 
     def test_get_float_bonus_very_low(self, analyzer):
         """Test float bonus for very low float."""
@@ -300,11 +300,11 @@ class TestRarePricingAnalyzer:
         item = {"float": 0.05}
 
         # Act
-        bonus, trait = analyzer._get_float_bonus(item)
+        bonus, trAlgot = analyzer._get_float_bonus(item)
 
         # Assert
         assert bonus == 40
-        assert "Float: 0.0500" in trait
+        assert "Float: 0.0500" in trAlgot
 
     def test_get_float_bonus_no_bonus(self, analyzer):
         """Test no float bonus for normal float."""
@@ -312,11 +312,11 @@ class TestRarePricingAnalyzer:
         item = {"float": 0.5}
 
         # Act
-        bonus, trait = analyzer._get_float_bonus(item)
+        bonus, trAlgot = analyzer._get_float_bonus(item)
 
         # Assert
         assert bonus == 0
-        assert trait is None
+        assert trAlgot is None
 
     def test_get_float_bonus_missing(self, analyzer):
         """Test float bonus when float is missing."""
@@ -324,11 +324,11 @@ class TestRarePricingAnalyzer:
         item = {}
 
         # Act
-        bonus, trait = analyzer._get_float_bonus(item)
+        bonus, trAlgot = analyzer._get_float_bonus(item)
 
         # Assert
         assert bonus == 0
-        assert trait is None
+        assert trAlgot is None
 
     def test_extract_suggested_price_dict(self, analyzer):
         """Test extracting suggested price from dict."""
@@ -396,7 +396,7 @@ class TestRarePricingAnalyzer:
         }
 
         # Act
-        items = await analyzer._fetch_market_items(
+        items = awAlgot analyzer._fetch_market_items(
             game="csgo",
             min_price=10.0,
             max_price=100.0,
@@ -473,7 +473,7 @@ class TestRarePricingAnalyzer:
         """Test analyzing item with low rarity score."""
         # Arrange
         item = {
-            "title": "Regular Item",  # No rare traits
+            "title": "Regular Item",  # No rare trAlgots
             "price": {"amount": 5000},  # $50
         }
 
@@ -503,7 +503,7 @@ class TestRarePricingAnalyzer:
         }
 
         # Act
-        results = await analyzer.find_mispriced_rare_items(
+        results = awAlgot analyzer.find_mispriced_rare_items(
             game="csgo",
             min_price=10.0,
             max_price=1000.0,
@@ -522,7 +522,7 @@ class TestRarePricingAnalyzer:
         mock_api.get_market_items.return_value = {"items": []}
 
         # Act
-        results = await analyzer.find_mispriced_rare_items(
+        results = awAlgot analyzer.find_mispriced_rare_items(
             game="csgo",
             min_price=10.0,
             max_price=1000.0,
@@ -539,7 +539,7 @@ class TestRarePricingAnalyzer:
         mock_api.get_market_items.side_effect = Exception("API Error")
 
         # Act
-        results = await analyzer.find_mispriced_rare_items(
+        results = awAlgot analyzer.find_mispriced_rare_items(
             game="csgo",
             min_price=10.0,
             max_price=1000.0,
@@ -569,7 +569,7 @@ class TestRarePricingAnalyzer:
         mock_api.get_market_items.return_value = {"items": []}
 
         # Act
-        results = await find_mispriced_rare_items(
+        results = awAlgot find_mispriced_rare_items(
             game="csgo",
             min_price=10.0,
             max_price=1000.0,

@@ -1,4 +1,4 @@
-use reqwest::{Client, StatusCode, header::{HeaderMap, HeaderValue, AUTHORIZATION, CONTENT_TYPE}};
+use reqwest::{Client, StatusCode};
 use std::time::Duration;
 use crate::rate_limiter::DMarketLimiter;
 use std::sync::Arc;
@@ -9,10 +9,10 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 /// Hybrid HFT Gateway for DMarket API v2.
 /// Uses HTTP/2 Multiplexing for Market Data (Source of Truth).
-/// Uses WebSocket (future phase) for notifications.
+/// Includes header optimization and robust error handling.
 pub struct RustNetworkClient {
     http_client: Client,
-    limiter: Arc<DMarketLimiter>, // Shared limiter for Arc cloning
+    limiter: Arc<DMarketLimiter>, 
     api_url: String,
     public_key: String,
     secret_key: String,
@@ -22,11 +22,16 @@ impl RustNetworkClient {
     /// Initialize with Strict ToS Limits (e.g., 5 RPS).
     pub fn new(requests_per_second: u32, public_key: String, secret_key: String) -> Result<Self, String> {
         let http_client = Client::builder()
-            // .http2_prior_knowledge() // REMOVED: Caused frame size error. ALPN will handle H2.
             .timeout(Duration::from_secs(5))
             .pool_idle_timeout(Duration::from_secs(90))
+            // Core: Mimic browser behavior to avoid low-level blocks
+            .user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+            // Core: Explicit GZIP/Brotli support
+            .gzip(true)
+            .brotli(true)
+            .deflate(true)
             .build()
-            .map_err(|e| e.to_string())?;
+            .map_err(|e| format!("Failed to build HTTP client: {}", e))?;
 
         Ok(RustNetworkClient {
             http_client,
@@ -41,17 +46,16 @@ impl RustNetworkClient {
     fn sign_request(&self, method: &str, path: &str, body: &str, timestamp: u64) -> Result<String, String> {
         let message = format!("{}{}{}{}", method, path, body, timestamp);
         
-        let secret_bytes = hex::decode(&self.secret_key).map_err(|e| format!("Invalid Secret Key Hex: {}", e))?;
+        // Error Handling: Handle invalid hex string
+        let secret_bytes = hex::decode(&self.secret_key)
+            .map_err(|e| format!("Invalid Secret Key Hex: {}", e))?;
+            
         if secret_bytes.len() != 64 {
              return Err("Secret Key must be 64 bytes (hex decoded)".to_string());
         }
         
-        // DMarket uses Ed25519. Key is 32 bytes seed + 32 bytes public key = 64 bytes.
-        // ed25519-dalek SigningKey::from_bytes expects 32 bytes seed.
-        // Usually secret key strings from DMarket are hex of 64 bytes (seed+pub).
-        // Let's try using the first 32 bytes as seed if length is 64.
         let seed = &secret_bytes[0..32];
-        let signing_key = SigningKey::from_bytes(seed.try_into().unwrap());
+        let signing_key = SigningKey::from_bytes(seed.try_into().map_err(|_| "Invalid Key Length")?);
         let signature: Signature = signing_key.sign(message.as_bytes());
         
         Ok(hex::encode(signature.to_bytes()))
@@ -81,17 +85,20 @@ impl RustNetworkClient {
 
         match response.status() {
             StatusCode::OK => {
-                let text = response.text().await.map_err(|e| e.to_string())?;
+                let text = response.text().await.map_err(|e| format!("Body Read Error: {}", e))?;
                 Ok(text)
             },
-            status => Err(format!("API Error {}: {}", status, response.text().await.unwrap_or_default())),
+            status => {
+                // QA: Log the error body for debugging (e.g., "Invalid Signature")
+                let err_body = response.text().await.unwrap_or_default();
+                Err(format!("API Error {}: {}", status, err_body))
+            }
         }
     }
 
-    /// Fetch Market Items (REST v2) with Bumpalo Arena support in Parser.
+    /// Fetch Market Items (REST v2)
     /// This is the "Hot Path".
     pub async fn fetch_market_items(&self, game_id: &str, title: &str) -> Result<String, String> {
-        // 1. Strict Rate Limiting Check
         self.limiter.acquire().await;
 
         let url = format!("{}/exchange/v1/market/items?gameId={}&title={}&limit=10&sort=price&order=asc&currency=USD", self.api_url, game_id, title);
@@ -101,11 +108,10 @@ impl RustNetworkClient {
             .await
             .map_err(|e| format!("Network Error: {}", e))?;
 
-        // 2. Handle 429/503 explicitly
         match response.status() {
             StatusCode::OK => {
-                let body = response.text().await.map_err(|e| e.to_string())?;
-                Ok(body) // Return raw JSON string for Zero-Copy parsing downstream
+                let body = response.text().await.map_err(|e| format!("Body Error: {}", e))?;
+                Ok(body) 
             },
             StatusCode::TOO_MANY_REQUESTS => {
                 Err("429: Rate Limit Exceeded. Backing off.".to_string())
@@ -121,12 +127,10 @@ impl RustNetworkClient {
     /// Returns a map of "GameID:Title" -> Result<JSON, Error>
     pub async fn fetch_bulk(&self, targets: Vec<(String, String)>) -> HashMap<String, Result<String, String>> {
         let mut tasks = Vec::new();
+        // Clone Arcs to move into threads (cheap)
         let client_ref = &self.http_client;
         let limiter_ref = &self.limiter;
         let api_url_ref = &self.api_url;
-
-        // Since we are inside `&self`, we can't move self into futures easily without cloning Arcs if we had them on self.
-        // But http_client is cloneable (cheap ref count) and limiter is Arc.
         
         for (game_id, title) in targets {
             let client = client_ref.clone();

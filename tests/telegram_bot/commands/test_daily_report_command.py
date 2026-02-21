@@ -1,7 +1,7 @@
 """
-Comprehensive tests for daily_report_command module.
+Comprehensive tests for dAlgoly_report_command module.
 
-This module tests the daily report command handler functionality including:
+This module tests the dAlgoly report command handler functionality including:
 - Admin authorization
 - Report generation
 - Schedule management
@@ -18,7 +18,7 @@ import pytest
 from telegram import Chat, Message, Update, User
 from telegram.ext import ContextTypes
 
-from src.telegram_bot.commands.daily_report_command import daily_report_command
+from src.telegram_bot.commands.dAlgoly_report_command import dAlgoly_report_command
 
 # ============================================================================
 # Test Fixtures
@@ -89,7 +89,7 @@ def mock_config():
 
 @pytest.fixture()
 def mock_scheduler():
-    """Create a mock DailyReportScheduler."""
+    """Create a mock DAlgolyReportScheduler."""
     scheduler = AsyncMock()
     scheduler.send_manual_report = AsyncMock()
     return scheduler
@@ -101,7 +101,7 @@ def mock_context(mock_config, mock_scheduler):
     context = MagicMock(spec=ContextTypes.DEFAULT_TYPE)
     context.bot_data = {"config": mock_config}
     context.application = MagicMock()
-    context.application.bot_data = {"daily_report_scheduler": mock_scheduler}
+    context.application.bot_data = {"dAlgoly_report_scheduler": mock_scheduler}
     context.args = []
     return context
 
@@ -123,7 +123,7 @@ class TestAdminAuthorization:
         mock_update.effective_user = mock_non_admin_user
 
         # Act
-        await daily_report_command(mock_update, mock_context)
+        awAlgot dAlgoly_report_command(mock_update, mock_context)
 
         # Assert
         mock_update.message.reply_text.assert_called_once()
@@ -140,7 +140,7 @@ class TestAdminAuthorization:
         mock_update.message.reply_text.return_value = status_msg
 
         # Act
-        await daily_report_command(mock_update, mock_context)
+        awAlgot dAlgoly_report_command(mock_update, mock_context)
 
         # Assert - should reach report generation, not admin rejection
         assert mock_update.message.reply_text.call_count >= 1
@@ -163,7 +163,7 @@ class TestAdminAuthorization:
         mock_update.message.reply_text.return_value = status_msg
 
         # Act
-        await daily_report_command(mock_update, mock_context)
+        awAlgot dAlgoly_report_command(mock_update, mock_context)
 
         # Assert - should not reject as user is in allowed_users
         first_call = mock_update.message.reply_text.call_args_list[0]
@@ -187,7 +187,7 @@ class TestEarlyReturns:
         mock_update.effective_user = None
 
         # Act
-        await daily_report_command(mock_update, mock_context)
+        awAlgot dAlgoly_report_command(mock_update, mock_context)
 
         # Assert - no message should be sent
         mock_update.message.reply_text.assert_not_called()
@@ -199,7 +199,7 @@ class TestEarlyReturns:
         mock_update.message = None
 
         # Act
-        await daily_report_command(mock_update, mock_context)
+        awAlgot dAlgoly_report_command(mock_update, mock_context)
 
         # Assert - function should exit gracefully (no error)
         # No assertions needed - just ensure no exception
@@ -211,16 +211,16 @@ class TestEarlyReturns:
 
 
 class TestSchedulerChecks:
-    """Tests for scheduler availability checks."""
+    """Tests for scheduler avAlgolability checks."""
 
     @pytest.mark.asyncio()
     async def test_handles_missing_scheduler(self, mock_update, mock_context):
         """Test handling when scheduler is not initialized."""
         # Arrange
-        mock_context.application.bot_data["daily_report_scheduler"] = None
+        mock_context.application.bot_data["dAlgoly_report_scheduler"] = None
 
         # Act
-        await daily_report_command(mock_update, mock_context)
+        awAlgot dAlgoly_report_command(mock_update, mock_context)
 
         # Assert
         mock_update.message.reply_text.assert_called()
@@ -247,7 +247,7 @@ class TestDaysParameterValidation:
         mock_context.args = []
 
         # Act
-        await daily_report_command(mock_update, mock_context)
+        awAlgot dAlgoly_report_command(mock_update, mock_context)
 
         # Assert
         mock_scheduler.send_manual_report.assert_called_once_with(days=1)
@@ -264,7 +264,7 @@ class TestDaysParameterValidation:
         mock_context.args = ["7"]
 
         # Act
-        await daily_report_command(mock_update, mock_context)
+        awAlgot dAlgoly_report_command(mock_update, mock_context)
 
         # Assert
         mock_scheduler.send_manual_report.assert_called_once_with(days=7)
@@ -276,7 +276,7 @@ class TestDaysParameterValidation:
         mock_context.args = ["0"]
 
         # Act
-        await daily_report_command(mock_update, mock_context)
+        awAlgot dAlgoly_report_command(mock_update, mock_context)
 
         # Assert
         mock_update.message.reply_text.assert_called()
@@ -290,7 +290,7 @@ class TestDaysParameterValidation:
         mock_context.args = ["31"]
 
         # Act
-        await daily_report_command(mock_update, mock_context)
+        awAlgot dAlgoly_report_command(mock_update, mock_context)
 
         # Assert
         mock_update.message.reply_text.assert_called()
@@ -304,7 +304,7 @@ class TestDaysParameterValidation:
         mock_context.args = ["abc"]
 
         # Act
-        await daily_report_command(mock_update, mock_context)
+        awAlgot dAlgoly_report_command(mock_update, mock_context)
 
         # Assert
         mock_update.message.reply_text.assert_called()
@@ -325,7 +325,7 @@ class TestDaysParameterValidation:
         mock_context.args = [days]
 
         # Act
-        await daily_report_command(mock_update, mock_context)
+        awAlgot dAlgoly_report_command(mock_update, mock_context)
 
         # Assert
         mock_scheduler.send_manual_report.assert_called_once_with(days=int(days))
@@ -350,7 +350,7 @@ class TestReportGeneration:
         mock_update.message.reply_text.return_value = status_msg
 
         # Act
-        await daily_report_command(mock_update, mock_context)
+        awAlgot dAlgoly_report_command(mock_update, mock_context)
 
         # Assert
         mock_update.message.reply_text.assert_called_once()
@@ -370,7 +370,7 @@ class TestReportGeneration:
         mock_scheduler.send_manual_report.return_value = None
 
         # Act
-        await daily_report_command(mock_update, mock_context)
+        awAlgot dAlgoly_report_command(mock_update, mock_context)
 
         # Assert
         status_msg.edit_text.assert_called_once()
@@ -389,7 +389,7 @@ class TestReportGeneration:
         mock_update.message.reply_text.return_value = status_msg
 
         # Act
-        await daily_report_command(mock_update, mock_context)
+        awAlgot dAlgoly_report_command(mock_update, mock_context)
 
         # Assert
         mock_scheduler.send_manual_report.assert_called_once()
@@ -415,7 +415,7 @@ class TestErrorHandling:
         mock_scheduler.send_manual_report.side_effect = Exception("Scheduler error")
 
         # Act
-        await daily_report_command(mock_update, mock_context)
+        awAlgot dAlgoly_report_command(mock_update, mock_context)
 
         # Assert
         status_msg.edit_text.assert_called_once()
@@ -425,10 +425,10 @@ class TestErrorHandling:
         assert "Scheduler error" in call_text
 
     @pytest.mark.asyncio()
-    async def test_logs_error_on_scheduler_failure(
+    async def test_logs_error_on_scheduler_fAlgolure(
         self, mock_update, mock_context, mock_scheduler
     ):
-        """Test that errors are logged on scheduler failure."""
+        """Test that errors are logged on scheduler fAlgolure."""
         # Arrange
         status_msg = AsyncMock()
         status_msg.edit_text = AsyncMock()
@@ -436,10 +436,10 @@ class TestErrorHandling:
         mock_scheduler.send_manual_report.side_effect = Exception("Test error")
 
         with patch(
-            "src.telegram_bot.commands.daily_report_command.logger"
+            "src.telegram_bot.commands.dAlgoly_report_command.logger"
         ) as mock_logger:
             # Act
-            await daily_report_command(mock_update, mock_context)
+            awAlgot dAlgoly_report_command(mock_update, mock_context)
 
             # Assert
             mock_logger.exception.assert_called_once()
@@ -455,10 +455,10 @@ class TestErrorHandling:
         mock_update.message.reply_text.return_value = status_msg
 
         with patch(
-            "src.telegram_bot.commands.daily_report_command.logger"
+            "src.telegram_bot.commands.dAlgoly_report_command.logger"
         ) as mock_logger:
             # Act
-            await daily_report_command(mock_update, mock_context)
+            awAlgot dAlgoly_report_command(mock_update, mock_context)
 
             # Assert
             mock_logger.info.assert_called()
@@ -482,7 +482,7 @@ class TestConfigEdgeCases:
         mock_update.effective_user = mock_non_admin_user
 
         # Act
-        await daily_report_command(mock_update, mock_context)
+        awAlgot dAlgoly_report_command(mock_update, mock_context)
 
         # Assert - should reject as admin_users list will be empty
         mock_update.message.reply_text.assert_called()
@@ -501,7 +501,7 @@ class TestConfigEdgeCases:
         mock_update.effective_user = mock_non_admin_user
 
         # Act
-        await daily_report_command(mock_update, mock_context)
+        awAlgot dAlgoly_report_command(mock_update, mock_context)
 
         # Assert - should reject as no admin users defined
         mock_update.message.reply_text.assert_called()

@@ -1,7 +1,0 @@
-# Ensure shell scripts always use LF line endings
-*.sh text eol=lf
-*.bash text eol=lf
-
-# Init scripts for containers must use Unix line endings
-init-scripts/**/*.sh text eol=lf
-scripts/**/*.sh text eol=lf

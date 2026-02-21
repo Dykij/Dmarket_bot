@@ -56,7 +56,7 @@ class PriceAlertsHandler:
     async def ensure_watcher_started(self) -> None:
         """Убеждаемся, что наблюдатель за ценами запущен."""
         if not self._is_watcher_started:
-            success = await self.price_watcher.start()
+            success = awAlgot self.price_watcher.start()
             self._is_watcher_started = success
 
     async def _handle_alert_triggered(
@@ -91,7 +91,7 @@ class PriceAlertsHandler:
         if not update.message:
             return
 
-        await self.ensure_watcher_started()
+        awAlgot self.ensure_watcher_started()
 
         keyboard = [
             [
@@ -109,7 +109,7 @@ class PriceAlertsHandler:
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
 
-        await update.message.reply_text(
+        awAlgot update.message.reply_text(
             "🔔 *Оповещения о ценах*\n\n"
             "Создавайте оповещения о ценах на предметы и получайте уведомления "
             "в реальном времени, когда цена достигнет указанного значения.",
@@ -132,7 +132,7 @@ class PriceAlertsHandler:
         query = update.callback_query
         if not query:
             return
-        await query.answer()
+        awAlgot query.answer()
 
         if not update.effective_user:
             return
@@ -154,7 +154,7 @@ class PriceAlertsHandler:
             ]
             reply_markup = InlineKeyboardMarkup(keyboard)
 
-            await query.edit_message_text(
+            awAlgot query.edit_message_text(
                 "🔍 У вас пока нет активных оповещений о ценах.\n\n"
                 "Нажмите кнопку ниже, чтобы добавить новое оповещение.",
                 reply_markup=reply_markup,
@@ -197,7 +197,7 @@ class PriceAlertsHandler:
 
         reply_markup = InlineKeyboardMarkup(keyboard)
 
-        await query.edit_message_text(
+        awAlgot query.edit_message_text(
             message_text,
             reply_markup=reply_markup,
             parse_mode="Markdown",
@@ -221,7 +221,7 @@ class PriceAlertsHandler:
         query = update.callback_query
         if not query:
             return ConversationHandler.END
-        await query.answer()
+        awAlgot query.answer()
 
         if not update.effective_user:
             return ConversationHandler.END
@@ -229,7 +229,7 @@ class PriceAlertsHandler:
         user_id = str(update.effective_user.id)
         self._user_temp_data[user_id] = {}
 
-        await query.edit_message_text(
+        awAlgot query.edit_message_text(
             "🔍 *Добавление оповещения о цене*\n\n"
             "Введите полное название предмета (market_hash_name), "
             "например: `AWP | Asiimov (Field-Tested)`\n\n"
@@ -265,7 +265,7 @@ class PriceAlertsHandler:
 
         # Здесь можно добавить проверку существования предмета через API
 
-        await update.message.reply_text(
+        awAlgot update.message.reply_text(
             f"📝 Выбран предмет: *{item_name}*\n\n"
             "Теперь введите целевую цену в USD (только число), "
             "например: `50.5` для 50.50$\n\n"
@@ -300,9 +300,9 @@ class PriceAlertsHandler:
             target_price = float(price_text)
             if target_price <= 0:
                 msg = "Цена должна быть положительной"
-                raise ValueError(msg)
+                rAlgose ValueError(msg)
         except ValueError:
-            await update.message.reply_text(
+            awAlgot update.message.reply_text(
                 "❌ Пожалуйста, введите корректное число для цены.\n\n"
                 "Например: `50.5` для 50.50$\n\n"
                 "Или отправьте /cancel для отмены.",
@@ -331,7 +331,7 @@ class PriceAlertsHandler:
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
 
-        await update.message.reply_text(
+        awAlgot update.message.reply_text(
             f"💲 Целевая цена: *${target_price:.2f}*\n\nВыберите условие срабатывания оповещения:",
             reply_markup=reply_markup,
             parse_mode="Markdown",
@@ -357,7 +357,7 @@ class PriceAlertsHandler:
         query = update.callback_query
         if not query or not query.data:
             return ConversationHandler.END
-        await query.answer()
+        awAlgot query.answer()
 
         if not update.effective_user:
             return ConversationHandler.END
@@ -369,7 +369,7 @@ class PriceAlertsHandler:
         callback_data = query.data
 
         if callback_data == CALLBACK_CANCEL:
-            await query.edit_message_text("❌ Создание оповещения отменено.")
+            awAlgot query.edit_message_text("❌ Создание оповещения отменено.")
             return ConversationHandler.END
 
         # Определяем условие срабатывания
@@ -401,7 +401,7 @@ class PriceAlertsHandler:
         # TODO: Получить item_id для предмета через API и создать реальное оповещение
         # в price_watcher
 
-        await query.edit_message_text(
+        awAlgot query.edit_message_text(
             f"✅ Оповещение успешно создано!\n\n"
             f"*{item_name}*\n"
             f"Вы получите уведомление, когда цена будет {condition_text} "
@@ -430,7 +430,7 @@ class PriceAlertsHandler:
         query = update.callback_query
         if not query or not query.data:
             return
-        await query.answer()
+        awAlgot query.answer()
 
         if not update.effective_user:
             return
@@ -446,7 +446,7 @@ class PriceAlertsHandler:
         # Проверяем, существует ли оповещение
         alerts_data = context.user_data.get(PRICE_ALERT_STORAGE_KEY, {})
         if alert_id not in alerts_data:
-            await query.edit_message_text(
+            awAlgot query.edit_message_text(
                 "❌ Оповещение не найдено или уже удалено.",
             )
             return
@@ -461,7 +461,7 @@ class PriceAlertsHandler:
         # TODO: Удалить оповещение из price_watcher, если оно там есть
 
         # Возвращаемся к списку оповещений
-        await self.handle_alert_list_callback(update, context)
+        awAlgot self.handle_alert_list_callback(update, context)
 
     async def handle_cancel(
         self,
@@ -489,7 +489,7 @@ class PriceAlertsHandler:
         if user_id in self._user_temp_data:
             del self._user_temp_data[user_id]
 
-        await update.message.reply_text(
+        awAlgot update.message.reply_text(
             "❌ Создание оповещения отменено.",
         )
 

@@ -1,6 +1,6 @@
 """Contract tests for DMarket API using Pact.
 
-This package contains consumer-driven contract tests that verify
+This package contAlgons consumer-driven contract tests that verify
 the API contracts between the DMarket Telegram Bot (consumer)
 and the DMarket API (provider).
 

@@ -1,15 +1,15 @@
-"""AI Training Handler for Telegram Bot.
+"""Algo TrAlgoning Handler for Telegram Bot.
 
 This module provides Telegram commands for:
-- /ai_train - Train the AI price prediction model
-- /ai_status - Check AI model status and data collection progress
-- /ai_scan - Run AI-powered smart scan
+- /Algo_trAlgon - TrAlgon the Algo price prediction model
+- /Algo_status - Check Algo model status and data collection progress
+- /Algo_scan - Run Algo-powered smart scan
 
 Usage:
     Register handlers in your bot initialization:
     ```python
-    from src.telegram_bot.handlers.ai_handler import register_ai_handlers
-    register_ai_handlers(application)
+    from src.telegram_bot.handlers.Algo_handler import register_Algo_handlers
+    register_Algo_handlers(application)
     ```
 """
 
@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 
 def _get_data_status(output_path: str) -> dict[str, Any]:
-    """Get status of collected training data.
+    """Get status of collected trAlgoning data.
 
     Args:
         output_path: Path to the CSV data file
@@ -40,7 +40,7 @@ def _get_data_status(output_path: str) -> dict[str, Any]:
     status: dict[str, Any] = {
         "exists": path.exists(),
         "rows": 0,
-        "ready_for_training": False,
+        "ready_for_trAlgoning": False,
         "path": str(path),
     }
 
@@ -50,84 +50,84 @@ def _get_data_status(output_path: str) -> dict[str, Any]:
                 # Count rows (excluding header)
                 row_count = sum(1 for _ in f) - 1
                 status["rows"] = max(0, row_count)
-                status["ready_for_training"] = row_count >= 100
+                status["ready_for_trAlgoning"] = row_count >= 100
         except Exception as e:
-            logger.warning("data_status_check_failed", error=str(e))
+            logger.warning("data_status_check_fAlgoled", error=str(e))
 
     return status
 
 
-async def ai_train_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Handle /ai_train command - Train the AI price prediction model.
+async def Algo_trAlgon_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Handle /Algo_trAlgon command - TrAlgon the Algo price prediction model.
 
-    This command triggers training of the RandomForest model on collected
+    This command triggers trAlgoning of the RandomForest model on collected
     market data. Requires at least 100 data points in market_history.csv.
 
-    Usage: /ai_train
+    Usage: /Algo_trAlgon
     """
     if not update.message:
         return
 
     user_id = update.effective_user.id if update.effective_user else 0
-    logger.info("ai_train_command", user_id=user_id)
+    logger.info("Algo_trAlgon_command", user_id=user_id)
 
-    await update.message.reply_text(
-        "🤖 <b>Запуск обучения AI модели...</b>\n\n"
+    awAlgot update.message.reply_text(
+        "🤖 <b>Запуск обучения Algo модели...</b>\n\n"
         "Это может занять несколько минут.",
         parse_mode="HTML",
     )
 
     try:
-        from src.ai.price_predictor import PricePredictor
+        from src.Algo.price_predictor import PricePredictor
 
         predictor = PricePredictor()
-        result = predictor.train_model()
+        result = predictor.trAlgon_model()
 
-        await update.message.reply_text(
-            f"🤖 <b>Результат обучения AI:</b>\n\n{result}",
+        awAlgot update.message.reply_text(
+            f"🤖 <b>Результат обучения Algo:</b>\n\n{result}",
             parse_mode="HTML",
         )
 
-        # Log training result
+        # Log trAlgoning result
         logger.info(
-            "ai_model_trained",
+            "Algo_model_trAlgoned",
             user_id=user_id,
             result=result,
         )
 
     except ImportError as e:
         error_msg = (
-            "❌ <b>Ошибка:</b> Отсутствуют зависимости для AI.\n\n"
+            "❌ <b>Ошибка:</b> Отсутствуют зависимости для Algo.\n\n"
             f"Установите: <code>pip install scikit-learn pandas numpy scipy joblib</code>\n\n"
             f"Детали: {e}"
         )
-        await update.message.reply_text(error_msg, parse_mode="HTML")
+        awAlgot update.message.reply_text(error_msg, parse_mode="HTML")
 
     except Exception as e:
         error_msg = f"❌ <b>Ошибка обучения:</b>\n\n{e}"
-        await update.message.reply_text(error_msg, parse_mode="HTML")
-        logger.exception("ai_train_failed", error=str(e))
+        awAlgot update.message.reply_text(error_msg, parse_mode="HTML")
+        logger.exception("Algo_trAlgon_fAlgoled", error=str(e))
 
 
-async def ai_status_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Handle /ai_status command - Check AI model and data status.
+async def Algo_status_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Handle /Algo_status command - Check Algo model and data status.
 
     Shows:
-    - Model training status
+    - Model trAlgoning status
     - Number of known items
     - Data collection progress
     - Recommendation on next steps
 
-    Usage: /ai_status
+    Usage: /Algo_status
     """
     if not update.message:
         return
 
     user_id = update.effective_user.id if update.effective_user else 0
-    logger.info("ai_status_command", user_id=user_id)
+    logger.info("Algo_status_command", user_id=user_id)
 
     try:
-        from src.ai.price_predictor import PricePredictor
+        from src.Algo.price_predictor import PricePredictor
         from src.dmarket.market_data_logger import MarketDataLoggerConfig
 
         predictor = PricePredictor()
@@ -138,10 +138,10 @@ async def ai_status_command(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         data_status = _get_data_status(config.output_path)
 
         # Build status message
-        status_parts = ["🤖 <b>AI Status</b>\n"]
+        status_parts = ["🤖 <b>Algo Status</b>\n"]
 
         # Model status
-        if model_info["is_trained"]:
+        if model_info["is_trAlgoned"]:
             status_parts.append(
                 f"✅ Модель обучена\n"
                 f"📦 Известных предметов: {model_info.get('known_items_count', 'N/A')}\n"
@@ -162,11 +162,11 @@ async def ai_status_command(update: Update, context: ContextTypes.DEFAULT_TYPE) 
                 f"📈 Записей: {data_status['rows']}\n"
             )
 
-            if data_status["ready_for_training"]:
+            if data_status["ready_for_trAlgoning"]:
                 status_parts.append("✅ Достаточно данных для обучения\n")
             else:
-                remaining = 100 - data_status["rows"]
-                status_parts.append(f"⏳ Нужно еще {remaining} записей\n")
+                remAlgoning = 100 - data_status["rows"]
+                status_parts.append(f"⏳ Нужно еще {remAlgoning} записей\n")
         else:
             status_parts.append(
                 "❌ Файл данных не найден\n"
@@ -183,58 +183,58 @@ async def ai_status_command(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         if not data_status["exists"] or data_status["rows"] < 100:
             status_parts.append(
                 "1. Подождите 48 часов для сбора данных\n"
-                "2. Затем выполните /ai_train\n"
+                "2. Затем выполните /Algo_trAlgon\n"
             )
-        elif not model_info["is_trained"]:
+        elif not model_info["is_trAlgoned"]:
             status_parts.append(
-                "1. Выполните /ai_train для обучения\n"
-                "2. После обучения используйте /ai_scan\n"
+                "1. Выполните /Algo_trAlgon для обучения\n"
+                "2. После обучения используйте /Algo_scan\n"
             )
         else:
             status_parts.append(
-                "✅ Система готова к работе\n" "Используйте /ai_scan для поиска\n"
+                "✅ Система готова к работе\n" "Используйте /Algo_scan для поиска\n"
             )
 
-        await update.message.reply_text(
+        awAlgot update.message.reply_text(
             "".join(status_parts),
             parse_mode="HTML",
         )
 
     except Exception as e:
-        await update.message.reply_text(
+        awAlgot update.message.reply_text(
             f"❌ <b>Ошибка получения статуса:</b>\n\n{e}",
             parse_mode="HTML",
         )
-        logger.exception("ai_status_failed", error=str(e))
+        logger.exception("Algo_status_fAlgoled", error=str(e))
 
 
-async def ai_scan_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Handle /ai_scan command - Run AI-powered smart scan.
+async def Algo_scan_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Handle /Algo_scan command - Run Algo-powered smart scan.
 
-    Performs a single scan using the Smart Scanner with AI validation.
+    Performs a single scan using the Smart Scanner with Algo validation.
     Finds and reports items with potential profit opportunities.
 
-    Usage: /ai_scan [include_locked]
+    Usage: /Algo_scan [include_locked]
         include_locked - Include items with trade ban (default: no)
     """
     if not update.message:
         return
 
     user_id = update.effective_user.id if update.effective_user else 0
-    logger.info("ai_scan_command", user_id=user_id)
+    logger.info("Algo_scan_command", user_id=user_id)
 
     # Parse arguments
     args = context.args or []
     include_locked = "locked" in " ".join(args).lower()
 
-    await update.message.reply_text(
-        "🔍 <b>Запуск AI-сканирования...</b>\n\n"
+    awAlgot update.message.reply_text(
+        "🔍 <b>Запуск Algo-сканирования...</b>\n\n"
         f"📦 Включить предметы с локом: {'Да' if include_locked else 'Нет'}",
         parse_mode="HTML",
     )
 
     try:
-        from src.ai.price_predictor import PricePredictor
+        from src.Algo.price_predictor import PricePredictor
         from src.dmarket.dmarket_api import DMarketAPI
         from src.dmarket.smart_scanner import SmartScanner, SmartScannerConfig
 
@@ -252,9 +252,9 @@ async def ai_scan_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         # Initialize predictor
         predictor = PricePredictor()
 
-        if not predictor.is_trained:
-            await update.message.reply_text(
-                "⚠️ AI модель не обучена.\n\n" "Выполните /ai_train сначала.",
+        if not predictor.is_trAlgoned:
+            awAlgot update.message.reply_text(
+                "⚠️ Algo модель не обучена.\n\n" "Выполните /Algo_trAlgon сначала.",
                 parse_mode="HTML",
             )
             return
@@ -264,7 +264,7 @@ async def ai_scan_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             allow_trade_ban=include_locked,
             max_lock_days=8 if include_locked else 0,
             min_profit_percent=15.0 if include_locked else 5.0,
-            enable_ai=True,
+            enable_Algo=True,
             dry_run=True,  # Always dry run from Telegram
         )
 
@@ -272,13 +272,13 @@ async def ai_scan_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         scanner = SmartScanner(api=api, predictor=predictor, config=config)
 
         # Run single scan
-        results = await scanner.scan_once()
+        results = awAlgot scanner.scan_once()
 
         # Filter profitable results
         opportunities = [r for r in results if r.should_buy]
 
         if not opportunities:
-            await update.message.reply_text(
+            awAlgot update.message.reply_text(
                 "📭 <b>Результат сканирования:</b>\n\n"
                 "Арбитражных возможностей не найдено.\n\n"
                 f"Проанализировано предметов: {len(results)}",
@@ -307,41 +307,41 @@ async def ai_scan_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
                 f"<i>...и еще {len(opportunities) - 5} возможностей</i>\n"
             )
 
-        await update.message.reply_text(
+        awAlgot update.message.reply_text(
             "".join(message_parts),
             parse_mode="HTML",
         )
 
         logger.info(
-            "ai_scan_completed",
+            "Algo_scan_completed",
             user_id=user_id,
             opportunities=len(opportunities),
             include_locked=include_locked,
         )
 
     except ImportError as e:
-        await update.message.reply_text(
+        awAlgot update.message.reply_text(
             f"❌ <b>Ошибка:</b> Отсутствуют зависимости.\n\n{e}",
             parse_mode="HTML",
         )
 
     except Exception as e:
-        await update.message.reply_text(
+        awAlgot update.message.reply_text(
             f"❌ <b>Ошибка сканирования:</b>\n\n{e}",
             parse_mode="HTML",
         )
-        logger.exception("ai_scan_failed", error=str(e))
+        logger.exception("Algo_scan_fAlgoled", error=str(e))
 
 
-async def ai_analyze_command(
+async def Algo_analyze_command(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> None:
-    """Handle /ai_analyze command - Analyze specific item with trade ban.
+    """Handle /Algo_analyze command - Analyze specific item with trade ban.
 
-    Provides detailed analysis of an item to determine if it's worth
+    Provides detAlgoled analysis of an item to determine if it's worth
     buying even with a trade lock.
 
-    Usage: /ai_analyze <item_name>
+    Usage: /Algo_analyze <item_name>
     """
     if not update.message:
         return
@@ -351,31 +351,31 @@ async def ai_analyze_command(
     # Get item name from arguments
     args = context.args or []
     if not args:
-        await update.message.reply_text(
+        awAlgot update.message.reply_text(
             "📝 <b>Использование:</b>\n\n"
-            "/ai_analyze &lt;название предмета&gt;\n\n"
+            "/Algo_analyze &lt;название предмета&gt;\n\n"
             "<b>Пример:</b>\n"
-            "/ai_analyze AK-47 | Redline (Field-Tested)",
+            "/Algo_analyze AK-47 | Redline (Field-Tested)",
             parse_mode="HTML",
         )
         return
 
     item_name = " ".join(args)
-    logger.info("ai_analyze_command", user_id=user_id, item=item_name)
+    logger.info("Algo_analyze_command", user_id=user_id, item=item_name)
 
-    await update.message.reply_text(
+    awAlgot update.message.reply_text(
         f"🔍 <b>Анализирую предмет:</b>\n\n" f"<code>{item_name}</code>",
         parse_mode="HTML",
     )
 
     try:
-        from src.ai.price_predictor import PricePredictor
+        from src.Algo.price_predictor import PricePredictor
 
         predictor = PricePredictor()
 
-        if not predictor.is_trained:
-            await update.message.reply_text(
-                "⚠️ AI модель не обучена.\n\n" "Выполните /ai_train сначала.",
+        if not predictor.is_trAlgoned:
+            awAlgot update.message.reply_text(
+                "⚠️ Algo модель не обучена.\n\n" "Выполните /Algo_trAlgon сначала.",
                 parse_mode="HTML",
             )
             return
@@ -384,8 +384,8 @@ async def ai_analyze_command(
         raw_price = predictor.get_raw_prediction(item_name)
 
         if raw_price is None:
-            await update.message.reply_text(
-                "❌ <b>Предмет не найден в базе AI</b>\n\n"
+            awAlgot update.message.reply_text(
+                "❌ <b>Предмет не найден в базе Algo</b>\n\n"
                 "Этот предмет не встречался в данных обучения.\n"
                 "Подождите пока бот соберет больше данных.",
                 parse_mode="HTML",
@@ -394,41 +394,41 @@ async def ai_analyze_command(
 
         # Build analysis message
         message = (
-            f"🤖 <b>AI Анализ предмета</b>\n\n"
+            f"🤖 <b>Algo Анализ предмета</b>\n\n"
             f"📦 <b>Предмет:</b>\n<code>{item_name}</code>\n\n"
-            f"💵 <b>AI Справедливая цена:</b> ${raw_price:.2f}\n\n"
+            f"💵 <b>Algo Справедливая цена:</b> ${raw_price:.2f}\n\n"
             f"<b>💡 Рекомендации:</b>\n"
             f"• Если рыночная цена ниже ${raw_price * 0.95:.2f} - покупка выгодна\n"
             f"• Если выше ${raw_price * 1.05:.2f} - переплата\n\n"
-            f"⚠️ <i>AI предсказание не гарантирует прибыль</i>"
+            f"⚠️ <i>Algo предсказание не гарантирует прибыль</i>"
         )
 
-        await update.message.reply_text(message, parse_mode="HTML")
+        awAlgot update.message.reply_text(message, parse_mode="HTML")
 
     except Exception as e:
-        await update.message.reply_text(
+        awAlgot update.message.reply_text(
             f"❌ <b>Ошибка анализа:</b>\n\n{e}",
             parse_mode="HTML",
         )
-        logger.exception("ai_analyze_failed", error=str(e))
+        logger.exception("Algo_analyze_fAlgoled", error=str(e))
 
 
-async def ai_collect_command(
+async def Algo_collect_command(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> None:
-    """Handle /ai_collect command - Collect real market data for AI training.
+    """Handle /Algo_collect command - Collect real market data for Algo trAlgoning.
 
-    Fetches real price data from DMarket API and saves it to CSV for training.
-    This ensures the AI model is trained on real market prices, not demo data.
+    Fetches real price data from DMarket API and saves it to CSV for trAlgoning.
+    This ensures the Algo model is trAlgoned on real market prices, not demo data.
 
-    Usage: /ai_collect [count]
+    Usage: /Algo_collect [count]
         count - Number of items to collect (default: 500, max: 2000)
     """
     if not update.message:
         return
 
     user_id = update.effective_user.id if update.effective_user else 0
-    logger.info("ai_collect_command", user_id=user_id)
+    logger.info("Algo_collect_command", user_id=user_id)
 
     # Parse arguments
     args = context.args or []
@@ -437,7 +437,7 @@ async def ai_collect_command(
     except (ValueError, IndexError):
         item_count = 500
 
-    await update.message.reply_text(
+    awAlgot update.message.reply_text(
         f"📥 <b>Сбор реальных данных с DMarket...</b>\n\n"
         f"🎯 Цель: {item_count} предметов\n"
         f"⏳ Это может занять несколько минут.",
@@ -477,11 +477,11 @@ async def ai_collect_command(
         batches_needed = (item_count + 99) // 100  # Round up
 
         for batch in range(batches_needed):
-            collected = await data_logger.log_market_data()
+            collected = awAlgot data_logger.log_market_data()
             total_collected += collected
 
             if batch % 5 == 0 and batch > 0:
-                await update.message.reply_text(
+                awAlgot update.message.reply_text(
                     f"📊 Прогресс: {total_collected}/{item_count} предметов",
                     parse_mode="HTML",
                 )
@@ -495,52 +495,52 @@ async def ai_collect_command(
             f"📄 Всего в базе: {data_status['rows']}\n\n"
         )
 
-        if data_status["ready_for_training"]:
+        if data_status["ready_for_trAlgoning"]:
             result_msg += (
                 "✅ <b>Данных достаточно для обучения!</b>\n\n"
-                "Выполните /ai_train чтобы обучить модель на реальных ценах."
+                "Выполните /Algo_trAlgon чтобы обучить модель на реальных ценах."
             )
         else:
-            remaining = 100 - data_status["rows"]
+            remAlgoning = 100 - data_status["rows"]
             result_msg += (
-                f"⏳ Нужно еще {remaining} записей.\n" f"Выполните /ai_collect еще раз."
+                f"⏳ Нужно еще {remAlgoning} записей.\n" f"Выполните /Algo_collect еще раз."
             )
 
-        await update.message.reply_text(result_msg, parse_mode="HTML")
+        awAlgot update.message.reply_text(result_msg, parse_mode="HTML")
 
         logger.info(
-            "ai_collect_completed",
+            "Algo_collect_completed",
             user_id=user_id,
             collected=total_collected,
             total_rows=data_status["rows"],
         )
 
     except Exception as e:
-        await update.message.reply_text(
+        awAlgot update.message.reply_text(
             f"❌ <b>Ошибка сбора данных:</b>\n\n{e}",
             parse_mode="HTML",
         )
-        logger.exception("ai_collect_failed", error=str(e))
+        logger.exception("Algo_collect_fAlgoled", error=str(e))
 
 
-async def ai_train_real_command(
+async def Algo_trAlgon_real_command(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> None:
-    """Handle /ai_train_real command - Train AI on real market prices.
+    """Handle /Algo_trAlgon_real command - TrAlgon Algo on real market prices.
 
     This command:
     1. Collects fresh data from DMarket API
-    2. Trains the model on real prices
-    3. Saves the trained model
+    2. TrAlgons the model on real prices
+    3. Saves the trAlgoned model
 
-    Usage: /ai_train_real [samples]
-        samples - Number of samples to collect before training (default: 500)
+    Usage: /Algo_trAlgon_real [samples]
+        samples - Number of samples to collect before trAlgoning (default: 500)
     """
     if not update.message:
         return
 
     user_id = update.effective_user.id if update.effective_user else 0
-    logger.info("ai_train_real_command", user_id=user_id)
+    logger.info("Algo_trAlgon_real_command", user_id=user_id)
 
     # Parse arguments
     args = context.args or []
@@ -549,8 +549,8 @@ async def ai_train_real_command(
     except (ValueError, IndexError):
         sample_count = 500
 
-    await update.message.reply_text(
-        f"🤖 <b>Обучение AI на реальных ценах</b>\n\n"
+    awAlgot update.message.reply_text(
+        f"🤖 <b>Обучение Algo на реальных ценах</b>\n\n"
         f"📥 Шаг 1/2: Сбор {sample_count} реальных цен...",
         parse_mode="HTML",
     )
@@ -558,7 +558,7 @@ async def ai_train_real_command(
     try:
         import os
 
-        from src.ai.price_predictor import PricePredictor
+        from src.Algo.price_predictor import PricePredictor
         from src.dmarket.dmarket_api import DMarketAPI
         from src.dmarket.market_data_logger import (
             MarketDataLogger,
@@ -588,48 +588,48 @@ async def ai_train_real_command(
         batches_needed = (sample_count + 99) // 100
 
         for batch in range(batches_needed):
-            collected = await data_logger.log_market_data()
+            collected = awAlgot data_logger.log_market_data()
             total_collected += collected
 
         data_status = data_logger.get_data_status()
 
-        await update.message.reply_text(
+        awAlgot update.message.reply_text(
             f"📊 Собрано {total_collected} записей (всего: {data_status['rows']})\n\n"
             f"🧠 Шаг 2/2: Обучение модели...",
             parse_mode="HTML",
         )
 
-        # Step 2: Train model
+        # Step 2: TrAlgon model
         predictor = PricePredictor()
-        result = predictor.train_model(force_retrain=True)
+        result = predictor.trAlgon_model(force_retrAlgon=True)
 
-        await update.message.reply_text(
+        awAlgot update.message.reply_text(
             f"🤖 <b>Обучение на реальных ценах завершено!</b>\n\n{result}",
             parse_mode="HTML",
         )
 
         logger.info(
-            "ai_train_real_completed",
+            "Algo_trAlgon_real_completed",
             user_id=user_id,
             collected=total_collected,
             result=result,
         )
 
     except Exception as e:
-        await update.message.reply_text(
+        awAlgot update.message.reply_text(
             f"❌ <b>Ошибка:</b>\n\n{e}",
             parse_mode="HTML",
         )
-        logger.exception("ai_train_real_failed", error=str(e))
+        logger.exception("Algo_trAlgon_real_fAlgoled", error=str(e))
 
 
 # ============================================================================
-# Helper functions for ai_train_liquid_command (Phase 2 refactoring)
+# Helper functions for Algo_trAlgon_liquid_command (Phase 2 refactoring)
 # ============================================================================
 
 
-async def _init_liquid_training_components(context: ContextTypes.DEFAULT_TYPE) -> tuple:
-    """Initialize filters and API clients for liquid training.
+async def _init_liquid_trAlgoning_components(context: ContextTypes.DEFAULT_TYPE) -> tuple:
+    """Initialize filters and API clients for liquid trAlgoning.
 
     Returns:
         Tuple of (whitelist_checker, blacklist_filter, waxpeer_api, dmarket_api)
@@ -660,7 +660,7 @@ async def _init_liquid_training_components(context: ContextTypes.DEFAULT_TYPE) -
         if waxpeer_key:
             waxpeer_api = WaxpeerAPI(api_key=waxpeer_key)
     except ImportError:
-        logger.warning("waxpeer_api_not_available")
+        logger.warning("waxpeer_api_not_avAlgolable")
 
     # Get or create DMarket API client
     dmarket_api = getattr(context.application, "dmarket_api", None)
@@ -713,19 +713,19 @@ async def _calculate_item_liquidity(
     if suggested_price:
         liquidity_score += 25
 
-    # Check on Waxpeer if available
+    # Check on Waxpeer if avAlgolable
     waxpeer_price = None
     waxpeer_count = 0
     if waxpeer_api:
         try:
             async with waxpeer_api:
-                price_info = await waxpeer_api.get_item_price_info(item_title)
+                price_info = awAlgot waxpeer_api.get_item_price_info(item_title)
                 if price_info and price_info.count >= 5:
                     liquidity_score += 25
                     waxpeer_price = float(price_info.price_usd)
                     waxpeer_count = price_info.count
         except Exception as e:
-            logger.debug("waxpeer_check_failed", item=item_title, error=str(e))
+            logger.debug("waxpeer_check_fAlgoled", item=item_title, error=str(e))
 
     # Popular items have category
     category = item.get("extra", {}).get("category", "")
@@ -748,26 +748,26 @@ def _save_liquid_data_to_csv(liquid_items: list[dict], output_path: Path) -> Non
         writer.writerows(liquid_items)
 
 
-def _train_model_on_liquid_data(liquid_items: list[dict]) -> str:
-    """Train the price prediction model on liquid items data.
+def _trAlgon_model_on_liquid_data(liquid_items: list[dict]) -> str:
+    """TrAlgon the price prediction model on liquid items data.
 
     Returns:
-        Training result message
+        TrAlgoning result message
     """
     import csv
     from pathlib import Path
 
-    from src.ai.price_predictor import PricePredictor
+    from src.Algo.price_predictor import PricePredictor
 
     predictor = PricePredictor()
 
     if len(liquid_items) < 50:
         return "⚠️ Недостаточно ликвидных данных для обучения (минимум 50)"
 
-    # Save to standard path for training
-    main_data_path = Path("data/market_history.csv")
+    # Save to standard path for trAlgoning
+    mAlgon_data_path = Path("data/market_history.csv")
 
-    with open(main_data_path, "w", newline="", encoding="utf-8") as f:
+    with open(mAlgon_data_path, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(
             f,
             fieldnames=[
@@ -792,7 +792,7 @@ def _train_model_on_liquid_data(liquid_items: list[dict]) -> str:
                 }
             )
 
-    return predictor.train_model(force_retrain=True)
+    return predictor.trAlgon_model(force_retrAlgon=True)
 
 
 # ============================================================================
@@ -800,10 +800,10 @@ def _train_model_on_liquid_data(liquid_items: list[dict]) -> str:
 # ============================================================================
 
 
-async def ai_train_liquid_command(
+async def Algo_trAlgon_liquid_command(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> None:
-    """Handle /ai_train_liquid command - Train AI only on liquid items.
+    """Handle /Algo_trAlgon_liquid command - TrAlgon Algo only on liquid items.
 
     Phase 2 Refactoring: Logic split into helper functions.
     """
@@ -811,7 +811,7 @@ async def ai_train_liquid_command(
         return
 
     user_id = update.effective_user.id if update.effective_user else 0
-    logger.info("ai_train_liquid_command", user_id=user_id)
+    logger.info("Algo_trAlgon_liquid_command", user_id=user_id)
 
     # Parse arguments
     args = context.args or []
@@ -820,8 +820,8 @@ async def ai_train_liquid_command(
     except (ValueError, IndexError):
         target_samples = 300
 
-    await update.message.reply_text(
-        f"🤖 <b>Обучение AI на ликвидных предметах</b>\n\n"
+    awAlgot update.message.reply_text(
+        f"🤖 <b>Обучение Algo на ликвидных предметах</b>\n\n"
         f"🎯 Цель: {target_samples} ликвидных предметов\n\n"
         f"⏳ Это может занять несколько минут...",
         parse_mode="HTML",
@@ -836,13 +836,13 @@ async def ai_train_liquid_command(
 
         # Initialize components (Phase 2 - use helper)
         whitelist_checker, blacklist_filter, waxpeer_api, dmarket_api = (
-            await _init_liquid_training_components(context)
+            awAlgot _init_liquid_trAlgoning_components(context)
         )
 
         output_path = Path("data/liquid_items.csv")
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
-        await update.message.reply_text(
+        awAlgot update.message.reply_text(
             f"🔍 Шаг 1/4: Получение предметов с DMarket...\n"
             f"📋 Whitelist: {sum(len(items) for items in WHITELIST_ITEMS.values())} | "
             f"🚫 Blacklist: {len(BLACKLIST_KEYWORDS) + len(PATTERN_KEYWORDS)}",
@@ -850,7 +850,7 @@ async def ai_train_liquid_command(
         )
 
         # Get items from DMarket
-        dmarket_items = await dmarket_api.get_market_items(
+        dmarket_items = awAlgot dmarket_api.get_market_items(
             game="a8db",
             limit=500,
             price_from=100,
@@ -859,7 +859,7 @@ async def ai_train_liquid_command(
         items_list = dmarket_items.get("objects", [])
         total_scanned = len(items_list)
 
-        await update.message.reply_text(
+        awAlgot update.message.reply_text(
             f"📋 Найдено {total_scanned} предметов\n🔍 Шаг 2/4: Фильтрация...",
             parse_mode="HTML",
         )
@@ -874,7 +874,7 @@ async def ai_train_liquid_command(
                 break
 
             score, is_wl, waxpeer_price, waxpeer_count = (
-                await _calculate_item_liquidity(
+                awAlgot _calculate_item_liquidity(
                     item, whitelist_checker, blacklist_filter, waxpeer_api
                 )
             )
@@ -907,12 +907,12 @@ async def ai_train_liquid_command(
 
             # Progress update every 100 items
             if (i + 1) % 100 == 0:
-                await update.message.reply_text(
+                awAlgot update.message.reply_text(
                     f"📊 {i + 1}/{len(items_list)} | ✅ {len(liquid_items)} liquid | 🚫 {blacklisted_count}",
                     parse_mode="HTML",
                 )
 
-        await update.message.reply_text(
+        awAlgot update.message.reply_text(
             f"🔍 Шаг 3/4: Сохранение {len(liquid_items)} предметов...",
             parse_mode="HTML",
         )
@@ -920,13 +920,13 @@ async def ai_train_liquid_command(
         # Save to CSV (Phase 2 - use helper)
         _save_liquid_data_to_csv(liquid_items, output_path)
 
-        await update.message.reply_text(
+        awAlgot update.message.reply_text(
             "🧠 Шаг 4/4: Обучение модели...",
             parse_mode="HTML",
         )
 
-        # Train model (Phase 2 - use helper)
-        result = _train_model_on_liquid_data(liquid_items)
+        # TrAlgon model (Phase 2 - use helper)
+        result = _trAlgon_model_on_liquid_data(liquid_items)
 
         summary = (
             f"🤖 <b>Обучение завершено!</b>\n\n"
@@ -935,36 +935,36 @@ async def ai_train_liquid_command(
             f"<b>Результат:</b>\n{result}"
         )
 
-        await update.message.reply_text(summary, parse_mode="HTML")
+        awAlgot update.message.reply_text(summary, parse_mode="HTML")
 
         logger.info(
-            "ai_train_liquid_completed",
+            "Algo_trAlgon_liquid_completed",
             user_id=user_id,
             total_scanned=total_scanned,
             liquid_count=len(liquid_items),
         )
 
     except Exception as e:
-        logger.exception("ai_train_liquid_failed", error=str(e))
-        await update.message.reply_text(
+        logger.exception("Algo_trAlgon_liquid_fAlgoled", error=str(e))
+        awAlgot update.message.reply_text(
             "❌ <b>Ошибка:</b>\n\nПроизошла ошибка при обучении. "
             "Пожалуйста, попробуйте позже.",
             parse_mode="HTML",
         )
 
 
-def register_ai_handlers(application: "Application") -> None:
-    """Register AI-related command handlers.
+def register_Algo_handlers(application: "Application") -> None:
+    """Register Algo-related command handlers.
 
     Args:
         application: Telegram Application instance
     """
-    application.add_handler(CommandHandler("ai_train", ai_train_command))
-    application.add_handler(CommandHandler("ai_status", ai_status_command))
-    application.add_handler(CommandHandler("ai_scan", ai_scan_command))
-    application.add_handler(CommandHandler("ai_analyze", ai_analyze_command))
-    application.add_handler(CommandHandler("ai_collect", ai_collect_command))
-    application.add_handler(CommandHandler("ai_train_real", ai_train_real_command))
-    application.add_handler(CommandHandler("ai_train_liquid", ai_train_liquid_command))
+    application.add_handler(CommandHandler("Algo_trAlgon", Algo_trAlgon_command))
+    application.add_handler(CommandHandler("Algo_status", Algo_status_command))
+    application.add_handler(CommandHandler("Algo_scan", Algo_scan_command))
+    application.add_handler(CommandHandler("Algo_analyze", Algo_analyze_command))
+    application.add_handler(CommandHandler("Algo_collect", Algo_collect_command))
+    application.add_handler(CommandHandler("Algo_trAlgon_real", Algo_trAlgon_real_command))
+    application.add_handler(CommandHandler("Algo_trAlgon_liquid", Algo_trAlgon_liquid_command))
 
-    logger.info("AI handlers registered")
+    logger.info("Algo handlers registered")

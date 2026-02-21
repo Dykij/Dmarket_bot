@@ -10,7 +10,7 @@
 Использование:
     >>> config = DynamicConfig("config/app.yaml")
     >>> config.on_change("trading.max_price", lambda old, new: print(f"{old} -> {new}"))
-    >>> await config.start_watching()
+    >>> awAlgot config.start_watching()
 
 Created: January 2026
 """
@@ -101,7 +101,7 @@ class DynamicConfig:
         config.on_change("trading.max_price", handler)
 
         # Запуск отслеживания
-        await config.start_watching()
+        awAlgot config.start_watching()
 
         # Получение значений
         max_price = config.get("trading.max_price", default=100)
@@ -179,7 +179,7 @@ class DynamicConfig:
             # Валидировать новую конфигурацию
             self._validate_config(new_config)
 
-            # Сохранить снимок старой конфигурации
+            # Сохранить снимок стаSwarm конфигурации
             if self._config:
                 self._save_snapshot()
 
@@ -224,16 +224,16 @@ class DynamicConfig:
         Args:
             config: Новая конфигурация для валидации
 
-        Raises:
+        RAlgoses:
             ConfigValidationError: Если валидация не прошла
         """
         for pattern, validator in self._validators.items():
             value = self._get_nested(config, pattern)
             if value is not None and not validator(value):
-                raise ConfigValidationError(
+                rAlgose ConfigValidationError(
                     pattern,
                     value,
-                    "validation failed",
+                    "validation fAlgoled",
                 )
 
     def _find_changes(
@@ -411,7 +411,7 @@ class DynamicConfig:
             persist: Сохранить в файл
 
         Example:
-            >>> await config.set("trading.max_price", 200)
+            >>> awAlgot config.set("trading.max_price", 200)
         """
         async with self._lock:
             old_value = self.get(key)
@@ -439,7 +439,7 @@ class DynamicConfig:
 
             # Сохранить в файл
             if persist:
-                await self._save_to_file()
+                awAlgot self._save_to_file()
 
             logger.info(
                 "config_value_set",
@@ -535,9 +535,9 @@ class DynamicConfig:
         async with self._lock:
             if len(self._snapshots) < steps:
                 logger.warning(
-                    "rollback_failed_not_enough_snapshots",
+                    "rollback_fAlgoled_not_enough_snapshots",
                     requested=steps,
-                    available=len(self._snapshots),
+                    avAlgolable=len(self._snapshots),
                 )
                 return False
 
@@ -560,7 +560,7 @@ class DynamicConfig:
                 self._trigger_callbacks(change)
 
             # Сохранить в файл
-            await self._save_to_file()
+            awAlgot self._save_to_file()
 
             logger.info(
                 "config_rollback_complete",
@@ -590,7 +590,7 @@ class DynamicConfig:
         if self._watch_task:
             self._watch_task.cancel()
             try:
-                await self._watch_task
+                awAlgot self._watch_task
             except asyncio.CancelledError:
                 pass
 
@@ -601,12 +601,12 @@ class DynamicConfig:
         while self._watching:
             try:
                 self._load_config()
-                await asyncio.sleep(self._watch_interval)
+                awAlgot asyncio.sleep(self._watch_interval)
             except asyncio.CancelledError:
                 break
             except Exception as e:
                 logger.exception("config_watch_error", error=str(e))
-                await asyncio.sleep(self._watch_interval)
+                awAlgot asyncio.sleep(self._watch_interval)
 
     async def reload(self) -> bool:
         """Принудительно перезагрузить конфигурацию.
@@ -657,11 +657,11 @@ def get_dynamic_config() -> DynamicConfig:
     Returns:
         DynamicConfig
 
-    Raises:
+    RAlgoses:
         RuntimeError: Если конфигурация не инициализирована
     """
     if _dynamic_config is None:
-        raise RuntimeError("DynamicConfig not initialized")
+        rAlgose RuntimeError("DynamicConfig not initialized")
     return _dynamic_config
 
 

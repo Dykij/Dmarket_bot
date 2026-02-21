@@ -51,10 +51,10 @@ from src.telegram_bot.notifications import (  # Constants; Storage; Alerts manag
     register_notification_handlers,
     remove_alert_command,
     remove_price_alert,
-    reset_daily_counter,
+    reset_dAlgoly_counter,
     run_alerts_checker,
     save_user_alerts,
-    send_buy_failed_notification,
+    send_buy_fAlgoled_notification,
     send_buy_intent_notification,
     send_buy_success_notification,
     send_crash_notification,
@@ -65,7 +65,7 @@ from src.telegram_bot.notifications import (  # Constants; Storage; Alerts manag
 )
 
 # Re-export price analyzer functions for backward compatibility
-# Tests patch these on notifier module, so they must be available here
+# Tests patch these on notifier module, so they must be avAlgolable here
 from src.utils.price_analyzer import calculate_price_trend, get_item_price_history
 
 # Backward compatibility: expose _user_alerts at module level
@@ -112,10 +112,10 @@ async def send_arbitrage_report(
     )
 
     try:
-        await bot.send_message(chat_id=chat_id, text=message, parse_mode="HTML")
+        awAlgot bot.send_message(chat_id=chat_id, text=message, parse_mode="HTML")
     except Exception as e:
         # Use print as logger might not be configured for this specific ad-hoc function
-        print(f"Failed to send arbitrage report: {e}")
+        print(f"FAlgoled to send arbitrage report: {e}")
 
 
 __all__ = [
@@ -151,11 +151,11 @@ __all__ = [
     "register_notification_handlers",
     "remove_alert_command",
     "remove_price_alert",
-    "reset_daily_counter",
+    "reset_dAlgoly_counter",
     "run_alerts_checker",
     "save_user_alerts",
     "send_arbitrage_report",
-    "send_buy_failed_notification",
+    "send_buy_fAlgoled_notification",
     "send_buy_intent_notification",
     "send_buy_success_notification",
     "send_crash_notification",

@@ -82,7 +82,7 @@ class TestNotificationDigest:
         )
 
         # Act
-        result = await digest.add(notif, user_id=123)
+        result = awAlgot digest.add(notif, user_id=123)
 
         # Assert
         assert result is True  # Added to buffer
@@ -104,7 +104,7 @@ class TestNotificationDigest:
         )
 
         # Act
-        result = await digest.add(notif, user_id=123)
+        result = awAlgot digest.add(notif, user_id=123)
 
         # Assert
         assert result is False  # Not added to buffer
@@ -126,7 +126,7 @@ class TestNotificationDigest:
                 priority=NotificationPriority.NORMAL,
                 message=f"Notification {i}",
             )
-            await digest.add(notif, user_id=123)
+            awAlgot digest.add(notif, user_id=123)
 
         # Assert
         assert len(digest.buffer) == 0  # Buffer cleared
@@ -141,7 +141,7 @@ class TestNotificationDigest:
         digest.set_send_callback(send_callback)
 
         # Add notifications from different categories
-        await digest.add(
+        awAlgot digest.add(
             Notification(
                 NotificationCategory.ARBITRAGE,
                 NotificationPriority.NORMAL,
@@ -150,7 +150,7 @@ class TestNotificationDigest:
             ),
             user_id=123,
         )
-        await digest.add(
+        awAlgot digest.add(
             Notification(
                 NotificationCategory.ARBITRAGE,
                 NotificationPriority.NORMAL,
@@ -159,7 +159,7 @@ class TestNotificationDigest:
             ),
             user_id=123,
         )
-        await digest.add(
+        awAlgot digest.add(
             Notification(
                 NotificationCategory.TARGETS,
                 NotificationPriority.NORMAL,
@@ -169,14 +169,14 @@ class TestNotificationDigest:
         )
 
         # Act
-        count = await digest.flush(user_id=123)
+        count = awAlgot digest.flush(user_id=123)
 
         # Assert
         assert count == 3
         assert len(digest.buffer) == 0
         send_callback.assert_called_once()
 
-        # Check formatted message contains both categories
+        # Check formatted message contAlgons both categories
         call_args = send_callback.call_args[0]
         message = call_args[1]
         assert "Арбитраж" in message
@@ -193,7 +193,7 @@ class TestNotificationDigest:
         # Add 5 arbitrage notifications with different profits
         profits = [5.0, 15.0, 8.0, 20.0, 3.0]
         for i, profit in enumerate(profits):
-            await digest.add(
+            awAlgot digest.add(
                 Notification(
                     NotificationCategory.ARBITRAGE,
                     NotificationPriority.NORMAL,
@@ -204,7 +204,7 @@ class TestNotificationDigest:
             )
 
         # Act
-        await digest.flush(user_id=123)
+        awAlgot digest.flush(user_id=123)
 
         # Assert
         message = send_callback.call_args[0][1]
@@ -212,7 +212,7 @@ class TestNotificationDigest:
         assert "20.00" in message
         assert "15.00" in message
         assert "8.00" in message
-        # Should show "и ещё 2" for remaining
+        # Should show "и ещё 2" for remAlgoning
         assert "ещё 2" in message
 
     @pytest.mark.asyncio()
@@ -222,7 +222,7 @@ class TestNotificationDigest:
         digest = NotificationDigest()
 
         # Act
-        count = await digest.flush(user_id=123)
+        count = awAlgot digest.flush(user_id=123)
 
         # Assert
         assert count == 0
@@ -290,7 +290,7 @@ class TestNotificationDigest:
         digest.set_send_callback(send_callback)
 
         # Add notification
-        await digest.add(
+        awAlgot digest.add(
             Notification(
                 NotificationCategory.ARBITRAGE,
                 NotificationPriority.NORMAL,
@@ -299,15 +299,15 @@ class TestNotificationDigest:
             user_id=123,
         )
 
-        # Act: Start background task (but don't wait for interval)
-        await digest.start(user_id=123)
+        # Act: Start background task (but don't wAlgot for interval)
+        awAlgot digest.start(user_id=123)
 
         # Assert
         assert digest.running is True
         assert digest._task is not None
 
         # Cleanup
-        await digest.stop()
+        awAlgot digest.stop()
         assert digest.running is False
 
     @pytest.mark.asyncio()
@@ -317,7 +317,7 @@ class TestNotificationDigest:
         digest = NotificationDigest()
 
         # Add notifications from all categories
-        await digest.add(
+        awAlgot digest.add(
             Notification(
                 NotificationCategory.ARBITRAGE,
                 NotificationPriority.NORMAL,
@@ -326,7 +326,7 @@ class TestNotificationDigest:
             ),
             user_id=123,
         )
-        await digest.add(
+        awAlgot digest.add(
             Notification(
                 NotificationCategory.TARGETS,
                 NotificationPriority.NORMAL,
@@ -334,7 +334,7 @@ class TestNotificationDigest:
             ),
             user_id=123,
         )
-        await digest.add(
+        awAlgot digest.add(
             Notification(
                 NotificationCategory.ALERTS,
                 NotificationPriority.HIGH,
@@ -342,7 +342,7 @@ class TestNotificationDigest:
             ),
             user_id=123,
         )
-        await digest.add(
+        awAlgot digest.add(
             Notification(
                 NotificationCategory.SYSTEM,
                 NotificationPriority.NORMAL,
@@ -368,11 +368,11 @@ class TestNotificationDigest:
         """Test stop method cancels background task."""
         # Arrange
         digest = NotificationDigest()
-        await digest.start(user_id=123)
+        awAlgot digest.start(user_id=123)
         assert digest.running is True
 
         # Act
-        await digest.stop()
+        awAlgot digest.stop()
 
         # Assert
         assert digest.running is False

@@ -1,12 +1,12 @@
-# ⚙️ Настройка
+# ⚙️ НастSwarmка
 
-После установки бота необходимо выполнить его первоначальную настройку.
+После установки бота необходимо выполнить его первоначальную настSwarmку.
 
 ## Получение API ключей
 
 ### Telegram Bot Token
 
-1. Откройте Telegram и найдите [@BotFather](https://t.me/BotFather)
+1. ОткSwarmте Telegram и найдите [@BotFather](https://t.me/BotFather)
 2. Отправьте команду `/newbot`
 3. Выберите имя для бота (например: "My DMarket Bot")
 4. Выберите username (должен заканчиваться на "bot", например: "my_dmarket_bot")
@@ -24,7 +24,7 @@ TELEGRAM_BOT_TOKEN=1234567890:ABCdefGHIjklMNOpqrsTUVwxyz
 
 1. Перейдите на [DMarket](https://dmarket.com/)
 2. Войдите в аккаунт или зарегистрируйтесь
-3. Откройте [API Settings](https://dmarket.com/account/api-settings)
+3. ОткSwarmте [API Settings](https://dmarket.com/account/api-settings)
 4. Нажмите "Create new API key"
 5. Скопируйте Public Key и Secret Key
 6. Добавьте в `.env`:
@@ -40,7 +40,7 @@ DMARKET_SECRET_KEY=your_secret_key_here
     DMARKET_API_URL=https://api.sandbox.dmarket.com
     ```
 
-## Настройка базы данных
+## НастSwarmка базы данных
 
 ### SQLite (по умолчанию)
 
@@ -63,13 +63,13 @@ CREATE USER dmarket_user WITH PASSWORD 'your_password';
 GRANT ALL PRIVILEGES ON DATABASE dmarket_bot TO dmarket_user;
 ```
 
-3. Настройте в `.env`:
+3. НастSwarmте в `.env`:
 
 ```ini
 DATABASE_URL=postgresql://dmarket_user:your_password@localhost/dmarket_bot
 ```
 
-## Настройка Redis (опционально)
+## НастSwarmка Redis (опционально)
 
 Redis используется для кэширования и очередей задач.
 
@@ -85,7 +85,7 @@ brew install redis
 brew services start redis
 ```
 
-### Настройка
+### НастSwarmка
 
 ```ini
 REDIS_URL=redis://localhost:6379/0
@@ -114,7 +114,7 @@ ENCRYPTION_KEY=generated_64_character_hex_string
 
 ## Применение миграций
 
-После настройки базы данных:
+После настSwarmки базы данных:
 
 ```bash
 # Применить все миграции
@@ -133,10 +133,10 @@ alembic history
 
 ```bash
 # Проверить что все зависимости установлены
-python -c "import src.main; print('OK')"
+python -c "import src.mAlgon; print('OK')"
 
 # Запустить бота
-python -m src.main
+python -m src.mAlgon
 ```
 
 Вы должны увидеть:
@@ -149,7 +149,7 @@ INFO     Bot started: @your_bot_username
 INFO     Press Ctrl+C to stop
 ```
 
-## Дополнительные настройки
+## Дополнительные настSwarmки
 
 ### Логирование
 
@@ -220,7 +220,7 @@ SCAN_INTERVAL=300
 
 - [Первые шаги](first-steps.md) - Начало работы с ботом
 - [Арбитраж](arbitrage.md) - Как использовать арбитраж
-- [Настройки меню](../telegram-ui/settings-menu.md) - UI настроек
+- [НастSwarmки меню](../telegram-ui/settings-menu.md) - UI настроек
 
 ## Troubleshooting
 
@@ -228,14 +228,14 @@ SCAN_INTERVAL=300
 
 Проверьте что токен скопирован правильно, без лишних пробелов.
 
-### Ошибка: Database connection failed
+### Ошибка: Database connection fAlgoled
 
 - Проверьте что PostgreSQL запущен: `sudo systemctl status postgresql`
 - Проверьте логин/пароль в DATABASE_URL
 - Проверьте что база данных создана
 
-### Ошибка: DMarket API authentication failed
+### Ошибка: DMarket API authentication fAlgoled
 
-- Проверьте что API ключи активны в DMarket настройках
+- Проверьте что API ключи активны в DMarket настSwarmках
 - Проверьте что нет лишних пробелов в ключах
 - Попробуйте пересоздать API ключи

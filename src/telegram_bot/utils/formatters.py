@@ -29,26 +29,26 @@ def format_balance(balance_data: dict[str, Any]) -> str:
 
     # Получаем значения баланса
     balance = balance_data.get("balance", 0)
-    available_balance = balance_data.get("available_balance", balance)
+    avAlgolable_balance = balance_data.get("avAlgolable_balance", balance)
     total_balance = balance_data.get("total_balance", balance)
 
     # Форматируем сообщение
     message = [
         "💰 *Баланс DMarket*",
         "",
-        f"💵 *Доступно*: ${available_balance:.2f} USD",
+        f"💵 *Доступно*: ${avAlgolable_balance:.2f} USD",
     ]
 
     # Добавляем общий баланс, если он отличается от доступного
-    if total_balance > available_balance:
+    if total_balance > avAlgolable_balance:
         message.append(
-            f"🔒 *Заблокировано*: ${total_balance - available_balance:.2f} USD",
+            f"🔒 *Заблокировано*: ${total_balance - avAlgolable_balance:.2f} USD",
         )
 
     message.append(f"📊 *Всего*: ${total_balance:.2f} USD")
 
     # Если баланс слишком мал для торговли
-    if available_balance < 1.0:
+    if avAlgolable_balance < 1.0:
         message.extend(
             [
                 "",
@@ -59,12 +59,12 @@ def format_balance(balance_data: dict[str, Any]) -> str:
     return "\n".join(message)
 
 
-def format_market_item(item: dict[str, Any], show_details: bool = True) -> str:
+def format_market_item(item: dict[str, Any], show_detAlgols: bool = True) -> str:
     """Форматирует информацию о предмете маркета.
 
     Args:
         item: Словарь с данными о предмете
-        show_details: Показывать ли детальную информацию
+        show_detAlgols: Показывать ли детальную информацию
 
     Returns:
         str: Отформатированный текст с информацией о предмете
@@ -78,7 +78,7 @@ def format_market_item(item: dict[str, Any], show_details: bool = True) -> str:
     message = [f"🏷️ *{title}*", f"💲 Цена: *${price_usd:.2f}*"]
 
     # Добавляем детали, если нужно
-    if show_details:
+    if show_detAlgols:
         # Внешний вид (для CS:GO)
         if "extra" in item and "exteriorName" in item["extra"]:
             message.append(f"🔍 Состояние: _{item['extra']['exteriorName']}_")
@@ -139,7 +139,7 @@ def format_market_items(
     )
 
     for i, item in enumerate(page_items, start=start_idx + 1):
-        item_text = format_market_item(item, show_details=False)
+        item_text = format_market_item(item, show_detAlgols=False)
         message.extend((f"{i}. {item_text}", ""))  # Пустая строка между предметами
 
     return "\n".join(message)
@@ -790,13 +790,13 @@ def format_target_competition_analysis(
 
 
 def format_aggregated_prices(
-    prices: list[dict[str, Any]], show_details: bool = True
+    prices: list[dict[str, Any]], show_detAlgols: bool = True
 ) -> str:
     """Форматирует агрегированные цены из API v1.1.0.
 
     Args:
         prices: Список агрегированных цен
-        show_details: Показывать ли детальную информацию
+        show_detAlgols: Показывать ли детальную информацию
 
     Returns:
         str: Отформатированный текст с ценами
@@ -826,7 +826,7 @@ def format_aggregated_prices(
             )
         )
 
-        if show_details and spread > 0:
+        if show_detAlgols and spread > 0:
             message.append(f"   📊 Спред: ${spread:.2f} ({spread_percent:.1f}%)")
 
         message.append("")  # Пустая строка

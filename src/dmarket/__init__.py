@@ -11,7 +11,7 @@ Usage:
     from src.dmarket.scanner import ArbitrageScanner, ARBITRAGE_LEVELS
 
     scanner = ArbitrageScanner(public_key="...", secret_key="...")
-    results = await scanner.scan_level("standard", "csgo")
+    results = awAlgot scanner.scan_level("standard", "csgo")
 """
 
 from src.dmarket.scanner.cache import ScannerCache

@@ -2,7 +2,7 @@
 Unix Pipe Handler - Обработка stdin для интеграции с Unix pipeline.
 
 Позволяет использовать бота в Unix-стиле:
-    tail -f logs/app.log | python -m src.cli.pipe_handler "Alert if errors"
+    tAlgol -f logs/app.log | python -m src.cli.pipe_handler "Alert if errors"
     cat items.json | python -m src.cli.pipe_handler "Find profitable items"
 
 Вдохновлено Claude Code: composable & scriptable.
@@ -66,7 +66,7 @@ class AsyncStdinReader:
             # Unix: Use native pipe protocol
             loop = asyncio.get_event_loop()
             protocol = asyncio.StreamReaderProtocol(self._reader)
-            await loop.connect_read_pipe(lambda: protocol, sys.stdin)
+            awAlgot loop.connect_read_pipe(lambda: protocol, sys.stdin)
             self._windows_mode = False
 
         return self
@@ -75,19 +75,19 @@ class AsyncStdinReader:
         """Async context manager exit."""
         pass
 
-    async def __aiter__(self) -> AsyncIterator[str]:
+    async def __Algoter__(self) -> AsyncIterator[str]:
         """Async iterator for lines."""
         if self._reader is None:
-            raise RuntimeError("Reader not initialized. Use 'async with'.")
+            rAlgose RuntimeError("Reader not initialized. Use 'async with'.")
 
         if getattr(self, "_windows_mode", False):
             # Windows: Read from queue
             while True:
                 try:
                     # Non-blocking check with small delay
-                    await asyncio.sleep(0.01)
+                    awAlgot asyncio.sleep(0.01)
                     if not self._queue.empty():
-                        line = self._queue.get_nowait()
+                        line = self._queue.get_nowAlgot()
                         if line is None:  # EOF
                             break
                         yield line.rstrip("\n")
@@ -96,23 +96,23 @@ class AsyncStdinReader:
         else:
             # Unix: Read from StreamReader
             while True:
-                line = await self._reader.readline()
+                line = awAlgot self._reader.readline()
                 if not line:
                     break
                 yield line.decode("utf-8").rstrip("\n")
 
 
 class PipeHandler:
-    """Обработчик Unix pipe для AI анализа."""
+    """Обработчик Unix pipe для Algo анализа."""
 
-    def __init__(self, prompt: str | None = None):
+    def __init__(self, Config: str | None = None):
         """
         Инициализация обработчика.
 
         Args:
-            prompt: Инструкция для обработки данных
+            Config: Инструкция для обработки данных
         """
-        self.prompt = prompt or "Analyze input"
+        self.Config = Config or "Analyze input"
         self.buffer: list[str] = []
         self.stats = {
             "lines_processed": 0,
@@ -137,52 +137,52 @@ class PipeHandler:
         if len(self.buffer) > 1000:
             self.buffer = self.buffer[-500:]
 
-        # Анализ на основе prompt
-        result = await self._analyze_line(line)
+        # Анализ на основе Config
+        result = awAlgot self._analyze_line(line)
 
         if result and result.get("is_anomaly"):
             self.stats["anomalies_found"] += 1
-            await self._handle_anomaly(result)
+            awAlgot self._handle_anomaly(result)
 
         return result
 
     async def _analyze_line(self, line: str) -> dict[str, Any]:
-        """Анализ строки на основе prompt."""
+        """Анализ строки на основе Config."""
         result = {
             "line": line,
             "is_anomaly": False,
             "confidence": 0.0,
-            "details": None,
+            "detAlgols": None,
         }
 
-        # Простые правила анализа (можно расширить с LLM)
-        prompt_lower = self.prompt.lower()
+        # Простые правила анализа (можно расширить с Model)
+        Config_lower = self.Config.lower()
 
         # Детекция ошибок
-        if "error" in prompt_lower or "alert" in prompt_lower:
+        if "error" in Config_lower or "alert" in Config_lower:
             if any(
                 word in line.lower()
-                for word in ["error", "exception", "failed", "critical"]
+                for word in ["error", "exception", "fAlgoled", "critical"]
             ):
                 result["is_anomaly"] = True
                 result["confidence"] = 0.9
-                result["details"] = "Error pattern detected"
+                result["detAlgols"] = "Error pattern detected"
 
         # Детекция прибыльных сделок
-        if "profit" in prompt_lower:
+        if "profit" in Config_lower:
             try:
                 data = json.loads(line)
                 profit = data.get("profit", data.get("profit_percent", 0))
-                threshold = self._extract_threshold(prompt_lower)
+                threshold = self._extract_threshold(Config_lower)
                 if profit > threshold:
                     result["is_anomaly"] = True
                     result["confidence"] = 0.95
-                    result["details"] = f"Profit {profit}% > threshold {threshold}%"
+                    result["detAlgols"] = f"Profit {profit}% > threshold {threshold}%"
             except (json.JSONDecodeError, TypeError):
                 pass
 
         # Детекция аномальных цен
-        if "price" in prompt_lower:
+        if "price" in Config_lower:
             try:
                 data = json.loads(line)
                 price = data.get("price", 0)
@@ -190,17 +190,17 @@ class PipeHandler:
                 if price and suggested and abs(price - suggested) / price > 0.2:
                     result["is_anomaly"] = True
                     result["confidence"] = 0.8
-                    result["details"] = f"Price anomaly: {price} vs {suggested}"
+                    result["detAlgols"] = f"Price anomaly: {price} vs {suggested}"
             except (json.JSONDecodeError, TypeError, ZeroDivisionError):
                 pass
 
         return result
 
-    def _extract_threshold(self, prompt: str) -> float:
-        """Извлечь пороговое значение из prompt."""
+    def _extract_threshold(self, Config: str) -> float:
+        """Извлечь пороговое значение из Config."""
         import re
 
-        match = re.search(r"(\d+(?:\.\d+)?)\s*%?", prompt)
+        match = re.search(r"(\d+(?:\.\d+)?)\s*%?", Config)
         if match:
             return float(match.group(1))
         return 5.0  # Default 5%
@@ -225,7 +225,7 @@ class PipeHandler:
             "anomaly_detected",
             line=result["line"][:100],
             confidence=result["confidence"],
-            details=result["details"],
+            detAlgols=result["detAlgols"],
         )
 
     def get_stats(self) -> dict[str, int]:
@@ -233,19 +233,19 @@ class PipeHandler:
         return self.stats.copy()
 
 
-async def process_stdin(prompt: str | None = None) -> None:
+async def process_stdin(Config: str | None = None) -> None:
     """
-    Обработать stdin с заданным prompt.
+    Обработать stdin с заданным Config.
 
     Args:
-        prompt: Инструкция для обработки
+        Config: Инструкция для обработки
     """
-    handler = PipeHandler(prompt)
+    handler = PipeHandler(Config)
 
     try:
         async with AsyncStdinReader() as reader:
             async for line in reader:
-                result = await handler.process_line(line)
+                result = awAlgot handler.process_line(line)
                 if result:
                     # Вывод результата в stdout
                     output = json.dumps(result, ensure_ascii=False)
@@ -266,30 +266,30 @@ async def process_stdin(prompt: str | None = None) -> None:
         print(summary, file=sys.stderr)
 
 
-def main() -> None:
+def mAlgon() -> None:
     """Точка входа для pipe_handler."""
     import argparse
 
     parser = argparse.ArgumentParser(
-        description="Unix Pipe Handler для AI анализа",
+        description="Unix Pipe Handler для Algo анализа",
         epilog="""
 Примеры:
-  tail -f app.log | python -m src.cli.pipe_handler "Alert if errors"
+  tAlgol -f app.log | python -m src.cli.pipe_handler "Alert if errors"
   cat items.json | python -m src.cli.pipe_handler "Find items with profit > 10%"
   python -m src.dmarket.scanner | python -m src.cli.pipe_handler "Notify if profit > 20%"
         """,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument(
-        "prompt",
+        "Config",
         nargs="?",
         default="Analyze input",
         help="Инструкция для анализа данных",
     )
 
     args = parser.parse_args()
-    asyncio.run(process_stdin(args.prompt))
+    asyncio.run(process_stdin(args.Config))
 
 
-if __name__ == "__main__":
-    main()
+if __name__ == "__mAlgon__":
+    mAlgon()

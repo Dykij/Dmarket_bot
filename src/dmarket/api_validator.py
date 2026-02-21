@@ -38,7 +38,7 @@ async def send_api_change_notification(
     error_count = len(validation_error.errors())
     first_errors = validation_error.errors()[:3]  # Первые 3 ошибки
 
-    error_details = "\n".join([f"- {err['loc']}: {err['msg']}" for err in first_errors])
+    error_detAlgols = "\n".join([f"- {err['loc']}: {err['msg']}" for err in first_errors])
 
     message = f"""
 🚨 КРИТИЧЕСКОЕ ИЗМЕНЕНИЕ DMarket API
@@ -47,7 +47,7 @@ async def send_api_change_notification(
 ❌ Ошибок валидации: {error_count}
 
 Первые ошибки:
-{error_details}
+{error_detAlgols}
 
 ⚠️ API DMarket изменился! Требуется обновление схем валидации.
 """
@@ -65,13 +65,13 @@ async def send_api_change_notification(
     # Отправляем уведомление, если доступен notifier
     if notifier:
         try:
-            await notifier.send_message(
+            awAlgot notifier.send_message(
                 message=message,
                 priority="critical",
                 category="system",
             )
         except Exception as e:
-            logger.exception(f"Failed to send API change notification: {e}")
+            logger.exception(f"FAlgoled to send API change notification: {e}")
 
 
 def validate_response(  # noqa: UP047
@@ -103,7 +103,7 @@ def validate_response(  # noqa: UP047
         @wraps(func)
         async def wrapper(*args: Any, **kwargs: Any) -> dict[str, Any] | T:
             # Вызываем оригинальную функцию
-            response_data = await func(*args, **kwargs)
+            response_data = awAlgot func(*args, **kwargs)
 
             # Если ответ содержит ошибку, не валидируем
             if isinstance(response_data, dict) and response_data.get("error"):
@@ -118,7 +118,7 @@ def validate_response(  # noqa: UP047
             except ValidationError as e:
                 # Критическая ошибка - формат API изменился!
                 logger.critical(
-                    f"VALIDATION_FAILED for {endpoint}: {e}",
+                    f"VALIDATION_FAlgoLED for {endpoint}: {e}",
                     extra={
                         "endpoint": endpoint,
                         "validation_error": str(e),
@@ -133,18 +133,18 @@ def validate_response(  # noqa: UP047
 
                 # Отправляем уведомление асинхронно
                 try:
-                    await send_api_change_notification(
+                    awAlgot send_api_change_notification(
                         endpoint=endpoint,
                         validation_error=e,
                         response_data=response_data,
                         notifier=notifier,
                     )
                 except Exception as notify_error:
-                    logger.exception(f"Failed to send notification: {notify_error}")
+                    logger.exception(f"FAlgoled to send notification: {notify_error}")
 
                 # Возвращаем невалидированные данные для backward compatibility
                 logger.warning(
-                    f"Returning unvalidated data for {endpoint} due to validation failure"
+                    f"Returning unvalidated data for {endpoint} due to validation fAlgolure"
                 )
                 return response_data
 
@@ -177,7 +177,7 @@ def validate_and_log(  # noqa: UP047
         return validated
     except ValidationError as e:
         logger.warning(
-            f"Validation failed for {endpoint}: {e}",
+            f"Validation fAlgoled for {endpoint}: {e}",
             extra={
                 "endpoint": endpoint,
                 "validation_error": str(e),

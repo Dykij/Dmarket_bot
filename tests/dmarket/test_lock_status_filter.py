@@ -16,9 +16,9 @@ from src.dmarket.lock_status_filter import (
 class TestLockStatus:
     """Тесты для LockStatus enum."""
 
-    def test_available_value(self):
-        """Тест значения AVAILABLE."""
-        assert LockStatus.AVAILABLE == 0
+    def test_avAlgolable_value(self):
+        """Тест значения AVAlgoLABLE."""
+        assert LockStatus.AVAlgoLABLE == 0
 
     def test_locked_value(self):
         """Тест значения LOCKED."""
@@ -28,16 +28,16 @@ class TestLockStatus:
 class TestLockInfo:
     """Тесты для LockInfo dataclass."""
 
-    def test_is_available(self):
-        """Тест is_available property."""
-        info = LockInfo(status=LockStatus.AVAILABLE)
-        assert info.is_available is True
+    def test_is_avAlgolable(self):
+        """Тест is_avAlgolable property."""
+        info = LockInfo(status=LockStatus.AVAlgoLABLE)
+        assert info.is_avAlgolable is True
         assert info.is_locked is False
 
     def test_is_locked(self):
         """Тест is_locked property."""
-        info = LockInfo(status=LockStatus.LOCKED, days_remaining=5)
-        assert info.is_available is False
+        info = LockInfo(status=LockStatus.LOCKED, days_remAlgoning=5)
+        assert info.is_avAlgolable is False
         assert info.is_locked is True
 
     def test_with_unlock_date(self):
@@ -45,11 +45,11 @@ class TestLockInfo:
         unlock_date = datetime.now() + timedelta(days=3)
         info = LockInfo(
             status=LockStatus.LOCKED,
-            days_remaining=3,
+            days_remAlgoning=3,
             unlock_date=unlock_date,
         )
         assert info.unlock_date is not None
-        assert info.days_remaining == 3
+        assert info.days_remAlgoning == 3
 
 
 class TestLockFilterConfig:
@@ -93,7 +93,7 @@ class TestItemWithLock:
         assert item.item_id == "test_123"
         assert item.title == "AK-47 | Redline"
         assert item.price == 10.0
-        assert item.lock_info.is_available is True
+        assert item.lock_info.is_avAlgolable is True
 
     def test_item_with_lock(self):
         """Тест предмета с блокировкой."""
@@ -103,13 +103,13 @@ class TestItemWithLock:
             price=50.0,
             lock_info=LockInfo(
                 status=LockStatus.LOCKED,
-                days_remaining=5,
+                days_remAlgoning=5,
                 calculated_discount=4.5,
             ),
         )
 
         assert item.lock_info.is_locked is True
-        assert item.lock_info.days_remaining == 5
+        assert item.lock_info.days_remAlgoning == 5
 
 
 class TestLockStatusFilter:
@@ -143,9 +143,9 @@ class TestLockStatusFilter:
         # 3% + 10 * 0.3% = 6%, но max = 5%
         assert discount == 5.0
 
-    def test_apply_lock_discount_available(self, filter):
+    def test_apply_lock_discount_avAlgolable(self, filter):
         """Тест применения дисконта к доступному предмету."""
-        lock_info = LockInfo(status=LockStatus.AVAILABLE)
+        lock_info = LockInfo(status=LockStatus.AVAlgoLABLE)
 
         discounted = filter.apply_lock_discount(100.0, lock_info)
 
@@ -155,7 +155,7 @@ class TestLockStatusFilter:
         """Тест применения дисконта к заблокированному предмету."""
         lock_info = LockInfo(
             status=LockStatus.LOCKED,
-            days_remaining=5,
+            days_remAlgoning=5,
             calculated_discount=4.5,
         )
 
@@ -176,37 +176,37 @@ class TestLockStatusFilter:
         # 10% - 4.5% = 5.5%
         assert abs(adjusted - 5.5) < 0.01
 
-    def test_adjust_profit_available(self, filter):
+    def test_adjust_profit_avAlgolable(self, filter):
         """Тест корректировки профита для доступного предмета."""
-        lock_info = LockInfo(status=LockStatus.AVAILABLE)
+        lock_info = LockInfo(status=LockStatus.AVAlgoLABLE)
 
         adjusted = filter.adjust_profit_for_lock(10.0, lock_info)
 
         assert adjusted == 10.0
 
-    def test_parse_lock_info_available(self, filter):
+    def test_parse_lock_info_avAlgolable(self, filter):
         """Тест парсинга доступного предмета."""
         item_data = {
             "lockStatus": 0,
-            "lockDaysRemaining": 0,
+            "lockDaysRemAlgoning": 0,
         }
 
         lock_info = filter.parse_lock_info(item_data)
 
-        assert lock_info.status == LockStatus.AVAILABLE
-        assert lock_info.is_available is True
+        assert lock_info.status == LockStatus.AVAlgoLABLE
+        assert lock_info.is_avAlgolable is True
 
     def test_parse_lock_info_locked(self, filter):
         """Тест парсинга заблокированного предмета."""
         item_data = {
             "lockStatus": 1,
-            "lockDaysRemaining": 5,
+            "lockDaysRemAlgoning": 5,
         }
 
         lock_info = filter.parse_lock_info(item_data)
 
         assert lock_info.status == LockStatus.LOCKED
-        assert lock_info.days_remaining == 5
+        assert lock_info.days_remAlgoning == 5
         assert lock_info.calculated_discount > 0
 
     def test_filter_items(self, filter):
@@ -214,7 +214,7 @@ class TestLockStatusFilter:
         items = [
             {
                 "itemId": "item_1",
-                "title": "Available Item",
+                "title": "AvAlgolable Item",
                 "price": {"USD": 1000},
                 "lockStatus": 0,
             },
@@ -223,21 +223,21 @@ class TestLockStatusFilter:
                 "title": "Locked Item",
                 "price": {"USD": 2000},
                 "lockStatus": 1,
-                "lockDaysRemaining": 5,
+                "lockDaysRemAlgoning": 5,
             },
         ]
 
         filtered = filter.filter_items(items, allow_locked=False)
 
         assert len(filtered) == 1
-        assert filtered[0].title == "Available Item"
+        assert filtered[0].title == "AvAlgolable Item"
 
     def test_filter_items_allow_locked(self, filter):
         """Тест фильтрации с разрешением locked."""
         items = [
             {
                 "itemId": "item_1",
-                "title": "Available Item",
+                "title": "AvAlgolable Item",
                 "price": {"USD": 1000},
                 "lockStatus": 0,
             },
@@ -246,7 +246,7 @@ class TestLockStatusFilter:
                 "title": "Locked Item",
                 "price": {"USD": 2000},
                 "lockStatus": 1,
-                "lockDaysRemaining": 5,
+                "lockDaysRemAlgoning": 5,
             },
         ]
 
@@ -265,14 +265,14 @@ class TestLockStatusFilter:
                 "title": "Short Lock",
                 "price": {"USD": 1000},
                 "lockStatus": 1,
-                "lockDaysRemaining": 2,
+                "lockDaysRemAlgoning": 2,
             },
             {
                 "itemId": "item_2",
                 "title": "Long Lock",
                 "price": {"USD": 2000},
                 "lockStatus": 1,
-                "lockDaysRemaining": 5,  # > max_lock_days
+                "lockDaysRemAlgoning": 5,  # > max_lock_days
             },
         ]
 
@@ -307,7 +307,7 @@ class TestLockStatusFilter:
                 "title": "Locked",
                 "price": {"USD": 1000},
                 "lockStatus": 1,
-                "lockDaysRemaining": 5,
+                "lockDaysRemAlgoning": 5,
             },
             {
                 "itemId": "item_2",
@@ -329,7 +329,7 @@ class TestLockStatusFilter:
             item_id="test",
             title="Test",
             price=10.0,
-            lock_info=LockInfo(status=LockStatus.AVAILABLE),
+            lock_info=LockInfo(status=LockStatus.AVAlgoLABLE),
         )
 
         should_buy, reason = filter.should_buy(item, target_profit=10.0, current_balance=100.0)
@@ -344,7 +344,7 @@ class TestLockStatusFilter:
             price=10.0,
             lock_info=LockInfo(
                 status=LockStatus.LOCKED,
-                days_remaining=5,
+                days_remAlgoning=5,
                 calculated_discount=4.5,
             ),
         )
@@ -363,7 +363,7 @@ class TestLockStatusFilter:
             price=30.0,  # 30% баланса
             lock_info=LockInfo(
                 status=LockStatus.LOCKED,
-                days_remaining=5,  # > 3 days
+                days_remAlgoning=5,  # > 3 days
                 calculated_discount=4.5,
             ),
         )
@@ -379,7 +379,7 @@ class TestLockStatusFilter:
             item_id="test",
             title="Test",
             price=10.0,
-            lock_info=LockInfo(status=LockStatus.AVAILABLE),
+            lock_info=LockInfo(status=LockStatus.AVAlgoLABLE),
             discount_percent=5.0,  # DMarket discount
         )
 
@@ -393,9 +393,9 @@ class TestLockStatusFilter:
         items = [
             ItemWithLock(
                 item_id="1",
-                title="Available",
+                title="AvAlgolable",
                 price=10.0,
-                lock_info=LockInfo(status=LockStatus.AVAILABLE),
+                lock_info=LockInfo(status=LockStatus.AVAlgoLABLE),
             ),
             ItemWithLock(
                 item_id="2",
@@ -403,7 +403,7 @@ class TestLockStatusFilter:
                 price=20.0,
                 lock_info=LockInfo(
                     status=LockStatus.LOCKED,
-                    days_remaining=5,
+                    days_remAlgoning=5,
                 ),
                 discount_percent=5.0,
             ),
@@ -412,7 +412,7 @@ class TestLockStatusFilter:
         stats = filter.get_stats(items)
 
         assert stats["total_items"] == 2
-        assert stats["available_now"] == 1
+        assert stats["avAlgolable_now"] == 1
         assert stats["locked"] == 1
         assert stats["locked_percent"] == 50.0
         assert stats["avg_lock_days"] == 5.0

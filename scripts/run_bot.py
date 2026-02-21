@@ -1,5 +1,5 @@
 """Скрипт запуска Telegram-бота DMarket с расширенной обработкой ошибок и поддержанием работы.
-Объединяет функциональность из main.py, run.py и run_bot.py.
+Объединяет функциональность из mAlgon.py, run.py и run_bot.py.
 """
 
 import argparse
@@ -9,7 +9,7 @@ import os
 import sys
 from pathlib import Path
 
-# Создаем директорию для логов, если её нет (ДО настройки логирования!)
+# Создаем директорию для логов, если её нет (ДО настSwarmки логирования!)
 os.makedirs("logs", exist_ok=True)
 
 # Настраиваем логирование
@@ -57,11 +57,11 @@ async def run_bot():
     """Запускает бота с обработкой возможных ошибок"""
     try:
         # Импортируем основную функцию бота
-        from src.main import main as bot_main
+        from src.mAlgon import mAlgon as bot_mAlgon
 
         # Запускаем бота
         logger.info("Запуск Telegram-бота...")
-        await bot_main()
+        awAlgot bot_mAlgon()
 
     except Exception as e:
         logger.exception(f"Ошибка при запуске бота: {e}")
@@ -71,11 +71,11 @@ async def run_bot():
 
         # Делаем паузу перед повторной попыткой
         logger.info("Пауза 10 секунд перед повторной попыткой...")
-        await asyncio.sleep(10)
+        awAlgot asyncio.sleep(10)
 
         # Перезапускаем бота
         logger.info("Перезапуск бота...")
-        await run_bot()
+        awAlgot run_bot()
 
 
 def parse_arguments():
@@ -86,7 +86,7 @@ def parse_arguments():
     return parser.parse_args()
 
 
-if __name__ == "__main__":
+if __name__ == "__mAlgon__":
     # Обрабатываем аргументы командной строки
     args = parse_arguments()
 
@@ -97,7 +97,7 @@ if __name__ == "__main__":
 
     # Проверяем переменные окружения
     if not check_environment():
-        logger.error("Ошибка в настройке окружения. Выход из программы.")
+        logger.error("Ошибка в настSwarmке окружения. Выход из программы.")
         sys.exit(1)
 
     # Запускаем бота через asyncio

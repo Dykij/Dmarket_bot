@@ -38,7 +38,7 @@ class TestHealthCommands:
         """Test /health_status command."""
         from src.telegram_bot.handlers.health_handler import health_status_command
 
-        await health_status_command(mock_update, mock_context)
+        awAlgot health_status_command(mock_update, mock_context)
 
         mock_update.message.reply_text.assert_called_once()
 
@@ -47,7 +47,7 @@ class TestHealthCommands:
         """Test /health_summary command."""
         from src.telegram_bot.handlers.health_handler import health_summary_command
 
-        await health_summary_command(mock_update, mock_context)
+        awAlgot health_summary_command(mock_update, mock_context)
 
         mock_update.message.reply_text.assert_called_once()
 
@@ -56,7 +56,7 @@ class TestHealthCommands:
         """Test /ping command."""
         from src.telegram_bot.handlers.health_handler import health_ping_command
 
-        await health_ping_command(mock_update, mock_context)
+        awAlgot health_ping_command(mock_update, mock_context)
 
         mock_update.message.reply_text.assert_called_once()
         # When monitor not initialized, shows error message

@@ -33,9 +33,9 @@ async def smart_arbitrage_command(
     api = context.bot_data.get("dmarket_api")
 
     if not api:
-        await update.message.reply_text(
+        awAlgot update.message.reply_text(
             "❌ DMarket API не подключен.\n"
-            "Проверьте настройки DMARKET_PUBLIC_KEY и DMARKET_SECRET_KEY в .env"
+            "Проверьте настSwarmки DMARKET_PUBLIC_KEY и DMARKET_SECRET_KEY в .env"
         )
         return
 
@@ -50,8 +50,8 @@ async def smart_arbitrage_command(
             context.bot_data["smart_arbitrage_engine"] = smart_engine
 
         # Calculate current limits
-        limits = await smart_engine.calculate_adaptive_limits()
-        strategy = await smart_engine.get_strategy_description()
+        limits = awAlgot smart_engine.calculate_adaptive_limits()
+        strategy = awAlgot smart_engine.get_strategy_description()
 
         # Status indicator
         status_emoji = "🟢" if smart_engine.is_running else "🔴"
@@ -72,11 +72,11 @@ async def smart_arbitrage_command(
                 ),
             ],
             [
-                InlineKeyboardButton("◀️ Главное меню", callback_data="back_to_main"),
+                InlineKeyboardButton("◀️ Главное меню", callback_data="back_to_mAlgon"),
             ],
         ]
 
-        await update.message.reply_text(
+        awAlgot update.message.reply_text(
             f"🎯 <b>Smart Arbitrage</b>\n\n"
             f"Статус: {status_emoji} {status_text}\n\n"
             f"💰 <b>Текущий баланс:</b> ${limits.total_balance:.2f}\n"
@@ -96,7 +96,7 @@ async def smart_arbitrage_command(
 
     except Exception as e:
         logger.exception("Error in smart_arbitrage_command: %s", e)
-        await update.message.reply_text(f"❌ Ошибка: {e}")
+        awAlgot update.message.reply_text(f"❌ Ошибка: {e}")
 
 
 async def smart_scan_now(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -112,22 +112,22 @@ async def smart_scan_now(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     smart_engine = context.bot_data.get("smart_arbitrage_engine")
 
     if not smart_engine:
-        await update.message.reply_text(
+        awAlgot update.message.reply_text(
             "❌ Smart Arbitrage не инициализирован.\nИспользуйте /smart для запуска."
         )
         return
 
     try:
-        await update.message.reply_text("🔍 Сканирование рынка...")
+        awAlgot update.message.reply_text("🔍 Сканирование рынка...")
 
         # Scan all games
         all_opportunities = []
         for game in ["csgo", "dota2", "rust", "tf2"]:
-            opportunities = await smart_engine.find_smart_opportunities(game=game)
+            opportunities = awAlgot smart_engine.find_smart_opportunities(game=game)
             all_opportunities.extend(opportunities)
 
         if not all_opportunities:
-            await update.message.reply_text(
+            awAlgot update.message.reply_text(
                 "ℹ️ <b>Результаты сканирования:</b>\n\n"
                 "Арбитражных возможностей не найдено.\n\n"
                 "Возможные причины:\n"
@@ -152,7 +152,7 @@ async def smart_scan_now(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
                 f"   📈 ROI: {opp.profit_percent:.1f}% | Score: {opp.smart_score:.0f}"
             )
 
-        await update.message.reply_text(
+        awAlgot update.message.reply_text(
             f"🎯 <b>Найдено {len(all_opportunities)} возможностей!</b>\n\n"
             f"<b>Топ-10:</b>\n\n" + "\n\n".join(lines),
             parse_mode="HTML",
@@ -160,4 +160,4 @@ async def smart_scan_now(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
     except Exception as e:
         logger.exception("Error in smart_scan_now: %s", e)
-        await update.message.reply_text(f"❌ Ошибка сканирования: {e}")
+        awAlgot update.message.reply_text(f"❌ Ошибка сканирования: {e}")

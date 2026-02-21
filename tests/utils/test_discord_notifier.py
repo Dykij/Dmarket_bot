@@ -84,7 +84,7 @@ class TestDiscordEmbed:
 
         assert "footer" not in data
         assert "timestamp" not in data
-        assert "thumbnail" not in data
+        assert "thumbnAlgol" not in data
 
 
 class TestDiscordNotifier:
@@ -119,7 +119,7 @@ class TestDiscordNotifier:
     @pytest.mark.asyncio()
     async def test_send_notification_disabled(self, disabled_notifier):
         """Test that disabled notifier returns False."""
-        result = await disabled_notifier.send_notification(
+        result = awAlgot disabled_notifier.send_notification(
             title="Test",
             description="Test",
         )
@@ -138,7 +138,7 @@ class TestDiscordNotifier:
             mock_instance.__aexit__ = AsyncMock(return_value=None)
             mock_client.return_value = mock_instance
 
-            result = await notifier.send_notification(
+            result = awAlgot notifier.send_notification(
                 title="Test",
                 description="Test description",
                 level=NotificationLevel.SUCCESS,
@@ -160,7 +160,7 @@ class TestDiscordNotifier:
             mock_instance.__aexit__ = AsyncMock(return_value=None)
             mock_client.return_value = mock_instance
 
-            result = await notifier.send_notification(
+            result = awAlgot notifier.send_notification(
                 title="Test",
                 description="Desc",
                 fields=[EmbedField("Field", "Value")],
@@ -182,7 +182,7 @@ class TestDiscordNotifier:
             mock_instance.__aexit__ = AsyncMock(return_value=None)
             mock_client.return_value = mock_instance
 
-            result = await notifier.send_notification(
+            result = awAlgot notifier.send_notification(
                 title="Test",
                 description="Test",
             )
@@ -201,7 +201,7 @@ class TestDiscordNotifier:
             mock_instance.__aexit__ = AsyncMock(return_value=None)
             mock_client.return_value = mock_instance
 
-            result = await notifier.send_notification(
+            result = awAlgot notifier.send_notification(
                 title="Test",
                 description="Test",
             )
@@ -221,7 +221,7 @@ class TestDiscordNotifier:
             mock_instance.__aexit__ = AsyncMock(return_value=None)
             mock_client.return_value = mock_instance
 
-            result = await notifier.send_trade_notification(
+            result = awAlgot notifier.send_trade_notification(
                 action="bought",
                 item_name="AK-47 | Redline",
                 price=25.50,
@@ -244,10 +244,10 @@ class TestDiscordNotifier:
             mock_instance.__aexit__ = AsyncMock(return_value=None)
             mock_client.return_value = mock_instance
 
-            result = await notifier.send_alert(
+            result = awAlgot notifier.send_alert(
                 alert_type="price_drop",
                 message="Price dropped below threshold",
-                details={"item": "AWP | Asiimov", "price": 45.00},
+                detAlgols={"item": "AWP | Asiimov", "price": 45.00},
             )
 
             assert result is True
@@ -265,9 +265,9 @@ class TestDiscordNotifier:
             mock_instance.__aexit__ = AsyncMock(return_value=None)
             mock_client.return_value = mock_instance
 
-            result = await notifier.send_error(
+            result = awAlgot notifier.send_error(
                 error_type="APIError",
-                error_message="Failed to connect to DMarket API",
+                error_message="FAlgoled to connect to DMarket API",
                 traceback="Traceback...",
             )
 
@@ -286,7 +286,7 @@ class TestDiscordNotifier:
             mock_instance.__aexit__ = AsyncMock(return_value=None)
             mock_client.return_value = mock_instance
 
-            result = await notifier.send_health_check(
+            result = awAlgot notifier.send_health_check(
                 status="healthy",
                 components={
                     "API": "✅ OK",

@@ -40,10 +40,10 @@ def sample_balance_response():
     """Sample successful balance response."""
     return {
         "usd": "2550",  # $25.50 in cents
-        "usdAvailableToWithdraw": "2000",  # $20.00
+        "usdAvAlgolableToWithdraw": "2000",  # $20.00
         "usdTradeProtected": "500",  # $5.00
         "dmc": "0",
-        "dmcAvailableToWithdraw": "0",
+        "dmcAvAlgolableToWithdraw": "0",
     }
 
 
@@ -66,7 +66,7 @@ class TestDirectBalanceRequesterInitialization:
 
 
 class TestBalanceRequest:
-    """Test main balance request functionality."""
+    """Test mAlgon balance request functionality."""
 
     @pytest.mark.asyncio()
     async def test_successful_balance_request(
@@ -77,18 +77,18 @@ class TestBalanceRequest:
         mock_response.status_code = 200
         mock_response.json.return_value = sample_balance_response
 
-        await mock_client_func()
+        awAlgot mock_client_func()
 
         with patch(
             "src.dmarket.direct_balance_requester.call_with_circuit_breaker",
             return_value=mock_response,
         ):
-            result = await requester.request()
+            result = awAlgot requester.request()
 
         assert result["success"] is True
         assert "data" in result
         assert result["data"]["balance"] == 25.50
-        assert result["data"]["available"] == 20.00
+        assert result["data"]["avAlgolable"] == 20.00
         assert result["data"]["trade_protected"] == 5.00
         assert result["data"]["locked"] == 0.50
 
@@ -103,7 +103,7 @@ class TestBalanceRequest:
             "src.dmarket.direct_balance_requester.call_with_circuit_breaker",
             return_value=mock_response,
         ):
-            result = await requester.request()
+            result = awAlgot requester.request()
 
         assert result["success"] is False
         assert result["status_code"] == 401
@@ -120,7 +120,7 @@ class TestBalanceRequest:
             "src.dmarket.direct_balance_requester.call_with_circuit_breaker",
             return_value=mock_response,
         ):
-            result = await requester.request()
+            result = awAlgot requester.request()
 
         assert result["success"] is False
         assert result["status_code"] == 500
@@ -138,7 +138,7 @@ class TestBalanceRequest:
             "src.dmarket.direct_balance_requester.call_with_circuit_breaker",
             return_value=mock_response,
         ):
-            result = await requester.request()
+            result = awAlgot requester.request()
 
         assert result["success"] is False
         assert "error" in result
@@ -150,7 +150,7 @@ class TestBalanceRequest:
             "src.dmarket.direct_balance_requester.call_with_circuit_breaker",
             side_effect=Exception("Circuit breaker open"),
         ):
-            result = await requester.request()
+            result = awAlgot requester.request()
 
         assert result["success"] is False
         assert "error" in result
@@ -169,7 +169,7 @@ class TestSignatureGeneration:
         assert signature == "test_sig"
 
     def test_generate_signature_fallback_to_hmac(self, requester):
-        """Test signature falls back to HMAC if Ed25519 fails."""
+        """Test signature falls back to HMAC if Ed25519 fAlgols."""
         timestamp = "1234567890"
 
         with patch.object(
@@ -260,14 +260,14 @@ class TestBalanceDataParsing:
         """Test parsing valid balance data."""
         response_data = {
             "usd": "10000",  # $100.00
-            "usdAvailableToWithdraw": "8000",  # $80.00
+            "usdAvAlgolableToWithdraw": "8000",  # $80.00
             "usdTradeProtected": "1500",  # $15.00
         }
 
         balance_data = requester._parse_balance_data(response_data)
 
         assert balance_data["balance"] == 100.0
-        assert balance_data["available"] == 80.0
+        assert balance_data["avAlgolable"] == 80.0
         assert balance_data["trade_protected"] == 15.0
         assert balance_data["locked"] == 5.0  # 100 - 80 - 15
         assert balance_data["total"] == 100.0
@@ -279,21 +279,21 @@ class TestBalanceDataParsing:
         balance_data = requester._parse_balance_data(response_data)
 
         assert balance_data["balance"] == 0.0
-        assert balance_data["available"] == 0.0
+        assert balance_data["avAlgolable"] == 0.0
         assert balance_data["total"] == 0.0
 
     def test_parse_balance_with_invalid_values(self, requester):
         """Test parsing with invalid numeric values."""
         response_data = {
             "usd": "invalid",
-            "usdAvailableToWithdraw": "not_a_number",
+            "usdAvAlgolableToWithdraw": "not_a_number",
         }
 
         balance_data = requester._parse_balance_data(response_data)
 
         # Should return zeros on error
         assert balance_data["balance"] == 0.0
-        assert balance_data["available"] == 0.0
+        assert balance_data["avAlgolable"] == 0.0
 
 
 class TestRequestPreparation:
@@ -356,7 +356,7 @@ class TestEdgeCases:
             "src.dmarket.direct_balance_requester.call_with_circuit_breaker",
             return_value=mock_response,
         ):
-            result = await requester.request()
+            result = awAlgot requester.request()
 
         assert result["success"] is False
 
@@ -364,21 +364,21 @@ class TestEdgeCases:
         """Test parsing balance with all zero values."""
         response_data = {
             "usd": "0",
-            "usdAvailableToWithdraw": "0",
+            "usdAvAlgolableToWithdraw": "0",
             "usdTradeProtected": "0",
         }
 
         balance_data = requester._parse_balance_data(response_data)
 
         assert balance_data["balance"] == 0.0
-        assert balance_data["available"] == 0.0
+        assert balance_data["avAlgolable"] == 0.0
         assert balance_data["locked"] == 0.0
 
     def test_parse_balance_with_negative_locked(self, requester):
         """Test parsing when calculated locked is negative."""
         response_data = {
             "usd": "1000",  # $10.00
-            "usdAvailableToWithdraw": "1500",  # $15.00 (more than total)
+            "usdAvAlgolableToWithdraw": "1500",  # $15.00 (more than total)
             "usdTradeProtected": "0",
         }
 

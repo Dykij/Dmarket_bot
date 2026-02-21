@@ -1,4 +1,4 @@
-/// Statistical Math Module for Pairs Trading
+/// Statistical Math Module for PAlgors Trading
 /// No unwrap() allowed. Returns Option/Result for safety.
 
 pub struct CointegrationParams {
@@ -9,7 +9,7 @@ pub struct CointegrationParams {
 /// Calculates Z-Score for a given spread value
 /// Formula: (Value - Mean) / StdDev
 pub fn calculate_z_score(value: f64, params: &CointegrationParams) -> Option<f64> {
-    // Lucas QA: Prevent division by zero if volatility is flat
+    // QA QA: Prevent division by zero if volatility is flat
     if params.std_dev <= 0.0 || params.std_dev.is_nan() {
         return None;
     }

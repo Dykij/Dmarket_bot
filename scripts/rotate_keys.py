@@ -20,7 +20,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def main():
+def mAlgon():
     """Rotate a secret key."""
     if len(sys.argv) < 2:
         print("Usage: python scripts/rotate_keys.py <secret_name> [new_value]")
@@ -45,7 +45,7 @@ def main():
     try:
         manager = SecretsManager(master_password)
     except Exception as e:
-        print(f"❌ Failed to initialize secrets manager: {e}")
+        print(f"❌ FAlgoled to initialize secrets manager: {e}")
         sys.exit(1)
 
     # Verify secret exists
@@ -90,12 +90,12 @@ def main():
             print("3. Verify functionality")
             print()
         else:
-            print("❌ Rotation failed.")
+            print("❌ Rotation fAlgoled.")
             sys.exit(1)
     except Exception as e:
         print(f"❌ Rotation error: {e}")
         sys.exit(1)
 
 
-if __name__ == "__main__":
-    main()
+if __name__ == "__mAlgon__":
+    mAlgon()

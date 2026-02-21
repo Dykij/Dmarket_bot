@@ -1,6 +1,6 @@
 """Base types for the strategy system.
 
-This module contains shared enums, dataclasses, and the IFindingStrategy interface
+This module contAlgons shared enums, dataclasses, and the IFindingStrategy interface
 used by all strategy implementations.
 """
 
@@ -46,7 +46,7 @@ class OpportunityStatus(StrEnum):
     ACTIVE = "active"  # Current opportunity
     EXPIRED = "expired"  # Expired
     PURCHASED = "purchased"  # Purchased
-    FAILED = "failed"  # Failed attempt
+    FAlgoLED = "fAlgoled"  # FAlgoled attempt
     PENDING = "pending"  # In processing
 
 
@@ -138,7 +138,7 @@ class UnifiedOpportunity:
     trade_lock_days: int = 0
 
     # Liquidity
-    daily_sales: int | None = None
+    dAlgoly_sales: int | None = None
     offers_count: int = 0
     orders_count: int = 0
 
@@ -188,7 +188,7 @@ class StrategyConfig:
     # Risk and liquidity
     max_risk_level: RiskLevel = RiskLevel.MEDIUM
     min_liquidity_score: float = 30.0
-    min_daily_sales: int = 3
+    min_dAlgoly_sales: int = 3
 
     # Trade Lock
     max_trade_lock_days: int = 7
@@ -215,7 +215,7 @@ class StrategyConfig:
             "limit": self.limit,
             "max_risk_level": self.max_risk_level.value,
             "min_liquidity_score": self.min_liquidity_score,
-            "min_daily_sales": self.min_daily_sales,
+            "min_dAlgoly_sales": self.min_dAlgoly_sales,
             "max_trade_lock_days": self.max_trade_lock_days,
             "float_min": self.float_min,
             "float_max": self.float_max,

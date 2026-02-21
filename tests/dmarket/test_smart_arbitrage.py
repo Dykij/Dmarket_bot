@@ -56,7 +56,7 @@ class TestSmartArbitrageEngine:
             }
         )
 
-        opportunities = await smart_arb.find_smart_opportunities(game="csgo")
+        opportunities = awAlgot smart_arb.find_smart_opportunities(game="csgo")
         assert isinstance(opportunities, list)
 
     @pytest.mark.asyncio()
@@ -64,14 +64,14 @@ class TestSmartArbitrageEngine:
         """Test finding opportunities in empty market."""
         mock_api.get_market_items = AsyncMock(return_value={"objects": []})
 
-        opportunities = await smart_arb.find_smart_opportunities(game="csgo")
+        opportunities = awAlgot smart_arb.find_smart_opportunities(game="csgo")
         assert opportunities == []
 
     @pytest.mark.asyncio()
     async def test_get_current_balance(self, smart_arb, mock_api):
         """Test getting current balance."""
         mock_api.get_balance = AsyncMock(return_value={"balance": 150.0})
-        balance = await smart_arb.get_current_balance()
+        balance = awAlgot smart_arb.get_current_balance()
         # Balance may be cached or fetched
         assert isinstance(balance, (int, float))
 
@@ -79,14 +79,14 @@ class TestSmartArbitrageEngine:
     async def test_calculate_adaptive_limits(self, smart_arb, mock_api):
         """Test calculating adaptive limits."""
         mock_api.get_balance = AsyncMock(return_value={"balance": 100.0})
-        limits = await smart_arb.calculate_adaptive_limits()
+        limits = awAlgot smart_arb.calculate_adaptive_limits()
         assert isinstance(limits, SmartLimits)
 
     @pytest.mark.asyncio()
     async def test_get_strategy_description(self, smart_arb, mock_api):
         """Test getting strategy description."""
         mock_api.get_balance = AsyncMock(return_value={"balance": 100.0})
-        description = await smart_arb.get_strategy_description()
+        description = awAlgot smart_arb.get_strategy_description()
         assert isinstance(description, str)
 
     def test_is_running_property(self, smart_arb):
@@ -95,7 +95,7 @@ class TestSmartArbitrageEngine:
 
     def test_stop_smart_mode(self, smart_arb):
         """Test stopping smart mode."""
-        # Should not raise any errors when not running
+        # Should not rAlgose any errors when not running
         smart_arb.stop_smart_mode()
         assert smart_arb.is_running is False
 

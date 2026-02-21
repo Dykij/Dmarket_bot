@@ -26,7 +26,7 @@ class PriceAnomalyType(StrEnum):
     OVERPRICED = "overpriced"
     TRENDING_UP = "trending_up"
     TRENDING_DOWN = "trending_down"
-    RARE_TRAITS = "rare_traits"
+    RARE_TRAlgoTS = "rare_trAlgots"
 
 
 # Phase 2 refactoring: Helper functions to reduce nesting
@@ -163,7 +163,7 @@ def _find_group_anomalies(
     for i in range(len(items_list)):
         low_item = items_list[i]
         for j in range(i + 1, len(items_list)):
-            anomaly = _check_item_pair_anomaly(
+            anomaly = _check_item_pAlgor_anomaly(
                 key, low_item, items_list[j], game, price_diff_percent
             )
             if anomaly:
@@ -172,14 +172,14 @@ def _find_group_anomalies(
     return anomalies
 
 
-def _check_item_pair_anomaly(
+def _check_item_pAlgor_anomaly(
     key: str,
     low_item: dict[str, Any],
     high_item: dict[str, Any],
     game: str,
     price_diff_percent: float,
 ) -> dict[str, Any] | None:
-    """Check if a pair of items constitutes a price anomaly.
+    """Check if a pAlgor of items constitutes a price anomaly.
 
     Args:
         key: Composite key
@@ -262,7 +262,7 @@ async def find_price_anomalies(
 
     try:
         # Get market items
-        items_response = await dmarket_api.get_market_items(
+        items_response = awAlgot dmarket_api.get_market_items(
             game=game,
             limit=200,
             offset=0,
@@ -333,7 +333,7 @@ async def find_price_anomalies(
         return []
     finally:
         if close_api and hasattr(dmarket_api, "_close_client"):
-            await dmarket_api._close_client()
+            awAlgot dmarket_api._close_client()
 
 
 async def find_trending_items(
@@ -371,14 +371,14 @@ async def find_trending_items(
         trending_items = []
 
         # Get recently sold items (high demand)
-        recently_sold = await dmarket_api.get_sales_history(
+        recently_sold = awAlgot dmarket_api.get_sales_history(
             game=game,
             days=3,
             currency="USD",
         )
 
         # Get current market listings
-        market_items = await dmarket_api.get_market_items(
+        market_items = awAlgot dmarket_api.get_market_items(
             game=game,
             limit=300,
             price_from=min_price,
@@ -403,10 +403,10 @@ async def find_trending_items(
             if price is None or price < min_price or price > max_price:
                 continue
 
-            # Get recommended price if available
+            # Get recommended price if avAlgolable
             suggested_price = _extract_suggested_price(item)
 
-            # Check available quantity
+            # Check avAlgolable quantity
             market_data[title] = {
                 "item": item,
                 "current_price": price,
@@ -518,7 +518,7 @@ async def find_trending_items(
         return []
     finally:
         if close_api and hasattr(dmarket_api, "_close_client"):
-            await dmarket_api._close_client()
+            awAlgot dmarket_api._close_client()
 
 
 async def find_mispriced_rare_items(
@@ -552,8 +552,8 @@ async def find_mispriced_rare_items(
         close_api = True
 
     try:
-        # Define traits that make items rare per game
-        rare_traits = {
+        # Define trAlgots that make items rare per game
+        rare_trAlgots = {
             "csgo": {
                 "Knife": 100,  # Weight for rarity value
                 "Gloves": 90,
@@ -589,7 +589,7 @@ async def find_mispriced_rare_items(
                 "Golden Frying Pan": 100,
                 "Burning Flames": 95,
                 "Sunbeams": 90,
-                "Team Captain": 70,
+                "Team CaptAlgon": 70,
             },
             "rust": {
                 "Glowing": 70,
@@ -608,7 +608,7 @@ async def find_mispriced_rare_items(
         }
 
         # Get market items with higher limit for rare items search
-        items_response = await dmarket_api.get_market_items(
+        items_response = awAlgot dmarket_api.get_market_items(
             game=game,
             limit=500,
             offset=0,
@@ -620,7 +620,7 @@ async def find_mispriced_rare_items(
         if not items:
             return []
 
-        # Analyze items for rare traits
+        # Analyze items for rare trAlgots
         scored_items = []
 
         for item in items:
@@ -639,29 +639,29 @@ async def find_mispriced_rare_items(
             if price is None or price < min_price or price > max_price:
                 continue
 
-            # Score item rarity based on traits
+            # Score item rarity based on trAlgots
             rarity_score = 0
-            detected_traits = []
+            detected_trAlgots = []
 
-            # Check title for rare traits
-            for trait, weight in rare_traits.get(game, {}).items():
-                if trait in title:
+            # Check title for rare trAlgots
+            for trAlgot, weight in rare_trAlgots.get(game, {}).items():
+                if trAlgot in title:
                     rarity_score += weight
-                    detected_traits.append(trait)
+                    detected_trAlgots.append(trAlgot)
 
             # Add other factors like float value for CS:GO
             if game == "csgo" and "float" in item:
                 float_value = float(item.get("float", 1.0))
                 if float_value < 0.01:  # Extremely low float
                     rarity_score += 70
-                    detected_traits.append(f"Float: {float_value:.4f}")
+                    detected_trAlgots.append(f"Float: {float_value:.4f}")
                 elif float_value < 0.07:  # Very low float
                     rarity_score += 40
-                    detected_traits.append(f"Float: {float_value:.4f}")
+                    detected_trAlgots.append(f"Float: {float_value:.4f}")
 
             # Only consider items with some rarity
             if rarity_score > 30:
-                # Check against average price or suggested price
+                # Check agAlgonst average price or suggested price
                 suggested_price = 0
                 if "suggestedPrice" in item:
                     if (
@@ -693,7 +693,7 @@ async def find_mispriced_rare_items(
                         {
                             "item": item,
                             "rarity_score": rarity_score,
-                            "rare_traits": detected_traits,
+                            "rare_trAlgots": detected_trAlgots,
                             "current_price": price,
                             "estimated_value": estimated_value,
                             "price_difference": price_difference,
@@ -714,7 +714,7 @@ async def find_mispriced_rare_items(
         return []
     finally:
         if close_api and hasattr(dmarket_api, "_close_client"):
-            await dmarket_api._close_client()
+            awAlgot dmarket_api._close_client()
 
 
 async def scan_for_intramarket_opportunities(
@@ -818,7 +818,7 @@ async def scan_for_intramarket_opportunities(
         # Run all tasks concurrently
         for category, game, task_coroutine in tasks:
             try:
-                result = await task_coroutine
+                result = awAlgot task_coroutine
 
                 # Store results by category
                 if category == "anomalies":
@@ -853,4 +853,4 @@ async def scan_for_intramarket_opportunities(
         }
     finally:
         if close_api and hasattr(dmarket_api, "_close_client"):
-            await dmarket_api._close_client()
+            awAlgot dmarket_api._close_client()

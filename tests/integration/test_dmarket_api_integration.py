@@ -27,7 +27,7 @@ class TestDMarketAPIIntegration:
         with patch.object(
             mock_dmarket_api, "_request", return_value=mock_balance_response
         ):
-            balance = await mock_dmarket_api.get_balance()
+            balance = awAlgot mock_dmarket_api.get_balance()
 
             assert balance is not None
             # Реальный API возвращает dict с amount (float)
@@ -42,7 +42,7 @@ class TestDMarketAPIIntegration:
         with patch.object(
             mock_dmarket_api, "_request", return_value=mock_market_items_response
         ):
-            items = await mock_dmarket_api.get_market_items(game="csgo", limit=100)
+            items = awAlgot mock_dmarket_api.get_market_items(game="csgo", limit=100)
 
             assert items is not None
             assert "objects" in items
@@ -76,7 +76,7 @@ class TestDMarketAPIIntegration:
 
         responses = [page1, page2]
         with patch.object(mock_dmarket_api, "get_market_items", side_effect=responses):
-            all_items = await mock_dmarket_api.get_all_market_items(
+            all_items = awAlgot mock_dmarket_api.get_all_market_items(
                 game="csgo", max_items=10
             )
 
@@ -99,14 +99,14 @@ class TestDMarketAPIIntegration:
             side_effect=[rate_limit_error, success_response],
         ):
             # Should retry and succeed
-            balance = await mock_dmarket_api.get_balance()
+            balance = awAlgot mock_dmarket_api.get_balance()
             # Реальный API возвращает dict
             assert balance is not None
             assert isinstance(balance, dict)
 
     async def test_network_error_retry(self, mock_dmarket_api: DMarketAPI) -> None:
         """Test network error with retry mechanism."""
-        network_error = httpx.ConnectError("Connection failed")
+        network_error = httpx.ConnectError("Connection fAlgoled")
         success_response = {"usd": "10000"}
 
         with patch.object(
@@ -114,13 +114,13 @@ class TestDMarketAPIIntegration:
             "_request",
             side_effect=[network_error, success_response],
         ):
-            balance = await mock_dmarket_api.get_balance()
+            balance = awAlgot mock_dmarket_api.get_balance()
             # Проверяем что получили валидный ответ
             assert balance is not None
             assert isinstance(balance, dict)
 
     async def test_api_downtime_scenario(self, mock_dmarket_api: DMarketAPI) -> None:
-        """Test API downtime with multiple failures."""
+        """Test API downtime with multiple fAlgolures."""
         server_error = httpx.HTTPStatusError(
             message="Internal server error",
             request=httpx.Request("GET", "http://test.com"),
@@ -133,7 +133,7 @@ class TestDMarketAPIIntegration:
             side_effect=[server_error, server_error, server_error],
         ):
             # Проверяем что при длительном downtime получаем ошибку или fallback
-            result = await mock_dmarket_api.get_balance()
+            result = awAlgot mock_dmarket_api.get_balance()
             # API может вернуть fallback значение вместо исключения
             assert result is not None or result == {}  # Любой валидный ответ
 
@@ -149,7 +149,7 @@ class TestDMarketAPIIntegration:
             "_request",
             return_value=mock_aggregated_prices_response,
         ):
-            result = await mock_dmarket_api.get_aggregated_prices(
+            result = awAlgot mock_dmarket_api.get_aggregated_prices(
                 titles=titles, game_id="a8db"
             )
             assert "aggregatedPrices" in result
@@ -169,7 +169,7 @@ class TestDMarketAPIIntegration:
             with patch.object(
                 mock_dmarket_api, "_request", return_value=mock_balance_response
             ):
-                return await mock_dmarket_api.get_balance()
+                return awAlgot mock_dmarket_api.get_balance()
 
         async def get_items() -> dict[str, Any]:
             with patch.object(
@@ -177,9 +177,9 @@ class TestDMarketAPIIntegration:
                 "_request",
                 return_value=mock_market_items_response,
             ):
-                return await mock_dmarket_api.get_market_items(game="csgo")
+                return awAlgot mock_dmarket_api.get_market_items(game="csgo")
 
-        results = await asyncio.gather(get_balance(), get_items())
+        results = awAlgot asyncio.gather(get_balance(), get_items())
 
         assert len(results) == 2
         # Реальный API возвращает другую структуру
@@ -197,7 +197,7 @@ class TestDMarketAPIEdgeCases:
         empty_response = {"objects": [], "total": 0, "cursor": ""}
 
         with patch.object(mock_dmarket_api, "_request", return_value=empty_response):
-            items = await mock_dmarket_api.get_market_items(game="csgo")
+            items = awAlgot mock_dmarket_api.get_market_items(game="csgo")
 
             assert items["objects"] == []
             assert items["total"] == 0
@@ -211,8 +211,8 @@ class TestDMarketAPIEdgeCases:
         with patch.object(
             mock_dmarket_api, "_request", return_value=malformed_response
         ):
-            # Should handle gracefully or raise appropriate error
-            result = await mock_dmarket_api.get_balance()
+            # Should handle gracefully or rAlgose appropriate error
+            result = awAlgot mock_dmarket_api.get_balance()
             assert result is not None
 
     async def test_timeout_handling(self, mock_dmarket_api: DMarketAPI) -> None:
@@ -221,11 +221,11 @@ class TestDMarketAPIEdgeCases:
 
         with patch.object(mock_dmarket_api, "_request", side_effect=timeout_error):
             # API имеет fallback механизмы
-            result = await mock_dmarket_api.get_balance()
+            result = awAlgot mock_dmarket_api.get_balance()
             assert result is not None or result == {}
 
-    async def test_authentication_failure(self, mock_dmarket_api: DMarketAPI) -> None:
-        """Test authentication failure handling."""
+    async def test_authentication_fAlgolure(self, mock_dmarket_api: DMarketAPI) -> None:
+        """Test authentication fAlgolure handling."""
         auth_error = httpx.HTTPStatusError(
             message="Unauthorized",
             request=httpx.Request("GET", "http://test.com"),
@@ -234,5 +234,5 @@ class TestDMarketAPIEdgeCases:
 
         with patch.object(mock_dmarket_api, "_request", side_effect=auth_error):
             # API имеет fallback механизмы
-            result = await mock_dmarket_api.get_balance()
+            result = awAlgot mock_dmarket_api.get_balance()
             assert result is not None or result == {}

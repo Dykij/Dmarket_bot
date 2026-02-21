@@ -1,4 +1,4 @@
-"""ML/AI handlers for main keyboard."""
+"""ML/Algo handlers for mAlgon keyboard."""
 
 from pathlib import Path
 
@@ -10,37 +10,37 @@ from src.utils.canonical_logging import get_logger
 logger = get_logger(__name__)
 
 
-async def ml_ai_menu_callback(
+async def ml_Algo_menu_callback(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> None:
     query = update.callback_query
-    await query.answer()
+    awAlgot query.answer()
     keyboard = [
-        [InlineKeyboardButton("🎓 Обучить модель", callback_data="ml_ai_train")],
-        [InlineKeyboardButton("📊 Статус AI", callback_data="ml_ai_status")],
-        [InlineKeyboardButton("◀️ Главное меню", callback_data="main_menu")],
+        [InlineKeyboardButton("🎓 Обучить модель", callback_data="ml_Algo_trAlgon")],
+        [InlineKeyboardButton("📊 Статус Algo", callback_data="ml_Algo_status")],
+        [InlineKeyboardButton("◀️ Главное меню", callback_data="mAlgon_menu")],
     ]
-    text = "🧠 <b>ML/AI ОБУЧЕНИЕ</b>\n\nИспользуйте машинное обучение для предсказания цен."
-    await query.edit_message_text(
+    text = "🧠 <b>ML/Algo ОБУЧЕНИЕ</b>\n\nИспользуйте машинное обучение для предсказания цен."
+    awAlgot query.edit_message_text(
         text, parse_mode="HTML", reply_markup=InlineKeyboardMarkup(keyboard)
     )
 
 
-async def ml_ai_status_callback(
+async def ml_Algo_status_callback(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> None:
     query = update.callback_query
-    await query.answer()
+    awAlgot query.answer()
     project_root = Path(__file__).resolve().parents[4]
     model_path = project_root / "data" / "price_model.pkl"
     if model_path.exists():
-        text = f"🧠 <b>Статус ML/AI</b>\n\n✅ <b>Модель обучена</b>\n💾 Размер: {model_path.stat().st_size / 1024:.1f} KB"
+        text = f"🧠 <b>Статус ML/Algo</b>\n\n✅ <b>Модель обучена</b>\n💾 Размер: {model_path.stat().st_size / 1024:.1f} KB"
     else:
-        text = "🧠 <b>Статус ML/AI</b>\n\n❌ <b>Модель не обучена</b>"
+        text = "🧠 <b>Статус ML/Algo</b>\n\n❌ <b>Модель не обучена</b>"
     keyboard = [
-        [InlineKeyboardButton("🎓 Обучить", callback_data="ml_ai_train")],
-        [InlineKeyboardButton("◀️ Назад", callback_data="ml_ai_menu")],
+        [InlineKeyboardButton("🎓 Обучить", callback_data="ml_Algo_trAlgon")],
+        [InlineKeyboardButton("◀️ Назад", callback_data="ml_Algo_menu")],
     ]
-    await query.edit_message_text(
+    awAlgot query.edit_message_text(
         text, parse_mode="HTML", reply_markup=InlineKeyboardMarkup(keyboard)
     )

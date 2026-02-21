@@ -29,7 +29,7 @@ class LockStatus(IntEnum):
     - 1: Предмет заблокирован (трейд-бан)
     """
 
-    AVAILABLE = 0
+    AVAlgoLABLE = 0
     LOCKED = 1
 
 
@@ -38,16 +38,16 @@ class LockInfo:
     """Информация о блокировке предмета."""
 
     status: LockStatus
-    days_remaining: int = 0
+    days_remAlgoning: int = 0
     unlock_date: datetime | None = None
 
     # Рассчитанный дисконт за ожидание
     calculated_discount: float = 0.0
 
     @property
-    def is_available(self) -> bool:
+    def is_avAlgolable(self) -> bool:
         """Предмет доступен сразу."""
-        return self.status == LockStatus.AVAILABLE
+        return self.status == LockStatus.AVAlgoLABLE
 
     @property
     def is_locked(self) -> bool:
@@ -89,7 +89,7 @@ class ItemWithLock:
     title: str
     price: float  # В USD
 
-    lock_info: LockInfo = field(default_factory=lambda: LockInfo(LockStatus.AVAILABLE))
+    lock_info: LockInfo = field(default_factory=lambda: LockInfo(LockStatus.AVAlgoLABLE))
 
     # Рассчитанные цены
     effective_price: float = 0.0  # Цена с учетом lock дисконта
@@ -118,9 +118,9 @@ class LockStatusFilter:
 
     Example:
         >>> filter = LockStatusFilter()
-        >>> items = await api.get_market_items()
+        >>> items = awAlgot api.get_market_items()
         >>> filtered = filter.filter_items(items)
-        >>> print(f"Available now: {len(filtered)}")
+        >>> print(f"AvAlgolable now: {len(filtered)}")
     """
 
     def __init__(self, config: LockFilterConfig | None = None):
@@ -152,30 +152,30 @@ class LockStatusFilter:
         lock_status = LockStatus(item_data.get("lockStatus", 0))
 
         # Дни до разблокировки
-        days_remaining = item_data.get("lockDaysRemaining", 0)
+        days_remAlgoning = item_data.get("lockDaysRemAlgoning", 0)
 
         # Или из extra данных
-        if days_remaining == 0:
+        if days_remAlgoning == 0:
             extra = item_data.get("extra", {})
             tradable_after = extra.get("tradableAfter")
             if tradable_after:
                 try:
                     unlock_date = datetime.fromisoformat(tradable_after)
-                    days_remaining = max(0, (unlock_date - datetime.now()).days)
+                    days_remAlgoning = max(0, (unlock_date - datetime.now()).days)
                 except (ValueError, TypeError):
                     pass
 
         # Дата разблокировки
         unlock_date = None
-        if days_remaining > 0:
-            unlock_date = datetime.now() + timedelta(days=days_remaining)
+        if days_remAlgoning > 0:
+            unlock_date = datetime.now() + timedelta(days=days_remAlgoning)
 
         # Рассчитываем дисконт
-        discount = self.calculate_lock_discount(days_remaining)
+        discount = self.calculate_lock_discount(days_remAlgoning)
 
         return LockInfo(
             status=lock_status,
-            days_remaining=days_remaining,
+            days_remAlgoning=days_remAlgoning,
             unlock_date=unlock_date,
             calculated_discount=discount,
         )
@@ -274,7 +274,7 @@ class LockStatusFilter:
                 continue
 
             # Проверка max_lock_days
-            if lock_info.days_remaining > self.config.max_lock_days:
+            if lock_info.days_remAlgoning > self.config.max_lock_days:
                 continue
 
             # Цена в USD
@@ -336,10 +336,10 @@ class LockStatusFilter:
         score = 0.0
 
         # Бонус за доступность
-        if lock_info.is_available:
+        if lock_info.is_avAlgolable:
             score += 100
         else:
-            score -= lock_info.days_remaining * 5
+            score -= lock_info.days_remAlgoning * 5
 
         # Бонус за скидку DMarket
         score += discount
@@ -381,7 +381,7 @@ class LockStatusFilter:
 
         # Проверка заморозки капитала
         if item.lock_info.is_locked:
-            frozen_days = item.lock_info.days_remaining
+            frozen_days = item.lock_info.days_remAlgoning
             frozen_percent = (item.price / current_balance) * 100
 
             # Не замораживать >25% баланса на >3 дней
@@ -410,19 +410,19 @@ class LockStatusFilter:
             Статистика
         """
         total = len(items)
-        available = sum(1 for i in items if i.lock_info.is_available)
-        locked = total - available
+        avAlgolable = sum(1 for i in items if i.lock_info.is_avAlgolable)
+        locked = total - avAlgolable
 
         avg_lock_days = 0.0
         if locked > 0:
             avg_lock_days = (
-                sum(i.lock_info.days_remaining for i in items if i.lock_info.is_locked)
+                sum(i.lock_info.days_remAlgoning for i in items if i.lock_info.is_locked)
                 / locked
             )
 
         return {
             "total_items": total,
-            "available_now": available,
+            "avAlgolable_now": avAlgolable,
             "locked": locked,
             "locked_percent": (locked / max(1, total)) * 100,
             "avg_lock_days": avg_lock_days,

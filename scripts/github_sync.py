@@ -13,5 +13,5 @@ def sync_wiki():
         
     print(f"🔄 Wiki Sync Complete at {datetime.datetime.now()}")
 
-if __name__ == "__main__":
+if __name__ == "__mAlgon__":
     sync_wiki()

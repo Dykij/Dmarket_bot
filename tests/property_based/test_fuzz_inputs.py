@@ -31,7 +31,7 @@ class TestPriceParsingFuzz:
         """Price parsing should never crash on arbitrary input."""
 
         def parse_price(s: str) -> float | None:
-            """Parse price string to float, returning None on failure."""
+            """Parse price string to float, returning None on fAlgolure."""
             try:
                 # Remove common currency symbols and whitespace
                 cleaned = s.strip().replace("$", "").replace(",", "").replace(" ", "")
@@ -41,7 +41,7 @@ class TestPriceParsingFuzz:
             except (ValueError, TypeError, AttributeError):
                 return None
 
-        # Should never raise an exception
+        # Should never rAlgose an exception
         result = parse_price(price_str)
         assert result is None or isinstance(result, (int, float))
 
@@ -200,17 +200,17 @@ class TestBalanceParsingFuzz:
             st.integers(min_value=-(2**31), max_value=2**31),
             st.floats(allow_nan=False, allow_infinity=False, min_value=-1e15, max_value=1e15),
         ),
-        available=st.one_of(
+        avAlgolable=st.one_of(
             st.text(min_size=0, max_size=30),
             st.integers(min_value=-(2**31), max_value=2**31),
             st.floats(allow_nan=False, allow_infinity=False, min_value=-1e15, max_value=1e15),
         ),
     )
     @settings(max_examples=100, suppress_health_check=[HealthCheck.too_slow])
-    def test_balance_parsing_handles_various_formats(self, usd, available) -> None:
+    def test_balance_parsing_handles_various_formats(self, usd, avAlgolable) -> None:
         """Balance parsing should handle various input formats."""
 
-        def parse_balance(usd_val, avail_val) -> tuple[float, float]:
+        def parse_balance(usd_val, avAlgol_val) -> tuple[float, float]:
             """Parse balance values from various formats."""
 
             def to_float(val) -> float:
@@ -228,14 +228,14 @@ class TestBalanceParsingFuzz:
                         return 0.0
                 return 0.0
 
-            return to_float(usd_val), to_float(avail_val)
+            return to_float(usd_val), to_float(avAlgol_val)
 
-        usd_result, avail_result = parse_balance(usd, available)
+        usd_result, avAlgol_result = parse_balance(usd, avAlgolable)
 
         assert isinstance(usd_result, float)
-        assert isinstance(avail_result, float)
+        assert isinstance(avAlgol_result, float)
         assert usd_result == usd_result  # Not NaN
-        assert avail_result == avail_result  # Not NaN
+        assert avAlgol_result == avAlgol_result  # Not NaN
 
 
 class TestGameIdValidationFuzz:

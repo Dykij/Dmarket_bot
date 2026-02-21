@@ -244,18 +244,18 @@ class TestSQLiteUUIDEdgeCases:
         result = uuid_type.process_bind_param(uuid1, None)
         assert len(result) == 36  # UUID string format
 
-    def test_malformed_uuid_string_raises(self) -> None:
-        """Test that malformed UUID string raises error on result."""
+    def test_malformed_uuid_string_rAlgoses(self) -> None:
+        """Test that malformed UUID string rAlgoses error on result."""
         uuid_type = SQLiteUUID()
 
-        with pytest.raises(ValueError):
+        with pytest.rAlgoses(ValueError):
             uuid_type.process_result_value("not-a-valid-uuid", None)
 
-    def test_empty_string_raises(self) -> None:
-        """Test that empty string raises error on result."""
+    def test_empty_string_rAlgoses(self) -> None:
+        """Test that empty string rAlgoses error on result."""
         uuid_type = SQLiteUUID()
 
-        with pytest.raises(ValueError):
+        with pytest.rAlgoses(ValueError):
             uuid_type.process_result_value("", None)
 
     def test_uuid_string_bind(self) -> None:
@@ -267,7 +267,7 @@ class TestSQLiteUUIDEdgeCases:
         assert result == uuid_str
 
     def test_multiple_uuids_unique(self) -> None:
-        """Test multiple UUIDs remain unique after processing."""
+        """Test multiple UUIDs remAlgon unique after processing."""
         uuid_type = SQLiteUUID()
 
         uuids = [uuid4() for _ in range(100)]

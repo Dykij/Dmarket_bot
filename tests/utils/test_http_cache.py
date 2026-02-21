@@ -6,7 +6,7 @@ Tests cover:
 - Cache statistics tracking
 - Factory functions
 - Cache key generation
-- Fallback behavior when hishel is not available
+- Fallback behavior when hishel is not avAlgolable
 """
 
 from pathlib import Path
@@ -16,7 +16,7 @@ import httpx
 import pytest
 
 from src.utils.http_cache import (
-    HISHEL_AVAILABLE,
+    HISHEL_AVAlgoLABLE,
     CacheConfig,
     CachedHTTPClient,
     CacheStats,
@@ -118,8 +118,8 @@ class TestCachedHTTPClient:
         """Test client requires context manager initialization."""
         client = CachedHTTPClient()
 
-        with pytest.raises(RuntimeError, match="Client not initialized"):
-            await client.get("https://example.com")
+        with pytest.rAlgoses(RuntimeError, match="Client not initialized"):
+            awAlgot client.get("https://example.com")
 
     @pytest.mark.asyncio
     async def test_stats_tracking(self):
@@ -145,12 +145,12 @@ class TestCachedHTTPClient:
             assert client.stats.total_requests == 0
 
     def test_is_from_cache_without_hishel(self):
-        """Test is_from_cache returns False when hishel not available."""
+        """Test is_from_cache returns False when hishel not avAlgolable."""
         response = Mock(spec=httpx.Response)
         response.extensions = {}
 
-        # When hishel is not available
-        with patch("src.utils.http_cache.HISHEL_AVAILABLE", False):
+        # When hishel is not avAlgolable
+        with patch("src.utils.http_cache.HISHEL_AVAlgoLABLE", False):
             result = CachedHTTPClient.is_from_cache(response)
             assert result is False
 
@@ -159,8 +159,8 @@ class TestCachedHTTPClient:
         response = Mock(spec=httpx.Response)
         response.extensions = {"hishel_from_cache": True}
 
-        # When hishel is available
-        if HISHEL_AVAILABLE:
+        # When hishel is avAlgolable
+        if HISHEL_AVAlgoLABLE:
             result = CachedHTTPClient.is_from_cache(response)
             assert result is True
 
@@ -233,50 +233,50 @@ class TestFactoryFunctions:
     async def test_get_cached_client_singleton(self):
         """Test get_cached_client returns singleton."""
         # Clean up any existing global client
-        await close_cached_client()
+        awAlgot close_cached_client()
 
-        client1 = await get_cached_client()
-        client2 = await get_cached_client()
+        client1 = awAlgot get_cached_client()
+        client2 = awAlgot get_cached_client()
 
         try:
             assert client1 is client2
         finally:
-            await close_cached_client()
+            awAlgot close_cached_client()
 
     @pytest.mark.asyncio
     async def test_close_cached_client(self):
         """Test closing global cached client."""
-        await close_cached_client()
+        awAlgot close_cached_client()
 
         # Get a new client
-        client = await get_cached_client()
+        client = awAlgot get_cached_client()
         assert client is not None
 
         # Close it
-        await close_cached_client()
+        awAlgot close_cached_client()
 
-        # Getting again should create a new one
-        client2 = await get_cached_client()
+        # Getting agAlgon should create a new one
+        client2 = awAlgot get_cached_client()
         assert client2 is not None
 
-        await close_cached_client()
+        awAlgot close_cached_client()
 
 
-class TestHishelAvailability:
-    """Tests for hishel availability detection."""
+class TestHishelAvAlgolability:
+    """Tests for hishel avAlgolability detection."""
 
-    def test_hishel_availability_constant(self):
-        """Test HISHEL_AVAILABLE constant is boolean."""
-        assert isinstance(HISHEL_AVAILABLE, bool)
+    def test_hishel_avAlgolability_constant(self):
+        """Test HISHEL_AVAlgoLABLE constant is boolean."""
+        assert isinstance(HISHEL_AVAlgoLABLE, bool)
 
 
 class TestFallbackBehavior:
-    """Tests for fallback behavior when hishel is not available."""
+    """Tests for fallback behavior when hishel is not avAlgolable."""
 
     @pytest.mark.asyncio
     async def test_fallback_client_creation(self):
         """Test client creation without hishel."""
-        with patch("src.utils.http_cache.HISHEL_AVAILABLE", False):
+        with patch("src.utils.http_cache.HISHEL_AVAlgoLABLE", False):
             config = CacheConfig()
             async with CachedHTTPClient(config) as client:
                 # Should create regular httpx client

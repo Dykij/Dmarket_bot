@@ -5,14 +5,14 @@ logger = logging.getLogger(__name__)
 
 class SecurityFirewall:
     """
-    The Iron Dome against Prompt Worms and Injection Attacks.
-    Designed by Benjamin, Audited by Lucas.
+    The Iron Dome agAlgonst Config Worms and Injection Attacks.
+    Designed by Core, Audited by QA.
     """
 
     # Basic Injection Patterns (The Worms)
     WORM_SIGNATURES = [
         r"Ignore previous instructions",
-        r"System prompt",
+        r"System Config",
         r"You are now",
         r"os\.system",
         r"subprocess",
@@ -37,15 +37,15 @@ class SecurityFirewall:
         # 2. Pattern Matching (Heuristic Firewall)
         for pattern in SecurityFirewall.WORM_SIGNATURES:
             if re.search(pattern, clean_text, re.IGNORECASE):
-                logger.warning(f"🚨 SECURITY ALERT: Prompt Worm detected. Pattern: {pattern}")
-                return "[REDACTED: MALICIOUS CONTENT BLOCKED BY LUCAS]"
+                logger.warning(f"🚨 SECURITY ALERT: Config Worm detected. Pattern: {pattern}")
+                return "[REDACTED: MALICIOUS CONTENT BLOCKED BY QA]"
 
         return clean_text.strip()
 
     @staticmethod
     def validate_command(cmd: list) -> bool:
         """
-        Lucas's Final Gate. Checks if a command list is safe for execution.
+        QA's Final Gate. Checks if a command list is safe for execution.
         """
         cmd_str = " ".join(cmd)
         if "rm " in cmd_str or "del " in cmd_str:

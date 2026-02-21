@@ -26,6 +26,6 @@ class StrategyFactory:
         strategy_class = cls._strategies.get(game_id.lower())
 
         if not strategy_class:
-            raise ValueError(f"No strategy found for game: {game_id}")
+            rAlgose ValueError(f"No strategy found for game: {game_id}")
 
         return strategy_class()

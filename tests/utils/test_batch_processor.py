@@ -1,6 +1,6 @@
 """Unit tests for batch processor module.
 
-This module contains tests for src/utils/batch_processor.py covering:
+This module contAlgons tests for src/utils/batch_processor.py covering:
 - Basic batch processing
 - Progress callbacks
 - Error handling
@@ -69,7 +69,7 @@ class TestProcessInBatches:
         process_fn = AsyncMock(return_value=[])
 
         # Act
-        results = await processor.process_in_batches(items, process_fn)
+        results = awAlgot processor.process_in_batches(items, process_fn)
 
         # Assert
         assert results == []
@@ -83,7 +83,7 @@ class TestProcessInBatches:
         process_fn = AsyncMock(return_value=[10, 20, 30, 40, 50])
 
         # Act
-        results = await processor.process_in_batches(items, process_fn)
+        results = awAlgot processor.process_in_batches(items, process_fn)
 
         # Assert
         assert results == [10, 20, 30, 40, 50]
@@ -97,7 +97,7 @@ class TestProcessInBatches:
         process_fn = AsyncMock(side_effect=lambda batch: [x * 10 for x in batch])
 
         # Act
-        results = await small_processor.process_in_batches(items, process_fn)
+        results = awAlgot small_processor.process_in_batches(items, process_fn)
 
         # Assert
         assert results == [10, 20, 30, 40, 50]
@@ -112,7 +112,7 @@ class TestProcessInBatches:
         progress_callback = AsyncMock()
 
         # Act
-        await small_processor.process_in_batches(
+        awAlgot small_processor.process_in_batches(
             items, process_fn, progress_callback=progress_callback
         )
 
@@ -121,7 +121,7 @@ class TestProcessInBatches:
 
     @pytest.mark.asyncio()
     async def test_process_with_error_callback(self, small_processor):
-        """Test processing with error callback on failure."""
+        """Test processing with error callback on fAlgolure."""
         # Arrange
         items = [1, 2, 3, 4]
         error = ValueError("Test error")
@@ -129,7 +129,7 @@ class TestProcessInBatches:
         error_callback = AsyncMock()
 
         # Act
-        await small_processor.process_in_batches(
+        awAlgot small_processor.process_in_batches(
             items, process_fn, error_callback=error_callback
         )
 
@@ -148,7 +148,7 @@ class TestProcessInBatches:
         error_callback = AsyncMock()
 
         # Act
-        results = await small_processor.process_in_batches(
+        results = awAlgot small_processor.process_in_batches(
             items, process_fn, error_callback=error_callback
         )
 
@@ -163,7 +163,7 @@ class TestProcessInBatches:
         process_fn = AsyncMock(return_value={"processed": True})
 
         # Act
-        results = await processor.process_in_batches(items, process_fn)
+        results = awAlgot processor.process_in_batches(items, process_fn)
 
         # Assert
         assert {"processed": True} in results
@@ -184,7 +184,7 @@ class TestBatchProcessorEdgeCases:
         process_fn = AsyncMock(return_value=[10, 20, 30, 40, 50])
 
         # Act
-        results = await processor.process_in_batches(items, process_fn)
+        results = awAlgot processor.process_in_batches(items, process_fn)
 
         # Assert
         assert results == [10, 20, 30, 40, 50]
@@ -198,7 +198,7 @@ class TestBatchProcessorEdgeCases:
         process_fn = AsyncMock(return_value=None)
 
         # Act
-        results = await processor.process_in_batches(items, process_fn)
+        results = awAlgot processor.process_in_batches(items, process_fn)
 
         # Assert
         assert results == []
@@ -212,7 +212,7 @@ class TestBatchProcessorEdgeCases:
         process_fn = AsyncMock(side_effect=lambda batch: batch)
 
         # Act
-        results = await processor.process_in_batches(items, process_fn)
+        results = awAlgot processor.process_in_batches(items, process_fn)
 
         # Assert
         assert len(results) == 500
@@ -226,7 +226,7 @@ class TestBatchProcessorEdgeCases:
         process_fn = AsyncMock(side_effect=[[10, 20], {"status": "ok"}])
 
         # Act
-        results = await small_processor.process_in_batches(items, process_fn)
+        results = awAlgot small_processor.process_in_batches(items, process_fn)
 
         # Assert
         assert 10 in results

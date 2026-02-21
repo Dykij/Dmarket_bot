@@ -22,7 +22,7 @@ class TestDMarketAPIModule:
 
             assert dmarket_api is not None
         except ImportError:
-            pytest.skip("dmarket_api module not available")
+            pytest.skip("dmarket_api module not avAlgolable")
 
     def test_dmarket_api_class_exists(self):
         """Test DMarketAPI class exists."""
@@ -31,7 +31,7 @@ class TestDMarketAPIModule:
 
             assert DMarketAPI is not None
         except ImportError:
-            pytest.skip("DMarketAPI not available")
+            pytest.skip("DMarketAPI not avAlgolable")
 
     @pytest.mark.asyncio
     async def test_dmarket_api_init(self):
@@ -45,7 +45,7 @@ class TestDMarketAPIModule:
             )
             assert api is not None
         except (ImportError, Exception):
-            pytest.skip("DMarketAPI not available")
+            pytest.skip("DMarketAPI not avAlgolable")
 
     @pytest.mark.asyncio
     async def test_dmarket_api_get_balance(self):
@@ -69,7 +69,7 @@ class TestDMarketAPIModule:
                 )
                 # Would call get_balance here
             except (ImportError, Exception):
-                pytest.skip("DMarketAPI not available")
+                pytest.skip("DMarketAPI not avAlgolable")
 
     @pytest.mark.asyncio
     async def test_dmarket_api_authentication(self):
@@ -84,7 +84,7 @@ class TestDMarketAPIModule:
             # API should create auth headers
             assert api is not None
         except (ImportError, Exception):
-            pytest.skip("DMarketAPI not available")
+            pytest.skip("DMarketAPI not avAlgolable")
 
 
 # ============================================================================
@@ -102,7 +102,7 @@ class TestArbitrageScannerModule:
 
             assert arbitrage_scanner is not None
         except ImportError:
-            pytest.skip("arbitrage_scanner module not available")
+            pytest.skip("arbitrage_scanner module not avAlgolable")
 
     def test_arbitrage_scanner_class_exists(self):
         """Test ArbitrageScanner class exists."""
@@ -111,7 +111,7 @@ class TestArbitrageScannerModule:
 
             assert ArbitrageScanner is not None
         except ImportError:
-            pytest.skip("ArbitrageScanner not available")
+            pytest.skip("ArbitrageScanner not avAlgolable")
 
     @pytest.mark.asyncio
     async def test_arbitrage_scanner_init(self):
@@ -123,7 +123,7 @@ class TestArbitrageScannerModule:
             scanner = ArbitrageScanner(api_client=mock_api)
             assert scanner is not None
         except (ImportError, Exception):
-            pytest.skip("ArbitrageScanner not available")
+            pytest.skip("ArbitrageScanner not avAlgolable")
 
     @pytest.mark.asyncio
     async def test_arbitrage_scanner_scan_level(self):
@@ -136,7 +136,7 @@ class TestArbitrageScannerModule:
             scanner = ArbitrageScanner(api_client=mock_api)
             # Would call scan_level here
         except (ImportError, Exception):
-            pytest.skip("ArbitrageScanner not available")
+            pytest.skip("ArbitrageScanner not avAlgolable")
 
 
 # ============================================================================
@@ -154,7 +154,7 @@ class TestArbitrageModule:
 
             assert arbitrage is not None
         except ImportError:
-            pytest.skip("arbitrage module not available")
+            pytest.skip("arbitrage module not avAlgolable")
 
 
 # ============================================================================
@@ -172,7 +172,7 @@ class TestTargetsModule:
 
             assert targets is not None
         except ImportError:
-            pytest.skip("targets module not available")
+            pytest.skip("targets module not avAlgolable")
 
     def test_target_manager_exists(self):
         """Test TargetManager class exists."""
@@ -181,7 +181,7 @@ class TestTargetsModule:
 
             assert TargetManager is not None
         except ImportError:
-            pytest.skip("TargetManager not available")
+            pytest.skip("TargetManager not avAlgolable")
 
 
 # ============================================================================
@@ -199,7 +199,7 @@ class TestGameFiltersModule:
 
             assert game_filters is not None
         except ImportError:
-            pytest.skip("game_filters module not available")
+            pytest.skip("game_filters module not avAlgolable")
 
     def test_supported_game_enum(self):
         """Test SupportedGame enum exists."""
@@ -209,7 +209,7 @@ class TestGameFiltersModule:
             assert SupportedGame.CSGO is not None
             assert SupportedGame.DOTA2 is not None
         except (ImportError, AttributeError):
-            pytest.skip("SupportedGame not available")
+            pytest.skip("SupportedGame not avAlgolable")
 
 
 # ============================================================================
@@ -227,7 +227,7 @@ class TestLiquidityAnalyzerModule:
 
             assert liquidity_analyzer is not None
         except ImportError:
-            pytest.skip("liquidity_analyzer module not available")
+            pytest.skip("liquidity_analyzer module not avAlgolable")
 
 
 # ============================================================================
@@ -245,7 +245,7 @@ class TestMarketAnalysisModule:
 
             assert market_analysis is not None
         except ImportError:
-            pytest.skip("market_analysis module not available")
+            pytest.skip("market_analysis module not avAlgolable")
 
 
 # ============================================================================
@@ -263,7 +263,7 @@ class TestSalesHistoryModule:
 
             assert sales_history is not None
         except ImportError:
-            pytest.skip("sales_history module not available")
+            pytest.skip("sales_history module not avAlgolable")
 
 
 # ============================================================================
@@ -281,7 +281,7 @@ class TestSchemasModule:
 
             assert schemas is not None
         except ImportError:
-            pytest.skip("schemas module not available")
+            pytest.skip("schemas module not avAlgolable")
 
     def test_item_schema(self):
         """Test Item schema exists."""
@@ -295,7 +295,7 @@ class TestSchemasModule:
             )
             assert item.itemId == "test_id"
         except (ImportError, Exception):
-            pytest.skip("DMarketItem not available")
+            pytest.skip("DMarketItem not avAlgolable")
 
 
 # ============================================================================
@@ -313,7 +313,7 @@ class TestCrossPlatformArbitrageModule:
 
             assert cross_platform_arbitrage is not None
         except ImportError:
-            pytest.skip("cross_platform_arbitrage module not available")
+            pytest.skip("cross_platform_arbitrage module not avAlgolable")
 
 
 # ============================================================================
@@ -331,7 +331,7 @@ class TestScannerLevelsModule:
 
             assert levels is not None
         except ImportError:
-            pytest.skip("scanner.levels module not available")
+            pytest.skip("scanner.levels module not avAlgolable")
 
     def test_levels_config(self):
         """Test LEVELS configuration exists."""
@@ -342,7 +342,7 @@ class TestScannerLevelsModule:
             # Should have multiple levels
             assert len(LEVELS) > 0
         except (ImportError, AttributeError):
-            pytest.skip("LEVELS not available")
+            pytest.skip("LEVELS not avAlgolable")
 
     def test_level_values(self):
         """Test each level has required fields."""
@@ -372,7 +372,7 @@ class TestScannerFiltersModule:
 
             assert filters is not None
         except ImportError:
-            pytest.skip("scanner.filters module not available")
+            pytest.skip("scanner.filters module not avAlgolable")
 
 
 # ============================================================================
@@ -390,7 +390,7 @@ class TestArbitrageTraderModule:
 
             assert trader is not None
         except ImportError:
-            pytest.skip("arbitrage.trader module not available")
+            pytest.skip("arbitrage.trader module not avAlgolable")
 
 
 # ============================================================================
@@ -408,7 +408,7 @@ class TestWaxpeerModule:
 
             assert waxpeer is not None
         except ImportError:
-            pytest.skip("waxpeer module not available")
+            pytest.skip("waxpeer module not avAlgolable")
 
     def test_waxpeer_api_import(self):
         """Test waxpeer_api module can be imported."""
@@ -417,7 +417,7 @@ class TestWaxpeerModule:
 
             assert waxpeer_api is not None
         except ImportError:
-            pytest.skip("waxpeer_api module not available")
+            pytest.skip("waxpeer_api module not avAlgolable")
 
 
 # ============================================================================
@@ -443,7 +443,7 @@ class TestDMarketIntegration:
             scanner = ArbitrageScanner(api_client=mock_api)
             assert scanner is not None
         except (ImportError, Exception):
-            pytest.skip("Integration test not available")
+            pytest.skip("Integration test not avAlgolable")
 
     @pytest.mark.asyncio
     async def test_api_with_circuit_breaker(self):
@@ -456,7 +456,7 @@ class TestDMarketIntegration:
             assert DMarketAPI is not None
             assert APICircuitBreaker is not None
         except ImportError:
-            pytest.skip("Integration test not available")
+            pytest.skip("Integration test not avAlgolable")
 
 
 # ============================================================================
@@ -476,7 +476,7 @@ class TestDMarketEdgeCases:
             api = DMarketAPI(public_key="", secret_key="")
             assert api is not None
         except (ImportError, Exception):
-            pass  # May raise validation error, which is expected
+            pass  # May rAlgose validation error, which is expected
 
     def test_invalid_level_name(self):
         """Test handling of invalid level names."""
@@ -486,7 +486,7 @@ class TestDMarketEdgeCases:
             # Invalid level should not exist
             assert "invalid_level" not in LEVELS
         except ImportError:
-            pytest.skip("LEVELS not available")
+            pytest.skip("LEVELS not avAlgolable")
 
     @pytest.mark.asyncio
     async def test_empty_market_response(self):
@@ -499,7 +499,7 @@ class TestDMarketEdgeCases:
             scanner = ArbitrageScanner(api_client=mock_api)
             # Scanner should handle empty responses
         except (ImportError, Exception):
-            pytest.skip("Scanner not available")
+            pytest.skip("Scanner not avAlgolable")
 
     @pytest.mark.asyncio
     async def test_api_timeout_handling(self):
@@ -514,4 +514,4 @@ class TestDMarketEdgeCases:
             # API should have timeout configured
             assert api is not None
         except (ImportError, Exception):
-            pytest.skip("DMarketAPI not available")
+            pytest.skip("DMarketAPI not avAlgolable")

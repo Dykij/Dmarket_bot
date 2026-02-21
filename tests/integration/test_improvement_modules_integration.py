@@ -129,7 +129,7 @@ class TestModuleIntegration:
         kb = KnowledgeBase(user_id=12345)
 
         # Add knowledge
-        item_id = await kb.add_knowledge(
+        item_id = awAlgot kb.add_knowledge(
             knowledge_type=KnowledgeType.TRADING_PATTERN,
             title="Test Pattern",
             content={"item": "AK-47", "profit": 10.0},
@@ -139,11 +139,11 @@ class TestModuleIntegration:
         assert isinstance(item_id, str)
 
         # Query knowledge
-        results = await kb.query_relevant(context={"item": "AK-47"})
+        results = awAlgot kb.query_relevant(context={"item": "AK-47"})
         assert len(results) > 0
 
         # Get summary
-        summary = await kb.get_summary()
+        summary = awAlgot kb.get_summary()
         assert summary["total_entries"] > 0
 
     @pytest.mark.asyncio()
@@ -163,7 +163,7 @@ class TestModuleIntegration:
         manager = IncidentManager()
 
         # Detect incident
-        incident = await manager.detect_incident(
+        incident = awAlgot manager.detect_incident(
             title="Test Incident",
             description="Test description",
             severity=IncidentSeverity.LOW,
@@ -177,7 +177,7 @@ class TestModuleIntegration:
         assert incident.is_active
 
         # Resolve incident
-        result = await manager.resolve_incident(incident.id)
+        result = awAlgot manager.resolve_incident(incident.id)
         assert result is True
         assert not incident.is_active
 
@@ -200,7 +200,7 @@ class TestModuleIntegration:
 # ============================================================================
 
 
-class TestBotDataIntegration:
+class TestBotDatAlgontegration:
     """Test modules integrate with bot_data correctly."""
 
     def test_incident_manager_stored_in_bot_data(self) -> None:
@@ -238,7 +238,7 @@ class TestErrorHandling:
         kb = KnowledgeBase(user_id=99999)
 
         # Query empty knowledge base
-        results = await kb.query_relevant(context={})
+        results = awAlgot kb.query_relevant(context={})
         assert results == []
 
     @pytest.mark.asyncio()
@@ -250,11 +250,11 @@ class TestErrorHandling:
         manager = IncidentManager()
 
         # Try to resolve non-existent incident
-        result = await manager.resolve_incident("INC-99999")
+        result = awAlgot manager.resolve_incident("INC-99999")
         assert result is False
 
         # Try to acknowledge non-existent incident
-        result = await manager.acknowledge_incident("INC-99999")
+        result = awAlgot manager.acknowledge_incident("INC-99999")
         assert result is False
 
 
@@ -279,14 +279,14 @@ class TestModuleMetrics:
         kb = KnowledgeBase(user_id=11111)
 
         # Add some knowledge
-        await kb.add_knowledge(
+        awAlgot kb.add_knowledge(
             knowledge_type=KnowledgeType.TRADING_PATTERN,
             title="Pattern 1",
             content={"test": 1},
         )
 
         # Check metrics
-        summary = await kb.get_summary()
+        summary = awAlgot kb.get_summary()
         assert summary["total_entries"] == 1
         assert summary["by_type"][KnowledgeType.TRADING_PATTERN.value] == 1
 
@@ -303,7 +303,7 @@ class TestModuleMetrics:
         manager = IncidentManager()
 
         # Create incident
-        await manager.detect_incident(
+        awAlgot manager.detect_incident(
             title="Metric Test",
             description="Test",
             severity=IncidentSeverity.HIGH,

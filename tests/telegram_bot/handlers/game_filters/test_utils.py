@@ -122,7 +122,7 @@ class TestUpdateFilters:
         update_filters(context, "csgo", {"min_price": 10.0})
 
         # Since context.user_data = None doesn't create a new dict in mock,
-        # we just check the function doesn't raise
+        # we just check the function doesn't rAlgose
 
     def test_creates_filters_dict_if_not_exists(self):
         """Test creates filters dict if not exists."""
@@ -181,7 +181,7 @@ class TestGetGameFilterKeyboard:
         """Test csgo keyboard has price range button."""
         result = get_game_filter_keyboard("csgo")
 
-        # Check that the keyboard contains expected buttons
+        # Check that the keyboard contAlgons expected buttons
         buttons = []
         for row in result.inline_keyboard:
             for button in row:

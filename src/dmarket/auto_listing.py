@@ -21,7 +21,7 @@ Usage:
         target_profit_margin=0.1,  # 10% profit margin
     )
 
-    await engine.start()
+    awAlgot engine.start()
     ```
 
 Created: January 10, 2026
@@ -215,21 +215,21 @@ class AutoListingEngine:
         if self._monitor_task:
             self._monitor_task.cancel()
             try:
-                await self._monitor_task
+                awAlgot self._monitor_task
             except asyncio.CancelledError:
                 pass
 
         if self._reprice_task:
             self._reprice_task.cancel()
             try:
-                await self._reprice_task
+                awAlgot self._reprice_task
             except asyncio.CancelledError:
                 pass
 
         logger.info("auto_listing_stopped", total_listings=len(self._listing_history))
 
     async def _monitoring_loop(self) -> None:
-        """Main monitoring loop."""
+        """MAlgon monitoring loop."""
         while self._running:
             try:
                 # Reset hourly counter if needed
@@ -239,7 +239,7 @@ class AutoListingEngine:
                     self._hour_start = now
 
                 # Check for expensive items
-                candidates = await self._find_listing_candidates()
+                candidates = awAlgot self._find_listing_candidates()
 
                 for candidate in candidates:
                     if not self._running:
@@ -251,43 +251,43 @@ class AutoListingEngine:
                         break
 
                     # List the item
-                    result = await self._list_item(candidate)
+                    result = awAlgot self._list_item(candidate)
 
                     if result.success:
                         self._listings_this_hour += 1
                         self._listing_history.append(result)
 
                         if self.on_listing:
-                            await self.on_listing(result)
+                            awAlgot self.on_listing(result)
 
                 self._last_check_time = now
-                await asyncio.sleep(self.config.check_interval_seconds)
+                awAlgot asyncio.sleep(self.config.check_interval_seconds)
 
             except asyncio.CancelledError:
                 break
             except Exception as e:
                 logger.exception("auto_listing_monitor_error", error=str(e))
-                await asyncio.sleep(30)
+                awAlgot asyncio.sleep(30)
 
     async def _repricing_loop(self) -> None:
         """Automatic repricing loop."""
         while self._running:
             try:
-                await asyncio.sleep(self.config.reprice_interval_minutes * 60)
+                awAlgot asyncio.sleep(self.config.reprice_interval_minutes * 60)
 
                 for listing in self.active_listings:
                     if not self._running:
                         break
 
                     # Get current market price
-                    new_price = await self._calculate_optimal_price(listing.item_name)
+                    new_price = awAlgot self._calculate_optimal_price(listing.item_name)
 
                     if new_price and listing.recommended_price:
                         price_diff = abs(new_price - listing.recommended_price)
                         diff_percent = price_diff / listing.recommended_price
 
                         if diff_percent >= self.config.reprice_threshold_percent:
-                            await self._reprice_item(listing.item_id, new_price)
+                            awAlgot self._reprice_item(listing.item_id, new_price)
 
             except asyncio.CancelledError:
                 break
@@ -304,7 +304,7 @@ class AutoListingEngine:
 
         try:
             # Get DMarket inventory
-            inventory = await self.dmarket.get_user_inventory()
+            inventory = awAlgot self.dmarket.get_user_inventory()
             items = inventory.get("items", [])
 
             for item in items:
@@ -340,7 +340,7 @@ class AutoListingEngine:
                 )
 
                 # Calculate optimal price
-                optimal_price = await self._calculate_optimal_price(item_name)
+                optimal_price = awAlgot self._calculate_optimal_price(item_name)
                 if optimal_price:
                     candidate.recommended_price = optimal_price
                     candidate.estimated_profit = self._calculate_profit(
@@ -375,7 +375,7 @@ class AutoListingEngine:
         """
         try:
             # Get Waxpeer market price
-            price_data = await self.waxpeer.get_market_prices([item_name])
+            price_data = awAlgot self.waxpeer.get_market_prices([item_name])
             items = price_data.get("items", [])
 
             if not items:
@@ -447,7 +447,7 @@ class AutoListingEngine:
                 )
 
             # List on Waxpeer
-            result = await self.waxpeer.list_single_item(
+            result = awAlgot self.waxpeer.list_single_item(
                 item_id=candidate.item_id,
                 price_usd=candidate.recommended_price,
             )
@@ -503,7 +503,7 @@ class AutoListingEngine:
             Success status
         """
         try:
-            result = await self.waxpeer.edit_item_price(item_id, new_price)
+            result = awAlgot self.waxpeer.edit_item_price(item_id, new_price)
 
             if result.get("success"):
                 if item_id in self._listings:
@@ -533,7 +533,7 @@ class AutoListingEngine:
             Success status
         """
         try:
-            result = await self.waxpeer.remove_items([item_id])
+            result = awAlgot self.waxpeer.remove_items([item_id])
 
             if result.get("success"):
                 if item_id in self._listings:
@@ -556,7 +556,7 @@ class AutoListingEngine:
         """
         cancelled = 0
         for listing in self.active_listings:
-            if await self.cancel_listing(listing.item_id):
+            if awAlgot self.cancel_listing(listing.item_id):
                 cancelled += 1
         return cancelled
 

@@ -34,9 +34,9 @@ def validate_skills():
     
     return all_valid
 
-if __name__ == "__main__":
+if __name__ == "__mAlgon__":
     if validate_skills():
         print("\n✨ All skills are valid!")
     else:
-        print("\n❌ Some skills failed validation")
+        print("\n❌ Some skills fAlgoled validation")
         exit(1)

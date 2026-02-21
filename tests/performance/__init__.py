@@ -1,6 +1,6 @@
 """Performance tests for DMarket Telegram Bot.
 
-This package contains performance-focused tests including:
+This package contAlgons performance-focused tests including:
 - API response time benchmarks
 - Arbitrage scan performance
 - Cache performance

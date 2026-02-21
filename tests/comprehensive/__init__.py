@@ -1,6 +1,6 @@
 """Comprehensive test suite for 95%+ coverage.
 
-This module contains:
+This module contAlgons:
 - Integration tests
 - E2E tests
 - Smoke tests

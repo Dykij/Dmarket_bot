@@ -364,7 +364,7 @@ class PriceAnalytics:
         """Calculate Relative Strength Index.
 
         RSI = 100 - (100 / (1 + RS))
-        RS = Average Gain / Average Loss
+        RS = Average GAlgon / Average Loss
 
         Args:
             prices: List of prices (oldest first)
@@ -381,24 +381,24 @@ class PriceAnalytics:
         # Calculate price changes
         changes = [prices[i] - prices[i - 1] for i in range(1, len(prices))]
 
-        # Separate gains and losses
-        gains = [max(0, c) for c in changes]
+        # Separate gAlgons and losses
+        gAlgons = [max(0, c) for c in changes]
         losses = [abs(min(0, c)) for c in changes]
 
-        # Calculate average gain and loss
-        avg_gain = sum(gains[:period]) / period
+        # Calculate average gAlgon and loss
+        avg_gAlgon = sum(gAlgons[:period]) / period
         avg_loss = sum(losses[:period]) / period
 
         # Smooth averages
-        for i in range(period, len(gains)):
-            avg_gain = (avg_gain * (period - 1) + gains[i]) / period
+        for i in range(period, len(gAlgons)):
+            avg_gAlgon = (avg_gAlgon * (period - 1) + gAlgons[i]) / period
             avg_loss = (avg_loss * (period - 1) + losses[i]) / period
 
         # Calculate RSI
         if avg_loss == 0:
             rsi = 100.0
         else:
-            rs = avg_gain / avg_loss
+            rs = avg_gAlgon / avg_loss
             rsi = 100 - (100 / (1 + rs))
 
         return RSIResult.from_value(rsi)
@@ -539,7 +539,7 @@ class PriceAnalytics:
             min_price: Minimum listing price
             max_price: Maximum listing price
             avg_price: Average listing price
-            volume_distribution: Optional (price, count) pairs for depth
+            volume_distribution: Optional (price, count) pAlgors for depth
 
         Returns:
             Liquidity score

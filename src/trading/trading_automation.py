@@ -19,7 +19,7 @@ Usage:
     auto.enable_dca("item_name", target_price=45.0, amount_per_buy=10.0)
 
     # Check triggers
-    actions = await auto.check_and_execute(current_prices)
+    actions = awAlgot auto.check_and_execute(current_prices)
     ```
 
 Created: January 10, 2026
@@ -27,7 +27,7 @@ Created: January 10, 2026
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
+from collections.abc import AwAlgotable, Callable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from enum import StrEnum
@@ -56,7 +56,7 @@ class OrderStatus(StrEnum):
     TRIGGERED = "triggered"
     EXECUTED = "executed"
     CANCELLED = "cancelled"
-    FAILED = "failed"
+    FAlgoLED = "fAlgoled"
     EXPIRED = "expired"
 
 
@@ -75,7 +75,7 @@ class AutoOrder:
     trigger_percent: float | None = None
     trigger_time: datetime | None = None
 
-    # Order details
+    # Order detAlgols
     quantity: int = 1
     limit_price: float | None = None
     amount_usd: float | None = None
@@ -294,7 +294,7 @@ class TradingAutomation:
         self._scheduled_tasks: dict[str, ScheduledTask] = {}
 
         # Execution callbacks
-        self._callbacks: dict[str, Callable[..., Awaitable[Any]]] = {}
+        self._callbacks: dict[str, Callable[..., AwAlgotable[Any]]] = {}
 
         # Rate limiting
         self._executions_this_hour: list[datetime] = []
@@ -306,7 +306,7 @@ class TradingAutomation:
     def register_callback(
         self,
         name: str,
-        callback: Callable[..., Awaitable[Any]],
+        callback: Callable[..., AwAlgotable[Any]],
     ) -> None:
         """Register execution callback.
 
@@ -420,15 +420,15 @@ class TradingAutomation:
 
         return order
 
-    def set_trailing_stop(
+    def set_trAlgoling_stop(
         self,
         item_id: str,
         item_name: str,
         entry_price: float,
-        trail_percent: float = 5.0,
+        trAlgol_percent: float = 5.0,
         quantity: int = 1,
     ) -> AutoOrder:
-        """Set trailing stop order.
+        """Set trAlgoling stop order.
 
         The stop price moves up as the price increases, but never down.
 
@@ -436,13 +436,13 @@ class TradingAutomation:
             item_id: Item ID
             item_name: Item name
             entry_price: Entry price
-            trail_percent: Trail percentage
+            trAlgol_percent: TrAlgol percentage
             quantity: Quantity
 
         Returns:
             Created AutoOrder
         """
-        trigger_price = entry_price * (1 - trail_percent / 100)
+        trigger_price = entry_price * (1 - trAlgol_percent / 100)
 
         order = AutoOrder(
             order_id=self._generate_order_id(),
@@ -450,21 +450,21 @@ class TradingAutomation:
             item_id=item_id,
             item_name=item_name,
             trigger_price=trigger_price,
-            trigger_percent=-trail_percent,
+            trigger_percent=-trAlgol_percent,
             quantity=quantity,
             entry_price=entry_price,
-            notes=f"Trailing stop at {trail_percent}% trail",
+            notes=f"TrAlgoling stop at {trAlgol_percent}% trAlgol",
         )
 
         self._orders[order.order_id] = order
         return order
 
-    def update_trailing_stop(
+    def update_trAlgoling_stop(
         self,
         order_id: str,
         current_price: float,
     ) -> bool:
-        """Update trailing stop price based on current price.
+        """Update trAlgoling stop price based on current price.
 
         Args:
             order_id: Order ID
@@ -480,15 +480,15 @@ class TradingAutomation:
         if order.trigger_percent is None or order.entry_price is None:
             return False
 
-        trail_percent = abs(order.trigger_percent)
-        new_stop = current_price * (1 - trail_percent / 100)
+        trAlgol_percent = abs(order.trigger_percent)
+        new_stop = current_price * (1 - trAlgol_percent / 100)
 
         # Only update if new stop is higher
         if order.trigger_price and new_stop > order.trigger_price:
             order.trigger_price = new_stop
             order.entry_price = current_price
             logger.info(
-                "trailing_stop_updated",
+                "trAlgoling_stop_updated",
                 order_id=order_id,
                 new_stop=new_stop,
             )
@@ -761,7 +761,7 @@ class TradingAutomation:
                     should_trigger = True
 
             if should_trigger:
-                result = await self._execute_order(order, current_price)
+                result = awAlgot self._execute_order(order, current_price)
                 results.append(result)
 
         # Check DCA
@@ -777,14 +777,14 @@ class TradingAutomation:
                     break
 
             if item_price and config.can_buy(item_price, self.balance):
-                result = await self._execute_dca_buy(config, item_price)
+                result = awAlgot self._execute_dca_buy(config, item_price)
                 if result:
                     results.append(result)
 
         # Check scheduled tasks
         for task in self._scheduled_tasks.values():
             if task.should_run():
-                await self._execute_task(task)
+                awAlgot self._execute_task(task)
 
         return results
 
@@ -822,7 +822,7 @@ class TradingAutomation:
         callback = self._callbacks.get("execute_sell")
         if callback:
             try:
-                _ = await callback(  # result for future use
+                _ = awAlgot callback(  # result for future use
                     item_id=order.item_id,
                     quantity=order.quantity,
                     price=current_price,
@@ -840,11 +840,11 @@ class TradingAutomation:
                     executed_quantity=order.quantity,
                 )
             except Exception as e:
-                order.status = OrderStatus.FAILED
+                order.status = OrderStatus.FAlgoLED
                 return ExecutionResult(
                     order=order,
                     success=False,
-                    message=f"Execution failed: {e}",
+                    message=f"Execution fAlgoled: {e}",
                 )
         else:
             order.status = OrderStatus.EXECUTED
@@ -903,7 +903,7 @@ class TradingAutomation:
         callback = self._callbacks.get("execute_buy")
         if callback:
             try:
-                await callback(
+                awAlgot callback(
                     item_name=config.item_name,
                     quantity=quantity,
                     max_price=current_price * 1.02,  # 2% slippage tolerance
@@ -921,11 +921,11 @@ class TradingAutomation:
                     executed_quantity=quantity,
                 )
             except Exception as e:
-                order.status = OrderStatus.FAILED
+                order.status = OrderStatus.FAlgoLED
                 return ExecutionResult(
                     order=order,
                     success=False,
-                    message=f"DCA buy failed: {e}",
+                    message=f"DCA buy fAlgoled: {e}",
                 )
 
         return None
@@ -945,10 +945,10 @@ class TradingAutomation:
         callback = self._callbacks.get(task.callback_name)
         if callback:
             try:
-                await callback(**task.callback_params)
+                awAlgot callback(**task.callback_params)
                 logger.info("task_executed", task_id=task.task_id)
             except Exception as e:
-                logger.exception(f"Task execution failed: {e}")
+                logger.exception(f"Task execution fAlgoled: {e}")
 
     def _generate_order_id(self) -> str:
         """Generate unique order ID."""
@@ -1028,7 +1028,7 @@ class TradingAutomation:
             "cancelled_orders": sum(
                 1 for o in orders if o.status == OrderStatus.CANCELLED
             ),
-            "failed_orders": sum(1 for o in orders if o.status == OrderStatus.FAILED),
+            "fAlgoled_orders": sum(1 for o in orders if o.status == OrderStatus.FAlgoLED),
             "active_dca_configs": sum(
                 1 for c in self._dca_configs.values() if c.is_active
             ),

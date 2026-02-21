@@ -34,13 +34,13 @@ cp .env.example .env
 
 ```bash
 # Запустить бота
-python -m src.main
+python -m src.mAlgon
 ```
 
 ## 📚 Навигация
 
-- **[Быстрый старт](guides/installation.md)** - Установка и настройка за 5 минут
-- **[Telegram UI](telegram-ui/main-menu.md)** - Описание интерфейса бота
+- **[Быстрый старт](guides/installation.md)** - Установка и настSwarmка за 5 минут
+- **[Telegram UI](telegram-ui/mAlgon-menu.md)** - Описание интерфейса бота
 - **[Арбитраж](guides/arbitrage.md)** - Как использовать арбитраж
 - **[API Reference](api/overview.md)** - Документация API
 
@@ -95,8 +95,8 @@ python -m src.main
 
 - **GitHub Issues**: [Создать issue](https://github.com/Dykij/DMarket-Telegram-Bot/issues)
 - **Telegram**: @your_support_bot
-- **Email**: support@example.com
+- **EmAlgol**: support@example.com
 
 ## 📄 Лицензия
 
-MIT License - см. [LICENSE](https://github.com/Dykij/DMarket-Telegram-Bot/blob/main/LICENSE)
+MIT License - см. [LICENSE](https://github.com/Dykij/DMarket-Telegram-Bot/blob/mAlgon/LICENSE)

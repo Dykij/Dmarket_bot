@@ -14,11 +14,11 @@ Usage:
     from src.dmarket.scanner import AggregatedScanner, AttributeFilters, PresetFilters
 
     scanner = ArbitrageScanner(public_key="...", secret_key="...")
-    results = await scanner.scan_level("standard", "csgo")
+    results = awAlgot scanner.scan_level("standard", "csgo")
 
     # Fast pre-scan
     agg_scanner = AggregatedScanner(api_client)
-    opportunities = await agg_scanner.pre_scan_opportunities(
+    opportunities = awAlgot agg_scanner.pre_scan_opportunities(
         titles=["AK-47 | Redline", "AWP | Asiimov"],
         game="csgo",
         min_margin=0.15

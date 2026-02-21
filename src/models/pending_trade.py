@@ -28,7 +28,7 @@ class PendingTradeStatus(StrEnum):
     SOLD = "sold"  # Продано успешно
     CANCELLED = "cancelled"  # Отменено пользователем
     STOP_LOSS = "stop_loss"  # Продано по stop-loss
-    FAILED = "failed"  # Ошибка при обработке
+    FAlgoLED = "fAlgoled"  # Ошибка при обработке
 
 
 class PendingTrade(Base):

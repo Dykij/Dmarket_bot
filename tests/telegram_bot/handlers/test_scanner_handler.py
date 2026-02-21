@@ -99,7 +99,7 @@ def sample_arbitrage_results(sample_arbitrage_result):
 # ======================== Тесты форматирования ========================
 
 
-def test_format_scanner_item_contains_all_fields(sample_arbitrage_result):
+def test_format_scanner_item_contAlgons_all_fields(sample_arbitrage_result):
     """Тест форматирования одного результата с полными данными."""
     result = format_scanner_item(sample_arbitrage_result)
 
@@ -190,7 +190,7 @@ def test_format_scanner_results_page_number():
 @pytest.mark.asyncio()
 async def test_start_scanner_menu_with_callback_query(mock_update, mock_context):
     """Тест отображения главного меню через callback query."""
-    await start_scanner_menu(mock_update, mock_context)
+    awAlgot start_scanner_menu(mock_update, mock_context)
 
     # Проверяем answer()
     mock_update.callback_query.answer.assert_called_once()
@@ -221,7 +221,7 @@ async def test_start_scanner_menu_without_callback_query(mock_update, mock_conte
     """Тест отображения главного меню без callback query."""
     mock_update.callback_query = None
 
-    await start_scanner_menu(mock_update, mock_context)
+    awAlgot start_scanner_menu(mock_update, mock_context)
 
     # Проверяем send_message вместо edit
     mock_context.bot.send_message.assert_called_once()
@@ -234,7 +234,7 @@ async def test_start_scanner_menu_without_callback_query(mock_update, mock_conte
 @pytest.mark.asyncio()
 async def test_start_scanner_menu_has_all_level_buttons(mock_update, mock_context):
     """Тест наличия всех кнопок уровней в меню."""
-    await start_scanner_menu(mock_update, mock_context)
+    awAlgot start_scanner_menu(mock_update, mock_context)
 
     call_args = mock_update.callback_query.edit_message_text.call_args
     keyboard = call_args[1]["reply_markup"].inline_keyboard
@@ -256,7 +256,7 @@ async def test_start_scanner_menu_has_all_level_buttons(mock_update, mock_contex
 @pytest.mark.asyncio()
 async def test_start_scanner_menu_button_callbacks(mock_update, mock_context):
     """Тест правильности callback_data для кнопок."""
-    await start_scanner_menu(mock_update, mock_context)
+    awAlgot start_scanner_menu(mock_update, mock_context)
 
     call_args = mock_update.callback_query.edit_message_text.call_args
     keyboard = call_args[1]["reply_markup"].inline_keyboard
@@ -301,7 +301,7 @@ async def test_handle_level_scan_success(
     mock_keyboard.return_value = InlineKeyboardMarkup([])
 
     # Вызываем функцию
-    await handle_level_scan(mock_update, mock_context, "standard", "csgo")
+    awAlgot handle_level_scan(mock_update, mock_context, "standard", "csgo")
 
     # Проверяем вызовы
     mock_update.callback_query.answer.assert_called_once()
@@ -327,7 +327,7 @@ async def test_handle_level_scan_no_callback_query(mock_update, mock_context):
     """Тест handle_level_scan без callback query."""
     mock_update.callback_query = None
 
-    await handle_level_scan(mock_update, mock_context, "standard")
+    awAlgot handle_level_scan(mock_update, mock_context, "standard")
 
     # Функция должна завершиться без действий
     # Проверяем, что не было вызовов
@@ -336,7 +336,7 @@ async def test_handle_level_scan_no_callback_query(mock_update, mock_context):
 @pytest.mark.asyncio()
 async def test_handle_level_scan_invalid_level(mock_update, mock_context):
     """Тест handle_level_scan с неверным уровнем."""
-    await handle_level_scan(mock_update, mock_context, "invalid_level")
+    awAlgot handle_level_scan(mock_update, mock_context, "invalid_level")
 
     # Проверяем сообщение об ошибке
     mock_update.callback_query.edit_message_text.assert_called()
@@ -354,7 +354,7 @@ async def test_handle_level_scan_api_client_none(
     """Тест handle_level_scan когда API клиент не создан."""
     mock_api_client.return_value = None
 
-    await handle_level_scan(mock_update, mock_context, "standard")
+    awAlgot handle_level_scan(mock_update, mock_context, "standard")
 
     # Проверяем сообщение об ошибке
     calls = mock_update.callback_query.edit_message_text.call_args_list
@@ -377,7 +377,7 @@ async def test_handle_level_scan_no_results(
     mock_scanner.scan_level = AsyncMock(return_value=[])
     mock_scanner_class.return_value = mock_scanner
 
-    await handle_level_scan(mock_update, mock_context, "standard")
+    awAlgot handle_level_scan(mock_update, mock_context, "standard")
 
     # Проверяем сообщение о пустых результатах
     calls = mock_update.callback_query.edit_message_text.call_args_list
@@ -400,7 +400,7 @@ async def test_handle_level_scan_exception(
     mock_scanner.scan_level = AsyncMock(side_effect=Exception("API Error"))
     mock_scanner_class.return_value = mock_scanner
 
-    await handle_level_scan(mock_update, mock_context, "standard")
+    awAlgot handle_level_scan(mock_update, mock_context, "standard")
 
     # Проверяем сообщение об ошибке
     calls = mock_update.callback_query.edit_message_text.call_args_list
@@ -438,7 +438,7 @@ async def test_handle_market_overview_success(
     )
     mock_scanner_class.return_value = mock_scanner
 
-    await handle_market_overview(mock_update, mock_context, "csgo")
+    awAlgot handle_market_overview(mock_update, mock_context, "csgo")
 
     # Проверяем вызовы
     mock_update.callback_query.answer.assert_called_once()
@@ -459,7 +459,7 @@ async def test_handle_market_overview_no_callback_query(mock_update, mock_contex
     """Тест handle_market_overview без callback query."""
     mock_update.callback_query = None
 
-    await handle_market_overview(mock_update, mock_context)
+    awAlgot handle_market_overview(mock_update, mock_context)
 
     # Функция должна завершиться без действий
 
@@ -474,7 +474,7 @@ async def test_handle_market_overview_api_client_none(
     """Тест handle_market_overview когда API клиент не создан."""
     mock_api_client.return_value = None
 
-    await handle_market_overview(mock_update, mock_context)
+    awAlgot handle_market_overview(mock_update, mock_context)
 
     # Проверяем сообщение об ошибке
     calls = mock_update.callback_query.edit_message_text.call_args_list
@@ -497,7 +497,7 @@ async def test_handle_market_overview_exception(
     mock_scanner.get_market_overview = AsyncMock(side_effect=Exception("Scanner Error"))
     mock_scanner_class.return_value = mock_scanner
 
-    await handle_market_overview(mock_update, mock_context)
+    awAlgot handle_market_overview(mock_update, mock_context)
 
     # Проверяем сообщение об ошибке
     calls = mock_update.callback_query.edit_message_text.call_args_list
@@ -532,7 +532,7 @@ async def test_handle_market_overview_with_market_depth(
     )
     mock_scanner_class.return_value = mock_scanner
 
-    await handle_market_overview(mock_update, mock_context, "csgo")
+    awAlgot handle_market_overview(mock_update, mock_context, "csgo")
 
     # Проверяем вызов analyze_market_depth
     # (если интегрирован в handle_market_overview)
@@ -564,7 +564,7 @@ async def test_handle_scanner_pagination_next(
     mock_pagination.get_items_per_page.return_value = 10
     mock_keyboard.return_value = InlineKeyboardMarkup([])
 
-    await handle_scanner_pagination(mock_update, mock_context)
+    awAlgot handle_scanner_pagination(mock_update, mock_context)
 
     # Проверяем вызов next_page
     mock_pagination.next_page.assert_called_once_with(123456789)
@@ -589,7 +589,7 @@ async def test_handle_scanner_pagination_prev(
     mock_pagination.get_items_per_page.return_value = 10
     mock_keyboard.return_value = InlineKeyboardMarkup([])
 
-    await handle_scanner_pagination(mock_update, mock_context)
+    awAlgot handle_scanner_pagination(mock_update, mock_context)
 
     # Проверяем вызов prev_page
     mock_pagination.prev_page.assert_called_once_with(123456789)
@@ -600,7 +600,7 @@ async def test_handle_scanner_pagination_no_callback_query(mock_update, mock_con
     """Тест пагинации без callback query."""
     mock_update.callback_query = None
 
-    await handle_scanner_pagination(mock_update, mock_context)
+    awAlgot handle_scanner_pagination(mock_update, mock_context)
 
     # Функция должна завершиться без действий
 
@@ -610,7 +610,7 @@ async def test_handle_scanner_pagination_invalid_data(mock_update, mock_context)
     """Тест пагинации с некорректными данными."""
     mock_update.callback_query.data = "scanner_paginate:invalid"
 
-    await handle_scanner_pagination(mock_update, mock_context)
+    awAlgot handle_scanner_pagination(mock_update, mock_context)
 
     # Проверяем, что answer был вызван, но edit не был
     mock_update.callback_query.answer.assert_called_once()
@@ -621,11 +621,11 @@ async def test_handle_scanner_pagination_invalid_data(mock_update, mock_context)
 
 
 @pytest.mark.asyncio()
-async def test_handle_scanner_callback_main_menu(mock_update, mock_context):
+async def test_handle_scanner_callback_mAlgon_menu(mock_update, mock_context):
     """Тест callback для главного меню сканера."""
     mock_update.callback_query.data = SCANNER_ACTION
 
-    await handle_scanner_callback(mock_update, mock_context)
+    awAlgot handle_scanner_callback(mock_update, mock_context)
 
     # Проверяем вызов start_scanner_menu
     mock_update.callback_query.edit_message_text.assert_called()
@@ -642,7 +642,7 @@ async def test_handle_scanner_callback_level_scan(
     mock_update.callback_query.data = f"{SCANNER_ACTION}_{LEVEL_SCAN_ACTION}_boost"
     mock_level_scan.return_value = AsyncMock()
 
-    await handle_scanner_callback(mock_update, mock_context)
+    awAlgot handle_scanner_callback(mock_update, mock_context)
 
     # Проверяем вызов handle_level_scan
     mock_level_scan.assert_called_once_with(mock_update, mock_context, "boost")
@@ -659,7 +659,7 @@ async def test_handle_scanner_callback_market_overview(
     mock_update.callback_query.data = f"{SCANNER_ACTION}_{MARKET_OVERVIEW_ACTION}"
     mock_overview.return_value = AsyncMock()
 
-    await handle_scanner_callback(mock_update, mock_context)
+    awAlgot handle_scanner_callback(mock_update, mock_context)
 
     # Проверяем вызов handle_market_overview
     mock_overview.assert_called_once_with(mock_update, mock_context)
@@ -670,7 +670,7 @@ async def test_handle_scanner_callback_unknown_action(mock_update, mock_context)
     """Тест callback для неизвестного действия."""
     mock_update.callback_query.data = f"{SCANNER_ACTION}_unknown_action"
 
-    await handle_scanner_callback(mock_update, mock_context)
+    awAlgot handle_scanner_callback(mock_update, mock_context)
 
     # Проверяем, что был вызван answer с сообщением
     mock_update.callback_query.answer.assert_called_once()
@@ -683,7 +683,7 @@ async def test_handle_scanner_callback_no_callback_query(mock_update, mock_conte
     """Тест handle_scanner_callback без callback query."""
     mock_update.callback_query = None
 
-    await handle_scanner_callback(mock_update, mock_context)
+    awAlgot handle_scanner_callback(mock_update, mock_context)
 
     # Функция должна завершиться без действий
 
@@ -728,7 +728,7 @@ async def test_integration_full_scan_workflow(
     """Интеграционный тест: полный workflow сканирования."""
     # 1. Открываем главное меню
     mock_update.callback_query.data = SCANNER_ACTION
-    await handle_scanner_callback(mock_update, mock_context)
+    awAlgot handle_scanner_callback(mock_update, mock_context)
 
     # Проверяем, что меню открылось
     assert mock_update.callback_query.edit_message_text.called
@@ -745,14 +745,14 @@ async def test_integration_full_scan_workflow(
     mock_keyboard.return_value = InlineKeyboardMarkup([])
 
     mock_update.callback_query.data = f"{SCANNER_ACTION}_{LEVEL_SCAN_ACTION}_standard"
-    await handle_scanner_callback(mock_update, mock_context)
+    awAlgot handle_scanner_callback(mock_update, mock_context)
 
     # Проверяем, что сканирование выполнено
     mock_scanner.scan_level.assert_called_once()
 
     # 3. Проверяем пагинацию
     mock_update.callback_query.data = "scanner_paginate:next:standard_csgo_"
-    await handle_scanner_pagination(mock_update, mock_context)
+    awAlgot handle_scanner_pagination(mock_update, mock_context)
 
     # Проверяем, что пагинация работает
     mock_pagination.next_page.assert_called_once()
@@ -763,7 +763,7 @@ async def test_integration_all_menu_buttons_work(mock_update, mock_context):
     """Интеграционный тест: все кнопки меню работают."""
     # Открываем меню
     mock_update.callback_query.data = SCANNER_ACTION
-    await handle_scanner_callback(mock_update, mock_context)
+    awAlgot handle_scanner_callback(mock_update, mock_context)
 
     # Получаем клавиатуру
     call_args = mock_update.callback_query.edit_message_text.call_args
@@ -784,7 +784,7 @@ async def test_handle_level_scan_no_effective_user(mock_update, mock_context):
     """Тест handle_level_scan без effective_user."""
     mock_update.effective_user = None
 
-    await handle_level_scan(mock_update, mock_context, "standard")
+    awAlgot handle_level_scan(mock_update, mock_context, "standard")
 
     # Проверяем, что функция завершилась без ошибок
     # edit_message_text не должен быть вызван после проверки user
@@ -796,7 +796,7 @@ async def test_handle_scanner_pagination_no_effective_user(mock_update, mock_con
     mock_update.effective_user = None
     mock_update.callback_query.data = "scanner_paginate:next:standard_csgo_"
 
-    await handle_scanner_pagination(mock_update, mock_context)
+    awAlgot handle_scanner_pagination(mock_update, mock_context)
 
     # Проверяем, что answer был вызван, но дальнейшая обработка не произошла
     mock_update.callback_query.answer.assert_called_once()

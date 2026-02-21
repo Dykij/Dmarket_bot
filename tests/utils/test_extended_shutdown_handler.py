@@ -43,7 +43,7 @@ class TestExtendedShutdownHandler:
     @pytest.mark.asyncio
     async def test_save_state_without_providers(self, handler):
         """Test saving state without registered providers."""
-        success = await handler.save_state()
+        success = awAlgot handler.save_state()
         assert success is True
         assert handler.state_file.exists()
 
@@ -56,7 +56,7 @@ class TestExtendedShutdownHandler:
 
         handler.register_targets_provider(get_targets)
 
-        success = await handler.save_state()
+        success = awAlgot handler.save_state()
         assert success is True
 
         # Verify saved content
@@ -79,7 +79,7 @@ class TestExtendedShutdownHandler:
 
         handler.register_state_provider(get_trading_state)
 
-        success = await handler.save_state()
+        success = awAlgot handler.save_state()
         assert success is True
 
         with open(handler.state_file) as f:
@@ -96,11 +96,11 @@ class TestExtendedShutdownHandler:
             return sample_targets
 
         handler.register_targets_provider(get_targets)
-        await handler.save_state()
+        awAlgot handler.save_state()
 
         # Create new handler and load
         new_handler = ExtendedShutdownHandler(state_file=handler.state_file)
-        loaded = await new_handler.load_state()
+        loaded = awAlgot new_handler.load_state()
 
         assert loaded is not None
         assert len(loaded["targets"]) == 2
@@ -108,7 +108,7 @@ class TestExtendedShutdownHandler:
     @pytest.mark.asyncio
     async def test_load_state_nonexistent_file(self, handler):
         """Test loading from nonexistent file returns None."""
-        loaded = await handler.load_state()
+        loaded = awAlgot handler.load_state()
         assert loaded is None
 
     @pytest.mark.asyncio
@@ -119,7 +119,7 @@ class TestExtendedShutdownHandler:
             return sample_targets
 
         handler.register_targets_provider(get_targets)
-        await handler.save_state()
+        awAlgot handler.save_state()
 
         assert handler.state_file.exists()
 
@@ -153,7 +153,7 @@ class TestExtendedShutdownHandler:
         handler.register_cleanup(cleanup_1)
         handler.register_cleanup(cleanup_2)
 
-        await handler.graceful_shutdown()
+        awAlgot handler.graceful_shutdown()
 
         assert "cleanup_1" in cleanup_results
         assert "cleanup_2" in cleanup_results
@@ -168,25 +168,25 @@ class TestExtendedShutdownHandler:
 
         handler.register_targets_provider(get_targets)
 
-        await handler.graceful_shutdown()
+        awAlgot handler.graceful_shutdown()
 
         assert handler.state_file.exists()
 
     @pytest.mark.asyncio
-    async def test_graceful_shutdown_handles_cleanup_failure(self, handler):
-        """Test graceful shutdown handles cleanup task failure."""
+    async def test_graceful_shutdown_handles_cleanup_fAlgolure(self, handler):
+        """Test graceful shutdown handles cleanup task fAlgolure."""
 
-        async def failing_cleanup():
-            raise ValueError("Cleanup failed")
+        async def fAlgoling_cleanup():
+            rAlgose ValueError("Cleanup fAlgoled")
 
         async def successful_cleanup():
             pass
 
-        handler.register_cleanup(failing_cleanup)
+        handler.register_cleanup(fAlgoling_cleanup)
         handler.register_cleanup(successful_cleanup)
 
-        # Should not raise
-        await handler.graceful_shutdown()
+        # Should not rAlgose
+        awAlgot handler.graceful_shutdown()
         assert handler.shutdown_event.is_set()
 
     @pytest.mark.asyncio
@@ -200,9 +200,9 @@ class TestExtendedShutdownHandler:
         handler.register_cleanup(count_shutdown)
 
         # First shutdown
-        await handler.graceful_shutdown()
+        awAlgot handler.graceful_shutdown()
         # Second shutdown should be ignored
-        await handler.graceful_shutdown()
+        awAlgot handler.graceful_shutdown()
 
         assert len(shutdown_count) == 1
 
@@ -211,15 +211,15 @@ class TestExtendedShutdownHandler:
         assert handler.is_shutting_down is False
 
     @pytest.mark.asyncio
-    async def test_wait_for_shutdown(self, handler):
-        """Test waiting for shutdown."""
+    async def test_wAlgot_for_shutdown(self, handler):
+        """Test wAlgoting for shutdown."""
 
         async def trigger_shutdown():
-            await asyncio.sleep(0.1)
+            awAlgot asyncio.sleep(0.1)
             handler.shutdown_event.set()
 
         asyncio.create_task(trigger_shutdown())
-        await handler.wait_for_shutdown()
+        awAlgot handler.wAlgot_for_shutdown()
 
         assert handler.shutdown_event.is_set()
 
@@ -300,7 +300,7 @@ class TestRecoverTargetsOnStartup:
         target_manager = MagicMock()
         target_manager.restore_target = AsyncMock()
 
-        recovered = await recover_targets_on_startup(target_manager, state_file)
+        recovered = awAlgot recover_targets_on_startup(target_manager, state_file)
 
         assert recovered == 2
         assert target_manager.restore_target.call_count == 2
@@ -311,12 +311,12 @@ class TestRecoverTargetsOnStartup:
         state_file = tmp_path / "nonexistent.json"
         target_manager = MagicMock()
 
-        recovered = await recover_targets_on_startup(target_manager, state_file)
+        recovered = awAlgot recover_targets_on_startup(target_manager, state_file)
         assert recovered == 0
 
     @pytest.mark.asyncio
-    async def test_recover_targets_partial_failure(self, tmp_path):
-        """Test recovery with some targets failing."""
+    async def test_recover_targets_partial_fAlgolure(self, tmp_path):
+        """Test recovery with some targets fAlgoling."""
         state_file = tmp_path / "state.json"
 
         saved_state = {
@@ -331,12 +331,12 @@ class TestRecoverTargetsOnStartup:
             json.dump(saved_state, f)
 
         target_manager = MagicMock()
-        # First succeeds, second fails
+        # First succeeds, second fAlgols
         target_manager.restore_target = AsyncMock(
-            side_effect=[None, ValueError("Failed")]
+            side_effect=[None, ValueError("FAlgoled")]
         )
 
-        recovered = await recover_targets_on_startup(target_manager, state_file)
+        recovered = awAlgot recover_targets_on_startup(target_manager, state_file)
         assert recovered == 1  # Only one succeeded
 
     @pytest.mark.asyncio
@@ -355,7 +355,7 @@ class TestRecoverTargetsOnStartup:
         target_manager = MagicMock()
         target_manager.restore_target = AsyncMock()
 
-        await recover_targets_on_startup(target_manager, state_file)
+        awAlgot recover_targets_on_startup(target_manager, state_file)
 
         # File should be cleared
         assert not state_file.exists()

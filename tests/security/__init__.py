@@ -1,6 +1,6 @@
 """Security tests for DMarket Telegram Bot.
 
-This package contains security-focused tests including:
+This package contAlgons security-focused tests including:
 - API key security
 - Input validation
 - SQL injection prevention

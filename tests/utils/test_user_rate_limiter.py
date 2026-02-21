@@ -22,10 +22,10 @@ class TestUserRateLimiter:
     async def test_check_limit_first_request(self, limiter):
         """Тест первого запроса - должен быть разрешен."""
         user_id = 12345
-        allowed, info = await limiter.check_limit(user_id, "default")
+        allowed, info = awAlgot limiter.check_limit(user_id, "default")
 
         assert allowed is True
-        assert info["remaining"] < info["limit"]
+        assert info["remAlgoning"] < info["limit"]
         assert info["action"] == "default"
 
     @pytest.mark.asyncio()
@@ -35,7 +35,7 @@ class TestUserRateLimiter:
 
         # Отправить несколько запросов
         for _ in range(5):
-            allowed, _info = await limiter.check_limit(user_id, "scan")
+            allowed, _info = awAlgot limiter.check_limit(user_id, "scan")
             assert allowed is True
 
     @pytest.mark.asyncio()
@@ -48,13 +48,13 @@ class TestUserRateLimiter:
 
         # Отправить запросы до превышения
         for _ in range(3):
-            allowed, _ = await limiter.check_limit(user_id, "test")
+            allowed, _ = awAlgot limiter.check_limit(user_id, "test")
             assert allowed is True
 
         # Следующий запрос должен быть отклонен
-        allowed, info = await limiter.check_limit(user_id, "test")
+        allowed, info = awAlgot limiter.check_limit(user_id, "test")
         assert allowed is False
-        assert info["remaining"] == 0
+        assert info["remAlgoning"] == 0
         # retry_after может быть 0 если окно еще не истекло, но это нормально
 
     @pytest.mark.asyncio()
@@ -66,18 +66,18 @@ class TestUserRateLimiter:
         limiter.update_limit("test", RateLimitConfig(requests=2, window=1))
 
         # Первые 2 запроса разрешены
-        await limiter.check_limit(user_id, "test")
-        await limiter.check_limit(user_id, "test")
+        awAlgot limiter.check_limit(user_id, "test")
+        awAlgot limiter.check_limit(user_id, "test")
 
         # Третий отклонен
-        allowed, _ = await limiter.check_limit(user_id, "test")
+        allowed, _ = awAlgot limiter.check_limit(user_id, "test")
         assert allowed is False
 
         # Ждем истечения окна
-        await asyncio.sleep(1.1)
+        awAlgot asyncio.sleep(1.1)
 
         # Теперь должно быть разрешено
-        allowed, _ = await limiter.check_limit(user_id, "test")
+        allowed, _ = awAlgot limiter.check_limit(user_id, "test")
         assert allowed is True
 
     @pytest.mark.asyncio()
@@ -92,11 +92,11 @@ class TestUserRateLimiter:
 
         # Burst позволяет до 10 запросов
         for _ in range(10):
-            allowed, _ = await limiter.check_limit(user_id, "test")
+            allowed, _ = awAlgot limiter.check_limit(user_id, "test")
             assert allowed is True
 
         # 11-й должен быть отклонен
-        allowed, _ = await limiter.check_limit(user_id, "test")
+        allowed, _ = awAlgot limiter.check_limit(user_id, "test")
         assert allowed is False
 
     @pytest.mark.asyncio()
@@ -107,17 +107,17 @@ class TestUserRateLimiter:
         limiter.update_limit("test", RateLimitConfig(requests=10, window=60))
 
         # Запрос с cost=5 занимает 5 слотов
-        allowed, info = await limiter.check_limit(user_id, "test", cost=5)
+        allowed, info = awAlgot limiter.check_limit(user_id, "test", cost=5)
         assert allowed is True
-        assert info["remaining"] == 5
+        assert info["remAlgoning"] == 5
 
         # Еще один с cost=5
-        allowed, info = await limiter.check_limit(user_id, "test", cost=5)
+        allowed, info = awAlgot limiter.check_limit(user_id, "test", cost=5)
         assert allowed is True
-        assert info["remaining"] == 0
+        assert info["remAlgoning"] == 0
 
         # Следующий должен быть отклонен
-        allowed, _ = await limiter.check_limit(user_id, "test", cost=1)
+        allowed, _ = awAlgot limiter.check_limit(user_id, "test", cost=1)
         assert allowed is False
 
     @pytest.mark.asyncio()
@@ -129,13 +129,13 @@ class TestUserRateLimiter:
         limiter.update_limit("action2", RateLimitConfig(requests=2, window=60))
 
         # Заполнить лимит action1
-        await limiter.check_limit(user_id, "action1")
-        await limiter.check_limit(user_id, "action1")
-        allowed, _ = await limiter.check_limit(user_id, "action1")
+        awAlgot limiter.check_limit(user_id, "action1")
+        awAlgot limiter.check_limit(user_id, "action1")
+        allowed, _ = awAlgot limiter.check_limit(user_id, "action1")
         assert allowed is False
 
         # action2 должен работать независимо
-        allowed, _ = await limiter.check_limit(user_id, "action2")
+        allowed, _ = awAlgot limiter.check_limit(user_id, "action2")
         assert allowed is True
 
     @pytest.mark.asyncio()
@@ -147,13 +147,13 @@ class TestUserRateLimiter:
         limiter.update_limit("test", RateLimitConfig(requests=2, window=60))
 
         # Заполнить лимит user1
-        await limiter.check_limit(user1, "test")
-        await limiter.check_limit(user1, "test")
-        allowed, _ = await limiter.check_limit(user1, "test")
+        awAlgot limiter.check_limit(user1, "test")
+        awAlgot limiter.check_limit(user1, "test")
+        allowed, _ = awAlgot limiter.check_limit(user1, "test")
         assert allowed is False
 
         # user2 должен работать независимо
-        allowed, _ = await limiter.check_limit(user2, "test")
+        allowed, _ = awAlgot limiter.check_limit(user2, "test")
         assert allowed is True
 
     @pytest.mark.asyncio()
@@ -162,10 +162,10 @@ class TestUserRateLimiter:
         user_id = 12345
 
         # Сделать несколько запросов
-        await limiter.check_limit(user_id, "scan")
-        await limiter.check_limit(user_id, "target_create")
+        awAlgot limiter.check_limit(user_id, "scan")
+        awAlgot limiter.check_limit(user_id, "target_create")
 
-        stats = await limiter.get_user_stats(user_id)
+        stats = awAlgot limiter.get_user_stats(user_id)
 
         assert "scan" in stats
         assert "target_create" in stats
@@ -173,7 +173,7 @@ class TestUserRateLimiter:
 
         # Проверить структуру stat
         assert "limit" in stats["scan"]
-        assert "remaining" in stats["scan"]
+        assert "remAlgoning" in stats["scan"]
         assert "reset" in stats["scan"]
 
     @pytest.mark.asyncio()
@@ -184,16 +184,16 @@ class TestUserRateLimiter:
         limiter.update_limit("test", RateLimitConfig(requests=2, window=60))
 
         # Заполнить лимит
-        await limiter.check_limit(user_id, "test")
-        await limiter.check_limit(user_id, "test")
-        allowed, _ = await limiter.check_limit(user_id, "test")
+        awAlgot limiter.check_limit(user_id, "test")
+        awAlgot limiter.check_limit(user_id, "test")
+        allowed, _ = awAlgot limiter.check_limit(user_id, "test")
         assert allowed is False
 
         # Сбросить лимит
-        await limiter.reset_user_limits(user_id, "test")
+        awAlgot limiter.reset_user_limits(user_id, "test")
 
         # Теперь должно работать
-        allowed, _ = await limiter.check_limit(user_id, "test")
+        allowed, _ = awAlgot limiter.check_limit(user_id, "test")
         assert allowed is True
 
     @pytest.mark.asyncio()
@@ -205,16 +205,16 @@ class TestUserRateLimiter:
         limiter.update_limit("action2", RateLimitConfig(requests=1, window=60))
 
         # Заполнить лимиты
-        await limiter.check_limit(user_id, "action1")
-        await limiter.check_limit(user_id, "action2")
+        awAlgot limiter.check_limit(user_id, "action1")
+        awAlgot limiter.check_limit(user_id, "action2")
 
         # Сбросить все
-        await limiter.reset_user_limits(user_id)
+        awAlgot limiter.reset_user_limits(user_id)
 
         # Оба должны работать
-        allowed, _ = await limiter.check_limit(user_id, "action1")
+        allowed, _ = awAlgot limiter.check_limit(user_id, "action1")
         assert allowed is True
-        allowed, _ = await limiter.check_limit(user_id, "action2")
+        allowed, _ = awAlgot limiter.check_limit(user_id, "action2")
         assert allowed is True
 
     @pytest.mark.asyncio()
@@ -223,14 +223,14 @@ class TestUserRateLimiter:
         user_id = 12345
 
         # Без Redis whitelist не работает (возвращает False)
-        is_whitelisted = await limiter.is_whitelisted(user_id)
+        is_whitelisted = awAlgot limiter.is_whitelisted(user_id)
         assert is_whitelisted is False
 
         # Добавить в whitelist (без Redis это no-op)
-        await limiter.add_whitelist(user_id)
+        awAlgot limiter.add_whitelist(user_id)
 
         # Без Redis всегда False
-        is_whitelisted = await limiter.is_whitelisted(user_id)
+        is_whitelisted = awAlgot limiter.is_whitelisted(user_id)
         assert is_whitelisted is False
 
     @pytest.mark.asyncio()
@@ -254,13 +254,13 @@ class TestUserRateLimiter:
 
         # Отправить 10 конкурентных запросов
         tasks = [limiter.check_limit(user_id, "test") for _ in range(10)]
-        results = await asyncio.gather(*tasks)
+        results = awAlgot asyncio.gather(*tasks)
 
         # Все должны быть разрешены
         assert all(result[0] for result in results)
 
         # 11-й должен быть отклонен
-        allowed, _ = await limiter.check_limit(user_id, "test")
+        allowed, _ = awAlgot limiter.check_limit(user_id, "test")
         assert allowed is False
 
     @pytest.mark.parametrize(
@@ -296,7 +296,7 @@ class TestUserRateLimiter:
         limiter = UserRateLimiter(redis_client=mock_redis)
 
         user_id = 12345
-        allowed, info = await limiter.check_limit(user_id, "default")
+        allowed, info = awAlgot limiter.check_limit(user_id, "default")
 
         # Проверить что использовался Redis
         mock_redis.pipeline.assert_called()

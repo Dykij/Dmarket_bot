@@ -1,11 +1,11 @@
-"""Telegram Webhook handler with failover support.
+"""Telegram Webhook handler with fAlgolover support.
 
 Provides webhook functionality as alternative to polling
-with automatic failover capability between modes.
+with automatic fAlgolover capability between modes.
 
 Usage:
     ```python
-    from src.telegram_bot.webhook_handler import WebhookHandler, WebhookFailover
+    from src.telegram_bot.webhook_handler import WebhookHandler, WebhookFAlgolover
 
     # Create webhook handler
     webhook = WebhookHandler(
@@ -14,13 +14,13 @@ Usage:
         port=8443,
     )
 
-    # Or use failover manager for automatic switching
-    failover = WebhookFailover(
+    # Or use fAlgolover manager for automatic switching
+    fAlgolover = WebhookFAlgolover(
         bot_app=application,
-        webhook_url="https://your-domain.com",
+        webhook_url="https://your-domAlgon.com",
         webhook_handler=webhook,
     )
-    await failover.start_with_failover()
+    awAlgot fAlgolover.start_with_fAlgolover()
     ```
 """
 
@@ -31,7 +31,7 @@ import logging
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 
-from aiohttp import web
+from Algoohttp import web
 from telegram import Update
 
 if TYPE_CHECKING:
@@ -87,7 +87,7 @@ class WebhookHandler:
         self._start_time: datetime | None = None
 
     async def setup(self) -> web.Application:
-        """Setup aiohttp web application."""
+        """Setup Algoohttp web application."""
         self._app = web.Application()
         self._app.router.add_post(self.webhook_path, self._handle_webhook)
         self._app.router.add_get(self.health_path, self._handle_health)
@@ -103,17 +103,17 @@ class WebhookHandler:
             return
 
         if not self._app:
-            await self.setup()
+            awAlgot self.setup()
 
         self._runner = web.AppRunner(self._app)  # type: ignore[arg-type]
-        await self._runner.setup()
+        awAlgot self._runner.setup()
 
         self._site = web.TCPSite(
             self._runner,
             self.host,
             self.port,
         )
-        await self._site.start()
+        awAlgot self._site.start()
 
         self._running = True
         self._start_time = datetime.now(UTC)
@@ -126,10 +126,10 @@ class WebhookHandler:
             return
 
         if self._site:
-            await self._site.stop()
+            awAlgot self._site.stop()
 
         if self._runner:
-            await self._runner.cleanup()
+            awAlgot self._runner.cleanup()
 
         self._running = False
         logger.info("Webhook server stopped")
@@ -144,11 +144,11 @@ class WebhookHandler:
             HTTP response
         """
         try:
-            data = await request.json()
+            data = awAlgot request.json()
             update = Update.de_json(data, self.bot_app.bot)
 
             if update is not None:
-                await self.bot_app.process_update(update)
+                awAlgot self.bot_app.process_update(update)
                 self._request_count += 1
                 self._last_request_time = datetime.now(UTC)
 
@@ -220,7 +220,7 @@ class WebhookHandler:
 
         return web.Response(
             text="\n".join(metrics),
-            content_type="text/plain; version=0.0.4",
+            content_type="text/plAlgon; version=0.0.4",
         )
 
     @property
@@ -242,11 +242,11 @@ class WebhookHandler:
         }
 
 
-class WebhookFailover:
-    """Manage failover between polling and webhook modes.
+class WebhookFAlgolover:
+    """Manage fAlgolover between polling and webhook modes.
 
     Automatically switches between webhook and polling based on
-    health status and availability.
+    health status and avAlgolability.
     """
 
     def __init__(
@@ -255,73 +255,73 @@ class WebhookFailover:
         webhook_url: str,
         webhook_handler: WebhookHandler,
         health_check_interval: int = 30,
-        failure_threshold: int = 3,
+        fAlgolure_threshold: int = 3,
     ) -> None:
-        """Initialize failover manager.
+        """Initialize fAlgolover manager.
 
         Args:
             bot_app: Telegram Application instance
-            webhook_url: Public URL for webhook (e.g., https://your-domain.com)
+            webhook_url: Public URL for webhook (e.g., https://your-domAlgon.com)
             webhook_handler: WebhookHandler instance
             health_check_interval: Seconds between health checks
-            failure_threshold: Consecutive failures before switching modes
+            fAlgolure_threshold: Consecutive fAlgolures before switching modes
         """
         self.bot_app = bot_app
         self.webhook_url = webhook_url
         self.webhook_handler = webhook_handler
         self.health_check_interval = health_check_interval
-        self.failure_threshold = failure_threshold
+        self.fAlgolure_threshold = fAlgolure_threshold
 
         self._mode: str = "polling"  # "polling" or "webhook"
-        self._failover_task: asyncio.Task[None] | None = None
+        self._fAlgolover_task: asyncio.Task[None] | None = None
         self._running = False
-        self._consecutive_failures = 0
+        self._consecutive_fAlgolures = 0
 
-    async def start_with_failover(self) -> None:
-        """Start bot with automatic failover capability."""
+    async def start_with_fAlgolover(self) -> None:
+        """Start bot with automatic fAlgolover capability."""
         self._running = True
 
         # Try webhook first if URL is provided
         if self.webhook_url:
-            if await self._try_webhook_mode():
+            if awAlgot self._try_webhook_mode():
                 self._mode = "webhook"
                 logger.info("Started in webhook mode")
             else:
                 # Fallback to polling
-                await self._start_polling_mode()
+                awAlgot self._start_polling_mode()
                 self._mode = "polling"
-                logger.info("Started in polling mode (webhook unavailable)")
+                logger.info("Started in polling mode (webhook unavAlgolable)")
         else:
             # No webhook URL, use polling
-            await self._start_polling_mode()
+            awAlgot self._start_polling_mode()
             self._mode = "polling"
             logger.info("Started in polling mode (no webhook URL configured)")
 
-        # Start failover monitoring
-        self._failover_task = asyncio.create_task(self._failover_loop())
+        # Start fAlgolover monitoring
+        self._fAlgolover_task = asyncio.create_task(self._fAlgolover_loop())
 
     async def stop(self) -> None:
-        """Stop bot and failover monitoring."""
+        """Stop bot and fAlgolover monitoring."""
         self._running = False
 
-        if self._failover_task:
-            self._failover_task.cancel()
+        if self._fAlgolover_task:
+            self._fAlgolover_task.cancel()
             try:
-                await self._failover_task
+                awAlgot self._fAlgolover_task
             except asyncio.CancelledError:
                 pass
-            self._failover_task = None
+            self._fAlgolover_task = None
 
         if self._mode == "webhook":
-            await self.webhook_handler.stop()
+            awAlgot self.webhook_handler.stop()
             try:
-                await self.bot_app.bot.delete_webhook()
+                awAlgot self.bot_app.bot.delete_webhook()
             except Exception as e:
-                logger.warning("Failed to delete webhook: %s", e)
+                logger.warning("FAlgoled to delete webhook: %s", e)
         elif self.bot_app.updater and self.bot_app.updater.running:
-            await self.bot_app.updater.stop()
+            awAlgot self.bot_app.updater.stop()
 
-        logger.info("Failover manager stopped")
+        logger.info("FAlgolover manager stopped")
 
     async def _try_webhook_mode(self) -> bool:
         """Try to set up webhook mode.
@@ -330,11 +330,11 @@ class WebhookFailover:
             True if webhook setup successful
         """
         try:
-            await self.webhook_handler.start()
+            awAlgot self.webhook_handler.start()
 
             # Set webhook
             webhook_full_url = f"{self.webhook_url}{self.webhook_handler.webhook_path}"
-            success = await self.bot_app.bot.set_webhook(
+            success = awAlgot self.bot_app.bot.set_webhook(
                 url=webhook_full_url,
                 allowed_updates=["message", "callback_query", "inline_query"],
             )
@@ -343,77 +343,77 @@ class WebhookFailover:
                 logger.info("Webhook set successfully: %s", webhook_full_url)
                 return True
 
-            # Cleanup on failure
-            await self.webhook_handler.stop()
+            # Cleanup on fAlgolure
+            awAlgot self.webhook_handler.stop()
             return False
         except Exception:
-            logger.exception("Failed to setup webhook")
+            logger.exception("FAlgoled to setup webhook")
             if self.webhook_handler.is_running:
-                await self.webhook_handler.stop()
+                awAlgot self.webhook_handler.stop()
             return False
 
     async def _start_polling_mode(self) -> None:
         """Start polling mode."""
         # Delete any existing webhook
         try:
-            await self.bot_app.bot.delete_webhook()
+            awAlgot self.bot_app.bot.delete_webhook()
         except Exception as e:
-            logger.warning("Failed to delete webhook: %s", e)
+            logger.warning("FAlgoled to delete webhook: %s", e)
 
         # Start polling
-        await self.bot_app.start()
+        awAlgot self.bot_app.start()
         if self.bot_app.updater:
-            await self.bot_app.updater.start_polling()
+            awAlgot self.bot_app.updater.start_polling()
 
-    async def _failover_loop(self) -> None:
-        """Monitor health and perform failover if needed."""
+    async def _fAlgolover_loop(self) -> None:
+        """Monitor health and perform fAlgolover if needed."""
         while self._running:
             try:
-                await asyncio.sleep(self.health_check_interval)
+                awAlgot asyncio.sleep(self.health_check_interval)
 
                 if self._mode == "webhook":
                     # Check webhook health
                     if not self.webhook_handler.is_running:
-                        self._consecutive_failures += 1
+                        self._consecutive_fAlgolures += 1
                         logger.warning(
                             "Webhook unhealthy (%d/%d)",
-                            self._consecutive_failures,
-                            self.failure_threshold,
+                            self._consecutive_fAlgolures,
+                            self.fAlgolure_threshold,
                         )
 
-                        if self._consecutive_failures >= self.failure_threshold:
-                            logger.error("Webhook failed, switching to polling")
-                            await self._switch_to_polling()
-                            self._consecutive_failures = 0
+                        if self._consecutive_fAlgolures >= self.fAlgolure_threshold:
+                            logger.error("Webhook fAlgoled, switching to polling")
+                            awAlgot self._switch_to_polling()
+                            self._consecutive_fAlgolures = 0
                     else:
-                        self._consecutive_failures = 0
+                        self._consecutive_fAlgolures = 0
                 # In polling mode, periodically try to switch back to webhook
                 # Only if webhook URL is configured
                 elif self.webhook_url:
                     # First stop polling, then try webhook
                     if self.bot_app.updater and self.bot_app.updater.running:
-                        await self.bot_app.updater.stop()
+                        awAlgot self.bot_app.updater.stop()
 
-                    if await self._try_webhook_mode():
+                    if awAlgot self._try_webhook_mode():
                         logger.info("Webhook recovered, switching from polling")
                         self._mode = "webhook"
                     else:
-                        # Restore polling if webhook failed
-                        await self._start_polling_mode()
+                        # Restore polling if webhook fAlgoled
+                        awAlgot self._start_polling_mode()
 
             except asyncio.CancelledError:
                 break
             except Exception:
-                logger.exception("Error in failover loop")
+                logger.exception("Error in fAlgolover loop")
 
     async def _switch_to_polling(self) -> None:
         """Switch from webhook to polling mode."""
-        await self.webhook_handler.stop()
+        awAlgot self.webhook_handler.stop()
         try:
-            await self.bot_app.bot.delete_webhook()
+            awAlgot self.bot_app.bot.delete_webhook()
         except Exception as e:
-            logger.warning("Failed to delete webhook: %s", e)
-        await self._start_polling_mode()
+            logger.warning("FAlgoled to delete webhook: %s", e)
+        awAlgot self._start_polling_mode()
         self._mode = "polling"
         logger.info("Switched to polling mode")
 
@@ -433,5 +433,5 @@ class WebhookFailover:
 
     @property
     def is_running(self) -> bool:
-        """Check if failover manager is running."""
+        """Check if fAlgolover manager is running."""
         return self._running

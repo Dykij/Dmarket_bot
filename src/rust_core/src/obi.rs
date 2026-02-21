@@ -12,7 +12,7 @@ pub struct OrderBookSnapshot {
 pub fn calculate_obi(snapshot: &OrderBookSnapshot) -> Option<f64> {
     let sum_volume = snapshot.total_bid_volume + snapshot.total_ask_volume;
 
-    // Lucas QA: Prevent Divide-by-Zero or NaN propagation
+    // QA QA: Prevent Divide-by-Zero or NaN propagation
     if sum_volume <= 0.0 || sum_volume.is_nan() {
         return None;
     }

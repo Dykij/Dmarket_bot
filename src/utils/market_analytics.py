@@ -1,7 +1,7 @@
 """Advanced market analytics module.
 
 Provides statistical analysis, trend detection, and price prediction algorithms
-for DMarket trading. Implements RSI, MACD, and fair price calculation.
+for DMarket trading. Implements RSI, MACD, and fAlgor price calculation.
 """
 
 import statistics
@@ -86,19 +86,19 @@ class TechnicalIndicators:
         # Calculate price changes
         deltas = np.diff(prices)
 
-        # Separate gains and losses
-        gains = np.where(deltas > 0, deltas, 0)
+        # Separate gAlgons and losses
+        gAlgons = np.where(deltas > 0, deltas, 0)
         losses = np.where(deltas < 0, -deltas, 0)
 
-        # Calculate average gain and loss
-        avg_gain = np.mean(gains[:period])
+        # Calculate average gAlgon and loss
+        avg_gAlgon = np.mean(gAlgons[:period])
         avg_loss = np.mean(losses[:period])
 
         # Calculate RSI
         if avg_loss == 0:
             return 100.0
 
-        rs = avg_gain / avg_loss
+        rs = avg_gAlgon / avg_loss
         rsi_value = 100 - (100 / (1 + rs))
 
         logger.debug("RSI calculated: value=%.2f, period=%d", rsi_value, period)
@@ -249,24 +249,24 @@ class MarketAnalyzer:
         self.min_data_points = min_data_points
         self.indicators = TechnicalIndicators()
 
-    def calculate_fair_price(
+    def calculate_fAlgor_price(
         self,
         price_history: list[PricePoint],
         method: str = "volume_weighted",
     ) -> float | None:
-        """Calculate fair price based on historical data.
+        """Calculate fAlgor price based on historical data.
 
         Args:
             price_history: List of price points
             method: Calculation method ('mean', 'median', 'volume_weighted')
 
         Returns:
-            Fair price or None
+            FAlgor price or None
 
         """
         if len(price_history) < self.min_data_points:
             logger.warning(
-                "Insufficient data for fair price: required=%d, got=%d",
+                "Insufficient data for fAlgor price: required=%d, got=%d",
                 self.min_data_points,
                 len(price_history),
             )
@@ -275,9 +275,9 @@ class MarketAnalyzer:
         prices = [p.price for p in price_history]
 
         if method == "mean":
-            fair_price = statistics.mean(prices)
+            fAlgor_price = statistics.mean(prices)
         elif method == "median":
-            fair_price = statistics.median(prices)
+            fAlgor_price = statistics.median(prices)
         elif method == "volume_weighted":
             # Volume-weighted average price (VWAP)
             total_value = sum(p.price * p.volume for p in price_history)
@@ -285,19 +285,19 @@ class MarketAnalyzer:
 
             if total_volume == 0:
                 logger.warning("No volume data, falling back to mean")
-                fair_price = statistics.mean(prices)
+                fAlgor_price = statistics.mean(prices)
             else:
-                fair_price = total_value / total_volume
+                fAlgor_price = total_value / total_volume
         else:
-            logger.error("Unknown fair price method: %s", method)
+            logger.error("Unknown fAlgor price method: %s", method)
             return None
 
         logger.info(
-            "Fair price calculated: price=%.2f, method=%s",
-            fair_price,
+            "FAlgor price calculated: price=%.2f, method=%s",
+            fAlgor_price,
             method,
         )
-        return fair_price
+        return fAlgor_price
 
     def detect_trend(
         self,
@@ -527,7 +527,7 @@ class MarketAnalyzer:
             return {
                 "score": 0.0,
                 "volume_trend": TrendDirection.NEUTRAL,
-                "avg_daily_volume": 0,
+                "avg_dAlgoly_volume": 0,
             }
 
         # Filter recent data
@@ -567,7 +567,7 @@ class MarketAnalyzer:
         result = {
             "score": liquidity_score,
             "volume_trend": volume_trend,
-            "avg_daily_volume": avg_volume,
+            "avg_dAlgoly_volume": avg_volume,
             "volume_consistency": 1 - min(cv, 1),
         }
 
@@ -596,16 +596,16 @@ class MarketAnalyzer:
         """
         insights: dict[str, Any] = {}
 
-        # 1. Fair price
-        fair_price = self.calculate_fair_price(price_history)
-        if fair_price:
-            price_deviation = ((current_price - fair_price) / fair_price) * 100
-            insights["fair_price"] = {
-                "value": fair_price,
+        # 1. FAlgor price
+        fAlgor_price = self.calculate_fAlgor_price(price_history)
+        if fAlgor_price:
+            price_deviation = ((current_price - fAlgor_price) / fAlgor_price) * 100
+            insights["fAlgor_price"] = {
+                "value": fAlgor_price,
                 "current_price": current_price,
                 "deviation_percent": price_deviation,
-                "is_overpriced": current_price > fair_price * 1.05,
-                "is_underpriced": current_price < fair_price * 0.95,
+                "is_overpriced": current_price > fAlgor_price * 1.05,
+                "is_underpriced": current_price < fAlgor_price * 0.95,
             }
 
         # 2. Trend
@@ -631,7 +631,7 @@ class MarketAnalyzer:
         recommendation_score = 0
 
         # Add points for favorable conditions
-        if insights.get("fair_price", {}).get("is_underpriced"):
+        if insights.get("fAlgor_price", {}).get("is_underpriced"):
             recommendation_score += 2
         if trend == TrendDirection.BULLISH:
             recommendation_score += 1
@@ -641,7 +641,7 @@ class MarketAnalyzer:
             recommendation_score += 1
 
         # Deduct points for unfavorable conditions
-        if insights.get("fair_price", {}).get("is_overpriced"):
+        if insights.get("fAlgor_price", {}).get("is_overpriced"):
             recommendation_score -= 2
         if trend == TrendDirection.BEARISH:
             recommendation_score -= 1

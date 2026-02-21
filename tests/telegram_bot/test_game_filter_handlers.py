@@ -4,7 +4,7 @@
 - Константы фильтров для разных игр
 - Управление текущими фильтрами пользователя
 - Построение клавиатур с фильтрами
-- Обработку callback'ов для настройки фильтров
+- Обработку callback'ов для настSwarmки фильтров
 - Генерацию параметров API на основе фильтров
 """
 
@@ -300,7 +300,7 @@ async def test_handle_game_filters(mock_filter_factory, mock_update, mock_contex
     mock_filter_factory.get_filter.return_value = mock_filter
 
     # Вызываем обработчик (он использует update.message, а не callback)
-    await handle_game_filters(mock_update, mock_context)
+    awAlgot handle_game_filters(mock_update, mock_context)
 
     # Проверяем, что reply_text был вызван
     mock_update.message.reply_text.assert_called()
@@ -317,11 +317,11 @@ async def test_handle_select_game_filter_callback(
     mock_filter.get_filter_description.return_value = "Фильтры не установлены"
     mock_filter_factory.get_filter.return_value = mock_filter
 
-    # Настройка данных callback
+    # НастSwarmка данных callback
     mock_update.callback_query.data = "select_filter:csgo:category"
 
     # Вызываем обработчик
-    await handle_select_game_filter_callback(mock_update, mock_context)
+    awAlgot handle_select_game_filter_callback(mock_update, mock_context)
 
     # Проверяем, что callback был обработан
     mock_update.callback_query.answer.assert_called()
@@ -338,11 +338,11 @@ async def test_handle_set_category_callback(
     mock_filter.get_filter_description.return_value = "Category: Rifle"
     mock_filter_factory.get_filter.return_value = mock_filter
 
-    # Настройка данных callback - используем правильный формат для handle_filter_callback
+    # НастSwarmка данных callback - используем правильный формат для handle_filter_callback
     mock_update.callback_query.data = "filter:category:Rifle:csgo"
 
     # Вызываем обработчик filter, который фактически устанавливает фильтры
-    await handle_filter_callback(mock_update, mock_context)
+    awAlgot handle_filter_callback(mock_update, mock_context)
 
     # Проверяем, что фильтр установлен в правильной структуре
     filters = mock_context.user_data.get("filters", {}).get("csgo", {})
@@ -360,11 +360,11 @@ async def test_handle_set_rarity_callback(
     mock_filter.get_filter_description.return_value = "Rarity: Covert"
     mock_filter_factory.get_filter.return_value = mock_filter
 
-    # Настройка данных callback - используем правильный формат для handle_filter_callback
+    # НастSwarmка данных callback - используем правильный формат для handle_filter_callback
     mock_update.callback_query.data = "filter:rarity:Covert:csgo"
 
     # Вызываем обработчик filter
-    await handle_filter_callback(mock_update, mock_context)
+    awAlgot handle_filter_callback(mock_update, mock_context)
 
     # Проверяем, что фильтр установлен
     filters = mock_context.user_data.get("filters", {}).get("csgo", {})
@@ -382,11 +382,11 @@ async def test_handle_set_exterior_callback(
     mock_filter.get_filter_description.return_value = "Exterior: Factory New"
     mock_filter_factory.get_filter.return_value = mock_filter
 
-    # Настройка данных callback - используем правильный формат для handle_filter_callback
+    # НастSwarmка данных callback - используем правильный формат для handle_filter_callback
     mock_update.callback_query.data = "filter:exterior:Factory New:csgo"
 
     # Вызываем обработчик filter
-    await handle_filter_callback(mock_update, mock_context)
+    awAlgot handle_filter_callback(mock_update, mock_context)
 
     # Проверяем, что фильтр установлен
     filters = mock_context.user_data.get("filters", {}).get("csgo", {})
@@ -402,11 +402,11 @@ async def test_handle_set_hero_callback(mock_filter_factory, mock_update, mock_c
     mock_filter.get_filter_description.return_value = "Hero: Pudge"
     mock_filter_factory.get_filter.return_value = mock_filter
 
-    # Настройка данных callback - используем правильный формат для handle_filter_callback
+    # НастSwarmка данных callback - используем правильный формат для handle_filter_callback
     mock_update.callback_query.data = "filter:hero:Pudge:dota2"
 
     # Вызываем обработчик filter
-    await handle_filter_callback(mock_update, mock_context)
+    awAlgot handle_filter_callback(mock_update, mock_context)
 
     # Проверяем, что фильтр установлен
     filters = mock_context.user_data.get("filters", {}).get("dota2", {})
@@ -424,11 +424,11 @@ async def test_handle_back_to_filters_callback(
     mock_filter.get_filter_description.return_value = "Фильтры не установлены"
     mock_filter_factory.get_filter.return_value = mock_filter
 
-    # Настройка данных callback
+    # НастSwarmка данных callback
     mock_update.callback_query.data = "back_to_filters:csgo"
 
     # Вызываем обработчик
-    await handle_back_to_filters_callback(mock_update, mock_context)
+    awAlgot handle_back_to_filters_callback(mock_update, mock_context)
 
     # Проверяем, что callback был обработан
     mock_update.callback_query.answer.assert_called()
@@ -442,7 +442,7 @@ async def test_handle_back_to_filters_callback(
 @pytest.mark.asyncio()
 async def test_handle_price_range_callback_csgo(mock_update, mock_context):
     """Тест обработчика выбора диапазона цен для CS:GO."""
-    # Настройка данных callback
+    # НастSwarmка данных callback
     mock_update.callback_query.data = "price_range:csgo"
 
     # Вызываем обработчик
@@ -450,7 +450,7 @@ async def test_handle_price_range_callback_csgo(mock_update, mock_context):
         handle_price_range_callback,
     )
 
-    await handle_price_range_callback(mock_update, mock_context)
+    awAlgot handle_price_range_callback(mock_update, mock_context)
 
     # Проверяем, что callback был обработан
     mock_update.callback_query.answer.assert_called_once()
@@ -458,7 +458,7 @@ async def test_handle_price_range_callback_csgo(mock_update, mock_context):
 
     # Проверяем, что в сообщении есть текст о диапазоне цен
     call_args = mock_update.callback_query.edit_message_text.call_args
-    assert "Настройка диапазона цен" in call_args.kwargs["text"]
+    assert "НастSwarmка диапазона цен" in call_args.kwargs["text"]
 
 
 @pytest.mark.asyncio()
@@ -474,7 +474,7 @@ async def test_handle_price_range_callback_with_existing_filters(
         }
     }
 
-    # Настройка данных callback
+    # НастSwarmка данных callback
     mock_update.callback_query.data = "price_range:csgo"
 
     # Вызываем обработчик
@@ -482,7 +482,7 @@ async def test_handle_price_range_callback_with_existing_filters(
         handle_price_range_callback,
     )
 
-    await handle_price_range_callback(mock_update, mock_context)
+    awAlgot handle_price_range_callback(mock_update, mock_context)
 
     # Проверяем вызов
     call_args = mock_update.callback_query.edit_message_text.call_args
@@ -492,7 +492,7 @@ async def test_handle_price_range_callback_with_existing_filters(
 @pytest.mark.asyncio()
 async def test_handle_float_range_callback_csgo(mock_update, mock_context):
     """Тест обработчика выбора диапазона float для CS:GO."""
-    # Настройка данных callback
+    # НастSwarmка данных callback
     mock_update.callback_query.data = "float_range:csgo"
 
     # Вызываем обработчик
@@ -500,7 +500,7 @@ async def test_handle_float_range_callback_csgo(mock_update, mock_context):
         handle_float_range_callback,
     )
 
-    await handle_float_range_callback(mock_update, mock_context)
+    awAlgot handle_float_range_callback(mock_update, mock_context)
 
     # Проверяем, что callback был обработан
     mock_update.callback_query.answer.assert_called_once()
@@ -508,13 +508,13 @@ async def test_handle_float_range_callback_csgo(mock_update, mock_context):
 
     # Проверяем, что в сообщении есть текст о диапазоне float
     call_args = mock_update.callback_query.edit_message_text.call_args
-    assert "Настройка диапазона Float" in call_args.kwargs["text"]
+    assert "НастSwarmка диапазона Float" in call_args.kwargs["text"]
 
 
 @pytest.mark.asyncio()
 async def test_handle_float_range_callback_non_csgo_game(mock_update, mock_context):
     """Тест обработчика float range для не-CS:GO игры (должен отклонить)."""
-    # Настройка данных callback для Dota 2
+    # НастSwarmка данных callback для Dota 2
     mock_update.callback_query.data = "float_range:dota2"
 
     # Вызываем обработчик
@@ -522,7 +522,7 @@ async def test_handle_float_range_callback_non_csgo_game(mock_update, mock_conte
         handle_float_range_callback,
     )
 
-    await handle_float_range_callback(mock_update, mock_context)
+    awAlgot handle_float_range_callback(mock_update, mock_context)
 
     # Проверяем, что показано сообщение об ошибке
     call_args = mock_update.callback_query.edit_message_text.call_args
@@ -532,7 +532,7 @@ async def test_handle_float_range_callback_non_csgo_game(mock_update, mock_conte
 @pytest.mark.asyncio()
 async def test_handle_set_category_callback_csgo(mock_update, mock_context):
     """Тест обработчика выбора категории для CS:GO."""
-    # Настройка данных callback
+    # НастSwarmка данных callback
     mock_update.callback_query.data = "set_category:csgo"
 
     # Вызываем обработчик
@@ -540,7 +540,7 @@ async def test_handle_set_category_callback_csgo(mock_update, mock_context):
         handle_set_category_callback,
     )
 
-    await handle_set_category_callback(mock_update, mock_context)
+    awAlgot handle_set_category_callback(mock_update, mock_context)
 
     # Проверяем, что callback был обработан
     mock_update.callback_query.answer.assert_called_once()
@@ -554,7 +554,7 @@ async def test_handle_set_category_callback_csgo(mock_update, mock_context):
 @pytest.mark.asyncio()
 async def test_handle_set_category_callback_rust(mock_update, mock_context):
     """Тест обработчика выбора категории для Rust."""
-    # Настройка данных callback
+    # НастSwarmка данных callback
     mock_update.callback_query.data = "set_category:rust"
 
     # Вызываем обработчик
@@ -562,7 +562,7 @@ async def test_handle_set_category_callback_rust(mock_update, mock_context):
         handle_set_category_callback,
     )
 
-    await handle_set_category_callback(mock_update, mock_context)
+    awAlgot handle_set_category_callback(mock_update, mock_context)
 
     # Проверяем, что callback был обработан
     mock_update.callback_query.answer.assert_called_once()
@@ -571,7 +571,7 @@ async def test_handle_set_category_callback_rust(mock_update, mock_context):
 @pytest.mark.asyncio()
 async def test_handle_set_rarity_callback_dota2(mock_update, mock_context):
     """Тест обработчика выбора редкости для Dota 2."""
-    # Настройка данных callback
+    # НастSwarmка данных callback
     mock_update.callback_query.data = "set_rarity:dota2"
 
     # Вызываем обработчик
@@ -579,7 +579,7 @@ async def test_handle_set_rarity_callback_dota2(mock_update, mock_context):
         handle_set_rarity_callback,
     )
 
-    await handle_set_rarity_callback(mock_update, mock_context)
+    awAlgot handle_set_rarity_callback(mock_update, mock_context)
 
     # Проверяем, что callback был обработан
     mock_update.callback_query.answer.assert_called_once()
@@ -589,7 +589,7 @@ async def test_handle_set_rarity_callback_dota2(mock_update, mock_context):
 @pytest.mark.asyncio()
 async def test_handle_set_exterior_callback_csgo(mock_update, mock_context):
     """Тест обработчика выбора внешнего вида для CS:GO."""
-    # Настройка данных callback
+    # НастSwarmка данных callback
     mock_update.callback_query.data = "set_exterior:csgo"
 
     # Вызываем обработчик
@@ -597,7 +597,7 @@ async def test_handle_set_exterior_callback_csgo(mock_update, mock_context):
         handle_set_exterior_callback,
     )
 
-    await handle_set_exterior_callback(mock_update, mock_context)
+    awAlgot handle_set_exterior_callback(mock_update, mock_context)
 
     # Проверяем, что callback был обработан
     mock_update.callback_query.answer.assert_called_once()
@@ -606,13 +606,13 @@ async def test_handle_set_exterior_callback_csgo(mock_update, mock_context):
 @pytest.mark.asyncio()
 async def test_handle_set_hero_callback_dota2(mock_update, mock_context):
     """Тест обработчика выбора героя для Dota 2."""
-    # Настройка данных callback
+    # НастSwarmка данных callback
     mock_update.callback_query.data = "set_hero:dota2"
 
     # Вызываем обработчик
     from src.telegram_bot.handlers.game_filter_handlers import handle_set_hero_callback
 
-    await handle_set_hero_callback(mock_update, mock_context)
+    awAlgot handle_set_hero_callback(mock_update, mock_context)
 
     # Проверяем, что callback был обработан
     mock_update.callback_query.answer.assert_called_once()
@@ -621,13 +621,13 @@ async def test_handle_set_hero_callback_dota2(mock_update, mock_context):
 @pytest.mark.asyncio()
 async def test_handle_set_class_callback_tf2(mock_update, mock_context):
     """Тест обработчика выбора класса для TF2."""
-    # Настройка данных callback
+    # НастSwarmка данных callback
     mock_update.callback_query.data = "set_class:tf2"
 
     # Вызываем обработчик
     from src.telegram_bot.handlers.game_filter_handlers import handle_set_class_callback
 
-    await handle_set_class_callback(mock_update, mock_context)
+    awAlgot handle_set_class_callback(mock_update, mock_context)
 
     # Проверяем, что callback был обработан
     mock_update.callback_query.answer.assert_called_once()
@@ -653,7 +653,7 @@ async def test_handle_filter_callback_price_range(
     mock_update.callback_query.data = "filter:price_range:10:50:csgo"
 
     # Вызываем обработчик
-    await handle_filter_callback(mock_update, mock_context)
+    awAlgot handle_filter_callback(mock_update, mock_context)
 
     # Проверяем, что фильтры установлены
     filters = mock_context.user_data.get("filters", {}).get("csgo", {})
@@ -684,7 +684,7 @@ async def test_handle_filter_callback_price_range_reset(
     mock_update.callback_query.data = "filter:price_range:reset:csgo"
 
     # Вызываем обработчик
-    await handle_filter_callback(mock_update, mock_context)
+    awAlgot handle_filter_callback(mock_update, mock_context)
 
     # Проверяем, что фильтры удалены
     filters = mock_context.user_data.get("filters", {}).get("csgo", {})
@@ -707,7 +707,7 @@ async def test_handle_filter_callback_float_range(
     mock_update.callback_query.data = "filter:float_range:0.00:0.07:csgo"
 
     # Вызываем обработчик
-    await handle_filter_callback(mock_update, mock_context)
+    awAlgot handle_filter_callback(mock_update, mock_context)
 
     # Проверяем, что фильтры установлены
     filters = mock_context.user_data.get("filters", {}).get("csgo", {})
@@ -738,7 +738,7 @@ async def test_handle_filter_callback_float_range_reset(
     mock_update.callback_query.data = "filter:float_range:reset:csgo"
 
     # Вызываем обработчик
-    await handle_filter_callback(mock_update, mock_context)
+    awAlgot handle_filter_callback(mock_update, mock_context)
 
     # Проверяем, что фильтры удалены
     filters = mock_context.user_data.get("filters", {}).get("csgo", {})
@@ -764,7 +764,7 @@ async def test_handle_filter_callback_category_reset(
     mock_update.callback_query.data = "filter:category:reset:csgo"
 
     # Вызываем обработчик
-    await handle_filter_callback(mock_update, mock_context)
+    awAlgot handle_filter_callback(mock_update, mock_context)
 
     # Проверяем, что фильтр удален
     filters = mock_context.user_data.get("filters", {}).get("csgo", {})
@@ -789,7 +789,7 @@ async def test_handle_filter_callback_rarity_reset(
     mock_update.callback_query.data = "filter:rarity:reset:csgo"
 
     # Вызываем обработчик
-    await handle_filter_callback(mock_update, mock_context)
+    awAlgot handle_filter_callback(mock_update, mock_context)
 
     # Проверяем, что фильтр удален
     filters = mock_context.user_data.get("filters", {}).get("csgo", {})
@@ -810,7 +810,7 @@ async def test_handle_filter_callback_invalid_format(
     mock_update.callback_query.data = "filter:invalid"
 
     # Вызываем обработчик
-    await handle_filter_callback(mock_update, mock_context)
+    awAlgot handle_filter_callback(mock_update, mock_context)
 
     # Проверяем, что показано сообщение об ошибке
     call_args = mock_update.callback_query.edit_message_text.call_args

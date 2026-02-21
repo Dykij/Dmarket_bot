@@ -11,10 +11,10 @@ from telegram.constants import ParseMode
 from telegram.ext import ContextTypes
 
 from src.telegram_bot.handlers.dmarket_status import dmarket_status_impl
-from src.telegram_bot.handlers.main_keyboard import (
+from src.telegram_bot.handlers.mAlgon_keyboard import (
     auto_trade_start,
-    get_main_keyboard,
-    main_menu_callback,
+    get_mAlgon_keyboard,
+    mAlgon_menu_callback,
 )
 from src.telegram_bot.keyboards import (
     get_alert_keyboard,
@@ -35,7 +35,7 @@ async def handle_simple_menu(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> None:
     """Handle simple_menu callback."""
-    await main_menu_callback(update, context)
+    awAlgot mAlgon_menu_callback(update, context)
 
 
 async def handle_balance(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -43,7 +43,7 @@ async def handle_balance(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     if not update.callback_query or not update.callback_query.message:
         return
 
-    await dmarket_status_impl(
+    awAlgot dmarket_status_impl(
         update, context, status_message=update.callback_query.message
     )
 
@@ -53,7 +53,7 @@ async def handle_search(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     if not update.callback_query:
         return
 
-    await update.callback_query.edit_message_text(
+    awAlgot update.callback_query.edit_message_text(
         "🔍 <b>Поиск предметов на DMarket</b>\n\nВыберите игру для поиска предметов:",
         reply_markup=get_game_selection_keyboard(),
         parse_mode=ParseMode.HTML,
@@ -65,8 +65,8 @@ async def handle_settings(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     if not update.callback_query:
         return
 
-    await update.callback_query.edit_message_text(
-        "⚙️ <b>Настройки бота</b>\n\nВыберите раздел для настройки:",
+    awAlgot update.callback_query.edit_message_text(
+        "⚙️ <b>НастSwarmки бота</b>\n\nВыберите раздел для настSwarmки:",
         reply_markup=get_settings_keyboard(),
         parse_mode=ParseMode.HTML,
     )
@@ -79,7 +79,7 @@ async def handle_market_trends(
     if not update.callback_query:
         return
 
-    await update.callback_query.edit_message_text(
+    awAlgot update.callback_query.edit_message_text(
         "📈 <b>Рыночные тренды</b>\n\n"
         "Анализ рыночных трендов и популярных предметов.\n"
         "Выберите игру для просмотра трендов:",
@@ -93,31 +93,31 @@ async def handle_alerts(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     if not update.callback_query:
         return
 
-    await update.callback_query.edit_message_text(
+    awAlgot update.callback_query.edit_message_text(
         "🔔 <b>Управление оповещениями</b>\n\n"
-        "Настройте оповещения о изменении цен и других рыночных событиях:",
+        "НастSwarmте оповещения о изменении цен и других рыночных событиях:",
         reply_markup=get_alert_keyboard(),
         parse_mode=ParseMode.HTML,
     )
 
 
-async def handle_back_to_main(
+async def handle_back_to_mAlgon(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> None:
-    """Handle back_to_main callback."""
+    """Handle back_to_mAlgon callback."""
     if not update.callback_query:
         return
 
-    await update.callback_query.edit_message_text(
+    awAlgot update.callback_query.edit_message_text(
         "👋 <b>Главное меню</b>\n\nВыберите действие:",
-        reply_markup=get_main_keyboard(),
+        reply_markup=get_mAlgon_keyboard(),
         parse_mode=ParseMode.HTML,
     )
 
 
-async def handle_main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Handle main_menu callback."""
-    await handle_back_to_main(update, context)
+async def handle_mAlgon_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Handle mAlgon_menu callback."""
+    awAlgot handle_back_to_mAlgon(update, context)
 
 
 # ============================================================================
@@ -129,21 +129,21 @@ async def handle_arbitrage_menu(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> None:
     """Handle arbitrage/arbitrage_menu callback - redirect to auto_trade."""
-    await auto_trade_start(update, context)
+    awAlgot auto_trade_start(update, context)
 
 
 async def handle_auto_arbitrage(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> None:
     """Handle auto_arbitrage callback - redirect to auto_trade."""
-    await auto_trade_start(update, context)
+    awAlgot auto_trade_start(update, context)
 
 
 async def handle_dmarket_arbitrage(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> None:
     """Handle dmarket_arbitrage callback - redirect to auto_trade."""
-    await auto_trade_start(update, context)
+    awAlgot auto_trade_start(update, context)
 
 
 async def handle_best_opportunities(
@@ -152,7 +152,7 @@ async def handle_best_opportunities(
     """Handle best_opportunities callback."""
     from src.telegram_bot.handlers.callbacks import handle_best_opportunities_impl
 
-    await handle_best_opportunities_impl(update, context)
+    awAlgot handle_best_opportunities_impl(update, context)
 
 
 async def handle_game_selection(
@@ -162,7 +162,7 @@ async def handle_game_selection(
     if not update.callback_query:
         return
 
-    await update.callback_query.edit_message_text(
+    awAlgot update.callback_query.edit_message_text(
         "🎮 <b>Выберите игру для арбитража:</b>",
         reply_markup=get_game_selection_keyboard(),
         parse_mode=ParseMode.HTML,
@@ -176,7 +176,7 @@ async def handle_market_analysis(
     if not update.callback_query:
         return
 
-    await update.callback_query.edit_message_text(
+    awAlgot update.callback_query.edit_message_text(
         "📊 <b>Анализ рынка</b>\n\nВыберите игру для анализа рыночных тенденций и цен:",
         reply_markup=get_game_selection_keyboard(),
         parse_mode=ParseMode.HTML,
@@ -190,7 +190,7 @@ async def handle_open_webapp(
     if not update.callback_query:
         return
 
-    await update.callback_query.edit_message_text(
+    awAlgot update.callback_query.edit_message_text(
         "🌐 <b>DMarket WebApp</b>\n\nНажмите кнопку ниже, чтобы открыть DMarket прямо в Telegram:",
         parse_mode=ParseMode.HTML,
         reply_markup=get_dmarket_webapp_keyboard(),
@@ -202,14 +202,14 @@ async def handle_open_webapp(
 # ============================================================================
 
 
-async def handle_temporary_unavailable(
+async def handle_temporary_unavAlgolable(
     update: Update, context: ContextTypes.DEFAULT_TYPE, feature: str = "Функция"
 ) -> None:
     """Handle callbacks for features under development."""
     if not update.callback_query:
         return
 
-    await update.callback_query.answer(f"⚠️ {feature} временно недоступна.")
+    awAlgot update.callback_query.answer(f"⚠️ {feature} временно недоступна.")
 
 
 async def handle_noop(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -218,7 +218,7 @@ async def handle_noop(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         return
 
     # Just acknowledge, don't do anything
-    await update.callback_query.answer()
+    awAlgot update.callback_query.answer()
 
 
 # ============================================================================
@@ -240,20 +240,20 @@ async def handle_help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
 • 🎯 <b>Таргеты</b> - автоматические заявки на покупку
 • 📊 <b>Аналитика</b> - анализ рынка
 • 🔔 <b>Оповещения</b> - уведомления о ценах
-• ⚙️ <b>Настройки</b> - конфигурация бота
+• ⚙️ <b>НастSwarmки</b> - конфигурация бота
 
 <b>Как использовать:</b>
-1. Настройте API ключи в /settings
+1. НастSwarmте API ключи в /settings
 2. Выберите игру (CS:GO, Dota 2, TF2, Rust)
 3. Запустите сканирование арбитража
-4. Настройте автоматические таргеты
+4. НастSwarmте автоматические таргеты
 
 <b>Поддержка:</b>
 Если возникли проблемы, используйте /logs для просмотра логов.
     """
 
-    await update.callback_query.edit_message_text(
+    awAlgot update.callback_query.edit_message_text(
         help_text,
         parse_mode=ParseMode.HTML,
-        reply_markup=get_main_keyboard(),
+        reply_markup=get_mAlgon_keyboard(),
     )

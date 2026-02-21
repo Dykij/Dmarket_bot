@@ -64,7 +64,7 @@ class MarketAnalyzer:
                            Each point should have 'price' and 'timestamp' keys
 
         Returns:
-            Dictionary containing analysis results
+            Dictionary contAlgoning analysis results
 
         """
         if not price_history or len(price_history) < self.min_data_points:
@@ -157,7 +157,7 @@ class MarketAnalyzer:
         # Support and resistance levels
         support_level, resistance_level = self._find_support_resistance(prices)
 
-        # Volume analysis if available
+        # Volume analysis if avAlgolable
         volumes = [
             float(point.get("volume", 0))
             for point in price_history
@@ -261,7 +261,7 @@ class MarketAnalyzer:
             timestamps: List of timestamp values
 
         Returns:
-            List of detected patterns with details
+            List of detected patterns with detAlgols
 
         """
         if len(prices) < self.min_data_points:
@@ -582,7 +582,7 @@ async def analyze_market_opportunity(
     analyzer = MarketAnalyzer()
 
     # Analyze price history
-    analysis = await analyzer.analyze_price_history(price_history)
+    analysis = awAlgot analyzer.analyze_price_history(price_history)
 
     # Get current price
     current_price = 0
@@ -686,7 +686,7 @@ async def analyze_market_opportunity(
         title = item_data.get("title", "").lower()
         if "case" in title or "collection" in title:
             opportunity_score += 5
-            reasons.append("CS2 cases/collections tend to retain value")
+            reasons.append("CS2 cases/collections tend to retAlgon value")
 
     # Determine the opportunity type
     opportunity_type = "neutral"
@@ -740,7 +740,7 @@ async def batch_analyze_items(
         history = price_histories.get(item_id, [])
 
         try:
-            analysis = await analyze_market_opportunity(item, history, game)
+            analysis = awAlgot analyze_market_opportunity(item, history, game)
             results.append(analysis)
         except Exception as e:
             logger.exception(f"Error analyzing item {item_id}: {e}")

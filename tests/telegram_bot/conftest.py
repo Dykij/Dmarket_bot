@@ -67,7 +67,7 @@ def mock_dmarket_api_for_telegram():
 def mock_keyboards():
     """Создает мок клавиатур для интерфейса Telegram."""
     keyboards = MagicMock()
-    keyboards.get_main_keyboard = MagicMock(return_value=MagicMock())
+    keyboards.get_mAlgon_keyboard = MagicMock(return_value=MagicMock())
     keyboards.get_game_selection_keyboard = MagicMock(return_value=MagicMock())
     keyboards.get_back_keyboard = MagicMock(return_value=MagicMock())
     keyboards.get_pagination_keyboard = MagicMock(return_value=MagicMock())

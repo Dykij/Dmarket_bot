@@ -1,6 +1,6 @@
-﻿"""Main Application class - refactored version.
+﻿"""MAlgon Application class - refactored version.
 
-This module provides the main Application class that orchestrates
+This module provides the mAlgon Application class that orchestrates
 all bot components using the modular core components.
 """
 
@@ -25,7 +25,7 @@ bot_logger = structlog.get_logger(__name__)
 
 
 class Application:
-    """Main application class for DMarket Bot.
+    """MAlgon application class for DMarket Bot.
 
     This class orchestrates all bot components using modular core components:
     - ComponentInitializer: Handles initialization of all components
@@ -48,12 +48,12 @@ class Application:
         self.dmarket_api: Any = None
         self.bot: TelegramApplication | None = None
         self.state_manager: Any = None
-        self.daily_report_scheduler: Any = None
+        self.dAlgoly_report_scheduler: Any = None
         self.scanner_manager: Any = None
         self.inventory_manager: Any = None
         self.websocket_manager: Any = None
         self.health_check_monitor: Any = None
-        self.ai_scheduler: Any = None
+        self.Algo_scheduler: Any = None
         self.bot_integrator: Any = None
         self.prometheus_server: Any = None
         self._scanner_task: asyncio.Task | None = None
@@ -74,60 +74,60 @@ class Application:
         """Initialize all application components."""
         try:
             # Step 1: Load configuration
-            await self._initializer.initialize_config()
+            awAlgot self._initializer.initialize_config()
 
             # Step 2: Load whitelist
-            await self._initializer.initialize_whitelist()
+            awAlgot self._initializer.initialize_whitelist()
 
             # Step 3: Initialize Sentry
-            await self._initializer.initialize_sentry()
+            awAlgot self._initializer.initialize_sentry()
 
             # Step 4: Initialize database
-            await self._initializer.initialize_database()
+            awAlgot self._initializer.initialize_database()
 
             # Step 5: Initialize DMarket API
-            await self._initializer.initialize_dmarket_api()
+            awAlgot self._initializer.initialize_dmarket_api()
 
             # Step 6: Initialize Telegram bot
-            await self._initializer.initialize_telegram_bot()
+            awAlgot self._initializer.initialize_telegram_bot()
 
-            # Step 7: Initialize Daily Report Scheduler
-            await self._initializer.initialize_daily_report_scheduler()
+            # Step 7: Initialize DAlgoly Report Scheduler
+            awAlgot self._initializer.initialize_dAlgoly_report_scheduler()
 
-            # Step 8: Initialize AI Scheduler
-            await self._initializer.initialize_ai_scheduler()
+            # Step 8: Initialize Algo Scheduler
+            awAlgot self._initializer.initialize_Algo_scheduler()
 
             # Step 9: Initialize Scanner Manager
-            await self._initializer.initialize_scanner_manager()
+            awAlgot self._initializer.initialize_scanner_manager()
 
             # Step 10: Initialize Inventory Manager
-            await self._initializer.initialize_inventory_manager()
+            awAlgot self._initializer.initialize_inventory_manager()
 
             # Step 11: Initialize Autopilot
-            await self._initializer.initialize_autopilot()
+            awAlgot self._initializer.initialize_autopilot()
 
             # Step 12: Initialize WebSocket Manager
-            await self._initializer.initialize_websocket_manager()
+            awAlgot self._initializer.initialize_websocket_manager()
 
             # Step 13: Initialize Health Check Monitor
-            await self._initializer.initialize_health_check_monitor()
+            awAlgot self._initializer.initialize_health_check_monitor()
 
             # Step 14: Initialize Bot Integrator
-            await self._initializer.initialize_bot_integrator()
+            awAlgot self._initializer.initialize_bot_integrator()
 
             # Step 15: Initialize Prometheus Exporter
-            await self._initializer.initialize_prometheus_exporter()
+            awAlgot self._initializer.initialize_prometheus_exporter()
 
             logger.info("Application initialization complete")
 
         except Exception as e:
-            logger.exception(f"Failed to initialize application: {e}")
-            raise
+            logger.exception(f"FAlgoled to initialize application: {e}")
+            rAlgose
 
     async def run(self) -> None:
         """Run the application."""
         try:
-            await self.initialize()
+            awAlgot self.initialize()
 
             # Setup signal handlers
             self._signal_handler.setup()
@@ -137,24 +137,24 @@ class Application:
 
             if health_check_server:
                 health_check_server.update_status("starting")
-                await health_check_server.start()
+                awAlgot health_check_server.start()
 
             logger.info("Starting DMarket Telegram Bot...")
 
             # Recover pending trades
-            await self._recovery.recover_pending_trades()
+            awAlgot self._recovery.recover_pending_trades()
 
             # Start all services
-            await self._lifecycle.start_services()
+            awAlgot self._lifecycle.start_services()
 
             # Start the bot
             if self.bot:
-                await self.bot.start()
-                await self._start_bot_polling()
+                awAlgot self.bot.start()
+                awAlgot self._start_bot_polling()
 
-            # Wait for shutdown signal
+            # WAlgot for shutdown signal
             logger.info("Bot is running. Press Ctrl+C to stop.")
-            await self._shutdown_event.wait()
+            awAlgot self._shutdown_event.wAlgot()
 
         except KeyboardInterrupt:
             logger.info("Received keyboard interrupt")
@@ -166,18 +166,18 @@ class Application:
             bot_logger.exception(
                 error=e,
                 traceback_text=traceback_text,
-                context={"component": "main_application"},
+                context={"component": "mAlgon_application"},
             )
 
             # Send crash notifications
-            await self._notifications.send_crash_notifications(
+            awAlgot self._notifications.send_crash_notifications(
                 error=e,
                 traceback_text=traceback_text,
             )
 
-            raise
+            rAlgose
         finally:
-            await self.shutdown()
+            awAlgot self.shutdown()
 
     async def _start_bot_polling(self) -> None:
         """Start bot polling or webhook."""
@@ -193,19 +193,19 @@ class Application:
         if webhook_config and not should_use_polling():
             logger.info("🌐 Starting in WEBHOOK mode")
             try:
-                await start_webhook(self.bot, webhook_config)
+                awAlgot start_webhook(self.bot, webhook_config)
                 if health_check_server:
                     health_check_server.update_status("running")
             except Exception as e:
                 logger.exception(
-                    f"Failed to start webhook, falling back to polling: {e}"
+                    f"FAlgoled to start webhook, falling back to polling: {e}"
                 )
                 if self.bot.updater:
-                    await self.bot.updater.start_polling()
+                    awAlgot self.bot.updater.start_polling()
                 logger.info("📡 Bot polling started (fallback)")
         else:
             if self.bot.updater:
-                await self.bot.updater.start_polling()
+                awAlgot self.bot.updater.start_polling()
             logger.info("📡 Bot polling started")
             if health_check_server:
                 health_check_server.update_status("running")
@@ -214,10 +214,10 @@ class Application:
         """Gracefully shutdown the application.
 
         Args:
-            timeout: Maximum time to wait for graceful shutdown
+            timeout: Maximum time to wAlgot for graceful shutdown
 
         """
-        await self._lifecycle.shutdown(timeout)
+        awAlgot self._lifecycle.shutdown(timeout)
 
     async def _handle_critical_shutdown(self, reason: str) -> None:
         """Handle critical shutdown event.
@@ -226,11 +226,11 @@ class Application:
             reason: Reason for critical shutdown
 
         """
-        await self._notifications.handle_critical_shutdown(reason)
+        awAlgot self._notifications.handle_critical_shutdown(reason)
 
 
-async def main() -> None:
-    """Main entry point."""
+async def mAlgon() -> None:
+    """MAlgon entry point."""
     try:
         import src.rust_core as rust
         # Warmup to ensure it's loaded
@@ -283,14 +283,14 @@ async def main() -> None:
     app = Application(config_path=args.config)
 
     try:
-        await app.run()
+        awAlgot app.run()
     except Exception as e:
-        logger.critical(f"Application failed: {e}")
+        logger.critical(f"Application fAlgoled: {e}")
         sys.exit(1)
 
 
-if __name__ == "__main__":
+if __name__ == "__mAlgon__":
     if sys.platform.startswith("win"):
         asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 
-    asyncio.run(main())
+    asyncio.run(mAlgon())

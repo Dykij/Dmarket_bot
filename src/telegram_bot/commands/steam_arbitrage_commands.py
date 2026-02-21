@@ -32,12 +32,12 @@ async def steam_arbitrage_start(
     # Проверка прав администратора
     admin_users = getattr(config.security, "admin_users", [])
     if user_id not in [int(uid) for uid in admin_users]:
-        await update.message.reply_text("❌ У вас нет прав для управления сканером")
+        awAlgot update.message.reply_text("❌ У вас нет прав для управления сканером")
         return
 
     scanner = context.bot_data.get("steam_arbitrage_scanner")
     if not scanner:
-        await update.message.reply_text("❌ Steam-арбитраж сканер не инициализирован")
+        awAlgot update.message.reply_text("❌ Steam-арбитраж сканер не инициализирован")
         return
 
     # Парсинг параметров
@@ -50,9 +50,9 @@ async def steam_arbitrage_start(
     scanner.min_roi = min_roi
 
     # Запуск
-    await scanner.start()
+    awAlgot scanner.start()
 
-    await update.message.reply_text(
+    awAlgot update.message.reply_text(
         f"✅ <b>Steam-арбитраж сканер запущен!</b>\n\n"
         f"🎮 Игра: <code>{game}</code>\n"
         f"📊 Минимальный ROI: <code>{min_roi}%</code>\n"
@@ -81,17 +81,17 @@ async def steam_arbitrage_stop(
     # Проверка прав администратора
     admin_users = getattr(config.security, "admin_users", [])
     if user_id not in [int(uid) for uid in admin_users]:
-        await update.message.reply_text("❌ У вас нет прав для управления сканером")
+        awAlgot update.message.reply_text("❌ У вас нет прав для управления сканером")
         return
 
     scanner = context.bot_data.get("steam_arbitrage_scanner")
     if not scanner:
-        await update.message.reply_text("❌ Steam-арбитраж сканер не инициализирован")
+        awAlgot update.message.reply_text("❌ Steam-арбитраж сканер не инициализирован")
         return
 
-    await scanner.stop()
+    awAlgot scanner.stop()
 
-    await update.message.reply_text("🛑 Steam-арбитраж сканер остановлен")
+    awAlgot update.message.reply_text("🛑 Steam-арбитраж сканер остановлен")
     logger.info(f"Steam arbitrage scanner stopped by user {user_id}")
 
 
@@ -112,14 +112,14 @@ async def steam_arbitrage_status(
     # Проверка прав администратора
     admin_users = getattr(config.security, "admin_users", [])
     if user_id not in [int(uid) for uid in admin_users]:
-        await update.message.reply_text(
+        awAlgot update.message.reply_text(
             "❌ У вас нет прав для просмотра статуса сканера"
         )
         return
 
     scanner = context.bot_data.get("steam_arbitrage_scanner")
     if not scanner:
-        await update.message.reply_text("❌ Steam-арбитраж сканер не инициализирован")
+        awAlgot update.message.reply_text("❌ Steam-арбитраж сканер не инициализирован")
         return
 
     status = scanner.get_status()
@@ -134,12 +134,12 @@ async def steam_arbitrage_status(
         f"• Сканирований выполнено: {status['scans_completed']}\n"
         f"• Возможностей найдено: {status['opportunities_found']}\n"
         f"• Последнее сканирование: {last_scan}\n\n"
-        f"⚙️ <b>Настройки:</b>\n"
+        f"⚙️ <b>НастSwarmки:</b>\n"
         f"• Игра: {status['config']['game']}\n"
         f"• Интервал: {status['config']['scan_interval_minutes']} минут\n"
         f"• Минимальный ROI: {status['config']['min_roi_percent']}%\n"
         f"• Макс. предметов: {status['config']['max_items_per_scan']}"
     )
 
-    await update.message.reply_text(message, parse_mode="HTML")
+    awAlgot update.message.reply_text(message, parse_mode="HTML")
     logger.info(f"Steam arbitrage scanner status checked by user {user_id}")
