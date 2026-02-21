@@ -1,0 +1,91 @@
+name: Hybrid HFT Pipeline
+
+on:
+  push:
+    branches: [ "master", "main", "dev" ]
+  pull_request:
+    branches: [ "master", "main", "dev" ]
+
+env:
+  CARGO_TERM_COLOR: always
+  # Force DRY_RUN for all CI tests to prevent accidental network calls
+  DRY_RUN: true
+
+jobs:
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Gitleaks (Secret Detection)
+        uses: zricethezav/gitleaks-action@master
+        continue-on-error: false
+
+  # Core Logic & Rust Hot Path
+  build-and-test:
+    name: Build & Test (Hybrid)
+    runs-on: windows-latest
+    needs: security
+    steps:
+      - uses: actions/checkout@v4
+
+      # 1. Setup Rust (The Muscle)
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+          components: rustfmt, clippy
+
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src/rust_core
+
+      # 2. Rust Quality Control
+      - name: Rust Formatting
+        run: |
+          cd src/rust_core
+          cargo fmt --all -- --check
+
+      - name: Rust Linting (Clippy)
+        run: |
+          cd src/rust_core
+          cargo clippy -- -D warnings
+
+      # 3. Compile HFT Core
+      - name: Build Rust Core (Release)
+        run: |
+          cd src/rust_core
+          cargo build --release --lib
+
+      # 4. Hybrid Link (DLL -> PYD)
+      - name: Link Rust to Python
+        run: |
+          Copy-Item "src/rust_core/target/release/rust_core.dll" -Destination "src/rust_core.pyd" -Force
+          Write-Output "✅ Rust Core Linked: src/rust_core.pyd"
+
+      # 5. Setup Python (The Brain)
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: 'pip'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-asyncio
+
+      # 6. Run Hybrid Tests
+      - name: Run Pytest
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+          # DMARKET_PUBLIC_KEY: ${{ secrets.DMARKET_PUBLIC_KEY }} # Mocked in tests usually, injected if needed
+        run: |
+          # Only run unit tests. Integration tests requiring live API are skipped in CI unless flagged.
+          pytest tests/unit -v
