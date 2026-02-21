@@ -184,7 +184,9 @@ class TOTP:
 
         # Decode secret
         try:
-            key = base64.b32decode(self.secret.upper() + "=" * ((8 - len(self.secret) % 8) % 8))
+            key = base64.b32decode(
+                self.secret.upper() + "=" * ((8 - len(self.secret) % 8) % 8)
+            )
         except Exception:
             key = self.secret.encode()
 
@@ -195,7 +197,7 @@ class TOTP:
         # Dynamic truncation
         offset = hmac_hash[-1] & 0x0F
         code = struct.unpack(">I", hmac_hash[offset : offset + 4])[0]
-        code = (code & 0x7FFFFFFF) % (10 ** self.digits)
+        code = (code & 0x7FFFFFFF) % (10**self.digits)
 
         return str(code).zfill(self.digits)
 
@@ -274,7 +276,9 @@ class APIKeyEncryption:
         """
         if master_key:
             # Derive key from master key
-            salt = b"dmarket_bot_salt"  # In production, use unique salt per installation
+            salt = (
+                b"dmarket_bot_salt"  # In production, use unique salt per installation
+            )
             kdf = PBKDF2HMAC(
                 algorithm=hashes.SHA256(),
                 length=32,
@@ -358,7 +362,9 @@ class SecurityManager:
         self._encryption = APIKeyEncryption(encryption_key)
 
         # Session tracking for 2FA
-        self._2fa_sessions: dict[str, tuple[int, datetime]] = {}  # session_id -> (user_id, expires)
+        self._2fa_sessions: dict[str, tuple[int, datetime]] = (
+            {}
+        )  # session_id -> (user_id, expires)
 
     # ==================== 2FA ====================
 
@@ -660,7 +666,11 @@ class SecurityManager:
             user_id=user_id,
             ip_address=ip_address,
             description=description,
-            expires_at=datetime.now(UTC) + timedelta(days=expires_days) if expires_days else None,
+            expires_at=(
+                datetime.now(UTC) + timedelta(days=expires_days)
+                if expires_days
+                else None
+            ),
         )
 
         if user_id not in self._ip_whitelist:
@@ -692,8 +702,7 @@ class SecurityManager:
 
         original_count = len(self._ip_whitelist[user_id])
         self._ip_whitelist[user_id] = [
-            e for e in self._ip_whitelist[user_id]
-            if e.ip_address != ip_address
+            e for e in self._ip_whitelist[user_id] if e.ip_address != ip_address
         ]
 
         removed = len(self._ip_whitelist[user_id]) < original_count
@@ -726,7 +735,11 @@ class SecurityManager:
             return True
 
         for entry in whitelist:
-            if entry.ip_address == ip_address and entry.is_active and not entry.is_expired():
+            if (
+                entry.ip_address == ip_address
+                and entry.is_active
+                and not entry.is_expired()
+            ):
                 return True
 
         return False
@@ -902,8 +915,14 @@ class SecurityManager:
 
         return {
             "2fa_enabled": two_fa_config.is_enabled if two_fa_config else False,
-            "2fa_last_used": two_fa_config.last_used.isoformat() if two_fa_config and two_fa_config.last_used else None,
-            "backup_codes_remaining": len(two_fa_config.backup_codes) if two_fa_config else 0,
+            "2fa_last_used": (
+                two_fa_config.last_used.isoformat()
+                if two_fa_config and two_fa_config.last_used
+                else None
+            ),
+            "backup_codes_remaining": (
+                len(two_fa_config.backup_codes) if two_fa_config else 0
+            ),
             "ip_whitelist_count": len([e for e in ip_whitelist if e.is_active]),
             "recent_security_events": len(recent_logs),
             "failed_auth_attempts_recent": failed_attempts,

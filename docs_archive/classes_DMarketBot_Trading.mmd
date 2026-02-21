@@ -1,0 +1,364 @@
+classDiagram
+  class AdaptiveTrader {
+    POSITION_MULTIPLIERS : dict
+    STOP_LOSS_MULTIPLIERS : dict
+    base_position_size : float
+    base_stop_loss_pct : float
+    base_take_profit_pct : float
+    detector
+    get_adapted_params(prices: list[float], balance: float | None) dict[str, Any]
+    should_trade(prices: list[float], min_confidence: float) tuple[bool, str]
+  }
+  class AdvancedTradingSkills {
+    manipulation_threshold : float
+    min_data_points : int
+    regime_detector
+    analyze_trade_opportunity(item: Item, account_balance: float) dict[str, Any]
+    calculate_position_size(account_balance: float, entry_price: float, stop_loss: float, risk_percent: float) dict[str, Any]
+    detect_market_manipulation(prices: list[float], volumes: list[int] | None) ManipulationAnalysis
+    optimal_entry_point(item: Item) EntryPointAnalysis
+    sentiment_analysis(item_name: str) SentimentAnalysis
+  }
+  class AutoOrder {
+    amount_usd : float | None
+    created_at : datetime
+    entry_price : float | None
+    executed_at : datetime | None
+    expires_at : datetime | None
+    item_id : str
+    item_name : str
+    limit_price : float | None
+    notes : str
+    order_id : str
+    order_type
+    quantity : int
+    status
+    trigger_percent : float | None
+    trigger_price : float | None
+    trigger_time : datetime | None
+    triggered_at : datetime | None
+    is_expired() bool
+    to_dict() dict[str, Any]
+  }
+  class BacktestConfig {
+    allow_short : bool
+    fee_percent : float
+    initial_balance : float
+    max_position_percent : float
+    slippage_percent : float
+    stop_loss_percent : float | None
+    take_profit_percent : float | None
+  }
+  class BacktestResults {
+    avg_pnl_per_trade : float
+    duration_days : int
+    end_date : datetime | None
+    equity_curve : list[float]
+    final_balance : float
+    losing_trades : int
+    max_drawdown : float
+    max_drawdown_percent : float
+    max_loss : float
+    max_profit : float
+    profit_factor : float
+    sharpe_ratio : float
+    sortino_ratio : float
+    start_date : datetime | None
+    total_pnl : float
+    total_return : float
+    total_return_percent : float
+    total_trades : int
+    trades : list[Trade]
+    win_rate : float
+    winning_trades : int
+    summary() str
+    to_dict() dict[str, Any]
+  }
+  class Backtester {
+    config
+    compare_strategies(strategies: list[Strategy]) dict[str, BacktestResults]
+    load_prices(prices: list[float] | list[PricePoint], start_date: datetime | None) None
+    run(strategy: Strategy) BacktestResults
+  }
+  class BaseStrategy {
+    game_id : str
+    min_profit_percent
+    calculate_roi(buy_price: float | Decimal, sell_price: float | Decimal) Decimal
+    calculate_target_sell_price(buy_price: float | Decimal) Decimal
+    get_query_filters() dict[str, str]
+    should_buy(item_data: dict[str, Any])* bool
+  }
+  class BreakoutStrategy {
+    lookback : int
+    stop_loss : float
+    trailing_stop : float
+    analyze(prices: list[float], current_idx: int, position: float, balance: float) tuple[TradeAction, float]
+  }
+  class CS2Strategy {
+    get_query_filters() dict[str, str]
+    should_buy(item_data: dict[str, Any]) bool
+  }
+  class DCAConfig {
+    amount_per_buy : float
+    avg_price : float
+    buy_count : int
+    interval_hours : int
+    is_active : bool
+    item_name : str
+    last_buy_time : datetime | None
+    max_total_amount : float
+    target_price : float
+    total_invested : float
+    can_buy(current_price: float, user_balance: float) bool
+    record_buy(price: float, amount: float) None
+  }
+  class Dota2Strategy {
+    get_query_filters() dict[str, str]
+    should_buy(item_data: dict[str, Any]) bool
+  }
+  class EntryPointAnalysis {
+    confidence : float
+    entry_price : float | None
+    reasons : list[str]
+    risk_reward_ratio : float | None
+    signal
+    stop_loss : float | None
+    target_price : float | None
+    to_dict() dict[str, Any]
+  }
+  class EntrySignal {
+    name
+  }
+  class ExecutionResult {
+    executed_at : datetime
+    executed_price : float | None
+    executed_quantity : int
+    message : str
+    order
+    success : bool
+    to_dict() dict[str, Any]
+  }
+  class HybridEngine {
+    MIN_GEM_ROI : Decimal
+    MIN_GRIND_ROI : Decimal
+    MIN_LIQUIDITY_GEM : float
+    MIN_LIQUIDITY_GRIND : float
+    dm : DMarketAPI
+    fees
+    wp : WaxpeerAPI
+    scan_market(game: str) None
+  }
+  class Item {
+    current_price : float
+    game : str
+    item_id : str
+    last_updated : datetime
+    name : str
+    price_history : list[float]
+    suggested_price : float | None
+    volume_history : list[int]
+  }
+  class LiquidityAdjustedFee {
+    DEFAULT_DAILY_ROI : Decimal
+    DM_FEE_BOT_MAX : Decimal
+    DM_FEE_BOT_MIN : Decimal
+    DM_FEE_F2F : Decimal
+    STEAM_HOLD_DAYS : int
+    WAX_CASHOUT_FEE : Decimal
+    WAX_SELLING_FEE : Decimal
+    daily_opportunity_cost : Decimal
+    dm_fee_rate : Decimal
+    calculate_gem_profit(buy_price: float | Decimal, wax_sell_price: float | Decimal, hold_days: int) dict[str, Decimal]
+    calculate_grind_profit(buy_price: float | Decimal, sell_price: float | Decimal) dict[str, Decimal]
+    calculate_opportunity_cost(capital: Decimal, days: int) Decimal
+    calculate_real_buy_cost(list_price: Decimal) Decimal
+    calculate_waxpeer_net_revenue(sell_price: Decimal) Decimal
+    get_break_even_waxpeer(buy_price: float | Decimal) Decimal
+  }
+  class LiquidityAnalyzer {
+    calculate_score(volume_7d: int, recent_sales: int) float
+  }
+  class ManipulationAnalysis {
+    confidence : float
+    detected : bool
+    indicators : list[str]
+    recommendation : str
+    type
+    to_dict() dict[str, Any]
+  }
+  class ManipulationType {
+    name
+  }
+  class MarketRegime {
+    name
+  }
+  class MeanReversionStrategy {
+    buy_deviation : float
+    sell_deviation : float
+    window : int
+    analyze(prices: list[float], current_idx: int, position: float, balance: float) tuple[TradeAction, float]
+  }
+  class OrderStatus {
+    name
+  }
+  class OrderType {
+    name
+  }
+  class PositionType {
+    name
+  }
+  class PricePoint {
+    close : float | None
+    high : float | None
+    low : float | None
+    open : float | None
+    price : float
+    timestamp : datetime
+    volume : float
+  }
+  class RebalanceConfig {
+    is_active : bool
+    min_trade_amount : float
+    rebalance_threshold : float
+    target_allocations : dict[str, float]
+    validate() bool
+  }
+  class RegimeAnalysis {
+    avg_price : float
+    confidence : float
+    data_points : int
+    momentum : float
+    price_change_pct : float
+    regime
+    suggested_strategy : str
+    trend_strength : float
+    volatility : float
+    window_size : int
+    to_dict() dict[str, Any]
+  }
+  class RegimeDetector {
+    RANGING_VOLATILITY : float
+    TREND_THRESHOLD : float
+    VOLATILITY_THRESHOLD : float
+    trend_threshold : float
+    volatility_threshold : float
+    window : int
+    analyze_multi_timeframe(prices: list[float], windows: list[int] | None) dict[str, RegimeAnalysis]
+    detect_regime(prices: list[float], window: int | None) RegimeAnalysis
+    get_regime_summary(multi_analysis: dict[str, RegimeAnalysis]) dict[str, Any]
+    get_strategy_details(regime: MarketRegime) dict[str, Any]
+  }
+  class RustStrategy {
+    should_buy(item_data: dict[str, Any]) bool
+  }
+  class ScheduledTask {
+    callback_name : str
+    callback_params : dict[str, Any]
+    interval_hours : int | None
+    is_active : bool
+    is_recurring : bool
+    last_run : datetime | None
+    run_count : int
+    schedule_time : datetime | None
+    task_id : str
+    task_type : str
+    should_run() bool
+  }
+  class SentimentAnalysis {
+    level
+    mentions_24h : int
+    score : float
+    sources : dict[str, float]
+    trending : bool
+    to_dict() dict[str, Any]
+  }
+  class SentimentLevel {
+    name
+  }
+  class SimpleStrategy {
+    buy_threshold : float
+    lookback : int
+    sell_threshold : float
+    analyze(prices: list[float], current_idx: int, position: float, balance: float) tuple[TradeAction, float]
+  }
+  class Strategy {
+    name
+    analyze(prices: list[float], current_idx: int, position: float, balance: float)* tuple[TradeAction, float]
+  }
+  class StrategyFactory {
+    get_strategy(game_id: str) BaseStrategy
+  }
+  class TF2Strategy {
+    get_query_filters() dict[str, str]
+    should_buy(item_data: dict[str, Any]) bool
+  }
+  class Trade {
+    action
+    balance_after : float
+    fee : float
+    fee_percent : float
+    notes : str
+    pnl : float
+    pnl_percent : float
+    position_after : float
+    price : float
+    quantity : float
+    timestamp : datetime
+    trade_id : int
+    to_dict() dict[str, Any]
+  }
+  class TradeAction {
+    name
+  }
+  class TradeSignal {
+    action : str
+    confidence : float
+    metrics : Dict[str, Any]
+    strategy : str
+  }
+  class TradingAutomation {
+    balance : float
+    dry_run : bool
+    max_orders_per_hour : int
+    calculate_rebalance_trades(current_holdings: dict[str, float], total_portfolio_value: float) list[dict[str, Any]]
+    cancel_order(order_id: str) bool
+    cancel_task(task_id: str) bool
+    check_and_execute(current_prices: dict[str, float]) list[ExecutionResult]
+    disable_dca(item_name: str) bool
+    enable_dca(item_name: str, target_price: float, amount_per_buy: float, interval_hours: int, max_total_amount: float) DCAConfig
+    get_active_orders() list[AutoOrder]
+    get_dca_status(item_name: str) dict[str, Any] | None
+    get_order_history(limit: int) list[AutoOrder]
+    get_statistics() dict[str, Any]
+    register_callback(name: str, callback: Callable[..., Awaitable[Any]]) None
+    schedule_task(task_type: str, schedule_time: datetime | None, interval_hours: int | None, callback_name: str, callback_params: dict[str, Any] | None) ScheduledTask
+    set_balance(balance: float) None
+    set_rebalance_config(target_allocations: dict[str, float], rebalance_threshold: float, min_trade_amount: float) RebalanceConfig | None
+    set_stop_loss(item_id: str, item_name: str, entry_price: float, stop_percent: float, quantity: int, expires_hours: int | None) AutoOrder
+    set_take_profit(item_id: str, item_name: str, entry_price: float, profit_percent: float, quantity: int, expires_hours: int | None) AutoOrder
+    set_trailing_stop(item_id: str, item_name: str, entry_price: float, trail_percent: float, quantity: int) AutoOrder
+    update_trailing_stop(order_id: str, current_price: float) bool
+  }
+  class VolatilityMetrics {
+    get_bollinger_position(price: float, history: List[float]) str
+  }
+  BreakoutStrategy --|> Strategy
+  MeanReversionStrategy --|> Strategy
+  SimpleStrategy --|> Strategy
+  CS2Strategy --|> BaseStrategy
+  Dota2Strategy --|> BaseStrategy
+  RustStrategy --|> BaseStrategy
+  TF2Strategy --|> BaseStrategy
+  EntrySignal --* EntryPointAnalysis : signal
+  ManipulationType --* ManipulationAnalysis : type
+  SentimentLevel --* SentimentAnalysis : level
+  BacktestConfig --* Backtester : config
+  TradeAction --* Trade : action
+  LiquidityAdjustedFee --* HybridEngine : fees
+  MarketRegime --* RegimeAnalysis : regime
+  RegimeDetector --* AdvancedTradingSkills : _regime_detector
+  RegimeDetector --* AdaptiveTrader : detector
+  AutoOrder --* ExecutionResult : order
+  OrderStatus --* AutoOrder : status
+  OrderType --* AutoOrder : order_type
+  RebalanceConfig --o TradingAutomation : _rebalance_config

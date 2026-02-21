@@ -55,7 +55,6 @@ WHITELIST_ITEMS = {
         "Operation Riptide Case",
         "Armory Case",  # Новый 2026
         "Elemental Case",  # Новый 2026
-
         # ===== КЛАССИЧЕСКИЕ КЕЙСЫ (СТАБИЛЬНАЯ ЛИКВИДНОСТЬ) =====
         "Clutch Case",
         "Spectrum 2 Case",
@@ -77,7 +76,6 @@ WHITELIST_ITEMS = {
         "Huntsman Weapon Case",
         "Breakout Case",
         "Revolver Case",
-
         # ===== ЛИКВИДНЫЕ СКИНЫ (БЫСТРАЯ ПРОДАЖА) =====
         # AK-47
         "AK-47 | Slate",
@@ -91,7 +89,6 @@ WHITELIST_ITEMS = {
         "AK-47 | Ice Coaled",
         "AK-47 | Nightwish",
         "AK-47 | Inheritance",  # Новый 2026
-
         # AWP
         "AWP | Asiimov",
         "AWP | Lightning Strike",
@@ -104,7 +101,6 @@ WHITELIST_ITEMS = {
         "AWP | Phobos",
         "AWP | Electric Hive",
         "AWP | PAW",
-
         # M4A4 / M4A1-S
         "M4A4 | Desolate Space",
         "M4A4 | Asiimov",
@@ -118,7 +114,6 @@ WHITELIST_ITEMS = {
         "M4A1-S | Golden Coil",
         "M4A1-S | Blue Phosphor",
         "M4A1-S | Nightmare",  # Новый 2026
-
         # Desert Eagle
         "Desert Eagle | Blaze",
         "Desert Eagle | Code Red",
@@ -127,7 +122,6 @@ WHITELIST_ITEMS = {
         "Desert Eagle | Light Rail",
         "Desert Eagle | Fennec Fox",
         "Desert Eagle | Kumicho Dragon",
-
         # Пистолеты
         "Glock-18 | Fade",
         "Glock-18 | Candy Apple",
@@ -139,7 +133,6 @@ WHITELIST_ITEMS = {
         "USP-S | Neo-Noir",
         "USP-S | Printstream",
         "USP-S | The Traitor",
-
         # Ножи (общие категории - высокая ликвидность)
         "★ Karambit",
         "★ Butterfly Knife",
@@ -161,7 +154,6 @@ WHITELIST_ITEMS = {
         "★ Nomad Knife",
         "★ Skeleton Knife",
         "★ Kukri Knife",  # Новый 2026
-
         # Перчатки (общие категории - высокая ликвидность)
         "★ Specialist Gloves",
         "★ Sport Gloves",
@@ -183,7 +175,6 @@ WHITELIST_ITEMS = {
         "Metal Door",
         "High External Stone Wall",
         "High External Wood Wall",
-
         # ===== ИНСТРУМЕНТЫ И РЕСУРСЫ =====
         "Furnace",
         "Large Furnace",
@@ -195,7 +186,6 @@ WHITELIST_ITEMS = {
         "Work Bench Level 3",
         "Small Oil Refinery",
         "Tool Cupboard",
-
         # ===== БРОНЯ (ПОПУЛЯРНАЯ) =====
         "Metal Chest Plate",
         "Metal Facemask",
@@ -205,7 +195,6 @@ WHITELIST_ITEMS = {
         "Roadsign Gloves",
         "Hoodie",
         "Pants",
-
         # ===== ОРУЖИЕ (ВЫСОКАЯ ЛИКВИДНОСТЬ) =====
         "AK47",
         "Tempered AK47",
@@ -221,7 +210,6 @@ WHITELIST_ITEMS = {
         "Assault Rifle",
         "M39 Rifle",
         "Rocket Launcher",
-
         # ===== ДЕКОРАТИВНЫЕ (ТУРНИРНЫЕ И РЕДКИЕ) =====
         "Twitch Rivals",
         "Dragon",
@@ -249,7 +237,6 @@ WHITELIST_ITEMS = {
         "Condemned Souls",  # Phantom Assassin Arcana 2024
         "Mercurial Vanguard",  # Razor Arcana 2025
         "Eternal Harvest",  # Faceless Void Arcana 2026
-
         # ===== IMMORTAL (ВЫСОКАЯ ЛИКВИДНОСТЬ) =====
         "Immortal Treasure",
         "Immortal Treasure I",
@@ -260,7 +247,6 @@ WHITELIST_ITEMS = {
         "Dragonclaw Hook",
         "Golden Immortal",
         "Ultra Rare Immortal",
-
         # ===== TI ПРЕДМЕТЫ (СЕЗОННАЯ ВЫСОКАЯ ЛИКВИДНОСТЬ) =====
         "Collector's Cache",
         "Collector's Cache II",
@@ -270,7 +256,6 @@ WHITELIST_ITEMS = {
         "Nemestice",
         "Cavern Crawl",
         "Diretide",
-
         # ===== SETS (ПОПУЛЯРНЫЕ) =====
         "Genuine",
         "Exalted",
@@ -287,13 +272,11 @@ WHITELIST_ITEMS = {
         "Tour of Duty Ticket",
         "Uncrating Key",
         "Cosmetic Key",
-
         # ===== МЕТАЛЛ (БАЗОВАЯ ВАЛЮТА) =====
         "Refined Metal",
         "Reclaimed Metal",
         "Scrap Metal",
         "Earbuds",
-
         # ===== TAUNTS (ВЫСОКАЯ ЛИКВИДНОСТЬ) =====
         "Taunt: The Schadenfreude",
         "Taunt: The Conga",
@@ -305,7 +288,6 @@ WHITELIST_ITEMS = {
         "Taunt: The Boston Breakdance",
         "Taunt: Yeti Punch",
         "Taunt: Victory Lap",
-
         # ===== СТРАННЫЕ ЧАСТИ (СТАБИЛЬНЫЙ СПРОС) =====
         "Strange Part: Kills",
         "Strange Part: Headshot Kills",
@@ -315,11 +297,9 @@ WHITELIST_ITEMS = {
         "Strange Part: Kills While Explosive-Jumping",
         "Strange Part: Airborne Enemy Kills",
         "Strange Part",
-
         # ===== UNUSUAL ЭФФЕКТЫ (ВЫСОКАЯ СТОИМОСТЬ) =====
         "Unusual",
         "Unusual Haunted Metal Scrap",
-
         # ===== ПОПУЛЯРНЫЕ ПРЕДМЕТЫ =====
         "Bill's Hat",
         "Max's Severed Head",
@@ -450,7 +430,9 @@ def get_game_weight(game: str) -> int:
 class WhitelistChecker:
     """Класс для проверки предметов по белому списку."""
 
-    def __init__(self, enable_priority_boost: bool = True, profit_boost_percent: float = 2.0):
+    def __init__(
+        self, enable_priority_boost: bool = True, profit_boost_percent: float = 2.0
+    ):
         """Инициализирует проверку белого списка.
 
         Args:
@@ -484,7 +466,9 @@ class WhitelistChecker:
         title = item.get("title", "")
         return any(target in title for target in whitelist)
 
-    def get_adjusted_profit_margin(self, base_margin: float, is_whitelist: bool) -> float:
+    def get_adjusted_profit_margin(
+        self, base_margin: float, is_whitelist: bool
+    ) -> float:
         """Получает скорректированный порог профита.
 
         Args:

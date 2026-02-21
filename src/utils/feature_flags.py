@@ -152,7 +152,11 @@ class FeatureFlagsManager:
         ) or (user_id and user_id in flag_config.get("blacklist", [])):
             result = False
         # Проверить whitelist (переопределяет выключенное состояние)
-        elif user_id and flag_config.get("whitelist") and user_id in flag_config["whitelist"]:
+        elif (
+            user_id
+            and flag_config.get("whitelist")
+            and user_id in flag_config["whitelist"]
+        ):
             result = True
         # Проверить процентный rollout
         elif "rollout_percent" in flag_config:
@@ -233,7 +237,9 @@ class FeatureFlagsManager:
         self.flags[feature_name]["enabled"] = enabled
 
         if rollout_percent is not None:
-            self.flags[feature_name]["rollout_percent"] = max(0, min(100, rollout_percent))
+            self.flags[feature_name]["rollout_percent"] = max(
+                0, min(100, rollout_percent)
+            )
 
         if whitelist is not None:
             self.flags[feature_name]["whitelist"] = whitelist

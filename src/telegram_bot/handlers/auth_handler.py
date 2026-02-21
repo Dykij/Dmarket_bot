@@ -122,8 +122,16 @@ class AuthHandler:
                 "Для отключения введите код из приложения."
             )
             keyboard = [
-                [InlineKeyboardButton("❌ Отключить 2FA", callback_data="auth:2fa:disable_start")],
-                [InlineKeyboardButton("🔑 Новые backup коды", callback_data="auth:2fa:new_backup")],
+                [
+                    InlineKeyboardButton(
+                        "❌ Отключить 2FA", callback_data="auth:2fa:disable_start"
+                    )
+                ],
+                [
+                    InlineKeyboardButton(
+                        "🔑 Новые backup коды", callback_data="auth:2fa:new_backup"
+                    )
+                ],
                 [InlineKeyboardButton("◀️ Назад", callback_data="auth:back")],
             ]
         else:
@@ -134,7 +142,11 @@ class AuthHandler:
                 "уровень защиты вашего аккаунта."
             )
             keyboard = [
-                [InlineKeyboardButton("✅ Включить 2FA", callback_data="auth:2fa:setup")],
+                [
+                    InlineKeyboardButton(
+                        "✅ Включить 2FA", callback_data="auth:2fa:setup"
+                    )
+                ],
                 [InlineKeyboardButton("◀️ Назад", callback_data="auth:back")],
             ]
 
@@ -251,14 +263,26 @@ class AuthHandler:
             if is_enabled:
                 text = "🔐 *2FA включена*\n\nВаш аккаунт защищён двухфакторной аутентификацией."
                 keyboard = [
-                    [InlineKeyboardButton("❌ Отключить", callback_data="auth:2fa:disable_start")],
-                    [InlineKeyboardButton("🔑 Backup коды", callback_data="auth:2fa:show_backup")],
+                    [
+                        InlineKeyboardButton(
+                            "❌ Отключить", callback_data="auth:2fa:disable_start"
+                        )
+                    ],
+                    [
+                        InlineKeyboardButton(
+                            "🔑 Backup коды", callback_data="auth:2fa:show_backup"
+                        )
+                    ],
                     [InlineKeyboardButton("◀️ Назад", callback_data="auth:back")],
                 ]
             else:
                 text = "🔐 *2FA отключена*\n\nВключите для дополнительной защиты."
                 keyboard = [
-                    [InlineKeyboardButton("✅ Включить", callback_data="auth:2fa:setup")],
+                    [
+                        InlineKeyboardButton(
+                            "✅ Включить", callback_data="auth:2fa:setup"
+                        )
+                    ],
                     [InlineKeyboardButton("◀️ Назад", callback_data="auth:back")],
                 ]
 
@@ -289,7 +313,11 @@ class AuthHandler:
 
             # In real app, would generate and send QR code image
             keyboard = [
-                [InlineKeyboardButton("✅ Ввести код", callback_data="auth:2fa:verify_prompt")],
+                [
+                    InlineKeyboardButton(
+                        "✅ Ввести код", callback_data="auth:2fa:verify_prompt"
+                    )
+                ],
                 [InlineKeyboardButton("❌ Отмена", callback_data="auth:2fa:menu")],
             ]
 
@@ -327,9 +355,9 @@ class AuthHandler:
 
             await query.edit_message_text(
                 text,
-                reply_markup=InlineKeyboardMarkup([
-                    [InlineKeyboardButton("◀️ Назад", callback_data="auth:2fa:menu")]
-                ]),
+                reply_markup=InlineKeyboardMarkup(
+                    [[InlineKeyboardButton("◀️ Назад", callback_data="auth:2fa:menu")]]
+                ),
                 parse_mode="Markdown",
             )
 
@@ -353,7 +381,9 @@ class AuthHandler:
                 )
             else:
                 for entry in whitelist[:5]:
-                    status = "✅" if entry.is_active and not entry.is_expired() else "❌"
+                    status = (
+                        "✅" if entry.is_active and not entry.is_expired() else "❌"
+                    )
                     text += f"{status} `{entry.ip_address}`\n"
                     if entry.description:
                         text += f"   _{entry.description}_\n"
@@ -385,9 +415,9 @@ class AuthHandler:
 
             await query.edit_message_text(
                 f"✅ IP `{demo_ip}` добавлен в whitelist",
-                reply_markup=InlineKeyboardMarkup([
-                    [InlineKeyboardButton("◀️ Назад", callback_data="auth:ip:menu")]
-                ]),
+                reply_markup=InlineKeyboardMarkup(
+                    [[InlineKeyboardButton("◀️ Назад", callback_data="auth:ip:menu")]]
+                ),
                 parse_mode="Markdown",
             )
 
@@ -411,7 +441,11 @@ class AuthHandler:
                     text += f"  Создан: {key['created_at']}\n"
 
             keyboard = [
-                [InlineKeyboardButton("➕ Создать ключ", callback_data="auth:api:create")],
+                [
+                    InlineKeyboardButton(
+                        "➕ Создать ключ", callback_data="auth:api:create"
+                    )
+                ],
                 [InlineKeyboardButton("◀️ Назад", callback_data="auth:back")],
             ]
 
@@ -429,10 +463,12 @@ class AuthHandler:
             if user_id not in self._api_keys:
                 self._api_keys[user_id] = []
 
-            self._api_keys[user_id].append({
-                "name": f"api_key_{len(self._api_keys[user_id]) + 1}",
-                "created_at": datetime.now(UTC).strftime("%Y-%m-%d"),
-            })
+            self._api_keys[user_id].append(
+                {
+                    "name": f"api_key_{len(self._api_keys[user_id]) + 1}",
+                    "created_at": datetime.now(UTC).strftime("%Y-%m-%d"),
+                }
+            )
 
             text = (
                 "✅ *API ключ создан*\n\n"
@@ -443,9 +479,9 @@ class AuthHandler:
 
             await query.edit_message_text(
                 text,
-                reply_markup=InlineKeyboardMarkup([
-                    [InlineKeyboardButton("◀️ Назад", callback_data="auth:api:menu")]
-                ]),
+                reply_markup=InlineKeyboardMarkup(
+                    [[InlineKeyboardButton("◀️ Назад", callback_data="auth:api:menu")]]
+                ),
                 parse_mode="Markdown",
             )
 
@@ -467,9 +503,9 @@ class AuthHandler:
 
             await query.edit_message_text(
                 text,
-                reply_markup=InlineKeyboardMarkup([
-                    [InlineKeyboardButton("◀️ Назад", callback_data="auth:back")]
-                ]),
+                reply_markup=InlineKeyboardMarkup(
+                    [[InlineKeyboardButton("◀️ Назад", callback_data="auth:back")]]
+                ),
                 parse_mode="Markdown",
             )
 

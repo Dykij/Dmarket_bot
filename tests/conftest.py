@@ -605,6 +605,20 @@ def reset_circuit_breaker() -> Generator[None, None, None]:
 # =============================================================================
 
 
+@pytest.fixture(autouse=True)
+def mock_env_vars(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Автоматически устанавливает фиктивные переменные окружения для всех тестов.
+
+    Это предотвращает ошибки при отсутствии реальных ключей в CI/CD окружении.
+    """
+    monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "dummy_bot_token")
+    monkeypatch.setenv("DMARKET_PUBLIC_KEY", "dummy_public_key")
+    monkeypatch.setenv("DMARKET_PRIVATE_KEY", "dummy_private_key")
+    # Также установим PYTHONPATH если это необходимо для тестов,
+    # хотя обычно pytest сам справляется с этим.
+    monkeypatch.setenv("PYTHONPATH", ".")
+
+
 @pytest.fixture()
 def mock_balance_response() -> dict[str, Any]:
     """Стандартный mock ответ баланса DMarket.

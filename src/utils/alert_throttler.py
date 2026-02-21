@@ -397,16 +397,16 @@ class AlertThrottler:
                 "last_sent": records[-1].sent_at.isoformat() if records else None,
             }
 
-        suppressed_stats = {
-            cat: alert.count for cat, alert in self._suppressed.items()
-        }
+        suppressed_stats = {cat: alert.count for cat, alert in self._suppressed.items()}
 
         return {
             "total_sent": self._total_sent,
             "total_suppressed": self._total_suppressed,
             "total_critical": self._total_critical,
             "suppression_rate": (
-                self._total_suppressed / (self._total_sent + self._total_suppressed) * 100
+                self._total_suppressed
+                / (self._total_sent + self._total_suppressed)
+                * 100
                 if (self._total_sent + self._total_suppressed) > 0
                 else 0
             ),
@@ -448,9 +448,7 @@ class AlertThrottler:
 
         # Удалить записи старше 24 часов
         cutoff = datetime.now(UTC) - timedelta(hours=24)
-        self._sent_alerts[category] = [
-            r for r in records if r.sent_at > cutoff
-        ]
+        self._sent_alerts[category] = [r for r in records if r.sent_at > cutoff]
 
         # Ограничить размер
         if len(self._sent_alerts[category]) > self._max_history:

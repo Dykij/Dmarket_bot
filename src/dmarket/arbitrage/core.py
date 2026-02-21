@@ -387,7 +387,9 @@ async def find_arbitrage_opportunities_async(
 
                 # Получаем предполагаемую цену продажи
                 if "suggestedPrice" in item:
-                    sell_price = float(item.get("suggestedPrice", {}).get("USD", 0)) / 100
+                    sell_price = (
+                        float(item.get("suggestedPrice", {}).get("USD", 0)) / 100
+                    )
                 else:
                     # По умолчанию наценка 15%
                     sell_price = buy_price * 1.15
@@ -417,7 +419,9 @@ async def find_arbitrage_opportunities_async(
                         {
                             "item_title": item.get("title", "Unknown"),
                             "market_from": "DMarket",
-                            "market_to": ("Steam Market" if game == "csgo" else "Game Market"),
+                            "market_to": (
+                                "Steam Market" if game == "csgo" else "Game Market"
+                            ),
                             "buy_price": buy_price,
                             "sell_price": sell_price,
                             "profit_amount": profit_amount,

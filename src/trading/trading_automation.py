@@ -166,7 +166,11 @@ class DCAConfig:
         if self.buy_count == 1:
             self.avg_price = price
         else:
-            self.avg_price = (old_total * self.avg_price + amount * price) / self.total_invested if self.total_invested > 0 else price
+            self.avg_price = (
+                (old_total * self.avg_price + amount * price) / self.total_invested
+                if self.total_invested > 0
+                else price
+            )
 
         self.last_buy_time = datetime.now(UTC)
 
@@ -218,7 +222,9 @@ class ScheduledTask:
             next_run = self.last_run + timedelta(hours=self.interval_hours)
             return now >= next_run
         if self.schedule_time:
-            return now >= self.schedule_time and (self.last_run is None or self.last_run < self.schedule_time)
+            return now >= self.schedule_time and (
+                self.last_run is None or self.last_run < self.schedule_time
+            )
 
         return False
 
@@ -345,7 +351,11 @@ class TradingAutomation:
             trigger_percent=-stop_percent,
             quantity=quantity,
             entry_price=entry_price,
-            expires_at=datetime.now(UTC) + timedelta(hours=expires_hours) if expires_hours else None,
+            expires_at=(
+                datetime.now(UTC) + timedelta(hours=expires_hours)
+                if expires_hours
+                else None
+            ),
             notes=f"Stop-loss at {stop_percent}% below entry ${entry_price:.2f}",
         )
 
@@ -392,7 +402,11 @@ class TradingAutomation:
             trigger_percent=profit_percent,
             quantity=quantity,
             entry_price=entry_price,
-            expires_at=datetime.now(UTC) + timedelta(hours=expires_hours) if expires_hours else None,
+            expires_at=(
+                datetime.now(UTC) + timedelta(hours=expires_hours)
+                if expires_hours
+                else None
+            ),
             notes=f"Take-profit at {profit_percent}% above entry ${entry_price:.2f}",
         )
 
@@ -557,7 +571,9 @@ class TradingAutomation:
             "buy_count": config.buy_count,
             "avg_price": round(config.avg_price, 2),
             "is_active": config.is_active,
-            "last_buy": config.last_buy_time.isoformat() if config.last_buy_time else None,
+            "last_buy": (
+                config.last_buy_time.isoformat() if config.last_buy_time else None
+            ),
         }
 
     # ==================== Rebalancing ====================
@@ -615,7 +631,11 @@ class TradingAutomation:
 
         for item, target_pct in config.target_allocations.items():
             current_value = current_holdings.get(item, 0)
-            current_pct = current_value / total_portfolio_value if total_portfolio_value > 0 else 0
+            current_pct = (
+                current_value / total_portfolio_value
+                if total_portfolio_value > 0
+                else 0
+            )
             target_value = total_portfolio_value * target_pct
 
             diff_pct = abs(current_pct - target_pct)
@@ -625,14 +645,16 @@ class TradingAutomation:
 
                 if abs(diff_value) >= config.min_trade_amount:
                     trade_type = "buy" if diff_value > 0 else "sell"
-                    trades.append({
-                        "item": item,
-                        "action": trade_type,
-                        "amount_usd": abs(diff_value),
-                        "current_pct": round(current_pct * 100, 2),
-                        "target_pct": round(target_pct * 100, 2),
-                        "diff_pct": round(diff_pct * 100, 2),
-                    })
+                    trades.append(
+                        {
+                            "item": item,
+                            "action": trade_type,
+                            "amount_usd": abs(diff_value),
+                            "current_pct": round(current_pct * 100, 2),
+                            "target_pct": round(target_pct * 100, 2),
+                            "diff_pct": round(diff_pct * 100, 2),
+                        }
+                    )
 
         return trades
 
@@ -931,14 +953,15 @@ class TradingAutomation:
     def _generate_order_id(self) -> str:
         """Generate unique order ID."""
         self._order_counter += 1
-        return f"auto_{self._order_counter}_{datetime.now(UTC).strftime('%Y%m%d%H%M%S')}"
+        return (
+            f"auto_{self._order_counter}_{datetime.now(UTC).strftime('%Y%m%d%H%M%S')}"
+        )
 
     def _cleanup_rate_limit(self) -> None:
         """Clean up old rate limit entries."""
         cutoff = datetime.now(UTC) - timedelta(hours=1)
         self._executions_this_hour = [
-            t for t in self._executions_this_hour
-            if t > cutoff
+            t for t in self._executions_this_hour if t > cutoff
         ]
 
     # ==================== Management ====================
@@ -965,7 +988,8 @@ class TradingAutomation:
             List of pending orders
         """
         return [
-            order for order in self._orders.values()
+            order
+            for order in self._orders.values()
             if order.status == OrderStatus.PENDING
         ]
 
@@ -1001,10 +1025,16 @@ class TradingAutomation:
             "total_orders": len(orders),
             "pending_orders": sum(1 for o in orders if o.status == OrderStatus.PENDING),
             "executed_orders": len(executed),
-            "cancelled_orders": sum(1 for o in orders if o.status == OrderStatus.CANCELLED),
+            "cancelled_orders": sum(
+                1 for o in orders if o.status == OrderStatus.CANCELLED
+            ),
             "failed_orders": sum(1 for o in orders if o.status == OrderStatus.FAILED),
-            "active_dca_configs": sum(1 for c in self._dca_configs.values() if c.is_active),
-            "active_scheduled_tasks": sum(1 for t in self._scheduled_tasks.values() if t.is_active),
+            "active_dca_configs": sum(
+                1 for c in self._dca_configs.values() if c.is_active
+            ),
+            "active_scheduled_tasks": sum(
+                1 for t in self._scheduled_tasks.values() if t.is_active
+            ),
             "executions_this_hour": len(self._executions_this_hour),
         }
 

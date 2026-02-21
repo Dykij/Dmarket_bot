@@ -242,7 +242,9 @@ class ShadowListingManager:
             our_price=our_current_price,
             competitor_prices=competitor_prices[:5],
             lowest_competitor_price=competitor_prices[0] if competitor_prices else None,
-            second_lowest_price=competitor_prices[1] if len(competitor_prices) > 1 else None,
+            second_lowest_price=(
+                competitor_prices[1] if len(competitor_prices) > 1 else None
+            ),
             steam_price=steam_price,
             suggested_price=suggested_price,
             market_condition=market_condition,
@@ -287,7 +289,11 @@ class ShadowListingManager:
                     price,
                     f"Monopoly: No competitors, set price {self.config.monopoly_markup_percent}% above Steam",
                 )
-            return (PricingAction.HOLD, our_price, "Monopoly: No competitors, hold current price")
+            return (
+                PricingAction.HOLD,
+                our_price,
+                "Monopoly: No competitors, hold current price",
+            )
 
         lowest = competitor_prices[0] if competitor_prices else None
         if lowest is None:
@@ -312,7 +318,10 @@ class ShadowListingManager:
                 )
 
         # БОЛЬШОЙ РАЗРЫВ: между 1 и 2 ценой
-        if price_gap > self.config.large_gap_threshold_percent and len(competitor_prices) >= 2:
+        if (
+            price_gap > self.config.large_gap_threshold_percent
+            and len(competitor_prices) >= 2
+        ):
             # Ставим цену второго минус 1 цент
             second_price = competitor_prices[1]
             new_price = round(second_price - 0.01, 2)
@@ -348,7 +357,9 @@ class ShadowListingManager:
             f"Standard undercut: ${lowest:.2f} -> ${new_price:.2f}",
         )
 
-    def _should_wait_for_competitor_sale(self, item_title: str, competitor_price: float) -> bool:
+    def _should_wait_for_competitor_sale(
+        self, item_title: str, competitor_price: float
+    ) -> bool:
         """Проверить, нужно ли ждать продажи конкурента.
 
         Если конкурент только что "подрезал" нас на мелкую сумму,

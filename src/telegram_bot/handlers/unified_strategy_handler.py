@@ -64,7 +64,9 @@ class UnifiedStrategyHandler:
         self._user_configs: dict[int, StrategyConfig] = {}
         self._user_strategy: dict[int, StrategyType] = {}
 
-    def _get_manager(self, context: ContextTypes.DEFAULT_TYPE) -> UnifiedStrategyManager:
+    def _get_manager(
+        self, context: ContextTypes.DEFAULT_TYPE
+    ) -> UnifiedStrategyManager:
         """Получить или создать менеджер стратегий."""
         if self._manager:
             return self._manager
@@ -82,6 +84,7 @@ class UnifiedStrategyHandler:
 
         # Fallback - создаем с дефолтным API
         from src.dmarket.dmarket_api import DMarketAPI
+
         self._manager = create_strategy_manager(
             dmarket_api=DMarketAPI(),
             waxpeer_api=None,
@@ -133,7 +136,9 @@ class UnifiedStrategyHandler:
         ]
         return InlineKeyboardMarkup(buttons)
 
-    def _get_presets_keyboard(self, strategy_type: StrategyType) -> InlineKeyboardMarkup:
+    def _get_presets_keyboard(
+        self, strategy_type: StrategyType
+    ) -> InlineKeyboardMarkup:
         """Создать клавиатуру выбора пресета."""
         buttons = [
             [
@@ -166,27 +171,33 @@ class UnifiedStrategyHandler:
 
         # Добавляем специфичные пресеты для стратегии
         if strategy_type == StrategyType.FLOAT_VALUE_ARBITRAGE:
-            buttons.append([
-                InlineKeyboardButton(
-                    "🎯 Float Premium",
-                    callback_data=f"{CB_PRESET}float_premium",
-                ),
-            ])
+            buttons.append(
+                [
+                    InlineKeyboardButton(
+                        "🎯 Float Premium",
+                        callback_data=f"{CB_PRESET}float_premium",
+                    ),
+                ]
+            )
         elif strategy_type == StrategyType.CROSS_PLATFORM_ARBITRAGE:
-            buttons.append([
-                InlineKeyboardButton(
-                    "⚡ Instant Arb (no lock)",
-                    callback_data=f"{CB_PRESET}instant_arb",
-                ),
-                InlineKeyboardButton(
-                    "📊 Investment",
-                    callback_data=f"{CB_PRESET}investment",
-                ),
-            ])
+            buttons.append(
+                [
+                    InlineKeyboardButton(
+                        "⚡ Instant Arb (no lock)",
+                        callback_data=f"{CB_PRESET}instant_arb",
+                    ),
+                    InlineKeyboardButton(
+                        "📊 Investment",
+                        callback_data=f"{CB_PRESET}investment",
+                    ),
+                ]
+            )
 
-        buttons.append([
-            InlineKeyboardButton("◀️ Back", callback_data=CB_BACK),
-        ])
+        buttons.append(
+            [
+                InlineKeyboardButton("◀️ Back", callback_data=CB_BACK),
+            ]
+        )
 
         return InlineKeyboardMarkup(buttons)
 
@@ -199,12 +210,19 @@ class UnifiedStrategyHandler:
             ],
         ]
         if has_more:
-            buttons.insert(0, [
-                InlineKeyboardButton("📄 Show More", callback_data="show_more_results"),
-            ])
-        buttons.append([
-            InlineKeyboardButton("❌ Close", callback_data="close_strategies"),
-        ])
+            buttons.insert(
+                0,
+                [
+                    InlineKeyboardButton(
+                        "📄 Show More", callback_data="show_more_results"
+                    ),
+                ],
+            )
+        buttons.append(
+            [
+                InlineKeyboardButton("❌ Close", callback_data="close_strategies"),
+            ]
+        )
         return InlineKeyboardMarkup(buttons)
 
     # ========================================================================
@@ -265,7 +283,9 @@ class UnifiedStrategyHandler:
         if not opportunities:
             return f"❌ **{strategy_name}**: No opportunities found\n\nTry different preset or strategy."
 
-        header = f"🔍 **{strategy_name}** - Found {len(opportunities)} opportunities\n\n"
+        header = (
+            f"🔍 **{strategy_name}** - Found {len(opportunities)} opportunities\n\n"
+        )
 
         items = []
         for i, opp in enumerate(opportunities[:max_show], 1):
@@ -361,9 +381,7 @@ class UnifiedStrategyHandler:
         for strategy_type, opportunities in all_results.items():
             strategy = manager.get_strategy(strategy_type)
             name = strategy.name if strategy else strategy_type.value
-            text_parts.append(
-                self._format_results(opportunities, name, max_show=5)
-            )
+            text_parts.append(self._format_results(opportunities, name, max_show=5))
 
         await update.message.reply_text(
             "\n\n---\n\n".join(text_parts) if text_parts else "No results found",
@@ -379,14 +397,18 @@ class UnifiedStrategyHandler:
         if not update.message:
             return
 
-        await update.message.reply_text("🏆 Finding best deals across all strategies...")
+        await update.message.reply_text(
+            "🏆 Finding best deals across all strategies..."
+        )
 
         manager = self._get_manager(context)
         config = get_strategy_config_preset("standard")
 
         opportunities = await manager.find_best_opportunities_combined(config, top_n=15)
 
-        text = self._format_results(opportunities, "🏆 Best Deals Combined", max_show=15)
+        text = self._format_results(
+            opportunities, "🏆 Best Deals Combined", max_show=15
+        )
 
         await update.message.reply_text(
             text,
@@ -446,7 +468,7 @@ class UnifiedStrategyHandler:
 
         # Выбор стратегии
         if data.startswith(CB_STRATEGY):
-            strategy_value = data[len(CB_STRATEGY):]
+            strategy_value = data[len(CB_STRATEGY) :]
             try:
                 strategy_type = StrategyType(strategy_value)
                 self._user_strategy[user_id] = strategy_type
@@ -491,7 +513,7 @@ class UnifiedStrategyHandler:
             return SELECTING_STRATEGY
 
         if data.startswith(CB_PRESET):
-            preset_name = data[len(CB_PRESET):]
+            preset_name = data[len(CB_PRESET) :]
             config = get_strategy_config_preset(preset_name)
             self._user_configs[user_id] = config
 
@@ -515,7 +537,9 @@ class UnifiedStrategyHandler:
 
             await query.edit_message_text(
                 text,
-                reply_markup=self._get_results_keyboard(has_more=len(opportunities) > 10),
+                reply_markup=self._get_results_keyboard(
+                    has_more=len(opportunities) > 10
+                ),
                 parse_mode="Markdown",
             )
             return ConversationHandler.END

@@ -173,7 +173,9 @@ class CommandCenter:
             # Кнопки быстрых действий
             keyboard = [
                 [
-                    InlineKeyboardButton("💎 Сокровища", callback_data="show_treasures"),
+                    InlineKeyboardButton(
+                        "💎 Сокровища", callback_data="show_treasures"
+                    ),
                     InlineKeyboardButton("📋 Логи", callback_data="show_logs"),
                 ],
                 [
@@ -228,13 +230,15 @@ class CommandCenter:
             )
             total_multiplier += treasure.estimated_value_multiplier
 
-        report.extend([
-            "",
-            f"📊 **Всего сокровищ:** {len(treasures)}",
-            f"💰 **Средний множитель:** {total_multiplier / len(treasures):.2f}x",
-            "",
-            "💡 Продайте их вручную на Buff163, CSFloat или других площадках.",
-        ])
+        report.extend(
+            [
+                "",
+                f"📊 **Всего сокровищ:** {len(treasures)}",
+                f"💰 **Средний множитель:** {total_multiplier / len(treasures):.2f}x",
+                "",
+                "💡 Продайте их вручную на Buff163, CSFloat или других площадках.",
+            ]
+        )
 
         await update.message.reply_text(
             "\n".join(report),
@@ -271,7 +275,9 @@ class CommandCenter:
                     ),
                 ],
                 [
-                    InlineKeyboardButton("❌ Отмена", callback_data="cancel_panic_sell"),
+                    InlineKeyboardButton(
+                        "❌ Отмена", callback_data="cancel_panic_sell"
+                    ),
                 ],
             ]
 
@@ -334,7 +340,9 @@ class CommandCenter:
                     )
                     offers = market_data.get("objects", [])
                     if offers:
-                        lowest_price = float(offers[0].get("price", {}).get("USD", 0)) / 100
+                        lowest_price = (
+                            float(offers[0].get("price", {}).get("USD", 0)) / 100
+                        )
                         panic_price = round(lowest_price * 0.95, 2)  # -5%
 
                         # Выставляем на продажу
@@ -488,7 +496,9 @@ class CommandCenter:
             return
 
         if not self.sales_protector:
-            await update.message.reply_text("⚠️ Модуль Steam Sales Protector не подключен")
+            await update.message.reply_text(
+                "⚠️ Модуль Steam Sales Protector не подключен"
+            )
             return
 
         message = self.sales_protector.format_status_message()

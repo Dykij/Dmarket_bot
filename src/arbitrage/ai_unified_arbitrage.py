@@ -237,7 +237,9 @@ class AIUnifiedArbitrage:
             except Exception as e:
                 logger.warning("telegram_notify_failed", error=str(e))
 
-    async def scan_dmarket_internal(self, game: str = "csgo") -> list[ArbitrageOpportunity]:
+    async def scan_dmarket_internal(
+        self, game: str = "csgo"
+    ) -> list[ArbitrageOpportunity]:
         """Scan DMarket for internal arbitrage opportunities.
 
         Finds items that can be bought and resold on DMarket with profit.
@@ -267,7 +269,9 @@ class AIUnifiedArbitrage:
 
         return opportunities
 
-    async def _evaluate_dmarket_internal(self, item: dict[str, Any]) -> ArbitrageOpportunity | None:
+    async def _evaluate_dmarket_internal(
+        self, item: dict[str, Any]
+    ) -> ArbitrageOpportunity | None:
         """Evaluate a DMarket item for internal arbitrage."""
         try:
             item_name = item.get("title", "")
@@ -285,7 +289,9 @@ class AIUnifiedArbitrage:
             if isinstance(suggested, dict):
                 suggested_price = Decimal(str(suggested.get("USD", 0))) / 100
             else:
-                suggested_price = Decimal(str(suggested)) / 100 if suggested else buy_price
+                suggested_price = (
+                    Decimal(str(suggested)) / 100 if suggested else buy_price
+                )
 
             if buy_price <= 0 or suggested_price <= 0:
                 return None
@@ -335,7 +341,9 @@ class AIUnifiedArbitrage:
             logger.debug("evaluate_dmarket_internal_error", error=str(e))
             return None
 
-    async def scan_cross_platform(self, game: str = "csgo") -> list[ArbitrageOpportunity]:
+    async def scan_cross_platform(
+        self, game: str = "csgo"
+    ) -> list[ArbitrageOpportunity]:
         """Scan for cross-platform arbitrage (DMarket <-> Waxpeer)."""
         opportunities: list[ArbitrageOpportunity] = []
 
@@ -361,7 +369,9 @@ class AIUnifiedArbitrage:
             # Get Waxpeer prices for these items
             try:
                 wp_prices = await self.waxpeer.get_items_list(item_names[:50])
-                wp_price_map = {p.name: p.price for p in wp_prices if hasattr(p, "name")}
+                wp_price_map = {
+                    p.name: p.price for p in wp_prices if hasattr(p, "name")
+                }
             except Exception as e:
                 logger.warning("waxpeer_prices_error", error=str(e))
                 wp_price_map = {}
@@ -371,7 +381,9 @@ class AIUnifiedArbitrage:
                 item_name = item.get("title", "")
 
                 if item_name in wp_price_map:
-                    opp = await self._evaluate_cross_platform(item, wp_price_map[item_name])
+                    opp = await self._evaluate_cross_platform(
+                        item, wp_price_map[item_name]
+                    )
                     if opp and self._meets_criteria(opp):
                         opportunities.append(opp)
 
@@ -486,7 +498,9 @@ class AIUnifiedArbitrage:
 
         return None
 
-    async def scan_with_steam_comparison(self, game: str = "csgo") -> list[ArbitrageOpportunity]:
+    async def scan_with_steam_comparison(
+        self, game: str = "csgo"
+    ) -> list[ArbitrageOpportunity]:
         """Scan opportunities and compare with Steam prices."""
         opportunities: list[ArbitrageOpportunity] = []
 
@@ -539,7 +553,9 @@ class AIUnifiedArbitrage:
             return False
         return True
 
-    async def scan_all(self, games: list[str] | None = None) -> list[ArbitrageOpportunity]:
+    async def scan_all(
+        self, games: list[str] | None = None
+    ) -> list[ArbitrageOpportunity]:
         """Scan all configured games for opportunities."""
         games = games or self.config.games
         all_opportunities: list[ArbitrageOpportunity] = []
@@ -697,7 +713,9 @@ class AIUnifiedArbitrage:
         """Get current statistics."""
         uptime = 0
         if self._stats["start_time"]:
-            uptime = int((datetime.now(UTC) - self._stats["start_time"]).total_seconds() / 60)
+            uptime = int(
+                (datetime.now(UTC) - self._stats["start_time"]).total_seconds() / 60
+            )
 
         return {
             **self._stats,

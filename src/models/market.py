@@ -19,10 +19,10 @@ from src.models.base import Base, UUIDType
 class MarketData(Base):
     """
     Core model for storing snapshot of DMarket item listings.
-    
+
     Use this model to track historical pricing, volume, and suggested prices
     for individual items (skins, cases, keys) across different games (CS2, Dota2, etc.).
-    
+
     Attributes:
         item_id (str): Unique DMarket item identifier (AssetID).
         game (str): Game identifier (e.g., 'a8db' for CS2).
@@ -39,21 +39,30 @@ class MarketData(Base):
     __tablename__ = "market_data"
 
     id = Column(UUIDType, primary_key=True, default=uuid4)
-    
+
     # Core Identity
-    item_id = Column(String(255), nullable=False, index=True, doc="Unique DMarket AssetID")
+    item_id = Column(
+        String(255), nullable=False, index=True, doc="Unique DMarket AssetID"
+    )
     game = Column(String(100), nullable=False, index=True, doc="Game ID (a8db/csgo)")
-    item_name = Column(Text, nullable=False, index=True, doc="Market Hash Name (e.g. AK-47 | Redline (Field-Tested))")
-    
+    item_name = Column(
+        Text,
+        nullable=False,
+        index=True,
+        doc="Market Hash Name (e.g. AK-47 | Redline (Field-Tested))",
+    )
+
     # Financials (Using Numeric for precision)
     price_usd = Column(Numeric(18, 4), nullable=False, doc="Listing price in USD")
-    suggested_price_usd = Column(Numeric(18, 4), nullable=True, doc="Algorithmic suggested price")
-    
+    suggested_price_usd = Column(
+        Numeric(18, 4), nullable=True, doc="Algorithmic suggested price"
+    )
+
     # Analytics
     price_change_24h = Column(Numeric(10, 4), nullable=True)
     volume_24h = Column(Integer, nullable=True)
     market_cap = Column(Numeric(20, 4), nullable=True)
-    
+
     # Meta
     data_source = Column(String(50), default="dmarket", index=True)
     raw_data = Column(JSON, nullable=True, doc="Original JSON payload from API")
@@ -66,7 +75,7 @@ class MarketData(Base):
 class MarketDataCache(Base):
     """
     Short-term cache for API responses to reduce rate limits.
-    
+
     Stores raw JSON responses for specific query keys.
     Useful for high-frequency endpoints like market listings or inventory.
     """
@@ -74,12 +83,16 @@ class MarketDataCache(Base):
     __tablename__ = "market_data_cache"
 
     id = Column(UUIDType, primary_key=True, default=uuid4)
-    cache_key = Column(String(500), unique=True, nullable=False, index=True, doc="Hash of query params")
+    cache_key = Column(
+        String(500), unique=True, nullable=False, index=True, doc="Hash of query params"
+    )
     game = Column(String(50), nullable=False, index=True)
     item_hash_name = Column(String(500), nullable=True)
-    data_type = Column(String(50), nullable=False, doc="Type of cached data (listings, history, etc.)")
+    data_type = Column(
+        String(50), nullable=False, doc="Type of cached data (listings, history, etc.)"
+    )
     data = Column(JSON, nullable=False, doc="Cached JSON payload")
-    
+
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     expires_at = Column(DateTime, nullable=False, index=True)
 

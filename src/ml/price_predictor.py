@@ -233,11 +233,17 @@ class AdaptivePricePredictor:
         else:
             # Fallback: статистические методы
             predicted_1h, std_1h = self._statistical_predict(features, horizon_hours=1)
-            predicted_24h, std_24h = self._statistical_predict(features, horizon_hours=24)
-            predicted_7d, std_7d = self._statistical_predict(features, horizon_hours=168)
+            predicted_24h, std_24h = self._statistical_predict(
+                features, horizon_hours=24
+            )
+            predicted_7d, std_7d = self._statistical_predict(
+                features, horizon_hours=168
+            )
 
         # Рассчитываем уверенность
-        confidence_score = self._calculate_confidence(features, std_24h / current_price if current_price > 0 else 1.0)
+        confidence_score = self._calculate_confidence(
+            features, std_24h / current_price if current_price > 0 else 1.0
+        )
         confidence = self._score_to_confidence(confidence_score)
 
         # Рассчитываем диапазоны (±1 std)
@@ -426,7 +432,12 @@ class AdaptivePricePredictor:
         if expected_change >= strong_buy_threshold and confidence_score >= 0.6:
             if can_afford:
                 recommendation = "strong_buy"
-                reasoning_parts.extend((f"Expected growth: {expected_change:.1f}%", f"Confidence: {confidence_score:.0%}"))
+                reasoning_parts.extend(
+                    (
+                        f"Expected growth: {expected_change:.1f}%",
+                        f"Confidence: {confidence_score:.0%}",
+                    )
+                )
             else:
                 recommendation = "buy"
                 reasoning_parts.append("Strong signal but exceeds position size limit")
@@ -506,7 +517,9 @@ class AdaptivePricePredictor:
             force: Принудительное обучение даже при малом количестве данных
         """
         if len(self._training_data_X) < MIN_TRAINING_SAMPLES and not force:
-            logger.warning(f"Not enough training data (minimum {MIN_TRAINING_SAMPLES} samples)")
+            logger.warning(
+                f"Not enough training data (minimum {MIN_TRAINING_SAMPLES} samples)"
+            )
             return
 
         self._init_models()

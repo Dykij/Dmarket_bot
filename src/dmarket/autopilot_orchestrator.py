@@ -277,7 +277,9 @@ class AutopilotOrchestrator:
 
     async def _balance_monitor(self):
         """Мониторинг баланса каждые N минут."""
-        logger.info("balance_monitor_started", interval=self.config.balance_check_interval)
+        logger.info(
+            "balance_monitor_started", interval=self.config.balance_check_interval
+        )
 
         while self.is_running:
             try:
@@ -287,7 +289,9 @@ class AutopilotOrchestrator:
                 balance_data = await self.api.get_balance()
                 # get_balance() returns {"balance": float} in USD (already converted from cents)
                 usd = (
-                    float(balance_data.get("balance", 0)) if isinstance(balance_data, dict) else 0.0
+                    float(balance_data.get("balance", 0))
+                    if isinstance(balance_data, dict)
+                    else 0.0
                 )
 
                 self.stats.balance_checks += 1
@@ -331,7 +335,9 @@ class AutopilotOrchestrator:
 
     async def _status_reporter(self):
         """Отправка периодических отчетов."""
-        logger.info("status_reporter_started", interval=self.config.status_report_interval)
+        logger.info(
+            "status_reporter_started", interval=self.config.status_report_interval
+        )
 
         while self.is_running:
             try:
@@ -345,7 +351,9 @@ class AutopilotOrchestrator:
 
     async def _inventory_monitor(self):
         """Мониторинг инвентаря для автопродажи."""
-        logger.info("inventory_monitor_started", interval=self.config.inventory_check_interval)
+        logger.info(
+            "inventory_monitor_started", interval=self.config.inventory_check_interval
+        )
 
         while self.is_running:
             try:

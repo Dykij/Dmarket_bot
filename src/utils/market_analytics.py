@@ -390,7 +390,9 @@ class MarketAnalyzer:
         macd_data = self.indicators.macd(prices)
         if macd_data:
             macd_signal = (
-                SignalType.SELL if macd_data["macd"] < macd_data["signal"] else SignalType.BUY
+                SignalType.SELL
+                if macd_data["macd"] < macd_data["signal"]
+                else SignalType.BUY
             )
             signals["macd"] = {
                 "value": macd_data,
@@ -402,7 +404,9 @@ class MarketAnalyzer:
         trend = self.detect_trend(price_history)
         signals["trend"] = {
             "value": trend,
-            "signal": (SignalType.SELL if trend == TrendDirection.BEARISH else SignalType.BUY),
+            "signal": (
+                SignalType.SELL if trend == TrendDirection.BEARISH else SignalType.BUY
+            ),
             "weight": 0.2,
         }
 
@@ -424,8 +428,12 @@ class MarketAnalyzer:
             }
 
         # Calculate confidence
-        sell_weight = sum(s["weight"] for s in signals.values() if s["signal"] == SignalType.SELL)
-        buy_weight = sum(s["weight"] for s in signals.values() if s["signal"] == SignalType.BUY)
+        sell_weight = sum(
+            s["weight"] for s in signals.values() if s["signal"] == SignalType.SELL
+        )
+        buy_weight = sum(
+            s["weight"] for s in signals.values() if s["signal"] == SignalType.BUY
+        )
 
         confidence = max(sell_weight, buy_weight)
         prediction = sell_weight > buy_weight and confidence >= threshold
@@ -550,7 +558,9 @@ class MarketAnalyzer:
         # Liquidity score (0-1)
         # High volume + consistent volume = high liquidity
         volume_std = statistics.stdev(volumes) if len(volumes) > 1 else 0
-        cv = volume_std / avg_volume if avg_volume > 0 else 1  # Coefficient of variation
+        cv = (
+            volume_std / avg_volume if avg_volume > 0 else 1
+        )  # Coefficient of variation
 
         liquidity_score = min(1.0, avg_volume / 100) * (1 - min(cv, 1))
 

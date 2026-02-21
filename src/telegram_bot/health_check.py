@@ -98,7 +98,9 @@ class HealthCheckServer:
 
             self.status = "running"
 
-            logger.info(f"✅ Health check server started on http://{self.host}:{self.port}")
+            logger.info(
+                f"✅ Health check server started on http://{self.host}:{self.port}"
+            )
             logger.info(f"  - Health:  http://{self.host}:{self.port}/health")
             logger.info(f"  - Ready:   http://{self.host}:{self.port}/ready")
             logger.info(f"  - Live:    http://{self.host}:{self.port}/live")
@@ -145,7 +147,9 @@ class HealthCheckServer:
             legacy_checks = await self._run_legacy_checks(missing_checks)
             checks.update(legacy_checks)
             if overall_status is None:
-                overall_status = "healthy" if all(legacy_checks.values()) else "unhealthy"
+                overall_status = (
+                    "healthy" if all(legacy_checks.values()) else "unhealthy"
+                )
             elif any(not value for value in legacy_checks.values()):
                 overall_status = "unhealthy"
 
@@ -192,7 +196,9 @@ class HealthCheckServer:
 
             if result.status == ServiceStatus.UNHEALTHY:
                 overall_status = "unhealthy"
-            elif result.status == ServiceStatus.DEGRADED and overall_status == "healthy":
+            elif (
+                result.status == ServiceStatus.DEGRADED and overall_status == "healthy"
+            ):
                 overall_status = "degraded"
 
         return checks, details, overall_status
@@ -254,7 +260,9 @@ class HealthCheckServer:
             "total_updates": self.total_updates,
             "total_errors": self.total_errors,
             "error_rate": (
-                self.total_errors / self.total_updates if self.total_updates > 0 else 0.0
+                self.total_errors / self.total_updates
+                if self.total_updates > 0
+                else 0.0
             ),
             "last_update_time": (
                 datetime.fromtimestamp(self.last_update_time).isoformat()

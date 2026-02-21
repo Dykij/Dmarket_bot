@@ -243,7 +243,9 @@ class AICoordinator:
     # Drift detection thresholds
     DRIFT_DETECTION_WINDOW = 100  # Number of decisions to track
     DRIFT_ACCURACY_THRESHOLD = 0.60  # Below this triggers drift alert
-    DRIFT_MIN_SAMPLES = 50  # Minimum samples before drift detection (DRIFT_DETECTION_WINDOW // 2)
+    DRIFT_MIN_SAMPLES = (
+        50  # Minimum samples before drift detection (DRIFT_DETECTION_WINDOW // 2)
+    )
     DRIFT_RECOVERY_OFFSET = 0.05  # Hysteresis offset to prevent oscillation
 
     def __init__(
@@ -454,7 +456,9 @@ class AICoordinator:
         # Calculate actual discount
         actual_discount = 0.0
         if suggested_price > 0:
-            actual_discount = ((suggested_price - current_price) / suggested_price) * 100
+            actual_discount = (
+                (suggested_price - current_price) / suggested_price
+            ) * 100
 
         # Get historical prices if available
         historical_prices = item_data.get("priceHistory", [])
@@ -526,17 +530,25 @@ class AICoordinator:
             predicted_price_7d=price_pred.get("predicted_price_7d", current_price),
             price_confidence=price_pred.get("confidence_score", 0.5),
             signal=signal.signal.value if hasattr(signal, "signal") else "hold",
-            signal_probability=signal.profit_probability if hasattr(signal, "profit_probability") else 0.5,
+            signal_probability=(
+                signal.profit_probability
+                if hasattr(signal, "profit_probability")
+                else 0.5
+            ),
             actual_discount=actual_discount,
             ml_threshold=ml_threshold,
             is_undervalued=is_undervalued,
             is_anomaly=anomaly_result.is_anomaly,
             anomaly_score=anomaly_result.score,
             anomaly_reason=anomaly_result.reason if anomaly_result.is_anomaly else None,
-            risk_level=signal.risk_level if hasattr(signal, "risk_level") else RiskLevel.MEDIUM,
+            risk_level=(
+                signal.risk_level if hasattr(signal, "risk_level") else RiskLevel.MEDIUM
+            ),
             risk_factors=signal.reasoning if hasattr(signal, "reasoning") else [],
             recommendation=recommendation,
-            recommendation_reason=self._get_recommendation_reason(recommendation, is_undervalued, signal),
+            recommendation_reason=self._get_recommendation_reason(
+                recommendation, is_undervalued, signal
+            ),
             llm_analysis=llm_analysis,
         )
 
@@ -674,7 +686,9 @@ class AICoordinator:
 
         # Update average confidence in stats
         if self._confidence_scores:
-            self._stats["avg_confidence"] = sum(self._confidence_scores) / len(self._confidence_scores)
+            self._stats["avg_confidence"] = sum(self._confidence_scores) / len(
+                self._confidence_scores
+            )
 
         return confidence
 
@@ -732,15 +746,24 @@ class AICoordinator:
         reasoning = []
 
         if action == TradeAction.BUY:
-            reasoning.append(f"Discount {analysis.actual_discount:.1f}% above ML threshold {analysis.ml_threshold:.1f}%")
+            reasoning.append(
+                f"Discount {analysis.actual_discount:.1f}% above ML threshold {analysis.ml_threshold:.1f}%"
+            )
         elif action == TradeAction.SKIP:
             if analysis.is_anomaly:
                 reasoning.append(f"Anomaly detected: {analysis.anomaly_reason}")
 
         if analysis.signal in {"strong_buy", "buy"}:
-            reasoning.append(f"Signal: {analysis.signal} ({analysis.signal_probability:.1%})")
+            reasoning.append(
+                f"Signal: {analysis.signal} ({analysis.signal_probability:.1%})"
+            )
 
-        reasoning.extend((f"Price prediction: ${analysis.predicted_price_24h:.2f} (24h)", f"Risk level: {analysis.risk_level.value}"))
+        reasoning.extend(
+            (
+                f"Price prediction: ${analysis.predicted_price_24h:.2f} (24h)",
+                f"Risk level: {analysis.risk_level.value}",
+            )
+        )
 
         return reasoning
 
@@ -814,12 +837,14 @@ class AICoordinator:
             was_profitable: Whether trade was profitable
         """
         # Add to history
-        self._trade_history.append({
-            "decision": decision.to_dict(),
-            "actual_profit": actual_profit,
-            "was_profitable": was_profitable,
-            "timestamp": datetime.now(UTC).isoformat(),
-        })
+        self._trade_history.append(
+            {
+                "decision": decision.to_dict(),
+                "actual_profit": actual_profit,
+                "was_profitable": was_profitable,
+                "timestamp": datetime.now(UTC).isoformat(),
+            }
+        )
 
         # Update stats
         if was_profitable:
@@ -829,7 +854,9 @@ class AICoordinator:
         # Track for drift detection
         self._prediction_outcomes.append(was_profitable)
         if len(self._prediction_outcomes) > self.DRIFT_DETECTION_WINDOW:
-            self._prediction_outcomes = self._prediction_outcomes[-self.DRIFT_DETECTION_WINDOW:]
+            self._prediction_outcomes = self._prediction_outcomes[
+                -self.DRIFT_DETECTION_WINDOW :
+            ]
 
         # Check for concept drift
         self._check_concept_drift()
@@ -843,9 +870,11 @@ class AICoordinator:
             historical_avg_price=decision.predicted_price,
             actual_discount=decision.discount_threshold_used,
             was_profitable=was_profitable,
-            profit_percent=(actual_profit / decision.current_price * 100)
-            if decision.current_price > 0
-            else 0,
+            profit_percent=(
+                (actual_profit / decision.current_price * 100)
+                if decision.current_price > 0
+                else 0
+            ),
         )
 
     def _check_concept_drift(self) -> None:
@@ -858,7 +887,9 @@ class AICoordinator:
             return
 
         # Calculate recent accuracy
-        recent_accuracy = sum(self._prediction_outcomes) / len(self._prediction_outcomes)
+        recent_accuracy = sum(self._prediction_outcomes) / len(
+            self._prediction_outcomes
+        )
 
         if recent_accuracy < self.DRIFT_ACCURACY_THRESHOLD:
             if not self._drift_detected:
@@ -872,7 +903,11 @@ class AICoordinator:
                         "recommendation": "Consider retraining models",
                     },
                 )
-        elif self._drift_detected and recent_accuracy >= self.DRIFT_ACCURACY_THRESHOLD + self.DRIFT_RECOVERY_OFFSET:
+        elif (
+            self._drift_detected
+            and recent_accuracy
+            >= self.DRIFT_ACCURACY_THRESHOLD + self.DRIFT_RECOVERY_OFFSET
+        ):
             # Drift recovered (with hysteresis to prevent oscillation)
             self._drift_detected = False
             logger.info(
@@ -888,7 +923,9 @@ class AICoordinator:
         """
         recent_accuracy = 0.0
         if self._prediction_outcomes:
-            recent_accuracy = sum(self._prediction_outcomes) / len(self._prediction_outcomes)
+            recent_accuracy = sum(self._prediction_outcomes) / len(
+                self._prediction_outcomes
+            )
 
         return {
             "drift_detected": self._drift_detected,
@@ -947,7 +984,9 @@ class AICoordinator:
             for idx, decision in enumerate(batch_decisions):
                 if isinstance(decision, Exception):
                     # Log the exception for debugging
-                    item_name = batch[idx].get("title", batch[idx].get("name", "unknown"))
+                    item_name = batch[idx].get(
+                        "title", batch[idx].get("name", "unknown")
+                    )
                     logger.warning(
                         "batch_decision_failed",
                         extra={"item_name": item_name, "error": str(decision)},

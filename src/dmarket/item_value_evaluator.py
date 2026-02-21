@@ -265,7 +265,9 @@ class ItemValueEvaluator:
             EvaluationResult с оценкой редкости
         """
         # Извлекаем базовые данные
-        item_id = item_data.get("itemId") or item_data.get("extra", {}).get("offerId", "unknown")
+        item_id = item_data.get("itemId") or item_data.get("extra", {}).get(
+            "offerId", "unknown"
+        )
         game = self._detect_game(item_data)
         title = item_data.get("title", "")
 
@@ -316,7 +318,9 @@ class ItemValueEvaluator:
 
         return GameType.CS2  # Default
 
-    def _evaluate_cs2(self, item_data: dict[str, Any], result: EvaluationResult) -> None:
+    def _evaluate_cs2(
+        self, item_data: dict[str, Any], result: EvaluationResult
+    ) -> None:
         """Оценить CS2 предмет."""
         extra = item_data.get("extra", {})
 
@@ -379,13 +383,17 @@ class ItemValueEvaluator:
     def _evaluate_cs2_stickers(self, result: EvaluationResult) -> None:
         """Оценить наклейки."""
         for sticker in result.stickers:
-            sticker_name = sticker.get("name", "") if isinstance(sticker, dict) else str(sticker)
+            sticker_name = (
+                sticker.get("name", "") if isinstance(sticker, dict) else str(sticker)
+            )
 
             # Проверяем Katowice 2014 Holo (JACKPOT)
             for kato_holo in self.cs2_valuable_stickers["katowice_2014_holo"]:
                 if kato_holo.lower() in sticker_name.lower():
                     result.value_multiplier += 1.0  # +100% минимум
-                    result.detected_attributes.append(f"Katowice 2014 Holo: {sticker_name}")
+                    result.detected_attributes.append(
+                        f"Katowice 2014 Holo: {sticker_name}"
+                    )
                     result.bonus_reasons.append("Katowice 2014 Holo sticker (JACKPOT)")
                     result.requires_manual_review = True
                     return  # Одной такой наклейки достаточно
@@ -401,14 +409,18 @@ class ItemValueEvaluator:
             for cologne in self.cs2_valuable_stickers["cologne_2014_holo"]:
                 if cologne.lower() in sticker_name.lower():
                     result.value_multiplier += 0.10  # +10%
-                    result.detected_attributes.append(f"Cologne 2014 Holo: {sticker_name}")
+                    result.detected_attributes.append(
+                        f"Cologne 2014 Holo: {sticker_name}"
+                    )
                     result.bonus_reasons.append("Cologne 2014 Holo sticker")
 
             # Проверяем Premium stickers
             for premium in self.cs2_valuable_stickers["premium_stickers"]:
                 if premium.lower() in sticker_name.lower():
                     result.value_multiplier += 0.15  # +15%
-                    result.detected_attributes.append(f"Premium Sticker: {sticker_name}")
+                    result.detected_attributes.append(
+                        f"Premium Sticker: {sticker_name}"
+                    )
                     result.bonus_reasons.append("Premium sticker (Crown/Howling Dawn)")
 
     def _evaluate_cs2_pattern(self, result: EvaluationResult) -> None:
@@ -420,9 +432,14 @@ class ItemValueEvaluator:
 
         # Case Hardened Blue Gem
         if "case hardened" in title_lower:
-            if result.pattern_id in self.cs2_valuable_patterns["case_hardened_blue_gem"]:
+            if (
+                result.pattern_id
+                in self.cs2_valuable_patterns["case_hardened_blue_gem"]
+            ):
                 result.value_multiplier += 0.50  # +50%
-                result.detected_attributes.append(f"Blue Gem Pattern: #{result.pattern_id}")
+                result.detected_attributes.append(
+                    f"Blue Gem Pattern: #{result.pattern_id}"
+                )
                 result.bonus_reasons.append("Case Hardened Blue Gem pattern")
                 result.requires_manual_review = True
 
@@ -430,7 +447,9 @@ class ItemValueEvaluator:
         if "fade" in title_lower:
             if result.pattern_id in self.cs2_valuable_patterns["fade_100"]:
                 result.value_multiplier += 0.20  # +20%
-                result.detected_attributes.append(f"High Fade Pattern: #{result.pattern_id}")
+                result.detected_attributes.append(
+                    f"High Fade Pattern: #{result.pattern_id}"
+                )
                 result.bonus_reasons.append("High fade percentage pattern")
 
     def _evaluate_cs2_phase(self, result: EvaluationResult) -> None:
@@ -455,7 +474,9 @@ class ItemValueEvaluator:
             result.detected_attributes.append(f"Good Doppler Phase: {result.phase}")
             result.bonus_reasons.append("Desirable Doppler phase")
 
-    def _evaluate_dota2(self, item_data: dict[str, Any], result: EvaluationResult) -> None:
+    def _evaluate_dota2(
+        self, item_data: dict[str, Any], result: EvaluationResult
+    ) -> None:
         """Оценить Dota 2 предмет."""
         extra = item_data.get("extra", {})
         title = result.title.lower()
@@ -480,7 +501,9 @@ class ItemValueEvaluator:
                 result.unlocked_styles = int(styles)
                 if result.unlocked_styles >= 2:
                     result.value_multiplier += 0.08  # +8%
-                    result.detected_attributes.append(f"Unlocked Styles: {result.unlocked_styles}")
+                    result.detected_attributes.append(
+                        f"Unlocked Styles: {result.unlocked_styles}"
+                    )
                     result.bonus_reasons.append("Multiple unlocked styles")
             except (ValueError, TypeError):
                 pass
@@ -490,7 +513,9 @@ class ItemValueEvaluator:
         for gem in result.gems:
             gem_name = gem.get("name", "") if isinstance(gem, dict) else str(gem)
             # gem_type is extracted but currently unused - kept for future enhancements
-            _gem_type = gem.get("type", "") if isinstance(gem, dict) else ""  # noqa: F841
+            _gem_type = (
+                gem.get("type", "") if isinstance(gem, dict) else ""
+            )  # noqa: F841
 
             # Проверяем редкие Prismatic гемы
             for rare_gem in self.dota2_valuable_gems["prismatic_rare"]:
@@ -506,7 +531,9 @@ class ItemValueEvaluator:
                     result.detected_attributes.append(f"Rare Ethereal Gem: {gem_name}")
                     result.bonus_reasons.append("Rare ethereal gem (valuable effect)")
 
-    def _evaluate_tf2(self, item_data: dict[str, Any], result: EvaluationResult) -> None:
+    def _evaluate_tf2(
+        self, item_data: dict[str, Any], result: EvaluationResult
+    ) -> None:
         """Оценить TF2 предмет."""
         extra = item_data.get("extra", {})
         title = result.title.lower()
@@ -564,11 +591,15 @@ class ItemValueEvaluator:
         for tier1_effect in self.tf2_valuable_attributes["unusual_effects_tier1"]:
             if tier1_effect.lower() in result.unusual_effect.lower():
                 result.value_multiplier += 0.25  # +25%
-                result.detected_attributes.append(f"Tier 1 Unusual: {result.unusual_effect}")
+                result.detected_attributes.append(
+                    f"Tier 1 Unusual: {result.unusual_effect}"
+                )
                 result.bonus_reasons.append("Top-tier unusual effect")
                 return
 
-    def _evaluate_rust(self, item_data: dict[str, Any], result: EvaluationResult) -> None:
+    def _evaluate_rust(
+        self, item_data: dict[str, Any], result: EvaluationResult
+    ) -> None:
         """Оценить Rust предмет."""
         title = result.title
 

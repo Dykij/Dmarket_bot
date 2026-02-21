@@ -13,6 +13,7 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+
 class ArbitrageScanner:
     """Core engine for scanning arbitrage opportunities."""
 
@@ -51,12 +52,15 @@ class ArbitrageScanner:
             )
         return self.api_client
 
-    async def scan_game(self, game: str, mode: str = "medium", max_items: int = 20) -> list[dict[str, Any]]:
+    async def scan_game(
+        self, game: str, mode: str = "medium", max_items: int = 20
+    ) -> list[dict[str, Any]]:
         # Simplified scan logic for now (actual logic to be restored/modularized)
         logger.info(f"Scanning {game} in {mode} mode")
         return []
 
     # ... other methods ...
+
 
 async def check_user_balance(api_client):
     """Stub for balance check to prevent ImportErrors"""

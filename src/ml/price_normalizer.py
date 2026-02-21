@@ -387,7 +387,9 @@ class PriceNormalizer:
         sell_usd = self.normalize(sell_price, sell_source).price_usd
 
         # Чистая цена после комиссии продажи
-        net_sell = self.calculate_net_price(sell_usd, sell_source, after_commission=True)
+        net_sell = self.calculate_net_price(
+            sell_usd, sell_source, after_commission=True
+        )
 
         # Расчет прибыли
         gross_profit = sell_usd - buy_usd

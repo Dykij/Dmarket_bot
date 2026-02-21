@@ -164,7 +164,9 @@ class SalesHistoryAnalyzer:
 
         # Calculate statistics
         try:
-            prices = [float(sale.get("price", {}).get("USD", 0)) / 100 for sale in sales]
+            prices = [
+                float(sale.get("price", {}).get("USD", 0)) / 100 for sale in sales
+            ]
             dates = [
                 datetime.fromisoformat(sale.get("date", datetime.now().isoformat()))
                 for sale in sales
@@ -189,7 +191,9 @@ class SalesHistoryAnalyzer:
                 x_mean = sum(x) / n
                 y_mean = avg_price
 
-                numerator = sum((x[i] - x_mean) * (prices[i] - y_mean) for i in range(n))
+                numerator = sum(
+                    (x[i] - x_mean) * (prices[i] - y_mean) for i in range(n)
+                )
                 denominator = sum((x[i] - x_mean) ** 2 for i in range(n))
 
                 if denominator > 0:

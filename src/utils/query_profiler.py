@@ -229,7 +229,15 @@ class QueryProfiler:
     def _extract_query_type(self, statement: str) -> str:
         """Extract query type from statement."""
         statement = statement.strip().upper()
-        for query_type in ("SELECT", "INSERT", "UPDATE", "DELETE", "CREATE", "ALTER", "DROP"):
+        for query_type in (
+            "SELECT",
+            "INSERT",
+            "UPDATE",
+            "DELETE",
+            "CREATE",
+            "ALTER",
+            "DROP",
+        ):
             if statement.startswith(query_type):
                 return query_type
         return "OTHER"
@@ -301,7 +309,9 @@ class QueryProfiler:
         )
 
     @contextmanager
-    def profile_block(self, name: str = "unnamed") -> Generator[ProfilerReport, None, None]:
+    def profile_block(
+        self, name: str = "unnamed"
+    ) -> Generator[ProfilerReport, None, None]:
         """Profile a block of code.
 
         Args:

@@ -40,7 +40,9 @@ async def send_profit_alert(item_data: dict) -> bool:
         return False
 
     if not chat_id:
-        logger.warning("ADMIN_CHAT_ID не установлен в .env - уведомления не будут отправляться")
+        logger.warning(
+            "ADMIN_CHAT_ID не установлен в .env - уведомления не будут отправляться"
+        )
         return False
 
     # --- ЛОГИКА ТИХОГО РЕЖИМА ---

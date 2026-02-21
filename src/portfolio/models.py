@@ -252,7 +252,10 @@ class Portfolio:
         for existing in self.items:
             if existing.item_id == item.item_id:
                 # Update average cost
-                total_cost = existing.buy_price * existing.quantity + item.buy_price * item.quantity
+                total_cost = (
+                    existing.buy_price * existing.quantity
+                    + item.buy_price * item.quantity
+                )
                 existing.quantity += item.quantity
                 existing.buy_price = total_cost / existing.quantity
                 self.updated_at = datetime.now(UTC)
@@ -328,7 +331,9 @@ class Portfolio:
         total_value = sum(item.current_value for item in self.items)
         total_cost = sum(item.total_cost for item in self.items)
         total_pnl = total_value - total_cost
-        total_pnl_percent = float(total_pnl / total_cost * 100) if total_cost > 0 else 0.0
+        total_pnl_percent = (
+            float(total_pnl / total_cost * 100) if total_cost > 0 else 0.0
+        )
 
         # Find best and worst performers
         best = max(self.items, key=lambda x: x.pnl_percent)
@@ -391,7 +396,9 @@ class Portfolio:
                 data.get("updated_at", datetime.now(UTC).isoformat())
             ),
         )
-        portfolio.items = [PortfolioItem.from_dict(item) for item in data.get("items", [])]
+        portfolio.items = [
+            PortfolioItem.from_dict(item) for item in data.get("items", [])
+        ]
         return portfolio
 
 

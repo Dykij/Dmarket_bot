@@ -155,7 +155,10 @@ class InstructionMatcher:
             default_patterns = {
                 "python-style": ["src/**/*.py"],
                 "testing": ["tests/**/*.py"],
-                "workflows": [".github/workflows/**/*.yml", ".github/workflows/**/*.yaml"],
+                "workflows": [
+                    ".github/workflows/**/*.yml",
+                    ".github/workflows/**/*.yaml",
+                ],
                 "documentation": ["docs/**/*.md", "*.md"],
                 "database": ["src/models/**/*.py", "alembic/**/*.py"],
                 "api-integration": ["src/dmarket/**/*.py", "src/waxpeer/**/*.py"],
@@ -225,7 +228,9 @@ class InstructionMatcher:
 
         # Sort by priority
         matching.sort(
-            key=lambda n: self.instructions[n].priority if n in self.instructions else 0,
+            key=lambda n: (
+                self.instructions[n].priority if n in self.instructions else 0
+            ),
             reverse=True,
         )
 

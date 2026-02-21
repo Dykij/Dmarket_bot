@@ -397,10 +397,12 @@ class PriceRangeMonitor:
         if target_id not in self.price_history:
             self.price_history[target_id] = []
 
-        self.price_history[target_id].append({
-            "timestamp": datetime.now(UTC),
-            "market_price": market_price,
-        })
+        self.price_history[target_id].append(
+            {
+                "timestamp": datetime.now(UTC),
+                "market_price": market_price,
+            }
+        )
 
         # Оставить только последние 100 проверок
         if len(self.price_history[target_id]) > 100:
@@ -430,7 +432,9 @@ class PriceRangeMonitor:
 
         cutoff_time = datetime.now(UTC) - timedelta(hours=hours)
         return [
-            entry for entry in self.price_history[target_id] if entry["timestamp"] >= cutoff_time
+            entry
+            for entry in self.price_history[target_id]
+            if entry["timestamp"] >= cutoff_time
         ]
 
     async def monitor_orders(
@@ -506,5 +510,7 @@ class PriceRangeMonitor:
             if not self.price_history[target_id]:
                 del self.price_history[target_id]
 
-        logger.info(f"Cleaned up {removed_count} old price check entries (older than {days} days)")
+        logger.info(
+            f"Cleaned up {removed_count} old price check entries (older than {days} days)"
+        )
         return removed_count

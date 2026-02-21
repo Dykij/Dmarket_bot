@@ -100,7 +100,9 @@ class EvaluationResult:
         """Проверить, есть ли переобучение."""
         if self.mean_train_score == 0:
             return False
-        ratio = abs(self.mean_train_score - self.mean_test_score) / abs(self.mean_train_score)
+        ratio = abs(self.mean_train_score - self.mean_test_score) / abs(
+            self.mean_train_score
+        )
         return ratio > threshold
 
 
@@ -174,6 +176,7 @@ class ModelTuner:
         """Проверить доступность sklearn."""
         try:
             import sklearn  # noqa: F401
+
             return True
         except ImportError:
             logger.warning("scikit-learn not available")
@@ -244,10 +247,9 @@ class ModelTuner:
 
         # 3. Feature Selection (опционально)
         if use_feature_selection and n_features_to_select:
-            steps.append((
-                "feature_selection",
-                SelectKBest(f_regression, k=n_features_to_select)
-            ))
+            steps.append(
+                ("feature_selection", SelectKBest(f_regression, k=n_features_to_select))
+            )
 
         # 4. Модель
         steps.append(("model", model))
@@ -397,9 +399,7 @@ class ModelTuner:
         pipeline = self.create_pipeline(model)
 
         # Адаптируем param_grid для pipeline
-        pipeline_param_grid = {
-            f"model__{k}": v for k, v in param_grid.items()
-        }
+        pipeline_param_grid = {f"model__{k}": v for k, v in param_grid.items()}
 
         start_time = time.time()
 
@@ -430,13 +430,16 @@ class ModelTuner:
 
             # Убираем префикс "model__" из параметров
             best_params = {
-                k.replace("model__", ""): v
-                for k, v in search.best_params_.items()
+                k.replace("model__", ""): v for k, v in search.best_params_.items()
             }
 
             return TuningResult(
                 best_params=best_params,
-                best_score=-search.best_score_ if "neg" in self.scoring.value else search.best_score_,
+                best_score=(
+                    -search.best_score_
+                    if "neg" in self.scoring.value
+                    else search.best_score_
+                ),
                 cv_results=dict(search.cv_results_),
                 best_estimator=search.best_estimator_,
                 model_name=model_name,
@@ -522,7 +525,9 @@ class ModelTuner:
             final_model = model.named_steps.get("model")
             if hasattr(final_model, "feature_importances_") and feature_names:
                 importances = final_model.feature_importances_
-                feature_importances = dict(zip(feature_names, importances, strict=False))
+                feature_importances = dict(
+                    zip(feature_names, importances, strict=False)
+                )
 
         mean_train = float(np.mean(train_scores))
         mean_test = float(np.mean(test_scores))
@@ -530,12 +535,20 @@ class ModelTuner:
         return EvaluationResult(
             train_scores=train_scores,
             test_scores=test_scores,
-            mean_train_score=abs(mean_train) if "neg" in self.scoring.value else mean_train,
-            mean_test_score=abs(mean_test) if "neg" in self.scoring.value else mean_test,
+            mean_train_score=(
+                abs(mean_train) if "neg" in self.scoring.value else mean_train
+            ),
+            mean_test_score=(
+                abs(mean_test) if "neg" in self.scoring.value else mean_test
+            ),
             std_train_score=float(np.std(train_scores)),
             std_test_score=float(np.std(test_scores)),
             feature_importances=feature_importances,
-            overfitting_ratio=abs(mean_train - mean_test) / abs(mean_train) if mean_train != 0 else 0.0,
+            overfitting_ratio=(
+                abs(mean_train - mean_test) / abs(mean_train)
+                if mean_train != 0
+                else 0.0
+            ),
         )
 
     def compare_models(
@@ -584,6 +597,7 @@ class ModelTuner:
         if not self._sklearn_available:
             return None
         from sklearn.ensemble import RandomForestRegressor
+
         return RandomForestRegressor(
             n_estimators=100,
             max_depth=10,
@@ -596,6 +610,7 @@ class ModelTuner:
         if not self._sklearn_available:
             return None
         from sklearn.ensemble import GradientBoostingRegressor
+
         return GradientBoostingRegressor(
             n_estimators=100,
             max_depth=5,
@@ -608,12 +623,14 @@ class ModelTuner:
         if not self._sklearn_available:
             return None
         from sklearn.linear_model import Ridge
+
         return Ridge(alpha=1.0)
 
     def _create_xgboost(self) -> Any:
         """Создать XGBoost с базовыми параметрами."""
         try:
             from xgboost import XGBRegressor
+
             return XGBRegressor(
                 n_estimators=100,
                 max_depth=5,
@@ -743,7 +760,9 @@ class AutoMLSelector:
         recommendations = []
 
         if not results:
-            recommendations.append("No results available. Check if sklearn is installed.")
+            recommendations.append(
+                "No results available. Check if sklearn is installed."
+            )
             return recommendations
 
         # Сортируем по score
@@ -776,11 +795,17 @@ class AutoMLSelector:
         if best_name == "random_forest":
             recommendations.append("💡 RandomForest is robust to outliers.")
         elif best_name == "gradient_boosting":
-            recommendations.append("💡 GradientBoosting may overfit. Monitor train/test gap.")
+            recommendations.append(
+                "💡 GradientBoosting may overfit. Monitor train/test gap."
+            )
         elif best_name == "xgboost":
-            recommendations.append("💡 XGBoost is fast. Consider early stopping in production.")
+            recommendations.append(
+                "💡 XGBoost is fast. Consider early stopping in production."
+            )
         elif best_name == "ridge":
-            recommendations.append("💡 Ridge is simple but may underfit complex patterns.")
+            recommendations.append(
+                "💡 Ridge is simple but may underfit complex patterns."
+            )
 
         return recommendations
 
@@ -820,6 +845,7 @@ class EnsembleBuilder:
         """Check sklearn availability."""
         try:
             import sklearn  # noqa: F401
+
             return True
         except ImportError:
             return False
@@ -886,16 +912,18 @@ class EnsembleBuilder:
             try:
                 from xgboost import XGBRegressor
 
-                estimators.append((
-                    "xgb",
-                    XGBRegressor(
-                        n_estimators=100,
-                        max_depth=5,
-                        learning_rate=0.1,
-                        random_state=self.random_state,
-                        n_jobs=-1,
-                    ),
-                ))
+                estimators.append(
+                    (
+                        "xgb",
+                        XGBRegressor(
+                            n_estimators=100,
+                            max_depth=5,
+                            learning_rate=0.1,
+                            random_state=self.random_state,
+                            n_jobs=-1,
+                        ),
+                    )
+                )
             except ImportError:
                 logger.info("XGBoost not available, skipping in ensemble")
 
@@ -948,7 +976,9 @@ class EnsembleBuilder:
         for name, model in estimators:
             try:
                 cv_scores = cross_val_score(
-                    model, X, y,
+                    model,
+                    X,
+                    y,
                     cv=cv,
                     scoring="neg_mean_absolute_error",
                     n_jobs=-1,
@@ -999,6 +1029,7 @@ class AdvancedFeatureSelector:
         """Check sklearn availability."""
         try:
             import sklearn  # noqa: F401
+
             return True
         except ImportError:
             return False
@@ -1188,7 +1219,9 @@ class AdvancedFeatureSelector:
             )
             model.fit(X, y)
             perm_importance = permutation_importance(
-                model, X, y,
+                model,
+                X,
+                y,
                 n_repeats=10,
                 random_state=self.random_state,
                 n_jobs=-1,

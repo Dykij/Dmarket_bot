@@ -119,7 +119,9 @@ class UniversalBalanceGetter:
 
         # Extract amounts (convert from USD to cents)
         usd_amount = balance_data.get("balance", 0) * 100
-        usd_available = balance_data.get("available", balance_data.get("balance", 0)) * 100
+        usd_available = (
+            balance_data.get("available", balance_data.get("balance", 0)) * 100
+        )
         usd_total = balance_data.get("total", balance_data.get("balance", 0)) * 100
         usd_locked = balance_data.get("locked", 0) * 100
         usd_trade_protected = balance_data.get("trade_protected", 0) * 100
@@ -151,12 +153,16 @@ class UniversalBalanceGetter:
         """
         endpoints = self._get_balance_endpoints()
 
-        response, successful_endpoint, last_error = await self._try_endpoints_for_balance(endpoints)
+        response, successful_endpoint, last_error = (
+            await self._try_endpoints_for_balance(endpoints)
+        )
 
         # Early return: no response from any endpoint
         if not response:
             error_message = (
-                str(last_error) if last_error else "Failed to get balance from any endpoint"
+                str(last_error)
+                if last_error
+                else "Failed to get balance from any endpoint"
             )
             logger.error(f"Critical error getting balance: {error_message}")
             return self._create_error_from_message(error_message)
@@ -287,11 +293,15 @@ class UniversalBalanceGetter:
         logger.info(f"🔍 RAW BALANCE API RESPONSE (get_balance): {response}")
         logger.info(f"Analyzing balance response from {endpoint}: {response}")
 
-        usd_amount, usd_available, usd_total = self._parse_balance_from_response(response)
+        usd_amount, usd_available, usd_total = self._parse_balance_from_response(
+            response
+        )
 
         # Warn if unable to parse
         if usd_amount == 0 and usd_available == 0 and usd_total == 0:
-            logger.warning(f"Could not parse balance data from known formats: {response}")
+            logger.warning(
+                f"Could not parse balance data from known formats: {response}"
+            )
 
         result = self._create_balance_response(
             usd_amount=usd_amount,
@@ -306,7 +316,9 @@ class UniversalBalanceGetter:
         )
         return result
 
-    def _parse_balance_from_response(self, response: dict[str, Any]) -> tuple[float, float, float]:
+    def _parse_balance_from_response(
+        self, response: dict[str, Any]
+    ) -> tuple[float, float, float]:
         """Parse balance amounts from API response.
 
         Args:

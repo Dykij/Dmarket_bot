@@ -31,7 +31,9 @@ logger = logging.getLogger(__name__)
 # ============================================================================
 
 
-async def handle_simple_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def handle_simple_menu(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Handle simple_menu callback."""
     await main_menu_callback(update, context)
 
@@ -41,7 +43,9 @@ async def handle_balance(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     if not update.callback_query or not update.callback_query.message:
         return
 
-    await dmarket_status_impl(update, context, status_message=update.callback_query.message)
+    await dmarket_status_impl(
+        update, context, status_message=update.callback_query.message
+    )
 
 
 async def handle_search(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -68,7 +72,9 @@ async def handle_settings(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     )
 
 
-async def handle_market_trends(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def handle_market_trends(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Handle market_trends callback."""
     if not update.callback_query:
         return
@@ -95,7 +101,9 @@ async def handle_alerts(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     )
 
 
-async def handle_back_to_main(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def handle_back_to_main(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Handle back_to_main callback."""
     if not update.callback_query:
         return
@@ -117,29 +125,39 @@ async def handle_main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -
 # ============================================================================
 
 
-async def handle_arbitrage_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def handle_arbitrage_menu(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Handle arbitrage/arbitrage_menu callback - redirect to auto_trade."""
     await auto_trade_start(update, context)
 
 
-async def handle_auto_arbitrage(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def handle_auto_arbitrage(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Handle auto_arbitrage callback - redirect to auto_trade."""
     await auto_trade_start(update, context)
 
 
-async def handle_dmarket_arbitrage(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def handle_dmarket_arbitrage(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Handle dmarket_arbitrage callback - redirect to auto_trade."""
     await auto_trade_start(update, context)
 
 
-async def handle_best_opportunities(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def handle_best_opportunities(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Handle best_opportunities callback."""
     from src.telegram_bot.handlers.callbacks import handle_best_opportunities_impl
 
     await handle_best_opportunities_impl(update, context)
 
 
-async def handle_game_selection(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def handle_game_selection(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Handle game_selection callback."""
     if not update.callback_query:
         return
@@ -151,7 +169,9 @@ async def handle_game_selection(update: Update, context: ContextTypes.DEFAULT_TY
     )
 
 
-async def handle_market_analysis(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def handle_market_analysis(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Handle market_analysis callback."""
     if not update.callback_query:
         return
@@ -163,7 +183,9 @@ async def handle_market_analysis(update: Update, context: ContextTypes.DEFAULT_T
     )
 
 
-async def handle_open_webapp(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def handle_open_webapp(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Handle open_webapp callback."""
     if not update.callback_query:
         return

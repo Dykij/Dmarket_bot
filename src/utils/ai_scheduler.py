@@ -149,9 +149,7 @@ class AITrainingScheduler:
             logger.info("Nightly AI training completed: %s", result)
 
             # Notify admins
-            await self._notify_admins(
-                f"🤖 AI Nightly Training\n\n{result}"
-            )
+            await self._notify_admins(f"🤖 AI Nightly Training\n\n{result}")
 
         except ImportError as e:
             error_msg = f"AI dependencies not installed: {e}"
@@ -165,7 +163,10 @@ class AITrainingScheduler:
     async def _collect_market_data(self) -> None:
         """Collect market data for AI training."""
         try:
-            from src.dmarket.market_data_logger import MarketDataLogger, MarketDataLoggerConfig
+            from src.dmarket.market_data_logger import (
+                MarketDataLogger,
+                MarketDataLoggerConfig,
+            )
 
             # Initialize logger if not already done
             if self._data_logger is None:

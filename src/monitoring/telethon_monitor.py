@@ -136,7 +136,8 @@ class SignalPatterns:
     )
 
     CSGO_ITEM_PATTERN = re.compile(
-        r"([A-Z][a-zA-Z0-9-]+\s*\|\s*[A-Za-z0-9\s\-']+(?:\s*\([A-Za-z\s]+\))?)", re.IGNORECASE
+        r"([A-Z][a-zA-Z0-9-]+\s*\|\s*[A-Za-z0-9\s\-']+(?:\s*\([A-Za-z\s]+\))?)",
+        re.IGNORECASE,
     )
 
 
@@ -188,7 +189,14 @@ class MessageAnalyzer:
             "recommendation",
             "alert",
         ],
-        SignalType.NEWS: ["новость", "news", "обновление", "update", "анонс", "announcement"],
+        SignalType.NEWS: [
+            "новость",
+            "news",
+            "обновление",
+            "update",
+            "анонс",
+            "announcement",
+        ],
     }
 
     @classmethod
@@ -300,7 +308,9 @@ class TelethonMonitor:
     ) -> None:
         """Initialize monitor."""
         if not TELETHON_AVAILABLE:
-            raise ImportError("Telethon is not installed. Install with: pip install telethon")
+            raise ImportError(
+                "Telethon is not installed. Install with: pip install telethon"
+            )
 
         self.api_id = api_id
         self.api_hash = api_hash
@@ -517,7 +527,9 @@ class MockTelethonMonitor:
         """Stop (no-op)."""
         self._is_running = False
 
-    def simulate_message(self, text: str, channel: str = "test") -> DetectedSignal | None:
+    def simulate_message(
+        self, text: str, channel: str = "test"
+    ) -> DetectedSignal | None:
         """Simulate receiving a message."""
         signal = MessageAnalyzer.analyze_message(text)
         if signal:
@@ -534,7 +546,9 @@ class MockTelethonMonitor:
             "signals_detected": len(self._signals),
         }
 
-    def get_recent_signals(self, limit: int = 50, **kwargs: Any) -> list[DetectedSignal]:
+    def get_recent_signals(
+        self, limit: int = 50, **kwargs: Any
+    ) -> list[DetectedSignal]:
         """Get recent signals."""
         return self._signals[-limit:]
 

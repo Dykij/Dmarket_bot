@@ -19,7 +19,10 @@ Callbacks:
 from telegram import Update
 from telegram.ext import ContextTypes
 
-from src.telegram_bot.keyboards.arbitrage import get_waxpeer_keyboard, get_waxpeer_settings_keyboard
+from src.telegram_bot.keyboards.arbitrage import (
+    get_waxpeer_keyboard,
+    get_waxpeer_settings_keyboard,
+)
 from src.utils.config import Config
 
 
@@ -33,7 +36,9 @@ async def waxpeer_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     await waxpeer_menu_handler(update, context)
 
 
-async def waxpeer_scan_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def waxpeer_scan_command(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Handle /waxpeer_scan command - starts cross-platform arbitrage scan.
 
     Args:
@@ -87,7 +92,9 @@ async def waxpeer_scan_command(update: Update, context: ContextTypes.DEFAULT_TYP
     )
 
 
-async def waxpeer_menu_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def waxpeer_menu_handler(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Handle Waxpeer menu callback."""
     query = update.callback_query
     if query:
@@ -129,7 +136,9 @@ async def waxpeer_menu_handler(update: Update, context: ContextTypes.DEFAULT_TYP
         )
 
 
-async def waxpeer_balance_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def waxpeer_balance_handler(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Handle Waxpeer balance check."""
     query = update.callback_query
     if query:
@@ -162,7 +171,9 @@ async def waxpeer_balance_handler(update: Update, context: ContextTypes.DEFAULT_
         )
 
 
-async def waxpeer_settings_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def waxpeer_settings_handler(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Handle Waxpeer settings menu."""
     query = update.callback_query
     if query:
@@ -193,7 +204,9 @@ async def waxpeer_settings_handler(update: Update, context: ContextTypes.DEFAULT
         )
 
 
-async def waxpeer_scan_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def waxpeer_scan_handler(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Handle cross-platform arbitrage scan."""
     query = update.callback_query
     if query:
@@ -232,7 +245,9 @@ WAXPEER_HANDLERS = {
 }
 
 
-async def route_waxpeer_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> bool:
+async def route_waxpeer_callback(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> bool:
     """Route Waxpeer-related callbacks.
 
     Args:

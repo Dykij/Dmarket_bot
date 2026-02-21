@@ -476,7 +476,9 @@ async def generate_market_report(
                 "average_market_liquidity": (
                     market_depth.get("summary", {}).get("average_liquidity_score", 0)
                 ),
-                "market_health": market_depth.get("summary", {}).get("market_health", "unknown"),
+                "market_health": market_depth.get("summary", {}).get(
+                    "market_health", "unknown"
+                ),
                 "recommended_actions": _generate_market_recommendations(results),
             },
         }
@@ -549,7 +551,9 @@ async def analyze_market_depth(
                 sort_by="best_deal",
             )
             items = [
-                item.get("title") for item in market_items.get("items", []) if item.get("title")
+                item.get("title")
+                for item in market_items.get("items", [])
+                if item.get("title")
             ][:limit]
 
         if not items:
@@ -591,7 +595,9 @@ async def analyze_market_depth(
             # Рассчитываем показатели глубины рынка
             total_volume = order_count + offer_count
             buy_pressure = (order_count / total_volume * 100) if total_volume > 0 else 0
-            sell_pressure = (offer_count / total_volume * 100) if total_volume > 0 else 0
+            sell_pressure = (
+                (offer_count / total_volume * 100) if total_volume > 0 else 0
+            )
 
             # Спред между лучшей ценой покупки и продажи
             spread = offer_price - order_price
@@ -611,28 +617,30 @@ async def analyze_market_depth(
                 market_balance = "balanced"
                 balance_description = "Сбалансированный рынок"
 
-            depth_analysis.append({
-                "title": title,
-                "order_count": order_count,
-                "offer_count": offer_count,
-                "total_volume": total_volume,
-                "order_price": order_price,
-                "offer_price": offer_price,
-                "spread": spread,
-                "spread_percent": spread_percent,
-                "buy_pressure": buy_pressure,
-                "sell_pressure": sell_pressure,
-                "liquidity_score": liquidity_score,
-                "market_balance": market_balance,
-                "balance_description": balance_description,
-                "arbitrage_potential": spread_percent > 5.0,
-            })
+            depth_analysis.append(
+                {
+                    "title": title,
+                    "order_count": order_count,
+                    "offer_count": offer_count,
+                    "total_volume": total_volume,
+                    "order_price": order_price,
+                    "offer_price": offer_price,
+                    "spread": spread,
+                    "spread_percent": spread_percent,
+                    "buy_pressure": buy_pressure,
+                    "sell_pressure": sell_pressure,
+                    "liquidity_score": liquidity_score,
+                    "market_balance": market_balance,
+                    "balance_description": balance_description,
+                    "arbitrage_potential": spread_percent > 5.0,
+                }
+            )
 
         # Рассчитываем сводные показатели
         if depth_analysis:
-            avg_liquidity = sum(item["liquidity_score"] for item in depth_analysis) / len(
-                depth_analysis
-            )
+            avg_liquidity = sum(
+                item["liquidity_score"] for item in depth_analysis
+            ) / len(depth_analysis)
             avg_spread = sum(item["spread_percent"] for item in depth_analysis) / len(
                 depth_analysis
             )
@@ -655,9 +663,7 @@ async def analyze_market_depth(
                     else (
                         "good"
                         if avg_liquidity >= 50
-                        else "moderate"
-                        if avg_liquidity >= 25
-                        else "poor"
+                        else "moderate" if avg_liquidity >= 25 else "poor"
                     )
                 ),
             }
@@ -922,9 +928,9 @@ def _calculate_market_volatility_level(volatile_items: list[dict[str, Any]]) -> 
         return "low"
 
     # Рассчитываем среднюю волатильность
-    avg_volatility = sum(item.get("volatility_score", 0) for item in volatile_items) / len(
-        volatile_items
-    )
+    avg_volatility = sum(
+        item.get("volatility_score", 0) for item in volatile_items
+    ) / len(volatile_items)
 
     if avg_volatility < 10:
         return "low"

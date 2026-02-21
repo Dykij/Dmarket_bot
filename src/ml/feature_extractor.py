@@ -67,26 +67,29 @@ class PriceFeatures:
 
     def to_array(self) -> np.ndarray:
         """Преобразовать признаки в numpy массив для ML модели."""
-        return np.array([
-            self.current_price,
-            self.price_mean_7d,
-            self.price_std_7d,
-            self.price_change_1h,
-            self.price_change_24h,
-            self.price_change_7d,
-            self.rsi,
-            self.volatility,
-            self.momentum,
-            self.sales_count_24h,
-            self.avg_sales_per_day,
-            self.hour_of_day,
-            self.day_of_week,
-            1.0 if self.is_weekend else 0.0,
-            1.0 if self.is_peak_hours else 0.0,
-            self._trend_to_numeric(),
-            self.market_depth,
-            self.competition_level,
-        ], dtype=np.float64)
+        return np.array(
+            [
+                self.current_price,
+                self.price_mean_7d,
+                self.price_std_7d,
+                self.price_change_1h,
+                self.price_change_24h,
+                self.price_change_7d,
+                self.rsi,
+                self.volatility,
+                self.momentum,
+                self.sales_count_24h,
+                self.avg_sales_per_day,
+                self.hour_of_day,
+                self.day_of_week,
+                1.0 if self.is_weekend else 0.0,
+                1.0 if self.is_peak_hours else 0.0,
+                self._trend_to_numeric(),
+                self.market_depth,
+                self.competition_level,
+            ],
+            dtype=np.float64,
+        )
 
     def _trend_to_numeric(self) -> float:
         """Преобразовать тренд в число."""
@@ -337,7 +340,9 @@ class MarketFeatureExtractor:
         # Среднее значение за период
         period = min(self.RSI_PERIOD, len(changes))
         avg_gain = np.mean(gains[-period:]) if len(gains) >= period else np.mean(gains)
-        avg_loss = np.mean(losses[-period:]) if len(losses) >= period else np.mean(losses)
+        avg_loss = (
+            np.mean(losses[-period:]) if len(losses) >= period else np.mean(losses)
+        )
 
         if avg_loss == 0:
             return 100.0 if avg_gain > 0 else 50.0

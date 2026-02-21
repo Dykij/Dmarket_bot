@@ -327,8 +327,14 @@ def create_callback_router() -> CallbackRouter:
     _register_analysis_handlers(router)
     _register_prefix_handlers(router)
 
-    logger.info("Callback router initialized with %d exact handlers", len(router._exact_handlers))
-    logger.info("Callback router initialized with %d prefix handlers", len(router._prefix_handlers))
+    logger.info(
+        "Callback router initialized with %d exact handlers",
+        len(router._exact_handlers),
+    )
+    logger.info(
+        "Callback router initialized with %d prefix handlers",
+        len(router._prefix_handlers),
+    )
 
     return router
 
@@ -610,7 +616,9 @@ async def _handle_cmp_steam(update, context):
             )
             return
 
-        parser = SteamAsyncParser(cache_ttl=STEAM_CACHE_TTL, max_concurrent=STEAM_MAX_CONCURRENT)
+        parser = SteamAsyncParser(
+            cache_ttl=STEAM_CACHE_TTL, max_concurrent=STEAM_MAX_CONCURRENT
+        )
 
         results = await parser.get_batch_prices(SAMPLE_ITEMS, game="csgo")
 
@@ -765,7 +773,9 @@ async def _handle_pagination(update, context):
         return
 
     direction = (
-        "next_page" if update.callback_query.data.startswith("arb_next_page_") else "prev_page"
+        "next_page"
+        if update.callback_query.data.startswith("arb_next_page_")
+        else "prev_page"
     )
     await handle_arbitrage_pagination(update.callback_query, context, direction)
 
@@ -902,7 +912,9 @@ async def _handle_stop_smart_arbitrage(update, context):
             parse_mode="HTML",
         )
     else:
-        await update.callback_query.edit_message_text("ℹ️ Smart Arbitrage не был запущен.")
+        await update.callback_query.edit_message_text(
+            "ℹ️ Smart Arbitrage не был запущен."
+        )
 
 
 async def _handle_smart_arbitrage_status(update, context):
@@ -1305,7 +1317,9 @@ async def _handle_scan_all_strategies(update, context):
 
         await auto_trade_scan_all(update, context)
     except ImportError:
-        await handle_temporary_unavailable(update, context, "Сканирование всех стратегий")
+        await handle_temporary_unavailable(
+            update, context, "Сканирование всех стратегий"
+        )
 
 
 async def _handle_strategy_cross_platform(update, context):

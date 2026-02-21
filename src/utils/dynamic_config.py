@@ -263,9 +263,7 @@ class DynamicConfig:
 
             if isinstance(old_value, dict) and isinstance(new_value, dict):
                 # Рекурсивно обработать вложенные словари
-                changes.extend(
-                    self._find_changes(old_value, new_value, full_key)
-                )
+                changes.extend(self._find_changes(old_value, new_value, full_key))
             elif old_value != new_value:
                 changes.append(
                     ConfigChange(

@@ -76,18 +76,20 @@ async def send_buy_intent_notification(
 
     keyboard = None
     if callback_data:
-        keyboard = InlineKeyboardMarkup([
+        keyboard = InlineKeyboardMarkup(
             [
-                InlineKeyboardButton(
-                    "✅ Купить",
-                    callback_data=f"buy:{callback_data}",
-                ),
-                InlineKeyboardButton(
-                    "❌ Отмена",
-                    callback_data=f"cancel_buy:{callback_data}",
-                ),
-            ],
-        ])
+                [
+                    InlineKeyboardButton(
+                        "✅ Купить",
+                        callback_data=f"buy:{callback_data}",
+                    ),
+                    InlineKeyboardButton(
+                        "❌ Отмена",
+                        callback_data=f"cancel_buy:{callback_data}",
+                    ),
+                ],
+            ]
+        )
 
     try:
         await bot.send_message(
@@ -172,9 +174,7 @@ async def send_buy_failed_notification(
     title = item.get("title", "Unknown Item")
     price = item.get("price", {}).get("USD", 0) / 100
 
-    message = (
-        f"❌ <b>Ошибка покупки</b>\n\n📦 <b>{title}</b>\n💰 Цена: ${price:.2f}\n\n⚠️ Ошибка: {error}"
-    )
+    message = f"❌ <b>Ошибка покупки</b>\n\n📦 <b>{title}</b>\n💰 Цена: ${price:.2f}\n\n⚠️ Ошибка: {error}"
 
     try:
         await bot.send_message(
@@ -224,7 +224,9 @@ async def send_sell_success_notification(
         profit = sell_price - buy_price
         profit_pct = (profit / buy_price) * 100 if buy_price > 0 else 0
         profit_emoji = "📈" if profit > 0 else "📉"
-        message += f"\n{profit_emoji} Прибыль: <b>${profit:.2f}</b> ({profit_pct:+.1f}%)\n"
+        message += (
+            f"\n{profit_emoji} Прибыль: <b>${profit:.2f}</b> ({profit_pct:+.1f}%)\n"
+        )
 
     if offer_id:
         message += f"📋 ID предложения: <code>{offer_id}</code>\n"
@@ -402,26 +404,28 @@ async def send_arbitrage_opportunity(
         message += "\n⚡ <i>Автопокупка активна</i>"
 
     # Create inline keyboard with Buy Now button
-    keyboard = InlineKeyboardMarkup([
+    keyboard = InlineKeyboardMarkup(
         [
-            InlineKeyboardButton(
-                "✅ Купить сейчас",
-                callback_data=f"buy_now_{item_id}_{price_cents}",
-            ),
-        ],
-        [
-            InlineKeyboardButton(
-                "⏭️ Пропустить",
-                callback_data="skip_item",
-            ),
-        ],
-        [
-            InlineKeyboardButton(
-                "🔍 Посмотреть на DMarket",
-                url=f"https://dmarket.com/ingame-items/item-list/{game}-skins/{item_id}",
-            ),
-        ],
-    ])
+            [
+                InlineKeyboardButton(
+                    "✅ Купить сейчас",
+                    callback_data=f"buy_now_{item_id}_{price_cents}",
+                ),
+            ],
+            [
+                InlineKeyboardButton(
+                    "⏭️ Пропустить",
+                    callback_data="skip_item",
+                ),
+            ],
+            [
+                InlineKeyboardButton(
+                    "🔍 Посмотреть на DMarket",
+                    url=f"https://dmarket.com/ingame-items/item-list/{game}-skins/{item_id}",
+                ),
+            ],
+        ]
+    )
 
     try:
         await bot.send_message(

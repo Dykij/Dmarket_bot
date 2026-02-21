@@ -22,38 +22,37 @@ from src.ml.enhanced_predictor import EnhancedPricePredictor
 
 async def main():
     """Простое сканирование CS:GO рынка."""
-    
+
     # 1. Инициализация API клиента
     api = DMarketAPI(
         public_key=os.getenv("DMARKET_PUBLIC_KEY"),
-        secret_key=os.getenv("DMARKET_SECRET_KEY")
+        secret_key=os.getenv("DMARKET_SECRET_KEY"),
     )
-    
+
     # 2. Инициализация AI-предиктора
     ml_predictor = EnhancedPricePredictor()
     ai_arbitrage = AIArbitragePredictor(ml_predictor)
-    
+
     print("🔍 Сканирование CS:GO рынка...")
-    
+
     # 3. Получение рыночных данных
     market_items = await api.get_market_items(
-        game="csgo",
-        limit=100  # Первые 100 items для быстрого теста
+        game="csgo", limit=100  # Первые 100 items для быстрого теста
     )
-    
+
     print(f"📦 Получено {len(market_items)} предметов")
-    
+
     # 4. AI-прогнозирование
     opportunities = await ai_arbitrage.predict_best_opportunities(
         items=market_items,
         current_balance=100.0,  # $100 USD available
-        risk_level="medium"  # Средний risk level
+        risk_level="medium",  # Средний risk level
     )
-    
+
     # 5. Вывод топ-10 результатов
     print("\n🎯 Топ-10 арбитражных возможностей:\n")
     print("=" * 80)
-    
+
     for i, opp in enumerate(opportunities[:10], 1):
         print(f"\n{i}. {opp['title']}")
         print(f"   Текущая цена: ${opp['price']['USD'] / 100:.2f}")
@@ -61,10 +60,10 @@ async def main():
         print(f"   Уверенность: {opp['confidence']:.1%}")
         print(f"   Risk Score: {opp['risk_score']:.1f}/100")
         print(f"   ROI: {opp['roi_percent']:.1f}%")
-    
+
     print("\n" + "=" * 80)
     print(f"✅ Найдено {len(opportunities)} возможностей")
-    
+
     # Cleanup
     await api.close()
 
@@ -75,5 +74,5 @@ if __name__ == "__main__":
         print("❌ Ошибка: DMARKET_PUBLIC_KEY не найден")
         print("💡 Создайте .env файл с API ключами")
         sys.exit(1)
-    
+
     asyncio.run(main())

@@ -251,7 +251,9 @@ class PortfolioManager:
         self._last_snapshot: PortfolioSnapshot | None = None
         self._last_snapshot_time: datetime | None = None
 
-    async def get_portfolio_snapshot(self, force_refresh: bool = False) -> PortfolioSnapshot:
+    async def get_portfolio_snapshot(
+        self, force_refresh: bool = False
+    ) -> PortfolioSnapshot:
         """Get current portfolio snapshot.
 
         Args:
@@ -289,7 +291,9 @@ class PortfolioManager:
                 inventory_items = inventory_data.get("objects", [])
 
                 # Get listed items (on market)
-                offers_data = await self._api.get_user_offers(limit=self._config.inventory_limit)
+                offers_data = await self._api.get_user_offers(
+                    limit=self._config.inventory_limit
+                )
                 listed_items = offers_data.get("objects", [])
 
                 # Get active targets
@@ -321,9 +325,15 @@ class PortfolioManager:
                 assets.append(asset)
 
         # Calculate totals
-        inventory_value = sum(a.total_value for a in assets if a.asset_type == AssetType.INVENTORY)
-        listed_value = sum(a.total_value for a in assets if a.asset_type == AssetType.LISTED)
-        targets_value = sum(a.total_value for a in assets if a.asset_type == AssetType.TARGET)
+        inventory_value = sum(
+            a.total_value for a in assets if a.asset_type == AssetType.INVENTORY
+        )
+        listed_value = sum(
+            a.total_value for a in assets if a.asset_type == AssetType.LISTED
+        )
+        targets_value = sum(
+            a.total_value for a in assets if a.asset_type == AssetType.TARGET
+        )
         total_value = cash_balance + inventory_value + listed_value + targets_value
 
         # Calculate distributions
@@ -332,7 +342,9 @@ class PortfolioManager:
 
         for asset in assets:
             game_dist[asset.game] = game_dist.get(asset.game, 0) + asset.total_value
-            category_dist[asset.category] = category_dist.get(asset.category, 0) + asset.total_value
+            category_dist[asset.category] = (
+                category_dist.get(asset.category, 0) + asset.total_value
+            )
 
         # Create snapshot
         snapshot = PortfolioSnapshot(
@@ -521,7 +533,9 @@ class PortfolioManager:
 
         return "Other"
 
-    async def analyze_risk(self, snapshot: PortfolioSnapshot | None = None) -> RiskAnalysis:
+    async def analyze_risk(
+        self, snapshot: PortfolioSnapshot | None = None
+    ) -> RiskAnalysis:
         """Analyze portfolio risk.
 
         Args:
@@ -560,7 +574,9 @@ class PortfolioManager:
                 f"High single-item concentration: {single_item_risk:.1f}% "
                 f"(max recommended: {self._config.max_single_item_percent}%)"
             )
-            recommendations.append("Consider diversifying by selling some high-value items")
+            recommendations.append(
+                "Consider diversifying by selling some high-value items"
+            )
 
         # Single game concentration
         max_game_value = max(snapshot.game_distribution.values(), default=0)
@@ -577,7 +593,8 @@ class PortfolioManager:
         illiquid_value = sum(
             a.total_value
             for a in snapshot.assets
-            if a.category in {"Sticker", "Graffiti", "Case", "Key", "Music Kit", "Patch"}
+            if a.category
+            in {"Sticker", "Graffiti", "Case", "Key", "Music Kit", "Patch"}
         )
         illiquidity_risk = (illiquid_value / total_value) * 100
 
@@ -591,7 +608,9 @@ class PortfolioManager:
 
         # Stale items risk (items held too long)
         stale_value = sum(
-            a.total_value for a in snapshot.assets if a.days_held > self._config.max_stale_days
+            a.total_value
+            for a in snapshot.assets
+            if a.days_held > self._config.max_stale_days
         )
         stale_items_risk = (stale_value / total_value) * 100
 
@@ -599,13 +618,17 @@ class PortfolioManager:
             risk_factors.append(
                 f"Stale items: {stale_items_risk:.1f}% held > {self._config.max_stale_days} days"
             )
-            recommendations.append("Consider reducing prices on stale items to improve turnover")
+            recommendations.append(
+                "Consider reducing prices on stale items to improve turnover"
+            )
 
         # Cash allocation
         cash_percent = (snapshot.cash_balance / total_value) * 100
         if cash_percent < 10:
             risk_factors.append(f"Low cash reserve: {cash_percent:.1f}%")
-            recommendations.append("Consider maintaining at least 10-20% in cash for opportunities")
+            recommendations.append(
+                "Consider maintaining at least 10-20% in cash for opportunities"
+            )
 
         # Calculate concentration score (0-100, higher = more concentrated = worse)
         concentration_score = min(100, (single_item_risk + single_game_risk) / 2)
@@ -686,7 +709,9 @@ class PortfolioManager:
             item_percent = (asset.total_value / total_value) * 100
 
             if item_percent > self._config.max_single_item_percent:
-                target_value = total_value * (self._config.max_single_item_percent / 100)
+                target_value = total_value * (
+                    self._config.max_single_item_percent / 100
+                )
                 excess_value = asset.total_value - target_value
                 quantity_to_sell = max(1, int(excess_value / asset.unit_price))
 
@@ -766,7 +791,9 @@ class PortfolioManager:
                 if a.asset_type in {AssetType.INVENTORY, AssetType.LISTED}
                 and a.profit_loss_percent >= 0  # Only profitable items
             ]
-            sellable.sort(key=lambda x: x.total_value)  # Sort by value, sell smallest first
+            sellable.sort(
+                key=lambda x: x.total_value
+            )  # Sort by value, sell smallest first
 
             target_cash = total_value * (self._config.target_cash_percent / 100)
             needed_cash = target_cash - snapshot.cash_balance
@@ -829,7 +856,9 @@ class PortfolioManager:
 
         # Calculate basic metrics
         total_value = snapshot.total_value_usd
-        cash_percent = (snapshot.cash_balance / total_value * 100) if total_value > 0 else 0
+        cash_percent = (
+            (snapshot.cash_balance / total_value * 100) if total_value > 0 else 0
+        )
 
         # Calculate unrealized P&L
         total_profit_loss = sum(a.profit_loss for a in snapshot.assets)
@@ -837,9 +866,15 @@ class PortfolioManager:
         losing_items = sum(1 for a in snapshot.assets if a.profit_loss < 0)
 
         # Asset allocation
-        inventory_percent = (snapshot.inventory_value / total_value * 100) if total_value > 0 else 0
-        listed_percent = (snapshot.listed_value / total_value * 100) if total_value > 0 else 0
-        targets_percent = (snapshot.targets_value / total_value * 100) if total_value > 0 else 0
+        inventory_percent = (
+            (snapshot.inventory_value / total_value * 100) if total_value > 0 else 0
+        )
+        listed_percent = (
+            (snapshot.listed_value / total_value * 100) if total_value > 0 else 0
+        )
+        targets_percent = (
+            (snapshot.targets_value / total_value * 100) if total_value > 0 else 0
+        )
 
         return {
             "period_days": period_days,
@@ -857,13 +892,17 @@ class PortfolioManager:
             "profitable_items": profitable_items,
             "losing_items": losing_items,
             "win_rate": (
-                (profitable_items / snapshot.asset_count * 100) if snapshot.asset_count > 0 else 0
+                (profitable_items / snapshot.asset_count * 100)
+                if snapshot.asset_count > 0
+                else 0
             ),
             "game_distribution": snapshot.game_distribution,
             "category_distribution": snapshot.category_distribution,
         }
 
-    def format_portfolio_report(self, snapshot: PortfolioSnapshot, risk: RiskAnalysis) -> str:
+    def format_portfolio_report(
+        self, snapshot: PortfolioSnapshot, risk: RiskAnalysis
+    ) -> str:
         """Format portfolio report for Telegram message.
 
         Args:
@@ -892,9 +931,13 @@ class PortfolioManager:
         # Game distribution
         if snapshot.game_distribution:
             lines.extend(("", "🎮 *By Game:*"))
-            for game, value in sorted(snapshot.game_distribution.items(), key=lambda x: -x[1]):
+            for game, value in sorted(
+                snapshot.game_distribution.items(), key=lambda x: -x[1]
+            ):
                 percent = (
-                    (value / snapshot.total_value_usd * 100) if snapshot.total_value_usd > 0 else 0
+                    (value / snapshot.total_value_usd * 100)
+                    if snapshot.total_value_usd > 0
+                    else 0
                 )
                 lines.append(f"  • {game}: ${value:.2f} ({percent:.1f}%)")
 
@@ -906,12 +949,14 @@ class PortfolioManager:
             RiskLevel.CRITICAL: "🔴",
         }
 
-        lines.extend([
-            "",
-            f"⚠️ *Risk Level:* {risk_emoji.get(risk.overall_risk, '⚪')} {risk.overall_risk.value.upper()}",
-            f"📊 Diversification: {risk.diversification_score:.0f}/100",
-            f"🎯 Concentration: {risk.concentration_score:.0f}%",
-        ])
+        lines.extend(
+            [
+                "",
+                f"⚠️ *Risk Level:* {risk_emoji.get(risk.overall_risk, '⚪')} {risk.overall_risk.value.upper()}",
+                f"📊 Diversification: {risk.diversification_score:.0f}/100",
+                f"🎯 Concentration: {risk.concentration_score:.0f}%",
+            ]
+        )
 
         # Risk factors
         if risk.risk_factors:

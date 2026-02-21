@@ -18,7 +18,9 @@ from src.utils.steam_db_handler import get_steam_db
 logger = logging.getLogger(__name__)
 
 
-async def steam_stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def steam_stats_command(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """
     Команда /stats - показывает статистику арбитражных находок за день.
 
@@ -76,7 +78,9 @@ async def steam_stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE
 
     except Exception as e:
         logger.error(f"Error in steam_stats_command: {e}", exc_info=True)
-        await update.message.reply_text("❌ Ошибка при получении статистики. Попробуйте позже.")
+        await update.message.reply_text(
+            "❌ Ошибка при получении статистики. Попробуйте позже."
+        )
 
 
 async def steam_top_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -130,10 +134,14 @@ async def steam_top_command(update: Update, context: ContextTypes.DEFAULT_TYPE) 
 
     except Exception as e:
         logger.error(f"Error in steam_top_command: {e}", exc_info=True)
-        await update.message.reply_text("❌ Ошибка при получении топа. Попробуйте позже.")
+        await update.message.reply_text(
+            "❌ Ошибка при получении топа. Попробуйте позже."
+        )
 
 
-async def steam_settings_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def steam_settings_command(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """
     Команда /steam_settings - показывает и изменяет настройки.
 
@@ -188,7 +196,9 @@ async def steam_settings_command(update: Update, context: ContextTypes.DEFAULT_T
                     )
                     logger.info(f"User {user_id} updated min_profit to {new_profit}")
                 else:
-                    await update.message.reply_text("❌ Профит должен быть от 0% до 100%")
+                    await update.message.reply_text(
+                        "❌ Профит должен быть от 0% до 100%"
+                    )
             except ValueError:
                 await update.message.reply_text(
                     "❌ Некорректное значение профита. Используйте число."
@@ -205,7 +215,9 @@ async def steam_settings_command(update: Update, context: ContextTypes.DEFAULT_T
                     )
                     logger.info(f"User {user_id} updated min_volume to {new_volume}")
                 else:
-                    await update.message.reply_text("❌ Объем должен быть положительным числом")
+                    await update.message.reply_text(
+                        "❌ Объем должен быть положительным числом"
+                    )
             except ValueError:
                 await update.message.reply_text(
                     "❌ Некорректное значение объема. Используйте целое число."
@@ -222,4 +234,6 @@ async def steam_settings_command(update: Update, context: ContextTypes.DEFAULT_T
 
     except Exception as e:
         logger.error(f"Error in steam_settings_command: {e}", exc_info=True)
-        await update.message.reply_text("❌ Ошибка при изменении настроек. Попробуйте позже.")
+        await update.message.reply_text(
+            "❌ Ошибка при изменении настроек. Попробуйте позже."
+        )

@@ -232,15 +232,21 @@ class EnhancedUserRateLimiter:
 
             # Apply priority multiplier
             if state.is_priority:
-                limit_per_minute = int(limit_per_minute * self.config.priority_multiplier)
+                limit_per_minute = int(
+                    limit_per_minute * self.config.priority_multiplier
+                )
 
             # Check based on strategy
             if self.config.strategy == RateLimitStrategy.SLIDING_WINDOW:
-                result = self._check_sliding_window(state, operation, limit_per_minute, now)
+                result = self._check_sliding_window(
+                    state, operation, limit_per_minute, now
+                )
             elif self.config.strategy == RateLimitStrategy.TOKEN_BUCKET:
                 result = self._check_token_bucket(state, now)
             else:  # FIXED_WINDOW
-                result = self._check_fixed_window(state, operation, limit_per_minute, now)
+                result = self._check_fixed_window(
+                    state, operation, limit_per_minute, now
+                )
 
             # Handle result
             if not result.allowed:
@@ -249,11 +255,15 @@ class EnhancedUserRateLimiter:
 
                 # Apply cooldown
                 if state.violations >= 3:
-                    state.cooldown_until = now + timedelta(seconds=self.config.cooldown_after_limit)
+                    state.cooldown_until = now + timedelta(
+                        seconds=self.config.cooldown_after_limit
+                    )
 
                 # Apply ban
                 if state.violations >= self.config.max_violations:
-                    state.banned_until = now + timedelta(seconds=self.config.ban_duration)
+                    state.banned_until = now + timedelta(
+                        seconds=self.config.ban_duration
+                    )
                     state.violations = 0
                     result.result = RateLimitResult.BANNED
                     result.message = "User banned due to excessive violations"
@@ -302,8 +312,12 @@ class EnhancedUserRateLimiter:
         if requests_in_window >= limit:
             # Calculate retry after
             if op_requests:
-                oldest_in_window = next((r for r in op_requests if r > window_start), now)
-                retry_after = int((oldest_in_window + timedelta(minutes=1) - now).total_seconds())
+                oldest_in_window = next(
+                    (r for r in op_requests if r > window_start), now
+                )
+                retry_after = int(
+                    (oldest_in_window + timedelta(minutes=1) - now).total_seconds()
+                )
             else:
                 retry_after = 60
 
@@ -444,7 +458,9 @@ class EnhancedUserRateLimiter:
         async with self._lock:
             state = self._get_user_state(user_id)
             state.is_priority = is_priority
-            logger.info("user_priority_updated", user_id=user_id, is_priority=is_priority)
+            logger.info(
+                "user_priority_updated", user_id=user_id, is_priority=is_priority
+            )
 
     async def reset_user(self, user_id: int) -> None:
         """Reset user rate limit state.
@@ -497,10 +513,19 @@ class EnhancedUserRateLimiter:
             "requests_last_minute": requests_last_minute,
             "violations": state.violations,
             "is_banned": state.banned_until is not None and now < state.banned_until,
-            "banned_until": state.banned_until.isoformat() if state.banned_until else None,
-            "is_in_cooldown": state.cooldown_until is not None and now < state.cooldown_until,
-            "cooldown_until": state.cooldown_until.isoformat() if state.cooldown_until else None,
-            "tokens": round(state.tokens, 2) if self.config.strategy == RateLimitStrategy.TOKEN_BUCKET else None,
+            "banned_until": (
+                state.banned_until.isoformat() if state.banned_until else None
+            ),
+            "is_in_cooldown": state.cooldown_until is not None
+            and now < state.cooldown_until,
+            "cooldown_until": (
+                state.cooldown_until.isoformat() if state.cooldown_until else None
+            ),
+            "tokens": (
+                round(state.tokens, 2)
+                if self.config.strategy == RateLimitStrategy.TOKEN_BUCKET
+                else None
+            ),
         }
 
     def get_stats(self) -> dict[str, Any]:
@@ -515,10 +540,13 @@ class EnhancedUserRateLimiter:
             "total_users": len(self._users),
             "total_requests": self._total_requests,
             "total_limited": self._total_limited,
-            "limit_rate": round(self._total_limited / max(1, self._total_requests) * 100, 2),
+            "limit_rate": round(
+                self._total_limited / max(1, self._total_requests) * 100, 2
+            ),
             "priority_users": sum(1 for u in self._users.values() if u.is_priority),
             "banned_users": sum(
-                1 for u in self._users.values()
+                1
+                for u in self._users.values()
                 if u.banned_until and now < u.banned_until
             ),
             "strategy": self.config.strategy.value,

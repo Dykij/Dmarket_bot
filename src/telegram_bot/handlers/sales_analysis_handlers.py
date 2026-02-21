@@ -65,7 +65,9 @@ def get_liquidity_emoji(liquidity_score: float) -> str:
     return "❄️"  # Очень низкая ликвидность
 
 
-async def handle_sales_analysis(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def handle_sales_analysis(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Обрабатывает команду /sales_analysis для анализа истории продаж предмета.
 
     Пример использования:

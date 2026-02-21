@@ -167,11 +167,13 @@ async def main() -> None:
             print(f"   ✅ Complete: p50={result['p50_ms']:.2f}ms")
         except Exception as e:
             print(f"   ❌ Failed: {e}")
-            results.append({
-                "skill": bench["name"],
-                "method": bench["method"],
-                "error": str(e),
-            })
+            results.append(
+                {
+                    "skill": bench["name"],
+                    "method": bench["method"],
+                    "error": str(e),
+                }
+            )
 
     # Display results
     print("\n" + "=" * 70)

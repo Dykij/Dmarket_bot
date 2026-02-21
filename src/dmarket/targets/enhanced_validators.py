@@ -125,7 +125,9 @@ def validate_target_conditions(
 
     # Превышен лимит - формируем suggestions
     excess = count - max_conditions
-    message = f"Too many conditions: {count}/{max_conditions}. Remove {excess} condition(s)."
+    message = (
+        f"Too many conditions: {count}/{max_conditions}. Remove {excess} condition(s)."
+    )
 
     suggestions = []
     attrs = target.get("Attrs", {})
@@ -134,7 +136,9 @@ def validate_target_conditions(
     if "paintSeed" in attrs and isinstance(attrs["paintSeed"], list):
         paint_count = len(attrs["paintSeed"])
         if paint_count > 2:
-            suggestions.append(f"Remove some paint seed values (currently {paint_count})")
+            suggestions.append(
+                f"Remove some paint seed values (currently {paint_count})"
+            )
 
     sticker_filter = target.get("stickerFilter")
     if sticker_filter:
@@ -489,7 +493,9 @@ def validate_target_complete(
     if rarity_filter:
         target_dict["rarityFilter"] = rarity_filter
 
-    is_valid, conditions_msg, suggestions = validate_target_conditions(target_dict, max_conditions)
+    is_valid, conditions_msg, suggestions = validate_target_conditions(
+        target_dict, max_conditions
+    )
 
     if not is_valid:
         return TargetOperationResult(

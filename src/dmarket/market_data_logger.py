@@ -135,14 +135,16 @@ class MarketDataLogger:
         if not path.exists():
             with open(path, "w", newline="", encoding="utf-8") as f:
                 writer = csv.writer(f)
-                writer.writerow([
-                    "item_name",
-                    "price",
-                    "float_value",
-                    "is_stat_trak",
-                    "game_id",
-                    "timestamp",
-                ])
+                writer.writerow(
+                    [
+                        "item_name",
+                        "price",
+                        "float_value",
+                        "is_stat_trak",
+                        "game_id",
+                        "timestamp",
+                    ]
+                )
             logger.info("csv_file_created", path=str(path))
 
     async def log_market_data(self) -> int:
@@ -192,7 +194,8 @@ class MarketDataLogger:
             response = await self.api.get_market_items(
                 game=game_id,
                 limit=self.config.max_items_per_scan,
-                price_from=self.config.min_price_cents / 100,  # Convert cents to dollars
+                price_from=self.config.min_price_cents
+                / 100,  # Convert cents to dollars
                 price_to=self.config.max_price_cents / 100,  # Convert cents to dollars
                 sort="price",
             )
@@ -227,7 +230,9 @@ class MarketDataLogger:
                     # Get price
                     price_data = item.get("price", {})
                     if isinstance(price_data, dict):
-                        price_cents = int(price_data.get("USD", 0) or price_data.get("amount", 0))
+                        price_cents = int(
+                            price_data.get("USD", 0) or price_data.get("amount", 0)
+                        )
                     else:
                         price_cents = int(price_data)
 
@@ -239,14 +244,16 @@ class MarketDataLogger:
                     # Check StatTrak
                     is_stat_trak = 1 if "StatTrak" in title else 0
 
-                    writer.writerow([
-                        title,
-                        price_usd,
-                        float_value,
-                        is_stat_trak,
-                        game_id,
-                        timestamp,
-                    ])
+                    writer.writerow(
+                        [
+                            title,
+                            price_usd,
+                            float_value,
+                            is_stat_trak,
+                            game_id,
+                            timestamp,
+                        ]
+                    )
 
                 except Exception as e:
                     logger.debug(
@@ -316,7 +323,9 @@ class MarketDataLogger:
             elapsed = time.time() - self.stats["start_time"]
             result["elapsed_hours"] = elapsed / 3600
             result["items_per_hour"] = (
-                self.stats["total_items_logged"] / (elapsed / 3600) if elapsed > 0 else 0
+                self.stats["total_items_logged"] / (elapsed / 3600)
+                if elapsed > 0
+                else 0
             )
 
         return result

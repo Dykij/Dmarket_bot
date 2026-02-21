@@ -84,7 +84,9 @@ def calculate_commission(
     game_factor = GAME_COMMISSION_FACTORS.get(game, 1.0)
 
     # Рассчитываем итоговую комиссию
-    commission = base_commission * rarity_factor * type_factor * popularity_factor * game_factor
+    commission = (
+        base_commission * rarity_factor * type_factor * popularity_factor * game_factor
+    )
 
     # Ограничиваем диапазон
     return max(MIN_COMMISSION_PERCENT, min(MAX_COMMISSION_PERCENT, commission))

@@ -374,9 +374,7 @@ class RealPriceCollector:
             result.prices = prices
             result.items_collected = len(prices)
             result.status = (
-                CollectionStatus.SUCCESS
-                if prices
-                else CollectionStatus.NO_DATA
+                CollectionStatus.SUCCESS if prices else CollectionStatus.NO_DATA
             )
 
             self._collection_stats["dmarket_calls"] += 1
@@ -405,9 +403,7 @@ class RealPriceCollector:
                 error=str(e),
             )
 
-        result.duration_seconds = (
-            datetime.now(UTC) - start_time
-        ).total_seconds()
+        result.duration_seconds = (datetime.now(UTC) - start_time).total_seconds()
         return result
 
     async def collect_from_waxpeer(
@@ -515,9 +511,7 @@ class RealPriceCollector:
             result.prices = prices
             result.items_collected = len(prices)
             result.status = (
-                CollectionStatus.SUCCESS
-                if prices
-                else CollectionStatus.NO_DATA
+                CollectionStatus.SUCCESS if prices else CollectionStatus.NO_DATA
             )
 
             self._collection_stats["waxpeer_calls"] += 1
@@ -546,9 +540,7 @@ class RealPriceCollector:
                 error=str(e),
             )
 
-        result.duration_seconds = (
-            datetime.now(UTC) - start_time
-        ).total_seconds()
+        result.duration_seconds = (datetime.now(UTC) - start_time).total_seconds()
         return result
 
     async def collect_from_steam(
@@ -641,9 +633,7 @@ class RealPriceCollector:
             result.prices = prices
             result.items_collected = len(prices)
             result.status = (
-                CollectionStatus.SUCCESS
-                if prices
-                else CollectionStatus.NO_DATA
+                CollectionStatus.SUCCESS if prices else CollectionStatus.NO_DATA
             )
 
             self._collection_stats["steam_calls"] += 1
@@ -666,9 +656,7 @@ class RealPriceCollector:
                 error=str(e),
             )
 
-        result.duration_seconds = (
-            datetime.now(UTC) - start_time
-        ).total_seconds()
+        result.duration_seconds = (datetime.now(UTC) - start_time).total_seconds()
         return result
 
     def _parse_steam_price(self, price_str: str) -> float:
@@ -891,15 +879,15 @@ class RealPriceCollector:
 
             result.prices = prices
             result.items_collected = len(prices)
-            result.status = CollectionStatus.SUCCESS if prices else CollectionStatus.NO_DATA
+            result.status = (
+                CollectionStatus.SUCCESS if prices else CollectionStatus.NO_DATA
+            )
 
         except Exception as e:
             result.status = CollectionStatus.FAILED
             result.error_message = str(e)
 
-        result.duration_seconds = (
-            datetime.now(UTC) - start_time
-        ).total_seconds()
+        result.duration_seconds = (datetime.now(UTC) - start_time).total_seconds()
         return result
 
     async def _collect_waxpeer_bulk(
@@ -948,15 +936,15 @@ class RealPriceCollector:
 
             result.prices = prices
             result.items_collected = len(prices)
-            result.status = CollectionStatus.SUCCESS if prices else CollectionStatus.NO_DATA
+            result.status = (
+                CollectionStatus.SUCCESS if prices else CollectionStatus.NO_DATA
+            )
 
         except Exception as e:
             result.status = CollectionStatus.FAILED
             result.error_message = str(e)
 
-        result.duration_seconds = (
-            datetime.now(UTC) - start_time
-        ).total_seconds()
+        result.duration_seconds = (datetime.now(UTC) - start_time).total_seconds()
         return result
 
     def get_statistics(self) -> dict[str, Any]:

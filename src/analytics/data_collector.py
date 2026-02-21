@@ -37,7 +37,9 @@ class MarketDataCollector:
         """
         self.api_client = api_client
         self.db_manager = db_manager
-        self.collection_interval = collection_interval_minutes * 60  # Convert to seconds
+        self.collection_interval = (
+            collection_interval_minutes * 60
+        )  # Convert to seconds
         self.retention_days = retention_days
         self._running = False
         self._task: asyncio.Task | None = None
@@ -298,10 +300,18 @@ class MarketDataCollector:
                         "timestamp": snapshot.timestamp.isoformat(),
                         "total_items": snapshot.total_items,
                         "total_sales": snapshot.total_sales,
-                        "csgo_items": snapshot.games_data.get("csgo", {}).get("items_count", 0),
-                        "dota2_items": snapshot.games_data.get("dota2", {}).get("items_count", 0),
-                        "tf2_items": snapshot.games_data.get("tf2", {}).get("items_count", 0),
-                        "rust_items": snapshot.games_data.get("rust", {}).get("items_count", 0),
+                        "csgo_items": snapshot.games_data.get("csgo", {}).get(
+                            "items_count", 0
+                        ),
+                        "dota2_items": snapshot.games_data.get("dota2", {}).get(
+                            "items_count", 0
+                        ),
+                        "tf2_items": snapshot.games_data.get("tf2", {}).get(
+                            "items_count", 0
+                        ),
+                        "rust_items": snapshot.games_data.get("rust", {}).get(
+                            "items_count", 0
+                        ),
                     }
                     writer.writerow(row)
 

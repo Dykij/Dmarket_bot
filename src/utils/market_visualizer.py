@@ -364,7 +364,11 @@ class MarketVisualizer:
 
             color = self.highlight_color
             if pattern_type == "reversal":
-                color = self.up_color if pattern.get("direction") == "upward" else self.down_color
+                color = (
+                    self.up_color
+                    if pattern.get("direction") == "upward"
+                    else self.down_color
+                )
             elif pattern_type == "fomo":
                 color = self.up_color
             elif pattern_type == "panic":
@@ -436,7 +440,8 @@ class MarketVisualizer:
         # Add legend for patterns
         pattern_types = {area["pattern"] for area in pattern_areas}
         handles = [
-            Rectangle((0, 0), 1, 1, color=self.highlight_color, alpha=0.3) for _ in pattern_types
+            Rectangle((0, 0), 1, 1, color=self.highlight_color, alpha=0.3)
+            for _ in pattern_types
         ]
         labels = [p.replace("_", " ").title() for p in pattern_types]
         if handles and labels:
@@ -516,9 +521,7 @@ class MarketVisualizer:
         trend_color = (
             (0, 200, 100)
             if trend == "up"
-            else (255, 80, 80)
-            if trend == "down"
-            else (170, 170, 170)
+            else (255, 80, 80) if trend == "down" else (170, 170, 170)
         )
         draw.text(
             (20, y_pos),
@@ -535,16 +538,12 @@ class MarketVisualizer:
         price_24h_color = (
             (0, 200, 100)
             if price_change_24h > 0
-            else (255, 80, 80)
-            if price_change_24h < 0
-            else text_color
+            else (255, 80, 80) if price_change_24h < 0 else text_color
         )
         price_7d_color = (
             (0, 200, 100)
             if price_change_7d > 0
-            else (255, 80, 80)
-            if price_change_7d < 0
-            else text_color
+            else (255, 80, 80) if price_change_7d < 0 else text_color
         )
 
         draw.text(
@@ -567,9 +566,7 @@ class MarketVisualizer:
         volatility_color = (
             (170, 170, 170)
             if volatility == "low"
-            else (255, 170, 0)
-            if volatility == "medium"
-            else (255, 80, 80)
+            else (255, 170, 0) if volatility == "medium" else (255, 80, 80)
         )
         draw.text(
             (20, y_pos),

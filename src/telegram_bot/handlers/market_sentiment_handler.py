@@ -14,7 +14,9 @@ from telegram.ext import CallbackQueryHandler, CommandHandler, ContextTypes
 logger = structlog.get_logger(__name__)
 
 
-async def show_market_status(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def show_market_status(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Show current market status and sentiment analysis."""
     query = update.callback_query
     if query:
@@ -36,17 +38,25 @@ async def show_market_status(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
         # Add X5 opportunities if available
         if sentiment.x5_opportunities:
-            message += f"\n\n🔥 *Найдено X5 возможностей:* {len(sentiment.x5_opportunities)}"
+            message += (
+                f"\n\n🔥 *Найдено X5 возможностей:* {len(sentiment.x5_opportunities)}"
+            )
 
     # Keyboard
     keyboard = [
         [
             InlineKeyboardButton("🔄 Обновить", callback_data="refresh_market_status"),
-            InlineKeyboardButton("🔥 X5 возможности", callback_data="show_x5_opportunities"),
+            InlineKeyboardButton(
+                "🔥 X5 возможности", callback_data="show_x5_opportunities"
+            ),
         ],
         [
-            InlineKeyboardButton("📊 Индикаторы", callback_data="show_market_indicators"),
-            InlineKeyboardButton("⚙️ Настройки", callback_data="market_sentiment_settings"),
+            InlineKeyboardButton(
+                "📊 Индикаторы", callback_data="show_market_indicators"
+            ),
+            InlineKeyboardButton(
+                "⚙️ Настройки", callback_data="market_sentiment_settings"
+            ),
         ],
         [
             InlineKeyboardButton("◀️ Назад", callback_data="smart_menu"),
@@ -68,7 +78,9 @@ async def show_market_status(update: Update, context: ContextTypes.DEFAULT_TYPE)
         )
 
 
-async def show_x5_opportunities(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def show_x5_opportunities(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Show current X5 hunting opportunities."""
     query = update.callback_query
     if query:
@@ -97,7 +109,9 @@ async def show_x5_opportunities(update: Update, context: ContextTypes.DEFAULT_TY
             InlineKeyboardButton("⚙️ Настройки X5", callback_data="x5_hunt_settings"),
         ],
         [
-            InlineKeyboardButton("◀️ К статусу рынка", callback_data="show_market_status"),
+            InlineKeyboardButton(
+                "◀️ К статусу рынка", callback_data="show_market_status"
+            ),
         ],
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
@@ -177,7 +191,9 @@ async def show_smart_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
                 "bull_run": "🚀 Рост",
                 "sale_period": "🎉 Распродажа!",
             }
-            market_status = state_text.get(sentiment.current_health.state.value, "❓ Неизвестно")
+            market_status = state_text.get(
+                sentiment.current_health.state.value, "❓ Неизвестно"
+            )
         hunt_mode = sentiment.high_risk_hunt
 
     # Get adaptive limits
@@ -208,19 +224,29 @@ async def show_smart_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             ),
         ],
         [
-            InlineKeyboardButton(text=f"📊 {market_status}", callback_data="show_market_status"),
-            InlineKeyboardButton(text=f"🔥 X5: {hunt_status}", callback_data="toggle_x5_hunt"),
+            InlineKeyboardButton(
+                text=f"📊 {market_status}", callback_data="show_market_status"
+            ),
+            InlineKeyboardButton(
+                text=f"🔥 X5: {hunt_status}", callback_data="toggle_x5_hunt"
+            ),
         ],
         [
-            InlineKeyboardButton(text="📈 Стата по играм", callback_data="stats_by_games"),
-            InlineKeyboardButton(text="🔄 Обновить", callback_data="refresh_smart_menu"),
+            InlineKeyboardButton(
+                text="📈 Стата по играм", callback_data="stats_by_games"
+            ),
+            InlineKeyboardButton(
+                text="🔄 Обновить", callback_data="refresh_smart_menu"
+            ),
         ],
         [
             InlineKeyboardButton(text="✅ WhiteList", callback_data="manage_whitelist"),
             InlineKeyboardButton(text="🚫 BlackList", callback_data="manage_blacklist"),
         ],
         [
-            InlineKeyboardButton(text="♻️ Репрайсинг", callback_data="toggle_repricing"),
+            InlineKeyboardButton(
+                text="♻️ Репрайсинг", callback_data="toggle_repricing"
+            ),
             InlineKeyboardButton(text="⚙️ Лимиты", callback_data="config_limits"),
         ],
         [
@@ -246,7 +272,9 @@ async def show_smart_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         )
 
 
-async def start_smart_arbitrage(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def start_smart_arbitrage(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Start smart arbitrage with adaptive limits."""
     query = update.callback_query
     await query.answer("🚀 Запуск Smart Arbitrage...")
@@ -313,14 +341,14 @@ async def start_smart_arbitrage(update: Update, context: ContextTypes.DEFAULT_TY
         if adjusted.get("speculative_budget", 0) > 0:
             message += f"\n🔥 X5 бюджет: ${adjusted['speculative_budget']:.2f}"
 
-        message += (
-            "\n\nБот начал сканирование рынка. Уведомления о сделках будут приходить автоматически."
-        )
+        message += "\n\nБот начал сканирование рынка. Уведомления о сделках будут приходить автоматически."
 
         keyboard = [
             [
                 InlineKeyboardButton("📊 Статус", callback_data="smart_status"),
-                InlineKeyboardButton("🛑 Остановить", callback_data="stop_smart_arbitrage"),
+                InlineKeyboardButton(
+                    "🛑 Остановить", callback_data="stop_smart_arbitrage"
+                ),
             ],
             [
                 InlineKeyboardButton("◀️ Меню", callback_data="smart_menu"),
@@ -377,7 +405,9 @@ async def scan_x5_now(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
 
         keyboard = [
             [
-                InlineKeyboardButton("🔄 Сканировать снова", callback_data="scan_x5_now"),
+                InlineKeyboardButton(
+                    "🔄 Сканировать снова", callback_data="scan_x5_now"
+                ),
             ],
             [
                 InlineKeyboardButton("◀️ Назад", callback_data="show_market_status"),

@@ -264,9 +264,13 @@ class CopilotAgent:
 
         try:
             loop = asyncio.get_running_loop()
-            loop.create_task(self.prompts.add_template(prompt_id, template, name, description))
+            loop.create_task(
+                self.prompts.add_template(prompt_id, template, name, description)
+            )
         except RuntimeError:
-            asyncio.run(self.prompts.add_template(prompt_id, template, name, description))
+            asyncio.run(
+                self.prompts.add_template(prompt_id, template, name, description)
+            )
 
     def _ensure_initialized(self) -> None:
         """Ensure the agent is initialized."""

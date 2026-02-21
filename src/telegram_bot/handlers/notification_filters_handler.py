@@ -188,7 +188,9 @@ def _build_filter_keyboard(
         button_text = _get_button_text(item_name, item_code in enabled_items)
         callback_data = f"{NOTIFY_FILTER}_{callback_prefix}_{item_code}"
 
-        keyboard.append([InlineKeyboardButton(button_text, callback_data=callback_data)])
+        keyboard.append(
+            [InlineKeyboardButton(button_text, callback_data=callback_data)]
+        )
 
     keyboard.append([InlineKeyboardButton("⬅️ Назад", callback_data=NOTIFY_FILTER)])
 

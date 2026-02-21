@@ -145,10 +145,10 @@ class WaxpeerAPI:  # noqa: PLR0904
 
     # Rate limits per minute (from Waxpeer documentation)
     RATE_LIMITS = {
-        "default_get": 60,      # GET requests per minute
-        "default_post": 30,     # POST requests per minute
-        "list_items": 10,       # List items per minute (expensive operation)
-        "prices": 30,           # Price queries per minute
+        "default_get": 60,  # GET requests per minute
+        "default_post": 30,  # POST requests per minute
+        "list_items": 10,  # List items per minute (expensive operation)
+        "prices": 30,  # Price queries per minute
     }
 
     def __init__(
@@ -335,7 +335,8 @@ class WaxpeerAPI:  # noqa: PLR0904
         return WaxpeerBalance(
             wallet=Decimal(str(wallet_mils)) / Decimal(str(MILS_PER_USD)),
             wallet_mils=wallet_mils,
-            available_for_withdrawal=Decimal(str(wallet_mils)) / Decimal(str(MILS_PER_USD)),
+            available_for_withdrawal=Decimal(str(wallet_mils))
+            / Decimal(str(MILS_PER_USD)),
             can_trade=can_trade,
         )
 
@@ -422,7 +423,9 @@ class WaxpeerAPI:  # noqa: PLR0904
             game=game,
         )
 
-    async def edit_item_price(self, item_id: str, new_price_usd: Decimal | float) -> dict[str, Any]:
+    async def edit_item_price(
+        self, item_id: str, new_price_usd: Decimal | float
+    ) -> dict[str, Any]:
         """
         Изменение цены выставленного предмета.
 
@@ -672,7 +675,9 @@ class WaxpeerAPI:  # noqa: PLR0904
 
     # === Trading History ===
 
-    async def get_history(self, skip: int = 0, limit: int = 100) -> list[dict[str, Any]]:
+    async def get_history(
+        self, skip: int = 0, limit: int = 100
+    ) -> list[dict[str, Any]]:
         """
         Получение истории торговли.
 

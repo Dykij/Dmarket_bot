@@ -267,7 +267,9 @@ class SkillRegistry:
         if methods is None:
             # Auto-discover methods from instance
             methods = [
-                m for m in dir(instance) if not m.startswith("_") and callable(getattr(instance, m))
+                m
+                for m in dir(instance)
+                if not m.startswith("_") and callable(getattr(instance, m))
             ]
 
         skill = SkillDefinition(
@@ -367,15 +369,17 @@ class SkillRegistry:
         for skill in self.skills.values():
             if category and skill.category != category:
                 continue
-            skills.append({
-                "id": skill.id,
-                "name": skill.name,
-                "description": skill.description,
-                "category": skill.category,
-                "version": skill.version,
-                "methods": skill.methods,
-                "performance": skill.performance,
-            })
+            skills.append(
+                {
+                    "id": skill.id,
+                    "name": skill.name,
+                    "description": skill.description,
+                    "category": skill.category,
+                    "version": skill.version,
+                    "methods": skill.methods,
+                    "performance": skill.performance,
+                }
+            )
         return skills
 
     def get_categories(self) -> list[str]:

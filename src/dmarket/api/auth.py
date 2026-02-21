@@ -89,7 +89,9 @@ def generate_signature_ed25519(
         logger.exception(f"Error generating Ed25519 signature: {e}")
         logger.exception(f"Traceback: {traceback.format_exc()}")
         # Fallback to HMAC method
-        return generate_signature_hmac(public_key, secret_key.encode("utf-8"), method, path, body)
+        return generate_signature_hmac(
+            public_key, secret_key.encode("utf-8"), method, path, body
+        )
 
 
 def _convert_secret_key(secret_key: str) -> bytes:

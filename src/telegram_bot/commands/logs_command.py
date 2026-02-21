@@ -35,7 +35,9 @@ def _parse_log_line(line: str) -> dict[str, Any] | None:
     return None
 
 
-def _collect_intent_logs_from_file(log_file: Path, max_logs: int) -> list[dict[str, Any]]:
+def _collect_intent_logs_from_file(
+    log_file: Path, max_logs: int
+) -> list[dict[str, Any]]:
     """Collect INTENT logs from a single log file.
 
     Returns:
@@ -80,7 +82,9 @@ async def logs_command(
     # For I/O-intensive operations, consider using aiofiles
     log_dir = Path("logs")
     if not log_dir.exists():  # noqa: ASYNC240
-        await update.message.reply_text("❌ Папка логов не найдена. Логи пока не записывались.")
+        await update.message.reply_text(
+            "❌ Папка логов не найдена. Логи пока не записывались."
+        )
         return
 
     # Get all log files sorted by modification time (newest first)
@@ -99,7 +103,9 @@ async def logs_command(
     max_logs = 20
 
     for log_file in log_files[:5]:  # Check up to 5 recent files
-        file_logs = _collect_intent_logs_from_file(log_file, max_logs - len(intent_logs))
+        file_logs = _collect_intent_logs_from_file(
+            log_file, max_logs - len(intent_logs)
+        )
         intent_logs.extend(file_logs)
         if len(intent_logs) >= max_logs:
             break

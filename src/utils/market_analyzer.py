@@ -87,8 +87,12 @@ class MarketAnalyzer:
         timestamps = [point.get("timestamp", 0) for point in price_history]
 
         # Sort by timestamp if needed
-        if not all(timestamps[i] <= timestamps[i + 1] for i in range(len(timestamps) - 1)):
-            combined = sorted(zip(timestamps, prices, strict=False), key=operator.itemgetter(0))
+        if not all(
+            timestamps[i] <= timestamps[i + 1] for i in range(len(timestamps) - 1)
+        ):
+            combined = sorted(
+                zip(timestamps, prices, strict=False), key=operator.itemgetter(0)
+            )
             timestamps, prices = zip(*combined, strict=False)
             prices = list(prices)
             timestamps = list(timestamps)
@@ -136,9 +140,13 @@ class MarketAnalyzer:
 
             # Calculate percentage changes
             if day_ago_price > 0:
-                price_change_24h = ((current_price - day_ago_price) / day_ago_price) * 100
+                price_change_24h = (
+                    (current_price - day_ago_price) / day_ago_price
+                ) * 100
             if week_ago_price > 0:
-                price_change_7d = ((current_price - week_ago_price) / week_ago_price) * 100
+                price_change_7d = (
+                    (current_price - week_ago_price) / week_ago_price
+                ) * 100
 
         # Trend analysis
         trend, confidence = self._analyze_trend(prices)
@@ -150,11 +158,17 @@ class MarketAnalyzer:
         support_level, resistance_level = self._find_support_resistance(prices)
 
         # Volume analysis if available
-        volumes = [float(point.get("volume", 0)) for point in price_history if "volume" in point]
+        volumes = [
+            float(point.get("volume", 0))
+            for point in price_history
+            if "volume" in point
+        ]
         volume_change = 0.0
 
         if len(volumes) > 1:
-            volume_change = ((volumes[-1] - volumes[0]) / volumes[0]) * 100 if volumes[0] > 0 else 0
+            volume_change = (
+                ((volumes[-1] - volumes[0]) / volumes[0]) * 100 if volumes[0] > 0 else 0
+            )
 
         return {
             "trend": trend,
@@ -213,7 +227,8 @@ class MarketAnalyzer:
             correlation = 0.0
         else:
             covariance = (
-                sum((xi - mean_x) * (yi - mean_y) for xi, yi in zip(x, y, strict=False)) / n
+                sum((xi - mean_x) * (yi - mean_y) for xi, yi in zip(x, y, strict=False))
+                / n
             )
             correlation = covariance / (math.sqrt(variance_x) * math.sqrt(variance_y))
 
@@ -464,7 +479,8 @@ class MarketAnalyzer:
                 # How far beyond the range is the breakout
                 breakout_strength = (
                     abs(
-                        prices[-1] - (range_max if prices[-1] > range_max else range_min),
+                        prices[-1]
+                        - (range_max if prices[-1] > range_max else range_min),
                     )
                     / range_size
                 )
@@ -472,13 +488,17 @@ class MarketAnalyzer:
 
         elif pattern_type in {PATTERN_FOMO, PATTERN_PANIC}:
             # Higher confidence for more extreme moves
-            change_rate = abs((prices[-1] - prices[-3]) / prices[-3]) if prices[-3] > 0 else 0
+            change_rate = (
+                abs((prices[-1] - prices[-3]) / prices[-3]) if prices[-3] > 0 else 0
+            )
             confidence *= min(1 + change_rate, 1.5)
 
         elif pattern_type in {PATTERN_BOTTOMING, PATTERN_TOPPING}:
             # Higher confidence for clearer formations
             volatility = (
-                np.std(prices[-5:]) / np.mean(prices[-5:]) if np.mean(prices[-5:]) > 0 else 0
+                np.std(prices[-5:]) / np.mean(prices[-5:])
+                if np.mean(prices[-5:]) > 0
+                else 0
             )
             confidence *= max(float(1 - volatility * 2), 0.6)
 
@@ -605,7 +625,9 @@ async def analyze_market_opportunity(
         reasons.append("Panic selling detected (potential buying opportunity)")
 
     # Breakout pattern - opportunity depends on direction
-    breakout_patterns = [p for p in analysis["patterns"] if p["type"] == PATTERN_BREAKOUT]
+    breakout_patterns = [
+        p for p in analysis["patterns"] if p["type"] == PATTERN_BREAKOUT
+    ]
     if breakout_patterns:
         if current_price > analysis["avg_price"]:
             # Upward breakout
@@ -619,7 +641,9 @@ async def analyze_market_opportunity(
     # Support/resistance proximity
     if analysis["support_level"] is not None:
         support_distance = (
-            (current_price - analysis["support_level"]) / current_price if current_price > 0 else 0
+            (current_price - analysis["support_level"]) / current_price
+            if current_price > 0
+            else 0
         )
         if support_distance < 0.05 and support_distance > 0:
             # Price near support - potential buy

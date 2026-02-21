@@ -303,9 +303,7 @@ class AIBacktester:
         roi_percent = (total_profit / self.initial_balance) * 100
 
         # Calculate win rate
-        win_rate = (
-            (profitable_trades / len(sell_trades) * 100) if sell_trades else 0.0
-        )
+        win_rate = (profitable_trades / len(sell_trades) * 100) if sell_trades else 0.0
 
         # Simple Sharpe ratio approximation
         if sell_trades:
@@ -393,9 +391,7 @@ class AIBacktester:
 
         return strategies.get(strategy, strategies["standard"])
 
-    def _calculate_profit_margin(
-        self, buy_price: float, sell_price: float
-    ) -> float:
+    def _calculate_profit_margin(self, buy_price: float, sell_price: float) -> float:
         """Calculate profit margin percentage.
 
         Args:

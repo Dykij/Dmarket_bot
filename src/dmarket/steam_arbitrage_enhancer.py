@@ -90,7 +90,9 @@ class SteamArbitrageEnhancer:
                             steam_data["volume"],
                             steam_data.get("median_price"),
                         )
-                        logger.info(f"Fetched Steam price: {item_name} = ${steam_data['price']}")
+                        logger.info(
+                            f"Fetched Steam price: {item_name} = ${steam_data['price']}"
+                        )
                     else:
                         logger.warning(f"No Steam data returned for: {item_name}")
                         skipped_count += 1
@@ -105,7 +107,9 @@ class SteamArbitrageEnhancer:
                     continue
 
                 except RateLimitError:
-                    logger.error("Steam Rate Limit hit! Stopping enhancement.")  # noqa: TRY400
+                    logger.error(
+                        "Steam Rate Limit hit! Stopping enhancement."
+                    )  # noqa: TRY400
                     break
 
                 except Exception as e:
@@ -122,7 +126,9 @@ class SteamArbitrageEnhancer:
                 continue
 
             # Расчет профита
-            dmarket_price = float(item.get("price", {}).get("USD", 0)) / 100  # Cents to dollars
+            dmarket_price = (
+                float(item.get("price", {}).get("USD", 0)) / 100
+            )  # Cents to dollars
             steam_price = steam_data["price"]
 
             profit_pct = calculate_arbitrage(dmarket_price, steam_price)
@@ -171,7 +177,9 @@ class SteamArbitrageEnhancer:
 
         return enhanced_items
 
-    def update_settings(self, min_profit: float | None = None, min_volume: int | None = None):
+    def update_settings(
+        self, min_profit: float | None = None, min_volume: int | None = None
+    ):
         """
         Обновляет настройки фильтрации.
 

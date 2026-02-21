@@ -55,7 +55,9 @@ class User(Base):
             "is_banned": self.is_banned,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
-            "last_activity": (self.last_activity.isoformat() if self.last_activity else None),
+            "last_activity": (
+                self.last_activity.isoformat() if self.last_activity else None
+            ),
         }
 
 

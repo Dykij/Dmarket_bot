@@ -65,10 +65,13 @@ try:
 except ImportError:
     STAMINA_AVAILABLE = False
     stamina = None  # type: ignore[assignment]
+
     def stamina_is_active():
         return False  # type: ignore[misc]
+
     def stamina_set_active(x):
         return None  # type: ignore[misc]
+
 
 from src.utils.exceptions import (
     APIError,

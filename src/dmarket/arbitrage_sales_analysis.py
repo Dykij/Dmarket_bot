@@ -201,7 +201,9 @@ class SalesAnalyzer:
         is_liquid = sales_per_day >= self.medium_volume_threshold
 
         # Calculate price range from sales
-        prices = [float(sale.get("price", {}).get("amount", 0)) / 100 for sale in sales_list]
+        prices = [
+            float(sale.get("price", {}).get("amount", 0)) / 100 for sale in sales_list
+        ]
         price_range = {
             "min": round(min(prices), 2) if prices else 0,
             "max": round(max(prices), 2) if prices else 0,
@@ -263,7 +265,9 @@ class SalesAnalyzer:
             # Extract price from nested structure
             sales_df["price"] = sales_df["price"].apply(
                 lambda x: (
-                    float(x.get("amount", 0)) / 100 if isinstance(x, dict) else float(x) / 100
+                    float(x.get("amount", 0)) / 100
+                    if isinstance(x, dict)
+                    else float(x) / 100
                 ),
             )
 
@@ -315,7 +319,9 @@ class SalesAnalyzer:
                     message = "Price may be too high based on historical data"
 
             # Convert estimated_days to hours
-            estimated_hours = estimated_days * 24 if estimated_days is not None else None
+            estimated_hours = (
+                estimated_days * 24 if estimated_days is not None else None
+            )
 
             # Generate recommendation
             if estimated_days is not None and estimated_days < 3:
@@ -394,7 +400,9 @@ class SalesAnalyzer:
             # Handle price extraction from different formats
             sales_df["price"] = sales_df["price"].apply(
                 lambda x: (
-                    float(x.get("amount", 0)) / 100 if isinstance(x, dict) else float(x) / 100
+                    float(x.get("amount", 0)) / 100
+                    if isinstance(x, dict)
+                    else float(x) / 100
                 ),
             )
 
@@ -417,7 +425,9 @@ class SalesAnalyzer:
             first_price = daily_avg["price"].iloc[0]
             last_price = daily_avg["price"].iloc[-1]
             price_change = last_price - first_price
-            price_change_percent = (price_change / first_price * 100) if first_price > 0 else 0
+            price_change_percent = (
+                (price_change / first_price * 100) if first_price > 0 else 0
+            )
 
             # Calculate volatility (standard deviation as percentage of mean)
             mean_price = daily_avg["price"].mean()
@@ -522,7 +532,10 @@ class SalesAnalyzer:
         risk_level = "high"  # Default to high risk
 
         if volume_stats["is_liquid"] and time_to_sell["estimated_days"] is not None:
-            if time_to_sell["estimated_days"] < 2 and price_trends["trend"] != "strong_downward":
+            if (
+                time_to_sell["estimated_days"] < 2
+                and price_trends["trend"] != "strong_downward"
+            ):
                 risk_level = "low"
             elif time_to_sell["estimated_days"] < 5 and price_trends["trend"] not in {
                 "strong_downward",
@@ -532,7 +545,10 @@ class SalesAnalyzer:
 
         # Calculate ROI (Return on Investment) taking into account time
         daily_roi = None
-        if time_to_sell["estimated_days"] is not None and time_to_sell["estimated_days"] > 0:
+        if (
+            time_to_sell["estimated_days"] is not None
+            and time_to_sell["estimated_days"] > 0
+        ):
             daily_roi = profit_percent / time_to_sell["estimated_days"]
 
         # Determine overall rating
@@ -574,7 +590,9 @@ class SalesAnalyzer:
 
         # Generate summary message
         if rating >= 8:
-            summary = "Excellent arbitrage opportunity with high potential ROI and low risk"
+            summary = (
+                "Excellent arbitrage opportunity with high potential ROI and low risk"
+            )
         elif rating >= 6:
             summary = "Good arbitrage opportunity with solid potential returns"
         elif rating >= 4:
@@ -726,7 +744,8 @@ class SalesAnalyzer:
                 # Filter by profit percentage and risk level
                 if (
                     analysis.get("profit_percentage", 0) >= min_profit_percent
-                    and risk_levels.get(analysis.get("risk_level", "high"), 2) <= max_risk_value
+                    and risk_levels.get(analysis.get("risk_level", "high"), 2)
+                    <= max_risk_value
                 ):
                     opportunities.append(
                         {
@@ -734,7 +753,9 @@ class SalesAnalyzer:
                             "expected_profit": analysis.get("expected_profit", 0),
                             "profit_percentage": analysis.get("profit_percentage", 0),
                             "risk_level": analysis.get("risk_level", "high"),
-                            "estimated_sell_time_hours": analysis.get("estimated_sell_time_hours"),
+                            "estimated_sell_time_hours": analysis.get(
+                                "estimated_sell_time_hours"
+                            ),
                             "recommendation": analysis.get("recommendation", ""),
                         },
                     )
@@ -880,7 +901,8 @@ async def find_best_arbitrage_opportunities(
             # Filter by profit percentage and risk level
             if (
                 analysis.get("profit_percentage", 0) >= min_profit_percent
-                and risk_levels.get(analysis.get("risk_level", "high"), 2) <= max_risk_value
+                and risk_levels.get(analysis.get("risk_level", "high"), 2)
+                <= max_risk_value
             ):
                 opportunities.append(
                     {
@@ -888,7 +910,9 @@ async def find_best_arbitrage_opportunities(
                         "expected_profit": analysis.get("expected_profit", 0),
                         "profit_percentage": analysis.get("profit_percentage", 0),
                         "risk_level": analysis.get("risk_level", "high"),
-                        "estimated_sell_time_hours": analysis.get("estimated_sell_time_hours"),
+                        "estimated_sell_time_hours": analysis.get(
+                            "estimated_sell_time_hours"
+                        ),
                         "recommendation": analysis.get("recommendation", ""),
                     },
                 )

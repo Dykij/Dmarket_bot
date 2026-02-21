@@ -178,7 +178,9 @@ async def scan(
     """
     verbose = ctx.obj.get("verbose", False)
 
-    click.echo(click.style(f"🔎 Сканирую {game.upper()} (уровень: {level})...", fg="cyan"))
+    click.echo(
+        click.style(f"🔎 Сканирую {game.upper()} (уровень: {level})...", fg="cyan")
+    )
 
     try:
         from src.dmarket.dmarket_api import DMarketAPI
@@ -194,12 +196,16 @@ async def scan(
         opportunities = await scanner.scan_level(level=level, game=game)
 
         # Фильтрация по прибыли
-        filtered = [opp for opp in opportunities if opp.get("profit_percent", 0) >= min_profit][
-            :limit
-        ]
+        filtered = [
+            opp for opp in opportunities if opp.get("profit_percent", 0) >= min_profit
+        ][:limit]
 
         click.echo()
-        click.echo(click.style(f"📊 Найдено {len(filtered)} возможностей:", fg="green", bold=True))
+        click.echo(
+            click.style(
+                f"📊 Найдено {len(filtered)} возможностей:", fg="green", bold=True
+            )
+        )
         click.echo()
 
         for i, opp in enumerate(filtered, 1):
@@ -230,7 +236,10 @@ async def scan(
 
 @cli.command()
 @click.option(
-    "--platform", "-p", default="dmarket", type=click.Choice(["dmarket", "waxpeer", "all"])
+    "--platform",
+    "-p",
+    default="dmarket",
+    type=click.Choice(["dmarket", "waxpeer", "all"]),
 )
 @click.pass_context
 @async_command
@@ -384,7 +393,9 @@ async def _execute_task(agent: CopilotAgent, task: str, dry_run: bool = False) -
 
     for res in results:
         status_icon = "✅" if res.success else "❌"
-        output_str = str(res.output)[:200] + "..." if len(str(res.output)) > 200 else res.output
+        output_str = (
+            str(res.output)[:200] + "..." if len(str(res.output)) > 200 else res.output
+        )
         report.append(f"{status_icon} Результат: {output_str}")
         if res.error:
             report.append(f"   Ошибка: {res.error}")

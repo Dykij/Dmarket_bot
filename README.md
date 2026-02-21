@@ -1,7 +1,7 @@
 # 🧠 DMarket Telegram Bot: Dual Brain Architecture (2026)
 
 <!-- Badges: Project Info -->
-[![Build Status](https://img.shields.io/github/actions/workflow/status/Dykij/DMarket-Telegram-Bot/ci.yml?branch=main&label=Build&logo=github)](https://github.com/Dykij/DMarket-Telegram-Bot/actions/workflows/ci.yml)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/Dykij/DMarket-Telegram-Bot/ci-cd.yml?branch=dev)](https://github.com/Dykij/DMarket-Telegram-Bot/actions/workflows/ci-cd.yml)
 [![Python Version](https://img.shields.io/badge/python-3.10%2B-blue?logo=python&logoColor=white)](https://www.python.org/)
 [![License](https://img.shields.io/github/license/Dykij/DMarket-Telegram-Bot?color=green)](LICENSE)
 [![Maintained](https://img.shields.io/badge/Maintained%3F-Yes%20(2026)-brightgreen.svg)](https://github.com/Dykij/DMarket-Telegram-Bot/graphs/commit-activity)

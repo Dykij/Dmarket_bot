@@ -27,7 +27,7 @@ class BlacklistManager:
         self.blacklist_file = Path(blacklist_file)
         self.blacklisted_sellers: set[str] = set()
         self.forbidden_keywords: list[str] = []
-        
+
         # Load logic
         self._load_config()
         self._load_blacklist()
@@ -35,10 +35,10 @@ class BlacklistManager:
     def _load_config(self) -> None:
         """Load blacklist settings from config."""
         self.forbidden_keywords = [
-            "Souvenir", 
-            "Well-Worn", 
-            "Inscribed Gem", 
-            "StatTrak™ Music Kit"
+            "Souvenir",
+            "Well-Worn",
+            "Inscribed Gem",
+            "StatTrak™ Music Kit",
         ]
 
     def _load_blacklist(self) -> None:
@@ -49,7 +49,7 @@ class BlacklistManager:
         try:
             with open(self.blacklist_file, encoding="utf-8") as f:
                 data = json.load(f)
-            
+
             # Load keywords (merge)
             file_keywords = data.get("forbidden_keywords", [])
             for kw in file_keywords:
@@ -62,7 +62,9 @@ class BlacklistManager:
     def is_item_forbidden(self, item_title: str) -> bool:
         """Check if an item contains forbidden keywords."""
         title_lower = item_title.lower()
-        return any(keyword.lower() in title_lower for keyword in self.forbidden_keywords)
+        return any(
+            keyword.lower() in title_lower for keyword in self.forbidden_keywords
+        )
 
     def should_skip_item(self, item: dict[str, Any]) -> Tuple[bool, str]:
         """Check if an item should be skipped based on blacklist."""

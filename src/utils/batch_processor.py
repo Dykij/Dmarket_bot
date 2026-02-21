@@ -207,7 +207,10 @@ class ProgressTracker:
         self.processed = processed
 
         # Only return progress if interval reached
-        if processed - self.last_update >= self.update_interval or processed == self.total:
+        if (
+            processed - self.last_update >= self.update_interval
+            or processed == self.total
+        ):
             self.last_update = processed
 
             percent = (processed / self.total * 100) if self.total > 0 else 0

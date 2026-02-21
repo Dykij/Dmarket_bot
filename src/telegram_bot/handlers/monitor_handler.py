@@ -19,7 +19,12 @@ from typing import Any
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import CallbackQueryHandler, CommandHandler, ContextTypes
 
-from src.monitoring import DetectedSignal, MockTelethonMonitor, SignalType, create_telethon_monitor
+from src.monitoring import (
+    DetectedSignal,
+    MockTelethonMonitor,
+    SignalType,
+    create_telethon_monitor,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -194,9 +199,11 @@ class MonitorHandler:
             [
                 InlineKeyboardButton(
                     "▶️ Запустить" if not stats.get("is_running") else "⏹️ Остановить",
-                    callback_data="monitor:start"
-                    if not stats.get("is_running")
-                    else "monitor:stop",
+                    callback_data=(
+                        "monitor:start"
+                        if not stats.get("is_running")
+                        else "monitor:stop"
+                    ),
                 ),
             ],
             [
@@ -239,7 +246,9 @@ class MonitorHandler:
                 ),
             ],
             [
-                InlineKeyboardButton("🧪 Тест сигнала", callback_data="monitor:test_signal"),
+                InlineKeyboardButton(
+                    "🧪 Тест сигнала", callback_data="monitor:test_signal"
+                ),
             ],
             [InlineKeyboardButton("◀️ Назад", callback_data="monitor:back")],
         ]
@@ -334,9 +343,15 @@ class MonitorHandler:
                 await self._monitor.start()
                 await query.edit_message_text(
                     "✅ Мониторинг запущен (Mock Mode)\n\nИспользуйте 'Тест сигнала' для проверки.",
-                    reply_markup=InlineKeyboardMarkup([
-                        [InlineKeyboardButton("◀️ Назад", callback_data="monitor:back")]
-                    ]),
+                    reply_markup=InlineKeyboardMarkup(
+                        [
+                            [
+                                InlineKeyboardButton(
+                                    "◀️ Назад", callback_data="monitor:back"
+                                )
+                            ]
+                        ]
+                    ),
                 )
             else:
                 # Real Telethon monitor runs in background
@@ -356,9 +371,9 @@ class MonitorHandler:
             await self._monitor.stop()
             await query.edit_message_text(
                 "⏹️ Мониторинг остановлен",
-                reply_markup=InlineKeyboardMarkup([
-                    [InlineKeyboardButton("◀️ Назад", callback_data="monitor:back")]
-                ]),
+                reply_markup=InlineKeyboardMarkup(
+                    [[InlineKeyboardButton("◀️ Назад", callback_data="monitor:back")]]
+                ),
             )
         except Exception as e:
             logger.exception(f"Monitor stop error: {e}")
@@ -381,10 +396,16 @@ class MonitorHandler:
 
         await query.edit_message_text(
             text,
-            reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("📋 Просмотреть", callback_data="monitor:channels")],
-                [InlineKeyboardButton("◀️ Назад", callback_data="monitor:back")],
-            ]),
+            reply_markup=InlineKeyboardMarkup(
+                [
+                    [
+                        InlineKeyboardButton(
+                            "📋 Просмотреть", callback_data="monitor:channels"
+                        )
+                    ],
+                    [InlineKeyboardButton("◀️ Назад", callback_data="monitor:back")],
+                ]
+            ),
             parse_mode="Markdown",
         )
 
@@ -433,10 +454,16 @@ class MonitorHandler:
 
         await query.edit_message_text(
             text,
-            reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("🧪 Ещё тест", callback_data="monitor:test_signal")],
-                [InlineKeyboardButton("◀️ Назад", callback_data="monitor:back")],
-            ]),
+            reply_markup=InlineKeyboardMarkup(
+                [
+                    [
+                        InlineKeyboardButton(
+                            "🧪 Ещё тест", callback_data="monitor:test_signal"
+                        )
+                    ],
+                    [InlineKeyboardButton("◀️ Назад", callback_data="monitor:back")],
+                ]
+            ),
             parse_mode="Markdown",
         )
 

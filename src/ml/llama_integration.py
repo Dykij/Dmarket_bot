@@ -22,6 +22,7 @@ import structlog
 
 try:
     import httpx
+
     HTTPX_AVAILABLE = True
 except ImportError:
     HTTPX_AVAILABLE = False
@@ -91,7 +92,6 @@ TASK_PROMPTS = {
 💰 РЕКОМЕНДАЦИЯ: [покупать/продавать/держать]
 ⚠️ РИСК: [низкий/средний/высокий]
 📝 АНАЛИЗ: [подробный анализ]""",
-
     LlamaTaskType.PRICE_PREDICTION: """Ты - AI для прогнозирования цен на игровые предметы.
 На основе исторических данных и текущих трендов:
 - Прогнозируй изменение цены на 24ч/7д/30д
@@ -106,7 +106,6 @@ TASK_PROMPTS = {
 📊 УРОВЕНЬ СОПРОТИВЛЕНИЯ: [цена]
 🔮 УВЕРЕННОСТЬ: [низкая/средняя/высокая]
 📝 ОБОСНОВАНИЕ: [анализ]""",
-
     LlamaTaskType.ARBITRAGE_RECOMMENDATION: """Ты - специалист по арбитражу между площадками.
 Площадки и комиссии:
 - DMarket: 7%
@@ -125,7 +124,6 @@ TASK_PROMPTS = {
 ⏱️ ВРЕМЯ РЕАЛИЗАЦИИ: [часы/дни]
 ⚠️ РИСК: [низкий/средний/высокий]
 ✅ РЕКОМЕНДАЦИЯ: [действовать/подождать/пропустить]""",
-
     LlamaTaskType.TRADING_ADVICE: """Ты - торговый советник для DMarket бота.
 Давай рекомендации по:
 - Моменту входа/выхода из позиции
@@ -147,7 +145,6 @@ TASK_PROMPTS = {
 ⚠️ СТОП-ЛОСС: [уровень]
 🎯 ТЕЙК-ПРОФИТ: [уровень]
 📝 ПОЯСНЕНИЕ: [детали]""",
-
     LlamaTaskType.ITEM_EVALUATION: """Ты - эксперт по оценке игровых предметов.
 Оценивай предметы по критериям:
 - Редкость и популярность
@@ -163,7 +160,6 @@ TASK_PROMPTS = {
 📈 ПОТЕНЦИАЛ РОСТА: [+X%]
 ⚠️ РИСК ПАДЕНИЯ: [-Y%]
 ✅ РЕКОМЕНДАЦИЯ: [покупать/держать/продавать]""",
-
     LlamaTaskType.RISK_ASSESSMENT: """Ты - риск-менеджер для торговли скинами.
 Оценивай риски:
 - Волатильность рынка
@@ -180,7 +176,6 @@ TASK_PROMPTS = {
 - [пункт 1]
 - [пункт 2]
 - [пункт 3]""",
-
     LlamaTaskType.GENERAL_CHAT: """Ты - AI-помощник для DMarket Trading Bot.
 Помогай пользователям:
 1. Анализировать рынок CS:GO, Dota 2, Rust, TF2
@@ -265,7 +260,8 @@ class LlamaIntegration:
 
                 # Проверяем что нужная модель установлена
                 model_available = any(
-                    self.config.model_name in m or m.startswith(self.config.model_name.split(":")[0])
+                    self.config.model_name in m
+                    or m.startswith(self.config.model_name.split(":")[0])
                     for m in models
                 )
 
@@ -347,7 +343,9 @@ class LlamaIntegration:
             enhanced_message = user_message
             if context:
                 context_str = json.dumps(context, ensure_ascii=False, indent=2)
-                enhanced_message = f"{user_message}\n\n📊 Данные:\n```json\n{context_str}\n```"
+                enhanced_message = (
+                    f"{user_message}\n\n📊 Данные:\n```json\n{context_str}\n```"
+                )
 
             # Формируем сообщения
             messages = [
@@ -609,7 +607,8 @@ class LlamaIntegration:
             **self.stats,
             "success_rate": (
                 self.stats["successful_requests"] / max(1, self.stats["total_requests"])
-            ) * 100,
+            )
+            * 100,
             "model": self.config.model_name,
             "is_available": self._is_available,
         }

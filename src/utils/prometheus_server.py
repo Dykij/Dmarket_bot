@@ -46,6 +46,7 @@ class PrometheusServer:
             import psutil
 
             from src.utils.prometheus_metrics import cpu_usage, ram_usage
+
             cpu_usage.set(psutil.cpu_percent())
             ram_usage.set(psutil.virtual_memory().percent)
         except ImportError:

@@ -492,7 +492,9 @@ class TargetManager:
             # Для достижения желаемой маржи: target_price * (1 + margin) = market_price * 0.93
             # Следовательно: target_price = market_price * 0.93 / (1 + margin)
             commission_multiplier = 0.93  # 1 - 0.07 (комиссия 7% при продаже)
-            target_price = round(market_price * commission_multiplier / (1 + profit_margin), 2)
+            target_price = round(
+                market_price * commission_multiplier / (1 + profit_margin), 2
+            )
 
             # Проверяем конкуренцию
             if check_competition:
@@ -504,12 +506,14 @@ class TargetManager:
 
                 if not competition.get("should_proceed", False):
                     logger.info(f"Пропуск '{title}': высокая конкуренция")
-                    results.append({
-                        "title": title,
-                        "status": "skipped",
-                        "reason": "high_competition",
-                        "competition": competition,
-                    })
+                    results.append(
+                        {
+                            "title": title,
+                            "status": "skipped",
+                            "reason": "high_competition",
+                            "competition": competition,
+                        }
+                    )
                     continue
 
                 # Если есть лучшая цена конкурентов, корректируем
@@ -524,23 +528,27 @@ class TargetManager:
                     price=target_price,
                     amount=1,
                 )
-                results.append({
-                    "title": title,
-                    "status": "created",
-                    "price": target_price,
-                    "result": result,
-                })
+                results.append(
+                    {
+                        "title": title,
+                        "status": "created",
+                        "price": target_price,
+                        "result": result,
+                    }
+                )
                 created += 1
 
                 # Задержка между созданиями
                 await self._delay(0.5)
 
             except Exception as e:
-                results.append({
-                    "title": title,
-                    "status": "error",
-                    "error": str(e),
-                })
+                results.append(
+                    {
+                        "title": title,
+                        "status": "error",
+                        "error": str(e),
+                    }
+                )
 
         logger.info(f"Создано {created}/{len(items)} умных таргетов")
         return results
@@ -575,15 +583,17 @@ class TargetManager:
 
             targets = []
             for trade in result.get("trades", []):
-                targets.append({
-                    "id": trade.get("TargetID"),
-                    "title": trade.get("Title"),
-                    "price": float(trade.get("Price", 0)) / 100,
-                    "game": trade.get("GameID"),
-                    "status": trade.get("Status"),
-                    "closed_at": trade.get("ClosedAt"),
-                    "created_at": trade.get("CreatedAt"),
-                })
+                targets.append(
+                    {
+                        "id": trade.get("TargetID"),
+                        "title": trade.get("Title"),
+                        "price": float(trade.get("Price", 0)) / 100,
+                        "game": trade.get("GameID"),
+                        "status": trade.get("Status"),
+                        "closed_at": trade.get("ClosedAt"),
+                        "created_at": trade.get("CreatedAt"),
+                    }
+                )
 
             logger.info(f"Найдено {len(targets)} закрытых таргетов")
             return targets
@@ -627,7 +637,9 @@ class TargetManager:
             "successful_count": len(successful),
             "success_rate": (len(successful) / len(closed) * 100) if closed else 0.0,
             "average_price": (
-                sum(t["price"] for t in successful) / len(successful) if successful else 0.0
+                sum(t["price"] for t in successful) / len(successful)
+                if successful
+                else 0.0
             ),
             "total_spent": sum(t["price"] for t in successful),
         }
@@ -676,7 +688,9 @@ class TargetManager:
             Результат оценки конкуренции
 
         """
-        return await assess_competition(self.api, game, title, max_competition, price_threshold)
+        return await assess_competition(
+            self.api, game, title, max_competition, price_threshold
+        )
 
     async def filter_low_competition_items(
         self,

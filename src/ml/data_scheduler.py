@@ -391,7 +391,9 @@ class MLDataScheduler:
 
         return {
             "state": self.state.value,
-            "started_at": (self.stats.started_at.isoformat() if self.stats.started_at else None),
+            "started_at": (
+                self.stats.started_at.isoformat() if self.stats.started_at else None
+            ),
             "uptime_seconds": uptime,
             "total_collections": self.stats.total_collections,
             "successful_collections": self.stats.successful_collections,
@@ -409,10 +411,14 @@ class MLDataScheduler:
             ),
             "total_cleanups": self.stats.total_cleanups,
             "last_collection": (
-                self.stats.last_collection.isoformat() if self.stats.last_collection else None
+                self.stats.last_collection.isoformat()
+                if self.stats.last_collection
+                else None
             ),
             "last_training": (
-                self.stats.last_training.isoformat() if self.stats.last_training else None
+                self.stats.last_training.isoformat()
+                if self.stats.last_training
+                else None
             ),
             "last_error": self.stats.last_error,
             "total_items_collected": self.stats.total_items_collected,

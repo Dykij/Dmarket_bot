@@ -131,7 +131,10 @@ class CrossPlatformArbitrageStrategy(IFindingStrategy):
 
     def validate_config(self, config: StrategyConfig) -> bool:
         """Проверка конфигурации."""
-        return not (config.min_price < Decimal("0.5") or config.min_profit_percent < Decimal("3.0"))
+        return not (
+            config.min_price < Decimal("0.5")
+            or config.min_profit_percent < Decimal("3.0")
+        )
 
     async def find_opportunities(
         self,
@@ -181,7 +184,9 @@ class CrossPlatformArbitrageStrategy(IFindingStrategy):
             buy_price = Decimal(str(item.get("dmarket_price", 0)))
             sell_price = Decimal(str(item.get("waxpeer_price", 0)))
             profit_usd = sell_price * Decimal("0.94") - buy_price  # После комиссии
-            profit_percent = (profit_usd / buy_price * 100) if buy_price > 0 else Decimal(0)
+            profit_percent = (
+                (profit_usd / buy_price * 100) if buy_price > 0 else Decimal(0)
+            )
 
             lock_days = item.get("trade_lock_days", 0)
             risk_level = self._calculate_risk_level(lock_days, profit_percent)
@@ -318,7 +323,9 @@ class FloatValueArbitrageStrategy(IFindingStrategy):
             premium_multiplier = Decimal(str(item.get("premium_multiplier", 1.0)))
             sell_price = buy_price * premium_multiplier
             profit_usd = sell_price - buy_price
-            profit_percent = (profit_usd / buy_price * 100) if buy_price > 0 else Decimal(0)
+            profit_percent = (
+                (profit_usd / buy_price * 100) if buy_price > 0 else Decimal(0)
+            )
 
             float_val = item.get("float_value", 0.5)
             risk_level = RiskLevel.MEDIUM  # Float trading has moderate risk
@@ -443,7 +450,9 @@ class IntramarketArbitrageStrategy(IFindingStrategy):
             buy_price = Decimal(str(item.get("price", 0)))
             suggested = Decimal(str(item.get("suggested_price", buy_price)))
             profit_usd = suggested * Decimal("0.93") - buy_price  # 7% комиссия
-            profit_percent = (profit_usd / buy_price * 100) if buy_price > 0 else Decimal(0)
+            profit_percent = (
+                (profit_usd / buy_price * 100) if buy_price > 0 else Decimal(0)
+            )
 
             if profit_percent < config.min_profit_percent:
                 return None
@@ -488,7 +497,9 @@ class IntramarketArbitrageStrategy(IFindingStrategy):
             trend_growth = Decimal(str(item.get("trend_growth", 0.05)))
             sell_price = buy_price * (1 + trend_growth)
             profit_usd = sell_price * Decimal("0.93") - buy_price
-            profit_percent = (profit_usd / buy_price * 100) if buy_price > 0 else Decimal(0)
+            profit_percent = (
+                (profit_usd / buy_price * 100) if buy_price > 0 else Decimal(0)
+            )
 
             if profit_percent < config.min_profit_percent:
                 return None
@@ -694,19 +705,21 @@ class UnifiedStrategyManager:
     def _init_strategies(self) -> None:
         """Инициализировать все доступные стратегии."""
         # Cross-platform (DMarket → Waxpeer)
-        self._strategies[StrategyType.CROSS_PLATFORM_ARBITRAGE] = CrossPlatformArbitrageStrategy(
-            dmarket_api=self.dmarket_api,
-            waxpeer_api=self.waxpeer_api,
+        self._strategies[StrategyType.CROSS_PLATFORM_ARBITRAGE] = (
+            CrossPlatformArbitrageStrategy(
+                dmarket_api=self.dmarket_api,
+                waxpeer_api=self.waxpeer_api,
+            )
         )
 
         # Float Value Arbitrage
-        self._strategies[StrategyType.FLOAT_VALUE_ARBITRAGE] = FloatValueArbitrageStrategy(
-            dmarket_api=self.dmarket_api
+        self._strategies[StrategyType.FLOAT_VALUE_ARBITRAGE] = (
+            FloatValueArbitrageStrategy(dmarket_api=self.dmarket_api)
         )
 
         # Intramarket Arbitrage
-        self._strategies[StrategyType.INTRAMARKET_ARBITRAGE] = IntramarketArbitrageStrategy(
-            dmarket_api=self.dmarket_api
+        self._strategies[StrategyType.INTRAMARKET_ARBITRAGE] = (
+            IntramarketArbitrageStrategy(dmarket_api=self.dmarket_api)
         )
 
         # Smart Market Finder
@@ -982,7 +995,9 @@ GAME_NAMES = {
 }
 
 
-def get_game_specific_config(game: str, base_preset: str = "standard") -> StrategyConfig:
+def get_game_specific_config(
+    game: str, base_preset: str = "standard"
+) -> StrategyConfig:
     """Получить конфигурацию специфичную для игры.
 
     Каждая игра имеет свои особенности рынка:
@@ -1038,7 +1053,9 @@ def get_game_specific_config(game: str, base_preset: str = "standard") -> Strate
         game=game,
         min_price=base.min_price,
         max_price=adjustments.get("max_price", base.max_price),
-        min_profit_percent=adjustments.get("min_profit_percent", base.min_profit_percent),
+        min_profit_percent=adjustments.get(
+            "min_profit_percent", base.min_profit_percent
+        ),
         min_profit_usd=base.min_profit_usd,
         limit=adjustments.get("limit", base.limit),
         max_risk_level=base.max_risk_level,

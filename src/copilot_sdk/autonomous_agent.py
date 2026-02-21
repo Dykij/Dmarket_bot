@@ -94,7 +94,9 @@ class Plan:
     @property
     def is_complete(self) -> bool:
         """План полностью выполнен."""
-        return all(s.status in (StepStatus.COMPLETED, StepStatus.SKIPPED) for s in self.steps)
+        return all(
+            s.status in (StepStatus.COMPLETED, StepStatus.SKIPPED) for s in self.steps
+        )
 
 
 @dataclass
@@ -514,7 +516,9 @@ class AutonomousAgent:
                 "progress": self._current_plan.progress,
                 "steps_total": len(self._current_plan.steps),
                 "steps_completed": sum(
-                    1 for s in self._current_plan.steps if s.status == StepStatus.COMPLETED
+                    1
+                    for s in self._current_plan.steps
+                    if s.status == StepStatus.COMPLETED
                 ),
                 "adjustments": self._current_plan.adjustments,
             }

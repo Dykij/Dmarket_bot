@@ -126,30 +126,40 @@ async def ai_brain_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     )
 
     if stats.get("in_cooldown"):
-        status_text += f"\n⚠️ <b>In cooldown until:</b> {stats.get('cooldown_until', 'N/A')}\n"
+        status_text += (
+            f"\n⚠️ <b>In cooldown until:</b> {stats.get('cooldown_until', 'N/A')}\n"
+        )
 
     # Create inline keyboard
     keyboard = []
 
     if brain.is_running:
-        keyboard.append([
-            InlineKeyboardButton("⏸️ Pause", callback_data="ai_brain:pause"),
-            InlineKeyboardButton("🛑 Stop", callback_data="ai_brain:stop"),
-        ])
+        keyboard.append(
+            [
+                InlineKeyboardButton("⏸️ Pause", callback_data="ai_brain:pause"),
+                InlineKeyboardButton("🛑 Stop", callback_data="ai_brain:stop"),
+            ]
+        )
     else:
-        keyboard.append([
-            InlineKeyboardButton("▶️ Start", callback_data="ai_brain:start"),
-            InlineKeyboardButton("🔄 Run Cycle", callback_data="ai_brain:cycle"),
-        ])
+        keyboard.append(
+            [
+                InlineKeyboardButton("▶️ Start", callback_data="ai_brain:start"),
+                InlineKeyboardButton("🔄 Run Cycle", callback_data="ai_brain:cycle"),
+            ]
+        )
 
-    keyboard.append([
-        InlineKeyboardButton("📋 Pending", callback_data="ai_brain:pending"),
-        InlineKeyboardButton("🔔 Alerts", callback_data="ai_brain:alerts"),
-    ])
-    keyboard.append([
-        InlineKeyboardButton("⚙️ Settings", callback_data="ai_brain:settings"),
-        InlineKeyboardButton("🔄 Refresh", callback_data="ai_brain:refresh"),
-    ])
+    keyboard.append(
+        [
+            InlineKeyboardButton("📋 Pending", callback_data="ai_brain:pending"),
+            InlineKeyboardButton("🔔 Alerts", callback_data="ai_brain:alerts"),
+        ]
+    )
+    keyboard.append(
+        [
+            InlineKeyboardButton("⚙️ Settings", callback_data="ai_brain:settings"),
+            InlineKeyboardButton("🔄 Refresh", callback_data="ai_brain:refresh"),
+        ]
+    )
 
     reply_markup = InlineKeyboardMarkup(keyboard)
 
@@ -198,8 +208,7 @@ async def ai_mode_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
     if mode not in mode_map:
         await update.message.reply_text(
-            f"❌ Unknown mode: {mode}\n\n"
-            f"Use: manual, semi, or auto",
+            f"❌ Unknown mode: {mode}\n\n" f"Use: manual, semi, or auto",
             parse_mode="HTML",
         )
         return
@@ -271,7 +280,9 @@ async def ai_stop_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         return
 
     brain.stop()
-    await update.message.reply_text("🛑 Stop requested. Bot will stop after current cycle.")
+    await update.message.reply_text(
+        "🛑 Stop requested. Bot will stop after current cycle."
+    )
 
 
 async def ai_pause_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -333,7 +344,9 @@ async def ai_limits_command(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     await update.message.reply_text(text, parse_mode="HTML")
 
 
-async def ai_pending_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def ai_pending_command(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Handle /ai_pending command - Show pending decisions.
 
     Usage: /ai_pending
@@ -359,15 +372,14 @@ async def ai_pending_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
             f"    🎯 Confidence: {decision.confidence:.0%}\n\n"
         )
 
-    text += (
-        "Use /ai_confirm [id] to confirm\n"
-        "Use /ai_reject [id] to reject"
-    )
+    text += "Use /ai_confirm [id] to confirm\n" "Use /ai_reject [id] to reject"
 
     await update.message.reply_text(text, parse_mode="HTML")
 
 
-async def ai_confirm_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def ai_confirm_command(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Handle /ai_confirm command - Confirm a pending decision.
 
     Usage: /ai_confirm [id]
@@ -489,7 +501,9 @@ async def ai_alerts_command(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     await update.message.reply_text(text, parse_mode="HTML")
 
 
-async def ai_emergency_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def ai_emergency_command(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Handle /ai_emergency command - Emergency stop.
 
     Usage: /ai_emergency [reason]
@@ -500,7 +514,9 @@ async def ai_emergency_command(update: Update, context: ContextTypes.DEFAULT_TYP
     user_id = update.effective_user.id if update.effective_user else 0
     reason = " ".join(context.args) if context.args else "Manual emergency stop"
 
-    logger.critical("emergency_stop_requested", extra={"user_id": user_id, "reason": reason})
+    logger.critical(
+        "emergency_stop_requested", extra={"user_id": user_id, "reason": reason}
+    )
 
     brain = get_bot_brain()
     brain.emergency_stop(reason)

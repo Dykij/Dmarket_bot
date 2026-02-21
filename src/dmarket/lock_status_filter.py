@@ -28,6 +28,7 @@ class LockStatus(IntEnum):
     - 0: Предмет доступен для вывода сразу
     - 1: Предмет заблокирован (трейд-бан)
     """
+
     AVAILABLE = 0
     LOCKED = 1
 
@@ -136,7 +137,7 @@ class LockStatusFilter:
                 "filter_locked": self.config.filter_locked,
                 "min_discount": self.config.min_lock_discount,
                 "max_discount": self.config.max_lock_discount,
-            }
+            },
         )
 
     def parse_lock_info(self, item_data: dict[str, Any]) -> LockInfo:
@@ -194,10 +195,7 @@ class LockStatusFilter:
         if days <= 0:
             return 0.0
 
-        discount = (
-            self.config.min_lock_discount
-            + days * self.config.discount_per_day
-        )
+        discount = self.config.min_lock_discount + days * self.config.discount_per_day
 
         return min(discount, self.config.max_lock_discount)
 
@@ -288,7 +286,9 @@ class LockStatusFilter:
 
             # Бонусы от DMarket
             discount = item_data.get("discount", 0)
-            bonus = price_data.get("bonus", 0) / 100 if isinstance(price_data, dict) else 0
+            bonus = (
+                price_data.get("bonus", 0) / 100 if isinstance(price_data, dict) else 0
+            )
 
             # Effective price с учетом lock
             effective_price = self.apply_lock_discount(price, lock_info)
@@ -374,7 +374,10 @@ class LockStatusFilter:
             )
 
             if adjusted_profit < self.config.min_lock_discount:
-                return False, f"Profit too low after lock adjustment: {adjusted_profit:.1f}%"
+                return (
+                    False,
+                    f"Profit too low after lock adjustment: {adjusted_profit:.1f}%",
+                )
 
         # Проверка заморозки капитала
         if item.lock_info.is_locked:
@@ -383,7 +386,10 @@ class LockStatusFilter:
 
             # Не замораживать >25% баланса на >3 дней
             if frozen_percent > 25 and frozen_days > 3:
-                return False, f"Would freeze {frozen_percent:.1f}% of balance for {frozen_days} days"
+                return (
+                    False,
+                    f"Would freeze {frozen_percent:.1f}% of balance for {frozen_days} days",
+                )
 
         # Двойное подтверждение: DMarket bonus + наш profit
         if item.discount_percent > 0 or item.bonus_amount > 0:
@@ -409,11 +415,10 @@ class LockStatusFilter:
 
         avg_lock_days = 0.0
         if locked > 0:
-            avg_lock_days = sum(
-                i.lock_info.days_remaining
-                for i in items
-                if i.lock_info.is_locked
-            ) / locked
+            avg_lock_days = (
+                sum(i.lock_info.days_remaining for i in items if i.lock_info.is_locked)
+                / locked
+            )
 
         return {
             "total_items": total,

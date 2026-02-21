@@ -373,7 +373,9 @@ def telegram_error_boundary(
                 await _handle_validation_error(e, update, func.__name__, ctx.user_id)
 
             except AuthenticationError as e:
-                await _handle_authentication_error(e, update, func.__name__, ctx.user_id)
+                await _handle_authentication_error(
+                    e, update, func.__name__, ctx.user_id
+                )
 
             except RateLimitError as e:
                 await _handle_rate_limit_error(e, update, func.__name__, ctx.user_id)

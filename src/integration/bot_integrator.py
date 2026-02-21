@@ -224,7 +224,9 @@ class BotIntegrator:
         self._initialized = True
 
         logger.info("=" * 60)
-        logger.info(f"✅ Initialization complete: {sum(results.values())}/{len(results)} modules")
+        logger.info(
+            f"✅ Initialization complete: {sum(results.values())}/{len(results)} modules"
+        )
         logger.info("=" * 60)
 
         # Publish initialization event
@@ -657,7 +659,9 @@ class BotIntegrator:
             "running": self._running,
             "start_time": self._start_time.isoformat() if self._start_time else None,
             "uptime_seconds": (
-                (datetime.now(UTC) - self._start_time).total_seconds() if self._start_time else 0
+                (datetime.now(UTC) - self._start_time).total_seconds()
+                if self._start_time
+                else 0
             ),
             "services": self.services.get_health_summary(),
             "health": health_status.to_dict(),

@@ -296,9 +296,13 @@ class GameScanner:
         candidates = items[: config.max_items * 2]
 
         # Filter through liquidity analyzer
-        return await self.liquidity_analyzer.filter_liquid_items(candidates, game=config.game)
+        return await self.liquidity_analyzer.filter_liquid_items(
+            candidates, game=config.game
+        )
 
-    def _log_scan_complete(self, config: ScanConfig, results: list[dict[str, Any]]) -> None:
+    def _log_scan_complete(
+        self, config: ScanConfig, results: list[dict[str, Any]]
+    ) -> None:
         """Log scan completion breadcrumb."""
         add_trading_breadcrumb(
             action="scan_game_completed",

@@ -141,9 +141,15 @@ class WatchlistItem:
             "added_at": self.added_at.isoformat(),
             "target_price": str(self.target_price) if self.target_price else None,
             "last_price": str(self.last_price) if self.last_price else None,
-            "last_checked": self.last_checked.isoformat() if self.last_checked else None,
+            "last_checked": (
+                self.last_checked.isoformat() if self.last_checked else None
+            ),
             "price_change": str(self.price_change) if self.price_change else None,
-            "price_change_percent": str(round(self.price_change_percent, 2)) if self.price_change_percent else None,
+            "price_change_percent": (
+                str(round(self.price_change_percent, 2))
+                if self.price_change_percent
+                else None
+            ),
             "is_target_reached": self.is_target_reached(),
             "game": self.game,
             "notes": self.notes,
@@ -395,7 +401,8 @@ class WatchlistManager:
         user_id = watchlist.user_id
         if user_id in self._user_watchlists:
             self._user_watchlists[user_id] = [
-                wl_id for wl_id in self._user_watchlists[user_id]
+                wl_id
+                for wl_id in self._user_watchlists[user_id]
                 if wl_id != watchlist_id
             ]
 
@@ -510,13 +517,15 @@ class WatchlistManager:
 
                 # Only report changes
                 if direction != PriceDirection.UNCHANGED or item.is_target_reached():
-                    updates.append(PriceUpdate(
-                        item=item,
-                        old_price=old_price,
-                        new_price=current_price,
-                        direction=direction,
-                        target_reached=item.is_target_reached(),
-                    ))
+                    updates.append(
+                        PriceUpdate(
+                            item=item,
+                            old_price=old_price,
+                            new_price=current_price,
+                            direction=direction,
+                            target_reached=item.is_target_reached(),
+                        )
+                    )
 
         return updates
 

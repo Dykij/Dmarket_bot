@@ -114,7 +114,9 @@ class WebhookConfig:
         return cls(
             url=webhook_url,
             port=int(os.getenv("WEBHOOK_PORT", "8443")),
-            listen=os.getenv("WEBHOOK_LISTEN", "0.0.0.0"),  # noqa: S104 - Required for Docker
+            listen=os.getenv(
+                "WEBHOOK_LISTEN", "0.0.0.0"
+            ),  # noqa: S104 - Required for Docker
             url_path=os.getenv("WEBHOOK_PATH", "telegram-webhook"),
             cert_path=os.getenv("WEBHOOK_CERT"),
             key_path=os.getenv("WEBHOOK_KEY"),
@@ -166,7 +168,9 @@ async def setup_webhook(
         # Read certificate if provided
         certificate = None
         if config.cert_path:
-            certificate = pathlib.Path(config.cert_path).read_bytes()  # noqa: ASYNC240 - Sync file read for SSL cert
+            certificate = pathlib.Path(
+                config.cert_path
+            ).read_bytes()  # noqa: ASYNC240 - Sync file read for SSL cert
             logger.info(f"  📜 Using SSL certificate: {config.cert_path}")
 
         # Set webhook with Telegram
@@ -184,7 +188,9 @@ async def setup_webhook(
             logger.info("✅ Webhook set successfully!")
             logger.info(f"   URL: {config.webhook_url}")
             logger.info(f"   Listening: {config.listen}:{config.port}")
-            logger.info(f"   SSL: {'enabled' if config.is_ssl else 'via reverse proxy'}")
+            logger.info(
+                f"   SSL: {'enabled' if config.is_ssl else 'via reverse proxy'}"
+            )
             logger.info(f"   Max connections: {config.max_connections}")
             logger.info("=" * 60)
             return True

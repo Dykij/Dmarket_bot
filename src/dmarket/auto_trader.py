@@ -228,7 +228,9 @@ class AutoTrader:
         has_funds = balance_data.get("has_funds", False)
 
         if not has_funds or balance < 1.0:
-            logger.warning(f"Auto-trading impossible: insufficient funds (${balance:.2f})")
+            logger.warning(
+                f"Auto-trading impossible: insufficient funds (${balance:.2f})"
+            )
             return False
 
         return True

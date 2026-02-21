@@ -136,7 +136,8 @@ class ScoredItem:
             True if item appears undervalued
         """
         return (
-            self.price_difference > min_difference and self.price_difference_percent > min_percent
+            self.price_difference > min_difference
+            and self.price_difference_percent > min_percent
         )
 
     def to_dict(self, game: str) -> dict[str, Any]:

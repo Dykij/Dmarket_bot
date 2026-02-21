@@ -45,9 +45,9 @@ class PriceAlertsHandler:
         """
         self.api_client = api_client
         self.price_watcher = RealtimePriceWatcher(api_client)
-        self._user_temp_data: dict[
-            str, dict[str, str | float]
-        ] = {}  # Временные данные для диалогов
+        self._user_temp_data: dict[str, dict[str, str | float]] = (
+            {}
+        )  # Временные данные для диалогов
         self._is_watcher_started = False
 
         # Регистрируем обработчик оповещений

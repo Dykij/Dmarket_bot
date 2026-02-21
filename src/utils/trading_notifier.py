@@ -46,7 +46,9 @@ class TradingNotifier:
         self.notification_queue = notification_queue
         self.user_id = user_id
 
-    def _create_item_dict(self, item_name: str, price: float, game: str) -> dict[str, Any]:
+    def _create_item_dict(
+        self, item_name: str, price: float, game: str
+    ) -> dict[str, Any]:
         """Create item dictionary for notification functions.
 
         Args:
@@ -104,7 +106,9 @@ class TradingNotifier:
 
         try:
             # Выполнить покупку
-            result = await self.api.buy_item(item_id=item_id, price=buy_price, game=game)
+            result = await self.api.buy_item(
+                item_id=item_id, price=buy_price, game=game
+            )
 
             # Проверить успешность
             if result.get("success"):
@@ -167,7 +171,9 @@ class TradingNotifier:
         """
         try:
             # Выполнить продажу
-            result = await self.api.sell_item(item_id=item_id, price=sell_price, game=game)
+            result = await self.api.sell_item(
+                item_id=item_id, price=sell_price, game=game
+            )
 
             # Если продажа успешна, отправить уведомление
             if result.get("success"):

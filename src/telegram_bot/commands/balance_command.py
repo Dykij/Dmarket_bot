@@ -77,7 +77,11 @@ def _format_error_by_code(error_code: int | str, error_msg: str) -> str:
     Returns:
         Formatted HTML error message
     """
-    if error_code == 404 or "404" in str(error_msg) or "not found" in str(error_msg).lower():
+    if (
+        error_code == 404
+        or "404" in str(error_msg)
+        or "not found" in str(error_msg).lower()
+    ):
         return (
             "⚠️ <b>Trading API недоступен (404)</b>\n\n"
             "Ваши API ключи работают, но не имеют доступа к "
@@ -97,7 +101,11 @@ def _format_error_by_code(error_code: int | str, error_msg: str) -> str:
             "📖 Подробнее: НАСТРОЙКА_API_КЛЮЧЕЙ.md"
         )
 
-    if error_code == 401 or "401" in str(error_msg) or "unauthorized" in str(error_msg).lower():
+    if (
+        error_code == 401
+        or "401" in str(error_msg)
+        or "unauthorized" in str(error_msg).lower()
+    ):
         return (
             "🔑 <b>Ошибка аутентификации (401)</b>\n\n"
             "API ключи недействительны или истекли.\n\n"
@@ -284,7 +292,9 @@ async def check_balance_command(
 
         # Update status
         status_text = "🔄 <b>Проверка баланса DMarket...</b>"
-        await _send_message_response(message, processing_message, status_text, is_callback)
+        await _send_message_response(
+            message, processing_message, status_text, is_callback
+        )
 
         # Check balance
         try:
@@ -293,13 +303,19 @@ async def check_balance_command(
 
             # Check for API error in response
             if balance_result.get("error", False):
-                error_msg = balance_result.get("error_message", "Неизвестная ошибка API")
+                error_msg = balance_result.get(
+                    "error_message", "Неизвестная ошибка API"
+                )
                 error_code = balance_result.get("status_code", "неизвестный код")
 
                 # Format error message (Phase 2 - use helper)
                 error_text = _format_error_by_code(error_code, error_msg)
                 await _send_message_response(
-                    message, processing_message, error_text, is_callback, include_keyboard=True
+                    message,
+                    processing_message,
+                    error_text,
+                    is_callback,
+                    include_keyboard=True,
                 )
                 return
 
@@ -336,7 +352,11 @@ async def check_balance_command(
 
             # Send result (Phase 2 - use helper)
             await _send_message_response(
-                message, processing_message, response_text, is_callback, include_keyboard=is_callback
+                message,
+                processing_message,
+                response_text,
+                is_callback,
+                include_keyboard=is_callback,
             )
 
         except APIError as e:
@@ -348,7 +368,11 @@ async def check_balance_command(
                 f"Проверьте настройки API ключей и повторите попытку."
             )
             await _send_message_response(
-                message, processing_message, error_text, is_callback, include_keyboard=True
+                message,
+                processing_message,
+                error_text,
+                is_callback,
+                include_keyboard=True,
             )
 
     except Exception as e:

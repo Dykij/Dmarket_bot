@@ -250,7 +250,9 @@ class FallbackCache:
             >>> print(f"Status: {status}")  # HIT, STALE, or MISS
         """
         effective_ttl = timedelta(seconds=ttl) if ttl else self._ttl
-        effective_stale_ttl = timedelta(seconds=stale_ttl) if stale_ttl else self._stale_ttl
+        effective_stale_ttl = (
+            timedelta(seconds=stale_ttl) if stale_ttl else self._stale_ttl
+        )
 
         # 1. Проверить in-memory кэш
         entry = self._cache.get(key)
@@ -502,10 +504,7 @@ class FallbackCache:
         count = 0
 
         async with self._lock:
-            keys_to_delete = [
-                k for k in self._cache
-                if self._match_pattern(k, pattern)
-            ]
+            keys_to_delete = [k for k in self._cache if self._match_pattern(k, pattern)]
             for key in keys_to_delete:
                 del self._cache[key]
                 count += 1

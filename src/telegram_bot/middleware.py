@@ -61,7 +61,9 @@ class BotMiddleware:
             try:
                 result = await func(update, context)
                 elapsed = (time.time() - start_time) * 1000
-                logger.info(f"Request #{self.request_count} completed in {elapsed:.2f}ms")
+                logger.info(
+                    f"Request #{self.request_count} completed in {elapsed:.2f}ms"
+                )
                 return result
             except Exception as e:
                 self.error_count += 1
@@ -74,7 +76,9 @@ class BotMiddleware:
 
         return wrapper
 
-    def rate_limit_middleware(self, max_requests: int = 30, window_seconds: int = 60) -> Callable:
+    def rate_limit_middleware(
+        self, max_requests: int = 30, window_seconds: int = 60
+    ) -> Callable:
         """Rate limiting middleware for users.
 
         Args:
@@ -88,7 +92,9 @@ class BotMiddleware:
 
         def decorator(func: Callable) -> Callable:
             @wraps(func)
-            async def wrapper(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Any:
+            async def wrapper(
+                update: Update, context: ContextTypes.DEFAULT_TYPE
+            ) -> Any:
                 """Wrapper function."""
                 if not update.effective_user:
                     return await func(update, context)
@@ -140,7 +146,9 @@ class BotMiddleware:
         return {
             "total_requests": self.request_count,
             "total_errors": self.error_count,
-            "error_rate": (self.error_count / self.request_count if self.request_count > 0 else 0),
+            "error_rate": (
+                self.error_count / self.request_count if self.request_count > 0 else 0
+            ),
             "command_stats": self.command_stats,
         }
 

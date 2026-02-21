@@ -209,14 +209,16 @@ async def check_good_deal_alerts(
                 discount = (1 - price_usd / suggested_usd) * 100
 
                 if discount >= 10:  # At least 10% discount
-                    deals.append({
-                        "title": item.get("title", "Unknown"),
-                        "price": price_usd,
-                        "suggested_price": suggested_usd,
-                        "discount": discount,
-                        "item_id": item.get("itemId"),
-                        "game": game,
-                    })
+                    deals.append(
+                        {
+                            "title": item.get("title", "Unknown"),
+                            "price": price_usd,
+                            "suggested_price": suggested_usd,
+                            "discount": discount,
+                            "item_id": item.get("itemId"),
+                            "game": game,
+                        }
+                    )
 
         return deals
 

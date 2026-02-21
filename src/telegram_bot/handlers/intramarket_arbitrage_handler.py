@@ -296,7 +296,9 @@ async def start_intramarket_arbitrage(
     # Отправляем сообщение о начале сканирования
     await _context.bot.send_message(
         chat_id=user_id,
-        text=("🔍 *Поиск возможностей арбитража внутри DMarket*\n\nВыберите тип арбитража:"),
+        text=(
+            "🔍 *Поиск возможностей арбитража внутри DMarket*\n\nВыберите тип арбитража:"
+        ),
         parse_mode="Markdown",
         reply_markup=InlineKeyboardMarkup(
             [

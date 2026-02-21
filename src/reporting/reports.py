@@ -198,31 +198,45 @@ class TradingReport:
         ]
 
         if self.best_trade:
-            lines.extend([
-                "## Best Trade",
-                f"- Item: {self.best_trade.item_name}",
-                f"- Profit: ${self.best_trade.profit:.2f} ({self.best_trade.profit_percent:.1f}%)" if self.best_trade.profit else "",
-                "",
-            ])
+            lines.extend(
+                [
+                    "## Best Trade",
+                    f"- Item: {self.best_trade.item_name}",
+                    (
+                        f"- Profit: ${self.best_trade.profit:.2f} ({self.best_trade.profit_percent:.1f}%)"
+                        if self.best_trade.profit
+                        else ""
+                    ),
+                    "",
+                ]
+            )
 
         if self.worst_trade:
-            lines.extend([
-                "## Worst Trade",
-                f"- Item: {self.worst_trade.item_name}",
-                f"- Loss: ${abs(self.worst_trade.profit or 0):.2f}" if self.worst_trade.profit else "",
-                "",
-            ])
+            lines.extend(
+                [
+                    "## Worst Trade",
+                    f"- Item: {self.worst_trade.item_name}",
+                    (
+                        f"- Loss: ${abs(self.worst_trade.profit or 0):.2f}"
+                        if self.worst_trade.profit
+                        else ""
+                    ),
+                    "",
+                ]
+            )
 
         if self.platform_breakdown:
             lines.extend(["## Platform Breakdown", ""])
             for platform, data in self.platform_breakdown.items():
-                lines.extend([
-                    f"### {platform.title()}",
-                    f"- Volume: ${data.get('volume', 0):.2f}",
-                    f"- Profit: ${data.get('profit', 0):.2f}",
-                    f"- Trades: {data.get('trades', 0)}",
-                    "",
-                ])
+                lines.extend(
+                    [
+                        f"### {platform.title()}",
+                        f"- Volume: ${data.get('volume', 0):.2f}",
+                        f"- Profit: ${data.get('profit', 0):.2f}",
+                        f"- Trades: {data.get('trades', 0)}",
+                        "",
+                    ]
+                )
 
         return "\n".join(lines)
 
@@ -351,7 +365,8 @@ class ReportGenerator:
         end = datetime(tax_year + 1, 1, 1, tzinfo=UTC)
 
         year_trades = [
-            t for t in trades
+            t
+            for t in trades
             if self._parse_timestamp(t.get("timestamp")) >= start
             and self._parse_timestamp(t.get("timestamp")) < end
         ]
@@ -375,15 +390,17 @@ class ReportGenerator:
                 else:
                     total_loss += abs(profit)
 
-                transactions.append({
-                    "date_sold": trade.get("timestamp", ""),
-                    "item_name": trade.get("item_name", ""),
-                    "quantity": trade.get("quantity", 1),
-                    "proceeds": value,
-                    "cost_basis": value - profit,
-                    "gain_loss": profit,
-                    "type": "Short-term",
-                })
+                transactions.append(
+                    {
+                        "date_sold": trade.get("timestamp", ""),
+                        "item_name": trade.get("item_name", ""),
+                        "quantity": trade.get("quantity", 1),
+                        "proceeds": value,
+                        "cost_basis": value - profit,
+                        "gain_loss": profit,
+                        "type": "Short-term",
+                    }
+                )
             elif trade_type == "buy":
                 total_cost_basis += value
 
@@ -458,7 +475,9 @@ class ReportGenerator:
         if report.total_loss != 0:
             report.profit_factor = abs(report.total_profit / report.total_loss)
 
-        hold_times = [t.hold_time_hours for t in trades if t.hold_time_hours is not None]
+        hold_times = [
+            t.hold_time_hours for t in trades if t.hold_time_hours is not None
+        ]
         if hold_times:
             report.avg_hold_time_hours = sum(hold_times) / len(hold_times)
 
@@ -504,8 +523,12 @@ class ReportGenerator:
             commission=float(data.get("commission", commission)),
             timestamp=self._parse_timestamp(data.get("timestamp")) or datetime.now(UTC),
             profit=float(data["profit"]) if "profit" in data else None,
-            profit_percent=float(data["profit_percent"]) if "profit_percent" in data else None,
-            hold_time_hours=float(data["hold_time_hours"]) if "hold_time_hours" in data else None,
+            profit_percent=(
+                float(data["profit_percent"]) if "profit_percent" in data else None
+            ),
+            hold_time_hours=(
+                float(data["hold_time_hours"]) if "hold_time_hours" in data else None
+            ),
         )
 
     def _parse_timestamp(self, value: Any) -> datetime | None:
@@ -521,7 +544,9 @@ class ReportGenerator:
                 return datetime.fromisoformat(value)
             except ValueError:
                 try:
-                    return datetime.strptime(value, "%Y-%m-%d %H:%M:%S").replace(tzinfo=UTC)
+                    return datetime.strptime(value, "%Y-%m-%d %H:%M:%S").replace(
+                        tzinfo=UTC
+                    )
                 except ValueError:
                     return None
 
@@ -532,9 +557,17 @@ class ReportGenerator:
         output = io.StringIO()
 
         fieldnames = [
-            "trade_id", "timestamp", "item_name", "trade_type",
-            "quantity", "price", "total_value", "platform",
-            "commission", "profit", "profit_percent",
+            "trade_id",
+            "timestamp",
+            "item_name",
+            "trade_type",
+            "quantity",
+            "price",
+            "total_value",
+            "platform",
+            "commission",
+            "profit",
+            "profit_percent",
         ]
 
         writer = csv.DictWriter(output, fieldnames=fieldnames)

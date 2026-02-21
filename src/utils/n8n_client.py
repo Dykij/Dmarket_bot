@@ -340,12 +340,14 @@ class N8NClient:
                 if active_only and not w.get("active", False):
                     continue
 
-                workflows.append(N8NWorkflow(
-                    id=w["id"],
-                    name=w.get("name", "Unnamed"),
-                    active=w.get("active", False),
-                    webhook_url=w.get("webhookUrl"),
-                ))
+                workflows.append(
+                    N8NWorkflow(
+                        id=w["id"],
+                        name=w.get("name", "Unnamed"),
+                        active=w.get("active", False),
+                        webhook_url=w.get("webhookUrl"),
+                    )
+                )
 
             logger.debug(
                 "n8n_workflows_listed",

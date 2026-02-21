@@ -148,7 +148,7 @@ class ComponentInitializer:
         # Enable persistence
         if not self.app.config.testing:
             from src.utils.db_persistence import SQLPersistence
-            
+
             persistence = SQLPersistence(db_manager=self.app.database)
             builder.persistence(persistence)
             logger.info("Persistence enabled: SQLPersistence (Database)")
@@ -228,7 +228,9 @@ class ComponentInitializer:
         )
 
         self.app.bot.daily_report_scheduler = self.app.daily_report_scheduler
-        logger.info(f"Daily Report Scheduler initialized at {report_time.strftime('%H:%M')}")
+        logger.info(
+            f"Daily Report Scheduler initialized at {report_time.strftime('%H:%M')}"
+        )
 
     async def initialize_ai_scheduler(self) -> None:
         """Initialize AI training scheduler."""
@@ -319,7 +321,10 @@ class ComponentInitializer:
         try:
             from src.dmarket.auto_buyer import AutoBuyConfig, AutoBuyer
             from src.dmarket.auto_seller import AutoSeller
-            from src.dmarket.autopilot_orchestrator import AutopilotConfig, AutopilotOrchestrator
+            from src.dmarket.autopilot_orchestrator import (
+                AutopilotConfig,
+                AutopilotOrchestrator,
+            )
             from src.utils.trading_persistence import init_trading_persistence
 
             # Initialize auto-buyer
@@ -450,18 +455,36 @@ class ComponentInitializer:
             )
 
             integrator_config = IntegratorConfig(
-                enable_enhanced_polling=getattr(self.app.config, "enable_enhanced_polling", True),
-                enable_price_analytics=getattr(self.app.config, "enable_price_analytics", True),
-                enable_auto_listing=getattr(self.app.config, "enable_auto_listing", True),
-                enable_portfolio_tracker=getattr(self.app.config, "enable_portfolio_tracker", True),
-                enable_custom_alerts=getattr(self.app.config, "enable_custom_alerts", True),
+                enable_enhanced_polling=getattr(
+                    self.app.config, "enable_enhanced_polling", True
+                ),
+                enable_price_analytics=getattr(
+                    self.app.config, "enable_price_analytics", True
+                ),
+                enable_auto_listing=getattr(
+                    self.app.config, "enable_auto_listing", True
+                ),
+                enable_portfolio_tracker=getattr(
+                    self.app.config, "enable_portfolio_tracker", True
+                ),
+                enable_custom_alerts=getattr(
+                    self.app.config, "enable_custom_alerts", True
+                ),
                 enable_watchlist=getattr(self.app.config, "enable_watchlist", True),
-                enable_anomaly_detection=getattr(self.app.config, "enable_anomaly_detection", True),
-                enable_smart_recommendations=getattr(self.app.config, "enable_smart_recommendations", True),
-                enable_trading_automation=getattr(self.app.config, "enable_trading_automation", True),
+                enable_anomaly_detection=getattr(
+                    self.app.config, "enable_anomaly_detection", True
+                ),
+                enable_smart_recommendations=getattr(
+                    self.app.config, "enable_smart_recommendations", True
+                ),
+                enable_trading_automation=getattr(
+                    self.app.config, "enable_trading_automation", True
+                ),
                 enable_reports=getattr(self.app.config, "enable_reports", True),
                 enable_security=getattr(self.app.config, "enable_security", True),
-                min_item_price_for_listing=getattr(self.app.config, "min_listing_price", 50.0),
+                min_item_price_for_listing=getattr(
+                    self.app.config, "min_listing_price", 50.0
+                ),
                 target_profit_margin=getattr(self.app.config, "target_margin", 0.10),
             )
 
@@ -481,7 +504,9 @@ class ComponentInitializer:
             self.app.bot.bot_integrator = self.app.bot_integrator
 
             success_count = sum(1 for v in init_results.values() if v)
-            logger.info(f"Bot Integrator: {success_count}/{len(init_results)} modules active")
+            logger.info(
+                f"Bot Integrator: {success_count}/{len(init_results)} modules active"
+            )
         except Exception as e:
             logger.warning(f"Failed to initialize Bot Integrator: {e}")
 
@@ -501,7 +526,9 @@ class ComponentInitializer:
                 host=prometheus_host,
                 port=prometheus_port,
             )
-            logger.info(f"Prometheus Exporter initialized on {prometheus_host}:{prometheus_port}")
+            logger.info(
+                f"Prometheus Exporter initialized on {prometheus_host}:{prometheus_port}"
+            )
         except Exception as e:
             logger.warning(f"Failed to initialize Prometheus Exporter: {e}")
 

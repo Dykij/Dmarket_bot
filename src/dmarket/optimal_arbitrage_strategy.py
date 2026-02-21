@@ -129,9 +129,7 @@ class StrategySettings:
     diversification_min_items: int = 5  # Минимум разных предметов
 
     # Площадки
-    enabled_platforms: list[str] = field(
-        default_factory=lambda: ["dmarket", "waxpeer"]
-    )
+    enabled_platforms: list[str] = field(default_factory=lambda: ["dmarket", "waxpeer"])
 
     # Игры
     enabled_games: list[str] = field(
@@ -311,10 +309,16 @@ class OptimalArbitrageStrategy:
 
         # ROI фильтры
         if opportunity.roi_percent < s.min_roi_percent:
-            return False, f"ROI {opportunity.roi_percent:.1f}% < min {s.min_roi_percent}%"
+            return (
+                False,
+                f"ROI {opportunity.roi_percent:.1f}% < min {s.min_roi_percent}%",
+            )
 
         if opportunity.roi_percent > s.max_roi_percent:
-            return False, f"ROI {opportunity.roi_percent:.1f}% > max {s.max_roi_percent}% (possible scam)"
+            return (
+                False,
+                f"ROI {opportunity.roi_percent:.1f}% > max {s.max_roi_percent}% (possible scam)",
+            )
 
         # Цена
         if opportunity.buy_price < s.min_price:
@@ -324,20 +328,35 @@ class OptimalArbitrageStrategy:
             return False, f"Price ${opportunity.buy_price:.2f} > max ${s.max_price}"
 
         if opportunity.buy_price > s.max_single_trade:
-            return False, f"Price ${opportunity.buy_price:.2f} > max single trade ${s.max_single_trade}"
+            return (
+                False,
+                f"Price ${opportunity.buy_price:.2f} > max single trade ${s.max_single_trade}",
+            )
 
         # Ликвидность
         if opportunity.liquidity_score < s.min_liquidity_score:
-            return False, f"Liquidity {opportunity.liquidity_score:.2f} < min {s.min_liquidity_score}"
+            return (
+                False,
+                f"Liquidity {opportunity.liquidity_score:.2f} < min {s.min_liquidity_score}",
+            )
 
         if opportunity.sales_per_day < s.min_sales_per_day:
-            return False, f"Sales/day {opportunity.sales_per_day:.1f} < min {s.min_sales_per_day}"
+            return (
+                False,
+                f"Sales/day {opportunity.sales_per_day:.1f} < min {s.min_sales_per_day}",
+            )
 
         if opportunity.days_to_sell > s.max_days_to_sell:
-            return False, f"Days to sell {opportunity.days_to_sell:.0f} > max {s.max_days_to_sell}"
+            return (
+                False,
+                f"Days to sell {opportunity.days_to_sell:.0f} > max {s.max_days_to_sell}",
+            )
 
         # Trade lock
-        if s.lock_strategy == TradeLockStrategy.INSTANT_ONLY and opportunity.has_trade_lock:
+        if (
+            s.lock_strategy == TradeLockStrategy.INSTANT_ONLY
+            and opportunity.has_trade_lock
+        ):
             return False, "Trade lock not allowed"
 
         if opportunity.lock_days > s.max_lock_days:
@@ -351,8 +370,13 @@ class OptimalArbitrageStrategy:
             RiskLevel.HIGH,
             RiskLevel.VERY_HIGH,
         ]
-        if risk_order.index(opportunity.risk_level) > risk_order.index(s.max_risk_level):
-            return False, f"Risk {opportunity.risk_level.value} > max {s.max_risk_level.value}"
+        if risk_order.index(opportunity.risk_level) > risk_order.index(
+            s.max_risk_level
+        ):
+            return (
+                False,
+                f"Risk {opportunity.risk_level.value} > max {s.max_risk_level.value}",
+            )
 
         # Дневные лимиты
         if self.daily_trades >= s.max_daily_trades:
@@ -381,7 +405,9 @@ class OptimalArbitrageStrategy:
         """
         try:
             # Извлечь данные
-            buy_price = float(item.get("price", {}).get("USD", 0)) / 100  # Центы в доллары
+            buy_price = (
+                float(item.get("price", {}).get("USD", 0)) / 100
+            )  # Центы в доллары
             if buy_price <= 0 or sell_price <= 0:
                 return None
 
@@ -406,7 +432,9 @@ class OptimalArbitrageStrategy:
             liquidity_score = min(sales_per_day / 5, 1.0)  # Нормализация
 
             # Оценить риск
-            risk_level = self.assess_risk_level(roi_percent, liquidity_score, sales_per_day)
+            risk_level = self.assess_risk_level(
+                roi_percent, liquidity_score, sales_per_day
+            )
 
             # Создать возможность
             opp = ArbitrageOpportunity(
@@ -421,7 +449,8 @@ class OptimalArbitrageStrategy:
                 net_profit=net_profit,
                 roi_percent=roi_percent,
                 fees_paid=fees_paid,
-                float_value=item.get("floatValue") or item.get("extra", {}).get("floatValue"),
+                float_value=item.get("floatValue")
+                or item.get("extra", {}).get("floatValue"),
                 pattern_id=item.get("extra", {}).get("paintSeed"),
                 phase=item.get("extra", {}).get("phase"),
                 stickers=item.get("extra", {}).get("stickers", []),
@@ -440,7 +469,9 @@ class OptimalArbitrageStrategy:
             return opp
 
         except (ValueError, KeyError, TypeError) as e:
-            logger.debug("item_analysis_error", error=str(e), item_id=item.get("itemId"))
+            logger.debug(
+                "item_analysis_error", error=str(e), item_id=item.get("itemId")
+            )
             return None
 
     def find_best_opportunities(

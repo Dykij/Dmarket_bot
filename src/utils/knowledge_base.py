@@ -132,7 +132,9 @@ class KnowledgeItem:
             "item_category": self.item_category,
             "use_count": self.use_count,
             "created_at": self.created_at.isoformat(),
-            "last_used_at": self.last_used_at.isoformat() if self.last_used_at else None,
+            "last_used_at": (
+                self.last_used_at.isoformat() if self.last_used_at else None
+            ),
         }
 
 
@@ -355,7 +357,9 @@ class KnowledgeBase:
     # Learning from Trades
     # =========================================================================
 
-    async def learn_from_trade(self, trade_result: dict[str, Any] | TradeResult) -> str | None:
+    async def learn_from_trade(
+        self, trade_result: dict[str, Any] | TradeResult
+    ) -> str | None:
         """Automatically learn from trade outcome.
 
         Called after every trade to extract lessons:

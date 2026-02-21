@@ -79,7 +79,9 @@ class ScannerManager:
         # Parallel scanner (multi-game)
         self.parallel: ParallelScanner | None = None
         if enable_parallel:
-            self.parallel = ParallelScanner(api_client=api_client, max_concurrent_scans=2)
+            self.parallel = ParallelScanner(
+                api_client=api_client, max_concurrent_scans=2
+            )
             logger.info("parallel_scanner_enabled", max_concurrent_scans=2)
 
         # Target cleaner
@@ -251,7 +253,9 @@ class ScannerManager:
             "games": results,
         }
 
-    async def _run_periodic_cleanup(self, games: list[str], interval_hours: float = 6.0):
+    async def _run_periodic_cleanup(
+        self, games: list[str], interval_hours: float = 6.0
+    ):
         """Run periodic cleanup in background.
 
         Args:
@@ -402,7 +406,9 @@ async def example_integration():
 
     # Option 2: Manual control
     # Single game scan
-    _results = await manager.scan_single_game("csgo", "high", max_items=10)  # noqa: F841
+    _results = await manager.scan_single_game(
+        "csgo", "high", max_items=10
+    )  # noqa: F841
 
     # Multi-game parallel scan
     _all_results = await manager.scan_multiple_games(  # noqa: F841

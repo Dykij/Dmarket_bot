@@ -82,7 +82,9 @@ class ExternalPriceAPI:
                     lowest_price_str = data.get("lowest_price", "")
                     if lowest_price_str:
                         # Убираем символ $ и конвертируем в float
-                        price = float(lowest_price_str.replace("$", "").replace(",", ""))
+                        price = float(
+                            lowest_price_str.replace("$", "").replace(",", "")
+                        )
 
                         # Кэшируем результат
                         self._cache[cache_key] = {
@@ -196,7 +198,9 @@ class ExternalPriceAPI:
 
         steam_price = prices[0] if not isinstance(prices[0], Exception) else None
         csgofloat_price = (
-            prices[1] if not isinstance(prices[1], Exception) and game == "csgo" else None
+            prices[1]
+            if not isinstance(prices[1], Exception) and game == "csgo"
+            else None
         )
 
         # Находим лучшую цену для продажи
@@ -226,13 +230,15 @@ class ExternalPriceAPI:
             net_profit = sell_revenue - dmarket_cost
             profit_margin = (net_profit / dmarket_cost) * 100
 
-            result.update({
-                "has_opportunity": net_profit > 0,
-                "best_platform": best_platform,
-                "best_price": best_price,
-                "profit_margin": round(profit_margin, 2),
-                "net_profit": round(net_profit, 2),
-            })
+            result.update(
+                {
+                    "has_opportunity": net_profit > 0,
+                    "best_platform": best_platform,
+                    "best_price": best_price,
+                    "profit_margin": round(profit_margin, 2),
+                    "net_profit": round(net_profit, 2),
+                }
+            )
 
         return result
 
@@ -271,7 +277,9 @@ class ExternalPriceAPI:
         # Объединяем результаты с исходными предметами
         for item, arb_data in zip(items, arbitrage_data, strict=False):
             if isinstance(arb_data, Exception):
-                logger.warning(f"Ошибка при проверке арбитража для {item.get('title')}: {arb_data}")
+                logger.warning(
+                    f"Ошибка при проверке арбитража для {item.get('title')}: {arb_data}"
+                )
                 results.append(item)
             else:
                 # Добавляем информацию об арбитраже к предмету

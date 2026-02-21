@@ -105,17 +105,19 @@ class AutoBuyer:
         """
         self.api = api_client
         self.config = config or AutoBuyConfig()
-        
+
         # Initialize Service Layer (Trading Engine)
         # This delegates business logic to a specialized service
-        self.engine = TradingEngine(TradingConfig(
-            min_discount_percent=self.config.min_discount_percent,
-            max_price_usd=self.config.max_price_usd,
-            check_sales_history=self.config.check_sales_history,
-            check_trade_lock=self.config.check_trade_lock,
-            max_trade_lock_hours=self.config.max_trade_lock_hours
-        ))
-        
+        self.engine = TradingEngine(
+            TradingConfig(
+                min_discount_percent=self.config.min_discount_percent,
+                max_price_usd=self.config.max_price_usd,
+                check_sales_history=self.config.check_sales_history,
+                check_trade_lock=self.config.check_trade_lock,
+                max_trade_lock_hours=self.config.max_trade_lock_hours,
+            )
+        )
+
         self.purchase_history: list[PurchaseResult] = []
         self._auto_seller = None  # Will be set via set_auto_seller()
         self._trading_persistence: TradingPersistence | None = None  # Persistence layer
@@ -137,7 +139,9 @@ class AutoBuyer:
             persistence: TradingPersistence instance
         """
         self._trading_persistence = persistence
-        logger.info("trading_persistence_linked", has_persistence=persistence is not None)
+        logger.info(
+            "trading_persistence_linked", has_persistence=persistence is not None
+        )
 
     def set_auto_seller(self, auto_seller) -> None:
         """Link auto-seller for automatic sale scheduling after purchase.
@@ -166,10 +170,10 @@ class AutoBuyer:
 
         # Delegate logic to Service Layer
         decision = self.engine.evaluate_deal(item)
-        
+
         if not decision.should_buy:
             return False, decision.reason
-            
+
         # Perform Async Liquidity Check (Engine Helper)
         # Note: We pass self.api because Engine is stateless regarding API connection
         if self.config.check_sales_history:
@@ -177,7 +181,7 @@ class AutoBuyer:
             is_liquid = await self._check_liquidity_proxy(title)
             if not is_liquid:
                 return False, "Low liquidity (< 5 sales/day)"
-                
+
         return True, decision.reason
 
     async def _check_liquidity_proxy(self, title: str) -> bool:
@@ -192,7 +196,9 @@ class AutoBuyer:
             # Note: This requires sales_history module
             from src.dmarket.sales_history import get_item_sales_history
 
-            history = await get_item_sales_history(api_client=self.api, item_title=title, days=7)
+            history = await get_item_sales_history(
+                api_client=self.api, item_title=title, days=7
+            )
 
             if not history:
                 logger.warning("no_sales_history", title=title)
@@ -221,7 +227,9 @@ class AutoBuyer:
             logger.exception("liquidity_check_failed", error=str(e))
             return True  # Assume liquid on error
 
-    async def buy_item(self, item_id: str, price_usd: float, force: bool = False) -> PurchaseResult:
+    async def buy_item(
+        self, item_id: str, price_usd: float, force: bool = False
+    ) -> PurchaseResult:
         """Purchase an item instantly.
 
         Args:
@@ -555,5 +563,7 @@ class AutoBuyer:
             return True
 
         except Exception as e:
-            logger.exception("purchase_persistence_failed", item_id=item_id, error=str(e))
+            logger.exception(
+                "purchase_persistence_failed", item_id=item_id, error=str(e)
+            )
             return False

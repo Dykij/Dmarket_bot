@@ -1,4 +1,3 @@
-
 import asyncio
 import json
 import logging
@@ -9,12 +8,13 @@ import websockets
 
 logger = logging.getLogger(__name__)
 
+
 class DMarketStream:
     def __init__(self, public_key: str, secret_key: str):
         self.public_key = public_key
         self.secret_key = secret_key
         # DMarket Socket.IO эндпоинт (используется большинством ботов)
-        self.ws_url = "wss://api.dmarket.com/v2/websocket" 
+        self.ws_url = "wss://api.dmarket.com/v2/websocket"
         self.ws: websockets.WebSocketClientProtocol | None = None
 
     async def connect(self):
@@ -22,9 +22,9 @@ class DMarketStream:
         try:
             # Для теста используем эндпоинт из наших доков по HFT (src/dmarket/hft_mode.py)
             # Если 404, значит эндпоинт изменился или требует специфических headers
-            self.ws = await websockets.connect(self.ws_url, extra_headers={
-                "X-Api-Key": self.public_key
-            })
+            self.ws = await websockets.connect(
+                self.ws_url, extra_headers={"X-Api-Key": self.public_key}
+            )
             print("WS: Соединение установлено.")
         except Exception as e:
             print(f"WS Connect Error: {e}")
@@ -49,25 +49,31 @@ class DMarketStream:
                 msg_str = str(data)[:100]
             except Exception:
                 msg_str = str(message)[:100]
-                
+
             process_time = (time.time() - start_time) * 1000
-            print(f"EVENT #{count+1} | Latency: {process_time:.2f}ms | Data: {msg_str}...")
-            
+            print(
+                f"EVENT #{count+1} | Latency: {process_time:.2f}ms | Data: {msg_str}..."
+            )
+
             count += 1
             if count >= limit:
                 break
 
+
 async def test_connection():
     pub = os.getenv("DMARKET_PUBLIC_KEY", "mock_pub")
     sec = os.getenv("DMARKET_SECRET_KEY", "mock_sec")
-    
+
     stream = DMarketStream(pub, sec)
     print("--- ЗАПУСК WS PROTOTYPE TEST ---")
     try:
         await stream.connect()
         await stream.listen(3)
     except Exception:
-        print("Test Final Result: Стрим не отвечает (404/Reject). Требуется активация API-ключа для WebSocket или использование Socket.io.")
+        print(
+            "Test Final Result: Стрим не отвечает (404/Reject). Требуется активация API-ключа для WebSocket или использование Socket.io."
+        )
+
 
 if __name__ == "__main__":
     asyncio.run(test_connection())

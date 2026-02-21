@@ -132,7 +132,9 @@ class PriceAnalyzer:
             else:
                 median_sell_price = sorted(prices)[len(prices) // 2]
 
-            analysis = self.calculate_profit(buy_price_cents, median_sell_price, steam_price_cents)
+            analysis = self.calculate_profit(
+                buy_price_cents, median_sell_price, steam_price_cents
+            )
 
             if analysis["is_profitable"]:
                 reason = analysis.get("reason", "dmarket_history")

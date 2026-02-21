@@ -53,15 +53,25 @@ async def hold_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
         keyboard = [
             [
-                InlineKeyboardButton("📦 Анализ инвентаря", callback_data="hold_analyze_inventory"),
-                InlineKeyboardButton("🔍 Проверить предмет", callback_data="hold_check_item"),
+                InlineKeyboardButton(
+                    "📦 Анализ инвентаря", callback_data="hold_analyze_inventory"
+                ),
+                InlineKeyboardButton(
+                    "🔍 Проверить предмет", callback_data="hold_check_item"
+                ),
             ],
             [
-                InlineKeyboardButton("📅 События CS2", callback_data="hold_events_csgo"),
-                InlineKeyboardButton("📅 События Dota2", callback_data="hold_events_dota2"),
+                InlineKeyboardButton(
+                    "📅 События CS2", callback_data="hold_events_csgo"
+                ),
+                InlineKeyboardButton(
+                    "📅 События Dota2", callback_data="hold_events_dota2"
+                ),
             ],
             [
-                InlineKeyboardButton("⚙️ Настройки Hold", callback_data="hold_settings"),
+                InlineKeyboardButton(
+                    "⚙️ Настройки Hold", callback_data="hold_settings"
+                ),
                 InlineKeyboardButton("🔙 Назад", callback_data="main_menu"),
             ],
         ]
@@ -72,7 +82,9 @@ async def hold_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
     except Exception as e:
         logger.exception(f"Hold command error: {e}")
-        await update.message.reply_text("❌ Ошибка при получении данных. Попробуйте позже.")
+        await update.message.reply_text(
+            "❌ Ошибка при получении данных. Попробуйте позже."
+        )
 
 
 async def _handle_analyze_inventory(
@@ -133,7 +145,9 @@ def _format_inventory_analysis(analysis: dict) -> str:
     message += f"📦 Всего предметов: {analysis['total_items']}\n"
     message += f"📈 Держать: {analysis['summary']['hold']}\n"
     message += f"💰 Продать: {analysis['summary']['sell']}\n"
-    message += f"📊 Ср. ожидание: {analysis['summary']['avg_expected_change']:+.1f}%\n\n"
+    message += (
+        f"📊 Ср. ожидание: {analysis['summary']['avg_expected_change']:+.1f}%\n\n"
+    )
 
     message += "**Рекомендации:**\n"
     for rec in analysis["recommendations"][:10]:
@@ -168,7 +182,9 @@ async def _handle_check_item(
 
     keyboard = [
         [
-            InlineKeyboardButton("Fracture Case", callback_data="hold_item_Fracture Case"),
+            InlineKeyboardButton(
+                "Fracture Case", callback_data="hold_item_Fracture Case"
+            ),
             InlineKeyboardButton("Recoil Case", callback_data="hold_item_Recoil Case"),
         ],
         [
@@ -320,7 +336,9 @@ async def _handle_menu(
             InlineKeyboardButton(
                 "📦 Анализ инвентаря", callback_data="hold_analyze_inventory"
             ),
-            InlineKeyboardButton("🔍 Проверить предмет", callback_data="hold_check_item"),
+            InlineKeyboardButton(
+                "🔍 Проверить предмет", callback_data="hold_check_item"
+            ),
         ],
         [
             InlineKeyboardButton("📅 События CS2", callback_data="hold_events_csgo"),
@@ -337,7 +355,9 @@ async def _handle_menu(
     )
 
 
-async def hold_callback_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def hold_callback_handler(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Handle intelligent hold callbacks.
 
     Routes callback queries to appropriate handler functions.
@@ -360,7 +380,9 @@ async def hold_callback_handler(update: Update, context: ContextTypes.DEFAULT_TY
             await _handle_check_item(update, context, query, hold_manager)
         elif data.startswith("hold_item_"):
             item_name = data.replace("hold_item_", "")
-            await _handle_item_selection(update, context, query, hold_manager, item_name)
+            await _handle_item_selection(
+                update, context, query, hold_manager, item_name
+            )
         elif data == "hold_events_csgo":
             await _handle_events_csgo(update, context, query, hold_manager)
         elif data == "hold_events_dota2":
@@ -378,5 +400,7 @@ async def hold_callback_handler(update: Update, context: ContextTypes.DEFAULT_TY
 def register_intelligent_hold_handlers(application) -> None:
     """Register intelligent hold handlers with the application."""
     application.add_handler(CommandHandler("hold", hold_command))
-    application.add_handler(CallbackQueryHandler(hold_callback_handler, pattern=r"^hold_"))
+    application.add_handler(
+        CallbackQueryHandler(hold_callback_handler, pattern=r"^hold_")
+    )
     logger.info("Intelligent Hold handlers registered")

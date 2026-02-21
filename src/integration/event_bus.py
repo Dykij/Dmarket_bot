@@ -241,7 +241,7 @@ class EventBus:
                 self._history.append(event)
                 # Trim history if too large
                 if len(self._history) > self._max_history:
-                    self._history = self._history[-self._max_history:]
+                    self._history = self._history[-self._max_history :]
 
         # Get subscribers
         subscribers = self._subscriptions.get(event.type, [])

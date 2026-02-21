@@ -395,12 +395,14 @@ class BatchUpdateChecker:
 
                 # Check if target reached
                 if current_price <= target_price:
-                    alerts.append({
-                        "item_name": item_name,
-                        "target_price": target_price,
-                        "current_price": current_price,
-                        "item_data": item,
-                    })
+                    alerts.append(
+                        {
+                            "item_name": item_name,
+                            "target_price": target_price,
+                            "current_price": current_price,
+                            "item_data": item,
+                        }
+                    )
 
                 self._last_prices[item_name] = current_price
 

@@ -132,7 +132,9 @@ class BacktestResult:
         """Total return as percentage."""
         if self.initial_balance == 0:
             return 0.0
-        return float((self.final_balance - self.initial_balance) / self.initial_balance * 100)
+        return float(
+            (self.final_balance - self.initial_balance) / self.initial_balance * 100
+        )
 
     @property
     def avg_profit_per_trade(self) -> Decimal:
@@ -276,7 +278,9 @@ class SimpleArbitrageStrategy(TradingStrategy):
     ) -> tuple[bool, Decimal, int]:
         """Check if should sell based on profit margin."""
         # Calculate required sell price for target margin
-        target_price = position.average_cost * Decimal(str(1 + self.sell_margin + self.dmarket_fee))
+        target_price = position.average_cost * Decimal(
+            str(1 + self.sell_margin + self.dmarket_fee)
+        )
 
         if current_price >= target_price:
             return True, current_price, position.quantity
@@ -585,7 +589,8 @@ class Backtester:
         for i in range(1, len(balance_history)):
             if balance_history[i - 1] > 0:
                 daily_return = float(
-                    (balance_history[i] - balance_history[i - 1]) / balance_history[i - 1]
+                    (balance_history[i] - balance_history[i - 1])
+                    / balance_history[i - 1]
                 )
                 returns.append(daily_return)
 

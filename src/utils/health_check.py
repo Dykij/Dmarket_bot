@@ -182,7 +182,9 @@ class HealthCheckMonitor:
             issues.append(f"⚠️ High Memory: {memory_percent:.1f}%")
 
         # Check inactivity
-        inactivity_minutes = (datetime.now() - self.last_activity_time).total_seconds() / 60
+        inactivity_minutes = (
+            datetime.now() - self.last_activity_time
+        ).total_seconds() / 60
         if inactivity_minutes > self.inactivity_warning_minutes:
             issues.append(f"⚠️ No activity for {inactivity_minutes:.0f} minutes")
 
@@ -244,7 +246,10 @@ class HealthCheckMonitor:
             return True
 
         # If configured but not connected, return False
-        return self.websocket_listener.is_running and self.websocket_listener.ws is not None
+        return (
+            self.websocket_listener.is_running
+            and self.websocket_listener.ws is not None
+        )
 
     async def _send_health_ping(self, message: str):
         """Send simple health ping to user.
@@ -284,7 +289,9 @@ class HealthCheckMonitor:
         # Format last activity
         activity_minutes = (datetime.now() - status.last_activity).total_seconds() / 60
         activity_str = (
-            "только что" if activity_minutes < 1 else f"{activity_minutes:.0f} минут назад"
+            "только что"
+            if activity_minutes < 1
+            else f"{activity_minutes:.0f} минут назад"
         )
 
         # Health emoji

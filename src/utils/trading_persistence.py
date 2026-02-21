@@ -298,11 +298,13 @@ class TradingPersistence:
             # Исключаем завершенные сделки по умолчанию
             if status is None:
                 query = query.where(
-                    PendingTrade.status.notin_([
-                        PendingTradeStatus.SOLD,
-                        PendingTradeStatus.CANCELLED,
-                        PendingTradeStatus.STOP_LOSS,
-                    ])
+                    PendingTrade.status.notin_(
+                        [
+                            PendingTradeStatus.SOLD,
+                            PendingTradeStatus.CANCELLED,
+                            PendingTradeStatus.STOP_LOSS,
+                        ]
+                    )
                 )
             else:
                 query = query.where(PendingTrade.status == status)
@@ -360,7 +362,11 @@ class TradingPersistence:
                 if isinstance(inventory, dict):
                     items = inventory.get("objects", inventory.get("Items", []))
                     for item in items:
-                        item_id = item.get("assetId") or item.get("asset_id") or item.get("itemId")
+                        item_id = (
+                            item.get("assetId")
+                            or item.get("asset_id")
+                            or item.get("itemId")
+                        )
                         if item_id:
                             inventory_ids.add(item_id)
                 logger.info(f"📋 Current inventory: {len(inventory_ids)} items")
@@ -421,7 +427,9 @@ class TradingPersistence:
             await self.mark_as_sold(trade.asset_id)
             result["action"] = "marked_sold"
             result["status"] = PendingTradeStatus.SOLD
-            logger.info(f"✅ Item sold while offline: {trade.title} (buy=${trade.buy_price:.2f})")
+            logger.info(
+                f"✅ Item sold while offline: {trade.title} (buy=${trade.buy_price:.2f})"
+            )
 
         return result
 
@@ -498,7 +506,9 @@ class TradingPersistence:
 
             for trade in trades:
                 status_key = trade.status
-                stats["by_status"][status_key] = stats["by_status"].get(status_key, 0) + 1
+                stats["by_status"][status_key] = (
+                    stats["by_status"].get(status_key, 0) + 1
+                )
 
                 if trade.status != PendingTradeStatus.SOLD:
                     stats["total_invested"] += trade.buy_price
@@ -525,11 +535,13 @@ class TradingPersistence:
             from sqlalchemy import delete
 
             stmt = delete(PendingTrade).where(
-                PendingTrade.status.in_([
-                    PendingTradeStatus.SOLD,
-                    PendingTradeStatus.CANCELLED,
-                    PendingTradeStatus.STOP_LOSS,
-                ]),
+                PendingTrade.status.in_(
+                    [
+                        PendingTradeStatus.SOLD,
+                        PendingTradeStatus.CANCELLED,
+                        PendingTradeStatus.STOP_LOSS,
+                    ]
+                ),
                 PendingTrade.updated_at < cutoff,
             )
 

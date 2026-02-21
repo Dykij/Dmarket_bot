@@ -356,8 +356,7 @@ async def run_batches(
     """
     items_list = list(items)
     batches = [
-        items_list[i : i + batch_size]
-        for i in range(0, len(items_list), batch_size)
+        items_list[i : i + batch_size] for i in range(0, len(items_list), batch_size)
     ]
 
     logger.info(

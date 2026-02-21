@@ -50,7 +50,9 @@ async def websocket_status_command(
     if stats["uptime_seconds"]:
         hours = stats["uptime_seconds"] / 3600
         uptime_str = (
-            f"{hours:.1f} часов" if hours >= 1 else f"{stats['uptime_seconds'] / 60:.0f} минут"
+            f"{hours:.1f} часов"
+            if hours >= 1
+            else f"{stats['uptime_seconds'] / 60:.0f} минут"
         )
 
     last_event_str = "Нет событий"

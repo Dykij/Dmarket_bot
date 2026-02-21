@@ -571,7 +571,9 @@ class ReactiveDMarketWebSocket:
                     "state": sub.state,
                     "events_received": sub.event_count,
                     "errors": sub.error_count,
-                    "last_event_at": (sub.last_event_at.isoformat() if sub.last_event_at else None),
+                    "last_event_at": (
+                        sub.last_event_at.isoformat() if sub.last_event_at else None
+                    ),
                     "created_at": sub.created_at.isoformat(),
                 }
                 for sub in self.subscriptions.values()

@@ -49,7 +49,11 @@ def get_mode_selection_keyboard() -> InlineKeyboardMarkup:
         [InlineKeyboardButton("🚀 Boost (Разгон)", callback_data="mode_boost")],
         [InlineKeyboardButton("📊 Standard (Стандарт)", callback_data="mode_standard")],
         [InlineKeyboardButton("💎 Medium (Средний)", callback_data="mode_medium")],
-        [InlineKeyboardButton("⭐ Advanced (Продвинутый)", callback_data="mode_advanced")],
+        [
+            InlineKeyboardButton(
+                "⭐ Advanced (Продвинутый)", callback_data="mode_advanced"
+            )
+        ],
         [InlineKeyboardButton("👑 Pro (Профессионал)", callback_data="mode_pro")],
     ]
     return InlineKeyboardMarkup(keyboard)
@@ -74,7 +78,9 @@ MODE_DESCRIPTIONS = {
 }
 
 
-async def handle_automatic_arbitrage(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def handle_automatic_arbitrage(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Handle Automatic Arbitrage button - initiate mode selection.
 
     Args:
@@ -88,7 +94,9 @@ async def handle_automatic_arbitrage(update: Update, context: ContextTypes.DEFAU
     if not user:
         return
 
-    message = update.message or (update.callback_query.message if update.callback_query else None)
+    message = update.message or (
+        update.callback_query.message if update.callback_query else None
+    )
     if not message:
         return
 
@@ -228,7 +236,9 @@ def _format_parallel_results(results: dict, mode: str) -> str:
 
     results_text += f"\n📊 Mode: {mode.capitalize()}\n"
     results_text += "⏱️ Scan completed successfully!\n\n"
-    results_text += "Use /arbitrage command for detailed view\nor check specific game results."
+    results_text += (
+        "Use /arbitrage command for detailed view\nor check specific game results."
+    )
 
     return results_text
 
@@ -318,7 +328,9 @@ async def handle_mode_selection_callback(
         results_text = _format_fallback_results(results, mode)
         if query.message:
             await query.message.edit_text(results_text, parse_mode="HTML")
-        logger.info("fallback_scan_completed", user_id=user.id, opportunities=len(results))
+        logger.info(
+            "fallback_scan_completed", user_id=user.id, opportunities=len(results)
+        )
         return
 
     # Parallel scan (Phase 2 - use helper)

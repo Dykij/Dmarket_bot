@@ -131,7 +131,9 @@ class WaxpeerManager:
         self._total_sold = 0
         self._total_profit = Decimal(0)
 
-    def _evaluate_item_rarity(self, item_data: dict[str, Any]) -> tuple[bool, str | None, float]:
+    def _evaluate_item_rarity(
+        self, item_data: dict[str, Any]
+    ) -> tuple[bool, str | None, float]:
         """
         Оценка редкости предмета CS2.
 
@@ -162,7 +164,9 @@ class WaxpeerManager:
         if stickers:
             for sticker in stickers:
                 sticker_name = (
-                    sticker.get("name", "") if isinstance(sticker, dict) else str(sticker)
+                    sticker.get("name", "")
+                    if isinstance(sticker, dict)
+                    else str(sticker)
                 )
                 for rare_group in self.filters.target_sticker_groups:
                     if rare_group.lower() in sticker_name.lower():
@@ -223,10 +227,14 @@ class WaxpeerManager:
 
         # Если есть рыночная цена, используем undercut
         if market_min_price and not is_rare:
-            undercut_price = market_min_price - Decimal(str(self.config.undercut_amount_usd))
+            undercut_price = market_min_price - Decimal(
+                str(self.config.undercut_amount_usd)
+            )
 
             # Проверяем минимальную прибыль
-            min_acceptable = buy_price * Decimal(str(1 + self.config.min_profit_percent / 100))
+            min_acceptable = buy_price * Decimal(
+                str(1 + self.config.min_profit_percent / 100)
+            )
 
             if undercut_price >= min_acceptable:
                 return undercut_price
@@ -260,7 +268,9 @@ class WaxpeerManager:
         markup_multiplier = 0.0
 
         if item_data:
-            is_rare, rare_reason, markup_multiplier = self._evaluate_item_rarity(item_data)
+            is_rare, rare_reason, markup_multiplier = self._evaluate_item_rarity(
+                item_data
+            )
 
         async with WaxpeerAPI(self.api_key) as api:
             # Получаем рыночную цену
@@ -334,7 +344,9 @@ class WaxpeerManager:
 
                 # Если наша цена выше минимальной - снижаем
                 if item.price > market_price:
-                    new_price = market_price - Decimal(str(self.config.undercut_amount_usd))
+                    new_price = market_price - Decimal(
+                        str(self.config.undercut_amount_usd)
+                    )
 
                     # Проверяем минимальную прибыль
                     if tracked:
@@ -348,12 +360,14 @@ class WaxpeerManager:
 
                     await api.edit_item_price(item.item_id, new_price)
 
-                    changes.append({
-                        "item_id": item.item_id,
-                        "name": item.name,
-                        "old_price": float(item.price),
-                        "new_price": float(new_price),
-                    })
+                    changes.append(
+                        {
+                            "item_id": item.item_id,
+                            "name": item.name,
+                            "old_price": float(item.price),
+                            "new_price": float(new_price),
+                        }
+                    )
 
                     logger.info(
                         "waxpeer_price_undercut",
@@ -458,13 +472,15 @@ class WaxpeerManager:
                     self._total_sold += 1
                     self._total_profit += profit
 
-                    new_sales.append({
-                        "name": tracked.name,
-                        "buy_price": float(tracked.buy_price),
-                        "sold_price": float(sold_price),
-                        "profit": float(profit),
-                        "is_rare": tracked.is_rare,
-                    })
+                    new_sales.append(
+                        {
+                            "name": tracked.name,
+                            "buy_price": float(tracked.buy_price),
+                            "sold_price": float(sold_price),
+                            "profit": float(profit),
+                            "is_rare": tracked.is_rare,
+                        }
+                    )
 
                     # Удаляем из трекинга
                     del self._listed_items[asset_id]
@@ -479,7 +495,9 @@ class WaxpeerManager:
 
             return new_sales
 
-    async def start_auto_reprice_loop(self, interval_minutes: int | None = None) -> None:
+    async def start_auto_reprice_loop(
+        self, interval_minutes: int | None = None
+    ) -> None:
         """
         Запуск цикла авто-репрайсинга.
 

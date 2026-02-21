@@ -204,17 +204,25 @@ class IntelligentHoldManager:
                 event = MarketEvent(
                     event_type=event_data["type"],
                     name=event_data["name"],
-                    start_date=datetime.strptime(event_data["start"], "%Y-%m-%d").replace(tzinfo=UTC),
-                    end_date=datetime.strptime(event_data["end"], "%Y-%m-%d").replace(tzinfo=UTC)
-                    if "end" in event_data
-                    else None,
+                    start_date=datetime.strptime(
+                        event_data["start"], "%Y-%m-%d"
+                    ).replace(tzinfo=UTC),
+                    end_date=(
+                        datetime.strptime(event_data["end"], "%Y-%m-%d").replace(
+                            tzinfo=UTC
+                        )
+                        if "end" in event_data
+                        else None
+                    ),
                     expected_impact=event_data.get("impact", 0.0),
                     affected_items=event_data.get("items", []),
                     affected_games=event_data.get("games", []),
                 )
                 self.events.append(event)
             except Exception as e:
-                logger.exception("event_load_error", event=event_data.get("name"), error=str(e))
+                logger.exception(
+                    "event_load_error", event=event_data.get("name"), error=str(e)
+                )
 
     def add_event(self, event: MarketEvent) -> None:
         """Add a custom event to track."""
@@ -249,7 +257,9 @@ class IntelligentHoldManager:
 
         return sorted(upcoming, key=lambda e: e.start_date)
 
-    def _calculate_expected_change(self, item_name: str, events: list[MarketEvent]) -> float:
+    def _calculate_expected_change(
+        self, item_name: str, events: list[MarketEvent]
+    ) -> float:
         """Calculate expected price change based on upcoming events."""
         if not events:
             return 0.0
@@ -319,7 +329,9 @@ class IntelligentHoldManager:
         expected_change = self._calculate_expected_change(item_name, upcoming_events)
 
         # Calculate current profit/loss
-        current_roi = ((current_price - buy_price) / buy_price) * 100 if buy_price > 0 else 0
+        current_roi = (
+            ((current_price - buy_price) / buy_price) * 100 if buy_price > 0 else 0
+        )
 
         # Decision logic
         action = "sell"
@@ -335,10 +347,14 @@ class IntelligentHoldManager:
             # Find nearest positive event
             positive_events = [e for e in upcoming_events if e.expected_impact > 0]
             if positive_events:
-                hold_days = positive_events[0].days_until + 3  # Hold until event + 3 days
+                hold_days = (
+                    positive_events[0].days_until + 3
+                )  # Hold until event + 3 days
                 reason = f"Expected +{expected_change * 100:.1f}% due to {positive_events[0].name}"
             else:
-                reason = f"Expected +{expected_change * 100:.1f}% based on market trends"
+                reason = (
+                    f"Expected +{expected_change * 100:.1f}% based on market trends"
+                )
 
         # Check for negative upcoming events (sell before they hit)
         elif expected_change < -0.10:  # >10% expected decrease
@@ -347,9 +363,7 @@ class IntelligentHoldManager:
 
             negative_events = [e for e in upcoming_events if e.expected_impact < 0]
             if negative_events:
-                reason = (
-                    f"Sell before {expected_change * 100:.1f}% drop from {negative_events[0].name}"
-                )
+                reason = f"Sell before {expected_change * 100:.1f}% drop from {negative_events[0].name}"
             else:
                 reason = f"Expected {expected_change * 100:.1f}% price drop"
 
@@ -363,7 +377,9 @@ class IntelligentHoldManager:
         elif days_held > 7 and current_roi < 5:
             action = "sell"
             confidence = 0.6
-            reason = f"Cut losses: Held {days_held} days with only {current_roi:.1f}% ROI"
+            reason = (
+                f"Cut losses: Held {days_held} days with only {current_roi:.1f}% ROI"
+            )
 
         # Neutral case
         else:
@@ -409,13 +425,15 @@ class IntelligentHoldManager:
                 days_held=item.get("days_held", 0),
             )
 
-            recommendations.append({
-                "item": item.get("name"),
-                "action": rec.action,
-                "confidence": rec.confidence,
-                "reason": rec.reason,
-                "expected_change": rec.expected_change_percent,
-            })
+            recommendations.append(
+                {
+                    "item": item.get("name"),
+                    "action": rec.action,
+                    "confidence": rec.confidence,
+                    "reason": rec.reason,
+                    "expected_change": rec.expected_change_percent,
+                }
+            )
 
             if rec.action == "hold":
                 hold_count += 1
@@ -432,7 +450,9 @@ class IntelligentHoldManager:
             "summary": {
                 "hold": hold_count,
                 "sell": sell_count,
-                "avg_expected_change": total_expected_change / len(inventory) if inventory else 0,
+                "avg_expected_change": (
+                    total_expected_change / len(inventory) if inventory else 0
+                ),
             },
             "upcoming_events": [
                 {
@@ -453,7 +473,9 @@ class IntelligentHoldManager:
         msg = f"{emoji} **{recommendation.item_name}**\n\n"
         msg += f"🎯 Рекомендация: **{action_text}**\n"
         msg += f"📊 Уверенность: {recommendation.confidence * 100:.0f}%\n"
-        msg += f"📈 Ожидаемое изменение: {recommendation.expected_change_percent:+.1f}%\n"
+        msg += (
+            f"📈 Ожидаемое изменение: {recommendation.expected_change_percent:+.1f}%\n"
+        )
         msg += f"💡 Причина: {recommendation.reason}\n"
 
         if recommendation.hold_duration_days > 0:

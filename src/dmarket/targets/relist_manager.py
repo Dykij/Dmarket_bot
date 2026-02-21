@@ -104,7 +104,10 @@ class RelistManager:
         # Проверить лимит
         current_count = self._count_relists_in_period(target_id)
         if current_count >= self.config.max_relists:
-            return False, f"Limit reached: {current_count}/{self.config.max_relists} relists"
+            return (
+                False,
+                f"Limit reached: {current_count}/{self.config.max_relists} relists",
+            )
 
         return True, "OK"
 
@@ -414,7 +417,9 @@ class RelistManager:
         Returns:
             Словарь target_id -> статистика
         """
-        return {target_id: self.get_statistics(target_id) for target_id in self.relist_data}
+        return {
+            target_id: self.get_statistics(target_id) for target_id in self.relist_data
+        }
 
     def cleanup_old_data(self, days: int = 7) -> int:
         """Очистить старые данные перевыставлений.
@@ -436,5 +441,7 @@ class RelistManager:
                 del self.relist_data[target_id]
                 removed_count += 1
 
-        logger.info(f"Cleaned up {removed_count} old relist data entries (older than {days} days)")
+        logger.info(
+            f"Cleaned up {removed_count} old relist data entries (older than {days} days)"
+        )
         return removed_count

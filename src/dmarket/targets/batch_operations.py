@@ -275,10 +275,12 @@ async def detect_existing_orders(
                         f"You already have an active order for this item "
                         f"at ${float(user_order.get('Price', {}).get('Amount', 0)) / 100:.2f}"
                     )
-                    suggestions.extend((
-                        "Cancel existing order first",
-                        "Or increase amount in existing order",
-                    ))
+                    suggestions.extend(
+                        (
+                            "Cancel existing order first",
+                            "Or increase amount in existing order",
+                        )
+                    )
 
             except Exception as e:
                 logger.warning(f"Failed to get user targets: {e}")
@@ -308,13 +310,13 @@ async def detect_existing_orders(
                     average_price = sum(prices) / len(prices)
 
                     if not has_user_order:
-                        reason = (
-                            f"Found {total_orders} existing order(s). Best price: ${best_price:.2f}"
+                        reason = f"Found {total_orders} existing order(s). Best price: ${best_price:.2f}"
+                        suggestions.extend(
+                            (
+                                f"Set your price above ${best_price:.2f} for priority",
+                                f"Or set ${average_price:.2f} for average position",
+                            )
                         )
-                        suggestions.extend((
-                            f"Set your price above ${best_price:.2f} for priority",
-                            f"Or set ${average_price:.2f} for average position",
-                        ))
 
         except Exception as e:
             logger.warning(f"Failed to get market orders: {e}")

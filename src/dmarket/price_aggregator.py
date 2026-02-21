@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 COMMISSION_RATES = {
     "dmarket": 0.07,  # 7%
     "waxpeer": 0.06,  # 6%
-    "steam": 0.13,    # 13%
+    "steam": 0.13,  # 13%
 }
 
 
@@ -34,6 +34,7 @@ class LockStatus(int, Enum):
     lockStatus: 0 = доступен сразу
     lockStatus: 1 = заблокирован на 7 дней (трейд-бан)
     """
+
     AVAILABLE = 0
     LOCKED = 1
 
@@ -80,12 +81,12 @@ class AggregatedPrice:
         base_price = self.min_price - self.bonus_amount
 
         if self.has_discount:
-            base_price *= (1 - self.discount_percent / 100)
+            base_price *= 1 - self.discount_percent / 100
 
         # Дисконт за lock (3-5% в зависимости от срока)
         if self.lock_status == LockStatus.LOCKED:
             lock_discount = min(0.05, 0.03 + (self.lock_days_remaining * 0.003))
-            base_price *= (1 - lock_discount)
+            base_price *= 1 - lock_discount
 
         return base_price / 100  # Возвращаем в USD
 
@@ -166,7 +167,7 @@ class PriceAggregator:
             extra={
                 "update_interval": self.config.update_interval,
                 "batch_size": self.config.batch_size,
-            }
+            },
         )
 
     async def get_aggregated_prices(
@@ -189,7 +190,8 @@ class PriceAggregator:
         needs_update = (
             force_refresh
             or self._last_update is None
-            or (datetime.now() - self._last_update).seconds > self.config.update_interval
+            or (datetime.now() - self._last_update).seconds
+            > self.config.update_interval
         )
 
         if needs_update:
@@ -222,7 +224,7 @@ class PriceAggregator:
         try:
             # Разбиваем на batch'и
             batches = [
-                item_names[i:i + self.config.batch_size]
+                item_names[i : i + self.config.batch_size]
                 for i in range(0, len(item_names), self.config.batch_size)
             ]
 
@@ -244,7 +246,7 @@ class PriceAggregator:
                 extra={
                     "items_count": len(item_names),
                     "batches": len(batches),
-                }
+                },
             )
 
         except Exception as e:
@@ -324,8 +326,12 @@ class PriceAggregator:
                 has_discount=random.random() > 0.8,
                 discount_percent=random.uniform(1, 10) if random.random() > 0.8 else 0,
                 bonus_amount=random.randint(0, 50) if random.random() > 0.7 else 0,
-                lock_status=LockStatus.AVAILABLE if random.random() > 0.2 else LockStatus.LOCKED,
-                lock_days_remaining=random.randint(1, 7) if random.random() > 0.8 else 0,
+                lock_status=(
+                    LockStatus.AVAILABLE if random.random() > 0.2 else LockStatus.LOCKED
+                ),
+                lock_days_remaining=(
+                    random.randint(1, 7) if random.random() > 0.8 else 0
+                ),
             )
 
         self._last_update = datetime.now()
@@ -359,8 +365,7 @@ class PriceAggregator:
             Предметы со скидкой >= min_discount
         """
         return [
-            p for p in prices
-            if p.has_discount and p.discount_percent >= min_discount
+            p for p in prices if p.has_discount and p.discount_percent >= min_discount
         ]
 
     def get_good_deals(
@@ -383,5 +388,6 @@ class PriceAggregator:
             "cache_hits": self._cache_hits,
             "cache_size": len(self._price_cache),
             "last_update": self._last_update.isoformat() if self._last_update else None,
-            "hit_rate": self._cache_hits / max(1, self._requests_made + self._cache_hits),
+            "hit_rate": self._cache_hits
+            / max(1, self._requests_made + self._cache_hits),
         }

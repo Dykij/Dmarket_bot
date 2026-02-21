@@ -13,7 +13,7 @@ class BaseStrategy(ABC):
     def __init__(self, game_id: str, min_profit_percent: float = 5.0):
         """
         Initialize strategy.
-        
+
         Args:
             game_id: Game identifier (csgo, dota2, etc.)
             min_profit_percent: Minimum desired profit percentage (e.g. 5.0 for 5%)
@@ -38,21 +38,23 @@ class BaseStrategy(ABC):
     def calculate_target_sell_price(self, buy_price: float | Decimal) -> Decimal:
         """
         Calculate the minimum sell price on Waxpeer to meet profit goals.
-        
+
         Uses FeeCalculator with game-specific risk premiums.
         """
         return FeeCalculator.calculate_target_price(
             buy_price=buy_price,
             game=self.game_id,
-            min_profit=float(self.min_profit_percent)
+            min_profit=float(self.min_profit_percent),
         )
 
-    def calculate_roi(self, buy_price: float | Decimal, sell_price: float | Decimal) -> Decimal:
+    def calculate_roi(
+        self, buy_price: float | Decimal, sell_price: float | Decimal
+    ) -> Decimal:
         """Calculate projected Return on Investment (ROI)."""
         profit = FeeCalculator.calculate_profit(buy_price, sell_price)
         real_cost = FeeCalculator.calculate_real_cost(buy_price)
-        
+
         if real_cost == 0:
             return Decimal("0")
-            
+
         return (profit / real_cost) * 100

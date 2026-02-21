@@ -92,10 +92,20 @@ async def alerts_command(
             )
 
     # Добавляем кнопки управления
-    keyboard.extend((
-        [InlineKeyboardButton("📊 Мои оповещения", callback_data="alerts:my_alerts")],
-        [InlineKeyboardButton("➕ Добавить оповещение", callback_data="alerts:create_alert")],
-    ))
+    keyboard.extend(
+        (
+            [
+                InlineKeyboardButton(
+                    "📊 Мои оповещения", callback_data="alerts:my_alerts"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    "➕ Добавить оповещение", callback_data="alerts:create_alert"
+                )
+            ],
+        )
+    )
 
     # Добавляем кнопки управления
     control_row = []
@@ -149,7 +159,9 @@ async def alerts_command(
         message_text += "\n"
 
     if price_alerts:
-        message_text += f"У вас {len(price_alerts)} активных оповещений о ценах предметов.\n"
+        message_text += (
+            f"У вас {len(price_alerts)} активных оповещений о ценах предметов.\n"
+        )
         message_text += "Нажмите 'Мои оповещения' для просмотра и управления.\n\n"
 
     if not user_subscriptions and not price_alerts:
@@ -462,7 +474,9 @@ async def alerts_callback(
         await query.answer("Неизвестное действие")
 
 
-async def update_alerts_keyboard(query: CallbackQuery, alerts_manager: Any, user_id: int) -> None:
+async def update_alerts_keyboard(
+    query: CallbackQuery, alerts_manager: Any, user_id: int
+) -> None:
     """Обновляет клавиатуру управления уведомлениями.
 
     Args:
@@ -504,10 +518,20 @@ async def update_alerts_keyboard(query: CallbackQuery, alerts_manager: Any, user
             )
 
     # Кнопки для управления оповещениями о конкретных предметах
-    keyboard.extend((
-        [InlineKeyboardButton("📊 Мои оповещения", callback_data="alerts:my_alerts")],
-        [InlineKeyboardButton("➕ Добавить оповещение", callback_data="alerts:create_alert")],
-    ))
+    keyboard.extend(
+        (
+            [
+                InlineKeyboardButton(
+                    "📊 Мои оповещения", callback_data="alerts:my_alerts"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    "➕ Добавить оповещение", callback_data="alerts:create_alert"
+                )
+            ],
+        )
+    )
 
     # Добавляем кнопки управления
     control_row = []
@@ -561,7 +585,9 @@ async def update_alerts_keyboard(query: CallbackQuery, alerts_manager: Any, user
         message_text += "\n"
 
     if price_alerts:
-        message_text += f"У вас {len(price_alerts)} активных оповещений о ценах предметов.\n"
+        message_text += (
+            f"У вас {len(price_alerts)} активных оповещений о ценах предметов.\n"
+        )
         message_text += "Нажмите 'Мои оповещения' для просмотра и управления.\n\n"
 
     if not user_subscriptions and not price_alerts:
@@ -746,7 +772,9 @@ async def show_create_alert_form(query: CallbackQuery, _user_id: int) -> None:
     )
 
 
-async def show_alerts_settings(query: CallbackQuery, alerts_manager: Any, user_id: int) -> None:
+async def show_alerts_settings(
+    query: CallbackQuery, alerts_manager: Any, user_id: int
+) -> None:
     """Показывает настройки уведомлений.
 
     Args:
@@ -817,10 +845,16 @@ async def show_alerts_settings(query: CallbackQuery, alerts_manager: Any, user_i
     message_text += "`/alertsettings <параметр>=<значение>`\n\n"
     message_text += "Доступные параметры:\n"
     message_text += "• `enabled=true|false` - включить/выключить оповещения\n"
-    message_text += "• `min_interval=минуты` - минимальный интервал между оповещениями\n"
-    message_text += "• `quiet_start=час` - начало тихих часов (не отправлять оповещения)\n"
+    message_text += (
+        "• `min_interval=минуты` - минимальный интервал между оповещениями\n"
+    )
+    message_text += (
+        "• `quiet_start=час` - начало тихих часов (не отправлять оповещения)\n"
+    )
     message_text += "• `quiet_end=час` - конец тихих часов\n"
-    message_text += "• `max_alerts=число` - максимальное количество оповещений в день\n\n"
+    message_text += (
+        "• `max_alerts=число` - максимальное количество оповещений в день\n\n"
+    )
     message_text += "Пример: `/alertsettings enabled=true min_interval=30`"
 
     # Создаем клавиатуру для управления настройками

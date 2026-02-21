@@ -8,6 +8,7 @@ from src.ml.parts.pipeline import MLPipeline
 
 logger = logging.getLogger(__name__)
 
+
 class EnhancedPricePredictor:
     """Enhanced predictor using an ensemble of models."""
 
@@ -23,6 +24,7 @@ class EnhancedPricePredictor:
         """Predict future price using extracted features and pipeline."""
         # Implementation logic here
         return {"prediction": current_price * 1.05, "confidence": 75.0}
+
 
 # Maintain backward compatibility
 from src.ml.parts.features import GameType

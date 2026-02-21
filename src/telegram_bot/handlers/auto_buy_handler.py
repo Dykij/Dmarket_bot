@@ -56,7 +56,9 @@ async def autobuy_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         )
 
 
-async def show_autobuy_status(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def show_autobuy_status(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Show current auto-buy status."""
     # Get user settings from context or database
     auto_buyer: AutoBuyer | None = context.bot_data.get("auto_buyer")
@@ -108,7 +110,9 @@ async def enable_autobuy(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
         api_client = context.bot_data.get("dmarket_api")
         if not api_client:
-            await update.message.reply_text("❌ API клиент не инициализирован. Перезапустите бота.")
+            await update.message.reply_text(
+                "❌ API клиент не инициализирован. Перезапустите бота."
+            )
             return
 
         config = AutoBuyConfig(enabled=True, dry_run=True)
@@ -117,7 +121,11 @@ async def enable_autobuy(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     else:
         auto_buyer.config.enabled = True
 
-    mode = "DRY_RUN (безопасный режим)" if auto_buyer.config.dry_run else "РЕАЛЬНЫЕ ПОКУПКИ"
+    mode = (
+        "DRY_RUN (безопасный режим)"
+        if auto_buyer.config.dry_run
+        else "РЕАЛЬНЫЕ ПОКУПКИ"
+    )
 
     await update.message.reply_text(
         f"✅ <b>Автопокупка включена!</b>\n\n"
@@ -163,7 +171,9 @@ async def disable_autobuy(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         await update.message.reply_text("ℹ️ Автопокупка уже выключена")
 
 
-async def show_autobuy_settings(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def show_autobuy_settings(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Show auto-buy settings with inline keyboard."""
     auto_buyer: AutoBuyer | None = context.bot_data.get("auto_buyer")
 
@@ -200,7 +210,11 @@ async def show_autobuy_settings(update: Update, context: ContextTypes.DEFAULT_TY
                 callback_data="autobuy_toggle_tradelock",
             )
         ],
-        [InlineKeyboardButton("🔄 Сбросить статистику", callback_data="autobuy_reset_stats")],
+        [
+            InlineKeyboardButton(
+                "🔄 Сбросить статистику", callback_data="autobuy_reset_stats"
+            )
+        ],
         [InlineKeyboardButton("◀️ Назад", callback_data="main_menu")],
     ]
 
@@ -276,7 +290,9 @@ async def buy_now_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     )
 
 
-async def skip_item_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def skip_item_callback(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Handle 'Skip' button press."""
     query = update.callback_query
     await query.answer("Предмет пропущен")

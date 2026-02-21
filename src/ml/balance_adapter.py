@@ -236,50 +236,62 @@ class BalanceAdaptiveStrategy:
         recs = []
 
         if self._category == BalanceCategory.MICRO:
-            recs.extend([
-                "Focus on cheap items ($0.10-$5) with high profit margin",
-                "Wait for 15%+ profit opportunities only",
-                "Make one trade at a time",
-                "Reinvest all profits to grow balance quickly",
-                "Consider depositing more to unlock better opportunities",
-            ])
+            recs.extend(
+                [
+                    "Focus on cheap items ($0.10-$5) with high profit margin",
+                    "Wait for 15%+ profit opportunities only",
+                    "Make one trade at a time",
+                    "Reinvest all profits to grow balance quickly",
+                    "Consider depositing more to unlock better opportunities",
+                ]
+            )
         elif self._category == BalanceCategory.SMALL:
-            recs.extend([
-                "Target items in $0.50-$30 range",
-                "Look for 10%+ profit after commission",
-                "Keep 2-3 positions maximum",
-                "Focus on high-liquidity items for quick flips",
-            ])
+            recs.extend(
+                [
+                    "Target items in $0.50-$30 range",
+                    "Look for 10%+ profit after commission",
+                    "Keep 2-3 positions maximum",
+                    "Focus on high-liquidity items for quick flips",
+                ]
+            )
         elif self._category == BalanceCategory.MEDIUM:
-            recs.extend([
-                "Diversify across 3-5 different items",
-                "Mix quick flips and medium-term holds",
-                "Target 7%+ profit per trade",
-                "Use tournament calendar for timing sticker investments",
-            ])
+            recs.extend(
+                [
+                    "Diversify across 3-5 different items",
+                    "Mix quick flips and medium-term holds",
+                    "Target 7%+ profit per trade",
+                    "Use tournament calendar for timing sticker investments",
+                ]
+            )
         elif self._category == BalanceCategory.LARGE:
-            recs.extend([
-                "Build a diversified portfolio (5-10 items)",
-                "Include some long-term investments",
-                "5%+ profit is acceptable at this scale",
-                "Consider cross-platform arbitrage (DMarket ↔ Waxpeer)",
-                "Use auto-repricing for inventory management",
-            ])
+            recs.extend(
+                [
+                    "Build a diversified portfolio (5-10 items)",
+                    "Include some long-term investments",
+                    "5%+ profit is acceptable at this scale",
+                    "Consider cross-platform arbitrage (DMarket ↔ Waxpeer)",
+                    "Use auto-repricing for inventory management",
+                ]
+            )
         else:  # WHALE
-            recs.extend([
-                "Maximum diversification recommended (10+ items)",
-                "Focus on capital preservation over growth",
-                "3%+ profit is sustainable at this volume",
-                "Consider market making strategies",
-                "Use intelligent hold during market events",
-                "Allocate portion to tournament sticker investments",
-            ])
+            recs.extend(
+                [
+                    "Maximum diversification recommended (10+ items)",
+                    "Focus on capital preservation over growth",
+                    "3%+ profit is sustainable at this volume",
+                    "Consider market making strategies",
+                    "Use intelligent hold during market events",
+                    "Allocate portion to tournament sticker investments",
+                ]
+            )
 
         # Общие рекомендации
-        recs.extend([
-            f"Current balance: ${self.user_balance:.2f}",
-            f"Category: {self._category.value}",
-        ])
+        recs.extend(
+            [
+                f"Current balance: ${self.user_balance:.2f}",
+                f"Category: {self._category.value}",
+            ]
+        )
 
         return recs
 
@@ -323,7 +335,10 @@ class BalanceAdaptiveStrategy:
         # Проверка цены
         max_price = self.user_balance * (params["max_position_percent"] / 100)
         if item_price > max_price:
-            return False, f"Price ${item_price:.2f} exceeds max position ${max_price:.2f}"
+            return (
+                False,
+                f"Price ${item_price:.2f} exceeds max position ${max_price:.2f}",
+            )
 
         # Проверка баланса
         if item_price > self.user_balance:
@@ -331,15 +346,24 @@ class BalanceAdaptiveStrategy:
 
         # Проверка прибыли
         if expected_profit_percent < params["min_profit_threshold"]:
-            return False, f"Profit {expected_profit_percent:.1f}% below threshold {params['min_profit_threshold']}%"
+            return (
+                False,
+                f"Profit {expected_profit_percent:.1f}% below threshold {params['min_profit_threshold']}%",
+            )
 
         # Проверка риска
         if risk_score > params["max_risk_tolerance"]:
-            return False, f"Risk {risk_score:.2f} exceeds tolerance {params['max_risk_tolerance']}"
+            return (
+                False,
+                f"Risk {risk_score:.2f} exceeds tolerance {params['max_risk_tolerance']}",
+            )
 
         # Проверка количества позиций
         if current_positions >= params["max_concurrent_positions"]:
-            return False, f"Max positions ({params['max_concurrent_positions']}) reached"
+            return (
+                False,
+                f"Max positions ({params['max_concurrent_positions']}) reached",
+            )
 
         return True, "All checks passed"
 
@@ -403,7 +427,9 @@ class BalanceAdaptiveStrategy:
         if volatility > 0.2:
             params["min_profit_threshold"] *= 1.5
             params["max_risk_tolerance"] *= 0.7
-            params["max_concurrent_positions"] = max(1, params["max_concurrent_positions"] - 2)
+            params["max_concurrent_positions"] = max(
+                1, params["max_concurrent_positions"] - 2
+            )
 
         # Распродажа - ещё консервативнее
         if is_sale_period:
@@ -456,7 +482,8 @@ class AdaptivePortfolioAllocator:
         # Сортируем по ожидаемой прибыли / риск (лучшие первые)
         sorted_opps = sorted(
             opportunities,
-            key=lambda x: x.get("expected_profit", 0) / max(x.get("risk_score", 0.5), 0.1),
+            key=lambda x: x.get("expected_profit", 0)
+            / max(x.get("risk_score", 0.5), 0.1),
             reverse=True,
         )
 

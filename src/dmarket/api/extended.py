@@ -50,9 +50,7 @@ class ExtendedMixin:
             "days": days,
             "currency": "USD",
         }
-        return await self._request(
-            "GET", "/account/v1/sales-history", params=params
-        )
+        return await self._request("GET", "/account/v1/sales-history", params=params)
 
     async def get_item_price_history(
         self, game: str, title: str, period: str = "last_month"
@@ -132,9 +130,7 @@ class ExtendedMixin:
             "offerId": offer_id,
             "price": {"amount": int(price * 100), "currency": "USD"},
         }
-        return await self._request(
-            "POST", "/exchange/v1/user/offers/edit", data=data
-        )
+        return await self._request("POST", "/exchange/v1/user/offers/edit", data=data)
 
     async def delete_offer(self, offer_id: str) -> dict[str, Any]:
         return await self._request(
@@ -152,9 +148,7 @@ class ExtendedMixin:
             "offset": offset,
             "status": "active",
         }
-        return await self._request(
-            "GET", "/api/v1/account/offers", params=params
-        )
+        return await self._request("GET", "/api/v1/account/offers", params=params)
 
     async def delete_targets(self, target_ids: list[str]) -> dict[str, Any]:
         data = {"Targets": [{"TargetID": tid} for tid in target_ids]}
@@ -162,9 +156,7 @@ class ExtendedMixin:
             "POST", "/marketplace-api/v1/user-targets/delete", data=data
         )
 
-    async def get_targets_by_title(
-        self, game_id: str, title: str
-    ) -> dict[str, Any]:
+    async def get_targets_by_title(self, game_id: str, title: str) -> dict[str, Any]:
         return await self._request(
             "GET",
             f"/marketplace-api/v1/targets-by-title/{game_id}/{quote(title)}",

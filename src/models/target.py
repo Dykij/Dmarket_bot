@@ -102,7 +102,9 @@ class TradeHistory(Base):
     status = Column(String(50), default="pending", index=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     completed_at = Column(DateTime, nullable=True)
-    trade_metadata = Column(JSON, nullable=True)  # Переименовано с metadata на trade_metadata
+    trade_metadata = Column(
+        JSON, nullable=True
+    )  # Переименовано с metadata на trade_metadata
 
     def __repr__(self) -> str:
         """Строковое представление записи истории."""
@@ -129,7 +131,9 @@ class TradeHistory(Base):
             "game": self.game,
             "status": self.status,
             "created_at": self.created_at.isoformat() if self.created_at else None,
-            "completed_at": (self.completed_at.isoformat() if self.completed_at else None),
+            "completed_at": (
+                self.completed_at.isoformat() if self.completed_at else None
+            ),
             "trade_metadata": self.trade_metadata,  # Переименовано
         }
 

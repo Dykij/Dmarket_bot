@@ -209,7 +209,9 @@ class RegimeDetector:
                 down_moves += 1
 
         total_moves = up_moves + down_moves
-        directional_ratio = abs(up_moves - down_moves) / total_moves if total_moves > 0 else 0
+        directional_ratio = (
+            abs(up_moves - down_moves) / total_moves if total_moves > 0 else 0
+        )
         trend_strength = directional_ratio * abs(momentum)
 
         # Determine regime
@@ -221,7 +223,9 @@ class RegimeDetector:
         )
 
         # Get strategy
-        strategy_info = REGIME_STRATEGIES.get(regime, REGIME_STRATEGIES[MarketRegime.UNKNOWN])
+        strategy_info = REGIME_STRATEGIES.get(
+            regime, REGIME_STRATEGIES[MarketRegime.UNKNOWN]
+        )
 
         return RegimeAnalysis(
             regime=regime,
@@ -260,19 +264,25 @@ class RegimeDetector:
             return MarketRegime.VOLATILE, max(0.5, confidence)
 
         # Low volatility + low momentum = ranging
-        if volatility < self.RANGING_VOLATILITY and abs(momentum) < self.trend_threshold / 2:
+        if (
+            volatility < self.RANGING_VOLATILITY
+            and abs(momentum) < self.trend_threshold / 2
+        ):
             confidence = 1.0 - (volatility / self.RANGING_VOLATILITY)
             return MarketRegime.RANGING, max(0.5, min(0.9, confidence))
 
         # Trending up
         if momentum > self.trend_threshold and directional_ratio > 0.3:
-            confidence = min(1.0, momentum / self.trend_threshold * 0.5 + directional_ratio * 0.5)
+            confidence = min(
+                1.0, momentum / self.trend_threshold * 0.5 + directional_ratio * 0.5
+            )
             return MarketRegime.TRENDING_UP, max(0.5, confidence)
 
         # Trending down
         if momentum < -self.trend_threshold and directional_ratio > 0.3:
             confidence = min(
-                1.0, abs(momentum) / self.trend_threshold * 0.5 + directional_ratio * 0.5
+                1.0,
+                abs(momentum) / self.trend_threshold * 0.5 + directional_ratio * 0.5,
             )
             return MarketRegime.TRENDING_DOWN, max(0.5, confidence)
 
@@ -358,7 +368,11 @@ class RegimeDetector:
 
         # Find dominant
         dominant_regime = max(regime_counts.items(), key=lambda x: x[1])[0]
-        agreement = regime_counts[dominant_regime] / total_confidence if total_confidence > 0 else 0
+        agreement = (
+            regime_counts[dominant_regime] / total_confidence
+            if total_confidence > 0
+            else 0
+        )
 
         strategy = self.get_strategy_details(dominant_regime)
 
@@ -442,7 +456,9 @@ class AdaptiveTrader:
         sl_multiplier = self.STOP_LOSS_MULTIPLIERS.get(regime, 1.0)
 
         # Adjust position size
-        adapted_position = self.base_position_size * pos_multiplier * analysis.confidence
+        adapted_position = (
+            self.base_position_size * pos_multiplier * analysis.confidence
+        )
 
         # Adjust stop loss (wider in volatile, tighter in trending down)
         adapted_stop_loss = self.base_stop_loss_pct * sl_multiplier
@@ -495,14 +511,20 @@ class AdaptiveTrader:
 
         # Don't trade low confidence
         if analysis.confidence < min_confidence:
-            return False, f"Low confidence ({analysis.confidence:.0%}), waiting for confirmation"
+            return (
+                False,
+                f"Low confidence ({analysis.confidence:.0%}), waiting for confirmation",
+            )
 
         # Caution in volatile markets
         if analysis.regime == MarketRegime.VOLATILE and analysis.volatility > 0.1:
             return False, "Extreme volatility detected, waiting for stability"
 
         # Caution in strong downtrends
-        if analysis.regime == MarketRegime.TRENDING_DOWN and analysis.trend_strength > 0.05:
+        if (
+            analysis.regime == MarketRegime.TRENDING_DOWN
+            and analysis.trend_strength > 0.05
+        ):
             return False, "Strong downtrend detected, waiting for reversal"
 
         return True, f"Trading conditions favorable ({analysis.regime.value})"

@@ -291,11 +291,13 @@ class PromptTester:
         for tc_data in data.get("tests", []):
             assertions = []
             for assert_data in tc_data.get("assertions", []):
-                assertions.append(Assertion(
-                    type=AssertionType(assert_data.get("type", "contains")),
-                    value=assert_data.get("value", ""),
-                    threshold=assert_data.get("threshold", 0.8),
-                ))
+                assertions.append(
+                    Assertion(
+                        type=AssertionType(assert_data.get("type", "contains")),
+                        value=assert_data.get("value", ""),
+                        threshold=assert_data.get("threshold", 0.8),
+                    )
+                )
 
             test_case = TestCase(
                 name=tc_data.get("name", "Unnamed Test"),
@@ -338,10 +340,12 @@ class PromptTester:
         for test_case in self.test_cases:
             # Filter by tags
             if tags and not any(t in test_case.tags for t in tags):
-                results.append(TestResult(
-                    test_case=test_case,
-                    status=TestStatus.SKIPPED,
-                ))
+                results.append(
+                    TestResult(
+                        test_case=test_case,
+                        status=TestStatus.SKIPPED,
+                    )
+                )
                 continue
 
             for provider in target_providers:
@@ -459,11 +463,13 @@ class PromptTester:
         # Simple mock that echoes back key info
         await asyncio.sleep(0.01)  # Simulate latency
 
-        return json.dumps({
-            "response": f"Mock response for: {prompt[:50]}...",
-            "variables": variables,
-            "mock": True,
-        })
+        return json.dumps(
+            {
+                "response": f"Mock response for: {prompt[:50]}...",
+                "variables": variables,
+                "mock": True,
+            }
+        )
 
     def _simple_yaml_parse(self, content: str) -> dict[str, Any]:
         """Simple YAML-like parsing for basic structures."""
@@ -556,7 +562,9 @@ class PromptTester:
                 TestStatus.SKIPPED: "⏭️",
             }.get(result.status, "❓")
 
-            lines.append(f"- {status_emoji} **{result.test_case.name}** ({result.provider})")
+            lines.append(
+                f"- {status_emoji} **{result.test_case.name}** ({result.provider})"
+            )
             if result.error:
                 lines.append(f"  - Error: `{result.error}`")
 

@@ -91,16 +91,22 @@ class SmartScannerConfig:
     def from_env(cls) -> "SmartScannerConfig":
         """Create configuration from environment variables."""
         return cls(
-            max_lock_days=int(os.getenv("SMART_SCANNER_MAX_LOCK_DAYS", str(DEFAULT_MAX_LOCK_DAYS))),
+            max_lock_days=int(
+                os.getenv("SMART_SCANNER_MAX_LOCK_DAYS", str(DEFAULT_MAX_LOCK_DAYS))
+            ),
             min_profit_percent=float(
-                os.getenv("SMART_SCANNER_MIN_PROFIT_PERCENT", str(DEFAULT_MIN_PROFIT_PERCENT))
+                os.getenv(
+                    "SMART_SCANNER_MIN_PROFIT_PERCENT", str(DEFAULT_MIN_PROFIT_PERCENT)
+                )
             ),
             price_max_cents=int(
                 os.getenv("SMART_SCANNER_PRICE_MAX_CENTS", str(DEFAULT_PRICE_MAX_CENTS))
             ),
-            silent_mode=os.getenv("SMART_SCANNER_SILENT_MODE", "true").lower() == "true",
+            silent_mode=os.getenv("SMART_SCANNER_SILENT_MODE", "true").lower()
+            == "true",
             enable_ai=os.getenv("SMART_SCANNER_ENABLE_AI", "true").lower() == "true",
-            allow_trade_ban=os.getenv("SMART_SCANNER_ALLOW_TRADE_BAN", "false").lower() == "true",
+            allow_trade_ban=os.getenv("SMART_SCANNER_ALLOW_TRADE_BAN", "false").lower()
+            == "true",
             dry_run=os.getenv("DRY_RUN", "true").lower() == "true",
             game_id=os.getenv("SMART_SCANNER_GAME_ID", "a8db"),
         )
@@ -187,7 +193,9 @@ class LocalDeltaFilter:
         # Create unique hash for item + price
         # Using sha256 for security best practices (non-cryptographic use but safer default)
         hash_input = f"{item_id}_{price_val}".encode()
-        item_hash = hashlib.sha256(hash_input).hexdigest()[:16]  # Truncate for efficiency
+        item_hash = hashlib.sha256(hash_input).hexdigest()[
+            :16
+        ]  # Truncate for efficiency
 
         # Check if already seen
         if item_hash in self.seen_hashes:
@@ -196,7 +204,7 @@ class LocalDeltaFilter:
         # Prevent memory leak - remove old hashes if too many
         if len(self.seen_hashes) >= self.max_size:
             # Remove ~20% of oldest entries (simple approach: just clear some)
-            to_remove = list(self.seen_hashes)[:int(self.max_size * 0.2)]
+            to_remove = list(self.seen_hashes)[: int(self.max_size * 0.2)]
             for h in to_remove:
                 self.seen_hashes.discard(h)
 
@@ -375,7 +383,9 @@ class SmartScanner:
             # Get price (convert from cents to USD)
             price_data = item.get("price", {})
             if isinstance(price_data, dict):
-                price_cents = int(price_data.get("USD", 0) or price_data.get("amount", 0))
+                price_cents = int(
+                    price_data.get("USD", 0) or price_data.get("amount", 0)
+                )
             else:
                 price_cents = int(price_data)
 
@@ -385,7 +395,9 @@ class SmartScanner:
                 return None
 
             # Get trade lock duration
-            lock_seconds = extra.get("tradeLockDuration", 0) or extra.get("lockStatus", 0)
+            lock_seconds = extra.get("tradeLockDuration", 0) or extra.get(
+                "lockStatus", 0
+            )
             lock_days = lock_seconds // 86400 if lock_seconds > 0 else 0
 
             # FILTER 1: Check trade lock
@@ -528,21 +540,23 @@ class SmartScanner:
 
         try:
             # Build buy request
-            buy_data = await self.api.buy_offers([
-                {
-                    "offerId": result.offer_id or result.item_id,
-                    "price": {
-                        "amount": str(int(result.market_price * 100)),
-                        "currency": "USD",
-                    },
-                    "type": "dmarket",
-                }
-            ])
+            buy_data = await self.api.buy_offers(
+                [
+                    {
+                        "offerId": result.offer_id or result.item_id,
+                        "price": {
+                            "amount": str(int(result.market_price * 100)),
+                            "currency": "USD",
+                        },
+                        "type": "dmarket",
+                    }
+                ]
+            )
 
             success = (
-                buy_data.get("success", False) or
-                buy_data.get("status") == "success" or
-                "orderId" in buy_data
+                buy_data.get("success", False)
+                or buy_data.get("status") == "success"
+                or "orderId" in buy_data
             )
 
             if success:
@@ -677,7 +691,9 @@ async def analyze_trade_ban_item(
 
     market_price = float(price_cents) / 100
     float_value = extra.get("floatValue") or extra.get("float", 0.5)
-    lock_days = (extra.get("tradeLockDuration", 0) or extra.get("lockStatus", 0)) // 86400
+    lock_days = (
+        extra.get("tradeLockDuration", 0) or extra.get("lockStatus", 0)
+    ) // 86400
 
     result: dict[str, Any] = {
         "item_title": title,
@@ -711,7 +727,9 @@ async def analyze_trade_ban_item(
         if ai_profit_percent >= min_profit_percent:
             result["can_resell_profit"] = True
             result["recommendation"] = "buy"
-            result["reason"] = f"AI предсказывает профит +{ai_profit_percent:.1f}% на DMarket"
+            result["reason"] = (
+                f"AI предсказывает профит +{ai_profit_percent:.1f}% на DMarket"
+            )
 
     # 2. Waxpeer Analysis (if available)
     if waxpeer_api:
@@ -738,8 +756,9 @@ async def analyze_trade_ban_item(
                     result["can_resell_profit"] = True
 
                     if (
-                        not result["dmarket_analysis"] or
-                        wax_profit_percent > result["dmarket_analysis"]["profit_percent"]
+                        not result["dmarket_analysis"]
+                        or wax_profit_percent
+                        > result["dmarket_analysis"]["profit_percent"]
                     ):
                         result["recommendation"] = "buy"
                         result["reason"] = (

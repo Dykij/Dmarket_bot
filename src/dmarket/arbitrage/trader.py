@@ -260,7 +260,9 @@ class ArbitrageTrader:
                     price_to=max_price,
                     sort="price",
                 )
-                market_items = response.get("objects", []) if isinstance(response, dict) else []
+                market_items = (
+                    response.get("objects", []) if isinstance(response, dict) else []
+                )
 
             if not market_items:
                 return []
@@ -302,24 +304,30 @@ class ArbitrageTrader:
 
                     commission_amount = sell_price * commission / 100
                     net_profit = sell_price - buy_price - commission_amount
-                    profit_percent = (net_profit / buy_price) * 100 if buy_price > 0 else 0
+                    profit_percent = (
+                        (net_profit / buy_price) * 100 if buy_price > 0 else 0
+                    )
 
                     if profit_percent >= min_profit and net_profit > 0:
-                        opportunities.append({
-                            "name": name,
-                            "buy_price": buy_price,
-                            "sell_price": sell_price,
-                            "profit": net_profit,
-                            "profit_percentage": profit_percent,
-                            "commission_percent": commission,
-                            "buy_item_id": cheapest.get("itemId"),
-                            "sell_item_id": item.get("itemId"),
-                            "game": game,
-                        })
+                        opportunities.append(
+                            {
+                                "name": name,
+                                "buy_price": buy_price,
+                                "sell_price": sell_price,
+                                "profit": net_profit,
+                                "profit_percentage": profit_percent,
+                                "commission_percent": commission,
+                                "buy_item_id": cheapest.get("itemId"),
+                                "sell_item_id": item.get("itemId"),
+                                "game": game,
+                            }
+                        )
                         break  # Берем только лучшую цену для продажи
 
             # Сортируем по прибыльности
-            opportunities.sort(key=operator.itemgetter("profit_percentage"), reverse=True)
+            opportunities.sort(
+                key=operator.itemgetter("profit_percentage"), reverse=True
+            )
             logger.info(f"Найдено {len(opportunities)} выгодных возможностей")
 
             return opportunities
@@ -397,15 +405,17 @@ class ArbitrageTrader:
             self.daily_traded += item["buy_price"]
 
             # Записываем в историю
-            self.transaction_history.append({
-                "item_name": item["name"],
-                "buy_price": item["buy_price"],
-                "sell_price": item["sell_price"],
-                "profit": item["profit"],
-                "profit_percentage": item["profit_percentage"],
-                "game": item["game"],
-                "timestamp": time.time(),
-            })
+            self.transaction_history.append(
+                {
+                    "item_name": item["name"],
+                    "buy_price": item["buy_price"],
+                    "sell_price": item["sell_price"],
+                    "profit": item["profit"],
+                    "profit_percentage": item["profit_percentage"],
+                    "game": item["game"],
+                    "timestamp": time.time(),
+                }
+            )
 
             # Сбрасываем счетчик ошибок
             self.error_count = 0
@@ -616,7 +626,9 @@ class ArbitrageTrader:
             Словарь с информацией о статусе
         """
         total_profit = (
-            sum(t["profit"] for t in self.transaction_history) if self.transaction_history else 0.0
+            sum(t["profit"] for t in self.transaction_history)
+            if self.transaction_history
+            else 0.0
         )
 
         on_pause = time.time() < self.pause_until

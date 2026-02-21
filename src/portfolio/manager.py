@@ -186,7 +186,9 @@ class PortfolioManager:
 
             if "objects" in inventory:
                 for item_data in inventory["objects"]:
-                    item_id = item_data.get("itemId", item_data.get("extra", {}).get("offerId", ""))
+                    item_id = item_data.get(
+                        "itemId", item_data.get("extra", {}).get("offerId", "")
+                    )
                     title = item_data.get("title", "Unknown Item")
 
                     # Check if already in portfolio
@@ -194,7 +196,9 @@ class PortfolioManager:
                     if not existing:
                         # Parse price
                         price_data = item_data.get("price", {})
-                        price_cents = int(price_data.get("USD", price_data.get("amount", 0)))
+                        price_cents = int(
+                            price_data.get("USD", price_data.get("amount", 0))
+                        )
                         price_usd = Decimal(price_cents) / 100
 
                         # Detect category from title
@@ -279,7 +283,9 @@ class PortfolioManager:
 
         return updated
 
-    async def _fetch_and_update_prices(self, game: str, items: list[PortfolioItem]) -> int:
+    async def _fetch_and_update_prices(
+        self, game: str, items: list[PortfolioItem]
+    ) -> int:
         """Fetch and update prices for items in a game.
 
         Args:
@@ -410,7 +416,9 @@ class PortfolioManager:
             return ItemCategory.GRAFFITI
         if "patch" in title_lower:
             return ItemCategory.PATCH
-        if any(w in title_lower for w in ["ak-47", "awp", "m4a1", "usp", "glock", "deagle"]):
+        if any(
+            w in title_lower for w in ["ak-47", "awp", "m4a1", "usp", "glock", "deagle"]
+        ):
             return ItemCategory.WEAPON
         return ItemCategory.OTHER
 
@@ -442,7 +450,8 @@ class PortfolioManager:
             self._storage_path.parent.mkdir(parents=True, exist_ok=True)
 
             data = {
-                str(user_id): portfolio.to_dict() for user_id, portfolio in self._portfolios.items()
+                str(user_id): portfolio.to_dict()
+                for user_id, portfolio in self._portfolios.items()
             }
 
             with open(self._storage_path, "w", encoding="utf-8") as f:

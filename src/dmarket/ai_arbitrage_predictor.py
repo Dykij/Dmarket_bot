@@ -103,7 +103,9 @@ class AIArbitragePredictor:
             >>> print(f"Found {len(opportunities)} opportunities")
         """
         if risk_level not in {"low", "medium", "high"}:
-            raise ValueError(f"Invalid risk_level: {risk_level}. Must be low/medium/high")
+            raise ValueError(
+                f"Invalid risk_level: {risk_level}. Must be low/medium/high"
+            )
 
         logger.info(
             "predicting_opportunities",
@@ -114,9 +116,7 @@ class AIArbitragePredictor:
 
         # Фильтрация по балансу
         affordable_items = [
-            item
-            for item in items
-            if self._get_price_usd(item) <= current_balance
+            item for item in items if self._get_price_usd(item) <= current_balance
         ]
 
         # ML-анализ каждого предмета
@@ -124,7 +124,9 @@ class AIArbitragePredictor:
         for item in affordable_items:
             try:
                 opportunity = await self._analyze_item(item, risk_level)
-                if opportunity and opportunity.confidence > self._get_min_confidence(risk_level):
+                if opportunity and opportunity.confidence > self._get_min_confidence(
+                    risk_level
+                ):
                     opportunities.append(opportunity)
             except Exception as e:
                 logger.warning(
@@ -143,9 +145,11 @@ class AIArbitragePredictor:
         logger.info(
             "prediction_complete",
             opportunities_found=len(opportunities),
-            avg_confidence=sum(o.confidence for o in opportunities) / len(opportunities)
-            if opportunities
-            else 0.0,
+            avg_confidence=(
+                sum(o.confidence for o in opportunities) / len(opportunities)
+                if opportunities
+                else 0.0
+            ),
         )
 
         return opportunities
@@ -193,9 +197,7 @@ class AIArbitragePredictor:
 
         # ML confidence (упрощенная версия)
         # В production: используется реальная ML модель
-        price_diff_percent = (
-            (suggested_price - current_price) / current_price * 100
-        )
+        price_diff_percent = (suggested_price - current_price) / current_price * 100
         confidence = min(0.95, max(0.5, price_diff_percent / 20))
 
         # Risk score calculation
@@ -250,7 +252,7 @@ class AIArbitragePredictor:
         liquidity_risk = 20  # Simplified
 
         # Combined risk
-        total_risk = (base_risk * 0.7 + liquidity_risk * 0.3)
+        total_risk = base_risk * 0.7 + liquidity_risk * 0.3
 
         return min(100.0, max(0.0, total_risk))
 

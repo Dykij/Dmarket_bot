@@ -113,7 +113,9 @@ class PriceItem(BaseModel):
     game: str = Field(..., description="Game code")
     item_id: str | None = Field(None, description="Platform-specific item ID")
     volume: int | None = Field(None, description="Trading volume (if available)")
-    liquidity: str | None = Field(None, description="Liquidity level (high, medium, low)")
+    liquidity: str | None = Field(
+        None, description="Liquidity level (high, medium, low)"
+    )
 
 
 class PricesResponse(BaseModel):
@@ -339,7 +341,7 @@ async def get_dmarket_prices(
         logger.error("dmarket_prices_error", error=str(e), exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to fetch DMarket prices: {e!s}"
+            detail=f"Failed to fetch DMarket prices: {e!s}",
         )
 
 
@@ -435,7 +437,7 @@ async def get_listing_targets(session=Depends(get_async_session)) -> dict[str, A
         logger.error("listing_targets_error", error=str(e), exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get listing targets: {e!s}"
+            detail=f"Failed to get listing targets: {e!s}",
         )
 
 
@@ -470,10 +472,12 @@ async def update_listing_target(
             "updated_at": datetime.now(UTC).isoformat(),
         }
     except Exception as e:
-        logger.error("update_target_error", asset_id=asset_id, error=str(e), exc_info=True)
+        logger.error(
+            "update_target_error", asset_id=asset_id, error=str(e), exc_info=True
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to update target: {e!s}"
+            detail=f"Failed to update target: {e!s}",
         )
 
 
@@ -508,7 +512,10 @@ async def process_arbitrage_alert(alert: ArbitrageAlert) -> None:
         logger.info("arbitrage_alert_processed", item=alert.item_name)
     except Exception as e:
         logger.error(
-            "arbitrage_processing_failed", item=alert.item_name, error=str(e), exc_info=True
+            "arbitrage_processing_failed",
+            item=alert.item_name,
+            error=str(e),
+            exc_info=True,
         )
 
 

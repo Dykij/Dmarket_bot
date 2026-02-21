@@ -61,8 +61,7 @@ async def improvements_command(
 
     if not integrator:
         await update.effective_message.reply_text(
-            "❌ Bot Integrator not available.\n"
-            "New improvements are not initialized."
+            "❌ Bot Integrator not available.\n" "New improvements are not initialized."
         )
         return
 
@@ -256,7 +255,9 @@ async def alerts_command(
     if user_alerts:
         lines.append("\n<b>Your Alerts:</b>")
         for alert in user_alerts[:5]:  # Show first 5
-            lines.append(f"• {alert.get('name', 'Unnamed')}: {alert.get('type', 'Unknown')}")
+            lines.append(
+                f"• {alert.get('name', 'Unnamed')}: {alert.get('type', 'Unknown')}"
+            )
 
     keyboard = [
         [
@@ -286,9 +287,7 @@ async def watchlist_command(
     integrator = get_integrator(context)
 
     if not integrator or not integrator.watchlist:
-        await update.effective_message.reply_text(
-            "❌ Watchlist module not available."
-        )
+        await update.effective_message.reply_text("❌ Watchlist module not available.")
         return
 
     user_id = update.effective_user.id if update.effective_user else 0
@@ -390,9 +389,7 @@ async def reports_command(
     integrator = get_integrator(context)
 
     if not integrator or not integrator.reports:
-        await update.effective_message.reply_text(
-            "❌ Reports module not available."
-        )
+        await update.effective_message.reply_text("❌ Reports module not available.")
         return
 
     lines = [
@@ -440,9 +437,7 @@ async def security_command(
     integrator = get_integrator(context)
 
     if not integrator or not integrator.security:
-        await update.effective_message.reply_text(
-            "❌ Security module not available."
-        )
+        await update.effective_message.reply_text("❌ Security module not available.")
         return
 
     user_id = update.effective_user.id if update.effective_user else 0

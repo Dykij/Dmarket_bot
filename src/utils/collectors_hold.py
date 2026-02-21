@@ -159,7 +159,9 @@ class CollectorsHoldConfig:
     )
 
     # Гемы (Dota 2)
-    always_hold_gem_types: list[str] = field(default_factory=lambda: ["Prismatic", "Ethereal"])
+    always_hold_gem_types: list[str] = field(
+        default_factory=lambda: ["Prismatic", "Ethereal"]
+    )
     rare_prismatic_colors: list[str] = field(
         default_factory=lambda: [
             "Creator's Light",
@@ -279,7 +281,9 @@ class CollectorsHoldManager:
                 return decision
 
         # 2. Дополнительные проверки по игре
-        hold_reason, details, multiplier = self._check_game_specific(item_data, game, evaluation)
+        hold_reason, details, multiplier = self._check_game_specific(
+            item_data, game, evaluation
+        )
 
         if hold_reason:
             decision = HoldDecision(
@@ -297,7 +301,10 @@ class CollectorsHoldManager:
             return decision
 
         # 3. Проверяем value_multiplier
-        if evaluation and evaluation.value_multiplier >= self.config.min_value_multiplier:
+        if (
+            evaluation
+            and evaluation.value_multiplier >= self.config.min_value_multiplier
+        ):
             decision = HoldDecision(
                 item_id=item_id,
                 title=title,
@@ -366,15 +373,27 @@ class CollectorsHoldManager:
             # Проверяем конкретные имена
             for rare_name in self.config.always_hold_sticker_names:
                 if rare_name.lower() in sticker_name.lower():
-                    return HoldReason.VALUABLE_STICKER, f"Rare sticker: {sticker_name}", 2.0
+                    return (
+                        HoldReason.VALUABLE_STICKER,
+                        f"Rare sticker: {sticker_name}",
+                        2.0,
+                    )
 
             # Проверяем коллекции
             for collection in self.config.always_hold_sticker_collections:
                 if collection.lower() in sticker_name.lower():
                     if "holo" in sticker_name.lower():
-                        return HoldReason.VALUABLE_STICKER, f"Holo from {collection}", 1.50
+                        return (
+                            HoldReason.VALUABLE_STICKER,
+                            f"Holo from {collection}",
+                            1.50,
+                        )
                     if "foil" in sticker_name.lower():
-                        return HoldReason.VALUABLE_STICKER, f"Foil from {collection}", 1.25
+                        return (
+                            HoldReason.VALUABLE_STICKER,
+                            f"Foil from {collection}",
+                            1.25,
+                        )
 
         # 3. Фаза Doppler
         phase = extra.get("phase", "")
@@ -421,7 +440,11 @@ class CollectorsHoldManager:
         # 3. Открытые стили
         unlocked_styles = extra.get("unlockedStyles", 0)
         if unlocked_styles >= 2:
-            return HoldReason.UNLOCKED_STYLES, f"{unlocked_styles} styles unlocked", 1.10
+            return (
+                HoldReason.UNLOCKED_STYLES,
+                f"{unlocked_styles} styles unlocked",
+                1.10,
+            )
 
         return None, "", 1.0
 
@@ -513,7 +536,9 @@ class CollectorsHoldManager:
             "total_processed": self._total_processed,
             "total_held": self._total_held,
             "hold_rate_percent": (
-                (self._total_held / self._total_processed * 100) if self._total_processed > 0 else 0
+                (self._total_held / self._total_processed * 100)
+                if self._total_processed > 0
+                else 0
             ),
             "treasures_by_reason": self._count_by_reason(),
         }
@@ -553,11 +578,13 @@ class CollectorsHoldManager:
         for platform in decision.recommended_platforms[:3]:
             lines.append(f"  • {platform}")
 
-        lines.extend([
-            "",
-            "⚠️ Бот НЕ выставил этот предмет на DMarket.",
-            "Продайте его вручную на специализированных площадках.",
-        ])
+        lines.extend(
+            [
+                "",
+                "⚠️ Бот НЕ выставил этот предмет на DMarket.",
+                "Продайте его вручную на специализированных площадках.",
+            ]
+        )
 
         return "\n".join(lines)
 

@@ -160,9 +160,11 @@ class SteamDatabaseHandler:
                 "price": row["lowest_price"],
                 "volume": row["volume"],
                 "median_price": row["median_price"],
-                "last_updated": datetime.fromisoformat(row["last_updated"])
-                if isinstance(row["last_updated"], str)
-                else row["last_updated"],
+                "last_updated": (
+                    datetime.fromisoformat(row["last_updated"])
+                    if isinstance(row["last_updated"], str)
+                    else row["last_updated"]
+                ),
                 "app_id": row["app_id"],
             }
         return None
@@ -191,13 +193,11 @@ class SteamDatabaseHandler:
         total = cursor.fetchone()["total"]
 
         # Актуальных записей (< 6 часов)
-        cursor.execute(
-            """
+        cursor.execute("""
             SELECT COUNT(*) as actual
             FROM steam_cache
             WHERE last_updated >= datetime('now', '-6 hours')
-            """
-        )
+            """)
         actual = cursor.fetchone()["actual"]
 
         # Устаревших записей
@@ -263,8 +263,7 @@ class SteamDatabaseHandler:
     def get_daily_stats(self) -> dict:
         """Получает статистику за последние 24 часа."""
         cursor = self.conn.cursor()
-        cursor.execute(
-            """
+        cursor.execute("""
             SELECT
                 COUNT(*) as count,
                 AVG(profit_pct) as avg_profit,
@@ -272,8 +271,7 @@ class SteamDatabaseHandler:
                 MIN(profit_pct) as min_profit
             FROM arbitrage_logs
             WHERE timestamp >= datetime('now', '-1 day')
-            """
-        )
+            """)
         row = cursor.fetchone()
 
         return {
@@ -312,7 +310,9 @@ class SteamDatabaseHandler:
     def get_settings(self) -> dict:
         """Получает настройки пользователя."""
         cursor = self.conn.cursor()
-        cursor.execute("SELECT min_profit, min_volume, is_paused FROM settings WHERE id = 1")
+        cursor.execute(
+            "SELECT min_profit, min_volume, is_paused FROM settings WHERE id = 1"
+        )
         row = cursor.fetchone()
 
         return {
@@ -355,7 +355,9 @@ class SteamDatabaseHandler:
             params.append(datetime.now())
 
             with self.conn:
-                self.conn.execute(f"UPDATE settings SET {', '.join(updates)} WHERE id = 1", params)  # noqa: S608 nosec B608
+                self.conn.execute(
+                    f"UPDATE settings SET {', '.join(updates)} WHERE id = 1", params
+                )  # noqa: S608 nosec B608
 
             logger.info(f"Updated settings: {updates}")
 
@@ -393,7 +395,9 @@ class SteamDatabaseHandler:
     def remove_from_blacklist(self, name: str):
         """Удаляет предмет из черного списка."""
         with self.conn:
-            cursor = self.conn.execute("DELETE FROM blacklist WHERE market_hash_name = ?", (name,))
+            cursor = self.conn.execute(
+                "DELETE FROM blacklist WHERE market_hash_name = ?", (name,)
+            )
             deleted = cursor.rowcount
 
         if deleted:

@@ -304,7 +304,9 @@ class RateLimiter:
         self.last_request_times[endpoint_type] = time.time()
 
         # Увеличиваем счетчик общих запросов
-        self.total_requests[endpoint_type] = self.total_requests.get(endpoint_type, 0) + 1
+        self.total_requests[endpoint_type] = (
+            self.total_requests.get(endpoint_type, 0) + 1
+        )
 
     async def handle_429(
         self,
@@ -331,7 +333,9 @@ class RateLimiter:
         # Увеличиваем счетчик попыток и ошибок 429
         current_attempts = self.retry_attempts.get(endpoint_type, 0) + 1
         self.retry_attempts[endpoint_type] = current_attempts
-        self.total_429_errors[endpoint_type] = self.total_429_errors.get(endpoint_type, 0) + 1
+        self.total_429_errors[endpoint_type] = (
+            self.total_429_errors.get(endpoint_type, 0) + 1
+        )
 
         # Определяем время ожидания
         if retry_after is not None and retry_after > 0:
@@ -433,7 +437,10 @@ class RateLimiter:
 
         """
         # Esli endpoint nahoditsya pod ogranicheniem
-        if endpoint_type in self.reset_times and time.time() < self.reset_times[endpoint_type]:
+        if (
+            endpoint_type in self.reset_times
+            and time.time() < self.reset_times[endpoint_type]
+        ):
             return 0
 
         # Vozvrashchaem ostavsheeesya kolichestvo zaprosov
@@ -607,8 +614,10 @@ class DMarketRateLimiter:
         self._429_counts: dict[str, int] = dict.fromkeys(self._endpoint_limits, 0)
 
         # Warning flags (to avoid spam)
-        self._warning_sent: dict[str, bool] = dict.fromkeys(self._endpoint_limits, False)
-        
+        self._warning_sent: dict[str, bool] = dict.fromkeys(
+            self._endpoint_limits, False
+        )
+
         # Smart Rate Limit: Backoff timestamps
         self._backoff_until: dict[str, float] = {}
 
@@ -633,7 +642,12 @@ class DMarketRateLimiter:
         # Trade endpoints (check before market since /buy is in both)
         if any(
             keyword in path_lower
-            for keyword in ["/items/buy", "/create-offer", "/offers/edit", "/offers/delete"]
+            for keyword in [
+                "/items/buy",
+                "/create-offer",
+                "/offers/edit",
+                "/offers/delete",
+            ]
         ):
             return "trade"
 
@@ -672,13 +686,19 @@ class DMarketRateLimiter:
             endpoint: Endpoint category or path
         """
         # Determine category if full path provided
-        category = endpoint if endpoint in self._limiters else self.get_endpoint_category(endpoint)
+        category = (
+            endpoint
+            if endpoint in self._limiters
+            else self.get_endpoint_category(endpoint)
+        )
 
         # Smart Rate Limit: Check backoff
         if category in self._backoff_until:
             wait_time = self._backoff_until[category] - time.time()
             if wait_time > 0:
-                logger.info(f"⏳ Smart Rate Limit: Waiting {wait_time:.2f}s for {category} cooldown")
+                logger.info(
+                    f"⏳ Smart Rate Limit: Waiting {wait_time:.2f}s for {category} cooldown"
+                )
                 await asyncio.sleep(wait_time)
             # Clear backoff after waiting (or if expired)
             del self._backoff_until[category]
@@ -739,7 +759,11 @@ class DMarketRateLimiter:
         Args:
             endpoint: Endpoint that returned 429
         """
-        category = endpoint if endpoint in self._limiters else self.get_endpoint_category(endpoint)
+        category = (
+            endpoint
+            if endpoint in self._limiters
+            else self.get_endpoint_category(endpoint)
+        )
 
         self._429_counts[category] = self._429_counts.get(category, 0) + 1
 
@@ -774,28 +798,28 @@ class DMarketRateLimiter:
 
     def update_from_headers(self, headers: dict[str, str], endpoint: str) -> None:
         """Update rate limits based on response headers.
-        
+
         Extracts X-RateLimit-Remaining and X-RateLimit-Reset to implement
         adaptive backoff before hitting 429 errors.
-        
+
         Args:
             headers: Response headers
             endpoint: API endpoint path
         """
         remaining = headers.get("X-RateLimit-Remaining")
         reset = headers.get("X-RateLimit-Reset")
-        
+
         if remaining is not None and reset is not None:
             try:
                 rem_int = int(remaining)
                 reset_ts = float(reset)
                 category = self.get_endpoint_category(endpoint)
-                
+
                 # If remaining is less than 10% of limit (approx < 5-10 depending on limit)
                 # Or just absolute safe threshold < 5
                 limit = self._endpoint_limits.get(category, 20)
                 threshold = max(2, int(limit * 0.1))
-                
+
                 if rem_int <= threshold:
                     now = time.time()
                     if reset_ts > now:
@@ -807,4 +831,6 @@ class DMarketRateLimiter:
                         )
             except (ValueError, TypeError):
                 pass
+
+
 from aiolimiter import AsyncLimiter

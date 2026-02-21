@@ -50,7 +50,9 @@ async def check_price_alerts(
 
     for user_id_str, alerts in active_alerts_.items():  # noqa: PLR1702
         # Skip if no active alerts
-        active_alerts = [a for a in alerts if a["active"] and a["type"] == "price_alert"]
+        active_alerts = [
+            a for a in alerts if a["active"] and a["type"] == "price_alert"
+        ]
         if not active_alerts:
             continue
 
@@ -119,7 +121,9 @@ async def check_price_alerts(
         except (APIError, NetworkError) as e:
             logger.exception(f"Error checking price alerts for user {user_id_str}: {e}")
         except Exception as e:  # noqa: BLE001
-            logger.exception(f"Unexpected error checking price alerts for user {user_id_str}: {e}")
+            logger.exception(
+                f"Unexpected error checking price alerts for user {user_id_str}: {e}"
+            )
 
     # Save changes
     save_user_preferences()
@@ -155,7 +159,8 @@ async def check_market_opportunities(
         for game in ["csgo", "dota2", "tf2", "rust"]:
             # Skip games that no users are interested in
             if not any(
-                prefs.get("games", {}).get(game, False) for prefs in interested_users.values()
+                prefs.get("games", {}).get(game, False)
+                for prefs in interested_users.values()
             ):
                 continue
 
@@ -170,7 +175,9 @@ async def check_market_opportunities(
             items_to_analyze = market_items[:50]  # Limit to top 50 items for efficiency
 
             # Get price history for these items
-            item_ids_list: list[str] = [item.get("itemId", "") for item in items_to_analyze]
+            item_ids_list: list[str] = [
+                item.get("itemId", "") for item in items_to_analyze
+            ]
             price_histories = await get_price_history_for_items(
                 api,
                 item_ids_list,
@@ -200,7 +207,9 @@ async def check_market_opportunities(
                     logger.exception(f"Unexpected error analyzing item {item_id}: {e}")
 
             # Sort opportunities by score
-            opportunities.sort(key=operator.itemgetter("opportunity_score"), reverse=True)
+            opportunities.sort(
+                key=operator.itemgetter("opportunity_score"), reverse=True
+            )
 
             # Send notifications to interested users
             for user_id, prefs in interested_users.items():

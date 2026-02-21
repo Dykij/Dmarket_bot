@@ -44,7 +44,11 @@
 """
 
 # Новые функции и контроллеры (январь 2026)
-from .batch_operations import check_duplicate_order, create_batch_target, detect_existing_orders
+from .batch_operations import (
+    check_duplicate_order,
+    create_batch_target,
+    detect_existing_orders,
+)
 from .competition import (
     analyze_target_competition,
     assess_competition,

@@ -260,7 +260,9 @@ class HistoricalDataCollector:
                     # Parse price (cents to USD)
                     price_raw = sale.get("price", {})
                     if isinstance(price_raw, dict):
-                        price_cents = int(price_raw.get("USD", price_raw.get("amount", 0)))
+                        price_cents = int(
+                            price_raw.get("USD", price_raw.get("amount", 0))
+                        )
                     else:
                         price_cents = int(price_raw)
 
@@ -388,7 +390,9 @@ class HistoricalDataCollector:
             Dictionary with cache stats
         """
         now = datetime.now(UTC)
-        valid_count = sum(1 for ts, _ in self._cache.values() if now - ts < self._cache_ttl)
+        valid_count = sum(
+            1 for ts, _ in self._cache.values() if now - ts < self._cache_ttl
+        )
 
         return {
             "total_entries": len(self._cache),

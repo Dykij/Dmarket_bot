@@ -218,7 +218,9 @@ class FileEditor:
             logger.error("revert_failed", backup_path=backup_path, error=str(e))
             return False
 
-    async def commit(self, message: str, files: list[str] | None = None) -> CommitResult:
+    async def commit(
+        self, message: str, files: list[str] | None = None
+    ) -> CommitResult:
         """
         Создать git коммит с изменениями.
 

@@ -43,7 +43,9 @@ class WaxpeerMCPServer:
             RuntimeError: Если MCP модуль не установлен
         """
         if not MCP_AVAILABLE:
-            raise RuntimeError("MCP module is not installed. Install it with: pip install mcp")
+            raise RuntimeError(
+                "MCP module is not installed. Install it with: pip install mcp"
+            )
 
         self.server = Server("waxpeer-bot")
         self.api_client = api_client or WaxpeerAPI()
@@ -169,16 +171,22 @@ class WaxpeerMCPServer:
                 return [
                     TextContent(
                         type="text",
-                        text=json.dumps(result, indent=2, ensure_ascii=False, default=str),
+                        text=json.dumps(
+                            result, indent=2, ensure_ascii=False, default=str
+                        ),
                     )
                 ]
 
             except Exception as e:
-                logger.error("waxpeer_mcp_tool_error", tool=name, error=str(e), exc_info=True)
+                logger.error(
+                    "waxpeer_mcp_tool_error", tool=name, error=str(e), exc_info=True
+                )
                 return [
                     TextContent(
                         type="text",
-                        text=json.dumps({"error": str(e), "tool": name}, ensure_ascii=False),
+                        text=json.dumps(
+                            {"error": str(e), "tool": name}, ensure_ascii=False
+                        ),
                     )
                 ]
 
@@ -246,7 +254,9 @@ class WaxpeerMCPServer:
         return {
             "success": result,
             "item_id": item_id,
-            "message": "Item removed successfully" if result else "Failed to remove item",
+            "message": (
+                "Item removed successfully" if result else "Failed to remove item"
+            ),
         }
 
     async def _cross_platform_arbitrage(
@@ -256,7 +266,9 @@ class WaxpeerMCPServer:
     ) -> dict[str, Any]:
         """Найти кросс-платформенный арбитраж."""
         try:
-            from src.dmarket.cross_platform_arbitrage import CrossPlatformArbitrageScanner
+            from src.dmarket.cross_platform_arbitrage import (
+                CrossPlatformArbitrageScanner,
+            )
 
             scanner = CrossPlatformArbitrageScanner()
             opportunities = await scanner.find_opportunities(

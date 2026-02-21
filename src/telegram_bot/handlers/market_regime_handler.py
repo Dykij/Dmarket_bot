@@ -255,9 +255,15 @@ class MarketRegimeHandler:
             logger.exception(f"Regime analysis error: {e}")
             await query.edit_message_text(
                 f"❌ Ошибка анализа: {e}",
-                reply_markup=InlineKeyboardMarkup([
-                    [InlineKeyboardButton("◀️ Назад", callback_data=f"regime:back:{game}")]
-                ]),
+                reply_markup=InlineKeyboardMarkup(
+                    [
+                        [
+                            InlineKeyboardButton(
+                                "◀️ Назад", callback_data=f"regime:back:{game}"
+                            )
+                        ]
+                    ]
+                ),
             )
 
     async def _show_multi_timeframe(self, query: Any, game: str) -> None:
@@ -291,7 +297,9 @@ class MarketRegimeHandler:
                 window = window_key.replace("window_", "")
                 emoji_tf = REGIME_EMOJI.get(analysis.regime, "📊")
                 name_tf = REGIME_NAMES_RU.get(analysis.regime, "?")
-                text += f"├ {window}p: {emoji_tf} {name_tf} ({analysis.confidence:.0%})\n"
+                text += (
+                    f"├ {window}p: {emoji_tf} {name_tf} ({analysis.confidence:.0%})\n"
+                )
 
             text += (
                 f"\n*Рекомендация:* `{summary['recommendation']}`\n"

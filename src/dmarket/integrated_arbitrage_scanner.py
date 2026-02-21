@@ -100,11 +100,13 @@ class ArbitrageOpportunity:
 
     def __post_init__(self):
         """Calculate liquidity after initialization."""
-        self.liquidity_score = sum([
-            self.dmarket_price is not None,
-            self.waxpeer_price is not None,
-            self.steam_price is not None,
-        ])
+        self.liquidity_score = sum(
+            [
+                self.dmarket_price is not None,
+                self.waxpeer_price is not None,
+                self.steam_price is not None,
+            ]
+        )
         self.is_liquid = self.liquidity_score >= MIN_LIQUIDITY_SCORE
 
 
@@ -137,7 +139,9 @@ class WaxpeerListingTarget:
     waxpeer_item_id: str | None = None
     listed_at: datetime | None = None
 
-    def calculate_target_price(self, waxpeer_price: Decimal, markup: Decimal = Decimal("0.10")) -> None:
+    def calculate_target_price(
+        self, waxpeer_price: Decimal, markup: Decimal = Decimal("0.10")
+    ) -> None:
         """Calculate target listing price with markup.
 
         Args:
@@ -153,7 +157,9 @@ class WaxpeerListingTarget:
         self.target_list_price = target_net / (Decimal(1) - WAXPEER_COMMISSION)
 
         # Calculate expected profit
-        net_after_commission = self.target_list_price * (Decimal(1) - WAXPEER_COMMISSION)
+        net_after_commission = self.target_list_price * (
+            Decimal(1) - WAXPEER_COMMISSION
+        )
         self.expected_profit = net_after_commission - self.buy_price
         self.expected_roi = (self.expected_profit / self.buy_price) * Decimal(100)
 
@@ -206,7 +212,9 @@ class IntegratedArbitrageScanner:
 
         # Storage for discovered opportunities and listing targets
         self.opportunities: list[ArbitrageOpportunity] = []
-        self.dmarket_only_opportunities: list[dict[str, Any]] = []  # DMarket-only arbitrage
+        self.dmarket_only_opportunities: list[dict[str, Any]] = (
+            []
+        )  # DMarket-only arbitrage
         self.listing_targets: dict[str, WaxpeerListingTarget] = {}  # asset_id -> target
 
         # Tracking
@@ -215,51 +223,53 @@ class IntegratedArbitrageScanner:
         self.total_opportunities: int = 0
         self.total_dmarket_opportunities: int = 0
 
-    async def process_arbitrage_item(self, item: dict[str, Any], game: str = "csgo") -> None:
+    async def process_arbitrage_item(
+        self, item: dict[str, Any], game: str = "csgo"
+    ) -> None:
         """Process a single arbitrage item using the FSM for robust handling.
-        
+
         Args:
             item: Item data dictionary
             game: Game identifier
         """
         fsm = TradeStateMachine(item_data=item)
-        
+
         try:
             # 1. Start Analysis
             await fsm.transition_to(TradeState.ANALYZING)
-            
+
             # ... (Here we would insert the specific profit checks, currently simplified)
             # Assuming item passed initial scan filters if it reached here
-            
+
             # 2. Execution Phase (Critical)
             # This persists the intent to buy in the DB
             await fsm.transition_to(TradeState.EXECUTING)
-            
+
             # Actual API Call
             # Note: This is a placeholder for the actual buy call which depends on specific internal API method
             # For now, we assume success to demonstrate FSM flow or wrap it
-            # purchase_response = await self.dmarket.buy_item(...) 
-            
+            # purchase_response = await self.dmarket.buy_item(...)
+
             # Simulating purchase for FSM demonstration
-            purchase_successful = True 
-            
+            purchase_successful = True
+
             if purchase_successful:
                 # 3. Verification Phase
                 await fsm.transition_to(TradeState.VERIFYING)
-                
+
                 # Check inventory/order status...
-                
+
                 # 4. Completion
                 await fsm.transition_to(TradeState.COMPLETED)
-                
+
                 # Add to Waxpeer targets if applicable
                 buy_price = Decimal(str(item.get("price", {}).get("USD", 0))) / 100
                 asset_id = item.get("extra", {}).get("assetId")
                 if asset_id:
                     await self.create_waxpeer_listing_target(
-                        item_name=item.get("title", "Unknown"), 
-                        asset_id=asset_id, 
-                        buy_price=buy_price
+                        item_name=item.get("title", "Unknown"),
+                        asset_id=asset_id,
+                        buy_price=buy_price,
                     )
             else:
                 await fsm.transition_to(TradeState.FAILED)
@@ -295,7 +305,11 @@ class IntegratedArbitrageScanner:
 
         dmarket_prices = results[0] if not isinstance(results[0], Exception) else {}
         waxpeer_prices = results[1] if not isinstance(results[1], Exception) else {}
-        steam_prices = results[2] if len(results) > 2 and not isinstance(results[2], Exception) else {}
+        steam_prices = (
+            results[2]
+            if len(results) > 2 and not isinstance(results[2], Exception)
+            else {}
+        )
 
         logger.info(
             "fetched_platform_prices",
@@ -311,7 +325,8 @@ class IntegratedArbitrageScanner:
 
         # Filter by profitability and liquidity
         filtered = [
-            opp for opp in opportunities
+            opp
+            for opp in opportunities
             if opp.profit_percent >= self.min_profit_percent
             and opp.liquidity_score >= self.min_liquidity_score
         ]
@@ -328,7 +343,11 @@ class IntegratedArbitrageScanner:
         logger.info(
             "scan_complete",
             total_opportunities=len(filtered),
-            avg_profit_percent=sum(o.profit_percent for o in filtered) / len(filtered) if filtered else 0,
+            avg_profit_percent=(
+                sum(o.profit_percent for o in filtered) / len(filtered)
+                if filtered
+                else 0
+            ),
         )
 
         return filtered
@@ -353,7 +372,9 @@ class IntegratedArbitrageScanner:
 
         try:
             # Import intramarket arbitrage module
-            from src.dmarket.intramarket_arbitrage import find_intramarket_opportunities_async
+            from src.dmarket.intramarket_arbitrage import (
+                find_intramarket_opportunities_async,
+            )
 
             # Scan for price anomalies on DMarket
             opportunities = await find_intramarket_opportunities_async(
@@ -365,7 +386,8 @@ class IntegratedArbitrageScanner:
 
             # Filter by minimum profit
             filtered = [
-                opp for opp in opportunities
+                opp
+                for opp in opportunities
                 if opp.get("profit_percent", 0) >= float(self.min_profit_percent)
             ]
 
@@ -379,7 +401,11 @@ class IntegratedArbitrageScanner:
             logger.info(
                 "dmarket_only_scan_complete",
                 total_opportunities=len(filtered),
-                avg_profit=sum(o.get("profit_percent", 0) for o in filtered) / len(filtered) if filtered else 0,
+                avg_profit=(
+                    sum(o.get("profit_percent", 0) for o in filtered) / len(filtered)
+                    if filtered
+                    else 0
+                ),
             )
 
             return filtered
@@ -412,7 +438,9 @@ class IntegratedArbitrageScanner:
         tasks = []
 
         if self.enable_dmarket_arbitrage:
-            tasks.append(self.scan_dmarket_only(game, limit * 2))  # More items for intramarket
+            tasks.append(
+                self.scan_dmarket_only(game, limit * 2)
+            )  # More items for intramarket
 
         if self.enable_cross_platform:
             tasks.append(self.scan_multi_platform(game, limit))
@@ -442,7 +470,9 @@ class IntegratedArbitrageScanner:
 
         return results
 
-    async def _fetch_dmarket_prices(self, game: str, limit: int) -> dict[str, PlatformPrice]:
+    async def _fetch_dmarket_prices(
+        self, game: str, limit: int
+    ) -> dict[str, PlatformPrice]:
         """Fetch prices from DMarket."""
         try:
             # TODO: Implement actual DMarket API call
@@ -453,7 +483,9 @@ class IntegratedArbitrageScanner:
             logger.error("dmarket_fetch_failed", error=str(e))
             return {}
 
-    async def _fetch_waxpeer_prices(self, game: str, limit: int) -> dict[str, PlatformPrice]:
+    async def _fetch_waxpeer_prices(
+        self, game: str, limit: int
+    ) -> dict[str, PlatformPrice]:
         """Fetch prices from Waxpeer (prices in mils: 1000 mils = $1)."""
         try:
             # TODO: Implement actual Waxpeer API call
@@ -464,7 +496,9 @@ class IntegratedArbitrageScanner:
             logger.error("waxpeer_fetch_failed", error=str(e))
             return {}
 
-    async def _fetch_steam_prices(self, game: str, limit: int) -> dict[str, PlatformPrice]:
+    async def _fetch_steam_prices(
+        self, game: str, limit: int
+    ) -> dict[str, PlatformPrice]:
         """Fetch prices from Steam Market."""
         try:
             # TODO: Implement actual Steam API call
@@ -486,7 +520,11 @@ class IntegratedArbitrageScanner:
         opportunities = []
 
         # Get all unique item names
-        all_items = set(dmarket_prices.keys()) | set(waxpeer_prices.keys()) | set(steam_prices.keys())
+        all_items = (
+            set(dmarket_prices.keys())
+            | set(waxpeer_prices.keys())
+            | set(steam_prices.keys())
+        )
 
         for item_name in all_items:
             dmarket = dmarket_prices.get(item_name)
@@ -494,7 +532,9 @@ class IntegratedArbitrageScanner:
             steam = steam_prices.get(item_name)
 
             # Need at least 2 platforms
-            available_count = sum([dmarket is not None, waxpeer is not None, steam is not None])
+            available_count = sum(
+                [dmarket is not None, waxpeer is not None, steam is not None]
+            )
             if available_count < 2:
                 continue
 
@@ -653,15 +693,17 @@ class IntegratedArbitrageScanner:
             if target.expected_roi < self.min_profit_percent:
                 continue
 
-            recommendations.append({
-                "item_name": target.item_name,
-                "asset_id": target.asset_id,
-                "buy_price": float(target.buy_price),
-                "target_list_price": float(target.target_list_price),
-                "expected_profit": float(target.expected_profit),
-                "expected_roi": float(target.expected_roi),
-                "days_held": (datetime.now(UTC) - target.bought_at).days,
-            })
+            recommendations.append(
+                {
+                    "item_name": target.item_name,
+                    "asset_id": target.asset_id,
+                    "buy_price": float(target.buy_price),
+                    "target_list_price": float(target.target_list_price),
+                    "expected_profit": float(target.expected_profit),
+                    "expected_roi": float(target.expected_roi),
+                    "days_held": (datetime.now(UTC) - target.bought_at).days,
+                }
+            )
 
         # Sort by ROI (best first)
         recommendations.sort(key=operator.itemgetter("expected_roi"), reverse=True)
@@ -683,7 +725,9 @@ class IntegratedArbitrageScanner:
         Returns:
             Dictionary with recommended strategy and expected profits
         """
-        logger.info("deciding_sell_strategy", item=item_name, buy_price=float(buy_price))
+        logger.info(
+            "deciding_sell_strategy", item=item_name, buy_price=float(buy_price)
+        )
 
         # Fetch current prices
         try:
@@ -723,7 +767,9 @@ class IntegratedArbitrageScanner:
             if waxpeer_roi > dmarket_roi * Decimal(2):  # Waxpeer 2x better
                 strategy = "hold_for_waxpeer"
                 reason = f"Waxpeer ROI ({waxpeer_roi:.1f}%) is significantly better than DMarket ({dmarket_roi:.1f}%)"
-            elif dmarket_roi >= OPTIMAL_PROFIT_PERCENT:  # DMarket profit is already great
+            elif (
+                dmarket_roi >= OPTIMAL_PROFIT_PERCENT
+            ):  # DMarket profit is already great
                 strategy = "sell_dmarket_immediately"
                 reason = f"DMarket profit is excellent ({dmarket_roi:.1f}%)"
             elif waxpeer_roi > dmarket_roi and waxpeer_roi >= self.min_profit_percent:
@@ -748,7 +794,9 @@ class IntegratedArbitrageScanner:
                 "strategy": strategy,
                 "reason": reason,
                 "dmarket": {
-                    "suggested_price": float(dmarket_suggested) if dmarket_suggested else None,
+                    "suggested_price": (
+                        float(dmarket_suggested) if dmarket_suggested else None
+                    ),
                     "profit": float(dmarket_profit),
                     "roi": float(dmarket_roi),
                 },
@@ -761,13 +809,17 @@ class IntegratedArbitrageScanner:
             }
 
         except Exception as e:
-            logger.error("strategy_decision_failed", item=item_name, error=str(e), exc_info=True)
+            logger.error(
+                "strategy_decision_failed", item=item_name, error=str(e), exc_info=True
+            )
             return {
                 "strategy": "error",
                 "reason": f"Failed to analyze: {e!s}",
             }
 
-    async def _get_dmarket_suggested_price(self, item_name: str, game: str) -> Decimal | None:
+    async def _get_dmarket_suggested_price(
+        self, item_name: str, game: str
+    ) -> Decimal | None:
         """Get DMarket suggested price for an item."""
         try:
             # TODO: Implement actual DMarket API call
@@ -775,7 +827,9 @@ class IntegratedArbitrageScanner:
             # return Decimal(str(result['suggested_price'])) / 100  # Convert cents to USD
             return None
         except Exception as e:
-            logger.error("dmarket_suggested_price_fetch_failed", item=item_name, error=str(e))
+            logger.error(
+                "dmarket_suggested_price_fetch_failed", item=item_name, error=str(e)
+            )
             return None
 
     def get_statistics(self) -> dict[str, Any]:
@@ -787,9 +841,15 @@ class IntegratedArbitrageScanner:
             "current_cross_platform_opportunities": len(self.opportunities),
             "current_dmarket_only_opportunities": len(self.dmarket_only_opportunities),
             "listing_targets": len(self.listing_targets),
-            "unlisted_targets": sum(1 for t in self.listing_targets.values() if not t.is_listed),
+            "unlisted_targets": sum(
+                1 for t in self.listing_targets.values() if not t.is_listed
+            ),
             "last_scan": self.last_scan.isoformat() if self.last_scan else None,
-            "avg_opportunities_per_scan": self.total_opportunities / self.total_scans if self.total_scans > 0 else 0,
+            "avg_opportunities_per_scan": (
+                self.total_opportunities / self.total_scans
+                if self.total_scans > 0
+                else 0
+            ),
             "strategies_enabled": {
                 "dmarket_only": self.enable_dmarket_arbitrage,
                 "cross_platform": self.enable_cross_platform,

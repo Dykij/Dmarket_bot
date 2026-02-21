@@ -35,7 +35,9 @@ from .utils import (
 logger = logging.getLogger(__name__)
 
 
-async def handle_game_filters(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def handle_game_filters(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Обработчик команды /filters - показывает выбор игры для фильтрации.
 
     Args:
@@ -106,7 +108,9 @@ async def handle_select_game_filter_callback(
     )
 
 
-async def handle_price_range_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def handle_price_range_callback(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Обработчик выбора диапазона цен.
 
     Args:
@@ -170,7 +174,9 @@ async def handle_price_range_callback(update: Update, context: ContextTypes.DEFA
     )
 
 
-async def handle_float_range_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def handle_float_range_callback(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Обработчик выбора диапазона Float (для CS2).
 
     Args:
@@ -284,10 +290,20 @@ async def handle_set_category_callback(
             keyboard.append(row.copy())
             row = []
 
-    keyboard.extend((
-        [InlineKeyboardButton("Сбросить", callback_data=f"filter:category:reset:{game}")],
-        [InlineKeyboardButton("⬅️ Назад", callback_data=f"select_game_filter:{game}")],
-    ))
+    keyboard.extend(
+        (
+            [
+                InlineKeyboardButton(
+                    "Сбросить", callback_data=f"filter:category:reset:{game}"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    "⬅️ Назад", callback_data=f"select_game_filter:{game}"
+                )
+            ],
+        )
+    )
 
     reply_markup = InlineKeyboardMarkup(keyboard)
 
@@ -299,7 +315,9 @@ async def handle_set_category_callback(
     )
 
 
-async def handle_set_rarity_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def handle_set_rarity_callback(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Обработчик выбора редкости.
 
     Args:
@@ -342,10 +360,20 @@ async def handle_set_rarity_callback(update: Update, context: ContextTypes.DEFAU
             keyboard.append(row.copy())
             row = []
 
-    keyboard.extend((
-        [InlineKeyboardButton("Сбросить", callback_data=f"filter:rarity:reset:{game}")],
-        [InlineKeyboardButton("⬅️ Назад", callback_data=f"select_game_filter:{game}")],
-    ))
+    keyboard.extend(
+        (
+            [
+                InlineKeyboardButton(
+                    "Сбросить", callback_data=f"filter:rarity:reset:{game}"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    "⬅️ Назад", callback_data=f"select_game_filter:{game}"
+                )
+            ],
+        )
+    )
 
     reply_markup = InlineKeyboardMarkup(keyboard)
 
@@ -398,10 +426,20 @@ async def handle_set_exterior_callback(
             ],
         )
 
-    keyboard.extend((
-        [InlineKeyboardButton("Сбросить", callback_data=f"filter:exterior:reset:{game}")],
-        [InlineKeyboardButton("⬅️ Назад", callback_data=f"select_game_filter:{game}")],
-    ))
+    keyboard.extend(
+        (
+            [
+                InlineKeyboardButton(
+                    "Сбросить", callback_data=f"filter:exterior:reset:{game}"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    "⬅️ Назад", callback_data=f"select_game_filter:{game}"
+                )
+            ],
+        )
+    )
 
     reply_markup = InlineKeyboardMarkup(keyboard)
 
@@ -413,7 +451,9 @@ async def handle_set_exterior_callback(
     )
 
 
-async def handle_set_hero_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def handle_set_hero_callback(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Обработчик выбора героя (для Dota 2).
 
     Args:
@@ -451,10 +491,20 @@ async def handle_set_hero_callback(update: Update, context: ContextTypes.DEFAULT
             keyboard.append(row.copy())
             row = []
 
-    keyboard.extend((
-        [InlineKeyboardButton("Сбросить", callback_data=f"filter:hero:reset:{game}")],
-        [InlineKeyboardButton("⬅️ Назад", callback_data=f"select_game_filter:{game}")],
-    ))
+    keyboard.extend(
+        (
+            [
+                InlineKeyboardButton(
+                    "Сбросить", callback_data=f"filter:hero:reset:{game}"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    "⬅️ Назад", callback_data=f"select_game_filter:{game}"
+                )
+            ],
+        )
+    )
 
     reply_markup = InlineKeyboardMarkup(keyboard)
 
@@ -466,7 +516,9 @@ async def handle_set_hero_callback(update: Update, context: ContextTypes.DEFAULT
     )
 
 
-async def handle_set_slot_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def handle_set_slot_callback(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Обработчик выбора слота (для Dota 2).
 
     Args:
@@ -504,10 +556,20 @@ async def handle_set_slot_callback(update: Update, context: ContextTypes.DEFAULT
             keyboard.append(row.copy())
             row = []
 
-    keyboard.extend((
-        [InlineKeyboardButton("Сбросить", callback_data=f"filter:slot:reset:{game}")],
-        [InlineKeyboardButton("⬅️ Назад", callback_data=f"select_game_filter:{game}")],
-    ))
+    keyboard.extend(
+        (
+            [
+                InlineKeyboardButton(
+                    "Сбросить", callback_data=f"filter:slot:reset:{game}"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    "⬅️ Назад", callback_data=f"select_game_filter:{game}"
+                )
+            ],
+        )
+    )
 
     reply_markup = InlineKeyboardMarkup(keyboard)
 
@@ -519,7 +581,9 @@ async def handle_set_slot_callback(update: Update, context: ContextTypes.DEFAULT
     )
 
 
-async def handle_set_class_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def handle_set_class_callback(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Обработчик выбора класса (для TF2).
 
     Args:
@@ -557,10 +621,20 @@ async def handle_set_class_callback(update: Update, context: ContextTypes.DEFAUL
             ],
         )
 
-    keyboard.extend((
-        [InlineKeyboardButton("Сбросить", callback_data=f"filter:class:reset:{game}")],
-        [InlineKeyboardButton("⬅️ Назад", callback_data=f"select_game_filter:{game}")],
-    ))
+    keyboard.extend(
+        (
+            [
+                InlineKeyboardButton(
+                    "Сбросить", callback_data=f"filter:class:reset:{game}"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    "⬅️ Назад", callback_data=f"select_game_filter:{game}"
+                )
+            ],
+        )
+    )
 
     reply_markup = InlineKeyboardMarkup(keyboard)
 
@@ -572,7 +646,9 @@ async def handle_set_class_callback(update: Update, context: ContextTypes.DEFAUL
     )
 
 
-async def handle_set_type_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def handle_set_type_callback(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Обработчик выбора типа (для TF2 и Rust).
 
     Args:
@@ -613,10 +689,20 @@ async def handle_set_type_callback(update: Update, context: ContextTypes.DEFAULT
             keyboard.append(row.copy())
             row = []
 
-    keyboard.extend((
-        [InlineKeyboardButton("Сбросить", callback_data=f"filter:type:reset:{game}")],
-        [InlineKeyboardButton("⬅️ Назад", callback_data=f"select_game_filter:{game}")],
-    ))
+    keyboard.extend(
+        (
+            [
+                InlineKeyboardButton(
+                    "Сбросить", callback_data=f"filter:type:reset:{game}"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    "⬅️ Назад", callback_data=f"select_game_filter:{game}"
+                )
+            ],
+        )
+    )
 
     reply_markup = InlineKeyboardMarkup(keyboard)
 
@@ -628,7 +714,9 @@ async def handle_set_type_callback(update: Update, context: ContextTypes.DEFAULT
     )
 
 
-async def handle_set_quality_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def handle_set_quality_callback(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Обработчик выбора качества (для TF2).
 
     Args:
@@ -666,10 +754,20 @@ async def handle_set_quality_callback(update: Update, context: ContextTypes.DEFA
             ],
         )
 
-    keyboard.extend((
-        [InlineKeyboardButton("Сбросить", callback_data=f"filter:quality:reset:{game}")],
-        [InlineKeyboardButton("⬅️ Назад", callback_data=f"select_game_filter:{game}")],
-    ))
+    keyboard.extend(
+        (
+            [
+                InlineKeyboardButton(
+                    "Сбросить", callback_data=f"filter:quality:reset:{game}"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    "⬅️ Назад", callback_data=f"select_game_filter:{game}"
+                )
+            ],
+        )
+    )
 
     reply_markup = InlineKeyboardMarkup(keyboard)
 
@@ -681,7 +779,9 @@ async def handle_set_quality_callback(update: Update, context: ContextTypes.DEFA
     )
 
 
-async def handle_filter_value_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def handle_filter_value_callback(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Обработчик установки значения фильтра.
 
     Args:

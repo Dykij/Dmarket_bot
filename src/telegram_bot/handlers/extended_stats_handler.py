@@ -119,9 +119,19 @@ async def _get_detailed_stats(db: Any) -> dict[str, Any]:
             game_id = row[0] if isinstance(row, tuple) else row.get("game_id")
             game_name = game_names.get(game_id, game_id[:8] if game_id else "Unknown")
 
-            trade_count = row[1] if isinstance(row, tuple) else row.get("trade_count", 0)
-            profit = (row[2] or 0) / 100 if isinstance(row, tuple) else row.get("profit", 0) / 100
-            volume = (row[3] or 0) / 100 if isinstance(row, tuple) else row.get("volume", 0) / 100
+            trade_count = (
+                row[1] if isinstance(row, tuple) else row.get("trade_count", 0)
+            )
+            profit = (
+                (row[2] or 0) / 100
+                if isinstance(row, tuple)
+                else row.get("profit", 0) / 100
+            )
+            volume = (
+                (row[3] or 0) / 100
+                if isinstance(row, tuple)
+                else row.get("volume", 0) / 100
+            )
             wins = row[4] if isinstance(row, tuple) else row.get("wins", 0)
             losses = row[5] if isinstance(row, tuple) else row.get("losses", 0)
 
@@ -229,20 +239,27 @@ def _format_stats_message(stats: dict[str, Any]) -> str:
     total_losses = stats["total"]["losses"]
 
     profit_sign = "+" if total_profit >= 0 else ""
-    lines.extend([
-        f"💰 *Итого чистая прибыль:* {profit_sign}${total_profit:.2f}",
-        f"🚀 *ROI:* {roi:+.1f}%",
-        f"📈 *Всего сделок:* {total_trades} (✅{total_wins} / ❌{total_losses})",
-        "",
-        f"💵 *Начальный баланс:* ${initial_balance:.2f}",
-        f"💎 *Текущий баланс:* ${initial_balance + total_profit:.2f}",
-    ])
+    lines.extend(
+        [
+            f"💰 *Итого чистая прибыль:* {profit_sign}${total_profit:.2f}",
+            f"🚀 *ROI:* {roi:+.1f}%",
+            f"📈 *Всего сделок:* {total_trades} (✅{total_wins} / ❌{total_losses})",
+            "",
+            f"💵 *Начальный баланс:* ${initial_balance:.2f}",
+            f"💎 *Текущий баланс:* ${initial_balance + total_profit:.2f}",
+        ]
+    )
 
     # Best performing game
     if stats["by_game"]:
         best_game = max(stats["by_game"].items(), key=lambda x: x[1].get("profit", 0))
         if best_game[1].get("profit", 0) > 0:
-            lines.extend(["", f"🏆 *Лучшая игра:* {best_game[0]} (+${best_game[1]['profit']:.2f})"])
+            lines.extend(
+                [
+                    "",
+                    f"🏆 *Лучшая игра:* {best_game[0]} (+${best_game[1]['profit']:.2f})",
+                ]
+            )
 
     return "\n".join(lines)
 
@@ -278,9 +295,11 @@ async def portfolio_command(
         # Calculate portfolio value
         total_value = (
             sum(
-                item.get("price", {}).get("amount", 0)
-                if isinstance(item.get("price"), dict)
-                else item.get("price", 0)
+                (
+                    item.get("price", {}).get("amount", 0)
+                    if isinstance(item.get("price"), dict)
+                    else item.get("price", 0)
+                )
                 for item in items
             )
             / 100
@@ -314,16 +333,20 @@ async def portfolio_command(
         for game_name, game_items in sorted(games.items()):
             game_value = (
                 sum(
-                    item.get("price", {}).get("amount", 0)
-                    if isinstance(item.get("price"), dict)
-                    else item.get("price", 0)
+                    (
+                        item.get("price", {}).get("amount", 0)
+                        if isinstance(item.get("price"), dict)
+                        else item.get("price", 0)
+                    )
                     for item in game_items
                 )
                 / 100
             )
             lines.append(f"🎮 {game_name}: {len(game_items)} шт. (${game_value:.2f})")
 
-        await update.effective_message.reply_text("\n".join(lines), parse_mode="Markdown")
+        await update.effective_message.reply_text(
+            "\n".join(lines), parse_mode="Markdown"
+        )
 
     except Exception as e:
         logger.exception(f"Error in portfolio_command: {e}")

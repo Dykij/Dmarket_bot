@@ -73,9 +73,7 @@ async def handle_network_error(
     if isinstance(error, RetryAfter):
         # При превышении лимита запросов указываем время ожидания
         retry_after = error.retry_after
-        message = (
-            f"Превышен лимит запросов к Telegram API. Пожалуйста, подождите {retry_after} секунд."
-        )
+        message = f"Превышен лимит запросов к Telegram API. Пожалуйста, подождите {retry_after} секунд."
         logger.warning(
             "Превышен лимит запросов: %s. Ожидание %s секунд.",
             error,
@@ -83,7 +81,9 @@ async def handle_network_error(
         )
 
     elif isinstance(error, TimedOut):
-        message = "Истекло время ожидания ответа от Telegram. Пожалуйста, попробуйте позже."
+        message = (
+            "Истекло время ожидания ответа от Telegram. Пожалуйста, попробуйте позже."
+        )
         logger.warning("Тайм-аут соединения: %s", error)
 
     elif isinstance(error, NetworkError):
@@ -228,18 +228,22 @@ async def handle_dmarket_api_error(
 
     # Формируем сообщение для пользователя
     if error_code == 401:
-        user_message = "Ошибка авторизации в DMarket API. Пожалуйста, проверьте ваши API ключи."
+        user_message = (
+            "Ошибка авторизации в DMarket API. Пожалуйста, проверьте ваши API ключи."
+        )
         logger.error("Ошибка авторизации DMarket API: неверные ключи")
     elif error_code == 429:
-        user_message = "Превышен лимит запросов к DMarket API. Пожалуйста, попробуйте позже."
+        user_message = (
+            "Превышен лимит запросов к DMarket API. Пожалуйста, попробуйте позже."
+        )
         logger.warning("Превышен лимит запросов к DMarket API: %s", dmarket_error)
     elif error_code in {500, 502, 503, 504}:
-        user_message = "Сервис DMarket временно недоступен. Пожалуйста, попробуйте позже."
+        user_message = (
+            "Сервис DMarket временно недоступен. Пожалуйста, попробуйте позже."
+        )
         logger.error("Ошибка сервера DMarket: %s", dmarket_error)
     else:
-        user_message = (
-            "Произошла ошибка при взаимодействии с DMarket. Пожалуйста, попробуйте позже."
-        )
+        user_message = "Произошла ошибка при взаимодействии с DMarket. Пожалуйста, попробуйте позже."
         logger.error("Ошибка DMarket API: %s, %s", error, dmarket_error)
 
     # Отправляем сообщение пользователю
@@ -260,7 +264,9 @@ async def handle_dmarket_api_error(
 # Основной обработчик ошибок
 
 
-async def error_handler(update: Update | None, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def error_handler(
+    update: Update | None, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Глобальный обработчик ошибок для Telegram бота.
 
     Обрабатывает все типы ошибок, логирует их, отправляет сообщения

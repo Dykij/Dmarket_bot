@@ -95,10 +95,12 @@ class UserRateLimiter:
 
     def _record_violation(self, user_id: int, action: str) -> None:
         """Record a rate limit violation."""
-        self._violations[user_id].append({
-            "action": action,
-            "timestamp": datetime.now(UTC),
-        })
+        self._violations[user_id].append(
+            {
+                "action": action,
+                "timestamp": datetime.now(UTC),
+            }
+        )
 
         # Keep only last hour of violations
         cutoff = datetime.now(UTC) - timedelta(hours=1)

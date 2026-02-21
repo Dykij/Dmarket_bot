@@ -157,7 +157,9 @@ class Alert:
             return abs(current_value - self.target_value) < Decimal("0.01")
         if self.condition == AlertCondition.CHANGE_PERCENT:
             if self.reference_price and self.reference_price > 0:
-                change_percent = abs((current_value - self.reference_price) / self.reference_price * 100)
+                change_percent = abs(
+                    (current_value - self.reference_price) / self.reference_price * 100
+                )
                 return change_percent >= self.target_value
         return False
 
@@ -543,7 +545,9 @@ class AlertManager:
         if user_id:
             alerts = self.get_user_alerts(user_id, status=AlertStatus.ACTIVE)
         else:
-            alerts = [a for a in self._alerts.values() if a.status == AlertStatus.ACTIVE]
+            alerts = [
+                a for a in self._alerts.values() if a.status == AlertStatus.ACTIVE
+            ]
 
         for alert in alerts:
             # Skip if expired
@@ -588,8 +592,7 @@ class AlertManager:
 
         # Clean old triggers
         self._user_triggers[user_id] = [
-            t for t in self._user_triggers[user_id]
-            if t > hour_ago
+            t for t in self._user_triggers[user_id] if t > hour_ago
         ]
 
         return len(self._user_triggers[user_id]) < self.config.max_triggers_per_hour
@@ -714,8 +717,7 @@ class AlertManager:
             "active_alerts": active,
             "total_triggers": triggered,
             "by_type": {
-                t.value: sum(1 for a in alerts if a.alert_type == t)
-                for t in AlertType
+                t.value: sum(1 for a in alerts if a.alert_type == t) for t in AlertType
             },
             "by_priority": {
                 p.value: sum(1 for a in alerts if a.priority == p)

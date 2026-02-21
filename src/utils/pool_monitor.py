@@ -92,14 +92,20 @@ class PoolMonitor:
 
             # Get pool info
             created_connections = (
-                len(pool._created_connections) if hasattr(pool, "_created_connections") else 0
+                len(pool._created_connections)
+                if hasattr(pool, "_created_connections")
+                else 0
             )
             available_connections = (
-                len(pool._available_connections) if hasattr(pool, "_available_connections") else 0
+                len(pool._available_connections)
+                if hasattr(pool, "_available_connections")
+                else 0
             )
             in_use = created_connections - available_connections
 
-            max_connections = pool.max_connections if hasattr(pool, "max_connections") else 50
+            max_connections = (
+                pool.max_connections if hasattr(pool, "max_connections") else 50
+            )
 
             utilization = (in_use / max_connections * 100) if max_connections > 0 else 0
 
@@ -227,7 +233,10 @@ class PoolMonitor:
             # Consider unhealthy if:
             # - Utilization > 90%
             # - Overflow connections being used
-            is_healthy = stat.utilization_percent < 90 and stat.overflow < stat.max_overflow * 0.5
+            is_healthy = (
+                stat.utilization_percent < 90
+                and stat.overflow < stat.max_overflow * 0.5
+            )
 
             health[name] = is_healthy
 

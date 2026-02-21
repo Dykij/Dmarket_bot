@@ -186,7 +186,11 @@ class DiscordNotifier:
         Returns:
             True if sent successfully
         """
-        level = NotificationLevel.SUCCESS if profit and profit > 0 else NotificationLevel.INFO
+        level = (
+            NotificationLevel.SUCCESS
+            if profit and profit > 0
+            else NotificationLevel.INFO
+        )
 
         fields = [
             EmbedField(name="Item", value=item_name, inline=False),
@@ -264,7 +268,9 @@ class DiscordNotifier:
 
         if traceback:
             # Truncate traceback to fit Discord limits
-            tb_truncated = traceback[:1000] + "..." if len(traceback) > 1000 else traceback
+            tb_truncated = (
+                traceback[:1000] + "..." if len(traceback) > 1000 else traceback
+            )
             fields.append(
                 EmbedField(
                     name="Traceback",
@@ -301,7 +307,8 @@ class DiscordNotifier:
         }.get(status.lower(), NotificationLevel.INFO)
 
         fields = [
-            EmbedField(name=name, value=status_val) for name, status_val in components.items()
+            EmbedField(name=name, value=status_val)
+            for name, status_val in components.items()
         ]
 
         return await self.send_notification(

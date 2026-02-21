@@ -182,7 +182,9 @@ class BlacklistManager:
             True if item should be skipped
         """
         title_lower = item_title.lower()
-        return any(keyword.lower() in title_lower for keyword in self.forbidden_keywords)
+        return any(
+            keyword.lower() in title_lower for keyword in self.forbidden_keywords
+        )
 
     def should_skip_item(
         self,
@@ -301,7 +303,8 @@ class BlacklistManager:
         # Check if threshold exceeded
         if failure_count >= self._failure_threshold:
             self.add_seller_to_blacklist(
-                seller_id, reason=f"Auto-blacklisted after {failure_count} failed transactions"
+                seller_id,
+                reason=f"Auto-blacklisted after {failure_count} failed transactions",
             )
             # Reset counter after blacklisting
             del self._failure_counter[seller_id]

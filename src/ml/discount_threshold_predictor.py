@@ -155,7 +155,11 @@ class DiscountThresholdPredictor:
         Args:
             model_path: Path to save/load the model
         """
-        self.model_path = Path(model_path) if model_path else Path("data/discount_threshold_model.pkl")
+        self.model_path = (
+            Path(model_path)
+            if model_path
+            else Path("data/discount_threshold_model.pkl")
+        )
 
         # ML models (lazy initialization)
         self._gradient_boost = None
@@ -213,28 +217,35 @@ class DiscountThresholdPredictor:
 
     def _extract_features(self, example: TrainingExample) -> np.ndarray:
         """Extract feature vector from training example."""
-        return np.array([
-            example.current_price,
-            example.historical_avg_price,
-            example.price_volatility,
-            example.sales_volume_24h,
-            example.market_depth,
-            example.hour_of_day,
-            example.day_of_week,
-            # Game encoding (one-hot)
-            1.0 if example.game == "csgo" else 0.0,
-            1.0 if example.game == "dota2" else 0.0,
-            1.0 if example.game == "tf2" else 0.0,
-            1.0 if example.game == "rust" else 0.0,
-            # Source encoding
-            1.0 if example.source == "dmarket" else 0.0,
-            1.0 if example.source == "waxpeer" else 0.0,
-            1.0 if example.source == "steam" else 0.0,
-            # Derived features
-            example.historical_avg_price / example.current_price if example.current_price > 0 else 1.0,
-            np.log1p(example.current_price),
-            np.log1p(example.sales_volume_24h + 1),
-        ], dtype=np.float64)
+        return np.array(
+            [
+                example.current_price,
+                example.historical_avg_price,
+                example.price_volatility,
+                example.sales_volume_24h,
+                example.market_depth,
+                example.hour_of_day,
+                example.day_of_week,
+                # Game encoding (one-hot)
+                1.0 if example.game == "csgo" else 0.0,
+                1.0 if example.game == "dota2" else 0.0,
+                1.0 if example.game == "tf2" else 0.0,
+                1.0 if example.game == "rust" else 0.0,
+                # Source encoding
+                1.0 if example.source == "dmarket" else 0.0,
+                1.0 if example.source == "waxpeer" else 0.0,
+                1.0 if example.source == "steam" else 0.0,
+                # Derived features
+                (
+                    example.historical_avg_price / example.current_price
+                    if example.current_price > 0
+                    else 1.0
+                ),
+                np.log1p(example.current_price),
+                np.log1p(example.sales_volume_24h + 1),
+            ],
+            dtype=np.float64,
+        )
 
     def add_training_example(
         self,
@@ -407,7 +418,10 @@ class DiscountThresholdPredictor:
         if len(self._training_examples) < self.MIN_TRAINING_SAMPLES and not force:
             logger.warning(
                 "Not enough training data",
-                extra={"samples": len(self._training_examples), "min_required": self.MIN_TRAINING_SAMPLES},
+                extra={
+                    "samples": len(self._training_examples),
+                    "min_required": self.MIN_TRAINING_SAMPLES,
+                },
             )
             return False
 
@@ -422,10 +436,12 @@ class DiscountThresholdPredictor:
 
         # Target: optimal threshold is based on profitability
         # We learn what discount threshold leads to profitable trades
-        y = np.array([
-            ex.actual_discount if ex.was_profitable else ex.actual_discount + 5.0
-            for ex in self._training_examples
-        ])
+        y = np.array(
+            [
+                ex.actual_discount if ex.was_profitable else ex.actual_discount + 5.0
+                for ex in self._training_examples
+            ]
+        )
 
         try:
             # Train ensemble
@@ -524,7 +540,9 @@ class DiscountThresholdPredictor:
                     day_of_week=now.weekday(),
                     market_data=current_market_data,
                 )
-                g_pred = 0.7 * self._gradient_boost.predict(g_features.reshape(1, -1))[0]
+                g_pred = (
+                    0.7 * self._gradient_boost.predict(g_features.reshape(1, -1))[0]
+                )
                 g_pred += 0.3 * self._ridge.predict(g_features.reshape(1, -1))[0]
                 thresholds_by_game[g] = float(np.clip(g_pred, 5.0, 35.0))
 
@@ -587,28 +605,31 @@ class DiscountThresholdPredictor:
             avg_volume = market_data.get("volume_24h", avg_volume)
             avg_depth = market_data.get("market_depth", avg_depth)
 
-        return np.array([
-            avg_price,
-            avg_hist_price,
-            avg_volatility,
-            avg_volume,
-            avg_depth,
-            hour_of_day,
-            day_of_week,
-            # Game encoding
-            1.0 if game == "csgo" else 0.0,
-            1.0 if game == "dota2" else 0.0,
-            1.0 if game == "tf2" else 0.0,
-            1.0 if game == "rust" else 0.0,
-            # Source encoding (use DMarket as default for prediction)
-            1.0,  # dmarket
-            0.0,  # waxpeer
-            0.0,  # steam
-            # Derived features
-            avg_hist_price / avg_price if avg_price > 0 else 1.0,
-            np.log1p(avg_price),
-            np.log1p(avg_volume + 1),
-        ], dtype=np.float64)
+        return np.array(
+            [
+                avg_price,
+                avg_hist_price,
+                avg_volatility,
+                avg_volume,
+                avg_depth,
+                hour_of_day,
+                day_of_week,
+                # Game encoding
+                1.0 if game == "csgo" else 0.0,
+                1.0 if game == "dota2" else 0.0,
+                1.0 if game == "tf2" else 0.0,
+                1.0 if game == "rust" else 0.0,
+                # Source encoding (use DMarket as default for prediction)
+                1.0,  # dmarket
+                0.0,  # waxpeer
+                0.0,  # steam
+                # Derived features
+                avg_hist_price / avg_price if avg_price > 0 else 1.0,
+                np.log1p(avg_price),
+                np.log1p(avg_volume + 1),
+            ],
+            dtype=np.float64,
+        )
 
     def _generate_reasoning(
         self,
@@ -648,7 +669,9 @@ class DiscountThresholdPredictor:
         if condition != self._market_condition:
             self._market_condition = condition
             self._prediction_cache.clear()  # Invalidate cache
-            logger.info("Market condition updated", extra={"condition": condition.value})
+            logger.info(
+                "Market condition updated", extra={"condition": condition.value}
+            )
 
     def _save_model(self) -> None:
         """Save model to disk using joblib (safer than pickle)."""
@@ -742,7 +765,9 @@ class DiscountThresholdPredictor:
             "is_trained": self._is_trained,
             "total_examples": total_count,
             "profitable_examples": profitable_count,
-            "profitability_rate": profitable_count / total_count if total_count > 0 else 0,
+            "profitability_rate": (
+                profitable_count / total_count if total_count > 0 else 0
+            ),
             "games": games,
             "sources": sources,
             "market_condition": self._market_condition.value,

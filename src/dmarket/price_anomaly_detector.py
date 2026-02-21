@@ -37,7 +37,9 @@ async def find_price_anomalies(
         List of price anomaly opportunities
 
     """
-    logger.info(f"Searching for price anomalies in {game} (min diff: {price_diff_percent}%)")
+    logger.info(
+        f"Searching for price anomalies in {game} (min diff: {price_diff_percent}%)"
+    )
 
     # Initialize API client
     api_client, should_close = await _init_api_client(dmarket_api)
@@ -182,7 +184,9 @@ def _extract_csgo_key_parts(title: str) -> list[str]:
         key_parts.append(base_title)
 
         # Add exterior
-        exterior = title.rsplit("(", maxsplit=1)[-1].split(")")[0] if "(" in title else ""
+        exterior = (
+            title.rsplit("(", maxsplit=1)[-1].split(")")[0] if "(" in title else ""
+        )
         if exterior:
             key_parts.append(exterior)
     else:
@@ -237,7 +241,9 @@ def _find_anomalies_in_groups(
         items_list.sort(key=operator.itemgetter("price"))
 
         # Find price differences
-        group_anomalies = _compare_item_prices(items_list, price_diff_percent, game, key)
+        group_anomalies = _compare_item_prices(
+            items_list, price_diff_percent, game, key
+        )
         anomalies.extend(group_anomalies)
 
     return anomalies

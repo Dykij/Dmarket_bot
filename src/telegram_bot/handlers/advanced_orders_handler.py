@@ -63,9 +63,7 @@ class AdvancedOrderHandler:
         """Показать главное меню расширенных ордеров."""
         keyboard = [
             [
-                InlineKeyboardButton(
-                    "📊 Float Order", callback_data="adv_order_float"
-                ),
+                InlineKeyboardButton("📊 Float Order", callback_data="adv_order_float"),
                 InlineKeyboardButton(
                     "💎 Doppler Order", callback_data="adv_order_doppler"
                 ),
@@ -79,9 +77,7 @@ class AdvancedOrderHandler:
                 ),
             ],
             [
-                InlineKeyboardButton(
-                    "📋 Шаблоны", callback_data="adv_order_templates"
-                ),
+                InlineKeyboardButton("📋 Шаблоны", callback_data="adv_order_templates"),
                 InlineKeyboardButton(
                     "📈 Мои ордера", callback_data="adv_order_my_orders"
                 ),
@@ -178,7 +174,9 @@ class AdvancedOrderHandler:
         else:
             return SELECTING_ORDER_TYPE
 
-        keyboard = [[InlineKeyboardButton("❌ Отмена", callback_data="adv_order_cancel")]]
+        keyboard = [
+            [InlineKeyboardButton("❌ Отмена", callback_data="adv_order_cancel")]
+        ]
 
         await query.edit_message_text(
             text,
@@ -221,7 +219,9 @@ class AdvancedOrderHandler:
                 ],
                 [
                     InlineKeyboardButton("💎 Ruby", callback_data="doppler_ruby"),
-                    InlineKeyboardButton("💙 Sapphire", callback_data="doppler_sapphire"),
+                    InlineKeyboardButton(
+                        "💙 Sapphire", callback_data="doppler_sapphire"
+                    ),
                 ],
                 [
                     InlineKeyboardButton("🖤 Black Pearl", callback_data="doppler_bp"),
@@ -231,8 +231,7 @@ class AdvancedOrderHandler:
             ]
 
             await update.message.reply_text(
-                f"💎 *Doppler Order для:*\n`{item_title}`\n\n"
-                "Выберите фазу:",
+                f"💎 *Doppler Order для:*\n`{item_title}`\n\n" "Выберите фазу:",
                 reply_markup=InlineKeyboardMarkup(keyboard),
                 parse_mode="Markdown",
             )
@@ -261,7 +260,9 @@ class AdvancedOrderHandler:
         else:
             return SELECTING_ORDER_TYPE
 
-        keyboard = [[InlineKeyboardButton("❌ Отмена", callback_data="adv_order_cancel")]]
+        keyboard = [
+            [InlineKeyboardButton("❌ Отмена", callback_data="adv_order_cancel")]
+        ]
 
         await update.message.reply_text(
             text,
@@ -309,7 +310,13 @@ class AdvancedOrderHandler:
                     "Пример: `500`"
                 )
 
-                keyboard = [[InlineKeyboardButton("❌ Отмена", callback_data="adv_order_cancel")]]
+                keyboard = [
+                    [
+                        InlineKeyboardButton(
+                            "❌ Отмена", callback_data="adv_order_cancel"
+                        )
+                    ]
+                ]
                 await query.edit_message_text(
                     text,
                     reply_markup=InlineKeyboardMarkup(keyboard),
@@ -370,7 +377,9 @@ class AdvancedOrderHandler:
         else:
             filter_text = "Unknown"
 
-        keyboard = [[InlineKeyboardButton("❌ Отмена", callback_data="adv_order_cancel")]]
+        keyboard = [
+            [InlineKeyboardButton("❌ Отмена", callback_data="adv_order_cancel")]
+        ]
 
         await update.message.reply_text(
             f"📦 *Создание ордера*\n\n"
@@ -390,7 +399,9 @@ class AdvancedOrderHandler:
     ) -> int:
         """Обработать ввод цены."""
         try:
-            price = float(update.message.text.strip().replace("$", "").replace(",", "."))
+            price = float(
+                update.message.text.strip().replace("$", "").replace(",", ".")
+            )
             if price <= 0:
                 raise ValueError("Price must be positive")
             context.user_data["max_price"] = price
@@ -438,7 +449,9 @@ class AdvancedOrderHandler:
 
         keyboard = [
             [
-                InlineKeyboardButton("✅ Подтвердить", callback_data="adv_order_confirm"),
+                InlineKeyboardButton(
+                    "✅ Подтвердить", callback_data="adv_order_confirm"
+                ),
                 InlineKeyboardButton("❌ Отмена", callback_data="adv_order_cancel"),
             ],
         ]
@@ -548,7 +561,9 @@ class AdvancedOrderHandler:
             elif order_type == "sticker":
                 filter_obj = AdvancedOrderFilter(
                     sticker_filter=StickerFilter(
-                        sticker_categories=[context.user_data.get("sticker_category", "")],
+                        sticker_categories=[
+                            context.user_data.get("sticker_category", "")
+                        ],
                         min_stickers=1,
                     )
                 )
@@ -666,17 +681,17 @@ class AdvancedOrderHandler:
         await query.answer("🔍 Сканирование...")
 
         if self.float_arbitrage is None:
-            await query.edit_message_text(
-                "❌ Float arbitrage module not initialized"
-            )
+            await query.edit_message_text("❌ Float arbitrage module not initialized")
             return SELECTING_ORDER_TYPE
 
         try:
-            opportunities = await self.float_arbitrage.find_float_arbitrage_opportunities(
-                game="csgo",
-                min_price=10.0,
-                max_price=100.0,
-                limit=10,
+            opportunities = (
+                await self.float_arbitrage.find_float_arbitrage_opportunities(
+                    game="csgo",
+                    min_price=10.0,
+                    max_price=100.0,
+                    limit=10,
+                )
             )
 
             if opportunities:

@@ -85,7 +85,9 @@ class ParallelResult:
 
 
 async def run_parallel(
-    tasks: Sequence[tuple[Callable[..., Awaitable[T]], ...] | Callable[[], Awaitable[T]]],
+    tasks: Sequence[
+        tuple[Callable[..., Awaitable[T]], ...] | Callable[[], Awaitable[T]]
+    ],
 ) -> list[T]:
     """Run multiple async tasks in parallel.
 
@@ -148,7 +150,9 @@ async def run_parallel(
 
 
 async def _fallback_gather(
-    tasks: Sequence[tuple[Callable[..., Awaitable[T]], ...] | Callable[[], Awaitable[T]]],
+    tasks: Sequence[
+        tuple[Callable[..., Awaitable[T]], ...] | Callable[[], Awaitable[T]]
+    ],
 ) -> list[T]:
     """Fallback using asyncio.gather when asyncer not available."""
     awaitables = []
@@ -194,7 +198,9 @@ class _AsyncioTaskGroupWrapper:
         self._tg = task_group
         self._tasks: list[asyncio.Task[Any]] = []
 
-    def soonify(self, func: Callable[P, Awaitable[T]]) -> Callable[P, "_FakeSoonValue[T]"]:
+    def soonify(
+        self, func: Callable[P, Awaitable[T]]
+    ) -> Callable[P, "_FakeSoonValue[T]"]:
         """Create a soonified version of the function."""
 
         def wrapper(*args: P.args, **kwargs: P.kwargs) -> "_FakeSoonValue[T]":

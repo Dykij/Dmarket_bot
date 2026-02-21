@@ -178,7 +178,9 @@ class AutoSteamArbitrageScanner:
             logger.info(f"Enhanced {len(enhanced_items)} items with Steam data")
 
             # 3. Фильтровать по ROI
-            opportunities = [item for item in enhanced_items if item.get("roi", 0) >= self.min_roi]
+            opportunities = [
+                item for item in enhanced_items if item.get("roi", 0) >= self.min_roi
+            ]
 
             if not opportunities:
                 logger.info("No arbitrage opportunities found")
@@ -194,7 +196,9 @@ class AutoSteamArbitrageScanner:
         except Exception as e:
             logger.error(f"Error performing scan: {e}", exc_info=True)
 
-    async def _send_opportunities_notification(self, opportunities: list[dict[str, Any]]) -> None:
+    async def _send_opportunities_notification(
+        self, opportunities: list[dict[str, Any]]
+    ) -> None:
         """
         Отправить уведомление о найденных возможностях.
 
@@ -250,7 +254,9 @@ class AutoSteamArbitrageScanner:
             "running": self._running,
             "scans_completed": self.scans_completed,
             "opportunities_found": self.opportunities_found,
-            "last_scan_time": self.last_scan_time.isoformat() if self.last_scan_time else None,
+            "last_scan_time": (
+                self.last_scan_time.isoformat() if self.last_scan_time else None
+            ),
             "config": {
                 "game": self.game,
                 "scan_interval_minutes": self.scan_interval // 60,

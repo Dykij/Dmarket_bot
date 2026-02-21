@@ -150,14 +150,16 @@ class ProjectIndex:
             for name, symbols in self.symbols.items():
                 if query.lower() in name.lower():
                     for symbol in symbols:
-                        results.append(SearchResult(
-                            file=symbol.file,
-                            line=symbol.line,
-                            snippet=f"{symbol.type}: {symbol.name}",
-                            score=1.0 if name.lower() == query.lower() else 0.8,
-                            symbol=symbol,
-                            match_type="symbol",
-                        ))
+                        results.append(
+                            SearchResult(
+                                file=symbol.file,
+                                line=symbol.line,
+                                snippet=f"{symbol.type}: {symbol.name}",
+                                score=1.0 if name.lower() == query.lower() else 0.8,
+                                symbol=symbol,
+                                match_type="symbol",
+                            )
+                        )
 
         # Текстовый поиск в документации
         if search_type in ("text", "all"):
@@ -170,12 +172,14 @@ class ProjectIndex:
                     end = min(len(content), idx + len(query) + 50)
                     snippet = content[start:end]
 
-                    results.append(SearchResult(
-                        file=path,
-                        snippet=f"...{snippet}...",
-                        score=0.7,
-                        match_type="text",
-                    ))
+                    results.append(
+                        SearchResult(
+                            file=path,
+                            snippet=f"...{snippet}...",
+                            score=0.7,
+                            match_type="text",
+                        )
+                    )
 
         # Семантический поиск
         if search_type in ("semantic", "all") and self._embeddings:
@@ -185,12 +189,14 @@ class ProjectIndex:
                 # Косинусное сходство
                 score = sum(a * b for a, b in zip(query_embedding, embedding))
                 if score > 0.1:
-                    results.append(SearchResult(
-                        file=path,
-                        snippet="[Semantic match]",
-                        score=score * 0.5,  # Снижаем вес для простого алгоритма
-                        match_type="semantic",
-                    ))
+                    results.append(
+                        SearchResult(
+                            file=path,
+                            snippet="[Semantic match]",
+                            score=score * 0.5,  # Снижаем вес для простого алгоритма
+                            match_type="semantic",
+                        )
+                    )
 
         # Сортировка по релевантности
         results.sort(key=lambda r: r.score, reverse=True)
@@ -326,31 +332,37 @@ class ProjectIndexer:
 
         for node in ast.walk(tree):
             if isinstance(node, ast.FunctionDef):
-                symbols.append(Symbol(
-                    name=node.name,
-                    type="function",
-                    file=file_path,
-                    line=node.lineno,
-                    docstring=ast.get_docstring(node),
-                    signature=self._get_function_signature(node),
-                ))
+                symbols.append(
+                    Symbol(
+                        name=node.name,
+                        type="function",
+                        file=file_path,
+                        line=node.lineno,
+                        docstring=ast.get_docstring(node),
+                        signature=self._get_function_signature(node),
+                    )
+                )
             elif isinstance(node, ast.AsyncFunctionDef):
-                symbols.append(Symbol(
-                    name=node.name,
-                    type="async_function",
-                    file=file_path,
-                    line=node.lineno,
-                    docstring=ast.get_docstring(node),
-                    signature=self._get_function_signature(node),
-                ))
+                symbols.append(
+                    Symbol(
+                        name=node.name,
+                        type="async_function",
+                        file=file_path,
+                        line=node.lineno,
+                        docstring=ast.get_docstring(node),
+                        signature=self._get_function_signature(node),
+                    )
+                )
             elif isinstance(node, ast.ClassDef):
-                symbols.append(Symbol(
-                    name=node.name,
-                    type="class",
-                    file=file_path,
-                    line=node.lineno,
-                    docstring=ast.get_docstring(node),
-                ))
+                symbols.append(
+                    Symbol(
+                        name=node.name,
+                        type="class",
+                        file=file_path,
+                        line=node.lineno,
+                        docstring=ast.get_docstring(node),
+                    )
+                )
 
         return symbols
 
@@ -390,7 +402,9 @@ class ProjectIndexer:
             Список результатов
         """
         if self.index is None:
-            raise RuntimeError("Project not indexed. Call `await indexer.index()` first.")
+            raise RuntimeError(
+                "Project not indexed. Call `await indexer.index()` first."
+            )
 
         return await self.index.search(question, top_k)
 

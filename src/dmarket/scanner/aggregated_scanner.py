@@ -147,17 +147,21 @@ class AggregatedScanner:
                 if max_supply is not None and supply > max_supply:
                     continue
 
-                opportunities.append({
-                    "title": item["title"],
-                    "order_price": order_price,
-                    "offer_price": offer_price,
-                    "spread": spread,
-                    "margin": margin,
-                    "demand": demand,
-                    "supply": supply,
-                    "game": game,
-                    "demand_supply_ratio": demand / supply if supply > 0 else float("inf"),
-                })
+                opportunities.append(
+                    {
+                        "title": item["title"],
+                        "order_price": order_price,
+                        "offer_price": offer_price,
+                        "spread": spread,
+                        "margin": margin,
+                        "demand": demand,
+                        "supply": supply,
+                        "game": game,
+                        "demand_supply_ratio": (
+                            demand / supply if supply > 0 else float("inf")
+                        ),
+                    }
+                )
 
             # Sort by margin (highest first)
             opportunities.sort(key=operator.itemgetter("margin"), reverse=True)
@@ -238,7 +242,8 @@ class AggregatedScanner:
 
             except Exception as e:
                 logger.exception(
-                    "batch_failed", extra={"batch": f"{batch_num}/{total_batches}", "error": str(e)}
+                    "batch_failed",
+                    extra={"batch": f"{batch_num}/{total_batches}", "error": str(e)},
                 )
                 # Continue with next batch even if one fails
                 continue
@@ -247,7 +252,8 @@ class AggregatedScanner:
         all_opportunities.sort(key=operator.itemgetter("margin"), reverse=True)
 
         logger.info(
-            "batch_pre_scan_completed", extra={"total_opportunities": len(all_opportunities)}
+            "batch_pre_scan_completed",
+            extra={"total_opportunities": len(all_opportunities)},
         )
 
         return all_opportunities
@@ -284,7 +290,11 @@ class AggregatedScanner:
         Returns:
             Filtered opportunities
         """
-        filtered = [opp for opp in opportunities if opp.get("demand_supply_ratio", 0) >= min_ratio]
+        filtered = [
+            opp
+            for opp in opportunities
+            if opp.get("demand_supply_ratio", 0) >= min_ratio
+        ]
 
         logger.info(
             "demand_supply_filter_applied",

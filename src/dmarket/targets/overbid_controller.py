@@ -193,7 +193,9 @@ class OverbidController:
             new_price = best_competitor_price + self.config.min_price_gap
 
             # Проверить лимит процента от начальной цены
-            max_allowed_price = initial_price * (1 + self.config.max_overbid_percent / 100)
+            max_allowed_price = initial_price * (
+                1 + self.config.max_overbid_percent / 100
+            )
             if new_price > max_allowed_price:
                 return TargetOperationResult(
                     success=False,
@@ -252,7 +254,9 @@ class OverbidController:
         Returns:
             Результат перебития
         """
-        logger.info(f"Overbidding order {target_id}: ${old_price:.2f} -> ${new_price:.2f}")
+        logger.info(
+            f"Overbidding order {target_id}: ${old_price:.2f} -> ${new_price:.2f}"
+        )
 
         try:
             # 1. Удалить старый ордер
@@ -345,7 +349,11 @@ class OverbidController:
             return 0
 
         cutoff_time = datetime.now(UTC) - timedelta(hours=24)
-        return sum(1 for entry in self.overbid_history[target_id] if entry.timestamp >= cutoff_time)
+        return sum(
+            1
+            for entry in self.overbid_history[target_id]
+            if entry.timestamp >= cutoff_time
+        )
 
     def get_overbid_history(self, target_id: str) -> list[RelistHistory]:
         """Получить историю перебитий для ордера.
@@ -397,7 +405,9 @@ class OverbidController:
         """
         interval = check_interval or self.config.check_interval_seconds
 
-        logger.info(f"Starting monitoring for {len(orders)} orders (interval: {interval}s)")
+        logger.info(
+            f"Starting monitoring for {len(orders)} orders (interval: {interval}s)"
+        )
 
         results = []
         for order in orders:

@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 class TF2Strategy(BaseStrategy):
     """
     Strategy for Team Fortress 2.
-    
+
     Constraints:
     - Keys are liquid currency.
     - Low margins but high volume.
@@ -27,20 +27,18 @@ class TF2Strategy(BaseStrategy):
         TF2 Specific Logic:
         Focus on 'Keys' as the main currency.
         """
-        return {
-            "title": "Mann Co. Supply Crate Key"
-        }
+        return {"title": "Mann Co. Supply Crate Key"}
 
     async def should_buy(self, item_data: dict[str, Any]) -> bool:
         try:
             dmarket_price = Decimal(str(item_data.get("dmarket_price", 0)))
             waxpeer_price = Decimal(str(item_data.get("waxpeer_price", 0)))
-            
+
             if dmarket_price <= 0 or waxpeer_price <= 0:
                 return False
 
             target_sell_price = self.calculate_target_sell_price(dmarket_price)
-            
+
             if waxpeer_price < target_sell_price:
                 return False
 

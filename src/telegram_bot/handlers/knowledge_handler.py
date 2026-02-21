@@ -169,12 +169,16 @@ async def knowledge_clear_command(
     user_id = update.effective_user.id
     logger.info("knowledge_clear_command", user_id=user_id)
 
-    keyboard = InlineKeyboardMarkup([
+    keyboard = InlineKeyboardMarkup(
         [
-            InlineKeyboardButton("✅ Yes, clear all", callback_data="kb_clear_confirm"),
-            InlineKeyboardButton("❌ Cancel", callback_data="kb_clear_cancel"),
+            [
+                InlineKeyboardButton(
+                    "✅ Yes, clear all", callback_data="kb_clear_confirm"
+                ),
+                InlineKeyboardButton("❌ Cancel", callback_data="kb_clear_cancel"),
+            ]
         ]
-    ])
+    )
 
     await update.message.reply_text(
         "⚠️ **Are you sure you want to clear your knowledge base?**\n\n"
@@ -235,19 +239,21 @@ async def knowledge_callback_handler(
 
     except Exception as e:
         logger.exception("knowledge_callback_failed", user_id=user_id, error=str(e))
-        await query.edit_message_text(
-            "❌ An error occurred. Please try again."
-        )
+        await query.edit_message_text("❌ An error occurred. Please try again.")
 
 
 async def _handle_clear_ask(query) -> None:
     """Handle clear confirmation request."""
-    keyboard = InlineKeyboardMarkup([
+    keyboard = InlineKeyboardMarkup(
         [
-            InlineKeyboardButton("✅ Yes, clear all", callback_data="kb_clear_confirm"),
-            InlineKeyboardButton("❌ Cancel", callback_data="kb_clear_cancel"),
+            [
+                InlineKeyboardButton(
+                    "✅ Yes, clear all", callback_data="kb_clear_confirm"
+                ),
+                InlineKeyboardButton("❌ Cancel", callback_data="kb_clear_cancel"),
+            ]
         ]
-    ])
+    )
 
     await query.edit_message_text(
         "⚠️ **Are you sure you want to clear your knowledge base?**\n\n"
@@ -264,8 +270,7 @@ async def _handle_clear_confirm(query, user_id: int) -> None:
     count = await kb.clear()
 
     await query.edit_message_text(
-        f"✅ Knowledge base cleared.\n\n"
-        f"Removed {count} entries."
+        f"✅ Knowledge base cleared.\n\n" f"Removed {count} entries."
     )
 
 
@@ -284,9 +289,9 @@ async def _handle_view_patterns(query, user_id: int) -> None:
         await query.edit_message_text(
             "📭 No trading patterns recorded yet.\n\n"
             "Complete profitable trades to start building patterns!",
-            reply_markup=InlineKeyboardMarkup([[
-                InlineKeyboardButton("◀️ Back", callback_data="kb_back")
-            ]]),
+            reply_markup=InlineKeyboardMarkup(
+                [[InlineKeyboardButton("◀️ Back", callback_data="kb_back")]]
+            ),
         )
         return
 
@@ -307,9 +312,9 @@ async def _handle_view_patterns(query, user_id: int) -> None:
     await query.edit_message_text(
         message,
         parse_mode="Markdown",
-        reply_markup=InlineKeyboardMarkup([[
-            InlineKeyboardButton("◀️ Back", callback_data="kb_back")
-        ]]),
+        reply_markup=InlineKeyboardMarkup(
+            [[InlineKeyboardButton("◀️ Back", callback_data="kb_back")]]
+        ),
     )
 
 
@@ -328,9 +333,9 @@ async def _handle_view_lessons(query, user_id: int) -> None:
         await query.edit_message_text(
             "📭 No lessons recorded yet.\n\n"
             "Lessons are learned from unsuccessful trades to help avoid future mistakes.",
-            reply_markup=InlineKeyboardMarkup([[
-                InlineKeyboardButton("◀️ Back", callback_data="kb_back")
-            ]]),
+            reply_markup=InlineKeyboardMarkup(
+                [[InlineKeyboardButton("◀️ Back", callback_data="kb_back")]]
+            ),
         )
         return
 
@@ -354,9 +359,9 @@ async def _handle_view_lessons(query, user_id: int) -> None:
     await query.edit_message_text(
         message,
         parse_mode="Markdown",
-        reply_markup=InlineKeyboardMarkup([[
-            InlineKeyboardButton("◀️ Back", callback_data="kb_back")
-        ]]),
+        reply_markup=InlineKeyboardMarkup(
+            [[InlineKeyboardButton("◀️ Back", callback_data="kb_back")]]
+        ),
     )
 
 
@@ -366,11 +371,10 @@ async def _handle_decay(query, user_id: int) -> None:
     removed = await kb.decay_relevance()
 
     await query.edit_message_text(
-        f"✅ Relevance decay applied.\n\n"
-        f"Removed {removed} stale entries.",
-        reply_markup=InlineKeyboardMarkup([[
-            InlineKeyboardButton("◀️ Back", callback_data="kb_back")
-        ]]),
+        f"✅ Relevance decay applied.\n\n" f"Removed {removed} stale entries.",
+        reply_markup=InlineKeyboardMarkup(
+            [[InlineKeyboardButton("◀️ Back", callback_data="kb_back")]]
+        ),
     )
 
 
@@ -423,16 +427,18 @@ def _get_type_emoji(knowledge_type: str) -> str:
 
 def _build_knowledge_keyboard() -> InlineKeyboardMarkup:
     """Build knowledge base keyboard."""
-    return InlineKeyboardMarkup([
+    return InlineKeyboardMarkup(
         [
-            InlineKeyboardButton("📈 Patterns", callback_data="kb_view_patterns"),
-            InlineKeyboardButton("📝 Lessons", callback_data="kb_view_lessons"),
-        ],
-        [
-            InlineKeyboardButton("🧹 Apply Decay", callback_data="kb_decay"),
-            InlineKeyboardButton("🗑️ Clear All", callback_data="kb_clear_ask"),
-        ],
-    ])
+            [
+                InlineKeyboardButton("📈 Patterns", callback_data="kb_view_patterns"),
+                InlineKeyboardButton("📝 Lessons", callback_data="kb_view_lessons"),
+            ],
+            [
+                InlineKeyboardButton("🧹 Apply Decay", callback_data="kb_decay"),
+                InlineKeyboardButton("🗑️ Clear All", callback_data="kb_clear_ask"),
+            ],
+        ]
+    )
 
 
 # ============================================================================

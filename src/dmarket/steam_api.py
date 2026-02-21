@@ -124,13 +124,17 @@ async def get_steam_price(
             # Обработка Rate Limit
             if response.status_code == 429:
                 backoff_duration = min(backoff_duration * 2, 600)  # Максимум 10 минут
-                steam_backoff_until = datetime.now() + timedelta(minutes=STEAM_BACKOFF_MINUTES)
+                steam_backoff_until = datetime.now() + timedelta(
+                    minutes=STEAM_BACKOFF_MINUTES
+                )
 
                 logger.error(
                     f"⚠️ Steam Rate Limit! Пауза на {STEAM_BACKOFF_MINUTES} минут. "
                     f"Backoff duration: {backoff_duration}s"
                 )
-                raise RateLimitError(f"Rate limit exceeded, backoff until {steam_backoff_until}")
+                raise RateLimitError(
+                    f"Rate limit exceeded, backoff until {steam_backoff_until}"
+                )
 
             # Успешный запрос - сбрасываем backoff
             if response.status_code == 200:
@@ -138,7 +142,9 @@ async def get_steam_price(
                 data = response.json()
 
                 if not data.get("success"):
-                    logger.warning(f"Item not found on Steam Market: {market_hash_name}")
+                    logger.warning(
+                        f"Item not found on Steam Market: {market_hash_name}"
+                    )
                     raise ItemNotFoundError(f"Item not found: {market_hash_name}")
 
                 # Парсинг цен
@@ -153,7 +159,9 @@ async def get_steam_price(
                         or "0"
                     )
 
-                    volume = int(data.get("volume", "0").replace(",", "").strip() or "0")
+                    volume = int(
+                        data.get("volume", "0").replace(",", "").strip() or "0"
+                    )
 
                     median_price = float(
                         data.get("median_price", "$0")
@@ -179,16 +187,22 @@ async def get_steam_price(
                     return result
 
                 except (ValueError, AttributeError) as e:
-                    logger.error(f"Error parsing Steam response: {e}, data: {data}")  # noqa: TRY400
+                    logger.error(
+                        f"Error parsing Steam response: {e}, data: {data}"
+                    )  # noqa: TRY400
                     raise SteamAPIError(f"Failed to parse Steam response: {e}")
 
             # Другие HTTP ошибки
             elif response.status_code >= 500:
-                logger.error(f"Steam server error {response.status_code}: {market_hash_name}")  # noqa: TRY400
+                logger.error(
+                    f"Steam server error {response.status_code}: {market_hash_name}"
+                )  # noqa: TRY400
                 raise SteamAPIError(f"Steam server error: {response.status_code}")
 
             elif response.status_code >= 400:
-                logger.error(f"Steam client error {response.status_code}: {market_hash_name}")  # noqa: TRY400
+                logger.error(
+                    f"Steam client error {response.status_code}: {market_hash_name}"
+                )  # noqa: TRY400
                 raise SteamAPIError(f"Steam client error: {response.status_code}")
 
     except httpx.TimeoutException:
@@ -424,9 +438,11 @@ class SteamMarketAPI:
                 # Transform result to expected format
                 return {
                     "lowest_price": f"${result.get('price', 0):.2f}",
-                    "median_price": f"${result.get('median_price', 0):.2f}"
-                    if result.get("median_price")
-                    else None,
+                    "median_price": (
+                        f"${result.get('median_price', 0):.2f}"
+                        if result.get("median_price")
+                        else None
+                    ),
                     "volume": str(result.get("volume", 0)),
                     "success": True,
                     "price": result.get("price", 0),

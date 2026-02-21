@@ -248,7 +248,9 @@ class FloatValueArbitrage:
         recommended_buy_price = sell_price_after_commission / (1 + self.min_margin)
 
         profit = sell_price_after_commission - base_market_price
-        profit_percent = (profit / base_market_price) * 100 if base_market_price > 0 else 0
+        profit_percent = (
+            (profit / base_market_price) * 100 if base_market_price > 0 else 0
+        )
 
         is_profitable = profit_percent >= self.min_margin * 100
 

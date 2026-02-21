@@ -57,7 +57,11 @@ class MarketHealth:
     @property
     def is_safe_to_buy(self) -> bool:
         """Check if market is safe for normal buying."""
-        return self.state in {MarketState.STABLE, MarketState.RECOVERY, MarketState.BULL_RUN}
+        return self.state in {
+            MarketState.STABLE,
+            MarketState.RECOVERY,
+            MarketState.BULL_RUN,
+        }
 
     @property
     def is_crash(self) -> bool:
@@ -140,11 +144,11 @@ class MarketSentimentAnalyzer:
 
     # Volatility thresholds for market state detection
     VOLATILITY_THRESHOLDS = {
-        "stable": 0.02,       # < 2% change = stable
-        "volatile": 0.05,     # 2-5% change = volatile
-        "crash": -0.10,       # > -10% = crash
-        "bull_run": 0.10,     # > +10% = bull run
-        "recovery": 0.03,     # +3% after crash = recovery
+        "stable": 0.02,  # < 2% change = stable
+        "volatile": 0.05,  # 2-5% change = volatile
+        "crash": -0.10,  # > -10% = crash
+        "bull_run": 0.10,  # > +10% = bull run
+        "recovery": 0.03,  # +3% after crash = recovery
     }
 
     def __init__(
@@ -260,14 +264,20 @@ class MarketSentimentAnalyzer:
                 logger.warning("indicator_fetch_error", item=item_name, error=str(e))
 
         # Calculate aggregate metrics
-        avg_price_change = sum(price_changes) / len(price_changes) if price_changes else 0
-        avg_volume_change = sum(volume_changes) / len(volume_changes) if volume_changes else 1.0
+        avg_price_change = (
+            sum(price_changes) / len(price_changes) if price_changes else 0
+        )
+        avg_volume_change = (
+            sum(volume_changes) / len(volume_changes) if volume_changes else 1.0
+        )
 
         # Determine market state
         state = self._determine_market_state(avg_price_change, avg_volume_change)
 
         # Calculate confidence (based on how many indicators we checked)
-        confidence = (indicators_checked / len(self.indicators)) * 100 if self.indicators else 0
+        confidence = (
+            (indicators_checked / len(self.indicators)) * 100 if self.indicators else 0
+        )
 
         self.current_health = MarketHealth(
             state=state,
@@ -289,7 +299,9 @@ class MarketSentimentAnalyzer:
 
         return self.current_health
 
-    def _determine_market_state(self, price_change: float, volume_change: float) -> MarketState:
+    def _determine_market_state(
+        self, price_change: float, volume_change: float
+    ) -> MarketState:
         """
         Determine market state based on price and volume changes.
 
@@ -375,7 +387,9 @@ class MarketSentimentAnalyzer:
                         reason=opportunity.reason,
                     )
             except Exception as e:
-                logger.debug("x5_analysis_error", item=item_info.get("name"), error=str(e))
+                logger.debug(
+                    "x5_analysis_error", item=item_info.get("name"), error=str(e)
+                )
 
         # Sort by confidence and keep top 10
         opportunities.sort(key=lambda x: x.confidence_score, reverse=True)
@@ -410,7 +424,9 @@ class MarketSentimentAnalyzer:
         # Calculate metrics
         volume_spike = current_volume / avg_volume if avg_volume > 0 else 1.0
         price_drop = (
-            ((avg_price_7d - current_price) / avg_price_7d) * 100 if avg_price_7d > 0 else 0
+            ((avg_price_7d - current_price) / avg_price_7d) * 100
+            if avg_price_7d > 0
+            else 0
         )
 
         # Score the opportunity
@@ -492,7 +508,9 @@ class MarketSentimentAnalyzer:
                     price_str = item.get("price", {}).get("USD", "0")
                     # DMarket returns prices in cents
                     price = (
-                        float(price_str) / 100 if isinstance(price_str, str) else price_str / 100
+                        float(price_str) / 100
+                        if isinstance(price_str, str)
+                        else price_str / 100
                     )
 
                     return {

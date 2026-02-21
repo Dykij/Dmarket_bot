@@ -32,7 +32,9 @@ sns.set_palette("husl")
 class ChartGenerator:
     """Utility class for generating charts and visualizations."""
 
-    def __init__(self, style: str = "default", figsize: tuple[int, int] = (12, 8)) -> None:
+    def __init__(
+        self, style: str = "default", figsize: tuple[int, int] = (12, 8)
+    ) -> None:
         """Initialize chart generator.
 
         Args:
@@ -172,7 +174,9 @@ class ChartGenerator:
             ax.set_ylabel("Items", fontsize=12)
 
             # Set y-tick labels to item names (truncated)
-            item_names = [name[:30] + "..." if len(name) > 30 else name for name in df["name"]]
+            item_names = [
+                name[:30] + "..." if len(name) > 30 else name for name in df["name"]
+            ]
             ax.set_yticks(range(len(df)))
             ax.set_yticklabels(item_names)
 
@@ -416,7 +420,9 @@ class MarketAnalyzer:
             "q25": float(np.percentile(prices, 25)),
             "q75": float(np.percentile(prices, 75)),
             "range": float(np.max(prices) - np.min(prices)),
-            "cv": (float(np.std(prices) / np.mean(prices)) if np.mean(prices) != 0 else 0),
+            "cv": (
+                float(np.std(prices) / np.mean(prices)) if np.mean(prices) != 0 else 0
+            ),
         }
 
     @staticmethod
@@ -453,7 +459,9 @@ class MarketAnalyzer:
             return {"trend": "insufficient_data", "confidence": 0.0}
 
         # Calculate trend strength
-        price_change = (df["price"].iloc[-1] - df["price"].iloc[0]) / df["price"].iloc[0]
+        price_change = (df["price"].iloc[-1] - df["price"].iloc[0]) / df["price"].iloc[
+            0
+        ]
         trend_strength = abs(price_change)
 
         if latest_short > latest_long * 1.02:  # 2% threshold
@@ -514,7 +522,9 @@ class MarketAnalyzer:
 
         return {
             "support": sorted(support_levels)[:5],  # Top 5 support levels
-            "resistance": sorted(resistance_levels, reverse=True)[:5],  # Top 5 resistance levels
+            "resistance": sorted(resistance_levels, reverse=True)[
+                :5
+            ],  # Top 5 resistance levels
         }
 
 

@@ -158,40 +158,48 @@ MAX_RETURN_OPPORTUNITIES: int = 50
 # Редкости предметов (для расчета комиссии)
 # =============================================================================
 
-HIGH_RARITY_ITEMS: frozenset[str] = frozenset({
-    "covert",
-    "extraordinary",
-    "contraband",
-    "ancient",
-    "mythical",
-    "immortal",
-    "arcana",
-})
+HIGH_RARITY_ITEMS: frozenset[str] = frozenset(
+    {
+        "covert",
+        "extraordinary",
+        "contraband",
+        "ancient",
+        "mythical",
+        "immortal",
+        "arcana",
+    }
+)
 """Редкие предметы с повышенной комиссией."""
 
-LOW_RARITY_ITEMS: frozenset[str] = frozenset({
-    "consumer",
-    "industrial",
-    "common",
-})
+LOW_RARITY_ITEMS: frozenset[str] = frozenset(
+    {
+        "consumer",
+        "industrial",
+        "common",
+    }
+)
 """Обычные предметы с пониженной комиссией."""
 
 # =============================================================================
 # Типы предметов (для расчета комиссии)
 # =============================================================================
 
-HIGH_VALUE_ITEM_TYPES: frozenset[str] = frozenset({
-    "knife",
-    "gloves",
-    "rare_special",
-})
+HIGH_VALUE_ITEM_TYPES: frozenset[str] = frozenset(
+    {
+        "knife",
+        "gloves",
+        "rare_special",
+    }
+)
 """Типы предметов высокой ценности."""
 
-LOW_VALUE_ITEM_TYPES: frozenset[str] = frozenset({
-    "sticker",
-    "container",
-    "key",
-})
+LOW_VALUE_ITEM_TYPES: frozenset[str] = frozenset(
+    {
+        "sticker",
+        "container",
+        "key",
+    }
+)
 """Типы предметов низкой ценности."""
 
 # =============================================================================

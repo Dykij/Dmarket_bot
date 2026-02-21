@@ -170,14 +170,18 @@ class AIIntegrationHandler:
             enhanced_message = f"{message}\n\nКонтекст:\n{context_str}"
 
         # Добавляем сообщение пользователя
-        self.conversation_history[user_id].append({
-            "role": "user",
-            "content": enhanced_message,
-        })
+        self.conversation_history[user_id].append(
+            {
+                "role": "user",
+                "content": enhanced_message,
+            }
+        )
 
         # Ограничиваем историю последними 10 сообщениями
         if len(self.conversation_history[user_id]) > 20:
-            self.conversation_history[user_id] = self.conversation_history[user_id][-20:]
+            self.conversation_history[user_id] = self.conversation_history[user_id][
+                -20:
+            ]
 
         try:
             async with httpx.AsyncClient(timeout=120.0) as client:
@@ -203,10 +207,12 @@ class AIIntegrationHandler:
                     ai_response = data.get("message", {}).get("content", "Нет ответа")
 
                     # Добавляем ответ в историю
-                    self.conversation_history[user_id].append({
-                        "role": "assistant",
-                        "content": ai_response,
-                    })
+                    self.conversation_history[user_id].append(
+                        {
+                            "role": "assistant",
+                            "content": ai_response,
+                        }
+                    )
 
                     return ai_response
                 return f"❌ Ошибка Ollama: HTTP {response.status_code}"
@@ -357,7 +363,9 @@ async def ai_models_command(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     await update.message.reply_text(text, parse_mode="Markdown")
 
 
-async def ai_set_model_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def ai_set_model_command(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Обработчик команды /ai_set_model - установить модель."""
     if not update.message:
         return
@@ -381,7 +389,9 @@ async def ai_set_model_command(update: Update, context: ContextTypes.DEFAULT_TYP
     )
 
 
-async def ai_analyze_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def ai_analyze_command(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Обработчик команды /ai_analyze - анализ рынка с AI."""
     if not update.message:
         return
@@ -411,7 +421,9 @@ async def ai_analyze_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
     )
 
 
-async def ai_recommend_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def ai_recommend_command(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Обработчик команды /ai_recommend - рекомендации модели."""
     if not update.message:
         return
@@ -466,7 +478,9 @@ HSA_OVERRIDE_GFX_VERSION=10.3.0 ollama serve
     await update.message.reply_text(text, parse_mode="Markdown")
 
 
-async def ai_status_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def ai_status_callback(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Callback для статуса AI."""
     query = update.callback_query
     if not query:
@@ -517,8 +531,7 @@ async def ai_clear_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     handler.clear_history(user_id)
 
     await query.edit_message_text(
-        "🗑️ История разговора очищена.\n\n"
-        "Используйте /ai для нового разговора.",
+        "🗑️ История разговора очищена.\n\n" "Используйте /ai для нового разговора.",
         parse_mode="Markdown",
     )
 
@@ -535,7 +548,11 @@ def register_ai_handlers(application) -> None:
     application.add_handler(CommandHandler("ai_analyze", ai_analyze_command))
     application.add_handler(CommandHandler("ai_recommend", ai_recommend_command))
 
-    application.add_handler(CallbackQueryHandler(ai_status_callback, pattern="^ai_status$"))
-    application.add_handler(CallbackQueryHandler(ai_clear_callback, pattern="^ai_clear$"))
+    application.add_handler(
+        CallbackQueryHandler(ai_status_callback, pattern="^ai_status$")
+    )
+    application.add_handler(
+        CallbackQueryHandler(ai_clear_callback, pattern="^ai_clear$")
+    )
 
     logger.info("ai_handlers_registered")

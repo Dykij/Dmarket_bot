@@ -60,7 +60,9 @@ def retry_on_failure(
             attempt = 0
             async for attempt_obj in AsyncRetrying(
                 stop=stop_after_attempt(max_attempts),
-                wait=wait_exponential(multiplier=multiplier, min=min_wait, max=max_wait),
+                wait=wait_exponential(
+                    multiplier=multiplier, min=min_wait, max=max_wait
+                ),
                 retry=retry_if_exception_type(retry_on),
                 reraise=True,
             ):
@@ -109,7 +111,9 @@ def retry_on_failure(
             for attempt, attempt_obj in enumerate(
                 retry(
                     stop=stop_after_attempt(max_attempts),
-                    wait=wait_exponential(multiplier=multiplier, min=min_wait, max=max_wait),
+                    wait=wait_exponential(
+                        multiplier=multiplier, min=min_wait, max=max_wait
+                    ),
                     retry=retry_if_exception_type(retry_on),
                     reraise=True,
                 )(lambda: func(*args, **kwargs)),

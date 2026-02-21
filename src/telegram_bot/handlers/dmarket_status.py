@@ -90,9 +90,14 @@ async def dmarket_status_impl(
                     "Неизвестная ошибка",
                 )
 
-                if "unauthorized" in error_message.lower() or "token" in error_message.lower():
+                if (
+                    "unauthorized" in error_message.lower()
+                    or "token" in error_message.lower()
+                ):
                     auth_status = "❌ <b>Авторизация</b>: ошибка авторизации"
-                    balance_info = "<i>Не удалось получить баланс: проверьте ключи API.</i>"
+                    balance_info = (
+                        "<i>Не удалось получить баланс: проверьте ключи API.</i>"
+                    )
                 else:
                     balance_info = f"<i>Ошибка при запросе баланса:</i> {error_message}"
             else:
@@ -103,9 +108,7 @@ async def dmarket_status_impl(
                 if public_key and secret_key:
                     # Форматируем баланс для отображения пользователю
                     balance_status = "✅" if balance > 0 else "⚠️"
-                    balance_info = (
-                        f"{balance_status} <b>Баланс</b>: <code>${balance:.2f} USD</code>"
-                    )
+                    balance_info = f"{balance_status} <b>Баланс</b>: <code>${balance:.2f} USD</code>"
                 else:
                     balance_info = "<i>Баланс недоступен без API ключей.</i>"
     except APIError as e:

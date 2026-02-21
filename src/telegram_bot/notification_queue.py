@@ -42,9 +42,9 @@ class NotificationQueue:
         chat_rate_limit: float = 1.0,  # 1 msg/sec per chat
     ) -> None:
         self.bot = bot
-        self.queue: asyncio.PriorityQueue[tuple[int, float, int, NotificationMessage]] = (
-            asyncio.PriorityQueue()
-        )
+        self.queue: asyncio.PriorityQueue[
+            tuple[int, float, int, NotificationMessage]
+        ] = asyncio.PriorityQueue()
         self.is_running = False
         self.worker_task: asyncio.Task[None] | None = None
 
@@ -163,7 +163,9 @@ class NotificationQueue:
             )
             # Put back in queue with high priority
             retry_after = (
-                e.retry_after if isinstance(e.retry_after, float) else float(e.retry_after)
+                e.retry_after
+                if isinstance(e.retry_after, float)
+                else float(e.retry_after)
             )
             await asyncio.sleep(retry_after)
             count = next(self._counter)

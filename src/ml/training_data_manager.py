@@ -878,7 +878,9 @@ class TrainingDataManager:
             **self._stats,
             "versions_count": len(self._metadata_index),
             "games": list({m.game for m in self._metadata_index.values()}),
-            "total_samples": sum(m.total_samples for m in self._metadata_index.values()),
+            "total_samples": sum(
+                m.total_samples for m in self._metadata_index.values()
+            ),
         }
 
     def clear_cache(self) -> int:

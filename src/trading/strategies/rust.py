@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 class RustStrategy(BaseStrategy):
     """
     Strategy for Rust.
-    
+
     Constraints:
     - 7 day trade lock usually applies.
     - High volatility on new skins.
@@ -25,12 +25,12 @@ class RustStrategy(BaseStrategy):
         try:
             dmarket_price = Decimal(str(item_data.get("dmarket_price", 0)))
             waxpeer_price = Decimal(str(item_data.get("waxpeer_price", 0)))
-            
+
             if dmarket_price <= 0 or waxpeer_price <= 0:
                 return False
 
             target_sell_price = self.calculate_target_sell_price(dmarket_price)
-            
+
             if waxpeer_price < target_sell_price:
                 return False
 

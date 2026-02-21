@@ -26,7 +26,9 @@ logger = logging.getLogger(__name__)
 bot_logger = BotLogger(__name__)
 
 
-async def test_sentry_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def test_sentry_command(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Тестирование интеграции с Sentry.
 
     Команда: /test_sentry [тип_теста]

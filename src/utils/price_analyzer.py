@@ -198,10 +198,14 @@ async def calculate_price_trend(
 
     # Определяем тренд
     increases = sum(
-        1 for i in range(1, len(period_prices)) if period_prices[i] > period_prices[i - 1]
+        1
+        for i in range(1, len(period_prices))
+        if period_prices[i] > period_prices[i - 1]
     )
     decreases = sum(
-        1 for i in range(1, len(period_prices)) if period_prices[i] < period_prices[i - 1]
+        1
+        for i in range(1, len(period_prices))
+        if period_prices[i] < period_prices[i - 1]
     )
 
     trend_direction = "stable"
@@ -366,7 +370,9 @@ async def analyze_supply_demand(
         # Анализируем предложения на продажу (offers)
         sell_offers = offers_data.get("offers", [])
         sell_count = len(sell_offers)
-        min_sell_price = float(sell_offers[0].get("price", 0)) / 100 if sell_offers else 0
+        min_sell_price = (
+            float(sell_offers[0].get("price", 0)) / 100 if sell_offers else 0
+        )
 
         # Анализируем предложения на покупку (targets)
         buy_offers = offers_data.get("targets", [])
@@ -374,7 +380,11 @@ async def analyze_supply_demand(
         max_buy_price = float(buy_offers[0].get("price", 0)) / 100 if buy_offers else 0
 
         # Рассчитываем спред между лучшими ценами покупки и продажи
-        spread = min_sell_price - max_buy_price if min_sell_price > 0 and max_buy_price > 0 else 0
+        spread = (
+            min_sell_price - max_buy_price
+            if min_sell_price > 0 and max_buy_price > 0
+            else 0
+        )
         spread_percent = (spread / min_sell_price * 100) if min_sell_price > 0 else 0
 
         # Определяем ликвидность
@@ -612,7 +622,9 @@ async def find_undervalued_items_with_ml_threshold(
     # Get ML-predicted threshold
     if use_ml_threshold:
         try:
-            from src.ml.discount_threshold_predictor import get_discount_threshold_predictor
+            from src.ml.discount_threshold_predictor import (
+                get_discount_threshold_predictor,
+            )
 
             predictor = get_discount_threshold_predictor()
             prediction = predictor.predict(game=game)
@@ -724,9 +736,7 @@ async def train_threshold_model_from_api(
             historical_prices=historical_prices,
         )
 
-        logger.info(
-            f"Model trained on {examples_count} examples from real API prices"
-        )
+        logger.info(f"Model trained on {examples_count} examples from real API prices")
 
         return {
             "success": True,
@@ -794,12 +804,16 @@ async def add_trade_outcome_for_training(
 
         # Calculate trade metrics
         if historical_avg_price > 0:
-            actual_discount = ((historical_avg_price - buy_price) / historical_avg_price) * 100
+            actual_discount = (
+                (historical_avg_price - buy_price) / historical_avg_price
+            ) * 100
         else:
             actual_discount = 0.0
 
         was_profitable = sell_price > buy_price
-        profit_percent = ((sell_price - buy_price) / buy_price) * 100 if buy_price > 0 else 0
+        profit_percent = (
+            ((sell_price - buy_price) / buy_price) * 100 if buy_price > 0 else 0
+        )
 
         # Add training example
         predictor.add_training_example(

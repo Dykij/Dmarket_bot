@@ -108,7 +108,9 @@ async def handle_view_items(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     if not user:
         return
 
-    message = update.message or (update.callback_query.message if update.callback_query else None)
+    message = update.message or (
+        update.callback_query.message if update.callback_query else None
+    )
     if not message:
         return
 
@@ -149,7 +151,9 @@ async def handle_view_items(update: Update, context: ContextTypes.DEFAULT_TYPE) 
             active_response = await api_client.get_user_offers(limit=10)
             active_items = active_response.get("Items", []) if active_response else []
         except Exception as e:
-            logger.warning("failed_to_fetch_active_items", error=str(e), user_id=user.id)
+            logger.warning(
+                "failed_to_fetch_active_items", error=str(e), user_id=user.id
+            )
             active_items = []
 
         # Build response message
@@ -168,10 +172,14 @@ async def handle_view_items(update: Update, context: ContextTypes.DEFAULT_TYPE) 
 
                 profit_emoji = "💚" if profit > 0 else "💔" if profit < 0 else "➖"
 
-                response_text += f"{i}. {title}\n   {profit_emoji} Profit: ${profit:.2f}\n"
+                response_text += (
+                    f"{i}. {title}\n   {profit_emoji} Profit: ${profit:.2f}\n"
+                )
 
             response_text += "─" * 30 + "\n"
-            response_text += f"💰 <b>Total Realized Profit: ${total_sold_profit:.2f}</b>\n\n"
+            response_text += (
+                f"💰 <b>Total Realized Profit: ${total_sold_profit:.2f}</b>\n\n"
+            )
 
             logger.info(
                 "sold_items_displayed",
@@ -203,7 +211,9 @@ async def handle_view_items(update: Update, context: ContextTypes.DEFAULT_TYPE) 
                 )
 
             response_text += "─" * 30 + "\n"
-            response_text += f"📊 <b>Est. Total Profit: ${total_estimated_profit:.2f}</b>\n\n"
+            response_text += (
+                f"📊 <b>Est. Total Profit: ${total_estimated_profit:.2f}</b>\n\n"
+            )
 
             logger.info(
                 "active_items_displayed",
@@ -250,7 +260,9 @@ async def handle_view_items(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         )
 
 
-async def handle_view_items_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def handle_view_items_callback(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Handle View Items callback from inline button.
 
     Args:

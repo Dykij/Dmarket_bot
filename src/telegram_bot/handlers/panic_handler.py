@@ -17,7 +17,9 @@ from telegram.ext import ContextTypes
 logger = structlog.get_logger(__name__)
 
 
-async def panic_button_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def panic_button_command(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """🚨 PANIC BUTTON - Emergency exit to cash.
 
     This command will:
@@ -101,7 +103,9 @@ async def panic_button_command(update: Update, context: ContextTypes.DEFAULT_TYP
                     stats["orders_cancelled"] += 1
                 except Exception as e:
                     logger.warning(
-                        "panic_cancel_order_failed", order_id=order.get("TargetID"), error=str(e)
+                        "panic_cancel_order_failed",
+                        order_id=order.get("TargetID"),
+                        error=str(e),
                     )
                     stats["errors"].append(f"Order {order.get('TargetID')}: {e!s}")
 
@@ -126,7 +130,9 @@ async def panic_button_command(update: Update, context: ContextTypes.DEFAULT_TYP
                 if item.get("Status") != "OfferCreated":
                     try:
                         # Get market price
-                        suggested_price = item.get("SuggestedPrice", {}).get("Amount", 0)
+                        suggested_price = item.get("SuggestedPrice", {}).get(
+                            "Amount", 0
+                        )
                         if suggested_price == 0:
                             # Skip items without price
                             continue
@@ -147,9 +153,13 @@ async def panic_button_command(update: Update, context: ContextTypes.DEFAULT_TYP
 
                     except Exception as e:
                         logger.warning(
-                            "panic_list_item_failed", item_id=item.get("ItemID"), error=str(e)
+                            "panic_list_item_failed",
+                            item_id=item.get("ItemID"),
+                            error=str(e),
                         )
-                        stats["errors"].append(f"Item {item.get('Title', 'Unknown')}: {e!s}")
+                        stats["errors"].append(
+                            f"Item {item.get('Title', 'Unknown')}: {e!s}"
+                        )
 
         except Exception as e:
             logger.exception("panic_list_inventory_failed", error=str(e))
@@ -158,7 +168,9 @@ async def panic_button_command(update: Update, context: ContextTypes.DEFAULT_TYP
         # Send final report
         error_text = ""
         if stats["errors"]:
-            error_text = "\n\n⚠️ <b>Ошибки:</b>\n" + "\n".join(f"• {e}" for e in stats["errors"][:5])
+            error_text = "\n\n⚠️ <b>Ошибки:</b>\n" + "\n".join(
+                f"• {e}" for e in stats["errors"][:5]
+            )
             if len(stats["errors"]) > 5:
                 error_text += f"\n• И еще {len(stats['errors']) - 5} ошибок..."
 
@@ -194,7 +206,9 @@ async def panic_button_command(update: Update, context: ContextTypes.DEFAULT_TYP
         )
 
 
-async def panic_status_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def panic_status_command(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Check if panic mode is available and show current state."""
     if not update.message:
         return
@@ -211,7 +225,9 @@ async def panic_status_command(update: Update, context: ContextTypes.DEFAULT_TYP
     autopilot_status = (
         "🟢 Активен" if orchestrator and orchestrator.is_active() else "🔴 Остановлен"
     )
-    autobuy_status = "🟢 Включена" if auto_buyer and auto_buyer.config.enabled else "🔴 Выключена"
+    autobuy_status = (
+        "🟢 Включена" if auto_buyer and auto_buyer.config.enabled else "🔴 Выключена"
+    )
 
     # Get active orders count
     try:
@@ -223,7 +239,9 @@ async def panic_status_command(update: Update, context: ContextTypes.DEFAULT_TYP
     # Get inventory count
     try:
         inventory = await api.get_user_inventory()
-        inventory_count = len([i for i in inventory if i.get("Status") != "OfferCreated"])
+        inventory_count = len(
+            [i for i in inventory if i.get("Status") != "OfferCreated"]
+        )
     except Exception:
         inventory_count = "?"
 

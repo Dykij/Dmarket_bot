@@ -368,12 +368,10 @@ class ServiceRegistry:
         """
         total = len(self._services)
         running = sum(
-            1 for s in self._services.values()
-            if s.status == ServiceStatus.RUNNING
+            1 for s in self._services.values() if s.status == ServiceStatus.RUNNING
         )
         errored = sum(
-            1 for s in self._services.values()
-            if s.status == ServiceStatus.ERROR
+            1 for s in self._services.values() if s.status == ServiceStatus.ERROR
         )
 
         return {
@@ -385,7 +383,9 @@ class ServiceRegistry:
             "services": {
                 name: {
                     "status": info.status.value,
-                    "started_at": info.started_at.isoformat() if info.started_at else None,
+                    "started_at": (
+                        info.started_at.isoformat() if info.started_at else None
+                    ),
                     "error": str(info.error) if info.error else None,
                 }
                 for name, info in self._services.items()

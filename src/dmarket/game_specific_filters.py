@@ -226,7 +226,9 @@ class CSGOFilter:
         for sticker in stickers:
             sticker_name = sticker.get("name", "")
             if sticker_name in CSGO_KATOWICE_2014_STICKERS:
-                premium += CSGO_KATOWICE_2014_STICKERS[sticker_name] * 0.1  # 10% от премии стикера
+                premium += (
+                    CSGO_KATOWICE_2014_STICKERS[sticker_name] * 0.1
+                )  # 10% от премии стикера
 
         # Премия за низкий float (FN)
         item_float = item.get("float_value", 0.5)
@@ -313,7 +315,6 @@ DOTA2_VALUABLE_ITEMS = {
     "Swine of the Sunken Galley": 50.0,  # Techies Arcana
     "Great Sage's Reckoning": 30.0,  # Monkey King Arcana
     "Benevolent Companion": 200.0,  # Io Arcana (limited)
-
     # Valuable Immortals
     "Golden Basher Blades": 20.0,
     "Golden Gravelmaw": 15.0,
@@ -432,7 +433,7 @@ class Dota2Filter:
         item_title = item.get("title", "")
         for item_name, item_premium in DOTA2_VALUABLE_ITEMS.items():
             if item_name.lower() in item_title.lower():
-                premium *= (item_premium / 10.0)  # Нормализуем
+                premium *= item_premium / 10.0  # Нормализуем
                 break
 
         return premium
@@ -493,7 +494,6 @@ TF2_UNUSUAL_EFFECTS = {
     "Hearts": 7.0,
     "Circling Hearts": 7.0,
     "Beams of Light": 7.0,
-
     # High Tier
     "Energy Orb": 5.0,
     "Cloudy Moon": 5.0,
@@ -502,7 +502,6 @@ TF2_UNUSUAL_EFFECTS = {
     "Blizzardy Storm": 4.0,
     "Green Energy": 4.0,
     "Purple Energy": 4.0,
-
     # Mid Tier
     "Smoking": 3.0,
     "Steaming": 2.5,
@@ -511,7 +510,6 @@ TF2_UNUSUAL_EFFECTS = {
     "Nuts n Bolts": 2.0,
     "Massed Flies": 2.0,
     "Vivid Plasma": 3.5,
-
     # Newer Effects
     "Nebula": 4.0,
     "Darkblaze": 4.5,
@@ -696,7 +694,7 @@ class TF2Filter:
         # Премия за Australium
         for austr_name, austr_price in TF2_AUSTRALIUM_WEAPONS.items():
             if austr_name.lower() in item_title.lower():
-                premium *= (austr_price / 40.0)  # Нормализуем
+                premium *= austr_price / 40.0  # Нормализуем
                 break
 
         # Премия за Strange
@@ -746,7 +744,6 @@ RUST_VALUABLE_SKINS = {
         "Apocalypse Garage Door": 70.0,
         "Punishment Garage Door": 60.0,
     },
-
     # AK-47 skins
     "AK-47": {
         "Glory AK47": 80.0,
@@ -755,26 +752,22 @@ RUST_VALUABLE_SKINS = {
         "Big Grin AK47": 40.0,
         "Digital Camo AK": 30.0,
     },
-
     # LR-300 skins
     "LR-300": {
         "Forest Raider LR300": 50.0,
         "Tempered LR300": 40.0,
         "Arctic LR300": 35.0,
     },
-
     # M249 skins
     "M249": {
         "Alien Relic M249": 45.0,
         "Bombing M249": 35.0,
     },
-
     # Metal Doors
     "Metal Door": {
         "Neon Metal Door": 60.0,
         "Looter's Metal Door": 40.0,
     },
-
     # Roadsign Armor
     "Roadsign Armor": {
         "Whiteout Armor": 30.0,
@@ -873,7 +866,7 @@ class RustFilter:
         for skins in RUST_VALUABLE_SKINS.values():
             for skin_name, skin_premium in skins.items():
                 if skin_name.lower() in item_title.lower():
-                    premium *= (skin_premium / 30.0)  # Нормализуем
+                    premium *= skin_premium / 30.0  # Нормализуем
                     break
 
         # Премия за luminescent
@@ -927,7 +920,9 @@ class UnifiedGameFilter:
     # Blacklist
     blacklist_keywords: list[str] = field(default_factory=list)
 
-    def get_game_filter(self) -> CSGOFilter | Dota2Filter | TF2Filter | RustFilter | None:
+    def get_game_filter(
+        self,
+    ) -> CSGOFilter | Dota2Filter | TF2Filter | RustFilter | None:
         """Получить фильтр для текущей игры."""
         if self.game == "csgo":
             return self.csgo_filter or CSGOFilter()
@@ -1040,8 +1035,21 @@ def create_tf2_unusual_filter(
     """Создать фильтр для Unusual предметов TF2."""
     # Определяем эффекты по tier
     tier_effects = {
-        "god": ["Burning Flames", "Scorching Flames", "Sunbeams", "Hearts", "Circling Hearts"],
-        "high": ["Energy Orb", "Cloudy Moon", "Harvest Moon", "Stormy Storm", "Green Energy", "Purple Energy"],
+        "god": [
+            "Burning Flames",
+            "Scorching Flames",
+            "Sunbeams",
+            "Hearts",
+            "Circling Hearts",
+        ],
+        "high": [
+            "Energy Orb",
+            "Cloudy Moon",
+            "Harvest Moon",
+            "Stormy Storm",
+            "Green Energy",
+            "Purple Energy",
+        ],
         "mid": ["Smoking", "Steaming", "Planets", "Orbiting Fire", "Vivid Plasma"],
         "low": ["Nuts n Bolts", "Massed Flies"],
     }
@@ -1049,7 +1057,7 @@ def create_tf2_unusual_filter(
     effects = []
     tiers = ["god", "high", "mid", "low"]
     start_index = tiers.index(min_tier) if min_tier in tiers else 2
-    for tier in tiers[:start_index + 1]:
+    for tier in tiers[: start_index + 1]:
         effects.extend(tier_effects.get(tier, []))
 
     return TF2Filter(

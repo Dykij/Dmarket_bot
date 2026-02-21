@@ -99,7 +99,9 @@ def format_scanner_item(result: dict[str, Any]) -> str:
         else:
             # Фоллбэк на старый формат
             time_days = liquidity_data.get("time_to_sell_days", 0.0)
-            liquidity_text = f"\n💧 Ликвидность: {emoji} {score:.0f}/100 (~{time_days:.1f} дней)"
+            liquidity_text = (
+                f"\n💧 Ликвидность: {emoji} {score:.0f}/100 (~{time_days:.1f} дней)"
+            )
 
     return (
         f"🎯 *{title}*\n"

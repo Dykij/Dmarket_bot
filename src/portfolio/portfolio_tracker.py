@@ -190,7 +190,11 @@ class PerformanceMetrics:
             "total_trades": self.total_trades,
             "winning_trades": self.winning_trades,
             "losing_trades": self.losing_trades,
-            "win_rate": round(self.winning_trades / self.total_trades * 100, 2) if self.total_trades > 0 else 0,
+            "win_rate": (
+                round(self.winning_trades / self.total_trades * 100, 2)
+                if self.total_trades > 0
+                else 0
+            ),
             "total_volume": str(self.total_volume),
             "total_pnl": str(self.total_pnl),
             "best_day_pnl": str(self.best_day_pnl),
@@ -484,13 +488,19 @@ class PortfolioTracker:
         # Sync inventory first
         await self.sync_inventory()
 
-        total_value = sum(item.current_price * item.quantity for item in self._inventory.values())
-        total_cost = sum(item.purchase_price * item.quantity for item in self._inventory.values())
+        total_value = sum(
+            item.current_price * item.quantity for item in self._inventory.values()
+        )
+        total_cost = sum(
+            item.purchase_price * item.quantity for item in self._inventory.values()
+        )
         realized_pnl = self.calculate_realized_pnl()
         unrealized_pnl = self.calculate_unrealized_pnl()
         total_pnl = realized_pnl + unrealized_pnl
 
-        total_pnl_percent = (total_pnl / total_cost * 100) if total_cost > 0 else Decimal(0)
+        total_pnl_percent = (
+            (total_pnl / total_cost * 100) if total_cost > 0 else Decimal(0)
+        )
 
         # Calculate win rate
         sells = [t for t in self._trades if t.trade_type == TradeType.SELL]
@@ -513,7 +523,11 @@ class PortfolioTracker:
                 if trade_pnl > 0:
                     winning_trades += 1
 
-        win_rate = (Decimal(str(winning_trades)) / Decimal(str(len(sells))) * 100) if sells else Decimal(0)
+        win_rate = (
+            (Decimal(str(winning_trades)) / Decimal(str(len(sells))) * 100)
+            if sells
+            else Decimal(0)
+        )
         avg_trade_pnl = total_trade_pnl / len(sells) if sells else Decimal(0)
 
         # Find best/worst trades
@@ -555,8 +569,7 @@ class PortfolioTracker:
 
         # Filter trades in period
         period_trades = [
-            t for t in self._trades
-            if period_start <= t.timestamp <= period_end
+            t for t in self._trades if period_start <= t.timestamp <= period_end
         ]
 
         if not period_trades:
@@ -588,7 +601,8 @@ class PortfolioTracker:
         for sell in sells:
             # Find buy
             buys = [
-                b for b in self._trades
+                b
+                for b in self._trades
                 if b.trade_type == TradeType.BUY
                 and b.item_name == sell.item_name
                 and b.timestamp < sell.timestamp

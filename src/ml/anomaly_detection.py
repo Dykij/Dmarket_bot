@@ -238,7 +238,9 @@ class AnomalyDetector:
         # Price change from last
         if len(historical_prices) > 0:
             last_price = historical_prices[-1]
-            price_change = abs(current_price - last_price) / last_price if last_price > 0 else 0
+            price_change = (
+                abs(current_price - last_price) / last_price if last_price > 0 else 0
+            )
         else:
             price_change = 0
 
@@ -251,26 +253,36 @@ class AnomalyDetector:
         # Check z-score
         if z_score > self.z_score_threshold:
             is_anomaly = True
-            reasons.append(f"Z-score {z_score:.2f} exceeds threshold {self.z_score_threshold}")
+            reasons.append(
+                f"Z-score {z_score:.2f} exceeds threshold {self.z_score_threshold}"
+            )
 
         # Check IQR bounds
         if current_price < lower_bound or current_price > upper_bound:
             is_anomaly = True
-            reasons.append(f"Price ${current_price:.2f} outside IQR bounds [${lower_bound:.2f}, ${upper_bound:.2f}]")
+            reasons.append(
+                f"Price ${current_price:.2f} outside IQR bounds [${lower_bound:.2f}, ${upper_bound:.2f}]"
+            )
 
         # Check sudden change
         if price_change > self.price_change_threshold:
             is_anomaly = True
-            reasons.append(f"Price change {price_change:.1%} exceeds threshold {self.price_change_threshold:.1%}")
+            reasons.append(
+                f"Price change {price_change:.1%} exceeds threshold {self.price_change_threshold:.1%}"
+            )
 
         # Determine type and severity
         if is_anomaly:
             if current_price > upper_bound:
                 anomaly_type = AnomalyType.PRICE_SPIKE
-                severity = AnomalySeverity.HIGH if z_score > 4 else AnomalySeverity.MEDIUM
+                severity = (
+                    AnomalySeverity.HIGH if z_score > 4 else AnomalySeverity.MEDIUM
+                )
             elif current_price < lower_bound:
                 anomaly_type = AnomalyType.PRICE_DROP
-                severity = AnomalySeverity.HIGH if z_score > 4 else AnomalySeverity.MEDIUM
+                severity = (
+                    AnomalySeverity.HIGH if z_score > 4 else AnomalySeverity.MEDIUM
+                )
             else:
                 anomaly_type = AnomalyType.UNUSUAL_PATTERN
                 severity = AnomalySeverity.LOW
@@ -333,30 +345,42 @@ class AnomalyDetector:
 
             if deviation > 0.2:  # 20% above market
                 is_anomaly = True
-                severity = AnomalySeverity.HIGH if deviation > 0.5 else AnomalySeverity.MEDIUM
+                severity = (
+                    AnomalySeverity.HIGH if deviation > 0.5 else AnomalySeverity.MEDIUM
+                )
                 reasons.append(f"Price {deviation:.1%} above market average")
                 recommendations.append("Consider waiting for lower price")
             elif deviation < -0.2:  # 20% below market
                 is_anomaly = True
                 severity = AnomalySeverity.MEDIUM
                 reasons.append(f"Price {abs(deviation):.1%} below market average")
-                recommendations.append("Verify item condition - price is suspiciously low")
+                recommendations.append(
+                    "Verify item condition - price is suspiciously low"
+                )
 
         # Check against historical prices
         if historical_prices and len(historical_prices) >= self.min_history_length:
             hist_result = self.check_price_anomaly(item_price, historical_prices)
             if hist_result.is_anomaly:
                 is_anomaly = True
-                severity = max(severity, hist_result.severity, key=lambda x: list(AnomalySeverity).index(x))
+                severity = max(
+                    severity,
+                    hist_result.severity,
+                    key=lambda x: list(AnomalySeverity).index(x),
+                )
                 reasons.append(f"Historical anomaly: {hist_result.reason}")
 
         # Check for manipulation patterns
         if is_anomaly and severity in {AnomalySeverity.HIGH, AnomalySeverity.CRITICAL}:
-            recommendations.append("Review transaction carefully - potential manipulation")
+            recommendations.append(
+                "Review transaction carefully - potential manipulation"
+            )
 
         # High value transaction check
         if total_value > 100:  # $100+
-            recommendations.append("High value transaction - double-check before confirming")
+            recommendations.append(
+                "High value transaction - double-check before confirming"
+            )
 
         score = 0.0
         if market_avg > 0:
@@ -371,7 +395,11 @@ class AnomalyDetector:
             details={
                 "item_price": item_price,
                 "market_avg": market_avg,
-                "deviation": round((item_price - market_avg) / market_avg, 4) if market_avg > 0 else 0,
+                "deviation": (
+                    round((item_price - market_avg) / market_avg, 4)
+                    if market_avg > 0
+                    else 0
+                ),
                 "quantity": quantity,
                 "total_value": total_value,
             },
@@ -426,11 +454,13 @@ class AnomalyDetector:
         for i in range(len(returns) - 1):
             if returns[i] > 0.15 and returns[i + 1] < -0.10:  # 15% up, then 10%+ down
                 pump_dump_detected = True
-                pump_dump_details.append({
-                    "index": i,
-                    "pump": round(returns[i], 4),
-                    "dump": round(returns[i + 1], 4),
-                })
+                pump_dump_details.append(
+                    {
+                        "index": i,
+                        "pump": round(returns[i], 4),
+                        "dump": round(returns[i + 1], 4),
+                    }
+                )
 
         # Check volume anomalies if available
         volume_anomaly = False
@@ -445,7 +475,11 @@ class AnomalyDetector:
 
         # Check for coordinated activity (unusual regularity)
         price_changes = np.abs(np.diff(prices_arr))
-        regularity_score = np.std(price_changes) / np.mean(price_changes) if np.mean(price_changes) > 0 else 1
+        regularity_score = (
+            np.std(price_changes) / np.mean(price_changes)
+            if np.mean(price_changes) > 0
+            else 1
+        )
         coordinated_suspected = regularity_score < 0.3  # Too regular = suspicious
 
         # Determine overall result
@@ -453,7 +487,9 @@ class AnomalyDetector:
         reasons = []
 
         if pump_dump_detected:
-            reasons.append(f"Pump and dump pattern detected ({len(pump_dump_details)} instances)")
+            reasons.append(
+                f"Pump and dump pattern detected ({len(pump_dump_details)} instances)"
+            )
         if volume_anomaly:
             reasons.append("Unusual volume spikes detected")
         if coordinated_suspected:
@@ -480,7 +516,9 @@ class AnomalyDetector:
             anomaly_type=AnomalyType.MANIPULATION_SUSPECTED if is_anomaly else None,
             severity=severity,
             score=score,
-            reason="; ".join(reasons) if reasons else "No manipulation patterns detected",
+            reason=(
+                "; ".join(reasons) if reasons else "No manipulation patterns detected"
+            ),
             details={
                 "pump_dump_instances": pump_dump_details,
                 "volume_anomaly": volume_anomaly,
@@ -533,7 +571,9 @@ class AnomalyDetector:
                 if z_score > 3:
                     is_anomaly = True
                     severity = max(severity, AnomalySeverity.MEDIUM)
-                    reasons.append(f"Response time {response_time_ms}ms significantly higher than average {mean_time:.0f}ms")
+                    reasons.append(
+                        f"Response time {response_time_ms}ms significantly higher than average {mean_time:.0f}ms"
+                    )
         elif response_time_ms > 5000:  # 5 seconds
             is_anomaly = True
             severity = max(severity, AnomalySeverity.MEDIUM)
@@ -564,7 +604,9 @@ class AnomalyDetector:
             details={
                 "response_code": response_code,
                 "response_time_ms": response_time_ms,
-                "missing_fields": list(set(expected_fields or []) - set(actual_fields or [])),
+                "missing_fields": list(
+                    set(expected_fields or []) - set(actual_fields or [])
+                ),
             },
         )
 
@@ -660,7 +702,7 @@ class AnomalyDetector:
 
         # Trim history if too large
         if len(self._anomaly_history) > self.MAX_ANOMALY_HISTORY:
-            self._anomaly_history = self._anomaly_history[-self.MAX_ANOMALY_HISTORY:]
+            self._anomaly_history = self._anomaly_history[-self.MAX_ANOMALY_HISTORY :]
 
     def get_anomaly_statistics(self) -> dict[str, Any]:
         """Get statistics about detected anomalies.
@@ -682,8 +724,12 @@ class AnomalyDetector:
 
         for anomaly in self._anomaly_history:
             if anomaly.anomaly_type:
-                by_type[anomaly.anomaly_type.value] = by_type.get(anomaly.anomaly_type.value, 0) + 1
-            by_severity[anomaly.severity.value] = by_severity.get(anomaly.severity.value, 0) + 1
+                by_type[anomaly.anomaly_type.value] = (
+                    by_type.get(anomaly.anomaly_type.value, 0) + 1
+                )
+            by_severity[anomaly.severity.value] = (
+                by_severity.get(anomaly.severity.value, 0) + 1
+            )
             scores.append(anomaly.score)
 
         return {
@@ -692,7 +738,8 @@ class AnomalyDetector:
             "by_severity": by_severity,
             "avg_score": round(np.mean(scores), 4) if scores else 0.0,
             "recent_24h": sum(
-                1 for a in self._anomaly_history
+                1
+                for a in self._anomaly_history
                 if a.detected_at > datetime.now(UTC) - timedelta(hours=24)
             ),
         }
@@ -716,7 +763,10 @@ class AnomalyDetector:
         Returns:
             AnomalyResult indicating if drift was detected
         """
-        if len(current_data) < self.DRIFT_MIN_SAMPLES or len(baseline_data) < self.DRIFT_MIN_SAMPLES:
+        if (
+            len(current_data) < self.DRIFT_MIN_SAMPLES
+            or len(baseline_data) < self.DRIFT_MIN_SAMPLES
+        ):
             return AnomalyResult(
                 is_anomaly=False,
                 reason="Insufficient data for drift detection",
@@ -747,14 +797,21 @@ class AnomalyDetector:
         baseline_quantiles = np.percentile(baseline_arr, [q * 100 for q in quantiles])
 
         quantile_diff = np.mean(np.abs(current_quantiles - baseline_quantiles))
-        normalized_quantile_diff = quantile_diff / baseline_mean if baseline_mean > 0 else 0
+        normalized_quantile_diff = (
+            quantile_diff / baseline_mean if baseline_mean > 0 else 0
+        )
 
         # Calculate drift score (0-1) using configurable weights
-        drift_score = min(1.0, (
-            self.DRIFT_WEIGHT_MEAN_SHIFT * min(1.0, normalized_shift / self.DRIFT_MEAN_SHIFT_SCALE) +
-            self.DRIFT_WEIGHT_VARIANCE * min(1.0, abs(variance_ratio - 1)) +
-            self.DRIFT_WEIGHT_QUANTILE * min(1.0, normalized_quantile_diff * self.DRIFT_QUANTILE_SCALE)
-        ))
+        drift_score = min(
+            1.0,
+            (
+                self.DRIFT_WEIGHT_MEAN_SHIFT
+                * min(1.0, normalized_shift / self.DRIFT_MEAN_SHIFT_SCALE)
+                + self.DRIFT_WEIGHT_VARIANCE * min(1.0, abs(variance_ratio - 1))
+                + self.DRIFT_WEIGHT_QUANTILE
+                * min(1.0, normalized_quantile_diff * self.DRIFT_QUANTILE_SCALE)
+            ),
+        )
 
         # Determine if drift is significant
         is_drift = drift_score > 0.5

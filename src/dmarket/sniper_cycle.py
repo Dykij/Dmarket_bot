@@ -85,7 +85,9 @@ async def sniper_cycle(
                 buy_res = await api.buy_item(
                     "POST",
                     api.ENDPOINT_PURCHASE,
-                    data={"offers": [{"offerId": offer_id, "price": item.get("price")}]},
+                    data={
+                        "offers": [{"offerId": offer_id, "price": item.get("price")}]
+                    },
                 )
 
                 if buy_res.get("status") == "success" or (
@@ -127,7 +129,9 @@ async def sniper_cycle(
                                     roi=15.0,
                                 )
                     else:
-                        logger.warning(f"Could not find assetId in buy response for {title}")
+                        logger.warning(
+                            f"Could not find assetId in buy response for {title}"
+                        )
                 else:
                     logger.warning(f"Failed to buy {title}: {buy_res}")
 

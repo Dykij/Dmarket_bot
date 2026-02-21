@@ -111,7 +111,9 @@ class TrendingItemsFinder:
         trending_items = self._analyze_trends()
         return self._sort_and_limit(trending_items)
 
-    async def _fetch_sales_history(self, dmarket_api: DMarketAPI) -> dict[str, Any] | None:
+    async def _fetch_sales_history(
+        self, dmarket_api: DMarketAPI
+    ) -> dict[str, Any] | None:
         """Fetch recent sales history."""
         try:
             return await dmarket_api.get_sales_history(
@@ -123,7 +125,9 @@ class TrendingItemsFinder:
             logger.exception(f"Failed to fetch sales history for {self.game}: {e}")
             return None
 
-    async def _fetch_market_items(self, dmarket_api: DMarketAPI) -> list[dict[str, Any]]:
+    async def _fetch_market_items(
+        self, dmarket_api: DMarketAPI
+    ) -> list[dict[str, Any]]:
         """Fetch current market items."""
         try:
             result = await dmarket_api.get_market_items(
@@ -238,7 +242,9 @@ class TrendingItemsFinder:
         last_sold_price = data["last_sold_price"]
         sales_count = data.get("sales_count", 0)
 
-        price_change_percent = ((current_price - last_sold_price) / last_sold_price) * 100
+        price_change_percent = (
+            (current_price - last_sold_price) / last_sold_price
+        ) * 100
 
         return TrendMetrics(
             current_price=current_price,
@@ -247,7 +253,9 @@ class TrendingItemsFinder:
             sales_count=sales_count,
         )
 
-    def _check_trend(self, data: dict[str, Any], metrics: TrendMetrics) -> TrendingItem | None:
+    def _check_trend(
+        self, data: dict[str, Any], metrics: TrendMetrics
+    ) -> TrendingItem | None:
         """Check if item has a profitable trend."""
         # Check upward trend
         upward_item = self._check_upward_trend(data, metrics)
@@ -347,7 +355,9 @@ class TrendingItemsFinder:
     def _sort_and_limit(self, items: list[TrendingItem]) -> list[dict[str, Any]]:
         """Sort by profit percentage and limit results."""
         items_dicts = [item.to_dict() for item in items]
-        items_dicts.sort(key=operator.itemgetter("potential_profit_percent"), reverse=True)
+        items_dicts.sort(
+            key=operator.itemgetter("potential_profit_percent"), reverse=True
+        )
         return items_dicts[: self.max_results]
 
 

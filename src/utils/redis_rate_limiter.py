@@ -260,17 +260,17 @@ class RateLimitPresets:
 
     # DMarket API limits
     DMARKET_MARKET = {"limit": 30, "window": 60}  # 30 req/min
-    DMARKET_TRADE = {"limit": 10, "window": 60}   # 10 req/min
+    DMARKET_TRADE = {"limit": 10, "window": 60}  # 10 req/min
 
     # Waxpeer API limits
-    WAXPEER_API = {"limit": 60, "window": 60}     # 60 req/min
+    WAXPEER_API = {"limit": 60, "window": 60}  # 60 req/min
 
     # Telegram Bot limits
-    TELEGRAM_USER = {"limit": 30, "window": 1}    # 30 msg/sec to same chat
+    TELEGRAM_USER = {"limit": 30, "window": 1}  # 30 msg/sec to same chat
     TELEGRAM_GROUP = {"limit": 20, "window": 60}  # 20 msg/min to group
 
     # Internal limits
-    ARBITRAGE_SCAN = {"limit": 5, "window": 60}   # 5 scans/min per user
+    ARBITRAGE_SCAN = {"limit": 5, "window": 60}  # 5 scans/min per user
 
 
 # Singleton instance

@@ -75,7 +75,9 @@ class EndpointInfo:
     category: EndpointCategory = EndpointCategory.ACCOUNT
     description: str = ""
     requires_auth: bool = True
-    rate_limit_per_minute: int | None = None  # Max requests per minute (None = use default)
+    rate_limit_per_minute: int | None = (
+        None  # Max requests per minute (None = use default)
+    )
     deprecated: bool = False
     replacement: str | None = None
 
@@ -169,13 +171,19 @@ class Endpoints:
     # ========================================
     # V1.1.0 Marketplace API endpoints (2024/2025)
     # ========================================
-    AGGREGATED_PRICES_POST = "/marketplace-api/v1/aggregated-prices"  # POST - recommended
-    AGGREGATED_PRICES_DEPRECATED = "/price-aggregator/v1/aggregated-prices"  # DEPRECATED
+    AGGREGATED_PRICES_POST = (
+        "/marketplace-api/v1/aggregated-prices"  # POST - recommended
+    )
+    AGGREGATED_PRICES_DEPRECATED = (
+        "/price-aggregator/v1/aggregated-prices"  # DEPRECATED
+    )
     TARGETS_BY_TITLE = "/marketplace-api/v1/targets-by-title"  # GET /{game_id}/{title}
     USER_TARGETS_CREATE = "/marketplace-api/v1/user-targets/create"  # POST
     USER_TARGETS_LIST = "/marketplace-api/v1/user-targets"  # GET
     USER_TARGETS_DELETE = "/marketplace-api/v1/user-targets/delete"  # POST
-    USER_TARGETS_CLOSED = "/marketplace-api/v1/user-targets/closed"  # GET - new statuses
+    USER_TARGETS_CLOSED = (
+        "/marketplace-api/v1/user-targets/closed"  # GET - new statuses
+    )
     USER_OFFERS_CREATE = "/marketplace-api/v1/user-offers/create"  # POST
     USER_OFFERS_EDIT = "/marketplace-api/v1/user-offers/edit"  # POST
     USER_OFFERS_CLOSED = "/marketplace-api/v1/user-offers/closed"  # GET - new statuses
@@ -577,7 +585,11 @@ class Endpoints:
             market_endpoints = Endpoints.get_endpoints_by_category(EndpointCategory.MARKET)
             # => ["MARKET_ITEMS", "MARKET_BEST_OFFERS", ...]
         """
-        return [name for name, info in cls.ENDPOINT_INFO.items() if info.category == category]
+        return [
+            name
+            for name, info in cls.ENDPOINT_INFO.items()
+            if info.category == category
+        ]
 
     @classmethod
     def price_to_cents(cls, price_usd: float) -> int:
@@ -605,7 +617,9 @@ class Endpoints:
 
         # Use Decimal for precise conversion
         price_decimal = Decimal(str(price_usd))
-        cents_decimal = (price_decimal * 100).quantize(Decimal(1), rounding=ROUND_HALF_UP)
+        cents_decimal = (price_decimal * 100).quantize(
+            Decimal(1), rounding=ROUND_HALF_UP
+        )
         return int(cents_decimal)
 
     @classmethod

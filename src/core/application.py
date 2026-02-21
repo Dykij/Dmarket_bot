@@ -197,7 +197,9 @@ class Application:
                 if health_check_server:
                     health_check_server.update_status("running")
             except Exception as e:
-                logger.exception(f"Failed to start webhook, falling back to polling: {e}")
+                logger.exception(
+                    f"Failed to start webhook, falling back to polling: {e}"
+                )
                 if self.bot.updater:
                     await self.bot.updater.start_polling()
                 logger.info("📡 Bot polling started (fallback)")
@@ -229,6 +231,15 @@ class Application:
 
 async def main() -> None:
     """Main entry point."""
+    try:
+        import src.rust_core as rust
+        # Warmup to ensure it's loaded
+        rust.validate_checksum("init")
+        print(f"🔩 Iron Core: ACTIVE (230ns)")
+    except Exception as e:
+        print(f"FATAL: {e}")
+        sys.exit(1)
+
     import argparse
 
     parser = argparse.ArgumentParser(description="DMarket Telegram Bot")
@@ -283,4 +294,3 @@ if __name__ == "__main__":
         asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 
     asyncio.run(main())
-

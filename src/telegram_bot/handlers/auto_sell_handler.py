@@ -88,10 +88,14 @@ class AutoSellHandler:
             ],
             [
                 InlineKeyboardButton("🔄 Toggle", callback_data="auto_sell:toggle"),
-                InlineKeyboardButton("📋 Active Sales", callback_data="auto_sell:active"),
+                InlineKeyboardButton(
+                    "📋 Active Sales", callback_data="auto_sell:active"
+                ),
             ],
             [
-                InlineKeyboardButton("❌ Cancel", callback_data="auto_sell:cancel_menu"),
+                InlineKeyboardButton(
+                    "❌ Cancel", callback_data="auto_sell:cancel_menu"
+                ),
             ],
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
@@ -281,9 +285,9 @@ class AutoSellHandler:
 
         await query.edit_message_text(
             f"🔄 Auto-sell has been {status}",
-            reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("« Back", callback_data="auto_sell:back")]
-            ]),
+            reply_markup=InlineKeyboardMarkup(
+                [[InlineKeyboardButton("« Back", callback_data="auto_sell:back")]]
+            ),
         )
 
     async def _show_active_sales(self, query) -> None:
@@ -297,9 +301,9 @@ class AutoSellHandler:
         if not sales:
             await query.edit_message_text(
                 "📋 *Active Sales*\n\nNo active sales.",
-                reply_markup=InlineKeyboardMarkup([
-                    [InlineKeyboardButton("« Back", callback_data="auto_sell:back")]
-                ]),
+                reply_markup=InlineKeyboardMarkup(
+                    [[InlineKeyboardButton("« Back", callback_data="auto_sell:back")]]
+                ),
                 parse_mode="Markdown",
             )
             return
@@ -308,7 +312,9 @@ class AutoSellHandler:
         lines = ["📋 *Active Sales*\n"]
         for sale in sales[:10]:
             profit_str = (
-                f"+${sale['profit']:.2f}" if sale["profit"] >= 0 else f"-${abs(sale['profit']):.2f}"
+                f"+${sale['profit']:.2f}"
+                if sale["profit"] >= 0
+                else f"-${abs(sale['profit']):.2f}"
             )
             lines.append(
                 f"• *{sale['item_name'][:25]}*\n"
@@ -321,9 +327,9 @@ class AutoSellHandler:
 
         await query.edit_message_text(
             "\n".join(lines),
-            reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("« Back", callback_data="auto_sell:back")]
-            ]),
+            reply_markup=InlineKeyboardMarkup(
+                [[InlineKeyboardButton("« Back", callback_data="auto_sell:back")]]
+            ),
             parse_mode="Markdown",
         )
 
@@ -338,9 +344,9 @@ class AutoSellHandler:
         if not sales:
             await query.edit_message_text(
                 "❌ *Cancel Sale*\n\nNo active sales to cancel.",
-                reply_markup=InlineKeyboardMarkup([
-                    [InlineKeyboardButton("« Back", callback_data="auto_sell:back")]
-                ]),
+                reply_markup=InlineKeyboardMarkup(
+                    [[InlineKeyboardButton("« Back", callback_data="auto_sell:back")]]
+                ),
                 parse_mode="Markdown",
             )
             return
@@ -349,16 +355,22 @@ class AutoSellHandler:
         keyboard = []
         for sale in sales[:5]:
             short_name = (
-                sale["item_name"][:20] + "..." if len(sale["item_name"]) > 20 else sale["item_name"]
+                sale["item_name"][:20] + "..."
+                if len(sale["item_name"]) > 20
+                else sale["item_name"]
             )
-            keyboard.append([
-                InlineKeyboardButton(
-                    f"❌ {short_name}",
-                    callback_data=f"auto_sell:cancel:{sale['item_id']}",
-                )
-            ])
+            keyboard.append(
+                [
+                    InlineKeyboardButton(
+                        f"❌ {short_name}",
+                        callback_data=f"auto_sell:cancel:{sale['item_id']}",
+                    )
+                ]
+            )
 
-        keyboard.append([InlineKeyboardButton("« Back", callback_data="auto_sell:back")])
+        keyboard.append(
+            [InlineKeyboardButton("« Back", callback_data="auto_sell:back")]
+        )
 
         await query.edit_message_text(
             "❌ *Cancel Sale*\n\nSelect a sale to cancel:",
@@ -377,16 +389,16 @@ class AutoSellHandler:
         if success:
             await query.edit_message_text(
                 f"✅ Sale cancelled: {item_id[:20]}...",
-                reply_markup=InlineKeyboardMarkup([
-                    [InlineKeyboardButton("« Back", callback_data="auto_sell:back")]
-                ]),
+                reply_markup=InlineKeyboardMarkup(
+                    [[InlineKeyboardButton("« Back", callback_data="auto_sell:back")]]
+                ),
             )
         else:
             await query.edit_message_text(
                 "❌ Failed to cancel sale. Item may already be sold.",
-                reply_markup=InlineKeyboardMarkup([
-                    [InlineKeyboardButton("« Back", callback_data="auto_sell:back")]
-                ]),
+                reply_markup=InlineKeyboardMarkup(
+                    [[InlineKeyboardButton("« Back", callback_data="auto_sell:back")]]
+                ),
             )
 
     async def _start_config_edit(self, query, param: str) -> int:
@@ -429,10 +441,14 @@ class AutoSellHandler:
             ],
             [
                 InlineKeyboardButton("🔄 Toggle", callback_data="auto_sell:toggle"),
-                InlineKeyboardButton("📋 Active Sales", callback_data="auto_sell:active"),
+                InlineKeyboardButton(
+                    "📋 Active Sales", callback_data="auto_sell:active"
+                ),
             ],
             [
-                InlineKeyboardButton("❌ Cancel", callback_data="auto_sell:cancel_menu"),
+                InlineKeyboardButton(
+                    "❌ Cancel", callback_data="auto_sell:cancel_menu"
+                ),
             ],
         ]
 

@@ -49,7 +49,9 @@ class CallbackRouter:
         """
         self._prefix_handlers.append((prefix, handler))
 
-    def register_pattern(self, matcher: Callable[[str], bool], handler: CallbackHandler) -> None:
+    def register_pattern(
+        self, matcher: Callable[[str], bool], handler: CallbackHandler
+    ) -> None:
         """Register handler with custom matcher function.
 
         Args:

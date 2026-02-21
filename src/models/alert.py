@@ -49,7 +49,9 @@ class PriceAlert(Base):
             "condition": self.condition,
             "is_active": self.is_active,
             "triggered": self.triggered,
-            "triggered_at": (self.triggered_at.isoformat() if self.triggered_at else None),
+            "triggered_at": (
+                self.triggered_at.isoformat() if self.triggered_at else None
+            ),
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "expires_at": self.expires_at.isoformat() if self.expires_at else None,
         }

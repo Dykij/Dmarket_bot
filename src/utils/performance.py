@@ -278,7 +278,9 @@ class AsyncBatch:
     их группировки в пакеты с ограниченным количеством одновременных операций.
     """
 
-    def __init__(self, max_concurrent: int = 5, delay_between_batches: float = 0.1) -> None:
+    def __init__(
+        self, max_concurrent: int = 5, delay_between_batches: float = 0.1
+    ) -> None:
         """Инициализирует объект для пакетного исполнения.
 
         Args:

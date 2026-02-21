@@ -158,7 +158,10 @@ class NotificationDigest:
             True if added to buffer, False if sent immediately
         """
         # Critical notifications bypass buffer
-        if self.flush_on_critical and notification.priority == NotificationPriority.CRITICAL:
+        if (
+            self.flush_on_critical
+            and notification.priority == NotificationPriority.CRITICAL
+        ):
             if self._send_callback:
                 await self._send_callback(user_id, notification.message)
                 logger.info(
@@ -299,10 +302,12 @@ class NotificationDigest:
             lines.append("")
 
         # Footer
-        lines.extend((
-            f"_Всего: {len(self.buffer)} уведомлений_",
-            f"_Период: {self.interval_minutes} минут_",
-        ))
+        lines.extend(
+            (
+                f"_Всего: {len(self.buffer)} уведомлений_",
+                f"_Период: {self.interval_minutes} минут_",
+            )
+        )
 
         return "\n".join(lines)
 

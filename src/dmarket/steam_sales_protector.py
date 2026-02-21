@@ -264,16 +264,18 @@ class SteamSalesProtector:
         ]
 
         # Добавляем 2025 год для тестирования
-        self._sales_calendar.extend([
-            SaleEvent(
-                name="Winter Sale 2025",
-                sale_type=SaleType.WINTER,
-                start_date=date(2025, 12, 19),
-                end_date=date(2026, 1, 2),
-                expected_discount_percent=25.0,
-                is_major=True,
-            ),
-        ])
+        self._sales_calendar.extend(
+            [
+                SaleEvent(
+                    name="Winter Sale 2025",
+                    sale_type=SaleType.WINTER,
+                    start_date=date(2025, 12, 19),
+                    end_date=date(2026, 1, 2),
+                    expected_discount_percent=25.0,
+                    is_major=True,
+                ),
+            ]
+        )
 
     def add_sale_event(self, event: SaleEvent) -> None:
         """Добавить событие распродажи вручную.
@@ -375,7 +377,9 @@ class SteamSalesProtector:
             )
 
         # 2. Проверяем приближающуюся распродажу
-        upcoming_sale = self.get_upcoming_sale(current_date, days_ahead=self.config.pre_sale_days)
+        upcoming_sale = self.get_upcoming_sale(
+            current_date, days_ahead=self.config.pre_sale_days
+        )
         if upcoming_sale:
             days_until = upcoming_sale.days_until_start(current_date)
             return SaleModeStatus(
@@ -391,7 +395,9 @@ class SteamSalesProtector:
             )
 
         # 3. Проверяем недавно завершившуюся распродажу
-        recent_sale = self.get_recent_sale(current_date, days_back=self.config.post_sale_days)
+        recent_sale = self.get_recent_sale(
+            current_date, days_back=self.config.post_sale_days
+        )
         if recent_sale:
             days_since = recent_sale.days_since_end(current_date)
             return SaleModeStatus(
@@ -416,7 +422,9 @@ class SteamSalesProtector:
             sell_price_modifier=1.0,
             buy_discount_threshold=0.0,
             reason="Normal trading mode. No sales affecting market.",
-            days_until_event=next_sale.days_until_start(current_date) if next_sale else 0,
+            days_until_event=(
+                next_sale.days_until_start(current_date) if next_sale else 0
+            ),
         )
 
     def get_price_modifiers(self, current_date: date | None = None) -> dict[str, float]:
@@ -459,8 +467,10 @@ class SteamSalesProtector:
             if item_discount_percent < status.buy_discount_threshold * 100:
                 return (
                     False,
-                    (f"Discount {item_discount_percent:.1f}% below threshold "
-                    f"{status.buy_discount_threshold * 100:.0f}%"),
+                    (
+                        f"Discount {item_discount_percent:.1f}% below threshold "
+                        f"{status.buy_discount_threshold * 100:.0f}%"
+                    ),
                 )
 
         return True, "OK to buy"
@@ -522,10 +532,20 @@ class SteamSalesProtector:
         ]
 
         if status.active_sale:
-            lines.extend((f"📢 Active: {status.active_sale.name}", f"   Expected price drop: -{status.active_sale.expected_discount_percent:.0f}%"))
+            lines.extend(
+                (
+                    f"📢 Active: {status.active_sale.name}",
+                    f"   Expected price drop: -{status.active_sale.expected_discount_percent:.0f}%",
+                )
+            )
 
         if status.upcoming_sale and status.days_until_event > 0:
-            lines.extend((f"⏰ Upcoming: {status.upcoming_sale.name}", f"   Starts in: {status.days_until_event} days"))
+            lines.extend(
+                (
+                    f"⏰ Upcoming: {status.upcoming_sale.name}",
+                    f"   Starts in: {status.days_until_event} days",
+                )
+            )
 
         lines.extend(("", f"💡 {status.reason}"))
 

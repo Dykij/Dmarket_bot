@@ -25,6 +25,7 @@ logger = logging.getLogger(__name__)
 # ГЛОБАЛЬНЫЕ НАСТРОЙКИ БОТА (Config)
 # =============================================================================
 
+
 @dataclass
 class ProfessionalBotConfig:
     """Профессиональные настройки бота для арбитража.
@@ -70,7 +71,9 @@ class ProfessionalBotConfig:
     # === AI Predictor ===
     min_samples_leaf: int = 5  # Защита от галлюцинаций (переобучения)
     min_samples_for_prediction: int = 10  # Минимум данных для прогноза
-    max_prediction_confidence: float = 0.95  # Максимальная уверенность (защита от overconfidence)
+    max_prediction_confidence: float = (
+        0.95  # Максимальная уверенность (защита от overconfidence)
+    )
     use_ensemble_voting: bool = True  # Голосование ансамбля моделей
 
     # === Whitelist/Blacklist ===
@@ -91,6 +94,7 @@ class ProfessionalBotConfig:
 # =============================================================================
 # SILENT MODE - Логирование без спама
 # =============================================================================
+
 
 class SilentModeLogger:
     """Логгер для Silent Mode.
@@ -131,9 +135,9 @@ class SilentModeLogger:
             encoding="utf-8",
         )
         self._file_handler.setLevel(logging.DEBUG)
-        self._file_handler.setFormatter(logging.Formatter(
-            "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
-        ))
+        self._file_handler.setFormatter(
+            logging.Formatter("%(asctime)s [%(levelname)s] %(name)s: %(message)s")
+        )
 
         # Добавляем к root logger
         logging.getLogger().addHandler(self._file_handler)
@@ -161,11 +165,13 @@ class SilentModeLogger:
             logger.info(msg)  # Только в файл
         else:
             # В не-silent режиме можно отправить в TG
-            self._pending_events.append({
-                "type": "scan",
-                "message": msg,
-                "timestamp": datetime.now(UTC),
-            })
+            self._pending_events.append(
+                {
+                    "type": "scan",
+                    "message": msg,
+                    "timestamp": datetime.now(UTC),
+                }
+            )
 
     async def log_purchase(
         self,
@@ -261,6 +267,7 @@ class SilentModeLogger:
 # LOCAL DELTA - Пропуск дубликатов
 # =============================================================================
 
+
 class LocalDeltaTracker:
     """Отслеживание изменений для пропуска дубликатов.
 
@@ -301,7 +308,9 @@ class LocalDeltaTracker:
         data_str = "|".join(key_fields)
 
         if self.config.delta_hash_algorithm == "md5":
-            return hashlib.md5(data_str.encode(), usedforsecurity=False).hexdigest()[:16]  # noqa: S324
+            return hashlib.md5(data_str.encode(), usedforsecurity=False).hexdigest()[
+                :16
+            ]  # noqa: S324
         return hashlib.sha256(data_str.encode(), usedforsecurity=False).hexdigest()[:16]
 
     def is_changed(self, item_id: str, item_data: dict[str, Any]) -> bool:
@@ -353,7 +362,8 @@ class LocalDeltaTracker:
         ttl = self.config.delta_cache_ttl_seconds
 
         expired = [
-            item_id for item_id, (_, ts) in self._cache.items()
+            item_id
+            for item_id, (_, ts) in self._cache.items()
             if current_time - ts > ttl
         ]
 
@@ -391,6 +401,7 @@ class LocalDeltaTracker:
 # =============================================================================
 # ADAPTIVE RATE LIMITER - Защита от 429
 # =============================================================================
+
 
 class AdaptiveRateLimiter:
     """Адаптивный rate limiter с защитой от 429 ошибок.
@@ -436,6 +447,7 @@ class AdaptiveRateLimiter:
             seconds: Количество секунд
         """
         import asyncio
+
         await asyncio.sleep(seconds)
 
     def record_success(self) -> None:
@@ -488,9 +500,7 @@ class AdaptiveRateLimiter:
                 self._current_delay / self.config.backoff_multiplier,
                 self.config.base_request_delay,
             )
-            logger.info(
-                f"Rate limit: задержка уменьшена до {self._current_delay:.1f}s"
-            )
+            logger.info(f"Rate limit: задержка уменьшена до {self._current_delay:.1f}s")
 
     def get_stats(self) -> dict[str, Any]:
         """Получить статистику.
@@ -513,6 +523,7 @@ class AdaptiveRateLimiter:
 # =============================================================================
 # AI PREDICTOR SETTINGS - Защита от галлюцинаций
 # =============================================================================
+
 
 @dataclass
 class AIProtectionSettings:
@@ -599,7 +610,9 @@ class AIProtectionSettings:
 
         # Проверка изменения цены
         if current_price > 0:
-            price_change_pct = abs(predicted_price - current_price) / current_price * 100
+            price_change_pct = (
+                abs(predicted_price - current_price) / current_price * 100
+            )
 
             if price_change_pct > self.max_price_change_percent:
                 return False, f"Price change too large: {price_change_pct:.1f}%"
@@ -610,6 +623,7 @@ class AIProtectionSettings:
 # =============================================================================
 # SMART SCANNER CONFIG - Умный сканер
 # =============================================================================
+
 
 @dataclass
 class SmartScannerConfig:
@@ -675,6 +689,7 @@ class SmartScannerConfig:
 # =============================================================================
 # FACTORY FUNCTIONS
 # =============================================================================
+
 
 def create_professional_config(
     balance: float,

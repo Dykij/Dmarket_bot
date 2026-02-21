@@ -80,7 +80,9 @@ def _get_main_keyboard() -> InlineKeyboardMarkup:
             InlineKeyboardButton("⏹ Остановить", callback_data="ai_arb:stop"),
         ],
         [
-            InlineKeyboardButton("📊 Возможности", callback_data="ai_arb:opportunities"),
+            InlineKeyboardButton(
+                "📊 Возможности", callback_data="ai_arb:opportunities"
+            ),
             InlineKeyboardButton("📈 Статистика", callback_data="ai_arb:stats"),
         ],
         [
@@ -108,7 +110,9 @@ def _get_settings_keyboard() -> InlineKeyboardMarkup:
             InlineKeyboardButton("🎮 TF2", callback_data="ai_arb:game:tf2"),
         ],
         [
-            InlineKeyboardButton("⚡ Авто-покупка: OFF", callback_data="ai_arb:toggle_auto"),
+            InlineKeyboardButton(
+                "⚡ Авто-покупка: OFF", callback_data="ai_arb:toggle_auto"
+            ),
         ],
         [
             InlineKeyboardButton("◀️ Назад", callback_data="ai_arb:menu"),
@@ -196,8 +200,12 @@ async def ai_arb_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
                 text = f"✅ <b>Найдено {len(opportunities)} возможностей!</b>\n\n"
 
                 for i, opp in enumerate(opportunities[:10], 1):
-                    platform_info = f"{opp.buy_platform.value}→{opp.sell_platform.value}"
-                    steam_info = f" (Steam: ${opp.steam_price:.2f})" if opp.steam_price else ""
+                    platform_info = (
+                        f"{opp.buy_platform.value}→{opp.sell_platform.value}"
+                    )
+                    steam_info = (
+                        f" (Steam: ${opp.steam_price:.2f})" if opp.steam_price else ""
+                    )
 
                     text += (
                         f"<b>{i}. {opp.item_name[:35]}</b>\n"

@@ -96,8 +96,14 @@ class ItemRecommendation:
             "risk_level": self.risk_level.value,
             "current_price": self.current_price,
             "target_price": self.target_price,
-            "expected_profit": round(self.expected_profit, 2) if self.expected_profit else None,
-            "expected_profit_percent": round(self.expected_profit_percent, 2) if self.expected_profit_percent else None,
+            "expected_profit": (
+                round(self.expected_profit, 2) if self.expected_profit else None
+            ),
+            "expected_profit_percent": (
+                round(self.expected_profit_percent, 2)
+                if self.expected_profit_percent
+                else None
+            ),
             "reason": self.reason,
             "factors": self.factors,
             "time_horizon": self.time_horizon,
@@ -135,11 +141,18 @@ class RecommendationBatch:
 
     def filter_by_risk(self, max_risk: RiskLevel) -> list[ItemRecommendation]:
         """Filter recommendations by maximum risk level."""
-        risk_order = [RiskLevel.VERY_LOW, RiskLevel.LOW, RiskLevel.MEDIUM, RiskLevel.HIGH, RiskLevel.VERY_HIGH]
+        risk_order = [
+            RiskLevel.VERY_LOW,
+            RiskLevel.LOW,
+            RiskLevel.MEDIUM,
+            RiskLevel.HIGH,
+            RiskLevel.VERY_HIGH,
+        ]
         max_risk_idx = risk_order.index(max_risk)
 
         return [
-            rec for rec in self.recommendations
+            rec
+            for rec in self.recommendations
             if risk_order.index(rec.risk_level) <= max_risk_idx
         ]
 
@@ -267,10 +280,26 @@ class SmartRecommendations:
         return RecommendationBatch(
             recommendations=recommendations,
             total_potential_profit=sum(r.expected_profit or 0 for r in recommendations),
-            avg_confidence=sum(r.confidence for r in recommendations) / len(recommendations) if recommendations else 0,
-            buy_count=sum(1 for r in recommendations if r.recommendation_type == RecommendationType.BUY),
-            sell_count=sum(1 for r in recommendations if r.recommendation_type == RecommendationType.SELL),
-            arbitrage_count=sum(1 for r in recommendations if r.recommendation_type == RecommendationType.ARBITRAGE),
+            avg_confidence=(
+                sum(r.confidence for r in recommendations) / len(recommendations)
+                if recommendations
+                else 0
+            ),
+            buy_count=sum(
+                1
+                for r in recommendations
+                if r.recommendation_type == RecommendationType.BUY
+            ),
+            sell_count=sum(
+                1
+                for r in recommendations
+                if r.recommendation_type == RecommendationType.SELL
+            ),
+            arbitrage_count=sum(
+                1
+                for r in recommendations
+                if r.recommendation_type == RecommendationType.ARBITRAGE
+            ),
         )
 
     async def _analyze_buy_opportunity(
@@ -346,7 +375,9 @@ class SmartRecommendations:
             if best_sell_price > current_price * 1.15:  # >15% profit potential
                 confidence += 25
                 target_price = best_sell_price * (1 - self.WAXPEER_COMMISSION)
-                factors.append(f"Cross-platform arbitrage: sell at ${best_sell_price:.2f}")
+                factors.append(
+                    f"Cross-platform arbitrage: sell at ${best_sell_price:.2f}"
+                )
                 risk_level = RiskLevel.LOW
 
         # Factor 4: Liquidity (if available)
@@ -376,8 +407,12 @@ class SmartRecommendations:
             return None
 
         # Calculate expected profit
-        expected_profit = target_price - current_price - (current_price * self.DMARKET_COMMISSION)
-        expected_profit_percent = (expected_profit / current_price) * 100 if current_price > 0 else 0
+        expected_profit = (
+            target_price - current_price - (current_price * self.DMARKET_COMMISSION)
+        )
+        expected_profit_percent = (
+            (expected_profit / current_price) * 100 if current_price > 0 else 0
+        )
 
         if expected_profit_percent < self.min_profit_threshold * 100:
             return None
@@ -463,7 +498,9 @@ class SmartRecommendations:
             if best_sell_price > current_price * 1.1:
                 recommendation_type = RecommendationType.SELL
                 confidence += 20
-                factors.append(f"Better price on other platform: ${best_sell_price:.2f}")
+                factors.append(
+                    f"Better price on other platform: ${best_sell_price:.2f}"
+                )
 
         # Hold time factor
         purchase_date = item.get("purchaseDate")
@@ -479,7 +516,9 @@ class SmartRecommendations:
                 if hold_time > timedelta(days=30) and profit_percent < 5:
                     recommendation_type = RecommendationType.SELL
                     confidence += 10
-                    factors.append(f"Held for {hold_time.days} days with minimal profit")
+                    factors.append(
+                        f"Held for {hold_time.days} days with minimal profit"
+                    )
 
         if recommendation_type == RecommendationType.HOLD:
             return None
@@ -494,7 +533,11 @@ class SmartRecommendations:
             target_price=current_price,
             expected_profit=net_profit,
             expected_profit_percent=profit_percent,
-            reason=f"Sell recommendation: {factors[0]}" if factors else "Sell to realize gains",
+            reason=(
+                f"Sell recommendation: {factors[0]}"
+                if factors
+                else "Sell to realize gains"
+            ),
             factors=factors,
             time_horizon="immediate",
             urgency="high" if profit_percent > 20 or profit_percent < -15 else "normal",
@@ -538,9 +581,15 @@ class SmartRecommendations:
 
             for platform, price in other_prices.items():
                 # Calculate profit
-                commission = self.WAXPEER_COMMISSION if "waxpeer" in platform.lower() else self.STEAM_COMMISSION
+                commission = (
+                    self.WAXPEER_COMMISSION
+                    if "waxpeer" in platform.lower()
+                    else self.STEAM_COMMISSION
+                )
                 net_sell_price = price * (1 - commission)
-                buy_cost = dmarket_price * (1 + self.DMARKET_COMMISSION * 0.5)  # DMarket buyer commission is lower
+                buy_cost = dmarket_price * (
+                    1 + self.DMARKET_COMMISSION * 0.5
+                )  # DMarket buyer commission is lower
 
                 profit = net_sell_price - buy_cost
                 profit_percent = (profit / buy_cost) * 100 if buy_cost > 0 else 0
@@ -548,25 +597,31 @@ class SmartRecommendations:
                 if profit_percent > 8:  # >8% profit after fees
                     confidence = min(90, 50 + profit_percent * 2)
 
-                    recommendations.append(ItemRecommendation(
-                        item_name=item_name,
-                        item_id=item_id,
-                        recommendation_type=RecommendationType.ARBITRAGE,
-                        confidence=confidence,
-                        risk_level=RiskLevel.LOW if profit_percent > 15 else RiskLevel.MEDIUM,
-                        current_price=dmarket_price,
-                        target_price=price,
-                        expected_profit=profit,
-                        expected_profit_percent=profit_percent,
-                        reason=f"Arbitrage: Buy on DMarket, sell on {platform} for {profit_percent:.1f}% profit",
-                        factors=[
-                            f"DMarket price: ${dmarket_price:.2f}",
-                            f"{platform} price: ${price:.2f}",
-                            f"Net profit after fees: ${profit:.2f}",
-                        ],
-                        time_horizon="immediate",
-                        urgency="high",
-                    ))
+                    recommendations.append(
+                        ItemRecommendation(
+                            item_name=item_name,
+                            item_id=item_id,
+                            recommendation_type=RecommendationType.ARBITRAGE,
+                            confidence=confidence,
+                            risk_level=(
+                                RiskLevel.LOW
+                                if profit_percent > 15
+                                else RiskLevel.MEDIUM
+                            ),
+                            current_price=dmarket_price,
+                            target_price=price,
+                            expected_profit=profit,
+                            expected_profit_percent=profit_percent,
+                            reason=f"Arbitrage: Buy on DMarket, sell on {platform} for {profit_percent:.1f}% profit",
+                            factors=[
+                                f"DMarket price: ${dmarket_price:.2f}",
+                                f"{platform} price: ${price:.2f}",
+                                f"Net profit after fees: ${profit:.2f}",
+                            ],
+                            time_horizon="immediate",
+                            urgency="high",
+                        )
+                    )
 
         return recommendations
 
@@ -584,7 +639,13 @@ class SmartRecommendations:
         Returns:
             Adjusted confidence
         """
-        risk_levels = [RiskLevel.VERY_LOW, RiskLevel.LOW, RiskLevel.MEDIUM, RiskLevel.HIGH, RiskLevel.VERY_HIGH]
+        risk_levels = [
+            RiskLevel.VERY_LOW,
+            RiskLevel.LOW,
+            RiskLevel.MEDIUM,
+            RiskLevel.HIGH,
+            RiskLevel.VERY_HIGH,
+        ]
         user_risk_idx = risk_levels.index(self.risk_tolerance)
         item_risk_idx = risk_levels.index(item_risk)
 
@@ -638,13 +699,9 @@ class SmartRecommendations:
 
         # Check balance utilization
         if self.user_balance > total_value * 2:
-            recommendations.append(
-                "Underutilized balance: consider investing more"
-            )
+            recommendations.append("Underutilized balance: consider investing more")
         elif total_value > self.user_balance * 5:
-            recommendations.append(
-                "High leverage: consider reducing positions"
-            )
+            recommendations.append("High leverage: consider reducing positions")
 
         return recommendations
 

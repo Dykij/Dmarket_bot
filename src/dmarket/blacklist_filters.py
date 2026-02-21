@@ -30,7 +30,6 @@ BLACKLIST_KEYWORDS = [
     "souvenir",
     "souvenir package",
     "souvenir case",
-
     # ===== НАКЛЕЙКИ И ГРАФФИТИ (НИЗКИЙ ПРОФИТ) =====
     "sticker |",
     "patch |",
@@ -38,7 +37,6 @@ BLACKLIST_KEYWORDS = [
     "sealed graffiti",
     "charm |",  # Новые чармы 2025+
     "pin |",
-
     # ===== КОЛЛЕКЦИОННЫЕ ПРЕДМЕТЫ (НЕСТАБИЛЬНЫЕ ЦЕНЫ) =====
     "collectible pin",
     "music kit",
@@ -48,20 +46,17 @@ BLACKLIST_KEYWORDS = [
     "stattrak music kit",
     "tournament sticker",
     "autograph sticker",
-
     # ===== КОНТЕЙНЕРЫ И КАПСУЛЫ (СЛОЖНАЯ ОЦЕНКА) =====
     "sticker capsule",
     "patch pack",
     "graffiti box",
     "gift package",
     "weapon case",  # Старые кейсы - низкая ликвидность
-
     # ===== RUST - НЕЛИКВИДНЫЕ КАТЕГОРИИ =====
     "blueprint",
     "note",
     "photograph",
     "cassette",
-
     # ===== DOTA 2 - НЕЛИКВИДНЫЕ КАТЕГОРИИ =====
     "gem",
     "inscribed gem",
@@ -80,7 +75,6 @@ BLACKLIST_KEYWORDS = [
     "player card",
     "fantasy item",
     "compendium",
-
     # ===== TF2 - НЕЛИКВИДНЫЕ КАТЕГОРИИ =====
     "crate",  # Старые крейты
     "salvaged crate",
@@ -96,7 +90,6 @@ BLACKLIST_KEYWORDS = [
     "dueling mini-game",
     "noise maker",
     "secret saxton",
-
     # ===== ОБЩИЕ НЕЛИКВИДНЫЕ ПАТТЕРНЫ =====
     "well-worn",  # Сложно продать быстро
     # Note: "battle-scarred" handled separately by float_filter (allows high profit)
@@ -112,7 +105,6 @@ PATTERN_KEYWORDS = [
     "kato 14",
     "kato14",
     "katowice14",
-
     # ===== РЕДКИЕ КОМАНДЫ (МАНИПУЛЯЦИИ С ЦЕНАМИ) =====
     "ibuypower",
     "ibp holo",
@@ -130,7 +122,6 @@ PATTERN_KEYWORDS = [
     "ninjas in pyjamas holo",
     "clan-mystik holo",
     "3dmax holo",
-
     # ===== РЕДКИЕ ПАТТЕРНЫ (СЛОЖНАЯ ОЦЕНКА) =====
     "blue gem",
     "case hardened",  # Только синие паттерны рискованны
@@ -143,7 +134,6 @@ PATTERN_KEYWORDS = [
     "sapphire",
     "emerald",
     "phase",  # Doppler phases требуют особой оценки
-
     # ===== CROWN FOIL И ДРУГИЕ ДОРОГИЕ НАКЛЕЙКИ =====
     "crown foil",
     "crown (foil)",
@@ -153,7 +143,6 @@ PATTERN_KEYWORDS = [
     "howling dawn",
     "nelu the bear",
     "phoenix foil",
-
     # ===== DOTA 2 РЕДКОСТИ =====
     "golden",  # Golden versions могут быть переоценены
     "platinum",

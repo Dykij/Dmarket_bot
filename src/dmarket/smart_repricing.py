@@ -62,7 +62,9 @@ class SmartRepricer:
         self.night_mode_enabled = self.config.get("night_mode_enabled", True)
         self.night_start_hour = self.config.get("night_start_hour", 2)
         self.night_end_hour = self.config.get("night_end_hour", 6)
-        self.night_undercut_multiplier = self.config.get("night_undercut_multiplier", 2.0)
+        self.night_undercut_multiplier = self.config.get(
+            "night_undercut_multiplier", 2.0
+        )
 
         # Panic sell protection
         self.panic_threshold_percent = self.config.get("panic_threshold_percent", 15)
@@ -160,7 +162,9 @@ class SmartRepricer:
             current_price = int(current_price_data) if current_price_data else 0
 
         if buy_price <= 0:
-            logger.warning(f"Cannot reprice item without buy_price: {item.get('title')}")
+            logger.warning(
+                f"Cannot reprice item without buy_price: {item.get('title')}"
+            )
             return None
 
         # Calculate price limits
@@ -181,7 +185,9 @@ class SmartRepricer:
         elif action == RepricingAction.REDUCE_TO_TARGET:
             # Target 5% profit above break-even
             target_price = int(break_even_price * 1.05)
-            new_price = max(min(market_min_price - undercut_step, target_price), break_even_price)
+            new_price = max(
+                min(market_min_price - undercut_step, target_price), break_even_price
+            )
 
         elif action == RepricingAction.REDUCE_TO_BREAK_EVEN:
             # Sell at break-even (no profit, no loss)

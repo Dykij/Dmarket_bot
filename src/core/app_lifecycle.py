@@ -37,7 +37,9 @@ class ApplicationLifecycle:
         # Start AI Training Scheduler
         if self.app.ai_scheduler:
             await self.app.ai_scheduler.start()
-            logger.info("✅ AI Training Scheduler started (nightly training at 03:00 UTC)")
+            logger.info(
+                "✅ AI Training Scheduler started (nightly training at 03:00 UTC)"
+            )
 
         # Start Scanner Manager
         if self.app.scanner_manager and not self.app.config.testing:

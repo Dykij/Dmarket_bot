@@ -310,14 +310,16 @@ class BotBrain:
                 extra={"old": old_state.value, "new": state.value},
             )
 
-    def _add_alert(self, level: AlertLevel, message: str, data: dict[str, Any] | None = None) -> None:
+    def _add_alert(
+        self, level: AlertLevel, message: str, data: dict[str, Any] | None = None
+    ) -> None:
         """Add an alert."""
         alert = Alert(level=level, message=message, data=data or {})
         self._alerts.append(alert)
 
         # Trim old alerts
         if len(self._alerts) > self._max_alerts:
-            self._alerts = self._alerts[-self._max_alerts:]
+            self._alerts = self._alerts[-self._max_alerts :]
 
         # Notify callback
         if self.on_alert:
@@ -530,10 +532,12 @@ class BotBrain:
                 continue
 
             # Add to trade history
-            self._trade_history.append({
-                "decision": decision.to_dict(),
-                "timestamp": datetime.now(UTC).isoformat(),
-            })
+            self._trade_history.append(
+                {
+                    "decision": decision.to_dict(),
+                    "timestamp": datetime.now(UTC).isoformat(),
+                }
+            )
 
             # Update AI coordinator for continuous learning
             # (In real scenario, we'd track actual P&L later)
@@ -620,7 +624,9 @@ class BotBrain:
                     try:
                         self.on_decision(decision)
                     except Exception as e:
-                        logger.warning("decision_callback_failed", extra={"error": str(e)})
+                        logger.warning(
+                            "decision_callback_failed", extra={"error": str(e)}
+                        )
 
             # 4. EXECUTE
             self._set_state(BotState.EXECUTING)
@@ -809,7 +815,9 @@ class BotBrain:
             "is_running": self._is_running,
             "pending_decisions": len(self._pending_decisions),
             "in_cooldown": self._in_cooldown,
-            "cooldown_until": self._cooldown_until.isoformat() if self._cooldown_until else None,
+            "cooldown_until": (
+                self._cooldown_until.isoformat() if self._cooldown_until else None
+            ),
             "config": {
                 "autonomy_level": self.config.autonomy_level.value,
                 "dry_run": self.config.dry_run,

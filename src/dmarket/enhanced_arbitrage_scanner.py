@@ -48,7 +48,9 @@ class EnhancedArbitrageScanner:
         self.sales_analyzer = (
             SalesHistoryAnalyzer(self.api_client) if enable_sales_history else None
         )
-        self.external_api = get_external_price_api() if enable_external_comparison else None
+        self.external_api = (
+            get_external_price_api() if enable_external_comparison else None
+        )
 
     async def find_opportunities(
         self,
@@ -96,7 +98,9 @@ class EnhancedArbitrageScanner:
             # Шаг 3: Проверка ликвидности через историю продаж
             if self.enable_sales_history and self.sales_analyzer:
                 filtered_items = await self._filter_by_sales_history(filtered_items)
-                logger.info(f"✅ После проверки истории продаж: {len(filtered_items)} предметов")
+                logger.info(
+                    f"✅ После проверки истории продаж: {len(filtered_items)} предметов"
+                )
 
             # Шаг 4: Сравнение с внешними ценами
             if self.enable_external_comparison and self.external_api:
@@ -155,8 +159,12 @@ class EnhancedArbitrageScanner:
                 if "price" in item and isinstance(item["price"], dict):
                     item["price_usd"] = float(item["price"].get("USD", 0)) / 100
 
-                if "suggestedPrice" in item and isinstance(item["suggestedPrice"], dict):
-                    item["suggested_usd"] = float(item["suggestedPrice"].get("USD", 0)) / 100
+                if "suggestedPrice" in item and isinstance(
+                    item["suggestedPrice"], dict
+                ):
+                    item["suggested_usd"] = (
+                        float(item["suggestedPrice"].get("USD", 0)) / 100
+                    )
 
             return items
 
@@ -257,7 +265,10 @@ class EnhancedArbitrageScanner:
 
                 # Анализируем последние 5 продаж
                 recent_sales = sales[:5]
-                prices = [float(sale.get("price", {}).get("USD", 0)) / 100 for sale in recent_sales]
+                prices = [
+                    float(sale.get("price", {}).get("USD", 0)) / 100
+                    for sale in recent_sales
+                ]
 
                 # Текущая цена
                 current_price = item.get("price_usd", 0)
@@ -288,7 +299,9 @@ class EnhancedArbitrageScanner:
                 filtered.append(item)
 
             except Exception as e:
-                logger.warning(f"Ошибка при анализе истории продаж для {item.get('title')}: {e}")
+                logger.warning(
+                    f"Ошибка при анализе истории продаж для {item.get('title')}: {e}"
+                )
                 # В случае ошибки пропускаем предмет (safety first)
                 continue
 

@@ -143,9 +143,8 @@ class MarketAlertsManager:
                     >= self.sent_alerts_cleanup_interval_seconds
                 ):
                     if (
-                        (not self._cleanup_task or self._cleanup_task.done())
-                        and not self._cleanup_lock.locked()
-                    ):
+                        not self._cleanup_task or self._cleanup_task.done()
+                    ) and not self._cleanup_lock.locked():
                         self._cleanup_task = asyncio.create_task(
                             self._cleanup_sent_alerts()
                         )
@@ -232,7 +231,9 @@ class MarketAlertsManager:
 
                 for item in price_changes:
                     # Создаем уникальный идентификатор для уведомления
-                    item_id = f"{item['market_hash_name']}_{int(item['change_percent'])}"
+                    item_id = (
+                        f"{item['market_hash_name']}_{int(item['change_percent'])}"
+                    )
 
                     # Пропускаем, если уведомление уже было отправлено
                     if item_id in self.sent_alerts["price_changes"][user_id]:
@@ -266,7 +267,9 @@ class MarketAlertsManager:
                         )
 
                         # Запоминаем, что отправили это уведомление
-                        self.sent_alerts["price_changes"][user_id][item_id] = time.time()
+                        self.sent_alerts["price_changes"][user_id][
+                            item_id
+                        ] = time.time()
                         alert_count += 1
 
                         # Небольшая пауза между сообщениями
@@ -309,7 +312,8 @@ class MarketAlertsManager:
             trending_items = [
                 item
                 for item in trending_items
-                if item.get("popularity_score", 0) >= self.alert_thresholds["trending_popularity"]
+                if item.get("popularity_score", 0)
+                >= self.alert_thresholds["trending_popularity"]
             ]
 
             if not trending_items:
@@ -326,7 +330,9 @@ class MarketAlertsManager:
 
                 for item in trending_items:
                     # Создаем уникальный идентификатор для уведомления
-                    item_id = f"{item['market_hash_name']}_{int(item['popularity_score'])}"
+                    item_id = (
+                        f"{item['market_hash_name']}_{int(item['popularity_score'])}"
+                    )
 
                     # Пропускаем, если уведомление уже было отправлено
                     if item_id in self.sent_alerts["trending"][user_id]:
@@ -399,7 +405,8 @@ class MarketAlertsManager:
             volatile_items = [
                 item
                 for item in volatile_items
-                if item.get("volatility_score", 0) >= self.alert_thresholds["volatility_threshold"]
+                if item.get("volatility_score", 0)
+                >= self.alert_thresholds["volatility_threshold"]
             ]
 
             if not volatile_items:
@@ -423,7 +430,9 @@ class MarketAlertsManager:
                     f"{i}. {name} - ${price:.2f} (волатильность: {volatility:.1f})\n"
                 )
 
-            market_update_message += "\nДля получения полного отчета используйте /market_analysis"
+            market_update_message += (
+                "\nДля получения полного отчета используйте /market_analysis"
+            )
 
             # Отправляем уведомления подписчикам
             for user_id in self.subscribers["volatility"]:
@@ -633,7 +642,9 @@ class MarketAlertsManager:
 
         """
         return [
-            alert_type for alert_type in self.subscribers if user_id in self.subscribers[alert_type]
+            alert_type
+            for alert_type in self.subscribers
+            if user_id in self.subscribers[alert_type]
         ]
 
     def get_subscription_count(self, alert_type: str | None = None) -> int:
@@ -770,7 +781,9 @@ class MarketAlertsManager:
         for alert_type in self.sent_alerts:
             for user_id, alerts in list(self.sent_alerts[alert_type].items()):
                 expired_alerts = [
-                    alert_id for alert_id, sent_at in alerts.items() if sent_at < cutoff_time
+                    alert_id
+                    for alert_id, sent_at in alerts.items()
+                    if sent_at < cutoff_time
                 ]
 
                 for alert_id in expired_alerts:

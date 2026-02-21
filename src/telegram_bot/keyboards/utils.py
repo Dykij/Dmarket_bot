@@ -130,18 +130,26 @@ def create_pagination_keyboard(
 
     # Кнопка "Назад"
     if current_page > 1:
-        buttons.append(InlineKeyboardButton(text="◀️", callback_data=f"{prefix}{current_page - 1}"))
+        buttons.append(
+            InlineKeyboardButton(text="◀️", callback_data=f"{prefix}{current_page - 1}")
+        )
 
     # Индикатор текущей страницы
-    buttons.append(InlineKeyboardButton(text=f"{current_page}/{total_pages}", callback_data="noop"))
+    buttons.append(
+        InlineKeyboardButton(text=f"{current_page}/{total_pages}", callback_data="noop")
+    )
 
     # Кнопка "Вперёд"
     if current_page < total_pages:
-        buttons.append(InlineKeyboardButton(text="▶️", callback_data=f"{prefix}{current_page + 1}"))
+        buttons.append(
+            InlineKeyboardButton(text="▶️", callback_data=f"{prefix}{current_page + 1}")
+        )
 
     # Кнопка "В конец"
     if show_first_last and current_page < total_pages - 1:
-        buttons.append(InlineKeyboardButton(text="⏭️", callback_data=f"{prefix}{total_pages}"))
+        buttons.append(
+            InlineKeyboardButton(text="⏭️", callback_data=f"{prefix}{total_pages}")
+        )
 
     rows = [buttons]
 

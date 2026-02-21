@@ -10,7 +10,9 @@ from telegram.ext import ContextTypes
 logger = logging.getLogger(__name__)
 
 
-async def steam_arbitrage_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def steam_arbitrage_start(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """
     Запустить автоматический Steam-арбитраж сканер.
 
@@ -62,7 +64,9 @@ async def steam_arbitrage_start(update: Update, context: ContextTypes.DEFAULT_TY
     logger.info(f"Steam arbitrage scanner started by user {user_id}")
 
 
-async def steam_arbitrage_stop(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def steam_arbitrage_stop(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """
     Остановить автоматический Steam-арбитраж сканер.
 
@@ -91,7 +95,9 @@ async def steam_arbitrage_stop(update: Update, context: ContextTypes.DEFAULT_TYP
     logger.info(f"Steam arbitrage scanner stopped by user {user_id}")
 
 
-async def steam_arbitrage_status(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def steam_arbitrage_status(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """
     Показать статус автоматического Steam-арбитраж сканера.
 
@@ -106,7 +112,9 @@ async def steam_arbitrage_status(update: Update, context: ContextTypes.DEFAULT_T
     # Проверка прав администратора
     admin_users = getattr(config.security, "admin_users", [])
     if user_id not in [int(uid) for uid in admin_users]:
-        await update.message.reply_text("❌ У вас нет прав для просмотра статуса сканера")
+        await update.message.reply_text(
+            "❌ У вас нет прав для просмотра статуса сканера"
+        )
         return
 
     scanner = context.bot_data.get("steam_arbitrage_scanner")

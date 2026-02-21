@@ -236,12 +236,30 @@ async def handle_text_buttons(
             "• Создайте таргет на нужный предмет\n"
             "• Система автоматически выставит buy order\n"
             "• Получайте уведомления о выполнении",
-            reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("➕ Создать таргет", callback_data="target_create")],
-                [InlineKeyboardButton("📋 Мои таргеты", callback_data="target_list")],
-                [InlineKeyboardButton("📊 Статистика", callback_data="target_stats")],
-                [InlineKeyboardButton("◀️ Главное меню", callback_data="main_menu")],
-            ]),
+            reply_markup=InlineKeyboardMarkup(
+                [
+                    [
+                        InlineKeyboardButton(
+                            "➕ Создать таргет", callback_data="target_create"
+                        )
+                    ],
+                    [
+                        InlineKeyboardButton(
+                            "📋 Мои таргеты", callback_data="target_list"
+                        )
+                    ],
+                    [
+                        InlineKeyboardButton(
+                            "📊 Статистика", callback_data="target_stats"
+                        )
+                    ],
+                    [
+                        InlineKeyboardButton(
+                            "◀️ Главное меню", callback_data="main_menu"
+                        )
+                    ],
+                ]
+            ),
             parse_mode=ParseMode.HTML,
         )
     elif text == "📦 Инвентарь":
@@ -250,10 +268,20 @@ async def handle_text_buttons(
         await update.message.reply_text(
             "📦 <b>Ваш инвентарь</b>\n\n"
             "⚠️ Для просмотра инвентаря необходимо настроить API ключи DMarket.",
-            reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("🔑 Настроить API", callback_data="settings_api")],
-                [InlineKeyboardButton("◀️ Главное меню", callback_data="main_menu")],
-            ]),
+            reply_markup=InlineKeyboardMarkup(
+                [
+                    [
+                        InlineKeyboardButton(
+                            "🔑 Настроить API", callback_data="settings_api"
+                        )
+                    ],
+                    [
+                        InlineKeyboardButton(
+                            "◀️ Главное меню", callback_data="main_menu"
+                        )
+                    ],
+                ]
+            ),
             parse_mode=ParseMode.HTML,
         )
     elif text in {"📈 Аналитика", "📈 Анализ рынка"}:
@@ -261,18 +289,36 @@ async def handle_text_buttons(
 
         await update.message.reply_text(
             "📈 <b>Аналитика рынка</b>\n\nВыберите раздел аналитики:",
-            reply_markup=InlineKeyboardMarkup([
+            reply_markup=InlineKeyboardMarkup(
                 [
-                    InlineKeyboardButton("📊 Тренды", callback_data="analysis_trends"),
-                    InlineKeyboardButton("💹 Волатильность", callback_data="analysis_vol"),
-                ],
-                [
-                    InlineKeyboardButton("🔥 Топ продаж", callback_data="analysis_top"),
-                    InlineKeyboardButton("📉 Падающие", callback_data="analysis_drop"),
-                ],
-                [InlineKeyboardButton("🎯 Рекомендации", callback_data="analysis_rec")],
-                [InlineKeyboardButton("◀️ Главное меню", callback_data="main_menu")],
-            ]),
+                    [
+                        InlineKeyboardButton(
+                            "📊 Тренды", callback_data="analysis_trends"
+                        ),
+                        InlineKeyboardButton(
+                            "💹 Волатильность", callback_data="analysis_vol"
+                        ),
+                    ],
+                    [
+                        InlineKeyboardButton(
+                            "🔥 Топ продаж", callback_data="analysis_top"
+                        ),
+                        InlineKeyboardButton(
+                            "📉 Падающие", callback_data="analysis_drop"
+                        ),
+                    ],
+                    [
+                        InlineKeyboardButton(
+                            "🎯 Рекомендации", callback_data="analysis_rec"
+                        )
+                    ],
+                    [
+                        InlineKeyboardButton(
+                            "◀️ Главное меню", callback_data="main_menu"
+                        )
+                    ],
+                ]
+            ),
             parse_mode=ParseMode.HTML,
         )
     elif text == "🔔 Оповещения":

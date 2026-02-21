@@ -90,20 +90,24 @@ class PollConfig:
     max_interval: float = 120.0  # Maximum: 2 minutes
 
     # Priority multipliers (lower = more frequent)
-    priority_multipliers: dict[PollPriority, float] = field(default_factory=lambda: {
-        PollPriority.CRITICAL: 0.3,  # 30% of base interval
-        PollPriority.HIGH: 0.5,  # 50% of base interval
-        PollPriority.NORMAL: 1.0,  # Base interval
-        PollPriority.LOW: 2.0,  # 200% of base interval
-    })
+    priority_multipliers: dict[PollPriority, float] = field(
+        default_factory=lambda: {
+            PollPriority.CRITICAL: 0.3,  # 30% of base interval
+            PollPriority.HIGH: 0.5,  # 50% of base interval
+            PollPriority.NORMAL: 1.0,  # Base interval
+            PollPriority.LOW: 2.0,  # 200% of base interval
+        }
+    )
 
     # Activity multipliers
-    activity_multipliers: dict[MarketActivity, float] = field(default_factory=lambda: {
-        MarketActivity.PEAK: 0.5,  # Poll twice as often
-        MarketActivity.NORMAL: 1.0,
-        MarketActivity.LOW: 1.5,
-        MarketActivity.MINIMAL: 2.0,
-    })
+    activity_multipliers: dict[MarketActivity, float] = field(
+        default_factory=lambda: {
+            MarketActivity.PEAK: 0.5,  # Poll twice as often
+            MarketActivity.NORMAL: 1.0,
+            MarketActivity.LOW: 1.5,
+            MarketActivity.MINIMAL: 2.0,
+        }
+    )
 
     # Peak hours (UTC)
     peak_hours: tuple[int, ...] = (14, 15, 16, 17, 18, 19, 20, 21)  # 2 PM - 9 PM UTC
@@ -215,7 +219,9 @@ class AdaptivePollingEngine:
             "changes_detected": self._changes_detected,
             "cached_items": len(self._price_cache),
             "known_items": len(self._known_item_ids),
-            "last_poll": self._last_poll_time.isoformat() if self._last_poll_time else None,
+            "last_poll": (
+                self._last_poll_time.isoformat() if self._last_poll_time else None
+            ),
         }
 
     async def start(self) -> None:
@@ -557,11 +563,13 @@ class DeltaTracker:
 
         if changes:
             self._snapshots[item_id] = data.copy()
-            self._change_history.append({
-                "item_id": item_id,
-                "changes": changes,
-                "timestamp": datetime.now(UTC).isoformat(),
-            })
+            self._change_history.append(
+                {
+                    "item_id": item_id,
+                    "changes": changes,
+                    "timestamp": datetime.now(UTC).isoformat(),
+                }
+            )
             return changes
 
         return None

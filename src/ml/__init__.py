@@ -56,7 +56,12 @@ from src.ml.bot_brain import (
     CycleResult,
     create_bot_brain,
 )
-from src.ml.data_scheduler import MLDataScheduler, SchedulerConfig, SchedulerState, TaskType
+from src.ml.data_scheduler import (
+    MLDataScheduler,
+    SchedulerConfig,
+    SchedulerState,
+    TaskType,
+)
 from src.ml.discount_threshold_predictor import (
     DiscountThresholdPredictor,
     MarketCondition,
@@ -86,7 +91,11 @@ from src.ml.model_tuner import (
 
 # Real Data Training Modules (новые модули для обучения на реальных данных API)
 from src.ml.price_normalizer import NormalizedPrice, PriceNormalizer, PriceSource
-from src.ml.price_predictor import AdaptivePricePredictor, PredictionConfidence, PricePrediction
+from src.ml.price_predictor import (
+    AdaptivePricePredictor,
+    PredictionConfidence,
+    PricePrediction,
+)
 from src.ml.real_price_collector import (
     CollectedPrice,
     CollectionResult,
@@ -107,7 +116,11 @@ from src.ml.smart_recommendations import (
     RiskLevel as RecommendationRiskLevel,
 )
 from src.ml.trade_classifier import AdaptiveTradeClassifier, RiskLevel, TradeSignal
-from src.ml.training_data_manager import DatasetMetadata, TrainingDataManager, TrainingDataset
+from src.ml.training_data_manager import (
+    DatasetMetadata,
+    TrainingDataManager,
+    TrainingDataset,
+)
 
 __all__ = [
     # ═══════════════════════════════════════════════════════════════════

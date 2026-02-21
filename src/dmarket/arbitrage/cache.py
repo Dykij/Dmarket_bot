@@ -101,7 +101,9 @@ def get_arbitrage_cache(cache_key: tuple[Any, ...]) -> list[dict[str, Any]] | No
     return items
 
 
-def save_arbitrage_cache(cache_key: tuple[Any, ...], items: list[dict[str, Any]]) -> None:
+def save_arbitrage_cache(
+    cache_key: tuple[Any, ...], items: list[dict[str, Any]]
+) -> None:
     """Сохраняет результаты арбитража в кэш.
 
     Args:

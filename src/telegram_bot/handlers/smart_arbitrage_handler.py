@@ -17,7 +17,9 @@ from telegram.ext import ContextTypes
 logger = logging.getLogger(__name__)
 
 
-async def smart_arbitrage_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def smart_arbitrage_command(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Handle /smart command - Smart Arbitrage menu.
 
     Args:
@@ -57,11 +59,17 @@ async def smart_arbitrage_command(update: Update, context: ContextTypes.DEFAULT_
 
         keyboard = [
             [
-                InlineKeyboardButton("🚀 Запустить", callback_data="start_smart_arbitrage"),
-                InlineKeyboardButton("🛑 Остановить", callback_data="stop_smart_arbitrage"),
+                InlineKeyboardButton(
+                    "🚀 Запустить", callback_data="start_smart_arbitrage"
+                ),
+                InlineKeyboardButton(
+                    "🛑 Остановить", callback_data="stop_smart_arbitrage"
+                ),
             ],
             [
-                InlineKeyboardButton("📊 Статус", callback_data="smart_arbitrage_status"),
+                InlineKeyboardButton(
+                    "📊 Статус", callback_data="smart_arbitrage_status"
+                ),
             ],
             [
                 InlineKeyboardButton("◀️ Главное меню", callback_data="back_to_main"),

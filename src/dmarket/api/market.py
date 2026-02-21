@@ -1,10 +1,13 @@
 ﻿"""Market operations for DMarket API."""
 
 from typing import Any
+from urllib.parse import urlencode
 
 from src.dmarket.api.client import GAME_MAP
 from src.dmarket.api_validator import validate_response
-from src.dmarket.schemas import MarketItemsResponse  # Updated v2.0 schema  # Updated v2.0 schema
+from src.dmarket.schemas import (
+    MarketItemsResponse,
+)  # Updated v2.0 schema  # Updated v2.0 schema
 
 
 class MarketMixin:
@@ -45,9 +48,22 @@ class MarketMixin:
         if tree_filters:
             params["treeFilters"] = tree_filters
 
-        return await self._request("GET", "/exchange/v1/market/items", params=params, force_refresh=force_refresh)
+        # Try Rust client if available
+        if getattr(self, "rust_client", None):
+            qs = urlencode(params)
+            full_url = f"{self.api_url}/exchange/v1/market/items?{qs}"
+            return await self._fetch_market_items_rust(full_url)
 
-    async def get_suggested_price(self, item_name: str, game: str = "csgo") -> float | None:
+        return await self._request(
+            "GET",
+            "/exchange/v1/market/items",
+            params=params,
+            force_refresh=force_refresh,
+        )
+
+    async def get_suggested_price(
+        self, item_name: str, game: str = "csgo"
+    ) -> float | None:
         response = await self.get_market_items(game=game, title=item_name, limit=1)
         items = response.get("objects", response.get("items", []))
         if not items:
@@ -56,6 +72,3 @@ class MarketMixin:
         if isinstance(suggested, dict):
             return float(suggested.get("amount", 0)) / 100
         return float(suggested) / 100 if suggested else None
-
-
-

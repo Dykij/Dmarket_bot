@@ -191,7 +191,11 @@ class ScannerFilters:
             if usd_price is not None:
                 try:
                     # Price might be in cents
-                    return float(usd_price) / 100 if float(usd_price) > 1000 else float(usd_price)
+                    return (
+                        float(usd_price) / 100
+                        if float(usd_price) > 1000
+                        else float(usd_price)
+                    )
                 except (ValueError, TypeError):
                     return None
         elif price is not None:

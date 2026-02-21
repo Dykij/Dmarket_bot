@@ -53,7 +53,7 @@ class DMarketAPI(
         }
         if status:
             params["BasicFilters.Status"] = status
-            
+
         logger.debug(f"Fetching user targets for game {mapped_game_id}")
         return await self._request(
             "GET", "/marketplace-api/v1/user-targets", params=params
@@ -61,11 +61,7 @@ class DMarketAPI(
 
     async def get_sacs_compliance_status(self) -> Dict[str, str]:
         """Check compliance with SACS-2026 standards."""
-        return {
-            "status": "compliant",
-            "version": self.VERSION,
-            "standard": "SACS-2026"
-        }
+        return {"status": "compliant", "version": self.VERSION, "standard": "SACS-2026"}
 
     async def clear_cache(self) -> None:
         """Clear the API cache."""

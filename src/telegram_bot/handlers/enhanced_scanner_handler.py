@@ -28,7 +28,9 @@ async def show_enhanced_scanner_menu(
             InlineKeyboardButton("🎩 TF2", callback_data="enhanced_scan_tf2"),
         ],
         [
-            InlineKeyboardButton("⚙️ Настройки", callback_data="enhanced_scan_settings"),
+            InlineKeyboardButton(
+                "⚙️ Настройки", callback_data="enhanced_scan_settings"
+            ),
             InlineKeyboardButton("❓ Помощь", callback_data="enhanced_scan_help"),
         ],
         [InlineKeyboardButton("« Назад", callback_data="main_menu")],
@@ -138,14 +140,22 @@ async def handle_enhanced_scan(
                 f"• Снизить минимальный порог скидки\n"
                 f"• Изменить ценовой диапазон\n"
                 f"• Попробовать другую игру",
-                reply_markup=InlineKeyboardMarkup([
-                    [InlineKeyboardButton("« Назад", callback_data="enhanced_scanner_menu")]
-                ]),
+                reply_markup=InlineKeyboardMarkup(
+                    [
+                        [
+                            InlineKeyboardButton(
+                                "« Назад", callback_data="enhanced_scanner_menu"
+                            )
+                        ]
+                    ]
+                ),
             )
             return
 
         # Формируем текст с результатами
-        result_text = f"{game_name}\n\n🎯 <b>Найдено {len(opportunities)} возможностей</b>\n\n"
+        result_text = (
+            f"{game_name}\n\n🎯 <b>Найдено {len(opportunities)} возможностей</b>\n\n"
+        )
 
         for i, item in enumerate(opportunities[:5], 1):  # Показываем топ-5
             title = item.get("title", "Unknown")
@@ -166,7 +176,9 @@ async def handle_enhanced_scan(
                 platform = ext_arb.get("best_platform")
                 ext_price = ext_arb.get("best_price")
                 net_profit = ext_arb.get("net_profit")
-                result_text += f"🌐 {platform}: ${ext_price:.2f} (профит: ${net_profit:.2f})\n"
+                result_text += (
+                    f"🌐 {platform}: ${ext_price:.2f} (профит: ${net_profit:.2f})\n"
+                )
 
             # Информация о ликвидности
             sales_volume = item.get("sales_volume")
@@ -181,7 +193,11 @@ async def handle_enhanced_scan(
         )
 
         keyboard = [
-            [InlineKeyboardButton("🔄 Повторить сканирование", callback_data=query.data)],
+            [
+                InlineKeyboardButton(
+                    "🔄 Повторить сканирование", callback_data=query.data
+                )
+            ],
             [InlineKeyboardButton("« Назад", callback_data="enhanced_scanner_menu")],
         ]
 
@@ -197,9 +213,15 @@ async def handle_enhanced_scan(
             f"❌ Ошибка при сканировании\n\n"
             f"Детали: {e!s}\n\n"
             f"Попробуйте позже или обратитесь к администратору.",
-            reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("« Назад", callback_data="enhanced_scanner_menu")]
-            ]),
+            reply_markup=InlineKeyboardMarkup(
+                [
+                    [
+                        InlineKeyboardButton(
+                            "« Назад", callback_data="enhanced_scanner_menu"
+                        )
+                    ]
+                ]
+            ),
         )
 
 
@@ -241,7 +263,9 @@ async def show_enhanced_scanner_help(
         "• Используйте auto_buy для мгновенной покупки"
     )
 
-    keyboard = [[InlineKeyboardButton("« Назад", callback_data="enhanced_scanner_menu")]]
+    keyboard = [
+        [InlineKeyboardButton("« Назад", callback_data="enhanced_scanner_menu")]
+    ]
 
     await query.edit_message_text(
         text=help_text,
@@ -274,7 +298,9 @@ async def handle_enhanced_scan_settings(
         "<i>Настройки можно изменить в конфигурации бота.</i>"
     )
 
-    keyboard = [[InlineKeyboardButton("« Назад", callback_data="enhanced_scanner_menu")]]
+    keyboard = [
+        [InlineKeyboardButton("« Назад", callback_data="enhanced_scanner_menu")]
+    ]
 
     await query.edit_message_text(
         text=settings_text,

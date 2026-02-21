@@ -39,6 +39,7 @@ logger = structlog.get_logger(__name__)
 # Role Definitions
 # ============================================================================
 
+
 class BotRole(StrEnum):
     """Available bot roles for different contexts."""
 
@@ -51,20 +52,17 @@ class BotRole(StrEnum):
 
 ROLE_PROMPTS = {
     BotRole.TRADING_ADVISOR: """You are an experienced cryptocurrency and CS:GO skin trading advisor with 10+ years of market experience. You provide clear, actionable trading recommendations based on data analysis. You always consider risk, timing, and user's capital constraints.""",
-
     BotRole.MARKET_ANALYST: """You are a quantitative market data analyst specializing in gaming item marketplaces. You analyze price trends, volume patterns, and cross-platform arbitrage opportunities. Your analysis is data-driven and statistical.""",
-
     BotRole.RISK_MANAGER: """You are a conservative risk management expert in trading. You identify potential risks, liquidity concerns, and market timing issues. You help users avoid losses and protect their capital.""",
-
     BotRole.EDUCATOR: """You are a patient, knowledgeable trading educator. You explain complex trading concepts in simple terms, using analogies and examples. You adjust explanations based on user's experience level.""",
-
-    BotRole.ASSISTANT: """You are a helpful trading assistant for DMarket bot users. You answer questions, explain features, and guide users through the platform."""
+    BotRole.ASSISTANT: """You are a helpful trading assistant for DMarket bot users. You answer questions, explain features, and guide users through the platform.""",
 }
 
 
 # ============================================================================
 # User Experience Levels
 # ============================================================================
+
 
 class UserLevel(StrEnum):
     """User experience levels for personalized responses."""
@@ -78,6 +76,7 @@ class UserLevel(StrEnum):
 # ============================================================================
 # Prompt Templates with XML Structure
 # ============================================================================
+
 
 @dataclass
 class PromptContext:
@@ -107,7 +106,7 @@ class PromptEngineer:
         api_key: str | None = None,
         model: str = "claude-3-5-sonnet-20241022",
         max_tokens: int = 1024,
-        temperature: float = 0.7
+        temperature: float = 0.7,
     ):
         """Initialize prompt engineer.
 
@@ -127,7 +126,7 @@ class PromptEngineer:
             "prompt_engineer_initialized",
             model=model,
             max_tokens=max_tokens,
-            temperature=temperature
+            temperature=temperature,
         )
 
     def _ensure_client(self) -> None:
@@ -135,12 +134,13 @@ class PromptEngineer:
         if self.client is None:
             try:
                 from anthropic import AsyncAnthropic
+
                 self.client = AsyncAnthropic(api_key=self.api_key)
                 logger.info("anthropic_client_initialized")
             except ImportError:
                 logger.warning(
                     "anthropic_not_installed",
-                    message="Install with: pip install anthropic"
+                    message="Install with: pip install anthropic",
                 )
                 raise ImportError("anthropic package not installed")
 
@@ -153,7 +153,7 @@ class PromptEngineer:
         context: PromptContext,
         data: dict[str, Any],
         instructions: str,
-        examples: list[dict[str, str]] | None = None
+        examples: list[dict[str, str]] | None = None,
     ) -> str:
         """Build structured prompt with XML tags.
 
@@ -182,7 +182,9 @@ class PromptEngineer:
             prompt_parts.append(
                 f"<capital_available>{float(context.capital_available)}</capital_available>"
             )
-        prompt_parts.append(f"<risk_tolerance>{context.risk_tolerance}</risk_tolerance>")
+        prompt_parts.append(
+            f"<risk_tolerance>{context.risk_tolerance}</risk_tolerance>"
+        )
         prompt_parts.append("</context>")
         prompt_parts.append("")
 
@@ -212,9 +214,7 @@ class PromptEngineer:
     # ========================================================================
 
     async def analyze_arbitrage_with_reasoning(
-        self,
-        opportunity: ArbitrageOpportunity,
-        context: PromptContext
+        self, opportunity: ArbitrageOpportunity, context: PromptContext
     ) -> str:
         """Analyze arbitrage with transparent chain-of-thought reasoning.
 
@@ -236,7 +236,7 @@ class PromptEngineer:
             "profit": f"${float(opportunity.profit_usd):.2f}",
             "roi": f"{float(opportunity.profit_percent):.1f}%",
             "liquidity_score": f"{opportunity.liquidity_score}/3",
-            "timestamp": datetime.now(UTC).isoformat()
+            "timestamp": datetime.now(UTC).isoformat(),
         }
 
         instructions = """Analyze this arbitrage opportunity using step-by-step reasoning:
@@ -265,7 +265,7 @@ IMPORTANT: Only use the data provided. Do not invent prices or make up informati
                 model=self.model,
                 max_tokens=self.max_tokens,
                 temperature=self.temperature,
-                messages=[{"role": "user", "content": prompt}]
+                messages=[{"role": "user", "content": prompt}],
             )
 
             return response.content[0].text
@@ -283,27 +283,26 @@ IMPORTANT: Only use the data provided. Do not invent prices or make up informati
         "explain_arbitrage": [
             {
                 "input": "AK-47 | Redline (FT), Buy $8.50, Sell $11.20, Profit $2.03 (23.9%)",
-                "output": "🎯 Great find! The AK-47 | Redline is currently underpriced on DMarket at $8.50. After buying and selling on Waxpeer at $11.20 (minus 6% commission = $10.53), you'd profit $2.03, which is a solid 23.9% return. This is a low-risk opportunity since the Redline is a popular skin with good liquidity."
+                "output": "🎯 Great find! The AK-47 | Redline is currently underpriced on DMarket at $8.50. After buying and selling on Waxpeer at $11.20 (minus 6% commission = $10.53), you'd profit $2.03, which is a solid 23.9% return. This is a low-risk opportunity since the Redline is a popular skin with good liquidity.",
             },
             {
                 "input": "M4A4 | Howl (MW), Buy $1,250, Sell $1,350, Profit $26.90 (2.2%)",
-                "output": "⚠️ Proceed with caution. While there's a $26.90 profit opportunity with the M4A4 | Howl, the ROI is only 2.2%. For a high-value item like this, consider: (1) Howls have low liquidity - they may take days to sell, (2) Small price fluctuations could erase your profit, (3) You're tying up $1,250 in capital. Unless you have significant capital and patience, this might not be optimal."
-            }
+                "output": "⚠️ Proceed with caution. While there's a $26.90 profit opportunity with the M4A4 | Howl, the ROI is only 2.2%. For a high-value item like this, consider: (1) Howls have low liquidity - they may take days to sell, (2) Small price fluctuations could erase your profit, (3) You're tying up $1,250 in capital. Unless you have significant capital and patience, this might not be optimal.",
+            },
         ],
-
         "strategy_recommendation": [
             {
                 "input": "Capital $100, Risk Medium, Experience Beginner",
-                "output": "📚 For a $100 budget, I recommend starting with the DMarket-only strategy. Focus on items in the $5-15 range with 10-15% ROI. This gives you: (1) Quick trades (30 min - 2 hours), (2) Lower risk than cross-platform, (3) Opportunity to learn without long holds. Aim for 3-5 small wins to build confidence before trying holds."
+                "output": "📚 For a $100 budget, I recommend starting with the DMarket-only strategy. Focus on items in the $5-15 range with 10-15% ROI. This gives you: (1) Quick trades (30 min - 2 hours), (2) Lower risk than cross-platform, (3) Opportunity to learn without long holds. Aim for 3-5 small wins to build confidence before trying holds.",
             }
-        ]
+        ],
     }
 
     async def explain_arbitrage(
         self,
         opportunity: ArbitrageOpportunity,
         context: PromptContext,
-        include_reasoning: bool = False
+        include_reasoning: bool = False,
     ) -> str:
         """Explain arbitrage opportunity with consistent format.
 
@@ -328,7 +327,7 @@ IMPORTANT: Only use the data provided. Do not invent prices or make up informati
             "sell_price": f"${float(opportunity.sell_price):.2f}",
             "profit": f"${float(opportunity.profit_usd):.2f}",
             "roi": f"{float(opportunity.profit_percent):.1f}%",
-            "liquidity": f"{opportunity.liquidity_score}/3"
+            "liquidity": f"{opportunity.liquidity_score}/3",
         }
 
         instructions = """Explain this arbitrage opportunity in a friendly, clear way.
@@ -346,7 +345,7 @@ IMPORTANT: Only use the provided data. Do not make up prices or information."""
             context,
             data,
             instructions,
-            examples=self.FEW_SHOT_EXAMPLES["explain_arbitrage"]
+            examples=self.FEW_SHOT_EXAMPLES["explain_arbitrage"],
         )
 
         try:
@@ -355,7 +354,7 @@ IMPORTANT: Only use the provided data. Do not make up prices or information."""
                 model=self.model,
                 max_tokens=self.max_tokens,
                 temperature=self.temperature,
-                messages=[{"role": "user", "content": prompt}]
+                messages=[{"role": "user", "content": prompt}],
             )
 
             return response.content[0].text
@@ -369,9 +368,7 @@ IMPORTANT: Only use the provided data. Do not make up prices or information."""
     # ========================================================================
 
     async def generate_market_insights(
-        self,
-        opportunities: list[ArbitrageOpportunity],
-        context: PromptContext
+        self, opportunities: list[ArbitrageOpportunity], context: PromptContext
     ) -> str:
         """Generate market insights with hallucination prevention.
 
@@ -386,7 +383,11 @@ IMPORTANT: Only use the provided data. Do not make up prices or information."""
         """
         # Prepare verified data
         total_opportunities = len(opportunities)
-        avg_roi = sum(o.profit_percent for o in opportunities) / total_opportunities if total_opportunities > 0 else Decimal(0)
+        avg_roi = (
+            sum(o.profit_percent for o in opportunities) / total_opportunities
+            if total_opportunities > 0
+            else Decimal(0)
+        )
 
         liquid_count = sum(1 for o in opportunities if o.liquidity_score >= 2)
 
@@ -400,7 +401,7 @@ IMPORTANT: Only use the provided data. Do not make up prices or information."""
             "average_roi": f"{float(avg_roi):.1f}%",
             "liquid_opportunities": str(liquid_count),
             "timestamp": datetime.now(UTC).isoformat(),
-            "platform_distribution": str(platform_distribution)
+            "platform_distribution": str(platform_distribution),
         }
 
         instructions = """Generate concise market insights based on the provided data.
@@ -431,7 +432,7 @@ Format:
                 model=self.model,
                 max_tokens=self.max_tokens,
                 temperature=0.3,  # Lower temperature for factual content
-                messages=[{"role": "user", "content": prompt}]
+                messages=[{"role": "user", "content": prompt}],
             )
 
             return response.content[0].text
@@ -445,9 +446,7 @@ Format:
     # ========================================================================
 
     async def generate_structured_recommendation(
-        self,
-        opportunity: ArbitrageOpportunity,
-        context: PromptContext
+        self, opportunity: ArbitrageOpportunity, context: PromptContext
     ) -> dict[str, Any]:
         """Generate structured JSON recommendation.
 
@@ -465,7 +464,7 @@ Format:
             "profit_percent": f"{float(opportunity.profit_percent):.1f}",
             "liquidity_score": str(opportunity.liquidity_score),
             "buy_price": f"{float(opportunity.buy_price):.2f}",
-            "sell_price": f"{float(opportunity.sell_price):.2f}"
+            "sell_price": f"{float(opportunity.sell_price):.2f}",
         }
 
         instructions = """Generate a structured recommendation in JSON format with these fields:
@@ -493,12 +492,13 @@ Base your recommendation on:
                 temperature=0.5,
                 messages=[
                     {"role": "user", "content": prompt},
-                    {"role": "assistant", "content": prefill}
-                ]
+                    {"role": "assistant", "content": prefill},
+                ],
             )
 
             # Extract and parse JSON
             import json
+
             json_text = prefill + response.content[0].text
             return json.loads(json_text)
 
@@ -533,7 +533,9 @@ This is a {rating} opportunity with {'low' if opp.liquidity_score >= 2 else 'med
 
     def _fallback_analysis(self, opp: ArbitrageOpportunity) -> str:
         """Rule-based analysis fallback."""
-        risk = "Low" if opp.liquidity_score >= 2 and opp.profit_percent >= 10 else "Medium"
+        risk = (
+            "Low" if opp.liquidity_score >= 2 and opp.profit_percent >= 10 else "Medium"
+        )
         action = "Buy Now" if opp.profit_percent >= 15 else "Evaluate"
 
         return f"""Analysis of {opp.item_name}:
@@ -548,7 +550,11 @@ Reasoning: ROI of {float(opp.profit_percent):.1f}% with liquidity score {opp.liq
         """Rule-based insights fallback."""
         total = len(opportunities)
         liquid = sum(1 for o in opportunities if o.liquidity_score >= 2)
-        avg_roi = sum(o.profit_percent for o in opportunities) / total if total > 0 else Decimal(0)
+        avg_roi = (
+            sum(o.profit_percent for o in opportunities) / total
+            if total > 0
+            else Decimal(0)
+        )
 
         return f"""📊 Market Snapshot
 
@@ -581,13 +587,14 @@ Current market shows {'strong' if avg_roi >= 15 else 'moderate'} arbitrage oppor
             "confidence": confidence,
             "risk_level": risk,
             "reasoning": f"ROI {float(opp.profit_percent):.1f}% with {opp.liquidity_score}/3 liquidity",
-            "estimated_time": "hours" if action == "buy" else "days"
+            "estimated_time": "hours" if action == "buy" else "days",
         }
 
 
 # ============================================================================
 # Educational Content Generator
 # ============================================================================
+
 
 class EducationalContentGenerator:
     """Generate educational content for users learning to trade."""
@@ -596,11 +603,7 @@ class EducationalContentGenerator:
         """Initialize with prompt engineer instance."""
         self.prompt_engineer = prompt_engineer
 
-    async def generate_lesson(
-        self,
-        topic: str,
-        user_level: UserLevel
-    ) -> str:
+    async def generate_lesson(self, topic: str, user_level: UserLevel) -> str:
         """Generate interactive lesson on trading topic.
 
         Args:
@@ -610,10 +613,7 @@ class EducationalContentGenerator:
         Returns:
             Educational content
         """
-        context = PromptContext(
-            role=BotRole.EDUCATOR,
-            user_level=user_level
-        )
+        context = PromptContext(role=BotRole.EDUCATOR, user_level=user_level)
 
         data = {"topic": topic}
 
@@ -644,7 +644,7 @@ Structure:
                 model=self.prompt_engineer.model,
                 max_tokens=self.prompt_engineer.max_tokens,
                 temperature=0.7,
-                messages=[{"role": "user", "content": prompt}]
+                messages=[{"role": "user", "content": prompt}],
             )
 
             return response.content[0].text
@@ -658,6 +658,7 @@ Structure:
 # Example Usage
 # ============================================================================
 
+
 async def example_usage():
     """Example of using PromptEngineer."""
     # Initialize
@@ -669,7 +670,7 @@ async def example_usage():
         user_level=UserLevel.INTERMEDIATE,
         user_id=12345,
         capital_available=Decimal("500.00"),
-        risk_tolerance="medium"
+        risk_tolerance="medium",
     )
 
     # Mock opportunity
@@ -682,7 +683,7 @@ async def example_usage():
         sell_price=Decimal("11.20"),
         profit_usd=Decimal("2.03"),
         profit_percent=Decimal("23.9"),
-        liquidity_score=3
+        liquidity_score=3,
     )
 
     # Generate explanation

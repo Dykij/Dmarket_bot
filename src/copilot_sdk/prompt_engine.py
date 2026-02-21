@@ -167,7 +167,9 @@ class PromptEngine:
                         value = value.strip()
                         # Handle lists
                         if value.startswith("[") and value.endswith("]"):
-                            value = [v.strip().strip("'\"") for v in value[1:-1].split(",")]
+                            value = [
+                                v.strip().strip("'\"") for v in value[1:-1].split(",")
+                            ]
                         metadata[key] = value
 
         return metadata
@@ -291,14 +293,16 @@ class PromptEngine:
         for template in self.templates.values():
             if category and template.category != category:
                 continue
-            prompts.append({
-                "id": template.id,
-                "name": template.name,
-                "description": template.description,
-                "variables": template.variables,
-                "category": template.category,
-                "tags": template.tags,
-            })
+            prompts.append(
+                {
+                    "id": template.id,
+                    "name": template.name,
+                    "description": template.description,
+                    "variables": template.variables,
+                    "category": template.category,
+                    "tags": template.tags,
+                }
+            )
         return prompts
 
     def get_template(self, template_id: str) -> PromptTemplate | None:

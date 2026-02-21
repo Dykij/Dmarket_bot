@@ -160,7 +160,10 @@ class PipeHandler:
 
         # Детекция ошибок
         if "error" in prompt_lower or "alert" in prompt_lower:
-            if any(word in line.lower() for word in ["error", "exception", "failed", "critical"]):
+            if any(
+                word in line.lower()
+                for word in ["error", "exception", "failed", "critical"]
+            ):
                 result["is_anomaly"] = True
                 result["confidence"] = 0.9
                 result["details"] = "Error pattern detected"

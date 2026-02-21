@@ -106,9 +106,13 @@ class Balance(BaseModel):
     """
 
     usd: str | int = Field(description="USD баланс в центах (строка)")
-    usdAvailableToWithdraw: str | int = Field(description="Доступный для вывода USD в центах")
+    usdAvailableToWithdraw: str | int = Field(
+        description="Доступный для вывода USD в центах"
+    )
     dmc: str | None = Field(None, description="DMC баланс")
-    dmcAvailableToWithdraw: str | None = Field(None, description="Доступный для вывода DMC")
+    dmcAvailableToWithdraw: str | None = Field(
+        None, description="Доступный для вывода DMC"
+    )
 
     @property
     def usd_dollars(self) -> float:
@@ -167,7 +171,9 @@ class MarketItem(BaseModel):
     type: str | None = Field(None, description="Тип предмета")
     tags: list[str] | None = Field(None, description="Теги предмета")
     extra: dict[str, Any] | None = Field(None, description="Дополнительные данные")
-    suggestedPrice: dict[str, str] | None = Field(None, description="Рекомендуемая цена")
+    suggestedPrice: dict[str, str] | None = Field(
+        None, description="Рекомендуемая цена"
+    )
 
     @property
     def price_usd(self) -> float:
@@ -210,7 +216,9 @@ class MarketItem(BaseModel):
 class MarketItemsResponse(BaseModel):
     """Ответ от эндпоинта /exchange/v1/market/items."""
 
-    objects: list[MarketItem] = Field(default_factory=list, description="Список предметов")
+    objects: list[MarketItem] = Field(
+        default_factory=list, description="Список предметов"
+    )
     total: int = Field(default=0, description="Общее количество предметов")
     cursor: str | None = Field(None, description="Курсор для пагинации")
 
@@ -340,7 +348,9 @@ class AggregatedPrice(BaseModel):
 class AggregatedPricesResponse(BaseModel):
     """Ответ от эндпоинта aggregated-prices (API v1.1.0)."""
 
-    aggregatedPrices: list[AggregatedPrice] = Field(description="Список агрегированных цен")
+    aggregatedPrices: list[AggregatedPrice] = Field(
+        description="Список агрегированных цен"
+    )
     nextCursor: str | None = Field(None, description="Курсор для следующей страницы")
 
 
@@ -353,7 +363,9 @@ class TargetOrder(BaseModel):
     amount: int = Field(description="Количество запрашиваемых предметов")
     price: str = Field(description="Цена в центах")
     title: str = Field(description="Название предмета")
-    attributes: dict[str, Any] | None = Field(None, description="Атрибуты (exterior, phase, etc)")
+    attributes: dict[str, Any] | None = Field(
+        None, description="Атрибуты (exterior, phase, etc)"
+    )
 
     @property
     def price_usd(self) -> float:
@@ -367,7 +379,9 @@ class TargetOrder(BaseModel):
 class TargetsByTitleResponse(BaseModel):
     """Ответ от эндпоинта targets-by-title (API v1.1.0)."""
 
-    orders: list[TargetOrder] = Field(default_factory=list, description="Список заявок на покупку")
+    orders: list[TargetOrder] = Field(
+        default_factory=list, description="Список заявок на покупку"
+    )
 
 
 # ==================== OFFERS BY TITLE MODELS ====================
@@ -394,7 +408,9 @@ class OfferByTitle(BaseModel):
 class OffersByTitleResponse(BaseModel):
     """Ответ от эндпоинта /exchange/v1/offers-by-title."""
 
-    objects: list[OfferByTitle] = Field(default_factory=list, description="Список предложений")
+    objects: list[OfferByTitle] = Field(
+        default_factory=list, description="Список предложений"
+    )
     total: int = Field(default=0, description="Общее количество")
     cursor: str | None = Field(None, description="Курсор для пагинации")
 
@@ -421,7 +437,9 @@ class InventoryItem(BaseModel):
 class UserInventoryResponse(BaseModel):
     """Ответ от эндпоинта /marketplace-api/v1/user-inventory."""
 
-    Items: list[InventoryItem] = Field(default_factory=list, description="Список предметов")
+    Items: list[InventoryItem] = Field(
+        default_factory=list, description="Список предметов"
+    )
     Total: str = Field(default="0", description="Общее количество")
     Cursor: str | None = Field(None, description="Курсор для пагинации")
 
@@ -435,13 +453,17 @@ class BuyItemResponse(BaseModel):
     orderId: str = Field(description="ID заказа")
     status: str = Field(description="Статус транзакции")
     txId: str | None = Field(None, description="ID транзакции")
-    dmOffersStatus: dict[str, dict[str, str]] | None = Field(None, description="Статус офферов")
+    dmOffersStatus: dict[str, dict[str, str]] | None = Field(
+        None, description="Статус офферов"
+    )
 
 
 class CreateOfferResponse(BaseModel):
     """Ответ после создания предложения."""
 
-    Result: list[dict[str, str]] = Field(default_factory=list, description="Результаты создания")
+    Result: list[dict[str, str]] = Field(
+        default_factory=list, description="Результаты создания"
+    )
 
 
 class UserOffersResponse(BaseModel):
@@ -473,7 +495,9 @@ class ClosedTargetsResponse(BaseModel):
 class LastSalesResponse(BaseModel):
     """Ответ от /trade-aggregator/v1/last-sales."""
 
-    sales: list[SalesHistory] = Field(default_factory=list, description="История продаж")
+    sales: list[SalesHistory] = Field(
+        default_factory=list, description="История продаж"
+    )
 
 
 # ==================== SALES HISTORY MODELS ====================
@@ -542,7 +566,9 @@ class DepositStatus(BaseModel):
     status: TransferStatus = Field(description="Статус трансфера")
     Error: str | None = Field(None, description="Сообщение об ошибке")
     Assets: list[DepositAsset] | None = Field(None, description="Список активов")
-    SteamDepositInfo: dict[str, Any] | None = Field(None, description="Информация о Steam депозите")
+    SteamDepositInfo: dict[str, Any] | None = Field(
+        None, description="Информация о Steam депозите"
+    )
 
 
 # ==================== LEGACY MODELS (для обратной совместимости) ====================

@@ -87,7 +87,9 @@ class TargetCleaner:
             return targets
 
         except Exception as e:
-            logger.error("failed_to_fetch_targets", game=game, error=str(e), exc_info=True)
+            logger.error(
+                "failed_to_fetch_targets", game=game, error=str(e), exc_info=True
+            )
             return []
 
     async def analyze_target_performance(
@@ -113,7 +115,9 @@ class TargetCleaner:
         else:
             created_at = datetime.now()
 
-        age_hours = (datetime.now() - created_at.replace(tzinfo=None)).total_seconds() / 3600
+        age_hours = (
+            datetime.now() - created_at.replace(tzinfo=None)
+        ).total_seconds() / 3600
 
         # Check competition using aggregated prices
         competition_count = 0
@@ -126,7 +130,9 @@ class TargetCleaner:
 
             if aggregated and "aggregatedPrices" in aggregated:
                 agg_data = (
-                    aggregated["aggregatedPrices"][0] if aggregated["aggregatedPrices"] else {}
+                    aggregated["aggregatedPrices"][0]
+                    if aggregated["aggregatedPrices"]
+                    else {}
                 )
                 order_count = agg_data.get("orderCount", 0)
                 order_best_price = agg_data.get("orderBestPrice")
@@ -158,7 +164,9 @@ class TargetCleaner:
         elif best_competitor_price and best_competitor_price > price:
             # Someone has better price - our order won't fill
             is_underperforming = True
-            cancel_reason = f"Better price exists: ${best_competitor_price:.2f} vs our ${price:.2f}"
+            cancel_reason = (
+                f"Better price exists: ${best_competitor_price:.2f} vs our ${price:.2f}"
+            )
 
         return TargetPerformance(
             target_id=target_id,
@@ -245,7 +253,9 @@ class TargetCleaner:
         cancelled_count = 0
         for perf in performances:
             if perf.is_underperforming:
-                success = await self.cancel_target(perf.target_id, perf.cancel_reason or "Unknown")
+                success = await self.cancel_target(
+                    perf.target_id, perf.cancel_reason or "Unknown"
+                )
                 if success:
                     cancelled_count += 1
 
@@ -279,7 +289,9 @@ class TargetCleaner:
             ],
         }
 
-    async def run_periodic_cleanup(self, games: list[str], interval_hours: float = 6.0) -> None:
+    async def run_periodic_cleanup(
+        self, games: list[str], interval_hours: float = 6.0
+    ) -> None:
         """Run periodic cleanup for multiple games.
 
         Args:

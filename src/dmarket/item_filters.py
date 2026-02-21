@@ -314,7 +314,12 @@ class ItemFilters:
 
         for item in items:
             # Get item name from different possible fields
-            item_name = item.get("title") or item.get("name") or item.get("market_hash_name") or ""
+            item_name = (
+                item.get("title")
+                or item.get("name")
+                or item.get("market_hash_name")
+                or ""
+            )
 
             # Skip blacklisted items
             if self.is_item_blacklisted(item_name):
@@ -330,7 +335,9 @@ class ItemFilters:
 
                 # Check price range
                 if price < min_price or price > max_price:
-                    logger.debug(f"Filtered out item outside price range: {item_name} (${price})")
+                    logger.debug(
+                        f"Filtered out item outside price range: {item_name} (${price})"
+                    )
                     continue
 
             filtered.append(item)
@@ -357,7 +364,9 @@ class ItemFilters:
             Tuple of (is_valid, reason_if_invalid)
 
         """
-        item_name = item.get("title") or item.get("name") or item.get("market_hash_name") or ""
+        item_name = (
+            item.get("title") or item.get("name") or item.get("market_hash_name") or ""
+        )
 
         # Check blacklist
         if self.is_item_blacklisted(item_name):

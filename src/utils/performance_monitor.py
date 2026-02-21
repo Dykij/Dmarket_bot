@@ -70,7 +70,9 @@ class PerformanceMetrics:
             "success_rate_percent": round(self.success_rate, 2),
             "total_time_seconds": round(self.total_time, 3),
             "average_time_seconds": round(self.average_time, 3),
-            "min_time_seconds": round(self.min_time, 3) if self.min_time != float("inf") else 0,
+            "min_time_seconds": (
+                round(self.min_time, 3) if self.min_time != float("inf") else 0
+            ),
             "max_time_seconds": round(self.max_time, 3),
             "slow_requests": self.slow_requests,
         }
@@ -216,15 +218,21 @@ class PerformanceMonitor:
         if func_name:
             if func_name in self._history:
                 slow = [
-                    m for m in self._history[func_name] if m.execution_time > self.slow_threshold
+                    m
+                    for m in self._history[func_name]
+                    if m.execution_time > self.slow_threshold
                 ]
         else:
             for history in self._history.values():
-                slow.extend(m for m in history if m.execution_time > self.slow_threshold)
+                slow.extend(
+                    m for m in history if m.execution_time > self.slow_threshold
+                )
 
         return sorted(slow, key=lambda m: m.execution_time, reverse=True)
 
-    def get_recent_history(self, func_name: str, limit: int = 10) -> list[RequestMetric]:
+    def get_recent_history(
+        self, func_name: str, limit: int = 10
+    ) -> list[RequestMetric]:
         """Get recent request history for a function.
 
         Args:
@@ -326,7 +334,9 @@ class PerformanceMonitor:
 global_monitor = PerformanceMonitor(slow_threshold=5.0)
 
 
-def slow_request_alert(threshold: float = 5.0) -> Callable[[Callable[..., T]], Callable[..., T]]:
+def slow_request_alert(
+    threshold: float = 5.0,
+) -> Callable[[Callable[..., T]], Callable[..., T]]:
     """Decorator to alert on slow requests.
 
     Args:

@@ -203,7 +203,9 @@ class DMarketWebSocketListener:
                 await self.ws.send(json.dumps(sub))
                 logger.debug("websocket_subscribed", channel=sub["channel"])
             except Exception as e:
-                logger.exception("websocket_subscribe_failed", channel=sub["channel"], error=str(e))
+                logger.exception(
+                    "websocket_subscribe_failed", channel=sub["channel"], error=str(e)
+                )
 
     async def _handle_message(self, message: str):
         """Handle incoming WebSocket message.
@@ -227,7 +229,9 @@ class DMarketWebSocketListener:
                 logger.debug("websocket_unknown_event", data=data)
 
         except json.JSONDecodeError as e:
-            logger.error("websocket_invalid_json", message=message, error=str(e))  # noqa: TRY400
+            logger.error(
+                "websocket_invalid_json", message=message, error=str(e)
+            )  # noqa: TRY400
             self.stats["events_failed"] += 1
         except Exception as e:
             logger.exception("websocket_handle_message_error", error=str(e))
@@ -282,7 +286,9 @@ class DMarketWebSocketListener:
             try:
                 await handler(data)
             except Exception as e:
-                logger.exception("websocket_handler_error", handler=handler.__name__, error=str(e))
+                logger.exception(
+                    "websocket_handler_error", handler=handler.__name__, error=str(e)
+                )
 
     def register_handler(self, event_type: WSEventType, handler: Callable):
         """Register event handler.
@@ -295,7 +301,11 @@ class DMarketWebSocketListener:
             self.event_handlers[event_type] = []
 
         self.event_handlers[event_type].append(handler)
-        logger.info("websocket_handler_registered", event_type=event_type, handler=handler.__name__)
+        logger.info(
+            "websocket_handler_registered",
+            event_type=event_type,
+            handler=handler.__name__,
+        )
 
     def unregister_handler(self, event_type: WSEventType, handler: Callable):
         """Unregister event handler.

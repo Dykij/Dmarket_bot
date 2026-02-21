@@ -97,7 +97,9 @@ class ProcessStats:
             "start_time": self.start_time.isoformat() if self.start_time else None,
             "restart_count": self.restart_count,
             "crash_count": self.crash_count,
-            "last_crash_time": self.last_crash_time.isoformat() if self.last_crash_time else None,
+            "last_crash_time": (
+                self.last_crash_time.isoformat() if self.last_crash_time else None
+            ),
             "uptime_seconds": self.uptime_seconds,
             "health_failures": self.health_failures,
             "last_restart_reason": self.last_restart_reason,
@@ -142,7 +144,9 @@ class Watchdog:
 
         file_handler = logging.FileHandler(self.config.log_file, encoding="utf-8")
         file_handler.setLevel(logging.INFO)
-        file_handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
+        file_handler.setFormatter(
+            logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+        )
 
         logging.getLogger().addHandler(file_handler)
         logging.getLogger().setLevel(logging.INFO)
@@ -293,7 +297,9 @@ class Watchdog:
         try:
             async with aiohttp.ClientSession() as session, session.get(
                 self.config.health_check_url,
-                timeout=aiohttp.ClientTimeout(total=self.config.health_check_timeout_seconds),
+                timeout=aiohttp.ClientTimeout(
+                    total=self.config.health_check_timeout_seconds
+                ),
             ) as response:
                 if response.status == 200:
                     return True
@@ -337,7 +343,9 @@ class Watchdog:
 
         # Проверяем лимит перезапусков
         if self._consecutive_restarts > self.config.max_restart_attempts:
-            logger.error(f"Max restart attempts ({self.config.max_restart_attempts}) exceeded")
+            logger.error(
+                f"Max restart attempts ({self.config.max_restart_attempts}) exceeded"
+            )
             await self._send_telegram_alert(
                 f"🚨 **CRITICAL: BOT STOPPED**\n\n"
                 f"Превышен лимит перезапусков ({self.config.max_restart_attempts})!\n"
@@ -392,7 +400,9 @@ class Watchdog:
             async with aiohttp.ClientSession() as session:
                 async with session.post(url, json=payload, timeout=10) as response:
                     if response.status != 200:
-                        logger.warning(f"Failed to send Telegram alert: {response.status}")
+                        logger.warning(
+                            f"Failed to send Telegram alert: {response.status}"
+                        )
 
         except Exception as e:
             logger.exception(f"Error sending Telegram alert: {e}")

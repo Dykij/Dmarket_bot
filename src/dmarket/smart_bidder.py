@@ -204,7 +204,9 @@ class SmartBidder:
             # Get our active orders
             our_orders = await self.api.get_user_targets()
             our_item_orders = [
-                o for o in our_orders if o.get("Title", "").lower() == item_title.lower()
+                o
+                for o in our_orders
+                if o.get("Title", "").lower() == item_title.lower()
             ]
 
             if not our_item_orders:
@@ -324,14 +326,16 @@ class SmartBidder:
             highest_competitor: Highest competitor bid
             success: Whether bid was successful
         """
-        self.bid_history.append({
-            "timestamp": datetime.now(),
-            "item": item_title,
-            "bid_price": bid_price,
-            "competitors": competitors,
-            "highest_competitor": highest_competitor,
-            "success": success,
-        })
+        self.bid_history.append(
+            {
+                "timestamp": datetime.now(),
+                "item": item_title,
+                "bid_price": bid_price,
+                "competitors": competitors,
+                "highest_competitor": highest_competitor,
+                "success": success,
+            }
+        )
 
         # Keep only last 100 bids
         if len(self.bid_history) > 100:

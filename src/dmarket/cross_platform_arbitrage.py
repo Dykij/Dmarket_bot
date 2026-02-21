@@ -92,11 +92,13 @@ BLACKLISTED_CATEGORIES = {
 }
 
 # Blacklisted keywords in item names
-BLACKLISTED_KEYWORDS = frozenset({
-    "graffiti",
-    "souvenir",
-    "sealed graffiti",
-})
+BLACKLISTED_KEYWORDS = frozenset(
+    {
+        "graffiti",
+        "souvenir",
+        "sealed graffiti",
+    }
+)
 
 
 # ============================================================================
@@ -123,7 +125,10 @@ class ArbitrageOpportunity:
     @property
     def is_profitable(self) -> bool:
         """Check if opportunity is profitable."""
-        return self.decision in {ArbitrageDecision.BUY_INSTANT, ArbitrageDecision.BUY_AND_HOLD}
+        return self.decision in {
+            ArbitrageDecision.BUY_INSTANT,
+            ArbitrageDecision.BUY_AND_HOLD,
+        }
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
@@ -152,7 +157,9 @@ class ScanConfig:
     min_liquidity: int = DEFAULT_MIN_LIQUIDITY
     use_balance_limit: bool = True
     include_locked: bool = True
-    allowed_categories: set[ItemCategory] = field(default_factory=ALLOWED_CATEGORIES.copy)
+    allowed_categories: set[ItemCategory] = field(
+        default_factory=ALLOWED_CATEGORIES.copy
+    )
     dry_run: bool = True
 
 
@@ -350,7 +357,9 @@ class CrossPlatformArbitrageScanner:
             # Get DMarket price (in cents, convert to USD)
             price_data = item.get("price", {})
             if isinstance(price_data, dict):
-                dm_price_cents = int(price_data.get("USD", 0) or price_data.get("amount", 0))
+                dm_price_cents = int(
+                    price_data.get("USD", 0) or price_data.get("amount", 0)
+                )
             else:
                 dm_price_cents = int(price_data)
 
@@ -361,7 +370,9 @@ class CrossPlatformArbitrageScanner:
 
             # Get trade lock duration
             extra = item.get("extra", {}) or item.get("extraAttributes", {})
-            lock_seconds = extra.get("tradeLockDuration", 0) or extra.get("lockDuration", 0)
+            lock_seconds = extra.get("tradeLockDuration", 0) or extra.get(
+                "lockDuration", 0
+            )
             lock_days = lock_seconds // 86400
 
             # Skip if lock is too long
@@ -416,7 +427,9 @@ class CrossPlatformArbitrageScanner:
             )
 
         except Exception as e:
-            logger.exception("item_analysis_failed", error=str(e), item=item.get("title", ""))
+            logger.exception(
+                "item_analysis_failed", error=str(e), item=item.get("title", "")
+            )
             return None
 
     async def _get_waxpeer_price(self, item_name: str) -> tuple[Decimal, int]:
@@ -527,7 +540,11 @@ class CrossPlatformArbitrageScanner:
             return ItemCategory.CASE.value
         if "key" in title_lower:
             return ItemCategory.KEY.value
-        if "knife" in title_lower or "karambit" in title_lower or "bayonet" in title_lower:
+        if (
+            "knife" in title_lower
+            or "karambit" in title_lower
+            or "bayonet" in title_lower
+        ):
             return ItemCategory.KNIFE.value
         if "gloves" in title_lower:
             return ItemCategory.GLOVES.value
@@ -571,15 +588,17 @@ class CrossPlatformArbitrageScanner:
 
         try:
             # Execute the purchase
-            result = await self.dmarket.buy_offers([
-                {
-                    "offerId": opportunity.offer_id,
-                    "price": {
-                        "amount": str(int(opportunity.dmarket_price * 100)),
-                        "currency": "USD",
-                    },
-                }
-            ])
+            result = await self.dmarket.buy_offers(
+                [
+                    {
+                        "offerId": opportunity.offer_id,
+                        "price": {
+                            "amount": str(int(opportunity.dmarket_price * 100)),
+                            "currency": "USD",
+                        },
+                    }
+                ]
+            )
 
             success = result.get("success", False) or result.get("status") == "success"
 
@@ -615,7 +634,9 @@ class CrossPlatformArbitrageScanner:
             ArbitrageDecision.INSUFFICIENT_LIQUIDITY: "💧",
         }
 
-        lock_info = f"⏳ Лок: {opp.lock_days} дн." if opp.lock_days > 0 else "✅ Без лока"
+        lock_info = (
+            f"⏳ Лок: {opp.lock_days} дн." if opp.lock_days > 0 else "✅ Без лока"
+        )
 
         mode = "АВТО-ПОКУПКА" if not self.config.dry_run else "ТЕСТ (DRY_RUN)"
 

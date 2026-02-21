@@ -121,9 +121,9 @@ class AdaptiveScanner:
 
         # Calculate spread volatility
         spreads = [s.price_spread for s in self.snapshots]
-        spread_variance = sum((s - sum(spreads) / len(spreads)) ** 2 for s in spreads) / len(
-            spreads
-        )
+        spread_variance = sum(
+            (s - sum(spreads) / len(spreads)) ** 2 for s in spreads
+        ) / len(spreads)
         spread_cv = (spread_variance**0.5) / (sum(spreads) / len(spreads))
 
         # Combined volatility score (0-1)
@@ -148,7 +148,9 @@ class AdaptiveScanner:
 
         # High volatility → shorter interval
         # Low volatility → longer interval
-        interval = int(self.max_interval - (volatility * (self.max_interval - self.min_interval)))
+        interval = int(
+            self.max_interval - (volatility * (self.max_interval - self.min_interval))
+        )
 
         self.current_interval = interval
 

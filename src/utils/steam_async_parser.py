@@ -155,7 +155,10 @@ class SteamAsyncParser:
                         }
 
                         # Cache the result
-                        self._cache[cache_key] = {"data": result, "timestamp": time.time()}
+                        self._cache[cache_key] = {
+                            "data": result,
+                            "timestamp": time.time(),
+                        }
 
                         return result
 
@@ -178,7 +181,11 @@ class SteamAsyncParser:
             except Exception as e:
                 self._stats["errors"] += 1
                 logger.exception(f"Steam price fetch error: {e}")
-                return {"status": "error", "item_name": item_hash_name, "message": str(e)}
+                return {
+                    "status": "error",
+                    "item_name": item_hash_name,
+                    "message": str(e),
+                }
 
     async def get_batch_prices(
         self, items: list[str], game: str = "csgo", currency: int = 1
@@ -202,13 +209,17 @@ class SteamAsyncParser:
         processed = []
         for i, result in enumerate(results):
             if isinstance(result, Exception):
-                processed.append({"status": "error", "item_name": items[i], "message": str(result)})
+                processed.append(
+                    {"status": "error", "item_name": items[i], "message": str(result)}
+                )
             else:
                 processed.append(result)
 
         return processed
 
-    async def get_order_histogram(self, item_nameid: int, game: str = "csgo") -> dict[str, Any]:
+    async def get_order_histogram(
+        self, item_nameid: int, game: str = "csgo"
+    ) -> dict[str, Any]:
         """
         Get full order book (buy/sell orders) for an item.
 
@@ -286,12 +297,16 @@ class SteamAsyncParser:
 
         # Profit if buying DMarket -> selling Steam
         dm_to_steam_profit = steam_price * (1 - steam_fee) - dmarket_price
-        dm_to_steam_roi = (dm_to_steam_profit / dmarket_price) * 100 if dmarket_price > 0 else 0
+        dm_to_steam_roi = (
+            (dm_to_steam_profit / dmarket_price) * 100 if dmarket_price > 0 else 0
+        )
 
         # Profit if buying Steam -> selling DMarket (instant arbitrage)
         # But we can't buy on Steam directly, so this is for reference
         steam_to_dm_profit = dmarket_price * (1 - dmarket_fee) - steam_price
-        steam_to_dm_roi = (steam_to_dm_profit / steam_price) * 100 if steam_price > 0 else 0
+        steam_to_dm_roi = (
+            (steam_to_dm_profit / steam_price) * 100 if steam_price > 0 else 0
+        )
 
         return {
             "valid": True,
@@ -311,7 +326,11 @@ class SteamAsyncParser:
 
     def get_stats(self) -> dict[str, Any]:
         """Get parser statistics."""
-        return {**self._stats, "cache_size": len(self._cache), "cache_ttl": self.cache_ttl}
+        return {
+            **self._stats,
+            "cache_size": len(self._cache),
+            "cache_ttl": self.cache_ttl,
+        }
 
     def clear_cache(self) -> int:
         """Clear price cache. Returns number of items cleared."""
@@ -324,7 +343,9 @@ class SteamAsyncParser:
         """Remove expired entries from cache."""
         now = time.time()
         expired = [
-            key for key, val in self._cache.items() if (now - val["timestamp"]) >= self.cache_ttl
+            key
+            for key, val in self._cache.items()
+            if (now - val["timestamp"]) >= self.cache_ttl
         ]
         for key in expired:
             del self._cache[key]
@@ -343,7 +364,9 @@ def get_steam_parser() -> SteamAsyncParser:
     return _parser_instance
 
 
-async def quick_price_check(items: list[str], game: str = "csgo") -> list[dict[str, Any]]:
+async def quick_price_check(
+    items: list[str], game: str = "csgo"
+) -> list[dict[str, Any]]:
     """
     Quick helper to fetch prices for multiple items.
 

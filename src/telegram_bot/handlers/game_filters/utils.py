@@ -17,7 +17,9 @@ from src.dmarket.game_filters import FilterFactory
 from .constants import DEFAULT_FILTERS
 
 
-def get_current_filters(context: ContextTypes.DEFAULT_TYPE, game: str) -> dict[str, Any]:
+def get_current_filters(
+    context: ContextTypes.DEFAULT_TYPE, game: str
+) -> dict[str, Any]:
     """Получает текущие фильтры для игры из контекста пользователя.
 
     Args:

@@ -99,11 +99,30 @@ def capture_message(message: str, level: str = "info", **kwargs: Any) -> None:
                 scope.set_extra(key, value)
             sentry_sdk.capture_message(message, level=level)
 
-def add_breadcrumb(*args, **kwargs): pass
-def capture_exception(*args, **kwargs): pass
-def capture_message(*args, **kwargs): pass
 
-def add_breadcrumb(*args, **kwargs): pass
-def capture_exception(*args, **kwargs): pass
-def capture_message(*args, **kwargs): pass
-def set_user_context(*args, **kwargs): pass
+def add_breadcrumb(*args, **kwargs):
+    pass
+
+
+def capture_exception(*args, **kwargs):
+    pass
+
+
+def capture_message(*args, **kwargs):
+    pass
+
+
+def add_breadcrumb(*args, **kwargs):
+    pass
+
+
+def capture_exception(*args, **kwargs):
+    pass
+
+
+def capture_message(*args, **kwargs):
+    pass
+
+
+def set_user_context(*args, **kwargs):
+    pass

@@ -228,9 +228,9 @@ class BacktestHandler:
             logger.exception("backtest_error", extra={"error": str(e)})
             await query.edit_message_text(
                 f"❌ Backtest failed: {e!s}\n\nPlease try again later.",
-                reply_markup=InlineKeyboardMarkup([
-                    [InlineKeyboardButton("« Back", callback_data="backtest:back")]
-                ]),
+                reply_markup=InlineKeyboardMarkup(
+                    [[InlineKeyboardButton("« Back", callback_data="backtest:back")]]
+                ),
             )
 
     async def _display_result(
@@ -282,9 +282,9 @@ class BacktestHandler:
         if not self._recent_results:
             await query.edit_message_text(
                 "📊 *Recent Results*\n\nNo backtests run yet.",
-                reply_markup=InlineKeyboardMarkup([
-                    [InlineKeyboardButton("« Back", callback_data="backtest:back")]
-                ]),
+                reply_markup=InlineKeyboardMarkup(
+                    [[InlineKeyboardButton("« Back", callback_data="backtest:back")]]
+                ),
                 parse_mode="Markdown",
             )
             return
@@ -304,9 +304,9 @@ class BacktestHandler:
 
         await query.edit_message_text(
             "\n".join(lines),
-            reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("« Back", callback_data="backtest:back")]
-            ]),
+            reply_markup=InlineKeyboardMarkup(
+                [[InlineKeyboardButton("« Back", callback_data="backtest:back")]]
+            ),
             parse_mode="Markdown",
         )
 

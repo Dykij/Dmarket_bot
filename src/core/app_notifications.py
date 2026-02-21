@@ -53,7 +53,9 @@ class NotificationManager:
                 )
                 logger.info(f"Critical shutdown notification sent to {user_id}")
             except Exception as e:
-                logger.exception(f"Failed to send shutdown notification to {user_id}: {e}")
+                logger.exception(
+                    f"Failed to send shutdown notification to {user_id}: {e}"
+                )
 
     async def send_crash_notifications(
         self,

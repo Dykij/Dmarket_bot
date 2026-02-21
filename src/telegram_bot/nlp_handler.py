@@ -246,9 +246,7 @@ class NLPCommandHandler:
         )
         if game_match:
             game_raw = game_match.group(1).lower().replace(" ", "")
-            params["game"] = self.PARAM_PATTERNS["game"]["map"].get(
-                game_raw, "csgo"
-            )
+            params["game"] = self.PARAM_PATTERNS["game"]["map"].get(game_raw, "csgo")
 
         # Extract price
         price_match = re.search(self.PARAM_PATTERNS["price"]["pattern"], text)

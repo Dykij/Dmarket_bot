@@ -144,7 +144,9 @@ class HFTStatistics:
             "total_profit": sum(t.expected_profit for t in successful),
             "total_spent": sum(t.buy_price for t in trades),
             "average_profit": (
-                sum(t.expected_profit for t in successful) / len(successful) if successful else 0
+                sum(t.expected_profit for t in successful) / len(successful)
+                if successful
+                else 0
             ),
         }
 
@@ -383,7 +385,9 @@ class HighFrequencyTrader:
 
     async def _scan_and_trade(self) -> None:
         """Scan for arbitrage and execute trades."""
-        logger.info(f"🔍 HFT Scan: games={self.config.games}, level={self.config.arbitrage_level}")
+        logger.info(
+            f"🔍 HFT Scan: games={self.config.games}, level={self.config.arbitrage_level}"
+        )
 
         opportunities: list[dict[str, Any]] = []
 
@@ -399,7 +403,8 @@ class HighFrequencyTrader:
                 filtered = [
                     item
                     for item in results
-                    if item.get("profit_percent", 0) >= self.config.auto_buy_threshold_percent
+                    if item.get("profit_percent", 0)
+                    >= self.config.auto_buy_threshold_percent
                 ]
 
                 opportunities.extend(filtered)
@@ -427,7 +432,9 @@ class HighFrequencyTrader:
                 final_orders.append(item)
                 budget -= price
 
-        logger.info(f"Found {len(opportunities)} opportunities, executing {len(final_orders)}")
+        logger.info(
+            f"Found {len(opportunities)} opportunities, executing {len(final_orders)}"
+        )
 
         # Execute trades
         for item in final_orders:
@@ -543,7 +550,9 @@ class HighFrequencyTrader:
             "average_profit": self.stats.average_profit,
             "runtime_hours": self.stats.runtime_hours,
             "last_scan": (
-                self.stats.last_scan_time.isoformat() if self.stats.last_scan_time else None
+                self.stats.last_scan_time.isoformat()
+                if self.stats.last_scan_time
+                else None
             ),
             "consecutive_errors": self.consecutive_errors,
         }

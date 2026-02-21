@@ -42,7 +42,9 @@ class CursorState:
     def record_response_time(self, time_ms: float) -> None:
         """Записать время ответа."""
         self._response_times.append(time_ms)
-        self.avg_response_time_ms = sum(self._response_times) / len(self._response_times)
+        self.avg_response_time_ms = sum(self._response_times) / len(
+            self._response_times
+        )
 
         if not self.first_request_time:
             self.first_request_time = datetime.now()
@@ -128,7 +130,7 @@ class CursorPaginator:
             extra={
                 "page_size": self.config.page_size,
                 "max_pages": self.config.max_pages,
-            }
+            },
         )
 
     async def paginate(
@@ -153,7 +155,10 @@ class CursorPaginator:
 
         while self.state.has_more:
             # Проверка лимита страниц
-            if self.config.max_pages > 0 and self.state.page_count >= self.config.max_pages:
+            if (
+                self.config.max_pages > 0
+                and self.state.page_count >= self.config.max_pages
+            ):
                 logger.info(f"Reached max pages limit: {self.config.max_pages}")
                 break
 
@@ -258,7 +263,7 @@ class CursorPaginator:
         """Повторная попытка загрузки с экспоненциальным backoff."""
         for attempt in range(self.config.max_retries):
             try:
-                await asyncio.sleep(2 ** attempt)  # Экспоненциальный backoff
+                await asyncio.sleep(2**attempt)  # Экспоненциальный backoff
                 return await self._fetch_page(game, filters)
             except Exception as e:
                 logger.warning(f"Retry {attempt + 1}/{self.config.max_retries}: {e}")
@@ -279,13 +284,15 @@ class CursorPaginator:
         # Генерируем mock данные
         items = []
         for i in range(self.config.page_size):
-            items.append({
-                "itemId": f"item_{self.state.page_count}_{i}",
-                "title": f"Test Item {self.state.page_count}-{i}",
-                "price": {"USD": random.randint(100, 10000)},
-                "discount": random.randint(0, 10) if random.random() > 0.8 else 0,
-                "lockStatus": 0 if random.random() > 0.2 else 1,
-            })
+            items.append(
+                {
+                    "itemId": f"item_{self.state.page_count}_{i}",
+                    "title": f"Test Item {self.state.page_count}-{i}",
+                    "price": {"USD": random.randint(100, 10000)},
+                    "discount": random.randint(0, 10) if random.random() > 0.8 else 0,
+                    "lockStatus": 0 if random.random() > 0.2 else 1,
+                }
+            )
 
         # Симуляция окончания данных
         has_more = self.state.page_count < 5
@@ -320,7 +327,9 @@ class CursorPaginator:
         """Создать ключ для кэша cursor."""
         filter_str = str(sorted(filters.items())) if filters else ""
         raw = f"{game}:{filter_str}"
-        return hashlib.md5(raw.encode(), usedforsecurity=False).hexdigest()[:16]  # noqa: S324
+        return hashlib.md5(raw.encode(), usedforsecurity=False).hexdigest()[
+            :16
+        ]  # noqa: S324
 
     async def get_all_items(
         self,

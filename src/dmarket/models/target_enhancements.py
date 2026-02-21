@@ -554,7 +554,9 @@ class RelistStatistics(BaseModel):
     total_relists: int = Field(description="Всего перевыставлений")
     max_relists: int = Field(description="Максимум разрешенных перевыставлений")
     remaining_relists: int = Field(description="Осталось перевыставлений")
-    last_relist_time: datetime | None = Field(None, description="Последнее перевыставление")
+    last_relist_time: datetime | None = Field(
+        None, description="Последнее перевыставление"
+    )
     reset_time: datetime = Field(description="Время сброса счетчика")
     time_until_reset: str = Field(description="Время до сброса (человекочитаемое)")
     action_on_limit: RelistAction = Field(description="Действие при лимите")

@@ -119,7 +119,9 @@ class PipelineResult:
             "step_results": [s.to_dict() for s in self.step_results],
             "total_time_ms": round(self.total_time_ms, 2),
             "started_at": self.started_at.isoformat(),
-            "completed_at": self.completed_at.isoformat() if self.completed_at else None,
+            "completed_at": (
+                self.completed_at.isoformat() if self.completed_at else None
+            ),
             "error": self.error,
         }
 
@@ -224,16 +226,20 @@ class SkillOrchestrator:
         """
         pipeline_steps = []
         for step in steps:
-            pipeline_steps.append(PipelineStep(
-                skill=step["skill"],
-                method=step.get("method", "execute"),
-                args=step.get("args", []),
-                kwargs=step.get("kwargs", {}),
-                timeout_seconds=step.get("timeout", 30.0),
-                retry_count=step.get("retry", 0),
-            ))
+            pipeline_steps.append(
+                PipelineStep(
+                    skill=step["skill"],
+                    method=step.get("method", "execute"),
+                    args=step.get("args", []),
+                    kwargs=step.get("kwargs", {}),
+                    timeout_seconds=step.get("timeout", 30.0),
+                    retry_count=step.get("retry", 0),
+                )
+            )
         self.pipelines[name] = pipeline_steps
-        logger.info("pipeline_registered", pipeline_name=name, steps=len(pipeline_steps))
+        logger.info(
+            "pipeline_registered", pipeline_name=name, steps=len(pipeline_steps)
+        )
 
     def list_skills(self) -> list[str]:
         """List all registered skills.
@@ -500,12 +506,14 @@ class SkillOrchestrator:
         processed_results = []
         for i, result in enumerate(results):
             if isinstance(result, Exception):
-                processed_results.append(SkillExecutionResult(
-                    skill_name=skill_calls[i]["skill"],
-                    method_name=skill_calls[i].get("method", "execute"),
-                    success=False,
-                    error=str(result),
-                ))
+                processed_results.append(
+                    SkillExecutionResult(
+                        skill_name=skill_calls[i]["skill"],
+                        method_name=skill_calls[i].get("method", "execute"),
+                        success=False,
+                        error=str(result),
+                    )
+                )
             else:
                 processed_results.append(result)
 

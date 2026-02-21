@@ -239,46 +239,56 @@ class PriceAnalysis:
             "item_name": self.item_name,
             "current_price": str(self.current_price),
             "analyzed_at": self.analyzed_at.isoformat(),
-            "rsi": {
-                "value": self.rsi.value,
-                "signal": self.rsi.signal.value,
-                "overbought": self.rsi.is_overbought,
-                "oversold": self.rsi.is_oversold,
-            }
-            if self.rsi
-            else None,
-            "macd": {
-                "macd_line": self.macd.macd_line,
-                "signal_line": self.macd.signal_line,
-                "histogram": self.macd.histogram,
-                "signal": self.macd.signal.value,
-            }
-            if self.macd
-            else None,
-            "bollinger": {
-                "upper": self.bollinger.upper,
-                "middle": self.bollinger.middle,
-                "lower": self.bollinger.lower,
-                "signal": self.bollinger.signal.value,
-            }
-            if self.bollinger
-            else None,
-            "trend": {
-                "direction": self.trend.trend.value,
-                "strength": self.trend.strength,
-                "support": self.trend.support_level,
-                "resistance": self.trend.resistance_level,
-            }
-            if self.trend
-            else None,
-            "liquidity": {
-                "score": self.liquidity.score,
-                "level": self.liquidity.level.value,
-                "listings": self.liquidity.listings_count,
-                "tradable": self.liquidity.is_tradable,
-            }
-            if self.liquidity
-            else None,
+            "rsi": (
+                {
+                    "value": self.rsi.value,
+                    "signal": self.rsi.signal.value,
+                    "overbought": self.rsi.is_overbought,
+                    "oversold": self.rsi.is_oversold,
+                }
+                if self.rsi
+                else None
+            ),
+            "macd": (
+                {
+                    "macd_line": self.macd.macd_line,
+                    "signal_line": self.macd.signal_line,
+                    "histogram": self.macd.histogram,
+                    "signal": self.macd.signal.value,
+                }
+                if self.macd
+                else None
+            ),
+            "bollinger": (
+                {
+                    "upper": self.bollinger.upper,
+                    "middle": self.bollinger.middle,
+                    "lower": self.bollinger.lower,
+                    "signal": self.bollinger.signal.value,
+                }
+                if self.bollinger
+                else None
+            ),
+            "trend": (
+                {
+                    "direction": self.trend.trend.value,
+                    "strength": self.trend.strength,
+                    "support": self.trend.support_level,
+                    "resistance": self.trend.resistance_level,
+                }
+                if self.trend
+                else None
+            ),
+            "liquidity": (
+                {
+                    "score": self.liquidity.score,
+                    "level": self.liquidity.level.value,
+                    "listings": self.liquidity.listings_count,
+                    "tradable": self.liquidity.is_tradable,
+                }
+                if self.liquidity
+                else None
+            ),
             "overall_signal": self.overall_signal.value,
             "confidence": round(self.confidence, 2),
         }
@@ -348,7 +358,9 @@ class PriceAnalytics:
 
         return ema
 
-    def calculate_rsi(self, prices: list[float], period: int | None = None) -> RSIResult | None:
+    def calculate_rsi(
+        self, prices: list[float], period: int | None = None
+    ) -> RSIResult | None:
         """Calculate Relative Strength Index.
 
         RSI = 100 - (100 / (1 + RS))
@@ -447,7 +459,11 @@ class PriceAnalytics:
 
         # Get previous values for crossover detection
         prev_macd = macd_history[-2] if len(macd_history) >= 2 else None
-        prev_signal = self.calculate_ema(macd_history[:-1], signal) if len(macd_history) >= 2 else None
+        prev_signal = (
+            self.calculate_ema(macd_history[:-1], signal)
+            if len(macd_history) >= 2
+            else None
+        )
 
         return MACDResult.from_values(
             macd_line=macd_line,
@@ -488,7 +504,7 @@ class PriceAnalytics:
 
         # Calculate standard deviation
         variance = sum((p - sma) ** 2 for p in recent_prices) / period
-        std = variance ** 0.5
+        std = variance**0.5
 
         upper = sma + (std * num_std)
         lower = sma - (std * num_std)
@@ -496,7 +512,9 @@ class PriceAnalytics:
         # Calculate bandwidth and position
         bandwidth = (upper - lower) / sma if sma > 0 else 0
         current_price = prices[-1]
-        position = (current_price - lower) / (upper - lower) if (upper - lower) > 0 else 0.5
+        position = (
+            (current_price - lower) / (upper - lower) if (upper - lower) > 0 else 0.5
+        )
 
         return BollingerBands(
             upper=round(upper, 2),
@@ -589,7 +607,9 @@ class PriceAnalytics:
 
         # Calculate moving averages
         sma_short = self.calculate_sma(prices[-10:], 10)
-        sma_long = self.calculate_sma(prices[-20:], 20) if len(prices) >= 20 else sma_short
+        sma_long = (
+            self.calculate_sma(prices[-20:], 20) if len(prices) >= 20 else sma_short
+        )
 
         if sma_short is None:
             return None
@@ -704,7 +724,9 @@ class PriceAnalytics:
             )
 
         # Calculate overall signal
-        analysis.overall_signal, analysis.confidence = self._calculate_overall_signal(analysis)
+        analysis.overall_signal, analysis.confidence = self._calculate_overall_signal(
+            analysis
+        )
 
         return analysis
 

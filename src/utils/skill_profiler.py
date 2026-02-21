@@ -252,8 +252,8 @@ class SkillProfiler:
         # Update throughput
         metrics.items_processed += items_count
         if metrics.total_execution_time_ms > 0:
-            metrics.throughput_per_sec = (
-                metrics.items_processed / (metrics.total_execution_time_ms / 1000)
+            metrics.throughput_per_sec = metrics.items_processed / (
+                metrics.total_execution_time_ms / 1000
             )
 
         # Update memory
@@ -341,9 +341,7 @@ class SkillProfiler:
             memory_after = self._get_memory_usage()
             memory_used = max(0, memory_after - memory_before)
 
-            self._update_metrics(
-                metrics, elapsed_ms, success, items_count, memory_used
-            )
+            self._update_metrics(metrics, elapsed_ms, success, items_count, memory_used)
 
             logger.debug(
                 "skill_profiled",
@@ -391,9 +389,7 @@ class SkillProfiler:
             memory_after = self._get_memory_usage()
             memory_used = max(0, memory_after - memory_before)
 
-            self._update_metrics(
-                metrics, elapsed_ms, success, items_count, memory_used
-            )
+            self._update_metrics(metrics, elapsed_ms, success, items_count, memory_used)
 
             logger.debug(
                 "skill_profiled_async",
@@ -423,8 +419,7 @@ class SkillProfiler:
             Dictionary mapping skill names to their metrics
         """
         return {
-            name: metrics.to_dict()
-            for name, metrics in self.skills_metrics.items()
+            name: metrics.to_dict() for name, metrics in self.skills_metrics.items()
         }
 
     def get_summary(self) -> dict[str, Any]:
@@ -433,9 +428,7 @@ class SkillProfiler:
         Returns:
             Summary with aggregate statistics
         """
-        total_executions = sum(
-            m.total_executions for m in self.skills_metrics.values()
-        )
+        total_executions = sum(m.total_executions for m in self.skills_metrics.values())
         total_successes = sum(
             m.successful_executions for m in self.skills_metrics.values()
         )
@@ -482,42 +475,49 @@ class SkillProfiler:
 
         for name, metrics in self.skills_metrics.items():
             if metrics.latency_p95_ms > latency_threshold_ms:
-                bottlenecks.append({
-                    "skill_name": name,
-                    "issue": "high_latency",
-                    "latency_p95_ms": round(metrics.latency_p95_ms, 2),
-                    "latency_p99_ms": round(metrics.latency_p99_ms, 2),
-                    "threshold_ms": latency_threshold_ms,
-                    "recommendation": (
-                        f"Consider optimizing {name} or adding caching"
-                    ),
-                })
+                bottlenecks.append(
+                    {
+                        "skill_name": name,
+                        "issue": "high_latency",
+                        "latency_p95_ms": round(metrics.latency_p95_ms, 2),
+                        "latency_p99_ms": round(metrics.latency_p99_ms, 2),
+                        "threshold_ms": latency_threshold_ms,
+                        "recommendation": (
+                            f"Consider optimizing {name} or adding caching"
+                        ),
+                    }
+                )
 
             if (
                 metrics.total_executions > 10
                 and metrics.failed_executions / metrics.total_executions > 0.1
             ):
-                bottlenecks.append({
-                    "skill_name": name,
-                    "issue": "high_failure_rate",
-                    "failure_rate": round(
-                        metrics.failed_executions / metrics.total_executions * 100, 2
-                    ),
-                    "recommendation": f"Investigate failures in {name}",
-                })
+                bottlenecks.append(
+                    {
+                        "skill_name": name,
+                        "issue": "high_failure_rate",
+                        "failure_rate": round(
+                            metrics.failed_executions / metrics.total_executions * 100,
+                            2,
+                        ),
+                        "recommendation": f"Investigate failures in {name}",
+                    }
+                )
 
             if metrics.memory_peak_bytes > self.MEMORY_WARNING_BYTES:
-                bottlenecks.append({
-                    "skill_name": name,
-                    "issue": "high_memory_usage",
-                    "memory_peak_mb": round(
-                        metrics.memory_peak_bytes / (1024 * 1024), 2
-                    ),
-                    "threshold_mb": round(
-                        self.MEMORY_WARNING_BYTES / (1024 * 1024), 2
-                    ),
-                    "recommendation": f"Optimize memory usage in {name}",
-                })
+                bottlenecks.append(
+                    {
+                        "skill_name": name,
+                        "issue": "high_memory_usage",
+                        "memory_peak_mb": round(
+                            metrics.memory_peak_bytes / (1024 * 1024), 2
+                        ),
+                        "threshold_mb": round(
+                            self.MEMORY_WARNING_BYTES / (1024 * 1024), 2
+                        ),
+                        "recommendation": f"Optimize memory usage in {name}",
+                    }
+                )
 
         return bottlenecks
 

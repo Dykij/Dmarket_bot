@@ -141,7 +141,7 @@ async def initialize_bot(token: str, setup_persistence: bool = True) -> Applicat
 
     # Настраиваем обработчики сигналов для корректного завершения
     setup_signal_handlers(application)
-    
+
     # Запуск защиты памяти
     memory_guard.start(application)
 

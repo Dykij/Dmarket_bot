@@ -85,7 +85,10 @@ class PaginationManager:
             Количество элементов на странице
 
         """
-        if user_id in self.user_settings and "items_per_page" in self.user_settings[user_id]:
+        if (
+            user_id in self.user_settings
+            and "items_per_page" in self.user_settings[user_id]
+        ):
             return self.user_settings[user_id]["items_per_page"]
         return self.default_items_per_page
 
@@ -458,13 +461,17 @@ def format_paginated_results(
 
     # Базовое форматирование для других типов данных
     header = f"📄 Страница {current_page + 1} из {total_pages}\n\n"
-    game_emoji = {"csgo": "🔫", "dota2": "🏆", "rust": "🏝️", "tf2": "🎩"}.get(game, "🎮")
+    game_emoji = {"csgo": "🔫", "dota2": "🏆", "rust": "🏝️", "tf2": "🎩"}.get(
+        game, "🎮"
+    )
 
     formatted_items = []
     for i, item in enumerate(items):
         title = item.get("title", f"Элемент #{i + 1}")
         price = (
-            item.get("price", {}).get("USD", 0) / 100 if isinstance(item.get("price"), dict) else 0
+            item.get("price", {}).get("USD", 0) / 100
+            if isinstance(item.get("price"), dict)
+            else 0
         )
         formatted_items.append(f"{i + 1}. {game_emoji} {title} - ${price:.2f}")
 

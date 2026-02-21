@@ -57,8 +57,12 @@ def update_liquidity_settings(user_id: int, settings: dict[str, Any]) -> None:
     for key, value in settings.items():
         profile["liquidity_settings"][key] = value
 
-    profile_manager.update_profile(user_id, {"liquidity_settings": profile["liquidity_settings"]})
-    logger.info(f"Обновлены настройки ликвидности для пользователя {user_id}: {settings}")
+    profile_manager.update_profile(
+        user_id, {"liquidity_settings": profile["liquidity_settings"]}
+    )
+    logger.info(
+        f"Обновлены настройки ликвидности для пользователя {user_id}: {settings}"
+    )
 
 
 def get_liquidity_settings_keyboard() -> InlineKeyboardMarkup:

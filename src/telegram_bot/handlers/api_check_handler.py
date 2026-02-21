@@ -47,7 +47,9 @@ async def handle_api_check(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     if not user:
         return
 
-    message = update.message or (update.callback_query.message if update.callback_query else None)
+    message = update.message or (
+        update.callback_query.message if update.callback_query else None
+    )
     if not message:
         return
 
@@ -163,7 +165,9 @@ async def handle_api_check(update: Update, context: ContextTypes.DEFAULT_TYPE) -
         )
 
 
-async def handle_api_check_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def handle_api_check_callback(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Handle API Check callback from inline button.
 
     Args:

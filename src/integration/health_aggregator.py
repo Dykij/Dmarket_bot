@@ -94,15 +94,18 @@ class SystemHealth:
             "summary": {
                 "total": len(self.components),
                 "healthy": sum(
-                    1 for c in self.components.values()
+                    1
+                    for c in self.components.values()
                     if c.status == HealthStatus.HEALTHY
                 ),
                 "degraded": sum(
-                    1 for c in self.components.values()
+                    1
+                    for c in self.components.values()
                     if c.status == HealthStatus.DEGRADED
                 ),
                 "unhealthy": sum(
-                    1 for c in self.components.values()
+                    1
+                    for c in self.components.values()
                     if c.status in {HealthStatus.UNHEALTHY, HealthStatus.CRITICAL}
                 ),
             },
@@ -245,7 +248,9 @@ class HealthAggregator:
                 is_connected = component.connected
                 if callable(is_connected):
                     is_connected = is_connected()
-                status = HealthStatus.HEALTHY if is_connected else HealthStatus.UNHEALTHY
+                status = (
+                    HealthStatus.HEALTHY if is_connected else HealthStatus.UNHEALTHY
+                )
                 details = {"connected": is_connected}
 
             # Default: assume healthy if no check available
@@ -256,13 +261,20 @@ class HealthAggregator:
             response_time = (datetime.now(UTC) - start_time).total_seconds() * 1000
 
             # Check for degraded (slow response)
-            if status == HealthStatus.HEALTHY and response_time > self._degraded_threshold_ms:
+            if (
+                status == HealthStatus.HEALTHY
+                and response_time > self._degraded_threshold_ms
+            ):
                 status = HealthStatus.DEGRADED
 
             health = ComponentHealth(
                 name=name,
                 status=status,
-                message="OK" if status in {HealthStatus.HEALTHY, HealthStatus.DEGRADED} else "Check failed",
+                message=(
+                    "OK"
+                    if status in {HealthStatus.HEALTHY, HealthStatus.DEGRADED}
+                    else "Check failed"
+                ),
                 last_check=datetime.now(UTC),
                 response_time_ms=response_time,
                 details=details,
@@ -389,7 +401,8 @@ class HealthAggregator:
             List of component names
         """
         return [
-            name for name, health in self._health_cache.items()
+            name
+            for name, health in self._health_cache.items()
             if health.status in {HealthStatus.UNHEALTHY, HealthStatus.CRITICAL}
         ]
 

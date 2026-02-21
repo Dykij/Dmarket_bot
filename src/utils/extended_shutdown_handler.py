@@ -145,9 +145,9 @@ class ExtendedShutdownHandler:
             if hasattr(target, "to_dict"):
                 serialized.append(target.to_dict())
             elif hasattr(target, "__dict__"):
-                serialized.append({
-                    k: v for k, v in target.__dict__.items() if not k.startswith("_")
-                })
+                serialized.append(
+                    {k: v for k, v in target.__dict__.items() if not k.startswith("_")}
+                )
             elif isinstance(target, dict):
                 serialized.append(target)
             else:
@@ -217,9 +217,11 @@ class ExtendedShutdownHandler:
                     if asyncio.iscoroutinefunction(cleanup_func):
                         await asyncio.wait_for(
                             cleanup_func(),
-                            timeout=self.max_shutdown_wait / len(self.cleanup_tasks)
-                            if self.cleanup_tasks
-                            else self.max_shutdown_wait,
+                            timeout=(
+                                self.max_shutdown_wait / len(self.cleanup_tasks)
+                                if self.cleanup_tasks
+                                else self.max_shutdown_wait
+                            ),
                         )
                     else:
                         cleanup_func()
@@ -247,7 +249,8 @@ class ExtendedShutdownHandler:
     async def _cancel_pending_tasks(self) -> None:
         """Cancel all pending asyncio tasks."""
         tasks = [
-            t for t in asyncio.all_tasks()
+            t
+            for t in asyncio.all_tasks()
             if t is not asyncio.current_task() and not t.done()
         ]
 
@@ -281,7 +284,9 @@ class ExtendedShutdownHandler:
         for sig in (signal.SIGTERM, signal.SIGINT):
             try:
                 loop.add_signal_handler(sig, lambda s=sig: signal_handler(s))
-                logger.debug("signal_handler_registered", signal=signal.Signals(sig).name)
+                logger.debug(
+                    "signal_handler_registered", signal=signal.Signals(sig).name
+                )
             except (ValueError, RuntimeError) as e:
                 # Windows or running in thread
                 logger.debug(

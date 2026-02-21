@@ -158,7 +158,9 @@ class PollingMetrics:
         # Update response time average
         self._response_times.append(response_time_ms)
         if self._response_times:
-            self.avg_response_time_ms = sum(self._response_times) / len(self._response_times)
+            self.avg_response_time_ms = sum(self._response_times) / len(
+                self._response_times
+            )
 
     @property
     def success_rate(self) -> float:
@@ -190,7 +192,9 @@ class PollingMetrics:
             "avg_response_time_ms": round(self.avg_response_time_ms, 2),
             "consecutive_failures": self.consecutive_failures,
             "health_status": self.health_status.value,
-            "last_poll_time": self.last_poll_time.isoformat() if self.last_poll_time else None,
+            "last_poll_time": (
+                self.last_poll_time.isoformat() if self.last_poll_time else None
+            ),
             "error_counts": self.error_counts,
         }
 
@@ -412,7 +416,9 @@ class EnhancedPollingEngine:
                                 try:
                                     await self.on_price_change(change)
                                 except Exception as e:
-                                    logger.exception("price_change_callback_error", error=str(e))
+                                    logger.exception(
+                                        "price_change_callback_error", error=str(e)
+                                    )
 
                     except Exception as e:
                         poll_success = False
@@ -512,7 +518,9 @@ class EnhancedPollingEngine:
 
         # Check if cache expired
         if cache_time:
-            if datetime.now(UTC) - cache_time > timedelta(seconds=self.config.cache_ttl_seconds):
+            if datetime.now(UTC) - cache_time > timedelta(
+                seconds=self.config.cache_ttl_seconds
+            ):
                 # Cache expired, refresh
                 self._price_cache.pop(item_id, None)
                 self._cache_timestamps.pop(item_id, None)
@@ -579,7 +587,9 @@ class EnhancedPollingEngine:
         """Handle polling failure with backoff."""
         # Calculate backoff delay
         attempt = self.metrics.consecutive_failures
-        self._last_delay = self.config.backoff.calculate_delay(attempt, self._last_delay)
+        self._last_delay = self.config.backoff.calculate_delay(
+            attempt, self._last_delay
+        )
 
         logger.warning(
             "enhanced_polling_failure",
@@ -622,7 +632,9 @@ class EnhancedPollingEngine:
                 oldest = min(recent_requests)
                 wait_time = (oldest + timedelta(minutes=1) - now).total_seconds()
                 if wait_time > 0:
-                    logger.debug("enhanced_polling_rate_limit_wait", wait_time=wait_time)
+                    logger.debug(
+                        "enhanced_polling_rate_limit_wait", wait_time=wait_time
+                    )
                     await asyncio.sleep(wait_time)
 
     def get_metrics(self) -> dict[str, Any]:

@@ -247,38 +247,46 @@ class DailyReportScheduler:
             cancelled = stats.get("cancelled_trades", 0)
             failed = stats.get("failed_trades", 0)
 
-            lines.extend([
-                f"  • Успешных: {successful} ({success_rate:.1f}%)",
-                f"  • Отменено: {cancelled}",
-                f"  • Ошибок: {failed}",
-            ])
+            lines.extend(
+                [
+                    f"  • Успешных: {successful} ({success_rate:.1f}%)",
+                    f"  • Отменено: {cancelled}",
+                    f"  • Ошибок: {failed}",
+                ]
+            )
 
-        lines.extend([
-            "",
-            f"💰 Прибыль: {total_profit:+.2f}$ ({avg_profit_pct:+.1f}%)",
-        ])
+        lines.extend(
+            [
+                "",
+                f"💰 Прибыль: {total_profit:+.2f}$ ({avg_profit_pct:+.1f}%)",
+            ]
+        )
 
         # Статистика сканирования
         scans = stats.get("scans_performed", 0)
         opportunities = stats.get("opportunities_found", 0)
 
         if scans > 0:
-            lines.extend([
-                "",
-                "🔍 Сканирование:",
-                f"  • Сканов выполнено: {scans}",
-                f"  • Возможностей найдено: {opportunities}",
-            ])
+            lines.extend(
+                [
+                    "",
+                    "🔍 Сканирование:",
+                    f"  • Сканов выполнено: {scans}",
+                    f"  • Возможностей найдено: {opportunities}",
+                ]
+            )
 
         # Ошибки API
         api_errors = stats.get("api_errors", {})
         critical_errors = stats.get("critical_errors", 0)
 
         if api_errors or critical_errors > 0:
-            lines.extend([
-                "",
-                "⚠️ Ошибки:",
-            ])
+            lines.extend(
+                [
+                    "",
+                    "⚠️ Ошибки:",
+                ]
+            )
 
             if api_errors:
                 for error_type, count in sorted(
@@ -291,9 +299,11 @@ class DailyReportScheduler:
             if critical_errors > 0:
                 lines.append(f"🔴 Критических: {critical_errors}")
         else:
-            lines.extend([
-                "",
-                "✅ Ошибок не обнаружено",
-            ])
+            lines.extend(
+                [
+                    "",
+                    "✅ Ошибок не обнаружено",
+                ]
+            )
 
         return "\n".join(lines)

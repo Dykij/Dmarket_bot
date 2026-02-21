@@ -137,7 +137,9 @@ async def show_arbitrage_opportunities(
         return
 
     opportunities = context.user_data.get("arbitrage_opportunities", [])
-    current_page = page if page is not None else context.user_data.get("arbitrage_page", 0)
+    current_page = (
+        page if page is not None else context.user_data.get("arbitrage_page", 0)
+    )
     context.user_data.get("arbitrage_mode", "normal")
 
     # Пересчитываем текущую страницу при необходимости
@@ -209,7 +211,9 @@ async def handle_best_opportunities_impl(
     await handle_dmarket_arbitrage_impl(update, context, mode="best")
 
 
-async def handle_game_selection_impl(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def handle_game_selection_impl(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Обрабатывает callback 'game_selection'.
 
     Args:
@@ -266,7 +270,9 @@ async def handle_game_selected_impl(
     await handle_dmarket_arbitrage_impl(update, context, mode=f"game_{game}")
 
 
-async def handle_market_comparison_impl(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def handle_market_comparison_impl(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Обрабатывает callback 'market_comparison'.
 
     Args:
@@ -405,7 +411,12 @@ async def _handle_legacy_callbacks(
             return
 
         # Arbitrage callbacks - redirect to auto_trade
-        if callback_data in {"arbitrage", "arbitrage_menu", "auto_arbitrage", "dmarket_arbitrage"}:
+        if callback_data in {
+            "arbitrage",
+            "arbitrage_menu",
+            "auto_arbitrage",
+            "dmarket_arbitrage",
+        }:
             await auto_trade_start(update, context)
             return
 
@@ -426,8 +437,10 @@ async def _handle_legacy_callbacks(
             return
 
         # Game prefix
-        if callback_data.startswith(CB_GAME_PREFIX) and not callback_data.startswith("game_selected"):
-            game = callback_data[len(CB_GAME_PREFIX):]
+        if callback_data.startswith(CB_GAME_PREFIX) and not callback_data.startswith(
+            "game_selected"
+        ):
+            game = callback_data[len(CB_GAME_PREFIX) :]
             await handle_game_selected_impl(update, context, game=game)
             return
 
@@ -438,7 +451,11 @@ async def _handle_legacy_callbacks(
 
         # Pagination
         if callback_data.startswith(("arb_next_page_", "arb_prev_page_")):
-            direction = "next_page" if callback_data.startswith("arb_next_page_") else "prev_page"
+            direction = (
+                "next_page"
+                if callback_data.startswith("arb_next_page_")
+                else "prev_page"
+            )
             await handle_arbitrage_pagination(query, context, direction)
             return
 
@@ -456,7 +473,9 @@ async def _handle_legacy_callbacks(
         )
 
     except Exception as e:
-        logger.exception("Ошибка при обработке legacy callback %s: %s", callback_data, e)
+        logger.exception(
+            "Ошибка при обработке legacy callback %s: %s", callback_data, e
+        )
         logger.exception(traceback.format_exc())
 
         try:

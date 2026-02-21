@@ -1,0 +1,175 @@
+use reqwest::{Client, StatusCode, header::{HeaderMap, HeaderValue, AUTHORIZATION, CONTENT_TYPE}};
+use std::time::Duration;
+use crate::rate_limiter::DMarketLimiter;
+use std::sync::Arc;
+use futures::future::join_all;
+use std::collections::HashMap;
+use ed25519_dalek::{Signer, SigningKey, Signature};
+use std::time::{SystemTime, UNIX_EPOCH};
+
+/// Hybrid HFT Gateway for DMarket API v2.
+/// Uses HTTP/2 Multiplexing for Market Data (Source of Truth).
+/// Uses WebSocket (future phase) for notifications.
+pub struct RustNetworkClient {
+    http_client: Client,
+    limiter: Arc<DMarketLimiter>, // Shared limiter for Arc cloning
+    api_url: String,
+    public_key: String,
+    secret_key: String,
+}
+
+impl RustNetworkClient {
+    /// Initialize with Strict ToS Limits (e.g., 5 RPS).
+    pub fn new(requests_per_second: u32, public_key: String, secret_key: String) -> Result<Self, String> {
+        let http_client = Client::builder()
+            // .http2_prior_knowledge() // REMOVED: Caused frame size error. ALPN will handle H2.
+            .timeout(Duration::from_secs(5))
+            .pool_idle_timeout(Duration::from_secs(90))
+            .build()
+            .map_err(|e| e.to_string())?;
+
+        Ok(RustNetworkClient {
+            http_client,
+            limiter: Arc::new(DMarketLimiter::new(requests_per_second)),
+            api_url: "https://api.dmarket.com".to_string(),
+            public_key,
+            secret_key,
+        })
+    }
+
+    /// Sign request using Ed25519 (DMarket specific: method + url_path + body + timestamp)
+    fn sign_request(&self, method: &str, path: &str, body: &str, timestamp: u64) -> Result<String, String> {
+        let message = format!("{}{}{}{}", method, path, body, timestamp);
+        
+        let secret_bytes = hex::decode(&self.secret_key).map_err(|e| format!("Invalid Secret Key Hex: {}", e))?;
+        if secret_bytes.len() != 64 {
+             return Err("Secret Key must be 64 bytes (hex decoded)".to_string());
+        }
+        
+        // DMarket uses Ed25519. Key is 32 bytes seed + 32 bytes public key = 64 bytes.
+        // ed25519-dalek SigningKey::from_bytes expects 32 bytes seed.
+        // Usually secret key strings from DMarket are hex of 64 bytes (seed+pub).
+        // Let's try using the first 32 bytes as seed if length is 64.
+        let seed = &secret_bytes[0..32];
+        let signing_key = SigningKey::from_bytes(seed.try_into().unwrap());
+        let signature: Signature = signing_key.sign(message.as_bytes());
+        
+        Ok(hex::encode(signature.to_bytes()))
+    }
+    
+    /// Get User Balance (Authenticated)
+    pub async fn fetch_user_balance(&self) -> Result<String, String> {
+        self.limiter.acquire().await;
+        
+        let path = "/account/v1/balance";
+        let method = "GET";
+        let body = "";
+        let timestamp = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
+        
+        let signature = self.sign_request(method, path, body, timestamp)?;
+        
+        let url = format!("{}{}", self.api_url, path);
+        
+        let response = self.http_client.get(&url)
+            .header("X-Api-Key", &self.public_key)
+            .header("X-Sign", signature)
+            .header("X-Timestamp", timestamp.to_string())
+            .header("Content-Type", "application/json")
+            .send()
+            .await
+            .map_err(|e| format!("Network Error: {}", e))?;
+
+        match response.status() {
+            StatusCode::OK => {
+                let text = response.text().await.map_err(|e| e.to_string())?;
+                Ok(text)
+            },
+            status => Err(format!("API Error {}: {}", status, response.text().await.unwrap_or_default())),
+        }
+    }
+
+    /// Fetch Market Items (REST v2) with Bumpalo Arena support in Parser.
+    /// This is the "Hot Path".
+    pub async fn fetch_market_items(&self, game_id: &str, title: &str) -> Result<String, String> {
+        // 1. Strict Rate Limiting Check
+        self.limiter.acquire().await;
+
+        let url = format!("{}/exchange/v1/market/items?gameId={}&title={}&limit=10&sort=price&order=asc&currency=USD", self.api_url, game_id, title);
+
+        let response = self.http_client.get(&url)
+            .send()
+            .await
+            .map_err(|e| format!("Network Error: {}", e))?;
+
+        // 2. Handle 429/503 explicitly
+        match response.status() {
+            StatusCode::OK => {
+                let body = response.text().await.map_err(|e| e.to_string())?;
+                Ok(body) // Return raw JSON string for Zero-Copy parsing downstream
+            },
+            StatusCode::TOO_MANY_REQUESTS => {
+                Err("429: Rate Limit Exceeded. Backing off.".to_string())
+            },
+            status => {
+                Err(format!("API Error: {}", status))
+            }
+        }
+    }
+
+    /// Multi-threaded fetch for multiple targets.
+    /// Uses join_all to execute concurrently, but respects the SHARED global rate limiter.
+    /// Returns a map of "GameID:Title" -> Result<JSON, Error>
+    pub async fn fetch_bulk(&self, targets: Vec<(String, String)>) -> HashMap<String, Result<String, String>> {
+        let mut tasks = Vec::new();
+        let client_ref = &self.http_client;
+        let limiter_ref = &self.limiter;
+        let api_url_ref = &self.api_url;
+
+        // Since we are inside `&self`, we can't move self into futures easily without cloning Arcs if we had them on self.
+        // But http_client is cloneable (cheap ref count) and limiter is Arc.
+        
+        for (game_id, title) in targets {
+            let client = client_ref.clone();
+            let limiter = limiter_ref.clone();
+            let url_base = api_url_ref.clone();
+            
+            // Spawn a future for each request
+            tasks.push(tokio::spawn(async move {
+                // Rate Limit Check (Global across all threads)
+                limiter.acquire().await;
+                
+                let url = format!("{}/exchange/v1/market/items?gameId={}&title={}&limit=10&sort=price&order=asc&currency=USD", url_base, game_id, title);
+                
+                match client.get(&url).send().await {
+                    Ok(resp) => {
+                        match resp.status() {
+                            StatusCode::OK => {
+                                match resp.text().await {
+                                    Ok(text) => (game_id, title, Ok(text)),
+                                    Err(e) => (game_id, title, Err(e.to_string())),
+                                }
+                            },
+                            StatusCode::TOO_MANY_REQUESTS => (game_id, title, Err("429".to_string())),
+                            s => (game_id, title, Err(format!("Status: {}", s))),
+                        }
+                    },
+                    Err(e) => (game_id, title, Err(e.to_string())),
+                }
+            }));
+        }
+
+        let results = join_all(tasks).await;
+        
+        let mut map = HashMap::new();
+        for res in results {
+            match res {
+                Ok((g, t, r)) => {
+                    let key = format!("{}:{}", g, t);
+                    map.insert(key, r);
+                },
+                Err(_) => {}, // Task panicked? rare.
+            }
+        }
+        map
+    }
+}

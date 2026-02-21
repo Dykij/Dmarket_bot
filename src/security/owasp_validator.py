@@ -189,7 +189,9 @@ class OWASPValidator:
             "tests/",  # Often have intentional vulnerabilities for testing
         ]
 
-    async def validate(self, code: str, file_path: str | None = None) -> list[SecurityIssue]:
+    async def validate(
+        self, code: str, file_path: str | None = None
+    ) -> list[SecurityIssue]:
         """
         Validate code against OWASP rules.
 
@@ -302,18 +304,20 @@ class OWASPValidator:
 
         for pattern, description in self.INJECTION_PATTERNS:
             for match in re.finditer(pattern, code, re.IGNORECASE):
-                line_number = code[:match.start()].count("\n") + 1
-                issues.append(SecurityIssue(
-                    category=OWASPCategory.A03_INJECTION,
-                    severity=Severity.HIGH,
-                    title="Potential Injection Vulnerability",
-                    description=description,
-                    file_path=file_path,
-                    line_number=line_number,
-                    code_snippet=self._get_snippet(code, line_number),
-                    recommendation="Use parameterized queries or safe APIs",
-                    cwe_id="CWE-89" if "SQL" in description else "CWE-78",
-                ))
+                line_number = code[: match.start()].count("\n") + 1
+                issues.append(
+                    SecurityIssue(
+                        category=OWASPCategory.A03_INJECTION,
+                        severity=Severity.HIGH,
+                        title="Potential Injection Vulnerability",
+                        description=description,
+                        file_path=file_path,
+                        line_number=line_number,
+                        code_snippet=self._get_snippet(code, line_number),
+                        recommendation="Use parameterized queries or safe APIs",
+                        cwe_id="CWE-89" if "SQL" in description else "CWE-78",
+                    )
+                )
 
         return issues
 
@@ -327,18 +331,20 @@ class OWASPValidator:
 
         for pattern, description in self.CRYPTO_PATTERNS:
             for match in re.finditer(pattern, code, re.IGNORECASE):
-                line_number = code[:match.start()].count("\n") + 1
-                issues.append(SecurityIssue(
-                    category=OWASPCategory.A02_CRYPTOGRAPHIC_FAILURES,
-                    severity=Severity.MEDIUM,
-                    title="Cryptographic Weakness",
-                    description=description,
-                    file_path=file_path,
-                    line_number=line_number,
-                    code_snippet=self._get_snippet(code, line_number),
-                    recommendation="Use strong cryptographic algorithms (SHA-256+, AES-256)",
-                    cwe_id="CWE-327",
-                ))
+                line_number = code[: match.start()].count("\n") + 1
+                issues.append(
+                    SecurityIssue(
+                        category=OWASPCategory.A02_CRYPTOGRAPHIC_FAILURES,
+                        severity=Severity.MEDIUM,
+                        title="Cryptographic Weakness",
+                        description=description,
+                        file_path=file_path,
+                        line_number=line_number,
+                        code_snippet=self._get_snippet(code, line_number),
+                        recommendation="Use strong cryptographic algorithms (SHA-256+, AES-256)",
+                        cwe_id="CWE-327",
+                    )
+                )
 
         return issues
 
@@ -353,30 +359,34 @@ class OWASPValidator:
         # Check for hardcoded secrets
         for pattern, description in self.HARDCODED_SECRETS_PATTERNS:
             for match in re.finditer(pattern, code, re.IGNORECASE):
-                line_number = code[:match.start()].count("\n") + 1
-                issues.append(SecurityIssue(
-                    category=OWASPCategory.A05_SECURITY_MISCONFIGURATION,
-                    severity=Severity.CRITICAL,
-                    title="Hardcoded Secret",
-                    description=description,
-                    file_path=file_path,
-                    line_number=line_number,
-                    code_snippet=self._get_snippet(code, line_number),
-                    recommendation="Use environment variables or secure secret management",
-                    cwe_id="CWE-798",
-                ))
+                line_number = code[: match.start()].count("\n") + 1
+                issues.append(
+                    SecurityIssue(
+                        category=OWASPCategory.A05_SECURITY_MISCONFIGURATION,
+                        severity=Severity.CRITICAL,
+                        title="Hardcoded Secret",
+                        description=description,
+                        file_path=file_path,
+                        line_number=line_number,
+                        code_snippet=self._get_snippet(code, line_number),
+                        recommendation="Use environment variables or secure secret management",
+                        cwe_id="CWE-798",
+                    )
+                )
 
         # Check for debug mode
         if re.search(r"DEBUG\s*=\s*True", code, re.IGNORECASE):
-            issues.append(SecurityIssue(
-                category=OWASPCategory.A05_SECURITY_MISCONFIGURATION,
-                severity=Severity.MEDIUM,
-                title="Debug Mode Enabled",
-                description="DEBUG mode should be disabled in production",
-                file_path=file_path,
-                recommendation="Set DEBUG=False in production",
-                cwe_id="CWE-489",
-            ))
+            issues.append(
+                SecurityIssue(
+                    category=OWASPCategory.A05_SECURITY_MISCONFIGURATION,
+                    severity=Severity.MEDIUM,
+                    title="Debug Mode Enabled",
+                    description="DEBUG mode should be disabled in production",
+                    file_path=file_path,
+                    recommendation="Set DEBUG=False in production",
+                    cwe_id="CWE-489",
+                )
+            )
 
         return issues
 
@@ -390,18 +400,20 @@ class OWASPValidator:
 
         for pattern, description in self.SSRF_PATTERNS:
             for match in re.finditer(pattern, code, re.IGNORECASE):
-                line_number = code[:match.start()].count("\n") + 1
-                issues.append(SecurityIssue(
-                    category=OWASPCategory.A10_SSRF,
-                    severity=Severity.HIGH,
-                    title="Potential SSRF Vulnerability",
-                    description=description,
-                    file_path=file_path,
-                    line_number=line_number,
-                    code_snippet=self._get_snippet(code, line_number),
-                    recommendation="Validate and whitelist URLs before making requests",
-                    cwe_id="CWE-918",
-                ))
+                line_number = code[: match.start()].count("\n") + 1
+                issues.append(
+                    SecurityIssue(
+                        category=OWASPCategory.A10_SSRF,
+                        severity=Severity.HIGH,
+                        title="Potential SSRF Vulnerability",
+                        description=description,
+                        file_path=file_path,
+                        line_number=line_number,
+                        code_snippet=self._get_snippet(code, line_number),
+                        recommendation="Validate and whitelist URLs before making requests",
+                        cwe_id="CWE-918",
+                    )
+                )
 
         return issues
 
@@ -432,17 +444,19 @@ class OWASPValidator:
                         auth in func_body.lower()
                         for auth in ["auth", "permission", "allowed", "verify"]
                     ):
-                        line_number = code[:match.start()].count("\n") + 1
-                        issues.append(SecurityIssue(
-                            category=OWASPCategory.A01_BROKEN_ACCESS_CONTROL,
-                            severity=Severity.LOW,
-                            title="Handler Without Apparent Auth Check",
-                            description=f"Handler '{func_name}' may lack authentication",
-                            file_path=file_path,
-                            line_number=line_number,
-                            recommendation="Add authentication/authorization checks",
-                            cwe_id="CWE-862",
-                        ))
+                        line_number = code[: match.start()].count("\n") + 1
+                        issues.append(
+                            SecurityIssue(
+                                category=OWASPCategory.A01_BROKEN_ACCESS_CONTROL,
+                                severity=Severity.LOW,
+                                title="Handler Without Apparent Auth Check",
+                                description=f"Handler '{func_name}' may lack authentication",
+                                file_path=file_path,
+                                line_number=line_number,
+                                recommendation="Add authentication/authorization checks",
+                                cwe_id="CWE-862",
+                            )
+                        )
 
         return issues
 
@@ -465,18 +479,20 @@ class OWASPValidator:
 
         for pattern, description in sensitive_patterns:
             for match in re.finditer(pattern, code, re.IGNORECASE):
-                line_number = code[:match.start()].count("\n") + 1
-                issues.append(SecurityIssue(
-                    category=OWASPCategory.A09_LOGGING_FAILURES,
-                    severity=Severity.MEDIUM,
-                    title="Sensitive Data in Logs",
-                    description=description,
-                    file_path=file_path,
-                    line_number=line_number,
-                    code_snippet=self._get_snippet(code, line_number),
-                    recommendation="Mask or remove sensitive data from logs",
-                    cwe_id="CWE-532",
-                ))
+                line_number = code[: match.start()].count("\n") + 1
+                issues.append(
+                    SecurityIssue(
+                        category=OWASPCategory.A09_LOGGING_FAILURES,
+                        severity=Severity.MEDIUM,
+                        title="Sensitive Data in Logs",
+                        description=description,
+                        file_path=file_path,
+                        line_number=line_number,
+                        code_snippet=self._get_snippet(code, line_number),
+                        recommendation="Mask or remove sensitive data from logs",
+                        cwe_id="CWE-532",
+                    )
+                )
 
         return issues
 
@@ -527,15 +543,17 @@ class OWASPValidator:
         ]
 
         for issue in sorted(issues, key=lambda x: x.severity.value):
-            lines.extend([
-                "-" * 40,
-                f"[{issue.severity.value.upper()}] {issue.title}",
-                f"Category: {issue.category.value}",
-                f"File: {issue.file_path}:{issue.line_number}",
-                f"Description: {issue.description}",
-                f"Recommendation: {issue.recommendation}",
-                "",
-            ])
+            lines.extend(
+                [
+                    "-" * 40,
+                    f"[{issue.severity.value.upper()}] {issue.title}",
+                    f"Category: {issue.category.value}",
+                    f"File: {issue.file_path}:{issue.line_number}",
+                    f"Description: {issue.description}",
+                    f"Recommendation: {issue.recommendation}",
+                    "",
+                ]
+            )
 
         return "\n".join(lines)
 
@@ -566,18 +584,24 @@ class OWASPValidator:
                 Severity.INFO: "🔵",
             }.get(issue.severity, "⚪")
 
-            lines.extend([
-                f"### {severity_emoji} {issue.title}",
-                "",
-                f"- **Category**: {issue.category.value}",
-                f"- **Severity**: {issue.severity.value}",
-                f"- **File**: `{issue.file_path}:{issue.line_number}`" if issue.file_path else "",
-                f"- **CWE**: {issue.cwe_id}" if issue.cwe_id else "",
-                "",
-                f"**Description**: {issue.description}",
-                "",
-                f"**Recommendation**: {issue.recommendation}",
-                "",
-            ])
+            lines.extend(
+                [
+                    f"### {severity_emoji} {issue.title}",
+                    "",
+                    f"- **Category**: {issue.category.value}",
+                    f"- **Severity**: {issue.severity.value}",
+                    (
+                        f"- **File**: `{issue.file_path}:{issue.line_number}`"
+                        if issue.file_path
+                        else ""
+                    ),
+                    f"- **CWE**: {issue.cwe_id}" if issue.cwe_id else "",
+                    "",
+                    f"**Description**: {issue.description}",
+                    "",
+                    f"**Recommendation**: {issue.recommendation}",
+                    "",
+                ]
+            )
 
         return "\n".join(lines)

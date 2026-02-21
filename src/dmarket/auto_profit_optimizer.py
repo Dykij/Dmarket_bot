@@ -235,9 +235,7 @@ class AutoProfitOptimizer:
         )
 
         # Calculate position sizing
-        available_balance = self.balance * (
-            1 - self._profile["reserve_percent"] / 100
-        )
+        available_balance = self.balance * (1 - self._profile["reserve_percent"] / 100)
         max_position = available_balance * (
             self._profile["max_portfolio_percent"] / 100
         )

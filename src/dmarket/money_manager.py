@@ -171,14 +171,18 @@ class MoneyManager:
                 try:
                     new_balance = float(balance_data.get("balance", 0))
                 except (ValueError, TypeError) as parse_err:
-                    logger.exception("balance_parse_error", data=balance_data, error=str(parse_err))
+                    logger.exception(
+                        "balance_parse_error", data=balance_data, error=str(parse_err)
+                    )
                     new_balance = 0.0
             else:
                 new_balance = 0.0
 
             # Check for significant balance change
             if self._current_balance > 0 and self.config.enable_balance_protection:
-                change_ratio = abs(new_balance - self._current_balance) / self._current_balance
+                change_ratio = (
+                    abs(new_balance - self._current_balance) / self._current_balance
+                )
                 if change_ratio > self.config.balance_change_threshold:
                     self._is_paused = True
                     self._pause_reason = (
@@ -250,7 +254,9 @@ class MoneyManager:
         }
         return limits_map.get(tier, (50, 5))
 
-    async def calculate_dynamic_limits(self, force_balance_refresh: bool = False) -> DynamicLimits:
+    async def calculate_dynamic_limits(
+        self, force_balance_refresh: bool = False
+    ) -> DynamicLimits:
         """Calculate all trading limits based on current balance.
 
         This is the core method that makes everything percentage-based.

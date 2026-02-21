@@ -147,9 +147,7 @@ class Incident:
             "acknowledged_at": (
                 self.acknowledged_at.isoformat() if self.acknowledged_at else None
             ),
-            "resolved_at": (
-                self.resolved_at.isoformat() if self.resolved_at else None
-            ),
+            "resolved_at": (self.resolved_at.isoformat() if self.resolved_at else None),
             "auto_mitigated": self.auto_mitigated,
             "mitigation_attempts": self.mitigation_attempts,
             "metadata": self.metadata,
@@ -223,7 +221,9 @@ class IncidentManager:
     def __init__(self) -> None:
         """Initialize the incident manager."""
         self._incidents: dict[str, Incident] = {}
-        self._mitigation_handlers: dict[str, MitigationHandler | AsyncMitigationHandler] = {}
+        self._mitigation_handlers: dict[
+            str, MitigationHandler | AsyncMitigationHandler
+        ] = {}
         self._alert_channels: list[Callable[[Incident], Any]] = []
 
         # Counter for incident IDs
@@ -295,7 +295,9 @@ class IncidentManager:
             channel: Alert channel function (sync or async)
         """
         self._alert_channels.append(channel)
-        logger.info("alert_channel_registered", total_channels=len(self._alert_channels))
+        logger.info(
+            "alert_channel_registered", total_channels=len(self._alert_channels)
+        )
 
     # =========================================================================
     # Incident Detection and Handling
@@ -597,10 +599,7 @@ class IncidentManager:
         """
         cutoff = datetime.now(UTC) - timedelta(hours=hours)
 
-        incidents = [
-            i for i in self._incidents.values()
-            if i.detected_at >= cutoff
-        ]
+        incidents = [i for i in self._incidents.values() if i.detected_at >= cutoff]
 
         if not include_resolved:
             incidents = [i for i in incidents if i.is_active]

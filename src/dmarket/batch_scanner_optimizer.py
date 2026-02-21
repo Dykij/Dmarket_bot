@@ -76,7 +76,10 @@ class BatchScannerOptimizer:
         )
 
         # Split items into batches
-        batches = [items[i : i + self.batch_size] for i in range(0, len(items), self.batch_size)]
+        batches = [
+            items[i : i + self.batch_size]
+            for i in range(0, len(items), self.batch_size)
+        ]
 
         # Process batches with controlled concurrency
         results = []

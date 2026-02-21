@@ -330,7 +330,9 @@ class Config:
 
         if "inventory" in data:
             inv_data = data["inventory"]
-            self.inventory.auto_sell = inv_data.get("auto_sell", self.inventory.auto_sell)
+            self.inventory.auto_sell = inv_data.get(
+                "auto_sell", self.inventory.auto_sell
+            )
             self.inventory.undercut_price = inv_data.get(
                 "undercut_price", self.inventory.undercut_price
             )
@@ -501,9 +503,15 @@ class Config:
     def _update_dmarket_from_env(self) -> None:
         """Update DMarket configuration from environment."""
         self.dmarket.api_url = os.getenv("DMARKET_API_URL", self.dmarket.api_url)
-        self.dmarket.public_key = os.getenv("DMARKET_PUBLIC_KEY", self.dmarket.public_key)
-        self.dmarket.secret_key = os.getenv("DMARKET_SECRET_KEY", self.dmarket.secret_key)
-        self.dmarket.rate_limit = self._get_env_int("API_RATE_LIMIT", self.dmarket.rate_limit)
+        self.dmarket.public_key = os.getenv(
+            "DMARKET_PUBLIC_KEY", self.dmarket.public_key
+        )
+        self.dmarket.secret_key = os.getenv(
+            "DMARKET_SECRET_KEY", self.dmarket.secret_key
+        )
+        self.dmarket.rate_limit = self._get_env_int(
+            "API_RATE_LIMIT", self.dmarket.rate_limit
+        )
 
     def _update_trading_from_env(self) -> None:
         """Update trading configuration from environment."""
@@ -537,7 +545,9 @@ class Config:
 
     def _update_waxpeer_from_env(self) -> None:
         """Update Waxpeer configuration from environment."""
-        self.waxpeer.enabled = self._get_env_bool("WAXPEER_ENABLED", self.waxpeer.enabled)
+        self.waxpeer.enabled = self._get_env_bool(
+            "WAXPEER_ENABLED", self.waxpeer.enabled
+        )
         self.waxpeer.api_key = os.getenv("WAXPEER_API_KEY", self.waxpeer.api_key)
         self.waxpeer.markup = self._get_env_float("WAXPEER_MARKUP", self.waxpeer.markup)
         self.waxpeer.rare_markup = self._get_env_float(
@@ -549,7 +559,9 @@ class Config:
         self.waxpeer.min_profit = self._get_env_float(
             "WAXPEER_MIN_PROFIT", self.waxpeer.min_profit
         )
-        self.waxpeer.reprice = self._get_env_bool("WAXPEER_REPRICE", self.waxpeer.reprice)
+        self.waxpeer.reprice = self._get_env_bool(
+            "WAXPEER_REPRICE", self.waxpeer.reprice
+        )
         self.waxpeer.reprice_interval = self._get_env_int(
             "WAXPEER_REPRICE_INTERVAL", self.waxpeer.reprice_interval
         )
@@ -557,8 +569,12 @@ class Config:
         self.waxpeer.scarcity_threshold = self._get_env_int(
             "WAXPEER_SCARCITY", self.waxpeer.scarcity_threshold
         )
-        self.waxpeer.auto_hold = self._get_env_bool("WAXPEER_AUTO_HOLD", self.waxpeer.auto_hold)
-        self.waxpeer.alert_on_rare = self._get_env_bool("WAXPEER_ALERT", self.waxpeer.alert_on_rare)
+        self.waxpeer.auto_hold = self._get_env_bool(
+            "WAXPEER_AUTO_HOLD", self.waxpeer.auto_hold
+        )
+        self.waxpeer.alert_on_rare = self._get_env_bool(
+            "WAXPEER_ALERT", self.waxpeer.alert_on_rare
+        )
 
     # ============================================================================
     # End of environment variable helper methods
@@ -582,7 +598,9 @@ class Config:
         self.monitoring.prometheus_port = self._get_env_int(
             "PROMETHEUS_PORT", self.monitoring.prometheus_port
         )
-        self.monitoring.enabled = self._get_env_bool("MONITORING_ENABLED", self.monitoring.enabled)
+        self.monitoring.enabled = self._get_env_bool(
+            "MONITORING_ENABLED", self.monitoring.enabled
+        )
 
         # Database configuration
         self.database.url = os.getenv("DATABASE_URL", self.database.url)
@@ -714,7 +732,9 @@ class Config:
         # Validate database URL
         if not self.database.url:
             errors.append("DATABASE_URL is required")
-        elif not self.database.url.startswith(("sqlite://", "postgresql://", "mysql://")):
+        elif not self.database.url.startswith(
+            ("sqlite://", "postgresql://", "mysql://")
+        ):
             errors.append(
                 "DATABASE_URL has unsupported scheme. "
                 "Supported: sqlite://, postgresql://, mysql://. "
@@ -724,7 +744,9 @@ class Config:
         # Validate logging level
         valid_log_levels = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
         if self.logging.level.upper() not in valid_log_levels:
-            errors.append(f"LOG_LEVEL must be one of {valid_log_levels}, got: {self.logging.level}")
+            errors.append(
+                f"LOG_LEVEL must be one of {valid_log_levels}, got: {self.logging.level}"
+            )
 
         # Validate security settings (convert user IDs)
         if self.security.allowed_users:
@@ -747,7 +769,9 @@ class Config:
 
         # Validate pool settings
         if self.database.pool_size <= 0:
-            errors.append(f"Database pool_size must be positive, got: {self.database.pool_size}")
+            errors.append(
+                f"Database pool_size must be positive, got: {self.database.pool_size}"
+            )
 
         if self.database.max_overflow < 0:
             errors.append(
@@ -760,7 +784,9 @@ class Config:
                 "⚠️  DRY_RUN=false - BOT WILL MAKE REAL TRADES! Make sure you understand the risks."
             )
         elif self.dry_run:
-            logger.info("✅ DRY_RUN=true - Bot is in safe mode (no real trades will be made)")
+            logger.info(
+                "✅ DRY_RUN=true - Bot is in safe mode (no real trades will be made)"
+            )
 
         # Raise all errors at once
         if errors:

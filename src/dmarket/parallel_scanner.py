@@ -116,7 +116,9 @@ class ParallelScanner:
         )
 
         # Create tasks for all games
-        tasks = [self.scan_game_level(game, level, max_items_per_game) for game in games]
+        tasks = [
+            self.scan_game_level(game, level, max_items_per_game) for game in games
+        ]
 
         # Execute in parallel
         results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -166,7 +168,9 @@ class ParallelScanner:
             max_items_per_level=max_items_per_level,
         )
 
-        tasks = [self.scan_game_level(game, level, max_items_per_level) for level in levels]
+        tasks = [
+            self.scan_game_level(game, level, max_items_per_level) for level in levels
+        ]
 
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
@@ -222,7 +226,9 @@ class ParallelScanner:
         combinations = []
         for game in games:
             for level in levels:
-                tasks.append(self.scan_game_level(game, level, max_items_per_combination))
+                tasks.append(
+                    self.scan_game_level(game, level, max_items_per_combination)
+                )
                 combinations.append((game, level))
 
         # Execute all in parallel

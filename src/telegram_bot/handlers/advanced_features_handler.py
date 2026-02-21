@@ -55,11 +55,14 @@ CHARTS_SELECT, VISUALIZE_ITEM, SMART_FIND_GAME, TRENDS_GAME = range(4)
 # Charts Handler - Profit visualization
 # =============================================================================
 
+
 async def charts_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Handle /charts command - show chart options."""
     keyboard = [
         [
-            InlineKeyboardButton("📈 Cumulative Profit", callback_data="chart_cumulative"),
+            InlineKeyboardButton(
+                "📈 Cumulative Profit", callback_data="chart_cumulative"
+            ),
             InlineKeyboardButton("📊 ROI Chart", callback_data="chart_roi"),
         ],
         [
@@ -177,6 +180,7 @@ async def charts_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 # Market Visualizer Handler
 # =============================================================================
 
+
 async def visualize_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Handle /visualize command - visualize item price history."""
     if context.args:
@@ -195,7 +199,9 @@ async def visualize_command(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     return VISUALIZE_ITEM
 
 
-async def visualize_item_input(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+async def visualize_item_input(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> int:
     """Handle item name input for visualization."""
     item_name = update.message.text
     await _generate_visualization(update, context, item_name)
@@ -256,6 +262,7 @@ async def _generate_visualization(
 # Smart Market Finder Handler
 # =============================================================================
 
+
 async def smart_find_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Handle /smart_find command - find best market opportunities."""
     keyboard = [
@@ -284,7 +291,9 @@ async def smart_find_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
     return SMART_FIND_GAME
 
 
-async def smart_find_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+async def smart_find_callback(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> int:
     """Handle smart find game selection."""
     query = update.callback_query
     await query.answer()
@@ -324,7 +333,11 @@ async def smart_find_callback(update: Update, context: ContextTypes.DEFAULT_TYPE
         message = f"🔍 **Best Opportunities for {game.upper()}**\n\n"
 
         for i, opp in enumerate(opportunities[:5], 1):
-            emoji = "🟢" if opp.risk_level == "low" else "🟡" if opp.risk_level == "medium" else "🔴"
+            emoji = (
+                "🟢"
+                if opp.risk_level == "low"
+                else "🟡" if opp.risk_level == "medium" else "🔴"
+            )
             message += (
                 f"{i}. **{opp.title[:30]}**\n"
                 f"   💰 ${opp.current_price:.2f} → ${opp.suggested_price:.2f}\n"
@@ -346,6 +359,7 @@ async def smart_find_callback(update: Update, context: ContextTypes.DEFAULT_TYPE
 # =============================================================================
 # Trending Items Handler
 # =============================================================================
+
 
 async def trends_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Handle /trends command - find trending items."""
@@ -438,6 +452,7 @@ async def trends_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 # Sniper Cycle Handler
 # =============================================================================
 
+
 async def sniper_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Handle /sniper command - run sniper cycle."""
     keyboard = [
@@ -509,6 +524,7 @@ async def sniper_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 # Shadow Listing Handler
 # =============================================================================
 
+
 async def shadow_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Handle /shadow command - shadow listing analysis."""
     keyboard = [
@@ -556,6 +572,7 @@ async def shadow_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 # =============================================================================
 # Smart Bidder Handler
 # =============================================================================
+
 
 async def bid_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Handle /bid command - smart bidding interface."""
@@ -623,6 +640,7 @@ async def bid_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 # Price Aggregator Handler
 # =============================================================================
 
+
 async def aggregate_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Handle /aggregate command - batch price checking."""
     await update.message.reply_text(
@@ -640,7 +658,10 @@ async def aggregate_command(update: Update, context: ContextTypes.DEFAULT_TYPE) 
 # Advanced Features Status
 # =============================================================================
 
-async def advanced_status_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+
+async def advanced_status_command(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Handle /advanced command - show advanced features status."""
     # Check module availability
     modules_status = {
@@ -686,6 +707,7 @@ def _check_module(module_path: str) -> bool:
 # Cancel Handler
 # =============================================================================
 
+
 async def cancel_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Handle conversation cancellation."""
     await update.message.reply_text("Operation cancelled.")
@@ -695,6 +717,7 @@ async def cancel_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 # =============================================================================
 # Register Handlers
 # =============================================================================
+
 
 def get_advanced_features_handlers() -> list:
     """Get all advanced features handlers."""

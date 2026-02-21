@@ -14,7 +14,7 @@ class StrategyFactory:
 
     _strategies: dict[str, Type[BaseStrategy]] = {
         "csgo": CS2Strategy,
-        "cs2": CS2Strategy, # Alias
+        "cs2": CS2Strategy,  # Alias
         "dota2": Dota2Strategy,
         "rust": RustStrategy,
         "tf2": TF2Strategy,
@@ -24,8 +24,8 @@ class StrategyFactory:
     def get_strategy(cls, game_id: str) -> BaseStrategy:
         """Get strategy instance for the specified game."""
         strategy_class = cls._strategies.get(game_id.lower())
-        
+
         if not strategy_class:
             raise ValueError(f"No strategy found for game: {game_id}")
-            
+
         return strategy_class()

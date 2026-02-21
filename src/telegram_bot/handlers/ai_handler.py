@@ -149,10 +149,12 @@ async def ai_status_command(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         else:
             status_parts.append("❌ Модель не обучена\n")
 
-        status_parts.extend([
-            "",  # Empty line
-            "<b>📊 Данные для обучения:</b>\n",
-        ])
+        status_parts.extend(
+            [
+                "",  # Empty line
+                "<b>📊 Данные для обучения:</b>\n",
+            ]
+        )
 
         if data_status["exists"]:
             status_parts.append(
@@ -164,19 +166,19 @@ async def ai_status_command(update: Update, context: ContextTypes.DEFAULT_TYPE) 
                 status_parts.append("✅ Достаточно данных для обучения\n")
             else:
                 remaining = 100 - data_status["rows"]
-                status_parts.append(
-                    f"⏳ Нужно еще {remaining} записей\n"
-                )
+                status_parts.append(f"⏳ Нужно еще {remaining} записей\n")
         else:
             status_parts.append(
                 "❌ Файл данных не найден\n"
                 "💡 Запустите бота в режиме логгера на 48 часов\n"
             )
 
-        status_parts.extend([
-            "",
-            "<b>💡 Рекомендации:</b>\n",
-        ])
+        status_parts.extend(
+            [
+                "",
+                "<b>💡 Рекомендации:</b>\n",
+            ]
+        )
 
         if not data_status["exists"] or data_status["rows"] < 100:
             status_parts.append(
@@ -190,8 +192,7 @@ async def ai_status_command(update: Update, context: ContextTypes.DEFAULT_TYPE) 
             )
         else:
             status_parts.append(
-                "✅ Система готова к работе\n"
-                "Используйте /ai_scan для поиска\n"
+                "✅ Система готова к работе\n" "Используйте /ai_scan для поиска\n"
             )
 
         await update.message.reply_text(
@@ -253,8 +254,7 @@ async def ai_scan_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
         if not predictor.is_trained:
             await update.message.reply_text(
-                "⚠️ AI модель не обучена.\n\n"
-                "Выполните /ai_train сначала.",
+                "⚠️ AI модель не обучена.\n\n" "Выполните /ai_train сначала.",
                 parse_mode="HTML",
             )
             return
@@ -287,12 +287,12 @@ async def ai_scan_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             return
 
         # Format results
-        message_parts = [
-            f"🎯 <b>Найдено {len(opportunities)} возможностей!</b>\n\n"
-        ]
+        message_parts = [f"🎯 <b>Найдено {len(opportunities)} возможностей!</b>\n\n"]
 
         for i, opp in enumerate(opportunities[:5], 1):  # Show top 5
-            lock_info = f"⏳ Лок: {opp.lock_days}д" if opp.lock_days > 0 else "✅ Без лока"
+            lock_info = (
+                f"⏳ Лок: {opp.lock_days}д" if opp.lock_days > 0 else "✅ Без лока"
+            )
 
             message_parts.append(
                 f"<b>{i}. {opp.title[:50]}...</b>\n"
@@ -333,7 +333,9 @@ async def ai_scan_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         logger.exception("ai_scan_failed", error=str(e))
 
 
-async def ai_analyze_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def ai_analyze_command(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Handle /ai_analyze command - Analyze specific item with trade ban.
 
     Provides detailed analysis of an item to determine if it's worth
@@ -362,8 +364,7 @@ async def ai_analyze_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
     logger.info("ai_analyze_command", user_id=user_id, item=item_name)
 
     await update.message.reply_text(
-        f"🔍 <b>Анализирую предмет:</b>\n\n"
-        f"<code>{item_name}</code>",
+        f"🔍 <b>Анализирую предмет:</b>\n\n" f"<code>{item_name}</code>",
         parse_mode="HTML",
     )
 
@@ -374,8 +375,7 @@ async def ai_analyze_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
         if not predictor.is_trained:
             await update.message.reply_text(
-                "⚠️ AI модель не обучена.\n\n"
-                "Выполните /ai_train сначала.",
+                "⚠️ AI модель не обучена.\n\n" "Выполните /ai_train сначала.",
                 parse_mode="HTML",
             )
             return
@@ -413,7 +413,9 @@ async def ai_analyze_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
         logger.exception("ai_analyze_failed", error=str(e))
 
 
-async def ai_collect_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def ai_collect_command(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Handle /ai_collect command - Collect real market data for AI training.
 
     Fetches real price data from DMarket API and saves it to CSV for training.
@@ -446,7 +448,10 @@ async def ai_collect_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
         import os
 
         from src.dmarket.dmarket_api import DMarketAPI
-        from src.dmarket.market_data_logger import MarketDataLogger, MarketDataLoggerConfig
+        from src.dmarket.market_data_logger import (
+            MarketDataLogger,
+            MarketDataLoggerConfig,
+        )
 
         # Get or create API client
         api = getattr(context.application, "dmarket_api", None)
@@ -498,8 +503,7 @@ async def ai_collect_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
         else:
             remaining = 100 - data_status["rows"]
             result_msg += (
-                f"⏳ Нужно еще {remaining} записей.\n"
-                f"Выполните /ai_collect еще раз."
+                f"⏳ Нужно еще {remaining} записей.\n" f"Выполните /ai_collect еще раз."
             )
 
         await update.message.reply_text(result_msg, parse_mode="HTML")
@@ -519,7 +523,9 @@ async def ai_collect_command(update: Update, context: ContextTypes.DEFAULT_TYPE)
         logger.exception("ai_collect_failed", error=str(e))
 
 
-async def ai_train_real_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def ai_train_real_command(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Handle /ai_train_real command - Train AI on real market prices.
 
     This command:
@@ -554,7 +560,10 @@ async def ai_train_real_command(update: Update, context: ContextTypes.DEFAULT_TY
 
         from src.ai.price_predictor import PricePredictor
         from src.dmarket.dmarket_api import DMarketAPI
-        from src.dmarket.market_data_logger import MarketDataLogger, MarketDataLoggerConfig
+        from src.dmarket.market_data_logger import (
+            MarketDataLogger,
+            MarketDataLoggerConfig,
+        )
 
         # Get or create API client
         api = getattr(context.application, "dmarket_api", None)
@@ -631,7 +640,9 @@ async def _init_liquid_training_components(context: ContextTypes.DEFAULT_TYPE) -
     from src.dmarket.dmarket_api import DMarketAPI
     from src.dmarket.whitelist_config import WhitelistChecker
 
-    whitelist_checker = WhitelistChecker(enable_priority_boost=True, profit_boost_percent=2.0)
+    whitelist_checker = WhitelistChecker(
+        enable_priority_boost=True, profit_boost_percent=2.0
+    )
     blacklist_filter = ItemBlacklistFilter(
         enable_keyword_filter=True,
         enable_float_filter=True,
@@ -770,14 +781,16 @@ def _train_model_on_liquid_data(liquid_items: list[dict]) -> str:
         )
         writer.writeheader()
         for item in liquid_items:
-            writer.writerow({
-                "item_name": item["item_name"],
-                "price": item["price"],
-                "float_value": item["float_value"],
-                "is_stat_trak": item["is_stat_trak"],
-                "game_id": item["game_id"],
-                "timestamp": item["timestamp"],
-            })
+            writer.writerow(
+                {
+                    "item_name": item["item_name"],
+                    "price": item["price"],
+                    "float_value": item["float_value"],
+                    "is_stat_trak": item["is_stat_trak"],
+                    "game_id": item["game_id"],
+                    "timestamp": item["timestamp"],
+                }
+            )
 
     return predictor.train_model(force_retrain=True)
 
@@ -787,7 +800,9 @@ def _train_model_on_liquid_data(liquid_items: list[dict]) -> str:
 # ============================================================================
 
 
-async def ai_train_liquid_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def ai_train_liquid_command(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> None:
     """Handle /ai_train_liquid command - Train AI only on liquid items.
 
     Phase 2 Refactoring: Logic split into helper functions.
@@ -820,9 +835,9 @@ async def ai_train_liquid_command(update: Update, context: ContextTypes.DEFAULT_
         from src.dmarket.whitelist_config import WHITELIST_ITEMS
 
         # Initialize components (Phase 2 - use helper)
-        (
-            whitelist_checker, blacklist_filter, waxpeer_api, dmarket_api
-        ) = await _init_liquid_training_components(context)
+        whitelist_checker, blacklist_filter, waxpeer_api, dmarket_api = (
+            await _init_liquid_training_components(context)
+        )
 
         output_path = Path("data/liquid_items.csv")
         output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -836,7 +851,10 @@ async def ai_train_liquid_command(update: Update, context: ContextTypes.DEFAULT_
 
         # Get items from DMarket
         dmarket_items = await dmarket_api.get_market_items(
-            game="a8db", limit=500, price_from=100, price_to=50000,
+            game="a8db",
+            limit=500,
+            price_from=100,
+            price_to=50000,
         )
         items_list = dmarket_items.get("objects", [])
         total_scanned = len(items_list)
@@ -855,8 +873,10 @@ async def ai_train_liquid_command(update: Update, context: ContextTypes.DEFAULT_
             if len(liquid_items) >= target_samples:
                 break
 
-            score, is_wl, waxpeer_price, waxpeer_count = await _calculate_item_liquidity(
-                item, whitelist_checker, blacklist_filter, waxpeer_api
+            score, is_wl, waxpeer_price, waxpeer_count = (
+                await _calculate_item_liquidity(
+                    item, whitelist_checker, blacklist_filter, waxpeer_api
+                )
             )
 
             if score == -1:  # Too cheap
@@ -869,19 +889,21 @@ async def ai_train_liquid_command(update: Update, context: ContextTypes.DEFAULT_
 
             min_score = 40 if is_wl else 50
             if score >= min_score:
-                liquid_items.append({
-                    "item_name": item.get("title", ""),
-                    "price": float(item.get("price", {}).get("USD", 0)) / 100,
-                    "float_value": item.get("extra", {}).get("float", 0),
-                    "is_stat_trak": "StatTrak" in item.get("title", ""),
-                    "game_id": "a8db",
-                    "timestamp": datetime.now().isoformat(),
-                    "liquidity_score": score,
-                    "is_whitelisted": is_wl,
-                    "dmarket_offers": item.get("extra", {}).get("offers_count", 0),
-                    "waxpeer_price": waxpeer_price,
-                    "waxpeer_count": waxpeer_count,
-                })
+                liquid_items.append(
+                    {
+                        "item_name": item.get("title", ""),
+                        "price": float(item.get("price", {}).get("USD", 0)) / 100,
+                        "float_value": item.get("extra", {}).get("float", 0),
+                        "is_stat_trak": "StatTrak" in item.get("title", ""),
+                        "game_id": "a8db",
+                        "timestamp": datetime.now().isoformat(),
+                        "liquidity_score": score,
+                        "is_whitelisted": is_wl,
+                        "dmarket_offers": item.get("extra", {}).get("offers_count", 0),
+                        "waxpeer_price": waxpeer_price,
+                        "waxpeer_count": waxpeer_count,
+                    }
+                )
 
             # Progress update every 100 items
             if (i + 1) % 100 == 0:

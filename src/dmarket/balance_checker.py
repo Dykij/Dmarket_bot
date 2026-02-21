@@ -242,9 +242,7 @@ class BalanceChecker:
         # Sufficient funds
         if has_funds:
             diagnosis = "sufficient_funds"
-            display_message = (
-                f"Баланс DMarket: ${available_balance:.2f} USD (достаточно для арбитража)"
-            )
+            display_message = f"Баланс DMarket: ${available_balance:.2f} USD (достаточно для арбитража)"
             return diagnosis, display_message
 
         # Insufficient funds - zero balance

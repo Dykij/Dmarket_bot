@@ -16,7 +16,11 @@ from typing import Any
 
 import numpy as np
 
-from src.ml.feature_extractor import MarketFeatureExtractor, PriceFeatures, TrendDirection
+from src.ml.feature_extractor import (
+    MarketFeatureExtractor,
+    PriceFeatures,
+    TrendDirection,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -225,10 +229,14 @@ class AdaptiveTradeClassifier:
         # Рассчитываем ожидаемую прибыль
         expected_profit_percent = 0.0
         if current_price > 0:
-            expected_profit_percent = ((expected_price - current_price) / current_price) * 100
+            expected_profit_percent = (
+                (expected_price - current_price) / current_price
+            ) * 100
 
         # Оцениваем риск
-        risk_score, risk_factors = self._calculate_risk(features, expected_profit_percent)
+        risk_score, risk_factors = self._calculate_risk(
+            features, expected_profit_percent
+        )
         risk_level = self._score_to_risk_level(risk_score)
 
         # Оцениваем ликвидность
@@ -428,7 +436,7 @@ class AdaptiveTradeClassifier:
         if risk_score > 0.3:
             risk_penalty = risk_score * 0.3
             for key in ["strong_buy", "buy", "sell", "strong_sell"]:
-                probs[key] *= (1 - risk_penalty)
+                probs[key] *= 1 - risk_penalty
             probs["hold"] += risk_penalty
 
         # Нормализация
@@ -538,13 +546,21 @@ class AdaptiveTradeClassifier:
 
         # Основной сигнал
         if signal == TradeSignal.STRONG_BUY:
-            reasoning.append(f"Strong buy opportunity: {expected_profit_percent:.1f}% expected profit")
+            reasoning.append(
+                f"Strong buy opportunity: {expected_profit_percent:.1f}% expected profit"
+            )
         elif signal == TradeSignal.BUY:
-            reasoning.append(f"Buy opportunity: {expected_profit_percent:.1f}% expected profit")
+            reasoning.append(
+                f"Buy opportunity: {expected_profit_percent:.1f}% expected profit"
+            )
         elif signal == TradeSignal.STRONG_SELL:
-            reasoning.append(f"Strong sell signal: {expected_profit_percent:.1f}% expected change")
+            reasoning.append(
+                f"Strong sell signal: {expected_profit_percent:.1f}% expected change"
+            )
         elif signal == TradeSignal.SELL:
-            reasoning.append(f"Sell signal: {expected_profit_percent:.1f}% expected change")
+            reasoning.append(
+                f"Sell signal: {expected_profit_percent:.1f}% expected change"
+            )
         elif signal == TradeSignal.SKIP:
             reasoning.append("Skip: high risk or low liquidity")
         else:

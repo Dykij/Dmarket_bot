@@ -9,10 +9,10 @@ critical risk thresholds are exceeded. It monitors:
 
 Usage:
     breaker = TradeCircuitBreaker()
-    
+
     if not breaker.can_trade():
         raise TradingSuspendedError(breaker.get_status())
-        
+
     try:
         # execute trade
         breaker.record_success()
@@ -28,9 +28,11 @@ from src.utils.canonical_logging import get_logger
 
 logger = get_logger(__name__)
 
+
 @dataclass
 class CircuitBreakerConfig:
     """Configuration for TradeCircuitBreaker."""
+
     max_consecutive_losses: int = 5
     max_daily_loss_usd: float = 50.0
     min_balance_threshold: float = 10.0
@@ -38,23 +40,24 @@ class CircuitBreakerConfig:
     cooldown_minutes: int = 60
     enable_emergency_stop: bool = True
 
+
 class TradeCircuitBreaker:
     """Safeguard against runaway losses or errors."""
-    
+
     def __init__(self, config: CircuitBreakerConfig | None = None):
         self.config = config or CircuitBreakerConfig()
-        
+
         # State
         self.is_open: bool = False  # False = Normal, True = Broken (Stop Trading)
         self.triggered_at: datetime | None = None
         self.trigger_reason: str = ""
-        
+
         # Counters
         self.consecutive_losses: int = 0
         self.daily_loss_usd: float = 0.0
         self.api_errors_last_hour: int = 0
         self._last_error_reset: float = time.time()
-        
+
         # Daily reset tracking
         self._last_daily_reset: float = time.time()
 
@@ -66,14 +69,19 @@ class TradeCircuitBreaker:
                 self.reset()
                 return True
             return False
-            
+
         # 2. Daily reset check
         if time.time() - self._last_daily_reset > 86400:
             self._reset_daily_stats()
 
         # 3. Check Balance Threshold
-        if current_balance is not None and current_balance < self.config.min_balance_threshold:
-            self.trip(f"CRITICAL: Balance ${current_balance:.2f} below threshold ${self.config.min_balance_threshold}")
+        if (
+            current_balance is not None
+            and current_balance < self.config.min_balance_threshold
+        ):
+            self.trip(
+                f"CRITICAL: Balance ${current_balance:.2f} below threshold ${self.config.min_balance_threshold}"
+            )
             return False
 
         return True
@@ -88,7 +96,7 @@ class TradeCircuitBreaker:
         """Record a losing trade."""
         self.consecutive_losses += 1
         self.daily_loss_usd += loss_usd
-        
+
         logger.warning(
             f"Loss recorded: -${loss_usd:.2f} "
             f"(Seq: {self.consecutive_losses}, Daily: -${self.daily_loss_usd:.2f})"
@@ -97,7 +105,7 @@ class TradeCircuitBreaker:
         # Check Limits
         if self.consecutive_losses >= self.config.max_consecutive_losses:
             self.trip(f"Max consecutive losses reached ({self.consecutive_losses})")
-            
+
         if self.daily_loss_usd >= self.config.max_daily_loss_usd:
             self.trip(f"Daily loss limit reached (-${self.daily_loss_usd:.2f})")
 
@@ -107,9 +115,9 @@ class TradeCircuitBreaker:
         if time.time() - self._last_error_reset > 3600:
             self.api_errors_last_hour = 0
             self._last_error_reset = time.time()
-            
+
         self.api_errors_last_hour += 1
-        
+
         if self.api_errors_last_hour >= self.config.max_api_errors_per_hour:
             self.trip(f"Too many API errors ({self.api_errors_last_hour}/hr)")
 
@@ -134,7 +142,7 @@ class TradeCircuitBreaker:
         """Check if cooldown period has passed."""
         if not self.triggered_at:
             return True
-            
+
         elapsed = datetime.now() - self.triggered_at
         return elapsed > timedelta(minutes=self.config.cooldown_minutes)
 
@@ -143,6 +151,7 @@ class TradeCircuitBreaker:
         self.daily_loss_usd = 0.0
         self._last_daily_reset = time.time()
         logger.info("Daily trading stats reset.")
+
 
 # Global instance
 circuit_breaker = TradeCircuitBreaker()

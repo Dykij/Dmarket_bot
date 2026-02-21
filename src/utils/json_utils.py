@@ -117,4 +117,6 @@ def load(fp: Any, **kwargs: Any) -> Any:
 
 
 # Алиасы для совместимости
-JSONDecodeError = orjson.JSONDecodeError if ORJSON_AVAILABLE else stdlib_json.JSONDecodeError
+JSONDecodeError = (
+    orjson.JSONDecodeError if ORJSON_AVAILABLE else stdlib_json.JSONDecodeError
+)

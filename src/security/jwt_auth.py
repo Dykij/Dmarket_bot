@@ -151,7 +151,9 @@ class TokenPair:
             "access_token": self.access_token,
             "refresh_token": self.refresh_token,
             "token_type": self.token_type,
-            "expires_in": int((self.access_expires_at - datetime.now(UTC)).total_seconds()),
+            "expires_in": int(
+                (self.access_expires_at - datetime.now(UTC)).total_seconds()
+            ),
             "refresh_expires_in": int(
                 (self.refresh_expires_at - datetime.now(UTC)).total_seconds()
             ),
@@ -433,13 +435,17 @@ class JWTAuth:
         """
         # Remove all sessions for user
         sessions_to_remove = [
-            sid for sid, data in self._sessions.items() if data.get("user_id") == user_id
+            sid
+            for sid, data in self._sessions.items()
+            if data.get("user_id") == user_id
         ]
 
         for sid in sessions_to_remove:
             del self._sessions[sid]
 
-        logger.info("user_tokens_revoked", user_id=user_id, count=len(sessions_to_remove))
+        logger.info(
+            "user_tokens_revoked", user_id=user_id, count=len(sessions_to_remove)
+        )
 
         return len(sessions_to_remove)
 
@@ -625,7 +631,9 @@ class APIKeyAuth:
             "token": token,
             "scopes": scopes or [],
             "created_at": datetime.now(UTC).isoformat(),
-            "expires_at": (datetime.now(UTC) + timedelta(days=expires_days)).isoformat(),
+            "expires_at": (
+                datetime.now(UTC) + timedelta(days=expires_days)
+            ).isoformat(),
         }
 
         return {

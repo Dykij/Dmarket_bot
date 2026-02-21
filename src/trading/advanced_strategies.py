@@ -151,7 +151,9 @@ class EntryPointAnalysis:
             "entry_price": self.entry_price,
             "target_price": self.target_price,
             "stop_loss": self.stop_loss,
-            "risk_reward_ratio": round(self.risk_reward_ratio, 2) if self.risk_reward_ratio else None,
+            "risk_reward_ratio": (
+                round(self.risk_reward_ratio, 2) if self.risk_reward_ratio else None
+            ),
             "reasons": self.reasons,
         }
 
@@ -223,7 +225,9 @@ class AdvancedTradingSkills:
         # 2. Price manipulation patterns
         price_manipulation = await self._detect_price_manipulation(prices)
         if price_manipulation > 0:
-            indicators.append(f"Price manipulation pattern (score: {price_manipulation:.2f})")
+            indicators.append(
+                f"Price manipulation pattern (score: {price_manipulation:.2f})"
+            )
             confidence_scores.append(price_manipulation)
 
         # 3. Wash trading detection
@@ -258,9 +262,13 @@ class AdvancedTradingSkills:
 
         recommendation = "Safe to trade"
         if detected:
-            recommendation = "AVOID - High risk of manipulation. Wait for market stabilization."
+            recommendation = (
+                "AVOID - High risk of manipulation. Wait for market stabilization."
+            )
         elif overall_confidence > 0.4:
-            recommendation = "CAUTION - Some manipulation indicators detected. Trade with care."
+            recommendation = (
+                "CAUTION - Some manipulation indicators detected. Trade with care."
+            )
 
         logger.info(
             "manipulation_analysis_complete",
@@ -286,7 +294,9 @@ class AdvancedTradingSkills:
         if avg_volume == 0:
             return 0.0
 
-        std_volume = statistics.stdev(volumes[:-1]) if len(volumes) > 2 else avg_volume * 0.5
+        std_volume = (
+            statistics.stdev(volumes[:-1]) if len(volumes) > 2 else avg_volume * 0.5
+        )
         latest_volume = volumes[-1]
 
         # Calculate z-score
@@ -354,10 +364,16 @@ class AdvancedTradingSkills:
         mid_point = len(prices) // 2
 
         # Calculate price change in first half (pump)
-        pump_change = (prices[mid_point] - prices[0]) / prices[0] if prices[0] > 0 else 0
+        pump_change = (
+            (prices[mid_point] - prices[0]) / prices[0] if prices[0] > 0 else 0
+        )
 
         # Calculate price change in second half (dump)
-        dump_change = (prices[-1] - prices[mid_point]) / prices[mid_point] if prices[mid_point] > 0 else 0
+        dump_change = (
+            (prices[-1] - prices[mid_point]) / prices[mid_point]
+            if prices[mid_point] > 0
+            else 0
+        )
 
         # Classic pump and dump: rapid increase followed by rapid decrease
         if pump_change > 0.3 and dump_change < -0.2:
@@ -465,7 +481,9 @@ class AdvancedTradingSkills:
 
         # 3. Compare to suggested price
         if item.suggested_price:
-            profit_margin = (item.suggested_price - item.current_price) / item.current_price
+            profit_margin = (
+                item.suggested_price - item.current_price
+            ) / item.current_price
             if profit_margin > 0.1:  # 10%+ profit potential
                 reasons.append(f"Profit potential: {profit_margin:.1%}")
                 confidence += 0.15
@@ -613,7 +631,9 @@ class AdvancedTradingSkills:
             "sentiment": sentiment.to_dict(),
             "manipulation": manipulation.to_dict(),
             "position_sizing": position,
-            "recommendation": self._generate_recommendation(entry, sentiment, manipulation),
+            "recommendation": self._generate_recommendation(
+                entry, sentiment, manipulation
+            ),
         }
 
     def _generate_recommendation(

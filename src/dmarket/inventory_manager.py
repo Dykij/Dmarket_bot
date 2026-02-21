@@ -80,7 +80,9 @@ class InventoryManager:
             if blacklist_config.get("enabled", True):
                 self.blacklist_manager = BlacklistManager(
                     config=self.config,
-                    blacklist_file=blacklist_config.get("file_path", "data/blacklist.json"),
+                    blacklist_file=blacklist_config.get(
+                        "file_path", "data/blacklist.json"
+                    ),
                 )
                 logger.info("BlacklistManager enabled for seller/item filtering")
         except ImportError:
@@ -93,7 +95,9 @@ class InventoryManager:
         1. Активные продажи (для undercutting)
         2. Новые предметы в инвентаре (для автоматического выставления)
         """
-        logger.info(f"📦 Inventory Manager started (check interval: {self.check_interval}s)")
+        logger.info(
+            f"📦 Inventory Manager started (check interval: {self.check_interval}s)"
+        )
 
         while True:
             try:
@@ -122,7 +126,9 @@ class InventoryManager:
 
             # API может вернуть dict с ключом "Items" или "objects"
             if isinstance(my_offers_response, dict):
-                my_offers = my_offers_response.get("Items", my_offers_response.get("objects", []))
+                my_offers = my_offers_response.get(
+                    "Items", my_offers_response.get("objects", [])
+                )
             else:
                 my_offers = []
 
@@ -340,7 +346,9 @@ class InventoryManager:
             True если успешно, False иначе
         """
         try:
-            result = await self.api.edit_offer(offer_id, {"price": {"amount": new_price}})
+            result = await self.api.edit_offer(
+                offer_id, {"price": {"amount": new_price}}
+            )
             return result.get("success", False) if isinstance(result, dict) else False
         except Exception as e:
             logger.exception(f"Error editing offer {offer_id}: {e}")
@@ -357,7 +365,9 @@ class InventoryManager:
             True если успешно, False иначе
         """
         try:
-            result = await self.api.create_sell_offer(item_id, {"price": {"amount": price}})
+            result = await self.api.create_sell_offer(
+                item_id, {"price": {"amount": price}}
+            )
             return result.get("success", False) if isinstance(result, dict) else False
         except Exception as e:
             logger.exception(f"Error creating sell offer for {item_id}: {e}")

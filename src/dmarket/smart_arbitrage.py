@@ -287,7 +287,9 @@ class SmartArbitrageEngine:
                         sort="price",  # Sort by price ascending to get cheapest first
                     )
 
-                    current_objects = items.get("objects", []) if isinstance(items, dict) else []
+                    current_objects = (
+                        items.get("objects", []) if isinstance(items, dict) else []
+                    )
 
                     # DEBUG: Log what we received from API
                     logger.info(
@@ -295,7 +297,11 @@ class SmartArbitrageEngine:
                         page=page,
                         items_count=len(current_objects),
                         has_cursor=bool(items.get("cursor", "")),
-                        total_in_response=items.get("total", {}).get("items", 0) if isinstance(items.get("total"), dict) else items.get("total", 0),
+                        total_in_response=(
+                            items.get("total", {}).get("items", 0)
+                            if isinstance(items.get("total"), dict)
+                            else items.get("total", 0)
+                        ),
                     )
 
                     if not current_objects:
@@ -312,7 +318,9 @@ class SmartArbitrageEngine:
                     await asyncio.sleep(0.3)
 
                 except Exception as page_err:
-                    logger.warning("pagination_page_error", page=page, error=str(page_err))
+                    logger.warning(
+                        "pagination_page_error", page=page, error=str(page_err)
+                    )
                     break
 
             # Log total scanned items
@@ -393,7 +401,9 @@ class SmartArbitrageEngine:
             # Get suggested price for profit calculation
             suggested_data = item.get("suggestedPrice", {})
             try:
-                sell_price_cents = int(float(str(suggested_data.get("USD", buy_price_cents))))
+                sell_price_cents = int(
+                    float(str(suggested_data.get("USD", buy_price_cents)))
+                )
             except (ValueError, TypeError):
                 sell_price_cents = buy_price_cents
             sell_price = sell_price_cents / 100.0
@@ -421,7 +431,9 @@ class SmartArbitrageEngine:
             if trade_lock_days > 0.1 and trade_lock_days <= 3:
                 required_roi = max(limits.min_roi, 12.0)  # Lock 1-3 days: 12%+
             elif trade_lock_days > 3:
-                required_roi = max(limits.min_roi, 20.0)  # Lock >3 days: only super deals (20%+)
+                required_roi = max(
+                    limits.min_roi, 20.0
+                )  # Lock >3 days: only super deals (20%+)
 
             # Skip if profit too low for this trade lock duration
             if profit_percent < required_roi:
@@ -447,9 +459,13 @@ class SmartArbitrageEngine:
 
             # Calculate smart score
             # Higher profit + lower price + no lock = better score
-            price_factor = 1 - (buy_price / limits.max_buy_price)  # 0-1, higher for cheaper
+            price_factor = 1 - (
+                buy_price / limits.max_buy_price
+            )  # 0-1, higher for cheaper
             profit_factor = profit_percent / 100  # Normalized profit
-            lock_penalty = 0.1 if trade_lock_days > 3 else (0.05 if trade_lock_days > 0 else 0)
+            lock_penalty = (
+                0.1 if trade_lock_days > 3 else (0.05 if trade_lock_days > 0 else 0)
+            )
             smart_score = (profit_factor * 0.6) + (price_factor * 0.3) - lock_penalty
 
             return SmartOpportunity(

@@ -71,10 +71,19 @@ from .checker import (
 )
 
 # Constants
-from .constants import DEFAULT_USER_SETTINGS, NOTIFICATION_PRIORITIES, NOTIFICATION_TYPES
+from .constants import (
+    DEFAULT_USER_SETTINGS,
+    NOTIFICATION_PRIORITIES,
+    NOTIFICATION_TYPES,
+)
 
 # Digest system
-from .digest import Notification, NotificationCategory, NotificationDigest, NotificationPriority
+from .digest import (
+    Notification,
+    NotificationCategory,
+    NotificationDigest,
+    NotificationPriority,
+)
 
 # Formatters
 from .formatters import (

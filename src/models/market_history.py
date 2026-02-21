@@ -25,7 +25,9 @@ class MarketSnapshot(Base):
         JSON, nullable=False, default=dict
     )  # Flexible JSON storage
 
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.now)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=datetime.now
+    )
 
     def __repr__(self) -> str:
         """String representation."""
@@ -48,10 +50,14 @@ class ItemPriceHistory(Base):
     price_cents: Mapped[int] = mapped_column(Integer, nullable=False)  # Price in cents
     suggested_price_cents: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
-    in_market: Mapped[int] = mapped_column(Integer, nullable=False, default=0)  # Items available
+    in_market: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0
+    )  # Items available
     timestamp: Mapped[datetime] = mapped_column(DateTime, nullable=False, index=True)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.now)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=datetime.now
+    )
 
     def __repr__(self) -> str:
         """String representation."""
@@ -87,10 +93,14 @@ class ArbitrageTrade(Base):
     market_depth: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     # Outcome
-    success: Mapped[bool] = mapped_column(nullable=False, default=False)  # Did trade succeed?
+    success: Mapped[bool] = mapped_column(
+        nullable=False, default=False
+    )  # Did trade succeed?
     executed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.now)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, nullable=False, default=datetime.now
+    )
 
     def __repr__(self) -> str:
         """String representation."""

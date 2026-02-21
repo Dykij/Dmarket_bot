@@ -91,7 +91,9 @@ class ListingConfig:
     # Repricing settings
     auto_reprice: bool = True
     reprice_interval_minutes: int = 15
-    reprice_threshold_percent: Decimal = Decimal("0.05")  # 5% price change triggers reprice
+    reprice_threshold_percent: Decimal = Decimal(
+        "0.05"
+    )  # 5% price change triggers reprice
 
     # Safety settings
     max_listings_per_hour: int = 10
@@ -182,7 +184,11 @@ class AutoListingEngine:
     @property
     def active_listings(self) -> list[ListingCandidate]:
         """Get active listings."""
-        return [listing for listing in self._listings.values() if listing.status == ListingStatus.LISTED]
+        return [
+            listing
+            for listing in self._listings.values()
+            if listing.status == ListingStatus.LISTED
+        ]
 
     async def start(self) -> None:
         """Start auto-listing engine."""
@@ -305,7 +311,9 @@ class AutoListingEngine:
                 item_name = item.get("title", "")
 
                 # Skip blacklisted items
-                if item_name.lower() in {b.lower() for b in self.config.blacklist_items}:
+                if item_name.lower() in {
+                    b.lower() for b in self.config.blacklist_items
+                }:
                     continue
 
                 # Get price
@@ -343,7 +351,10 @@ class AutoListingEngine:
                         candidate.profit_margin = candidate.estimated_profit / price_usd
 
                     # Check minimum profit
-                    if candidate.profit_margin and candidate.profit_margin >= self.config.min_profit_margin:
+                    if (
+                        candidate.profit_margin
+                        and candidate.profit_margin >= self.config.min_profit_margin
+                    ):
                         candidates.append(candidate)
 
             logger.info("auto_listing_candidates_found", count=len(candidates))
@@ -389,7 +400,9 @@ class AutoListingEngine:
             return optimal.quantize(Decimal("0.01"))
 
         except Exception as e:
-            logger.exception("auto_listing_price_calc_error", item=item_name, error=str(e))
+            logger.exception(
+                "auto_listing_price_calc_error", item=item_name, error=str(e)
+            )
             return None
 
     def _calculate_profit(
@@ -469,7 +482,9 @@ class AutoListingEngine:
             )
 
         except Exception as e:
-            logger.exception("auto_listing_error", item=candidate.item_name, error=str(e))
+            logger.exception(
+                "auto_listing_error", item=candidate.item_name, error=str(e)
+            )
             return ListingResult(
                 success=False,
                 item_id=candidate.item_id,
@@ -502,7 +517,9 @@ class AutoListingEngine:
                 return True
 
         except Exception as e:
-            logger.exception("auto_listing_reprice_error", item_id=item_id, error=str(e))
+            logger.exception(
+                "auto_listing_reprice_error", item_id=item_id, error=str(e)
+            )
 
         return False
 
@@ -550,7 +567,10 @@ class AutoListingEngine:
             Statistics dictionary
         """
         total_profit = sum(
-            r.listed_price - self._listings.get(r.item_id, ListingCandidate("", "", Decimal(0))).dmarket_price
+            r.listed_price
+            - self._listings.get(
+                r.item_id, ListingCandidate("", "", Decimal(0))
+            ).dmarket_price
             for r in self._listing_history
             if r.success and r.listed_price
         )
@@ -562,7 +582,9 @@ class AutoListingEngine:
             "successful_listings": sum(1 for r in self._listing_history if r.success),
             "listings_this_hour": self._listings_this_hour,
             "estimated_total_profit": str(total_profit),
-            "last_check": self._last_check_time.isoformat() if self._last_check_time else None,
+            "last_check": (
+                self._last_check_time.isoformat() if self._last_check_time else None
+            ),
         }
 
 

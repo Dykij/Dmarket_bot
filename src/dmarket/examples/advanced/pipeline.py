@@ -45,7 +45,9 @@ async def main() -> None:
             return [{"item": item, "score": 0.85} for item in items]
 
     class MockFilter:
-        async def filter_by_score(self, predictions: list[dict], min_score: float) -> list[dict]:
+        async def filter_by_score(
+            self, predictions: list[dict], min_score: float
+        ) -> list[dict]:
             await asyncio.sleep(0.05)
             return [p for p in predictions if p["score"] >= min_score]
 

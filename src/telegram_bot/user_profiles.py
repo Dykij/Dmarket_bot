@@ -500,7 +500,9 @@ async def set_api_keys(user_id: int, public_key: str, secret_key: str) -> bool:
         return True
 
     except Exception as e:
-        logger.exception(f"Ошибка при установке API ключей для пользователя {user_id}: {e}")
+        logger.exception(
+            f"Ошибка при установке API ключей для пользователя {user_id}: {e}"
+        )
         return False
 
 

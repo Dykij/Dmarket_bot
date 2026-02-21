@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 class CS2Strategy(BaseStrategy):
     """
     Strategy for Counter-Strike 2.
-    
+
     Constraints:
     - 7-day trade lock after purchase.
     - High volatility.
@@ -35,7 +35,7 @@ class CS2Strategy(BaseStrategy):
     async def should_buy(self, item_data: dict[str, Any]) -> bool:
         """
         Evaluate buy opportunity for CS2 item.
-        
+
         Expected item_data format:
         {
             "dmarket_price": float,
@@ -49,14 +49,14 @@ class CS2Strategy(BaseStrategy):
             dmarket_price = Decimal(str(item_data.get("dmarket_price", 0)))
             waxpeer_price = Decimal(str(item_data.get("waxpeer_price", 0)))
             steam_price = Decimal(str(item_data.get("steam_price", 0)))
-            
+
             if dmarket_price <= 0 or waxpeer_price <= 0:
                 return False
 
             # 1. Break-even & Target Price Check
             # Calculate target sell price (includes 3% risk premium for CS2)
             target_sell_price = self.calculate_target_sell_price(dmarket_price)
-            
+
             if waxpeer_price < target_sell_price:
                 # logger.debug(f"CS2 Skip {item_data.get('title')}: Waxpeer price {waxpeer_price} < Target {target_sell_price}")
                 return False
@@ -67,7 +67,9 @@ class CS2Strategy(BaseStrategy):
             if steam_price > 0:
                 # Safety: Don't buy if DMarket is > 110% of Steam (unless you trust Waxpeer price heavily)
                 if dmarket_price > steam_price * Decimal("1.1"):
-                    logger.debug(f"CS2 Skip {item_data.get('title')}: DMarket price > 110% Steam")
+                    logger.debug(
+                        f"CS2 Skip {item_data.get('title')}: DMarket price > 110% Steam"
+                    )
                     return False
 
             # 3. Volume Check (Basic)
@@ -88,5 +90,7 @@ class CS2Strategy(BaseStrategy):
             return True
 
         except Exception as e:
-            logger.error(f"Error evaluating CS2 item {item_data.get('title', 'unknown')}: {e}")
+            logger.error(
+                f"Error evaluating CS2 item {item_data.get('title', 'unknown')}: {e}"
+            )
             return False

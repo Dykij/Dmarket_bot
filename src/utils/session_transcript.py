@@ -158,41 +158,49 @@ class SessionTranscript:
             )
             lines.append(f"**Duration**: {self._calculate_duration() / 1000:.1f}s")
 
-        lines.extend([
-            f"**AI Model**: {self.ai_model}",
-            "",
-        ])
+        lines.extend(
+            [
+                f"**AI Model**: {self.ai_model}",
+                "",
+            ]
+        )
 
         if self.description:
-            lines.extend([
-                "## Description",
-                "",
-                self.description,
-                "",
-            ])
+            lines.extend(
+                [
+                    "## Description",
+                    "",
+                    self.description,
+                    "",
+                ]
+            )
 
         # Metrics summary
-        lines.extend([
-            "## Metrics",
-            "",
-            "| Metric | Value |",
-            "|--------|-------|",
-            f"| Total Actions | {self.metrics.total_actions} |",
-            f"| Files Created | {self.metrics.files_created} |",
-            f"| Files Modified | {self.metrics.files_modified} |",
-            f"| Commands Run | {self.metrics.commands_run} |",
-            f"| Tests Run | {self.metrics.tests_run} |",
-            f"| Tests Passed | {self.metrics.tests_passed} |",
-            f"| Errors | {self.metrics.errors_encountered} |",
-            f"| Success Rate | {self.metrics._calculate_success_rate()}% |",
-            "",
-        ])
+        lines.extend(
+            [
+                "## Metrics",
+                "",
+                "| Metric | Value |",
+                "|--------|-------|",
+                f"| Total Actions | {self.metrics.total_actions} |",
+                f"| Files Created | {self.metrics.files_created} |",
+                f"| Files Modified | {self.metrics.files_modified} |",
+                f"| Commands Run | {self.metrics.commands_run} |",
+                f"| Tests Run | {self.metrics.tests_run} |",
+                f"| Tests Passed | {self.metrics.tests_passed} |",
+                f"| Errors | {self.metrics.errors_encountered} |",
+                f"| Success Rate | {self.metrics._calculate_success_rate()}% |",
+                "",
+            ]
+        )
 
         # Actions timeline
-        lines.extend([
-            "## Timeline",
-            "",
-        ])
+        lines.extend(
+            [
+                "## Timeline",
+                "",
+            ]
+        )
 
         for i, action in enumerate(self.actions, 1):
             status = "✅" if action.success else "❌"
@@ -212,11 +220,13 @@ class SessionTranscript:
             lines.append("")
 
         if self.tags:
-            lines.extend([
-                "## Tags",
-                "",
-                ", ".join(f"`{tag}`" for tag in self.tags),
-            ])
+            lines.extend(
+                [
+                    "## Tags",
+                    "",
+                    ", ".join(f"`{tag}`" for tag in self.tags),
+                ]
+            )
 
         return "\n".join(lines)
 

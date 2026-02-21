@@ -11,6 +11,7 @@ import structlog
 try:
     import google.cloud.logging
     from google.cloud.logging.handlers import CloudLoggingHandler
+
     HAS_GOOGLE_CLOUD = True
 except ImportError:
     HAS_GOOGLE_CLOUD = False
@@ -18,7 +19,7 @@ except ImportError:
 
 def setup_logger(name: str = "dmarket_bot", level: str = "INFO") -> Any:
     """Configure structured logging with Cloud integration."""
-    
+
     processors = [
         structlog.contextvars.merge_contextvars,
         structlog.processors.add_log_level,
@@ -37,7 +38,9 @@ def setup_logger(name: str = "dmarket_bot", level: str = "INFO") -> Any:
     structlog.configure(
         processors=processors,
         logger_factory=structlog.PrintLoggerFactory(),
-        wrapper_class=structlog.make_filtering_bound_logger(logging.getLevelName(level)),
+        wrapper_class=structlog.make_filtering_bound_logger(
+            logging.getLevelName(level)
+        ),
         cache_logger_on_first_use=True,
     )
 
@@ -48,23 +51,23 @@ def setup_logger(name: str = "dmarket_bot", level: str = "INFO") -> Any:
         try:
             client = google.cloud.logging.Client()
             handler = CloudLoggingHandler(client, name=name)
-            
+
             # Add handler to root logger for standard library compatibility
             root_logger = logging.getLogger()
             root_logger.setLevel(level)
             root_logger.addHandler(handler)
-            
+
             # Specific label for trade opportunities
             def log_opportunity(event_dict):
                 if event_dict.get("event") == "trade_opportunity":
                     # Add specific label/tag for metrics
                     event_dict["labels"] = {"type": "trade_opportunity"}
                 return event_dict
-                
-            # Note: Structlog integration with standard logging handler is implicit 
+
+            # Note: Structlog integration with standard logging handler is implicit
             # if we use standard library logger factory, but here we use PrintFactory.
             # Ideally for Cloud Logging we want stdlib integration.
-            
+
         except Exception as e:
             print(f"Failed to setup Cloud Logging: {e}")
 

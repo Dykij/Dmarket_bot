@@ -77,7 +77,9 @@ class ScannerDashboard:
         user_scans = [s for s in self.scan_history if s["user_id"] == user_id]
 
         total_scans = len(user_scans)
-        total_opportunities = sum(len(s["data"].get("opportunities", [])) for s in user_scans)
+        total_opportunities = sum(
+            len(s["data"].get("opportunities", [])) for s in user_scans
+        )
 
         # Считаем среднюю прибыль
         all_opportunities = []
@@ -298,7 +300,9 @@ def get_scanner_control_keyboard(level: str | None = None) -> InlineKeyboardMark
     return InlineKeyboardMarkup(keyboard)
 
 
-@handle_exceptions(logger_instance=logger, default_error_message="Ошибка дашборда", reraise=False)
+@handle_exceptions(
+    logger_instance=logger, default_error_message="Ошибка дашборда", reraise=False
+)
 async def show_dashboard(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
@@ -350,7 +354,9 @@ async def show_dashboard(
         )
 
 
-@handle_exceptions(logger_instance=logger, default_error_message="Ошибка статистики", reraise=False)
+@handle_exceptions(
+    logger_instance=logger, default_error_message="Ошибка статистики", reraise=False
+)
 async def show_stats(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
@@ -410,7 +416,9 @@ async def show_scanner_menu(
         return
     await query.answer()
 
-    message = "🔍 *Управление сканером*\n\nВыберите уровень арбитража для сканирования:\n\n"
+    message = (
+        "🔍 *Управление сканером*\n\nВыберите уровень арбитража для сканирования:\n\n"
+    )
 
     for level_id, level_data in ARBITRAGE_LEVELS.items():
         emoji = level_data.get("emoji", "📊")
@@ -495,7 +503,9 @@ async def show_active_scans(
     )
 
 
-@handle_exceptions(logger_instance=logger, default_error_message="Ошибка истории", reraise=False)
+@handle_exceptions(
+    logger_instance=logger, default_error_message="Ошибка истории", reraise=False
+)
 async def show_history(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
@@ -520,7 +530,9 @@ async def show_history(
     if not user_scans:
         message = "📜 *История сканирований*\n\n_История пуста_"
     else:
-        message = f"📜 *История сканирований* (последние {min(10, len(user_scans))})\n\n"
+        message = (
+            f"📜 *История сканирований* (последние {min(10, len(user_scans))})\n\n"
+        )
 
         for i, scan in enumerate(user_scans[:10], 1):
             timestamp = scan["timestamp"]
@@ -547,7 +559,9 @@ async def show_history(
     )
 
 
-@handle_exceptions(logger_instance=logger, default_error_message="Ошибка графиков", reraise=False)
+@handle_exceptions(
+    logger_instance=logger, default_error_message="Ошибка графиков", reraise=False
+)
 async def show_charts(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE,
@@ -622,10 +636,16 @@ async def show_charts(
 
         levels = list(level_profits.keys())
         avg_profits = [
-            (sum(level_profits[level]) / len(level_profits[level]) if level_profits[level] else 0)
+            (
+                sum(level_profits[level]) / len(level_profits[level])
+                if level_profits[level]
+                else 0
+            )
             for level in levels
         ]
-        max_profits = [max(level_profits[level]) if level_profits[level] else 0 for level in levels]
+        max_profits = [
+            max(level_profits[level]) if level_profits[level] else 0 for level in levels
+        ]
 
         comparison_chart_url = await generate_profit_comparison_chart(
             levels,

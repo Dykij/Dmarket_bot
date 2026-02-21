@@ -9,13 +9,20 @@
 
 import time
 
-from prometheus_client import Counter, Gauge, Histogram, Info, generate_latest, make_asgi_app
+from prometheus_client import (
+    Counter,
+    Gauge,
+    Histogram,
+    Info,
+    generate_latest,
+    make_asgi_app,
+)
 
 # Метрика RPS (DMarket Requests Per Minute/Total)
 dmarket_requests_total = Counter(
     "dmarket_requests_total",
     "Total number of DMarket API requests",
-    ["endpoint", "method"]
+    ["endpoint", "method"],
 )
 
 
@@ -400,8 +407,12 @@ def track_arbitrage_scan(
     arbitrage_scans_total.labels(game=game, level=level, status=status).inc()
 
     if success:
-        arbitrage_opportunities_found.labels(game=game, level=level).inc(opportunities_count)
-        arbitrage_opportunities_current.labels(game=game, level=level).set(opportunities_count)
+        arbitrage_opportunities_found.labels(game=game, level=level).inc(
+            opportunities_count
+        )
+        arbitrage_opportunities_current.labels(game=game, level=level).set(
+            opportunities_count
+        )
 
     if duration is not None:
         arbitrage_scan_duration_seconds.labels(level=level).observe(duration)
