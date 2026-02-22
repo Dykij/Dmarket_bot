@@ -5,6 +5,8 @@ pynacl
 requests
 python-dotenv
 structlog
+aiosqlite
+duckduckgo-search
 
 # Testing & Dev
 pytest

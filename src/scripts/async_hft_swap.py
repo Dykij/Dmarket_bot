@@ -15,10 +15,10 @@ from typing import List, Dict
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 
 from src.utils.api_client import AsyncDMarketClient
-# We might need ConfigManager if keys aren't in env, but let's try env first or hardcoded placeholder
+from src.core.database import db  # <--- IMPORT DATABASE
 from src.core.config_manager import ConfigManager
-
 from dotenv import load_dotenv
+
 load_dotenv(r"D:\Dmarket_bot\.env")
 
 # Setup Logging
@@ -43,7 +43,7 @@ MIN_PRICES = {
 }
 
 async def fetch_market_price(client: AsyncDMarketClient, title: str) -> int:
-    """Fetches the lowest market price for an item."""
+    """Fetches the lowest market price for an item and RECORDS it."""
     try:
         # Fetch top 1 item sorted by price
         data = await client.request(
@@ -64,11 +64,16 @@ async def fetch_market_price(client: AsyncDMarketClient, title: str) -> int:
         if objects:
             price_doc = objects[0].get("price", {})
             if "USD" in price_doc:
-                # DMarket API usually returns prices in cents (integer or string)
-                # If it's "185", it means $1.85 (185 cents).
-                # We should NOT multiply by 100 if it's already cents.
                 try:
-                    return int(float(price_doc["USD"]))
+                    price = int(float(price_doc["USD"]))
+                    
+                    # --- DATA COLLECTION HOOK ---
+                    # Record the tick to SQLite for AI training
+                    if price > 0:
+                        await db.insert_tick(title, price)
+                    # ----------------------------
+                    
+                    return price
                 except ValueError:
                     return 0
             
@@ -79,6 +84,7 @@ async def fetch_market_price(client: AsyncDMarketClient, title: str) -> int:
         return 0
 
 def calculate_undercut(market_price: int, min_price: int) -> int:
+# ... (rest of the file remains similar)
     """Smart Undercut Logic."""
     if market_price <= 0:
         return 0
@@ -142,51 +148,58 @@ async def main():
     logger.info("🚀 STARTING ASYNC SWAP & SELL...")
     start_time = time.time()
 
-    async with AsyncDMarketClient(public_key, secret_key) as client:
-        # 1. Fetch Inventory
-        logger.info("📦 Fetching Inventory...")
-        inventory_data = await client.get_user_inventory(game=GAME_ID)
-        items = inventory_data.get("objects", [])
-        logger.info(f"📦 Inventory received: {len(items)} items")
+    # Init DB
+    await db.connect()
 
-        if not items:
-            logger.info("💤 No items to sell.")
-            return
+    try:
+        async with AsyncDMarketClient(public_key, secret_key) as client:
+            # 1. Fetch Inventory
+            logger.info("📦 Fetching Inventory...")
+            inventory_data = await client.get_user_inventory(game=GAME_ID)
+            items = inventory_data.get("objects", [])
+            logger.info(f"📦 Inventory received: {len(items)} items")
 
-        # 2. Analyze Items & Prepare Batch (Concurrency via TaskGroup)
-        offers_batch = []
-        
-        # Python 3.11+ TaskGroup
-        if hasattr(asyncio, "TaskGroup"):
-            async with asyncio.TaskGroup() as tg:
-                for item in items:
-                    tg.create_task(process_item(client, item, offers_batch))
-        else:
-            # Fallback for older python
-            tasks = [process_item(client, item, offers_batch) for item in items]
-            await asyncio.gather(*tasks)
+            if not items:
+                logger.info("💤 No items to sell.")
+                return
 
-        # 3. Execute Batch Offer
-        if offers_batch:
-            logger.info(f"⚡ Executing Batch Offer ({len(offers_batch)} items)...")
+            # 2. Analyze Items & Prepare Batch (Concurrency via TaskGroup)
+            offers_batch = []
             
-            # Using Marketplace API V2 Batch Create
-            payload = {"requests": offers_batch}
-            
-            try:
-                # Note: This endpoint is POST /marketplace-api/v2/offers:batchCreate
-                # It likely requires signing.
-                response = await client.request("POST", "/marketplace-api/v2/offers:batchCreate", body=payload, sign=True)
+            # Python 3.11+ TaskGroup
+            if hasattr(asyncio, "TaskGroup"):
+                async with asyncio.TaskGroup() as tg:
+                    for item in items:
+                        tg.create_task(process_item(client, item, offers_batch))
+            else:
+                # Fallback for older python
+                tasks = [process_item(client, item, offers_batch) for item in items]
+                await asyncio.gather(*tasks)
+
+            # 3. Execute Batch Offer
+            if offers_batch:
+                logger.info(f"⚡ Executing Batch Offer ({len(offers_batch)} items)...")
                 
-                # Check response
-                # Format: { "result": [...], "failed": [...] } or { "offers": [...] }? 
-                # Let's log the full response to be sure.
-                logger.info(f"✅ API Response: {response}")
+                # Using Marketplace API V2 Batch Create
+                payload = {"requests": offers_batch}
+                
+                try:
+                    # Note: This endpoint is POST /marketplace-api/v2/offers:batchCreate
+                    # It likely requires signing.
+                    response = await client.request("POST", "/marketplace-api/v2/offers:batchCreate", body=payload, sign=True)
+                    
+                    # Check response
+                    # Format: { "result": [...], "failed": [...] } or { "offers": [...] }? 
+                    # Let's log the full response to be sure.
+                    logger.info(f"✅ API Response: {response}")
 
-            except Exception as e:
-                logger.error(f"❌ Batch Transaction Failed: {e}")
-        else:
-            logger.info("💤 No suitable offers generated.")
+                except Exception as e:
+                    logger.error(f"❌ Batch Transaction Failed: {e}")
+            else:
+                logger.info("💤 No suitable offers generated.")
+    
+    finally:
+        await db.close()
 
     duration = time.time() - start_time
     logger.info(f"🏁 OPERATION COMPLETE. Time: {duration:.4f}s")
