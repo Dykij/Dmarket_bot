@@ -27,6 +27,11 @@ jobs:
         ruff check . --select=E9,F63,F7,F82 --target-version=py311
         ruff check . --exit-zero
     - name: Run Smoke Tests
+      env:
+        DMARKET_PUBLIC_KEY: "mock_key"
+        DMARKET_SECRET_KEY: "mock_secret"
+        TELEGRAM_BOT_TOKEN: "mock_token"
+        TELEGRAM_CHAT_ID: "123456"
       run: |
         # Check imports for new components
         python -c "import src.config; import src.bot.main; import src.bot.scanner; import src.bot.trader; import src.bot.sales; import src.telegram_bot; print('Core imports successful')"
