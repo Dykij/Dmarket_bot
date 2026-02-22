@@ -16,7 +16,7 @@ jobs:
     name: Security Scan
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - name: Gitleaks (Secret Detection)
@@ -29,7 +29,7 @@ jobs:
     runs-on: windows-latest
     needs: security
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       # 1. Setup Rust (The Muscle)
       - name: Set up Rust
