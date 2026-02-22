@@ -1,7 +1,0 @@
-2026/02/15-14:13:10.789 5778 Reusing MANIFEST C:\Users\west2\.openclaw\browser\openclaw\user-data\Default\Local Storage\leveldb/MANIFEST-000001
-2026/02/15-14:13:10.792 5778 Recovering log #7
-2026/02/15-14:13:10.793 5778 (ignoring error) C:\Users\west2\.openclaw\browser\openclaw\user-data\Default\Local Storage\leveldb/000007.log: dropping 92 bytes; Corruption: checksum mismatch
-2026/02/15-14:13:10.794 5778 Reusing old log C:\Users\west2\.openclaw\browser\openclaw\user-data\Default\Local Storage\leveldb/000007.log 
-2026/02/15-14:14:10.810 135c Level-0 table #11: started
-2026/02/15-14:14:10.823 135c Level-0 table #11: 821082 bytes OK
-2026/02/15-14:14:10.825 135c Delete type=0 #7
