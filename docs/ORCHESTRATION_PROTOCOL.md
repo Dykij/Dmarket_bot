@@ -34,21 +34,15 @@
   - Store successful strategies for future replay.
   - Ensure all code changes are documented in `docs_archive`.
 
-### 5. Coding Standards (Protocol "Surgical Precision")
-**Rule: Eliminate "Ghost Code" Errors**
+### 6. Protocol "Trust But Verify" (New)
+**Rule: Mandatory Cross-Verification**
 
-1.  **Small Files (< 500 lines):**
-    *   **Action:** Use `write` ONLY.
-    *   **Reason:** Overwriting the full file guarantees 100% integrity and avoids `edit` mismatch errors.
-    *   **Scope:** Most scripts in `src/scripts/` and configs.
-
-2.  **Large Files (> 500 lines):**
-    *   **Action:** Use `edit`, BUT execute `read` first.
-    *   **Constraint:** `oldText` must be copied bit-for-bit from the `read` output. NO editing from memory.
-
-3.  **Validation:**
-    *   **Agent:** Harper (QA).
-    *   **Check:** Verify syntax after every modification.
+1.  **Requirement:** No Agent (Roy, Boss, Harper) allows a proposal to reach the Sovereign without external validation.
+2.  **Mechanism:**
+    *   **Hypothesis:** Boss proposes a strategy (e.g., "Use Bid-Ask Spread").
+    *   **Verification:** Archivist MUST find external proof (Docs, Papers, Reputable Sources) via Search Tools.
+    *   **Consensus:** The Hive (40 sub-agents) votes. If proof is weak, the proposal is rejected.
+3.  **Output:** Every major decision presented to the User must include a "Verified By" section citing the source.
 
 ### Interaction Protocol
 1.  **Boss** defines the goal (sell items X, Y, Z).

@@ -2,7 +2,7 @@ name: HFT Bot CI
 
 on:
   push:
-    branches: [ "main", "dev" ]
+    branches: [ "main", "dev", "DEvOp" ]
   pull_request:
     branches: [ "main" ]
 
@@ -28,8 +28,5 @@ jobs:
         ruff check . --exit-zero
     - name: Run Smoke Tests
       run: |
-        # Only run the manual test script as a smoke test for now
-        # to ensure environment sanity without triggering full legacy suite
-        # Note: This might fail if it needs real keys, so we mock or skip if keys missing
-        # For CI, just checking if it imports is good enough for step 1
-        python -c "import src.utils.api_client; print('Imports OK')"
+        # Check imports for new components
+        python -c "import src.config; import src.bot.main; import src.bot.scanner; import src.bot.trader; import src.bot.sales; import src.telegram_bot; print('Core imports successful')"

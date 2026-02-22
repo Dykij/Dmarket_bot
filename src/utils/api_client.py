@@ -220,3 +220,68 @@ class AsyncDMarketClient:
             "currency": "USD"
         }
         return await self.request("GET", "/exchange/v1/user/items", params=params)
+
+    # --- Target (Buy Order) Methods ---
+
+    async def create_target(self, game: str, targets: List[Dict]) -> Dict:
+        """
+        Create buy targets (bids).
+        
+        Args:
+            game: Game ID (e.g. 'a8db')
+            targets: List of dicts like:
+                {
+                    "Amount": 1,
+                    "Price": {"Amount": 1200, "Currency": "USD"},
+                    "Title": "AK-47 | Redline (Field-Tested)"
+                }
+        """
+        body = {
+            "GameID": game,
+            "Targets": targets
+        }
+        return await self.request("POST", "/marketplace-api/v1/user-targets/create", body=body)
+
+    async def get_user_targets(
+        self, 
+        game: str = "a8db", 
+        limit: str = "100", 
+        status: str = "TargetStatusActive",
+        cursor: str = ""
+    ) -> Dict:
+        """Fetch active user targets."""
+        params = {
+            "GameID": game,
+            "Limit": limit,
+            "BasicFilters.Status": status,
+            "Cursor": cursor
+        }
+        return await self.request("GET", "/marketplace-api/v1/user-targets", params=params)
+
+    async def delete_target(self, target_ids: List[Dict]) -> Dict:
+        """
+        Delete targets.
+        
+        Args:
+            target_ids: List of dicts [{"TargetID": "..."}]
+        """
+        body = {
+            "Targets": target_ids
+        }
+        return await self.request("POST", "/marketplace-api/v1/user-targets/delete", body=body)
+
+    # --- Market Analysis Methods ---
+
+    async def get_aggregated_prices(self, names: List[str], game: str = "a8db") -> Dict:
+        """
+        Get Best Bid and Best Ask for a list of items.
+        Crucial for Spread Trading.
+        """
+        body = {
+            "filter": {
+                "game": game,
+                "titles": names
+            },
+            "limit": "100"
+        }
+        return await self.request("POST", "/marketplace-api/v1/aggregated-prices", body=body)

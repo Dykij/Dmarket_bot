@@ -17,3 +17,14 @@ build/
 logs/
 .mypy_cache/
 .ruff_cache/
+
+# Local databases and caches
+*.db
+*.sqlite
+data/market_data.db
+data/blackboard.json
+history_dump.txt
+research_report.json
+memory/*.md
+legacy/
+src/scripts/research_assistant.py
