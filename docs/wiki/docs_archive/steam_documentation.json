@@ -1,0 +1,6 @@
+{
+  "steam_api": {
+    "market_history": "https://steamcommunity.com/market/pricehistory/?appid=<game_id>&market_hash_name=<name>",
+    "data_points": "Volume, Median Price"
+  }
+}

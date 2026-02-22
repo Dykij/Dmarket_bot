@@ -1,0 +1,9 @@
+{
+  "powershell_core": {
+    "secret_management": {
+      "module": "SecretManagement",
+      "command": "Set-Secret -Name <name> -Vault <vault> -Secret <value>",
+      "security": "Avoid plaintext keys in .env"
+    }
+  }
+}

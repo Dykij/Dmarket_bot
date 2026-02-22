@@ -1,0 +1,58 @@
+{
+  "meta": {
+    "lastTouchedVersion": "2026.2.19-2",
+    "lastTouchedAt": "2026-02-22T13:39:37.866Z"
+  },
+  "env": {
+    "GOOGLE_CLOUD_PROJECT": "arkady-bot-dev",
+    "GOOGLE_CLOUD_LOCATION": "global",
+    "GOOGLE_APPLICATION_CREDENTIALS": "C:\\Users\\west2\\Downloads\\arkady-bot-dev-e8f1e599a6c3.json",
+    "OPENCLAW_VERTEX_AUTH": "service_account",
+    "GITHUB_APP_ID": "2836302",
+    "GITHUB_INSTALLATION_ID": "109251736",
+    "GITHUB_PRIVATE_KEY_PATH": "C:\\Users\\west2\\.openclaw\\credentials\\github.pem",
+    "GITHUB_CLIENT_SECRET": "Iv23lipxZs4zMLaCr1YE",
+    "SKILLSMP_API_KEY": "sk_live_skillsmp_f6BdAcqVkSO2V4Db2MW2Pj63XlF3Q9HR5vr3f75saPU"
+  },
+  "agents": {
+    "defaults": {
+      "model": {
+        "primary": "google-vertex/gemini-3-pro-preview"
+      },
+      "workspace": "C:\\Users\\west2\\.openclaw\\workspace"
+    }
+  },
+  "commands": {
+    "native": "auto",
+    "nativeSkills": "auto",
+    "restart": true
+  },
+  "channels": {
+    "telegram": {
+      "enabled": true,
+      "dmPolicy": "allowlist",
+      "botToken": "8461845004:AAE3eAnAyohsRh9XMrkv3pNx56iACKmOuws",
+      "groupPolicy": "allowlist",
+      "streamMode": "partial"
+    }
+  },
+  "gateway": {
+    "mode": "local",
+    "bind": "loopback",
+    "auth": {
+      "token": "1234"
+    }
+  },
+  "plugins": {
+    "entries": {
+      "telegram": {
+        "enabled": true
+      },
+      "device-pair": {
+        "config": {
+          "publicUrl": "https://bodia.tail0e782b.ts.net/"
+        }
+      }
+    }
+  }
+}

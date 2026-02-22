@@ -1,0 +1,21 @@
+{
+  "system_core": [
+    "MASTER_PROTOCOL.md",
+    "Platform.json"
+  ],
+  "execution_layer": [
+    "src/trading_bot.py",
+    "src/core/supervisor.py"
+  ],
+  "security_layer": [
+    "src/core/security.py",
+    "src/core/validator.py"
+  ],
+  "logs_layer": [
+    "logs/archive/",
+    "docs/LAST_SESSION_REPORT.md"
+  ],
+  "admin_rights": true,
+  "CORE_TYPE": "RUST_NATIVE",
+  "BENCHMARK": "0.002400 ms"
+}

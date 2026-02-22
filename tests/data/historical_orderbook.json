@@ -1,0 +1,32 @@
+[
+  {
+    "timestamp": 1708300000,
+    "title": "AK-47 | Redline (Field-Tested)",
+    "order_book": [
+      {"price": 15.50, "volume": 10, "type": "ask"},
+      {"price": 15.60, "volume": 5, "type": "ask"},
+      {"price": 14.80, "volume": 20, "type": "bid"},
+      {"price": 14.70, "volume": 15, "type": "bid"}
+    ]
+  },
+  {
+    "timestamp": 1708300001,
+    "title": "AK-47 | Redline (Field-Tested)",
+    "order_book": [
+      {"price": 15.50, "volume": 2, "type": "ask"}, 
+      {"price": 15.60, "volume": 5, "type": "ask"},
+      {"price": 14.80, "volume": 25, "type": "bid"}, 
+      {"price": 14.70, "volume": 15, "type": "bid"}
+    ]
+  },
+  {
+    "timestamp": 1708300002,
+    "title": "AK-47 | Redline (Field-Tested)",
+    "order_book": [
+      {"price": 13.90, "volume": 1, "type": "ask"}, 
+      {"price": 15.60, "volume": 5, "type": "ask"},
+      {"price": 14.80, "volume": 25, "type": "bid"},
+      {"price": 14.70, "volume": 15, "type": "bid"}
+    ]
+  }
+]

@@ -1,0 +1,261 @@
+{
+  "title": "GitHub Documentation",
+  "metadata": {
+    "source": "https://docs.github.com/en",
+    "generated_at": "2026-02-11T13:14:44.778817Z",
+    "description": "Complete documentation for GitHub platform."
+  },
+  "sections": [
+    {
+      "id": "get_started",
+      "title": "Get Started",
+      "content": [
+        {
+          "name": "Get started",
+          "url": "https://docs.github.com/en/get-started"
+        },
+        {
+          "name": "Migrations",
+          "url": "https://docs.github.com/en/migrations"
+        },
+        {
+          "name": "Account and profile",
+          "url": "https://docs.github.com/en/account-and-profile"
+        },
+        {
+          "name": "Authentication",
+          "url": "https://docs.github.com/en/authentication"
+        },
+        {
+          "name": "Billing and payments",
+          "url": "https://docs.github.com/en/billing"
+        },
+        {
+          "name": "Set up Git",
+          "url": "https://docs.github.com/en/get-started/git-basics/set-up-git",
+          "description": "Git is responsible for everything GitHub-related that happens locally on your computer."
+        },
+        {
+          "name": "Connecting to GitHub with SSH",
+          "url": "https://docs.github.com/en/authentication/connecting-to-github-with-ssh",
+          "description": "Connect using the Secure Shell Protocol (SSH)."
+        },
+        {
+          "name": "Creating and managing repositories",
+          "url": "https://docs.github.com/en/repositories/creating-and-managing-repositories"
+        },
+        {
+          "name": "Basic writing and formatting syntax",
+          "url": "https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax"
+        }
+      ]
+    },
+    {
+      "id": "collaborative_coding",
+      "title": "Collaborative Coding",
+      "content": [
+        {
+          "name": "Codespaces",
+          "url": "https://docs.github.com/en/codespaces"
+        },
+        {
+          "name": "Repositories",
+          "url": "https://docs.github.com/en/repositories"
+        },
+        {
+          "name": "Pull requests",
+          "url": "https://docs.github.com/en/pull-requests",
+          "description": "Pull requests let you propose, review, and merge code changes."
+        },
+        {
+          "name": "GitHub Discussions",
+          "url": "https://docs.github.com/en/discussions"
+        },
+        {
+          "name": "Integrations",
+          "url": "https://docs.github.com/en/integrations"
+        }
+      ]
+    },
+    {
+      "id": "github_copilot",
+      "title": "GitHub Copilot",
+      "content": [
+        {
+          "name": "GitHub Copilot",
+          "url": "https://docs.github.com/en/copilot"
+        },
+        {
+          "name": "Plans",
+          "url": "https://docs.github.com/en/copilot/get-started/plans"
+        },
+        {
+          "name": "Get IDE code suggestions",
+          "url": "https://docs.github.com/en/copilot/how-tos/get-code-suggestions/get-ide-code-suggestions"
+        },
+        {
+          "name": "Coding agent",
+          "url": "https://docs.github.com/en/copilot/how-tos/use-copilot-agents/coding-agent"
+        },
+        {
+          "name": "Tutorials",
+          "url": "https://docs.github.com/en/copilot/tutorials"
+        },
+        {
+          "name": "Copilot Chat Cookbook",
+          "url": "https://docs.github.com/en/copilot/tutorials/copilot-chat-cookbook"
+        },
+        {
+          "name": "Customization library",
+          "url": "https://docs.github.com/en/copilot/tutorials/customization-library"
+        }
+      ]
+    },
+    {
+      "id": "cicd_devops",
+      "title": "CI/CD and DevOps",
+      "content": [
+        {
+          "name": "GitHub Actions",
+          "url": "https://docs.github.com/en/actions"
+        },
+        {
+          "name": "GitHub Packages",
+          "url": "https://docs.github.com/en/packages"
+        },
+        {
+          "name": "GitHub Pages",
+          "url": "https://docs.github.com/en/pages"
+        }
+      ]
+    },
+    {
+      "id": "security",
+      "title": "Security and Quality",
+      "content": [
+        {
+          "name": "Secure your secrets",
+          "url": "https://docs.github.com/en/code-security/how-tos/secure-your-secrets"
+        },
+        {
+          "name": "Secure your supply chain",
+          "url": "https://docs.github.com/en/code-security/how-tos/secure-your-supply-chain"
+        },
+        {
+          "name": "Scan code for vulnerabilities",
+          "url": "https://docs.github.com/en/code-security/how-tos/scan-code-for-vulnerabilities"
+        },
+        {
+          "name": "Maintain quality code",
+          "url": "https://docs.github.com/en/code-security/how-tos/maintain-quality-code"
+        }
+      ]
+    },
+    {
+      "id": "project_management",
+      "title": "Project Management",
+      "content": [
+        {
+          "name": "GitHub Issues",
+          "url": "https://docs.github.com/en/issues"
+        },
+        {
+          "name": "Projects",
+          "url": "https://docs.github.com/en/issues/planning-and-tracking-with-projects"
+        },
+        {
+          "name": "Search on GitHub",
+          "url": "https://docs.github.com/en/search-github"
+        }
+      ]
+    },
+    {
+      "id": "enterprise",
+      "title": "Enterprise and Teams",
+      "content": [
+        {
+          "name": "Organizations",
+          "url": "https://docs.github.com/en/organizations"
+        },
+        {
+          "name": "Secure at scale",
+          "url": "https://docs.github.com/en/code-security/how-tos/secure-at-scale"
+        },
+        {
+          "name": "Enterprise onboarding",
+          "url": "https://docs.github.com/en/enterprise-cloud@latest/enterprise-onboarding"
+        },
+        {
+          "name": "Enterprise administrators",
+          "url": "https://docs.github.com/en/enterprise-cloud@latest/admin"
+        }
+      ]
+    },
+    {
+      "id": "developers",
+      "title": "Developers",
+      "content": [
+        {
+          "name": "Apps",
+          "url": "https://docs.github.com/en/apps"
+        },
+        {
+          "name": "REST API",
+          "url": "https://docs.github.com/en/rest"
+        },
+        {
+          "name": "GraphQL API",
+          "url": "https://docs.github.com/en/graphql"
+        },
+        {
+          "name": "Webhooks",
+          "url": "https://docs.github.com/en/webhooks"
+        },
+        {
+          "name": "GitHub Models",
+          "url": "https://docs.github.com/en/github-models"
+        }
+      ]
+    },
+    {
+      "id": "client_apps",
+      "title": "Client Apps",
+      "content": [
+        {
+          "name": "GitHub CLI",
+          "url": "https://docs.github.com/en/github-cli"
+        },
+        {
+          "name": "GitHub Mobile",
+          "url": "https://docs.github.com/en/get-started/using-github/github-mobile"
+        },
+        {
+          "name": "GitHub Desktop",
+          "url": "https://docs.github.com/en/desktop"
+        }
+      ]
+    },
+    {
+      "id": "community",
+      "title": "Community",
+      "content": [
+        {
+          "name": "Building communities",
+          "url": "https://docs.github.com/en/communities"
+        },
+        {
+          "name": "GitHub Sponsors",
+          "url": "https://docs.github.com/en/sponsors"
+        },
+        {
+          "name": "GitHub Education",
+          "url": "https://docs.github.com/en/education"
+        },
+        {
+          "name": "GitHub Support",
+          "url": "https://docs.github.com/en/support"
+        }
+      ]
+    }
+  ]
+}

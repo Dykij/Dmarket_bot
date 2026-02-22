@@ -1,0 +1,7 @@
+{
+  "github_cli": {
+    "auth": "gh auth login",
+    "commit_history": "gh repo view <owner>/<repo> --json commits",
+    "integration": "Use 'gh' tool directly if available"
+  }
+}

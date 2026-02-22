@@ -1,0 +1,144 @@
+{
+  "title": "Waxpeer API Documentation",
+  "metadata": {
+    "source": "https://docs.waxpeer.com/",
+    "generated_at": "2026-02-11T13:14:44.778817Z",
+    "base_url": "https://api.waxpeer.com",
+    "description": "Waxpeer API for buying and selling CS2 (CSGO), Rust, TF2 skins via P2P marketplace."
+  },
+  "sections": [
+    {
+      "id": "overview",
+      "title": "Overview",
+      "description": "Waxpeer is a P2P marketplace for in-game skins. Items trade directly between seller and buyer Steam inventories. Requires valid Steam API key and Steam access token (updated regularly)."
+    },
+    {
+      "id": "buying",
+      "title": "Buying Items",
+      "content": {
+        "endpoints": [
+          {
+            "name": "Buy by ID",
+            "description": "Buy item by unique item_id, sent to specified trade link."
+          },
+          {
+            "name": "Buy by Name",
+            "description": "Buy item by name, sent to specified trade link."
+          },
+          {
+            "name": "Get all unique items",
+            "description": "Retrieve all unique items with min price and count."
+          },
+          {
+            "name": "Search items by name",
+            "description": "Search for available items by name."
+          },
+          {
+            "name": "Get all listed items",
+            "description": "Fetch all items listed on Waxpeer."
+          },
+          {
+            "name": "Check trade status",
+            "description": "Check status of Steam trades by project_id or Waxpeer IDs."
+          },
+          {
+            "name": "Get recent purchases",
+            "description": "Get recent purchases with filters."
+          }
+        ]
+      }
+    },
+    {
+      "id": "buy_orders",
+      "title": "Buy Orders",
+      "content": {
+        "endpoints": [
+          {
+            "name": "View trigger history",
+            "description": "See history of triggered buy orders."
+          },
+          {
+            "name": "View active buy orders",
+            "description": "List active buy orders."
+          },
+          {
+            "name": "Get max orders",
+            "description": "Fetch maximum orders for items."
+          },
+          {
+            "name": "Create buy order",
+            "description": "Create a new buy order."
+          },
+          {
+            "name": "Edit buy order",
+            "description": "Edit existing buy order."
+          },
+          {
+            "name": "Remove buy order",
+            "description": "Remove a buy order."
+          }
+        ]
+      }
+    },
+    {
+      "id": "selling",
+      "title": "Selling Items",
+      "content": {
+        "endpoints": [
+          {
+            "name": "List items for sale",
+            "description": "List Steam items from inventory for sale."
+          },
+          {
+            "name": "Edit price",
+            "description": "Edit the price for listed items."
+          },
+          {
+            "name": "Remove items by ID",
+            "description": "Remove specific items by ID."
+          },
+          {
+            "name": "Remove all listings",
+            "description": "Remove all listings."
+          },
+          {
+            "name": "Get available items",
+            "description": "Fetch items that can be listed for sale."
+          },
+          {
+            "name": "Get inventory",
+            "description": "Get user's inventory."
+          },
+          {
+            "name": "Trade notifications",
+            "description": "Notifications about created trade offers."
+          },
+          {
+            "name": "Force P2P status check",
+            "description": "Force a P2P status check."
+          }
+        ]
+      }
+    },
+    {
+      "id": "authentication",
+      "title": "Authentication",
+      "content": {
+        "requirements": [
+          "Valid Steam API key",
+          "Steam access token (must be updated regularly)",
+          "Waxpeer API key from account settings"
+        ]
+      }
+    },
+    {
+      "id": "supported_games",
+      "title": "Supported Games",
+      "content": [
+        "CS2 (CSGO)",
+        "Rust",
+        "TF2"
+      ]
+    }
+  ]
+}

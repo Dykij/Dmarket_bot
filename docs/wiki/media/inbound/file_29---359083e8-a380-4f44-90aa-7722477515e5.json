@@ -1,0 +1,185 @@
+{
+  "title": "Steam / Steamworks Documentation",
+  "metadata": {
+    "source": "https://partner.steamgames.com/doc/home",
+    "generated_at": "2026-02-11T13:14:44.778817Z",
+    "description": "Steamworks SDK documentation and Steam Web API reference."
+  },
+  "sections": [
+    {
+      "id": "steamworks",
+      "title": "Steamworks Documentation",
+      "content": {
+        "categories": [
+          {
+            "name": "Getting Started",
+            "url": "https://partner.steamgames.com/doc/gettingstarted",
+            "description": "Overview of Steamworks features and usage guidelines."
+          },
+          {
+            "name": "Store Presence",
+            "url": "https://partner.steamgames.com/doc/store",
+            "description": "Manage applications, pricing, and store presence."
+          },
+          {
+            "name": "Features",
+            "url": "https://partner.steamgames.com/doc/features",
+            "description": "Detailed information on available features."
+          },
+          {
+            "name": "Finance",
+            "url": "https://partner.steamgames.com/doc/finance",
+            "description": "Information about payment and revenue."
+          },
+          {
+            "name": "Sales and Marketing",
+            "url": "https://partner.steamgames.com/doc/marketing",
+            "description": "Features and best practices for sales."
+          },
+          {
+            "name": "Steamworks SDK",
+            "url": "https://partner.steamgames.com/doc/sdk",
+            "description": "SDK integration documentation."
+          },
+          {
+            "name": "Cafe Licensing",
+            "url": "https://partner.steamgames.com/pccafe",
+            "description": "PC Cafe program details."
+          },
+          {
+            "name": "Steam VR",
+            "url": "https://partner.steamgames.com/doc/features/steamvr/info",
+            "description": "Virtual Reality features."
+          }
+        ]
+      }
+    },
+    {
+      "id": "web_api",
+      "title": "Steam Web API",
+      "description": "HTTP-based API at api.steampowered.com. Format: /<interface>/<method>/v<version>/?key=<key>&format=<format>. Supports JSON (default), XML, VDF.",
+      "content": {
+        "interfaces": [
+          {
+            "name": "ISteamUser",
+            "description": "Access and manipulate Steam user information.",
+            "methods": [
+              {
+                "name": "GetPlayerSummaries",
+                "description": "Basic profile info for Steam IDs (persona name, last logoff, etc.)."
+              },
+              {
+                "name": "GetFriendList",
+                "description": "Friends list for a SteamID."
+              },
+              {
+                "name": "GetPlayerBans",
+                "description": "Player ban information."
+              },
+              {
+                "name": "ResolveVanityURL",
+                "description": "Resolve vanity URL to SteamID."
+              },
+              {
+                "name": "CheckAppOwnership",
+                "description": "Check if user owns an application."
+              },
+              {
+                "name": "GetDeletedSteamIDs",
+                "description": "List of deleted accounts that owned a game (GDPR)."
+              }
+            ]
+          },
+          {
+            "name": "ISteamApps",
+            "description": "Information about applications and DLC on Steam.",
+            "methods": [
+              {
+                "name": "GetAppList",
+                "description": "All applications available on Steam."
+              },
+              {
+                "name": "GetServersAtAddress",
+                "description": "Game servers at a specific IP."
+              },
+              {
+                "name": "GetAppBetas",
+                "description": "Beta branches for an application."
+              },
+              {
+                "name": "GetAppBuilds",
+                "description": "Build history for an application."
+              },
+              {
+                "name": "SetAppBuildLive",
+                "description": "Set a build live for a beta branch."
+              }
+            ]
+          },
+          {
+            "name": "ISteamEconomy",
+            "description": "Trade and economy related functionality.",
+            "methods": [
+              {
+                "name": "GetAssetPrices",
+                "description": "Prices of items in a game's economy."
+              },
+              {
+                "name": "GetAssetClassInfo",
+                "description": "Information about a list of items."
+              }
+            ]
+          },
+          {
+            "name": "IPlayerService",
+            "description": "Player-related service methods.",
+            "methods": [
+              {
+                "name": "GetRecentlyPlayedGames",
+                "description": "Games played in the last 2 weeks."
+              },
+              {
+                "name": "GetOwnedGames",
+                "description": "Games owned by a player."
+              },
+              {
+                "name": "GetSteamLevel",
+                "description": "Player's Steam level."
+              },
+              {
+                "name": "GetBadges",
+                "description": "Player's badges."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "resources",
+      "title": "Resources",
+      "content": [
+        {
+          "name": "Steamworks Discussions",
+          "url": "https://steamcommunity.com/groups/steamworks/discussions"
+        },
+        {
+          "name": "Steamworks Video Tutorials",
+          "url": "https://www.youtube.com/user/SteamworksDev"
+        },
+        {
+          "name": "Contact Support",
+          "url": "https://help.steampowered.com/en/wizard/HelpWithPublishing"
+        },
+        {
+          "name": "Steamworks Blog",
+          "url": "https://store.steampowered.com/news/group/4145017"
+        },
+        {
+          "name": "Steam Blog",
+          "url": "https://store.steampowered.com/news/app/593110"
+        }
+      ]
+    }
+  ]
+}

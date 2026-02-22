@@ -1,0 +1,7 @@
+[
+  {
+    "schedule": "*/10 * * * *",
+    "command": "python src/dmarket/api/client.py --health-check",
+    "description": "Platform Heartbeat"
+  }
+]

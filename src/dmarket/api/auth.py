@@ -56,10 +56,11 @@ def generate_signature_ed25519(
         # Generate timestamp
         timestamp = str(int(time.time()))
 
-        # Build string to sign: METHOD + PATH + TIMESTAMP (+ body if present)
-        string_to_sign = f"{method.upper()}{path}{timestamp}"
+        # Build string to sign: METHOD + PATH + BODY + TIMESTAMP
+        string_to_sign = f"{method.upper()}{path}"
         if body:
             string_to_sign += body
+        string_to_sign += timestamp
 
         logger.debug(f"String to sign: {string_to_sign}")
 
