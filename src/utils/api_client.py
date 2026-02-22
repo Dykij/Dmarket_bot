@@ -14,7 +14,6 @@ Features:
 import asyncio
 import logging
 import time
-import os
 from typing import Any, Dict, Optional, Union, List
 
 import aiohttp
@@ -72,7 +71,10 @@ class AsyncDMarketClient:
                 )
             
             # Use optimized JSON serializer if available
-            json_serialize = lambda x: json.dumps(x).decode('utf-8') if hasattr(json, 'dumps') and 'orjson' in json.__name__ else json.dumps
+            def json_serialize(x):
+                if hasattr(json, 'dumps') and 'orjson' in json.__name__:
+                    return json.dumps(x).decode('utf-8')
+                return json.dumps(x)
 
             self._session = aiohttp.ClientSession(
                 base_url=self.BASE_URL,

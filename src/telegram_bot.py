@@ -135,7 +135,6 @@ async def btn_inventory(message: types.Message):
             # Show first 5 items
             for item in items[:5]:
                 title = item.get("title", "Unknown")
-                price = "???"
                 # Price logic is complex without listing info, skipping for brevity
                 msg += f"- {title}\n"
             

@@ -5,7 +5,7 @@ Executes orders based on opportunities from the Scanner.
 """
 
 import logging
-from typing import List, Dict
+from typing import Dict
 
 from src.config import Config
 from src.utils.api_client import AsyncDMarketClient

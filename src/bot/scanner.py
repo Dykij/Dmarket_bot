@@ -4,7 +4,6 @@ Description: Scans the CS2 market for items with a profitable Spread.
 Uses the new "Batch API" to scan 200 items in 3 seconds.
 """
 
-import asyncio
 import logging
 from typing import List, Dict
 

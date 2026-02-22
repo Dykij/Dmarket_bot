@@ -78,7 +78,7 @@ class SalesManager:
                     elif isinstance(best_ask_raw, (int, float, str)):
                         try:
                             best_ask_cents = int(best_ask_raw)
-                        except:
+                        except (ValueError, TypeError):
                             best_ask_cents = 0
                 
                 if best_ask_cents > 0:
