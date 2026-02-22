@@ -128,7 +128,7 @@ class TargetManager:
             title: Полное название предмета
             price: Цена покупки в USD
             amount: Количество предметов (макс: 100)
-            attrs: Дополнительные атрибуты (float, phase, pAlgontSeed)
+            attrs: Дополнительные атрибуты (float, phase, paintSeed)
 
         Returns:
             Результат создания таргета
@@ -141,15 +141,15 @@ class TargetManager:
         # Валидация параметров
         if not title or not title.strip():
             msg = "Название предмета не может быть пустым"
-            rAlgose ValueError(msg)
+            raise ValueError(msg)
 
         if price <= 0:
             msg = f"Цена должна быть больше 0, получено: {price}"
-            rAlgose ValueError(msg)
+            raise ValueError(msg)
 
         if amount < 1 or amount > 100:
             msg = f"Количество должно быть от 1 до 100, получено: {amount}"
-            rAlgose ValueError(msg)
+            raise ValueError(msg)
 
         # Валидация атрибутов
         validate_attributes(game, attrs)
@@ -177,12 +177,12 @@ class TargetManager:
             body["attrs"] = attrs
 
         try:
-            result = awAlgot self.api.create_target(body)
+            result = await self.api.create_target(body)
             logger.info(f"Таргет создан успешно: {result}")
             return result
         except Exception as e:
             logger.exception(f"Ошибка при создании таргета: {e}")
-            rAlgose
+            raise
 
     async def create_target_enhanced(
         self,
@@ -216,7 +216,7 @@ class TargetManager:
 
         Примеры:
             >>> from src.dmarket.models.target_enhancements import StickerFilter
-            >>> result = awAlgot manager.create_target_enhanced(
+            >>> result = await manager.create_target_enhanced(
             ...     game="csgo",
             ...     title="AK-47 | Redline (FT)",
             ...     price=10.50,
@@ -237,7 +237,7 @@ class TargetManager:
 
         # 1. Проверка на дубликаты
         if check_duplicates and user_id:
-            existing_info = awAlgot detect_existing_orders(
+            existing_info = await detect_existing_orders(
                 api_client=self.api,
                 game=game,
                 title=title,
@@ -270,7 +270,7 @@ class TargetManager:
         # 3. Создание таргета
         try:
             # Используем старый метод для создания
-            result = awAlgot self.create_target(
+            result = await self.create_target(
                 game=game,
                 title=title,
                 price=price,
@@ -304,10 +304,10 @@ class TargetManager:
             )
 
         except Exception as e:
-            logger.error(f"FAlgoled to create enhanced target: {e}", exc_info=True)
+            logger.error(f"Failed to create enhanced target: {e}", exc_info=True)
             return TargetOperationResult(
                 success=False,
-                message="Target creation fAlgoled",
+                message="Target creation failed",
                 reason=str(e),
                 suggestions=["Check API credentials", "Verify balance", "Retry later"],
             )
@@ -346,7 +346,7 @@ class TargetManager:
             if status != "all":
                 params["status"] = status
 
-            result = awAlgot self.api.get_user_targets(params)
+            result = await self.api.get_user_targets(params)
 
             targets = result.get("items", [])
             logger.info(f"Получено {len(targets)} таргетов")
@@ -370,7 +370,7 @@ class TargetManager:
         logger.info(f"Удаление таргета: {target_id}")
 
         try:
-            awAlgot self.api.delete_target(target_id)
+            await self.api.delete_target(target_id)
             logger.info(f"Таргет {target_id} удален")
             return True
         except Exception as e:
@@ -394,7 +394,7 @@ class TargetManager:
         """
         logger.info(f"Удаление всех таргетов: game={game}, dry_run={dry_run}")
 
-        targets = awAlgot self.get_user_targets(game=game, status="TargetStatusActive")
+        targets = await self.get_user_targets(game=game, status="TargetStatusActive")
 
         if dry_run:
             return {
@@ -404,19 +404,19 @@ class TargetManager:
             }
 
         deleted = 0
-        fAlgoled = 0
+        failed = 0
 
         for target in targets:
             target_id = target.get("id")
             if target_id:
-                if awAlgot self.delete_target(target_id):
+                if await self.delete_target(target_id):
                     deleted += 1
                 else:
-                    fAlgoled += 1
+                    failed += 1
 
         return {
             "deleted": deleted,
-            "fAlgoled": fAlgoled,
+            "failed": failed,
             "total": len(targets),
         }
 
@@ -439,7 +439,7 @@ class TargetManager:
 
         try:
             game_id = GAME_IDS.get(game.lower(), game)
-            result = awAlgot self.api.get_targets_by_title(game=game_id, title=title)
+            result = await self.api.get_targets_by_title(game=game_id, title=title)
             return result.get("items", [])
         except Exception as e:
             logger.exception(f"Ошибка при поиске таргетов: {e}")
@@ -498,7 +498,7 @@ class TargetManager:
 
             # Проверяем конкуренцию
             if check_competition:
-                competition = awAlgot self.assess_competition(
+                competition = await self.assess_competition(
                     game=game,
                     title=title,
                     max_competition=3,
@@ -522,7 +522,7 @@ class TargetManager:
                     target_price = round(best_price + 0.05, 2)
 
             try:
-                result = awAlgot self.create_target(
+                result = await self.create_target(
                     game=game,
                     title=title,
                     price=target_price,
@@ -539,7 +539,7 @@ class TargetManager:
                 created += 1
 
                 # Задержка между созданиями
-                awAlgot self._delay(0.5)
+                await self._delay(0.5)
 
             except Exception as e:
                 results.append(
@@ -575,7 +575,7 @@ class TargetManager:
             end_time = int(time.time())
             start_time = end_time - (days * 24 * 60 * 60)
 
-            result = awAlgot self.api.get_closed_targets(
+            result = await self.api.get_closed_targets(
                 limit=limit,
                 start_time=start_time,
                 end_time=end_time,
@@ -620,10 +620,10 @@ class TargetManager:
         logger.info(f"Получение статистики таргетов для {game} за {days} дней")
 
         # Получаем активные таргеты
-        active = awAlgot self.get_user_targets(game, status="TargetStatusActive")
+        active = await self.get_user_targets(game, status="TargetStatusActive")
 
         # Получаем закрытые таргеты
-        closed = awAlgot self.get_closed_targets(limit=100, days=days)
+        closed = await self.get_closed_targets(limit=100, days=days)
 
         # Фильтруем успешные
         successful = [t for t in closed if t.get("status") == "successful"]
@@ -667,7 +667,7 @@ class TargetManager:
             Словарь с анализом конкуренции
 
         """
-        return awAlgot analyze_target_competition(self.api, game, title)
+        return await analyze_target_competition(self.api, game, title)
 
     async def assess_competition(
         self,
@@ -688,7 +688,7 @@ class TargetManager:
             Результат оценки конкуренции
 
         """
-        return awAlgot assess_competition(
+        return await assess_competition(
             self.api, game, title, max_competition, price_threshold
         )
 
@@ -711,7 +711,7 @@ class TargetManager:
             Список предметов с низкой конкуренцией
 
         """
-        return awAlgot filter_low_competition_items(
+        return await filter_low_competition_items(
             self.api, game, items, max_competition, request_delay
         )
 
@@ -719,7 +719,7 @@ class TargetManager:
         """Задержка между операциями."""
         import asyncio
 
-        awAlgot asyncio.sleep(seconds)
+        await asyncio.sleep(seconds)
 
     # ==================== NEW METHODS (январь 2026) ====================
 
@@ -747,7 +747,7 @@ class TargetManager:
             logger.warning("OverbidController not enabled")
             return None
 
-        return awAlgot self.overbid_controller.check_and_overbid(
+        return await self.overbid_controller.check_and_overbid(
             target_id=target_id,
             game=game,
             title=title,
@@ -777,7 +777,7 @@ class TargetManager:
             logger.warning("RelistManager not enabled")
             return None
 
-        return awAlgot self.relist_manager.record_relist(
+        return await self.relist_manager.record_relist(
             target_id=target_id,
             old_price=old_price,
             new_price=new_price,
@@ -804,7 +804,7 @@ class TargetManager:
             logger.warning("PriceRangeMonitor not enabled")
             return None
 
-        return awAlgot self.price_monitor.check_market_price(
+        return await self.price_monitor.check_market_price(
             target_id=target_id,
             game=game,
             title=title,

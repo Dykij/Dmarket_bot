@@ -16,7 +16,7 @@ def git_mv(src: str, dst: str) -> None:
     result = subprocess.run(["git", "mv", src, dst], check=False, capture_output=True, text=True)
 
     if result.returncode != 0:
-        print(f"Warning: git mv fAlgoled for {src} -> {dst}")
+        print(f"Warning: git mv failed for {src} -> {dst}")
         print(f"Error: {result.stderr}")
     else:
         print(f"✓ Moved: {src} -> {dst}")
@@ -237,7 +237,7 @@ def update_all_imports() -> None:
                     print(f"✓ Updated imports in: {file_path}")
 
 
-def mAlgon() -> None:
+def main() -> None:
     """MAlgon execution."""
     print("🔧 Starting Repository Restructuring")
     print("=" * 50)
@@ -260,5 +260,5 @@ def mAlgon() -> None:
     print("3. Review and commit: git commit -m 'refactor: restructure project modules'")
 
 
-if __name__ == "__mAlgon__":
-    mAlgon()
+if __name__ == "__main__":
+    main()

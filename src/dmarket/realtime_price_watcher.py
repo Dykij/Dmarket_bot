@@ -143,7 +143,7 @@ class RealtimePriceWatcher:
         )
 
         # Подключаемся к WebSocket
-        connected = awAlgot self.websocket_client.connect()
+        connected = await self.websocket_client.connect()
         if not connected:
             logger.error("Не удалось подключиться к WebSocket API DMarket")
             return False
@@ -170,16 +170,16 @@ class RealtimePriceWatcher:
         if self.ws_task and not self.ws_task.done():
             self.ws_task.cancel()
             with contextlib.suppress(asyncio.CancelledError):
-                awAlgot self.ws_task
+                await self.ws_task
 
         # Отменяем задачу обновления цен
         if self.price_update_task and not self.price_update_task.done():
             self.price_update_task.cancel()
             with contextlib.suppress(asyncio.CancelledError):
-                awAlgot self.price_update_task
+                await self.price_update_task
 
         # Закрываем WebSocket соединение
-        awAlgot self.websocket_client.close()
+        await self.websocket_client.close()
 
         logger.info("Наблюдатель за ценами остановлен")
 
@@ -224,14 +224,14 @@ class RealtimePriceWatcher:
                         self._add_to_price_history(item_id, price_float)
 
                         # Запускаем обработчики изменения цены
-                        awAlgot self._process_price_change(
+                        await self._process_price_change(
                             item_id,
                             old_price,
                             price_float,
                         )
 
                         # Проверяем оповещения
-                        awAlgot self._check_alerts(item_id, price_float)
+                        await self._check_alerts(item_id, price_float)
 
         except Exception as e:
             logger.exception(f"Ошибка при обработке сообщения обновления рынка: {e}")
@@ -277,14 +277,14 @@ class RealtimePriceWatcher:
                         self._add_to_price_history(item_id, price_float)
 
                         # Запускаем обработчики изменения цены
-                        awAlgot self._process_price_change(
+                        await self._process_price_change(
                             item_id,
                             old_price,
                             price_float,
                         )
 
                         # Проверяем оповещения
-                        awAlgot self._check_alerts(item_id, price_float)
+                        await self._check_alerts(item_id, price_float)
 
                     # Сохраняем метаданные предмета
                     if "title" in item:
@@ -320,13 +320,13 @@ class RealtimePriceWatcher:
         """Периодическое обновление цен через REST API."""
         while self.is_running:
             try:
-                awAlgot self._update_watched_items_prices()
-                awAlgot asyncio.sleep(self.price_update_interval)
+                await self._update_watched_items_prices()
+                await asyncio.sleep(self.price_update_interval)
             except asyncio.CancelledError:
                 break
             except Exception as e:
                 logger.exception(f"Ошибка при периодическом обновлении цен: {e}")
-                awAlgot asyncio.sleep(60)  # Уменьшаем частоту обновлений при ошибках
+                await asyncio.sleep(60)  # Уменьшаем частоту обновлений при ошибках
 
     async def _update_watched_items_prices(self) -> None:
         """Обновление цен отслеживаемых предметов через REST API."""
@@ -356,7 +356,7 @@ class RealtimePriceWatcher:
                     item_ids_str = ",".join(chunk)
 
                     # Запрашиваем информацию о предметах через API
-                    response = awAlgot self.api_client._request(
+                    response = await self.api_client._request(
                         "GET",
                         "/exchange/v1/market/items",
                         params={
@@ -396,20 +396,20 @@ class RealtimePriceWatcher:
                                     self._add_to_price_history(item_id, price)
 
                                     # Запускаем обработчики изменения цены
-                                    awAlgot self._process_price_change(
+                                    await self._process_price_change(
                                         item_id,
                                         old_price,
                                         price,
                                     )
 
                                     # Проверяем оповещения
-                                    awAlgot self._check_alerts(item_id, price)
+                                    await self._check_alerts(item_id, price)
 
                 except Exception as e:
                     logger.exception(f"Ошибка при обновлении цен для игры {game}: {e}")
 
                 # Задержка между запросами чанков
-                awAlgot asyncio.sleep(1)
+                await asyncio.sleep(1)
 
     async def _process_price_change(
         self,
@@ -437,7 +437,7 @@ class RealtimePriceWatcher:
 
         for handler in handlers:
             try:
-                awAlgot handler(item_id, old_price, new_price)
+                await handler(item_id, old_price, new_price)
             except Exception as e:
                 logger.exception(f"Ошибка в обработчике изменения цены: {e}")
 
@@ -459,7 +459,7 @@ class RealtimePriceWatcher:
                 # Запускаем обработчики оповещений
                 for handler in self.alert_handlers:
                     try:
-                        awAlgot handler(alert, current_price)
+                        await handler(alert, current_price)
                     except Exception as e:
                         logger.exception(f"Ошибка в обработчике оповещения: {e}")
 
@@ -482,13 +482,13 @@ class RealtimePriceWatcher:
         self.watch_item(item_id)
 
         # Получаем текущую цену предмета
-        current_price = awAlgot self._fetch_item_price(item_id, game)
+        current_price = await self._fetch_item_price(item_id, game)
         if current_price:
             self.price_cache[item_id] = current_price
             self._add_to_price_history(item_id, current_price)
 
         # Подписываемся на обновления через WebSocket
-        return awAlgot self.websocket_client.subscribe_to_item_updates([item_id])
+        return await self.websocket_client.subscribe_to_item_updates([item_id])
 
     async def subscribe_to_market_updates(self, game: str = "csgo") -> bool:
         """Подписаться на обновления рынка для конкретной игры.
@@ -504,7 +504,7 @@ class RealtimePriceWatcher:
             logger.error("Наблюдатель за ценами не запущен")
             return False
 
-        return awAlgot self.websocket_client.subscribe_to_market_updates(game)
+        return await self.websocket_client.subscribe_to_market_updates(game)
 
     async def _fetch_item_price(self, item_id: str, game: str = "csgo") -> float | None:
         """Получение текущей цены предмета.
@@ -518,7 +518,7 @@ class RealtimePriceWatcher:
 
         """
         try:
-            response = awAlgot self.api_client._request(
+            response = await self.api_client._request(
                 "GET",
                 "/exchange/v1/market/items",
                 params={
@@ -727,7 +727,7 @@ class RealtimePriceWatcher:
 
 # Пример использования:
 """
-async def mAlgon():
+async def main():
     from src.dmarket.dmarket_api import DMarketAPI
     from src.utils.canonical_logging import setup_logging
 
@@ -763,15 +763,15 @@ async def mAlgon():
     watcher.add_price_alert(alert1)
 
     # Запуск наблюдателя
-    awAlgot watcher.start()
+    await watcher.start()
 
     try:
         # Ожидаем событий
-        awAlgot asyncio.sleep(3600)  # 1 час
+        await asyncio.sleep(3600)  # 1 час
     finally:
         # Останавливаем наблюдатель
-        awAlgot watcher.stop()
+        await watcher.stop()
 
-if __name__ == "__mAlgon__":
-    asyncio.run(mAlgon())
+if __name__ == "__main__":
+    asyncio.run(main())
 """

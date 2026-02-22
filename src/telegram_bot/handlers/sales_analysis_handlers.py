@@ -86,7 +86,7 @@ async def handle_sales_analysis(
     parts = message.split(" ", 1)
 
     if len(parts) < 2:
-        awAlgot update.message.reply_text(
+        await update.message.reply_text(
             "⚠️ <b>Необходимо указать название предмета!</b>\n\n"
             "Пример: <code>/sales_analysis AWP | Asiimov (Field-Tested)</code>",
             parse_mode=ParseMode.HTML,
@@ -96,7 +96,7 @@ async def handle_sales_analysis(
     item_name = parts[1].strip()
 
     # Отправляем сообщение о начале анализа
-    reply_message = awAlgot update.message.reply_text(
+    reply_message = await update.message.reply_text(
         f"🔍 Анализ истории продаж для предмета:\n<code>{item_name}</code>\n\n"
         "⏳ Пожалуйста, подождите...",
         parse_mode=ParseMode.HTML,
@@ -104,7 +104,7 @@ async def handle_sales_analysis(
 
     try:
         # Выполняем анализ истории продаж напрямую
-        analysis = awAlgot analyze_sales_history(
+        analysis = await analyze_sales_history(
             item_name=item_name,
             days=14,  # Анализируем за 2 недели
         )
@@ -131,7 +131,7 @@ async def handle_sales_analysis(
         )
 
         # Отправляем результаты анализа
-        awAlgot reply_message.edit_text(
+        await reply_message.edit_text(
             text=formatted_message,
             reply_markup=keyboard,
             parse_mode=ParseMode.HTML,
@@ -140,14 +140,14 @@ async def handle_sales_analysis(
     except APIError as e:
         # Обработка ошибок API
         logger.exception(f"Ошибка API при анализе продаж: {e}")
-        awAlgot reply_message.edit_text(
+        await reply_message.edit_text(
             f"❌ <b>Ошибка при получении данных о продажах:</b> {e.message}",
             parse_mode=ParseMode.HTML,
         )
     except Exception as e:
         # Обработка прочих ошибок
         logger.exception(f"Ошибка при анализе продаж: {e!s}")
-        awAlgot reply_message.edit_text(
+        await reply_message.edit_text(
             f"❌ <b>Произошла ошибка:</b> {e!s}",
             parse_mode=ParseMode.HTML,
         )
@@ -175,14 +175,14 @@ async def handle_arbitrage_with_sales(
 
     # Отправляем сообщение о начале поиска
     game_name = GAMES.get(game, game)
-    reply_message = awAlgot update.message.reply_text(
+    reply_message = await update.message.reply_text(
         f"🔍 Поиск арбитражных возможностей для {game_name}...\n\n⏳ Пожалуйста, подождите...",
         parse_mode=ParseMode.HTML,
     )
 
     try:
         # Выполняем поиск арбитражных возможностей напрямую
-        results = awAlgot enhanced_arbitrage_search(
+        results = await enhanced_arbitrage_search(
             game=game,
             min_profit=1.0,
         )
@@ -215,7 +215,7 @@ async def handle_arbitrage_with_sales(
         )
 
         # Отправляем результаты поиска
-        awAlgot reply_message.edit_text(
+        await reply_message.edit_text(
             text=formatted_message,
             reply_markup=keyboard,
             parse_mode=ParseMode.HTML,
@@ -224,14 +224,14 @@ async def handle_arbitrage_with_sales(
     except APIError as e:
         # Обработка ошибок API
         logger.exception(f"Ошибка API при поиске арбитража с учетом продаж: {e}")
-        awAlgot reply_message.edit_text(
+        await reply_message.edit_text(
             f"❌ <b>Ошибка при поиске арбитражных возможностей:</b> {e.message}",
             parse_mode=ParseMode.HTML,
         )
     except Exception as e:
         # Обработка прочих ошибок
         logger.exception(f"Ошибка при поиске арбитража с учетом продаж: {e!s}")
-        awAlgot reply_message.edit_text(
+        await reply_message.edit_text(
             f"❌ <b>Произошла ошибка:</b> {e!s}",
             parse_mode=ParseMode.HTML,
         )
@@ -259,7 +259,7 @@ async def handle_liquidity_analysis(
     parts = message.split(" ", 1)
 
     if len(parts) < 2:
-        awAlgot update.message.reply_text(
+        await update.message.reply_text(
             "⚠️ <b>Необходимо указать название предмета!</b>\n\n"
             "Пример: <code>/liquidity AWP | Asiimov (Field-Tested)</code>",
             parse_mode=ParseMode.HTML,
@@ -270,7 +270,7 @@ async def handle_liquidity_analysis(
     # Note: Game filtering reserved for future implementation
 
     # Отправляем сообщение о начале анализа
-    reply_message = awAlgot update.message.reply_text(
+    reply_message = await update.message.reply_text(
         f"🔍 Анализ ликвидности предмета:\n<code>{item_name}</code>\n\n⏳ Пожалуйста, подождите...",
         parse_mode=ParseMode.HTML,
     )
@@ -278,7 +278,7 @@ async def handle_liquidity_analysis(
     try:
         # Выполняем анализ ликвидности напрямую
         # Note: analyze_item_liquidity expects item_id, using item_name as ID
-        analysis = awAlgot analyze_item_liquidity(item_id=item_name)
+        analysis = await analyze_item_liquidity(item_id=item_name)
 
         # Форматируем результаты анализа с использованием функции форматирования
         formatted_message = format_liquidity_analysis(analysis, item_name)
@@ -300,7 +300,7 @@ async def handle_liquidity_analysis(
         )
 
         # Отправляем результаты анализа
-        awAlgot reply_message.edit_text(
+        await reply_message.edit_text(
             text=formatted_message,
             reply_markup=keyboard,
             parse_mode=ParseMode.HTML,
@@ -309,14 +309,14 @@ async def handle_liquidity_analysis(
     except APIError as e:
         # Обработка ошибок API
         logger.exception(f"Ошибка API при анализе ликвидности: {e}")
-        awAlgot reply_message.edit_text(
+        await reply_message.edit_text(
             f"❌ <b>Ошибка при анализе ликвидности:</b> {e.message}",
             parse_mode=ParseMode.HTML,
         )
     except Exception as e:
         # Обработка прочих ошибок
         logger.exception(f"Ошибка при анализе ликвидности: {e!s}")
-        awAlgot reply_message.edit_text(
+        await reply_message.edit_text(
             f"❌ <b>Произошла ошибка:</b> {e!s}",
             parse_mode=ParseMode.HTML,
         )
@@ -343,14 +343,14 @@ async def handle_sales_volume_stats(
 
     # Отправляем сообщение о начале запроса
     game_name = GAMES.get(game, game)
-    reply_message = awAlgot update.message.reply_text(
+    reply_message = await update.message.reply_text(
         f"🔍 Получение статистики объема продаж для {game_name}...\n\n⏳ Пожалуйста, подождите...",
         parse_mode=ParseMode.HTML,
     )
 
     try:
         # Выполняем запрос статистики напрямую
-        stats = awAlgot get_sales_volume_stats(game=game)
+        stats = await get_sales_volume_stats(game=game)
 
         # Форматируем результаты с использованием функции форматирования
         formatted_message = format_sales_volume_stats(stats, game)
@@ -372,7 +372,7 @@ async def handle_sales_volume_stats(
         )
 
         # Отправляем результаты
-        awAlgot reply_message.edit_text(
+        await reply_message.edit_text(
             text=formatted_message,
             reply_markup=keyboard,
             parse_mode=ParseMode.HTML,
@@ -381,14 +381,14 @@ async def handle_sales_volume_stats(
     except APIError as e:
         # Обработка ошибок API
         logger.exception(f"Ошибка API при получении статистики объема продаж: {e}")
-        awAlgot reply_message.edit_text(
+        await reply_message.edit_text(
             f"❌ <b>Ошибка при получении статистики:</b> {e.message}",
             parse_mode=ParseMode.HTML,
         )
     except Exception as e:
         # Обработка прочих ошибок
         logger.exception(f"Ошибка при получении статистики объема продаж: {e!s}")
-        awAlgot reply_message.edit_text(
+        await reply_message.edit_text(
             f"❌ <b>Произошла ошибка:</b> {e!s}",
             parse_mode=ParseMode.HTML,
         )

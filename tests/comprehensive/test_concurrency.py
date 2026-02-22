@@ -28,12 +28,12 @@ class TestAsyncConcurrency:
         results = []
 
         async def mock_api_call(request_id: int) -> dict:
-            awAlgot asyncio.sleep(0.01)
+            await asyncio.sleep(0.01)
             return {"id": request_id, "status": "success"}
 
         # Execute concurrent requests
         tasks = [mock_api_call(i) for i in range(10)]
-        results = awAlgot asyncio.gather(*tasks)
+        results = await asyncio.gather(*tasks)
 
         # All requests should complete successfully
         assert len(results) == 10
@@ -52,7 +52,7 @@ class TestAsyncConcurrency:
         async def cached_operation(key: str, value: str) -> str:
             async with lock:
                 if key not in cache:
-                    awAlgot asyncio.sleep(0.001)  # Simulate computation
+                    await asyncio.sleep(0.001)  # Simulate computation
                     cache[key] = value
                     operations.append(f"write:{key}")
                 else:
@@ -61,7 +61,7 @@ class TestAsyncConcurrency:
 
         # Concurrent access to same key
         tasks = [cached_operation("key1", f"value_{i}") for i in range(5)]
-        results = awAlgot asyncio.gather(*tasks)
+        results = await asyncio.gather(*tasks)
 
         # Only one write should occur
         write_count = sum(1 for op in operations if op.startswith("write"))
@@ -71,14 +71,14 @@ class TestAsyncConcurrency:
 
     @pytest.mark.asyncio
     async def test_concurrent_balance_updates(self) -> None:
-        """Test concurrent balance updates mAlgontAlgon consistency."""
+        """Test concurrent balance updates maintAlgon consistency."""
         balance = {"amount": 1000}
         lock = asyncio.Lock()
 
         async def update_balance(delta: int) -> int:
             async with lock:
                 current = balance["amount"]
-                awAlgot asyncio.sleep(0.001)  # Simulate processing
+                await asyncio.sleep(0.001)  # Simulate processing
                 balance["amount"] = current + delta
                 return balance["amount"]
 
@@ -89,7 +89,7 @@ class TestAsyncConcurrency:
             update_balance(200),
             update_balance(-100),
         ]
-        awAlgot asyncio.gather(*tasks)
+        await asyncio.gather(*tasks)
 
         # Final balance should be consistent
         expected = 1000 + 100 - 50 + 200 - 100
@@ -111,7 +111,7 @@ class TestAsyncConcurrency:
                     current_count += 1
                     concurrent_count.append(current_count)
 
-                awAlgot asyncio.sleep(0.01)
+                await asyncio.sleep(0.01)
 
                 async with lock:
                     current_count -= 1
@@ -119,7 +119,7 @@ class TestAsyncConcurrency:
             return op_id
 
         tasks = [limited_operation(i) for i in range(10)]
-        awAlgot asyncio.gather(*tasks)
+        await asyncio.gather(*tasks)
 
         # Concurrent count should never exceed limit
         assert max(concurrent_count) <= max_concurrent
@@ -143,14 +143,14 @@ class TestRaceConditions:
         async def purchase_item(buyer_id: int) -> bool:
             async with lock:
                 if inventory.get("item_1", 0) > 0:
-                    awAlgot asyncio.sleep(0.001)  # Simulate delay
+                    await asyncio.sleep(0.001)  # Simulate delay
                     inventory["item_1"] -= 1
                     purchases.append(buyer_id)
                     return True
                 return False
 
         # Two buyers try to purchase the same item
-        results = awAlgot asyncio.gather(
+        results = await asyncio.gather(
             purchase_item(1),
             purchase_item(2),
         )
@@ -172,14 +172,14 @@ class TestRaceConditions:
                 if tx_id in spent_transactions:
                     return False  # Already processed
                 if balance["amount"] >= amount:
-                    awAlgot asyncio.sleep(0.001)
+                    await asyncio.sleep(0.001)
                     balance["amount"] -= amount
                     spent_transactions.add(tx_id)
                     return True
                 return False
 
         # Try to spend same transaction twice concurrently
-        results = awAlgot asyncio.gather(
+        results = await asyncio.gather(
             spend("tx1", 100),
             spend("tx1", 100),
         )
@@ -197,11 +197,11 @@ class TestRaceConditions:
         async def increment():
             async with lock:
                 current = counter["value"]
-                awAlgot asyncio.sleep(0.0001)
+                await asyncio.sleep(0.0001)
                 counter["value"] = current + 1
 
         tasks = [increment() for _ in range(100)]
-        awAlgot asyncio.gather(*tasks)
+        await asyncio.gather(*tasks)
 
         assert counter["value"] == 100
 
@@ -224,31 +224,31 @@ class TestDeadlockPrevention:
         async def operation_1():
             # Always acquire locks in same order
             async with lock_a, lock_b:
-                awAlgot asyncio.sleep(0.01)
+                await asyncio.sleep(0.01)
                 results.append("op1")
 
         async def operation_2():
             # Same order as operation_1
             async with lock_a, lock_b:
-                awAlgot asyncio.sleep(0.01)
+                await asyncio.sleep(0.01)
                 results.append("op2")
 
-        awAlgot asyncio.gather(operation_1(), operation_2())
+        await asyncio.gather(operation_1(), operation_2())
 
         assert len(results) == 2
 
     @pytest.mark.asyncio
-    async def test_timeout_prevents_indefinite_wAlgot(self) -> None:
-        """Test timeout prevents indefinite wAlgoting."""
+    async def test_timeout_prevents_indefinite_wait(self) -> None:
+        """Test timeout prevents indefinite waiting."""
         lock = asyncio.Lock()
-        awAlgot lock.acquire()  # Lock is held
+        await lock.acquire()  # Lock is held
 
         async def try_acquire_with_timeout():
             try:
-                # asyncio.Lock doesn't have timeout, simulate with wAlgot_for
+                # asyncio.Lock doesn't have timeout, simulate with wait_for
                 acquired = False
                 try:
-                    awAlgot asyncio.wAlgot_for(
+                    await asyncio.wait_for(
                         asyncio.shield(lock.acquire()),
                         timeout=0.1
                     )
@@ -259,7 +259,7 @@ class TestDeadlockPrevention:
             finally:
                 pass
 
-        result = awAlgot try_acquire_with_timeout()
+        result = await try_acquire_with_timeout()
 
         # Should timeout, not acquire
         assert result is False
@@ -270,7 +270,7 @@ class TestDeadlockPrevention:
     async def test_try_lock_pattern(self) -> None:
         """Test try-lock pattern for non-blocking acquisition."""
         lock = asyncio.Lock()
-        awAlgot lock.acquire()
+        await lock.acquire()
 
         # Try to acquire without blocking
         acquired = lock.locked()
@@ -296,17 +296,17 @@ class TestResourceContention:
 
         # Fill pool with connections
         for i in range(pool_size):
-            awAlgot pool.put(f"conn_{i}")
+            await pool.put(f"conn_{i}")
 
         async def use_connection(task_id: int) -> str:
-            conn = awAlgot pool.get()
-            awAlgot asyncio.sleep(0.01)  # Use connection
-            awAlgot pool.put(conn)
+            conn = await pool.get()
+            await asyncio.sleep(0.01)  # Use connection
+            await pool.put(conn)
             return f"task_{task_id}_used_{conn}"
 
         # More tasks than connections
         tasks = [use_connection(i) for i in range(10)]
-        results = awAlgot asyncio.gather(*tasks)
+        results = await asyncio.gather(*tasks)
 
         assert len(results) == 10
         # Pool should be back to full
@@ -334,7 +334,7 @@ class TestResourceContention:
                 return True
 
         # Burst of requests
-        results = awAlgot asyncio.gather(*[
+        results = await asyncio.gather(*[
             rate_limited_request(i) for i in range(10)
         ])
 
@@ -349,17 +349,17 @@ class TestResourceContention:
 
         # Add items with priorities
         for i in range(5):
-            awAlgot queue.put(i)
+            await queue.put(i)
 
         async def process_queue():
             while not queue.empty():
-                item = awAlgot queue.get()
+                item = await queue.get()
                 processed_order.append(item)
                 queue.task_done()
 
-        awAlgot process_queue()
+        await process_queue()
 
-        # FIFO order should be mAlgontAlgoned
+        # FIFO order should be maintAlgoned
         assert processed_order == [0, 1, 2, 3, 4]
 
 
@@ -433,17 +433,17 @@ class TestAsyncQueues:
 
         async def producer():
             for i in range(10):
-                awAlgot queue.put(i)
+                await queue.put(i)
                 produced.append(i)
-                awAlgot asyncio.sleep(0.001)
+                await asyncio.sleep(0.001)
 
         async def consumer():
             while len(consumed) < 10:
-                item = awAlgot queue.get()
+                item = await queue.get()
                 consumed.append(item)
                 queue.task_done()
 
-        awAlgot asyncio.gather(producer(), consumer())
+        await asyncio.gather(producer(), consumer())
 
         assert produced == consumed
         assert len(consumed) == 10
@@ -457,12 +457,12 @@ class TestAsyncQueues:
 
         # Add items
         for i in range(30):
-            awAlgot queue.put(i)
+            await queue.put(i)
 
         async def consumer(consumer_id: int):
             while not done.is_set() or not queue.empty():
                 try:
-                    item = awAlgot asyncio.wAlgot_for(queue.get(), timeout=0.1)
+                    item = await asyncio.wait_for(queue.get(), timeout=0.1)
                     consumed[consumer_id].append(item)
                     queue.task_done()
                 except asyncio.TimeoutError:
@@ -475,10 +475,10 @@ class TestAsyncQueues:
         ]
 
         # WAlgot for queue to be processed
-        awAlgot queue.join()
+        await queue.join()
         done.set()
 
-        awAlgot asyncio.gather(*tasks)
+        await asyncio.gather(*tasks)
 
         # All items should be consumed
         total_consumed = sum(len(items) for items in consumed.values())

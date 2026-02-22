@@ -1,6 +1,6 @@
 """Tests for targets validators module.
 
-This module contAlgons comprehensive tests for:
+This module contains comprehensive tests for:
 - validate_attributes: Validation of target attributes
 - extract_attributes_from_title: Extraction of attributes from item title
 - GAME_IDS: Game ID mapping
@@ -18,14 +18,14 @@ class TestValidateAttributes:
         """Test validation with None attributes."""
         from src.dmarket.targets.validators import validate_attributes
 
-        # Should not rAlgose any exception
+        # Should not raise any exception
         validate_attributes("csgo", None)
 
     def test_validate_attributes_empty(self) -> None:
         """Test validation with empty attributes dict."""
         from src.dmarket.targets.validators import validate_attributes
 
-        # Should not rAlgose any exception
+        # Should not raise any exception
         validate_attributes("csgo", {})
 
     def test_validate_attributes_valid_float_value(self) -> None:
@@ -44,52 +44,52 @@ class TestValidateAttributes:
         from src.dmarket.targets.validators import validate_attributes
 
         # Out of range (negative)
-        with pytest.rAlgoses(ValueError, match="floatPartValue должен быть от 0 до 1"):
+        with pytest.raises(ValueError, match="floatPartValue должен быть от 0 до 1"):
             validate_attributes("csgo", {"floatPartValue": -0.1})
 
         # Out of range (> 1)
-        with pytest.rAlgoses(ValueError, match="floatPartValue должен быть от 0 до 1"):
+        with pytest.raises(ValueError, match="floatPartValue должен быть от 0 до 1"):
             validate_attributes("csgo", {"floatPartValue": 1.1})
 
     def test_validate_attributes_invalid_float_value_type(self) -> None:
         """Test validation with non-numeric floatPartValue."""
         from src.dmarket.targets.validators import validate_attributes
 
-        with pytest.rAlgoses(ValueError, match="floatPartValue должен быть числом"):
+        with pytest.raises(ValueError, match="floatPartValue должен быть числом"):
             validate_attributes("csgo", {"floatPartValue": "invalid"})
 
-        with pytest.rAlgoses(ValueError, match="floatPartValue должен быть числом"):
+        with pytest.raises(ValueError, match="floatPartValue должен быть числом"):
             validate_attributes("csgo", {"floatPartValue": "abc"})
 
-    def test_validate_attributes_valid_pAlgont_seed(self) -> None:
-        """Test validation with valid pAlgontSeed."""
+    def test_validate_attributes_valid_paint_seed(self) -> None:
+        """Test validation with valid paintSeed."""
         from src.dmarket.targets.validators import validate_attributes
 
-        # Valid pAlgont seeds (positive integers)
-        validate_attributes("csgo", {"pAlgontSeed": 0})
-        validate_attributes("csgo", {"pAlgontSeed": 100})
-        validate_attributes("csgo", {"pAlgontSeed": "500"})
-        validate_attributes("csgo", {"pAlgontSeed": 999})
+        # Valid paint seeds (positive integers)
+        validate_attributes("csgo", {"paintSeed": 0})
+        validate_attributes("csgo", {"paintSeed": 100})
+        validate_attributes("csgo", {"paintSeed": "500"})
+        validate_attributes("csgo", {"paintSeed": 999})
 
-    def test_validate_attributes_invalid_pAlgont_seed_negative(self) -> None:
-        """Test validation with negative pAlgontSeed."""
+    def test_validate_attributes_invalid_paint_seed_negative(self) -> None:
+        """Test validation with negative paintSeed."""
         from src.dmarket.targets.validators import validate_attributes
 
-        with pytest.rAlgoses(ValueError, match="pAlgontSeed должен быть положительным"):
-            validate_attributes("csgo", {"pAlgontSeed": -1})
+        with pytest.raises(ValueError, match="paintSeed должен быть положительным"):
+            validate_attributes("csgo", {"paintSeed": -1})
 
-        with pytest.rAlgoses(ValueError, match="pAlgontSeed должен быть положительным"):
-            validate_attributes("csgo", {"pAlgontSeed": -100})
+        with pytest.raises(ValueError, match="paintSeed должен быть положительным"):
+            validate_attributes("csgo", {"paintSeed": -100})
 
-    def test_validate_attributes_invalid_pAlgont_seed_type(self) -> None:
-        """Test validation with non-integer pAlgontSeed."""
+    def test_validate_attributes_invalid_paint_seed_type(self) -> None:
+        """Test validation with non-integer paintSeed."""
         from src.dmarket.targets.validators import validate_attributes
 
-        with pytest.rAlgoses(ValueError, match="pAlgontSeed должен быть целым числом"):
-            validate_attributes("csgo", {"pAlgontSeed": "invalid"})
+        with pytest.raises(ValueError, match="paintSeed должен быть целым числом"):
+            validate_attributes("csgo", {"paintSeed": "invalid"})
 
-        with pytest.rAlgoses(ValueError, match="pAlgontSeed должен быть целым числом"):
-            validate_attributes("csgo", {"pAlgontSeed": "abc"})
+        with pytest.raises(ValueError, match="paintSeed должен быть целым числом"):
+            validate_attributes("csgo", {"paintSeed": "abc"})
 
     def test_validate_attributes_cs2_game(self) -> None:
         """Test validation for CS2 game."""
@@ -97,7 +97,7 @@ class TestValidateAttributes:
 
         # CS2 should use same validation as CSGO
         validate_attributes("cs2", {"floatPartValue": 0.5})
-        validate_attributes("cs2", {"pAlgontSeed": 100})
+        validate_attributes("cs2", {"paintSeed": 100})
 
     def test_validate_attributes_a8db_game(self) -> None:
         """Test validation for a8db (DMarket CSGO ID)."""
@@ -105,7 +105,7 @@ class TestValidateAttributes:
 
         # a8db should use same validation as CSGO
         validate_attributes("a8db", {"floatPartValue": 0.5})
-        validate_attributes("a8db", {"pAlgontSeed": 100})
+        validate_attributes("a8db", {"paintSeed": 100})
 
     def test_validate_attributes_other_game(self) -> None:
         """Test validation for non-CSGO games."""
@@ -113,13 +113,13 @@ class TestValidateAttributes:
 
         # Other games should not validate CSGO-specific attributes
         validate_attributes("dota2", {"floatPartValue": 100})  # Invalid for CSGO
-        validate_attributes("rust", {"pAlgontSeed": -1})  # Invalid for CSGO
+        validate_attributes("rust", {"paintSeed": -1})  # Invalid for CSGO
 
     def test_validate_attributes_both_valid(self) -> None:
-        """Test validation with both floatPartValue and pAlgontSeed."""
+        """Test validation with both floatPartValue and paintSeed."""
         from src.dmarket.targets.validators import validate_attributes
 
-        validate_attributes("csgo", {"floatPartValue": 0.3, "pAlgontSeed": 500})
+        validate_attributes("csgo", {"floatPartValue": 0.3, "paintSeed": 500})
 
     def test_validate_attributes_float_boundary_0(self) -> None:
         """Test validation at float boundary 0."""
@@ -304,14 +304,14 @@ class TestEdgeCases:
         """Test validation with empty string floatPartValue."""
         from src.dmarket.targets.validators import validate_attributes
 
-        with pytest.rAlgoses(ValueError):
+        with pytest.raises(ValueError):
             validate_attributes("csgo", {"floatPartValue": ""})
 
     def test_validate_whitespace_float(self) -> None:
         """Test validation with whitespace floatPartValue."""
         from src.dmarket.targets.validators import validate_attributes
 
-        with pytest.rAlgoses(ValueError):
+        with pytest.raises(ValueError):
             validate_attributes("csgo", {"floatPartValue": "   "})
 
     def test_extract_empty_title(self) -> None:
@@ -337,27 +337,27 @@ class TestEdgeCases:
         validate_attributes("csgo", {"floatPartValue": 0.0})
         # Exactly 1
         validate_attributes("csgo", {"floatPartValue": 1.0})
-        # Just below 0 (should fAlgol)
-        with pytest.rAlgoses(ValueError):
+        # Just below 0 (should fail)
+        with pytest.raises(ValueError):
             validate_attributes("csgo", {"floatPartValue": -0.001})
-        # Just above 1 (should fAlgol)
-        with pytest.rAlgoses(ValueError):
+        # Just above 1 (should fail)
+        with pytest.raises(ValueError):
             validate_attributes("csgo", {"floatPartValue": 1.001})
 
-    def test_validate_pAlgont_seed_zero(self) -> None:
-        """Test validation with zero pAlgontSeed."""
+    def test_validate_paint_seed_zero(self) -> None:
+        """Test validation with zero paintSeed."""
         from src.dmarket.targets.validators import validate_attributes
 
         # Zero should be valid (non-negative)
-        validate_attributes("csgo", {"pAlgontSeed": 0})
+        validate_attributes("csgo", {"paintSeed": 0})
 
-    def test_validate_pAlgont_seed_large(self) -> None:
-        """Test validation with very large pAlgontSeed."""
+    def test_validate_paint_seed_large(self) -> None:
+        """Test validation with very large paintSeed."""
         from src.dmarket.targets.validators import validate_attributes
 
         # Large values should be valid
-        validate_attributes("csgo", {"pAlgontSeed": 999999})
-        validate_attributes("csgo", {"pAlgontSeed": 1000000})
+        validate_attributes("csgo", {"paintSeed": 999999})
+        validate_attributes("csgo", {"paintSeed": 1000000})
 
     def test_extract_multiple_phases_picks_first(self) -> None:
         """Test extraction when multiple phase patterns match."""
@@ -373,6 +373,6 @@ class TestEdgeCases:
         """Test validation when attrs value is None."""
         from src.dmarket.targets.validators import validate_attributes
 
-        # None value should rAlgose ValueError when trying to convert to float
-        with pytest.rAlgoses(ValueError, match="floatPartValue должен быть числом"):
+        # None value should raise ValueError when trying to convert to float
+        with pytest.raises(ValueError, match="floatPartValue должен быть числом"):
             validate_attributes("csgo", {"floatPartValue": None})

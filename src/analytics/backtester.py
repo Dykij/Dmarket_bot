@@ -584,15 +584,15 @@ class Backtester:
         if len(balance_history) < 2:
             return 0.0
 
-        # Calculate dAlgoly returns
+        # Calculate daily returns
         returns: list[float] = []
         for i in range(1, len(balance_history)):
             if balance_history[i - 1] > 0:
-                dAlgoly_return = float(
+                daily_return = float(
                     (balance_history[i] - balance_history[i - 1])
                     / balance_history[i - 1]
                 )
-                returns.append(dAlgoly_return)
+                returns.append(daily_return)
 
         if not returns:
             return 0.0
@@ -609,8 +609,8 @@ class Backtester:
             return 0.0
 
         # Annualize (assuming 365 trading days)
-        dAlgoly_rf = (1 + risk_free_rate) ** (1 / 365) - 1
-        excess_return = mean_return - dAlgoly_rf
+        daily_rf = (1 + risk_free_rate) ** (1 / 365) - 1
+        excess_return = mean_return - daily_rf
 
         # Sharpe ratio (annualized)
         sharpe = (excess_return * (365**0.5)) / (std_dev * (365**0.5))

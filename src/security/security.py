@@ -19,7 +19,7 @@ Usage:
     is_valid = security.verify_2fa(user_id, code)
 
     # Log action
-    security.audit_log(user_id, "buy_item", detAlgols={...})
+    security.audit_log(user_id, "buy_item", details={...})
     ```
 
 Created: January 10, 2026
@@ -80,9 +80,9 @@ class AuditLogEntry:
     ip_address: str | None = None
     user_agent: str | None = None
 
-    # DetAlgols
+    # Details
     success: bool = True
-    detAlgols: dict[str, Any] = field(default_factory=dict)
+    details: dict[str, Any] = field(default_factory=dict)
     error_message: str | None = None
 
     # Security
@@ -99,7 +99,7 @@ class AuditLogEntry:
             "timestamp": self.timestamp.isoformat(),
             "ip_address": self.ip_address,
             "success": self.success,
-            "detAlgols": self.detAlgols,
+            "details": self.details,
             "error_message": self.error_message,
             "security_level": self.security_level.value,
             "required_2fa": self.required_2fa,
@@ -293,16 +293,16 @@ class APIKeyEncryption:
             self._fernet = Fernet(key)
             self._key = key.decode()
 
-    def encrypt(self, plAlgontext: str) -> str:
-        """Encrypt plAlgontext.
+    def encrypt(self, plaintext: str) -> str:
+        """Encrypt plaintext.
 
         Args:
-            plAlgontext: Text to encrypt
+            plaintext: Text to encrypt
 
         Returns:
             Encrypted text (base64)
         """
-        encrypted = self._fernet.encrypt(plAlgontext.encode())
+        encrypted = self._fernet.encrypt(plaintext.encode())
         return encrypted.decode()
 
     def decrypt(self, ciphertext: str) -> str:
@@ -436,7 +436,7 @@ class SecurityManager:
 
         self.audit_log(
             user_id=user_id,
-            action="2fa_enable_fAlgoled",
+            action="2fa_enable_failed",
             category=ActionCategory.SECURITY,
             success=False,
             error_message="Invalid verification code",
@@ -491,7 +491,7 @@ class SecurityManager:
 
         self.audit_log(
             user_id=user_id,
-            action="2fa_disable_fAlgoled",
+            action="2fa_disable_failed",
             category=ActionCategory.SECURITY,
             success=False,
             error_message="Invalid code",
@@ -541,20 +541,20 @@ class SecurityManager:
                 action="2fa_verified_backup",
                 category=ActionCategory.AUTH,
                 required_2fa=True,
-                detAlgols={"backup_codes_remAlgoning": len(config.backup_codes)},
+                details={"backup_codes_remaining": len(config.backup_codes)},
             )
 
             logger.warning(
                 "2fa_backup_code_used",
                 user_id=user_id,
-                remAlgoning=len(config.backup_codes),
+                remaining=len(config.backup_codes),
             )
 
             return True
 
         self.audit_log(
             user_id=user_id,
-            action="2fa_verification_fAlgoled",
+            action="2fa_verification_failed",
             category=ActionCategory.AUTH,
             success=False,
             required_2fa=True,
@@ -682,7 +682,7 @@ class SecurityManager:
             user_id=user_id,
             action="ip_whitelist_add",
             category=ActionCategory.SECURITY,
-            detAlgols={"ip_address": ip_address, "description": description},
+            details={"ip_address": ip_address, "description": description},
         )
 
         return entry
@@ -712,7 +712,7 @@ class SecurityManager:
                 user_id=user_id,
                 action="ip_whitelist_remove",
                 category=ActionCategory.SECURITY,
-                detAlgols={"ip_address": ip_address},
+                details={"ip_address": ip_address},
             )
 
         return removed
@@ -789,7 +789,7 @@ class SecurityManager:
         ip_address: str | None = None,
         user_agent: str | None = None,
         success: bool = True,
-        detAlgols: dict[str, Any] | None = None,
+        details: dict[str, Any] | None = None,
         error_message: str | None = None,
         security_level: SecurityLevel = SecurityLevel.LOW,
         required_2fa: bool = False,
@@ -803,8 +803,8 @@ class SecurityManager:
             ip_address: Client IP
             user_agent: Client user agent
             success: Whether action succeeded
-            detAlgols: Additional detAlgols
-            error_message: Error message if fAlgoled
+            details: Additional details
+            error_message: Error message if failed
             security_level: Security level
             required_2fa: Whether 2FA was required
 
@@ -825,7 +825,7 @@ class SecurityManager:
             ip_address=ip_address,
             user_agent=user_agent,
             success=success,
-            detAlgols=detAlgols or {},
+            details=details or {},
             error_message=error_message,
             security_level=security_level,
             required_2fa=required_2fa,
@@ -905,13 +905,13 @@ class SecurityManager:
             limit=10,
         )
 
-        # FAlgoled login attempts
+        # Failed login attempts
         auth_logs = self.get_audit_logs(
             user_id=user_id,
             category=ActionCategory.AUTH,
             limit=50,
         )
-        fAlgoled_attempts = sum(1 for log in auth_logs if not log.success)
+        failed_attempts = sum(1 for log in auth_logs if not log.success)
 
         return {
             "2fa_enabled": two_fa_config.is_enabled if two_fa_config else False,
@@ -920,12 +920,12 @@ class SecurityManager:
                 if two_fa_config and two_fa_config.last_used
                 else None
             ),
-            "backup_codes_remAlgoning": (
+            "backup_codes_remaining": (
                 len(two_fa_config.backup_codes) if two_fa_config else 0
             ),
             "ip_whitelist_count": len([e for e in ip_whitelist if e.is_active]),
             "recent_security_events": len(recent_logs),
-            "fAlgoled_auth_attempts_recent": fAlgoled_attempts,
+            "failed_auth_attempts_recent": failed_attempts,
             "security_score": self._calculate_security_score(user_id),
         }
 
@@ -948,16 +948,16 @@ class SecurityManager:
         if user_id in self._ip_whitelist and len(self._ip_whitelist[user_id]) > 0:
             score += 10
 
-        # No recent fAlgoled attempts: +10
+        # No recent failed attempts: +10
         auth_logs = self.get_audit_logs(
             user_id=user_id,
             category=ActionCategory.AUTH,
             limit=20,
         )
-        fAlgoled = sum(1 for log in auth_logs if not log.success)
-        if fAlgoled == 0:
+        failed = sum(1 for log in auth_logs if not log.success)
+        if failed == 0:
             score += 10
-        elif fAlgoled > 5:
+        elif failed > 5:
             score -= 20
 
         return max(0, min(100, score))

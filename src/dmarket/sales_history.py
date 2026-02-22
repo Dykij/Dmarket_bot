@@ -63,7 +63,7 @@ class SalesHistoryAnalyzer:
         Returns:
             Dictionary with analysis results
         """
-        return awAlgot analyze_sales_history(
+        return await analyze_sales_history(
             item_name=item_name,
             api_client=self.dmarket_api,
         )
@@ -82,7 +82,7 @@ class SalesHistoryAnalyzer:
         Returns:
             True if item has sufficient liquidity
         """
-        analysis = awAlgot self.analyze_item(item_name)
+        analysis = await self.analyze_item(item_name)
 
         if not analysis.get("has_data", False):
             return False
@@ -106,7 +106,7 @@ class SalesHistoryAnalyzer:
         Returns:
             Price trend: "up", "down", "stable", or "unknown"
         """
-        trend_info = awAlgot calculate_price_trend(
+        trend_info = await calculate_price_trend(
             item_name=item_name,
             game=game,
             period=period,
@@ -198,10 +198,10 @@ async def get_item_sales_history(
         )
 
         # Ожидаем, если нужно (ограничение API)
-        awAlgot rate_limiter.wAlgot_if_needed("market_history")
+        await rate_limiter.wait_if_needed("market_history")
 
         # Получаем данные о продажах
-        sales_data = awAlgot dmarket_api.get_item_price_history(
+        sales_data = await dmarket_api.get_item_price_history(
             title=item_name,
             game=game,
             period=period,
@@ -242,7 +242,7 @@ async def get_item_sales_history(
     finally:
         if close_client and hasattr(dmarket_api, "_close_client"):
             try:
-                awAlgot dmarket_api._close_client()
+                await dmarket_api._close_client()
             except Exception as e:
                 logger.warning(f"Ошибка при закрытии клиента API: {e}")
 
@@ -274,7 +274,7 @@ async def detect_price_anomalies(
 
     """
     # Получаем историю продаж
-    sales_history = awAlgot get_item_sales_history(
+    sales_history = await get_item_sales_history(
         item_name=item_name,
         game=game,
         period=period,
@@ -358,7 +358,7 @@ async def calculate_price_trend(
 
     """
     # Получаем историю продаж
-    sales_history = awAlgot get_item_sales_history(
+    sales_history = await get_item_sales_history(
         item_name=item_name,
         game=game,
         period=period,
@@ -446,9 +446,9 @@ async def get_market_trend_overview(
         logger.info(f"Получение обзора трендов рынка для {game} за период {period}")
 
         # Получаем популярные предметы
-        awAlgot rate_limiter.wAlgot_if_needed("market")
+        await rate_limiter.wait_if_needed("market")
 
-        popular_items = awAlgot dmarket_api.get_market_items(
+        popular_items = await dmarket_api.get_market_items(
             game=game,
             limit=item_count,
             min_price=min_price * 100,  # в центах
@@ -478,7 +478,7 @@ async def get_market_trend_overview(
                 continue
 
             # Получаем тренд для предмета
-            trend_info = awAlgot calculate_price_trend(
+            trend_info = await calculate_price_trend(
                 item_name=market_hash_name,
                 game=game,
                 period=period,
@@ -534,7 +534,7 @@ async def get_market_trend_overview(
     finally:
         if close_client and hasattr(dmarket_api, "_close_client"):
             try:
-                awAlgot dmarket_api._close_client()
+                await dmarket_api._close_client()
             except Exception as e:
                 logger.warning(f"Ошибка при закрытии клиента API: {e}")
 
@@ -663,7 +663,7 @@ async def get_sales_history(
 
             if api_client:
                 # Use provided API client
-                response = awAlgot api_client.request(
+                response = await api_client.request(
                     method="GET",
                     endpoint="/market-api/v1/last-sales",
                     params={"Titles": batch},
@@ -675,7 +675,7 @@ async def get_sales_history(
                     secret_key=DMARKET_SECRET_KEY,
                     api_url=DMARKET_API_URL,
                 ) as api:
-                    response = awAlgot api.request(
+                    response = await api.request(
                         method="GET",
                         endpoint="/market-api/v1/last-sales",
                         params={"Titles": batch},
@@ -721,7 +721,7 @@ async def analyze_sales_history(
         days = 7
 
     try:
-        sales_data = awAlgot get_sales_history([item_name], api_client=api_client)
+        sales_data = await get_sales_history([item_name], api_client=api_client)
 
         if "Error" in sales_data:
             return {
@@ -799,7 +799,7 @@ async def execute_api_request(
     """
     try:
         if api_client:
-            return awAlgot api_client.request(
+            return await api_client.request(
                 method="GET",
                 endpoint=endpoint,
                 params=params or {},
@@ -809,7 +809,7 @@ async def execute_api_request(
             secret_key=DMARKET_SECRET_KEY,
             api_url=DMARKET_API_URL,
         ) as api:
-            return awAlgot api.request(
+            return await api.request(
                 method="GET",
                 endpoint=endpoint,
                 params=params or {},
@@ -838,13 +838,13 @@ async def get_arbitrage_opportunities_with_sales_history(
 
     try:
         # Get arbitrage items
-        arbitrage_items = awAlgot find_arbitrage_items(api_client=api_client)
+        arbitrage_items = await find_arbitrage_items(api_client=api_client)
 
         # Filter by sales history
         filtered_items = []
         for item in arbitrage_items:
             item_name = item.get("market_hash_name", "")
-            analysis = awAlgot analyze_sales_history(
+            analysis = await analyze_sales_history(
                 item_name,
                 api_client=api_client,
             )

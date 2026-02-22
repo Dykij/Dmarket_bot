@@ -138,7 +138,7 @@ class SkillSecurityScanner:
             
         except Exception as e:
             logger.error(
-                "skill_scan_fAlgoled",
+                "skill_scan_failed",
                 skill_file=str(skill_file),
                 error=str(e),
                 exc_info=True,
@@ -264,7 +264,7 @@ class SkillSecurityScanner:
         return "".join(report)
 
 
-def mAlgon() -> int:
+def main() -> int:
     """MAlgon entry point."""
     scanner = SkillSecurityScanner()
     issues = scanner.scan_all_skills()
@@ -291,5 +291,5 @@ def mAlgon() -> int:
         return 0
 
 
-if __name__ == "__mAlgon__":
-    sys.exit(mAlgon())
+if __name__ == "__main__":
+    sys.exit(main())

@@ -82,7 +82,7 @@ class TestNewUserRegistrationFlow:
         # Step 1: User sends /start
         mock_update.message.text = "/start"
 
-        awAlgot start_command(mock_update, mock_context)
+        await start_command(mock_update, mock_context)
 
         # Verify welcome message sent
         mock_update.message.reply_text.assert_called()
@@ -95,7 +95,7 @@ class TestNewUserRegistrationFlow:
         """Test user can access help after registration."""
         from src.telegram_bot.commands.basic_commands import help_command
 
-        awAlgot help_command(mock_update, mock_context)
+        await help_command(mock_update, mock_context)
 
         mock_update.message.reply_text.assert_called()
 
@@ -213,7 +213,7 @@ class TestBalanceCheckFlow:
         mock_api = mock_context.bot_data["dmarket_api"]
         mock_api.get_balance = AsyncMock(return_value={"usd": "10000", "dmc": "5000"})
 
-        balance = awAlgot mock_api.get_balance()
+        balance = await mock_api.get_balance()
 
         assert "usd" in balance
         assert "dmc" in balance
@@ -225,7 +225,7 @@ class TestBalanceCheckFlow:
         mock_api = mock_context.bot_data["dmarket_api"]
         mock_api.get_balance = AsyncMock(return_value={"usd": "50", "dmc": "0"})
 
-        balance = awAlgot mock_api.get_balance()
+        balance = await mock_api.get_balance()
 
         # Low balance
         assert int(balance["usd"]) < 100
@@ -316,12 +316,12 @@ class TestSettingsManagementFlow:
         mock_context.user_data["notifications"] = {
             "price_alerts": True,
             "arbitrage": True,
-            "dAlgoly_report": False,
+            "daily_report": False,
         }
 
         prefs = mock_context.user_data["notifications"]
         assert prefs["price_alerts"] is True
-        assert prefs["dAlgoly_report"] is False
+        assert prefs["daily_report"] is False
 
 
 # ============================================================================
@@ -338,19 +338,19 @@ class TestErrorRecoveryFlow:
         """Test recovery from API errors."""
         mock_api = mock_context.bot_data["dmarket_api"]
 
-        # First call fAlgols
+        # First call fails
         mock_api.get_balance = AsyncMock(
             side_effect=[Exception("API Error"), {"usd": "10000", "dmc": "5000"}]
         )
 
-        # First attempt fAlgols
+        # First attempt fails
         try:
-            awAlgot mock_api.get_balance()
+            await mock_api.get_balance()
         except Exception:
             pass
 
         # Second attempt succeeds
-        balance = awAlgot mock_api.get_balance()
+        balance = await mock_api.get_balance()
         assert "usd" in balance
 
     @pytest.mark.asyncio()
@@ -367,12 +367,12 @@ class TestErrorRecoveryFlow:
 
         # First attempt times out
         try:
-            awAlgot mock_api.get_market_items("csgo")
+            await mock_api.get_market_items("csgo")
         except TimeoutError:
             pass
 
         # Second attempt succeeds
-        result = awAlgot mock_api.get_market_items("csgo")
+        result = await mock_api.get_market_items("csgo")
         assert "objects" in result
 
 
@@ -393,7 +393,7 @@ class TestCompleteUserJourney:
         from src.telegram_bot.commands.basic_commands import start_command
 
         # Step 1: New user starts bot
-        awAlgot start_command(mock_update, mock_context)
+        await start_command(mock_update, mock_context)
 
         # Step 2: User is registered
         assert mock_update.message.reply_text.called
@@ -407,39 +407,39 @@ class TestCompleteUserJourney:
             return_value={"objects": [], "total": "0"}
         )
 
-        result = awAlgot mock_api.get_market_items("csgo")
+        result = await mock_api.get_market_items("csgo")
         assert "objects" in result
 
     @pytest.mark.asyncio()
     @pytest.mark.e2e()
-    async def test_dAlgoly_trading_session_journey(self, mock_context):
-        """Test journey: dAlgoly trading session."""
+    async def test_daily_trading_session_journey(self, mock_context):
+        """Test journey: daily trading session."""
         mock_api = mock_context.bot_data["dmarket_api"]
 
         # Step 1: Check balance
         mock_api.get_balance = AsyncMock(return_value={"usd": "10000", "dmc": "5000"})
-        balance = awAlgot mock_api.get_balance()
+        balance = await mock_api.get_balance()
         assert int(balance["usd"]) > 0
 
         # Step 2: Scan for opportunities
         mock_api.get_market_items = AsyncMock(
             return_value={"objects": [{"title": "Test", "price": {"USD": "100"}}]}
         )
-        items = awAlgot mock_api.get_market_items("csgo")
+        items = await mock_api.get_market_items("csgo")
         assert len(items.get("objects", [])) > 0
 
         # Step 3: Create target
         mock_api.create_target = AsyncMock(
             return_value={"targetId": "123", "status": "active"}
         )
-        target = awAlgot mock_api.create_target(title="Test", price=100)
+        target = await mock_api.create_target(title="Test", price=100)
         assert "targetId" in target
 
         # Step 4: Monitor targets
         mock_api.get_user_targets = AsyncMock(
             return_value={"targets": [{"targetId": "123", "status": "active"}]}
         )
-        targets = awAlgot mock_api.get_user_targets()
+        targets = await mock_api.get_user_targets()
         assert len(targets.get("targets", [])) > 0
 
 
@@ -469,7 +469,7 @@ class TestMultiGameScanFlow:
             }
         )
 
-        result = awAlgot mock_api.get_market_items("csgo")
+        result = await mock_api.get_market_items("csgo")
         assert "objects" in result
         assert len(result["objects"]) > 0
 
@@ -487,7 +487,7 @@ class TestMultiGameScanFlow:
             }
         )
 
-        result = awAlgot mock_api.get_market_items("dota2")
+        result = await mock_api.get_market_items("dota2")
         assert "objects" in result
 
     @pytest.mark.asyncio()
@@ -504,7 +504,7 @@ class TestMultiGameScanFlow:
             }
         )
 
-        result = awAlgot mock_api.get_market_items("rust")
+        result = await mock_api.get_market_items("rust")
         assert "objects" in result
 
     @pytest.mark.asyncio()
@@ -521,7 +521,7 @@ class TestMultiGameScanFlow:
             }
         )
 
-        result = awAlgot mock_api.get_market_items("tf2")
+        result = await mock_api.get_market_items("tf2")
         assert "objects" in result
 
 
@@ -553,7 +553,7 @@ class TestAPIKeyManagementFlow:
         mock_api.get_balance = AsyncMock(return_value={"usd": "100", "dmc": "0"})
 
         # Validation by checking balance
-        result = awAlgot mock_api.get_balance()
+        result = await mock_api.get_balance()
         assert "usd" in result
 
     @pytest.mark.asyncio()

@@ -527,7 +527,7 @@ class MarketAnalyzer:
             return {
                 "score": 0.0,
                 "volume_trend": TrendDirection.NEUTRAL,
-                "avg_dAlgoly_volume": 0,
+                "avg_daily_volume": 0,
             }
 
         # Filter recent data
@@ -567,7 +567,7 @@ class MarketAnalyzer:
         result = {
             "score": liquidity_score,
             "volume_trend": volume_trend,
-            "avg_dAlgoly_volume": avg_volume,
+            "avg_daily_volume": avg_volume,
             "volume_consistency": 1 - min(cv, 1),
         }
 

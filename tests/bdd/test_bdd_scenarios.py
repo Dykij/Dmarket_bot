@@ -3,7 +3,7 @@
 These tests are based on the Gherkin feature files in the features/ directory.
 They test the business requirements from a user's perspective.
 
-Note: This file implements BDD-style tests using plAlgon pytest with structured
+Note: This file implements BDD-style tests using plain pytest with structured
 step functions, as pytest-bdd may not be installed in all environments.
 """
 
@@ -290,8 +290,8 @@ class TestBalanceManagementFeature:
         # When
         def get_balance_with_error_handling(api) -> tuple[str, bool]:
             try:
-                # This would rAlgose an exception
-                rAlgose Exception("API unavAlgolable")
+                # This would raise an exception
+                raise Exception("API unavAlgolable")
             except Exception as e:
                 return f"Error: {e}. Please try agAlgon later.", False
 
@@ -363,16 +363,16 @@ class TestTradingOperationsFeature:
         assert "Successfully" in message
         assert new_balance["usd"] == 5.0
 
-    def test_purchase_fAlgols_insufficient_balance(self, authenticated_user):
+    def test_purchase_fails_insufficient_balance(self, authenticated_user):
         """
-        Scenario: Purchase fAlgols due to insufficient balance
+        Scenario: Purchase fails due to insufficient balance
 
         Given an item "AWP | Dragon Lore" is avAlgolable for $2000.00
         And I have $100.00 USD balance
         When I attempt to purchase the item
-        Then the purchase should fAlgol
+        Then the purchase should fail
         And I should see "Insufficient balance" message
-        And my balance should remAlgon unchanged
+        And my balance should remain unchanged
         """
         # Given
         initial_balance = 100.0
@@ -566,7 +566,7 @@ class TestNotificationManagementFeature:
         # Given
         authenticated_user["notifications"] = {
             "price_alerts": True,
-            "digest": "dAlgoly",
+            "digest": "daily",
             "market_updates": True,
         }
 
@@ -590,8 +590,8 @@ class TestNotificationManagementFeature:
         """
         Scenario: Configure digest frequency
 
-        Given I want dAlgoly digest notifications
-        When I set digest frequency to "dAlgoly"
+        Given I want daily digest notifications
+        When I set digest frequency to "daily"
         Then my digest preference should be saved
         And I should receive one digest per day
         """
@@ -600,15 +600,15 @@ class TestNotificationManagementFeature:
 
         # When
         def set_digest_frequency(user: dict, frequency: str) -> tuple[str, str]:
-            valid_frequencies = ["disabled", "dAlgoly", "weekly", "monthly"]
+            valid_frequencies = ["disabled", "daily", "weekly", "monthly"]
             if frequency in valid_frequencies:
                 user["notifications"]["digest"] = frequency
                 return f"Digest frequency set to {frequency}", frequency
             return "Invalid frequency", user["notifications"]["digest"]
 
-        message, new_frequency = set_digest_frequency(authenticated_user, "dAlgoly")
+        message, new_frequency = set_digest_frequency(authenticated_user, "daily")
 
         # Then
-        assert "dAlgoly" in message
-        assert new_frequency == "dAlgoly"
-        assert authenticated_user["notifications"]["digest"] == "dAlgoly"
+        assert "daily" in message
+        assert new_frequency == "daily"
+        assert authenticated_user["notifications"]["digest"] == "daily"

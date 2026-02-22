@@ -1,6 +1,6 @@
 """Property-based tests for DMarket API modules using Hypothesis.
 
-This module contAlgons property-based tests that automatically generate
+This module contains property-based tests that automatically generate
 test cases to find edge cases and validate invariants.
 """
 

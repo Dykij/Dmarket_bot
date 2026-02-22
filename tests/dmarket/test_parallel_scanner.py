@@ -43,7 +43,7 @@ class TestParallelScanner:
             ]
         }
 
-        results = awAlgot scanner.scan_game_level("csgo", "standard")
+        results = await scanner.scan_game_level("csgo", "standard")
 
         assert isinstance(results, list)
 
@@ -52,7 +52,7 @@ class TestParallelScanner:
         """Test scanning multiple games."""
         mock_api.get_market_items.return_value = {"objects": []}
 
-        results = awAlgot scanner.scan_multiple_games(
+        results = await scanner.scan_multiple_games(
             games=["csgo", "dota2"],
             level="standard"
         )
@@ -64,7 +64,7 @@ class TestParallelScanner:
         """Test scanning multiple levels."""
         mock_api.get_market_items.return_value = {"objects": []}
 
-        results = awAlgot scanner.scan_multiple_levels(
+        results = await scanner.scan_multiple_levels(
             game="csgo",
             levels=["boost", "standard"]
         )

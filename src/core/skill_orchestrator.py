@@ -51,7 +51,7 @@ class SkillOrchestrator:
 
         return required_skills
 
-if __name__ == "__mAlgon__":
+if __name__ == "__main__":
     orchestrator = SkillOrchestrator()
     print("Dispatching 'security_audit':", orchestrator.dispatch_task("security_audit"))
     print("Dispatching 'high_load_processing':", orchestrator.dispatch_task("high_load_processing"))

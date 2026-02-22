@@ -110,7 +110,7 @@ class AlgoBacktester:
 
         Example:
             >>> backtester = AlgoBacktester(initial_balance=100.0)
-            >>> result = awAlgot backtester.backtest_arbitrage_strategy(
+            >>> result = await backtester.backtest_arbitrage_strategy(
             ...     historical_data=market_history,
             ...     strategy="standard",
             ...     min_profit_percent=5.0
@@ -155,7 +155,7 @@ class AlgoBacktester:
 
                 if should_buy:
                     # Execute buy
-                    trade = awAlgot self._execute_buy(
+                    trade = await self._execute_buy(
                         timestamp=timestamp,
                         item_id=item_id,
                         title=title,
@@ -184,7 +184,7 @@ class AlgoBacktester:
                 if should_sell:
                     # Execute sell
                     sell_price = max(suggested_price, current_price)
-                    trade = awAlgot self._execute_sell(
+                    trade = await self._execute_sell(
                         timestamp=timestamp,
                         item_id=item_id,
                         title=position["title"],
@@ -440,7 +440,7 @@ def create_Algo_backtester(
 
     Example:
         >>> backtester = create_Algo_backtester(initial_balance=500.0)
-        >>> result = awAlgot backtester.backtest_arbitrage_strategy(data)
+        >>> result = await backtester.backtest_arbitrage_strategy(data)
     """
     return AlgoBacktester(
         initial_balance=initial_balance,

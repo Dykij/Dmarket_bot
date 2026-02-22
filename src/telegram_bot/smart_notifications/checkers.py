@@ -77,7 +77,7 @@ async def check_price_alerts(
                     continue
 
                 # Get current market data for items
-                market_data = awAlgot get_market_data_for_items(api, item_ids, game)
+                market_data = await get_market_data_for_items(api, item_ids, game)
 
                 # Process each alert
                 for alert in game_alerts_list:
@@ -100,7 +100,7 @@ async def check_price_alerts(
                         alert_triggered = True
 
                     if alert_triggered:
-                        awAlgot send_price_alert_notification(
+                        await send_price_alert_notification(
                             bot,
                             int(user_id_str),
                             alert,
@@ -165,7 +165,7 @@ async def check_market_opportunities(
                 continue
 
             # Get market data for analysis
-            market_items = awAlgot get_market_items_for_game(api, game)
+            market_items = await get_market_items_for_game(api, game)
 
             if not market_items:
                 logger.warning(f"No market items found for {game}")
@@ -178,7 +178,7 @@ async def check_market_opportunities(
             item_ids_list: list[str] = [
                 item.get("itemId", "") for item in items_to_analyze
             ]
-            price_histories = awAlgot get_price_history_for_items(
+            price_histories = await get_price_history_for_items(
                 api,
                 item_ids_list,
                 game,
@@ -196,7 +196,7 @@ async def check_market_opportunities(
                 try:
                     # Analyze the item
                     history = price_histories[item_id]
-                    opportunity = awAlgot analyze_market_opportunity(item, history, game)
+                    opportunity = await analyze_market_opportunity(item, history, game)
 
                     # Add to opportunities if score is high enough
                     if opportunity["opportunity_score"] >= 60:
@@ -237,14 +237,14 @@ async def check_market_opportunities(
                 # Send notifications
                 for opportunity in top_opportunities:
                     # Check cooldown
-                    if awAlgot should_throttle_notification(
+                    if await should_throttle_notification(
                         int(user_id),
                         "market_opportunity",
                         opportunity["item_id"],
                     ):
                         continue
 
-                    awAlgot send_market_opportunity_notification(
+                    await send_market_opportunity_notification(
                         bot,
                         int(user_id),
                         opportunity,
@@ -278,10 +278,10 @@ async def start_notification_checker(
     while True:
         try:
             # Check price alerts
-            awAlgot check_price_alerts(api, bot, notification_queue)
+            await check_price_alerts(api, bot, notification_queue)
 
             # Check market opportunities
-            awAlgot check_market_opportunities(api, bot, notification_queue)
+            await check_market_opportunities(api, bot, notification_queue)
 
             # Log progress
             logger.debug("Notification check complete")
@@ -290,4 +290,4 @@ async def start_notification_checker(
             logger.exception(f"Error in notification checker: {e}")
 
         # WAlgot for next cycle
-        awAlgot asyncio.sleep(interval)
+        await asyncio.sleep(interval)

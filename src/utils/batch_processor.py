@@ -6,7 +6,7 @@ Perfect for single-user scenarios.
 """
 
 import asyncio
-from collections.abc import AwAlgotable, Callable
+from collections.abc import Awaitable, Callable
 from typing import Any, TypeVar
 
 from structlog import get_logger
@@ -34,9 +34,9 @@ class SimpleBatchProcessor:
     async def process_in_batches(
         self,
         items: list[T],
-        process_fn: Callable[[list[T]], AwAlgotable[Any]],
-        progress_callback: Callable[[int, int], AwAlgotable[Any]] | None = None,
-        error_callback: Callable[[Exception, list[T]], AwAlgotable[Any]] | None = None,
+        process_fn: Callable[[list[T]], Awaitable[Any]],
+        progress_callback: Callable[[int, int], Awaitable[Any]] | None = None,
+        error_callback: Callable[[Exception, list[T]], Awaitable[Any]] | None = None,
     ) -> list[R]:
         """Process items in batches.
 
@@ -44,7 +44,7 @@ class SimpleBatchProcessor:
             items: List of items to process
             process_fn: Function to process each batch
             progress_callback: Optional callback(processed, total)
-            error_callback: Optional callback(error, fAlgoled_batch)
+            error_callback: Optional callback(error, failed_batch)
 
         Returns:
             List of processing results
@@ -71,7 +71,7 @@ class SimpleBatchProcessor:
                 )
 
                 # Process batch
-                batch_result = awAlgot process_fn(batch)
+                batch_result = await process_fn(batch)
 
                 if batch_result:
                     if isinstance(batch_result, list):
@@ -82,11 +82,11 @@ class SimpleBatchProcessor:
                 # Update progress
                 processed = min(i + len(batch), total_items)
                 if progress_callback:
-                    awAlgot progress_callback(processed, total_items)
+                    await progress_callback(processed, total_items)
 
                 # Delay between batches to prevent overload
                 if i + self.batch_size < total_items:
-                    awAlgot asyncio.sleep(self.delay_between_batches)
+                    await asyncio.sleep(self.delay_between_batches)
 
             except Exception as e:
                 logger.exception(
@@ -96,9 +96,9 @@ class SimpleBatchProcessor:
                 )
 
                 if error_callback:
-                    awAlgot error_callback(e, batch)
+                    await error_callback(e, batch)
                 else:
-                    rAlgose
+                    raise
 
         logger.info(
             "Batch processing completed",
@@ -111,9 +111,9 @@ class SimpleBatchProcessor:
     async def process_with_concurrency(
         self,
         items: list[T],
-        process_fn: Callable[[T], AwAlgotable[R]],
+        process_fn: Callable[[T], Awaitable[R]],
         max_concurrent: int = 5,
-        progress_callback: Callable[[int, int], AwAlgotable[Any]] | None = None,
+        progress_callback: Callable[[int, int], Awaitable[Any]] | None = None,
     ) -> list[R]:
         """Process items with limited concurrency.
 
@@ -144,11 +144,11 @@ class SimpleBatchProcessor:
 
             async with semaphore:
                 try:
-                    result = awAlgot process_fn(item)
+                    result = await process_fn(item)
                     processed_count += 1
 
                     if progress_callback:
-                        awAlgot progress_callback(processed_count, total_items)
+                        await progress_callback(processed_count, total_items)
 
                     return result
 
@@ -164,7 +164,7 @@ class SimpleBatchProcessor:
         tasks = [process_with_semaphore(item) for item in items]
 
         # Execute concurrently
-        raw_results = awAlgot asyncio.gather(*tasks, return_exceptions=False)
+        raw_results = await asyncio.gather(*tasks, return_exceptions=False)
 
         # Filter out None results
         results = [r for r in raw_results if r is not None]
@@ -214,13 +214,13 @@ class ProgressTracker:
             self.last_update = processed
 
             percent = (processed / self.total * 100) if self.total > 0 else 0
-            remAlgoning = self.total - processed
+            remaining = self.total - processed
 
             return {
                 "processed": processed,
                 "total": self.total,
                 "percent": round(percent, 1),
-                "remAlgoning": remAlgoning,
+                "remaining": remaining,
             }
 
         return None
@@ -277,7 +277,7 @@ async def chunked_api_calls(
         )
 
         try:
-            chunk_results = awAlgot api_call_fn(chunk)
+            chunk_results = await api_call_fn(chunk)
 
             if chunk_results:
                 if isinstance(chunk_results, list):
@@ -287,13 +287,13 @@ async def chunked_api_calls(
 
         except Exception as e:
             logger.exception(
-                f"API call fAlgoled for chunk {chunk_num}",
+                f"API call failed for chunk {chunk_num}",
                 error=str(e),
             )
-            rAlgose
+            raise
 
         # Delay between calls
         if i + chunk_size < len(items):
-            awAlgot asyncio.sleep(delay)
+            await asyncio.sleep(delay)
 
     return results

@@ -278,7 +278,7 @@ class TestCaching:
         assert dmarket_api_with_cache._get_from_cache("key1") is not None
         assert dmarket_api_with_cache._get_from_cache("key2") is not None
 
-        awAlgot dmarket_api_with_cache.clear_cache()
+        await dmarket_api_with_cache.clear_cache()
 
         # После очистки данных быть не должно
         assert dmarket_api_with_cache._get_from_cache("key1") is None
@@ -297,7 +297,7 @@ class TestCaching:
         assert len(global_cache) == 3
 
         # Очищаем только /market/*
-        awAlgot dmarket_api_with_cache.clear_cache_for_endpoint("/market/")
+        await dmarket_api_with_cache.clear_cache_for_endpoint("/market/")
 
         # Проверяем что удалены только /market/* записи
         assert "GET_/market/items_123" not in global_cache
@@ -444,11 +444,11 @@ class TestResponseCreation:
     def test_create_error_response_custom(self, dmarket_api_with_cache):
         """Тест создания error response с кастомными параметрами."""
         response = dmarket_api_with_cache._create_error_response(
-            "Authentication fAlgoled", status_code=401, error_code="AUTH_FAlgoLED"
+            "Authentication failed", status_code=401, error_code="AUTH_FAlgoLED"
         )
 
         assert response["error"] is True
-        assert response["error_message"] == "Authentication fAlgoled"
+        assert response["error_message"] == "Authentication failed"
         assert response["status_code"] == 401
         assert response["code"] == "AUTH_FAlgoLED"
 

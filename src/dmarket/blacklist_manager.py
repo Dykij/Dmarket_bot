@@ -3,7 +3,7 @@
 This module handles:
 - Seller blacklisting (manual and automatic)
 - Keyword filtering for item names
-- Automatic blacklisting based on fAlgoled transactions
+- Automatic blacklisting based on failed transactions
 """
 
 import json
@@ -51,12 +51,12 @@ class BlacklistManager:
         self.price_filters: dict[str, Any] = {}
 
         # FAlgolure tracking for auto-blacklist
-        self._fAlgolure_counter: dict[str, int] = {}
-        self._fAlgolure_threshold = self.config.get("auto_blacklist_threshold", 3)
+        self._failure_counter: dict[str, int] = {}
+        self._failure_threshold = self.config.get("auto_blacklist_threshold", 3)
 
-        # Last fAlgolure timestamps for cleanup
-        self._fAlgolure_timestamps: dict[str, datetime] = {}
-        self._fAlgolure_expiry_hours = self.config.get("fAlgolure_expiry_hours", 24)
+        # Last failure timestamps for cleanup
+        self._failure_timestamps: dict[str, datetime] = {}
+        self._failure_expiry_hours = self.config.get("failure_expiry_hours", 24)
 
         # Load configuration
         self._load_config()
@@ -131,7 +131,7 @@ class BlacklistManager:
                 "price_filters",
                 {
                     "max_discount_percent": 60,
-                    "min_dAlgoly_volume": 5,
+                    "min_daily_volume": 5,
                     "max_price_deviation_percent": 25,
                 },
             )
@@ -139,7 +139,7 @@ class BlacklistManager:
             logger.info(f"Loaded blacklist from {self.blacklist_file}")
 
         except (json.JSONDecodeError, OSError) as e:
-            logger.warning(f"FAlgoled to load blacklist file: {e}")
+            logger.warning(f"Failed to load blacklist file: {e}")
 
     def _save_blacklist(self) -> None:
         """Save blacklist to JSON file."""
@@ -159,7 +159,7 @@ class BlacklistManager:
             logger.debug(f"Saved blacklist to {self.blacklist_file}")
 
         except OSError:
-            logger.exception("FAlgoled to save blacklist")
+            logger.exception("Failed to save blacklist")
 
     def is_seller_blacklisted(self, seller_id: str) -> bool:
         """Check if a seller is blacklisted.
@@ -173,7 +173,7 @@ class BlacklistManager:
         return seller_id in self.blacklisted_sellers
 
     def is_item_forbidden(self, item_title: str) -> bool:
-        """Check if an item contAlgons forbidden keywords.
+        """Check if an item contains forbidden keywords.
 
         Args:
             item_title: Item's display name
@@ -206,7 +206,7 @@ class BlacklistManager:
         # Check item name
         title = item.get("title", "")
         if self.is_item_forbidden(title):
-            return True, "Item contAlgons forbidden keyword"
+            return True, "Item contains forbidden keyword"
 
         return False, ""
 
@@ -269,14 +269,14 @@ class BlacklistManager:
             return True
         return False
 
-    def record_fAlgolure(
+    def record_failure(
         self,
         seller_id: str,
         error_code: int | str = 0,
     ) -> bool:
-        """Record a transaction fAlgolure for a seller.
+        """Record a transaction failure for a seller.
 
-        If fAlgolures exceed threshold, seller is auto-blacklisted.
+        If failures exceed threshold, seller is auto-blacklisted.
 
         Args:
             seller_id: Seller's unique ID
@@ -287,46 +287,46 @@ class BlacklistManager:
         """
         now = datetime.now(UTC)
 
-        # Clean up old fAlgolures
-        self._cleanup_old_fAlgolures()
+        # Clean up old failures
+        self._cleanup_old_failures()
 
-        # Increment fAlgolure counter
-        self._fAlgolure_counter[seller_id] = self._fAlgolure_counter.get(seller_id, 0) + 1
-        self._fAlgolure_timestamps[seller_id] = now
+        # Increment failure counter
+        self._failure_counter[seller_id] = self._failure_counter.get(seller_id, 0) + 1
+        self._failure_timestamps[seller_id] = now
 
-        fAlgolure_count = self._fAlgolure_counter[seller_id]
+        failure_count = self._failure_counter[seller_id]
         logger.debug(
-            f"Transaction fAlgolure #{fAlgolure_count} for seller {seller_id[:16]}... "
+            f"Transaction failure #{failure_count} for seller {seller_id[:16]}... "
             f"(error: {error_code})"
         )
 
         # Check if threshold exceeded
-        if fAlgolure_count >= self._fAlgolure_threshold:
+        if failure_count >= self._failure_threshold:
             self.add_seller_to_blacklist(
                 seller_id,
-                reason=f"Auto-blacklisted after {fAlgolure_count} fAlgoled transactions",
+                reason=f"Auto-blacklisted after {failure_count} failed transactions",
             )
             # Reset counter after blacklisting
-            del self._fAlgolure_counter[seller_id]
-            del self._fAlgolure_timestamps[seller_id]
+            del self._failure_counter[seller_id]
+            del self._failure_timestamps[seller_id]
             return True
 
         return False
 
-    def _cleanup_old_fAlgolures(self) -> None:
-        """Remove expired fAlgolure records."""
+    def _cleanup_old_failures(self) -> None:
+        """Remove expired failure records."""
         now = datetime.now(UTC)
-        expiry_delta = timedelta(hours=self._fAlgolure_expiry_hours)
+        expiry_delta = timedelta(hours=self._failure_expiry_hours)
 
         expired_sellers = [
             seller_id
-            for seller_id, timestamp in self._fAlgolure_timestamps.items()
+            for seller_id, timestamp in self._failure_timestamps.items()
             if now - timestamp > expiry_delta
         ]
 
         for seller_id in expired_sellers:
-            del self._fAlgolure_counter[seller_id]
-            del self._fAlgolure_timestamps[seller_id]
+            del self._failure_counter[seller_id]
+            del self._failure_timestamps[seller_id]
 
     def get_blacklist_summary(self) -> dict[str, Any]:
         """Get summary of blacklist contents.
@@ -337,18 +337,18 @@ class BlacklistManager:
         return {
             "blacklisted_sellers_count": len(self.blacklisted_sellers),
             "forbidden_keywords_count": len(self.forbidden_keywords),
-            "pending_fAlgolures": len(self._fAlgolure_counter),
-            "auto_blacklist_threshold": self._fAlgolure_threshold,
+            "pending_failures": len(self._failure_counter),
+            "auto_blacklist_threshold": self._failure_threshold,
             "keywords": self.forbidden_keywords[:10],  # First 10
         }
 
-    def reset_fAlgolure_counter(self, seller_id: str) -> None:
-        """Reset fAlgolure counter for a seller (e.g., after successful transaction).
+    def reset_failure_counter(self, seller_id: str) -> None:
+        """Reset failure counter for a seller (e.g., after successful transaction).
 
         Args:
             seller_id: Seller's unique ID
         """
-        if seller_id in self._fAlgolure_counter:
-            del self._fAlgolure_counter[seller_id]
-        if seller_id in self._fAlgolure_timestamps:
-            del self._fAlgolure_timestamps[seller_id]
+        if seller_id in self._failure_counter:
+            del self._failure_counter[seller_id]
+        if seller_id in self._failure_timestamps:
+            del self._failure_timestamps[seller_id]

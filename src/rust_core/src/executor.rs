@@ -19,7 +19,7 @@ impl OrderExecutor {
     /// Returns: Order ID (String) or "DRY_RUN"
     pub async fn execute(&self, signal: TradeSignal) -> Result<String, String> {
         // 1. Check Rate Limit (Governor)
-        self.limiter.acquire().awAlgot;
+        self.limiter.acquire().await;
 
         match signal.action.as_str() {
             "BUY" => {

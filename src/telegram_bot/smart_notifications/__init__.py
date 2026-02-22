@@ -3,7 +3,7 @@
 This module provides sophisticated, context-aware notifications for:
 - Smart market opportunity alerts based on analysis
 - Personalized notifications based on user preferences
-- Multi-channel delivery (Telegram, emAlgol, etc.)
+- Multi-channel delivery (Telegram, email, etc.)
 - Smart notification scheduling and throttling
 - Advanced market condition triggers
 """

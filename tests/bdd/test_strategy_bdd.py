@@ -33,8 +33,8 @@ def user_context():
         "user_id": 123456,
         "balance": 1000.0,
         "risk_tolerance": "balanced",
-        "dAlgoly_trades": 0,
-        "dAlgoly_spend": 0.0,
+        "daily_trades": 0,
+        "daily_spend": 0.0,
     }
 
 
@@ -277,7 +277,7 @@ class TestUnifiedStrategySystemFeature:
         Given I select the "standard" preset
         When I modify the minimum ROI to 12%
         Then the modified setting should be applied
-        And other preset defaults should remAlgon unchanged
+        And other preset defaults should remain unchanged
         """
         # Given: standard preset defaults
         standard_preset = {
@@ -540,35 +540,35 @@ class TestRiskManagementFeature:
         assert not is_valid
         assert "suspicious" in message.lower() or "scam" in message.lower()
 
-    def test_dAlgoly_limit_enforcement(self, user_context):
+    def test_daily_limit_enforcement(self, user_context):
         """
         Scenario: DAlgoly trading limits are enforced
 
-        Given I have a dAlgoly trade limit of 10 trades
+        Given I have a daily trade limit of 10 trades
         And I have already made 9 trades today
         When I attempt to make 2 more trades
         Then only 1 trade should be allowed
         And I should be notified about the limit
         """
         # Given
-        user_context["dAlgoly_trades"] = 9
-        dAlgoly_limit = 10
+        user_context["daily_trades"] = 9
+        daily_limit = 10
         requested_trades = 2
 
         # When: check limit
-        def check_dAlgoly_limit(current: int, limit: int, requested: int) -> tuple:
-            remAlgoning = limit - current
-            allowed = min(requested, remAlgoning)
+        def check_daily_limit(current: int, limit: int, requested: int) -> tuple:
+            remaining = limit - current
+            allowed = min(requested, remaining)
             message = f"Allowed {allowed} of {requested} trades. DAlgoly limit: {limit}"
-            return allowed, remAlgoning, message
+            return allowed, remaining, message
 
-        allowed, remAlgoning, message = check_dAlgoly_limit(
-            user_context["dAlgoly_trades"], dAlgoly_limit, requested_trades
+        allowed, remaining, message = check_daily_limit(
+            user_context["daily_trades"], daily_limit, requested_trades
         )
 
         # Then
         assert allowed == 1
-        assert remAlgoning == 1
+        assert remaining == 1
         assert "limit" in message.lower()
 
     def test_diversification_prevents_concentration(self, user_context):

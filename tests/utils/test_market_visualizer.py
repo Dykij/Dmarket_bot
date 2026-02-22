@@ -245,7 +245,7 @@ class TestMarketVisualizer:
         visualizer = MarketVisualizer()
 
         # Test with empty data
-        result = awAlgot visualizer.create_price_chart(
+        result = await visualizer.create_price_chart(
             price_history=[],
             item_name="Test Item",
             game="csgo",
@@ -264,7 +264,7 @@ class TestMarketVisualizer:
         """Test creating a price chart."""
         visualizer = MarketVisualizer()
 
-        result = awAlgot visualizer.create_price_chart(
+        result = await visualizer.create_price_chart(
             price_history=sample_price_history,
             item_name="AK-47 | Redline",
             game="csgo",
@@ -284,7 +284,7 @@ class TestMarketVisualizer:
         """Test creating a price chart with volume data."""
         visualizer = MarketVisualizer()
 
-        result = awAlgot visualizer.create_price_chart(
+        result = await visualizer.create_price_chart(
             price_history=sample_price_history_with_volume,
             item_name="AK-47 | Redline",
             game="csgo",
@@ -306,7 +306,7 @@ class TestMarketVisualizer:
         """Test creating a market comparison chart."""
         visualizer = MarketVisualizer()
 
-        result = awAlgot visualizer.create_market_comparison_chart(
+        result = await visualizer.create_market_comparison_chart(
             items_data=sample_items_data,
             price_histories=sample_price_histories,
             width=800,
@@ -326,7 +326,7 @@ class TestMarketVisualizer:
         """Test creating a pattern visualization chart."""
         visualizer = MarketVisualizer()
 
-        result = awAlgot visualizer.create_pattern_visualization(
+        result = await visualizer.create_pattern_visualization(
             price_history=sample_pattern_history,
             patterns=sample_patterns,
             item_name="AK-47 | Redline",
@@ -352,7 +352,7 @@ class TestMarketVisualizer:
         mock_img.save = MagicMock()
         mock_new.return_value = mock_img
 
-        result = awAlgot visualizer.create_market_summary_image(
+        result = await visualizer.create_market_summary_image(
             item_data=sample_item_data,
             analysis=sample_analysis_data,
             width=800,

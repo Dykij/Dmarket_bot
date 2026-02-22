@@ -26,7 +26,7 @@ class TestCursorPagination:
                 "cursor": None,  # No more pages
             }
 
-            awAlgot api.get_all_market_items(game="csgo", max_items=10, use_cursor=True)
+            await api.get_all_market_items(game="csgo", max_items=10, use_cursor=True)
 
             # Verify cursor parameter was used
             call_args = mock_request.call_args
@@ -60,7 +60,7 @@ class TestCursorPagination:
         with patch.object(
             api, "_request", new_callable=AsyncMock, side_effect=responses
         ) as mock_request:
-            result = awAlgot api.get_all_market_items(game="csgo", max_items=250, use_cursor=True)
+            result = await api.get_all_market_items(game="csgo", max_items=250, use_cursor=True)
 
             # Verify all pages were fetched
             assert len(result) == 250
@@ -90,7 +90,7 @@ class TestCursorPagination:
         with patch.object(
             api, "_request", new_callable=AsyncMock, side_effect=responses
         ) as mock_request:
-            result = awAlgot api.get_all_market_items(game="csgo", max_items=150, use_cursor=True)
+            result = await api.get_all_market_items(game="csgo", max_items=150, use_cursor=True)
 
             # Should stop at 150 items (2 pages fetched, 150 returned)
             assert len(result) == 150
@@ -111,7 +111,7 @@ class TestCursorPagination:
         with patch.object(
             api, "_request", new_callable=AsyncMock, side_effect=responses
         ) as mock_request:
-            result = awAlgot api.get_all_market_items(game="csgo", max_items=1000, use_cursor=True)
+            result = await api.get_all_market_items(game="csgo", max_items=1000, use_cursor=True)
 
             # Should stop after first page since cursor is None
             assert len(result) == 50
@@ -128,7 +128,7 @@ class TestCursorPagination:
                 {"objects": [{"title": f"Item {i}"} for i in range(101, 151)]},
             ]
 
-            result = awAlgot api.get_all_market_items(game="csgo", max_items=150, use_cursor=False)
+            result = await api.get_all_market_items(game="csgo", max_items=150, use_cursor=False)
 
             # Verify offset pagination was used
             assert len(result) == 150
@@ -157,7 +157,7 @@ class TestCursorPagination:
         with patch.object(
             api, "_request", new_callable=AsyncMock, side_effect=responses
         ) as mock_request:
-            result = awAlgot api.get_all_market_items(game="csgo", max_items=150, use_cursor=True)
+            result = await api.get_all_market_items(game="csgo", max_items=150, use_cursor=True)
 
             assert len(result) == 150
             assert mock_request.call_count == 2
@@ -183,7 +183,7 @@ class TestCursorPagination:
         with patch.object(
             api, "_request", new_callable=AsyncMock, side_effect=responses
         ) as mock_request:
-            awAlgot api.get_all_market_items(
+            await api.get_all_market_items(
                 game="csgo",
                 max_items=10,
                 price_from=10.0,
@@ -204,7 +204,7 @@ class TestCursorPagination:
         with patch.object(api, "_request", new_callable=AsyncMock) as mock_request:
             mock_request.return_value = {"objects": [], "cursor": None}
 
-            result = awAlgot api.get_all_market_items(game="csgo", max_items=100, use_cursor=True)
+            result = await api.get_all_market_items(game="csgo", max_items=100, use_cursor=True)
 
             assert len(result) == 0
             assert mock_request.call_count == 1
@@ -220,7 +220,7 @@ class TestCursorPagination:
                 "cursor": cursor_value,
             }
 
-            result = awAlgot api.get_all_market_items(game="csgo", max_items=10, use_cursor=True)
+            result = await api.get_all_market_items(game="csgo", max_items=10, use_cursor=True)
 
             assert len(result) >= 1
 

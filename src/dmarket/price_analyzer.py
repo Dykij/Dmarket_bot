@@ -5,6 +5,7 @@ for arbitrage trading.
 """
 
 import logging
+from src.dmarket.pricing.fee_oracle import fee_oracle
 
 logger = logging.getLogger(__name__)
 
@@ -21,13 +22,15 @@ class PriceAnalyzer:
         """
         self.min_roi = min_roi
         self.max_price_usd = max_price_usd
-        self.market_fee = 0.07  # 7% DMarket commission
+        # self.market_fee is now dynamic
 
-    def calculate_profit(
+    async def calculate_profit(
         self,
         buy_price_cents: int,
         avg_sell_price_cents: int,
         steam_price_cents: int | None = None,
+        game_id: str = "a8db",
+        title: str = "Unknown"
     ) -> dict:
         """Calculate potential net profit.
 
@@ -35,12 +38,17 @@ class PriceAnalyzer:
             buy_price_cents: Buying price in cents
             avg_sell_price_cents: Average selling price in cents
             steam_price_cents: Steam price in cents (optional)
+            game_id: Game identifier for fee lookup
+            title: Item title for fee lookup
 
         Returns:
             Dict with profit analysis
         """
+        # Dynamic Fee Lookup
+        fee_fraction = await fee_oracle.get_fee_for_item(game_id, title)
+        
         # How much we get after market fee
-        potential_revenue = avg_sell_price_cents * (1 - self.market_fee)
+        potential_revenue = avg_sell_price_cents * (1 - fee_fraction)
         net_profit = potential_revenue - buy_price_cents
 
         if buy_price_cents > 0:
@@ -52,6 +60,78 @@ class PriceAnalyzer:
             "net_profit_usd": round(net_profit / 100, 2),
             "roi_percent": round(roi, 2),
             "is_profitable": roi >= self.min_roi,
+            "used_fee": fee_fraction
+        }
+        
+        return result
+
+    async def analyze_opportunity(
+        self,
+        item_title: str,
+        game_id: str,
+        dmarket_price_usd: float,
+        steam_price_data: dict | None,
+        aggregated_data: dict | None
+    ) -> dict:
+        """
+        Deep analysis using Fees, Steam Price, and Market Depth (OBI).
+        """
+        # 1. Steam-to-Cash (K_s2c)
+        k_s2c = 0.0
+        steam_median = 0.0
+        if steam_price_data:
+            steam_median = steam_price_data.get("median_price", 0.0)
+            if steam_median > 0:
+                k_s2c = dmarket_price_usd / steam_median
+
+        # 2. OBI (Order Book Imbalance) & Spread
+        obi = 0.0
+        spread_percent = 0.0
+        
+        if aggregated_data:
+            # aggregated_data format: { "orderBestPrice": ..., "orderCount": ..., "offerBestPrice": ..., "offerCount": ... }
+            # best_buy = orderBestPrice, best_sell = offerBestPrice
+            
+            try:
+                best_buy_cents = int(aggregated_data.get("orderBestPrice", {}).get("Amount", 0))
+                best_sell_cents = int(aggregated_data.get("offerBestPrice", {}).get("Amount", 0))
+                
+                buy_vol = int(aggregated_data.get("orderCount", 0))
+                sell_vol = int(aggregated_data.get("offerCount", 0))
+                
+                total_vol = buy_vol + sell_vol
+                if total_vol > 0:
+                    obi = (buy_vol - sell_vol) / total_vol
+                    
+                if best_sell_cents > 0:
+                    spread_cents = best_sell_cents - best_buy_cents
+                    spread_percent = (spread_cents / best_sell_cents) * 100
+            except:
+                pass
+
+        # 3. Dynamic Profit Calc
+        # Convert usd to cents for precision
+        buy_cents = int(dmarket_price_usd * 100)
+        # Prediction: We sell at current best offer price? Or undercut?
+        # Conservative: Sell at Best Offer - 1 cent (if we want to be liquidity provider)
+        # Aggressive: Sell at Best Order + 1 cent?
+        # Let's assume we sell at current DMarket price (just to check if IT is profitable itself)
+        
+        profit_analysis = await self.calculate_profit(
+            buy_price_cents=buy_cents,
+            avg_sell_price_cents=buy_cents, # Assuming price stability
+            steam_price_cents=int(steam_median * 100),
+            game_id=game_id,
+            title=item_title
+        )
+        
+        return {
+            "title": item_title,
+            "k_s2c": round(k_s2c, 3),
+            "obi": round(obi, 2),
+            "spread": round(spread_percent, 2),
+            "profit": profit_analysis,
+            "steam_price": steam_median
         }
 
         # Add Steam comparison if avAlgolable

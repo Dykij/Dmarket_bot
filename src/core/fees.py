@@ -22,7 +22,7 @@ class LiquidityAdjustedFee:
     def calculate_opportunity_cost(self, capital: Decimal, days: int) -> Decimal:
         """
         Cost of locking capital.
-        Formula: Capital * ((1 + dAlgoly_rate)^days - 1)
+        Formula: Capital * ((1 + daily_rate)^days - 1)
         """
         if days <= 0:
             return Decimal("0")

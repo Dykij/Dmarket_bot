@@ -58,7 +58,7 @@ class TestSlidingWindowStrategy:
     async def test_allows_under_limit(self, limiter):
         """Test allows requests under limit."""
         for _ in range(4):
-            result = awAlgot limiter.check_rate_limit(123, "test_op")
+            result = await limiter.check_rate_limit(123, "test_op")
             assert result.allowed is True
             assert result.result == RateLimitResult.ALLOWED
 
@@ -67,32 +67,32 @@ class TestSlidingWindowStrategy:
         """Test blocks requests over limit."""
         # Make 5 requests (at limit)
         for _ in range(5):
-            awAlgot limiter.check_rate_limit(123, "test_op")
+            await limiter.check_rate_limit(123, "test_op")
 
         # 6th should be blocked
-        result = awAlgot limiter.check_rate_limit(123, "test_op")
+        result = await limiter.check_rate_limit(123, "test_op")
         assert result.allowed is False
         assert result.result == RateLimitResult.RATE_LIMITED
 
     @pytest.mark.asyncio
-    async def test_remAlgoning_count(self, limiter):
-        """Test remAlgoning count is correct."""
-        # First request - remAlgoning is calculated before recording
-        result = awAlgot limiter.check_rate_limit(123, "test_op")
-        # After first request, 4 remAlgoning slots
-        assert result.remAlgoning >= 4
+    async def test_remaining_count(self, limiter):
+        """Test remaining count is correct."""
+        # First request - remaining is calculated before recording
+        result = await limiter.check_rate_limit(123, "test_op")
+        # After first request, 4 remaining slots
+        assert result.remaining >= 4
 
-        result = awAlgot limiter.check_rate_limit(123, "test_op")
-        # After second request, 3 remAlgoning slots
-        assert result.remAlgoning >= 3
+        result = await limiter.check_rate_limit(123, "test_op")
+        # After second request, 3 remaining slots
+        assert result.remaining >= 3
 
     @pytest.mark.asyncio
     async def test_retry_after(self, limiter):
         """Test retry after calculation."""
         for _ in range(5):
-            awAlgot limiter.check_rate_limit(123, "test_op")
+            await limiter.check_rate_limit(123, "test_op")
 
-        result = awAlgot limiter.check_rate_limit(123, "test_op")
+        result = await limiter.check_rate_limit(123, "test_op")
         assert result.retry_after > 0
         assert result.retry_after <= 60
 
@@ -114,16 +114,16 @@ class TestTokenBucketStrategy:
     async def test_allows_burst(self, limiter):
         """Test allows burst of requests."""
         for _ in range(5):
-            result = awAlgot limiter.check_rate_limit(123)
+            result = await limiter.check_rate_limit(123)
             assert result.allowed is True
 
     @pytest.mark.asyncio
     async def test_blocks_after_burst(self, limiter):
         """Test blocks after burst exhausted."""
         for _ in range(5):
-            awAlgot limiter.check_rate_limit(123)
+            await limiter.check_rate_limit(123)
 
-        result = awAlgot limiter.check_rate_limit(123)
+        result = await limiter.check_rate_limit(123)
         assert result.allowed is False
 
     @pytest.mark.asyncio
@@ -131,14 +131,14 @@ class TestTokenBucketStrategy:
         """Test tokens refill over time."""
         # Exhaust tokens
         for _ in range(5):
-            awAlgot limiter.check_rate_limit(123)
+            await limiter.check_rate_limit(123)
 
         # Manually advance time by modifying last_refill
         state = limiter._get_user_state(123)
         state.last_refill = datetime.now(UTC) - timedelta(seconds=2)
 
         # Should have 2 new tokens
-        result = awAlgot limiter.check_rate_limit(123)
+        result = await limiter.check_rate_limit(123)
         assert result.allowed is True
 
 
@@ -161,16 +161,16 @@ class TestFixedWindowStrategy:
     async def test_allows_under_limit(self, limiter):
         """Test allows requests under limit."""
         for _ in range(4):
-            result = awAlgot limiter.check_rate_limit(123, "test_op")
+            result = await limiter.check_rate_limit(123, "test_op")
             assert result.allowed is True
 
     @pytest.mark.asyncio
     async def test_blocks_over_limit(self, limiter):
         """Test blocks over limit."""
         for _ in range(5):
-            awAlgot limiter.check_rate_limit(123, "test_op")
+            await limiter.check_rate_limit(123, "test_op")
 
-        result = awAlgot limiter.check_rate_limit(123, "test_op")
+        result = await limiter.check_rate_limit(123, "test_op")
         assert result.allowed is False
 
 
@@ -191,12 +191,12 @@ class TestOperationLimits:
     async def test_different_limits_per_operation(self, limiter):
         """Test different limits for different operations."""
         # scan_market allows 2/min
-        result = awAlgot limiter.check_rate_limit(123, "scan_market")
+        result = await limiter.check_rate_limit(123, "scan_market")
         assert result.allowed is True
         assert result.limit == 2
 
         # buy_item allows 1/min
-        result = awAlgot limiter.check_rate_limit(123, "buy_item")
+        result = await limiter.check_rate_limit(123, "buy_item")
         assert result.allowed is True
         assert result.limit == 1
 
@@ -204,15 +204,15 @@ class TestOperationLimits:
     async def test_operation_specific_blocking(self, limiter):
         """Test operation-specific blocking."""
         # Use up scan_market limit
-        awAlgot limiter.check_rate_limit(123, "scan_market")
-        awAlgot limiter.check_rate_limit(123, "scan_market")
+        await limiter.check_rate_limit(123, "scan_market")
+        await limiter.check_rate_limit(123, "scan_market")
 
         # scan_market should be blocked
-        result = awAlgot limiter.check_rate_limit(123, "scan_market")
+        result = await limiter.check_rate_limit(123, "scan_market")
         assert result.allowed is False
 
         # buy_item should still work
-        result = awAlgot limiter.check_rate_limit(123, "buy_item")
+        result = await limiter.check_rate_limit(123, "buy_item")
         assert result.allowed is True
 
 
@@ -234,19 +234,19 @@ class TestPriorityUsers:
     @pytest.mark.asyncio
     async def test_priority_user_higher_limit(self, limiter):
         """Test priority users get higher limits."""
-        awAlgot limiter.set_priority_user(123, True)
+        await limiter.set_priority_user(123, True)
 
         # Priority user should get 10 req/min (5 * 2)
-        result = awAlgot limiter.check_rate_limit(123, "test_op")
+        result = await limiter.check_rate_limit(123, "test_op")
         assert result.limit == 10
 
     @pytest.mark.asyncio
     async def test_remove_priority(self, limiter):
         """Test removing priority status."""
-        awAlgot limiter.set_priority_user(123, True)
-        awAlgot limiter.set_priority_user(123, False)
+        await limiter.set_priority_user(123, True)
+        await limiter.set_priority_user(123, False)
 
-        result = awAlgot limiter.check_rate_limit(123, "test_op")
+        result = await limiter.check_rate_limit(123, "test_op")
         assert result.limit == 5
 
 
@@ -271,11 +271,11 @@ class TestViolationsAndBans:
     async def test_violation_tracking(self, limiter):
         """Test violation tracking."""
         # Use up limit
-        awAlgot limiter.check_rate_limit(123, "test_op")
-        awAlgot limiter.check_rate_limit(123, "test_op")
+        await limiter.check_rate_limit(123, "test_op")
+        await limiter.check_rate_limit(123, "test_op")
 
         # This should be blocked and counted as violation
-        awAlgot limiter.check_rate_limit(123, "test_op")
+        await limiter.check_rate_limit(123, "test_op")
 
         status = limiter.get_user_status(123)
         assert status["violations"] >= 1
@@ -284,7 +284,7 @@ class TestViolationsAndBans:
     async def test_cooldown_applied(self, limiter):
         """Test cooldown is applied after violations."""
         for _ in range(10):  # Generate violations
-            awAlgot limiter.check_rate_limit(123, "test_op")
+            await limiter.check_rate_limit(123, "test_op")
 
         status = limiter.get_user_status(123)
 
@@ -296,7 +296,7 @@ class TestViolationsAndBans:
         """Test ban after max violations."""
         # Generate enough violations to trigger ban
         for _ in range(20):
-            awAlgot limiter.check_rate_limit(123, "test_op")
+            await limiter.check_rate_limit(123, "test_op")
 
         status = limiter.get_user_status(123)
         # Either banned or close to ban
@@ -309,7 +309,7 @@ class TestViolationsAndBans:
         state.banned_until = datetime.now(UTC) + timedelta(hours=1)
         state.violations = 5
 
-        awAlgot limiter.unban_user(123)
+        await limiter.unban_user(123)
 
         status = limiter.get_user_status(123)
         assert status["is_banned"] is False
@@ -327,7 +327,7 @@ class TestUserManagement:
     @pytest.mark.asyncio
     async def test_get_user_status(self, limiter):
         """Test getting user status."""
-        awAlgot limiter.check_rate_limit(123)
+        await limiter.check_rate_limit(123)
 
         status = limiter.get_user_status(123)
         assert status["user_id"] == 123
@@ -338,9 +338,9 @@ class TestUserManagement:
         """Test resetting user state."""
         # Make some requests
         for _ in range(5):
-            awAlgot limiter.check_rate_limit(123)
+            await limiter.check_rate_limit(123)
 
-        awAlgot limiter.reset_user(123)
+        await limiter.reset_user(123)
 
         status = limiter.get_user_status(123)
         assert status["requests_last_minute"] == 0
@@ -351,9 +351,9 @@ class TestUserManagement:
         """Test getting retry after time."""
         limiter.config.requests_per_minute = 1
 
-        awAlgot limiter.check_rate_limit(123)
+        await limiter.check_rate_limit(123)
 
-        retry_after = awAlgot limiter.get_retry_after(123)
+        retry_after = await limiter.get_retry_after(123)
         assert retry_after >= 0
 
 
@@ -368,8 +368,8 @@ class TestStatistics:
     @pytest.mark.asyncio
     async def test_get_stats(self, limiter):
         """Test getting statistics."""
-        awAlgot limiter.check_rate_limit(123)
-        awAlgot limiter.check_rate_limit(456)
+        await limiter.check_rate_limit(123)
+        await limiter.check_rate_limit(456)
 
         stats = limiter.get_stats()
         assert stats["total_users"] == 2
@@ -387,13 +387,13 @@ class TestCleanup:
     @pytest.mark.asyncio
     async def test_cleanup_old_data(self, limiter):
         """Test cleaning up old data."""
-        awAlgot limiter.check_rate_limit(123)
+        await limiter.check_rate_limit(123)
 
         # Age the user
         state = limiter._get_user_state(123)
         state.last_request = datetime.now(UTC) - timedelta(hours=48)
 
-        cleaned = awAlgot limiter.cleanup_old_data(max_age_hours=24)
+        cleaned = await limiter.cleanup_old_data(max_age_hours=24)
         assert cleaned == 1
 
 

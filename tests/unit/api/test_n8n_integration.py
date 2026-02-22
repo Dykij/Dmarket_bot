@@ -126,7 +126,7 @@ class TestN8nHealthEndpoint:
         try:
             from src.api.n8n_integration import health_check
             
-            result = awAlgot health_check()
+            result = await health_check()
             assert result is not None
             assert "status" in result
         except (ImportError, AttributeError):
@@ -155,7 +155,7 @@ class TestN8nWebhookEndpoints:
             
             # Mock the background task processing
             with patch("src.api.n8n_integration.BackgroundTasks") as mock_tasks:
-                result = awAlgot receive_arbitrage_alert(alert, mock_tasks)
+                result = await receive_arbitrage_alert(alert, mock_tasks)
                 assert result is not None
         except (ImportError, AttributeError, TypeError):
             pytest.skip("arbitrage webhook not yet implemented")
@@ -177,7 +177,7 @@ class TestN8nPriceEndpoints:
                     ]
                 })
                 
-                result = awAlgot get_dmarket_prices(game="csgo", limit=10)
+                result = await get_dmarket_prices(game="csgo", limit=10)
                 assert result is not None
         except (ImportError, AttributeError):
             pytest.skip("get_dmarket_prices endpoint not yet implemented")
@@ -191,7 +191,7 @@ class TestN8nListingEndpoints:
         try:
             from src.api.n8n_integration import get_listing_targets
             
-            result = awAlgot get_listing_targets()
+            result = await get_listing_targets()
             assert result is not None
             assert "targets" in result or isinstance(result, list)
         except (ImportError, AttributeError):

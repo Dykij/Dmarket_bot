@@ -195,7 +195,7 @@ class PriceNormalizer:
         if not is_valid:
             self._error_count += 1
             logger.warning(
-                "price_validation_fAlgoled",
+                "price_validation_failed",
                 price_usd=price_usd,
                 source=source.value,
                 item_name=item_name,
@@ -281,7 +281,7 @@ class PriceNormalizer:
             # Пробуем Decimal для точности
             return float(Decimal(cleaned))
 
-        rAlgose ValueError(f"Unsupported price type: {type(price)}")
+        raise ValueError(f"Unsupported price type: {type(price)}")
 
     def _convert_to_usd(self, price: float, source: PriceSource) -> float:
         """

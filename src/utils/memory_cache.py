@@ -9,7 +9,7 @@ import asyncio
 import logging
 import time
 from collections import OrderedDict
-from collections.abc import AwAlgotable, Callable
+from collections.abc import Awaitable, Callable
 from functools import wraps
 from typing import Any, ParamSpec, TypeVar, cast
 
@@ -65,8 +65,8 @@ class TTLCache:
         async def cleanup_loop() -> None:
             while True:
                 try:
-                    awAlgot asyncio.sleep(interval)
-                    awAlgot self._cleanup_expired()
+                    await asyncio.sleep(interval)
+                    await self._cleanup_expired()
                 except asyncio.CancelledError:
                     break
                 except Exception as e:
@@ -79,7 +79,7 @@ class TTLCache:
         if self._cleanup_task and not self._cleanup_task.done():
             self._cleanup_task.cancel()
             try:
-                awAlgot self._cleanup_task
+                await self._cleanup_task
             except asyncio.CancelledError:
                 pass
 
@@ -212,7 +212,7 @@ def cached(
     cache: TTLCache | None = None,
     ttl: int | None = None,
     key_prefix: str = "",
-) -> Callable[[Callable[P, AwAlgotable[T]]], Callable[P, AwAlgotable[T]]]:
+) -> Callable[[Callable[P, Awaitable[T]]], Callable[P, Awaitable[T]]]:
     """
     Декоратор для кэширования результатов асинхронных функций.
 
@@ -224,26 +224,26 @@ def cached(
     Example:
         @cached(cache=_price_cache, ttl=30, key_prefix="item_price")
         async def get_item_price(item_id: str) -> float:
-            return awAlgot api.get_price(item_id)
+            return await api.get_price(item_id)
     """
     cache_instance = cache or _market_data_cache
 
-    def decorator(func: Callable[P, AwAlgotable[T]]) -> Callable[P, AwAlgotable[T]]:
+    def decorator(func: Callable[P, Awaitable[T]]) -> Callable[P, Awaitable[T]]:
         @wraps(func)
         async def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
             # Создать ключ кэша из имени функции и аргументов
             cache_key = _make_cache_key(key_prefix or func.__name__, args, kwargs)
 
             # Попытка получить из кэша
-            cached_value = awAlgot cache_instance.get(cache_key)
+            cached_value = await cache_instance.get(cache_key)
             if cached_value is not None:
                 logger.debug("Cache HIT: %s", cache_key)
                 return cast("T", cached_value)
 
             # Вызвать функцию и сохранить результат
             logger.debug("Cache MISS: %s", cache_key)
-            result = awAlgot func(*args, **kwargs)
-            awAlgot cache_instance.set(cache_key, result, ttl=ttl)
+            result = await func(*args, **kwargs)
+            await cache_instance.set(cache_key, result, ttl=ttl)
 
             return result
 
@@ -302,19 +302,19 @@ async def get_user_cache() -> TTLCache:
 
 async def start_all_cleanup_tasks() -> None:
     """Запустить фоновую очистку для всех кэшей."""
-    awAlgot _price_cache.start_cleanup(interval=30)
-    awAlgot _market_data_cache.start_cleanup(interval=60)
-    awAlgot _history_cache.start_cleanup(interval=120)
-    awAlgot _user_cache.start_cleanup(interval=300)
+    await _price_cache.start_cleanup(interval=30)
+    await _market_data_cache.start_cleanup(interval=60)
+    await _history_cache.start_cleanup(interval=120)
+    await _user_cache.start_cleanup(interval=300)
     logger.info("All cache cleanup tasks started")
 
 
 async def stop_all_cleanup_tasks() -> None:
     """Остановить фоновую очистку для всех кэшей."""
-    awAlgot _price_cache.stop_cleanup()
-    awAlgot _market_data_cache.stop_cleanup()
-    awAlgot _history_cache.stop_cleanup()
-    awAlgot _user_cache.stop_cleanup()
+    await _price_cache.stop_cleanup()
+    await _market_data_cache.stop_cleanup()
+    await _history_cache.stop_cleanup()
+    await _user_cache.stop_cleanup()
     logger.info("All cache cleanup tasks stopped")
 
 
@@ -326,10 +326,10 @@ async def get_all_cache_stats() -> dict[str, dict[str, Any]]:
         Словарь со статистикой каждого кэша
     """
     return {
-        "price_cache": awAlgot _price_cache.get_stats(),
-        "market_data_cache": awAlgot _market_data_cache.get_stats(),
-        "history_cache": awAlgot _history_cache.get_stats(),
-        "user_cache": awAlgot _user_cache.get_stats(),
+        "price_cache": await _price_cache.get_stats(),
+        "market_data_cache": await _market_data_cache.get_stats(),
+        "history_cache": await _history_cache.get_stats(),
+        "user_cache": await _user_cache.get_stats(),
     }
 
 
@@ -339,8 +339,8 @@ async def clear_all_caches() -> None:
 
     Полезно для тестирования и сброса состояния кэшей.
     """
-    awAlgot _price_cache.clear()
-    awAlgot _market_data_cache.clear()
-    awAlgot _history_cache.clear()
-    awAlgot _user_cache.clear()
+    await _price_cache.clear()
+    await _market_data_cache.clear()
+    await _history_cache.clear()
+    await _user_cache.clear()
     logger.info("All caches cleared")

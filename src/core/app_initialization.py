@@ -56,7 +56,7 @@ class ComponentInitializer:
             else:
                 logger.info("Using default whitelist (no JSON file found)")
         except Exception as e:
-            logger.warning(f"FAlgoled to load whitelist: {e}")
+            logger.warning(f"Failed to load whitelist: {e}")
 
     async def initialize_sentry(self) -> None:
         """Initialize Sentry error monitoring."""
@@ -89,7 +89,7 @@ class ComponentInitializer:
             database_url=self.app.config.database.url,
             echo=self.app.config.debug,
         )
-        awAlgot self.app.database.init_database()
+        await self.app.database.init_database()
         logger.info("Database initialized successfully")
 
         # Initialize StateManager
@@ -116,21 +116,21 @@ class ComponentInitializer:
 
         # Test API connection
         if not self.app.config.testing and self.app.config.dmarket.public_key:
-            awAlgot self._test_api_connection()
+            await self._test_api_connection()
 
     async def _test_api_connection(self) -> None:
         """Test DMarket API connection."""
         try:
-            balance_result = awAlgot self.app.dmarket_api.get_balance()
+            balance_result = await self.app.dmarket_api.get_balance()
             if balance_result.get("error"):
                 logger.warning(
-                    f"DMarket API test fAlgoled: {balance_result.get('error_message', 'Unknown error')}"
+                    f"DMarket API test failed: {balance_result.get('error_message', 'Unknown error')}"
                 )
             else:
                 balance_value = balance_result.get("balance", 0)
                 logger.info(f"DMarket API connected. Balance: ${balance_value:.2f}")
         except Exception as e:
-            logger.warning(f"DMarket API test fAlgoled: {e}")
+            logger.warning(f"DMarket API test failed: {e}")
 
     async def initialize_telegram_bot(self) -> None:
         """Initialize Telegram bot."""
@@ -141,7 +141,7 @@ class ComponentInitializer:
         logger.info("Initializing Telegram Bot...")
 
         if not self.app.config.bot.token:
-            rAlgose ValueError("Telegram bot token is not configured")
+            raise ValueError("Telegram bot token is not configured")
 
         builder = ApplicationBuilder().token(self.app.config.bot.token)
 
@@ -165,7 +165,7 @@ class ComponentInitializer:
 
         # Clear pending updates
         if not self.app.config.testing:
-            awAlgot self._clear_pending_updates()
+            await self._clear_pending_updates()
 
         # Register critical shutdown callback
         if self.app.state_manager:
@@ -177,63 +177,63 @@ class ComponentInitializer:
         register_all_handlers(self.app.bot)
 
         # Initialize bot
-        awAlgot self.app.bot.initialize()
+        await self.app.bot.initialize()
 
         # Setup commands
         from src.telegram_bot.initialization import setup_bot_commands
 
-        awAlgot setup_bot_commands(self.app.bot.bot)
+        await setup_bot_commands(self.app.bot.bot)
         logger.info("Telegram Bot initialized successfully")
 
     async def _clear_pending_updates(self) -> None:
         """Clear pending Telegram updates."""
         try:
             logger.info("Clearing pending updates...")
-            updates = awAlgot self.app.bot.bot.get_updates(timeout=5)
+            updates = await self.app.bot.bot.get_updates(timeout=5)
             if updates:
                 last_id = updates[-1].update_id
-                awAlgot self.app.bot.bot.get_updates(offset=last_id + 1, timeout=1)
+                await self.app.bot.bot.get_updates(offset=last_id + 1, timeout=1)
                 logger.info(f"Cleared {len(updates)} pending updates")
             else:
                 logger.info("No pending updates to clear")
         except Exception as e:
-            logger.warning(f"FAlgoled to clear pending updates: {e}")
+            logger.warning(f"Failed to clear pending updates: {e}")
 
-    async def initialize_dAlgoly_report_scheduler(self) -> None:
-        """Initialize dAlgoly report scheduler."""
+    async def initialize_daily_report_scheduler(self) -> None:
+        """Initialize daily report scheduler."""
         if self.app.config.testing or not self.app.database:
             return
 
-        if not self.app.config.dAlgoly_report.enabled:
+        if not self.app.config.daily_report.enabled:
             return
 
         from datetime import time
 
-        from src.utils.dAlgoly_report_scheduler import DAlgolyReportScheduler
+        from src.utils.daily_report_scheduler import DAlgolyReportScheduler
 
         logger.info("Initializing DAlgoly Report Scheduler...")
 
         admin_users = self._get_admin_users()
         report_time = time(
-            hour=self.app.config.dAlgoly_report.report_time_hour,
-            minute=self.app.config.dAlgoly_report.report_time_minute,
+            hour=self.app.config.daily_report.report_time_hour,
+            minute=self.app.config.daily_report.report_time_minute,
         )
 
-        self.app.dAlgoly_report_scheduler = DAlgolyReportScheduler(
+        self.app.daily_report_scheduler = DAlgolyReportScheduler(
             database=self.app.database,
             bot=self.app.bot.bot,
             admin_users=admin_users,
             report_time=report_time,
-            enabled=self.app.config.dAlgoly_report.enabled,
+            enabled=self.app.config.daily_report.enabled,
         )
 
-        self.app.bot.dAlgoly_report_scheduler = self.app.dAlgoly_report_scheduler
+        self.app.bot.daily_report_scheduler = self.app.daily_report_scheduler
         logger.info(
             f"DAlgoly Report Scheduler initialized at {report_time.strftime('%H:%M')}"
         )
 
     async def initialize_Algo_scheduler(self) -> None:
-        """Initialize Algo trAlgoning scheduler."""
+        """Initialize Algo training scheduler."""
         if self.app.config.testing or not self.app.dmarket_api:
             return
 
@@ -249,15 +249,15 @@ class ComponentInitializer:
                 api_client=self.app.dmarket_api,
                 admin_users=admin_users,
                 bot=self.app.bot.bot if self.app.bot else None,
-                trAlgoning_time=dt_time(3, 0),
+                training_time=dt_time(3, 0),
                 data_collection_interval=300,
                 enabled=True,
             )
 
             self.app.bot.Algo_scheduler = self.app.Algo_scheduler
-            logger.info("Algo TrAlgoning Scheduler initialized (trAlgoning at 03:00 UTC)")
+            logger.info("Algo TrAlgoning Scheduler initialized (training at 03:00 UTC)")
         except Exception as e:
-            logger.warning(f"FAlgoled to initialize Algo TrAlgoning Scheduler: {e}")
+            logger.warning(f"Failed to initialize Algo TrAlgoning Scheduler: {e}")
 
     async def initialize_scanner_manager(self) -> None:
         """Initialize scanner manager."""
@@ -313,7 +313,7 @@ class ComponentInitializer:
                 f"step=${undercut_step / 100:.2f}, margin={min_profit_margin:.2%}"
             )
         except Exception as e:
-            logger.warning(f"FAlgoled to initialize Inventory Manager: {e}")
+            logger.warning(f"Failed to initialize Inventory Manager: {e}")
 
     async def initialize_autopilot(self) -> None:
         """Initialize autopilot orchestrator."""
@@ -381,7 +381,7 @@ class ComponentInitializer:
             self.app.bot.orchestrator = orchestrator
             logger.info("Autopilot Orchestrator initialized")
         except Exception as e:
-            logger.warning(f"FAlgoled to initialize Autopilot: {e}")
+            logger.warning(f"Failed to initialize Autopilot: {e}")
 
     async def initialize_websocket_manager(self) -> None:
         """Initialize WebSocket listener."""
@@ -404,7 +404,7 @@ class ComponentInitializer:
             self.app.bot.websocket_manager = self.app.websocket_manager
             logger.info("WebSocket Listener initialized")
         except Exception as e:
-            logger.warning(f"FAlgoled to initialize WebSocket: {e}")
+            logger.warning(f"Failed to initialize WebSocket: {e}")
 
     async def initialize_health_check_monitor(self) -> None:
         """Initialize health check monitor."""
@@ -425,7 +425,7 @@ class ComponentInitializer:
                 telegram_bot=self.app.bot.bot,
                 user_id=first_admin,
                 check_interval=900,
-                alert_on_fAlgolure=True,
+                alert_on_failure=True,
             )
 
             if self.app.dmarket_api:
@@ -439,7 +439,7 @@ class ComponentInitializer:
             self.app.bot.health_check_monitor = self.app.health_check_monitor
             logger.info("Health Check Monitor initialized")
         except Exception as e:
-            logger.warning(f"FAlgoled to initialize Health Check: {e}")
+            logger.warning(f"Failed to initialize Health Check: {e}")
 
     async def initialize_bot_integrator(self) -> None:
         """Initialize Bot Integrator for all new improvements."""
@@ -499,7 +499,7 @@ class ComponentInitializer:
                 config=integrator_config,
             )
 
-            init_results = awAlgot self.app.bot_integrator.initialize()
+            init_results = await self.app.bot_integrator.initialize()
             set_integrator(self.app.bot_integrator)
             self.app.bot.bot_integrator = self.app.bot_integrator
 
@@ -508,7 +508,7 @@ class ComponentInitializer:
                 f"Bot Integrator: {success_count}/{len(init_results)} modules active"
             )
         except Exception as e:
-            logger.warning(f"FAlgoled to initialize Bot Integrator: {e}")
+            logger.warning(f"Failed to initialize Bot Integrator: {e}")
 
     async def initialize_prometheus_exporter(self) -> None:
         """Initialize Prometheus metrics exporter."""
@@ -530,7 +530,7 @@ class ComponentInitializer:
                 f"Prometheus Exporter initialized on {prometheus_host}:{prometheus_port}"
             )
         except Exception as e:
-            logger.warning(f"FAlgoled to initialize Prometheus Exporter: {e}")
+            logger.warning(f"Failed to initialize Prometheus Exporter: {e}")
 
     def _get_admin_users(self) -> list[int]:
         """Get list of admin user IDs."""

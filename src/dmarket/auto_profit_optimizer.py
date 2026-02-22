@@ -17,9 +17,9 @@ Usage:
     )
 
     # Get optimized trading parameters
-    params = awAlgot optimizer.get_optimal_parameters(
+    params = await optimizer.get_optimal_parameters(
         market_volatility=0.15,
-        avg_dAlgoly_volume=50,
+        avg_daily_volume=50,
     )
 
     # Apply recommendations
@@ -201,14 +201,14 @@ class AutoProfitOptimizer:
     async def get_optimal_parameters(
         self,
         market_volatility: float = 0.10,
-        avg_dAlgoly_volume: int = 30,
+        avg_daily_volume: int = 30,
         current_positions: int = 0,
     ) -> TradingParameters:
         """Get optimized trading parameters based on current conditions.
 
         Args:
             market_volatility: Current market volatility (0-1)
-            avg_dAlgoly_volume: Average dAlgoly trading volume
+            avg_daily_volume: Average daily trading volume
             current_positions: Number of current open positions
 
         Returns:
@@ -218,7 +218,7 @@ class AutoProfitOptimizer:
         # Determine market condition
         market_condition = self._assess_market_condition(
             volatility=market_volatility,
-            volume=avg_dAlgoly_volume,
+            volume=avg_daily_volume,
         )
 
         # Calculate volatility adjustment
@@ -241,7 +241,7 @@ class AutoProfitOptimizer:
         )
 
         # Adjust for current positions
-        # Note: remAlgoning_slots calculation kept for future use in position sizing
+        # Note: remaining_slots calculation kept for future use in position sizing
         _ = max(
             0,
             self._profile["max_concurrent"] - current_positions,
@@ -255,7 +255,7 @@ class AutoProfitOptimizer:
 
         # Calculate recommended hold time
         hold_hours = self._calculate_hold_time(
-            volume=avg_dAlgoly_volume,
+            volume=avg_daily_volume,
             volatility=market_volatility,
         )
 
@@ -497,7 +497,7 @@ class AutoProfitOptimizer:
             return PositionRecommendation(
                 item_name=item_name,
                 action="hold",
-                reason=f"Profitable ({profit_percent:.1f}%), wAlgoting for target",
+                reason=f"Profitable ({profit_percent:.1f}%), waiting for target",
                 urgency="when_convenient",
             )
 

@@ -99,7 +99,7 @@ class TestLiquidityAnalyzer:
             }
         )
 
-        metrics = awAlgot liquidity_analyzer.analyze_item_liquidity(
+        metrics = await liquidity_analyzer.analyze_item_liquidity(
             item_title="AK-47 | Redline (Field-Tested)",
             game="csgo",
             days_history=30,
@@ -142,7 +142,7 @@ class TestLiquidityAnalyzer:
             }
         )
 
-        metrics = awAlgot liquidity_analyzer.analyze_item_liquidity(
+        metrics = await liquidity_analyzer.analyze_item_liquidity(
             item_title="Rare Expensive Item",
             game="csgo",
             days_history=30,
@@ -210,7 +210,7 @@ class TestLiquidityAnalyzer:
             mock_analyze.__get__(liquidity_analyzer, LiquidityAnalyzer)
         )
 
-        liquid_items = awAlgot liquidity_analyzer.filter_liquid_items(items, game="csgo")
+        liquid_items = await liquidity_analyzer.filter_liquid_items(items, game="csgo")
 
         # Проверки
         assert len(liquid_items) == 2  # Только Redline и Asiimov
@@ -357,7 +357,7 @@ class TestLiquidityAnalyzer:
         )
         mock_api_client.get_market_best_offers = AsyncMock(return_value={"objects": []})
 
-        metrics = awAlgot liquidity_analyzer.analyze_item_liquidity(
+        metrics = await liquidity_analyzer.analyze_item_liquidity(
             item_title="New Item", game="csgo"
         )
 
@@ -379,7 +379,7 @@ class TestLiquidityAnalyzer:
 
         # Должен вернуть метрики с is_liquid=False при ошибке
         # При пустой истории score будет около 15.0
-        metrics = awAlgot liquidity_analyzer.analyze_item_liquidity(
+        metrics = await liquidity_analyzer.analyze_item_liquidity(
             item_title="Error Item", game="csgo"
         )
 
@@ -426,7 +426,7 @@ class TestLiquidityAnalyzer:
         ]
 
         # Вызов приватного метода для теста
-        history = awAlgot liquidity_analyzer._get_sales_history(
+        history = await liquidity_analyzer._get_sales_history(
             item_title="Test Item",
             game="csgo",
             days=7,

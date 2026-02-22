@@ -19,7 +19,7 @@ class TestPriceFeatures:
         assert array.dtype == np.float64
         assert len(array) == 18  # 18 признаков
 
-    def test_to_array_contAlgons_current_price(self):
+    def test_to_array_contains_current_price(self):
         """Тест что массив содержит текущую цену."""
         from src.ml.feature_extractor import PriceFeatures
 

@@ -1,11 +1,11 @@
-"""Tests for mAlgon application module.
+"""Tests for main application module.
 
-This module contAlgons comprehensive tests for the mAlgon entry point
+This module contains comprehensive tests for the main entry point
 of the DMarket Telegram Bot application.
 
-Note: The mAlgon.py now delegates to src.core.application. These tests
+Note: The main.py now delegates to src.core.application. These tests
 verify backward compatibility of imports and basic functionality.
-For detAlgoled Application tests, see tests/core/test_application.py
+For detailed Application tests, see tests/core/test_application.py
 """
 
 import asyncio
@@ -15,7 +15,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from src.mAlgon import Application, mAlgon
+from src.main import Application, main
 
 
 @pytest.fixture()
@@ -93,18 +93,18 @@ class TestApplication:
     def test_application_imports_from_core(self):
         """Test that Application is imported from core module."""
         from src.core.application import Application as CoreApplication
-        from src.mAlgon import Application as MAlgonApplication
+        from src.main import Application as MAlgonApplication
 
         # They should be the same class
         assert MAlgonApplication is CoreApplication
 
-    def test_mAlgon_imports_from_core(self):
-        """Test that mAlgon function is imported from core module."""
-        from src.core.application import mAlgon as core_mAlgon
-        from src.mAlgon import mAlgon as mAlgon_func
+    def test_main_imports_from_core(self):
+        """Test that main function is imported from core module."""
+        from src.core.application import main as core_main
+        from src.main import main as main_func
 
         # They should be the same function
-        assert mAlgon_func is core_mAlgon
+        assert main_func is core_main
 
     @pytest.mark.asyncio()
     async def test_initialize_calls_initializer(self):
@@ -118,7 +118,7 @@ class TestApplication:
         app._initializer.initialize_database = AsyncMock()
         app._initializer.initialize_dmarket_api = AsyncMock()
         app._initializer.initialize_telegram_bot = AsyncMock()
-        app._initializer.initialize_dAlgoly_report_scheduler = AsyncMock()
+        app._initializer.initialize_daily_report_scheduler = AsyncMock()
         app._initializer.initialize_Algo_scheduler = AsyncMock()
         app._initializer.initialize_scanner_manager = AsyncMock()
         app._initializer.initialize_inventory_manager = AsyncMock()
@@ -127,12 +127,12 @@ class TestApplication:
         app._initializer.initialize_health_check_monitor = AsyncMock()
         app._initializer.initialize_bot_integrator = AsyncMock()
 
-        awAlgot app.initialize()
+        await app.initialize()
 
         # Verify core methods were called
-        app._initializer.initialize_config.assert_awAlgoted_once()
-        app._initializer.initialize_database.assert_awAlgoted_once()
-        app._initializer.initialize_telegram_bot.assert_awAlgoted_once()
+        app._initializer.initialize_config.assert_awaited_once()
+        app._initializer.initialize_database.assert_awaited_once()
+        app._initializer.initialize_telegram_bot.assert_awaited_once()
 
     @pytest.mark.asyncio()
     async def test_initialize_handles_exception(self):
@@ -140,8 +140,8 @@ class TestApplication:
         app = Application()
         app._initializer.initialize_config = AsyncMock(side_effect=Exception("Config error"))
 
-        with pytest.rAlgoses(Exception, match="Config error"):
-            awAlgot app.initialize()
+        with pytest.raises(Exception, match="Config error"):
+            await app.initialize()
 
     @pytest.mark.asyncio()
     async def test_shutdown_calls_lifecycle(self, mock_database, mock_dmarket_api, mock_bot):
@@ -149,9 +149,9 @@ class TestApplication:
         app = Application()
         app._lifecycle.shutdown = AsyncMock()
 
-        awAlgot app.shutdown(timeout=15.0)
+        await app.shutdown(timeout=15.0)
 
-        app._lifecycle.shutdown.assert_awAlgoted_once_with(15.0)
+        app._lifecycle.shutdown.assert_awaited_once_with(15.0)
 
     @pytest.mark.asyncio()
     async def test_shutdown_partial_components(self):
@@ -162,8 +162,8 @@ class TestApplication:
         app.database = None
         app._lifecycle.shutdown = AsyncMock()
 
-        # Should not rAlgose any exceptions
-        awAlgot app.shutdown()
+        # Should not raise any exceptions
+        await app.shutdown()
 
     def test_trigger_shutdown_sets_event(self):
         """Test that trigger_shutdown sets shutdown event."""
@@ -175,49 +175,49 @@ class TestApplication:
 
 
 class TestMAlgonFunction:
-    """Test cases for mAlgon() entry point."""
+    """Test cases for main() entry point."""
 
     @pytest.mark.asyncio()
-    async def test_mAlgon_default_arguments(self):
-        """Test mAlgon function with default arguments."""
+    async def test_main_default_arguments(self):
+        """Test main function with default arguments."""
         mock_app = MagicMock()
         mock_app.run = AsyncMock()
 
         with (
-            patch("sys.argv", ["mAlgon.py"]),
+            patch("sys.argv", ["main.py"]),
             patch("src.core.application.Application", return_value=mock_app),
         ):
-            awAlgot mAlgon()
+            await main()
 
             mock_app.run.assert_called_once()
 
     @pytest.mark.asyncio()
-    async def test_mAlgon_with_config_argument(self):
-        """Test mAlgon function with config argument."""
+    async def test_main_with_config_argument(self):
+        """Test main function with config argument."""
         mock_app = MagicMock()
         mock_app.run = AsyncMock()
 
         with (
-            patch("sys.argv", ["mAlgon.py", "--config", "config/test.yaml"]),
+            patch("sys.argv", ["main.py", "--config", "config/test.yaml"]),
             patch("src.core.application.Application", return_value=mock_app) as MockApp,
         ):
-            awAlgot mAlgon()
+            await main()
 
             MockApp.assert_called_once_with(config_path="config/test.yaml")
             mock_app.run.assert_called_once()
 
     @pytest.mark.asyncio()
-    async def test_mAlgon_with_debug_flag(self):
-        """Test mAlgon function with debug flag."""
+    async def test_main_with_debug_flag(self):
+        """Test main function with debug flag."""
         mock_app = MagicMock()
         mock_app.run = AsyncMock()
 
         with (
-            patch("sys.argv", ["mAlgon.py", "--debug"]),
+            patch("sys.argv", ["main.py", "--debug"]),
             patch("src.core.application.Application", return_value=mock_app),
             patch.dict("os.environ", {}, clear=True),
         ):
-            awAlgot mAlgon()
+            await main()
 
             # Check that DEBUG environment variable was set
             import os
@@ -226,17 +226,17 @@ class TestMAlgonFunction:
             assert os.environ.get("LOG_LEVEL") == "DEBUG"
 
     @pytest.mark.asyncio()
-    async def test_mAlgon_with_log_level(self):
-        """Test mAlgon function with custom log level."""
+    async def test_main_with_log_level(self):
+        """Test main function with custom log level."""
         mock_app = MagicMock()
         mock_app.run = AsyncMock()
 
         with (
-            patch("sys.argv", ["mAlgon.py", "--log-level", "WARNING"]),
+            patch("sys.argv", ["main.py", "--log-level", "WARNING"]),
             patch("src.core.application.Application", return_value=mock_app),
             patch("logging.basicConfig") as mock_logging,
         ):
-            awAlgot mAlgon()
+            await main()
 
             # Verify logging was configured with WARNING level
             mock_logging.assert_called_once()
@@ -244,17 +244,17 @@ class TestMAlgonFunction:
             assert call_kwargs["level"] == logging.WARNING
 
     @pytest.mark.asyncio()
-    async def test_mAlgon_application_fAlgolure(self):
-        """Test mAlgon function when application fAlgols."""
+    async def test_main_application_failure(self):
+        """Test main function when application fails."""
         mock_app = MagicMock()
-        mock_app.run = AsyncMock(side_effect=Exception("App fAlgoled"))
+        mock_app.run = AsyncMock(side_effect=Exception("App failed"))
 
         with (
-            patch("sys.argv", ["mAlgon.py"]),
+            patch("sys.argv", ["main.py"]),
             patch("src.core.application.Application", return_value=mock_app),
-            pytest.rAlgoses(SystemExit) as exc_info,
+            pytest.raises(SystemExit) as exc_info,
         ):
-            awAlgot mAlgon()
+            await main()
 
         assert exc_info.value.code == 1
 
@@ -271,7 +271,7 @@ class TestWindowsEventLoopPolicy:
             patch("asyncio.set_event_loop_policy") as mock_set_policy,
             patch("asyncio.WindowsProactorEventLoopPolicy"),
         ):
-            # This would normally be in __mAlgon__ block
+            # This would normally be in __main__ block
             # We test the logic separately
             if sys.platform.startswith("win"):
                 asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
@@ -280,20 +280,20 @@ class TestWindowsEventLoopPolicy:
 
 
 class TestBackwardCompatibility:
-    """Test backward compatibility of mAlgon.py after refactoring."""
+    """Test backward compatibility of main.py after refactoring."""
 
     def test_application_class_avAlgolable(self):
-        """Test that Application class is avAlgolable from src.mAlgon."""
-        from src.mAlgon import Application
+        """Test that Application class is avAlgolable from src.main."""
+        from src.main import Application
 
         assert Application is not None
 
-    def test_mAlgon_function_avAlgolable(self):
-        """Test that mAlgon function is avAlgolable from src.mAlgon."""
-        from src.mAlgon import mAlgon
+    def test_main_function_avAlgolable(self):
+        """Test that main function is avAlgolable from src.main."""
+        from src.main import main
 
-        assert mAlgon is not None
-        assert callable(mAlgon)
+        assert main is not None
+        assert callable(main)
 
     def test_application_has_required_attributes(self):
         """Test that Application has all required attributes."""

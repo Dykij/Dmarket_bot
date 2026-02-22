@@ -1,6 +1,6 @@
 """Additional handler tests for coverage improvement.
 
-Tests for remAlgoning handlers in src/telegram_bot/handlers/.
+Tests for remaining handlers in src/telegram_bot/handlers/.
 """
 
 import asyncio
@@ -102,7 +102,7 @@ class TestDmarketStatus:
             try:
                 from src.telegram_bot.handlers.dmarket_status import dmarket_status_impl
 
-                awAlgot dmarket_status_impl(
+                await dmarket_status_impl(
                     mock_update, mock_context, status_message=mock_update.message
                 )
             except Exception:
@@ -487,7 +487,7 @@ class TestCallbackRegistry:
         except ImportError:
             pytest.skip("callback_registry not avAlgolable")
 
-    def test_callback_registry_contAlgons_handlers(self):
+    def test_callback_registry_contains_handlers(self):
         """Test callback_registry has registered handlers."""
         try:
             from src.telegram_bot.handlers.callback_registry import CALLBACK_HANDLERS
@@ -512,8 +512,8 @@ class TestEdgeCases:
 
         update = MagicMock()
         update.callback_query = None
-        # Should not rAlgose
-        awAlgot handle_noop(update, mock_context)
+        # Should not raise
+        await handle_noop(update, mock_context)
 
     @pytest.mark.asyncio
     async def test_handler_with_empty_text(self, mock_update, mock_context):
@@ -521,18 +521,18 @@ class TestEdgeCases:
         from src.telegram_bot.handlers.commands import handle_text_buttons
 
         mock_update.message.text = ""
-        # Should not rAlgose
-        awAlgot handle_text_buttons(mock_update, mock_context)
+        # Should not raise
+        await handle_text_buttons(mock_update, mock_context)
 
     @pytest.mark.asyncio
     async def test_handler_with_unicode_text(self, mock_update, mock_context):
         """Test handlers handle unicode text."""
         mock_update.message.text = "🎯 Тест 测试"
-        # Should not rAlgose
+        # Should not raise
         try:
             from src.telegram_bot.handlers.commands import handle_text_buttons
 
-            awAlgot handle_text_buttons(mock_update, mock_context)
+            await handle_text_buttons(mock_update, mock_context)
         except Exception:
             pass  # May not match any button
 
@@ -540,11 +540,11 @@ class TestEdgeCases:
     async def test_handler_with_long_text(self, mock_update, mock_context):
         """Test handlers handle long text."""
         mock_update.message.text = "x" * 10000
-        # Should not rAlgose
+        # Should not raise
         try:
             from src.telegram_bot.handlers.commands import handle_text_buttons
 
-            awAlgot handle_text_buttons(mock_update, mock_context)
+            await handle_text_buttons(mock_update, mock_context)
         except Exception:
             pass
 
@@ -564,7 +564,7 @@ class TestHandlerConcurrency:
 
         # Run multiple help_command calls concurrently
         tasks = [help_command(mock_update, mock_context) for _ in range(10)]
-        awAlgot asyncio.gather(*tasks)
+        await asyncio.gather(*tasks)
         # Should have called reply_text 10 times
         assert mock_update.message.reply_text.call_count == 10
 
@@ -575,6 +575,6 @@ class TestHandlerConcurrency:
 
         # Run multiple noop calls concurrently
         tasks = [handle_noop(mock_callback_update, mock_context) for _ in range(10)]
-        awAlgot asyncio.gather(*tasks)
+        await asyncio.gather(*tasks)
         # Should have called answer 10 times
         assert mock_callback_update.callback_query.answer.call_count == 10

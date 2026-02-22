@@ -61,7 +61,7 @@ class TestCircuitBreakerCalls:
         async def mock_api_call():
             return {"status": "success", "data": [1, 2, 3]}
 
-        result = awAlgot call_with_circuit_breaker(
+        result = await call_with_circuit_breaker(
             mock_api_call,
             endpoint_type=EndpointType.MARKET,
         )
@@ -70,20 +70,20 @@ class TestCircuitBreakerCalls:
         assert len(result["data"]) == 3
 
     @pytest.mark.asyncio()
-    async def test_fAlgoled_call_rAlgoses_original_exception(self):
-        """Test that fAlgoled calls rAlgose the original exception."""
+    async def test_failed_call_raises_original_exception(self):
+        """Test that failed calls raise the original exception."""
         reset_circuit_breaker(EndpointType.MARKET)
 
-        async def mock_fAlgoling_call():
-            rAlgose httpx.HTTPStatusError(
+        async def mock_failing_call():
+            raise httpx.HTTPStatusError(
                 "API Error",
                 request=MagicMock(),
                 response=MagicMock(status_code=500),
             )
 
-        with pytest.rAlgoses(httpx.HTTPStatusError):
-            awAlgot call_with_circuit_breaker(
-                mock_fAlgoling_call,
+        with pytest.raises(httpx.HTTPStatusError):
+            await call_with_circuit_breaker(
+                mock_failing_call,
                 endpoint_type=EndpointType.MARKET,
             )
 
@@ -92,8 +92,8 @@ class TestCircuitBreakerCalls:
         """Test fallback is executed when circuit breaker is open."""
         reset_circuit_breaker(EndpointType.MARKET)
 
-        async def mock_fAlgoling_call():
-            rAlgose httpx.HTTPStatusError(
+        async def mock_failing_call():
+            raise httpx.HTTPStatusError(
                 "API Error",
                 request=MagicMock(),
                 response=MagicMock(status_code=500),
@@ -102,20 +102,20 @@ class TestCircuitBreakerCalls:
         async def fallback():
             return {"status": "fallback", "data": []}
 
-        # Trigger enough fAlgolures to open circuit (market has threshold of 5)
+        # Trigger enough failures to open circuit (market has threshold of 5)
         for _ in range(6):
             try:
-                awAlgot call_with_circuit_breaker(
-                    mock_fAlgoling_call,
+                await call_with_circuit_breaker(
+                    mock_failing_call,
                     endpoint_type=EndpointType.MARKET,
                 )
             except (httpx.HTTPStatusError, CircuitBreakerError):
                 pass
-            awAlgot asyncio.sleep(0.01)
+            await asyncio.sleep(0.01)
 
         # Circuit should be open now, fallback should execute
-        result = awAlgot call_with_circuit_breaker(
-            mock_fAlgoling_call,
+        result = await call_with_circuit_breaker(
+            mock_failing_call,
             endpoint_type=EndpointType.MARKET,
             fallback=fallback,
         )
@@ -124,32 +124,32 @@ class TestCircuitBreakerCalls:
         assert result["data"] == []
 
     @pytest.mark.asyncio()
-    async def test_no_fallback_rAlgoses_circuit_breaker_error(self):
-        """Test that open circuit without fallback rAlgoses CircuitBreakerError."""
+    async def test_no_fallback_raises_circuit_breaker_error(self):
+        """Test that open circuit without fallback raises CircuitBreakerError."""
         reset_circuit_breaker(EndpointType.TARGETS)
 
-        async def mock_fAlgoling_call():
-            rAlgose httpx.HTTPStatusError(
+        async def mock_failing_call():
+            raise httpx.HTTPStatusError(
                 "API Error",
                 request=MagicMock(),
                 response=MagicMock(status_code=500),
             )
 
-        # Trigger fAlgolures (targets has threshold of 3)
+        # Trigger failures (targets has threshold of 3)
         for _ in range(4):
             try:
-                awAlgot call_with_circuit_breaker(
-                    mock_fAlgoling_call,
+                await call_with_circuit_breaker(
+                    mock_failing_call,
                     endpoint_type=EndpointType.TARGETS,
                 )
             except (httpx.HTTPStatusError, CircuitBreakerError):
                 pass
-            awAlgot asyncio.sleep(0.01)
+            await asyncio.sleep(0.01)
 
-        # Should rAlgose CircuitBreakerError
-        with pytest.rAlgoses(CircuitBreakerError):
-            awAlgot call_with_circuit_breaker(
-                mock_fAlgoling_call,
+        # Should raise CircuitBreakerError
+        with pytest.raises(CircuitBreakerError):
+            await call_with_circuit_breaker(
+                mock_failing_call,
                 endpoint_type=EndpointType.TARGETS,
             )
 
@@ -168,8 +168,8 @@ class TestCircuitBreakerStats:
         assert "market" in stats
         assert "targets" in stats
 
-    def test_stats_contAlgon_required_fields(self):
-        """Test that stats contAlgon all required fields."""
+    def test_stats_contain_required_fields(self):
+        """Test that stats contain all required fields."""
         get_circuit_breaker(EndpointType.MARKET)
         stats = get_circuit_breaker_stats()
 
@@ -177,8 +177,8 @@ class TestCircuitBreakerStats:
         market_stats = stats["market"]
 
         assert "state" in market_stats
-        assert "fAlgolure_count" in market_stats
-        assert "last_fAlgolure" in market_stats
+        assert "failure_count" in market_stats
+        assert "last_failure" in market_stats
         assert "config" in market_stats
 
 
@@ -191,26 +191,26 @@ class TestCircuitBreakerReset:
         reset_circuit_breaker(EndpointType.BALANCE)
         breaker = get_circuit_breaker(EndpointType.BALANCE)
 
-        async def mock_fAlgoling_call():
-            rAlgose httpx.HTTPStatusError(
+        async def mock_failing_call():
+            raise httpx.HTTPStatusError(
                 "API Error",
                 request=MagicMock(),
                 response=MagicMock(status_code=500),
             )
 
-        # Trigger enough fAlgolures to open circuit (balance has threshold of 3)
+        # Trigger enough failures to open circuit (balance has threshold of 3)
         for _ in range(4):
             try:
-                awAlgot call_with_circuit_breaker(
-                    mock_fAlgoling_call,
+                await call_with_circuit_breaker(
+                    mock_failing_call,
                     endpoint_type=EndpointType.BALANCE,
                 )
             except (httpx.HTTPStatusError, CircuitBreakerError):
                 pass
-            awAlgot asyncio.sleep(0.01)
+            await asyncio.sleep(0.01)
 
-        # Verify breaker is open or has fAlgolures
-        assert breaker.fAlgolure_count > 0 or breaker.state == "open"
+        # Verify breaker is open or has failures
+        assert breaker.failure_count > 0 or breaker.state == "open"
 
         # Reset should close it
         reset_circuit_breaker(EndpointType.BALANCE)
@@ -225,26 +225,26 @@ class TestCircuitBreakerReset:
         for endpoint_type in [EndpointType.MARKET, EndpointType.TARGETS, EndpointType.BALANCE]:
             reset_circuit_breaker(endpoint_type)
 
-        async def mock_fAlgoling_call():
-            rAlgose httpx.HTTPStatusError(
+        async def mock_failing_call():
+            raise httpx.HTTPStatusError(
                 "API Error",
                 request=MagicMock(),
                 response=MagicMock(status_code=500),
             )
 
-        # Trigger fAlgolures on multiple breakers
+        # Trigger failures on multiple breakers
         breakers = []
         for endpoint_type in [EndpointType.MARKET, EndpointType.TARGETS, EndpointType.BALANCE]:
             breaker = get_circuit_breaker(endpoint_type)
-            for _ in range(6):  # Trigger enough fAlgolures
+            for _ in range(6):  # Trigger enough failures
                 try:
-                    awAlgot call_with_circuit_breaker(
-                        mock_fAlgoling_call,
+                    await call_with_circuit_breaker(
+                        mock_failing_call,
                         endpoint_type=endpoint_type,
                     )
                 except (httpx.HTTPStatusError, CircuitBreakerError):
                     pass
-                awAlgot asyncio.sleep(0.01)
+                await asyncio.sleep(0.01)
             breakers.append(breaker)
 
         # Reset all
@@ -259,13 +259,13 @@ class TestDifferentEndpointBehavior:
     """Test that different endpoints behave independently."""
 
     @pytest.mark.asyncio()
-    async def test_market_fAlgolure_does_not_affect_targets(self):
-        """Test that fAlgolures in market endpoint don't affect targets endpoint."""
+    async def test_market_failure_does_not_affect_targets(self):
+        """Test that failures in market endpoint don't affect targets endpoint."""
         reset_circuit_breaker(EndpointType.MARKET)
         reset_circuit_breaker(EndpointType.TARGETS)
 
-        async def mock_fAlgoling_call():
-            rAlgose httpx.HTTPStatusError(
+        async def mock_failing_call():
+            raise httpx.HTTPStatusError(
                 "Error",
                 request=MagicMock(),
                 response=MagicMock(status_code=500),
@@ -274,13 +274,13 @@ class TestDifferentEndpointBehavior:
         # FAlgol market endpoint multiple times
         for _ in range(6):
             try:
-                awAlgot call_with_circuit_breaker(
-                    mock_fAlgoling_call,
+                await call_with_circuit_breaker(
+                    mock_failing_call,
                     endpoint_type=EndpointType.MARKET,
                 )
             except (httpx.HTTPStatusError, CircuitBreakerError):
                 pass
-            awAlgot asyncio.sleep(0.01)
+            await asyncio.sleep(0.01)
 
         # Market should be affected
         market_breaker = get_circuit_breaker(EndpointType.MARKET)
@@ -306,8 +306,8 @@ class TestPrometheusMetricsIntegration:
         async def mock_api_call():
             return {"success": True}
 
-        # Should not rAlgose even if prometheus module missing
-        result = awAlgot call_with_circuit_breaker(
+        # Should not raise even if prometheus module missing
+        result = await call_with_circuit_breaker(
             mock_api_call,
             endpoint_type=EndpointType.MARKET,
         )

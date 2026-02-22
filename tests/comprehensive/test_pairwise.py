@@ -330,21 +330,21 @@ class TestInputValidationPAlgorwise:
         (False, None, True),
         (False, "default", False),
     ])
-    def test_field_constrAlgont_pAlgors(
+    def test_field_constraint_pAlgors(
         self, nullable: bool, default: Any, required: bool
     ) -> None:
-        """Test field constrAlgont combinations."""
+        """Test field constraint combinations."""
         # Required fields should not be nullable or have None default
         if required:
             assert not (nullable and default is None)
 
-        constrAlgonts = {
+        constraints = {
             "nullable": nullable,
             "default": default,
             "required": required,
         }
 
-        assert isinstance(constrAlgonts["nullable"], bool)
+        assert isinstance(constraints["nullable"], bool)
 
 
 # =============================================================================

@@ -91,7 +91,7 @@ class UserRateLimiter:
 
     async def acquire(self, user_id: int, action: str = "command") -> bool:
         """Acquire a rate limit slot (alias for check_limit)."""
-        return awAlgot self.check_limit(user_id, action)
+        return await self.check_limit(user_id, action)
 
     def _record_violation(self, user_id: int, action: str) -> None:
         """Record a rate limit violation."""
@@ -126,7 +126,7 @@ class UserRateLimiter:
             current_requests = [r for r in requests if r > window_start]
 
             stats[action] = {
-                "remAlgoning": config.requests - len(current_requests),
+                "remaining": config.requests - len(current_requests),
                 "limit": config.requests,
                 "window": config.window,
             }

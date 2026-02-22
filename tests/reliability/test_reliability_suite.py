@@ -25,7 +25,7 @@ class TestChaosEngineering:
     """Тесты chaos engineering - симуляция сбоев."""
 
     @pytest.mark.asyncio()
-    async def test_random_api_fAlgolures(self):
+    async def test_random_api_failures(self):
         """Тест случайных отключений DMarket API."""
         # Arrange
         call_count = 0
@@ -34,21 +34,21 @@ class TestChaosEngineering:
             nonlocal call_count
             call_count += 1
             if call_count % 3 == 0:  # Каждый 3-й запрос падает
-                rAlgose APIError("Random API fAlgolure")
+                raise APIError("Random API failure")
             return {"success": True, "data": "ok"}
 
         # Act
         successes = 0
-        fAlgolures = 0
+        failures = 0
         for _ in range(10):
             try:
-                awAlgot flaky_request()
+                await flaky_request()
                 successes += 1
             except APIError:
-                fAlgolures += 1
+                failures += 1
 
         # Assert
-        assert fAlgolures > 0, "Должны быть сбои"
+        assert failures > 0, "Должны быть сбои"
         assert successes > 0, "Должны быть успешные запросы"
 
     @pytest.mark.asyncio()
@@ -57,42 +57,42 @@ class TestChaosEngineering:
 
         # Arrange
         async def slow_request():
-            awAlgot asyncio.sleep(0.5)  # Задержка 500ms
+            await asyncio.sleep(0.5)  # Задержка 500ms
             return {"success": True}
 
         # Act
         start_time = time.time()
-        awAlgot slow_request()
+        await slow_request()
         elapsed = time.time() - start_time
 
         # Assert
         assert elapsed >= 0.5, "Должна быть задержка минимум 500ms"
 
     @pytest.mark.asyncio()
-    async def test_partial_fAlgolures(self):
-        """Тест частичных сбоев (50% requests fAlgol)."""
+    async def test_partial_failures(self):
+        """Тест частичных сбоев (50% requests fail)."""
         # Arrange
         call_count = 0
 
-        async def half_fAlgoling():
+        async def half_failing():
             nonlocal call_count
             call_count += 1
             if call_count % 2 == 0:
-                rAlgose APIError("50% fAlgolure rate")
+                raise APIError("50% failure rate")
             return {"success": True}
 
         # Act
         successes = 0
-        fAlgolures = 0
+        failures = 0
         for _ in range(10):
             try:
-                awAlgot half_fAlgoling()
+                await half_failing()
                 successes += 1
             except APIError:
-                fAlgolures += 1
+                failures += 1
 
         # Assert
-        assert fAlgolures == 5, "50% запросов должны падать"
+        assert failures == 5, "50% запросов должны падать"
         assert successes == 5, "50% запросов должны проходить"
 
     @pytest.mark.asyncio()
@@ -103,17 +103,17 @@ class TestChaosEngineering:
 
         async def db_operation():
             if not db_connected:
-                rAlgose ConnectionError("Database connection lost")
+                raise ConnectionError("Database connection lost")
             return {"data": "success"}
 
         # Act & Assert - Нормальная работа
-        result = awAlgot db_operation()
+        result = await db_operation()
         assert result["data"] == "success"
 
         # Симуляция разрыва
         db_connected = False
-        with pytest.rAlgoses(ConnectionError):
-            awAlgot db_operation()
+        with pytest.raises(ConnectionError):
+            await db_operation()
 
     @pytest.mark.asyncio()
     async def test_redis_unavAlgolability(self):
@@ -145,7 +145,7 @@ class TestChaosEngineering:
         def allocate_memory(size: int) -> bool:
             nonlocal current_memory
             if current_memory + size > memory_limit:
-                rAlgose MemoryError("Out of memory")
+                raise MemoryError("Out of memory")
             current_memory += size
             return True
 
@@ -153,7 +153,7 @@ class TestChaosEngineering:
         assert allocate_memory(500) is True
 
         # Попытка превысить лимит
-        with pytest.rAlgoses(MemoryError):
+        with pytest.raises(MemoryError):
             allocate_memory(600)
 
     @pytest.mark.asyncio()
@@ -166,7 +166,7 @@ class TestChaosEngineering:
         def write_to_disk(size: int) -> bool:
             nonlocal used_space
             if used_space + size > disk_space:
-                rAlgose OSError("Disk full")
+                raise OSError("Disk full")
             used_space += size
             return True
 
@@ -174,7 +174,7 @@ class TestChaosEngineering:
         assert write_to_disk(50) is True
 
         # Попытка превысить лимит
-        with pytest.rAlgoses(IOError):
+        with pytest.raises(IOError):
             write_to_disk(60)
 
     @pytest.mark.asyncio()
@@ -213,7 +213,7 @@ class TestChaosEngineering:
         assert can_communicate("zone_a", "zone_b") is False
 
     @pytest.mark.asyncio()
-    async def test_cascading_fAlgolures(self):
+    async def test_cascading_failures(self):
         """Тест каскадных сбоев."""
         # Arrange
         services = {"api": True, "database": True, "cache": True}
@@ -249,13 +249,13 @@ class TestCircuitBreaker:
         # Arrange
         class SimpleCircuitBreaker:
             def __init__(self, threshold: int):
-                self.fAlgolure_count = 0
+                self.failure_count = 0
                 self.threshold = threshold
                 self.state = "closed"
 
-            def record_fAlgolure(self):
-                self.fAlgolure_count += 1
-                if self.fAlgolure_count >= self.threshold:
+            def record_failure(self):
+                self.failure_count += 1
+                if self.failure_count >= self.threshold:
                     self.state = "open"
 
             def is_open(self):
@@ -265,7 +265,7 @@ class TestCircuitBreaker:
 
         # Act
         for _ in range(3):
-            cb.record_fAlgolure()
+            cb.record_failure()
 
         # Assert
         assert cb.is_open()
@@ -278,7 +278,7 @@ class TestCircuitBreaker:
 
         # Act - Simulate state machine
         states.append("closed")  # Normal
-        states.append("open")  # After fAlgolures
+        states.append("open")  # After failures
         states.append("half_open")  # After timeout
         states.append("closed")  # After success
 
@@ -296,14 +296,14 @@ class TestCircuitBreaker:
         async def try_recovery():
             nonlocal circuit_state
             # WAlgot timeout
-            awAlgot asyncio.sleep(0.1)
+            await asyncio.sleep(0.1)
             circuit_state = "half_open"
             # Try request
             circuit_state = "closed"  # Success
             return True
 
         # Act
-        result = awAlgot try_recovery()
+        result = await try_recovery()
 
         # Assert
         assert result is True
@@ -317,7 +317,7 @@ class TestCircuitBreaker:
 
         async def primary_service():
             if not primary_avAlgolable:
-                rAlgose Exception("Primary unavAlgolable")
+                raise Exception("Primary unavAlgolable")
             return "primary_data"
 
         async def fallback_service():
@@ -325,9 +325,9 @@ class TestCircuitBreaker:
 
         # Act
         try:
-            result = awAlgot primary_service()
+            result = await primary_service()
         except Exception:
-            result = awAlgot fallback_service()
+            result = await fallback_service()
 
         # Assert
         assert result == "fallback_data"
@@ -338,40 +338,40 @@ class TestCircuitBreaker:
 
         # Arrange
         async def slow_operation():
-            awAlgot asyncio.sleep(2.0)
+            await asyncio.sleep(2.0)
             return "too_slow"
 
         # Act & Assert
-        with pytest.rAlgoses(asyncio.TimeoutError):
-            awAlgot asyncio.wAlgot_for(slow_operation(), timeout=0.5)
+        with pytest.raises(asyncio.TimeoutError):
+            await asyncio.wait_for(slow_operation(), timeout=0.5)
 
     @pytest.mark.asyncio()
     async def test_circuit_breaker_metrics_collection(self):
         """Тест сбора метрик circuit breaker."""
         # Arrange
-        metrics = {"success": 0, "fAlgolures": 0, "timeouts": 0}
+        metrics = {"success": 0, "failures": 0, "timeouts": 0}
 
-        async def tracked_operation(should_fAlgol: bool):
-            if should_fAlgol:
-                metrics["fAlgolures"] += 1
-                rAlgose Exception("FAlgoled")
+        async def tracked_operation(should_fail: bool):
+            if should_fail:
+                metrics["failures"] += 1
+                raise Exception("Failed")
             metrics["success"] += 1
             return "success"
 
         # Act
         try:
-            awAlgot tracked_operation(False)
+            await tracked_operation(False)
         except Exception:
             pass
 
         try:
-            awAlgot tracked_operation(True)
+            await tracked_operation(True)
         except Exception:
             pass
 
         # Assert
         assert metrics["success"] == 1
-        assert metrics["fAlgolures"] == 1
+        assert metrics["failures"] == 1
 
 
 # ============================================================================
@@ -405,15 +405,15 @@ class TestRetryLogic:
         max_retries = 3
         attempt_count = 0
 
-        async def fAlgoling_operation():
+        async def failing_operation():
             nonlocal attempt_count
             attempt_count += 1
-            rAlgose Exception("Always fAlgols")
+            raise Exception("Always fails")
 
         # Act
         for retry in range(max_retries):
             try:
-                awAlgot fAlgoling_operation()
+                await failing_operation()
             except Exception:
                 if retry >= max_retries - 1:
                     break
@@ -435,8 +435,8 @@ class TestRetryLogic:
             return "processed"
 
         # Act
-        result1 = awAlgot idempotent_operation("op_123", "data")
-        result2 = awAlgot idempotent_operation("op_123", "data")  # Retry
+        result1 = await idempotent_operation("op_123", "data")
+        result2 = await idempotent_operation("op_123", "data")  # Retry
 
         # Assert
         assert result1 == "processed"
@@ -449,25 +449,25 @@ class TestRetryLogic:
         # Arrange
         items = ["item1", "item2", "item3", "item4"]
         processed = []
-        fAlgoled = []
+        failed = []
 
         async def process_item(item: str):
             if "3" in item:
-                rAlgose Exception(f"FAlgoled to process {item}")
+                raise Exception(f"Failed to process {item}")
             processed.append(item)
             return f"processed_{item}"
 
         # Act
         for item in items:
             try:
-                awAlgot process_item(item)
+                await process_item(item)
             except Exception:
-                fAlgoled.append(item)
+                failed.append(item)
 
         # Assert
         assert len(processed) == 3
-        assert len(fAlgoled) == 1
-        assert "item3" in fAlgoled
+        assert len(failed) == 1
+        assert "item3" in failed
 
     @pytest.mark.asyncio()
     async def test_dead_letter_queue(self):
@@ -483,13 +483,13 @@ class TestRetryLogic:
 
             try:
                 if "bad" in item:
-                    rAlgose Exception("Processing fAlgoled")
+                    raise Exception("Processing failed")
                 return True
             except Exception:
-                return awAlgot process_with_dlq(item, retries + 1)
+                return await process_with_dlq(item, retries + 1)
 
         # Act
-        awAlgot process_with_dlq("bad_item")
+        await process_with_dlq("bad_item")
 
         # Assert
         assert len(dead_letter_queue) == 1
@@ -505,15 +505,15 @@ class TestRetryLogic:
         async def operation_with_budget():
             nonlocal retries_used
             if retries_used >= retry_budget:
-                rAlgose Exception("Retry budget exhausted")
+                raise Exception("Retry budget exhausted")
             retries_used += 1
-            rAlgose Exception("Need retry")
+            raise Exception("Need retry")
 
         # Act
         try:
             for _ in range(15):  # Попытка превысить бюджет
                 try:
-                    awAlgot operation_with_budget()
+                    await operation_with_budget()
                 except Exception as e:
                     if "budget exhausted" in str(e):
                         break
@@ -534,19 +534,19 @@ Phase 5 - Task 4: Reliability Testing
 
 Категории:
 1. Chaos Engineering (10 тестов):
-   - Random API fAlgolures
+   - Random API failures
    - Network latency injection
-   - Partial fAlgolures (50%)
+   - Partial failures (50%)
    - Database connection drops
    - Redis unavAlgolability
    - Out of memory scenarios
    - Disk full scenarios
    - CPU saturation
    - Network partitions
-   - Cascading fAlgolures
+   - Cascading failures
 
 2. Circuit Breaker (6 тестов):
-   - Opens after N fAlgolures
+   - Opens after N failures
    - Half-open state
    - Closes after success
    - Fallback mechanism

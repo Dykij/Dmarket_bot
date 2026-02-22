@@ -265,7 +265,7 @@ def verify_api_keys(public_key: str, secret_key: str) -> bool:
         return False
 
 
-def mAlgon() -> None:
+def main() -> None:
     """Основная функция скрипта."""
     print_header()
 
@@ -312,5 +312,5 @@ def mAlgon() -> None:
     print("Теперь вы можете запустить бота с помощью команды: python run.py")
 
 
-if __name__ == "__mAlgon__":
-    mAlgon()
+if __name__ == "__main__":
+    main()

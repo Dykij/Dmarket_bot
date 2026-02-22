@@ -37,8 +37,8 @@ class TestCS2Constants:
         """Test that CS2_CATEGORIES is not empty."""
         assert len(CS2_CATEGORIES) > 0
 
-    def test_cs2_categories_contAlgons_expected_items(self):
-        """Test that CS2_CATEGORIES contAlgons expected items."""
+    def test_cs2_categories_contains_expected_items(self):
+        """Test that CS2_CATEGORIES contains expected items."""
         expected = ["Pistol", "Rifle", "Knife", "Gloves"]
         for item in expected:
             assert item in CS2_CATEGORIES
@@ -51,12 +51,12 @@ class TestCS2Constants:
         """Test that CS2_RARITIES is not empty."""
         assert len(CS2_RARITIES) > 0
 
-    def test_cs2_rarities_contAlgons_covert(self):
-        """Test that CS2_RARITIES contAlgons Covert."""
+    def test_cs2_rarities_contains_covert(self):
+        """Test that CS2_RARITIES contains Covert."""
         assert "Covert" in CS2_RARITIES
 
-    def test_cs2_rarities_contAlgons_contraband(self):
-        """Test that CS2_RARITIES contAlgons Contraband."""
+    def test_cs2_rarities_contains_contraband(self):
+        """Test that CS2_RARITIES contains Contraband."""
         assert "Contraband" in CS2_RARITIES
 
     def test_cs2_exteriors_is_list(self):
@@ -67,12 +67,12 @@ class TestCS2Constants:
         """Test that CS2_EXTERIORS has exactly 5 items."""
         assert len(CS2_EXTERIORS) == 5
 
-    def test_cs2_exteriors_contAlgons_factory_new(self):
-        """Test that CS2_EXTERIORS contAlgons Factory New."""
+    def test_cs2_exteriors_contains_factory_new(self):
+        """Test that CS2_EXTERIORS contains Factory New."""
         assert "Factory New" in CS2_EXTERIORS
 
-    def test_cs2_exteriors_contAlgons_battle_scarred(self):
-        """Test that CS2_EXTERIORS contAlgons Battle-Scarred."""
+    def test_cs2_exteriors_contains_battle_scarred(self):
+        """Test that CS2_EXTERIORS contains Battle-Scarred."""
         assert "Battle-Scarred" in CS2_EXTERIORS
 
 
@@ -87,8 +87,8 @@ class TestDota2Constants:
         """Test that DOTA2_HEROES is not empty."""
         assert len(DOTA2_HEROES) > 0
 
-    def test_dota2_heroes_contAlgons_popular_heroes(self):
-        """Test that DOTA2_HEROES contAlgons popular heroes."""
+    def test_dota2_heroes_contains_popular_heroes(self):
+        """Test that DOTA2_HEROES contains popular heroes."""
         expected = ["Pudge", "Invoker", "Axe"]
         for hero in expected:
             assert hero in DOTA2_HEROES
@@ -101,12 +101,12 @@ class TestDota2Constants:
         """Test that DOTA2_RARITIES is not empty."""
         assert len(DOTA2_RARITIES) > 0
 
-    def test_dota2_rarities_contAlgons_arcana(self):
-        """Test that DOTA2_RARITIES contAlgons Arcana."""
+    def test_dota2_rarities_contains_arcana(self):
+        """Test that DOTA2_RARITIES contains Arcana."""
         assert "Arcana" in DOTA2_RARITIES
 
-    def test_dota2_rarities_contAlgons_immortal(self):
-        """Test that DOTA2_RARITIES contAlgons Immortal."""
+    def test_dota2_rarities_contains_immortal(self):
+        """Test that DOTA2_RARITIES contains Immortal."""
         assert "Immortal" in DOTA2_RARITIES
 
     def test_dota2_slots_is_list(self):
@@ -117,8 +117,8 @@ class TestDota2Constants:
         """Test that DOTA2_SLOTS is not empty."""
         assert len(DOTA2_SLOTS) > 0
 
-    def test_dota2_slots_contAlgons_weapon(self):
-        """Test that DOTA2_SLOTS contAlgons Weapon."""
+    def test_dota2_slots_contains_weapon(self):
+        """Test that DOTA2_SLOTS contains Weapon."""
         assert "Weapon" in DOTA2_SLOTS
 
 
@@ -133,8 +133,8 @@ class TestTF2Constants:
         """Test that TF2_CLASSES has 10 items (9 classes + All)."""
         assert len(TF2_CLASSES) == 10
 
-    def test_tf2_classes_contAlgons_all_classes(self):
-        """Test that TF2_CLASSES contAlgons all expected classes."""
+    def test_tf2_classes_contains_all_classes(self):
+        """Test that TF2_CLASSES contains all expected classes."""
         expected = [
             "Scout",
             "Soldier",
@@ -149,8 +149,8 @@ class TestTF2Constants:
         for cls in expected:
             assert cls in TF2_CLASSES
 
-    def test_tf2_classes_contAlgons_all_classes_option(self):
-        """Test that TF2_CLASSES contAlgons All Classes option."""
+    def test_tf2_classes_contains_all_classes_option(self):
+        """Test that TF2_CLASSES contains All Classes option."""
         assert "All Classes" in TF2_CLASSES
 
     def test_tf2_qualities_is_list(self):
@@ -161,12 +161,12 @@ class TestTF2Constants:
         """Test that TF2_QUALITIES is not empty."""
         assert len(TF2_QUALITIES) > 0
 
-    def test_tf2_qualities_contAlgons_unusual(self):
-        """Test that TF2_QUALITIES contAlgons Unusual."""
+    def test_tf2_qualities_contains_unusual(self):
+        """Test that TF2_QUALITIES contains Unusual."""
         assert "Unusual" in TF2_QUALITIES
 
-    def test_tf2_qualities_contAlgons_strange(self):
-        """Test that TF2_QUALITIES contAlgons Strange."""
+    def test_tf2_qualities_contains_strange(self):
+        """Test that TF2_QUALITIES contains Strange."""
         assert "Strange" in TF2_QUALITIES
 
     def test_tf2_types_is_list(self):
@@ -177,8 +177,8 @@ class TestTF2Constants:
         """Test that TF2_TYPES is not empty."""
         assert len(TF2_TYPES) > 0
 
-    def test_tf2_types_contAlgons_hat(self):
-        """Test that TF2_TYPES contAlgons Hat."""
+    def test_tf2_types_contains_hat(self):
+        """Test that TF2_TYPES contains Hat."""
         assert "Hat" in TF2_TYPES
 
 
@@ -193,8 +193,8 @@ class TestRustConstants:
         """Test that RUST_CATEGORIES is not empty."""
         assert len(RUST_CATEGORIES) > 0
 
-    def test_rust_categories_contAlgons_weapon(self):
-        """Test that RUST_CATEGORIES contAlgons Weapon."""
+    def test_rust_categories_contains_weapon(self):
+        """Test that RUST_CATEGORIES contains Weapon."""
         assert "Weapon" in RUST_CATEGORIES
 
     def test_rust_types_is_list(self):
@@ -213,8 +213,8 @@ class TestRustConstants:
         """Test that RUST_RARITIES is not empty."""
         assert len(RUST_RARITIES) > 0
 
-    def test_rust_rarities_contAlgons_legendary(self):
-        """Test that RUST_RARITIES contAlgons Legendary."""
+    def test_rust_rarities_contains_legendary(self):
+        """Test that RUST_RARITIES contains Legendary."""
         assert "Legendary" in RUST_RARITIES
 
 
@@ -296,8 +296,8 @@ class TestGameNames:
         for game in expected_games:
             assert game in GAME_NAMES
 
-    def test_csgo_name_contAlgons_cs2(self):
-        """Test that csgo name contAlgons CS2."""
+    def test_csgo_name_contains_cs2(self):
+        """Test that csgo name contains CS2."""
         assert "CS2" in GAME_NAMES["csgo"]
 
     def test_dota2_name_is_correct(self):

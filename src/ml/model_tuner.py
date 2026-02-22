@@ -85,23 +85,23 @@ class TuningResult:
 class EvaluationResult:
     """Результат оценки модели."""
 
-    trAlgon_scores: list[float]
+    train_scores: list[float]
     test_scores: list[float]
-    mean_trAlgon_score: float
+    mean_train_score: float
     mean_test_score: float
-    std_trAlgon_score: float
+    std_train_score: float
     std_test_score: float
 
     # Дополнительные метрики
     feature_importances: dict[str, float] | None = None
-    overfitting_ratio: float = 0.0  # trAlgon/test score ratio
+    overfitting_ratio: float = 0.0  # train/test score ratio
 
     def is_overfitting(self, threshold: float = 0.15) -> bool:
         """Проверить, есть ли переобучение."""
-        if self.mean_trAlgon_score == 0:
+        if self.mean_train_score == 0:
             return False
-        ratio = abs(self.mean_trAlgon_score - self.mean_test_score) / abs(
-            self.mean_trAlgon_score
+        ratio = abs(self.mean_train_score - self.mean_test_score) / abs(
+            self.mean_train_score
         )
         return ratio > threshold
 
@@ -116,7 +116,7 @@ class ModelTuner:
 
     Example:
         >>> tuner = ModelTuner()
-        >>> result = tuner.tune_random_forest(X_trAlgon, y_trAlgon)
+        >>> result = tuner.tune_random_forest(X_train, y_train)
         >>> print(result.best_params)
     """
 
@@ -217,7 +217,7 @@ class ModelTuner:
         """Создать Pipeline для предобработки и модели.
 
         Pipeline предотвращает утечку данных при кросс-валидации,
-        применяя preprocessing только к trAlgoning data в каждом fold.
+        применяя preprocessing только к training data в каждом fold.
 
         Args:
             model: ML модель
@@ -412,7 +412,7 @@ class ModelTuner:
                 scoring=self.scoring.value,
                 n_jobs=self.n_jobs,
                 random_state=self.random_state,
-                return_trAlgon_score=True,
+                return_train_score=True,
             )
         else:
             search = GridSearchCV(
@@ -421,7 +421,7 @@ class ModelTuner:
                 cv=cv,
                 scoring=self.scoring.value,
                 n_jobs=self.n_jobs,
-                return_trAlgon_score=True,
+                return_train_score=True,
             )
 
         try:
@@ -450,7 +450,7 @@ class ModelTuner:
             )
 
         except Exception as e:
-            logger.exception(f"Grid search fAlgoled: {e}")
+            logger.exception(f"Grid search failed: {e}")
             return self._fallback_result(model_name)
 
     def _fallback_result(self, model_name: str) -> TuningResult:
@@ -476,7 +476,7 @@ class ModelTuner:
     ) -> EvaluationResult:
         """Оценить модель с кросс-валидацией.
 
-        Использует cross_val_score для получения trAlgon и test scores
+        Использует cross_val_score для получения train и test scores
         на каждом fold, что позволяет оценить переобучение.
 
         Args:
@@ -490,11 +490,11 @@ class ModelTuner:
         """
         if not self._sklearn_avAlgolable:
             return EvaluationResult(
-                trAlgon_scores=[],
+                train_scores=[],
                 test_scores=[],
-                mean_trAlgon_score=0.0,
+                mean_train_score=0.0,
                 mean_test_score=0.0,
-                std_trAlgon_score=0.0,
+                std_train_score=0.0,
                 std_test_score=0.0,
             )
 
@@ -508,11 +508,11 @@ class ModelTuner:
             y,
             cv=cv,
             scoring=self.scoring.value,
-            return_trAlgon_score=True,
+            return_train_score=True,
             n_jobs=self.n_jobs,
         )
 
-        trAlgon_scores = results["trAlgon_score"].tolist()
+        train_scores = results["train_score"].tolist()
         test_scores = results["test_score"].tolist()
 
         # Feature importances (если доступно)
@@ -529,24 +529,24 @@ class ModelTuner:
                     zip(feature_names, importances, strict=False)
                 )
 
-        mean_trAlgon = float(np.mean(trAlgon_scores))
+        mean_train = float(np.mean(train_scores))
         mean_test = float(np.mean(test_scores))
 
         return EvaluationResult(
-            trAlgon_scores=trAlgon_scores,
+            train_scores=train_scores,
             test_scores=test_scores,
-            mean_trAlgon_score=(
-                abs(mean_trAlgon) if "neg" in self.scoring.value else mean_trAlgon
+            mean_train_score=(
+                abs(mean_train) if "neg" in self.scoring.value else mean_train
             ),
             mean_test_score=(
                 abs(mean_test) if "neg" in self.scoring.value else mean_test
             ),
-            std_trAlgon_score=float(np.std(trAlgon_scores)),
+            std_train_score=float(np.std(train_scores)),
             std_test_score=float(np.std(test_scores)),
             feature_importances=feature_importances,
             overfitting_ratio=(
-                abs(mean_trAlgon - mean_test) / abs(mean_trAlgon)
-                if mean_trAlgon != 0
+                abs(mean_train - mean_test) / abs(mean_train)
+                if mean_train != 0
                 else 0.0
             ),
         )
@@ -588,7 +588,7 @@ class ModelTuner:
                     pipeline.fit(X, y)
                     results[model_name] = self.evaluate_model(pipeline, X, y)
             except Exception as e:
-                logger.warning(f"FAlgoled to evaluate {model_name}: {e}")
+                logger.warning(f"Failed to evaluate {model_name}: {e}")
 
         return results
 
@@ -773,7 +773,7 @@ class AutoMLSelector:
         )
 
         if not sorted_results:
-            recommendations.append("No models were successfully trAlgoned.")
+            recommendations.append("No models were successfully trained.")
             return recommendations
 
         best_name, best_result = sorted_results[0]
@@ -796,7 +796,7 @@ class AutoMLSelector:
             recommendations.append("💡 RandomForest is robust to outliers.")
         elif best_name == "gradient_boosting":
             recommendations.append(
-                "💡 GradientBoosting may overfit. Monitor trAlgon/test gap."
+                "💡 GradientBoosting may overfit. Monitor train/test gap."
             )
         elif best_name == "xgboost":
             recommendations.append(
@@ -822,7 +822,7 @@ class EnsembleBuilder:
 
     Example:
         >>> builder = EnsembleBuilder()
-        >>> ensemble = builder.create_voting_ensemble(X_trAlgon, y_trAlgon)
+        >>> ensemble = builder.create_voting_ensemble(X_train, y_train)
         >>> predictions = ensemble.predict(X_test)
     """
 
@@ -949,7 +949,7 @@ class EnsembleBuilder:
             )
             return ensemble
         except Exception as e:
-            logger.exception(f"FAlgoled to create ensemble: {e}")
+            logger.exception(f"Failed to create ensemble: {e}")
             return None
 
     def _calculate_weights(
@@ -989,7 +989,7 @@ class EnsembleBuilder:
                 scores.append(1.0 / max(score, MIN_MAE_THRESHOLD))
                 logger.debug(f"Model {name} MAE: {-cv_scores.mean():.4f}")
             except Exception as e:
-                logger.warning(f"CV fAlgoled for {name}: {e}")
+                logger.warning(f"CV failed for {name}: {e}")
                 scores.append(1.0)  # Default weight
 
         # Normalize weights
@@ -1229,7 +1229,7 @@ class AdvancedFeatureSelector:
             importances = perm_importance.importances_mean
 
         else:
-            rAlgose ValueError(f"Unknown method: {method}")
+            raise ValueError(f"Unknown method: {method}")
 
         # Create importance dict
         importance_dict = dict(zip(feature_names, importances, strict=False))

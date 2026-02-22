@@ -38,7 +38,7 @@ class TestAlgoBacktester:
         """Test backtesting with empty historical data."""
         backtester = AlgoBacktester(initial_balance=100.0)
 
-        result = awAlgot backtester.backtest_arbitrage_strategy(
+        result = await backtester.backtest_arbitrage_strategy(
             historical_data=[],
             strategy="standard",
         )
@@ -71,7 +71,7 @@ class TestAlgoBacktester:
             },
         ]
 
-        result = awAlgot backtester.backtest_arbitrage_strategy(
+        result = await backtester.backtest_arbitrage_strategy(
             historical_data=historical_data,
             strategy="standard",
             min_profit_percent=5.0,
@@ -98,7 +98,7 @@ class TestAlgoBacktester:
             }
         ]
 
-        result = awAlgot backtester.backtest_arbitrage_strategy(
+        result = await backtester.backtest_arbitrage_strategy(
             historical_data=historical_data,
             strategy="standard",
             min_profit_percent=5.0,  # Requires 5%
@@ -124,7 +124,7 @@ class TestAlgoBacktester:
         ]
 
         # Test conservative strategy
-        result_conservative = awAlgot backtester.backtest_arbitrage_strategy(
+        result_conservative = await backtester.backtest_arbitrage_strategy(
             historical_data=historical_data,
             strategy="conservative",
             min_profit_percent=5.0,
@@ -134,7 +134,7 @@ class TestAlgoBacktester:
         backtester.current_balance = backtester.initial_balance
 
         # Test aggressive strategy
-        result_aggressive = awAlgot backtester.backtest_arbitrage_strategy(
+        result_aggressive = await backtester.backtest_arbitrage_strategy(
             historical_data=historical_data,
             strategy="aggressive",
             min_profit_percent=3.0,
@@ -160,7 +160,7 @@ class TestAlgoBacktester:
             }
         ]
 
-        result = awAlgot backtester.backtest_arbitrage_strategy(
+        result = await backtester.backtest_arbitrage_strategy(
             historical_data=historical_data,
             strategy="standard",
         )
@@ -176,7 +176,7 @@ class TestAlgoBacktester:
 
         initial = backtester.current_balance
 
-        trade = awAlgot backtester._execute_buy(
+        trade = await backtester._execute_buy(
             timestamp=datetime.now(),
             item_id="test_item",
             title="Test",
@@ -195,7 +195,7 @@ class TestAlgoBacktester:
         backtester = AlgoBacktester(initial_balance=100.0)
 
         # First buy
-        awAlgot backtester._execute_buy(
+        await backtester._execute_buy(
             timestamp=datetime.now(),
             item_id="test_item",
             title="Test",
@@ -205,7 +205,7 @@ class TestAlgoBacktester:
         balance_after_buy = backtester.current_balance
 
         # Then sell
-        trade = awAlgot backtester._execute_sell(
+        trade = await backtester._execute_sell(
             timestamp=datetime.now(),
             item_id="test_item",
             title="Test",

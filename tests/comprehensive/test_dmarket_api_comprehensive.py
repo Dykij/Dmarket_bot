@@ -158,8 +158,8 @@ class TestDMarketAPIInitialization:
         api = DMarketAPI(mock_public_key, mock_secret_key, notifier=mock_notifier)
         assert api.notifier is mock_notifier
 
-    def test_game_map_contAlgons_standard_games(self) -> None:
-        """Test GAME_MAP contAlgons all standard game IDs."""
+    def test_game_map_contains_standard_games(self) -> None:
+        """Test GAME_MAP contains all standard game IDs."""
         from src.dmarket.dmarket_api import GAME_MAP
 
         assert "csgo" in GAME_MAP
@@ -241,7 +241,7 @@ class TestDMarketAPIBalance:
 
         with patch.object(api, "_request", new_callable=AsyncMock) as mock_request:
             mock_request.return_value = mock_balance_response
-            balance = awAlgot api.get_balance()
+            balance = await api.get_balance()
 
             assert balance is not None
             mock_request.assert_called_once()
@@ -258,11 +258,11 @@ class TestDMarketAPIBalance:
         api = DMarketAPI(mock_public_key, mock_secret_key)
 
         with patch.object(api, "_request", new_callable=AsyncMock) as mock_request:
-            mock_request.side_effect = httpx.HTTPError("Connection fAlgoled")
+            mock_request.side_effect = httpx.HTTPError("Connection failed")
 
             try:
-                awAlgot api.get_balance()
-                # May rAlgose or return None depending on implementation
+                await api.get_balance()
+                # May raise or return None depending on implementation
             except httpx.HTTPError:
                 pass  # Expected behavior
 
@@ -280,7 +280,7 @@ class TestDMarketAPIBalance:
 
         with patch.object(api, "_request", new_callable=AsyncMock) as mock_request:
             mock_request.return_value = mock_balance_response
-            balance = awAlgot api.get_balance()
+            balance = await api.get_balance()
 
             # Verify response structure
             if balance:
@@ -304,7 +304,7 @@ class TestDMarketAPIMarketOperations:
 
         with patch.object(api, "_request", new_callable=AsyncMock) as mock_request:
             mock_request.return_value = mock_market_items_response
-            items = awAlgot api.get_market_items(game="csgo", limit=10)
+            items = await api.get_market_items(game="csgo", limit=10)
 
             assert items is not None
             mock_request.assert_called_once()
@@ -323,7 +323,7 @@ class TestDMarketAPIMarketOperations:
 
         with patch.object(api, "_request", new_callable=AsyncMock) as mock_request:
             mock_request.return_value = mock_market_items_response
-            items = awAlgot api.get_market_items(
+            items = await api.get_market_items(
                 game="csgo",
                 limit=100,
                 offset=50,
@@ -345,7 +345,7 @@ class TestDMarketAPIMarketOperations:
 
         with patch.object(api, "_request", new_callable=AsyncMock) as mock_request:
             mock_request.return_value = mock_market_items_response
-            items = awAlgot api.get_market_items(
+            items = await api.get_market_items(
                 game="csgo",
                 limit=100,
                 price_from=100,  # $1.00
@@ -371,7 +371,7 @@ class TestDMarketAPIMarketOperations:
             mock_request.return_value = mock_market_items_response
 
             for game in games:
-                items = awAlgot api.get_market_items(game=game, limit=10)
+                items = await api.get_market_items(game=game, limit=10)
                 assert items is not None
 
 
@@ -392,7 +392,7 @@ class TestDMarketAPITargets:
 
         with patch.object(api, "_request", new_callable=AsyncMock) as mock_request:
             mock_request.return_value = mock_targets_response
-            targets = awAlgot api.get_user_targets(game_id="a8db")
+            targets = await api.get_user_targets(game_id="a8db")
 
             assert targets is not None
             mock_request.assert_called_once()
@@ -419,7 +419,7 @@ class TestDMarketAPITargets:
         # In dry run mode, should not make actual API call
         with patch.object(api, "_request", new_callable=AsyncMock) as mock_request:
             mock_request.return_value = {"Items": targets_to_create}
-            result = awAlgot api.create_targets("a8db", targets_to_create)
+            result = await api.create_targets("a8db", targets_to_create)
             # Either calls with dry_run check or skips the call
             assert result is not None or mock_request.called
 
@@ -436,7 +436,7 @@ class TestDMarketAPITargets:
 
         with patch.object(api, "_request", new_callable=AsyncMock) as mock_request:
             mock_request.return_value = {"success": True}
-            result = awAlgot api.delete_targets(["target_123", "target_456"])
+            result = await api.delete_targets(["target_123", "target_456"])
 
             assert result is not None or mock_request.called
 
@@ -458,7 +458,7 @@ class TestDMarketAPISalesHistory:
 
         with patch.object(api, "_request", new_callable=AsyncMock) as mock_request:
             mock_request.return_value = mock_sales_history_response
-            history = awAlgot api.get_sales_history(game="csgo", title="AK-47 | Redline")
+            history = await api.get_sales_history(game="csgo", title="AK-47 | Redline")
 
             assert history is not None
             mock_request.assert_called_once()
@@ -477,7 +477,7 @@ class TestDMarketAPISalesHistory:
 
         with patch.object(api, "_request", new_callable=AsyncMock) as mock_request:
             mock_request.return_value = mock_sales_history_response
-            history = awAlgot api.get_sales_history(game="csgo", title="AK-47 | Redline", days=14)
+            history = await api.get_sales_history(game="csgo", title="AK-47 | Redline", days=14)
 
             assert history is not None
 
@@ -509,7 +509,7 @@ class TestDMarketAPIErrorHandling:
             )
 
             try:
-                awAlgot api.get_market_items(game="csgo")
+                await api.get_market_items(game="csgo")
             except httpx.HTTPStatusError:
                 pass  # Expected
 
@@ -536,7 +536,7 @@ class TestDMarketAPIErrorHandling:
             )
 
             try:
-                awAlgot api.get_balance()
+                await api.get_balance()
             except httpx.HTTPStatusError:
                 pass  # Expected
 
@@ -555,7 +555,7 @@ class TestDMarketAPIErrorHandling:
             mock_request.side_effect = httpx.TimeoutException("Connection timed out")
 
             try:
-                awAlgot api.get_market_items(game="csgo")
+                await api.get_market_items(game="csgo")
             except httpx.TimeoutException:
                 pass  # Expected
 
@@ -582,7 +582,7 @@ class TestDMarketAPIErrorHandling:
             )
 
             try:
-                awAlgot api.get_balance()
+                await api.get_balance()
             except httpx.HTTPStatusError:
                 pass  # Expected
 
@@ -609,11 +609,11 @@ class TestDMarketAPICaching:
             mock_request.return_value = mock_balance_response
 
             # First call should make request
-            awAlgot api.get_balance()
+            await api.get_balance()
             initial_call_count = mock_request.call_count
 
             # Subsequent calls may use cache (implementation-dependent)
-            awAlgot api.get_balance()
+            await api.get_balance()
             # Call count may or may not increase depending on caching logic
 
 
@@ -643,7 +643,7 @@ class TestDMarketAPIInventory:
 
         with patch.object(api, "_request", new_callable=AsyncMock) as mock_request:
             mock_request.return_value = mock_inventory_response
-            inventory = awAlgot api.get_user_inventory(game_id="csgo")
+            inventory = await api.get_user_inventory(game_id="csgo")
 
             assert inventory is not None
 
@@ -660,7 +660,7 @@ class TestDMarketAPIInventory:
 
         with patch.object(api, "_request", new_callable=AsyncMock) as mock_request:
             mock_request.return_value = {"objects": [], "total": {"items": 0}}
-            inventory = awAlgot api.get_user_inventory(game_id="a8db")
+            inventory = await api.get_user_inventory(game_id="a8db")
 
             assert inventory is not None
 
@@ -690,7 +690,7 @@ class TestDMarketAPIAggregatedPrices:
 
         with patch.object(api, "_request", new_callable=AsyncMock) as mock_request:
             mock_request.return_value = mock_response
-            prices = awAlgot api.get_aggregated_prices(titles=["AK-47 | Redline"], game_id="a8db")
+            prices = await api.get_aggregated_prices(titles=["AK-47 | Redline"], game_id="a8db")
 
             assert prices is not None
 
@@ -724,11 +724,11 @@ class TestDMarketAPIIntegration:
             ]
 
             # Step 1: Check balance
-            balance = awAlgot api.get_balance()
+            balance = await api.get_balance()
             assert balance is not None
 
             # Step 2: Get market items
-            items = awAlgot api.get_market_items(game="csgo", limit=10)
+            items = await api.get_market_items(game="csgo", limit=10)
             assert items is not None
 
     @pytest.mark.asyncio
@@ -753,7 +753,7 @@ class TestDMarketAPIIntegration:
 
         with patch.object(api, "_request", new_callable=AsyncMock) as mock_request:
             mock_request.return_value = {"Items": targets}
-            result = awAlgot api.create_targets("a8db", targets)
+            result = await api.create_targets("a8db", targets)
 
             # Verify workflow completed
             assert result is not None or mock_request.called

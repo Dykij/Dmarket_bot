@@ -173,7 +173,7 @@ class TestMarketAlertsManagerMonitoring:
     async def test_start_monitoring_sets_running_flag(self, manager):
         """Test start_monitoring sets running flag."""
         with patch.object(manager, "_monitor_market", return_value=AsyncMock()):
-            awAlgot manager.start_monitoring()
+            await manager.start_monitoring()
 
             assert manager.running is True
 
@@ -183,7 +183,7 @@ class TestMarketAlertsManagerMonitoring:
         manager.running = True
 
         # Should return early without error
-        awAlgot manager.start_monitoring()
+        await manager.start_monitoring()
 
         # Still running
         assert manager.running is True

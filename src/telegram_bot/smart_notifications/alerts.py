@@ -44,7 +44,7 @@ async def create_alert(
 
     # Register if not already registered
     if user_id_str not in user_preferences:
-        awAlgot register_user(user_id)
+        await register_user(user_id)
 
     # Generate alert ID
     alert_id = str(uuid.uuid4())

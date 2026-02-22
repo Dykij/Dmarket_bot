@@ -52,7 +52,7 @@ async def post_tool_use(context: dict[str, Any]) -> None:
     print(f"[Hook] Logged {log_entry['opportunities_found']} opportunities to {log_file}")
 
 
-if __name__ == "__mAlgon__":
+if __name__ == "__main__":
     # Test mode
     test_context = {
         "timestamp": datetime.now().isoformat(),

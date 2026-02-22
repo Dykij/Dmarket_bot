@@ -27,61 +27,61 @@ class TestNotificationTypes:
         """Test that NOTIFICATION_TYPES is a dictionary."""
         assert isinstance(NOTIFICATION_TYPES, dict)
 
-    def test_notification_types_contAlgons_price_drop(self):
+    def test_notification_types_contains_price_drop(self):
         """Test that price_drop type exists."""
         assert "price_drop" in NOTIFICATION_TYPES
         assert "📉" in NOTIFICATION_TYPES["price_drop"]
 
-    def test_notification_types_contAlgons_price_rise(self):
+    def test_notification_types_contains_price_rise(self):
         """Test that price_rise type exists."""
         assert "price_rise" in NOTIFICATION_TYPES
         assert "📈" in NOTIFICATION_TYPES["price_rise"]
 
-    def test_notification_types_contAlgons_volume_increase(self):
+    def test_notification_types_contains_volume_increase(self):
         """Test that volume_increase type exists."""
         assert "volume_increase" in NOTIFICATION_TYPES
         assert "📊" in NOTIFICATION_TYPES["volume_increase"]
 
-    def test_notification_types_contAlgons_good_deal(self):
+    def test_notification_types_contains_good_deal(self):
         """Test that good_deal type exists."""
         assert "good_deal" in NOTIFICATION_TYPES
         assert "💰" in NOTIFICATION_TYPES["good_deal"]
 
-    def test_notification_types_contAlgons_arbitrage(self):
+    def test_notification_types_contains_arbitrage(self):
         """Test that arbitrage type exists."""
         assert "arbitrage" in NOTIFICATION_TYPES
         assert "🔄" in NOTIFICATION_TYPES["arbitrage"]
 
-    def test_notification_types_contAlgons_trend_change(self):
+    def test_notification_types_contains_trend_change(self):
         """Test that trend_change type exists."""
         assert "trend_change" in NOTIFICATION_TYPES
 
-    def test_notification_types_contAlgons_buy_intent(self):
+    def test_notification_types_contains_buy_intent(self):
         """Test that buy_intent type exists."""
         assert "buy_intent" in NOTIFICATION_TYPES
         assert "🛒" in NOTIFICATION_TYPES["buy_intent"]
 
-    def test_notification_types_contAlgons_buy_success(self):
+    def test_notification_types_contains_buy_success(self):
         """Test that buy_success type exists."""
         assert "buy_success" in NOTIFICATION_TYPES
         assert "✅" in NOTIFICATION_TYPES["buy_success"]
 
-    def test_notification_types_contAlgons_buy_fAlgoled(self):
-        """Test that buy_fAlgoled type exists."""
-        assert "buy_fAlgoled" in NOTIFICATION_TYPES
-        assert "❌" in NOTIFICATION_TYPES["buy_fAlgoled"]
+    def test_notification_types_contains_buy_failed(self):
+        """Test that buy_failed type exists."""
+        assert "buy_failed" in NOTIFICATION_TYPES
+        assert "❌" in NOTIFICATION_TYPES["buy_failed"]
 
-    def test_notification_types_contAlgons_sell_success(self):
+    def test_notification_types_contains_sell_success(self):
         """Test that sell_success type exists."""
         assert "sell_success" in NOTIFICATION_TYPES
         assert "✅" in NOTIFICATION_TYPES["sell_success"]
 
-    def test_notification_types_contAlgons_sell_fAlgoled(self):
-        """Test that sell_fAlgoled type exists."""
-        assert "sell_fAlgoled" in NOTIFICATION_TYPES
-        assert "❌" in NOTIFICATION_TYPES["sell_fAlgoled"]
+    def test_notification_types_contains_sell_failed(self):
+        """Test that sell_failed type exists."""
+        assert "sell_failed" in NOTIFICATION_TYPES
+        assert "❌" in NOTIFICATION_TYPES["sell_failed"]
 
-    def test_notification_types_contAlgons_critical_shutdown(self):
+    def test_notification_types_contains_critical_shutdown(self):
         """Test that critical_shutdown type exists."""
         assert "critical_shutdown" in NOTIFICATION_TYPES
         assert "🛑" in NOTIFICATION_TYPES["critical_shutdown"]
@@ -97,9 +97,9 @@ class TestNotificationTypes:
             "trend_change",
             "buy_intent",
             "buy_success",
-            "buy_fAlgoled",
+            "buy_failed",
             "sell_success",
-            "sell_fAlgoled",
+            "sell_failed",
             "critical_shutdown",
         ]
 
@@ -112,8 +112,8 @@ class TestNotificationTypes:
             assert isinstance(key, str)
             assert isinstance(value, str)
 
-    def test_notification_types_values_contAlgon_emojis(self):
-        """Test that all values contAlgon emojis for visual feedback."""
+    def test_notification_types_values_contain_emojis(self):
+        """Test that all values contain emojis for visual feedback."""
         for value in NOTIFICATION_TYPES.values():
             # All notification type descriptions should have some text
             assert len(value) > 0
@@ -216,20 +216,20 @@ class TestNotificationPriorities:
         assert "buy_success" in NOTIFICATION_PRIORITIES
         assert NOTIFICATION_PRIORITIES["buy_success"] == 90
 
-    def test_buy_fAlgoled_high_priority(self):
-        """Test that buy_fAlgoled has high priority."""
-        assert "buy_fAlgoled" in NOTIFICATION_PRIORITIES
-        assert NOTIFICATION_PRIORITIES["buy_fAlgoled"] == 90
+    def test_buy_failed_high_priority(self):
+        """Test that buy_failed has high priority."""
+        assert "buy_failed" in NOTIFICATION_PRIORITIES
+        assert NOTIFICATION_PRIORITIES["buy_failed"] == 90
 
     def test_sell_success_priority(self):
         """Test that sell_success has appropriate priority."""
         assert "sell_success" in NOTIFICATION_PRIORITIES
         assert NOTIFICATION_PRIORITIES["sell_success"] == 85
 
-    def test_sell_fAlgoled_priority(self):
-        """Test that sell_fAlgoled has appropriate priority."""
-        assert "sell_fAlgoled" in NOTIFICATION_PRIORITIES
-        assert NOTIFICATION_PRIORITIES["sell_fAlgoled"] == 85
+    def test_sell_failed_priority(self):
+        """Test that sell_failed has appropriate priority."""
+        assert "sell_failed" in NOTIFICATION_PRIORITIES
+        assert NOTIFICATION_PRIORITIES["sell_failed"] == 85
 
     def test_buy_intent_priority(self):
         """Test that buy_intent has appropriate priority."""

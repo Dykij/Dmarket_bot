@@ -1,7 +1,7 @@
 """Tests for DiscountThresholdPredictor ML module.
 
 Tests the ML-based discount threshold prediction functionality
-including trAlgoning on real prices and prediction generation.
+including training on real prices and prediction generation.
 """
 
 import tempfile
@@ -34,8 +34,8 @@ class TestDiscountThresholdPredictorBasic:
             predictor = DiscountThresholdPredictor(model_path=model_path)
 
             assert predictor is not None
-            assert predictor._is_trAlgoned is False
-            assert len(predictor._trAlgoning_examples) == 0
+            assert predictor._is_trained is False
+            assert len(predictor._training_examples) == 0
 
     def test_init_with_custom_model_path(self):
         """Test initialization with custom model path."""
@@ -111,7 +111,7 @@ class TestThresholdPrediction:
 class TestTrAlgoningExample:
     """Tests for TrAlgoningExample dataclass."""
 
-    def test_trAlgoning_example_creation(self):
+    def test_training_example_creation(self):
         """Test TrAlgoningExample creation."""
         from src.ml.discount_threshold_predictor import TrAlgoningExample
 
@@ -137,14 +137,14 @@ class TestTrAlgoningExample:
 
 
 class TestPredictionWithoutTrAlgoning:
-    """Tests for prediction when model is not trAlgoned."""
+    """Tests for prediction when model is not trained."""
 
-    def test_predict_returns_default_when_not_trAlgoned(self):
-        """Test that untrAlgoned model returns default threshold."""
+    def test_predict_returns_default_when_not_trained(self):
+        """Test that untrained model returns default threshold."""
         from src.ml.discount_threshold_predictor import DiscountThresholdPredictor
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            model_path = Path(tmpdir) / "test_untrAlgoned_model.pkl"
+            model_path = Path(tmpdir) / "test_untrained_model.pkl"
             predictor = DiscountThresholdPredictor(model_path=model_path)
 
             prediction = predictor.predict(game="csgo")
@@ -152,7 +152,7 @@ class TestPredictionWithoutTrAlgoning:
             # Should return default value
             assert prediction.optimal_threshold == predictor.DEFAULT_THRESHOLDS["csgo"]
             assert prediction.confidence == 0.3  # Low confidence
-            assert "default" in prediction.reasoning.lower() or "not trAlgoned" in prediction.reasoning.lower()
+            assert "default" in prediction.reasoning.lower() or "not trained" in prediction.reasoning.lower()
 
     def test_predict_respects_game_specific_defaults(self):
         """Test that different games get different default thresholds."""
@@ -173,17 +173,17 @@ class TestPredictionWithoutTrAlgoning:
 
 
 class TestAddTrAlgoningExample:
-    """Tests for adding trAlgoning examples."""
+    """Tests for adding training examples."""
 
-    def test_add_trAlgoning_example(self):
-        """Test adding a trAlgoning example."""
+    def test_add_training_example(self):
+        """Test adding a training example."""
         from src.ml.discount_threshold_predictor import DiscountThresholdPredictor
 
         with tempfile.TemporaryDirectory() as tmpdir:
             model_path = Path(tmpdir) / "test_add_example_model.pkl"
             predictor = DiscountThresholdPredictor(model_path=model_path)
 
-            predictor.add_trAlgoning_example(
+            predictor.add_training_example(
                 item_name="Test Item",
                 game="csgo",
                 current_price=10.0,
@@ -194,12 +194,12 @@ class TestAddTrAlgoningExample:
                 source="dmarket",
             )
 
-            assert len(predictor._trAlgoning_examples) == 1
-            assert predictor._trAlgoning_examples[0].item_name == "Test Item"
-            assert predictor._trAlgoning_examples[0].game == "csgo"
+            assert len(predictor._training_examples) == 1
+            assert predictor._training_examples[0].item_name == "Test Item"
+            assert predictor._training_examples[0].game == "csgo"
 
     def test_add_multiple_examples(self):
-        """Test adding multiple trAlgoning examples."""
+        """Test adding multiple training examples."""
         from src.ml.discount_threshold_predictor import DiscountThresholdPredictor
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -207,7 +207,7 @@ class TestAddTrAlgoningExample:
             predictor = DiscountThresholdPredictor(model_path=model_path)
 
             for i in range(10):
-                predictor.add_trAlgoning_example(
+                predictor.add_training_example(
                     item_name=f"Item {i}",
                     game="csgo",
                     current_price=10.0 + i,
@@ -218,14 +218,14 @@ class TestAddTrAlgoningExample:
                     source="dmarket",
                 )
 
-            assert len(predictor._trAlgoning_examples) == 10
+            assert len(predictor._training_examples) == 10
 
 
 class TestModelTrAlgoning:
-    """Tests for model trAlgoning."""
+    """Tests for model training."""
 
-    def test_trAlgon_fAlgols_with_few_samples(self):
-        """Test that trAlgoning fAlgols with too few samples."""
+    def test_train_fails_with_few_samples(self):
+        """Test that training fails with too few samples."""
         from src.ml.discount_threshold_predictor import DiscountThresholdPredictor
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -234,7 +234,7 @@ class TestModelTrAlgoning:
 
             # Add only 5 samples (less than MIN_TRAlgoNING_SAMPLES)
             for i in range(5):
-                predictor.add_trAlgoning_example(
+                predictor.add_training_example(
                     item_name=f"Item {i}",
                     game="csgo",
                     current_price=10.0,
@@ -244,13 +244,13 @@ class TestModelTrAlgoning:
                     profit_percent=5.0,
                 )
 
-            result = predictor.trAlgon()
+            result = predictor.train()
 
             assert result is False
-            assert predictor._is_trAlgoned is False
+            assert predictor._is_trained is False
 
-    def test_trAlgon_succeeds_with_enough_samples(self):
-        """Test that trAlgoning succeeds with enough samples."""
+    def test_train_succeeds_with_enough_samples(self):
+        """Test that training succeeds with enough samples."""
         from src.ml.discount_threshold_predictor import DiscountThresholdPredictor
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -259,7 +259,7 @@ class TestModelTrAlgoning:
 
             # Add enough samples
             for i in range(25):
-                predictor.add_trAlgoning_example(
+                predictor.add_training_example(
                     item_name=f"Item {i}",
                     game="csgo" if i % 4 != 3 else "dota2",
                     current_price=10.0 + i * 0.5,
@@ -270,25 +270,25 @@ class TestModelTrAlgoning:
                     source=["dmarket", "waxpeer", "steam"][i % 3],
                 )
 
-            result = predictor.trAlgon()
+            result = predictor.train()
 
             assert result is True
-            assert predictor._is_trAlgoned is True
+            assert predictor._is_trained is True
 
-    def test_trAlgoned_model_gives_different_predictions(self):
-        """Test that trAlgoned model gives more confident predictions."""
+    def test_trained_model_gives_different_predictions(self):
+        """Test that trained model gives more confident predictions."""
         from src.ml.discount_threshold_predictor import DiscountThresholdPredictor
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            model_path = Path(tmpdir) / "test_trAlgoning_model.pkl"
+            model_path = Path(tmpdir) / "test_training_model.pkl"
             predictor = DiscountThresholdPredictor(model_path=model_path)
 
-            # Get prediction before trAlgoning
+            # Get prediction before training
             pred_before = predictor.predict(game="csgo")
 
             # TrAlgon the model
             for i in range(30):
-                predictor.add_trAlgoning_example(
+                predictor.add_training_example(
                     item_name=f"Item {i}",
                     game="csgo",
                     current_price=10.0 + i * 0.5,
@@ -298,14 +298,14 @@ class TestModelTrAlgoning:
                     profit_percent=5.0 if i % 3 != 0 else -3.0,
                 )
 
-            predictor.trAlgon()
+            predictor.train()
 
-            # Get prediction after trAlgoning
+            # Get prediction after training
             pred_after = predictor.predict(game="csgo")
 
-            # Confidence should be higher after trAlgoning
+            # Confidence should be higher after training
             assert pred_after.confidence >= pred_before.confidence
-            assert predictor._is_trAlgoned is True
+            assert predictor._is_trained is True
 
 
 class TestMarketCondition:
@@ -438,11 +438,11 @@ class TestModelPersistence:
         with tempfile.TemporaryDirectory() as tmpdir:
             model_path = Path(tmpdir) / "test_model.pkl"
 
-            # Create and trAlgon predictor
+            # Create and train predictor
             predictor1 = DiscountThresholdPredictor(model_path=model_path)
 
             for i in range(25):
-                predictor1.add_trAlgoning_example(
+                predictor1.add_training_example(
                     item_name=f"Item {i}",
                     game="csgo",
                     current_price=10.0 + i,
@@ -452,16 +452,16 @@ class TestModelPersistence:
                     profit_percent=5.0 if i % 2 == 0 else -3.0,
                 )
 
-            predictor1.trAlgon()
+            predictor1.train()
 
-            # Save happens automatically in trAlgon()
+            # Save happens automatically in train()
             assert model_path.exists()
 
             # Create new predictor that loads from file
             predictor2 = DiscountThresholdPredictor(model_path=model_path)
 
-            assert predictor2._is_trAlgoned is True
-            assert len(predictor2._trAlgoning_examples) == 25
+            assert predictor2._is_trained is True
+            assert len(predictor2._training_examples) == 25
 
 
 class TestGlobalPredictor:
@@ -482,7 +482,7 @@ class TestGlobalPredictor:
         """Test convenience function for prediction."""
         from src.ml.discount_threshold_predictor import predict_discount_threshold
 
-        threshold = awAlgot predict_discount_threshold(game="csgo")
+        threshold = await predict_discount_threshold(game="csgo")
 
         assert isinstance(threshold, float)
         assert 0 < threshold < 50
@@ -502,7 +502,7 @@ class TestStatistics:
 
             # Add some examples
             for i in range(10):
-                predictor.add_trAlgoning_example(
+                predictor.add_training_example(
                     item_name=f"Item {i}",
                     game="csgo" if i < 7 else "dota2",
                     current_price=10.0,
@@ -519,7 +519,7 @@ class TestStatistics:
             assert stats["profitability_rate"] == 0.6
             assert "csgo" in stats["games"]
             assert "dota2" in stats["games"]
-            assert stats["is_trAlgoned"] is False
+            assert stats["is_trained"] is False
 
 
 class TestCaching:

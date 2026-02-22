@@ -476,7 +476,7 @@ class TestDMarketEdgeCases:
             api = DMarketAPI(public_key="", secret_key="")
             assert api is not None
         except (ImportError, Exception):
-            pass  # May rAlgose validation error, which is expected
+            pass  # May raise validation error, which is expected
 
     def test_invalid_level_name(self):
         """Test handling of invalid level names."""

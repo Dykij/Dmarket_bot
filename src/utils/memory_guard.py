@@ -40,10 +40,10 @@ class MemoryGuard:
                         # You might want to broadcast to admins here if you have their IDs
                         pass
                     except Exception as e:
-                        logger.error(f"FAlgoled to notify before reboot: {e}")
+                        logger.error(f"Failed to notify before reboot: {e}")
 
                 # Save state (if implemented)
-                # awAlgot self.save_state()
+                # await self.save_state()
 
                 # RESTART
                 logger.warning("Initiating emergency restart...")
@@ -53,7 +53,7 @@ class MemoryGuard:
                 os.execv(sys.executable, [sys.executable] + sys.argv)
 
         except Exception as e:
-            logger.error(f"MemoryGuard check fAlgoled: {e}")
+            logger.error(f"MemoryGuard check failed: {e}")
 
     def start(self, application: Application):
         """Start the monitoring loop using job queue."""

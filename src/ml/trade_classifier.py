@@ -117,7 +117,7 @@ class AdaptiveTradeClassifier:
 
         # ML модель (ленивая инициализация)
         self._classifier = None
-        self._is_trAlgoned = False
+        self._is_trained = False
 
         # Пороги для классификации (адаптивные)
         self._update_thresholds()

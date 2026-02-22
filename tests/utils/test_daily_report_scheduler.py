@@ -1,11 +1,11 @@
-"""Tests for dAlgoly_report_scheduler module."""
+"""Tests for daily_report_scheduler module."""
 
 from datetime import datetime, time, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from src.utils.dAlgoly_report_scheduler import DAlgolyReportScheduler
+from src.utils.daily_report_scheduler import DAlgolyReportScheduler
 
 
 class TestDAlgolyReportSchedulerInit:
@@ -72,7 +72,7 @@ class TestDAlgolyReportSchedulerStart:
             enabled=False,
         )
 
-        awAlgot scheduler.start()
+        await scheduler.start()
 
         assert scheduler._is_running is False
 
@@ -87,7 +87,7 @@ class TestDAlgolyReportSchedulerStart:
         scheduler._is_running = True
 
         with patch.object(scheduler.scheduler, "add_job") as mock_add:
-            awAlgot scheduler.start()
+            await scheduler.start()
             mock_add.assert_not_called()
 
     @pytest.mark.asyncio()
@@ -101,7 +101,7 @@ class TestDAlgolyReportSchedulerStart:
 
         with patch.object(scheduler.scheduler, "add_job") as mock_add:
             with patch.object(scheduler.scheduler, "start") as mock_start:
-                awAlgot scheduler.start()
+                await scheduler.start()
 
                 mock_add.assert_called_once()
                 mock_start.assert_called_once()
@@ -121,7 +121,7 @@ class TestDAlgolyReportSchedulerStop:
         )
 
         with patch.object(scheduler.scheduler, "shutdown") as mock_shutdown:
-            awAlgot scheduler.stop()
+            await scheduler.stop()
             mock_shutdown.assert_not_called()
 
     @pytest.mark.asyncio()
@@ -135,9 +135,9 @@ class TestDAlgolyReportSchedulerStop:
         scheduler._is_running = True
 
         with patch.object(scheduler.scheduler, "shutdown") as mock_shutdown:
-            awAlgot scheduler.stop()
+            await scheduler.stop()
 
-            mock_shutdown.assert_called_once_with(wAlgot=False)
+            mock_shutdown.assert_called_once_with(wait=False)
             assert scheduler._is_running is False
 
 
@@ -156,7 +156,7 @@ class TestDAlgolyReportSchedulerManualReport:
         with patch.object(
             scheduler, "_generate_and_send_report", new_callable=AsyncMock
         ) as mock_generate:
-            awAlgot scheduler.send_manual_report()
+            await scheduler.send_manual_report()
             mock_generate.assert_called_once_with(days=1)
 
     @pytest.mark.asyncio()
@@ -171,7 +171,7 @@ class TestDAlgolyReportSchedulerManualReport:
         with patch.object(
             scheduler, "_generate_and_send_report", new_callable=AsyncMock
         ) as mock_generate:
-            awAlgot scheduler.send_manual_report(days=7)
+            await scheduler.send_manual_report(days=7)
             mock_generate.assert_called_once_with(days=7)
 
 
@@ -198,7 +198,7 @@ class TestDAlgolyReportSchedulerGenerateReport:
                 "total_trades": 10,
                 "successful_trades": 8,
                 "cancelled_trades": 1,
-                "fAlgoled_trades": 1,
+                "failed_trades": 1,
                 "total_profit_usd": 50.0,
                 "avg_profit_percent": 5.0,
                 "api_errors": {},
@@ -207,7 +207,7 @@ class TestDAlgolyReportSchedulerGenerateReport:
                 "opportunities_found": 20,
             }
 
-            awAlgot scheduler._generate_and_send_report()
+            await scheduler._generate_and_send_report()
 
             assert bot.send_message.call_count == 3
 
@@ -215,7 +215,7 @@ class TestDAlgolyReportSchedulerGenerateReport:
     async def test_generate_report_handles_send_error(self):
         """Test that report generation handles send errors gracefully."""
         bot = MagicMock()
-        bot.send_message = AsyncMock(side_effect=Exception("Send fAlgoled"))
+        bot.send_message = AsyncMock(side_effect=Exception("Send failed"))
         database = MagicMock()
 
         scheduler = DAlgolyReportScheduler(
@@ -229,8 +229,8 @@ class TestDAlgolyReportSchedulerGenerateReport:
         ) as mock_stats:
             mock_stats.return_value = {"total_trades": 0}
 
-            # Should not rAlgose exception
-            awAlgot scheduler._generate_and_send_report()
+            # Should not raise exception
+            await scheduler._generate_and_send_report()
 
 
 class TestDAlgolyReportSchedulerCollectStatistics:
@@ -253,7 +253,7 @@ class TestDAlgolyReportSchedulerCollectStatistics:
         start_date = datetime.now() - timedelta(days=1)
         end_date = datetime.now()
 
-        stats = awAlgot scheduler._collect_statistics(start_date, end_date)
+        stats = await scheduler._collect_statistics(start_date, end_date)
 
         assert stats["total_trades"] == 0
         assert stats["successful_trades"] == 0
@@ -291,7 +291,7 @@ class TestDAlgolyReportSchedulerCollectStatistics:
         start_date = datetime.now() - timedelta(days=1)
         end_date = datetime.now()
 
-        stats = awAlgot scheduler._collect_statistics(start_date, end_date)
+        stats = await scheduler._collect_statistics(start_date, end_date)
 
         assert stats["total_trades"] == 15
         assert stats["successful_trades"] == 12
@@ -316,7 +316,7 @@ class TestDAlgolyReportSchedulerFormatReport:
             "total_trades": 0,
             "successful_trades": 0,
             "cancelled_trades": 0,
-            "fAlgoled_trades": 0,
+            "failed_trades": 0,
             "total_profit_usd": 0.0,
             "avg_profit_percent": 0.0,
             "api_errors": {},
@@ -346,7 +346,7 @@ class TestDAlgolyReportSchedulerFormatReport:
             "total_trades": 20,
             "successful_trades": 15,
             "cancelled_trades": 3,
-            "fAlgoled_trades": 2,
+            "failed_trades": 2,
             "total_profit_usd": 150.50,
             "avg_profit_percent": 7.5,
             "api_errors": {},
@@ -378,7 +378,7 @@ class TestDAlgolyReportSchedulerFormatReport:
             "total_trades": 5,
             "successful_trades": 3,
             "cancelled_trades": 1,
-            "fAlgoled_trades": 1,
+            "failed_trades": 1,
             "total_profit_usd": -10.0,
             "avg_profit_percent": -2.0,
             "api_errors": {"rate_limit": 10, "timeout": 5},
@@ -409,7 +409,7 @@ class TestDAlgolyReportSchedulerFormatReport:
             "total_trades": 0,
             "successful_trades": 0,
             "cancelled_trades": 0,
-            "fAlgoled_trades": 0,
+            "failed_trades": 0,
             "total_profit_usd": 0.0,
             "avg_profit_percent": 0.0,
             "api_errors": {},

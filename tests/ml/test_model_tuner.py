@@ -165,25 +165,25 @@ class TestEvaluationResult:
     def test_creation(self):
         """Проверить создание EvaluationResult."""
         result = EvaluationResult(
-            trAlgon_scores=[0.9, 0.91, 0.89],
+            train_scores=[0.9, 0.91, 0.89],
             test_scores=[0.85, 0.84, 0.86],
-            mean_trAlgon_score=0.9,
+            mean_train_score=0.9,
             mean_test_score=0.85,
-            std_trAlgon_score=0.01,
+            std_train_score=0.01,
             std_test_score=0.01,
         )
 
-        assert len(result.trAlgon_scores) == 3
+        assert len(result.train_scores) == 3
         assert result.mean_test_score == 0.85
 
     def test_is_overfitting_true(self):
         """Проверить обнаружение переобучения."""
         result = EvaluationResult(
-            trAlgon_scores=[0.95],
+            train_scores=[0.95],
             test_scores=[0.6],
-            mean_trAlgon_score=0.95,
+            mean_train_score=0.95,
             mean_test_score=0.6,
-            std_trAlgon_score=0.0,
+            std_train_score=0.0,
             std_test_score=0.0,
         )
 
@@ -193,11 +193,11 @@ class TestEvaluationResult:
     def test_is_overfitting_false(self):
         """Проверить отсутствие переобучения."""
         result = EvaluationResult(
-            trAlgon_scores=[0.85],
+            train_scores=[0.85],
             test_scores=[0.82],
-            mean_trAlgon_score=0.85,
+            mean_train_score=0.85,
             mean_test_score=0.82,
-            std_trAlgon_score=0.0,
+            std_train_score=0.0,
             std_test_score=0.0,
         )
 
@@ -351,7 +351,7 @@ class TestModelTuner:
         result = tuner.evaluate_model(pipeline, X, y)
 
         assert isinstance(result, EvaluationResult)
-        assert len(result.trAlgon_scores) == tuner.cv_folds
+        assert len(result.train_scores) == tuner.cv_folds
         assert len(result.test_scores) == tuner.cv_folds
         assert result.mean_test_score > 0
 
@@ -573,5 +573,5 @@ class TestModelTunerEdgeCases:
         assert not np.isnan(predictions).any()
 
 
-if __name__ == "__mAlgon__":
-    pytest.mAlgon([__file__, "-v"])
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

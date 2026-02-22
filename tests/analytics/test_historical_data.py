@@ -403,7 +403,7 @@ class TestHistoricalDataCollector:
     @pytest.mark.asyncio()
     async def test_collect_price_history_empty_result(self, collector, mock_api):
         """Test collecting price history with no data."""
-        result = awAlgot collector.collect_price_history("csgo", "Test Item", days=30)
+        result = await collector.collect_price_history("csgo", "Test Item", days=30)
 
         assert isinstance(result, PriceHistory)
         assert result.game == "csgo"
@@ -421,7 +421,7 @@ class TestHistoricalDataCollector:
             ]
         }
 
-        result = awAlgot collector.collect_price_history("csgo", "AK-47", days=30)
+        result = await collector.collect_price_history("csgo", "AK-47", days=30)
 
         assert len(result.points) == 2
         assert result.points[0].price == Decimal("15.00")  # 1500 cents -> $15.00
@@ -440,7 +440,7 @@ class TestHistoricalDataCollector:
             ]
         }
 
-        result = awAlgot collector.collect_price_history("csgo", "AWP | Asiimov", days=30)
+        result = await collector.collect_price_history("csgo", "AWP | Asiimov", days=30)
 
         # Should have 2 points - one for offer, one for order
         assert len(result.points) == 2
@@ -451,10 +451,10 @@ class TestHistoricalDataCollector:
     async def test_collect_price_history_cache_hit(self, collector, mock_api):
         """Test cache hit on second call."""
         # First call
-        awAlgot collector.collect_price_history("csgo", "Item", days=30)
+        await collector.collect_price_history("csgo", "Item", days=30)
 
         # Second call should use cache
-        awAlgot collector.collect_price_history("csgo", "Item", days=30)
+        await collector.collect_price_history("csgo", "Item", days=30)
 
         # API should only be called once
         assert mock_api.get_sales_history.call_count == 1
@@ -463,10 +463,10 @@ class TestHistoricalDataCollector:
     async def test_collect_price_history_cache_bypass(self, collector, mock_api):
         """Test bypassing cache."""
         # First call
-        awAlgot collector.collect_price_history("csgo", "Item", days=30)
+        await collector.collect_price_history("csgo", "Item", days=30)
 
         # Second call bypassing cache
-        awAlgot collector.collect_price_history("csgo", "Item", days=30, use_cache=False)
+        await collector.collect_price_history("csgo", "Item", days=30, use_cache=False)
 
         # API should be called twice
         assert mock_api.get_sales_history.call_count == 2
@@ -477,8 +477,8 @@ class TestHistoricalDataCollector:
         mock_api.get_sales_history.side_effect = Exception("API Error")
         mock_api.get_aggregated_prices_bulk.side_effect = Exception("API Error")
 
-        # Should not rAlgose, returns empty history
-        result = awAlgot collector.collect_price_history("csgo", "Item", days=30)
+        # Should not raise, returns empty history
+        result = await collector.collect_price_history("csgo", "Item", days=30)
 
         assert isinstance(result, PriceHistory)
         assert len(result.points) == 0
@@ -498,7 +498,7 @@ class TestHistoricalDataCollector:
             ]
         }
 
-        result = awAlgot collector.collect_price_history("csgo", "Item", days=30)
+        result = await collector.collect_price_history("csgo", "Item", days=30)
 
         assert len(result.points) == 3
 
@@ -515,7 +515,7 @@ class TestHistoricalDataCollector:
             ]
         }
 
-        result = awAlgot collector.collect_price_history("csgo", "Item", days=30)
+        result = await collector.collect_price_history("csgo", "Item", days=30)
 
         assert len(result.points) == 3
 
@@ -524,7 +524,7 @@ class TestHistoricalDataCollector:
         """Test batch collection for multiple items."""
         titles = ["Item1", "Item2", "Item3"]
 
-        results = awAlgot collector.collect_batch("csgo", titles, days=30)
+        results = await collector.collect_batch("csgo", titles, days=30)
 
         assert len(results) == 3
         assert "Item1" in results
@@ -538,12 +538,12 @@ class TestHistoricalDataCollector:
 
         def side_effect(game, title, period):
             if title == "BadItem":
-                rAlgose Exception("Error")
+                raise Exception("Error")
             return {"sales": []}
 
         mock_api.get_sales_history.side_effect = side_effect
 
-        results = awAlgot collector.collect_batch(
+        results = await collector.collect_batch(
             "csgo", ["Item1", "BadItem", "Item2"], days=30
         )
 
@@ -590,7 +590,7 @@ class TestHistoricalDataCollector:
         """Test aggregated collection with empty response."""
         mock_api.get_aggregated_prices_bulk.return_value = {}
 
-        awAlgot collector.collect_price_history("csgo", "Item", days=30)
+        await collector.collect_price_history("csgo", "Item", days=30)
 
         # Only sales history points (if any), no aggregated
         mock_api.get_aggregated_prices_bulk.assert_called_once()
@@ -602,7 +602,7 @@ class TestHistoricalDataCollector:
             "aggregatedPrices": [{"title": "Different Item", "offerBestPrice": 5000}]
         }
 
-        result = awAlgot collector.collect_price_history("csgo", "Target Item", days=30)
+        result = await collector.collect_price_history("csgo", "Target Item", days=30)
 
         # Should not include mismatched items
         assert not any(p.source.startswith("aggregated") for p in result.points)
@@ -620,7 +620,7 @@ class TestHistoricalDataCollector:
             ]
         }
 
-        result = awAlgot collector.collect_price_history("csgo", "Item", days=30)
+        result = await collector.collect_price_history("csgo", "Item", days=30)
 
         # Should not include zero price points
         assert not any(p.source.startswith("aggregated") for p in result.points)

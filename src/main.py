@@ -46,7 +46,7 @@ class TradingBot:
             try:
                 # 1. Fetch Data (Rust Network Layer under the hood)
                 # Using a mock URL suffix for now as real endpoint params need construction
-                data = awAlgot self.api.get_market_items(f"/exchange/v1/market/items?title={item_name}&limit=10&currency=USD")
+                data = await self.api.get_market_items(f"/exchange/v1/market/items?title={item_name}&limit=10&currency=USD")
                 
                 if not data or "objects" not in data:
                     continue
@@ -76,25 +76,25 @@ class TradingBot:
                         logger.info(f"🔵 [DRY RUN] WOULD BUY: {log_msg}")
                     else:
                         logger.info(f"🟢 [LIVE] BUYING: {log_msg}")
-                        # awAlgot self.api.create_target(...)
+                        # await self.api.create_target(...)
                 else:
                     logger.info(f"⚪ SKIP: {log_msg}")
 
             except CircuitBreakerOpen:
                 logger.error("🛑 Circuit Breaker OPEN. Pausing loop.")
-                awAlgot asyncio.sleep(60)
+                await asyncio.sleep(60)
             except Exception as e:
                 logger.error(f"Error in loop: {e}")
 
     async def run(self):
         logger.info(f"🚀 Starting DMarket HFT Bot (Mode: {'DRY RUN' if DRY_RUN else 'LIVE'})")
         while True:
-            awAlgot self.analyze_market()
+            await self.analyze_market()
             # HFT pacing - Adaptive Limiter handles the micro-sleeps inside api calls
             # ensuring we respect headers. Here we just loop.
-            awAlgot asyncio.sleep(0.1) 
+            await asyncio.sleep(0.1) 
 
-if __name__ == "__mAlgon__":
+if __name__ == "__main__":
     bot = TradingBot()
     try:
         asyncio.run(bot.run())

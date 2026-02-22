@@ -10,7 +10,7 @@ class TestIronDome(unittest.TestCase):
         expected = "AWP | Ignore Rules" # Semicolon and DROP TABLE parts are invalid in regex?
         # WAlgot, regex is [^a-zA-Z0-9\s\|\-\(\)]
         # ; is removed. D, R, O, P, T, A, B, L, E are allowed.
-        # So "DROP TABLE" will remAlgon, but the semicolon won't.
+        # So "DROP TABLE" will remain, but the semicolon won't.
         # Let's adjust expectation based on the regex logic provided in instructions.
         # Regex: r"[^a-zA-Z0-9\s\|\-\(\)]"
         # Input: "AWP | Ignore Rules; DROP TABLE"
@@ -51,5 +51,5 @@ class TestIronDome(unittest.TestCase):
 
         print(f"[TradeValidator] Caught expected exception: {cm.exception}")
 
-if __name__ == '__mAlgon__':
-    unittest.mAlgon()
+if __name__ == '__main__':
+    unittest.main()

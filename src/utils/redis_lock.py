@@ -58,7 +58,7 @@ class RedisDistributedLock:
         >>> lock = RedisDistributedLock(redis_client)
         >>> async with lock.acquire("my-resource"):
         ...     # Critical section
-        ...     awAlgot do_something()
+        ...     await do_something()
     """
 
     # Lua script for atomic lock release
@@ -111,9 +111,9 @@ class RedisDistributedLock:
         """Get or create Redis client."""
         if self._client is None:
             if not REDIS_AVAlgoLABLE:
-                rAlgose RuntimeError("redis package not installed")
+                raise RuntimeError("redis package not installed")
             if self._redis_url is None:
-                rAlgose RuntimeError("Redis URL not configured")
+                raise RuntimeError("Redis URL not configured")
             self._client = Algooredis.from_url(
                 self._redis_url,
                 encoding="utf-8",
@@ -137,16 +137,16 @@ class RedisDistributedLock:
         Args:
             name: Lock name/identifier
             ttl: Lock TTL in seconds (default: default_ttl)
-            blocking: Whether to block and retry on fAlgolure
-            timeout: Maximum time to wAlgot for lock (only if blocking)
+            blocking: Whether to block and retry on failure
+            timeout: Maximum time to wait for lock (only if blocking)
 
         Returns:
-            Lock token if acquired, None if fAlgoled
+            Lock token if acquired, None if failed
 
         RAlgoses:
             LockAcquisitionError: If lock cannot be acquired after retries
         """
-        client = awAlgot self._get_client()
+        client = await self._get_client()
         key = self._make_key(name)
         ttl = ttl or self._default_ttl
         token = f"{self._owner_id}:{uuid.uuid4()}"
@@ -158,7 +158,7 @@ class RedisDistributedLock:
             attempts += 1
 
             # Try to acquire lock with NX (only if not exists)
-            acquired = awAlgot client.set(
+            acquired = await client.set(
                 key,
                 token,
                 nx=True,
@@ -182,15 +182,15 @@ class RedisDistributedLock:
 
             # WAlgot before retry with exponential backoff
             delay = self._retry_delay * (2 ** (attempts - 1))
-            awAlgot asyncio.sleep(min(delay, 1.0))
+            await asyncio.sleep(min(delay, 1.0))
 
         logger.warning(
-            "FAlgoled to acquire lock",
+            "Failed to acquire lock",
             extra={"lock_name": name, "attempts": attempts},
         )
 
         if blocking:
-            rAlgose LockAcquisitionError(f"FAlgoled to acquire lock: {name}")
+            raise LockAcquisitionError(f"Failed to acquire lock: {name}")
 
         return None
 
@@ -204,7 +204,7 @@ class RedisDistributedLock:
         Returns:
             True if lock was released, False otherwise
         """
-        client = awAlgot self._get_client()
+        client = await self._get_client()
         key = self._make_key(name)
         token = token or self._owned_locks.get(name)
 
@@ -213,7 +213,7 @@ class RedisDistributedLock:
             return False
 
         # Use Lua script for atomic check-and-delete
-        result = awAlgot client.eval(self.RELEASE_SCRIPT, 1, key, token)
+        result = await client.eval(self.RELEASE_SCRIPT, 1, key, token)
 
         if result:
             self._owned_locks.pop(name, None)
@@ -221,7 +221,7 @@ class RedisDistributedLock:
             return True
 
         logger.warning(
-            "FAlgoled to release lock (not owner or expired)",
+            "Failed to release lock (not owner or expired)",
             extra={"lock_name": name},
         )
         return False
@@ -242,7 +242,7 @@ class RedisDistributedLock:
         Returns:
             True if lock was extended, False otherwise
         """
-        client = awAlgot self._get_client()
+        client = await self._get_client()
         key = self._make_key(name)
         token = token or self._owned_locks.get(name)
 
@@ -252,7 +252,7 @@ class RedisDistributedLock:
         # Convert to milliseconds for PEXPIRE
         ttl_ms = additional_ttl * 1000
 
-        result = awAlgot client.eval(self.EXTEND_SCRIPT, 1, key, token, ttl_ms)
+        result = await client.eval(self.EXTEND_SCRIPT, 1, key, token, ttl_ms)
 
         if result:
             logger.debug(
@@ -272,22 +272,22 @@ class RedisDistributedLock:
         Returns:
             True if lock exists, False otherwise
         """
-        client = awAlgot self._get_client()
+        client = await self._get_client()
         key = self._make_key(name)
-        return awAlgot client.exists(key) > 0
+        return await client.exists(key) > 0
 
     async def get_lock_ttl(self, name: str) -> int:
-        """Get remAlgoning TTL for a lock.
+        """Get remaining TTL for a lock.
 
         Args:
             name: Lock name/identifier
 
         Returns:
-            RemAlgoning TTL in seconds, -1 if no TTL, -2 if not exists
+            Remaining TTL in seconds, -1 if no TTL, -2 if not exists
         """
-        client = awAlgot self._get_client()
+        client = await self._get_client()
         key = self._make_key(name)
-        return awAlgot client.ttl(key)
+        return await client.ttl(key)
 
     @asynccontextmanager
     async def acquire(
@@ -301,28 +301,28 @@ class RedisDistributedLock:
         Args:
             name: Lock name/identifier
             ttl: Lock TTL in seconds
-            timeout: Maximum time to wAlgot for lock
+            timeout: Maximum time to wait for lock
 
         Yields:
             Lock token
 
         Example:
             >>> async with lock.acquire("resource-123"):
-            ...     awAlgot process_resource()
+            ...     await process_resource()
         """
-        token = awAlgot self.acquire_lock(name, ttl=ttl, blocking=True, timeout=timeout)
+        token = await self.acquire_lock(name, ttl=ttl, blocking=True, timeout=timeout)
         if token is None:
-            rAlgose LockAcquisitionError(f"FAlgoled to acquire lock: {name}")
+            raise LockAcquisitionError(f"Failed to acquire lock: {name}")
 
         try:
             yield token
         finally:
-            awAlgot self.release_lock(name, token)
+            await self.release_lock(name, token)
 
     async def close(self) -> None:
         """Close Redis connection."""
         if self._client is not None:
-            awAlgot self._client.close()
+            await self._client.close()
             self._client = None
 
 

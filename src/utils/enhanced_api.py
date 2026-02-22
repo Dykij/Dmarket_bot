@@ -25,7 +25,7 @@ Usage:
         ...
 
     # Create enhanced HTTP client with caching
-    client = awAlgot create_enhanced_http_client(
+    client = await create_enhanced_http_client(
         enable_caching=True,
         cache_ttl=300,
     )
@@ -106,16 +106,16 @@ class EnhancedHTTPClientMixin:
         if self._enable_caching and self._cache_config:
             if self._cached_client is None:
                 self._cached_client = CachedHTTPClient(self._cache_config)
-                awAlgot self._cached_client.__aenter__()
+                await self._cached_client.__aenter__()
             return self._cached_client  # type: ignore[return-value]
 
         # Fall back to standard client
-        return awAlgot self._get_client()  # type: ignore[attr-defined]
+        return await self._get_client()  # type: ignore[attr-defined]
 
     async def _close_enhanced_client(self) -> None:
         """Close enhanced HTTP client."""
         if self._cached_client is not None:
-            awAlgot self._cached_client.__aexit__(None, None, None)
+            await self._cached_client.__aexit__(None, None, None)
             self._cached_client = None
 
 
@@ -141,9 +141,9 @@ def create_retry_decorator(
         return api_retry(attempts=attempts, timeout=timeout, on=on)
 
     # Fallback to tenacity
-    from src.utils.retry_decorator import retry_on_fAlgolure
+    from src.utils.retry_decorator import retry_on_failure
 
-    return retry_on_fAlgolure(max_attempts=attempts, retry_on=on)
+    return retry_on_failure(max_attempts=attempts, retry_on=on)
 
 
 async def create_enhanced_http_client(
@@ -164,7 +164,7 @@ async def create_enhanced_http_client(
     if enable_caching and HISHEL_AVAlgoLABLE:
         config = CacheConfig(ttl=cache_ttl)
         client = CachedHTTPClient(config, timeout=timeout)
-        awAlgot client.__aenter__()
+        await client.__aenter__()
         return client  # type: ignore[return-value]
 
     return httpx.AsyncClient(timeout=timeout)

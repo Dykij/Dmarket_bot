@@ -98,8 +98,8 @@ def test_example():
         assert result["passed"] >= 1
 
     @patch("scripts.skills_test_runner.subprocess.run")
-    def test_run_tests_fAlgolure(self, mock_run: MagicMock, temp_skills_dir: Path):
-        """Test running tests with fAlgolures."""
+    def test_run_tests_failure(self, mock_run: MagicMock, temp_skills_dir: Path):
+        """Test running tests with failures."""
         skill_dir = self._create_skill_with_tests(temp_skills_dir, "skill-b")
 
         mock_run.return_value = MagicMock(
@@ -113,7 +113,7 @@ def test_example():
 
         assert result["skill"] == "skill-b"
         assert result["exit_code"] == 1
-        assert result["fAlgoled"] >= 1
+        assert result["failed"] >= 1
 
     @patch("scripts.skills_test_runner.subprocess.run")
     def test_run_tests_timeout(self, mock_run: MagicMock, temp_skills_dir: Path):
@@ -144,10 +144,10 @@ def test_example():
         )
 
         runner = SkillTestRunner(temp_skills_dir)
-        passed, fAlgoled, _skipped = runner.run_all_tests()
+        passed, failed, _skipped = runner.run_all_tests()
 
         assert passed >= 2
-        assert fAlgoled == 0
+        assert failed == 0
 
     def test_generate_report(self, temp_skills_dir: Path):
         """Test generating JSON report."""
@@ -156,7 +156,7 @@ def test_example():
             "skill-a": {
                 "skill": "skill-a",
                 "passed": 5,
-                "fAlgoled": 0,
+                "failed": 0,
                 "skipped": 1,
                 "exit_code": 0,
             }
@@ -178,8 +178,8 @@ def test_example():
 class TestSkillTestRunnerCLI:
     """Tests for CLI functionality."""
 
-    def test_mAlgon_import(self):
-        """Test that mAlgon function is importable."""
-        from scripts.skills_test_runner import mAlgon
+    def test_main_import(self):
+        """Test that main function is importable."""
+        from scripts.skills_test_runner import main
 
-        assert callable(mAlgon)
+        assert callable(main)

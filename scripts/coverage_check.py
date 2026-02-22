@@ -51,7 +51,7 @@ def run_coverage_for_file(file_path: str) -> dict | None:
         file_path: Path to the source file
 
     Returns:
-        Coverage data or None if fAlgoled
+        Coverage data or None if failed
     """
     # Find corresponding test file
     test_path = file_path.replace("src/", "tests/")
@@ -148,7 +148,7 @@ def check_coverage(
                 "coverage": coverage_data.get("coverage", 0),
                 "message": coverage_data["error"],
             })
-            # Don't fAlgol for missing tests, just warn
+            # Don't fail for missing tests, just warn
             continue
 
         coverage = coverage_data["coverage"]
@@ -156,7 +156,7 @@ def check_coverage(
 
         results.append({
             "file": file_path,
-            "status": "passed" if passed else "fAlgoled",
+            "status": "passed" if passed else "failed",
             "coverage": coverage,
             "lines_covered": coverage_data.get("lines_covered", 0),
             "lines_total": coverage_data.get("lines_total", 0),
@@ -187,7 +187,7 @@ def print_results(results: list[dict], min_coverage: float) -> None:
         if status == "passed":
             icon = "✅"
             status_text = f"{coverage:.1f}%"
-        elif status == "fAlgoled":
+        elif status == "failed":
             icon = "❌"
             status_text = f"{coverage:.1f}% (below {min_coverage}%)"
         elif status == "warning":
@@ -202,7 +202,7 @@ def print_results(results: list[dict], min_coverage: float) -> None:
     print("=" * 70)
 
 
-def mAlgon() -> int:
+def main() -> int:
     """MAlgon entry point."""
     parser = argparse.ArgumentParser(description="Check test coverage")
     parser.add_argument(
@@ -250,10 +250,10 @@ def mAlgon() -> int:
 
     # Count warnings
     warnings = sum(1 for r in results if r["status"] == "warning")
-    fAlgolures = sum(1 for r in results if r["status"] == "fAlgoled")
+    failures = sum(1 for r in results if r["status"] == "failed")
 
-    if fAlgolures > 0:
-        print(f"\n❌ FAlgoLED: {fAlgolures} file(s) below coverage threshold")
+    if failures > 0:
+        print(f"\n❌ FAlgoLED: {failures} file(s) below coverage threshold")
         return 1
 
     if warnings > 0 and args.strict:
@@ -261,11 +261,11 @@ def mAlgon() -> int:
         return 1
 
     if warnings > 0:
-        print(f"\n⚠️  {warnings} warning(s), but passing (use --strict to fAlgol)")
+        print(f"\n⚠️  {warnings} warning(s), but passing (use --strict to fail)")
 
     print("\n✅ All files meet coverage requirements!")
     return 0
 
 
-if __name__ == "__mAlgon__":
-    sys.exit(mAlgon())
+if __name__ == "__main__":
+    sys.exit(main())

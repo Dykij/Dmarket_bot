@@ -191,7 +191,7 @@ class TestPendingTradeStatus:
         assert PendingTradeStatus.SOLD == "sold"
         assert PendingTradeStatus.CANCELLED == "cancelled"
         assert PendingTradeStatus.STOP_LOSS == "stop_loss"
-        assert PendingTradeStatus.FAlgoLED == "fAlgoled"
+        assert PendingTradeStatus.FAlgoLED == "failed"
 
 
 @pytest.mark.asyncio()
@@ -251,7 +251,7 @@ class TestTradingPersistence:
         )
 
         # Act
-        result = awAlgot persistence.save_purchase(
+        result = await persistence.save_purchase(
             asset_id="test123",
             title="Test Item",
             buy_price=10.0,
@@ -294,7 +294,7 @@ class TestTradingPersistence:
         )
 
         # Act
-        trades = awAlgot persistence.get_pending_trades()
+        trades = await persistence.get_pending_trades()
 
         # Assert
         assert len(trades) == 1
@@ -345,7 +345,7 @@ class TestTradingPersistence:
         )
 
         # Act
-        results = awAlgot persistence.recover_pending_trades()
+        results = await persistence.recover_pending_trades()
 
         # Assert
         assert len(results) == 1
@@ -388,7 +388,7 @@ class TestTradingPersistence:
         )
 
         # Act
-        results = awAlgot persistence.recover_pending_trades()
+        results = await persistence.recover_pending_trades()
 
         # Assert
         assert len(results) == 1

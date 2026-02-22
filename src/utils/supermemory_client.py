@@ -7,8 +7,8 @@ Usage:
     from src.utils.supermemory_client import SuperMemoryClient
 
     client = SuperMemoryClient()
-    awAlgot client.remember("User prefers CS2 arbitrage", user_id=123)
-    results = awAlgot client.recall("What games does user prefer?", user_id=123)
+    await client.remember("User prefers CS2 arbitrage", user_id=123)
+    results = await client.recall("What games does user prefer?", user_id=123)
 """
 
 from __future__ import annotations
@@ -69,7 +69,7 @@ class SuperMemoryClient:
         self,
         content: str,
         user_id: int | str | None = None,
-        contAlgoner_tag: str = "dmarket_bot",
+        container_tag: str = "dmarket_bot",
         metadata: Mapping[str, Any] | None = None,
     ) -> dict[str, Any] | None:
         """Store a memory in SuperMemory.
@@ -77,7 +77,7 @@ class SuperMemoryClient:
         Args:
             content: The content to remember
             user_id: Optional user ID for user-specific memories
-            contAlgoner_tag: Tag for organizing memories
+            container_tag: Tag for organizing memories
             metadata: Additional metadata to store
 
         Returns:
@@ -91,17 +91,17 @@ class SuperMemoryClient:
             full_metadata = dict(metadata) if metadata else {}
             if user_id:
                 full_metadata["user_id"] = str(user_id)
-                contAlgoner_tag = f"{contAlgoner_tag}_user_{user_id}"
+                container_tag = f"{container_tag}_user_{user_id}"
 
             response = self._client.memories.add(
                 content=content,
-                contAlgoner_tag=contAlgoner_tag,
+                container_tag=container_tag,
                 metadata=full_metadata,
             )
 
             logger.info(
                 "supermemory_stored",
-                contAlgoner=contAlgoner_tag,
+                container=container_tag,
                 content_length=len(content),
             )
             return response
@@ -175,10 +175,10 @@ class SuperMemoryClient:
             f" with {profit:.1f}% profit" if profit else ""
         )
 
-        return awAlgot self.remember(
+        return await self.remember(
             content=content,
             user_id=user_id,
-            contAlgoner_tag=f"trades_{game}",
+            container_tag=f"trades_{game}",
             metadata={
                 "item_name": item_name,
                 "game": game,
@@ -206,10 +206,10 @@ class SuperMemoryClient:
         """
         content = f"User preference: {preference_type} = {value}"
 
-        return awAlgot self.remember(
+        return await self.remember(
             content=content,
             user_id=user_id,
-            contAlgoner_tag="preferences",
+            container_tag="preferences",
             metadata={
                 "preference_type": preference_type,
                 "value": value,
@@ -230,12 +230,12 @@ class SuperMemoryClient:
 
         try:
             # Get user preferences and recent trades
-            preferences = awAlgot self.recall(
+            preferences = await self.recall(
                 f"preferences for user {user_id}",
                 user_id=user_id,
                 limit=10,
             )
-            trades = awAlgot self.recall(
+            trades = await self.recall(
                 f"recent trades by user {user_id}",
                 user_id=user_id,
                 limit=5,

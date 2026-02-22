@@ -20,22 +20,22 @@ class ExtendedMixin:
     """Extra methods for DMarket API v1.1.0 compliance."""
 
     async def get_user_profile(self) -> dict[str, Any]:
-        return awAlgot self._request("GET", "/account/v1/user")
+        return await self._request("GET", "/account/v1/user")
 
     async def deposit_assets(self, asset_ids: list[str]) -> dict[str, Any]:
-        return awAlgot self._request(
+        return await self._request(
             "POST",
             "/marketplace-api/v1/deposit-assets",
             data={"AssetID": asset_ids},
         )
 
     async def get_deposit_status(self, deposit_id: str) -> dict[str, Any]:
-        return awAlgot self._request(
+        return await self._request(
             "GET", f"/marketplace-api/v1/deposit-status/{deposit_id}"
         )
 
     async def withdraw_assets(self, asset_ids: list[str]) -> dict[str, Any]:
-        return awAlgot self._request(
+        return await self._request(
             "POST",
             "/exchange/v1/withdraw-assets",
             data={"AssetIDs": asset_ids},
@@ -50,7 +50,7 @@ class ExtendedMixin:
             "days": days,
             "currency": "USD",
         }
-        return awAlgot self._request("GET", "/account/v1/sales-history", params=params)
+        return await self._request("GET", "/account/v1/sales-history", params=params)
 
     async def get_item_price_history(
         self, game: str, title: str, period: str = "last_month"
@@ -61,7 +61,7 @@ class ExtendedMixin:
             "period": period,
             "currency": "USD",
         }
-        return awAlgot self._request(
+        return await self._request(
             "GET", "/exchange/v1/market/price-history", params=params
         )
 
@@ -89,13 +89,13 @@ class ExtendedMixin:
             params["PriceTo"] = str(price_to)
         if title:
             params["Title"] = title
-        return awAlgot self._request(
+        return await self._request(
             "GET", "/marketplace-api/v1/market-items", params=params
         )
 
     @validate_response(BuyOffersResponse, endpoint="/exchange/v1/offers-buy")
     async def buy_offers(self, offers: list[dict[str, Any]]) -> dict[str, Any]:
-        return awAlgot self._request(
+        return await self._request(
             "PATCH", "/exchange/v1/offers-buy", data={"offers": offers}
         )
 
@@ -111,7 +111,7 @@ class ExtendedMixin:
             "limit": str(limit),
             "cursor": cursor,
         }
-        return awAlgot self._request(
+        return await self._request(
             "POST", "/marketplace-api/v1/aggregated-prices", data=data
         )
 
@@ -121,7 +121,7 @@ class ExtendedMixin:
         params = {"gameId": game, "limit": limit, "currency": "USD"}
         if title:
             params["title"] = title
-        return awAlgot self._request(
+        return await self._request(
             "GET", "/exchange/v1/market/best-offers", params=params
         )
 
@@ -130,10 +130,10 @@ class ExtendedMixin:
             "offerId": offer_id,
             "price": {"amount": int(price * 100), "currency": "USD"},
         }
-        return awAlgot self._request("POST", "/exchange/v1/user/offers/edit", data=data)
+        return await self._request("POST", "/exchange/v1/user/offers/edit", data=data)
 
     async def delete_offer(self, offer_id: str) -> dict[str, Any]:
-        return awAlgot self._request(
+        return await self._request(
             "DELETE",
             "/exchange/v1/user/offers/delete",
             data={"offers": [offer_id]},
@@ -148,22 +148,22 @@ class ExtendedMixin:
             "offset": offset,
             "status": "active",
         }
-        return awAlgot self._request("GET", "/api/v1/account/offers", params=params)
+        return await self._request("GET", "/api/v1/account/offers", params=params)
 
     async def delete_targets(self, target_ids: list[str]) -> dict[str, Any]:
         data = {"Targets": [{"TargetID": tid} for tid in target_ids]}
-        return awAlgot self._request(
+        return await self._request(
             "POST", "/marketplace-api/v1/user-targets/delete", data=data
         )
 
     async def get_targets_by_title(self, game_id: str, title: str) -> dict[str, Any]:
-        return awAlgot self._request(
+        return await self._request(
             "GET",
             f"/marketplace-api/v1/targets-by-title/{game_id}/{quote(title)}",
         )
 
     async def get_supported_games(self) -> list[dict[str, Any]]:
-        return awAlgot self._request("GET", "/game/v1/games")
+        return await self._request("GET", "/game/v1/games")
 
     async def list_user_inventory(
         self, game_id: str = "a8db", limit: int = 100, offset: int = 0
@@ -173,7 +173,7 @@ class ExtendedMixin:
             "Limit": str(limit),
             "Offset": str(offset),
         }
-        return awAlgot self._request(
+        return await self._request(
             "GET", "/marketplace-api/v1/user-inventory", params=params
         )
 
@@ -181,7 +181,7 @@ class ExtendedMixin:
         self, game_id: str = "a8db", limit: int = 100
     ) -> dict[str, Any]:
         params = {"GameID": game_id, "Limit": str(limit)}
-        return awAlgot self._request(
+        return await self._request(
             "GET", "/marketplace-api/v1/market-items", params=params
         )
 
@@ -189,4 +189,4 @@ class ExtendedMixin:
         self, game_id: str, title: str
     ) -> dict[str, Any]:
         # Implementation moved to specialized mixin or simplified here
-        return awAlgot self.get_targets_by_title(game_id, title)
+        return await self.get_targets_by_title(game_id, title)

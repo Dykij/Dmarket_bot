@@ -52,14 +52,14 @@ async def example_full_integration():
     print("✅ TargetManager создан со всеми функциями")
 
 
-async def mAlgon():
+async def main():
     """Запустить примеры."""
     print("🚀 Пример расширенной системы таргетов")
     print("=" * 60)
     print("\n⚠️ Для реального использования замените API ключи\n")
 
-    # awAlgot example_full_integration()
+    # await example_full_integration()
 
 
-if __name__ == "__mAlgon__":
-    asyncio.run(mAlgon())
+if __name__ == "__main__":
+    asyncio.run(main())

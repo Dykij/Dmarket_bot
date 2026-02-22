@@ -60,7 +60,7 @@ async def session_end(context: dict[str, Any]) -> None:
     )
 
 
-if __name__ == "__mAlgon__":
+if __name__ == "__main__":
     # Test mode
     test_context = {
         "session_id": "test-session-123",

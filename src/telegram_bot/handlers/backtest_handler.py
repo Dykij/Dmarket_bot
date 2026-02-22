@@ -73,7 +73,7 @@ class BacktestHandler:
             return
 
         if not self._api:
-            awAlgot update.message.reply_text("❌ API not configured")
+            await update.message.reply_text("❌ API not configured")
             return
 
         # Parse arguments
@@ -109,7 +109,7 @@ class BacktestHandler:
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
 
-        awAlgot update.message.reply_text(
+        await update.message.reply_text(
             f"🔬 *Backtesting*\n\n"
             f"Period: {days} days\n"
             f"Initial Balance: ${float(self._initial_balance):.2f}\n\n"
@@ -133,22 +133,22 @@ class BacktestHandler:
         if not query or not query.data:
             return
 
-        awAlgot query.answer()
+        await query.answer()
 
         data = query.data
         if data.startswith("backtest:run:"):
             parts = data.split(":")
             strategy = parts[2]
             days = int(parts[3]) if len(parts) > 3 else 30
-            awAlgot self._run_backtest(query, strategy, days)
+            await self._run_backtest(query, strategy, days)
         elif data == "backtest:results":
-            awAlgot self._show_results(query)
+            await self._show_results(query)
         elif data == "backtest:settings":
-            awAlgot self._show_settings(query)
+            await self._show_settings(query)
         elif data.startswith("backtest:balance:"):
             balance = float(data.split(":")[-1])
             self._initial_balance = Decimal(str(balance))
-            awAlgot self._show_settings(query)
+            await self._show_settings(query)
 
     async def _run_backtest(
         self,
@@ -164,10 +164,10 @@ class BacktestHandler:
             days: Number of days to backtest
         """
         if not self._api:
-            awAlgot query.edit_message_text("❌ API not configured")
+            await query.edit_message_text("❌ API not configured")
             return
 
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             f"⏳ Running backtest...\n\n"
             f"Strategy: {strategy_name}\n"
             f"Period: {days} days\n\n"
@@ -198,7 +198,7 @@ class BacktestHandler:
             ]
 
             # Collect historical data
-            price_histories = awAlgot collector.collect_batch(
+            price_histories = await collector.collect_batch(
                 game="csgo",
                 titles=sample_items,
                 days=days,
@@ -208,7 +208,7 @@ class BacktestHandler:
             end_date = datetime.now(UTC)
             start_date = end_date - timedelta(days=days)
 
-            result = awAlgot backtester.run(
+            result = await backtester.run(
                 strategy=strategy,
                 price_histories=price_histories,
                 start_date=start_date,
@@ -222,12 +222,12 @@ class BacktestHandler:
                 self._recent_results.pop(0)
 
             # Display result
-            awAlgot self._display_result(query, result)
+            await self._display_result(query, result)
 
         except Exception as e:
             logger.exception("backtest_error", extra={"error": str(e)})
-            awAlgot query.edit_message_text(
-                f"❌ Backtest fAlgoled: {e!s}\n\nPlease try agAlgon later.",
+            await query.edit_message_text(
+                f"❌ Backtest failed: {e!s}\n\nPlease try agAlgon later.",
                 reply_markup=InlineKeyboardMarkup(
                     [[InlineKeyboardButton("« Back", callback_data="backtest:back")]]
                 ),
@@ -271,7 +271,7 @@ class BacktestHandler:
 
         keyboard = [[InlineKeyboardButton("« Back", callback_data="backtest:back")]]
 
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             text,
             reply_markup=InlineKeyboardMarkup(keyboard),
             parse_mode="Markdown",
@@ -280,7 +280,7 @@ class BacktestHandler:
     async def _show_results(self, query) -> None:
         """Show recent backtest results."""
         if not self._recent_results:
-            awAlgot query.edit_message_text(
+            await query.edit_message_text(
                 "📊 *Recent Results*\n\nNo backtests run yet.",
                 reply_markup=InlineKeyboardMarkup(
                     [[InlineKeyboardButton("« Back", callback_data="backtest:back")]]
@@ -302,7 +302,7 @@ class BacktestHandler:
                 f"{result.win_rate:.0f}% win | {profit_str}"
             )
 
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             "\n".join(lines),
             reply_markup=InlineKeyboardMarkup(
                 [[InlineKeyboardButton("« Back", callback_data="backtest:back")]]
@@ -331,7 +331,7 @@ class BacktestHandler:
             [InlineKeyboardButton("« Back", callback_data="backtest:back")],
         ]
 
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             text,
             reply_markup=InlineKeyboardMarkup(keyboard),
             parse_mode="Markdown",

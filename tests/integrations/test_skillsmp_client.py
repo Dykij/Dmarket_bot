@@ -28,7 +28,7 @@ class TestSkillsMPClient:
         """Create a mock HTTP response."""
         response = MagicMock()
         response.status_code = 200
-        response.rAlgose_for_status = MagicMock()
+        response.raise_for_status = MagicMock()
         return response
 
     def test_client_initialization(self):
@@ -76,7 +76,7 @@ class TestSkillsMPClient:
             mock_request.return_value = mock_data
 
             # Act
-            skills = awAlgot client.search_skills(
+            skills = await client.search_skills(
                 query="test",
                 category="testing",
                 tags=["python"],
@@ -97,7 +97,7 @@ class TestSkillsMPClient:
             mock_request.return_value = {"skills": []}
 
             # Act
-            skills = awAlgot client.search_skills(query="nonexistent")
+            skills = await client.search_skills(query="nonexistent")
 
             # Assert
             assert len(skills) == 0
@@ -110,7 +110,7 @@ class TestSkillsMPClient:
             "skill": {
                 "id": "skill-123",
                 "name": "Specific Skill",
-                "description": "DetAlgols",
+                "description": "Details",
                 "category": "security",
                 "author": "author",
             }
@@ -120,7 +120,7 @@ class TestSkillsMPClient:
             mock_request.return_value = mock_data
 
             # Act
-            skill = awAlgot client.get_skill("skill-123")
+            skill = await client.get_skill("skill-123")
 
             # Assert
             assert skill is not None
@@ -140,7 +140,7 @@ class TestSkillsMPClient:
             mock_request.side_effect = error
 
             # Act
-            skill = awAlgot client.get_skill("nonexistent")
+            skill = await client.get_skill("nonexistent")
 
             # Assert
             assert skill is None
@@ -167,7 +167,7 @@ class TestSkillsMPClient:
             mock_request.return_value = mock_data
 
             # Act
-            recs = awAlgot client.get_recommendations(
+            recs = await client.get_recommendations(
                 repo_url="https://github.com/test/repo",
                 focus=["testing"],
             )
@@ -198,7 +198,7 @@ class TestSkillsMPClient:
             mock_request.return_value = mock_data
 
             # Act
-            recs = awAlgot client.get_testing_improvements(
+            recs = await client.get_testing_improvements(
                 languages=["python"],
                 frameworks=["pytest"],
                 current_coverage=85.0,
@@ -223,7 +223,7 @@ class TestSkillsMPClient:
             mock_request.return_value = mock_data
 
             # Act
-            result = awAlgot client.analyze_repository(
+            result = await client.analyze_repository(
                 repo_url="https://github.com/test/repo",
             )
 
@@ -239,7 +239,7 @@ class TestSkillsMPClient:
         client._client = mock_http_client
 
         # Act
-        awAlgot client.close()
+        await client.close()
 
         # Assert
         mock_http_client.aclose.assert_called_once()

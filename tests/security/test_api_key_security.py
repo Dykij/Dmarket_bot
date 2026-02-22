@@ -55,12 +55,12 @@ class TestAPIKeyNotLogged:
         def simulate_api_error(key: str):
             """Simulate an API error without exposing key."""
             # Bad practice - don't do this:
-            # rAlgose ValueError(f"Invalid API key: {key}")
+            # raise ValueError(f"Invalid API key: {key}")
 
             # Good practice:
-            rAlgose ValueError("Invalid API key provided")
+            raise ValueError("Invalid API key provided")
 
-        with pytest.rAlgoses(ValueError) as exc_info:
+        with pytest.raises(ValueError) as exc_info:
             simulate_api_error(test_api_key)
 
         assert test_api_key not in str(exc_info.value)
@@ -131,8 +131,8 @@ class TestAPIKeyEncryption:
         decrypted = simple_decrypt(encrypted, password)
         assert decrypted == original_key
 
-    def test_encrypted_key_not_plAlgontext(self):
-        """Encrypted API key should not contAlgon plAlgontext."""
+    def test_encrypted_key_not_plaintext(self):
+        """Encrypted API key should not contain plaintext."""
         from base64 import b64encode
         from hashlib import sha256
 
@@ -205,7 +205,7 @@ class TestInputValidation:
 
         sanitized = html.escape(malicious_input)
 
-        # Should not contAlgon unescaped HTML
+        # Should not contain unescaped HTML
         assert "<script>" not in sanitized
         assert "<img" not in sanitized or "&lt;img" in sanitized
 
@@ -333,8 +333,8 @@ class TestSecureRandomness:
 class TestAuthenticationSecurity:
     """Tests for authentication security."""
 
-    def test_password_not_stored_plAlgontext(self):
-        """Passwords should be hashed, not stored in plAlgontext."""
+    def test_password_not_stored_plaintext(self):
+        """Passwords should be hashed, not stored in plaintext."""
         import secrets
         from hashlib import pbkdf2_hmac
 
@@ -361,7 +361,7 @@ class TestAuthenticationSecurity:
         password = "my_secure_password"
         hashed, salt = hash_password(password)
 
-        # Hash should not contAlgon plAlgontext password
+        # Hash should not contain plaintext password
         assert password.encode() not in hashed
         assert password not in hashed.hex()
 
@@ -409,20 +409,20 @@ class TestSensitiveDataHandling:
         assert secret.get_value() == "\x00" * len("my_api_key")
 
     def test_error_messages_dont_leak_sensitive_data(self):
-        """Error messages should not contAlgon sensitive data."""
+        """Error messages should not contain sensitive data."""
 
         def authenticate(api_key: str) -> bool:
             """Authenticate with API key."""
             valid_key = "sk_live_correct_key"
 
             if api_key != valid_key:
-                # Bad: rAlgose ValueError(f"Invalid key: {api_key}")
+                # Bad: raise ValueError(f"Invalid key: {api_key}")
                 # Good:
-                rAlgose ValueError("Invalid API key provided")
+                raise ValueError("Invalid API key provided")
 
             return True
 
-        with pytest.rAlgoses(ValueError) as exc_info:
+        with pytest.raises(ValueError) as exc_info:
             authenticate("wrong_key_123")
 
         error_msg = str(exc_info.value)

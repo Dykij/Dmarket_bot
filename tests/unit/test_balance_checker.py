@@ -51,7 +51,7 @@ class TestFetchBalance:
             "usd": {"avAlgolable": 1000, "frozen": 0}
         }
 
-        result = awAlgot balance_checker._fetch_balance()
+        result = await balance_checker._fetch_balance()
 
         mock_api_client._request.assert_called_once_with(
             method="GET",
@@ -157,7 +157,7 @@ class TestGetErrorDisplayMessage:
     """Tests for _get_error_display_message method."""
 
     @pytest.mark.parametrize(
-        ("diagnosis", "expected_contAlgons"),
+        ("diagnosis", "expected_contains"),
         (
             ("auth_error", "авторизации"),
             ("missing_keys", "ключи"),
@@ -167,11 +167,11 @@ class TestGetErrorDisplayMessage:
         ),
     )
     def test_display_messages_for_diagnoses(
-        self, balance_checker, diagnosis, expected_contAlgons
+        self, balance_checker, diagnosis, expected_contains
     ):
-        """Test display messages contAlgon expected text."""
+        """Test display messages contain expected text."""
         message = balance_checker._get_error_display_message(diagnosis)
-        assert expected_contAlgons.lower() in message.lower()
+        assert expected_contains.lower() in message.lower()
 
 
 class TestCreateSuccessResult:
@@ -312,7 +312,7 @@ class TestCreateExceptionResult:
 
 
 class TestCheckBalance:
-    """Tests for mAlgon check_balance method."""
+    """Tests for main check_balance method."""
 
     @pytest.mark.asyncio()
     async def test_check_balance_success_flow(self, balance_checker, mock_api_client):
@@ -324,7 +324,7 @@ class TestCheckBalance:
             }
         }
 
-        result = awAlgot balance_checker.check_balance()
+        result = await balance_checker.check_balance()
 
         assert result["error"] is False
         assert result["has_funds"] is True
@@ -337,7 +337,7 @@ class TestCheckBalance:
         """Test that check_balance handles exceptions gracefully."""
         mock_api_client._request.side_effect = Exception("Network error")
 
-        result = awAlgot balance_checker.check_balance()
+        result = await balance_checker.check_balance()
 
         assert result["error"] is True
         assert result["diagnosis"] == "exception"
@@ -354,7 +354,7 @@ class TestCheckBalance:
             }
         }
 
-        result = awAlgot checker.check_balance()
+        result = await checker.check_balance()
 
         assert result["has_funds"] is False
         assert result["min_required"] == 10.0
@@ -372,7 +372,7 @@ class TestIntegration:
             "message": "Unauthorized access",
         }
 
-        result = awAlgot balance_checker.check_balance()
+        result = await balance_checker.check_balance()
 
         assert result["error"] is True
         assert result["diagnosis"] == "auth_error"
@@ -385,7 +385,7 @@ class TestIntegration:
         """Test complete flow when API returns empty response."""
         mock_api_client._request.return_value = None
 
-        result = awAlgot balance_checker.check_balance()
+        result = await balance_checker.check_balance()
 
         assert result["error"] is True
         assert result["diagnosis"] == "api_error"
@@ -400,7 +400,7 @@ class TestIntegration:
             }
         }
 
-        result = awAlgot balance_checker.check_balance()
+        result = await balance_checker.check_balance()
 
         assert result["error"] is False
         assert result["has_funds"] is True

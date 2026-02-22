@@ -58,7 +58,7 @@ class BatchScannerOptimizer:
 
         Example:
             >>> optimizer = BatchScannerOptimizer()
-            >>> results = awAlgot optimizer.process_items_batched(
+            >>> results = await optimizer.process_items_batched(
             ...     items=market_items, process_func=scanner.analyze_batch
             ... )
         """
@@ -90,7 +90,7 @@ class BatchScannerOptimizer:
                 for idx, batch in enumerate(batch_group)
             ]
 
-            batch_results = awAlgot asyncio.gather(*tasks, return_exceptions=True)
+            batch_results = await asyncio.gather(*tasks, return_exceptions=True)
 
             # Flatten results and handle errors
             for result in batch_results:
@@ -148,18 +148,18 @@ class BatchScannerOptimizer:
                 batch_size=len(batch),
             )
 
-            result = awAlgot process_func(batch)
+            result = await process_func(batch)
             return result if isinstance(result, list) else []
 
         except Exception as e:
             logger.error(
-                "batch_processing_fAlgoled",
+                "batch_processing_failed",
                 batch_idx=batch_idx,
                 batch_size=len(batch),
                 error=str(e),
                 exc_info=True,
             )
-            rAlgose
+            raise
 
     async def process_games_parallel(
         self,
@@ -177,7 +177,7 @@ class BatchScannerOptimizer:
 
         Example:
             >>> optimizer = BatchScannerOptimizer()
-            >>> results = awAlgot optimizer.process_games_parallel(
+            >>> results = await optimizer.process_games_parallel(
             ...     games=["csgo", "dota2", "tf2", "rust"], scan_func=scanner.scan_game
             ... )
         """
@@ -191,14 +191,14 @@ class BatchScannerOptimizer:
 
         # Scan all games in parallel
         tasks = [scan_func(game) for game in games]
-        results = awAlgot asyncio.gather(*tasks, return_exceptions=True)
+        results = await asyncio.gather(*tasks, return_exceptions=True)
 
         # Process results
         game_results = {}
         for game, result in zip(games, results, strict=False):
             if isinstance(result, Exception):
                 logger.error(
-                    "game_scan_fAlgoled",
+                    "game_scan_failed",
                     game=game,
                     error=str(result),
                 )
@@ -269,9 +269,9 @@ async def optimize_batch_processing(
 
     Example:
         >>> from src.dmarket.batch_scanner_optimizer import optimize_batch_processing
-        >>> results = awAlgot optimize_batch_processing(
+        >>> results = await optimize_batch_processing(
         ...     items=market_items, process_func=scanner.analyze_items
         ... )
     """
     optimizer = BatchScannerOptimizer(batch_size=batch_size)
-    return awAlgot optimizer.process_items_batched(items, process_func)
+    return await optimizer.process_items_batched(items, process_func)

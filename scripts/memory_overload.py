@@ -81,5 +81,5 @@ def run_memory_overload():
         sl.shm.unlink()
         print("Memory Overload Test Complete.")
 
-if __name__ == "__mAlgon__":
+if __name__ == "__main__":
     run_memory_overload()

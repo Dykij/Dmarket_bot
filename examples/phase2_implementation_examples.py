@@ -60,7 +60,7 @@ async def example_1_Algo_arbitrage():
 
     # Прогнозирование возможностей
     print("\n📊 Анализ рынка...")
-    opportunities = awAlgot predictor.predict_best_opportunities(
+    opportunities = await predictor.predict_best_opportunities(
         items=market_items,
         current_balance=50.0,  # $50 доступно
         risk_level="medium",
@@ -100,7 +100,7 @@ async def example_2_nlp_handler():
 
     print("\n🗣️ Обработка естественных команд:")
     for command, lang_name in test_commands:
-        result = awAlgot nlp.parse_user_intent(command, user_id=123)
+        result = await nlp.parse_user_intent(command, user_id=123)
 
         print(f"\n📝 Команда: \"{command}\" ({lang_name})")
         print(f"   ├─ Intent: {result.intent}")
@@ -132,7 +132,7 @@ async def example_3_integration():
 
     # Шаг 1: NLP распознает команду
     print("\n🧠 Шаг 1: NLP анализ...")
-    intent_result = awAlgot nlp.parse_user_intent(user_command, user_id=123)
+    intent_result = await nlp.parse_user_intent(user_command, user_id=123)
 
     if intent_result.intent != "scan_arbitrage":
         print(f"❌ Неожиданное намерение: {intent_result.intent}")
@@ -165,7 +165,7 @@ async def example_3_integration():
     print("\n🤖 Шаг 3: Algo прогнозирование...")
     max_price = intent_result.params.get("max_price", 100.0)
 
-    opportunities = awAlgot predictor.predict_best_opportunities(
+    opportunities = await predictor.predict_best_opportunities(
         items=market_items,
         current_balance=max_price,
         risk_level="medium",
@@ -181,7 +181,7 @@ async def example_3_integration():
         print(f"   ⚠️ Риск: {opp.risk_score:.0f}/100")
 
 
-async def mAlgon():
+async def main():
     """Запуск всех примеров."""
     print("\n" + "=" * 60)
     print("🚀 PHASE 2 IMPLEMENTATION EXAMPLES")
@@ -192,9 +192,9 @@ async def mAlgon():
     print("3. Integration - Полная интеграция модулей")
 
     # Запуск примеров
-    awAlgot example_1_Algo_arbitrage()
-    awAlgot example_2_nlp_handler()
-    awAlgot example_3_integration()
+    await example_1_Algo_arbitrage()
+    await example_2_nlp_handler()
+    await example_3_integration()
 
     print("\n" + "=" * 60)
     print("✅ Все примеры выполнены успешно!")
@@ -206,5 +206,5 @@ async def mAlgon():
     print()
 
 
-if __name__ == "__mAlgon__":
-    asyncio.run(mAlgon())
+if __name__ == "__main__":
+    asyncio.run(main())

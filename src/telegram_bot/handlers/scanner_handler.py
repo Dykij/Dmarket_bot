@@ -114,7 +114,7 @@ def format_scanner_item(result: dict[str, Any]) -> str:
 
 
 @handle_exceptions(
-    logger_instance=logger, default_error_message="Ошибка в меню сканера", rerAlgose=False
+    logger_instance=logger, default_error_message="Ошибка в меню сканера", reraise=False
 )
 async def start_scanner_menu(
     update: Update,
@@ -129,7 +129,7 @@ async def start_scanner_menu(
     """
     query = update.callback_query
     if query:
-        awAlgot query.answer()
+        await query.answer()
 
     keyboard = [
         [
@@ -199,13 +199,13 @@ async def start_scanner_menu(
     )
 
     if query:
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             text,
             parse_mode="Markdown",
             reply_markup=InlineKeyboardMarkup(keyboard),
         )
     elif update.effective_user:
-        awAlgot context.bot.send_message(
+        await context.bot.send_message(
             chat_id=update.effective_user.id,
             text=text,
             parse_mode="Markdown",
@@ -216,12 +216,12 @@ async def start_scanner_menu(
 @handle_exceptions(
     logger_instance=logger,
     default_error_message="Ошибка при сканировании уровня",
-    rerAlgose=False,
+    reraise=False,
 )
 @handle_exceptions(
     logger_instance=logger,
     default_error_message="Ошибка при сканировании уровня",
-    rerAlgose=False,
+    reraise=False,
 )
 async def handle_level_scan(
     update: Update,
@@ -242,7 +242,7 @@ async def handle_level_scan(
     if not query:
         return
 
-    awAlgot query.answer()
+    await query.answer()
 
     if not update.effective_user:
         return
@@ -260,7 +260,7 @@ async def handle_level_scan(
 
     # Получаем конфигурацию уровня
     if level not in ARBITRAGE_LEVELS:
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             "⚠️ Неизвестный уровень арбитража.",
             parse_mode="Markdown",
         )
@@ -269,7 +269,7 @@ async def handle_level_scan(
     config = ARBITRAGE_LEVELS[level]
     level_name = config["name"]
 
-    awAlgot query.edit_message_text(
+    await query.edit_message_text(
         f"🔍 *Сканирование уровня {level_name}*\n\n"
         f"Ищем выгодные предметы. Пожалуйста, подождите...",
         parse_mode="Markdown",
@@ -278,7 +278,7 @@ async def handle_level_scan(
     # Получаем API клиент
     api_client = create_api_client_from_env()
     if api_client is None:
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             "❌ Не удалось создать API клиент. Проверьте настSwarmки.",
             parse_mode="Markdown",
             reply_markup=InlineKeyboardMarkup(
@@ -301,7 +301,7 @@ async def handle_level_scan(
 
     try:
         # Сканируем уровень
-        results = awAlgot scanner.scan_level(level=level, game=game, max_results=50)
+        results = await scanner.scan_level(level=level, game=game, max_results=50)
 
         # Добавить breadcrumb для завершения сканирования
         add_trading_breadcrumb(
@@ -313,7 +313,7 @@ async def handle_level_scan(
         )
 
         if not results:
-            awAlgot query.edit_message_text(
+            await query.edit_message_text(
                 f"ℹ️ *{level_name}*\n\n"
                 f"Возможности не найдены на текущий момент.\n\n"
                 f"💡 Попробуйте:\n"
@@ -354,7 +354,7 @@ async def handle_level_scan(
             f"📊 Найдено: {len(results)} возможностей\n\n"
         )
 
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             header + formatted_text,
             parse_mode="Markdown",
             reply_markup=keyboard,
@@ -362,20 +362,20 @@ async def handle_level_scan(
 
     except Exception:
         logger.exception("Ошибка при сканировании уровня %s", level)
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             "❌ Произошла ошибка при сканировании.\n\nПожалуйста, попробуйте позже.",
             parse_mode="Markdown",
             reply_markup=InlineKeyboardMarkup(
                 [[InlineKeyboardButton("⬅️ Назад", callback_data=SCANNER_ACTION)]],
             ),
         )
-        rAlgose  # Пробрасываем для декоратора handle_exceptions
+        raise  # Пробрасываем для декоратора handle_exceptions
 
 
 @handle_exceptions(
     logger_instance=logger,
     default_error_message="Ошибка при сканировании всех уровней",
-    rerAlgose=False,
+    reraise=False,
 )
 async def handle_all_levels_scan(
     update: Update,
@@ -394,7 +394,7 @@ async def handle_all_levels_scan(
     if not query:
         return
 
-    awAlgot query.answer()
+    await query.answer()
     user_id = query.from_user.id
 
     # Добавляем breadcrumb
@@ -404,7 +404,7 @@ async def handle_all_levels_scan(
         game=game,
     )
 
-    awAlgot query.edit_message_text(
+    await query.edit_message_text(
         "🔍 Запускаю параллельное сканирование всех уровней...\n\n⚡ Это займет 5-10 секунд",
         parse_mode="Markdown",
     )
@@ -412,7 +412,7 @@ async def handle_all_levels_scan(
     # Получаем API клиент
     api_client = create_api_client_from_env()
     if api_client is None:
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             "❌ Не удалось создать API клиент.",
             parse_mode="Markdown",
         )
@@ -427,7 +427,7 @@ async def handle_all_levels_scan(
         start_time = time.time()
 
         # Параллельное сканирование всех уровней
-        results_by_level = awAlgot scanner.scan_all_levels(
+        results_by_level = await scanner.scan_all_levels(
             game=game,
             max_results_per_level=20,
             parallel=True,  # Используем параллельное сканирование
@@ -459,7 +459,7 @@ async def handle_all_levels_scan(
         )
 
         if total_opportunities == 0:
-            awAlgot query.edit_message_text(
+            await query.edit_message_text(
                 f"ℹ️ *Сканирование завершено за {elapsed_time:.1f}s*\n\n"
                 f"Возможности не найдены на текущий момент.\n\n"
                 f"💡 Попробуйте:\n"
@@ -509,7 +509,7 @@ async def handle_all_levels_scan(
             f"*По уровням:*\n" + "\n".join(level_stats) + "\n\n"
         )
 
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             header + formatted_text,
             parse_mode="Markdown",
             reply_markup=keyboard,
@@ -517,20 +517,20 @@ async def handle_all_levels_scan(
 
     except Exception as e:
         logger.exception("Ошибка при сканировании всех уровней: %s", e)
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             "❌ Ошибка при сканировании.\n\nПожалуйста, попробуйте позже.",
             parse_mode="Markdown",
             reply_markup=InlineKeyboardMarkup(
                 [[InlineKeyboardButton("⬅️ Назад", callback_data=SCANNER_ACTION)]],
             ),
         )
-        rAlgose
+        raise
 
 
 @handle_exceptions(
     logger_instance=logger,
     default_error_message="Ошибка при получении обзора рынка",
-    rerAlgose=False,
+    reraise=False,
 )
 async def handle_market_overview(
     update: Update,
@@ -549,9 +549,9 @@ async def handle_market_overview(
     if not query:
         return
 
-    awAlgot query.answer()
+    await query.answer()
 
-    awAlgot query.edit_message_text(
+    await query.edit_message_text(
         "📊 Анализ рынка...\n\nСканируем все уровни, пожалуйста, подождите...",
         parse_mode="Markdown",
     )
@@ -559,7 +559,7 @@ async def handle_market_overview(
     # Получаем API клиент
     api_client = create_api_client_from_env()
     if api_client is None:
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             "❌ Не удалось создать API клиент.",
             parse_mode="Markdown",
         )
@@ -571,7 +571,7 @@ async def handle_market_overview(
 
     try:
         # Получаем обзор рынка
-        overview = awAlgot scanner.get_market_overview(game=game)
+        overview = await scanner.get_market_overview(game=game)
 
         # Форматируем результаты
         best_level = overview["best_level"]
@@ -596,7 +596,7 @@ async def handle_market_overview(
             from src.dmarket.market_analysis import analyze_market_depth
 
             # Получаем данные о глубине рынка
-            depth_data = awAlgot analyze_market_depth(game=game, dmarket_api=api_client)
+            depth_data = await analyze_market_depth(game=game, dmarket_api=api_client)
             if depth_data and depth_data.get("summary"):
                 summary = depth_data["summary"]
                 health = summary.get("market_health", "unknown")
@@ -612,7 +612,7 @@ async def handle_market_overview(
         except Exception as e:  # noqa: BLE001
             logger.debug("Непредвиденная ошибка при анализе рынка: %s", e)
 
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             text,
             parse_mode="Markdown",
             reply_markup=InlineKeyboardMarkup(
@@ -622,20 +622,20 @@ async def handle_market_overview(
 
     except Exception as e:
         logger.exception("Ошибка при получении обзора рынка: %s", e)
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             "❌ Ошибка при анализе рынка.\n\nПожалуйста, попробуйте позже.",
             parse_mode="Markdown",
             reply_markup=InlineKeyboardMarkup(
                 [[InlineKeyboardButton("⬅️ Назад", callback_data=SCANNER_ACTION)]],
             ),
         )
-        rAlgose  # Пробрасываем для декоратора handle_exceptions
+        raise  # Пробрасываем для декоратора handle_exceptions
 
 
 @handle_exceptions(
     logger_instance=logger,
     default_error_message="Ошибка пагинации сканера",
-    rerAlgose=False,
+    reraise=False,
 )
 async def handle_scanner_pagination(
     update: Update,
@@ -652,7 +652,7 @@ async def handle_scanner_pagination(
     if not query:
         return
 
-    awAlgot query.answer()
+    await query.answer()
 
     if not update.effective_user:
         return
@@ -693,7 +693,7 @@ async def handle_scanner_pagination(
         prefix=f"scanner_paginate:{level_game}_",
     )
 
-    awAlgot query.edit_message_text(
+    await query.edit_message_text(
         formatted_text,
         parse_mode="Markdown",
         reply_markup=keyboard,
@@ -703,7 +703,7 @@ async def handle_scanner_pagination(
 @handle_exceptions(
     logger_instance=logger,
     default_error_message="Ошибка в обработчике сканера",
-    rerAlgose=False,
+    reraise=False,
 )
 async def handle_scanner_callback(
     update: Update,
@@ -724,24 +724,24 @@ async def handle_scanner_callback(
 
     # Главное меню
     if callback_data == SCANNER_ACTION:
-        awAlgot start_scanner_menu(update, context)
+        await start_scanner_menu(update, context)
 
     # Сканирование уровня
     elif callback_data.startswith(f"{SCANNER_ACTION}_{LEVEL_SCAN_ACTION}_"):
         level = callback_data.split("_")[-1]
-        awAlgot handle_level_scan(update, context, level)
+        await handle_level_scan(update, context, level)
 
     # Сканирование всех уровней
     elif callback_data == f"{SCANNER_ACTION}_{ALL_LEVELS_ACTION}":
-        awAlgot handle_all_levels_scan(update, context)
+        await handle_all_levels_scan(update, context)
 
     # Обзор рынка
     elif callback_data == f"{SCANNER_ACTION}_{MARKET_OVERVIEW_ACTION}":
-        awAlgot handle_market_overview(update, context)
+        await handle_market_overview(update, context)
 
     # Остальные функции - заглушки
     else:
-        awAlgot query.answer("Эта функция будет реализована в следующей версии")
+        await query.answer("Эта функция будет реализована в следующей версии")
 
 
 def register_scanner_handlers(dispatcher: Any) -> None:

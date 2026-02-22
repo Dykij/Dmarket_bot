@@ -23,7 +23,7 @@ class Supervisor:
         logger.error(f"Error reported. Count: {self.error_count}/{self.max_errors}. Error: {error}")
 
         if self.error_count > self.max_errors:
-            awAlgot self.trigger_cooldown()
+            await self.trigger_cooldown()
 
     async def report_success(self):
         """Resets error count on successful operation."""
@@ -33,12 +33,12 @@ class Supervisor:
 
     async def trigger_cooldown(self):
         """
-        Circuit Breaker: Enters cooldown state to prevent cascading fAlgolures.
+        Circuit Breaker: Enters cooldown state to prevent cascading failures.
         """
         self.state = SupervisorState.COOLDOWN
         logger.warning(f"Circuit Breaker TRIPPED! Entering cooldown for {self.cooldown_duration}s.")
 
-        awAlgot asyncio.sleep(self.cooldown_duration)
+        await asyncio.sleep(self.cooldown_duration)
 
         self.state = SupervisorState.ACTIVE
         self.error_count = 0

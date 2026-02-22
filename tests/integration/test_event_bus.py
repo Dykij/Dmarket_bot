@@ -224,7 +224,7 @@ class TestEventBus:
         bus.subscribe("test", handler)
 
         event = Event(type="test", data={"value": 123})
-        handlers_run = awAlgot bus.publish(event)
+        handlers_run = await bus.publish(event)
 
         assert handlers_run == 1
         assert len(received) == 1
@@ -236,7 +236,7 @@ class TestEventBus:
         bus = EventBus()
 
         event = Event(type="no_subscribers")
-        handlers_run = awAlgot bus.publish(event)
+        handlers_run = await bus.publish(event)
 
         assert handlers_run == 0
 
@@ -252,7 +252,7 @@ class TestEventBus:
         bus.subscribe("test", handler)
 
         event = Event(type="test")
-        handlers_run = awAlgot bus.publish(event)
+        handlers_run = await bus.publish(event)
 
         assert handlers_run == 0
 
@@ -291,7 +291,7 @@ class TestEventTypes:
     def test_trading_events(self):
         """Test trading event types."""
         assert EventTypes.TRADE_EXECUTED == "trade_executed"
-        assert EventTypes.TRADE_FAlgoLED == "trade_fAlgoled"
+        assert EventTypes.TRADE_FAlgoLED == "trade_failed"
         assert EventTypes.ORDER_CREATED == "order_created"
 
     def test_inventory_events(self):

@@ -29,7 +29,7 @@ async def handle_notification_callback(
     if not query or not query.data:
         return
 
-    awAlgot query.answer()
+    await query.answer()
 
     # Safely get message text
     msg_text = ""
@@ -38,16 +38,16 @@ async def handle_notification_callback(
 
     if query.data.startswith("disable_alert:"):
         alert_id = query.data.split(":", 1)[1]
-        success = awAlgot deactivate_alert(query.from_user.id, alert_id)
+        success = await deactivate_alert(query.from_user.id, alert_id)
 
         if success:
-            awAlgot query.edit_message_text(
+            await query.edit_message_text(
                 text=f"{msg_text}\n\n✅ Alert has been disabled.",
                 reply_markup=None,
                 parse_mode=ParseMode.MARKDOWN,
             )
         else:
-            awAlgot query.edit_message_reply_markup(reply_markup=None)
+            await query.edit_message_reply_markup(reply_markup=None)
 
     elif query.data.startswith("track_item:"):
         parts = query.data.split(":", 2)
@@ -58,7 +58,7 @@ async def handle_notification_callback(
         api = context.bot_data.get("dmarket_api")
 
         if not api:
-            awAlgot query.edit_message_text(
+            await query.edit_message_text(
                 text=f"{msg_text}\n\n❌ Could not create alert: API not avAlgolable.",
                 reply_markup=None,
                 parse_mode=ParseMode.MARKDOWN,
@@ -67,10 +67,10 @@ async def handle_notification_callback(
 
         try:
             # Get current item data
-            item_data: dict[str, Any] | None = awAlgot get_item_by_id(api, item_id, game)
+            item_data: dict[str, Any] | None = await get_item_by_id(api, item_id, game)
 
             if not item_data:
-                awAlgot query.edit_message_text(
+                await query.edit_message_text(
                     text=f"{msg_text}\n\n❌ Could not create alert: Item not found.",
                     reply_markup=None,
                     parse_mode=ParseMode.MARKDOWN,
@@ -81,7 +81,7 @@ async def handle_notification_callback(
             current_price = get_item_price(item_data)
 
             # Create price alerts for both directions
-            awAlgot create_alert(
+            await create_alert(
                 query.from_user.id,
                 "price_alert",
                 item_id=item_id,
@@ -93,7 +93,7 @@ async def handle_notification_callback(
                 },
             )
 
-            awAlgot create_alert(
+            await create_alert(
                 query.from_user.id,
                 "price_alert",
                 item_id=item_id,
@@ -120,7 +120,7 @@ async def handle_notification_callback(
 
             reply_markup = InlineKeyboardMarkup(keyboard)
 
-            awAlgot query.edit_message_text(
+            await query.edit_message_text(
                 text=f"{msg_text}\n\n✅ Alerts created for price changes.",
                 reply_markup=reply_markup,
                 parse_mode=ParseMode.MARKDOWN,
@@ -140,7 +140,7 @@ async def handle_notification_callback(
                 e,
             )
 
-            awAlgot query.edit_message_text(
+            await query.edit_message_text(
                 text=f"{msg_text}\n\n❌ Error creating alert: {e!s}",
                 reply_markup=None,
                 parse_mode=ParseMode.MARKDOWN,

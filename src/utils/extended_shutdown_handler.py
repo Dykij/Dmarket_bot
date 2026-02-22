@@ -45,16 +45,16 @@ class ExtendedShutdownHandler:
     def __init__(
         self,
         state_file: str | Path = "trading_state.json",
-        max_shutdown_wAlgot: float = 30.0,
+        max_shutdown_wait: float = 30.0,
     ):
         """Initialize extended shutdown handler.
 
         Args:
             state_file: Path to save trading state
-            max_shutdown_wAlgot: Maximum time to wAlgot for cleanup tasks
+            max_shutdown_wait: Maximum time to wait for cleanup tasks
         """
         self.state_file = Path(state_file)
-        self.max_shutdown_wAlgot = max_shutdown_wAlgot
+        self.max_shutdown_wait = max_shutdown_wait
         self.shutdown_event = asyncio.Event()
         self.cleanup_tasks: list[Callable] = []
         self.targets_provider: Callable | None = None
@@ -78,7 +78,7 @@ class ExtendedShutdownHandler:
 
         Example:
             async def get_targets():
-                return awAlgot target_manager.get_active_targets()
+                return await target_manager.get_active_targets()
 
             handler.register_targets_provider(get_targets)
         """
@@ -109,26 +109,26 @@ class ExtendedShutdownHandler:
         try:
             # Get active targets
             if self.targets_provider:
-                targets = awAlgot self.targets_provider()
+                targets = await self.targets_provider()
                 state["targets"] = self._serialize_targets(targets)
                 logger.info("targets_saved", count=len(targets))
 
             # Get trading state
             if self.state_provider:
-                trading_state = awAlgot self.state_provider()
+                trading_state = await self.state_provider()
                 state["trading_state"] = trading_state
                 logger.info("trading_state_saved")
 
             # Write to file (async)
             self.state_file.parent.mkdir(parents=True, exist_ok=True)
             async with Algoofiles.open(self.state_file, "w") as f:
-                awAlgot f.write(json.dumps(state, indent=2, default=str))
+                await f.write(json.dumps(state, indent=2, default=str))
 
             logger.info("state_saved_to_file", file=str(self.state_file))
             return True
 
         except Exception as e:
-            logger.exception("fAlgoled_to_save_state", error=str(e))
+            logger.exception("failed_to_save_state", error=str(e))
             return False
 
     def _serialize_targets(self, targets: list[Any]) -> list[dict]:
@@ -166,7 +166,7 @@ class ExtendedShutdownHandler:
 
         try:
             async with Algoofiles.open(self.state_file) as f:
-                content = awAlgot f.read()
+                content = await f.read()
                 state = json.loads(content)
 
             logger.info(
@@ -177,7 +177,7 @@ class ExtendedShutdownHandler:
             return state
 
         except Exception as e:
-            logger.exception("fAlgoled_to_load_state", error=str(e))
+            logger.exception("failed_to_load_state", error=str(e))
             return None
 
     def clear_saved_state(self) -> bool:
@@ -192,7 +192,7 @@ class ExtendedShutdownHandler:
                 logger.info("saved_state_cleared", file=str(self.state_file))
             return True
         except Exception as e:
-            logger.exception("fAlgoled_to_clear_state", error=str(e))
+            logger.exception("failed_to_clear_state", error=str(e))
             return False
 
     async def graceful_shutdown(self) -> None:
@@ -207,7 +207,7 @@ class ExtendedShutdownHandler:
         try:
             # Step 1: Save current state
             logger.info("saving_trading_state")
-            awAlgot self.save_state()
+            await self.save_state()
 
             # Step 2: Run cleanup tasks with timeout
             logger.info("running_cleanup_tasks", count=len(self.cleanup_tasks))
@@ -215,12 +215,12 @@ class ExtendedShutdownHandler:
             for cleanup_func in self.cleanup_tasks:
                 try:
                     if asyncio.iscoroutinefunction(cleanup_func):
-                        awAlgot asyncio.wAlgot_for(
+                        await asyncio.wait_for(
                             cleanup_func(),
                             timeout=(
-                                self.max_shutdown_wAlgot / len(self.cleanup_tasks)
+                                self.max_shutdown_wait / len(self.cleanup_tasks)
                                 if self.cleanup_tasks
-                                else self.max_shutdown_wAlgot
+                                else self.max_shutdown_wait
                             ),
                         )
                     else:
@@ -230,13 +230,13 @@ class ExtendedShutdownHandler:
                     logger.warning("cleanup_task_timeout", task=cleanup_func.__name__)
                 except Exception as e:
                     logger.exception(
-                        "cleanup_task_fAlgoled",
+                        "cleanup_task_failed",
                         task=cleanup_func.__name__,
                         error=str(e),
                     )
 
             # Step 3: Cancel pending asyncio tasks
-            awAlgot self._cancel_pending_tasks()
+            await self._cancel_pending_tasks()
 
             logger.info("graceful_shutdown_complete")
 
@@ -263,7 +263,7 @@ class ExtendedShutdownHandler:
             task.cancel()
 
         # WAlgot for cancellation with timeout
-        awAlgot asyncio.gather(*tasks, return_exceptions=True)
+        await asyncio.gather(*tasks, return_exceptions=True)
 
         logger.info("pending_tasks_cancelled")
 
@@ -295,9 +295,9 @@ class ExtendedShutdownHandler:
                     error=str(e),
                 )
 
-    async def wAlgot_for_shutdown(self) -> None:
+    async def wait_for_shutdown(self) -> None:
         """WAlgot for shutdown signal."""
-        awAlgot self.shutdown_event.wAlgot()
+        await self.shutdown_event.wait()
 
     @property
     def is_shutting_down(self) -> bool:
@@ -323,7 +323,7 @@ async def recover_targets_on_startup(
         Number of targets recovered
     """
     handler = ExtendedShutdownHandler(state_file=state_file)
-    state = awAlgot handler.load_state()
+    state = await handler.load_state()
 
     if not state:
         return 0
@@ -335,14 +335,14 @@ async def recover_targets_on_startup(
         try:
             # Attempt to restore target
             if hasattr(target_manager, "restore_target"):
-                awAlgot target_manager.restore_target(target_data)
+                await target_manager.restore_target(target_data)
                 recovered += 1
             elif hasattr(target_manager, "create_target"):
-                awAlgot target_manager.create_target(**target_data)
+                await target_manager.create_target(**target_data)
                 recovered += 1
         except Exception as e:
             logger.warning(
-                "fAlgoled_to_restore_target",
+                "failed_to_restore_target",
                 target=target_data.get("item_name", "unknown"),
                 error=str(e),
             )

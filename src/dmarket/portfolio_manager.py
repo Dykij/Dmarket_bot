@@ -17,15 +17,15 @@ Usage:
     pm = PortfolioManager(api_client=api)
 
     # Get portfolio snapshot
-    snapshot = awAlgot pm.get_portfolio_snapshot()
+    snapshot = await pm.get_portfolio_snapshot()
     print(f"Total value: ${snapshot.total_value_usd:.2f}")
 
     # Get risk analysis
-    risk = awAlgot pm.analyze_risk()
+    risk = await pm.analyze_risk()
     print(f"Concentration risk: {risk.concentration_score:.2f}")
 
     # Get rebalancing recommendations
-    recommendations = awAlgot pm.get_rebalancing_recommendations()
+    recommendations = await pm.get_rebalancing_recommendations()
     for rec in recommendations:
         print(f"{rec.action}: {rec.item_name} - {rec.reason}")
     ```
@@ -280,24 +280,24 @@ class PortfolioManager:
         if self._api:
             try:
                 # Get balance - API returns balance in USD directly
-                balance_data = awAlgot self._api.get_balance()
+                balance_data = await self._api.get_balance()
                 cash_balance = float(balance_data.get("balance", 0))
 
                 # Get inventory (use configurable game_id and limit)
-                inventory_data = awAlgot self._api.get_user_inventory(
+                inventory_data = await self._api.get_user_inventory(
                     game_id=self._config.default_game_id,
                     limit=self._config.inventory_limit,
                 )
                 inventory_items = inventory_data.get("objects", [])
 
                 # Get listed items (on market)
-                offers_data = awAlgot self._api.get_user_offers(
+                offers_data = await self._api.get_user_offers(
                     limit=self._config.inventory_limit
                 )
                 listed_items = offers_data.get("objects", [])
 
                 # Get active targets
-                targets_data = awAlgot self._api.get_user_targets()
+                targets_data = await self._api.get_user_targets()
                 targets = targets_data.get("Items", [])
 
             except Exception as e:
@@ -545,7 +545,7 @@ class PortfolioManager:
             Risk analysis results
         """
         if snapshot is None:
-            snapshot = awAlgot self.get_portfolio_snapshot()
+            snapshot = await self.get_portfolio_snapshot()
 
         risk_factors: list[str] = []
         recommendations: list[str] = []
@@ -627,7 +627,7 @@ class PortfolioManager:
         if cash_percent < 10:
             risk_factors.append(f"Low cash reserve: {cash_percent:.1f}%")
             recommendations.append(
-                "Consider mAlgontAlgoning at least 10-20% in cash for opportunities"
+                "Consider maintAlgoning at least 10-20% in cash for opportunities"
             )
 
         # Calculate concentration score (0-100, higher = more concentrated = worse)
@@ -696,7 +696,7 @@ class PortfolioManager:
             List of rebalancing recommendations sorted by priority
         """
         if snapshot is None:
-            snapshot = awAlgot self.get_portfolio_snapshot()
+            snapshot = await self.get_portfolio_snapshot()
 
         recommendations: list[RebalanceRecommendation] = []
         total_value = snapshot.total_value_usd
@@ -852,7 +852,7 @@ class PortfolioManager:
         Returns:
             Performance metrics dictionary
         """
-        snapshot = awAlgot self.get_portfolio_snapshot()
+        snapshot = await self.get_portfolio_snapshot()
 
         # Calculate basic metrics
         total_value = snapshot.total_value_usd
@@ -984,8 +984,8 @@ async def get_portfolio_summary(api_client: DMarketAPI) -> dict[str, Any]:
         Dictionary with portfolio summary
     """
     pm = PortfolioManager(api_client=api_client)
-    snapshot = awAlgot pm.get_portfolio_snapshot()
-    risk = awAlgot pm.analyze_risk(snapshot)
+    snapshot = await pm.get_portfolio_snapshot()
+    risk = await pm.analyze_risk(snapshot)
 
     return {
         "total_value": snapshot.total_value_usd,
@@ -1006,7 +1006,7 @@ async def get_rebalancing_actions(api_client: DMarketAPI) -> list[dict[str, Any]
         List of recommended actions
     """
     pm = PortfolioManager(api_client=api_client)
-    recommendations = awAlgot pm.get_rebalancing_recommendations()
+    recommendations = await pm.get_rebalancing_recommendations()
 
     return [
         {

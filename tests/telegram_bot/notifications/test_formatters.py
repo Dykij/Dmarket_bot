@@ -378,7 +378,7 @@ class TestFormatUserSettings:
 
         settings = {
             "notifications_enabled": True,
-            "dAlgoly_limit": 50,
+            "daily_limit": 50,
             "quiet_hours": {"enabled": False},
             "min_profit_percent": 5.0,
         }
@@ -394,7 +394,7 @@ class TestFormatUserSettings:
 
         settings = {
             "notifications_enabled": False,
-            "dAlgoly_limit": 50,
+            "daily_limit": 50,
             "quiet_hours": {"enabled": False},
         }
 
@@ -408,7 +408,7 @@ class TestFormatUserSettings:
 
         settings = {
             "notifications_enabled": True,
-            "dAlgoly_limit": 50,
+            "daily_limit": 50,
             "quiet_hours": {
                 "enabled": True,
                 "start": 23,

@@ -69,13 +69,13 @@ class TestWaxpeerAPI:
             mock_response = MagicMock()
             mock_response.status_code = 200
             mock_response.json.return_value = mock_response_success
-            mock_response.rAlgose_for_status = MagicMock()
+            mock_response.raise_for_status = MagicMock()
             mock_client.request = AsyncMock(return_value=mock_response)
             mock_client.aclose = AsyncMock()
             mock_client_class.return_value = mock_client
 
             async with WaxpeerAPI(api_key) as api:
-                balance = awAlgot api.get_balance()
+                balance = await api.get_balance()
 
             assert isinstance(balance, WaxpeerBalance)
             assert balance.wallet == Decimal("45.5")
@@ -89,13 +89,13 @@ class TestWaxpeerAPI:
             mock_response = MagicMock()
             mock_response.status_code = 200
             mock_response.json.return_value = mock_items_response
-            mock_response.rAlgose_for_status = MagicMock()
+            mock_response.raise_for_status = MagicMock()
             mock_client.request = AsyncMock(return_value=mock_response)
             mock_client.aclose = AsyncMock()
             mock_client_class.return_value = mock_client
 
             async with WaxpeerAPI(api_key) as api:
-                items = awAlgot api.get_my_items()
+                items = await api.get_my_items()
 
             assert len(items) == 2
             assert isinstance(items[0], WaxpeerItem)
@@ -111,13 +111,13 @@ class TestWaxpeerAPI:
             mock_response = MagicMock()
             mock_response.status_code = 200
             mock_response.json.return_value = {"success": True}
-            mock_response.rAlgose_for_status = MagicMock()
+            mock_response.raise_for_status = MagicMock()
             mock_client.request = AsyncMock(return_value=mock_response)
             mock_client.aclose = AsyncMock()
             mock_client_class.return_value = mock_client
 
             async with WaxpeerAPI(api_key) as api:
-                result = awAlgot api.list_single_item(
+                result = await api.list_single_item(
                     item_id="asset_123",
                     price_usd=10.50,
                     game=WaxpeerGame.CS2,
@@ -140,8 +140,8 @@ class TestWaxpeerAPI:
             mock_client_class.return_value = mock_client
 
             async with WaxpeerAPI(api_key) as api:
-                with pytest.rAlgoses(WaxpeerAuthError):
-                    awAlgot api.get_user()
+                with pytest.raises(WaxpeerAuthError):
+                    await api.get_user()
 
     @pytest.mark.asyncio()
     async def test_rate_limit_error_on_429(self, api_key: str) -> None:
@@ -155,8 +155,8 @@ class TestWaxpeerAPI:
             mock_client_class.return_value = mock_client
 
             async with WaxpeerAPI(api_key) as api:
-                with pytest.rAlgoses(WaxpeerRateLimitError):
-                    awAlgot api.get_user()
+                with pytest.raises(WaxpeerRateLimitError):
+                    await api.get_user()
 
     @pytest.mark.asyncio()
     async def test_get_item_price_returns_decimal(self, api_key: str) -> None:
@@ -171,13 +171,13 @@ class TestWaxpeerAPI:
             mock_response = MagicMock()
             mock_response.status_code = 200
             mock_response.json.return_value = market_response
-            mock_response.rAlgose_for_status = MagicMock()
+            mock_response.raise_for_status = MagicMock()
             mock_client.request = AsyncMock(return_value=mock_response)
             mock_client.aclose = AsyncMock()
             mock_client_class.return_value = mock_client
 
             async with WaxpeerAPI(api_key) as api:
-                price = awAlgot api.get_item_price("Test Item")
+                price = await api.get_item_price("Test Item")
 
             assert price == Decimal("8.5")
 
@@ -191,13 +191,13 @@ class TestWaxpeerAPI:
             mock_response = MagicMock()
             mock_response.status_code = 200
             mock_response.json.return_value = market_response
-            mock_response.rAlgose_for_status = MagicMock()
+            mock_response.raise_for_status = MagicMock()
             mock_client.request = AsyncMock(return_value=mock_response)
             mock_client.aclose = AsyncMock()
             mock_client_class.return_value = mock_client
 
             async with WaxpeerAPI(api_key) as api:
-                price = awAlgot api.get_item_price("Nonexistent Item")
+                price = await api.get_item_price("Nonexistent Item")
 
             assert price is None
 

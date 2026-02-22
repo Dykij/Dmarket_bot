@@ -150,7 +150,7 @@ class TestItemAnalysis:
         ) as mock_analyze:
             mock_analyze.return_value = {"valid": True, "profit": 200}
 
-            result = awAlgot scanner._analyze_item(item)
+            result = await scanner._analyze_item(item)
 
             assert result is not None
             mock_analyze.assert_called_once()
@@ -170,7 +170,7 @@ class TestItemAnalysis:
         ) as mock_analyze:
             mock_analyze.return_value = {"profit": 300, "profit_percent": 30.0}
 
-            result = awAlgot scanner._analyze_item(item)
+            result = await scanner._analyze_item(item)
 
             assert "profit" in result
             assert result["profit"] > 0
@@ -185,7 +185,7 @@ class TestItemAnalysis:
         ) as mock_analyze:
             mock_analyze.return_value = None
 
-            result = awAlgot scanner._analyze_item(item)
+            result = await scanner._analyze_item(item)
 
             # Должен обработать отсутствие цены
             assert result is None or isinstance(result, dict)
@@ -205,7 +205,7 @@ class TestItemAnalysis:
         ) as mock_analyze:
             mock_analyze.return_value = {"profit": 0}
 
-            result = awAlgot scanner._analyze_item(item)
+            result = await scanner._analyze_item(item)
 
             assert result is not None
 
@@ -224,7 +224,7 @@ class TestItemAnalysis:
         ) as mock_analyze:
             mock_analyze.return_value = None  # Не должен возвращать убыточные предметы
 
-            result = awAlgot scanner._analyze_item(item)
+            result = await scanner._analyze_item(item)
 
             assert result is None or result.get("profit", 0) < 0
 
@@ -247,7 +247,7 @@ class TestItemAnalysis:
             mock_analyze.return_value = {"profit": 200}
 
             for item in items:
-                result = awAlgot scanner._analyze_item(item)
+                result = await scanner._analyze_item(item)
                 assert result is not None
 
     @pytest.mark.asyncio()
@@ -258,10 +258,10 @@ class TestItemAnalysis:
         with patch.object(
             scanner, "_analyze_item", new_callable=AsyncMock
         ) as mock_analyze:
-            mock_analyze.side_effect = Exception("Analysis fAlgoled")
+            mock_analyze.side_effect = Exception("Analysis failed")
 
-            with pytest.rAlgoses(Exception):
-                awAlgot scanner._analyze_item(item)
+            with pytest.raises(Exception):
+                await scanner._analyze_item(item)
 
     @pytest.mark.asyncio()
     async def test_analyze_item_with_extra_fields(self, scanner):
@@ -279,7 +279,7 @@ class TestItemAnalysis:
         ) as mock_analyze:
             mock_analyze.return_value = {"valid": True, "profit": 200}
 
-            result = awAlgot scanner._analyze_item(item)
+            result = await scanner._analyze_item(item)
 
             assert result is not None
 
@@ -326,7 +326,7 @@ class TestStatisticsAndOverview:
 
         assert isinstance(stats, dict)
 
-    def test_get_statistics_contAlgons_scan_count(self, scanner):
+    def test_get_statistics_contains_scan_count(self, scanner):
         """Тест что статистика содержит количество сканирований."""
         stats = scanner.get_statistics()
 
@@ -361,7 +361,7 @@ class TestStatisticsAndOverview:
         ) as mock_overview:
             mock_overview.return_value = {"total_items": 100, "avg_price": 50.0}
 
-            overview = awAlgot scanner.get_market_overview("csgo")
+            overview = await scanner.get_market_overview("csgo")
 
             assert overview is not None
             assert isinstance(overview, dict)
@@ -377,7 +377,7 @@ class TestStatisticsAndOverview:
             mock_overview.return_value = {"total_items": 50}
 
             for game in games:
-                overview = awAlgot scanner.get_market_overview(game)
+                overview = await scanner.get_market_overview(game)
                 assert overview is not None
 
     @pytest.mark.asyncio()
@@ -391,7 +391,7 @@ class TestStatisticsAndOverview:
                 {"item": "Item 2", "profit": 15.0},
             ]
 
-            result = awAlgot scanner.find_best_opportunities("csgo")
+            result = await scanner.find_best_opportunities("csgo")
 
             assert isinstance(result, list)
 
@@ -407,7 +407,7 @@ class TestStatisticsAndOverview:
                 {"item": "Item 3", "profit": 10.0},
             ]
 
-            result = awAlgot scanner.find_best_opportunities("csgo", limit=3)
+            result = await scanner.find_best_opportunities("csgo", limit=3)
 
             assert isinstance(result, list)
             assert len(result) <= 3
@@ -424,7 +424,7 @@ class TestStatisticsAndOverview:
                 "medium": [{"item": "Item 3"}],
             }
 
-            result = awAlgot scanner.scan_all_levels("csgo")
+            result = await scanner.scan_all_levels("csgo")
 
             assert isinstance(result, dict)
             assert len(result) > 0
@@ -497,7 +497,7 @@ class TestHelperMethods:
     @pytest.mark.asyncio()
     async def test_get_api_client_returns_existing_client(self, scanner):
         """Тест что get_api_client возвращает существующий клиент."""
-        client = awAlgot scanner.get_api_client()
+        client = await scanner.get_api_client()
 
         assert client is not None
         assert client == scanner.api_client
@@ -511,6 +511,6 @@ class TestHelperMethods:
             mock_instance = MagicMock()
             mock_api.return_value = mock_instance
 
-            client = awAlgot scanner.get_api_client()
+            client = await scanner.get_api_client()
 
             assert client is not None

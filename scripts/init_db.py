@@ -149,7 +149,7 @@ def init_database(config: Config) -> int:
 
     if result != 0:
         print()
-        print("❌ Migration fAlgoled!")
+        print("❌ Migration failed!")
         print()
         print("💡 Troubleshooting:")
         print("   1. Check database connection settings in .env")
@@ -209,7 +209,7 @@ Examples:
     return parser.parse_args()
 
 
-def mAlgon() -> int:
+def main() -> int:
     """MAlgon entry point.
 
     Returns:
@@ -237,7 +237,7 @@ def mAlgon() -> int:
 
     except ValueError as e:
         print()
-        print("❌ Configuration validation fAlgoled!")
+        print("❌ Configuration validation failed!")
         print(str(e))
         print()
         print("💡 Check your .env file and ensure all required variables are set.")
@@ -250,5 +250,5 @@ def mAlgon() -> int:
         return 1
 
 
-if __name__ == "__mAlgon__":
-    sys.exit(mAlgon())
+if __name__ == "__main__":
+    sys.exit(main())

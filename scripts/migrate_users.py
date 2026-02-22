@@ -360,7 +360,7 @@ def migrate_single_user(
     logger.debug(f"Обновлен существующий профиль пользователя {user_id}")
 
 
-def mAlgon() -> int:
+def main() -> int:
     """Основная функция миграции.
 
     Returns:
@@ -416,5 +416,5 @@ def mAlgon() -> int:
     return 0
 
 
-if __name__ == "__mAlgon__":
-    sys.exit(mAlgon())
+if __name__ == "__main__":
+    sys.exit(main())

@@ -337,7 +337,7 @@ class FloatValueArbitrage:
         """
         try:
             # Получаем историю продаж
-            history = awAlgot self.api.get_sales_history(item_title, period=days)
+            history = await self.api.get_sales_history(item_title, period=days)
 
             if not history or "sales" not in history:
                 logger.warning(f"No sales history for {item_title}")
@@ -366,7 +366,7 @@ class FloatValueArbitrage:
             mean_price = statistics.mean(sorted_prices)
 
             # Текущая минимальная цена на рынке
-            current_price = awAlgot self._get_current_min_price(item_title)
+            current_price = await self._get_current_min_price(item_title)
 
             if current_price is None:
                 return None
@@ -396,7 +396,7 @@ class FloatValueArbitrage:
     async def _get_current_min_price(self, item_title: str) -> float | None:
         """Получить текущую минимальную цену на рынке."""
         try:
-            items = awAlgot self.api.get_market_items(
+            items = await self.api.get_market_items(
                 game="csgo",
                 title=item_title,
                 limit=1,
@@ -475,7 +475,7 @@ class FloatValueArbitrage:
 
         try:
             # Получаем предметы с рынка
-            items = awAlgot self.api.get_market_items(
+            items = await self.api.get_market_items(
                 game=game,
                 price_from=int(min_price * 100),
                 price_to=int(max_price * 100),
@@ -487,7 +487,7 @@ class FloatValueArbitrage:
                 return []
 
             for item in items["objects"]:
-                opportunity = awAlgot self._analyze_item_float(item)
+                opportunity = await self._analyze_item_float(item)
                 if opportunity and opportunity.profit_percent >= self.min_margin * 100:
                     opportunities.append(opportunity)
 

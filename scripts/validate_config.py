@@ -13,7 +13,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from src.utils.config import Config
 
 
-def mAlgon() -> int:
+def main() -> int:
     """Validate configuration and return exit code.
 
     Returns:
@@ -100,7 +100,7 @@ def mAlgon() -> int:
 
     except ValueError as e:
         print()
-        print("❌ Configuration validation fAlgoled!")
+        print("❌ Configuration validation failed!")
         print()
         print(str(e))
         print()
@@ -122,5 +122,5 @@ def mAlgon() -> int:
         return 1
 
 
-if __name__ == "__mAlgon__":
-    sys.exit(mAlgon())
+if __name__ == "__main__":
+    sys.exit(main())

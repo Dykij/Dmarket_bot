@@ -17,7 +17,7 @@
     from src.dmarket.shadow_listing import ShadowListingManager
 
     manager = ShadowListingManager(api_client)
-    price = awAlgot manager.calculate_optimal_price(
+    price = await manager.calculate_optimal_price(
         item_id="item123", buy_price=10.0, current_market_price=11.0
     )
     ```
@@ -52,8 +52,8 @@ class PricingAction(StrEnum):
 
     UNDERCUT = "undercut"  # Снизить цену
     HOLD = "hold"  # Держать текущую цену
-    RAlgoSE = "rAlgose"  # Поднять цену
-    WAlgoT = "wAlgot"  # Подождать (не реагировать на мелкий undercut)
+    RAlgoSE = "raise"  # Поднять цену
+    WAlgoT = "wait"  # Подождать (не реагировать на мелкий undercut)
 
 
 @dataclass
@@ -102,7 +102,7 @@ class ShadowListingConfig:
     max_undercut_percent: float = 2.0  # Максимум 2% ниже
 
     # Ожидание при мелком undercut
-    wAlgot_hours_on_small_undercut: int = 2  # Ждать 2 часа
+    wait_hours_on_small_undercut: int = 2  # Ждать 2 часа
     small_undercut_threshold_cents: int = 5  # Менее 5 центов = мелкий
 
     # Анализ разрыва цен
@@ -163,13 +163,13 @@ class ShadowListingManager:
         """
         # Получаем предложения с рынка
         try:
-            market_data = awAlgot self.api.get_market_items(
+            market_data = await self.api.get_market_items(
                 title=item_title,
                 game=game,
                 limit=20,  # Берем топ-20 для анализа
             )
         except Exception as e:
-            logger.exception(f"FAlgoled to fetch market data: {e}")
+            logger.exception(f"Failed to fetch market data: {e}")
             return self._create_default_analysis(item_title, our_current_price)
 
         # Парсим данные
@@ -314,7 +314,7 @@ class ShadowListingManager:
                 return (
                     PricingAction.RAlgoSE,
                     round(target_price, 2),
-                    f"Scarcity: Only {len(competitor_prices)} offers, rAlgosed price",
+                    f"Scarcity: Only {len(competitor_prices)} offers, raised price",
                 )
 
         # БОЛЬШОЙ РАЗРЫВ: между 1 и 2 ценой
@@ -337,7 +337,7 @@ class ShadowListingManager:
             undercut_amount = (our_price - lowest) * 100  # В центах
             if 0 < undercut_amount <= self.config.small_undercut_threshold_cents:
                 # Проверяем историю undercut
-                if self._should_wAlgot_for_competitor_sale(item_title, lowest):
+                if self._should_wait_for_competitor_sale(item_title, lowest):
                     return (
                         PricingAction.WAlgoT,
                         our_price,
@@ -357,7 +357,7 @@ class ShadowListingManager:
             f"Standard undercut: ${lowest:.2f} -> ${new_price:.2f}",
         )
 
-    def _should_wAlgot_for_competitor_sale(
+    def _should_wait_for_competitor_sale(
         self, item_title: str, competitor_price: float
     ) -> bool:
         """Проверить, нужно ли ждать продажи конкурента.
@@ -372,7 +372,7 @@ class ShadowListingManager:
         history.append((now, competitor_price))
 
         # Оставляем только записи за последние N часов
-        cutoff = now - timedelta(hours=self.config.wAlgot_hours_on_small_undercut)
+        cutoff = now - timedelta(hours=self.config.wait_hours_on_small_undercut)
         history = [(t, p) for t, p in history if t > cutoff]
         self._undercut_history[item_title] = history
 
@@ -453,7 +453,7 @@ class ShadowListingManager:
             Оптимальная цена в USD
         """
         # Анализируем рынок
-        analysis = awAlgot self.analyze_market_depth(
+        analysis = await self.analyze_market_depth(
             item_title=item_title,
             game=game,
             our_offer_id=our_offer_id,
@@ -490,6 +490,6 @@ class ShadowListingManager:
                 "scarcity_threshold": self.config.scarcity_threshold,
                 "scarcity_markup": self.config.scarcity_markup_percent,
                 "monopoly_markup": self.config.monopoly_markup_percent,
-                "wAlgot_hours": self.config.wAlgot_hours_on_small_undercut,
+                "wait_hours": self.config.wait_hours_on_small_undercut,
             },
         }

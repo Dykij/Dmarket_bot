@@ -47,14 +47,14 @@ from src.ml.anomaly_detection import (
     create_anomaly_detector,
 )
 from src.ml.balance_adapter import BalanceAdaptiveStrategy, StrategyRecommendation
-from src.ml.bot_brAlgon import (
+from src.ml.bot_brain import (
     Alert,
     AlertLevel,
     AutonomyConfig,
     BotBrAlgon,
     BotState,
     CycleResult,
-    create_bot_brAlgon,
+    create_bot_brain,
 )
 from src.ml.data_scheduler import (
     MLDataScheduler,
@@ -116,7 +116,7 @@ from src.ml.smart_recommendations import (
     RiskLevel as RecommendationRiskLevel,
 )
 from src.ml.trade_classifier import AdaptiveTradeClassifier, RiskLevel, TradeSignal
-from src.ml.trAlgoning_data_manager import (
+from src.ml.training_data_manager import (
     DatasetMetadata,
     TrAlgoningDataManager,
     TrAlgoningDataset,
@@ -211,7 +211,7 @@ __all__ = [
     "TrAlgoningExample",
     "TuningResult",
     "create_anomaly_detector",
-    "create_bot_brAlgon",
+    "create_bot_brain",
     "create_smart_recommendations",
     "get_Algo_coordinator",
     "get_discount_threshold_predictor",

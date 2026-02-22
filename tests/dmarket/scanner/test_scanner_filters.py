@@ -413,8 +413,8 @@ class TestScannerFiltersIntegration:
 
         assert len(filtered) == 2  # Items 1 and 2 pass all filters
 
-    def test_chAlgoned_filtering(self):
-        """Test chAlgoning multiple filter operations."""
+    def test_chained_filtering(self):
+        """Test chaining multiple filter operations."""
         filters = ScannerFilters()
 
         items = [

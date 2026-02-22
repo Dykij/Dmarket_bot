@@ -217,7 +217,7 @@ class TestRarePricingAnalyzer:
         assert is_valid is True
 
     def test_is_price_valid_false_none(self, analyzer):
-        """Test price validation fAlgols for None."""
+        """Test price validation fails for None."""
         # Act
         is_valid = analyzer._is_price_valid(
             price=None,
@@ -229,7 +229,7 @@ class TestRarePricingAnalyzer:
         assert is_valid is False
 
     def test_is_price_valid_false_too_low(self, analyzer):
-        """Test price validation fAlgols when too low."""
+        """Test price validation fails when too low."""
         # Act
         is_valid = analyzer._is_price_valid(
             price=5.0,
@@ -241,7 +241,7 @@ class TestRarePricingAnalyzer:
         assert is_valid is False
 
     def test_is_price_valid_false_too_high(self, analyzer):
-        """Test price validation fAlgols when too high."""
+        """Test price validation fails when too high."""
         # Act
         is_valid = analyzer._is_price_valid(
             price=150.0,
@@ -396,7 +396,7 @@ class TestRarePricingAnalyzer:
         }
 
         # Act
-        items = awAlgot analyzer._fetch_market_items(
+        items = await analyzer._fetch_market_items(
             game="csgo",
             min_price=10.0,
             max_price=100.0,
@@ -503,7 +503,7 @@ class TestRarePricingAnalyzer:
         }
 
         # Act
-        results = awAlgot analyzer.find_mispriced_rare_items(
+        results = await analyzer.find_mispriced_rare_items(
             game="csgo",
             min_price=10.0,
             max_price=1000.0,
@@ -522,7 +522,7 @@ class TestRarePricingAnalyzer:
         mock_api.get_market_items.return_value = {"items": []}
 
         # Act
-        results = awAlgot analyzer.find_mispriced_rare_items(
+        results = await analyzer.find_mispriced_rare_items(
             game="csgo",
             min_price=10.0,
             max_price=1000.0,
@@ -539,7 +539,7 @@ class TestRarePricingAnalyzer:
         mock_api.get_market_items.side_effect = Exception("API Error")
 
         # Act
-        results = awAlgot analyzer.find_mispriced_rare_items(
+        results = await analyzer.find_mispriced_rare_items(
             game="csgo",
             min_price=10.0,
             max_price=1000.0,
@@ -569,7 +569,7 @@ class TestRarePricingAnalyzer:
         mock_api.get_market_items.return_value = {"items": []}
 
         # Act
-        results = awAlgot find_mispriced_rare_items(
+        results = await find_mispriced_rare_items(
             game="csgo",
             min_price=10.0,
             max_price=1000.0,

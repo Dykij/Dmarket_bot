@@ -5,11 +5,11 @@ from unittest.mock import AsyncMock
 import pytest
 
 from src.utils.exceptions import NetworkError, RateLimitError
-from src.utils.retry_decorator import retry_api_call, retry_on_fAlgolure
+from src.utils.retry_decorator import retry_api_call, retry_on_failure
 
 
 class TestRetryOnFAlgolure:
-    """Tests for retry_on_fAlgolure decorator."""
+    """Tests for retry_on_failure decorator."""
 
     @pytest.mark.asyncio()
     async def test_async_function_succeeds_first_try(self):
@@ -18,12 +18,12 @@ class TestRetryOnFAlgolure:
         mock_func = AsyncMock(return_value="success")
 
         # Decorate function
-        @retry_on_fAlgolure(max_attempts=3)
+        @retry_on_failure(max_attempts=3)
         async def test_func():
-            return awAlgot mock_func()
+            return await mock_func()
 
         # Act
-        result = awAlgot test_func()
+        result = await test_func()
 
         # Assert
         assert result == "success"
@@ -34,18 +34,18 @@ class TestRetryOnFAlgolure:
         """Test that async function retries on NetworkError."""
         # Arrange
         mock_func = AsyncMock(
-            side_effect=[NetworkError("Connection fAlgoled"), "success"]
+            side_effect=[NetworkError("Connection failed"), "success"]
         )
 
-        @retry_on_fAlgolure(max_attempts=3, min_wAlgot=0.1, max_wAlgot=0.2)
+        @retry_on_failure(max_attempts=3, min_wait=0.1, max_wait=0.2)
         async def test_func():
-            result = awAlgot mock_func()
+            result = await mock_func()
             if isinstance(result, str):
                 return result
-            rAlgose result
+            raise result
 
         # Act
-        result = awAlgot test_func()
+        result = await test_func()
 
         # Assert
         assert result == "success"
@@ -53,17 +53,17 @@ class TestRetryOnFAlgolure:
 
     @pytest.mark.asyncio()
     async def test_async_function_exhausts_retries(self):
-        """Test that async function rAlgoses after max retries."""
+        """Test that async function raises after max retries."""
         # Arrange
-        mock_func = AsyncMock(side_effect=NetworkError("Persistent fAlgolure"))
+        mock_func = AsyncMock(side_effect=NetworkError("Persistent failure"))
 
-        @retry_on_fAlgolure(max_attempts=3, min_wAlgot=0.1, max_wAlgot=0.2)
+        @retry_on_failure(max_attempts=3, min_wait=0.1, max_wait=0.2)
         async def test_func():
-            awAlgot mock_func()
+            await mock_func()
 
         # Act & Assert
-        with pytest.rAlgoses(NetworkError):
-            awAlgot test_func()
+        with pytest.raises(NetworkError):
+            await test_func()
 
         assert mock_func.call_count == 3
 
@@ -73,17 +73,17 @@ class TestRetryOnFAlgolure:
         # Arrange
         mock_func = AsyncMock(side_effect=ValueError("Invalid value"))
 
-        @retry_on_fAlgolure(
+        @retry_on_failure(
             max_attempts=3,
-            min_wAlgot=0.1,
+            min_wait=0.1,
             retry_on=(NetworkError, ConnectionError),
         )
         async def test_func():
-            awAlgot mock_func()
+            await mock_func()
 
         # Act & Assert
-        with pytest.rAlgoses(ValueError):
-            awAlgot test_func()
+        with pytest.raises(ValueError):
+            await test_func()
 
         assert mock_func.call_count == 1
 
@@ -93,21 +93,21 @@ class TestRetryOnFAlgolure:
         # Arrange
         call_count = 0
 
-        @retry_on_fAlgolure(
+        @retry_on_failure(
             max_attempts=3,
-            min_wAlgot=0.1,
-            max_wAlgot=0.2,
+            min_wait=0.1,
+            max_wait=0.2,
             retry_on=(RateLimitError,),
         )
         async def test_func():
             nonlocal call_count
             call_count += 1
             if call_count < 2:
-                rAlgose RateLimitError("Rate limit exceeded")
+                raise RateLimitError("Rate limit exceeded")
             return "success"
 
         # Act
-        result = awAlgot test_func()
+        result = await test_func()
 
         # Assert
         assert result == "success"
@@ -115,14 +115,14 @@ class TestRetryOnFAlgolure:
 
     @pytest.mark.asyncio()
     async def test_exponential_backoff_timing(self):
-        """Test that exponential backoff increases wAlgot time."""
+        """Test that exponential backoff increases wait time."""
         # Arrange
         call_times = []
 
-        @retry_on_fAlgolure(
+        @retry_on_failure(
             max_attempts=3,
-            min_wAlgot=0.1,
-            max_wAlgot=0.5,
+            min_wait=0.1,
+            max_wait=0.5,
             multiplier=2,
         )
         async def test_func():
@@ -130,11 +130,11 @@ class TestRetryOnFAlgolure:
 
             call_times.append(time.time())
             if len(call_times) < 2:
-                rAlgose NetworkError("Temporary fAlgolure")
+                raise NetworkError("Temporary failure")
             return "success"
 
         # Act
-        result = awAlgot test_func()
+        result = await test_func()
 
         # Assert
         assert result == "success"
@@ -153,16 +153,16 @@ class TestRetryApiCall:
         # Arrange
         call_count = 0
 
-        @retry_api_call(max_attempts=3, min_wAlgot=0.1, max_wAlgot=0.2)
+        @retry_api_call(max_attempts=3, min_wait=0.1, max_wait=0.2)
         async def api_call():
             nonlocal call_count
             call_count += 1
             if call_count < 2:
-                rAlgose NetworkError("Network issue")
+                raise NetworkError("Network issue")
             return {"data": "success"}
 
         # Act
-        result = awAlgot api_call()
+        result = await api_call()
 
         # Assert
         assert result == {"data": "success"}
@@ -174,16 +174,16 @@ class TestRetryApiCall:
         # Arrange
         call_count = 0
 
-        @retry_api_call(max_attempts=3, min_wAlgot=0.1, max_wAlgot=0.2)
+        @retry_api_call(max_attempts=3, min_wait=0.1, max_wait=0.2)
         async def api_call():
             nonlocal call_count
             call_count += 1
             if call_count < 2:
-                rAlgose RateLimitError("Too many requests")
+                raise RateLimitError("Too many requests")
             return {"data": "success"}
 
         # Act
-        result = awAlgot api_call()
+        result = await api_call()
 
         # Assert
         assert result == {"data": "success"}
@@ -195,16 +195,16 @@ class TestRetryApiCall:
         # Arrange
         call_count = 0
 
-        @retry_api_call(max_attempts=3, min_wAlgot=0.1, max_wAlgot=0.2)
+        @retry_api_call(max_attempts=3, min_wait=0.1, max_wait=0.2)
         async def api_call():
             nonlocal call_count
             call_count += 1
             if call_count < 2:
-                rAlgose TimeoutError("Request timeout")
+                raise TimeoutError("Request timeout")
             return {"data": "success"}
 
         # Act
-        result = awAlgot api_call()
+        result = await api_call()
 
         # Assert
         assert result == {"data": "success"}
@@ -220,11 +220,11 @@ class TestRetryApiCall:
         async def api_call():
             nonlocal call_count
             call_count += 1
-            rAlgose ValueError("Invalid data")
+            raise ValueError("Invalid data")
 
         # Act & Assert
-        with pytest.rAlgoses(ValueError):
-            awAlgot api_call()
+        with pytest.raises(ValueError):
+            await api_call()
 
         assert call_count == 1
 
@@ -234,17 +234,17 @@ class TestRetryApiCall:
         # Arrange
         call_count = 0
 
-        @retry_api_call(max_attempts=2, min_wAlgot=0.1, max_wAlgot=0.2)
+        @retry_api_call(max_attempts=2, min_wait=0.1, max_wait=0.2)
         async def api_call():
             nonlocal call_count
             call_count += 1
             if call_count < 2:
-                rAlgose NetworkError("Network error")
+                raise NetworkError("Network error")
             return "success"
 
         # Act
         with caplog.at_level("WARNING"):
-            result = awAlgot api_call()
+            result = await api_call()
 
         # Assert
         assert result == "success"

@@ -80,7 +80,7 @@ class SteamArbitrageEnhancer:
             else:
                 # Запрос к Steam API
                 try:
-                    steam_data = awAlgot get_steam_price(normalized_name)
+                    steam_data = await get_steam_price(normalized_name)
 
                     if steam_data:
                         # Сохраняем в кэш
@@ -99,7 +99,7 @@ class SteamArbitrageEnhancer:
                         continue
 
                     # Пауза между запросами (уже есть в декораторе)
-                    awAlgot asyncio.sleep(0.5)
+                    await asyncio.sleep(0.5)
 
                 except ItemNotFoundError:
                     logger.warning(f"Item not found on Steam: {item_name}")
@@ -196,9 +196,9 @@ class SteamArbitrageEnhancer:
         self.db.add_to_blacklist(item_name, reason)
         logger.info(f"Added to blacklist: {item_name}")
 
-    def get_dAlgoly_stats(self) -> dict:
+    def get_daily_stats(self) -> dict:
         """Получает статистику за день."""
-        return self.db.get_dAlgoly_stats()
+        return self.db.get_daily_stats()
 
     def get_top_items_today(self, limit: int = 5) -> list:
         """Получает топ предметов дня."""

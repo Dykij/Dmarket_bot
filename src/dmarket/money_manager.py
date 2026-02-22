@@ -13,7 +13,7 @@ Usage:
     from src.dmarket.money_manager import MoneyManager
 
     manager = MoneyManager(api_client)
-    limits = awAlgot manager.calculate_dynamic_limits()
+    limits = await manager.calculate_dynamic_limits()
 """
 
 from __future__ import annotations
@@ -159,7 +159,7 @@ class MoneyManager:
             return self._current_balance
 
         try:
-            balance_data = awAlgot self.api_client.get_balance()
+            balance_data = await self.api_client.get_balance()
 
             # Debug log to see what API returns
             logger.debug("money_manager_raw_balance", data=balance_data)
@@ -264,7 +264,7 @@ class MoneyManager:
         Returns:
             DynamicLimits with all calculated parameters
         """
-        balance = awAlgot self.get_balance(force_refresh=force_balance_refresh)
+        balance = await self.get_balance(force_refresh=force_balance_refresh)
         tier = self._determine_tier(balance)
 
         # Calculate reserve (percentage of balance)

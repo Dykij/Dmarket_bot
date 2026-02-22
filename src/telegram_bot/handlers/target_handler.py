@@ -26,7 +26,7 @@ TARGET_COMPETITION_ACTION = "target_competition"
 @handle_exceptions(
     logger_instance=logger,
     default_error_message="Ошибка в меню таргетов",
-    rerAlgose=False,
+    reraise=False,
 )
 async def start_targets_menu(
     update: Update,
@@ -41,7 +41,7 @@ async def start_targets_menu(
     """
     query = update.callback_query
     if query:
-        awAlgot query.answer()
+        await query.answer()
 
     if update.effective_user:
         user_id = update.effective_user.id
@@ -82,7 +82,7 @@ async def start_targets_menu(
         [
             InlineKeyboardButton(
                 "⬅️ Назад",
-                callback_data="mAlgon_menu",
+                callback_data="main_menu",
             ),
         ],
     ]
@@ -99,13 +99,13 @@ async def start_targets_menu(
     )
 
     if query:
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             text,
             parse_mode="Markdown",
             reply_markup=InlineKeyboardMarkup(keyboard),
         )
     else:
-        awAlgot context.bot.send_message(
+        await context.bot.send_message(
             chat_id=user_id,
             text=text,
             parse_mode="Markdown",
@@ -116,7 +116,7 @@ async def start_targets_menu(
 @handle_exceptions(
     logger_instance=logger,
     default_error_message="Ошибка при создании умных таргетов",
-    rerAlgose=False,
+    reraise=False,
 )
 async def handle_smart_targets(
     update: Update,
@@ -135,9 +135,9 @@ async def handle_smart_targets(
     if not query:
         return
 
-    awAlgot query.answer()
+    await query.answer()
 
-    awAlgot query.edit_message_text(
+    await query.edit_message_text(
         "🤖 *Умные таргеты*\n\n"
         "Анализируем рынок и создаем оптимальные таргеты...\n"
         "Пожалуйста, подождите...",
@@ -148,7 +148,7 @@ async def handle_smart_targets(
         # Получаем API клиент
         api_client = create_api_client_from_env()
         if api_client is None:
-            awAlgot query.edit_message_text(
+            await query.edit_message_text(
                 "❌ Не удалось создать API клиент. Проверьте настSwarmки.",
                 parse_mode="Markdown",
             )
@@ -165,7 +165,7 @@ async def handle_smart_targets(
         ]
 
         # Создаем умные таргеты
-        results = awAlgot target_manager.create_smart_targets(
+        results = await target_manager.create_smart_targets(
             game=game,
             items=popular_items,
             price_reduction_percent=5.0,
@@ -180,7 +180,7 @@ async def handle_smart_targets(
         else:
             text = "⚠️ Не удалось создать умные таргеты. Попробуйте позже."
 
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             text,
             parse_mode="Markdown",
             reply_markup=InlineKeyboardMarkup(
@@ -189,21 +189,21 @@ async def handle_smart_targets(
         )
 
     except Exception as e:
-        # Логирование выполняется декоратором handle_exceptions при re-rAlgose
-        awAlgot query.edit_message_text(
+        # Логирование выполняется декоратором handle_exceptions при re-raise
+        await query.edit_message_text(
             f"⚠️ Произошла ошибка: {e!s}",
             parse_mode="Markdown",
             reply_markup=InlineKeyboardMarkup(
                 [[InlineKeyboardButton("⬅️ Назад", callback_data=TARGET_ACTION)]],
             ),
         )
-        rAlgose  # Пробрасываем исключение для логирования
+        raise  # Пробрасываем исключение для логирования
 
 
 @handle_exceptions(
     logger_instance=logger,
     default_error_message="Ошибка при анализе конкуренции",
-    rerAlgose=False,
+    reraise=False,
 )
 async def handle_competition_analysis(
     update: Update,
@@ -222,9 +222,9 @@ async def handle_competition_analysis(
     if not query:
         return
 
-    awAlgot query.answer()
+    await query.answer()
 
-    awAlgot query.edit_message_text(
+    await query.edit_message_text(
         "🎯 *Анализ конкуренции*\n\n"
         "Анализируем существующие buy orders...\n"
         "Пожалуйста, подождите...",
@@ -235,7 +235,7 @@ async def handle_competition_analysis(
         # Получаем API клиент
         api_client = create_api_client_from_env()
         if api_client is None:
-            awAlgot query.edit_message_text(
+            await query.edit_message_text(
                 "❌ Не удалось создать API клиент.",
                 parse_mode="Markdown",
             )
@@ -246,7 +246,7 @@ async def handle_competition_analysis(
 
         # Анализируем конкуренцию для популярного предмета
         item_title = "AK-47 | Redline (Field-Tested)"
-        analysis = awAlgot target_manager.analyze_target_competition(
+        analysis = await target_manager.analyze_target_competition(
             game=game,
             title=item_title,
         )
@@ -256,7 +256,7 @@ async def handle_competition_analysis(
         else:
             text = "⚠️ Не удалось получить данные о конкуренции."
 
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             text,
             parse_mode="Markdown",
             reply_markup=InlineKeyboardMarkup(
@@ -265,21 +265,21 @@ async def handle_competition_analysis(
         )
 
     except Exception as e:
-        # Логирование выполняется декоратором handle_exceptions при re-rAlgose
-        awAlgot query.edit_message_text(
+        # Логирование выполняется декоратором handle_exceptions при re-raise
+        await query.edit_message_text(
             f"⚠️ Произошла ошибка: {e!s}",
             parse_mode="Markdown",
             reply_markup=InlineKeyboardMarkup(
                 [[InlineKeyboardButton("⬅️ Назад", callback_data=TARGET_ACTION)]],
             ),
         )
-        rAlgose  # Пробрасываем исключение для логирования
+        raise  # Пробрасываем исключение для логирования
 
 
 @handle_exceptions(
     logger_instance=logger,
     default_error_message="Ошибка в обработчике таргетов",
-    rerAlgose=False,
+    reraise=False,
 )
 async def handle_target_callback(
     update: Update,
@@ -299,14 +299,14 @@ async def handle_target_callback(
     callback_data = query.data
 
     if callback_data == TARGET_ACTION:
-        awAlgot start_targets_menu(update, context)
+        await start_targets_menu(update, context)
     elif callback_data == f"{TARGET_ACTION}_{TARGET_SMART_ACTION}":
-        awAlgot handle_smart_targets(update, context)
+        await handle_smart_targets(update, context)
     elif callback_data == f"{TARGET_ACTION}_{TARGET_COMPETITION_ACTION}":
-        awAlgot handle_competition_analysis(update, context)
+        await handle_competition_analysis(update, context)
     elif callback_data.startswith(f"{TARGET_ACTION}_"):
         # Заглушки для остальных функций
-        awAlgot query.answer("Эта функция будет реализована в следующей версии")
+        await query.answer("Эта функция будет реализована в следующей версии")
 
 
 def register_target_handlers(dispatcher: Any) -> None:

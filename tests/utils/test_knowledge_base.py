@@ -40,7 +40,7 @@ def knowledge_base() -> KnowledgeBase:
 @pytest.fixture()
 async def populated_kb(knowledge_base: KnowledgeBase) -> KnowledgeBase:
     """Create a knowledge base with some entries."""
-    awAlgot knowledge_base.add_knowledge(
+    await knowledge_base.add_knowledge(
         knowledge_type=KnowledgeType.TRADING_PATTERN,
         title="Profitable AK-47 trade",
         content={
@@ -51,7 +51,7 @@ async def populated_kb(knowledge_base: KnowledgeBase) -> KnowledgeBase:
         game="csgo",
     )
 
-    awAlgot knowledge_base.add_knowledge(
+    await knowledge_base.add_knowledge(
         knowledge_type=KnowledgeType.LESSON_LEARNED,
         title="Avoid overpriced items",
         content={
@@ -62,7 +62,7 @@ async def populated_kb(knowledge_base: KnowledgeBase) -> KnowledgeBase:
         game="csgo",
     )
 
-    awAlgot knowledge_base.add_knowledge(
+    await knowledge_base.add_knowledge(
         knowledge_type=KnowledgeType.MARKET_INSIGHT,
         title="Dota 2 arcanas rising",
         content={
@@ -123,7 +123,7 @@ class TestAddKnowledge:
         self, knowledge_base: KnowledgeBase
     ) -> None:
         """Test adding a knowledge entry."""
-        entry_id = awAlgot knowledge_base.add_knowledge(
+        entry_id = await knowledge_base.add_knowledge(
             knowledge_type=KnowledgeType.TRADING_PATTERN,
             title="Test pattern",
             content={"test": "data"},
@@ -138,7 +138,7 @@ class TestAddKnowledge:
         self, knowledge_base: KnowledgeBase
     ) -> None:
         """Test adding knowledge with all parameters."""
-        entry_id = awAlgot knowledge_base.add_knowledge(
+        entry_id = await knowledge_base.add_knowledge(
             knowledge_type=KnowledgeType.ITEM_KNOWLEDGE,
             title="Item info",
             content={"float": 0.05, "stickers": 3},
@@ -159,7 +159,7 @@ class TestAddKnowledge:
         self, knowledge_base: KnowledgeBase
     ) -> None:
         """Test that relevance is clamped to 0-1 range."""
-        entry_id = awAlgot knowledge_base.add_knowledge(
+        entry_id = await knowledge_base.add_knowledge(
             knowledge_type=KnowledgeType.MARKET_INSIGHT,
             title="High relevance",
             content={},
@@ -174,7 +174,7 @@ class TestAddKnowledge:
         self, knowledge_base: KnowledgeBase
     ) -> None:
         """Test that metrics are updated when adding."""
-        awAlgot knowledge_base.add_knowledge(
+        await knowledge_base.add_knowledge(
             knowledge_type=KnowledgeType.USER_PREFERENCE,
             title="Preference",
             content={"min_profit": 10},
@@ -196,7 +196,7 @@ class TestQueryKnowledge:
         self, knowledge_base: KnowledgeBase
     ) -> None:
         """Test querying empty KB returns empty list."""
-        results = awAlgot knowledge_base.query_relevant(
+        results = await knowledge_base.query_relevant(
             context={"item": "AK-47"},
         )
         assert results == []
@@ -206,7 +206,7 @@ class TestQueryKnowledge:
         self, populated_kb: KnowledgeBase
     ) -> None:
         """Test query finds entries matching item name."""
-        results = awAlgot populated_kb.query_relevant(
+        results = await populated_kb.query_relevant(
             context={"item": "AK-47"},
         )
 
@@ -220,7 +220,7 @@ class TestQueryKnowledge:
     ) -> None:
         """Test query boosts entries matching the game."""
         # Query for dota2
-        results = awAlgot populated_kb.query_relevant(
+        results = await populated_kb.query_relevant(
             context={"game": "dota2"},
         )
 
@@ -236,7 +236,7 @@ class TestQueryKnowledge:
         self, populated_kb: KnowledgeBase
     ) -> None:
         """Test query filters by knowledge type."""
-        results = awAlgot populated_kb.query_relevant(
+        results = await populated_kb.query_relevant(
             context={},
             knowledge_types=[KnowledgeType.LESSON_LEARNED],
         )
@@ -252,13 +252,13 @@ class TestQueryKnowledge:
         """Test query respects result limit."""
         # Add many entries
         for i in range(20):
-            awAlgot knowledge_base.add_knowledge(
+            await knowledge_base.add_knowledge(
                 knowledge_type=KnowledgeType.MARKET_INSIGHT,
                 title=f"Insight {i}",
                 content={"index": i},
             )
 
-        results = awAlgot knowledge_base.query_relevant(
+        results = await knowledge_base.query_relevant(
             context={},
             limit=5,
         )
@@ -270,7 +270,7 @@ class TestQueryKnowledge:
         self, populated_kb: KnowledgeBase
     ) -> None:
         """Test query updates entry usage stats."""
-        results = awAlgot populated_kb.query_relevant(
+        results = await populated_kb.query_relevant(
             context={"item": "AK-47"},
         )
 
@@ -294,7 +294,7 @@ class TestLearnFromTrades:
         sample_trade_result: TradeResult,
     ) -> None:
         """Test learning from successful trade creates pattern."""
-        entry_id = awAlgot knowledge_base.learn_from_trade(sample_trade_result)
+        entry_id = await knowledge_base.learn_from_trade(sample_trade_result)
 
         assert entry_id is not None
         entry = knowledge_base._cache[entry_id]
@@ -302,11 +302,11 @@ class TestLearnFromTrades:
         assert "profitable" in entry.title.lower()
 
     @pytest.mark.asyncio()
-    async def test_learn_fAlgolure_creates_lesson(
+    async def test_learn_failure_creates_lesson(
         self, knowledge_base: KnowledgeBase
     ) -> None:
-        """Test learning from fAlgoled trade creates lesson."""
-        fAlgoled_trade = TradeResult(
+        """Test learning from failed trade creates lesson."""
+        failed_trade = TradeResult(
             item_name="AWP | Asiimov",
             buy_price=50.0,
             sell_price=45.0,
@@ -315,7 +315,7 @@ class TestLearnFromTrades:
             game="csgo",
         )
 
-        entry_id = awAlgot knowledge_base.learn_from_trade(fAlgoled_trade)
+        entry_id = await knowledge_base.learn_from_trade(failed_trade)
 
         assert entry_id is not None
         entry = knowledge_base._cache[entry_id]
@@ -336,7 +336,7 @@ class TestLearnFromTrades:
             "game": "csgo",
         }
 
-        entry_id = awAlgot knowledge_base.learn_from_trade(trade_dict)
+        entry_id = await knowledge_base.learn_from_trade(trade_dict)
 
         assert entry_id is not None
         entry = knowledge_base._cache[entry_id]
@@ -356,7 +356,7 @@ class TestLearnFromTrades:
             game="csgo",
         )
 
-        entry_id = awAlgot knowledge_base.learn_from_trade(breakeven_trade)
+        entry_id = await knowledge_base.learn_from_trade(breakeven_trade)
         assert entry_id is None
 
 
@@ -379,7 +379,7 @@ class TestRelevanceDecay:
             entry.last_used_at = datetime.now(UTC) - timedelta(days=30)
 
         initial_count = len(populated_kb._cache)
-        removed = awAlgot populated_kb.decay_relevance()
+        removed = await populated_kb.decay_relevance()
 
         # Some entries should have been removed
         assert removed >= 0
@@ -390,13 +390,13 @@ class TestRelevanceDecay:
         self, knowledge_base: KnowledgeBase
     ) -> None:
         """Test decay preserves recent entries."""
-        awAlgot knowledge_base.add_knowledge(
+        await knowledge_base.add_knowledge(
             knowledge_type=KnowledgeType.TRADING_PATTERN,
             title="Recent entry",
             content={"recent": True},
         )
 
-        removed = awAlgot knowledge_base.decay_relevance()
+        removed = await knowledge_base.decay_relevance()
 
         assert removed == 0
         assert len(knowledge_base._cache) == 1
@@ -415,7 +415,7 @@ class TestSummaryAndMetrics:
         self, knowledge_base: KnowledgeBase
     ) -> None:
         """Test summary of empty KB."""
-        summary = awAlgot knowledge_base.get_summary()
+        summary = await knowledge_base.get_summary()
 
         assert summary["total_entries"] == 0
         assert summary["by_type"] == {}
@@ -426,7 +426,7 @@ class TestSummaryAndMetrics:
         self, populated_kb: KnowledgeBase
     ) -> None:
         """Test summary of populated KB."""
-        summary = awAlgot populated_kb.get_summary()
+        summary = await populated_kb.get_summary()
 
         assert summary["total_entries"] == 3
         assert "trading_pattern" in summary["by_type"]
@@ -438,7 +438,7 @@ class TestSummaryAndMetrics:
         self, populated_kb: KnowledgeBase
     ) -> None:
         """Test clear removes all entries."""
-        count = awAlgot populated_kb.clear()
+        count = await populated_kb.clear()
 
         assert count == 3
         assert len(populated_kb._cache) == 0

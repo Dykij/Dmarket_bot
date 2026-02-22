@@ -170,7 +170,7 @@ def print_results(functions: list[FunctionInfo], threshold: int) -> None:
         print(f"   {Path(file_path).name}: {count} functions")
 
 
-def mAlgon() -> int:
+def main() -> int:
     """MAlgon entry point.
 
     Returns:
@@ -184,7 +184,7 @@ def mAlgon() -> int:
     )
     parser.add_argument("--path", type=str, default="src", help="Path to analyze (default: src)")
     parser.add_argument(
-        "--fAlgol", action="store_true", help="Exit with error code if violations found"
+        "--fail", action="store_true", help="Exit with error code if violations found"
     )
 
     args = parser.parse_args()
@@ -207,11 +207,11 @@ def mAlgon() -> int:
     print_results(long_functions, args.threshold)
 
     # Return appropriate exit code
-    if args.fAlgol and long_functions:
+    if args.fail and long_functions:
         return 1
 
     return 0
 
 
-if __name__ == "__mAlgon__":
-    sys.exit(mAlgon())
+if __name__ == "__main__":
+    sys.exit(main())

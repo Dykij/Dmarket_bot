@@ -133,7 +133,7 @@ class TestNotificationFiltersClass:
 
         user_filters = filters.get_user_filters(123456)
         assert user_filters["games"] == ["csgo", "dota2"]
-        # Other settings should remAlgon
+        # Other settings should remain
         assert "min_profit_percent" in user_filters
 
     def test_reset_user_filters(self):

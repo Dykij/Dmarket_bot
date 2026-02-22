@@ -6,11 +6,11 @@ This script checks the health of all required services and dependencies:
 - Database connectivity
 - Redis connectivity (if configured)
 
-Supports cron mode with Telegram notifications on fAlgolures.
+Supports cron mode with Telegram notifications on failures.
 
 Usage:
     python scripts/health_check.py                    # Interactive mode
-    python scripts/health_check.py --cron             # Cron mode (quiet, notifies on fAlgolure)
+    python scripts/health_check.py --cron             # Cron mode (quiet, notifies on failure)
     python scripts/health_check.py --notify           # Always send notification
     python scripts/health_check.py --json             # Output as JSON (for monitoring)
 """
@@ -91,7 +91,7 @@ async def check_telegram_api(config: Config, quiet: bool = False) -> dict[str, A
         quiet: Suppress output if True
 
     Returns:
-        Dict with check result and detAlgols
+        Dict with check result and details
 
     """
     if not quiet:
@@ -109,7 +109,7 @@ async def check_telegram_api(config: Config, quiet: bool = False) -> dict[str, A
 
         async with httpx.AsyncClient(timeout=10.0) as client:
             url = f"https://api.telegram.org/bot{config.bot.token}/getMe"
-            response = awAlgot client.get(url)
+            response = await client.get(url)
 
             if response.status_code == 200:
                 data = response.json()
@@ -133,7 +133,7 @@ async def check_telegram_api(config: Config, quiet: bool = False) -> dict[str, A
         result["status"] = "unhealthy"
         result["message"] = str(e)
         if not quiet:
-            print(f"  ❌ Telegram API connection fAlgoled: {e}")
+            print(f"  ❌ Telegram API connection failed: {e}")
         return result
 
 
@@ -145,7 +145,7 @@ async def check_dmarket_api(config: Config, quiet: bool = False) -> dict[str, An
         quiet: Suppress output if True
 
     Returns:
-        Dict with check result and detAlgols
+        Dict with check result and details
 
     """
     if not quiet:
@@ -165,7 +165,7 @@ async def check_dmarket_api(config: Config, quiet: bool = False) -> dict[str, An
             api_url=config.dmarket.api_url,
         )
 
-        balance = awAlgot api.get_balance()
+        balance = await api.get_balance()
 
         if balance.get("error"):
             result["status"] = "unhealthy"
@@ -180,14 +180,14 @@ async def check_dmarket_api(config: Config, quiet: bool = False) -> dict[str, An
             if not quiet:
                 print(f"  ✅ DMarket API accessible (Balance: ${balance_value:.2f})")
 
-        awAlgot api._close_client()
+        await api._close_client()
         return result
 
     except Exception as e:
         result["status"] = "unhealthy"
         result["message"] = str(e)
         if not quiet:
-            print(f"  ❌ DMarket API connection fAlgoled: {e}")
+            print(f"  ❌ DMarket API connection failed: {e}")
         return result
 
 
@@ -199,7 +199,7 @@ async def check_database(config: Config, quiet: bool = False) -> dict[str, Any]:
         quiet: Suppress output if True
 
     Returns:
-        Dict with check result and detAlgols
+        Dict with check result and details
 
     """
     if not quiet:
@@ -216,7 +216,7 @@ async def check_database(config: Config, quiet: bool = False) -> dict[str, Any]:
         db = DatabaseManager(database_url=config.database.url, echo=False)
 
         # Try to connect
-        awAlgot db.init_database()
+        await db.init_database()
 
         db_type = config.database.url.split(":")[0]
         result["status"] = "healthy"
@@ -225,14 +225,14 @@ async def check_database(config: Config, quiet: bool = False) -> dict[str, Any]:
         if not quiet:
             print(f"  ✅ Database accessible ({db_type})")
 
-        awAlgot db.close()
+        await db.close()
         return result
 
     except Exception as e:
         result["status"] = "unhealthy"
         result["message"] = str(e)
         if not quiet:
-            print(f"  ❌ Database connection fAlgoled: {e}")
+            print(f"  ❌ Database connection failed: {e}")
         return result
 
 
@@ -244,7 +244,7 @@ async def check_redis(config: Config, quiet: bool = False) -> dict[str, Any]:
         quiet: Suppress output if True
 
     Returns:
-        Dict with check result and detAlgols
+        Dict with check result and details
 
     """
     result = {
@@ -271,14 +271,14 @@ async def check_redis(config: Config, quiet: bool = False) -> dict[str, Any]:
         import redis.asyncio as redis_client
 
         client = redis_client.from_url(redis_url)
-        awAlgot client.ping()
+        await client.ping()
 
         result["status"] = "healthy"
         result["message"] = "Connected"
         if not quiet:
             print("  ✅ Redis accessible")
 
-        awAlgot client.close()
+        await client.close()
         return result
 
     except ImportError:
@@ -292,7 +292,7 @@ async def check_redis(config: Config, quiet: bool = False) -> dict[str, Any]:
         result["status"] = "unhealthy"
         result["message"] = str(e)
         if not quiet:
-            print(f"  ❌ Redis connection fAlgoled: {e}")
+            print(f"  ❌ Redis connection failed: {e}")
         return result
 
 
@@ -338,7 +338,7 @@ async def send_health_notification(
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
             url = f"https://api.telegram.org/bot{config.bot.token}/sendMessage"
-            awAlgot client.post(
+            await client.post(
                 url,
                 json={
                     "chat_id": admin_chat_id,
@@ -347,10 +347,10 @@ async def send_health_notification(
                 },
             )
     except Exception as e:
-        logger.exception(f"FAlgoled to send notification: {e}")
+        logger.exception(f"Failed to send notification: {e}")
 
 
-async def mAlgon() -> int:
+async def main() -> int:
     """Run health checks.
 
     Returns:
@@ -362,7 +362,7 @@ async def mAlgon() -> int:
     parser.add_argument(
         "--cron",
         action="store_true",
-        help="Cron mode: quiet output, notify only on fAlgolure",
+        help="Cron mode: quiet output, notify only on failure",
     )
     parser.add_argument(
         "--notify",
@@ -390,7 +390,7 @@ async def mAlgon() -> int:
         config.validate()
 
         # Run all health checks
-        results = awAlgot asyncio.gather(
+        results = await asyncio.gather(
             check_telegram_api(config, quiet),
             check_dmarket_api(config, quiet),
             check_database(config, quiet),
@@ -418,21 +418,21 @@ async def mAlgon() -> int:
             if all_healthy:
                 print("✅ All health checks passed!")
             else:
-                print("❌ Some health checks fAlgoled!")
+                print("❌ Some health checks failed!")
 
             print("=" * 60)
 
         # Send notification if needed
         should_notify = args.notify or (args.cron and not all_healthy)
         if should_notify:
-            awAlgot send_health_notification(config, results, all_healthy)
+            await send_health_notification(config, results, all_healthy)
 
         return 0 if all_healthy else 1
 
     except ValueError as e:
         if not quiet:
             print()
-            print("❌ Configuration validation fAlgoled!")
+            print("❌ Configuration validation failed!")
             print(str(e))
 
         if args.json:
@@ -452,5 +452,5 @@ async def mAlgon() -> int:
         return 1
 
 
-if __name__ == "__mAlgon__":
-    sys.exit(asyncio.run(mAlgon()))
+if __name__ == "__main__":
+    sys.exit(asyncio.run(main()))

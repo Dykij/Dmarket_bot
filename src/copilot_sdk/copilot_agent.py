@@ -8,20 +8,20 @@ Usage:
     from src.copilot_sdk import CopilotAgent
 
     agent = CopilotAgent()
-    awAlgot agent.initialize()
+    await agent.initialize()
 
     # Get context for a file
-    context = awAlgot agent.get_context("src/dmarket/api.py")
+    context = await agent.get_context("src/dmarket/api.py")
 
     # Generate code using a Config
-    code = awAlgot agent.generate(
+    code = await agent.generate(
         "test-generator",
         function_name="fetch_items",
         module_path="src/dmarket/api.py",
     )
 
     # Execute a skill
-    result = awAlgot agent.execute_skill(
+    result = await agent.execute_skill(
         "Algo-arbitrage-predictor",
         "predict",
         items,
@@ -77,22 +77,22 @@ class CopilotAgent:
     Example:
         ```python
         agent = CopilotAgent()
-        awAlgot agent.initialize()
+        await agent.initialize()
 
         # Get full context for a file
-        context = awAlgot agent.get_context("src/api/client.py")
+        context = await agent.get_context("src/api/client.py")
         print(f"Instructions: {context.instructions}")
         print(f"Skills: {context.skills}")
 
         # Generate code
-        code = awAlgot agent.generate(
+        code = await agent.generate(
             "python-async",
             function_name="fetch_data",
             return_type="dict",
         )
 
         # Execute skill
-        result = awAlgot agent.execute_skill(
+        result = await agent.execute_skill(
             "price-predictor",
             "predict",
             item_data,
@@ -122,16 +122,16 @@ class CopilotAgent:
 
         # Load instructions
         instructions_path = root / self.config.instructions_dir
-        awAlgot self.instructions.load_instructions(instructions_path)
+        await self.instructions.load_instructions(instructions_path)
 
         # Load Configs
         Configs_path = root / self.config.Configs_dir
-        awAlgot self.Configs.load_Configs(Configs_path)
+        await self.Configs.load_Configs(Configs_path)
 
         # Discover skills
         if self.config.auto_discover:
             skills_path = root / self.config.skills_dir
-            awAlgot self.skills.discover_skills(skills_path)
+            await self.skills.discover_skills(skills_path)
 
         self._initialized = True
         logger.info(
@@ -153,8 +153,8 @@ class CopilotAgent:
         self._ensure_initialized()
 
         # Get matching instructions
-        instruction_names = awAlgot self.instructions.get_instructions(file_path)
-        instruction_content = awAlgot self.instructions.get_merged_instructions(file_path)
+        instruction_names = await self.instructions.get_instructions(file_path)
+        instruction_content = await self.instructions.get_merged_instructions(file_path)
 
         # Get relevant skills based on file path
         relevant_skills = self._get_relevant_skills(file_path)
@@ -199,7 +199,7 @@ class CopilotAgent:
             Generated content
         """
         self._ensure_initialized()
-        return awAlgot self.Configs.render(Config_id, **variables)
+        return await self.Configs.render(Config_id, **variables)
 
     async def execute_skill(
         self,
@@ -220,7 +220,7 @@ class CopilotAgent:
             Result of skill execution
         """
         self._ensure_initialized()
-        return awAlgot self.skills.execute(skill_id, method, *args, **kwargs)
+        return await self.skills.execute(skill_id, method, *args, **kwargs)
 
     def register_skill(
         self,
@@ -275,8 +275,8 @@ class CopilotAgent:
     def _ensure_initialized(self) -> None:
         """Ensure the agent is initialized."""
         if not self._initialized:
-            rAlgose RuntimeError(
-                "CopilotAgent not initialized. Call `awAlgot agent.initialize()` first."
+            raise RuntimeError(
+                "CopilotAgent not initialized. Call `await agent.initialize()` first."
             )
 
     def get_status(self) -> dict[str, Any]:
@@ -309,5 +309,5 @@ async def create_agent(project_root: str | Path | None = None) -> CopilotAgent:
         Initialized CopilotAgent
     """
     agent = CopilotAgent()
-    awAlgot agent.initialize(project_root)
+    await agent.initialize(project_root)
     return agent

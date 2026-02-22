@@ -24,9 +24,9 @@ class TestSchedulerConfig:
 
         config = SchedulerConfig(
             collection_interval_hours=6.0,
-            trAlgoning_interval_hours=24.0,
+            training_interval_hours=24.0,
             cleanup_interval_hours=168.0,
-            min_samples_for_trAlgoning=100,
+            min_samples_for_training=100,
             max_data_age_days=90,
             enable_dmarket=True,
             enable_waxpeer=True,
@@ -34,9 +34,9 @@ class TestSchedulerConfig:
         )
 
         assert config.collection_interval_hours == 6.0
-        assert config.trAlgoning_interval_hours == 24.0
+        assert config.training_interval_hours == 24.0
         assert config.cleanup_interval_hours == 168.0
-        assert config.min_samples_for_trAlgoning == 100
+        assert config.min_samples_for_training == 100
         assert config.max_data_age_days == 90
         assert config.enable_dmarket is True
         assert config.enable_waxpeer is True
@@ -49,9 +49,9 @@ class TestSchedulerConfig:
         config = SchedulerConfig()
 
         assert config.collection_interval_hours > 0
-        assert config.trAlgoning_interval_hours > 0
+        assert config.training_interval_hours > 0
         assert config.cleanup_interval_hours > 0
-        assert config.min_samples_for_trAlgoning > 0
+        assert config.min_samples_for_training > 0
         assert config.max_data_age_days > 0
 
     def test_config_fields(self):
@@ -62,9 +62,9 @@ class TestSchedulerConfig:
 
         # Проверяем что все ожидаемые поля присутствуют
         assert hasattr(config, "collection_interval_hours")
-        assert hasattr(config, "trAlgoning_interval_hours")
+        assert hasattr(config, "training_interval_hours")
         assert hasattr(config, "cleanup_interval_hours")
-        assert hasattr(config, "min_samples_for_trAlgoning")
+        assert hasattr(config, "min_samples_for_training")
         assert hasattr(config, "max_data_age_days")
         assert hasattr(config, "enable_dmarket")
         assert hasattr(config, "enable_waxpeer")
@@ -80,16 +80,16 @@ class TestSchedulerStats:
 
         stats = SchedulerStats(
             total_collections=10,
-            total_trAlgonings=5,
+            total_trainings=5,
             total_cleanups=2,
             last_collection=datetime.now(),
-            last_trAlgoning=datetime.now(),
+            last_training=datetime.now(),
             samples_collected=1000,
             errors_count=3,
         )
 
         assert stats.total_collections == 10
-        assert stats.total_trAlgonings == 5
+        assert stats.total_trainings == 5
         assert stats.total_cleanups == 2
         assert stats.samples_collected == 1000
         assert stats.errors_count == 3
@@ -101,12 +101,12 @@ class TestSchedulerStats:
         stats = SchedulerStats()
 
         assert stats.total_collections == 0
-        assert stats.total_trAlgonings == 0
+        assert stats.total_trainings == 0
         assert stats.total_cleanups == 0
         assert stats.samples_collected == 0
         assert stats.errors_count == 0
         assert stats.last_collection is None
-        assert stats.last_trAlgoning is None
+        assert stats.last_training is None
 
 
 class TestSchedulerState:
@@ -148,7 +148,7 @@ class TestTaskType:
         from src.ml.data_scheduler import TaskType
 
         assert TaskType.DATA_COLLECTION.value == "data_collection"
-        assert TaskType.MODEL_TRAlgoNING.value == "model_trAlgoning"
+        assert TaskType.MODEL_TRAlgoNING.value == "model_training"
         assert TaskType.DATA_CLEANUP.value == "data_cleanup"
         assert TaskType.HEALTH_CHECK.value == "health_check"
 
@@ -160,7 +160,7 @@ class TestMLDataScheduler:
     def mock_predictor(self):
         """Мок для MLPricePredictor."""
         mock = MagicMock()
-        mock.trAlgon = MagicMock(return_value={"accuracy": 0.85})
+        mock.train = MagicMock(return_value={"accuracy": 0.85})
         mock.predict = MagicMock(return_value=100.0)
         return mock
 
@@ -171,9 +171,9 @@ class TestMLDataScheduler:
 
         return SchedulerConfig(
             collection_interval_hours=1.0,
-            trAlgoning_interval_hours=6.0,
+            training_interval_hours=6.0,
             cleanup_interval_hours=24.0,
-            min_samples_for_trAlgoning=10,
+            min_samples_for_training=10,
             max_data_age_days=30,
         )
 
@@ -215,7 +215,7 @@ class TestMLDataScheduler:
 
         assert stats is not None
         assert stats.total_collections >= 0
-        assert stats.total_trAlgonings >= 0
+        assert stats.total_trainings >= 0
         assert stats.samples_collected >= 0
 
     def test_get_status_dict(self, scheduler):
@@ -236,17 +236,17 @@ class TestMLDataScheduler:
         task = asyncio.create_task(scheduler.start())
 
         # Даем время на старт
-        awAlgot asyncio.sleep(0.1)
+        await asyncio.sleep(0.1)
 
         # Проверяем состояние
         assert scheduler.state in [SchedulerState.RUNNING, SchedulerState.STOPPED]
 
         # Останавливаем
-        awAlgot scheduler.stop()
+        await scheduler.stop()
         task.cancel()
 
         try:
-            awAlgot task
+            await task
         except asyncio.CancelledError:
             pass
 
@@ -255,7 +255,7 @@ class TestMLDataScheduler:
         """Тест остановки планировщика."""
         from src.ml.data_scheduler import SchedulerState
 
-        awAlgot scheduler.stop()
+        await scheduler.stop()
         assert scheduler.state == SchedulerState.STOPPED
 
     @pytest.mark.asyncio()
@@ -310,20 +310,20 @@ class TestMLDataScheduler:
         with patch.object(scheduler, "_run_collection", new_callable=AsyncMock) as mock_collect:
             mock_collect.return_value = MagicMock(items_processed=100)
 
-            awAlgot scheduler._run_task_collection()
+            await scheduler._run_task_collection()
 
             # Проверяем что метод был вызван
             mock_collect.assert_called_once()
 
     @pytest.mark.asyncio()
-    async def test_run_trAlgoning_task(self, scheduler):
+    async def test_run_training_task(self, scheduler):
         """Тест выполнения задачи обучения."""
-        with patch.object(scheduler, "_run_trAlgoning", new_callable=AsyncMock) as mock_trAlgon:
-            mock_trAlgon.return_value = MagicMock(success=True)
+        with patch.object(scheduler, "_run_training", new_callable=AsyncMock) as mock_train:
+            mock_train.return_value = MagicMock(success=True)
 
-            awAlgot scheduler._run_task_trAlgoning()
+            await scheduler._run_task_training()
 
-            mock_trAlgon.assert_called_once()
+            mock_train.assert_called_once()
 
     @pytest.mark.asyncio()
     async def test_run_cleanup_task(self, scheduler):
@@ -331,7 +331,7 @@ class TestMLDataScheduler:
         with patch.object(scheduler, "_run_cleanup", new_callable=AsyncMock) as mock_cleanup:
             mock_cleanup.return_value = MagicMock(items_processed=5)
 
-            awAlgot scheduler._run_task_cleanup()
+            await scheduler._run_task_cleanup()
 
             mock_cleanup.assert_called_once()
 
@@ -346,13 +346,13 @@ class TestSchedulerIntegration:
 
         config = SchedulerConfig(
             collection_interval_hours=0.001,  # Очень частый сбор для тестов
-            trAlgoning_interval_hours=0.001,
+            training_interval_hours=0.001,
             cleanup_interval_hours=0.001,
-            min_samples_for_trAlgoning=5,
+            min_samples_for_training=5,
         )
 
         mock_predictor = MagicMock()
-        mock_predictor.trAlgon = MagicMock(return_value={"accuracy": 0.85})
+        mock_predictor.train = MagicMock(return_value={"accuracy": 0.85})
 
         return MLDataScheduler(predictor=mock_predictor, config=config)
 
@@ -383,7 +383,7 @@ class TestSchedulerIntegration:
 
             # Планировщик должен обработать ошибку без падения
             try:
-                awAlgot full_scheduler._run_task_collection()
+                await full_scheduler._run_task_collection()
             except Exception:
                 pass  # Ошибка ожидаема
 
@@ -407,15 +407,15 @@ class TestSchedulerIntegration:
 
         config = SchedulerConfig(
             collection_interval_hours=12.0,
-            trAlgoning_interval_hours=48.0,
-            min_samples_for_trAlgoning=500,
+            training_interval_hours=48.0,
+            min_samples_for_training=500,
         )
 
         config_dict = asdict(config)
 
         assert config_dict["collection_interval_hours"] == 12.0
-        assert config_dict["trAlgoning_interval_hours"] == 48.0
-        assert config_dict["min_samples_for_trAlgoning"] == 500
+        assert config_dict["training_interval_hours"] == 48.0
+        assert config_dict["min_samples_for_training"] == 500
 
     def test_stats_serialization(self):
         """Тест сериализации статистики."""
@@ -425,14 +425,14 @@ class TestSchedulerIntegration:
 
         stats = SchedulerStats(
             total_collections=100,
-            total_trAlgonings=10,
+            total_trainings=10,
             samples_collected=5000,
         )
 
         stats_dict = asdict(stats)
 
         assert stats_dict["total_collections"] == 100
-        assert stats_dict["total_trAlgonings"] == 10
+        assert stats_dict["total_trainings"] == 10
         assert stats_dict["samples_collected"] == 5000
 
 
@@ -453,7 +453,7 @@ class TestSchedulerEdgeCases:
 
         config = SchedulerConfig(
             collection_interval_hours=0.0001,
-            trAlgoning_interval_hours=0.0001,
+            training_interval_hours=0.0001,
             cleanup_interval_hours=0.0001,
         )
 
@@ -466,7 +466,7 @@ class TestSchedulerEdgeCases:
 
         config = SchedulerConfig(
             collection_interval_hours=8760.0,  # 1 год
-            trAlgoning_interval_hours=8760.0,
+            training_interval_hours=8760.0,
             cleanup_interval_hours=8760.0,
         )
 
@@ -480,8 +480,8 @@ class TestSchedulerEdgeCases:
 
         scheduler = MLDataScheduler(predictor=None)
 
-        awAlgot scheduler.stop()
-        awAlgot scheduler.stop()  # Повторная остановка не должна падать
+        await scheduler.stop()
+        await scheduler.stop()  # Повторная остановка не должна падать
 
         assert scheduler.state == SchedulerState.STOPPED
 
@@ -516,19 +516,19 @@ class TestMLDataSchedulerWithRealIntervals:
 
         config = SchedulerConfig(
             collection_interval_hours=0.001,  # ~3.6 секунды
-            trAlgoning_interval_hours=0.002,
-            min_samples_for_trAlgoning=5,
+            training_interval_hours=0.002,
+            min_samples_for_training=5,
         )
 
         mock_predictor = MagicMock()
-        mock_predictor.trAlgon_from_real_data = AsyncMock(return_value={"success": True})
+        mock_predictor.train_from_real_data = AsyncMock(return_value={"success": True})
 
         return MLDataScheduler(predictor=mock_predictor, config=config)
 
     def test_scheduler_intervals(self, scheduler_with_intervals):
         """Тест проверки интервалов."""
         assert scheduler_with_intervals.config.collection_interval_hours == 0.001
-        assert scheduler_with_intervals.config.trAlgoning_interval_hours == 0.002
+        assert scheduler_with_intervals.config.training_interval_hours == 0.002
 
 
 class TestMLDataSchedulerErrorHandling:
@@ -540,12 +540,12 @@ class TestMLDataSchedulerErrorHandling:
         from src.ml.data_scheduler import MLDataScheduler, SchedulerConfig
 
         config = SchedulerConfig(
-            min_samples_for_trAlgoning=5,
-            retry_on_fAlgolure=False,  # Отключаем retry для быстрых тестов
+            min_samples_for_training=5,
+            retry_on_failure=False,  # Отключаем retry для быстрых тестов
         )
 
         mock_predictor = MagicMock()
-        mock_predictor.trAlgon_from_real_data = AsyncMock(side_effect=Exception("TrAlgoning Error"))
+        mock_predictor.train_from_real_data = AsyncMock(side_effect=Exception("TrAlgoning Error"))
 
         return MLDataScheduler(predictor=mock_predictor, config=config)
 
@@ -555,16 +555,16 @@ class TestMLDataSchedulerErrorHandling:
         with patch.object(scheduler_with_errors, "_collect_data_only", new_callable=AsyncMock) as mock_collect:
             mock_collect.side_effect = Exception("Collection Error")
 
-            result = awAlgot scheduler_with_errors._run_collection()
+            result = await scheduler_with_errors._run_collection()
 
             # Должен вернуть ошибку, но не упасть
             assert result.success is False
             assert result.error_message is not None
 
     @pytest.mark.asyncio()
-    async def test_trAlgoning_error_handling(self, scheduler_with_errors):
+    async def test_training_error_handling(self, scheduler_with_errors):
         """Тест обработки ошибок при обучении."""
-        result = awAlgot scheduler_with_errors._run_trAlgoning()
+        result = await scheduler_with_errors._run_training()
 
         # Должен вернуть ошибку, но не упасть
         assert result.success is False
@@ -582,7 +582,7 @@ class TestMLDataSchedulerMetrics:
         config = SchedulerConfig()
 
         mock_predictor = MagicMock()
-        mock_predictor.trAlgon_from_real_data = AsyncMock(return_value={"success": True})
+        mock_predictor.train_from_real_data = AsyncMock(return_value={"success": True})
 
         return MLDataScheduler(predictor=mock_predictor, config=config)
 
@@ -592,17 +592,17 @@ class TestMLDataSchedulerMetrics:
         with patch.object(scheduler, "_collect_data_only", new_callable=AsyncMock) as mock_collect:
             mock_collect.return_value = {"total_samples": 10, "games_collected": ["csgo"]}
 
-            awAlgot scheduler._run_collection()
+            await scheduler._run_collection()
 
             assert scheduler.stats.total_collections == 1
             assert scheduler.stats.last_collection is not None
 
     @pytest.mark.asyncio()
-    async def test_metrics_after_trAlgoning(self, scheduler):
+    async def test_metrics_after_training(self, scheduler):
         """Тест метрик после обучения."""
-        awAlgot scheduler._run_trAlgoning()
+        await scheduler._run_training()
 
-        assert scheduler.stats.total_trAlgonings == 1
+        assert scheduler.stats.total_trainings == 1
 
     def test_get_stats_dict(self, scheduler):
         """Тест получения статистики как словаря."""

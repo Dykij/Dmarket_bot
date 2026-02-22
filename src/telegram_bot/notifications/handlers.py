@@ -1,6 +1,6 @@
 """Telegram command and callback handlers for notifications.
 
-This module contAlgons all handlers for notification-related commands and callbacks:
+This module contains all handlers for notification-related commands and callbacks:
 - create_alert_command: /alert command to create new alerts
 - list_alerts_command: /alerts command to view alerts
 - remove_alert_command: /removealert command to delete alerts
@@ -51,7 +51,7 @@ async def handle_buy_cancel_callback(
     if not query:
         return
 
-    awAlgot query.answer()
+    await query.answer()
 
     # Extract item_id from callback_data (format: cancel_buy:item_id)
     callback_data = query.data
@@ -61,7 +61,7 @@ async def handle_buy_cancel_callback(
     item_id = callback_data.replace("cancel_buy:", "")
 
     # Update message to show cancellation
-    awAlgot query.edit_message_text(
+    await query.edit_message_text(
         f"❌ Покупка отменена\n\nПредмет: `{item_id}`",
         parse_mode="Markdown",
     )
@@ -84,7 +84,7 @@ async def handle_alert_callback(
     if not query or not update.effective_user:
         return
 
-    awAlgot query.answer()
+    await query.answer()
 
     # Extract alert_id from callback_data (format: disable_alert:alert_id)
     callback_data = query.data
@@ -95,16 +95,16 @@ async def handle_alert_callback(
     user_id = update.effective_user.id
 
     # Remove the alert
-    success = awAlgot remove_price_alert(user_id, alert_id)
+    success = await remove_price_alert(user_id, alert_id)
 
     if success:
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             "🔕 Оповещение отключено",
             parse_mode="Markdown",
         )
         logger.info(f"Оповещение {alert_id} отключено пользователем {user_id}")
     else:
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             "❌ Не удалось отключить оповещение. Возможно, оно уже удалено.",
             parse_mode="Markdown",
         )
@@ -131,7 +131,7 @@ async def create_alert_command(
 
     # Validate arguments
     if not context.args or len(context.args) < 3:
-        awAlgot update.message.reply_text(
+        await update.message.reply_text(
             "Используйте команду в формате:\n"
             "/alert <item_id> <тип> <порог>\n\n"
             "Типы оповещений:\n"
@@ -148,7 +148,7 @@ async def create_alert_command(
     try:
         threshold = float(context.args[2])
     except ValueError:
-        awAlgot update.message.reply_text("Порог должен быть числом")
+        await update.message.reply_text("Порог должен быть числом")
         return
 
     # Validate alert type
@@ -160,28 +160,28 @@ async def create_alert_command(
         "trend_change",
     ]
     if alert_type not in valid_types:
-        awAlgot update.message.reply_text(
+        await update.message.reply_text(
             f"Неизвестный тип оповещения: {alert_type}\nДоступные типы: {', '.join(valid_types)}",
         )
         return
 
     try:
         # Get item info from API
-        item_data = awAlgot api._request(
+        item_data = await api._request(
             method="GET",
             path=f"/exchange/v1/offers/{item_id}",
             params={},
         )
 
         if not item_data:
-            awAlgot update.message.reply_text(f"Предмет с ID {item_id} не найден")
+            await update.message.reply_text(f"Предмет с ID {item_id} не найден")
             return
 
         title = item_data.get("title", "Неизвестный предмет")
         game = item_data.get("gameId", "csgo")
 
         # Create the alert
-        alert = awAlgot add_price_alert(
+        alert = await add_price_alert(
             update.effective_user.id,
             item_id,
             title,
@@ -211,7 +211,7 @@ async def create_alert_command(
 
         reply_markup = InlineKeyboardMarkup(keyboard)
 
-        awAlgot update.message.reply_text(
+        await update.message.reply_text(
             message,
             reply_markup=reply_markup,
             parse_mode="Markdown",
@@ -219,7 +219,7 @@ async def create_alert_command(
 
     except Exception as e:
         logger.exception(f"Ошибка при создании оповещения: {e}")
-        awAlgot update.message.reply_text(
+        await update.message.reply_text(
             f"Произошла ошибка при создании оповещения: {e!s}",
         )
 
@@ -240,10 +240,10 @@ async def list_alerts_command(
     user_id = update.effective_user.id
 
     # Get user alerts
-    alerts = awAlgot get_user_alerts(user_id)
+    alerts = await get_user_alerts(user_id)
 
     if not alerts:
-        awAlgot update.message.reply_text("У вас нет активных оповещений")
+        await update.message.reply_text("У вас нет активных оповещений")
         return
 
     # Format alerts list
@@ -266,7 +266,7 @@ async def list_alerts_command(
     message += "Чтобы удалить оповещение, используйте команду:\n"
     message += "/removealert <номер_оповещения>"
 
-    awAlgot update.message.reply_text(
+    await update.message.reply_text(
         message,
         parse_mode="Markdown",
     )
@@ -291,7 +291,7 @@ async def remove_alert_command(
 
     # Check for alert number argument
     if not context.args:
-        awAlgot update.message.reply_text(
+        await update.message.reply_text(
             "Используйте команду в формате:\n"
             "/removealert <номер_оповещения>\n\n"
             "Чтобы увидеть список оповещений и их номера, используйте /alerts",
@@ -303,14 +303,14 @@ async def remove_alert_command(
         alert_num = int(context.args[0])
 
         # Get user alerts
-        alerts = awAlgot get_user_alerts(user_id)
+        alerts = await get_user_alerts(user_id)
 
         if not alerts:
-            awAlgot update.message.reply_text("У вас нет активных оповещений")
+            await update.message.reply_text("У вас нет активных оповещений")
             return
 
         if alert_num < 1 or alert_num > len(alerts):
-            awAlgot update.message.reply_text(
+            await update.message.reply_text(
                 f"Неверный номер оповещения. Доступны: 1-{len(alerts)}",
             )
             return
@@ -320,18 +320,18 @@ async def remove_alert_command(
         title = alerts[alert_num - 1]["title"]
 
         # Remove the alert
-        success = awAlgot remove_price_alert(user_id, alert_id)
+        success = await remove_price_alert(user_id, alert_id)
 
         if success:
-            awAlgot update.message.reply_text(f"Оповещение для {title} успешно удалено")
+            await update.message.reply_text(f"Оповещение для {title} успешно удалено")
         else:
-            awAlgot update.message.reply_text("Не удалось удалить оповещение")
+            await update.message.reply_text("Не удалось удалить оповещение")
 
     except ValueError:
-        awAlgot update.message.reply_text("Номер оповещения должен быть числом")
+        await update.message.reply_text("Номер оповещения должен быть числом")
     except Exception as e:
         logger.exception(f"Ошибка при удалении оповещения: {e}")
-        awAlgot update.message.reply_text(f"Произошла ошибка: {e!s}")
+        await update.message.reply_text(f"Произошла ошибка: {e!s}")
 
 
 async def settings_command(
@@ -368,7 +368,7 @@ async def settings_command(
                 "max_alerts_per_day": 10,
             },
             "last_notification": 0,
-            "dAlgoly_notifications": 0,
+            "daily_notifications": 0,
             "last_day": datetime.now().strftime("%Y-%m-%d"),
         }
 
@@ -399,9 +399,9 @@ async def settings_command(
                         settings["max_alerts_per_day"] = int(value)
 
         # Save changes
-        awAlgot update_user_settings(user_id, settings)
+        await update_user_settings(user_id, settings)
 
-        awAlgot update.message.reply_text("НастSwarmки оповещений обновлены")
+        await update.message.reply_text("НастSwarmки оповещений обновлены")
 
     # Format current settings message
     enabled = "Включены" if settings["enabled"] else "Отключены"
@@ -424,7 +424,7 @@ async def settings_command(
     message += "Пример:\n"
     message += "/alertsettings enabled=true min_interval=30 quiet_start=22 quiet_end=9"
 
-    awAlgot update.message.reply_text(
+    await update.message.reply_text(
         message,
         parse_mode="Markdown",
     )
@@ -475,7 +475,7 @@ def register_notification_handlers(
     )
 
     # Start periodic alerts checker
-    # NOTE: The alerts checker is now started via post_init hook in mAlgon.py
+    # NOTE: The alerts checker is now started via post_init hook in main.py
     # to avoid "no running event loop" error during handler registration
     api = getattr(application, "dmarket_api", None)  # Изменено с bot_data на атрибут
 

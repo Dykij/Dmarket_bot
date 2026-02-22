@@ -107,7 +107,7 @@ class TestAggregatedPrice:
             has_discount=False,
             bonus_amount=0,
             lock_status=LockStatus.LOCKED,
-            lock_days_remAlgoning=5,
+            lock_days_remaining=5,
         )
         # Lock discount = 3% + 5 * 0.3% = 4.5%
         # Но максимум 5%
@@ -187,7 +187,7 @@ class TestPriceAggregator:
         """Тест получения цен в mock режиме."""
         items = ["AK-47 | Redline", "AWP | Asiimov", "M4A4 | Howl"]
 
-        prices = awAlgot aggregator.get_aggregated_prices(items)
+        prices = await aggregator.get_aggregated_prices(items)
 
         assert len(prices) == 3
         for price in prices:
@@ -201,11 +201,11 @@ class TestPriceAggregator:
         items = ["Test Item"]
 
         # Первый запрос
-        awAlgot aggregator.get_aggregated_prices(items)
+        await aggregator.get_aggregated_prices(items)
         initial_requests = aggregator._requests_made
 
         # ВтоSwarm запрос (из кэша)
-        awAlgot aggregator.get_aggregated_prices(items, force_refresh=False)
+        await aggregator.get_aggregated_prices(items, force_refresh=False)
 
         # Запросы не должны увеличиться
         # (mock режим не увеличивает счетчик, но кэш работает)
@@ -216,12 +216,12 @@ class TestPriceAggregator:
         """Тест принудительного обновления."""
         items = ["Test Item"]
 
-        awAlgot aggregator.get_aggregated_prices(items)
+        await aggregator.get_aggregated_prices(items)
         first_update = aggregator._last_update
 
-        awAlgot asyncio.sleep(0.1)
+        await asyncio.sleep(0.1)
 
-        awAlgot aggregator.get_aggregated_prices(items, force_refresh=True)
+        await aggregator.get_aggregated_prices(items, force_refresh=True)
         second_update = aggregator._last_update
 
         assert second_update > first_update
@@ -355,7 +355,7 @@ class TestPriceAggregatorWithAPI:
                     "count": 25,
                     "discount": 5,
                     "lockStatus": 0,
-                    "lockDaysRemAlgoning": 0,
+                    "lockDaysRemaining": 0,
                     "extra": {"nameHash": "ak47_redline"},
                 }
             ]
@@ -367,7 +367,7 @@ class TestPriceAggregatorWithAPI:
         """Тест получения цен через API."""
         aggregator = PriceAggregator(api_client=mock_api)
 
-        prices = awAlgot aggregator.get_aggregated_prices(
+        prices = await aggregator.get_aggregated_prices(
             item_names=["AK-47 | Redline"],
             game="csgo",
             force_refresh=True,

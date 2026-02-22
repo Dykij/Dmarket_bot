@@ -13,11 +13,11 @@
 Использование:
     >>> api_bulkhead = Bulkhead("api", max_concurrent=10)
     >>> async with api_bulkhead.acquire():
-    ...     awAlgot api.call()
+    ...     await api.call()
 
     # Или с таймаутом:
     >>> async with api_bulkhead.acquire(timeout=5.0):
-    ...     awAlgot api.call()
+    ...     await api.call()
 
 Created: January 2026
 """
@@ -57,7 +57,7 @@ class BulkheadStats:
         total_released: Общее количество освобождений
         current_active: Текущее количество активных операций
         max_concurrent_reached: Максимальное одновременное использование
-        avg_wAlgot_time_ms: Среднее время ожидания в мс
+        avg_wait_time_ms: Среднее время ожидания в мс
         last_rejection_time: Время последнего отклонения
     """
 
@@ -66,11 +66,11 @@ class BulkheadStats:
     total_released: int = 0
     current_active: int = 0
     max_concurrent_reached: int = 0
-    avg_wAlgot_time_ms: float = 0.0
+    avg_wait_time_ms: float = 0.0
     last_rejection_time: datetime | None = None
-    _wAlgot_times: list[float] = field(default_factory=list)
+    _wait_times: list[float] = field(default_factory=list)
 
-    def record_acquire(self, wAlgot_time_ms: float) -> None:
+    def record_acquire(self, wait_time_ms: float) -> None:
         """Записать успешный захват."""
         self.total_acquired += 1
         self.current_active += 1
@@ -80,10 +80,10 @@ class BulkheadStats:
         )
 
         # Обновить среднее время ожидания (скользящее окно)
-        self._wAlgot_times.append(wAlgot_time_ms)
-        if len(self._wAlgot_times) > 100:
-            self._wAlgot_times = self._wAlgot_times[-100:]
-        self.avg_wAlgot_time_ms = sum(self._wAlgot_times) / len(self._wAlgot_times)
+        self._wait_times.append(wait_time_ms)
+        if len(self._wait_times) > 100:
+            self._wait_times = self._wait_times[-100:]
+        self.avg_wait_time_ms = sum(self._wait_times) / len(self._wait_times)
 
     def record_release(self) -> None:
         """Записать освобождение."""
@@ -103,7 +103,7 @@ class BulkheadStats:
             "total_released": self.total_released,
             "current_active": self.current_active,
             "max_concurrent_reached": self.max_concurrent_reached,
-            "avg_wAlgot_time_ms": round(self.avg_wAlgot_time_ms, 2),
+            "avg_wait_time_ms": round(self.avg_wait_time_ms, 2),
             "last_rejection_time": (
                 self.last_rejection_time.isoformat()
                 if self.last_rejection_time
@@ -144,7 +144,7 @@ class Bulkhead:
 
         # Использование в коде
         async with api_bulkhead.acquire(timeout=10.0):
-            result = awAlgot api.get_items()
+            result = await api.get_items()
 
         # Проверка состояния
         state = api_bulkhead.get_state()
@@ -198,27 +198,27 @@ class Bulkhead:
 
         Example:
             async with bulkhead.acquire(timeout=5.0):
-                awAlgot do_something()
+                await do_something()
         """
         start_time = asyncio.get_event_loop().time()
 
         try:
             if timeout is not None:
-                acquired = awAlgot asyncio.wAlgot_for(
+                acquired = await asyncio.wait_for(
                     self._semaphore.acquire(),
                     timeout=timeout,
                 )
             else:
-                acquired = awAlgot self._semaphore.acquire()
+                acquired = await self._semaphore.acquire()
 
             if not acquired:
                 self._stats.record_rejection()
                 self._track_metrics("rejected")
-                rAlgose BulkheadFullError(self.name, timeout)
+                raise BulkheadFullError(self.name, timeout)
 
             # Записать время ожидания
-            wAlgot_time_ms = (asyncio.get_event_loop().time() - start_time) * 1000
-            self._stats.record_acquire(wAlgot_time_ms)
+            wait_time_ms = (asyncio.get_event_loop().time() - start_time) * 1000
+            self._stats.record_acquire(wait_time_ms)
             self._track_metrics("acquired")
 
             # Проверить состояние и залогировать предупреждения
@@ -241,7 +241,7 @@ class Bulkhead:
                 current_active=self._stats.current_active,
                 max_concurrent=self.max_concurrent,
             )
-            rAlgose BulkheadFullError(self.name, timeout) from None
+            raise BulkheadFullError(self.name, timeout) from None
 
     def _check_and_warn(self) -> None:
         """Проверить состояние и выдать предупреждения."""
@@ -373,7 +373,7 @@ class BulkheadRegistry:
             ValueError: Если bulkhead с таким именем уже существует
         """
         if name in self._bulkheads:
-            rAlgose ValueError(f"Bulkhead '{name}' already exists")
+            raise ValueError(f"Bulkhead '{name}' already exists")
 
         bulkhead = Bulkhead(name, max_concurrent, warn_threshold)
         self._bulkheads[name] = bulkhead

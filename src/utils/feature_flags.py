@@ -45,7 +45,7 @@ class Feature(enum.StrEnum):
     # Notification features
     SMART_NOTIFICATIONS = "smart_notifications"
     DISCORD_NOTIFICATIONS = "discord_notifications"
-    DAlgoLY_REPORTS = "dAlgoly_reports"
+    DAlgoLY_REPORTS = "daily_reports"
 
     # Experimental features
     EXPERIMENTAL_UI = "experimental_ui"
@@ -138,7 +138,7 @@ class FeatureFlagsManager:
         # Проверить кэш в Redis
         if self.redis and user_id:
             cache_key = f"feature_flag:{feature_name}:{user_id}"
-            cached = awAlgot self.redis.get(cache_key)
+            cached = await self.redis.get(cache_key)
             if cached is not None:
                 return cached == b"1"
 
@@ -178,7 +178,7 @@ class FeatureFlagsManager:
         # Кэшировать результат
         if self.redis and user_id:
             cache_key = f"feature_flag:{feature_name}:{user_id}"
-            awAlgot self.redis.setex(cache_key, 300, "1" if result else "0")  # 5 мин
+            await self.redis.setex(cache_key, 300, "1" if result else "0")  # 5 мин
 
         return result
 
@@ -251,7 +251,7 @@ class FeatureFlagsManager:
         if self.redis:
             pattern = f"feature_flag:{feature_name}:*"
             async for key in self.redis.scan_iter(match=pattern):
-                awAlgot self.redis.delete(key)
+                await self.redis.delete(key)
 
         logger.info(
             "feature_flag_updated",
@@ -282,7 +282,7 @@ class FeatureFlagsManager:
             # Обновить кэш
             if self.redis:
                 cache_key = f"feature_flag:{feature_name}:{user_id}"
-                awAlgot self.redis.setex(cache_key, 300, "1")
+                await self.redis.setex(cache_key, 300, "1")
 
             logger.info(
                 "user_added_to_whitelist",
@@ -308,7 +308,7 @@ class FeatureFlagsManager:
                 # Сбросить кэш
                 if self.redis:
                     cache_key = f"feature_flag:{feature_name}:{user_id}"
-                    awAlgot self.redis.delete(cache_key)
+                    await self.redis.delete(cache_key)
 
                 logger.info(
                     "user_removed_from_whitelist",
@@ -338,7 +338,7 @@ class FeatureFlagsManager:
         user_flags = {}
 
         for feature in Feature:
-            enabled = awAlgot self.is_enabled(feature, user_id)
+            enabled = await self.is_enabled(feature, user_id)
             user_flags[feature.value] = enabled
 
         return user_flags
@@ -357,14 +357,14 @@ class FeatureFlagsManager:
             logger.exception("feature_flags_save_error")
 
 
-# Глобальный экземпляр (инициализируется в mAlgon)
+# Глобальный экземпляр (инициализируется в main)
 _feature_flags: FeatureFlagsManager | None = None
 
 
 def get_feature_flags() -> FeatureFlagsManager:
     """Получить глобальный экземпляр менеджера."""
     if _feature_flags is None:
-        rAlgose RuntimeError("FeatureFlagsManager not initialized")
+        raise RuntimeError("FeatureFlagsManager not initialized")
     return _feature_flags
 
 

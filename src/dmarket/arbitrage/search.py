@@ -75,7 +75,7 @@ async def find_arbitrage_items(
 
     """
     if mode in {"low", "boost"}:
-        results = awAlgot arbitrage_boost_async(
+        results = await arbitrage_boost_async(
             game,
             min_price,
             max_price,
@@ -83,7 +83,7 @@ async def find_arbitrage_items(
             api_client,
         )
     elif mode == "mid":
-        results = awAlgot arbitrage_mid_async(
+        results = await arbitrage_mid_async(
             game,
             min_price,
             max_price,
@@ -91,7 +91,7 @@ async def find_arbitrage_items(
             api_client,
         )
     elif mode == "pro":
-        results = awAlgot arbitrage_pro_async(
+        results = await arbitrage_pro_async(
             game,
             min_price,
             max_price,
@@ -100,7 +100,7 @@ async def find_arbitrage_items(
         )
     else:
         # По умолчанию используем средний режим
-        results = awAlgot arbitrage_mid_async(
+        results = await arbitrage_mid_async(
             game,
             min_price,
             max_price,
@@ -229,7 +229,7 @@ async def find_arbitrage_opportunities_advanced(
 
     try:
         # Получаем предметы маркета
-        market_items = awAlgot api_client.get_market_items(
+        market_items = await api_client.get_market_items(
             game=game,
             max_items=max_items,
             price_from=price_lower,

@@ -221,7 +221,7 @@ def get_game_filter_keyboard(game: str) -> InlineKeyboardMarkup:
                     callback_data=f"filter:reset:{game}",
                 ),
             ],
-            [InlineKeyboardButton("⬅️ Назад", callback_data="back_to_filters:mAlgon")],
+            [InlineKeyboardButton("⬅️ Назад", callback_data="back_to_filters:main")],
         ],
     )
 

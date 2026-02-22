@@ -260,7 +260,7 @@ class SteamDatabaseHandler:
             )
         logger.debug(f"Logged arbitrage opportunity: {name} ({profit}%)")
 
-    def get_dAlgoly_stats(self) -> dict:
+    def get_daily_stats(self) -> dict:
         """Получает статистику за последние 24 часа."""
         cursor = self.conn.cursor()
         cursor.execute("""

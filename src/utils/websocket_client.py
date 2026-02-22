@@ -12,8 +12,8 @@ import uuid
 from collections.abc import Callable
 from typing import Any
 
-import Algoohttp
-from Algoohttp import ClientSession
+import aiohttp
+from aiohttp import ClientSession
 
 from src.dmarket.dmarket_api import DMarketAPI
 
@@ -68,10 +68,10 @@ class DMarketWebSocketClient:
         try:
             # Create new session if needed
             if self.session is None or self.session.closed:
-                self.session = Algoohttp.ClientSession()
+                self.session = aiohttp.ClientSession()
 
             # Connect to WebSocket
-            self.ws_connection = awAlgot self.session.ws_connect(
+            self.ws_connection = await self.session.ws_connect(
                 self.WS_ENDPOINT,
                 timeout=30.0,
                 heartbeat=30.0,
@@ -83,15 +83,15 @@ class DMarketWebSocketClient:
 
             # Authenticate if needed
             if self.api_client.public_key and self.api_client.secret_key:
-                awAlgot self._authenticate()
+                await self._authenticate()
 
             # Resubscribe to previously active subscriptions
-            awAlgot self._resubscribe()
+            await self._resubscribe()
 
             return True
 
-        except (TimeoutError, Algoohttp.ClientError):
-            logger.exception("FAlgoled to connect to DMarket WebSocket")
+        except (TimeoutError, aiohttp.ClientError):
+            logger.exception("Failed to connect to DMarket WebSocket")
             self.is_connected = False
             return False
 
@@ -101,16 +101,16 @@ class DMarketWebSocketClient:
             logger.info("Closing WebSocket connection...")
 
             # Unsubscribe from everything before closing
-            awAlgot self._unsubscribe_all()
+            await self._unsubscribe_all()
 
-            awAlgot self.ws_connection.close()
+            await self.ws_connection.close()
             self.ws_connection = None
             self.is_connected = False
 
             logger.info("WebSocket connection closed")
 
         if self.session and not self.session.closed:
-            awAlgot self.session.close()
+            await self.session.close()
             self.session = None
 
     async def listen(self) -> None:
@@ -120,35 +120,35 @@ class DMarketWebSocketClient:
         """
         while self.is_connected:
             try:
-                message = awAlgot self.ws_connection.receive()
+                message = await self.ws_connection.receive()
 
-                if message.type == Algoohttp.WSMsgType.TEXT:
-                    awAlgot self._handle_message(message.data)
+                if message.type == aiohttp.WSMsgType.TEXT:
+                    await self._handle_message(message.data)
 
-                elif message.type == Algoohttp.WSMsgType.CLOSED:
+                elif message.type == aiohttp.WSMsgType.CLOSED:
                     logger.warning("WebSocket connection closed by server")
                     self.is_connected = False
-                    awAlgot self._attempt_reconnect()
+                    await self._attempt_reconnect()
 
-                elif message.type == Algoohttp.WSMsgType.ERROR:
+                elif message.type == aiohttp.WSMsgType.ERROR:
                     logger.error(f"WebSocket connection error: {message.data}")
                     self.is_connected = False
-                    awAlgot self._attempt_reconnect()
+                    await self._attempt_reconnect()
 
             except asyncio.CancelledError:
                 # Task was cancelled, just exit
                 logger.info("WebSocket listen task cancelled")
                 break
-            except Algoohttp.ClientError:
+            except aiohttp.ClientError:
                 logger.exception("WebSocket error")
                 self.is_connected = False
-                awAlgot self._attempt_reconnect()
+                await self._attempt_reconnect()
 
     async def _attempt_reconnect(self) -> None:
         """Attempt to reconnect to WebSocket."""
         if self.reconnect_attempts >= self.max_reconnect_attempts:
             logger.error(
-                "FAlgoled to reconnect after %s attempts, giving up",
+                "Failed to reconnect after %s attempts, giving up",
                 self.reconnect_attempts,
             )
             return
@@ -164,12 +164,12 @@ class DMarketWebSocketClient:
             delay,
             self.reconnect_attempts,
         )
-        awAlgot asyncio.sleep(delay)
+        await asyncio.sleep(delay)
 
-        success = awAlgot self.connect()
+        success = await self.connect()
         if not success:
             logger.warning(
-                "Reconnect attempt %s fAlgoled",
+                "Reconnect attempt %s failed",
                 self.reconnect_attempts,
             )
 
@@ -201,14 +201,14 @@ class DMarketWebSocketClient:
                 # Execute all handlers for this event type
                 for handler in handlers:
                     try:
-                        awAlgot handler(message)
+                        await handler(message)
                     except (TypeError, RuntimeError, asyncio.CancelledError):
                         logger.exception(
                             f"Error in event handler for {event_type}",
                         )
 
         except json.JSONDecodeError:
-            logger.exception(f"FAlgoled to parse WebSocket message: {data}")
+            logger.exception(f"Failed to parse WebSocket message: {data}")
         except (TypeError, KeyError, AttributeError):
             logger.exception("Error handling WebSocket message")
 
@@ -225,7 +225,7 @@ class DMarketWebSocketClient:
         else:
             error = message.get("error", "Unknown error")
             self.authenticated = False
-            logger.error("Authentication fAlgoled: %s", error)
+            logger.error("Authentication failed: %s", error)
 
     async def _authenticate(self) -> None:
         """Authenticate with the WebSocket API using API keys."""
@@ -246,7 +246,7 @@ class DMarketWebSocketClient:
         }
 
         # Send authentication message
-        awAlgot self.ws_connection.send_json(auth_message)
+        await self.ws_connection.send_json(auth_message)
         logger.debug("Sent authentication request")
 
     async def _resubscribe(self) -> None:
@@ -257,7 +257,7 @@ class DMarketWebSocketClient:
         logger.info(f"Resubscribing to {len(self.subscriptions)} topics")
 
         for topic in self.subscriptions.copy():
-            awAlgot self.subscribe(topic)
+            await self.subscribe(topic)
 
     async def _unsubscribe_all(self) -> None:
         """Unsubscribe from all active subscriptions."""
@@ -267,7 +267,7 @@ class DMarketWebSocketClient:
         logger.info(f"Unsubscribing from {len(self.subscriptions)} topics")
 
         for topic in self.subscriptions.copy():
-            awAlgot self.unsubscribe(topic)
+            await self.unsubscribe(topic)
 
     async def subscribe(self, topic: str, params: dict[str, Any] | None = None) -> bool:
         """Subscribe to a topic.
@@ -294,7 +294,7 @@ class DMarketWebSocketClient:
             subscription["params"] = params
 
         # Send subscription request
-        awAlgot self.ws_connection.send_json(subscription)
+        await self.ws_connection.send_json(subscription)
         logger.info("Subscribed to %s", topic)
 
         # Add to active subscriptions
@@ -322,7 +322,7 @@ class DMarketWebSocketClient:
         }
 
         # Send unsubscription request
-        awAlgot self.ws_connection.send_json(unsubscription)
+        await self.ws_connection.send_json(unsubscription)
         logger.info("Unsubscribed from %s", topic)
 
         # Remove from active subscriptions
@@ -379,7 +379,7 @@ class DMarketWebSocketClient:
             logger.error("Cannot send message: WebSocket not connected")
             return False
 
-        awAlgot self.ws_connection.send_json(message)
+        await self.ws_connection.send_json(message)
         return True
 
     async def subscribe_to_market_updates(self, game: str = "csgo") -> bool:
@@ -392,7 +392,7 @@ class DMarketWebSocketClient:
             bool: True if subscription was successful
 
         """
-        return awAlgot self.subscribe("market:update", {"gameId": game})
+        return await self.subscribe("market:update", {"gameId": game})
 
     async def subscribe_to_item_updates(self, item_ids: list[str]) -> bool:
         """Subscribe to updates for specific items.
@@ -404,4 +404,4 @@ class DMarketWebSocketClient:
             bool: True if subscription was successful
 
         """
-        return awAlgot self.subscribe("items:update", {"itemIds": item_ids})
+        return await self.subscribe("items:update", {"itemIds": item_ids})

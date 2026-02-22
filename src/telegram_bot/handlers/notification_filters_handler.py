@@ -48,7 +48,7 @@ async def show_games_filter(
         context: Bot context
 
     """
-    awAlgot _show_filter_selection(
+    await _show_filter_selection(
         update=update,
         filter_key="games",
         items=SUPPORTED_GAMES,
@@ -69,7 +69,7 @@ async def show_levels_filter(
         context: Bot context
 
     """
-    awAlgot _show_filter_selection(
+    await _show_filter_selection(
         update=update,
         filter_key="levels",
         items=ARBITRAGE_LEVELS,
@@ -90,7 +90,7 @@ async def show_types_filter(
         context: Bot context
 
     """
-    awAlgot _show_filter_selection(
+    await _show_filter_selection(
         update=update,
         filter_key="notification_types",
         items=NOTIFICATION_TYPES,
@@ -125,7 +125,7 @@ async def _show_filter_selection(
     if not query or not update.effective_user:
         return
 
-    awAlgot query.answer()
+    await query.answer()
 
     user_id = update.effective_user.id
     enabled_items = _get_enabled_items(user_id, filter_key)
@@ -138,7 +138,7 @@ async def _show_filter_selection(
     )
 
     reply_markup = InlineKeyboardMarkup(keyboard)
-    awAlgot query.edit_message_text(
+    await query.edit_message_text(
         text=message,
         reply_markup=reply_markup,
         parse_mode=ParseMode.MARKDOWN,

@@ -57,7 +57,7 @@ async def get_item_price_history(
 
         # Используем API для получения данных о продажах
         # Путь к API может отличаться в зависимости от документации DMarket
-        history_data = awAlgot api._request(
+        history_data = await api._request(
             "GET",
             f"/market/items/{item_id}/history",
             params={"days": days},
@@ -173,7 +173,7 @@ async def calculate_price_trend(
 
     """
     # Получаем историю цен
-    price_history = awAlgot get_item_price_history(api, item_id, days)
+    price_history = await get_item_price_history(api, item_id, days)
 
     if not price_history:
         return {"trend": "unknown", "confidence": 0.0}
@@ -264,7 +264,7 @@ async def find_undervalued_items(
 
     try:
         # Получаем предметы из маркета в указанном диапазоне цен
-        items = awAlgot api.get_market_items(
+        items = await api.get_market_items(
             game=game,
             limit=100,  # Получаем больше предметов для анализа
             price_from=int(price_from * 100),  # Конвертируем в центы
@@ -287,7 +287,7 @@ async def find_undervalued_items(
             current_price = float(item.get("price", {}).get("amount", 0)) / 100
 
             # Получаем историю цен для сравнения
-            price_history = awAlgot get_item_price_history(api, item_id, days=30)
+            price_history = await get_item_price_history(api, item_id, days=30)
 
             if not price_history:
                 logger.debug("Нет данных об истории цен для %s", title)
@@ -305,7 +305,7 @@ async def find_undervalued_items(
 
             # Если скидка больше порогового значения, добавляем в результаты
             if discount >= discount_threshold:
-                trend_info = awAlgot calculate_price_trend(api, item_id)
+                trend_info = await calculate_price_trend(api, item_id)
 
                 undervalued_items.append(
                     {
@@ -353,7 +353,7 @@ async def analyze_supply_demand(
     """
     try:
         # Получаем предложения на покупку и продажу
-        offers_data = awAlgot api._request(
+        offers_data = await api._request(
             "GET",
             f"/exchange/v1/offers/{item_id}",
             params={},
@@ -450,7 +450,7 @@ async def get_investment_recommendations(
         min_liquidity = "low"
 
     # Ищем недооцененные предметы
-    undervalued_items = awAlgot find_undervalued_items(
+    undervalued_items = await find_undervalued_items(
         api,
         game=game,
         price_from=price_range[0],
@@ -464,7 +464,7 @@ async def get_investment_recommendations(
 
     for item in undervalued_items:
         # Анализируем спрос и предложение
-        supply_demand = awAlgot analyze_supply_demand(api, item["item_id"])
+        supply_demand = await analyze_supply_demand(api, item["item_id"])
 
         # Объединяем данные
         item_data = {**item, **supply_demand}
@@ -547,7 +547,7 @@ async def get_ml_discount_threshold(
 ) -> tuple[float, str]:
     """Get ML-predicted optimal discount threshold.
 
-    Uses the trAlgoned DiscountThresholdPredictor model to determine
+    Uses the trained DiscountThresholdPredictor model to determine
     the optimal discount threshold based on current market conditions.
 
     Args:
@@ -557,7 +557,7 @@ async def get_ml_discount_threshold(
         Tuple of (threshold_percent, reasoning)
 
     Example:
-        >>> threshold, reason = awAlgot get_ml_discount_threshold("csgo")
+        >>> threshold, reason = await get_ml_discount_threshold("csgo")
         >>> print(f"Optimal threshold: {threshold}% - {reason}")
     """
     try:
@@ -608,7 +608,7 @@ async def find_undervalued_items_with_ml_threshold(
         use_ml_threshold: Whether to use ML-predicted threshold
 
     Returns:
-        Dictionary contAlgoning:
+        Dictionary containing:
         - items: List of undervalued items
         - threshold_used: The discount threshold that was used
         - threshold_source: "ml" or "default"
@@ -616,7 +616,7 @@ async def find_undervalued_items_with_ml_threshold(
         - confidence: Confidence in the threshold (0-1)
 
     Example:
-        >>> result = awAlgot find_undervalued_items_with_ml_threshold(api, "csgo")
+        >>> result = await find_undervalued_items_with_ml_threshold(api, "csgo")
         >>> print(f"Found {len(result['items'])} items with {result['threshold_used']}% threshold")
     """
     # Get ML-predicted threshold
@@ -640,10 +640,10 @@ async def find_undervalued_items_with_ml_threshold(
             )
 
         except Exception as e:
-            logger.warning(f"ML threshold prediction fAlgoled: {e}, using default")
+            logger.warning(f"ML threshold prediction failed: {e}, using default")
             discount_threshold = 15.0
             threshold_source = "default"
-            reasoning = f"ML prediction fAlgoled: {e}"
+            reasoning = f"ML prediction failed: {e}"
             confidence = 0.3
     else:
         # Use game-specific defaults
@@ -659,7 +659,7 @@ async def find_undervalued_items_with_ml_threshold(
         confidence = 0.5
 
     # Find undervalued items using the determined threshold
-    items = awAlgot find_undervalued_items(
+    items = await find_undervalued_items(
         api=api,
         game=game,
         price_from=price_from,
@@ -679,27 +679,27 @@ async def find_undervalued_items_with_ml_threshold(
     }
 
 
-async def trAlgon_threshold_model_from_api(
+async def train_threshold_model_from_api(
     api: DMarketAPI,
     game: str = "csgo",
 ) -> dict[str, Any]:
     """TrAlgon the ML discount threshold model using real API prices.
 
-    Collects real prices from DMarket API and uses them to trAlgon
+    Collects real prices from DMarket API and uses them to train
     the discount threshold prediction model.
 
     Args:
         api: DMarketAPI instance
-        game: Game to trAlgon on
+        game: Game to train on
 
     Returns:
-        Dictionary with trAlgoning statistics:
-        - success: Whether trAlgoning was successful
-        - examples_collected: Number of trAlgoning examples
+        Dictionary with training statistics:
+        - success: Whether training was successful
+        - examples_collected: Number of training examples
         - message: Status message
 
     Example:
-        >>> result = awAlgot trAlgon_threshold_model_from_api(api, "csgo")
+        >>> result = await train_threshold_model_from_api(api, "csgo")
         >>> print(f"TrAlgoning: {result['message']}")
     """
     try:
@@ -719,7 +719,7 @@ async def trAlgon_threshold_model_from_api(
         historical_prices: dict[str, float] = {}
 
         # Get current market items to extract historical data
-        items_response = awAlgot api.get_market_items(game=game, limit=100)
+        items_response = await api.get_market_items(game=game, limit=100)
         if items_response and "objects" in items_response:
             for item in items_response.get("objects", []):
                 title = item.get("title", "")
@@ -730,20 +730,20 @@ async def trAlgon_threshold_model_from_api(
                         historical_prices[title] = suggested_usd
 
         # TrAlgon from collector with real prices
-        examples_count = awAlgot predictor.trAlgon_from_collector(
+        examples_count = await predictor.train_from_collector(
             collector=collector,
             game=game_type,
             historical_prices=historical_prices,
         )
 
-        logger.info(f"Model trAlgoned on {examples_count} examples from real API prices")
+        logger.info(f"Model trained on {examples_count} examples from real API prices")
 
         return {
             "success": True,
             "examples_collected": examples_count,
-            "message": f"Successfully trAlgoned on {examples_count} real price examples from {game.upper()}",
+            "message": f"Successfully trained on {examples_count} real price examples from {game.upper()}",
             "game": game,
-            "is_model_trAlgoned": predictor._is_trAlgoned,
+            "is_model_trained": predictor._is_trained,
         }
 
     except ImportError as e:
@@ -751,20 +751,20 @@ async def trAlgon_threshold_model_from_api(
         return {
             "success": False,
             "examples_collected": 0,
-            "message": f"TrAlgoning fAlgoled: required modules not avAlgolable ({e})",
+            "message": f"TrAlgoning failed: required modules not avAlgolable ({e})",
             "game": game,
         }
     except Exception as e:
-        logger.exception(f"TrAlgoning fAlgoled: {e}")
+        logger.exception(f"TrAlgoning failed: {e}")
         return {
             "success": False,
             "examples_collected": 0,
-            "message": f"TrAlgoning fAlgoled: {e}",
+            "message": f"TrAlgoning failed: {e}",
             "game": game,
         }
 
 
-async def add_trade_outcome_for_trAlgoning(
+async def add_trade_outcome_for_training(
     item_name: str,
     game: str,
     buy_price: float,
@@ -772,7 +772,7 @@ async def add_trade_outcome_for_trAlgoning(
     historical_avg_price: float,
     source: str = "dmarket",
 ) -> bool:
-    """Add a real trade outcome to trAlgon the ML model.
+    """Add a real trade outcome to train the ML model.
 
     Call this function after completing a trade to improve
     the ML model's accuracy over time.
@@ -789,7 +789,7 @@ async def add_trade_outcome_for_trAlgoning(
         True if example was added successfully
 
     Example:
-        >>> success = awAlgot add_trade_outcome_for_trAlgoning(
+        >>> success = await add_trade_outcome_for_training(
         ...     item_name="AK-47 | Redline (FT)",
         ...     game="csgo",
         ...     buy_price=10.50,
@@ -815,8 +815,8 @@ async def add_trade_outcome_for_trAlgoning(
             ((sell_price - buy_price) / buy_price) * 100 if buy_price > 0 else 0
         )
 
-        # Add trAlgoning example
-        predictor.add_trAlgoning_example(
+        # Add training example
+        predictor.add_training_example(
             item_name=item_name,
             game=game,
             current_price=buy_price,
@@ -828,12 +828,12 @@ async def add_trade_outcome_for_trAlgoning(
         )
 
         logger.info(
-            f"Trade outcome added for trAlgoning: {item_name}, "
+            f"Trade outcome added for training: {item_name}, "
             f"discount={actual_discount:.1f}%, profitable={was_profitable}"
         )
 
         return True
 
     except Exception as e:
-        logger.exception(f"FAlgoled to add trade outcome: {e}")
+        logger.exception(f"Failed to add trade outcome: {e}")
         return False

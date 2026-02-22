@@ -12,7 +12,7 @@ try:
     print("--- DIAGNOSTICS START ---")
     predictor = PricePredictor()
     model_info = predictor.get_model_info()
-    print(f"MODEL_TRAlgoNED: {model_info['is_trAlgoned']}")
+    print(f"MODEL_TRAlgoNED: {model_info['is_trained']}")
     print(f"KNOWN_ITEMS: {model_info.get('known_items_count', 0)}")
 
     # 2. Check Data Status
@@ -31,11 +31,11 @@ try:
     print(f"DATA_PATH: {data_path}")
 
     # 3. Action Logic (Self-Correction)
-    if not model_info['is_trAlgoned']:
+    if not model_info['is_trained']:
         if rows >= 100:
             print("ACTION: TRAlgoNING_MODEL...")
             try:
-                result = predictor.trAlgon_model()
+                result = predictor.train_model()
                 print(f"TRAlgoNING_RESULT: {result}")
             except Exception as e:
                 print(f"TRAlgoNING_ERROR: {e}")

@@ -29,14 +29,14 @@ async def settings_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     if not query.data:
         return
 
-    awAlgot query.answer()
+    await query.answer()
 
     user_id = query.from_user.id
     data = query.data
 
     # Route to specific handler based on callback data
     handlers = {
-        "settings": _handle_mAlgon_settings,
+        "settings": _handle_main_settings,
         "settings_language": _handle_language_menu,
         "settings_api_keys": _handle_api_keys_display,
         "settings_toggle_trading": _handle_toggle_trading,
@@ -46,21 +46,21 @@ async def settings_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) 
 
     # Check for handlers with prefixes
     if data in handlers:
-        awAlgot handlers[data](query, user_id)
+        await handlers[data](query, user_id)
     elif data.startswith("language:"):
-        awAlgot _handle_language_selection(query, user_id, data)
+        await _handle_language_selection(query, user_id, data)
     elif data.startswith("limit_"):
-        awAlgot _handle_limit_adjustment(query, user_id, data)
+        await _handle_limit_adjustment(query, user_id, data)
     elif data.startswith("notif_"):
-        awAlgot _handle_notification_toggle(query, user_id, data)
+        await _handle_notification_toggle(query, user_id, data)
 
 
-async def _handle_mAlgon_settings(query, user_id: int) -> None:
-    """Display mAlgon settings menu."""
+async def _handle_main_settings(query, user_id: int) -> None:
+    """Display main settings menu."""
     settings_text = get_localized_text(user_id, "settings")
     keyboard = get_settings_keyboard()
 
-    awAlgot query.edit_message_text(
+    await query.edit_message_text(
         text=settings_text,
         reply_markup=keyboard,
     )
@@ -79,7 +79,7 @@ async def _handle_language_menu(query, user_id: int) -> None:
     )
     keyboard = get_language_keyboard(current_language)
 
-    awAlgot query.edit_message_text(
+    await query.edit_message_text(
         text=language_text,
         reply_markup=keyboard,
     )
@@ -90,7 +90,7 @@ async def _handle_language_selection(query, user_id: int, data: str) -> None:
     lang_code = data.split(":")[1]
 
     if lang_code not in LANGUAGES:
-        awAlgot _send_unsupported_language_error(query, lang_code)
+        await _send_unsupported_language_error(query, lang_code)
         return
 
     _save_language_preference(user_id, lang_code)
@@ -103,7 +103,7 @@ async def _handle_language_selection(query, user_id: int, data: str) -> None:
     )
 
     keyboard = get_back_to_settings_keyboard()
-    awAlgot query.edit_message_text(
+    await query.edit_message_text(
         text=confirmation_text,
         reply_markup=keyboard,
     )
@@ -126,7 +126,7 @@ async def _send_unsupported_language_error(query, lang_code: str) -> None:
     error_text = f"⚠️ Язык {lang_code} не поддерживается."
     keyboard = get_language_keyboard("ru")
 
-    awAlgot query.edit_message_text(
+    await query.edit_message_text(
         text=error_text,
         reply_markup=keyboard,
     )
@@ -144,7 +144,7 @@ async def _handle_api_keys_display(query, user_id: int) -> None:
     api_text = _format_api_keys_text(api_key_display, api_secret_display)
 
     keyboard = get_back_to_settings_keyboard()
-    awAlgot query.edit_message_text(
+    await query.edit_message_text(
         text=api_text,
         reply_markup=keyboard,
     )
@@ -188,7 +188,7 @@ async def _handle_toggle_trading(query, user_id: int) -> None:
     settings_text = get_localized_text(user_id, "settings")
     keyboard = get_settings_keyboard()
 
-    awAlgot query.edit_message_text(
+    await query.edit_message_text(
         text=f"{settings_text}\n\n{status_text}",
         reply_markup=keyboard,
     )
@@ -210,7 +210,7 @@ async def _handle_limits_display(query, user_id: int) -> None:
     limits_text = _format_limits_text(trade_settings)
     keyboard = get_back_to_settings_keyboard()
 
-    awAlgot query.edit_message_text(
+    await query.edit_message_text(
         text=limits_text,
         reply_markup=keyboard,
     )
@@ -220,13 +220,13 @@ def _format_limits_text(trade_settings: dict) -> str:
     """Format trading limits display text."""
     min_profit = trade_settings.get("min_profit", 2.0)
     max_price = trade_settings.get("max_price", 50.0)
-    max_dAlgoly_trades = trade_settings.get("max_dAlgoly_trades", 10)
+    max_daily_trades = trade_settings.get("max_daily_trades", 10)
 
     return (
         f"📊 Лимиты торговли\n\n"
         f"Минимальная прибыль: {min_profit}%\n"
         f"Максимальная цена: ${max_price}\n"
-        f"Максимум сделок в день: {max_dAlgoly_trades}\n\n"
+        f"Максимум сделок в день: {max_daily_trades}\n\n"
         f"Для изменения используйте команды:\n"
         f"/set_min_profit <значение>\n"
         f"/set_max_price <значение>\n"
@@ -251,7 +251,7 @@ async def _handle_limit_adjustment(query, user_id: int, data: str) -> None:
     _adjust_limit_value(trade_settings, limit_type, action)
     save_user_profiles()
 
-    awAlgot _handle_limits_display(query, user_id)
+    await _handle_limits_display(query, user_id)
 
 
 def _adjust_limit_value(trade_settings: dict, limit_type: str, action: str) -> None:
@@ -259,7 +259,7 @@ def _adjust_limit_value(trade_settings: dict, limit_type: str, action: str) -> N
     adjustments = {
         "profit": ("min_profit", 0.5, 0.1, 50.0),  # (key, step, min, max)
         "price": ("max_price", 5.0, 1.0, 1000.0),
-        "trades": ("max_dAlgoly_trades", 5, 1, 100),
+        "trades": ("max_daily_trades", 5, 1, 100),
     }
 
     if limit_type not in adjustments:
@@ -286,7 +286,7 @@ async def _handle_notifications_menu(query, user_id: int) -> None:
     notifications_text = _format_notifications_text(notif_settings)
     # keyboard = get_notifications_keyboard(notif_settings)  # TODO: implement
 
-    awAlgot query.edit_message_text(
+    await query.edit_message_text(
         text=notifications_text,
         # reply_markup=keyboard,  # TODO: implement
     )
@@ -325,7 +325,7 @@ async def _handle_notification_toggle(query, user_id: int, data: str) -> None:
     _toggle_notification_setting(notif_settings, notif_type)
     save_user_profiles()
 
-    awAlgot _handle_notifications_menu(query, user_id)
+    await _handle_notifications_menu(query, user_id)
 
 
 def _toggle_notification_setting(notif_settings: dict, notif_type: str) -> None:

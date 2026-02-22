@@ -91,7 +91,7 @@ class TestDMarketHandlerInit:
         assert handler.api is not None
 
     @patch("src.telegram_bot.handlers.dmarket_handlers.DMarketAPI")
-    def test_initialize_api_fAlgolure(self, mock_api_class):
+    def test_initialize_api_failure(self, mock_api_class):
         """Тест обработки ошибки при инициализации API."""
         mock_api_class.side_effect = Exception("API Error")
 
@@ -101,7 +101,7 @@ class TestDMarketHandlerInit:
         handler.api_url = "https://api.dmarket.com"
         handler.api = None
 
-        # Декоратор с rerAlgose=False перехватывает ошибку
+        # Декоратор с reraise=False перехватывает ошибку
         # Проверяем, что метод выполняется без exception
         handler.initialize_api()
 
@@ -122,7 +122,7 @@ class TestStatusCommand:
                 api_url="https://api.dmarket.com",
             )
 
-            awAlgot handler.status_command(mock_update, mock_context)
+            await handler.status_command(mock_update, mock_context)
 
             mock_update.message.reply_text.assert_called_once()
             call_args = mock_update.message.reply_text.call_args
@@ -143,7 +143,7 @@ class TestStatusCommand:
             api_url="https://api.dmarket.com",
         )
 
-        awAlgot handler.status_command(mock_update, mock_context)
+        await handler.status_command(mock_update, mock_context)
 
         mock_update.message.reply_text.assert_called_once()
         call_args = mock_update.message.reply_text.call_args
@@ -163,7 +163,7 @@ class TestBalanceCommand:
             api_url="https://api.dmarket.com",
         )
 
-        awAlgot handler.balance_command(mock_update, mock_context)
+        await handler.balance_command(mock_update, mock_context)
 
         mock_update.message.reply_text.assert_called_once()
         call_args = mock_update.message.reply_text.call_args
@@ -179,7 +179,7 @@ class TestBalanceCommand:
             "src.telegram_bot.handlers.dmarket_handlers.DMarketAPI"
         ) as mock_api_class:
             mock_api_instance = MagicMock()
-            # Make get_balance an AsyncMock to support awAlgot
+            # Make get_balance an AsyncMock to support await
             mock_api_instance.get_balance = AsyncMock(return_value=mock_balance)
             mock_api_class.return_value = mock_api_instance
 
@@ -189,7 +189,7 @@ class TestBalanceCommand:
                 api_url="https://api.dmarket.com",
             )
 
-            awAlgot handler.balance_command(mock_update, mock_context)
+            await handler.balance_command(mock_update, mock_context)
 
             mock_update.message.reply_text.assert_called_once()
             call_args = mock_update.message.reply_text.call_args
@@ -208,7 +208,7 @@ class TestBalanceCommand:
             "src.telegram_bot.handlers.dmarket_handlers.DMarketAPI"
         ) as mock_api_class:
             mock_api_instance = MagicMock()
-            # Make get_balance an AsyncMock to support awAlgot
+            # Make get_balance an AsyncMock to support await
             mock_api_instance.get_balance = AsyncMock(
                 side_effect=Exception("API Error")
             )
@@ -220,8 +220,8 @@ class TestBalanceCommand:
                 api_url="https://api.dmarket.com",
             )
 
-            # Декоратор с rerAlgose=False перехватывает ошибку и отправляет сообщение
-            awAlgot handler.balance_command(mock_update, mock_context)
+            # Декоратор с reraise=False перехватывает ошибку и отправляет сообщение
+            await handler.balance_command(mock_update, mock_context)
 
             # Проверяем, что ошибка отправлена пользователю
             mock_update.message.reply_text.assert_called()

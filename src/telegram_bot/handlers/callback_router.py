@@ -7,7 +7,7 @@ Phase 2 Refactoring: Early returns, small functions, clear responsibilities.
 """
 
 import logging
-from collections.abc import AwAlgotable, Callable
+from collections.abc import Awaitable, Callable
 
 from telegram import Update
 from telegram.ext import ContextTypes
@@ -17,7 +17,7 @@ from src.utils.telegram_error_handlers import telegram_error_boundary
 logger = logging.getLogger(__name__)
 
 # Type alias for callback handlers
-CallbackHandler = Callable[[Update, ContextTypes.DEFAULT_TYPE], AwAlgotable[None]]
+CallbackHandler = Callable[[Update, ContextTypes.DEFAULT_TYPE], Awaitable[None]]
 
 
 class CallbackRouter:
@@ -79,24 +79,24 @@ class CallbackRouter:
         callback_data = update.callback_query.data
 
         # Answer callback query immediately
-        awAlgot update.callback_query.answer()
+        await update.callback_query.answer()
 
         # Try exact match first (fastest)
         if callback_data in self._exact_handlers:
             handler = self._exact_handlers[callback_data]
-            awAlgot handler(update, context)
+            await handler(update, context)
             return True
 
         # Try prefix matches
         for prefix, handler in self._prefix_handlers:
             if callback_data.startswith(prefix):
-                awAlgot handler(update, context)
+                await handler(update, context)
                 return True
 
         # Try pattern matches
         for matcher, handler in self._pattern_handlers:
             if matcher(callback_data):
-                awAlgot handler(update, context)
+                await handler(update, context)
                 return True
 
         # No handler found
@@ -123,7 +123,7 @@ async def button_callback_handler_v2(
     if router is None:
         logger.error("Callback router not initialized in bot_data")
         if update.callback_query:
-            awAlgot update.callback_query.answer("❌ Ошибка: роутер не инициализирован")
+            await update.callback_query.answer("❌ Ошибка: роутер не инициализирован")
         return
 
-    awAlgot router.route(update, context)
+    await router.route(update, context)

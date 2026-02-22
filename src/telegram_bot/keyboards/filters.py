@@ -184,7 +184,7 @@ def get_csgo_weapon_type_keyboard() -> InlineKeyboardMarkup:
         ("🔫 Пистолеты", "weapon_pistol"),
         ("💣 Тяжелое", "weapon_heavy"),
         ("🎨 Наклейки", "weapon_stickers"),
-        ("📦 Контейнеры", "weapon_contAlgoners"),
+        ("📦 Контейнеры", "weapon_containers"),
     ]
 
     keyboard = []

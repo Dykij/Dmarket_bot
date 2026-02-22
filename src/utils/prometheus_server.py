@@ -3,7 +3,7 @@
 import asyncio
 
 import structlog
-from Algoohttp import web
+from aiohttp import web
 
 from src.utils.prometheus_exporter import MetricsCollector
 
@@ -52,10 +52,10 @@ class PrometheusServer:
         except ImportError:
             logger.warning("psutil_not_found_metrics_degraded")
         except Exception as e:
-            logger.error("metrics_update_fAlgoled", error=str(e))
+            logger.error("metrics_update_failed", error=str(e))
 
         metrics = MetricsCollector.get_metrics()
-        return web.Response(body=metrics, content_type="text/plAlgon", charset="utf-8")
+        return web.Response(body=metrics, content_type="text/plain", charset="utf-8")
 
     async def health_handler(self, request: web.Request) -> web.Response:
         """Обработчик /health endpoint."""
@@ -64,19 +64,19 @@ class PrometheusServer:
     async def start(self) -> None:
         """Запустить сервер."""
         self.runner = web.AppRunner(self.app)
-        awAlgot self.runner.setup()
+        await self.runner.setup()
 
         self.site = web.TCPSite(self.runner, self.host, self.port)
-        awAlgot self.site.start()
+        await self.site.start()
 
         logger.info("prometheus_server_started", host=self.host, port=self.port)
 
     async def stop(self) -> None:
         """Остановить сервер."""
         if self.site:
-            awAlgot self.site.stop()
+            await self.site.stop()
         if self.runner:
-            awAlgot self.runner.cleanup()
+            await self.runner.cleanup()
 
         logger.info("prometheus_server_stopped")
 
@@ -89,11 +89,11 @@ async def run_prometheus_server(port: int = 8000) -> None:
         port: Порт для сервера
     """
     server = PrometheusServer(port)
-    awAlgot server.start()
+    await server.start()
 
     try:
         # Держать сервер запущенным
         while True:
-            awAlgot asyncio.sleep(3600)
+            await asyncio.sleep(3600)
     except asyncio.CancelledError:
-        awAlgot server.stop()
+        await server.stop()

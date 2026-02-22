@@ -50,7 +50,7 @@ class TestEndToEndWorkflows:
 
         # Act - Поиск возможностей
         with patch.object(api, "get_market_items", return_value=mock_items):
-            opportunities = awAlgot scanner.scan_level("standard", "csgo")
+            opportunities = await scanner.scan_level("standard", "csgo")
 
         # Assert
         assert len(opportunities) > 0
@@ -93,7 +93,7 @@ class TestEndToEndWorkflows:
         # Act - Get portfolio snapshot (метод который есть в API)
         with patch.object(api, "get_user_inventory") as mock_inv:
             mock_inv.return_value = {"objects": mock_inventory}
-            snapshot = awAlgot portfolio.get_portfolio_snapshot()
+            snapshot = await portfolio.get_portfolio_snapshot()
 
         # Assert
         assert snapshot is not None
@@ -110,7 +110,7 @@ class TestEndToEndWorkflows:
         for game in games:
             mock_items = {"objects": [{"game": game}]}
             with patch.object(api, "get_market_items", return_value=mock_items):
-                result = awAlgot api.get_market_items(game=game)
+                result = await api.get_market_items(game=game)
                 assert result is not None
 
     @pytest.mark.asyncio()
@@ -120,22 +120,22 @@ class TestEndToEndWorkflows:
         api = DMarketAPI(public_key="test", secret_key="test")
         call_count = 0
 
-        async def fAlgoling_then_success(*args, **kwargs):
+        async def failing_then_success(*args, **kwargs):
             nonlocal call_count
             call_count += 1
             if call_count == 1:
-                rAlgose Exception("Temporary fAlgolure")
+                raise Exception("Temporary failure")
             return {"success": True}
 
         # Act
-        with patch.object(api, "get_balance", side_effect=fAlgoling_then_success):
+        with patch.object(api, "get_balance", side_effect=failing_then_success):
             try:
-                awAlgot api.get_balance()
+                await api.get_balance()
                 success_first = True
             except Exception:
                 success_first = False
                 # Retry
-                result = awAlgot api.get_balance()
+                result = await api.get_balance()
                 success_retry = result["success"]
 
         # Assert
@@ -214,11 +214,11 @@ class TestEndToEndWorkflows:
         ]
 
         async def process_user(user: dict) -> dict:
-            awAlgot asyncio.sleep(0.01)  # Simulate async work
+            await asyncio.sleep(0.01)  # Simulate async work
             return {"processed": True, "user_id": user["id"]}
 
         # Act
-        results = awAlgot asyncio.gather(*[process_user(u) for u in users])
+        results = await asyncio.gather(*[process_user(u) for u in users])
 
         # Assert
         assert len(results) == 3
@@ -327,7 +327,7 @@ class TestExternalServicesIntegration:
         ws = MockWebSocket()
 
         # Act
-        websocket_connected = awAlgot ws.connect()
+        websocket_connected = await ws.connect()
 
         # Assert
         assert websocket_connected

@@ -102,52 +102,52 @@ class TestStopLossTakeProfit:
         assert order.expires_at is not None
         assert order.expires_at > datetime.now(UTC)
     
-    def test_set_trAlgoling_stop(self):
-        """Test trAlgoling stop order."""
+    def test_set_trailing_stop(self):
+        """Test trailing stop order."""
         auto = TradingAutomation()
         
-        order = auto.set_trAlgoling_stop(
+        order = auto.set_trailing_stop(
             item_id="item_1",
             item_name="AK-47",
             entry_price=100.0,
-            trAlgol_percent=5.0,
+            trail_percent=5.0,
         )
         
         assert order.order_type == OrderType.STOP_LOSS
         assert order.trigger_price == 95.0  # 5% below entry
     
-    def test_update_trAlgoling_stop(self):
-        """Test trAlgoling stop update."""
+    def test_update_trailing_stop(self):
+        """Test trailing stop update."""
         auto = TradingAutomation()
         
-        order = auto.set_trAlgoling_stop(
+        order = auto.set_trailing_stop(
             item_id="item_1",
             item_name="AK-47",
             entry_price=100.0,
-            trAlgol_percent=5.0,
+            trail_percent=5.0,
         )
         
         # Price increased to 110
-        updated = auto.update_trAlgoling_stop(order.order_id, 110.0)
+        updated = auto.update_trailing_stop(order.order_id, 110.0)
         
         assert updated is True
         assert order.trigger_price == 104.5  # 5% below 110
     
-    def test_update_trAlgoling_stop_no_update_on_drop(self):
-        """Test trAlgoling stop doesn't update on price drop."""
+    def test_update_trailing_stop_no_update_on_drop(self):
+        """Test trailing stop doesn't update on price drop."""
         auto = TradingAutomation()
         
-        order = auto.set_trAlgoling_stop(
+        order = auto.set_trailing_stop(
             item_id="item_1",
             item_name="AK-47",
             entry_price=100.0,
-            trAlgol_percent=5.0,
+            trail_percent=5.0,
         )
         
         original_stop = order.trigger_price
         
         # Price dropped to 90 - shouldn't update
-        updated = auto.update_trAlgoling_stop(order.order_id, 90.0)
+        updated = auto.update_trailing_stop(order.order_id, 90.0)
         
         assert updated is False
         assert order.trigger_price == original_stop
@@ -335,7 +335,7 @@ class TestOrderExecution:
         )
         
         # Price dropped below stop
-        results = awAlgot auto.check_and_execute({"item_1": 85.0})
+        results = await auto.check_and_execute({"item_1": 85.0})
         
         assert len(results) == 1
         assert results[0].success is True
@@ -354,7 +354,7 @@ class TestOrderExecution:
         )
         
         # Price rose above target
-        results = awAlgot auto.check_and_execute({"item_1": 125.0})
+        results = await auto.check_and_execute({"item_1": 125.0})
         
         assert len(results) == 1
         assert results[0].success is True
@@ -373,7 +373,7 @@ class TestOrderExecution:
         )
         
         # Price didn't drop below stop
-        results = awAlgot auto.check_and_execute({"item_1": 95.0})
+        results = await auto.check_and_execute({"item_1": 95.0})
         
         assert len(results) == 0
 

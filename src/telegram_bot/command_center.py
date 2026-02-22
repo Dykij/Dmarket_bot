@@ -94,18 +94,18 @@ class CommandCenter:
         if not update.message:
             return
 
-        awAlgot update.message.reply_text("⏳ Собираю данные...")
+        await update.message.reply_text("⏳ Собираю данные...")
 
         try:
             # Получаем баланс
             balance_usd = 0.0
             if self.api:
                 try:
-                    balance_data = awAlgot self.api.get_balance()
+                    balance_data = await self.api.get_balance()
                     # API возвращает balance в долларах напрямую
                     balance_usd = float(balance_data.get("balance", 0))
                 except Exception as e:
-                    logger.exception(f"FAlgoled to get balance: {e}")
+                    logger.exception(f"Failed to get balance: {e}")
 
             # Получаем статистику из БД
             # active_trades: Tracked for future dashboard expansion
@@ -117,7 +117,7 @@ class CommandCenter:
             if self.db:
                 try:
                     # Активные сделки
-                    pending = awAlgot self.db.get_pending_items()
+                    pending = await self.db.get_pending_items()
                     pending_items = len(pending) if pending else 0
 
                     # Подсчет инвестиций
@@ -128,7 +128,7 @@ class CommandCenter:
                             total_invested += float(item[2])
 
                 except Exception as e:
-                    logger.exception(f"FAlgoled to get DB stats: {e}")
+                    logger.exception(f"Failed to get DB stats: {e}")
 
             # Сокровища
             if self.collectors_hold:
@@ -184,7 +184,7 @@ class CommandCenter:
                 ],
             ]
 
-            awAlgot update.message.reply_text(
+            await update.message.reply_text(
                 "\n".join(report),
                 parse_mode="Markdown",
                 reply_markup=InlineKeyboardMarkup(keyboard),
@@ -192,7 +192,7 @@ class CommandCenter:
 
         except Exception as e:
             logger.exception(f"Status command error: {e}")
-            awAlgot update.message.reply_text(f"❌ Ошибка получения статуса: {e}")
+            await update.message.reply_text(f"❌ Ошибка получения статуса: {e}")
 
     async def treasures_command(
         self,
@@ -204,13 +204,13 @@ class CommandCenter:
             return
 
         if not self.collectors_hold:
-            awAlgot update.message.reply_text("⚠️ Модуль Collector's Hold не подключен")
+            await update.message.reply_text("⚠️ Модуль Collector's Hold не подключен")
             return
 
         treasures = self.collectors_hold.get_treasures()
 
         if not treasures:
-            awAlgot update.message.reply_text(
+            await update.message.reply_text(
                 "📜 **Сейф с сокровищами пуст**\n\n"
                 "Пока редких вещей не найдено.\n"
                 "Бот продолжает поиск! 🔍"
@@ -225,7 +225,7 @@ class CommandCenter:
             emoji = "💎" if treasure.estimated_value_multiplier >= 1.5 else "✨"
             report.append(
                 f"{emoji} {i}. **{treasure.title}**\n"
-                f"   └ {treasure.reason_detAlgols[:50]}\n"
+                f"   └ {treasure.reason_details[:50]}\n"
                 f"   └ Множитель: {treasure.estimated_value_multiplier:.2f}x"
             )
             total_multiplier += treasure.estimated_value_multiplier
@@ -240,7 +240,7 @@ class CommandCenter:
             ]
         )
 
-        awAlgot update.message.reply_text(
+        await update.message.reply_text(
             "\n".join(report),
             parse_mode="Markdown",
         )
@@ -259,7 +259,7 @@ class CommandCenter:
             return
 
         if not self.api:
-            awAlgot update.message.reply_text("⚠️ API клиент не подключен")
+            await update.message.reply_text("⚠️ API клиент не подключен")
             return
 
         # Проверяем аргументы
@@ -281,7 +281,7 @@ class CommandCenter:
                 ],
             ]
 
-            awAlgot update.message.reply_text(
+            await update.message.reply_text(
                 "🚨 **PANIC SELL - ЭКСТРЕННЫЙ ВЫХОД В КЭШ**\n\n"
                 "Эта команда выставит **ВЕСЬ** ваш инвентарь "
                 "на 5% дешевле текущих конкурентов.\n\n"
@@ -296,17 +296,17 @@ class CommandCenter:
             return
 
         # Выполняем panic sell
-        awAlgot update.message.reply_text("🔄 Начинаю PANIC SELL...")
+        await update.message.reply_text("🔄 Начинаю PANIC SELL...")
 
         self._panic_mode = True
 
         try:
             # Получаем инвентарь
-            inventory = awAlgot self.api.get_user_inventory()
+            inventory = await self.api.get_user_inventory()
             items = inventory.get("items", [])
 
             if not items:
-                awAlgot update.message.reply_text("📦 Инвентарь пуст, нечего продавать.")
+                await update.message.reply_text("📦 Инвентарь пуст, нечего продавать.")
                 return
 
             sold_count = 0
@@ -325,7 +325,7 @@ class CommandCenter:
                 # Пропускаем сокровища (если есть в БД)
                 if self.db:
                     try:
-                        db_status = awAlgot self.db.get_item_status(item_id)
+                        db_status = await self.db.get_item_status(item_id)
                         if db_status == "HOLD_RARE":
                             skipped_count += 1
                             continue
@@ -334,7 +334,7 @@ class CommandCenter:
 
                 # Получаем текущую цену рынка
                 try:
-                    market_data = awAlgot self.api.get_market_items(
+                    market_data = await self.api.get_market_items(
                         title=title,
                         limit=1,
                     )
@@ -346,16 +346,16 @@ class CommandCenter:
                         panic_price = round(lowest_price * 0.95, 2)  # -5%
 
                         # Выставляем на продажу
-                        awAlgot self.api.create_offer(
+                        await self.api.create_offer(
                             item_id=item_id,
                             price=int(panic_price * 100),  # В центах
                         )
                         sold_count += 1
 
                 except Exception as e:
-                    logger.exception(f"FAlgoled to list item {title}: {e}")
+                    logger.exception(f"Failed to list item {title}: {e}")
 
-            awAlgot update.message.reply_text(
+            await update.message.reply_text(
                 f"✅ **PANIC SELL завершен**\n\n"
                 f"📦 Выставлено: {sold_count} предметов\n"
                 f"⏭️ Пропущено: {skipped_count} (уже выставлены или сокровища)\n\n"
@@ -364,7 +364,7 @@ class CommandCenter:
 
         except Exception as e:
             logger.exception(f"Panic sell error: {e}")
-            awAlgot update.message.reply_text(f"❌ Ошибка PANIC SELL: {e}")
+            await update.message.reply_text(f"❌ Ошибка PANIC SELL: {e}")
         finally:
             self._panic_mode = False
 
@@ -380,7 +380,7 @@ class CommandCenter:
         args = context.args or []
 
         if not args:
-            awAlgot update.message.reply_text(
+            await update.message.reply_text(
                 "📝 **Добавление предмета в отслеживание**\n\n"
                 "Использование:\n"
                 "`/add_target <URL>`\n\n"
@@ -399,14 +399,14 @@ class CommandCenter:
         item_name = self._parse_item_url(url)
 
         if not item_name:
-            awAlgot update.message.reply_text(
+            await update.message.reply_text(
                 "❌ Не удалось распознать ссылку.\n\n"
                 "Убедитесь, что это ссылка на предмет DMarket или Steam Market."
             )
             return
 
         # TODO: Добавить в whitelist/targets
-        awAlgot update.message.reply_text(
+        await update.message.reply_text(
             f"✅ **Предмет добавлен в отслеживание**\n\n"
             f"📦 {item_name}\n\n"
             f"Бот будет искать выгодные предложения для этого предмета."
@@ -461,14 +461,14 @@ class CommandCenter:
             log_file = Path("logs/bot.log")
 
             # Async check for file existence
-            file_exists = awAlgot asyncio.to_thread(os.path.exists, log_file)
+            file_exists = await asyncio.to_thread(os.path.exists, log_file)
             if not file_exists:
-                awAlgot update.message.reply_text("📋 Файл логов не найден.")
+                await update.message.reply_text("📋 Файл логов не найден.")
                 return
 
             # Читаем последние 50 строк (async)
             async with Algoofiles.open(log_file, encoding="utf-8") as f:
-                content = awAlgot f.read()
+                content = await f.read()
                 lines = content.splitlines(keepends=True)
                 last_lines = lines[-50:]
 
@@ -478,13 +478,13 @@ class CommandCenter:
             if len(log_text) > 4000:
                 log_text = log_text[-4000:]
 
-            awAlgot update.message.reply_text(
+            await update.message.reply_text(
                 f"📋 **Последние логи:**\n\n```\n{log_text}\n```",
                 parse_mode="Markdown",
             )
 
         except Exception as e:
-            awAlgot update.message.reply_text(f"❌ Ошибка чтения логов: {e}")
+            await update.message.reply_text(f"❌ Ошибка чтения логов: {e}")
 
     async def market_mode_command(
         self,
@@ -496,13 +496,13 @@ class CommandCenter:
             return
 
         if not self.sales_protector:
-            awAlgot update.message.reply_text(
+            await update.message.reply_text(
                 "⚠️ Модуль Steam Sales Protector не подключен"
             )
             return
 
         message = self.sales_protector.format_status_message()
-        awAlgot update.message.reply_text(message, parse_mode="Markdown")
+        await update.message.reply_text(message, parse_mode="Markdown")
 
     async def portfolio_command(
         self,
@@ -513,7 +513,7 @@ class CommandCenter:
         if not update.message:
             return
 
-        awAlgot update.message.reply_text("⏳ Оцениваю портфель...")
+        await update.message.reply_text("⏳ Оцениваю портфель...")
 
         try:
             portfolio_value = 0.0
@@ -522,14 +522,14 @@ class CommandCenter:
 
             # Баланс
             if self.api:
-                balance_data = awAlgot self.api.get_balance()
+                balance_data = await self.api.get_balance()
                 # API возвращает balance в долларах напрямую
                 balance_usd = float(balance_data.get("balance", 0))
                 portfolio_value += balance_usd
 
             # Инвентарь
             if self.api:
-                inventory = awAlgot self.api.get_user_inventory()
+                inventory = await self.api.get_user_inventory()
                 items = inventory.get("items", [])
                 items_count = len(items)
 
@@ -551,7 +551,7 @@ class CommandCenter:
                         # TODO: Получить реальную цену покупки из БД
                         treasures_value += 10.0 * t.estimated_value_multiplier
 
-            awAlgot update.message.reply_text(
+            await update.message.reply_text(
                 f"💼 **ВАШ ПОРТФЕЛЬ**\n\n"
                 f"💵 Баланс: ${balance_usd:.2f}\n"
                 f"📦 Инвентарь: {items_count} предметов\n"
@@ -562,7 +562,7 @@ class CommandCenter:
 
         except Exception as e:
             logger.exception(f"Portfolio command error: {e}")
-            awAlgot update.message.reply_text(f"❌ Ошибка оценки портфеля: {e}")
+            await update.message.reply_text(f"❌ Ошибка оценки портфеля: {e}")
 
     async def handle_callback(
         self,
@@ -574,29 +574,29 @@ class CommandCenter:
         if not query:
             return
 
-        awAlgot query.answer()
+        await query.answer()
 
         data = query.data
 
         if data == "show_treasures":
             # Эмулируем /treasures
-            awAlgot self.treasures_command(update, context)
+            await self.treasures_command(update, context)
 
         elif data == "show_logs":
-            awAlgot self.logs_command(update, context)
+            await self.logs_command(update, context)
 
         elif data == "refresh_status":
-            awAlgot self.status_command(update, context)
+            await self.status_command(update, context)
 
         elif data == "market_mode":
-            awAlgot self.market_mode_command(update, context)
+            await self.market_mode_command(update, context)
 
         elif data == "confirm_panic_sell":
             # Добавляем CONFIRM и выполняем
             context.args = ["CONFIRM"]  # type: ignore
             if query.message:
                 update._message = query.message  # type: ignore
-            awAlgot self.panic_sell_command(update, context)
+            await self.panic_sell_command(update, context)
 
         elif data == "cancel_panic_sell":
-            awAlgot query.edit_message_text("❌ Panic Sell отменен.")
+            await query.edit_message_text("❌ Panic Sell отменен.")

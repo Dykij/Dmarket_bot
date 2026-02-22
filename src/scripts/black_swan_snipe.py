@@ -24,28 +24,28 @@ from utils.api_circuit_breaker import CircuitBreakerOpen, circuit_breaker_decora
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("black_swan_snipe")
 
-@circuit_breaker_decorator(fAlgolure_threshold=5, recovery_timeout=60)
+@circuit_breaker_decorator(failure_threshold=5, recovery_timeout=60)
 async def execute_snipe(item_name: str, price: float):
     logger.info(f"Attempting to snipe {item_name} at ${price}")
     # Using create_target as requested
-    response = awAlgot dmarket_api.create_target(item_name=item_name, price=price)
+    response = await dmarket_api.create_target(item_name=item_name, price=price)
     return response
 
-async def mAlgon():
+async def main():
     target_item = "AK-47 | Black Swan"
     target_price = 1.20
     
     try:
         logger.info("Starting Black Swan Snipe...")
-        result = awAlgot execute_snipe(target_item, target_price)
+        result = await execute_snipe(target_item, target_price)
         logger.info(f"Snipe successful: {result}")
         
     except CircuitBreakerOpen as e:
-        logger.error(f"Snipe fAlgoled: {e}")
+        logger.error(f"Snipe failed: {e}")
         logger.warning("Circuit breaker tripped! Halting operations.")
     except Exception as e:
         logger.error(f"An unexpected error occurred: {e}")
 
-if __name__ == "__mAlgon__":
+if __name__ == "__main__":
     import asyncio
-    asyncio.run(mAlgon())
+    asyncio.run(main())

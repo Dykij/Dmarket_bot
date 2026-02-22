@@ -59,7 +59,7 @@ class TestAutopilotCommands:
         mock_context.args = []
         mock_context.bot_data = {}
 
-        awAlgot autopilot_command(mock_update, mock_context)
+        await autopilot_command(mock_update, mock_context)
 
         mock_update.message.reply_text.assert_called_once()
         assert "не инициализирован" in str(mock_update.message.reply_text.call_args)
@@ -73,7 +73,7 @@ class TestAutopilotCommands:
 
         mock_orchestrator.is_active.return_value = True
 
-        awAlgot autopilot_command(mock_update, mock_context)
+        await autopilot_command(mock_update, mock_context)
 
         mock_update.message.reply_text.assert_called_once()
         assert "уже работает" in str(mock_update.message.reply_text.call_args)
@@ -85,7 +85,7 @@ class TestAutopilotCommands:
 
         mock_orchestrator.is_active.return_value = False
 
-        awAlgot autopilot_stop_command(mock_update, mock_context)
+        await autopilot_stop_command(mock_update, mock_context)
 
         mock_update.message.reply_text.assert_called_once()
         assert "не запущен" in str(mock_update.message.reply_text.call_args)
@@ -101,7 +101,7 @@ class TestAutopilotCommands:
             "trades_today": 5,
         }
 
-        awAlgot autopilot_status_command(mock_update, mock_context)
+        await autopilot_status_command(mock_update, mock_context)
 
         mock_update.message.reply_text.assert_called_once()
 
@@ -114,10 +114,10 @@ class TestAutopilotCommands:
         mock_orchestrator.get_stats = MagicMock(return_value={
             "uptime_minutes": 120,
             "purchases": 10,
-            "fAlgoled_purchases": 2,
+            "failed_purchases": 2,
             "total_spent_usd": 100.0,
             "sales": 8,
-            "fAlgoled_sales": 1,
+            "failed_sales": 1,
             "total_earned_usd": 125.0,
             "net_profit_usd": 25.0,
             "roi_percent": 25.0,
@@ -127,7 +127,7 @@ class TestAutopilotCommands:
             "low_balance_warnings": 5,
         })
 
-        awAlgot autopilot_stats_command(mock_update, mock_context)
+        await autopilot_stats_command(mock_update, mock_context)
 
         mock_update.message.reply_text.assert_called_once()
 
@@ -176,7 +176,7 @@ class TestAutopilotCallbacks:
             autopilot_start_confirmed_callback,
         )
 
-        awAlgot autopilot_start_confirmed_callback(mock_update_callback, mock_context)
+        await autopilot_start_confirmed_callback(mock_update_callback, mock_context)
 
         mock_update_callback.callback_query.answer.assert_called_once()
         mock_orchestrator.start.assert_called_once()

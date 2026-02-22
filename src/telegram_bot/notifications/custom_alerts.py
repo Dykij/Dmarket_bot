@@ -16,14 +16,14 @@ Usage:
     manager = AlertManager(user_id=123456)
 
     # Create price alert
-    alert = awAlgot manager.create_price_alert(
+    alert = await manager.create_price_alert(
         item_name="AK-47 | Redline",
         target_price=15.0,
         condition="below",
     )
 
     # Check alerts
-    triggered = awAlgot manager.check_alerts(current_prices)
+    triggered = await manager.check_alerts(current_prices)
     ```
 
 Created: January 10, 2026

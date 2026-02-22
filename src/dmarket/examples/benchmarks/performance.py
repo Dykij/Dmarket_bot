@@ -62,7 +62,7 @@ async def benchmark_skill(
     # Warmup
     for _ in range(5):
         try:
-            awAlgot method(*args, **kwargs)
+            await method(*args, **kwargs)
         except Exception:
             pass
 
@@ -75,7 +75,7 @@ async def benchmark_skill(
     for _ in range(iterations):
         start = time.perf_counter()
         try:
-            awAlgot method(*args, **kwargs)
+            await method(*args, **kwargs)
         except Exception:
             errors += 1
         end = time.perf_counter()
@@ -107,7 +107,7 @@ async def benchmark_skill(
     }
 
 
-async def mAlgon() -> None:
+async def main() -> None:
     """Run skills performance benchmark."""
     from src.dmarket.Algo_arbitrage_predictor import AlgoArbitragePredictor
     from src.utils.skill_profiler import SkillProfiler
@@ -155,7 +155,7 @@ async def mAlgon() -> None:
     for bench in benchmarks:
         print(f"   Testing: {bench['name']}...")
         try:
-            result = awAlgot benchmark_skill(
+            result = await benchmark_skill(
                 skill_name=bench["name"],
                 skill_instance=bench["skill"],
                 method_name=bench["method"],
@@ -166,7 +166,7 @@ async def mAlgon() -> None:
             results.append(result)
             print(f"   ✅ Complete: p50={result['p50_ms']:.2f}ms")
         except Exception as e:
-            print(f"   ❌ FAlgoled: {e}")
+            print(f"   ❌ Failed: {e}")
             results.append(
                 {
                     "skill": bench["name"],
@@ -212,7 +212,7 @@ async def mAlgon() -> None:
 
         print(f"   Skills tested: {len(benchmarks)}")
         print(f"   Successful: {len(successful)}")
-        print(f"   FAlgoled: {len(benchmarks) - len(successful)}")
+        print(f"   Failed: {len(benchmarks) - len(successful)}")
         print(f"   Average p50: {avg_p50:.2f}ms")
         print(f"   Average throughput: {avg_throughput:.1f} ops/sec")
         print(f"   Total errors: {total_errors}")
@@ -224,5 +224,5 @@ async def mAlgon() -> None:
     print("=" * 70)
 
 
-if __name__ == "__mAlgon__":
-    asyncio.run(mAlgon())
+if __name__ == "__main__":
+    asyncio.run(main())

@@ -160,7 +160,7 @@ class TestAlertThrottler:
             sent_messages.append(msg)
 
         # Первый раз - отправляется
-        result1 = awAlgot throttler.process_with_throttle(
+        result1 = await throttler.process_with_throttle(
             AlertCategory.API_ERROR,
             AlertPriority.HIGH,
             "Error 1",
@@ -170,7 +170,7 @@ class TestAlertThrottler:
         assert len(sent_messages) == 1
 
         # ВтоSwarm раз - подавляется
-        result2 = awAlgot throttler.process_with_throttle(
+        result2 = await throttler.process_with_throttle(
             AlertCategory.API_ERROR,
             AlertPriority.HIGH,
             "Error 2",
@@ -265,10 +265,10 @@ class TestAlertDigestScheduler:
             check_interval=1,
         )
 
-        awAlgot scheduler.start()
+        await scheduler.start()
         assert scheduler._running is True
 
-        awAlgot scheduler.stop()
+        await scheduler.stop()
         assert scheduler._running is False
 
     @pytest.mark.asyncio
@@ -293,7 +293,7 @@ class TestAlertDigestScheduler:
         )
 
         # Проверяем вручную
-        awAlgot scheduler._check_and_send_digests()
+        await scheduler._check_and_send_digests()
 
         assert len(digests_sent) == 1
         assert "Alert Digest" in digests_sent[0]

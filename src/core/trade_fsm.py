@@ -25,7 +25,7 @@ class TradeState(StrEnum):
     EXECUTING = "executing"  # Sending buy request to API
     VERIFYING = "verifying"  # Checking purchase confirmation
     COMPLETED = "completed"  # Trade successfully finished (bought)
-    FAlgoLED = "fAlgoled"  # Trade fAlgoled
+    FAlgoLED = "failed"  # Trade failed
 
 
 class TradeStateMachine:
@@ -35,7 +35,7 @@ class TradeStateMachine:
         """Initialize FSM.
 
         Args:
-            item_data: Dictionary with item detAlgols (title, price, etc.)
+            item_data: Dictionary with item details (title, price, etc.)
             session_id: Optional unique ID for this trade session
         """
         self.item_data = item_data or {}
@@ -54,18 +54,18 @@ class TradeStateMachine:
 
         # Pre-transition logic
         if new_state == TradeState.EXECUTING:
-            awAlgot self._persist_execution_start()
+            await self._persist_execution_start()
 
         elif new_state == TradeState.VERIFYING:
-            awAlgot self._update_status(
+            await self._update_status(
                 PendingTradeStatus.BOUGHT, context
             )  # Or specific internal status if model supported it
 
         elif new_state == TradeState.COMPLETED:
-            awAlgot self._finalize_trade(PendingTradeStatus.BOUGHT)  # Ready for listing
+            await self._finalize_trade(PendingTradeStatus.BOUGHT)  # Ready for listing
 
         elif new_state == TradeState.FAlgoLED:
-            awAlgot self._finalize_trade(PendingTradeStatus.FAlgoLED)
+            await self._finalize_trade(PendingTradeStatus.FAlgoLED)
 
         self.current_state = new_state
 
@@ -96,14 +96,14 @@ class TradeStateMachine:
                     created_at=datetime.utcnow(),
                 )
                 session.add(trade)
-                awAlgot session.commit()
-                awAlgot session.refresh(trade)
+                await session.commit()
+                await session.refresh(trade)
                 self.trade_id = trade.id
                 logger.info(
                     f"💾 Persisted trade execution start. DB ID: {self.trade_id}"
                 )
         except Exception as e:
-            logger.error(f"❌ FAlgoled to persist trade state: {e}")
+            logger.error(f"❌ Failed to persist trade state: {e}")
 
     async def _update_status(self, db_status: str, context: dict = None) -> None:
         """Update existing DB record status."""
@@ -112,19 +112,19 @@ class TradeStateMachine:
 
         try:
             async with get_db_session() as session:
-                trade = awAlgot session.get(PendingTrade, self.trade_id)
+                trade = await session.get(PendingTrade, self.trade_id)
                 if trade:
                     trade.status = db_status
                     if context and "offer_id" in context:
                         trade.offer_id = context["offer_id"]
                     trade.updated_at = datetime.utcnow()
-                    awAlgot session.commit()
+                    await session.commit()
         except Exception as e:
-            logger.error(f"❌ FAlgoled to update trade status: {e}")
+            logger.error(f"❌ Failed to update trade status: {e}")
 
     async def _finalize_trade(self, final_status: str) -> None:
         """Finalize the trade record."""
-        awAlgot self._update_status(final_status)
+        await self._update_status(final_status)
 
     @staticmethod
     async def recover_stuck_trades(api_client) -> None:
@@ -134,7 +134,7 @@ class TradeStateMachine:
             async with get_db_session() as session:
                 # Find trades that started executing but never verified
                 stmt = select(PendingTrade).where(PendingTrade.status == "executing")
-                result = awAlgot session.execute(stmt)
+                result = await session.execute(stmt)
                 stuck_trades = result.scalars().all()
 
                 for trade in stuck_trades:
@@ -142,7 +142,7 @@ class TradeStateMachine:
                         f"⚠️ Recovering stuck trade {trade.id} ({trade.title})..."
                     )
                     # Logic: Check inventory to see if we actually own it
-                    inventory = awAlgot api_client.get_user_inventory(game=trade.game)
+                    inventory = await api_client.get_user_inventory(game=trade.game)
                     found = False
                     for item in inventory.get("objects", []):
                         if item.get("itemId") == trade.asset_id:
@@ -156,13 +156,13 @@ class TradeStateMachine:
                         trade.status = PendingTradeStatus.BOUGHT
                     else:
                         logger.warning(
-                            f"❌ Trade {trade.id} fAlgoled (item not in inventory). Moving to FAlgoLED."
+                            f"❌ Trade {trade.id} failed (item not in inventory). Moving to FAlgoLED."
                         )
                         trade.status = PendingTradeStatus.FAlgoLED
 
-                    awAlgot session.commit()
+                    await session.commit()
         except Exception as e:
-            logger.error(f"❌ Recovery fAlgoled: {e}")
+            logger.error(f"❌ Recovery failed: {e}")
 
 
 # Imports needed at module level

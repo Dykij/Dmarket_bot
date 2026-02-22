@@ -17,7 +17,7 @@
 
     if result.requires_manual_review:
         # Отправить уведомление в Telegram - это джекпот!
-        awAlgot notify_admin(result)
+        await notify_admin(result)
     elif result.value_multiplier > 1.0:
         # Готовы переплатить за редкость
         adjusted_max_price = base_price * result.value_multiplier
@@ -339,8 +339,8 @@ class ItemValueEvaluator:
             result.stickers = stickers
             self._evaluate_cs2_stickers(result)
 
-        # 3. Проверяем паттерн (pAlgont seed)
-        pattern_id = extra.get("pAlgontSeed") or extra.get("pattern")
+        # 3. Проверяем паттерн (paint seed)
+        pattern_id = extra.get("paintSeed") or extra.get("pattern")
         if pattern_id is not None:
             try:
                 result.pattern_id = int(pattern_id)
@@ -424,7 +424,7 @@ class ItemValueEvaluator:
                     result.bonus_reasons.append("Premium sticker (Crown/Howling Dawn)")
 
     def _evaluate_cs2_pattern(self, result: EvaluationResult) -> None:
-        """Оценить паттерн (pAlgont seed)."""
+        """Оценить паттерн (paint seed)."""
         if result.pattern_id is None:
             return
 

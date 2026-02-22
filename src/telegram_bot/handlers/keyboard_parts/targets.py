@@ -1,4 +1,4 @@
-"""Target (buy order) handlers for mAlgon keyboard."""
+"""Target (buy order) handlers for main keyboard."""
 
 from typing import Any
 
@@ -16,14 +16,14 @@ def _get_dmarket_api(context: ContextTypes.DEFAULT_TYPE):
 
 async def targets_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
-    awAlgot query.answer()
+    await query.answer()
     keyboard = [
         [InlineKeyboardButton("➕ Создать таргет", callback_data="target_create")],
         [InlineKeyboardButton("🤖 Авто-таргеты", callback_data="target_auto")],
         [InlineKeyboardButton("📋 Мои таргеты", callback_data="target_list")],
-        [InlineKeyboardButton("◀️ Главное меню", callback_data="mAlgon_menu")],
+        [InlineKeyboardButton("◀️ Главное меню", callback_data="main_menu")],
     ]
-    awAlgot query.edit_message_text(
+    await query.edit_message_text(
         "🎯 <b>ТАРГЕТЫ (Buy Orders)</b>\n\nВыберите действие:",
         parse_mode="HTML",
         reply_markup=InlineKeyboardMarkup(keyboard),
@@ -32,7 +32,7 @@ async def targets_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
 async def target_create(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
-    awAlgot query.answer()
+    await query.answer()
     keyboard = [
         [
             InlineKeyboardButton("🔫 CS2", callback_data="target_game_csgo"),
@@ -44,7 +44,7 @@ async def target_create(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         ],
         [InlineKeyboardButton("◀️ Назад", callback_data="targets_menu")],
     ]
-    awAlgot query.edit_message_text(
+    await query.edit_message_text(
         "➕ <b>СОЗДАНИЕ ТАРГЕТА</b>\n\nШаг 1: Выберите игру:",
         parse_mode="HTML",
         reply_markup=InlineKeyboardMarkup(keyboard),
@@ -55,7 +55,7 @@ async def _delete_all_targets(dmarket_api: Any) -> int:
     deleted_count = 0
     for game in ["csgo", "dota2", "tf2", "rust"]:
         try:
-            targets_response = awAlgot dmarket_api.get_user_targets(game=game)
+            targets_response = await dmarket_api.get_user_targets(game=game)
             targets = targets_response.get("Items", [])
             target_ids = [
                 t.get("TargetID") or t.get("targetId")
@@ -63,7 +63,7 @@ async def _delete_all_targets(dmarket_api: Any) -> int:
                 if t.get("TargetID") or t.get("targetId")
             ]
             if target_ids:
-                awAlgot dmarket_api.delete_targets(target_ids=target_ids)
+                await dmarket_api.delete_targets(target_ids=target_ids)
                 deleted_count += len(target_ids)
         except Exception:
             continue
@@ -72,7 +72,7 @@ async def _delete_all_targets(dmarket_api: Any) -> int:
 
 async def target_auto(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
-    awAlgot query.answer("Анализирую...")
-    awAlgot query.edit_message_text(
+    await query.answer("Анализирую...")
+    await query.edit_message_text(
         "🤖 <b>АВТО-ТАРГЕТЫ</b>\n\n⏳ Подбираю выгодные позиции...", parse_mode="HTML"
     )

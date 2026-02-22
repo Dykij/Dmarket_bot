@@ -269,7 +269,7 @@ class TestDisplayResultsWithPagination:
     @patch("src.telegram_bot.handlers.intramarket_arbitrage_handler.pagination_manager")
     async def test_display_empty_results(self, mock_pagination, mock_callback_query):
         """Test displaying empty results."""
-        awAlgot display_results_with_pagination(
+        await display_results_with_pagination(
             query=mock_callback_query,
             results=[],
             title="Test Title",
@@ -300,7 +300,7 @@ class TestDisplayResultsWithPagination:
         mock_pagination.get_items_per_page.return_value = 10
         mock_keyboard.return_value = InlineKeyboardMarkup([])
 
-        awAlgot display_results_with_pagination(
+        await display_results_with_pagination(
             query=mock_callback_query,
             results=[sample_underpriced_result],
             title="Ценовые аномалии",
@@ -330,7 +330,7 @@ class TestDisplayResultsWithPagination:
         mock_pagination.get_items_per_page.return_value = 10
         mock_keyboard.return_value = InlineKeyboardMarkup([])
 
-        awAlgot display_results_with_pagination(
+        await display_results_with_pagination(
             query=mock_callback_query,
             results=[sample_underpriced_result],
             title="Test",
@@ -355,7 +355,7 @@ class TestHandleIntramarketPagination:
         """Test pagination without callback query."""
         mock_update.callback_query = None
 
-        awAlgot handle_intramarket_pagination(mock_update, mock_context)
+        await handle_intramarket_pagination(mock_update, mock_context)
 
         # Function should return early without errors
 
@@ -365,7 +365,7 @@ class TestHandleIntramarketPagination:
         mock_update.effective_user = None
         mock_update.callback_query.data = "intra_paginate:next:anomaly:csgo"
 
-        awAlgot handle_intramarket_pagination(mock_update, mock_context)
+        await handle_intramarket_pagination(mock_update, mock_context)
 
         mock_update.callback_query.answer.assert_called_once()
 
@@ -374,7 +374,7 @@ class TestHandleIntramarketPagination:
         """Test pagination without callback data."""
         mock_update.callback_query.data = None
 
-        awAlgot handle_intramarket_pagination(mock_update, mock_context)
+        await handle_intramarket_pagination(mock_update, mock_context)
 
         mock_update.callback_query.answer.assert_called_once()
 
@@ -383,7 +383,7 @@ class TestHandleIntramarketPagination:
         """Test pagination with invalid data format."""
         mock_update.callback_query.data = "invalid_data"
 
-        awAlgot handle_intramarket_pagination(mock_update, mock_context)
+        await handle_intramarket_pagination(mock_update, mock_context)
 
         mock_update.callback_query.answer.assert_called_once()
 
@@ -401,7 +401,7 @@ class TestHandleIntramarketPagination:
         mock_pagination.get_items_per_page.return_value = 10
         mock_keyboard.return_value = InlineKeyboardMarkup([])
 
-        awAlgot handle_intramarket_pagination(mock_update, mock_context)
+        await handle_intramarket_pagination(mock_update, mock_context)
 
         mock_pagination.next_page.assert_called_once_with(123456789)
         mock_update.callback_query.answer.assert_called_once()
@@ -420,7 +420,7 @@ class TestHandleIntramarketPagination:
         mock_pagination.get_items_per_page.return_value = 10
         mock_keyboard.return_value = InlineKeyboardMarkup([])
 
-        awAlgot handle_intramarket_pagination(mock_update, mock_context)
+        await handle_intramarket_pagination(mock_update, mock_context)
 
         mock_pagination.prev_page.assert_called_once_with(123456789)
 
@@ -438,7 +438,7 @@ class TestHandleIntramarketPagination:
         mock_pagination.get_items_per_page.return_value = 10
         mock_keyboard.return_value = InlineKeyboardMarkup([])
 
-        awAlgot handle_intramarket_pagination(mock_update, mock_context)
+        await handle_intramarket_pagination(mock_update, mock_context)
 
         call_args = mock_update.callback_query.edit_message_text.call_args
         assert "Ценовые аномалии" in call_args[0][0]
@@ -457,7 +457,7 @@ class TestHandleIntramarketPagination:
         mock_pagination.get_items_per_page.return_value = 10
         mock_keyboard.return_value = InlineKeyboardMarkup([])
 
-        awAlgot handle_intramarket_pagination(mock_update, mock_context)
+        await handle_intramarket_pagination(mock_update, mock_context)
 
         call_args = mock_update.callback_query.edit_message_text.call_args
         assert "Растущие в цене" in call_args[0][0]
@@ -476,7 +476,7 @@ class TestHandleIntramarketPagination:
         mock_pagination.get_items_per_page.return_value = 10
         mock_keyboard.return_value = InlineKeyboardMarkup([])
 
-        awAlgot handle_intramarket_pagination(mock_update, mock_context)
+        await handle_intramarket_pagination(mock_update, mock_context)
 
         call_args = mock_update.callback_query.edit_message_text.call_args
         assert "Редкие предметы" in call_args[0][0]
@@ -496,7 +496,7 @@ class TestHandleIntramarketPagination:
         mock_pagination.get_items_per_page.return_value = 10
         mock_keyboard.return_value = InlineKeyboardMarkup([])
 
-        awAlgot handle_intramarket_pagination(mock_update, mock_context)
+        await handle_intramarket_pagination(mock_update, mock_context)
 
         # Should default to csgo
         call_args = mock_update.callback_query.edit_message_text.call_args
@@ -512,8 +512,8 @@ class TestStartIntramarketArbitrage:
 
     @pytest.mark.asyncio()
     async def test_start_menu_content(self, mock_update, mock_context):
-        """Test that start menu contAlgons all expected elements."""
-        awAlgot start_intramarket_arbitrage(mock_update, mock_context)
+        """Test that start menu contains all expected elements."""
+        await start_intramarket_arbitrage(mock_update, mock_context)
 
         mock_update.callback_query.answer.assert_called_once()
         mock_context.bot.send_message.assert_called_once()
@@ -542,7 +542,7 @@ class TestStartIntramarketArbitrage:
     @pytest.mark.asyncio()
     async def test_start_menu_chat_id(self, mock_update, mock_context):
         """Test that message is sent to correct chat."""
-        awAlgot start_intramarket_arbitrage(mock_update, mock_context)
+        await start_intramarket_arbitrage(mock_update, mock_context)
 
         call_kwargs = mock_context.bot.send_message.call_args[1]
         assert call_kwargs["chat_id"] == 123456789
@@ -550,7 +550,7 @@ class TestStartIntramarketArbitrage:
     @pytest.mark.asyncio()
     async def test_start_menu_parse_mode(self, mock_update, mock_context):
         """Test that Markdown parse mode is used."""
-        awAlgot start_intramarket_arbitrage(mock_update, mock_context)
+        await start_intramarket_arbitrage(mock_update, mock_context)
 
         call_kwargs = mock_context.bot.send_message.call_args[1]
         assert call_kwargs.get("parse_mode") == "Markdown"
@@ -567,7 +567,7 @@ class TestHandleIntramarketCallback:
         """Test callback without query."""
         mock_update.callback_query = None
 
-        awAlgot handle_intramarket_callback(mock_update, mock_context)
+        await handle_intramarket_callback(mock_update, mock_context)
 
         # Should return early without errors
 
@@ -576,17 +576,17 @@ class TestHandleIntramarketCallback:
         """Test callback without data."""
         mock_update.callback_query.data = None
 
-        awAlgot handle_intramarket_callback(mock_update, mock_context)
+        await handle_intramarket_callback(mock_update, mock_context)
 
         mock_update.callback_query.answer.assert_called_once()
 
     @pytest.mark.asyncio()
-    async def test_callback_mAlgon_menu(self, mock_update, mock_context):
+    async def test_callback_main_menu(self, mock_update, mock_context):
         """Test callback with just the base action shows error message."""
         # When callback_data is just "intra" (no action type), it shows an error
         mock_update.callback_query.data = INTRA_ARBITRAGE_ACTION
 
-        awAlgot handle_intramarket_callback(mock_update, mock_context)
+        await handle_intramarket_callback(mock_update, mock_context)
 
         mock_update.callback_query.answer.assert_called_once()
         # Without action type, it shows "incorrect request data" via edit_message_text
@@ -604,13 +604,13 @@ class TestHandleIntramarketCallback:
     async def test_callback_anomaly_no_api_client(
         self, mock_api_client, mock_anomalies, mock_update, mock_context
     ):
-        """Test callback when API client creation fAlgols."""
+        """Test callback when API client creation fails."""
         mock_update.callback_query.data = (
             f"{INTRA_ARBITRAGE_ACTION}_{ANOMALY_ACTION}_csgo"
         )
         mock_api_client.return_value = None
 
-        awAlgot handle_intramarket_callback(mock_update, mock_context)
+        await handle_intramarket_callback(mock_update, mock_context)
 
         mock_update.callback_query.answer.assert_called_once()
         # Should show error about API client
@@ -648,7 +648,7 @@ class TestHandleIntramarketCallback:
         mock_pagination.get_page.return_value = ([sample_underpriced_result], 0, 1)
         mock_pagination.get_items_per_page.return_value = 10
 
-        awAlgot handle_intramarket_callback(mock_update, mock_context)
+        await handle_intramarket_callback(mock_update, mock_context)
 
         mock_anomalies.assert_called_once()
         mock_pagination.add_items_for_user.assert_called_once()
@@ -679,7 +679,7 @@ class TestHandleIntramarketCallback:
         mock_pagination.get_page.return_value = ([sample_trending_result], 0, 1)
         mock_pagination.get_items_per_page.return_value = 10
 
-        awAlgot handle_intramarket_callback(mock_update, mock_context)
+        await handle_intramarket_callback(mock_update, mock_context)
 
         mock_trending.assert_called_once()
         call_kwargs = mock_trending.call_args[1]
@@ -709,7 +709,7 @@ class TestHandleIntramarketCallback:
         mock_pagination.get_page.return_value = ([sample_rare_result], 0, 1)
         mock_pagination.get_items_per_page.return_value = 10
 
-        awAlgot handle_intramarket_callback(mock_update, mock_context)
+        await handle_intramarket_callback(mock_update, mock_context)
 
         mock_rare.assert_called_once()
         call_kwargs = mock_rare.call_args[1]
@@ -728,7 +728,7 @@ class TestHandleIntramarketCallback:
         )
         mock_api_client.return_value = AsyncMock()
 
-        awAlgot handle_intramarket_callback(mock_update, mock_context)
+        await handle_intramarket_callback(mock_update, mock_context)
 
         call_args = mock_update.callback_query.edit_message_text.call_args_list
         # Should show unknown type message
@@ -748,7 +748,7 @@ class TestRegisterIntramarketHandlers:
 
         register_intramarket_handlers(mock_dispatcher)
 
-        # Should register at least 2 handlers (mAlgon callback and pagination)
+        # Should register at least 2 handlers (main callback and pagination)
         assert mock_dispatcher.add_handler.call_count >= 2
 
     def test_register_callback_query_handlers(self):

@@ -43,7 +43,7 @@ class TestAPICheckHandler:
         mock_context.bot_data["dmarket_api"].get_balance = AsyncMock(
             return_value={"balance": 100.50, "dmc": 50.0}
         )
-        awAlgot handle_api_check(mock_update, mock_context)
+        await handle_api_check(mock_update, mock_context)
         assert mock_update.message.reply_text.called
 
 

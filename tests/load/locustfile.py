@@ -72,7 +72,7 @@ class TelegramBotAPIUser(HttpUser):
     """Simulates API user behavior for Telegram bot backend."""
 
     tasks = [APITaskSet]
-    wAlgot_time = between(1, 3)  # WAlgot 1-3 seconds between tasks
+    wait_time = between(1, 3)  # WAlgot 1-3 seconds between tasks
 
     def on_start(self):
         """Called when a user starts."""
@@ -120,7 +120,7 @@ class TelegramWebhookUser(HttpUser):
     """Simulates Telegram webhook traffic."""
 
     tasks = [WebhookTaskSet]
-    wAlgot_time = between(0.5, 2)  # Faster pace for webhooks
+    wait_time = between(0.5, 2)  # Faster pace for webhooks
 
 
 # Event hooks for custom reporting

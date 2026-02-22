@@ -151,11 +151,11 @@ class TestTrackCommand:
         final = bot_commands_total.labels(command="test_cmd", status="success")._value._value
         assert final == initial + 1
 
-    def test_track_command_fAlgolure(self):
+    def test_track_command_failure(self):
         """Тест трекинга неуспешной команды."""
-        initial = bot_commands_total.labels(command="test_cmd", status="fAlgoled")._value._value
+        initial = bot_commands_total.labels(command="test_cmd", status="failed")._value._value
         track_command("test_cmd", success=False)
-        final = bot_commands_total.labels(command="test_cmd", status="fAlgoled")._value._value
+        final = bot_commands_total.labels(command="test_cmd", status="failed")._value._value
         assert final == initial + 1
 
     def test_track_command_default_success(self):
@@ -174,7 +174,7 @@ class TestTrackCommand:
         # Каждая команда должна иметь свой счетчик
         cmd1 = bot_commands_total.labels(command="cmd1", status="success")._value._value
         cmd2 = bot_commands_total.labels(command="cmd2", status="success")._value._value
-        cmd3 = bot_commands_total.labels(command="cmd3", status="fAlgoled")._value._value
+        cmd3 = bot_commands_total.labels(command="cmd3", status="failed")._value._value
 
         assert cmd1 >= 1
         assert cmd2 >= 1
@@ -285,7 +285,7 @@ class TestGetMetrics:
         result = get_metrics()
         assert isinstance(result, bytes)
 
-    def test_get_metrics_contAlgons_prometheus_format(self):
+    def test_get_metrics_contains_prometheus_format(self):
         """Тест что результат содержит Prometheus формат."""
         result = get_metrics()
         # Prometheus metrics должны содержать # HELP
@@ -381,7 +381,7 @@ class TestTimer:
         try:
             with Timer() as t:
                 time.sleep(0.01)
-                rAlgose ValueError("Test error")
+                raise ValueError("Test error")
         except ValueError:
             pass
 

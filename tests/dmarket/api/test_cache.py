@@ -1,6 +1,6 @@
 """Unit tests for DMarket API cache module.
 
-This module contAlgons tests for src/dmarket/api/cache.py covering:
+This module contains tests for src/dmarket/api/cache.py covering:
 - Cache key generation
 - Cacheability checks
 - Cache get/save operations

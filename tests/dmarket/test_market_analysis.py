@@ -207,7 +207,7 @@ class TestAnalyzePriceChanges:
                 }
             ),
         ):
-            result = awAlgot analyze_price_changes(
+            result = await analyze_price_changes(
                 game="csgo",
                 period="24h",
                 dmarket_api=mock_api,
@@ -236,7 +236,7 @@ class TestAnalyzePriceChanges:
                 }
             ),
         ):
-            result = awAlgot analyze_price_changes(
+            result = await analyze_price_changes(
                 game="csgo",
                 direction="up",
                 dmarket_api=mock_api,
@@ -250,7 +250,7 @@ class TestAnalyzePriceChanges:
         mock_api = AsyncMock()
         mock_api.get_market_items = AsyncMock(return_value=None)
 
-        result = awAlgot analyze_price_changes(
+        result = await analyze_price_changes(
             game="csgo",
             dmarket_api=mock_api,
         )
@@ -266,7 +266,7 @@ class TestAnalyzePriceChanges:
             "src.dmarket.market_analysis._get_historical_prices",
             AsyncMock(return_value={}),
         ):
-            result = awAlgot analyze_price_changes(
+            result = await analyze_price_changes(
                 game="csgo",
                 dmarket_api=mock_api,
             )
@@ -294,7 +294,7 @@ class TestFindTrendingItems:
             }
         )
 
-        result = awAlgot find_trending_items(
+        result = await find_trending_items(
             game="csgo",
             dmarket_api=mock_api,
         )
@@ -324,7 +324,7 @@ class TestFindTrendingItems:
             }
         )
 
-        result = awAlgot find_trending_items(
+        result = await find_trending_items(
             game="csgo",
             min_sales=5,
             dmarket_api=mock_api,
@@ -338,7 +338,7 @@ class TestFindTrendingItems:
         mock_api = AsyncMock()
         mock_api.get_market_items = AsyncMock(return_value=None)
 
-        result = awAlgot find_trending_items(
+        result = await find_trending_items(
             game="csgo",
             dmarket_api=mock_api,
         )
@@ -373,7 +373,7 @@ class TestAnalyzeMarketVolatility:
                 }
             ),
         ):
-            result = awAlgot analyze_market_volatility(
+            result = await analyze_market_volatility(
                 game="csgo",
                 dmarket_api=mock_api,
             )
@@ -389,7 +389,7 @@ class TestAnalyzeMarketVolatility:
             "src.dmarket.market_analysis._get_historical_prices",
             AsyncMock(return_value={}),
         ):
-            result = awAlgot analyze_market_volatility(
+            result = await analyze_market_volatility(
                 game="csgo",
                 dmarket_api=mock_api,
             )
@@ -425,7 +425,7 @@ class TestGenerateMarketReport:
                 }
             ),
         ):
-            result = awAlgot generate_market_report(
+            result = await generate_market_report(
                 game="csgo",
                 dmarket_api=mock_api,
             )
@@ -461,7 +461,7 @@ class TestGenerateMarketReport:
                 }
             ),
         ):
-            result = awAlgot generate_market_report(
+            result = await generate_market_report(
                 game="csgo,dota2",
                 dmarket_api=mock_api,
             )

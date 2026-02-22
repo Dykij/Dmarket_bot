@@ -14,14 +14,14 @@ Examples:
     >>> digest = NotificationDigest(interval_minutes=15, max_buffer_size=10)
     >>>
     >>> # Add notifications
-    >>> awAlgot digest.add(notification1)
-    >>> awAlgot digest.add(notification2)
+    >>> await digest.add(notification1)
+    >>> await digest.add(notification2)
     >>>
     >>> # Manual flush
-    >>> awAlgot digest.flush()
+    >>> await digest.flush()
     >>>
     >>> # Start background flushing
-    >>> awAlgot digest.start()
+    >>> await digest.start()
 """
 
 import asyncio
@@ -163,7 +163,7 @@ class NotificationDigest:
             and notification.priority == NotificationPriority.CRITICAL
         ):
             if self._send_callback:
-                awAlgot self._send_callback(user_id, notification.message)
+                await self._send_callback(user_id, notification.message)
                 logger.info(
                     "critical_notification_sent_immediately",
                     user_id=user_id,
@@ -181,7 +181,7 @@ class NotificationDigest:
 
         # Check if buffer is full
         if len(self.buffer) >= self.max_buffer_size:
-            awAlgot self.flush(user_id)
+            await self.flush(user_id)
             return True
 
         return True
@@ -206,7 +206,7 @@ class NotificationDigest:
 
         # Send digest
         if self._send_callback:
-            awAlgot self._send_callback(user_id, digest_message)
+            await self._send_callback(user_id, digest_message)
 
         # Clear buffer
         count = len(self.buffer)
@@ -336,7 +336,7 @@ class NotificationDigest:
         if self._task:
             self._task.cancel()
             try:
-                awAlgot self._task
+                await self._task
             except asyncio.CancelledError:
                 pass
 
@@ -349,10 +349,10 @@ class NotificationDigest:
             user_id: Target user ID
         """
         while self.running:
-            awAlgot asyncio.sleep(self.interval_minutes * 60)
+            await asyncio.sleep(self.interval_minutes * 60)
 
             if self.buffer:
-                awAlgot self.flush(user_id)
+                await self.flush(user_id)
 
     def should_flush(self) -> bool:
         """Check if digest should be flushed.

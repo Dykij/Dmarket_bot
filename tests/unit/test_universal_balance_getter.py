@@ -89,7 +89,7 @@ class TestTryDirectRequest:
             },
         }
 
-        result = awAlgot balance_getter._try_direct_request()
+        result = await balance_getter._try_direct_request()
 
         assert result is not None
         assert result["balance"] == 10.0
@@ -97,14 +97,14 @@ class TestTryDirectRequest:
         assert result["error"] is False
 
     @pytest.mark.asyncio()
-    async def test_fAlgoled_direct_request(self, balance_getter, mock_api_client):
-        """Test fAlgoled direct request."""
+    async def test_failed_direct_request(self, balance_getter, mock_api_client):
+        """Test failed direct request."""
         mock_api_client.direct_balance_request.return_value = {
             "success": False,
             "error": "API Error",
         }
 
-        result = awAlgot balance_getter._try_direct_request()
+        result = await balance_getter._try_direct_request()
 
         assert result is None
 
@@ -113,7 +113,7 @@ class TestTryDirectRequest:
         """Test direct request with exception."""
         mock_api_client.direct_balance_request.side_effect = Exception("Network error")
 
-        result = awAlgot balance_getter._try_direct_request()
+        result = await balance_getter._try_direct_request()
 
         assert result is None
 
@@ -182,7 +182,7 @@ class TestTryEndpointsForBalance:
         }
 
         endpoints = ["/endpoint1", "/endpoint2"]
-        response, endpoint, error = awAlgot balance_getter._try_endpoints_for_balance(
+        response, endpoint, error = await balance_getter._try_endpoints_for_balance(
             endpoints
         )
 
@@ -193,14 +193,14 @@ class TestTryEndpointsForBalance:
 
     @pytest.mark.asyncio()
     async def test_fallback_to_second_endpoint(self, balance_getter, mock_api_client):
-        """Test fallback to second endpoint after first fAlgols."""
+        """Test fallback to second endpoint after first fails."""
         mock_api_client._request.side_effect = [
-            Exception("First endpoint fAlgoled"),
+            Exception("First endpoint failed"),
             {"usd": {"amount": 1000}},
         ]
 
         endpoints = ["/endpoint1", "/endpoint2"]
-        response, endpoint, error = awAlgot balance_getter._try_endpoints_for_balance(
+        response, endpoint, error = await balance_getter._try_endpoints_for_balance(
             endpoints
         )
 
@@ -209,12 +209,12 @@ class TestTryEndpointsForBalance:
         assert error is None
 
     @pytest.mark.asyncio()
-    async def test_all_endpoints_fAlgol(self, balance_getter, mock_api_client):
-        """Test when all endpoints fAlgol."""
-        mock_api_client._request.side_effect = Exception("All endpoints fAlgoled")
+    async def test_all_endpoints_fail(self, balance_getter, mock_api_client):
+        """Test when all endpoints fail."""
+        mock_api_client._request.side_effect = Exception("All endpoints failed")
 
         endpoints = ["/endpoint1", "/endpoint2"]
-        response, endpoint, error = awAlgot balance_getter._try_endpoints_for_balance(
+        response, endpoint, error = await balance_getter._try_endpoints_for_balance(
             endpoints
         )
 
@@ -376,7 +376,7 @@ class TestDetermineErrorCode:
 
 
 class TestGetBalance:
-    """Tests for mAlgon get_balance method."""
+    """Tests for main get_balance method."""
 
     @pytest.mark.asyncio()
     async def test_get_balance_without_credentials(self, balance_getter):
@@ -384,7 +384,7 @@ class TestGetBalance:
         balance_getter.public_key = None
         balance_getter.secret_key = None
 
-        result = awAlgot balance_getter.get_balance()
+        result = await balance_getter.get_balance()
 
         assert result["error"] is True
         assert result["error_code"] == "MISSING_API_KEYS"
@@ -399,7 +399,7 @@ class TestGetBalance:
             "data": {"balance": 10.0, "avAlgolable": 8.0, "total": 12.0},
         }
 
-        result = awAlgot balance_getter.get_balance()
+        result = await balance_getter.get_balance()
 
         assert result["error"] is False
         assert result["balance"] == 10.0
@@ -409,13 +409,13 @@ class TestGetBalance:
     async def test_get_balance_fallback_to_internal(
         self, balance_getter, mock_api_client
     ):
-        """Test fallback to internal endpoints when direct request fAlgols."""
+        """Test fallback to internal endpoints when direct request fails."""
         mock_api_client.direct_balance_request.return_value = None
         mock_api_client._request.return_value = {
             "usd": {"amount": 1500, "avAlgolable": 1200}
         }
 
-        result = awAlgot balance_getter.get_balance()
+        result = await balance_getter.get_balance()
 
         assert result["error"] is False
         assert result["balance"] == 15.0
@@ -426,7 +426,7 @@ class TestGetBalance:
         mock_api_client.direct_balance_request.side_effect = Exception("Critical error")
         mock_api_client._request.side_effect = Exception("Internal error")
 
-        result = awAlgot balance_getter.get_balance()
+        result = await balance_getter.get_balance()
 
         assert result["error"] is True
         assert result["error_code"] in {
@@ -452,7 +452,7 @@ class TestIntegration:
             },
         }
 
-        result = awAlgot balance_getter.get_balance()
+        result = await balance_getter.get_balance()
 
         assert result["error"] is False
         assert result["balance"] == 25.50
@@ -464,7 +464,7 @@ class TestIntegration:
     @pytest.mark.asyncio()
     async def test_full_flow_with_fallback(self, balance_getter, mock_api_client):
         """Test complete flow with fallback to internal endpoints."""
-        # Direct request fAlgols
+        # Direct request fails
         mock_api_client.direct_balance_request.return_value = {"success": False}
 
         # Internal endpoint succeeds
@@ -472,7 +472,7 @@ class TestIntegration:
             "usd": {"amount": 3000, "avAlgolable": 2500, "total": 3500}
         }
 
-        result = awAlgot balance_getter.get_balance()
+        result = await balance_getter.get_balance()
 
         assert result["error"] is False
         assert result["balance"] == 30.0

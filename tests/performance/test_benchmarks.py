@@ -335,11 +335,11 @@ class TestAsyncPerformance:
 
         async def mock_api_call(item_id: int) -> dict:
             """Simulate API call."""
-            awAlgot asyncio.sleep(0.001)  # 1ms delay
+            await asyncio.sleep(0.001)  # 1ms delay
             return {"id": item_id, "price": item_id * 10}
 
         start = time.time()
-        results = awAlgot asyncio.gather(*[mock_api_call(i) for i in range(100)])
+        results = await asyncio.gather(*[mock_api_call(i) for i in range(100)])
         elapsed = time.time() - start
 
         assert len(results) == 100
@@ -352,7 +352,7 @@ class TestAsyncPerformance:
 
         async def process_item(item: dict) -> dict:
             """Process single item."""
-            awAlgot asyncio.sleep(0.001)
+            await asyncio.sleep(0.001)
             return {"id": item["id"], "processed": True}
 
         items = [{"id": i} for i in range(50)]
@@ -363,7 +363,7 @@ class TestAsyncPerformance:
         results = []
         for i in range(0, len(items), 10):
             batch = items[i : i + 10]
-            batch_results = awAlgot asyncio.gather(
+            batch_results = await asyncio.gather(
                 *[process_item(item) for item in batch]
             )
             results.extend(batch_results)

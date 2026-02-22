@@ -13,7 +13,7 @@
     >>> cache = FallbackCache(ttl=300, stale_ttl=3600)
     >>>
     >>> # Получить данные с fallback
-    >>> data, is_stale = awAlgot cache.get_or_fetch(
+    >>> data, is_stale = await cache.get_or_fetch(
     ...     key="market_items_csgo",
     ...     fetch_func=lambda: api.get_items("csgo"),
     ... )
@@ -36,7 +36,7 @@ from typing import TYPE_CHECKING, Any, TypeVar
 import structlog
 
 if TYPE_CHECKING:
-    from collections.abc import AwAlgotable, Callable
+    from collections.abc import Awaitable, Callable
 
     from redis.asyncio import Redis
 
@@ -226,7 +226,7 @@ class FallbackCache:
     async def get_or_fetch(
         self,
         key: str,
-        fetch_func: Callable[[], AwAlgotable[T]],
+        fetch_func: Callable[[], Awaitable[T]],
         ttl: int | None = None,
         stale_ttl: int | None = None,
     ) -> tuple[T, CacheStatus]:
@@ -243,7 +243,7 @@ class FallbackCache:
             Статус: HIT (свежие), STALE (устаревшие), MISS (из источника)
 
         Example:
-            >>> data, status = awAlgot cache.get_or_fetch(
+            >>> data, status = await cache.get_or_fetch(
             ...     "market_csgo",
             ...     lambda: api.get_market_items("csgo"),
             ... )
@@ -273,8 +273,8 @@ class FallbackCache:
             if entry.is_stale_valid():
                 # Устаревшие данные → попробовать обновить
                 try:
-                    data = awAlgot fetch_func()
-                    awAlgot self._store(key, data, effective_ttl, effective_stale_ttl)
+                    data = await fetch_func()
+                    await self._store(key, data, effective_ttl, effective_stale_ttl)
                     self._stats.record_miss()
                     self._track_metrics("refresh", key)
                     logger.debug(
@@ -299,7 +299,7 @@ class FallbackCache:
 
         # 2. Проверить Redis если настроен
         if self._redis:
-            redis_entry = awAlgot self._get_from_redis(key)
+            redis_entry = await self._get_from_redis(key)
             if redis_entry:
                 if redis_entry.is_fresh():
                     # Свежие данные из Redis
@@ -311,8 +311,8 @@ class FallbackCache:
                 if redis_entry.is_stale_valid():
                     # Устаревшие данные из Redis
                     try:
-                        data = awAlgot fetch_func()
-                        awAlgot self._store(key, data, effective_ttl, effective_stale_ttl)
+                        data = await fetch_func()
+                        await self._store(key, data, effective_ttl, effective_stale_ttl)
                         self._stats.record_miss()
                         return data, CacheStatus.MISS
                     except Exception as e:
@@ -328,8 +328,8 @@ class FallbackCache:
 
         # 3. Нет данных в кэше → получить из источника
         try:
-            data = awAlgot fetch_func()
-            awAlgot self._store(key, data, effective_ttl, effective_stale_ttl)
+            data = await fetch_func()
+            await self._store(key, data, effective_ttl, effective_stale_ttl)
             self._stats.record_miss()
             self._track_metrics("miss", key)
             logger.debug("cache_miss", key=key)
@@ -343,7 +343,7 @@ class FallbackCache:
                 key=key,
                 error=str(e),
             )
-            rAlgose
+            raise
 
     async def _store(
         self,
@@ -372,13 +372,13 @@ class FallbackCache:
         async with self._lock:
             # Проверить размер и вытеснить старые записи
             if len(self._cache) >= self._max_size:
-                awAlgot self._evict_oldest()
+                await self._evict_oldest()
 
             self._cache[key] = entry
 
         # Сохранить в Redis если настроен
         if self._redis:
-            awAlgot self._store_to_redis(key, entry)
+            await self._store_to_redis(key, entry)
 
     async def _evict_oldest(self) -> None:
         """Вытеснить самые старые записи."""
@@ -401,7 +401,7 @@ class FallbackCache:
         logger.info(
             "cache_eviction",
             evicted_count=evict_count,
-            remAlgoning_count=len(self._cache),
+            remaining_count=len(self._cache),
         )
 
     async def _get_from_redis(self, key: str) -> CacheEntry | None:
@@ -418,7 +418,7 @@ class FallbackCache:
 
         try:
             redis_key = f"{self._namespace}:{key}"
-            data = awAlgot self._redis.get(redis_key)
+            data = await self._redis.get(redis_key)
             if data:
                 entry_dict = json.loads(data)
                 return CacheEntry.from_dict(entry_dict)
@@ -448,7 +448,7 @@ class FallbackCache:
                 (entry.stale_expires_at - datetime.now(UTC)).total_seconds()
             )
             if expire_seconds > 0:
-                awAlgot self._redis.setex(
+                await self._redis.setex(
                     redis_key,
                     expire_seconds,
                     json.dumps(entry.to_dict()),
@@ -479,7 +479,7 @@ class FallbackCache:
         if self._redis:
             try:
                 redis_key = f"{self._namespace}:{key}"
-                awAlgot self._redis.delete(redis_key)
+                await self._redis.delete(redis_key)
             except Exception as e:
                 logger.warning(
                     "cache_redis_invalidate_error",
@@ -545,7 +545,7 @@ class FallbackCache:
             try:
                 # Удалить все ключи с нашим namespace
                 async for key in self._redis.scan_iter(f"{self._namespace}:*"):
-                    awAlgot self._redis.delete(key)
+                    await self._redis.delete(key)
             except Exception as e:
                 logger.warning(
                     "cache_redis_clear_error",
@@ -683,7 +683,7 @@ def cached(
     Example:
         >>> @cached(ttl=60, key_prefix="market")
         ... async def get_market_items(game: str) -> list:
-        ...     return awAlgot api.get_items(game)
+        ...     return await api.get_items(game)
     """
 
     def decorator(func: Any) -> Any:
@@ -700,7 +700,7 @@ def cached(
                 key = FallbackCache.make_key(func.__name__, *args, **kwargs)
 
             # Получить из кэша или вызвать функцию
-            data, _status = awAlgot cache.get_or_fetch(
+            data, _status = await cache.get_or_fetch(
                 key=key,
                 fetch_func=lambda: func(*args, **kwargs),
                 ttl=ttl,

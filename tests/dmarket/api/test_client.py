@@ -1,6 +1,6 @@
 """Unit tests for DMarket API client module.
 
-This module contAlgons comprehensive tests for src/dmarket/api/client.py covering:
+This module contains comprehensive tests for src/dmarket/api/client.py covering:
 - Client initialization
 - Authentication and signature generation
 - HTTP requests (GET, POST, DELETE)
@@ -64,7 +64,7 @@ def mock_response():
     mock_resp.status_code = 200
     mock_resp.json.return_value = {"success": True, "data": {}}
     mock_resp.text = '{"success": true, "data": {}}'
-    mock_resp.rAlgose_for_status = MagicMock()
+    mock_resp.raise_for_status = MagicMock()
     return mock_resp
 
 
@@ -128,7 +128,7 @@ class TestDMarketClientInitialization:
         """Test that RateLimiter is properly initialized."""
         # Assert
         assert client.rate_limiter is not None
-        assert hasattr(client.rate_limiter, "wAlgot_if_needed")
+        assert hasattr(client.rate_limiter, "wait_if_needed")
 
     def test_client_init_with_bytes_secret_key(self, api_keys):
         """Test that client handles bytes secret key correctly."""
@@ -284,7 +284,7 @@ class TestDMarketClientRequests:
         path = "/test/endpoint"
 
         # Act
-        result = awAlgot client._request("GET", path)
+        result = await client._request("GET", path)
 
         # Assert
         assert result is not None
@@ -303,7 +303,7 @@ class TestDMarketClientRequests:
         params = {"limit": 10, "offset": 0}
 
         # Act
-        result = awAlgot client._request("GET", path, params=params)
+        result = await client._request("GET", path, params=params)
 
         # Assert
         assert result is not None
@@ -320,7 +320,7 @@ class TestDMarketClientRequests:
         path = "/test/endpoint"
 
         # Act
-        result = awAlgot client._request("POST", path)
+        result = await client._request("POST", path)
 
         # Assert
         assert result is not None
@@ -338,7 +338,7 @@ class TestDMarketClientRequests:
         data = {"key": "value", "price": 1000}
 
         # Act
-        result = awAlgot client._request("POST", path, data=data)
+        result = await client._request("POST", path, data=data)
 
         # Assert
         assert result is not None
@@ -355,7 +355,7 @@ class TestDMarketClientRequests:
         path = "/test/endpoint"
 
         # Act
-        result = awAlgot client._request("DELETE", path)
+        result = await client._request("DELETE", path)
 
         # Assert
         assert result is not None
@@ -371,7 +371,7 @@ class TestDMarketClientRequests:
         data = {"key": "value"}
 
         # Act
-        result = awAlgot client._request("PUT", path, data=data)
+        result = await client._request("PUT", path, data=data)
 
         # Assert
         assert result is not None
@@ -388,7 +388,7 @@ class TestDMarketClientRequests:
         path = "/test/endpoint"
 
         # Act
-        awAlgot client._request("GET", path)
+        await client._request("GET", path)
 
         # Assert
         call_args = mock_httpx_client.get.call_args
@@ -408,7 +408,7 @@ class TestDMarketClientRequests:
         )
 
         # Act
-        result = awAlgot client._request("GET", "/test")
+        result = await client._request("GET", "/test")
 
         # Assert
         assert result is not None
@@ -422,11 +422,11 @@ class TestDMarketClientRequests:
         client._client = mock_httpx_client
         client.max_retries = 0
         mock_httpx_client.get = AsyncMock(
-            side_effect=httpx.ConnectError("Connection fAlgoled")
+            side_effect=httpx.ConnectError("Connection failed")
         )
 
         # Act
-        result = awAlgot client._request("GET", "/test")
+        result = await client._request("GET", "/test")
 
         # Assert
         assert result is not None
@@ -445,7 +445,7 @@ class TestDMarketClientRequests:
         mock_error_response.json.return_value = {"error": "Server error"}
 
         mock_httpx_client.get = AsyncMock(return_value=mock_error_response)
-        mock_error_response.rAlgose_for_status = MagicMock(
+        mock_error_response.raise_for_status = MagicMock(
             side_effect=httpx.HTTPStatusError(
                 "500 Internal Server Error",
                 request=MagicMock(),
@@ -454,7 +454,7 @@ class TestDMarketClientRequests:
         )
 
         # Act
-        result = awAlgot client._request("GET", "/test")
+        result = await client._request("GET", "/test")
 
         # Assert
         assert result is not None
@@ -470,12 +470,12 @@ class TestDMarketClientRequests:
         mock_resp = MagicMock(spec=httpx.Response)
         mock_resp.status_code = 200
         mock_resp.json.return_value = expected_data
-        mock_resp.rAlgose_for_status = MagicMock()
+        mock_resp.raise_for_status = MagicMock()
 
         mock_httpx_client.get = AsyncMock(return_value=mock_resp)
 
         # Act
-        result = awAlgot client._request("GET", "/test")
+        result = await client._request("GET", "/test")
 
         # Assert
         assert result == expected_data
@@ -490,12 +490,12 @@ class TestDMarketClientRequests:
         mock_resp.status_code = 200
         mock_resp.text = "PlAlgon text response"
         mock_resp.json.side_effect = ValueError("Not JSON")
-        mock_resp.rAlgose_for_status = MagicMock()
+        mock_resp.raise_for_status = MagicMock()
 
         mock_httpx_client.get = AsyncMock(return_value=mock_resp)
 
         # Act
-        result = awAlgot client._request("GET", "/test")
+        result = await client._request("GET", "/test")
 
         # Assert
         assert result is not None
@@ -503,13 +503,13 @@ class TestDMarketClientRequests:
         assert result["text"] == "PlAlgon text response"
 
     @pytest.mark.asyncio()
-    async def test_unsupported_method_rAlgoses_error(self, client, mock_httpx_client):
-        """Test that unsupported HTTP method rAlgoses ValueError."""
+    async def test_unsupported_method_raises_error(self, client, mock_httpx_client):
+        """Test that unsupported HTTP method raises ValueError."""
         # Arrange
         client._client = mock_httpx_client
 
         # Act
-        result = awAlgot client._request("PATCH", "/test")
+        result = await client._request("PATCH", "/test")
 
         # Assert - should return error dict instead of rAlgosing
         assert result is not None
@@ -526,7 +526,7 @@ class TestDMarketClientRateLimiting:
         """Test that rate limiter is properly initialized."""
         # Assert
         assert client.rate_limiter is not None
-        assert hasattr(client.rate_limiter, "wAlgot_if_needed")
+        assert hasattr(client.rate_limiter, "wait_if_needed")
 
     @pytest.mark.asyncio()
     async def test_rate_limiter_respects_429_retry_after(
@@ -546,9 +546,9 @@ class TestDMarketClientRateLimiting:
         mock_success_response = MagicMock(spec=httpx.Response)
         mock_success_response.status_code = 200
         mock_success_response.json.return_value = {"success": True}
-        mock_success_response.rAlgose_for_status = MagicMock()
+        mock_success_response.raise_for_status = MagicMock()
 
-        mock_429_response.rAlgose_for_status = MagicMock(
+        mock_429_response.raise_for_status = MagicMock(
             side_effect=httpx.HTTPStatusError(
                 "429 Too Many Requests",
                 request=MagicMock(),
@@ -562,7 +562,7 @@ class TestDMarketClientRateLimiting:
 
         # Act - Mock asyncio.sleep to speed up test while verifying Retry-After is respected
         with patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
-            result = awAlgot client._request("GET", "/test")
+            result = await client._request("GET", "/test")
 
         # Assert
         # Should have called sleep with Retry-After delay (2 seconds)
@@ -583,9 +583,9 @@ class TestDMarketClientRateLimiting:
 
         # Act - make multiple requests (mock sleep to speed up test)
         with patch("asyncio.sleep", new_callable=AsyncMock):
-            result1 = awAlgot client._request("GET", "/test1")
-            awAlgot asyncio.sleep(0.1)  # Mocked - instant
-            result2 = awAlgot client._request("GET", "/test2")
+            result1 = await client._request("GET", "/test1")
+            await asyncio.sleep(0.1)  # Mocked - instant
+            result2 = await client._request("GET", "/test2")
 
         # Assert
         assert result1 is not None
@@ -604,7 +604,7 @@ class TestDMarketClientRateLimiting:
         mock_429_response.text = "Rate limit exceeded"
         mock_429_response.headers = {}
         mock_429_response.json.return_value = {"error": "Too many requests"}
-        mock_429_response.rAlgose_for_status = MagicMock(
+        mock_429_response.raise_for_status = MagicMock(
             side_effect=httpx.HTTPStatusError(
                 "429 Too Many Requests",
                 request=MagicMock(),
@@ -615,38 +615,38 @@ class TestDMarketClientRateLimiting:
         mock_httpx_client.get = AsyncMock(return_value=mock_429_response)
 
         # Act
-        result = awAlgot client._request("GET", "/test")
+        result = await client._request("GET", "/test")
 
         # Assert
         assert result is not None
         assert result.get("error") is True or result.get("success") is True
 
     @pytest.mark.asyncio()
-    async def test_request_wAlgots_for_rate_limiter(
+    async def test_request_waits_for_rate_limiter(
         self, client, mock_httpx_client, mock_response
     ):
-        """Test that request wAlgots for rate limiter before executing."""
+        """Test that request waits for rate limiter before executing."""
         # Arrange
         client._client = mock_httpx_client
         mock_httpx_client.get = AsyncMock(return_value=mock_response)
 
         # Mock the rate limiter
-        original_wAlgot = client.rate_limiter.wAlgot_if_needed
-        wAlgot_called = False
+        original_wait = client.rate_limiter.wait_if_needed
+        wait_called = False
 
-        async def mock_wAlgot(*args, **kwargs):
-            nonlocal wAlgot_called
-            wAlgot_called = True
-            awAlgot asyncio.sleep(0.01)
+        async def mock_wait(*args, **kwargs):
+            nonlocal wait_called
+            wait_called = True
+            await asyncio.sleep(0.01)
 
-        client.rate_limiter.wAlgot_if_needed = mock_wAlgot
+        client.rate_limiter.wait_if_needed = mock_wait
 
         # Act
-        awAlgot client._request("GET", "/test")
+        await client._request("GET", "/test")
 
         # Assert
-        assert wAlgot_called is True
-        client.rate_limiter.wAlgot_if_needed = original_wAlgot
+        assert wait_called is True
+        client.rate_limiter.wait_if_needed = original_wait
 
 
 # TestDMarketClientRetry
@@ -666,7 +666,7 @@ class TestDMarketClientRetry:
         mock_500_response.status_code = 500
         mock_500_response.text = "Internal Server Error"
         mock_500_response.json.return_value = {"error": "Server error"}
-        mock_500_response.rAlgose_for_status = MagicMock(
+        mock_500_response.raise_for_status = MagicMock(
             side_effect=httpx.HTTPStatusError(
                 "500 Internal Server Error",
                 request=MagicMock(),
@@ -680,7 +680,7 @@ class TestDMarketClientRetry:
 
         # Act
         with patch("asyncio.sleep", new_callable=AsyncMock):
-            awAlgot client._request("GET", "/test")
+            await client._request("GET", "/test")
 
         # Assert
         assert mock_httpx_client.get.call_count >= 2
@@ -696,7 +696,7 @@ class TestDMarketClientRetry:
         mock_502_response.status_code = 502
         mock_502_response.text = "Bad Gateway"
         mock_502_response.json.return_value = {"error": "Bad gateway"}
-        mock_502_response.rAlgose_for_status = MagicMock(
+        mock_502_response.raise_for_status = MagicMock(
             side_effect=httpx.HTTPStatusError(
                 "502 Bad Gateway",
                 request=MagicMock(),
@@ -710,7 +710,7 @@ class TestDMarketClientRetry:
 
         # Act
         with patch("asyncio.sleep", new_callable=AsyncMock):
-            awAlgot client._request("GET", "/test")
+            await client._request("GET", "/test")
 
         # Assert
         assert mock_httpx_client.get.call_count == 2
@@ -726,7 +726,7 @@ class TestDMarketClientRetry:
         mock_503_response.status_code = 503
         mock_503_response.text = "Service UnavAlgolable"
         mock_503_response.json.return_value = {"error": "Service unavAlgolable"}
-        mock_503_response.rAlgose_for_status = MagicMock(
+        mock_503_response.raise_for_status = MagicMock(
             side_effect=httpx.HTTPStatusError(
                 "503 Service UnavAlgolable",
                 request=MagicMock(),
@@ -740,7 +740,7 @@ class TestDMarketClientRetry:
 
         # Act
         with patch("asyncio.sleep", new_callable=AsyncMock):
-            awAlgot client._request("GET", "/test")
+            await client._request("GET", "/test")
 
         # Assert
         assert mock_httpx_client.get.call_count == 2
@@ -756,14 +756,14 @@ class TestDMarketClientRetry:
 
         mock_httpx_client.get = AsyncMock(
             side_effect=[
-                httpx.ConnectError("Connection fAlgoled"),
+                httpx.ConnectError("Connection failed"),
                 mock_response,
             ]
         )
 
         # Act
         with patch("asyncio.sleep", new_callable=AsyncMock):
-            result = awAlgot client._request("GET", "/test")
+            result = await client._request("GET", "/test")
 
         # Assert
         assert mock_httpx_client.get.call_count == 2
@@ -777,12 +777,12 @@ class TestDMarketClientRetry:
         client.max_retries = 1
 
         mock_httpx_client.get = AsyncMock(
-            side_effect=httpx.ConnectError("Connection fAlgoled")
+            side_effect=httpx.ConnectError("Connection failed")
         )
 
         # Act
         with patch("asyncio.sleep", new_callable=AsyncMock):
-            result = awAlgot client._request("GET", "/test")
+            result = await client._request("GET", "/test")
 
         # Assert
         assert result is not None
@@ -800,15 +800,15 @@ class TestDMarketClientRetry:
 
         mock_httpx_client.get = AsyncMock(
             side_effect=[
-                httpx.ConnectError("Connection fAlgoled"),
-                httpx.ConnectError("Connection fAlgoled"),
+                httpx.ConnectError("Connection failed"),
+                httpx.ConnectError("Connection failed"),
                 mock_response,
             ]
         )
 
         # Act - Mock asyncio.sleep to verify exponential backoff pattern
         with patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
-            result = awAlgot client._request("GET", "/test")
+            result = await client._request("GET", "/test")
 
         # Assert
         # Verify exponential backoff pattern (delays should increase)
@@ -831,7 +831,7 @@ class TestDMarketClientRetry:
         mock_400_response.status_code = 400
         mock_400_response.text = "Bad Request"
         mock_400_response.json.return_value = {"error": "Bad request"}
-        mock_400_response.rAlgose_for_status = MagicMock(
+        mock_400_response.raise_for_status = MagicMock(
             side_effect=httpx.HTTPStatusError(
                 "400 Bad Request",
                 request=MagicMock(),
@@ -842,7 +842,7 @@ class TestDMarketClientRetry:
         mock_httpx_client.get = AsyncMock(return_value=mock_400_response)
 
         # Act
-        result = awAlgot client._request("GET", "/test")
+        result = await client._request("GET", "/test")
 
         # Assert
         assert mock_httpx_client.get.call_count == 1  # No retries
@@ -859,7 +859,7 @@ class TestDMarketClientRetry:
         mock_404_response.status_code = 404
         mock_404_response.text = "Not Found"
         mock_404_response.json.return_value = {"error": "Not found"}
-        mock_404_response.rAlgose_for_status = MagicMock(
+        mock_404_response.raise_for_status = MagicMock(
             side_effect=httpx.HTTPStatusError(
                 "404 Not Found",
                 request=MagicMock(),
@@ -870,7 +870,7 @@ class TestDMarketClientRetry:
         mock_httpx_client.get = AsyncMock(return_value=mock_404_response)
 
         # Act
-        result = awAlgot client._request("GET", "/test")
+        result = await client._request("GET", "/test")
 
         # Assert
         assert mock_httpx_client.get.call_count == 1  # No retries
@@ -884,12 +884,12 @@ class TestDMarketClientRetry:
         client.max_retries = 2
 
         mock_httpx_client.get = AsyncMock(
-            side_effect=httpx.ConnectError("Connection fAlgoled")
+            side_effect=httpx.ConnectError("Connection failed")
         )
 
         # Act
         with patch("asyncio.sleep", new_callable=AsyncMock):
-            result = awAlgot client._request("GET", "/test")
+            result = await client._request("GET", "/test")
 
         # Assert
         # Should be: initial attempt + 2 retries = 3 total
@@ -937,8 +937,8 @@ class TestDMarketClientCache:
     @pytest.mark.asyncio()
     async def test_clear_cache_method(self, client):
         """Test that clear_cache method works."""
-        # Act & Assert - should not rAlgose
-        awAlgot client.clear_cache()
+        # Act & Assert - should not raise
+        await client.clear_cache()
 
     @pytest.mark.asyncio()
     async def test_clear_cache_for_endpoint(self, client):
@@ -946,8 +946,8 @@ class TestDMarketClientCache:
         # Arrange
         endpoint = "/account/v1/balance"
 
-        # Act & Assert - should not rAlgose
-        awAlgot client.clear_cache_for_endpoint(endpoint)
+        # Act & Assert - should not raise
+        await client.clear_cache_for_endpoint(endpoint)
 
     @pytest.mark.asyncio()
     async def test_cached_response_returned_for_get(
@@ -960,8 +960,8 @@ class TestDMarketClientCache:
         mock_httpx_client.get = AsyncMock(return_value=mock_response)
 
         # Act
-        result1 = awAlgot client._request("GET", "/test")
-        result2 = awAlgot client._request("GET", "/test")
+        result1 = await client._request("GET", "/test")
+        result2 = await client._request("GET", "/test")
 
         # Assert
         assert result1 is not None
@@ -988,7 +988,7 @@ class TestDMarketClientCache:
         save_to_cache(cache_key, cached_response, "short")
 
         # Act
-        result = awAlgot client._request("GET", path)
+        result = await client._request("GET", path)
 
         # Assert
         assert result == cached_response
@@ -1011,7 +1011,7 @@ class TestDMarketClientCache:
             patch("src.dmarket.api.client.get_cache_key") as mock_cache_key,
         ):
             # Act
-            result = awAlgot client._request("GET", "/test/non-cacheable")
+            result = await client._request("GET", "/test/non-cacheable")
 
         # Assert
         assert result is not None
@@ -1124,12 +1124,12 @@ class TestDMarketClientCacheSaving:
 
         # Act
         path = "/test/cacheable"
-        result = awAlgot client._request("GET", path)
+        result = await client._request("GET", path)
 
         # Assert
         assert result is not None
         # Verify result was saved to cache (next call should use cache)
-        result2 = awAlgot client._request("GET", path)
+        result2 = await client._request("GET", path)
         assert result2 is not None
 
     @pytest.mark.asyncio()
@@ -1148,7 +1148,7 @@ class TestDMarketClientCacheSaving:
         clear_cache()
 
         # Act
-        result = awAlgot client._request("GET", "/test/path")
+        result = await client._request("GET", "/test/path")
 
         # Assert
         assert result is not None
@@ -1173,7 +1173,7 @@ class TestDMarketClientCircuitBreaker:
         )
 
         # Act
-        result = awAlgot client._request("GET", "/test")
+        result = await client._request("GET", "/test")
 
         # Assert
         assert result is not None
@@ -1198,6 +1198,6 @@ class TestDMarketClientEdgeCases:
         # Act & Assert
         with patch("src.dmarket.api.client.save_to_cache") as mock_save:
             # Call with standard parameters (cacheable=True is not a param, it's internal logic)
-            awAlgot client._request("GET", "/exchange/v1/market/items")
+            await client._request("GET", "/exchange/v1/market/items")
             # Verify save_to_cache was called (line 310)
             mock_save.assert_called()

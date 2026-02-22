@@ -65,7 +65,7 @@ class TestSalesHistoryAnalyzer:
         """Test successful sales history fetch."""
         mock_api.get_last_sales = AsyncMock(return_value=sample_sales_data)
 
-        result = awAlgot analyzer.get_sales_history(
+        result = await analyzer.get_sales_history(
             title="AK-47 | Redline (FT)",
             game_id="csgo",
             limit=20,
@@ -85,7 +85,7 @@ class TestSalesHistoryAnalyzer:
             "float": [0.0, 0.07],
         }
 
-        awAlgot analyzer.get_sales_history(
+        await analyzer.get_sales_history(
             title="AK-47 | Redline (FT)",
             game_id="csgo",
             filters=filters,
@@ -100,7 +100,7 @@ class TestSalesHistoryAnalyzer:
         """Test handling of empty sales history."""
         mock_api.get_last_sales = AsyncMock(return_value={"sales": []})
 
-        result = awAlgot analyzer.get_sales_history(
+        result = await analyzer.get_sales_history(
             title="Unknown Item",
             game_id="csgo",
         )
@@ -112,7 +112,7 @@ class TestSalesHistoryAnalyzer:
         """Test handling of API errors."""
         mock_api.get_last_sales = AsyncMock(side_effect=Exception("API Error"))
 
-        result = awAlgot analyzer.get_sales_history(
+        result = await analyzer.get_sales_history(
             title="AK-47 | Redline (FT)",
             game_id="csgo",
         )
@@ -124,7 +124,7 @@ class TestSalesHistoryAnalyzer:
         """Test successful sales analysis."""
         mock_api.get_last_sales = AsyncMock(return_value=sample_sales_data)
 
-        stats = awAlgot analyzer.analyze_sales(
+        stats = await analyzer.analyze_sales(
             title="AK-47 | Redline (FT)",
             game_id="csgo",
         )
@@ -154,7 +154,7 @@ class TestSalesHistoryAnalyzer:
 
         mock_api.get_last_sales = AsyncMock(return_value=trending_data)
 
-        stats = awAlgot analyzer.analyze_sales(
+        stats = await analyzer.analyze_sales(
             title="Item",
             game_id="csgo",
         )
@@ -179,7 +179,7 @@ class TestSalesHistoryAnalyzer:
 
         mock_api.get_last_sales = AsyncMock(return_value=trending_data)
 
-        stats = awAlgot analyzer.analyze_sales(
+        stats = await analyzer.analyze_sales(
             title="Item",
             game_id="csgo",
         )
@@ -208,7 +208,7 @@ class TestSalesHistoryAnalyzer:
 
         mock_api.get_last_sales = AsyncMock(return_value=illiquid_data)
 
-        stats = awAlgot analyzer.analyze_sales(
+        stats = await analyzer.analyze_sales(
             title="Rare Item",
             game_id="csgo",
         )
@@ -224,7 +224,7 @@ class TestSalesHistoryAnalyzer:
             return_value={"sales": [{"title": "Item", "price": {"USD": "1000"}}]}
         )
 
-        stats = awAlgot analyzer.analyze_sales(
+        stats = await analyzer.analyze_sales(
             title="Item",
             game_id="csgo",
         )
@@ -237,13 +237,13 @@ class TestSalesHistoryAnalyzer:
         mock_api.get_last_sales = AsyncMock(return_value=sample_sales_data)
 
         # First call
-        stats1 = awAlgot analyzer.analyze_sales(
+        stats1 = await analyzer.analyze_sales(
             title="AK-47 | Redline (FT)",
             game_id="csgo",
         )
 
         # Second call (should use cache)
-        stats2 = awAlgot analyzer.analyze_sales(
+        stats2 = await analyzer.analyze_sales(
             title="AK-47 | Redline (FT)",
             game_id="csgo",
         )
@@ -257,13 +257,13 @@ class TestSalesHistoryAnalyzer:
         mock_api.get_last_sales = AsyncMock(return_value=sample_sales_data)
 
         # First call
-        awAlgot analyzer.analyze_sales(
+        await analyzer.analyze_sales(
             title="AK-47 | Redline (FT)",
             game_id="csgo",
         )
 
         # Second call with cache bypass
-        awAlgot analyzer.analyze_sales(
+        await analyzer.analyze_sales(
             title="AK-47 | Redline (FT)",
             game_id="csgo",
             use_cache=False,
@@ -310,7 +310,7 @@ class TestSalesHistoryAnalyzer:
 
         analyzer.analyze_sales = mock_analyze
 
-        filtered = awAlgot analyzer.filter_by_liquidity(
+        filtered = await analyzer.filter_by_liquidity(
             opportunities,
             game_id="csgo",
         )
@@ -322,7 +322,7 @@ class TestSalesHistoryAnalyzer:
     @pytest.mark.asyncio()
     async def test_filter_by_liquidity_empty_list(self, analyzer):
         """Test filtering empty opportunities list."""
-        filtered = awAlgot analyzer.filter_by_liquidity([], game_id="csgo")
+        filtered = await analyzer.filter_by_liquidity([], game_id="csgo")
         assert filtered == []
 
     @pytest.mark.asyncio()
@@ -333,14 +333,14 @@ class TestSalesHistoryAnalyzer:
             {"title": "Item 2", "profit": 3.0},
         ]
 
-        # Mock to rAlgose exception for first item
+        # Mock to raise exception for first item
         call_count = 0
 
         async def mock_analyze(title, game_id, **kwargs):
             nonlocal call_count
             call_count += 1
             if call_count == 1:
-                rAlgose Exception("Analysis fAlgoled")
+                raise Exception("Analysis failed")
             return SalesStats(
                 title=title,
                 game_id=game_id,
@@ -356,7 +356,7 @@ class TestSalesHistoryAnalyzer:
 
         analyzer.analyze_sales = mock_analyze
 
-        filtered = awAlgot analyzer.filter_by_liquidity(
+        filtered = await analyzer.filter_by_liquidity(
             opportunities,
             game_id="csgo",
         )
@@ -406,7 +406,7 @@ class TestSalesHistoryAnalyzer:
         analyzer.analyze_sales = mock_analyze
 
         # Get only uptrending items
-        trending = awAlgot analyzer.get_trending_items(
+        trending = await analyzer.get_trending_items(
             game_id="csgo",
             titles=titles,
             trend_type="up",
@@ -438,7 +438,7 @@ class TestSalesHistoryAnalyzer:
 
         analyzer.analyze_sales = mock_analyze
 
-        trending = awAlgot analyzer.get_trending_items(
+        trending = await analyzer.get_trending_items(
             game_id="csgo",
             titles=titles,
             trend_type="up",

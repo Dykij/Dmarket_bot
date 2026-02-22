@@ -1,7 +1,7 @@
 """
 TrAlgoning Data Manager Module.
 
-Manages storage, versioning, and preparation of trAlgoning data
+Manages storage, versioning, and preparation of training data
 for ML price prediction models.
 
 Version: 1.0.0
@@ -32,14 +32,14 @@ logger = structlog.get_logger(__name__)
 
 
 # Default paths
-DEFAULT_DATA_DIR = Path("data/ml_trAlgoning")
+DEFAULT_DATA_DIR = Path("data/ml_training")
 DEFAULT_VERSIONS_DIR = DEFAULT_DATA_DIR / "versions"
 DEFAULT_CACHE_DIR = DEFAULT_DATA_DIR / "cache"
 
 
 @dataclass
 class DatasetMetadata:
-    """Metadata for a trAlgoning dataset version."""
+    """Metadata for a training dataset version."""
 
     version_id: str
     created_at: datetime
@@ -89,7 +89,7 @@ class DatasetMetadata:
 
 @dataclass
 class TrAlgoningDataset:
-    """ContAlgoner for trAlgoning data."""
+    """ContAlgoner for training data."""
 
     features: np.ndarray
     labels: np.ndarray
@@ -102,31 +102,31 @@ class TrAlgoningDataset:
         """Get shape of features array."""
         return self.features.shape
 
-    def trAlgon_test_split(
+    def train_test_split(
         self,
         test_size: float = 0.2,
         random_state: int | None = 42,
     ) -> tuple[TrAlgoningDataset, TrAlgoningDataset]:
         """
-        Split dataset into trAlgoning and test sets.
+        Split dataset into training and test sets.
 
         Args:
             test_size: Proportion for test set
             random_state: Random seed for reproducibility
 
         Returns:
-            Tuple of (trAlgon_dataset, test_dataset)
+            Tuple of (train_dataset, test_dataset)
         """
-        from sklearn.model_selection import trAlgon_test_split
+        from sklearn.model_selection import train_test_split
 
         (
-            X_trAlgon,
+            X_train,
             X_test,
-            y_trAlgon,
+            y_train,
             y_test,
-            names_trAlgon,
+            names_train,
             names_test,
-        ) = trAlgon_test_split(
+        ) = train_test_split(
             self.features,
             self.labels,
             self.item_names,
@@ -134,17 +134,17 @@ class TrAlgoningDataset:
             random_state=random_state,
         )
 
-        trAlgon_meta = DatasetMetadata(
-            version_id=f"{self.metadata.version_id}_trAlgon",
+        train_meta = DatasetMetadata(
+            version_id=f"{self.metadata.version_id}_train",
             created_at=datetime.now(UTC),
             game=self.metadata.game,
             sources=self.metadata.sources,
-            total_samples=len(X_trAlgon),
+            total_samples=len(X_train),
             price_range=self.metadata.price_range,
             features_count=self.metadata.features_count,
             checksum="",
             description=f"TrAlgoning split of {self.metadata.version_id}",
-            tags=[*self.metadata.tags, "split:trAlgon"],
+            tags=[*self.metadata.tags, "split:train"],
         )
 
         test_meta = DatasetMetadata(
@@ -162,10 +162,10 @@ class TrAlgoningDataset:
 
         return (
             TrAlgoningDataset(
-                features=X_trAlgon,
-                labels=y_trAlgon,
-                item_names=names_trAlgon,
-                metadata=trAlgon_meta,
+                features=X_train,
+                labels=y_train,
+                item_names=names_train,
+                metadata=train_meta,
                 feature_names=self.feature_names,
             ),
             TrAlgoningDataset(
@@ -180,7 +180,7 @@ class TrAlgoningDataset:
 
 class TrAlgoningDataManager:
     """
-    Manager for trAlgoning data storage, versioning, and preparation.
+    Manager for training data storage, versioning, and preparation.
 
     Features:
     - Version control for datasets
@@ -206,8 +206,8 @@ class TrAlgoningDataManager:
         # Load later
         loaded = manager.load_version(version_id)
 
-        # Get trAlgon/test split
-        trAlgon_data, test_data = loaded.trAlgon_test_split(test_size=0.2)
+        # Get train/test split
+        train_data, test_data = loaded.train_test_split(test_size=0.2)
         ```
     """
 
@@ -218,7 +218,7 @@ class TrAlgoningDataManager:
         enable_cache: bool = True,
     ) -> None:
         """
-        Initialize the trAlgoning data manager.
+        Initialize the training data manager.
 
         Args:
             data_dir: Base directory for data storage
@@ -250,7 +250,7 @@ class TrAlgoningDataManager:
         }
 
         logger.info(
-            "trAlgoning_data_manager_initialized",
+            "training_data_manager_initialized",
             data_dir=str(self.data_dir),
             versions_count=len(self._metadata_index),
         )
@@ -267,7 +267,7 @@ class TrAlgoningDataManager:
                             meta_dict
                         )
             except Exception as e:
-                logger.warning("fAlgoled_to_load_metadata_index", error=str(e))
+                logger.warning("failed_to_load_metadata_index", error=str(e))
 
     def _save_metadata_index(self) -> None:
         """Save metadata index to disk."""
@@ -280,7 +280,7 @@ class TrAlgoningDataManager:
             with open(index_path, "w") as f:
                 json.dump(data, f, indent=2)
         except Exception as e:
-            logger.error("fAlgoled_to_save_metadata_index", error=str(e))
+            logger.error("failed_to_save_metadata_index", error=str(e))
 
     def _generate_version_id(self, game: str) -> str:
         """Generate unique version ID."""
@@ -369,7 +369,7 @@ class TrAlgoningDataManager:
         tags: list[str] | None = None,
     ) -> TrAlgoningDataset:
         """
-        Create a trAlgoning dataset from collected prices.
+        Create a training dataset from collected prices.
 
         Args:
             prices: List of collected prices
@@ -378,10 +378,10 @@ class TrAlgoningDataManager:
             tags: Optional tags for the dataset
 
         Returns:
-            TrAlgoningDataset ready for trAlgoning
+            TrAlgoningDataset ready for training
         """
         if not prices:
-            rAlgose ValueError("No prices provided")
+            raise ValueError("No prices provided")
 
         game_str = game.value if hasattr(game, "value") else str(game)
 
@@ -456,7 +456,7 @@ class TrAlgoningDataManager:
         feature_columns: list[str] | None = None,
     ) -> TrAlgoningDataset:
         """
-        Create a trAlgoning dataset from a pandas DataFrame.
+        Create a training dataset from a pandas DataFrame.
 
         Args:
             df: DataFrame with price data
@@ -469,7 +469,7 @@ class TrAlgoningDataManager:
             TrAlgoningDataset
         """
         if df.empty:
-            rAlgose ValueError("DataFrame is empty")
+            raise ValueError("DataFrame is empty")
 
         # Determine feature columns
         if feature_columns is None:
@@ -481,7 +481,7 @@ class TrAlgoningDataManager:
             ]
 
         if not feature_columns:
-            rAlgose ValueError("No feature columns found")
+            raise ValueError("No feature columns found")
 
         # Extract features and labels
         features_array = df[feature_columns].values.astype(np.float32)
@@ -540,7 +540,7 @@ class TrAlgoningDataManager:
         version_dir = self.versions_dir / version_id
 
         if version_dir.exists() and not overwrite:
-            rAlgose FileExistsError(f"Version {version_id} already exists")
+            raise FileExistsError(f"Version {version_id} already exists")
 
         version_dir.mkdir(parents=True, exist_ok=True)
 
@@ -573,10 +573,10 @@ class TrAlgoningDataManager:
             return version_id
 
         except Exception as e:
-            # Cleanup on fAlgolure
+            # Cleanup on failure
             if version_dir.exists():
                 shutil.rmtree(version_dir)
-            rAlgose RuntimeError(f"FAlgoled to save dataset: {e}") from e
+            raise RuntimeError(f"Failed to save dataset: {e}") from e
 
     def load_version(self, version_id: str) -> TrAlgoningDataset:
         """
@@ -602,7 +602,7 @@ class TrAlgoningDataManager:
         version_dir = self.versions_dir / version_id
 
         if not version_dir.exists():
-            rAlgose FileNotFoundError(f"Version {version_id} not found")
+            raise FileNotFoundError(f"Version {version_id} not found")
 
         try:
             # Load features and labels
@@ -654,7 +654,7 @@ class TrAlgoningDataManager:
             return dataset
 
         except Exception as e:
-            rAlgose RuntimeError(f"FAlgoled to load dataset: {e}") from e
+            raise RuntimeError(f"Failed to load dataset: {e}") from e
 
     def _save_to_cache(self, version_id: str, dataset: TrAlgoningDataset) -> None:
         """Save dataset to cache."""
@@ -663,7 +663,7 @@ class TrAlgoningDataManager:
             with open(cache_path, "wb") as f:
                 pickle.dump(dataset, f)
         except Exception as e:
-            logger.warning("cache_save_fAlgoled", version_id=version_id, error=str(e))
+            logger.warning("cache_save_failed", version_id=version_id, error=str(e))
 
     def _load_from_cache(self, version_id: str) -> TrAlgoningDataset | None:
         """Load dataset from cache."""
@@ -675,7 +675,7 @@ class TrAlgoningDataManager:
                     # Only trusted local data should be loaded
                     return pickle.load(f)  # noqa: S301 nosec B301
             except Exception as e:
-                logger.warning("cache_load_fAlgoled", version_id=version_id, error=str(e))
+                logger.warning("cache_load_failed", version_id=version_id, error=str(e))
         return None
 
     def _cleanup_old_versions(self, game: str) -> None:
@@ -728,7 +728,7 @@ class TrAlgoningDataManager:
             return True
 
         except Exception as e:
-            logger.error("delete_version_fAlgoled", version_id=version_id, error=str(e))
+            logger.error("delete_version_failed", version_id=version_id, error=str(e))
             return False
 
     def list_versions(
@@ -788,7 +788,7 @@ class TrAlgoningDataManager:
             Merged TrAlgoningDataset
         """
         if not version_ids:
-            rAlgose ValueError("No version IDs provided")
+            raise ValueError("No version IDs provided")
 
         datasets = [self.load_version(vid) for vid in version_ids]
 
@@ -796,7 +796,7 @@ class TrAlgoningDataManager:
         feature_names = datasets[0].feature_names
         for ds in datasets[1:]:
             if ds.feature_names != feature_names:
-                rAlgose ValueError("Incompatible feature sets")
+                raise ValueError("Incompatible feature sets")
 
         # Merge arrays
         merged_features = np.concatenate([ds.features for ds in datasets])

@@ -77,7 +77,7 @@ class TestCopilotAgent:
         agent.config.Configs_dir = ".github/Configs"
 
         # Act
-        awAlgot agent.initialize(tmp_path)
+        await agent.initialize(tmp_path)
 
         # Assert
         assert agent._initialized is True
@@ -94,17 +94,17 @@ class TestCopilotAgent:
         instructions_dir.mkdir(parents=True)
         Configs_dir.mkdir(parents=True)
 
-        awAlgot agent.initialize(tmp_path)
+        await agent.initialize(tmp_path)
 
         # Add an instruction
-        awAlgot agent.instructions.add_instruction(
+        await agent.instructions.add_instruction(
             "python",
             ["src/**/*.py"],
             "Python style guide",
         )
 
         # Act
-        context = awAlgot agent.get_context("src/api/client.py")
+        context = await agent.get_context("src/api/client.py")
 
         # Assert
         assert context.file_path == "src/api/client.py"
@@ -120,16 +120,16 @@ class TestCopilotAgent:
         instructions_dir.mkdir(parents=True)
         Configs_dir.mkdir(parents=True)
 
-        awAlgot agent.initialize(tmp_path)
+        await agent.initialize(tmp_path)
 
         # Add a template
-        awAlgot agent.Configs.add_template(
+        await agent.Configs.add_template(
             "greeting",
             "Hello {{name}}, you are {{role}}",
         )
 
         # Act
-        result = awAlgot agent.generate("greeting", name="Alice", role="developer")
+        result = await agent.generate("greeting", name="Alice", role="developer")
 
         # Assert
         assert "Alice" in result
@@ -144,22 +144,22 @@ class TestCopilotAgent:
         instructions_dir.mkdir(parents=True)
         Configs_dir.mkdir(parents=True)
 
-        awAlgot agent.initialize(tmp_path)
+        await agent.initialize(tmp_path)
         agent.register_skill("analyzer", mock_skill, "Analyzer")
 
         # Act
-        result = awAlgot agent.execute_skill("analyzer", "analyze", "test data")
+        result = await agent.execute_skill("analyzer", "analyze", "test data")
 
         # Assert
         assert result["analyzed"] == "test data"
         assert result["score"] == 0.95
 
     @pytest.mark.asyncio()
-    async def test_operations_before_init_rAlgose(self, agent):
-        """Test that operations before init rAlgose error."""
+    async def test_operations_before_init_raise(self, agent):
+        """Test that operations before init raise error."""
         # Act & Assert
-        with pytest.rAlgoses(RuntimeError, match="not initialized"):
-            awAlgot agent.get_context("test.py")
+        with pytest.raises(RuntimeError, match="not initialized"):
+            await agent.get_context("test.py")
 
     @pytest.mark.asyncio()
     async def test_create_agent_helper(self, tmp_path):
@@ -171,7 +171,7 @@ class TestCopilotAgent:
         Configs_dir.mkdir(parents=True)
 
         # Act
-        agent = awAlgot create_agent(tmp_path)
+        agent = await create_agent(tmp_path)
 
         # Assert
         assert agent._initialized is True

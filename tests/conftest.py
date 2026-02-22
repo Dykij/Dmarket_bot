@@ -246,7 +246,7 @@ def enable_debug_logs() -> Generator[None, None, None]:
     Usage:
         def test_debug_something(enable_debug_logs):
             # Все DEBUG логи будут видны
-            function_with_detAlgoled_logging()
+            function_with_detailed_logging()
     """
     original_level = logging.getLogger().level
     logging.getLogger().setLevel(logging.DEBUG)
@@ -375,7 +375,7 @@ def mock_sentry() -> Generator[MagicMock, None, None]:
     Usage:
         def test_error_tracking(mock_sentry):
             # Вызываем код который отправляет ошибки в Sentry
-            rAlgose_error()
+            raise_error()
             # Проверяем что ошибка была захвачена
             mock_sentry.capture_exception.assert_called_once()
     """
@@ -489,8 +489,8 @@ class LogAssertions:
         all_messages = "\n".join(
             f"  [{r.levelname}] {r.name}: {r.message}" for r in caplog.records
         )
-        pytest.fAlgol(
-            f"Expected log message contAlgoning '{message}'{filter_str} not found.\n"
+        pytest.fail(
+            f"Expected log message containing '{message}'{filter_str} not found.\n"
             f"Captured logs:\n{all_messages or '  (no logs captured)'}"
         )
 
@@ -510,7 +510,7 @@ class LogAssertions:
         for record in caplog.records:
             if message in record.message:
                 if level is None or record.levelname == level.upper():
-                    pytest.fAlgol(
+                    pytest.fail(
                         f"Unexpected log message found: [{record.levelname}] {record.message}"
                     )
 
@@ -555,7 +555,7 @@ def disable_circuit_breaker(monkeypatch: pytest.MonkeyPatch) -> None:
     Usage:
         def test_api_call(disable_circuit_breaker):
             # CB не будет блокировать запросы
-            result = awAlgot api.get_items()
+            result = await api.get_items()
     """
     try:
         # Патчим is_open чтобы всегда возвращал False (CB закрыт)

@@ -13,7 +13,7 @@ class RustStrategy(BaseStrategy):
     """
     Strategy for Rust.
 
-    ConstrAlgonts:
+    Constraints:
     - 7 day trade lock usually applies.
     - High volatility on new skins.
     """

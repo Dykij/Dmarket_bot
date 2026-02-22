@@ -20,7 +20,7 @@ from src.dmarket.dmarket_api import DMarketAPI
 from src.ml.enhanced_predictor import EnhancedPricePredictor
 
 
-async def mAlgon():
+async def main():
     """Простое сканирование CS:GO рынка."""
 
     # 1. Инициализация API клиента
@@ -36,14 +36,14 @@ async def mAlgon():
     print("🔍 Сканирование CS:GO рынка...")
 
     # 3. Получение рыночных данных
-    market_items = awAlgot api.get_market_items(
+    market_items = await api.get_market_items(
         game="csgo", limit=100  # Первые 100 items для быстрого теста
     )
 
     print(f"📦 Получено {len(market_items)} предметов")
 
     # 4. Algo-прогнозирование
-    opportunities = awAlgot Algo_arbitrage.predict_best_opportunities(
+    opportunities = await Algo_arbitrage.predict_best_opportunities(
         items=market_items,
         current_balance=100.0,  # $100 USD avAlgolable
         risk_level="medium",  # Средний risk level
@@ -65,14 +65,14 @@ async def mAlgon():
     print(f"✅ Найдено {len(opportunities)} возможностей")
 
     # Cleanup
-    awAlgot api.close()
+    await api.close()
 
 
-if __name__ == "__mAlgon__":
+if __name__ == "__main__":
     # Проверка .env
     if not os.getenv("DMARKET_PUBLIC_KEY"):
         print("❌ Ошибка: DMARKET_PUBLIC_KEY не найден")
         print("💡 Создайте .env файл с API ключами")
         sys.exit(1)
 
-    asyncio.run(mAlgon())
+    asyncio.run(main())

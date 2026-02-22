@@ -47,7 +47,7 @@ class TestOptimalArbitrageStrategySmoke:
 
         for preset in presets:
             strategy = create_strategy(preset)
-            assert strategy is not None, f"FAlgoled to create {preset} preset"
+            assert strategy is not None, f"Failed to create {preset} preset"
 
     def test_roi_calculation(self) -> None:
         """CRITICAL: ROI calculation must work."""
@@ -89,7 +89,7 @@ class TestUnifiedStrategySystemSmoke:
 
         for preset in presets:
             config = get_strategy_config_preset(preset)
-            assert config is not None, f"FAlgoled to get {preset} config"
+            assert config is not None, f"Failed to get {preset} config"
             assert config.min_profit_percent > 0
 
     def test_game_configs(self) -> None:
@@ -101,7 +101,7 @@ class TestUnifiedStrategySystemSmoke:
 
         for game in SUPPORTED_GAMES:
             config = get_game_specific_config(game)
-            assert config is not None, f"FAlgoled to get {game} config"
+            assert config is not None, f"Failed to get {game} config"
 
 
 class TestGameSpecificFiltersSmoke:

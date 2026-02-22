@@ -168,7 +168,7 @@ def test_get_cached_results_expired_cache(scanner):
 @pytest.mark.asyncio()
 async def test_get_api_client_existing(scanner):
     """Тест получения существующего API клиента."""
-    client = awAlgot scanner.get_api_client()
+    client = await scanner.get_api_client()
     assert client is scanner.api_client
 
 
@@ -183,7 +183,7 @@ async def test_get_api_client_create_new(scanner_no_client):
             "DMARKET_API_URL": "https://test.api.com",
         },
     ):
-        client = awAlgot scanner_no_client.get_api_client()
+        client = await scanner_no_client.get_api_client()
         assert client is not None
         assert scanner_no_client.api_client is client
 
@@ -205,8 +205,8 @@ async def test_scan_game_with_cache(scanner):
     scanner._save_to_cache(cache_key, cached_items)
 
     # Сканирование должно вернуть данные из кеша
-    with patch("src.dmarket.arbitrage_scanner.rate_limiter.wAlgot_if_needed"):
-        result = awAlgot scanner.scan_game("csgo", "medium", max_items=10)
+    with patch("src.dmarket.arbitrage_scanner.rate_limiter.wait_if_needed"):
+        result = await scanner.scan_game("csgo", "medium", max_items=10)
 
     assert result == cached_items
     assert scanner.api_client.get_market_items.call_count == 0
@@ -216,13 +216,13 @@ async def test_scan_game_with_cache(scanner):
 async def test_scan_game_without_cache(scanner):
     """Тест scan_game без кеша (первый запрос)."""
     with (
-        patch("src.dmarket.arbitrage_scanner.rate_limiter.wAlgot_if_needed"),
+        patch("src.dmarket.arbitrage_scanner.rate_limiter.wait_if_needed"),
         patch(
             "src.dmarket.arbitrage_scanner.arbitrage_mid_async",
             return_value=[{"item": "from_func"}],
         ),
     ):
-        result = awAlgot scanner.scan_game("csgo", "medium", max_items=10)
+        result = await scanner.scan_game("csgo", "medium", max_items=10)
 
     assert isinstance(result, list)
     assert scanner.total_scans == 1
@@ -232,13 +232,13 @@ async def test_scan_game_without_cache(scanner):
 async def test_scan_game_boost_mode(scanner):
     """Тест режима boost."""
     with (
-        patch("src.dmarket.arbitrage_scanner.rate_limiter.wAlgot_if_needed"),
+        patch("src.dmarket.arbitrage_scanner.rate_limiter.wait_if_needed"),
         patch(
             "src.dmarket.arbitrage_scanner.arbitrage_boost_async",
             return_value=[{"item": "boost"}],
         ) as mock_boost,
     ):
-        result = awAlgot scanner.scan_game("csgo", "low", max_items=5)
+        result = await scanner.scan_game("csgo", "low", max_items=5)
 
     mock_boost.assert_called_once_with("csgo")
     assert isinstance(result, list)
@@ -248,13 +248,13 @@ async def test_scan_game_boost_mode(scanner):
 async def test_scan_game_pro_mode(scanner):
     """Тест режима pro."""
     with (
-        patch("src.dmarket.arbitrage_scanner.rate_limiter.wAlgot_if_needed"),
+        patch("src.dmarket.arbitrage_scanner.rate_limiter.wait_if_needed"),
         patch(
             "src.dmarket.arbitrage_scanner.arbitrage_pro_async",
             return_value=[{"item": "pro"}],
         ) as mock_pro,
     ):
-        result = awAlgot scanner.scan_game("dota2", "high", max_items=3)
+        result = await scanner.scan_game("dota2", "high", max_items=3)
 
     mock_pro.assert_called_once_with("dota2")
     assert isinstance(result, list)
@@ -264,14 +264,14 @@ async def test_scan_game_pro_mode(scanner):
 async def test_scan_game_with_price_range(scanner):
     """Тест сканирования с диапазоном цен."""
     with (
-        patch("src.dmarket.arbitrage_scanner.rate_limiter.wAlgot_if_needed"),
+        patch("src.dmarket.arbitrage_scanner.rate_limiter.wait_if_needed"),
         patch("src.dmarket.arbitrage_scanner.ArbitrageTrader") as mock_trader,
     ):
         mock_trader_instance = AsyncMock()
         mock_trader_instance.scan_items = AsyncMock(return_value=[{"item": "trader"}])
         mock_trader.return_value = mock_trader_instance
 
-        result = awAlgot scanner.scan_game(
+        result = await scanner.scan_game(
             "csgo", "medium", max_items=10, price_from=10.0, price_to=50.0
         )
 
@@ -282,13 +282,13 @@ async def test_scan_game_with_price_range(scanner):
 async def test_scan_game_api_error(scanner):
     """Тест обработки ошибки API."""
     with (
-        patch("src.dmarket.arbitrage_scanner.rate_limiter.wAlgot_if_needed"),
+        patch("src.dmarket.arbitrage_scanner.rate_limiter.wait_if_needed"),
         patch(
             "src.dmarket.arbitrage_scanner.arbitrage_mid_async",
             side_effect=Exception("API Error"),
         ),
     ):
-        result = awAlgot scanner.scan_game("csgo", "medium")
+        result = await scanner.scan_game("csgo", "medium")
 
     assert result == []
 
@@ -377,7 +377,7 @@ async def test_scan_multiple_games_success(scanner):
         mock_scan.return_value = [{"item": "test"}]
 
         games = ["csgo", "dota2"]
-        result = awAlgot scanner.scan_multiple_games(games, "medium", max_items_per_game=5)
+        result = await scanner.scan_multiple_games(games, "medium", max_items_per_game=5)
 
     assert len(result) == 2
     assert "csgo" in result
@@ -388,22 +388,22 @@ async def test_scan_multiple_games_success(scanner):
 @pytest.mark.asyncio()
 async def test_scan_multiple_games_empty_list(scanner):
     """Тест сканирования пустого списка игр."""
-    result = awAlgot scanner.scan_multiple_games([], "medium")
+    result = await scanner.scan_multiple_games([], "medium")
     assert result == {}
 
 
 @pytest.mark.asyncio()
-async def test_scan_multiple_games_one_fAlgols(scanner):
+async def test_scan_multiple_games_one_fails(scanner):
     """Тест обработки ошибки при сканировании одной из игр."""
 
     async def mock_scan_game(game, mode, max_items, **kwargs):
         if game == "csgo":
             return [{"item": "csgo_item"}]
-        rAlgose Exception("API Error")
+        raise Exception("API Error")
 
     with patch.object(scanner, "scan_game", side_effect=mock_scan_game):
         games = ["csgo", "dota2"]
-        result = awAlgot scanner.scan_multiple_games(games, "medium")
+        result = await scanner.scan_multiple_games(games, "medium")
 
     assert "csgo" in result
     assert "dota2" in result
@@ -423,7 +423,7 @@ async def test_check_user_balance_success(scanner):
     # Формат: {"usd": {"amount": 10050}} = $100.50 (amount в центах)
     scanner.api_client._request = AsyncMock(return_value={"usd": {"amount": 10050}})
 
-    result = awAlgot scanner.check_user_balance()
+    result = await scanner.check_user_balance()
 
     assert result["error"] is False
     assert "balance" in result
@@ -435,7 +435,7 @@ async def test_check_user_balance_api_error(scanner):
     """Тест обработки ошибки при проверке баланса."""
     scanner.api_client._request = AsyncMock(side_effect=Exception("API Error"))
 
-    result = awAlgot scanner.check_user_balance()
+    result = await scanner.check_user_balance()
 
     assert result["error"] is True
     assert "error_message" in result
@@ -466,7 +466,7 @@ def test_get_level_config_pro(scanner):
 
 def test_get_level_config_invalid(scanner):
     """Тест получения конфигурации несуществующего уровня."""
-    with pytest.rAlgoses(ValueError, match="Неизвестный уровень арбитража"):
+    with pytest.raises(ValueError, match="Неизвестный уровень арбитража"):
         scanner.get_level_config("invalid_level")
 
 
@@ -509,7 +509,7 @@ async def test_scan_level_boost(scanner):
     scanner.api_client.get_market_items = AsyncMock(return_value=mock_response)
     scanner._analyze_item = AsyncMock(return_value={"item": "boost_item"})
 
-    result = awAlgot scanner.scan_level("boost", "csgo", max_results=10)
+    result = await scanner.scan_level("boost", "csgo", max_results=10)
 
     assert isinstance(result, list)
     assert len(result) > 0
@@ -522,7 +522,7 @@ async def test_scan_level_with_cache(scanner):
     cached_data = [{"item": "cached"}]
     scanner._scanner_cache._cache[cache_key] = (cached_data, time.time())
 
-    result = awAlgot scanner.scan_level("boost", "csgo")
+    result = await scanner.scan_level("boost", "csgo")
 
     # Должен вернуть кешированные данные без обращения к API
     assert result == cached_data
@@ -540,7 +540,7 @@ async def test_scan_level_filters_by_price_range(scanner):
     with patch.object(scanner, "scan_game", new_callable=AsyncMock) as mock_scan:
         mock_scan.return_value = items
 
-        result = awAlgot scanner.scan_level("boost", "csgo")
+        result = await scanner.scan_level("boost", "csgo")
 
     # Только предметы в диапазоне boost (0.5-3.0)
     assert all(0.5 <= item["buy_price"] <= 3.0 for item in result)
@@ -557,7 +557,7 @@ async def test_scan_all_levels_success(scanner):
     with patch.object(scanner, "scan_level", new_callable=AsyncMock) as mock_scan:
         mock_scan.return_value = [{"item": "test"}]
 
-        result = awAlgot scanner.scan_all_levels("csgo", max_results_per_level=5)
+        result = await scanner.scan_all_levels("csgo", max_results_per_level=5)
 
     assert isinstance(result, dict)
     assert len(result) == 5  # boost, standard, medium, advanced, pro
@@ -565,7 +565,7 @@ async def test_scan_all_levels_success(scanner):
 
 
 @pytest.mark.asyncio()
-async def test_scan_all_levels_one_fAlgols(scanner):
+async def test_scan_all_levels_one_fails(scanner):
     """Тест обработки ошибки при сканировании одного уровня."""
 
     async def mock_scan_level(level, game, max_results=10, use_cache=True):
@@ -574,7 +574,7 @@ async def test_scan_all_levels_one_fAlgols(scanner):
         return [{"item": f"{level}_item"}]
 
     with patch.object(scanner, "scan_level", side_effect=mock_scan_level):
-        result = awAlgot scanner.scan_all_levels("csgo")
+        result = await scanner.scan_all_levels("csgo")
 
     assert "boost" in result
     assert result["boost"] == []
@@ -595,7 +595,7 @@ async def test_find_best_opportunities_top_n(scanner, level_test_data):
         return level_test_data.get(level, [])
 
     with patch.object(scanner, "scan_level", side_effect=mock_scan_level):
-        result = awAlgot scanner.find_best_opportunities("csgo", top_n=3)
+        result = await scanner.find_best_opportunities("csgo", top_n=3)
 
     assert len(result) <= 3
     # Должны быть отсортированы по profit_percent (убывание)
@@ -612,7 +612,7 @@ async def test_find_best_opportunities_min_level(scanner, level_test_data):
         return level_test_data.get(level, [])
 
     with patch.object(scanner, "scan_level", side_effect=mock_scan_level):
-        result = awAlgot scanner.find_best_opportunities("csgo", top_n=10, min_level="medium")
+        result = await scanner.find_best_opportunities("csgo", top_n=10, min_level="medium")
 
     # Не должно быть предметов из boost и standard
     titles = [item.get("title") for item in result]
@@ -631,7 +631,7 @@ async def test_find_best_opportunities_max_level(scanner, level_test_data):
         return level_test_data.get(level, [])
 
     with patch.object(scanner, "scan_level", side_effect=mock_scan_level):
-        result = awAlgot scanner.find_best_opportunities("csgo", top_n=10, max_level="medium")
+        result = await scanner.find_best_opportunities("csgo", top_n=10, max_level="medium")
 
     # Не должно быть предметов из advanced и pro
     titles = [item.get("title") for item in result]
@@ -662,7 +662,7 @@ async def test_scan_all_levels_parallel_success(scanner, mock_api_client):
 
     with patch.object(scanner, "scan_level", side_effect=mock_scan_level):
         start_time = time.time()
-        results = awAlgot scanner.scan_all_levels_parallel(game="csgo")
+        results = await scanner.scan_all_levels_parallel(game="csgo")
         elapsed = time.time() - start_time
 
         # Проверяем что получены результаты для всех уровней
@@ -684,11 +684,11 @@ async def test_scan_all_levels_parallel_with_errors(scanner):
     async def mock_scan_level_with_errors(level, game, max_results):
         # Для уровней boost и pro выбрасываем ошибку
         if level in ["boost", "pro"]:
-            rAlgose ValueError(f"Error scanning {level}")
+            raise ValueError(f"Error scanning {level}")
         return [{"title": f"Item {level}", "profit_percent": 5.0}]
 
     with patch.object(scanner, "scan_level", side_effect=mock_scan_level_with_errors):
-        results = awAlgot scanner.scan_all_levels_parallel(game="csgo")
+        results = await scanner.scan_all_levels_parallel(game="csgo")
 
         # Проверяем что получены результаты для успешных уровней
         assert isinstance(results, dict)
@@ -713,7 +713,7 @@ async def test_scan_all_levels_with_parallel_flag(scanner, mock_api_client):
 
     with patch.object(scanner, "scan_level", side_effect=mock_scan_level):
         # С parallel=True
-        results_parallel = awAlgot scanner.scan_all_levels(
+        results_parallel = await scanner.scan_all_levels(
             game="csgo",
             parallel=True,
         )
@@ -722,7 +722,7 @@ async def test_scan_all_levels_with_parallel_flag(scanner, mock_api_client):
         assert len(results_parallel) == 5
 
         # С parallel=False (последовательное выполнение)
-        results_sequential = awAlgot scanner.scan_all_levels(
+        results_sequential = await scanner.scan_all_levels(
             game="csgo",
             parallel=False,
         )
@@ -737,8 +737,8 @@ async def test_scan_all_levels_with_parallel_flag(scanner, mock_api_client):
 @pytest.mark.asyncio()
 async def test_scan_all_levels_parallel_invalid_game(scanner):
     """Тест параллельного сканирования с невалидной игSwarm."""
-    with pytest.rAlgoses(ValueError, match="не поддерживается"):
-        awAlgot scanner.scan_all_levels_parallel(game="invalid_game")
+    with pytest.raises(ValueError, match="не поддерживается"):
+        await scanner.scan_all_levels_parallel(game="invalid_game")
 
 
 @pytest.mark.asyncio()
@@ -749,11 +749,11 @@ async def test_find_best_opportunities_parallel_execution(scanner, level_test_da
     async def mock_scan_level_with_timing(level, game, max_results):
         """Mock который записывает время вызова."""
         call_times.append(time.time())
-        awAlgot asyncio.sleep(0.01)  # Небольшая задержка
+        await asyncio.sleep(0.01)  # Небольшая задержка
         return level_test_data.get(level, [])
 
     with patch.object(scanner, "scan_level", side_effect=mock_scan_level_with_timing):
-        awAlgot scanner.find_best_opportunities("csgo", top_n=10)
+        await scanner.find_best_opportunities("csgo", top_n=10)
 
         # При параллельном выполнении все вызовы должны начаться примерно одновременно
         if len(call_times) > 1:
@@ -800,7 +800,7 @@ async def test_auto_trade_items_success(scanner):
         ]
     }
 
-    result = awAlgot scanner.auto_trade_items(items_by_game, max_trades=1)
+    result = await scanner.auto_trade_items(items_by_game, max_trades=1)
 
     assert isinstance(result, tuple)
     assert len(result) == 3
@@ -809,7 +809,7 @@ async def test_auto_trade_items_success(scanner):
 @pytest.mark.asyncio()
 async def test_auto_trade_items_empty_list(scanner):
     """Тест автоторговли с пустым списком."""
-    result = awAlgot scanner.auto_trade_items({})
+    result = await scanner.auto_trade_items({})
 
     assert isinstance(result, tuple)
     assert result[0] == 0  # purchases
@@ -836,7 +836,7 @@ async def test_auto_trade_items_insufficient_balance(scanner):
         ]
     }
 
-    result = awAlgot scanner.auto_trade_items(items_by_game)
+    result = await scanner.auto_trade_items(items_by_game)
 
     # Не должно быть успешных сделок из-за нехватки средств
     assert result[0] == 0  # purchases
@@ -858,7 +858,7 @@ async def test_auto_trade_items_max_trades_limit(scanner):
         ]
     }
 
-    result = awAlgot scanner.auto_trade_items(items_by_game, max_trades=3)
+    result = await scanner.auto_trade_items(items_by_game, max_trades=3)
 
     # Должно быть не более 3 попыток торговли
     total_attempts = result[0] + result[1]  # purchases + sales
@@ -884,7 +884,7 @@ async def test_analyze_item_success(scanner):
         "min_profit_percent": 3.0,
     }
 
-    result = awAlgot scanner._analyze_item(item, config, "csgo")
+    result = await scanner._analyze_item(item, config, "csgo")
 
     assert result is not None
     assert "buy_price" in result
@@ -907,7 +907,7 @@ async def test_analyze_item_no_profit(scanner):
         "min_profit_percent": 3.0,
     }
 
-    result = awAlgot scanner._analyze_item(item, config, "csgo")
+    result = await scanner._analyze_item(item, config, "csgo")
 
     # Предмет не должен быть добавлен (нет прибыли)
     assert result is None or result["profit"] <= 0
@@ -926,7 +926,7 @@ async def test_full_arbitrage_workflow(scanner):
 
     # 1. Сканирование игры
     with (
-        patch("src.dmarket.arbitrage_scanner.rate_limiter.wAlgot_if_needed"),
+        patch("src.dmarket.arbitrage_scanner.rate_limiter.wait_if_needed"),
         patch(
             "src.dmarket.arbitrage_scanner.arbitrage_mid_async",
             return_value=[
@@ -940,17 +940,17 @@ async def test_full_arbitrage_workflow(scanner):
             ],
         ),
     ):
-        items = awAlgot scanner.scan_game("csgo", "medium", max_items=5)
+        items = await scanner.scan_game("csgo", "medium", max_items=5)
 
     assert len(items) > 0
 
     # 2. Проверка баланса
-    balance = awAlgot scanner.check_user_balance()
+    balance = await scanner.check_user_balance()
     assert balance["error"] is False
 
     # 3. Автоматическая торговля (упрощённая проверка)
     items_dict = {"csgo": items}
-    result = awAlgot scanner.auto_trade_items(items_dict, max_trades=1)
+    result = await scanner.auto_trade_items(items_dict, max_trades=1)
     assert result is not None
 
 
@@ -962,8 +962,8 @@ async def test_full_arbitrage_workflow(scanner):
 @pytest.mark.asyncio()
 async def test_scan_game_with_zero_max_items(scanner):
     """Тест сканирования с max_items=0."""
-    with patch("src.dmarket.arbitrage_scanner.rate_limiter.wAlgot_if_needed"):
-        result = awAlgot scanner.scan_game("csgo", "medium", max_items=0)
+    with patch("src.dmarket.arbitrage_scanner.rate_limiter.wait_if_needed"):
+        result = await scanner.scan_game("csgo", "medium", max_items=0)
 
     assert result == []
 
@@ -991,14 +991,14 @@ async def test_scan_multiple_games_concurrent(scanner):
     """Тест конкурентного сканирования игр."""
 
     async def delayed_scan(game, mode, max_items):
-        awAlgot asyncio.sleep(0.1)  # Имитация задержки API
+        await asyncio.sleep(0.1)  # Имитация задержки API
         return [{"item": f"{game}_item"}]
 
     with patch.object(scanner, "scan_game", side_effect=delayed_scan):
         games = ["csgo", "dota2", "rust"]
 
         start_time = time.time()
-        result = awAlgot scanner.scan_multiple_games(games, "medium")
+        result = await scanner.scan_multiple_games(games, "medium")
         elapsed = time.time() - start_time
 
     # Проверяем, что сканирование было параллельным (< 0.3 сек вместо 0.3+)
@@ -1034,7 +1034,7 @@ async def test_liquidity_analyzer_initialized_when_enabled(mock_api_client):
     scanner = ArbitrageScanner(api_client=mock_api_client, enable_liquidity_filter=True)
 
     # Вызываем get_api_client для инициализации анализатора
-    awAlgot scanner.get_api_client()
+    await scanner.get_api_client()
 
     assert scanner.liquidity_analyzer is not None
 
@@ -1044,7 +1044,7 @@ async def test_liquidity_analyzer_not_initialized_when_disabled(mock_api_client)
     """Тест что LiquidityAnalyzer не инициализируется при отключенном фильтре."""
     scanner = ArbitrageScanner(api_client=mock_api_client, enable_liquidity_filter=False)
 
-    awAlgot scanner.get_api_client()
+    await scanner.get_api_client()
 
     assert scanner.liquidity_analyzer is None
 
@@ -1056,7 +1056,7 @@ async def test_analyze_item_filters_by_low_liquidity(mock_api_client):
     scanner.min_liquidity_score = 70  # Устанавливаем порог
 
     # Инициализируем анализатор
-    awAlgot scanner.get_api_client()
+    await scanner.get_api_client()
 
     # Мокаем анализатор ликвидности чтобы вернуть низкий балл
     from src.dmarket.liquidity_analyzer import LiquidityMetrics
@@ -1082,7 +1082,7 @@ async def test_analyze_item_filters_by_low_liquidity(mock_api_client):
     }
     config = {"price_range": (5.0, 15.0), "min_profit_percent": 5.0}
 
-    result = awAlgot scanner._analyze_item(item, config, "csgo")
+    result = await scanner._analyze_item(item, config, "csgo")
 
     # Предмет должен быть отфильтрован из-за низкой ликвидности
     assert result is None
@@ -1094,7 +1094,7 @@ async def test_analyze_item_passes_high_liquidity(mock_api_client):
     scanner = ArbitrageScanner(api_client=mock_api_client, enable_liquidity_filter=True)
     scanner.min_liquidity_score = 60
 
-    awAlgot scanner.get_api_client()
+    await scanner.get_api_client()
 
     # Мокаем высокую ликвидность
     from src.dmarket.liquidity_analyzer import LiquidityMetrics
@@ -1120,7 +1120,7 @@ async def test_analyze_item_passes_high_liquidity(mock_api_client):
     }
     config = {"price_range": (5.0, 15.0), "min_profit_percent": 5.0}
 
-    result = awAlgot scanner._analyze_item(item, config, "csgo")
+    result = await scanner._analyze_item(item, config, "csgo")
 
     # Предмет должен пSwarmти фильтр
     assert result is not None
@@ -1136,7 +1136,7 @@ async def test_analyze_item_filters_by_time_to_sell(mock_api_client):
     scanner = ArbitrageScanner(api_client=mock_api_client, enable_liquidity_filter=True)
     scanner.max_time_to_sell_days = 5  # Максимум 5 дней
 
-    awAlgot scanner.get_api_client()
+    await scanner.get_api_client()
 
     # Мокаем предмет который продается долго
     from src.dmarket.liquidity_analyzer import LiquidityMetrics
@@ -1162,7 +1162,7 @@ async def test_analyze_item_filters_by_time_to_sell(mock_api_client):
     }
     config = {"price_range": (5.0, 15.0), "min_profit_percent": 5.0}
 
-    result = awAlgot scanner._analyze_item(item, config, "csgo")
+    result = await scanner._analyze_item(item, config, "csgo")
 
     # Должен быть отфильтрован из-за долгой продажи
     assert result is None
@@ -1173,7 +1173,7 @@ async def test_analyze_item_without_liquidity_filter(mock_api_client):
     """Тест что без фильтра ликвидности предметы не анализируются."""
     scanner = ArbitrageScanner(api_client=mock_api_client, enable_liquidity_filter=False)
 
-    awAlgot scanner.get_api_client()
+    await scanner.get_api_client()
 
     item = {
         "itemId": "test_item",
@@ -1183,7 +1183,7 @@ async def test_analyze_item_without_liquidity_filter(mock_api_client):
     }
     config = {"price_range": (5.0, 15.0), "min_profit_percent": 5.0}
 
-    result = awAlgot scanner._analyze_item(item, config, "csgo")
+    result = await scanner._analyze_item(item, config, "csgo")
 
     # Должен вернуться результат без данных ликвидности
     assert result is not None
@@ -1195,7 +1195,7 @@ async def test_scan_level_with_liquidity_filter(mock_api_client):
     """Тест scan_level с фильтрацией по ликвидности."""
     scanner = ArbitrageScanner(api_client=mock_api_client, enable_liquidity_filter=True)
 
-    awAlgot scanner.get_api_client()
+    await scanner.get_api_client()
 
     # Мокаем API чтобы вернуть несколько предметов
     mock_api_client.get_market_items = AsyncMock(
@@ -1248,7 +1248,7 @@ async def test_scan_level_with_liquidity_filter(mock_api_client):
         side_effect=mock_liquidity_analysis
     )
 
-    results = awAlgot scanner.scan_level("boost", "csgo", max_results=10)
+    results = await scanner.scan_level("boost", "csgo", max_results=10)
 
     # Должен вернуться только 1 предмет (High Liquidity)
     assert len(results) == 1

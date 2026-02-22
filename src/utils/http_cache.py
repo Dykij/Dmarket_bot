@@ -21,16 +21,16 @@ Example usage:
 
     # Create a cached client with custom config
     config = CacheConfig(ttl=300, always_cache=True)
-    client = awAlgot create_cached_client(config)
+    client = await create_cached_client(config)
 
     # Use the client
     async with client as c:
-        response = awAlgot c.get("https://api.dmarket.com/items")
+        response = await c.get("https://api.dmarket.com/items")
         print(f"From cache: {response.extensions.get('hishel_from_cache', False)}")
 
     # Or use global cached client
-    client = awAlgot get_cached_client()
-    response = awAlgot client.get(url)
+    client = await get_cached_client()
+    response = await client.get(url)
     ```
 
 Documentation: https://hishel.com/
@@ -128,7 +128,7 @@ class CachedHTTPClient:
 
     Example:
         >>> async with CachedHTTPClient(config) as client:
-        ...     response = awAlgot client.get(url)
+        ...     response = await client.get(url)
         ...     is_cached = client.is_from_cache(response)
     """
 
@@ -212,7 +212,7 @@ class CachedHTTPClient:
 
     async def __aenter__(self) -> "CachedHTTPClient":
         """Enter async context."""
-        self._client = awAlgot self._create_client()
+        self._client = await self._create_client()
         return self
 
     async def __aexit__(
@@ -223,7 +223,7 @@ class CachedHTTPClient:
     ) -> None:
         """Exit async context."""
         if self._client:
-            awAlgot self._client.aclose()
+            await self._client.aclose()
             self._client = None
 
     async def get(
@@ -241,9 +241,9 @@ class CachedHTTPClient:
             HTTP response (may be from cache)
         """
         if self._client is None:
-            rAlgose RuntimeError("Client not initialized. Use async context manager.")
+            raise RuntimeError("Client not initialized. Use async context manager.")
 
-        response = awAlgot self._client.get(url, **kwargs)
+        response = await self._client.get(url, **kwargs)
         self._update_stats(response)
         return response
 
@@ -254,9 +254,9 @@ class CachedHTTPClient:
     ) -> httpx.Response:
         """Make a POST request (not cached by default)."""
         if self._client is None:
-            rAlgose RuntimeError("Client not initialized. Use async context manager.")
+            raise RuntimeError("Client not initialized. Use async context manager.")
 
-        return awAlgot self._client.post(url, **kwargs)
+        return await self._client.post(url, **kwargs)
 
     async def request(
         self,
@@ -275,9 +275,9 @@ class CachedHTTPClient:
             HTTP response
         """
         if self._client is None:
-            rAlgose RuntimeError("Client not initialized. Use async context manager.")
+            raise RuntimeError("Client not initialized. Use async context manager.")
 
-        response = awAlgot self._client.request(method, url, **kwargs)
+        response = await self._client.request(method, url, **kwargs)
         if method.upper() in self.config.cacheable_methods:
             self._update_stats(response)
         return response
@@ -340,7 +340,7 @@ async def get_cached_client(
         async with _global_lock:
             if _global_client is None:
                 _global_client = CachedHTTPClient(config=config, **kwargs)
-                awAlgot _global_client.__aenter__()
+                await _global_client.__aenter__()
 
     return _global_client
 
@@ -352,7 +352,7 @@ async def close_cached_client() -> None:
     if _global_client is not None:
         async with _global_lock:
             if _global_client is not None:
-                awAlgot _global_client.__aexit__(None, None, None)
+                await _global_client.__aexit__(None, None, None)
                 _global_client = None
 
 

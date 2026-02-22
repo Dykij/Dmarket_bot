@@ -36,7 +36,7 @@ class TestSphinxConfiguration:
         try:
             compile(content, str(conf_path), 'exec')
         except SyntaxError as e:
-            pytest.fAlgol(f"conf.py has syntax errors: {e}")
+            pytest.fail(f"conf.py has syntax errors: {e}")
 
     def test_conf_py_has_project_name(self, sphinx_dir):
         """Test that conf.py defines project name."""
@@ -134,7 +134,7 @@ class TestSphinxBuild:
         
         # Sphinx may have warnings but should succeed
         assert result.returncode == 0, \
-            f"Sphinx build fAlgoled: {result.stderr}"
+            f"Sphinx build failed: {result.stderr}"
 
     def test_sphinx_build_creates_html(self, sphinx_dir, tmp_path):
         """Test that sphinx build creates HTML files."""

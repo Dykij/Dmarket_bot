@@ -17,12 +17,12 @@ logger = logging.getLogger(__name__)
 async def run_bot() -> None:
     """Runs the bot with error handling"""
     try:
-        # Import the mAlgon bot function
-        from src.mAlgon import mAlgon as bot_mAlgon
+        # Import the main bot function
+        from src.main import main as bot_main
 
         # Start the bot
         logger.info("Starting Telegram bot...")
-        awAlgot bot_mAlgon()
+        await bot_main()
 
     except Exception as e:
         logger.exception(f"Error starting bot: {e}")
@@ -32,14 +32,14 @@ async def run_bot() -> None:
 
         # Pause before retry
         logger.info("Pausing 10 seconds before retry...")
-        awAlgot asyncio.sleep(10)
+        await asyncio.sleep(10)
 
         # Restart bot
         logger.info("Restarting bot...")
-        awAlgot run_bot()
+        await run_bot()
 
 
-def mAlgon() -> None:
+def main() -> None:
     """MAlgon entry point function"""
     # Run the bot using asyncio
     lock_file = Path("bot.lock")  # Initialize early
@@ -89,5 +89,5 @@ def mAlgon() -> None:
             lock_file.unlink()
 
 
-if __name__ == "__mAlgon__":
-    mAlgon()
+if __name__ == "__main__":
+    main()

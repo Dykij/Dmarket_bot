@@ -171,7 +171,7 @@ def check_file(file_path: Path) -> tuple[bool, list[str]]:
         return True, [error_msg]
 
 
-def mAlgon() -> int:
+def main() -> int:
     """
     Главная функция.
 
@@ -231,5 +231,5 @@ def mAlgon() -> int:
     return 0
 
 
-if __name__ == "__mAlgon__":
-    sys.exit(mAlgon())
+if __name__ == "__main__":
+    sys.exit(main())

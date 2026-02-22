@@ -35,12 +35,12 @@ async def _get_arbitrage() -> AlgoUnifiedArbitrage:
     if _arbitrage_instance is None:
         from src.arbitrage import AlgoUnifiedArbitrage, ArbitrageConfig
 
-        # Try to get API clients from contAlgoner
+        # Try to get API clients from container
         try:
-            from src.contAlgoners import ContAlgoner
+            from src.containers import ContAlgoner
 
-            contAlgoner = ContAlgoner()
-            dmarket_api = contAlgoner.dmarket_api()
+            container = ContAlgoner()
+            dmarket_api = container.dmarket_api()
         except Exception:
             dmarket_api = None
 
@@ -69,8 +69,8 @@ async def _get_arbitrage() -> AlgoUnifiedArbitrage:
     return _arbitrage_instance
 
 
-def _get_mAlgon_keyboard() -> InlineKeyboardMarkup:
-    """Create mAlgon Algo arbitrage keyboard."""
+def _get_main_keyboard() -> InlineKeyboardMarkup:
+    """Create main Algo arbitrage keyboard."""
     keyboard = [
         [
             InlineKeyboardButton("🔍 Сканировать сейчас", callback_data="Algo_arb:scan"),
@@ -89,7 +89,7 @@ def _get_mAlgon_keyboard() -> InlineKeyboardMarkup:
             InlineKeyboardButton("⚙️ НастSwarmки", callback_data="Algo_arb:settings"),
         ],
         [
-            InlineKeyboardButton("◀️ Назад", callback_data="mAlgon_menu"),
+            InlineKeyboardButton("◀️ Назад", callback_data="main_menu"),
         ],
     ]
     return InlineKeyboardMarkup(keyboard)
@@ -122,8 +122,8 @@ def _get_settings_keyboard() -> InlineKeyboardMarkup:
 
 
 async def Algo_arb_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Handle /Algo_arb command - mAlgon Algo arbitrage menu."""
-    arbitrage = awAlgot _get_arbitrage()
+    """Handle /Algo_arb command - main Algo arbitrage menu."""
+    arbitrage = await _get_arbitrage()
     stats = arbitrage.get_stats()
 
     status_emoji = "🟢" if stats["is_running"] else "🔴"
@@ -145,17 +145,17 @@ async def Algo_arb_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     if update.effective_chat:
         arbitrage.set_telegram(context.bot, update.effective_chat.id)
 
-    awAlgot update.message.reply_text(
+    await update.message.reply_text(
         text,
         parse_mode="HTML",
-        reply_markup=_get_mAlgon_keyboard(),
+        reply_markup=_get_main_keyboard(),
     )
 
 
 async def Algo_arb_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Handle Algo arbitrage callbacks."""
     query = update.callback_query
-    awAlgot query.answer()
+    await query.answer()
 
     data = query.data
     if not data.startswith("Algo_arb:"):
@@ -163,7 +163,7 @@ async def Algo_arb_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) 
 
     action = data.split(":")[1] if ":" in data else ""
 
-    arbitrage = awAlgot _get_arbitrage()
+    arbitrage = await _get_arbitrage()
 
     # Set Telegram for notifications
     if update.effective_chat:
@@ -181,20 +181,20 @@ async def Algo_arb_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) 
             f"Найдено: {stats['opportunities_found']}"
         )
 
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             text,
             parse_mode="HTML",
-            reply_markup=_get_mAlgon_keyboard(),
+            reply_markup=_get_main_keyboard(),
         )
 
     elif action == "scan":
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             "🔍 <b>Сканирование...</b>\n\nПроверяю DMarket, Waxpeer и Steam цены...",
             parse_mode="HTML",
         )
 
         try:
-            opportunities = awAlgot arbitrage.scan_all()
+            opportunities = await arbitrage.scan_all()
 
             if opportunities:
                 text = f"✅ <b>Найдено {len(opportunities)} возможностей!</b>\n\n"
@@ -225,58 +225,58 @@ async def Algo_arb_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) 
                     "• Подождать изменения рынка"
                 )
 
-            awAlgot query.edit_message_text(
+            await query.edit_message_text(
                 text,
                 parse_mode="HTML",
-                reply_markup=_get_mAlgon_keyboard(),
+                reply_markup=_get_main_keyboard(),
             )
 
         except Exception as e:
             logger.error("scan_error", error=str(e))
-            awAlgot query.edit_message_text(
+            await query.edit_message_text(
                 f"❌ <b>Ошибка сканирования</b>\n\n{str(e)[:200]}",
                 parse_mode="HTML",
-                reply_markup=_get_mAlgon_keyboard(),
+                reply_markup=_get_main_keyboard(),
             )
 
     elif action == "start":
         if arbitrage._running:
-            awAlgot query.edit_message_text(
+            await query.edit_message_text(
                 "⚠️ <b>Автосканирование уже запущено!</b>",
                 parse_mode="HTML",
-                reply_markup=_get_mAlgon_keyboard(),
+                reply_markup=_get_main_keyboard(),
             )
         else:
             asyncio.create_task(arbitrage.start_auto_scan())
-            awAlgot query.edit_message_text(
+            await query.edit_message_text(
                 "✅ <b>Автосканирование запущено!</b>\n\n"
                 f"⏱ Интервал: {arbitrage.config.scan_interval_seconds} сек\n"
                 f"📊 Игры: {', '.join(arbitrage.config.games)}\n"
                 f"💰 Мин. ROI: {arbitrage.config.min_roi_percent}%\n\n"
                 "<i>Вы будете получать уведомления о найденных возможностях.</i>",
                 parse_mode="HTML",
-                reply_markup=_get_mAlgon_keyboard(),
+                reply_markup=_get_main_keyboard(),
             )
 
     elif action == "stop":
         if not arbitrage._running:
-            awAlgot query.edit_message_text(
+            await query.edit_message_text(
                 "⚠️ <b>Автосканирование не запущено!</b>",
                 parse_mode="HTML",
-                reply_markup=_get_mAlgon_keyboard(),
+                reply_markup=_get_main_keyboard(),
             )
         else:
-            awAlgot arbitrage.stop_auto_scan()
+            await arbitrage.stop_auto_scan()
             stats = arbitrage.get_stats()
 
-            awAlgot query.edit_message_text(
+            await query.edit_message_text(
                 "⏹ <b>Автосканирование остановлено</b>\n\n"
                 f"📊 Сканов выполнено: {stats['scans_completed']}\n"
                 f"🔍 Найдено возможностей: {stats['opportunities_found']}\n"
                 f"✅ Выполнено сделок: {stats['opportunities_executed']}\n"
                 f"💰 Общая прибыль: ${stats['total_profit_usd']:.2f}",
                 parse_mode="HTML",
-                reply_markup=_get_mAlgon_keyboard(),
+                reply_markup=_get_main_keyboard(),
             )
 
     elif action == "opportunities":
@@ -303,10 +303,10 @@ async def Algo_arb_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         else:
             text = "📊 <b>Нет сохранённых возможностей</b>\n\nВыполните сканирование для поиска."
 
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             text,
             parse_mode="HTML",
-            reply_markup=_get_mAlgon_keyboard(),
+            reply_markup=_get_main_keyboard(),
         )
 
     elif action == "stats":
@@ -328,10 +328,10 @@ async def Algo_arb_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) 
             f"• Dry Run: {'Да' if arbitrage.config.dry_run else 'Нет'}"
         )
 
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             text,
             parse_mode="HTML",
-            reply_markup=_get_mAlgon_keyboard(),
+            reply_markup=_get_main_keyboard(),
         )
 
     elif action == "settings":
@@ -347,7 +347,7 @@ async def Algo_arb_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) 
             f"🧪 Dry Run: {'✅ Вкл' if config.dry_run else '❌ Выкл'}"
         )
 
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             text,
             parse_mode="HTML",
             reply_markup=_get_settings_keyboard(),
@@ -357,7 +357,7 @@ async def Algo_arb_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         arbitrage.config.auto_execute = not arbitrage.config.auto_execute
         status = "включена" if arbitrage.config.auto_execute else "выключена"
 
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             f"⚡ <b>Авто-покупка {status}!</b>\n\n"
             f"{'⚠️ Внимание: бот будет автоматически покупать предметы!' if arbitrage.config.auto_execute else '✅ Бот только показывает возможности.'}",
             parse_mode="HTML",
@@ -373,7 +373,7 @@ async def Algo_arb_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) 
             arbitrage.config.games.append(game)
             status = "добавлена"
 
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             f"🎮 <b>Игра {game.upper()} {status}!</b>\n\n"
             f"Текущие игры: {', '.join(arbitrage.config.games)}",
             parse_mode="HTML",

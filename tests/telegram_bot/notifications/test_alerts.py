@@ -93,7 +93,7 @@ class TestAddPriceAlert:
             "src.telegram_bot.notifications.alerts.get_storage",
             return_value=mock_storage,
         ):
-            result = awAlgot add_price_alert(
+            result = await add_price_alert(
                 user_id=12345,
                 item_id="item123",
                 title="Test Item",
@@ -122,7 +122,7 @@ class TestAddPriceAlert:
             "src.telegram_bot.notifications.alerts.get_storage",
             return_value=mock_storage,
         ):
-            result1 = awAlgot add_price_alert(
+            result1 = await add_price_alert(
                 user_id=12345,
                 item_id="item1",
                 title="Item 1",
@@ -134,9 +134,9 @@ class TestAddPriceAlert:
             # Small delay to ensure different timestamp
             import asyncio
 
-            awAlgot asyncio.sleep(0.01)
+            await asyncio.sleep(0.01)
 
-            result2 = awAlgot add_price_alert(
+            result2 = await add_price_alert(
                 user_id=12345,
                 item_id="item2",
                 title="Item 2",
@@ -156,7 +156,7 @@ class TestAddPriceAlert:
             "src.telegram_bot.notifications.alerts.get_storage",
             return_value=mock_storage,
         ):
-            result = awAlgot add_price_alert(
+            result = await add_price_alert(
                 user_id=12345,
                 item_id="dota_item",
                 title="Arcana",
@@ -174,7 +174,7 @@ class TestAddPriceAlert:
             "src.telegram_bot.notifications.alerts.get_storage",
             return_value=mock_storage,
         ):
-            result = awAlgot add_price_alert(
+            result = await add_price_alert(
                 user_id=12345,
                 item_id="item",
                 title="Item",
@@ -195,7 +195,7 @@ class TestAddPriceAlert:
             "src.telegram_bot.notifications.alerts.get_storage",
             return_value=mock_storage,
         ):
-            result = awAlgot add_price_alert(
+            result = await add_price_alert(
                 user_id=12345,
                 item_id="item",
                 title="Item",
@@ -222,7 +222,7 @@ class TestGetUserAlerts:
             "src.telegram_bot.notifications.alerts.get_storage",
             return_value=mock_storage_with_alerts,
         ):
-            alerts = awAlgot get_user_alerts(user_id=12345)
+            alerts = await get_user_alerts(user_id=12345)
 
             assert isinstance(alerts, list)
             assert len(alerts) == 2
@@ -234,21 +234,21 @@ class TestGetUserAlerts:
             "src.telegram_bot.notifications.alerts.get_storage",
             return_value=mock_storage,
         ):
-            alerts = awAlgot get_user_alerts(user_id=99999)
+            alerts = await get_user_alerts(user_id=99999)
 
             assert isinstance(alerts, list)
             assert len(alerts) == 0
 
     @pytest.mark.asyncio()
-    async def test_get_user_alerts_contAlgons_correct_data(
+    async def test_get_user_alerts_contains_correct_data(
         self, mock_storage_with_alerts
     ):
-        """Test that alerts contAlgon expected data."""
+        """Test that alerts contain expected data."""
         with patch(
             "src.telegram_bot.notifications.alerts.get_storage",
             return_value=mock_storage_with_alerts,
         ):
-            alerts = awAlgot get_user_alerts(user_id=12345)
+            alerts = await get_user_alerts(user_id=12345)
 
             # Find the first alert
             ak47_alert = next(
@@ -274,7 +274,7 @@ class TestRemovePriceAlert:
             "src.telegram_bot.notifications.alerts.get_storage",
             return_value=mock_storage_with_alerts,
         ):
-            result = awAlgot remove_price_alert(
+            result = await remove_price_alert(
                 user_id=12345,
                 alert_id="alert_123_12345",
             )
@@ -289,12 +289,12 @@ class TestRemovePriceAlert:
             "src.telegram_bot.notifications.alerts.get_storage",
             return_value=mock_storage_with_alerts,
         ):
-            result = awAlgot remove_price_alert(
+            result = await remove_price_alert(
                 user_id=12345,
                 alert_id="nonexistent_alert",
             )
 
-            # Should return None/False or not rAlgose error
+            # Should return None/False or not raise error
             assert result is None or result is False or result is True
 
     @pytest.mark.asyncio()
@@ -304,7 +304,7 @@ class TestRemovePriceAlert:
             "src.telegram_bot.notifications.alerts.get_storage",
             return_value=mock_storage_with_alerts,
         ):
-            awAlgot remove_price_alert(
+            await remove_price_alert(
                 user_id=12345,
                 alert_id="alert_123_12345",
             )
@@ -326,7 +326,7 @@ class TestUpdateUserSettings:
             return_value=mock_storage,
         ):
             # update_user_settings returns None by design
-            awAlgot update_user_settings(
+            await update_user_settings(
                 user_id=12345,
                 settings={
                     "min_profit_percent": 10.0,
@@ -345,7 +345,7 @@ class TestUpdateUserSettings:
             return_value=mock_storage,
         ):
             # update_user_settings returns None by design
-            awAlgot update_user_settings(
+            await update_user_settings(
                 user_id=12345,
                 settings={
                     "min_profit_percent": 15.0,
@@ -362,7 +362,7 @@ class TestUpdateUserSettings:
             "src.telegram_bot.notifications.alerts.get_storage",
             return_value=mock_storage,
         ):
-            awAlgot update_user_settings(
+            await update_user_settings(
                 user_id=12345,
                 settings={"enabled": False},
             )
@@ -383,7 +383,7 @@ class TestEdgeCases:
             "src.telegram_bot.notifications.alerts.get_storage",
             return_value=mock_storage,
         ):
-            result = awAlgot add_price_alert(
+            result = await add_price_alert(
                 user_id=12345,
                 item_id="item",
                 title="Test & Item <Special>",
@@ -401,7 +401,7 @@ class TestEdgeCases:
             "src.telegram_bot.notifications.alerts.get_storage",
             return_value=mock_storage,
         ):
-            result = awAlgot add_price_alert(
+            result = await add_price_alert(
                 user_id=12345,
                 item_id="item",
                 title="Item",
@@ -419,7 +419,7 @@ class TestEdgeCases:
             "src.telegram_bot.notifications.alerts.get_storage",
             return_value=mock_storage,
         ):
-            result = awAlgot add_price_alert(
+            result = await add_price_alert(
                 user_id=12345,
                 item_id="item",
                 title="Expensive Item",
@@ -444,13 +444,13 @@ class TestEdgeCases:
         with patch(
             "src.telegram_bot.notifications.alerts.get_storage", return_value=storage1
         ):
-            alerts1 = awAlgot get_user_alerts(user_id=111)
+            alerts1 = await get_user_alerts(user_id=111)
             assert len(alerts1) == 1
 
         with patch(
             "src.telegram_bot.notifications.alerts.get_storage", return_value=storage2
         ):
-            alerts2 = awAlgot get_user_alerts(user_id=222)
+            alerts2 = await get_user_alerts(user_id=222)
             assert len(alerts2) == 2
 
     @pytest.mark.asyncio()
@@ -461,7 +461,7 @@ class TestEdgeCases:
             return_value=mock_storage,
         ):
             # Add price drop alert
-            result1 = awAlgot add_price_alert(
+            result1 = await add_price_alert(
                 user_id=12345,
                 item_id="item1",
                 title="Item",
@@ -471,7 +471,7 @@ class TestEdgeCases:
             )
 
             # Add price rise alert for same item
-            result2 = awAlgot add_price_alert(
+            result2 = await add_price_alert(
                 user_id=12345,
                 item_id="item1",
                 title="Item",
@@ -514,7 +514,7 @@ class TestIntegration:
             return_value=mock_storage,
         ):
             # Add an alert
-            awAlgot add_price_alert(
+            await add_price_alert(
                 user_id=12345,
                 item_id="item1",
                 title="Test Item",
@@ -527,7 +527,7 @@ class TestIntegration:
             assert len(alerts_list) >= 1
 
             # Get alerts
-            alerts = awAlgot get_user_alerts(user_id=12345)
+            alerts = await get_user_alerts(user_id=12345)
             assert len(alerts) >= 1
 
     @pytest.mark.asyncio()
@@ -549,7 +549,7 @@ class TestIntegration:
             return_value=mock_storage,
         ):
             # Add
-            alert = awAlgot add_price_alert(
+            alert = await add_price_alert(
                 user_id=12345,
                 item_id="lifecycle_item",
                 title="Lifecycle Test",
@@ -562,8 +562,8 @@ class TestIntegration:
             alert_id = alert["id"]
 
             # Get
-            alerts = awAlgot get_user_alerts(user_id=12345)
+            alerts = await get_user_alerts(user_id=12345)
             assert any(a.get("id") == alert_id for a in alerts)
 
             # Remove
-            awAlgot remove_price_alert(user_id=12345, alert_id=alert_id)
+            await remove_price_alert(user_id=12345, alert_id=alert_id)

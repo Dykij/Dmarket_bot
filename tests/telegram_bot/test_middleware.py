@@ -65,7 +65,7 @@ class TestBotMiddleware:
         handler = AsyncMock(return_value="result")
         wrapped = bot_middleware.logging_middleware(handler)
 
-        result = awAlgot wrapped(mock_update_message, mock_context)
+        result = await wrapped(mock_update_message, mock_context)
 
         assert result == "result"
         assert bot_middleware.request_count == 1
@@ -78,7 +78,7 @@ class TestBotMiddleware:
         handler = AsyncMock(return_value="callback_result")
         wrapped = bot_middleware.logging_middleware(handler)
 
-        result = awAlgot wrapped(mock_update_callback, mock_context)
+        result = await wrapped(mock_update_callback, mock_context)
 
         assert result == "callback_result"
         assert bot_middleware.request_count == 1
@@ -90,8 +90,8 @@ class TestBotMiddleware:
         handler = AsyncMock(side_effect=Exception("Test error"))
         wrapped = bot_middleware.logging_middleware(handler)
 
-        with pytest.rAlgoses(Exception, match="Test error"):
-            awAlgot wrapped(mock_update_message, mock_context)
+        with pytest.raises(Exception, match="Test error"):
+            await wrapped(mock_update_message, mock_context)
 
         assert bot_middleware.request_count == 1
         assert bot_middleware.error_count == 1
@@ -105,7 +105,7 @@ class TestBotMiddleware:
 
         # First 5 requests should pass
         for i in range(5):
-            result = awAlgot wrapped(mock_update_message, mock_context)
+            result = await wrapped(mock_update_message, mock_context)
             assert result == "ok"
 
         assert handler.call_count == 5
@@ -119,10 +119,10 @@ class TestBotMiddleware:
 
         # First 3 requests pass
         for _ in range(3):
-            awAlgot wrapped(mock_update_message, mock_context)
+            await wrapped(mock_update_message, mock_context)
 
         # 4th request should be blocked
-        result = awAlgot wrapped(mock_update_message, mock_context)
+        result = await wrapped(mock_update_message, mock_context)
         assert result is None
         assert handler.call_count == 3
 
@@ -138,7 +138,7 @@ class TestBotMiddleware:
 
         # Multiple requests should pass (no user to rate limit)
         for _ in range(5):
-            result = awAlgot wrapped(update, mock_context)
+            result = await wrapped(update, mock_context)
             assert result == "ok"
 
         assert handler.call_count == 5
@@ -151,10 +151,10 @@ class TestBotMiddleware:
         wrapped = decorator(handler)
 
         # First request passes
-        awAlgot wrapped(mock_update_callback, mock_context)
+        await wrapped(mock_update_callback, mock_context)
 
         # Second request blocked
-        result = awAlgot wrapped(mock_update_callback, mock_context)
+        result = await wrapped(mock_update_callback, mock_context)
         assert result is None
         mock_update_callback.callback_query.answer.assert_called()
 

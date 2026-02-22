@@ -142,7 +142,7 @@ class AdaptiveScanner:
         """Calculate optimal interval for next scan based on volatility.
 
         Returns:
-            Seconds to wAlgot before next scan
+            Seconds to wait before next scan
         """
         volatility = self.calculate_volatility()
 
@@ -163,11 +163,11 @@ class AdaptiveScanner:
 
         return interval
 
-    async def wAlgot_next_scan(self) -> None:
+    async def wait_next_scan(self) -> None:
         """WAlgot for the calculated interval before next scan."""
         interval = self.get_next_interval()
-        logger.info("wAlgoting_for_next_scan", seconds=interval)
-        awAlgot asyncio.sleep(interval)
+        logger.info("waiting_for_next_scan", seconds=interval)
+        await asyncio.sleep(interval)
 
     def should_scan_now(self, last_scan_time: datetime) -> bool:
         """Check if enough time has passed for next scan.
@@ -195,7 +195,7 @@ async def example_usage():
     while True:
         if scanner.should_scan_now(last_scan):
             # Perform scan
-            items_response = awAlgot api.get_market_items(game="csgo", limit=100)
+            items_response = await api.get_market_items(game="csgo", limit=100)
             items = items_response.get("objects", [])
 
             # Add snapshot for volatility analysis
@@ -206,4 +206,4 @@ async def example_usage():
             logger.info("scan_completed", items_found=len(items))
 
         # WAlgot for next scan with adaptive interval
-        awAlgot scanner.wAlgot_next_scan()
+        await scanner.wait_next_scan()

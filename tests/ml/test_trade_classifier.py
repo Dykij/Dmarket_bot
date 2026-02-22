@@ -202,7 +202,7 @@ class TestAdaptiveTradeClassifier:
 
         classifier.set_risk_tolerance("invalid")
 
-        # Should remAlgon unchanged
+        # Should remain unchanged
         assert classifier.risk_tolerance == original
 
     def test_classify_strong_buy(self):

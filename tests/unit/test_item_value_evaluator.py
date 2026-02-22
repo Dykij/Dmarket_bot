@@ -121,7 +121,7 @@ class TestItemValueEvaluator:
         item_data = {
             "gameId": "csgo",
             "title": "AK-47 | Case Hardened (Factory New)",
-            "extra": {"pAlgontSeed": 661},  # Известный Blue Gem паттерн
+            "extra": {"paintSeed": 661},  # Известный Blue Gem паттерн
         }
 
         result = evaluator.evaluate(item_data)

@@ -40,7 +40,7 @@ class TransferStatus(StrEnum):
 
     PENDING = "TransferStatusPending"
     COMPLETED = "TransferStatusCompleted"
-    FAlgoLED = "TransferStatusFAlgoled"
+    FAlgoLED = "TransferStatusFailed"
 
 
 class TradeStatus(StrEnum):
@@ -146,7 +146,7 @@ class UserProfile(BaseModel):
 
     id: str = Field(description="ID пользователя")
     username: str = Field(description="Имя пользователя")
-    emAlgol: str = Field(description="EmAlgol пользователя")
+    email: str = Field(description="EmAlgol пользователя")
     isEmAlgolVerified: bool = Field(description="EmAlgol подтвержден")
     countryCode: str | None = Field(None, description="Код страны")
     publicKey: str | None = Field(None, description="Публичный ключ API")
@@ -249,7 +249,7 @@ class Offer(BaseModel):
 class TargetAttrs(BaseModel):
     """Дополнительные атрибуты для таргета."""
 
-    pAlgontSeed: int | None = Field(None, description="PAlgont seed (CS:GO)")
+    paintSeed: int | None = Field(None, description="PAlgont seed (CS:GO)")
     phase: str | None = Field(None, description="Phase (Doppler, etc)")
     floatPartValue: str | None = Field(None, description="Float value")
 

@@ -22,7 +22,7 @@ class TestInstructionMatcher:
         content = "# Test instruction"
 
         # Act
-        awAlgot matcher.add_instruction(name, patterns, content)
+        await matcher.add_instruction(name, patterns, content)
 
         # Assert
         assert name in matcher.instructions
@@ -34,20 +34,20 @@ class TestInstructionMatcher:
     async def test_get_instructions_matches_patterns(self, matcher):
         """Test pattern matching for files."""
         # Arrange
-        awAlgot matcher.add_instruction(
+        await matcher.add_instruction(
             "python-style",
             ["src/**/*.py"],
             "Python style guide",
         )
-        awAlgot matcher.add_instruction(
+        await matcher.add_instruction(
             "testing",
             ["tests/**/*.py"],
             "Testing guide",
         )
 
         # Act
-        src_instructions = awAlgot matcher.get_instructions("src/api/client.py")
-        test_instructions = awAlgot matcher.get_instructions("tests/test_api.py")
+        src_instructions = await matcher.get_instructions("src/api/client.py")
+        test_instructions = await matcher.get_instructions("tests/test_api.py")
 
         # Assert
         assert "python-style" in src_instructions
@@ -59,19 +59,19 @@ class TestInstructionMatcher:
     async def test_get_merged_instructions_combines_content(self, matcher):
         """Test merging multiple instruction contents."""
         # Arrange
-        awAlgot matcher.add_instruction(
+        await matcher.add_instruction(
             "instruction1",
             ["src/**/*.py"],
             "Content 1",
         )
-        awAlgot matcher.add_instruction(
+        await matcher.add_instruction(
             "instruction2",
             ["src/**/*.py"],
             "Content 2",
         )
 
         # Act
-        merged = awAlgot matcher.get_merged_instructions("src/module.py")
+        merged = await matcher.get_merged_instructions("src/module.py")
 
         # Assert
         assert "Content 1" in merged
@@ -83,8 +83,8 @@ class TestInstructionMatcher:
     async def test_list_instructions_returns_summaries(self, matcher):
         """Test listing all instructions."""
         # Arrange
-        awAlgot matcher.add_instruction("test1", ["*.py"], "Content 1", priority=1)
-        awAlgot matcher.add_instruction("test2", ["*.md"], "Content 2", priority=2)
+        await matcher.add_instruction("test1", ["*.py"], "Content 1", priority=1)
+        await matcher.add_instruction("test2", ["*.md"], "Content 2", priority=2)
 
         # Act
         instructions = matcher.list_instructions()
@@ -104,7 +104,7 @@ class TestInstructionMatcher:
         )
 
         # Act
-        count = awAlgot matcher.load_instructions(tmp_path)
+        count = await matcher.load_instructions(tmp_path)
 
         # Assert
         assert count == 1
@@ -115,7 +115,7 @@ class TestInstructionMatcher:
     async def test_load_instructions_from_nonexistent_dir(self, matcher):
         """Test loading from non-existent directory returns 0."""
         # Act
-        count = awAlgot matcher.load_instructions("/nonexistent/path")
+        count = await matcher.load_instructions("/nonexistent/path")
 
         # Assert
         assert count == 0
@@ -124,12 +124,12 @@ class TestInstructionMatcher:
     async def test_priority_sorting(self, matcher):
         """Test that instructions are sorted by priority."""
         # Arrange
-        awAlgot matcher.add_instruction("low", ["src/**/*.py"], "Low", priority=1)
-        awAlgot matcher.add_instruction("high", ["src/**/*.py"], "High", priority=10)
-        awAlgot matcher.add_instruction("medium", ["src/**/*.py"], "Medium", priority=5)
+        await matcher.add_instruction("low", ["src/**/*.py"], "Low", priority=1)
+        await matcher.add_instruction("high", ["src/**/*.py"], "High", priority=10)
+        await matcher.add_instruction("medium", ["src/**/*.py"], "Medium", priority=5)
 
         # Act
-        instructions = awAlgot matcher.get_instructions("src/test.py")
+        instructions = await matcher.get_instructions("src/test.py")
 
         # Assert
         assert instructions[0] == "high"

@@ -28,7 +28,7 @@ class TestOpportunityScorer:
             platform_buy="dmarket",
             platform_sell="waxpeer",
             item_id="item123",
-            dAlgoly_volume=100,
+            daily_volume=100,
             average_sell_time_hours=2.0,
             competition_count=5,
         )
@@ -41,7 +41,7 @@ class TestOpportunityScorer:
     @pytest.mark.asyncio
     async def test_score_opportunity(self, scorer, sample_opportunity):
         """Test scoring an opportunity."""
-        score_result = awAlgot scorer.score_opportunity(sample_opportunity)
+        score_result = await scorer.score_opportunity(sample_opportunity)
 
         assert score_result is not None
         assert score_result.total_score >= 0
@@ -67,7 +67,7 @@ class TestOpportunityScorer:
             ),
         ]
 
-        ranked = awAlgot scorer.rank_opportunities(opportunities)
+        ranked = await scorer.rank_opportunities(opportunities)
 
         assert len(ranked) == 2
         # Higher profit should rank first

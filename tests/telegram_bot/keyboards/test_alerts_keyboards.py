@@ -206,8 +206,8 @@ class TestGetAlertActionsKeyboard:
         # 3 rows: [edit, delete], [pause, stats], [back]
         assert len(result.inline_keyboard) == 3
 
-    def test_edit_button_contAlgons_alert_id(self):
-        """Test that 'Edit' button contAlgons the alert ID in callback."""
+    def test_edit_button_contains_alert_id(self):
+        """Test that 'Edit' button contains the alert ID in callback."""
         alert_id = "alert_456"
         result = get_alert_actions_keyboard(alert_id)
 
@@ -217,8 +217,8 @@ class TestGetAlertActionsKeyboard:
         assert "Изменить" in edit_button.text
         assert f"alert_edit_{alert_id}" == edit_button.callback_data
 
-    def test_delete_button_contAlgons_alert_id(self):
-        """Test that 'Delete' button contAlgons the alert ID in callback."""
+    def test_delete_button_contains_alert_id(self):
+        """Test that 'Delete' button contains the alert ID in callback."""
         alert_id = "alert_789"
         result = get_alert_actions_keyboard(alert_id)
 
@@ -228,8 +228,8 @@ class TestGetAlertActionsKeyboard:
         assert "Удалить" in delete_button.text
         assert f"alert_delete_{alert_id}" == delete_button.callback_data
 
-    def test_pause_button_contAlgons_alert_id(self):
-        """Test that 'Pause' button contAlgons the alert ID in callback."""
+    def test_pause_button_contains_alert_id(self):
+        """Test that 'Pause' button contains the alert ID in callback."""
         alert_id = "my_alert"
         result = get_alert_actions_keyboard(alert_id)
 
@@ -239,8 +239,8 @@ class TestGetAlertActionsKeyboard:
         assert "Приостановить" in pause_button.text
         assert f"alert_pause_{alert_id}" == pause_button.callback_data
 
-    def test_stats_button_contAlgons_alert_id(self):
-        """Test that 'Stats' button contAlgons the alert ID in callback."""
+    def test_stats_button_contains_alert_id(self):
+        """Test that 'Stats' button contains the alert ID in callback."""
         alert_id = "stats_alert"
         result = get_alert_actions_keyboard(alert_id)
 
@@ -532,7 +532,7 @@ class TestGetAlertNotificationSettingsKeyboard:
         """Test that keyboard has the expected number of rows."""
         result = get_alert_notification_settings_keyboard()
 
-        # 4 rows: [push, telegram], [emAlgol, sound], [quiet hours], [back]
+        # 4 rows: [push, telegram], [email, sound], [quiet hours], [back]
         assert len(result.inline_keyboard) == 4
 
     def test_default_settings_push_enabled(self):
@@ -555,15 +555,15 @@ class TestGetAlertNotificationSettingsKeyboard:
         assert "Telegram" in telegram_button.text
         assert "✅" in telegram_button.text
 
-    def test_default_settings_emAlgol_disabled(self):
-        """Test that emAlgol is disabled by default."""
+    def test_default_settings_email_disabled(self):
+        """Test that email is disabled by default."""
         result = get_alert_notification_settings_keyboard()
 
         second_row = result.inline_keyboard[1]
-        emAlgol_button = second_row[0]
+        email_button = second_row[0]
 
-        assert "EmAlgol" in emAlgol_button.text
-        assert "❌" in emAlgol_button.text
+        assert "EmAlgol" in email_button.text
+        assert "❌" in email_button.text
 
     def test_default_settings_sound_enabled(self):
         """Test that sound is enabled by default."""
@@ -577,7 +577,7 @@ class TestGetAlertNotificationSettingsKeyboard:
 
     def test_custom_settings_push_disabled(self):
         """Test custom settings with push disabled."""
-        settings = {"push": False, "telegram": True, "emAlgol": False, "sound": True}
+        settings = {"push": False, "telegram": True, "email": False, "sound": True}
         result = get_alert_notification_settings_keyboard(settings)
 
         first_row = result.inline_keyboard[0]
@@ -585,15 +585,15 @@ class TestGetAlertNotificationSettingsKeyboard:
 
         assert "❌" in push_button.text
 
-    def test_custom_settings_emAlgol_enabled(self):
-        """Test custom settings with emAlgol enabled."""
-        settings = {"push": True, "telegram": True, "emAlgol": True, "sound": True}
+    def test_custom_settings_email_enabled(self):
+        """Test custom settings with email enabled."""
+        settings = {"push": True, "telegram": True, "email": True, "sound": True}
         result = get_alert_notification_settings_keyboard(settings)
 
         second_row = result.inline_keyboard[1]
-        emAlgol_button = second_row[0]
+        email_button = second_row[0]
 
-        assert "✅" in emAlgol_button.text
+        assert "✅" in email_button.text
 
     def test_quiet_hours_button_exists(self):
         """Test that 'Quiet hours' button exists."""

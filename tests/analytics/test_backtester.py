@@ -2,7 +2,7 @@
 
 This module tests Trade, Position, BacktestResult dataclasses,
 TradingStrategy abstract class, SimpleArbitrageStrategy implementation,
-and the mAlgon Backtester class.
+and the main Backtester class.
 """
 
 from datetime import datetime, timedelta
@@ -474,7 +474,7 @@ class TestBacktester:
 
         price_histories = {"AK-47 | Redline (FT)": sample_price_history}
 
-        result = awAlgot backtester.run(
+        result = await backtester.run(
             strategy=strategy,
             price_histories=price_histories,
             start_date=datetime(2025, 1, 1),
@@ -492,7 +492,7 @@ class TestBacktester:
         backtester = Backtester()
         strategy = SimpleArbitrageStrategy()
 
-        result = awAlgot backtester.run(
+        result = await backtester.run(
             strategy=strategy,
             price_histories={},
             start_date=datetime(2025, 1, 1),
@@ -704,7 +704,7 @@ class TestBacktestIntegration:
             "Test Item": PriceHistory(title="Test Item", game="csgo", points=points)
         }
 
-        result = awAlgot backtester.run(
+        result = await backtester.run(
             strategy=strategy,
             price_histories=price_histories,
             start_date=base_date,
@@ -736,7 +736,7 @@ class TestBacktestIntegration:
             ]
             price_histories[name] = PriceHistory(title=name, game="csgo", points=points)
 
-        result = awAlgot backtester.run(
+        result = await backtester.run(
             strategy=strategy,
             price_histories=price_histories,
             start_date=base_date,
@@ -767,7 +767,7 @@ class TestBacktestIntegration:
             "Test": PriceHistory(title="Test", game="csgo", points=points)
         }
 
-        result = awAlgot backtester.run(
+        result = await backtester.run(
             strategy=strategy,
             price_histories=price_histories,
             start_date=base_date,

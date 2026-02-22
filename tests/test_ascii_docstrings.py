@@ -1,7 +1,7 @@
 """
 Tests for ASCII docstrings in keyboard modules.
 
-Validates that docstrings contAlgon visual ASCII diagrams for Telegram UI.
+Validates that docstrings contain visual ASCII diagrams for Telegram UI.
 """
 
 import ast
@@ -44,7 +44,7 @@ class TestASCIIDocstrings:
         assert settings_path.exists(), "settings.py should exist"
 
     def _has_ascii_diagram(self, docstring: str) -> bool:
-        """Check if docstring contAlgons ASCII diagram markers."""
+        """Check if docstring contains ASCII diagram markers."""
         if not docstring:
             return False
 
@@ -82,7 +82,7 @@ class TestASCIIDocstrings:
             assert func is not None, f"Function {func_name} not found"
             assert func["docstring"] is not None, f"{func_name} should have docstring"
             assert self._has_ascii_diagram(func["docstring"]), (
-                f"{func_name} docstring should contAlgon ASCII diagram"
+                f"{func_name} docstring should contain ASCII diagram"
             )
 
     def test_alerts_functions_have_ascii_docstrings(self, keyboards_dir):
@@ -97,7 +97,7 @@ class TestASCIIDocstrings:
             assert func is not None, f"Function {func_name} not found"
             assert func["docstring"] is not None, f"{func_name} should have docstring"
             assert self._has_ascii_diagram(func["docstring"]), (
-                f"{func_name} docstring should contAlgon ASCII diagram"
+                f"{func_name} docstring should contain ASCII diagram"
             )
 
     def test_settings_functions_have_ascii_docstrings(self, keyboards_dir):
@@ -112,12 +112,12 @@ class TestASCIIDocstrings:
             assert func is not None, f"Function {func_name} not found"
             assert func["docstring"] is not None, f"{func_name} should have docstring"
             assert self._has_ascii_diagram(func["docstring"]), (
-                f"{func_name} docstring should contAlgon ASCII diagram"
+                f"{func_name} docstring should contain ASCII diagram"
             )
 
     def test_ascii_diagrams_have_proper_structure(self, keyboards_dir):
         """Test that ASCII diagrams have proper box structure."""
-        # Test one file in detAlgol
+        # Test one file in detail
         arb_path = keyboards_dir / "arbitrage.py"
         functions = self._extract_functions_with_docstrings(arb_path)
 

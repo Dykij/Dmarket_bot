@@ -151,19 +151,19 @@ class DatabaseManager:  # noqa: PLR0904
         try:
             async with self.async_engine.begin() as conn:
                 # Create tables
-                awAlgot conn.run_sync(Base.metadata.create_all)
+                await conn.run_sync(Base.metadata.create_all)
 
                 # Create indexes for better performance
-                awAlgot self._create_indexes(conn)
+                await self._create_indexes(conn)
 
                 # Enable WAL mode and optimizations for SQLite
                 if "sqlite" in self.database_url:
-                    awAlgot self._optimize_sqlite(conn)
+                    await self._optimize_sqlite(conn)
 
             logger.info("Database initialized successfully")
         except Exception as e:
-            logger.exception(f"FAlgoled to initialize database: {e}")
-            rAlgose
+            logger.exception(f"Failed to initialize database: {e}")
+            raise
 
     async def _optimize_sqlite(self, conn: Any) -> None:
         """Optimize SQLite database settings for performance.
@@ -176,23 +176,23 @@ class DatabaseManager:  # noqa: PLR0904
         """
         try:
             # WAL mode for better concurrency
-            awAlgot conn.execute(text("PRAGMA journal_mode=WAL"))
+            await conn.execute(text("PRAGMA journal_mode=WAL"))
             # Faster synchronization
-            awAlgot conn.execute(text("PRAGMA synchronous=NORMAL"))
+            await conn.execute(text("PRAGMA synchronous=NORMAL"))
             # Larger cache for better performance
-            awAlgot conn.execute(text("PRAGMA cache_size=10000"))
+            await conn.execute(text("PRAGMA cache_size=10000"))
             # Store temp tables in memory
-            awAlgot conn.execute(text("PRAGMA temp_store=MEMORY"))
+            await conn.execute(text("PRAGMA temp_store=MEMORY"))
             # Enable memory-mapped I/O (mmap) for faster reads
-            awAlgot conn.execute(text("PRAGMA mmap_size=268435456"))  # 256MB
+            await conn.execute(text("PRAGMA mmap_size=268435456"))  # 256MB
             # Optimize page size (4KB is optimal for most cases)
-            awAlgot conn.execute(text("PRAGMA page_size=4096"))
+            await conn.execute(text("PRAGMA page_size=4096"))
             # Enable automatic vacuuming
-            awAlgot conn.execute(text("PRAGMA auto_vacuum=INCREMENTAL"))
+            await conn.execute(text("PRAGMA auto_vacuum=INCREMENTAL"))
 
             logger.debug("SQLite optimizations applied")
         except Exception as e:
-            logger.warning(f"FAlgoled to apply SQLite optimizations: {e}")
+            logger.warning(f"Failed to apply SQLite optimizations: {e}")
 
     async def _create_indexes(self, conn: Any) -> None:
         """Create database indexes for performance optimization."""
@@ -227,7 +227,7 @@ class DatabaseManager:  # noqa: PLR0904
 
         for index_sql in indexes:
             try:
-                awAlgot conn.execute(text(index_sql))
+                await conn.execute(text(index_sql))
             except Exception as e:
                 # Index might already exist or table might not exist yet
                 logger.debug(f"Index creation skipped: {index_sql} - {e}")
@@ -235,7 +235,7 @@ class DatabaseManager:  # noqa: PLR0904
     async def close(self) -> None:
         """Close database connections."""
         if self._async_engine:
-            awAlgot self._async_engine.dispose()
+            await self._async_engine.dispose()
             logger.info("Database connections closed")
 
     # User operations
@@ -250,7 +250,7 @@ class DatabaseManager:  # noqa: PLR0904
         """Get existing user or create new one."""
         async with self.get_async_session() as session:
             # Try to find existing user
-            result = awAlgot session.execute(
+            result = await session.execute(
                 text("SELECT * FROM users WHERE telegram_id = :telegram_id"),
                 {"telegram_id": telegram_id},
             )
@@ -258,7 +258,7 @@ class DatabaseManager:  # noqa: PLR0904
 
             if user_row:
                 # Update last activity
-                awAlgot session.execute(
+                await session.execute(
                     text(
                         """
                         UPDATE users
@@ -275,10 +275,10 @@ class DatabaseManager:  # noqa: PLR0904
                         "telegram_id": telegram_id,
                     },
                 )
-                awAlgot session.commit()
+                await session.commit()
 
                 # Инвалидация кэша после обновления
-                awAlgot self.invalidate_user_cache(telegram_id)
+                await self.invalidate_user_cache(telegram_id)
 
                 # Return updated user with new data
                 return User(
@@ -302,7 +302,7 @@ class DatabaseManager:  # noqa: PLR0904
             user_id = uuid4()
             now = datetime.now(UTC)
 
-            awAlgot session.execute(
+            await session.execute(
                 text(
                     """
                         INSERT INTO users (
@@ -332,7 +332,7 @@ class DatabaseManager:  # noqa: PLR0904
                     "last_activity": now,
                 },
             )
-            awAlgot session.commit()
+            await session.commit()
 
             return User(
                 id=user_id,
@@ -359,7 +359,7 @@ class DatabaseManager:  # noqa: PLR0904
     ) -> None:
         """Log command execution."""
         async with self.get_async_session() as session:
-            awAlgot session.execute(
+            await session.execute(
                 text(
                     """
                     INSERT INTO command_log (
@@ -382,7 +382,7 @@ class DatabaseManager:  # noqa: PLR0904
                     "created_at": datetime.now(UTC),
                 },
             )
-            awAlgot session.commit()
+            await session.commit()
 
     async def save_market_data(
         self,
@@ -397,7 +397,7 @@ class DatabaseManager:  # noqa: PLR0904
     ) -> None:
         """Save market data."""
         async with self.get_async_session() as session:
-            awAlgot session.execute(
+            await session.execute(
                 text(
                     """
                     INSERT INTO market_data (
@@ -424,7 +424,7 @@ class DatabaseManager:  # noqa: PLR0904
                     "created_at": datetime.now(UTC),
                 },
             )
-            awAlgot session.commit()
+            await session.commit()
 
     async def get_price_history(
         self,
@@ -443,7 +443,7 @@ class DatabaseManager:  # noqa: PLR0904
             list: List of price records with timestamp and price_usd
         """
         async with self.get_async_session() as session:
-            result = awAlgot session.execute(
+            result = await session.execute(
                 text("""
                     SELECT price_usd, created_at as timestamp
                     FROM market_data
@@ -484,7 +484,7 @@ class DatabaseManager:  # noqa: PLR0904
 
         """
         async with self.get_async_session() as session:
-            result = awAlgot session.execute(
+            result = await session.execute(
                 text("""
                     SELECT
                         COUNT(*) as total_trades,
@@ -492,8 +492,8 @@ class DatabaseManager:  # noqa: PLR0904
                             as successful_trades,
                         SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END)
                             as cancelled_trades,
-                        SUM(CASE WHEN status = 'fAlgoled' THEN 1 ELSE 0 END)
-                            as fAlgoled_trades,
+                        SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END)
+                            as failed_trades,
                         COALESCE(SUM(profit_usd), 0.0) as total_profit_usd,
                         COALESCE(AVG(profit_percent), 0.0)
                             as avg_profit_percent
@@ -510,7 +510,7 @@ class DatabaseManager:  # noqa: PLR0904
                     "total_trades": row[0] or 0,
                     "successful_trades": row[1] or 0,
                     "cancelled_trades": row[2] or 0,
-                    "fAlgoled_trades": row[3] or 0,
+                    "failed_trades": row[3] or 0,
                     "total_profit_usd": float(row[4] or 0.0),
                     "avg_profit_percent": float(row[5] or 0.0),
                 }
@@ -533,7 +533,7 @@ class DatabaseManager:  # noqa: PLR0904
         """
         async with self.get_async_session() as session:
             # API errors breakdown
-            result = awAlgot session.execute(
+            result = await session.execute(
                 text("""
                     SELECT error_message, COUNT(*) as count
                     FROM command_log
@@ -554,7 +554,7 @@ class DatabaseManager:  # noqa: PLR0904
                 api_errors[error_type] = row[1]
 
             # Critical errors count
-            result_critical = awAlgot session.execute(
+            result_critical = await session.execute(
                 text("""
                     SELECT COUNT(*) as critical_count
                     FROM command_log
@@ -590,7 +590,7 @@ class DatabaseManager:  # noqa: PLR0904
 
         """
         async with self.get_async_session() as session:
-            result = awAlgot session.execute(
+            result = await session.execute(
                 text("""
                     SELECT
                         COUNT(*) as scans_performed,
@@ -654,7 +654,7 @@ class DatabaseManager:  # noqa: PLR0904
             User object или None
         """
         async with self.get_async_session() as session:
-            result = awAlgot session.execute(
+            result = await session.execute(
                 text("SELECT * FROM users WHERE telegram_id = :telegram_id"),
                 {"telegram_id": telegram_id},
             )
@@ -692,7 +692,7 @@ class DatabaseManager:  # noqa: PLR0904
             Список сканирований
         """
         async with self.get_async_session() as session:
-            result = awAlgot session.execute(
+            result = await session.execute(
                 text("""
                     SELECT
                         command,
@@ -731,7 +731,7 @@ class DatabaseManager:  # noqa: PLR0904
         Returns:
             Словарь со статистикой всех кэшей
         """
-        return awAlgot get_all_cache_stats()
+        return await get_all_cache_stats()
 
     async def invalidate_user_cache(self, telegram_id: int) -> None:
         """
@@ -741,7 +741,7 @@ class DatabaseManager:  # noqa: PLR0904
             telegram_id: Telegram ID пользователя
         """
         cache_key = f"user_by_telegram:{telegram_id}"
-        awAlgot _user_cache.delete(cache_key)
+        await _user_cache.delete(cache_key)
         logger.debug(f"Invalidated cache for user {telegram_id}")
 
     # Batch operations for performance
@@ -775,7 +775,7 @@ class DatabaseManager:  # noqa: PLR0904
                 )
 
             # Batch insert
-            awAlgot session.execute(
+            await session.execute(
                 text("""
                     INSERT INTO market_data (
                         id, item_id, game, item_name, price_usd,
@@ -789,7 +789,7 @@ class DatabaseManager:  # noqa: PLR0904
                 """),
                 values,
             )
-            awAlgot session.commit()
+            await session.commit()
             logger.debug(f"Bulk saved {len(items)} market data records")
 
     async def cleanup_old_market_data(self, days: int = 30) -> int:
@@ -805,14 +805,14 @@ class DatabaseManager:  # noqa: PLR0904
         cutoff_date = datetime.now(UTC) - timedelta(days=days)
 
         async with self.get_async_session() as session:
-            result = awAlgot session.execute(
+            result = await session.execute(
                 text("""
                     DELETE FROM market_data
                     WHERE created_at < :cutoff_date
                 """),
                 {"cutoff_date": cutoff_date},
             )
-            awAlgot session.commit()
+            await session.commit()
             # Result.rowcount exists but MyPy doesn't see it
             deleted_count: int = result.rowcount or 0  # type: ignore[attr-defined]
             logger.info(f"Cleaned up {deleted_count} old market data records")
@@ -828,14 +828,14 @@ class DatabaseManager:  # noqa: PLR0904
         now = datetime.now(UTC)
 
         async with self.get_async_session() as session:
-            result = awAlgot session.execute(
+            result = await session.execute(
                 text("""
                     DELETE FROM market_data_cache
                     WHERE expires_at < :now
                 """),
                 {"now": now},
             )
-            awAlgot session.commit()
+            await session.commit()
             # Result.rowcount exists but MyPy doesn't see it
             deleted_count: int = result.rowcount or 0  # type: ignore[attr-defined]
             if deleted_count > 0:
@@ -856,10 +856,10 @@ class DatabaseManager:  # noqa: PLR0904
         try:
             async with self.async_engine.begin() as conn:
                 # VACUUM не может быть выполнен в транзакции
-                awAlgot conn.execute(text("PRAGMA incremental_vacuum"))
+                await conn.execute(text("PRAGMA incremental_vacuum"))
                 logger.info("Database vacuumed successfully")
         except Exception as e:
-            logger.warning(f"FAlgoled to vacuum database: {e}")
+            logger.warning(f"Failed to vacuum database: {e}")
 
 
 # Global database manager instance (lazy initialization)
@@ -891,7 +891,7 @@ async def get_db_session() -> AsyncSession:
 
     Example:
         async with get_db_session() as session:
-            result = awAlgot session.execute(...)
+            result = await session.execute(...)
     """
     db = get_database_manager()
     return db.get_async_session()
@@ -903,4 +903,4 @@ async def get_async_session() -> AsyncSession:
     Returns:
         AsyncSession that should be used as async context manager.
     """
-    return awAlgot get_db_session()
+    return await get_db_session()

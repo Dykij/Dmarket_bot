@@ -375,7 +375,7 @@ class TestMarketAnalyzer:
 
         assert result["score"] == 0.0
         assert result["volume_trend"] == TrendDirection.NEUTRAL
-        assert result["avg_dAlgoly_volume"] == 0
+        assert result["avg_daily_volume"] == 0
 
     def test_analyze_liquidity(
         self, analyzer: MarketAnalyzer, price_history: list[PricePoint]
@@ -385,7 +385,7 @@ class TestMarketAnalyzer:
 
         assert "score" in result
         assert "volume_trend" in result
-        assert "avg_dAlgoly_volume" in result
+        assert "avg_daily_volume" in result
         assert "volume_consistency" in result
 
     def test_analyze_liquidity_bullish_volume_trend(

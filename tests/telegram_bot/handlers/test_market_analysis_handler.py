@@ -253,7 +253,7 @@ def create_volatility_item(volatility_score: float = 15.0) -> list[dict]:
 @pytest.mark.asyncio()
 async def test_market_analysis_command_success(mock_update, mock_context):
     """Тест успешного вызова команды анализа рынка."""
-    awAlgot market_analysis_command(mock_update, mock_context)
+    await market_analysis_command(mock_update, mock_context)
 
     # Проверяем что сообщение отправлено
     mock_update.message.reply_text.assert_called_once()
@@ -269,7 +269,7 @@ async def test_market_analysis_command_success(mock_update, mock_context):
 @pytest.mark.asyncio()
 async def test_market_analysis_command_creates_keyboard(mock_update, mock_context):
     """Тест создания клавиатуры для анализа рынка."""
-    awAlgot market_analysis_command(mock_update, mock_context)
+    await market_analysis_command(mock_update, mock_context)
 
     _args, kwargs = mock_update.message.reply_text.call_args
     keyboard = kwargs["reply_markup"]
@@ -293,7 +293,7 @@ async def test_market_analysis_callback_select_game(mock_update, mock_context):
     """Тест выбора игры через колбэк."""
     mock_update.callback_query.data = "analysis:select_game:dota2"
 
-    awAlgot market_analysis_callback(mock_update, mock_context)
+    await market_analysis_callback(mock_update, mock_context)
 
     # Проверяем обновление сообщения
     mock_update.callback_query.edit_message_text.assert_called_once()
@@ -310,7 +310,7 @@ async def test_market_analysis_callback_initializes_user_data(
     """Тест инициализации данных пользователя."""
     mock_update.callback_query.data = "analysis:select_game:csgo"
 
-    awAlgot market_analysis_callback(mock_update, mock_context)
+    await market_analysis_callback(mock_update, mock_context)
 
     # Проверяем создание структуры данных
     assert "market_analysis" in mock_context.user_data
@@ -334,7 +334,7 @@ async def test_market_analysis_callback_price_changes(
     mock_api_client.return_value = MagicMock()
     mock_analyze.return_value = sample_price_changes
 
-    awAlgot market_analysis_callback(mock_update, mock_context)
+    await market_analysis_callback(mock_update, mock_context)
 
     # Проверяем что API клиент создан
     mock_api_client.assert_called_once()
@@ -355,7 +355,7 @@ async def test_market_analysis_callback_api_error(
     # НастSwarmка мока для возврата None (ошибка API)
     mock_api_client.return_value = None
 
-    awAlgot market_analysis_callback(mock_update, mock_context)
+    await market_analysis_callback(mock_update, mock_context)
 
     # Проверяем сообщение об ошибке
     mock_update.callback_query.edit_message_text.assert_called()
@@ -376,7 +376,7 @@ async def test_show_price_changes_results_success(
     mock_pagination.get_page.return_value = (sample_price_changes, 0, 1)
     mock_pagination.get_items_per_page.return_value = 5
 
-    awAlgot show_price_changes_results(mock_callback_query, mock_context, "csgo")
+    await show_price_changes_results(mock_callback_query, mock_context, "csgo")
 
     # Проверяем вызов редактирования сообщения
     mock_callback_query.edit_message_text.assert_called_once()
@@ -396,7 +396,7 @@ async def test_show_price_changes_results_empty(
     # НастSwarmка пагинации - пустой список
     mock_pagination.get_page.return_value = ([], 0, 0)
 
-    awAlgot show_price_changes_results(mock_callback_query, mock_context, "csgo")
+    await show_price_changes_results(mock_callback_query, mock_context, "csgo")
 
     # Проверяем сообщение о пустых результатах
     mock_callback_query.edit_message_text.assert_called_once()
@@ -413,7 +413,7 @@ async def test_show_trending_items_results(
     mock_pagination.get_page.return_value = (sample_trending_items, 0, 1)
     mock_pagination.get_items_per_page.return_value = 5
 
-    awAlgot show_trending_items_results(mock_callback_query, mock_context, "csgo")
+    await show_trending_items_results(mock_callback_query, mock_context, "csgo")
 
     mock_callback_query.edit_message_text.assert_called_once()
     args = mock_callback_query.edit_message_text.call_args[0]
@@ -428,7 +428,7 @@ async def test_show_volatility_results(
     """Тест отображения результатов волатильности."""
     mock_pagination.get_page.return_value = (sample_volatility_data, 0, 1)
 
-    awAlgot show_volatility_results(mock_callback_query, mock_context, "csgo")
+    await show_volatility_results(mock_callback_query, mock_context, "csgo")
 
     mock_callback_query.edit_message_text.assert_called_once()
     args = mock_callback_query.edit_message_text.call_args[0]
@@ -440,7 +440,7 @@ async def test_show_market_report(
     mock_callback_query, mock_context, sample_market_report
 ):
     """Тест отображения рыночного отчета."""
-    awAlgot show_market_report(mock_callback_query, mock_context, sample_market_report)
+    await show_market_report(mock_callback_query, mock_context, sample_market_report)
 
     mock_callback_query.edit_message_text.assert_called_once()
     args = mock_callback_query.edit_message_text.call_args[0]
@@ -453,7 +453,7 @@ async def test_show_market_report_with_error(mock_callback_query, mock_context):
     """Тест отображения отчета с ошибкой."""
     error_report = {"error": "Test error message", "game": "csgo"}
 
-    awAlgot show_market_report(mock_callback_query, mock_context, error_report)
+    await show_market_report(mock_callback_query, mock_context, error_report)
 
     mock_callback_query.edit_message_text.assert_called_once()
     args = mock_callback_query.edit_message_text.call_args[0]
@@ -469,7 +469,7 @@ async def test_show_undervalued_items_results(
     """Тест отображения недооцененных предметов."""
     mock_pagination.get_page.return_value = (sample_undervalued_items, 0, 1)
 
-    awAlgot show_undervalued_items_results(mock_callback_query, mock_context, "csgo")
+    await show_undervalued_items_results(mock_callback_query, mock_context, "csgo")
 
     mock_callback_query.edit_message_text.assert_called_once()
     args = mock_callback_query.edit_message_text.call_args[0]
@@ -484,7 +484,7 @@ async def test_show_investment_recommendations_results(
     """Тест отображения инвестиционных рекомендаций."""
     mock_pagination.get_page.return_value = (sample_recommendations, 0, 1)
 
-    awAlgot show_investment_recommendations_results(
+    await show_investment_recommendations_results(
         mock_callback_query, mock_context, "csgo"
     )
 
@@ -506,7 +506,7 @@ async def test_handle_pagination_analysis_next_page(
     mock_pagination.get_page.return_value = (sample_price_changes, 1, 2)
     mock_pagination.get_items_per_page.return_value = 5
 
-    awAlgot handle_pagination_analysis(mock_update, mock_context)
+    await handle_pagination_analysis(mock_update, mock_context)
 
     # Проверяем вызов next_page
     mock_pagination.next_page.assert_called_once_with(123456789)
@@ -522,7 +522,7 @@ async def test_handle_pagination_analysis_prev_page(
     mock_pagination.get_page.return_value = (sample_trending_items, 0, 2)
     mock_pagination.get_items_per_page.return_value = 5
 
-    awAlgot handle_pagination_analysis(mock_update, mock_context)
+    await handle_pagination_analysis(mock_update, mock_context)
 
     # Проверяем вызов prev_page
     mock_pagination.prev_page.assert_called_once_with(123456789)
@@ -538,7 +538,7 @@ async def test_handle_period_change(mock_callback_func, mock_update, mock_contex
     mock_update.callback_query.data = "period_change:7d:csgo"
     mock_update.callback_query.answer = AsyncMock()
 
-    awAlgot handle_period_change(mock_update, mock_context)
+    await handle_period_change(mock_update, mock_context)
 
     # Проверяем обновление периода
     assert mock_context.user_data["market_analysis"]["period"] == "7d"
@@ -557,7 +557,7 @@ async def test_handle_risk_level_change(mock_callback_func, mock_update, mock_co
     mock_update.callback_query.data = "analysis_risk:high:csgo"
     mock_update.callback_query.answer = AsyncMock()
 
-    awAlgot handle_risk_level_change(mock_update, mock_context)
+    await handle_risk_level_change(mock_update, mock_context)
 
     # Проверяем обновление уровня риска
     assert mock_context.user_data["market_analysis"]["risk_level"] == "high"
@@ -569,7 +569,7 @@ async def test_handle_risk_level_change(mock_callback_func, mock_update, mock_co
     # (handle_risk_level_change изменяет query.data на "analysis:recommendations:{game}")
     mock_update.callback_query.data = "analysis_risk:high:csgo"
 
-    awAlgot handle_risk_level_change(mock_update, mock_context)
+    await handle_risk_level_change(mock_update, mock_context)
 
     # Проверяем обновление уровня риска
     assert mock_context.user_data["market_analysis"]["risk_level"] == "high"
@@ -613,14 +613,14 @@ class TestMarketAnalysisCommandExtended:
         update = MagicMock(spec=Update)
         update.message = None
 
-        result = awAlgot market_analysis_command(update, mock_context)
+        result = await market_analysis_command(update, mock_context)
 
         assert result is None
 
     @pytest.mark.asyncio()
     async def test_command_keyboard_has_game_buttons(self, mock_update, mock_context):
         """Тест наличия кнопок выбора игр в клавиатуре."""
-        awAlgot market_analysis_command(mock_update, mock_context)
+        await market_analysis_command(mock_update, mock_context)
 
         _, kwargs = mock_update.message.reply_text.call_args
         keyboard = kwargs["reply_markup"]
@@ -646,7 +646,7 @@ class TestMarketAnalysisCallbackExtended:
         update = MagicMock(spec=Update)
         update.callback_query = None
 
-        result = awAlgot market_analysis_callback(update, mock_context)
+        result = await market_analysis_callback(update, mock_context)
 
         assert result is None
 
@@ -655,7 +655,7 @@ class TestMarketAnalysisCallbackExtended:
         """Тест возврата при отсутствии data."""
         mock_update.callback_query.data = None
 
-        result = awAlgot market_analysis_callback(mock_update, mock_context)
+        result = await market_analysis_callback(mock_update, mock_context)
 
         assert result is None
 
@@ -664,7 +664,7 @@ class TestMarketAnalysisCallbackExtended:
         """Тест возврата при коротких данных."""
         mock_update.callback_query.data = "analysis"
 
-        result = awAlgot market_analysis_callback(mock_update, mock_context)
+        result = await market_analysis_callback(mock_update, mock_context)
 
         assert result is None
 
@@ -675,7 +675,7 @@ class TestMarketAnalysisCallbackExtended:
         context.user_data = None
         mock_update.callback_query.data = "analysis:price_changes:csgo"
 
-        result = awAlgot market_analysis_callback(mock_update, context)
+        result = await market_analysis_callback(mock_update, context)
 
         assert result is None
 
@@ -697,7 +697,7 @@ class TestMarketAnalysisCallbackExtended:
         mock_api_client.return_value = MagicMock()
         mock_trending.return_value = []
 
-        awAlgot market_analysis_callback(mock_update, mock_context)
+        await market_analysis_callback(mock_update, mock_context)
 
         mock_trending.assert_called_once()
 
@@ -721,7 +721,7 @@ class TestMarketAnalysisCallbackExtended:
         mock_api_client.return_value = MagicMock()
         mock_volatility.return_value = []
 
-        awAlgot market_analysis_callback(mock_update, mock_context)
+        await market_analysis_callback(mock_update, mock_context)
 
         mock_volatility.assert_called_once()
 
@@ -741,7 +741,7 @@ class TestMarketAnalysisCallbackExtended:
         mock_api_client.return_value = MagicMock()
         mock_report.return_value = {"game": "csgo", "market_summary": {}}
 
-        awAlgot market_analysis_callback(mock_update, mock_context)
+        await market_analysis_callback(mock_update, mock_context)
 
         mock_report.assert_called_once()
 
@@ -763,7 +763,7 @@ class TestMarketAnalysisCallbackExtended:
         mock_api_client.return_value = MagicMock()
         mock_undervalued.return_value = []
 
-        awAlgot market_analysis_callback(mock_update, mock_context)
+        await market_analysis_callback(mock_update, mock_context)
 
         mock_undervalued.assert_called_once()
 
@@ -786,7 +786,7 @@ class TestMarketAnalysisCallbackExtended:
         mock_api_client.return_value = MagicMock()
         mock_recommendations.return_value = []
 
-        awAlgot market_analysis_callback(mock_update, mock_context)
+        await market_analysis_callback(mock_update, mock_context)
 
         mock_recommendations.assert_called_once()
 
@@ -802,7 +802,7 @@ class TestMarketAnalysisCallbackExtended:
         mock_context.user_data["market_analysis"] = {"current_game": "csgo"}
         mock_api_client.side_effect = Exception("Test error")
 
-        awAlgot market_analysis_callback(mock_update, mock_context)
+        await market_analysis_callback(mock_update, mock_context)
 
         mock_update.callback_query.edit_message_text.assert_called()
         args = mock_update.callback_query.edit_message_text.call_args[0]
@@ -820,7 +820,7 @@ class TestShowVolatilityResultsExtended:
         """Тест отображения очень высокой волатильности."""
         mock_pagination.get_page.return_value = (create_volatility_item(35.0), 0, 1)
 
-        awAlgot show_volatility_results(mock_callback_query, mock_context, "csgo")
+        await show_volatility_results(mock_callback_query, mock_context, "csgo")
 
         args = mock_callback_query.edit_message_text.call_args[0]
         assert "Очень высокая" in args[0]
@@ -833,7 +833,7 @@ class TestShowVolatilityResultsExtended:
         """Тест отображения высокой волатильности."""
         mock_pagination.get_page.return_value = (create_volatility_item(25.0), 0, 1)
 
-        awAlgot show_volatility_results(mock_callback_query, mock_context, "csgo")
+        await show_volatility_results(mock_callback_query, mock_context, "csgo")
 
         args = mock_callback_query.edit_message_text.call_args[0]
         assert "Высокая" in args[0]
@@ -846,7 +846,7 @@ class TestShowVolatilityResultsExtended:
         """Тест отображения средней волатильности."""
         mock_pagination.get_page.return_value = (create_volatility_item(15.0), 0, 1)
 
-        awAlgot show_volatility_results(mock_callback_query, mock_context, "csgo")
+        await show_volatility_results(mock_callback_query, mock_context, "csgo")
 
         args = mock_callback_query.edit_message_text.call_args[0]
         assert "Средняя" in args[0]
@@ -859,7 +859,7 @@ class TestShowVolatilityResultsExtended:
         """Тест отображения низкой волатильности."""
         mock_pagination.get_page.return_value = (create_volatility_item(5.0), 0, 1)
 
-        awAlgot show_volatility_results(mock_callback_query, mock_context, "csgo")
+        await show_volatility_results(mock_callback_query, mock_context, "csgo")
 
         args = mock_callback_query.edit_message_text.call_args[0]
         assert "Низкая" in args[0]
@@ -872,7 +872,7 @@ class TestShowVolatilityResultsExtended:
         """Тест кнопок пагинации при наличии нескольких страниц."""
         mock_pagination.get_page.return_value = (sample_volatility_data, 0, 3)
 
-        awAlgot show_volatility_results(mock_callback_query, mock_context, "csgo")
+        await show_volatility_results(mock_callback_query, mock_context, "csgo")
 
         _, kwargs = mock_callback_query.edit_message_text.call_args
         keyboard = kwargs["reply_markup"]
@@ -894,7 +894,7 @@ class TestShowMarketReportExtended:
         """Тест отображения падающего направления рынка."""
         sample_market_report["market_summary"]["price_change_direction"] = "down"
 
-        awAlgot show_market_report(
+        await show_market_report(
             mock_callback_query, mock_context, sample_market_report
         )
 
@@ -908,7 +908,7 @@ class TestShowMarketReportExtended:
         """Тест отображения стабильного направления рынка."""
         sample_market_report["market_summary"]["price_change_direction"] = "stable"
 
-        awAlgot show_market_report(
+        await show_market_report(
             mock_callback_query, mock_context, sample_market_report
         )
 
@@ -936,7 +936,7 @@ class TestShowMarketReportExtended:
                 "trending_items": sample_market_report.get("trending_items", []),
             }
 
-            awAlgot show_market_report(mock_callback_query, mock_context, report_copy)
+            await show_market_report(mock_callback_query, mock_context, report_copy)
 
             args = mock_callback_query.edit_message_text.call_args[0]
             assert expected in args[0]
@@ -957,7 +957,7 @@ class TestShowUndervaluedItemsResultsExtended:
             1,
         )
 
-        awAlgot show_undervalued_items_results(mock_callback_query, mock_context, "csgo")
+        await show_undervalued_items_results(mock_callback_query, mock_context, "csgo")
 
         args = mock_callback_query.edit_message_text.call_args[0]
         assert "🔼" in args[0]
@@ -974,7 +974,7 @@ class TestShowUndervaluedItemsResultsExtended:
             1,
         )
 
-        awAlgot show_undervalued_items_results(mock_callback_query, mock_context, "csgo")
+        await show_undervalued_items_results(mock_callback_query, mock_context, "csgo")
 
         args = mock_callback_query.edit_message_text.call_args[0]
         assert "🔽" in args[0]
@@ -991,7 +991,7 @@ class TestShowUndervaluedItemsResultsExtended:
             1,
         )
 
-        awAlgot show_undervalued_items_results(mock_callback_query, mock_context, "csgo")
+        await show_undervalued_items_results(mock_callback_query, mock_context, "csgo")
 
         args = mock_callback_query.edit_message_text.call_args[0]
         assert "➡️" in args[0]
@@ -1012,7 +1012,7 @@ class TestShowInvestmentRecommendationsResultsExtended:
             1,
         )
 
-        awAlgot show_investment_recommendations_results(
+        await show_investment_recommendations_results(
             mock_callback_query, mock_context, "csgo"
         )
 
@@ -1031,7 +1031,7 @@ class TestShowInvestmentRecommendationsResultsExtended:
             1,
         )
 
-        awAlgot show_investment_recommendations_results(
+        await show_investment_recommendations_results(
             mock_callback_query, mock_context, "csgo"
         )
 
@@ -1050,7 +1050,7 @@ class TestShowInvestmentRecommendationsResultsExtended:
             1,
         )
 
-        awAlgot show_investment_recommendations_results(
+        await show_investment_recommendations_results(
             mock_callback_query, mock_context, "csgo"
         )
 
@@ -1067,7 +1067,7 @@ class TestHandlePeriodChangeExtended:
         update = MagicMock(spec=Update)
         update.callback_query = None
 
-        result = awAlgot handle_period_change(update, mock_context)
+        result = await handle_period_change(update, mock_context)
 
         assert result is None
 
@@ -1076,7 +1076,7 @@ class TestHandlePeriodChangeExtended:
         """Тест возврата при отсутствии data."""
         mock_update.callback_query.data = None
 
-        result = awAlgot handle_period_change(mock_update, mock_context)
+        result = await handle_period_change(mock_update, mock_context)
 
         assert result is None
 
@@ -1085,7 +1085,7 @@ class TestHandlePeriodChangeExtended:
         """Тест возврата при коротких данных."""
         mock_update.callback_query.data = "period_change"
 
-        result = awAlgot handle_period_change(mock_update, mock_context)
+        result = await handle_period_change(mock_update, mock_context)
 
         assert result is None
 
@@ -1096,7 +1096,7 @@ class TestHandlePeriodChangeExtended:
         context.user_data = None
         mock_update.callback_query.data = "period_change:24h:csgo"
 
-        result = awAlgot handle_period_change(mock_update, context)
+        result = await handle_period_change(mock_update, context)
 
         assert result is None
 
@@ -1110,7 +1110,7 @@ class TestHandleRiskLevelChangeExtended:
         update = MagicMock(spec=Update)
         update.callback_query = None
 
-        result = awAlgot handle_risk_level_change(update, mock_context)
+        result = await handle_risk_level_change(update, mock_context)
 
         assert result is None
 
@@ -1119,7 +1119,7 @@ class TestHandleRiskLevelChangeExtended:
         """Тест возврата при отсутствии data."""
         mock_update.callback_query.data = None
 
-        result = awAlgot handle_risk_level_change(mock_update, mock_context)
+        result = await handle_risk_level_change(mock_update, mock_context)
 
         assert result is None
 
@@ -1128,7 +1128,7 @@ class TestHandleRiskLevelChangeExtended:
         """Тест возврата при коротких данных."""
         mock_update.callback_query.data = "analysis_risk:low"
 
-        result = awAlgot handle_risk_level_change(mock_update, mock_context)
+        result = await handle_risk_level_change(mock_update, mock_context)
 
         assert result is None
 
@@ -1139,7 +1139,7 @@ class TestHandleRiskLevelChangeExtended:
         context.user_data = None
         mock_update.callback_query.data = "analysis_risk:low:csgo"
 
-        result = awAlgot handle_risk_level_change(mock_update, context)
+        result = await handle_risk_level_change(mock_update, context)
 
         assert result is None
 
@@ -1153,7 +1153,7 @@ class TestHandlePaginationAnalysisExtended:
         update = MagicMock(spec=Update)
         update.callback_query = None
 
-        result = awAlgot handle_pagination_analysis(update, mock_context)
+        result = await handle_pagination_analysis(update, mock_context)
 
         assert result is None
 
@@ -1162,7 +1162,7 @@ class TestHandlePaginationAnalysisExtended:
         """Тест возврата при отсутствии data."""
         mock_update.callback_query.data = None
 
-        result = awAlgot handle_pagination_analysis(mock_update, mock_context)
+        result = await handle_pagination_analysis(mock_update, mock_context)
 
         assert result is None
 
@@ -1171,7 +1171,7 @@ class TestHandlePaginationAnalysisExtended:
         """Тест возврата при коротких данных."""
         mock_update.callback_query.data = "analysis_page:next"
 
-        result = awAlgot handle_pagination_analysis(mock_update, mock_context)
+        result = await handle_pagination_analysis(mock_update, mock_context)
 
         assert result is None
 
@@ -1185,7 +1185,7 @@ class TestHandlePaginationAnalysisExtended:
         mock_update.callback_query.data = "analysis_page:next:volatility:csgo"
         mock_show_results.return_value = None
 
-        awAlgot handle_pagination_analysis(mock_update, mock_context)
+        await handle_pagination_analysis(mock_update, mock_context)
 
         mock_pagination.next_page.assert_called_once()
         mock_show_results.assert_called_once()
@@ -1202,7 +1202,7 @@ class TestHandlePaginationAnalysisExtended:
         mock_update.callback_query.data = "analysis_page:next:undervalued:csgo"
         mock_show_results.return_value = None
 
-        awAlgot handle_pagination_analysis(mock_update, mock_context)
+        await handle_pagination_analysis(mock_update, mock_context)
 
         mock_pagination.next_page.assert_called_once()
         mock_show_results.assert_called_once()
@@ -1219,7 +1219,7 @@ class TestHandlePaginationAnalysisExtended:
         mock_update.callback_query.data = "analysis_page:prev:recommendations:csgo"
         mock_show_results.return_value = None
 
-        awAlgot handle_pagination_analysis(mock_update, mock_context)
+        await handle_pagination_analysis(mock_update, mock_context)
 
         mock_pagination.prev_page.assert_called_once()
         mock_show_results.assert_called_once()

@@ -71,7 +71,7 @@ def test_custom_pool_limits():
 @pytest.mark.asyncio()
 async def test_get_client_creates_httpx_client(api_client):
     """Test _get_client creates httpx.AsyncClient with proper settings."""
-    client = awAlgot api_client._get_client()
+    client = await api_client._get_client()
 
     assert isinstance(client, httpx.AsyncClient)
     assert client.timeout.connect == api_client.connection_timeout
@@ -81,8 +81,8 @@ async def test_get_client_creates_httpx_client(api_client):
 @pytest.mark.asyncio()
 async def test_get_client_reuses_existing_client(api_client):
     """Test _get_client reuses the same client instance."""
-    client1 = awAlgot api_client._get_client()
-    client2 = awAlgot api_client._get_client()
+    client1 = await api_client._get_client()
+    client2 = await api_client._get_client()
 
     # Should be the same instance
     assert client1 is client2
@@ -91,12 +91,12 @@ async def test_get_client_reuses_existing_client(api_client):
 @pytest.mark.asyncio()
 async def test_get_client_recreates_after_close(api_client):
     """Test _get_client creates new client after close."""
-    client1 = awAlgot api_client._get_client()
+    client1 = await api_client._get_client()
     original_id = id(client1)
 
-    awAlgot api_client._close_client()
+    await api_client._close_client()
 
-    client2 = awAlgot api_client._get_client()
+    client2 = await api_client._get_client()
     new_id = id(client2)
 
     # Should be different instances
@@ -106,10 +106,10 @@ async def test_get_client_recreates_after_close(api_client):
 @pytest.mark.asyncio()
 async def test_close_client_closes_httpx_client(api_client):
     """Test _close_client properly closes the httpx client."""
-    client = awAlgot api_client._get_client()
+    client = await api_client._get_client()
     assert not client.is_closed
 
-    awAlgot api_client._close_client()
+    await api_client._close_client()
 
     assert api_client._client is None or api_client._client.is_closed
 
@@ -132,7 +132,7 @@ def test_get_connection_pool_stats_when_closed(api_client):
 async def test_get_connection_pool_stats_when_active(api_client):
     """Test get_connection_pool_stats returns correct data when client is active."""
     # Create client
-    awAlgot api_client._get_client()
+    await api_client._get_client()
 
     stats = api_client.get_connection_pool_stats()
 
@@ -148,7 +148,7 @@ async def test_get_connection_pool_stats_when_active(api_client):
 @pytest.mark.asyncio()
 async def test_connection_pool_stats_structure(api_client):
     """Test connection pool stats have expected structure."""
-    awAlgot api_client._get_client()
+    await api_client._get_client()
 
     stats = api_client.get_connection_pool_stats()
 
@@ -173,11 +173,11 @@ async def test_connection_pool_stats_structure(api_client):
 @pytest.mark.asyncio()
 async def test_connection_reuse_across_requests(api_client):
     """Test that connections are reused across multiple requests."""
-    client = awAlgot api_client._get_client()
+    client = await api_client._get_client()
 
     # Make multiple "requests" (just getting the client)
     for _ in range(5):
-        same_client = awAlgot api_client._get_client()
+        same_client = await api_client._get_client()
         assert same_client is client
 
 
@@ -192,14 +192,14 @@ async def test_parallel_requests_use_same_client():
 
     # Create multiple tasks that get the client
     tasks = [api_client._get_client() for _ in range(10)]
-    clients = awAlgot asyncio.gather(*tasks)
+    clients = await asyncio.gather(*tasks)
 
     # All should be the same instance
     first_client = clients[0]
     for client in clients[1:]:
         assert client is first_client
 
-    awAlgot api_client._close_client()
+    await api_client._close_client()
 
 
 # ============================================================================
@@ -210,7 +210,7 @@ async def test_parallel_requests_use_same_client():
 @pytest.mark.asyncio()
 async def test_http2_enabled_in_client(api_client):
     """Test HTTP/2 is actually enabled in the created client."""
-    client = awAlgot api_client._get_client()
+    client = await api_client._get_client()
 
     # httpx.AsyncClient should have http2 attribute
     # Note: actual HTTP/2 usage depends on server support
@@ -244,7 +244,7 @@ async def test_context_manager_closes_client():
     )
 
     async with client:
-        http_client = awAlgot client._get_client()
+        http_client = await client._get_client()
         assert not http_client.is_closed
 
     # After exiting context, client should be closed
@@ -261,8 +261,8 @@ async def test_context_manager_closes_on_exception():
 
     try:
         async with client:
-            awAlgot client._get_client()
-            rAlgose ValueError("Test exception")
+            await client._get_client()
+            raise ValueError("Test exception")
     except ValueError:
         pass
 
@@ -278,12 +278,12 @@ async def test_context_manager_closes_on_exception():
 @pytest.mark.asyncio()
 async def test_multiple_close_calls_safe(api_client):
     """Test calling _close_client multiple times is safe."""
-    awAlgot api_client._get_client()
+    await api_client._get_client()
 
-    # Close multiple times should not rAlgose error
-    awAlgot api_client._close_client()
-    awAlgot api_client._close_client()
-    awAlgot api_client._close_client()
+    # Close multiple times should not raise error
+    await api_client._close_client()
+    await api_client._close_client()
+    await api_client._close_client()
 
     assert api_client._client is None
 
@@ -291,12 +291,12 @@ async def test_multiple_close_calls_safe(api_client):
 @pytest.mark.asyncio()
 async def test_get_client_after_multiple_closes(api_client):
     """Test getting client after multiple closes works."""
-    awAlgot api_client._get_client()
-    awAlgot api_client._close_client()
-    awAlgot api_client._close_client()
+    await api_client._get_client()
+    await api_client._close_client()
+    await api_client._close_client()
 
     # Should be able to get new client
-    new_client = awAlgot api_client._get_client()
+    new_client = await api_client._get_client()
     assert isinstance(new_client, httpx.AsyncClient)
     assert not new_client.is_closed
 

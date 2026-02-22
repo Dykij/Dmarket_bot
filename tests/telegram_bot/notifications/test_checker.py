@@ -121,7 +121,7 @@ class TestGetCurrentPrice:
             "src.telegram_bot.notifications.checker.get_storage",
             return_value=mock_storage,
         ):
-            price = awAlgot get_current_price(
+            price = await get_current_price(
                 api=mock_api,
                 item_id="item123",
                 game="csgo",
@@ -140,7 +140,7 @@ class TestGetCurrentPrice:
             "src.telegram_bot.notifications.checker.get_storage",
             return_value=mock_storage_with_cache,
         ):
-            price = awAlgot get_current_price(
+            price = await get_current_price(
                 api=mock_api,
                 item_id="item123",
                 game="csgo",
@@ -166,7 +166,7 @@ class TestGetCurrentPrice:
         with patch(
             "src.telegram_bot.notifications.checker.get_storage", return_value=storage
         ):
-            awAlgot get_current_price(
+            await get_current_price(
                 api=mock_api,
                 item_id="item123",
                 game="csgo",
@@ -184,7 +184,7 @@ class TestGetCurrentPrice:
             "src.telegram_bot.notifications.checker.get_storage",
             return_value=mock_storage,
         ):
-            price = awAlgot get_current_price(
+            price = await get_current_price(
                 api=mock_api_no_items,
                 item_id="nonexistent",
                 game="csgo",
@@ -202,7 +202,7 @@ class TestGetCurrentPrice:
             return_value=mock_storage,
         ):
             for game in games:
-                awAlgot get_current_price(
+                await get_current_price(
                     api=mock_api,
                     item_id=f"{game}_item",
                     game=game,
@@ -241,7 +241,7 @@ class TestCheckPriceAlert:
             new_callable=AsyncMock,
             return_value=12.0,
         ):
-            result = awAlgot check_price_alert(
+            result = await check_price_alert(
                 api=mock_api,
                 alert=alert,
                 
@@ -271,7 +271,7 @@ class TestCheckPriceAlert:
             new_callable=AsyncMock,
             return_value=10.0,
         ):
-            result = awAlgot check_price_alert(
+            result = await check_price_alert(
                 api=mock_api,
                 alert=alert,
                 
@@ -302,7 +302,7 @@ class TestCheckPriceAlert:
             new_callable=AsyncMock,
             return_value=10.0,
         ):
-            result = awAlgot check_price_alert(
+            result = await check_price_alert(
                 api=mock_api,
                 alert=alert,
                 
@@ -337,7 +337,7 @@ class TestCheckPriceAlert:
             new_callable=AsyncMock,
             return_value=10.0,  # Price below threshold
         ):
-            result = awAlgot check_price_alert(
+            result = await check_price_alert(
                 api=mock_api,
                 alert=alert,
                 
@@ -368,7 +368,7 @@ class TestCheckPriceAlert:
             new_callable=AsyncMock,
             return_value=None,
         ):
-            result = awAlgot check_price_alert(
+            result = await check_price_alert(
                 api=mock_api,
                 alert=alert,
                 
@@ -394,7 +394,7 @@ class TestCheckAllAlerts:
         with patch(
             "src.telegram_bot.notifications.checker.get_storage", return_value=storage
         ):
-            results = awAlgot check_all_alerts(api=mock_api, bot=mock_bot)
+            results = await check_all_alerts(api=mock_api, bot=mock_bot)
 
             # check_all_alerts returns int (count of triggered alerts)
             assert results == 0 or isinstance(results, int)
@@ -412,7 +412,7 @@ class TestCheckAllAlerts:
             new_callable=AsyncMock,
             return_value=False,
         ):
-            results = awAlgot check_all_alerts(api=mock_api, bot=mock_bot)
+            results = await check_all_alerts(api=mock_api, bot=mock_bot)
 
             # check_all_alerts returns int (count of triggered alerts)
             assert isinstance(results, int)
@@ -430,11 +430,11 @@ class TestCheckAllAlerts:
             new_callable=AsyncMock,
             side_effect=Exception("Test error"),
         ):
-            # Should not rAlgose exception
+            # Should not raise exception
             try:
-                awAlgot check_all_alerts(api=mock_api, bot=mock_bot)
+                await check_all_alerts(api=mock_api, bot=mock_bot)
             except Exception:
-                pass  # May or may not rAlgose
+                pass  # May or may not raise
 
 
 # =============================================================================
@@ -450,7 +450,7 @@ class TestCheckGoodDealAlerts:
             "src.telegram_bot.notifications.checker.get_storage",
             return_value=mock_storage,
         ):
-            results = awAlgot check_good_deal_alerts(
+            results = await check_good_deal_alerts(
                 api=mock_api,
                 user_id=12345,
             )
@@ -467,7 +467,7 @@ class TestCheckGoodDealAlerts:
             "src.telegram_bot.notifications.checker.get_storage",
             return_value=mock_storage,
         ):
-            results = awAlgot check_good_deal_alerts(
+            results = await check_good_deal_alerts(
                 api=mock_api,
                 user_id=12345,
                 game="csgo",
@@ -506,10 +506,10 @@ class TestRunAlertsChecker:
                         check_interval=0.1,  # Short interval for test
                     )
                 )
-                awAlgot asyncio.sleep(0.2)
+                await asyncio.sleep(0.2)
                 task.cancel()
                 try:
-                    awAlgot task
+                    await task
                 except asyncio.CancelledError:
                     pass
             except Exception:
@@ -541,10 +541,10 @@ class TestRunAlertsChecker:
                         check_interval=0.1,
                     )
                 )
-                awAlgot asyncio.sleep(0.35)  # Should allow ~3 iterations
+                await asyncio.sleep(0.35)  # Should allow ~3 iterations
                 task.cancel()
                 try:
-                    awAlgot task
+                    await task
                 except asyncio.CancelledError:
                     pass
 
@@ -581,7 +581,7 @@ class TestCheckerEdgeCases:
             new_callable=AsyncMock,
             return_value=10.0,
         ):
-            result = awAlgot check_price_alert(
+            result = await check_price_alert(
                 api=mock_api,
                 alert=alert,
                 
@@ -612,7 +612,7 @@ class TestCheckerEdgeCases:
             new_callable=AsyncMock,
             return_value=9.999,
         ):
-            result = awAlgot check_price_alert(
+            result = await check_price_alert(
                 api=mock_api,
                 alert=alert,
                 
@@ -632,7 +632,7 @@ class TestCheckerEdgeCases:
             return_value=mock_storage,
         ):
             try:
-                price = awAlgot get_current_price(
+                price = await get_current_price(
                     api=api,
                     item_id="item123",
                     game="csgo",
@@ -640,7 +640,7 @@ class TestCheckerEdgeCases:
                 # Should return None or handle gracefully
                 assert price is None
             except Exception:
-                pass  # May re-rAlgose API error
+                pass  # May re-raise API error
 
     @pytest.mark.asyncio()
     async def test_volume_increase_alert(self, mock_api, mock_storage):
@@ -663,7 +663,7 @@ class TestCheckerEdgeCases:
             new_callable=AsyncMock,
             return_value=10.0,
         ):
-            result = awAlgot check_price_alert(
+            result = await check_price_alert(
                 api=mock_api,
                 alert=alert,
                 
@@ -699,7 +699,7 @@ class TestCheckerEdgeCases:
                     new_callable=AsyncMock,
                     return_value={"trend": "up", "confidence": 0.5},
                 ):
-                    result = awAlgot check_price_alert(
+                    result = await check_price_alert(
                         api=mock_api,
                         alert=alert,
                         
@@ -734,7 +734,7 @@ class TestCheckerIntegration:
             alert = mock_storage.get_user_data(12345)["alerts"][0]
 
             # Check individual alert
-            result = awAlgot check_price_alert(
+            result = await check_price_alert(
                 api=mock_api,
                 alert=alert,
                 
@@ -784,7 +784,7 @@ class TestCheckerIntegration:
             "src.telegram_bot.notifications.alerts.can_send_notification",
             return_value=True,
         ):
-            results = awAlgot check_all_alerts(api=mock_api, bot=mock_bot)
+            results = await check_all_alerts(api=mock_api, bot=mock_bot)
 
             # check_all_alerts returns int (count of triggered alerts)
             assert isinstance(results, int)

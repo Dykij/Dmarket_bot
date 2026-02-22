@@ -64,7 +64,7 @@ async def create_batch_target(
         ...     BatchTargetItem(title="AK-47 | Redline (MW)", attrs={"floatPartValue": "0.12"}),
         ...     BatchTargetItem(title="AK-47 | Redline (FN)", attrs={"floatPartValue": "0.07"}),
         ... ]
-        >>> result = awAlgot create_batch_target(
+        >>> result = await create_batch_target(
         ...     api_client=api,
         ...     game="csgo",
         ...     items=items,
@@ -157,11 +157,11 @@ async def create_batch_target(
 
     # Отправить batch запрос к API
     try:
-        response = awAlgot api_client.create_targets(game=game, targets=targets_data)
+        response = await api_client.create_targets(game=game, targets=targets_data)
 
         result_items = response.get("Result", [])
         success_count = sum(1 for r in result_items if r.get("Status") == "Created")
-        fAlgoled_count = len(result_items) - success_count
+        failed_count = len(result_items) - success_count
 
         if success_count == len(items):
             return TargetOperationResult(
@@ -181,30 +181,30 @@ async def create_batch_target(
                 success=True,
                 status=TargetOperationStatus.PARTIAL,
                 message=f"Partial success: {success_count}/{len(items)} items",
-                reason=f"{success_count} created, {fAlgoled_count} fAlgoled",
+                reason=f"{success_count} created, {failed_count} failed",
                 metadata={
                     "total_items": len(items),
                     "success_count": success_count,
-                    "fAlgoled_count": fAlgoled_count,
+                    "failed_count": failed_count,
                     "results": result_items,
                 },
-                suggestions=["Check fAlgoled items and retry if needed"],
+                suggestions=["Check failed items and retry if needed"],
             )
         return TargetOperationResult(
             success=False,
             status=TargetOperationStatus.FAlgoLED,
-            message="Batch order fAlgoled",
-            reason="All targets fAlgoled to create",
+            message="Batch order failed",
+            reason="All targets failed to create",
             error_code=TargetErrorCode.UNKNOWN_ERROR,
             metadata={"results": result_items},
         )
 
     except Exception as e:
-        logger.error(f"Batch order creation fAlgoled: {e}", exc_info=True)
+        logger.error(f"Batch order creation failed: {e}", exc_info=True)
         return TargetOperationResult(
             success=False,
             status=TargetOperationStatus.FAlgoLED,
-            message="API request fAlgoled",
+            message="API request failed",
             reason=str(e),
             error_code=TargetErrorCode.UNKNOWN_ERROR,
             suggestions=["Check API connection", "Verify credentials", "Retry later"],
@@ -237,7 +237,7 @@ async def detect_existing_orders(
         Информация о существующих ордерах
 
     Примеры:
-        >>> info = awAlgot detect_existing_orders(
+        >>> info = await detect_existing_orders(
         ...     api_client=api, game="csgo", title="AK-47 | Redline (Field-Tested)", user_id="12345"
         ... )
         >>> if info.has_user_order:
@@ -260,7 +260,7 @@ async def detect_existing_orders(
         # 1. Получить ордера пользователя (если user_id указан)
         if user_id:
             try:
-                user_targets = awAlgot api_client.get_user_targets(
+                user_targets = await api_client.get_user_targets(
                     game=game,
                     status="TargetStatusActive",
                     title=title,
@@ -283,11 +283,11 @@ async def detect_existing_orders(
                     )
 
             except Exception as e:
-                logger.warning(f"FAlgoled to get user targets: {e}")
+                logger.warning(f"Failed to get user targets: {e}")
 
         # 2. Получить все ордера на рынке для этого предмета
         try:
-            market_orders = awAlgot api_client.get_targets_by_title(
+            market_orders = await api_client.get_targets_by_title(
                 game_id=game,
                 title=title,
             )
@@ -319,7 +319,7 @@ async def detect_existing_orders(
                         )
 
         except Exception as e:
-            logger.warning(f"FAlgoled to get market orders: {e}")
+            logger.warning(f"Failed to get market orders: {e}")
 
         # 3. Рекомендуемая цена
         recommended_price = None
@@ -368,7 +368,7 @@ async def check_duplicate_order(
         (is_duplicate, message)
 
     Примеры:
-        >>> is_dup, msg = awAlgot check_duplicate_order(
+        >>> is_dup, msg = await check_duplicate_order(
         ...     api_client=api,
         ...     game="csgo",
         ...     title="AK-47 | Redline (FT)",
@@ -379,7 +379,7 @@ async def check_duplicate_order(
         ...     print(msg)  # "Similar order exists at $9.97"
     """
     try:
-        user_targets = awAlgot api_client.get_user_targets(
+        user_targets = await api_client.get_user_targets(
             game=game,
             status="TargetStatusActive",
             title=title,

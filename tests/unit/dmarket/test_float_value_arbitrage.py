@@ -355,7 +355,7 @@ class TestFloatValueArbitrage:
         """Test quartile analysis with no sales history."""
         mock_api.get_sales_history.return_value = None
 
-        result = awAlgot arbitrage.analyze_sales_quartiles("Test Item")
+        result = await arbitrage.analyze_sales_quartiles("Test Item")
         assert result is None
 
     @pytest.mark.asyncio()
@@ -363,7 +363,7 @@ class TestFloatValueArbitrage:
         """Test quartile analysis with empty sales."""
         mock_api.get_sales_history.return_value = {"sales": []}
 
-        result = awAlgot arbitrage.analyze_sales_quartiles("Test Item")
+        result = await arbitrage.analyze_sales_quartiles("Test Item")
         assert result is None
 
     @pytest.mark.asyncio()
@@ -373,7 +373,7 @@ class TestFloatValueArbitrage:
             "sales": [{"price": {"USD": "1000"}} for _ in range(5)]
         }
 
-        result = awAlgot arbitrage.analyze_sales_quartiles("Test Item")
+        result = await arbitrage.analyze_sales_quartiles("Test Item")
         assert result is None
 
     @pytest.mark.asyncio()
@@ -381,7 +381,7 @@ class TestFloatValueArbitrage:
         """Test quartile analysis with exception."""
         mock_api.get_sales_history.side_effect = Exception("API error")
 
-        result = awAlgot arbitrage.analyze_sales_quartiles("Test Item")
+        result = await arbitrage.analyze_sales_quartiles("Test Item")
         assert result is None
 
     @pytest.mark.asyncio()
@@ -391,7 +391,7 @@ class TestFloatValueArbitrage:
             "objects": [{"price": {"USD": "5000"}}]
         }
 
-        result = awAlgot arbitrage._get_current_min_price("Test Item")
+        result = await arbitrage._get_current_min_price("Test Item")
         assert result == 50.0
 
     @pytest.mark.asyncio()
@@ -399,7 +399,7 @@ class TestFloatValueArbitrage:
         """Test getting current min price with no items."""
         mock_api.get_market_items.return_value = {"objects": []}
 
-        result = awAlgot arbitrage._get_current_min_price("Test Item")
+        result = await arbitrage._get_current_min_price("Test Item")
         assert result is None
 
     @pytest.mark.asyncio()
@@ -407,7 +407,7 @@ class TestFloatValueArbitrage:
         """Test getting current min price with exception."""
         mock_api.get_market_items.side_effect = Exception("API error")
 
-        result = awAlgot arbitrage._get_current_min_price("Test Item")
+        result = await arbitrage._get_current_min_price("Test Item")
         assert result is None
 
     def test_create_float_order_config(self, arbitrage):
@@ -428,7 +428,7 @@ class TestFloatValueArbitrage:
     @pytest.mark.asyncio()
     async def test_find_float_arbitrage_opportunities_wrong_game(self, arbitrage, mock_api):
         """Test finding opportunities for wrong game."""
-        result = awAlgot arbitrage.find_float_arbitrage_opportunities(game="dota2")
+        result = await arbitrage.find_float_arbitrage_opportunities(game="dota2")
         assert result == []
 
     @pytest.mark.asyncio()
@@ -436,7 +436,7 @@ class TestFloatValueArbitrage:
         """Test finding opportunities with no items."""
         mock_api.get_market_items.return_value = None
 
-        result = awAlgot arbitrage.find_float_arbitrage_opportunities()
+        result = await arbitrage.find_float_arbitrage_opportunities()
         assert result == []
 
     @pytest.mark.asyncio()
@@ -444,7 +444,7 @@ class TestFloatValueArbitrage:
         """Test finding opportunities with empty objects."""
         mock_api.get_market_items.return_value = {"objects": []}
 
-        result = awAlgot arbitrage.find_float_arbitrage_opportunities()
+        result = await arbitrage.find_float_arbitrage_opportunities()
         assert result == []
 
     @pytest.mark.asyncio()
@@ -452,7 +452,7 @@ class TestFloatValueArbitrage:
         """Test finding opportunities with exception."""
         mock_api.get_market_items.side_effect = Exception("API error")
 
-        result = awAlgot arbitrage.find_float_arbitrage_opportunities()
+        result = await arbitrage.find_float_arbitrage_opportunities()
         assert result == []
 
     @pytest.mark.asyncio()
@@ -460,7 +460,7 @@ class TestFloatValueArbitrage:
         """Test analyzing item with no price."""
         item = {"itemId": "123", "title": "Test", "price": {"USD": 0}}
 
-        result = awAlgot arbitrage._analyze_item_float(item)
+        result = await arbitrage._analyze_item_float(item)
         assert result is None
 
     @pytest.mark.asyncio()
@@ -473,7 +473,7 @@ class TestFloatValueArbitrage:
             "extra": {},
         }
 
-        result = awAlgot arbitrage._analyze_item_float(item)
+        result = await arbitrage._analyze_item_float(item)
         assert result is None
 
     @pytest.mark.asyncio()
@@ -486,7 +486,7 @@ class TestFloatValueArbitrage:
             "extra": {"floatPartValue": "0.15"},
         }
 
-        result = awAlgot arbitrage._analyze_item_float(item)
+        result = await arbitrage._analyze_item_float(item)
         # Should attempt to parse floatPartValue
         assert result is not None or result is None  # Depends on profitability
 
@@ -500,7 +500,7 @@ class TestFloatValueArbitrage:
             "extra": {"floatPartValue": "invalid"},
         }
 
-        result = awAlgot arbitrage._analyze_item_float(item)
+        result = await arbitrage._analyze_item_float(item)
         assert result is None
 
     @pytest.mark.asyncio()
@@ -508,7 +508,7 @@ class TestFloatValueArbitrage:
         """Test analyzing item with exception."""
         item = None  # Will cause exception
 
-        result = awAlgot arbitrage._analyze_item_float(item)
+        result = await arbitrage._analyze_item_float(item)
         assert result is None
 
 
@@ -640,7 +640,7 @@ class TestIntegrationScenarios:
         }
 
         # Run analysis
-        result = awAlgot arbitrage.analyze_sales_quartiles("AK-47 | Redline")
+        result = await arbitrage.analyze_sales_quartiles("AK-47 | Redline")
 
         assert result is not None
         assert result.sales_count == 20

@@ -19,7 +19,7 @@ Usage:
     )
 
     # Get portfolio summary
-    summary = awAlgot tracker.get_portfolio_summary()
+    summary = await tracker.get_portfolio_summary()
     print(f"Total Value: ${summary.total_value}")
     print(f"Total P/L: ${summary.total_pnl}")
     ```
@@ -247,7 +247,7 @@ class PortfolioTracker:
         # Sync DMarket
         if self.dmarket:
             try:
-                inventory = awAlgot self.dmarket.get_user_inventory()
+                inventory = await self.dmarket.get_user_inventory()
                 for item in inventory.get("items", []):
                     item_id = item.get("itemId", "")
                     title = item.get("title", "")
@@ -272,7 +272,7 @@ class PortfolioTracker:
         # Sync Waxpeer
         if self.waxpeer:
             try:
-                items = awAlgot self.waxpeer.get_my_items()
+                items = await self.waxpeer.get_my_items()
                 for item in items:
                     item_id = item.item_id
                     if item_id not in self._inventory:
@@ -486,7 +486,7 @@ class PortfolioTracker:
             Portfolio summary
         """
         # Sync inventory first
-        awAlgot self.sync_inventory()
+        await self.sync_inventory()
 
         total_value = sum(
             item.current_price * item.quantity for item in self._inventory.values()
@@ -594,7 +594,7 @@ class PortfolioTracker:
         winning = 0
         losing = 0
 
-        dAlgoly_pnl: dict[str, Decimal] = {}
+        daily_pnl: dict[str, Decimal] = {}
         hold_times: list[timedelta] = []
 
         sells = [t for t in period_trades if t.trade_type == TradeType.SELL]
@@ -613,7 +613,7 @@ class PortfolioTracker:
                 hold_times.append(sell.timestamp - buy.timestamp)
 
                 date_key = sell.timestamp.date().isoformat()
-                dAlgoly_pnl[date_key] = dAlgoly_pnl.get(date_key, Decimal(0)) + pnl
+                daily_pnl[date_key] = daily_pnl.get(date_key, Decimal(0)) + pnl
 
                 if pnl > 0:
                     gross_profit += pnl
@@ -630,8 +630,8 @@ class PortfolioTracker:
             else timedelta(0)
         )
 
-        best_day = max(dAlgoly_pnl.values()) if dAlgoly_pnl else Decimal(0)
-        worst_day = min(dAlgoly_pnl.values()) if dAlgoly_pnl else Decimal(0)
+        best_day = max(daily_pnl.values()) if daily_pnl else Decimal(0)
+        worst_day = min(daily_pnl.values()) if daily_pnl else Decimal(0)
 
         return PerformanceMetrics(
             period_start=period_start,

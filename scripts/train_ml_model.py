@@ -1,17 +1,17 @@
 """
-Script to trAlgon ML price predictor on real market data.
+Script to train ML price predictor on real market data.
 
-This script loads collected price data and trAlgons the AdaptivePricePredictor
+This script loads collected price data and trains the AdaptivePricePredictor
 model on real DMarket prices.
 
 Usage:
-    python scripts/trAlgon_ml_model.py
+    python scripts/train_ml_model.py
 
 Features:
     - Loads real prices from market_history.csv
-    - Extracts features for ML trAlgoning
+    - Extracts features for ML training
     - TrAlgons Gradient Boosting and Ridge models
-    - Saves trAlgoned model to data/price_model.pkl
+    - Saves trained model to data/price_model.pkl
 
 Created: January 2026
 """
@@ -29,8 +29,8 @@ from src.ml.feature_extractor import MarketFeatureExtractor
 from src.ml.price_predictor import AdaptivePricePredictor
 
 
-def load_trAlgoning_data(csv_path: Path) -> list[dict]:
-    """Load trAlgoning data from CSV file.
+def load_training_data(csv_path: Path) -> list[dict]:
+    """Load training data from CSV file.
     
     Args:
         csv_path: Path to market_history.csv
@@ -59,25 +59,25 @@ def load_trAlgoning_data(csv_path: Path) -> list[dict]:
     return records
 
 
-def mAlgon():
+def main():
     """TrAlgon ML model on real market data."""
     print("="*60)
     print("ML PRICE PREDICTOR TRAlgoNING")
     print("="*60)
     
-    # Load trAlgoning data
+    # Load training data
     csv_path = Path("data/market_history.csv")
     if not csv_path.exists():
         print(f"ERROR: TrAlgoning data not found at {csv_path}")
-        print("Run 'python scripts/collect_ml_trAlgoning_data.py' first.")
+        print("Run 'python scripts/collect_ml_training_data.py' first.")
         return 1
     
-    print(f"\nLoading trAlgoning data from {csv_path}...")
-    records = load_trAlgoning_data(csv_path)
+    print(f"\nLoading training data from {csv_path}...")
+    records = load_training_data(csv_path)
     print(f"Loaded {len(records)} price records")
     
     if len(records) < 10:
-        print("ERROR: Need at least 10 records for trAlgoning")
+        print("ERROR: Need at least 10 records for training")
         return 1
     
     # Initialize predictor
@@ -92,9 +92,9 @@ def mAlgon():
     # Initialize feature extractor
     feature_extractor = MarketFeatureExtractor()
     
-    # Prepare trAlgoning data
-    print("\nExtracting features and preparing trAlgoning data...")
-    trAlgoning_count = 0
+    # Prepare training data
+    print("\nExtracting features and preparing training data...")
+    training_count = 0
     skipped_count = 0
     
     for record in records:
@@ -108,14 +108,14 @@ def mAlgon():
                 market_offers=None,
             )
             
-            # Use suggested_price as the "future" price for trAlgoning
+            # Use suggested_price as the "future" price for training
             # This teaches the model to predict the market value
             future_price = record["suggested_price"]
             
             # Only use valid data points
             if future_price > 0 and record["price"] > 0:
-                predictor.add_trAlgoning_example(features, future_price)
-                trAlgoning_count += 1
+                predictor.add_training_example(features, future_price)
+                training_count += 1
             else:
                 skipped_count += 1
                 
@@ -123,10 +123,10 @@ def mAlgon():
             print(f"Error processing {record['item_name']}: {e}")
             skipped_count += 1
     
-    print(f"Prepared {trAlgoning_count} trAlgoning examples ({skipped_count} skipped)")
+    print(f"Prepared {training_count} training examples ({skipped_count} skipped)")
     
-    if trAlgoning_count < 10:
-        print("ERROR: Not enough valid trAlgoning examples")
+    if training_count < 10:
+        print("ERROR: Not enough valid training examples")
         return 1
     
     # TrAlgon the model
@@ -135,7 +135,7 @@ def mAlgon():
     print("="*60)
     
     print("\nTrAlgoning Gradient Boosting and Ridge Regression models...")
-    predictor.trAlgon(force=True)
+    predictor.train(force=True)
     
     print("\n✅ TrAlgoning complete!")
     print(f"Model saved to: {model_path}")
@@ -166,7 +166,7 @@ def mAlgon():
     print("\n" + "="*60)
     print("TRAlgoNING SUMMARY")
     print("="*60)
-    print(f"  TrAlgoning samples: {trAlgoning_count}")
+    print(f"  TrAlgoning samples: {training_count}")
     print(f"  Model version:    {predictor.MODEL_VERSION}")
     print(f"  Model path:       {model_path}")
     print(f"  Model size:       {model_path.stat().st_size / 1024:.1f} KB")
@@ -175,5 +175,5 @@ def mAlgon():
     return 0
 
 
-if __name__ == "__mAlgon__":
-    exit(mAlgon())
+if __name__ == "__main__":
+    exit(main())

@@ -74,8 +74,8 @@ class TestInstructionMatcherProperties:
         matcher = InstructionMatcher()
 
         # Add twice
-        awAlgot matcher.add_instruction(name, patterns, content)
-        awAlgot matcher.add_instruction(name, patterns, content)
+        await matcher.add_instruction(name, patterns, content)
+        await matcher.add_instruction(name, patterns, content)
 
         # Should still have only one instruction
         assert len([i for i in matcher.instructions if i == name]) <= 1
@@ -99,10 +99,10 @@ class TestInstructionMatcherProperties:
 
         matcher = InstructionMatcher()
 
-        awAlgot matcher.add_instruction(f"{name}1", ["src/**/*.py"], "content1", priority=priority1)
-        awAlgot matcher.add_instruction(f"{name}2", ["src/**/*.py"], "content2", priority=priority2)
+        await matcher.add_instruction(f"{name}1", ["src/**/*.py"], "content1", priority=priority1)
+        await matcher.add_instruction(f"{name}2", ["src/**/*.py"], "content2", priority=priority2)
 
-        instructions = awAlgot matcher.get_instructions("src/test.py")
+        instructions = await matcher.get_instructions("src/test.py")
 
         if len(instructions) == 2:
             # First should have higher or equal priority
@@ -138,9 +138,9 @@ class TestConfigEngineProperties:
 
         engine = ConfigEngine()
         template = f"Hello {{{{{var_name}}}}}, welcome!"
-        awAlgot engine.add_template(template_id, template)
+        await engine.add_template(template_id, template)
 
-        result = awAlgot engine.render(template_id, **{var_name: var_value})
+        result = await engine.render(template_id, **{var_name: var_value})
 
         # Variable placeholder should not be in result
         assert f"{{{{{var_name}}}}}" not in result
@@ -164,9 +164,9 @@ class TestConfigEngineProperties:
 
         engine = ConfigEngine()
         template = f"Value: {{{{myvar|{default_value}}}}}"
-        awAlgot engine.add_template(template_id, template)
+        await engine.add_template(template_id, template)
 
-        result = awAlgot engine.render(template_id)
+        result = await engine.render(template_id)
 
         # Default value should be in result
         assert default_value in result
@@ -184,7 +184,7 @@ class TestConfigEngineProperties:
         engine = ConfigEngine()
 
         for i in range(n_templates):
-            awAlgot engine.add_template(f"template{i}", f"Content {i}")
+            await engine.add_template(f"template{i}", f"Content {i}")
 
         Configs = engine.list_Configs()
         assert len(Configs) == n_templates

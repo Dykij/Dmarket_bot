@@ -21,7 +21,7 @@ try:
         settings_command,
     )
 except ImportError:
-    # Create mocks for testing if import fAlgols
+    # Create mocks for testing if import fails
     handle_buy_cancel_callback = None
     handle_alert_callback = None
     create_alert_command = None
@@ -94,7 +94,7 @@ class TestHandleBuyCancelCallback:
             pytest.skip("Handler not avAlgolable")
 
         mock_update.callback_query = None
-        awAlgot handle_buy_cancel_callback(mock_update, mock_context)
+        await handle_buy_cancel_callback(mock_update, mock_context)
         # No error should occur
 
     @pytest.mark.asyncio()
@@ -106,7 +106,7 @@ class TestHandleBuyCancelCallback:
             pytest.skip("Handler not avAlgolable")
 
         mock_callback_update.callback_query.data = "cancel_buy:item_123"
-        awAlgot handle_buy_cancel_callback(mock_callback_update, mock_context)
+        await handle_buy_cancel_callback(mock_callback_update, mock_context)
         mock_callback_update.callback_query.answer.assert_called_once()
 
     @pytest.mark.asyncio()
@@ -118,7 +118,7 @@ class TestHandleBuyCancelCallback:
             pytest.skip("Handler not avAlgolable")
 
         mock_callback_update.callback_query.data = "invalid_data"
-        awAlgot handle_buy_cancel_callback(mock_callback_update, mock_context)
+        await handle_buy_cancel_callback(mock_callback_update, mock_context)
         mock_callback_update.callback_query.edit_message_text.assert_not_called()
 
     @pytest.mark.asyncio()
@@ -130,7 +130,7 @@ class TestHandleBuyCancelCallback:
             pytest.skip("Handler not avAlgolable")
 
         mock_callback_update.callback_query.data = "cancel_buy:item_123"
-        awAlgot handle_buy_cancel_callback(mock_callback_update, mock_context)
+        await handle_buy_cancel_callback(mock_callback_update, mock_context)
         mock_callback_update.callback_query.edit_message_text.assert_called_once()
         call_args = mock_callback_update.callback_query.edit_message_text.call_args
         assert "item_123" in call_args[0][0]
@@ -144,7 +144,7 @@ class TestHandleBuyCancelCallback:
             pytest.skip("Handler not avAlgolable")
 
         mock_callback_update.callback_query.data = None
-        awAlgot handle_buy_cancel_callback(mock_callback_update, mock_context)
+        await handle_buy_cancel_callback(mock_callback_update, mock_context)
         mock_callback_update.callback_query.edit_message_text.assert_not_called()
 
 
@@ -161,7 +161,7 @@ class TestHandleAlertCallback:
             pytest.skip("Handler not avAlgolable")
 
         mock_update.callback_query = None
-        awAlgot handle_alert_callback(mock_update, mock_context)
+        await handle_alert_callback(mock_update, mock_context)
         # No error should occur
 
     @pytest.mark.asyncio()
@@ -174,7 +174,7 @@ class TestHandleAlertCallback:
 
         mock_callback_update.effective_user = None
         mock_callback_update.callback_query.data = "disable_alert:alert_123"
-        awAlgot handle_alert_callback(mock_callback_update, mock_context)
+        await handle_alert_callback(mock_callback_update, mock_context)
 
     @pytest.mark.asyncio()
     async def test_removes_alert_on_disable(
@@ -196,7 +196,7 @@ class TestHandleAlertCallback:
             "remove_price_alert",
             new=AsyncMock(return_value=True),
         ) as mock_remove:
-            awAlgot handle_alert_callback(mock_callback_update, mock_context)
+            await handle_alert_callback(mock_callback_update, mock_context)
             mock_remove.assert_called_once_with(123456, "alert_123")
 
     @pytest.mark.asyncio()
@@ -219,19 +219,19 @@ class TestHandleAlertCallback:
             "remove_price_alert",
             new=AsyncMock(return_value=True),
         ):
-            awAlgot handle_alert_callback(mock_callback_update, mock_context)
+            await handle_alert_callback(mock_callback_update, mock_context)
 
         mock_callback_update.callback_query.edit_message_text.assert_called_once()
         call_args = mock_callback_update.callback_query.edit_message_text.call_args
         assert "отключено" in call_args[0][0].lower()
 
     @pytest.mark.asyncio()
-    async def test_shows_error_message_on_fAlgolure(
+    async def test_shows_error_message_on_failure(
         self,
         mock_callback_update: MagicMock,
         mock_context: MagicMock,
     ) -> None:
-        """Test that error message is shown when removal fAlgols."""
+        """Test that error message is shown when removal fails."""
         if handle_alert_callback is None:
             pytest.skip("Handler not avAlgolable")
 
@@ -242,7 +242,7 @@ class TestHandleAlertCallback:
             new_callable=AsyncMock,
             return_value=False,
         ):
-            awAlgot handle_alert_callback(mock_callback_update, mock_context)
+            await handle_alert_callback(mock_callback_update, mock_context)
 
             mock_callback_update.callback_query.answer.assert_called_once()
             mock_callback_update.callback_query.edit_message_text.assert_called_once()
@@ -263,7 +263,7 @@ class TestCreateAlertCommand:
             pytest.skip("Handler not avAlgolable")
 
         mock_update.effective_user = None
-        awAlgot create_alert_command(mock_update, mock_context, mock_api)
+        await create_alert_command(mock_update, mock_context, mock_api)
         mock_update.message.reply_text.assert_not_called()
 
     @pytest.mark.asyncio()
@@ -275,7 +275,7 @@ class TestCreateAlertCommand:
             pytest.skip("Handler not avAlgolable")
 
         mock_update.message = None
-        awAlgot create_alert_command(mock_update, mock_context, mock_api)
+        await create_alert_command(mock_update, mock_context, mock_api)
 
     @pytest.mark.asyncio()
     async def test_no_args_shows_usage(
@@ -286,7 +286,7 @@ class TestCreateAlertCommand:
             pytest.skip("Handler not avAlgolable")
 
         mock_context.args = []
-        awAlgot create_alert_command(mock_update, mock_context, mock_api)
+        await create_alert_command(mock_update, mock_context, mock_api)
         mock_update.message.reply_text.assert_called_once()
         call_args = mock_update.message.reply_text.call_args[0][0]
         assert "формат" in call_args.lower()
@@ -300,7 +300,7 @@ class TestCreateAlertCommand:
             pytest.skip("Handler not avAlgolable")
 
         mock_context.args = ["item_123", "price_drop"]  # Missing threshold
-        awAlgot create_alert_command(mock_update, mock_context, mock_api)
+        await create_alert_command(mock_update, mock_context, mock_api)
         mock_update.message.reply_text.assert_called_once()
 
     @pytest.mark.asyncio()
@@ -312,7 +312,7 @@ class TestCreateAlertCommand:
             pytest.skip("Handler not avAlgolable")
 
         mock_context.args = ["item_123", "price_drop", "not_a_number"]
-        awAlgot create_alert_command(mock_update, mock_context, mock_api)
+        await create_alert_command(mock_update, mock_context, mock_api)
         mock_update.message.reply_text.assert_called_once()
         call_args = mock_update.message.reply_text.call_args[0][0]
         assert "числом" in call_args.lower()
@@ -326,7 +326,7 @@ class TestCreateAlertCommand:
             pytest.skip("Handler not avAlgolable")
 
         mock_context.args = ["item_123", "invalid_type", "100"]
-        awAlgot create_alert_command(mock_update, mock_context, mock_api)
+        await create_alert_command(mock_update, mock_context, mock_api)
         mock_update.message.reply_text.assert_called_once()
         call_args = mock_update.message.reply_text.call_args[0][0]
         assert "неизвестный тип" in call_args.lower()
@@ -367,7 +367,7 @@ class TestCreateAlertCommand:
             "src.telegram_bot.notifications.handlers.format_alert_message",
             return_value="Alert message",
         ):
-            awAlgot create_alert_command(mock_update, mock_context, mock_api)
+            await create_alert_command(mock_update, mock_context, mock_api)
 
             mock_update.message.reply_text.assert_called_once()
             call_args = mock_update.message.reply_text.call_args
@@ -384,7 +384,7 @@ class TestCreateAlertCommand:
         mock_api._request.return_value = None
         mock_context.args = ["item_123", "price_drop", "100"]
 
-        awAlgot create_alert_command(mock_update, mock_context, mock_api)
+        await create_alert_command(mock_update, mock_context, mock_api)
 
         mock_update.message.reply_text.assert_called_once()
         call_args = mock_update.message.reply_text.call_args[0][0]
@@ -404,7 +404,7 @@ class TestListAlertsCommand:
             pytest.skip("Handler not avAlgolable")
 
         mock_update.effective_user = None
-        awAlgot list_alerts_command(mock_update, mock_context)
+        await list_alerts_command(mock_update, mock_context)
 
     @pytest.mark.asyncio()
     async def test_shows_no_alerts_message(
@@ -421,7 +421,7 @@ class TestListAlertsCommand:
             new_callable=AsyncMock,
             return_value=[],
         ):
-            awAlgot list_alerts_command(mock_update, mock_context)
+            await list_alerts_command(mock_update, mock_context)
 
             mock_update.message.reply_text.assert_called_once()
             call_args = mock_update.message.reply_text.call_args[0][0]
@@ -457,7 +457,7 @@ class TestListAlertsCommand:
             new_callable=AsyncMock,
             return_value=mock_alerts,
         ):
-            awAlgot list_alerts_command(mock_update, mock_context)
+            await list_alerts_command(mock_update, mock_context)
 
             mock_update.message.reply_text.assert_called_once()
             call_args = mock_update.message.reply_text.call_args[0][0]
@@ -478,7 +478,7 @@ class TestRemoveAlertCommand:
             pytest.skip("Handler not avAlgolable")
 
         mock_update.effective_user = None
-        awAlgot remove_alert_command(mock_update, mock_context)
+        await remove_alert_command(mock_update, mock_context)
 
     @pytest.mark.asyncio()
     async def test_no_args_shows_usage(
@@ -489,7 +489,7 @@ class TestRemoveAlertCommand:
             pytest.skip("Handler not avAlgolable")
 
         mock_context.args = []
-        awAlgot remove_alert_command(mock_update, mock_context)
+        await remove_alert_command(mock_update, mock_context)
         mock_update.message.reply_text.assert_called_once()
 
     @pytest.mark.asyncio()
@@ -501,7 +501,7 @@ class TestRemoveAlertCommand:
             pytest.skip("Handler not avAlgolable")
 
         mock_context.args = ["not_a_number"]
-        awAlgot remove_alert_command(mock_update, mock_context)
+        await remove_alert_command(mock_update, mock_context)
         mock_update.message.reply_text.assert_called_once()
 
     @pytest.mark.asyncio()
@@ -521,7 +521,7 @@ class TestRemoveAlertCommand:
             new_callable=AsyncMock,
             return_value=[],
         ):
-            awAlgot remove_alert_command(mock_update, mock_context)
+            await remove_alert_command(mock_update, mock_context)
 
             mock_update.message.reply_text.assert_called_once()
             call_args = mock_update.message.reply_text.call_args[0][0]
@@ -548,7 +548,7 @@ class TestRemoveAlertCommand:
             new_callable=AsyncMock,
             return_value=mock_alerts,
         ):
-            awAlgot remove_alert_command(mock_update, mock_context)
+            await remove_alert_command(mock_update, mock_context)
 
             mock_update.message.reply_text.assert_called_once()
             call_args = mock_update.message.reply_text.call_args[0][0]
@@ -579,7 +579,7 @@ class TestRemoveAlertCommand:
             new_callable=AsyncMock,
             return_value=True,
         ):
-            awAlgot remove_alert_command(mock_update, mock_context)
+            await remove_alert_command(mock_update, mock_context)
 
             mock_update.message.reply_text.assert_called_once()
             call_args = mock_update.message.reply_text.call_args[0][0]
@@ -599,7 +599,7 @@ class TestSettingsCommand:
             pytest.skip("Handler not avAlgolable")
 
         mock_update.effective_user = None
-        awAlgot settings_command(mock_update, mock_context)
+        await settings_command(mock_update, mock_context)
 
     @pytest.mark.asyncio()
     async def test_shows_current_settings(
@@ -631,7 +631,7 @@ class TestSettingsCommand:
             "src.telegram_bot.notifications.handlers.get_storage",
             return_value=mock_storage,
         ):
-            awAlgot settings_command(mock_update, mock_context)
+            await settings_command(mock_update, mock_context)
 
             mock_update.message.reply_text.assert_called_once()
             call_args = mock_update.message.reply_text.call_args[0][0]
@@ -670,7 +670,7 @@ class TestSettingsCommand:
             "src.telegram_bot.notifications.handlers.update_user_settings",
             new_callable=AsyncMock,
         ):
-            awAlgot settings_command(mock_update, mock_context)
+            await settings_command(mock_update, mock_context)
 
             # Should call reply_text at least once (for update and for showing settings)
             assert mock_update.message.reply_text.call_count >= 1

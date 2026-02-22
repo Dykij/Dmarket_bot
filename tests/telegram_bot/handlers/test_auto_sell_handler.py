@@ -104,7 +104,7 @@ class TestAutoSellCommand:
         """Test command shows enabled status."""
         mock_auto_seller.config.enabled = True
 
-        awAlgot handler.handle_auto_sell_command(mock_update, mock_context)
+        await handler.handle_auto_sell_command(mock_update, mock_context)
 
         mock_update.message.reply_text.assert_called_once()
         call_kwargs = mock_update.message.reply_text.call_args.kwargs
@@ -119,7 +119,7 @@ class TestAutoSellCommand:
         """Test command shows disabled status."""
         mock_auto_seller.config.enabled = False
 
-        awAlgot handler.handle_auto_sell_command(mock_update, mock_context)
+        await handler.handle_auto_sell_command(mock_update, mock_context)
 
         mock_update.message.reply_text.assert_called_once()
         call_args = mock_update.message.reply_text.call_args
@@ -134,8 +134,8 @@ class TestAutoSellCommand:
         update = MagicMock()
         update.message = None
 
-        awAlgot handler.handle_auto_sell_command(update, mock_context)
-        # Should not rAlgose
+        await handler.handle_auto_sell_command(update, mock_context)
+        # Should not raise
 
 
 class TestStatusCallback:
@@ -153,7 +153,7 @@ class TestStatusCallback:
             "scheduled_count": 10,
             "listed_count": 8,
             "sold_count": 5,
-            "fAlgoled_count": 1,
+            "failed_count": 1,
             "stop_loss_count": 0,
             "adjustments_count": 15,
             "total_profit": 25.50,
@@ -163,7 +163,7 @@ class TestStatusCallback:
         update.callback_query = mock_query
         mock_query.data = "auto_sell:status"
 
-        awAlgot handler.handle_callback(update, mock_context)
+        await handler.handle_callback(update, mock_context)
 
         mock_query.edit_message_text.assert_called_once()
         text = mock_query.edit_message_text.call_args.kwargs.get(
@@ -181,7 +181,7 @@ class TestStatusCallback:
         update.callback_query = mock_query
         mock_query.data = "auto_sell:status"
 
-        awAlgot handler.handle_callback(update, mock_context)
+        await handler.handle_callback(update, mock_context)
 
         mock_query.edit_message_text.assert_called_once()
         text = mock_query.edit_message_text.call_args[0][0]
@@ -200,7 +200,7 @@ class TestConfigCallback:
         update.callback_query = mock_query
         mock_query.data = "auto_sell:config"
 
-        awAlgot handler.handle_callback(update, mock_context)
+        await handler.handle_callback(update, mock_context)
 
         mock_query.edit_message_text.assert_called_once()
         text = mock_query.edit_message_text.call_args.kwargs.get(
@@ -225,7 +225,7 @@ class TestToggleCallback:
         update.callback_query = mock_query
         mock_query.data = "auto_sell:toggle"
 
-        awAlgot handler.handle_callback(update, mock_context)
+        await handler.handle_callback(update, mock_context)
 
         assert mock_auto_seller.config.enabled is False
 
@@ -240,7 +240,7 @@ class TestToggleCallback:
         update.callback_query = mock_query
         mock_query.data = "auto_sell:toggle"
 
-        awAlgot handler.handle_callback(update, mock_context)
+        await handler.handle_callback(update, mock_context)
 
         assert mock_auto_seller.config.enabled is True
 
@@ -259,7 +259,7 @@ class TestActiveSalesCallback:
         update.callback_query = mock_query
         mock_query.data = "auto_sell:active"
 
-        awAlgot handler.handle_callback(update, mock_context)
+        await handler.handle_callback(update, mock_context)
 
         text = mock_query.edit_message_text.call_args.kwargs.get(
             "text", mock_query.edit_message_text.call_args[0][0]
@@ -289,7 +289,7 @@ class TestActiveSalesCallback:
         update.callback_query = mock_query
         mock_query.data = "auto_sell:active"
 
-        awAlgot handler.handle_callback(update, mock_context)
+        await handler.handle_callback(update, mock_context)
 
         text = mock_query.edit_message_text.call_args.kwargs.get(
             "text", mock_query.edit_message_text.call_args[0][0]
@@ -311,27 +311,27 @@ class TestCancelSaleCallback:
         update.callback_query = mock_query
         mock_query.data = "auto_sell:cancel:item123"
 
-        awAlgot handler.handle_callback(update, mock_context)
+        await handler.handle_callback(update, mock_context)
 
         mock_auto_seller.cancel_sale.assert_called_once_with("item123")
         text = mock_query.edit_message_text.call_args[0][0]
         assert "cancelled" in text
 
     @pytest.mark.asyncio()
-    async def test_cancel_sale_fAlgolure(
+    async def test_cancel_sale_failure(
         self, handler, mock_query, mock_context, mock_auto_seller
     ):
-        """Test fAlgoled sale cancellation."""
+        """Test failed sale cancellation."""
         mock_auto_seller.cancel_sale = AsyncMock(return_value=False)
 
         update = MagicMock()
         update.callback_query = mock_query
         mock_query.data = "auto_sell:cancel:item123"
 
-        awAlgot handler.handle_callback(update, mock_context)
+        await handler.handle_callback(update, mock_context)
 
         text = mock_query.edit_message_text.call_args[0][0]
-        assert "FAlgoled" in text
+        assert "Failed" in text
 
 
 class TestCancelMenu:
@@ -348,7 +348,7 @@ class TestCancelMenu:
         update.callback_query = mock_query
         mock_query.data = "auto_sell:cancel_menu"
 
-        awAlgot handler.handle_callback(update, mock_context)
+        await handler.handle_callback(update, mock_context)
 
         text = mock_query.edit_message_text.call_args.kwargs.get(
             "text", mock_query.edit_message_text.call_args[0][0]
@@ -378,7 +378,7 @@ class TestCancelMenu:
         update.callback_query = mock_query
         mock_query.data = "auto_sell:cancel_menu"
 
-        awAlgot handler.handle_callback(update, mock_context)
+        await handler.handle_callback(update, mock_context)
 
         # Check keyboard has cancel buttons
         call_kwargs = mock_query.edit_message_text.call_args.kwargs
@@ -389,15 +389,15 @@ class TestBackCallback:
     """Tests for back callback."""
 
     @pytest.mark.asyncio()
-    async def test_back_to_mAlgon_menu(
+    async def test_back_to_main_menu(
         self, handler, mock_query, mock_context, mock_auto_seller
     ):
-        """Test returning to mAlgon menu."""
+        """Test returning to main menu."""
         update = MagicMock()
         update.callback_query = mock_query
         mock_query.data = "auto_sell:back"
 
-        awAlgot handler.handle_callback(update, mock_context)
+        await handler.handle_callback(update, mock_context)
 
         mock_query.edit_message_text.assert_called_once()
         text = mock_query.edit_message_text.call_args.kwargs.get(
@@ -508,7 +508,7 @@ class TestCallbackQueryNone:
         update = MagicMock()
         update.callback_query = None
 
-        result = awAlgot handler.handle_callback(update, mock_context)
+        result = await handler.handle_callback(update, mock_context)
         assert result is None
 
     @pytest.mark.asyncio()
@@ -518,5 +518,5 @@ class TestCallbackQueryNone:
         update.callback_query = mock_query
         mock_query.data = None
 
-        result = awAlgot handler.handle_callback(update, mock_context)
+        result = await handler.handle_callback(update, mock_context)
         assert result is None

@@ -80,7 +80,7 @@ def create_settings_keyboard() -> InlineKeyboardMarkup:
             InlineKeyboardButton(text="⚠️ Риск", callback_data="set_risk"),
         ],
         [
-            InlineKeyboardButton(text="◀️ Главное меню", callback_data="mAlgon_menu"),
+            InlineKeyboardButton(text="◀️ Главное меню", callback_data="main_menu"),
         ],
     ]
     return InlineKeyboardMarkup(keyboard)

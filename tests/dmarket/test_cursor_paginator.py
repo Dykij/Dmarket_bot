@@ -144,7 +144,7 @@ class TestCursorPaginator:
         )
         paginator = CursorPaginator(config=config)
 
-        items = awAlgot paginator.get_all_items(game="csgo", max_items=100)
+        items = await paginator.get_all_items(game="csgo", max_items=100)
 
         assert len(items) <= 100
 
@@ -158,7 +158,7 @@ class TestCursorPaginator:
         )
         paginator = CursorPaginator(config=config)
 
-        items = awAlgot paginator.get_all_items(game="csgo", max_items=25)
+        items = await paginator.get_all_items(game="csgo", max_items=25)
 
         assert len(items) <= 25
 

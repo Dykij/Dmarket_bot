@@ -8,7 +8,7 @@ Example:
     >>> async def handler(update, context):
     ...     api = get_dmarket_api(context)
     ...     if api:
-    ...         balance = awAlgot api.get_balance()
+    ...         balance = await api.get_balance()
 """
 
 import functools
@@ -63,7 +63,7 @@ def get_dmarket_api(context: ContextTypes.DEFAULT_TYPE) -> IDMarketAPI | None:
     Example:
         >>> api = get_dmarket_api(context)
         >>> if api:
-        ...     balance = awAlgot api.get_balance()
+        ...     balance = await api.get_balance()
     """
     # Сначала проверяем legacy bot_data
     api = get_from_context(context, "dmarket_api")
@@ -72,12 +72,12 @@ def get_dmarket_api(context: ContextTypes.DEFAULT_TYPE) -> IDMarketAPI | None:
 
     # Затем пробуем DI контейнер
     try:
-        from src.contAlgoners import get_contAlgoner
+        from src.containers import get_container
 
-        contAlgoner = get_contAlgoner()
-        return contAlgoner.dmarket_api()
+        container = get_container()
+        return container.dmarket_api()
     except (RuntimeError, ImportError) as e:
-        logger.debug("DI contAlgoner not avAlgolable: %s", e)
+        logger.debug("DI container not avAlgolable: %s", e)
         return None
 
 
@@ -95,13 +95,13 @@ def get_arbitrage_scanner(
     Example:
         >>> scanner = get_arbitrage_scanner(context)
         >>> if scanner:
-        ...     results = awAlgot scanner.scan_game("csgo", "standard")
+        ...     results = await scanner.scan_game("csgo", "standard")
     """
     try:
-        from src.contAlgoners import get_contAlgoner
+        from src.containers import get_container
 
-        contAlgoner = get_contAlgoner()
-        return contAlgoner.arbitrage_scanner()
+        container = get_container()
+        return container.arbitrage_scanner()
     except (RuntimeError, ImportError):
         # Fallback: создать scanner с API из bot_data
         # DMarketAPI implements IDMarketAPI protocol, type mismatch is safe
@@ -127,13 +127,13 @@ def get_target_manager(
     Example:
         >>> manager = get_target_manager(context)
         >>> if manager:
-        ...     targets = awAlgot manager.get_active_targets()
+        ...     targets = await manager.get_active_targets()
     """
     try:
-        from src.contAlgoners import get_contAlgoner
+        from src.containers import get_container
 
-        contAlgoner = get_contAlgoner()
-        return contAlgoner.target_manager()
+        container = get_container()
+        return container.target_manager()
     except (RuntimeError, ImportError):
         # Fallback: создать manager с API из bot_data
         # DMarketAPI implements IDMarketAPI protocol, type mismatch is safe
@@ -171,10 +171,10 @@ def get_database(context: ContextTypes.DEFAULT_TYPE) -> Any | None:
         return db
 
     try:
-        from src.contAlgoners import get_contAlgoner
+        from src.containers import get_container
 
-        contAlgoner = get_contAlgoner()
-        return contAlgoner.database()
+        container = get_container()
+        return container.database()
     except (RuntimeError, ImportError):
         return None
 
@@ -189,10 +189,10 @@ def get_memory_cache(context: ContextTypes.DEFAULT_TYPE) -> Any | None:
         TTLCache или None
     """
     try:
-        from src.contAlgoners import get_contAlgoner
+        from src.containers import get_container
 
-        contAlgoner = get_contAlgoner()
-        return contAlgoner.memory_cache()
+        container = get_container()
+        return container.memory_cache()
     except (RuntimeError, ImportError):
         return None
 
@@ -218,7 +218,7 @@ def inject_dependencies(handler_func: Any) -> Any:
         ... ):
         ...     # dmarket_api и scanner будут автоматически инжектированы
         ...     if dmarket_api:
-        ...         balance = awAlgot dmarket_api.get_balance()
+        ...         balance = await dmarket_api.get_balance()
 
     Args:
         handler_func: Async handler функция
@@ -254,7 +254,7 @@ def inject_dependencies(handler_func: Any) -> Any:
             elif param_name == "database":
                 kwargs["database"] = get_database(context)
 
-        return awAlgot handler_func(update, context, *args, **kwargs)
+        return await handler_func(update, context, *args, **kwargs)
 
     return wrapper
 

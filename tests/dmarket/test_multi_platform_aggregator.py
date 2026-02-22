@@ -51,7 +51,7 @@ class TestMultiPlatformAggregator:
         }
         mock_waxpeer_api.search_items.return_value = []
 
-        prices = awAlgot aggregator.get_prices("AK-47 | Redline (Field-Tested)")
+        prices = await aggregator.get_prices("AK-47 | Redline (Field-Tested)")
 
         assert prices is not None
         assert prices.item_name == "AK-47 | Redline (Field-Tested)"
@@ -61,7 +61,7 @@ class TestMultiPlatformAggregator:
         """Test finding cross-platform arbitrage opportunities."""
         items = ["AK-47 | Redline (Field-Tested)"]
 
-        opportunities = awAlgot aggregator.find_arbitrage_opportunities(items)
+        opportunities = await aggregator.find_arbitrage_opportunities(items)
 
         # Returns list, may be empty if no arbitrage found
         assert isinstance(opportunities, list)
@@ -74,7 +74,7 @@ class TestMultiPlatformAggregator:
         }
         mock_waxpeer_api.get_items = AsyncMock(return_value=[])
 
-        result = awAlgot aggregator.get_best_buy_platform("Test Item", "csgo")
+        result = await aggregator.get_best_buy_platform("Test Item", "csgo")
 
         # Returns tuple of (platform, price) or None
         if result is not None:
@@ -89,7 +89,7 @@ class TestMultiPlatformAggregator:
         }
         mock_waxpeer_api.get_items = AsyncMock(return_value=[])
 
-        result = awAlgot aggregator.get_best_sell_platform("Test Item", "csgo")
+        result = await aggregator.get_best_sell_platform("Test Item", "csgo")
 
         # Returns tuple of (platform, net_price) or None
         if result is not None:

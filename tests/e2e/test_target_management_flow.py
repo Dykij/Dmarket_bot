@@ -98,7 +98,7 @@ class TestTargetCreationFlow:
         target_price = 10.0  # $10.00
 
         # Act: Create target
-        result = awAlgot manager.create_target(
+        result = await manager.create_target(
             game="csgo",
             title=item_title,
             price=target_price,
@@ -120,8 +120,8 @@ class TestTargetCreationFlow:
         manager = TargetManager(api_client=mock_dmarket_api)
 
         # Act & Assert: Price too low
-        with pytest.rAlgoses(ValueError) as exc_info:
-            awAlgot manager.create_target(
+        with pytest.raises(ValueError) as exc_info:
+            await manager.create_target(
                 game="csgo",
                 title="Test Item",
                 price=0.0,  # Invalid: zero price
@@ -130,7 +130,7 @@ class TestTargetCreationFlow:
         assert "больше 0" in str(exc_info.value) or "price" in str(exc_info.value).lower()
 
         # Act: Valid price
-        result = awAlgot manager.create_target(
+        result = await manager.create_target(
             game="csgo",
             title="Test Item",
             price=1.0,  # Valid: $1.00
@@ -161,7 +161,7 @@ class TestTargetViewingFlow:
         manager = TargetManager(api_client=mock_dmarket_api)
 
         # Act: Get user targets
-        targets = awAlgot manager.get_user_targets(game="csgo", status="active")
+        targets = await manager.get_user_targets(game="csgo", status="active")
 
         # Assert: Targets fetched
         assert isinstance(targets, list)
@@ -184,7 +184,7 @@ class TestTargetViewingFlow:
         manager = TargetManager(api_client=mock_dmarket_api)
 
         # Act: Get targets for specific game
-        targets = awAlgot manager.get_user_targets(
+        targets = await manager.get_user_targets(
             game="csgo",
             status="active",
             limit=50,
@@ -216,7 +216,7 @@ class TestTargetDeletionFlow:
         target_id = "target_123"
 
         # Act: Delete target
-        result = awAlgot manager.delete_target(target_id=target_id)
+        result = await manager.delete_target(target_id=target_id)
 
         # Assert: Deleted successfully
         assert result is True
@@ -233,7 +233,7 @@ class TestTargetDeletionFlow:
         manager = TargetManager(api_client=mock_dmarket_api)
 
         # Act: Delete non-existent target (manager catches exception)
-        result = awAlgot manager.delete_target(target_id="nonexistent_id")
+        result = await manager.delete_target(target_id="nonexistent_id")
 
         # Assert: Returns False (exception was caught)
         assert result is False
@@ -269,7 +269,7 @@ class TestBatchTargetOperations:
             )
             for title, price in items
         ]
-        results = awAlgot asyncio.gather(*tasks, return_exceptions=True)
+        results = await asyncio.gather(*tasks, return_exceptions=True)
 
         # Assert: All created successfully
         assert len(results) == len(items)
@@ -287,7 +287,7 @@ class TestBatchTargetOperations:
         manager = TargetManager(api_client=mock_dmarket_api)
 
         # Act: Get first page
-        page1 = awAlgot manager.get_user_targets(game="csgo", limit=50, offset=0)
+        page1 = await manager.get_user_targets(game="csgo", limit=50, offset=0)
 
         # Assert
         assert isinstance(page1, list)

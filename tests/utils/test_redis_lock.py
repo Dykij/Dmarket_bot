@@ -47,7 +47,7 @@ class TestRedisDistributedLock:
         lock_name = "test-resource"
 
         # Act
-        token = awAlgot lock_manager.acquire_lock(lock_name)
+        token = await lock_manager.acquire_lock(lock_name)
 
         # Assert
         assert token is not None
@@ -62,7 +62,7 @@ class TestRedisDistributedLock:
         lock_name = "held-resource"
 
         # Act
-        token = awAlgot lock_manager.acquire_lock(lock_name, blocking=False)
+        token = await lock_manager.acquire_lock(lock_name, blocking=False)
 
         # Assert
         assert token is None
@@ -70,13 +70,13 @@ class TestRedisDistributedLock:
     @pytest.mark.asyncio
     async def test_acquire_lock_blocking_retry(self, lock_manager, mock_redis):
         """Test blocking lock acquisition with retries."""
-        # Arrange - always fAlgol to acquire
+        # Arrange - always fail to acquire
         mock_redis.set = AsyncMock(return_value=False)
         lock_name = "blocked-resource"
 
         # Act & Assert
-        with pytest.rAlgoses(LockAcquisitionError):
-            awAlgot lock_manager.acquire_lock(lock_name, blocking=True)
+        with pytest.raises(LockAcquisitionError):
+            await lock_manager.acquire_lock(lock_name, blocking=True)
 
         # Should have retried
         assert mock_redis.set.call_count == lock_manager._retry_count
@@ -86,10 +86,10 @@ class TestRedisDistributedLock:
         """Test successful lock release."""
         # Arrange
         lock_name = "release-test"
-        awAlgot lock_manager.acquire_lock(lock_name)
+        await lock_manager.acquire_lock(lock_name)
 
         # Act
-        released = awAlgot lock_manager.release_lock(lock_name)
+        released = await lock_manager.release_lock(lock_name)
 
         # Assert
         assert released is True
@@ -105,7 +105,7 @@ class TestRedisDistributedLock:
         lock_manager._owned_locks[lock_name] = "wrong-token"
 
         # Act
-        released = awAlgot lock_manager.release_lock(lock_name)
+        released = await lock_manager.release_lock(lock_name)
 
         # Assert
         assert released is False
@@ -115,10 +115,10 @@ class TestRedisDistributedLock:
         """Test successful lock extension."""
         # Arrange
         lock_name = "extend-test"
-        awAlgot lock_manager.acquire_lock(lock_name)
+        await lock_manager.acquire_lock(lock_name)
 
         # Act
-        extended = awAlgot lock_manager.extend_lock(lock_name, additional_ttl=60)
+        extended = await lock_manager.extend_lock(lock_name, additional_ttl=60)
 
         # Assert
         assert extended is True
@@ -130,7 +130,7 @@ class TestRedisDistributedLock:
         lock_name = "check-test"
 
         # Act
-        locked = awAlgot lock_manager.is_locked(lock_name)
+        locked = await lock_manager.is_locked(lock_name)
 
         # Assert
         assert locked is True
@@ -143,7 +143,7 @@ class TestRedisDistributedLock:
         lock_name = "ttl-test"
 
         # Act
-        ttl = awAlgot lock_manager.get_lock_ttl(lock_name)
+        ttl = await lock_manager.get_lock_ttl(lock_name)
 
         # Assert
         assert ttl == 30
@@ -168,7 +168,7 @@ class TestRedisDistributedLock:
     async def test_close(self, lock_manager, mock_redis):
         """Test closing connection."""
         # Act
-        awAlgot lock_manager.close()
+        await lock_manager.close()
 
         # Assert
         mock_redis.close.assert_called_once()

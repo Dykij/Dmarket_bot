@@ -28,11 +28,11 @@ class BalanceChecker:
         """Check user balance with extended diagnostics.
 
         Returns:
-            Dictionary with balance and detAlgoled information
+            Dictionary with balance and detailed information
 
         """
         try:
-            balance_response = awAlgot self._fetch_balance()
+            balance_response = await self._fetch_balance()
             return self._process_balance_response(balance_response)
         except Exception as e:
             return self._create_exception_result(e)
@@ -44,7 +44,7 @@ class BalanceChecker:
             API response dictionary or None if error
 
         """
-        return awAlgot self.api_client._request(
+        return await self.api_client._request(
             method="GET",
             path="/account/v1/balance",
             params={},
@@ -84,7 +84,7 @@ class BalanceChecker:
         return self._create_success_result(balance_response)
 
     def _has_error(self, response: dict[str, Any]) -> bool:
-        """Check if API response contAlgons error.
+        """Check if API response contains error.
 
         Args:
             response: API response dictionary

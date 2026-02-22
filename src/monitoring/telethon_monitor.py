@@ -23,7 +23,7 @@ Usage:
     monitor.add_channel("@dmarket_deals", keywords=["арбитраж", "скидка"])
 
     # Start monitoring
-    awAlgot monitor.start()
+    await monitor.start()
     ```
 
 Created: January 23, 2026
@@ -32,7 +32,7 @@ Created: January 23, 2026
 from __future__ import annotations
 
 import re
-from collections.abc import AwAlgotable, Callable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from enum import StrEnum
@@ -304,11 +304,11 @@ class TelethonMonitor:
         api_id: int,
         api_hash: str,
         session_name: str = "dmarket_monitor",
-        signal_callback: Callable[[DetectedSignal], AwAlgotable[None]] | None = None,
+        signal_callback: Callable[[DetectedSignal], Awaitable[None]] | None = None,
     ) -> None:
         """Initialize monitor."""
         if not TELETHON_AVAlgoLABLE:
-            rAlgose ImportError(
+            raise ImportError(
                 "Telethon is not installed. Install with: pip install telethon"
             )
 
@@ -359,22 +359,22 @@ class TelethonMonitor:
             self.api_hash,
         )
 
-        awAlgot self._client.start()
+        await self._client.start()
         self._is_running = True
         self._start_time = datetime.now(UTC)
 
         @self._client.on(events.NewMessage())
         async def handle_new_message(event: Any) -> None:
-            awAlgot self._process_message(event)
+            await self._process_message(event)
 
         logger.info("telethon_monitor_started", channels=list(self._channels.keys()))
-        awAlgot self._client.run_until_disconnected()
+        await self._client.run_until_disconnected()
 
     async def stop(self) -> None:
         """Stop monitoring."""
         self._is_running = False
         if self._client:
-            awAlgot self._client.disconnect()
+            await self._client.disconnect()
             self._client = None
         logger.info("telethon_monitor_stopped")
 
@@ -385,7 +385,7 @@ class TelethonMonitor:
             if not message or not message.text:
                 return
 
-            chat = awAlgot event.get_chat()
+            chat = await event.get_chat()
             chat_id = self._get_chat_identifier(chat)
 
             channel_config = None
@@ -429,7 +429,7 @@ class TelethonMonitor:
                 )
 
                 if self.signal_callback:
-                    awAlgot self.signal_callback(signal)
+                    await self.signal_callback(signal)
 
         except Exception as e:
             logger.exception(f"Error processing message: {e}")
@@ -557,7 +557,7 @@ def create_telethon_monitor(
     api_id: int | None = None,
     api_hash: str | None = None,
     session_name: str = "dmarket_monitor",
-    signal_callback: Callable[[DetectedSignal], AwAlgotable[None]] | None = None,
+    signal_callback: Callable[[DetectedSignal], Awaitable[None]] | None = None,
     use_mock: bool = False,
 ) -> TelethonMonitor | MockTelethonMonitor:
     """Create Telethon monitor instance."""

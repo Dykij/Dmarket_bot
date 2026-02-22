@@ -82,7 +82,7 @@ class TestJsonDumps:
             assert "2025" in result
         else:
             # Стандартный json не поддерживает datetime
-            with pytest.rAlgoses(TypeError):
+            with pytest.raises(TypeError):
                 json_utils.dumps(data)
 
     def test_dumps_unicode(self):
@@ -148,7 +148,7 @@ class TestJsonLoads:
         invalid_json = '{"name": "invalid", "price": }'
 
         # Act & Assert
-        with pytest.rAlgoses(json_utils.JSONDecodeError):
+        with pytest.raises(json_utils.JSONDecodeError):
             json_utils.loads(invalid_json)
 
     def test_loads_empty_object(self):

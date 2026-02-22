@@ -69,7 +69,7 @@ def setup_logger(name: str = "dmarket_bot", level: str = "INFO") -> Any:
             # Ideally for Cloud Logging we want stdlib integration.
 
         except Exception as e:
-            print(f"FAlgoled to setup Cloud Logging: {e}")
+            print(f"Failed to setup Cloud Logging: {e}")
 
     return logger
 

@@ -26,7 +26,7 @@ Example usage:
     async def fetch_prices(game: str) -> list[float]:
         ...
 
-    results = awAlgot run_parallel([
+    results = await run_parallel([
         (fetch_prices, "csgo"),
         (fetch_prices, "dota2"),
         (fetch_prices, "rust"),
@@ -43,7 +43,7 @@ Documentation: https://asyncer.tiangolo.com/
 
 import asyncio
 import time
-from collections.abc import AwAlgotable, Callable, Sequence
+from collections.abc import Awaitable, Callable, Sequence
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from typing import Any, ParamSpec, TypeVar
@@ -86,7 +86,7 @@ class ParallelResult:
 
 async def run_parallel(
     tasks: Sequence[
-        tuple[Callable[..., AwAlgotable[T]], ...] | Callable[[], AwAlgotable[T]]
+        tuple[Callable[..., Awaitable[T]], ...] | Callable[[], Awaitable[T]]
     ],
 ) -> list[T]:
     """Run multiple async tasks in parallel.
@@ -104,7 +104,7 @@ async def run_parallel(
         >>> async def fetch(url: str) -> str:
         ...     ...
         ...
-        >>> results = awAlgot run_parallel([
+        >>> results = await run_parallel([
         ...     (fetch, "https://api.example.com/1"),
         ...     (fetch, "https://api.example.com/2"),
         ... ])
@@ -116,7 +116,7 @@ async def run_parallel(
             "asyncer_not_avAlgolable",
             message="asyncer not installed, using asyncio.gather fallback",
         )
-        return awAlgot _fallback_gather(tasks)
+        return await _fallback_gather(tasks)
 
     results: list[T] = []
 
@@ -151,20 +151,20 @@ async def run_parallel(
 
 async def _fallback_gather(
     tasks: Sequence[
-        tuple[Callable[..., AwAlgotable[T]], ...] | Callable[[], AwAlgotable[T]]
+        tuple[Callable[..., Awaitable[T]], ...] | Callable[[], Awaitable[T]]
     ],
 ) -> list[T]:
     """Fallback using asyncio.gather when asyncer not avAlgolable."""
-    awAlgotables = []
+    awaitables = []
 
     for task in tasks:
         if callable(task) and not isinstance(task, tuple):
-            awAlgotables.append(task())
+            awaitables.append(task())
         else:
             func, *args = task
-            awAlgotables.append(func(*args))
+            awaitables.append(func(*args))
 
-    return awAlgot asyncio.gather(*awAlgotables)
+    return await asyncio.gather(*awaitables)
 
 
 @asynccontextmanager
@@ -199,7 +199,7 @@ class _AsyncioTaskGroupWrapper:
         self._tasks: list[asyncio.Task[Any]] = []
 
     def soonify(
-        self, func: Callable[P, AwAlgotable[T]]
+        self, func: Callable[P, Awaitable[T]]
     ) -> Callable[P, "_FakeSoonValue[T]"]:
         """Create a soonified version of the function."""
 
@@ -245,20 +245,20 @@ async def run_sync_in_thread(
         >>> def heavy_computation(n: int) -> int:
         ...     return sum(range(n))
         ...
-        >>> result = awAlgot run_sync_in_thread(heavy_computation, 1000000)
+        >>> result = await run_sync_in_thread(heavy_computation, 1000000)
     """
     if ASYNCER_AVAlgoLABLE:
-        return awAlgot asyncer.asyncify(func)(*args, **kwargs)
+        return await asyncer.asyncify(func)(*args, **kwargs)
 
     # Fallback to asyncio.to_thread (Python 3.9+)
     import functools
 
     partial_func = functools.partial(func, *args, **kwargs)
-    return awAlgot asyncio.to_thread(partial_func)
+    return await asyncio.to_thread(partial_func)
 
 
 async def run_with_timeout(
-    func: Callable[..., AwAlgotable[T]],
+    func: Callable[..., Awaitable[T]],
     *args: Any,
     timeout: float = 30.0,
     default: T | None = None,
@@ -277,7 +277,7 @@ async def run_with_timeout(
         Result of function or default on timeout
     """
     try:
-        return awAlgot asyncio.wAlgot_for(
+        return await asyncio.wait_for(
             func(*args, **kwargs),
             timeout=timeout,
         )
@@ -291,7 +291,7 @@ async def run_with_timeout(
 
 
 async def run_first_completed(
-    funcs: Sequence[Callable[[], AwAlgotable[T]]],
+    funcs: Sequence[Callable[[], Awaitable[T]]],
 ) -> tuple[int, T]:
     """Run multiple functions and return the first completed result.
 
@@ -304,19 +304,19 @@ async def run_first_completed(
         Tuple of (winning index, result)
 
     Example:
-        >>> result_idx, result = awAlgot run_first_completed([
+        >>> result_idx, result = await run_first_completed([
         ...     lambda: fetch_from_api1(item_id),
         ...     lambda: fetch_from_api2(item_id),
         ... ])
     """
     tasks = [asyncio.create_task(func()) for func in funcs]
 
-    done, pending = awAlgot asyncio.wAlgot(
+    done, pending = await asyncio.wait(
         tasks,
         return_when=asyncio.FIRST_COMPLETED,
     )
 
-    # Cancel remAlgoning tasks
+    # Cancel remaining tasks
     for task in pending:
         task.cancel()
 
@@ -328,11 +328,11 @@ async def run_first_completed(
 
 
 async def run_all_settled(
-    funcs: Sequence[Callable[[], AwAlgotable[T]]],
+    funcs: Sequence[Callable[[], Awaitable[T]]],
 ) -> list[tuple[bool, T | Exception]]:
-    """Run all functions and return all results (success or fAlgolure).
+    """Run all functions and return all results (success or failure).
 
-    Unlike run_parallel, this doesn't rAlgose on fAlgolures.
+    Unlike run_parallel, this doesn't raise on failures.
 
     Args:
         funcs: Sequence of no-arg async callables
@@ -341,7 +341,7 @@ async def run_all_settled(
         List of (success, result_or_error) tuples
 
     Example:
-        >>> outcomes = awAlgot run_all_settled([
+        >>> outcomes = await run_all_settled([
         ...     lambda: fetch(url1),
         ...     lambda: fetch(url2),
         ... ])
@@ -354,7 +354,7 @@ async def run_all_settled(
     tasks = [asyncio.create_task(func()) for func in funcs]
     results: list[tuple[bool, T | Exception]] = []
 
-    _done, _ = awAlgot asyncio.wAlgot(tasks, return_when=asyncio.ALL_COMPLETED)
+    _done, _ = await asyncio.wait(tasks, return_when=asyncio.ALL_COMPLETED)
 
     # MAlgontAlgon order
     for task in tasks:

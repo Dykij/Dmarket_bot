@@ -184,12 +184,12 @@ class TestLiquidityRecommendations:
         for recommendation in LIQUIDITY_RECOMMENDATIONS.values():
             assert len(recommendation) > 0
 
-    def test_positive_recommendations_contAlgon_checkmark(self):
+    def test_positive_recommendations_contain_checkmark(self):
         """Положительные рекомендации должны содержать ✅."""
         assert "✅" in LIQUIDITY_RECOMMENDATIONS["very_high"]
         assert "✅" in LIQUIDITY_RECOMMENDATIONS["high"]
 
-    def test_negative_recommendations_contAlgon_warning(self):
+    def test_negative_recommendations_contain_warning(self):
         """Негативные рекомендации должны содержать ⚠️ или ❌."""
         assert (
             "⚠️" in LIQUIDITY_RECOMMENDATIONS["medium"]

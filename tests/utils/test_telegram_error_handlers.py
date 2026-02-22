@@ -51,7 +51,7 @@ class TestTelegramErrorBoundary:
             patch("src.utils.telegram_error_handlers.set_user_context"),
             patch("src.utils.telegram_error_handlers.add_breadcrumb"),
         ):
-            result = awAlgot test_handler(mock_update, mock_context)
+            result = await test_handler(mock_update, mock_context)
             assert result == "success"
 
     @pytest.mark.asyncio()
@@ -62,13 +62,13 @@ class TestTelegramErrorBoundary:
 
         @telegram_error_boundary()
         async def test_handler(update, context):
-            rAlgose ValidationError("Invalid input")
+            raise ValidationError("Invalid input")
 
         with (
             patch("src.utils.telegram_error_handlers.set_user_context"),
             patch("src.utils.telegram_error_handlers.add_breadcrumb"),
         ):
-            awAlgot test_handler(mock_update, mock_context)
+            await test_handler(mock_update, mock_context)
             mock_update.message.reply_text.assert_called_once()
             call_args = mock_update.message.reply_text.call_args[0][0]
             assert "валидации" in call_args.lower() or "validation" in call_args.lower()
@@ -81,7 +81,7 @@ class TestTelegramErrorBoundary:
 
         @telegram_error_boundary()
         async def test_handler(update, context):
-            rAlgose AuthenticationError("Invalid API key")
+            raise AuthenticationError("Invalid API key")
 
         with (
             patch("src.utils.telegram_error_handlers.set_user_context"),
@@ -90,7 +90,7 @@ class TestTelegramErrorBoundary:
                 "src.utils.telegram_error_handlers.capture_exception"
             ) as mock_capture,
         ):
-            awAlgot test_handler(mock_update, mock_context)
+            await test_handler(mock_update, mock_context)
             mock_update.message.reply_text.assert_called_once()
             mock_capture.assert_called_once()
 
@@ -104,13 +104,13 @@ class TestTelegramErrorBoundary:
 
         @telegram_error_boundary()
         async def test_handler(update, context):
-            rAlgose error
+            raise error
 
         with (
             patch("src.utils.telegram_error_handlers.set_user_context"),
             patch("src.utils.telegram_error_handlers.add_breadcrumb"),
         ):
-            awAlgot test_handler(mock_update, mock_context)
+            await test_handler(mock_update, mock_context)
             mock_update.message.reply_text.assert_called_once()
             call_args = mock_update.message.reply_text.call_args[0][0]
             assert "лимит" in call_args.lower() or "limit" in call_args.lower()
@@ -120,12 +120,12 @@ class TestTelegramErrorBoundary:
         self, mock_update: MagicMock, mock_context: MagicMock
     ) -> None:
         """Test APIError handling."""
-        error = APIError("API request fAlgoled")
+        error = APIError("API request failed")
         error.status_code = 500
 
         @telegram_error_boundary()
         async def test_handler(update, context):
-            rAlgose error
+            raise error
 
         with (
             patch("src.utils.telegram_error_handlers.set_user_context"),
@@ -134,7 +134,7 @@ class TestTelegramErrorBoundary:
                 "src.utils.telegram_error_handlers.capture_exception"
             ) as mock_capture,
         ):
-            awAlgot test_handler(mock_update, mock_context)
+            await test_handler(mock_update, mock_context)
             mock_update.message.reply_text.assert_called_once()
             mock_capture.assert_called_once()
 
@@ -146,7 +146,7 @@ class TestTelegramErrorBoundary:
 
         @telegram_error_boundary(user_friendly_message="Custom error message")
         async def test_handler(update, context):
-            rAlgose ValueError("Unexpected error")
+            raise ValueError("Unexpected error")
 
         with (
             patch("src.utils.telegram_error_handlers.set_user_context"),
@@ -155,7 +155,7 @@ class TestTelegramErrorBoundary:
                 "src.utils.telegram_error_handlers.capture_exception"
             ) as mock_capture,
         ):
-            awAlgot test_handler(mock_update, mock_context)
+            await test_handler(mock_update, mock_context)
             mock_update.message.reply_text.assert_called_once_with(
                 "Custom error message"
             )
@@ -175,13 +175,13 @@ class TestTelegramErrorBoundary:
 
         @telegram_error_boundary()
         async def test_handler(update, context):
-            rAlgose ValidationError("Invalid callback")
+            raise ValidationError("Invalid callback")
 
         with (
             patch("src.utils.telegram_error_handlers.set_user_context"),
             patch("src.utils.telegram_error_handlers.add_breadcrumb"),
         ):
-            awAlgot test_handler(mock_update, mock_context)
+            await test_handler(mock_update, mock_context)
             mock_update.callback_query.answer.assert_called_once()
 
     @pytest.mark.asyncio()
@@ -202,7 +202,7 @@ class TestTelegramErrorBoundary:
             patch("src.utils.telegram_error_handlers.set_user_context"),
             patch("src.utils.telegram_error_handlers.add_breadcrumb"),
         ):
-            result = awAlgot test_handler(mock_update, mock_context)
+            result = await test_handler(mock_update, mock_context)
             assert result == "success"
 
     @pytest.mark.asyncio()
@@ -220,7 +220,7 @@ class TestTelegramErrorBoundary:
             patch("src.utils.telegram_error_handlers.add_breadcrumb"),
             patch("src.utils.telegram_error_handlers.logger") as mock_logger,
         ):
-            result = awAlgot test_handler(mock_update, mock_context)
+            result = await test_handler(mock_update, mock_context)
             assert result == "success"
             # Logger should not be called for info logs when log_context=False
             info_calls = list(mock_logger.info.call_args_list)
@@ -264,7 +264,7 @@ class TestBaseHandler:
         error = ValueError("Test error")
 
         with patch("src.utils.telegram_error_handlers.capture_exception"):
-            awAlgot handler.handle_error(mock_update, error, "Custom error message")
+            await handler.handle_error(mock_update, error, "Custom error message")
 
         mock_update.message.reply_text.assert_called_once_with("Custom error message")
 
@@ -281,7 +281,7 @@ class TestBaseHandler:
         error = ValueError("Test error")
 
         with patch("src.utils.telegram_error_handlers.capture_exception"):
-            awAlgot handler.handle_error(mock_update, error)
+            await handler.handle_error(mock_update, error)
 
         mock_update.callback_query.answer.assert_called_once()
 
@@ -297,7 +297,7 @@ class TestBaseHandler:
         error = ValueError("Test error")
 
         with patch("src.utils.telegram_error_handlers.capture_exception"):
-            awAlgot handler.handle_error(mock_update, error)
+            await handler.handle_error(mock_update, error)
 
         mock_update.message.reply_text.assert_called_once()
 
@@ -306,7 +306,7 @@ class TestBaseHandler:
         self, handler: BaseHandler, mock_update: MagicMock
     ) -> None:
         """Test validate_user with valid user."""
-        result = awAlgot handler.validate_user(mock_update)
+        result = await handler.validate_user(mock_update)
         assert result is True
 
     @pytest.mark.asyncio()
@@ -315,7 +315,7 @@ class TestBaseHandler:
         mock_update = MagicMock()
         mock_update.effective_user = None
 
-        result = awAlgot handler.validate_user(mock_update)
+        result = await handler.validate_user(mock_update)
         assert result is False
 
     @pytest.mark.asyncio()
@@ -323,7 +323,7 @@ class TestBaseHandler:
         self, handler: BaseHandler, mock_update: MagicMock
     ) -> None:
         """Test safe_reply with message update."""
-        awAlgot handler.safe_reply(mock_update, "Test message")
+        await handler.safe_reply(mock_update, "Test message")
         mock_update.message.reply_text.assert_called_once_with("Test message")
 
     @pytest.mark.asyncio()
@@ -336,7 +336,7 @@ class TestBaseHandler:
         mock_update.callback_query.message.reply_text = AsyncMock()
         mock_update.callback_query.answer = AsyncMock()
 
-        awAlgot handler.safe_reply(mock_update, "Test message")
+        await handler.safe_reply(mock_update, "Test message")
 
         mock_update.callback_query.message.reply_text.assert_called_once_with(
             "Test message"
@@ -348,7 +348,7 @@ class TestBaseHandler:
         self, handler: BaseHandler, mock_update: MagicMock
     ) -> None:
         """Test safe_reply with additional kwargs."""
-        awAlgot handler.safe_reply(mock_update, "Test message", parse_mode="HTML")
+        await handler.safe_reply(mock_update, "Test message", parse_mode="HTML")
         mock_update.message.reply_text.assert_called_once_with(
             "Test message", parse_mode="HTML"
         )
@@ -358,10 +358,10 @@ class TestBaseHandler:
         self, handler: BaseHandler, mock_update: MagicMock
     ) -> None:
         """Test safe_reply handles exceptions gracefully."""
-        mock_update.message.reply_text = AsyncMock(side_effect=Exception("Send fAlgoled"))
+        mock_update.message.reply_text = AsyncMock(side_effect=Exception("Send failed"))
 
-        # Should not rAlgose exception
-        awAlgot handler.safe_reply(mock_update, "Test message")
+        # Should not raise exception
+        await handler.safe_reply(mock_update, "Test message")
 
 
 class TestErrorBoundaryWithAdditionalArgs:
@@ -399,7 +399,7 @@ class TestErrorBoundaryWithAdditionalArgs:
             patch("src.utils.telegram_error_handlers.set_user_context"),
             patch("src.utils.telegram_error_handlers.add_breadcrumb"),
         ):
-            result = awAlgot test_handler(mock_update, mock_context, "extra_value")
+            result = await test_handler(mock_update, mock_context, "extra_value")
             assert result == "extra_value"
 
     @pytest.mark.asyncio()
@@ -416,7 +416,7 @@ class TestErrorBoundaryWithAdditionalArgs:
             patch("src.utils.telegram_error_handlers.set_user_context"),
             patch("src.utils.telegram_error_handlers.add_breadcrumb"),
         ):
-            result = awAlgot test_handler(mock_update, mock_context, key="value")
+            result = await test_handler(mock_update, mock_context, key="value")
             assert result == "value"
 
     @pytest.mark.asyncio()

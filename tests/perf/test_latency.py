@@ -2,11 +2,11 @@ import asyncio
 import time
 import pytest
 
-# Performance constrAlgont: Critical path should be under 50ms
+# Performance constraint: Critical path should be under 50ms
 
 async def critical_path_operation():
     """Simulate a critical path operation for latency testing."""
-    awAlgot asyncio.sleep(0.01)  # 10ms
+    await asyncio.sleep(0.01)  # 10ms
     return True
 
 @pytest.mark.asyncio
@@ -14,7 +14,7 @@ async def test_latency_critical_path():
     """Verify that critical path operations complete within 50ms."""
     start_time = time.perf_counter()
 
-    awAlgot critical_path_operation()
+    await critical_path_operation()
 
     end_time = time.perf_counter()
     duration_ms = (end_time - start_time) * 1000

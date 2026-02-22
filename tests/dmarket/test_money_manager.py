@@ -130,7 +130,7 @@ class TestMoneyManager:
         """Test dynamic limits calculation."""
         mock_api.get_balance = AsyncMock(return_value={"balance": 500.0})
 
-        limits = awAlgot manager.calculate_dynamic_limits()
+        limits = await manager.calculate_dynamic_limits()
 
         assert limits is not None
         assert limits.total_balance == 500.0
@@ -143,7 +143,7 @@ class TestMoneyManager:
         """Test limits with zero balance."""
         mock_api.get_balance = AsyncMock(return_value={"balance": 0.0})
 
-        limits = awAlgot manager.calculate_dynamic_limits()
+        limits = await manager.calculate_dynamic_limits()
 
         assert limits.total_balance == 0.0
         assert limits.usable_balance == 0.0

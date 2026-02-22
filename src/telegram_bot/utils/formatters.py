@@ -59,12 +59,12 @@ def format_balance(balance_data: dict[str, Any]) -> str:
     return "\n".join(message)
 
 
-def format_market_item(item: dict[str, Any], show_detAlgols: bool = True) -> str:
+def format_market_item(item: dict[str, Any], show_details: bool = True) -> str:
     """Форматирует информацию о предмете маркета.
 
     Args:
         item: Словарь с данными о предмете
-        show_detAlgols: Показывать ли детальную информацию
+        show_details: Показывать ли детальную информацию
 
     Returns:
         str: Отформатированный текст с информацией о предмете
@@ -78,7 +78,7 @@ def format_market_item(item: dict[str, Any], show_detAlgols: bool = True) -> str
     message = [f"🏷️ *{title}*", f"💲 Цена: *${price_usd:.2f}*"]
 
     # Добавляем детали, если нужно
-    if show_detAlgols:
+    if show_details:
         # Внешний вид (для CS:GO)
         if "extra" in item and "exteriorName" in item["extra"]:
             message.append(f"🔍 Состояние: _{item['extra']['exteriorName']}_")
@@ -139,7 +139,7 @@ def format_market_items(
     )
 
     for i, item in enumerate(page_items, start=start_idx + 1):
-        item_text = format_market_item(item, show_detAlgols=False)
+        item_text = format_market_item(item, show_details=False)
         message.extend((f"{i}. {item_text}", ""))  # Пустая строка между предметами
 
     return "\n".join(message)
@@ -790,13 +790,13 @@ def format_target_competition_analysis(
 
 
 def format_aggregated_prices(
-    prices: list[dict[str, Any]], show_detAlgols: bool = True
+    prices: list[dict[str, Any]], show_details: bool = True
 ) -> str:
     """Форматирует агрегированные цены из API v1.1.0.
 
     Args:
         prices: Список агрегированных цен
-        show_detAlgols: Показывать ли детальную информацию
+        show_details: Показывать ли детальную информацию
 
     Returns:
         str: Отформатированный текст с ценами
@@ -826,7 +826,7 @@ def format_aggregated_prices(
             )
         )
 
-        if show_detAlgols and spread > 0:
+        if show_details and spread > 0:
             message.append(f"   📊 Спред: ${spread:.2f} ({spread_percent:.1f}%)")
 
         message.append("")  # Пустая строка

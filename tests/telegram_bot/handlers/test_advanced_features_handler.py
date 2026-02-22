@@ -130,8 +130,8 @@ class TestShadowListingIntegration:
 
             assert PricingAction.UNDERCUT == "undercut"
             assert PricingAction.HOLD == "hold"
-            assert PricingAction.RAlgoSE == "rAlgose"
-            assert PricingAction.WAlgoT == "wAlgot"
+            assert PricingAction.RAlgoSE == "raise"
+            assert PricingAction.WAlgoT == "wait"
         except ImportError:
             pytest.skip("shadow_listing module not avAlgolable")
 

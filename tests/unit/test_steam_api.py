@@ -46,7 +46,7 @@ class TestGetSteamPrice:
             mock_client.return_value.__aenter__.return_value.get = mock_get
 
             # Test
-            result = awAlgot get_steam_price("AK-47 | Redline (Field-Tested)", app_id=730)
+            result = await get_steam_price("AK-47 | Redline (Field-Tested)", app_id=730)
 
             # Assertions
             assert result is not None
@@ -70,9 +70,9 @@ class TestGetSteamPrice:
             mock_get = AsyncMock(return_value=mock_response)
             mock_client.return_value.__aenter__.return_value.get = mock_get
 
-            # Test - should rAlgose RateLimitError
-            with pytest.rAlgoses(Exception):  # Can be RateLimitError or general Exception
-                awAlgot get_steam_price("Test Item")
+            # Test - should raise RateLimitError
+            with pytest.raises(Exception):  # Can be RateLimitError or general Exception
+                await get_steam_price("Test Item")
 
             # Backoff should be active now
             backoff_status = get_backoff_status()
@@ -92,9 +92,9 @@ class TestGetSteamPrice:
             mock_get = AsyncMock(return_value=mock_response)
             mock_client.return_value.__aenter__.return_value.get = mock_get
 
-            # Test - should rAlgose ItemNotFoundError
-            with pytest.rAlgoses(Exception):  # Can be ItemNotFoundError or general Exception
-                awAlgot get_steam_price("Nonexistent Item")
+            # Test - should raise ItemNotFoundError
+            with pytest.raises(Exception):  # Can be ItemNotFoundError or general Exception
+                await get_steam_price("Nonexistent Item")
 
     @pytest.mark.asyncio()
     async def test_get_steam_price_server_error(self):
@@ -106,9 +106,9 @@ class TestGetSteamPrice:
             mock_get = AsyncMock(return_value=mock_response)
             mock_client.return_value.__aenter__.return_value.get = mock_get
 
-            # Test - should rAlgose SteamAPIError
-            with pytest.rAlgoses(Exception):  # Can be SteamAPIError or general Exception
-                awAlgot get_steam_price("Test Item")
+            # Test - should raise SteamAPIError
+            with pytest.raises(Exception):  # Can be SteamAPIError or general Exception
+                await get_steam_price("Test Item")
 
     @pytest.mark.asyncio()
     async def test_get_steam_price_timeout(self):
@@ -119,9 +119,9 @@ class TestGetSteamPrice:
             mock_get = AsyncMock(side_effect=httpx.TimeoutException("Timeout"))
             mock_client.return_value.__aenter__.return_value.get = mock_get
 
-            # Test - should rAlgose SteamAPIError
-            with pytest.rAlgoses(Exception):  # Can be SteamAPIError or general Exception
-                awAlgot get_steam_price("Test Item")
+            # Test - should raise SteamAPIError
+            with pytest.raises(Exception):  # Can be SteamAPIError or general Exception
+                await get_steam_price("Test Item")
 
 
 class TestCalculateArbitrage:
@@ -226,7 +226,7 @@ class TestGetPricesBatch:
         with patch("src.dmarket.steam_api.get_steam_price") as mock_get_price:
             mock_get_price.return_value = {"price": 10.0, "volume": 100}
 
-            results = awAlgot get_prices_batch(items, delay=0.1)
+            results = await get_prices_batch(items, delay=0.1)
 
             assert len(results) == 2
             assert all(item in results for item in items)
@@ -243,7 +243,7 @@ class TestGetPricesBatch:
             return {"price": 10.0, "volume": 100}
 
         with patch("src.dmarket.steam_api.get_steam_price", side_effect=mock_get_price):
-            results = awAlgot get_prices_batch(items, delay=0.1)
+            results = await get_prices_batch(items, delay=0.1)
 
             assert results["Good Item"] is not None
             assert results["Bad Item"] is None
@@ -258,7 +258,7 @@ class TestBackoffManagement:
 
         status = get_backoff_status()
         assert status["active"] is False
-        assert status["remAlgoning_seconds"] == 0
+        assert status["remaining_seconds"] == 0
 
     def test_get_backoff_status_inactive(self):
         """Test getting status when backoff is inactive."""
@@ -267,9 +267,9 @@ class TestBackoffManagement:
         status = get_backoff_status()
         assert status["active"] is False
         assert status["until"] is None
-        assert status["remAlgoning_seconds"] == 0
+        assert status["remaining_seconds"] == 0
         assert "duration" in status
 
 
-if __name__ == "__mAlgon__":
-    pytest.mAlgon([__file__, "-v"])
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

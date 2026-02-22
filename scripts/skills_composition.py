@@ -14,41 +14,41 @@ import yaml
 
 
 class SkillDependency:
-    """Represents a skill dependency with version constrAlgonts."""
+    """Represents a skill dependency with version constraints."""
 
-    def __init__(self, name: str, version_constrAlgont: str):
+    def __init__(self, name: str, version_constraint: str):
         self.name = name
-        self.version_constrAlgont = version_constrAlgont
-        self.min_version, self.max_version = self._parse_constrAlgont(version_constrAlgont)
+        self.version_constraint = version_constraint
+        self.min_version, self.max_version = self._parse_constraint(version_constraint)
 
-    def _parse_constrAlgont(self, constrAlgont: str) -> tuple[str | None, str | None]:
-        """Parse semver constrAlgont (e.g., '>=1.0.0', '^1.2.0', '~1.2.0')."""
-        if constrAlgont.startswith(">="):
-            return constrAlgont[2:], None
-        if constrAlgont.startswith("^"):
+    def _parse_constraint(self, constraint: str) -> tuple[str | None, str | None]:
+        """Parse semver constraint (e.g., '>=1.0.0', '^1.2.0', '~1.2.0')."""
+        if constraint.startswith(">="):
+            return constraint[2:], None
+        if constraint.startswith("^"):
             # ^1.2.3 means >=1.2.3 <2.0.0
-            version = constrAlgont[1:]
+            version = constraint[1:]
             parts = version.split(".")
             if len(parts) >= 1:
                 next_major = str(int(parts[0]) + 1) + ".0.0"
                 return version, next_major
-        elif constrAlgont.startswith("~"):
+        elif constraint.startswith("~"):
             # ~1.2.3 means >=1.2.3 <1.3.0
-            version = constrAlgont[1:]
+            version = constraint[1:]
             parts = version.split(".")
             if len(parts) >= 2:
                 next_minor = f"{parts[0]}.{int(parts[1]) + 1}.0"
                 return version, next_minor
-        elif constrAlgont.startswith("=="):
-            version = constrAlgont[2:]
+        elif constraint.startswith("=="):
+            version = constraint[2:]
             return version, version
         else:
             # Exact version
-            return constrAlgont, constrAlgont
+            return constraint, constraint
         return None, None
 
     def is_satisfied(self, version: str) -> bool:
-        """Check if a version satisfies this dependency constrAlgont."""
+        """Check if a version satisfies this dependency constraint."""
         # For exact version (min == max), check equality
         if self.min_version == self.max_version and self.min_version is not None:
             return self._compare_versions(version, self.min_version) == 0
@@ -123,8 +123,8 @@ class SkillCompositionManager:
                 # Format: "skill-name>=1.0.0"
                 match = re.match(r"^([a-z0-9-]+)(.*)$", dep)
                 if match:
-                    name, constrAlgont = match.groups()
-                    dependencies.append(SkillDependency(name, constrAlgont or ">=0.0.0"))
+                    name, constraint = match.groups()
+                    dependencies.append(SkillDependency(name, constraint or ">=0.0.0"))
         return dependencies
 
     def check_circular_dependencies(self) -> list[list[str]]:
@@ -190,7 +190,7 @@ class SkillCompositionManager:
         return len(missing) == 0, resolved, missing
 
     def validate_dependency_versions(self, skill_name: str) -> list[str]:
-        """Validate that all dependency version constrAlgonts are satisfied."""
+        """Validate that all dependency version constraints are satisfied."""
         errors = []
 
         if skill_name not in self.skills:
@@ -206,7 +206,7 @@ class SkillCompositionManager:
             if not dep.is_satisfied(actual_version):
                 errors.append(
                     f"Dependency '{dep.name}' version {actual_version} does not satisfy "
-                    f"constrAlgont '{dep.version_constrAlgont}' required by '{skill_name}'"
+                    f"constraint '{dep.version_constraint}' required by '{skill_name}'"
                 )
 
         return errors
@@ -223,7 +223,7 @@ class SkillCompositionManager:
             if deps:
                 lines.append("**Dependencies:**")
                 for dep in deps:
-                    lines.append(f"  - {dep.name} {dep.version_constrAlgont}")
+                    lines.append(f"  - {dep.name} {dep.version_constraint}")
             else:
                 lines.append("**No dependencies**")
 
@@ -232,7 +232,7 @@ class SkillCompositionManager:
         return "\n".join(lines)
 
 
-def mAlgon():
+def main():
     """MAlgon CLI for skills composition management."""
     import argparse
 
@@ -273,7 +273,7 @@ def mAlgon():
                 version = manager.skills[skill]["metadata"].get("version", "0.0.0")
                 print(f"  - {skill} (v{version})")
         else:
-            print("\n❌ FAlgoled to resolve. Missing skills:")
+            print("\n❌ Failed to resolve. Missing skills:")
             for skill in missing:
                 print(f"  - {skill}")
             sys.exit(1)
@@ -298,5 +298,5 @@ def mAlgon():
         print(manager.generate_dependency_graph())
 
 
-if __name__ == "__mAlgon__":
-    mAlgon()
+if __name__ == "__main__":
+    main()

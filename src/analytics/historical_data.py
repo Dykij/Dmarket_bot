@@ -181,11 +181,11 @@ class HistoricalDataCollector:
 
         try:
             # Collect from sales history
-            sales_points = awAlgot self._collect_from_sales_history(game, title, days)
+            sales_points = await self._collect_from_sales_history(game, title, days)
             points.extend(sales_points)
 
             # Collect from aggregated prices
-            agg_points = awAlgot self._collect_from_aggregated(game, title)
+            agg_points = await self._collect_from_aggregated(game, title)
             points.extend(agg_points)
 
             # Sort by timestamp
@@ -237,7 +237,7 @@ class HistoricalDataCollector:
 
         try:
             # Get sales history from API
-            history = awAlgot self.api.get_sales_history(
+            history = await self.api.get_sales_history(
                 game=game,
                 title=title,
                 period=f"{days}d",
@@ -305,7 +305,7 @@ class HistoricalDataCollector:
 
         try:
             # Get aggregated prices
-            aggregated = awAlgot self.api.get_aggregated_prices_bulk(
+            aggregated = await self.api.get_aggregated_prices_bulk(
                 game=game,
                 titles=[title],
                 limit=1,
@@ -368,7 +368,7 @@ class HistoricalDataCollector:
 
         for title in titles:
             try:
-                history = awAlgot self.collect_price_history(game, title, days)
+                history = await self.collect_price_history(game, title, days)
                 results[title] = history
             except Exception as e:
                 logger.warning(

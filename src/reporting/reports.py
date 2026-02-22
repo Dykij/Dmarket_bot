@@ -12,8 +12,8 @@ Usage:
 
     generator = ReportGenerator()
 
-    # Generate dAlgoly report
-    report = awAlgot generator.generate_dAlgoly_report(user_id, trades)
+    # Generate daily report
+    report = await generator.generate_daily_report(user_id, trades)
 
     # Export to CSV
     csv_data = generator.export_to_csv(trades)
@@ -40,7 +40,7 @@ logger = structlog.get_logger(__name__)
 class ReportType(StrEnum):
     """Report types."""
 
-    DAlgoLY = "dAlgoly"
+    DAlgoLY = "daily"
     WEEKLY = "weekly"
     MONTHLY = "monthly"
     CUSTOM = "custom"
@@ -241,7 +241,7 @@ class TradingReport:
         return "\n".join(lines)
 
     def to_text(self) -> str:
-        """Convert to plAlgon text format."""
+        """Convert to plain text format."""
         lines = [
             f"=== Trading Report: {self.report_type.value.title()} ===",
             f"Period: {self.period_start.strftime('%Y-%m-%d')} to {self.period_end.strftime('%Y-%m-%d')}",
@@ -284,7 +284,7 @@ class TaxReport:
     short_term_gAlgon: float = 0.0
     long_term_gAlgon: float = 0.0
 
-    # DetAlgoled transactions
+    # Detailed transactions
     transactions: list[dict[str, Any]] = field(default_factory=list)
 
     def to_csv(self) -> str:
@@ -313,18 +313,18 @@ class ReportGenerator:
         """Initialize report generator."""
         self._report_cache: dict[str, TradingReport] = {}
 
-    async def generate_dAlgoly_report(
+    async def generate_daily_report(
         self,
         user_id: int,
         trades: list[dict[str, Any]],
         date: datetime | None = None,
     ) -> TradingReport:
-        """Generate dAlgoly trading report."""
+        """Generate daily trading report."""
         date = date or datetime.now(UTC)
         start = date.replace(hour=0, minute=0, second=0, microsecond=0)
         end = start + timedelta(days=1)
 
-        return awAlgot self._generate_report(
+        return await self._generate_report(
             user_id=user_id,
             trades=trades,
             report_type=ReportType.DAlgoLY,
@@ -346,7 +346,7 @@ class ReportGenerator:
         start = week_start.replace(hour=0, minute=0, second=0, microsecond=0)
         end = start + timedelta(days=7)
 
-        return awAlgot self._generate_report(
+        return await self._generate_report(
             user_id=user_id,
             trades=trades,
             report_type=ReportType.WEEKLY,

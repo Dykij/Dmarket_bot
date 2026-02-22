@@ -203,13 +203,13 @@ class MarketSentimentAnalyzer:
 
         while self._running:
             try:
-                awAlgot self.update_market_health()
+                await self.update_market_health()
                 if self.high_risk_hunt:
-                    awAlgot self.scan_for_x5_opportunities()
+                    await self.scan_for_x5_opportunities()
             except Exception as e:
                 logger.exception("market_sentiment_update_error", error=str(e))
 
-            awAlgot asyncio.sleep(self.check_interval * 60)
+            await asyncio.sleep(self.check_interval * 60)
 
     async def stop(self) -> None:
         """Stop market monitoring."""
@@ -230,7 +230,7 @@ class MarketSentimentAnalyzer:
         for item_name in self.indicators:
             try:
                 # Fetch current price
-                current_data = awAlgot self._fetch_item_price(item_name)
+                current_data = await self._fetch_item_price(item_name)
                 if not current_data:
                     continue
 
@@ -372,11 +372,11 @@ class MarketSentimentAnalyzer:
         opportunities = []
 
         # Get extended list of items to scan
-        scan_items = awAlgot self._get_x5_scan_list()
+        scan_items = await self._get_x5_scan_list()
 
         for item_info in scan_items:
             try:
-                opportunity = awAlgot self._analyze_x5_potential(item_info)
+                opportunity = await self._analyze_x5_potential(item_info)
                 if opportunity and opportunity.confidence_score >= 60:
                     opportunities.append(opportunity)
                     logger.info(
@@ -409,7 +409,7 @@ class MarketSentimentAnalyzer:
         game = item_info.get("game", "csgo")
 
         # Fetch current and historical data
-        current_data = awAlgot self._fetch_item_price(item_name)
+        current_data = await self._fetch_item_price(item_name)
         if not current_data:
             return None
 
@@ -497,7 +497,7 @@ class MarketSentimentAnalyzer:
         try:
             # Use API client to fetch market data
             if hasattr(self.api_client, "get_market_items"):
-                result = awAlgot self.api_client.get_market_items(
+                result = await self.api_client.get_market_items(
                     game="csgo",
                     title=item_name,
                     limit=1,

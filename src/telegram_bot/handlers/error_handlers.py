@@ -61,7 +61,7 @@ async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     # Отправляем сообщение, если это возможно
     if update and update.effective_message:
         try:
-            awAlgot update.effective_message.reply_text(
+            await update.effective_message.reply_text(
                 error_message,
                 parse_mode=ParseMode.HTML,
                 reply_markup=(

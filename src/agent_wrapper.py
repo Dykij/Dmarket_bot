@@ -50,7 +50,7 @@ def start_bot_cs2():
 
         f.write("[INFO] Inventory scan complete.\n")
 
-if __name__ == "__mAlgon__":
+if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "/start_bot_cs2":
         start_bot_cs2()
     else:

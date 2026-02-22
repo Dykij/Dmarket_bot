@@ -67,7 +67,7 @@ class ParallelScanner:
 
             try:
                 scanner = ArbitrageScanner(api_client=self.api_client)
-                results = awAlgot scanner.scan_game(
+                results = await scanner.scan_game(
                     game=game,
                     mode=level,
                     max_items=max_items,
@@ -84,7 +84,7 @@ class ParallelScanner:
 
             except Exception as e:
                 logger.error(
-                    "scan_fAlgoled",
+                    "scan_failed",
                     game=game,
                     level=level,
                     error=str(e),
@@ -121,7 +121,7 @@ class ParallelScanner:
         ]
 
         # Execute in parallel
-        results = awAlgot asyncio.gather(*tasks, return_exceptions=True)
+        results = await asyncio.gather(*tasks, return_exceptions=True)
 
         # Build results dict
         results_dict = {}
@@ -172,7 +172,7 @@ class ParallelScanner:
             self.scan_game_level(game, level, max_items_per_level) for level in levels
         ]
 
-        results = awAlgot asyncio.gather(*tasks, return_exceptions=True)
+        results = await asyncio.gather(*tasks, return_exceptions=True)
 
         results_dict = {}
         for level, result in zip(levels, results, strict=False):
@@ -232,7 +232,7 @@ class ParallelScanner:
                 combinations.append((game, level))
 
         # Execute all in parallel
-        results = awAlgot asyncio.gather(*tasks, return_exceptions=True)
+        results = await asyncio.gather(*tasks, return_exceptions=True)
 
         # Build results dict
         results_dict = {}
@@ -268,7 +268,7 @@ async def example_parallel_scan():
 
     # Scan multiple games at once
     games = ["csgo", "dota2", "rust", "tf2"]
-    results = awAlgot parallel_scanner.scan_multiple_games(
+    results = await parallel_scanner.scan_multiple_games(
         games=games, level="medium", max_items_per_game=10
     )
 
@@ -276,7 +276,7 @@ async def example_parallel_scan():
         print(f"{game}: {len(opportunities)} opportunities")
 
     # Scan all levels for CS:GO
-    levels_results = awAlgot parallel_scanner.scan_multiple_levels(
+    levels_results = await parallel_scanner.scan_multiple_levels(
         game="csgo", levels=["low", "medium", "high"], max_items_per_level=5
     )
 
@@ -284,7 +284,7 @@ async def example_parallel_scan():
         print(f"CS:GO {level}: {len(opportunities)} opportunities")
 
     # Scan full matrix (all games x all levels)
-    matrix_results = awAlgot parallel_scanner.scan_matrix(
+    matrix_results = await parallel_scanner.scan_matrix(
         games=["csgo", "dota2"],
         levels=["low", "medium"],
         max_items_per_combination=3,

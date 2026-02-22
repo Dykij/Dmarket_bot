@@ -311,9 +311,9 @@ class TestAdaptiveRateLimiter:
         config = ProfessionalBotConfig()
         limiter = AdaptiveRateLimiter(config)
 
-        wAlgot_time = limiter.record_429_error(retry_after=30)
+        wait_time = limiter.record_429_error(retry_after=30)
 
-        assert wAlgot_time == 30.0
+        assert wait_time == 30.0
 
     def test_stats_tracking(self):
         """Тест отслеживания статистики."""
@@ -332,12 +332,12 @@ class TestAdaptiveRateLimiter:
 
     @pytest.mark.asyncio()
     async def test_disabled_limiter(self):
-        """При отключенном limiter wAlgot не вызывается."""
+        """При отключенном limiter wait не вызывается."""
         config = ProfessionalBotConfig(enable_adaptive_limiter=False)
         limiter = AdaptiveRateLimiter(config)
 
-        # wAlgot_before_request должен просто вернуться без блокировки
-        awAlgot limiter.wAlgot_before_request()
+        # wait_before_request должен просто вернуться без блокировки
+        await limiter.wait_before_request()
 
 
 # =============================================================================
@@ -514,7 +514,7 @@ class TestSilentModeLogger:
         notifier = AsyncMock()
         logger_instance = SilentModeLogger(config, notifier=notifier)
 
-        awAlgot logger_instance.log_purchase(
+        await logger_instance.log_purchase(
             item_name="Test Item",
             buy_price=10.0,
             expected_profit=1.0,
@@ -530,9 +530,9 @@ class TestSilentModeLogger:
         notifier = AsyncMock()
         logger_instance = SilentModeLogger(config, notifier=notifier)
 
-        awAlgot logger_instance.log_error(
+        await logger_instance.log_error(
             error_type="API_ERROR",
-            error_message="Connection fAlgoled",
+            error_message="Connection failed",
             critical=True,
         )
 
@@ -545,7 +545,7 @@ class TestSilentModeLogger:
         notifier = AsyncMock()
         logger_instance = SilentModeLogger(config, notifier=notifier)
 
-        awAlgot logger_instance.log_error(
+        await logger_instance.log_error(
             error_type="WARNING",
             error_message="Minor issue",
             critical=False,

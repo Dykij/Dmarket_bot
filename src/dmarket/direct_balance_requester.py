@@ -47,23 +47,23 @@ class DirectBalanceRequester:
         """Execute direct balance request via REST API using Ed25519.
 
         This method is an alternative way to get balance in case
-        of problems with the mAlgon method.
+        of problems with the main method.
 
         Returns:
             Dictionary with balance result or error
 
         Example:
             >>> requester = DirectBalanceRequester(api_url, key, secret, client_func)
-            >>> result = awAlgot requester.request()
+            >>> result = await requester.request()
             >>> if result["success"]:
             ...     print(f"Balance: ${result['data']['balance']:.2f}")
         """
         try:
             full_url, headers = self._prepare_request()
 
-            client = awAlgot self._get_client()
+            client = await self._get_client()
 
-            response = awAlgot call_with_circuit_breaker(
+            response = await call_with_circuit_breaker(
                 client.get, full_url, headers=headers, timeout=10
             )
 
@@ -74,7 +74,7 @@ class DirectBalanceRequester:
             return self._error_result(f"Circuit breaker open: {e}")
 
         except Exception as e:
-            logger.exception("direct_balance_request_fAlgoled", error=str(e))
+            logger.exception("direct_balance_request_failed", error=str(e))
             return self._error_result(str(e))
 
     def _prepare_request(self) -> tuple[str, dict[str, str]]:
@@ -99,7 +99,7 @@ class DirectBalanceRequester:
     def _generate_signature(self, timestamp: str) -> str:
         """Generate Ed25519 signature for request.
 
-        Falls back to HMAC-SHA256 if Ed25519 fAlgols.
+        Falls back to HMAC-SHA256 if Ed25519 fails.
         """
         string_to_sign = f"GET{self.ENDPOINT_BALANCE}{timestamp}"
 
@@ -108,14 +108,14 @@ class DirectBalanceRequester:
         try:
             return self._sign_with_ed25519(string_to_sign)
         except Exception as e:
-            logger.warning("ed25519_signing_fAlgoled_fallback_to_hmac", error=str(e))
+            logger.warning("ed25519_signing_failed_fallback_to_hmac", error=str(e))
             return self._sign_with_hmac(string_to_sign)
 
     def _sign_with_ed25519(self, message: str) -> str:
         """Sign message with Ed25519.
 
         RAlgoses:
-            Exception: If signing fAlgols
+            Exception: If signing fails
         """
         secret_key_bytes = self._parse_secret_key()
 

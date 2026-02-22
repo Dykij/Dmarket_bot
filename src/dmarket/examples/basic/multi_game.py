@@ -24,8 +24,8 @@ async def scan_game(
     """Сканирование одной игры."""
     print(f"  🎮 Сканирование {game.upper()}...")
 
-    items = awAlgot api.get_market_items(game=game, limit=50)
-    opportunities = awAlgot Algo_arbitrage.predict_best_opportunities(
+    items = await api.get_market_items(game=game, limit=50)
+    opportunities = await Algo_arbitrage.predict_best_opportunities(
         items=items, current_balance=balance, risk_level="medium"
     )
 
@@ -33,7 +33,7 @@ async def scan_game(
     return opportunities
 
 
-async def mAlgon():
+async def main():
     """Мультиигровой анализ."""
 
     # Инициализация
@@ -57,7 +57,7 @@ async def mAlgon():
 
     for game in games:
         try:
-            opps = awAlgot scan_game(api, Algo_arbitrage, game, balance_per_game)
+            opps = await scan_game(api, Algo_arbitrage, game, balance_per_game)
             # Добавляем game_id для каждой возможности
             for opp in opps:
                 opp["scanned_game"] = game
@@ -120,12 +120,12 @@ async def mAlgon():
         f"✅ Всего найдено {len(all_opportunities)} возможностей в {len(games)} играх"
     )
 
-    awAlgot api.close()
+    await api.close()
 
 
-if __name__ == "__mAlgon__":
+if __name__ == "__main__":
     if not os.getenv("DMARKET_PUBLIC_KEY"):
         print("❌ Ошибка: DMARKET_PUBLIC_KEY не найден")
         sys.exit(1)
 
-    asyncio.run(mAlgon())
+    asyncio.run(main())

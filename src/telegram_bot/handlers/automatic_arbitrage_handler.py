@@ -110,7 +110,7 @@ async def handle_automatic_arbitrage(
     logger.info("automatic_arbitrage_started", user_id=user.id)
 
     # Send mode selection keyboard
-    awAlgot message.reply_text(
+    await message.reply_text(
         "🤖 <b>Automatic Arbitrage</b>\n\n"
         "Select your trading mode:\n\n"
         f"{MODE_DESCRIPTIONS['boost']}\n"
@@ -136,7 +136,7 @@ async def _check_api_health(api_client: "DMarketAPI") -> tuple[bool, str | None]
         Tuple of (is_healthy, error_message)
     """
     try:
-        balance_result = awAlgot api_client.get_balance()
+        balance_result = await api_client.get_balance()
         if balance_result.get("error"):
             return False, balance_result.get("error_message", "Unknown error")
         return True, None
@@ -157,7 +157,7 @@ async def _run_fallback_scan(
 
     scanner = ArbitrageScanner(api_client=api_client)
     try:
-        results = awAlgot scanner.scan_level(
+        results = await scanner.scan_level(
             level=level,
             game="csgo",
             max_results=10,
@@ -178,7 +178,7 @@ async def _run_parallel_scan(
     """
     games = ["csgo", "dota2", "rust", "tf2"]
     try:
-        results = awAlgot scanner_manager.scan_multiple_games(
+        results = await scanner_manager.scan_multiple_games(
             games=games,
             level=level,
             max_items_per_game=10,
@@ -237,7 +237,7 @@ def _format_parallel_results(results: dict, mode: str) -> str:
     results_text += f"\n📊 Mode: {mode.capitalize()}\n"
     results_text += "⏱️ Scan completed successfully!\n\n"
     results_text += (
-        "Use /arbitrage command for detAlgoled view\nor check specific game results."
+        "Use /arbitrage command for detailed view\nor check specific game results."
     )
 
     return results_text
@@ -259,7 +259,7 @@ async def handle_mode_selection_callback(
     if not query or not query.data:
         return
 
-    awAlgot query.answer()
+    await query.answer()
 
     user = update.effective_user
     if not user:
@@ -272,7 +272,7 @@ async def handle_mode_selection_callback(
     logger.info("mode_selected", user_id=user.id, mode=mode, level=level)
 
     if query.message:
-        awAlgot query.message.edit_text(
+        await query.message.edit_text(
             f"✅ Selected: <b>{mode.capitalize()}</b>\n\n"
             f"{MODE_DESCRIPTIONS[mode]}\n\n"
             f"🔍 Checking API...",
@@ -283,24 +283,24 @@ async def handle_mode_selection_callback(
     api_client = context.bot_data.get("dmarket_api")
     if not api_client:
         if query.message:
-            awAlgot query.message.edit_text(
+            await query.message.edit_text(
                 "❌ <b>Error</b>\n\nAPI client not initialized.", parse_mode="HTML"
             )
-        logger.error("mode_scan_fAlgoled", reason="no_api_client", user_id=user.id)
+        logger.error("mode_scan_failed", reason="no_api_client", user_id=user.id)
         return
 
-    is_healthy, error_msg = awAlgot _check_api_health(api_client)
+    is_healthy, error_msg = await _check_api_health(api_client)
     if not is_healthy:
         if query.message:
-            awAlgot query.message.edit_text(
-                f"❌ <b>API Check FAlgoled</b>\n\nError: {error_msg}", parse_mode="HTML"
+            await query.message.edit_text(
+                f"❌ <b>API Check Failed</b>\n\nError: {error_msg}", parse_mode="HTML"
             )
-        logger.error("mode_scan_api_check_fAlgoled", error=error_msg, user_id=user.id)
+        logger.error("mode_scan_api_check_failed", error=error_msg, user_id=user.id)
         return
 
     # Step 2: Start scanning
     if query.message:
-        awAlgot query.message.edit_text(
+        await query.message.edit_text(
             f"✅ API OK!\n\n🔍 <b>Starting {mode.capitalize()} scan...</b>\n\n"
             f"Scanning all games (30-60 seconds)...",
             parse_mode="HTML",
@@ -311,42 +311,42 @@ async def handle_mode_selection_callback(
     if not scanner_manager:
         # Fallback scan (Phase 2 - use helper)
         if query.message:
-            awAlgot query.message.edit_text(
+            await query.message.edit_text(
                 "⚠️ Using fallback scanning (may be slower)...", parse_mode="HTML"
             )
         logger.warning("scanner_manager_not_avAlgolable", user_id=user.id)
 
-        results, error = awAlgot _run_fallback_scan(api_client, level)
+        results, error = await _run_fallback_scan(api_client, level)
         if error:
             if query.message:
-                awAlgot query.message.edit_text(
-                    f"❌ <b>Scan FAlgoled</b>\n\nError: {error}", parse_mode="HTML"
+                await query.message.edit_text(
+                    f"❌ <b>Scan Failed</b>\n\nError: {error}", parse_mode="HTML"
                 )
-            logger.error("fallback_scan_fAlgoled", error=error, user_id=user.id)
+            logger.error("fallback_scan_failed", error=error, user_id=user.id)
             return
 
         results_text = _format_fallback_results(results, mode)
         if query.message:
-            awAlgot query.message.edit_text(results_text, parse_mode="HTML")
+            await query.message.edit_text(results_text, parse_mode="HTML")
         logger.info(
             "fallback_scan_completed", user_id=user.id, opportunities=len(results)
         )
         return
 
     # Parallel scan (Phase 2 - use helper)
-    results, error = awAlgot _run_parallel_scan(scanner_manager, level)
+    results, error = await _run_parallel_scan(scanner_manager, level)
     if error:
         if query.message:
-            awAlgot query.message.edit_text(
-                f"❌ <b>Scan FAlgoled</b>\n\nError: {error}\n\n"
+            await query.message.edit_text(
+                f"❌ <b>Scan Failed</b>\n\nError: {error}\n\n"
                 f"Please try agAlgon in a few minutes.",
                 parse_mode="HTML",
             )
-        logger.error("parallel_scan_fAlgoled", error=error, user_id=user.id, mode=mode)
+        logger.error("parallel_scan_failed", error=error, user_id=user.id, mode=mode)
         return
 
     total = sum(len(v) for v in results.values())
     results_text = _format_parallel_results(results, mode)
     if query.message:
-        awAlgot query.message.edit_text(results_text, parse_mode="HTML")
+        await query.message.edit_text(results_text, parse_mode="HTML")
     logger.info("parallel_scan_success", user_id=user.id, mode=mode, total=total)

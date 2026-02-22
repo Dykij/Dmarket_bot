@@ -1,6 +1,6 @@
 """Tests for DMarketRateLimiter (Roadmap Task #3).
 
-Tests per-endpoint rate limiting with Algoolimiter integration.
+Tests per-endpoint rate limiting with aiolimiter integration.
 """
 
 import asyncio
@@ -95,7 +95,7 @@ async def test_acquire_allows_request_within_limit(rate_limiter):
     """Test acquire() allows requests within rate limit."""
     # Should complete quickly since limit not reached
     start_time = time.time()
-    awAlgot rate_limiter.acquire("market")
+    await rate_limiter.acquire("market")
     elapsed = time.time() - start_time
 
     # Should not block significantly
@@ -112,17 +112,17 @@ async def test_acquire_blocks_when_limit_reached():
     limiter = DMarketRateLimiter()
 
     # Override limit to 2 requests per second for fast testing
-    from Algoolimiter import AsyncLimiter
+    from aiolimiter import AsyncLimiter
 
     limiter._limiters["market"] = AsyncLimiter(max_rate=2, time_period=1.0)
 
     # Make 2 quick requests (should be fine)
-    awAlgot limiter.acquire("market")
-    awAlgot limiter.acquire("market")
+    await limiter.acquire("market")
+    await limiter.acquire("market")
 
     # Third request should block briefly
     start_time = time.time()
-    awAlgot limiter.acquire("market")
+    await limiter.acquire("market")
     elapsed = time.time() - start_time
 
     # Should have been delayed (~0.5s for third request in 1s window)
@@ -133,7 +133,7 @@ async def test_acquire_blocks_when_limit_reached():
 async def test_acquire_with_full_path(rate_limiter):
     """Test acquire() works with full endpoint paths."""
     # Pass full path instead of category
-    awAlgot rate_limiter.acquire("/exchange/v1/market/items")
+    await rate_limiter.acquire("/exchange/v1/market/items")
 
     # Should map to "market" category
     assert rate_limiter._usage_counts["market"] == 1
@@ -145,14 +145,14 @@ async def test_parallel_acquires_respect_limits():
     limiter = DMarketRateLimiter()
 
     # Override limit for testing
-    from Algoolimiter import AsyncLimiter
+    from aiolimiter import AsyncLimiter
 
     limiter._limiters["market"] = AsyncLimiter(max_rate=5, time_period=1.0)
 
     # Make 10 parallel requests
     start_time = time.time()
     tasks = [limiter.acquire("market") for _ in range(10)]
-    awAlgot asyncio.gather(*tasks)
+    await asyncio.gather(*tasks)
     elapsed = time.time() - start_time
 
     # Should take at least 0.8 seconds (allow tolerance for system delays)
@@ -217,9 +217,9 @@ def test_get_stats_initial_state(rate_limiter):
 async def test_get_stats_after_requests(rate_limiter):
     """Test get_stats() reflects actual usage."""
     # Make some requests
-    awAlgot rate_limiter.acquire("market")
-    awAlgot rate_limiter.acquire("market")
-    awAlgot rate_limiter.acquire("inventory")
+    await rate_limiter.acquire("market")
+    await rate_limiter.acquire("market")
+    await rate_limiter.acquire("inventory")
 
     # Record some errors
     rate_limiter.record_429_error("market")
@@ -256,7 +256,7 @@ def test_reset_stats(rate_limiter):
 @pytest.mark.asyncio()
 async def test_acquire_unknown_endpoint_uses_other(rate_limiter):
     """Test unknown endpoints use 'other' category."""
-    awAlgot rate_limiter.acquire("/some/unknown/path")
+    await rate_limiter.acquire("/some/unknown/path")
 
     # Should use "other" category
     assert rate_limiter._usage_counts["other"] == 1
@@ -265,8 +265,8 @@ async def test_acquire_unknown_endpoint_uses_other(rate_limiter):
 @pytest.mark.asyncio()
 async def test_acquire_case_insensitive(rate_limiter):
     """Test endpoint detection is case-insensitive."""
-    awAlgot rate_limiter.acquire("/EXCHANGE/V1/MARKET/ITEMS")
-    awAlgot rate_limiter.acquire("/exchange/v1/MARKET/items")
+    await rate_limiter.acquire("/EXCHANGE/V1/MARKET/ITEMS")
+    await rate_limiter.acquire("/exchange/v1/MARKET/items")
 
     # Both should map to "market"
     assert rate_limiter._usage_counts["market"] == 2
@@ -278,7 +278,7 @@ async def test_acquire_with_empty_string():
     limiter = DMarketRateLimiter()
 
     # Should not crash, should use "other"
-    awAlgot limiter.acquire("")
+    await limiter.acquire("")
     assert limiter._usage_counts["other"] == 1
 
 
@@ -308,7 +308,7 @@ async def test_realistic_usage_pattern():
 
     # Execute all
     start_time = time.time()
-    awAlgot asyncio.gather(*tasks)
+    await asyncio.gather(*tasks)
     elapsed = time.time() - start_time
 
     # Should complete (limits high enough)

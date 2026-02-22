@@ -224,7 +224,7 @@ def get_alert_notification_settings_keyboard(
 
     push_enabled = settings.get("push", True)
     telegram_enabled = settings.get("telegram", True)
-    emAlgol_enabled = settings.get("emAlgol", False)
+    email_enabled = settings.get("email", False)
     sound_enabled = settings.get("sound", True)
 
     keyboard = [
@@ -240,8 +240,8 @@ def get_alert_notification_settings_keyboard(
         ],
         [
             InlineKeyboardButton(
-                text=f"📧 EmAlgol: {'✅' if emAlgol_enabled else '❌'}",
-                callback_data="alert_setting_emAlgol",
+                text=f"📧 EmAlgol: {'✅' if email_enabled else '❌'}",
+                callback_data="alert_setting_email",
             ),
             InlineKeyboardButton(
                 text=f"🔊 Звук: {'✅' if sound_enabled else '❌'}",

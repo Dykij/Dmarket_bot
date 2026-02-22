@@ -279,7 +279,7 @@ class TestShadowListingManager:
         mock_api.get_market_items.return_value = {"objects": []}
 
         manager = ShadowListingManager(mock_api)
-        analysis = awAlgot manager.analyze_market_depth(
+        analysis = await manager.analyze_market_depth(
             item_title="Test Item",
             game="csgo",
             our_current_price=10.0,
@@ -302,7 +302,7 @@ class TestShadowListingManager:
         }
 
         manager = ShadowListingManager(mock_api)
-        analysis = awAlgot manager.analyze_market_depth(
+        analysis = await manager.analyze_market_depth(
             item_title="Test Item",
             game="csgo",
             our_current_price=12.0,
@@ -319,7 +319,7 @@ class TestShadowListingManager:
         mock_api.get_market_items.return_value = {"objects": []}
 
         manager = ShadowListingManager(mock_api)
-        price = awAlgot manager.calculate_optimal_price(
+        price = await manager.calculate_optimal_price(
             item_title="Test Item",
             buy_price=10.0,
             game="csgo",
@@ -347,7 +347,7 @@ class TestShadowListingManager:
         }
 
         manager = ShadowListingManager(mock_api)
-        analysis = awAlgot manager.analyze_market_depth(
+        analysis = await manager.analyze_market_depth(
             item_title="Test Item",
             game="csgo",
             our_current_price=13.0,

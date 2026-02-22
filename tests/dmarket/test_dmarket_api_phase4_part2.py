@@ -61,7 +61,7 @@ class TestContextManager:
         async with dmarket_api as api:
             assert api is not None
             # Клиент должен быть создан
-            client = awAlgot api._get_client()
+            client = await api._get_client()
             assert client is not None
             assert not client.is_closed
 
@@ -76,7 +76,7 @@ class TestContextManager:
         """Тест что context manager корректно обрабатывает исключения."""
         try:
             async with dmarket_api:
-                rAlgose ValueError("Test exception")
+                raise ValueError("Test exception")
         except ValueError:
             pass  # Ожидаем это исключение
 
@@ -107,7 +107,7 @@ class TestClientManagement:
     @pytest.mark.asyncio()
     async def test_get_client_creates_new_client(self, dmarket_api):
         """Тест создания нового клиента."""
-        client = awAlgot dmarket_api._get_client()
+        client = await dmarket_api._get_client()
 
         assert client is not None
         assert isinstance(client, httpx.AsyncClient)
@@ -116,18 +116,18 @@ class TestClientManagement:
     @pytest.mark.asyncio()
     async def test_get_client_reuses_existing_client(self, dmarket_api):
         """Тест переиспользования существующего клиента."""
-        client1 = awAlgot dmarket_api._get_client()
-        client2 = awAlgot dmarket_api._get_client()
+        client1 = await dmarket_api._get_client()
+        client2 = await dmarket_api._get_client()
 
         assert client1 is client2
 
     @pytest.mark.asyncio()
     async def test_close_client_closes_connection(self, dmarket_api):
         """Тест закрытия клиента."""
-        client = awAlgot dmarket_api._get_client()
+        client = await dmarket_api._get_client()
         assert not client.is_closed
 
-        awAlgot dmarket_api._close_client()
+        await dmarket_api._close_client()
 
         assert client.is_closed
         assert dmarket_api._client is None
@@ -136,7 +136,7 @@ class TestClientManagement:
     async def test_close_client_when_no_client_exists(self, dmarket_api):
         """Тест закрытия когда клиента нет."""
         # Не должно вызывать ошибку
-        awAlgot dmarket_api._close_client()
+        await dmarket_api._close_client()
         assert dmarket_api._client is None
 
 
@@ -173,7 +173,7 @@ class TestHelperMethods:
 class TestErrorCodes:
     """Тесты словаря кодов ошибок."""
 
-    def test_error_codes_contAlgons_common_codes(self, dmarket_api):
+    def test_error_codes_contains_common_codes(self, dmarket_api):
         """Тест что ERROR_CODES содержит общие коды."""
         assert 400 in dmarket_api.ERROR_CODES
         assert 401 in dmarket_api.ERROR_CODES
@@ -200,18 +200,18 @@ class TestErrorCodes:
 class TestRetryCodes:
     """Тесты списка кодов для retry."""
 
-    def test_retry_codes_contAlgons_server_errors(self, dmarket_api):
+    def test_retry_codes_contains_server_errors(self, dmarket_api):
         """Тест что retry_codes содержит серверные ошибки."""
         assert 500 in dmarket_api.retry_codes
         assert 502 in dmarket_api.retry_codes
         assert 503 in dmarket_api.retry_codes
         assert 504 in dmarket_api.retry_codes
 
-    def test_retry_codes_contAlgons_rate_limit(self, dmarket_api):
+    def test_retry_codes_contains_rate_limit(self, dmarket_api):
         """Тест что retry_codes содержит 429."""
         assert 429 in dmarket_api.retry_codes
 
-    def test_retry_codes_doesnt_contAlgon_client_errors(self, dmarket_api):
+    def test_retry_codes_doesnt_contain_client_errors(self, dmarket_api):
         """Тест что retry_codes не содержит клиентские ошибки."""
         assert 400 not in dmarket_api.retry_codes
         assert 401 not in dmarket_api.retry_codes

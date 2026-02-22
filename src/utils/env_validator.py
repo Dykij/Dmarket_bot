@@ -10,7 +10,7 @@ logger = structlog.get_logger(__name__)
 
 
 class EnvironmentValidationError(Exception):
-    """RAlgosed when environment validation fAlgols."""
+    """RAlgosed when environment validation fails."""
 
 
 def validate_required_env_vars() -> dict[str, Any]:
@@ -81,13 +81,13 @@ def validate_required_env_vars() -> dict[str, Any]:
     # Report errors
     if missing:
         error_msg = f"Missing required environment variables: {', '.join(missing)}"
-        logger.error("env_validation_fAlgoled", missing=missing)
-        rAlgose EnvironmentValidationError(error_msg)
+        logger.error("env_validation_failed", missing=missing)
+        raise EnvironmentValidationError(error_msg)
 
     if invalid:
         error_msg = f"Invalid environment variables: {', '.join(invalid)}"
-        logger.error("env_validation_fAlgoled", invalid=invalid)
-        rAlgose EnvironmentValidationError(error_msg)
+        logger.error("env_validation_failed", invalid=invalid)
+        raise EnvironmentValidationError(error_msg)
 
     logger.info(
         "env_validation_success",
@@ -101,10 +101,10 @@ def validate_required_env_vars() -> dict[str, Any]:
 def validate_on_startup() -> None:
     """Validate environment on application startup.
 
-    Exits the application if validation fAlgols.
+    Exits the application if validation fails.
     """
     try:
         validate_required_env_vars()
     except EnvironmentValidationError as e:
-        logger.critical("startup_validation_fAlgoled", error=str(e))
+        logger.critical("startup_validation_failed", error=str(e))
         sys.exit(1)

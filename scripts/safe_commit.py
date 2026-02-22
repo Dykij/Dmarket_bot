@@ -23,7 +23,7 @@ def safe_commit(message):
         subprocess.run(['git', 'add', '.'], check=True)
         subprocess.run(['git', 'commit', '-m', message, '--no-verify'], check=True)
     except subprocess.CalledProcessError as e:
-        print(f"Commit fAlgoled: {e}")
+        print(f"Commit failed: {e}")
         sys.exit(1)
 
     # 3. Capture HEAD after
@@ -40,7 +40,7 @@ def safe_commit(message):
         sys.exit(1)
 
 
-if __name__ == "__mAlgon__":
+if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Usage: python safe_commit.py \"Commit Message\"")
         sys.exit(1)

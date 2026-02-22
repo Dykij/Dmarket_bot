@@ -4,9 +4,9 @@ import asyncio
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import Algoohttp
+import aiohttp
 import pytest
-from Algoohttp import WSMessage, WSMsgType
+from aiohttp import WSMessage, WSMsgType
 
 from src.dmarket.dmarket_api import DMarketAPI
 from src.utils.websocket_client import DMarketWebSocketClient
@@ -76,13 +76,13 @@ class MockWebSocket:
 
     async def __anext__(self):
         if not self.messages:
-            rAlgose StopAsyncIteration
+            raise StopAsyncIteration
         return self.messages.pop(0)
 
     async def receive(self):
         """Получить следующее сообщение."""
         if not self.messages:
-            rAlgose StopAsyncIteration
+            raise StopAsyncIteration
         return self.messages.pop(0)
 
 
@@ -102,7 +102,7 @@ async def test_connect_success(websocket_client):
 
     try:
         # Вызываем метод
-        result = awAlgot websocket_client.connect()
+        result = await websocket_client.connect()
 
         # Проверки
         assert result is True
@@ -114,18 +114,18 @@ async def test_connect_success(websocket_client):
 
 
 @pytest.mark.asyncio()
-@patch("Algoohttp.ClientSession")
+@patch("aiohttp.ClientSession")
 async def test_connect_token_error(mock_session, websocket_client):
     """Тест ошибки получения токена."""
     # Подготовка моков
     mock_session_instance = MagicMock()
     mock_session_instance.ws_connect = AsyncMock(
-        side_effect=Algoohttp.ClientError("Connection fAlgoled"),
+        side_effect=aiohttp.ClientError("Connection failed"),
     )
     mock_session.return_value = mock_session_instance
 
     # Вызов тестируемого метода
-    result = awAlgot websocket_client.connect()
+    result = await websocket_client.connect()
 
     # Проверки
     assert result is False
@@ -133,7 +133,7 @@ async def test_connect_token_error(mock_session, websocket_client):
 
 
 @pytest.mark.asyncio()
-@patch("Algoohttp.ClientSession")
+@patch("aiohttp.ClientSession")
 async def test_connect_no_token(mock_session, websocket_client):
     """Тест таймаута при подключении."""
     # Подготовка моков
@@ -144,7 +144,7 @@ async def test_connect_no_token(mock_session, websocket_client):
     mock_session.return_value = mock_session_instance
 
     # Вызов тестируемого метода
-    result = awAlgot websocket_client.connect()
+    result = await websocket_client.connect()
 
     # Проверки
     assert result is False
@@ -160,7 +160,7 @@ async def test_subscribe(websocket_client):
     websocket_client.ws_connection.send_json = AsyncMock()
 
     # Test subscribing
-    result = awAlgot websocket_client.subscribe("prices:update")
+    result = await websocket_client.subscribe("prices:update")
 
     # Verify subscription was successful
     assert result is True
@@ -174,7 +174,7 @@ async def test_subscribe_not_connected(websocket_client):
     websocket_client.is_connected = False
 
     # Вызов тестируемого метода
-    result = awAlgot websocket_client.subscribe("prices:update")
+    result = await websocket_client.subscribe("prices:update")
 
     # Проверки
     assert result is False
@@ -191,7 +191,7 @@ async def test_unsubscribe(websocket_client):
     websocket_client.subscriptions = {"market:update", "prices:update"}
 
     # Вызов тестируемого метода
-    result = awAlgot websocket_client.unsubscribe("prices:update")
+    result = await websocket_client.unsubscribe("prices:update")
 
     # Проверки
     assert result is True
@@ -242,7 +242,7 @@ async def test_listen_message_handling(mock_create_task, websocket_client):
     # Имитируем один вызов listen перед ошибкой
     # Mock _attempt_reconnect to prevent actual reconnection
     with patch.object(websocket_client, "_attempt_reconnect", AsyncMock()):
-        awAlgot websocket_client.listen()
+        await websocket_client.listen()
 
     # Проверки
     handler.assert_called_once()
@@ -265,7 +265,7 @@ async def test_close(websocket_client):
     websocket_client.is_connected = True
 
     # Close connection
-    awAlgot websocket_client.close()
+    await websocket_client.close()
 
     # Verify connection was closed
     assert websocket_client.is_connected is False
@@ -295,7 +295,7 @@ async def test_authenticate(websocket_client):
     websocket_client.ws_connection = AsyncMock()
     websocket_client.ws_connection.send_json = AsyncMock()
 
-    awAlgot websocket_client._authenticate()
+    await websocket_client._authenticate()
 
     websocket_client.ws_connection.send_json.assert_called_once()
     call_args = websocket_client.ws_connection.send_json.call_args[0][0]
@@ -309,7 +309,7 @@ async def test_authenticate_not_connected(websocket_client):
     """Тест аутентификации при отсутствии соединения."""
     websocket_client.is_connected = False
 
-    awAlgot websocket_client._authenticate()
+    await websocket_client._authenticate()
 
     # Не должно быть исключений, просто логирование
 
@@ -322,7 +322,7 @@ async def test_resubscribe(websocket_client):
     websocket_client.ws_connection.send_json = AsyncMock()
     websocket_client.subscriptions = {"market:update", "prices:update"}
 
-    awAlgot websocket_client._resubscribe()
+    await websocket_client._resubscribe()
 
     # Должно быть два вызова subscribe
     assert websocket_client.ws_connection.send_json.call_count == 2
@@ -336,7 +336,7 @@ async def test_unsubscribe_all(websocket_client):
     websocket_client.ws_connection.send_json = AsyncMock()
     websocket_client.subscriptions = {"market:update", "prices:update"}
 
-    awAlgot websocket_client._unsubscribe_all()
+    await websocket_client._unsubscribe_all()
 
     # Должно быть два вызова unsubscribe
     assert websocket_client.ws_connection.send_json.call_count == 2
@@ -348,19 +348,19 @@ async def test_handle_message_auth_success(websocket_client):
     """Тест обработки успешной аутентификации."""
     message_data = json.dumps({"type": "auth", "status": "success"})
 
-    awAlgot websocket_client._handle_message(message_data)
+    await websocket_client._handle_message(message_data)
 
     assert websocket_client.authenticated is True
 
 
 @pytest.mark.asyncio()
-async def test_handle_message_auth_fAlgolure(websocket_client):
+async def test_handle_message_auth_failure(websocket_client):
     """Тест обработки неудачной аутентификации."""
     message_data = json.dumps(
         {"type": "auth", "status": "error", "error": "Invalid API key"}
     )
 
-    awAlgot websocket_client._handle_message(message_data)
+    await websocket_client._handle_message(message_data)
 
     assert websocket_client.authenticated is False
 
@@ -373,7 +373,7 @@ async def test_handle_message_subscription(websocket_client):
     )
 
     # Не должно быть исключений
-    awAlgot websocket_client._handle_message(message_data)
+    await websocket_client._handle_message(message_data)
 
 
 @pytest.mark.asyncio()
@@ -382,7 +382,7 @@ async def test_handle_message_json_decode_error(websocket_client):
     message_data = "invalid json {"
 
     # Не должно быть исключений, только логирование
-    awAlgot websocket_client._handle_message(message_data)
+    await websocket_client._handle_message(message_data)
 
 
 @pytest.mark.asyncio()
@@ -392,7 +392,7 @@ async def test_attempt_reconnect_success(websocket_client):
 
     with patch.object(websocket_client, "connect", AsyncMock(return_value=True)):
         with patch("asyncio.sleep", AsyncMock()):
-            awAlgot websocket_client._attempt_reconnect()
+            await websocket_client._attempt_reconnect()
 
     assert websocket_client.reconnect_attempts == 3
 
@@ -403,7 +403,7 @@ async def test_attempt_reconnect_max_attempts(websocket_client):
     websocket_client.reconnect_attempts = 10
     websocket_client.max_reconnect_attempts = 10
 
-    awAlgot websocket_client._attempt_reconnect()
+    await websocket_client._attempt_reconnect()
 
     # Должен выйти без попыток
     assert websocket_client.reconnect_attempts == 10
@@ -428,7 +428,7 @@ async def test_send_message(websocket_client):
     websocket_client.ws_connection.send_json = AsyncMock()
 
     message = {"type": "custom", "data": {"key": "value"}}
-    result = awAlgot websocket_client.send_message(message)
+    result = await websocket_client.send_message(message)
 
     assert result is True
     websocket_client.ws_connection.send_json.assert_called_once_with(message)
@@ -439,7 +439,7 @@ async def test_send_message_not_connected(websocket_client):
     """Тест отправки сообщения при отсутствии соединения."""
     websocket_client.is_connected = False
 
-    result = awAlgot websocket_client.send_message({"type": "test"})
+    result = await websocket_client.send_message({"type": "test"})
 
     assert result is False
 
@@ -451,7 +451,7 @@ async def test_subscribe_to_market_updates(websocket_client):
     websocket_client.ws_connection = AsyncMock()
     websocket_client.ws_connection.send_json = AsyncMock()
 
-    result = awAlgot websocket_client.subscribe_to_market_updates("csgo")
+    result = await websocket_client.subscribe_to_market_updates("csgo")
 
     assert result is True
     websocket_client.ws_connection.send_json.assert_called_once()
@@ -468,7 +468,7 @@ async def test_subscribe_to_item_updates(websocket_client):
     websocket_client.ws_connection.send_json = AsyncMock()
 
     item_ids = ["item1", "item2", "item3"]
-    result = awAlgot websocket_client.subscribe_to_item_updates(item_ids)
+    result = await websocket_client.subscribe_to_item_updates(item_ids)
 
     assert result is True
     websocket_client.ws_connection.send_json.assert_called_once()
@@ -485,7 +485,7 @@ async def test_subscribe_with_params(websocket_client):
     websocket_client.ws_connection.send_json = AsyncMock()
 
     params = {"filter": "price>100"}
-    result = awAlgot websocket_client.subscribe("custom:topic", params)
+    result = await websocket_client.subscribe("custom:topic", params)
 
     assert result is True
     call_args = websocket_client.ws_connection.send_json.call_args[0][0]
@@ -497,7 +497,7 @@ async def test_connect_already_connected(websocket_client):
     """Тест подключения когда уже подключен."""
     websocket_client.is_connected = True
 
-    result = awAlgot websocket_client.connect()
+    result = await websocket_client.connect()
 
     assert result is True
 
@@ -508,13 +508,13 @@ async def test_listen_cancelled_error(websocket_client):
     websocket_client.is_connected = True
 
     async def mock_receive():
-        rAlgose asyncio.CancelledError
+        raise asyncio.CancelledError
 
     websocket_client.ws_connection = AsyncMock()
     websocket_client.ws_connection.receive = mock_receive
 
     # Не должно быть исключений
-    awAlgot websocket_client.listen()
+    await websocket_client.listen()
 
 
 @pytest.mark.asyncio()
@@ -527,7 +527,7 @@ async def test_listen_closed_message(websocket_client):
     websocket_client.is_connected = True
 
     with patch.object(websocket_client, "_attempt_reconnect", AsyncMock()):
-        awAlgot websocket_client.listen()
+        await websocket_client.listen()
 
     assert websocket_client.is_connected is False
 
@@ -540,14 +540,14 @@ async def test_connect_with_full_flow(websocket_client):
     mock_ws = AsyncMock()
     mock_ws.send_json = AsyncMock()
 
-    with patch("Algoohttp.ClientSession", return_value=mock_session):
+    with patch("aiohttp.ClientSession", return_value=mock_session):
         mock_session.ws_connect = AsyncMock(return_value=mock_ws)
 
         # Добавляем подписки перед подключением
         websocket_client.subscriptions.add("test:topic")
 
         # Подключаемся
-        result = awAlgot websocket_client.connect()
+        result = await websocket_client.connect()
 
         # Проверки
         assert result is True
@@ -564,7 +564,7 @@ async def test_authenticate_no_api_keys(websocket_client):
     websocket_client.api_client.secret_key = None
 
     # Не должно вызывать ошибок
-    awAlgot websocket_client._authenticate()
+    await websocket_client._authenticate()
 
 
 @pytest.mark.asyncio()
@@ -573,7 +573,7 @@ async def test_resubscribe_empty_subscriptions(websocket_client):
     websocket_client.subscriptions = set()
 
     # Не должно вызывать ошибок
-    awAlgot websocket_client._resubscribe()
+    await websocket_client._resubscribe()
 
 
 @pytest.mark.asyncio()
@@ -582,7 +582,7 @@ async def test_unsubscribe_all_empty_subscriptions(websocket_client):
     websocket_client.subscriptions = set()
 
     # Не должно вызывать ошибок
-    awAlgot websocket_client._unsubscribe_all()
+    await websocket_client._unsubscribe_all()
 
 
 @pytest.mark.asyncio()
@@ -594,16 +594,16 @@ async def test_handle_message_with_handler_exception(websocket_client):
     """
 
     # Регистрируем handler, который выбрасывает исключение
-    async def fAlgoling_handler(message):
-        rAlgose ValueError("Handler error")
+    async def failing_handler(message):
+        raise ValueError("Handler error")
 
-    websocket_client.register_handler("test:event", fAlgoling_handler)
+    websocket_client.register_handler("test:event", failing_handler)
 
     message_data = json.dumps({"type": "test:event", "data": "test"})
 
     # ValueError не перехватывается - пробрасывается наружу
-    with pytest.rAlgoses(ValueError, match="Handler error"):
-        awAlgot websocket_client._handle_message(message_data)
+    with pytest.raises(ValueError, match="Handler error"):
+        await websocket_client._handle_message(message_data)
 
 
 @pytest.mark.asyncio()
@@ -616,8 +616,8 @@ async def test_handle_message_generic_exception(websocket_client):
     # Создаём некорректные данные, которые вызовут исключение
     with patch("json.loads", side_effect=Exception("Generic error")):
         # Exception не перехватывается - пробрасывается наружу
-        with pytest.rAlgoses(Exception, match="Generic error"):
-            awAlgot websocket_client._handle_message('{"type": "test"}')
+        with pytest.raises(Exception, match="Generic error"):
+            await websocket_client._handle_message('{"type": "test"}')
 
 
 @pytest.mark.asyncio()
@@ -632,21 +632,21 @@ async def test_handle_auth_response_success(websocket_client):
 @pytest.mark.asyncio()
 async def test_handle_auth_response_with_error(websocket_client):
     """Тест обработки ошибки аутентификации с сообщением."""
-    message = {"status": "fAlgoled", "error": "Invalid credentials"}
+    message = {"status": "failed", "error": "Invalid credentials"}
     websocket_client._handle_auth_response(message)
 
     assert websocket_client.authenticated is False
 
 
 @pytest.mark.asyncio()
-async def test_attempt_reconnect_fAlgoled(websocket_client):
+async def test_attempt_reconnect_failed(websocket_client):
     """Тест неудачного реконнекта."""
     websocket_client.reconnect_attempts = 2
 
     mock_connect = AsyncMock(return_value=False)
     with patch.object(websocket_client, "connect", mock_connect):
         with patch("asyncio.sleep", AsyncMock()):
-            awAlgot websocket_client._attempt_reconnect()
+            await websocket_client._attempt_reconnect()
 
     assert websocket_client.reconnect_attempts == 3
 
@@ -665,7 +665,7 @@ async def test_attempt_reconnect_exponential_backoff(websocket_client):
     mock_connect = AsyncMock(return_value=False)
     with patch.object(websocket_client, "connect", mock_connect):
         with patch("asyncio.sleep", side_effect=mock_sleep):
-            awAlgot websocket_client._attempt_reconnect()
+            await websocket_client._attempt_reconnect()
 
     # 2^6 = 64, но максимум 60 секунд
     assert sleep_called_with == 60
@@ -697,7 +697,7 @@ async def test_close_without_connection(websocket_client):
     websocket_client.session = None
 
     # Не должно вызывать ошибок
-    awAlgot websocket_client.close()
+    await websocket_client.close()
 
 
 @pytest.mark.asyncio()
@@ -712,7 +712,7 @@ async def test_close_with_subscriptions(websocket_client):
     websocket_client.is_connected = True
     websocket_client.subscriptions = {"topic1", "topic2"}
 
-    awAlgot websocket_client.close()
+    await websocket_client.close()
 
     # Проверяем что соединение закрыто
     assert websocket_client.is_connected is False
@@ -725,13 +725,13 @@ async def test_listen_client_error(websocket_client):
     websocket_client.is_connected = True
 
     async def mock_receive():
-        rAlgose Algoohttp.ClientError("Connection error")
+        raise aiohttp.ClientError("Connection error")
 
     websocket_client.ws_connection = AsyncMock()
     websocket_client.ws_connection.receive = mock_receive
 
     with patch.object(websocket_client, "_attempt_reconnect", AsyncMock()):
-        awAlgot websocket_client.listen()
+        await websocket_client.listen()
 
     assert websocket_client.is_connected is False
 
@@ -761,7 +761,7 @@ async def test_listen_multiple_messages(websocket_client):
     websocket_client.is_connected = True
 
     with patch.object(websocket_client, "_attempt_reconnect", AsyncMock()):
-        awAlgot websocket_client.listen()
+        await websocket_client.listen()
 
     # Handler должен быть вызван дважды
     assert handler.call_count == 2
@@ -775,7 +775,7 @@ async def test_subscribe_to_market_updates_default_game(websocket_client):
     websocket_client.ws_connection.send_json = AsyncMock()
 
     # Используем значение по умолчанию
-    result = awAlgot websocket_client.subscribe_to_market_updates()
+    result = await websocket_client.subscribe_to_market_updates()
 
     assert result is True
     call_args = websocket_client.ws_connection.send_json.call_args[0][0]
@@ -790,7 +790,7 @@ async def test_unsubscribe_not_in_subscriptions(websocket_client):
     websocket_client.ws_connection.send_json = AsyncMock()
     websocket_client.subscriptions = set()
 
-    result = awAlgot websocket_client.unsubscribe("nonexistent:topic")
+    result = await websocket_client.unsubscribe("nonexistent:topic")
 
     assert result is True
     # Не должно быть ошибок при попытке удаления
@@ -807,7 +807,7 @@ async def test_handle_message_multiple_handlers_for_event(websocket_client):
 
     message_data = json.dumps({"type": "multi:event", "data": "test"})
 
-    awAlgot websocket_client._handle_message(message_data)
+    await websocket_client._handle_message(message_data)
 
     # Оба обработчика должны быть вызваны
     handler1.assert_called_once()

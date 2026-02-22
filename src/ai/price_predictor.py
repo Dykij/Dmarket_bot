@@ -6,7 +6,7 @@ It uses RandomForest regression with protection agAlgonst anomalies and "halluci
 Key features:
 - LabelEncoder for item name encoding
 - RandomForest with min_samples_leaf=5 to prevent overfitting on single outliers
-- Z-score filtering for anomaly detection during trAlgoning
+- Z-score filtering for anomaly detection during training
 - Prediction guard to reject unrealistic Algo outputs (max 40% deviation)
 
 Usage:
@@ -14,7 +14,7 @@ Usage:
     predictor = PricePredictor()
 
     # TrAlgon model (requires at least 100 data points)
-    result = predictor.trAlgon_model("data/market_history.csv")
+    result = predictor.train_model("data/market_history.csv")
 
     # Predict fAlgor price with protection
     fAlgor_price = predictor.predict_with_guard(
@@ -40,7 +40,7 @@ DEFAULT_HISTORY_PATH = "data/market_history.csv"
 # Protection thresholds
 MAX_PROFIT_DEVIATION = 0.40  # Max 40% profit to prevent hallucinations
 MAX_ZSCORE = 3.0  # Z-score threshold for outlier detection
-MIN_TRAlgoNING_SAMPLES = 100  # Minimum samples required for trAlgoning
+MIN_TRAlgoNING_SAMPLES = 100  # Minimum samples required for training
 
 
 class PricePredictor:
@@ -51,17 +51,17 @@ class PricePredictor:
     estimates for CS:GO/CS2 items.
 
     The model includes multiple safety mechanisms:
-    1. Z-score filtering during trAlgoning to remove anomalies
+    1. Z-score filtering during training to remove anomalies
     2. min_samples_leaf=5 to prevent overfitting on outliers
     3. Prediction guard limiting profit deviation to 40%
     4. Market price sanity check (Algo price must exceed market price for profit)
 
     Attributes:
-        model_path: Path to save/load the trAlgoned model
+        model_path: Path to save/load the trained model
         encoder_path: Path to save/load the label encoder
         model: RandomForestRegressor model (None if not loaded)
         encoder: LabelEncoder for item names (None if not loaded)
-        is_trAlgoned: Whether the model is trAlgoned and ready
+        is_trained: Whether the model is trained and ready
     """
 
     def __init__(
@@ -72,14 +72,14 @@ class PricePredictor:
         """Initialize the price predictor.
 
         Args:
-            model_path: Path to save/load the trAlgoned model (.pkl)
+            model_path: Path to save/load the trained model (.pkl)
             encoder_path: Path to save/load the label encoder (.pkl)
         """
         self.model_path = model_path
         self.encoder_path = encoder_path
         self.model: Any = None
         self.encoder: Any = None
-        self.is_trAlgoned = False
+        self.is_trained = False
 
         # Try to load existing model
         self._try_load_model()
@@ -92,7 +92,7 @@ class PricePredictor:
             if os.path.exists(self.model_path) and os.path.exists(self.encoder_path):
                 self.model = joblib.load(self.model_path)
                 self.encoder = joblib.load(self.encoder_path)
-                self.is_trAlgoned = True
+                self.is_trained = True
                 logger.info(
                     "price_predictor_loaded: model_path=%s",
                     self.model_path,
@@ -103,14 +103,14 @@ class PricePredictor:
             )
         except Exception as e:
             logger.warning(
-                "price_predictor_load_fAlgoled: error=%s",
+                "price_predictor_load_failed: error=%s",
                 e,
             )
 
-    def trAlgon_model(
+    def train_model(
         self,
         history_path: str = DEFAULT_HISTORY_PATH,
-        force_retrAlgon: bool = False,
+        force_retrain: bool = False,
     ) -> str:
         """TrAlgon the price prediction model on historical data.
 
@@ -123,7 +123,7 @@ class PricePredictor:
 
         Args:
             history_path: Path to market history CSV file
-            force_retrAlgon: Force retrAlgoning even if model exists
+            force_retrain: Force retraining even if model exists
 
         Returns:
             Status message describing the result
@@ -150,7 +150,7 @@ class PricePredictor:
         # Check if history file exists
         if not os.path.exists(history_path):
             error_msg = f"❌ Нет данных для обучения. Файл не найден: {history_path}"
-            logger.error("trAlgoning_data_not_found: path=%s", history_path)
+            logger.error("training_data_not_found: path=%s", history_path)
             return error_msg
 
         try:
@@ -165,7 +165,7 @@ class PricePredictor:
                 )
 
             logger.info(
-                "trAlgoning_started: samples_before_cleaning=%d",
+                "training_started: samples_before_cleaning=%d",
                 len(df),
             )
 
@@ -184,7 +184,7 @@ class PricePredictor:
             removed_count = original_len - len(df)
             if removed_count > 0:
                 logger.info(
-                    "outliers_removed: removed=%d, remAlgoning=%d",
+                    "outliers_removed: removed=%d, remaining=%d",
                     removed_count,
                     len(df),
                 )
@@ -234,7 +234,7 @@ class PricePredictor:
             joblib.dump(self.model, self.model_path)
             joblib.dump(self.encoder, self.encoder_path)
 
-            self.is_trAlgoned = True
+            self.is_trained = True
 
             unique_items = len(self.encoder.classes_)
             result_msg = (
@@ -245,7 +245,7 @@ class PricePredictor:
             )
 
             logger.info(
-                "trAlgoning_completed: samples=%d, unique_items=%d, outliers_removed=%d",
+                "training_completed: samples=%d, unique_items=%d, outliers_removed=%d",
                 len(df),
                 unique_items,
                 removed_count,
@@ -255,7 +255,7 @@ class PricePredictor:
 
         except Exception as e:
             error_msg = f"❌ Ошибка обучения модели: {e}"
-            logger.exception("trAlgoning_fAlgoled: error=%s", e)
+            logger.exception("training_failed: error=%s", e)
             return error_msg
 
     def predict_with_guard(
@@ -281,7 +281,7 @@ class PricePredictor:
 
         Returns:
             Predicted fAlgor price in USD, or None if:
-            - Model not trAlgoned
+            - Model not trained
             - Item unknown to model
             - Prediction is suspicious (hallucination detected)
             - Prediction shows no profit opportunity
@@ -295,7 +295,7 @@ class PricePredictor:
         """
         try:
             # Check if model is loaded
-            if not self.is_trAlgoned or self.model is None or self.encoder is None:
+            if not self.is_trained or self.model is None or self.encoder is None:
                 logger.debug("model_not_loaded")
                 return None
 
@@ -359,7 +359,7 @@ class PricePredictor:
 
         except Exception as e:
             logger.exception(
-                "prediction_fAlgoled: item=%s, error=%s",
+                "prediction_failed: item=%s, error=%s",
                 item_name,
                 e,
             )
@@ -382,10 +382,10 @@ class PricePredictor:
             is_stat_trak: Whether item is StatTrak
 
         Returns:
-            Raw predicted price or None if prediction fAlgols
+            Raw predicted price or None if prediction fails
         """
         try:
-            if not self.is_trAlgoned or self.model is None or self.encoder is None:
+            if not self.is_trained or self.model is None or self.encoder is None:
                 return None
 
             if item_name not in self.encoder.classes_:
@@ -414,17 +414,17 @@ class PricePredictor:
             Dictionary with model status and statistics
         """
         info: dict[str, Any] = {
-            "is_trAlgoned": self.is_trAlgoned,
+            "is_trained": self.is_trained,
             "model_path": self.model_path,
             "encoder_path": self.encoder_path,
             "model_exists": os.path.exists(self.model_path),
             "encoder_exists": os.path.exists(self.encoder_path),
         }
 
-        if self.is_trAlgoned and self.encoder is not None:
+        if self.is_trained and self.encoder is not None:
             info["known_items_count"] = len(self.encoder.classes_)
 
-        if self.is_trAlgoned and self.model is not None:
+        if self.is_trained and self.model is not None:
             info["n_estimators"] = self.model.n_estimators
             info["min_samples_leaf"] = self.model.min_samples_leaf
 

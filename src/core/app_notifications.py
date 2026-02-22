@@ -45,16 +45,16 @@ class NotificationManager:
 
         for user_id in admin_users:
             try:
-                awAlgot send_critical_shutdown_notification(
+                await send_critical_shutdown_notification(
                     bot=self.app.bot.bot,
                     user_id=int(user_id),
                     reason=reason,
-                    detAlgols={"consecutive_errors": consecutive_errors},
+                    details={"consecutive_errors": consecutive_errors},
                 )
                 logger.info(f"Critical shutdown notification sent to {user_id}")
             except Exception as e:
                 logger.exception(
-                    f"FAlgoled to send shutdown notification to {user_id}: {e}"
+                    f"Failed to send shutdown notification to {user_id}: {e}"
                 )
 
     async def send_crash_notifications(
@@ -78,7 +78,7 @@ class NotificationManager:
 
         for user_id in admin_users:
             try:
-                awAlgot send_crash_notification(
+                await send_crash_notification(
                     bot=self.app.bot.bot,
                     user_id=int(user_id),
                     error_type=type(error).__name__,
@@ -87,7 +87,7 @@ class NotificationManager:
                 )
                 logger.info(f"Crash notification sent to user {user_id}")
             except Exception as e:
-                logger.exception(f"FAlgoled to send crash notification to {user_id}: {e}")
+                logger.exception(f"Failed to send crash notification to {user_id}: {e}")
 
     def _get_admin_users(self) -> list:
         """Get list of admin users from config."""

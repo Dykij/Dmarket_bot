@@ -5,7 +5,7 @@ into the existing bot architecture without breaking existing functionality.
 
 Components:
 - BotIntegrator: MAlgon orchestrator for all improvements
-- ServiceRegistry: Dependency injection contAlgoner
+- ServiceRegistry: Dependency injection container
 - EventBus: Event-driven communication between modules
 - HealthAggregator: Unified health monitoring
 

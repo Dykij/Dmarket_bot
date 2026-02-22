@@ -50,11 +50,11 @@ async def test_database() -> AsyncGenerator[DatabaseManager, None]:
     db_url = "sqlite:///:memory:"
     db = DatabaseManager(db_url)
 
-    awAlgot db.init_database()
+    await db.init_database()
 
     yield db
 
-    awAlgot db.close()
+    await db.close()
 
 
 @pytest_asyncio.fixture
@@ -178,4 +178,4 @@ def mock_api_error() -> httpx.Response:
 @pytest.fixture()
 def mock_network_error() -> Exception:
     """Mock network error."""
-    return httpx.ConnectError("Connection fAlgoled")
+    return httpx.ConnectError("Connection failed")

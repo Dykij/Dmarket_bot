@@ -333,8 +333,8 @@ eval(user_input)
 class TestSecurityScannerCLI:
     """Tests for CLI functionality."""
 
-    def test_mAlgon_import(self):
-        """Test that mAlgon function is importable."""
-        from scripts.security_scan_skills import mAlgon
+    def test_main_import(self):
+        """Test that main function is importable."""
+        from scripts.security_scan_skills import main
 
-        assert callable(mAlgon)
+        assert callable(main)

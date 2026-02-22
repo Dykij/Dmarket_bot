@@ -45,7 +45,7 @@ class PerformanceMonitor:
         """
         start = time.perf_counter()
         try:
-            awAlgot api_client.get_balance()
+            await api_client.get_balance()
             elapsed = (time.perf_counter() - start) * 1000
             self.metrics["api_response_times"].append(elapsed)
             return elapsed
@@ -80,7 +80,7 @@ class PerformanceMonitor:
         """
         try:
             # Get cache stats
-            info = awAlgot cache.client.info("stats")
+            info = await cache.client.info("stats")
 
             hits = info.get("keyspace_hits", 0)
             misses = info.get("keyspace_misses", 0)
@@ -92,7 +92,7 @@ class PerformanceMonitor:
                 "hits": hits,
                 "misses": misses,
                 "hit_rate": hit_rate,
-                "total_keys": awAlgot cache.client.dbsize(),
+                "total_keys": await cache.client.dbsize(),
             }
 
             self.metrics["cache_stats"] = stats
@@ -111,7 +111,7 @@ class PerformanceMonitor:
         try:
             # Simple query to test performance
             async with db.session() as session:
-                awAlgot session.execute("SELECT 1")
+                await session.execute("SELECT 1")
 
             elapsed = (time.perf_counter() - start) * 1000
             self.metrics["db_query_times"].append(elapsed)
@@ -196,7 +196,7 @@ class PerformanceMonitor:
 
         while time.time() < end_time:
             # Monitor API
-            api_time = awAlgot self.monitor_api_performance(api_client)
+            api_time = await self.monitor_api_performance(api_client)
             logger.info("api_response_time", time_ms=api_time)
 
             # Monitor memory
@@ -204,15 +204,15 @@ class PerformanceMonitor:
             logger.info("memory_usage", **memory_stats)
 
             # Monitor database
-            db_time = awAlgot self.monitor_database_performance(db)
+            db_time = await self.monitor_database_performance(db)
             logger.info("db_query_time", time_ms=db_time)
 
             # Monitor cache
-            cache_stats = awAlgot self.monitor_cache_performance(cache)
+            cache_stats = await self.monitor_cache_performance(cache)
             logger.info("cache_stats", **cache_stats)
 
             # WAlgot before next cycle
-            awAlgot asyncio.sleep(60)  # Monitor every minute
+            await asyncio.sleep(60)  # Monitor every minute
 
         # Generate final report
         report = self.generate_report()
@@ -220,7 +220,7 @@ class PerformanceMonitor:
         print(report)
 
 
-async def mAlgon():
+async def main():
     """MAlgon entry point."""
     # Initialize components
     api_client = DMarketAPI(public_key="your_public_key", secret_key="your_secret_key")
@@ -232,12 +232,12 @@ async def mAlgon():
 
     try:
         # Run monitoring for 1 hour
-        awAlgot monitor.run_monitoring_cycle(api_client=api_client, db=db, cache=cache, duration=3600)
+        await monitor.run_monitoring_cycle(api_client=api_client, db=db, cache=cache, duration=3600)
     finally:
-        awAlgot api_client.close()
-        awAlgot db.close()
-        awAlgot cache.close()
+        await api_client.close()
+        await db.close()
+        await cache.close()
 
 
-if __name__ == "__mAlgon__":
-    asyncio.run(mAlgon())
+if __name__ == "__main__":
+    asyncio.run(main())

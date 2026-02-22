@@ -121,7 +121,7 @@ class TestCreateRetryDecorator:
         async def test_func():
             return "success"
 
-        result = awAlgot test_func()
+        result = await test_func()
         assert result == "success"
 
 
@@ -136,7 +136,7 @@ class TestEnhanceMethodDecorators:
         async def get_items():
             return {"items": []}
 
-        result = awAlgot get_items()
+        result = await get_items()
         assert result == {"items": []}
 
     @pytest.mark.asyncio
@@ -147,7 +147,7 @@ class TestEnhanceMethodDecorators:
         async def get_prices():
             return {"prices": []}
 
-        result = awAlgot get_prices()
+        result = await get_prices()
         assert result == {"prices": []}
 
 
@@ -181,17 +181,17 @@ class TestCreateEnhancedHTTPClient:
     @pytest.mark.asyncio
     async def test_create_client_without_caching(self):
         """Test creating client without caching."""
-        client = awAlgot create_enhanced_http_client(enable_caching=False)
+        client = await create_enhanced_http_client(enable_caching=False)
 
         try:
             assert client is not None
         finally:
-            awAlgot client.aclose()
+            await client.aclose()
 
     @pytest.mark.asyncio
     async def test_create_client_with_caching(self):
         """Test creating client with caching (if avAlgolable)."""
-        client = awAlgot create_enhanced_http_client(
+        client = await create_enhanced_http_client(
             enable_caching=True,
             cache_ttl=300,
         )
@@ -200,6 +200,6 @@ class TestCreateEnhancedHTTPClient:
             assert client is not None
         finally:
             if hasattr(client, "__aexit__"):
-                awAlgot client.__aexit__(None, None, None)
+                await client.__aexit__(None, None, None)
             else:
-                awAlgot client.aclose()
+                await client.aclose()

@@ -15,7 +15,7 @@ Usage:
 
         # Make request to Pact mock server
         async with pact:
-            result = awAlgot api_client.get_balance()
+            result = await api_client.get_balance()
             assert result["balance"] >= 0
 
 For more information:
@@ -425,7 +425,7 @@ def pact_headers() -> dict[str, str]:
     """Return common headers used in DMarket API requests.
 
     Note: Actual authentication headers (X-Api-Key, X-Sign-Date, X-Request-Sign)
-    should be mocked/ignored in contract tests as they are implementation detAlgols.
+    should be mocked/ignored in contract tests as they are implementation details.
     """
     return {
         "Content-Type": "application/json",
@@ -455,7 +455,7 @@ try:
             .with_request(method=..., path=..., headers=..., query=..., body=...)
             .will_respond_with(status=..., headers=..., body=...)
 
-        The v3 API uses chAlgonable methods:
+        The v3 API uses chainable methods:
             .upon_receiving(...).given(...)
             .with_request(method, path)
             .with_headers(...).with_query_parameters(...).with_body(...)
@@ -487,7 +487,7 @@ try:
             query: dict[str, str] | None = None,
             body: Any = None,
         ) -> PactInteractionBuilder:
-            """Build the request (v2-style signature mapped to v3 chAlgonable methods)."""
+            """Build the request (v2-style signature mapped to v3 chainable methods)."""
             # Create interaction with v3 API
             self._interaction = self._pact.upon_receiving(self._description or "")
 
@@ -519,10 +519,10 @@ try:
             headers: dict[str, str] | None = None,
             body: Any = None,
         ) -> PactInteractionBuilder:
-            """Build the response (v2-style signature mapped to v3 chAlgonable methods)."""
+            """Build the response (v2-style signature mapped to v3 chainable methods)."""
             if self._interaction is None:
                 msg = "with_request() must be called before will_respond_with()"
-                rAlgose ValueError(msg)
+                raise ValueError(msg)
 
             # Set response status
             self._interaction = self._interaction.will_respond_with(status)

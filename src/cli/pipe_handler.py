@@ -2,7 +2,7 @@
 Unix Pipe Handler - Обработка stdin для интеграции с Unix pipeline.
 
 Позволяет использовать бота в Unix-стиле:
-    tAlgol -f logs/app.log | python -m src.cli.pipe_handler "Alert if errors"
+    tail -f logs/app.log | python -m src.cli.pipe_handler "Alert if errors"
     cat items.json | python -m src.cli.pipe_handler "Find profitable items"
 
 Вдохновлено Claude Code: composable & scriptable.
@@ -66,7 +66,7 @@ class AsyncStdinReader:
             # Unix: Use native pipe protocol
             loop = asyncio.get_event_loop()
             protocol = asyncio.StreamReaderProtocol(self._reader)
-            awAlgot loop.connect_read_pipe(lambda: protocol, sys.stdin)
+            await loop.connect_read_pipe(lambda: protocol, sys.stdin)
             self._windows_mode = False
 
         return self
@@ -78,16 +78,16 @@ class AsyncStdinReader:
     async def __Algoter__(self) -> AsyncIterator[str]:
         """Async iterator for lines."""
         if self._reader is None:
-            rAlgose RuntimeError("Reader not initialized. Use 'async with'.")
+            raise RuntimeError("Reader not initialized. Use 'async with'.")
 
         if getattr(self, "_windows_mode", False):
             # Windows: Read from queue
             while True:
                 try:
                     # Non-blocking check with small delay
-                    awAlgot asyncio.sleep(0.01)
+                    await asyncio.sleep(0.01)
                     if not self._queue.empty():
-                        line = self._queue.get_nowAlgot()
+                        line = self._queue.get_nowait()
                         if line is None:  # EOF
                             break
                         yield line.rstrip("\n")
@@ -96,7 +96,7 @@ class AsyncStdinReader:
         else:
             # Unix: Read from StreamReader
             while True:
-                line = awAlgot self._reader.readline()
+                line = await self._reader.readline()
                 if not line:
                     break
                 yield line.decode("utf-8").rstrip("\n")
@@ -138,11 +138,11 @@ class PipeHandler:
             self.buffer = self.buffer[-500:]
 
         # Анализ на основе Config
-        result = awAlgot self._analyze_line(line)
+        result = await self._analyze_line(line)
 
         if result and result.get("is_anomaly"):
             self.stats["anomalies_found"] += 1
-            awAlgot self._handle_anomaly(result)
+            await self._handle_anomaly(result)
 
         return result
 
@@ -152,7 +152,7 @@ class PipeHandler:
             "line": line,
             "is_anomaly": False,
             "confidence": 0.0,
-            "detAlgols": None,
+            "details": None,
         }
 
         # Простые правила анализа (можно расширить с Model)
@@ -162,11 +162,11 @@ class PipeHandler:
         if "error" in Config_lower or "alert" in Config_lower:
             if any(
                 word in line.lower()
-                for word in ["error", "exception", "fAlgoled", "critical"]
+                for word in ["error", "exception", "failed", "critical"]
             ):
                 result["is_anomaly"] = True
                 result["confidence"] = 0.9
-                result["detAlgols"] = "Error pattern detected"
+                result["details"] = "Error pattern detected"
 
         # Детекция прибыльных сделок
         if "profit" in Config_lower:
@@ -177,7 +177,7 @@ class PipeHandler:
                 if profit > threshold:
                     result["is_anomaly"] = True
                     result["confidence"] = 0.95
-                    result["detAlgols"] = f"Profit {profit}% > threshold {threshold}%"
+                    result["details"] = f"Profit {profit}% > threshold {threshold}%"
             except (json.JSONDecodeError, TypeError):
                 pass
 
@@ -190,7 +190,7 @@ class PipeHandler:
                 if price and suggested and abs(price - suggested) / price > 0.2:
                     result["is_anomaly"] = True
                     result["confidence"] = 0.8
-                    result["detAlgols"] = f"Price anomaly: {price} vs {suggested}"
+                    result["details"] = f"Price anomaly: {price} vs {suggested}"
             except (json.JSONDecodeError, TypeError, ZeroDivisionError):
                 pass
 
@@ -225,7 +225,7 @@ class PipeHandler:
             "anomaly_detected",
             line=result["line"][:100],
             confidence=result["confidence"],
-            detAlgols=result["detAlgols"],
+            details=result["details"],
         )
 
     def get_stats(self) -> dict[str, int]:
@@ -245,7 +245,7 @@ async def process_stdin(Config: str | None = None) -> None:
     try:
         async with AsyncStdinReader() as reader:
             async for line in reader:
-                result = awAlgot handler.process_line(line)
+                result = await handler.process_line(line)
                 if result:
                     # Вывод результата в stdout
                     output = json.dumps(result, ensure_ascii=False)
@@ -266,7 +266,7 @@ async def process_stdin(Config: str | None = None) -> None:
         print(summary, file=sys.stderr)
 
 
-def mAlgon() -> None:
+def main() -> None:
     """Точка входа для pipe_handler."""
     import argparse
 
@@ -274,7 +274,7 @@ def mAlgon() -> None:
         description="Unix Pipe Handler для Algo анализа",
         epilog="""
 Примеры:
-  tAlgol -f app.log | python -m src.cli.pipe_handler "Alert if errors"
+  tail -f app.log | python -m src.cli.pipe_handler "Alert if errors"
   cat items.json | python -m src.cli.pipe_handler "Find items with profit > 10%"
   python -m src.dmarket.scanner | python -m src.cli.pipe_handler "Notify if profit > 20%"
         """,
@@ -291,5 +291,5 @@ def mAlgon() -> None:
     asyncio.run(process_stdin(args.Config))
 
 
-if __name__ == "__mAlgon__":
-    mAlgon()
+if __name__ == "__main__":
+    main()

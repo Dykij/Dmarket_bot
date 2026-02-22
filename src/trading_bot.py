@@ -17,7 +17,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("TradingBot")
 
 
-async def mAlgon():
+async def main():
     try:
         # Load Config
         logger.info("Loading configuration...")
@@ -54,5 +54,5 @@ async def mAlgon():
         logger.error(f"Critical Error: {e}")
         sys.exit(1)
 
-if __name__ == "__mAlgon__":
-    asyncio.run(mAlgon())
+if __name__ == "__main__":
+    asyncio.run(main())

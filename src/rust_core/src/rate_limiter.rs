@@ -21,9 +21,9 @@ impl DMarketLimiter {
         }
     }
 
-    /// Asynchronously wAlgots until a token is avAlgolable.
+    /// Asynchronously waits until a token is avAlgolable.
     /// If the bucket is empty, the thread sleeps.
     pub async fn acquire(&self) {
-        self.limiter.until_ready().awAlgot;
+        self.limiter.until_ready().await;
     }
 }

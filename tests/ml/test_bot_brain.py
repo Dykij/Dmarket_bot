@@ -5,28 +5,28 @@ from datetime import UTC, datetime
 import pytest
 
 from src.ml.Algo_coordinator import AutonomyLevel
-from src.ml.bot_brAlgon import (
+from src.ml.bot_brain import (
     Alert,
     AlertLevel,
     AutonomyConfig,
     BotBrAlgon,
     BotState,
     CycleResult,
-    create_bot_brAlgon,
+    create_bot_brain,
 )
 
 
 class TestBotBrAlgonBasic:
     """Basic tests for BotBrAlgon."""
 
-    def test_init_creates_brAlgon(self):
+    def test_init_creates_brain(self):
         """Test that BotBrAlgon can be initialized."""
-        brAlgon = BotBrAlgon()
+        brain = BotBrAlgon()
 
-        assert brAlgon is not None
-        assert brAlgon.state == BotState.IDLE
-        assert brAlgon.is_running is False
-        assert brAlgon.config.dry_run is True
+        assert brain is not None
+        assert brain.state == BotState.IDLE
+        assert brain.is_running is False
+        assert brain.config.dry_run is True
 
     def test_init_with_custom_config(self):
         """Test initialization with custom config."""
@@ -35,11 +35,11 @@ class TestBotBrAlgonBasic:
             max_trade_usd=100.0,
             dry_run=False,
         )
-        brAlgon = BotBrAlgon(config=config)
+        brain = BotBrAlgon(config=config)
 
-        assert brAlgon.config.autonomy_level == AutonomyLevel.SEMI_AUTO
-        assert brAlgon.config.max_trade_usd == 100.0
-        assert brAlgon.config.dry_run is False
+        assert brain.config.autonomy_level == AutonomyLevel.SEMI_AUTO
+        assert brain.config.max_trade_usd == 100.0
+        assert brain.config.dry_run is False
 
 
 class TestAutonomyConfig:
@@ -51,7 +51,7 @@ class TestAutonomyConfig:
 
         assert config.autonomy_level == AutonomyLevel.MANUAL
         assert config.max_trade_usd == 50.0
-        assert config.max_dAlgoly_volume_usd == 200.0
+        assert config.max_daily_volume_usd == 200.0
         assert config.dry_run is True
         assert config.scan_interval_seconds == 60
 
@@ -145,33 +145,33 @@ class TestCycleResult:
 
 
 class TestBrAlgonControls:
-    """Tests for brAlgon control methods."""
+    """Tests for brain control methods."""
 
     def test_pause_sets_state(self):
         """Test pause sets paused state."""
-        brAlgon = BotBrAlgon()
+        brain = BotBrAlgon()
 
-        brAlgon.pause()
+        brain.pause()
 
-        assert brAlgon.state == BotState.PAUSED
+        assert brain.state == BotState.PAUSED
 
     def test_resume_from_pause(self):
         """Test resume from paused state."""
-        brAlgon = BotBrAlgon()
-        brAlgon.pause()
+        brain = BotBrAlgon()
+        brain.pause()
 
-        brAlgon.resume()
+        brain.resume()
 
-        assert brAlgon.state == BotState.IDLE
+        assert brain.state == BotState.IDLE
 
     def test_emergency_stop(self):
         """Test emergency stop."""
-        brAlgon = BotBrAlgon()
+        brain = BotBrAlgon()
 
-        brAlgon.emergency_stop("Test reason")
+        brain.emergency_stop("Test reason")
 
-        assert brAlgon.state == BotState.STOPPED
-        assert brAlgon.is_running is False
+        assert brain.state == BotState.STOPPED
+        assert brain.is_running is False
 
 
 class TestPendingDecisions:
@@ -179,15 +179,15 @@ class TestPendingDecisions:
 
     def test_pending_decisions_initially_empty(self):
         """Test pending decisions list is initially empty."""
-        brAlgon = BotBrAlgon()
+        brain = BotBrAlgon()
 
-        assert len(brAlgon.pending_decisions) == 0
+        assert len(brain.pending_decisions) == 0
 
     def test_clear_pending_decisions(self):
         """Test clearing pending decisions."""
-        brAlgon = BotBrAlgon()
+        brain = BotBrAlgon()
 
-        count = brAlgon.clear_pending_decisions()
+        count = brain.clear_pending_decisions()
 
         assert count == 0
 
@@ -197,9 +197,9 @@ class TestStatistics:
 
     def test_get_statistics(self):
         """Test getting statistics."""
-        brAlgon = BotBrAlgon()
+        brain = BotBrAlgon()
 
-        stats = brAlgon.get_statistics()
+        stats = brain.get_statistics()
 
         assert "total_cycles" in stats
         assert "total_items_scanned" in stats
@@ -208,14 +208,14 @@ class TestStatistics:
         assert "is_running" in stats
         assert stats["total_cycles"] == 0
 
-    def test_reset_dAlgoly_stats(self):
-        """Test resetting dAlgoly statistics."""
-        brAlgon = BotBrAlgon()
+    def test_reset_daily_stats(self):
+        """Test resetting daily statistics."""
+        brain = BotBrAlgon()
 
-        brAlgon.reset_dAlgoly_stats()
+        brain.reset_daily_stats()
 
-        stats = brAlgon.get_statistics()
-        assert stats["dAlgoly_volume"] == 0.0
+        stats = brain.get_statistics()
+        assert stats["daily_volume"] == 0.0
 
 
 class TestAlerts:
@@ -223,45 +223,45 @@ class TestAlerts:
 
     def test_get_alerts_empty(self):
         """Test getting alerts when none exist."""
-        brAlgon = BotBrAlgon()
+        brain = BotBrAlgon()
 
-        alerts = brAlgon.get_alerts()
+        alerts = brain.get_alerts()
 
         assert len(alerts) == 0
 
     def test_alerts_after_emergency_stop(self):
         """Test alerts are generated after emergency stop."""
-        brAlgon = BotBrAlgon()
+        brain = BotBrAlgon()
 
-        brAlgon.emergency_stop("Test")
+        brain.emergency_stop("Test")
 
-        alerts = brAlgon.get_alerts()
+        alerts = brain.get_alerts()
         assert len(alerts) > 0
         assert any("EMERGENCY" in a.message for a in alerts)
 
 
 class TestFactoryFunction:
-    """Tests for create_bot_brAlgon factory."""
+    """Tests for create_bot_brain factory."""
 
-    def test_create_bot_brAlgon_default(self):
-        """Test creating brAlgon with defaults."""
-        brAlgon = create_bot_brAlgon()
+    def test_create_bot_brain_default(self):
+        """Test creating brain with defaults."""
+        brain = create_bot_brain()
 
-        assert brAlgon is not None
-        assert brAlgon.config.autonomy_level == AutonomyLevel.MANUAL
-        assert brAlgon.config.dry_run is True
+        assert brain is not None
+        assert brain.config.autonomy_level == AutonomyLevel.MANUAL
+        assert brain.config.dry_run is True
 
-    def test_create_bot_brAlgon_custom(self):
-        """Test creating brAlgon with custom options."""
-        brAlgon = create_bot_brAlgon(
+    def test_create_bot_brain_custom(self):
+        """Test creating brain with custom options."""
+        brain = create_bot_brain(
             autonomy_level=AutonomyLevel.AUTO,
             dry_run=False,
             max_trade_usd=100.0,
         )
 
-        assert brAlgon.config.autonomy_level == AutonomyLevel.AUTO
-        assert brAlgon.config.dry_run is False
-        assert brAlgon.config.max_trade_usd == 100.0
+        assert brain.config.autonomy_level == AutonomyLevel.AUTO
+        assert brain.config.dry_run is False
+        assert brain.config.max_trade_usd == 100.0
 
 
 class TestRunCycle:
@@ -270,9 +270,9 @@ class TestRunCycle:
     @pytest.mark.asyncio
     async def test_run_cycle_without_api(self):
         """Test running cycle without API returns empty result."""
-        brAlgon = BotBrAlgon()
+        brain = BotBrAlgon()
 
-        result = awAlgot brAlgon.run_cycle()
+        result = await brain.run_cycle()
 
         assert isinstance(result, CycleResult)
         assert result.cycle_number == 1
@@ -281,11 +281,11 @@ class TestRunCycle:
     @pytest.mark.asyncio
     async def test_run_cycle_updates_stats(self):
         """Test running cycle updates statistics."""
-        brAlgon = BotBrAlgon()
+        brain = BotBrAlgon()
 
-        awAlgot brAlgon.run_cycle()
+        await brain.run_cycle()
 
-        stats = brAlgon.get_statistics()
+        stats = brain.get_statistics()
         assert stats["total_cycles"] == 1
 
 
@@ -295,16 +295,16 @@ class TestConfirmReject:
     @pytest.mark.asyncio
     async def test_confirm_invalid_index(self):
         """Test confirming with invalid index."""
-        brAlgon = BotBrAlgon()
+        brain = BotBrAlgon()
 
-        result = awAlgot brAlgon.confirm_decision(999)
+        result = await brain.confirm_decision(999)
 
         assert result is False
 
     def test_reject_invalid_index(self):
         """Test rejecting with invalid index."""
-        brAlgon = BotBrAlgon()
+        brain = BotBrAlgon()
 
-        result = brAlgon.reject_decision(999)
+        result = brain.reject_decision(999)
 
         assert result is False

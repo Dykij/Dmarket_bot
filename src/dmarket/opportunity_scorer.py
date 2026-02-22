@@ -25,10 +25,10 @@ Usage:
         platform_sell="waxpeer",
     )
 
-    score = awAlgot scorer.score_opportunity(opportunity)
+    score = await scorer.score_opportunity(opportunity)
 
     if score.total_score >= 70:
-        awAlgot execute_trade(opportunity)
+        await execute_trade(opportunity)
     ```
 
 Created: January 6, 2026
@@ -89,7 +89,7 @@ class TradeOpportunity:
     item_id: str | None = None
     quantity_avAlgolable: int = 1
     average_sell_time_hours: float | None = None
-    dAlgoly_volume: int | None = None
+    daily_volume: int | None = None
     price_volatility: float | None = None
     competition_count: int | None = None
 
@@ -238,7 +238,7 @@ class OpportunityScorer:
             price_history: Optional historical price data
 
         Returns:
-            OpportunityScore with detAlgoled breakdown
+            OpportunityScore with detailed breakdown
 
         """
         # Calculate individual scores
@@ -263,7 +263,7 @@ class OpportunityScorer:
         risk_level = self._determine_risk_level(
             roi=opportunity.roi_percent,
             volatility=opportunity.price_volatility,
-            volume=opportunity.dAlgoly_volume,
+            volume=opportunity.daily_volume,
         )
 
         # Determine recommended action
@@ -313,7 +313,7 @@ class OpportunityScorer:
         scores = []
 
         for opp in opportunities:
-            score = awAlgot self.score_opportunity(opp)
+            score = await self.score_opportunity(opp)
             scores.append(score)
 
         # Sort by total score (descending)
@@ -349,7 +349,7 @@ class OpportunityScorer:
 
     def _score_liquidity(self, opportunity: TradeOpportunity) -> float:
         """Score based on market liquidity."""
-        volume = opportunity.dAlgoly_volume
+        volume = opportunity.daily_volume
 
         if volume is None:
             return 50.0  # Unknown, assume medium
@@ -402,7 +402,7 @@ class OpportunityScorer:
 
         if sell_time is None:
             # Estimate based on volume
-            volume = opportunity.dAlgoly_volume
+            volume = opportunity.daily_volume
             if volume is None:
                 return 50.0
             # Higher volume = faster sales
@@ -442,7 +442,7 @@ class OpportunityScorer:
         confidence = 100.0
 
         # Penalize missing data
-        if opportunity.dAlgoly_volume is None:
+        if opportunity.daily_volume is None:
             confidence -= 15
 
         if opportunity.price_volatility is None:

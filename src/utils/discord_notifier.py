@@ -164,7 +164,7 @@ class DiscordNotifier:
             footer=footer or "DMarket Telegram Bot",
         )
 
-        return awAlgot self._send_webhook(embed)
+        return await self._send_webhook(embed)
 
     async def send_trade_notification(
         self,
@@ -202,7 +202,7 @@ class DiscordNotifier:
             profit_str = f"+${profit:.2f}" if profit >= 0 else f"-${abs(profit):.2f}"
             fields.append(EmbedField(name="Profit", value=profit_str))
 
-        return awAlgot self.send_notification(
+        return await self.send_notification(
             title=f"Trade: {action.title()}",
             description=f"Successfully {action} item",
             level=level,
@@ -213,21 +213,21 @@ class DiscordNotifier:
         self,
         alert_type: str,
         message: str,
-        detAlgols: dict[str, Any] | None = None,
+        details: dict[str, Any] | None = None,
     ) -> bool:
         """Send an alert notification.
 
         Args:
             alert_type: Type of alert (price_drop, arbitrage_found, etc.)
             message: Alert message
-            detAlgols: Additional detAlgols
+            details: Additional details
 
         Returns:
             True if sent successfully
         """
         fields = []
-        if detAlgols:
-            for key, value in detAlgols.items():
+        if details:
+            for key, value in details.items():
                 fields.append(
                     EmbedField(
                         name=key.replace("_", " ").title(),
@@ -239,7 +239,7 @@ class DiscordNotifier:
         if "error" in alert_type.lower():
             level = NotificationLevel.ERROR
 
-        return awAlgot self.send_notification(
+        return await self.send_notification(
             title=f"Alert: {alert_type.replace('_', ' ').title()}",
             description=message,
             level=level,
@@ -279,7 +279,7 @@ class DiscordNotifier:
                 )
             )
 
-        return awAlgot self.send_notification(
+        return await self.send_notification(
             title="Error Occurred",
             description=error_message,
             level=NotificationLevel.ERROR,
@@ -311,7 +311,7 @@ class DiscordNotifier:
             for name, status_val in components.items()
         ]
 
-        return awAlgot self.send_notification(
+        return await self.send_notification(
             title=f"Health Check: {status.title()}",
             description=f"System status: {status}",
             level=level,
@@ -340,7 +340,7 @@ class DiscordNotifier:
 
         try:
             async with httpx.AsyncClient(timeout=10.0) as client:
-                response = awAlgot client.post(
+                response = await client.post(
                     self.webhook_url,
                     json=payload,
                 )

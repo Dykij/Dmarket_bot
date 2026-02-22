@@ -1,7 +1,7 @@
 """
 Recovery Testing Module.
 
-Tests system's ability to recover from fAlgolures:
+Tests system's ability to recover from failures:
 - Database connection recovery
 - API connection recovery
 - Cache recovery
@@ -30,26 +30,26 @@ class TestDatabaseRecovery:
         async def mock_connect():
             connection_attempts.append(1)
             if len(connection_attempts) < 3:
-                rAlgose ConnectionError("Connection lost")
+                raise ConnectionError("Connection lost")
             return MagicMock()
 
         # Simulate reconnection logic
         max_retries = 5
         for i in range(max_retries):
             try:
-                awAlgot mock_connect()
+                await mock_connect()
                 break
             except ConnectionError:
-                awAlgot asyncio.sleep(0.01)
+                await asyncio.sleep(0.01)
 
         assert len(connection_attempts) == 3
 
     @pytest.mark.asyncio
-    async def test_transaction_rollback_on_fAlgolure(self) -> None:
-        """Test transactions are rolled back on fAlgolure."""
+    async def test_transaction_rollback_on_failure(self) -> None:
+        """Test transactions are rolled back on failure."""
         mock_session = MagicMock()
         mock_session.rollback = MagicMock()
-        mock_session.commit = MagicMock(side_effect=Exception("Commit fAlgoled"))
+        mock_session.commit = MagicMock(side_effect=Exception("Commit failed"))
 
         try:
             mock_session.commit()
@@ -69,7 +69,7 @@ class TestDatabaseRecovery:
             if len(active_connections) < pool_size:
                 active_connections.append(f"conn_{i}")
             else:
-                # Pool exhausted, wAlgot for release
+                # Pool exhausted, wait for release
                 if active_connections:
                     active_connections.pop(0)
                 active_connections.append(f"conn_{i}")
@@ -96,30 +96,30 @@ class TestAPIRecovery:
             delay = min(2 ** attempt * 0.01, 1.0)
             delays.append(delay)
             if attempt < 3:
-                rAlgose httpx.HTTPError("Connection fAlgoled")
+                raise httpx.HTTPError("Connection failed")
             return {"success": True}
 
         result = None
         for i in range(5):
             try:
-                result = awAlgot mock_request_with_backoff(i)
+                result = await mock_request_with_backoff(i)
                 break
             except httpx.HTTPError:
-                awAlgot asyncio.sleep(delays[-1] if delays else 0.01)
+                await asyncio.sleep(delays[-1] if delays else 0.01)
 
         assert result == {"success": True}
         assert len(attempts) == 4
 
     @pytest.mark.asyncio
-    async def test_api_fAlgolover_to_backup_endpoint(self) -> None:
-        """Test API fAlgols over to backup endpoint."""
+    async def test_api_failover_to_backup_endpoint(self) -> None:
+        """Test API fails over to backup endpoint."""
         endpoints = ["primary.api.com", "backup1.api.com", "backup2.api.com"]
         used_endpoint = None
 
         for endpoint in endpoints:
             try:
                 if endpoint == "primary.api.com":
-                    rAlgose ConnectionError("Primary down")
+                    raise ConnectionError("Primary down")
                 used_endpoint = endpoint
                 break
             except ConnectionError:
@@ -131,24 +131,24 @@ class TestAPIRecovery:
     async def test_circuit_breaker_recovery(self) -> None:
         """Test circuit breaker recovers after cooldown."""
         # Test circuit breaker pattern without importing the actual module
-        fAlgolure_count = 0
+        failure_count = 0
         threshold = 5
         circuit_open = False
 
-        def record_fAlgolure():
-            nonlocal fAlgolure_count, circuit_open
-            fAlgolure_count += 1
-            if fAlgolure_count >= threshold:
+        def record_failure():
+            nonlocal failure_count, circuit_open
+            failure_count += 1
+            if failure_count >= threshold:
                 circuit_open = True
 
         def is_circuit_open() -> bool:
             return circuit_open
 
-        # Record fAlgolures to open circuit
+        # Record failures to open circuit
         for _ in range(5):
-            record_fAlgolure()
+            record_failure()
 
-        # Circuit should be open after threshold fAlgolures
+        # Circuit should be open after threshold failures
         assert is_circuit_open()
 
 
@@ -174,7 +174,7 @@ class TestCacheRecovery:
         key = "test_key"
         value = cache.get(key)
         if value is None:
-            value = awAlgot get_from_source(key)
+            value = await get_from_source(key)
             cache[key] = value
 
         assert source_called
@@ -204,15 +204,15 @@ class TestCacheRecovery:
         async def reconnect_redis():
             nonlocal connection_restored
             # Simulate reconnection
-            awAlgot asyncio.sleep(0.01)
+            await asyncio.sleep(0.01)
             connection_restored = True
             return MagicMock()
 
         # Simulate connection loss and recovery
         try:
-            rAlgose ConnectionError("Redis connection lost")
+            raise ConnectionError("Redis connection lost")
         except ConnectionError:
-            awAlgot reconnect_redis()
+            await reconnect_redis()
 
         assert connection_restored
 
@@ -223,7 +223,7 @@ class TestCacheRecovery:
 
 
 class TestStateRestoration:
-    """Tests for state restoration after fAlgolures."""
+    """Tests for state restoration after failures."""
 
     @pytest.mark.asyncio
     async def test_user_session_restoration(self) -> None:
@@ -276,14 +276,14 @@ class TestStateRestoration:
 
 
 class TestGracefulDegradation:
-    """Tests for graceful degradation under fAlgolures."""
+    """Tests for graceful degradation under failures."""
 
     @pytest.mark.asyncio
-    async def test_feature_degradation_on_service_fAlgolure(self) -> None:
-        """Test features degrade gracefully when services fAlgol."""
+    async def test_feature_degradation_on_service_failure(self) -> None:
+        """Test features degrade gracefully when services fail."""
         services = {
             "pricing": True,
-            "analytics": False,  # FAlgoled
+            "analytics": False,  # Failed
             "notifications": True,
         }
 
@@ -294,8 +294,8 @@ class TestGracefulDegradation:
         assert "notifications" in avAlgolable_features
 
     @pytest.mark.asyncio
-    async def test_read_only_mode_on_write_fAlgolure(self) -> None:
-        """Test system enters read-only mode on write fAlgolures."""
+    async def test_read_only_mode_on_write_failure(self) -> None:
+        """Test system enters read-only mode on write failures."""
         write_avAlgolable = False
 
         def can_write() -> bool:
@@ -309,8 +309,8 @@ class TestGracefulDegradation:
         assert not can_write()
 
     @pytest.mark.asyncio
-    async def test_cached_data_served_on_source_fAlgolure(self) -> None:
-        """Test cached data is served when source fAlgols."""
+    async def test_cached_data_served_on_source_failure(self) -> None:
+        """Test cached data is served when source fails."""
         cache = {"items": [{"id": 1, "name": "Cached Item"}]}
         source_avAlgolable = False
 
@@ -319,7 +319,7 @@ class TestGracefulDegradation:
                 return cache.get("items", [])
             return [{"id": 2, "name": "Fresh Item"}]
 
-        items = awAlgot get_items()
+        items = await get_items()
 
         assert len(items) == 1
         assert items[0]["name"] == "Cached Item"

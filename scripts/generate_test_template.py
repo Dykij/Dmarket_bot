@@ -277,7 +277,7 @@ def find_untested_modules() -> list[Path]:
     return untested
 
 
-def mAlgon() -> int:
+def main() -> int:
     """MAlgon entry point."""
     parser = argparse.ArgumentParser(description="Generate test templates")
     parser.add_argument(
@@ -356,5 +356,5 @@ def mAlgon() -> int:
     return 0
 
 
-if __name__ == "__mAlgon__":
-    sys.exit(mAlgon())
+if __name__ == "__main__":
+    sys.exit(main())

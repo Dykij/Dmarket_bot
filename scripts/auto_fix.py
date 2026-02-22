@@ -42,7 +42,7 @@ async def auto_fix():
         
         # Collect until we hit 100
         while rows < 100:
-            collected = awAlgot logger.log_market_data()
+            collected = await logger.log_market_data()
             rows += collected
             print(f"Collected batch: {collected}. Total: {rows}")
             if collected == 0:
@@ -58,14 +58,14 @@ async def auto_fix():
     predictor = PricePredictor()
     model_info = predictor.get_model_info()
     
-    if not model_info['is_trAlgoned']:
+    if not model_info['is_trained']:
         print("Action: TrAlgoning Model...")
-        result = predictor.trAlgon_model(force_retrAlgon=True)
+        result = predictor.train_model(force_retrain=True)
         print(f"TrAlgoning Result: {result}")
     else:
-        print("Model already trAlgoned.")
+        print("Model already trained.")
         
     print("--- AUTO-FIX COMPLETE ---")
 
-if __name__ == "__mAlgon__":
+if __name__ == "__main__":
     asyncio.run(auto_fix())

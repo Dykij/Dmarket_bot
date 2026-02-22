@@ -57,7 +57,7 @@ async def knowledge_command(
 
     try:
         kb = get_knowledge_base(user_id)
-        summary = awAlgot kb.get_summary()
+        summary = await kb.get_summary()
 
         # Build summary message
         type_lines = []
@@ -80,16 +80,16 @@ async def knowledge_command(
 
         keyboard = _build_knowledge_keyboard()
 
-        awAlgot update.message.reply_text(
+        await update.message.reply_text(
             message,
             parse_mode="Markdown",
             reply_markup=keyboard,
         )
 
     except Exception as e:
-        logger.exception("knowledge_command_fAlgoled", user_id=user_id, error=str(e))
-        awAlgot update.message.reply_text(
-            "❌ FAlgoled to load knowledge base. Please try agAlgon later."
+        logger.exception("knowledge_command_failed", user_id=user_id, error=str(e))
+        await update.message.reply_text(
+            "❌ Failed to load knowledge base. Please try agAlgon later."
         )
 
 
@@ -113,14 +113,14 @@ async def knowledge_list_command(
         kb = get_knowledge_base(user_id)
 
         # Get recent entries
-        entries = awAlgot kb.query_relevant(
+        entries = await kb.query_relevant(
             context={},  # Empty context to get all
             min_relevance=0.0,
             limit=10,
         )
 
         if not entries:
-            awAlgot update.message.reply_text(
+            await update.message.reply_text(
                 "📭 Your knowledge base is empty.\n\n"
                 "Complete some trades to start building your trading knowledge!"
             )
@@ -141,15 +141,15 @@ async def knowledge_list_command(
 
         message = "\n".join(lines)
 
-        awAlgot update.message.reply_text(
+        await update.message.reply_text(
             message,
             parse_mode="Markdown",
         )
 
     except Exception as e:
-        logger.exception("knowledge_list_fAlgoled", user_id=user_id, error=str(e))
-        awAlgot update.message.reply_text(
-            "❌ FAlgoled to list knowledge entries. Please try agAlgon later."
+        logger.exception("knowledge_list_failed", user_id=user_id, error=str(e))
+        await update.message.reply_text(
+            "❌ Failed to list knowledge entries. Please try agAlgon later."
         )
 
 
@@ -180,7 +180,7 @@ async def knowledge_clear_command(
         ]
     )
 
-    awAlgot update.message.reply_text(
+    await update.message.reply_text(
         "⚠️ **Are you sure you want to clear your knowledge base?**\n\n"
         "This will remove all accumulated trading knowledge, patterns, "
         "and lessons learned. This action cannot be undone.",
@@ -208,7 +208,7 @@ async def knowledge_callback_handler(
     if not query or not query.data or not update.effective_user:
         return
 
-    awAlgot query.answer()
+    await query.answer()
 
     user_id = update.effective_user.id
     data = query.data
@@ -217,29 +217,29 @@ async def knowledge_callback_handler(
 
     try:
         if data == "kb_clear_ask":
-            awAlgot _handle_clear_ask(query)
+            await _handle_clear_ask(query)
 
         elif data == "kb_clear_confirm":
-            awAlgot _handle_clear_confirm(query, user_id)
+            await _handle_clear_confirm(query, user_id)
 
         elif data == "kb_clear_cancel":
-            awAlgot query.edit_message_text("❌ Operation cancelled.")
+            await query.edit_message_text("❌ Operation cancelled.")
 
         elif data == "kb_view_patterns":
-            awAlgot _handle_view_patterns(query, user_id)
+            await _handle_view_patterns(query, user_id)
 
         elif data == "kb_view_lessons":
-            awAlgot _handle_view_lessons(query, user_id)
+            await _handle_view_lessons(query, user_id)
 
         elif data == "kb_decay":
-            awAlgot _handle_decay(query, user_id)
+            await _handle_decay(query, user_id)
 
         elif data == "kb_back":
-            awAlgot _handle_back_to_summary(query, user_id)
+            await _handle_back_to_summary(query, user_id)
 
     except Exception as e:
-        logger.exception("knowledge_callback_fAlgoled", user_id=user_id, error=str(e))
-        awAlgot query.edit_message_text("❌ An error occurred. Please try agAlgon.")
+        logger.exception("knowledge_callback_failed", user_id=user_id, error=str(e))
+        await query.edit_message_text("❌ An error occurred. Please try agAlgon.")
 
 
 async def _handle_clear_ask(query) -> None:
@@ -255,7 +255,7 @@ async def _handle_clear_ask(query) -> None:
         ]
     )
 
-    awAlgot query.edit_message_text(
+    await query.edit_message_text(
         "⚠️ **Are you sure you want to clear your knowledge base?**\n\n"
         "This will remove all accumulated trading knowledge, patterns, "
         "and lessons learned. This action cannot be undone.",
@@ -267,9 +267,9 @@ async def _handle_clear_ask(query) -> None:
 async def _handle_clear_confirm(query, user_id: int) -> None:
     """Handle clear confirmation."""
     kb = get_knowledge_base(user_id)
-    count = awAlgot kb.clear()
+    count = await kb.clear()
 
-    awAlgot query.edit_message_text(
+    await query.edit_message_text(
         f"✅ Knowledge base cleared.\n\n" f"Removed {count} entries."
     )
 
@@ -278,7 +278,7 @@ async def _handle_view_patterns(query, user_id: int) -> None:
     """Handle view patterns callback."""
     kb = get_knowledge_base(user_id)
 
-    entries = awAlgot kb.query_relevant(
+    entries = await kb.query_relevant(
         context={},
         min_relevance=0.0,
         limit=10,
@@ -286,7 +286,7 @@ async def _handle_view_patterns(query, user_id: int) -> None:
     )
 
     if not entries:
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             "📭 No trading patterns recorded yet.\n\n"
             "Complete profitable trades to start building patterns!",
             reply_markup=InlineKeyboardMarkup(
@@ -309,7 +309,7 @@ async def _handle_view_patterns(query, user_id: int) -> None:
 
     message = "\n".join(lines)
 
-    awAlgot query.edit_message_text(
+    await query.edit_message_text(
         message,
         parse_mode="Markdown",
         reply_markup=InlineKeyboardMarkup(
@@ -322,7 +322,7 @@ async def _handle_view_lessons(query, user_id: int) -> None:
     """Handle view lessons callback."""
     kb = get_knowledge_base(user_id)
 
-    entries = awAlgot kb.query_relevant(
+    entries = await kb.query_relevant(
         context={},
         min_relevance=0.0,
         limit=10,
@@ -330,7 +330,7 @@ async def _handle_view_lessons(query, user_id: int) -> None:
     )
 
     if not entries:
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             "📭 No lessons recorded yet.\n\n"
             "Lessons are learned from unsuccessful trades to help avoid future mistakes.",
             reply_markup=InlineKeyboardMarkup(
@@ -356,7 +356,7 @@ async def _handle_view_lessons(query, user_id: int) -> None:
 
     message = "\n".join(lines)
 
-    awAlgot query.edit_message_text(
+    await query.edit_message_text(
         message,
         parse_mode="Markdown",
         reply_markup=InlineKeyboardMarkup(
@@ -368,9 +368,9 @@ async def _handle_view_lessons(query, user_id: int) -> None:
 async def _handle_decay(query, user_id: int) -> None:
     """Handle decay callback - apply relevance decay."""
     kb = get_knowledge_base(user_id)
-    removed = awAlgot kb.decay_relevance()
+    removed = await kb.decay_relevance()
 
-    awAlgot query.edit_message_text(
+    await query.edit_message_text(
         f"✅ Relevance decay applied.\n\n" f"Removed {removed} stale entries.",
         reply_markup=InlineKeyboardMarkup(
             [[InlineKeyboardButton("◀️ Back", callback_data="kb_back")]]
@@ -381,7 +381,7 @@ async def _handle_decay(query, user_id: int) -> None:
 async def _handle_back_to_summary(query, user_id: int) -> None:
     """Handle back to summary callback."""
     kb = get_knowledge_base(user_id)
-    summary = awAlgot kb.get_summary()
+    summary = await kb.get_summary()
 
     type_lines = []
     for ktype, count in summary.get("by_type", {}).items():
@@ -399,7 +399,7 @@ async def _handle_back_to_summary(query, user_id: int) -> None:
         f"📁 **By Type:**\n{type_text}"
     )
 
-    awAlgot query.edit_message_text(
+    await query.edit_message_text(
         message,
         parse_mode="Markdown",
         reply_markup=_build_knowledge_keyboard(),

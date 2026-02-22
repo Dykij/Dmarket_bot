@@ -32,7 +32,7 @@ class SelfHealingAST:
             
         return "\n".join(fixed_lines)
 
-if __name__ == "__mAlgon__":
+if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     bad_code = """
     def calculate_profit(a, b)

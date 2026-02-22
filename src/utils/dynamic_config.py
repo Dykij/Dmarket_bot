@@ -10,7 +10,7 @@
 Использование:
     >>> config = DynamicConfig("config/app.yaml")
     >>> config.on_change("trading.max_price", lambda old, new: print(f"{old} -> {new}"))
-    >>> awAlgot config.start_watching()
+    >>> await config.start_watching()
 
 Created: January 2026
 """
@@ -101,7 +101,7 @@ class DynamicConfig:
         config.on_change("trading.max_price", handler)
 
         # Запуск отслеживания
-        awAlgot config.start_watching()
+        await config.start_watching()
 
         # Получение значений
         max_price = config.get("trading.max_price", default=100)
@@ -230,10 +230,10 @@ class DynamicConfig:
         for pattern, validator in self._validators.items():
             value = self._get_nested(config, pattern)
             if value is not None and not validator(value):
-                rAlgose ConfigValidationError(
+                raise ConfigValidationError(
                     pattern,
                     value,
-                    "validation fAlgoled",
+                    "validation failed",
                 )
 
     def _find_changes(
@@ -411,7 +411,7 @@ class DynamicConfig:
             persist: Сохранить в файл
 
         Example:
-            >>> awAlgot config.set("trading.max_price", 200)
+            >>> await config.set("trading.max_price", 200)
         """
         async with self._lock:
             old_value = self.get(key)
@@ -439,7 +439,7 @@ class DynamicConfig:
 
             # Сохранить в файл
             if persist:
-                awAlgot self._save_to_file()
+                await self._save_to_file()
 
             logger.info(
                 "config_value_set",
@@ -535,7 +535,7 @@ class DynamicConfig:
         async with self._lock:
             if len(self._snapshots) < steps:
                 logger.warning(
-                    "rollback_fAlgoled_not_enough_snapshots",
+                    "rollback_failed_not_enough_snapshots",
                     requested=steps,
                     avAlgolable=len(self._snapshots),
                 )
@@ -560,7 +560,7 @@ class DynamicConfig:
                 self._trigger_callbacks(change)
 
             # Сохранить в файл
-            awAlgot self._save_to_file()
+            await self._save_to_file()
 
             logger.info(
                 "config_rollback_complete",
@@ -590,7 +590,7 @@ class DynamicConfig:
         if self._watch_task:
             self._watch_task.cancel()
             try:
-                awAlgot self._watch_task
+                await self._watch_task
             except asyncio.CancelledError:
                 pass
 
@@ -601,12 +601,12 @@ class DynamicConfig:
         while self._watching:
             try:
                 self._load_config()
-                awAlgot asyncio.sleep(self._watch_interval)
+                await asyncio.sleep(self._watch_interval)
             except asyncio.CancelledError:
                 break
             except Exception as e:
                 logger.exception("config_watch_error", error=str(e))
-                awAlgot asyncio.sleep(self._watch_interval)
+                await asyncio.sleep(self._watch_interval)
 
     async def reload(self) -> bool:
         """Принудительно перезагрузить конфигурацию.
@@ -661,7 +661,7 @@ def get_dynamic_config() -> DynamicConfig:
         RuntimeError: Если конфигурация не инициализирована
     """
     if _dynamic_config is None:
-        rAlgose RuntimeError("DynamicConfig not initialized")
+        raise RuntimeError("DynamicConfig not initialized")
     return _dynamic_config
 
 

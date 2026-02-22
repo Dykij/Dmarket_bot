@@ -1,4 +1,4 @@
-"""ML/Algo handlers for mAlgon keyboard."""
+"""ML/Algo handlers for main keyboard."""
 
 from pathlib import Path
 
@@ -14,14 +14,14 @@ async def ml_Algo_menu_callback(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> None:
     query = update.callback_query
-    awAlgot query.answer()
+    await query.answer()
     keyboard = [
-        [InlineKeyboardButton("🎓 Обучить модель", callback_data="ml_Algo_trAlgon")],
+        [InlineKeyboardButton("🎓 Обучить модель", callback_data="ml_Algo_train")],
         [InlineKeyboardButton("📊 Статус Algo", callback_data="ml_Algo_status")],
-        [InlineKeyboardButton("◀️ Главное меню", callback_data="mAlgon_menu")],
+        [InlineKeyboardButton("◀️ Главное меню", callback_data="main_menu")],
     ]
     text = "🧠 <b>ML/Algo ОБУЧЕНИЕ</b>\n\nИспользуйте машинное обучение для предсказания цен."
-    awAlgot query.edit_message_text(
+    await query.edit_message_text(
         text, parse_mode="HTML", reply_markup=InlineKeyboardMarkup(keyboard)
     )
 
@@ -30,7 +30,7 @@ async def ml_Algo_status_callback(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> None:
     query = update.callback_query
-    awAlgot query.answer()
+    await query.answer()
     project_root = Path(__file__).resolve().parents[4]
     model_path = project_root / "data" / "price_model.pkl"
     if model_path.exists():
@@ -38,9 +38,9 @@ async def ml_Algo_status_callback(
     else:
         text = "🧠 <b>Статус ML/Algo</b>\n\n❌ <b>Модель не обучена</b>"
     keyboard = [
-        [InlineKeyboardButton("🎓 Обучить", callback_data="ml_Algo_trAlgon")],
+        [InlineKeyboardButton("🎓 Обучить", callback_data="ml_Algo_train")],
         [InlineKeyboardButton("◀️ Назад", callback_data="ml_Algo_menu")],
     ]
-    awAlgot query.edit_message_text(
+    await query.edit_message_text(
         text, parse_mode="HTML", reply_markup=InlineKeyboardMarkup(keyboard)
     )

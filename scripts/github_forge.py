@@ -38,7 +38,7 @@ def create_issue_on_crash(log_file):
     except FileNotFoundError:
         print(f"⚠️ Log file not found: {log_file}")
 
-if __name__ == "__mAlgon__":
+if __name__ == "__main__":
     sync_wiki()
     # Simulated check
     create_issue_on_crash("logs/bot.log")

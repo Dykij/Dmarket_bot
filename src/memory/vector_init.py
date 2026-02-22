@@ -32,7 +32,7 @@ class VectorMemory:
             count += 1
         print(f"✅ Indexed {count} documents into Vector Memory.")
 
-if __name__ == "__mAlgon__":
+if __name__ == "__main__":
     vm = VectorMemory()
     vm.initialize()
     vm.index_knowledge_base()

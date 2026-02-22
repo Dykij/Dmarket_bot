@@ -55,7 +55,7 @@ class TestSalesAnalyzer:
         # Mock _request to return sales data
         mock_api._request = AsyncMock(return_value={"sales": mock_sales})
 
-        result = awAlgot analyzer.get_item_sales_history(
+        result = await analyzer.get_item_sales_history(
             item_name="AK-47 | Redline (Field-Tested)",
             game="csgo",
             days=7,
@@ -69,7 +69,7 @@ class TestSalesAnalyzer:
         # Mock when item is not found
         mock_api.get_market_items = AsyncMock(return_value={"items": []})
 
-        result = awAlgot analyzer.get_item_sales_history(
+        result = await analyzer.get_item_sales_history(
             item_name="Rare Item",
             game="csgo",
             days=7,
@@ -96,7 +96,7 @@ class TestSalesAnalyzer:
         )
         mock_api._request = AsyncMock(return_value={"sales": mock_sales})
 
-        result = awAlgot analyzer.analyze_sales_volume(
+        result = await analyzer.analyze_sales_volume(
             item_name="AK-47 | Redline",
             game="csgo",
             days=7,
@@ -124,7 +124,7 @@ class TestSalesAnalyzer:
         )
         mock_api._request = AsyncMock(return_value={"sales": mock_sales})
 
-        result = awAlgot analyzer.analyze_sales_volume(
+        result = await analyzer.analyze_sales_volume(
             item_name="Test Item",
             game="csgo",
             days=7,
@@ -151,7 +151,7 @@ class TestSalesAnalyzer:
         )
         mock_api._request = AsyncMock(return_value={"sales": mock_sales})
 
-        result = awAlgot analyzer.analyze_sales_volume(
+        result = await analyzer.analyze_sales_volume(
             item_name="Rare Item",
             game="csgo",
             days=7,
@@ -175,7 +175,7 @@ class TestSalesAnalyzer:
         )
         analyzer.api_client._request = AsyncMock(return_value={"sales": sales})
 
-        result = awAlgot analyzer.estimate_time_to_sell(
+        result = await analyzer.estimate_time_to_sell(
             item_name="Popular Item", current_price=10.0, game="csgo", days=7
         )
 
@@ -193,7 +193,7 @@ class TestSalesAnalyzer:
         )
         mock_api._request = AsyncMock(return_value={"sales": mock_sales})
 
-        result = awAlgot analyzer.estimate_time_to_sell(
+        result = await analyzer.estimate_time_to_sell(
             item_name="Rare Item",
             game="csgo",
         )
@@ -219,7 +219,7 @@ class TestSalesAnalyzer:
         )
         analyzer.api_client._request = AsyncMock(return_value={"sales": sales})
 
-        result = awAlgot analyzer.analyze_price_trends(
+        result = await analyzer.analyze_price_trends(
             item_name="Trending Item", game="csgo", days=7
         )
 
@@ -243,7 +243,7 @@ class TestSalesAnalyzer:
         )
         analyzer.api_client._request = AsyncMock(return_value={"sales": sales})
 
-        result = awAlgot analyzer.analyze_price_trends(
+        result = await analyzer.analyze_price_trends(
             item_name="Declining Item", game="csgo", days=7
         )
 
@@ -272,7 +272,7 @@ class TestSalesAnalyzer:
         )
         analyzer.api_client._request = AsyncMock(return_value={"sales": sales})
 
-        result = awAlgot analyzer.analyze_price_trends(
+        result = await analyzer.analyze_price_trends(
             item_name="Stable Item", game="csgo", days=7
         )
 
@@ -293,7 +293,7 @@ class TestSalesAnalyzer:
         )
         analyzer.api_client._request = AsyncMock(return_value={"sales": sales})
 
-        result = awAlgot analyzer.evaluate_arbitrage_potential(
+        result = await analyzer.evaluate_arbitrage_potential(
             item_name="Excellent Item",
             buy_price=10.0,
             sell_price=15.0,
@@ -320,7 +320,7 @@ class TestSalesAnalyzer:
         )
         analyzer.api_client._request = AsyncMock(return_value={"sales": sales})
 
-        result = awAlgot analyzer.evaluate_arbitrage_potential(
+        result = await analyzer.evaluate_arbitrage_potential(
             item_name="Poor Item",
             buy_price=10.0,
             sell_price=10.5,
@@ -343,12 +343,12 @@ class TestSalesAnalyzer:
         )
 
         # Первый вызов
-        awAlgot analyzer.get_item_sales_history(
+        await analyzer.get_item_sales_history(
             item_name="Test Item", game="csgo", days=7
         )
 
         # ВтоSwarm вызов (должен использовать кэш)
-        awAlgot analyzer.get_item_sales_history(
+        await analyzer.get_item_sales_history(
             item_name="Test Item", game="csgo", days=7
         )
 
@@ -374,7 +374,7 @@ class TestEdgeCases:
 
         analyzer = SalesAnalyzer(api_client=mock_api)
 
-        result = awAlgot analyzer.analyze_sales_volume(
+        result = await analyzer.analyze_sales_volume(
             item_name="No Sales Item", game="csgo"
         )
 
@@ -390,7 +390,7 @@ class TestEdgeCases:
         analyzer = SalesAnalyzer(api_client=mock_api)
 
         # Метод должен вернуть пустой результат, а не выбросить исключение
-        result = awAlgot analyzer.get_item_sales_history(
+        result = await analyzer.get_item_sales_history(
             item_name="Test Item", game="csgo"
         )
         assert result == {"sales": []}
@@ -410,5 +410,5 @@ class TestEdgeCases:
         analyzer = SalesAnalyzer(api_client=mock_api)
 
         # Должно обработать без ошибки
-        result = awAlgot analyzer.analyze_sales_volume("csgo", "Test Item")
+        result = await analyzer.analyze_sales_volume("csgo", "Test Item")
         assert isinstance(result, dict)

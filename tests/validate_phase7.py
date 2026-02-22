@@ -104,5 +104,5 @@ def validate_phase_modules():
     return 0
 
 
-if __name__ == "__mAlgon__":
+if __name__ == "__main__":
     sys.exit(validate_phase_modules())

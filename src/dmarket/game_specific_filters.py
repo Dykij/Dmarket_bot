@@ -603,7 +603,7 @@ class TF2Filter:
     is_collectors: bool | None = None
 
     # PAlgont
-    pAlgont_color: str | None = None
+    paint_color: str | None = None
 
     # Spell
     has_spell: bool = False

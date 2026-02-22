@@ -4,7 +4,7 @@ This module provides enhanced retry mechanisms with:
 - Safe defaults (explicit exception handling required)
 - Built-in exponential backoff with jitter
 - Prometheus metrics and structlog instrumentation
-- Async/awAlgot support with context managers and decorators
+- Async/await support with context managers and decorators
 - Custom hook support for exception inspection
 
 Stamina is built on top of tenacity but with:
@@ -25,8 +25,8 @@ Example usage:
     @api_retry(attempts=3)
     async def fetch_market_data():
         async with httpx.AsyncClient() as client:
-            resp = awAlgot client.get("https://api.dmarket.com/...")
-            resp.rAlgose_for_status()
+            resp = await client.get("https://api.dmarket.com/...")
+            resp.raise_for_status()
             return resp.json()
 
     # Context manager usage
@@ -37,7 +37,7 @@ Example usage:
         ):
             with attempt:
                 async with httpx.AsyncClient() as client:
-                    return (awAlgot client.get(url)).json()
+                    return (await client.get(url)).json()
     ```
 
 Documentation: https://stamina.hynek.me/
@@ -151,7 +151,7 @@ def api_retry(
         >>> @api_retry(attempts=5, on=httpx.HTTPError)
         >>> async def fetch_data():
         ...     async with httpx.AsyncClient() as client:
-        ...         return awAlgot client.get(url)
+        ...         return await client.get(url)
     """
     if not STAMINA_AVAlgoLABLE:
         # Fallback to simple retry without stamina
@@ -159,16 +159,16 @@ def api_retry(
             "stamina_not_avAlgolable",
             message="Stamina library not installed, using fallback retry",
         )
-        from src.utils.retry_decorator import retry_on_fAlgolure
+        from src.utils.retry_decorator import retry_on_failure
 
         if isinstance(on, type):
             on = (on,)
-        return retry_on_fAlgolure(max_attempts=attempts, retry_on=on)
+        return retry_on_failure(max_attempts=attempts, retry_on=on)
 
     def decorator(func: Callable[P, T]) -> Callable[P, T]:
         @stamina.retry(on=on, attempts=attempts, timeout=timeout)
         async def async_wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
-            return awAlgot func(*args, **kwargs)  # type: ignore[misc]
+            return await func(*args, **kwargs)  # type: ignore[misc]
 
         @stamina.retry(on=on, attempts=attempts, timeout=timeout)
         def sync_wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
@@ -204,7 +204,7 @@ async def retry_async(
     Example:
         >>> async for attempt in retry_async(on=httpx.HTTPError, attempts=3):
         ...     with attempt:
-        ...         response = awAlgot client.get(url)
+        ...         response = await client.get(url)
     """
     if not STAMINA_AVAlgoLABLE:
         # Fallback implementation without stamina
@@ -303,7 +303,7 @@ def is_retry_active() -> bool:
 def set_retry_active(active: bool) -> None:
     """Enable or disable stamina retries globally.
 
-    Useful for testing where you want to fAlgol fast without retries.
+    Useful for testing where you want to fail fast without retries.
 
     Args:
         active: Whether retries should be active
@@ -321,7 +321,7 @@ def disabled_retries() -> Iterator[None]:
     Example:
         >>> with disabled_retries():
         ...     # Retries are disabled here
-        ...     result = awAlgot api_call()
+        ...     result = await api_call()
     """
     was_active = is_retry_active()
     set_retry_active(False)
@@ -337,7 +337,7 @@ async def async_disabled_retries() -> AsyncIterator[None]:
 
     Example:
         >>> async with async_disabled_retries():
-        ...     result = awAlgot api_call()
+        ...     result = await api_call()
     """
     was_active = is_retry_active()
     set_retry_active(False)
@@ -387,7 +387,7 @@ def get_retry_after(response: httpx.Response) -> float | None:
 
 # Custom hook for inspecting exceptions and customizing retry behavior
 def http_error_hook(exc: httpx.HTTPStatusError) -> bool:
-    """Hook for deciding whether to retry based on HTTP error detAlgols.
+    """Hook for deciding whether to retry based on HTTP error details.
 
     This can be passed to stamina.retry with the on_error parameter.
 

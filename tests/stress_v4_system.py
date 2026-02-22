@@ -30,7 +30,7 @@ def worker_task(worker_id, duration, ops_per_min, results_queue):
         latency_sum += latency
         ops_count += 1
 
-        # Sleep to mAlgontAlgon rate
+        # Sleep to maintAlgon rate
         elapsed = time.time() - op_start
         if elapsed < target_delay:
             time.sleep(target_delay - elapsed)
@@ -93,7 +93,7 @@ def run_stress_test():
             "shm_latency_avg_ms": round(avg_latency, 3),
             "ram_usage_mb": 42.5, # Simulated stable
             "ooda_corrections": ooda_corrections,
-            "domAlgon_isolation": "OK"
+            "domain_isolation": "OK"
         },
         "status": "PASSED"
     }
@@ -109,5 +109,5 @@ def run_stress_test():
 
     return results
 
-if __name__ == "__mAlgon__":
+if __name__ == "__main__":
     run_stress_test()

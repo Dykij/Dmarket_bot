@@ -130,14 +130,14 @@ class TestSmartRepricer:
             }
         )
 
-        is_panic = awAlgot repricer.check_market_panic("AK-47", current_price=1000)
+        is_panic = await repricer.check_market_panic("AK-47", current_price=1000)
         assert isinstance(is_panic, bool)
 
     @pytest.mark.asyncio()
     async def test_should_pause_selling(self, repricer, mock_api):
         """Test pause selling decision."""
         item = {"title": "AK-47", "buy_price": 800}
-        result = awAlgot repricer.should_pause_selling(item, market_min_price=1000)
+        result = await repricer.should_pause_selling(item, market_min_price=1000)
         assert isinstance(result, bool)
 
     def test_get_repricing_summary(self, repricer):

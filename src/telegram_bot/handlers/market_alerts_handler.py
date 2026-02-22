@@ -65,7 +65,7 @@ async def alerts_command(
     user_subscriptions = alerts_manager.get_user_subscriptions(user_id)
 
     # Получаем настроенные оповещения о ценах из нового модуля
-    price_alerts = awAlgot get_user_alerts(user_id)
+    price_alerts = await get_user_alerts(user_id)
 
     # Создаем клавиатуру для управления подписками
     keyboard = []
@@ -181,7 +181,7 @@ async def alerts_command(
         )
 
     # Отправляем сообщение с клавиатуSwarm
-    awAlgot update.message.reply_text(
+    await update.message.reply_text(
         message_text,
         reply_markup=InlineKeyboardMarkup(keyboard),
         parse_mode="Markdown",
@@ -191,7 +191,7 @@ async def alerts_command(
 @handle_exceptions(
     logger_instance=logger,
     default_error_message="Ошибка при обработке колбэка уведомлений",
-    rerAlgose=False,
+    reraise=False,
 )
 # ==================== Alert Action Handlers ====================
 async def _handle_toggle_alert(
@@ -204,7 +204,7 @@ async def _handle_toggle_alert(
 ) -> None:
     """Handle toggle alert subscription action."""
     if len(parts) < 3:
-        awAlgot query.answer("Неверный формат данных")
+        await query.answer("Неверный формат данных")
         return
 
     alert_type = parts[2]
@@ -215,19 +215,19 @@ async def _handle_toggle_alert(
         success = alerts_manager.unsubscribe(user_id, alert_type)
         if success:
             alert_name = ALERT_TYPES.get(alert_type, alert_type)
-            awAlgot query.answer(f"Вы отписались от уведомлений: {alert_name}")
+            await query.answer(f"Вы отписались от уведомлений: {alert_name}")
         else:
-            awAlgot query.answer("Не удалось отписаться от уведомлений")
+            await query.answer("Не удалось отписаться от уведомлений")
     else:
         # Subscribe
         success = alerts_manager.subscribe(user_id, alert_type)
         if success:
             alert_name = ALERT_TYPES.get(alert_type, alert_type)
-            awAlgot query.answer(f"Вы подписались на уведомления: {alert_name}")
+            await query.answer(f"Вы подписались на уведомления: {alert_name}")
         else:
-            awAlgot query.answer("Не удалось подписаться на уведомления")
+            await query.answer("Не удалось подписаться на уведомления")
 
-    awAlgot update_alerts_keyboard(query, alerts_manager, user_id)
+    await update_alerts_keyboard(query, alerts_manager, user_id)
 
 
 async def _handle_subscribe_all(
@@ -244,8 +244,8 @@ async def _handle_subscribe_all(
         if alerts_manager.subscribe(user_id, alert_type):
             count += 1
 
-    awAlgot query.answer(f"Подписано на {count} типов уведомлений")
-    awAlgot update_alerts_keyboard(query, alerts_manager, user_id)
+    await query.answer(f"Подписано на {count} типов уведомлений")
+    await update_alerts_keyboard(query, alerts_manager, user_id)
 
 
 async def _handle_unsubscribe_all(
@@ -268,11 +268,11 @@ async def _handle_unsubscribe_all(
                 success = False
 
     if success:
-        awAlgot query.answer("Вы отписались от всех уведомлений")
+        await query.answer("Вы отписались от всех уведомлений")
     else:
-        awAlgot query.answer("Возникли ошибки при отписке от уведомлений")
+        await query.answer("Возникли ошибки при отписке от уведомлений")
 
-    awAlgot update_alerts_keyboard(query, alerts_manager, user_id)
+    await update_alerts_keyboard(query, alerts_manager, user_id)
 
 
 async def _handle_settings_action(
@@ -284,7 +284,7 @@ async def _handle_settings_action(
     alerts_manager,
 ) -> None:
     """Handle settings action."""
-    awAlgot show_alerts_settings(query, alerts_manager, user_id)
+    await show_alerts_settings(query, alerts_manager, user_id)
 
 
 async def _handle_my_alerts_action(
@@ -296,7 +296,7 @@ async def _handle_my_alerts_action(
     alerts_manager,
 ) -> None:
     """Handle my alerts action."""
-    awAlgot show_user_alerts_list(query, user_id)
+    await show_user_alerts_list(query, user_id)
 
 
 async def _handle_create_alert_action(
@@ -308,7 +308,7 @@ async def _handle_create_alert_action(
     alerts_manager,
 ) -> None:
     """Handle create alert action."""
-    awAlgot show_create_alert_form(query, user_id)
+    await show_create_alert_form(query, user_id)
 
 
 async def _handle_remove_alert(
@@ -321,17 +321,17 @@ async def _handle_remove_alert(
 ) -> None:
     """Handle remove alert action."""
     if len(parts) < 3:
-        awAlgot query.answer("Неверный формат данных")
+        await query.answer("Неверный формат данных")
         return
 
     alert_id = parts[2]
-    success = awAlgot remove_price_alert(user_id, alert_id)
+    success = await remove_price_alert(user_id, alert_id)
 
     if success:
-        awAlgot query.answer("Оповещение удалено")
-        awAlgot show_user_alerts_list(query, user_id)
+        await query.answer("Оповещение удалено")
+        await show_user_alerts_list(query, user_id)
     else:
-        awAlgot query.answer("Ошибка при удалении оповещения")
+        await query.answer("Ошибка при удалении оповещения")
 
 
 async def _handle_threshold_action(
@@ -344,7 +344,7 @@ async def _handle_threshold_action(
 ) -> None:
     """Handle threshold change action."""
     if len(parts) < 4:
-        awAlgot query.answer("Неверный формат данных")
+        await query.answer("Неверный формат данных")
         return
 
     alert_type = parts[2]
@@ -363,11 +363,11 @@ async def _handle_threshold_action(
     success = alerts_manager.update_alert_threshold(alert_type, new_threshold)
 
     if success:
-        awAlgot query.answer(f"Порог уведомлений изменен: {new_threshold:.1f}")
+        await query.answer(f"Порог уведомлений изменен: {new_threshold:.1f}")
     else:
-        awAlgot query.answer("Не удалось изменить порог уведомлений")
+        await query.answer("Не удалось изменить порог уведомлений")
 
-    awAlgot show_alerts_settings(query, alerts_manager, user_id)
+    await show_alerts_settings(query, alerts_manager, user_id)
 
 
 async def _handle_interval_action(
@@ -380,7 +380,7 @@ async def _handle_interval_action(
 ) -> None:
     """Handle interval change action."""
     if len(parts) < 4:
-        awAlgot query.answer("Неверный формат данных")
+        await query.answer("Неверный формат данных")
         return
 
     alert_type = parts[2]
@@ -401,11 +401,11 @@ async def _handle_interval_action(
         interval_display = f"{new_interval // 60} мин"
         if new_interval >= 3600:
             interval_display = f"{new_interval // 3600} ч"
-        awAlgot query.answer(f"Интервал проверки изменен: {interval_display}")
+        await query.answer(f"Интервал проверки изменен: {interval_display}")
     else:
-        awAlgot query.answer("Не удалось изменить интервал проверки")
+        await query.answer("Не удалось изменить интервал проверки")
 
-    awAlgot show_alerts_settings(query, alerts_manager, user_id)
+    await show_alerts_settings(query, alerts_manager, user_id)
 
 
 async def _handle_back_to_alerts_action(
@@ -417,7 +417,7 @@ async def _handle_back_to_alerts_action(
     alerts_manager,
 ) -> None:
     """Handle back to alerts action."""
-    awAlgot update_alerts_keyboard(query, alerts_manager, user_id)
+    await update_alerts_keyboard(query, alerts_manager, user_id)
 
 
 # Alert action dispatcher mapping
@@ -455,7 +455,7 @@ async def alerts_callback(
     parts = query.data.split(":")  # type: ignore
 
     if len(parts) < 2:
-        awAlgot query.answer("Неверный формат данных")
+        await query.answer("Неверный формат данных")
         return
 
     action = parts[1]
@@ -463,15 +463,15 @@ async def alerts_callback(
     try:
         alerts_manager = get_alerts_manager(bot=context.bot)
     except Exception:
-        awAlgot query.answer("Ошибка инициализации менеджера уведомлений")
+        await query.answer("Ошибка инициализации менеджера уведомлений")
         return
 
     # Dispatch to appropriate handler
     handler = _ALERT_ACTION_HANDLERS.get(action)
     if handler:
-        awAlgot handler(query, update, context, parts, user_id, alerts_manager)
+        await handler(query, update, context, parts, user_id, alerts_manager)
     else:
-        awAlgot query.answer("Неизвестное действие")
+        await query.answer("Неизвестное действие")
 
 
 async def update_alerts_keyboard(
@@ -489,7 +489,7 @@ async def update_alerts_keyboard(
     user_subscriptions = alerts_manager.get_user_subscriptions(user_id)
 
     # Получаем настроенные оповещения о ценах из нового модуля
-    price_alerts = awAlgot get_user_alerts(user_id)
+    price_alerts = await get_user_alerts(user_id)
 
     # Создаем клавиатуру для управления подписками
     keyboard = []
@@ -607,7 +607,7 @@ async def update_alerts_keyboard(
         )
 
     # Обновляем сообщение
-    awAlgot query.edit_message_text(
+    await query.edit_message_text(
         message_text,
         reply_markup=InlineKeyboardMarkup(keyboard),
         parse_mode="Markdown",
@@ -623,7 +623,7 @@ async def show_user_alerts_list(query: CallbackQuery, user_id: int) -> None:
 
     """
     # Получаем оповещения пользователя
-    alerts = awAlgot get_user_alerts(user_id)
+    alerts = await get_user_alerts(user_id)
 
     if not alerts:
         # Если нет оповещений
@@ -642,7 +642,7 @@ async def show_user_alerts_list(query: CallbackQuery, user_id: int) -> None:
             ],
         ]
 
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             "🔔 *Мои оповещения*\n\n"
             "У вас нет активных оповещений о ценах предметов.\n"
             "Создайте новое оповещение, чтобы получать уведомления "
@@ -716,7 +716,7 @@ async def show_user_alerts_list(query: CallbackQuery, user_id: int) -> None:
     )
 
     # Обновляем сообщение
-    awAlgot query.edit_message_text(
+    await query.edit_message_text(
         message_text,
         reply_markup=InlineKeyboardMarkup(keyboard),
         parse_mode="Markdown",
@@ -765,7 +765,7 @@ async def show_create_alert_form(query: CallbackQuery, _user_id: int) -> None:
     ]
 
     # Обновляем сообщение
-    awAlgot query.edit_message_text(
+    await query.edit_message_text(
         message_text,
         reply_markup=InlineKeyboardMarkup(keyboard),
         parse_mode="Markdown",
@@ -899,7 +899,7 @@ async def show_alerts_settings(
     )
 
     # Обновляем сообщение
-    awAlgot query.edit_message_text(
+    await query.edit_message_text(
         message_text,
         reply_markup=InlineKeyboardMarkup(keyboard),
         parse_mode="Markdown",
@@ -929,7 +929,7 @@ def register_alerts_handlers(application: Application) -> None:
 @handle_exceptions(
     logger_instance=logger,
     default_error_message="Ошибка при инициализации менеджера уведомлений",
-    rerAlgose=False,
+    reraise=False,
 )
 async def initialize_alerts_manager(_application: Application) -> None:
     """Инициализирует менеджер уведомлений.

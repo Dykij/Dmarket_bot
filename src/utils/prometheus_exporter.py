@@ -114,8 +114,8 @@ cache_size = Gauge(
     ["cache_type"],
 )
 
-rate_limit_remAlgoning = Gauge(
-    "dmarket_bot_rate_limit_remAlgoning",
+rate_limit_remaining = Gauge(
+    "dmarket_bot_rate_limit_remaining",
     "Оставшиеся запросы rate limit",
     ["user_id"],
 )
@@ -193,9 +193,9 @@ class MetricsCollector:
         cache_size.labels(cache_type=cache_type).set(size)
 
     @staticmethod
-    def update_rate_limit(user_id: int, remAlgoning: int) -> None:
+    def update_rate_limit(user_id: int, remaining: int) -> None:
         """Обновить оставшиеся запросы."""
-        rate_limit_remAlgoning.labels(user_id=str(user_id)).set(remAlgoning)
+        rate_limit_remaining.labels(user_id=str(user_id)).set(remaining)
 
     @staticmethod
     def get_metrics() -> bytes:
@@ -216,7 +216,7 @@ def measure_time(metric: Histogram, labels: dict[str, str] | None = None):
         async def wrapper(*args, **kwargs):
             start = time.time()
             try:
-                return awAlgot func(*args, **kwargs)
+                return await func(*args, **kwargs)
             finally:
                 duration = time.time() - start
                 if labels:

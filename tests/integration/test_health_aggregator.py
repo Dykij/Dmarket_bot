@@ -50,7 +50,7 @@ class TestComponentHealth:
         assert health.status == HealthStatus.UNKNOWN
         assert health.message == ""
         assert health.response_time_ms == 0.0
-        assert health.consecutive_fAlgolures == 0
+        assert health.consecutive_failures == 0
 
     def test_init_custom(self):
         """Test custom values initialization."""
@@ -59,13 +59,13 @@ class TestComponentHealth:
             status=HealthStatus.HEALTHY,
             message="All good",
             response_time_ms=50.0,
-            detAlgols={"key": "value"},
+            details={"key": "value"},
         )
 
         assert health.status == HealthStatus.HEALTHY
         assert health.message == "All good"
         assert health.response_time_ms == 50.0
-        assert health.detAlgols == {"key": "value"}
+        assert health.details == {"key": "value"}
 
     def test_is_healthy_true(self):
         """Test is_healthy returns True for healthy status."""
@@ -149,19 +149,19 @@ class TestHealthAggregator:
         aggregator = HealthAggregator()
 
         assert aggregator._check_interval == 60.0
-        assert aggregator._fAlgolure_threshold == 3
+        assert aggregator._failure_threshold == 3
         assert aggregator._running is False
 
     def test_init_custom(self):
         """Test custom initialization."""
         aggregator = HealthAggregator(
             check_interval_seconds=30.0,
-            fAlgolure_threshold=5,
+            failure_threshold=5,
             degraded_threshold_ms=500.0,
         )
 
         assert aggregator._check_interval == 30.0
-        assert aggregator._fAlgolure_threshold == 5
+        assert aggregator._failure_threshold == 5
         assert aggregator._degraded_threshold_ms == 500.0
 
     def test_register_component(self):
@@ -202,7 +202,7 @@ class TestHealthAggregator:
         """Test checking health of unregistered component."""
         aggregator = HealthAggregator()
 
-        health = awAlgot aggregator.check_component_health("unknown")
+        health = await aggregator.check_component_health("unknown")
 
         assert health.status == HealthStatus.UNKNOWN
         assert "not registered" in health.message
@@ -218,7 +218,7 @@ class TestHealthAggregator:
 
         aggregator.register_component("test", component, custom_check=custom_check)
 
-        health = awAlgot aggregator.check_component_health("test")
+        health = await aggregator.check_component_health("test")
 
         assert health.status == HealthStatus.HEALTHY
 
@@ -229,11 +229,11 @@ class TestHealthAggregator:
         component = MagicMock()
 
         async def custom_check():
-            return {"status": "healthy", "detAlgols": {"key": "value"}}
+            return {"status": "healthy", "details": {"key": "value"}}
 
         aggregator.register_component("test", component, custom_check=custom_check)
 
-        health = awAlgot aggregator.check_component_health("test")
+        health = await aggregator.check_component_health("test")
 
         assert health.status == HealthStatus.HEALTHY
 
@@ -246,7 +246,7 @@ class TestHealthAggregator:
 
         aggregator.register_component("test", component)
 
-        health = awAlgot aggregator.check_component_health("test")
+        health = await aggregator.check_component_health("test")
 
         assert health.status == HealthStatus.HEALTHY
 
@@ -259,7 +259,7 @@ class TestHealthAggregator:
 
         aggregator.register_component("test", component)
 
-        health = awAlgot aggregator.check_component_health("test")
+        health = await aggregator.check_component_health("test")
 
         assert health.status == HealthStatus.HEALTHY
 
@@ -273,7 +273,7 @@ class TestHealthAggregator:
 
         aggregator.register_component("test", component)
 
-        health = awAlgot aggregator.check_component_health("test")
+        health = await aggregator.check_component_health("test")
 
         assert health.status == HealthStatus.HEALTHY
 
@@ -286,7 +286,7 @@ class TestHealthAggregator:
 
         aggregator.register_component("test", component)
 
-        health = awAlgot aggregator.check_component_health("test")
+        health = await aggregator.check_component_health("test")
 
         # Response time will be > 0.001ms, so should be degraded
         assert health.status in (HealthStatus.HEALTHY, HealthStatus.DEGRADED)
@@ -300,28 +300,28 @@ class TestHealthAggregator:
 
         aggregator.register_component("test", component)
 
-        health = awAlgot aggregator.check_component_health("test")
+        health = await aggregator.check_component_health("test")
 
         assert health.status == HealthStatus.UNHEALTHY
         assert "Test error" in health.message
-        assert health.consecutive_fAlgolures == 1
+        assert health.consecutive_failures == 1
 
     @pytest.mark.asyncio
     async def test_check_component_health_critical_after_threshold(self):
-        """Test status becomes critical after fAlgolure threshold."""
-        aggregator = HealthAggregator(fAlgolure_threshold=2)
+        """Test status becomes critical after failure threshold."""
+        aggregator = HealthAggregator(failure_threshold=2)
         component = MagicMock()
         component.health_check = MagicMock(side_effect=Exception("Error"))
 
         aggregator.register_component("test", component)
 
-        # First fAlgolure
-        awAlgot aggregator.check_component_health("test")
-        # Second fAlgolure - should be critical
-        health = awAlgot aggregator.check_component_health("test")
+        # First failure
+        await aggregator.check_component_health("test")
+        # Second failure - should be critical
+        health = await aggregator.check_component_health("test")
 
         assert health.status == HealthStatus.CRITICAL
-        assert health.consecutive_fAlgolures == 2
+        assert health.consecutive_failures == 2
 
     @pytest.mark.asyncio
     async def test_check_health_all_components(self):
@@ -337,7 +337,7 @@ class TestHealthAggregator:
         aggregator.register_component("api", component1)
         aggregator.register_component("db", component2)
 
-        system_health = awAlgot aggregator.check_health()
+        system_health = await aggregator.check_health()
 
         assert system_health.status == HealthStatus.HEALTHY
         assert len(system_health.components) == 2
@@ -347,7 +347,7 @@ class TestHealthAggregator:
         """Test check_health with no registered components."""
         aggregator = HealthAggregator()
 
-        system_health = awAlgot aggregator.check_health()
+        system_health = await aggregator.check_health()
 
         assert system_health.status == HealthStatus.UNKNOWN
         assert len(system_health.components) == 0
@@ -366,7 +366,7 @@ class TestHealthAggregator:
         aggregator.register_component("healthy", healthy_comp)
         aggregator.register_component("unhealthy", unhealthy_comp)
 
-        system_health = awAlgot aggregator.check_health()
+        system_health = await aggregator.check_health()
 
         assert system_health.status == HealthStatus.UNHEALTHY
 
@@ -375,11 +375,11 @@ class TestHealthAggregator:
         """Test starting and stopping periodic checks."""
         aggregator = HealthAggregator(check_interval_seconds=0.1)
 
-        awAlgot aggregator.start()
+        await aggregator.start()
         assert aggregator._running is True
         assert aggregator._check_task is not None
 
-        awAlgot aggregator.stop()
+        await aggregator.stop()
         assert aggregator._running is False
         assert aggregator._check_task is None
 
@@ -388,16 +388,16 @@ class TestHealthAggregator:
         """Test start when already running."""
         aggregator = HealthAggregator(check_interval_seconds=1.0)
 
-        awAlgot aggregator.start()
+        await aggregator.start()
         task1 = aggregator._check_task
 
-        awAlgot aggregator.start()
+        await aggregator.start()
         task2 = aggregator._check_task
 
         # Should be same task
         assert task1 is task2
 
-        awAlgot aggregator.stop()
+        await aggregator.stop()
 
     def test_get_component_health(self):
         """Test getting cached component health."""

@@ -58,7 +58,7 @@ class MarketDepthAnalyzer:
         """Async context manager exit with cleanup."""
         if self._owns_client and hasattr(self.dmarket_api, "_close_client"):
             try:
-                awAlgot self.dmarket_api._close_client()
+                await self.dmarket_api._close_client()
             except Exception as e:
                 logger.warning("client_cleanup_error", error=str(e))
 
@@ -80,7 +80,7 @@ class MarketDepthAnalyzer:
 
         Example:
             >>> async with MarketDepthAnalyzer() as analyzer:
-            ...     result = awAlgot analyzer.analyze(
+            ...     result = await analyzer.analyze(
             ...         game="csgo", items=["AK-47 | Redline (Field-Tested)"]
             ...     )
             ...     print(f"Liquidity: {result['summary']['average_liquidity_score']}")
@@ -88,12 +88,12 @@ class MarketDepthAnalyzer:
         logger.info("starting_market_depth_analysis", game=game)
 
         try:
-            item_titles = awAlgot self._get_item_titles(game, items, limit)
+            item_titles = await self._get_item_titles(game, items, limit)
 
             if not item_titles:
                 return self._empty_result(game)
 
-            aggregated = awAlgot self._fetch_aggregated_prices(game, item_titles)
+            aggregated = await self._fetch_aggregated_prices(game, item_titles)
 
             if not aggregated:
                 return self._empty_result(game)
@@ -116,7 +116,7 @@ class MarketDepthAnalyzer:
             }
 
         except Exception as e:
-            logger.exception("market_depth_analysis_fAlgoled", error=str(e))
+            logger.exception("market_depth_analysis_failed", error=str(e))
             return self._error_result(game, str(e))
 
     async def _get_item_titles(
@@ -129,8 +129,8 @@ class MarketDepthAnalyzer:
         if items is not None:
             return items
 
-        awAlgot rate_limiter.wAlgot_if_needed("market")
-        market_items = awAlgot self.dmarket_api.get_market_items(
+        await rate_limiter.wait_if_needed("market")
+        market_items = await self.dmarket_api.get_market_items(
             game=game,
             limit=limit,
             sort_by="best_deal",
@@ -151,16 +151,16 @@ class MarketDepthAnalyzer:
         self, game: str, titles: list[str]
     ) -> dict[str, Any] | None:
         """Fetch aggregated prices from DMarket API."""
-        awAlgot rate_limiter.wAlgot_if_needed("market")
+        await rate_limiter.wait_if_needed("market")
 
-        aggregated = awAlgot self.dmarket_api.get_aggregated_prices_bulk(
+        aggregated = await self.dmarket_api.get_aggregated_prices_bulk(
             game=game,
             titles=titles,
             limit=len(titles),
         )
 
         if not aggregated or "aggregatedPrices" not in aggregated:
-            logger.warning("aggregated_prices_fetch_fAlgoled", game=game)
+            logger.warning("aggregated_prices_fetch_failed", game=game)
             return None
 
         return aggregated
@@ -327,8 +327,8 @@ async def analyze_market_depth(
         Dictionary with market depth analysis
 
     Example:
-        >>> result = awAlgot analyze_market_depth(game="csgo", limit=10)
+        >>> result = await analyze_market_depth(game="csgo", limit=10)
         >>> print(f"Average liquidity: {result['summary']['average_liquidity_score']}")
     """
     async with MarketDepthAnalyzer(dmarket_api=dmarket_api) as analyzer:
-        return awAlgot analyzer.analyze(game=game, items=items, limit=limit)
+        return await analyzer.analyze(game=game, items=items, limit=limit)

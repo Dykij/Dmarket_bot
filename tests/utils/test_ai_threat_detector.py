@@ -39,7 +39,7 @@ class TestAlgoThreatDetector:
         """Test analysis of clean, safe request."""
         detector = AlgoThreatDetector()
 
-        analysis = awAlgot detector.analyze_request(
+        analysis = await detector.analyze_request(
             request_data={"text": "Hello world"},
             user_id="user_123",
         )
@@ -54,7 +54,7 @@ class TestAlgoThreatDetector:
         detector = AlgoThreatDetector()
 
         # SQL injection attempt
-        analysis = awAlgot detector.analyze_request(
+        analysis = await detector.analyze_request(
             request_data={"query": "SELECT * FROM users WHERE id=1 OR 1=1"},
             user_id="attacker_1",
         )
@@ -70,7 +70,7 @@ class TestAlgoThreatDetector:
         detector = AlgoThreatDetector()
 
         # XSS attempt
-        analysis = awAlgot detector.analyze_request(
+        analysis = await detector.analyze_request(
             request_data={"comment": "<script>alert('XSS')</script>"},
             user_id="attacker_2",
         )
@@ -91,13 +91,13 @@ class TestAlgoThreatDetector:
 
         # Make requests up to limit
         for _ in range(5):
-            awAlgot detector.analyze_request(
+            await detector.analyze_request(
                 request_data={"text": "test"},
                 user_id=user_id,
             )
 
         # Next request should trigger rate limit
-        analysis = awAlgot detector.analyze_request(
+        analysis = await detector.analyze_request(
             request_data={"text": "test"},
             user_id=user_id,
         )
@@ -110,17 +110,17 @@ class TestAlgoThreatDetector:
         detector = AlgoThreatDetector(max_requests_per_window=2)
 
         # User 1 makes requests
-        awAlgot detector.analyze_request(
+        await detector.analyze_request(
             request_data={"text": "test"},
             user_id="user_1",
         )
-        awAlgot detector.analyze_request(
+        await detector.analyze_request(
             request_data={"text": "test"},
             user_id="user_1",
         )
 
         # User 2 should not be affected
-        analysis = awAlgot detector.analyze_request(
+        analysis = await detector.analyze_request(
             request_data={"text": "test"},
             user_id="user_2",
         )
@@ -134,7 +134,7 @@ class TestAlgoThreatDetector:
 
         # Very long payload (possible buffer overflow)
         long_text = "A" * 15000
-        analysis = awAlgot detector.analyze_request(
+        analysis = await detector.analyze_request(
             request_data={"payload": long_text},
             user_id="user_123",
         )
@@ -148,7 +148,7 @@ class TestAlgoThreatDetector:
 
         # Excessive URL encoding
         suspicious_text = "test" + "%20" * 25
-        analysis = awAlgot detector.analyze_request(
+        analysis = await detector.analyze_request(
             request_data={"url": suspicious_text},
             user_id="user_123",
         )
@@ -161,7 +161,7 @@ class TestAlgoThreatDetector:
         detector = AlgoThreatDetector()
 
         # Both SQL injection and XSS
-        analysis = awAlgot detector.analyze_request(
+        analysis = await detector.analyze_request(
             request_data={
                 "query": "SELECT * FROM users WHERE 1=1",
                 "comment": "<script>alert(1)</script>",
@@ -180,7 +180,7 @@ class TestAlgoThreatDetector:
         detector = AlgoThreatDetector()
 
         # Critical threat (SQL injection)
-        analysis = awAlgot detector.analyze_request(
+        analysis = await detector.analyze_request(
             request_data={"query": "DROP TABLE users;--"},
             user_id="attacker",
         )
@@ -194,7 +194,7 @@ class TestAlgoThreatDetector:
         detector = AlgoThreatDetector(anomaly_threshold=0.9)
 
         # Medium threat
-        analysis = awAlgot detector.analyze_request(
+        analysis = await detector.analyze_request(
             request_data={"text": "slightly suspicious?"},
             user_id="user",
         )

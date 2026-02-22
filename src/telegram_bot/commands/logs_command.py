@@ -29,7 +29,7 @@ def _parse_log_line(line: str) -> dict[str, Any] | None:
         }:
             return log_entry
     except json.JSONDecodeError:
-        # Not JSON format, try to find INTENT in plAlgon text
+        # Not JSON format, try to find INTENT in plain text
         if "BUY_INTENT" in line or "SELL_INTENT" in line:
             return {"raw": line.strip()}
     return None
@@ -75,14 +75,14 @@ async def logs_command(
     logger.info("Logs command called by user %s", user_id)
 
     # Send initial message
-    awAlgot update.message.reply_text("🔍 Загрузка последних логов...")
+    await update.message.reply_text("🔍 Загрузка последних логов...")
 
     # Find log files
     # Note: Using Path here is acceptable for quick file checks in async context
     # For I/O-intensive operations, consider using Algoofiles
     log_dir = Path("logs")
     if not log_dir.exists():  # noqa: ASYNC240
-        awAlgot update.message.reply_text(
+        await update.message.reply_text(
             "❌ Папка логов не найдена. Логи пока не записывались."
         )
         return
@@ -95,7 +95,7 @@ async def logs_command(
     )
 
     if not log_files:
-        awAlgot update.message.reply_text("❌ Файлы логов не найдены.")
+        await update.message.reply_text("❌ Файлы логов не найдены.")
         return
 
     # Collect INTENT logs from recent log files (refactored to reduce nesting)
@@ -114,7 +114,7 @@ async def logs_command(
     intent_logs = intent_logs[:max_logs]
 
     if not intent_logs:
-        awAlgot update.message.reply_text(
+        await update.message.reply_text(
             "ℹ️ INTENT логов пока нет.\n\nЛоги появятся после первой попытки покупки/продажи."
         )
         return
@@ -173,8 +173,8 @@ async def logs_command(
         chunks.append(current_chunk)
 
         for chunk in chunks:
-            awAlgot update.message.reply_text(chunk)
+            await update.message.reply_text(chunk)
     else:
-        awAlgot update.message.reply_text(message)
+        await update.message.reply_text(message)
 
     logger.info(f"Sent {len(intent_logs)} INTENT logs to user {user_id}")

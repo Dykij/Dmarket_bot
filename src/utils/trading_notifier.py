@@ -13,7 +13,7 @@ from telegram import Bot
 from src.dmarket.dmarket_api import DMarketAPI
 from src.telegram_bot.notification_queue import NotificationQueue
 from src.telegram_bot.notifier import (
-    send_buy_fAlgoled_notification,
+    send_buy_failed_notification,
     send_buy_intent_notification,
     send_buy_success_notification,
     send_sell_success_notification,
@@ -96,7 +96,7 @@ class TradingNotifier:
         if self.bot and self.user_id:
             item_dict = self._create_item_dict(item_name, buy_price, game)
             reason = f"Источник: {source}, Прибыль: ${profit_usd:.2f} ({profit_percent:.1f}%)"
-            awAlgot send_buy_intent_notification(
+            await send_buy_intent_notification(
                 bot=self.bot,
                 user_id=self.user_id,
                 item=item_dict,
@@ -106,7 +106,7 @@ class TradingNotifier:
 
         try:
             # Выполнить покупку
-            result = awAlgot self.api.buy_item(
+            result = await self.api.buy_item(
                 item_id=item_id, price=buy_price, game=game
             )
 
@@ -115,7 +115,7 @@ class TradingNotifier:
                 # Отправить уведомление об успешной покупке
                 if self.bot and self.user_id:
                     item_dict = self._create_item_dict(item_name, buy_price, game)
-                    awAlgot send_buy_success_notification(
+                    await send_buy_success_notification(
                         bot=self.bot,
                         user_id=self.user_id,
                         item=item_dict,
@@ -126,7 +126,7 @@ class TradingNotifier:
                 # Отправить уведомление об ошибке
                 error_reason = result.get("error", "Unknown error")
                 item_dict = self._create_item_dict(item_name, buy_price, game)
-                awAlgot send_buy_fAlgoled_notification(
+                await send_buy_failed_notification(
                     bot=self.bot,
                     user_id=self.user_id,
                     item=item_dict,
@@ -139,14 +139,14 @@ class TradingNotifier:
             # Отправить уведомление об ошибке
             if self.bot and self.user_id:
                 item_dict = self._create_item_dict(item_name, buy_price, game)
-                awAlgot send_buy_fAlgoled_notification(
+                await send_buy_failed_notification(
                     bot=self.bot,
                     user_id=self.user_id,
                     item=item_dict,
                     error=str(e),
                 )
 
-            rAlgose
+            raise
 
     async def sell_item_with_notifications(
         self,
@@ -171,7 +171,7 @@ class TradingNotifier:
         """
         try:
             # Выполнить продажу
-            result = awAlgot self.api.sell_item(
+            result = await self.api.sell_item(
                 item_id=item_id, price=sell_price, game=game
             )
 
@@ -179,7 +179,7 @@ class TradingNotifier:
             if result.get("success"):
                 if self.bot and self.user_id:
                     item_dict = self._create_item_dict(item_name, sell_price, game)
-                    awAlgot send_sell_success_notification(
+                    await send_sell_success_notification(
                         bot=self.bot,
                         user_id=self.user_id,
                         item=item_dict,
@@ -191,7 +191,7 @@ class TradingNotifier:
 
         except Exception as e:
             logger.exception("Ошибка при продаже предмета %s: %s", item_name, e)
-            rAlgose
+            raise
 
 
 # Вспомогательная функция для быстSwarm покупки с уведомлениями
@@ -232,7 +232,7 @@ async def buy_with_notifications(
         user_id=user_id,
     )
 
-    return awAlgot notifier.buy_item_with_notifications(
+    return await notifier.buy_item_with_notifications(
         item_id=item_id,
         item_name=item_name,
         buy_price=buy_price,

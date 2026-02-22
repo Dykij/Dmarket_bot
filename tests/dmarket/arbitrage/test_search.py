@@ -80,7 +80,7 @@ class TestFindArbitrageItems:
             "src.dmarket.arbitrage.search.arbitrage_boost_async",
             AsyncMock(return_value=[{"name": "Item1", "profit": 2.0}]),
         ) as mock_boost:
-            results = awAlgot find_arbitrage_items(
+            results = await find_arbitrage_items(
                 game="csgo",
                 mode="boost",
                 min_price=1.0,
@@ -99,7 +99,7 @@ class TestFindArbitrageItems:
             "src.dmarket.arbitrage.search.arbitrage_boost_async",
             AsyncMock(return_value=[]),
         ) as mock_boost:
-            awAlgot find_arbitrage_items(game="csgo", mode="low")
+            await find_arbitrage_items(game="csgo", mode="low")
             mock_boost.assert_called_once()
 
     @pytest.mark.asyncio()
@@ -111,7 +111,7 @@ class TestFindArbitrageItems:
             "src.dmarket.arbitrage.search.arbitrage_mid_async",
             AsyncMock(return_value=[]),
         ) as mock_mid:
-            awAlgot find_arbitrage_items(game="csgo", mode="mid")
+            await find_arbitrage_items(game="csgo", mode="mid")
             mock_mid.assert_called_once()
 
     @pytest.mark.asyncio()
@@ -123,7 +123,7 @@ class TestFindArbitrageItems:
             "src.dmarket.arbitrage.search.arbitrage_pro_async",
             AsyncMock(return_value=[]),
         ) as mock_pro:
-            awAlgot find_arbitrage_items(game="csgo", mode="pro")
+            await find_arbitrage_items(game="csgo", mode="pro")
             mock_pro.assert_called_once()
 
     @pytest.mark.asyncio()
@@ -135,7 +135,7 @@ class TestFindArbitrageItems:
             "src.dmarket.arbitrage.search.arbitrage_mid_async",
             AsyncMock(return_value=[]),
         ) as mock_mid:
-            awAlgot find_arbitrage_items(game="csgo", mode="unknown_mode")
+            await find_arbitrage_items(game="csgo", mode="unknown_mode")
             mock_mid.assert_called_once()
 
     @pytest.mark.asyncio()
@@ -151,7 +151,7 @@ class TestFindArbitrageItems:
             "src.dmarket.arbitrage.search.arbitrage_mid_async",
             AsyncMock(return_value=tuple_results),
         ):
-            results = awAlgot find_arbitrage_items(game="csgo", mode="mid")
+            results = await find_arbitrage_items(game="csgo", mode="mid")
 
             assert len(results) == 1
             assert results[0]["market_hash_name"] == "Item Name"
@@ -173,7 +173,7 @@ class TestFindArbitrageItems:
             "src.dmarket.arbitrage.search.arbitrage_mid_async",
             AsyncMock(return_value=dict_results),
         ):
-            results = awAlgot find_arbitrage_items(game="csgo", mode="mid")
+            results = await find_arbitrage_items(game="csgo", mode="mid")
 
             assert len(results) == 1
             assert results[0]["name"] == "Item"
@@ -205,7 +205,7 @@ class TestFindArbitrageOpportunitiesAdvanced:
             "src.dmarket.arbitrage.search.get_arbitrage_cache",
             return_value=cached,
         ):
-            results = awAlgot find_arbitrage_opportunities_advanced(
+            results = await find_arbitrage_opportunities_advanced(
                 api_client=mock_api_client,
                 game="csgo",
             )
@@ -223,7 +223,7 @@ class TestFindArbitrageOpportunitiesAdvanced:
             return_value=None,
         ):
             with patch("src.dmarket.arbitrage.search.save_arbitrage_cache"):
-                awAlgot find_arbitrage_opportunities_advanced(
+                await find_arbitrage_opportunities_advanced(
                     api_client=mock_api_client,
                     game="unknown_game",
                 )
@@ -242,7 +242,7 @@ class TestFindArbitrageOpportunitiesAdvanced:
             return_value=None,
         ):
             with patch("src.dmarket.arbitrage.search.save_arbitrage_cache"):
-                awAlgot find_arbitrage_opportunities_advanced(
+                await find_arbitrage_opportunities_advanced(
                     api_client=mock_api_client,
                     mode="game_dota2",
                 )
@@ -263,7 +263,7 @@ class TestFindArbitrageOpportunitiesAdvanced:
             patch("src.dmarket.arbitrage.search.save_arbitrage_cache"),
         ):
             # Should internally convert "normal" to "medium"
-            awAlgot find_arbitrage_opportunities_advanced(
+            await find_arbitrage_opportunities_advanced(
                 api_client=mock_api_client,
                 mode="normal",
             )
@@ -279,7 +279,7 @@ class TestFindArbitrageOpportunitiesAdvanced:
             "src.dmarket.arbitrage.search.get_arbitrage_cache",
             return_value=None,
         ):
-            results = awAlgot find_arbitrage_opportunities_advanced(
+            results = await find_arbitrage_opportunities_advanced(
                 api_client=mock_api_client,
             )
 
@@ -298,7 +298,7 @@ class TestFindArbitrageOpportunitiesAdvanced:
             "src.dmarket.arbitrage.search.get_arbitrage_cache",
             return_value=None,
         ):
-            results = awAlgot find_arbitrage_opportunities_advanced(
+            results = await find_arbitrage_opportunities_advanced(
                 api_client=mock_api_client,
             )
 
@@ -314,7 +314,7 @@ class TestFindArbitrageOpportunitiesAdvanced:
             return_value=None,
         ):
             with patch("src.dmarket.arbitrage.search.save_arbitrage_cache"):
-                awAlgot find_arbitrage_opportunities_advanced(
+                await find_arbitrage_opportunities_advanced(
                     api_client=mock_api_client,
                     mode="medium",
                 )
@@ -471,7 +471,7 @@ class TestModuleExports:
     """Test module exports."""
 
     def test_all_exports(self):
-        """Test __all__ contAlgons expected exports."""
+        """Test __all__ contains expected exports."""
         from src.dmarket.arbitrage.search import __all__
 
         assert "find_arbitrage_items" in __all__

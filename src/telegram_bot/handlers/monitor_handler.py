@@ -125,7 +125,7 @@ class MonitorHandler:
 
         keyboard = self._create_monitor_keyboard()
 
-        awAlgot update.message.reply_text(
+        await update.message.reply_text(
             text,
             reply_markup=InlineKeyboardMarkup(keyboard),
             parse_mode="Markdown",
@@ -141,7 +141,7 @@ class MonitorHandler:
         if not query or not query.data:
             return
 
-        awAlgot query.answer()
+        await query.answer()
 
         data = query.data
         parts = data.split(":")
@@ -149,31 +149,31 @@ class MonitorHandler:
         action = parts[1] if len(parts) > 1 else ""
 
         if action == "status":
-            awAlgot self._show_status(query)
+            await self._show_status(query)
         elif action == "channels":
-            awAlgot self._show_channels(query)
+            await self._show_channels(query)
         elif action == "signals":
-            awAlgot self._show_signals(query)
+            await self._show_signals(query)
         elif action == "settings":
-            awAlgot self._show_settings(query)
+            await self._show_settings(query)
         elif action == "start":
-            awAlgot self._start_monitor(query)
+            await self._start_monitor(query)
         elif action == "stop":
-            awAlgot self._stop_monitor(query)
+            await self._stop_monitor(query)
         elif action == "add_default":
-            awAlgot self._add_default_channels(query)
+            await self._add_default_channels(query)
         elif action == "test_signal":
-            awAlgot self._test_signal(query)
+            await self._test_signal(query)
         elif action == "back":
             keyboard = self._create_monitor_keyboard()
-            awAlgot query.edit_message_text(
+            await query.edit_message_text(
                 "📡 *Мониторинг каналов*\n\nВыберите действие:",
                 reply_markup=InlineKeyboardMarkup(keyboard),
                 parse_mode="Markdown",
             )
 
     async def _show_status(self, query: Any) -> None:
-        """Show detAlgoled monitoring status."""
+        """Show detailed monitoring status."""
         stats = self._monitor.get_stats()
 
         text = "📊 *Статус мониторинга*\n\n"
@@ -213,7 +213,7 @@ class MonitorHandler:
             [InlineKeyboardButton("◀️ Назад", callback_data="monitor:back")],
         ]
 
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             text,
             reply_markup=InlineKeyboardMarkup(keyboard),
             parse_mode="Markdown",
@@ -253,7 +253,7 @@ class MonitorHandler:
             [InlineKeyboardButton("◀️ Назад", callback_data="monitor:back")],
         ]
 
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             text,
             reply_markup=InlineKeyboardMarkup(keyboard),
             parse_mode="Markdown",
@@ -308,7 +308,7 @@ class MonitorHandler:
             [InlineKeyboardButton("◀️ Назад", callback_data="monitor:back")],
         ]
 
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             text,
             reply_markup=InlineKeyboardMarkup(keyboard),
             parse_mode="Markdown",
@@ -329,7 +329,7 @@ class MonitorHandler:
             [InlineKeyboardButton("◀️ Назад", callback_data="monitor:back")],
         ]
 
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             text,
             reply_markup=InlineKeyboardMarkup(keyboard),
             parse_mode="Markdown",
@@ -340,8 +340,8 @@ class MonitorHandler:
         try:
             # For mock monitor, just set running flag
             if isinstance(self._monitor, MockTelethonMonitor):
-                awAlgot self._monitor.start()
-                awAlgot query.edit_message_text(
+                await self._monitor.start()
+                await query.edit_message_text(
                     "✅ Мониторинг запущен (Mock Mode)\n\nИспользуйте 'Тест сигнала' для проверки.",
                     reply_markup=InlineKeyboardMarkup(
                         [
@@ -355,7 +355,7 @@ class MonitorHandler:
                 )
             else:
                 # Real Telethon monitor runs in background
-                awAlgot query.edit_message_text(
+                await query.edit_message_text(
                     "⏳ Запуск мониторинга...\n\nЭто может занять несколько секунд.",
                 )
                 # Would need to run in background task
@@ -363,13 +363,13 @@ class MonitorHandler:
 
         except Exception as e:
             logger.exception(f"Monitor start error: {e}")
-            awAlgot query.edit_message_text(f"❌ Ошибка запуска: {e}")
+            await query.edit_message_text(f"❌ Ошибка запуска: {e}")
 
     async def _stop_monitor(self, query: Any) -> None:
         """Stop the monitor."""
         try:
-            awAlgot self._monitor.stop()
-            awAlgot query.edit_message_text(
+            await self._monitor.stop()
+            await query.edit_message_text(
                 "⏹️ Мониторинг остановлен",
                 reply_markup=InlineKeyboardMarkup(
                     [[InlineKeyboardButton("◀️ Назад", callback_data="monitor:back")]]
@@ -377,7 +377,7 @@ class MonitorHandler:
             )
         except Exception as e:
             logger.exception(f"Monitor stop error: {e}")
-            awAlgot query.edit_message_text(f"❌ Ошибка: {e}")
+            await query.edit_message_text(f"❌ Ошибка: {e}")
 
     async def _add_default_channels(self, query: Any) -> None:
         """Add default channels."""
@@ -394,7 +394,7 @@ class MonitorHandler:
             "Добавьте свои через /monitor\\_add_"
         )
 
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             text,
             reply_markup=InlineKeyboardMarkup(
                 [
@@ -412,7 +412,7 @@ class MonitorHandler:
     async def _test_signal(self, query: Any) -> None:
         """Test signal detection with sample message."""
         if not isinstance(self._monitor, MockTelethonMonitor):
-            awAlgot query.edit_message_text(
+            await query.edit_message_text(
                 "❌ Тестовые сигналы доступны только в Mock Mode",
             )
             return
@@ -452,7 +452,7 @@ class MonitorHandler:
         else:
             text = "❌ Сигнал не обнаружен в тестовом сообщении."
 
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             text,
             reply_markup=InlineKeyboardMarkup(
                 [
@@ -468,7 +468,7 @@ class MonitorHandler:
         )
 
     def _create_monitor_keyboard(self) -> list[list[InlineKeyboardButton]]:
-        """Create mAlgon monitor keyboard."""
+        """Create main monitor keyboard."""
         return [
             [
                 InlineKeyboardButton("📊 Статус", callback_data="monitor:status"),
@@ -479,7 +479,7 @@ class MonitorHandler:
                 InlineKeyboardButton("⚙️ НастSwarmки", callback_data="monitor:settings"),
             ],
             [
-                InlineKeyboardButton("◀️ Главное меню", callback_data="mAlgon_menu"),
+                InlineKeyboardButton("◀️ Главное меню", callback_data="main_menu"),
             ],
         ]
 
@@ -506,7 +506,7 @@ class MonitorHandler:
             text += f"\n_Уверенность: {signal.confidence:.0%}_"
 
             try:
-                awAlgot self._notify_callback(text)
+                await self._notify_callback(text)
             except Exception as e:
                 logger.exception(f"Notification error: {e}")
 

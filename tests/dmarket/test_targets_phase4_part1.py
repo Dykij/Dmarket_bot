@@ -86,7 +86,7 @@ class TestCreateTarget:
     @pytest.mark.asyncio()
     async def test_create_target_basic(self, target_manager):
         """Тест создания базового таргета."""
-        result = awAlgot target_manager.create_target(
+        result = await target_manager.create_target(
             game="csgo", title="AK-47 | Redline (Field-Tested)", price=10.0
         )
 
@@ -96,7 +96,7 @@ class TestCreateTarget:
     @pytest.mark.asyncio()
     async def test_create_target_with_amount(self, target_manager):
         """Тест создания таргета с количеством."""
-        result = awAlgot target_manager.create_target(
+        result = await target_manager.create_target(
             game="csgo", title="AK-47 | Redline (FT)", price=10.0, amount=5
         )
 
@@ -105,54 +105,54 @@ class TestCreateTarget:
     @pytest.mark.asyncio()
     async def test_create_target_with_attrs(self, target_manager):
         """Тест создания таргета с атрибутами."""
-        result = awAlgot target_manager.create_target(
+        result = await target_manager.create_target(
             game="csgo", title="AK-47 | Redline (FT)", price=10.0, attrs={"float": 0.15}
         )
 
         assert result["success"] is True
 
     @pytest.mark.asyncio()
-    async def test_create_target_empty_title_rAlgoses_error(self, target_manager):
+    async def test_create_target_empty_title_raises_error(self, target_manager):
         """Тест что пустое название вызывает ошибку."""
-        with pytest.rAlgoses(ValueError, match="не может быть пустым"):
-            awAlgot target_manager.create_target(game="csgo", title="", price=10.0)
+        with pytest.raises(ValueError, match="не может быть пустым"):
+            await target_manager.create_target(game="csgo", title="", price=10.0)
 
     @pytest.mark.asyncio()
-    async def test_create_target_zero_price_rAlgoses_error(self, target_manager):
+    async def test_create_target_zero_price_raises_error(self, target_manager):
         """Тест что нулевая цена вызывает ошибку."""
-        with pytest.rAlgoses(ValueError, match="больше 0"):
-            awAlgot target_manager.create_target(
+        with pytest.raises(ValueError, match="больше 0"):
+            await target_manager.create_target(
                 game="csgo", title="AK-47 | Redline (FT)", price=0.0
             )
 
     @pytest.mark.asyncio()
-    async def test_create_target_negative_price_rAlgoses_error(self, target_manager):
+    async def test_create_target_negative_price_raises_error(self, target_manager):
         """Тест что отрицательная цена вызывает ошибку."""
-        with pytest.rAlgoses(ValueError, match="больше 0"):
-            awAlgot target_manager.create_target(
+        with pytest.raises(ValueError, match="больше 0"):
+            await target_manager.create_target(
                 game="csgo", title="AK-47 | Redline (FT)", price=-5.0
             )
 
     @pytest.mark.asyncio()
-    async def test_create_target_invalid_amount_rAlgoses_error(self, target_manager):
+    async def test_create_target_invalid_amount_raises_error(self, target_manager):
         """Тест что неверное количество вызывает ошибку."""
-        with pytest.rAlgoses(ValueError, match="от 1 до 100"):
-            awAlgot target_manager.create_target(
+        with pytest.raises(ValueError, match="от 1 до 100"):
+            await target_manager.create_target(
                 game="csgo", title="AK-47 | Redline (FT)", price=10.0, amount=0
             )
 
     @pytest.mark.asyncio()
-    async def test_create_target_amount_over_100_rAlgoses_error(self, target_manager):
+    async def test_create_target_amount_over_100_raises_error(self, target_manager):
         """Тест что количество >100 вызывает ошибку."""
-        with pytest.rAlgoses(ValueError, match="от 1 до 100"):
-            awAlgot target_manager.create_target(
+        with pytest.raises(ValueError, match="от 1 до 100"):
+            await target_manager.create_target(
                 game="csgo", title="AK-47 | Redline (FT)", price=10.0, amount=101
             )
 
     @pytest.mark.asyncio()
     async def test_create_target_calls_api(self, target_manager, mock_api_client):
         """Тест что метод вызывает API."""
-        awAlgot target_manager.create_target(
+        await target_manager.create_target(
             game="csgo", title="AK-47 | Redline (FT)", price=10.0
         )
 
@@ -164,7 +164,7 @@ class TestCreateTarget:
         games = ["csgo", "dota2", "tf2", "rust"]
 
         for game in games:
-            result = awAlgot target_manager.create_target(
+            result = await target_manager.create_target(
                 game=game, title="Test Item", price=10.0
             )
             assert result["success"] is True
@@ -172,7 +172,7 @@ class TestCreateTarget:
     @pytest.mark.asyncio()
     async def test_create_target_with_high_price(self, target_manager):
         """Тест создания таргета с высокой ценой."""
-        result = awAlgot target_manager.create_target(
+        result = await target_manager.create_target(
             game="csgo", title="★ Karambit | Fade (FN)", price=1000.0
         )
 
@@ -181,7 +181,7 @@ class TestCreateTarget:
     @pytest.mark.asyncio()
     async def test_create_target_with_low_price(self, target_manager):
         """Тест создания таргета с низкой ценой."""
-        result = awAlgot target_manager.create_target(
+        result = await target_manager.create_target(
             game="csgo", title="P250 | Sand Dune (BS)", price=0.01
         )
 
@@ -190,24 +190,24 @@ class TestCreateTarget:
     @pytest.mark.asyncio()
     async def test_create_target_with_special_characters(self, target_manager):
         """Тест создания таргета с спецсимволами в названии."""
-        result = awAlgot target_manager.create_target(
+        result = await target_manager.create_target(
             game="csgo", title="★ M9 Bayonet | Doppler (Phase 2)", price=500.0
         )
 
         assert result["success"] is True
 
     @pytest.mark.asyncio()
-    async def test_create_target_whitespace_only_title_rAlgoses_error(
+    async def test_create_target_whitespace_only_title_raises_error(
         self, target_manager
     ):
         """Тест что название из пробелов вызывает ошибку."""
-        with pytest.rAlgoses(ValueError, match="не может быть пустым"):
-            awAlgot target_manager.create_target(game="csgo", title="   ", price=10.0)
+        with pytest.raises(ValueError, match="не может быть пустым"):
+            await target_manager.create_target(game="csgo", title="   ", price=10.0)
 
     @pytest.mark.asyncio()
     async def test_create_target_with_max_amount(self, target_manager):
         """Тест создания таргета с максимальным количеством."""
-        result = awAlgot target_manager.create_target(
+        result = await target_manager.create_target(
             game="csgo", title="AK-47 | Redline (FT)", price=10.0, amount=100
         )
 
@@ -225,21 +225,21 @@ class TestGetTargets:
     @pytest.mark.asyncio()
     async def test_get_user_targets_returns_dict(self, target_manager):
         """Тест что get_user_targets возвращает список."""
-        result = awAlgot target_manager.get_user_targets()
+        result = await target_manager.get_user_targets()
 
         assert isinstance(result, list)
 
     @pytest.mark.asyncio()
     async def test_get_user_targets_with_game_filter(self, target_manager):
         """Тест получения таргетов с фильтром по игре."""
-        result = awAlgot target_manager.get_user_targets(game="csgo")
+        result = await target_manager.get_user_targets(game="csgo")
 
         assert isinstance(result, list)
 
     @pytest.mark.asyncio()
     async def test_get_user_targets_calls_api(self, target_manager, mock_api_client):
         """Тест что метод вызывает API."""
-        awAlgot target_manager.get_user_targets()
+        await target_manager.get_user_targets()
 
         mock_api_client.get_user_targets.assert_called_once()
 
@@ -248,7 +248,7 @@ class TestGetTargets:
         """Тест что get_targets_by_title возвращает список."""
         target_manager.api.get_targets_by_title = AsyncMock(return_value={"items": []})
 
-        result = awAlgot target_manager.get_targets_by_title(
+        result = await target_manager.get_targets_by_title(
             game="csgo", title="AK-47 | Redline"
         )
 
@@ -259,7 +259,7 @@ class TestGetTargets:
         """Тест поиска таргетов с пустым названием."""
         target_manager.api.get_targets_by_title = AsyncMock(return_value={"items": []})
 
-        result = awAlgot target_manager.get_targets_by_title(game="csgo", title="")
+        result = await target_manager.get_targets_by_title(game="csgo", title="")
 
         assert isinstance(result, list)
 
@@ -268,7 +268,7 @@ class TestGetTargets:
         """Тест что get_closed_targets возвращает список."""
         target_manager.api.get_closed_targets = AsyncMock(return_value={"objects": []})
 
-        result = awAlgot target_manager.get_closed_targets()
+        result = await target_manager.get_closed_targets()
 
         assert isinstance(result, list)
 
@@ -277,7 +277,7 @@ class TestGetTargets:
         """Тест получения закрытых таргетов с лимитом."""
         target_manager.api.get_closed_targets = AsyncMock(return_value={"objects": []})
 
-        result = awAlgot target_manager.get_closed_targets(limit=10)
+        result = await target_manager.get_closed_targets(limit=10)
 
         assert isinstance(result, list)
 
@@ -286,7 +286,7 @@ class TestGetTargets:
         """Тест получения закрытых таргетов за период."""
         target_manager.api.get_closed_targets = AsyncMock(return_value={"objects": []})
 
-        result = awAlgot target_manager.get_closed_targets(days=30)
+        result = await target_manager.get_closed_targets(days=30)
 
         assert isinstance(result, list)
 
@@ -302,21 +302,21 @@ class TestDeleteTargets:
     @pytest.mark.asyncio()
     async def test_delete_target_returns_bool(self, target_manager):
         """Тест что delete_target возвращает bool."""
-        result = awAlgot target_manager.delete_target("target_123")
+        result = await target_manager.delete_target("target_123")
 
         assert isinstance(result, bool)
 
     @pytest.mark.asyncio()
     async def test_delete_target_success(self, target_manager):
         """Тест успешного удаления таргета."""
-        result = awAlgot target_manager.delete_target("target_123")
+        result = await target_manager.delete_target("target_123")
 
         assert result is True
 
     @pytest.mark.asyncio()
     async def test_delete_target_calls_api(self, target_manager, mock_api_client):
         """Тест что метод вызывает API."""
-        awAlgot target_manager.delete_target("target_123")
+        await target_manager.delete_target("target_123")
 
         mock_api_client.delete_target.assert_called_once_with("target_123")
 
@@ -329,7 +329,7 @@ class TestDeleteTargets:
             }
         )
 
-        result = awAlgot target_manager.delete_all_targets()
+        result = await target_manager.delete_all_targets()
 
         assert isinstance(result, dict)
 
@@ -340,7 +340,7 @@ class TestDeleteTargets:
             return_value={"objects": [{"TargetID": "target_1", "GameID": "csgo"}]}
         )
 
-        result = awAlgot target_manager.delete_all_targets(game="csgo")
+        result = await target_manager.delete_all_targets(game="csgo")
 
         assert isinstance(result, dict)
 
@@ -349,7 +349,7 @@ class TestDeleteTargets:
         """Тест удаления когда нет таргетов."""
         target_manager.api.get_user_targets = AsyncMock(return_value=[])
 
-        result = awAlgot target_manager.delete_all_targets(dry_run=False)
+        result = await target_manager.delete_all_targets(dry_run=False)
 
         assert result["deleted"] == 0
 
@@ -362,7 +362,7 @@ class TestDeleteTargets:
             return_value={"objects": targets}
         )
 
-        result = awAlgot target_manager.delete_all_targets()
+        result = await target_manager.delete_all_targets()
 
         assert isinstance(result, dict)
 
@@ -381,17 +381,17 @@ class TestStatistics:
         target_manager.api.get_user_targets = AsyncMock(return_value=[])
         target_manager.api.get_closed_targets = AsyncMock(return_value=[])
 
-        result = awAlgot target_manager.get_target_statistics(game="csgo")
+        result = await target_manager.get_target_statistics(game="csgo")
 
         assert isinstance(result, dict)
 
     @pytest.mark.asyncio()
-    async def test_get_target_statistics_contAlgons_total(self, target_manager):
+    async def test_get_target_statistics_contains_total(self, target_manager):
         """Тест что статистика содержит общее количество."""
         target_manager.api.get_user_targets = AsyncMock(return_value=[])
         target_manager.api.get_closed_targets = AsyncMock(return_value=[])
 
-        result = awAlgot target_manager.get_target_statistics(game="csgo")
+        result = await target_manager.get_target_statistics(game="csgo")
 
         assert "active_count" in result or "total" in result or isinstance(result, dict)
 
@@ -406,7 +406,7 @@ class TestStatistics:
         )
         target_manager.api.get_closed_targets = AsyncMock(return_value=[])
 
-        result = awAlgot target_manager.get_target_statistics(game="csgo")
+        result = await target_manager.get_target_statistics(game="csgo")
 
         assert isinstance(result, dict)
 
@@ -418,7 +418,7 @@ class TestStatistics:
             return_value=[{"TargetID": "t1"}, {"TargetID": "t2"}]
         )
 
-        result = awAlgot target_manager.get_target_statistics(game="csgo")
+        result = await target_manager.get_target_statistics(game="csgo")
 
         assert isinstance(result, dict)
 
@@ -430,7 +430,7 @@ class TestStatistics:
         )
         target_manager.api.get_closed_targets = AsyncMock(return_value=[])
 
-        result = awAlgot target_manager.get_target_statistics(game="csgo")
+        result = await target_manager.get_target_statistics(game="csgo")
 
         assert isinstance(result, dict)
 
@@ -448,7 +448,7 @@ class TestCompetitionAnalysis:
         """Тест что analyze_target_competition возвращает словарь."""
         target_manager.api.get_market_items = AsyncMock(return_value={"objects": []})
 
-        result = awAlgot target_manager.analyze_target_competition(
+        result = await target_manager.analyze_target_competition(
             game="csgo", title="AK-47 | Redline (FT)"
         )
 
@@ -466,7 +466,7 @@ class TestCompetitionAnalysis:
             }
         )
 
-        result = awAlgot target_manager.analyze_target_competition(
+        result = await target_manager.analyze_target_competition(
             game="csgo", title="AK-47 | Redline (FT)"
         )
 
@@ -485,7 +485,7 @@ class TestCompetitionAnalysis:
             }
         )
 
-        result = awAlgot target_manager.assess_competition(
+        result = await target_manager.assess_competition(
             game="csgo", title="AK-47 | Redline (FT)"
         )
 
@@ -504,7 +504,7 @@ class TestCompetitionAnalysis:
             }
         )
 
-        result = awAlgot target_manager.assess_competition(game="csgo", title="Rare Item")
+        result = await target_manager.assess_competition(game="csgo", title="Rare Item")
 
         assert isinstance(result, dict)
         assert result["should_proceed"] is True
@@ -522,7 +522,7 @@ class TestCompetitionAnalysis:
             }
         )
 
-        result = awAlgot target_manager.assess_competition(
+        result = await target_manager.assess_competition(
             game="csgo", title="Popular Item"
         )
 
@@ -548,7 +548,7 @@ class TestCompetitionAnalysis:
             }
         )
 
-        result = awAlgot target_manager.filter_low_competition_items(
+        result = await target_manager.filter_low_competition_items(
             game="csgo", items=items
         )
 
@@ -584,7 +584,7 @@ class TestCompetitionAnalysis:
             side_effect=mock_competition
         )
 
-        result = awAlgot target_manager.filter_low_competition_items(
+        result = await target_manager.filter_low_competition_items(
             game="csgo", items=items
         )
 
@@ -595,7 +595,7 @@ class TestCompetitionAnalysis:
     @pytest.mark.asyncio()
     async def test_filter_low_competition_items_empty_list(self, target_manager):
         """Тест фильтрации пустого списка."""
-        result = awAlgot target_manager.filter_low_competition_items(
+        result = await target_manager.filter_low_competition_items(
             game="csgo", items=[]
         )
 
@@ -619,7 +619,7 @@ class TestCompetitionAnalysis:
             }
         )
 
-        result = awAlgot target_manager.filter_low_competition_items(
+        result = await target_manager.filter_low_competition_items(
             game="csgo", items=items, max_competition=20
         )
 
@@ -645,7 +645,7 @@ class TestValidation:
         """Тест валидации невалидного float."""
         attrs = {"floatPartValue": 1.5}
 
-        with pytest.rAlgoses(ValueError):
+        with pytest.raises(ValueError):
             validate_attributes("csgo", attrs)
 
     def test_validate_attributes_none(self):
@@ -699,7 +699,7 @@ class TestHelperMethods:
         import time
 
         start = time.time()
-        awAlgot target_manager._delay(0.1)
+        await target_manager._delay(0.1)
         elapsed = time.time() - start
 
         assert elapsed >= 0.09  # Учитываем погрешность
@@ -707,7 +707,7 @@ class TestHelperMethods:
     @pytest.mark.asyncio()
     async def test_delay_zero_seconds(self, target_manager):
         """Тест задержки на 0 секунд."""
-        awAlgot target_manager._delay(0)
+        await target_manager._delay(0)
         # Просто проверяем что не упало
         assert True
 
@@ -725,7 +725,7 @@ class TestSmartTargets:
         """Тест что create_smart_targets возвращает список."""
         items = [{"title": "Item 1", "price": 10.0}]
 
-        result = awAlgot target_manager.create_smart_targets(
+        result = await target_manager.create_smart_targets(
             game="csgo", items=items, max_targets=5
         )
 
@@ -736,7 +736,7 @@ class TestSmartTargets:
         """Тест создания умных таргетов с лимитом."""
         items = [{"title": f"Item {i}", "price": 10.0 + i} for i in range(10)]
 
-        result = awAlgot target_manager.create_smart_targets(
+        result = await target_manager.create_smart_targets(
             game="csgo", items=items, max_targets=3
         )
 
@@ -748,7 +748,7 @@ class TestSmartTargets:
         """Тест создания умных таргетов когда нет предметов."""
         items = []
 
-        result = awAlgot target_manager.create_smart_targets(
+        result = await target_manager.create_smart_targets(
             game="csgo", items=items, max_targets=5
         )
 

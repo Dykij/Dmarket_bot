@@ -22,7 +22,7 @@ class TaskResult(Enum):
     """Task completion results."""
 
     SUCCESS = "success"
-    FAlgoLURE = "fAlgolure"
+    FAlgoLURE = "failure"
     ABANDONED = "abandoned"
     TIMEOUT = "timeout"
 
@@ -104,9 +104,9 @@ class TestTaskCompletion:
         """Test tracking of task with errors."""
         task_tracker.start_task("task_2", "create_target")
         task_tracker.record_step("task_2")
-        task_tracker.record_error("task_2")  # First attempt fAlgoled
+        task_tracker.record_error("task_2")  # First attempt failed
         task_tracker.record_step("task_2")
-        task_tracker.record_error("task_2")  # Second attempt fAlgoled
+        task_tracker.record_error("task_2")  # Second attempt failed
         task_tracker.record_step("task_2")
         task_tracker.complete_task("task_2", TaskResult.SUCCESS)
 
@@ -116,7 +116,7 @@ class TestTaskCompletion:
 
     def test_success_rate_calculation(self, task_tracker):
         """Test success rate calculation."""
-        # 3 successful, 2 fAlgoled
+        # 3 successful, 2 failed
         for i in range(5):
             task_tracker.start_task(f"task_{i}", "test_task")
             result = TaskResult.SUCCESS if i < 3 else TaskResult.FAlgoLURE
@@ -135,20 +135,20 @@ class TestErrorMessageClarity:
             "invalid_price": {
                 "code": "INVALID_PRICE",
                 "message": "Invalid price format",
-                "detAlgol": "Price must be a positive number with up to 2 decimal places",
+                "detail": "Price must be a positive number with up to 2 decimal places",
                 "example": "Example: 10.50",
                 "action": "Please enter a valid price",
             },
             "api_error": {
                 "code": "API_ERROR",
                 "message": "Service temporarily unavAlgolable",
-                "detAlgol": "The DMarket API is not responding",
+                "detail": "The DMarket API is not responding",
                 "action": "Please try agAlgon in a few minutes",
             },
             "auth_error": {
                 "code": "AUTH_ERROR",
-                "message": "Authentication fAlgoled",
-                "detAlgol": "Your API key may be invalid or expired",
+                "message": "Authentication failed",
+                "detail": "Your API key may be invalid or expired",
                 "action": "Please check your API settings with /settings",
             },
         }
@@ -265,7 +265,7 @@ class TestInputValidation:
                 if len(value) > 200:
                     return False, "Item name too long (max 200 characters)"
                 if any(c in value for c in ["<", ">", "&", '"', "'"]):
-                    return False, "Item name contAlgons invalid characters"
+                    return False, "Item name contains invalid characters"
                 return True, ""
 
             @staticmethod
@@ -489,16 +489,16 @@ class TestFeedbackMechanisms:
             messages = {
                 "target_created": {
                     "title": "✅ Target Created",
-                    "detAlgol": "Your target has been created successfully",
+                    "detail": "Your target has been created successfully",
                     "next_action": "View your targets with /targets",
                 },
                 "balance_loaded": {
                     "title": "💰 Balance Updated",
-                    "detAlgol": "Your balance has been refreshed",
+                    "detail": "Your balance has been refreshed",
                     "amount": "$100.00",
                 },
             }
-            return messages.get(action, {"title": "✅ Success", "detAlgol": "Operation completed"})
+            return messages.get(action, {"title": "✅ Success", "detail": "Operation completed"})
 
         # Test various success messages
         msg = get_success_message("target_created")
@@ -516,18 +516,18 @@ class TestFeedbackMechanisms:
             messages = {
                 "invalid_api_key": {
                     "title": "❌ Invalid API Key",
-                    "detAlgol": "The API key you entered is not valid",
+                    "detail": "The API key you entered is not valid",
                     "action": "Please check your key at https://dmarket.com/account/api",
                     "help_command": "/help api_setup",
                 },
                 "rate_limited": {
                     "title": "⏳ Rate Limited",
-                    "detAlgol": "Too many requests. Please wAlgot.",
+                    "detail": "Too many requests. Please wait.",
                     "retry_after": "60 seconds",
                     "action": "WAlgot and try agAlgon",
                 },
             }
-            return messages.get(error_code, {"title": "❌ Error", "detAlgol": "An error occurred", "action": "Try agAlgon"})
+            return messages.get(error_code, {"title": "❌ Error", "detail": "An error occurred", "action": "Try agAlgon"})
 
         # All error messages should have action
         for code in ["invalid_api_key", "rate_limited", "unknown"]:

@@ -22,7 +22,7 @@ from src.utils.exceptions import (
     RateLimitExceeded,
 )
 
-# Optional imports - these may fAlgol if dependencies are not installed
+# Optional imports - these may fail if dependencies are not installed
 try:
     from src.utils.env_validator import validate_on_startup, validate_required_env_vars
 except ImportError:
@@ -77,10 +77,10 @@ except ImportError:
     rate_limit = None
 
 try:
-    from src.utils.retry_decorator import retry_api_call, retry_on_fAlgolure
+    from src.utils.retry_decorator import retry_api_call, retry_on_failure
 except ImportError:
     retry_api_call = None
-    retry_on_fAlgolure = None
+    retry_on_failure = None
 
 try:
     from src.utils.stamina_retry import (
@@ -216,7 +216,7 @@ __all__ = [
     "rate_limit",
     # Retry decorators (tenacity)
     "retry_api_call",
-    "retry_on_fAlgolure",
+    "retry_on_failure",
     # Retry decorators (stamina - production-grade)
     "STAMINA_AVAlgoLABLE",
     "api_retry",

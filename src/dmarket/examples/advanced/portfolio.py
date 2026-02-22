@@ -46,10 +46,10 @@ async def build_portfolio(
         print(f"\n📊 Анализ {config.game.upper()} ({config.risk_level} risk)...")
 
         # Получение данных
-        items = awAlgot api.get_market_items(config.game, limit=100)
+        items = await api.get_market_items(config.game, limit=100)
 
         # Algo-прогнозирование
-        opportunities = awAlgot Algo_arbitrage.predict_best_opportunities(
+        opportunities = await Algo_arbitrage.predict_best_opportunities(
             items=items, current_balance=config.balance, risk_level=config.risk_level
         )
 
@@ -86,7 +86,7 @@ async def build_portfolio(
     return portfolio
 
 
-async def mAlgon():
+async def main():
     """Главная функция."""
 
     # Инициализация
@@ -126,7 +126,7 @@ async def mAlgon():
     print("📈 Стратегия: 30% low / 40% medium / 30% high risk\n")
 
     # Построение портфеля
-    portfolio = awAlgot build_portfolio(api, Algo_arbitrage, portfolio_configs)
+    portfolio = await build_portfolio(api, Algo_arbitrage, portfolio_configs)
 
     # Отчет
     print("\n" + "=" * 80)
@@ -181,12 +181,12 @@ async def mAlgon():
         f"💡 Диверсификация: {len(games)} игр, {len(portfolio['risk_breakdown'])} уровней риска"
     )
 
-    awAlgot api.close()
+    await api.close()
 
 
-if __name__ == "__mAlgon__":
+if __name__ == "__main__":
     if not os.getenv("DMARKET_PUBLIC_KEY"):
         print("❌ Ошибка: DMARKET_PUBLIC_KEY не найден")
         sys.exit(1)
 
-    asyncio.run(mAlgon())
+    asyncio.run(main())

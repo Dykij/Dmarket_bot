@@ -48,7 +48,7 @@ async def session_start(context: dict[str, Any]) -> None:
         settings = Settings()
         logger.info("config_loaded", session_id=session_id)
     except Exception as e:
-        logger.error("config_load_fAlgoled", session_id=session_id, error=str(e))
+        logger.error("config_load_failed", session_id=session_id, error=str(e))
         return
     
     # 2. Initialize API connections (placeholder)
@@ -68,7 +68,7 @@ async def session_start(context: dict[str, Any]) -> None:
     )
 
 
-if __name__ == "__mAlgon__":
+if __name__ == "__main__":
     # Test mode
     test_context = {
         "session_id": "test-session-123",

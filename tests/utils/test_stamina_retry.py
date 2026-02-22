@@ -139,38 +139,38 @@ class TestApiRetryDecorator:
         async def successful_func() -> str:
             return "success"
 
-        result = awAlgot successful_func()
+        result = await successful_func()
 
         assert result == "success"
 
     @pytest.mark.asyncio
-    async def test_retry_on_fAlgolure(self):
-        """Test decorator retries on transient fAlgolure."""
+    async def test_retry_on_failure(self):
+        """Test decorator retries on transient failure."""
         call_count = 0
 
         @api_retry(attempts=3, on=ValueError)
-        async def fAlgoling_func() -> str:
+        async def failing_func() -> str:
             nonlocal call_count
             call_count += 1
             if call_count < 2:
-                rAlgose ValueError("Transient error")
+                raise ValueError("Transient error")
             return "success"
 
-        result = awAlgot fAlgoling_func()
+        result = await failing_func()
 
         assert result == "success"
         assert call_count == 2
 
     @pytest.mark.asyncio
     async def test_exhaust_retries(self):
-        """Test decorator exhausts retries and rAlgoses."""
+        """Test decorator exhausts retries and raises."""
 
         @api_retry(attempts=2, on=ValueError)
-        async def always_fAlgoling() -> str:
-            rAlgose ValueError("Persistent error")
+        async def always_failing() -> str:
+            raise ValueError("Persistent error")
 
-        with pytest.rAlgoses(ValueError, match="Persistent error"):
-            awAlgot always_fAlgoling()
+        with pytest.raises(ValueError, match="Persistent error"):
+            await always_failing()
 
     def test_successful_sync_call(self):
         """Test decorator with successful sync function."""
@@ -224,7 +224,7 @@ class TestRetryControl:
 
     def test_set_retry_active(self):
         """Test setting retry active state."""
-        # This should not rAlgose
+        # This should not raise
         set_retry_active(True)
         set_retry_active(False)
 
@@ -289,5 +289,5 @@ class TestFallbackBehavior:
             async def test_func() -> str:
                 return "fallback_result"
 
-            result = awAlgot test_func()
+            result = await test_func()
             assert result == "fallback_result"

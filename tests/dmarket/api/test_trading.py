@@ -1,6 +1,6 @@
 """Unit tests for DMarket API trading operations module.
 
-This module contAlgons tests for src/dmarket/api/trading.py covering:
+This module contains tests for src/dmarket/api/trading.py covering:
 - Buying items
 - Selling items
 - Creating and managing offers
@@ -104,7 +104,7 @@ def targets_mixin(mock_request, mock_cache_clear):
             amount: int = 1,
         ) -> dict:
             """Create a single target (buy order)."""
-            return awAlgot self._request(
+            return await self._request(
                 "POST",
                 "/marketplace-api/v1/user-targets/create",
                 data={
@@ -125,7 +125,7 @@ def targets_mixin(mock_request, mock_cache_clear):
             new_price: float,
         ) -> dict:
             """Update target price."""
-            return awAlgot self._request(
+            return await self._request(
                 "PATCH",
                 f"/marketplace-api/v1/user-targets/{target_id}",
                 data={"Price": {"Amount": int(new_price * 100), "Currency": "USD"}},
@@ -133,7 +133,7 @@ def targets_mixin(mock_request, mock_cache_clear):
 
         async def delete_target(self, target_id: str) -> dict:
             """Delete a target."""
-            return awAlgot self._request(
+            return await self._request(
                 "DELETE",
                 f"/marketplace-api/v1/user-targets/{target_id}",
             )
@@ -155,7 +155,7 @@ class TestBuyItem:
         price = 10.50
 
         # Act
-        result = awAlgot trading_mixin.buy_item(item_id=item_id, price=price)
+        result = await trading_mixin.buy_item(item_id=item_id, price=price)
 
         # Assert
         assert result is not None
@@ -172,7 +172,7 @@ class TestBuyItem:
         price = 10.50
 
         # Act
-        result = awAlgot trading_mixin_live.buy_item(item_id=item_id, price=price)
+        result = await trading_mixin_live.buy_item(item_id=item_id, price=price)
 
         # Assert
         assert result is not None
@@ -185,7 +185,7 @@ class TestBuyItem:
         mock_request.return_value = {"success": True, "orderId": "order123"}
 
         # Act
-        result = awAlgot trading_mixin_live.buy_item(
+        result = await trading_mixin_live.buy_item(
             item_id="item123",
             price=15.00,
             game="dota2",
@@ -209,7 +209,7 @@ class TestBuyItem:
         price_usd = 15.50  # $15.50
 
         # Act
-        awAlgot trading_mixin_live.buy_item(item_id="item123", price=price_usd)
+        await trading_mixin_live.buy_item(item_id="item123", price=price_usd)
 
         # Assert
         call_args = mock_request.call_args
@@ -225,7 +225,7 @@ class TestBuyItem:
         mock_request.return_value = {"success": True}
 
         # Act - profit should be calculated as sell_price - price = 25 - 20 = 5
-        result = awAlgot trading_mixin_live.buy_item(
+        result = await trading_mixin_live.buy_item(
             item_id="item123",
             price=20.00,
             sell_price=25.00,
@@ -249,7 +249,7 @@ class TestSellItem:
         price = 25.00
 
         # Act
-        result = awAlgot trading_mixin.sell_item(item_id=item_id, price=price)
+        result = await trading_mixin.sell_item(item_id=item_id, price=price)
 
         # Assert
         assert result is not None
@@ -264,7 +264,7 @@ class TestSellItem:
         mock_request.return_value = {"success": True, "offerId": "offer123"}
 
         # Act
-        result = awAlgot trading_mixin_live.sell_item(item_id="asset_123", price=25.00)
+        result = await trading_mixin_live.sell_item(item_id="asset_123", price=25.00)
 
         # Assert
         assert result is not None
@@ -277,7 +277,7 @@ class TestSellItem:
         mock_request.return_value = {"success": True}
 
         # Act
-        awAlgot trading_mixin_live.sell_item(
+        await trading_mixin_live.sell_item(
             item_id="asset_123",
             price=30.00,
             game="dota2",
@@ -305,7 +305,7 @@ class TestEditOffer:
         new_price = 35.00
 
         # Act
-        awAlgot trading_mixin.edit_offer(offer_id=offer_id, new_price=new_price)
+        await trading_mixin.edit_offer(offer_id=offer_id, new_price=new_price)
 
         # Assert
         mock_request.assert_called_once()
@@ -329,7 +329,7 @@ class TestDeleteOffer:
         offer_id = "offer_123"
 
         # Act
-        awAlgot trading_mixin.delete_offer(offer_id=offer_id)
+        await trading_mixin.delete_offer(offer_id=offer_id)
 
         # Assert
         mock_request.assert_called_once()
@@ -350,7 +350,7 @@ class TestGetActiveOffers:
         mock_request.return_value = {"offers": [], "total": 0}
 
         # Act
-        result = awAlgot trading_mixin.get_active_offers()
+        result = await trading_mixin.get_active_offers()
 
         # Assert
         assert result is not None
@@ -363,7 +363,7 @@ class TestGetActiveOffers:
         mock_request.return_value = {"offers": [], "total": 0}
 
         # Act
-        awAlgot trading_mixin.get_active_offers(
+        await trading_mixin.get_active_offers(
             game="csgo",
             limit=50,
             offset=10,
@@ -389,7 +389,7 @@ class TestTradingEdgeCases:
         mock_request.return_value = {"error": True, "message": "Invalid price"}
 
         # Act
-        result = awAlgot trading_mixin_live.buy_item(item_id="item123", price=0.0)
+        result = await trading_mixin_live.buy_item(item_id="item123", price=0.0)
 
         # Assert - should handle gracefully or return error
         assert result is not None
@@ -401,7 +401,7 @@ class TestTradingEdgeCases:
         mock_request.return_value = {"error": True, "message": "Invalid price"}
 
         # Act
-        result = awAlgot trading_mixin_live.buy_item(item_id="item123", price=-5.0)
+        result = await trading_mixin_live.buy_item(item_id="item123", price=-5.0)
 
         # Assert - should handle gracefully
         assert result is not None
@@ -413,7 +413,7 @@ class TestTradingEdgeCases:
         mock_request.return_value = {"error": True, "message": "Invalid asset"}
 
         # Act
-        result = awAlgot trading_mixin_live.sell_item(item_id="", price=10.0)
+        result = await trading_mixin_live.sell_item(item_id="", price=10.0)
 
         # Assert
         assert result is not None
@@ -426,7 +426,7 @@ class TestTradingEdgeCases:
 
         # Act
         with patch("src.dmarket.api.trading.add_trading_breadcrumb") as mock_breadcrumb:
-            awAlgot trading_mixin_live.buy_item(
+            await trading_mixin_live.buy_item(
                 item_id="item123",
                 price=10.0,
                 item_name="Test Item",
@@ -439,8 +439,8 @@ class TestTradingEdgeCases:
     async def test_dry_run_returns_simulated_success(self, trading_mixin):
         """Test that DRY_RUN mode returns simulated success."""
         # Act
-        buy_result = awAlgot trading_mixin.buy_item(item_id="item", price=10.0)
-        sell_result = awAlgot trading_mixin.sell_item(item_id="asset", price=15.0)
+        buy_result = await trading_mixin.buy_item(item_id="item", price=10.0)
+        sell_result = await trading_mixin.sell_item(item_id="asset", price=15.0)
 
         # Assert
         assert buy_result.get("dry_run") is True or buy_result.get("success") is True
@@ -448,7 +448,7 @@ class TestTradingEdgeCases:
 
 
 # =============================================================================
-# FINAL COVERAGE PUSH - Quick tests for remAlgoning modules
+# FINAL COVERAGE PUSH - Quick tests for remaining modules
 # =============================================================================
 
 
@@ -462,7 +462,7 @@ class TestTargetsAPIAdditional:
         mock_request.return_value = {"success": True, "targetId": "tgt_123"}
 
         # Act
-        result = awAlgot targets_mixin.create_target(
+        result = await targets_mixin.create_target(
             game="csgo",
             title="AK-47 | Redline",
             price=15.50,
@@ -479,7 +479,7 @@ class TestTargetsAPIAdditional:
         mock_request.return_value = {"success": True}
 
         # Act
-        result = awAlgot targets_mixin.update_target(
+        result = await targets_mixin.update_target(
             target_id="tgt_123",
             new_price=20.00,
         )
@@ -494,7 +494,7 @@ class TestTargetsAPIAdditional:
         mock_request.return_value = {"success": True}
 
         # Act
-        result = awAlgot targets_mixin.delete_target(target_id="tgt_123")
+        result = await targets_mixin.delete_target(target_id="tgt_123")
 
         # Assert
         assert result["success"] is True
@@ -510,7 +510,7 @@ class TestTradingAPIAdditional:
         mock_request.return_value = {"success": True, "orderId": "ord_123"}
 
         # Act
-        result = awAlgot trading_mixin.buy_item(
+        result = await trading_mixin.buy_item(
             item_id="item_123",
             price=25.99,
             game="csgo",
@@ -526,7 +526,7 @@ class TestTradingAPIAdditional:
         mock_request.return_value = {"success": True}
 
         # Act
-        result = awAlgot trading_mixin.sell_item(
+        result = await trading_mixin.sell_item(
             item_id="item_456",
             price=50.00,
             buy_price=40.00,
@@ -542,7 +542,7 @@ class TestTradingAPIAdditional:
         mock_request.return_value = {"success": True}
 
         # Act
-        result = awAlgot trading_mixin.delete_offer(offer_id="offer_789")
+        result = await trading_mixin.delete_offer(offer_id="offer_789")
 
         # Assert
         assert result["success"] is True

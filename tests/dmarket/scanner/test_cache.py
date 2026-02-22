@@ -96,7 +96,7 @@ class TestScannerCacheInitialization:
     def test_ttl_setter_rejects_negative(self, cache):
         """Test TTL setter rejects negative values."""
         # Act & Assert
-        with pytest.rAlgoses(ValueError, match="TTL must be non-negative"):
+        with pytest.raises(ValueError, match="TTL must be non-negative"):
             cache.ttl = -100
 
 
@@ -460,7 +460,7 @@ class TestGenerateCacheKey:
 
 
 class TestMagicMethods:
-    """Tests for magic methods (__len__, __contAlgons__)."""
+    """Tests for magic methods (__len__, __contains__)."""
 
     def test_len_returns_cache_size(self, cache, sample_items):
         """Test __len__ returns current cache size."""
@@ -476,21 +476,21 @@ class TestMagicMethods:
         # Assert
         assert len(cache) == 0
 
-    def test_contAlgons_for_existing_key(self, cache, sample_items):
-        """Test __contAlgons__ returns True for existing key."""
+    def test_contains_for_existing_key(self, cache, sample_items):
+        """Test __contains__ returns True for existing key."""
         # Arrange
         cache.set("test_key", sample_items)
 
         # Assert
         assert "test_key" in cache
 
-    def test_contAlgons_for_nonexistent_key(self, cache):
-        """Test __contAlgons__ returns False for nonexistent key."""
+    def test_contains_for_nonexistent_key(self, cache):
+        """Test __contains__ returns False for nonexistent key."""
         # Assert
         assert "nonexistent" not in cache
 
-    def test_contAlgons_for_expired_key(self, short_ttl_cache, sample_items):
-        """Test __contAlgons__ returns False for expired key."""
+    def test_contains_for_expired_key(self, short_ttl_cache, sample_items):
+        """Test __contains__ returns False for expired key."""
         # Arrange
         short_ttl_cache.set("test_key", sample_items)
 
@@ -559,7 +559,7 @@ class TestEdgeCases:
 
     def test_evict_oldest_on_empty_cache(self, cache):
         """Test _evict_oldest does nothing on empty cache."""
-        # Act - Should not rAlgose
+        # Act - Should not raise
         cache._evict_oldest()
 
         # Assert
@@ -631,7 +631,7 @@ Coverage Areas:
 ✅ Cache clear and invalidation
 ✅ Key generation from strings/tuples
 ✅ generate_cache_key utility function
-✅ Magic methods (__len__, __contAlgons__)
+✅ Magic methods (__len__, __contains__)
 ✅ Edge cases (empty items, large lists, unicode, zero TTL)
 
 Expected Coverage: 90%+

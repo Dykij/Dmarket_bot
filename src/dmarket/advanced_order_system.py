@@ -88,8 +88,8 @@ class AdvancedOrderFilter:
     float_max: float | None = None
 
     # Pattern фильтры
-    pAlgont_seed: int | None = None  # Конкретный паттерн
-    pAlgont_seeds: list[int] | None = None  # Список паттернов
+    paint_seed: int | None = None  # Конкретный паттерн
+    paint_seeds: list[int] | None = None  # Список паттернов
 
     # Doppler фильтры
     phase: DopplerPhase | None = None
@@ -110,10 +110,10 @@ class AdvancedOrderFilter:
         if self.float_max is not None:
             attrs["floatMax"] = str(self.float_max)
 
-        if self.pAlgont_seed is not None:
-            attrs["pAlgontSeed"] = self.pAlgont_seed
-        elif self.pAlgont_seeds:
-            attrs["pAlgontSeed"] = self.pAlgont_seeds
+        if self.paint_seed is not None:
+            attrs["paintSeed"] = self.paint_seed
+        elif self.paint_seeds:
+            attrs["paintSeed"] = self.paint_seeds
 
         if self.phase is not None:
             attrs["phase"] = self.phase.value
@@ -133,10 +133,10 @@ class AdvancedOrderFilter:
             count += 1
         if self.float_max is not None:
             count += 1
-        if self.pAlgont_seed is not None:
+        if self.paint_seed is not None:
             count += 1
-        elif self.pAlgont_seeds:
-            count += len(self.pAlgont_seeds)
+        elif self.paint_seeds:
+            count += len(self.paint_seeds)
         if self.phase is not None:
             count += 1
         if self.stat_trak is not None:
@@ -305,7 +305,7 @@ class AdvancedOrderManager:
             name="AK-47 Case Hardened Blue Gem",
             description="Паттерны #661, #670 и др.",
             item_title="AK-47 | Case Hardened (Field-Tested)",
-            filter=AdvancedOrderFilter(pAlgont_seeds=[661, 670, 321, 955]),
+            filter=AdvancedOrderFilter(paint_seeds=[661, 670, 321, 955]),
             base_price_usd=100.0,
             expected_premium_multiplier=10.0,  # Blue gems очень дорогие
         )
@@ -367,7 +367,7 @@ class AdvancedOrderManager:
         attrs = order.filter.to_target_attrs()
 
         # Создаём таргет через менеджер
-        result = awAlgot self.targets.create_target(
+        result = await self.targets.create_target(
             title=order.item_title,
             price=int(order.max_price_usd * 100),
             amount=order.amount,
@@ -401,7 +401,7 @@ class AdvancedOrderManager:
             return None
 
         order = template.create_order(max_price_usd)
-        return awAlgot self.create_order(order)
+        return await self.create_order(order)
 
     def list_templates(self) -> list[dict[str, Any]]:
         """Получить список доступных шаблонов."""
@@ -425,7 +425,7 @@ class AdvancedOrderManager:
         if target_id not in self.active_orders:
             return False
 
-        result = awAlgot self.targets.delete_target(target_id)
+        result = await self.targets.delete_target(target_id)
         if result:
             self.active_orders[target_id].is_active = False
 
@@ -439,7 +439,7 @@ class AdvancedOrderManager:
         """
         cancelled = 0
         for target_id in list(self.active_orders.keys()):
-            if awAlgot self.cancel_order(target_id):
+            if await self.cancel_order(target_id):
                 cancelled += 1
 
         return cancelled
@@ -494,7 +494,7 @@ def create_doppler_order(
 
 def create_pattern_order(
     item_title: str,
-    pAlgont_seeds: list[int],
+    paint_seeds: list[int],
     max_price: float,
     expected_premium: float = 2.0,
 ) -> AdvancedOrder:
@@ -502,9 +502,9 @@ def create_pattern_order(
     return AdvancedOrder(
         item_title=item_title,
         max_price_usd=max_price,
-        filter=AdvancedOrderFilter(pAlgont_seeds=pAlgont_seeds),
+        filter=AdvancedOrderFilter(paint_seeds=paint_seeds),
         expected_sell_price=max_price * expected_premium,
-        notes=f"Patterns: {pAlgont_seeds}",
+        notes=f"Patterns: {paint_seeds}",
     )
 
 

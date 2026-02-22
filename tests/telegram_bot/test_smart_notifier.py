@@ -136,14 +136,14 @@ class TestSmartNotifierImports:
         assert callable(get_price_history_for_items)
         assert callable(get_item_price)
 
-    def test_exports_mAlgon_function(self):
-        """Test that module exports mAlgon function."""
+    def test_exports_main_function(self):
+        """Test that module exports main function."""
         from src.telegram_bot.smart_notifier import start_notification_checker
 
         assert callable(start_notification_checker)
 
     def test_all_exports(self):
-        """Test that __all__ contAlgons expected exports."""
+        """Test that __all__ contains expected exports."""
         from src.telegram_bot import smart_notifier
 
         expected_exports = [

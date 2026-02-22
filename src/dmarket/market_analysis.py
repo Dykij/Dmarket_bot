@@ -102,9 +102,9 @@ async def analyze_price_changes(
         }.get(period, 24)
 
         # Получаем текущие цены
-        awAlgot rate_limiter.wAlgot_if_needed("market")
+        await rate_limiter.wait_if_needed("market")
 
-        current_items = awAlgot dmarket_api.get_market_items(
+        current_items = await dmarket_api.get_market_items(
             game=game,
             limit=200,
             min_price=min_price * 100,  # в центах
@@ -117,7 +117,7 @@ async def analyze_price_changes(
             return []
 
         # Получаем исторические данные о ценах
-        historical_prices = awAlgot _get_historical_prices(
+        historical_prices = await _get_historical_prices(
             game=game,
             period_hours=period_hours,
             dmarket_api=dmarket_api,
@@ -185,7 +185,7 @@ async def analyze_price_changes(
     finally:
         if close_client and hasattr(dmarket_api, "_close_client"):
             try:
-                awAlgot dmarket_api._close_client()
+                await dmarket_api._close_client()
             except Exception as e:
                 logger.warning(f"Ошибка при закрытии клиента API: {e}")
 
@@ -227,9 +227,9 @@ async def find_trending_items(
         logger.info(f"Поиск трендовых предметов для {game}")
 
         # Получаем предметы, отсортированные по объему продаж
-        awAlgot rate_limiter.wAlgot_if_needed("market")
+        await rate_limiter.wait_if_needed("market")
 
-        trending_response = awAlgot dmarket_api.get_market_items(
+        trending_response = await dmarket_api.get_market_items(
             game=game,
             limit=200,
             min_price=min_price * 100,  # в центах
@@ -288,7 +288,7 @@ async def find_trending_items(
     finally:
         if close_client and hasattr(dmarket_api, "_close_client"):
             try:
-                awAlgot dmarket_api._close_client()
+                await dmarket_api._close_client()
             except Exception as e:
                 logger.warning(f"Ошибка при закрытии клиента API: {e}")
 
@@ -326,21 +326,21 @@ async def analyze_market_volatility(
 
     try:
         # Получаем исторические данные о ценах за разные периоды
-        historical_24h = awAlgot _get_historical_prices(
+        historical_24h = await _get_historical_prices(
             game=game,
             period_hours=24,
             dmarket_api=dmarket_api,
         )
-        historical_7d = awAlgot _get_historical_prices(
+        historical_7d = await _get_historical_prices(
             game=game,
             period_hours=24 * 7,
             dmarket_api=dmarket_api,
         )
 
         # Получаем текущие цены
-        awAlgot rate_limiter.wAlgot_if_needed("market")
+        await rate_limiter.wait_if_needed("market")
 
-        current_items = awAlgot dmarket_api.get_market_items(
+        current_items = await dmarket_api.get_market_items(
             game=game,
             limit=100,
             min_price=min_price * 100,
@@ -406,7 +406,7 @@ async def analyze_market_volatility(
     finally:
         if close_client and hasattr(dmarket_api, "_close_client"):
             try:
-                awAlgot dmarket_api._close_client()
+                await dmarket_api._close_client()
             except Exception as e:
                 logger.warning(f"Ошибка при закрытии клиента API: {e}")
 
@@ -455,7 +455,7 @@ async def generate_market_report(
             ),
         ]
 
-        results = awAlgot asyncio.gather(*tasks)
+        results = await asyncio.gather(*tasks)
 
         # Формируем отчет с данными о глубине рынка
         market_depth = results[3]
@@ -497,7 +497,7 @@ async def generate_market_report(
     finally:
         if close_client and hasattr(dmarket_api, "_close_client"):
             try:
-                awAlgot dmarket_api._close_client()
+                await dmarket_api._close_client()
             except Exception as e:
                 logger.warning(f"Ошибка при закрытии клиента API: {e}")
 
@@ -524,7 +524,7 @@ async def analyze_market_depth(
         Словарь с анализом глубины рынка
 
     Example:
-        >>> analysis = awAlgot analyze_market_depth(
+        >>> analysis = await analyze_market_depth(
         ...     game="csgo", items=["AK-47 | Redline (Field-Tested)", "AWP | Asiimov (FT)"]
         ... )
         >>> print(f"Глубина рынка: {analysis['average_depth_score']:.1f}/100")
@@ -544,8 +544,8 @@ async def analyze_market_depth(
 
         # Если список предметов не указан, получаем популярные
         if items is None:
-            awAlgot rate_limiter.wAlgot_if_needed("market")
-            market_items = awAlgot dmarket_api.get_market_items(
+            await rate_limiter.wait_if_needed("market")
+            market_items = await dmarket_api.get_market_items(
                 game=game,
                 limit=limit,
                 sort_by="best_deal",
@@ -566,8 +566,8 @@ async def analyze_market_depth(
             }
 
         # Используем новый API v1.1.0 для получения aggregated prices
-        awAlgot rate_limiter.wAlgot_if_needed("market")
-        aggregated = awAlgot dmarket_api.get_aggregated_prices_bulk(
+        await rate_limiter.wait_if_needed("market")
+        aggregated = await dmarket_api.get_aggregated_prices_bulk(
             game=game,
             titles=items,
             limit=len(items),
@@ -695,7 +695,7 @@ async def analyze_market_depth(
     finally:
         if close_client and hasattr(dmarket_api, "_close_client"):
             try:
-                awAlgot dmarket_api._close_client()
+                await dmarket_api._close_client()
             except Exception as e:
                 logger.warning(f"Ошибка при закрытии клиента API: {e}")
 
@@ -723,9 +723,9 @@ async def _get_historical_prices(
     # Для прототипа используем симуляцию исторических данных
 
     # Получаем текущие цены для нескольких предметов
-    awAlgot rate_limiter.wAlgot_if_needed("market")
+    await rate_limiter.wait_if_needed("market")
 
-    items_response = awAlgot dmarket_api.get_market_items(
+    items_response = await dmarket_api.get_market_items(
         game=game,
         limit=200,
         sort_by="best_bargAlgon",

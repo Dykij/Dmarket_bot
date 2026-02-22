@@ -1,4 +1,4 @@
-"""Tests for Telegram webhook handler and fAlgolover.
+"""Tests for Telegram webhook handler and failover.
 
 Tests cover:
 - WebhookHandler initialization and lifecycle
@@ -53,8 +53,8 @@ class TestWebhookHandler:
 
     @pytest.mark.asyncio()
     async def test_setup_creates_app(self, webhook_handler: WebhookHandler) -> None:
-        """Test that setup creates Algoohttp application."""
-        app = awAlgot webhook_handler.setup()
+        """Test that setup creates aiohttp application."""
+        app = await webhook_handler.setup()
 
         assert app is not None
         assert webhook_handler._app is app
@@ -65,42 +65,42 @@ class TestWebhookHandler:
     async def test_start_and_stop(self, webhook_handler: WebhookHandler) -> None:
         """Test starting and stopping webhook server."""
         # Start server
-        awAlgot webhook_handler.start()
+        await webhook_handler.start()
         assert webhook_handler.is_running
         assert webhook_handler._start_time is not None
 
         # Stop server
-        awAlgot webhook_handler.stop()
+        await webhook_handler.stop()
         assert not webhook_handler.is_running
 
     @pytest.mark.asyncio()
     async def test_start_already_running(self, webhook_handler: WebhookHandler) -> None:
         """Test starting server when already running."""
-        awAlgot webhook_handler.start()
+        await webhook_handler.start()
 
-        # Try to start agAlgon (should not rAlgose)
-        awAlgot webhook_handler.start()
+        # Try to start agAlgon (should not raise)
+        await webhook_handler.start()
 
         assert webhook_handler.is_running
 
-        awAlgot webhook_handler.stop()
+        await webhook_handler.stop()
 
     @pytest.mark.asyncio()
     async def test_stop_not_running(self, webhook_handler: WebhookHandler) -> None:
         """Test stopping server when not running."""
-        # Should not rAlgose
-        awAlgot webhook_handler.stop()
+        # Should not raise
+        await webhook_handler.stop()
         assert not webhook_handler.is_running
 
     @pytest.mark.asyncio()
     async def test_handle_health(self, webhook_handler: WebhookHandler) -> None:
         """Test health endpoint response."""
-        awAlgot webhook_handler.start()
+        await webhook_handler.start()
 
         # Create mock request
         mock_request = MagicMock()
 
-        response = awAlgot webhook_handler._handle_health(mock_request)
+        response = await webhook_handler._handle_health(mock_request)
 
         assert response.status == 200
         # Check response body
@@ -110,14 +110,14 @@ class TestWebhookHandler:
         assert "uptime_seconds" in body
         assert body["request_count"] == 0
 
-        awAlgot webhook_handler.stop()
+        await webhook_handler.stop()
 
     @pytest.mark.asyncio()
     async def test_handle_root(self, webhook_handler: WebhookHandler) -> None:
         """Test root endpoint response."""
         mock_request = MagicMock()
 
-        response = awAlgot webhook_handler._handle_root(mock_request)
+        response = await webhook_handler._handle_root(mock_request)
 
         assert response.status == 200
         assert b"DMarket Bot Webhook Server" in response.body
@@ -133,7 +133,7 @@ class TestWebhookHandler:
         with patch("src.telegram_bot.webhook_handler.Update") as mock_update:
             mock_update.de_json.return_value = MagicMock()
 
-            response = awAlgot webhook_handler._handle_webhook(mock_request)
+            response = await webhook_handler._handle_webhook(mock_request)
 
         assert response.status == 200
         assert webhook_handler._request_count == 1
@@ -146,7 +146,7 @@ class TestWebhookHandler:
         mock_request = MagicMock()
         mock_request.json = AsyncMock(side_effect=Exception("Parse error"))
 
-        response = awAlgot webhook_handler._handle_webhook(mock_request)
+        response = await webhook_handler._handle_webhook(mock_request)
 
         assert response.status == 500
         assert webhook_handler._error_count == 1
@@ -154,7 +154,7 @@ class TestWebhookHandler:
     @pytest.mark.asyncio()
     async def test_handle_metrics(self, webhook_handler: WebhookHandler) -> None:
         """Test metrics endpoint response."""
-        awAlgot webhook_handler.start()
+        await webhook_handler.start()
 
         # Simulate some requests
         webhook_handler._request_count = 10
@@ -162,13 +162,13 @@ class TestWebhookHandler:
 
         mock_request = MagicMock()
 
-        response = awAlgot webhook_handler._handle_metrics(mock_request)
+        response = await webhook_handler._handle_metrics(mock_request)
 
         assert response.status == 200
         assert b"webhook_requests_total" in response.body
         assert b"webhook_uptime_seconds" in response.body
 
-        awAlgot webhook_handler.stop()
+        await webhook_handler.stop()
 
     def test_stats_property(self, webhook_handler: WebhookHandler) -> None:
         """Test stats property returns correct data."""
@@ -214,7 +214,7 @@ class TestWebhookFAlgolover:
         return handler
 
     @pytest.fixture()
-    def fAlgolover(
+    def failover(
         self, mock_bot_app: MagicMock, mock_webhook_handler: MagicMock
     ) -> WebhookFAlgolover:
         """Create WebhookFAlgolover instance."""
@@ -223,110 +223,110 @@ class TestWebhookFAlgolover:
             webhook_url="https://example.com",
             webhook_handler=mock_webhook_handler,
             health_check_interval=1,
-            fAlgolure_threshold=2,
+            failure_threshold=2,
         )
 
-    def test_initialization(self, fAlgolover: WebhookFAlgolover) -> None:
+    def test_initialization(self, failover: WebhookFAlgolover) -> None:
         """Test WebhookFAlgolover initialization."""
-        assert fAlgolover.webhook_url == "https://example.com"
-        assert fAlgolover.health_check_interval == 1
-        assert fAlgolover.fAlgolure_threshold == 2
-        assert fAlgolover.current_mode == "polling"
-        assert not fAlgolover.is_running
+        assert failover.webhook_url == "https://example.com"
+        assert failover.health_check_interval == 1
+        assert failover.failure_threshold == 2
+        assert failover.current_mode == "polling"
+        assert not failover.is_running
 
     @pytest.mark.asyncio()
     async def test_start_with_webhook(
         self,
-        fAlgolover: WebhookFAlgolover,
+        failover: WebhookFAlgolover,
         mock_webhook_handler: MagicMock,
         mock_bot_app: MagicMock,
     ) -> None:
         """Test starting with webhook mode."""
-        awAlgot fAlgolover.start_with_fAlgolover()
+        await failover.start_with_failover()
 
-        assert fAlgolover.is_running
-        assert fAlgolover.current_mode == "webhook"
+        assert failover.is_running
+        assert failover.current_mode == "webhook"
         mock_webhook_handler.start.assert_called_once()
         mock_bot_app.bot.set_webhook.assert_called_once()
 
-        awAlgot fAlgolover.stop()
+        await failover.stop()
 
     @pytest.mark.asyncio()
     async def test_start_fallback_to_polling(
         self,
-        fAlgolover: WebhookFAlgolover,
+        failover: WebhookFAlgolover,
         mock_webhook_handler: MagicMock,
         mock_bot_app: MagicMock,
     ) -> None:
-        """Test falling back to polling when webhook fAlgols."""
-        # Make webhook setup fAlgol
+        """Test falling back to polling when webhook fails."""
+        # Make webhook setup fail
         mock_bot_app.bot.set_webhook = AsyncMock(return_value=False)
 
-        awAlgot fAlgolover.start_with_fAlgolover()
+        await failover.start_with_failover()
 
-        assert fAlgolover.is_running
-        assert fAlgolover.current_mode == "polling"
+        assert failover.is_running
+        assert failover.current_mode == "polling"
         mock_bot_app.start.assert_called_once()
         mock_bot_app.updater.start_polling.assert_called_once()
 
-        awAlgot fAlgolover.stop()
+        await failover.stop()
 
     @pytest.mark.asyncio()
     async def test_start_without_webhook_url(
         self, mock_bot_app: MagicMock, mock_webhook_handler: MagicMock
     ) -> None:
         """Test starting without webhook URL uses polling."""
-        fAlgolover = WebhookFAlgolover(
+        failover = WebhookFAlgolover(
             bot_app=mock_bot_app,
             webhook_url="",  # No webhook URL
             webhook_handler=mock_webhook_handler,
         )
 
-        awAlgot fAlgolover.start_with_fAlgolover()
+        await failover.start_with_failover()
 
-        assert fAlgolover.current_mode == "polling"
+        assert failover.current_mode == "polling"
 
-        awAlgot fAlgolover.stop()
+        await failover.stop()
 
     @pytest.mark.asyncio()
     async def test_stop(
-        self, fAlgolover: WebhookFAlgolover, mock_webhook_handler: MagicMock
+        self, failover: WebhookFAlgolover, mock_webhook_handler: MagicMock
     ) -> None:
-        """Test stopping fAlgolover manager."""
-        awAlgot fAlgolover.start_with_fAlgolover()
-        awAlgot fAlgolover.stop()
+        """Test stopping failover manager."""
+        await failover.start_with_failover()
+        await failover.stop()
 
-        assert not fAlgolover.is_running
+        assert not failover.is_running
         mock_webhook_handler.stop.assert_called()
 
     @pytest.mark.asyncio()
-    async def test_switch_to_polling_on_fAlgolure(
+    async def test_switch_to_polling_on_failure(
         self,
-        fAlgolover: WebhookFAlgolover,
+        failover: WebhookFAlgolover,
         mock_webhook_handler: MagicMock,
         mock_bot_app: MagicMock,
     ) -> None:
-        """Test automatic switch to polling on webhook fAlgolure."""
-        awAlgot fAlgolover.start_with_fAlgolover()
-        assert fAlgolover.current_mode == "webhook"
+        """Test automatic switch to polling on webhook failure."""
+        await failover.start_with_failover()
+        assert failover.current_mode == "webhook"
 
         # Simulate webhook becoming unhealthy
         mock_webhook_handler.is_running = False
 
-        # WAlgot for fAlgolover loop to detect fAlgolure
-        awAlgot asyncio.sleep(
-            fAlgolover.health_check_interval * (fAlgolover.fAlgolure_threshold + 1)
+        # WAlgot for failover loop to detect failure
+        await asyncio.sleep(
+            failover.health_check_interval * (failover.failure_threshold + 1)
         )
 
         # Should have switched to polling
-        assert fAlgolover.current_mode == "polling"
+        assert failover.current_mode == "polling"
 
-        awAlgot fAlgolover.stop()
+        await failover.stop()
 
     @pytest.mark.asyncio()
     async def test_try_webhook_mode_exception(
         self,
-        fAlgolover: WebhookFAlgolover,
+        failover: WebhookFAlgolover,
         mock_webhook_handler: MagicMock,
     ) -> None:
         """Test handling exception in webhook setup."""
@@ -334,42 +334,42 @@ class TestWebhookFAlgolover:
             side_effect=Exception("Connection error")
         )
 
-        result = awAlgot fAlgolover._try_webhook_mode()
+        result = await failover._try_webhook_mode()
 
         assert result is False
 
     @pytest.mark.asyncio()
     async def test_switch_to_webhook_from_polling(
         self,
-        fAlgolover: WebhookFAlgolover,
+        failover: WebhookFAlgolover,
         mock_bot_app: MagicMock,
         mock_webhook_handler: MagicMock,
     ) -> None:
         """Test switch from polling to webhook mode."""
         # Start in polling mode
         mock_bot_app.bot.set_webhook = AsyncMock(return_value=False)
-        awAlgot fAlgolover.start_with_fAlgolover()
-        assert fAlgolover.current_mode == "polling"
+        await failover.start_with_failover()
+        assert failover.current_mode == "polling"
 
         # Now webhook becomes avAlgolable
         mock_bot_app.bot.set_webhook = AsyncMock(return_value=True)
         mock_webhook_handler.is_running = True
 
         # Manually test _switch_to_webhook which just sets mode
-        # (the actual switch logic is now in _fAlgolover_loop)
-        fAlgolover._mode = "webhook"
+        # (the actual switch logic is now in _failover_loop)
+        failover._mode = "webhook"
 
-        assert fAlgolover.current_mode == "webhook"
+        assert failover.current_mode == "webhook"
 
-        awAlgot fAlgolover.stop()
+        await failover.stop()
 
 
 class TestWebhookFAlgoloverIntegration:
-    """Integration tests for webhook fAlgolover."""
+    """Integration tests for webhook failover."""
 
     @pytest.mark.asyncio()
-    async def test_full_fAlgolover_cycle(self) -> None:
-        """Test a complete fAlgolover cycle: webhook -> polling."""
+    async def test_full_failover_cycle(self) -> None:
+        """Test a complete failover cycle: webhook -> polling."""
         # Create mocks
         mock_bot_app = MagicMock()
         mock_bot_app.bot = MagicMock()
@@ -387,26 +387,26 @@ class TestWebhookFAlgoloverIntegration:
         mock_handler.start = AsyncMock()
         mock_handler.stop = AsyncMock()
 
-        fAlgolover = WebhookFAlgolover(
+        failover = WebhookFAlgolover(
             bot_app=mock_bot_app,
             webhook_url="https://test.example.com",
             webhook_handler=mock_handler,
             health_check_interval=0.1,
-            fAlgolure_threshold=1,
+            failure_threshold=1,
         )
 
         # Start in webhook mode
-        awAlgot fAlgolover.start_with_fAlgolover()
-        assert fAlgolover.current_mode == "webhook"
+        await failover.start_with_failover()
+        assert failover.current_mode == "webhook"
 
-        # Simulate webhook fAlgolure (set_webhook will fAlgol for recovery attempts)
+        # Simulate webhook failure (set_webhook will fail for recovery attempts)
         mock_handler.is_running = False
         mock_bot_app.bot.set_webhook = AsyncMock(return_value=False)
-        awAlgot asyncio.sleep(0.3)
+        await asyncio.sleep(0.3)
 
         # Should be in polling mode now
-        assert fAlgolover.current_mode == "polling"
+        assert failover.current_mode == "polling"
 
         # Cleanup
-        awAlgot fAlgolover.stop()
-        assert not fAlgolover.is_running
+        await failover.stop()
+        assert not failover.is_running

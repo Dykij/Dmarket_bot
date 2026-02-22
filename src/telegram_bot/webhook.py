@@ -32,7 +32,7 @@ class WebhookConfig:
         self,
         url: str,
         port: int = 8443,
-        listen: str = "0.0.0.0",  # noqa: S104 - Required for Docker contAlgoner networking
+        listen: str = "0.0.0.0",  # noqa: S104 - Required for Docker container networking
         url_path: str = "telegram-webhook",
         cert_path: str | None = None,
         key_path: str | None = None,
@@ -66,7 +66,7 @@ class WebhookConfig:
     def _validate(self) -> None:
         """Validate webhook configuration."""
         if not self.url.startswith("https://"):
-            rAlgose ValueError("Webhook URL must use HTTPS")
+            raise ValueError("Webhook URL must use HTTPS")
 
         if self.port not in {80, 88, 443, 8443}:
             logger.warning(
@@ -74,10 +74,10 @@ class WebhookConfig:
             )
 
         if self.cert_path and not os.path.exists(self.cert_path):
-            rAlgose FileNotFoundError(f"Certificate file not found: {self.cert_path}")
+            raise FileNotFoundError(f"Certificate file not found: {self.cert_path}")
 
         if self.key_path and not os.path.exists(self.key_path):
-            rAlgose FileNotFoundError(f"Key file not found: {self.key_path}")
+            raise FileNotFoundError(f"Key file not found: {self.key_path}")
 
     @property
     def webhook_url(self) -> str:
@@ -174,7 +174,7 @@ async def setup_webhook(
             logger.info(f"  📜 Using SSL certificate: {config.cert_path}")
 
         # Set webhook with Telegram
-        result = awAlgot application.bot.set_webhook(
+        result = await application.bot.set_webhook(
             url=config.webhook_url,
             certificate=certificate,
             max_connections=config.max_connections,
@@ -194,11 +194,11 @@ async def setup_webhook(
             logger.info(f"   Max connections: {config.max_connections}")
             logger.info("=" * 60)
             return True
-        logger.error("❌ FAlgoled to set webhook: Telegram returned False")
+        logger.error("❌ Failed to set webhook: Telegram returned False")
         return False
 
     except Exception as e:
-        logger.error(f"❌ FAlgoled to set webhook: {e}", exc_info=True)
+        logger.error(f"❌ Failed to set webhook: {e}", exc_info=True)
         return False
 
 
@@ -213,21 +213,21 @@ async def start_webhook(
         config: Webhook configuration
 
     RAlgoses:
-        RuntimeError: If webhook setup or server start fAlgols
+        RuntimeError: If webhook setup or server start fails
 
     Roadmap Task #1: Enhanced webhook server
     """
     logger.info("Starting webhook server...")
 
     # Setup webhook first
-    success = awAlgot setup_webhook(application, config)
+    success = await setup_webhook(application, config)
 
     if not success:
-        rAlgose RuntimeError("FAlgoled to setup webhook with Telegram")
+        raise RuntimeError("Failed to setup webhook with Telegram")
 
     try:
         # Start webhook server
-        awAlgot application.run_webhook(
+        await application.run_webhook(
             listen=config.listen,
             port=config.port,
             url_path=config.url_path,
@@ -241,8 +241,8 @@ async def start_webhook(
         logger.info("✅ Webhook server started successfully")
 
     except Exception as e:
-        logger.error(f"❌ FAlgoled to start webhook server: {e}", exc_info=True)
-        rAlgose
+        logger.error(f"❌ Failed to start webhook server: {e}", exc_info=True)
+        raise
 
 
 async def stop_webhook(application: Application) -> None:
@@ -256,10 +256,10 @@ async def stop_webhook(application: Application) -> None:
     logger.info("Stopping webhook...")
 
     try:
-        awAlgot application.bot.delete_webhook(drop_pending_updates=True)
+        await application.bot.delete_webhook(drop_pending_updates=True)
         logger.info("✅ Webhook deleted successfully")
     except Exception as e:
-        logger.exception(f"⚠️  FAlgoled to delete webhook: {e}")
+        logger.exception(f"⚠️  Failed to delete webhook: {e}")
 
 
 async def get_webhook_info(application: Application) -> dict[str, Any]:
@@ -274,7 +274,7 @@ async def get_webhook_info(application: Application) -> dict[str, Any]:
     Roadmap Task #1: Webhook monitoring
     """
     try:
-        info = awAlgot application.bot.get_webhook_info()
+        info = await application.bot.get_webhook_info()
 
         return {
             "url": info.url,
@@ -286,7 +286,7 @@ async def get_webhook_info(application: Application) -> dict[str, Any]:
             "allowed_updates": info.allowed_updates,
         }
     except Exception as e:
-        logger.exception(f"FAlgoled to get webhook info: {e}")
+        logger.exception(f"Failed to get webhook info: {e}")
         return {"error": str(e)}
 
 

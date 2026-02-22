@@ -65,7 +65,7 @@ class TestSmartNotificationsUtils:
             }
         )
 
-        result = awAlgot get_market_data_for_items(mock_api, ["item_1", "item_2"], "csgo")
+        result = await get_market_data_for_items(mock_api, ["item_1", "item_2"], "csgo")
 
         assert "item_1" in result
         assert "item_2" in result
@@ -76,7 +76,7 @@ class TestSmartNotificationsUtils:
         """Test with empty item IDs list."""
         from src.telegram_bot.smart_notifications.utils import get_market_data_for_items
 
-        result = awAlgot get_market_data_for_items(mock_api, [], "csgo")
+        result = await get_market_data_for_items(mock_api, [], "csgo")
 
         assert result == {}
         mock_api._request.assert_not_called()
@@ -89,7 +89,7 @@ class TestSmartNotificationsUtils:
 
         mock_api._request = AsyncMock(side_effect=APIError("API Error"))
 
-        result = awAlgot get_market_data_for_items(mock_api, ["item_1"], "csgo")
+        result = await get_market_data_for_items(mock_api, ["item_1"], "csgo")
 
         assert result == {}
 
@@ -103,7 +103,7 @@ class TestSmartNotificationsUtils:
 
         mock_api._request = AsyncMock(return_value={"items": []})
 
-        awAlgot get_market_data_for_items(mock_api, item_ids, "csgo")
+        await get_market_data_for_items(mock_api, item_ids, "csgo")
 
         # Should be called twice (2 batches)
         assert mock_api._request.call_count == 2
@@ -156,7 +156,7 @@ class TestSmartNotificationsPreferences:
         _user_preferences.clear()
         _user_preferences["456"] = {"enabled": True}
 
-        # Should not rAlgose (saves all preferences to file)
+        # Should not raise (saves all preferences to file)
         save_user_preferences()
 
     def test_load_user_preferences_no_args(self):
@@ -165,7 +165,7 @@ class TestSmartNotificationsPreferences:
             load_user_preferences,
         )
 
-        # Should not rAlgose (loads from file)
+        # Should not raise (loads from file)
         load_user_preferences()
 
 
@@ -234,7 +234,7 @@ class TestSmartNotificationsSenders:
         ), patch(
             "src.telegram_bot.smart_notifications.senders.record_notification"
         ):
-            awAlgot send_price_alert_notification(
+            await send_price_alert_notification(
                 mock_bot, 123456, alert, item_data, 12.0, user_prefs
             )
 
@@ -262,7 +262,7 @@ class TestSmartNotificationsSenders:
         ), patch(
             "src.telegram_bot.smart_notifications.senders.record_notification"
         ):
-            awAlgot send_market_opportunity_notification(
+            await send_market_opportunity_notification(
                 mock_bot, 789012, opportunity, user_prefs
             )
 
@@ -298,8 +298,8 @@ class TestSmartNotificationsCheckers:
         _active_alerts.clear()
         _user_preferences.clear()
 
-        # Should not rAlgose
-        awAlgot check_price_alerts(mock_api, mock_bot)
+        # Should not raise
+        await check_price_alerts(mock_api, mock_bot)
 
         # No API calls should be made
         mock_api._request.assert_not_called()
@@ -322,7 +322,7 @@ class TestSmartNotificationsCheckers:
         ]
         _user_preferences["123"] = {"enabled": False}
 
-        awAlgot check_price_alerts(mock_api, mock_bot)
+        await check_price_alerts(mock_api, mock_bot)
 
         # Should skip disabled users
         mock_api._request.assert_not_called()

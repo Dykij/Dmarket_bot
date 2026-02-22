@@ -7,7 +7,7 @@ class AlgoModel:
     def __init__(self, api_key=None, model_name="gemini-1.5-flash"):
         self.api_key = api_key or os.environ.get("GOOGLE_API_KEY")
         if not self.api_key:
-            rAlgose ValueError("GOOGLE_API_KEY not found. Please set it in environment variables.")
+            raise ValueError("GOOGLE_API_KEY not found. Please set it in environment variables.")
         
         genAlgo.configure(api_key=self.api_key)
         
@@ -17,7 +17,7 @@ class AlgoModel:
             "top_p": 0.95,
             "top_k": 40,
             "max_output_tokens": 512,
-            "response_mime_type": "text/plAlgon",
+            "response_mime_type": "text/plain",
         }
         
         self.safety_settings = {

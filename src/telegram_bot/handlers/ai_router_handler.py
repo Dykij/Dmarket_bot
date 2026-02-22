@@ -20,13 +20,13 @@ async def Algo_message_handler(update: Update, context: ContextTypes.DEFAULT_TYP
     router = AlgoRouter(gemini)
 
     # Process through Algo
-    awAlgot update.message.reply_chat_action("typing")
-    response = awAlgot router.process_user_message(user_text)
+    await update.message.reply_chat_action("typing")
+    response = await router.process_user_message(user_text)
 
-    awAlgot update.message.reply_text(response)
+    await update.message.reply_text(response)
 
 
-# Filter out commands, only handle plAlgon text
+# Filter out commands, only handle plain text
 Algo_router_handler = MessageHandler(
     filters.TEXT & (~filters.COMMAND), Algo_message_handler
 )

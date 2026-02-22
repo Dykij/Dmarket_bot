@@ -2,11 +2,11 @@
 Fault Injection Testing Module.
 
 Tests system behavior when faults are injected:
-- Network fAlgolures
+- Network failures
 - Timeout scenarios
 - Exception handling
 - Resource exhaustion
-- Dependency fAlgolures
+- Dependency failures
 """
 import asyncio
 from typing import Any
@@ -27,37 +27,37 @@ class TestNetworkFaultInjection:
     async def test_connection_refused_handling(self) -> None:
         """Test handling of connection refused errors."""
         async def mock_request():
-            rAlgose ConnectionRefusedError("Connection refused")
+            raise ConnectionRefusedError("Connection refused")
 
-        with pytest.rAlgoses(ConnectionRefusedError):
-            awAlgot mock_request()
+        with pytest.raises(ConnectionRefusedError):
+            await mock_request()
 
     @pytest.mark.asyncio
     async def test_connection_reset_handling(self) -> None:
         """Test handling of connection reset errors."""
         async def mock_request():
-            rAlgose ConnectionResetError("Connection reset by peer")
+            raise ConnectionResetError("Connection reset by peer")
 
-        with pytest.rAlgoses(ConnectionResetError):
-            awAlgot mock_request()
+        with pytest.raises(ConnectionResetError):
+            await mock_request()
 
     @pytest.mark.asyncio
-    async def test_dns_resolution_fAlgolure(self) -> None:
-        """Test handling of DNS resolution fAlgolures."""
+    async def test_dns_resolution_failure(self) -> None:
+        """Test handling of DNS resolution failures."""
         async def mock_request():
-            rAlgose OSError("Name or service not known")
+            raise OSError("Name or service not known")
 
-        with pytest.rAlgoses(OSError):
-            awAlgot mock_request()
+        with pytest.raises(OSError):
+            await mock_request()
 
     @pytest.mark.asyncio
     async def test_network_unreachable(self) -> None:
         """Test handling of network unreachable errors."""
         async def mock_request():
-            rAlgose OSError("Network is unreachable")
+            raise OSError("Network is unreachable")
 
-        with pytest.rAlgoses(OSError):
-            awAlgot mock_request()
+        with pytest.raises(OSError):
+            await mock_request()
 
     @pytest.mark.asyncio
     async def test_partial_response_handling(self) -> None:
@@ -65,7 +65,7 @@ class TestNetworkFaultInjection:
         async def mock_partial_response():
             return {"data": "incomplete..."}
 
-        response = awAlgot mock_partial_response()
+        response = await mock_partial_response()
 
         # Should detect incomplete data
         def is_complete(data: dict) -> bool:
@@ -86,29 +86,29 @@ class TestTimeoutFaultInjection:
     async def test_request_timeout_handling(self) -> None:
         """Test handling of request timeouts."""
         async def slow_request():
-            awAlgot asyncio.sleep(10)
+            await asyncio.sleep(10)
             return {"data": "response"}
 
-        with pytest.rAlgoses(asyncio.TimeoutError):
-            awAlgot asyncio.wAlgot_for(slow_request(), timeout=0.01)
+        with pytest.raises(asyncio.TimeoutError):
+            await asyncio.wait_for(slow_request(), timeout=0.01)
 
     @pytest.mark.asyncio
     async def test_connect_timeout_handling(self) -> None:
         """Test handling of connection timeouts."""
         async def mock_connect():
-            rAlgose asyncio.TimeoutError("Connection timed out")
+            raise asyncio.TimeoutError("Connection timed out")
 
-        with pytest.rAlgoses(asyncio.TimeoutError):
-            awAlgot mock_connect()
+        with pytest.raises(asyncio.TimeoutError):
+            await mock_connect()
 
     @pytest.mark.asyncio
     async def test_read_timeout_handling(self) -> None:
         """Test handling of read timeouts."""
         async def mock_read():
-            rAlgose asyncio.TimeoutError("Read timed out")
+            raise asyncio.TimeoutError("Read timed out")
 
-        with pytest.rAlgoses(asyncio.TimeoutError):
-            awAlgot mock_read()
+        with pytest.raises(asyncio.TimeoutError):
+            await mock_read()
 
     @pytest.mark.asyncio
     async def test_retry_after_timeout(self) -> None:
@@ -120,15 +120,15 @@ class TestTimeoutFaultInjection:
                 attempts.append(attempt)
                 try:
                     if attempt < 2:
-                        rAlgose asyncio.TimeoutError("Timeout")
+                        raise asyncio.TimeoutError("Timeout")
                     return {"success": True}
                 except asyncio.TimeoutError:
                     if attempt == max_retries - 1:
-                        rAlgose
-                    awAlgot asyncio.sleep(0.01)
+                        raise
+                    await asyncio.sleep(0.01)
             return {"success": False}
 
-        result = awAlgot request_with_retry()
+        result = await request_with_retry()
 
         assert result["success"]
         assert len(attempts) == 3
@@ -148,14 +148,14 @@ class TestExceptionFaultInjection:
         error_handled = False
 
         async def mock_request():
-            rAlgose httpx.HTTPStatusError(
+            raise httpx.HTTPStatusError(
                 "Bad Request",
                 request=MagicMock(),
                 response=MagicMock(status_code=400)
             )
 
         try:
-            awAlgot mock_request()
+            await mock_request()
         except httpx.HTTPStatusError as e:
             if e.response.status_code == 400:
                 error_handled = True
@@ -168,14 +168,14 @@ class TestExceptionFaultInjection:
         error_handled = False
 
         async def mock_request():
-            rAlgose httpx.HTTPStatusError(
+            raise httpx.HTTPStatusError(
                 "Unauthorized",
                 request=MagicMock(),
                 response=MagicMock(status_code=401)
             )
 
         try:
-            awAlgot mock_request()
+            await mock_request()
         except httpx.HTTPStatusError as e:
             if e.response.status_code == 401:
                 error_handled = True
@@ -192,14 +192,14 @@ class TestExceptionFaultInjection:
                 status_code=429,
                 headers={"Retry-After": "60"}
             )
-            rAlgose httpx.HTTPStatusError(
+            raise httpx.HTTPStatusError(
                 "Too Many Requests",
                 request=MagicMock(),
                 response=response
             )
 
         try:
-            awAlgot mock_request()
+            await mock_request()
         except httpx.HTTPStatusError as e:
             if e.response.status_code == 429:
                 retry_after = e.response.headers.get("Retry-After")
@@ -212,14 +212,14 @@ class TestExceptionFaultInjection:
         error_handled = False
 
         async def mock_request():
-            rAlgose httpx.HTTPStatusError(
+            raise httpx.HTTPStatusError(
                 "Internal Server Error",
                 request=MagicMock(),
                 response=MagicMock(status_code=500)
             )
 
         try:
-            awAlgot mock_request()
+            await mock_request()
         except httpx.HTTPStatusError as e:
             if e.response.status_code == 500:
                 error_handled = True
@@ -232,10 +232,10 @@ class TestExceptionFaultInjection:
         error_handled = False
 
         async def mock_response():
-            rAlgose ValueError("Invalid JSON")
+            raise ValueError("Invalid JSON")
 
         try:
-            awAlgot mock_response()
+            await mock_response()
         except ValueError:
             error_handled = True
 
@@ -270,23 +270,23 @@ class TestResourceExhaustion:
         """Test behavior when connection pool is exhausted."""
         pool_size = 5
         active_connections = []
-        wAlgoting = []
+        waiting = []
 
         async def get_connection():
             if len(active_connections) < pool_size:
                 conn = f"conn_{len(active_connections)}"
                 active_connections.append(conn)
                 return conn
-            # Pool exhausted - would wAlgot
-            wAlgoting.append(1)
+            # Pool exhausted - would wait
+            waiting.append(1)
             return None
 
         # Exhaust pool
         for _ in range(10):
-            awAlgot get_connection()
+            await get_connection()
 
         assert len(active_connections) == pool_size
-        assert len(wAlgoting) == 5
+        assert len(waiting) == 5
 
     @pytest.mark.asyncio
     async def test_queue_overflow_handling(self) -> None:
@@ -316,7 +316,7 @@ class TestResourceExhaustion:
 
 
 class TestDependencyFAlgolure:
-    """Tests for dependency fAlgolure scenarios."""
+    """Tests for dependency failure scenarios."""
 
     @pytest.mark.asyncio
     async def test_database_unavAlgolable(self) -> None:
@@ -325,11 +325,11 @@ class TestDependencyFAlgolure:
 
         async def db_query():
             if not db_avAlgolable:
-                rAlgose ConnectionError("Database unavAlgolable")
+                raise ConnectionError("Database unavAlgolable")
             return {"data": "result"}
 
-        with pytest.rAlgoses(ConnectionError):
-            awAlgot db_query()
+        with pytest.raises(ConnectionError):
+            await db_query()
 
     @pytest.mark.asyncio
     async def test_cache_unavAlgolable_fallback(self) -> None:
@@ -345,7 +345,7 @@ class TestDependencyFAlgolure:
                 return {"key": key, "source": "direct"}
             return {"key": key, "source": "cache"}
 
-        result = awAlgot get_cached_data("test")
+        result = await get_cached_data("test")
 
         assert fallback_called
         assert result["source"] == "direct"
@@ -357,41 +357,41 @@ class TestDependencyFAlgolure:
 
         async def call_external_api():
             if not api_avAlgolable:
-                rAlgose httpx.ConnectError("API unavAlgolable")
+                raise httpx.ConnectError("API unavAlgolable")
             return {"status": "ok"}
 
-        with pytest.rAlgoses(httpx.ConnectError):
-            awAlgot call_external_api()
+        with pytest.raises(httpx.ConnectError):
+            await call_external_api()
 
     @pytest.mark.asyncio
-    async def test_circuit_breaker_on_dependency_fAlgolure(self) -> None:
-        """Test circuit breaker activates on dependency fAlgolure."""
-        fAlgolures = 0
+    async def test_circuit_breaker_on_dependency_failure(self) -> None:
+        """Test circuit breaker activates on dependency failure."""
+        failures = 0
         circuit_open = False
         threshold = 5
 
         async def call_with_breaker():
-            nonlocal fAlgolures, circuit_open
+            nonlocal failures, circuit_open
             if circuit_open:
-                rAlgose Exception("Circuit breaker open")
+                raise Exception("Circuit breaker open")
 
             try:
-                rAlgose ConnectionError("Dependency fAlgoled")
+                raise ConnectionError("Dependency failed")
             except ConnectionError:
-                fAlgolures += 1
-                if fAlgolures >= threshold:
+                failures += 1
+                if failures >= threshold:
                     circuit_open = True
-                rAlgose
+                raise
 
-        # Trigger fAlgolures until circuit opens
+        # Trigger failures until circuit opens
         for _ in range(6):
             try:
-                awAlgot call_with_breaker()
+                await call_with_breaker()
             except (ConnectionError, Exception):
                 pass
 
         assert circuit_open
-        assert fAlgolures == threshold
+        assert failures == threshold
 
 
 # =============================================================================
@@ -408,7 +408,7 @@ class TestDataCorruption:
 
         corrupted_data = '{"key": "value", "broken'
 
-        with pytest.rAlgoses(json.JSONDecodeError):
+        with pytest.raises(json.JSONDecodeError):
             json.loads(corrupted_data)
 
     def test_invalid_encoding_handling(self) -> None:
@@ -423,7 +423,7 @@ class TestDataCorruption:
         invalid_data = b"\xff\xfe"
         result = safe_decode(invalid_data)
 
-        # Should not rAlgose, returns replacement characters
+        # Should not raise, returns replacement characters
         assert result is not None
 
     def test_checksum_validation(self) -> None:
@@ -453,26 +453,26 @@ class TestDataCorruption:
 
 
 class TestCascadingFAlgolures:
-    """Tests for cascading fAlgolure scenarios."""
+    """Tests for cascading failure scenarios."""
 
     @pytest.mark.asyncio
-    async def test_fAlgolure_isolation(self) -> None:
-        """Test that fAlgolures are isolated between components."""
-        component_a_fAlgoled = True
+    async def test_failure_isolation(self) -> None:
+        """Test that failures are isolated between components."""
+        component_a_failed = True
         component_b_status = "healthy"
 
         async def component_b_operation():
             # Component B should work regardless of A
             return {"status": component_b_status}
 
-        result = awAlgot component_b_operation()
+        result = await component_b_operation()
 
         assert result["status"] == "healthy"
-        assert component_a_fAlgoled  # A is fAlgoled but B works
+        assert component_a_failed  # A is failed but B works
 
     @pytest.mark.asyncio
     async def test_bulkhead_pattern(self) -> None:
-        """Test bulkhead pattern prevents cascading fAlgolures."""
+        """Test bulkhead pattern prevents cascading failures."""
         bulkheads = {
             "critical": {"capacity": 10, "used": 0},
             "normal": {"capacity": 20, "used": 0},
@@ -482,11 +482,11 @@ class TestCascadingFAlgolures:
             bulkhead: str, operation
         ) -> Any:
             if bulkheads[bulkhead]["used"] >= bulkheads[bulkhead]["capacity"]:
-                rAlgose Exception(f"Bulkhead {bulkhead} full")
+                raise Exception(f"Bulkhead {bulkhead} full")
 
             bulkheads[bulkhead]["used"] += 1
             try:
-                return awAlgot operation()
+                return await operation()
             finally:
                 bulkheads[bulkhead]["used"] -= 1
 
@@ -494,7 +494,7 @@ class TestCascadingFAlgolures:
             return "success"
 
         # Critical operations have separate pool
-        result = awAlgot execute_in_bulkhead("critical", mock_operation)
+        result = await execute_in_bulkhead("critical", mock_operation)
         assert result == "success"
 
     @pytest.mark.asyncio

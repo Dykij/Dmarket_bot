@@ -114,7 +114,7 @@ class TestHandleGameFilters:
         mock_update.message.reply_text = AsyncMock()
 
         # Act
-        awAlgot handle_game_filters(mock_update, mock_context)
+        await handle_game_filters(mock_update, mock_context)
 
         # Assert
         mock_update.message.reply_text.assert_called_once()
@@ -123,14 +123,14 @@ class TestHandleGameFilters:
         assert isinstance(call_args.kwargs["reply_markup"], InlineKeyboardMarkup)
 
     @pytest.mark.asyncio()
-    async def test_keyboard_contAlgons_all_games(self, mock_update, mock_context):
-        """Test that keyboard contAlgons all supported games."""
+    async def test_keyboard_contains_all_games(self, mock_update, mock_context):
+        """Test that keyboard contains all supported games."""
         # Arrange
         mock_update.message = AsyncMock()
         mock_update.message.reply_text = AsyncMock()
 
         # Act
-        awAlgot handle_game_filters(mock_update, mock_context)
+        await handle_game_filters(mock_update, mock_context)
 
         # Assert
         call_args = mock_update.message.reply_text.call_args
@@ -147,7 +147,7 @@ class TestHandleGameFilters:
         update.message = None
 
         # Act
-        result = awAlgot handle_game_filters(update, mock_context)
+        result = await handle_game_filters(update, mock_context)
 
         # Assert - no exception, just returns
         assert result is None
@@ -168,7 +168,7 @@ class TestHandleSelectGameFilterCallback:
         mock_update.callback_query.data = "select_game_filter:csgo"
 
         # Act
-        awAlgot handle_select_game_filter_callback(mock_update, mock_context)
+        await handle_select_game_filter_callback(mock_update, mock_context)
 
         # Assert
         mock_update.callback_query.answer.assert_called_once()
@@ -181,7 +181,7 @@ class TestHandleSelectGameFilterCallback:
         mock_update.callback_query.data = "select_game_filter:dota2"
 
         # Act
-        awAlgot handle_select_game_filter_callback(mock_update, mock_context)
+        await handle_select_game_filter_callback(mock_update, mock_context)
 
         # Assert
         mock_update.callback_query.answer.assert_called_once()
@@ -194,7 +194,7 @@ class TestHandleSelectGameFilterCallback:
         mock_update.callback_query.data = "select_game_filter:tf2"
 
         # Act
-        awAlgot handle_select_game_filter_callback(mock_update, mock_context)
+        await handle_select_game_filter_callback(mock_update, mock_context)
 
         # Assert
         mock_update.callback_query.answer.assert_called_once()
@@ -206,7 +206,7 @@ class TestHandleSelectGameFilterCallback:
         mock_update.callback_query.data = "select_game_filter:rust"
 
         # Act
-        awAlgot handle_select_game_filter_callback(mock_update, mock_context)
+        await handle_select_game_filter_callback(mock_update, mock_context)
 
         # Assert
         mock_update.callback_query.answer.assert_called_once()
@@ -219,7 +219,7 @@ class TestHandleSelectGameFilterCallback:
         mock_context.user_data["filters"] = {"csgo": {"category": "Rifle"}}
 
         # Act
-        awAlgot handle_select_game_filter_callback(mock_update, mock_context)
+        await handle_select_game_filter_callback(mock_update, mock_context)
 
         # Assert
         call_args = mock_update.callback_query.edit_message_text.call_args
@@ -234,7 +234,7 @@ class TestHandleSelectGameFilterCallback:
         update.callback_query = None
 
         # Act
-        result = awAlgot handle_select_game_filter_callback(update, mock_context)
+        result = await handle_select_game_filter_callback(update, mock_context)
 
         # Assert
         assert result is None
@@ -246,7 +246,7 @@ class TestHandleSelectGameFilterCallback:
         mock_update.callback_query.data = None
 
         # Act
-        result = awAlgot handle_select_game_filter_callback(mock_update, mock_context)
+        result = await handle_select_game_filter_callback(mock_update, mock_context)
 
         # Assert
         assert result is None
@@ -267,7 +267,7 @@ class TestHandlePriceRangeCallback:
         mock_update.callback_query.data = "price_range:csgo"
 
         # Act
-        awAlgot handle_price_range_callback(mock_update, mock_context)
+        await handle_price_range_callback(mock_update, mock_context)
 
         # Assert
         mock_update.callback_query.answer.assert_called_once()
@@ -286,7 +286,7 @@ class TestHandlePriceRangeCallback:
         }
 
         # Act
-        awAlgot handle_price_range_callback(mock_update, mock_context)
+        await handle_price_range_callback(mock_update, mock_context)
 
         # Assert
         call_args = mock_update.callback_query.edit_message_text.call_args
@@ -302,7 +302,7 @@ class TestHandlePriceRangeCallback:
         update.callback_query = None
 
         # Act
-        result = awAlgot handle_price_range_callback(update, mock_context)
+        result = await handle_price_range_callback(update, mock_context)
 
         # Assert
         assert result is None
@@ -323,7 +323,7 @@ class TestHandleFloatRangeCallback:
         mock_update.callback_query.data = "float_range:csgo"
 
         # Act
-        awAlgot handle_float_range_callback(mock_update, mock_context)
+        await handle_float_range_callback(mock_update, mock_context)
 
         # Assert
         mock_update.callback_query.answer.assert_called_once()
@@ -339,7 +339,7 @@ class TestHandleFloatRangeCallback:
         mock_update.callback_query.data = "float_range:dota2"
 
         # Act
-        awAlgot handle_float_range_callback(mock_update, mock_context)
+        await handle_float_range_callback(mock_update, mock_context)
 
         # Assert
         call_args = mock_update.callback_query.edit_message_text.call_args
@@ -355,7 +355,7 @@ class TestHandleFloatRangeCallback:
         update.callback_query = None
 
         # Act
-        result = awAlgot handle_float_range_callback(update, mock_context)
+        result = await handle_float_range_callback(update, mock_context)
 
         # Assert
         assert result is None
@@ -376,7 +376,7 @@ class TestHandleSetCategoryCallback:
         mock_update.callback_query.data = "set_category:csgo"
 
         # Act
-        awAlgot handle_set_category_callback(mock_update, mock_context)
+        await handle_set_category_callback(mock_update, mock_context)
 
         # Assert
         mock_update.callback_query.answer.assert_called_once()
@@ -392,7 +392,7 @@ class TestHandleSetCategoryCallback:
         mock_update.callback_query.data = "set_category:rust"
 
         # Act
-        awAlgot handle_set_category_callback(mock_update, mock_context)
+        await handle_set_category_callback(mock_update, mock_context)
 
         # Assert
         mock_update.callback_query.answer.assert_called_once()
@@ -405,7 +405,7 @@ class TestHandleSetCategoryCallback:
         update.callback_query = None
 
         # Act
-        result = awAlgot handle_set_category_callback(update, mock_context)
+        result = await handle_set_category_callback(update, mock_context)
 
         # Assert
         assert result is None
@@ -426,7 +426,7 @@ class TestHandleSetRarityCallback:
         mock_update.callback_query.data = "set_rarity:csgo"
 
         # Act
-        awAlgot handle_set_rarity_callback(mock_update, mock_context)
+        await handle_set_rarity_callback(mock_update, mock_context)
 
         # Assert
         mock_update.callback_query.answer.assert_called_once()
@@ -439,7 +439,7 @@ class TestHandleSetRarityCallback:
         mock_update.callback_query.data = "set_rarity:dota2"
 
         # Act
-        awAlgot handle_set_rarity_callback(mock_update, mock_context)
+        await handle_set_rarity_callback(mock_update, mock_context)
 
         # Assert
         mock_update.callback_query.answer.assert_called_once()
@@ -452,7 +452,7 @@ class TestHandleSetRarityCallback:
         update.callback_query = None
 
         # Act
-        result = awAlgot handle_set_rarity_callback(update, mock_context)
+        result = await handle_set_rarity_callback(update, mock_context)
 
         # Assert
         assert result is None
@@ -473,7 +473,7 @@ class TestHandleSetExteriorCallback:
         mock_update.callback_query.data = "set_exterior:csgo"
 
         # Act
-        awAlgot handle_set_exterior_callback(mock_update, mock_context)
+        await handle_set_exterior_callback(mock_update, mock_context)
 
         # Assert
         mock_update.callback_query.answer.assert_called_once()
@@ -487,7 +487,7 @@ class TestHandleSetExteriorCallback:
         update.callback_query = None
 
         # Act
-        result = awAlgot handle_set_exterior_callback(update, mock_context)
+        result = await handle_set_exterior_callback(update, mock_context)
 
         # Assert
         assert result is None
@@ -508,7 +508,7 @@ class TestHandleSetHeroCallback:
         mock_update.callback_query.data = "set_hero:dota2"
 
         # Act
-        awAlgot handle_set_hero_callback(mock_update, mock_context)
+        await handle_set_hero_callback(mock_update, mock_context)
 
         # Assert
         mock_update.callback_query.answer.assert_called_once()
@@ -522,7 +522,7 @@ class TestHandleSetHeroCallback:
         update.callback_query = None
 
         # Act
-        result = awAlgot handle_set_hero_callback(update, mock_context)
+        result = await handle_set_hero_callback(update, mock_context)
 
         # Assert
         assert result is None
@@ -543,7 +543,7 @@ class TestHandleSetClassCallback:
         mock_update.callback_query.data = "set_class:tf2"
 
         # Act
-        awAlgot handle_set_class_callback(mock_update, mock_context)
+        await handle_set_class_callback(mock_update, mock_context)
 
         # Assert
         mock_update.callback_query.answer.assert_called_once()
@@ -557,7 +557,7 @@ class TestHandleSetClassCallback:
         update.callback_query = None
 
         # Act
-        result = awAlgot handle_set_class_callback(update, mock_context)
+        result = await handle_set_class_callback(update, mock_context)
 
         # Assert
         assert result is None

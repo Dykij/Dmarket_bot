@@ -109,7 +109,7 @@ class TestTradingNotifier:
                 new_callable=AsyncMock,
             ) as mock_success,
         ):
-            result = awAlgot notifier.buy_item_with_notifications(
+            result = await notifier.buy_item_with_notifications(
                 item_id="item-123",
                 item_name="AK-47 | Redline",
                 buy_price=15.50,
@@ -126,10 +126,10 @@ class TestTradingNotifier:
             )
 
     @pytest.mark.asyncio()
-    async def test_buy_item_with_notifications_api_fAlgolure(
+    async def test_buy_item_with_notifications_api_failure(
         self, notifier: TradingNotifier, mock_api_client: MagicMock
     ) -> None:
-        """Test buy with notifications when API returns fAlgolure."""
+        """Test buy with notifications when API returns failure."""
         mock_api_client.buy_item = AsyncMock(
             return_value={"success": False, "error": "Insufficient balance"}
         )
@@ -140,11 +140,11 @@ class TestTradingNotifier:
                 new_callable=AsyncMock,
             ) as mock_intent,
             patch(
-                "src.utils.trading_notifier.send_buy_fAlgoled_notification",
+                "src.utils.trading_notifier.send_buy_failed_notification",
                 new_callable=AsyncMock,
-            ) as mock_fAlgoled,
+            ) as mock_failed,
         ):
-            result = awAlgot notifier.buy_item_with_notifications(
+            result = await notifier.buy_item_with_notifications(
                 item_id="item-123",
                 item_name="AK-47 | Redline",
                 buy_price=15.50,
@@ -153,13 +153,13 @@ class TestTradingNotifier:
 
             assert result["success"] is False
             mock_intent.assert_called_once()
-            mock_fAlgoled.assert_called_once()
+            mock_failed.assert_called_once()
 
     @pytest.mark.asyncio()
     async def test_buy_item_with_notifications_exception(
         self, notifier: TradingNotifier, mock_api_client: MagicMock
     ) -> None:
-        """Test buy with notifications when API rAlgoses exception."""
+        """Test buy with notifications when API raises exception."""
         mock_api_client.buy_item = AsyncMock(side_effect=Exception("Network error"))
 
         with (
@@ -168,26 +168,26 @@ class TestTradingNotifier:
                 new_callable=AsyncMock,
             ),
             patch(
-                "src.utils.trading_notifier.send_buy_fAlgoled_notification",
+                "src.utils.trading_notifier.send_buy_failed_notification",
                 new_callable=AsyncMock,
-            ) as mock_fAlgoled,
+            ) as mock_failed,
         ):
-            with pytest.rAlgoses(Exception, match="Network error"):
-                awAlgot notifier.buy_item_with_notifications(
+            with pytest.raises(Exception, match="Network error"):
+                await notifier.buy_item_with_notifications(
                     item_id="item-123",
                     item_name="AK-47 | Redline",
                     buy_price=15.50,
                     sell_price=20.00,
                 )
 
-            mock_fAlgoled.assert_called_once()
+            mock_failed.assert_called_once()
 
     @pytest.mark.asyncio()
     async def test_buy_item_without_bot(self, mock_api_client: MagicMock) -> None:
         """Test buy when bot is not configured."""
         notifier = TradingNotifier(api_client=mock_api_client)
 
-        result = awAlgot notifier.buy_item_with_notifications(
+        result = await notifier.buy_item_with_notifications(
             item_id="item-123",
             item_name="AK-47 | Redline",
             buy_price=15.50,
@@ -206,7 +206,7 @@ class TestTradingNotifier:
             "src.utils.trading_notifier.send_sell_success_notification",
             new_callable=AsyncMock,
         ) as mock_success:
-            result = awAlgot notifier.sell_item_with_notifications(
+            result = await notifier.sell_item_with_notifications(
                 item_id="item-123",
                 item_name="AK-47 | Redline",
                 buy_price=15.50,
@@ -221,15 +221,15 @@ class TestTradingNotifier:
             )
 
     @pytest.mark.asyncio()
-    async def test_sell_item_with_notifications_fAlgolure(
+    async def test_sell_item_with_notifications_failure(
         self, notifier: TradingNotifier, mock_api_client: MagicMock
     ) -> None:
-        """Test sell with notifications when API returns fAlgolure."""
+        """Test sell with notifications when API returns failure."""
         mock_api_client.sell_item = AsyncMock(
             return_value={"success": False, "error": "Item not found"}
         )
 
-        result = awAlgot notifier.sell_item_with_notifications(
+        result = await notifier.sell_item_with_notifications(
             item_id="item-123",
             item_name="AK-47 | Redline",
             buy_price=15.50,
@@ -242,11 +242,11 @@ class TestTradingNotifier:
     async def test_sell_item_with_notifications_exception(
         self, notifier: TradingNotifier, mock_api_client: MagicMock
     ) -> None:
-        """Test sell with notifications when API rAlgoses exception."""
+        """Test sell with notifications when API raises exception."""
         mock_api_client.sell_item = AsyncMock(side_effect=Exception("Network error"))
 
-        with pytest.rAlgoses(Exception, match="Network error"):
-            awAlgot notifier.sell_item_with_notifications(
+        with pytest.raises(Exception, match="Network error"):
+            await notifier.sell_item_with_notifications(
                 item_id="item-123",
                 item_name="AK-47 | Redline",
                 buy_price=15.50,
@@ -258,7 +258,7 @@ class TestTradingNotifier:
         """Test sell when bot is not configured."""
         notifier = TradingNotifier(api_client=mock_api_client)
 
-        result = awAlgot notifier.sell_item_with_notifications(
+        result = await notifier.sell_item_with_notifications(
             item_id="item-123",
             item_name="AK-47 | Redline",
             buy_price=15.50,
@@ -301,7 +301,7 @@ class TestBuyWithNotifications:
                 new_callable=AsyncMock,
             ),
         ):
-            result = awAlgot buy_with_notifications(
+            result = await buy_with_notifications(
                 api_client=mock_api_client,
                 bot=mock_bot,
                 user_id=12345,
@@ -332,7 +332,7 @@ class TestBuyWithNotifications:
                 new_callable=AsyncMock,
             ),
         ):
-            result = awAlgot buy_with_notifications(
+            result = await buy_with_notifications(
                 api_client=mock_api_client,
                 bot=mock_bot,
                 user_id=12345,
@@ -384,7 +384,7 @@ class TestTradingNotifierProfitCalculation:
                 new_callable=AsyncMock,
             ),
         ):
-            awAlgot notifier.buy_item_with_notifications(
+            await notifier.buy_item_with_notifications(
                 item_id="item-123",
                 item_name="Test Item",
                 buy_price=10.00,

@@ -1,14 +1,14 @@
 """Тесты для клавиатур Telegram бота.
 
 Покрывает:
-- Главная клавиатура (mAlgon_keyboard.py)
+- Главная клавиатура (main_keyboard.py)
 - Клавиатура настроек
 - Константы callback_data
 """
 
 from telegram import InlineKeyboardMarkup
 
-from src.telegram_bot.handlers.mAlgon_keyboard import get_mAlgon_keyboard
+from src.telegram_bot.handlers.main_keyboard import get_main_keyboard
 from src.telegram_bot.keyboards import (
     CB_BACK,
     CB_CANCEL,
@@ -39,52 +39,52 @@ class TestKeyboardConstants:
 class TestMAlgonKeyboard:
     """Тесты главной клавиатуры."""
 
-    def test_mAlgon_keyboard_creation(self):
+    def test_main_keyboard_creation(self):
         """Тест создания главной клавиатуры."""
-        keyboard = get_mAlgon_keyboard()
+        keyboard = get_main_keyboard()
 
         assert isinstance(keyboard, InlineKeyboardMarkup)
         assert len(keyboard.inline_keyboard) == 7
 
-    def test_mAlgon_keyboard_with_balance(self):
+    def test_main_keyboard_with_balance(self):
         """Тест клавиатуры с балансом."""
-        keyboard = get_mAlgon_keyboard(balance=100.50)
+        keyboard = get_main_keyboard(balance=100.50)
 
         all_buttons = [btn for row in keyboard.inline_keyboard for btn in row]
         button_texts = [btn.text for btn in all_buttons]
 
         assert any("$100.50" in text for text in button_texts)
 
-    def test_mAlgon_keyboard_has_auto_trade(self):
+    def test_main_keyboard_has_auto_trade(self):
         """Тест наличия кнопки авто-торговли."""
-        keyboard = get_mAlgon_keyboard()
+        keyboard = get_main_keyboard()
 
         all_buttons = [btn for row in keyboard.inline_keyboard for btn in row]
         button_texts = [btn.text for btn in all_buttons]
 
         assert any("АВТО-ТОРГОВЛЯ" in text for text in button_texts)
 
-    def test_mAlgon_keyboard_has_targets(self):
+    def test_main_keyboard_has_targets(self):
         """Тест наличия кнопки таргетов."""
-        keyboard = get_mAlgon_keyboard()
+        keyboard = get_main_keyboard()
 
         all_buttons = [btn for row in keyboard.inline_keyboard for btn in row]
         button_texts = [btn.text for btn in all_buttons]
 
         assert any("ТАРГЕТЫ" in text for text in button_texts)
 
-    def test_mAlgon_keyboard_has_emergency_stop(self):
+    def test_main_keyboard_has_emergency_stop(self):
         """Тест наличия кнопки экстренной остановки."""
-        keyboard = get_mAlgon_keyboard()
+        keyboard = get_main_keyboard()
 
         all_buttons = [btn for row in keyboard.inline_keyboard for btn in row]
         button_texts = [btn.text for btn in all_buttons]
 
         assert any("ЭКСТРЕННАЯ" in text for text in button_texts)
 
-    def test_mAlgon_keyboard_has_whitelist_blacklist(self):
+    def test_main_keyboard_has_whitelist_blacklist(self):
         """Тест наличия WhiteList и BlackList."""
-        keyboard = get_mAlgon_keyboard()
+        keyboard = get_main_keyboard()
 
         all_buttons = [btn for row in keyboard.inline_keyboard for btn in row]
         button_texts = [btn.text for btn in all_buttons]
@@ -92,27 +92,27 @@ class TestMAlgonKeyboard:
         assert any("WhiteList" in text for text in button_texts)
         assert any("BlackList" in text for text in button_texts)
 
-    def test_mAlgon_keyboard_has_repricing(self):
+    def test_main_keyboard_has_repricing(self):
         """Тест наличия кнопки репрайсинга."""
-        keyboard = get_mAlgon_keyboard()
+        keyboard = get_main_keyboard()
 
         all_buttons = [btn for row in keyboard.inline_keyboard for btn in row]
         button_texts = [btn.text for btn in all_buttons]
 
         assert any("Репрайсинг" in text for text in button_texts)
 
-    def test_mAlgon_keyboard_has_settings(self):
+    def test_main_keyboard_has_settings(self):
         """Тест наличия кнопки настроек."""
-        keyboard = get_mAlgon_keyboard()
+        keyboard = get_main_keyboard()
 
         all_buttons = [btn for row in keyboard.inline_keyboard for btn in row]
         button_texts = [btn.text for btn in all_buttons]
 
         assert any("НастSwarmки" in text for text in button_texts)
 
-    def test_mAlgon_keyboard_callback_data(self):
+    def test_main_keyboard_callback_data(self):
         """Тест callback_data кнопок."""
-        keyboard = get_mAlgon_keyboard()
+        keyboard = get_main_keyboard()
 
         all_buttons = [btn for row in keyboard.inline_keyboard for btn in row]
         callback_data = [btn.callback_data for btn in all_buttons]
@@ -174,9 +174,9 @@ class TestBackToSettingsKeyboard:
 class TestKeyboardStructure:
     """Тесты структуры клавиатур."""
 
-    def test_mAlgon_keyboard_has_multiple_rows(self):
+    def test_main_keyboard_has_multiple_rows(self):
         """Тест что главная клавиатура имеет несколько рядов."""
-        keyboard = get_mAlgon_keyboard()
+        keyboard = get_main_keyboard()
 
         assert len(keyboard.inline_keyboard) >= 5
 

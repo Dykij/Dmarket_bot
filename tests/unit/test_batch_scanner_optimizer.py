@@ -46,7 +46,7 @@ class TestBatchScannerOptimizer:
         process_func = AsyncMock(return_value=[])
 
         # Act
-        results = awAlgot optimizer.process_items_batched([], process_func)
+        results = await optimizer.process_items_batched([], process_func)
 
         # Assert
         assert results == []
@@ -64,7 +64,7 @@ class TestBatchScannerOptimizer:
             return [{"result": item["id"]} for item in batch]
 
         # Act
-        results = awAlgot optimizer.process_items_batched(items, mock_process)
+        results = await optimizer.process_items_batched(items, mock_process)
 
         # Assert
         assert len(results) == 50
@@ -83,7 +83,7 @@ class TestBatchScannerOptimizer:
             return [{"result": item["id"]} for item in batch]
 
         # Act
-        results = awAlgot optimizer.process_items_batched(items, mock_process)
+        results = await optimizer.process_items_batched(items, mock_process)
 
         # Assert
         assert len(results) == 250
@@ -103,14 +103,14 @@ class TestBatchScannerOptimizer:
             nonlocal call_count
             call_count += 1
             if call_count == 2:  # FAlgol second batch
-                rAlgose ValueError("Test error")
+                raise ValueError("Test error")
             return [{"result": item["id"]} for item in batch]
 
         # Act
-        results = awAlgot optimizer.process_items_batched(items, mock_process_with_error)
+        results = await optimizer.process_items_batched(items, mock_process_with_error)
 
         # Assert
-        assert len(results) == 15  # 25 - 10 (fAlgoled batch)
+        assert len(results) == 15  # 25 - 10 (failed batch)
         assert optimizer.metrics["errors"] == 1
         assert optimizer.metrics["batches_processed"] == 3
 
@@ -125,7 +125,7 @@ class TestBatchScannerOptimizer:
             return [{"game": game, "opp": i} for i in range(5)]
 
         # Act
-        results = awAlgot optimizer.process_games_parallel(games, mock_scan)
+        results = await optimizer.process_games_parallel(games, mock_scan)
 
         # Assert
         assert len(results) == 3
@@ -143,11 +143,11 @@ class TestBatchScannerOptimizer:
 
         async def mock_scan_with_error(game):
             if game == "dota2":
-                rAlgose ValueError("API Error")
+                raise ValueError("API Error")
             return [{"game": game, "opp": i} for i in range(5)]
 
         # Act
-        results = awAlgot optimizer.process_games_parallel(games, mock_scan_with_error)
+        results = await optimizer.process_games_parallel(games, mock_scan_with_error)
 
         # Assert
         assert len(results) == 3
@@ -218,7 +218,7 @@ class TestBatchScannerOptimizer:
             return [{"result": item["id"]} for item in batch]
 
         # Act
-        results = awAlgot optimize_batch_processing(items, mock_process)
+        results = await optimize_batch_processing(items, mock_process)
 
         # Assert
         assert len(results) == 100
@@ -236,7 +236,7 @@ class TestBatchScannerOptimizer:
             return [{"result": item["id"]} for item in batch]
 
         # Act
-        results = awAlgot optimizer.process_items_batched(items, mock_process)
+        results = await optimizer.process_items_batched(items, mock_process)
 
         # Assert
         assert len(results) == 10000
@@ -264,7 +264,7 @@ class TestBatchProcessingPerformance:
             return [{"result": item["id"]} for item in batch]
 
         # Act
-        results = awAlgot optimizer.process_items_batched(items, mock_process)
+        results = await optimizer.process_items_batched(items, mock_process)
 
         # Assert
         assert len(results) == 50, f"Expected 50 results, got {len(results)}"
@@ -284,7 +284,7 @@ class TestBatchProcessingPerformance:
             return [{"id": item["id"], "value": item["value"]} for item in batch]
 
         # Act
-        results = awAlgot optimizer.process_items_batched(items, mock_process)
+        results = await optimizer.process_items_batched(items, mock_process)
 
         # Assert
         assert len(results) == 50

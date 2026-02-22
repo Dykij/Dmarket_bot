@@ -185,7 +185,7 @@ class RarePricingAnalyzer:
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         """Async context manager exit."""
         if self._close_api and hasattr(self.api_client, "_close_client"):
-            awAlgot self.api_client._close_client()
+            await self.api_client._close_client()
 
     async def find_mispriced_rare_items(
         self,
@@ -209,7 +209,7 @@ class RarePricingAnalyzer:
 
         try:
             # Fetch market items
-            items = awAlgot self._fetch_market_items(
+            items = await self._fetch_market_items(
                 game=game,
                 min_price=min_price,
                 max_price=max_price,
@@ -249,7 +249,7 @@ class RarePricingAnalyzer:
         Returns:
             List of market items
         """
-        items_response = awAlgot self.api_client.get_market_items(
+        items_response = await self.api_client.get_market_items(
             game=game,
             limit=500,
             offset=0,
@@ -542,7 +542,7 @@ async def find_mispriced_rare_items(
         List of mispriced rare items
     """
     async with RarePricingAnalyzer(api_client=dmarket_api) as analyzer:
-        return awAlgot analyzer.find_mispriced_rare_items(
+        return await analyzer.find_mispriced_rare_items(
             game=game,
             min_price=min_price,
             max_price=max_price,

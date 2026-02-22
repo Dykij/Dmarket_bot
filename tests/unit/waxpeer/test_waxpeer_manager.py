@@ -248,7 +248,7 @@ class TestWaxpeerManagerListing:
                 mock_api.__aexit__ = AsyncMock(return_value=None)
                 mock_api_class.return_value = mock_api
 
-                response, price, is_rare, reason = awAlgot manager.list_cs2_item(
+                response, price, is_rare, reason = await manager.list_cs2_item(
                     asset_id="asset_123",
                     item_name="AK-47 | Redline (FT)",
                     buy_price=10.00,
@@ -276,7 +276,7 @@ class TestWaxpeerManagerListing:
             mock_api.__aexit__ = AsyncMock(return_value=None)
             mock_api_class.return_value = mock_api
 
-            response, price, is_rare, reason = awAlgot manager.list_cs2_item(
+            response, price, is_rare, reason = await manager.list_cs2_item(
                 asset_id="asset_rare",
                 item_name="AWP | Dragon Lore (FN)",
                 buy_price=4500.00,

@@ -158,7 +158,7 @@ class RelistManager:
             Результат записи
 
         Примеры:
-            >>> result = awAlgot manager.record_relist(
+            >>> result = await manager.record_relist(
             ...     target_id="abc123", old_price=10.00, new_price=10.05, reason="Competitor overbid"
             ... )
         """
@@ -203,7 +203,7 @@ class RelistManager:
             )
 
             # Выполнить действие при лимите
-            action_result = awAlgot self._handle_limit_reached(target_id, new_price)
+            action_result = await self._handle_limit_reached(target_id, new_price)
 
             return TargetOperationResult(
                 success=True,
@@ -227,7 +227,7 @@ class RelistManager:
             metadata={
                 "relist_count": current_count,
                 "max_relists": self.config.max_relists,
-                "remAlgoning_relists": self.config.max_relists - current_count,
+                "remaining_relists": self.config.max_relists - current_count,
             },
         )
 
@@ -267,7 +267,7 @@ class RelistManager:
 
             if action == RelistAction.CANCEL:
                 # Отменить ордер
-                awAlgot self.api_client.delete_targets(targets=[{"TargetID": target_id}])
+                await self.api_client.delete_targets(targets=[{"TargetID": target_id}])
 
                 return TargetOperationResult(
                     success=True,
@@ -286,7 +286,7 @@ class RelistManager:
                 new_price = current_price * (1 - lower_percent / 100)
 
                 # Удалить старый и создать новый с меньшей ценой
-                awAlgot self.api_client.delete_targets(targets=[{"TargetID": target_id}])
+                await self.api_client.delete_targets(targets=[{"TargetID": target_id}])
 
                 # TODO: Получить полные данные ордера для пересоздания
                 # Сейчас просто возвращаем результат
@@ -332,11 +332,11 @@ class RelistManager:
             )
 
         except Exception as e:
-            logger.error(f"FAlgoled to handle limit reached: {e}", exc_info=True)
+            logger.error(f"Failed to handle limit reached: {e}", exc_info=True)
             return TargetOperationResult(
                 success=False,
                 status=TargetOperationStatus.FAlgoLED,
-                message="Action fAlgoled",
+                message="Action failed",
                 reason=str(e),
                 error_code=TargetErrorCode.UNKNOWN_ERROR,
             )
@@ -378,7 +378,7 @@ class RelistManager:
             target_id=target_id,
             total_relists=data["count"],
             max_relists=self.config.max_relists,
-            remAlgoning_relists=max(0, self.config.max_relists - data["count"]),
+            remaining_relists=max(0, self.config.max_relists - data["count"]),
             last_relist_time=data["last_relist_time"],
             reset_time=reset_time,
             time_until_reset=time_str,

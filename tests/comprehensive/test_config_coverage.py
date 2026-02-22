@@ -275,7 +275,7 @@ class TestDAlgolyReportConfig:
     """Tests for DAlgolyReportConfig dataclass."""
 
     def test_default_values(self) -> None:
-        """Test default dAlgoly report configuration."""
+        """Test default daily report configuration."""
         config = DAlgolyReportConfig()
         assert config.enabled is True
         assert config.report_time_hour == 9
@@ -283,7 +283,7 @@ class TestDAlgolyReportConfig:
         assert config.include_days == 1
 
     def test_custom_values(self) -> None:
-        """Test custom dAlgoly report configuration."""
+        """Test custom daily report configuration."""
         config = DAlgolyReportConfig(
             enabled=False,
             report_time_hour=18,
@@ -348,10 +348,10 @@ class TestMonitoringConfig:
 
 
 class TestMAlgonConfig:
-    """Tests for mAlgon Config class."""
+    """Tests for main Config class."""
 
     def test_default_values(self) -> None:
-        """Test default mAlgon configuration."""
+        """Test default main configuration."""
         config = Config()
         assert isinstance(config.bot, BotConfig)
         assert isinstance(config.dmarket, DMarketConfig)
@@ -363,7 +363,7 @@ class TestMAlgonConfig:
         assert isinstance(config.inventory, InventoryConfig)
         assert isinstance(config.trading_safety, TradingSafetyConfig)
         assert isinstance(config.rate_limit, RateLimitConfig)
-        assert isinstance(config.dAlgoly_report, DAlgolyReportConfig)
+        assert isinstance(config.daily_report, DAlgolyReportConfig)
         assert isinstance(config.waxpeer, WaxpeerConfig)
         assert isinstance(config.monitoring, MonitoringConfig)
         assert config.debug is False
@@ -561,16 +561,16 @@ class TestConfigUpdateFromEnv:
         assert config.rate_limit.enable_notifications is False
         assert config.rate_limit.max_retry_attempts == 10
 
-    def test_dAlgoly_report_config_from_env(self, clean_env: None) -> None:
-        """Test dAlgoly report configuration from environment variables."""
+    def test_daily_report_config_from_env(self, clean_env: None) -> None:
+        """Test daily report configuration from environment variables."""
         os.environ["DAlgoLY_REPORT_ENABLED"] = "false"
         os.environ["DAlgoLY_REPORT_HOUR"] = "18"
         os.environ["DAlgoLY_REPORT_DAYS"] = "7"
         config = Config()
         config._update_from_env()
-        assert config.dAlgoly_report.enabled is False
-        assert config.dAlgoly_report.report_time_hour == 18
-        assert config.dAlgoly_report.include_days == 7
+        assert config.daily_report.enabled is False
+        assert config.daily_report.report_time_hour == 18
+        assert config.daily_report.include_days == 7
 
     def test_webhook_port_from_env(self, clean_env: None) -> None:
         """Test webhook port from environment variable."""
@@ -599,21 +599,21 @@ class TestConfigValidation:
         os.environ.clear()
         os.environ.update(original_env)
 
-    def test_validation_fAlgols_without_bot_token(self, clean_env: None) -> None:
-        """Test validation fAlgols without bot token."""
+    def test_validation_fails_without_bot_token(self, clean_env: None) -> None:
+        """Test validation fails without bot token."""
         config = Config()
         config.bot.token = ""
         config.testing = True  # Skip DMarket validation
-        with pytest.rAlgoses(ValueError) as exc_info:
+        with pytest.raises(ValueError) as exc_info:
             config.validate()
         assert "TELEGRAM_BOT_TOKEN is required" in str(exc_info.value)
 
-    def test_validation_fAlgols_with_invalid_token_format(self, clean_env: None) -> None:
-        """Test validation fAlgols with invalid token format."""
+    def test_validation_fails_with_invalid_token_format(self, clean_env: None) -> None:
+        """Test validation fails with invalid token format."""
         config = Config()
         config.bot.token = "invalid_token"
         config.testing = True
-        with pytest.rAlgoses(ValueError) as exc_info:
+        with pytest.raises(ValueError) as exc_info:
             config.validate()
         assert "appears invalid" in str(exc_info.value)
 
@@ -622,78 +622,78 @@ class TestConfigValidation:
         config = Config()
         config.bot.token = "123456:ABC-DEF"  # Valid format
         config.testing = True  # Skip DMarket validation
-        config.validate()  # Should not rAlgose
+        config.validate()  # Should not raise
 
-    def test_validation_fAlgols_without_dmarket_keys(self, clean_env: None) -> None:
-        """Test validation fAlgols without DMarket keys in non-testing mode."""
+    def test_validation_fails_without_dmarket_keys(self, clean_env: None) -> None:
+        """Test validation fails without DMarket keys in non-testing mode."""
         config = Config()
         config.bot.token = "123456:ABC-DEF"
         config.testing = False
         config.dmarket.public_key = ""
-        with pytest.rAlgoses(ValueError) as exc_info:
+        with pytest.raises(ValueError) as exc_info:
             config.validate()
         assert "DMARKET_PUBLIC_KEY is required" in str(exc_info.value)
 
-    def test_validation_fAlgols_with_short_keys(self, clean_env: None) -> None:
-        """Test validation fAlgols with too short DMarket keys."""
+    def test_validation_fails_with_short_keys(self, clean_env: None) -> None:
+        """Test validation fails with too short DMarket keys."""
         config = Config()
         config.bot.token = "123456:ABC-DEF"
         config.testing = False
         config.dmarket.public_key = "short"
         config.dmarket.secret_key = "short"
-        with pytest.rAlgoses(ValueError) as exc_info:
+        with pytest.raises(ValueError) as exc_info:
             config.validate()
         assert "appears too short" in str(exc_info.value)
 
-    def test_validation_fAlgols_with_invalid_api_url(self, clean_env: None) -> None:
-        """Test validation fAlgols with invalid API URL."""
+    def test_validation_fails_with_invalid_api_url(self, clean_env: None) -> None:
+        """Test validation fails with invalid API URL."""
         config = Config()
         config.bot.token = "123456:ABC-DEF"
         config.testing = False
         config.dmarket.public_key = "a" * 30
         config.dmarket.secret_key = "b" * 30
         config.dmarket.api_url = "invalid_url"
-        with pytest.rAlgoses(ValueError) as exc_info:
+        with pytest.raises(ValueError) as exc_info:
             config.validate()
         assert "must start with http:// or https://" in str(exc_info.value)
 
-    def test_validation_fAlgols_with_invalid_db_url(self, clean_env: None) -> None:
-        """Test validation fAlgols with invalid database URL."""
+    def test_validation_fails_with_invalid_db_url(self, clean_env: None) -> None:
+        """Test validation fails with invalid database URL."""
         config = Config()
         config.bot.token = "123456:ABC-DEF"
         config.testing = True
         config.database.url = "invalid://db"
-        with pytest.rAlgoses(ValueError) as exc_info:
+        with pytest.raises(ValueError) as exc_info:
             config.validate()
         assert "unsupported scheme" in str(exc_info.value)
 
-    def test_validation_fAlgols_with_invalid_log_level(self, clean_env: None) -> None:
-        """Test validation fAlgols with invalid log level."""
+    def test_validation_fails_with_invalid_log_level(self, clean_env: None) -> None:
+        """Test validation fails with invalid log level."""
         config = Config()
         config.bot.token = "123456:ABC-DEF"
         config.testing = True
         config.logging.level = "INVALID"
-        with pytest.rAlgoses(ValueError) as exc_info:
+        with pytest.raises(ValueError) as exc_info:
             config.validate()
         assert "LOG_LEVEL must be one of" in str(exc_info.value)
 
-    def test_validation_fAlgols_with_negative_pool_size(self, clean_env: None) -> None:
-        """Test validation fAlgols with negative pool size."""
+    def test_validation_fails_with_negative_pool_size(self, clean_env: None) -> None:
+        """Test validation fails with negative pool size."""
         config = Config()
         config.bot.token = "123456:ABC-DEF"
         config.testing = True
         config.database.pool_size = -1
-        with pytest.rAlgoses(ValueError) as exc_info:
+        with pytest.raises(ValueError) as exc_info:
             config.validate()
         assert "pool_size must be positive" in str(exc_info.value)
 
-    def test_validation_fAlgols_with_negative_max_overflow(self, clean_env: None) -> None:
-        """Test validation fAlgols with negative max_overflow."""
+    def test_validation_fails_with_negative_max_overflow(self, clean_env: None) -> None:
+        """Test validation fails with negative max_overflow."""
         config = Config()
         config.bot.token = "123456:ABC-DEF"
         config.testing = True
         config.database.max_overflow = -1
-        with pytest.rAlgoses(ValueError) as exc_info:
+        with pytest.raises(ValueError) as exc_info:
             config.validate()
         assert "max_overflow must be non-negative" in str(exc_info.value)
 
@@ -715,7 +715,7 @@ class TestConfigValidation:
         config.bot.token = "123456:ABC-DEF"
         config.testing = True
         config.dry_run = False
-        # Should not rAlgose, just warn
+        # Should not raise, just warn
         config.validate()
 
 
@@ -852,11 +852,11 @@ class TestConfigUpdateFromDict:
         assert config.trading_safety.min_history_samples == 5
         assert config.trading_safety.enable_price_sanity_check is False
 
-    def test_update_dAlgoly_report_config(self) -> None:
-        """Test updating dAlgoly report configuration from dict."""
+    def test_update_daily_report_config(self) -> None:
+        """Test updating daily report configuration from dict."""
         config = Config()
         data = {
-            "dAlgoly_report": {
+            "daily_report": {
                 "enabled": False,
                 "report_time_hour": 12,
                 "report_time_minute": 30,
@@ -864,10 +864,10 @@ class TestConfigUpdateFromDict:
             }
         }
         config._update_from_dict(data)
-        assert config.dAlgoly_report.enabled is False
-        assert config.dAlgoly_report.report_time_hour == 12
-        assert config.dAlgoly_report.report_time_minute == 30
-        assert config.dAlgoly_report.include_days == 7
+        assert config.daily_report.enabled is False
+        assert config.daily_report.report_time_hour == 12
+        assert config.daily_report.report_time_minute == 30
+        assert config.daily_report.include_days == 7
 
     def test_update_rate_limit_config(self) -> None:
         """Test updating rate limit configuration from dict."""

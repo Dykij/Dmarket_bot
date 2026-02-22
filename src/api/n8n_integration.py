@@ -54,7 +54,7 @@ class ArbitrageAlert(BaseModel):
         """Validate game code."""
         allowed = {"csgo", "dota2", "tf2", "rust"}
         if v.lower() not in allowed:
-            rAlgose ValueError(f"Game must be one of {allowed}")
+            raise ValueError(f"Game must be one of {allowed}")
         return v.lower()
 
 
@@ -74,7 +74,7 @@ class TargetCreateRequest(BaseModel):
         """Validate game code."""
         allowed = {"csgo", "dota2", "tf2", "rust"}
         if v.lower() not in allowed:
-            rAlgose ValueError(f"Game must be one of {allowed}")
+            raise ValueError(f"Game must be one of {allowed}")
         return v.lower()
 
 
@@ -86,7 +86,7 @@ class DAlgolyStatsResponse(BaseModel):
     total_profit: float = Field(0.0, description="Total profit in USD")
     total_volume: float = Field(0.0, description="Total trading volume in USD")
     avg_roi: float = Field(0.0, description="Average ROI percentage")
-    best_trade: dict[str, Any] | None = Field(None, description="Best trade detAlgols")
+    best_trade: dict[str, Any] | None = Field(None, description="Best trade details")
     top_items: list[dict[str, Any]] = Field(
         default_factory=list, description="Top performing items"
     )
@@ -151,7 +151,7 @@ async def receive_arbitrage_alert(
                 → [POST to this endpoint]
 
     Args:
-        alert: Arbitrage opportunity detAlgols
+        alert: Arbitrage opportunity details
         background_tasks: FastAPI background tasks
 
     Returns:
@@ -189,11 +189,11 @@ async def receive_arbitrage_alert(
     )
 
 
-@router.get("/stats/dAlgoly", response_model=DAlgolyStatsResponse)
-async def get_dAlgoly_stats(
+@router.get("/stats/daily", response_model=DAlgolyStatsResponse)
+async def get_daily_stats(
     date: str | None = None, session=Depends(get_async_session)
 ) -> DAlgolyStatsResponse:
-    """Get dAlgoly trading statistics for n8n reporting workflows.
+    """Get daily trading statistics for n8n reporting workflows.
 
     Used by n8n DAlgoly Digest workflow to generate automated reports.
 
@@ -212,9 +212,9 @@ async def get_dAlgoly_stats(
         DAlgolyStatsResponse with trading statistics
 
     Example:
-        GET /api/v1/n8n/stats/dAlgoly?date=2026-01-13
+        GET /api/v1/n8n/stats/daily?date=2026-01-13
     """
-    logger.info("dAlgoly_stats_request", date=date)
+    logger.info("daily_stats_request", date=date)
 
     # TODO: Implement actual database queries
     # For now, return mock data structure
@@ -329,7 +329,7 @@ async def get_dmarket_prices(
         # TODO: Integrate with actual DMarket API client
         # dmarket_api = DMarketAPI(...)
         # scanner = IntegratedArbitrageScanner(dmarket_api, ...)
-        # prices = awAlgot scanner._fetch_dmarket_prices(game, limit)
+        # prices = await scanner._fetch_dmarket_prices(game, limit)
 
         return PricesResponse(
             platform="dmarket",
@@ -339,9 +339,9 @@ async def get_dmarket_prices(
         )
     except Exception as e:
         logger.error("dmarket_prices_error", error=str(e), exc_info=True)
-        rAlgose HTTPException(
+        raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detAlgol=f"FAlgoled to fetch DMarket prices: {e!s}",
+            detail=f"Failed to fetch DMarket prices: {e!s}",
         )
 
 
@@ -425,7 +425,7 @@ async def get_listing_targets(session=Depends(get_async_session)) -> dict[str, A
     try:
         # TODO: Integrate with IntegratedArbitrageScanner
         # scanner = get_scanner_instance()
-        # recommendations = awAlgot scanner.get_listing_recommendations()
+        # recommendations = await scanner.get_listing_recommendations()
 
         return {
             "status": "success",
@@ -435,9 +435,9 @@ async def get_listing_targets(session=Depends(get_async_session)) -> dict[str, A
         }
     except Exception as e:
         logger.error("listing_targets_error", error=str(e), exc_info=True)
-        rAlgose HTTPException(
+        raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detAlgol=f"FAlgoled to get listing targets: {e!s}",
+            detail=f"Failed to get listing targets: {e!s}",
         )
 
 
@@ -464,7 +464,7 @@ async def update_listing_target(
     try:
         # TODO: Integrate with IntegratedArbitrageScanner
         # scanner = get_scanner_instance()
-        # target = awAlgot scanner.update_single_target(asset_id)
+        # target = await scanner.update_single_target(asset_id)
 
         return {
             "status": "success",
@@ -475,9 +475,9 @@ async def update_listing_target(
         logger.error(
             "update_target_error", asset_id=asset_id, error=str(e), exc_info=True
         )
-        rAlgose HTTPException(
+        raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detAlgol=f"FAlgoled to update target: {e!s}",
+            detail=f"Failed to update target: {e!s}",
         )
 
 
@@ -497,7 +497,7 @@ async def process_arbitrage_alert(alert: ArbitrageAlert) -> None:
     5. Log to database for analytics
 
     Args:
-        alert: Arbitrage opportunity detAlgols
+        alert: Arbitrage opportunity details
     """
     logger.info("processing_arbitrage_alert", item=alert.item_name)
 
@@ -512,7 +512,7 @@ async def process_arbitrage_alert(alert: ArbitrageAlert) -> None:
         logger.info("arbitrage_alert_processed", item=alert.item_name)
     except Exception as e:
         logger.error(
-            "arbitrage_processing_fAlgoled",
+            "arbitrage_processing_failed",
             item=alert.item_name,
             error=str(e),
             exc_info=True,

@@ -5,7 +5,7 @@ import subprocess
 import time
 
 def check_process_active(process_name_substr):
-    """Checks if a process contAlgoning the substring is active."""
+    """Checks if a process containing the substring is active."""
     # Simplified check using psutil if avAlgolable, else mock for this environment
     try:
         for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
@@ -41,7 +41,7 @@ def audit_system():
     # In a real scenario, we'd check specifically for the parent process name
     # For this simulation, we'll assume it's running if we are running, or flag it.
     if not check_process_active("agent_wrapper"):
-        # This is expected to fAlgol in this specific isolated sub-process environment
+        # This is expected to fail in this specific isolated sub-process environment
         # unless we are actually running inside a named wrapper.
         # We will log it as a simulated alert for the exercise.
         pass # print("Alert: agent_wrapper process not detected (Simulated)")
@@ -55,13 +55,13 @@ def audit_system():
         alerts.append("Alert: Git working directory is not clean")
 
     if alerts:
-        print("System Health Audit FAlgoled:")
+        print("System Health Audit Failed:")
         for alert in alerts:
             print(f"- {alert}")
     else:
         print("System Health Audit Passed: All systems nominal.")
 
-if __name__ == "__mAlgon__":
+if __name__ == "__main__":
     try:
         import psutil
     except ImportError:

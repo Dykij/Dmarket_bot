@@ -124,7 +124,7 @@ class PriceRangeMonitor:
 
         Примеры:
             >>> monitor.set_config("abc123", PriceRangeConfig(min_price=8.0, max_price=15.0))
-            >>> result = awAlgot monitor.check_market_price("abc123", "csgo", "AK-47 | Redline (FT)")
+            >>> result = await monitor.check_market_price("abc123", "csgo", "AK-47 | Redline (FT)")
         """
         # Проверить наличие конфигурации
         config = self.get_config(target_id)
@@ -139,7 +139,7 @@ class PriceRangeMonitor:
             )
 
         # Проверить нужно ли проверять
-        if not awAlgot self.should_check_price(target_id):
+        if not await self.should_check_price(target_id):
             return TargetOperationResult(
                 success=True,
                 status=TargetOperationStatus.SUCCESS,
@@ -152,13 +152,13 @@ class PriceRangeMonitor:
 
         try:
             # Получить рыночную цену
-            market_price = awAlgot self._get_market_price(game, title)
+            market_price = await self._get_market_price(game, title)
 
             if market_price is None:
                 return TargetOperationResult(
                     success=False,
                     status=TargetOperationStatus.FAlgoLED,
-                    message="FAlgoled to get market price",
+                    message="Failed to get market price",
                     reason="No market data avAlgolable",
                     error_code=TargetErrorCode.UNKNOWN_ERROR,
                 )
@@ -169,7 +169,7 @@ class PriceRangeMonitor:
             # Проверить диапазон
             if market_price < config.min_price:
                 # Цена ниже минимума
-                return awAlgot self._handle_price_breach(
+                return await self._handle_price_breach(
                     target_id=target_id,
                     game=game,
                     title=title,
@@ -180,7 +180,7 @@ class PriceRangeMonitor:
 
             if market_price > config.max_price:
                 # Цена выше максимума
-                return awAlgot self._handle_price_breach(
+                return await self._handle_price_breach(
                     target_id=target_id,
                     game=game,
                     title=title,
@@ -208,7 +208,7 @@ class PriceRangeMonitor:
             return TargetOperationResult(
                 success=False,
                 status=TargetOperationStatus.FAlgoLED,
-                message="Check fAlgoled",
+                message="Check failed",
                 reason=str(e),
                 error_code=TargetErrorCode.UNKNOWN_ERROR,
             )
@@ -225,7 +225,7 @@ class PriceRangeMonitor:
         """
         try:
             # Получить агрегированные цены
-            response = awAlgot self.api_client.get_aggregated_prices(
+            response = await self.api_client.get_aggregated_prices(
                 game=game,
                 titles=[title],
             )
@@ -255,7 +255,7 @@ class PriceRangeMonitor:
                 return None
 
         except Exception as e:
-            logger.warning(f"FAlgoled to get market price: {e}")
+            logger.warning(f"Failed to get market price: {e}")
             return None
 
     async def _handle_price_breach(
@@ -296,7 +296,7 @@ class PriceRangeMonitor:
         try:
             if action == PriceRangeAction.CANCEL:
                 # Отменить ордер
-                awAlgot self.api_client.delete_targets(targets=[{"TargetID": target_id}])
+                await self.api_client.delete_targets(targets=[{"TargetID": target_id}])
 
                 return TargetOperationResult(
                     success=True,
@@ -378,11 +378,11 @@ class PriceRangeMonitor:
             )
 
         except Exception as e:
-            logger.error(f"FAlgoled to handle price breach: {e}", exc_info=True)
+            logger.error(f"Failed to handle price breach: {e}", exc_info=True)
             return TargetOperationResult(
                 success=False,
                 status=TargetOperationStatus.FAlgoLED,
-                message="Action fAlgoled",
+                message="Action failed",
                 reason=str(e),
                 error_code=TargetErrorCode.UNKNOWN_ERROR,
             )
@@ -455,13 +455,13 @@ class PriceRangeMonitor:
             ...     {"target_id": "abc", "game": "csgo", "title": "AK-47 | Redline (FT)"},
             ...     {"target_id": "def", "game": "csgo", "title": "M4A4 | Asiimov (FT)"},
             ... ]
-            >>> results = awAlgot monitor.monitor_orders(orders)
+            >>> results = await monitor.monitor_orders(orders)
         """
         logger.info(f"Starting price monitoring for {len(orders)} orders")
 
         results = []
         for order in orders:
-            result = awAlgot self.check_market_price(
+            result = await self.check_market_price(
                 target_id=order["target_id"],
                 game=order["game"],
                 title=order["title"],
@@ -469,7 +469,7 @@ class PriceRangeMonitor:
             results.append(result)
 
             # Небольшая задержка между проверками
-            awAlgot asyncio.sleep(1)
+            await asyncio.sleep(1)
 
         return results
 

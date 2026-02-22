@@ -41,7 +41,7 @@ async def get_market_data_for_items(
             }
 
             # Make API request
-            response = awAlgot api._request(
+            response = await api._request(
                 "GET",
                 "/exchange/v1/market/items",
                 params=params,
@@ -57,7 +57,7 @@ async def get_market_data_for_items(
 
             # Small delay between batches
             if i + batch_size < len(item_ids):
-                awAlgot asyncio.sleep(0.5)
+                await asyncio.sleep(0.5)
 
     except (APIError, NetworkError) as e:
         logger.exception(f"Error getting market data for items: {e}")
@@ -91,7 +91,7 @@ async def get_item_by_id(
         }
 
         # Make API request
-        response = awAlgot api._request(
+        response = await api._request(
             "GET",
             "/exchange/v1/market/items",
             params=params,
@@ -128,7 +128,7 @@ async def get_market_items_for_game(
     """
     try:
         # Make API request
-        response = awAlgot api._request(
+        response = await api._request(
             "GET",
             "/exchange/v1/market/items",
             params={
@@ -171,7 +171,7 @@ async def get_price_history_for_items(
         # Get price history for each item
         for item_id in item_ids:
             # Make API request
-            response = awAlgot api._request(
+            response = await api._request(
                 "GET",
                 "/exchange/v1/market/price-history",
                 params={
@@ -188,7 +188,7 @@ async def get_price_history_for_items(
                 result[item_id] = history
 
             # Small delay between requests
-            awAlgot asyncio.sleep(0.2)
+            await asyncio.sleep(0.2)
 
     except (APIError, NetworkError) as e:
         logger.exception(f"Error getting price history for items: {e}")

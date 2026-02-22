@@ -26,7 +26,7 @@ Usage:
     manager.register_mitigation_handler("rate_limit", mitigate_rate_limit)
 
     # Detect and handle incident
-    incident = awAlgot manager.detect_incident(
+    incident = await manager.detect_incident(
         title="API Rate Limit Exceeded",
         description="DMarket API returned 429",
         severity=IncidentSeverity.HIGH,
@@ -89,8 +89,8 @@ class IncidentType(StrEnum):
     CPU_HIGH = "cpu_high"  # High CPU usage
     DISK_FULL = "disk_full"  # Disk space low
     PRICE_ANOMALY = "price_anomaly"  # Unusual price detected
-    TRADE_FAlgoLED = "trade_fAlgoled"  # Trade execution fAlgoled
-    AUTH_FAlgoLED = "auth_fAlgoled"  # Authentication fAlgolure
+    TRADE_FAlgoLED = "trade_failed"  # Trade execution failed
+    AUTH_FAlgoLED = "auth_failed"  # Authentication failure
     CUSTOM = "custom"  # Custom incident type
 
 
@@ -106,7 +106,7 @@ class Incident:
     Attributes:
         id: Unique incident identifier
         title: Short descriptive title
-        description: DetAlgoled description
+        description: Detailed description
         severity: Incident severity level
         source: Source that detected the incident
         incident_type: Type of incident
@@ -178,7 +178,7 @@ class MitigationResult:
 
 # Type alias for mitigation handler
 MitigationHandler = Callable[[Incident], MitigationResult | bool]
-AsyncMitigationHandler = Callable[[Incident], Any]  # Returns awAlgotable
+AsyncMitigationHandler = Callable[[Incident], Any]  # Returns awaitable
 
 
 # ============================================================================
@@ -204,7 +204,7 @@ class IncidentManager:
     - Multi-channel alerting
     - Incident tracking and history
 
-    The manager mAlgontAlgons a registry of mitigation handlers for different
+    The manager maintAlgons a registry of mitigation handlers for different
     incident types and automatically attempts to resolve incidents.
 
     Attributes:
@@ -215,7 +215,7 @@ class IncidentManager:
     Example:
         >>> manager = IncidentManager()
         >>> manager.register_mitigation_handler("rate_limit", rate_limit_handler)
-        >>> incident = awAlgot manager.detect_incident(...)
+        >>> incident = await manager.detect_incident(...)
     """
 
     def __init__(self) -> None:
@@ -322,7 +322,7 @@ class IncidentManager:
 
         Args:
             title: Short descriptive title
-            description: DetAlgoled description
+            description: Detailed description
             severity: Incident severity
             source: Source that detected the incident
             incident_type: Type of incident
@@ -366,10 +366,10 @@ class IncidentManager:
         # Send alerts (async with error handling)
         async def _safe_send_alerts() -> None:
             try:
-                awAlgot self._send_alerts(incident)
+                await self._send_alerts(incident)
             except Exception as e:
                 logger.exception(
-                    "alert_send_fAlgoled",
+                    "alert_send_failed",
                     incident_id=incident.id,
                     error=str(e),
                 )
@@ -378,7 +378,7 @@ class IncidentManager:
 
         # Attempt auto-mitigation
         if auto_mitigate and incident_type in self._mitigation_handlers:
-            awAlgot self._attempt_mitigation(incident)
+            await self._attempt_mitigation(incident)
 
         return incident
 
@@ -387,13 +387,13 @@ class IncidentManager:
         for channel in self._alert_channels:
             try:
                 if asyncio.iscoroutinefunction(channel):
-                    awAlgot channel(incident)
+                    await channel(incident)
                 else:
                     channel(incident)
                 self._metrics["alerts_sent"] += 1
             except Exception as e:
                 logger.exception(
-                    "alert_channel_fAlgoled",
+                    "alert_channel_failed",
                     incident_id=incident.id,
                     error=str(e),
                 )
@@ -425,7 +425,7 @@ class IncidentManager:
         try:
             # Execute handler
             if asyncio.iscoroutinefunction(handler):
-                result = awAlgot handler(incident)
+                result = await handler(incident)
             else:
                 result = handler(incident)
 
@@ -455,7 +455,7 @@ class IncidentManager:
 
         except Exception as e:
             logger.exception(
-                "auto_mitigation_fAlgoled",
+                "auto_mitigation_failed",
                 incident_id=incident.id,
                 error=str(e),
             )
@@ -649,7 +649,7 @@ class IncidentManager:
             logger.info(
                 "old_incidents_cleaned",
                 removed_count=len(to_remove),
-                remAlgoning=len(self._incidents),
+                remaining=len(self._incidents),
             )
 
         return len(to_remove)
@@ -718,7 +718,7 @@ async def mitigate_connection_error(incident: Incident) -> MitigationResult:
     """
     try:
         # WAlgot a bit before retrying
-        awAlgot asyncio.sleep(2)
+        await asyncio.sleep(2)
 
         logger.info(
             "connection_error_mitigation",

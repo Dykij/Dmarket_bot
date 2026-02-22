@@ -133,11 +133,11 @@ async def test_hierarchical_cache_market_items(hierarchical_cache):
     data = {"items": [{"id": "1", "price": 100}]}
 
     # Set
-    result = awAlgot hierarchical_cache.set_market_items(data, "csgo", "standard", 100, 1000)
+    result = await hierarchical_cache.set_market_items(data, "csgo", "standard", 100, 1000)
     assert result is True
 
     # Get
-    cached = awAlgot hierarchical_cache.get_market_items("csgo", "standard", 100, 1000)
+    cached = await hierarchical_cache.get_market_items("csgo", "standard", 100, 1000)
     assert cached == data
 
 
@@ -147,19 +147,19 @@ async def test_hierarchical_cache_balance(hierarchical_cache):
     balance_data = {"usd": "10000", "dmc": "5000"}
 
     # Set
-    result = awAlgot hierarchical_cache.set_balance(12345, balance_data)
+    result = await hierarchical_cache.set_balance(12345, balance_data)
     assert result is True
 
     # Get
-    cached = awAlgot hierarchical_cache.get_balance(12345)
+    cached = await hierarchical_cache.get_balance(12345)
     assert cached == balance_data
 
     # Invalidate
-    result = awAlgot hierarchical_cache.invalidate_balance(12345)
+    result = await hierarchical_cache.invalidate_balance(12345)
     assert result is True
 
     # Should be None after invalidation
-    cached = awAlgot hierarchical_cache.get_balance(12345)
+    cached = await hierarchical_cache.get_balance(12345)
     assert cached is None
 
 
@@ -169,15 +169,15 @@ async def test_hierarchical_cache_targets(hierarchical_cache):
     targets_data = [{"item": "AK-47", "price": 10.0}]
 
     # Set
-    result = awAlgot hierarchical_cache.set_targets(12345, targets_data, "csgo")
+    result = await hierarchical_cache.set_targets(12345, targets_data, "csgo")
     assert result is True
 
     # Get
-    cached = awAlgot hierarchical_cache.get_targets(12345, "csgo")
+    cached = await hierarchical_cache.get_targets(12345, "csgo")
     assert cached == targets_data
 
     # Invalidate specific game
-    result = awAlgot hierarchical_cache.invalidate_targets(12345, "csgo")
+    result = await hierarchical_cache.invalidate_targets(12345, "csgo")
     assert result is True
 
 
@@ -187,11 +187,11 @@ async def test_hierarchical_cache_arbitrage_results(hierarchical_cache):
     results = [{"item": "test", "profit": 5.0}]
 
     # Set
-    result = awAlgot hierarchical_cache.set_arbitrage_results("csgo", "standard", results)
+    result = await hierarchical_cache.set_arbitrage_results("csgo", "standard", results)
     assert result is True
 
     # Get
-    cached = awAlgot hierarchical_cache.get_arbitrage_results("csgo", "standard")
+    cached = await hierarchical_cache.get_arbitrage_results("csgo", "standard")
     assert cached == results
 
 
@@ -201,11 +201,11 @@ async def test_hierarchical_cache_warm_cache(hierarchical_cache):
     games = ["csgo", "dota2"]
     levels = ["standard", "medium"]
 
-    stats = awAlgot hierarchical_cache.warm_cache(games, levels)
+    stats = await hierarchical_cache.warm_cache(games, levels)
 
     assert "attempted" in stats
     assert "succeeded" in stats
-    assert "fAlgoled" in stats
+    assert "failed" in stats
     assert stats["attempted"] == 4  # 2 games * 2 levels
 
 
@@ -213,10 +213,10 @@ async def test_hierarchical_cache_warm_cache(hierarchical_cache):
 async def test_hierarchical_cache_invalidate_market_data(hierarchical_cache):
     """Test invalidating market data cache."""
     # Set some market data
-    awAlgot hierarchical_cache.set_market_items({"test": "data"}, "csgo", "standard")
+    await hierarchical_cache.set_market_items({"test": "data"}, "csgo", "standard")
 
     # Invalidate all market data for csgo
-    count = awAlgot hierarchical_cache.invalidate_market_data("csgo")
+    count = await hierarchical_cache.invalidate_market_data("csgo")
 
     # Count might be 0 if using memory cache without pattern support
     assert count >= 0
@@ -234,20 +234,20 @@ async def test_hierarchical_cache_end_to_end(hierarchical_cache):
 
     # 1. Cache user balance
     balance = {"usd": "10000"}
-    awAlgot hierarchical_cache.set_balance(user_id, balance)
+    await hierarchical_cache.set_balance(user_id, balance)
 
     # 2. Cache user targets
     targets = [{"item": "AK-47", "price": 10.0}]
-    awAlgot hierarchical_cache.set_targets(user_id, targets, "csgo")
+    await hierarchical_cache.set_targets(user_id, targets, "csgo")
 
     # 3. Cache arbitrage results
     results = [{"item": "test", "profit": 5.0}]
-    awAlgot hierarchical_cache.set_arbitrage_results("csgo", "standard", results)
+    await hierarchical_cache.set_arbitrage_results("csgo", "standard", results)
 
     # 4. Retrieve all cached data
-    cached_balance = awAlgot hierarchical_cache.get_balance(user_id)
-    cached_targets = awAlgot hierarchical_cache.get_targets(user_id, "csgo")
-    cached_results = awAlgot hierarchical_cache.get_arbitrage_results("csgo", "standard")
+    cached_balance = await hierarchical_cache.get_balance(user_id)
+    cached_targets = await hierarchical_cache.get_targets(user_id, "csgo")
+    cached_results = await hierarchical_cache.get_arbitrage_results("csgo", "standard")
 
     # 5. Verify
     assert cached_balance == balance
@@ -255,12 +255,12 @@ async def test_hierarchical_cache_end_to_end(hierarchical_cache):
     assert cached_results == results
 
     # 6. Invalidate balance
-    awAlgot hierarchical_cache.invalidate_balance(user_id)
-    assert awAlgot hierarchical_cache.get_balance(user_id) is None
+    await hierarchical_cache.invalidate_balance(user_id)
+    assert await hierarchical_cache.get_balance(user_id) is None
 
     # 7. Other caches should still work
-    assert awAlgot hierarchical_cache.get_targets(user_id, "csgo") == targets
-    assert awAlgot hierarchical_cache.get_arbitrage_results("csgo", "standard") == results
+    assert await hierarchical_cache.get_targets(user_id, "csgo") == targets
+    assert await hierarchical_cache.get_arbitrage_results("csgo", "standard") == results
 
 
 @pytest.mark.asyncio()
@@ -269,11 +269,11 @@ async def test_hierarchical_cache_ttl_applied_correctly(hierarchical_cache, mock
     user_id = 12345
 
     # Cache different types of data
-    awAlgot hierarchical_cache.set_balance(user_id, {"usd": "1000"})
-    awAlgot hierarchical_cache.set_targets(user_id, [], "csgo")
-    awAlgot hierarchical_cache.set_arbitrage_results("csgo", "standard", [])
+    await hierarchical_cache.set_balance(user_id, {"usd": "1000"})
+    await hierarchical_cache.set_targets(user_id, [], "csgo")
+    await hierarchical_cache.set_arbitrage_results("csgo", "standard", [])
 
     # Verify data was cached (we can't easily test TTL without time manipulation)
-    assert awAlgot hierarchical_cache.get_balance(user_id) is not None
-    assert awAlgot hierarchical_cache.get_targets(user_id, "csgo") is not None
-    assert awAlgot hierarchical_cache.get_arbitrage_results("csgo", "standard") is not None
+    assert await hierarchical_cache.get_balance(user_id) is not None
+    assert await hierarchical_cache.get_targets(user_id, "csgo") is not None
+    assert await hierarchical_cache.get_arbitrage_results("csgo", "standard") is not None

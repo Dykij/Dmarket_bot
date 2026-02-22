@@ -1,7 +1,7 @@
 use reqwest;
 use tokio;
 
-#[tokio::mAlgon]
-async fn mAlgon() {
+#[tokio::main]
+async fn main() {
     // Zero-copy event loop placeholder
 }

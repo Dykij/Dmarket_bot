@@ -101,7 +101,7 @@ async def test_find_price_anomalies_success(mock_dmarket_api, sample_market_item
     """Тест успешного поиска ценовых аномалий."""
     mock_dmarket_api.get_market_items.return_value = sample_market_items
 
-    results = awAlgot find_price_anomalies(
+    results = await find_price_anomalies(
         game="csgo",
         dmarket_api=mock_dmarket_api,
         price_diff_percent=10.0,
@@ -123,7 +123,7 @@ async def test_find_price_anomalies_empty_items(mock_dmarket_api):
     """Тест поиска аномалий при пустом списке предметов."""
     mock_dmarket_api.get_market_items.return_value = {"items": []}
 
-    results = awAlgot find_price_anomalies(
+    results = await find_price_anomalies(
         game="csgo",
         dmarket_api=mock_dmarket_api,
     )
@@ -138,7 +138,7 @@ async def test_find_price_anomalies_filter_by_price(
     """Тест фильтрации по цене."""
     mock_dmarket_api.get_market_items.return_value = sample_market_items
 
-    awAlgot find_price_anomalies(
+    await find_price_anomalies(
         game="csgo",
         dmarket_api=mock_dmarket_api,
         min_price=20.0,
@@ -170,7 +170,7 @@ async def test_find_price_anomalies_csgo_filters(mock_dmarket_api):
     }
     mock_dmarket_api.get_market_items.return_value = items_with_stickers
 
-    results = awAlgot find_price_anomalies(
+    results = await find_price_anomalies(
         game="csgo",
         dmarket_api=mock_dmarket_api,
     )
@@ -188,7 +188,7 @@ async def test_find_price_anomalies_sorts_by_profit(
     """Тест сортировки по проценту прибыли."""
     mock_dmarket_api.get_market_items.return_value = sample_market_items
 
-    results = awAlgot find_price_anomalies(
+    results = await find_price_anomalies(
         game="csgo",
         dmarket_api=mock_dmarket_api,
     )
@@ -212,7 +212,7 @@ async def test_find_trending_items_success(
     mock_dmarket_api.get_sales_history.return_value = sample_sales_history
     mock_dmarket_api.get_market_items.return_value = sample_market_items
 
-    results = awAlgot find_trending_items(
+    results = await find_trending_items(
         game="csgo",
         dmarket_api=mock_dmarket_api,
     )
@@ -254,7 +254,7 @@ async def test_find_trending_items_upward_trend(mock_dmarket_api):
     mock_dmarket_api.get_market_items.return_value = market_items
     mock_dmarket_api.get_sales_history.return_value = sales_history
 
-    results = awAlgot find_trending_items(
+    results = await find_trending_items(
         game="csgo",
         dmarket_api=mock_dmarket_api,
     )
@@ -302,7 +302,7 @@ async def test_find_trending_items_recovery_trend(mock_dmarket_api):
     mock_dmarket_api.get_market_items.return_value = market_items
     mock_dmarket_api.get_sales_history.return_value = sales_history
 
-    results = awAlgot find_trending_items(
+    results = await find_trending_items(
         game="csgo",
         dmarket_api=mock_dmarket_api,
     )
@@ -317,7 +317,7 @@ async def test_find_trending_items_no_items(mock_dmarket_api):
     mock_dmarket_api.get_market_items.return_value = {"items": []}
     mock_dmarket_api.get_sales_history.return_value = {"items": []}
 
-    results = awAlgot find_trending_items(
+    results = await find_trending_items(
         game="csgo",
         dmarket_api=mock_dmarket_api,
     )
@@ -333,7 +333,7 @@ async def test_find_mispriced_rare_items_success(mock_dmarket_api, sample_rare_i
     """Тест успешного поиска недооцененных редких предметов."""
     mock_dmarket_api.get_market_items.return_value = sample_rare_items
 
-    results = awAlgot find_mispriced_rare_items(
+    results = await find_mispriced_rare_items(
         game="csgo",
         dmarket_api=mock_dmarket_api,
     )
@@ -370,7 +370,7 @@ async def test_find_mispriced_rare_items_csgo_trAlgots(mock_dmarket_api):
     }
     mock_dmarket_api.get_market_items.return_value = items_with_trAlgots
 
-    results = awAlgot find_mispriced_rare_items(
+    results = await find_mispriced_rare_items(
         game="csgo",
         dmarket_api=mock_dmarket_api,
     )
@@ -399,7 +399,7 @@ async def test_find_mispriced_rare_items_dota2_trAlgots(mock_dmarket_api):
     }
     mock_dmarket_api.get_market_items.return_value = items_with_trAlgots
 
-    results = awAlgot find_mispriced_rare_items(
+    results = await find_mispriced_rare_items(
         game="dota2",
         dmarket_api=mock_dmarket_api,
     )
@@ -419,7 +419,7 @@ async def test_find_mispriced_rare_items_price_filter(
     """Тест фильтрации по цене."""
     mock_dmarket_api.get_market_items.return_value = sample_rare_items
 
-    awAlgot find_mispriced_rare_items(
+    await find_mispriced_rare_items(
         game="csgo",
         dmarket_api=mock_dmarket_api,
         min_price=100.0,
@@ -439,7 +439,7 @@ async def test_find_mispriced_rare_items_sorts_by_discount(
     """Тест сортировки по проценту скидки."""
     mock_dmarket_api.get_market_items.return_value = sample_rare_items
 
-    results = awAlgot find_mispriced_rare_items(
+    results = await find_mispriced_rare_items(
         game="csgo",
         dmarket_api=mock_dmarket_api,
     )
@@ -464,7 +464,7 @@ async def test_scan_for_intramarket_opportunities_success(
     mock_dmarket_api.get_market_items.return_value = sample_market_items
     mock_dmarket_api.get_sales_history.return_value = sample_sales_history
 
-    results = awAlgot scan_for_intramarket_opportunities(
+    results = await scan_for_intramarket_opportunities(
         games=["csgo"],
         dmarket_api=mock_dmarket_api,
     )
@@ -485,7 +485,7 @@ async def test_scan_for_intramarket_opportunities_multiple_games(
     mock_dmarket_api.get_market_items.return_value = sample_market_items
     mock_dmarket_api.get_sales_history.return_value = {"items": []}
 
-    results = awAlgot scan_for_intramarket_opportunities(
+    results = await scan_for_intramarket_opportunities(
         games=["csgo", "dota2"],
         dmarket_api=mock_dmarket_api,
     )
@@ -502,7 +502,7 @@ async def test_scan_for_intramarket_opportunities_selective(
     """Тест выборочного сканирования (только аномалии)."""
     mock_dmarket_api.get_market_items.return_value = sample_market_items
 
-    results = awAlgot scan_for_intramarket_opportunities(
+    results = await scan_for_intramarket_opportunities(
         games=["csgo"],
         dmarket_api=mock_dmarket_api,
         include_anomalies=True,
@@ -522,7 +522,7 @@ async def test_scan_for_intramarket_opportunities_error_handling(mock_dmarket_ap
     # НастSwarmка мока на выброс исключения
     mock_dmarket_api.get_market_items.side_effect = Exception("API Error")
 
-    results = awAlgot scan_for_intramarket_opportunities(
+    results = await scan_for_intramarket_opportunities(
         games=["csgo"],
         dmarket_api=mock_dmarket_api,
     )
@@ -611,7 +611,7 @@ async def test_find_price_anomalies_tf2(
     """Тест поиска аномалий цен для TF2."""
     mock_dmarket_api.get_market_items.return_value = sample_tf2_market_items
 
-    anomalies = awAlgot find_price_anomalies(
+    anomalies = await find_price_anomalies(
         game="tf2",
         min_price=1.0,
         max_price=5000.0,
@@ -634,7 +634,7 @@ async def test_find_mispriced_rare_items_tf2(
     """Тест поиска недооцененных редких предметов TF2."""
     mock_dmarket_api.get_market_items.return_value = sample_tf2_rare_items
 
-    rare_items = awAlgot find_mispriced_rare_items(
+    rare_items = await find_mispriced_rare_items(
         game="tf2",
         min_price=10.0,
         max_price=600000.0,
@@ -674,7 +674,7 @@ async def test_find_trending_items_tf2(
         ],
     }
 
-    trending = awAlgot find_trending_items(
+    trending = await find_trending_items(
         game="tf2",
         min_price=5.0,
         max_price=20000.0,
@@ -754,7 +754,7 @@ async def test_find_price_anomalies_rust(
     """Тест поиска аномалий цен для Rust."""
     mock_dmarket_api.get_market_items.return_value = sample_rust_market_items
 
-    anomalies = awAlgot find_price_anomalies(
+    anomalies = await find_price_anomalies(
         game="rust",
         min_price=1.0,
         max_price=10000.0,
@@ -777,7 +777,7 @@ async def test_find_mispriced_rare_items_rust(
     """Тест поиска недооцененных редких предметов Rust."""
     mock_dmarket_api.get_market_items.return_value = sample_rust_rare_items
 
-    rare_items = awAlgot find_mispriced_rare_items(
+    rare_items = await find_mispriced_rare_items(
         game="rust",
         min_price=10.0,
         max_price=50000.0,
@@ -822,7 +822,7 @@ async def test_find_trending_items_rust(
         ],
     }
 
-    trending = awAlgot find_trending_items(
+    trending = await find_trending_items(
         game="rust",
         min_price=5.0,
         max_price=20000.0,
@@ -857,7 +857,7 @@ async def test_scan_for_intramarket_opportunities_all_games(
     mock_dmarket_api.get_market_items.side_effect = get_items_side_effect
     mock_dmarket_api.get_sales_history.return_value = {"items": []}
 
-    results = awAlgot scan_for_intramarket_opportunities(
+    results = await scan_for_intramarket_opportunities(
         games=["csgo", "tf2", "rust"],
         max_results_per_game=5,
         dmarket_api=mock_dmarket_api,

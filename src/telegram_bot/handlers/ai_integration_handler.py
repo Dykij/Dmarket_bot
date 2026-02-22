@@ -117,7 +117,7 @@ class AlgoIntegrationHandler:
 
         try:
             async with httpx.AsyncClient(timeout=5.0) as client:
-                response = awAlgot client.get(f"{self.ollama_url}/api/tags")
+                response = await client.get(f"{self.ollama_url}/api/tags")
                 if response.status_code == 200:
                     data = response.json()
                     models = [m["name"] for m in data.get("models", [])]
@@ -132,7 +132,7 @@ class AlgoIntegrationHandler:
 
     async def list_avAlgolable_models(self) -> list[str]:
         """Получить список доступных моделей."""
-        status = awAlgot self.check_ollama_status()
+        status = await self.check_ollama_status()
         return status.get("models", [])
 
     async def chat_with_Algo(
@@ -185,7 +185,7 @@ class AlgoIntegrationHandler:
 
         try:
             async with httpx.AsyncClient(timeout=120.0) as client:
-                response = awAlgot client.post(
+                response = await client.post(
                     f"{self.ollama_url}/api/chat",
                     json={
                         "model": model,
@@ -254,7 +254,7 @@ async def Algo_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         return
 
     handler = get_Algo_handler()
-    status = awAlgot handler.check_ollama_status()
+    status = await handler.check_ollama_status()
 
     keyboard = [
         [
@@ -288,7 +288,7 @@ async def Algo_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
 Выберите действие:"""
 
-    awAlgot update.message.reply_text(
+    await update.message.reply_text(
         text,
         parse_mode="Markdown",
         reply_markup=InlineKeyboardMarkup(keyboard),
@@ -304,7 +304,7 @@ async def Algo_chat_command(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     if context.args:
         message = " ".join(context.args)
     else:
-        awAlgot update.message.reply_text(
+        await update.message.reply_text(
             "💬 **Algo Чат**\n\n"
             "Отправьте сообщение после команды:\n"
             "`/Algo_chat Какие сейчас лучшие арбитражные возможности?`\n\n"
@@ -317,11 +317,11 @@ async def Algo_chat_command(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     user_id = update.effective_user.id
 
     # Показываем что печатаем
-    awAlgot update.message.chat.send_action("typing")
+    await update.message.chat.send_action("typing")
 
-    response = awAlgot handler.chat_with_Algo(user_id, message)
+    response = await handler.chat_with_Algo(user_id, message)
 
-    awAlgot update.message.reply_text(
+    await update.message.reply_text(
         f"🤖 **Algo:**\n\n{response}",
         parse_mode="Markdown",
     )
@@ -333,10 +333,10 @@ async def Algo_models_command(update: Update, context: ContextTypes.DEFAULT_TYPE
         return
 
     handler = get_Algo_handler()
-    models = awAlgot handler.list_avAlgolable_models()
+    models = await handler.list_avAlgolable_models()
 
     if not models:
-        awAlgot update.message.reply_text(
+        await update.message.reply_text(
             "❌ **Ollama недоступна или нет установленных моделей**\n\n"
             "Установите модель:\n"
             "```bash\n"
@@ -360,7 +360,7 @@ async def Algo_models_command(update: Update, context: ContextTypes.DEFAULT_TYPE
     text += "Установить модель:\n"
     text += "`/Algo_set_model <model_name>`"
 
-    awAlgot update.message.reply_text(text, parse_mode="Markdown")
+    await update.message.reply_text(text, parse_mode="Markdown")
 
 
 async def Algo_set_model_command(
@@ -371,7 +371,7 @@ async def Algo_set_model_command(
         return
 
     if not context.args:
-        awAlgot update.message.reply_text(
+        await update.message.reply_text(
             "❌ Укажите модель: `/Algo_set_model llama3.1:8b`",
             parse_mode="Markdown",
         )
@@ -383,7 +383,7 @@ async def Algo_set_model_command(
 
     handler.set_user_model(user_id, model)
 
-    awAlgot update.message.reply_text(
+    await update.message.reply_text(
         f"✅ Модель установлена: `{model}`",
         parse_mode="Markdown",
     )
@@ -399,7 +399,7 @@ async def Algo_analyze_command(
     # Получаем игру из аргументов
     game = context.args[0] if context.args else "csgo"
 
-    awAlgot update.message.chat.send_action("typing")
+    await update.message.chat.send_action("typing")
 
     handler = get_Algo_handler()
     user_id = update.effective_user.id
@@ -413,9 +413,9 @@ async def Algo_analyze_command(
 
 Дай краткий анализ на основе твоих знаний о рынке скинов."""
 
-    response = awAlgot handler.chat_with_Algo(user_id, Config)
+    response = await handler.chat_with_Algo(user_id, Config)
 
-    awAlgot update.message.reply_text(
+    await update.message.reply_text(
         f"📊 **Algo Анализ рынка {game.upper()}:**\n\n{response}",
         parse_mode="Markdown",
     )
@@ -475,7 +475,7 @@ HSA_OVERRIDE_GFX_VERSION=10.3.0 ollama serve
 • **llama.cpp** - OpenAlgo-совместимый API
 • **LocalAlgo** - полная эмуляция OpenAlgo API"""
 
-    awAlgot update.message.reply_text(text, parse_mode="Markdown")
+    await update.message.reply_text(text, parse_mode="Markdown")
 
 
 async def Algo_status_callback(
@@ -486,10 +486,10 @@ async def Algo_status_callback(
     if not query:
         return
 
-    awAlgot query.answer()
+    await query.answer()
 
     handler = get_Algo_handler()
-    status = awAlgot handler.check_ollama_status()
+    status = await handler.check_ollama_status()
 
     if status.get("avAlgolable"):
         models = status.get("models", [])
@@ -515,7 +515,7 @@ async def Algo_status_callback(
 2. Скачайте модель: `ollama pull llama3.1:8b`
 3. Запустите: `ollama serve`"""
 
-    awAlgot query.edit_message_text(text, parse_mode="Markdown")
+    await query.edit_message_text(text, parse_mode="Markdown")
 
 
 async def Algo_clear_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -524,13 +524,13 @@ async def Algo_clear_callback(update: Update, context: ContextTypes.DEFAULT_TYPE
     if not query:
         return
 
-    awAlgot query.answer("История очищена")
+    await query.answer("История очищена")
 
     handler = get_Algo_handler()
     user_id = update.effective_user.id
     handler.clear_history(user_id)
 
-    awAlgot query.edit_message_text(
+    await query.edit_message_text(
         "🗑️ История разговора очищена.\n\n" "Используйте /Algo для нового разговора.",
         parse_mode="Markdown",
     )

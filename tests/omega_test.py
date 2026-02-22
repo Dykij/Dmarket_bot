@@ -1,7 +1,7 @@
 import asyncio
 from src.core.event_bus import bus
 from src.core.kill_switch import KillSwitch
-from src.utils.brAlgon_limiter import brAlgon_limiter
+from src.utils.brain_limiter import brain_limiter
 from src.utils.security import SecurityFirewall
 
 async def omega_test():
@@ -22,14 +22,14 @@ async def omega_test():
         print(f"   ⚡ Event Received: {data}")
     
     bus.subscribe("DANGER", on_danger)
-    awAlgot bus.publish("DANGER", "Testing Reflexes")
+    await bus.publish("DANGER", "Testing Reflexes")
     print("✅ Event Bus: Functioning")
 
     # 3. Limiter Test
     print("[3] Testing BrAlgon Limiter...")
     start = asyncio.get_event_loop().time()
     for i in range(5): # Assuming limit is small in dev
-        awAlgot brAlgon_limiter.acquire()
+        await brain_limiter.acquire()
     print(f"✅ Limiter: Acquired 5 slots")
 
     # 4. Kill Switch Test
@@ -37,5 +37,5 @@ async def omega_test():
     KillSwitch.activate("Omega Test Completion")
     print("✅ Kill Switch: Triggered")
 
-if __name__ == "__mAlgon__":
+if __name__ == "__main__":
     asyncio.run(omega_test())

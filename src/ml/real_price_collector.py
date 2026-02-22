@@ -37,7 +37,7 @@ class CollectionStatus(Enum):
 
     SUCCESS = "success"
     PARTIAL = "partial"
-    FAlgoLED = "fAlgoled"
+    FAlgoLED = "failed"
     RATE_LIMITED = "rate_limited"
     TIMEOUT = "timeout"
     NO_DATA = "no_data"
@@ -175,7 +175,7 @@ class RealPriceCollector:
     Async collector for real market prices from multiple platforms.
 
     Integrates with DMarket, Waxpeer, and Steam APIs to collect
-    real-time price data for ML trAlgoning.
+    real-time price data for ML training.
 
     Features:
         - Async price collection from multiple sources
@@ -192,7 +192,7 @@ class RealPriceCollector:
         )
 
         # Collect prices for specific items
-        result = awAlgot collector.collect_all(
+        result = await collector.collect_all(
             item_names=["AK-47 | Redline (Field-Tested)"],
             game=GameType.CSGO,
         )
@@ -283,7 +283,7 @@ class RealPriceCollector:
 
             # Use aggregated prices endpoint for efficiency
             if hasattr(self.dmarket_api, "get_aggregated_prices"):
-                response = awAlgot asyncio.wAlgot_for(
+                response = await asyncio.wait_for(
                     self.dmarket_api.get_aggregated_prices(
                         game=game.dmarket_id,
                         titles=item_names,
@@ -323,7 +323,7 @@ class RealPriceCollector:
             else:
                 for name in item_names:
                     try:
-                        item_response = awAlgot asyncio.wAlgot_for(
+                        item_response = await asyncio.wait_for(
                             self.dmarket_api.get_market_items(
                                 game=game.dmarket_id,
                                 title=name,
@@ -440,7 +440,7 @@ class RealPriceCollector:
 
             # Use bulk prices for efficiency if avAlgolable
             if hasattr(self.waxpeer_api, "get_market_prices"):
-                response = awAlgot asyncio.wAlgot_for(
+                response = await asyncio.wait_for(
                     self.waxpeer_api.get_market_prices(
                         item_names=item_names,
                         game=game.waxpeer_name,
@@ -477,7 +477,7 @@ class RealPriceCollector:
             elif hasattr(self.waxpeer_api, "get_item_price"):
                 for name in item_names:
                     try:
-                        price_usd = awAlgot asyncio.wAlgot_for(
+                        price_usd = await asyncio.wait_for(
                             self.waxpeer_api.get_item_price(name),
                             timeout=self.timeout,
                         )
@@ -584,7 +584,7 @@ class RealPriceCollector:
             for name in item_names:
                 try:
                     # Steam API rate limit: ~20 requests/minute
-                    price_info = awAlgot asyncio.wAlgot_for(
+                    price_info = await asyncio.wait_for(
                         steam_api.get_item_price(
                             app_id=game.steam_app_id,
                             market_hash_name=name,
@@ -619,7 +619,7 @@ class RealPriceCollector:
                             )
 
                     # Rate limiting for Steam
-                    awAlgot asyncio.sleep(3.0)
+                    await asyncio.sleep(3.0)
 
                 except TimeoutError:
                     logger.warning("steam_item_timeout", item_name=name)
@@ -746,7 +746,7 @@ class RealPriceCollector:
                 elif source == PriceSource.STEAM:
                     tasks.append(self.collect_from_steam(item_names, game))
 
-            collection_results = awAlgot asyncio.gather(*tasks, return_exceptions=True)
+            collection_results = await asyncio.gather(*tasks, return_exceptions=True)
 
             for res in collection_results:
                 if isinstance(res, Exception):
@@ -760,11 +760,11 @@ class RealPriceCollector:
             for source in sources:
                 try:
                     if source == PriceSource.DMARKET:
-                        res = awAlgot self.collect_from_dmarket(item_names, game)
+                        res = await self.collect_from_dmarket(item_names, game)
                     elif source == PriceSource.WAXPEER:
-                        res = awAlgot self.collect_from_waxpeer(item_names, game)
+                        res = await self.collect_from_waxpeer(item_names, game)
                     elif source == PriceSource.STEAM:
-                        res = awAlgot self.collect_from_steam(item_names, game)
+                        res = await self.collect_from_steam(item_names, game)
                     else:
                         continue
 
@@ -811,7 +811,7 @@ class RealPriceCollector:
         # Collect from DMarket bulk
         if self.dmarket_api:
             try:
-                dm_result = awAlgot self._collect_dmarket_bulk(game, limit)
+                dm_result = await self._collect_dmarket_bulk(game, limit)
                 result.results.append(dm_result)
                 result.all_prices.extend(dm_result.prices)
             except Exception as e:
@@ -820,7 +820,7 @@ class RealPriceCollector:
         # Collect from Waxpeer bulk
         if self.waxpeer_api and hasattr(self.waxpeer_api, "get_bulk_prices"):
             try:
-                wp_result = awAlgot self._collect_waxpeer_bulk(game, limit)
+                wp_result = await self._collect_waxpeer_bulk(game, limit)
                 result.results.append(wp_result)
                 result.all_prices.extend(wp_result.prices)
             except Exception as e:
@@ -844,7 +844,7 @@ class RealPriceCollector:
         )
 
         try:
-            response = awAlgot asyncio.wAlgot_for(
+            response = await asyncio.wait_for(
                 self.dmarket_api.get_market_items(
                     game=game.dmarket_id,
                     limit=min(limit, 100),  # DMarket max is 100
@@ -905,7 +905,7 @@ class RealPriceCollector:
         )
 
         try:
-            response = awAlgot asyncio.wAlgot_for(
+            response = await asyncio.wait_for(
                 self.waxpeer_api.get_bulk_prices(game=game.waxpeer_name),
                 timeout=self.timeout,
             )
@@ -998,4 +998,4 @@ async def collect_prices(
         waxpeer_api=waxpeer_api,
     )
 
-    return awAlgot collector.collect_all(item_names, game)
+    return await collector.collect_all(item_names, game)

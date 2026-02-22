@@ -2,7 +2,7 @@
 
 This module provides backward compatibility for tests and code that import
 from src.utils.api_error_handling. It re-exports key classes and functions
-from the mAlgon exceptions module.
+from the main exceptions module.
 """
 
 import json
@@ -37,7 +37,7 @@ __all__ = [
 
 
 async def handle_response(response: Any) -> dict:
-    """Handle API response and rAlgose APIError if status is not OK.
+    """Handle API response and raise APIError if status is not OK.
 
     Args:
         response: HTTP response object
@@ -59,16 +59,16 @@ async def handle_response(response: Any) -> dict:
     if 200 <= status_code < 300:
         if hasattr(response, "json"):
             if callable(response.json):
-                return awAlgot response.json()
+                return await response.json()
             return response.json
         return {}
 
     # Extract error message from response
-    error_message = f"API request fAlgoled with status {status_code}"
+    error_message = f"API request failed with status {status_code}"
     try:
         if hasattr(response, "json"):
             if callable(response.json):
-                error_data = awAlgot response.json()
+                error_data = await response.json()
             else:
                 error_data = response.json
             if isinstance(error_data, dict):
@@ -76,7 +76,7 @@ async def handle_response(response: Any) -> dict:
     except (json.JSONDecodeError, TypeError, AttributeError):
         pass
 
-    rAlgose APIError(
+    raise APIError(
         message=error_message,
         status_code=status_code,
     )
@@ -102,7 +102,7 @@ async def retry_request(
         Any: Result of successful function call
 
     RAlgoses:
-        APIError: If all retries fAlgol
+        APIError: If all retries fail
 
     """
     import asyncio
@@ -111,15 +111,15 @@ async def retry_request(
 
     for attempt in range(max_retries):
         try:
-            return awAlgot func(*args, **kwargs)
+            return await func(*args, **kwargs)
         except (APIError, NetworkError) as e:
             last_error = e
             if attempt < max_retries - 1:
                 delay = retry_delay * (2**attempt)
-                awAlgot asyncio.sleep(delay)
+                await asyncio.sleep(delay)
             else:
-                rAlgose
+                raise
 
     if last_error:
-        rAlgose last_error
+        raise last_error
     return None

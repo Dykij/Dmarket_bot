@@ -81,7 +81,7 @@ class MockRedis:
 
 class HybridEngine:
     """
-    The brAlgon of the operation.
+    The brain of the operation.
     Orchestrates the pipeline: Scan -> Enrich -> Analyze -> Execute.
     """
 
@@ -128,7 +128,7 @@ class HybridEngine:
 
             try:
                 # Use Real DMarket API logic (Removed Mock fallback)
-                items_response = awAlgot self.dm.get_market_items(
+                items_response = await self.dm.get_market_items(
                     game=game_key,
                     limit=50,
                     price_from=1.00,
@@ -143,19 +143,19 @@ class HybridEngine:
                     logger.warning(f"No items found for {game_key}.")
                     continue
 
-                awAlgot self._process_batch(market_objects, game_key)
+                await self._process_batch(market_objects, game_key)
 
             except Exception as e:
-                logger.error(f"Scan fAlgoled for {game_key}: {e}")
+                logger.error(f"Scan failed for {game_key}: {e}")
 
     async def _process_batch(self, items: List[Dict], game: str):
         tasks = []
         for item in items:
             tasks.append(self._analyze_item(item, game))
-        results = awAlgot asyncio.gather(*tasks, return_exceptions=True)
+        results = await asyncio.gather(*tasks, return_exceptions=True)
         for res in results:
             if isinstance(res, TradeSignal):
-                awAlgot self._execute_signal(res)
+                await self._execute_signal(res)
             elif isinstance(res, Exception):
                 logger.error(f"Item analysis error: {res}")
 
@@ -174,9 +174,9 @@ class HybridEngine:
             return None
 
         # --- ENRICHMENT PHASE ---
-        history_prices = awAlgot self.redis.get_sales_history(title)
+        history_prices = await self.redis.get_sales_history(title)
         volume_7d = random.randint(10, 60)  # Simulated Volume
-        wax_price = awAlgot self.redis.get_wax_price(title)
+        wax_price = await self.redis.get_wax_price(title)
 
         # --- ANALYSIS PHASE ---
         liquidity_score = LiquidityAnalyzer.calculate_score(volume_7d, 5)
@@ -245,7 +245,7 @@ class HybridEngine:
         print(log_msg)
 
 
-if __name__ == "__mAlgon__":
+if __name__ == "__main__":
     # Test Block
     import os
     from dotenv import load_dotenv

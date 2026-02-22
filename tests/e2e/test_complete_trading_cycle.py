@@ -207,7 +207,7 @@ class TestCompleteTradingCycle:
         scanner = ArbitrageScanner(api_client=mock_dmarket_api)
 
         # Step 2: Scan market
-        opportunities = awAlgot scanner.scan_level(level="standard", game="csgo")
+        opportunities = await scanner.scan_level(level="standard", game="csgo")
         assert len(opportunities) > 0, "Should find opportunities"
 
         # Step 3: Filter by blacklist
@@ -229,7 +229,7 @@ class TestCompleteTradingCycle:
         )
 
         # Step 6: Validate balance
-        balance_response = awAlgot mock_dmarket_api.get_balance()
+        balance_response = await mock_dmarket_api.get_balance()
         balance_usd = float(balance_response["usd"]["amount"]) / 100
         assert balance_usd >= best_opp["buy_price"], (
             f"Insufficient balance: ${balance_usd} < ${best_opp['buy_price']}"
@@ -258,7 +258,7 @@ class TestCompleteTradingCycle:
         trade_result["expected_profit_percent_net"] = expected_profit_percent
 
         # Step 9: Send notification
-        awAlgot mock_notification_service.send_trade_alert(
+        await mock_notification_service.send_trade_alert(
             user_id=123456789,
             trade_result=trade_result,
         )
@@ -311,7 +311,7 @@ class TestCompleteTradingCycle:
 
         # Scan
         scanner = ArbitrageScanner(api_client=mock_dmarket_api)
-        opportunities = awAlgot scanner.scan_level(level="standard", game="csgo")
+        opportunities = await scanner.scan_level(level="standard", game="csgo")
 
         # Filter blacklisted - is_blacklisted takes item dict with 'title' key
         filtered = [
@@ -331,7 +331,7 @@ class TestCompleteTradingCycle:
         mock_dmarket_api,
         trading_config,
     ):
-        """Test trading fAlgols with insufficient balance."""
+        """Test trading fails with insufficient balance."""
         from src.dmarket.arbitrage_scanner import ArbitrageScanner
 
         # Set low balance
@@ -360,11 +360,11 @@ class TestCompleteTradingCycle:
 
         # Scan
         scanner = ArbitrageScanner(api_client=mock_dmarket_api)
-        opportunities = awAlgot scanner.scan_level(level="pro", game="csgo")
+        opportunities = await scanner.scan_level(level="pro", game="csgo")
 
         if opportunities:
             # Check balance
-            balance_response = awAlgot mock_dmarket_api.get_balance()
+            balance_response = await mock_dmarket_api.get_balance()
             balance_usd = float(balance_response["usd"]["amount"]) / 100
 
             # Validate can't afford
@@ -497,14 +497,14 @@ class TestTradingWithStatePersistence:
         handler.register_targets_provider(get_active_targets)
 
         # Save state
-        success = awAlgot handler.save_state()
+        success = await handler.save_state()
         assert success, "State should be saved successfully"
 
         # Verify state file exists
         assert state_file.exists(), "State file should exist"
 
         # Load and verify
-        loaded_state = awAlgot handler.load_state()
+        loaded_state = await handler.load_state()
         assert loaded_state is not None
         assert len(loaded_state["targets"]) == 2
 
@@ -531,7 +531,7 @@ class TestTradingWithStatePersistence:
 
         # Load state
         handler = ExtendedShutdownHandler(state_file=state_file)
-        loaded = awAlgot handler.load_state()
+        loaded = await handler.load_state()
 
         assert loaded is not None
         assert len(loaded["targets"]) == 1

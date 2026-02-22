@@ -68,7 +68,7 @@ class TestSessionAction:
         # Act
         action = SessionAction(
             action_type=ActionType.ERROR,
-            description="Build fAlgoled",
+            description="Build failed",
             success=False,
             error_message="Compilation error on line 42",
         )
@@ -288,7 +288,7 @@ class TestSessionTranscriptGenerator:
             ActionType.TEST_RUN,
             "Run tests",
             success=True,
-            detAlgols={"passed": 10},
+            details={"passed": 10},
         )
 
         # Assert
@@ -310,7 +310,7 @@ class TestSessionTranscriptGenerator:
 
         # Assert
         session = generator.get_current_session()
-        # Error action + fAlgoled action = 2 errors
+        # Error action + failed action = 2 errors
         assert session.metrics.errors_encountered >= 1
 
     def test_end_session(self, generator):

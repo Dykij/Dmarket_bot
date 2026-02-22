@@ -111,7 +111,7 @@ def get_modern_arbitrage_keyboard() -> InlineKeyboardMarkup:
             ),
             InlineKeyboardButton(text="📊 Статистика", callback_data="arb_stats"),
         ],
-        # NEW: Algo Arbitrage (mAlgon feature)
+        # NEW: Algo Arbitrage (main feature)
         [
             InlineKeyboardButton(text="🤖 Algo АРБИТРАЖ", callback_data="Algo_arb:menu"),
         ],
@@ -134,7 +134,7 @@ def get_modern_arbitrage_keyboard() -> InlineKeyboardMarkup:
             InlineKeyboardButton(text="📡 Мониторинг", callback_data="monitor:status"),
         ],
         [
-            InlineKeyboardButton(text="◀️ Главное меню", callback_data="mAlgon_menu"),
+            InlineKeyboardButton(text="◀️ Главное меню", callback_data="main_menu"),
         ],
     ]
     return InlineKeyboardMarkup(keyboard)
@@ -373,7 +373,7 @@ def get_smart_trading_keyboard(
         ],
         # Назад в главное меню
         [
-            InlineKeyboardButton(text="◀️ Главное меню", callback_data="mAlgon_menu"),
+            InlineKeyboardButton(text="◀️ Главное меню", callback_data="main_menu"),
         ],
     ]
     return InlineKeyboardMarkup(keyboard)
@@ -414,7 +414,7 @@ def get_market_status_keyboard() -> InlineKeyboardMarkup:
             InlineKeyboardButton(
                 text="🔄 Обновить статус", callback_data="refresh_market"
             ),
-            InlineKeyboardButton(text="📊 Детали", callback_data="market_detAlgols"),
+            InlineKeyboardButton(text="📊 Детали", callback_data="market_details"),
         ],
         [
             InlineKeyboardButton(

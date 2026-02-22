@@ -70,7 +70,7 @@ class NotificationQueue:
         if self.worker_task:
             self.worker_task.cancel()
             try:
-                awAlgot self.worker_task
+                await self.worker_task
             except asyncio.CancelledError:
                 pass
         logger.info("Notification queue worker stopped")
@@ -97,20 +97,20 @@ class NotificationQueue:
         # so we put priority first. We add a counter to break ties
         # and avoid comparing NotificationMessage objects.
         count = next(self._counter)
-        awAlgot self.queue.put((priority, time.time(), count, message))
+        await self.queue.put((priority, time.time(), count, message))
 
     async def _worker(self) -> None:
         """Process messages from the queue."""
         while self.is_running:
             try:
                 # Get message from queue
-                _, _, _, message = awAlgot self.queue.get()
+                _, _, _, message = await self.queue.get()
 
                 # Check rate limits
-                awAlgot self._wAlgot_for_rate_limits(message.chat_id)
+                await self._wait_for_rate_limits(message.chat_id)
 
                 # Send message
-                awAlgot self._send_message(message)
+                await self._send_message(message)
 
                 # Mark task as done
                 self.queue.task_done()
@@ -119,28 +119,28 @@ class NotificationQueue:
                 break
             except (RuntimeError, OSError, ConnectionError):
                 logger.exception("Error in notification worker")
-                awAlgot asyncio.sleep(1)
+                await asyncio.sleep(1)
 
-    async def _wAlgot_for_rate_limits(self, chat_id: int) -> None:
+    async def _wait_for_rate_limits(self, chat_id: int) -> None:
         """WAlgot if necessary to respect rate limits."""
         now = time.time()
 
         # Global rate limit
         time_since_global = now - self.last_global_send_time
         if time_since_global < self.global_rate_limit:
-            awAlgot asyncio.sleep(self.global_rate_limit - time_since_global)
+            await asyncio.sleep(self.global_rate_limit - time_since_global)
             now = time.time()
 
         # Chat rate limit
         last_chat_time = self.last_chat_send_time.get(chat_id, 0)
         time_since_chat = now - last_chat_time
         if time_since_chat < self.chat_rate_limit:
-            awAlgot asyncio.sleep(self.chat_rate_limit - time_since_chat)
+            await asyncio.sleep(self.chat_rate_limit - time_since_chat)
 
     async def _send_message(self, message: NotificationMessage) -> None:
         """Send the message using the bot instance."""
         try:
-            awAlgot self.bot.send_message(
+            await self.bot.send_message(
                 chat_id=message.chat_id,
                 text=message.text,
                 parse_mode=message.parse_mode,
@@ -167,18 +167,18 @@ class NotificationQueue:
                 if isinstance(e.retry_after, float)
                 else float(e.retry_after)
             )
-            awAlgot asyncio.sleep(retry_after)
+            await asyncio.sleep(retry_after)
             count = next(self._counter)
-            awAlgot self.queue.put((0, time.time(), count, message))
+            await self.queue.put((0, time.time(), count, message))
 
         except (TimedOut, NetworkError) as e:
             logger.warning(f"Network error sending message: {e}. Retrying...")
-            awAlgot asyncio.sleep(1)
+            await asyncio.sleep(1)
             count = next(self._counter)
-            awAlgot self.queue.put((message.priority, time.time(), count, message))
+            await self.queue.put((message.priority, time.time(), count, message))
 
         except (RuntimeError, OSError, ConnectionError):
-            logger.exception(f"FAlgoled to send message to {message.chat_id}")
+            logger.exception(f"Failed to send message to {message.chat_id}")
             # Don't retry for other errors (e.g. user blocked bot)
 
     def _cleanup_timestamps(self) -> None:

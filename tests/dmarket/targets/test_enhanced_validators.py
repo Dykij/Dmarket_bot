@@ -40,22 +40,22 @@ class TestCountTargetConditions:
         target = {
             "Attrs": {
                 "floatPartValue": "0.15",
-                "pAlgontSeed": 123,
+                "paintSeed": 123,
                 "phase": "Ruby",
             }
         }
 
         count = count_target_conditions(target)
 
-        assert count == 3  # float + pAlgontSeed + phase
+        assert count == 3  # float + paintSeed + phase
 
-    def test_count_multiple_pAlgont_seeds(self):
-        """Тест подсчета множественных pAlgont seeds."""
-        target = {"Attrs": {"pAlgontSeed": [1, 2, 3, 4, 5]}}
+    def test_count_multiple_paint_seeds(self):
+        """Тест подсчета множественных paint seeds."""
+        target = {"Attrs": {"paintSeed": [1, 2, 3, 4, 5]}}
 
         count = count_target_conditions(target)
 
-        assert count == 5  # Каждый pAlgont seed = 1 условие
+        assert count == 5  # Каждый paint seed = 1 условие
 
     def test_count_sticker_filter(self):
         """Тест подсчета условий в фильтре стикеров."""
@@ -90,7 +90,7 @@ class TestCountTargetConditions:
         target = {
             "Attrs": {
                 "floatPartValue": "0.15",
-                "pAlgontSeed": [1, 2],
+                "paintSeed": [1, 2],
             },
             "stickerFilter": StickerFilter(sticker_names=["Sticker1"], holo=True),
             "rarityFilter": RarityFilter(rarity=RarityLevel.LEGENDARY),
@@ -98,7 +98,7 @@ class TestCountTargetConditions:
 
         count = count_target_conditions(target)
 
-        # float=1 + pAlgontSeeds=2 + stickerName=1 + holo=1 + rarity=1
+        # float=1 + paintSeeds=2 + stickerName=1 + holo=1 + rarity=1
         assert count == 6
 
 
@@ -117,7 +117,7 @@ class TestValidateTargetConditions:
 
     def test_validate_exceeds_limit(self):
         """Тест валидации превышения лимита."""
-        target = {"Attrs": {"pAlgontSeed": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]}}
+        target = {"Attrs": {"paintSeed": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]}}
 
         is_valid, message, suggestions = validate_target_conditions(target, max_conditions=10)
 
@@ -129,7 +129,7 @@ class TestValidateTargetConditions:
     def test_validate_provides_suggestions(self):
         """Тест что валидатор дает подсказки."""
         target = {
-            "Attrs": {"pAlgontSeed": [1, 2, 3, 4, 5, 6]},
+            "Attrs": {"paintSeed": [1, 2, 3, 4, 5, 6]},
             "stickerFilter": StickerFilter(
                 sticker_names=["S1", "S2", "S3", "S4"],
                 holo=True,
@@ -140,7 +140,7 @@ class TestValidateTargetConditions:
         is_valid, message, suggestions = validate_target_conditions(target, max_conditions=10)
 
         assert is_valid is False
-        assert any("pAlgont seed" in s.lower() for s in suggestions)
+        assert any("paint seed" in s.lower() for s in suggestions)
 
 
 class TestValidateTargetPrice:
@@ -209,15 +209,15 @@ class TestValidateTargetAttributes:
         assert result.error_code == TargetErrorCode.INVALID_ATTRIBUTES
         assert "0 and 1" in result.reason
 
-    def test_validate_csgo_pAlgont_seed_valid(self):
-        """Тест валидного pAlgont seed."""
-        result = validate_target_attributes("csgo", {"pAlgontSeed": 500})
+    def test_validate_csgo_paint_seed_valid(self):
+        """Тест валидного paint seed."""
+        result = validate_target_attributes("csgo", {"paintSeed": 500})
 
         assert result.success is True
 
-    def test_validate_csgo_pAlgont_seed_invalid(self):
-        """Тест невалидного pAlgont seed."""
-        result = validate_target_attributes("csgo", {"pAlgontSeed": 1500})
+    def test_validate_csgo_paint_seed_invalid(self):
+        """Тест невалидного paint seed."""
+        result = validate_target_attributes("csgo", {"paintSeed": 1500})
 
         assert result.success is False
         assert result.error_code == TargetErrorCode.INVALID_ATTRIBUTES
@@ -316,7 +316,7 @@ class TestValidateTargetComplete:
             game="csgo",
             title="Test Item",
             price=10.50,
-            attrs={"pAlgontSeed": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]},
+            attrs={"paintSeed": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]},
             max_conditions=10,
         )
 

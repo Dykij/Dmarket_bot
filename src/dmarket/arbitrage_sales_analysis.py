@@ -92,11 +92,11 @@ class SalesAnalyzer:
                 return cached_data
 
         # Get API client
-        api_client = awAlgot self.get_api_client()
+        api_client = await self.get_api_client()
 
         try:
             # First we need to get the item ID for the given item name
-            items_response = awAlgot api_client.get_market_items(
+            items_response = await api_client.get_market_items(
                 game=game,
                 title=item_name,
                 limit=1,
@@ -121,7 +121,7 @@ class SalesAnalyzer:
 
             # Get sales history from API
             # Endpoint: /exchange/v1/sales/history (based on DMarket docs)
-            sales_data = awAlgot api_client._request(
+            sales_data = await api_client._request(
                 method="GET",
                 path="/exchange/v1/sales/history",
                 params={
@@ -164,7 +164,7 @@ class SalesAnalyzer:
 
         """
         # Get sales history
-        sales = awAlgot self.get_item_sales_history(item_name, game, days)
+        sales = await self.get_item_sales_history(item_name, game, days)
 
         # Handle both list and dict responses
         if isinstance(sales, dict):
@@ -237,7 +237,7 @@ class SalesAnalyzer:
 
         """
         # Get sales history
-        sales = awAlgot self.get_item_sales_history(item_name, game, days)
+        sales = await self.get_item_sales_history(item_name, game, days)
 
         # Check if we have enough sales data
         sales_list = sales if isinstance(sales, list) else sales.get("sales", [])
@@ -282,7 +282,7 @@ class SalesAnalyzer:
                 price_percentile = 0.5
 
             # Estimate time to sell based on volume and price percentile
-            volume_stats = awAlgot self.analyze_sales_volume(item_name, game, days)
+            volume_stats = await self.analyze_sales_volume(item_name, game, days)
             sales_per_day = volume_stats["sales_per_day"]
 
             if sales_per_day == 0:
@@ -371,7 +371,7 @@ class SalesAnalyzer:
 
         """
         # Get sales history
-        sales = awAlgot self.get_item_sales_history(item_name, game, days)
+        sales = await self.get_item_sales_history(item_name, game, days)
 
         # Insufficient sales data
         if sales is None or len(sales) < self.min_sample_size:
@@ -395,7 +395,7 @@ class SalesAnalyzer:
             elif "timestamp" in sales_df.columns:
                 sales_df["timestamp"] = pd.to_datetime(sales_df["timestamp"])
             else:
-                rAlgose KeyError("Neither 'date' nor 'timestamp' field found")
+                raise KeyError("Neither 'date' nor 'timestamp' field found")
 
             # Handle price extraction from different formats
             sales_df["price"] = sales_df["price"].apply(
@@ -409,11 +409,11 @@ class SalesAnalyzer:
             # Sort by timestamp
             sales_df = sales_df.sort_values("timestamp")
 
-            # Calculate dAlgoly averages
+            # Calculate daily averages
             sales_df["date"] = sales_df["timestamp"].dt.date
-            dAlgoly_avg = sales_df.groupby("date")["price"].mean().reset_index()
+            daily_avg = sales_df.groupby("date")["price"].mean().reset_index()
 
-            if len(dAlgoly_avg) < 2:
+            if len(daily_avg) < 2:
                 return {
                     "trend": "stable",
                     "price_change_percent": 0,
@@ -422,16 +422,16 @@ class SalesAnalyzer:
                 }
 
             # Calculate trend metrics
-            first_price = dAlgoly_avg["price"].iloc[0]
-            last_price = dAlgoly_avg["price"].iloc[-1]
+            first_price = daily_avg["price"].iloc[0]
+            last_price = daily_avg["price"].iloc[-1]
             price_change = last_price - first_price
             price_change_percent = (
                 (price_change / first_price * 100) if first_price > 0 else 0
             )
 
             # Calculate volatility (standard deviation as percentage of mean)
-            mean_price = dAlgoly_avg["price"].mean()
-            std_price = dAlgoly_avg["price"].std()
+            mean_price = daily_avg["price"].mean()
+            std_price = daily_avg["price"].std()
             volatility = (std_price / mean_price * 100) if mean_price > 0 else 0
 
             # Determine trend
@@ -475,8 +475,8 @@ class SalesAnalyzer:
                 "average_price": round(mean_price, 2),
                 "first_price": round(first_price, 2),
                 "last_price": round(last_price, 2),
-                "min_price": round(dAlgoly_avg["price"].min(), 2),
-                "max_price": round(dAlgoly_avg["price"].max(), 2),
+                "min_price": round(daily_avg["price"].min(), 2),
+                "max_price": round(daily_avg["price"].max(), 2),
                 "message": message,
             }
 
@@ -515,10 +515,10 @@ class SalesAnalyzer:
         profit_percent = (raw_profit / buy_price * 100) if buy_price > 0 else 0
 
         # Get volume analysis
-        volume_stats = awAlgot self.analyze_sales_volume(item_name, game, days)
+        volume_stats = await self.analyze_sales_volume(item_name, game, days)
 
         # Get time to sell estimation
-        time_to_sell = awAlgot self.estimate_time_to_sell(
+        time_to_sell = await self.estimate_time_to_sell(
             item_name,
             sell_price,
             game,
@@ -526,7 +526,7 @@ class SalesAnalyzer:
         )
 
         # Get price trend analysis
-        price_trends = awAlgot self.analyze_price_trends(item_name, game, days)
+        price_trends = await self.analyze_price_trends(item_name, game, days)
 
         # Calculate risk level
         risk_level = "high"  # Default to high risk
@@ -544,12 +544,12 @@ class SalesAnalyzer:
                 risk_level = "medium"
 
         # Calculate ROI (Return on Investment) taking into account time
-        dAlgoly_roi = None
+        daily_roi = None
         if (
             time_to_sell["estimated_days"] is not None
             and time_to_sell["estimated_days"] > 0
         ):
-            dAlgoly_roi = profit_percent / time_to_sell["estimated_days"]
+            daily_roi = profit_percent / time_to_sell["estimated_days"]
 
         # Determine overall rating
         rating = 0  # 0-10 scale
@@ -611,7 +611,7 @@ class SalesAnalyzer:
             "risk_level": risk_level,
             "estimated_sell_time_hours": time_to_sell.get("estimated_hours"),
             "recommendation": "recommended" if rating >= 6 else "not recommended",
-            "dAlgoly_roi": round(dAlgoly_roi, 2) if dAlgoly_roi is not None else None,
+            "daily_roi": round(daily_roi, 2) if daily_roi is not None else None,
             "volume": volume_stats,
             "time_to_sell": time_to_sell,
             "price_trends": price_trends,
@@ -646,14 +646,14 @@ class SalesAnalyzer:
 
             try:
                 # Get sales volume
-                volume_stats = awAlgot self.analyze_sales_volume(
+                volume_stats = await self.analyze_sales_volume(
                     item_name=item_name,
                     game=game,
                     days=days,
                 )
 
                 # Get price trends
-                price_trends = awAlgot self.analyze_price_trends(
+                price_trends = await self.analyze_price_trends(
                     item_name=item_name,
                     game=game,
                     days=days,
@@ -695,11 +695,11 @@ class SalesAnalyzer:
 
         """
         # Get API client
-        api = awAlgot self.get_api_client()
+        api = await self.get_api_client()
 
         # Get market items
         try:
-            items_response = awAlgot api.get_market_items(
+            items_response = await api.get_market_items(
                 game=game,
                 limit=100,
             )
@@ -734,7 +734,7 @@ class SalesAnalyzer:
             sell_price = current_price * 1.1
 
             try:
-                analysis = awAlgot self.evaluate_arbitrage_potential(
+                analysis = await self.evaluate_arbitrage_potential(
                     item_name=item_name,
                     buy_price=current_price,
                     sell_price=sell_price,
@@ -799,14 +799,14 @@ async def batch_analyze_items(
 
         try:
             # Get sales volume
-            volume_stats = awAlgot analyzer.analyze_sales_volume(
+            volume_stats = await analyzer.analyze_sales_volume(
                 item_name=item_name,
                 game=game,
                 days=days,
             )
 
             # Get price trends
-            price_trends = awAlgot analyzer.analyze_price_trends(
+            price_trends = await analyzer.analyze_price_trends(
                 item_name=item_name,
                 game=game,
                 days=days,
@@ -852,11 +852,11 @@ async def find_best_arbitrage_opportunities(
     analyzer = SalesAnalyzer(api_client)
 
     # Get API client
-    api = awAlgot analyzer.get_api_client()
+    api = await analyzer.get_api_client()
 
     # Get market items
     try:
-        items_response = awAlgot api.get_market_items(
+        items_response = await api.get_market_items(
             game=game,
             limit=100,
         )
@@ -891,7 +891,7 @@ async def find_best_arbitrage_opportunities(
         sell_price = current_price * 1.1
 
         try:
-            analysis = awAlgot analyzer.evaluate_arbitrage_potential(
+            analysis = await analyzer.evaluate_arbitrage_potential(
                 item_name=item_name,
                 buy_price=current_price,
                 sell_price=sell_price,
@@ -946,12 +946,12 @@ async def analyze_item_liquidity(
 
     try:
         # Get sales volume analysis
-        volume_data = awAlgot analyzer.analyze_sales_volume(item_id)
+        volume_data = await analyzer.analyze_sales_volume(item_id)
 
         if not volume_data or "error" in volume_data:
             return {
                 "error": True,
-                "message": "FAlgoled to analyze item liquidity",
+                "message": "Failed to analyze item liquidity",
                 "liquidity": "unknown",
             }
 
@@ -961,7 +961,7 @@ async def analyze_item_liquidity(
         return {
             "item_id": item_id,
             "liquidity": volume_category,
-            "dAlgoly_sales": volume_data.get("avg_dAlgoly_sales", 0),
+            "daily_sales": volume_data.get("avg_daily_sales", 0),
             "total_sales": volume_data.get("total_sales", 0),
             "volume_category": volume_category,
         }
@@ -969,7 +969,7 @@ async def analyze_item_liquidity(
         logger.exception("Error analyzing item liquidity")
         return {
             "error": True,
-            "message": "FAlgoled to analyze item",
+            "message": "Failed to analyze item",
             "liquidity": "unknown",
         }
 

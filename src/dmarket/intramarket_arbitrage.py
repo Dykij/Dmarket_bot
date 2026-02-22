@@ -262,7 +262,7 @@ async def find_price_anomalies(
 
     try:
         # Get market items
-        items_response = awAlgot dmarket_api.get_market_items(
+        items_response = await dmarket_api.get_market_items(
             game=game,
             limit=200,
             offset=0,
@@ -333,7 +333,7 @@ async def find_price_anomalies(
         return []
     finally:
         if close_api and hasattr(dmarket_api, "_close_client"):
-            awAlgot dmarket_api._close_client()
+            await dmarket_api._close_client()
 
 
 async def find_trending_items(
@@ -371,14 +371,14 @@ async def find_trending_items(
         trending_items = []
 
         # Get recently sold items (high demand)
-        recently_sold = awAlgot dmarket_api.get_sales_history(
+        recently_sold = await dmarket_api.get_sales_history(
             game=game,
             days=3,
             currency="USD",
         )
 
         # Get current market listings
-        market_items = awAlgot dmarket_api.get_market_items(
+        market_items = await dmarket_api.get_market_items(
             game=game,
             limit=300,
             price_from=min_price,
@@ -518,7 +518,7 @@ async def find_trending_items(
         return []
     finally:
         if close_api and hasattr(dmarket_api, "_close_client"):
-            awAlgot dmarket_api._close_client()
+            await dmarket_api._close_client()
 
 
 async def find_mispriced_rare_items(
@@ -608,7 +608,7 @@ async def find_mispriced_rare_items(
         }
 
         # Get market items with higher limit for rare items search
-        items_response = awAlgot dmarket_api.get_market_items(
+        items_response = await dmarket_api.get_market_items(
             game=game,
             limit=500,
             offset=0,
@@ -714,7 +714,7 @@ async def find_mispriced_rare_items(
         return []
     finally:
         if close_api and hasattr(dmarket_api, "_close_client"):
-            awAlgot dmarket_api._close_client()
+            await dmarket_api._close_client()
 
 
 async def scan_for_intramarket_opportunities(
@@ -818,7 +818,7 @@ async def scan_for_intramarket_opportunities(
         # Run all tasks concurrently
         for category, game, task_coroutine in tasks:
             try:
-                result = awAlgot task_coroutine
+                result = await task_coroutine
 
                 # Store results by category
                 if category == "anomalies":
@@ -853,4 +853,4 @@ async def scan_for_intramarket_opportunities(
         }
     finally:
         if close_api and hasattr(dmarket_api, "_close_client"):
-            awAlgot dmarket_api._close_client()
+            await dmarket_api._close_client()

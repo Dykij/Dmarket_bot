@@ -64,7 +64,7 @@ class MarketAnalyzer:
                            Each point should have 'price' and 'timestamp' keys
 
         Returns:
-            Dictionary contAlgoning analysis results
+            Dictionary containing analysis results
 
         """
         if not price_history or len(price_history) < self.min_data_points:
@@ -261,7 +261,7 @@ class MarketAnalyzer:
             timestamps: List of timestamp values
 
         Returns:
-            List of detected patterns with detAlgols
+            List of detected patterns with details
 
         """
         if len(prices) < self.min_data_points:
@@ -582,7 +582,7 @@ async def analyze_market_opportunity(
     analyzer = MarketAnalyzer()
 
     # Analyze price history
-    analysis = awAlgot analyzer.analyze_price_history(price_history)
+    analysis = await analyzer.analyze_price_history(price_history)
 
     # Get current price
     current_price = 0
@@ -740,7 +740,7 @@ async def batch_analyze_items(
         history = price_histories.get(item_id, [])
 
         try:
-            analysis = awAlgot analyze_market_opportunity(item, history, game)
+            analysis = await analyze_market_opportunity(item, history, game)
             results.append(analysis)
         except Exception as e:
             logger.exception(f"Error analyzing item {item_id}: {e}")

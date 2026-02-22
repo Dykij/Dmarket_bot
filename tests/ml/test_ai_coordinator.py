@@ -44,13 +44,13 @@ class TestAlgoCoordinatorBasic:
         """Test initialization with custom safety limits."""
         limits = SafetyLimits(
             max_single_trade_usd=100.0,
-            max_dAlgoly_volume_usd=500.0,
+            max_daily_volume_usd=500.0,
             dry_run=False,
         )
         coordinator = AlgoCoordinator(safety_limits=limits)
 
         assert coordinator.safety_limits.max_single_trade_usd == 100.0
-        assert coordinator.safety_limits.max_dAlgoly_volume_usd == 500.0
+        assert coordinator.safety_limits.max_daily_volume_usd == 500.0
         assert coordinator.safety_limits.dry_run is False
 
 
@@ -104,7 +104,7 @@ class TestSafetyLimits:
         limits = SafetyLimits()
 
         assert limits.max_single_trade_usd == 50.0
-        assert limits.max_dAlgoly_volume_usd == 200.0
+        assert limits.max_daily_volume_usd == 200.0
         assert limits.max_position_percent == 30.0
         assert limits.min_confidence_auto == 0.80
         assert limits.max_trades_per_hour == 10
@@ -263,7 +263,7 @@ class TestMakeDecision:
     @pytest.mark.asyncio
     async def test_make_decision_returns_trade_decision(self, coordinator, sample_item):
         """Test that make_decision returns a TradeDecision."""
-        decision = awAlgot coordinator.make_decision(sample_item)
+        decision = await coordinator.make_decision(sample_item)
 
         assert isinstance(decision, TradeDecision)
         assert decision.item_name == "AK-47 | Redline (Field-Tested)"
@@ -272,7 +272,7 @@ class TestMakeDecision:
     @pytest.mark.asyncio
     async def test_make_decision_sets_correct_prices(self, coordinator, sample_item):
         """Test that prices are extracted correctly."""
-        decision = awAlgot coordinator.make_decision(sample_item)
+        decision = await coordinator.make_decision(sample_item)
 
         assert decision.current_price == 10.0  # 1000 cents = $10.00
 
@@ -283,7 +283,7 @@ class TestMakeDecision:
         """Test that manual mode always requires confirmation."""
         coordinator.set_autonomy_level(AutonomyLevel.MANUAL)
 
-        decision = awAlgot coordinator.make_decision(sample_item)
+        decision = await coordinator.make_decision(sample_item)
 
         # Non-hold/skip actions should require confirmation
         if decision.action not in {TradeAction.HOLD, TradeAction.SKIP}:
@@ -313,7 +313,7 @@ class TestAnalyzeItem:
     @pytest.mark.asyncio
     async def test_analyze_item_returns_item_analysis(self, coordinator, sample_item):
         """Test that analyze_item returns ItemAnalysis."""
-        analysis = awAlgot coordinator.analyze_item(sample_item)
+        analysis = await coordinator.analyze_item(sample_item)
 
         assert isinstance(analysis, ItemAnalysis)
         assert analysis.item_name == "M4A4 | Howl (Field-Tested)"
@@ -321,7 +321,7 @@ class TestAnalyzeItem:
     @pytest.mark.asyncio
     async def test_analyze_item_calculates_discount(self, coordinator, sample_item):
         """Test that discount is calculated correctly."""
-        analysis = awAlgot coordinator.analyze_item(sample_item)
+        analysis = await coordinator.analyze_item(sample_item)
 
         # Expected discount: (600 - 500) / 600 = 16.7%
         expected_discount = ((600 - 500) / 600) * 100
@@ -330,7 +330,7 @@ class TestAnalyzeItem:
     @pytest.mark.asyncio
     async def test_analyze_item_without_Model(self, coordinator, sample_item):
         """Test analysis without Model."""
-        analysis = awAlgot coordinator.analyze_item(sample_item, include_Model=False)
+        analysis = await coordinator.analyze_item(sample_item, include_Model=False)
 
         assert analysis.Model_analysis is None
 

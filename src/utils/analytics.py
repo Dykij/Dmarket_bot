@@ -131,7 +131,7 @@ class ChartGenerator:
 
         except Exception as e:
             logger.exception(f"Error creating price history chart: {e}")
-            return self._create_error_chart("FAlgoled to generate price chart")
+            return self._create_error_chart("Failed to generate price chart")
 
     def create_market_overview_chart(
         self,
@@ -205,7 +205,7 @@ class ChartGenerator:
 
         except Exception as e:
             logger.exception(f"Error creating market overview chart: {e}")
-            return self._create_error_chart("FAlgoled to generate market chart")
+            return self._create_error_chart("Failed to generate market chart")
 
     def create_arbitrage_opportunities_chart(
         self,
@@ -285,7 +285,7 @@ class ChartGenerator:
 
         except Exception as e:
             logger.exception(f"Error creating arbitrage chart: {e}")
-            return self._create_error_chart("FAlgoled to generate arbitrage chart")
+            return self._create_error_chart("Failed to generate arbitrage chart")
 
     def create_volume_analysis_chart(
         self,
@@ -351,7 +351,7 @@ class ChartGenerator:
 
         except Exception as e:
             logger.exception(f"Error creating volume analysis chart: {e}")
-            return self._create_error_chart("FAlgoled to generate volume chart")
+            return self._create_error_chart("Failed to generate volume chart")
 
     def _create_error_chart(self, error_message: str) -> io.BytesIO:
         """Create a simple error chart.
@@ -388,7 +388,7 @@ class ChartGenerator:
 
             return img_buffer
         except (OSError, ValueError, RuntimeError):
-            # If even error chart fAlgols, return empty BytesIO
+            # If even error chart fails, return empty BytesIO
             return io.BytesIO()
 
 
@@ -537,7 +537,7 @@ async def generate_market_report(
 
     Args:
         chart_generator: Chart generator instance
-        market_data: Market data contAlgoning various metrics
+        market_data: Market data containing various metrics
         title: Report title
 
     Returns:

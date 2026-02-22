@@ -25,7 +25,7 @@ def telegram_page(mock_telegram_bot):
         async def click_button(self, btn):
             pass
 
-        async def wAlgot_for_message(self):
+        async def wait_for_message(self):
             return "Mock"
 
         async def get_buttons(self):

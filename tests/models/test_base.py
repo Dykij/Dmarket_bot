@@ -1,6 +1,6 @@
 """Unit tests for models/base module.
 
-This module contAlgons tests for src/models/base.py covering:
+This module contains tests for src/models/base.py covering:
 - SQLiteUUID type decorator
 - UUIDType alias
 - Base declarative model
@@ -292,29 +292,29 @@ class TestToDictMethod:
 class TestBaseEdgeCases:
     """Tests for edge cases in base module."""
 
-    def test_sqlite_uuid_with_empty_string_rAlgoses(self):
-        """Test that empty string rAlgoses ValueError."""
+    def test_sqlite_uuid_with_empty_string_raises(self):
+        """Test that empty string raises ValueError."""
         sqlite_uuid = SQLiteUUID()
         mock_dialect = MagicMock()
 
         # Empty string is not a valid UUID
-        with pytest.rAlgoses(ValueError):
+        with pytest.raises(ValueError):
             sqlite_uuid.process_result_value("", mock_dialect)
 
-    def test_sqlite_uuid_with_invalid_uuid_rAlgoses(self):
-        """Test that invalid UUID string rAlgoses ValueError."""
+    def test_sqlite_uuid_with_invalid_uuid_raises(self):
+        """Test that invalid UUID string raises ValueError."""
         sqlite_uuid = SQLiteUUID()
         mock_dialect = MagicMock()
 
-        with pytest.rAlgoses(ValueError):
+        with pytest.raises(ValueError):
             sqlite_uuid.process_result_value("not-a-valid-uuid", mock_dialect)
 
-    def test_sqlite_uuid_with_short_uuid_rAlgoses(self):
-        """Test that too short UUID string rAlgoses ValueError."""
+    def test_sqlite_uuid_with_short_uuid_raises(self):
+        """Test that too short UUID string raises ValueError."""
         sqlite_uuid = SQLiteUUID()
         mock_dialect = MagicMock()
 
-        with pytest.rAlgoses(ValueError):
+        with pytest.raises(ValueError):
             sqlite_uuid.process_result_value("550e8400-e29b-41d4", mock_dialect)
 
     def test_to_dict_with_empty_columns(self):

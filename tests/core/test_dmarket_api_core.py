@@ -171,11 +171,11 @@ class TestDMarketAPIClientManagement:
         )
 
         assert api._client is None
-        client = awAlgot api._get_client()
+        client = await api._get_client()
         assert client is not None
         assert isinstance(client, httpx.AsyncClient)
 
-        awAlgot api._close_client()
+        await api._close_client()
 
     @pytest.mark.asyncio()
     async def test_get_client_reuses_existing(self):
@@ -185,12 +185,12 @@ class TestDMarketAPIClientManagement:
             secret_key="test_secret",
         )
 
-        client1 = awAlgot api._get_client()
-        client2 = awAlgot api._get_client()
+        client1 = await api._get_client()
+        client2 = await api._get_client()
 
         assert client1 is client2
 
-        awAlgot api._close_client()
+        await api._close_client()
 
     @pytest.mark.asyncio()
     async def test_close_client(self):
@@ -200,10 +200,10 @@ class TestDMarketAPIClientManagement:
             secret_key="test_secret",
         )
 
-        awAlgot api._get_client()
+        await api._get_client()
         assert api._client is not None
 
-        awAlgot api._close_client()
+        await api._close_client()
         assert api._client is None
 
     @pytest.mark.asyncio()
@@ -238,7 +238,7 @@ class TestDMarketAPIBasicOperations:
         with patch.object(api, "_request", new_callable=AsyncMock) as mock_request:
             mock_request.return_value = mock_response
 
-            balance = awAlgot api.get_balance()
+            balance = await api.get_balance()
 
             assert balance is not None
             assert "balance" in balance or "usd" in balance
@@ -270,7 +270,7 @@ class TestDMarketAPIBasicOperations:
         with patch.object(api, "_request", new_callable=AsyncMock) as mock_request:
             mock_request.return_value = mock_response
 
-            items = awAlgot api.get_market_items(game="csgo")
+            items = await api.get_market_items(game="csgo")
 
             assert items is not None
             mock_request.assert_called_once()
@@ -286,7 +286,7 @@ class TestDMarketAPIBasicOperations:
         with patch.object(api, "_request", new_callable=AsyncMock) as mock_request:
             mock_request.return_value = {"objects": []}
 
-            awAlgot api.get_market_items(
+            await api.get_market_items(
                 game="csgo",
                 limit=50,
                 offset=0,
@@ -317,7 +317,7 @@ class TestDMarketAPIBasicOperations:
         with patch.object(api, "_request", new_callable=AsyncMock) as mock_request:
             mock_request.return_value = mock_response
 
-            inventory = awAlgot api.get_user_inventory()
+            inventory = await api.get_user_inventory()
 
             assert inventory is not None
             mock_request.assert_called_once()
@@ -377,7 +377,7 @@ class TestDMarketAPIConstants:
         """Тест эндпоинтов пользователя."""
         assert DMarketAPI.ENDPOINT_USER_INVENTORY == "/inventory/v1/user/items"
         assert DMarketAPI.ENDPOINT_USER_OFFERS == "/marketplace-api/v1/user-offers"
-        assert DMarketAPI.ENDPOINT_USER_TARGETS == "/mAlgon/v2/user-targets"
+        assert DMarketAPI.ENDPOINT_USER_TARGETS == "/main/v2/user-targets"
 
     def test_error_codes(self):
         """Тест констант кодов ошибок."""

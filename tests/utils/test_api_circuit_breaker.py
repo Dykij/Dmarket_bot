@@ -1,6 +1,6 @@
 """Unit tests for api_circuit_breaker module.
 
-This module contAlgons tests for src/utils/api_circuit_breaker.py covering:
+This module contains tests for src/utils/api_circuit_breaker.py covering:
 - APICircuitBreaker initialization
 - Circuit breaker constants
 - call_with_circuit_breaker function
@@ -26,7 +26,7 @@ def reset_circuit_breakers_before_test():
     _circuit_breakers.clear()
     # Reset the legacy dmarket_api_breaker
     try:
-        dmarket_api_breaker._fAlgolure_count = 0
+        dmarket_api_breaker._failure_count = 0
         dmarket_api_breaker._state = "closed"
     except AttributeError:
         pass  # Some implementations may differ
@@ -57,7 +57,7 @@ class TestAPICircuitBreakerInit:
         # Assert
         assert breaker is not None
 
-    def test_fAlgolure_threshold_constant(self):
+    def test_failure_threshold_constant(self):
         """Test FAlgoLURE_THRESHOLD constant."""
         assert APICircuitBreaker.FAlgoLURE_THRESHOLD == 5
 
@@ -104,7 +104,7 @@ class TestCallWithCircuitBreaker:
             return "success"
 
         # Act
-        result = awAlgot call_with_circuit_breaker(success_func)
+        result = await call_with_circuit_breaker(success_func)
 
         # Assert
         assert result == "success"
@@ -118,7 +118,7 @@ class TestCallWithCircuitBreaker:
             return a + b
 
         # Act
-        result = awAlgot call_with_circuit_breaker(func_with_args, 1, 2)
+        result = await call_with_circuit_breaker(func_with_args, 1, 2)
 
         # Assert
         assert result == 3
@@ -132,7 +132,7 @@ class TestCallWithCircuitBreaker:
             return f"hello {name}"
 
         # Act
-        result = awAlgot call_with_circuit_breaker(func_with_kwargs, name="test")
+        result = await call_with_circuit_breaker(func_with_kwargs, name="test")
 
         # Assert
         assert result == "hello test"
@@ -147,7 +147,7 @@ class TestCallWithCircuitBreaker:
             return expected
 
         # Act
-        result = awAlgot call_with_circuit_breaker(return_dict)
+        result = await call_with_circuit_breaker(return_dict)
 
         # Assert
         assert result == expected
@@ -190,7 +190,7 @@ class TestCircuitBreakerEdgeCases:
             return "async result"
 
         # Act
-        result = awAlgot call_with_circuit_breaker(async_func)
+        result = await call_with_circuit_breaker(async_func)
 
         # Assert
         assert result == "async result"
@@ -204,7 +204,7 @@ class TestCircuitBreakerEdgeCases:
             return "success"
 
         # Act
-        result = awAlgot call_with_circuit_breaker(success_func, fallback=None)
+        result = await call_with_circuit_breaker(success_func, fallback=None)
 
         # Assert
         assert result == "success"
@@ -222,7 +222,7 @@ class TestCircuitBreakerConfiguration:
         breaker = APICircuitBreaker(name="custom")
 
         # Assert - inherits class constants
-        assert breaker._fAlgolure_threshold == APICircuitBreaker.FAlgoLURE_THRESHOLD
+        assert breaker._failure_threshold == APICircuitBreaker.FAlgoLURE_THRESHOLD
         assert breaker._recovery_timeout == APICircuitBreaker.RECOVERY_TIMEOUT
 
     def test_expected_exception_is_http_error(self):
@@ -230,8 +230,8 @@ class TestCircuitBreakerConfiguration:
         # Assert
         assert APICircuitBreaker.EXPECTED_EXCEPTION is httpx.HTTPError
 
-    def test_fAlgolure_threshold_is_reasonable(self):
-        """Test that fAlgolure threshold is reasonable."""
+    def test_failure_threshold_is_reasonable(self):
+        """Test that failure threshold is reasonable."""
         # Assert - should be between 1 and 20
         assert 1 <= APICircuitBreaker.FAlgoLURE_THRESHOLD <= 20
 

@@ -219,7 +219,7 @@ class TestPortfolioSummary:
         tracker.record_buy("Item1", Decimal("50.0"), item_id="item1")
         tracker.record_buy("Item2", Decimal("100.0"), item_id="item2")
 
-        summary = awAlgot tracker.get_portfolio_summary()
+        summary = await tracker.get_portfolio_summary()
 
         assert isinstance(summary, PortfolioSummary)
         assert summary.total_trades == 2
@@ -371,7 +371,7 @@ class TestInventorySync:
         """Test inventory sync."""
         tracker = PortfolioTracker(dmarket_api=mock_dmarket_api)
 
-        synced = awAlgot tracker.sync_inventory()
+        synced = await tracker.sync_inventory()
 
         assert synced == 1
         assert "item1" in tracker._inventory

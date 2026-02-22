@@ -11,8 +11,8 @@ from datetime import UTC, datetime
 from enum import StrEnum
 from typing import Any, Generic, TypeVar
 
-import Algoohttp
-from Algoohttp import ClientSession
+import aiohttp
+from aiohttp import ClientSession
 
 from src.dmarket.dmarket_api import DMarketAPI
 from src.utils.canonical_logging import get_logger
@@ -118,7 +118,7 @@ class Observable(Generic[T]):  # noqa: UP046
                 logger.exception("Error creating async observer task")
 
         if tasks:
-            awAlgot asyncio.gather(*tasks, return_exceptions=True)
+            await asyncio.gather(*tasks, return_exceptions=True)
 
     def clear(self) -> None:
         """Clear all observers."""
@@ -232,9 +232,9 @@ class ReactiveDMarketWebSocket:
 
         try:
             if self.session is None or self.session.closed:
-                self.session = Algoohttp.ClientSession()
+                self.session = aiohttp.ClientSession()
 
-            self.ws_connection = awAlgot self.session.ws_connect(
+            self.ws_connection = await self.session.ws_connect(
                 self.WS_ENDPOINT,
                 timeout=30.0,
                 heartbeat=30.0,
@@ -246,23 +246,23 @@ class ReactiveDMarketWebSocket:
             logger.info("Connected to DMarket WebSocket API")
 
             # Emit connection state
-            awAlgot self.connection_state.emit(True)
+            await self.connection_state.emit(True)
 
             # Authenticate
-            awAlgot self._authenticate()
+            await self._authenticate()
 
             # Start listening
             self._listen_task = asyncio.create_task(self._listen())
 
             # Resubscribe to active subscriptions
-            awAlgot self._resubscribe_all()
+            await self._resubscribe_all()
 
             return True
 
-        except (TimeoutError, Algoohttp.ClientError):
-            logger.exception("FAlgoled to connect to WebSocket")
+        except (TimeoutError, aiohttp.ClientError):
+            logger.exception("Failed to connect to WebSocket")
             self.is_connected = False
-            awAlgot self.connection_state.emit(False)
+            await self.connection_state.emit(False)
             return False
 
     async def disconnect(self) -> None:
@@ -273,24 +273,24 @@ class ReactiveDMarketWebSocket:
         if self._listen_task and not self._listen_task.done():
             self._listen_task.cancel()
             try:
-                awAlgot self._listen_task
+                await self._listen_task
             except asyncio.CancelledError:
                 pass
 
         # Unsubscribe from all
-        awAlgot self._unsubscribe_all()
+        await self._unsubscribe_all()
 
         # Close WebSocket
         if self.ws_connection:
-            awAlgot self.ws_connection.close()
+            await self.ws_connection.close()
             self.ws_connection = None
 
         self.is_connected = False
-        awAlgot self.connection_state.emit(False)
+        await self.connection_state.emit(False)
 
         # Close session
         if self.session and not self.session.closed:
-            awAlgot self.session.close()
+            await self.session.close()
             self.session = None
 
         logger.info("Disconnected from WebSocket")
@@ -299,38 +299,38 @@ class ReactiveDMarketWebSocket:
         """Listen for WebSocket messages."""
         while self.is_connected and self.ws_connection:
             try:
-                message = awAlgot self.ws_connection.receive()
+                message = await self.ws_connection.receive()
 
-                if message.type == Algoohttp.WSMsgType.TEXT:
-                    awAlgot self._handle_message(message.data)
+                if message.type == aiohttp.WSMsgType.TEXT:
+                    await self._handle_message(message.data)
 
-                elif message.type == Algoohttp.WSMsgType.CLOSED:
+                elif message.type == aiohttp.WSMsgType.CLOSED:
                     logger.warning("WebSocket closed by server")
                     self.is_connected = False
-                    awAlgot self.connection_state.emit(False)
+                    await self.connection_state.emit(False)
                     if self.auto_reconnect:
-                        awAlgot self._attempt_reconnect()
+                        await self._attempt_reconnect()
                     break
 
-                elif message.type == Algoohttp.WSMsgType.ERROR:
+                elif message.type == aiohttp.WSMsgType.ERROR:
                     logger.error("WebSocket error: %s", message.data)
                     self.is_connected = False
-                    awAlgot self.connection_state.emit(False)
+                    await self.connection_state.emit(False)
                     if self.auto_reconnect:
-                        awAlgot self._attempt_reconnect()
+                        await self._attempt_reconnect()
                     break
 
             except asyncio.CancelledError:
                 logger.info("Listen task cancelled")
                 break
             except (
-                Algoohttp.ClientError,
+                aiohttp.ClientError,
                 TimeoutError,
                 ConnectionError,
             ):
                 logger.exception("Error in listen loop")
                 if self.auto_reconnect:
-                    awAlgot self._attempt_reconnect()
+                    await self._attempt_reconnect()
                 break
 
     async def _handle_message(self, data: str) -> None:
@@ -350,7 +350,7 @@ class ReactiveDMarketWebSocket:
                 return
 
             # Emit to all events observable
-            awAlgot self.all_events.emit(message)
+            await self.all_events.emit(message)
 
             # Check if it's a known event type
             try:
@@ -363,14 +363,14 @@ class ReactiveDMarketWebSocket:
 
                 # Emit to specific observable
                 if event_type in self.observables:
-                    awAlgot self.observables[event_type].emit(message)
+                    await self.observables[event_type].emit(message)
 
             except ValueError:
                 # Unknown event type, still emit to all_events
                 logger.debug("Unknown event type: %s", event_type_str)
 
         except json.JSONDecodeError:
-            logger.exception(f"FAlgoled to parse message: {data}")
+            logger.exception(f"Failed to parse message: {data}")
         except (KeyError, TypeError, AttributeError):
             logger.exception("Error handling message")
 
@@ -386,7 +386,7 @@ class ReactiveDMarketWebSocket:
             "timestamp": str(int(datetime.now(UTC).timestamp())),
         }
 
-        awAlgot self.ws_connection.send_json(auth_message)
+        await self.ws_connection.send_json(auth_message)
         logger.debug("Sent authentication request")
 
     async def _attempt_reconnect(self) -> None:
@@ -406,8 +406,8 @@ class ReactiveDMarketWebSocket:
             f"{self.max_reconnect_attempts})"
         )
 
-        awAlgot asyncio.sleep(delay)
-        awAlgot self.connect()
+        await asyncio.sleep(delay)
+        await self.connect()
 
     async def subscribe_to(
         self,
@@ -445,7 +445,7 @@ class ReactiveDMarketWebSocket:
             sub_message["params"] = params
 
         # Send subscription
-        awAlgot self.ws_connection.send_json(sub_message)
+        await self.ws_connection.send_json(sub_message)
         subscription.update_state(SubscriptionState.ACTIVE)
         self.subscriptions[topic] = subscription
 
@@ -480,7 +480,7 @@ class ReactiveDMarketWebSocket:
         }
 
         # Send unsubscription
-        awAlgot self.ws_connection.send_json(unsub_message)
+        await self.ws_connection.send_json(unsub_message)
         del self.subscriptions[topic]
 
         logger.info("Unsubscribed from %s", topic)
@@ -494,7 +494,7 @@ class ReactiveDMarketWebSocket:
         logger.info("Resubscribing to %s topics", len(self.subscriptions))
 
         for topic, subscription in list(self.subscriptions.items()):
-            awAlgot self.subscribe_to(topic, subscription.params)
+            await self.subscribe_to(topic, subscription.params)
 
     async def _unsubscribe_all(self) -> None:
         """Unsubscribe from all topics."""
@@ -504,7 +504,7 @@ class ReactiveDMarketWebSocket:
         logger.info("Unsubscribing from %s topics", len(self.subscriptions))
 
         for topic in list(self.subscriptions.keys()):
-            awAlgot self.unsubscribe_from(topic)
+            await self.unsubscribe_from(topic)
 
     # Convenience methods for common subscriptions
 
@@ -515,7 +515,7 @@ class ReactiveDMarketWebSocket:
             Subscription object
 
         """
-        return awAlgot self.subscribe_to("balance:updates")
+        return await self.subscribe_to("balance:updates")
 
     async def subscribe_to_order_events(self) -> Subscription:
         """Subscribe to all order events.
@@ -524,7 +524,7 @@ class ReactiveDMarketWebSocket:
             Subscription object
 
         """
-        return awAlgot self.subscribe_to("orders:*")
+        return await self.subscribe_to("orders:*")
 
     async def subscribe_to_market_prices(
         self,
@@ -545,7 +545,7 @@ class ReactiveDMarketWebSocket:
         if items:
             params["itemIds"] = items
 
-        return awAlgot self.subscribe_to("market:prices", params)
+        return await self.subscribe_to("market:prices", params)
 
     async def subscribe_to_target_matches(self) -> Subscription:
         """Subscribe to target match events.
@@ -554,7 +554,7 @@ class ReactiveDMarketWebSocket:
             Subscription object
 
         """
-        return awAlgot self.subscribe_to("targets:matched")
+        return await self.subscribe_to("targets:matched")
 
     def get_subscription_stats(self) -> dict[str, Any]:
         """Get statistics for all subscriptions.

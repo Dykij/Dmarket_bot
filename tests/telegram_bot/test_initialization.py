@@ -111,20 +111,20 @@ class TestInitializeBot:
     """Tests for initialize_bot function."""
 
     @pytest.mark.asyncio()
-    async def test_initialize_bot_rAlgoses_without_token(self):
-        """Test initialize_bot rAlgoses ValueError when token is empty."""
+    async def test_initialize_bot_raises_without_token(self):
+        """Test initialize_bot raises ValueError when token is empty."""
         from src.telegram_bot.initialization import initialize_bot
 
-        with pytest.rAlgoses(ValueError, match="Не указан токен"):
-            awAlgot initialize_bot("")
+        with pytest.raises(ValueError, match="Не указан токен"):
+            await initialize_bot("")
 
     @pytest.mark.asyncio()
-    async def test_initialize_bot_rAlgoses_with_none_token(self):
-        """Test initialize_bot rAlgoses ValueError when token is None."""
+    async def test_initialize_bot_raises_with_none_token(self):
+        """Test initialize_bot raises ValueError when token is None."""
         from src.telegram_bot.initialization import initialize_bot
 
-        with pytest.rAlgoses((ValueError, TypeError)):
-            awAlgot initialize_bot(None)
+        with pytest.raises((ValueError, TypeError)):
+            await initialize_bot(None)
 
     @pytest.mark.asyncio()
     async def test_initialize_bot_with_valid_token(self):
@@ -147,7 +147,7 @@ class TestInitializeBot:
                 mock_app
             )
 
-            result = awAlgot initialize_bot("test_token", setup_persistence=False)
+            result = await initialize_bot("test_token", setup_persistence=False)
 
             assert result == mock_app
             mock_builder.return_value.token.assert_called_once_with("test_token")
@@ -172,15 +172,15 @@ class TestInitializeBot:
             mock_admin.return_value = []
 
             mock_app = MagicMock()
-            builder_chAlgon = MagicMock()
-            builder_chAlgon.token.return_value = builder_chAlgon
-            builder_chAlgon.concurrent_updates.return_value = builder_chAlgon
-            builder_chAlgon.connection_pool_size.return_value = builder_chAlgon
-            builder_chAlgon.persistence.return_value = builder_chAlgon
-            builder_chAlgon.build.return_value = mock_app
-            mock_builder.return_value = builder_chAlgon
+            builder_chain = MagicMock()
+            builder_chain.token.return_value = builder_chain
+            builder_chain.concurrent_updates.return_value = builder_chain
+            builder_chain.connection_pool_size.return_value = builder_chain
+            builder_chain.persistence.return_value = builder_chain
+            builder_chain.build.return_value = mock_app
+            mock_builder.return_value = builder_chain
 
-            awAlgot initialize_bot("test_token", setup_persistence=True)
+            await initialize_bot("test_token", setup_persistence=True)
 
             mock_persistence.assert_called_once()
 
@@ -207,7 +207,7 @@ class TestInitializeBot:
                 mock_app
             )
 
-            awAlgot initialize_bot("test_token", setup_persistence=False)
+            await initialize_bot("test_token", setup_persistence=False)
 
             # Admin IDs from profiles should be used
             mock_setup_error.assert_called_once()
@@ -225,7 +225,7 @@ class TestSetupBotCommands:
 
         mock_bot = AsyncMock()
 
-        awAlgot setup_bot_commands(mock_bot)
+        await setup_bot_commands(mock_bot)
 
         # Should call set_my_commands with language_code="en"
         calls = [
@@ -242,7 +242,7 @@ class TestSetupBotCommands:
 
         mock_bot = AsyncMock()
 
-        awAlgot setup_bot_commands(mock_bot)
+        await setup_bot_commands(mock_bot)
 
         # Should call set_my_commands with language_code="ru"
         calls = [
@@ -259,7 +259,7 @@ class TestSetupBotCommands:
 
         mock_bot = AsyncMock()
 
-        awAlgot setup_bot_commands(mock_bot)
+        await setup_bot_commands(mock_bot)
 
         # Should also call without language_code for default
         assert mock_bot.set_my_commands.call_count >= 3
@@ -272,8 +272,8 @@ class TestSetupBotCommands:
         mock_bot = AsyncMock()
         mock_bot.set_my_commands.side_effect = Exception("API Error")
 
-        # Should not rAlgose
-        awAlgot setup_bot_commands(mock_bot)
+        # Should not raise
+        await setup_bot_commands(mock_bot)
 
     @pytest.mark.asyncio()
     async def test_setup_bot_commands_includes_standard_commands(self):
@@ -282,7 +282,7 @@ class TestSetupBotCommands:
 
         mock_bot = AsyncMock()
 
-        awAlgot setup_bot_commands(mock_bot)
+        await setup_bot_commands(mock_bot)
 
         # Check that commands include standard ones (only basic commands are registered)
         first_call = mock_bot.set_my_commands.call_args_list[0]
@@ -348,7 +348,7 @@ class TestSetupSignalHandlers:
             mock_loop.add_signal_handler.side_effect = NotImplementedError()
             mock_get_loop.return_value = mock_loop
 
-            # Should not rAlgose
+            # Should not raise
             setup_signal_handlers(mock_application)
 
 
@@ -461,7 +461,7 @@ class TestInitializeServices:
             mock_api = MagicMock()
             mock_create.return_value = mock_api
 
-            awAlgot initialize_services(mock_application)
+            await initialize_services(mock_application)
 
             assert mock_application.bot_data["dmarket_api"] == mock_api
 
@@ -478,8 +478,8 @@ class TestInitializeServices:
         ) as mock_create:
             mock_create.side_effect = Exception("API Error")
 
-            # Should not rAlgose
-            awAlgot initialize_services(mock_application)
+            # Should not raise
+            await initialize_services(mock_application)
 
             # API should not be in bot_data
             assert "dmarket_api" not in mock_application.bot_data
@@ -496,8 +496,8 @@ class TestGetBotToken:
             token = get_bot_token()
             assert token == "test_token_123"
 
-    def test_get_bot_token_rAlgoses_when_missing(self):
-        """Test get_bot_token rAlgoses ValueError when token is missing."""
+    def test_get_bot_token_raises_when_missing(self):
+        """Test get_bot_token raises ValueError when token is missing."""
         from src.telegram_bot.initialization import get_bot_token
 
         with patch.dict(os.environ, {}, clear=True):
@@ -505,7 +505,7 @@ class TestGetBotToken:
             if "TELEGRAM_BOT_TOKEN" in os.environ:
                 del os.environ["TELEGRAM_BOT_TOKEN"]
 
-            with pytest.rAlgoses(ValueError, match="Не указан токен"):
+            with pytest.raises(ValueError, match="Не указан токен"):
                 get_bot_token()
 
 
@@ -534,7 +534,7 @@ class TestSetupAndRunBot:
             mock_start.side_effect = KeyboardInterrupt()
 
             try:
-                awAlgot setup_and_run_bot(
+                await setup_and_run_bot(
                     token="test_token",
                     log_file=log_file,
                 )
@@ -559,7 +559,7 @@ class TestSetupAndRunBot:
             mock_start.side_effect = KeyboardInterrupt()
 
             try:
-                awAlgot setup_and_run_bot(token="custom_token")
+                await setup_and_run_bot(token="custom_token")
             except KeyboardInterrupt:
                 pass
 
@@ -586,7 +586,7 @@ class TestSetupAndRunBot:
             mock_start.side_effect = KeyboardInterrupt()
 
             try:
-                awAlgot setup_and_run_bot(token=None)
+                await setup_and_run_bot(token=None)
             except KeyboardInterrupt:
                 pass
 

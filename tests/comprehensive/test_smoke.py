@@ -85,8 +85,8 @@ class TestDMarketAPIBasicFunctionality:
         assert api is not None
         assert api.public_key == "test_public_key"
 
-    def test_game_map_contAlgons_csgo(self) -> None:
-        """Test GAME_MAP contAlgons CS:GO entry."""
+    def test_game_map_contains_csgo(self) -> None:
+        """Test GAME_MAP contains CS:GO entry."""
         from src.dmarket.dmarket_api import GAME_MAP
 
         assert "csgo" in GAME_MAP
@@ -138,7 +138,7 @@ class TestCircuitBreakerBasicFunctionality:
         async def simple_func() -> str:
             return "success"
 
-        result = awAlgot call_with_circuit_breaker(
+        result = await call_with_circuit_breaker(
             simple_func, endpoint_type=EndpointType.MARKET
         )
 
@@ -231,7 +231,7 @@ class TestCriticalPaths:
             mock_request.return_value = {
                 "usd": {"amount": "100000", "currency": "USD"}
             }
-            balance = awAlgot api.get_balance()
+            balance = await api.get_balance()
 
             assert balance is not None
             mock_request.assert_called_once()
@@ -248,7 +248,7 @@ class TestCriticalPaths:
                 "objects": [{"itemId": "1", "title": "Test", "price": {"USD": "1000"}}],
                 "total": {"items": 1},
             }
-            items = awAlgot api.get_market_items(game="csgo", limit=10)
+            items = await api.get_market_items(game="csgo", limit=10)
 
             assert items is not None
             mock_request.assert_called_once()
@@ -262,7 +262,7 @@ class TestCriticalPaths:
 
         with patch.object(api, "_request", new_callable=AsyncMock) as mock_request:
             mock_request.return_value = {"Items": [], "TotalItems": 0}
-            targets = awAlgot api.get_user_targets(game_id="csgo")
+            targets = await api.get_user_targets(game_id="csgo")
 
             assert targets is not None
 
@@ -364,7 +364,7 @@ class TestPerformanceSmoke:
     """Basic performance smoke tests."""
 
     def test_import_time_reasonable(self) -> None:
-        """Test mAlgon module imports in reasonable time."""
+        """Test main module imports in reasonable time."""
         import time
 
         start = time.time()
@@ -395,7 +395,7 @@ class TestPerformanceSmoke:
 
         start = time.time()
         for _ in range(100):
-            awAlgot call_with_circuit_breaker(
+            await call_with_circuit_breaker(
                 fast_func, endpoint_type=EndpointType.MARKET
             )
         elapsed = time.time() - start
@@ -438,9 +438,9 @@ class TestIntegrationSmoke:
         async def wrapped_balance() -> dict[str, Any]:
             with patch.object(api, "_request", new_callable=AsyncMock) as mock:
                 mock.return_value = {"usd": {"amount": "1000"}}
-                return awAlgot api.get_balance()
+                return await api.get_balance()
 
-        result = awAlgot call_with_circuit_breaker(
+        result = await call_with_circuit_breaker(
             wrapped_balance, endpoint_type=EndpointType.BALANCE
         )
 

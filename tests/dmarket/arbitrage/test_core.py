@@ -47,7 +47,7 @@ class TestFetchMarketItems:
         ):
             from src.dmarket.arbitrage.core import fetch_market_items
 
-            result = awAlgot fetch_market_items(
+            result = await fetch_market_items(
                 game="csgo",
                 limit=10,
                 dmarket_api=mock_api,
@@ -73,7 +73,7 @@ class TestFetchMarketItems:
         ):
             from src.dmarket.arbitrage.core import fetch_market_items
 
-            result = awAlgot fetch_market_items(game="csgo", limit=10)
+            result = await fetch_market_items(game="csgo", limit=10)
             assert result == []
 
     @pytest.mark.asyncio()
@@ -92,7 +92,7 @@ class TestFetchMarketItems:
         ):
             from src.dmarket.arbitrage.core import fetch_market_items
 
-            awAlgot fetch_market_items(
+            await fetch_market_items(
                 game="dota2",
                 limit=50,
                 price_from=5.0,
@@ -123,7 +123,7 @@ class TestFetchMarketItems:
         ):
             from src.dmarket.arbitrage.core import fetch_market_items
 
-            result = awAlgot fetch_market_items(game="csgo", dmarket_api=mock_api)
+            result = await fetch_market_items(game="csgo", dmarket_api=mock_api)
             assert result == []
 
 
@@ -160,7 +160,7 @@ class TestFindArbitrageAsync:
             ),
             patch("src.dmarket.arbitrage.core.save_to_cache"),
         ):
-            results = awAlgot _find_arbitrage_async(
+            results = await _find_arbitrage_async(
                 min_profit=1.0,
                 max_profit=10.0,
                 game="csgo",
@@ -195,7 +195,7 @@ class TestFindArbitrageAsync:
             ),
             patch("src.dmarket.arbitrage.core.save_to_cache"),
         ):
-            results = awAlgot _find_arbitrage_async(
+            results = await _find_arbitrage_async(
                 min_profit=0.1,
                 max_profit=5.0,
                 game="csgo",
@@ -218,7 +218,7 @@ class TestFindArbitrageAsync:
             "src.dmarket.arbitrage.core.get_cached_results",
             return_value=cached_data,
         ):
-            results = awAlgot _find_arbitrage_async(
+            results = await _find_arbitrage_async(
                 min_profit=1.0,
                 max_profit=5.0,
                 game="csgo",
@@ -242,7 +242,7 @@ class TestFindArbitrageAsync:
             ),
             patch("src.dmarket.arbitrage.core.save_to_cache"),
         ):
-            results = awAlgot _find_arbitrage_async(
+            results = await _find_arbitrage_async(
                 min_profit=1.0,
                 max_profit=5.0,
                 game="csgo",
@@ -268,7 +268,7 @@ class TestArbitrageBoostAsync:
             "src.dmarket.arbitrage.core._find_arbitrage_async",
             AsyncMock(return_value=[]),
         ) as mock_find:
-            awAlgot arbitrage_boost_async(game="csgo")
+            await arbitrage_boost_async(game="csgo")
 
             mock_find.assert_called_once_with(1, 5, "csgo", None, None)
 
@@ -281,7 +281,7 @@ class TestArbitrageBoostAsync:
             "src.dmarket.arbitrage.core._find_arbitrage_async",
             AsyncMock(return_value=[]),
         ) as mock_find:
-            awAlgot arbitrage_boost_async(
+            await arbitrage_boost_async(
                 game="dota2",
                 min_price=1.0,
                 max_price=10.0,
@@ -307,7 +307,7 @@ class TestArbitrageMidAsync:
             "src.dmarket.arbitrage.core._find_arbitrage_async",
             AsyncMock(return_value=[]),
         ) as mock_find:
-            awAlgot arbitrage_mid_async(game="csgo")
+            await arbitrage_mid_async(game="csgo")
 
             mock_find.assert_called_once_with(5, 20, "csgo", None, None)
 
@@ -320,7 +320,7 @@ class TestArbitrageMidAsync:
             "src.dmarket.arbitrage.core._find_arbitrage_async",
             AsyncMock(return_value=[]),
         ) as mock_find:
-            awAlgot arbitrage_mid_async(game="tf2")
+            await arbitrage_mid_async(game="tf2")
 
             mock_find.assert_called_once_with(5, 20, "tf2", None, None)
 
@@ -342,7 +342,7 @@ class TestArbitrageProAsync:
             "src.dmarket.arbitrage.core._find_arbitrage_async",
             AsyncMock(return_value=[]),
         ) as mock_find:
-            awAlgot arbitrage_pro_async(game="csgo")
+            await arbitrage_pro_async(game="csgo")
 
             mock_find.assert_called_once_with(20, 100, "csgo", None, None)
 
@@ -355,7 +355,7 @@ class TestArbitrageProAsync:
             "src.dmarket.arbitrage.core._find_arbitrage_async",
             AsyncMock(return_value=[]),
         ) as mock_find:
-            awAlgot arbitrage_pro_async(
+            await arbitrage_pro_async(
                 game="rust",
                 min_price=50.0,
                 max_price=500.0,
@@ -399,7 +399,7 @@ class TestFindArbitrageOpportunitiesAsync:
             ),
             patch("src.dmarket.arbitrage.core.save_to_cache"),
         ):
-            results = awAlgot find_arbitrage_opportunities_async(
+            results = await find_arbitrage_opportunities_async(
                 min_profit_percentage=5.0,
                 max_results=10,
                 game="csgo",
@@ -418,7 +418,7 @@ class TestFindArbitrageOpportunitiesAsync:
             "src.dmarket.arbitrage.core.get_cached_results",
             return_value=cached_data,
         ):
-            results = awAlgot find_arbitrage_opportunities_async(
+            results = await find_arbitrage_opportunities_async(
                 min_profit_percentage=10.0,
                 max_results=5,
                 game="csgo",
@@ -441,7 +441,7 @@ class TestFindArbitrageOpportunitiesAsync:
                 return_value=None,
             ),
         ):
-            results = awAlgot find_arbitrage_opportunities_async()
+            results = await find_arbitrage_opportunities_async()
 
         assert results == []
 
@@ -479,7 +479,7 @@ class TestItemProcessing:
             ),
             patch("src.dmarket.arbitrage.core.save_to_cache"),
         ):
-            results = awAlgot _find_arbitrage_async(0.1, 10.0, "csgo")
+            results = await _find_arbitrage_async(0.1, 10.0, "csgo")
 
         # Results processing depends on actual profit calculation
         assert isinstance(results, list)
@@ -508,7 +508,7 @@ class TestItemProcessing:
             ),
             patch("src.dmarket.arbitrage.core.save_to_cache"),
         ):
-            results = awAlgot _find_arbitrage_async(0.1, 10.0, "csgo")
+            results = await _find_arbitrage_async(0.1, 10.0, "csgo")
 
         assert isinstance(results, list)
 
@@ -543,7 +543,7 @@ class TestItemProcessing:
             ),
             patch("src.dmarket.arbitrage.core.save_to_cache"),
         ):
-            results = awAlgot _find_arbitrage_async(0.1, 10.0, "csgo")
+            results = await _find_arbitrage_async(0.1, 10.0, "csgo")
 
         assert isinstance(results, list)
 
@@ -587,7 +587,7 @@ class TestResultSorting:
             ),
             patch("src.dmarket.arbitrage.core.save_to_cache"),
         ):
-            results = awAlgot _find_arbitrage_async(0.1, 100.0, "csgo")
+            results = await _find_arbitrage_async(0.1, 100.0, "csgo")
 
         # If there are results, they should be sorted
         if len(results) > 1:
@@ -611,7 +611,7 @@ class TestModuleExports:
     """Test module exports."""
 
     def test_all_exports(self):
-        """Test __all__ contAlgons expected exports."""
+        """Test __all__ contains expected exports."""
         from src.dmarket.arbitrage.core import __all__
 
         expected = [

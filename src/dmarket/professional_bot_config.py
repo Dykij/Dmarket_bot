@@ -198,7 +198,7 @@ class SilentModeLogger:
 
         # В Telegram отправляем всегда
         if self.notifier and self.config.telegram_notify_on_buy:
-            awAlgot self.notifier.send_message(msg, priority="high")
+            await self.notifier.send_message(msg, priority="high")
 
     async def log_error(
         self,
@@ -222,7 +222,7 @@ class SilentModeLogger:
 
         # Критические ошибки всегда в Telegram
         if self.notifier and self.config.telegram_notify_on_error and critical:
-            awAlgot self.notifier.send_message(msg, priority="critical")
+            await self.notifier.send_message(msg, priority="critical")
 
     async def send_summary_if_needed(self) -> None:
         """Отправляет сводку, если прошло достаточно времени."""
@@ -240,7 +240,7 @@ class SilentModeLogger:
 
         # Формируем сводку
         summary = self._format_summary()
-        awAlgot self.notifier.send_message(summary, priority="low")
+        await self.notifier.send_message(summary, priority="low")
 
         self._last_summary_time = now
         self._pending_events.clear()
@@ -424,7 +424,7 @@ class AdaptiveRateLimiter:
         self._total_requests = 0
         self._total_429s = 0
 
-    async def wAlgot_before_request(self) -> None:
+    async def wait_before_request(self) -> None:
         """Ожидание перед следующим запросом."""
         if not self.config.enable_adaptive_limiter:
             return
@@ -434,8 +434,8 @@ class AdaptiveRateLimiter:
 
         # Если с последнего запроса прошло меньше текущей задержки
         if elapsed < self._current_delay:
-            wAlgot_time = self._current_delay - elapsed
-            awAlgot self._async_sleep(wAlgot_time)
+            wait_time = self._current_delay - elapsed
+            await self._async_sleep(wait_time)
 
         self._last_request_time = time.time()
         self._total_requests += 1
@@ -448,7 +448,7 @@ class AdaptiveRateLimiter:
         """
         import asyncio
 
-        awAlgot asyncio.sleep(seconds)
+        await asyncio.sleep(seconds)
 
     def record_success(self) -> None:
         """Фиксирует успешный запрос."""

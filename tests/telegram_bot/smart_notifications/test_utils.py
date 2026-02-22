@@ -90,7 +90,7 @@ class TestGetMarketDataForItems:
         item_ids = ["item_001", "item_002"]
 
         # Act
-        result = awAlgot get_market_data_for_items(mock_api, item_ids, "csgo")
+        result = await get_market_data_for_items(mock_api, item_ids, "csgo")
 
         # Assert
         assert "item_001" in result
@@ -105,7 +105,7 @@ class TestGetMarketDataForItems:
         item_ids = []
 
         # Act
-        result = awAlgot get_market_data_for_items(mock_api, item_ids, "csgo")
+        result = await get_market_data_for_items(mock_api, item_ids, "csgo")
 
         # Assert
         assert result == {}
@@ -119,7 +119,7 @@ class TestGetMarketDataForItems:
         item_ids = ["item_001"]
 
         # Act
-        result = awAlgot get_market_data_for_items(mock_api, item_ids, "csgo")
+        result = await get_market_data_for_items(mock_api, item_ids, "csgo")
 
         # Assert
         assert result == {}  # Returns empty dict on error
@@ -132,7 +132,7 @@ class TestGetMarketDataForItems:
         item_ids = ["item_001"]
 
         # Act
-        result = awAlgot get_market_data_for_items(mock_api, item_ids, "csgo")
+        result = await get_market_data_for_items(mock_api, item_ids, "csgo")
 
         # Assert
         assert result == {}
@@ -145,7 +145,7 @@ class TestGetMarketDataForItems:
         item_ids = ["item_001"]
 
         # Act
-        result = awAlgot get_market_data_for_items(mock_api, item_ids, "csgo")
+        result = await get_market_data_for_items(mock_api, item_ids, "csgo")
 
         # Assert
         assert result == {}
@@ -160,7 +160,7 @@ class TestGetMarketDataForItems:
 
         # Act
         with patch("asyncio.sleep", new_callable=AsyncMock):
-            awAlgot get_market_data_for_items(mock_api, item_ids, "csgo")
+            await get_market_data_for_items(mock_api, item_ids, "csgo")
 
         # Assert
         assert mock_api._request.call_count == 2  # Two batches
@@ -173,7 +173,7 @@ class TestGetMarketDataForItems:
         item_ids = ["item_001", "item_002"]
 
         # Act
-        awAlgot get_market_data_for_items(mock_api, item_ids, "dota2")
+        await get_market_data_for_items(mock_api, item_ids, "dota2")
 
         # Assert
         mock_api._request.assert_called_once()
@@ -198,7 +198,7 @@ class TestGetMarketDataForItems:
         item_ids = ["item_001"]
 
         # Act
-        result = awAlgot get_market_data_for_items(mock_api, item_ids, "csgo")
+        result = await get_market_data_for_items(mock_api, item_ids, "csgo")
 
         # Assert
         assert len(result) == 1
@@ -222,7 +222,7 @@ class TestGetItemById:
         }
 
         # Act
-        result = awAlgot get_item_by_id(mock_api, "item_001", "csgo")
+        result = await get_item_by_id(mock_api, "item_001", "csgo")
 
         # Assert
         assert result is not None
@@ -236,7 +236,7 @@ class TestGetItemById:
         mock_api._request.return_value = {"items": []}
 
         # Act
-        result = awAlgot get_item_by_id(mock_api, "nonexistent", "csgo")
+        result = await get_item_by_id(mock_api, "nonexistent", "csgo")
 
         # Assert
         assert result is None
@@ -248,7 +248,7 @@ class TestGetItemById:
         mock_api._request.side_effect = APIError("API Error")
 
         # Act
-        result = awAlgot get_item_by_id(mock_api, "item_001", "csgo")
+        result = await get_item_by_id(mock_api, "item_001", "csgo")
 
         # Assert
         assert result is None
@@ -260,7 +260,7 @@ class TestGetItemById:
         mock_api._request.side_effect = NetworkError("Network Error")
 
         # Act
-        result = awAlgot get_item_by_id(mock_api, "item_001", "csgo")
+        result = await get_item_by_id(mock_api, "item_001", "csgo")
 
         # Assert
         assert result is None
@@ -272,7 +272,7 @@ class TestGetItemById:
         mock_api._request.side_effect = RuntimeError("Unexpected")
 
         # Act
-        result = awAlgot get_item_by_id(mock_api, "item_001", "csgo")
+        result = await get_item_by_id(mock_api, "item_001", "csgo")
 
         # Assert
         assert result is None
@@ -284,7 +284,7 @@ class TestGetItemById:
         mock_api._request.return_value = {"items": []}
 
         # Act
-        awAlgot get_item_by_id(mock_api, "item_123", "dota2")
+        await get_item_by_id(mock_api, "item_123", "dota2")
 
         # Assert
         mock_api._request.assert_called_once()
@@ -310,7 +310,7 @@ class TestGetMarketItemsForGame:
         mock_api._request.return_value = sample_market_items
 
         # Act
-        result = awAlgot get_market_items_for_game(mock_api, "csgo")
+        result = await get_market_items_for_game(mock_api, "csgo")
 
         # Assert
         assert len(result) == 3
@@ -323,7 +323,7 @@ class TestGetMarketItemsForGame:
         mock_api._request.side_effect = APIError("API Error")
 
         # Act
-        result = awAlgot get_market_items_for_game(mock_api, "csgo")
+        result = await get_market_items_for_game(mock_api, "csgo")
 
         # Assert
         assert result == []
@@ -335,7 +335,7 @@ class TestGetMarketItemsForGame:
         mock_api._request.side_effect = NetworkError("Network Error")
 
         # Act
-        result = awAlgot get_market_items_for_game(mock_api, "csgo")
+        result = await get_market_items_for_game(mock_api, "csgo")
 
         # Assert
         assert result == []
@@ -347,7 +347,7 @@ class TestGetMarketItemsForGame:
         mock_api._request.side_effect = Exception("Unexpected")
 
         # Act
-        result = awAlgot get_market_items_for_game(mock_api, "csgo")
+        result = await get_market_items_for_game(mock_api, "csgo")
 
         # Assert
         assert result == []
@@ -359,7 +359,7 @@ class TestGetMarketItemsForGame:
         mock_api._request.return_value = sample_market_items
 
         # Act
-        awAlgot get_market_items_for_game(mock_api, "csgo")
+        await get_market_items_for_game(mock_api, "csgo")
 
         # Assert
         call_args = mock_api._request.call_args
@@ -373,7 +373,7 @@ class TestGetMarketItemsForGame:
         mock_api._request.return_value = sample_market_items
 
         # Act
-        awAlgot get_market_items_for_game(mock_api, "csgo", limit=50)
+        await get_market_items_for_game(mock_api, "csgo", limit=50)
 
         # Assert
         call_args = mock_api._request.call_args
@@ -387,7 +387,7 @@ class TestGetMarketItemsForGame:
         mock_api._request.return_value = sample_market_items
 
         # Act
-        awAlgot get_market_items_for_game(mock_api, "dota2", limit=25)
+        await get_market_items_for_game(mock_api, "dota2", limit=25)
 
         # Assert
         call_args = mock_api._request.call_args
@@ -417,7 +417,7 @@ class TestGetPriceHistoryForItems:
 
         # Act
         with patch("asyncio.sleep", new_callable=AsyncMock):
-            result = awAlgot get_price_history_for_items(mock_api, item_ids, "csgo")
+            result = await get_price_history_for_items(mock_api, item_ids, "csgo")
 
         # Assert
         assert "item_001" in result
@@ -432,7 +432,7 @@ class TestGetPriceHistoryForItems:
 
         # Act
         with patch("asyncio.sleep", new_callable=AsyncMock):
-            result = awAlgot get_price_history_for_items(mock_api, item_ids, "csgo")
+            result = await get_price_history_for_items(mock_api, item_ids, "csgo")
 
         # Assert
         assert "item_001" in result
@@ -448,7 +448,7 @@ class TestGetPriceHistoryForItems:
 
         # Act
         with patch("asyncio.sleep", new_callable=AsyncMock):
-            result = awAlgot get_price_history_for_items(mock_api, item_ids, "csgo")
+            result = await get_price_history_for_items(mock_api, item_ids, "csgo")
 
         # Assert
         assert "item_001" not in result
@@ -461,7 +461,7 @@ class TestGetPriceHistoryForItems:
         item_ids = ["item_001"]
 
         # Act
-        result = awAlgot get_price_history_for_items(mock_api, item_ids, "csgo")
+        result = await get_price_history_for_items(mock_api, item_ids, "csgo")
 
         # Assert
         assert result == {}
@@ -474,7 +474,7 @@ class TestGetPriceHistoryForItems:
         item_ids = ["item_001"]
 
         # Act
-        result = awAlgot get_price_history_for_items(mock_api, item_ids, "csgo")
+        result = await get_price_history_for_items(mock_api, item_ids, "csgo")
 
         # Assert
         assert result == {}
@@ -487,7 +487,7 @@ class TestGetPriceHistoryForItems:
         item_ids = ["item_001"]
 
         # Act
-        result = awAlgot get_price_history_for_items(mock_api, item_ids, "csgo")
+        result = await get_price_history_for_items(mock_api, item_ids, "csgo")
 
         # Assert
         assert result == {}
@@ -501,7 +501,7 @@ class TestGetPriceHistoryForItems:
 
         # Act
         with patch("asyncio.sleep", new_callable=AsyncMock):
-            awAlgot get_price_history_for_items(mock_api, item_ids, "dota2")
+            await get_price_history_for_items(mock_api, item_ids, "dota2")
 
         # Assert
         call_args = mock_api._request.call_args
@@ -520,7 +520,7 @@ class TestGetPriceHistoryForItems:
         item_ids = []
 
         # Act
-        result = awAlgot get_price_history_for_items(mock_api, item_ids, "csgo")
+        result = await get_price_history_for_items(mock_api, item_ids, "csgo")
 
         # Assert
         assert result == {}

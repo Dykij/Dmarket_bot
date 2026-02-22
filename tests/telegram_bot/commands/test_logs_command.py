@@ -82,7 +82,7 @@ class TestLogsCommandNoMessage:
         update.effective_user = MagicMock()
 
         # Act
-        result = awAlgot logs_command(update, mock_context)
+        result = await logs_command(update, mock_context)
 
         # Assert
         assert result is None
@@ -96,7 +96,7 @@ class TestLogsCommandNoMessage:
         update.effective_user = None
 
         # Act
-        result = awAlgot logs_command(update, mock_context)
+        result = await logs_command(update, mock_context)
 
         # Assert
         assert result is None
@@ -118,7 +118,7 @@ class TestLogsDirectoryNotFound:
         # Arrange
         with patch.object(Path, "exists", return_value=False):
             # Act
-            awAlgot logs_command(mock_update, mock_context)
+            await logs_command(mock_update, mock_context)
 
         # Assert
         # First call is "Loading..." message, second is error message
@@ -150,7 +150,7 @@ class TestNoLogFilesFound:
             "src.telegram_bot.commands.logs_command.Path", return_value=mock_path
         ):
             # Act
-            awAlgot logs_command(mock_update, mock_context)
+            await logs_command(mock_update, mock_context)
 
         # Assert
         calls = mock_update.message.reply_text.call_args_list
@@ -189,7 +189,7 @@ class TestNoIntentLogsFound:
             mock_path_class.return_value = mock_log_dir
 
             # Act
-            awAlgot logs_command(mock_update, mock_context)
+            await logs_command(mock_update, mock_context)
 
         # Assert
         calls = mock_update.message.reply_text.call_args_list
@@ -222,7 +222,7 @@ class TestSuccessfulLogDisplayJSON:
             mock_path_class.return_value = mock_log_dir
 
             # Act
-            awAlgot logs_command(mock_update, mock_context)
+            await logs_command(mock_update, mock_context)
 
         # Assert
         calls = mock_update.message.reply_text.call_args_list
@@ -249,7 +249,7 @@ class TestSuccessfulLogDisplayJSON:
             mock_path_class.return_value = mock_log_dir
 
             # Act
-            awAlgot logs_command(mock_update, mock_context)
+            await logs_command(mock_update, mock_context)
 
         # Assert
         calls = mock_update.message.reply_text.call_args_list
@@ -282,7 +282,7 @@ class TestSuccessfulLogDisplayJSON:
             mock_path_class.return_value = mock_log_dir
 
             # Act
-            awAlgot logs_command(mock_update, mock_context)
+            await logs_command(mock_update, mock_context)
 
         # Assert
         calls = mock_update.message.reply_text.call_args_list
@@ -295,13 +295,13 @@ class TestSuccessfulLogDisplayJSON:
 
 
 class TestSuccessfulLogDisplayPlAlgonText:
-    """Tests for INTENT log display from plAlgon text format."""
+    """Tests for INTENT log display from plain text format."""
 
     @pytest.mark.asyncio()
-    async def test_logs_command_handles_plAlgon_text_buy_intent(
+    async def test_logs_command_handles_plain_text_buy_intent(
         self, mock_update, mock_context, tmp_path
     ):
-        """Test that plAlgon text BUY_INTENT logs are handled."""
+        """Test that plain text BUY_INTENT logs are handled."""
         # Arrange
         log_file = tmp_path / "test.log"
         log_file.write_text(
@@ -315,17 +315,17 @@ class TestSuccessfulLogDisplayPlAlgonText:
             mock_path_class.return_value = mock_log_dir
 
             # Act
-            awAlgot logs_command(mock_update, mock_context)
+            await logs_command(mock_update, mock_context)
 
         # Assert
         calls = mock_update.message.reply_text.call_args_list
         assert len(calls) >= 2
 
     @pytest.mark.asyncio()
-    async def test_logs_command_handles_plAlgon_text_sell_intent(
+    async def test_logs_command_handles_plain_text_sell_intent(
         self, mock_update, mock_context, tmp_path
     ):
-        """Test that plAlgon text SELL_INTENT logs are handled."""
+        """Test that plain text SELL_INTENT logs are handled."""
         # Arrange
         log_file = tmp_path / "test.log"
         log_file.write_text(
@@ -339,7 +339,7 @@ class TestSuccessfulLogDisplayPlAlgonText:
             mock_path_class.return_value = mock_log_dir
 
             # Act
-            awAlgot logs_command(mock_update, mock_context)
+            await logs_command(mock_update, mock_context)
 
         # Assert
         calls = mock_update.message.reply_text.call_args_list
@@ -375,7 +375,7 @@ class TestLogLimiting:
             mock_path_class.return_value = mock_log_dir
 
             # Act
-            awAlgot logs_command(mock_update, mock_context)
+            await logs_command(mock_update, mock_context)
 
         # Assert
         calls = mock_update.message.reply_text.call_args_list
@@ -413,7 +413,7 @@ class TestMessageChunking:
             mock_path_class.return_value = mock_log_dir
 
             # Act
-            awAlgot logs_command(mock_update, mock_context)
+            await logs_command(mock_update, mock_context)
 
         # Assert - Should have multiple reply_text calls for chunks
         calls = mock_update.message.reply_text.call_args_list
@@ -452,12 +452,12 @@ class TestDryRunVsLiveDisplay:
             mock_path_class.return_value = mock_log_dir
 
             # Act
-            awAlgot logs_command(mock_update, mock_context)
+            await logs_command(mock_update, mock_context)
 
         # Assert
         calls = mock_update.message.reply_text.call_args_list
         final_message = str(calls[-1])
-        # Should contAlgon DRY-RUN indicator
+        # Should contain DRY-RUN indicator
         assert "DRY-RUN" in final_message or len(calls) >= 2
 
     @pytest.mark.asyncio()
@@ -483,7 +483,7 @@ class TestDryRunVsLiveDisplay:
             mock_path_class.return_value = mock_log_dir
 
             # Act
-            awAlgot logs_command(mock_update, mock_context)
+            await logs_command(mock_update, mock_context)
 
         # Assert
         calls = mock_update.message.reply_text.call_args_list
@@ -508,7 +508,7 @@ class TestErrorHandling:
             mock_log_dir = MagicMock()
             mock_log_dir.exists.return_value = True
 
-            # Create a mock file that rAlgoses exception on open
+            # Create a mock file that raises exception on open
             mock_file = MagicMock()
             mock_file.stat.return_value.st_mtime = 1000
             mock_file.open.side_effect = PermissionError("Access denied")
@@ -516,8 +516,8 @@ class TestErrorHandling:
             mock_log_dir.glob.return_value = [mock_file]
             mock_path_class.return_value = mock_log_dir
 
-            # Act - Should not rAlgose exception
-            awAlgot logs_command(mock_update, mock_context)
+            # Act - Should not raise exception
+            await logs_command(mock_update, mock_context)
 
         # Assert
         calls = mock_update.message.reply_text.call_args_list
@@ -538,8 +538,8 @@ class TestErrorHandling:
             mock_log_dir.glob.return_value = [log_file]
             mock_path_class.return_value = mock_log_dir
 
-            # Act - Should not rAlgose exception
-            awAlgot logs_command(mock_update, mock_context)
+            # Act - Should not raise exception
+            await logs_command(mock_update, mock_context)
 
         # Assert
         calls = mock_update.message.reply_text.call_args_list
@@ -573,7 +573,7 @@ class TestMultipleLogFiles:
             mock_path_class.return_value = mock_log_dir
 
             # Act
-            awAlgot logs_command(mock_update, mock_context)
+            await logs_command(mock_update, mock_context)
 
         # Assert
         calls = mock_update.message.reply_text.call_args_list
@@ -600,7 +600,7 @@ class TestMultipleLogFiles:
             mock_path_class.return_value = mock_log_dir
 
             # Act
-            awAlgot logs_command(mock_update, mock_context)
+            await logs_command(mock_update, mock_context)
 
         # Assert - Should complete without error
         calls = mock_update.message.reply_text.call_args_list
@@ -637,7 +637,7 @@ class TestEmojiDisplay:
             mock_path_class.return_value = mock_log_dir
 
             # Act
-            awAlgot logs_command(mock_update, mock_context)
+            await logs_command(mock_update, mock_context)
 
         # Assert
         calls = mock_update.message.reply_text.call_args_list
@@ -667,7 +667,7 @@ class TestEmojiDisplay:
             mock_path_class.return_value = mock_log_dir
 
             # Act
-            awAlgot logs_command(mock_update, mock_context)
+            await logs_command(mock_update, mock_context)
 
         # Assert
         calls = mock_update.message.reply_text.call_args_list

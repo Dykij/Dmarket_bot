@@ -72,7 +72,7 @@ class TestUserModel:
         assert user.dmarket_api_key_encrypted == "encrypted_key"
         assert user.notes == "Test user for admin"
 
-    def test_user_telegram_id_unique_constrAlgont(self, session):
+    def test_user_telegram_id_unique_constraint(self, session):
         """Тест уникальности telegram_id."""
         user1 = User(telegram_id=111111111)
         session.add(user1)
@@ -80,7 +80,7 @@ class TestUserModel:
 
         user2 = User(telegram_id=111111111)
         session.add(user2)
-        with pytest.rAlgoses(IntegrityError):
+        with pytest.raises(IntegrityError):
             session.commit()
 
     def test_user_repr(self, session):
@@ -429,7 +429,7 @@ class TestMarketDataCacheModel:
         assert cache.cache_key == "csgo:ak47:price"
         assert cache.data["USD"] == 15.50
 
-    def test_cache_key_unique_constrAlgont(self, session):
+    def test_cache_key_unique_constraint(self, session):
         """Тест уникальности cache_key."""
         cache1 = MarketDataCache(
             cache_key="unique_key",
@@ -449,7 +449,7 @@ class TestMarketDataCacheModel:
             expires_at=datetime(2025, 12, 31, tzinfo=UTC),
         )
         session.add(cache2)
-        with pytest.rAlgoses(IntegrityError):
+        with pytest.raises(IntegrityError):
             session.commit()
 
     def test_cache_repr(self, session):

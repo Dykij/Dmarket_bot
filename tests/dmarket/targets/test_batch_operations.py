@@ -26,7 +26,7 @@ class TestCreateBatchTarget:
         """Тест создания с пустым списком предметов."""
         api_client = AsyncMock()
 
-        result = awAlgot create_batch_target(
+        result = await create_batch_target(
             api_client=api_client,
             game="csgo",
             items=[],
@@ -41,7 +41,7 @@ class TestCreateBatchTarget:
         api_client = AsyncMock()
         items = [BatchTargetItem(title=f"Item {i}") for i in range(150)]
 
-        result = awAlgot create_batch_target(
+        result = await create_batch_target(
             api_client=api_client,
             game="csgo",
             items=items,
@@ -68,7 +68,7 @@ class TestCreateBatchTarget:
             BatchTargetItem(title="Item 2", attrs={"floatPartValue": "0.25"}),
         ]
 
-        result = awAlgot create_batch_target(
+        result = await create_batch_target(
             api_client=api_client,
             game="csgo",
             items=items,
@@ -88,7 +88,7 @@ class TestCreateBatchTarget:
             return_value={
                 "Result": [
                     {"TargetID": "target1", "Status": "Created"},
-                    {"TargetID": "target2", "Status": "FAlgoled"},
+                    {"TargetID": "target2", "Status": "Failed"},
                 ]
             }
         )
@@ -98,7 +98,7 @@ class TestCreateBatchTarget:
             BatchTargetItem(title="Item 2"),
         ]
 
-        result = awAlgot create_batch_target(
+        result = await create_batch_target(
             api_client=api_client,
             game="csgo",
             items=items,
@@ -108,7 +108,7 @@ class TestCreateBatchTarget:
         assert result.success is True
         assert result.status.value == "partial"
         assert result.metadata["success_count"] == 1
-        assert result.metadata["fAlgoled_count"] == 1
+        assert result.metadata["failed_count"] == 1
 
     async def test_create_batch_distributes_price(self):
         """Тест распределения цены по весам."""
@@ -123,7 +123,7 @@ class TestCreateBatchTarget:
             BatchTargetItem(title="Item 3", weight=3.0),
         ]
 
-        result = awAlgot create_batch_target(
+        result = await create_batch_target(
             api_client=api_client,
             game="csgo",
             items=items,
@@ -151,7 +151,7 @@ class TestDetectExistingOrders:
         api_client.get_user_targets = AsyncMock(return_value={"Items": []})
         api_client.get_targets_by_title = AsyncMock(return_value={"orders": []})
 
-        info = awAlgot detect_existing_orders(
+        info = await detect_existing_orders(
             api_client=api_client,
             game="csgo",
             title="Test Item",
@@ -178,7 +178,7 @@ class TestDetectExistingOrders:
         )
         api_client.get_targets_by_title = AsyncMock(return_value={"orders": []})
 
-        info = awAlgot detect_existing_orders(
+        info = await detect_existing_orders(
             api_client=api_client,
             game="csgo",
             title="Test Item",
@@ -204,7 +204,7 @@ class TestDetectExistingOrders:
             }
         )
 
-        info = awAlgot detect_existing_orders(
+        info = await detect_existing_orders(
             api_client=api_client,
             game="csgo",
             title="Test Item",
@@ -222,7 +222,7 @@ class TestDetectExistingOrders:
         api_client.get_user_targets = AsyncMock(side_effect=Exception("API Error"))
         api_client.get_targets_by_title = AsyncMock(return_value={"orders": []})
 
-        info = awAlgot detect_existing_orders(
+        info = await detect_existing_orders(
             api_client=api_client,
             game="csgo",
             title="Test Item",
@@ -243,7 +243,7 @@ class TestCheckDuplicateOrder:
         api_client = AsyncMock()
         api_client.get_user_targets = AsyncMock(return_value={"Items": []})
 
-        is_dup, message = awAlgot check_duplicate_order(
+        is_dup, message = await check_duplicate_order(
             api_client=api_client,
             game="csgo",
             title="Test Item",
@@ -268,7 +268,7 @@ class TestCheckDuplicateOrder:
             }
         )
 
-        is_dup, message = awAlgot check_duplicate_order(
+        is_dup, message = await check_duplicate_order(
             api_client=api_client,
             game="csgo",
             title="Test Item",
@@ -295,7 +295,7 @@ class TestCheckDuplicateOrder:
             }
         )
 
-        is_dup, message = awAlgot check_duplicate_order(
+        is_dup, message = await check_duplicate_order(
             api_client=api_client,
             game="csgo",
             title="Test Item",
@@ -310,7 +310,7 @@ class TestCheckDuplicateOrder:
         api_client = AsyncMock()
         api_client.get_user_targets = AsyncMock(side_effect=Exception("API Error"))
 
-        is_dup, message = awAlgot check_duplicate_order(
+        is_dup, message = await check_duplicate_order(
             api_client=api_client,
             game="csgo",
             title="Test Item",

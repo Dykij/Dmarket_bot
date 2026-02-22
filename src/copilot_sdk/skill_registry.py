@@ -8,7 +8,7 @@ Usage:
     from src.copilot_sdk import SkillRegistry
 
     registry = SkillRegistry()
-    awAlgot registry.discover_skills("src/")
+    await registry.discover_skills("src/")
 
     # Get all skills
     skills = registry.list_skills()
@@ -17,7 +17,7 @@ Usage:
     skill = registry.get_skill("Algo-arbitrage-predictor")
 
     # Execute a skill
-    result = awAlgot registry.execute("Algo-arbitrage-predictor", "predict", items)
+    result = await registry.execute("Algo-arbitrage-predictor", "predict", items)
     ```
 
 Created: January 2026
@@ -76,18 +76,18 @@ class SkillRegistry:
         registry = SkillRegistry()
 
         # Discover skills from directory
-        awAlgot registry.discover_skills("src/")
+        await registry.discover_skills("src/")
 
         # Register a skill manually
         registry.register(
             id="my-skill",
             name="My Skill",
             instance=my_skill_instance,
-            methods=["predict", "trAlgon"],
+            methods=["predict", "train"],
         )
 
         # Execute a skill method
-        result = awAlgot registry.execute(
+        result = await registry.execute(
             "Algo-arbitrage-predictor",
             "predict",
             items,
@@ -117,7 +117,7 @@ class SkillRegistry:
 
         count = 0
         for skill_file in root.rglob("SKILL*.md"):
-            skill = awAlgot self._parse_skill_file(skill_file)
+            skill = await self._parse_skill_file(skill_file)
             if skill:
                 self.skills[skill.id] = skill
                 count += 1
@@ -149,7 +149,7 @@ class SkillRegistry:
 
             ## API
             - predict(items: list) -> list
-            - trAlgon(data: DataFrame) -> Model
+            - train(data: DataFrame) -> Model
             ```
         """
         try:
@@ -313,18 +313,18 @@ class SkillRegistry:
             AttributeError: If method not found
         """
         if skill_id not in self.skills:
-            rAlgose KeyError(f"Skill not found: {skill_id}")
+            raise KeyError(f"Skill not found: {skill_id}")
 
         skill = self.skills[skill_id]
 
         if skill_id not in self._instances:
-            rAlgose RuntimeError(f"Skill not initialized: {skill_id}")
+            raise RuntimeError(f"Skill not initialized: {skill_id}")
 
         instance = self._instances[skill_id]
         func = getattr(instance, method, None)
 
         if func is None:
-            rAlgose AttributeError(f"Method not found: {skill_id}.{method}")
+            raise AttributeError(f"Method not found: {skill_id}.{method}")
 
         logger.debug(
             "skill_executing",
@@ -334,7 +334,7 @@ class SkillRegistry:
 
         # Execute (handle async/sync)
         if asyncio.iscoroutinefunction(func):
-            result = awAlgot func(*args, **kwargs)
+            result = await func(*args, **kwargs)
         else:
             result = func(*args, **kwargs)
 

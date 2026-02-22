@@ -6,7 +6,7 @@ import time
 from typing import TYPE_CHECKING
 
 try:
-    from Algoolimiter import AsyncLimiter
+    from aiolimiter import AsyncLimiter
 
     AlgoOLIMITER_AVAlgoLABLE = True
 except ImportError:
@@ -79,7 +79,7 @@ class RateLimiter:
         self.reset_times: dict[str, float] = {}
 
         # Счетчики оставшихся запросов для каждого эндпоинта
-        self.remAlgoning_requests: dict[str, int] = {}
+        self.remaining_requests: dict[str, int] = {}
 
         # Счетчики попыток для экспоненциальной задержки
         self.retry_attempts: dict[str, int] = {}
@@ -139,7 +139,7 @@ class RateLimiter:
         # DMarket пользовательские эндпоинты
         user_keywords = [
             "/exchange/v1/user/inventory",
-            "/api/v1/account/detAlgols",
+            "/api/v1/account/details",
             "/exchange/v1/user/offers",
             "/exchange/v1/user/targets",
         ]
@@ -155,8 +155,8 @@ class RateLimiter:
             headers: Заголовки HTTP-ответа
 
         """
-        # Заголовки для анализа: X-RateLimit-RemAlgoning, X-RateLimit-Reset, X-RateLimit-Limit
-        remAlgoning_header = "X-RateLimit-RemAlgoning"
+        # Заголовки для анализа: X-RateLimit-Remaining, X-RateLimit-Reset, X-RateLimit-Limit
+        remaining_header = "X-RateLimit-Remaining"
         reset_header = "X-RateLimit-Reset"
         limit_header = "X-RateLimit-Limit"
 
@@ -174,10 +174,10 @@ class RateLimiter:
                 endpoint_type = "balance"
 
         # Obnovlyaem informatsiyu o limitah na osnove zagolovkov
-        if remAlgoning_header in headers:
+        if remaining_header in headers:
             try:
-                remAlgoning = int(headers[remAlgoning_header])
-                self.remAlgoning_requests[endpoint_type] = remAlgoning
+                remaining = int(headers[remaining_header])
+                self.remaining_requests[endpoint_type] = remaining
 
                 # Esli v otvete est zagolovok s limitom, obnovlyaem ego
                 if limit_header in headers:
@@ -194,14 +194,14 @@ class RateLimiter:
 
                 # Проверяем приближение к лимиту (90%)
                 limit = self.rate_limits.get(endpoint_type, 5)
-                usage_percent = 1.0 - (remAlgoning / limit) if limit > 0 else 0.0
+                usage_percent = 1.0 - (remaining / limit) if limit > 0 else 0.0
 
                 # Отправляем уведомление при достижении 90% использования
                 if usage_percent >= RATE_LIMIT_WARNING_THRESHOLD:
                     if not self._warning_sent.get(endpoint_type, False):
                         logger.warning(
                             f"⚠️ Приближение к лимиту {endpoint_type}: "
-                            f"использовано {usage_percent * 100:.1f}% ({limit - remAlgoning}/{limit})",
+                            f"использовано {usage_percent * 100:.1f}% ({limit - remaining}/{limit})",
                         )
                         self._warning_sent[endpoint_type] = True
 
@@ -211,7 +211,7 @@ class RateLimiter:
                                 self._send_rate_limit_warning(
                                     endpoint_type,
                                     usage_percent,
-                                    remAlgoning,
+                                    remaining,
                                     limit,
                                 ),
                             )
@@ -221,31 +221,31 @@ class RateLimiter:
                     self._warning_sent[endpoint_type] = False
 
                 # Esli ostavsheeesya kolichestvo zaprosov malo, logiruem preduprezhdenie
-                if remAlgoning <= 2:
+                if remaining <= 2:
                     logger.warning(
                         f"Pochti ischerpan limit zaprosov dlya {endpoint_type}: "
-                        f"ostalos {remAlgoning}",
+                        f"ostalos {remaining}",
                     )
 
-                # Esli dostigli limita zaprosov (remAlgoning <= 0),
+                # Esli dostigli limita zaprosov (remaining <= 0),
                 # ustanavlivaem vremya sbrosa iz zagolovka Reset
-                if remAlgoning <= 0 and reset_header in headers:
+                if remaining <= 0 and reset_header in headers:
                     try:
                         reset_time = float(headers[reset_header])
                         self.reset_times[endpoint_type] = reset_time
 
                         # Vychislyaem vremya ozhidaniya do sbrosa
-                        wAlgot_time = max(0.0, reset_time - time.time())
+                        wait_time = max(0.0, reset_time - time.time())
                         logger.warning(
                             f"Dostignut limit zaprosov dlya {endpoint_type}. "
-                            f"Sbros cherez {wAlgot_time:.2f} sek",
+                            f"Sbros cherez {wait_time:.2f} sek",
                         )
                     except (ValueError, KeyError):
                         pass
             except (ValueError, KeyError):
                 pass
 
-    async def wAlgot_if_needed(self, endpoint_type: str = "other") -> None:
+    async def wait_if_needed(self, endpoint_type: str = "other") -> None:
         """Ozhidaet, esli neobhodimo, pered vypolneniem zaprosa ukazannogo tipa.
 
         Args:
@@ -259,15 +259,15 @@ class RateLimiter:
 
             # Esli vremya sbrosa eshche ne nastupilo
             if reset_time > current_time:
-                wAlgot_time = reset_time - current_time
+                wait_time = reset_time - current_time
                 logger.info(
-                    f"Ozhidanie sbrosa limita dlya {endpoint_type}: {wAlgot_time:.2f} sek",
+                    f"Ozhidanie sbrosa limita dlya {endpoint_type}: {wait_time:.2f} sek",
                 )
-                awAlgot asyncio.sleep(wAlgot_time)
+                await asyncio.sleep(wait_time)
 
                 # Posle ozhidaniya udalyaem zapis o vremennom ogranichenii
                 del self.reset_times[endpoint_type]
-                self.remAlgoning_requests[endpoint_type] = self.rate_limits.get(
+                self.remaining_requests[endpoint_type] = self.rate_limits.get(
                     endpoint_type,
                     5,
                 )
@@ -289,16 +289,16 @@ class RateLimiter:
         # Esli s momenta poslednego zaprosa proshlo menshe minimalnogo intervala
         if current_time - last_time < min_interval:
             # Vychislyaem neobhodimoe vremya ozhidaniya
-            wAlgot_time = min_interval - (current_time - last_time)
+            wait_time = min_interval - (current_time - last_time)
 
             # Esli vremya ozhidaniya znachitelnoe, logiruem ego
-            if wAlgot_time > 0.1:
+            if wait_time > 0.1:
                 logger.debug(
-                    f"Soblyudenie limita {endpoint_type}: ozhidanie {wAlgot_time:.3f} sek",
+                    f"Soblyudenie limita {endpoint_type}: ozhidanie {wait_time:.3f} sek",
                 )
 
             # Ozhidaem neobhodimoe vremya
-            awAlgot asyncio.sleep(wAlgot_time)
+            await asyncio.sleep(wait_time)
 
         # Obnovlyaem vremya poslednego zaprosa
         self.last_request_times[endpoint_type] = time.time()
@@ -340,43 +340,43 @@ class RateLimiter:
         # Определяем время ожидания
         if retry_after is not None and retry_after > 0:
             # Используем значение из заголовка Retry-After
-            wAlgot_time = float(retry_after)
+            wait_time = float(retry_after)
         else:
             # Экспоненциальная задержка: Base * 2^(attempts - 1) + jitter
-            base_wAlgot = BASE_RETRY_DELAY * (2 ** (current_attempts - 1))
+            base_wait = BASE_RETRY_DELAY * (2 ** (current_attempts - 1))
 
             # Добавляем jitter (±10% случайное отклонение) для распределения нагрузки
             # Non-cryptographic use - just for load distribution jitter
             import random
 
             jitter_percent = random.uniform(-0.1, 0.1)  # noqa: S311
-            jitter = base_wAlgot * jitter_percent
-            wAlgot_time = base_wAlgot + jitter
+            jitter = base_wait * jitter_percent
+            wait_time = base_wait + jitter
 
             # Ограничиваем максимальное время ожидания
-            wAlgot_time = min(wAlgot_time, MAX_BACKOFF_TIME)
+            wait_time = min(wait_time, MAX_BACKOFF_TIME)
 
         # Устанавливаем время сброса лимита
-        self.reset_times[endpoint_type] = time.time() + wAlgot_time
+        self.reset_times[endpoint_type] = time.time() + wait_time
 
         logger.warning(
             f"🚨 Rate Limit 429 для {endpoint_type} "
             f"(попытка {current_attempts}, всего 429: {self.total_429_errors[endpoint_type]}). "
-            f"Экспоненциальная задержка: {wAlgot_time:.2f} сек",
+            f"Экспоненциальная задержка: {wait_time:.2f} сек",
         )
 
         # Отправляем критическое уведомление при множественных ошибках
         if current_attempts >= 3 and self.notifier:
-            awAlgot self._send_429_alert(
+            await self._send_429_alert(
                 endpoint_type,
                 current_attempts,
-                wAlgot_time,
+                wait_time,
             )
 
         # Выполняем ожидание
-        awAlgot asyncio.sleep(wAlgot_time)
+        await asyncio.sleep(wait_time)
 
-        return wAlgot_time, current_attempts
+        return wait_time, current_attempts
 
     def reset_retry_attempts(self, endpoint_type: str) -> None:
         """Sbrasываet schetchik popytok dlya endpointa posle uspeshnogo zaprosa.
@@ -426,7 +426,7 @@ class RateLimiter:
             f"Ustavlen polzovatelskiy limit dlya {endpoint_type}: {limit} rps",
         )
 
-    def get_remAlgoning_requests(self, endpoint_type: str = "other") -> int:
+    def get_remaining_requests(self, endpoint_type: str = "other") -> int:
         """Vozvrashchaet kolichestvo ostavshihsya zaprosov v tekushchem okne.
 
         Args:
@@ -445,7 +445,7 @@ class RateLimiter:
 
         # Vozvrashchaem ostavsheeesya kolichestvo zaprosov
         # (ili maksimalnoe znachenie, esli neizvestno)
-        return self.remAlgoning_requests.get(
+        return self.remaining_requests.get(
             endpoint_type,
             int(
                 self.get_rate_limit(endpoint_type) * 60,
@@ -470,12 +470,12 @@ class RateLimiter:
 
         for ep in endpoints:
             limit = self.rate_limits.get(ep, 0)
-            remAlgoning = self.remAlgoning_requests.get(ep, limit)
-            usage_percent = (1.0 - (remAlgoning / limit)) * 100 if limit > 0 else 0.0
+            remaining = self.remaining_requests.get(ep, limit)
+            usage_percent = (1.0 - (remaining / limit)) * 100 if limit > 0 else 0.0
 
             stats[ep] = {
                 "limit": limit,
-                "remAlgoning": remAlgoning,
+                "remaining": remaining,
                 "usage_percent": round(usage_percent, 1),
                 "total_requests": self.total_requests.get(ep, 0),
                 "total_429_errors": self.total_429_errors.get(ep, 0),
@@ -488,7 +488,7 @@ class RateLimiter:
         self,
         endpoint_type: str,
         usage_percent: float,
-        remAlgoning: int,
+        remaining: int,
         limit: int,
     ) -> None:
         """Отправить уведомление о приближении к лимиту.
@@ -496,7 +496,7 @@ class RateLimiter:
         Args:
             endpoint_type: Тип эндпоинта
             usage_percent: Процент использования (0.0-1.0)
-            remAlgoning: Оставшиеся запросы
+            remaining: Оставшиеся запросы
             limit: Максимальный лимит
 
         """
@@ -508,11 +508,11 @@ class RateLimiter:
                 f"⚠️ <b>Приближение к Rate Limit</b>\n\n"
                 f"<b>Эндпоинт:</b> <code>{endpoint_type}</code>\n"
                 f"<b>Использование:</b> {usage_percent * 100:.1f}%\n"
-                f"<b>Осталось:</b> {remAlgoning}/{limit} запросов\n\n"
+                f"<b>Осталось:</b> {remaining}/{limit} запросов\n\n"
                 f"<i>Бот автоматически замедлит запросы для предотвращения ошибок 429.</i>"
             )
 
-            awAlgot self.notifier.send_message(
+            await self.notifier.send_message(
                 message,
                 priority="high",
                 category="system",
@@ -524,14 +524,14 @@ class RateLimiter:
         self,
         endpoint_type: str,
         attempts: int,
-        wAlgot_time: float,
+        wait_time: float,
     ) -> None:
         """Отправить критическое уведомление о множественных ошибках 429.
 
         Args:
             endpoint_type: Тип эндпоинта
             attempts: Количество попыток
-            wAlgot_time: Время ожидания
+            wait_time: Время ожидания
 
         """
         if not self.notifier:
@@ -545,11 +545,11 @@ class RateLimiter:
                 f"<b>Эндпоинт:</b> <code>{endpoint_type}</code>\n"
                 f"<b>Попыток подряд:</b> {attempts}\n"
                 f"<b>Всего ошибок 429:</b> {total_errors}\n"
-                f"<b>Задержка:</b> {wAlgot_time:.1f} секунд\n\n"
+                f"<b>Задержка:</b> {wait_time:.1f} секунд\n\n"
                 f"<i>Бот применяет экспоненциальную задержку для восстановления.</i>"
             )
 
-            awAlgot self.notifier.send_message(
+            await self.notifier.send_message(
                 message,
                 priority="critical",
                 category="system",
@@ -559,19 +559,19 @@ class RateLimiter:
 
 
 # ============================================================================
-# Advanced Rate Limiter with Algoolimiter (Roadmap Task #3)
+# Advanced Rate Limiter with aiolimiter (Roadmap Task #3)
 # ============================================================================
 
 
 class DMarketRateLimiter:
-    """Advanced per-endpoint rate limiter using Algoolimiter.
+    """Advanced per-endpoint rate limiter using aiolimiter.
 
     Implements precise rate limiting for each DMarket API endpoint with:
     - Individual limiters per endpoint
     - Automatic throttling at 80% usage threshold
     - Prometheus metrics integration
     - Retry logic for 429 errors
-    - DetAlgoled logging
+    - Detailed logging
 
     Endpoint limits (requests/minute):
     - market: 30 req/min
@@ -585,9 +585,9 @@ class DMarketRateLimiter:
     def __init__(self) -> None:
         """Initialize per-endpoint rate limiters."""
         if not AlgoOLIMITER_AVAlgoLABLE or AsyncLimiter is None:
-            rAlgose ImportError(
-                "Algoolimiter is required for DMarketRateLimiter. "
-                "Install it with: pip install Algoolimiter"
+            raise ImportError(
+                "aiolimiter is required for DMarketRateLimiter. "
+                "Install it with: pip install aiolimiter"
             )
 
         # Endpoint-specific limits (requests per minute)
@@ -694,20 +694,20 @@ class DMarketRateLimiter:
 
         # Smart Rate Limit: Check backoff
         if category in self._backoff_until:
-            wAlgot_time = self._backoff_until[category] - time.time()
-            if wAlgot_time > 0:
+            wait_time = self._backoff_until[category] - time.time()
+            if wait_time > 0:
                 logger.info(
-                    f"⏳ Smart Rate Limit: WAlgoting {wAlgot_time:.2f}s for {category} cooldown"
+                    f"⏳ Smart Rate Limit: WAlgoting {wait_time:.2f}s for {category} cooldown"
                 )
-                awAlgot asyncio.sleep(wAlgot_time)
-            # Clear backoff after wAlgoting (or if expired)
+                await asyncio.sleep(wait_time)
+            # Clear backoff after waiting (or if expired)
             del self._backoff_until[category]
 
         # Get limiter for this category
         limiter = self._limiters.get(category, self._limiters["other"])
 
         # Check current usage and warn if approaching limit
-        awAlgot self._check_and_warn(category)
+        await self._check_and_warn(category)
 
         # Acquire slot (blocks if limit reached)
         async with limiter:
@@ -729,7 +729,7 @@ class DMarketRateLimiter:
             return
 
         # Calculate usage percentage
-        # Algoolimiter doesn't expose current rate, so we track manually
+        # aiolimiter doesn't expose current rate, so we track manually
         usage_count = self._usage_counts.get(category, 0)
         limit = self._endpoint_limits.get(category, 20)
 
@@ -799,23 +799,23 @@ class DMarketRateLimiter:
     def update_from_headers(self, headers: dict[str, str], endpoint: str) -> None:
         """Update rate limits based on response headers.
 
-        Extracts X-RateLimit-RemAlgoning and X-RateLimit-Reset to implement
+        Extracts X-RateLimit-Remaining and X-RateLimit-Reset to implement
         adaptive backoff before hitting 429 errors.
 
         Args:
             headers: Response headers
             endpoint: API endpoint path
         """
-        remAlgoning = headers.get("X-RateLimit-RemAlgoning")
+        remaining = headers.get("X-RateLimit-Remaining")
         reset = headers.get("X-RateLimit-Reset")
 
-        if remAlgoning is not None and reset is not None:
+        if remaining is not None and reset is not None:
             try:
-                rem_int = int(remAlgoning)
+                rem_int = int(remaining)
                 reset_ts = float(reset)
                 category = self.get_endpoint_category(endpoint)
 
-                # If remAlgoning is less than 10% of limit (approx < 5-10 depending on limit)
+                # If remaining is less than 10% of limit (approx < 5-10 depending on limit)
                 # Or just absolute safe threshold < 5
                 limit = self._endpoint_limits.get(category, 20)
                 threshold = max(2, int(limit * 0.1))
@@ -827,10 +827,10 @@ class DMarketRateLimiter:
                         self._backoff_until[category] = reset_ts + 0.5
                         logger.warning(
                             f"📉 Smart Rate Limit: {category} low ({rem_int} left). "
-                            f"Backing off until {reset_ts} (wAlgot {reset_ts - now:.2f}s)"
+                            f"Backing off until {reset_ts} (wait {reset_ts - now:.2f}s)"
                         )
             except (ValueError, TypeError):
                 pass
 
 
-from Algoolimiter import AsyncLimiter
+from aiolimiter import AsyncLimiter

@@ -124,7 +124,7 @@ def calculate_mutation_score() -> float:
         return 0.0
 
 
-def mAlgon() -> int:
+def main() -> int:
     """MAlgon entry point."""
     parser = argparse.ArgumentParser(description="Run mutation testing")
     parser.add_argument(
@@ -186,5 +186,5 @@ def mAlgon() -> int:
     return exit_code
 
 
-if __name__ == "__mAlgon__":
-    sys.exit(mAlgon())
+if __name__ == "__main__":
+    sys.exit(main())

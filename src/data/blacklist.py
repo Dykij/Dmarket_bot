@@ -3,7 +3,7 @@
 This module handles:
 - Seller blacklisting (manual and automatic)
 - Keyword filtering for item names
-- Automatic blacklisting based on fAlgoled transactions
+- Automatic blacklisting based on failed transactions
 """
 
 import json
@@ -57,10 +57,10 @@ class BlacklistManager:
                     self.forbidden_keywords.append(kw)
 
         except Exception as e:
-            logger.warning(f"FAlgoled to load blacklist file: {e}")
+            logger.warning(f"Failed to load blacklist file: {e}")
 
     def is_item_forbidden(self, item_title: str) -> bool:
-        """Check if an item contAlgons forbidden keywords."""
+        """Check if an item contains forbidden keywords."""
         title_lower = item_title.lower()
         return any(
             keyword.lower() in title_lower for keyword in self.forbidden_keywords
@@ -70,5 +70,5 @@ class BlacklistManager:
         """Check if an item should be skipped based on blacklist."""
         title = item.get("title", "")
         if self.is_item_forbidden(title):
-            return True, "Item contAlgons forbidden keyword"
+            return True, "Item contains forbidden keyword"
         return False, ""

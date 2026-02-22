@@ -59,5 +59,5 @@ class TestGauntlet(unittest.TestCase):
             self.assertIn("ERROR_SIMULATED", content)
         print("PASS: Archivist error report generated")
 
-if __name__ == '__mAlgon__':
-    unittest.mAlgon(verbosity=2)
+if __name__ == '__main__':
+    unittest.main(verbosity=2)

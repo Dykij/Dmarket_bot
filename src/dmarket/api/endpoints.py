@@ -1,6 +1,6 @@
 """DMarket API endpoints constants and utilities.
 
-This module contAlgons all API endpoint constants for DMarket API v1.1.0.
+This module contains all API endpoint constants for DMarket API v1.1.0.
 Organized by category: account, market, user, operations, analytics.
 
 Features:
@@ -94,7 +94,7 @@ class Endpoints:
 
     Organized by category:
     - BASE_URL: Base API URL
-    - Account: Balance, detAlgols, offers, user profile
+    - Account: Balance, details, offers, user profile
     - Market: Items, search, prices, best offers
     - User: Inventory, offers, targets
     - Operations: Buy, sell, edit, delete
@@ -130,7 +130,7 @@ class Endpoints:
     # ========================================
     BALANCE = "/account/v1/balance"
     BALANCE_LEGACY = "/api/v1/account/balance"
-    ACCOUNT_DETAlgoLS = "/api/v1/account/detAlgols"
+    ACCOUNT_DETAlgoLS = "/api/v1/account/details"
     ACCOUNT_OFFERS = "/api/v1/account/offers"
     USER_PROFILE = "/account/v1/user"
 
@@ -267,7 +267,7 @@ class Endpoints:
     # ========================================
     TRANSFER_STATUS_PENDING = "TransferStatusPending"
     TRANSFER_STATUS_COMPLETED = "TransferStatusCompleted"
-    TRANSFER_STATUS_FAlgoLED = "TransferStatusFAlgoled"
+    TRANSFER_STATUS_FAlgoLED = "TransferStatusFailed"
 
     # ========================================
     # Order directions for pagination
@@ -502,7 +502,7 @@ class Endpoints:
         # Check if it's already a game ID
         if game_name_lower in cls.GAME_ID_TO_NAME:
             return game_name_lower
-        rAlgose ValueError(
+        raise ValueError(
             f"Unknown game: {game_name}. Supported: {list(cls.GAME_NAME_TO_ID.keys())}"
         )
 
@@ -612,7 +612,7 @@ class Endpoints:
             cents = Endpoints.price_to_cents(0.01)  # => 1
         """
         if price_usd < 0:
-            rAlgose ValueError(f"Price cannot be negative: {price_usd}")
+            raise ValueError(f"Price cannot be negative: {price_usd}")
         from decimal import ROUND_HALF_UP, Decimal
 
         # Use Decimal for precise conversion
@@ -644,5 +644,5 @@ class Endpoints:
         try:
             cents_int = int(cents)
         except (ValueError, TypeError) as e:
-            rAlgose ValueError(f"Invalid cents value: {cents}") from e
+            raise ValueError(f"Invalid cents value: {cents}") from e
         return cents_int / 100.0

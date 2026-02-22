@@ -45,7 +45,7 @@ class TestWaxpeerHandler:
         """Test /waxpeer command handler."""
         with patch("src.telegram_bot.handlers.waxpeer_handler.waxpeer_menu_handler") as mock_menu:
             mock_menu.return_value = None
-            awAlgot waxpeer_command(mock_update, mock_context)
+            await waxpeer_command(mock_update, mock_context)
             mock_menu.assert_called_once()
 
     @pytest.mark.asyncio
@@ -56,7 +56,7 @@ class TestWaxpeerHandler:
             mock_config.waxpeer.enabled = False
             mock_config_class.load.return_value = mock_config
 
-            awAlgot waxpeer_scan_command(mock_update, mock_context)
+            await waxpeer_scan_command(mock_update, mock_context)
 
             mock_update.message.reply_text.assert_called_once()
             call_args = mock_update.message.reply_text.call_args
@@ -72,7 +72,7 @@ class TestWaxpeerHandler:
             mock_config.waxpeer.enabled = True
             mock_config_class.load.return_value = mock_config
 
-            awAlgot waxpeer_scan_command(mock_update, mock_context)
+            await waxpeer_scan_command(mock_update, mock_context)
 
             mock_update.message.reply_text.assert_called_once()
             call_args = mock_update.message.reply_text.call_args
@@ -87,7 +87,7 @@ class TestWaxpeerHandler:
             mock_config.waxpeer.api_key = None
             mock_config_class.load.return_value = mock_config
 
-            awAlgot waxpeer_scan_command(mock_update, mock_context)
+            await waxpeer_scan_command(mock_update, mock_context)
 
             mock_update.message.reply_text.assert_called_once()
             call_args = mock_update.message.reply_text.call_args
@@ -102,7 +102,7 @@ class TestWaxpeerHandler:
             mock_config.waxpeer.api_key = "test_key"
             mock_config_class.load.return_value = mock_config
 
-            awAlgot waxpeer_scan_command(mock_update, mock_context)
+            await waxpeer_scan_command(mock_update, mock_context)
 
             mock_update.message.reply_text.assert_called()
             # Should show scanning message
@@ -114,7 +114,7 @@ class TestWaxpeerHandler:
         """Test scan with no message."""
         mock_update.message = None
 
-        awAlgot waxpeer_scan_command(mock_update, mock_context)
+        await waxpeer_scan_command(mock_update, mock_context)
 
         # Should return early without error
 

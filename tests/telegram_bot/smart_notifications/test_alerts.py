@@ -93,7 +93,7 @@ class TestCreateAlert:
         prefs_module._user_preferences.update(sample_user_preferences)
 
         with patch(f"{ALERTS_MODULE}.save_user_preferences"):
-            alert_id = awAlgot create_alert(
+            alert_id = await create_alert(
                 user_id=12345,
                 alert_type="price_alert",
                 item_id="item_abc",
@@ -114,7 +114,7 @@ class TestCreateAlert:
         )
 
         with patch(f"{ALERTS_MODULE}.save_user_preferences"):
-            alert_id = awAlgot create_alert(
+            alert_id = await create_alert(
                 user_id=99999,
                 alert_type="price_alert",
             )
@@ -136,7 +136,7 @@ class TestCreateAlert:
         prefs_module._user_preferences.update(sample_user_preferences)
 
         with patch(f"{ALERTS_MODULE}.save_user_preferences"):
-            alert_id = awAlgot create_alert(
+            alert_id = await create_alert(
                 user_id=12345,
                 alert_type="trend_alert",
                 item_id="item_xyz",
@@ -170,7 +170,7 @@ class TestCreateAlert:
         prefs_module._user_preferences.update(sample_user_preferences)
 
         with patch(f"{ALERTS_MODULE}.save_user_preferences"):
-            awAlgot create_alert(
+            await create_alert(
                 user_id=12345,
                 alert_type="price_alert",
             )
@@ -194,9 +194,9 @@ class TestCreateAlert:
         prefs_module._user_preferences.update(sample_user_preferences)
 
         with patch(f"{ALERTS_MODULE}.save_user_preferences"):
-            alert_id1 = awAlgot create_alert(user_id=12345, alert_type="price_alert")
-            alert_id2 = awAlgot create_alert(user_id=12345, alert_type="trend_alert")
-            alert_id3 = awAlgot create_alert(user_id=12345, alert_type="market_alert")
+            alert_id1 = await create_alert(user_id=12345, alert_type="price_alert")
+            alert_id2 = await create_alert(user_id=12345, alert_type="trend_alert")
+            alert_id3 = await create_alert(user_id=12345, alert_type="market_alert")
 
         alerts = get_active_alerts()
         assert len(alerts["12345"]) == 3
@@ -221,7 +221,7 @@ class TestDeactivateAlert:
         prefs_module._active_alerts.update(sample_alerts)
 
         with patch(f"{ALERTS_MODULE}.save_user_preferences"):
-            result = awAlgot deactivate_alert(12345, "alert_123")
+            result = await deactivate_alert(12345, "alert_123")
 
         assert result is True
         alerts = get_active_alerts()
@@ -235,7 +235,7 @@ class TestDeactivateAlert:
 
         prefs_module._active_alerts.update(sample_alerts)
 
-        result = awAlgot deactivate_alert(12345, "nonexistent_alert")
+        result = await deactivate_alert(12345, "nonexistent_alert")
 
         assert result is False
 
@@ -244,7 +244,7 @@ class TestDeactivateAlert:
         """Test deactivating alert for a non-existent user."""
         from src.telegram_bot.smart_notifications.alerts import deactivate_alert
 
-        result = awAlgot deactivate_alert(99999, "alert_123")
+        result = await deactivate_alert(99999, "alert_123")
 
         assert result is False
 
@@ -265,7 +265,7 @@ class TestDeactivateAlert:
         prefs_module._active_alerts.update(multiple_alerts)
 
         with patch(f"{ALERTS_MODULE}.save_user_preferences"):
-            result = awAlgot deactivate_alert(12345, "alert_2")
+            result = await deactivate_alert(12345, "alert_2")
 
         assert result is True
         alerts = get_active_alerts()
@@ -290,7 +290,7 @@ class TestGetUserAlerts:
 
         prefs_module._active_alerts.update(sample_alerts)
 
-        alerts = awAlgot get_user_alerts(12345)
+        alerts = await get_user_alerts(12345)
 
         assert len(alerts) == 1
         assert alerts[0]["id"] == "alert_123"
@@ -300,7 +300,7 @@ class TestGetUserAlerts:
         """Test getting alerts for user with no alerts."""
         from src.telegram_bot.smart_notifications.alerts import get_user_alerts
 
-        alerts = awAlgot get_user_alerts(99999)
+        alerts = await get_user_alerts(99999)
 
         assert alerts == []
 
@@ -319,7 +319,7 @@ class TestGetUserAlerts:
         }
         prefs_module._active_alerts.update(mixed_alerts)
 
-        alerts = awAlgot get_user_alerts(12345)
+        alerts = await get_user_alerts(12345)
 
         assert len(alerts) == 2
         assert all(a["active"] for a in alerts)
@@ -349,7 +349,7 @@ class TestAlertEdgeCases:
         alert_ids = set()
         with patch(f"{ALERTS_MODULE}.save_user_preferences"):
             for _ in range(100):
-                alert_id = awAlgot create_alert(user_id=12345, alert_type="price_alert")
+                alert_id = await create_alert(user_id=12345, alert_type="price_alert")
                 alert_ids.add(alert_id)
 
         # All 100 IDs should be unique
@@ -369,7 +369,7 @@ class TestAlertEdgeCases:
         special_name = "★ Karambit | 虎紋 ★ (Factory New) 🔥"
 
         with patch(f"{ALERTS_MODULE}.save_user_preferences"):
-            awAlgot create_alert(
+            await create_alert(
                 user_id=12345,
                 alert_type="price_alert",
                 item_name=special_name,
@@ -390,7 +390,7 @@ class TestAlertEdgeCases:
         before = datetime.now().timestamp()
 
         with patch(f"{ALERTS_MODULE}.save_user_preferences"):
-            awAlgot create_alert(user_id=12345, alert_type="price_alert")
+            await create_alert(user_id=12345, alert_type="price_alert")
 
         after = datetime.now().timestamp()
 
@@ -409,7 +409,7 @@ class TestAlertEdgeCases:
         prefs_module._user_preferences.update(sample_user_preferences)
 
         with patch(f"{ALERTS_MODULE}.save_user_preferences"):
-            awAlgot create_alert(user_id=12345, alert_type="price_alert")
+            await create_alert(user_id=12345, alert_type="price_alert")
 
         alerts = get_active_alerts()
         created_alert = alerts["12345"][0]

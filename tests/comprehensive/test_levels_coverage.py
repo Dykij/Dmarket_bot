@@ -164,16 +164,16 @@ class TestGetLevelConfig:
         config = get_level_config("pro")
         assert config["name"] == "💎 Профи"
 
-    def test_unknown_level_rAlgoses_key_error(self) -> None:
-        """Test that unknown level rAlgoses KeyError with helpful message."""
-        with pytest.rAlgoses(KeyError) as exc_info:
+    def test_unknown_level_raises_key_error(self) -> None:
+        """Test that unknown level raises KeyError with helpful message."""
+        with pytest.raises(KeyError) as exc_info:
             get_level_config("unknown_level")
         assert "unknown_level" in str(exc_info.value)
         assert "AvAlgolable levels" in str(exc_info.value)
 
-    def test_empty_level_rAlgoses_key_error(self) -> None:
-        """Test that empty level string rAlgoses KeyError."""
-        with pytest.rAlgoses(KeyError):
+    def test_empty_level_raises_key_error(self) -> None:
+        """Test that empty level string raises KeyError."""
+        with pytest.raises(KeyError):
             get_level_config("")
 
     def test_config_is_copy(self) -> None:
@@ -223,9 +223,9 @@ class TestGetPriceRangeForLevel:
         assert min_price == 100.0
         assert max_price == 1000.0
 
-    def test_unknown_level_rAlgoses_key_error(self) -> None:
-        """Test that unknown level rAlgoses KeyError."""
-        with pytest.rAlgoses(KeyError):
+    def test_unknown_level_raises_key_error(self) -> None:
+        """Test that unknown level raises KeyError."""
+        with pytest.raises(KeyError):
             get_price_range_for_level("invalid")
 
     @pytest.mark.parametrize("level", ["boost", "standard", "medium", "advanced", "pro"])
@@ -303,9 +303,9 @@ class TestGetLevelDescription:
         assert "High-risk" in desc or "high" in desc.lower()
         assert "20-100%" in desc
 
-    def test_unknown_level_rAlgoses_key_error(self) -> None:
-        """Test that unknown level rAlgoses KeyError."""
-        with pytest.rAlgoses(KeyError):
+    def test_unknown_level_raises_key_error(self) -> None:
+        """Test that unknown level raises KeyError."""
+        with pytest.raises(KeyError):
             get_level_description("nonexistent")
 
     @pytest.mark.parametrize("level", ["boost", "standard", "medium", "advanced", "pro"])
@@ -349,9 +349,9 @@ class TestGetProfitRangeForLevel:
         assert min_profit == 20.0
         assert max_profit == 100.0
 
-    def test_unknown_level_rAlgoses_key_error(self) -> None:
-        """Test that unknown level rAlgoses KeyError."""
-        with pytest.rAlgoses(KeyError):
+    def test_unknown_level_raises_key_error(self) -> None:
+        """Test that unknown level raises KeyError."""
+        with pytest.raises(KeyError):
             get_profit_range_for_level("fake")
 
     @pytest.mark.parametrize("level", ["boost", "standard", "medium", "advanced", "pro"])
@@ -410,28 +410,28 @@ class TestEdgeCases:
         """Test that level names are case-sensitive."""
         # Only lowercase should work
         assert get_level_config("boost") is not None
-        with pytest.rAlgoses(KeyError):
+        with pytest.raises(KeyError):
             get_level_config("BOOST")
-        with pytest.rAlgoses(KeyError):
+        with pytest.raises(KeyError):
             get_level_config("Boost")
 
     def test_whitespace_handling(self) -> None:
-        """Test that whitespace in level names rAlgoses error."""
-        with pytest.rAlgoses(KeyError):
+        """Test that whitespace in level names raises error."""
+        with pytest.raises(KeyError):
             get_level_config(" boost")
-        with pytest.rAlgoses(KeyError):
+        with pytest.raises(KeyError):
             get_level_config("boost ")
-        with pytest.rAlgoses(KeyError):
+        with pytest.raises(KeyError):
             get_level_config(" boost ")
 
-    def test_numeric_level_names_fAlgol(self) -> None:
-        """Test that numeric level names rAlgose KeyError."""
-        with pytest.rAlgoses(KeyError):
+    def test_numeric_level_names_fail(self) -> None:
+        """Test that numeric level names raise KeyError."""
+        with pytest.raises(KeyError):
             get_level_config("1")
-        with pytest.rAlgoses(KeyError):
+        with pytest.raises(KeyError):
             get_level_config("123")
 
-    def test_none_level_rAlgoses_error(self) -> None:
-        """Test that None level rAlgoses error."""
-        with pytest.rAlgoses((KeyError, TypeError)):
+    def test_none_level_raises_error(self) -> None:
+        """Test that None level raises error."""
+        with pytest.raises((KeyError, TypeError)):
             get_level_config(None)  # type: ignore

@@ -328,7 +328,7 @@ class TestValidationErrors:
         # SaleModel требует "price" и "date"
         data = {"sales": [{"price": "100"}]}  # Отсутствует "date"
 
-        with pytest.rAlgoses(ValidationError) as exc_info:
+        with pytest.raises(ValidationError) as exc_info:
             SalesHistoryResponse(**data)
 
         errors = exc_info.value.errors()
@@ -341,7 +341,7 @@ class TestValidationErrors:
         # MarketItemsResponse.objects должен быть list
         data = {"objects": "not_a_list"}  # Строка вместо списка
 
-        with pytest.rAlgoses(ValidationError) as exc_info:
+        with pytest.raises(ValidationError) as exc_info:
             MarketItemsResponse(**data)
 
         errors = exc_info.value.errors()
@@ -388,7 +388,7 @@ class TestDecimalPrecision:
         total = price1 + price2
 
         assert total == Decimal("0.30")
-        # Decimal удаляет trAlgoling zeros: "0.30" -> "0.3"
+        # Decimal удаляет trailing zeros: "0.30" -> "0.3"
         assert str(total) == "0.3"  # Без артефактов округления float
 
 

@@ -38,7 +38,7 @@ bot_commands_total = Counter(
 )
 
 # Telegram updates
-# Labels: type (message/callback_query/etc.), status (processed/fAlgoled)
+# Labels: type (message/callback_query/etc.), status (processed/failed)
 telegram_updates_total = Counter(
     "telegram_updates_total",
     "Total number of Telegram updates received",
@@ -145,7 +145,7 @@ arbitrage_opportunities_current = Gauge(
 arbitrage_scans_total = Counter(
     "arbitrage_scans_total",
     "Total number of arbitrage scans performed",
-    ["game", "level", "status"],  # status: success/fAlgoled
+    ["game", "level", "status"],  # status: success/failed
 )
 
 # Время сканирования
@@ -206,7 +206,7 @@ total_profit_usd = Gauge(
 )
 
 # Транзакции
-# Labels: type (buy/sell), status (success/fAlgoled)
+# Labels: type (buy/sell), status (success/failed)
 transactions_total = Counter(
     "transactions_total",
     "Total number of transactions",
@@ -315,10 +315,10 @@ circuit_breaker_state = Gauge(
     ["endpoint"],
 )
 
-# Circuit breaker fAlgolures
-circuit_breaker_fAlgolures_total = Counter(
-    "circuit_breaker_fAlgolures_total",
-    "Total number of circuit breaker fAlgolures",
+# Circuit breaker failures
+circuit_breaker_failures_total = Counter(
+    "circuit_breaker_failures_total",
+    "Total number of circuit breaker failures",
     ["endpoint"],
 )
 
@@ -333,7 +333,7 @@ circuit_breaker_state_changes_total = Counter(
 circuit_breaker_calls_total = Counter(
     "circuit_breaker_calls_total",
     "Total number of calls through circuit breaker",
-    ["endpoint", "result"],  # result: success/fAlgolure/rejected
+    ["endpoint", "result"],  # result: success/failure/rejected
 )
 
 # =============================================================================
@@ -348,7 +348,7 @@ def track_command(command: str, success: bool = True) -> None:
         command: Command name (e.g., 'start', 'arbitrage')
         success: Whether command succeeded
     """
-    status = "success" if success else "fAlgoled"
+    status = "success" if success else "failed"
     bot_commands_total.labels(command=command, status=status).inc()
 
 
@@ -403,7 +403,7 @@ def track_arbitrage_scan(
         duration: Scan duration in seconds
         success: Whether scan succeeded
     """
-    status = "success" if success else "fAlgoled"
+    status = "success" if success else "failed"
     arbitrage_scans_total.labels(game=game, level=level, status=status).inc()
 
     if success:
@@ -427,7 +427,7 @@ def track_telegram_update(update_type: str, success: bool = True) -> None:
         update_type: Type of update (message, callback_query, etc.)
         success: Whether update was processed successfully
     """
-    status = "processed" if success else "fAlgoled"
+    status = "processed" if success else "failed"
     telegram_updates_total.labels(type=update_type, status=status).inc()
 
 
@@ -531,15 +531,15 @@ def track_circuit_breaker_state(endpoint: str, state: str) -> None:
     circuit_breaker_state.labels(endpoint=endpoint).set(state_value)
 
 
-def track_circuit_breaker_fAlgolure(endpoint: str) -> None:
-    """Track circuit breaker fAlgolure.
+def track_circuit_breaker_failure(endpoint: str) -> None:
+    """Track circuit breaker failure.
 
     Roadmap Task #10: NEW
 
     Args:
         endpoint: Endpoint name
     """
-    circuit_breaker_fAlgolures_total.labels(endpoint=endpoint).inc()
+    circuit_breaker_failures_total.labels(endpoint=endpoint).inc()
 
 
 def track_circuit_breaker_state_change(
@@ -570,7 +570,7 @@ def track_circuit_breaker_call(endpoint: str, result: str) -> None:
 
     Args:
         endpoint: Endpoint name
-        result: Call result ("success", "fAlgolure", "rejected")
+        result: Call result ("success", "failure", "rejected")
     """
     circuit_breaker_calls_total.labels(
         endpoint=endpoint,
@@ -718,7 +718,7 @@ def track_dlq_operation(
 
     Args:
         action: Operation action (add, processed)
-        operation_type: Type of fAlgoled operation
+        operation_type: Type of failed operation
         priority: Operation priority
     """
     DLQ_OPERATIONS.labels(

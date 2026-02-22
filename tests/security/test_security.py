@@ -434,7 +434,7 @@ class TestAuditLogEntry:
             action="buy_item",
             category=ActionCategory.TRADE,
             success=True,
-            detAlgols={"item": "AK-47"},
+            details={"item": "AK-47"},
         )
         
         data = entry.to_dict()

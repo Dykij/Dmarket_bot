@@ -208,7 +208,7 @@ class ChangelogGenerator:
         print(f"✅ CHANGELOG saved to {self.output}")
 
 
-def mAlgon():
+def main():
     """Точка входа скрипта."""
     parser = argparse.ArgumentParser(description="Generate CHANGELOG from git commits")
     parser.add_argument(
@@ -238,5 +238,5 @@ def mAlgon():
         generator.save()
 
 
-if __name__ == "__mAlgon__":
-    mAlgon()
+if __name__ == "__main__":
+    main()

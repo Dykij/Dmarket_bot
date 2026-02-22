@@ -110,7 +110,7 @@ def _convert_secret_key(secret_key: str) -> bytes:
             logger.debug("Using HEX format secret key (32 bytes)")
             return result
         except ValueError as e:
-            logger.debug(f"HEX decode fAlgoled: {e}")
+            logger.debug(f"HEX decode failed: {e}")
 
     # Format 2: Base64 format
     if len(secret_key) == 44 or "=" in secret_key:
@@ -119,7 +119,7 @@ def _convert_secret_key(secret_key: str) -> bytes:
             logger.debug(f"Using Base64 format secret key ({len(result)} bytes)")
             return result
         except Exception as e:
-            logger.debug(f"Base64 decode fAlgoled: {e}")
+            logger.debug(f"Base64 decode failed: {e}")
 
     # Format 3: Long HEX - take first 64 chars
     if len(secret_key) >= 64:
@@ -128,7 +128,7 @@ def _convert_secret_key(secret_key: str) -> bytes:
             logger.debug("Using first 32 bytes of long HEX key")
             return result
         except ValueError as e:
-            logger.debug(f"Long HEX decode fAlgoled: {e}")
+            logger.debug(f"Long HEX decode failed: {e}")
 
     # Fallback: encode string to bytes and pad/truncate to 32
     logger.warning("Secret key format unknown, using padded bytes")

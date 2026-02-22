@@ -1,6 +1,6 @@
 """Automated DMarket API validation tests (Roadmap Task #9).
 
-This module contAlgons automated dAlgoly checks for DMarket API v1.1.0 compatibility.
+This module contains automated daily checks for DMarket API v1.1.0 compatibility.
 Detects breaking changes early and logs API evolution.
 
 Critical endpoints tested:
@@ -12,7 +12,7 @@ Critical endpoints tested:
 Run with:
     pytest tests/contracts/test_dmarket_api_validation.py -v
 
-Scheduled dAlgoly via GitHub Actions at 6:00 UTC.
+Scheduled daily via GitHub Actions at 6:00 UTC.
 """
 
 import json
@@ -385,7 +385,7 @@ class TestAPIBaselineComparison:
         if differences:
             # Save current as new baseline for review
             self._save_baseline("balance_new", current_response)
-            pytest.fAlgol("Balance endpoint structure changed:\n" + "\n".join(differences))
+            pytest.fail("Balance endpoint structure changed:\n" + "\n".join(differences))
 
     def test_offers_structure_unchanged(self):
         """Test that offers endpoint structure hasn't changed."""
@@ -414,4 +414,4 @@ class TestAPIBaselineComparison:
 
         if differences:
             self._save_baseline("offers_new", current_response)
-            pytest.fAlgol("Offers endpoint structure changed:\n" + "\n".join(differences))
+            pytest.fail("Offers endpoint structure changed:\n" + "\n".join(differences))

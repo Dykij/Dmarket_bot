@@ -66,7 +66,7 @@ class TestDirectBalanceRequesterInitialization:
 
 
 class TestBalanceRequest:
-    """Test mAlgon balance request functionality."""
+    """Test main balance request functionality."""
 
     @pytest.mark.asyncio()
     async def test_successful_balance_request(
@@ -77,13 +77,13 @@ class TestBalanceRequest:
         mock_response.status_code = 200
         mock_response.json.return_value = sample_balance_response
 
-        awAlgot mock_client_func()
+        await mock_client_func()
 
         with patch(
             "src.dmarket.direct_balance_requester.call_with_circuit_breaker",
             return_value=mock_response,
         ):
-            result = awAlgot requester.request()
+            result = await requester.request()
 
         assert result["success"] is True
         assert "data" in result
@@ -103,7 +103,7 @@ class TestBalanceRequest:
             "src.dmarket.direct_balance_requester.call_with_circuit_breaker",
             return_value=mock_response,
         ):
-            result = awAlgot requester.request()
+            result = await requester.request()
 
         assert result["success"] is False
         assert result["status_code"] == 401
@@ -120,7 +120,7 @@ class TestBalanceRequest:
             "src.dmarket.direct_balance_requester.call_with_circuit_breaker",
             return_value=mock_response,
         ):
-            result = awAlgot requester.request()
+            result = await requester.request()
 
         assert result["success"] is False
         assert result["status_code"] == 500
@@ -138,7 +138,7 @@ class TestBalanceRequest:
             "src.dmarket.direct_balance_requester.call_with_circuit_breaker",
             return_value=mock_response,
         ):
-            result = awAlgot requester.request()
+            result = await requester.request()
 
         assert result["success"] is False
         assert "error" in result
@@ -150,7 +150,7 @@ class TestBalanceRequest:
             "src.dmarket.direct_balance_requester.call_with_circuit_breaker",
             side_effect=Exception("Circuit breaker open"),
         ):
-            result = awAlgot requester.request()
+            result = await requester.request()
 
         assert result["success"] is False
         assert "error" in result
@@ -169,7 +169,7 @@ class TestSignatureGeneration:
         assert signature == "test_sig"
 
     def test_generate_signature_fallback_to_hmac(self, requester):
-        """Test signature falls back to HMAC if Ed25519 fAlgols."""
+        """Test signature falls back to HMAC if Ed25519 fails."""
         timestamp = "1234567890"
 
         with patch.object(
@@ -356,7 +356,7 @@ class TestEdgeCases:
             "src.dmarket.direct_balance_requester.call_with_circuit_breaker",
             return_value=mock_response,
         ):
-            result = awAlgot requester.request()
+            result = await requester.request()
 
         assert result["success"] is False
 

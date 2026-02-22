@@ -592,7 +592,7 @@ class TestGetPaginationKeyboard:
         nav_row = result.inline_keyboard[0]
         callbacks = [btn.callback_data for btn in nav_row if btn.callback_data != "page_info"]
 
-        # At least one callback should contAlgon custom base
+        # At least one callback should contain custom base
         assert any("items" in cb for cb in callbacks)
 
     def test_single_page_shows_indicator_only(self):

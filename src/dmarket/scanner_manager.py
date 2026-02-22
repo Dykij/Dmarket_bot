@@ -5,7 +5,7 @@ This module provides a unified interface for managing:
 - Parallel multi-game scanning
 - Automatic target cleanup
 
-Usage in mAlgon.py:
+Usage in main.py:
     from src.dmarket.scanner_manager import ScannerManager
 
     manager = ScannerManager(
@@ -126,7 +126,7 @@ class ScannerManager:
 
         try:
             # Use arbitrage scanner with tree_filters support
-            results = awAlgot self.scanner.scan_level(
+            results = await self.scanner.scan_level(
                 level=level,
                 game=game,
                 max_results=max_items,
@@ -154,7 +154,7 @@ class ScannerManager:
 
         except Exception as e:
             logger.error(
-                "scan_fAlgoled",
+                "scan_failed",
                 game=game,
                 level=level,
                 error=str(e),
@@ -184,7 +184,7 @@ class ScannerManager:
                 games=games,
                 level=level,
             )
-            return awAlgot self.parallel.scan_multiple_games(
+            return await self.parallel.scan_multiple_games(
                 games=games,
                 level=level,
                 max_items_per_game=max_items_per_game,
@@ -193,7 +193,7 @@ class ScannerManager:
         logger.info("parallel_disabled_using_sequential", games=games)
         results = {}
         for game in games:
-            results[game] = awAlgot self.scan_single_game(
+            results[game] = await self.scan_single_game(
                 game=game,
                 level=level,
                 max_items=max_items_per_game,
@@ -219,7 +219,7 @@ class ScannerManager:
 
         for game in games:
             try:
-                stats = awAlgot self.cleaner.clean_targets(game)
+                stats = await self.cleaner.clean_targets(game)
                 results[game] = stats
                 total_cancelled += stats["cancelled"]
                 total_kept += stats["kept"]
@@ -233,7 +233,7 @@ class ScannerManager:
 
             except Exception as e:
                 logger.error(
-                    "game_cleanup_fAlgoled",
+                    "game_cleanup_failed",
                     game=game,
                     error=str(e),
                     exc_info=True,
@@ -273,7 +273,7 @@ class ScannerManager:
 
         while self._running:
             try:
-                awAlgot self.cleanup_targets(games)
+                await self.cleanup_targets(games)
             except Exception as e:
                 logger.error(
                     "periodic_cleanup_error",
@@ -282,7 +282,7 @@ class ScannerManager:
                 )
 
             # WAlgot for next cycle
-            awAlgot asyncio.sleep(interval_hours * 3600)
+            await asyncio.sleep(interval_hours * 3600)
 
     async def run_continuous(
         self,
@@ -323,11 +323,11 @@ class ScannerManager:
                 # Check if should scan now (adaptive)
                 if self.adaptive:
                     if not self.adaptive.should_scan_now(self._last_scan):
-                        awAlgot asyncio.sleep(10)  # Check agAlgon in 10 seconds
+                        await asyncio.sleep(10)  # Check agAlgon in 10 seconds
                         continue
 
                 # Scan all games (parallel or sequential)
-                results = awAlgot self.scan_multiple_games(
+                results = await self.scan_multiple_games(
                     games=games,
                     level=level,
                     max_items_per_game=10,
@@ -345,14 +345,14 @@ class ScannerManager:
 
                 # WAlgot for next scan (adaptive or fixed)
                 if self.adaptive:
-                    awAlgot self.adaptive.wAlgot_next_scan()
+                    await self.adaptive.wait_next_scan()
                 else:
-                    awAlgot asyncio.sleep(300)  # 5 minutes default
+                    await asyncio.sleep(300)  # 5 minutes default
 
         except asyncio.CancelledError:
             logger.info("continuous_scanning_cancelled")
         finally:
-            awAlgot self.stop()
+            await self.stop()
 
     async def stop(self) -> None:
         """Stop all scanning operations."""
@@ -361,7 +361,7 @@ class ScannerManager:
         if self._cleanup_task:
             self._cleanup_task.cancel()
             try:
-                awAlgot self._cleanup_task
+                await self._cleanup_task
             except asyncio.CancelledError:
                 pass
 
@@ -380,10 +380,10 @@ class ScannerManager:
 
 # Example usage for integration
 async def example_integration():
-    """Example of how to integrate ScannerManager in mAlgon.py."""
+    """Example of how to integrate ScannerManager in main.py."""
     from src.dmarket.dmarket_api import DMarketAPI
 
-    # Initialize API client (in mAlgon.py, this comes from Application class)
+    # Initialize API client (in main.py, this comes from Application class)
     api = DMarketAPI(public_key="...", secret_key="...")
 
     # Create scanner manager
@@ -406,21 +406,21 @@ async def example_integration():
 
     # Option 2: Manual control
     # Single game scan
-    _results = awAlgot manager.scan_single_game(
+    _results = await manager.scan_single_game(
         "csgo", "high", max_items=10
     )  # noqa: F841
 
     # Multi-game parallel scan
-    _all_results = awAlgot manager.scan_multiple_games(  # noqa: F841
+    _all_results = await manager.scan_multiple_games(  # noqa: F841
         games=["csgo", "dota2", "rust"],
         level="medium",
     )
 
     # Manual cleanup
-    _cleanup_stats = awAlgot manager.cleanup_targets(["csgo", "dota2"])  # noqa: F841
+    _cleanup_stats = await manager.cleanup_targets(["csgo", "dota2"])  # noqa: F841
 
     # After testing, disable dry-run mode
     manager.set_cleaner_dry_run(False)
 
     # Cleanup
-    awAlgot manager.stop()
+    await manager.stop()

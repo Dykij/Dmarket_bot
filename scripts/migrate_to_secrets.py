@@ -37,14 +37,14 @@ def add_secret_version(client, secret_id, payload):
     )
     print(f"Added secret version: {response.name}")
 
-def mAlgon():
+def main():
     print(f"Migrating secrets to Google Cloud Project: {PROJECT_ID}")
     
     # Initialize client (uses Application Default Credentials)
     try:
         client = secretmanager.SecretManagerServiceClient()
     except Exception as e:
-        print(f"FAlgoled to initialize Secret Manager client: {e}")
+        print(f"Failed to initialize Secret Manager client: {e}")
         return
 
     # 1. Read Local Key
@@ -65,5 +65,5 @@ def mAlgon():
     
     print("Migration successful. Local file can be archived.")
 
-if __name__ == "__mAlgon__":
-    mAlgon()
+if __name__ == "__main__":
+    main()

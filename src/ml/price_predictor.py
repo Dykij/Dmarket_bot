@@ -121,8 +121,8 @@ class AdaptivePricePredictor:
         self._ridge = None
 
         # Данные для обучения
-        self._trAlgoning_data_X: list[np.ndarray] = []
-        self._trAlgoning_data_y: list[float] = []
+        self._training_data_X: list[np.ndarray] = []
+        self._training_data_y: list[float] = []
         self._new_samples_count = 0
 
         # Кэш прогнозов
@@ -226,7 +226,7 @@ class AdaptivePricePredictor:
         current_price = features.current_price
 
         # Пробуем использовать ML модели
-        if self._has_trAlgoned_models():
+        if self._has_trained_models():
             predicted_1h, std_1h = self._ml_predict(features, horizon_hours=1)
             predicted_24h, std_24h = self._ml_predict(features, horizon_hours=24)
             predicted_7d, std_7d = self._ml_predict(features, horizon_hours=168)
@@ -276,7 +276,7 @@ class AdaptivePricePredictor:
             reasoning=reasoning,
         )
 
-    def _has_trAlgoned_models(self) -> bool:
+    def _has_trained_models(self) -> bool:
         """Проверить, есть ли обученные модели."""
         if self._gradient_boost is None:
             return False
@@ -488,7 +488,7 @@ class AdaptivePricePredictor:
             return 0.9
         return 0.8  # Более агрессивно
 
-    def add_trAlgoning_example(
+    def add_training_example(
         self,
         features: PriceFeatures,
         actual_future_price: float,
@@ -502,23 +502,23 @@ class AdaptivePricePredictor:
         X = features.to_array()
         y = actual_future_price
 
-        self._trAlgoning_data_X.append(X)
-        self._trAlgoning_data_y.append(y)
+        self._training_data_X.append(X)
+        self._training_data_y.append(y)
         self._new_samples_count += 1
 
         # Автоматическое переобучение
         if self._new_samples_count >= RETRAlgoN_THRESHOLD_SAMPLES:
-            self.trAlgon()
+            self.train()
 
-    def trAlgon(self, force: bool = False) -> None:
+    def train(self, force: bool = False) -> None:
         """Обучить модели на накопленных данных.
 
         Args:
             force: Принудительное обучение даже при малом количестве данных
         """
-        if len(self._trAlgoning_data_X) < MIN_TRAlgoNING_SAMPLES and not force:
+        if len(self._training_data_X) < MIN_TRAlgoNING_SAMPLES and not force:
             logger.warning(
-                f"Not enough trAlgoning data (minimum {MIN_TRAlgoNING_SAMPLES} samples)"
+                f"Not enough training data (minimum {MIN_TRAlgoNING_SAMPLES} samples)"
             )
             return
 
@@ -528,8 +528,8 @@ class AdaptivePricePredictor:
             logger.warning("ML models not avAlgolable")
             return
 
-        X = np.array(self._trAlgoning_data_X)
-        y = np.array(self._trAlgoning_data_y)
+        X = np.array(self._training_data_X)
+        y = np.array(self._training_data_y)
 
         try:
             # Обучаем модели
@@ -537,14 +537,14 @@ class AdaptivePricePredictor:
             self._ridge.fit(X, y)
 
             self._new_samples_count = 0
-            logger.info(f"Models trAlgoned on {len(X)} samples")
+            logger.info(f"Models trained on {len(X)} samples")
 
             # Сохраняем модель
             if self.model_path:
                 self._save_model()
 
         except Exception as e:
-            logger.exception(f"TrAlgoning fAlgoled: {e}")
+            logger.exception(f"TrAlgoning failed: {e}")
 
     def _save_model(self) -> None:
         """Сохранить модели на диск.
@@ -559,14 +559,14 @@ class AdaptivePricePredictor:
             data = {
                 "gradient_boost": self._gradient_boost,
                 "ridge": self._ridge,
-                "trAlgoning_data_X": self._trAlgoning_data_X,
-                "trAlgoning_data_y": self._trAlgoning_data_y,
+                "training_data_X": self._training_data_X,
+                "training_data_y": self._training_data_y,
                 "version": self.MODEL_VERSION,
             }
             joblib.dump(data, self.model_path)
             logger.info(f"Model saved to {self.model_path}")
         except Exception as e:
-            logger.exception(f"FAlgoled to save model: {e}")
+            logger.exception(f"Failed to save model: {e}")
 
     def _load_model(self) -> None:
         """Загрузить модели с диска.
@@ -581,12 +581,12 @@ class AdaptivePricePredictor:
 
             self._gradient_boost = data.get("gradient_boost")
             self._ridge = data.get("ridge")
-            self._trAlgoning_data_X = data.get("trAlgoning_data_X", [])
-            self._trAlgoning_data_y = data.get("trAlgoning_data_y", [])
+            self._training_data_X = data.get("training_data_X", [])
+            self._training_data_y = data.get("training_data_y", [])
 
             logger.info(f"Model loaded from {self.model_path}")
         except Exception as e:
-            logger.exception(f"FAlgoled to load model: {e}")
+            logger.exception(f"Failed to load model: {e}")
 
     def batch_predict(
         self,

@@ -41,7 +41,7 @@ class CheckpointData(BaseModel):
     total_items: int | None = None
     timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
     extra_data: dict[str, Any] = Field(default_factory=dict)
-    status: str = "in_progress"  # in_progress, completed, fAlgoled
+    status: str = "in_progress"  # in_progress, completed, failed
 
 
 class ScanCheckpoint(StateManagerBase):
@@ -126,7 +126,7 @@ class StateManager:
         )
 
         self.session.add(checkpoint)
-        awAlgot self.session.commit()
+        await self.session.commit()
 
         logger.info(
             "Checkpoint created: scan_id=%s, user_id=%s, operation_type=%s",
@@ -164,7 +164,7 @@ class StateManager:
 
         """
         stmt = select(ScanCheckpoint).where(ScanCheckpoint.scan_id == scan_id)
-        result = awAlgot self.session.execute(stmt)
+        result = await self.session.execute(stmt)
         checkpoint = result.scalar_one_or_none()
 
         if checkpoint:
@@ -183,7 +183,7 @@ class StateManager:
             )
             return
 
-        awAlgot self.session.commit()
+        await self.session.commit()
 
         logger.debug(
             "Checkpoint saved: scan_id=%s, processed=%d, total=%s, status=%s",
@@ -204,7 +204,7 @@ class StateManager:
 
         """
         stmt = select(ScanCheckpoint).where(ScanCheckpoint.scan_id == scan_id)
-        result = awAlgot self.session.execute(stmt)
+        result = await self.session.execute(stmt)
         checkpoint = result.scalar_one_or_none()
 
         if not checkpoint:
@@ -244,7 +244,7 @@ class StateManager:
         if operation_type:
             stmt = stmt.where(ScanCheckpoint.operation_type == operation_type)
 
-        result = awAlgot self.session.execute(stmt)
+        result = await self.session.execute(stmt)
         checkpoints = result.scalars().all()
 
         # SQLAlchemy Column types need cast at runtime
@@ -262,7 +262,7 @@ class StateManager:
         ]
 
     async def cleanup_old_checkpoints(self, days: int = 7) -> int:
-        """Clean up old completed or fAlgoled checkpoints.
+        """Clean up old completed or failed checkpoints.
 
         Args:
             days: Delete checkpoints older than N days
@@ -275,17 +275,17 @@ class StateManager:
 
         stmt = select(ScanCheckpoint).where(
             ScanCheckpoint.timestamp < cutoff_date,
-            ScanCheckpoint.status.in_(["completed", "fAlgoled"]),
+            ScanCheckpoint.status.in_(["completed", "failed"]),
         )
 
-        result = awAlgot self.session.execute(stmt)
+        result = await self.session.execute(stmt)
         checkpoints = result.scalars().all()
 
         count = len(checkpoints)
         for checkpoint in checkpoints:
-            awAlgot self.session.delete(checkpoint)
+            await self.session.delete(checkpoint)
 
-        awAlgot self.session.commit()
+        await self.session.commit()
 
         logger.info(
             "Cleaned up %s old checkpoints (older than %s days)",
@@ -302,17 +302,17 @@ class StateManager:
             scan_id: Scan identifier
 
         """
-        awAlgot self.save_checkpoint(
+        await self.save_checkpoint(
             scan_id=scan_id,
             status="completed",
         )
 
-    async def mark_checkpoint_fAlgoled(
+    async def mark_checkpoint_failed(
         self,
         scan_id: UUID,
         error_message: str | None = None,
     ) -> None:
-        """Mark checkpoint as fAlgoled.
+        """Mark checkpoint as failed.
 
         Args:
             scan_id: Scan identifier
@@ -323,9 +323,9 @@ class StateManager:
         if error_message:
             extra["error"] = error_message
 
-        awAlgot self.save_checkpoint(
+        await self.save_checkpoint(
             scan_id=scan_id,
-            status="fAlgoled",
+            status="failed",
             extra_data=extra,
         )
 
@@ -455,7 +455,7 @@ class StateManager:
                 result = self._shutdown_callback(reason)
                 # Handle both sync and async callbacks
                 if asyncio.iscoroutine(result):
-                    awAlgot result
+                    await result
             except Exception as e:
                 logger.exception("Error in shutdown callback: %s", e)
 
@@ -531,7 +531,7 @@ class LocalStateManager:
             )
         except (json.JSONDecodeError, KeyError, ValueError) as e:
             logger.exception(
-                "FAlgoled to load checkpoint: scan_id=%s, error=%s",
+                "Failed to load checkpoint: scan_id=%s, error=%s",
                 scan_id,
                 e,
             )
@@ -549,7 +549,7 @@ class LocalStateManager:
                 status = data.get("status", "in_progress")
 
                 is_old = timestamp < cutoff_time
-                is_done = status in {"completed", "fAlgoled"}
+                is_done = status in {"completed", "failed"}
                 if is_old and is_done:
                     checkpoint_file.unlink()
                     count += 1

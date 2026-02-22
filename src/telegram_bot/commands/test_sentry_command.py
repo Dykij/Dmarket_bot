@@ -54,7 +54,7 @@ async def test_sentry_command(
     # Проверка прав доступа
     config = Config.load()
     if not config.debug and user_id not in config.security.admin_users:
-        awAlgot update.message.reply_text(
+        await update.message.reply_text(
             "❌ Эта команда доступна только администраторам в production режиме"
         )
         return
@@ -75,23 +75,23 @@ async def test_sentry_command(
     if context.args and len(context.args) > 0:
         test_type = context.args[0].lower()
 
-    awAlgot update.message.reply_text(f"🧪 Запуск Sentry тестов: {test_type}")
+    await update.message.reply_text(f"🧪 Запуск Sentry тестов: {test_type}")
 
     try:
         if test_type in {"breadcrumbs", "all"}:
-            awAlgot _test_breadcrumbs(update, user_id)
+            await _test_breadcrumbs(update, user_id)
 
         if test_type in {"error", "all"}:
-            awAlgot _test_simple_error(update)
+            await _test_simple_error(update)
 
         if test_type in {"api_error", "all"}:
-            awAlgot _test_api_error(update, user_id)
+            await _test_api_error(update, user_id)
 
         if test_type in {"division", "all"}:
-            awAlgot _test_division_error(update)
+            await _test_division_error(update)
 
         if test_type == "all":
-            awAlgot update.message.reply_text(
+            await update.message.reply_text(
                 "✅ Все тесты Sentry выполнены!\n\n"
                 "Проверьте Sentry dashboard:\n"
                 "https://sentry.io/issues/\n\n"
@@ -99,12 +99,12 @@ async def test_sentry_command(
                 "• telegram: Bot command\n"
                 "• trading: Trading action\n"
                 "• http: API request\n"
-                "• error: Error detAlgols"
+                "• error: Error details"
             )
 
     except Exception as e:
         logger.exception("Error during Sentry test")
-        awAlgot update.message.reply_text(f"❌ Ошибка теста: {e}")
+        await update.message.reply_text(f"❌ Ошибка теста: {e}")
 
 
 async def _test_breadcrumbs(update: Update, user_id: int) -> None:
@@ -136,7 +136,7 @@ async def _test_breadcrumbs(update: Update, user_id: int) -> None:
     # Симуляция задержки API
     import asyncio
 
-    awAlgot asyncio.sleep(0.5)
+    await asyncio.sleep(0.5)
 
     # 3. API breadcrumb - успешный ответ
     add_api_breadcrumb(
@@ -157,7 +157,7 @@ async def _test_breadcrumbs(update: Update, user_id: int) -> None:
     )
 
     if update.message:
-        awAlgot update.message.reply_text("✅ Breadcrumbs тест выполнен")
+        await update.message.reply_text("✅ Breadcrumbs тест выполнен")
 
 
 async def _test_simple_error(update: Update) -> None:
@@ -175,14 +175,14 @@ async def _test_simple_error(update: Update) -> None:
     )
 
     try:
-        rAlgose ValueError("Test error: This is intentional for Sentry testing")
+        raise ValueError("Test error: This is intentional for Sentry testing")
     except ValueError as e:
         # Захват ошибки в Sentry
         sentry_sdk.capture_exception(e)
         logger.exception("Test error captured: %s", e)
 
     if update.message:
-        awAlgot update.message.reply_text("✅ Simple error тест выполнен")
+        await update.message.reply_text("✅ Simple error тест выполнен")
 
 
 async def _test_api_error(update: Update, user_id: int) -> None:
@@ -218,13 +218,13 @@ async def _test_api_error(update: Update, user_id: int) -> None:
     )
 
     try:
-        rAlgose RuntimeError("API Rate Limit: Too many requests (429)")
+        raise RuntimeError("API Rate Limit: Too many requests (429)")
     except RuntimeError as e:
         sentry_sdk.capture_exception(e)
         logger.exception("API error captured: %s", e)
 
     if update.message:
-        awAlgot update.message.reply_text("✅ API error тест выполнен")
+        await update.message.reply_text("✅ API error тест выполнен")
 
 
 async def _test_division_error(update: Update) -> None:
@@ -247,7 +247,7 @@ async def _test_division_error(update: Update) -> None:
         logger.exception("Division error captured: %s", e)
 
     if update.message:
-        awAlgot update.message.reply_text("✅ Division error тест выполнен")
+        await update.message.reply_text("✅ Division error тест выполнен")
 
 
 async def test_sentry_info(
@@ -283,4 +283,4 @@ async def test_sentry_info(
         info_text += "Установите SENTRY_DSN в .env файле:\n"
         info_text += "`SENTRY_DSN=https://your-key@sentry.io/your-project`"
 
-    awAlgot update.message.reply_text(info_text, parse_mode="Markdown")
+    await update.message.reply_text(info_text, parse_mode="Markdown")

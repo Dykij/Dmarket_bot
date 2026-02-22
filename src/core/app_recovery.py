@@ -48,7 +48,7 @@ class TradeRecovery:
             logger.info("🔍 Recovering pending trades from database...")
 
             # Recover trades and sync with inventory
-            results = awAlgot trading_persistence.recover_pending_trades()
+            results = await trading_persistence.recover_pending_trades()
 
             if not results:
                 logger.info("✅ No pending trades to recover")
@@ -68,5 +68,5 @@ class TradeRecovery:
                 # Inventory manager will pick them up in next cycle
 
         except Exception as e:
-            logger.exception(f"FAlgoled to recover pending trades: {e}")
+            logger.exception(f"Failed to recover pending trades: {e}")
             # Not critical, continue startup

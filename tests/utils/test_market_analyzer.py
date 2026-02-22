@@ -141,7 +141,7 @@ class TestMarketAnalyzer:
     async def test_analyze_price_history_uptrend(self, sample_price_history):
         """Test analyzing a price history with upward trend."""
         analyzer = MarketAnalyzer()
-        result = awAlgot analyzer.analyze_price_history(sample_price_history)
+        result = await analyzer.analyze_price_history(sample_price_history)
 
         assert result["trend"] == TREND_UP
         assert result["confidence"] > 0.5
@@ -154,7 +154,7 @@ class TestMarketAnalyzer:
     async def test_analyze_price_history_downtrend(self, downtrend_price_history):
         """Test analyzing a price history with downward trend."""
         analyzer = MarketAnalyzer()
-        result = awAlgot analyzer.analyze_price_history(downtrend_price_history)
+        result = await analyzer.analyze_price_history(downtrend_price_history)
 
         assert result["trend"] == TREND_DOWN
         assert result["confidence"] > 0.5
@@ -164,7 +164,7 @@ class TestMarketAnalyzer:
     async def test_analyze_price_history_volatile(self, volatile_price_history):
         """Test analyzing a price history with volatile pattern."""
         analyzer = MarketAnalyzer()
-        result = awAlgot analyzer.analyze_price_history(volatile_price_history)
+        result = await analyzer.analyze_price_history(volatile_price_history)
 
         assert result["volatility"] != "low"
         assert result["volatility_ratio"] > 0.05
@@ -173,7 +173,7 @@ class TestMarketAnalyzer:
     async def test_analyze_price_history_insufficient_data(self):
         """Test behavior with insufficient data points."""
         analyzer = MarketAnalyzer(min_data_points=10)
-        result = awAlgot analyzer.analyze_price_history(
+        result = await analyzer.analyze_price_history(
             [
                 {"price": 10.0, "timestamp": datetime.now(UTC).timestamp()},
             ],
@@ -242,7 +242,7 @@ class TestMarketOpportunity:
         sample_price_history,
     ):
         """Test market opportunity analysis with upward trend."""
-        result = awAlgot analyze_market_opportunity(
+        result = await analyze_market_opportunity(
             sample_item_data,
             sample_price_history,
             "csgo",
@@ -263,7 +263,7 @@ class TestMarketOpportunity:
         downtrend_price_history,
     ):
         """Test market opportunity analysis with downward trend."""
-        result = awAlgot analyze_market_opportunity(
+        result = await analyze_market_opportunity(
             sample_item_data,
             downtrend_price_history,
             "csgo",
@@ -300,7 +300,7 @@ class TestMarketOpportunity:
             {"price": 17.0, "timestamp": datetime.now(UTC).timestamp()},
         ]
 
-        result = awAlgot analyze_market_opportunity(
+        result = await analyze_market_opportunity(
             sample_item_data,
             fomo_history,
             "csgo",
@@ -324,7 +324,7 @@ class TestMarketOpportunity:
             "test-item-456": sample_price_history,
         }
 
-        results = awAlgot batch_analyze_items(items, price_histories, "csgo")
+        results = await batch_analyze_items(items, price_histories, "csgo")
 
         assert len(results) == 2
         assert results[0]["item_id"] == "test-item-123"

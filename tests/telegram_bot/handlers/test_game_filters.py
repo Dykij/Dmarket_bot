@@ -314,7 +314,7 @@ class TestGameFilterHandlers:
         """Test /filters command handler."""
         from src.telegram_bot.handlers.game_filters.handlers import handle_game_filters
 
-        awAlgot handle_game_filters(mock_update, mock_context)
+        await handle_game_filters(mock_update, mock_context)
 
         mock_update.message.reply_text.assert_called_once()
         call_args = mock_update.message.reply_text.call_args
@@ -328,8 +328,8 @@ class TestGameFilterHandlers:
         update = MagicMock()
         update.message = None
 
-        # Should not rAlgose
-        awAlgot handle_game_filters(update, mock_context)
+        # Should not raise
+        await handle_game_filters(update, mock_context)
 
     @pytest.mark.asyncio()
     async def test_handle_select_game_filter_callback(self, mock_update, mock_context):
@@ -338,7 +338,7 @@ class TestGameFilterHandlers:
             handle_select_game_filter_callback,
         )
 
-        awAlgot handle_select_game_filter_callback(mock_update, mock_context)
+        await handle_select_game_filter_callback(mock_update, mock_context)
 
         mock_update.callback_query.answer.assert_called_once()
         mock_update.callback_query.edit_message_text.assert_called_once()
@@ -353,8 +353,8 @@ class TestGameFilterHandlers:
         update = MagicMock()
         update.callback_query = None
 
-        # Should not rAlgose
-        awAlgot handle_select_game_filter_callback(update, mock_context)
+        # Should not raise
+        await handle_select_game_filter_callback(update, mock_context)
 
     @pytest.mark.asyncio()
     async def test_handle_price_range_callback(self, mock_update, mock_context):
@@ -365,7 +365,7 @@ class TestGameFilterHandlers:
 
         mock_update.callback_query.data = "price_range:csgo"
 
-        awAlgot handle_price_range_callback(mock_update, mock_context)
+        await handle_price_range_callback(mock_update, mock_context)
 
         mock_update.callback_query.answer.assert_called_once()
         mock_update.callback_query.edit_message_text.assert_called_once()
@@ -381,7 +381,7 @@ class TestGameFilterHandlers:
 
         mock_update.callback_query.data = "float_range:csgo"
 
-        awAlgot handle_float_range_callback(mock_update, mock_context)
+        await handle_float_range_callback(mock_update, mock_context)
 
         mock_update.callback_query.edit_message_text.assert_called_once()
         call_args = mock_update.callback_query.edit_message_text.call_args
@@ -398,7 +398,7 @@ class TestGameFilterHandlers:
 
         mock_update.callback_query.data = "float_range:dota2"
 
-        awAlgot handle_float_range_callback(mock_update, mock_context)
+        await handle_float_range_callback(mock_update, mock_context)
 
         call_args = mock_update.callback_query.edit_message_text.call_args
         assert "только для CS2" in call_args.kwargs["text"]
@@ -412,7 +412,7 @@ class TestGameFilterHandlers:
 
         mock_update.callback_query.data = "set_category:csgo"
 
-        awAlgot handle_set_category_callback(mock_update, mock_context)
+        await handle_set_category_callback(mock_update, mock_context)
 
         call_args = mock_update.callback_query.edit_message_text.call_args
         assert "Выбор категории" in call_args.kwargs["text"]
@@ -426,7 +426,7 @@ class TestGameFilterHandlers:
 
         mock_update.callback_query.data = "set_rarity:csgo"
 
-        awAlgot handle_set_rarity_callback(mock_update, mock_context)
+        await handle_set_rarity_callback(mock_update, mock_context)
 
         call_args = mock_update.callback_query.edit_message_text.call_args
         assert "Выбор редкости" in call_args.kwargs["text"]
@@ -440,7 +440,7 @@ class TestGameFilterHandlers:
 
         mock_update.callback_query.data = "set_exterior:csgo"
 
-        awAlgot handle_set_exterior_callback(mock_update, mock_context)
+        await handle_set_exterior_callback(mock_update, mock_context)
 
         call_args = mock_update.callback_query.edit_message_text.call_args
         assert "внешнего вида" in call_args.kwargs["text"]
@@ -456,7 +456,7 @@ class TestGameFilterHandlers:
 
         mock_update.callback_query.data = "set_exterior:dota2"
 
-        awAlgot handle_set_exterior_callback(mock_update, mock_context)
+        await handle_set_exterior_callback(mock_update, mock_context)
 
         call_args = mock_update.callback_query.edit_message_text.call_args
         assert "только для CS2" in call_args.kwargs["text"]
@@ -470,7 +470,7 @@ class TestGameFilterHandlers:
 
         mock_update.callback_query.data = "set_hero:dota2"
 
-        awAlgot handle_set_hero_callback(mock_update, mock_context)
+        await handle_set_hero_callback(mock_update, mock_context)
 
         call_args = mock_update.callback_query.edit_message_text.call_args
         assert "Выбор героя" in call_args.kwargs["text"]
@@ -484,7 +484,7 @@ class TestGameFilterHandlers:
 
         mock_update.callback_query.data = "set_hero:csgo"
 
-        awAlgot handle_set_hero_callback(mock_update, mock_context)
+        await handle_set_hero_callback(mock_update, mock_context)
 
         call_args = mock_update.callback_query.edit_message_text.call_args
         assert "только для Dota 2" in call_args.kwargs["text"]
@@ -498,7 +498,7 @@ class TestGameFilterHandlers:
 
         mock_update.callback_query.data = "set_slot:dota2"
 
-        awAlgot handle_set_slot_callback(mock_update, mock_context)
+        await handle_set_slot_callback(mock_update, mock_context)
 
         call_args = mock_update.callback_query.edit_message_text.call_args
         assert "Выбор слота" in call_args.kwargs["text"]
@@ -512,7 +512,7 @@ class TestGameFilterHandlers:
 
         mock_update.callback_query.data = "set_class:tf2"
 
-        awAlgot handle_set_class_callback(mock_update, mock_context)
+        await handle_set_class_callback(mock_update, mock_context)
 
         call_args = mock_update.callback_query.edit_message_text.call_args
         assert "Выбор класса" in call_args.kwargs["text"]
@@ -526,7 +526,7 @@ class TestGameFilterHandlers:
 
         mock_update.callback_query.data = "set_class:csgo"
 
-        awAlgot handle_set_class_callback(mock_update, mock_context)
+        await handle_set_class_callback(mock_update, mock_context)
 
         call_args = mock_update.callback_query.edit_message_text.call_args
         assert "только для Team Fortress 2" in call_args.kwargs["text"]
@@ -540,7 +540,7 @@ class TestGameFilterHandlers:
 
         mock_update.callback_query.data = "set_type:tf2"
 
-        awAlgot handle_set_type_callback(mock_update, mock_context)
+        await handle_set_type_callback(mock_update, mock_context)
 
         call_args = mock_update.callback_query.edit_message_text.call_args
         assert "Выбор типа" in call_args.kwargs["text"]
@@ -554,7 +554,7 @@ class TestGameFilterHandlers:
 
         mock_update.callback_query.data = "set_quality:tf2"
 
-        awAlgot handle_set_quality_callback(mock_update, mock_context)
+        await handle_set_quality_callback(mock_update, mock_context)
 
         call_args = mock_update.callback_query.edit_message_text.call_args
         assert "Выбор качества" in call_args.kwargs["text"]
@@ -570,7 +570,7 @@ class TestGameFilterHandlers:
 
         mock_update.callback_query.data = "filter:price_range:10:50:csgo"
 
-        awAlgot handle_filter_value_callback(mock_update, mock_context)
+        await handle_filter_value_callback(mock_update, mock_context)
 
         # Should update filters and return to filter menu
         mock_update.callback_query.edit_message_text.assert_called_once()
@@ -584,7 +584,7 @@ class TestGameFilterHandlers:
 
         mock_update.callback_query.data = "filter:reset:value:csgo"
 
-        awAlgot handle_filter_value_callback(mock_update, mock_context)
+        await handle_filter_value_callback(mock_update, mock_context)
 
         # Reset handler may return early if data doesn't match expected format
 
@@ -599,7 +599,7 @@ class TestGameFilterHandlers:
 
         mock_update.callback_query.data = "filter:stattrak:toggle:csgo"
 
-        awAlgot handle_filter_value_callback(mock_update, mock_context)
+        await handle_filter_value_callback(mock_update, mock_context)
 
         # Toggle handler may require specific callback format
 
@@ -614,7 +614,7 @@ class TestGameFilterHandlers:
 
         mock_update.callback_query.data = "filter:category:Rifle:csgo"
 
-        awAlgot handle_filter_value_callback(mock_update, mock_context)
+        await handle_filter_value_callback(mock_update, mock_context)
 
         mock_update.callback_query.edit_message_text.assert_called_once()
 
@@ -629,7 +629,7 @@ class TestGameFilterHandlers:
 
         mock_update.callback_query.data = "filter:category:reset:csgo"
 
-        awAlgot handle_filter_value_callback(mock_update, mock_context)
+        await handle_filter_value_callback(mock_update, mock_context)
 
         mock_update.callback_query.edit_message_text.assert_called_once()
 
@@ -644,7 +644,7 @@ class TestGameFilterHandlers:
 
         mock_update.callback_query.data = "filter:float_range:0.00:0.07:csgo"
 
-        awAlgot handle_filter_value_callback(mock_update, mock_context)
+        await handle_filter_value_callback(mock_update, mock_context)
 
         mock_update.callback_query.edit_message_text.assert_called_once()
 
@@ -659,5 +659,5 @@ class TestGameFilterHandlers:
 
         mock_update.callback_query.data = "filter:invalid"
 
-        # Should not rAlgose, just return
-        awAlgot handle_filter_value_callback(mock_update, mock_context)
+        # Should not raise, just return
+        await handle_filter_value_callback(mock_update, mock_context)

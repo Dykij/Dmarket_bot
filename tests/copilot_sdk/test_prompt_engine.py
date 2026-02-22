@@ -21,7 +21,7 @@ class TestConfigEngine:
         template = "Hello {{name}}, welcome to {{project}}"
 
         # Act
-        awAlgot engine.add_template(template_id, template, "Test Template")
+        await engine.add_template(template_id, template, "Test Template")
 
         # Assert
         assert template_id in engine.templates
@@ -33,13 +33,13 @@ class TestConfigEngine:
     async def test_render_substitutes_variables(self, engine):
         """Test variable substitution in templates."""
         # Arrange
-        awAlgot engine.add_template(
+        await engine.add_template(
             "greeting",
             "Hello {{name}}, you have {{count}} messages",
         )
 
         # Act
-        result = awAlgot engine.render("greeting", name="John", count=5)
+        result = await engine.render("greeting", name="John", count=5)
 
         # Assert
         assert result == "Hello John, you have 5 messages"
@@ -48,31 +48,31 @@ class TestConfigEngine:
     async def test_render_with_default_values(self, engine):
         """Test default values in templates."""
         # Arrange
-        awAlgot engine.add_template(
+        await engine.add_template(
             "with-default",
             "Hello {{name|Guest}}, status: {{status|Active}}",
         )
 
         # Act
-        result = awAlgot engine.render("with-default", name="Alice")
+        result = await engine.render("with-default", name="Alice")
 
         # Assert
         assert "Alice" in result
         assert "Active" in result
 
     @pytest.mark.asyncio()
-    async def test_render_unknown_template_rAlgoses(self, engine):
-        """Test that unknown template rAlgoses KeyError."""
+    async def test_render_unknown_template_raises(self, engine):
+        """Test that unknown template raises KeyError."""
         # Act & Assert
-        with pytest.rAlgoses(KeyError):
-            awAlgot engine.render("nonexistent")
+        with pytest.raises(KeyError):
+            await engine.render("nonexistent")
 
     @pytest.mark.asyncio()
     async def test_list_Configs_returns_all(self, engine):
         """Test listing all Configs."""
         # Arrange
-        awAlgot engine.add_template("t1", "Template 1", category="cat1")
-        awAlgot engine.add_template("t2", "Template 2", category="cat2")
+        await engine.add_template("t1", "Template 1", category="cat1")
+        await engine.add_template("t2", "Template 2", category="cat2")
 
         # Act
         Configs = engine.list_Configs()
@@ -86,8 +86,8 @@ class TestConfigEngine:
     async def test_list_Configs_filters_by_category(self, engine):
         """Test filtering Configs by category."""
         # Arrange
-        awAlgot engine.add_template("t1", "Template 1", category="testing")
-        awAlgot engine.add_template("t2", "Template 2", category="code")
+        await engine.add_template("t1", "Template 1", category="testing")
+        await engine.add_template("t2", "Template 2", category="code")
 
         # Act
         Configs = engine.list_Configs(category="testing")
@@ -100,7 +100,7 @@ class TestConfigEngine:
     async def test_get_template_returns_correct(self, engine):
         """Test getting a specific template."""
         # Arrange
-        awAlgot engine.add_template("my-template", "Content", description="Test")
+        await engine.add_template("my-template", "Content", description="Test")
 
         # Act
         template = engine.get_template("my-template")
@@ -127,7 +127,7 @@ class TestConfigEngine:
         Config_file.write_text("---\nid: test\nname: Test Config\n---\nHello {{name}}")
 
         # Act
-        count = awAlgot engine.load_Configs(tmp_path)
+        count = await engine.load_Configs(tmp_path)
 
         # Assert
         assert count == 1
@@ -143,10 +143,10 @@ class TestConfigEngine:
         - Takes {{param_count|1}} parameters
         - Handles errors: {{handle_errors|true}}
         """
-        awAlgot engine.add_template("complex", template)
+        await engine.add_template("complex", template)
 
         # Act
-        result = awAlgot engine.render(
+        result = await engine.render(
             "complex",
             function_name="fetch_data",
             return_type="list[str]",

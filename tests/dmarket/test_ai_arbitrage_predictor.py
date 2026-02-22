@@ -34,7 +34,7 @@ class TestAlgoArbitragePredictor:
         """Test prediction with empty item list."""
         predictor = AlgoArbitragePredictor()
 
-        opportunities = awAlgot predictor.predict_best_opportunities(
+        opportunities = await predictor.predict_best_opportunities(
             items=[],
             current_balance=100.0,
             risk_level="medium",
@@ -65,7 +65,7 @@ class TestAlgoArbitragePredictor:
             },
         ]
 
-        opportunities = awAlgot predictor.predict_best_opportunities(
+        opportunities = await predictor.predict_best_opportunities(
             items=items,
             current_balance=50.0,  # Can only afford first item
             risk_level="medium",
@@ -79,11 +79,11 @@ class TestAlgoArbitragePredictor:
 
     @pytest.mark.asyncio
     async def test_predict_with_invalid_risk_level(self):
-        """Test prediction with invalid risk level rAlgoses error."""
+        """Test prediction with invalid risk level raises error."""
         predictor = AlgoArbitragePredictor()
 
-        with pytest.rAlgoses(ValueError, match="Invalid risk_level"):
-            awAlgot predictor.predict_best_opportunities(
+        with pytest.raises(ValueError, match="Invalid risk_level"):
+            await predictor.predict_best_opportunities(
                 items=[],
                 current_balance=100.0,
                 risk_level="invalid",
@@ -105,7 +105,7 @@ class TestAlgoArbitragePredictor:
             }
         ]
 
-        opportunities = awAlgot predictor.predict_best_opportunities(
+        opportunities = await predictor.predict_best_opportunities(
             items=items,
             current_balance=100.0,
             risk_level="medium",
@@ -130,14 +130,14 @@ class TestAlgoArbitragePredictor:
         ]
 
         # Low risk should filter more aggressively
-        low_risk_opps = awAlgot predictor.predict_best_opportunities(
+        low_risk_opps = await predictor.predict_best_opportunities(
             items=items,
             current_balance=100.0,
             risk_level="low",
         )
 
         # High risk should be more permissive
-        high_risk_opps = awAlgot predictor.predict_best_opportunities(
+        high_risk_opps = await predictor.predict_best_opportunities(
             items=items,
             current_balance=100.0,
             risk_level="high",

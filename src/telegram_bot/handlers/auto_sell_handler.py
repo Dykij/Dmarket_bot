@@ -72,7 +72,7 @@ class AutoSellHandler:
     ) -> None:
         """Handle /auto_sell command.
 
-        Shows mAlgon auto-sell menu with options.
+        Shows main auto-sell menu with options.
 
         Args:
             update: Telegram update
@@ -101,7 +101,7 @@ class AutoSellHandler:
         reply_markup = InlineKeyboardMarkup(keyboard)
 
         status = "✅ Enabled" if self._is_enabled() else "❌ Disabled"
-        awAlgot update.message.reply_text(
+        await update.message.reply_text(
             f"🤖 *Auto-Sell Management*\n\nStatus: {status}\n\nChoose an option:",
             reply_markup=reply_markup,
             parse_mode="Markdown",
@@ -125,27 +125,27 @@ class AutoSellHandler:
         if not query or not query.data:
             return None
 
-        awAlgot query.answer()
+        await query.answer()
 
         data = query.data
         if data == "auto_sell:status":
-            awAlgot self._show_status(query)
+            await self._show_status(query)
         elif data == "auto_sell:config":
-            awAlgot self._show_config(query)
+            await self._show_config(query)
         elif data == "auto_sell:toggle":
-            awAlgot self._toggle_auto_sell(query)
+            await self._toggle_auto_sell(query)
         elif data == "auto_sell:active":
-            awAlgot self._show_active_sales(query)
+            await self._show_active_sales(query)
         elif data == "auto_sell:cancel_menu":
-            awAlgot self._show_cancel_menu(query)
+            await self._show_cancel_menu(query)
         elif data.startswith("auto_sell:cancel:"):
             item_id = data.split(":")[-1]
-            awAlgot self._cancel_sale(query, item_id)
+            await self._cancel_sale(query, item_id)
         elif data.startswith("auto_sell:config:"):
             param = data.split(":")[-1]
-            return awAlgot self._start_config_edit(query, param)
+            return await self._start_config_edit(query, param)
         elif data == "auto_sell:back":
-            awAlgot self._show_mAlgon_menu(query)
+            await self._show_main_menu(query)
 
         return None
 
@@ -168,17 +168,17 @@ class AutoSellHandler:
 
         param = context.user_data.get("editing_param")
         if not param:
-            awAlgot update.message.reply_text("❌ No parameter selected")
+            await update.message.reply_text("❌ No parameter selected")
             return ConversationHandler.END
 
         try:
             value = float(update.message.text)
-            awAlgot self._update_config(param, value)
-            awAlgot update.message.reply_text(
+            await self._update_config(param, value)
+            await update.message.reply_text(
                 f"✅ Updated {param} to {value}",
             )
         except ValueError:
-            awAlgot update.message.reply_text(
+            await update.message.reply_text(
                 "❌ Invalid value. Please enter a number.",
             )
 
@@ -193,7 +193,7 @@ class AutoSellHandler:
     async def _show_status(self, query) -> None:
         """Show auto-sell statistics."""
         if not self._auto_seller:
-            awAlgot query.edit_message_text("❌ Auto-sell not configured")
+            await query.edit_message_text("❌ Auto-sell not configured")
             return
 
         stats = self._auto_seller.get_statistics()
@@ -207,14 +207,14 @@ class AutoSellHandler:
             f"  • Scheduled: {stats['scheduled_count']}\n"
             f"  • Listed: {stats['listed_count']}\n"
             f"  • Sold: {stats['sold_count']}\n"
-            f"  • FAlgoled: {stats['fAlgoled_count']}\n"
+            f"  • Failed: {stats['failed_count']}\n"
             f"  • Stop-loss: {stats['stop_loss_count']}\n\n"
             f"*Price Adjustments:* {stats['adjustments_count']}\n"
             f"*Total Profit:* ${stats['total_profit']:.2f}"
         )
 
         keyboard = [[InlineKeyboardButton("« Back", callback_data="auto_sell:back")]]
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             text,
             reply_markup=InlineKeyboardMarkup(keyboard),
             parse_mode="Markdown",
@@ -223,7 +223,7 @@ class AutoSellHandler:
     async def _show_config(self, query) -> None:
         """Show auto-sell configuration."""
         if not self._auto_seller:
-            awAlgot query.edit_message_text("❌ Auto-sell not configured")
+            await query.edit_message_text("❌ Auto-sell not configured")
             return
 
         config = self._auto_seller.config
@@ -267,7 +267,7 @@ class AutoSellHandler:
             [InlineKeyboardButton("« Back", callback_data="auto_sell:back")],
         ]
 
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             text,
             reply_markup=InlineKeyboardMarkup(keyboard),
             parse_mode="Markdown",
@@ -276,14 +276,14 @@ class AutoSellHandler:
     async def _toggle_auto_sell(self, query) -> None:
         """Toggle auto-sell on/off."""
         if not self._auto_seller:
-            awAlgot query.edit_message_text("❌ Auto-sell not configured")
+            await query.edit_message_text("❌ Auto-sell not configured")
             return
 
         # Toggle the enabled state
         self._auto_seller.config.enabled = not self._auto_seller.config.enabled
         status = "✅ Enabled" if self._auto_seller.config.enabled else "❌ Disabled"
 
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             f"🔄 Auto-sell has been {status}",
             reply_markup=InlineKeyboardMarkup(
                 [[InlineKeyboardButton("« Back", callback_data="auto_sell:back")]]
@@ -293,13 +293,13 @@ class AutoSellHandler:
     async def _show_active_sales(self, query) -> None:
         """Show list of active sales."""
         if not self._auto_seller:
-            awAlgot query.edit_message_text("❌ Auto-sell not configured")
+            await query.edit_message_text("❌ Auto-sell not configured")
             return
 
         sales = self._auto_seller.get_active_sales()
 
         if not sales:
-            awAlgot query.edit_message_text(
+            await query.edit_message_text(
                 "📋 *Active Sales*\n\nNo active sales.",
                 reply_markup=InlineKeyboardMarkup(
                     [[InlineKeyboardButton("« Back", callback_data="auto_sell:back")]]
@@ -325,7 +325,7 @@ class AutoSellHandler:
         if len(sales) > 10:
             lines.append(f"\n_...and {len(sales) - 10} more_")
 
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             "\n".join(lines),
             reply_markup=InlineKeyboardMarkup(
                 [[InlineKeyboardButton("« Back", callback_data="auto_sell:back")]]
@@ -336,13 +336,13 @@ class AutoSellHandler:
     async def _show_cancel_menu(self, query) -> None:
         """Show menu to cancel active sales."""
         if not self._auto_seller:
-            awAlgot query.edit_message_text("❌ Auto-sell not configured")
+            await query.edit_message_text("❌ Auto-sell not configured")
             return
 
         sales = self._auto_seller.get_active_sales()
 
         if not sales:
-            awAlgot query.edit_message_text(
+            await query.edit_message_text(
                 "❌ *Cancel Sale*\n\nNo active sales to cancel.",
                 reply_markup=InlineKeyboardMarkup(
                     [[InlineKeyboardButton("« Back", callback_data="auto_sell:back")]]
@@ -372,7 +372,7 @@ class AutoSellHandler:
             [InlineKeyboardButton("« Back", callback_data="auto_sell:back")]
         )
 
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             "❌ *Cancel Sale*\n\nSelect a sale to cancel:",
             reply_markup=InlineKeyboardMarkup(keyboard),
             parse_mode="Markdown",
@@ -381,21 +381,21 @@ class AutoSellHandler:
     async def _cancel_sale(self, query, item_id: str) -> None:
         """Cancel a specific sale."""
         if not self._auto_seller:
-            awAlgot query.edit_message_text("❌ Auto-sell not configured")
+            await query.edit_message_text("❌ Auto-sell not configured")
             return
 
-        success = awAlgot self._auto_seller.cancel_sale(item_id)
+        success = await self._auto_seller.cancel_sale(item_id)
 
         if success:
-            awAlgot query.edit_message_text(
+            await query.edit_message_text(
                 f"✅ Sale cancelled: {item_id[:20]}...",
                 reply_markup=InlineKeyboardMarkup(
                     [[InlineKeyboardButton("« Back", callback_data="auto_sell:back")]]
                 ),
             )
         else:
-            awAlgot query.edit_message_text(
-                "❌ FAlgoled to cancel sale. Item may already be sold.",
+            await query.edit_message_text(
+                "❌ Failed to cancel sale. Item may already be sold.",
                 reply_markup=InlineKeyboardMarkup(
                     [[InlineKeyboardButton("« Back", callback_data="auto_sell:back")]]
                 ),
@@ -432,8 +432,8 @@ class AutoSellHandler:
             extra={"param": param, "value": value},
         )
 
-    async def _show_mAlgon_menu(self, query) -> None:
-        """Show mAlgon auto-sell menu."""
+    async def _show_main_menu(self, query) -> None:
+        """Show main auto-sell menu."""
         keyboard = [
             [
                 InlineKeyboardButton("📊 Status", callback_data="auto_sell:status"),
@@ -453,7 +453,7 @@ class AutoSellHandler:
         ]
 
         status = "✅ Enabled" if self._is_enabled() else "❌ Disabled"
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             f"🤖 *Auto-Sell Management*\n\nStatus: {status}\n\nChoose an option:",
             reply_markup=InlineKeyboardMarkup(keyboard),
             parse_mode="Markdown",

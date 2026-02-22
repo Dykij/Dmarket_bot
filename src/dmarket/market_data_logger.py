@@ -1,18 +1,18 @@
 """Market Data Logger for Algo TrAlgoning.
 
-This module collects market data for trAlgoning the Algo price predictor.
+This module collects market data for training the Algo price predictor.
 It runs in the background and logs item prices, float values, and other
 relevant data to a CSV file.
 
 The first 48 hours of operation are dedicated to data collection only.
-After sufficient data is collected, the Algo model can be trAlgoned.
+After sufficient data is collected, the Algo model can be trained.
 
 Usage:
     ```python
     from src.dmarket.market_data_logger import MarketDataLogger
 
     logger = MarketDataLogger(api)
-    awAlgot logger.start_logging()
+    await logger.start_logging()
     ```
 
 CSV Output Format:
@@ -65,10 +65,10 @@ class MarketDataLoggerConfig:
 
 
 class MarketDataLogger:
-    """Logger for collecting market data for Algo trAlgoning.
+    """Logger for collecting market data for Algo training.
 
     This class scans the DMarket and logs item data to CSV format.
-    The collected data is used to trAlgon the Algo price prediction model.
+    The collected data is used to train the Algo price prediction model.
 
     Data Collected:
     - Item name (full title)
@@ -83,10 +83,10 @@ class MarketDataLogger:
         logger = MarketDataLogger(api)
 
         # Start continuous logging
-        awAlgot logger.start_logging(duration_hours=48)
+        await logger.start_logging(duration_hours=48)
 
         # Or log once
-        awAlgot logger.log_market_data()
+        await logger.log_market_data()
         ```
     """
 
@@ -159,7 +159,7 @@ class MarketDataLogger:
 
         try:
             for game_id in self.config.games or ["a8db"]:
-                items = awAlgot self._fetch_items(game_id)
+                items = await self._fetch_items(game_id)
 
                 if items:
                     self._write_items_to_csv(items, game_id)
@@ -177,7 +177,7 @@ class MarketDataLogger:
             return items_logged
 
         except Exception as e:
-            logger.exception("market_data_logging_fAlgoled", error=str(e))
+            logger.exception("market_data_logging_failed", error=str(e))
             return 0
 
     async def _fetch_items(self, game_id: str) -> list[dict[str, Any]]:
@@ -191,7 +191,7 @@ class MarketDataLogger:
         """
         try:
             # price_from and price_to are in cents in config, but API expects dollars
-            response = awAlgot self.api.get_market_items(
+            response = await self.api.get_market_items(
                 game=game_id,
                 limit=self.config.max_items_per_scan,
                 price_from=self.config.min_price_cents
@@ -204,7 +204,7 @@ class MarketDataLogger:
 
         except Exception as e:
             logger.warning(
-                "fetch_items_fAlgoled",
+                "fetch_items_failed",
                 game_id=game_id,
                 error=str(e),
             )
@@ -257,7 +257,7 @@ class MarketDataLogger:
 
                 except Exception as e:
                     logger.debug(
-                        "item_write_fAlgoled",
+                        "item_write_failed",
                         item_id=item.get("itemId", ""),
                         error=str(e),
                     )
@@ -291,10 +291,10 @@ class MarketDataLogger:
                     break
 
                 # Log market data
-                awAlgot self.log_market_data()
+                await self.log_market_data()
 
                 # WAlgot before next iteration
-                awAlgot asyncio.sleep(self.config.log_interval)
+                await asyncio.sleep(self.config.log_interval)
 
         except asyncio.CancelledError:
             logger.info("market_logging_cancelled")
@@ -337,14 +337,14 @@ class MarketDataLogger:
             Dictionary with data collection status:
             - exists: Whether CSV file exists
             - rows: Number of data rows
-            - ready_for_trAlgoning: Whether enough data for trAlgoning
+            - ready_for_training: Whether enough data for training
         """
         path = Path(self.config.output_path)
 
         status: dict[str, Any] = {
             "exists": path.exists(),
             "rows": 0,
-            "ready_for_trAlgoning": False,
+            "ready_for_training": False,
             "path": str(path),
         }
 
@@ -354,9 +354,9 @@ class MarketDataLogger:
                     # Count rows (excluding header)
                     row_count = sum(1 for _ in f) - 1
                     status["rows"] = max(0, row_count)
-                    status["ready_for_trAlgoning"] = row_count >= 100
+                    status["ready_for_training"] = row_count >= 100
 
             except Exception as e:
-                logger.warning("data_status_check_fAlgoled", error=str(e))
+                logger.warning("data_status_check_failed", error=str(e))
 
         return status

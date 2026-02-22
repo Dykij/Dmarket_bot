@@ -34,7 +34,7 @@ def scan_files(root_dir):
 
     return report
 
-def mAlgon():
+def main():
     target_dir = "src"
     if not os.path.exists(target_dir):
         print(f"Directory {target_dir} not found, scanning current dir instead.")
@@ -61,5 +61,5 @@ def mAlgon():
         
     print(f"Audit complete. Report written to {output_path}")
 
-if __name__ == "__mAlgon__":
-    mAlgon()
+if __name__ == "__main__":
+    main()

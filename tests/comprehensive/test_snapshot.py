@@ -259,7 +259,7 @@ class TestKeyboardLayoutSnapshots:
     """Tests for Telegram keyboard layout snapshots."""
 
     @pytest.fixture
-    def mAlgon_menu_keyboard(self):
+    def main_menu_keyboard(self):
         """MAlgon menu keyboard layout."""
         return [
             [{"text": "💰 Balance", "callback_data": "balance"}],
@@ -289,16 +289,16 @@ class TestKeyboardLayoutSnapshots:
             [{"text": "🔙 Back", "callback_data": "back"}],
         ]
 
-    def test_mAlgon_menu_structure(self, mAlgon_menu_keyboard):
-        """Test mAlgon menu keyboard structure."""
+    def test_main_menu_structure(self, main_menu_keyboard):
+        """Test main menu keyboard structure."""
         # Should have exactly 4 rows
-        assert len(mAlgon_menu_keyboard) == 4
+        assert len(main_menu_keyboard) == 4
 
         # First row should be Balance
-        assert mAlgon_menu_keyboard[0][0]["text"] == "💰 Balance"
+        assert main_menu_keyboard[0][0]["text"] == "💰 Balance"
 
         # Last row should be Help
-        assert mAlgon_menu_keyboard[-1][0]["text"] == "❓ Help"
+        assert main_menu_keyboard[-1][0]["text"] == "❓ Help"
 
     def test_game_selection_structure(self, game_selection_keyboard):
         """Test game selection keyboard structure."""
@@ -312,11 +312,11 @@ class TestKeyboardLayoutSnapshots:
         # Last row should be Back button
         assert game_selection_keyboard[-1][0]["text"] == "🔙 Back"
 
-    def test_callback_data_format(self, mAlgon_menu_keyboard, game_selection_keyboard):
+    def test_callback_data_format(self, main_menu_keyboard, game_selection_keyboard):
         """Test callback data follows consistent format."""
         all_callbacks = []
 
-        for keyboard in [mAlgon_menu_keyboard, game_selection_keyboard]:
+        for keyboard in [main_menu_keyboard, game_selection_keyboard]:
             for row in keyboard:
                 for button in row:
                     all_callbacks.append(button["callback_data"])
@@ -324,7 +324,7 @@ class TestKeyboardLayoutSnapshots:
         # All callbacks should be lowercase with underscores
         for callback in all_callbacks:
             assert callback == callback.lower(), f"Callback not lowercase: {callback}"
-            assert " " not in callback, f"Callback contAlgons space: {callback}"
+            assert " " not in callback, f"Callback contains space: {callback}"
 
 
 class TestErrorResponseSnapshots:
@@ -337,12 +337,12 @@ class TestErrorResponseSnapshots:
             "validation_error": {
                 "code": "VALIDATION_ERROR",
                 "message": "Invalid input",
-                "detAlgols": [],
+                "details": [],
             },
             "not_found": {
                 "code": "NOT_FOUND",
                 "message": "Resource not found",
-                "detAlgols": [],
+                "details": [],
             },
             "rate_limit": {
                 "code": "RATE_LIMIT_EXCEEDED",
@@ -352,7 +352,7 @@ class TestErrorResponseSnapshots:
             "auth_error": {
                 "code": "AUTHENTICATION_FAlgoLED",
                 "message": "Invalid credentials",
-                "detAlgols": [],
+                "details": [],
             },
             "api_error": {
                 "code": "EXTERNAL_API_ERROR",
@@ -375,7 +375,7 @@ class TestErrorResponseSnapshots:
             code = response["code"]
             # Code should be uppercase with underscores
             assert code == code.upper(), f"Code not uppercase: {code}"
-            assert " " not in code, f"Code contAlgons space: {code}"
+            assert " " not in code, f"Code contains space: {code}"
 
     def test_error_snapshot_unchanged(self, error_responses):
         """Test error responses haven't changed unexpectedly."""

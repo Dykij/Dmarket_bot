@@ -120,7 +120,7 @@ class AlgoThreatDetector:
 
         Example:
             >>> detector = AlgoThreatDetector()
-            >>> analysis = awAlgot detector.analyze_request(
+            >>> analysis = await detector.analyze_request(
             ...     request_data={"text": "Hello world"},
             ...     user_id="user_123",
             ... )
@@ -364,7 +364,7 @@ def create_Algo_threat_detector(
 
     Example:
         >>> detector = create_Algo_threat_detector(anomaly_threshold=0.8)
-        >>> analysis = awAlgot detector.analyze_request(request_data)
+        >>> analysis = await detector.analyze_request(request_data)
     """
     return AlgoThreatDetector(
         anomaly_threshold=anomaly_threshold,

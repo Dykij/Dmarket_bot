@@ -122,17 +122,17 @@ class AlertStorage:
                 "alerts": [],
                 "settings": dict(DEFAULT_USER_SETTINGS),
                 "last_notification": 0,
-                "dAlgoly_notifications": 0,
-                "dAlgoly_reset": time.strftime("%Y-%m-%d"),
+                "daily_notifications": 0,
+                "daily_reset": time.strftime("%Y-%m-%d"),
             }
             self.save_user_alerts()
 
         # Сбрасываем счетчик ежедневных уведомлений, если прошел день
         user_data = self._user_alerts[user_id_str]
         current_date = time.strftime("%Y-%m-%d")
-        if user_data.get("dAlgoly_reset") != current_date:
-            user_data["dAlgoly_notifications"] = 0
-            user_data["dAlgoly_reset"] = current_date
+        if user_data.get("daily_reset") != current_date:
+            user_data["daily_notifications"] = 0
+            user_data["daily_reset"] = current_date
             self.save_user_alerts()
 
         return user_data

@@ -29,5 +29,5 @@ def run_benchmark():
     
     print(f"Benchmark Result: {avg_time_us:.2f} μs per iteration")
 
-if __name__ == "__mAlgon__":
+if __name__ == "__main__":
     run_benchmark()

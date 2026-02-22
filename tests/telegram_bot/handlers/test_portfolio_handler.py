@@ -62,7 +62,7 @@ def mock_callback_query():
     query = MagicMock()
     query.answer = AsyncMock()
     query.edit_message_text = AsyncMock()
-    query.data = "portfolio:detAlgols"
+    query.data = "portfolio:details"
     return query
 
 
@@ -119,7 +119,7 @@ class TestHandlePortfolioCommand:
         update.message = None
         update.effective_user = MagicMock()
 
-        result = awAlgot portfolio_handler.handle_portfolio_command(update, mock_context)
+        result = await portfolio_handler.handle_portfolio_command(update, mock_context)
         assert result is None
 
     @pytest.mark.asyncio()
@@ -129,7 +129,7 @@ class TestHandlePortfolioCommand:
         update.message = MagicMock()
         update.effective_user = None
 
-        result = awAlgot portfolio_handler.handle_portfolio_command(update, mock_context)
+        result = await portfolio_handler.handle_portfolio_command(update, mock_context)
         assert result is None
 
     @pytest.mark.asyncio()
@@ -156,7 +156,7 @@ class TestHandlePortfolioCommand:
         ) as mock_get_metrics:
             mock_get_metrics.return_value = mock_metrics_obj
 
-            awAlgot portfolio_handler.handle_portfolio_command(mock_update, mock_context)
+            await portfolio_handler.handle_portfolio_command(mock_update, mock_context)
 
             mock_update.message.reply_text.assert_called_once()
             call_kwargs = mock_update.message.reply_text.call_args[1]
@@ -187,7 +187,7 @@ class TestHandlePortfolioCommand:
         ) as mock_get_metrics:
             mock_get_metrics.return_value = mock_metrics_obj
 
-            awAlgot portfolio_handler.handle_portfolio_command(mock_update, mock_context)
+            await portfolio_handler.handle_portfolio_command(mock_update, mock_context)
 
             call_kwargs = mock_update.message.reply_text.call_args[1]
             reply_markup = call_kwargs["reply_markup"]
@@ -208,7 +208,7 @@ class TestHandleCallback:
         update.callback_query = None
         update.effective_user = MagicMock()
 
-        result = awAlgot portfolio_handler.handle_callback(update, mock_context)
+        result = await portfolio_handler.handle_callback(update, mock_context)
         assert result is None
 
     @pytest.mark.asyncio()
@@ -220,7 +220,7 @@ class TestHandleCallback:
         update.callback_query.answer = AsyncMock()
         update.effective_user = MagicMock()
 
-        result = awAlgot portfolio_handler.handle_callback(update, mock_context)
+        result = await portfolio_handler.handle_callback(update, mock_context)
         assert result is None
 
     @pytest.mark.asyncio()
@@ -228,28 +228,28 @@ class TestHandleCallback:
         """Test callback with no user."""
         update = MagicMock()
         update.callback_query = MagicMock()
-        update.callback_query.data = "portfolio:detAlgols"
+        update.callback_query.data = "portfolio:details"
         update.callback_query.answer = AsyncMock()
         update.effective_user = None
 
-        result = awAlgot portfolio_handler.handle_callback(update, mock_context)
+        result = await portfolio_handler.handle_callback(update, mock_context)
         assert result is None
 
     @pytest.mark.asyncio()
-    async def test_callback_detAlgols(
+    async def test_callback_details(
         self, portfolio_handler, mock_callback_query, mock_context
     ):
-        """Test callback for detAlgols."""
+        """Test callback for details."""
         update = MagicMock()
         update.callback_query = mock_callback_query
-        mock_callback_query.data = "portfolio:detAlgols"
+        mock_callback_query.data = "portfolio:details"
         update.effective_user = MagicMock()
         update.effective_user.id = 123
 
         with patch.object(
-            portfolio_handler, "_show_detAlgols", new_callable=AsyncMock
+            portfolio_handler, "_show_details", new_callable=AsyncMock
         ) as mock_show:
-            awAlgot portfolio_handler.handle_callback(update, mock_context)
+            await portfolio_handler.handle_callback(update, mock_context)
             mock_show.assert_called_once()
 
     @pytest.mark.asyncio()
@@ -266,7 +266,7 @@ class TestHandleCallback:
         with patch.object(
             portfolio_handler, "_show_performance", new_callable=AsyncMock
         ) as mock_show:
-            awAlgot portfolio_handler.handle_callback(update, mock_context)
+            await portfolio_handler.handle_callback(update, mock_context)
             mock_show.assert_called_once()
 
     @pytest.mark.asyncio()
@@ -283,7 +283,7 @@ class TestHandleCallback:
         with patch.object(
             portfolio_handler, "_show_risk_analysis", new_callable=AsyncMock
         ) as mock_show:
-            awAlgot portfolio_handler.handle_callback(update, mock_context)
+            await portfolio_handler.handle_callback(update, mock_context)
             mock_show.assert_called_once()
 
     @pytest.mark.asyncio()
@@ -300,7 +300,7 @@ class TestHandleCallback:
         with patch.object(
             portfolio_handler, "_show_diversification", new_callable=AsyncMock
         ) as mock_show:
-            awAlgot portfolio_handler.handle_callback(update, mock_context)
+            await portfolio_handler.handle_callback(update, mock_context)
             mock_show.assert_called_once()
 
     @pytest.mark.asyncio()
@@ -317,7 +317,7 @@ class TestHandleCallback:
         with patch.object(
             portfolio_handler, "_sync_portfolio", new_callable=AsyncMock
         ) as mock_sync:
-            awAlgot portfolio_handler.handle_callback(update, mock_context)
+            await portfolio_handler.handle_callback(update, mock_context)
             mock_sync.assert_called_once()
 
     @pytest.mark.asyncio()
@@ -334,7 +334,7 @@ class TestHandleCallback:
         with patch.object(
             portfolio_handler, "_update_prices", new_callable=AsyncMock
         ) as mock_update:
-            awAlgot portfolio_handler.handle_callback(update, mock_context)
+            await portfolio_handler.handle_callback(update, mock_context)
             mock_update.assert_called_once()
 
     @pytest.mark.asyncio()
@@ -349,9 +349,9 @@ class TestHandleCallback:
         update.effective_user.id = 123
 
         with patch.object(
-            portfolio_handler, "_show_mAlgon_menu", new_callable=AsyncMock
+            portfolio_handler, "_show_main_menu", new_callable=AsyncMock
         ) as mock_menu:
-            awAlgot portfolio_handler.handle_callback(update, mock_context)
+            await portfolio_handler.handle_callback(update, mock_context)
             mock_menu.assert_called_once()
 
     @pytest.mark.asyncio()
@@ -368,7 +368,7 @@ class TestHandleCallback:
         with patch.object(
             portfolio_handler, "_remove_item", new_callable=AsyncMock
         ) as mock_remove:
-            awAlgot portfolio_handler.handle_callback(update, mock_context)
+            await portfolio_handler.handle_callback(update, mock_context)
             mock_remove.assert_called_once_with(mock_callback_query, 123, "item_123")
 
 
@@ -386,7 +386,7 @@ class TestHandleAddItemId:
         update = MagicMock()
         update.message = None
 
-        result = awAlgot portfolio_handler.handle_add_item_id(update, mock_context)
+        result = await portfolio_handler.handle_add_item_id(update, mock_context)
         assert result == ConversationHandler.END
 
     @pytest.mark.asyncio()
@@ -399,7 +399,7 @@ class TestHandleAddItemId:
         context = MagicMock()
         context.user_data = None
 
-        result = awAlgot portfolio_handler.handle_add_item_id(update, context)
+        result = await portfolio_handler.handle_add_item_id(update, context)
         assert result == ConversationHandler.END
 
     @pytest.mark.asyncio()
@@ -411,7 +411,7 @@ class TestHandleAddItemId:
         update.message = MagicMock()
         update.message.text = None
 
-        result = awAlgot portfolio_handler.handle_add_item_id(update, mock_context)
+        result = await portfolio_handler.handle_add_item_id(update, mock_context)
         assert result == ConversationHandler.END
 
     @pytest.mark.asyncio()
@@ -421,7 +421,7 @@ class TestHandleAddItemId:
         """Test add item with invalid format (too few parts)."""
         mock_update.message.text = "invalid format"
 
-        result = awAlgot portfolio_handler.handle_add_item_id(mock_update, mock_context)
+        result = await portfolio_handler.handle_add_item_id(mock_update, mock_context)
 
         # Should return WAlgoTING_ITEM_ID for retry
         assert result == WAlgoTING_ITEM_ID
@@ -439,7 +439,7 @@ class TestHandleAddItemId:
         mock_update.message.text = "AK-47 | Redline, csgo, 25.50"
 
         with patch.object(portfolio_handler._manager, "add_item") as mock_add:
-            result = awAlgot portfolio_handler.handle_add_item_id(
+            result = await portfolio_handler.handle_add_item_id(
                 mock_update, mock_context
             )
             mock_add.assert_called_once()
@@ -455,7 +455,7 @@ class TestHandleAddItemId:
         mock_update.message.text = "AWP | Asiimov, csgo, 50.00"
 
         with patch.object(portfolio_handler._manager, "add_item"):
-            result = awAlgot portfolio_handler.handle_add_item_id(
+            result = await portfolio_handler.handle_add_item_id(
                 mock_update, mock_context
             )
 
@@ -472,7 +472,7 @@ class TestHandleAddItemId:
         """Test add item with invalid price."""
         mock_update.message.text = "Item Name, csgo, not_a_price"
 
-        result = awAlgot portfolio_handler.handle_add_item_id(mock_update, mock_context)
+        result = await portfolio_handler.handle_add_item_id(mock_update, mock_context)
 
         # Should show error message and return WAlgoTING_ITEM_ID
         mock_update.message.reply_text.assert_called()
@@ -530,12 +530,12 @@ class TestEdgeCases:
         """Test callback always answers query."""
         update = MagicMock()
         update.callback_query = mock_callback_query
-        mock_callback_query.data = "portfolio:detAlgols"
+        mock_callback_query.data = "portfolio:details"
         update.effective_user = MagicMock()
         update.effective_user.id = 123
 
-        with patch.object(portfolio_handler, "_show_detAlgols", new_callable=AsyncMock):
-            awAlgot portfolio_handler.handle_callback(update, mock_context)
+        with patch.object(portfolio_handler, "_show_details", new_callable=AsyncMock):
+            await portfolio_handler.handle_callback(update, mock_context)
             mock_callback_query.answer.assert_called_once()
 
     @pytest.mark.asyncio()
@@ -548,7 +548,7 @@ class TestEdgeCases:
         mock_update.message.text = "  Item Name  ,  csgo  ,  25.50  "
 
         with patch.object(portfolio_handler._manager, "add_item") as mock_add:
-            result = awAlgot portfolio_handler.handle_add_item_id(
+            result = await portfolio_handler.handle_add_item_id(
                 mock_update, mock_context
             )
             mock_add.assert_called_once()
@@ -568,7 +568,7 @@ class TestEdgeCases:
         mock_update.message.text = "Test Item, csgo, 10.00"
 
         with patch.object(portfolio_handler._manager, "add_item") as mock_add:
-            result = awAlgot portfolio_handler.handle_add_item_id(
+            result = await portfolio_handler.handle_add_item_id(
                 mock_update, mock_context
             )
 
@@ -591,7 +591,7 @@ class TestEdgeCases:
         with patch.object(
             portfolio_handler, "_remove_item", new_callable=AsyncMock
         ) as mock_remove:
-            awAlgot portfolio_handler.handle_callback(update, mock_context)
+            await portfolio_handler.handle_callback(update, mock_context)
             mock_remove.assert_called_once_with(
                 mock_callback_query, 123, "special_item_id_123"
             )
@@ -614,7 +614,7 @@ class TestEdgeCases:
         mock_update.message.text = "Item, CSGO, 10.00"
 
         with patch.object(portfolio_handler._manager, "add_item") as mock_add:
-            result = awAlgot portfolio_handler.handle_add_item_id(
+            result = await portfolio_handler.handle_add_item_id(
                 mock_update, mock_context
             )
 
@@ -627,12 +627,12 @@ class TestEdgeCases:
         self, portfolio_handler, mock_update, mock_context
     ):
         """Test add item handles comma in item name."""
-        # This might fAlgol with current implementation - testing edge case
+        # This might fail with current implementation - testing edge case
         mock_update.message.text = "Item, Part2, csgo, 10.00"
 
-        # Should handle gracefully (might combine "Item, Part2" as title or fAlgol)
-        awAlgot portfolio_handler.handle_add_item_id(mock_update, mock_context)
-        # Just verify it doesn't rAlgose an exception
+        # Should handle gracefully (might combine "Item, Part2" as title or fail)
+        await portfolio_handler.handle_add_item_id(mock_update, mock_context)
+        # Just verify it doesn't raise an exception
 
     @pytest.mark.asyncio()
     async def test_zero_price(self, portfolio_handler, mock_update, mock_context):
@@ -642,7 +642,7 @@ class TestEdgeCases:
         mock_update.message.text = "Free Item, csgo, 0.00"
 
         with patch.object(portfolio_handler._manager, "add_item") as mock_add:
-            result = awAlgot portfolio_handler.handle_add_item_id(
+            result = await portfolio_handler.handle_add_item_id(
                 mock_update, mock_context
             )
 
@@ -658,7 +658,7 @@ class TestEdgeCases:
         mock_update.message.text = "Expensive Item, csgo, 99999.99"
 
         with patch.object(portfolio_handler._manager, "add_item") as mock_add:
-            result = awAlgot portfolio_handler.handle_add_item_id(
+            result = await portfolio_handler.handle_add_item_id(
                 mock_update, mock_context
             )
 

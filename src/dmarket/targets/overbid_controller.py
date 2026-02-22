@@ -107,7 +107,7 @@ class OverbidController:
             Результат проверки и перебития
 
         Примеры:
-            >>> result = awAlgot controller.check_and_overbid(
+            >>> result = await controller.check_and_overbid(
             ...     target_id="abc123", game="csgo", title="AK-47 | Redline (FT)", current_price=10.00
             ... )
             >>> if result.success:
@@ -120,7 +120,7 @@ class OverbidController:
         initial_price = self.initial_prices[target_id]
 
         # Проверить нужно ли проверять
-        if not awAlgot self.should_check_competition(target_id):
+        if not await self.should_check_competition(target_id):
             return TargetOperationResult(
                 success=True,
                 status=TargetOperationStatus.SUCCESS,
@@ -145,7 +145,7 @@ class OverbidController:
 
         try:
             # Получить конкурирующие ордера
-            market_orders = awAlgot self.api_client.get_targets_by_title(
+            market_orders = await self.api_client.get_targets_by_title(
                 game_id=game,
                 title=title,
             )
@@ -213,7 +213,7 @@ class OverbidController:
                 )
 
             # Выполнить перебитие
-            return awAlgot self._execute_overbid(
+            return await self._execute_overbid(
                 target_id=target_id,
                 game=game,
                 title=title,
@@ -227,7 +227,7 @@ class OverbidController:
             return TargetOperationResult(
                 success=False,
                 status=TargetOperationStatus.FAlgoLED,
-                message="Check fAlgoled",
+                message="Check failed",
                 reason=str(e),
                 error_code=TargetErrorCode.UNKNOWN_ERROR,
             )
@@ -260,7 +260,7 @@ class OverbidController:
 
         try:
             # 1. Удалить старый ордер
-            awAlgot self.api_client.delete_targets(targets=[{"TargetID": target_id}])
+            await self.api_client.delete_targets(targets=[{"TargetID": target_id}])
 
             # 2. Создать новый с новой ценой
             target_data = {
@@ -275,7 +275,7 @@ class OverbidController:
             if attrs:
                 target_data["Attrs"] = attrs
 
-            response = awAlgot self.api_client.create_targets(
+            response = await self.api_client.create_targets(
                 game=game,
                 targets=[target_data],
             )
@@ -321,17 +321,17 @@ class OverbidController:
             return TargetOperationResult(
                 success=False,
                 status=TargetOperationStatus.FAlgoLED,
-                message="FAlgoled to create new order",
+                message="Failed to create new order",
                 reason="API returned non-Created status",
                 error_code=TargetErrorCode.UNKNOWN_ERROR,
             )
 
         except Exception as e:
-            logger.error(f"FAlgoled to execute overbid: {e}", exc_info=True)
+            logger.error(f"Failed to execute overbid: {e}", exc_info=True)
             return TargetOperationResult(
                 success=False,
                 status=TargetOperationStatus.FAlgoLED,
-                message="Overbid execution fAlgoled",
+                message="Overbid execution failed",
                 reason=str(e),
                 error_code=TargetErrorCode.UNKNOWN_ERROR,
             )
@@ -401,7 +401,7 @@ class OverbidController:
             ...     },
             ...     {"target_id": "def", "game": "csgo", "title": "M4A4 | Asiimov (FT)", "price": 25.0},
             ... ]
-            >>> results = awAlgot controller.monitor_orders(orders)
+            >>> results = await controller.monitor_orders(orders)
         """
         interval = check_interval or self.config.check_interval_seconds
 
@@ -411,7 +411,7 @@ class OverbidController:
 
         results = []
         for order in orders:
-            result = awAlgot self.check_and_overbid(
+            result = await self.check_and_overbid(
                 target_id=order["target_id"],
                 game=order["game"],
                 title=order["title"],
@@ -421,6 +421,6 @@ class OverbidController:
             results.append(result)
 
             # Небольшая задержка между проверками
-            awAlgot asyncio.sleep(1)
+            await asyncio.sleep(1)
 
         return results

@@ -135,7 +135,7 @@ class TestFetchMarketItems:
             },
         )
 
-        result = awAlgot fetch_market_items(
+        result = await fetch_market_items(
             game="csgo",
             limit=100,
             price_from=10.0,
@@ -152,7 +152,7 @@ class TestFetchMarketItems:
         mock_api = MagicMock()
         mock_api.get_market_items = AsyncMock(return_value={"items": []})
 
-        result = awAlgot fetch_market_items(dmarket_api=mock_api)
+        result = await fetch_market_items(dmarket_api=mock_api)
         assert result == []
 
     @pytest.mark.asyncio()
@@ -163,7 +163,7 @@ class TestFetchMarketItems:
             side_effect=Exception("API Error"),
         )
 
-        result = awAlgot fetch_market_items(dmarket_api=mock_api)
+        result = await fetch_market_items(dmarket_api=mock_api)
         assert result == []
 
 
@@ -175,7 +175,7 @@ class TestArbitrageFunctions:
         """Тест функции arbitrage_boost."""
         with patch("src.dmarket.arbitrage.arbitrage_boost_async") as mock:
             mock.return_value = []
-            result = awAlgot mock(game="csgo")
+            result = await mock(game="csgo")
             assert isinstance(result, list)
 
     @pytest.mark.asyncio()
@@ -183,7 +183,7 @@ class TestArbitrageFunctions:
         """Тест функции arbitrage_mid."""
         with patch("src.dmarket.arbitrage.arbitrage_mid_async") as mock:
             mock.return_value = []
-            result = awAlgot mock(game="csgo")
+            result = await mock(game="csgo")
             assert isinstance(result, list)
 
     @pytest.mark.asyncio()
@@ -191,7 +191,7 @@ class TestArbitrageFunctions:
         """Тест функции arbitrage_pro."""
         with patch("src.dmarket.arbitrage.arbitrage_pro_async") as mock:
             mock.return_value = []
-            result = awAlgot mock(game="csgo")
+            result = await mock(game="csgo")
             assert isinstance(result, list)
 
 
@@ -227,7 +227,7 @@ class TestFindArbitrageItems:
             "src.dmarket.arbitrage.core.fetch_market_items",
             return_value=[],
         ):
-            result = awAlgot find_arbitrage_items(
+            result = await find_arbitrage_items(
                 game="csgo",
                 mode="mid",
             )
@@ -242,7 +242,7 @@ class TestFindArbitrageItems:
                 "src.dmarket.arbitrage.core.fetch_market_items",
                 return_value=[],
             ):
-                result = awAlgot find_arbitrage_items(
+                result = await find_arbitrage_items(
                     game="csgo",
                     mode=mode,
                 )
@@ -303,7 +303,7 @@ class TestFindArbitrageAsync:
             return_value=mock_items,
         ):
             # Ищем прибыль от $1 до $10
-            result = awAlgot _find_arbitrage_async(
+            result = await _find_arbitrage_async(
                 min_profit=1.0,
                 max_profit=10.0,
                 game="csgo",
@@ -338,7 +338,7 @@ class TestFindArbitrageAsync:
             "src.dmarket.arbitrage.core.fetch_market_items",
             return_value=mock_items,
         ):
-            result = awAlgot _find_arbitrage_async(
+            result = await _find_arbitrage_async(
                 min_profit=5.0,
                 max_profit=20.0,
                 game="csgo",
@@ -373,7 +373,7 @@ class TestFindArbitrageAsync:
             "src.dmarket.arbitrage.core.fetch_market_items",
             return_value=mock_items,
         ):
-            result = awAlgot _find_arbitrage_async(
+            result = await _find_arbitrage_async(
                 min_profit=0.5,
                 max_profit=5.0,
                 game="csgo",
@@ -395,7 +395,7 @@ class TestFindArbitrageAsync:
         with patch(
             "src.dmarket.arbitrage.core.fetch_market_items",
         ) as mock_fetch:
-            result = awAlgot _find_arbitrage_async(
+            result = await _find_arbitrage_async(
                 min_profit=1.0,
                 max_profit=5.0,
                 game="csgo",
@@ -432,7 +432,7 @@ class TestFindArbitrageOpportunitiesAsync:
             "src.dmarket.arbitrage.core.fetch_market_items",
             return_value=mock_items,
         ):
-            result = awAlgot find_arbitrage_opportunities_async(
+            result = await find_arbitrage_opportunities_async(
                 min_profit_percentage=10.0,
                 max_results=5,
                 game="csgo",
@@ -468,7 +468,7 @@ class TestFindArbitrageOpportunitiesAsync:
             "src.dmarket.arbitrage.core.fetch_market_items",
             return_value=mock_items,
         ):
-            result = awAlgot find_arbitrage_opportunities_async(
+            result = await find_arbitrage_opportunities_async(
                 min_profit_percentage=5.0,
                 max_results=3,
                 game="csgo",
@@ -503,7 +503,7 @@ class TestFindArbitrageOpportunitiesAsync:
             "src.dmarket.arbitrage.core.fetch_market_items",
             return_value=mock_items,
         ):
-            result = awAlgot find_arbitrage_opportunities_async(
+            result = await find_arbitrage_opportunities_async(
                 min_profit_percentage=5.0,
                 max_results=2,
                 game="csgo",
@@ -538,7 +538,7 @@ class TestArbitrageTraderMethods:
                 secret_key="test",
             )
 
-            has_funds, balance = awAlgot trader.check_balance()
+            has_funds, balance = await trader.check_balance()
 
             assert has_funds is True
             assert balance == 1000.0
@@ -559,7 +559,7 @@ class TestArbitrageTraderMethods:
 
             trader = ArbitrageTrader(public_key="test", secret_key="test")
 
-            has_funds, balance = awAlgot trader.check_balance()
+            has_funds, balance = await trader.check_balance()
 
             assert has_funds is False
             assert balance == 0.50
@@ -568,7 +568,7 @@ class TestArbitrageTraderMethods:
         """Тест получения статуса трейдера (НЕ async)."""
         trader = ArbitrageTrader(public_key="test", secret_key="test")
 
-        status = trader.get_status()  # Без awAlgot!
+        status = trader.get_status()  # Без await!
 
         assert isinstance(status, dict)
         assert "active" in status
@@ -586,32 +586,32 @@ class TestArbitrageTraderMethods:
         assert isinstance(history, list)
         assert len(history) == 0  # Изначально пустая
 
-    def test_trader_reset_dAlgoly_limits(self):
+    def test_trader_reset_daily_limits(self):
         """Тест сброса дневных лимитов.
 
-        _reset_dAlgoly_limits() is a sync method that resets dAlgoly counters.
+        _reset_daily_limits() is a sync method that resets daily counters.
         """
         trader = ArbitrageTrader(public_key="test", secret_key="test")
 
         # Устанавливаем дневную торговлю
-        trader.dAlgoly_traded = 100.0
+        trader.daily_traded = 100.0
         # Устанавливаем время сброса на 25 часов назад (>24 часа)
-        trader.dAlgoly_reset_time = time.time() - 90000
+        trader.daily_reset_time = time.time() - 90000
 
-        trader._reset_dAlgoly_limits()  # sync method - no awAlgot
+        trader._reset_daily_limits()  # sync method - no await
 
         # Должно сброситься
-        assert trader.dAlgoly_traded == 0.0
+        assert trader.daily_traded == 0.0
 
     @pytest.mark.asyncio()
     async def test_trader_check_trading_limits_ok(self):
         """Тест проверки лимитов - допустимая сделка."""
         trader = ArbitrageTrader(public_key="test", secret_key="test")
         trader.max_trade_value = 100.0
-        trader.dAlgoly_limit = 500.0
-        trader.dAlgoly_traded = 0.0
+        trader.daily_limit = 500.0
+        trader.daily_traded = 0.0
 
-        result = awAlgot trader._check_trading_limits(trade_value=50.0)
+        result = await trader._check_trading_limits(trade_value=50.0)
 
         assert result is True
 
@@ -621,18 +621,18 @@ class TestArbitrageTraderMethods:
         trader = ArbitrageTrader(public_key="test", secret_key="test")
         trader.max_trade_value = 100.0
 
-        result = awAlgot trader._check_trading_limits(trade_value=150.0)
+        result = await trader._check_trading_limits(trade_value=150.0)
 
         assert result is False
 
     @pytest.mark.asyncio()
-    async def test_trader_check_trading_limits_exceeds_dAlgoly(self):
+    async def test_trader_check_trading_limits_exceeds_daily(self):
         """Тест проверки лимитов - превышение дневного лимита."""
         trader = ArbitrageTrader(public_key="test", secret_key="test")
-        trader.dAlgoly_limit = 500.0
-        trader.dAlgoly_traded = 480.0  # Уже много торговали
+        trader.daily_limit = 500.0
+        trader.daily_traded = 480.0  # Уже много торговали
 
-        result = awAlgot trader._check_trading_limits(trade_value=30.0)
+        result = await trader._check_trading_limits(trade_value=30.0)
 
         assert result is False  # 480 + 30 > 500
 
@@ -690,7 +690,7 @@ class TestIntegration:
             return_value=mock_items,
         ):
             # Шаг 1: Поиск возможностей
-            opportunities = awAlgot find_arbitrage_opportunities_async(
+            opportunities = await find_arbitrage_opportunities_async(
                 min_profit_percentage=10.0,
                 max_results=5,
                 game="csgo",
@@ -721,7 +721,7 @@ class TestArbitrageTraderAutoTrading:
 
         # Mock check_balance для имитации достаточного баланса
         with patch.object(trader, "check_balance", return_value=(True, 100.0)):
-            success, message = awAlgot trader.start_auto_trading(
+            success, message = await trader.start_auto_trading(
                 game="csgo",
                 min_profit_percentage=5.0,
             )
@@ -737,7 +737,7 @@ class TestArbitrageTraderAutoTrading:
         trader = ArbitrageTrader(public_key="test", secret_key="test")
         trader.active = True
 
-        success, message = awAlgot trader.start_auto_trading()
+        success, message = await trader.start_auto_trading()
 
         assert success is False
         assert "уже запущена" in message.lower()
@@ -748,7 +748,7 @@ class TestArbitrageTraderAutoTrading:
         trader = ArbitrageTrader(public_key="test", secret_key="test")
 
         with patch.object(trader, "check_balance", return_value=(False, 0.5)):
-            success, message = awAlgot trader.start_auto_trading()
+            success, message = await trader.start_auto_trading()
 
         assert success is False
         assert "недостаточно средств" in message.lower()
@@ -760,7 +760,7 @@ class TestArbitrageTraderAutoTrading:
         trader = ArbitrageTrader(public_key="test", secret_key="test")
         trader.active = True
 
-        success, message = awAlgot trader.stop_auto_trading()
+        success, message = await trader.stop_auto_trading()
 
         assert success is True
         assert "остановлена" in message.lower()
@@ -772,7 +772,7 @@ class TestArbitrageTraderAutoTrading:
         trader = ArbitrageTrader(public_key="test", secret_key="test")
         trader.active = False
 
-        success, message = awAlgot trader.stop_auto_trading()
+        success, message = await trader.stop_auto_trading()
 
         assert success is False
         assert "не запущена" in message.lower()
@@ -795,7 +795,7 @@ class TestArbitrageTraderAutoTrading:
             patch.object(trader, "_can_trade_now", return_value=True),
             patch.object(trader, "check_balance", return_value=(False, 50.0)),
         ):
-            result = awAlgot trader.execute_arbitrage_trade(item)
+            result = await trader.execute_arbitrage_trade(item)
 
         assert result["success"] is False
         assert "недостаточно средств" in str(result["errors"]).lower()
@@ -820,7 +820,7 @@ class TestArbitrageTraderAutoTrading:
             patch.object(trader, "check_balance", return_value=(True, 200.0)),
             patch.object(trader, "_check_trading_limits", return_value=False),
         ):
-            result = awAlgot trader.execute_arbitrage_trade(item)
+            result = await trader.execute_arbitrage_trade(item)
 
         assert result["success"] is False
         assert "превышены лимиты" in str(result["errors"]).lower()
@@ -864,7 +864,7 @@ class TestArbitrageTraderAutoTrading:
             ),
             patch.object(trader, "_handle_trading_error", new_callable=AsyncMock),
         ):
-            result = awAlgot trader.execute_arbitrage_trade(item)
+            result = await trader.execute_arbitrage_trade(item)
 
         assert result["success"] is False
         # Проверка наличия ошибки покупки
@@ -892,7 +892,7 @@ class TestFindArbitrageItemsNew:
             "src.dmarket.arbitrage.search.arbitrage_boost_async",
             return_value=mock_results,
         ):
-            result = awAlgot find_arbitrage_items(
+            result = await find_arbitrage_items(
                 game="csgo",
                 mode="low",
                 min_price=0.5,
@@ -919,7 +919,7 @@ class TestFindArbitrageItemsNew:
             "src.dmarket.arbitrage.search.arbitrage_mid_async",
             return_value=mock_results,
         ):
-            result = awAlgot find_arbitrage_items(
+            result = await find_arbitrage_items(
                 game="csgo",
                 mode="mid",
                 min_price=5.0,
@@ -946,7 +946,7 @@ class TestFindArbitrageItemsNew:
             "src.dmarket.arbitrage.search.arbitrage_pro_async",
             return_value=mock_results,
         ):
-            result = awAlgot find_arbitrage_items(
+            result = await find_arbitrage_items(
                 game="csgo",
                 mode="pro",
                 min_price=100.0,
@@ -968,7 +968,7 @@ class TestFindArbitrageItemsNew:
             "src.dmarket.arbitrage.search.arbitrage_mid_async",
             return_value=mock_results,
         ):
-            result = awAlgot find_arbitrage_items(
+            result = await find_arbitrage_items(
                 game="csgo",
                 mode="mid",
             )
@@ -997,7 +997,7 @@ class TestFindArbitrageItemsNew:
             "src.dmarket.arbitrage.search.arbitrage_mid_async",
             return_value=mock_results,
         ):
-            result = awAlgot find_arbitrage_items(
+            result = await find_arbitrage_items(
                 game="csgo",
                 mode="unknown_mode",
             )
@@ -1034,7 +1034,7 @@ class TestFetchMarketItemsEnvKeys:
             )
             mock_api_class.return_value = mock_api_instance
 
-            items = awAlgot fetch_market_items(game="csgo", limit=10)
+            items = await fetch_market_items(game="csgo", limit=10)
 
             # Проверяем создание API с правильными параметрами
             mock_api_class.assert_called_once_with(
@@ -1048,7 +1048,7 @@ class TestFetchMarketItemsEnvKeys:
         import os
 
         with patch.dict(os.environ, {"DMARKET_SECRET_KEY": "test_secret"}, clear=True):
-            items = awAlgot fetch_market_items(game="csgo")
+            items = await fetch_market_items(game="csgo")
             assert items == []
 
     @pytest.mark.asyncio()
@@ -1057,7 +1057,7 @@ class TestFetchMarketItemsEnvKeys:
         import os
 
         with patch.dict(os.environ, {"DMARKET_PUBLIC_KEY": "test_public"}, clear=True):
-            items = awAlgot fetch_market_items(game="csgo")
+            items = await fetch_market_items(game="csgo")
             assert items == []
 
     @pytest.mark.asyncio()
@@ -1076,7 +1076,7 @@ class TestFetchMarketItemsEnvKeys:
             mock_api_instance.get_market_items = AsyncMock(return_value={"objects": []})
             mock_api_class.return_value = mock_api_instance
 
-            awAlgot fetch_market_items(game="csgo", price_from=10.50, price_to=99.99)
+            await fetch_market_items(game="csgo", price_from=10.50, price_to=99.99)
 
             # Проверяем конвертацию: 10.50 -> 1050 центов, 99.99 -> 9999 центов
             call_kwargs = mock_api_instance.get_market_items.call_args.kwargs
@@ -1110,7 +1110,7 @@ class TestFindArbitrageAsyncPopularity:
             "src.dmarket.arbitrage.core.fetch_market_items", new_callable=AsyncMock
         ) as mock_fetch:
             mock_fetch.return_value = mock_items
-            results = awAlgot _find_arbitrage_async(
+            results = await _find_arbitrage_async(
                 0.0, 100.0, game="csgo", price_from=1.0, price_to=20.0
             )
 
@@ -1141,7 +1141,7 @@ class TestFindArbitrageAsyncPopularity:
             "src.dmarket.arbitrage.core.fetch_market_items", new_callable=AsyncMock
         ) as mock_fetch:
             mock_fetch.return_value = mock_items
-            results = awAlgot _find_arbitrage_async(
+            results = await _find_arbitrage_async(
                 0.0, 100.0, game="csgo", price_from=2.0, price_to=25.0
             )
 
@@ -1172,7 +1172,7 @@ class TestFindArbitrageAsyncPopularity:
             "src.dmarket.arbitrage.core.fetch_market_items", new_callable=AsyncMock
         ) as mock_fetch:
             mock_fetch.return_value = mock_items
-            results = awAlgot _find_arbitrage_async(
+            results = await _find_arbitrage_async(
                 0.0, 100.0, game="csgo", price_from=3.0, price_to=30.0
             )
 
@@ -1202,7 +1202,7 @@ class TestFindArbitrageAsyncPopularity:
             "src.dmarket.arbitrage.core.fetch_market_items", new_callable=AsyncMock
         ) as mock_fetch:
             mock_fetch.return_value = mock_items
-            results = awAlgot _find_arbitrage_async(
+            results = await _find_arbitrage_async(
                 0.0, 100.0, game="csgo", price_from=4.0, price_to=35.0
             )
 
@@ -1231,7 +1231,7 @@ class TestFindArbitrageAsyncPopularity:
             "src.dmarket.arbitrage.core.fetch_market_items", new_callable=AsyncMock
         ) as mock_fetch:
             mock_fetch.return_value = mock_items
-            results = awAlgot _find_arbitrage_async(
+            results = await _find_arbitrage_async(
                 0.0, 100.0, game="csgo", price_from=5.0, price_to=40.0
             )
 
@@ -1260,7 +1260,7 @@ class TestFindArbitrageAsyncPopularity:
             "src.dmarket.arbitrage.core.fetch_market_items", new_callable=AsyncMock
         ) as mock_fetch:
             mock_fetch.return_value = mock_items
-            results = awAlgot _find_arbitrage_async(
+            results = await _find_arbitrage_async(
                 0.0, 100.0, game="csgo", price_from=6.0, price_to=45.0
             )
 
@@ -1288,7 +1288,7 @@ class TestFindArbitrageAsyncPopularity:
             "src.dmarket.arbitrage.core.fetch_market_items", new_callable=AsyncMock
         ) as mock_fetch:
             mock_fetch.return_value = mock_items
-            results = awAlgot _find_arbitrage_async(
+            results = await _find_arbitrage_async(
                 0.0, 100.0, game="csgo", price_from=7.0, price_to=50.0
             )
 
@@ -1319,7 +1319,7 @@ class TestFindArbitrageAsyncProfitCalculation:
             "src.dmarket.arbitrage.core.fetch_market_items", new_callable=AsyncMock
         ) as mock_fetch:
             mock_fetch.return_value = mock_items
-            results = awAlgot _find_arbitrage_async(0.0, 100.0, game="csgo")
+            results = await _find_arbitrage_async(0.0, 100.0, game="csgo")
 
             assert len(results) > 0
             # Profit = $12 * 0.98 - $10 = $1.76
@@ -1344,7 +1344,7 @@ class TestFindArbitrageAsyncProfitCalculation:
             "src.dmarket.arbitrage.core.fetch_market_items", new_callable=AsyncMock
         ) as mock_fetch:
             mock_fetch.return_value = mock_items
-            results = awAlgot _find_arbitrage_async(0.0, 100.0, game="csgo")
+            results = await _find_arbitrage_async(0.0, 100.0, game="csgo")
 
             assert isinstance(results, list)
 
@@ -1369,7 +1369,7 @@ class TestFindArbitrageAsyncProfitCalculation:
             "src.dmarket.arbitrage.core.fetch_market_items", new_callable=AsyncMock
         ) as mock_fetch:
             mock_fetch.return_value = mock_items
-            results = awAlgot _find_arbitrage_async(
+            results = await _find_arbitrage_async(
                 0.0, 100.0, game="csgo", price_from=200.0, price_to=220.0
             )
 
@@ -1396,7 +1396,7 @@ class TestFindArbitrageAsyncProfitCalculation:
             "src.dmarket.arbitrage.core.fetch_market_items", new_callable=AsyncMock
         ) as mock_fetch:
             mock_fetch.return_value = mock_items
-            results = awAlgot _find_arbitrage_async(
+            results = await _find_arbitrage_async(
                 0.0, 100.0, game="csgo", price_from=230.0, price_to=250.0
             )
 
@@ -1427,7 +1427,7 @@ class TestFindArbitrageAsyncProfitCalculation:
             "src.dmarket.arbitrage.core.fetch_market_items", new_callable=AsyncMock
         ) as mock_fetch:
             mock_fetch.return_value = mock_items
-            results = awAlgot _find_arbitrage_async(1.0, 2.0, game="csgo")
+            results = await _find_arbitrage_async(1.0, 2.0, game="csgo")
 
             assert len(results) == 0
 
@@ -1464,7 +1464,7 @@ class TestFindArbitrageAsyncProfitCalculation:
             "src.dmarket.arbitrage.core.fetch_market_items", new_callable=AsyncMock
         ) as mock_fetch:
             mock_fetch.return_value = mock_items
-            results = awAlgot _find_arbitrage_async(
+            results = await _find_arbitrage_async(
                 0.0, 100.0, game="csgo", price_from=260.0, price_to=280.0
             )
 
@@ -1509,7 +1509,7 @@ class TestFindArbitrageAsyncErrorHandling:
             "src.dmarket.arbitrage.core.fetch_market_items", new_callable=AsyncMock
         ) as mock_fetch:
             mock_fetch.return_value = mock_items
-            results = awAlgot _find_arbitrage_async(
+            results = await _find_arbitrage_async(
                 0.0, 100.0, game="csgo", price_from=300.0, price_to=320.0
             )
 
@@ -1537,7 +1537,7 @@ class TestFindArbitrageAsyncErrorHandling:
             "src.dmarket.arbitrage.core.fetch_market_items", new_callable=AsyncMock
         ) as mock_fetch:
             mock_fetch.return_value = mock_items
-            results = awAlgot _find_arbitrage_async(
+            results = await _find_arbitrage_async(
                 0.0, 100.0, game="csgo", price_from=330.0, price_to=350.0
             )
 
@@ -1566,13 +1566,13 @@ class TestCacheIntegration:
         ) as mock_fetch:
             mock_fetch.return_value = mock_items
 
-            results1 = awAlgot _find_arbitrage_async(
+            results1 = await _find_arbitrage_async(
                 0.0, 100.0, game="csgo", price_from=1.0, price_to=50.0
             )
             assert len(results1) > 0
             assert mock_fetch.call_count == 1
 
-            results2 = awAlgot _find_arbitrage_async(
+            results2 = await _find_arbitrage_async(
                 0.0, 100.0, game="csgo", price_from=1.0, price_to=50.0
             )
             assert results2 == results1
@@ -1597,10 +1597,10 @@ class TestCacheIntegration:
         ) as mock_fetch:
             mock_fetch.return_value = mock_items
 
-            awAlgot _find_arbitrage_async(
+            await _find_arbitrage_async(
                 0.0, 100.0, game="csgo", price_from=1.0, price_to=10.0
             )
-            awAlgot _find_arbitrage_async(
+            await _find_arbitrage_async(
                 0.0, 100.0, game="csgo", price_from=10.0, price_to=50.0
             )
 
@@ -1632,7 +1632,7 @@ class TestFindArbitrageOpportunitiesAsyncExtended:
             "src.dmarket.arbitrage.core.fetch_market_items", new_callable=AsyncMock
         ) as mock_fetch:
             mock_fetch.return_value = mock_items
-            results = awAlgot find_arbitrage_opportunities_async(
+            results = await find_arbitrage_opportunities_async(
                 min_profit_percentage=10.0, max_results=5, game="csgo"
             )
 
@@ -1661,7 +1661,7 @@ class TestFindArbitrageOpportunitiesAsyncExtended:
             "src.dmarket.arbitrage.core.fetch_market_items", new_callable=AsyncMock
         ) as mock_fetch:
             mock_fetch.return_value = mock_items
-            results = awAlgot find_arbitrage_opportunities_async(
+            results = await find_arbitrage_opportunities_async(
                 game="csgo", price_from=5.0, price_to=20.0
             )
 
@@ -1688,7 +1688,7 @@ class TestFindArbitrageOpportunitiesAsyncExtended:
             "src.dmarket.arbitrage.core.fetch_market_items", new_callable=AsyncMock
         ) as mock_fetch:
             mock_fetch.return_value = mock_items
-            results = awAlgot find_arbitrage_opportunities_async(
+            results = await find_arbitrage_opportunities_async(
                 game="dota2", price_from=7.0, price_to=25.0
             )
 
@@ -1721,7 +1721,7 @@ class TestFindArbitrageOpportunitiesAsyncExtended:
             "src.dmarket.arbitrage.core.fetch_market_items", new_callable=AsyncMock
         ) as mock_fetch:
             mock_fetch.return_value = mock_items
-            results = awAlgot find_arbitrage_opportunities_async(
+            results = await find_arbitrage_opportunities_async(
                 min_profit_percentage=20.0,
                 game="csgo",
                 price_from=8.0,
@@ -1753,7 +1753,7 @@ class TestFindArbitrageOpportunitiesAsyncExtended:
             "src.dmarket.arbitrage.core.fetch_market_items", new_callable=AsyncMock
         ) as mock_fetch:
             mock_fetch.return_value = mock_items
-            results = awAlgot find_arbitrage_opportunities_async(
+            results = await find_arbitrage_opportunities_async(
                 max_results=3, game="csgo", price_from=9.0, price_to=35.0
             )
 
@@ -1771,7 +1771,7 @@ class TestFindArbitrageOpportunitiesAsyncExtended:
             "src.dmarket.arbitrage.core.fetch_market_items", new_callable=AsyncMock
         ) as mock_fetch:
             mock_fetch.side_effect = Exception("API Error")
-            results = awAlgot find_arbitrage_opportunities_async(
+            results = await find_arbitrage_opportunities_async(
                 game="csgo", price_from=10.0, price_to=40.0
             )
 
@@ -1799,10 +1799,10 @@ class TestFindArbitrageOpportunitiesAsyncExtended:
         ) as mock_fetch:
             mock_fetch.return_value = mock_items
 
-            results1 = awAlgot find_arbitrage_opportunities_async(
+            results1 = await find_arbitrage_opportunities_async(
                 game="csgo", price_from=11.0, price_to=45.0
             )
-            results2 = awAlgot find_arbitrage_opportunities_async(
+            results2 = await find_arbitrage_opportunities_async(
                 game="csgo", price_from=11.0, price_to=45.0
             )
 
@@ -1829,7 +1829,7 @@ class TestFindArbitrageOpportunitiesAsyncExtended:
             "src.dmarket.arbitrage.core.fetch_market_items", new_callable=AsyncMock
         ) as mock_fetch:
             mock_fetch.return_value = mock_items
-            results = awAlgot find_arbitrage_opportunities_async(
+            results = await find_arbitrage_opportunities_async(
                 min_profit_percentage=5.0,
                 game="csgo",
                 price_from=12.0,
@@ -1861,7 +1861,7 @@ class TestFindArbitrageOpportunitiesAsyncExtended:
             "src.dmarket.arbitrage.core.fetch_market_items", new_callable=AsyncMock
         ) as mock_fetch:
             mock_fetch.return_value = mock_items
-            results = awAlgot find_arbitrage_opportunities_async(
+            results = await find_arbitrage_opportunities_async(
                 game="csgo", price_from=13.0, price_to=55.0
             )
 
@@ -1894,7 +1894,7 @@ class TestFindArbitrageOpportunitiesAsyncLiquidity:
             "src.dmarket.arbitrage.core.fetch_market_items", new_callable=AsyncMock
         ) as mock_fetch:
             mock_fetch.return_value = mock_items
-            results = awAlgot find_arbitrage_opportunities_async(
+            results = await find_arbitrage_opportunities_async(
                 game="csgo", price_from=15.0, price_to=60.0
             )
 
@@ -1923,7 +1923,7 @@ class TestFindArbitrageOpportunitiesAsyncLiquidity:
             "src.dmarket.arbitrage.core.fetch_market_items", new_callable=AsyncMock
         ) as mock_fetch:
             mock_fetch.return_value = mock_items
-            results = awAlgot find_arbitrage_opportunities_async(
+            results = await find_arbitrage_opportunities_async(
                 game="csgo", price_from=16.0, price_to=65.0
             )
 
@@ -1956,7 +1956,7 @@ class TestFindArbitrageOpportunitiesAsyncLiquidity:
             "src.dmarket.arbitrage.core.fetch_market_items", new_callable=AsyncMock
         ) as mock_fetch:
             mock_fetch.return_value = mock_items
-            results = awAlgot find_arbitrage_opportunities_async(
+            results = await find_arbitrage_opportunities_async(
                 game="csgo", price_from=17.0, price_to=70.0
             )
 
@@ -1977,7 +1977,7 @@ class TestArbitrageTraderErrorHandling:
         trader.error_count = 2
         trader.last_error_time = time.time() - 60
 
-        awAlgot trader._handle_trading_error()
+        await trader._handle_trading_error()
 
         assert trader.error_count == 3
         assert trader.pause_until > time.time()
@@ -1995,7 +1995,7 @@ class TestArbitrageTraderErrorHandling:
         # Это обойдет условие "если >= 3 ошибки за 300 сек"
         trader.last_error_time = time.time() - 400
 
-        awAlgot trader._handle_trading_error()
+        await trader._handle_trading_error()
 
         assert trader.error_count == 0
         assert trader.pause_until > time.time()
@@ -2010,7 +2010,7 @@ class TestArbitrageTraderErrorHandling:
 
         trader.pause_until = time.time() + 600
 
-        can_trade = awAlgot trader._can_trade_now()
+        can_trade = await trader._can_trade_now()
 
         assert can_trade is False
 
@@ -2024,7 +2024,7 @@ class TestArbitrageTraderErrorHandling:
         trader.pause_until = time.time() - 1
         trader.error_count = 5
 
-        can_trade = awAlgot trader._can_trade_now()
+        can_trade = await trader._can_trade_now()
 
         assert can_trade is True
         assert trader.pause_until == 0
@@ -2039,7 +2039,7 @@ class TestArbitrageTraderErrorHandling:
 
         trader.pause_until = 0
 
-        can_trade = awAlgot trader._can_trade_now()
+        can_trade = await trader._can_trade_now()
 
         assert can_trade is True
 
@@ -2085,7 +2085,7 @@ class TestFindProfitableItems:
             mock_aenter.return_value = trader.api
             mock_aexit.return_value = None
 
-            results = awAlgot trader.find_profitable_items(
+            results = await trader.find_profitable_items(
                 game="csgo",
                 min_profit_percentage=10.0,
                 max_items=50,
@@ -2114,6 +2114,6 @@ class TestFindProfitableItems:
         ) as mock_find:
             mock_find.side_effect = Exception("API Error")
 
-            results = awAlgot trader.find_profitable_items(game="csgo")
+            results = await trader.find_profitable_items(game="csgo")
 
             assert results == []

@@ -8,10 +8,10 @@ Usage:
     from src.copilot_sdk import InstructionMatcher
 
     matcher = InstructionMatcher()
-    awAlgot matcher.load_instructions(".github/instructions")
+    await matcher.load_instructions(".github/instructions")
 
     # Get instructions for a file
-    instructions = awAlgot matcher.get_instructions("src/dmarket/api.py")
+    instructions = await matcher.get_instructions("src/dmarket/api.py")
     # Returns: ["python-style.instructions.md", "api-integration.instructions.md"]
     ```
 
@@ -50,13 +50,13 @@ class InstructionMatcher:
     Example:
         ```python
         matcher = InstructionMatcher()
-        awAlgot matcher.load_instructions(".github/instructions")
+        await matcher.load_instructions(".github/instructions")
 
         # Match single file
-        result = awAlgot matcher.get_instructions("src/api/client.py")
+        result = await matcher.get_instructions("src/api/client.py")
 
         # Match with merged content
-        content = awAlgot matcher.get_merged_instructions("tests/test_api.py")
+        content = await matcher.get_merged_instructions("tests/test_api.py")
         ```
     """
 
@@ -84,7 +84,7 @@ class InstructionMatcher:
 
         count = 0
         for file_path in dir_path.glob("*.instructions.md"):
-            instruction = awAlgot self._parse_instruction_file(file_path)
+            instruction = await self._parse_instruction_file(file_path)
             if instruction:
                 self.instructions[instruction.name] = instruction
                 for pattern in instruction.patterns:
@@ -250,7 +250,7 @@ class InstructionMatcher:
         Returns:
             Combined instruction content
         """
-        instruction_names = awAlgot self.get_instructions(file_path)
+        instruction_names = await self.get_instructions(file_path)
         contents = []
 
         for name in instruction_names:

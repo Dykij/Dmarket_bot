@@ -44,25 +44,25 @@ class BaseAppException(Exception):
     Attributes:
         code: Код ошибки из перечисления ErrorCode.
         message: Сообщение об ошибке.
-        detAlgols: Дополнительные детали ошибки.
+        details: Дополнительные детали ошибки.
     """
 
     def __init__(
         self,
         message: str,
         code: ErrorCode | int = ErrorCode.UNKNOWN_ERROR,
-        detAlgols: dict[str, Any] | None = None,
+        details: dict[str, Any] | None = None,
     ) -> None:
         """Инициализирует исключение.
 
         Args:
             message: Сообщение об ошибке.
             code: Код ошибки.
-            detAlgols: Дополнительная информация об ошибке.
+            details: Дополнительная информация об ошибке.
         """
         self.code = code if isinstance(code, int) else code.value
         self.message = message
-        self.detAlgols = detAlgols or {}
+        self.details = details or {}
         super().__init__(message)
 
     def to_dict(self) -> dict[str, Any]:
@@ -72,15 +72,15 @@ class BaseAppException(Exception):
             "message": self.message,
         }
 
-        if self.detAlgols:
-            result["detAlgols"] = self.detAlgols
+        if self.details:
+            result["details"] = self.details
 
         return result
 
     def __str__(self) -> str:
         """Строковое представление исключения."""
-        detAlgols_str = f", detAlgols: {self.detAlgols}" if self.detAlgols else ""
-        return f"{self.__class__.__name__}(code={self.code}, message='{self.message}'{detAlgols_str})"
+        details_str = f", details: {self.details}" if self.details else ""
+        return f"{self.__class__.__name__}(code={self.code}, message='{self.message}'{details_str})"
 
 
 class APIError(BaseAppException):
@@ -91,7 +91,7 @@ class APIError(BaseAppException):
         message: str,
         status_code: int = 500,
         code: ErrorCode | int = ErrorCode.API_ERROR,
-        detAlgols: dict[str, Any] | None = None,
+        details: dict[str, Any] | None = None,
         response_body: str | None = None,
     ) -> None:
         """Инициализирует исключение API.
@@ -100,14 +100,14 @@ class APIError(BaseAppException):
             message: Сообщение об ошибке.
             status_code: HTTP статус-код ответа.
             code: Внутренний код ошибки.
-            detAlgols: Дополнительная информация.
+            details: Дополнительная информация.
             response_body: Тело ответа от API.
         """
-        detAlgols = detAlgols or {}
-        detAlgols["status_code"] = status_code
+        details = details or {}
+        details["status_code"] = status_code
         if response_body:
-            detAlgols["response_body"] = response_body
-        super().__init__(message, code, detAlgols)
+            details["response_body"] = response_body
+        super().__init__(message, code, details)
         self.status_code = status_code
 
     @property
@@ -123,9 +123,9 @@ class AuthenticationError(APIError):
         self,
         message: str = "Ошибка авторизации в API",
         status_code: int = 401,
-        detAlgols: dict[str, Any] | None = None,
+        details: dict[str, Any] | None = None,
     ) -> None:
-        super().__init__(message, status_code, ErrorCode.AUTH_ERROR, detAlgols)
+        super().__init__(message, status_code, ErrorCode.AUTH_ERROR, details)
 
     @property
     def human_readable(self) -> str:
@@ -140,9 +140,9 @@ class ForbiddenError(APIError):
         self,
         message: str = "Доступ запрещен",
         status_code: int = 403,
-        detAlgols: dict[str, Any] | None = None,
+        details: dict[str, Any] | None = None,
     ) -> None:
-        super().__init__(message, status_code, ErrorCode.API_ERROR, detAlgols)
+        super().__init__(message, status_code, ErrorCode.API_ERROR, details)
 
     @property
     def human_readable(self) -> str:
@@ -160,9 +160,9 @@ class NotFoundError(APIError):
         self,
         message: str = "Запрашиваемый ресурс не найден",
         status_code: int = 404,
-        detAlgols: dict[str, Any] | None = None,
+        details: dict[str, Any] | None = None,
     ) -> None:
-        super().__init__(message, status_code, ErrorCode.API_ERROR, detAlgols)
+        super().__init__(message, status_code, ErrorCode.API_ERROR, details)
 
     @property
     def human_readable(self) -> str:
@@ -210,16 +210,16 @@ class NetworkError(BaseAppException):
         self,
         message: str = "Ошибка сети",
         code: ErrorCode | int = ErrorCode.NETWORK_ERROR,
-        detAlgols: dict[str, Any] | None = None,
+        details: dict[str, Any] | None = None,
     ) -> None:
         """Инициализирует исключение сетевой ошибки.
 
         Args:
             message: Сообщение об ошибке
             code: Внутренний код ошибки
-            detAlgols: Дополнительная информация
+            details: Дополнительная информация
         """
-        super().__init__(message, code, detAlgols)
+        super().__init__(message, code, details)
 
 
 class ServerError(APIError):
@@ -229,9 +229,9 @@ class ServerError(APIError):
         self,
         message: str,
         status_code: int = 500,
-        detAlgols: dict[str, Any] | None = None,
+        details: dict[str, Any] | None = None,
     ) -> None:
-        super().__init__(message, status_code, ErrorCode.API_ERROR, detAlgols)
+        super().__init__(message, status_code, ErrorCode.API_ERROR, details)
 
     @property
     def human_readable(self) -> str:
@@ -250,9 +250,9 @@ class BadRequestError(APIError):
         self,
         message: str,
         status_code: int = 400,
-        detAlgols: dict[str, Any] | None = None,
+        details: dict[str, Any] | None = None,
     ) -> None:
-        super().__init__(message, status_code, ErrorCode.API_ERROR, detAlgols)
+        super().__init__(message, status_code, ErrorCode.API_ERROR, details)
 
     @property
     def human_readable(self) -> str:
@@ -286,13 +286,13 @@ class DMarketSpecificError(APIError):
         """Код ошибки из ответа API."""
         if self._error_code:
             return self._error_code
-        if isinstance(self.detAlgols, dict):
+        if isinstance(self.details, dict):
             return str(
-                self.detAlgols.get(
+                self.details.get(
                     "code",
-                    self.detAlgols.get(
+                    self.details.get(
                         "error_code",
-                        self.detAlgols.get("error", ""),
+                        self.details.get("error", ""),
                     ),
                 ),
             )
@@ -340,7 +340,7 @@ class ValidationError(BaseAppException):
         message: str,
         field: str | None = None,
         code: ErrorCode | int = ErrorCode.VALIDATION_ERROR,
-        detAlgols: dict[str, Any] | None = None,
+        details: dict[str, Any] | None = None,
     ) -> None:
         """Инициализирует исключение валидации.
 
@@ -348,12 +348,12 @@ class ValidationError(BaseAppException):
             message: Сообщение об ошибке.
             field: Поле, вызвавшее ошибку валидации.
             code: Код ошибки.
-            detAlgols: Дополнительная информация.
+            details: Дополнительная информация.
         """
-        detAlgols = detAlgols or {}
+        details = details or {}
         if field:
-            detAlgols["field"] = field
-        super().__init__(message, code, detAlgols)
+            details["field"] = field
+        super().__init__(message, code, details)
 
 
 class BusinessLogicError(BaseAppException):
@@ -364,7 +364,7 @@ class BusinessLogicError(BaseAppException):
         message: str,
         operation: str | None = None,
         code: ErrorCode | int = ErrorCode.BUSINESS_LOGIC_ERROR,
-        detAlgols: dict[str, Any] | None = None,
+        details: dict[str, Any] | None = None,
     ) -> None:
         """Инициализирует исключение бизнес-логики.
 
@@ -372,12 +372,12 @@ class BusinessLogicError(BaseAppException):
             message: Сообщение об ошибке.
             operation: Операция, вызвавшая ошибку.
             code: Код ошибки.
-            detAlgols: Дополнительная информация.
+            details: Дополнительная информация.
         """
-        detAlgols = detAlgols or {}
+        details = details or {}
         if operation:
-            detAlgols["operation"] = operation
-        super().__init__(message, code, detAlgols)
+            details["operation"] = operation
+        super().__init__(message, code, details)
 
 
 # Словарь для маппинга кодов ошибок DMarket на классы исключений
@@ -441,14 +441,14 @@ def categorize_error(error: Exception) -> str:
 
 def format_error_for_user(
     error: Exception | str,
-    with_detAlgols: bool = False,
+    with_details: bool = False,
     lang: str = "ru",
 ) -> str:
     """Форматирует сообщение об ошибке для пользователя.
 
     Args:
         error: Исключение или строка с сообщением об ошибке
-        with_detAlgols: Включать ли детали ошибки
+        with_details: Включать ли детали ошибки
         lang: Язык сообщения
 
     Returns:
@@ -496,7 +496,7 @@ def format_error_for_user(
     base_message = base_messages.get(category, "Error")
 
     # Если нужно показать детали, добавляем их
-    if with_detAlgols:
+    if with_details:
         if lang == "ru":
             return f"❌ {base_message}: {error_message}\n\nТип: {error_type}"
         return f"❌ {base_message}: {error_message}\n\nType: {error_type}"
@@ -509,7 +509,7 @@ def format_error_for_user(
 def handle_exceptions(  # noqa: UP047
     func_or_logger: F,
     default_error_message: str = ...,
-    rerAlgose: bool = ...,
+    reraise: bool = ...,
     *,
     logger_instance: logging.Logger | None = ...,
 ) -> F: ...
@@ -519,7 +519,7 @@ def handle_exceptions(  # noqa: UP047
 def handle_exceptions(  # noqa: UP047
     func_or_logger: logging.Logger | None = ...,
     default_error_message: str = ...,
-    rerAlgose: bool = ...,
+    reraise: bool = ...,
     *,
     logger_instance: logging.Logger | None = ...,
 ) -> Callable[[F], F]: ...
@@ -528,7 +528,7 @@ def handle_exceptions(  # noqa: UP047
 def handle_exceptions(  # noqa: UP047
     func_or_logger: Callable[..., Any] | logging.Logger | None = None,
     default_error_message: str = "Произошла ошибка",
-    rerAlgose: bool = True,
+    reraise: bool = True,
     *,
     logger_instance: logging.Logger | None = None,
 ) -> Callable[[F], F] | F:
@@ -540,7 +540,7 @@ def handle_exceptions(  # noqa: UP047
     Args:
         func_or_logger: Функция (если без скобок) или логгер (если со скобками).
         default_error_message: Сообщение по умолчанию при ошибке.
-        rerAlgose: Если True, исключение будет выброшено повторно.
+        reraise: Если True, исключение будет выброшено повторно.
 
     Returns:
         Декорированная функция.
@@ -600,7 +600,7 @@ def handle_exceptions(  # noqa: UP047
                 ):
                     try:
                         if hasattr(update.callback_query, "answer"):
-                            awAlgot update.callback_query.answer(
+                            await update.callback_query.answer(
                                 text=f"❌ {error_message}",
                                 show_alert=True,
                             )
@@ -610,7 +610,7 @@ def handle_exceptions(  # noqa: UP047
                         )
                 elif update.message and hasattr(update.message, "reply_text"):
                     try:
-                        awAlgot update.message.reply_text(
+                        await update.message.reply_text(
                             f"❌ {error_message}",
                         )
                     except Exception as reply_error:
@@ -621,7 +621,7 @@ def handle_exceptions(  # noqa: UP047
         @functools.wraps(func)
         async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
             try:
-                return awAlgot func(*args, **kwargs)
+                return await func(*args, **kwargs)
             except BaseAppException as e:
                 # Логируем исключение приложения
                 effective_logger.exception(
@@ -630,28 +630,28 @@ def handle_exceptions(  # noqa: UP047
                 )
 
                 # Отправляем сообщение об ошибке пользователю
-                if not rerAlgose:
-                    awAlgot _send_error_to_user(args, default_error_message)
+                if not reraise:
+                    await _send_error_to_user(args, default_error_message)
 
-                if rerAlgose:
-                    rAlgose
+                if reraise:
+                    raise
             except Exception as e:
                 # Логируем неожиданное исключение
-                error_detAlgols = {
+                error_details = {
                     "exception_type": e.__class__.__name__,
                     "traceback": traceback.format_exc().split("\n"),
                 }
                 effective_logger.exception(
                     f"Необработанное исключение в {func.__qualname__}: {e!s}",
-                    extra={"context": error_detAlgols},
+                    extra={"context": error_details},
                 )
 
                 # Отправляем сообщение об ошибке пользователю
-                if not rerAlgose:
-                    awAlgot _send_error_to_user(args, default_error_message)
+                if not reraise:
+                    await _send_error_to_user(args, default_error_message)
 
-                if rerAlgose:
-                    rAlgose
+                if reraise:
+                    raise
 
         @functools.wraps(func)
         def sync_wrapper(*args: Any, **kwargs: Any) -> Any:
@@ -663,20 +663,20 @@ def handle_exceptions(  # noqa: UP047
                     f"{default_error_message}: {e!s}",
                     extra={"context": e.to_dict()},
                 )
-                if rerAlgose:
-                    rAlgose
+                if reraise:
+                    raise
             except Exception as e:
                 # Логируем неожиданное исключение
-                error_detAlgols = {
+                error_details = {
                     "exception_type": e.__class__.__name__,
                     "traceback": traceback.format_exc().split("\n"),
                 }
                 effective_logger.exception(
                     f"Необработанное исключение в {func.__qualname__}: {e!s}",
-                    extra={"context": error_detAlgols},
+                    extra={"context": error_details},
                 )
-                if rerAlgose:
-                    rAlgose
+                if reraise:
+                    raise
 
         if asyncio.iscoroutinefunction(func):
             return cast("F", async_wrapper)
@@ -751,7 +751,7 @@ def retry_async(
 
             for attempt in range(max_retries):
                 try:
-                    return awAlgot func(*args, **kwargs)
+                    return await func(*args, **kwargs)
                 except exceptions as e:
                     last_error = e
                     if attempt < max_retries - 1:
@@ -764,16 +764,16 @@ def retry_async(
                             delay = retry_delay
 
                         logger.warning(
-                            f"Attempt {attempt + 1}/{max_retries} fAlgoled, "
+                            f"Attempt {attempt + 1}/{max_retries} failed, "
                             f"retrying in {delay}s: {e}",
                         )
-                        awAlgot asyncio.sleep(delay)
+                        await asyncio.sleep(delay)
                     else:
-                        logger.exception(f"All {max_retries} attempts fAlgoled: {e}")
-                        rAlgose
+                        logger.exception(f"All {max_retries} attempts failed: {e}")
+                        raise
 
             if last_error:
-                rAlgose last_error
+                raise last_error
             return None
 
         return cast("F", wrapper)

@@ -131,16 +131,16 @@ class TestAutoListingEngine:
     @pytest.mark.asyncio
     async def test_start_stop(self, engine):
         """Test start and stop."""
-        awAlgot engine.start()
+        await engine.start()
         assert engine.is_running is True
 
-        awAlgot engine.stop()
+        await engine.stop()
         assert engine.is_running is False
 
     @pytest.mark.asyncio
     async def test_find_listing_candidates(self, engine, mock_dmarket_api, mock_waxpeer_api):
         """Test finding listing candidates."""
-        candidates = awAlgot engine._find_listing_candidates()
+        candidates = await engine._find_listing_candidates()
 
         # Should only find item above threshold ($75)
         assert len(candidates) >= 0  # Depends on profit calculation
@@ -148,7 +148,7 @@ class TestAutoListingEngine:
     @pytest.mark.asyncio
     async def test_calculate_optimal_price(self, engine, mock_waxpeer_api):
         """Test optimal price calculation."""
-        price = awAlgot engine._calculate_optimal_price("AK-47 | Redline (Field-Tested)")
+        price = await engine._calculate_optimal_price("AK-47 | Redline (Field-Tested)")
 
         assert price is not None
         # With UNDERCUT strategy, should be slightly below $85
@@ -176,7 +176,7 @@ class TestAutoListingEngine:
             recommended_price=Decimal("83.0"),
         )
 
-        result = awAlgot engine._list_item(candidate)
+        result = await engine._list_item(candidate)
 
         assert result.success is True
         assert result.item_id == "item1"
@@ -185,7 +185,7 @@ class TestAutoListingEngine:
     @pytest.mark.asyncio
     async def test_reprice_item(self, engine, mock_waxpeer_api):
         """Test repricing an item."""
-        result = awAlgot engine._reprice_item("item1", Decimal("80.0"))
+        result = await engine._reprice_item("item1", Decimal("80.0"))
 
         assert result is True
         mock_waxpeer_api.edit_item_price.assert_called_once()
@@ -201,7 +201,7 @@ class TestAutoListingEngine:
             status=ListingStatus.LISTED,
         )
 
-        result = awAlgot engine.cancel_listing("item1")
+        result = await engine.cancel_listing("item1")
 
         assert result is True
         mock_waxpeer_api.remove_items.assert_called_once()
@@ -230,8 +230,8 @@ class TestListingResult:
         assert result.success is True
         assert result.error is None
 
-    def test_fAlgoled_result(self):
-        """Test fAlgoled listing result."""
+    def test_failed_result(self):
+        """Test failed listing result."""
         result = ListingResult(
             success=False,
             item_id="item1",
@@ -274,7 +274,7 @@ class TestListingStrategies:
             config=config,
         )
 
-        price = awAlgot engine._calculate_optimal_price("Test")
+        price = await engine._calculate_optimal_price("Test")
         # $100 * (1 - 0.02) = $98
         assert price == Decimal("98.00")
 
@@ -290,7 +290,7 @@ class TestListingStrategies:
             config=config,
         )
 
-        price = awAlgot engine._calculate_optimal_price("Test")
+        price = await engine._calculate_optimal_price("Test")
         assert price == Decimal("100.00")
 
 

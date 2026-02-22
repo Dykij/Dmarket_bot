@@ -140,7 +140,7 @@ class QueryProfiler:
             self._engine = engine
 
         if self._engine is None:
-            rAlgose ValueError("Engine is required")
+            raise ValueError("Engine is required")
 
         if not self._enabled:
             event.listen(self._engine, "before_cursor_execute", self._before_execute)

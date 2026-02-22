@@ -90,7 +90,7 @@ class TestAdvancedOrderHandler:
     @pytest.mark.asyncio
     async def test_show_advanced_orders_menu(self, handler, mock_update, mock_context):
         """Test showing advanced orders menu."""
-        result = awAlgot handler.show_advanced_orders_menu(mock_update, mock_context)
+        result = await handler.show_advanced_orders_menu(mock_update, mock_context)
 
         mock_update.message.reply_text.assert_called_once()
         call_args = mock_update.message.reply_text.call_args
@@ -105,7 +105,7 @@ class TestAdvancedOrderHandler:
         mock_update.callback_query.answer = AsyncMock()
         mock_update.callback_query.edit_message_text = AsyncMock()
 
-        result = awAlgot handler.handle_order_type_selection(mock_update, mock_context)
+        result = await handler.handle_order_type_selection(mock_update, mock_context)
 
         mock_update.callback_query.answer.assert_called_once()
         assert result == ENTERING_ITEM_TITLE
@@ -118,7 +118,7 @@ class TestAdvancedOrderHandler:
         mock_update.callback_query.answer = AsyncMock()
         mock_update.callback_query.edit_message_text = AsyncMock()
 
-        result = awAlgot handler.handle_order_type_selection(mock_update, mock_context)
+        result = await handler.handle_order_type_selection(mock_update, mock_context)
 
         mock_update.callback_query.answer.assert_called_once()
 
@@ -128,7 +128,7 @@ class TestAdvancedOrderHandler:
         mock_update.message.text = "AK-47 | Redline"
         mock_context.user_data["order_type"] = "float"
 
-        result = awAlgot handler.handle_item_title(mock_update, mock_context)
+        result = await handler.handle_item_title(mock_update, mock_context)
 
         assert mock_context.user_data.get("item_title") == "AK-47 | Redline"
         assert result == ENTERING_FLOAT_RANGE
@@ -140,7 +140,7 @@ class TestAdvancedOrderHandler:
         mock_context.user_data["order_type"] = "float"
         mock_context.user_data["item_title"] = "AK-47 | Redline"
 
-        result = awAlgot handler.handle_float_range(mock_update, mock_context)
+        result = await handler.handle_float_range(mock_update, mock_context)
 
         assert mock_context.user_data.get("float_min") == 0.01
         assert mock_context.user_data.get("float_max") == 0.07
@@ -152,7 +152,7 @@ class TestAdvancedOrderHandler:
         mock_update.message.text = "invalid range"
         mock_context.user_data["order_type"] = "float"
 
-        result = awAlgot handler.handle_float_range(mock_update, mock_context)
+        result = await handler.handle_float_range(mock_update, mock_context)
 
         mock_update.message.reply_text.assert_called()
         # Should stay on same state for retry
@@ -167,7 +167,7 @@ class TestAdvancedOrderHandler:
         mock_context.user_data["float_min"] = 0.01
         mock_context.user_data["float_max"] = 0.07
 
-        result = awAlgot handler.handle_price(mock_update, mock_context)
+        result = await handler.handle_price(mock_update, mock_context)
 
         # Implementation stores price in "max_price" key
         assert mock_context.user_data.get("max_price") == 25.50
@@ -189,7 +189,7 @@ class TestAdvancedOrderHandler:
             "max_price": 25.50,  # Uses max_price, not price
         }
 
-        result = awAlgot handler.handle_confirmation(mock_update, mock_context)
+        result = await handler.handle_confirmation(mock_update, mock_context)
 
         # Implementation calls create_order, not create_float_order
         mock_order_manager.create_order.assert_called_once()
@@ -203,7 +203,7 @@ class TestAdvancedOrderHandler:
         mock_update.callback_query.answer = AsyncMock()
         mock_update.callback_query.edit_message_text = AsyncMock()
 
-        result = awAlgot handler.cancel(mock_update, mock_context)
+        result = await handler.cancel(mock_update, mock_context)
 
         # cancel() calls edit_message_text, not answer()
         mock_update.callback_query.edit_message_text.assert_called_once()
@@ -218,17 +218,17 @@ class TestAdvancedOrderHandler:
         ]
 
         # Method is called show_my_orders, not show_active_orders
-        awAlgot handler.show_my_orders(mock_update, mock_context)
+        await handler.show_my_orders(mock_update, mock_context)
 
         mock_update.message.reply_text.assert_called_once()
         call_args = mock_update.message.reply_text.call_args
-        # The message contAlgons "Мои активные ордера" in Russian
+        # The message contains "Мои активные ордера" in Russian
         assert "активные ордера" in str(call_args)
 
     @pytest.mark.asyncio
     async def test_show_templates(self, handler, mock_update, mock_context):
         """Test showing order templates."""
-        awAlgot handler.show_templates(mock_update, mock_context)
+        await handler.show_templates(mock_update, mock_context)
 
         mock_update.message.reply_text.assert_called_once()
 

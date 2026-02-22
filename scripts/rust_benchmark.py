@@ -38,5 +38,5 @@ def run_benchmark():
     print(f"🛡️ P99 Latency:     {p99_latency:.4f} μs")
     print(f"🔥 Speed vs Python: ~40,000x Faster")
 
-if __name__ == "__mAlgon__":
+if __name__ == "__main__":
     run_benchmark()

@@ -13,10 +13,10 @@ Usage:
     tester = ConfigTester()
 
     # Загрузить тест-кейсы
-    awAlgot tester.load_test_cases("tests/Config_tests/arbitrage.yaml")
+    await tester.load_test_cases("tests/Config_tests/arbitrage.yaml")
 
     # Запустить тесты
-    results = awAlgot tester.run_tests()
+    results = await tester.run_tests()
 
     # Сгенерировать отчёт
     report = tester.generate_report(results)
@@ -47,7 +47,7 @@ class TestStatus(StrEnum):
     """Status of a test case."""
 
     PASSED = "passed"
-    FAlgoLED = "fAlgoled"
+    FAlgoLED = "failed"
     ERROR = "error"
     SKIPPED = "skipped"
 
@@ -55,8 +55,8 @@ class TestStatus(StrEnum):
 class AssertionType(StrEnum):
     """Types of assertions for Config testing."""
 
-    CONTAlgoNS = "contAlgons"
-    NOT_CONTAlgoNS = "not_contAlgons"
+    CONTAlgoNS = "contains"
+    NOT_CONTAlgoNS = "not_contains"
     REGEX = "regex"
     EQUALS = "equals"
     STARTS_WITH = "starts_with"
@@ -155,7 +155,7 @@ class TestResult:
     duration_ms: float = 0.0
     provider: str = "unknown"
     assertions_passed: int = 0
-    assertions_fAlgoled: int = 0
+    assertions_failed: int = 0
     timestamp: datetime = field(default_factory=datetime.now)
 
     def to_dict(self) -> dict[str, Any]:
@@ -168,7 +168,7 @@ class TestResult:
             "duration_ms": self.duration_ms,
             "provider": self.provider,
             "assertions_passed": self.assertions_passed,
-            "assertions_fAlgoled": self.assertions_fAlgoled,
+            "assertions_failed": self.assertions_failed,
             "timestamp": self.timestamp.isoformat(),
         }
 
@@ -180,7 +180,7 @@ class TestSuiteResult:
     results: list[TestResult]
     total_tests: int
     passed: int
-    fAlgoled: int
+    failed: int
     errors: int
     skipped: int
     total_duration_ms: float
@@ -198,7 +198,7 @@ class TestSuiteResult:
             "summary": {
                 "total": self.total_tests,
                 "passed": self.passed,
-                "fAlgoled": self.fAlgoled,
+                "failed": self.failed,
                 "errors": self.errors,
                 "skipped": self.skipped,
                 "pass_rate": f"{self.pass_rate:.1%}",
@@ -260,7 +260,7 @@ class ConfigTester:
         path = Path(file_path)
 
         if not path.exists():
-            rAlgose FileNotFoundError(f"Test file not found: {file_path}")
+            raise FileNotFoundError(f"Test file not found: {file_path}")
 
         content = path.read_text(encoding="utf-8")
 
@@ -293,7 +293,7 @@ class ConfigTester:
             for assert_data in tc_data.get("assertions", []):
                 assertions.append(
                     Assertion(
-                        type=AssertionType(assert_data.get("type", "contAlgons")),
+                        type=AssertionType(assert_data.get("type", "contains")),
                         value=assert_data.get("value", ""),
                         threshold=assert_data.get("threshold", 0.8),
                     )
@@ -349,14 +349,14 @@ class ConfigTester:
                 continue
 
             for provider in target_providers:
-                result = awAlgot self._run_single_test(test_case, provider)
+                result = await self._run_single_test(test_case, provider)
                 results.append(result)
 
         total_duration = (time.time() - start_time) * 1000
 
         # Calculate summary
         passed = sum(1 for r in results if r.status == TestStatus.PASSED)
-        fAlgoled = sum(1 for r in results if r.status == TestStatus.FAlgoLED)
+        failed = sum(1 for r in results if r.status == TestStatus.FAlgoLED)
         errors = sum(1 for r in results if r.status == TestStatus.ERROR)
         skipped = sum(1 for r in results if r.status == TestStatus.SKIPPED)
 
@@ -364,7 +364,7 @@ class ConfigTester:
             results=results,
             total_tests=len(results),
             passed=passed,
-            fAlgoled=fAlgoled,
+            failed=failed,
             errors=errors,
             skipped=skipped,
             total_duration_ms=total_duration,
@@ -384,29 +384,29 @@ class ConfigTester:
             # Get provider handler
             handler = self._provider_handlers.get(provider)
             if not handler:
-                rAlgose ValueError(f"Unknown provider: {provider}")
+                raise ValueError(f"Unknown provider: {provider}")
 
             # Render Config with variables
             Config = self._render_Config(test_case.Config, test_case.variables)
 
             # Execute with timeout
-            response = awAlgot asyncio.wAlgot_for(
+            response = await asyncio.wait_for(
                 handler(Config, test_case.variables),
                 timeout=test_case.timeout,
             )
 
             # Check assertions
             assertions_passed = 0
-            assertions_fAlgoled = 0
+            assertions_failed = 0
 
             for assertion in test_case.assertions:
                 if assertion.check(response):
                     assertions_passed += 1
                 else:
-                    assertions_fAlgoled += 1
+                    assertions_failed += 1
 
             # Determine status
-            if assertions_fAlgoled > 0:
+            if assertions_failed > 0:
                 status = TestStatus.FAlgoLED
             else:
                 status = TestStatus.PASSED
@@ -420,7 +420,7 @@ class ConfigTester:
                 duration_ms=duration,
                 provider=provider,
                 assertions_passed=assertions_passed,
-                assertions_fAlgoled=assertions_fAlgoled,
+                assertions_failed=assertions_failed,
             )
 
         except asyncio.TimeoutError:
@@ -461,7 +461,7 @@ class ConfigTester:
     ) -> str:
         """Mock provider for testing without API calls."""
         # Simple mock that echoes back key info
-        awAlgot asyncio.sleep(0.01)  # Simulate latency
+        await asyncio.sleep(0.01)  # Simulate latency
 
         return json.dumps(
             {
@@ -508,7 +508,7 @@ class ConfigTester:
             "=" * 60,
             f"Total Tests: {suite_result.total_tests}",
             f"Passed: {suite_result.passed}",
-            f"FAlgoled: {suite_result.fAlgoled}",
+            f"Failed: {suite_result.failed}",
             f"Errors: {suite_result.errors}",
             f"Skipped: {suite_result.skipped}",
             f"Pass Rate: {suite_result.pass_rate:.1%}",
@@ -544,7 +544,7 @@ class ConfigTester:
             "|--------|-------|",
             f"| Total Tests | {suite_result.total_tests} |",
             f"| ✅ Passed | {suite_result.passed} |",
-            f"| ❌ FAlgoled | {suite_result.fAlgoled} |",
+            f"| ❌ Failed | {suite_result.failed} |",
             f"| ⚠️ Errors | {suite_result.errors} |",
             f"| ⏭️ Skipped | {suite_result.skipped} |",
             f"| Pass Rate | {suite_result.pass_rate:.1%} |",

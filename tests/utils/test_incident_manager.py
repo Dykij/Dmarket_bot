@@ -219,7 +219,7 @@ class TestIncidentDetection:
         self, incident_manager: IncidentManager
     ) -> None:
         """Test detecting an incident creates a record."""
-        incident = awAlgot incident_manager.detect_incident(
+        incident = await incident_manager.detect_incident(
             title="Test Incident",
             description="This is a test",
             severity=IncidentSeverity.HIGH,
@@ -238,14 +238,14 @@ class TestIncidentDetection:
         self, incident_manager: IncidentManager
     ) -> None:
         """Test incident IDs increment correctly."""
-        inc1 = awAlgot incident_manager.detect_incident(
+        inc1 = await incident_manager.detect_incident(
             title="First",
             description="First",
             severity=IncidentSeverity.LOW,
             source="test",
         )
 
-        inc2 = awAlgot incident_manager.detect_incident(
+        inc2 = await incident_manager.detect_incident(
             title="Second",
             description="Second",
             severity=IncidentSeverity.LOW,
@@ -260,7 +260,7 @@ class TestIncidentDetection:
         self, incident_manager: IncidentManager
     ) -> None:
         """Test detection updates metrics."""
-        awAlgot incident_manager.detect_incident(
+        await incident_manager.detect_incident(
             title="High Severity",
             description="Test",
             severity=IncidentSeverity.HIGH,
@@ -279,7 +279,7 @@ class TestIncidentDetection:
         self, incident_manager: IncidentManager
     ) -> None:
         """Test incident with custom metadata."""
-        incident = awAlgot incident_manager.detect_incident(
+        incident = await incident_manager.detect_incident(
             title="With Metadata",
             description="Test",
             severity=IncidentSeverity.MEDIUM,
@@ -310,7 +310,7 @@ class TestAutomaticMitigation:
 
         incident_manager.register_mitigation_handler("test_type", successful_handler)
 
-        incident = awAlgot incident_manager.detect_incident(
+        incident = await incident_manager.detect_incident(
             title="Test",
             description="Test",
             severity=IncidentSeverity.MEDIUM,
@@ -319,32 +319,32 @@ class TestAutomaticMitigation:
         )
 
         # Give async task time to complete
-        awAlgot asyncio.sleep(0.1)
+        await asyncio.sleep(0.1)
 
         assert incident.status == IncidentStatus.RESOLVED
         assert incident.auto_mitigated is True
         assert incident.mitigation_attempts == 1
 
     @pytest.mark.asyncio()
-    async def test_auto_mitigation_fAlgolure(
+    async def test_auto_mitigation_failure(
         self, incident_manager: IncidentManager
     ) -> None:
-        """Test fAlgoled automatic mitigation."""
+        """Test failed automatic mitigation."""
 
-        async def fAlgoling_handler(incident: Incident) -> bool:
+        async def failing_handler(incident: Incident) -> bool:
             return False
 
-        incident_manager.register_mitigation_handler("fAlgol_type", fAlgoling_handler)
+        incident_manager.register_mitigation_handler("fail_type", failing_handler)
 
-        incident = awAlgot incident_manager.detect_incident(
+        incident = await incident_manager.detect_incident(
             title="Will FAlgol",
             description="Test",
             severity=IncidentSeverity.HIGH,
             source="test",
-            incident_type="fAlgol_type",
+            incident_type="fail_type",
         )
 
-        awAlgot asyncio.sleep(0.1)
+        await asyncio.sleep(0.1)
 
         assert incident.status == IncidentStatus.INVESTIGATING
         assert incident.auto_mitigated is False
@@ -354,7 +354,7 @@ class TestAutomaticMitigation:
         self, incident_manager: IncidentManager
     ) -> None:
         """Test no mitigation attempted without handler."""
-        incident = awAlgot incident_manager.detect_incident(
+        incident = await incident_manager.detect_incident(
             title="No Handler",
             description="Test",
             severity=IncidentSeverity.LOW,
@@ -376,7 +376,7 @@ class TestAutomaticMitigation:
 
         incident_manager.register_mitigation_handler("skip_type", handler)
 
-        incident = awAlgot incident_manager.detect_incident(
+        incident = await incident_manager.detect_incident(
             title="Skip Mitigation",
             description="Test",
             severity=IncidentSeverity.LOW,
@@ -401,7 +401,7 @@ class TestIncidentLifecycle:
         self, incident_manager: IncidentManager
     ) -> None:
         """Test acknowledging an incident."""
-        incident = awAlgot incident_manager.detect_incident(
+        incident = await incident_manager.detect_incident(
             title="To Acknowledge",
             description="Test",
             severity=IncidentSeverity.MEDIUM,
@@ -409,7 +409,7 @@ class TestIncidentLifecycle:
             auto_mitigate=False,
         )
 
-        result = awAlgot incident_manager.acknowledge_incident(incident.id)
+        result = await incident_manager.acknowledge_incident(incident.id)
 
         assert result is True
         assert incident.status == IncidentStatus.ACKNOWLEDGED
@@ -420,7 +420,7 @@ class TestIncidentLifecycle:
         self, incident_manager: IncidentManager
     ) -> None:
         """Test resolving an incident."""
-        incident = awAlgot incident_manager.detect_incident(
+        incident = await incident_manager.detect_incident(
             title="To Resolve",
             description="Test",
             severity=IncidentSeverity.LOW,
@@ -428,7 +428,7 @@ class TestIncidentLifecycle:
             auto_mitigate=False,
         )
 
-        result = awAlgot incident_manager.resolve_incident(
+        result = await incident_manager.resolve_incident(
             incident.id,
             resolution_notes="Fixed manually",
         )
@@ -443,7 +443,7 @@ class TestIncidentLifecycle:
         self, incident_manager: IncidentManager
     ) -> None:
         """Test closing an incident."""
-        incident = awAlgot incident_manager.detect_incident(
+        incident = await incident_manager.detect_incident(
             title="To Close",
             description="Test",
             severity=IncidentSeverity.LOW,
@@ -451,8 +451,8 @@ class TestIncidentLifecycle:
             auto_mitigate=False,
         )
 
-        awAlgot incident_manager.resolve_incident(incident.id)
-        result = awAlgot incident_manager.close_incident(
+        await incident_manager.resolve_incident(incident.id)
+        result = await incident_manager.close_incident(
             incident.id,
             closing_notes="All good",
         )
@@ -465,9 +465,9 @@ class TestIncidentLifecycle:
         self, incident_manager: IncidentManager
     ) -> None:
         """Test operations on non-existent incident."""
-        assert awAlgot incident_manager.acknowledge_incident("fake") is False
-        assert awAlgot incident_manager.resolve_incident("fake") is False
-        assert awAlgot incident_manager.close_incident("fake") is False
+        assert await incident_manager.acknowledge_incident("fake") is False
+        assert await incident_manager.resolve_incident("fake") is False
+        assert await incident_manager.close_incident("fake") is False
 
 
 # ============================================================================
@@ -483,7 +483,7 @@ class TestQueries:
         self, incident_manager: IncidentManager
     ) -> None:
         """Test getting incident by ID."""
-        incident = awAlgot incident_manager.detect_incident(
+        incident = await incident_manager.detect_incident(
             title="Get Me",
             description="Test",
             severity=IncidentSeverity.LOW,
@@ -507,7 +507,7 @@ class TestQueries:
         self, incident_manager: IncidentManager
     ) -> None:
         """Test getting active incidents."""
-        inc1 = awAlgot incident_manager.detect_incident(
+        inc1 = await incident_manager.detect_incident(
             title="Active 1",
             description="Test",
             severity=IncidentSeverity.HIGH,
@@ -515,7 +515,7 @@ class TestQueries:
             auto_mitigate=False,
         )
 
-        inc2 = awAlgot incident_manager.detect_incident(
+        inc2 = await incident_manager.detect_incident(
             title="Active 2",
             description="Test",
             severity=IncidentSeverity.MEDIUM,
@@ -523,7 +523,7 @@ class TestQueries:
             auto_mitigate=False,
         )
 
-        awAlgot incident_manager.resolve_incident(inc1.id)
+        await incident_manager.resolve_incident(inc1.id)
 
         active = incident_manager.get_active_incidents()
 
@@ -535,7 +535,7 @@ class TestQueries:
         self, incident_manager: IncidentManager
     ) -> None:
         """Test filtering active incidents by severity."""
-        awAlgot incident_manager.detect_incident(
+        await incident_manager.detect_incident(
             title="High",
             description="Test",
             severity=IncidentSeverity.HIGH,
@@ -543,7 +543,7 @@ class TestQueries:
             auto_mitigate=False,
         )
 
-        awAlgot incident_manager.detect_incident(
+        await incident_manager.detect_incident(
             title="Low",
             description="Test",
             severity=IncidentSeverity.LOW,
@@ -563,7 +563,7 @@ class TestQueries:
         self, incident_manager: IncidentManager
     ) -> None:
         """Test getting recent incidents."""
-        awAlgot incident_manager.detect_incident(
+        await incident_manager.detect_incident(
             title="Recent",
             description="Test",
             severity=IncidentSeverity.LOW,
@@ -587,7 +587,7 @@ class TestPrebuiltMitigationHandlers:
     @pytest.mark.asyncio()
     async def test_rate_limit_mitigation(self, sample_incident: Incident) -> None:
         """Test rate limit mitigation handler."""
-        result = awAlgot mitigate_rate_limit(sample_incident)
+        result = await mitigate_rate_limit(sample_incident)
 
         assert isinstance(result, MitigationResult)
         assert result.success is True
@@ -596,7 +596,7 @@ class TestPrebuiltMitigationHandlers:
     @pytest.mark.asyncio()
     async def test_api_timeout_mitigation(self, sample_incident: Incident) -> None:
         """Test API timeout mitigation handler."""
-        result = awAlgot mitigate_api_timeout(sample_incident)
+        result = await mitigate_api_timeout(sample_incident)
 
         assert isinstance(result, MitigationResult)
         assert result.success is True

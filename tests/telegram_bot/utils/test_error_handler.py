@@ -61,7 +61,7 @@ class TestHandleNetworkError:
         """Тест обработки RetryAfter ошибки."""
         mock_context.error = RetryAfter(30)
 
-        awAlgot handle_network_error(mock_update, mock_context)
+        await handle_network_error(mock_update, mock_context)
 
         mock_context.bot.send_message.assert_called_once()
         call_args = mock_context.bot.send_message.call_args[1]
@@ -72,7 +72,7 @@ class TestHandleNetworkError:
         """Тест обработки TimedOut ошибки."""
         mock_context.error = TimedOut("Connection timeout")
 
-        awAlgot handle_network_error(mock_update, mock_context)
+        await handle_network_error(mock_update, mock_context)
 
         mock_context.bot.send_message.assert_called_once()
         call_args = mock_context.bot.send_message.call_args[1]
@@ -81,19 +81,19 @@ class TestHandleNetworkError:
     @pytest.mark.asyncio()
     async def test_handle_network_error_generic(self, mock_update, mock_context):
         """Тест обработки общей сетевой ошибки."""
-        mock_context.error = NetworkError("Network fAlgolure")
+        mock_context.error = NetworkError("Network failure")
 
-        awAlgot handle_network_error(mock_update, mock_context)
+        await handle_network_error(mock_update, mock_context)
 
         mock_context.bot.send_message.assert_called_once()
 
     @pytest.mark.asyncio()
     async def test_handle_network_error_no_update(self, mock_context):
         """Тест без update."""
-        mock_context.error = NetworkError("Network fAlgolure")
+        mock_context.error = NetworkError("Network failure")
 
         # Не должно быть исключений
-        awAlgot handle_network_error(None, mock_context)
+        await handle_network_error(None, mock_context)
 
         mock_context.bot.send_message.assert_not_called()
 
@@ -109,7 +109,7 @@ class TestRetryLastAction:
         mock_context.job = mock_job
 
         # Не должно быть исключений
-        awAlgot retry_last_action(mock_context)
+        await retry_last_action(mock_context)
 
     @pytest.mark.asyncio()
     async def test_retry_without_job(self, mock_context):
@@ -117,7 +117,7 @@ class TestRetryLastAction:
         mock_context.job = None
 
         # Не должно быть исключений
-        awAlgot retry_last_action(mock_context)
+        await retry_last_action(mock_context)
 
 
 class TestHandleForbiddenError:
@@ -128,7 +128,7 @@ class TestHandleForbiddenError:
         """Тест обработки блокировки пользователем."""
         mock_context.error = Forbidden("bot was blocked by the user")
 
-        awAlgot handle_forbidden_error(mock_update, mock_context)
+        await handle_forbidden_error(mock_update, mock_context)
 
         mock_context.bot.send_message.assert_called_once()
         call_args = mock_context.bot.send_message.call_args[1]
@@ -139,7 +139,7 @@ class TestHandleForbiddenError:
         """Тест обработки удаления из группы."""
         mock_context.error = Forbidden("bot was kicked from the group")
 
-        awAlgot handle_forbidden_error(mock_update, mock_context)
+        await handle_forbidden_error(mock_update, mock_context)
 
         call_args = mock_context.bot.send_message.call_args[1]
         assert "удален из группы" in call_args["text"]
@@ -149,7 +149,7 @@ class TestHandleForbiddenError:
         """Тест обработки отсутствия прав."""
         mock_context.error = Forbidden("not enough rights to send")
 
-        awAlgot handle_forbidden_error(mock_update, mock_context)
+        await handle_forbidden_error(mock_update, mock_context)
 
         call_args = mock_context.bot.send_message.call_args[1]
         assert "недостаточно прав" in call_args["text"]
@@ -163,7 +163,7 @@ class TestHandleBadRequest:
         """Тест игнорирования 'message is not modified'."""
         mock_context.error = BadRequest("message is not modified")
 
-        awAlgot handle_bad_request(mock_update, mock_context)
+        await handle_bad_request(mock_update, mock_context)
 
         # Должно быть проигнорировано
         mock_context.bot.send_message.assert_not_called()
@@ -173,7 +173,7 @@ class TestHandleBadRequest:
         """Тест обработки 'message to edit not found'."""
         mock_context.error = BadRequest("message to edit not found")
 
-        awAlgot handle_bad_request(mock_update, mock_context)
+        await handle_bad_request(mock_update, mock_context)
 
         call_args = mock_context.bot.send_message.call_args[1]
         assert "не найдено" in call_args["text"]
@@ -183,7 +183,7 @@ class TestHandleBadRequest:
         """Тест обработки 'query is too old'."""
         mock_context.error = BadRequest("query is too old")
 
-        awAlgot handle_bad_request(mock_update, mock_context)
+        await handle_bad_request(mock_update, mock_context)
 
         call_args = mock_context.bot.send_message.call_args[1]
         assert "устарел" in call_args["text"]
@@ -193,7 +193,7 @@ class TestHandleBadRequest:
         """Тест обработки ошибки парсинга."""
         mock_context.error = BadRequest("can't parse entities")
 
-        awAlgot handle_bad_request(mock_update, mock_context)
+        await handle_bad_request(mock_update, mock_context)
 
         call_args = mock_context.bot.send_message.call_args[1]
         assert "форматировании" in call_args["text"]
@@ -203,7 +203,7 @@ class TestHandleBadRequest:
         """Тест обработки неверного file_id."""
         mock_context.error = BadRequest("wrong file identifier")
 
-        awAlgot handle_bad_request(mock_update, mock_context)
+        await handle_bad_request(mock_update, mock_context)
 
         call_args = mock_context.bot.send_message.call_args[1]
         assert "файлом" in call_args["text"]
@@ -220,7 +220,7 @@ class TestHandleDmarketApiError:
         mock_context.dmarket_error = dmarket_error
         mock_context.error = Exception("Unauthorized")
 
-        awAlgot handle_dmarket_api_error(mock_update, mock_context)
+        await handle_dmarket_api_error(mock_update, mock_context)
 
         call_args = mock_context.bot.send_message.call_args[1]
         assert "авторизации" in call_args["text"]
@@ -233,7 +233,7 @@ class TestHandleDmarketApiError:
         mock_context.dmarket_error = dmarket_error
         mock_context.error = Exception("Rate limit")
 
-        awAlgot handle_dmarket_api_error(mock_update, mock_context)
+        await handle_dmarket_api_error(mock_update, mock_context)
 
         call_args = mock_context.bot.send_message.call_args[1]
         assert "лимит" in call_args["text"]
@@ -246,7 +246,7 @@ class TestHandleDmarketApiError:
         mock_context.dmarket_error = dmarket_error
         mock_context.error = Exception("Server error")
 
-        awAlgot handle_dmarket_api_error(mock_update, mock_context)
+        await handle_dmarket_api_error(mock_update, mock_context)
 
         call_args = mock_context.bot.send_message.call_args[1]
         assert "недоступен" in call_args["text"]
@@ -259,7 +259,7 @@ class TestHandleDmarketApiError:
         mock_context.dmarket_error = dmarket_error
         mock_context.error = Exception("Bad request")
 
-        awAlgot handle_dmarket_api_error(mock_update, mock_context)
+        await handle_dmarket_api_error(mock_update, mock_context)
 
         mock_context.bot.send_message.assert_called_once()
 
@@ -275,7 +275,7 @@ class TestErrorHandler:
         with patch(
             "src.telegram_bot.utils.error_handler.handle_network_error", AsyncMock()
         ) as mock_handle:
-            awAlgot error_handler(mock_update, mock_context)
+            await error_handler(mock_update, mock_context)
             mock_handle.assert_called_once()
 
     @pytest.mark.asyncio()
@@ -286,7 +286,7 @@ class TestErrorHandler:
         with patch(
             "src.telegram_bot.utils.error_handler.handle_forbidden_error", AsyncMock()
         ) as mock_handle:
-            awAlgot error_handler(mock_update, mock_context)
+            await error_handler(mock_update, mock_context)
             mock_handle.assert_called_once()
 
     @pytest.mark.asyncio()
@@ -294,7 +294,7 @@ class TestErrorHandler:
         """Тест прямой обработки BadRequest."""
         mock_context.error = BadRequest("query is too old")
 
-        awAlgot error_handler(mock_update, mock_context)
+        await error_handler(mock_update, mock_context)
 
         # Должно отправить сообщение пользователю
         assert mock_context.bot.send_message.called
@@ -308,7 +308,7 @@ class TestErrorHandler:
         with patch(
             "src.telegram_bot.utils.error_handler.handle_dmarket_api_error", AsyncMock()
         ) as mock_handle:
-            awAlgot error_handler(mock_update, mock_context)
+            await error_handler(mock_update, mock_context)
             mock_handle.assert_called_once()
 
     @pytest.mark.asyncio()
@@ -316,7 +316,7 @@ class TestErrorHandler:
         """Тест обработки обычной ошибки."""
         mock_context.error = ValueError("Test error")
 
-        awAlgot error_handler(mock_update, mock_context)
+        await error_handler(mock_update, mock_context)
 
         # Должны быть вызовы send_message для пользователя
         assert mock_context.bot.send_message.called
@@ -327,14 +327,14 @@ class TestErrorHandler:
         mock_context.error = Exception("Error without update")
 
         # Не должно быть исключений
-        awAlgot error_handler(None, mock_context)
+        await error_handler(None, mock_context)
 
     @pytest.mark.asyncio()
     async def test_handle_error_sends_user_message(self, mock_update, mock_context):
         """Тест отправки сообщения пользователю."""
         mock_context.error = ValueError("Test error")
 
-        awAlgot error_handler(mock_update, mock_context)
+        await error_handler(mock_update, mock_context)
 
         # Должно отправить хотя бы одно сообщение
         assert mock_context.bot.send_message.call_count >= 1
@@ -373,7 +373,7 @@ class TestExceptionGuard:
             return "success"
 
         guarded_func = exception_guard(test_func)
-        result = awAlgot guarded_func(mock_update, mock_context)
+        result = await guarded_func(mock_update, mock_context)
 
         assert result == "success"
 
@@ -382,14 +382,14 @@ class TestExceptionGuard:
         """Тест обработки исключения в обёрнутой функции."""
 
         async def test_func(update, context):
-            rAlgose ValueError("Test error")
+            raise ValueError("Test error")
 
         guarded_func = exception_guard(test_func)
 
         with patch(
             "src.telegram_bot.utils.error_handler.error_handler", AsyncMock()
         ) as mock_handler:
-            result = awAlgot guarded_func(mock_update, mock_context)
+            result = await guarded_func(mock_update, mock_context)
 
             assert result is None
             mock_handler.assert_called_once()
@@ -405,7 +405,7 @@ class TestSendMessageSafe:
         mock_message = MagicMock(spec=Message)
         mock_bot.send_message = AsyncMock(return_value=mock_message)
 
-        result = awAlgot send_message_safe(mock_bot, 12345, "Test message")
+        result = await send_message_safe(mock_bot, 12345, "Test message")
 
         assert result == mock_message
 
@@ -415,7 +415,7 @@ class TestSendMessageSafe:
         mock_bot = MagicMock(spec=Bot)
         mock_bot.send_message = AsyncMock(side_effect=Forbidden("Forbidden"))
 
-        result = awAlgot send_message_safe(mock_bot, 12345, "Test message")
+        result = await send_message_safe(mock_bot, 12345, "Test message")
 
         assert result is None
 
@@ -425,7 +425,7 @@ class TestSendMessageSafe:
         mock_bot = MagicMock(spec=Bot)
         mock_bot.send_message = AsyncMock(side_effect=BadRequest("Bad request"))
 
-        result = awAlgot send_message_safe(mock_bot, 12345, "Test message")
+        result = await send_message_safe(mock_bot, 12345, "Test message")
 
         assert result is None
 
@@ -435,7 +435,7 @@ class TestSendMessageSafe:
         mock_bot = MagicMock(spec=Bot)
         mock_bot.send_message = AsyncMock(side_effect=NetworkError("Network error"))
 
-        result = awAlgot send_message_safe(mock_bot, 12345, "Test message")
+        result = await send_message_safe(mock_bot, 12345, "Test message")
 
         assert result is None
 

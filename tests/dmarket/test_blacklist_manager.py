@@ -116,35 +116,35 @@ class TestBlacklistManager:
         assert should_skip is True
         assert "keyword" in reason.lower()
 
-    def test_record_fAlgolure_increments(self, manager):
-        """Test fAlgolure counter incrementing."""
+    def test_record_failure_increments(self, manager):
+        """Test failure counter incrementing."""
         seller_id = "seller123"
 
-        manager.record_fAlgolure(seller_id)
-        assert manager._fAlgolure_counter[seller_id] == 1
+        manager.record_failure(seller_id)
+        assert manager._failure_counter[seller_id] == 1
 
-        manager.record_fAlgolure(seller_id)
-        assert manager._fAlgolure_counter[seller_id] == 2
+        manager.record_failure(seller_id)
+        assert manager._failure_counter[seller_id] == 2
 
-    def test_record_fAlgolure_auto_blacklists(self, manager):
-        """Test automatic blacklisting after repeated fAlgolures."""
-        seller_id = "fAlgoling_seller"
-        manager._fAlgolure_threshold = 3
+    def test_record_failure_auto_blacklists(self, manager):
+        """Test automatic blacklisting after repeated failures."""
+        seller_id = "failing_seller"
+        manager._failure_threshold = 3
 
-        # Simulate fAlgolures until threshold
+        # Simulate failures until threshold
         for _ in range(3):
-            manager.record_fAlgolure(seller_id)
+            manager.record_failure(seller_id)
 
         assert manager.is_seller_blacklisted(seller_id) is True
 
-    def test_reset_fAlgolure_counter(self, manager):
-        """Test resetting fAlgolure counter."""
+    def test_reset_failure_counter(self, manager):
+        """Test resetting failure counter."""
         seller_id = "seller123"
-        manager._fAlgolure_counter[seller_id] = 5
+        manager._failure_counter[seller_id] = 5
 
-        manager.reset_fAlgolure_counter(seller_id)
+        manager.reset_failure_counter(seller_id)
 
-        assert seller_id not in manager._fAlgolure_counter
+        assert seller_id not in manager._failure_counter
 
     def test_get_blacklist_summary(self, manager):
         """Test getting blacklist summary."""

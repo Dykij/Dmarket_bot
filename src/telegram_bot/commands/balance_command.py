@@ -198,13 +198,13 @@ async def _send_message_response(
     reply_markup = get_back_to_arbitrage_keyboard() if include_keyboard else None
 
     if is_callback and isinstance(message, CallbackQuery):
-        awAlgot message.edit_message_text(
+        await message.edit_message_text(
             text=text,
             reply_markup=reply_markup,
             parse_mode=ParseMode.HTML,
         )
     elif processing_message is not None:
-        awAlgot processing_message.edit_text(
+        await processing_message.edit_text(
             text=text,
             parse_mode=ParseMode.HTML,
         )
@@ -243,25 +243,25 @@ async def check_balance_command(
 
     # Send initial processing message
     if is_callback and isinstance(message, CallbackQuery):
-        awAlgot message.edit_message_text(
+        await message.edit_message_text(
             text="🔄 <b>Проверка подключения к DMarket API...</b>",
             parse_mode=ParseMode.HTML,
         )
         processing_message = None
     elif is_message and isinstance(message, Message):
-        processing_message = awAlgot message.reply_text(
+        processing_message = await message.reply_text(
             text="🔄 <b>Проверка подключения к DMarket API...</b>",
             parse_mode=ParseMode.HTML,
         )
     elif is_update and isinstance(message, Update) and message.message is not None:
         # For Update object
-        processing_message = awAlgot message.message.reply_text(
+        processing_message = await message.message.reply_text(
             text="🔄 <b>Проверка подключения к DMarket API...</b>",
             parse_mode=ParseMode.HTML,
         )
     else:
         logger.error(
-            "FAlgoled to get message object for response. Type: %s",
+            "Failed to get message object for response. Type: %s",
             type(message),
         )
         return
@@ -278,13 +278,13 @@ async def check_balance_command(
             )
 
             if is_callback and isinstance(message, CallbackQuery):
-                awAlgot message.edit_message_text(
+                await message.edit_message_text(
                     text=error_text,
                     reply_markup=get_back_to_arbitrage_keyboard(),
                     parse_mode=ParseMode.HTML,
                 )
             elif processing_message is not None:
-                awAlgot processing_message.edit_text(
+                await processing_message.edit_text(
                     text=error_text,
                     parse_mode=ParseMode.HTML,
                 )
@@ -292,14 +292,14 @@ async def check_balance_command(
 
         # Update status
         status_text = "🔄 <b>Проверка баланса DMarket...</b>"
-        awAlgot _send_message_response(
+        await _send_message_response(
             message, processing_message, status_text, is_callback
         )
 
         # Check balance
         try:
             # Try new balance endpoint first
-            balance_result = awAlgot api_client.get_user_balance()
+            balance_result = await api_client.get_user_balance()
 
             # Check for API error in response
             if balance_result.get("error", False):
@@ -310,7 +310,7 @@ async def check_balance_command(
 
                 # Format error message (Phase 2 - use helper)
                 error_text = _format_error_by_code(error_code, error_msg)
-                awAlgot _send_message_response(
+                await _send_message_response(
                     message,
                     processing_message,
                     error_text,
@@ -325,11 +325,11 @@ async def check_balance_command(
             has_funds = balance_result.get("has_funds", False)
 
             # Get account info
-            account_info = awAlgot api_client.get_account_detAlgols()
+            account_info = await api_client.get_account_details()
             username = account_info.get("username", "Неизвестный")
 
             # Get active offers stats
-            offers_info = awAlgot api_client.get_active_offers(limit=1)
+            offers_info = await api_client.get_active_offers(limit=1)
             total_offers = offers_info.get("total", 0)
 
             # Format response (Phase 2 - use helper)
@@ -351,7 +351,7 @@ async def check_balance_command(
             )
 
             # Send result (Phase 2 - use helper)
-            awAlgot _send_message_response(
+            await _send_message_response(
                 message,
                 processing_message,
                 response_text,
@@ -367,7 +367,7 @@ async def check_balance_command(
                 f"Возможно, проблема с подключением к DMarket API. "
                 f"Проверьте настSwarmки API ключей и повторите попытку."
             )
-            awAlgot _send_message_response(
+            await _send_message_response(
                 message,
                 processing_message,
                 error_text,
@@ -396,6 +396,6 @@ async def check_balance_command(
                 f"администратору."
             )
 
-        awAlgot _send_message_response(
+        await _send_message_response(
             message, processing_message, error_text, is_callback, include_keyboard=True
         )

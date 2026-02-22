@@ -36,7 +36,7 @@ async def steam_stats_command(
 
     try:
         enhancer = get_steam_enhancer()
-        stats = enhancer.get_dAlgoly_stats()
+        stats = enhancer.get_daily_stats()
 
         # Формируем сообщение
         message = (
@@ -73,12 +73,12 @@ async def steam_stats_command(
             f"• Устаревших: **{cache_stats['stale']}**\n"
         )
 
-        awAlgot update.message.reply_text(message, parse_mode="Markdown")
+        await update.message.reply_text(message, parse_mode="Markdown")
         logger.info(f"Sent stats to user {user_id}")
 
     except Exception as e:
         logger.error(f"Error in steam_stats_command: {e}", exc_info=True)
-        awAlgot update.message.reply_text(
+        await update.message.reply_text(
             "❌ Ошибка при получении статистики. Попробуйте позже."
         )
 
@@ -102,7 +102,7 @@ async def steam_top_command(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         top_items = enhancer.get_top_items_today(limit=5)
 
         if not top_items:
-            awAlgot update.message.reply_text(
+            await update.message.reply_text(
                 "📊 Топ предметов за 24 часа\n\n_Пока находок нет. Проверьте позже!_",
                 parse_mode="Markdown",
             )
@@ -129,12 +129,12 @@ async def steam_top_command(update: Update, context: ContextTypes.DEFAULT_TYPE) 
             message += f"{medal} **{item_name}**\n"
             message += f"   💰 Профит: **{profit:.1f}%**\n\n"
 
-        awAlgot update.message.reply_text(message, parse_mode="Markdown")
+        await update.message.reply_text(message, parse_mode="Markdown")
         logger.info(f"Sent top items to user {user_id}")
 
     except Exception as e:
         logger.error(f"Error in steam_top_command: {e}", exc_info=True)
-        awAlgot update.message.reply_text(
+        await update.message.reply_text(
             "❌ Ошибка при получении топа. Попробуйте позже."
         )
 
@@ -179,7 +179,7 @@ async def steam_settings_command(
                 "`/steam_settings volume 100` - установить объем\n"
             )
 
-            awAlgot update.message.reply_text(message, parse_mode="Markdown")
+            await update.message.reply_text(message, parse_mode="Markdown")
             return
 
         # Обработка команд изменения
@@ -190,17 +190,17 @@ async def steam_settings_command(
                 new_profit = float(context.args[1])
                 if 0 < new_profit <= 100:
                     enhancer.update_settings(min_profit=new_profit)
-                    awAlgot update.message.reply_text(
+                    await update.message.reply_text(
                         f"✅ Минимальный профит установлен: **{new_profit:.0f}%**",
                         parse_mode="Markdown",
                     )
                     logger.info(f"User {user_id} updated min_profit to {new_profit}")
                 else:
-                    awAlgot update.message.reply_text(
+                    await update.message.reply_text(
                         "❌ Профит должен быть от 0% до 100%"
                     )
             except ValueError:
-                awAlgot update.message.reply_text(
+                await update.message.reply_text(
                     "❌ Некорректное значение профита. Используйте число."
                 )
 
@@ -209,22 +209,22 @@ async def steam_settings_command(
                 new_volume = int(context.args[1])
                 if new_volume >= 0:
                     enhancer.update_settings(min_volume=new_volume)
-                    awAlgot update.message.reply_text(
+                    await update.message.reply_text(
                         f"✅ Минимальный объем установлен: **{new_volume} шт/день**",
                         parse_mode="Markdown",
                     )
                     logger.info(f"User {user_id} updated min_volume to {new_volume}")
                 else:
-                    awAlgot update.message.reply_text(
+                    await update.message.reply_text(
                         "❌ Объем должен быть положительным числом"
                     )
             except ValueError:
-                awAlgot update.message.reply_text(
+                await update.message.reply_text(
                     "❌ Некорректное значение объема. Используйте целое число."
                 )
 
         else:
-            awAlgot update.message.reply_text(
+            await update.message.reply_text(
                 "❌ Неизвестная команда.\n\n"
                 "Используйте:\n"
                 "`/steam_settings profit <число>`\n"
@@ -234,6 +234,6 @@ async def steam_settings_command(
 
     except Exception as e:
         logger.error(f"Error in steam_settings_command: {e}", exc_info=True)
-        awAlgot update.message.reply_text(
+        await update.message.reply_text(
             "❌ Ошибка при изменении настроек. Попробуйте позже."
         )

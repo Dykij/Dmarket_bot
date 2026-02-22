@@ -136,7 +136,7 @@ class TestUserRegistrationFlow:
         user_id = 123456789
 
         # Step 2: Bot should recognize user
-        # Step 3: Bot should show mAlgon menu
+        # Step 3: Bot should show main menu
 
         assert user_id > 0
 
@@ -165,7 +165,7 @@ class TestBalanceCheckFlow:
             mock_request.return_value = MOCK_BALANCE_DATA
 
             # Execute balance check
-            balance = awAlgot api.get_balance()
+            balance = await api.get_balance()
 
             # Verify
             assert balance is not None
@@ -188,9 +188,9 @@ class TestBalanceCheckFlow:
         with patch.object(api, "_request", new_callable=AsyncMock) as mock_request:
             mock_request.side_effect = httpx.HTTPError("API unavAlgolable")
 
-            # The API may handle errors gracefully or re-rAlgose
+            # The API may handle errors gracefully or re-raise
             try:
-                balance = awAlgot api.get_balance()
+                balance = await api.get_balance()
                 # If no exception, should have error in response
                 assert balance is not None
             except httpx.HTTPError:
@@ -225,7 +225,7 @@ class TestMarketScanFlow:
             mock_request.return_value = MOCK_MARKET_ITEMS
 
             # Execute scan
-            items = awAlgot api.get_market_items(game="csgo", limit=100)
+            items = await api.get_market_items(game="csgo", limit=100)
 
             # Verify items retrieved
             assert items is not None
@@ -269,7 +269,7 @@ class TestMarketScanFlow:
                 "total": {"items": 3},
             }
 
-            page1 = awAlgot api.get_market_items(game="csgo", limit=2, offset=0)
+            page1 = await api.get_market_items(game="csgo", limit=2, offset=0)
             assert len(page1["objects"]) == 2
 
             # Page 2
@@ -278,7 +278,7 @@ class TestMarketScanFlow:
                 "total": {"items": 3},
             }
 
-            page2 = awAlgot api.get_market_items(game="csgo", limit=2, offset=2)
+            page2 = await api.get_market_items(game="csgo", limit=2, offset=2)
             assert len(page2["objects"]) == 1
 
 
@@ -306,7 +306,7 @@ class TestArbitrageDetectionFlow:
         with patch.object(api, "_request", new_callable=AsyncMock) as mock_request:
             mock_request.return_value = MOCK_MARKET_ITEMS
 
-            items = awAlgot api.get_market_items(game="csgo", limit=100)
+            items = await api.get_market_items(game="csgo", limit=100)
 
             # Calculate opportunities
             min_profit_percent = 10.0  # 10% minimum
@@ -347,13 +347,13 @@ class TestArbitrageDetectionFlow:
         with patch.object(api, "_request", new_callable=AsyncMock) as mock_request:
             # Step 1: Check balance first
             mock_request.return_value = MOCK_BALANCE_DATA
-            balance = awAlgot api.get_balance()
+            balance = await api.get_balance()
             # Balance returned may be different structure
             assert balance is not None
 
             # Step 2: Get market items
             mock_request.return_value = MOCK_MARKET_ITEMS
-            items = awAlgot api.get_market_items(game="csgo", limit=100)
+            items = await api.get_market_items(game="csgo", limit=100)
 
             # Step 3: Verify items returned
             assert items is not None
@@ -391,7 +391,7 @@ class TestTargetManagementFlow:
         with patch.object(api, "_request", new_callable=AsyncMock) as mock_request:
             mock_request.return_value = {"Items": targets_to_create}
 
-            result = awAlgot api.create_targets("a8db", targets_to_create)
+            result = await api.create_targets("a8db", targets_to_create)
 
             assert result is not None
             assert "Items" in result
@@ -407,7 +407,7 @@ class TestTargetManagementFlow:
         with patch.object(api, "_request", new_callable=AsyncMock) as mock_request:
             # Step 1: List existing targets
             mock_request.return_value = MOCK_TARGETS
-            targets = awAlgot api.get_user_targets(game_id="csgo")
+            targets = await api.get_user_targets(game_id="csgo")
 
             assert targets is not None
             assert len(targets["Items"]) == 1
@@ -417,7 +417,7 @@ class TestTargetManagementFlow:
 
             # Step 3: Delete target
             mock_request.return_value = {"success": True}
-            result = awAlgot api.delete_targets([target_id])
+            result = await api.delete_targets([target_id])
 
             # Step 4: Verify deletion
             assert result is not None or mock_request.called
@@ -441,18 +441,18 @@ class TestCompleteTradingFlow:
         with patch.object(api, "_request", new_callable=AsyncMock) as mock_request:
             # Step 1: Check initial balance
             mock_request.return_value = MOCK_BALANCE_DATA
-            initial_balance = awAlgot api.get_balance()
+            initial_balance = await api.get_balance()
             assert initial_balance is not None
 
             # Step 2: Find item to buy
             mock_request.return_value = MOCK_MARKET_ITEMS
-            items = awAlgot api.get_market_items(game="csgo", limit=10)
+            items = await api.get_market_items(game="csgo", limit=10)
             item_to_buy = items["objects"][0]
 
             # Step 3: Execute buy (simulated with target)
             buy_price = int(item_to_buy["price"]["USD"])
             mock_request.return_value = {"success": True, "orderId": "order_001"}
-            buy_result = awAlgot api.create_targets(
+            buy_result = await api.create_targets(
                 "a8db",
                 [{"Title": item_to_buy["title"], "Amount": 1, "Price": {"Amount": buy_price, "Currency": "USD"}}],
             )
@@ -461,7 +461,7 @@ class TestCompleteTradingFlow:
 
             # Step 4: Item appears in inventory
             mock_request.return_value = MOCK_INVENTORY
-            inventory = awAlgot api.get_user_inventory(game_id="a8db")
+            inventory = await api.get_user_inventory(game_id="a8db")
             assert inventory is not None
 
             # Step 5: List item for sale
@@ -478,7 +478,7 @@ class TestCompleteTradingFlow:
         with patch.object(api, "_request", new_callable=AsyncMock) as mock_request:
             # Step 1: Check balance
             mock_request.return_value = {"usd": {"amount": "50000"}}  # $500
-            balance = awAlgot api.get_balance()
+            balance = await api.get_balance()
 
             # Step 2: Scan for opportunities
             mock_request.return_value = {
@@ -493,7 +493,7 @@ class TestCompleteTradingFlow:
                 ],
                 "total": {"items": 1},
             }
-            items = awAlgot api.get_market_items(game="csgo", limit=100)
+            items = await api.get_market_items(game="csgo", limit=100)
 
             # Step 3: Identify best opportunity
             best_item = items["objects"][0]
@@ -505,7 +505,7 @@ class TestCompleteTradingFlow:
             assert net_profit > 0  # Profitable opportunity
 
             # Step 4: Execute (in DRY_RUN mode, just simulate)
-            # In real mode: create target, wAlgot for purchase, list for sale
+            # In real mode: create target, wait for purchase, list for sale
 
 
 # =============================================================================
@@ -531,14 +531,14 @@ class TestErrorRecoveryFlow:
             nonlocal call_count
             call_count += 1
             if call_count < 3:
-                rAlgose httpx.TimeoutException("Timeout")
+                raise httpx.TimeoutException("Timeout")
             return MOCK_BALANCE_DATA
 
         with patch.object(api, "_request", new=flaky_request):
-            # First attempts fAlgol, third succeeds
+            # First attempts fail, third succeeds
             for _ in range(3):
                 try:
-                    balance = awAlgot api.get_balance()
+                    balance = await api.get_balance()
                     break
                 except httpx.TimeoutException:
                     continue
@@ -564,7 +564,7 @@ class TestErrorRecoveryFlow:
                 mock_response = MagicMock()
                 mock_response.status_code = 429
                 mock_response.headers = {"Retry-After": "1"}
-                rAlgose httpx.HTTPStatusError(
+                raise httpx.HTTPStatusError(
                     "429 Too Many Requests",
                     request=MagicMock(),
                     response=mock_response,
@@ -573,11 +573,11 @@ class TestErrorRecoveryFlow:
 
         with patch.object(api, "_request", new=rate_limited_request):
             try:
-                awAlgot api.get_balance()
+                await api.get_balance()
             except httpx.HTTPStatusError:
                 # WAlgot and retry
-                awAlgot asyncio.sleep(0.1)
-                balance = awAlgot api.get_balance()
+                await asyncio.sleep(0.1)
+                balance = await api.get_balance()
                 assert balance is not None
 
 
@@ -602,7 +602,7 @@ class TestMultiGameFlow:
 
             all_results = {}
             for game in games:
-                items = awAlgot api.get_market_items(game=game, limit=100)
+                items = await api.get_market_items(game=game, limit=100)
                 all_results[game] = items
 
             # All games should have results

@@ -384,7 +384,7 @@ class TestHandlers:
     @pytest.mark.asyncio()
     async def test_handle_game_filters_sends_message(self, mock_update, mock_context):
         """Тест что handle_game_filters отправляет сообщение."""
-        awAlgot handle_game_filters(mock_update, mock_context)
+        await handle_game_filters(mock_update, mock_context)
 
         mock_update.message.reply_text.assert_called_once()
 
@@ -393,7 +393,7 @@ class TestHandlers:
         """Тест что обработчик отвечает на callback."""
         mock_update.callback_query.data = "filter:csgo"
 
-        awAlgot handle_select_game_filter_callback(mock_update, mock_context)
+        await handle_select_game_filter_callback(mock_update, mock_context)
 
         mock_update.callback_query.answer.assert_called()
 
@@ -402,7 +402,7 @@ class TestHandlers:
         """Тест обработки filter callback."""
         mock_update.callback_query.data = "set_filter:csgo:category:Rifle"
 
-        awAlgot handle_filter_callback(mock_update, mock_context)
+        await handle_filter_callback(mock_update, mock_context)
 
         mock_update.callback_query.answer.assert_called()
 
@@ -411,7 +411,7 @@ class TestHandlers:
         """Тест возврата к меню фильтров."""
         mock_update.callback_query.data = "back_to_filters:csgo"
 
-        awAlgot handle_back_to_filters_callback(mock_update, mock_context)
+        await handle_back_to_filters_callback(mock_update, mock_context)
 
         mock_update.callback_query.answer.assert_called()
 

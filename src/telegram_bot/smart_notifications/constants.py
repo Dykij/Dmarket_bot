@@ -55,7 +55,7 @@ DEFAULT_USER_PREFERENCES: dict[str, Any] = {
         "min_price": 1.0,
         "max_price": 1000.0,
         "min_profit": 5.0,
-        "notification_style": "detAlgoled",
+        "notification_style": "detailed",
     },
     "last_notification": {},
 }

@@ -128,7 +128,7 @@ class TestPoolMonitor:
 
         monitor.register_pool("database", engine)
 
-        # Should not rAlgose
+        # Should not raise
         monitor.log_stats()
 
 

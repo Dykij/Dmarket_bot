@@ -50,12 +50,12 @@ class UniversalBalanceGetter:
 
         try:
             # Try direct REST API request first
-            direct_result = awAlgot self._try_direct_request()
+            direct_result = await self._try_direct_request()
             if direct_result:
                 return direct_result
 
             # Fallback to internal API client with multiple endpoints
-            return awAlgot self._try_internal_endpoints()
+            return await self._try_internal_endpoints()
 
         except Exception as e:
             return self._handle_exception(e)
@@ -76,12 +76,12 @@ class UniversalBalanceGetter:
         """Try to get balance via direct REST API request.
 
         Returns:
-            Balance response dict if successful, None if fAlgoled
+            Balance response dict if successful, None if failed
 
         """
         try:
             logger.debug("🔍 Trying to get balance via direct REST API request...")
-            direct_response = awAlgot self.api_client.direct_balance_request()
+            direct_response = await self.api_client.direct_balance_request()
             logger.debug(f"🔍 Direct API response: {direct_response}")
 
             # Early return: unsuccessful direct request
@@ -91,7 +91,7 @@ class UniversalBalanceGetter:
                     if direct_response
                     else "No response"
                 )
-                logger.warning(f"⚠️ Direct REST API request fAlgoled: {error_message}")
+                logger.warning(f"⚠️ Direct REST API request failed: {error_message}")
                 logger.debug(f"🔍 Full error response: {direct_response}")
                 return None
 
@@ -101,7 +101,7 @@ class UniversalBalanceGetter:
 
         except Exception as e:
             logger.warning(f"⚠️ Error during direct REST API request: {e!s}")
-            logger.exception(f"📋 Exception detAlgols: {e}")
+            logger.exception(f"📋 Exception details: {e}")
             return None
 
     def _process_direct_response(self, response: dict[str, Any]) -> dict[str, Any]:
@@ -154,7 +154,7 @@ class UniversalBalanceGetter:
         endpoints = self._get_balance_endpoints()
 
         response, successful_endpoint, last_error = (
-            awAlgot self._try_endpoints_for_balance(endpoints)
+            await self._try_endpoints_for_balance(endpoints)
         )
 
         # Early return: no response from any endpoint
@@ -162,7 +162,7 @@ class UniversalBalanceGetter:
             error_message = (
                 str(last_error)
                 if last_error
-                else "FAlgoled to get balance from any endpoint"
+                else "Failed to get balance from any endpoint"
             )
             logger.error(f"Critical error getting balance: {error_message}")
             return self._create_error_from_message(error_message)
@@ -205,7 +205,7 @@ class UniversalBalanceGetter:
         for endpoint in endpoints:
             try:
                 logger.debug(f"Trying endpoint: {endpoint}")
-                response = awAlgot self.api_client._request(
+                response = await self.api_client._request(
                     method="GET",
                     path=endpoint,
                     params={},
@@ -216,13 +216,13 @@ class UniversalBalanceGetter:
                     return response, endpoint, None
 
             except Exception as e:
-                logger.debug(f"FAlgoled to get balance from {endpoint}: {e!s}")
+                logger.debug(f"Failed to get balance from {endpoint}: {e!s}")
                 last_error = e
 
         return None, None, last_error
 
     def _response_has_error(self, response: dict[str, Any]) -> bool:
-        """Check if response contAlgons an error.
+        """Check if response contains an error.
 
         Args:
             response: API response

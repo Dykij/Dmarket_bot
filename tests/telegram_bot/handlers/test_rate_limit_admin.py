@@ -76,8 +76,8 @@ class TestRateLimitStatsCommand:
         limiter = MagicMock()
         limiter.get_user_stats = AsyncMock(
             return_value={
-                "scan": {"remAlgoning": 3, "limit": 10},
-                "trade": {"remAlgoning": 5, "limit": 5},
+                "scan": {"remaining": 3, "limit": 10},
+                "trade": {"remaining": 5, "limit": 5},
             }
         )
         return limiter
@@ -89,7 +89,7 @@ class TestRateLimitStatsCommand:
         update.effective_user = None
         update.message = None
 
-        awAlgot rate_limit_stats_command(update, mock_context)
+        await rate_limit_stats_command(update, mock_context)
 
         # Should return early without error
 
@@ -100,7 +100,7 @@ class TestRateLimitStatsCommand:
         update.effective_user = MagicMock()
         update.message = None
 
-        awAlgot rate_limit_stats_command(update, mock_context)
+        await rate_limit_stats_command(update, mock_context)
 
     @pytest.mark.asyncio()
     async def test_stats_non_admin(self, mock_update, mock_context):
@@ -108,7 +108,7 @@ class TestRateLimitStatsCommand:
         with patch(
             "src.telegram_bot.handlers.rate_limit_admin.is_admin", return_value=False
         ):
-            awAlgot rate_limit_stats_command(mock_update, mock_context)
+            await rate_limit_stats_command(mock_update, mock_context)
 
             mock_update.message.reply_text.assert_called_once()
             call_args = mock_update.message.reply_text.call_args[0][0]
@@ -126,7 +126,7 @@ class TestRateLimitStatsCommand:
             ),
             patch.object(mock_context.bot_data, "__getattribute__", return_value=None),
         ):
-            awAlgot rate_limit_stats_command(mock_update, mock_context)
+            await rate_limit_stats_command(mock_update, mock_context)
 
             mock_update.message.reply_text.assert_called_once()
             call_args = mock_update.message.reply_text.call_args[0][0]
@@ -150,7 +150,7 @@ class TestRateLimitStatsCommand:
                 return_value=mock_rate_limiter,
             ),
         ):
-            awAlgot rate_limit_stats_command(mock_update, mock_context)
+            await rate_limit_stats_command(mock_update, mock_context)
 
             mock_rate_limiter.get_user_stats.assert_called_once_with(
                 mock_update.effective_user.id
@@ -175,7 +175,7 @@ class TestRateLimitStatsCommand:
                 return_value=mock_rate_limiter,
             ),
         ):
-            awAlgot rate_limit_stats_command(mock_update, mock_context)
+            await rate_limit_stats_command(mock_update, mock_context)
 
             mock_rate_limiter.get_user_stats.assert_called_once_with(999999999)
 
@@ -197,7 +197,7 @@ class TestRateLimitStatsCommand:
                 return_value=mock_rate_limiter,
             ),
         ):
-            awAlgot rate_limit_stats_command(mock_update, mock_context)
+            await rate_limit_stats_command(mock_update, mock_context)
 
             mock_update.message.reply_text.assert_called_once()
             call_args = mock_update.message.reply_text.call_args[0][0]
@@ -209,7 +209,7 @@ class TestRateLimitStatsCommand:
     ):
         """Test stats formatting with low usage (green)."""
         mock_rate_limiter.get_user_stats.return_value = {
-            "scan": {"remAlgoning": 9, "limit": 10},  # 10% usage
+            "scan": {"remaining": 9, "limit": 10},  # 10% usage
         }
         mock_context.bot_data.user_rate_limiter = mock_rate_limiter
 
@@ -223,7 +223,7 @@ class TestRateLimitStatsCommand:
                 return_value=mock_rate_limiter,
             ),
         ):
-            awAlgot rate_limit_stats_command(mock_update, mock_context)
+            await rate_limit_stats_command(mock_update, mock_context)
 
             call_args = mock_update.message.reply_text.call_args[0][0]
             assert "🟢" in call_args
@@ -234,7 +234,7 @@ class TestRateLimitStatsCommand:
     ):
         """Test stats formatting with medium usage (yellow)."""
         mock_rate_limiter.get_user_stats.return_value = {
-            "scan": {"remAlgoning": 3, "limit": 10},  # 70% usage
+            "scan": {"remaining": 3, "limit": 10},  # 70% usage
         }
         mock_context.bot_data.user_rate_limiter = mock_rate_limiter
 
@@ -248,7 +248,7 @@ class TestRateLimitStatsCommand:
                 return_value=mock_rate_limiter,
             ),
         ):
-            awAlgot rate_limit_stats_command(mock_update, mock_context)
+            await rate_limit_stats_command(mock_update, mock_context)
 
             call_args = mock_update.message.reply_text.call_args[0][0]
             assert "🟡" in call_args
@@ -259,7 +259,7 @@ class TestRateLimitStatsCommand:
     ):
         """Test stats formatting with high usage (red)."""
         mock_rate_limiter.get_user_stats.return_value = {
-            "scan": {"remAlgoning": 1, "limit": 10},  # 90% usage
+            "scan": {"remaining": 1, "limit": 10},  # 90% usage
         }
         mock_context.bot_data.user_rate_limiter = mock_rate_limiter
 
@@ -273,7 +273,7 @@ class TestRateLimitStatsCommand:
                 return_value=mock_rate_limiter,
             ),
         ):
-            awAlgot rate_limit_stats_command(mock_update, mock_context)
+            await rate_limit_stats_command(mock_update, mock_context)
 
             call_args = mock_update.message.reply_text.call_args[0][0]
             assert "🔴" in call_args
@@ -319,7 +319,7 @@ class TestRateLimitResetCommand:
         update.effective_user = None
         update.message = None
 
-        awAlgot rate_limit_reset_command(update, mock_context)
+        await rate_limit_reset_command(update, mock_context)
 
     @pytest.mark.asyncio()
     async def test_reset_non_admin(self, mock_update, mock_context):
@@ -327,7 +327,7 @@ class TestRateLimitResetCommand:
         with patch(
             "src.telegram_bot.handlers.rate_limit_admin.is_admin", return_value=False
         ):
-            awAlgot rate_limit_reset_command(mock_update, mock_context)
+            await rate_limit_reset_command(mock_update, mock_context)
 
             call_args = mock_update.message.reply_text.call_args[0][0]
             assert "только администраторам" in call_args
@@ -344,7 +344,7 @@ class TestRateLimitResetCommand:
             "src.telegram_bot.handlers.rate_limit_admin.is_admin", return_value=True
         ):
             # The function uses getattr which returns None by default for non-existent attributes
-            awAlgot rate_limit_reset_command(mock_update, mock_context)
+            await rate_limit_reset_command(mock_update, mock_context)
 
             # This test validates that the command handles the case
             assert mock_update.message.reply_text.called
@@ -365,7 +365,7 @@ class TestRateLimitResetCommand:
                 return_value=mock_rate_limiter,
             ),
         ):
-            awAlgot rate_limit_reset_command(mock_update, mock_context)
+            await rate_limit_reset_command(mock_update, mock_context)
 
             call_args = mock_update.message.reply_text.call_args[0][0]
             assert "Использование" in call_args
@@ -388,7 +388,7 @@ class TestRateLimitResetCommand:
                 return_value=mock_rate_limiter,
             ),
         ):
-            awAlgot rate_limit_reset_command(mock_update, mock_context)
+            await rate_limit_reset_command(mock_update, mock_context)
 
             call_args = mock_update.message.reply_text.call_args[0][0]
             assert "Использование" in call_args
@@ -411,7 +411,7 @@ class TestRateLimitResetCommand:
                 return_value=mock_rate_limiter,
             ),
         ):
-            awAlgot rate_limit_reset_command(mock_update, mock_context)
+            await rate_limit_reset_command(mock_update, mock_context)
 
             mock_rate_limiter.reset_user_limits.assert_called_once_with(999999999, None)
             call_args = mock_update.message.reply_text.call_args[0][0]
@@ -436,7 +436,7 @@ class TestRateLimitResetCommand:
                 return_value=mock_rate_limiter,
             ),
         ):
-            awAlgot rate_limit_reset_command(mock_update, mock_context)
+            await rate_limit_reset_command(mock_update, mock_context)
 
             mock_rate_limiter.reset_user_limits.assert_called_once_with(
                 999999999, "scan"
@@ -463,7 +463,7 @@ class TestRateLimitResetCommand:
                 return_value=mock_rate_limiter,
             ),
         ):
-            awAlgot rate_limit_reset_command(mock_update, mock_context)
+            await rate_limit_reset_command(mock_update, mock_context)
 
             call_args = mock_update.message.reply_text.call_args[0][0]
             assert "Ошибка" in call_args
@@ -511,7 +511,7 @@ class TestRateLimitWhitelistCommand:
         update.effective_user = None
         update.message = None
 
-        awAlgot rate_limit_whitelist_command(update, mock_context)
+        await rate_limit_whitelist_command(update, mock_context)
 
     @pytest.mark.asyncio()
     async def test_whitelist_non_admin(self, mock_update, mock_context):
@@ -519,7 +519,7 @@ class TestRateLimitWhitelistCommand:
         with patch(
             "src.telegram_bot.handlers.rate_limit_admin.is_admin", return_value=False
         ):
-            awAlgot rate_limit_whitelist_command(mock_update, mock_context)
+            await rate_limit_whitelist_command(mock_update, mock_context)
 
             call_args = mock_update.message.reply_text.call_args[0][0]
             assert "только администраторам" in call_args
@@ -535,7 +535,7 @@ class TestRateLimitWhitelistCommand:
             "src.telegram_bot.handlers.rate_limit_admin.is_admin", return_value=True
         ):
             # The function uses getattr which returns None by default for non-existent attributes
-            awAlgot rate_limit_whitelist_command(mock_update, mock_context)
+            await rate_limit_whitelist_command(mock_update, mock_context)
 
             # This test validates that the command handles the case
             assert mock_update.message.reply_text.called
@@ -558,7 +558,7 @@ class TestRateLimitWhitelistCommand:
                 return_value=mock_rate_limiter,
             ),
         ):
-            awAlgot rate_limit_whitelist_command(mock_update, mock_context)
+            await rate_limit_whitelist_command(mock_update, mock_context)
 
             call_args = mock_update.message.reply_text.call_args[0][0]
             assert "Использование" in call_args
@@ -581,7 +581,7 @@ class TestRateLimitWhitelistCommand:
                 return_value=mock_rate_limiter,
             ),
         ):
-            awAlgot rate_limit_whitelist_command(mock_update, mock_context)
+            await rate_limit_whitelist_command(mock_update, mock_context)
 
             call_args = mock_update.message.reply_text.call_args[0][0]
             assert "Использование" in call_args
@@ -602,7 +602,7 @@ class TestRateLimitWhitelistCommand:
                 return_value=mock_rate_limiter,
             ),
         ):
-            awAlgot rate_limit_whitelist_command(mock_update, mock_context)
+            await rate_limit_whitelist_command(mock_update, mock_context)
 
             mock_rate_limiter.add_whitelist.assert_called_once_with(999999999)
             call_args = mock_update.message.reply_text.call_args[0][0]
@@ -624,7 +624,7 @@ class TestRateLimitWhitelistCommand:
                 return_value=mock_rate_limiter,
             ),
         ):
-            awAlgot rate_limit_whitelist_command(mock_update, mock_context)
+            await rate_limit_whitelist_command(mock_update, mock_context)
 
             mock_rate_limiter.remove_whitelist.assert_called_once_with(999999999)
             call_args = mock_update.message.reply_text.call_args[0][0]
@@ -649,7 +649,7 @@ class TestRateLimitWhitelistCommand:
                 return_value=mock_rate_limiter,
             ),
         ):
-            awAlgot rate_limit_whitelist_command(mock_update, mock_context)
+            await rate_limit_whitelist_command(mock_update, mock_context)
 
             call_args = mock_update.message.reply_text.call_args[0][0]
             assert "в whitelist" in call_args
@@ -673,7 +673,7 @@ class TestRateLimitWhitelistCommand:
                 return_value=mock_rate_limiter,
             ),
         ):
-            awAlgot rate_limit_whitelist_command(mock_update, mock_context)
+            await rate_limit_whitelist_command(mock_update, mock_context)
 
             call_args = mock_update.message.reply_text.call_args[0][0]
             assert "не в whitelist" in call_args
@@ -696,7 +696,7 @@ class TestRateLimitWhitelistCommand:
                 return_value=mock_rate_limiter,
             ),
         ):
-            awAlgot rate_limit_whitelist_command(mock_update, mock_context)
+            await rate_limit_whitelist_command(mock_update, mock_context)
 
             call_args = mock_update.message.reply_text.call_args[0][0]
             assert "Неизвестное действие" in call_args
@@ -720,7 +720,7 @@ class TestRateLimitWhitelistCommand:
                 return_value=mock_rate_limiter,
             ),
         ):
-            awAlgot rate_limit_whitelist_command(mock_update, mock_context)
+            await rate_limit_whitelist_command(mock_update, mock_context)
 
             call_args = mock_update.message.reply_text.call_args[0][0]
             assert "Ошибка" in call_args
@@ -772,7 +772,7 @@ class TestRateLimitConfigCommand:
         update.effective_user = None
         update.message = None
 
-        awAlgot rate_limit_config_command(update, mock_context)
+        await rate_limit_config_command(update, mock_context)
 
     @pytest.mark.asyncio()
     async def test_config_non_admin(self, mock_update, mock_context):
@@ -780,7 +780,7 @@ class TestRateLimitConfigCommand:
         with patch(
             "src.telegram_bot.handlers.rate_limit_admin.is_admin", return_value=False
         ):
-            awAlgot rate_limit_config_command(mock_update, mock_context)
+            await rate_limit_config_command(mock_update, mock_context)
 
             call_args = mock_update.message.reply_text.call_args[0][0]
             assert "только администраторам" in call_args
@@ -796,7 +796,7 @@ class TestRateLimitConfigCommand:
             "src.telegram_bot.handlers.rate_limit_admin.is_admin", return_value=True
         ):
             # The function uses getattr which returns None by default for non-existent attributes
-            awAlgot rate_limit_config_command(mock_update, mock_context)
+            await rate_limit_config_command(mock_update, mock_context)
 
             # This test validates that the command handles the case
             assert mock_update.message.reply_text.called
@@ -819,7 +819,7 @@ class TestRateLimitConfigCommand:
                 return_value=mock_rate_limiter,
             ),
         ):
-            awAlgot rate_limit_config_command(mock_update, mock_context)
+            await rate_limit_config_command(mock_update, mock_context)
 
             call_args = mock_update.message.reply_text.call_args[0][0]
             assert "Текущие лимиты" in call_args
@@ -842,7 +842,7 @@ class TestRateLimitConfigCommand:
                 return_value=mock_rate_limiter,
             ),
         ):
-            awAlgot rate_limit_config_command(mock_update, mock_context)
+            await rate_limit_config_command(mock_update, mock_context)
 
             call_args = mock_update.message.reply_text.call_args[0][0]
             assert "Использование" in call_args
@@ -865,7 +865,7 @@ class TestRateLimitConfigCommand:
                 return_value=mock_rate_limiter,
             ),
         ):
-            awAlgot rate_limit_config_command(mock_update, mock_context)
+            await rate_limit_config_command(mock_update, mock_context)
 
             call_args = mock_update.message.reply_text.call_args[0][0]
             assert "Использование" in call_args
@@ -888,7 +888,7 @@ class TestRateLimitConfigCommand:
                 return_value=mock_rate_limiter,
             ),
         ):
-            awAlgot rate_limit_config_command(mock_update, mock_context)
+            await rate_limit_config_command(mock_update, mock_context)
 
             mock_rate_limiter.update_limit.assert_called_once()
             call_args = mock_update.message.reply_text.call_args[0][0]
@@ -912,7 +912,7 @@ class TestRateLimitConfigCommand:
                 return_value=mock_rate_limiter,
             ),
         ):
-            awAlgot rate_limit_config_command(mock_update, mock_context)
+            await rate_limit_config_command(mock_update, mock_context)
 
             call_args = mock_update.message.reply_text.call_args[0][0]
             assert "Burst" in call_args
@@ -936,7 +936,7 @@ class TestRateLimitConfigCommand:
                 return_value=mock_rate_limiter,
             ),
         ):
-            awAlgot rate_limit_config_command(mock_update, mock_context)
+            await rate_limit_config_command(mock_update, mock_context)
 
             call_args = mock_update.message.reply_text.call_args[0][0]
             assert "Ошибка" in call_args

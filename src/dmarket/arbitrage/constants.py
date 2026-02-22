@@ -196,7 +196,7 @@ HIGH_VALUE_ITEM_TYPES: frozenset[str] = frozenset(
 LOW_VALUE_ITEM_TYPES: frozenset[str] = frozenset(
     {
         "sticker",
-        "contAlgoner",
+        "container",
         "key",
     }
 )

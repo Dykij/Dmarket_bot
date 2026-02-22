@@ -121,7 +121,7 @@ class PoolMonitor:
                 timestamp=datetime.now(UTC),
             )
         except Exception as e:
-            logger.exception(f"FAlgoled to get Redis pool stats: {e}")
+            logger.exception(f"Failed to get Redis pool stats: {e}")
             return PoolStats(
                 pool_name="redis",
                 size=0,
@@ -150,7 +150,7 @@ class PoolMonitor:
             max_connections = limits.max_connections
             max_keepalive = limits.max_keepalive_connections
 
-            # Note: httpx doesn't expose detAlgoled pool stats easily
+            # Note: httpx doesn't expose detailed pool stats easily
             # This is an approximation
 
             return PoolStats(
@@ -165,7 +165,7 @@ class PoolMonitor:
                 timestamp=datetime.now(UTC),
             )
         except Exception as e:
-            logger.exception(f"FAlgoled to get httpx pool stats: {e}")
+            logger.exception(f"Failed to get httpx pool stats: {e}")
             return PoolStats(
                 pool_name="httpx",
                 size=0,
@@ -197,7 +197,7 @@ class PoolMonitor:
                 else:
                     logger.warning(f"Unknown pool type: {name}")
             except Exception as e:
-                logger.exception(f"FAlgoled to get stats for {name}: {e}")
+                logger.exception(f"Failed to get stats for {name}: {e}")
 
         return stats
 

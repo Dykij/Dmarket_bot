@@ -46,5 +46,5 @@ def stress_test_shm():
     sl.shm.close()
     sl.shm.unlink()
 
-if __name__ == "__mAlgon__":
+if __name__ == "__main__":
     stress_test_shm()

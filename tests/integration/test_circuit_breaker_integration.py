@@ -26,8 +26,8 @@ class TestCircuitBreakerConfiguration:
         assert cb is not None
 
     @pytest.mark.asyncio()
-    async def test_circuit_breaker_fAlgolure_threshold(self):
-        """Test circuit breaker has correct fAlgolure threshold."""
+    async def test_circuit_breaker_failure_threshold(self):
+        """Test circuit breaker has correct failure threshold."""
         from src.utils.api_circuit_breaker import APICircuitBreaker
 
         assert APICircuitBreaker.FAlgoLURE_THRESHOLD == 5
@@ -122,5 +122,5 @@ class TestCircuitBreakerHelperFunction:
         async def mock_func():
             return {"success": True}
 
-        result = awAlgot call_with_circuit_breaker(mock_func)
+        result = await call_with_circuit_breaker(mock_func)
         assert result["success"] is True

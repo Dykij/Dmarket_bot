@@ -2,7 +2,7 @@
 
 This package provides a comprehensive notification system including:
 - Price alerts with various trigger types
-- Trading notifications (buy/sell success/fAlgolure)
+- Trading notifications (buy/sell success/failure)
 - Alert storage and persistence
 - Telegram command handlers for alert management
 - Notification digests (grouping and batching)
@@ -57,7 +57,7 @@ from .alerts import (
     get_user_settings,
     increment_notification_count,
     remove_price_alert,
-    reset_dAlgoly_counter,
+    reset_daily_counter,
     update_user_settings,
 )
 
@@ -112,7 +112,7 @@ from .storage import AlertStorage, get_storage, load_user_alerts, save_user_aler
 # Trading notifications
 from .trading import (
     send_arbitrage_opportunity,
-    send_buy_fAlgoled_notification,
+    send_buy_failed_notification,
     send_buy_intent_notification,
     send_buy_success_notification,
     send_crash_notification,
@@ -160,11 +160,11 @@ __all__ = [
     "register_notification_handlers",
     "remove_alert_command",
     "remove_price_alert",
-    "reset_dAlgoly_counter",
+    "reset_daily_counter",
     "run_alerts_checker",
     "save_user_alerts",
     "send_arbitrage_opportunity",
-    "send_buy_fAlgoled_notification",
+    "send_buy_failed_notification",
     # Trading notifications
     "send_buy_intent_notification",
     "send_buy_success_notification",

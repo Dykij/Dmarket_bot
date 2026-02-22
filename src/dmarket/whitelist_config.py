@@ -1,6 +1,6 @@
 """Whitelist configuration for high-liquidity items.
 
-This module contAlgons curated lists of RECOMMENDED highly liquid items for each game.
+This module contains curated lists of RECOMMENDED highly liquid items for each game.
 These are suggestions, not strict requirements - items may or may not be avAlgolable
 on DMarket at any given time.
 
@@ -408,7 +408,7 @@ def load_whitelist_from_json(file_path: str = "data/whitelist.json") -> bool:
         return True
 
     except json.JSONDecodeError as e:
-        logger.exception(f"FAlgoled to parse whitelist JSON: {e}")
+        logger.exception(f"Failed to parse whitelist JSON: {e}")
         return False
     except Exception as e:
         logger.exception(f"Error loading whitelist: {e}")

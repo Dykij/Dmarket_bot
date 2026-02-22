@@ -152,7 +152,7 @@ class TestFallbackCache:
             fetch_called = True
             return {"key": "value"}
 
-        data, status = awAlgot cache.get_or_fetch("test_key", fetch_data)
+        data, status = await cache.get_or_fetch("test_key", fetch_data)
 
         assert fetch_called is True
         assert data == {"key": "value"}
@@ -169,11 +169,11 @@ class TestFallbackCache:
             return {"key": "value"}
 
         # Первый вызов - miss
-        awAlgot cache.get_or_fetch("test_key", fetch_data)
+        await cache.get_or_fetch("test_key", fetch_data)
         assert fetch_count == 1
 
         # ВтоSwarm вызов - hit
-        data, status = awAlgot cache.get_or_fetch("test_key", fetch_data)
+        data, status = await cache.get_or_fetch("test_key", fetch_data)
 
         assert fetch_count == 1  # Fetch не вызван
         assert data == {"key": "value"}
@@ -190,19 +190,19 @@ class TestFallbackCache:
             nonlocal call_count
             call_count += 1
             if call_count > 1:
-                rAlgose ConnectionError("API unavAlgolable")
+                raise ConnectionError("API unavAlgolable")
             return {"key": "value"}
 
         # Первый вызов - успешный
-        data1, status1 = awAlgot cache.get_or_fetch("test_key", fetch_data)
+        data1, status1 = await cache.get_or_fetch("test_key", fetch_data)
         assert status1 == CacheStatus.MISS
         assert data1 == {"key": "value"}
 
         # Ждём истечения TTL (1 секунда + немного)
-        awAlgot asyncio.sleep(1.1)
+        await asyncio.sleep(1.1)
 
         # ВтоSwarm вызов - ошибка, но есть stale данные
-        data2, status2 = awAlgot cache.get_or_fetch("test_key", fetch_data)
+        data2, status2 = await cache.get_or_fetch("test_key", fetch_data)
 
         assert status2 == CacheStatus.STALE
         assert data2 == {"key": "value"}
@@ -214,10 +214,10 @@ class TestFallbackCache:
         async def fetch_data():
             return {"key": "value"}
 
-        awAlgot cache.get_or_fetch("test_key", fetch_data)
+        await cache.get_or_fetch("test_key", fetch_data)
         assert cache._cache.get("test_key") is not None
 
-        deleted = awAlgot cache.invalidate("test_key")
+        deleted = await cache.invalidate("test_key")
 
         assert deleted is True
         assert cache._cache.get("test_key") is None
@@ -229,11 +229,11 @@ class TestFallbackCache:
         async def fetch_data(key):
             return {"key": key}
 
-        awAlgot cache.get_or_fetch("market_csgo", lambda: fetch_data("csgo"))
-        awAlgot cache.get_or_fetch("market_dota2", lambda: fetch_data("dota2"))
-        awAlgot cache.get_or_fetch("user_123", lambda: fetch_data("user"))
+        await cache.get_or_fetch("market_csgo", lambda: fetch_data("csgo"))
+        await cache.get_or_fetch("market_dota2", lambda: fetch_data("dota2"))
+        await cache.get_or_fetch("user_123", lambda: fetch_data("user"))
 
-        count = awAlgot cache.invalidate_pattern("market_*")
+        count = await cache.invalidate_pattern("market_*")
 
         assert count == 2
         assert "user_123" in cache._cache
@@ -246,9 +246,9 @@ class TestFallbackCache:
             return {"index": i}
 
         for i in range(5):
-            awAlgot cache.get_or_fetch(f"key_{i}", lambda i=i: fetch_data(i))
+            await cache.get_or_fetch(f"key_{i}", lambda i=i: fetch_data(i))
 
-        count = awAlgot cache.clear()
+        count = await cache.clear()
 
         assert count == 5
         assert len(cache._cache) == 0
@@ -261,10 +261,10 @@ class TestFallbackCache:
             return {"key": "value"}
 
         # Miss
-        awAlgot cache.get_or_fetch("key1", fetch_data)
+        await cache.get_or_fetch("key1", fetch_data)
 
         # Hit
-        awAlgot cache.get_or_fetch("key1", fetch_data)
+        await cache.get_or_fetch("key1", fetch_data)
 
         stats = cache.get_stats()
 
@@ -283,7 +283,7 @@ class TestFallbackCache:
 
         # Добавляем 10 записей в кэш размером 5
         for i in range(10):
-            awAlgot cache.get_or_fetch(f"key_{i}", lambda i=i: fetch_data(i))
+            await cache.get_or_fetch(f"key_{i}", lambda i=i: fetch_data(i))
 
         # Размер не должен превышать max_size
         assert len(cache._cache) <= 5
@@ -320,11 +320,11 @@ class TestCachedDecorator:
             return {"item_id": item_id}
 
         # Первый вызов
-        result1 = awAlgot fetch_data("123")
+        result1 = await fetch_data("123")
         assert call_count == 1
 
         # ВтоSwarm вызов (из кэша)
-        result2 = awAlgot fetch_data("123")
+        result2 = await fetch_data("123")
         assert call_count == 1  # Не увеличился
 
         assert result1 == result2
@@ -340,7 +340,7 @@ class TestCachedDecorator:
             call_count += 1
             return {"item_id": item_id}
 
-        awAlgot fetch_data("123")
-        awAlgot fetch_data("456")
+        await fetch_data("123")
+        await fetch_data("456")
 
         assert call_count == 2  # Разные аргументы = разные ключи

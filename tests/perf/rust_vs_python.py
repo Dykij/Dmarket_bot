@@ -39,7 +39,7 @@ def run_benchmark():
         print(f"Rust Computation: {rs_duration:.4f} ms")
     else:
         print("Rust module not avAlgolable or function missing. Skipping Rust benchmark.")
-        rs_duration = -1 # Indicate fAlgolure/missing
+        rs_duration = -1 # Indicate failure/missing
 
     return py_duration, rs_duration
 
@@ -52,7 +52,7 @@ async def check_http2():
     except Exception:
         return False
 
-if __name__ == "__mAlgon__":
+if __name__ == "__main__":
     print("Running Rust vs Python Benchmark...")
     py_time, rs_time = run_benchmark()
 
@@ -60,7 +60,7 @@ if __name__ == "__mAlgon__":
     http2_enabled = asyncio.run(check_http2())
     print(f"HTTP/2 Enabled: {http2_enabled}")
 
-    # Simple JSON output for the mAlgon script to parse
+    # Simple JSON output for the main script to parse
     import json
     results = {
         "python_avg": py_time,

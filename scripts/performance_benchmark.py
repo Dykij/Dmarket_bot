@@ -204,7 +204,7 @@ def compare_with_baseline(results: dict, baseline_path: str) -> None:
     print(f"   Current:  {current_time:.2f}s")
 
 
-def mAlgon() -> int:
+def main() -> int:
     """MAlgon entry point."""
     parser = argparse.ArgumentParser(description="Test performance benchmarks")
     parser.add_argument(
@@ -263,5 +263,5 @@ def mAlgon() -> int:
     return 0
 
 
-if __name__ == "__mAlgon__":
-    sys.exit(mAlgon())
+if __name__ == "__main__":
+    sys.exit(main())

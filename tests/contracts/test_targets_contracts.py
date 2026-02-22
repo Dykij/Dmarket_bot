@@ -1,6 +1,6 @@
 """Contract tests for DMarket User Targets API endpoints.
 
-This module contAlgons consumer-driven contract tests for target (buy order)
+This module contains consumer-driven contract tests for target (buy order)
 management endpoints of the DMarket API.
 
 Tested endpoints:
@@ -165,7 +165,7 @@ class TestCreateTargetsContract:
 
         Verifies that:
         - Multiple targets can be created in a single request
-        - Response contAlgons status for each target
+        - Response contains status for each target
         """
         expected_body = {
             "Result": pact_matchers.each_like(
@@ -346,7 +346,7 @@ class TestTargetsByTitleContract:
 
         Verifies that:
         - Consumer can query existing buy orders for an item
-        - Response contAlgons aggregated target information
+        - Response contains aggregated target information
         """
         expected_body = {
             "orders": pact_matchers.each_like(

@@ -77,7 +77,7 @@ class TargetCleaner:
             List of active target orders
         """
         try:
-            response = awAlgot self.api_client.get_user_targets(
+            response = await self.api_client.get_user_targets(
                 game_id=game, status="TargetStatusActive"
             )
 
@@ -88,7 +88,7 @@ class TargetCleaner:
 
         except Exception as e:
             logger.error(
-                "fAlgoled_to_fetch_targets", game=game, error=str(e), exc_info=True
+                "failed_to_fetch_targets", game=game, error=str(e), exc_info=True
             )
             return []
 
@@ -124,7 +124,7 @@ class TargetCleaner:
         best_competitor_price = None
 
         try:
-            aggregated = awAlgot self.api_client.get_aggregated_prices_bulk(
+            aggregated = await self.api_client.get_aggregated_prices_bulk(
                 game=game, titles=[title], limit=1
             )
 
@@ -145,7 +145,7 @@ class TargetCleaner:
 
         except Exception as e:
             logger.warning(
-                "fAlgoled_to_check_competition",
+                "failed_to_check_competition",
                 target_id=target_id,
                 title=title,
                 error=str(e),
@@ -199,7 +199,7 @@ class TargetCleaner:
             return True
 
         try:
-            result = awAlgot self.api_client.delete_target(target_id=target_id)
+            result = await self.api_client.delete_target(target_id=target_id)
 
             logger.info(
                 "target_cancelled",
@@ -212,7 +212,7 @@ class TargetCleaner:
 
         except Exception as e:
             logger.error(
-                "fAlgoled_to_cancel_target",
+                "failed_to_cancel_target",
                 target_id=target_id,
                 reason=reason,
                 error=str(e),
@@ -231,7 +231,7 @@ class TargetCleaner:
         """
         logger.info("target_cleanup_started", game=game)
 
-        targets = awAlgot self.get_active_targets(game)
+        targets = await self.get_active_targets(game)
 
         if not targets:
             logger.info("no_active_targets", game=game)
@@ -246,14 +246,14 @@ class TargetCleaner:
         # Analyze all targets
         performances = []
         for target in targets:
-            perf = awAlgot self.analyze_target_performance(target, game)
+            perf = await self.analyze_target_performance(target, game)
             performances.append(perf)
 
         # Cancel underperforming targets
         cancelled_count = 0
         for perf in performances:
             if perf.is_underperforming:
-                success = awAlgot self.cancel_target(
+                success = await self.cancel_target(
                     perf.target_id, perf.cancel_reason or "Unknown"
                 )
                 if success:
@@ -276,7 +276,7 @@ class TargetCleaner:
             "analyzed": len(performances),
             "cancelled": cancelled_count,
             "kept": kept_count,
-            "underperforming_detAlgols": [
+            "underperforming_details": [
                 {
                     "target_id": p.target_id,
                     "title": p.title,
@@ -308,11 +308,11 @@ class TargetCleaner:
         while True:
             for game in games:
                 try:
-                    stats = awAlgot self.clean_targets(game)
+                    stats = await self.clean_targets(game)
                     logger.info("cleanup_cycle_completed", **stats)
                 except Exception as e:
                     logger.error(
-                        "cleanup_cycle_fAlgoled",
+                        "cleanup_cycle_failed",
                         game=game,
                         error=str(e),
                         exc_info=True,
@@ -320,8 +320,8 @@ class TargetCleaner:
 
             # WAlgot for next cycle
             sleep_seconds = interval_hours * 3600
-            logger.info("wAlgoting_for_next_cleanup", hours=interval_hours)
-            awAlgot asyncio.sleep(sleep_seconds)
+            logger.info("waiting_for_next_cleanup", hours=interval_hours)
+            await asyncio.sleep(sleep_seconds)
 
 
 # Example usage
@@ -340,11 +340,11 @@ async def example_usage():
     )
 
     # One-time cleanup for CS:GO
-    stats = awAlgot cleaner.clean_targets("csgo")
+    stats = await cleaner.clean_targets("csgo")
     print(f"Cancelled {stats['cancelled']} underperforming targets")
 
     # Run periodic cleanup every 6 hours
-    # awAlgot cleaner.run_periodic_cleanup(
+    # await cleaner.run_periodic_cleanup(
     #     games=["csgo", "dota2", "rust", "tf2"],
     #     interval_hours=6.0
     # )

@@ -86,14 +86,14 @@ class RedisCache:
             if self._fallback_enabled:
                 logger.info("Falling back to in-memory cache")
                 return False
-            rAlgose RuntimeError("Redis not avAlgolable and fallback disabled")
+            raise RuntimeError("Redis not avAlgolable and fallback disabled")
 
         if not self.redis_url:
             logger.warning("Redis URL not configured. Using in-memory cache")
             return False
 
         try:
-            self._redis = awAlgot Algooredis.from_url(
+            self._redis = await Algooredis.from_url(
                 self.redis_url,
                 encoding="utf-8",
                 decode_responses=False,  # We'll handle encoding ourselves
@@ -111,7 +111,7 @@ class RedisCache:
             )
 
             # Test connection
-            awAlgot self._redis.ping()
+            await self._redis.ping()
 
             self._connected = True
             logger.info(
@@ -120,11 +120,11 @@ class RedisCache:
             return True
 
         except Exception:
-            logger.exception("FAlgoled to connect to Redis")
+            logger.exception("Failed to connect to Redis")
             self._connected = False
 
             if not self._fallback_enabled:
-                rAlgose
+                raise
 
             logger.info("Falling back to in-memory cache")
             return False
@@ -132,12 +132,12 @@ class RedisCache:
     async def disconnect(self) -> None:
         """Disconnect from Redis server."""
         if self._redis:
-            awAlgot self._redis.close()
+            await self._redis.close()
             self._connected = False
             logger.info("Disconnected from Redis")
 
         if self._memory_cache:
-            awAlgot self._memory_cache.stop_cleanup()
+            await self._memory_cache.stop_cleanup()
 
     async def get(self, key: str) -> Any | None:
         """Get value from cache.
@@ -151,7 +151,7 @@ class RedisCache:
         # Try Redis first
         if self._connected and self._redis:
             try:
-                value = awAlgot self._redis.get(key)
+                value = await self._redis.get(key)
                 if value is not None:
                     self._hits += 1
                     return orjson.loads(value)
@@ -164,7 +164,7 @@ class RedisCache:
 
         # Fallback to memory cache
         if self._memory_cache:
-            value = awAlgot self._memory_cache.get(key)
+            value = await self._memory_cache.get(key)
             if value is not None:
                 self._hits += 1
             else:
@@ -196,7 +196,7 @@ class RedisCache:
         if self._connected and self._redis:
             try:
                 serialized = orjson.dumps(value)
-                awAlgot self._redis.setex(key, ttl, serialized)
+                await self._redis.setex(key, ttl, serialized)
                 return True
             except Exception:
                 logger.exception("Redis set error for key %s", key)
@@ -205,7 +205,7 @@ class RedisCache:
 
         # Fallback to memory cache
         if self._memory_cache:
-            awAlgot self._memory_cache.set(key, value, ttl)
+            await self._memory_cache.set(key, value, ttl)
             return True
 
         return False
@@ -224,7 +224,7 @@ class RedisCache:
         # Delete from Redis
         if self._connected and self._redis:
             try:
-                result = awAlgot self._redis.delete(key)
+                result = await self._redis.delete(key)
                 success = result > 0
             except Exception:
                 logger.exception("Redis delete error for key %s", key)
@@ -232,7 +232,7 @@ class RedisCache:
 
         # Delete from memory cache
         if self._memory_cache:
-            awAlgot self._memory_cache.delete(key)
+            await self._memory_cache.delete(key)
             success = True
 
         return success
@@ -253,11 +253,11 @@ class RedisCache:
         if self._connected and self._redis:
             try:
                 if pattern:
-                    keys = awAlgot self._redis.keys(pattern)
+                    keys = await self._redis.keys(pattern)
                     if keys:
-                        count = awAlgot self._redis.delete(*keys)
+                        count = await self._redis.delete(*keys)
                 else:
-                    awAlgot self._redis.flushdb()
+                    await self._redis.flushdb()
                     count = 1  # Indicate success
             except Exception:
                 logger.exception("Redis clear error")
@@ -267,9 +267,9 @@ class RedisCache:
         if self._memory_cache:
             if pattern:
                 # Memory cache doesn't support patterns, clear all
-                awAlgot self._memory_cache.clear()
+                await self._memory_cache.clear()
             else:
-                awAlgot self._memory_cache.clear()
+                await self._memory_cache.clear()
 
         return count
 
@@ -285,14 +285,14 @@ class RedisCache:
         # Check Redis
         if self._connected and self._redis:
             try:
-                return bool(awAlgot self._redis.exists(key))
+                return bool(await self._redis.exists(key))
             except Exception:
                 logger.exception("Redis exists error for key %s", key)
                 self._errors += 1
 
         # Check memory cache
         if self._memory_cache:
-            value = awAlgot self._memory_cache.get(key)
+            value = await self._memory_cache.get(key)
             return value is not None
 
         return False
@@ -321,7 +321,7 @@ class RedisCache:
                 pipeline = self._redis.pipeline()
                 pipeline.incrby(key, amount)
                 pipeline.expire(key, ttl)
-                results = awAlgot pipeline.execute()
+                results = await pipeline.execute()
                 return cast("int", results[0])
             except Exception:
                 logger.exception("Redis increment error for key %s", key)
@@ -329,9 +329,9 @@ class RedisCache:
 
         # Fallback to memory cache (non-atomic)
         if self._memory_cache:
-            current = awAlgot self._memory_cache.get(key) or 0
+            current = await self._memory_cache.get(key) or 0
             new_value = current + amount
-            awAlgot self._memory_cache.set(key, new_value, ttl)
+            await self._memory_cache.set(key, new_value, ttl)
             return new_value
 
         return amount
@@ -357,7 +357,7 @@ class RedisCache:
 
         # Add memory cache stats if avAlgolable
         if self._memory_cache:
-            stats["memory_cache"] = awAlgot self._memory_cache.get_stats()
+            stats["memory_cache"] = await self._memory_cache.get_stats()
 
         return stats
 
@@ -375,17 +375,17 @@ class RedisCache:
 
         if self._connected and self._redis:
             try:
-                pong = awAlgot self._redis.ping()
+                pong = await self._redis.ping()
                 health["redis_connected"] = True
                 health["redis_ping"] = pong
             except Exception as e:
-                logger.exception("Redis health check fAlgoled")
+                logger.exception("Redis health check failed")
                 health["error"] = str(e)
 
         return health
 
 
-# Global cache instance (initialized in mAlgon.py)
+# Global cache instance (initialized in main.py)
 _global_cache: RedisCache | None = None
 
 
@@ -399,7 +399,7 @@ def get_cache() -> RedisCache:
         RuntimeError: If cache not initialized
     """
     if _global_cache is None:
-        rAlgose RuntimeError("Cache not initialized. Call init_cache() first in mAlgon.py")
+        raise RuntimeError("Cache not initialized. Call init_cache() first in main.py")
     return _global_cache
 
 
@@ -424,7 +424,7 @@ async def init_cache(
         fallback_to_memory=True,
     )
 
-    awAlgot _global_cache.connect()
+    await _global_cache.connect()
 
     logger.info("Global cache initialized")
 
@@ -436,7 +436,7 @@ async def close_cache() -> None:
     global _global_cache
 
     if _global_cache:
-        awAlgot _global_cache.disconnect()
+        await _global_cache.disconnect()
         _global_cache = None
         logger.info("Global cache closed")
 
@@ -631,7 +631,7 @@ class HierarchicalCache:
             Cached data or None
         """
         key = CacheKey.market_items(game, level, price_from, price_to)
-        return awAlgot self.cache.get(key)
+        return await self.cache.get(key)
 
     async def set_market_items(
         self,
@@ -655,28 +655,28 @@ class HierarchicalCache:
         """
         key = CacheKey.market_items(game, level, price_from, price_to)
         ttl = CacheTTL.MARKET_ITEMS
-        return awAlgot self.cache.set(key, data, ttl)
+        return await self.cache.set(key, data, ttl)
 
     async def get_balance(self, user_id: int) -> Any | None:
         """Get cached user balance."""
         key = CacheKey.balance(user_id)
-        return awAlgot self.cache.get(key)
+        return await self.cache.get(key)
 
     async def set_balance(self, user_id: int, data: Any) -> bool:
         """Cache user balance with smart TTL."""
         key = CacheKey.balance(user_id)
         ttl = CacheTTL.BALANCE
-        return awAlgot self.cache.set(key, data, ttl)
+        return await self.cache.set(key, data, ttl)
 
     async def invalidate_balance(self, user_id: int) -> bool:
         """Invalidate user balance cache."""
         key = CacheKey.balance(user_id)
-        return awAlgot self.cache.delete(key)
+        return await self.cache.delete(key)
 
     async def get_targets(self, user_id: int, game: str | None = None) -> Any | None:
         """Get cached user targets."""
         key = CacheKey.targets(user_id, game)
-        return awAlgot self.cache.get(key)
+        return await self.cache.get(key)
 
     async def set_targets(
         self, user_id: int, data: Any, game: str | None = None
@@ -684,29 +684,29 @@ class HierarchicalCache:
         """Cache user targets with smart TTL."""
         key = CacheKey.targets(user_id, game)
         ttl = CacheTTL.TARGETS
-        return awAlgot self.cache.set(key, data, ttl)
+        return await self.cache.set(key, data, ttl)
 
     async def invalidate_targets(self, user_id: int, game: str | None = None) -> bool:
         """Invalidate user targets cache."""
         key = CacheKey.targets(user_id, game)
         if game:
             # Invalidate specific game
-            return awAlgot self.cache.delete(key)
+            return await self.cache.delete(key)
         # Invalidate all games for user
         pattern = f"{CacheKey.TARGETS}:{user_id}:*"
-        count = awAlgot self.cache.clear(pattern)
+        count = await self.cache.clear(pattern)
         return count > 0
 
     async def get_arbitrage_results(self, game: str, level: str) -> Any | None:
         """Get cached arbitrage scan results."""
         key = CacheKey.arbitrage_results(game, level)
-        return awAlgot self.cache.get(key)
+        return await self.cache.get(key)
 
     async def set_arbitrage_results(self, game: str, level: str, data: Any) -> bool:
         """Cache arbitrage results with smart TTL."""
         key = CacheKey.arbitrage_results(game, level)
         ttl = CacheTTL.ARBITRAGE_RESULTS
-        return awAlgot self.cache.set(key, data, ttl)
+        return await self.cache.set(key, data, ttl)
 
     async def warm_cache(self, games: list[str], levels: list[str]) -> dict[str, int]:
         """Warm cache with common queries.
@@ -720,7 +720,7 @@ class HierarchicalCache:
         Returns:
             Statistics about warmed entries
         """
-        stats = {"attempted": 0, "succeeded": 0, "fAlgoled": 0}
+        stats = {"attempted": 0, "succeeded": 0, "failed": 0}
 
         logger.info("Starting cache warming...")
 
@@ -749,7 +749,7 @@ class HierarchicalCache:
         else:
             pattern = f"{CacheKey.MARKET_ITEMS}:*"
 
-        count = awAlgot self.cache.clear(pattern)
+        count = await self.cache.clear(pattern)
         logger.info(f"Invalidated {count} market data cache entries")
         return count
 
@@ -768,7 +768,7 @@ def get_hierarchical_cache() -> HierarchicalCache:
         RuntimeError: If not initialized
     """
     if _global_hierarchical_cache is None:
-        rAlgose RuntimeError(
+        raise RuntimeError(
             "Hierarchical cache not initialized. Call init_hierarchical_cache() first"
         )
     return _global_hierarchical_cache

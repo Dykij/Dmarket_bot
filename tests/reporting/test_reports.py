@@ -27,11 +27,11 @@ class TestReportGenerator:
         assert generator._report_cache == {}
     
     @pytest.mark.asyncio
-    async def test_generate_dAlgoly_report_empty(self):
-        """Test dAlgoly report with no trades."""
+    async def test_generate_daily_report_empty(self):
+        """Test daily report with no trades."""
         generator = ReportGenerator()
         
-        report = awAlgot generator.generate_dAlgoly_report(
+        report = await generator.generate_daily_report(
             user_id=123,
             trades=[],
         )
@@ -41,8 +41,8 @@ class TestReportGenerator:
         assert report.total_trades == 0
     
     @pytest.mark.asyncio
-    async def test_generate_dAlgoly_report_with_trades(self):
-        """Test dAlgoly report with trades."""
+    async def test_generate_daily_report_with_trades(self):
+        """Test daily report with trades."""
         generator = ReportGenerator()
         
         today = datetime.now(UTC)
@@ -72,7 +72,7 @@ class TestReportGenerator:
             },
         ]
         
-        report = awAlgot generator.generate_dAlgoly_report(
+        report = await generator.generate_daily_report(
             user_id=123,
             trades=trades,
             date=today,
@@ -87,7 +87,7 @@ class TestReportGenerator:
         """Test weekly report generation."""
         generator = ReportGenerator()
         
-        report = awAlgot generator.generate_weekly_report(
+        report = await generator.generate_weekly_report(
             user_id=123,
             trades=[],
         )
@@ -119,7 +119,7 @@ class TestReportGenerator:
             },
         ]
         
-        report = awAlgot generator.generate_tax_report(
+        report = await generator.generate_tax_report(
             user_id=123,
             trades=trades,
             tax_year=2026,
@@ -173,7 +173,7 @@ class TestTradingReport:
         
         data = report.to_dict()
         
-        assert data["report_type"] == "dAlgoly"
+        assert data["report_type"] == "daily"
         assert data["user_id"] == 123
         assert data["financial"]["net_profit"] == 50.0
     
@@ -297,7 +297,7 @@ class TestExport:
         
         json_str = generator.export_to_json(report)
         
-        assert "dAlgoly" in json_str
+        assert "daily" in json_str
         assert "123" in json_str
     
     def test_format_report_text(self):
@@ -347,7 +347,7 @@ class TestMetricsCalculation:
             {"trade_type": "sell", "profit": -3.0, "timestamp": today.isoformat()},
         ]
         
-        report = awAlgot generator.generate_dAlgoly_report(123, trades, today)
+        report = await generator.generate_daily_report(123, trades, today)
         
         # 2 wins out of 4 trades = 50%
         assert report.win_rate == 50.0
@@ -363,7 +363,7 @@ class TestMetricsCalculation:
             {"trade_type": "sell", "profit": -10.0, "timestamp": today.isoformat()},
         ]
         
-        report = awAlgot generator.generate_dAlgoly_report(123, trades, today)
+        report = await generator.generate_daily_report(123, trades, today)
         
         # Profit factor = 30 / 10 = 3.0
         assert report.profit_factor == 3.0
@@ -380,7 +380,7 @@ class TestMetricsCalculation:
             {"item_name": "AWP", "timestamp": today.isoformat()},
         ]
         
-        report = awAlgot generator.generate_dAlgoly_report(123, trades, today)
+        report = await generator.generate_daily_report(123, trades, today)
         
         assert report.most_traded_item == "AK-47"
     
@@ -395,7 +395,7 @@ class TestMetricsCalculation:
             {"platform": "waxpeer", "total_value": 50.0, "profit": 5.0, "timestamp": today.isoformat()},
         ]
         
-        report = awAlgot generator.generate_dAlgoly_report(123, trades, today)
+        report = await generator.generate_daily_report(123, trades, today)
         
         assert "dmarket" in report.platform_breakdown
         assert "waxpeer" in report.platform_breakdown

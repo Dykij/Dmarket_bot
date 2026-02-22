@@ -1,11 +1,11 @@
 """Unit tests for DMarket API wallet module.
 
-This module contAlgons comprehensive tests for src/dmarket/api/wallet.py covering:
+This module contains comprehensive tests for src/dmarket/api/wallet.py covering:
 - Error response creation
 - Balance response creation and parsing
 - Balance retrieval from multiple endpoints
 - Direct balance requests with Ed25519 signatures
-- User profile and account detAlgols
+- User profile and account details
 
 Target: 25+ tests to achieve 70%+ coverage
 """
@@ -36,7 +36,7 @@ class MockDMarketClient(WalletOperationsMixin):
         self.api_url = "https://api.dmarket.com"
         self.ENDPOINT_BALANCE = "/account/v1/balance"
         self.ENDPOINT_BALANCE_LEGACY = "/account/v1/balance/legacy"
-        self.ENDPOINT_ACCOUNT_DETAlgoLS = "/account/v1/detAlgols"
+        self.ENDPOINT_ACCOUNT_DETAlgoLS = "/account/v1/details"
         self._request = AsyncMock()
         self._get_client = AsyncMock()
 
@@ -365,7 +365,7 @@ class TestWalletGetBalance:
         )
 
         # Act
-        result = awAlgot wallet_client.get_balance()
+        result = await wallet_client.get_balance()
 
         # Assert
         assert result["error"] is False
@@ -385,7 +385,7 @@ class TestWalletGetBalance:
         )
 
         # Act
-        result = awAlgot wallet_client.get_balance()
+        result = await wallet_client.get_balance()
 
         # Assert
         assert result["balance"] == 0.0
@@ -404,7 +404,7 @@ class TestWalletGetBalance:
         )
 
         # Act
-        result = awAlgot wallet_client.get_balance()
+        result = await wallet_client.get_balance()
 
         # Assert
         assert result["error"] is True
@@ -417,7 +417,7 @@ class TestWalletGetBalance:
         wallet_client._request = AsyncMock(side_effect=Exception("Request timeout"))
 
         # Act
-        result = awAlgot wallet_client.get_balance()
+        result = await wallet_client.get_balance()
 
         # Assert
         assert result["error"] is True
@@ -430,7 +430,7 @@ class TestWalletGetBalance:
         client = MockDMarketClient(public_key="", secret_key="")
 
         # Act
-        result = awAlgot client.get_balance()
+        result = await client.get_balance()
 
         # Assert
         assert result["error"] is True
@@ -441,7 +441,7 @@ class TestWalletGetBalance:
     async def test_get_balance_unauthorized(self, wallet_client, mock_httpx_client):
         """Test handling of 401 Unauthorized error."""
         # Arrange
-        # Mock direct_balance_request to fAlgol with 401
+        # Mock direct_balance_request to fail with 401
         wallet_client._get_client = AsyncMock(return_value=mock_httpx_client)
 
         mock_401_response = MagicMock(spec=httpx.Response)
@@ -460,17 +460,17 @@ class TestWalletGetBalance:
         )
 
         # Act
-        result = awAlgot wallet_client.get_balance()
+        result = await wallet_client.get_balance()
 
         # Assert
         assert result["error"] is True
-        # When all endpoints fAlgol, it may return 500 or 401 depending on error parsing
+        # When all endpoints fail, it may return 500 or 401 depending on error parsing
         assert result["status_code"] in {401, 500}
         assert result["code"] in {"UNAUTHORIZED", "REQUEST_FAlgoLED"}
 
     @pytest.mark.asyncio()
     async def test_get_balance_tries_multiple_endpoints(self, wallet_client):
-        """Test that balance request tries multiple endpoints on fAlgolure."""
+        """Test that balance request tries multiple endpoints on failure."""
         # Arrange
         call_count = 0
 
@@ -484,7 +484,7 @@ class TestWalletGetBalance:
         wallet_client._request = AsyncMock(side_effect=mock_request_side_effect)
 
         # Act
-        awAlgot wallet_client.get_balance()
+        await wallet_client.get_balance()
 
         # Assert
         assert call_count >= 1  # Should try at least one endpoint
@@ -507,7 +507,7 @@ class TestWalletGetBalance:
         mock_httpx_client.get = AsyncMock(return_value=mock_response)
 
         # Act
-        result = awAlgot wallet_client.direct_balance_request()
+        result = await wallet_client.direct_balance_request()
 
         # Assert
         assert result["success"] is True
@@ -539,7 +539,7 @@ class TestWalletDirectBalanceRequest:
         mock_httpx_client.get = AsyncMock(return_value=mock_response)
 
         # Act
-        result = awAlgot wallet_client.direct_balance_request()
+        result = await wallet_client.direct_balance_request()
 
         # Assert
         assert result["success"] is True
@@ -569,7 +569,7 @@ class TestWalletDirectBalanceRequest:
         mock_httpx_client.get = AsyncMock(return_value=mock_response)
 
         # Act
-        result = awAlgot wallet_client.direct_balance_request()
+        result = await wallet_client.direct_balance_request()
 
         # Assert
         assert result["success"] is True
@@ -591,7 +591,7 @@ class TestWalletDirectBalanceRequest:
         mock_httpx_client.get = AsyncMock(return_value=mock_response)
 
         # Act
-        result = awAlgot wallet_client.direct_balance_request()
+        result = await wallet_client.direct_balance_request()
 
         # Assert
         assert result["success"] is False
@@ -606,11 +606,11 @@ class TestWalletDirectBalanceRequest:
         # Arrange
         wallet_client._get_client = AsyncMock(return_value=mock_httpx_client)
         mock_httpx_client.get = AsyncMock(
-            side_effect=httpx.HTTPError("Connection fAlgoled")
+            side_effect=httpx.HTTPError("Connection failed")
         )
 
         # Act
-        result = awAlgot wallet_client.direct_balance_request()
+        result = await wallet_client.direct_balance_request()
 
         # Assert
         assert result["success"] is False
@@ -631,7 +631,7 @@ class TestWalletDirectBalanceRequest:
         mock_httpx_client.get = AsyncMock(return_value=mock_response)
 
         # Act
-        awAlgot wallet_client.direct_balance_request()
+        await wallet_client.direct_balance_request()
 
         # Assert
         call_args = mock_httpx_client.get.call_args
@@ -647,7 +647,7 @@ class TestWalletDirectBalanceRequest:
 
 
 class TestWalletUserProfile:
-    """Tests for user profile and account detAlgols methods."""
+    """Tests for user profile and account details methods."""
 
     @pytest.mark.asyncio()
     async def test_get_user_profile(self, wallet_client):
@@ -655,34 +655,34 @@ class TestWalletUserProfile:
         # Arrange
         expected_profile = {
             "id": "user123",
-            "emAlgol": "test@example.com",
+            "email": "test@example.com",
             "verified": True,
         }
         wallet_client._request = AsyncMock(return_value=expected_profile)
 
         # Act
-        result = awAlgot wallet_client.get_user_profile()
+        result = await wallet_client.get_user_profile()
 
         # Assert
         assert result == expected_profile
         wallet_client._request.assert_called_once_with("GET", "/account/v1/user")
 
     @pytest.mark.asyncio()
-    async def test_get_account_detAlgols(self, wallet_client):
-        """Test getting account detAlgols."""
+    async def test_get_account_details(self, wallet_client):
+        """Test getting account details."""
         # Arrange
-        expected_detAlgols = {
+        expected_details = {
             "account_id": "acc123",
             "level": "verified",
-            "limits": {"dAlgoly": 10000},
+            "limits": {"daily": 10000},
         }
-        wallet_client._request = AsyncMock(return_value=expected_detAlgols)
+        wallet_client._request = AsyncMock(return_value=expected_details)
 
         # Act
-        result = awAlgot wallet_client.get_account_detAlgols()
+        result = await wallet_client.get_account_details()
 
         # Assert
-        assert result == expected_detAlgols
+        assert result == expected_details
         wallet_client._request.assert_called_once_with(
             "GET", wallet_client.ENDPOINT_ACCOUNT_DETAlgoLS
         )
@@ -711,13 +711,13 @@ class TestWalletGetBalanceSuccessPath:
 
         mock_httpx_client.get = AsyncMock(return_value=mock_response)
 
-        # Mock _request to fAlgol so direct_balance_request is the successful path
+        # Mock _request to fail so direct_balance_request is the successful path
         wallet_client._request = AsyncMock(
             return_value={"error": "Not found", "code": "NOT_FOUND"}
         )
 
         # Act
-        result = awAlgot wallet_client.get_balance()
+        result = await wallet_client.get_balance()
 
         # Assert
         assert result["error"] is False
@@ -751,7 +751,7 @@ class TestWalletGetBalanceSuccessPath:
         mock_httpx_client.get = AsyncMock(return_value=mock_response)
 
         # Act
-        result = awAlgot wallet_client.direct_balance_request()
+        result = await wallet_client.direct_balance_request()
 
         # Assert
         assert result["success"] is True
@@ -769,7 +769,7 @@ class TestWalletGetBalanceSuccessPath:
         mock_httpx_client.get = AsyncMock(side_effect=Exception("Network error"))
 
         # Act
-        result = awAlgot wallet_client.direct_balance_request()
+        result = await wallet_client.direct_balance_request()
 
         # Assert
         assert result["success"] is False
@@ -819,31 +819,31 @@ class TestWalletGetBalanceEndpointFallback:
     """Tests for endpoint fallback logic in get_balance."""
 
     @pytest.mark.asyncio()
-    async def test_get_balance_tries_all_endpoints_on_fAlgolure(
+    async def test_get_balance_tries_all_endpoints_on_failure(
         self, wallet_client, mock_httpx_client
     ):
-        """Test that get_balance tries all endpoints when direct request fAlgols."""
+        """Test that get_balance tries all endpoints when direct request fails."""
         # Arrange
         wallet_client._get_client = AsyncMock(return_value=mock_httpx_client)
 
-        # Mock direct_balance_request to fAlgol
+        # Mock direct_balance_request to fail
         mock_direct_response = MagicMock(spec=httpx.Response)
         mock_direct_response.status_code = 500
         mock_direct_response.text = "Server Error"
         mock_httpx_client.get = AsyncMock(return_value=mock_direct_response)
 
-        # Mock all _request calls to fAlgol
+        # Mock all _request calls to fail
         call_count = 0
 
         async def mock_request_side_effect(*args, **kwargs):
             nonlocal call_count
             call_count += 1
-            return {"error": "FAlgoled", "code": "ERROR"}
+            return {"error": "Failed", "code": "ERROR"}
 
         wallet_client._request = AsyncMock(side_effect=mock_request_side_effect)
 
         # Act
-        result = awAlgot wallet_client.get_balance()
+        result = await wallet_client.get_balance()
 
         # Assert
         assert result["error"] is True
@@ -857,7 +857,7 @@ class TestWalletGetBalanceEndpointFallback:
         # Arrange
         wallet_client._get_client = AsyncMock(return_value=mock_httpx_client)
 
-        # Mock direct_balance_request to fAlgol
+        # Mock direct_balance_request to fail
         mock_direct_response = MagicMock(spec=httpx.Response)
         mock_direct_response.status_code = 500
         mock_direct_response.text = "Server Error"
@@ -872,7 +872,7 @@ class TestWalletGetBalanceEndpointFallback:
         )
 
         # Act
-        result = awAlgot wallet_client.get_balance()
+        result = await wallet_client.get_balance()
 
         # Assert
         assert result["error"] is False
@@ -895,7 +895,7 @@ class TestWalletDeprecatedMethods:
             }
         )
 
-        # Mock direct_balance_request to fAlgol
+        # Mock direct_balance_request to fail
         mock_httpx_client = AsyncMock(spec=httpx.AsyncClient)
         mock_direct_response = MagicMock(spec=httpx.Response)
         mock_direct_response.status_code = 500
@@ -904,7 +904,7 @@ class TestWalletDeprecatedMethods:
         wallet_client._get_client = AsyncMock(return_value=mock_httpx_client)
 
         # Act
-        result = awAlgot wallet_client.get_user_balance()
+        result = await wallet_client.get_user_balance()
 
         # Assert
         assert result is not None
@@ -938,13 +938,13 @@ class TestWalletErrorHandling:
         # Arrange
         wallet_client._get_client = AsyncMock(return_value=mock_httpx_client)
 
-        # Mock direct_balance_request to fAlgol
+        # Mock direct_balance_request to fail
         mock_direct_response = MagicMock(spec=httpx.Response)
         mock_direct_response.status_code = 500
         mock_direct_response.text = "Error"
         mock_httpx_client.get = AsyncMock(return_value=mock_direct_response)
 
-        # Mock _request to return None (all endpoints fAlgoled)
+        # Mock _request to return None (all endpoints failed)
         wallet_client._request = AsyncMock(return_value=None)
 
         # Mock _try_endpoints_for_balance to return 404 error
@@ -954,7 +954,7 @@ class TestWalletErrorHandling:
         wallet_client._try_endpoints_for_balance = mock_try_endpoints
 
         # Act
-        result = awAlgot wallet_client.get_balance()
+        result = await wallet_client.get_balance()
 
         # Assert
         assert result["error"] is True
@@ -969,7 +969,7 @@ class TestWalletErrorHandling:
         # Arrange
         wallet_client._get_client = AsyncMock(return_value=mock_httpx_client)
 
-        # Mock direct_balance_request to fAlgol
+        # Mock direct_balance_request to fail
         mock_direct_response = MagicMock(spec=httpx.Response)
         mock_direct_response.status_code = 500
         mock_direct_response.text = "Error"
@@ -982,7 +982,7 @@ class TestWalletErrorHandling:
         wallet_client._try_endpoints_for_balance = mock_try_endpoints
 
         # Act
-        result = awAlgot wallet_client.get_balance()
+        result = await wallet_client.get_balance()
 
         # Assert
         assert result["error"] is True
@@ -997,7 +997,7 @@ class TestWalletErrorHandling:
         # Arrange
         wallet_client._get_client = AsyncMock(return_value=mock_httpx_client)
 
-        # Mock direct_balance_request to fAlgol
+        # Mock direct_balance_request to fail
         mock_direct_response = MagicMock(spec=httpx.Response)
         mock_direct_response.status_code = 500
         mock_direct_response.text = "Error"
@@ -1017,7 +1017,7 @@ class TestWalletErrorHandling:
         wallet_client._try_endpoints_for_balance = mock_try_endpoints
 
         # Act
-        result = awAlgot wallet_client.get_balance()
+        result = await wallet_client.get_balance()
 
         # Assert
         assert result["error"] is True
@@ -1032,7 +1032,7 @@ class TestWalletErrorHandling:
         # Arrange
         wallet_client._get_client = AsyncMock(return_value=mock_httpx_client)
 
-        # Mock direct_balance_request to fAlgol
+        # Mock direct_balance_request to fail
         mock_direct_response = MagicMock(spec=httpx.Response)
         mock_direct_response.status_code = 500
         mock_direct_response.text = "Error"
@@ -1051,7 +1051,7 @@ class TestWalletErrorHandling:
         wallet_client._try_endpoints_for_balance = mock_try_endpoints
 
         # Act
-        result = awAlgot wallet_client.get_balance()
+        result = await wallet_client.get_balance()
 
         # Assert
         assert result["error"] is True
@@ -1089,7 +1089,7 @@ class TestWalletSecretKeyConversion:
         mock_httpx_client.get = AsyncMock(return_value=mock_response)
 
         # Act
-        result = awAlgot wallet_client.direct_balance_request()
+        result = await wallet_client.direct_balance_request()
 
         # Assert
         assert result["success"] is True
@@ -1114,7 +1114,7 @@ class TestWalletSecretKeyConversion:
         mock_httpx_client.get = AsyncMock(return_value=mock_response)
 
         # Act
-        result = awAlgot wallet_client.direct_balance_request()
+        result = await wallet_client.direct_balance_request()
 
         # Assert
         assert result["success"] is True
@@ -1139,7 +1139,7 @@ class TestWalletSecretKeyConversion:
         mock_httpx_client.get = AsyncMock(return_value=mock_response)
 
         # Act
-        result = awAlgot wallet_client.direct_balance_request()
+        result = await wallet_client.direct_balance_request()
 
         # Assert
         assert result["success"] is True
@@ -1148,11 +1148,11 @@ class TestWalletSecretKeyConversion:
     async def test_direct_request_signature_fallback_to_hmac(
         self, wallet_client, mock_httpx_client
     ):
-        """Test fallback to HMAC when Ed25519 signature fAlgols."""
+        """Test fallback to HMAC when Ed25519 signature fails."""
         # Arrange
         wallet_client._get_client = AsyncMock(return_value=mock_httpx_client)
 
-        # Set invalid secret key that will cause Ed25519 to fAlgol
+        # Set invalid secret key that will cause Ed25519 to fail
         wallet_client._secret_key = "invalid_key_format_☠"
 
         mock_response = MagicMock(spec=httpx.Response)
@@ -1164,7 +1164,7 @@ class TestWalletSecretKeyConversion:
         mock_httpx_client.get = AsyncMock(return_value=mock_response)
 
         # Act
-        result = awAlgot wallet_client.direct_balance_request()
+        result = await wallet_client.direct_balance_request()
 
         # Assert
         # Should succeed with HMAC fallback
@@ -1206,22 +1206,22 @@ class TestWalletLegacyKeyFormats:
         # Arrange
         wallet_client._get_client = AsyncMock(return_value=mock_httpx_client)
 
-        # Mock direct_balance_request to fAlgol
+        # Mock direct_balance_request to fail
         mock_httpx_client.get = AsyncMock(side_effect=Exception("Unexpected error"))
 
-        # Mock _try_endpoints_for_balance to rAlgose exception
+        # Mock _try_endpoints_for_balance to raise exception
         async def mock_try_endpoints(*args, **kwargs):
-            rAlgose Exception("Database connection fAlgoled")
+            raise Exception("Database connection failed")
 
         wallet_client._try_endpoints_for_balance = mock_try_endpoints
 
         # Act
-        result = awAlgot wallet_client.get_balance()
+        result = await wallet_client.get_balance()
 
         # Assert
         assert result["error"] is True
         assert result["status_code"] == 500
-        assert "Database connection fAlgoled" in result["error_message"]
+        assert "Database connection failed" in result["error_message"]
 
     def test_parse_balance_handles_value_error(self, wallet_client):
         """Test that ValueError in parsing is handled gracefully."""
@@ -1288,14 +1288,14 @@ class TestWalletLegacyKeyFormats:
             side_effect=Exception("404 resource not found")
         )
 
-        # Mock _try_endpoints_for_balance to also rAlgose 404 exception
+        # Mock _try_endpoints_for_balance to also raise 404 exception
         async def mock_try_endpoints(*args, **kwargs):
-            rAlgose Exception("404 not found")
+            raise Exception("404 not found")
 
         wallet_client._try_endpoints_for_balance = mock_try_endpoints
 
         # Act
-        result = awAlgot wallet_client.get_balance()
+        result = await wallet_client.get_balance()
 
         # Assert
         assert result["error"] is True
@@ -1311,14 +1311,14 @@ class TestWalletLegacyKeyFormats:
         wallet_client._get_client = AsyncMock(return_value=mock_httpx_client)
         mock_httpx_client.get = AsyncMock(side_effect=Exception("401 unauthorized"))
 
-        # Mock _try_endpoints_for_balance to also rAlgose 401 exception
+        # Mock _try_endpoints_for_balance to also raise 401 exception
         async def mock_try_endpoints(*args, **kwargs):
-            rAlgose Exception("401 Unauthorized access")
+            raise Exception("401 Unauthorized access")
 
         wallet_client._try_endpoints_for_balance = mock_try_endpoints
 
         # Act
-        result = awAlgot wallet_client.get_balance()
+        result = await wallet_client.get_balance()
 
         # Assert
         assert result["error"] is True
@@ -1328,7 +1328,7 @@ class TestWalletLegacyKeyFormats:
 
 # =============================================================================
 # NEW TESTS - Added to improve coverage from 11% to 70%+
-# Target: Test uncovered methods (get_user_profile, get_account_detAlgols)
+# Target: Test uncovered methods (get_user_profile, get_account_details)
 # =============================================================================
 
 
@@ -1341,13 +1341,13 @@ class TestWalletUserProfileExtended:
         # Arrange
         expected_profile = {
             "user_id": "test_user_123",
-            "emAlgol": "test@example.com",
+            "email": "test@example.com",
             "created_at": "2025-01-01T00:00:00Z",
         }
         wallet_client._request = AsyncMock(return_value=expected_profile)
 
         # Act
-        result = awAlgot wallet_client.get_user_profile()
+        result = await wallet_client.get_user_profile()
 
         # Assert
         assert result == expected_profile
@@ -1360,8 +1360,8 @@ class TestWalletUserProfileExtended:
         wallet_client._request = AsyncMock(side_effect=Exception("API Error"))
 
         # Act & Assert
-        with pytest.rAlgoses(Exception) as exc_info:
-            awAlgot wallet_client.get_user_profile()
+        with pytest.raises(Exception) as exc_info:
+            await wallet_client.get_user_profile()
 
         assert "API Error" in str(exc_info.value)
 
@@ -1372,56 +1372,56 @@ class TestWalletUserProfileExtended:
         wallet_client._request = AsyncMock(return_value={})
 
         # Act
-        result = awAlgot wallet_client.get_user_profile()
+        result = await wallet_client.get_user_profile()
 
         # Assert
         assert result == {}
 
 
-class TestWalletAccountDetAlgols:
-    """Tests for get_account_detAlgols method."""
+class TestWalletAccountDetails:
+    """Tests for get_account_details method."""
 
     @pytest.mark.asyncio()
-    async def test_get_account_detAlgols_success(self, wallet_client):
-        """Test successful retrieval of account detAlgols."""
+    async def test_get_account_details_success(self, wallet_client):
+        """Test successful retrieval of account details."""
         # Arrange
-        expected_detAlgols = {
+        expected_details = {
             "account_id": "acc_123",
             "balance": {"USD": "10000"},
             "verified": True,
         }
-        wallet_client._request = AsyncMock(return_value=expected_detAlgols)
+        wallet_client._request = AsyncMock(return_value=expected_details)
 
         # Act
-        result = awAlgot wallet_client.get_account_detAlgols()
+        result = await wallet_client.get_account_details()
 
         # Assert
-        assert result == expected_detAlgols
+        assert result == expected_details
         wallet_client._request.assert_called_once_with(
             "GET", wallet_client.ENDPOINT_ACCOUNT_DETAlgoLS
         )
 
     @pytest.mark.asyncio()
-    async def test_get_account_detAlgols_handles_timeout(self, wallet_client):
-        """Test handling of timeout when getting account detAlgols."""
+    async def test_get_account_details_handles_timeout(self, wallet_client):
+        """Test handling of timeout when getting account details."""
         # Arrange
         import asyncio
 
         wallet_client._request = AsyncMock(side_effect=TimeoutError("Request timeout"))
 
         # Act & Assert
-        with pytest.rAlgoses(asyncio.TimeoutError):
-            awAlgot wallet_client.get_account_detAlgols()
+        with pytest.raises(asyncio.TimeoutError):
+            await wallet_client.get_account_details()
 
     @pytest.mark.asyncio()
-    async def test_get_account_detAlgols_with_partial_data(self, wallet_client):
-        """Test account detAlgols with partial data."""
+    async def test_get_account_details_with_partial_data(self, wallet_client):
+        """Test account details with partial data."""
         # Arrange
-        partial_detAlgols = {"account_id": "acc_456"}
-        wallet_client._request = AsyncMock(return_value=partial_detAlgols)
+        partial_details = {"account_id": "acc_456"}
+        wallet_client._request = AsyncMock(return_value=partial_details)
 
         # Act
-        result = awAlgot wallet_client.get_account_detAlgols()
+        result = await wallet_client.get_account_details()
 
         # Assert
         assert result["account_id"] == "acc_456"

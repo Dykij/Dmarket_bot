@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from src.contAlgoners import init_contAlgoner, reset_contAlgoner
+from src.containers import init_container, reset_container
 from src.telegram_bot.dependencies import (
     get_arbitrage_scanner,
     get_config,
@@ -19,9 +19,9 @@ from src.telegram_bot.dependencies import (
 @pytest.fixture(autouse=True)
 def reset_di():
     """Сбросить DI перед каждым тестом."""
-    reset_contAlgoner()
+    reset_container()
     yield
-    reset_contAlgoner()
+    reset_container()
 
 
 @pytest.fixture()
@@ -71,9 +71,9 @@ class TestGetDMarketApi:
 
         assert result is mock_api
 
-    def test_returns_from_contAlgoner_if_bot_data_empty(self, mock_context):
+    def test_returns_from_container_if_bot_data_empty(self, mock_context):
         """Тест получения API из DI контейнера."""
-        init_contAlgoner(
+        init_container(
             {
                 "dmarket": {
                     "public_key": "test",
@@ -95,9 +95,9 @@ class TestGetDMarketApi:
 class TestGetArbitrageScanner:
     """Тесты для get_arbitrage_scanner."""
 
-    def test_returns_scanner_from_contAlgoner(self, mock_context):
+    def test_returns_scanner_from_container(self, mock_context):
         """Тест получения сканера из контейнера."""
-        init_contAlgoner(
+        init_container(
             {
                 "dmarket": {
                     "public_key": "test",
@@ -129,9 +129,9 @@ class TestGetArbitrageScanner:
 class TestGetTargetManager:
     """Тесты для get_target_manager."""
 
-    def test_returns_manager_from_contAlgoner(self, mock_context):
+    def test_returns_manager_from_container(self, mock_context):
         """Тест получения менеджера из контейнера."""
-        init_contAlgoner(
+        init_container(
             {
                 "dmarket": {
                     "public_key": "test",
@@ -190,9 +190,9 @@ class TestGetDatabase:
 
         assert result is mock_db
 
-    def test_returns_from_contAlgoner_if_bot_data_empty(self, mock_context):
+    def test_returns_from_container_if_bot_data_empty(self, mock_context):
         """Тест получения БД из контейнера."""
-        init_contAlgoner(
+        init_container(
             {
                 "database": {"url": "sqlite:///:memory:"},
             }
@@ -222,7 +222,7 @@ class TestInjectDependencies:
             return dmarket_api
 
         update = MagicMock()
-        result = awAlgot handler(update, mock_context)
+        result = await handler(update, mock_context)
 
         assert result is mock_api
 
@@ -237,7 +237,7 @@ class TestInjectDependencies:
             return scanner
 
         update = MagicMock()
-        result = awAlgot handler(update, mock_context)
+        result = await handler(update, mock_context)
 
         assert result is not None
         assert result.api_client is mock_api
@@ -253,7 +253,7 @@ class TestInjectDependencies:
             return target_manager
 
         update = MagicMock()
-        result = awAlgot handler(update, mock_context)
+        result = await handler(update, mock_context)
 
         assert result is not None
         assert result.api is mock_api
@@ -269,7 +269,7 @@ class TestInjectDependencies:
             return config
 
         update = MagicMock()
-        result = awAlgot handler(update, mock_context)
+        result = await handler(update, mock_context)
 
         assert result is mock_config
 
@@ -286,7 +286,7 @@ class TestInjectDependencies:
             return dmarket_api
 
         update = MagicMock()
-        result = awAlgot handler(update, mock_context, dmarket_api=explicit_api)
+        result = await handler(update, mock_context, dmarket_api=explicit_api)
 
         assert result is explicit_api
 
@@ -299,7 +299,7 @@ class TestInjectDependencies:
             return {"api": dmarket_api, "scanner": scanner}
 
         update = MagicMock()
-        result = awAlgot handler(update, mock_context)
+        result = await handler(update, mock_context)
 
         assert result["api"] is None
         assert result["scanner"] is None
@@ -328,7 +328,7 @@ class TestInjectDependencies:
             }
 
         update = MagicMock()
-        result = awAlgot handler(update, mock_context)
+        result = await handler(update, mock_context)
 
         assert result["api"] is mock_api
         assert result["config"] is mock_config

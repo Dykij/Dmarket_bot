@@ -39,7 +39,7 @@ def run_endurance_test(duration=300):
         time.sleep(0.9)
 
 
-if __name__ == "__mAlgon__":
+if __name__ == "__main__":
     # Ensure logs directory exists
     os.makedirs('logs', exist_ok=True)
     run_endurance_test()

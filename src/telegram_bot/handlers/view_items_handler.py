@@ -124,14 +124,14 @@ async def handle_view_items(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     logger.info("view_items_started", user_id=user.id)
 
     # Send initial status
-    status_msg = awAlgot message.reply_text("📦 Loading your items...")
+    status_msg = await message.reply_text("📦 Loading your items...")
 
     try:
         # Get API client
         api_client: DMarketAPI | None = context.bot_data.get("dmarket_api")
 
         if not api_client:
-            awAlgot status_msg.edit_text(
+            await status_msg.edit_text(
                 "❌ <b>Error</b>\n\nAPI client not initialized.\nPlease restart the bot.",
                 parse_mode="HTML",
             )
@@ -140,19 +140,19 @@ async def handle_view_items(update: Update, context: ContextTypes.DEFAULT_TYPE) 
 
         # Fetch sold items (closed offers)
         try:
-            sold_response = awAlgot api_client.get_user_closed_offers(limit=10)
+            sold_response = await api_client.get_user_closed_offers(limit=10)
             sold_items = sold_response.get("Items", []) if sold_response else []
         except Exception as e:
-            logger.warning("fAlgoled_to_fetch_sold_items", error=str(e), user_id=user.id)
+            logger.warning("failed_to_fetch_sold_items", error=str(e), user_id=user.id)
             sold_items = []
 
         # Fetch active listings
         try:
-            active_response = awAlgot api_client.get_user_offers(limit=10)
+            active_response = await api_client.get_user_offers(limit=10)
             active_items = active_response.get("Items", []) if active_response else []
         except Exception as e:
             logger.warning(
-                "fAlgoled_to_fetch_active_items", error=str(e), user_id=user.id
+                "failed_to_fetch_active_items", error=str(e), user_id=user.id
             )
             active_items = []
 
@@ -227,7 +227,7 @@ async def handle_view_items(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         # Summary
         if sold_items or active_items:
             response_text += "ℹ️ <i>Commission rate: 7% (DMarket)</i>\n"
-            response_text += "<i>Use /inventory for detAlgoled view</i>"
+            response_text += "<i>Use /inventory for detailed view</i>"
         else:
             response_text += "💡 <b>Getting Started</b>\n\n"
             response_text += "Start trading by using:\n"
@@ -235,7 +235,7 @@ async def handle_view_items(update: Update, context: ContextTypes.DEFAULT_TYPE) 
             response_text += "• 🎯 Manual scanning - Select specific items\n\n"
             response_text += "Happy trading! 🚀"
 
-        awAlgot status_msg.edit_text(response_text, parse_mode="HTML")
+        await status_msg.edit_text(response_text, parse_mode="HTML")
 
         logger.info(
             "view_items_completed",
@@ -246,7 +246,7 @@ async def handle_view_items(update: Update, context: ContextTypes.DEFAULT_TYPE) 
 
     except Exception as e:
         std_logger.exception("Unexpected error in view_items handler")
-        awAlgot status_msg.edit_text(
+        await status_msg.edit_text(
             "❌ <b>Error Loading Items</b>\n\n"
             "An unexpected error occurred.\n"
             "Please try agAlgon later.",
@@ -276,9 +276,9 @@ async def handle_view_items_callback(
     if not query:
         return
 
-    awAlgot query.answer()
+    await query.answer()
 
     # Create fake message update for reuse of handle_view_items
     if query.message:
         update.message = query.message
-        awAlgot handle_view_items(update, context)
+        await handle_view_items(update, context)

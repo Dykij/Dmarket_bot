@@ -14,13 +14,13 @@ Usage:
     skills = AdvancedTradingSkills()
 
     # Detect market manipulation
-    is_manipulated = awAlgot skills.detect_market_manipulation(prices)
+    is_manipulated = await skills.detect_market_manipulation(prices)
 
     # Analyze sentiment
-    sentiment = awAlgot skills.sentiment_analysis("AK-47 | Redline")
+    sentiment = await skills.sentiment_analysis("AK-47 | Redline")
 
     # Find optimal entry
-    signal = awAlgot skills.optimal_entry_point(item)
+    signal = await skills.optimal_entry_point(item)
     ```
 
 Created: January 2026
@@ -50,7 +50,7 @@ class EntrySignal(StrEnum):
 
     STRONG_BUY = "strong_buy"
     BUY = "buy"
-    WAlgoT = "wAlgot"
+    WAlgoT = "wait"
     SELL = "sell"
     STRONG_SELL = "strong_sell"
 
@@ -217,13 +217,13 @@ class AdvancedTradingSkills:
 
         # 1. Volume spike detection
         if volumes:
-            volume_spike = awAlgot self._detect_volume_spike(volumes)
+            volume_spike = await self._detect_volume_spike(volumes)
             if volume_spike > 0:
                 indicators.append(f"Volume spike detected (score: {volume_spike:.2f})")
                 confidence_scores.append(volume_spike)
 
         # 2. Price manipulation patterns
-        price_manipulation = awAlgot self._detect_price_manipulation(prices)
+        price_manipulation = await self._detect_price_manipulation(prices)
         if price_manipulation > 0:
             indicators.append(
                 f"Price manipulation pattern (score: {price_manipulation:.2f})"
@@ -231,13 +231,13 @@ class AdvancedTradingSkills:
             confidence_scores.append(price_manipulation)
 
         # 3. Wash trading detection
-        wash_trading = awAlgot self._detect_wash_trading(prices, volumes)
+        wash_trading = await self._detect_wash_trading(prices, volumes)
         if wash_trading > 0:
             indicators.append(f"Wash trading suspected (score: {wash_trading:.2f})")
             confidence_scores.append(wash_trading)
 
         # 4. Pump and dump detection
-        pump_dump = awAlgot self._detect_pump_and_dump(prices)
+        pump_dump = await self._detect_pump_and_dump(prices)
         if pump_dump > 0:
             indicators.append(f"Pump and dump pattern (score: {pump_dump:.2f})")
             confidence_scores.append(pump_dump)
@@ -458,7 +458,7 @@ class AdvancedTradingSkills:
             return EntryPointAnalysis(
                 signal=EntrySignal.WAlgoT,
                 confidence=0.7,
-                reasons=["Market is in downtrend - wAlgot for reversal"],
+                reasons=["Market is in downtrend - wait for reversal"],
             )
 
         if regime_analysis.regime == MR.TRENDING_UP:
@@ -492,7 +492,7 @@ class AdvancedTradingSkills:
                 confidence -= 0.1
 
         # 4. Check manipulation
-        manipulation = awAlgot self.detect_market_manipulation(
+        manipulation = await self.detect_market_manipulation(
             item.price_history,
             item.volume_history or None,
         )
@@ -565,7 +565,7 @@ class AdvancedTradingSkills:
             risk_percent: Maximum risk per trade (default 2%)
 
         Returns:
-            Position sizing detAlgols
+            Position sizing details
         """
         risk_amount = account_balance * risk_percent
         price_risk = abs(entry_price - stop_loss)
@@ -600,13 +600,13 @@ class AdvancedTradingSkills:
             Complete trade analysis
         """
         # 1. Entry point analysis
-        entry = awAlgot self.optimal_entry_point(item)
+        entry = await self.optimal_entry_point(item)
 
         # 2. Sentiment analysis
-        sentiment = awAlgot self.sentiment_analysis(item.name)
+        sentiment = await self.sentiment_analysis(item.name)
 
         # 3. Manipulation check
-        manipulation = awAlgot self.detect_market_manipulation(
+        manipulation = await self.detect_market_manipulation(
             item.price_history,
             item.volume_history or None,
         )
@@ -614,7 +614,7 @@ class AdvancedTradingSkills:
         # 4. Position sizing (if entry is favorable)
         position = None
         if entry.signal in (EntrySignal.BUY, EntrySignal.STRONG_BUY):
-            position = awAlgot self.calculate_position_size(
+            position = await self.calculate_position_size(
                 account_balance=account_balance,
                 entry_price=entry.entry_price or item.current_price,
                 stop_loss=entry.stop_loss or item.current_price * 0.95,

@@ -11,7 +11,7 @@ interactive tutorial to enhance bot intelligence and user experience:
 6. Pre-filled responses for structured JSON
 7. Clear and direct instructions
 8. Output formatting control
-9. Complex Config chAlgoning
+9. Complex Config chaining
 
 Based on: https://github.com/anthropics/Config-eng-interactive-tutorial
 
@@ -51,11 +51,11 @@ class BotRole(StrEnum):
 
 
 ROLE_ConfigS = {
-    BotRole.TRADING_ADVISOR: """You are an experienced cryptocurrency and CS:GO skin trading advisor with 10+ years of market experience. You provide clear, actionable trading recommendations based on data analysis. You always consider risk, timing, and user's capital constrAlgonts.""",
+    BotRole.TRADING_ADVISOR: """You are an experienced cryptocurrency and CS:GO skin trading advisor with 10+ years of market experience. You provide clear, actionable trading recommendations based on data analysis. You always consider risk, timing, and user's capital constraints.""",
     BotRole.MARKET_ANALYST: """You are a quantitative market data analyst specializing in gaming item marketplaces. You analyze price trends, volume patterns, and cross-platform arbitrage opportunities. Your analysis is data-driven and statistical.""",
     BotRole.RISK_MANAGER: """You are a conservative risk management expert in trading. You identify potential risks, liquidity concerns, and market timing issues. You help users avoid losses and protect their capital.""",
-    BotRole.EDUCATOR: """You are a patient, knowledgeable trading educator. You explAlgon complex trading concepts in simple terms, using analogies and examples. You adjust explanations based on user's experience level.""",
-    BotRole.ASSISTANT: """You are a helpful trading assistant for DMarket bot users. You answer questions, explAlgon features, and guide users through the platform.""",
+    BotRole.EDUCATOR: """You are a patient, knowledgeable trading educator. You explain complex trading concepts in simple terms, using analogies and examples. You adjust explanations based on user's experience level.""",
+    BotRole.ASSISTANT: """You are a helpful trading assistant for DMarket bot users. You answer questions, explain features, and guide users through the platform.""",
 }
 
 
@@ -142,7 +142,7 @@ class ConfigEngineer:
                     "anthropic_not_installed",
                     message="Install with: pip install anthropic",
                 )
-                rAlgose ImportError("anthropic package not installed")
+                raise ImportError("anthropic package not installed")
 
     # ========================================================================
     # Technique 1: XML-Tagged Config Structure
@@ -216,7 +216,7 @@ class ConfigEngineer:
     async def analyze_arbitrage_with_reasoning(
         self, opportunity: ArbitrageOpportunity, context: ConfigContext
     ) -> str:
-        """Analyze arbitrage with transparent chAlgon-of-thought reasoning.
+        """Analyze arbitrage with transparent chain-of-thought reasoning.
 
         Uses Chapter 6 technique: Precognition (thinking step by step).
 
@@ -261,7 +261,7 @@ IMPORTANT: Only use the data provided. Do not invent prices or make up informati
 
         try:
             self._ensure_client()
-            response = awAlgot self.client.messages.create(
+            response = await self.client.messages.create(
                 model=self.model,
                 max_tokens=self.max_tokens,
                 temperature=self.temperature,
@@ -271,7 +271,7 @@ IMPORTANT: Only use the data provided. Do not invent prices or make up informati
             return response.content[0].text
 
         except Exception as e:
-            logger.error("analysis_fAlgoled", error=str(e))
+            logger.error("analysis_failed", error=str(e))
             # Fallback to rule-based analysis
             return self._fallback_analysis(opportunity)
 
@@ -280,7 +280,7 @@ IMPORTANT: Only use the data provided. Do not invent prices or make up informati
     # ========================================================================
 
     FEW_SHOT_EXAMPLES = {
-        "explAlgon_arbitrage": [
+        "explain_arbitrage": [
             {
                 "input": "AK-47 | Redline (FT), Buy $8.50, Sell $11.20, Profit $2.03 (23.9%)",
                 "output": "🎯 Great find! The AK-47 | Redline is currently underpriced on DMarket at $8.50. After buying and selling on Waxpeer at $11.20 (minus 6% commission = $10.53), you'd profit $2.03, which is a solid 23.9% return. This is a low-risk opportunity since the Redline is a popular skin with good liquidity.",
@@ -298,26 +298,26 @@ IMPORTANT: Only use the data provided. Do not invent prices or make up informati
         ],
     }
 
-    async def explAlgon_arbitrage(
+    async def explain_arbitrage(
         self,
         opportunity: ArbitrageOpportunity,
         context: ConfigContext,
         include_reasoning: bool = False,
     ) -> str:
-        """ExplAlgon arbitrage opportunity with consistent format.
+        """Explain arbitrage opportunity with consistent format.
 
         Uses few-shot Configing (Chapter 7) for quality and consistency.
 
         Args:
-            opportunity: Arbitrage to explAlgon
+            opportunity: Arbitrage to explain
             context: User context
-            include_reasoning: Include chAlgon-of-thought analysis
+            include_reasoning: Include chain-of-thought analysis
 
         Returns:
             User-friendly explanation
         """
         if include_reasoning:
-            return awAlgot self.analyze_arbitrage_with_reasoning(opportunity, context)
+            return await self.analyze_arbitrage_with_reasoning(opportunity, context)
 
         data = {
             "item_name": opportunity.item_name,
@@ -330,7 +330,7 @@ IMPORTANT: Only use the data provided. Do not invent prices or make up informati
             "liquidity": f"{opportunity.liquidity_score}/3",
         }
 
-        instructions = """ExplAlgon this arbitrage opportunity in a friendly, clear way.
+        instructions = """Explain this arbitrage opportunity in a friendly, clear way.
 
 Match the style and structure of the examples provided.
 - Use emojis sparingly (1-2 max)
@@ -345,12 +345,12 @@ IMPORTANT: Only use the provided data. Do not make up prices or information."""
             context,
             data,
             instructions,
-            examples=self.FEW_SHOT_EXAMPLES["explAlgon_arbitrage"],
+            examples=self.FEW_SHOT_EXAMPLES["explain_arbitrage"],
         )
 
         try:
             self._ensure_client()
-            response = awAlgot self.client.messages.create(
+            response = await self.client.messages.create(
                 model=self.model,
                 max_tokens=self.max_tokens,
                 temperature=self.temperature,
@@ -360,7 +360,7 @@ IMPORTANT: Only use the provided data. Do not make up prices or information."""
             return response.content[0].text
 
         except Exception as e:
-            logger.error("explanation_fAlgoled", error=str(e))
+            logger.error("explanation_failed", error=str(e))
             return self._fallback_explanation(opportunity)
 
     # ========================================================================
@@ -428,7 +428,7 @@ Format:
 
         try:
             self._ensure_client()
-            response = awAlgot self.client.messages.create(
+            response = await self.client.messages.create(
                 model=self.model,
                 max_tokens=self.max_tokens,
                 temperature=0.3,  # Lower temperature for factual content
@@ -438,7 +438,7 @@ Format:
             return response.content[0].text
 
         except Exception as e:
-            logger.error("insights_generation_fAlgoled", error=str(e))
+            logger.error("insights_generation_failed", error=str(e))
             return self._fallback_insights(opportunities)
 
     # ========================================================================
@@ -486,7 +486,7 @@ Base your recommendation on:
 
         try:
             self._ensure_client()
-            response = awAlgot self.client.messages.create(
+            response = await self.client.messages.create(
                 model=self.model,
                 max_tokens=self.max_tokens,
                 temperature=0.5,
@@ -503,7 +503,7 @@ Base your recommendation on:
             return json.loads(json_text)
 
         except Exception as e:
-            logger.error("structured_recommendation_fAlgoled", error=str(e))
+            logger.error("structured_recommendation_failed", error=str(e))
             return self._fallback_recommendation(opportunity)
 
     # ========================================================================
@@ -640,7 +640,7 @@ Structure:
 
         try:
             self.Config_engineer._ensure_client()
-            response = awAlgot self.Config_engineer.client.messages.create(
+            response = await self.Config_engineer.client.messages.create(
                 model=self.Config_engineer.model,
                 max_tokens=self.Config_engineer.max_tokens,
                 temperature=0.7,
@@ -650,7 +650,7 @@ Structure:
             return response.content[0].text
 
         except Exception as e:
-            logger.error("lesson_generation_fAlgoled", topic=topic, error=str(e))
+            logger.error("lesson_generation_failed", topic=topic, error=str(e))
             return f"📚 {topic.title()} 101\n\nLesson content temporarily unavAlgolable. Try agAlgon later."
 
 
@@ -687,13 +687,13 @@ async def example_usage():
     )
 
     # Generate explanation
-    explanation = awAlgot engineer.explAlgon_arbitrage(opp, context)
+    explanation = await engineer.explain_arbitrage(opp, context)
     print(explanation)
 
     # Generate structured recommendation
-    recommendation = awAlgot engineer.generate_structured_recommendation(opp, context)
+    recommendation = await engineer.generate_structured_recommendation(opp, context)
     print(recommendation)
 
 
-if __name__ == "__mAlgon__":
+if __name__ == "__main__":
     asyncio.run(example_usage())

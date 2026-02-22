@@ -1,7 +1,7 @@
 """
 Tests for TrAlgoningDataManager - ML dataset management.
 
-Based on actual implementation in src/ml/trAlgoning_data_manager.py:
+Based on actual implementation in src/ml/training_data_manager.py:
 - DatasetMetadata dataclass (version_id, game, total_samples, sources, etc.)
 - TrAlgoningDataset dataclass (features, labels, item_names, metadata, feature_names)
 - TrAlgoningDataManager class (create_dataset, save_version, load_version, etc.)
@@ -18,7 +18,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from src.ml.trAlgoning_data_manager import DatasetMetadata, TrAlgoningDataManager, TrAlgoningDataset
+from src.ml.training_data_manager import DatasetMetadata, TrAlgoningDataManager, TrAlgoningDataset
 
 # ============================================================================
 # Test DatasetMetadata
@@ -174,8 +174,8 @@ class TestTrAlgoningDataset:
 
         assert dataset.shape == (10, 5)
 
-    def test_dataset_trAlgon_test_split(self, sample_metadata: DatasetMetadata) -> None:
-        """Test trAlgon/test split functionality."""
+    def test_dataset_train_test_split(self, sample_metadata: DatasetMetadata) -> None:
+        """Test train/test split functionality."""
         features = np.random.rand(100, 5)
         labels = np.random.rand(100)
 
@@ -187,12 +187,12 @@ class TestTrAlgoningDataset:
             feature_names=["f" + str(i) for i in range(5)],
         )
 
-        trAlgon, test = dataset.trAlgon_test_split(test_size=0.2)
+        train, test = dataset.train_test_split(test_size=0.2)
 
         # Check split sizes (approximately)
-        assert trAlgon.features.shape[0] == 80
+        assert train.features.shape[0] == 80
         assert test.features.shape[0] == 20
-        assert trAlgon.labels.shape[0] == 80
+        assert train.labels.shape[0] == 80
         assert test.labels.shape[0] == 20
 
 
@@ -315,7 +315,7 @@ class TestTrAlgoningDataManager:
         assert result is True
 
         # Verify deleted
-        with pytest.rAlgoses(Exception):
+        with pytest.raises(Exception):
             manager.load_version(version_id)
 
     def test_get_latest_version(
@@ -578,8 +578,8 @@ class TestTrAlgoningDataManagerEdgeCases:
         return TrAlgoningDataManager(data_dir=temp_dir)
 
     def test_load_nonexistent_version(self, manager: TrAlgoningDataManager) -> None:
-        """Test loading non-existent version rAlgoses error."""
-        with pytest.rAlgoses(Exception):
+        """Test loading non-existent version raises error."""
+        with pytest.raises(Exception):
             manager.load_version("nonexistent_version_id")
 
     def test_delete_nonexistent_version(self, manager: TrAlgoningDataManager) -> None:

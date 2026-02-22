@@ -327,7 +327,7 @@ class SmartRepricer:
             True if selling should be paused
         """
         title = item.get("title", "Unknown")
-        return awAlgot self.check_market_panic(title, market_min_price)
+        return await self.check_market_panic(title, market_min_price)
 
     def get_repricing_summary(self, items: list[dict[str, Any]]) -> dict[str, Any]:
         """Generate summary of repricing actions needed.

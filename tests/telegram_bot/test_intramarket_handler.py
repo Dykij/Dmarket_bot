@@ -163,13 +163,13 @@ class TestStartArbitrage:
     async def test_start_intramarket_arbitrage(self, update, context):
         """Тест запуска интерфейса внутрирыночного арбитража."""
         # Вызываем тестируемую функцию
-        awAlgot start_intramarket_arbitrage(update, context)
+        await start_intramarket_arbitrage(update, context)
 
         # Проверяем, что ответ на callback был отправлен
-        update.callback_query.answer.assert_awAlgoted_once()
+        update.callback_query.answer.assert_awaited_once()
 
         # Проверяем, что сообщение было отправлено
-        context.bot.send_message.assert_awAlgoted_once()
+        context.bot.send_message.assert_awaited_once()
 
         # Проверяем, что текст содержит правильные элементы
         _args, kwargs = context.bot.send_message.call_args
@@ -236,10 +236,10 @@ class TestHandleIntramarketCallback:
             mock_pagination.get_items_per_page.return_value = 5
 
             # Вызываем тестируемую функцию
-            awAlgot handle_intramarket_callback(update, context)
+            await handle_intramarket_callback(update, context)
 
             # Проверяем, что ответ на callback был отправлен
-            update.callback_query.answer.assert_awAlgoted_once()
+            update.callback_query.answer.assert_awaited_once()
 
             # Проверяем, что сообщение о сканировании было отправлено
             edit_message_calls = update.callback_query.edit_message_text.mock_calls
@@ -252,7 +252,7 @@ class TestHandleIntramarketCallback:
             assert "CS2" in first_call_args[0]
 
             # Проверяем, что функция find_price_anomalies была вызвана с правильными параметрами
-            assert mock_anomalies.awAlgot_count == 1
+            assert mock_anomalies.await_count == 1
             call_kwargs = mock_anomalies.call_args[1]
             assert call_kwargs["game"] == "csgo"
             assert call_kwargs["max_results"] == 50
@@ -303,13 +303,13 @@ class TestHandleIntramarketCallback:
             mock_pagination.get_items_per_page.return_value = 5
 
             # Вызываем тестируемую функцию
-            awAlgot handle_intramarket_callback(update, context)
+            await handle_intramarket_callback(update, context)
 
             # Проверяем, что ответ на callback был отправлен
-            update.callback_query.answer.assert_awAlgoted_once()
+            update.callback_query.answer.assert_awaited_once()
 
             # Проверяем, что функция find_trending_items была вызвана
-            assert mock_trending.awAlgot_count == 1
+            assert mock_trending.await_count == 1
             call_kwargs = mock_trending.call_args[1]
             assert call_kwargs["game"] == "csgo"
             assert call_kwargs["max_results"] == 50
@@ -363,13 +363,13 @@ class TestHandleIntramarketCallback:
             mock_pagination.get_items_per_page.return_value = 5
 
             # Вызываем тестируемую функцию
-            awAlgot handle_intramarket_callback(update, context)
+            await handle_intramarket_callback(update, context)
 
             # Проверяем, что ответ на callback был отправлен
-            update.callback_query.answer.assert_awAlgoted_once()
+            update.callback_query.answer.assert_awaited_once()
 
             # Проверяем, что find_mispriced_rare_items была вызвана
-            assert mock_rare.awAlgot_count == 1
+            assert mock_rare.await_count == 1
             call_kwargs = mock_rare.call_args[1]
             assert call_kwargs["game"] == "csgo"
             assert call_kwargs["max_results"] == 50
@@ -394,10 +394,10 @@ class TestHandleIntramarketCallback:
             return_value=AsyncMock(),
         ):
             # Вызываем тестируемую функцию
-            awAlgot handle_intramarket_callback(update, context)
+            await handle_intramarket_callback(update, context)
 
             # Проверяем, что ответ на callback был отправлен
-            update.callback_query.answer.assert_awAlgoted_once()
+            update.callback_query.answer.assert_awaited_once()
 
             # Проверяем отправленное сообщение об ошибке
             edit_message_calls = update.callback_query.edit_message_text.mock_calls
@@ -421,10 +421,10 @@ class TestHandleIntramarketCallback:
             return_value=AsyncMock(),
         ):
             # Вызываем тестируемую функцию
-            awAlgot handle_intramarket_callback(update, context)
+            await handle_intramarket_callback(update, context)
 
             # Проверяем, что ответ на callback был отправлен
-            update.callback_query.answer.assert_awAlgoted_once()
+            update.callback_query.answer.assert_awaited_once()
 
             # Проверяем отправленное сообщение о пустых результатах
             edit_message_calls = update.callback_query.edit_message_text.mock_calls
@@ -437,7 +437,7 @@ class TestHandleIntramarketCallback:
     async def test_handle_error(self, mock_anomalies, update, context):
         """Тест обработки ошибки при выполнении запроса.
 
-        Декоратор @handle_exceptions с rerAlgose=True отправляет сообщение
+        Декоратор @handle_exceptions с reraise=True отправляет сообщение
         пользователю и затем перевыбрасывает исключение.
         """
         # Обновляем данные callback_query
@@ -452,9 +452,9 @@ class TestHandleIntramarketCallback:
             return_value=AsyncMock(),
         ):
             # Вызываем тестируемую функцию - должно выбросить исключение
-            with pytest.rAlgoses(Exception, match="Test error"):
-                awAlgot handle_intramarket_callback(update, context)
+            with pytest.raises(Exception, match="Test error"):
+                await handle_intramarket_callback(update, context)
 
             # Проверяем, что ответ на callback был отправлен
             # (answer вызывается до возникновения ошибки)
-            update.callback_query.answer.assert_awAlgoted()
+            update.callback_query.answer.assert_awaited()

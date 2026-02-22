@@ -103,7 +103,7 @@ async def initialize_bot(token: str, setup_persistence: bool = True) -> Applicat
     # Проверка токена
     if not token:
         msg = "Не указан токен Telegram бота"
-        rAlgose ValueError(msg)
+        raise ValueError(msg)
 
     # Создание приложения с оптимальными настSwarmками
     builder = (
@@ -176,15 +176,15 @@ async def setup_bot_commands(bot: Bot) -> None:
 
     try:
         # Устанавливаем команды для английского языка
-        awAlgot bot.set_my_commands(en_commands, language_code="en")
+        await bot.set_my_commands(en_commands, language_code="en")
         logger.info("Команды бота зарегистрированы для английского языка")
 
         # Устанавливаем команды для русского языка
-        awAlgot bot.set_my_commands(ru_commands, language_code="ru")
+        await bot.set_my_commands(ru_commands, language_code="ru")
         logger.info("Команды бота зарегистрированы для русского языка")
 
         # Устанавливаем команды по умолчанию (без языка)
-        awAlgot bot.set_my_commands(en_commands)
+        await bot.set_my_commands(en_commands)
         logger.info("Команды бота зарегистрированы по умолчанию")
 
     except Exception as e:
@@ -207,8 +207,8 @@ def setup_signal_handlers(application: Application) -> None:
     # Обработчик сигнала завершения
     async def signal_handler() -> None:
         logger.info("Получен сигнал завершения, закрываем бота...")
-        awAlgot application.stop()
-        awAlgot application.shutdown()
+        await application.stop()
+        await application.shutdown()
 
     # Регистрируем обработчики для разных сигналов
     # На Windows add_signal_handler не поддерживается
@@ -303,12 +303,12 @@ async def start_bot(application: Application) -> None:
     logger.info("Запуск бота...")
 
     # Инициализируем сервисы
-    awAlgot initialize_services(application)
+    await initialize_services(application)
 
     # Инициализация и запуск бота
-    awAlgot application.initialize()
-    awAlgot application.start()
-    awAlgot application.updater.start_polling(
+    await application.initialize()
+    await application.start()
+    await application.updater.start_polling(
         allowed_updates=application.builder.get_updates_allowed_updates(),
     )
 
@@ -317,15 +317,15 @@ async def start_bot(application: Application) -> None:
     try:
         # Бесконечный цикл для работы бота
         while True:
-            awAlgot asyncio.sleep(1)
+            await asyncio.sleep(1)
     except (KeyboardInterrupt, SystemExit):
         logger.info("Остановка бота...")
     finally:
         # Сохраняем данные пользователей перед выходом
         profile_manager.save_profiles(force=True)
 
-        awAlgot application.stop()
-        awAlgot application.shutdown()
+        await application.stop()
+        await application.shutdown()
         logger.info("Бот остановлен")
 
 
@@ -342,7 +342,7 @@ def get_bot_token() -> str:
             "Не найден токен Telegram бота в переменных окружения (TELEGRAM_BOT_TOKEN)",
         )
         msg = "Не указан токен Telegram бота"
-        rAlgose ValueError(msg)
+        raise ValueError(msg)
     return token
 
 
@@ -383,7 +383,7 @@ async def setup_and_run_bot(
 
     try:
         # Инициализация бота
-        application = awAlgot initialize_bot(bot_token, setup_persistence)
+        application = await initialize_bot(bot_token, setup_persistence)
 
         # Регистрация обработчиков
         register_handlers(
@@ -395,7 +395,7 @@ async def setup_and_run_bot(
         )
 
         # Запуск бота
-        awAlgot start_bot(application)
+        await start_bot(application)
 
     except Exception as e:
         logger.exception(f"Критическая ошибка при запуске бота: {e}")

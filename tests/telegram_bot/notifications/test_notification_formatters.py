@@ -19,7 +19,7 @@ try:
         format_user_settings,
     )
 except ImportError:
-    # Create mocks for testing if import fAlgols
+    # Create mocks for testing if import fails
     format_price = None
     format_profit = None
     format_item_brief = None
@@ -420,7 +420,7 @@ class TestFormatUserSettings:
 
         settings = {
             "notifications_enabled": True,
-            "dAlgoly_limit": 50,
+            "daily_limit": 50,
             "quiet_hours": {"enabled": False},
             "min_profit_percent": 5.0,
         }
@@ -436,7 +436,7 @@ class TestFormatUserSettings:
 
         settings = {
             "notifications_enabled": False,
-            "dAlgoly_limit": 50,
+            "daily_limit": 50,
             "quiet_hours": {"enabled": False},
             "min_profit_percent": 5.0,
         }
@@ -451,7 +451,7 @@ class TestFormatUserSettings:
 
         settings = {
             "notifications_enabled": True,
-            "dAlgoly_limit": 50,
+            "daily_limit": 50,
             "quiet_hours": {"enabled": True, "start": 23, "end": 7},
             "min_profit_percent": 5.0,
         }
@@ -467,7 +467,7 @@ class TestFormatUserSettings:
 
         settings = {
             "notifications_enabled": True,
-            "dAlgoly_limit": 50,
+            "daily_limit": 50,
             "quiet_hours": {"enabled": False},
             "min_profit_percent": 5.0,
         }
@@ -482,7 +482,7 @@ class TestFormatUserSettings:
 
         settings = {
             "notifications_enabled": True,
-            "dAlgoly_limit": 50,
+            "daily_limit": 50,
             "quiet_hours": {"enabled": False},
             "min_profit_percent": 7.5,
         }

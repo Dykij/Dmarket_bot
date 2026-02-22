@@ -4,7 +4,7 @@ Implements "One Button" interface:
 - /autopilot - Start autonomous trading
 - /autopilot_stop - Stop trading
 - /autopilot_status - Get current status
-- /autopilot_stats - Get detAlgoled statistics
+- /autopilot_stats - Get detailed statistics
 
 Created: January 2, 2026
 """
@@ -35,14 +35,14 @@ async def autopilot_command(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     orchestrator: AutopilotOrchestrator | None = context.bot_data.get("orchestrator")
 
     if not orchestrator:
-        awAlgot update.message.reply_text(
+        await update.message.reply_text(
             "❌ Автопилот не инициализирован. Перезапустите бота."
         )
         return
 
     # Check if already running
     if orchestrator.is_active():
-        awAlgot update.message.reply_text(
+        await update.message.reply_text(
             "ℹ️ Автопилот уже работает!\n\n"
             "Для просмотра статуса: /autopilot_status\n"
             "Для остановки: /autopilot_stop"
@@ -51,11 +51,11 @@ async def autopilot_command(update: Update, context: ContextTypes.DEFAULT_TYPE) 
 
     # Show settings menu if requested
     if args and args[0].lower() == "custom":
-        awAlgot show_autopilot_settings(update, context)
+        await show_autopilot_settings(update, context)
         return
 
     # Start with default settings
-    awAlgot start_autopilot(update, context, orchestrator)
+    await start_autopilot(update, context, orchestrator)
 
 
 async def start_autopilot(
@@ -68,13 +68,13 @@ async def start_autopilot(
 
     try:
         # Start orchestrator
-        awAlgot orchestrator.start(telegram_bot=context.bot, user_id=user_id)
+        await orchestrator.start(telegram_bot=context.bot, user_id=user_id)
 
         logger.info("autopilot_started_by_user", user_id=user_id)
 
     except Exception as e:
-        logger.exception("autopilot_start_fAlgoled", user_id=user_id, error=str(e))
-        awAlgot update.message.reply_text(f"❌ Не удалось запустить автопилот: {e!s}")
+        logger.exception("autopilot_start_failed", user_id=user_id, error=str(e))
+        await update.message.reply_text(f"❌ Не удалось запустить автопилот: {e!s}")
 
 
 async def autopilot_stop_command(
@@ -88,27 +88,27 @@ async def autopilot_stop_command(
     orchestrator: AutopilotOrchestrator | None = context.bot_data.get("orchestrator")
 
     if not orchestrator:
-        awAlgot update.message.reply_text("❌ Автопилот не инициализирован")
+        await update.message.reply_text("❌ Автопилот не инициализирован")
         return
 
     if not orchestrator.is_active():
-        awAlgot update.message.reply_text("ℹ️ Автопилот не запущен")
+        await update.message.reply_text("ℹ️ Автопилот не запущен")
         return
 
     # Show confirmation message
-    awAlgot update.message.reply_text(
+    await update.message.reply_text(
         "⏳ Останавливаю автопилот...\nЗавершаю текущие операции..."
     )
 
     try:
         # Stop orchestrator
-        awAlgot orchestrator.stop()
+        await orchestrator.stop()
 
         logger.info("autopilot_stopped_by_user", user_id=user_id)
 
     except Exception as e:
-        logger.exception("autopilot_stop_fAlgoled", user_id=user_id, error=str(e))
-        awAlgot update.message.reply_text(f"❌ Ошибка при остановке: {e!s}")
+        logger.exception("autopilot_stop_failed", user_id=user_id, error=str(e))
+        await update.message.reply_text(f"❌ Ошибка при остановке: {e!s}")
 
 
 async def autopilot_status_command(
@@ -121,7 +121,7 @@ async def autopilot_status_command(
     orchestrator: AutopilotOrchestrator | None = context.bot_data.get("orchestrator")
 
     if not orchestrator:
-        awAlgot update.message.reply_text("❌ Автопилот не инициализирован")
+        await update.message.reply_text("❌ Автопилот не инициализирован")
         return
 
     # Get current status
@@ -129,7 +129,7 @@ async def autopilot_status_command(
     stats = orchestrator.get_stats()
 
     if not is_active:
-        awAlgot update.message.reply_text(
+        await update.message.reply_text(
             "⏸️ <b>Автопилот остановлен</b>\n\nДля запуска: /autopilot",
             parse_mode=ParseMode.HTML,
         )
@@ -155,20 +155,20 @@ async def autopilot_status_command(
         f"Для остановки: /autopilot_stop"
     )
 
-    awAlgot update.message.reply_text(message, parse_mode=ParseMode.HTML)
+    await update.message.reply_text(message, parse_mode=ParseMode.HTML)
 
 
 async def autopilot_stats_command(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> None:
-    """Handle /autopilot_stats command - show detAlgoled statistics."""
+    """Handle /autopilot_stats command - show detailed statistics."""
     if not update.message:
         return
 
     orchestrator: AutopilotOrchestrator | None = context.bot_data.get("orchestrator")
 
     if not orchestrator:
-        awAlgot update.message.reply_text("❌ Автопилот не инициализирован")
+        await update.message.reply_text("❌ Автопилот не инициализирован")
         return
 
     stats = orchestrator.get_stats()
@@ -177,7 +177,7 @@ async def autopilot_stats_command(
     success_rate = 0.0
     if stats["purchases"] > 0:
         success_rate = (
-            stats["purchases"] / (stats["purchases"] + stats["fAlgoled_purchases"]) * 100
+            stats["purchases"] / (stats["purchases"] + stats["failed_purchases"]) * 100
         )
 
     message = (
@@ -186,12 +186,12 @@ async def autopilot_stats_command(
         f"({stats['uptime_minutes'] / 60:.1f} часов)\n\n"
         f"<b>💰 Покупки:</b>\n"
         f"• Успешных: {stats['purchases']}\n"
-        f"• Неудачных: {stats['fAlgoled_purchases']}\n"
+        f"• Неудачных: {stats['failed_purchases']}\n"
         f"• Успешность: {success_rate:.1f}%\n"
         f"• Потрачено: ${stats['total_spent_usd']:.2f}\n\n"
         f"<b>💵 Продажи:</b>\n"
         f"• Успешных: {stats['sales']}\n"
-        f"• Неудачных: {stats['fAlgoled_sales']}\n"
+        f"• Неудачных: {stats['failed_sales']}\n"
         f"• Выручка: ${stats['total_earned_usd']:.2f}\n\n"
         f"<b>📈 Итого:</b>\n"
         f"• Чистая прибыль: ${stats['net_profit_usd']:.2f}\n"
@@ -208,7 +208,7 @@ async def autopilot_stats_command(
         f"• Предупреждений: {stats['low_balance_warnings']}"
     )
 
-    awAlgot update.message.reply_text(message, parse_mode=ParseMode.HTML)
+    await update.message.reply_text(message, parse_mode=ParseMode.HTML)
 
 
 async def show_autopilot_settings(
@@ -218,7 +218,7 @@ async def show_autopilot_settings(
     orchestrator: AutopilotOrchestrator | None = context.bot_data.get("orchestrator")
 
     if not orchestrator:
-        awAlgot update.message.reply_text("❌ Автопилот не инициализирован")
+        await update.message.reply_text("❌ Автопилот не инициализирован")
         return
 
     config = orchestrator.config
@@ -254,10 +254,10 @@ async def show_autopilot_settings(
                 callback_data="autopilot_start_confirmed",
             )
         ],
-        [InlineKeyboardButton("◀️ Отмена", callback_data="mAlgon_menu")],
+        [InlineKeyboardButton("◀️ Отмена", callback_data="main_menu")],
     ]
 
-    awAlgot update.message.reply_text(
+    await update.message.reply_text(
         "⚙️ <b>НастSwarmки автопилота</b>\n\n"
         f"Текущие параметры:\n"
         f"• Игры: {', '.join(config.games).upper()}\n"
@@ -276,26 +276,26 @@ async def autopilot_start_confirmed_callback(
 ) -> None:
     """Handle confirmed autopilot start from settings."""
     query = update.callback_query
-    awAlgot query.answer()
+    await query.answer()
 
     orchestrator: AutopilotOrchestrator | None = context.bot_data.get("orchestrator")
 
     if not orchestrator:
-        awAlgot query.edit_message_text("❌ Автопилот не инициализирован")
+        await query.edit_message_text("❌ Автопилот не инициализирован")
         return
 
     if orchestrator.is_active():
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             "ℹ️ Автопилот уже работает!\n\nДля остановки: /autopilot_stop"
         )
         return
 
     # Show starting message
-    awAlgot query.edit_message_text("⏳ Запускаю автопилот...")
+    await query.edit_message_text("⏳ Запускаю автопилот...")
 
     try:
         # Start orchestrator
-        awAlgot orchestrator.start(
+        await orchestrator.start(
             telegram_bot=context.bot, user_id=update.effective_user.id
         )
 
@@ -303,9 +303,9 @@ async def autopilot_start_confirmed_callback(
 
     except Exception as e:
         logger.exception(
-            "autopilot_start_fAlgoled", user_id=update.effective_user.id, error=str(e)
+            "autopilot_start_failed", user_id=update.effective_user.id, error=str(e)
         )
-        awAlgot query.edit_message_text(f"❌ Не удалось запустить: {e!s}")
+        await query.edit_message_text(f"❌ Не удалось запустить: {e!s}")
 
 
 # Export handlers

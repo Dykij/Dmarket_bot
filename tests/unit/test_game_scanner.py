@@ -338,7 +338,7 @@ class TestLiquidityFilter:
         items = [{"title": "Item 1"}, {"title": "Item 2"}]
         config = ScanConfig(game="csgo")
 
-        result = awAlgot game_scanner._apply_liquidity_filter(items, config)
+        result = await game_scanner._apply_liquidity_filter(items, config)
 
         assert result == items
 
@@ -361,7 +361,7 @@ class TestLiquidityFilter:
         mock_liquidity_analyzer.filter_liquid_items.return_value = filtered
 
         config = ScanConfig(game="csgo", max_items=2)
-        result = awAlgot scanner._apply_liquidity_filter(items, config)
+        result = await scanner._apply_liquidity_filter(items, config)
 
         assert result == filtered
         mock_liquidity_analyzer.filter_liquid_items.assert_called_once()
@@ -369,7 +369,7 @@ class TestLiquidityFilter:
 
 @pytest.mark.asyncio()
 class TestScanMethod:
-    """Test mAlgon scan() method."""
+    """Test main scan() method."""
 
     @patch("src.dmarket.game_scanner.rate_limiter")
     async def test_scan_with_cache_hit(
@@ -380,7 +380,7 @@ class TestScanMethod:
         mock_cache_manager._get_cached_results.return_value = cached_data
 
         config = ScanConfig(game="csgo", max_items=10)
-        result = awAlgot game_scanner.scan(config)
+        result = await game_scanner.scan(config)
 
         assert result == cached_data[:10]
         assert game_scanner.total_scans == 0  # No actual scan performed
@@ -396,7 +396,7 @@ class TestScanMethod:
         mock_trader_class.return_value = mock_trader
 
         config = ScanConfig(game="csgo")
-        awAlgot game_scanner.scan(config)
+        await game_scanner.scan(config)
 
         assert game_scanner.total_scans == 1
 
@@ -421,7 +421,7 @@ class TestBackwardCompatibleWrapper:
         scanner_instance.liquidity_analyzer = None
         scanner_instance.enable_liquidity_filter = False
 
-        result = awAlgot scan_game(
+        result = await scan_game(
             scanner_instance=scanner_instance,
             game="csgo",
             mode="medium",

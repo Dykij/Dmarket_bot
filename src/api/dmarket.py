@@ -83,7 +83,7 @@ class DMarketAPI:
                 headers["X-Request-Sign"] = f"dmar ed25519 {signature}"
                 return headers
             except Exception as e:
-                logger.warning(f"Ed25519 signing fAlgoled, falling back to HMAC: {e}")
+                logger.warning(f"Ed25519 signing failed, falling back to HMAC: {e}")
 
         # Fallback to HMAC-SHA256
         signature = hmac.new(
@@ -108,7 +108,7 @@ class DMarketAPI:
         # Rate Limiting
         elapsed = time.time() - self.last_request_time
         if elapsed < self.rate_limit:
-            awAlgot asyncio.sleep(self.rate_limit - elapsed)
+            await asyncio.sleep(self.rate_limit - elapsed)
 
         url = f"{self.BASE_URL}{endpoint}"
         body_str = json.dumps(data) if data else ""
@@ -125,7 +125,7 @@ class DMarketAPI:
             try:
                 headers = self._generate_signature(method, path_for_sign, body_str)
 
-                response = awAlgot self.client.request(
+                response = await self.client.request(
                     method, url, params=params, content=body_str, headers=headers
                 )
 
@@ -137,7 +137,7 @@ class DMarketAPI:
                     logger.warning(
                         f"Rate limit hit. Sleeping... (Attempt {attempt+1}/{retries})"
                     )
-                    awAlgot asyncio.sleep(2**attempt)  # Exponential backoff
+                    await asyncio.sleep(2**attempt)  # Exponential backoff
                 else:
                     logger.error(f"API Error {response.status_code}: {response.text}")
                     # Don't retry on client errors (400-403) unless it's strictly network
@@ -149,7 +149,7 @@ class DMarketAPI:
 
             except httpx.RequestError as e:
                 logger.error(f"Network error: {e}")
-                awAlgot asyncio.sleep(1)
+                await asyncio.sleep(1)
 
         return {"objects": []}  # Fallback
 
@@ -179,14 +179,14 @@ class DMarketAPI:
             "priceTo": int(price_to * 100),
         }
 
-        return awAlgot self._request("GET", "/exchange/v1/market/items", params=params)
+        return await self._request("GET", "/exchange/v1/market/items", params=params)
 
     async def close(self):
-        awAlgot self.client.aclose()
+        await self.client.aclose()
 
 
 # --- Consilium Test Runner ---
-if __name__ == "__mAlgon__":
+if __name__ == "__main__":
     from dotenv import load_dotenv
 
     load_dotenv()
@@ -212,7 +212,7 @@ if __name__ == "__mAlgon__":
 
         for game in games:
             print(f"📡 Requesting {game.upper()}...")
-            data = awAlgot api.get_market_items(
+            data = await api.get_market_items(
                 game, limit=5, price_from=1.0, price_to=10.0
             )
             items = data.get("objects", [])
@@ -227,6 +227,6 @@ if __name__ == "__mAlgon__":
 
             print("-" * 30)
 
-        awAlgot api.close()
+        await api.close()
 
     asyncio.run(test_multigame())

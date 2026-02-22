@@ -124,7 +124,7 @@ async def _handle_game_selection(
     _add_game_selection_rows(keyboard, game)
     game_name = GAMES.get(game, game)
 
-    awAlgot query.edit_message_text(
+    await query.edit_message_text(
         f"🔎 *Анализ рынка DMarket*\n\n"
         f"Выберите тип анализа и игру для исследования тенденций рынка "
         f"и поиска выгодных возможностей.\n\n"
@@ -143,7 +143,7 @@ async def _run_price_changes_analysis(
     user_id: int,
 ) -> None:
     """Run price changes analysis."""
-    results = awAlgot analyze_price_changes(
+    results = await analyze_price_changes(
         game=current_game,
         period=user_settings.get("period", "24h"),
         min_price=user_settings.get("min_price", 1.0),
@@ -152,7 +152,7 @@ async def _run_price_changes_analysis(
         limit=20,
     )
     pagination_manager.set_items(user_id, results, "price_changes")
-    awAlgot show_price_changes_results(query, context, current_game)
+    await show_price_changes_results(query, context, current_game)
 
 
 async def _run_trending_analysis(
@@ -164,7 +164,7 @@ async def _run_trending_analysis(
     user_id: int,
 ) -> None:
     """Run trending items analysis."""
-    results = awAlgot find_trending_items(
+    results = await find_trending_items(
         game=current_game,
         min_price=user_settings.get("min_price", 1.0),
         max_price=user_settings.get("max_price", 500.0),
@@ -172,7 +172,7 @@ async def _run_trending_analysis(
         limit=20,
     )
     pagination_manager.set_items(user_id, results, "trending")
-    awAlgot show_trending_items_results(query, context, current_game)
+    await show_trending_items_results(query, context, current_game)
 
 
 async def _run_volatility_analysis(
@@ -184,7 +184,7 @@ async def _run_volatility_analysis(
     user_id: int,
 ) -> None:
     """Run volatility analysis."""
-    results = awAlgot analyze_market_volatility(
+    results = await analyze_market_volatility(
         game=current_game,
         min_price=user_settings.get("min_price", 1.0),
         max_price=user_settings.get("max_price", 500.0),
@@ -192,7 +192,7 @@ async def _run_volatility_analysis(
         limit=20,
     )
     pagination_manager.set_items(user_id, results, "volatility")
-    awAlgot show_volatility_results(query, context, current_game)
+    await show_volatility_results(query, context, current_game)
 
 
 async def _run_undervalued_analysis(
@@ -204,7 +204,7 @@ async def _run_undervalued_analysis(
     user_id: int,
 ) -> None:
     """Run undervalued items analysis."""
-    results = awAlgot find_undervalued_items(
+    results = await find_undervalued_items(
         api_client,
         game=current_game,
         price_from=user_settings.get("min_price", 1.0),
@@ -213,7 +213,7 @@ async def _run_undervalued_analysis(
         max_results=20,
     )
     pagination_manager.set_items(user_id, results, "undervalued")
-    awAlgot show_undervalued_items_results(query, context, current_game)
+    await show_undervalued_items_results(query, context, current_game)
 
 
 async def _run_recommendations_analysis(
@@ -225,14 +225,14 @@ async def _run_recommendations_analysis(
     user_id: int,
 ) -> None:
     """Run investment recommendations analysis."""
-    results = awAlgot get_investment_recommendations(
+    results = await get_investment_recommendations(
         api_client,
         game=current_game,
         budget=user_settings.get("max_price", 100.0),
         risk_level="medium",
     )
     pagination_manager.set_items(user_id, results, "recommendations")
-    awAlgot show_investment_recommendations_results(query, context, current_game)
+    await show_investment_recommendations_results(query, context, current_game)
 
 
 # ============================================================================
@@ -311,7 +311,7 @@ async def market_analysis_command(
 
     reply_markup = InlineKeyboardMarkup(keyboard)
 
-    awAlgot update.message.reply_text(
+    await update.message.reply_text(
         "🔎 *Анализ рынка DMarket*\n\n"
         "Выберите тип анализа и игру для исследования тенденций рынка "
         "и поиска выгодных возможностей.\n\n"
@@ -335,7 +335,7 @@ async def market_analysis_callback(
     if not query or not query.data:
         return
 
-    awAlgot query.answer()
+    await query.answer()
 
     user_id = query.from_user.id
 
@@ -361,7 +361,7 @@ async def market_analysis_callback(
 
     # Обновляем текущую игру (Phase 2 - use helper)
     if action == "select_game":
-        awAlgot _handle_game_selection(query, context, game)
+        await _handle_game_selection(query, context, game)
         return
 
     # Получаем текущие настSwarmки пользователя
@@ -369,7 +369,7 @@ async def market_analysis_callback(
     current_game = user_settings.get("current_game", game)
 
     game_name = GAMES.get(current_game, current_game)
-    awAlgot query.edit_message_text(
+    await query.edit_message_text(
         f"⏳ Загрузка данных анализа рынка для {game_name}...",
         parse_mode="Markdown",
     )
@@ -379,7 +379,7 @@ async def market_analysis_callback(
         api_client = create_api_client_from_env()
 
         if api_client is None:
-            awAlgot query.edit_message_text(
+            await query.edit_message_text(
                 "❌ Не удалось создать API клиент. Проверьте настSwarmки API ключей.",
                 reply_markup=get_back_to_market_analysis_keyboard(current_game),
                 parse_mode="Markdown",
@@ -388,29 +388,29 @@ async def market_analysis_callback(
 
         # Dispatch to appropriate handler (Phase 2 - use helpers)
         if action == "price_changes":
-            awAlgot _run_price_changes_analysis(
+            await _run_price_changes_analysis(
                 query, context, api_client, user_settings, current_game, user_id
             )
         elif action == "trending":
-            awAlgot _run_trending_analysis(
+            await _run_trending_analysis(
                 query, context, api_client, user_settings, current_game, user_id
             )
         elif action == "volatility":
-            awAlgot _run_volatility_analysis(
+            await _run_volatility_analysis(
                 query, context, api_client, user_settings, current_game, user_id
             )
         elif action == "report":
-            report = awAlgot generate_market_report(
+            report = await generate_market_report(
                 game=current_game,
                 dmarket_api=api_client,
             )
-            awAlgot show_market_report(query, context, report)
+            await show_market_report(query, context, report)
         elif action == "undervalued":
-            awAlgot _run_undervalued_analysis(
+            await _run_undervalued_analysis(
                 query, context, api_client, user_settings, current_game, user_id
             )
         elif action == "recommendations":
-            awAlgot _run_recommendations_analysis(
+            await _run_recommendations_analysis(
                 query, context, api_client, user_settings, current_game, user_id
             )
 
@@ -420,7 +420,7 @@ async def market_analysis_callback(
 
         logger.exception(traceback.format_exc())
 
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             f"❌ Произошла ошибка при анализе рынка:\n\n{e!s}",
             reply_markup=get_back_to_market_analysis_keyboard(current_game),
         )
@@ -429,7 +429,7 @@ async def market_analysis_callback(
         api_client_ref = locals().get("api_client")
         if api_client_ref is not None and hasattr(api_client_ref, "_close_client"):
             try:
-                awAlgot api_client_ref._close_client()
+                await api_client_ref._close_client()
             except Exception as e:
                 logger.warning(f"Ошибка при закрытии клиента API: {e}")
 
@@ -448,7 +448,7 @@ async def handle_pagination_analysis(
     if not query or not query.data:
         return
 
-    awAlgot query.answer()
+    await query.answer()
 
     user_id = query.from_user.id
     data = query.data
@@ -470,15 +470,15 @@ async def handle_pagination_analysis(
 
     # Отображаем выбранную страницу в зависимости от типа анализа
     if analysis_type == "price_changes":
-        awAlgot show_price_changes_results(query, context, game)
+        await show_price_changes_results(query, context, game)
     elif analysis_type == "trending":
-        awAlgot show_trending_items_results(query, context, game)
+        await show_trending_items_results(query, context, game)
     elif analysis_type == "volatility":
-        awAlgot show_volatility_results(query, context, game)
+        await show_volatility_results(query, context, game)
     elif analysis_type == "undervalued":
-        awAlgot show_undervalued_items_results(query, context, game)
+        await show_undervalued_items_results(query, context, game)
     elif analysis_type == "recommendations":
-        awAlgot show_investment_recommendations_results(query, context, game)
+        await show_investment_recommendations_results(query, context, game)
 
 
 async def show_price_changes_results(
@@ -501,7 +501,7 @@ async def show_price_changes_results(
 
     if not items:
         # Если нет результатов
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             f"📉 *Анализ изменений цен*\n\n"
             f"Не найдено изменений цен для игры {GAMES.get(game, game)} "
             f"с текущими настSwarmками фильтрации.",
@@ -556,7 +556,7 @@ async def show_price_changes_results(
     )
 
     # Отображаем результаты
-    awAlgot query.edit_message_text(
+    await query.edit_message_text(
         header_text + formatted_text,
         reply_markup=InlineKeyboardMarkup(keyboard),
         parse_mode="Markdown",
@@ -583,7 +583,7 @@ async def show_trending_items_results(
 
     if not items:
         # Если нет результатов
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             f"🔥 *Трендовые предметы*\n\n"
             f"Не найдено трендовых предметов для игры {GAMES.get(game, game)} "
             f"с текущими настSwarmками фильтрации.",
@@ -634,7 +634,7 @@ async def show_trending_items_results(
     )
 
     # Отображаем результаты
-    awAlgot query.edit_message_text(
+    await query.edit_message_text(
         header_text + formatted_text,
         reply_markup=InlineKeyboardMarkup(keyboard),
         parse_mode="Markdown",
@@ -660,7 +660,7 @@ async def show_volatility_results(
     items, current_page, total_pages = pagination_manager.get_page(user_id)
 
     if not items:
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             f"ℹ️ Нет данных о волатильности для {GAMES.get(game, game)}",
             reply_markup=get_back_to_market_analysis_keyboard(game),
         )
@@ -737,7 +737,7 @@ async def show_volatility_results(
     )
 
     # Отображаем результаты
-    awAlgot query.edit_message_text(
+    await query.edit_message_text(
         text,
         reply_markup=InlineKeyboardMarkup(keyboard),
         parse_mode="Markdown",
@@ -762,7 +762,7 @@ async def show_market_report(
 
     # Проверяем наличие ошибки
     if "error" in report:
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             f"❌ Произошла ошибка при создании отчета:\n\n{report['error']}",
             reply_markup=get_back_to_market_analysis_keyboard(game),
         )
@@ -848,7 +848,7 @@ async def show_market_report(
     ]
 
     # Отображаем отчет
-    awAlgot query.edit_message_text(
+    await query.edit_message_text(
         text,
         reply_markup=InlineKeyboardMarkup(keyboard),
         parse_mode="Markdown",
@@ -869,7 +869,7 @@ async def handle_period_change(
     if not query or not query.data:
         return
 
-    awAlgot query.answer()
+    await query.answer()
 
     # Разбираем данные колбэка
     parts = query.data.split(":")
@@ -889,11 +889,11 @@ async def handle_period_change(
     context.user_data["market_analysis"]["period"] = period
 
     # Запускаем новый анализ с обновленным периодом
-    awAlgot query.answer("Период анализа обновлен")
+    await query.answer("Период анализа обновлен")
 
     # Симулируем нажатие на кнопку анализа изменений цен
     query.data = f"analysis:price_changes:{game}"
-    awAlgot market_analysis_callback(update, context)
+    await market_analysis_callback(update, context)
 
 
 def get_back_to_market_analysis_keyboard(game: str) -> InlineKeyboardMarkup:
@@ -963,7 +963,7 @@ async def show_undervalued_items_results(
 
     if not items:
         game_name = GAMES.get(game, game)
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             f"ℹ️ Не найдено недооцененных предметов для {game_name}",
             reply_markup=get_back_to_market_analysis_keyboard(game),
         )
@@ -1037,7 +1037,7 @@ async def show_undervalued_items_results(
     )
 
     # Отображаем результаты
-    awAlgot query.edit_message_text(
+    await query.edit_message_text(
         text,
         reply_markup=InlineKeyboardMarkup(keyboard),
         parse_mode="Markdown",
@@ -1064,7 +1064,7 @@ async def show_investment_recommendations_results(
 
     if not items:
         game_name = GAMES.get(game, game)
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             f"ℹ️ Не удалось сформировать инвестиционные рекомендации для {game_name}",
             reply_markup=get_back_to_market_analysis_keyboard(game),
         )
@@ -1152,7 +1152,7 @@ async def show_investment_recommendations_results(
     )
 
     # Отображаем результаты
-    awAlgot query.edit_message_text(
+    await query.edit_message_text(
         text,
         reply_markup=InlineKeyboardMarkup(keyboard),
         parse_mode="Markdown",
@@ -1173,7 +1173,7 @@ async def handle_risk_level_change(
     query = update.callback_query
     if not query or not query.data:
         return
-    awAlgot query.answer()
+    await query.answer()
 
     # Разбираем данные колбэка
     parts = query.data.split(":")
@@ -1193,8 +1193,8 @@ async def handle_risk_level_change(
     context.user_data["market_analysis"]["risk_level"] = risk_level
 
     # Запускаем новый анализ с обновленным уровнем риска
-    awAlgot query.answer(f"Уровень риска обновлен: {risk_level}")
+    await query.answer(f"Уровень риска обновлен: {risk_level}")
 
     # Симулируем нажатие на кнопку рекомендаций
     query.data = f"analysis:recommendations:{game}"
-    awAlgot market_analysis_callback(update, context)
+    await market_analysis_callback(update, context)

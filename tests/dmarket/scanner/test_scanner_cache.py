@@ -76,13 +76,13 @@ class TestScannerCacheTTL:
 
         assert cache.ttl == 0
 
-    def test_set_ttl_negative_rAlgoses_error(self):
-        """Test setting negative TTL rAlgoses error."""
+    def test_set_ttl_negative_raises_error(self):
+        """Test setting negative TTL raises error."""
         from src.dmarket.scanner.cache import ScannerCache
 
         cache = ScannerCache()
 
-        with pytest.rAlgoses(ValueError, match="non-negative"):
+        with pytest.raises(ValueError, match="non-negative"):
             cache.ttl = -1
 
 
@@ -371,7 +371,7 @@ class TestScannerCacheStatistics:
 
 
 class TestScannerCacheDunderMethods:
-    """Tests for __len__ and __contAlgons__ methods."""
+    """Tests for __len__ and __contains__ methods."""
 
     def test_len_empty(self):
         """Test len on empty cache."""
@@ -391,8 +391,8 @@ class TestScannerCacheDunderMethods:
 
         assert len(cache) == 2
 
-    def test_contAlgons_existing_key(self):
-        """Test contAlgons with existing key."""
+    def test_contains_existing_key(self):
+        """Test contains with existing key."""
         from src.dmarket.scanner.cache import ScannerCache
 
         cache = ScannerCache()
@@ -400,16 +400,16 @@ class TestScannerCacheDunderMethods:
 
         assert "key1" in cache
 
-    def test_contAlgons_missing_key(self):
-        """Test contAlgons with missing key."""
+    def test_contains_missing_key(self):
+        """Test contains with missing key."""
         from src.dmarket.scanner.cache import ScannerCache
 
         cache = ScannerCache()
 
         assert "missing" not in cache
 
-    def test_contAlgons_expired_key(self):
-        """Test contAlgons with expired key."""
+    def test_contains_expired_key(self):
+        """Test contains with expired key."""
         from src.dmarket.scanner.cache import ScannerCache
 
         cache = ScannerCache(ttl=1)  # 1 second expiration

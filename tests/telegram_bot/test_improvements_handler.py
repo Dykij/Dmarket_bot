@@ -95,7 +95,7 @@ class TestImprovementsHandler:
         """Test improvements command when integrator is not avAlgolable."""
         from src.telegram_bot.handlers.improvements_handler import improvements_command
         
-        awAlgot improvements_command(mock_update, mock_context)
+        await improvements_command(mock_update, mock_context)
         
         mock_update.effective_message.reply_text.assert_called_once()
         call_args = mock_update.effective_message.reply_text.call_args
@@ -110,7 +110,7 @@ class TestImprovementsHandler:
         
         mock_context.application.bot_integrator = mock_integrator
         
-        awAlgot improvements_command(mock_update, mock_context)
+        await improvements_command(mock_update, mock_context)
         
         mock_update.effective_message.reply_text.assert_called_once()
         call_args = mock_update.effective_message.reply_text.call_args
@@ -123,7 +123,7 @@ class TestImprovementsHandler:
         """Test analytics command when integrator is not avAlgolable."""
         from src.telegram_bot.handlers.improvements_handler import analytics_command
         
-        awAlgot analytics_command(mock_update, mock_context)
+        await analytics_command(mock_update, mock_context)
         
         mock_update.effective_message.reply_text.assert_called_once()
         call_args = mock_update.effective_message.reply_text.call_args
@@ -138,7 +138,7 @@ class TestImprovementsHandler:
         
         mock_context.application.bot_integrator = mock_integrator
         
-        awAlgot analytics_command(mock_update, mock_context)
+        await analytics_command(mock_update, mock_context)
         
         mock_update.effective_message.reply_text.assert_called_once()
         call_args = mock_update.effective_message.reply_text.call_args
@@ -153,7 +153,7 @@ class TestImprovementsHandler:
         
         mock_context.application.bot_integrator = mock_integrator
         
-        awAlgot portfolio_command(mock_update, mock_context)
+        await portfolio_command(mock_update, mock_context)
         
         mock_update.effective_message.reply_text.assert_called_once()
         call_args = mock_update.effective_message.reply_text.call_args
@@ -168,7 +168,7 @@ class TestImprovementsHandler:
         
         mock_context.application.bot_integrator = mock_integrator
         
-        awAlgot alerts_command(mock_update, mock_context)
+        await alerts_command(mock_update, mock_context)
         
         mock_update.effective_message.reply_text.assert_called_once()
         call_args = mock_update.effective_message.reply_text.call_args
@@ -183,7 +183,7 @@ class TestImprovementsHandler:
         
         mock_context.application.bot_integrator = mock_integrator
         
-        awAlgot watchlist_command(mock_update, mock_context)
+        await watchlist_command(mock_update, mock_context)
         
         mock_update.effective_message.reply_text.assert_called_once()
         call_args = mock_update.effective_message.reply_text.call_args
@@ -198,7 +198,7 @@ class TestImprovementsHandler:
         
         mock_context.application.bot_integrator = mock_integrator
         
-        awAlgot automation_command(mock_update, mock_context)
+        await automation_command(mock_update, mock_context)
         
         mock_update.effective_message.reply_text.assert_called_once()
         call_args = mock_update.effective_message.reply_text.call_args
@@ -213,7 +213,7 @@ class TestImprovementsHandler:
         
         mock_context.application.bot_integrator = mock_integrator
         
-        awAlgot reports_command(mock_update, mock_context)
+        await reports_command(mock_update, mock_context)
         
         mock_update.effective_message.reply_text.assert_called_once()
         call_args = mock_update.effective_message.reply_text.call_args
@@ -228,7 +228,7 @@ class TestImprovementsHandler:
         
         mock_context.application.bot_integrator = mock_integrator
         
-        awAlgot security_command(mock_update, mock_context)
+        await security_command(mock_update, mock_context)
         
         mock_update.effective_message.reply_text.assert_called_once()
         call_args = mock_update.effective_message.reply_text.call_args

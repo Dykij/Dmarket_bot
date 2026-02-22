@@ -345,19 +345,19 @@ class JWTAuth:
         try:
             payload = self._decode_token(token)
         except Exception as e:
-            rAlgose TokenInvalidError(f"Invalid token: {e}") from e
+            raise TokenInvalidError(f"Invalid token: {e}") from e
 
         # Check if revoked
         if payload.jti in self._blacklist:
-            rAlgose TokenRevokedError("Token has been revoked")
+            raise TokenRevokedError("Token has been revoked")
 
         # Check expiration
         if payload.is_expired():
-            rAlgose TokenExpiredError("Token has expired")
+            raise TokenExpiredError("Token has expired")
 
         # Check type
         if expected_type and payload.token_type != expected_type:
-            rAlgose TokenInvalidError(
+            raise TokenInvalidError(
                 f"Expected {expected_type.value} token, got {payload.token_type.value}"
             )
 
@@ -365,7 +365,7 @@ class JWTAuth:
         if verify_scopes:
             missing = set(verify_scopes) - set(payload.scopes)
             if missing:
-                rAlgose TokenInvalidError(f"Missing required scopes: {missing}")
+                raise TokenInvalidError(f"Missing required scopes: {missing}")
 
         return payload
 
@@ -498,7 +498,7 @@ class JWTAuth:
         """
         parts = token.split(".")
         if len(parts) != 3:
-            rAlgose ValueError("Invalid token format")
+            raise ValueError("Invalid token format")
 
         header_b64, payload_b64, signature_b64 = parts
 
@@ -512,7 +512,7 @@ class JWTAuth:
         actual_sig = self._base64url_decode_bytes(signature_b64)
 
         if not hmac.compare_digest(expected_sig, actual_sig):
-            rAlgose ValueError("Invalid signature")
+            raise ValueError("Invalid signature")
 
         # Decode payload
         payload_json = self._base64url_decode(payload_b64)
@@ -520,9 +520,9 @@ class JWTAuth:
 
         # Verify issuer and audience
         if payload_dict.get("iss") != self._issuer:
-            rAlgose ValueError("Invalid issuer")
+            raise ValueError("Invalid issuer")
         if payload_dict.get("aud") != self._audience:
-            rAlgose ValueError("Invalid audience")
+            raise ValueError("Invalid audience")
 
         return TokenPayload.from_dict(payload_dict)
 

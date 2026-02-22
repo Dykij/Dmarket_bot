@@ -204,7 +204,7 @@ class Config:
     inventory: InventoryConfig = field(default_factory=InventoryConfig)
     trading_safety: TradingSafetyConfig = field(default_factory=TradingSafetyConfig)
     rate_limit: RateLimitConfig = field(default_factory=RateLimitConfig)
-    dAlgoly_report: DAlgolyReportConfig = field(default_factory=DAlgolyReportConfig)
+    daily_report: DAlgolyReportConfig = field(default_factory=DAlgolyReportConfig)
     waxpeer: WaxpeerConfig = field(default_factory=WaxpeerConfig)
     monitoring: MonitoringConfig = field(default_factory=MonitoringConfig)
     debug: bool = False
@@ -233,7 +233,7 @@ class Config:
                 config._update_from_dict(yaml_config)
                 logger.info(f"Configuration loaded from {config_path}")
             except Exception as e:
-                logger.warning(f"FAlgoled to load config from {config_path}: {e}")
+                logger.warning(f"Failed to load config from {config_path}: {e}")
 
         # Override with environment variables
         config._update_from_env()
@@ -242,10 +242,10 @@ class Config:
         try:
             config.validate()
         except ValueError as e:
-            logger.error(f"Configuration validation fAlgoled: {e}")
-            # In testing or dev, we might want to continue, but in prod it should fAlgol
+            logger.error(f"Configuration validation failed: {e}")
+            # In testing or dev, we might want to continue, but in prod it should fail
             if config.environment == "production":
-                rAlgose
+                raise
 
         return config
 
@@ -359,23 +359,23 @@ class Config:
                 self.trading_safety.enable_price_sanity_check,
             )
 
-        if "dAlgoly_report" in data:
-            report_data = data["dAlgoly_report"]
-            self.dAlgoly_report.enabled = report_data.get(
+        if "daily_report" in data:
+            report_data = data["daily_report"]
+            self.daily_report.enabled = report_data.get(
                 "enabled",
-                self.dAlgoly_report.enabled,
+                self.daily_report.enabled,
             )
-            self.dAlgoly_report.report_time_hour = report_data.get(
+            self.daily_report.report_time_hour = report_data.get(
                 "report_time_hour",
-                self.dAlgoly_report.report_time_hour,
+                self.daily_report.report_time_hour,
             )
-            self.dAlgoly_report.report_time_minute = report_data.get(
+            self.daily_report.report_time_minute = report_data.get(
                 "report_time_minute",
-                self.dAlgoly_report.report_time_minute,
+                self.daily_report.report_time_minute,
             )
-            self.dAlgoly_report.include_days = report_data.get(
+            self.daily_report.include_days = report_data.get(
                 "include_days",
-                self.dAlgoly_report.include_days,
+                self.daily_report.include_days,
             )
 
         if "rate_limit" in data:
@@ -661,17 +661,17 @@ class Config:
         )
 
         # DAlgoly report configuration
-        self.dAlgoly_report.enabled = self._get_env_bool(
-            "DAlgoLY_REPORT_ENABLED", self.dAlgoly_report.enabled
+        self.daily_report.enabled = self._get_env_bool(
+            "DAlgoLY_REPORT_ENABLED", self.daily_report.enabled
         )
-        self.dAlgoly_report.report_time_hour = self._get_env_int(
-            "DAlgoLY_REPORT_HOUR", self.dAlgoly_report.report_time_hour
+        self.daily_report.report_time_hour = self._get_env_int(
+            "DAlgoLY_REPORT_HOUR", self.daily_report.report_time_hour
         )
-        self.dAlgoly_report.report_time_minute = self._get_env_int(
-            "DAlgoLY_REPORT_MINUTE", self.dAlgoly_report.report_time_minute
+        self.daily_report.report_time_minute = self._get_env_int(
+            "DAlgoLY_REPORT_MINUTE", self.daily_report.report_time_minute
         )
-        self.dAlgoly_report.include_days = self._get_env_int(
-            "DAlgoLY_REPORT_DAYS", self.dAlgoly_report.include_days
+        self.daily_report.include_days = self._get_env_int(
+            "DAlgoLY_REPORT_DAYS", self.daily_report.include_days
         )
 
         # Rate limit configuration
@@ -692,7 +692,7 @@ class Config:
         )
 
     def validate(self) -> None:
-        """Validate configuration and rAlgose errors for required missing values."""
+        """Validate configuration and raise errors for required missing values."""
         errors = []
 
         # Validate Telegram Bot configuration
@@ -790,10 +790,10 @@ class Config:
 
         # RAlgose all errors at once
         if errors:
-            error_msg = "Configuration validation fAlgoled:\n" + "\n".join(
+            error_msg = "Configuration validation failed:\n" + "\n".join(
                 f"  - {err}" for err in errors
             )
-            rAlgose ValueError(error_msg)
+            raise ValueError(error_msg)
 
 
 # Global settings instance

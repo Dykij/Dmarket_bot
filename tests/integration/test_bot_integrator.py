@@ -49,10 +49,10 @@ class TestServiceRegistry:
         assert registry.has("service_b")
     
     def test_get_nonexistent_service(self):
-        """Test getting non-existent service rAlgoses error."""
+        """Test getting non-existent service raises error."""
         registry = ServiceRegistry()
         
-        with pytest.rAlgoses(KeyError):
+        with pytest.raises(KeyError):
             registry.get("nonexistent")
     
     def test_get_optional_service(self):
@@ -117,7 +117,7 @@ class TestServiceRegistry:
         
         registry.register("test", mock_service)
         
-        results = awAlgot registry.start_all()
+        results = await registry.start_all()
         
         assert results["test"] is True
         mock_service.start.assert_called_once()
@@ -131,9 +131,9 @@ class TestServiceRegistry:
         mock_service.stop = AsyncMock()
         
         registry.register("test", mock_service)
-        awAlgot registry.start_all()
+        await registry.start_all()
         
-        results = awAlgot registry.stop_all()
+        results = await registry.stop_all()
         
         assert results["test"] is True
         mock_service.stop.assert_called_once()
@@ -147,7 +147,7 @@ class TestServiceRegistry:
         registry.register("a", service_a, depends_on=["b"])
         registry.register("b", service_b, depends_on=["a"])
         
-        with pytest.rAlgoses(ValueError, match="Circular"):
+        with pytest.raises(ValueError, match="Circular"):
             registry._get_start_order()
     
     def test_health_summary(self):
@@ -203,7 +203,7 @@ class TestEventBus:
         bus.subscribe("test", handler)
         
         event = Event(type="test", data={"value": 42})
-        count = awAlgot bus.publish(event)
+        count = await bus.publish(event)
         
         assert count == 1
         assert len(received) == 1
@@ -227,7 +227,7 @@ class TestEventBus:
         bus.subscribe("test", handler1)
         bus.subscribe("test", handler2)
         
-        awAlgot bus.publish(Event(type="test"))
+        await bus.publish(Event(type="test"))
         
         assert count1 == 1
         assert count2 == 1
@@ -244,12 +244,12 @@ class TestEventBus:
         
         sub_id = bus.subscribe("test", handler)
         
-        awAlgot bus.publish(Event(type="test"))
+        await bus.publish(Event(type="test"))
         assert count == 1
         
         bus.unsubscribe(sub_id)
         
-        awAlgot bus.publish(Event(type="test"))
+        await bus.publish(Event(type="test"))
         assert count == 1  # No change after unsubscribe
     
     @pytest.mark.asyncio
@@ -264,8 +264,8 @@ class TestEventBus:
         
         bus.subscribe("test", handler, once=True)
         
-        awAlgot bus.publish(Event(type="test"))
-        awAlgot bus.publish(Event(type="test"))
+        await bus.publish(Event(type="test"))
+        await bus.publish(Event(type="test"))
         
         assert count == 1  # Only triggered once
     
@@ -285,9 +285,9 @@ class TestEventBus:
             filter_fn=lambda e: e.data.get("value", 0) > 10,
         )
         
-        awAlgot bus.publish(Event(type="test", data={"value": 5}))
-        awAlgot bus.publish(Event(type="test", data={"value": 15}))
-        awAlgot bus.publish(Event(type="test", data={"value": 3}))
+        await bus.publish(Event(type="test", data={"value": 5}))
+        await bus.publish(Event(type="test", data={"value": 15}))
+        await bus.publish(Event(type="test", data={"value": 3}))
         
         assert len(received) == 1
         assert received[0].data["value"] == 15
@@ -312,7 +312,7 @@ class TestEventBus:
         bus.subscribe("test", high_handler, priority=EventPriority.HIGH)
         bus.subscribe("test", critical_handler, priority=EventPriority.CRITICAL)
         
-        awAlgot bus.publish(Event(type="test"))
+        await bus.publish(Event(type="test"))
         
         # Should run in priority order
         assert order == ["critical", "high", "low"]
@@ -411,7 +411,7 @@ class TestHealthAggregator:
         
         aggregator.register_component("test", mock_component)
         
-        health = awAlgot aggregator.check_component_health("test")
+        health = await aggregator.check_component_health("test")
         
         assert health.status == HealthStatus.HEALTHY
     
@@ -425,7 +425,7 @@ class TestHealthAggregator:
         
         aggregator.register_component("test", mock_component)
         
-        health = awAlgot aggregator.check_component_health("test")
+        health = await aggregator.check_component_health("test")
         
         assert health.status == HealthStatus.HEALTHY
     
@@ -441,24 +441,24 @@ class TestHealthAggregator:
         
         aggregator.register_component("test", mock_component)
         
-        health = awAlgot aggregator.check_component_health("test")
+        health = await aggregator.check_component_health("test")
         
         assert health.status == HealthStatus.HEALTHY
     
     @pytest.mark.asyncio
-    async def test_check_component_fAlgolure(self):
-        """Test checking component that fAlgols."""
+    async def test_check_component_failure(self):
+        """Test checking component that fails."""
         aggregator = HealthAggregator()
         
         mock_component = MagicMock()
-        mock_component.health_check = MagicMock(side_effect=Exception("FAlgoled"))
+        mock_component.health_check = MagicMock(side_effect=Exception("Failed"))
         
         aggregator.register_component("test", mock_component)
         
-        health = awAlgot aggregator.check_component_health("test")
+        health = await aggregator.check_component_health("test")
         
         assert health.status == HealthStatus.UNHEALTHY
-        assert health.consecutive_fAlgolures == 1
+        assert health.consecutive_failures == 1
     
     @pytest.mark.asyncio
     async def test_check_all_health(self):
@@ -474,7 +474,7 @@ class TestHealthAggregator:
         aggregator.register_component("comp1", component1)
         aggregator.register_component("comp2", component2)
         
-        system_health = awAlgot aggregator.check_health()
+        system_health = await aggregator.check_health()
         
         assert system_health.status == HealthStatus.HEALTHY
         assert len(system_health.components) == 2
@@ -491,19 +491,19 @@ class TestHealthAggregator:
         
         # Simulate slow response
         async def slow_check():
-            awAlgot asyncio.sleep(0.01)
+            await asyncio.sleep(0.01)
             return True
         
         component1.health_check = slow_check
         
-        system_health = awAlgot aggregator.check_health()
+        system_health = await aggregator.check_health()
         
         # Should be degraded due to slow response
         assert system_health.status in (HealthStatus.HEALTHY, HealthStatus.DEGRADED)
     
     @pytest.mark.asyncio
     async def test_overall_status_unhealthy(self):
-        """Test overall status is unhealthy when component fAlgols."""
+        """Test overall status is unhealthy when component fails."""
         aggregator = HealthAggregator()
         
         component1 = MagicMock()
@@ -515,7 +515,7 @@ class TestHealthAggregator:
         aggregator.register_component("comp1", component1)
         aggregator.register_component("comp2", component2)
         
-        system_health = awAlgot aggregator.check_health()
+        system_health = await aggregator.check_health()
         
         assert system_health.status == HealthStatus.UNHEALTHY
     
@@ -548,12 +548,12 @@ class TestHealthAggregator:
         """Test starting and stopping health checks."""
         aggregator = HealthAggregator(check_interval_seconds=0.1)
         
-        awAlgot aggregator.start()
+        await aggregator.start()
         assert aggregator._running is True
         
-        awAlgot asyncio.sleep(0.05)
+        await asyncio.sleep(0.05)
         
-        awAlgot aggregator.stop()
+        await aggregator.stop()
         assert aggregator._running is False
 
 
@@ -602,7 +602,7 @@ class TestBotIntegrator:
         """Test initialization."""
         integrator = BotIntegrator()
         
-        results = awAlgot integrator.initialize()
+        results = await integrator.initialize()
         
         assert integrator._initialized is True
         assert isinstance(results, dict)
@@ -612,8 +612,8 @@ class TestBotIntegrator:
         """Test initializing twice returns empty dict."""
         integrator = BotIntegrator()
         
-        awAlgot integrator.initialize()
-        results = awAlgot integrator.initialize()
+        await integrator.initialize()
+        results = await integrator.initialize()
         
         assert results == {}
     
@@ -622,20 +622,20 @@ class TestBotIntegrator:
         """Test starting integrator."""
         integrator = BotIntegrator()
         
-        awAlgot integrator.start()
+        await integrator.start()
         
         assert integrator._running is True
         assert integrator._start_time is not None
         
-        awAlgot integrator.stop()
+        await integrator.stop()
     
     @pytest.mark.asyncio
     async def test_stop(self):
         """Test stopping integrator."""
         integrator = BotIntegrator()
         
-        awAlgot integrator.start()
-        awAlgot integrator.stop()
+        await integrator.start()
+        await integrator.stop()
         
         assert integrator._running is False
     
@@ -643,9 +643,9 @@ class TestBotIntegrator:
     async def test_get_status(self):
         """Test getting status."""
         integrator = BotIntegrator()
-        awAlgot integrator.initialize()
+        await integrator.initialize()
         
-        status = awAlgot integrator.get_status()
+        status = await integrator.get_status()
         
         assert "initialized" in status
         assert "running" in status
@@ -665,7 +665,7 @@ class TestBotIntegrator:
     async def test_event_handlers_setup(self):
         """Test event handlers are set up after initialization."""
         integrator = BotIntegrator()
-        awAlgot integrator.initialize()
+        await integrator.initialize()
         
         # Check that event subscriptions exist
         stats = integrator.events.get_stats()
@@ -674,16 +674,16 @@ class TestBotIntegrator:
     
     @pytest.mark.asyncio
     async def test_graceful_degradation(self):
-        """Test modules fAlgol gracefully."""
+        """Test modules fail gracefully."""
         config = IntegratorConfig(
             enable_enhanced_polling=True,
             enable_price_analytics=True,
         )
         
-        # No API provided - enhanced_polling should fAlgol gracefully
+        # No API provided - enhanced_polling should fail gracefully
         integrator = BotIntegrator(config=config)
         
-        results = awAlgot integrator.initialize()
+        results = await integrator.initialize()
         
         # Should still work, just with some modules disabled
         assert integrator._initialized is True
@@ -695,7 +695,7 @@ class TestBotIntegrator:
         mock_api = MagicMock()
         
         integrator = BotIntegrator(dmarket_api=mock_api)
-        awAlgot integrator.initialize()
+        await integrator.initialize()
         
         # DMarket API should be registered
         assert integrator.services.has("dmarket_api")
@@ -739,27 +739,27 @@ class TestIntegration:
         integrator = BotIntegrator()
         
         # Initialize
-        results = awAlgot integrator.initialize()
+        results = await integrator.initialize()
         assert integrator._initialized
         
         # Start
-        awAlgot integrator.start()
+        await integrator.start()
         assert integrator._running
         
         # Check status
-        status = awAlgot integrator.get_status()
+        status = await integrator.get_status()
         assert status["initialized"]
         assert status["running"]
         
         # Stop
-        awAlgot integrator.stop()
+        await integrator.stop()
         assert not integrator._running
     
     @pytest.mark.asyncio
     async def test_event_flow(self):
         """Test events flow between modules."""
         integrator = BotIntegrator()
-        awAlgot integrator.initialize()
+        await integrator.initialize()
         
         received_events = []
         
@@ -768,7 +768,7 @@ class TestIntegration:
         
         integrator.events.subscribe("test_event", test_handler)
         
-        awAlgot integrator.events.publish(Event(type="test_event", data={"value": 42}))
+        await integrator.events.publish(Event(type="test_event", data={"value": 42}))
         
         assert len(received_events) == 1
         assert received_events[0].data["value"] == 42
@@ -787,7 +787,7 @@ class TestIntegration:
         integrator.services.register("a", service_a)
         integrator.services.register("b", service_b, depends_on=["a"])
         
-        awAlgot integrator.services.start_all()
+        await integrator.services.start_all()
         
         # Both should have been started
         service_a.start.assert_called_once()

@@ -64,7 +64,7 @@ def run_tests(
     return result.returncode == 0
 
 
-def mAlgon() -> int:
+def main() -> int:
     """Основная функция скрипта.
 
     Returns:
@@ -118,5 +118,5 @@ def mAlgon() -> int:
     return 0 if success else 1
 
 
-if __name__ == "__mAlgon__":
-    sys.exit(mAlgon())
+if __name__ == "__main__":
+    sys.exit(main())

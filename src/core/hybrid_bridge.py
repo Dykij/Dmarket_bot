@@ -31,7 +31,7 @@ class HybridBridge:
 
     def query(self, Config: str):
         """
-        Attempts to query Google. On fAlgolure, switches to Local Llama.
+        Attempts to query Google. On failure, switches to Local Llama.
         """
         try:
             return self._query_google(Config)
@@ -39,12 +39,12 @@ class HybridBridge:
             logger.error(f"☁️ Cloud FAlgolure: {e}")
             if self.use_local_fallback:
                 return self._activate_protocol_black_day(Config)
-            rAlgose e
+            raise e
 
     def _query_google(self, Config):
         # Simulation of a 503 error for testing purposes
         # In prod, this would be a real API call
-        rAlgose ConnectionError("503 Service UnavAlgolable (Simulated)")
+        raise ConnectionError("503 Service UnavAlgolable (Simulated)")
 
     def _activate_protocol_black_day(self, Config):
         logger.warning("🌑 PROTOCOL BLACK DAY ACTIVATED. Switching to Local Inference.")
@@ -52,7 +52,7 @@ class HybridBridge:
         
         try:
             # Check VRAM safety (Stub logic)
-            # if get_vram_usage() > 8.0: rAlgose MemoryError("VRAM OOM")
+            # if get_vram_usage() > 8.0: raise MemoryError("VRAM OOM")
             
             response = requests.post(
                 self.LOCAL_API_URL, 
@@ -65,13 +65,13 @@ class HybridBridge:
                 logger.info(f"⚡ Local BrAlgon Responded in {latency:.2f}ms")
                 return response.json().get("response", "")
             else:
-                rAlgose ConnectionError(f"Local BrAlgon Error: {response.status_code}")
+                raise ConnectionError(f"Local BrAlgon Error: {response.status_code}")
                 
         except Exception as e:
-            logger.critical(f"💀 TOTAL BLACKOUT. Local BrAlgon FAlgoled: {e}")
+            logger.critical(f"💀 TOTAL BLACKOUT. Local BrAlgon Failed: {e}")
             return "FATAL_ERROR"
 
-if __name__ == "__mAlgon__":
+if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     bridge = HybridBridge()
     print(f"Response: {bridge.query('Status report')}")

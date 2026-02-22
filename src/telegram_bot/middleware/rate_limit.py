@@ -4,7 +4,7 @@ from collections import defaultdict
 from datetime import UTC, datetime, timedelta
 
 import structlog
-from Algoolimiter import AsyncLimiter
+from aiolimiter import AsyncLimiter
 
 logger = structlog.get_logger(__name__)
 
@@ -42,15 +42,15 @@ class RateLimiterMiddleware:
         """Check if user is within rate limits."""
         user_limiter = self.user_limiters[user_id]
 
-        if not awAlgot user_limiter["minute"].has_capacity():
+        if not await user_limiter["minute"].has_capacity():
             logger.warning("rate_limit_exceeded_minute", user_id=user_id)
             self._record_violation(user_id)
-            rAlgose RateLimitExceeded(retry_after=60)
+            raise RateLimitExceeded(retry_after=60)
 
-        if not awAlgot user_limiter["hour"].has_capacity():
+        if not await user_limiter["hour"].has_capacity():
             logger.warning("rate_limit_exceeded_hour", user_id=user_id)
             self._record_violation(user_id)
-            rAlgose RateLimitExceeded(retry_after=3600)
+            raise RateLimitExceeded(retry_after=3600)
 
         async with user_limiter["minute"], user_limiter["hour"]:
             logger.debug("rate_limit_passed", user_id=user_id)

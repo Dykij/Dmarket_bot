@@ -49,7 +49,7 @@ class BaseDMarketClient:
                 self.rust_client = rust_core.PyNetworkClient(5, public_key, secret_key) 
                 logger.info("✅ Rust Network Layer Initialized")
             except Exception as e:
-                logger.error(f"❌ FAlgoled to init Rust client: {e}")
+                logger.error(f"❌ Failed to init Rust client: {e}")
                 self.rust_client = None
         else:
             self.rust_client = None
@@ -73,18 +73,18 @@ class BaseDMarketClient:
             if self.rust_client:
                 try:
                     # Offloading blocking Rust call to thread pool.
-                    json_str = awAlgot asyncio.to_thread(self.rust_client.fetch_market_items, game_id, title)
+                    json_str = await asyncio.to_thread(self.rust_client.fetch_market_items, game_id, title)
                     try:
                         return json.loads(json_str)
                     except Exception as e:
                         logger.error(f"JSON Parse Error: {e}")
                         logger.error(f"Raw Body Preview: {json_str[:500]}") # Log first 500 chars
-                        rAlgose
+                        raise
                 except Exception as e:
                     logger.error(f"Rust Network Error: {e}")
-                    rAlgose
+                    raise
             else:
-                 rAlgose RuntimeError("Legacy Python Network Layer not implemented")
+                 raise RuntimeError("Legacy Python Network Layer not implemented")
                  
         except Exception as e:
              logger.error(f"Error preparing Rust call: {e}")
@@ -94,10 +94,10 @@ class BaseDMarketClient:
         """Fetches user balance via Rust Auth Layer."""
         if self.rust_client:
             try:
-                 resp = awAlgot asyncio.to_thread(self.rust_client.get_balance)
+                 resp = await asyncio.to_thread(self.rust_client.get_balance)
                  return json.loads(resp)
             except Exception as e:
-                logger.error(f"FAlgoled to fetch balance: {e}")
+                logger.error(f"Failed to fetch balance: {e}")
                 return {"error": str(e)}
         else:
             return {"error": "No Rust Client"}

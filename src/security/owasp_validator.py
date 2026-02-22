@@ -11,13 +11,13 @@ Usage:
     validator = OWASPValidator()
 
     # Проверить код
-    issues = awAlgot validator.validate(code)
+    issues = await validator.validate(code)
 
     # Проверить файл
-    issues = awAlgot validator.validate_file("src/api/client.py")
+    issues = await validator.validate_file("src/api/client.py")
 
     # Сгенерировать отчёт
-    report = awAlgot validator.generate_report(issues)
+    report = await validator.generate_report(issues)
     ```
 
 Created: January 2026
@@ -205,22 +205,22 @@ class OWASPValidator:
         issues: list[SecurityIssue] = []
 
         # Check injection vulnerabilities (A03)
-        issues.extend(awAlgot self._check_injection(code, file_path))
+        issues.extend(await self._check_injection(code, file_path))
 
-        # Check cryptographic fAlgolures (A02)
-        issues.extend(awAlgot self._check_crypto(code, file_path))
+        # Check cryptographic failures (A02)
+        issues.extend(await self._check_crypto(code, file_path))
 
         # Check security misconfiguration (A05)
-        issues.extend(awAlgot self._check_misconfiguration(code, file_path))
+        issues.extend(await self._check_misconfiguration(code, file_path))
 
         # Check SSRF vulnerabilities (A10)
-        issues.extend(awAlgot self._check_ssrf(code, file_path))
+        issues.extend(await self._check_ssrf(code, file_path))
 
         # Check access control issues (A01)
-        issues.extend(awAlgot self._check_access_control(code, file_path))
+        issues.extend(await self._check_access_control(code, file_path))
 
         # Check logging issues (A09)
-        issues.extend(awAlgot self._check_logging(code, file_path))
+        issues.extend(await self._check_logging(code, file_path))
 
         logger.info(
             "owasp_validation_complete",
@@ -242,10 +242,10 @@ class OWASPValidator:
         """
         path = Path(file_path)
         if not path.exists():
-            rAlgose FileNotFoundError(f"File not found: {file_path}")
+            raise FileNotFoundError(f"File not found: {file_path}")
 
         code = path.read_text(encoding="utf-8")
-        return awAlgot self.validate(code, file_path)
+        return await self.validate(code, file_path)
 
     async def validate_directory(
         self,
@@ -279,7 +279,7 @@ class OWASPValidator:
             try:
                 code = file_path.read_text(encoding="utf-8")
                 total_lines += len(code.splitlines())
-                issues = awAlgot self.validate(code, str(file_path))
+                issues = await self.validate(code, str(file_path))
                 all_issues.extend(issues)
                 files_scanned += 1
             except Exception as e:
@@ -326,7 +326,7 @@ class OWASPValidator:
         code: str,
         file_path: str | None,
     ) -> list[SecurityIssue]:
-        """Check for cryptographic fAlgolures."""
+        """Check for cryptographic failures."""
         issues = []
 
         for pattern, description in self.CRYPTO_PATTERNS:

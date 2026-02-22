@@ -1,15 +1,15 @@
 """
-Script to collect real market prices for ML trAlgoning.
+Script to collect real market prices for ML training.
 
 This script connects to DMarket API and collects real price data
-for trAlgoning the ML price predictor model.
+for training the ML price predictor model.
 
 Usage:
-    python scripts/collect_ml_trAlgoning_data.py --games csgo rust --items 500
+    python scripts/collect_ml_training_data.py --games csgo rust --items 500
 
 Features:
     - Collects real prices from DMarket API
-    - Saves data in format suitable for ML trAlgoning
+    - Saves data in format suitable for ML training
     - Supports multiple games
     - Automatic deduplication
     - Progress tracking
@@ -38,8 +38,8 @@ load_dotenv()
 from src.dmarket.dmarket_api import DMarketAPI
 from src.ml.price_normalizer import PriceNormalizer
 
-# Output directory for trAlgoning data
-OUTPUT_DIR = Path("data/ml_trAlgoning/real_data")
+# Output directory for training data
+OUTPUT_DIR = Path("data/ml_training/real_data")
 
 
 async def collect_prices_for_game(
@@ -65,7 +65,7 @@ async def collect_prices_for_game(
     
     try:
         # Collect from DMarket
-        result = awAlgot collector.collect_from_dmarket(
+        result = await collector.collect_from_dmarket(
             item_names=[],  # Empty list = collect all avAlgolable
             game=game,
         )
@@ -131,7 +131,7 @@ async def collect_all_games(
             print(f"Unknown game: {game_name}, skipping...")
             continue
             
-        prices = awAlgot collect_prices_for_game(
+        prices = await collect_prices_for_game(
             collector=collector,
             game=game,
             max_items=max_items_per_game,
@@ -173,7 +173,7 @@ async def collect_from_live_api(
     
     try:
         # Check connection
-        balance = awAlgot api.get_balance()
+        balance = await api.get_balance()
         print(f"Connected to DMarket API. Balance: ${balance:.2f}")
     except Exception as e:
         print(f"Warning: Could not get balance: {e}")
@@ -198,7 +198,7 @@ async def collect_from_live_api(
         
         try:
             # Get items from DMarket with price filter for realistic data
-            response = awAlgot api.get_market_items(
+            response = await api.get_market_items(
                 game=game_name,
                 limit=min(max_items_per_game, 100),  # API limit per request
                 price_from=1.0,  # Minimum $1 to avoid trash items
@@ -244,7 +244,7 @@ async def collect_from_live_api(
     return all_data
 
 
-def save_trAlgoning_data(data: dict, filename: str | None = None) -> Path:
+def save_training_data(data: dict, filename: str | None = None) -> Path:
     """Save collected data to file.
     
     Args:
@@ -274,7 +274,7 @@ def save_trAlgoning_data(data: dict, filename: str | None = None) -> Path:
 
 
 def merge_with_existing(new_data: dict, existing_path: Path | None = None) -> dict:
-    """Merge new data with existing trAlgoning data.
+    """Merge new data with existing training data.
     
     Args:
         new_data: Newly collected data
@@ -312,10 +312,10 @@ def merge_with_existing(new_data: dict, existing_path: Path | None = None) -> di
     return existing_data
 
 
-def mAlgon():
+def main():
     """MAlgon entry point."""
     parser = argparse.ArgumentParser(
-        description="Collect real market prices for ML trAlgoning"
+        description="Collect real market prices for ML training"
     )
     parser.add_argument(
         "--games",
@@ -362,10 +362,10 @@ def mAlgon():
         data = merge_with_existing(data, merge_path)
     
     # Save data
-    save_trAlgoning_data(data, args.output)
+    save_training_data(data, args.output)
     
     print("\nDone!")
 
 
-if __name__ == "__mAlgon__":
-    mAlgon()
+if __name__ == "__main__":
+    main()

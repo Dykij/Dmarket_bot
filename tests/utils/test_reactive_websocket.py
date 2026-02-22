@@ -34,7 +34,7 @@ class TestObservable:
             received.append(data)
 
         observable.subscribe(handler)
-        awAlgot observable.emit({"test": "data"})
+        await observable.emit({"test": "data"})
 
         assert len(received) == 1
         assert received[0] == {"test": "data"}
@@ -48,7 +48,7 @@ class TestObservable:
             received.append(data)
 
         observable.subscribe_async(handler)
-        awAlgot observable.emit({"test": "data"})
+        await observable.emit({"test": "data"})
 
         assert len(received) == 1
         assert received[0] == {"test": "data"}
@@ -67,7 +67,7 @@ class TestObservable:
 
         observable.subscribe(handler1)
         observable.subscribe(handler2)
-        awAlgot observable.emit({"event": "test"})
+        await observable.emit({"event": "test"})
 
         assert len(received1) == 1
         assert len(received2) == 1
@@ -81,10 +81,10 @@ class TestObservable:
             received.append(data)
 
         observable.subscribe(handler)
-        awAlgot observable.emit({"first": True})
+        await observable.emit({"first": True})
 
         observable.unsubscribe(handler)
-        awAlgot observable.emit({"second": True})
+        await observable.emit({"second": True})
 
         assert len(received) == 1
         assert received[0] == {"first": True}
@@ -247,7 +247,7 @@ class TestReactiveDMarketWebSocket:
         """Test connect returns True when already connected."""
         websocket.is_connected = True
 
-        result = awAlgot websocket.connect()
+        result = await websocket.connect()
 
         assert result is True
 
@@ -261,7 +261,7 @@ class TestReactiveDMarketWebSocket:
         websocket.session = MagicMock()
         websocket.session.close = AsyncMock()
 
-        awAlgot websocket.disconnect()
+        await websocket.disconnect()
 
         assert websocket.is_connected is False
 
@@ -276,10 +276,10 @@ class TestReactiveDMarketWebSocket:
         websocket.connection_state.subscribe(state_handler)
 
         # Emit events
-        awAlgot websocket.connection_state.emit(True)
+        await websocket.connection_state.emit(True)
         assert states_received == [True]
 
-        awAlgot websocket.connection_state.emit(False)
+        await websocket.connection_state.emit(False)
         assert states_received == [True, False]
 
     @pytest.mark.asyncio
@@ -293,7 +293,7 @@ class TestReactiveDMarketWebSocket:
         websocket.all_events.subscribe(event_handler)
 
         test_event = {"type": "test", "data": {"value": 123}}
-        awAlgot websocket.all_events.emit(test_event)
+        await websocket.all_events.emit(test_event)
 
         assert len(events_received) == 1
         assert events_received[0] == test_event
@@ -308,7 +308,7 @@ class TestReactiveDMarketWebSocket:
 
         websocket.observables[EventType.BALANCE_UPDATE].subscribe(balance_handler)
 
-        awAlgot websocket.observables[EventType.BALANCE_UPDATE].emit({"balance": 100.0})
+        await websocket.observables[EventType.BALANCE_UPDATE].emit({"balance": 100.0})
 
         assert len(balance_events) == 1
         assert balance_events[0] == {"balance": 100.0}

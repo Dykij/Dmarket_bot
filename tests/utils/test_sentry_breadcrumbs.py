@@ -338,13 +338,13 @@ class TestBreadcrumbIntegration:
     @patch("src.utils.sentry_breadcrumbs.sentry_sdk.add_breadcrumb")
     @patch("src.utils.sentry_breadcrumbs.sentry_sdk.set_user")
     @patch("src.utils.sentry_breadcrumbs.sentry_sdk.is_initialized", return_value=True)
-    def test_full_breadcrumb_trAlgol(
+    def test_full_breadcrumb_trail(
         self,
         mock_is_init: MagicMock,
         mock_set_user: MagicMock,
         mock_add_breadcrumb: MagicMock,
     ) -> None:
-        """Тест полного trAlgol breadcrumbs."""
+        """Тест полного trail breadcrumbs."""
         # 1. Установить user context
         set_user_context(user_id=123456, username="test_user")
 

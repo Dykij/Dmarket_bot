@@ -54,11 +54,11 @@ class TestArbitrageTraderInit:
         assert trader.public_key is None
         assert trader.secret_key is None
 
-    def test_init_without_credentials_rAlgoses(self):
-        """Test initialization without credentials rAlgoses ValueError."""
+    def test_init_without_credentials_raises(self):
+        """Test initialization without credentials raises ValueError."""
         from src.dmarket.arbitrage.trader import ArbitrageTrader
 
-        with pytest.rAlgoses(ValueError) as exc_info:
+        with pytest.raises(ValueError) as exc_info:
             ArbitrageTrader()
 
         assert "requires either api_client" in str(exc_info.value)
@@ -72,8 +72,8 @@ class TestArbitrageTraderInit:
 
         assert trader.min_profit_percentage == 5.0  # DEFAULT_MIN_PROFIT_PERCENTAGE
         assert trader.max_trade_value == 100.0  # DEFAULT_MAX_TRADE_VALUE
-        assert trader.dAlgoly_limit == 500.0  # DEFAULT_DAlgoLY_LIMIT
-        assert trader.dAlgoly_traded == 0.0
+        assert trader.daily_limit == 500.0  # DEFAULT_DAlgoLY_LIMIT
+        assert trader.daily_traded == 0.0
         assert trader.error_count == 0
         assert trader.pause_until == 0.0
         assert trader.current_game == "csgo"
@@ -87,12 +87,12 @@ class TestArbitrageTraderInit:
             api_client=mock_api,
             min_profit_percentage=10.0,
             max_trade_value=50.0,
-            dAlgoly_limit=200.0,
+            daily_limit=200.0,
         )
 
         assert trader.min_profit_percentage == 10.0
         assert trader.max_trade_value == 50.0
-        assert trader.dAlgoly_limit == 200.0
+        assert trader.daily_limit == 200.0
 
 
 # =============================================================================
@@ -119,7 +119,7 @@ class TestCheckBalance:
         # API returns {"balance": value_in_dollars}
         trader.api.get_balance = AsyncMock(return_value={"balance": 100.0, "error": False})
 
-        has_funds, balance = awAlgot trader.check_balance()
+        has_funds, balance = await trader.check_balance()
 
         assert has_funds is True
         assert balance == 100.0
@@ -130,7 +130,7 @@ class TestCheckBalance:
         # API returns {"balance": value_in_dollars}
         trader.api.get_balance = AsyncMock(return_value={"balance": 0.5, "error": False})
 
-        has_funds, balance = awAlgot trader.check_balance()
+        has_funds, balance = await trader.check_balance()
 
         assert has_funds is False
         assert balance == 0.5
@@ -140,7 +140,7 @@ class TestCheckBalance:
         """Test check_balance handles exceptions."""
         trader.api.get_balance = AsyncMock(side_effect=Exception("API Error"))
 
-        has_funds, balance = awAlgot trader.check_balance()
+        has_funds, balance = await trader.check_balance()
 
         assert has_funds is False
         assert balance == 0.0
@@ -163,50 +163,50 @@ class TestTradingLimits:
         return ArbitrageTrader(
             api_client=mock_api,
             max_trade_value=50.0,
-            dAlgoly_limit=200.0,
+            daily_limit=200.0,
         )
 
     @pytest.mark.asyncio()
     async def test_check_limits_allows_valid_trade(self, trader):
         """Test that valid trades are allowed."""
-        result = awAlgot trader._check_trading_limits(30.0)
+        result = await trader._check_trading_limits(30.0)
         assert result is True
 
     @pytest.mark.asyncio()
     async def test_check_limits_rejects_over_max(self, trader):
         """Test that trades over max_trade_value are rejected."""
-        result = awAlgot trader._check_trading_limits(100.0)  # Over $50 max
+        result = await trader._check_trading_limits(100.0)  # Over $50 max
         assert result is False
 
     @pytest.mark.asyncio()
-    async def test_check_limits_rejects_over_dAlgoly(self, trader):
-        """Test that trades over dAlgoly limit are rejected."""
-        trader.dAlgoly_traded = 180.0
-        result = awAlgot trader._check_trading_limits(30.0)  # Would exceed $200 dAlgoly
+    async def test_check_limits_rejects_over_daily(self, trader):
+        """Test that trades over daily limit are rejected."""
+        trader.daily_traded = 180.0
+        result = await trader._check_trading_limits(30.0)  # Would exceed $200 daily
         assert result is False
 
     def test_set_trading_limits(self, trader):
         """Test setting trading limits."""
-        trader.set_trading_limits(max_trade_value=75.0, dAlgoly_limit=300.0)
+        trader.set_trading_limits(max_trade_value=75.0, daily_limit=300.0)
 
         assert trader.max_trade_value == 75.0
-        assert trader.dAlgoly_limit == 300.0
+        assert trader.daily_limit == 300.0
 
     def test_set_trading_limits_partial(self, trader):
         """Test setting only one limit."""
         trader.set_trading_limits(max_trade_value=25.0)
 
         assert trader.max_trade_value == 25.0
-        assert trader.dAlgoly_limit == 200.0  # Unchanged
+        assert trader.daily_limit == 200.0  # Unchanged
 
-    def test_reset_dAlgoly_limits(self, trader):
-        """Test dAlgoly limits reset after 24 hours."""
-        trader.dAlgoly_traded = 150.0
-        trader.dAlgoly_reset_time = time.time() - 25 * 3600  # 25 hours ago
+    def test_reset_daily_limits(self, trader):
+        """Test daily limits reset after 24 hours."""
+        trader.daily_traded = 150.0
+        trader.daily_reset_time = time.time() - 25 * 3600  # 25 hours ago
 
-        trader._reset_dAlgoly_limits()
+        trader._reset_daily_limits()
 
-        assert trader.dAlgoly_traded == 0.0
+        assert trader.daily_traded == 0.0
 
 
 # =============================================================================
@@ -229,7 +229,7 @@ class TestErrorHandling:
     async def test_handle_error_increments_count(self, trader):
         """Test that error count is incremented."""
         assert trader.error_count == 0
-        awAlgot trader._handle_trading_error()
+        await trader._handle_trading_error()
         assert trader.error_count == 1
 
     @pytest.mark.asyncio()
@@ -237,7 +237,7 @@ class TestErrorHandling:
         """Test 15-minute pause after 3 errors."""
         trader.error_count = 2
 
-        awAlgot trader._handle_trading_error()
+        await trader._handle_trading_error()
 
         assert trader.error_count == 3
         assert trader.pause_until > time.time()
@@ -247,7 +247,7 @@ class TestErrorHandling:
         """Test 1-hour pause after 10 errors."""
         trader.error_count = 9
 
-        awAlgot trader._handle_trading_error()
+        await trader._handle_trading_error()
 
         # After 10 errors, count resets to 0 and pause for 1 hour
         assert trader.error_count == 0
@@ -258,14 +258,14 @@ class TestErrorHandling:
         """Test can_trade_now returns False when paused."""
         trader.pause_until = time.time() + 600  # Paused for 10 more minutes
 
-        result = awAlgot trader._can_trade_now()
+        result = await trader._can_trade_now()
 
         assert result is False
 
     @pytest.mark.asyncio()
     async def test_can_trade_now_when_not_paused(self, trader):
         """Test can_trade_now returns True when not paused."""
-        result = awAlgot trader._can_trade_now()
+        result = await trader._can_trade_now()
         assert result is True
 
     @pytest.mark.asyncio()
@@ -274,7 +274,7 @@ class TestErrorHandling:
         trader.pause_until = time.time() - 10  # Expired 10 seconds ago
         trader.error_count = 5
 
-        result = awAlgot trader._can_trade_now()
+        result = await trader._can_trade_now()
 
         assert result is True
         assert trader.pause_until == 0
@@ -317,7 +317,7 @@ class TestFindProfitableItems:
         ]
         trader.api.get_all_market_items = AsyncMock(return_value=mock_items)
 
-        results = awAlgot trader.find_profitable_items(
+        results = await trader.find_profitable_items(
             game="csgo",
             min_profit_percentage=5.0,
         )
@@ -330,7 +330,7 @@ class TestFindProfitableItems:
         """Test with no market items."""
         trader.api.get_all_market_items = AsyncMock(return_value=[])
 
-        results = awAlgot trader.find_profitable_items(game="csgo")
+        results = await trader.find_profitable_items(game="csgo")
 
         assert results == []
 
@@ -339,7 +339,7 @@ class TestFindProfitableItems:
         """Test exception handling."""
         trader.api.get_all_market_items = AsyncMock(side_effect=Exception("API Error"))
 
-        results = awAlgot trader.find_profitable_items(game="csgo")
+        results = await trader.find_profitable_items(game="csgo")
 
         assert results == []
 
@@ -367,7 +367,7 @@ class TestAutoTrading:
         """Test starting auto-trading."""
         trader.api.get_balance = AsyncMock(return_value={"balance": 100.0, "error": False})
 
-        success, message = awAlgot trader.start_auto_trading(
+        success, message = await trader.start_auto_trading(
             game="csgo",
             min_profit_percentage=5.0,
         )
@@ -381,7 +381,7 @@ class TestAutoTrading:
         """Test starting when already active."""
         trader.active = True
 
-        success, message = awAlgot trader.start_auto_trading()
+        success, message = await trader.start_auto_trading()
 
         assert success is False
         assert len(message) > 0  # Error message should not be empty
@@ -391,7 +391,7 @@ class TestAutoTrading:
         """Test starting with insufficient funds."""
         trader.api.get_balance = AsyncMock(return_value={"balance": 0.5, "error": False})
 
-        success, message = awAlgot trader.start_auto_trading()
+        success, message = await trader.start_auto_trading()
 
         assert success is False
         assert len(message) > 0  # Error message should not be empty
@@ -401,7 +401,7 @@ class TestAutoTrading:
         """Test stopping auto-trading."""
         trader.active = True
 
-        success, message = awAlgot trader.stop_auto_trading()
+        success, message = await trader.stop_auto_trading()
 
         assert success is True
         assert len(message) > 0  # Message should not be empty
@@ -412,7 +412,7 @@ class TestAutoTrading:
         """Test stopping when not active."""
         trader.active = False
 
-        success, _message = awAlgot trader.stop_auto_trading()
+        success, _message = await trader.stop_auto_trading()
 
         assert success is False
 
@@ -538,7 +538,7 @@ class TestPurchaseItem:
             }
         )
 
-        result = awAlgot trader.purchase_item("item123", 10.0)
+        result = await trader.purchase_item("item123", 10.0)
 
         assert result["success"] is True
         assert result["new_item_id"] == "new_item_123"
@@ -552,7 +552,7 @@ class TestPurchaseItem:
             }
         )
 
-        result = awAlgot trader.purchase_item("item123", 10.0)
+        result = await trader.purchase_item("item123", 10.0)
 
         assert result["success"] is False
         assert "not avAlgolable" in result["error"].lower()
@@ -562,7 +562,7 @@ class TestPurchaseItem:
         """Test purchase with exception."""
         trader.api._request = AsyncMock(side_effect=Exception("Network error"))
 
-        result = awAlgot trader.purchase_item("item123", 10.0)
+        result = await trader.purchase_item("item123", 10.0)
 
         assert result["success"] is False
         assert "Network error" in result["error"]
@@ -591,7 +591,7 @@ class TestListItemForSale:
         """Test successful item listing."""
         trader.api._request = AsyncMock(return_value={"status": "ok"})
 
-        result = awAlgot trader.list_item_for_sale("item123", 15.0)
+        result = await trader.list_item_for_sale("item123", 15.0)
 
         assert result["success"] is True
         assert result["price"] == 15.0
@@ -605,7 +605,7 @@ class TestListItemForSale:
             }
         )
 
-        result = awAlgot trader.list_item_for_sale("item123", 15.0)
+        result = await trader.list_item_for_sale("item123", 15.0)
 
         assert result["success"] is False
 
@@ -614,7 +614,7 @@ class TestListItemForSale:
         """Test listing with exception."""
         trader.api._request = AsyncMock(side_effect=Exception("API Error"))
 
-        result = awAlgot trader.list_item_for_sale("item123", 15.0)
+        result = await trader.list_item_for_sale("item123", 15.0)
 
         assert result["success"] is False
 
@@ -661,7 +661,7 @@ class TestExecuteArbitrageTrade:
             "game": "csgo",
         }
 
-        result = awAlgot trader.execute_arbitrage_trade(item)
+        result = await trader.execute_arbitrage_trade(item)
 
         assert result["success"] is True
         assert result["profit"] == 4.0
@@ -680,14 +680,14 @@ class TestExecuteArbitrageTrade:
             "game": "csgo",
         }
 
-        result = awAlgot trader.execute_arbitrage_trade(item)
+        result = await trader.execute_arbitrage_trade(item)
 
         assert result["success"] is False
         assert len(result["errors"]) > 0  # Should have at least one error
 
     @pytest.mark.asyncio()
-    async def test_execute_trade_purchase_fAlgols(self, trader):
-        """Test trade when purchase fAlgols."""
+    async def test_execute_trade_purchase_fails(self, trader):
+        """Test trade when purchase fails."""
         trader.api.get_balance = AsyncMock(return_value={"balance": 100.0, "error": False})
         trader.purchase_item = AsyncMock(
             return_value={"success": False, "error": "Item sold"}
@@ -701,7 +701,7 @@ class TestExecuteArbitrageTrade:
             "game": "csgo",
         }
 
-        result = awAlgot trader.execute_arbitrage_trade(item)
+        result = await trader.execute_arbitrage_trade(item)
 
         assert result["success"] is False
         assert len(result["errors"]) > 0  # Should have at least one error

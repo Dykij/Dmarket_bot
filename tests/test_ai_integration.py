@@ -20,7 +20,7 @@ async def test_Algo_router_balance_intent():
     ]
     
     router = AlgoRouter(mock_gemini)
-    response = awAlgot router.process_user_message("Покажи мой баланс")
+    response = await router.process_user_message("Покажи мой баланс")
     
     assert "баланс" in response.lower()
     assert "$10.00" in response
@@ -36,7 +36,7 @@ async def test_Algo_router_search_intent():
     ]
     
     router = AlgoRouter(mock_gemini)
-    response = awAlgot router.process_user_message("Найди AK-47")
+    response = await router.process_user_message("Найди AK-47")
     
     assert "AK-47" in response
     assert mock_gemini.call_with_cache.call_count == 2

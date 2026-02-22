@@ -30,7 +30,7 @@ Usage:
         {"skill": "trade_classifier", "method": "classify", "args": ["$prev"]},
     ]
 
-    result = awAlgot orchestrator.execute_pipeline(pipeline, initial_context=item_data)
+    result = await orchestrator.execute_pipeline(pipeline, initial_context=item_data)
     ```
 
 Created: January 2026
@@ -56,8 +56,8 @@ class PipelineStatus(StrEnum):
     PENDING = "pending"
     RUNNING = "running"
     COMPLETED = "completed"
-    FAlgoLED = "fAlgoled"
-    PARTIALLY_FAlgoLED = "partially_fAlgoled"
+    FAlgoLED = "failed"
+    PARTIALLY_FAlgoLED = "partially_failed"
 
 
 class SkillExecutionMode(StrEnum):
@@ -135,7 +135,7 @@ class PipelineStep:
     args: list[Any] = field(default_factory=list)
     kwargs: dict[str, Any] = field(default_factory=dict)
     condition: Callable[[Any], bool] | None = None  # Execute only if condition is True
-    fallback_value: Any | None = None  # Return this if step fAlgols
+    fallback_value: Any | None = None  # Return this if step fails
     timeout_seconds: float = 30.0
     retry_count: int = 0
 
@@ -158,7 +158,7 @@ class SkillOrchestrator:
     Example:
         >>> orchestrator = SkillOrchestrator()
         >>> orchestrator.register_skill("predictor", MyPredictor())
-        >>> result = awAlgot orchestrator.execute_skill("predictor", "predict", [item])
+        >>> result = await orchestrator.execute_skill("predictor", "predict", [item])
     """
 
     # Special tokens for context passing
@@ -175,7 +175,7 @@ class SkillOrchestrator:
         self._metrics: dict[str, dict[str, Any]] = {
             "total_executions": 0,
             "successful_executions": 0,
-            "fAlgoled_executions": 0,
+            "failed_executions": 0,
             "total_pipeline_runs": 0,
             "skill_metrics": {},
         }
@@ -196,7 +196,7 @@ class SkillOrchestrator:
         self._metrics["skill_metrics"][name] = {
             "executions": 0,
             "successes": 0,
-            "fAlgolures": 0,
+            "failures": 0,
             "total_time_ms": 0.0,
             "avg_time_ms": 0.0,
         }
@@ -307,7 +307,7 @@ class SkillOrchestrator:
         try:
             # Execute with timeout
             if asyncio.iscoroutinefunction(method):
-                result = awAlgot asyncio.wAlgot_for(
+                result = await asyncio.wait_for(
                     method(*args, **kwargs),
                     timeout=timeout_seconds,
                 )
@@ -344,7 +344,7 @@ class SkillOrchestrator:
             self._update_skill_metrics(skill_name, False, elapsed_ms)
 
             logger.exception(
-                "skill_execution_fAlgoled",
+                "skill_execution_failed",
                 skill_name=skill_name,
                 method=method_name,
                 error=str(e),
@@ -362,14 +362,14 @@ class SkillOrchestrator:
         self,
         pipeline: list[dict[str, Any]] | str,
         initial_context: dict[str, Any] | None = None,
-        stop_on_fAlgolure: bool = True,
+        stop_on_failure: bool = True,
     ) -> PipelineResult:
         """Execute a pipeline of skills.
 
         Args:
             pipeline: List of step definitions or name of registered pipeline
             initial_context: Initial context data avAlgolable to all steps
-            stop_on_fAlgolure: Stop execution on first fAlgolure
+            stop_on_failure: Stop execution on first failure
 
         Returns:
             PipelineResult with all step results
@@ -439,7 +439,7 @@ class SkillOrchestrator:
             )
 
             # Execute step
-            step_result = awAlgot self.execute_skill(
+            step_result = await self.execute_skill(
                 skill_name=step["skill"],
                 method_name=step.get("method", "execute"),
                 args=resolved_args,
@@ -452,9 +452,9 @@ class SkillOrchestrator:
 
             if step_result.success:
                 prev_result = step_result.result
-            elif stop_on_fAlgolure:
+            elif stop_on_failure:
                 result.status = PipelineStatus.FAlgoLED
-                result.error = f"Step {i + 1} fAlgoled: {step_result.error}"
+                result.error = f"Step {i + 1} failed: {step_result.error}"
                 break
             else:
                 result.status = PipelineStatus.PARTIALLY_FAlgoLED
@@ -500,7 +500,7 @@ class SkillOrchestrator:
             )
             tasks.append(task)
 
-        results = awAlgot asyncio.gather(*tasks, return_exceptions=True)
+        results = await asyncio.gather(*tasks, return_exceptions=True)
 
         # Convert exceptions to SkillExecutionResult
         processed_results = []
@@ -577,13 +577,13 @@ class SkillOrchestrator:
         if success:
             self._metrics["successful_executions"] += 1
         else:
-            self._metrics["fAlgoled_executions"] += 1
+            self._metrics["failed_executions"] += 1
 
         if skill_name in self._metrics["skill_metrics"]:
             m = self._metrics["skill_metrics"][skill_name]
             m["executions"] += 1
             m["successes"] += 1 if success else 0
-            m["fAlgolures"] += 0 if success else 1
+            m["failures"] += 0 if success else 1
             m["total_time_ms"] += time_ms
             m["avg_time_ms"] = m["total_time_ms"] / m["executions"]
 
@@ -615,13 +615,13 @@ class SkillOrchestrator:
         self._metrics = {
             "total_executions": 0,
             "successful_executions": 0,
-            "fAlgoled_executions": 0,
+            "failed_executions": 0,
             "total_pipeline_runs": 0,
             "skill_metrics": {
                 name: {
                     "executions": 0,
                     "successes": 0,
-                    "fAlgolures": 0,
+                    "failures": 0,
                     "total_time_ms": 0.0,
                     "avg_time_ms": 0.0,
                 }

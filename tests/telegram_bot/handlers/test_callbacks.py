@@ -148,7 +148,7 @@ class TestArbitrageCallbackImpl:
         mock_auto_trade_start.return_value = None
 
         # Act
-        awAlgot arbitrage_callback_impl(mock_update, mock_context)
+        await arbitrage_callback_impl(mock_update, mock_context)
 
         # Assert
         mock_auto_trade_start.assert_called_once_with(mock_update, mock_context)
@@ -166,7 +166,7 @@ class TestArbitrageCallbackImpl:
         mock_auto_trade_start.return_value = None
 
         # Act
-        awAlgot arbitrage_callback_impl(mock_update, mock_context)
+        await arbitrage_callback_impl(mock_update, mock_context)
 
         # Assert
         mock_auto_trade_start.assert_called_once()
@@ -188,7 +188,7 @@ class TestHandleDmarketArbitrageImpl:
         mock_auto_trade_start.return_value = None
 
         # Act
-        awAlgot handle_dmarket_arbitrage_impl(mock_update, mock_context, mode="normal")
+        await handle_dmarket_arbitrage_impl(mock_update, mock_context, mode="normal")
 
         # Assert
         mock_auto_trade_start.assert_called_once_with(mock_update, mock_context)
@@ -206,7 +206,7 @@ class TestHandleDmarketArbitrageImpl:
         mock_auto_trade_start.return_value = None
 
         # Act
-        awAlgot handle_dmarket_arbitrage_impl(mock_update, mock_context, mode="aggressive")
+        await handle_dmarket_arbitrage_impl(mock_update, mock_context, mode="aggressive")
 
         # Assert
         mock_auto_trade_start.assert_called_once_with(mock_update, mock_context)
@@ -224,7 +224,7 @@ class TestHandleDmarketArbitrageImpl:
         mock_auto_trade_start.return_value = None
 
         # Act
-        awAlgot handle_dmarket_arbitrage_impl(mock_update, mock_context)
+        await handle_dmarket_arbitrage_impl(mock_update, mock_context)
 
         # Assert
         mock_auto_trade_start.assert_called_once()
@@ -242,7 +242,7 @@ class TestHandleDmarketArbitrageImpl:
         mock_auto_trade_start.return_value = None
 
         # Act
-        awAlgot handle_dmarket_arbitrage_impl(mock_update, mock_context, mode="conservative")
+        await handle_dmarket_arbitrage_impl(mock_update, mock_context, mode="conservative")
 
         # Assert
         mock_auto_trade_start.assert_called_once()
@@ -274,7 +274,7 @@ class TestShowArbitrageOpportunities:
         mock_create_keyboard.return_value = mock_keyboard
 
         # Act
-        awAlgot show_arbitrage_opportunities(mock_query, mock_context)
+        await show_arbitrage_opportunities(mock_query, mock_context)
 
         # Assert
         mock_format_opps.assert_called_once_with(sample_opportunities, 0, 3)
@@ -304,7 +304,7 @@ class TestShowArbitrageOpportunities:
 
         # Act - передаем page=1, но функция пересчитывает до 0
         # (только 1 страница)
-        awAlgot show_arbitrage_opportunities(mock_query, mock_context, page=1)
+        await show_arbitrage_opportunities(mock_query, mock_context, page=1)
 
         # Assert - функция сбрасывает на 0 т.к. 3 предмета = 1 страница
         mock_format_opps.assert_called_once_with(sample_opportunities, 0, 3)
@@ -329,7 +329,7 @@ class TestHandleArbitragePagination:
         mock_context.user_data["arbitrage_opportunities"] = extended_opportunities
 
         # Act
-        awAlgot handle_arbitrage_pagination(mock_query, mock_context, "next_page")
+        await handle_arbitrage_pagination(mock_query, mock_context, "next_page")
 
         # Assert
         assert mock_context.user_data["arbitrage_page"] == 1
@@ -350,7 +350,7 @@ class TestHandleArbitragePagination:
         mock_context.user_data["arbitrage_opportunities"] = sample_opportunities
 
         # Act
-        awAlgot handle_arbitrage_pagination(mock_query, mock_context, "prev_page")
+        await handle_arbitrage_pagination(mock_query, mock_context, "prev_page")
 
         # Assert
         assert mock_context.user_data["arbitrage_page"] == 0
@@ -371,7 +371,7 @@ class TestHandleArbitragePagination:
         mock_context.user_data["arbitrage_opportunities"] = sample_opportunities
 
         # Act
-        awAlgot handle_arbitrage_pagination(mock_query, mock_context, "prev_page")
+        await handle_arbitrage_pagination(mock_query, mock_context, "prev_page")
 
         # Assert
         assert mock_context.user_data["arbitrage_page"] == 0
@@ -392,7 +392,7 @@ class TestHandleArbitragePagination:
         mock_context.user_data["arbitrage_opportunities"] = sample_opportunities
 
         # Act
-        awAlgot handle_arbitrage_pagination(mock_query, mock_context, "next_page")
+        await handle_arbitrage_pagination(mock_query, mock_context, "next_page")
 
         # Assert - 3 итема дают ровно 1 страницу, не можем перейти дальше
         assert mock_context.user_data["arbitrage_page"] == 0
@@ -411,7 +411,7 @@ class TestHandleBestOpportunitiesImpl:
     ):
         """Тест вызова с режимом 'best'."""
         # Act
-        awAlgot handle_best_opportunities_impl(mock_update, mock_context)
+        await handle_best_opportunities_impl(mock_update, mock_context)
 
         # Assert
         mock_handle_arbitrage.assert_called_once_with(
@@ -438,7 +438,7 @@ class TestHandleGameSelectionImpl:
         mock_get_keyboard.return_value = mock_keyboard
 
         # Act
-        awAlgot handle_game_selection_impl(mock_update, mock_context)
+        await handle_game_selection_impl(mock_update, mock_context)
 
         # Assert
         mock_update.callback_query.edit_message_text.assert_called_once()
@@ -464,7 +464,7 @@ class TestHandleGameSelectedImpl:
         mock_dmarket_impl.return_value = None
 
         # Act
-        awAlgot handle_game_selected_impl(mock_update, mock_context, game="csgo")
+        await handle_game_selected_impl(mock_update, mock_context, game="csgo")
 
         # Assert
         assert mock_context.user_data.get("selected_game") == "csgo"
@@ -484,7 +484,7 @@ class TestHandleGameSelectedImpl:
         mock_dmarket_impl.return_value = None
 
         # Act
-        awAlgot handle_game_selected_impl(mock_update, mock_context, game="dota2")
+        await handle_game_selected_impl(mock_update, mock_context, game="dota2")
 
         # Assert
         assert mock_context.user_data.get("selected_game") == "dota2"
@@ -503,7 +503,7 @@ class TestHandleGameSelectedImpl:
         mock_dmarket_impl.return_value = None
 
         # Act
-        awAlgot handle_game_selected_impl(mock_update, mock_context)
+        await handle_game_selected_impl(mock_update, mock_context)
 
         # Assert
         assert mock_context.user_data.get("selected_game") == "rust"
@@ -516,9 +516,9 @@ class TestHandleGameSelectedImpl:
         update.callback_query = None
 
         # Act
-        awAlgot handle_game_selected_impl(update, mock_context, game="csgo")
+        await handle_game_selected_impl(update, mock_context, game="csgo")
 
-        # Assert - no error should be rAlgosed
+        # Assert - no error should be raised
 
     @pytest.mark.asyncio
     async def test_returns_early_without_game(
@@ -531,7 +531,7 @@ class TestHandleGameSelectedImpl:
         mock_update.callback_query.data = "other_callback"
 
         # Act
-        awAlgot handle_game_selected_impl(mock_update, mock_context)
+        await handle_game_selected_impl(mock_update, mock_context)
 
         # Assert - no edit_message_text should be called
         mock_update.callback_query.edit_message_text.assert_not_called()
@@ -548,7 +548,7 @@ class TestHandleMarketComparisonImpl:
     ):
         """Тест отображения заглушки сравнения рынков."""
         # Act
-        awAlgot handle_market_comparison_impl(mock_update, mock_context)
+        await handle_market_comparison_impl(mock_update, mock_context)
 
         # Assert
         mock_update.callback_query.edit_message_text.assert_called_once()
@@ -568,7 +568,7 @@ class TestButtonCallbackHandler:
         update.callback_query = None
 
         # Act
-        awAlgot button_callback_handler(update, mock_context)
+        await button_callback_handler(update, mock_context)
 
         # Assert - функция должна вернуться без ошибок
         # Ничего не вызывается, т.к. query = None
@@ -584,7 +584,7 @@ class TestButtonCallbackHandler:
         update.callback_query.data = None
 
         # Act
-        awAlgot button_callback_handler(update, mock_context)
+        await button_callback_handler(update, mock_context)
 
         # Assert - функция должна вернуться без ошибок
         update.callback_query.answer.assert_not_called()
@@ -603,7 +603,7 @@ class TestButtonCallbackHandler:
         mock_get_keyboard.return_value = mock_keyboard
 
         # Act
-        awAlgot button_callback_handler(mock_update, mock_context)
+        await button_callback_handler(mock_update, mock_context)
 
         # Assert
         mock_update.callback_query.answer.assert_called_once()
@@ -626,7 +626,7 @@ class TestButtonCallbackHandler:
         mock_auto_trade_start.return_value = None
 
         # Act
-        awAlgot button_callback_handler(mock_update, mock_context)
+        await button_callback_handler(mock_update, mock_context)
 
         # Assert - answer is called at least once (at start of handler)
         assert mock_update.callback_query.answer.call_count >= 1
@@ -645,7 +645,7 @@ class TestButtonCallbackHandler:
         mock_auto_trade_start.return_value = None
 
         # Act
-        awAlgot button_callback_handler(mock_update, mock_context)
+        await button_callback_handler(mock_update, mock_context)
 
         # Assert - answer is called at least once (at start of handler)
         assert mock_update.callback_query.answer.call_count >= 1
@@ -663,7 +663,7 @@ class TestButtonCallbackHandler:
         mock_update.callback_query.data = "game_selected:csgo"
 
         # Act
-        awAlgot button_callback_handler(mock_update, mock_context)
+        await button_callback_handler(mock_update, mock_context)
 
         # Assert
         mock_update.callback_query.answer.assert_called_once()
@@ -683,7 +683,7 @@ class TestButtonCallbackHandler:
         mock_update.callback_query.data = "arb_next_page_1"
 
         # Act
-        awAlgot button_callback_handler(mock_update, mock_context)
+        await button_callback_handler(mock_update, mock_context)
 
         # Assert
         mock_update.callback_query.answer.assert_called_once()
@@ -703,7 +703,7 @@ class TestButtonCallbackHandler:
         mock_update.callback_query.data = "arb_prev_page_0"
 
         # Act
-        awAlgot button_callback_handler(mock_update, mock_context)
+        await button_callback_handler(mock_update, mock_context)
 
         # Assert
         mock_update.callback_query.answer.assert_called_once()
@@ -725,7 +725,7 @@ class TestButtonCallbackHandler:
         mock_get_keyboard.return_value = mock_keyboard
 
         # Act
-        awAlgot button_callback_handler(mock_update, mock_context)
+        await button_callback_handler(mock_update, mock_context)
 
         # Assert - answer is called at least once
         assert mock_update.callback_query.answer.call_count >= 1
@@ -754,7 +754,7 @@ class TestButtonCallbackHandler:
         mock_get_keyboard.return_value = mock_keyboard
 
         # Act
-        awAlgot button_callback_handler(mock_update, mock_context)
+        await button_callback_handler(mock_update, mock_context)
 
         # Assert - answer is called at least once (at start of handler)
         assert mock_update.callback_query.answer.call_count >= 1

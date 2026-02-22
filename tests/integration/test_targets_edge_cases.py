@@ -46,7 +46,7 @@ class TestTargetsEdgeCases:
             }
         ]
 
-        result = awAlgot mock_dmarket_api.create_targets(game_id="a8db", targets=targets)
+        result = await mock_dmarket_api.create_targets(game_id="a8db", targets=targets)
 
         assert result is not None
         assert "Result" in result
@@ -80,7 +80,7 @@ class TestTargetsEdgeCases:
             }
         ]
 
-        result = awAlgot mock_dmarket_api.create_targets(game_id="a8db", targets=targets)
+        result = await mock_dmarket_api.create_targets(game_id="a8db", targets=targets)
 
         assert result is not None
 
@@ -113,12 +113,12 @@ class TestTargetsEdgeCases:
                 "Attrs": {
                     "floatPartValue": 0.001,  # Очень низкий float
                     "phase": "Phase 2",
-                    "pAlgontSeed": 123,
+                    "paintSeed": 123,
                 },
             }
         ]
 
-        result = awAlgot mock_dmarket_api.create_targets(game_id="a8db", targets=targets)
+        result = await mock_dmarket_api.create_targets(game_id="a8db", targets=targets)
 
         assert result is not None
 
@@ -153,7 +153,7 @@ class TestTargetsEdgeCases:
             for i in range(10)
         ]
 
-        result = awAlgot mock_dmarket_api.create_targets(game_id="a8db", targets=targets)
+        result = await mock_dmarket_api.create_targets(game_id="a8db", targets=targets)
 
         assert result is not None
         assert len(result.get("Result", [])) == 10
@@ -182,7 +182,7 @@ class TestTargetsEdgeCases:
             }
         ]
 
-        result = awAlgot mock_dmarket_api.create_targets(game_id="a8db", targets=targets)
+        result = await mock_dmarket_api.create_targets(game_id="a8db", targets=targets)
 
         # API должен обработать ошибку
         assert result is not None
@@ -211,7 +211,7 @@ class TestTargetsEdgeCases:
             }
         ]
 
-        result = awAlgot mock_dmarket_api.create_targets(game_id="a8db", targets=targets)
+        result = await mock_dmarket_api.create_targets(game_id="a8db", targets=targets)
 
         assert result is not None
 
@@ -231,7 +231,7 @@ class TestTargetsEdgeCases:
             },
         )
 
-        result = awAlgot mock_dmarket_api.delete_targets(
+        result = await mock_dmarket_api.delete_targets(
             target_ids=["nonexistent_target"]
         )
 
@@ -268,7 +268,7 @@ class TestTargetsEdgeCases:
         )
 
         # Запрос с фильтрами (game_id вместо game)
-        result = awAlgot mock_dmarket_api.get_user_targets(
+        result = await mock_dmarket_api.get_user_targets(
             game_id="a8db", status="TargetStatusActive"
         )
 
@@ -329,10 +329,10 @@ class TestTargetsEdgeCases:
             status_code=200,
         )
 
-        result1 = awAlgot mock_dmarket_api.get_user_targets(game_id="a8db")
+        result1 = await mock_dmarket_api.get_user_targets(game_id="a8db")
         assert len(result1.get("Items", [])) == 50
 
-        result2 = awAlgot mock_dmarket_api.get_user_targets(game_id="a8db", offset=50)
+        result2 = await mock_dmarket_api.get_user_targets(game_id="a8db", offset=50)
         assert len(result2.get("Items", [])) == 50
 
     async def test_target_with_unicode_title(
@@ -364,7 +364,7 @@ class TestTargetsEdgeCases:
             }
         ]
 
-        result = awAlgot mock_dmarket_api.create_targets(game_id="a8db", targets=targets)
+        result = await mock_dmarket_api.create_targets(game_id="a8db", targets=targets)
 
         assert result is not None
 
@@ -399,7 +399,7 @@ class TestTargetsEdgeCases:
         )
 
         # get_closed_targets doesn't take game parameter
-        result = awAlgot mock_dmarket_api.get_closed_targets(
+        result = await mock_dmarket_api.get_closed_targets(
             status="successful", limit=50
         )
 
@@ -434,7 +434,7 @@ class TestTargetsValidation:
             }
         ]
 
-        result = awAlgot mock_dmarket_api.create_targets(game_id="a8db", targets=targets)
+        result = await mock_dmarket_api.create_targets(game_id="a8db", targets=targets)
 
         assert result is not None
 
@@ -462,7 +462,7 @@ class TestTargetsValidation:
             }
         ]
 
-        result = awAlgot mock_dmarket_api.create_targets(game_id="a8db", targets=targets)
+        result = await mock_dmarket_api.create_targets(game_id="a8db", targets=targets)
 
         assert result is not None
 
@@ -490,7 +490,7 @@ class TestTargetsValidation:
             }
         ]
 
-        result = awAlgot mock_dmarket_api.create_targets(game_id="a8db", targets=targets)
+        result = await mock_dmarket_api.create_targets(game_id="a8db", targets=targets)
 
         assert result is not None
 
@@ -518,7 +518,7 @@ class TestTargetsValidation:
             }
         ]
 
-        result = awAlgot mock_dmarket_api.create_targets(game_id="a8db", targets=targets)
+        result = await mock_dmarket_api.create_targets(game_id="a8db", targets=targets)
 
         assert result is not None
 
@@ -546,7 +546,7 @@ class TestTargetsValidation:
             }
         ]
 
-        result = awAlgot mock_dmarket_api.create_targets(game_id="a8db", targets=targets)
+        result = await mock_dmarket_api.create_targets(game_id="a8db", targets=targets)
 
         assert result is not None
 
@@ -574,6 +574,6 @@ class TestTargetsValidation:
             }
         ]
 
-        result = awAlgot mock_dmarket_api.create_targets(game_id="a8db", targets=targets)
+        result = await mock_dmarket_api.create_targets(game_id="a8db", targets=targets)
 
         assert result is not None

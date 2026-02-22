@@ -70,7 +70,7 @@ class ItemFilters:
             logger.info(f"Loaded item filters from {self.config_path}")
 
         except Exception:
-            logger.exception("FAlgoled to load item filters")
+            logger.exception("Failed to load item filters")
             self.config = self._get_default_config()
 
     def _get_default_config(self) -> dict[str, Any]:

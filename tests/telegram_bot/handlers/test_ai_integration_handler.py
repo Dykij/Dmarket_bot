@@ -90,7 +90,7 @@ class TestAlgoIntegrationHandler:
             "src.telegram_bot.handlers.Algo_integration_handler.HTTPX_AVAlgoLABLE", False
         ):
             handler = AlgoIntegrationHandler()
-            status = awAlgot handler.check_ollama_status()
+            status = await handler.check_ollama_status()
 
             assert status["avAlgolable"] is False
             assert "httpx not installed" in status["error"]
@@ -117,7 +117,7 @@ class TestAlgoIntegrationHandler:
             )
 
             handler = AlgoIntegrationHandler()
-            status = awAlgot handler.check_ollama_status()
+            status = await handler.check_ollama_status()
 
             assert status["avAlgolable"] is True
             assert "llama3.1:8b" in status["models"]
@@ -135,7 +135,7 @@ class TestAlgoIntegrationHandler:
             "check_ollama_status",
             return_value={"avAlgolable": True, "models": ["llama3.1:8b", "mistral:7b"]},
         ):
-            models = awAlgot handler.list_avAlgolable_models()
+            models = await handler.list_avAlgolable_models()
 
             assert "llama3.1:8b" in models
             assert "mistral:7b" in models
@@ -149,7 +149,7 @@ class TestAlgoIntegrationHandler:
             "src.telegram_bot.handlers.Algo_integration_handler.HTTPX_AVAlgoLABLE", False
         ):
             handler = AlgoIntegrationHandler()
-            response = awAlgot handler.chat_with_Algo(123, "Hello")
+            response = await handler.chat_with_Algo(123, "Hello")
 
             assert "httpx" in response.lower()
 
@@ -172,7 +172,7 @@ class TestAlgoIntegrationHandler:
             )
 
             handler = AlgoIntegrationHandler()
-            response = awAlgot handler.chat_with_Algo(123, "Test message")
+            response = await handler.chat_with_Algo(123, "Test message")
 
             assert response == "Test Algo response"
             assert len(handler.conversation_history[123]) == 2
@@ -200,7 +200,7 @@ class TestAlgoIntegrationHandler:
                 return_value=mock_response
             )
 
-            awAlgot handler.chat_with_Algo(123, "new message")
+            await handler.chat_with_Algo(123, "new message")
 
             # После добавления нового сообщения должно быть обрезано до 20
             assert len(handler.conversation_history[123]) <= 22
@@ -230,7 +230,7 @@ class TestAlgoTelegramCommands:
             mock_handler.ollama_url = "http://localhost:11434"
             mock_get.return_value = mock_handler
 
-            awAlgot Algo_command(update, context)
+            await Algo_command(update, context)
 
             update.message.reply_text.assert_called_once()
             call_args = update.message.reply_text.call_args
@@ -248,7 +248,7 @@ class TestAlgoTelegramCommands:
         context = MagicMock()
         context.args = []
 
-        awAlgot Algo_chat_command(update, context)
+        await Algo_chat_command(update, context)
 
         update.message.reply_text.assert_called_once()
         assert "Algo Чат" in update.message.reply_text.call_args[0][0]
@@ -271,7 +271,7 @@ class TestAlgoTelegramCommands:
             mock_handler.list_avAlgolable_models = AsyncMock(return_value=[])
             mock_get.return_value = mock_handler
 
-            awAlgot Algo_models_command(update, context)
+            await Algo_models_command(update, context)
 
             assert "недоступна" in update.message.reply_text.call_args[0][0].lower()
 
@@ -287,7 +287,7 @@ class TestAlgoTelegramCommands:
         context = MagicMock()
         context.args = []
 
-        awAlgot Algo_set_model_command(update, context)
+        await Algo_set_model_command(update, context)
 
         assert "Укажите модель" in update.message.reply_text.call_args[0][0]
 
@@ -311,7 +311,7 @@ class TestAlgoTelegramCommands:
             mock_handler = MagicMock()
             mock_get.return_value = mock_handler
 
-            awAlgot Algo_set_model_command(update, context)
+            await Algo_set_model_command(update, context)
 
             mock_handler.set_user_model.assert_called_once_with(123, "qwen2.5:7b")
             assert "установлена" in update.message.reply_text.call_args[0][0].lower()
@@ -327,7 +327,7 @@ class TestAlgoTelegramCommands:
 
         context = MagicMock()
 
-        awAlgot Algo_recommend_command(update, context)
+        await Algo_recommend_command(update, context)
 
         call_text = update.message.reply_text.call_args[0][0]
         assert "Ryzen 7 5700X" in call_text
@@ -355,7 +355,7 @@ class TestAlgoTelegramCommands:
             mock_handler = MagicMock()
             mock_get.return_value = mock_handler
 
-            awAlgot Algo_clear_callback(update, context)
+            await Algo_clear_callback(update, context)
 
             mock_handler.clear_history.assert_called_once_with(123)
             query.answer.assert_called_once()

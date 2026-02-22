@@ -167,7 +167,7 @@ class TestRiskAnalysis:
         self, portfolio_manager, sample_snapshot
     ):
         """Тест что analyze_risk возвращает RiskAnalysis."""
-        risk = awAlgot portfolio_manager.analyze_risk(sample_snapshot)
+        risk = await portfolio_manager.analyze_risk(sample_snapshot)
 
         assert isinstance(risk, RiskAnalysis)
         assert risk.overall_risk in {
@@ -192,7 +192,7 @@ class TestRiskAnalysis:
             category_distribution={},
         )
 
-        risk = awAlgot portfolio_manager.analyze_risk(snapshot)
+        risk = await portfolio_manager.analyze_risk(snapshot)
 
         assert risk.overall_risk == RiskLevel.LOW
 
@@ -208,14 +208,14 @@ class TestPerformanceMetrics:
     @pytest.mark.asyncio()
     async def test_get_performance_metrics_returns_dict(self, portfolio_manager):
         """Тест что get_performance_metrics возвращает словарь."""
-        metrics = awAlgot portfolio_manager.get_performance_metrics()
+        metrics = await portfolio_manager.get_performance_metrics()
 
         assert isinstance(metrics, dict)
 
     @pytest.mark.asyncio()
     async def test_get_performance_metrics_with_period_days_parameter(self, portfolio_manager):
         """Тест метрик за определенный период."""
-        metrics = awAlgot portfolio_manager.get_performance_metrics(period_days=7)
+        metrics = await portfolio_manager.get_performance_metrics(period_days=7)
 
         assert isinstance(metrics, dict)
 
@@ -359,7 +359,7 @@ class TestHelperFunctions:
         """Тест что get_portfolio_summary возвращает словарь."""
         from src.dmarket.portfolio_manager import get_portfolio_summary
 
-        summary = awAlgot get_portfolio_summary(mock_api_client)
+        summary = await get_portfolio_summary(mock_api_client)
 
         assert isinstance(summary, dict)
 
@@ -368,7 +368,7 @@ class TestHelperFunctions:
         """Тест что get_rebalancing_actions возвращает список."""
         from src.dmarket.portfolio_manager import get_rebalancing_actions
 
-        actions = awAlgot get_rebalancing_actions(mock_api_client)
+        actions = await get_rebalancing_actions(mock_api_client)
 
         assert isinstance(actions, list)
 

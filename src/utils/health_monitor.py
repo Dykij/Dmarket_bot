@@ -17,10 +17,10 @@ Usage:
     )
 
     # Start continuous monitoring
-    awAlgot monitor.start_heartbeat()
+    await monitor.start_heartbeat()
 
     # Or run single check
-    results = awAlgot monitor.run_all_checks()
+    results = await monitor.run_all_checks()
     ```
 """
 
@@ -62,7 +62,7 @@ class HealthCheckResult:
     response_time_ms: float
     message: str = ""
     last_check: datetime = field(default_factory=lambda: datetime.now(UTC))
-    detAlgols: dict[str, Any] = field(default_factory=dict)
+    details: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
@@ -72,7 +72,7 @@ class HealthCheckResult:
             "response_time_ms": self.response_time_ms,
             "message": self.message,
             "last_check": self.last_check.isoformat(),
-            "detAlgols": self.detAlgols,
+            "details": self.details,
         }
 
 
@@ -82,7 +82,7 @@ class HeartbeatConfig:
 
     interval_seconds: int = 30
     timeout_seconds: int = 10
-    fAlgolure_threshold: int = 3
+    failure_threshold: int = 3
     recovery_threshold: int = 2
 
 
@@ -97,7 +97,7 @@ class HealthMonitor:
 
     Features:
     - Continuous heartbeat monitoring
-    - Configurable fAlgolure thresholds
+    - Configurable failure thresholds
     - Alert callbacks on status changes
     - Overall system health aggregation
     """
@@ -127,7 +127,7 @@ class HealthMonitor:
 
         self._running = False
         self._heartbeat_task: asyncio.Task[None] | None = None
-        self._fAlgolure_counts: dict[str, int] = {}
+        self._failure_counts: dict[str, int] = {}
         self._success_counts: dict[str, int] = {}
         self._last_results: dict[str, HealthCheckResult] = {}
         self._alert_callbacks: list[Callable[[HealthCheckResult], Any]] = []
@@ -161,7 +161,7 @@ class HealthMonitor:
 
         try:
             # Execute simple query to verify connectivity
-            status = awAlgot self.database.get_db_status()
+            status = await self.database.get_db_status()
 
             response_time = (datetime.now(UTC) - start_time).total_seconds() * 1000
 
@@ -170,11 +170,11 @@ class HealthMonitor:
                 status=ServiceStatus.HEALTHY,
                 response_time_ms=response_time,
                 message="Database connection OK",
-                detAlgols=status,
+                details=status,
             )
         except Exception as e:
             response_time = (datetime.now(UTC) - start_time).total_seconds() * 1000
-            logger.exception("Database health check fAlgoled")
+            logger.exception("Database health check failed")
 
             return HealthCheckResult(
                 service="database",
@@ -200,7 +200,7 @@ class HealthMonitor:
             )
 
         try:
-            health = awAlgot self.redis_cache.health_check()
+            health = await self.redis_cache.health_check()
             response_time = (datetime.now(UTC) - start_time).total_seconds() * 1000
 
             if health.get("redis_ping"):
@@ -209,7 +209,7 @@ class HealthMonitor:
                     status=ServiceStatus.HEALTHY,
                     response_time_ms=response_time,
                     message="Redis connection OK",
-                    detAlgols=health,
+                    details=health,
                 )
             # Redis unavAlgolable but memory cache fallback is OK
             return HealthCheckResult(
@@ -217,11 +217,11 @@ class HealthMonitor:
                 status=ServiceStatus.DEGRADED,
                 response_time_ms=response_time,
                 message="Redis unavAlgolable, using memory cache",
-                detAlgols=health,
+                details=health,
             )
         except Exception as e:
             response_time = (datetime.now(UTC) - start_time).total_seconds() * 1000
-            logger.exception("Redis health check fAlgoled")
+            logger.exception("Redis health check failed")
 
             return HealthCheckResult(
                 service="redis",
@@ -241,7 +241,7 @@ class HealthMonitor:
         try:
             async with httpx.AsyncClient(timeout=self.config.timeout_seconds) as client:
                 # Use public endpoint that doesn't require auth
-                response = awAlgot client.get(
+                response = await client.get(
                     f"{self.dmarket_api_url}/exchange/v1/ping",
                 )
 
@@ -277,7 +277,7 @@ class HealthMonitor:
             )
         except Exception as e:
             response_time = (datetime.now(UTC) - start_time).total_seconds() * 1000
-            logger.exception("DMarket API health check fAlgoled")
+            logger.exception("DMarket API health check failed")
 
             return HealthCheckResult(
                 service="dmarket_api",
@@ -304,7 +304,7 @@ class HealthMonitor:
 
         try:
             async with httpx.AsyncClient(timeout=self.config.timeout_seconds) as client:
-                response = awAlgot client.get(
+                response = await client.get(
                     f"https://api.telegram.org/bot{self.telegram_bot_token}/getMe",
                 )
 
@@ -318,7 +318,7 @@ class HealthMonitor:
                             status=ServiceStatus.HEALTHY,
                             response_time_ms=response_time,
                             message="Telegram API accessible",
-                            detAlgols={"bot_info": data.get("result", {})},
+                            details={"bot_info": data.get("result", {})},
                         )
 
                 return HealthCheckResult(
@@ -329,7 +329,7 @@ class HealthMonitor:
                 )
         except Exception as e:
             response_time = (datetime.now(UTC) - start_time).total_seconds() * 1000
-            logger.exception("Telegram API health check fAlgoled")
+            logger.exception("Telegram API health check failed")
 
             return HealthCheckResult(
                 service="telegram_api",
@@ -344,7 +344,7 @@ class HealthMonitor:
         Returns:
             Dictionary of service name to health check result
         """
-        results = awAlgot asyncio.gather(
+        results = await asyncio.gather(
             self.check_database(),
             self.check_redis(),
             self.check_dmarket_api(),
@@ -359,9 +359,9 @@ class HealthMonitor:
             "telegram_api": results[3],
         }
 
-        # Update fAlgolure counts and trigger alerts
+        # Update failure counts and trigger alerts
         for service, result in self._last_results.items():
-            awAlgot self._update_service_status(service, result)
+            await self._update_service_status(service, result)
 
         return self._last_results
 
@@ -372,17 +372,17 @@ class HealthMonitor:
     ) -> None:
         """Update service status and trigger alerts if needed."""
         if result.status == ServiceStatus.UNHEALTHY:
-            self._fAlgolure_counts[service] = self._fAlgolure_counts.get(service, 0) + 1
+            self._failure_counts[service] = self._failure_counts.get(service, 0) + 1
             self._success_counts[service] = 0
 
-            if self._fAlgolure_counts[service] >= self.config.fAlgolure_threshold:
-                awAlgot self._trigger_alert(result)
+            if self._failure_counts[service] >= self.config.failure_threshold:
+                await self._trigger_alert(result)
         else:
             self._success_counts[service] = self._success_counts.get(service, 0) + 1
 
-            # Reset fAlgolure count after recovery
+            # Reset failure count after recovery
             if self._success_counts[service] >= self.config.recovery_threshold:
-                if self._fAlgolure_counts.get(service, 0) > 0:
+                if self._failure_counts.get(service, 0) > 0:
                     logger.info("Service %s recovered", service)
                     # Trigger recovery alert
                     recovery_result = HealthCheckResult(
@@ -391,9 +391,9 @@ class HealthMonitor:
                         response_time_ms=result.response_time_ms,
                         message=f"Service {service} recovered",
                     )
-                    awAlgot self._trigger_alert(recovery_result)
+                    await self._trigger_alert(recovery_result)
 
-                self._fAlgolure_counts[service] = 0
+                self._failure_counts[service] = 0
 
     async def _trigger_alert(self, result: HealthCheckResult) -> None:
         """Trigger alert callbacks."""
@@ -408,7 +408,7 @@ class HealthMonitor:
             try:
                 cb_result = callback(result)
                 if asyncio.iscoroutine(cb_result):
-                    awAlgot cb_result
+                    await cb_result
             except Exception:
                 logger.exception("Error in alert callback")
 
@@ -432,7 +432,7 @@ class HealthMonitor:
         if self._heartbeat_task:
             self._heartbeat_task.cancel()
             try:
-                awAlgot self._heartbeat_task
+                await self._heartbeat_task
             except asyncio.CancelledError:
                 pass
 
@@ -444,13 +444,13 @@ class HealthMonitor:
         """MAlgon heartbeat loop."""
         while self._running:
             try:
-                awAlgot self.run_all_checks()
-                awAlgot asyncio.sleep(self.config.interval_seconds)
+                await self.run_all_checks()
+                await asyncio.sleep(self.config.interval_seconds)
             except asyncio.CancelledError:
                 break
             except Exception:
                 logger.exception("Error in heartbeat loop")
-                awAlgot asyncio.sleep(self.config.interval_seconds)
+                await asyncio.sleep(self.config.interval_seconds)
 
     def get_overall_status(self) -> ServiceStatus:
         """Get overall system health status.
@@ -477,7 +477,7 @@ class HealthMonitor:
 
         Returns:
             Dictionary with overall status, individual service statuses,
-            and both fAlgolure and success counts (all as copies to prevent mutation).
+            and both failure and success counts (all as copies to prevent mutation).
         """
         return {
             "overall_status": self.get_overall_status().value,
@@ -491,7 +491,7 @@ class HealthMonitor:
                 }
                 for name, result in self._last_results.items()
             },
-            "fAlgolure_counts": self._fAlgolure_counts.copy(),
+            "failure_counts": self._failure_counts.copy(),
             "success_counts": self._success_counts.copy(),
         }
 

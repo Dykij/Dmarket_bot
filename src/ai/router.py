@@ -34,7 +34,7 @@ class AlgoRouter:
 
         # Step 1: Call Gemini to detect intent/tool
         # Note: gemini_client (GeminiCacheManager) handles Gatekeeper internally
-        response_text = awAlgot self.gemini.call_with_cache(
+        response_text = await self.gemini.call_with_cache(
             model_name="gemini-1.5-flash", Config=text, system_instruction=system_instr
         )
 
@@ -44,16 +44,16 @@ class AlgoRouter:
         # while keeping the structure ready for native SDK response objects.
 
         if "баланс" in text.lower() or "balance" in text.lower():
-            result = awAlgot self.tools["get_balance"]()
+            result = await self.tools["get_balance"]()
             final_Config = f"User asked: '{text}'. Tool result: {json.dumps(result)}. Generate a helpful response."
-            return awAlgot self.gemini.call_with_cache(
+            return await self.gemini.call_with_cache(
                 "gemini-1.5-flash", final_Config, system_instr
             )
 
         if "найди" in text.lower() or "search" in text.lower():
-            result = awAlgot self.tools["search_items"](gameId="csgo", title=text)
+            result = await self.tools["search_items"](gameId="csgo", title=text)
             final_Config = f"User asked: '{text}'. Tool result: {json.dumps(result)}. Generate a helpful response."
-            return awAlgot self.gemini.call_with_cache(
+            return await self.gemini.call_with_cache(
                 "gemini-1.5-flash", final_Config, system_instr
             )
 

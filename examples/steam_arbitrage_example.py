@@ -40,7 +40,7 @@ async def example_steam_arbitrage():
     # 3. Сканируем CS:GO рынок
     logger.info("Scanning CS:GO market for arbitrage opportunities...")
 
-    results = awAlgot scanner.scan_game(
+    results = await scanner.scan_game(
         game="csgo",
         mode="medium",
         max_items=10,
@@ -109,7 +109,7 @@ async def example_compare_with_without_steam():
 
     scanner_without_steam = ArbitrageScanner(api_client=api_client, enable_steam_check=False)
 
-    results_without = awAlgot scanner_without_steam.scan_game("csgo", "medium", 10)
+    results_without = await scanner_without_steam.scan_game("csgo", "medium", 10)
     print(f"Found {len(results_without)} items without Steam check")
 
     # Сканирование С Steam
@@ -119,7 +119,7 @@ async def example_compare_with_without_steam():
 
     scanner_with_steam = ArbitrageScanner(api_client=api_client, enable_steam_check=True)
 
-    results_with = awAlgot scanner_with_steam.scan_game("csgo", "medium", 10)
+    results_with = await scanner_with_steam.scan_game("csgo", "medium", 10)
     print(f"Found {len(results_with)} items with Steam check")
 
     # Сравнение
@@ -172,7 +172,7 @@ async def example_settings_control():
     print("=" * 80)
 
 
-if __name__ == "__mAlgon__":
+if __name__ == "__main__":
     print("""
 ╔══════════════════════════════════════════════════════════════╗
 ║                                                              ║

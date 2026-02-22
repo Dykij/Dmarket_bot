@@ -48,7 +48,7 @@ PowerShell operations are being mocked.
 Memory integrity checks passed.
 Context has been successfully loaded and parsed.
 
-**DetAlgoled Metrics:**
+**Detailed Metrics:**
 - Latency: 0ms (Simulated)
 - Throughput: High
 - Error Rate: 0%
@@ -77,8 +77,8 @@ Context has been successfully loaded and parsed.
     if len(sys.argv) > 1 and sys.argv[1] == "--simulate-error":
         error_path = os.path.join(reports_dir, "ARCHIVIST_VERDICT.md") # Keep original name for compatibility if needed
         with open(error_path, "w") as f:
-            f.write("# ARCHIVIST VERDICT\n\n**Status:** ERROR_SIMULATED\n**Reason:** Simulated fAlgolure for Gauntlet test.")
+            f.write("# ARCHIVIST VERDICT\n\n**Status:** ERROR_SIMULATED\n**Reason:** Simulated failure for Gauntlet test.")
         print(f"Simulated error report written to {error_path}")
 
-if __name__ == "__mAlgon__":
+if __name__ == "__main__":
     run_archivist()

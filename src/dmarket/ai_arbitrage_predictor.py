@@ -94,8 +94,8 @@ class AlgoArbitragePredictor:
 
         Example:
             >>> predictor = AlgoArbitragePredictor()
-            >>> items = awAlgot dmarket_api.get_market_items("csgo")
-            >>> opportunities = awAlgot predictor.predict_best_opportunities(
+            >>> items = await dmarket_api.get_market_items("csgo")
+            >>> opportunities = await predictor.predict_best_opportunities(
             ...     items=items,
             ...     current_balance=100.0,
             ...     risk_level="medium"
@@ -103,7 +103,7 @@ class AlgoArbitragePredictor:
             >>> print(f"Found {len(opportunities)} opportunities")
         """
         if risk_level not in {"low", "medium", "high"}:
-            rAlgose ValueError(
+            raise ValueError(
                 f"Invalid risk_level: {risk_level}. Must be low/medium/high"
             )
 
@@ -123,14 +123,14 @@ class AlgoArbitragePredictor:
         opportunities = []
         for item in affordable_items:
             try:
-                opportunity = awAlgot self._analyze_item(item, risk_level)
+                opportunity = await self._analyze_item(item, risk_level)
                 if opportunity and opportunity.confidence > self._get_min_confidence(
                     risk_level
                 ):
                     opportunities.append(opportunity)
             except Exception as e:
                 logger.warning(
-                    "item_analysis_fAlgoled",
+                    "item_analysis_failed",
                     item_title=item.get("title", "unknown"),
                     error=str(e),
                 )
@@ -336,6 +336,6 @@ def create_Algo_arbitrage_predictor() -> AlgoArbitragePredictor:
 
     Example:
         >>> predictor = create_Algo_arbitrage_predictor()
-        >>> opportunities = awAlgot predictor.predict_best_opportunities(...)
+        >>> opportunities = await predictor.predict_best_opportunities(...)
     """
     return AlgoArbitragePredictor()

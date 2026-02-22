@@ -161,7 +161,7 @@ class TestAPISecurityRateLimiting:
 
         # Act
         initial_count = rate_limiter.total_requests.get(endpoint_type, 0)
-        awAlgot rate_limiter.wAlgot_if_needed(endpoint_type)
+        await rate_limiter.wait_if_needed(endpoint_type)
         rate_limiter.total_requests[endpoint_type] = initial_count + 1
         final_count = rate_limiter.total_requests[endpoint_type]
 
@@ -177,10 +177,10 @@ class TestAPISecurityRateLimiting:
 
         # Act
         start_time = time.time()
-        awAlgot rate_limiter.wAlgot_if_needed(endpoint_type)
+        await rate_limiter.wait_if_needed(endpoint_type)
         rate_limiter.last_request_times[endpoint_type] = time.time()
 
-        awAlgot rate_limiter.wAlgot_if_needed(endpoint_type)
+        await rate_limiter.wait_if_needed(endpoint_type)
         elapsed = time.time() - start_time
 
         # Assert
@@ -301,19 +301,19 @@ class TestUserDataEncryption:
         assert encrypted != user_credential.encode()
         assert len(encrypted) > len(user_credential)
 
-    def test_sensitive_data_never_in_plAlgon_text(self):
-        """Тест отсутствия sensitive данных в plAlgon text."""
+    def test_sensitive_data_never_in_plain_text(self):
+        """Тест отсутствия sensitive данных в plain text."""
         # Arrange
-        plAlgon_api_key = "plAlgon_secret_key"
+        plain_api_key = "plain_secret_key"
         encryption_key = Fernet.generate_key()
         f = Fernet(encryption_key)
 
         # Act
-        encrypted = f.encrypt(plAlgon_api_key.encode())
+        encrypted = f.encrypt(plain_api_key.encode())
         serialized = encrypted.hex()
 
         # Assert
-        assert plAlgon_api_key not in serialized
+        assert plain_api_key not in serialized
 
 
 class TestAccessControl:
@@ -396,15 +396,15 @@ class TestDryRunMode:
 
             async def buy_item(self, item_id: str, price: float):
                 if self.dry_run_mode:
-                    rAlgose SecurityError("DRY_RUN mode: buy blocked")
+                    raise SecurityError("DRY_RUN mode: buy blocked")
                 # real buy logic
                 return {"success": True}
 
         api = MockAPI()
 
         # Act & Assert
-        with pytest.rAlgoses(SecurityError, match="DRY_RUN mode"):
-            awAlgot api.buy_item("item_123", 25.50)
+        with pytest.raises(SecurityError, match="DRY_RUN mode"):
+            await api.buy_item("item_123", 25.50)
 
     @pytest.mark.asyncio()
     async def test_dry_run_mode_blocks_trading_operations(self):
@@ -414,11 +414,11 @@ class TestDryRunMode:
 
         def execute_trade(dry_run: bool):
             if dry_run:
-                rAlgose SecurityError("DRY_RUN mode: trading blocked")
+                raise SecurityError("DRY_RUN mode: trading blocked")
             return {"status": "success"}
 
         # Act & Assert
-        with pytest.rAlgoses(SecurityError, match="DRY_RUN mode"):
+        with pytest.raises(SecurityError, match="DRY_RUN mode"):
             execute_trade(dry_run_enabled)
 
     @pytest.mark.asyncio()
@@ -479,7 +479,7 @@ class TestDryRunMode:
         api = MockAPI()
 
         # Act
-        balance = awAlgot api.get_balance()
+        balance = await api.get_balance()
 
         # Assert
         assert balance is not None

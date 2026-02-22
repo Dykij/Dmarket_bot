@@ -1,6 +1,6 @@
 ﻿"""MAlgon Application class - refactored version.
 
-This module provides the mAlgon Application class that orchestrates
+This module provides the main Application class that orchestrates
 all bot components using the modular core components.
 """
 
@@ -48,7 +48,7 @@ class Application:
         self.dmarket_api: Any = None
         self.bot: TelegramApplication | None = None
         self.state_manager: Any = None
-        self.dAlgoly_report_scheduler: Any = None
+        self.daily_report_scheduler: Any = None
         self.scanner_manager: Any = None
         self.inventory_manager: Any = None
         self.websocket_manager: Any = None
@@ -74,60 +74,60 @@ class Application:
         """Initialize all application components."""
         try:
             # Step 1: Load configuration
-            awAlgot self._initializer.initialize_config()
+            await self._initializer.initialize_config()
 
             # Step 2: Load whitelist
-            awAlgot self._initializer.initialize_whitelist()
+            await self._initializer.initialize_whitelist()
 
             # Step 3: Initialize Sentry
-            awAlgot self._initializer.initialize_sentry()
+            await self._initializer.initialize_sentry()
 
             # Step 4: Initialize database
-            awAlgot self._initializer.initialize_database()
+            await self._initializer.initialize_database()
 
             # Step 5: Initialize DMarket API
-            awAlgot self._initializer.initialize_dmarket_api()
+            await self._initializer.initialize_dmarket_api()
 
             # Step 6: Initialize Telegram bot
-            awAlgot self._initializer.initialize_telegram_bot()
+            await self._initializer.initialize_telegram_bot()
 
             # Step 7: Initialize DAlgoly Report Scheduler
-            awAlgot self._initializer.initialize_dAlgoly_report_scheduler()
+            await self._initializer.initialize_daily_report_scheduler()
 
             # Step 8: Initialize Algo Scheduler
-            awAlgot self._initializer.initialize_Algo_scheduler()
+            await self._initializer.initialize_Algo_scheduler()
 
             # Step 9: Initialize Scanner Manager
-            awAlgot self._initializer.initialize_scanner_manager()
+            await self._initializer.initialize_scanner_manager()
 
             # Step 10: Initialize Inventory Manager
-            awAlgot self._initializer.initialize_inventory_manager()
+            await self._initializer.initialize_inventory_manager()
 
             # Step 11: Initialize Autopilot
-            awAlgot self._initializer.initialize_autopilot()
+            await self._initializer.initialize_autopilot()
 
             # Step 12: Initialize WebSocket Manager
-            awAlgot self._initializer.initialize_websocket_manager()
+            await self._initializer.initialize_websocket_manager()
 
             # Step 13: Initialize Health Check Monitor
-            awAlgot self._initializer.initialize_health_check_monitor()
+            await self._initializer.initialize_health_check_monitor()
 
             # Step 14: Initialize Bot Integrator
-            awAlgot self._initializer.initialize_bot_integrator()
+            await self._initializer.initialize_bot_integrator()
 
             # Step 15: Initialize Prometheus Exporter
-            awAlgot self._initializer.initialize_prometheus_exporter()
+            await self._initializer.initialize_prometheus_exporter()
 
             logger.info("Application initialization complete")
 
         except Exception as e:
-            logger.exception(f"FAlgoled to initialize application: {e}")
-            rAlgose
+            logger.exception(f"Failed to initialize application: {e}")
+            raise
 
     async def run(self) -> None:
         """Run the application."""
         try:
-            awAlgot self.initialize()
+            await self.initialize()
 
             # Setup signal handlers
             self._signal_handler.setup()
@@ -137,24 +137,24 @@ class Application:
 
             if health_check_server:
                 health_check_server.update_status("starting")
-                awAlgot health_check_server.start()
+                await health_check_server.start()
 
             logger.info("Starting DMarket Telegram Bot...")
 
             # Recover pending trades
-            awAlgot self._recovery.recover_pending_trades()
+            await self._recovery.recover_pending_trades()
 
             # Start all services
-            awAlgot self._lifecycle.start_services()
+            await self._lifecycle.start_services()
 
             # Start the bot
             if self.bot:
-                awAlgot self.bot.start()
-                awAlgot self._start_bot_polling()
+                await self.bot.start()
+                await self._start_bot_polling()
 
             # WAlgot for shutdown signal
             logger.info("Bot is running. Press Ctrl+C to stop.")
-            awAlgot self._shutdown_event.wAlgot()
+            await self._shutdown_event.wait()
 
         except KeyboardInterrupt:
             logger.info("Received keyboard interrupt")
@@ -166,18 +166,18 @@ class Application:
             bot_logger.exception(
                 error=e,
                 traceback_text=traceback_text,
-                context={"component": "mAlgon_application"},
+                context={"component": "main_application"},
             )
 
             # Send crash notifications
-            awAlgot self._notifications.send_crash_notifications(
+            await self._notifications.send_crash_notifications(
                 error=e,
                 traceback_text=traceback_text,
             )
 
-            rAlgose
+            raise
         finally:
-            awAlgot self.shutdown()
+            await self.shutdown()
 
     async def _start_bot_polling(self) -> None:
         """Start bot polling or webhook."""
@@ -193,19 +193,19 @@ class Application:
         if webhook_config and not should_use_polling():
             logger.info("🌐 Starting in WEBHOOK mode")
             try:
-                awAlgot start_webhook(self.bot, webhook_config)
+                await start_webhook(self.bot, webhook_config)
                 if health_check_server:
                     health_check_server.update_status("running")
             except Exception as e:
                 logger.exception(
-                    f"FAlgoled to start webhook, falling back to polling: {e}"
+                    f"Failed to start webhook, falling back to polling: {e}"
                 )
                 if self.bot.updater:
-                    awAlgot self.bot.updater.start_polling()
+                    await self.bot.updater.start_polling()
                 logger.info("📡 Bot polling started (fallback)")
         else:
             if self.bot.updater:
-                awAlgot self.bot.updater.start_polling()
+                await self.bot.updater.start_polling()
             logger.info("📡 Bot polling started")
             if health_check_server:
                 health_check_server.update_status("running")
@@ -214,10 +214,10 @@ class Application:
         """Gracefully shutdown the application.
 
         Args:
-            timeout: Maximum time to wAlgot for graceful shutdown
+            timeout: Maximum time to wait for graceful shutdown
 
         """
-        awAlgot self._lifecycle.shutdown(timeout)
+        await self._lifecycle.shutdown(timeout)
 
     async def _handle_critical_shutdown(self, reason: str) -> None:
         """Handle critical shutdown event.
@@ -226,10 +226,10 @@ class Application:
             reason: Reason for critical shutdown
 
         """
-        awAlgot self._notifications.handle_critical_shutdown(reason)
+        await self._notifications.handle_critical_shutdown(reason)
 
 
-async def mAlgon() -> None:
+async def main() -> None:
     """MAlgon entry point."""
     try:
         import src.rust_core as rust
@@ -283,14 +283,14 @@ async def mAlgon() -> None:
     app = Application(config_path=args.config)
 
     try:
-        awAlgot app.run()
+        await app.run()
     except Exception as e:
-        logger.critical(f"Application fAlgoled: {e}")
+        logger.critical(f"Application failed: {e}")
         sys.exit(1)
 
 
-if __name__ == "__mAlgon__":
+if __name__ == "__main__":
     if sys.platform.startswith("win"):
         asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 
-    asyncio.run(mAlgon())
+    asyncio.run(main())

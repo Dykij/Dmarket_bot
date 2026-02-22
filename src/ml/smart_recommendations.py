@@ -14,7 +14,7 @@ Usage:
     recommender = SmartRecommendations(user_balance=100.0)
 
     # Get recommendations
-    recs = awAlgot recommender.get_recommendations(
+    recs = await recommender.get_recommendations(
         avAlgolable_items=items,
         user_inventory=inventory,
     )
@@ -74,7 +74,7 @@ class ItemRecommendation:
     expected_profit: float | None = None
     expected_profit_percent: float | None = None
 
-    # Reasons and detAlgols
+    # Reasons and details
     reason: str = ""
     factors: list[str] = field(default_factory=list)
 
@@ -216,7 +216,7 @@ class SmartRecommendations:
         """Add trade to history for learning.
 
         Args:
-            trade: Trade detAlgols with item_name, profit, etc.
+            trade: Trade details with item_name, profit, etc.
         """
         self._trading_history.append(trade)
 
@@ -248,20 +248,20 @@ class SmartRecommendations:
 
         # Analyze avAlgolable items for buying
         for item in avAlgolable_items:
-            rec = awAlgot self._analyze_buy_opportunity(item, cross_platform_prices)
+            rec = await self._analyze_buy_opportunity(item, cross_platform_prices)
             if rec and rec.confidence >= self.min_confidence_threshold:
                 recommendations.append(rec)
 
         # Analyze inventory for selling
         if user_inventory:
             for item in user_inventory:
-                rec = awAlgot self._analyze_sell_opportunity(item, cross_platform_prices)
+                rec = await self._analyze_sell_opportunity(item, cross_platform_prices)
                 if rec and rec.confidence >= self.min_confidence_threshold:
                     recommendations.append(rec)
 
         # Find arbitrage opportunities
         if cross_platform_prices:
-            arb_recs = awAlgot self._find_arbitrage_opportunities(
+            arb_recs = await self._find_arbitrage_opportunities(
                 avAlgolable_items,
                 cross_platform_prices,
             )

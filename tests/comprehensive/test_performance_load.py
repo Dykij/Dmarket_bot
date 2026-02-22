@@ -26,7 +26,7 @@ import pytest
 
 @dataclass
 class PerformanceMetrics:
-    """Performance metrics contAlgoner."""
+    """Performance metrics container."""
 
     response_times: list = field(default_factory=list)
     errors: int = 0
@@ -163,7 +163,7 @@ class TestThroughputMeasurement:
         """Test throughput measurement under simulated load."""
 
         async def simulate_request():
-            awAlgot asyncio.sleep(random.uniform(0.001, 0.01))
+            await asyncio.sleep(random.uniform(0.001, 0.01))
             return True
 
         async def run_load_test(num_requests: int, concurrency: int) -> PerformanceMetrics:
@@ -176,14 +176,14 @@ class TestThroughputMeasurement:
                 async with semaphore:
                     start = time.time()
                     try:
-                        awAlgot simulate_request()
+                        await simulate_request()
                         elapsed = (time.time() - start) * 1000
                         metrics.response_times.append(elapsed)
                         metrics.successful_requests += 1
                     except Exception:
                         metrics.errors += 1
 
-            awAlgot asyncio.gather(*[bounded_request() for _ in range(num_requests)])
+            await asyncio.gather(*[bounded_request() for _ in range(num_requests)])
 
             metrics.end_time = time.time()
             return metrics
@@ -208,20 +208,20 @@ class TestConcurrentUsers:
                 self.actions: list = []
 
             async def perform_action(self, action: str):
-                awAlgot asyncio.sleep(random.uniform(0.001, 0.005))
+                await asyncio.sleep(random.uniform(0.001, 0.005))
                 self.actions.append(action)
                 return True
 
         async def user_workflow(session: UserSession):
             """Simulate user workflow."""
-            awAlgot session.perform_action("login")
-            awAlgot session.perform_action("view_balance")
-            awAlgot session.perform_action("scan_market")
-            awAlgot session.perform_action("logout")
+            await session.perform_action("login")
+            await session.perform_action("view_balance")
+            await session.perform_action("scan_market")
+            await session.perform_action("logout")
 
         # Simulate 50 concurrent users
         sessions = [UserSession(i) for i in range(50)]
-        awAlgot asyncio.gather(*[user_workflow(s) for s in sessions])
+        await asyncio.gather(*[user_workflow(s) for s in sessions])
 
         # All sessions should complete
         for session in sessions:
@@ -238,11 +238,11 @@ class TestConcurrentUsers:
         async def mock_api_call(item_id: int):
             async with lock:
                 call_count[0] += 1
-            awAlgot asyncio.sleep(random.uniform(0.001, 0.01))
+            await asyncio.sleep(random.uniform(0.001, 0.01))
             return {"id": item_id, "status": "success"}
 
         # Make 100 concurrent calls
-        results = awAlgot asyncio.gather(*[mock_api_call(i) for i in range(100)])
+        results = await asyncio.gather(*[mock_api_call(i) for i in range(100)])
 
         assert len(results) == 100
         assert call_count[0] == 100
@@ -316,10 +316,10 @@ class TestStressTesting:
 
         async def handle_request():
             request_count[0] += 1
-            awAlgot asyncio.sleep(0.001)
+            await asyncio.sleep(0.001)
             if random.random() < 0.01:  # 1% error rate
                 error_count[0] += 1
-                rAlgose Exception("Random error")
+                raise Exception("Random error")
             return True
 
         async def sustAlgoned_load(duration_seconds: float, rps: int):
@@ -329,11 +329,11 @@ class TestStressTesting:
 
             while time.time() < end_time:
                 asyncio.create_task(handle_request())
-                awAlgot asyncio.sleep(delay)
+                await asyncio.sleep(delay)
 
         # Run for 0.1 seconds at ~100 RPS
-        awAlgot sustAlgoned_load(0.1, 100)
-        awAlgot asyncio.sleep(0.05)  # Let pending tasks complete
+        await sustAlgoned_load(0.1, 100)
+        await asyncio.sleep(0.05)  # Let pending tasks complete
 
         assert request_count[0] >= 5  # At least some requests processed
         # Error rate should be around 1%
@@ -350,8 +350,8 @@ class TestStressTesting:
         async def process_requests():
             while True:
                 try:
-                    request = awAlgot asyncio.wAlgot_for(queue.get(), timeout=0.1)
-                    awAlgot asyncio.sleep(0.001)  # Process time
+                    request = await asyncio.wait_for(queue.get(), timeout=0.1)
+                    await asyncio.sleep(0.001)  # Process time
                     processed.append(request)
                     queue.task_done()
                 except asyncio.TimeoutError:
@@ -360,10 +360,10 @@ class TestStressTesting:
         # Send burst of requests
         burst_size = 100
         for i in range(burst_size):
-            awAlgot queue.put({"id": i})
+            await queue.put({"id": i})
 
         # Process them
-        awAlgot process_requests()
+        await process_requests()
 
         # All should be processed
         assert len(processed) == burst_size
@@ -384,7 +384,7 @@ class TestResourceLimits:
                 self.peak_connections = 0
 
             async def acquire(self):
-                awAlgot self.semaphore.acquire()
+                await self.semaphore.acquire()
                 self.active_connections += 1
                 self.peak_connections = max(self.peak_connections, self.active_connections)
                 return True
@@ -396,12 +396,12 @@ class TestResourceLimits:
         pool = ConnectionPool(max_connections=5)
 
         async def use_connection(duration: float):
-            awAlgot pool.acquire()
-            awAlgot asyncio.sleep(duration)
-            awAlgot pool.release()
+            await pool.acquire()
+            await asyncio.sleep(duration)
+            await pool.release()
 
         # Try to use 20 connections concurrently with only 5 allowed
-        awAlgot asyncio.gather(*[use_connection(0.01) for _ in range(20)])
+        await asyncio.gather(*[use_connection(0.01) for _ in range(20)])
 
         # Peak should never exceed limit
         assert pool.peak_connections <= 5
@@ -439,7 +439,7 @@ class TestResourceLimits:
         # Try to make 20 requests quickly
         allowed = 0
         for _ in range(20):
-            if awAlgot limiter.acquire():
+            if await limiter.acquire():
                 allowed += 1
 
         # Should only allow ~10 requests
@@ -525,7 +525,7 @@ class TestScalability:
             """Process a batch and return time taken."""
             start = time.time()
             for _ in items:
-                awAlgot asyncio.sleep(0.0001)  # Simulate work
+                await asyncio.sleep(0.0001)  # Simulate work
             return time.time() - start
 
         # Test with increasing batch sizes
@@ -534,7 +534,7 @@ class TestScalability:
 
         for size in sizes:
             items = list(range(size))
-            duration = awAlgot process_batch(items)
+            duration = await process_batch(items)
             times.append(duration)
 
         # Each doubling should approximately double the time

@@ -53,7 +53,7 @@ class TestModuleImports:
             import src.telegram_bot  # noqa: F401
             import src.utils  # noqa: F401
         except ImportError as e:
-            rAlgose AssertionError(f"Import fAlgoled: {e}") from e
+            raise AssertionError(f"Import failed: {e}") from e
 
 
 class TestProjectConfiguration:

@@ -33,7 +33,7 @@ class FeeConfig:
 
     # Capital Efficiency
     STEAM_HOLD_DAYS: int = 7
-    DAlgoLY_OPPORTUNITY_COST: Decimal = Decimal("0.01")  # 1% dAlgoly target
+    DAlgoLY_OPPORTUNITY_COST: Decimal = Decimal("0.01")  # 1% daily target
 
 
 @dataclass(frozen=True)

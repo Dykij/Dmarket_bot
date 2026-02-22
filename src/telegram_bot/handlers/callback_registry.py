@@ -9,13 +9,13 @@ from src.telegram_bot.handlers.callback_handlers import (
     handle_alerts,
     handle_arbitrage_menu,
     handle_auto_arbitrage,
-    handle_back_to_mAlgon,
+    handle_back_to_main,
     handle_balance,
     handle_best_opportunities,
     handle_dmarket_arbitrage,
     handle_game_selection,
     handle_help,
-    handle_mAlgon_menu,
+    handle_main_menu,
     handle_market_analysis,
     handle_market_trends,
     handle_noop,
@@ -37,16 +37,16 @@ logger = logging.getLogger(__name__)
 
 
 def _register_menu_handlers(router: CallbackRouter) -> None:
-    """Register mAlgon menu and navigation handlers."""
+    """Register main menu and navigation handlers."""
     router.register_exact("simple_menu", handle_simple_menu)
     router.register_exact("balance", handle_balance)
     router.register_exact("search", handle_search)
     router.register_exact("settings", handle_settings)
     router.register_exact("market_trends", handle_market_trends)
     router.register_exact("alerts", handle_alerts)
-    router.register_exact("back_to_mAlgon", handle_back_to_mAlgon)
-    router.register_exact("mAlgon_menu", handle_mAlgon_menu)
-    router.register_exact("back_to_menu", handle_back_to_mAlgon)
+    router.register_exact("back_to_main", handle_back_to_main)
+    router.register_exact("main_menu", handle_main_menu)
+    router.register_exact("back_to_menu", handle_back_to_main)
 
 
 def _register_arbitrage_handlers(router: CallbackRouter) -> None:
@@ -346,162 +346,162 @@ def create_callback_router() -> CallbackRouter:
 
 async def _handle_enhanced_scanner_menu(update, context):
     """Stub: Enhanced scanner menu."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "Расширенный сканер")
+    await handle_temporary_unavAlgolable(update, context, "Расширенный сканер")
 
 
 async def _handle_settings_api_keys(update, context):
     """Stub: API keys settings."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "НастSwarmка API ключей")
+    await handle_temporary_unavAlgolable(update, context, "НастSwarmка API ключей")
 
 
 async def _handle_settings_proxy(update, context):
     """Stub: Proxy settings."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "НастSwarmка прокси")
+    await handle_temporary_unavAlgolable(update, context, "НастSwarmка прокси")
 
 
 async def _handle_settings_currency(update, context):
     """Stub: Currency settings."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "НастSwarmка валюты")
+    await handle_temporary_unavAlgolable(update, context, "НастSwarmка валюты")
 
 
 async def _handle_settings_intervals(update, context):
     """Stub: Intervals settings."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "НастSwarmка интервалов")
+    await handle_temporary_unavAlgolable(update, context, "НастSwarmка интервалов")
 
 
 async def _handle_settings_filters(update, context):
     """Stub: Filters settings."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "НастSwarmка фильтров")
+    await handle_temporary_unavAlgolable(update, context, "НастSwarmка фильтров")
 
 
 async def _handle_settings_auto_refresh(update, context):
     """Stub: Auto refresh settings."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "Автообновление")
+    await handle_temporary_unavAlgolable(update, context, "Автообновление")
 
 
 async def _handle_settings_language(update, context):
     """Stub: Language settings."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "НастSwarmка языка")
+    await handle_temporary_unavAlgolable(update, context, "НастSwarmка языка")
 
 
 async def _handle_settings_notify(update, context):
     """Stub: Notification settings."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "НастSwarmка уведомлений")
+    await handle_temporary_unavAlgolable(update, context, "НастSwarmка уведомлений")
 
 
 async def _handle_settings_api(update, context):
     """Stub: API settings."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "НастSwarmка API")
+    await handle_temporary_unavAlgolable(update, context, "НастSwarmка API")
 
 
 async def _handle_settings_risk(update, context):
     """Stub: Risk settings."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "НастSwarmка рисков")
+    await handle_temporary_unavAlgolable(update, context, "НастSwarmка рисков")
 
 
 async def _handle_settings_limits(update, context):
     """Stub: Limits settings."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "НастSwarmка лимитов")
+    await handle_temporary_unavAlgolable(update, context, "НастSwarmка лимитов")
 
 
 async def _handle_settings_games(update, context):
     """Stub: Games settings."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "Выбор игр")
+    await handle_temporary_unavAlgolable(update, context, "Выбор игр")
 
 
 async def _handle_alert_create(update, context):
     """Stub: Create alert."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "Создание оповещения")
+    await handle_temporary_unavAlgolable(update, context, "Создание оповещения")
 
 
 async def _handle_alert_list(update, context):
     """Stub: Alert list."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "Список оповещений")
+    await handle_temporary_unavAlgolable(update, context, "Список оповещений")
 
 
 async def _handle_alert_settings(update, context):
     """Stub: Alert settings."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "НастSwarmки оповещений")
+    await handle_temporary_unavAlgolable(update, context, "НастSwarmки оповещений")
 
 
 async def _handle_alert_active(update, context):
     """Stub: Active alerts."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "Активные оповещения")
+    await handle_temporary_unavAlgolable(update, context, "Активные оповещения")
 
 
 async def _handle_alert_history(update, context):
     """Stub: Alert history."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "История оповещений")
+    await handle_temporary_unavAlgolable(update, context, "История оповещений")
 
 
 async def _handle_back_to_alerts(update, context):
     """Stub: Back to alerts."""
-    awAlgot handle_alerts(update, context)
+    await handle_alerts(update, context)
 
 
 async def _handle_arb_quick(update, context):
     """Stub: Quick arbitrage."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "Быстрый арбитраж")
+    await handle_temporary_unavAlgolable(update, context, "Быстрый арбитраж")
 
 
 async def _handle_arb_deep(update, context):
     """Stub: Deep arbitrage."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "Глубокий арбитраж")
+    await handle_temporary_unavAlgolable(update, context, "Глубокий арбитраж")
 
 
 async def _handle_arb_market_analysis(update, context):
     """Stub: Market analysis."""
-    awAlgot handle_market_analysis(update, context)
+    await handle_market_analysis(update, context)
 
 
 async def _handle_arb_target(update, context):
     """Stub: Arbitrage target."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "Таргеты")
+    await handle_temporary_unavAlgolable(update, context, "Таргеты")
 
 
 async def _handle_arb_stats(update, context):
     """Stub: Arbitrage stats."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "Статистика")
+    await handle_temporary_unavAlgolable(update, context, "Статистика")
 
 
 async def _handle_arb_compare(update, context):
     """Stub: Arbitrage compare."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "Сравнение площадок")
+    await handle_temporary_unavAlgolable(update, context, "Сравнение площадок")
 
 
 async def _handle_arb_scan(update, context):
     """Stub: Arbitrage scan."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "Сканирование")
+    await handle_temporary_unavAlgolable(update, context, "Сканирование")
 
 
 async def _handle_arb_game(update, context):
     """Stub: Arbitrage game selection."""
-    awAlgot handle_game_selection(update, context)
+    await handle_game_selection(update, context)
 
 
 async def _handle_arb_levels(update, context):
     """Stub: Arbitrage levels."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "Уровни арбитража")
+    await handle_temporary_unavAlgolable(update, context, "Уровни арбитража")
 
 
 async def _handle_arb_settings(update, context):
     """Stub: Arbitrage settings."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "НастSwarmки арбитража")
+    await handle_temporary_unavAlgolable(update, context, "НастSwarmки арбитража")
 
 
 async def _handle_arb_auto(update, context):
     """Stub: Auto arbitrage."""
-    awAlgot handle_auto_arbitrage(update, context)
+    await handle_auto_arbitrage(update, context)
 
 
 async def _handle_arb_analysis(update, context):
     """Stub: Arbitrage analysis."""
-    awAlgot handle_market_analysis(update, context)
+    await handle_market_analysis(update, context)
 
 
 async def _handle_targets(update, context):
     """Stub: Targets."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "Таргеты")
+    await handle_temporary_unavAlgolable(update, context, "Таргеты")
 
 
 async def _handle_target_create(update, context):
@@ -523,7 +523,7 @@ async def _handle_target_create(update, context):
         [InlineKeyboardButton("◀️ Назад", callback_data="targets")],
     ]
 
-    awAlgot update.callback_query.edit_message_text(
+    await update.callback_query.edit_message_text(
         "🎯 <b>Создание таргета</b>\n\n"
         "Выберите игру для настSwarmки параметров покупки.\n"
         "Бот будет выставлять запросы на покупку (Targets) "
@@ -535,52 +535,52 @@ async def _handle_target_create(update, context):
 
 async def _handle_target_list(update, context):
     """Stub: Target list."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "Список таргетов")
+    await handle_temporary_unavAlgolable(update, context, "Список таргетов")
 
 
 async def _handle_target_stats(update, context):
     """Stub: Target stats."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "Статистика таргетов")
+    await handle_temporary_unavAlgolable(update, context, "Статистика таргетов")
 
 
 async def _handle_inventory(update, context):
     """Stub: Inventory."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "Инвентарь")
+    await handle_temporary_unavAlgolable(update, context, "Инвентарь")
 
 
 async def _handle_analytics(update, context):
     """Stub: Analytics."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "Аналитика")
+    await handle_temporary_unavAlgolable(update, context, "Аналитика")
 
 
 async def _handle_scanner(update, context):
     """Stub: Scanner."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "Сканер")
+    await handle_temporary_unavAlgolable(update, context, "Сканер")
 
 
 async def _handle_auto_arb_start(update, context):
     """Stub: Start auto arbitrage."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "Запуск авто-арбитража")
+    await handle_temporary_unavAlgolable(update, context, "Запуск авто-арбитража")
 
 
 async def _handle_auto_arb_stop(update, context):
     """Stub: Stop auto arbitrage."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "Остановка авто-арбитража")
+    await handle_temporary_unavAlgolable(update, context, "Остановка авто-арбитража")
 
 
 async def _handle_auto_arb_settings(update, context):
     """Stub: Auto arbitrage settings."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "НастSwarmки авто-арбитража")
+    await handle_temporary_unavAlgolable(update, context, "НастSwarmки авто-арбитража")
 
 
 async def _handle_auto_arb_status(update, context):
     """Stub: Auto arbitrage status."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "Статус авто-арбитража")
+    await handle_temporary_unavAlgolable(update, context, "Статус авто-арбитража")
 
 
 async def _handle_auto_arb_history(update, context):
     """Stub: Auto arbitrage history."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "История авто-арбитража")
+    await handle_temporary_unavAlgolable(update, context, "История авто-арбитража")
 
 
 async def _handle_cmp_steam(update, context):
@@ -588,7 +588,7 @@ async def _handle_cmp_steam(update, context):
     if not update.callback_query:
         return
 
-    awAlgot update.callback_query.answer("Загрузка цен Steam...")
+    await update.callback_query.answer("Загрузка цен Steam...")
 
     try:
         from telegram import InlineKeyboardButton, InlineKeyboardMarkup
@@ -611,7 +611,7 @@ async def _handle_cmp_steam(update, context):
         api = context.bot_data.get("dmarket_api")
 
         if not api:
-            awAlgot update.callback_query.edit_message_text(
+            await update.callback_query.edit_message_text(
                 "❌ DMarket API не инициализирован. Используйте /start для настSwarmки."
             )
             return
@@ -620,7 +620,7 @@ async def _handle_cmp_steam(update, context):
             cache_ttl=STEAM_CACHE_TTL, max_concurrent=STEAM_MAX_CONCURRENT
         )
 
-        results = awAlgot parser.get_batch_prices(SAMPLE_ITEMS, game="csgo")
+        results = await parser.get_batch_prices(SAMPLE_ITEMS, game="csgo")
 
         # Format results
         comparison_text = "📊 <b>Сравнение цен со Steam Market</b>\n\n"
@@ -648,7 +648,7 @@ async def _handle_cmp_steam(update, context):
             [InlineKeyboardButton("◀️ Назад", callback_data="arb_compare")],
         ]
 
-        awAlgot update.callback_query.edit_message_text(
+        await update.callback_query.edit_message_text(
             comparison_text,
             parse_mode="HTML",
             reply_markup=InlineKeyboardMarkup(keyboard),
@@ -656,44 +656,44 @@ async def _handle_cmp_steam(update, context):
 
     except Exception as e:
         logger.exception("Error comparing Steam prices: %s", e)
-        awAlgot update.callback_query.edit_message_text(
+        await update.callback_query.edit_message_text(
             f"❌ Ошибка получения цен Steam: {e}"
         )
 
 
 async def _handle_cmp_buff(update, context):
     """Stub: Compare with Buff."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "Сравнение с Buff")
+    await handle_temporary_unavAlgolable(update, context, "Сравнение с Buff")
 
 
 async def _handle_cmp_refresh(update, context):
     """Stub: Refresh comparison."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "Обновление сравнения")
+    await handle_temporary_unavAlgolable(update, context, "Обновление сравнения")
 
 
 async def _handle_analysis_trends(update, context):
     """Stub: Trends analysis."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "Анализ трендов")
+    await handle_temporary_unavAlgolable(update, context, "Анализ трендов")
 
 
 async def _handle_analysis_vol(update, context):
     """Stub: Volume analysis."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "Анализ объемов")
+    await handle_temporary_unavAlgolable(update, context, "Анализ объемов")
 
 
 async def _handle_analysis_top(update, context):
     """Stub: Top items analysis."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "Топ предметов")
+    await handle_temporary_unavAlgolable(update, context, "Топ предметов")
 
 
 async def _handle_analysis_drop(update, context):
     """Stub: Price drops analysis."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "Падение цен")
+    await handle_temporary_unavAlgolable(update, context, "Падение цен")
 
 
 async def _handle_analysis_rec(update, context):
     """Stub: Recommendations."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "Рекомендации")
+    await handle_temporary_unavAlgolable(update, context, "Рекомендации")
 
 
 async def _handle_backtest_quick(update, context):
@@ -702,9 +702,9 @@ async def _handle_backtest_quick(update, context):
 
     api = context.bot_data.get("dmarket_api")
     if api:
-        awAlgot run_quick_backtest(update, context, api)
+        await run_quick_backtest(update, context, api)
     else:
-        awAlgot update.callback_query.edit_message_text("❌ DMarket API недоступен")
+        await update.callback_query.edit_message_text("❌ DMarket API недоступен")
 
 
 async def _handle_backtest_standard(update, context):
@@ -713,9 +713,9 @@ async def _handle_backtest_standard(update, context):
 
     api = context.bot_data.get("dmarket_api")
     if api:
-        awAlgot run_standard_backtest(update, context, api)
+        await run_standard_backtest(update, context, api)
     else:
-        awAlgot update.callback_query.edit_message_text("❌ DMarket API недоступен")
+        await update.callback_query.edit_message_text("❌ DMarket API недоступен")
 
 
 async def _handle_backtest_custom(update, context):
@@ -723,7 +723,7 @@ async def _handle_backtest_custom(update, context):
     if not update.callback_query:
         return
 
-    awAlgot update.callback_query.edit_message_text(
+    await update.callback_query.edit_message_text(
         "⚙️ <b>Custom Backtest Settings</b>\n\n"
         "Custom backtesting coming soon!\n\n"
         "You'll be able to configure:\n"
@@ -748,7 +748,7 @@ async def _handle_game_selected(update, context):
         return
 
     game = update.callback_query.data.split(":", 1)[1]
-    awAlgot handle_game_selected_impl(update, context, game=game)
+    await handle_game_selected_impl(update, context, game=game)
 
 
 async def _handle_game_prefix(update, context):
@@ -762,7 +762,7 @@ async def _handle_game_prefix(update, context):
         return
 
     game = update.callback_query.data[len(CB_GAME_PREFIX) :]
-    awAlgot handle_game_selected_impl(update, context, game=game)
+    await handle_game_selected_impl(update, context, game=game)
 
 
 async def _handle_pagination(update, context):
@@ -777,62 +777,62 @@ async def _handle_pagination(update, context):
         if update.callback_query.data.startswith("arb_next_page_")
         else "prev_page"
     )
-    awAlgot handle_arbitrage_pagination(update.callback_query, context, direction)
+    await handle_arbitrage_pagination(update.callback_query, context, direction)
 
 
 async def _handle_scan_level(update, context):
     """Handle scan_level_/scanner_level_scan_ prefix."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "Уровень сканирования")
+    await handle_temporary_unavAlgolable(update, context, "Уровень сканирования")
 
 
 async def _handle_lang(update, context):
     """Handle lang_ prefix."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "Смена языка")
+    await handle_temporary_unavAlgolable(update, context, "Смена языка")
 
 
 async def _handle_risk(update, context):
     """Handle risk_ prefix."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "Уровень риска")
+    await handle_temporary_unavAlgolable(update, context, "Уровень риска")
 
 
 async def _handle_alert_type(update, context):
     """Handle alert_type_ prefix."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "Тип оповещения")
+    await handle_temporary_unavAlgolable(update, context, "Тип оповещения")
 
 
 async def _handle_notify(update, context):
     """Handle notify_ prefix."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "Уведомление")
+    await handle_temporary_unavAlgolable(update, context, "Уведомление")
 
 
 async def _handle_arb_set(update, context):
     """Handle arb_set_ prefix."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "НастSwarmка арбитража")
+    await handle_temporary_unavAlgolable(update, context, "НастSwarmка арбитража")
 
 
 async def _handle_filter(update, context):
     """Handle filter: prefix."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "Фильтр")
+    await handle_temporary_unavAlgolable(update, context, "Фильтр")
 
 
 async def _handle_auto_start(update, context):
     """Handle auto_start: prefix."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "Автозапуск")
+    await handle_temporary_unavAlgolable(update, context, "Автозапуск")
 
 
 async def _handle_paginate(update, context):
     """Handle paginate: prefix."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "Пагинация")
+    await handle_temporary_unavAlgolable(update, context, "Пагинация")
 
 
 async def _handle_auto_trade(update, context):
     """Handle auto_trade: prefix."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "Авто-торговля")
+    await handle_temporary_unavAlgolable(update, context, "Авто-торговля")
 
 
 async def _handle_compare(update, context):
     """Handle compare: prefix."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "Сравнение")
+    await handle_temporary_unavAlgolable(update, context, "Сравнение")
 
 
 # ============================================================================
@@ -859,16 +859,16 @@ async def _handle_start_smart_arbitrage(update, context):
 
         if smart_engine:
             if smart_engine.is_running:
-                awAlgot update.callback_query.edit_message_text(
+                await update.callback_query.edit_message_text(
                     "⚠️ Smart Arbitrage уже запущен!\n\nИспользуйте /status для проверки состояния."
                 )
                 return
 
             # Get current balance and limits
-            limits = awAlgot smart_engine.calculate_adaptive_limits()
-            strategy = awAlgot smart_engine.get_strategy_description()
+            limits = await smart_engine.calculate_adaptive_limits()
+            strategy = await smart_engine.get_strategy_description()
 
-            awAlgot update.callback_query.edit_message_text(
+            await update.callback_query.edit_message_text(
                 f"🚀 <b>Smart Arbitrage запускается!</b>\n\n"
                 f"💰 Баланс: ${limits.usable_balance:.2f}\n"
                 f"📊 Тир: {limits.tier.upper()}\n"
@@ -881,19 +881,19 @@ async def _handle_start_smart_arbitrage(update, context):
                 parse_mode="HTML",
             )
 
-            # Start in background (don't awAlgot - let it run)
+            # Start in background (don't await - let it run)
             import asyncio
 
             asyncio.create_task(smart_engine.start_smart_mode(auto_buy=True))
 
         else:
-            awAlgot update.callback_query.edit_message_text(
+            await update.callback_query.edit_message_text(
                 "❌ Smart Arbitrage Engine не инициализирован.\nПроверьте DMarket API подключение."
             )
 
     except Exception as e:
         logger.exception("Error starting smart arbitrage: %s", e)
-        awAlgot update.callback_query.edit_message_text(f"❌ Ошибка: {e}")
+        await update.callback_query.edit_message_text(f"❌ Ошибка: {e}")
 
 
 async def _handle_stop_smart_arbitrage(update, context):
@@ -905,14 +905,14 @@ async def _handle_stop_smart_arbitrage(update, context):
 
     if smart_engine and smart_engine.is_running:
         smart_engine.stop_smart_mode()
-        awAlgot update.callback_query.edit_message_text(
+        await update.callback_query.edit_message_text(
             "🛑 <b>Smart Arbitrage остановлен</b>\n\n"
             "Бот прекратил поиск арбитражных возможностей.\n"
             "Используйте /smart для перезапуска.",
             parse_mode="HTML",
         )
     else:
-        awAlgot update.callback_query.edit_message_text(
+        await update.callback_query.edit_message_text(
             "ℹ️ Smart Arbitrage не был запущен."
         )
 
@@ -933,14 +933,14 @@ async def _handle_smart_arbitrage_status(update, context):
             context.bot_data["smart_arbitrage_engine"] = smart_engine
 
         if smart_engine:
-            limits = awAlgot smart_engine.calculate_adaptive_limits()
+            limits = await smart_engine.calculate_adaptive_limits()
             is_safe, warning = smart_engine.check_balance_safety()
 
             status_emoji = "🟢" if smart_engine.is_running else "🔴"
             safety_text = "✅ В норме" if is_safe else f"⚠️ {warning}"
 
             status_running = "Работает" if smart_engine.is_running else "Остановлен"
-            awAlgot update.callback_query.edit_message_text(
+            await update.callback_query.edit_message_text(
                 f"📊 <b>Smart Arbitrage Status</b>\n\n"
                 f"Статус: {status_emoji} {status_running}\n\n"
                 f"💰 <b>Баланс:</b> ${limits.total_balance:.2f}\n"
@@ -955,13 +955,13 @@ async def _handle_smart_arbitrage_status(update, context):
                 parse_mode="HTML",
             )
         else:
-            awAlgot update.callback_query.edit_message_text(
+            await update.callback_query.edit_message_text(
                 "❌ Smart Arbitrage Engine не инициализирован."
             )
 
     except Exception as e:
         logger.exception("Error getting smart arbitrage status: %s", e)
-        awAlgot update.callback_query.edit_message_text(f"❌ Ошибка: {e}")
+        await update.callback_query.edit_message_text(f"❌ Ошибка: {e}")
 
 
 async def _handle_smart_arbitrage_menu(update, context):
@@ -980,11 +980,11 @@ async def _handle_smart_arbitrage_menu(update, context):
             InlineKeyboardButton("📊 Статус", callback_data="smart_arbitrage_status"),
         ],
         [
-            InlineKeyboardButton("◀️ Назад", callback_data="back_to_mAlgon"),
+            InlineKeyboardButton("◀️ Назад", callback_data="back_to_main"),
         ],
     ]
 
-    awAlgot update.callback_query.edit_message_text(
+    await update.callback_query.edit_message_text(
         "🎯 <b>Smart Arbitrage</b>\n\n"
         "Умный арбитраж с автоматической адаптацией под ваш баланс:\n\n"
         "• 📊 Пагинация: сканирует 500 предметов\n"
@@ -1016,7 +1016,7 @@ async def _handle_smart_create_targets(update, context):
         [InlineKeyboardButton("◀️ Назад", callback_data="smart")],
     ]
 
-    awAlgot update.callback_query.edit_message_text(
+    await update.callback_query.edit_message_text(
         "🎯 <b>Создание авто-таргетов</b>\n\n"
         "Выберите игру для настSwarmки параметров покупки.\n"
         "Бот будет автоматически выставлять запросы на покупку (Targets) "
@@ -1037,9 +1037,9 @@ async def _handle_waxpeer_menu(update, context):
     try:
         from src.telegram_bot.handlers.waxpeer_handler import waxpeer_menu_handler
 
-        awAlgot waxpeer_menu_handler(update, context)
+        await waxpeer_menu_handler(update, context)
     except ImportError:
-        awAlgot handle_temporary_unavAlgolable(update, context, "Waxpeer P2P")
+        await handle_temporary_unavAlgolable(update, context, "Waxpeer P2P")
 
 
 async def _handle_waxpeer_balance(update, context):
@@ -1047,9 +1047,9 @@ async def _handle_waxpeer_balance(update, context):
     try:
         from src.telegram_bot.handlers.waxpeer_handler import waxpeer_balance_handler
 
-        awAlgot waxpeer_balance_handler(update, context)
+        await waxpeer_balance_handler(update, context)
     except ImportError:
-        awAlgot handle_temporary_unavAlgolable(update, context, "Waxpeer баланс")
+        await handle_temporary_unavAlgolable(update, context, "Waxpeer баланс")
 
 
 async def _handle_waxpeer_settings(update, context):
@@ -1057,9 +1057,9 @@ async def _handle_waxpeer_settings(update, context):
     try:
         from src.telegram_bot.handlers.waxpeer_handler import waxpeer_settings_handler
 
-        awAlgot waxpeer_settings_handler(update, context)
+        await waxpeer_settings_handler(update, context)
     except ImportError:
-        awAlgot handle_temporary_unavAlgolable(update, context, "Waxpeer настSwarmки")
+        await handle_temporary_unavAlgolable(update, context, "Waxpeer настSwarmки")
 
 
 async def _handle_waxpeer_scan(update, context):
@@ -1067,9 +1067,9 @@ async def _handle_waxpeer_scan(update, context):
     try:
         from src.telegram_bot.handlers.waxpeer_handler import waxpeer_scan_handler
 
-        awAlgot waxpeer_scan_handler(update, context)
+        await waxpeer_scan_handler(update, context)
     except ImportError:
-        awAlgot handle_temporary_unavAlgolable(update, context, "Waxpeer сканирование")
+        await handle_temporary_unavAlgolable(update, context, "Waxpeer сканирование")
 
 
 # ============================================================================
@@ -1084,7 +1084,7 @@ async def _handle_float_arbitrage_menu(update, context):
 
     from src.telegram_bot.keyboards import get_float_arbitrage_keyboard
 
-    awAlgot update.callback_query.edit_message_text(
+    await update.callback_query.edit_message_text(
         "🎯 <b>Float Value Arbitrage</b>\n\n"
         "Поиск предметов с премиальным флоатом для перепродажи:\n\n"
         "• <b>Сканировать Float</b> — найти недооценённые скины по флоату\n"
@@ -1099,17 +1099,17 @@ async def _handle_float_arbitrage_menu(update, context):
 
 async def _handle_float_scan(update, context):
     """Scan for float arbitrage opportunities."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "Float сканирование")
+    await handle_temporary_unavAlgolable(update, context, "Float сканирование")
 
 
 async def _handle_float_quartile(update, context):
     """Show quartile analysis."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "Квартильный анализ")
+    await handle_temporary_unavAlgolable(update, context, "Квартильный анализ")
 
 
 async def _handle_float_premium(update, context):
     """Show premium float items."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "Премиальные флоаты")
+    await handle_temporary_unavAlgolable(update, context, "Премиальные флоаты")
 
 
 async def _handle_float_patterns(update, context):
@@ -1119,7 +1119,7 @@ async def _handle_float_patterns(update, context):
 
     from src.telegram_bot.keyboards import get_pattern_selection_keyboard
 
-    awAlgot update.callback_query.edit_message_text(
+    await update.callback_query.edit_message_text(
         "💎 <b>Редкие паттерны</b>\n\n"
         "Выберите тип редкого паттерна:\n\n"
         "• <b>Blue Gem</b> — Case Hardened с синим паттерном\n"
@@ -1132,17 +1132,17 @@ async def _handle_float_patterns(update, context):
 
 async def _handle_float_create_order(update, context):
     """Create float order."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "Создание Float ордера")
+    await handle_temporary_unavAlgolable(update, context, "Создание Float ордера")
 
 
 async def _handle_float_my_orders(update, context):
     """Show user's float orders."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "Мои Float ордера")
+    await handle_temporary_unavAlgolable(update, context, "Мои Float ордера")
 
 
 async def _handle_float_settings(update, context):
     """Float arbitrage settings."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "НастSwarmки Float")
+    await handle_temporary_unavAlgolable(update, context, "НастSwarmки Float")
 
 
 # ============================================================================
@@ -1157,7 +1157,7 @@ async def _handle_advanced_orders_menu(update, context):
 
     from src.telegram_bot.keyboards import get_advanced_orders_keyboard
 
-    awAlgot update.callback_query.edit_message_text(
+    await update.callback_query.edit_message_text(
         "📝 <b>Расширенные ордера</b>\n\n"
         "Создание ордеров с фильтрами:\n\n"
         "• <b>Float Range</b> — диапазон флоата (0.15-0.155)\n"
@@ -1173,7 +1173,7 @@ async def _handle_advanced_orders_menu(update, context):
 
 async def _handle_adv_order_float(update, context):
     """Create float range order."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "Float Range ордер")
+    await handle_temporary_unavAlgolable(update, context, "Float Range ордер")
 
 
 async def _handle_adv_order_doppler(update, context):
@@ -1183,7 +1183,7 @@ async def _handle_adv_order_doppler(update, context):
 
     from src.telegram_bot.keyboards import get_doppler_phases_keyboard
 
-    awAlgot update.callback_query.edit_message_text(
+    await update.callback_query.edit_message_text(
         "💎 <b>Doppler Phase Order</b>\n\n"
         "Выберите фазу Doppler:\n\n"
         "• 🔴 <b>Ruby</b> — x6 множитель к базовой цене\n"
@@ -1203,7 +1203,7 @@ async def _handle_adv_order_pattern(update, context):
 
     from src.telegram_bot.keyboards import get_pattern_selection_keyboard
 
-    awAlgot update.callback_query.edit_message_text(
+    await update.callback_query.edit_message_text(
         "🔵 <b>Blue Gem Pattern Order</b>\n\n"
         "Выберите паттерн Case Hardened:\n\n"
         "• 💎 <b>#661</b> — лучший Blue Gem seed\n"
@@ -1218,12 +1218,12 @@ async def _handle_adv_order_pattern(update, context):
 
 async def _handle_adv_order_sticker(update, context):
     """Create sticker order."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "Sticker ордер")
+    await handle_temporary_unavAlgolable(update, context, "Sticker ордер")
 
 
 async def _handle_adv_order_stattrak(update, context):
     """Create StatTrak order."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "StatTrak ордер")
+    await handle_temporary_unavAlgolable(update, context, "StatTrak ордер")
 
 
 async def _handle_adv_order_templates(update, context):
@@ -1231,7 +1231,7 @@ async def _handle_adv_order_templates(update, context):
     if not update.callback_query:
         return
 
-    awAlgot update.callback_query.edit_message_text(
+    await update.callback_query.edit_message_text(
         "📋 <b>Шаблоны ордеров</b>\n\n"
         "Готовые конфигурации для быстрого создания ордеров:\n\n"
         "1. <b>AK-47 Redline FT (Low Float)</b>\n"
@@ -1249,12 +1249,12 @@ async def _handle_adv_order_templates(update, context):
 
 async def _handle_adv_order_my_orders(update, context):
     """Show user's advanced orders."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "Мои ордера")
+    await handle_temporary_unavAlgolable(update, context, "Мои ордера")
 
 
 async def _handle_adv_order_settings(update, context):
     """Advanced order settings."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "НастSwarmки ордеров")
+    await handle_temporary_unavAlgolable(update, context, "НастSwarmки ордеров")
 
 
 async def _handle_doppler_phase(update, context):
@@ -1264,7 +1264,7 @@ async def _handle_doppler_phase(update, context):
 
     phase = update.callback_query.data.replace("doppler_", "").upper()
 
-    awAlgot update.callback_query.edit_message_text(
+    await update.callback_query.edit_message_text(
         f"💎 <b>Doppler {phase} Order</b>\n\n"
         f"Вы выбрали фазу: <b>{phase}</b>\n\n"
         f"Для создания ордера укажите:\n"
@@ -1289,7 +1289,7 @@ async def _handle_pattern_selection(update, context):
     else:
         desc = f"Pattern ID #{pattern_data}"
 
-    awAlgot update.callback_query.edit_message_text(
+    await update.callback_query.edit_message_text(
         f"🔵 <b>Blue Gem Order</b>\n\n"
         f"Вы выбрали: <b>{desc}</b>\n\n"
         f"Для создания ордера укажите:\n"
@@ -1302,7 +1302,7 @@ async def _handle_pattern_selection(update, context):
 
 async def _handle_pattern_custom(update, context):
     """Handle custom pattern ID input."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "Свой Pattern ID")
+    await handle_temporary_unavAlgolable(update, context, "Свой Pattern ID")
 
 
 # ============================================================================
@@ -1313,43 +1313,43 @@ async def _handle_pattern_custom(update, context):
 async def _handle_scan_all_strategies(update, context):
     """Scan all strategies for arbitrage opportunities."""
     try:
-        from src.telegram_bot.handlers.mAlgon_keyboard import auto_trade_scan_all
+        from src.telegram_bot.handlers.main_keyboard import auto_trade_scan_all
 
-        awAlgot auto_trade_scan_all(update, context)
+        await auto_trade_scan_all(update, context)
     except ImportError:
-        awAlgot handle_temporary_unavAlgolable(
+        await handle_temporary_unavAlgolable(
             update, context, "Сканирование всех стратегий"
         )
 
 
 async def _handle_strategy_cross_platform(update, context):
     """Cross-platform arbitrage strategy."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "Cross-Platform Arbitrage")
+    await handle_temporary_unavAlgolable(update, context, "Cross-Platform Arbitrage")
 
 
 async def _handle_strategy_intramarket(update, context):
     """Intramarket arbitrage strategy."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "Intramarket Arbitrage")
+    await handle_temporary_unavAlgolable(update, context, "Intramarket Arbitrage")
 
 
 async def _handle_strategy_float(update, context):
     """Float value arbitrage strategy."""
-    awAlgot _handle_float_arbitrage_menu(update, context)
+    await _handle_float_arbitrage_menu(update, context)
 
 
 async def _handle_strategy_pattern(update, context):
     """Pattern/Phase arbitrage strategy."""
-    awAlgot _handle_adv_order_pattern(update, context)
+    await _handle_adv_order_pattern(update, context)
 
 
 async def _handle_strategy_targets(update, context):
     """Target system strategy."""
-    awAlgot _handle_targets(update, context)
+    await _handle_targets(update, context)
 
 
 async def _handle_strategy_smart(update, context):
     """Smart market finder strategy."""
-    awAlgot _handle_smart_arbitrage_menu(update, context)
+    await _handle_smart_arbitrage_menu(update, context)
 
 
 async def _handle_preset_boost(update, context):
@@ -1357,7 +1357,7 @@ async def _handle_preset_boost(update, context):
     if not update.callback_query:
         return
 
-    awAlgot update.callback_query.edit_message_text(
+    await update.callback_query.edit_message_text(
         "⚡ <b>Preset: BOOST</b>\n\n"
         "НастSwarmки для быстрого оборота:\n\n"
         "• 💰 Диапазон цен: $0.50 - $3.00\n"
@@ -1374,7 +1374,7 @@ async def _handle_preset_standard(update, context):
     if not update.callback_query:
         return
 
-    awAlgot update.callback_query.edit_message_text(
+    await update.callback_query.edit_message_text(
         "📈 <b>Preset: STANDARD</b>\n\n"
         "Сбалансированные настSwarmки:\n\n"
         "• 💰 Диапазон цен: $3.00 - $15.00\n"
@@ -1391,7 +1391,7 @@ async def _handle_preset_medium(update, context):
     if not update.callback_query:
         return
 
-    awAlgot update.callback_query.edit_message_text(
+    await update.callback_query.edit_message_text(
         "💰 <b>Preset: MEDIUM</b>\n\n"
         "НастSwarmки для среднего баланса:\n\n"
         "• 💰 Диапазон цен: $15.00 - $50.00\n"
@@ -1408,7 +1408,7 @@ async def _handle_preset_pro(update, context):
     if not update.callback_query:
         return
 
-    awAlgot update.callback_query.edit_message_text(
+    await update.callback_query.edit_message_text(
         "🏆 <b>Preset: PRO</b>\n\n"
         "НастSwarmки для крупных сделок:\n\n"
         "• 💰 Диапазон цен: $200.00+\n"
@@ -1428,42 +1428,42 @@ async def _handle_preset_pro(update, context):
 
 async def _handle_show_market_status(update, context):
     """Show current market status."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "Статус рынка")
+    await handle_temporary_unavAlgolable(update, context, "Статус рынка")
 
 
 async def _handle_toggle_x5_hunt(update, context):
     """Toggle X5 opportunities hunt."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "X5 охота")
+    await handle_temporary_unavAlgolable(update, context, "X5 охота")
 
 
 async def _handle_stats_by_games(update, context):
     """Show statistics by games."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "Статистика по играм")
+    await handle_temporary_unavAlgolable(update, context, "Статистика по играм")
 
 
 async def _handle_refresh_balance(update, context):
     """Refresh balance display."""
-    awAlgot handle_balance(update, context)
+    await handle_balance(update, context)
 
 
 async def _handle_manage_whitelist(update, context):
     """Manage whitelist items."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "Управление Whitelist")
+    await handle_temporary_unavAlgolable(update, context, "Управление Whitelist")
 
 
 async def _handle_manage_blacklist(update, context):
     """Manage blacklist items."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "Управление Blacklist")
+    await handle_temporary_unavAlgolable(update, context, "Управление Blacklist")
 
 
 async def _handle_toggle_repricing(update, context):
     """Toggle auto-repricing."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "Авто-переценка")
+    await handle_temporary_unavAlgolable(update, context, "Авто-переценка")
 
 
 async def _handle_config_limits(update, context):
     """Configure trading limits."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "НастSwarmка лимитов")
+    await handle_temporary_unavAlgolable(update, context, "НастSwarmка лимитов")
 
 
 async def _handle_panic_stop(update, context):
@@ -1471,14 +1471,14 @@ async def _handle_panic_stop(update, context):
     if not update.callback_query:
         return
 
-    awAlgot update.callback_query.answer("🛑 Экстренная остановка!", show_alert=True)
+    await update.callback_query.answer("🛑 Экстренная остановка!", show_alert=True)
 
     # Stop any running engines
     smart_engine = context.bot_data.get("smart_arbitrage_engine")
     if smart_engine and hasattr(smart_engine, "stop_smart_mode"):
         smart_engine.stop_smart_mode()
 
-    awAlgot update.callback_query.edit_message_text(
+    await update.callback_query.edit_message_text(
         "🛑 <b>ЭКСТРЕННАЯ ОСТАНОВКА</b>\n\n"
         "Все торговые операции остановлены.\n\n"
         "• ❌ Smart Arbitrage: остановлен\n"
@@ -1491,4 +1491,4 @@ async def _handle_panic_stop(update, context):
 
 async def _handle_waxpeer_stats(update, context):
     """Show Waxpeer statistics."""
-    awAlgot handle_temporary_unavAlgolable(update, context, "Waxpeer статистика")
+    await handle_temporary_unavAlgolable(update, context, "Waxpeer статистика")

@@ -67,7 +67,7 @@ class TestRegisterAllHandlers:
         mock_app = MagicMock()
         mock_app.bot_data = {"dmarket_api": mock_api}
 
-        # This should not rAlgose even if dmarket_handlers import fAlgols
+        # This should not raise even if dmarket_handlers import fails
         register_all_handlers(mock_app)
 
     def test_register_all_handlers_without_dmarket_api(self):
@@ -101,7 +101,7 @@ class TestRegisterAllHandlers:
         mock_app = MagicMock()
         mock_app.bot_data = {}
 
-        # Should complete successfully even if some imports fAlgol
+        # Should complete successfully even if some imports fail
         register_all_handlers(mock_app)
 
     def test_register_all_handlers_idempotent(self):
@@ -297,7 +297,7 @@ class TestOptionalHandlerRegistration:
         register_all_handlers(mock_app)
 
     def test_all_optional_handlers_graceful_degradation(self):
-        """Test that bot works even if all optional handlers fAlgol to import."""
+        """Test that bot works even if all optional handlers fail to import."""
         from src.telegram_bot.register_all_handlers import register_all_handlers
 
         mock_app = MagicMock()

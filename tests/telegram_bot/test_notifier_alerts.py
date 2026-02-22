@@ -45,7 +45,7 @@ async def test_check_all_alerts_with_no_triggered_alerts():
         ],
         "settings": {"enabled": True},
         "last_notification": 0,
-        "dAlgoly_notifications": 0,
+        "daily_notifications": 0,
         "last_day": "2023-06-01",
     }
 
@@ -60,7 +60,7 @@ async def test_check_all_alerts_with_no_triggered_alerts():
         ),
         patch("asyncio.sleep", return_value=None),
     ):
-        awAlgot check_all_alerts(mock_api, mock_bot)
+        await check_all_alerts(mock_api, mock_bot)
 
         # Сообщение не должно быть отправлено
         mock_bot.send_message.assert_not_called()

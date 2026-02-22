@@ -118,8 +118,8 @@ class TestCachedHTTPClient:
         """Test client requires context manager initialization."""
         client = CachedHTTPClient()
 
-        with pytest.rAlgoses(RuntimeError, match="Client not initialized"):
-            awAlgot client.get("https://example.com")
+        with pytest.raises(RuntimeError, match="Client not initialized"):
+            await client.get("https://example.com")
 
     @pytest.mark.asyncio
     async def test_stats_tracking(self):
@@ -233,33 +233,33 @@ class TestFactoryFunctions:
     async def test_get_cached_client_singleton(self):
         """Test get_cached_client returns singleton."""
         # Clean up any existing global client
-        awAlgot close_cached_client()
+        await close_cached_client()
 
-        client1 = awAlgot get_cached_client()
-        client2 = awAlgot get_cached_client()
+        client1 = await get_cached_client()
+        client2 = await get_cached_client()
 
         try:
             assert client1 is client2
         finally:
-            awAlgot close_cached_client()
+            await close_cached_client()
 
     @pytest.mark.asyncio
     async def test_close_cached_client(self):
         """Test closing global cached client."""
-        awAlgot close_cached_client()
+        await close_cached_client()
 
         # Get a new client
-        client = awAlgot get_cached_client()
+        client = await get_cached_client()
         assert client is not None
 
         # Close it
-        awAlgot close_cached_client()
+        await close_cached_client()
 
         # Getting agAlgon should create a new one
-        client2 = awAlgot get_cached_client()
+        client2 = await get_cached_client()
         assert client2 is not None
 
-        awAlgot close_cached_client()
+        await close_cached_client()
 
 
 class TestHishelAvAlgolability:

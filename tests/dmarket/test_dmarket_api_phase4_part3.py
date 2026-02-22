@@ -60,7 +60,7 @@ class TestGetBalance:
         mock_response = {"usd": "10000", "usdAvAlgolableToWithdraw": "9500", "dmc": "0"}
 
         with patch.object(dmarket_api, "_request", return_value=mock_response):
-            balance = awAlgot dmarket_api.get_balance()
+            balance = await dmarket_api.get_balance()
 
             assert balance is not None
             assert "balance" in balance or "usd" in balance
@@ -73,7 +73,7 @@ class TestGetBalance:
         with patch.object(
             dmarket_api, "_request", return_value=mock_response
         ) as mock_req:
-            awAlgot dmarket_api.get_balance()
+            await dmarket_api.get_balance()
 
             # Проверяем что вызвали с эндпоинтом баланса
             call_args = mock_req.call_args
@@ -89,7 +89,7 @@ class TestGetBalance:
         mock_response = {"usd": "0", "usdAvAlgolableToWithdraw": "0"}
 
         with patch.object(dmarket_api, "_request", return_value=mock_response):
-            balance = awAlgot dmarket_api.get_balance()
+            balance = await dmarket_api.get_balance()
 
             assert balance is not None
 
@@ -99,7 +99,7 @@ class TestGetBalance:
         mock_response = {"usd": "1000000", "usdAvAlgolableToWithdraw": "1000000"}
 
         with patch.object(dmarket_api, "_request", return_value=mock_response):
-            balance = awAlgot dmarket_api.get_balance()
+            balance = await dmarket_api.get_balance()
 
             assert balance is not None
 
@@ -109,7 +109,7 @@ class TestGetBalance:
         mock_response = {}
 
         with patch.object(dmarket_api, "_request", return_value=mock_response):
-            balance = awAlgot dmarket_api.get_balance()
+            balance = await dmarket_api.get_balance()
 
             # Должен вернуть данные, даже если пустые
             assert balance is not None
@@ -123,9 +123,9 @@ class TestGetBalance:
             dmarket_api, "_request", return_value=mock_response
         ) as mock_req:
             # Первый вызов
-            awAlgot dmarket_api.get_balance()
+            await dmarket_api.get_balance()
             # ВтоSwarm вызов
-            awAlgot dmarket_api.get_balance()
+            await dmarket_api.get_balance()
 
             # _request должен быть вызван дважды (GET кэшируется внутри _request)
             assert mock_req.call_count >= 1
@@ -138,7 +138,7 @@ class TestGetBalance:
         with patch.object(
             dmarket_api, "_request", return_value=mock_response
         ) as mock_req:
-            awAlgot dmarket_api.get_balance()
+            await dmarket_api.get_balance()
 
             # Проверяем что первый аргумент - это "GET"
             call_args = mock_req.call_args
@@ -166,7 +166,7 @@ class TestGetMarketItems:
         }
 
         with patch.object(dmarket_api, "_request", return_value=mock_response):
-            items = awAlgot dmarket_api.get_market_items(game="csgo")
+            items = await dmarket_api.get_market_items(game="csgo")
 
             assert items is not None
 
@@ -178,7 +178,7 @@ class TestGetMarketItems:
         with patch.object(
             dmarket_api, "_request", return_value=mock_response
         ) as mock_req:
-            awAlgot dmarket_api.get_market_items(game="csgo")
+            await dmarket_api.get_market_items(game="csgo")
 
             # Проверяем что game передан в параметрах
             call_kwargs = mock_req.call_args.kwargs if mock_req.call_args else {}
@@ -196,7 +196,7 @@ class TestGetMarketItems:
         with patch.object(
             dmarket_api, "_request", return_value=mock_response
         ) as mock_req:
-            awAlgot dmarket_api.get_market_items(game="csgo", limit=50)
+            await dmarket_api.get_market_items(game="csgo", limit=50)
 
             call_kwargs = mock_req.call_args.kwargs if mock_req.call_args else {}
             if "params" in call_kwargs:
@@ -211,7 +211,7 @@ class TestGetMarketItems:
         with patch.object(
             dmarket_api, "_request", return_value=mock_response
         ) as mock_req:
-            awAlgot dmarket_api.get_market_items(
+            await dmarket_api.get_market_items(
                 game="csgo", price_from=1000, price_to=5000
             )
 
@@ -229,7 +229,7 @@ class TestGetMarketItems:
         with patch.object(
             dmarket_api, "_request", return_value=mock_response
         ) as mock_req:
-            awAlgot dmarket_api.get_market_items(game="csgo")
+            await dmarket_api.get_market_items(game="csgo")
 
             call_args = mock_req.call_args
             assert call_args is not None
@@ -241,7 +241,7 @@ class TestGetMarketItems:
         mock_response = {"objects": [], "total": {"items": 0}}
 
         with patch.object(dmarket_api, "_request", return_value=mock_response):
-            items = awAlgot dmarket_api.get_market_items(game="csgo")
+            items = await dmarket_api.get_market_items(game="csgo")
 
             assert items is not None
 
@@ -252,7 +252,7 @@ class TestGetMarketItems:
 
         with patch.object(dmarket_api, "_request", return_value=mock_response):
             for game in ["csgo", "dota2", "tf2", "rust"]:
-                items = awAlgot dmarket_api.get_market_items(game=game)
+                items = await dmarket_api.get_market_items(game=game)
                 assert items is not None
 
     @pytest.mark.asyncio()
@@ -264,8 +264,8 @@ class TestGetMarketItems:
             dmarket_api, "_request", return_value=mock_response
         ) as mock_req:
             # Два одинаковых запроса
-            awAlgot dmarket_api.get_market_items(game="csgo")
-            awAlgot dmarket_api.get_market_items(game="csgo")
+            await dmarket_api.get_market_items(game="csgo")
+            await dmarket_api.get_market_items(game="csgo")
 
             # Должен быть хотя бы один вызов
             assert mock_req.call_count >= 1
@@ -291,7 +291,7 @@ class TestGetUserInventory:
         }
 
         with patch.object(dmarket_api, "_request", return_value=mock_response):
-            inventory = awAlgot dmarket_api.get_user_inventory()
+            inventory = await dmarket_api.get_user_inventory()
 
             assert inventory is not None
 
@@ -303,7 +303,7 @@ class TestGetUserInventory:
         with patch.object(
             dmarket_api, "_request", return_value=mock_response
         ) as mock_req:
-            awAlgot dmarket_api.get_user_inventory()
+            await dmarket_api.get_user_inventory()
 
             call_args = mock_req.call_args
             assert call_args is not None
@@ -319,7 +319,7 @@ class TestGetUserInventory:
             dmarket_api, "_request", return_value=mock_response
         ) as mock_req:
             # Note: method uses game_id parameter, not game
-            awAlgot dmarket_api.get_user_inventory(game_id="a8db99ca-dc45-4c0e-9989-11ba71ed97a2")
+            await dmarket_api.get_user_inventory(game_id="a8db99ca-dc45-4c0e-9989-11ba71ed97a2")
 
             call_kwargs = mock_req.call_args.kwargs if mock_req.call_args else {}
             # Проверяем что параметры переданы
@@ -331,7 +331,7 @@ class TestGetUserInventory:
         mock_response = {"objects": [], "total": 0}
 
         with patch.object(dmarket_api, "_request", return_value=mock_response):
-            inventory = awAlgot dmarket_api.get_user_inventory()
+            inventory = await dmarket_api.get_user_inventory()
 
             assert inventory is not None
 
@@ -343,7 +343,7 @@ class TestGetUserInventory:
         with patch.object(
             dmarket_api, "_request", return_value=mock_response
         ) as mock_req:
-            awAlgot dmarket_api.get_user_inventory(limit=100)
+            await dmarket_api.get_user_inventory(limit=100)
 
             call_kwargs = mock_req.call_args.kwargs if mock_req.call_args else {}
             # Параметры должны быть переданы

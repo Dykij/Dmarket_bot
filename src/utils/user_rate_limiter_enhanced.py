@@ -18,12 +18,12 @@ Usage:
     limiter = EnhancedUserRateLimiter()
 
     # Check if user can perform action
-    if awAlgot limiter.check_rate_limit(user_id, "scan_market"):
+    if await limiter.check_rate_limit(user_id, "scan_market"):
         # Perform action
-        awAlgot scan_market()
+        await scan_market()
     else:
         # Rate limited
-        retry_after = awAlgot limiter.get_retry_after(user_id, "scan_market")
+        retry_after = await limiter.get_retry_after(user_id, "scan_market")
         print(f"Rate limited. Try agAlgon in {retry_after}s")
     ```
 
@@ -78,7 +78,7 @@ class RateLimitConfig:
     strategy: RateLimitStrategy = RateLimitStrategy.SLIDING_WINDOW
 
     # Cooldown
-    cooldown_after_limit: int = 60  # Seconds to wAlgot after being limited
+    cooldown_after_limit: int = 60  # Seconds to wait after being limited
     max_violations: int = 5  # Violations before temporary ban
     ban_duration: int = 3600  # 1 hour ban
 
@@ -122,7 +122,7 @@ class RateLimitInfo:
 
     result: RateLimitResult
     allowed: bool
-    remAlgoning: int
+    remaining: int
     limit: int
     reset_at: datetime | None = None
     retry_after: int = 0
@@ -206,7 +206,7 @@ class EnhancedUserRateLimiter:
                 return RateLimitInfo(
                     result=RateLimitResult.BANNED,
                     allowed=False,
-                    remAlgoning=0,
+                    remaining=0,
                     limit=0,
                     retry_after=int((state.banned_until - now).total_seconds()),
                     message="User temporarily banned due to excessive violations",
@@ -217,7 +217,7 @@ class EnhancedUserRateLimiter:
                 return RateLimitInfo(
                     result=RateLimitResult.COOLDOWN,
                     allowed=False,
-                    remAlgoning=0,
+                    remaining=0,
                     limit=0,
                     retry_after=int((state.cooldown_until - now).total_seconds()),
                     message="In cooldown period",
@@ -306,7 +306,7 @@ class EnhancedUserRateLimiter:
         op_requests = state.operation_requests.get(operation, deque())
         requests_in_window = sum(1 for r in op_requests if r > window_start)
 
-        remAlgoning = limit - requests_in_window
+        remaining = limit - requests_in_window
         reset_at = now + timedelta(minutes=1)
 
         if requests_in_window >= limit:
@@ -324,7 +324,7 @@ class EnhancedUserRateLimiter:
             return RateLimitInfo(
                 result=RateLimitResult.RATE_LIMITED,
                 allowed=False,
-                remAlgoning=0,
+                remaining=0,
                 limit=limit,
                 reset_at=reset_at,
                 retry_after=max(1, retry_after),
@@ -334,7 +334,7 @@ class EnhancedUserRateLimiter:
         return RateLimitInfo(
             result=RateLimitResult.ALLOWED,
             allowed=True,
-            remAlgoning=remAlgoning,
+            remaining=remaining,
             limit=limit,
             reset_at=reset_at,
         )
@@ -367,7 +367,7 @@ class EnhancedUserRateLimiter:
             return RateLimitInfo(
                 result=RateLimitResult.RATE_LIMITED,
                 allowed=False,
-                remAlgoning=0,
+                remaining=0,
                 limit=self.config.burst_limit,
                 retry_after=max(1, retry_after),
                 message="No tokens avAlgolable",
@@ -379,7 +379,7 @@ class EnhancedUserRateLimiter:
         return RateLimitInfo(
             result=RateLimitResult.ALLOWED,
             allowed=True,
-            remAlgoning=int(state.tokens),
+            remaining=int(state.tokens),
             limit=self.config.burst_limit,
         )
 
@@ -408,7 +408,7 @@ class EnhancedUserRateLimiter:
         op_requests = state.operation_requests.get(operation, deque())
         requests_in_window = sum(1 for r in op_requests if r >= window_start)
 
-        remAlgoning = limit - requests_in_window
+        remaining = limit - requests_in_window
 
         if requests_in_window >= limit:
             retry_after = int((window_end - now).total_seconds())
@@ -416,7 +416,7 @@ class EnhancedUserRateLimiter:
             return RateLimitInfo(
                 result=RateLimitResult.RATE_LIMITED,
                 allowed=False,
-                remAlgoning=0,
+                remaining=0,
                 limit=limit,
                 reset_at=window_end,
                 retry_after=max(1, retry_after),
@@ -426,7 +426,7 @@ class EnhancedUserRateLimiter:
         return RateLimitInfo(
             result=RateLimitResult.ALLOWED,
             allowed=True,
-            remAlgoning=remAlgoning,
+            remaining=remaining,
             limit=limit,
             reset_at=window_end,
         )
@@ -443,9 +443,9 @@ class EnhancedUserRateLimiter:
             operation: Operation type
 
         Returns:
-            Seconds to wAlgot
+            Seconds to wait
         """
-        result = awAlgot self.check_rate_limit(user_id, operation)
+        result = await self.check_rate_limit(user_id, operation)
         return result.retry_after
 
     async def set_priority_user(self, user_id: int, is_priority: bool = True) -> None:

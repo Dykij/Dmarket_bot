@@ -33,7 +33,7 @@ async def show_enhanced_scanner_menu(
             ),
             InlineKeyboardButton("❓ Помощь", callback_data="enhanced_scan_help"),
         ],
-        [InlineKeyboardButton("« Назад", callback_data="mAlgon_menu")],
+        [InlineKeyboardButton("« Назад", callback_data="main_menu")],
     ]
 
     reply_markup = InlineKeyboardMarkup(keyboard)
@@ -51,14 +51,14 @@ async def show_enhanced_scanner_menu(
 
     query = update.callback_query
     if query:
-        awAlgot query.answer()
-        awAlgot query.edit_message_text(
+        await query.answer()
+        await query.edit_message_text(
             text=text,
             reply_markup=reply_markup,
             parse_mode="HTML",
         )
     else:
-        awAlgot update.message.reply_text(
+        await update.message.reply_text(
             text=text,
             reply_markup=reply_markup,
             parse_mode="HTML",
@@ -71,7 +71,7 @@ async def handle_enhanced_scan(
 ) -> None:
     """Обработать запуск enhanced сканирования."""
     query = update.callback_query
-    awAlgot query.answer()
+    await query.answer()
 
     # Извлекаем игру из callback_data
     game_map = {
@@ -84,7 +84,7 @@ async def handle_enhanced_scan(
     game, game_name = game_map.get(query.data, ("csgo", "🎯 CS:GO/CS2"))
 
     # Отправляем уведомление о начале сканирования
-    awAlgot query.edit_message_text(
+    await query.edit_message_text(
         f"{game_name}\n\n"
         f"🔍 Запускаю Enhanced Arbitrage Scanner...\n"
         f"⏳ Это может занять 10-30 секунд\n\n"
@@ -101,7 +101,7 @@ async def handle_enhanced_scan(
         dmarket_api = context.bot_data.get("dmarket_api")
 
         if not dmarket_api:
-            awAlgot query.edit_message_text(
+            await query.edit_message_text(
                 "❌ Ошибка: API клиент недоступен\nПопробуйте позже или перезапустите бота.",
             )
             return
@@ -122,18 +122,18 @@ async def handle_enhanced_scan(
             "tf2": "tf2",
         }
 
-        opportunities = awAlgot scanner.find_opportunities(
+        opportunities = await scanner.find_opportunities(
             game_id=game_ids.get(game, "a8db"),
             min_price=5.0,
             max_price=100.0,
             limit=10,
         )
 
-        awAlgot scanner.close()
+        await scanner.close()
 
         # Формируем результат
         if not opportunities:
-            awAlgot query.edit_message_text(
+            await query.edit_message_text(
                 f"{game_name}\n\n"
                 f"❌ Не найдено арбитражных возможностей\n\n"
                 f"Попробуйте:\n"
@@ -201,7 +201,7 @@ async def handle_enhanced_scan(
             [InlineKeyboardButton("« Назад", callback_data="enhanced_scanner_menu")],
         ]
 
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             text=result_text,
             reply_markup=InlineKeyboardMarkup(keyboard),
             parse_mode="HTML",
@@ -209,7 +209,7 @@ async def handle_enhanced_scan(
 
     except Exception as e:
         logger.error(f"Ошибка в enhanced сканировании: {e}", exc_info=True)
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             f"❌ Ошибка при сканировании\n\n"
             f"Детали: {e!s}\n\n"
             f"Попробуйте позже или обратитесь к администратору.",
@@ -231,7 +231,7 @@ async def show_enhanced_scanner_help(
 ) -> None:
     """Показать помощь по Enhanced Scanner."""
     query = update.callback_query
-    awAlgot query.answer()
+    await query.answer()
 
     help_text = (
         "❓ <b>Enhanced Arbitrage Scanner - Помощь</b>\n\n"
@@ -267,7 +267,7 @@ async def show_enhanced_scanner_help(
         [InlineKeyboardButton("« Назад", callback_data="enhanced_scanner_menu")]
     ]
 
-    awAlgot query.edit_message_text(
+    await query.edit_message_text(
         text=help_text,
         reply_markup=InlineKeyboardMarkup(keyboard),
         parse_mode="HTML",
@@ -284,7 +284,7 @@ async def handle_enhanced_scan_settings(
 ) -> None:
     """Показать настSwarmки Enhanced Scanner."""
     query = update.callback_query
-    awAlgot query.answer()
+    await query.answer()
 
     settings_text = (
         "⚙️ <b>НастSwarmки Enhanced Scanner</b>\n\n"
@@ -302,7 +302,7 @@ async def handle_enhanced_scan_settings(
         [InlineKeyboardButton("« Назад", callback_data="enhanced_scanner_menu")]
     ]
 
-    awAlgot query.edit_message_text(
+    await query.edit_message_text(
         text=settings_text,
         reply_markup=InlineKeyboardMarkup(keyboard),
         parse_mode="HTML",

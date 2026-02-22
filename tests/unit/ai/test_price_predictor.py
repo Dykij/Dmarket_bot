@@ -29,13 +29,13 @@ class TestPricePredictor:
                 encoder_path=encoder_path,
             )
 
-            assert not predictor.is_trAlgoned
+            assert not predictor.is_trained
             assert predictor.model is None
             assert predictor.encoder is None
 
     @pytest.mark.skipif(not ML_DEPS_AVAlgoLABLE, reason="ML dependencies not installed")
-    def test_trAlgon_model_no_data_file(self) -> None:
-        """Test trAlgoning when data file doesn't exist."""
+    def test_train_model_no_data_file(self) -> None:
+        """Test training when data file doesn't exist."""
         from src.Algo.price_predictor import PricePredictor
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -48,14 +48,14 @@ class TestPricePredictor:
                 encoder_path=encoder_path,
             )
 
-            result = predictor.trAlgon_model(history_path=history_path)
+            result = predictor.train_model(history_path=history_path)
 
             assert "❌" in result
             assert "не найден" in result.lower()
 
     @pytest.mark.skipif(not ML_DEPS_AVAlgoLABLE, reason="ML dependencies not installed")
-    def test_trAlgon_model_insufficient_data(self) -> None:
-        """Test trAlgoning with too few samples."""
+    def test_train_model_insufficient_data(self) -> None:
+        """Test training with too few samples."""
         from src.Algo.price_predictor import PricePredictor
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -74,14 +74,14 @@ class TestPricePredictor:
                 encoder_path=encoder_path,
             )
 
-            result = predictor.trAlgon_model(history_path=history_path)
+            result = predictor.train_model(history_path=history_path)
 
             assert "⚠️" in result
             assert "10/100" in result
 
     @pytest.mark.skipif(not ML_DEPS_AVAlgoLABLE, reason="ML dependencies not installed")
-    def test_trAlgon_model_success(self) -> None:
-        """Test successful model trAlgoning."""
+    def test_train_model_success(self) -> None:
+        """Test successful model training."""
         from src.Algo.price_predictor import PricePredictor
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -102,15 +102,15 @@ class TestPricePredictor:
                 encoder_path=encoder_path,
             )
 
-            result = predictor.trAlgon_model(history_path=history_path)
+            result = predictor.train_model(history_path=history_path)
 
             assert "✅" in result
-            assert predictor.is_trAlgoned
+            assert predictor.is_trained
             assert predictor.model is not None
             assert os.path.exists(model_path)
 
     def test_predict_with_guard_no_model(self) -> None:
-        """Test prediction when model not trAlgoned."""
+        """Test prediction when model not trained."""
         from src.Algo.price_predictor import PricePredictor
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -126,8 +126,8 @@ class TestPricePredictor:
 
             assert result is None
 
-    def test_get_model_info_not_trAlgoned(self) -> None:
-        """Test get_model_info when not trAlgoned."""
+    def test_get_model_info_not_trained(self) -> None:
+        """Test get_model_info when not trained."""
         from src.Algo.price_predictor import PricePredictor
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -138,7 +138,7 @@ class TestPricePredictor:
 
             info = predictor.get_model_info()
 
-            assert info["is_trAlgoned"] is False
+            assert info["is_trained"] is False
             assert info["model_exists"] is False
 
     @pytest.mark.skipif(not ML_DEPS_AVAlgoLABLE, reason="ML dependencies not installed")
@@ -151,7 +151,7 @@ class TestPricePredictor:
             encoder_path = os.path.join(tmpdir, "encoder.pkl")
             history_path = os.path.join(tmpdir, "history.csv")
 
-            # Create trAlgoning data where "Expensive Item" has high prices
+            # Create training data where "Expensive Item" has high prices
             with open(history_path, "w") as f:
                 f.write("item_name,price_usd,float_value,is_stat_trak\n")
                 for i in range(150):
@@ -162,7 +162,7 @@ class TestPricePredictor:
                 model_path=model_path,
                 encoder_path=encoder_path,
             )
-            predictor.trAlgon_model(history_path=history_path)
+            predictor.train_model(history_path=history_path)
 
             # Try to predict with very low market price
             # Model should predict ~100-150, but market price is 10
@@ -180,12 +180,12 @@ class TestPricePredictorEdgeCases:
     """Edge case tests for PricePredictor."""
 
     def test_predict_unknown_item(self) -> None:
-        """Test prediction for item not in trAlgoning data."""
+        """Test prediction for item not in training data."""
         from src.Algo.price_predictor import PricePredictor
 
-        # Mock a trAlgoned predictor
+        # Mock a trained predictor
         predictor = PricePredictor()
-        predictor.is_trAlgoned = True
+        predictor.is_trained = True
 
         # Mock encoder without the item
         mock_encoder = MagicMock()
@@ -207,7 +207,7 @@ class TestPricePredictorEdgeCases:
         from src.Algo.price_predictor import PricePredictor
 
         predictor = PricePredictor()
-        predictor.is_trAlgoned = True
+        predictor.is_trained = True
 
         # Mock encoder
         mock_encoder = MagicMock()

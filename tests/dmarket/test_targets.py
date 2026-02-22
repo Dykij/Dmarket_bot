@@ -68,7 +68,7 @@ async def test_create_target_success(mock_api_client):
     manager = TargetManager(mock_api_client)
 
     # Создаем таргет
-    result = awAlgot manager.create_target(
+    result = await manager.create_target(
         game="csgo",
         title="AWP | Asiimov (Field-Tested)",
         price=50.0,
@@ -86,8 +86,8 @@ async def test_create_target_invalid_price(mock_api_client):
     manager = TargetManager(mock_api_client)
 
     # Попытка создать таргет с отрицательной ценой
-    with pytest.rAlgoses(ValueError, match="Цена должна быть больше 0"):
-        awAlgot manager.create_target(
+    with pytest.raises(ValueError, match="Цена должна быть больше 0"):
+        await manager.create_target(
             game="csgo",
             title="AK-47 | Redline",
             price=-10.0,
@@ -101,8 +101,8 @@ async def test_create_target_invalid_amount(mock_api_client):
     manager = TargetManager(mock_api_client)
 
     # Количество больше максимума
-    with pytest.rAlgoses(ValueError, match="Количество должно быть от 1 до 100"):
-        awAlgot manager.create_target(
+    with pytest.raises(ValueError, match="Количество должно быть от 1 до 100"):
+        await manager.create_target(
             game="csgo",
             title="AK-47 | Redline",
             price=10.0,
@@ -110,8 +110,8 @@ async def test_create_target_invalid_amount(mock_api_client):
         )
 
     # Количество равно 0
-    with pytest.rAlgoses(ValueError, match="Количество должно быть от 1 до 100"):
-        awAlgot manager.create_target(
+    with pytest.raises(ValueError, match="Количество должно быть от 1 до 100"):
+        await manager.create_target(
             game="csgo",
             title="AK-47 | Redline",
             price=10.0,
@@ -125,8 +125,8 @@ async def test_create_target_empty_title(mock_api_client):
     manager = TargetManager(mock_api_client)
 
     # Пустое название
-    with pytest.rAlgoses(ValueError, match="Название предмета не может быть пустым"):
-        awAlgot manager.create_target(
+    with pytest.raises(ValueError, match="Название предмета не может быть пустым"):
+        await manager.create_target(
             game="csgo",
             title="",
             price=10.0,
@@ -143,12 +143,12 @@ async def test_create_target_with_attrs(mock_api_client):
     manager = TargetManager(mock_api_client)
 
     # Создаем таргет с атрибутами
-    result = awAlgot manager.create_target(
+    result = await manager.create_target(
         game="csgo",
         title="M4A4 | Howl (Factory New)",
         price=1500.0,
         amount=1,
-        attrs={"float": 0.01, "pAlgontSeed": 123},
+        attrs={"float": 0.01, "paintSeed": 123},
     )
 
     # Проверки
@@ -181,7 +181,7 @@ async def test_get_user_targets_success(mock_api_client):
     manager = TargetManager(mock_api_client)
 
     # Получаем таргеты с обязательным параметром game
-    result = awAlgot manager.get_user_targets(game="csgo")
+    result = await manager.get_user_targets(game="csgo")
 
     # Проверки
     assert isinstance(result, list)
@@ -198,7 +198,7 @@ async def test_get_user_targets_empty(mock_api_client):
     manager = TargetManager(mock_api_client)
 
     # Получаем таргеты
-    result = awAlgot manager.get_user_targets(game="csgo")
+    result = await manager.get_user_targets(game="csgo")
 
     # Проверки
     assert result == []
@@ -223,7 +223,7 @@ async def test_get_targets_by_title(mock_api_client):
     manager = TargetManager(mock_api_client)
 
     # Получаем таргеты по названию
-    result = awAlgot manager.get_targets_by_title(
+    result = await manager.get_targets_by_title(
         game="csgo", title="AWP | Asiimov (Field-Tested)"
     )
 
@@ -246,7 +246,7 @@ async def test_delete_target_success(mock_api_client):
     manager = TargetManager(mock_api_client)
 
     # Удаляем таргет
-    result = awAlgot manager.delete_target("target123")
+    result = await manager.delete_target("target123")
 
     # Проверки
     assert result is True
@@ -262,7 +262,7 @@ async def test_delete_target_not_found(mock_api_client):
     manager = TargetManager(mock_api_client)
 
     # Удаляем таргет
-    result = awAlgot manager.delete_target("target999")
+    result = await manager.delete_target("target999")
 
     # Проверки - должен вернуть False при ошибке
     assert result is False
@@ -284,7 +284,7 @@ async def test_delete_all_targets(mock_api_client):
     manager = TargetManager(mock_api_client)
 
     # Удаляем все таргеты с dry_run=False
-    result = awAlgot manager.delete_all_targets(game="csgo", dry_run=False)
+    result = await manager.delete_all_targets(game="csgo", dry_run=False)
 
     # Проверки - результат должен быть словарём
     assert result is not None
@@ -305,7 +305,7 @@ async def test_get_target_statistics(mock_api_client):
     manager = TargetManager(mock_api_client)
 
     # Получаем статистику с обязательным параметром game
-    stats = awAlgot manager.get_target_statistics(game="csgo")
+    stats = await manager.get_target_statistics(game="csgo")
 
     # Проверки - проверяем ключи, которые действительно возвращаются
     assert "active_count" in stats
@@ -322,7 +322,7 @@ async def test_get_closed_targets(mock_api_client):
     manager = TargetManager(mock_api_client)
 
     # Получаем закрытые таргеты
-    result = awAlgot manager.get_closed_targets()
+    result = await manager.get_closed_targets()
 
     # Проверки
     assert isinstance(result, list)
@@ -340,7 +340,7 @@ async def test_create_smart_targets_basic(mock_api_client):
 
     # Тестируем, что метод существует и может быть вызван
     items = []
-    result = awAlgot manager.create_smart_targets(game="csgo", items=items)
+    result = await manager.create_smart_targets(game="csgo", items=items)
 
     # Проверки - метод возвращает список результатов
     assert isinstance(result, (dict, list))

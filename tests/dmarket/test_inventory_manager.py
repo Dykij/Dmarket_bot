@@ -49,7 +49,7 @@ class TestInventoryManager:
         assert manager.min_profit_margin == 1.02
         assert manager.total_undercuts == 0
         assert manager.total_listed == 0
-        assert manager.fAlgoled_listings == 0
+        assert manager.failed_listings == 0
 
     def test_init_with_config(self, mock_api, mock_bot):
         """Test initialization with config."""
@@ -69,14 +69,14 @@ class TestInventoryManager:
         """Test getting statistics."""
         manager.total_undercuts = 10
         manager.total_listed = 20
-        manager.fAlgoled_listings = 2
+        manager.failed_listings = 2
         manager.relist_attempts["item1"] = 3
 
         stats = manager.get_statistics()
 
         assert stats["total_undercuts"] == 10
         assert stats["total_listed"] == 20
-        assert stats["fAlgoled_listings"] == 2
+        assert stats["failed_listings"] == 2
         assert stats["active_relist_attempts"] == 1
 
     def test_relist_attempts_tracking(self, manager):
@@ -122,11 +122,11 @@ class TestInventoryManager:
 
         # Run for a very short time
         task = asyncio.create_task(manager.refresh_inventory_loop())
-        awAlgot asyncio.sleep(0.1)
+        await asyncio.sleep(0.1)
         task.cancel()
 
         try:
-            awAlgot task
+            await task
         except asyncio.CancelledError:
             pass  # Expected
 
@@ -140,7 +140,7 @@ class TestInventoryManager:
             ]
         }
 
-        price = awAlgot manager._get_market_min_price("AK-47 | Redline")
+        price = await manager._get_market_min_price("AK-47 | Redline")
 
         # Should return lowest price
         assert price == 2500
@@ -150,16 +150,16 @@ class TestInventoryManager:
         """Test getting market price with no listings."""
         mock_api.get_market_items.return_value = {"objects": []}
 
-        price = awAlgot manager._get_market_min_price("Rare Item")
+        price = await manager._get_market_min_price("Rare Item")
 
         assert price == 0
 
     @pytest.mark.asyncio
     async def test_send_telegram_message(self, manager, mock_bot):
         """Test sending Telegram notification."""
-        awAlgot manager._send_telegram_message("Test message")
+        await manager._send_telegram_message("Test message")
 
-        # Should not rAlgose error even if bot is mocked
+        # Should not raise error even if bot is mocked
 
     @pytest.mark.asyncio
     async def test_send_telegram_message_no_bot(self, mock_api):
@@ -170,5 +170,5 @@ class TestInventoryManager:
             telegram_bot=None,
         )
 
-        # Should not rAlgose
-        awAlgot manager._send_telegram_message("Test message")
+        # Should not raise
+        await manager._send_telegram_message("Test message")

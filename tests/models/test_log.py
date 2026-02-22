@@ -329,7 +329,7 @@ class TestLogModelsIntegration:
         session_id = "session_test"
         timestamp = datetime.now(UTC)
 
-        # Command that fAlgoled
+        # Command that failed
         command_log = MagicMock()
         command_log.user_id = user_id
         command_log.command = "purchase"

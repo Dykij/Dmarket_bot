@@ -11,10 +11,10 @@ Usage:
     from src.copilot_sdk.autonomous_agent import AutonomousAgent
 
     agent = AutonomousAgent()
-    awAlgot agent.initialize()
+    await agent.initialize()
 
     # Выполнить задачу автономно
-    results = awAlgot agent.execute_plan("Find and fix all type errors in src/dmarket/")
+    results = await agent.execute_plan("Find and fix all type errors in src/dmarket/")
 
     # Проверить прогресс
     status = agent.get_status()
@@ -46,7 +46,7 @@ class StepStatus(StrEnum):
     PENDING = "pending"
     IN_PROGRESS = "in_progress"
     COMPLETED = "completed"
-    FAlgoLED = "fAlgoled"
+    FAlgoLED = "failed"
     SKIPPED = "skipped"
 
 
@@ -140,11 +140,11 @@ class AutonomousAgent:
 
         self._skill_registry = SkillRegistry()
         root = Path(project_root) if project_root else Path.cwd()
-        awAlgot self._skill_registry.discover_skills(root / "src")
+        await self._skill_registry.discover_skills(root / "src")
 
         self._initialized = True
         # Core skills registration
-        awAlgot self._register_core_skills()
+        await self._register_core_skills()
 
         logger.info(
             "autonomous_agent_initialized",
@@ -190,20 +190,20 @@ class AutonomousAgent:
         logger.info("autonomous_agent_executing", goal=goal)
 
         # 1. Создать план
-        plan = awAlgot self._create_plan(goal)
+        plan = await self._create_plan(goal)
         self._current_plan = plan
 
         # 2. Выполнить шаги
         results: list[StepResult] = []
 
         for step in plan.steps:
-            result = awAlgot self._execute_step(step)
+            result = await self._execute_step(step)
             results.append(result)
 
             # 3. Проверить и скорректировать при неудаче
             if not result.success:
                 if plan.adjustments < self.max_adjustments:
-                    adjusted_plan = awAlgot self._adjust_plan(plan, step, result)
+                    adjusted_plan = await self._adjust_plan(plan, step, result)
                     if adjusted_plan:
                         plan = adjusted_plan
                         self._current_plan = plan
@@ -242,15 +242,15 @@ class AutonomousAgent:
 
         # Паттерны задач и соответствующие шаги
         if "find" in goal_lower and "fix" in goal_lower:
-            steps = awAlgot self._create_find_fix_plan(goal)
+            steps = await self._create_find_fix_plan(goal)
         elif "arbitrage" in goal_lower or "scan" in goal_lower:
-            steps = awAlgot self._create_arbitrage_plan(goal)
+            steps = await self._create_arbitrage_plan(goal)
         elif "test" in goal_lower:
-            steps = awAlgot self._create_testing_plan(goal)
+            steps = await self._create_testing_plan(goal)
         elif "refactor" in goal_lower:
-            steps = awAlgot self._create_refactoring_plan(goal)
+            steps = await self._create_refactoring_plan(goal)
         else:
-            steps = awAlgot self._create_generic_plan(goal)
+            steps = await self._create_generic_plan(goal)
 
         return Plan(goal=goal, steps=steps)
 
@@ -416,14 +416,14 @@ class AutonomousAgent:
         try:
             if self.dry_run:
                 # Симуляция
-                awAlgot asyncio.sleep(0.1)
+                await asyncio.sleep(0.1)
                 result = StepResult(
                     success=True,
                     output=f"[DRY RUN] Step '{step.id}' would execute: {step.description}",
                 )
             # Реальное выполнение
             elif step.skill and self._skill_registry:
-                output = awAlgot self._skill_registry.execute(
+                output = await self._skill_registry.execute(
                     step.skill,
                     step.action or "execute",
                     **step.args,
@@ -440,7 +440,7 @@ class AutonomousAgent:
 
         except Exception as e:
             logger.error(
-                "step_fAlgoled",
+                "step_failed",
                 step_id=step.id,
                 error=str(e),
                 exc_info=True,
@@ -455,7 +455,7 @@ class AutonomousAgent:
     async def _adjust_plan(
         self,
         plan: Plan,
-        fAlgoled_step: Step,
+        failed_step: Step,
         result: StepResult,
     ) -> Plan | None:
         """
@@ -463,7 +463,7 @@ class AutonomousAgent:
 
         Args:
             plan: Текущий план
-            fAlgoled_step: Неудавшийся шаг
+            failed_step: Неудавшийся шаг
             result: Результат неудачи
 
         Returns:
@@ -474,27 +474,27 @@ class AutonomousAgent:
         logger.info(
             "plan_adjusting",
             goal=plan.goal,
-            fAlgoled_step=fAlgoled_step.id,
+            failed_step=failed_step.id,
             adjustment=plan.adjustments,
         )
 
         # Стратегии корректировки
         # 1. Пропустить шаг и продолжить
-        if "optional" in fAlgoled_step.description.lower():
-            fAlgoled_step.status = StepStatus.SKIPPED
+        if "optional" in failed_step.description.lower():
+            failed_step.status = StepStatus.SKIPPED
             return plan
 
         # 2. Добавить подготовительный шаг
         if "permission" in str(result.error).lower():
             prep_step = Step(
-                id=f"prep_{fAlgoled_step.id}",
+                id=f"prep_{failed_step.id}",
                 description="Подготовка окружения",
                 skill=None,
                 action="prepare",
             )
-            idx = plan.steps.index(fAlgoled_step)
+            idx = plan.steps.index(failed_step)
             plan.steps.insert(idx, prep_step)
-            fAlgoled_step.status = StepStatus.PENDING
+            failed_step.status = StepStatus.PENDING
             return plan
 
         # 3. Разбить на подшаги
@@ -535,8 +535,8 @@ class AutonomousAgent:
     def _ensure_initialized(self) -> None:
         """Проверка инициализации."""
         if not self._initialized:
-            rAlgose RuntimeError(
-                "AutonomousAgent not initialized. Call `awAlgot agent.initialize()` first."
+            raise RuntimeError(
+                "AutonomousAgent not initialized. Call `await agent.initialize()` first."
             )
 
 
@@ -556,5 +556,5 @@ async def create_autonomous_agent(
         Инициализированный агент
     """
     agent = AutonomousAgent(dry_run=dry_run)
-    awAlgot agent.initialize(project_root)
+    await agent.initialize(project_root)
     return agent

@@ -22,7 +22,7 @@ def _get_orchestrator(context: ContextTypes.DEFAULT_TYPE):
 
 async def auto_trade_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
-    awAlgot query.answer()
+    await query.answer()
     is_running = context.bot_data.get("auto_trade_running", False)
     if is_running:
         keyboard = [
@@ -32,9 +32,9 @@ async def auto_trade_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -
                 )
             ],
             [InlineKeyboardButton("📊 Статус", callback_data="auto_trade_status")],
-            [InlineKeyboardButton("◀️ Главное меню", callback_data="mAlgon_menu")],
+            [InlineKeyboardButton("◀️ Главное меню", callback_data="main_menu")],
         ]
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             "🤖 🟢 <b>Статус: РАБОТАЕТ</b>",
             parse_mode="HTML",
             reply_markup=InlineKeyboardMarkup(keyboard),
@@ -47,9 +47,9 @@ async def auto_trade_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -
                     "🔎 СКАНИРОВАТЬ ВСЁ", callback_data="auto_trade_scan_all"
                 )
             ],
-            [InlineKeyboardButton("◀️ Главное меню", callback_data="mAlgon_menu")],
+            [InlineKeyboardButton("◀️ Главное меню", callback_data="main_menu")],
         ]
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             "🤖 🔴 <b>Статус: ОСТАНОВЛЕНА</b>",
             parse_mode="HTML",
             reply_markup=InlineKeyboardMarkup(keyboard),
@@ -58,9 +58,9 @@ async def auto_trade_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -
 
 async def auto_trade_run(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
-    awAlgot query.answer("Запуск...")
+    await query.answer("Запуск...")
     context.bot_data["auto_trade_running"] = True
-    awAlgot query.edit_message_text(
+    await query.edit_message_text(
         "✅ Авто-торговля запущена!",
         reply_markup=InlineKeyboardMarkup(
             [[InlineKeyboardButton("◀️ Назад", callback_data="auto_trade_start")]]
@@ -70,9 +70,9 @@ async def auto_trade_run(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
 async def auto_trade_stop(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
-    awAlgot query.answer("Остановка...")
+    await query.answer("Остановка...")
     context.bot_data["auto_trade_running"] = False
-    awAlgot query.edit_message_text(
+    await query.edit_message_text(
         "🛑 Торговля остановлена.",
         reply_markup=InlineKeyboardMarkup(
             [[InlineKeyboardButton("◀️ Назад", callback_data="auto_trade_start")]]

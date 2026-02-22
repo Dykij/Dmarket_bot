@@ -13,7 +13,7 @@ class InventoryMixin:
         self, game_id: str = "a8db99ca-dc45-4c0e-9989-11ba71ed97a2", limit: int = 100
     ) -> dict[str, Any]:
         params = {"GameID": game_id, "Limit": str(limit), "Offset": "0"}
-        return awAlgot self._request(
+        return await self._request(
             "GET", "/marketplace-api/v1/user-inventory", params=params
         )
 
@@ -30,18 +30,18 @@ class InventoryMixin:
             "Limit": str(limit),
             "Offset": str(offset),
         }
-        return awAlgot self._request(
+        return await self._request(
             "GET", "/marketplace-api/v1/user-offers", params=params
         )
 
     async def create_offers(self, offers: list[dict[str, Any]]) -> dict[str, Any]:
-        return awAlgot self._request(
+        return await self._request(
             "POST", "/marketplace-api/v1/user-offers/create", data={"Offers": offers}
         )
 
     async def remove_offers(self, offer_ids: list[str]) -> dict[str, Any]:
         data = {"Offers": [{"OfferID": oid} for oid in offer_ids]}
-        return awAlgot self._request(
+        return await self._request(
             "POST", "/marketplace-api/v1/user-offers/delete", data=data
         )
 
@@ -69,11 +69,11 @@ class InventoryMixin:
             params["PriceTo"] = str(price_to)
         if title:
             params["Title"] = title
-        return awAlgot self._request(
+        return await self._request(
             "GET", "/marketplace-api/v1/market-items", params=params
         )
 
     async def sync_inventory(self, game_id: str = "a8db") -> dict[str, Any]:
-        return awAlgot self._request(
+        return await self._request(
             "POST", "/marketplace-api/v1/user-inventory/sync", data={"GameID": game_id}
         )

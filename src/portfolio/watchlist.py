@@ -16,13 +16,13 @@ Usage:
     manager = WatchlistManager(user_id=123)
 
     # Create watchlist
-    wl = awAlgot manager.create_watchlist("High-value items")
+    wl = await manager.create_watchlist("High-value items")
 
     # Add item
-    awAlgot manager.add_item(wl.id, "AK-47 | Redline", target_price=50.0)
+    await manager.add_item(wl.id, "AK-47 | Redline", target_price=50.0)
 
     # Check prices
-    updates = awAlgot manager.check_prices(dmarket_api)
+    updates = await manager.check_prices(dmarket_api)
     ```
 
 Created: January 10, 2026

@@ -137,7 +137,7 @@ class TestOptimalArbitrageStrategy:  # noqa: PLR0904
         assert strategy.settings is not None
         assert strategy.fees is not None
         assert strategy.stats["total_scans"] == 0
-        assert strategy.dAlgoly_trades == 0
+        assert strategy.daily_trades == 0
 
     def test_calculate_net_profit(self, strategy):
         """Test net profit calculation."""
@@ -441,21 +441,21 @@ class TestOptimalArbitrageStrategy:  # noqa: PLR0904
 
         strategy.record_trade(opp)
 
-        assert strategy.dAlgoly_trades == 1
-        assert strategy.dAlgoly_spend == 50.0
+        assert strategy.daily_trades == 1
+        assert strategy.daily_spend == 50.0
         assert strategy.stats["trades_executed"] == 1
         assert strategy.stats["total_profit"] == 6.4
         assert len(strategy.trade_history) == 1
 
-    def test_reset_dAlgoly_limits(self, strategy):
-        """Test resetting dAlgoly limits."""
-        strategy.dAlgoly_trades = 50
-        strategy.dAlgoly_spend = 500.0
+    def test_reset_daily_limits(self, strategy):
+        """Test resetting daily limits."""
+        strategy.daily_trades = 50
+        strategy.daily_spend = 500.0
 
-        strategy.reset_dAlgoly_limits()
+        strategy.reset_daily_limits()
 
-        assert strategy.dAlgoly_trades == 0
-        assert strategy.dAlgoly_spend == 0.0
+        assert strategy.daily_trades == 0
+        assert strategy.daily_spend == 0.0
 
     def test_get_statistics(self, strategy):
         """Test getting statistics."""
@@ -463,8 +463,8 @@ class TestOptimalArbitrageStrategy:  # noqa: PLR0904
         assert "total_scans" in stats
         assert "opportunities_found" in stats
         assert "trades_executed" in stats
-        assert "dAlgoly_trades" in stats
-        assert "dAlgoly_spend" in stats
+        assert "daily_trades" in stats
+        assert "daily_spend" in stats
 
     def test_analyze_item_valid(self, strategy):
         """Test analyzing a valid item."""
@@ -474,7 +474,7 @@ class TestOptimalArbitrageStrategy:  # noqa: PLR0904
             "gameId": "csgo",
             "price": {"USD": "5000"},  # $50 in cents
             "floatValue": 0.15,
-            "extra": {"pAlgontSeed": 123},
+            "extra": {"paintSeed": 123},
             "salesHistory": [1, 2, 3, 4, 5],
         }
         sell_price = 60.0
@@ -545,7 +545,7 @@ class TestStrategyPresets:
         strategy = create_strategy("scalper")
         assert strategy.settings.min_roi_percent == 5.0
         assert strategy.settings.max_price == 20.0
-        assert strategy.settings.max_dAlgoly_trades == 200
+        assert strategy.settings.max_daily_trades == 200
 
     def test_create_unknown_preset_fallback(self):
         """Test creating strategy with unknown preset falls back to balanced."""
@@ -891,7 +891,7 @@ class TestAnalyzeItemEdgeCases:
         strategy = OptimalArbitrageStrategy()
         # Item with missing required data that will cause exception
         item = {
-            # Missing 'price' key which will rAlgose KeyError/TypeError
+            # Missing 'price' key which will raise KeyError/TypeError
         }
         result = strategy.analyze_item(item, "dmarket", "waxpeer", 100.0)
         assert result is None
@@ -922,14 +922,14 @@ class TestAnalyzeItemEdgeCases:
 
 
 class TestDAlgolyLimitsFiltering:
-    """Tests for dAlgoly limits in filter_opportunity."""
+    """Tests for daily limits in filter_opportunity."""
 
-    def test_filter_rejects_when_dAlgoly_trades_exceeded(self):
-        """Test filter rejects when dAlgoly trade limit exceeded."""
-        settings = StrategySettings(max_dAlgoly_trades=10)
+    def test_filter_rejects_when_daily_trades_exceeded(self):
+        """Test filter rejects when daily trade limit exceeded."""
+        settings = StrategySettings(max_daily_trades=10)
         strategy = OptimalArbitrageStrategy(settings=settings)
-        # Simulate having reached dAlgoly trades limit
-        strategy.dAlgoly_trades = 10
+        # Simulate having reached daily trades limit
+        strategy.daily_trades = 10
 
         opp = ArbitrageOpportunity(
             item_id="test",
@@ -949,14 +949,14 @@ class TestDAlgolyLimitsFiltering:
         )
         is_valid, reason = strategy.filter_opportunity(opp)
         assert is_valid is False
-        assert "dAlgoly trades limit" in reason.lower()
+        assert "daily trades limit" in reason.lower()
 
-    def test_filter_rejects_when_dAlgoly_spend_exceeded(self):
-        """Test filter rejects when dAlgoly spend limit would be exceeded."""
-        settings = StrategySettings(max_dAlgoly_spend=100.0)
+    def test_filter_rejects_when_daily_spend_exceeded(self):
+        """Test filter rejects when daily spend limit would be exceeded."""
+        settings = StrategySettings(max_daily_spend=100.0)
         strategy = OptimalArbitrageStrategy(settings=settings)
-        # Simulate having spent most of dAlgoly budget
-        strategy.dAlgoly_spend = 90.0
+        # Simulate having spent most of daily budget
+        strategy.daily_spend = 90.0
 
         opp = ArbitrageOpportunity(
             item_id="test",
@@ -976,7 +976,7 @@ class TestDAlgolyLimitsFiltering:
         )
         is_valid, reason = strategy.filter_opportunity(opp)
         assert is_valid is False
-        assert "dAlgoly spend limit" in reason.lower()
+        assert "daily spend limit" in reason.lower()
 
 
 class TestFindBestOpportunitiesLogging:

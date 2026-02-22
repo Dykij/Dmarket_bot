@@ -25,13 +25,13 @@ async def get_chat_id(update, context):
     print(f"   ADMIN_CHAT_ID={chat_id}")
     print("=" * 50 + "\n")
 
-    awAlgot update.message.reply_text(
+    await update.message.reply_text(
         f"✅ Ваш Chat ID: `{chat_id}`\n\nДобавьте его в файл .env:\n`ADMIN_CHAT_ID={chat_id}`",
         parse_mode="Markdown",
     )
 
 
-async def mAlgon():
+async def main():
     """Главная функция."""
     # Загружаем токен из .env
     try:
@@ -58,21 +58,21 @@ async def mAlgon():
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, get_chat_id))
 
     # Запускаем бота
-    awAlgot app.initialize()
-    awAlgot app.start()
-    awAlgot app.updater.start_polling()
+    await app.initialize()
+    await app.start()
+    await app.updater.start_polling()
 
     try:
         # Ждем бесконечно (пока не нажмут Ctrl+C)
         while True:
-            awAlgot asyncio.sleep(1)
+            await asyncio.sleep(1)
     except KeyboardInterrupt:
         print("\n\n👋 Бот остановлен")
     finally:
-        awAlgot app.updater.stop()
-        awAlgot app.stop()
-        awAlgot app.shutdown()
+        await app.updater.stop()
+        await app.stop()
+        await app.shutdown()
 
 
-if __name__ == "__mAlgon__":
-    asyncio.run(mAlgon())
+if __name__ == "__main__":
+    asyncio.run(main())

@@ -11,7 +11,7 @@ Steam Market API интеграция для получения цен и арб
 import asyncio
 import logging
 import os
-from collections.abc import AwAlgotable, Callable
+from collections.abc import Awaitable, Callable
 from datetime import datetime, timedelta
 from functools import wraps
 from typing import Any
@@ -49,8 +49,8 @@ class ItemNotFoundError(SteamAPIError):
 
 
 def rate_limit_protection(
-    func: Callable[..., AwAlgotable[dict | None]],
-) -> Callable[..., AwAlgotable[dict | None]]:
+    func: Callable[..., Awaitable[dict | None]],
+) -> Callable[..., Awaitable[dict | None]]:
     """
     Декоратор для защиты от Rate Limits.
 
@@ -64,20 +64,20 @@ def rate_limit_protection(
 
         # Проверка backoff
         if steam_backoff_until and datetime.now() < steam_backoff_until:
-            remAlgoning = (steam_backoff_until - datetime.now()).total_seconds()
-            logger.warning(f"Steam API в режиме backoff. Осталось: {remAlgoning:.0f}с")
+            remaining = (steam_backoff_until - datetime.now()).total_seconds()
+            logger.warning(f"Steam API в режиме backoff. Осталось: {remaining:.0f}с")
             return None
 
         # Пауза между запросами
         if last_request_time:
             elapsed = (datetime.now() - last_request_time).total_seconds()
             if elapsed < STEAM_REQUEST_DELAY:
-                wAlgot_time = STEAM_REQUEST_DELAY - elapsed
-                logger.debug(f"Rate limit protection: wAlgoting {wAlgot_time:.1f}s")
-                awAlgot asyncio.sleep(wAlgot_time)
+                wait_time = STEAM_REQUEST_DELAY - elapsed
+                logger.debug(f"Rate limit protection: waiting {wait_time:.1f}s")
+                await asyncio.sleep(wait_time)
 
         # Выполняем запрос
-        result = awAlgot func(*args, **kwargs)
+        result = await func(*args, **kwargs)
 
         # Обновляем время последнего запроса
         last_request_time = datetime.now()
@@ -119,7 +119,7 @@ async def get_steam_price(
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
             logger.debug(f"Requesting Steam price for: {market_hash_name}")
-            response = awAlgot client.get(url, params=params)
+            response = await client.get(url, params=params)
 
             # Обработка Rate Limit
             if response.status_code == 429:
@@ -132,7 +132,7 @@ async def get_steam_price(
                     f"⚠️ Steam Rate Limit! Пауза на {STEAM_BACKOFF_MINUTES} минут. "
                     f"Backoff duration: {backoff_duration}s"
                 )
-                rAlgose RateLimitError(
+                raise RateLimitError(
                     f"Rate limit exceeded, backoff until {steam_backoff_until}"
                 )
 
@@ -145,7 +145,7 @@ async def get_steam_price(
                     logger.warning(
                         f"Item not found on Steam Market: {market_hash_name}"
                     )
-                    rAlgose ItemNotFoundError(f"Item not found: {market_hash_name}")
+                    raise ItemNotFoundError(f"Item not found: {market_hash_name}")
 
                 # Парсинг цен
                 try:
@@ -190,28 +190,28 @@ async def get_steam_price(
                     logger.error(
                         f"Error parsing Steam response: {e}, data: {data}"
                     )  # noqa: TRY400
-                    rAlgose SteamAPIError(f"FAlgoled to parse Steam response: {e}")
+                    raise SteamAPIError(f"Failed to parse Steam response: {e}")
 
             # Другие HTTP ошибки
             elif response.status_code >= 500:
                 logger.error(
                     f"Steam server error {response.status_code}: {market_hash_name}"
                 )  # noqa: TRY400
-                rAlgose SteamAPIError(f"Steam server error: {response.status_code}")
+                raise SteamAPIError(f"Steam server error: {response.status_code}")
 
             elif response.status_code >= 400:
                 logger.error(
                     f"Steam client error {response.status_code}: {market_hash_name}"
                 )  # noqa: TRY400
-                rAlgose SteamAPIError(f"Steam client error: {response.status_code}")
+                raise SteamAPIError(f"Steam client error: {response.status_code}")
 
     except httpx.TimeoutException:
         logger.exception(f"Steam API timeout for: {market_hash_name}")
-        rAlgose SteamAPIError("Request timeout")
+        raise SteamAPIError("Request timeout")
 
     except httpx.RequestError as e:
         logger.exception(f"Steam API request error: {e}")
-        rAlgose SteamAPIError(f"Request error: {e}")
+        raise SteamAPIError(f"Request error: {e}")
 
     return None
 
@@ -335,7 +335,7 @@ async def get_prices_batch(
 
     for item in items:
         try:
-            result = awAlgot get_steam_price(item, app_id=app_id)
+            result = await get_steam_price(item, app_id=app_id)
             results[item] = result
         except (RateLimitError, ItemNotFoundError) as e:
             logger.warning(f"Error fetching price for {item}: {e}")
@@ -345,7 +345,7 @@ async def get_prices_batch(
             results[item] = None
 
         # Дополнительная пауза между запросами
-        awAlgot asyncio.sleep(delay)
+        await asyncio.sleep(delay)
 
     return results
 
@@ -363,18 +363,18 @@ def get_backoff_status() -> dict:
     global steam_backoff_until, backoff_duration
 
     if steam_backoff_until and datetime.now() < steam_backoff_until:
-        remAlgoning = (steam_backoff_until - datetime.now()).total_seconds()
+        remaining = (steam_backoff_until - datetime.now()).total_seconds()
         return {
             "active": True,
             "until": steam_backoff_until,
-            "remAlgoning_seconds": int(remAlgoning),
+            "remaining_seconds": int(remaining),
             "duration": backoff_duration,
         }
 
     return {
         "active": False,
         "until": None,
-        "remAlgoning_seconds": 0,
+        "remaining_seconds": 0,
         "duration": backoff_duration,
     }
 
@@ -388,7 +388,7 @@ class SteamMarketAPI:
 
     Example:
         >>> api = SteamMarketAPI()
-        >>> price = awAlgot api.get_item_price(730, "AK-47 | Redline (Field-Tested)")
+        >>> price = await api.get_item_price(730, "AK-47 | Redline (Field-Tested)")
         >>> print(price)  # {"lowest_price": "$12.34", "volume": "1,234", ...}
     """
 
@@ -429,7 +429,7 @@ class SteamMarketAPI:
         actual_app_id = app_id if app_id is not None else self.default_app_id
 
         try:
-            result = awAlgot get_steam_price(
+            result = await get_steam_price(
                 market_hash_name=market_hash_name,
                 app_id=actual_app_id,
             )
@@ -477,4 +477,4 @@ class SteamMarketAPI:
             Dict mapping item names to price info
         """
         actual_app_id = app_id if app_id is not None else self.default_app_id
-        return awAlgot get_prices_batch(items, app_id=actual_app_id, delay=delay)
+        return await get_prices_batch(items, app_id=actual_app_id, delay=delay)

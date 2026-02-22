@@ -35,8 +35,8 @@ with patch.dict(
 class TestMCPAvAlgolability:
     """Tests for MCP avAlgolability check."""
 
-    def test_mcp_not_installed_rAlgoses_error(self) -> None:
-        """Test that missing MCP rAlgoses RuntimeError."""
+    def test_mcp_not_installed_raises_error(self) -> None:
+        """Test that missing MCP raises RuntimeError."""
         with patch.dict(
             "sys.modules",
             {
@@ -59,7 +59,7 @@ class TestMCPAvAlgolability:
 
             assert isinstance(MCP_AVAlgoLABLE, bool)
         except ImportError:
-            # If import fAlgols due to missing dependencies, test passes
+            # If import fails due to missing dependencies, test passes
             # as the module structure is correct
             pass
 
@@ -110,10 +110,10 @@ class TestGetBalance:
 
         # Create a simple function that mimics _get_balance
         async def get_balance(api_client: AsyncMock) -> dict:
-            balance = awAlgot api_client.get_balance()
+            balance = await api_client.get_balance()
             return {"success": True, "balance": balance}
 
-        result = awAlgot get_balance(mock_client)
+        result = await get_balance(mock_client)
 
         assert result["success"] is True
         assert result["balance"]["usd"] == "10000"
@@ -127,12 +127,12 @@ class TestGetBalance:
 
         async def get_balance(api_client: AsyncMock) -> dict:
             try:
-                balance = awAlgot api_client.get_balance()
+                balance = await api_client.get_balance()
                 return {"success": True, "balance": balance}
             except Exception as e:
                 return {"success": False, "error": str(e)}
 
-        result = awAlgot get_balance(mock_client)
+        result = await get_balance(mock_client)
 
         assert result["success"] is False
         assert "API Error" in result["error"]
@@ -166,7 +166,7 @@ class TestGetMarketItems:
             price_from: int | None = None,
             price_to: int | None = None,
         ) -> dict:
-            items = awAlgot api_client.get_market_items(
+            items = await api_client.get_market_items(
                 game=game,
                 limit=limit,
                 price_from=price_from,
@@ -179,7 +179,7 @@ class TestGetMarketItems:
                 "items": items.get("objects", [])[:limit],
             }
 
-        result = awAlgot get_market_items(mock_client, "csgo", limit=10)
+        result = await get_market_items(mock_client, "csgo", limit=10)
 
         assert result["success"] is True
         assert result["game"] == "csgo"
@@ -194,7 +194,7 @@ class TestGetMarketItems:
             return_value={"objects": [{"title": "Item", "price": {"USD": "1500"}}]}
         )
 
-        awAlgot mock_client.get_market_items(
+        await mock_client.get_market_items(
             game="csgo", limit=10, price_from=100, price_to=2000
         )
 
@@ -209,7 +209,7 @@ class TestGetMarketItems:
         mock_client.get_market_items = AsyncMock(return_value={"objects": []})
 
         async def get_market_items(api_client: AsyncMock, game: str) -> dict:
-            items = awAlgot api_client.get_market_items(game=game)
+            items = await api_client.get_market_items(game=game)
             return {
                 "success": True,
                 "game": game,
@@ -217,7 +217,7 @@ class TestGetMarketItems:
                 "items": items.get("objects", []),
             }
 
-        result = awAlgot get_market_items(mock_client, "csgo")
+        result = await get_market_items(mock_client, "csgo")
 
         assert result["success"] is True
         assert result["count"] == 0
@@ -250,7 +250,7 @@ class TestScanArbitrage:
             level: str = "standard",
             min_profit: float = 0.5,
         ) -> dict:
-            opportunities = awAlgot scanner.scan_level(level=level, game=game)
+            opportunities = await scanner.scan_level(level=level, game=game)
             filtered = [
                 opp for opp in opportunities if opp.get("profit", 0) >= min_profit
             ]
@@ -263,7 +263,7 @@ class TestScanArbitrage:
                 "opportunities": filtered[:20],
             }
 
-        result = awAlgot scan_arbitrage(mock_scanner, "csgo", min_profit=0.5)
+        result = await scan_arbitrage(mock_scanner, "csgo", min_profit=0.5)
 
         assert result["success"] is True
         assert result["game"] == "csgo"
@@ -276,7 +276,7 @@ class TestScanArbitrage:
         mock_scanner.scan_level = AsyncMock(return_value=[])
 
         async def scan_arbitrage(scanner: AsyncMock, game: str) -> dict:
-            opportunities = awAlgot scanner.scan_level(level="standard", game=game)
+            opportunities = await scanner.scan_level(level="standard", game=game)
             return {
                 "success": True,
                 "game": game,
@@ -284,7 +284,7 @@ class TestScanArbitrage:
                 "opportunities": opportunities,
             }
 
-        result = awAlgot scan_arbitrage(mock_scanner, "csgo")
+        result = await scan_arbitrage(mock_scanner, "csgo")
 
         assert result["success"] is True
         assert result["count"] == 0
@@ -301,7 +301,7 @@ class TestScanArbitrage:
         async def scan_arbitrage(
             scanner: AsyncMock, game: str, min_profit: float = 0.5
         ) -> dict:
-            opportunities = awAlgot scanner.scan_level(level="standard", game=game)
+            opportunities = await scanner.scan_level(level="standard", game=game)
             filtered = [
                 opp for opp in opportunities if opp.get("profit", 0) >= min_profit
             ]
@@ -311,23 +311,23 @@ class TestScanArbitrage:
                 "opportunities": filtered[:20],  # Limit to 20
             }
 
-        result = awAlgot scan_arbitrage(mock_scanner, "csgo")
+        result = await scan_arbitrage(mock_scanner, "csgo")
 
         assert result["count"] == 30
         assert len(result["opportunities"]) == 20
 
 
 # =============================================================================
-# Tests for _get_item_detAlgols method
+# Tests for _get_item_details method
 # =============================================================================
 
 
-class TestGetItemDetAlgols:
-    """Tests for _get_item_detAlgols method."""
+class TestGetItemDetails:
+    """Tests for _get_item_details method."""
 
     @pytest.mark.asyncio()
-    async def test_get_item_detAlgols_success(self) -> None:
-        """Test successful item detAlgols retrieval."""
+    async def test_get_item_details_success(self) -> None:
+        """Test successful item details retrieval."""
         mock_client = AsyncMock()
         mock_client.get_item_by_id = AsyncMock(
             return_value={
@@ -337,29 +337,29 @@ class TestGetItemDetAlgols:
             }
         )
 
-        async def get_item_detAlgols(api_client: AsyncMock, item_id: str) -> dict:
-            detAlgols = awAlgot api_client.get_item_by_id(item_id)
-            return {"success": True, "item": detAlgols}
+        async def get_item_details(api_client: AsyncMock, item_id: str) -> dict:
+            details = await api_client.get_item_by_id(item_id)
+            return {"success": True, "item": details}
 
-        result = awAlgot get_item_detAlgols(mock_client, "item_123")
+        result = await get_item_details(mock_client, "item_123")
 
         assert result["success"] is True
         assert result["item"]["title"] == "AK-47 | Redline"
 
     @pytest.mark.asyncio()
-    async def test_get_item_detAlgols_not_found(self) -> None:
-        """Test item detAlgols when item not found."""
+    async def test_get_item_details_not_found(self) -> None:
+        """Test item details when item not found."""
         mock_client = AsyncMock()
         mock_client.get_item_by_id = AsyncMock(side_effect=Exception("Item not found"))
 
-        async def get_item_detAlgols(api_client: AsyncMock, item_id: str) -> dict:
+        async def get_item_details(api_client: AsyncMock, item_id: str) -> dict:
             try:
-                detAlgols = awAlgot api_client.get_item_by_id(item_id)
-                return {"success": True, "item": detAlgols}
+                details = await api_client.get_item_by_id(item_id)
+                return {"success": True, "item": details}
             except Exception as e:
                 return {"success": False, "error": str(e)}
 
-        result = awAlgot get_item_detAlgols(mock_client, "nonexistent")
+        result = await get_item_details(mock_client, "nonexistent")
 
         assert result["success"] is False
         assert "Item not found" in result["error"]
@@ -388,12 +388,12 @@ class TestCreateTarget:
             price: float,
             amount: int = 1,
         ) -> dict:
-            result = awAlgot target_manager.create_target(
+            result = await target_manager.create_target(
                 game=game, title=title, price=price, amount=amount
             )
             return {"success": True, "target": result}
 
-        result = awAlgot create_target(
+        result = await create_target(
             mock_target_manager, "csgo", "AK-47 | Redline", 15.50
         )
 
@@ -415,12 +415,12 @@ class TestCreateTarget:
             price: float,
             amount: int = 1,
         ) -> dict:
-            result = awAlgot target_manager.create_target(
+            result = await target_manager.create_target(
                 game=game, title=title, price=price, amount=amount
             )
             return {"success": True, "target": result}
 
-        result = awAlgot create_target(
+        result = await create_target(
             mock_target_manager, "csgo", "AK-47", 10.0, amount=5
         )
 
@@ -447,10 +447,10 @@ class TestGetTargets:
         )
 
         async def get_targets(target_manager: AsyncMock) -> dict:
-            targets = awAlgot target_manager.get_all_targets()
+            targets = await target_manager.get_all_targets()
             return {"success": True, "count": len(targets), "targets": targets}
 
-        result = awAlgot get_targets(mock_target_manager)
+        result = await get_targets(mock_target_manager)
 
         assert result["success"] is True
         assert result["count"] == 2
@@ -463,10 +463,10 @@ class TestGetTargets:
         mock_target_manager.get_all_targets = AsyncMock(return_value=[])
 
         async def get_targets(target_manager: AsyncMock) -> dict:
-            targets = awAlgot target_manager.get_all_targets()
+            targets = await target_manager.get_all_targets()
             return {"success": True, "count": len(targets), "targets": targets}
 
-        result = awAlgot get_targets(mock_target_manager)
+        result = await get_targets(mock_target_manager)
 
         assert result["success"] is True
         assert result["count"] == 0
@@ -527,7 +527,7 @@ class TestErrorHandling:
                 return {"error": f"Unknown tool: {name}"}
             return {"success": True}
 
-        result = awAlgot call_tool("unknown_tool")
+        result = await call_tool("unknown_tool")
 
         assert "error" in result
         assert "Unknown tool" in result["error"]
@@ -542,12 +542,12 @@ class TestErrorHandling:
 
         async def get_balance_with_error_handling(api_client: AsyncMock) -> dict:
             try:
-                balance = awAlgot api_client.get_balance()
+                balance = await api_client.get_balance()
                 return {"success": True, "balance": balance}
             except Exception as e:
                 return {"error": str(e), "tool": "get_balance"}
 
-        result = awAlgot get_balance_with_error_handling(mock_client)
+        result = await get_balance_with_error_handling(mock_client)
 
         assert "error" in result
         assert "Network error" in result["error"]
@@ -612,7 +612,7 @@ class TestIntegrationScenarios:
         mock_api = AsyncMock()
         mock_api.get_balance = AsyncMock(return_value={"usd": "10000"})
 
-        balance_result = awAlgot mock_api.get_balance()
+        balance_result = await mock_api.get_balance()
         assert balance_result["usd"] == "10000"
 
         # 2. Scan for opportunities (mocked)
@@ -630,7 +630,7 @@ class TestIntegrationScenarios:
         )
 
         # Create a target
-        result = awAlgot mock_target_manager.create_target(
+        result = await mock_target_manager.create_target(
             game="csgo",
             title="AK-47 | Redline",
             price=15.50,

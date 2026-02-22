@@ -39,10 +39,10 @@ async def analyze_target_competition(
     try:
         # Получаем существующие таргеты для предмета
         game_id = GAME_IDS.get(game.lower(), game)
-        existing_targets = awAlgot api.get_targets_by_title(game=game_id, title=title)
+        existing_targets = await api.get_targets_by_title(game=game_id, title=title)
 
         # Получаем агрегированные данные о ценах
-        aggregated = awAlgot api.get_aggregated_prices_bulk(
+        aggregated = await api.get_aggregated_prices_bulk(
             game=game,
             titles=[title],
             limit=1,
@@ -146,7 +146,7 @@ async def assess_competition(
 
     try:
         # Получаем данные о конкуренции через API
-        competition = awAlgot api.get_buy_orders_competition(
+        competition = await api.get_buy_orders_competition(
             game_id=game_id,
             title=title,
             price_threshold=price_threshold,
@@ -250,7 +250,7 @@ async def filter_low_competition_items(
             continue
 
         # Оцениваем конкуренцию для каждого предмета
-        competition = awAlgot assess_competition(
+        competition = await assess_competition(
             api=api,
             game=game,
             title=title,
@@ -271,7 +271,7 @@ async def filter_low_competition_items(
 
         # Задержка для rate limiting
         if request_delay > 0:
-            awAlgot asyncio.sleep(request_delay)
+            await asyncio.sleep(request_delay)
 
     logger.info(
         f"Фильтрация завершена: {len(filtered_items)}/{len(items)} предметов с низкой конкуренцией"

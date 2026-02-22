@@ -36,7 +36,7 @@ class TestLockInfo:
 
     def test_is_locked(self):
         """Тест is_locked property."""
-        info = LockInfo(status=LockStatus.LOCKED, days_remAlgoning=5)
+        info = LockInfo(status=LockStatus.LOCKED, days_remaining=5)
         assert info.is_avAlgolable is False
         assert info.is_locked is True
 
@@ -45,11 +45,11 @@ class TestLockInfo:
         unlock_date = datetime.now() + timedelta(days=3)
         info = LockInfo(
             status=LockStatus.LOCKED,
-            days_remAlgoning=3,
+            days_remaining=3,
             unlock_date=unlock_date,
         )
         assert info.unlock_date is not None
-        assert info.days_remAlgoning == 3
+        assert info.days_remaining == 3
 
 
 class TestLockFilterConfig:
@@ -103,13 +103,13 @@ class TestItemWithLock:
             price=50.0,
             lock_info=LockInfo(
                 status=LockStatus.LOCKED,
-                days_remAlgoning=5,
+                days_remaining=5,
                 calculated_discount=4.5,
             ),
         )
 
         assert item.lock_info.is_locked is True
-        assert item.lock_info.days_remAlgoning == 5
+        assert item.lock_info.days_remaining == 5
 
 
 class TestLockStatusFilter:
@@ -155,7 +155,7 @@ class TestLockStatusFilter:
         """Тест применения дисконта к заблокированному предмету."""
         lock_info = LockInfo(
             status=LockStatus.LOCKED,
-            days_remAlgoning=5,
+            days_remaining=5,
             calculated_discount=4.5,
         )
 
@@ -188,7 +188,7 @@ class TestLockStatusFilter:
         """Тест парсинга доступного предмета."""
         item_data = {
             "lockStatus": 0,
-            "lockDaysRemAlgoning": 0,
+            "lockDaysRemaining": 0,
         }
 
         lock_info = filter.parse_lock_info(item_data)
@@ -200,13 +200,13 @@ class TestLockStatusFilter:
         """Тест парсинга заблокированного предмета."""
         item_data = {
             "lockStatus": 1,
-            "lockDaysRemAlgoning": 5,
+            "lockDaysRemaining": 5,
         }
 
         lock_info = filter.parse_lock_info(item_data)
 
         assert lock_info.status == LockStatus.LOCKED
-        assert lock_info.days_remAlgoning == 5
+        assert lock_info.days_remaining == 5
         assert lock_info.calculated_discount > 0
 
     def test_filter_items(self, filter):
@@ -223,7 +223,7 @@ class TestLockStatusFilter:
                 "title": "Locked Item",
                 "price": {"USD": 2000},
                 "lockStatus": 1,
-                "lockDaysRemAlgoning": 5,
+                "lockDaysRemaining": 5,
             },
         ]
 
@@ -246,7 +246,7 @@ class TestLockStatusFilter:
                 "title": "Locked Item",
                 "price": {"USD": 2000},
                 "lockStatus": 1,
-                "lockDaysRemAlgoning": 5,
+                "lockDaysRemaining": 5,
             },
         ]
 
@@ -265,14 +265,14 @@ class TestLockStatusFilter:
                 "title": "Short Lock",
                 "price": {"USD": 1000},
                 "lockStatus": 1,
-                "lockDaysRemAlgoning": 2,
+                "lockDaysRemaining": 2,
             },
             {
                 "itemId": "item_2",
                 "title": "Long Lock",
                 "price": {"USD": 2000},
                 "lockStatus": 1,
-                "lockDaysRemAlgoning": 5,  # > max_lock_days
+                "lockDaysRemaining": 5,  # > max_lock_days
             },
         ]
 
@@ -307,7 +307,7 @@ class TestLockStatusFilter:
                 "title": "Locked",
                 "price": {"USD": 1000},
                 "lockStatus": 1,
-                "lockDaysRemAlgoning": 5,
+                "lockDaysRemaining": 5,
             },
             {
                 "itemId": "item_2",
@@ -344,7 +344,7 @@ class TestLockStatusFilter:
             price=10.0,
             lock_info=LockInfo(
                 status=LockStatus.LOCKED,
-                days_remAlgoning=5,
+                days_remaining=5,
                 calculated_discount=4.5,
             ),
         )
@@ -363,7 +363,7 @@ class TestLockStatusFilter:
             price=30.0,  # 30% баланса
             lock_info=LockInfo(
                 status=LockStatus.LOCKED,
-                days_remAlgoning=5,  # > 3 days
+                days_remaining=5,  # > 3 days
                 calculated_discount=4.5,
             ),
         )
@@ -403,7 +403,7 @@ class TestLockStatusFilter:
                 price=20.0,
                 lock_info=LockInfo(
                     status=LockStatus.LOCKED,
-                    days_remAlgoning=5,
+                    days_remaining=5,
                 ),
                 discount_percent=5.0,
             ),

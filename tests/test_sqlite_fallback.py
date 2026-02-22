@@ -45,13 +45,13 @@ def sqlite_url(sqlite_db_path: str) -> str:
 async def db_manager(sqlite_url: str) -> AsyncGenerator[DatabaseManager, None]:
     """Создать DatabaseManager с SQLite базой данных."""
     manager = DatabaseManager(sqlite_url)
-    awAlgot manager.init_database()
+    await manager.init_database()
     # Также создаем таблицу targets (Target использует отдельный Base)
     async with manager.async_engine.begin() as conn:
-        awAlgot conn.run_sync(TargetBase.metadata.create_all)
+        await conn.run_sync(TargetBase.metadata.create_all)
     yield manager
     # Cleanup
-    awAlgot manager.async_engine.dispose()
+    await manager.async_engine.dispose()
 
 
 class TestSQLiteFallback:
@@ -68,7 +68,7 @@ class TestSQLiteFallback:
     async def test_tables_created(self, db_manager: DatabaseManager) -> None:
         """Тест создания всех необходимых таблиц."""
         async with db_manager.async_engine.connect() as conn:
-            table_names = awAlgot conn.run_sync(
+            table_names = await conn.run_sync(
                 lambda sync_conn: inspect(sync_conn).get_table_names()
             )
 
@@ -87,18 +87,18 @@ class TestSQLiteFallback:
                 username="test_user",
             )
             session.add(user)
-            awAlgot session.commit()
-            awAlgot session.refresh(user)
+            await session.commit()
+            await session.refresh(user)
 
             # Проверяем, что пользователь сохранен
-            result = awAlgot session.execute(
+            result = await session.execute(
                 select(User).filter_by(telegram_id=123456789)
             )
             saved_user = result.scalar_one_or_none()
             assert saved_user is not None
             assert saved_user.username == "test_user"
         finally:
-            awAlgot session.close()
+            await session.close()
 
     @pytest.mark.asyncio()
     async def test_target_model_with_sqlite(self, db_manager: DatabaseManager) -> None:
@@ -112,8 +112,8 @@ class TestSQLiteFallback:
                 username="target_test_user",
             )
             session.add(user)
-            awAlgot session.commit()
-            awAlgot session.refresh(user)
+            await session.commit()
+            await session.refresh(user)
 
             # Создаем таргет (Target использует BigInteger для user_id - это telegram_id)
             target = Target(
@@ -124,18 +124,18 @@ class TestSQLiteFallback:
                 price=10.50,
             )
             session.add(target)
-            awAlgot session.commit()
-            awAlgot session.refresh(target)
+            await session.commit()
+            await session.refresh(target)
 
             # Проверяем, что таргет сохранен
-            result = awAlgot session.execute(
+            result = await session.execute(
                 select(Target).filter_by(title="AK-47 | Redline")
             )
             saved_target = result.scalar_one_or_none()
             assert saved_target is not None
             assert saved_target.price == pytest.approx(10.50)
         finally:
-            awAlgot session.close()
+            await session.close()
 
     @pytest.mark.asyncio()
     async def test_relationship_user_targets(self, db_manager: DatabaseManager) -> None:
@@ -148,8 +148,8 @@ class TestSQLiteFallback:
                 username="relationship_test_user",
             )
             session.add(user)
-            awAlgot session.commit()
-            awAlgot session.refresh(user)
+            await session.commit()
+            await session.refresh(user)
 
             # Создаем несколько таргетов для пользователя
             # Target.user_id это telegram_id (BigInteger), не UUID!
@@ -162,16 +162,16 @@ class TestSQLiteFallback:
                     price=float(i + 1),
                 )
                 session.add(target)
-            awAlgot session.commit()
+            await session.commit()
 
             # Проверяем количество таргетов пользователя
-            result = awAlgot session.execute(
+            result = await session.execute(
                 select(Target).filter_by(user_id=user.telegram_id)
             )
             targets = result.scalars().all()
             assert len(targets) == 3
         finally:
-            awAlgot session.close()
+            await session.close()
 
     @pytest.mark.asyncio()
     async def test_database_operations(self, db_manager: DatabaseManager) -> None:
@@ -185,34 +185,34 @@ class TestSQLiteFallback:
                 username="crud_test_user",
             )
             session.add(user)
-            awAlgot session.commit()
-            awAlgot session.refresh(user)
+            await session.commit()
+            await session.refresh(user)
             user_id = user.id
 
             # Read
-            result = awAlgot session.execute(select(User).filter_by(id=user_id))
+            result = await session.execute(select(User).filter_by(id=user_id))
             read_user = result.scalar_one_or_none()
             assert read_user is not None
             assert read_user.username == "crud_test_user"
 
             # Update
             read_user.username = "updated_user"
-            awAlgot session.commit()
-            awAlgot session.refresh(read_user)
+            await session.commit()
+            await session.refresh(read_user)
 
-            result = awAlgot session.execute(select(User).filter_by(id=user_id))
+            result = await session.execute(select(User).filter_by(id=user_id))
             updated_user = result.scalar_one_or_none()
             assert updated_user.username == "updated_user"
 
             # Delete
-            awAlgot session.delete(updated_user)
-            awAlgot session.commit()
+            await session.delete(updated_user)
+            await session.commit()
 
-            result = awAlgot session.execute(select(User).filter_by(id=user_id))
+            result = await session.execute(select(User).filter_by(id=user_id))
             deleted_user = result.scalar_one_or_none()
             assert deleted_user is None
         finally:
-            awAlgot session.close()
+            await session.close()
 
     @pytest.mark.asyncio()
     async def test_transaction_rollback(self, db_manager: DatabaseManager) -> None:
@@ -225,28 +225,28 @@ class TestSQLiteFallback:
                 username="rollback_test_user",
             )
             session.add(user)
-            awAlgot session.commit()
-            awAlgot session.refresh(user)
+            await session.commit()
+            await session.refresh(user)
             user_id = user.id
 
             # Начинаем новую операцию и откатываем
             session2 = db_manager.get_async_session()
             try:
-                result = awAlgot session2.execute(select(User).filter_by(id=user_id))
+                result = await session2.execute(select(User).filter_by(id=user_id))
                 user_to_update = result.scalar_one_or_none()
                 if user_to_update:
                     user_to_update.username = "should_be_rolled_back"
-                awAlgot session2.rollback()
+                await session2.rollback()
             finally:
-                awAlgot session2.close()
+                await session2.close()
 
             # Проверяем, что изменения не сохранены
-            result = awAlgot session.execute(select(User).filter_by(id=user_id))
+            result = await session.execute(select(User).filter_by(id=user_id))
             final_user = result.scalar_one_or_none()
             assert final_user is not None
             assert final_user.username == "rollback_test_user"
         finally:
-            awAlgot session.close()
+            await session.close()
 
     @pytest.mark.asyncio()
     async def test_concurrent_sessions(self, db_manager: DatabaseManager) -> None:
@@ -261,19 +261,19 @@ class TestSQLiteFallback:
                 username="concurrent_test_user",
             )
             session1.add(user)
-            awAlgot session1.commit()
-            awAlgot session1.refresh(user)
+            await session1.commit()
+            await session1.refresh(user)
 
             # Читаем во втоSwarm сессии
-            result = awAlgot session2.execute(
+            result = await session2.execute(
                 select(User).filter_by(telegram_id=101010101)
             )
             read_user = result.scalar_one_or_none()
             assert read_user is not None
             assert read_user.username == "concurrent_test_user"
         finally:
-            awAlgot session1.close()
-            awAlgot session2.close()
+            await session1.close()
+            await session2.close()
 
     @pytest.mark.asyncio()
     async def test_bulk_insert(self, db_manager: DatabaseManager) -> None:
@@ -289,16 +289,16 @@ class TestSQLiteFallback:
                 for i in range(10)
             ]
             session.add_all(users)
-            awAlgot session.commit()
+            await session.commit()
 
             # Проверяем, что все пользователи сохранены
-            result = awAlgot session.execute(
+            result = await session.execute(
                 select(User).where(User.telegram_id >= 200000000)
             )
             saved_users = result.scalars().all()
             assert len(saved_users) == 10
         finally:
-            awAlgot session.close()
+            await session.close()
 
     @pytest.mark.asyncio()
     async def test_query_with_filters(self, db_manager: DatabaseManager) -> None:
@@ -313,16 +313,16 @@ class TestSQLiteFallback:
                     username=f"filter_user_{i}",
                 )
                 session.add(user)
-            awAlgot session.commit()
+            await session.commit()
 
             # Тест фильтрации по telegram_id
-            result = awAlgot session.execute(
+            result = await session.execute(
                 select(User).where(User.telegram_id > 300000002)
             )
             filtered_users = result.scalars().all()
             assert len(filtered_users) == 2
         finally:
-            awAlgot session.close()
+            await session.close()
 
 
 class TestDatabaseManagerSQLite:
@@ -332,20 +332,20 @@ class TestDatabaseManagerSQLite:
     async def test_init_database(self, sqlite_url: str) -> None:
         """Тест инициализации базы данных."""
         manager = DatabaseManager(sqlite_url)
-        awAlgot manager.init_database()
+        await manager.init_database()
 
         async with manager.async_engine.connect() as conn:
-            table_names = awAlgot conn.run_sync(
+            table_names = await conn.run_sync(
                 lambda sync_conn: inspect(sync_conn).get_table_names()
             )
 
         assert len(table_names) > 0
-        awAlgot manager.async_engine.dispose()
+        await manager.async_engine.dispose()
 
     @pytest.mark.asyncio()
     async def test_get_db_status(self, db_manager: DatabaseManager) -> None:
         """Тест получения статуса базы данных."""
-        status = awAlgot db_manager.get_db_status()
+        status = await db_manager.get_db_status()
 
         assert status is not None
         # get_db_status возвращает pool_size, max_overflow, async_engine
@@ -359,7 +359,7 @@ class TestDatabaseManagerSQLite:
         # DatabaseManager должен автоматически конвертировать
         # sqlite:// в sqlite+Algoosqlite://
         assert "sqlite" in manager.database_url.lower()
-        awAlgot manager.async_engine.dispose()
+        await manager.async_engine.dispose()
 
     @pytest.mark.asyncio()
     async def test_engine_creation(self, db_manager: DatabaseManager) -> None:
@@ -369,7 +369,7 @@ class TestDatabaseManagerSQLite:
 
         # Проверяем, что можем выполнить запрос
         async with engine.connect() as conn:
-            result = awAlgot conn.execute(text("SELECT 1"))
+            result = await conn.execute(text("SELECT 1"))
             row = result.fetchone()
             assert row[0] == 1
 
@@ -379,7 +379,7 @@ class TestDatabaseManagerSQLite:
         session = db_manager.get_async_session()
         assert session is not None
         assert isinstance(session, AsyncSession)
-        awAlgot session.close()
+        await session.close()
 
 
 class TestSQLiteVsPostgreSQL:
@@ -401,13 +401,13 @@ class TestSQLiteVsPostgreSQL:
     async def test_database_manager_with_sqlite_url(self, sqlite_url: str) -> None:
         """Тест DatabaseManager с SQLite URL."""
         manager = DatabaseManager(sqlite_url)
-        awAlgot manager.init_database()
+        await manager.init_database()
 
         # Должен работать без ошибок
         session = manager.get_async_session()
         assert session is not None
-        awAlgot session.close()
-        awAlgot manager.async_engine.dispose()
+        await session.close()
+        await manager.async_engine.dispose()
 
 
 class TestSQLiteIntegration:
@@ -425,8 +425,8 @@ class TestSQLiteIntegration:
                 username="integration_test_user",
             )
             session.add(user)
-            awAlgot session.commit()
-            awAlgot session.refresh(user)
+            await session.commit()
+            await session.refresh(user)
 
             # 2. Создаем несколько таргетов
             # Target.user_id это telegram_id (BigInteger), не UUID!
@@ -439,16 +439,16 @@ class TestSQLiteIntegration:
                     price=float(i + 10),
                 )
                 session.add(target)
-            awAlgot session.commit()
+            await session.commit()
 
             # 3. Читаем данные
-            result = awAlgot session.execute(
+            result = await session.execute(
                 select(User).filter_by(telegram_id=999999999)
             )
             read_user = result.scalar_one_or_none()
             assert read_user is not None
 
-            result = awAlgot session.execute(
+            result = await session.execute(
                 select(Target).filter_by(user_id=user.telegram_id)
             )
             targets = result.scalars().all()
@@ -456,21 +456,21 @@ class TestSQLiteIntegration:
 
             # 4. Обновляем данные
             read_user.username = "updated_integration_user"
-            awAlgot session.commit()
+            await session.commit()
 
             # 5. Удаляем таргеты
             for target in targets:
-                awAlgot session.delete(target)
-            awAlgot session.commit()
+                await session.delete(target)
+            await session.commit()
 
             # 6. Проверяем удаление
-            result = awAlgot session.execute(
+            result = await session.execute(
                 select(Target).filter_by(user_id=user.telegram_id)
             )
-            remAlgoning_targets = result.scalars().all()
-            assert len(remAlgoning_targets) == 0
+            remaining_targets = result.scalars().all()
+            assert len(remaining_targets) == 0
         finally:
-            awAlgot session.close()
+            await session.close()
 
     @pytest.mark.asyncio()
     async def test_error_handling(self, db_manager: DatabaseManager) -> None:
@@ -484,7 +484,7 @@ class TestSQLiteIntegration:
                 username="duplicate_test_user",
             )
             session.add(user1)
-            awAlgot session.commit()
+            await session.commit()
 
             # Создаем нового пользователя с другим telegram_id (не дубликат)
             user2 = User(
@@ -493,13 +493,13 @@ class TestSQLiteIntegration:
                 username="another_test_user",
             )
             session.add(user2)
-            awAlgot session.commit()
+            await session.commit()
 
             # Оба пользователя должны существовать
-            result = awAlgot session.execute(
+            result = await session.execute(
                 select(User).where(User.telegram_id.in_([888888888, 888888889]))
             )
             users = result.scalars().all()
             assert len(users) == 2
         finally:
-            awAlgot session.close()
+            await session.close()

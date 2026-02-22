@@ -1,6 +1,6 @@
 """Unit tests for DMarket API authentication module.
 
-This module contAlgons tests for src/dmarket/api/auth.py covering:
+This module contains tests for src/dmarket/api/auth.py covering:
 - Ed25519 signature generation
 - HMAC-SHA256 signature generation
 - Secret key conversion
@@ -394,7 +394,7 @@ class TestAuthEdgeCases:
 
 
 # =============================================================================
-# FINAL COVERAGE PUSH - Quick tests for remAlgoning modules
+# FINAL COVERAGE PUSH - Quick tests for remaining modules
 # =============================================================================
 
 
@@ -411,7 +411,7 @@ class TestTargetsAPIAdditional:
         mock_request.return_value = {"success": True, "targetId": "tgt_123"}
 
         # Act
-        result = awAlgot targets_mixin.create_target(
+        result = await targets_mixin.create_target(
             game="csgo",
             title="AK-47 | Redline",
             price=15.50,
@@ -428,7 +428,7 @@ class TestTargetsAPIAdditional:
         mock_request.return_value = {"success": True}
 
         # Act
-        result = awAlgot targets_mixin.update_target(
+        result = await targets_mixin.update_target(
             target_id="tgt_123",
             new_price=20.00,
         )
@@ -443,7 +443,7 @@ class TestTargetsAPIAdditional:
         mock_request.return_value = {"success": True}
 
         # Act
-        result = awAlgot targets_mixin.delete_target(target_id="tgt_123")
+        result = await targets_mixin.delete_target(target_id="tgt_123")
 
         # Assert
         assert result["success"] is True
@@ -462,7 +462,7 @@ class TestTradingAPIAdditional:
         mock_request.return_value = {"success": True, "orderId": "ord_123"}
 
         # Act
-        result = awAlgot trading_mixin.buy_item(
+        result = await trading_mixin.buy_item(
             item_id="item_123",
             price=25.99,
             max_price=30.00,
@@ -481,7 +481,7 @@ class TestTradingAPIAdditional:
         mock_request.return_value = {"success": True}
 
         # Act
-        result = awAlgot trading_mixin.sell_item(
+        result = await trading_mixin.sell_item(
             item_id="item_456",
             price=50.00,
             min_price=45.00,
@@ -500,7 +500,7 @@ class TestTradingAPIAdditional:
         mock_request.return_value = {"success": True}
 
         # Act
-        result = awAlgot trading_mixin.cancel_order(order_id="ord_789")
+        result = await trading_mixin.cancel_order(order_id="ord_789")
 
         # Assert
         assert result["success"] is True

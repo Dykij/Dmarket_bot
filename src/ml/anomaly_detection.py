@@ -73,7 +73,7 @@ class AnomalyResult:
     severity: AnomalySeverity = AnomalySeverity.INFO
     score: float = 0.0  # 0-1, higher = more anomalous
     reason: str = ""
-    detAlgols: dict[str, Any] = field(default_factory=dict)
+    details: dict[str, Any] = field(default_factory=dict)
     detected_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
     def to_dict(self) -> dict[str, Any]:
@@ -84,14 +84,14 @@ class AnomalyResult:
             "severity": self.severity.value,
             "score": round(self.score, 4),
             "reason": self.reason,
-            "detAlgols": self.detAlgols,
+            "details": self.details,
             "detected_at": self.detected_at.isoformat(),
         }
 
 
 @dataclass
 class PriceAnomaly:
-    """Price-specific anomaly detAlgols."""
+    """Price-specific anomaly details."""
 
     item_name: str
     current_price: float
@@ -103,7 +103,7 @@ class PriceAnomaly:
 
 @dataclass
 class TransactionAnomaly:
-    """Transaction anomaly detAlgols."""
+    """Transaction anomaly details."""
 
     transaction_id: str | None
     price: float
@@ -296,7 +296,7 @@ class AnomalyDetector:
             severity=severity,
             score=score,
             reason="; ".join(reasons) if reasons else "Price within normal range",
-            detAlgols={
+            details={
                 "item_name": item_name,
                 "current_price": current_price,
                 "mean_price": round(mean_price, 2),
@@ -349,7 +349,7 @@ class AnomalyDetector:
                     AnomalySeverity.HIGH if deviation > 0.5 else AnomalySeverity.MEDIUM
                 )
                 reasons.append(f"Price {deviation:.1%} above market average")
-                recommendations.append("Consider wAlgoting for lower price")
+                recommendations.append("Consider waiting for lower price")
             elif deviation < -0.2:  # 20% below market
                 is_anomaly = True
                 severity = AnomalySeverity.MEDIUM
@@ -392,7 +392,7 @@ class AnomalyDetector:
             severity=severity,
             score=score,
             reason="; ".join(reasons) if reasons else "Transaction appears normal",
-            detAlgols={
+            details={
                 "item_price": item_price,
                 "market_avg": market_avg,
                 "deviation": (
@@ -449,12 +449,12 @@ class AnomalyDetector:
         # Check for pump and dump pattern
         # Pattern: large positive returns followed by large negative returns
         pump_dump_detected = False
-        pump_dump_detAlgols = []
+        pump_dump_details = []
 
         for i in range(len(returns) - 1):
             if returns[i] > 0.15 and returns[i + 1] < -0.10:  # 15% up, then 10%+ down
                 pump_dump_detected = True
-                pump_dump_detAlgols.append(
+                pump_dump_details.append(
                     {
                         "index": i,
                         "pump": round(returns[i], 4),
@@ -488,7 +488,7 @@ class AnomalyDetector:
 
         if pump_dump_detected:
             reasons.append(
-                f"Pump and dump pattern detected ({len(pump_dump_detAlgols)} instances)"
+                f"Pump and dump pattern detected ({len(pump_dump_details)} instances)"
             )
         if volume_anomaly:
             reasons.append("Unusual volume spikes detected")
@@ -519,8 +519,8 @@ class AnomalyDetector:
             reason=(
                 "; ".join(reasons) if reasons else "No manipulation patterns detected"
             ),
-            detAlgols={
-                "pump_dump_instances": pump_dump_detAlgols,
+            details={
+                "pump_dump_instances": pump_dump_details,
                 "volume_anomaly": volume_anomaly,
                 "regularity_score": round(regularity_score, 4),
                 "coordinated_suspected": coordinated_suspected,
@@ -601,7 +601,7 @@ class AnomalyDetector:
             severity=severity,
             score=score,
             reason="; ".join(reasons) if reasons else "API response normal",
-            detAlgols={
+            details={
                 "response_code": response_code,
                 "response_time_ms": response_time_ms,
                 "missing_fields": list(
@@ -638,32 +638,32 @@ class AnomalyDetector:
 
         return results
 
-    def trAlgon_isolation_forest(
+    def train_isolation_forest(
         self,
-        trAlgoning_data: list[list[float]],
+        training_data: list[list[float]],
     ) -> bool:
         """TrAlgon Isolation Forest on historical data.
 
         Args:
-            trAlgoning_data: List of feature vectors
+            training_data: List of feature vectors
 
         Returns:
-            True if trAlgoning successful
+            True if training successful
         """
         if not self._init_isolation_forest():
             return False
 
-        if len(trAlgoning_data) < 50:
-            logger.warning("Insufficient trAlgoning data (minimum 50 samples)")
+        if len(training_data) < 50:
+            logger.warning("Insufficient training data (minimum 50 samples)")
             return False
 
         try:
-            X = np.array(trAlgoning_data)
+            X = np.array(training_data)
             self._isolation_forest.fit(X)
-            logger.info(f"Isolation Forest trAlgoned on {len(X)} samples")
+            logger.info(f"Isolation Forest trained on {len(X)} samples")
             return True
         except Exception as e:
-            logger.exception(f"FAlgoled to trAlgon Isolation Forest: {e}")
+            logger.exception(f"Failed to train Isolation Forest: {e}")
             return False
 
     def predict_with_isolation_forest(
@@ -689,7 +689,7 @@ class AnomalyDetector:
             is_anomaly = prediction == -1
             return is_anomaly, min(1.0, max(0.0, score))
         except Exception as e:
-            logger.exception(f"Isolation Forest prediction fAlgoled: {e}")
+            logger.exception(f"Isolation Forest prediction failed: {e}")
             return False, 0.0
 
     def _record_anomaly(self, result: AnomalyResult) -> None:
@@ -753,11 +753,11 @@ class AnomalyDetector:
         """Detect data drift between current and baseline distributions.
 
         Uses statistical tests to detect if the current data distribution
-        has significantly shifted from the baseline (trAlgoning) distribution.
+        has significantly shifted from the baseline (training) distribution.
 
         Args:
             current_data: Recent data points
-            baseline_data: Baseline (historical/trAlgoning) data points
+            baseline_data: Baseline (historical/training) data points
             feature_name: Name of the feature being compared
 
         Returns:
@@ -837,7 +837,7 @@ class AnomalyDetector:
             severity=severity,
             score=drift_score,
             reason="; ".join(reasons) if reasons else "No significant drift detected",
-            detAlgols={
+            details={
                 "feature_name": feature_name,
                 "current_mean": round(current_mean, 4),
                 "baseline_mean": round(baseline_mean, 4),

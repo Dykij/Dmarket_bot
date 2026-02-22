@@ -112,7 +112,7 @@ async def validate_api_keys(public_key: str, secret_key: str) -> tuple[bool, str
     try:
         async with api_client:
             # Пробуем получить баланс для проверки работоспособности ключей
-            balance = awAlgot api_client.get_balance()
+            balance = await api_client.get_balance()
 
             if balance.get("error"):
                 error_message = balance.get("error_message", "Неизвестная ошибка")

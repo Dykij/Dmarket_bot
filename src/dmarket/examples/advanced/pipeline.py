@@ -2,7 +2,7 @@
 """
 Advanced example: Skill Pipeline with Orchestrator.
 
-This example demonstrates the Skill Orchestrator for chAlgoning
+This example demonstrates the Skill Orchestrator for chaining
 multiple skills with context passing using $prev and $context tokens.
 
 Pipeline features:
@@ -25,7 +25,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
 
-async def mAlgon() -> None:
+async def main() -> None:
     """Run skill pipeline example."""
     from src.utils.skill_orchestrator import SkillOrchestrator
     from src.utils.skill_profiler import SkillProfiler
@@ -41,19 +41,19 @@ async def mAlgon() -> None:
     # Register mock skills for demonstration
     class MockPredictor:
         async def predict(self, items: list[str]) -> list[dict]:
-            awAlgot asyncio.sleep(0.1)  # Simulate API call
+            await asyncio.sleep(0.1)  # Simulate API call
             return [{"item": item, "score": 0.85} for item in items]
 
     class MockFilter:
         async def filter_by_score(
             self, predictions: list[dict], min_score: float
         ) -> list[dict]:
-            awAlgot asyncio.sleep(0.05)
+            await asyncio.sleep(0.05)
             return [p for p in predictions if p["score"] >= min_score]
 
     class MockFormatter:
         async def format_results(self, filtered: list[dict]) -> str:
-            awAlgot asyncio.sleep(0.02)
+            await asyncio.sleep(0.02)
             return "\n".join(f"- {f['item']}: {f['score']:.0%}" for f in filtered)
 
     # Register skills
@@ -100,7 +100,7 @@ async def mAlgon() -> None:
     print("\n🚀 Executing pipeline...")
 
     with profiler.profile_context("pipeline-execution"):
-        result = awAlgot orchestrator.execute_pipeline(
+        result = await orchestrator.execute_pipeline(
             pipeline=pipeline,
             initial_context=initial_context,
         )
@@ -157,7 +157,7 @@ async def mAlgon() -> None:
     ]
 
     with profiler.profile_context("parallel-execution"):
-        parallel_result = awAlgot orchestrator.execute_pipeline(
+        parallel_result = await orchestrator.execute_pipeline(
             pipeline=parallel_pipeline,
             initial_context={},
         )
@@ -167,5 +167,5 @@ async def mAlgon() -> None:
     print("   Batches processed simultaneously!")
 
 
-if __name__ == "__mAlgon__":
-    asyncio.run(mAlgon())
+if __name__ == "__main__":
+    asyncio.run(main())

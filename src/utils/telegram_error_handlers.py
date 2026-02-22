@@ -142,9 +142,9 @@ async def _send_error_to_user(
         error_message: Error message to send
     """
     if update.message:
-        awAlgot update.message.reply_text(error_message)
+        await update.message.reply_text(error_message)
     elif update.callback_query:
-        awAlgot update.callback_query.answer(error_message, show_alert=True)
+        await update.callback_query.answer(error_message, show_alert=True)
 
 
 async def _handle_validation_error(
@@ -170,7 +170,7 @@ async def _handle_validation_error(
         },
     )
     error_message = f"❌ Ошибка валидации: {error}"
-    awAlgot _send_error_to_user(update, error_message)
+    await _send_error_to_user(update, error_message)
 
 
 async def _handle_authentication_error(
@@ -197,7 +197,7 @@ async def _handle_authentication_error(
         },
     )
     error_message = "❌ Ошибка аутентификации. Проверьте API ключи в /settings"
-    awAlgot _send_error_to_user(update, error_message)
+    await _send_error_to_user(update, error_message)
 
     capture_exception(
         error,
@@ -232,7 +232,7 @@ async def _handle_rate_limit_error(
         },
     )
     error_message = f"⏳ Превышен лимит запросов. Попробуйте через {retry_after} секунд"
-    awAlgot _send_error_to_user(update, error_message)
+    await _send_error_to_user(update, error_message)
 
 
 async def _handle_api_error(
@@ -261,7 +261,7 @@ async def _handle_api_error(
         },
     )
     error_message = "❌ Ошибка при обращении к API DMarket. Попробуйте позже"
-    awAlgot _send_error_to_user(update, error_message)
+    await _send_error_to_user(update, error_message)
 
     capture_exception(
         error,
@@ -301,7 +301,7 @@ async def _handle_unexpected_error(
         },
     )
 
-    awAlgot _send_error_to_user(update, user_friendly_message)
+    await _send_error_to_user(update, user_friendly_message)
 
     capture_exception(
         error,
@@ -362,7 +362,7 @@ def telegram_error_boundary(
 
                 _setup_sentry_context(func.__name__, ctx)
 
-                result = awAlgot func(update, context, *args, **kwargs)
+                result = await func(update, context, *args, **kwargs)
 
                 if log_context:
                     _log_handler_success(func.__name__, ctx.user_id)
@@ -370,21 +370,21 @@ def telegram_error_boundary(
                 return result
 
             except ValidationError as e:
-                awAlgot _handle_validation_error(e, update, func.__name__, ctx.user_id)
+                await _handle_validation_error(e, update, func.__name__, ctx.user_id)
 
             except AuthenticationError as e:
-                awAlgot _handle_authentication_error(
+                await _handle_authentication_error(
                     e, update, func.__name__, ctx.user_id
                 )
 
             except RateLimitError as e:
-                awAlgot _handle_rate_limit_error(e, update, func.__name__, ctx.user_id)
+                await _handle_rate_limit_error(e, update, func.__name__, ctx.user_id)
 
             except APIError as e:
-                awAlgot _handle_api_error(e, update, func.__name__, ctx.user_id)
+                await _handle_api_error(e, update, func.__name__, ctx.user_id)
 
             except Exception as e:
-                awAlgot _handle_unexpected_error(
+                await _handle_unexpected_error(
                     e, update, func.__name__, ctx, user_friendly_message
                 )
 
@@ -436,9 +436,9 @@ class BaseHandler:
 
         # Notify user
         if update.message:
-            awAlgot update.message.reply_text(user_message)
+            await update.message.reply_text(user_message)
         elif update.callback_query:
-            awAlgot update.callback_query.answer(user_message, show_alert=True)
+            await update.callback_query.answer(user_message, show_alert=True)
 
         # Capture in Sentry
         capture_exception(
@@ -478,12 +478,12 @@ class BaseHandler:
         """
         try:
             if update.message:
-                awAlgot update.message.reply_text(text, **kwargs)
+                await update.message.reply_text(text, **kwargs)
             elif update.callback_query:
-                awAlgot update.callback_query.message.reply_text(text, **kwargs)  # type: ignore[union-attr]
-                awAlgot update.callback_query.answer()
+                await update.callback_query.message.reply_text(text, **kwargs)  # type: ignore[union-attr]
+                await update.callback_query.answer()
         except Exception:
             self.logger.exception(
-                "FAlgoled to send reply",
+                "Failed to send reply",
                 extra={"text": text},
             )

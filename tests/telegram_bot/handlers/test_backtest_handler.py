@@ -83,7 +83,7 @@ class TestBacktestHandlerInit:
         assert handler._initial_balance == Decimal("500.0")
 
     def test_init_balance_precision(self, mock_api):
-        """Test balance mAlgontAlgons precision."""
+        """Test balance maintAlgons precision."""
         handler = BacktestHandler(api=mock_api, initial_balance=123.456789)
         # Decimal should preserve precision
         assert float(handler._initial_balance) == pytest.approx(123.456789)
@@ -119,7 +119,7 @@ class TestHandleBacktestCommand:
         update = MagicMock()
         update.message = None
 
-        result = awAlgot backtest_handler.handle_backtest_command(update, mock_context)
+        result = await backtest_handler.handle_backtest_command(update, mock_context)
         assert result is None
 
     @pytest.mark.asyncio()
@@ -127,7 +127,7 @@ class TestHandleBacktestCommand:
         """Test command when API not configured."""
         handler = BacktestHandler(api=None)
 
-        awAlgot handler.handle_backtest_command(mock_update, mock_context)
+        await handler.handle_backtest_command(mock_update, mock_context)
 
         mock_update.message.reply_text.assert_called_once_with("❌ API not configured")
 
@@ -138,7 +138,7 @@ class TestHandleBacktestCommand:
         """Test command with default days."""
         mock_context.args = []
 
-        awAlgot backtest_handler.handle_backtest_command(mock_update, mock_context)
+        await backtest_handler.handle_backtest_command(mock_update, mock_context)
 
         mock_update.message.reply_text.assert_called_once()
         call_args = mock_update.message.reply_text.call_args
@@ -151,7 +151,7 @@ class TestHandleBacktestCommand:
         """Test command with custom days."""
         mock_context.args = ["60"]
 
-        awAlgot backtest_handler.handle_backtest_command(mock_update, mock_context)
+        await backtest_handler.handle_backtest_command(mock_update, mock_context)
 
         call_args = mock_update.message.reply_text.call_args
         assert "60 days" in call_args[0][0]
@@ -163,7 +163,7 @@ class TestHandleBacktestCommand:
         """Test command with days below minimum."""
         mock_context.args = ["3"]  # Below minimum of 7
 
-        awAlgot backtest_handler.handle_backtest_command(mock_update, mock_context)
+        await backtest_handler.handle_backtest_command(mock_update, mock_context)
 
         call_args = mock_update.message.reply_text.call_args
         assert "7 days" in call_args[0][0]
@@ -175,7 +175,7 @@ class TestHandleBacktestCommand:
         """Test command with days above maximum."""
         mock_context.args = ["100"]  # Above maximum of 90
 
-        awAlgot backtest_handler.handle_backtest_command(mock_update, mock_context)
+        await backtest_handler.handle_backtest_command(mock_update, mock_context)
 
         call_args = mock_update.message.reply_text.call_args
         assert "90 days" in call_args[0][0]
@@ -187,7 +187,7 @@ class TestHandleBacktestCommand:
         """Test command with invalid days (non-numeric)."""
         mock_context.args = ["invalid"]
 
-        awAlgot backtest_handler.handle_backtest_command(mock_update, mock_context)
+        await backtest_handler.handle_backtest_command(mock_update, mock_context)
 
         call_args = mock_update.message.reply_text.call_args
         # Should use default 30 days
@@ -198,7 +198,7 @@ class TestHandleBacktestCommand:
         self, backtest_handler, mock_update, mock_context
     ):
         """Test command shows inline keyboard."""
-        awAlgot backtest_handler.handle_backtest_command(mock_update, mock_context)
+        await backtest_handler.handle_backtest_command(mock_update, mock_context)
 
         call_kwargs = mock_update.message.reply_text.call_args[1]
         assert "reply_markup" in call_kwargs
@@ -211,7 +211,7 @@ class TestHandleBacktestCommand:
         """Test command shows initial balance."""
         handler = BacktestHandler(api=mock_api, initial_balance=250.0)
 
-        awAlgot handler.handle_backtest_command(mock_update, mock_context)
+        await handler.handle_backtest_command(mock_update, mock_context)
 
         call_args = mock_update.message.reply_text.call_args
         assert "$250.00" in call_args[0][0]
@@ -229,7 +229,7 @@ class TestHandleCallback:
         update = MagicMock()
         update.callback_query = None
 
-        result = awAlgot backtest_handler.handle_callback(update, mock_context)
+        result = await backtest_handler.handle_callback(update, mock_context)
         assert result is None
 
     @pytest.mark.asyncio()
@@ -240,7 +240,7 @@ class TestHandleCallback:
         update.callback_query.data = None
         update.callback_query.answer = AsyncMock()
 
-        result = awAlgot backtest_handler.handle_callback(update, mock_context)
+        result = await backtest_handler.handle_callback(update, mock_context)
         assert result is None
 
     @pytest.mark.asyncio()
@@ -252,7 +252,7 @@ class TestHandleCallback:
         update.callback_query = mock_callback_query
         mock_callback_query.data = "backtest:results"
 
-        awAlgot backtest_handler.handle_callback(update, mock_context)
+        await backtest_handler.handle_callback(update, mock_context)
 
         mock_callback_query.answer.assert_called_once()
         mock_callback_query.edit_message_text.assert_called_once()
@@ -266,7 +266,7 @@ class TestHandleCallback:
         update.callback_query = mock_callback_query
         mock_callback_query.data = "backtest:settings"
 
-        awAlgot backtest_handler.handle_callback(update, mock_context)
+        await backtest_handler.handle_callback(update, mock_context)
 
         mock_callback_query.answer.assert_called_once()
 
@@ -279,7 +279,7 @@ class TestHandleCallback:
         update.callback_query = mock_callback_query
         mock_callback_query.data = "backtest:balance:200.0"
 
-        awAlgot backtest_handler.handle_callback(update, mock_context)
+        await backtest_handler.handle_callback(update, mock_context)
 
         assert backtest_handler._initial_balance == Decimal("200.0")
 
@@ -295,7 +295,7 @@ class TestRunBacktest:
         """Test running backtest without API."""
         handler = BacktestHandler(api=None)
 
-        awAlgot handler._run_backtest(mock_callback_query, "simple", 30)
+        await handler._run_backtest(mock_callback_query, "simple", 30)
 
         mock_callback_query.edit_message_text.assert_called()
         call_args = mock_callback_query.edit_message_text.call_args[0][0]
@@ -309,7 +309,7 @@ class TestRunBacktest:
         with patch.object(backtest_handler, "_api") as mock_api:
             mock_api.get_sales_history = AsyncMock(side_effect=Exception("Test"))
 
-            awAlgot backtest_handler._run_backtest(mock_callback_query, "simple", 30)
+            await backtest_handler._run_backtest(mock_callback_query, "simple", 30)
 
             # First call should be loading message
             first_call = mock_callback_query.edit_message_text.call_args_list[0]
@@ -327,11 +327,11 @@ class TestRunBacktest:
                 side_effect=Exception("Test error")
             )
 
-            awAlgot backtest_handler._run_backtest(mock_callback_query, "simple", 30)
+            await backtest_handler._run_backtest(mock_callback_query, "simple", 30)
 
             # Should show error message
             last_call = mock_callback_query.edit_message_text.call_args_list[-1]
-            assert "fAlgoled" in last_call[0][0].lower()
+            assert "failed" in last_call[0][0].lower()
 
 
 # ============================================================================
@@ -362,7 +362,7 @@ class TestDisplayResult:
         self, backtest_handler, mock_callback_query, mock_result
     ):
         """Test display with positive profit."""
-        awAlgot backtest_handler._display_result(mock_callback_query, mock_result)
+        await backtest_handler._display_result(mock_callback_query, mock_result)
 
         call_args = mock_callback_query.edit_message_text.call_args[0][0]
         assert "+$20.00" in call_args
@@ -375,7 +375,7 @@ class TestDisplayResult:
         """Test display with negative profit."""
         mock_result.total_profit = Decimal("-15.0")
 
-        awAlgot backtest_handler._display_result(mock_callback_query, mock_result)
+        await backtest_handler._display_result(mock_callback_query, mock_result)
 
         call_args = mock_callback_query.edit_message_text.call_args[0][0]
         assert "-$15.00" in call_args
@@ -386,7 +386,7 @@ class TestDisplayResult:
         self, backtest_handler, mock_callback_query, mock_result
     ):
         """Test display shows statistics."""
-        awAlgot backtest_handler._display_result(mock_callback_query, mock_result)
+        await backtest_handler._display_result(mock_callback_query, mock_result)
 
         call_args = mock_callback_query.edit_message_text.call_args[0][0]
         assert "Win Rate: 70.0%" in call_args
@@ -405,7 +405,7 @@ class TestShowResults:
         """Test show results with no results."""
         backtest_handler._recent_results = []
 
-        awAlgot backtest_handler._show_results(mock_callback_query)
+        await backtest_handler._show_results(mock_callback_query)
 
         call_args = mock_callback_query.edit_message_text.call_args[0][0]
         assert "No backtests run yet" in call_args
@@ -425,7 +425,7 @@ class TestShowResults:
             result.end_date = datetime.now(UTC)
             backtest_handler._recent_results.append(result)
 
-        awAlgot backtest_handler._show_results(mock_callback_query)
+        await backtest_handler._show_results(mock_callback_query)
 
         call_args = mock_callback_query.edit_message_text.call_args[0][0]
         assert "Recent Backtest Results" in call_args
@@ -440,7 +440,7 @@ class TestShowSettings:
     @pytest.mark.asyncio()
     async def test_show_settings(self, backtest_handler, mock_callback_query):
         """Test show settings displays current balance."""
-        awAlgot backtest_handler._show_settings(mock_callback_query)
+        await backtest_handler._show_settings(mock_callback_query)
 
         mock_callback_query.edit_message_text.assert_called_once()
         call_args = mock_callback_query.edit_message_text.call_args[0][0]
@@ -484,7 +484,7 @@ class TestEdgeCases:
         """Test float precision in balance."""
         handler = BacktestHandler(api=mock_api, initial_balance=99.99)
 
-        awAlgot handler.handle_backtest_command(mock_update, mock_context)
+        await handler.handle_backtest_command(mock_update, mock_context)
 
         call_args = mock_update.message.reply_text.call_args[0][0]
         assert "$99.99" in call_args
@@ -494,7 +494,7 @@ class TestEdgeCases:
         """Test zero balance."""
         handler = BacktestHandler(api=mock_api, initial_balance=0.0)
 
-        awAlgot handler.handle_backtest_command(mock_update, mock_context)
+        await handler.handle_backtest_command(mock_update, mock_context)
 
         call_args = mock_update.message.reply_text.call_args[0][0]
         assert "$0.00" in call_args
@@ -504,7 +504,7 @@ class TestEdgeCases:
         """Test large balance."""
         handler = BacktestHandler(api=mock_api, initial_balance=1000000.0)
 
-        awAlgot handler.handle_backtest_command(mock_update, mock_context)
+        await handler.handle_backtest_command(mock_update, mock_context)
 
         call_args = mock_update.message.reply_text.call_args[0][0]
         assert "$1000000.00" in call_args
@@ -512,7 +512,7 @@ class TestEdgeCases:
     def test_empty_args_list(self, backtest_handler, mock_context):
         """Test with empty args list."""
         mock_context.args = []
-        # Should not rAlgose
+        # Should not raise
         assert mock_context.args == []
 
     def test_none_args(self, backtest_handler, mock_context):

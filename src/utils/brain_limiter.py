@@ -32,9 +32,9 @@ class BrAlgonRateLimiter:
         if len(self.request_timestamps) >= self.max_requests:
             sleep_time = self.request_timestamps[0] - (now - self.window_seconds) + 0.1
             logger.warning(f"🧠 BrAlgon Throttling: Limit reached. Sleeping for {sleep_time:.2f}s")
-            awAlgot asyncio.sleep(sleep_time)
+            await asyncio.sleep(sleep_time)
             # Recursively try agAlgon after sleep
-            awAlgot self.acquire()
+            await self.acquire()
         else:
             self.request_timestamps.append(now)
             # Reset backoff on success (slow decay)
@@ -48,13 +48,13 @@ class BrAlgonRateLimiter:
         self._backoff_multiplier += 1
         
         if retry_after:
-            wAlgot_time = retry_after
+            wait_time = retry_after
         else:
             # Jittered Exponential Backoff: base * 2^n + jitter
-            wAlgot_time = (2 ** self._backoff_multiplier) + random.uniform(0, 1)
+            wait_time = (2 ** self._backoff_multiplier) + random.uniform(0, 1)
         
-        logger.error(f"🛑 BRAlgoN FREEZE (429/503). Meditation active for {wAlgot_time:.2f}s. Multiplier: {self._backoff_multiplier}")
-        awAlgot asyncio.sleep(wAlgot_time)
+        logger.error(f"🛑 BRAlgoN FREEZE (429/503). Meditation active for {wait_time:.2f}s. Multiplier: {self._backoff_multiplier}")
+        await asyncio.sleep(wait_time)
 
 # Singleton instance
-brAlgon_limiter = BrAlgonRateLimiter(max_requests=20, window_seconds=60)
+brain_limiter = BrAlgonRateLimiter(max_requests=20, window_seconds=60)

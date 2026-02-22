@@ -154,7 +154,7 @@ class TestSmartScanner:
     def mock_predictor(self) -> MagicMock:
         """Create mock price predictor."""
         predictor = MagicMock()
-        predictor.is_trAlgoned = True
+        predictor.is_trained = True
         predictor.predict_with_guard = MagicMock(return_value=None)
         return predictor
 
@@ -173,7 +173,7 @@ class TestSmartScanner:
         """Test scanning when no items returned."""
         scanner = SmartScanner(api=mock_api, predictor=mock_predictor)
 
-        results = awAlgot scanner.scan_once()
+        results = await scanner.scan_once()
 
         assert results == []
         mock_api.get_market_items.assert_called_once()
@@ -200,7 +200,7 @@ class TestSmartScanner:
 
         scanner = SmartScanner(api=mock_api, predictor=mock_predictor)
 
-        results = awAlgot scanner.scan_once()
+        results = await scanner.scan_once()
 
         assert len(results) == 1
         assert results[0].item_id == "123"
@@ -226,7 +226,7 @@ class TestSmartScanner:
         config = SmartScannerConfig(allow_trade_ban=False, max_lock_days=0)
         scanner = SmartScanner(api=mock_api, predictor=mock_predictor, config=config)
 
-        results = awAlgot scanner.scan_once()
+        results = await scanner.scan_once()
 
         # Item should be filtered out
         assert results == []
@@ -259,7 +259,7 @@ class TestSmartScanner:
         )
         scanner = SmartScanner(api=mock_api, predictor=mock_predictor, config=config)
 
-        results = awAlgot scanner.scan_once()
+        results = await scanner.scan_once()
 
         assert len(results) == 1
         assert results[0].should_buy is True

@@ -90,21 +90,21 @@ class TestConfigContext:
             pytest.skip("ConfigContext not yet implemented")
 
 
-class TestExplAlgonArbitrageMethod:
+class TestExplainArbitrageMethod:
     """Test arbitrage explanation generation."""
 
-    async def test_explAlgon_arbitrage_method_exists(self):
-        """Test that explAlgon_arbitrage method exists."""
+    async def test_explain_arbitrage_method_exists(self):
+        """Test that explain_arbitrage method exists."""
         try:
             from src.Algo.Config_engineering_integration import ConfigEngineer
             
             engineer = ConfigEngineer(api_key="test_key")
-            assert hasattr(engineer, 'explAlgon_arbitrage')
+            assert hasattr(engineer, 'explain_arbitrage')
         except (ImportError, AttributeError):
-            pytest.skip("explAlgon_arbitrage method not yet implemented")
+            pytest.skip("explain_arbitrage method not yet implemented")
 
-    async def test_explAlgon_arbitrage_with_mock_response(self):
-        """Test explAlgon_arbitrage with mocked Claude API."""
+    async def test_explain_arbitrage_with_mock_response(self):
+        """Test explain_arbitrage with mocked Claude API."""
         try:
             from src.Algo.Config_engineering_integration import ArbitrageOpportunity, ConfigEngineer
             
@@ -119,11 +119,11 @@ class TestExplAlgonArbitrageMethod:
             
             # Mock Claude API response
             with patch.object(engineer, '_call_claude_api', return_value="Mocked explanation"):
-                result = awAlgot engineer.explAlgon_arbitrage(mock_opp)
+                result = await engineer.explain_arbitrage(mock_opp)
                 assert result is not None
                 assert isinstance(result, str)
         except (ImportError, AttributeError, TypeError):
-            pytest.skip("explAlgon_arbitrage not yet fully implemented")
+            pytest.skip("explain_arbitrage not yet fully implemented")
 
 
 class TestFallbackMethods:
@@ -165,15 +165,15 @@ class TestConfigTechniques:
                 Config = engineer._build_xml_Config(
                     context={"user_level": "beginner"},
                     data={"item": "Test"},
-                    instructions="ExplAlgon this"
+                    instructions="Explain this"
                 )
                 assert Config is not None
                 assert isinstance(Config, str)
         except (ImportError, AttributeError):
             pytest.skip("XML Config builder not yet implemented")
 
-    def test_chAlgon_of_thought_reasoning(self):
-        """Test chAlgon-of-thought reasoning implementation."""
+    def test_chain_of_thought_reasoning(self):
+        """Test chain-of-thought reasoning implementation."""
         try:
             from src.Algo.Config_engineering_integration import ConfigEngineer
             

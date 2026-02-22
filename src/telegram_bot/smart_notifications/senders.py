@@ -47,22 +47,22 @@ async def send_price_alert_notification(
         target_price = conditions.get("price", 0)
         condition = conditions.get("condition", "below")
 
-        # Format item detAlgols using the formatter
-        item_formatted = format_market_item(item_data, show_detAlgols=True)
+        # Format item details using the formatter
+        item_formatted = format_market_item(item_data, show_details=True)
 
         # Build the notification text
         title = f"💰 <b>Уведомление о цене: {alert.get('item_name', 'Предмет')}</b>"
-        alert_detAlgols = ""
+        alert_details = ""
 
         if condition == "below":
-            alert_detAlgols = f"📉 Цена упала до <b>${current_price:.2f}</b> (ниже ${target_price:.2f})"
+            alert_details = f"📉 Цена упала до <b>${current_price:.2f}</b> (ниже ${target_price:.2f})"
         elif condition == "above":
-            alert_detAlgols = f"📈 Цена поднялась до <b>${current_price:.2f}</b> (выше ${target_price:.2f})"
+            alert_details = f"📈 Цена поднялась до <b>${current_price:.2f}</b> (выше ${target_price:.2f})"
         else:
-            alert_detAlgols = f"🔄 Текущая цена: <b>${current_price:.2f}</b> (целевая: ${target_price:.2f})"
+            alert_details = f"🔄 Текущая цена: <b>${current_price:.2f}</b> (целевая: ${target_price:.2f})"
 
         # Create the message
-        message = f"{title}\n\n{alert_detAlgols}\n\n{item_formatted}"
+        message = f"{title}\n\n{alert_details}\n\n{item_formatted}"
 
         # Add action buttons
         keyboard = [
@@ -96,7 +96,7 @@ async def send_price_alert_notification(
 
         # Send the notification
         if notification_queue:
-            awAlgot notification_queue.enqueue(
+            await notification_queue.enqueue(
                 chat_id=chat_id,
                 text=message,
                 parse_mode=ParseMode.HTML,
@@ -105,7 +105,7 @@ async def send_price_alert_notification(
                 priority=Priority.HIGH,
             )
         else:
-            awAlgot bot.send_message(
+            await bot.send_message(
                 chat_id=chat_id,
                 text=message,
                 parse_mode=ParseMode.HTML,
@@ -118,7 +118,7 @@ async def send_price_alert_notification(
         )
 
         # Update notification history
-        awAlgot record_notification(user_id, "price_alert", alert.get("item_id"))
+        await record_notification(user_id, "price_alert", alert.get("item_id"))
 
         # Update alert if one-time
         if alert.get("one_time"):
@@ -150,10 +150,10 @@ async def send_market_opportunity_notification(
         chat_id = user_prefs.get("chat_id", user_id)
         notification_style = user_prefs.get("preferences", {}).get(
             "notification_style",
-            "detAlgoled",
+            "detailed",
         )
 
-        # Extract opportunity detAlgols
+        # Extract opportunity details
         item_name = opportunity.get("item_name", "Unknown Item")
         game = opportunity.get("game", "csgo")
         score = opportunity.get("opportunity_score", 0)
@@ -195,7 +195,7 @@ async def send_market_opportunity_notification(
                 f"🕒 <i>{datetime.now().strftime('%Y-%m-%d %H:%M')}</i>"
             )
         else:
-            # For detAlgoled style, use the standard formatter
+            # For detailed style, use the standard formatter
             formatted_text = format_opportunities(formatted_opportunities, 0, 1)
 
             # Add a custom header
@@ -242,7 +242,7 @@ async def send_market_opportunity_notification(
             reply_markup_part = markup if i == len(messages) - 1 else None
 
             if notification_queue:
-                awAlgot notification_queue.enqueue(
+                await notification_queue.enqueue(
                     chat_id=chat_id,
                     text=msg_part,
                     parse_mode=ParseMode.HTML,
@@ -251,7 +251,7 @@ async def send_market_opportunity_notification(
                     priority=Priority.NORMAL,
                 )
             else:
-                awAlgot bot.send_message(
+                await bot.send_message(
                     chat_id=chat_id,
                     text=msg_part,
                     parse_mode=ParseMode.HTML,
@@ -264,7 +264,7 @@ async def send_market_opportunity_notification(
         )
 
         # Update notification history
-        awAlgot record_notification(
+        await record_notification(
             user_id,
             "market_opportunity",
             opportunity.get("item_id"),
@@ -295,7 +295,7 @@ async def notify_user(
     """
     try:
         if notification_queue:
-            awAlgot notification_queue.enqueue(
+            await notification_queue.enqueue(
                 chat_id=user_id,
                 text=message,
                 reply_markup=reply_markup,
@@ -303,7 +303,7 @@ async def notify_user(
                 priority=Priority.HIGH,
             )
         else:
-            awAlgot bot.send_message(
+            await bot.send_message(
                 chat_id=user_id,
                 text=message,
                 reply_markup=reply_markup,

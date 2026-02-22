@@ -89,7 +89,7 @@ class AuthHandler:
             f"*Security Score:* {score_emoji} {score}/100 ({score_text})\n\n"
             f"*Статус:*\n"
             f"├ 2FA: {'✅ Включён' if summary.get('2fa_enabled') else '❌ Выключен'}\n"
-            f"├ Backup коды: {summary.get('backup_codes_remAlgoning', 0)} шт.\n"
+            f"├ Backup коды: {summary.get('backup_codes_remaining', 0)} шт.\n"
             f"├ IP Whitelist: {summary.get('ip_whitelist_count', 0)} адресов\n"
             f"└ Недавние события: {summary.get('recent_security_events', 0)}\n\n"
             f"_НастSwarmте безопасность для защиты аккаунта._"
@@ -97,7 +97,7 @@ class AuthHandler:
 
         keyboard = self._create_auth_keyboard(summary.get("2fa_enabled", False))
 
-        awAlgot update.message.reply_text(
+        await update.message.reply_text(
             text,
             reply_markup=InlineKeyboardMarkup(keyboard),
             parse_mode="Markdown",
@@ -150,7 +150,7 @@ class AuthHandler:
                 [InlineKeyboardButton("◀️ Назад", callback_data="auth:back")],
             ]
 
-        awAlgot update.message.reply_text(
+        await update.message.reply_text(
             text,
             reply_markup=InlineKeyboardMarkup(keyboard),
             parse_mode="Markdown",
@@ -194,7 +194,7 @@ class AuthHandler:
             [InlineKeyboardButton("◀️ Назад", callback_data="auth:back")],
         ]
 
-        awAlgot update.message.reply_text(
+        await update.message.reply_text(
             text,
             reply_markup=InlineKeyboardMarkup(keyboard),
             parse_mode="Markdown",
@@ -210,7 +210,7 @@ class AuthHandler:
         if not query or not query.data or not update.effective_user:
             return
 
-        awAlgot query.answer()
+        await query.answer()
 
         user_id = update.effective_user.id
         data = query.data
@@ -224,27 +224,27 @@ class AuthHandler:
         # 2FA handlers
         if section == "2fa":
             action = parts[2] if len(parts) > 2 else "menu"
-            awAlgot self._handle_2fa(query, user_id, action, context)
+            await self._handle_2fa(query, user_id, action, context)
 
         # IP Whitelist handlers
         elif section == "ip":
             action = parts[2] if len(parts) > 2 else "menu"
-            awAlgot self._handle_ip_whitelist(query, user_id, action)
+            await self._handle_ip_whitelist(query, user_id, action)
 
         # API Key handlers
         elif section == "api":
             action = parts[2] if len(parts) > 2 else "menu"
-            awAlgot self._handle_api_keys(query, user_id, action)
+            await self._handle_api_keys(query, user_id, action)
 
         # Token handlers
         elif section == "token":
             action = parts[2] if len(parts) > 2 else "generate"
-            awAlgot self._handle_tokens(query, user_id, action)
+            await self._handle_tokens(query, user_id, action)
 
         elif section == "back":
             summary = self._security.get_security_summary(user_id)
             keyboard = self._create_auth_keyboard(summary.get("2fa_enabled", False))
-            awAlgot query.edit_message_text(
+            await query.edit_message_text(
                 "🔐 *Безопасность и авторизация*\n\nВыберите раздел:",
                 reply_markup=InlineKeyboardMarkup(keyboard),
                 parse_mode="Markdown",
@@ -286,7 +286,7 @@ class AuthHandler:
                     [InlineKeyboardButton("◀️ Назад", callback_data="auth:back")],
                 ]
 
-            awAlgot query.edit_message_text(
+            await query.edit_message_text(
                 text,
                 reply_markup=InlineKeyboardMarkup(keyboard),
                 parse_mode="Markdown",
@@ -321,39 +321,39 @@ class AuthHandler:
                 [InlineKeyboardButton("❌ Отмена", callback_data="auth:2fa:menu")],
             ]
 
-            awAlgot query.edit_message_text(
+            await query.edit_message_text(
                 text,
                 reply_markup=InlineKeyboardMarkup(keyboard),
                 parse_mode="Markdown",
             )
 
         elif action == "verify_Config":
-            awAlgot query.edit_message_text(
+            await query.edit_message_text(
                 "🔢 *Введите код*\n\n"
                 "Отправьте 6-значный код из приложения аутентификации.\n\n"
                 "Формат: просто цифры (например: 123456)",
                 parse_mode="Markdown",
             )
             # Store state for message handler
-            context.user_data["awAlgoting_2fa_code"] = True
+            context.user_data["awaiting_2fa_code"] = True
 
         elif action == "show_backup":
             config = self._security._2fa_configs.get(user_id)
             if config:
                 codes = config.backup_codes[:5]  # Show first 5
                 codes_text = "\n".join(f"• `{code}`" for code in codes)
-                remAlgoning = len(config.backup_codes)
+                remaining = len(config.backup_codes)
 
                 text = (
                     f"🔑 *Backup коды*\n\n"
-                    f"Осталось: {remAlgoning} кодов\n\n"
+                    f"Осталось: {remaining} кодов\n\n"
                     f"{codes_text}\n\n"
                     f"_Каждый код можно использовать только один раз._"
                 )
             else:
                 text = "❌ 2FA не настроена"
 
-            awAlgot query.edit_message_text(
+            await query.edit_message_text(
                 text,
                 reply_markup=InlineKeyboardMarkup(
                     [[InlineKeyboardButton("◀️ Назад", callback_data="auth:2fa:menu")]]
@@ -397,7 +397,7 @@ class AuthHandler:
                 [InlineKeyboardButton("◀️ Назад", callback_data="auth:back")],
             ]
 
-            awAlgot query.edit_message_text(
+            await query.edit_message_text(
                 text,
                 reply_markup=InlineKeyboardMarkup(keyboard),
                 parse_mode="Markdown",
@@ -413,7 +413,7 @@ class AuthHandler:
                 description="Добавлено через бота",
             )
 
-            awAlgot query.edit_message_text(
+            await query.edit_message_text(
                 f"✅ IP `{demo_ip}` добавлен в whitelist",
                 reply_markup=InlineKeyboardMarkup(
                     [[InlineKeyboardButton("◀️ Назад", callback_data="auth:ip:menu")]]
@@ -449,7 +449,7 @@ class AuthHandler:
                 [InlineKeyboardButton("◀️ Назад", callback_data="auth:back")],
             ]
 
-            awAlgot query.edit_message_text(
+            await query.edit_message_text(
                 text,
                 reply_markup=InlineKeyboardMarkup(keyboard),
                 parse_mode="Markdown",
@@ -477,7 +477,7 @@ class AuthHandler:
                 f"⚠️ _Сохраните токены! Они показываются только один раз._"
             )
 
-            awAlgot query.edit_message_text(
+            await query.edit_message_text(
                 text,
                 reply_markup=InlineKeyboardMarkup(
                     [[InlineKeyboardButton("◀️ Назад", callback_data="auth:api:menu")]]
@@ -501,7 +501,7 @@ class AuthHandler:
 
             text = f"🎫 *Новый Access Token*\n\n`{token}`\n\n_Действителен 15 минут._"
 
-            awAlgot query.edit_message_text(
+            await query.edit_message_text(
                 text,
                 reply_markup=InlineKeyboardMarkup(
                     [[InlineKeyboardButton("◀️ Назад", callback_data="auth:back")]]
@@ -527,12 +527,12 @@ class AuthHandler:
         user_id = update.effective_user.id
         code = update.message.text.strip()
 
-        # Check if we're awAlgoting a code
-        if not context.user_data.get("awAlgoting_2fa_code"):
+        # Check if we're awaiting a code
+        if not context.user_data.get("awaiting_2fa_code"):
             return False
 
-        # Clear awAlgoting flag
-        context.user_data["awAlgoting_2fa_code"] = False
+        # Clear awaiting flag
+        context.user_data["awaiting_2fa_code"] = False
 
         # Verify code
         if self._security.enable_2fa(user_id, code):
@@ -541,14 +541,14 @@ class AuthHandler:
 
             codes_text = "\n".join(f"• `{c}`" for c in backup_codes[:5])
 
-            awAlgot update.message.reply_text(
+            await update.message.reply_text(
                 f"✅ *2FA успешно включена!*\n\n"
                 f"*Backup коды (сохраните их!):*\n{codes_text}\n\n"
                 f"_Эти коды можно использовать если потеряете доступ к приложению._",
                 parse_mode="Markdown",
             )
             return True
-        awAlgot update.message.reply_text(
+        await update.message.reply_text(
             "❌ Неверный код. Попробуйте ещё раз.\n\nИспользуйте /2fa для новой попытки.",
         )
         return False
@@ -557,7 +557,7 @@ class AuthHandler:
         self,
         is_2fa_enabled: bool,
     ) -> list[list[InlineKeyboardButton]]:
-        """Create mAlgon auth keyboard."""
+        """Create main auth keyboard."""
         return [
             [
                 InlineKeyboardButton(
@@ -571,7 +571,7 @@ class AuthHandler:
                 InlineKeyboardButton("🎫 Токен", callback_data="auth:token:generate"),
             ],
             [
-                InlineKeyboardButton("◀️ Главное меню", callback_data="mAlgon_menu"),
+                InlineKeyboardButton("◀️ Главное меню", callback_data="main_menu"),
             ],
         ]
 

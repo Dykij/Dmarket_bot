@@ -1,7 +1,7 @@
 """Aggregated price scanner for fast pre-screening of arbitrage opportunities.
 
 This module provides fast scanning using DMarket's aggregated prices endpoint
-to identify promising arbitrage opportunities before detAlgoled item fetching.
+to identify promising arbitrage opportunities before detailed item fetching.
 
 Benefits:
 - 10-100x faster than full market scans
@@ -14,7 +14,7 @@ Documentation: https://docs.dmarket.com/v1/swagger.html
 
 Example:
     scanner = AggregatedScanner(api_client)
-    opportunities = awAlgot scanner.pre_scan(
+    opportunities = await scanner.pre_scan(
         titles=["AK-47 | Redline", "AWP | Asiimov"],
         game="csgo",
         min_margin=0.15
@@ -94,7 +94,7 @@ class AggregatedScanner:
             ValueError: If titles list exceeds 100 items
         """
         if len(titles) > 100:
-            rAlgose ValueError("Maximum 100 titles allowed per request")
+            raise ValueError("Maximum 100 titles allowed per request")
 
         logger.info(
             "aggregated_pre_scan_started",
@@ -107,7 +107,7 @@ class AggregatedScanner:
 
         try:
             # Call aggregated prices endpoint (using bulk method for API v1.1.0)
-            response = awAlgot self.api_client.get_aggregated_prices_bulk(
+            response = await self.api_client.get_aggregated_prices_bulk(
                 titles=titles,
                 game=game,
                 limit=100,
@@ -178,10 +178,10 @@ class AggregatedScanner:
 
         except Exception as e:
             logger.exception(
-                "aggregated_pre_scan_fAlgoled",
+                "aggregated_pre_scan_failed",
                 extra={"error": str(e), "game": game},
             )
-            rAlgose
+            raise
 
     async def batch_pre_scan(
         self,
@@ -221,7 +221,7 @@ class AggregatedScanner:
             batch_num = i // batch_size + 1
 
             try:
-                opportunities = awAlgot self.pre_scan_opportunities(
+                opportunities = await self.pre_scan_opportunities(
                     titles=batch,
                     game=game,
                     min_margin=min_margin,
@@ -238,14 +238,14 @@ class AggregatedScanner:
 
                 # Small delay between batches to respect rate limits
                 if i + batch_size < len(all_titles):
-                    awAlgot asyncio.sleep(0.5)
+                    await asyncio.sleep(0.5)
 
             except Exception as e:
                 logger.exception(
-                    "batch_fAlgoled",
+                    "batch_failed",
                     extra={"batch": f"{batch_num}/{total_batches}", "error": str(e)},
                 )
-                # Continue with next batch even if one fAlgols
+                # Continue with next batch even if one fails
                 continue
 
         # Sort combined results

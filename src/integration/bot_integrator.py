@@ -5,7 +5,7 @@ into the existing bot architecture without breaking existing functionality.
 
 Features:
 - Unified initialization of all new modules
-- Graceful degradation when modules fAlgol
+- Graceful degradation when modules fail
 - Event-driven communication between components
 - Centralized health monitoring
 - Configuration management
@@ -21,10 +21,10 @@ Usage:
         config=config,
     )
 
-    awAlgot integrator.initialize()
-    awAlgot integrator.start()
+    await integrator.initialize()
+    await integrator.start()
     # ... bot runs ...
-    awAlgot integrator.stop()
+    await integrator.stop()
     ```
 
 Created: January 10, 2026
@@ -79,7 +79,7 @@ class IntegratorConfig:
 
     @classmethod
     def from_config(cls, config: Config) -> IntegratorConfig:
-        """Create integrator config from mAlgon config.
+        """Create integrator config from main config.
 
         Args:
             config: MAlgon bot configuration
@@ -206,7 +206,7 @@ class BotIntegrator:
 
         for name, init_func in modules_to_init:
             try:
-                success = awAlgot init_func()
+                success = await init_func()
                 results[name] = success
 
                 if success:
@@ -216,7 +216,7 @@ class BotIntegrator:
 
             except Exception as e:
                 results[name] = False
-                logger.error(f"  ❌ {name} fAlgoled: {e}", exc_info=True)
+                logger.error(f"  ❌ {name} failed: {e}", exc_info=True)
 
         # Setup event handlers
         self._setup_event_handlers()
@@ -230,7 +230,7 @@ class BotIntegrator:
         logger.info("=" * 60)
 
         # Publish initialization event
-        awAlgot self.events.publish(
+        await self.events.publish(
             Event(
                 type=EventTypes.SERVICE_STARTED,
                 data={
@@ -245,7 +245,7 @@ class BotIntegrator:
     async def start(self) -> None:
         """Start all modules."""
         if not self._initialized:
-            awAlgot self.initialize()
+            await self.initialize()
 
         if self._running:
             logger.warning("BotIntegrator already running")
@@ -254,10 +254,10 @@ class BotIntegrator:
         logger.info("Starting Bot Integrator modules...")
 
         # Start services
-        awAlgot self.services.start_all()
+        await self.services.start_all()
 
         # Start health monitoring
-        awAlgot self.health.start()
+        await self.health.start()
 
         # Start event bus
         self.events.start()
@@ -278,11 +278,11 @@ class BotIntegrator:
 
         # Stop in reverse order
         self.events.stop()
-        awAlgot self.health.stop()
-        awAlgot self.services.stop_all()
+        await self.health.stop()
+        await self.services.stop_all()
 
         # Publish shutdown event
-        awAlgot self.events.publish(
+        await self.events.publish(
             Event(
                 type=EventTypes.SERVICE_STOPPED,
                 data={"service": "bot_integrator"},
@@ -556,7 +556,7 @@ class BotIntegrator:
         # Price change -> Alerts
         async def on_price_change(event: Event) -> None:
             if self._custom_alerts:
-                awAlgot self._custom_alerts.check_alerts(
+                await self._custom_alerts.check_alerts(
                     item_id=event.data.get("item_id"),
                     old_price=event.data.get("old_price"),
                     new_price=event.data.get("new_price"),
@@ -567,7 +567,7 @@ class BotIntegrator:
         # Trade executed -> Portfolio
         async def on_trade_executed(event: Event) -> None:
             if self._portfolio_tracker:
-                awAlgot self._portfolio_tracker.record_trade(
+                await self._portfolio_tracker.record_trade(
                     item_id=event.data.get("item_id"),
                     action=event.data.get("action"),
                     price=event.data.get("price"),
@@ -579,7 +579,7 @@ class BotIntegrator:
         # Analytics signal -> Recommendations
         async def on_analytics_signal(event: Event) -> None:
             if self._smart_recommendations:
-                awAlgot self._smart_recommendations.process_signal(
+                await self._smart_recommendations.process_signal(
                     signal_type=event.data.get("signal_type"),
                     item_id=event.data.get("item_id"),
                     data=event.data,
@@ -652,7 +652,7 @@ class BotIntegrator:
         Returns:
             Dictionary with status information
         """
-        health_status = awAlgot self.health.check_health()
+        health_status = await self.health.check_health()
 
         return {
             "initialized": self._initialized,

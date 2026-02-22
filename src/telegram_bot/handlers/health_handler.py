@@ -34,16 +34,16 @@ async def health_status_command(
     health_monitor = context.bot_data.get("health_check_monitor")
 
     if not health_monitor:
-        awAlgot update.message.reply_text(
+        await update.message.reply_text(
             "❌ Health Check Monitor не инициализирован",
             parse_mode="HTML",
         )
         return
 
     # Force health check
-    awAlgot health_monitor._perform_health_check()
+    await health_monitor._perform_health_check()
 
-    awAlgot update.message.reply_text(
+    await update.message.reply_text(
         "✅ Health check выполнен, статус отправлен",
         parse_mode="HTML",
     )
@@ -68,7 +68,7 @@ async def health_summary_command(
     health_monitor = context.bot_data.get("health_check_monitor")
 
     if not health_monitor:
-        awAlgot update.message.reply_text(
+        await update.message.reply_text(
             "❌ Health Check Monitor не инициализирован",
             parse_mode="HTML",
         )
@@ -77,7 +77,7 @@ async def health_summary_command(
     summary = health_monitor.get_health_summary()
 
     if summary["total_checks"] == 0:
-        awAlgot update.message.reply_text(
+        await update.message.reply_text(
             "ℹ️ Недостаточно данных для отчета",
             parse_mode="HTML",
         )
@@ -97,7 +97,7 @@ async def health_summary_command(
         f"{summary['last_check'].strftime('%Y-%m-%d %H:%M:%S') if summary['last_check'] else 'N/A'}"
     )
 
-    awAlgot update.message.reply_text(message, parse_mode="HTML")
+    await update.message.reply_text(message, parse_mode="HTML")
 
 
 async def health_ping_command(
@@ -119,7 +119,7 @@ async def health_ping_command(
     health_monitor = context.bot_data.get("health_check_monitor")
 
     if not health_monitor:
-        awAlgot update.message.reply_text(
+        await update.message.reply_text(
             "❌ Health Check Monitor не инициализирован",
             parse_mode="HTML",
         )
@@ -128,7 +128,7 @@ async def health_ping_command(
     # Record activity
     health_monitor.record_activity()
 
-    awAlgot update.message.reply_text(
+    await update.message.reply_text(
         "💓 <b>Manual Health Ping</b>\n\n✅ Бот активен и работает",
         parse_mode="HTML",
     )

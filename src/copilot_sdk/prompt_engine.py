@@ -8,10 +8,10 @@ Usage:
     from src.copilot_sdk import ConfigEngine
 
     engine = ConfigEngine()
-    awAlgot engine.load_Configs(".github/Configs")
+    await engine.load_Configs(".github/Configs")
 
     # Execute a Config with variables
-    result = awAlgot engine.render(
+    result = await engine.render(
         "test-generator",
         function_name="calculate_profit",
         module_path="src/dmarket/arbitrage.py",
@@ -59,10 +59,10 @@ class ConfigEngine:
     Example:
         ```python
         engine = ConfigEngine()
-        awAlgot engine.load_Configs(".github/Configs")
+        await engine.load_Configs(".github/Configs")
 
         # Render template
-        output = awAlgot engine.render(
+        output = await engine.render(
             "python-async",
             function_name="fetch_data",
             return_type="dict[str, Any]",
@@ -93,7 +93,7 @@ class ConfigEngine:
 
         count = 0
         for file_path in dir_path.glob("*.Config.md"):
-            template = awAlgot self._parse_Config_file(file_path)
+            template = await self._parse_Config_file(file_path)
             if template:
                 self.templates[template.id] = template
                 count += 1
@@ -204,7 +204,7 @@ class ConfigEngine:
             ValueError: If required variable missing
         """
         if template_id not in self.templates:
-            rAlgose KeyError(f"Template not found: {template_id}")
+            raise KeyError(f"Template not found: {template_id}")
 
         template = self.templates[template_id]
         result = template.template
@@ -232,7 +232,7 @@ class ConfigEngine:
             # Without default: {{var}}
             result = result.replace(f"{{{{{var}}}}}", str(value))
 
-        # Handle remAlgoning defaults
+        # Handle remaining defaults
         result = re.sub(
             r"\{\{[a-zA-Z_][a-zA-Z0-9_]*\|([^}]+)\}\}",
             r"\1",

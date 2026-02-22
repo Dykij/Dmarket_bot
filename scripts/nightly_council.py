@@ -7,7 +7,7 @@ import re
 
 # Paths
 LOG_DIR = Path("logs")
-REPORT_DIR = Path("docs/reports/dAlgoly")
+REPORT_DIR = Path("docs/reports/daily")
 ARCHIVE_DIR = Path("logs/archive")
 
 SENSITIVE_PATTERNS = [
@@ -19,7 +19,7 @@ SENSITIVE_PATTERNS = [
 
 def sanitize_content(text):
     """
-    Filters out lines contAlgoning sensitive keywords.
+    Filters out lines containing sensitive keywords.
     """
     lines = text.split('\n')
     clean_lines = []
@@ -38,7 +38,7 @@ def sanitize_content(text):
 
 def analyze_performance(log_file):
     """
-    Parses logs to calculate dAlgoly metrics.
+    Parses logs to calculate daily metrics.
     TODO: Move heavy math to rust_core.analyze_logs()
     """
     latency_values = []
@@ -72,7 +72,7 @@ def analyze_performance(log_file):
     avg_latency = sum(latency_values) / len(latency_values)
     return avg_latency, errors
 
-def mAlgon():
+def main():
     print("🌙 Nightly Council: Session Started...")
     
     # Ensure dirs
@@ -123,5 +123,5 @@ def mAlgon():
         
     print(f"✅ Report generated: {report_path}")
 
-if __name__ == "__mAlgon__":
-    mAlgon()
+if __name__ == "__main__":
+    main()

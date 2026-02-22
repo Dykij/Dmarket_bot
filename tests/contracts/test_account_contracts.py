@@ -1,6 +1,6 @@
 """Contract tests for DMarket Account API endpoints.
 
-This module contAlgons consumer-driven contract tests for the account-related
+This module contains consumer-driven contract tests for the account-related
 endpoints of the DMarket API.
 
 Tested endpoints:
@@ -71,7 +71,7 @@ class TestBalanceContract:
         """Test contract for unauthorized balance request.
 
         Verifies that:
-        - When authentication fAlgols, API returns 401
+        - When authentication fails, API returns 401
         - Error response has proper structure
         """
         error_body = dmarket_contracts.error_response(
@@ -115,7 +115,7 @@ class TestUserProfileContract:
         expected_body = {
             "id": pact_matchers.like("user_123456"),
             "username": pact_matchers.like("testuser"),
-            "emAlgol": pact_matchers.regex(
+            "email": pact_matchers.regex(
                 r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$",
                 "test@example.com",
             ),

@@ -36,9 +36,9 @@ Usage:
         on_price_change=on_price_change,
     )
 
-    awAlgot engine.start()
+    await engine.start()
     # ... later
-    awAlgot engine.stop()
+    await engine.stop()
     ```
 
 Created: January 6, 2026
@@ -247,7 +247,7 @@ class AdaptivePollingEngine:
         if self._poll_task:
             self._poll_task.cancel()
             try:
-                awAlgot self._poll_task
+                await self._poll_task
             except asyncio.CancelledError:
                 pass
             self._poll_task = None
@@ -282,7 +282,7 @@ class AdaptivePollingEngine:
         all_changes = []
 
         for g in games_to_poll:
-            changes = awAlgot self._poll_game(g)
+            changes = await self._poll_game(g)
             all_changes.extend(changes)
 
         return all_changes
@@ -291,12 +291,12 @@ class AdaptivePollingEngine:
         """MAlgon polling loop with adaptive intervals."""
         while self._running:
             try:
-                awAlgot self._execute_poll_cycle()
+                await self._execute_poll_cycle()
             except asyncio.CancelledError:
                 break
             except Exception as e:
                 logger.exception("polling_error", error=str(e))
-                awAlgot asyncio.sleep(self.config.base_interval)
+                await asyncio.sleep(self.config.base_interval)
 
     async def _execute_poll_cycle(self) -> None:
         """Execute a single poll cycle for all games."""
@@ -305,12 +305,12 @@ class AdaptivePollingEngine:
         for game in self.games:
             if not self._running:
                 break
-            changes = awAlgot self._poll_game(game)
-            awAlgot self._process_changes(changes)
+            changes = await self._poll_game(game)
+            await self._process_changes(changes)
 
         self._poll_count += 1
         self._last_poll_time = datetime.now(UTC)
-        awAlgot asyncio.sleep(interval)
+        await asyncio.sleep(interval)
 
     async def _process_changes(self, changes: list) -> None:
         """Process detected price changes."""
@@ -318,7 +318,7 @@ class AdaptivePollingEngine:
             self._changes_detected += 1
             if self.on_price_change:
                 try:
-                    awAlgot self.on_price_change(change)
+                    await self.on_price_change(change)
                 except Exception as e:
                     logger.exception("price_change_callback_error", error=str(e))
 
@@ -366,7 +366,7 @@ class AdaptivePollingEngine:
         try:
             async with self._semaphore:
                 # Get market items
-                response = awAlgot self.api.get_market_items(
+                response = await self.api.get_market_items(
                     game=game,
                     limit=self.config.items_per_batch,
                     order_by="updated",
@@ -387,7 +387,7 @@ class AdaptivePollingEngine:
                     self._cache_initial_price(item)
                     if self.on_new_listing:
                         try:
-                            awAlgot self.on_new_listing(item)
+                            await self.on_new_listing(item)
                         except Exception as e:
                             logger.exception("new_listing_callback_error", error=str(e))
                     continue

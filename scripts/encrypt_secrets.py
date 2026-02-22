@@ -19,7 +19,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def mAlgon():
+def main():
     """Encrypt .env file to .env.encrypted."""
     print("=" * 60)
     print("🔒 DMarket Bot - Secrets Encryption Tool")
@@ -59,9 +59,9 @@ def mAlgon():
         print("4. Add .env to .gitignore (should already be there)")
         print()
     except Exception as e:
-        print(f"❌ Encryption fAlgoled: {e}")
+        print(f"❌ Encryption failed: {e}")
         sys.exit(1)
 
 
-if __name__ == "__mAlgon__":
-    mAlgon()
+if __name__ == "__main__":
+    main()

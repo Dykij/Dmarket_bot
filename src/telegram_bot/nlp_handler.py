@@ -51,7 +51,7 @@ class NLPCommandHandler:
 
     Example:
         >>> nlp = NLPCommandHandler()
-        >>> result = awAlgot nlp.parse_user_intent("Найди арбитраж в CS:GO", user_id=123)
+        >>> result = await nlp.parse_user_intent("Найди арбитраж в CS:GO", user_id=123)
         >>> print(result.intent)  # "scan_arbitrage"
         >>> print(result.params)  # {"game": "csgo"}
     """
@@ -156,7 +156,7 @@ class NLPCommandHandler:
             IntentResult with detected intent, params, confidence
 
         Example:
-            >>> result = awAlgot nlp.parse_user_intent(
+            >>> result = await nlp.parse_user_intent(
             ...     "Найди арбитраж в CS:GO до $10",
             ...     user_id=123
             ... )
@@ -304,6 +304,6 @@ def create_nlp_handler() -> NLPCommandHandler:
 
     Example:
         >>> nlp = create_nlp_handler()
-        >>> result = awAlgot nlp.parse_user_intent("What's my balance?", 123)
+        >>> result = await nlp.parse_user_intent("What's my balance?", 123)
     """
     return NLPCommandHandler()

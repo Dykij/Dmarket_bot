@@ -11,7 +11,7 @@ import json
 import logging
 import os
 import time
-from collections.abc import AwAlgotable, Callable
+from collections.abc import Awaitable, Callable
 from pathlib import Path
 from typing import Any, TypeVar
 
@@ -541,7 +541,7 @@ async def update_user_settings(user_id: int, settings: dict[str, Any]) -> None:
 
 
 # Type variable for decorator
-F = TypeVar("F", bound=Callable[..., AwAlgotable[None]])
+F = TypeVar("F", bound=Callable[..., Awaitable[None]])
 
 
 # Декоратор для проверки прав доступа
@@ -565,7 +565,7 @@ def require_access_level(feature: str) -> Callable[[F], F]:
         ) -> None:
             if not update.effective_user:
                 if update.message:
-                    awAlgot update.message.reply_text(
+                    await update.message.reply_text(
                         "⚠️ Ошибка: Не удалось определить пользователя.",
                     )
                 return
@@ -574,14 +574,14 @@ def require_access_level(feature: str) -> Callable[[F], F]:
 
             if not profile_manager.has_access(user_id, feature):
                 if update.message:
-                    awAlgot update.message.reply_text(
+                    await update.message.reply_text(
                         f"⛔ У вас нет доступа к этой функции ({feature}).\n"
                         "Для получения доступа обратитесь к администратору.",
                     )
                 return
 
             # Если доступ есть, выполняем исходную функцию
-            awAlgot func(update, context, *args, **kwargs)
+            await func(update, context, *args, **kwargs)
 
         return wrapper  # type: ignore[return-value]
 

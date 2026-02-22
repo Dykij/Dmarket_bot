@@ -222,7 +222,7 @@ def test_watcher_initialization(price_watcher, mock_api_client):
 async def test_watcher_start_success(price_watcher, mock_websocket_client):
     """Тест успешного запуска наблюдателя."""
     with patch("asyncio.create_task") as mock_create_task:
-        result = awAlgot price_watcher.start()
+        result = await price_watcher.start()
 
         assert result is True
         assert price_watcher.is_running is True
@@ -245,7 +245,7 @@ async def test_watcher_start_already_running(price_watcher):
     """Тест запуска уже работающего наблюдателя."""
     price_watcher.is_running = True
 
-    result = awAlgot price_watcher.start()
+    result = await price_watcher.start()
 
     assert result is True
     # WebSocket connect не должен вызываться
@@ -253,11 +253,11 @@ async def test_watcher_start_already_running(price_watcher):
 
 
 @pytest.mark.asyncio()
-async def test_watcher_start_connection_fAlgoled(price_watcher, mock_websocket_client):
+async def test_watcher_start_connection_failed(price_watcher, mock_websocket_client):
     """Тест неудачного подключения к WebSocket."""
     mock_websocket_client.connect = AsyncMock(return_value=False)
 
-    result = awAlgot price_watcher.start()
+    result = await price_watcher.start()
 
     assert result is False
     assert price_watcher.is_running is False
@@ -267,7 +267,7 @@ async def test_watcher_start_connection_fAlgoled(price_watcher, mock_websocket_c
 async def test_watcher_stop(price_watcher):
     """Тест остановки наблюдателя."""
     # Создаём мок задачи которая уже завершена (done=True)
-    # Тогда awAlgot не будет вызван
+    # Тогда await не будет вызван
     mock_ws_task = MagicMock()
     mock_ws_task.done = MagicMock(return_value=True)
     mock_ws_task.cancel = MagicMock()
@@ -280,7 +280,7 @@ async def test_watcher_stop(price_watcher):
     price_watcher.ws_task = mock_ws_task
     price_watcher.price_update_task = mock_update_task
 
-    awAlgot price_watcher.stop()
+    await price_watcher.stop()
 
     assert price_watcher.is_running is False
     # cancel() не должен вызываться для завершенных задач
@@ -294,7 +294,7 @@ async def test_watcher_stop_not_running(price_watcher):
     """Тест остановки неработающего наблюдателя."""
     price_watcher.is_running = False
 
-    awAlgot price_watcher.stop()
+    await price_watcher.stop()
 
     # close не должен вызываться
     price_watcher.websocket_client.close.assert_not_called()
@@ -569,7 +569,7 @@ def test_get_item_metadata_not_exists(price_watcher):
 @pytest.mark.asyncio()
 async def test_subscribe_to_item_not_running(price_watcher):
     """Тест подписки на предмет когда наблюдатель не запущен."""
-    result = awAlgot price_watcher.subscribe_to_item("item_123")
+    result = await price_watcher.subscribe_to_item("item_123")
 
     assert result is False
 
@@ -581,7 +581,7 @@ async def test_subscribe_to_item_success(price_watcher):
 
     # Мокируем _fetch_item_price
     with patch.object(price_watcher, "_fetch_item_price", return_value=15.50):
-        result = awAlgot price_watcher.subscribe_to_item("item_123", game="csgo")
+        result = await price_watcher.subscribe_to_item("item_123", game="csgo")
 
         assert result is True
         assert "item_123" in price_watcher.watched_items
@@ -591,7 +591,7 @@ async def test_subscribe_to_item_success(price_watcher):
 @pytest.mark.asyncio()
 async def test_subscribe_to_market_updates_not_running(price_watcher):
     """Тест подписки на обновления рынка когда наблюдатель не запущен."""
-    result = awAlgot price_watcher.subscribe_to_market_updates("csgo")
+    result = await price_watcher.subscribe_to_market_updates("csgo")
 
     assert result is False
 
@@ -601,7 +601,7 @@ async def test_subscribe_to_market_updates_success(price_watcher):
     """Тест успешной подписки на обновления рынка."""
     price_watcher.is_running = True
 
-    result = awAlgot price_watcher.subscribe_to_market_updates("csgo")
+    result = await price_watcher.subscribe_to_market_updates("csgo")
 
     assert result is True
     price_watcher.websocket_client.subscribe_to_market_updates.assert_called_once_with(
@@ -627,7 +627,7 @@ async def test_fetch_item_price_success(price_watcher, mock_api_client):
         }
     )
 
-    price = awAlgot price_watcher._fetch_item_price("item_123", game="csgo")
+    price = await price_watcher._fetch_item_price("item_123", game="csgo")
 
     assert price == 15.50
     # Проверяем сохранение метаданных
@@ -639,7 +639,7 @@ async def test_fetch_item_price_no_items(price_watcher, mock_api_client):
     """Тест получения цены - предмет не найден."""
     mock_api_client._request = AsyncMock(return_value={"items": []})
 
-    price = awAlgot price_watcher._fetch_item_price("item_123")
+    price = await price_watcher._fetch_item_price("item_123")
 
     assert price is None
 
@@ -649,7 +649,7 @@ async def test_fetch_item_price_api_error(price_watcher, mock_api_client):
     """Тест получения цены - ошибка API."""
     mock_api_client._request = AsyncMock(side_effect=Exception("API Error"))
 
-    price = awAlgot price_watcher._fetch_item_price("item_123")
+    price = await price_watcher._fetch_item_price("item_123")
 
     assert price is None
 
@@ -663,7 +663,7 @@ async def test_process_price_change_no_change(price_watcher):
     handler = AsyncMock()
     price_watcher.register_price_change_handler(handler, item_id="item_123")
 
-    awAlgot price_watcher._process_price_change("item_123", 10.0, 10.0)
+    await price_watcher._process_price_change("item_123", 10.0, 10.0)
 
     # Обработчик не должен быть вызван
     handler.assert_not_called()
@@ -680,7 +680,7 @@ async def test_process_price_change_with_handlers(price_watcher):
     price_watcher.register_price_change_handler(handler2, item_id="item_123")
     price_watcher.register_price_change_handler(global_handler)  # Глобальный
 
-    awAlgot price_watcher._process_price_change("item_123", 10.0, 12.0)
+    await price_watcher._process_price_change("item_123", 10.0, 12.0)
 
     # Все обработчики должны быть вызваны
     handler1.assert_called_once_with("item_123", 10.0, 12.0)
@@ -691,14 +691,14 @@ async def test_process_price_change_with_handlers(price_watcher):
 @pytest.mark.asyncio()
 async def test_process_price_change_handler_error(price_watcher):
     """Тест обработки изменения цены - ошибка в обработчике."""
-    fAlgoling_handler = AsyncMock(side_effect=Exception("Handler error"))
+    failing_handler = AsyncMock(side_effect=Exception("Handler error"))
     working_handler = AsyncMock()
 
-    price_watcher.register_price_change_handler(fAlgoling_handler, item_id="item_123")
+    price_watcher.register_price_change_handler(failing_handler, item_id="item_123")
     price_watcher.register_price_change_handler(working_handler, item_id="item_123")
 
     # Не должно вызывать исключение
-    awAlgot price_watcher._process_price_change("item_123", 10.0, 12.0)
+    await price_watcher._process_price_change("item_123", 10.0, 12.0)
 
     # Работающий обработчик должен быть вызван
     working_handler.assert_called_once()
@@ -716,7 +716,7 @@ async def test_check_alerts_triggered(price_watcher):
     price_watcher.add_price_alert(alert)
     price_watcher.register_alert_handler(alert_handler)
 
-    awAlgot price_watcher._check_alerts("item_123", 9.0)
+    await price_watcher._check_alerts("item_123", 9.0)
 
     # Оповещение должно сработать
     assert alert.is_triggered is True
@@ -732,7 +732,7 @@ async def test_check_alerts_not_triggered(price_watcher):
     price_watcher.add_price_alert(alert)
     price_watcher.register_alert_handler(alert_handler)
 
-    awAlgot price_watcher._check_alerts("item_123", 11.0)
+    await price_watcher._check_alerts("item_123", 11.0)
 
     # Оповещение не должно сработать
     assert alert.is_triggered is False
@@ -749,13 +749,13 @@ async def test_check_alerts_already_triggered(price_watcher):
     price_watcher.register_alert_handler(alert_handler)
 
     # Первая проверка - срабатывает
-    awAlgot price_watcher._check_alerts("item_123", 9.0)
+    await price_watcher._check_alerts("item_123", 9.0)
 
     # Сбрасываем мок
     alert_handler.reset_mock()
 
     # Вторая проверка - уже сработало
-    awAlgot price_watcher._check_alerts("item_123", 8.0)
+    await price_watcher._check_alerts("item_123", 8.0)
 
     # Обработчик не должен быть вызван повторно
     alert_handler.assert_not_called()
@@ -773,7 +773,7 @@ async def test_handle_market_update_success(price_watcher):
 
     with patch.object(price_watcher, "_process_price_change") as mock_process:
         with patch.object(price_watcher, "_check_alerts") as mock_check:
-            awAlgot price_watcher._handle_market_update(message)
+            await price_watcher._handle_market_update(message)
 
             # Проверяем обновление цены
             assert price_watcher.price_cache["item_123"] == 15.50
@@ -789,7 +789,7 @@ async def test_handle_market_update_unwatched_item(price_watcher):
     message = {"data": {"items": [{"itemId": "item_999", "price": {"USD": "1550"}}]}}
 
     with patch.object(price_watcher, "_process_price_change") as mock_process:
-        awAlgot price_watcher._handle_market_update(message)
+        await price_watcher._handle_market_update(message)
 
         # Цена не должна быть сохранена
         assert "item_999" not in price_watcher.price_cache
@@ -816,7 +816,7 @@ async def test_handle_items_update_with_metadata(price_watcher):
         }
     }
 
-    awAlgot price_watcher._handle_items_update(message)
+    await price_watcher._handle_items_update(message)
 
     # Проверяем сохранение метаданных
     assert "item_123" in price_watcher.item_metadata
@@ -845,7 +845,7 @@ async def test_full_workflow_with_alert(price_watcher):
     # Имитируем получение сообщения с низкой ценой
     message = {"data": {"items": [{"itemId": "item_123", "price": {"USD": "950"}}]}}
 
-    awAlgot price_watcher._handle_market_update(message)
+    await price_watcher._handle_market_update(message)
 
     # Проверяем результат
     assert len(alert_triggered) == 1
@@ -870,7 +870,7 @@ async def test_full_workflow_price_changes(price_watcher):
     # Имитируем изменение цены
     message = {"data": {"items": [{"itemId": "item_123", "price": {"USD": "1200"}}]}}
 
-    awAlgot price_watcher._handle_market_update(message)
+    await price_watcher._handle_market_update(message)
 
     # Проверяем результат
     assert len(price_changes) == 1

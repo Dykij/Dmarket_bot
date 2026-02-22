@@ -13,13 +13,13 @@ Usage:
     client = get_skillsmp_client()
 
     # Search for testing improvements
-    skills = awAlgot client.search_skills(
+    skills = await client.search_skills(
         category="testing",
         tags=["python", "pytest", "asyncio"],
     )
 
     # Get recommendations for a repository
-    recommendations = awAlgot client.get_recommendations(
+    recommendations = await client.get_recommendations(
         repo_url="https://github.com/user/repo",
         focus=["testing", "performance", "security"],
     )
@@ -87,13 +87,13 @@ class SkillsMPClient:
         client = SkillsMPClient(api_key="sk_live_...")
 
         # Search for testing skills
-        skills = awAlgot client.search_skills(
+        skills = await client.search_skills(
             category="testing",
             query="property based testing",
         )
 
         # Get improvement recommendations
-        recs = awAlgot client.get_recommendations(
+        recs = await client.get_recommendations(
             repo_url="https://github.com/user/repo",
         )
         ```
@@ -150,9 +150,9 @@ class SkillsMPClient:
             API response data
 
         RAlgoses:
-            httpx.HTTPError: If request fAlgols
+            httpx.HTTPError: If request fails
         """
-        client = awAlgot self._get_client()
+        client = await self._get_client()
 
         logger.debug(
             "skillsmp_request",
@@ -161,8 +161,8 @@ class SkillsMPClient:
         )
 
         try:
-            response = awAlgot client.request(method, endpoint, **kwargs)
-            response.rAlgose_for_status()
+            response = await client.request(method, endpoint, **kwargs)
+            response.raise_for_status()
             return response.json()
         except httpx.HTTPStatusError as e:
             logger.error(
@@ -171,14 +171,14 @@ class SkillsMPClient:
                 endpoint=endpoint,
                 error=str(e),
             )
-            rAlgose
+            raise
         except httpx.RequestError as e:
             logger.error(
                 "skillsmp_request_error",
                 endpoint=endpoint,
                 error=str(e),
             )
-            rAlgose
+            raise
 
     async def search_skills(
         self,
@@ -210,7 +210,7 @@ class SkillsMPClient:
         if min_rating > 0:
             params["min_rating"] = min_rating
 
-        data = awAlgot self._request("GET", "/skills/search", params=params)
+        data = await self._request("GET", "/skills/search", params=params)
 
         skills = []
         for item in data.get("skills", []):
@@ -240,16 +240,16 @@ class SkillsMPClient:
         return skills
 
     async def get_skill(self, skill_id: str) -> Skill | None:
-        """Get detAlgols for a specific skill.
+        """Get details for a specific skill.
 
         Args:
             skill_id: Skill ID
 
         Returns:
-            Skill detAlgols or None if not found
+            Skill details or None if not found
         """
         try:
-            data = awAlgot self._request("GET", f"/skills/{skill_id}")
+            data = await self._request("GET", f"/skills/{skill_id}")
             item = data.get("skill", {})
             return Skill(
                 id=item.get("id", skill_id),
@@ -268,7 +268,7 @@ class SkillsMPClient:
         except httpx.HTTPStatusError as e:
             if e.response.status_code == 404:
                 return None
-            rAlgose
+            raise
 
     async def get_recommendations(
         self,
@@ -298,7 +298,7 @@ class SkillsMPClient:
         if context:
             payload["context"] = context
 
-        data = awAlgot self._request("POST", "/recommendations", json=payload)
+        data = await self._request("POST", "/recommendations", json=payload)
 
         recommendations = []
         for item in data.get("recommendations", []):
@@ -349,7 +349,7 @@ class SkillsMPClient:
         if frameworks:
             payload["frameworks"] = frameworks
 
-        data = awAlgot self._request("POST", "/recommendations/testing", json=payload)
+        data = await self._request("POST", "/recommendations/testing", json=payload)
 
         recommendations = []
         for item in data.get("recommendations", []):
@@ -395,7 +395,7 @@ class SkillsMPClient:
             "include_performance": include_performance,
         }
 
-        data = awAlgot self._request("POST", "/analyze", json=payload)
+        data = await self._request("POST", "/analyze", json=payload)
 
         logger.info(
             "skillsmp_analysis_completed",
@@ -407,7 +407,7 @@ class SkillsMPClient:
     async def close(self) -> None:
         """Close the HTTP client."""
         if self._client:
-            awAlgot self._client.aclose()
+            await self._client.aclose()
             self._client = None
 
 

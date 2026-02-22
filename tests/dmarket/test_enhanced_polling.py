@@ -65,20 +65,20 @@ class TestPollingMetrics:
 
         assert metrics.total_polls == 1
         assert metrics.successful_polls == 1
-        assert metrics.fAlgoled_polls == 0
+        assert metrics.failed_polls == 0
         assert metrics.items_processed == 50
         assert metrics.changes_detected == 5
-        assert metrics.consecutive_fAlgolures == 0
+        assert metrics.consecutive_failures == 0
 
-    def test_record_fAlgoled_poll(self):
-        """Test recording fAlgoled poll."""
+    def test_record_failed_poll(self):
+        """Test recording failed poll."""
         metrics = PollingMetrics()
         metrics.record_poll(success=False, response_time_ms=1000, error="timeout")
 
         assert metrics.total_polls == 1
         assert metrics.successful_polls == 0
-        assert metrics.fAlgoled_polls == 1
-        assert metrics.consecutive_fAlgolures == 1
+        assert metrics.failed_polls == 1
+        assert metrics.consecutive_failures == 1
         assert "timeout" in metrics.error_counts
 
     def test_success_rate(self):
@@ -154,31 +154,31 @@ class TestEnhancedPollingEngine:
     @pytest.mark.asyncio
     async def test_start_stop(self, engine):
         """Test start and stop."""
-        awAlgot engine.start()
+        await engine.start()
         assert engine.is_running is True
 
-        awAlgot asyncio.sleep(0.1)
+        await asyncio.sleep(0.1)
 
-        awAlgot engine.stop()
+        await engine.stop()
         assert engine.is_running is False
 
     @pytest.mark.asyncio
     async def test_pause_resume(self, engine):
         """Test pause and resume."""
-        awAlgot engine.start()
-        awAlgot engine.pause()
+        await engine.start()
+        await engine.pause()
         assert engine.is_running is False
 
-        awAlgot engine.resume()
-        awAlgot asyncio.sleep(0.1)
+        await engine.resume()
+        await asyncio.sleep(0.1)
         assert engine._paused is False
 
-        awAlgot engine.stop()
+        await engine.stop()
 
     @pytest.mark.asyncio
     async def test_force_poll(self, engine, mock_api):
         """Test force poll."""
-        changes = awAlgot engine.force_poll("csgo")
+        changes = await engine.force_poll("csgo")
         assert isinstance(changes, list)
         mock_api.get_market_items.assert_called()
 

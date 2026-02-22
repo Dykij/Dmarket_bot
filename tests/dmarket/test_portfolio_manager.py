@@ -279,7 +279,7 @@ class TestPortfolioManager:
     @pytest.mark.asyncio()
     async def test_get_portfolio_snapshot(self, portfolio_manager):
         """Test getting portfolio snapshot."""
-        snapshot = awAlgot portfolio_manager.get_portfolio_snapshot()
+        snapshot = await portfolio_manager.get_portfolio_snapshot()
 
         assert snapshot is not None
         assert snapshot.total_value_usd > 0
@@ -289,10 +289,10 @@ class TestPortfolioManager:
     async def test_get_portfolio_snapshot_caching(self, portfolio_manager):
         """Test that snapshot is cached."""
         # First call
-        snapshot1 = awAlgot portfolio_manager.get_portfolio_snapshot()
+        snapshot1 = await portfolio_manager.get_portfolio_snapshot()
 
         # Second call should return cached
-        snapshot2 = awAlgot portfolio_manager.get_portfolio_snapshot()
+        snapshot2 = await portfolio_manager.get_portfolio_snapshot()
 
         # Should be same object (cached)
         assert snapshot1 is snapshot2
@@ -301,10 +301,10 @@ class TestPortfolioManager:
     async def test_get_portfolio_snapshot_force_refresh(self, portfolio_manager):
         """Test forcing snapshot refresh."""
         # First call
-        awAlgot portfolio_manager.get_portfolio_snapshot()
+        await portfolio_manager.get_portfolio_snapshot()
 
         # Force refresh
-        snapshot = awAlgot portfolio_manager.get_portfolio_snapshot(force_refresh=True)
+        snapshot = await portfolio_manager.get_portfolio_snapshot(force_refresh=True)
 
         assert snapshot is not None
 
@@ -314,7 +314,7 @@ class TestPortfolioManager:
         mock_api.get_balance.side_effect = Exception("API Error")
 
         pm = PortfolioManager(api_client=mock_api)
-        snapshot = awAlgot pm.get_portfolio_snapshot()
+        snapshot = await pm.get_portfolio_snapshot()
 
         # Should handle error gracefully
         assert snapshot is not None
@@ -358,7 +358,7 @@ class TestRiskAnalysis:
     @pytest.mark.asyncio()
     async def test_analyze_risk_basic(self, portfolio_manager):
         """Test basic risk analysis."""
-        risk = awAlgot portfolio_manager.analyze_risk()
+        risk = await portfolio_manager.analyze_risk()
 
         assert risk is not None
         assert isinstance(risk.overall_risk, RiskLevel)
@@ -369,7 +369,7 @@ class TestRiskAnalysis:
     async def test_analyze_risk_empty_portfolio(self):
         """Test risk analysis with empty portfolio."""
         pm = PortfolioManager()  # No API
-        risk = awAlgot pm.analyze_risk()
+        risk = await pm.analyze_risk()
 
         assert risk.overall_risk == RiskLevel.LOW
         assert risk.concentration_score == 0
@@ -378,7 +378,7 @@ class TestRiskAnalysis:
     @pytest.mark.asyncio()
     async def test_analyze_risk_with_snapshot(self, portfolio_manager, sample_snapshot):
         """Test risk analysis with provided snapshot."""
-        risk = awAlgot portfolio_manager.analyze_risk(snapshot=sample_snapshot)
+        risk = await portfolio_manager.analyze_risk(snapshot=sample_snapshot)
 
         assert risk is not None
         assert isinstance(risk, RiskAnalysis)
@@ -411,7 +411,7 @@ class TestRiskAnalysis:
             category_distribution={"Knife": 90.0},
         )
 
-        risk = awAlgot portfolio_manager.analyze_risk(
+        risk = await portfolio_manager.analyze_risk(
             snapshot=high_concentration_snapshot
         )
 
@@ -447,7 +447,7 @@ class TestRiskAnalysis:
             category_distribution={"Rifle": 95.0},
         )
 
-        risk = awAlgot portfolio_manager.analyze_risk(snapshot=low_cash_snapshot)
+        risk = await portfolio_manager.analyze_risk(snapshot=low_cash_snapshot)
 
         # Should detect low cash
         assert any("cash" in f.lower() for f in risk.risk_factors)
@@ -464,7 +464,7 @@ class TestRebalancing:
     @pytest.mark.asyncio()
     async def test_get_rebalancing_recommendations(self, portfolio_manager):
         """Test getting rebalancing recommendations."""
-        recommendations = awAlgot portfolio_manager.get_rebalancing_recommendations()
+        recommendations = await portfolio_manager.get_rebalancing_recommendations()
 
         assert isinstance(recommendations, list)
         # All recommendations should be valid
@@ -511,7 +511,7 @@ class TestRebalancing:
             category_distribution={"Knife": 50.0, "Rifle": 40.0},
         )
 
-        recommendations = awAlgot portfolio_manager.get_rebalancing_recommendations(
+        recommendations = await portfolio_manager.get_rebalancing_recommendations(
             snapshot=snapshot
         )
 
@@ -548,7 +548,7 @@ class TestRebalancing:
             category_distribution={"Rifle": 50.0},
         )
 
-        recommendations = awAlgot portfolio_manager.get_rebalancing_recommendations(
+        recommendations = await portfolio_manager.get_rebalancing_recommendations(
             snapshot=snapshot
         )
 
@@ -586,7 +586,7 @@ class TestRebalancing:
             category_distribution={"Rifle": 50.0},
         )
 
-        recommendations = awAlgot portfolio_manager.get_rebalancing_recommendations(
+        recommendations = await portfolio_manager.get_rebalancing_recommendations(
             snapshot=snapshot
         )
 
@@ -599,7 +599,7 @@ class TestRebalancing:
     @pytest.mark.asyncio()
     async def test_max_recommendations_limit(self, portfolio_manager):
         """Test that recommendations respect max limit."""
-        recommendations = awAlgot portfolio_manager.get_rebalancing_recommendations(
+        recommendations = await portfolio_manager.get_rebalancing_recommendations(
             max_recommendations=5
         )
 
@@ -608,7 +608,7 @@ class TestRebalancing:
     @pytest.mark.asyncio()
     async def test_recommendations_sorted_by_priority(self, portfolio_manager):
         """Test that recommendations are sorted by priority."""
-        recommendations = awAlgot portfolio_manager.get_rebalancing_recommendations()
+        recommendations = await portfolio_manager.get_rebalancing_recommendations()
 
         if len(recommendations) > 1:
             priorities = [r.priority for r in recommendations]
@@ -626,7 +626,7 @@ class TestPerformanceMetrics:
     @pytest.mark.asyncio()
     async def test_get_performance_metrics(self, portfolio_manager):
         """Test getting performance metrics."""
-        metrics = awAlgot portfolio_manager.get_performance_metrics()
+        metrics = await portfolio_manager.get_performance_metrics()
 
         assert "total_value_usd" in metrics
         assert "cash_balance" in metrics
@@ -637,14 +637,14 @@ class TestPerformanceMetrics:
     @pytest.mark.asyncio()
     async def test_performance_metrics_period(self, portfolio_manager):
         """Test performance metrics with custom period."""
-        metrics = awAlgot portfolio_manager.get_performance_metrics(period_days=7)
+        metrics = await portfolio_manager.get_performance_metrics(period_days=7)
 
         assert metrics["period_days"] == 7
 
     @pytest.mark.asyncio()
     async def test_performance_metrics_distribution(self, portfolio_manager):
         """Test game and category distribution in metrics."""
-        metrics = awAlgot portfolio_manager.get_performance_metrics()
+        metrics = await portfolio_manager.get_performance_metrics()
 
         assert "game_distribution" in metrics
         assert "category_distribution" in metrics
@@ -710,7 +710,7 @@ class TestConvenienceFunctions:
     @pytest.mark.asyncio()
     async def test_get_portfolio_summary(self, mock_api):
         """Test get_portfolio_summary function."""
-        summary = awAlgot get_portfolio_summary(mock_api)
+        summary = await get_portfolio_summary(mock_api)
 
         assert "total_value" in summary
         assert "cash" in summary
@@ -721,7 +721,7 @@ class TestConvenienceFunctions:
     @pytest.mark.asyncio()
     async def test_get_rebalancing_actions(self, mock_api):
         """Test get_rebalancing_actions function."""
-        actions = awAlgot get_rebalancing_actions(mock_api)
+        actions = await get_rebalancing_actions(mock_api)
 
         assert isinstance(actions, list)
         for action in actions:
@@ -747,7 +747,7 @@ class TestEdgeCases:
         mock_api.get_user_targets.return_value = {"Items": []}
 
         pm = PortfolioManager(api_client=mock_api)
-        snapshot = awAlgot pm.get_portfolio_snapshot()
+        snapshot = await pm.get_portfolio_snapshot()
 
         assert snapshot.inventory_value == 0
         assert snapshot.listed_value == 0
@@ -768,7 +768,7 @@ class TestEdgeCases:
         }
 
         pm = PortfolioManager(api_client=mock_api)
-        snapshot = awAlgot pm.get_portfolio_snapshot()
+        snapshot = await pm.get_portfolio_snapshot()
 
         # Should handle gracefully, parsing valid items
         assert snapshot is not None
@@ -790,8 +790,8 @@ class TestEdgeCases:
             category_distribution={},
         )
 
-        risk = awAlgot pm.analyze_risk(snapshot)
-        recommendations = awAlgot pm.get_rebalancing_recommendations(snapshot)
+        risk = await pm.analyze_risk(snapshot)
+        recommendations = await pm.get_rebalancing_recommendations(snapshot)
 
         assert risk.overall_risk == RiskLevel.LOW
         assert len(recommendations) == 0
@@ -812,7 +812,7 @@ class TestEdgeCases:
         }
 
         pm = PortfolioManager(api_client=mock_api)
-        snapshot = awAlgot pm.get_portfolio_snapshot()
+        snapshot = await pm.get_portfolio_snapshot()
 
         # Should have negative profit
         losing_asset = next(
@@ -864,8 +864,8 @@ class TestPortfolioConfig:
         lenient_config = PortfolioConfig(max_single_item_percent=50.0)
         pm_lenient = PortfolioManager(api_client=mock_api, config=lenient_config)
 
-        risk_strict = awAlgot pm_strict.analyze_risk()
-        risk_lenient = awAlgot pm_lenient.analyze_risk()
+        risk_strict = await pm_strict.analyze_risk()
+        risk_lenient = await pm_lenient.analyze_risk()
 
         # Strict config should detect more risk factors
         # (or have higher concentration score)

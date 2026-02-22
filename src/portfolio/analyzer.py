@@ -539,7 +539,7 @@ class PortfolioAnalyzer:
 
         if liquidity < 50:
             recommendations.append(
-                "Portfolio contAlgons many illiquid items - consider more liquid alternatives"
+                "Portfolio contains many illiquid items - consider more liquid alternatives"
             )
 
         if concentration > 50:

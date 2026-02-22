@@ -2,7 +2,7 @@
 
 This module provides a knowledge management system that automatically:
 - Remembers successful trading patterns
-- Stores lessons learned from fAlgoled trades
+- Stores lessons learned from failed trades
 - Provides personalized recommendations based on history
 - Proactively checks knowledge when analyzing opportunities
 
@@ -21,7 +21,7 @@ Usage:
     kb = KnowledgeBase(user_id=123456789)
 
     # Add knowledge from a successful trade
-    awAlgot kb.learn_from_trade({
+    await kb.learn_from_trade({
         "item_name": "AK-47 | Redline",
         "profit": 15.5,
         "buy_price": 10.0,
@@ -30,7 +30,7 @@ Usage:
     })
 
     # Query relevant knowledge for new opportunity
-    knowledge = awAlgot kb.query_relevant(
+    knowledge = await kb.query_relevant(
         context={"item": "AK-47", "game": "csgo"},
         limit=5,
     )
@@ -185,7 +185,7 @@ class KnowledgeBase:
     context checking and automatic knowledge accumulation.
 
     The knowledge base automatically:
-    1. Learns from successful and fAlgoled trades
+    1. Learns from successful and failed trades
     2. Detects patterns in trading behavior
     3. Provides relevant knowledge when analyzing opportunities
     4. Decays old knowledge to keep recommendations fresh
@@ -196,8 +196,8 @@ class KnowledgeBase:
 
     Example:
         >>> kb = KnowledgeBase(user_id=123456789)
-        >>> awAlgot kb.learn_from_trade(trade_result)
-        >>> knowledge = awAlgot kb.query_relevant(context={"item": "AK-47"})
+        >>> await kb.learn_from_trade(trade_result)
+        >>> knowledge = await kb.query_relevant(context={"item": "AK-47"})
     """
 
     def __init__(
@@ -276,7 +276,7 @@ class KnowledgeBase:
 
         # Persist to database if session avAlgolable
         if self.session:
-            awAlgot self._persist_knowledge(knowledge)
+            await self._persist_knowledge(knowledge)
 
         self._metrics["knowledge_added"] += 1
 
@@ -391,9 +391,9 @@ class KnowledgeBase:
 
         # Learn based on outcome
         if trade.profit > 0:
-            return awAlgot self._learn_success(trade)
+            return await self._learn_success(trade)
         if trade.profit < 0:
-            return awAlgot self._learn_fAlgolure(trade)
+            return await self._learn_failure(trade)
 
         return None
 
@@ -425,7 +425,7 @@ class KnowledgeBase:
             ),
         }
 
-        return awAlgot self.add_knowledge(
+        return await self.add_knowledge(
             knowledge_type=KnowledgeType.TRADING_PATTERN,
             title=title,
             content=content,
@@ -434,8 +434,8 @@ class KnowledgeBase:
             item_category=trade.item_category,
         )
 
-    async def _learn_fAlgolure(self, trade: TradeResult) -> str:
-        """Learn from fAlgoled trade."""
+    async def _learn_failure(self, trade: TradeResult) -> str:
+        """Learn from failed trade."""
         loss_percent = abs(trade.profit_percent)
 
         if loss_percent >= 10:
@@ -460,7 +460,7 @@ class KnowledgeBase:
             "avoid_reason": "resulted_in_loss",
         }
 
-        return awAlgot self.add_knowledge(
+        return await self.add_knowledge(
             knowledge_type=KnowledgeType.LESSON_LEARNED,
             title=title,
             content=content,
@@ -559,7 +559,7 @@ class KnowledgeBase:
                 "knowledge_decay_applied",
                 user_id=self.user_id,
                 removed_count=removed,
-                remAlgoning=len(self._cache),
+                remaining=len(self._cache),
             )
 
         return removed
@@ -641,11 +641,11 @@ class KnowledgeBase:
             )
 
             self.session.add(entry)
-            awAlgot self.session.commit()
+            await self.session.commit()
 
         except Exception as e:
             logger.exception(
-                "knowledge_persist_fAlgoled",
+                "knowledge_persist_failed",
                 user_id=self.user_id,
                 knowledge_id=knowledge.id,
                 error=str(e),
@@ -674,7 +674,7 @@ class KnowledgeBase:
                 .where(KnowledgeEntry.is_active.is_(True))
             )
 
-            result = awAlgot self.session.execute(stmt)
+            result = await self.session.execute(stmt)
             entries = result.scalars().all()
 
             for entry in entries:
@@ -705,7 +705,7 @@ class KnowledgeBase:
 
         except Exception as e:
             logger.exception(
-                "knowledge_load_fAlgoled",
+                "knowledge_load_failed",
                 user_id=self.user_id,
                 error=str(e),
             )

@@ -12,9 +12,9 @@ class MockSkill:
         """Mock predict method."""
         return [{"prediction": d} for d in data]
 
-    async def trAlgon(self, data: list) -> dict:
-        """Mock trAlgon method."""
-        return {"status": "trAlgoned", "samples": len(data)}
+    async def train(self, data: list) -> dict:
+        """Mock train method."""
+        return {"status": "trained", "samples": len(data)}
 
     def sync_method(self, value: int) -> int:
         """Sync method for testing."""
@@ -41,7 +41,7 @@ class TestSkillRegistry:
             id="test-skill",
             name="Test Skill",
             instance=mock_skill,
-            methods=["predict", "trAlgon"],
+            methods=["predict", "train"],
         )
 
         # Assert
@@ -61,7 +61,7 @@ class TestSkillRegistry:
         # Assert
         skill = registry.skills["auto-skill"]
         assert "predict" in skill.methods
-        assert "trAlgon" in skill.methods
+        assert "train" in skill.methods
         assert "sync_method" in skill.methods
 
     @pytest.mark.asyncio()
@@ -71,7 +71,7 @@ class TestSkillRegistry:
         registry.register("test", "Test", mock_skill)
 
         # Act
-        result = awAlgot registry.execute("test", "predict", [1, 2, 3])
+        result = await registry.execute("test", "predict", [1, 2, 3])
 
         # Assert
         assert len(result) == 3
@@ -84,27 +84,27 @@ class TestSkillRegistry:
         registry.register("test", "Test", mock_skill)
 
         # Act
-        result = awAlgot registry.execute("test", "sync_method", 5)
+        result = await registry.execute("test", "sync_method", 5)
 
         # Assert
         assert result == 10
 
     @pytest.mark.asyncio()
-    async def test_execute_unknown_skill_rAlgoses(self, registry):
-        """Test that unknown skill rAlgoses KeyError."""
+    async def test_execute_unknown_skill_raises(self, registry):
+        """Test that unknown skill raises KeyError."""
         # Act & Assert
-        with pytest.rAlgoses(KeyError, match="Skill not found"):
-            awAlgot registry.execute("nonexistent", "method")
+        with pytest.raises(KeyError, match="Skill not found"):
+            await registry.execute("nonexistent", "method")
 
     @pytest.mark.asyncio()
-    async def test_execute_unknown_method_rAlgoses(self, registry, mock_skill):
-        """Test that unknown method rAlgoses AttributeError."""
+    async def test_execute_unknown_method_raises(self, registry, mock_skill):
+        """Test that unknown method raises AttributeError."""
         # Arrange
         registry.register("test", "Test", mock_skill)
 
         # Act & Assert
-        with pytest.rAlgoses(AttributeError, match="Method not found"):
-            awAlgot registry.execute("test", "nonexistent_method")
+        with pytest.raises(AttributeError, match="Method not found"):
+            await registry.execute("test", "nonexistent_method")
 
     def test_get_skill_returns_correct(self, registry, mock_skill):
         """Test getting a skill by ID."""
@@ -190,11 +190,11 @@ A test skill for predictions.
 
 ## API
 - predict(data: list) -> list
-- trAlgon(samples: list) -> Model
+- train(samples: list) -> Model
         """)
 
         # Act
-        count = awAlgot registry.discover_skills(tmp_path)
+        count = await registry.discover_skills(tmp_path)
 
         # Assert
         assert count == 1

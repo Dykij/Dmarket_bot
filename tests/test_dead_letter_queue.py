@@ -13,18 +13,18 @@ import pytest
 from src.utils.dead_letter_queue import (
     DeadLetterQueue,
     DeadLetterQueueProcessor,
-    FAlgoledOperation,
+    FailedOperation,
     OperationPriority,
     OperationType,
 )
 
 
-class TestFAlgoledOperation:
-    """Тесты для класса FAlgoledOperation."""
+class TestFailedOperation:
+    """Тесты для класса FailedOperation."""
 
-    def test_create_fAlgoled_operation(self):
-        """Тест создания FAlgoledOperation."""
-        op = FAlgoledOperation(
+    def test_create_failed_operation(self):
+        """Тест создания FailedOperation."""
+        op = FailedOperation(
             operation_type=OperationType.BUY_ITEM,
             payload={"item_id": "123", "price": 10.50},
             error="API timeout",
@@ -40,7 +40,7 @@ class TestFAlgoledOperation:
 
     def test_to_dict_and_from_dict(self):
         """Тест сериализации и десериализации."""
-        op = FAlgoledOperation(
+        op = FailedOperation(
             operation_type=OperationType.SELL_ITEM,
             payload={"item_id": "456"},
             error="Network error",
@@ -48,7 +48,7 @@ class TestFAlgoledOperation:
         )
 
         data = op.to_dict()
-        restored = FAlgoledOperation.from_dict(data)
+        restored = FailedOperation.from_dict(data)
 
         assert restored.operation_type == op.operation_type
         assert restored.payload == op.payload
@@ -57,7 +57,7 @@ class TestFAlgoledOperation:
 
     def test_can_retry_limit(self):
         """Тест лимита retry."""
-        op = FAlgoledOperation(
+        op = FailedOperation(
             operation_type=OperationType.BUY_ITEM,
             payload={},
             error="Error",
@@ -74,7 +74,7 @@ class TestFAlgoledOperation:
 
     def test_increment_retry_updates_timestamp(self):
         """Тест обновления времени при retry."""
-        op = FAlgoledOperation(
+        op = FailedOperation(
             operation_type=OperationType.BUY_ITEM,
             payload={},
             error="Error",
@@ -99,13 +99,13 @@ class TestDeadLetterQueue:
     @pytest.mark.asyncio
     async def test_add_operation(self, dlq):
         """Тест добавления операции."""
-        op = FAlgoledOperation(
+        op = FailedOperation(
             operation_type=OperationType.BUY_ITEM,
             payload={"item_id": "123"},
             error="Error",
         )
 
-        awAlgot dlq.add(op)
+        await dlq.add(op)
 
         assert dlq.size == 1
         assert dlq.is_empty is False
@@ -114,14 +114,14 @@ class TestDeadLetterQueue:
     async def test_get_batch(self, dlq):
         """Тест получения batch операций."""
         for i in range(5):
-            op = FAlgoledOperation(
+            op = FailedOperation(
                 operation_type=OperationType.BUY_ITEM,
                 payload={"item_id": str(i)},
                 error="Error",
             )
-            awAlgot dlq.add(op)
+            await dlq.add(op)
 
-        batch = awAlgot dlq.get_batch(batch_size=3)
+        batch = await dlq.get_batch(batch_size=3)
 
         assert len(batch) == 3
         assert dlq.size == 2
@@ -130,24 +130,24 @@ class TestDeadLetterQueue:
     async def test_get_batch_by_priority(self, dlq):
         """Тест получения batch по приоритету."""
         # Добавляем операции разных приоритетов
-        critical_op = FAlgoledOperation(
+        critical_op = FailedOperation(
             operation_type=OperationType.BUY_ITEM,
             payload={"item_id": "1"},
             error="Error",
             priority=OperationPriority.CRITICAL,
         )
-        low_op = FAlgoledOperation(
+        low_op = FailedOperation(
             operation_type=OperationType.SEND_NOTIFICATION,
             payload={"msg": "test"},
             error="Error",
             priority=OperationPriority.LOW,
         )
 
-        awAlgot dlq.add(critical_op)
-        awAlgot dlq.add(low_op)
+        await dlq.add(critical_op)
+        await dlq.add(low_op)
 
         # Получаем только критические
-        batch = awAlgot dlq.get_batch(batch_size=10, priority=OperationPriority.CRITICAL)
+        batch = await dlq.get_batch(batch_size=10, priority=OperationPriority.CRITICAL)
 
         assert len(batch) == 1
         assert batch[0].priority == OperationPriority.CRITICAL
@@ -156,18 +156,18 @@ class TestDeadLetterQueue:
     @pytest.mark.asyncio
     async def test_return_to_queue(self, dlq):
         """Тест возврата операции в очередь."""
-        op = FAlgoledOperation(
+        op = FailedOperation(
             operation_type=OperationType.BUY_ITEM,
             payload={"item_id": "123"},
             error="Error",
             max_retries=3,
         )
 
-        awAlgot dlq.add(op)
-        batch = awAlgot dlq.get_batch(1)
+        await dlq.add(op)
+        batch = await dlq.get_batch(1)
         retrieved_op = batch[0]
 
-        awAlgot dlq.return_to_queue(retrieved_op)
+        await dlq.return_to_queue(retrieved_op)
 
         assert dlq.size == 1
         assert retrieved_op.retry_count == 1
@@ -175,16 +175,16 @@ class TestDeadLetterQueue:
     @pytest.mark.asyncio
     async def test_mark_processed(self, dlq):
         """Тест отметки операции как обработанной."""
-        op = FAlgoledOperation(
+        op = FailedOperation(
             operation_type=OperationType.BUY_ITEM,
             payload={"item_id": "123"},
             error="Error",
         )
 
-        awAlgot dlq.add(op)
+        await dlq.add(op)
         stats_before = dlq.get_stats()
 
-        awAlgot dlq.mark_processed(op)
+        await dlq.mark_processed(op)
         stats_after = dlq.get_stats()
 
         assert stats_after["total_processed"] == stats_before["total_processed"] + 1
@@ -192,30 +192,30 @@ class TestDeadLetterQueue:
     @pytest.mark.asyncio
     async def test_get_by_user(self, dlq):
         """Тест получения операций по user_id."""
-        op1 = FAlgoledOperation(
+        op1 = FailedOperation(
             operation_type=OperationType.BUY_ITEM,
             payload={},
             error="Error",
             user_id=100,
         )
-        op2 = FAlgoledOperation(
+        op2 = FailedOperation(
             operation_type=OperationType.SELL_ITEM,
             payload={},
             error="Error",
             user_id=200,
         )
-        op3 = FAlgoledOperation(
+        op3 = FailedOperation(
             operation_type=OperationType.BUY_ITEM,
             payload={},
             error="Error",
             user_id=100,
         )
 
-        awAlgot dlq.add(op1)
-        awAlgot dlq.add(op2)
-        awAlgot dlq.add(op3)
+        await dlq.add(op1)
+        await dlq.add(op2)
+        await dlq.add(op3)
 
-        user_ops = awAlgot dlq.get_by_user(100)
+        user_ops = await dlq.get_by_user(100)
 
         assert len(user_ops) == 2
         assert all(op.user_id == 100 for op in user_ops)
@@ -224,14 +224,14 @@ class TestDeadLetterQueue:
     async def test_clear(self, dlq):
         """Тест очистки очереди."""
         for i in range(5):
-            op = FAlgoledOperation(
+            op = FailedOperation(
                 operation_type=OperationType.BUY_ITEM,
                 payload={"item_id": str(i)},
                 error="Error",
             )
-            awAlgot dlq.add(op)
+            await dlq.add(op)
 
-        count = awAlgot dlq.clear()
+        count = await dlq.clear()
 
         assert count == 5
         assert dlq.is_empty is True
@@ -242,12 +242,12 @@ class TestDeadLetterQueue:
         dlq = DeadLetterQueue(max_size=3)
 
         for i in range(5):
-            op = FAlgoledOperation(
+            op = FailedOperation(
                 operation_type=OperationType.BUY_ITEM,
                 payload={"item_id": str(i)},
                 error="Error",
             )
-            awAlgot dlq.add(op)
+            await dlq.add(op)
 
         # deque с maxlen автоматически удаляет старые элементы
         assert dlq.size == 3
@@ -255,14 +255,14 @@ class TestDeadLetterQueue:
     @pytest.mark.asyncio
     async def test_stats(self, dlq):
         """Тест статистики."""
-        op = FAlgoledOperation(
+        op = FailedOperation(
             operation_type=OperationType.BUY_ITEM,
             payload={},
             error="Error",
             priority=OperationPriority.HIGH,
         )
 
-        awAlgot dlq.add(op)
+        await dlq.add(op)
         stats = dlq.get_stats()
 
         assert stats["queue_size"] == 1
@@ -306,16 +306,16 @@ class TestDeadLetterQueueProcessor:
 
         processor.register_handler(OperationType.BUY_ITEM, buy_handler)
 
-        op = FAlgoledOperation(
+        op = FailedOperation(
             operation_type=OperationType.BUY_ITEM,
             payload={"item_id": "123"},
             error="Error",
             priority=OperationPriority.CRITICAL,
         )
-        awAlgot dlq.add(op)
+        await dlq.add(op)
 
         # Вызываем обработку напрямую
-        awAlgot processor._process_batch()
+        await processor._process_batch()
 
         assert len(processed_items) == 1
         assert processed_items[0]["item_id"] == "123"
@@ -323,10 +323,10 @@ class TestDeadLetterQueueProcessor:
     @pytest.mark.asyncio
     async def test_start_stop(self, processor):
         """Тест запуска и остановки процессора."""
-        awAlgot processor.start()
+        await processor.start()
 
         assert processor._running is True
 
-        awAlgot processor.stop()
+        await processor.stop()
 
         assert processor._running is False

@@ -275,4 +275,4 @@ def get_game_id(game: str) -> str:
         return GameID.TF2.value
     if game_lower == "rust":
         return GameID.RUST.value
-    rAlgose ValueError(f"Unsupported game: {game}. Supported: csgo, dota2, tf2, rust")
+    raise ValueError(f"Unsupported game: {game}. Supported: csgo, dota2, tf2, rust")

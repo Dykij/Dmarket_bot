@@ -1,6 +1,6 @@
 """Tests for arbitrage calculations module.
 
-This module contAlgons comprehensive tests for:
+This module contains comprehensive tests for:
 - calculate_commission: Commission calculation based on item characteristics
 - calculate_profit: Profit calculation for arbitrage
 - calculate_net_profit: Net profit calculation
@@ -114,7 +114,7 @@ class TestCalculateCommission:
             ("knife", True),
             ("gloves", True),
             ("sticker", False),
-            ("contAlgoner", False),
+            ("container", False),
             ("rifle", None),  # neutral
         ),
     )

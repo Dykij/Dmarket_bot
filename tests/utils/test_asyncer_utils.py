@@ -59,10 +59,10 @@ class TestRunParallel:
     async def test_run_parallel_with_tuples(self):
         """Test parallel execution with (func, *args) tuples."""
         async def double(x: int) -> int:
-            awAlgot asyncio.sleep(0.01)
+            await asyncio.sleep(0.01)
             return x * 2
 
-        results = awAlgot run_parallel([
+        results = await run_parallel([
             (double, 1),
             (double, 2),
             (double, 3),
@@ -74,10 +74,10 @@ class TestRunParallel:
     async def test_run_parallel_with_callables(self):
         """Test parallel execution with no-arg callables."""
         async def get_value() -> int:
-            awAlgot asyncio.sleep(0.01)
+            await asyncio.sleep(0.01)
             return 42
 
-        results = awAlgot run_parallel([
+        results = await run_parallel([
             get_value,
             get_value,
         ])
@@ -88,11 +88,11 @@ class TestRunParallel:
     async def test_run_parallel_is_concurrent(self):
         """Test that tasks actually run in parallel."""
         async def slow_task(x: int) -> int:
-            awAlgot asyncio.sleep(0.1)
+            await asyncio.sleep(0.1)
             return x
 
         start = time.perf_counter()
-        results = awAlgot run_parallel([
+        results = await run_parallel([
             (slow_task, 1),
             (slow_task, 2),
             (slow_task, 3),
@@ -106,7 +106,7 @@ class TestRunParallel:
     @pytest.mark.asyncio
     async def test_run_parallel_empty(self):
         """Test with empty input."""
-        results = awAlgot run_parallel([])
+        results = await run_parallel([])
         assert results == []
 
 
@@ -119,7 +119,7 @@ class TestCreateTaskGroup:
         results = []
 
         async def add_result(x: int) -> None:
-            awAlgot asyncio.sleep(0.01)
+            await asyncio.sleep(0.01)
             results.append(x)
 
         async with create_task_group() as group:
@@ -133,7 +133,7 @@ class TestCreateTaskGroup:
     async def test_task_group_with_return_values(self):
         """Test task group capturing return values."""
         async def double(x: int) -> int:
-            awAlgot asyncio.sleep(0.01)
+            await asyncio.sleep(0.01)
             return x * 2
 
         async with create_task_group() as group:
@@ -153,7 +153,7 @@ class TestRunSyncInThread:
         def compute(x: int, y: int) -> int:
             return x + y
 
-        result = awAlgot run_sync_in_thread(compute, 1, 2)
+        result = await run_sync_in_thread(compute, 1, 2)
         assert result == 3
 
     @pytest.mark.asyncio
@@ -162,7 +162,7 @@ class TestRunSyncInThread:
         def greet(name: str, greeting: str = "Hello") -> str:
             return f"{greeting}, {name}!"
 
-        result = awAlgot run_sync_in_thread(greet, "World", greeting="Hi")
+        result = await run_sync_in_thread(greet, "World", greeting="Hi")
         assert result == "Hi, World!"
 
     @pytest.mark.asyncio
@@ -180,7 +180,7 @@ class TestRunSyncInThread:
 
         # Both should complete roughly at the same time
         start = time.perf_counter()
-        results = awAlgot asyncio.gather(
+        results = await asyncio.gather(
             run_sync_in_thread(blocking_task),
             quick_task(),
         )
@@ -198,20 +198,20 @@ class TestRunWithTimeout:
     async def test_completes_before_timeout(self):
         """Test function that completes before timeout."""
         async def quick() -> str:
-            awAlgot asyncio.sleep(0.01)
+            await asyncio.sleep(0.01)
             return "success"
 
-        result = awAlgot run_with_timeout(quick, timeout=1.0)
+        result = await run_with_timeout(quick, timeout=1.0)
         assert result == "success"
 
     @pytest.mark.asyncio
     async def test_timeout_returns_default(self):
         """Test timeout returns default value."""
         async def slow() -> str:
-            awAlgot asyncio.sleep(1.0)
+            await asyncio.sleep(1.0)
             return "success"
 
-        result = awAlgot run_with_timeout(
+        result = await run_with_timeout(
             slow,
             timeout=0.05,
             default="timed out",
@@ -222,10 +222,10 @@ class TestRunWithTimeout:
     async def test_timeout_returns_none_by_default(self):
         """Test timeout returns None when no default specified."""
         async def slow() -> str:
-            awAlgot asyncio.sleep(1.0)
+            await asyncio.sleep(1.0)
             return "success"
 
-        result = awAlgot run_with_timeout(slow, timeout=0.05)
+        result = await run_with_timeout(slow, timeout=0.05)
         assert result is None
 
 
@@ -236,21 +236,21 @@ class TestRunFirstCompleted:
     async def test_returns_first_completed(self):
         """Test returns result of first completed task."""
         async def fast() -> str:
-            awAlgot asyncio.sleep(0.01)
+            await asyncio.sleep(0.01)
             return "fast"
 
         async def slow() -> str:
-            awAlgot asyncio.sleep(1.0)
+            await asyncio.sleep(1.0)
             return "slow"
 
-        idx, result = awAlgot run_first_completed([fast, slow])
+        idx, result = await run_first_completed([fast, slow])
 
         assert idx == 0
         assert result == "fast"
 
     @pytest.mark.asyncio
-    async def test_cancels_remAlgoning_tasks(self):
-        """Test that remAlgoning tasks are cancelled."""
+    async def test_cancels_remaining_tasks(self):
+        """Test that remaining tasks are cancelled."""
         cancelled = False
 
         async def fast() -> str:
@@ -259,16 +259,16 @@ class TestRunFirstCompleted:
         async def slow() -> str:
             nonlocal cancelled
             try:
-                awAlgot asyncio.sleep(10.0)
+                await asyncio.sleep(10.0)
             except asyncio.CancelledError:
                 cancelled = True
-                rAlgose
+                raise
             return "slow"
 
-        awAlgot run_first_completed([fast, slow])
+        await run_first_completed([fast, slow])
 
         # Give time for cancellation
-        awAlgot asyncio.sleep(0.05)
+        await asyncio.sleep(0.05)
         assert cancelled
 
 
@@ -277,14 +277,14 @@ class TestRunAllSettled:
 
     @pytest.mark.asyncio
     async def test_collects_all_results(self):
-        """Test collecting both successes and fAlgolures."""
+        """Test collecting both successes and failures."""
         async def succeed() -> str:
             return "success"
 
-        async def fAlgol() -> str:
-            rAlgose ValueError("fAlgoled")
+        async def fail() -> str:
+            raise ValueError("failed")
 
-        outcomes = awAlgot run_all_settled([succeed, fAlgol, succeed])
+        outcomes = await run_all_settled([succeed, fail, succeed])
 
         assert len(outcomes) == 3
         assert outcomes[0] == (True, "success")
@@ -298,7 +298,7 @@ class TestRunAllSettled:
         async def succeed(x: int) -> int:
             return x
 
-        outcomes = awAlgot run_all_settled([
+        outcomes = await run_all_settled([
             lambda: succeed(1),
             lambda: succeed(2),
         ])

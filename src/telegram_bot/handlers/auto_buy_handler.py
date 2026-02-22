@@ -34,19 +34,19 @@ async def autobuy_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
     # No arguments - show status
     if not args:
-        awAlgot show_autobuy_status(update, context)
+        await show_autobuy_status(update, context)
         return
 
     command = args[0].lower()
 
     if command == "on":
-        awAlgot enable_autobuy(update, context)
+        await enable_autobuy(update, context)
     elif command == "off":
-        awAlgot disable_autobuy(update, context)
+        await disable_autobuy(update, context)
     elif command == "settings":
-        awAlgot show_autobuy_settings(update, context)
+        await show_autobuy_settings(update, context)
     else:
-        awAlgot update.message.reply_text(
+        await update.message.reply_text(
             "❌ Неизвестная команда\n\n"
             "Использование:\n"
             "/autobuy - статус\n"
@@ -64,7 +64,7 @@ async def show_autobuy_status(
     auto_buyer: AutoBuyer | None = context.bot_data.get("auto_buyer")
 
     if not auto_buyer:
-        awAlgot update.message.reply_text(
+        await update.message.reply_text(
             "ℹ️ <b>Автопокупка</b>\n\n"
             "Статус: ❌ Не инициализирована\n\n"
             "Для включения используйте: /autobuy on",
@@ -78,7 +78,7 @@ async def show_autobuy_status(
     status_emoji = "✅" if config.enabled else "❌"
     mode_text = "🔒 DRY_RUN" if config.dry_run else "⚠️ РЕАЛЬНЫЕ ПОКУПКИ"
 
-    awAlgot update.message.reply_text(
+    await update.message.reply_text(
         f"🤖 <b>Статус автопокупки</b>\n\n"
         f"Режим: {status_emoji} {'Включен' if config.enabled else 'Выключен'}\n"
         f"Тип: {mode_text}\n\n"
@@ -90,7 +90,7 @@ async def show_autobuy_status(
         f"<b>Статистика:</b>\n"
         f"• Всего покупок: {stats['total_purchases']}\n"
         f"• Успешных: {stats['successful']}\n"
-        f"• Неудачных: {stats['fAlgoled']}\n"
+        f"• Неудачных: {stats['failed']}\n"
         f"• Потрачено: ${stats['total_spent_usd']:.2f}\n"
         f"• Успешность: {stats['success_rate']:.1f}%\n\n"
         f"Команды:\n"
@@ -110,7 +110,7 @@ async def enable_autobuy(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
         api_client = context.bot_data.get("dmarket_api")
         if not api_client:
-            awAlgot update.message.reply_text(
+            await update.message.reply_text(
                 "❌ API клиент не инициализирован. Перезапустите бота."
             )
             return
@@ -127,7 +127,7 @@ async def enable_autobuy(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         else "РЕАЛЬНЫЕ ПОКУПКИ"
     )
 
-    awAlgot update.message.reply_text(
+    await update.message.reply_text(
         f"✅ <b>Автопокупка включена!</b>\n\n"
         f"Режим: {mode}\n"
         f"Мин. скидка: {auto_buyer.config.min_discount_percent}%\n"
@@ -153,7 +153,7 @@ async def disable_autobuy(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         auto_buyer.config.enabled = False
         stats = auto_buyer.get_purchase_stats()
 
-        awAlgot update.message.reply_text(
+        await update.message.reply_text(
             f"❌ <b>Автопокупка выключена</b>\n\n"
             f"За сессию:\n"
             f"• Покупок: {stats['total_purchases']}\n"
@@ -168,7 +168,7 @@ async def disable_autobuy(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             stats=stats,
         )
     else:
-        awAlgot update.message.reply_text("ℹ️ Автопокупка уже выключена")
+        await update.message.reply_text("ℹ️ Автопокупка уже выключена")
 
 
 async def show_autobuy_settings(
@@ -178,7 +178,7 @@ async def show_autobuy_settings(
     auto_buyer: AutoBuyer | None = context.bot_data.get("auto_buyer")
 
     if not auto_buyer:
-        awAlgot update.message.reply_text(
+        await update.message.reply_text(
             "❌ Автопокупка не инициализирована. Используйте /autobuy on"
         )
         return
@@ -215,10 +215,10 @@ async def show_autobuy_settings(
                 "🔄 Сбросить статистику", callback_data="autobuy_reset_stats"
             )
         ],
-        [InlineKeyboardButton("◀️ Назад", callback_data="mAlgon_menu")],
+        [InlineKeyboardButton("◀️ Назад", callback_data="main_menu")],
     ]
 
-    awAlgot update.message.reply_text(
+    await update.message.reply_text(
         "⚙️ <b>НастSwarmки автопокупки</b>\n\nВыберите параметр для изменения:",
         reply_markup=InlineKeyboardMarkup(keyboard),
         parse_mode=ParseMode.HTML,
@@ -231,13 +231,13 @@ async def buy_now_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     Callback data format: buy_now_{item_id}_{price_cents}
     """
     query = update.callback_query
-    awAlgot query.answer()
+    await query.answer()
 
     callback_data = query.data
     parts = callback_data.split("_")
 
     if len(parts) < 4:
-        awAlgot query.edit_message_text("❌ Неверный формат данных")
+        await query.edit_message_text("❌ Неверный формат данных")
         return
 
     item_id = parts[2]
@@ -248,23 +248,23 @@ async def buy_now_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     auto_buyer: AutoBuyer | None = context.bot_data.get("auto_buyer")
 
     if not auto_buyer:
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             "❌ Автопокупка не инициализирована\n\nИспользуйте /autobuy on для включения"
         )
         return
 
     # Show processing message
-    awAlgot query.edit_message_text(
+    await query.edit_message_text(
         f"⏳ <b>Обработка покупки...</b>\n\nID: {item_id}\nЦена: ${price_usd:.2f}",
         parse_mode=ParseMode.HTML,
     )
 
     # Execute purchase
-    result = awAlgot auto_buyer.buy_item(item_id, price_usd, force=True)
+    result = await auto_buyer.buy_item(item_id, price_usd, force=True)
 
     # Show result
     if result.success:
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             f"✅ <b>Покупка завершена!</b>\n\n"
             f"Предмет: {result.item_title}\n"
             f"Цена: ${result.price_usd:.2f}\n"
@@ -273,7 +273,7 @@ async def buy_now_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -
             parse_mode=ParseMode.HTML,
         )
     else:
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             f"❌ <b>Покупка не удалась</b>\n\n"
             f"ID: {result.item_id}\n"
             f"Цена: ${result.price_usd:.2f}\n\n"
@@ -295,8 +295,8 @@ async def skip_item_callback(
 ) -> None:
     """Handle 'Skip' button press."""
     query = update.callback_query
-    awAlgot query.answer("Предмет пропущен")
-    awAlgot query.edit_message_text("⏭️ Предмет пропущен")
+    await query.answer("Предмет пропущен")
+    await query.edit_message_text("⏭️ Предмет пропущен")
 
 
 # Export handlers

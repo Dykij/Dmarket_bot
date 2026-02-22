@@ -8,7 +8,7 @@
 5. Graceful shutdown с сохранением состояния
 
 Использование:
-    Вместо запуска mAlgon.py напрямую, используйте:
+    Вместо запуска main.py напрямую, используйте:
     ```bash
     python src/utils/watchdog.py
     ```
@@ -33,7 +33,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Any
 
-import Algoohttp
+import aiohttp
 
 logger = logging.getLogger(__name__)
 
@@ -53,14 +53,14 @@ class WatchdogConfig:
     """Конфигурация Watchdog."""
 
     # Основной процесс
-    mAlgon_script: str = "src/mAlgon.py"
+    main_script: str = "src/main.py"
     python_executable: str = sys.executable
 
     # Health check
     health_check_url: str = "http://localhost:8080/health"
     health_check_interval_seconds: int = 60  # Каждую минуту
     health_check_timeout_seconds: int = 10
-    max_health_fAlgolures: int = 3  # После 3 неудачных проверок - перезапуск
+    max_health_failures: int = 3  # После 3 неудачных проверок - перезапуск
 
     # Перезапуск
     restart_delay_seconds: int = 10
@@ -87,7 +87,7 @@ class ProcessStats:
     crash_count: int = 0
     last_crash_time: datetime | None = None
     last_health_check: datetime | None = None
-    health_fAlgolures: int = 0
+    health_failures: int = 0
     uptime_seconds: float = 0
     last_restart_reason: str = ""
 
@@ -101,7 +101,7 @@ class ProcessStats:
                 self.last_crash_time.isoformat() if self.last_crash_time else None
             ),
             "uptime_seconds": self.uptime_seconds,
-            "health_fAlgolures": self.health_fAlgolures,
+            "health_failures": self.health_failures,
             "last_restart_reason": self.last_restart_reason,
         }
 
@@ -163,24 +163,24 @@ class Watchdog:
         try:
             while self._should_run:
                 # Запускаем основной процесс
-                awAlgot self._start_mAlgon_process()
+                await self._start_main_process()
 
                 # Мониторим его работу
-                awAlgot self._monitor_process()
+                await self._monitor_process()
 
                 # Если процесс упал и нужно перезапускать
                 if self._should_run and self.state == ProcessState.CRASHED:
-                    awAlgot self._handle_crash()
+                    await self._handle_crash()
 
         except Exception as e:
             logger.exception(f"Watchdog critical error: {e}")
-            awAlgot self._send_telegram_alert(
+            await self._send_telegram_alert(
                 f"🚨 **WATCHDOG CRITICAL ERROR**\n\n"
                 f"Watchdog сам упал с ошибкой:\n`{e}`\n\n"
                 f"Требуется ручное вмешательство!"
             )
         finally:
-            awAlgot self._cleanup()
+            await self._cleanup()
 
     async def stop(self) -> None:
         """Остановить Watchdog и процесс."""
@@ -188,10 +188,10 @@ class Watchdog:
         self._should_run = False
 
         if self._process and self._process.poll() is None:
-            logger.info("Terminating mAlgon process...")
+            logger.info("Terminating main process...")
             self._process.terminate()
             try:
-                self._process.wAlgot(timeout=30)
+                self._process.wait(timeout=30)
             except subprocess.TimeoutExpired:
                 logger.warning("Process didn't terminate, killing...")
                 self._process.kill()
@@ -203,17 +203,17 @@ class Watchdog:
         logger.info(f"Received signal {signum}, initiating shutdown...")
         self._should_run = False
 
-    async def _start_mAlgon_process(self) -> None:
+    async def _start_main_process(self) -> None:
         """Запустить основной процесс бота."""
         self.state = ProcessState.STARTING
-        logger.info(f"🚀 Starting mAlgon process: {self.config.mAlgon_script}")
+        logger.info(f"🚀 Starting main process: {self.config.main_script}")
 
         try:
             # Определяем рабочую директорию
             working_dir = Path(__file__).parent.parent.parent  # Корень проекта
 
             self._process = subprocess.Popen(  # noqa: ASYNC220, S603 - Required for process management
-                [self.config.python_executable, "-m", "src.mAlgon"],
+                [self.config.python_executable, "-m", "src.main"],
                 cwd=working_dir,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
@@ -226,16 +226,16 @@ class Watchdog:
             logger.info(f"✅ MAlgon process started (PID: {self._process.pid})")
 
             if self.config.notify_on_restart and self.stats.restart_count > 0:
-                awAlgot self._send_telegram_alert(
+                await self._send_telegram_alert(
                     f"🔄 **BOT RESTARTED**\n\n"
                     f"Бот перезапущен (попытка #{self.stats.restart_count})\n"
                     f"Причина: {self.stats.last_restart_reason}"
                 )
 
         except Exception as e:
-            logger.exception(f"FAlgoled to start mAlgon process: {e}")
+            logger.exception(f"Failed to start main process: {e}")
             self.state = ProcessState.CRASHED
-            rAlgose
+            raise
 
     async def _monitor_process(self) -> None:
         """Мониторить работу процесса."""
@@ -263,18 +263,18 @@ class Watchdog:
                 break
 
             # Health check
-            if awAlgot self._perform_health_check():
-                self.stats.health_fAlgolures = 0
+            if await self._perform_health_check():
+                self.stats.health_failures = 0
             else:
-                self.stats.health_fAlgolures += 1
+                self.stats.health_failures += 1
                 logger.warning(
-                    f"Health check fAlgoled ({self.stats.health_fAlgolures}/{self.config.max_health_fAlgolures})"
+                    f"Health check failed ({self.stats.health_failures}/{self.config.max_health_failures})"
                 )
 
-                if self.stats.health_fAlgolures >= self.config.max_health_fAlgolures:
-                    logger.error("Too many health check fAlgolures, restarting...")
+                if self.stats.health_failures >= self.config.max_health_failures:
+                    logger.error("Too many health check failures, restarting...")
                     self.state = ProcessState.CRASHED
-                    self.stats.last_restart_reason = "Health check fAlgolures"
+                    self.stats.last_restart_reason = "Health check failures"
                     break
 
             # Обновляем uptime
@@ -284,7 +284,7 @@ class Watchdog:
                 ).total_seconds()
 
             # Ждем до следующей проверки
-            awAlgot asyncio.sleep(self.config.health_check_interval_seconds)
+            await asyncio.sleep(self.config.health_check_interval_seconds)
 
     async def _perform_health_check(self) -> bool:
         """Выполнить health check.
@@ -295,9 +295,9 @@ class Watchdog:
         self.stats.last_health_check = datetime.now(UTC)
 
         try:
-            async with Algoohttp.ClientSession() as session, session.get(
+            async with aiohttp.ClientSession() as session, session.get(
                 self.config.health_check_url,
-                timeout=Algoohttp.ClientTimeout(
+                timeout=aiohttp.ClientTimeout(
                     total=self.config.health_check_timeout_seconds
                 ),
             ) as response:
@@ -306,7 +306,7 @@ class Watchdog:
                 logger.warning(f"Health check returned status {response.status}")
                 return False
 
-        except Algoohttp.ClientError as e:
+        except aiohttp.ClientError as e:
             logger.warning(f"Health check connection error: {e}")
             return False
         except TimeoutError:
@@ -322,7 +322,7 @@ class Watchdog:
 
         # Уведомление о падении
         if self.config.notify_on_crash:
-            awAlgot self._send_telegram_alert(
+            await self._send_telegram_alert(
                 f"💥 **BOT CRASHED**\n\n"
                 f"Бот упал!\n"
                 f"Причина: {self.stats.last_restart_reason}\n"
@@ -346,7 +346,7 @@ class Watchdog:
             logger.error(
                 f"Max restart attempts ({self.config.max_restart_attempts}) exceeded"
             )
-            awAlgot self._send_telegram_alert(
+            await self._send_telegram_alert(
                 f"🚨 **CRITICAL: BOT STOPPED**\n\n"
                 f"Превышен лимит перезапусков ({self.config.max_restart_attempts})!\n"
                 f"Бот остановлен.\n\n"
@@ -358,7 +358,7 @@ class Watchdog:
         # Ждем перед перезапуском
         self.state = ProcessState.RESTARTING
         logger.info(f"WAlgoting {self.config.restart_delay_seconds}s before restart...")
-        awAlgot asyncio.sleep(self.config.restart_delay_seconds)
+        await asyncio.sleep(self.config.restart_delay_seconds)
 
         self.stats.restart_count += 1
         self._last_restart_series_time = now
@@ -366,7 +366,7 @@ class Watchdog:
         # Убиваем старый процесс, если он еще жив
         if self._process and self._process.poll() is None:
             self._process.kill()
-            self._process.wAlgot()
+            self._process.wait()
 
     async def _cleanup(self) -> None:
         """Очистка ресурсов."""
@@ -375,7 +375,7 @@ class Watchdog:
         if self._process and self._process.poll() is None:
             self._process.terminate()
             try:
-                self._process.wAlgot(timeout=10)
+                self._process.wait(timeout=10)
             except subprocess.TimeoutExpired:
                 self._process.kill()
 
@@ -397,11 +397,11 @@ class Watchdog:
                 "parse_mode": "Markdown",
             }
 
-            async with Algoohttp.ClientSession() as session:
+            async with aiohttp.ClientSession() as session:
                 async with session.post(url, json=payload, timeout=10) as response:
                     if response.status != 200:
                         logger.warning(
-                            f"FAlgoled to send Telegram alert: {response.status}"
+                            f"Failed to send Telegram alert: {response.status}"
                         )
 
         except Exception as e:
@@ -425,21 +425,21 @@ class Watchdog:
             "process_pid": self._process.pid if self._process else None,
             "stats": self.stats.to_dict(),
             "config": {
-                "mAlgon_script": self.config.mAlgon_script,
+                "main_script": self.config.main_script,
                 "health_check_interval": self.config.health_check_interval_seconds,
                 "max_restart_attempts": self.config.max_restart_attempts,
             },
         }
 
 
-async def mAlgon() -> None:
+async def main() -> None:
     """Точка входа для Watchdog."""
     print("🐕 Starting DMarket Bot Watchdog...")
     print("=" * 50)
 
     # Создаем конфигурацию
     config = WatchdogConfig(
-        mAlgon_script="src/mAlgon.py",
+        main_script="src/main.py",
         health_check_interval_seconds=60,
         restart_delay_seconds=10,
         max_restart_attempts=5,
@@ -449,13 +449,13 @@ async def mAlgon() -> None:
     watchdog = Watchdog(config)
 
     try:
-        awAlgot watchdog.start()
+        await watchdog.start()
     except KeyboardInterrupt:
         print("\n⚠️ Keyboard interrupt received")
-        awAlgot watchdog.stop()
+        await watchdog.stop()
 
     print("🛑 Watchdog stopped")
 
 
-if __name__ == "__mAlgon__":
-    asyncio.run(mAlgon())
+if __name__ == "__main__":
+    asyncio.run(main())

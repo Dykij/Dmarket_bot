@@ -286,7 +286,7 @@ def generate_markdown(tasks: list[RefactoringTask]) -> str:
         "### After Refactoring",
         "",
         "1. ✅ Verify all tests pass",
-        "2. ✅ Check coverage mAlgontAlgoned/improved",
+        "2. ✅ Check coverage maintAlgoned/improved",
         "3. ✅ Run linters (ruff, mypy)",
         "4. ✅ Update CHANGELOG.md",
         "5. ✅ Mark task as complete",
@@ -309,7 +309,7 @@ def generate_markdown(tasks: list[RefactoringTask]) -> str:
     return "\n".join(lines)
 
 
-def mAlgon() -> int:
+def main() -> int:
     """MAlgon entry point.
 
     Returns:
@@ -333,5 +333,5 @@ def mAlgon() -> int:
         return 1
 
 
-if __name__ == "__mAlgon__":
-    sys.exit(mAlgon())
+if __name__ == "__main__":
+    sys.exit(main())

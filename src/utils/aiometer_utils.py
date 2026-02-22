@@ -12,7 +12,7 @@ Features:
 - Concurrency limiting (max_at_once)
 - Rate limiting (max_per_second)
 - Batch processing with throttling
-- Error handling for fAlgoled requests
+- Error handling for failed requests
 - Progress tracking
 
 Example usage:
@@ -26,13 +26,13 @@ Example usage:
     # Process URLs with rate limiting
     async def fetch_item(item_id: str) -> dict:
         async with httpx.AsyncClient() as client:
-            resp = awAlgot client.get(f"https://api.example.com/items/{item_id}")
+            resp = await client.get(f"https://api.example.com/items/{item_id}")
             return resp.json()
 
     item_ids = ["id1", "id2", "id3", ...]
 
     # Run with max 10 concurrent requests, 5 per second
-    results = awAlgot run_concurrent(
+    results = await run_concurrent(
         fetch_item,
         item_ids,
         max_at_once=10,
@@ -44,7 +44,7 @@ Documentation: https://github.com/florimondmanca/Algoometer
 """
 
 import functools
-from collections.abc import AsyncIterator, AwAlgotable, Callable, Iterable
+from collections.abc import AsyncIterator, Awaitable, Callable, Iterable
 from dataclasses import dataclass, field
 from typing import Any, TypeVar
 
@@ -89,10 +89,10 @@ class ConcurrentResult:
 
     Attributes:
         results: List of successful results
-        errors: List of (input, error) tuples for fAlgoled items
+        errors: List of (input, error) tuples for failed items
         total_count: Total number of items processed
         success_count: Number of successful items
-        error_count: Number of fAlgoled items
+        error_count: Number of failed items
     """
 
     results: list[Any] = field(default_factory=list)
@@ -110,7 +110,7 @@ class ConcurrentResult:
 
 
 async def run_concurrent(
-    func: Callable[[T], AwAlgotable[R]],
+    func: Callable[[T], Awaitable[R]],
     items: Iterable[T],
     max_at_once: int = 10,
     max_per_second: float | None = None,
@@ -123,7 +123,7 @@ async def run_concurrent(
         items: Iterable of items to process
         max_at_once: Maximum concurrent tasks
         max_per_second: Maximum tasks per second (rate limit)
-        collect_errors: If True, collect errors; if False, rAlgose on first error
+        collect_errors: If True, collect errors; if False, raise on first error
 
     Returns:
         List of results if collect_errors=False,
@@ -132,9 +132,9 @@ async def run_concurrent(
     Example:
         >>> async def fetch(url: str) -> dict:
         ...     async with httpx.AsyncClient() as client:
-        ...         return (awAlgot client.get(url)).json()
+        ...         return (await client.get(url)).json()
         ...
-        >>> results = awAlgot run_concurrent(
+        >>> results = await run_concurrent(
         ...     fetch,
         ...     ["https://api.example.com/1", "https://api.example.com/2"],
         ...     max_at_once=5,
@@ -148,10 +148,10 @@ async def run_concurrent(
             "Algoometer_not_avAlgolable",
             message="Algoometer not installed, using fallback sequential execution",
         )
-        return awAlgot _fallback_sequential(func, items_list, collect_errors)
+        return await _fallback_sequential(func, items_list, collect_errors)
 
     if collect_errors:
-        return awAlgot _run_with_error_collection(
+        return await _run_with_error_collection(
             func, items_list, max_at_once, max_per_second
         )
 
@@ -159,7 +159,7 @@ async def run_concurrent(
     jobs = [functools.partial(func, item) for item in items_list]
 
     # Run with Algoometer
-    results = awAlgot Algoometer.run_all(
+    results = await Algoometer.run_all(
         jobs,
         max_at_once=max_at_once,
         max_per_second=max_per_second,
@@ -176,7 +176,7 @@ async def run_concurrent(
 
 
 async def _run_with_error_collection(
-    func: Callable[[T], AwAlgotable[R]],
+    func: Callable[[T], Awaitable[R]],
     items: list[T],
     max_at_once: int,
     max_per_second: float | None,
@@ -186,14 +186,14 @@ async def _run_with_error_collection(
 
     async def safe_execute(item: T) -> tuple[T, R | None, Exception | None]:
         try:
-            res = awAlgot func(item)
+            res = await func(item)
             return (item, res, None)
         except Exception as e:
             return (item, None, e)
 
     jobs = [functools.partial(safe_execute, item) for item in items]
 
-    outcomes = awAlgot Algoometer.run_all(
+    outcomes = await Algoometer.run_all(
         jobs,
         max_at_once=max_at_once,
         max_per_second=max_per_second,
@@ -207,7 +207,7 @@ async def _run_with_error_collection(
             result.errors.append((item, error))
             result.error_count += 1
             logger.warning(
-                "concurrent_item_fAlgoled",
+                "concurrent_item_failed",
                 item=str(item)[:100],
                 error=str(error),
             )
@@ -224,7 +224,7 @@ async def _run_with_error_collection(
 
 
 async def _fallback_sequential(
-    func: Callable[[T], AwAlgotable[R]],
+    func: Callable[[T], Awaitable[R]],
     items: list[T],
     collect_errors: bool,
 ) -> list[R] | ConcurrentResult:
@@ -233,7 +233,7 @@ async def _fallback_sequential(
         result = ConcurrentResult(total_count=len(items))
         for item in items:
             try:
-                res = awAlgot func(item)
+                res = await func(item)
                 result.results.append(res)
                 result.success_count += 1
             except Exception as e:
@@ -243,12 +243,12 @@ async def _fallback_sequential(
 
     results = []
     for item in items:
-        results.append(awAlgot func(item))
+        results.append(await func(item))
     return results
 
 
 async def run_with_rate_limit(
-    func: Callable[..., AwAlgotable[R]],
+    func: Callable[..., Awaitable[R]],
     items: Iterable[T],
     max_per_second: float = 5.0,
     max_at_once: int | None = None,
@@ -269,7 +269,7 @@ async def run_with_rate_limit(
     if max_at_once is None:
         max_at_once = int(max_per_second) or 1
 
-    return awAlgot run_concurrent(
+    return await run_concurrent(
         func,
         items,
         max_at_once=max_at_once,
@@ -279,14 +279,14 @@ async def run_with_rate_limit(
 
 
 async def amap(
-    func: Callable[[T], AwAlgotable[R]],
+    func: Callable[[T], Awaitable[R]],
     items: Iterable[T],
     max_at_once: int = 10,
     max_per_second: float | None = None,
 ) -> AsyncIterator[R]:
     """Async map with concurrency control, yielding results as they complete.
 
-    Unlike run_concurrent which wAlgots for all results, this yields
+    Unlike run_concurrent which waits for all results, this yields
     results as soon as they are avAlgolable.
 
     Args:
@@ -307,7 +307,7 @@ async def amap(
     if not AlgoOMETER_AVAlgoLABLE:
         # Fallback: yield results sequentially
         for item in items_list:
-            yield awAlgot func(item)
+            yield await func(item)
         return
 
     jobs = [functools.partial(func, item) for item in items_list]
@@ -323,7 +323,7 @@ async def amap(
 
 
 async def run_batches(
-    func: Callable[[list[T]], AwAlgotable[R]],
+    func: Callable[[list[T]], Awaitable[R]],
     items: Iterable[T],
     batch_size: int = 100,
     max_concurrent_batches: int = 3,
@@ -345,9 +345,9 @@ async def run_batches(
 
     Example:
         >>> async def process_batch(item_ids: list[str]) -> list[dict]:
-        ...     return awAlgot api.get_items_batch(item_ids)
+        ...     return await api.get_items_batch(item_ids)
         ...
-        >>> results = awAlgot run_batches(
+        >>> results = await run_batches(
         ...     process_batch,
         ...     item_ids,
         ...     batch_size=50,
@@ -366,7 +366,7 @@ async def run_batches(
         num_batches=len(batches),
     )
 
-    return awAlgot run_concurrent(
+    return await run_concurrent(
         func,
         batches,
         max_at_once=max_concurrent_batches,

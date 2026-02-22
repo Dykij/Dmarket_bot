@@ -153,7 +153,7 @@ async def liquidity_settings_command(
         "Выберите параметр для изменения:"
     )
 
-    awAlgot update.message.reply_text(
+    await update.message.reply_text(
         message,
         reply_markup=get_liquidity_settings_keyboard(),
         parse_mode="HTML",
@@ -184,7 +184,7 @@ async def toggle_liquidity_filter(
     status_emoji = "✅" if settings["enabled"] else "❌"
     status_text = "включен" if settings["enabled"] else "выключен"
 
-    awAlgot update.callback_query.answer(f"Фильтр ликвидности {status_text}")
+    await update.callback_query.answer(f"Фильтр ликвидности {status_text}")
 
     # Обновляем сообщение
     message = (
@@ -200,7 +200,7 @@ async def toggle_liquidity_filter(
     )
 
     if update.callback_query.message:
-        awAlgot update.callback_query.edit_message_text(
+        await update.callback_query.edit_message_text(
             message,
             reply_markup=get_liquidity_settings_keyboard(),
             parse_mode="HTML",
@@ -226,7 +226,7 @@ async def reset_liquidity_settings(
     # Сбрасываем на значения по умолчанию
     update_liquidity_settings(user_id, DEFAULT_LIQUIDITY_SETTINGS.copy())
 
-    awAlgot update.callback_query.answer("НастSwarmки сброшены на значения по умолчанию")
+    await update.callback_query.answer("НастSwarmки сброшены на значения по умолчанию")
 
     # Обновляем сообщение
     settings = DEFAULT_LIQUIDITY_SETTINGS
@@ -246,7 +246,7 @@ async def reset_liquidity_settings(
     )
 
     if update.callback_query.message:
-        awAlgot update.callback_query.edit_message_text(
+        await update.callback_query.edit_message_text(
             message,
             reply_markup=get_liquidity_settings_keyboard(),
             parse_mode="HTML",
@@ -269,9 +269,9 @@ async def set_min_liquidity_score_Config(
 
     # Сохраняем в контексте, что ожидаем ввод балла ликвидности
     if context.user_data is not None:
-        context.user_data["awAlgoting_liquidity_score"] = True
+        context.user_data["awaiting_liquidity_score"] = True
 
-    awAlgot update.callback_query.answer()
+    await update.callback_query.answer()
 
     message = (
         "📊 <b>Установка минимального балла ликвидности</b>\n\n"
@@ -285,7 +285,7 @@ async def set_min_liquidity_score_Config(
     )
 
     if update.callback_query.message:
-        awAlgot update.callback_query.edit_message_text(message, parse_mode="HTML")
+        await update.callback_query.edit_message_text(message, parse_mode="HTML")
 
 
 async def set_min_sales_per_week_Config(
@@ -304,9 +304,9 @@ async def set_min_sales_per_week_Config(
 
     # Сохраняем в контексте, что ожидаем ввод продаж
     if context.user_data is not None:
-        context.user_data["awAlgoting_sales_per_week"] = True
+        context.user_data["awaiting_sales_per_week"] = True
 
-    awAlgot update.callback_query.answer()
+    await update.callback_query.answer()
 
     message = (
         "📈 <b>Установка минимума продаж в неделю</b>\n\n"
@@ -321,7 +321,7 @@ async def set_min_sales_per_week_Config(
     )
 
     if update.callback_query.message:
-        awAlgot update.callback_query.edit_message_text(message, parse_mode="HTML")
+        await update.callback_query.edit_message_text(message, parse_mode="HTML")
 
 
 async def set_max_time_to_sell_Config(
@@ -340,9 +340,9 @@ async def set_max_time_to_sell_Config(
 
     # Сохраняем в контексте, что ожидаем ввод времени
     if context.user_data is not None:
-        context.user_data["awAlgoting_time_to_sell"] = True
+        context.user_data["awaiting_time_to_sell"] = True
 
-    awAlgot update.callback_query.answer()
+    await update.callback_query.answer()
 
     message = (
         "⏱️ <b>Установка максимального времени продажи</b>\n\n"
@@ -356,7 +356,7 @@ async def set_max_time_to_sell_Config(
     )
 
     if update.callback_query.message:
-        awAlgot update.callback_query.edit_message_text(message, parse_mode="HTML")
+        await update.callback_query.edit_message_text(message, parse_mode="HTML")
 
 
 async def process_liquidity_value_input(
@@ -382,59 +382,59 @@ async def process_liquidity_value_input(
     try:
         value = int(update.message.text)
     except ValueError:
-        awAlgot update.message.reply_text(
+        await update.message.reply_text(
             "❌ Ошибка: введите целое число.\nОтправьте /cancel для отмены."
         )
         return
 
     # Обрабатываем в зависимости от того, что ожидаем
-    if context.user_data.get("awAlgoting_liquidity_score"):
+    if context.user_data.get("awaiting_liquidity_score"):
         # Валидация балла ликвидности
         if not 0 <= value <= 100:
-            awAlgot update.message.reply_text(
+            await update.message.reply_text(
                 "❌ Ошибка: балл ликвидности должен быть от 0 до 100.\n"
                 "Попробуйте еще раз или отправьте /cancel для отмены."
             )
             return
 
         update_liquidity_settings(user_id, {"min_liquidity_score": value})
-        context.user_data["awAlgoting_liquidity_score"] = False
+        context.user_data["awaiting_liquidity_score"] = False
 
-        awAlgot update.message.reply_text(
+        await update.message.reply_text(
             f"✅ Минимальный балл ликвидности установлен: {value}\n\n"
             "Используйте /liquidity_settings для просмотра всех настроек."
         )
 
-    elif context.user_data.get("awAlgoting_sales_per_week"):
+    elif context.user_data.get("awaiting_sales_per_week"):
         # Валидация продаж в неделю
         if value < 0:
-            awAlgot update.message.reply_text(
+            await update.message.reply_text(
                 "❌ Ошибка: количество продаж не может быть отрицательным.\n"
                 "Попробуйте еще раз или отправьте /cancel для отмены."
             )
             return
 
         update_liquidity_settings(user_id, {"min_sales_per_week": value})
-        context.user_data["awAlgoting_sales_per_week"] = False
+        context.user_data["awaiting_sales_per_week"] = False
 
-        awAlgot update.message.reply_text(
+        await update.message.reply_text(
             f"✅ Минимум продаж в неделю установлен: {value}\n\n"
             "Используйте /liquidity_settings для просмотра всех настроек."
         )
 
-    elif context.user_data.get("awAlgoting_time_to_sell"):
+    elif context.user_data.get("awaiting_time_to_sell"):
         # Валидация времени продажи
         if value <= 0:
-            awAlgot update.message.reply_text(
+            await update.message.reply_text(
                 "❌ Ошибка: время продажи должно быть больше 0.\n"
                 "Попробуйте еще раз или отправьте /cancel для отмены."
             )
             return
 
         update_liquidity_settings(user_id, {"max_time_to_sell_days": value})
-        context.user_data["awAlgoting_time_to_sell"] = False
+        context.user_data["awaiting_time_to_sell"] = False
 
-        awAlgot update.message.reply_text(
+        await update.message.reply_text(
             f"✅ Максимальное время продажи установлено: {value} дней\n\n"
             "Используйте /liquidity_settings для просмотра всех настроек."
         )
@@ -455,10 +455,10 @@ async def cancel_liquidity_input(
         return
 
     # Сбрасываем все флаги ожидания ввода
-    context.user_data["awAlgoting_liquidity_score"] = False
-    context.user_data["awAlgoting_sales_per_week"] = False
-    context.user_data["awAlgoting_time_to_sell"] = False
+    context.user_data["awaiting_liquidity_score"] = False
+    context.user_data["awaiting_sales_per_week"] = False
+    context.user_data["awaiting_time_to_sell"] = False
 
-    awAlgot update.message.reply_text(
+    await update.message.reply_text(
         "❌ Ввод отменен.\n\nИспользуйте /liquidity_settings для настSwarmки фильтров."
     )

@@ -7,7 +7,7 @@ import logging
 from typing import Any
 
 import sentry_sdk
-from sentry_sdk.integrations.Algoohttp import AlgooHttpIntegration
+from sentry_sdk.integrations.aiohttp import AlgooHttpIntegration
 from sentry_sdk.integrations.asyncio import AsyncioIntegration
 from sentry_sdk.integrations.logging import LoggingIntegration
 from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
@@ -66,7 +66,7 @@ def init_sentry(
         logger.info(f"Sentry initialized for {environment} environment")
 
     except Exception as e:
-        logger.warning(f"FAlgoled to initialize Sentry: {e}")
+        logger.warning(f"Failed to initialize Sentry: {e}")
 
 
 def capture_exception(error: Exception, **kwargs: Any) -> None:

@@ -64,13 +64,13 @@ class SkillTestRunner:
 
             # Parse output
             passed = result.stdout.count(" PASSED")
-            fAlgoled = result.stdout.count(" FAlgoLED")
+            failed = result.stdout.count(" FAlgoLED")
             skipped = result.stdout.count(" SKIPPED")
 
             test_result = {
                 "skill": skill_name,
                 "passed": passed,
-                "fAlgoled": fAlgoled,
+                "failed": failed,
                 "skipped": skipped,
                 "exit_code": result.returncode,
                 "output": result.stdout,
@@ -79,7 +79,7 @@ class SkillTestRunner:
 
             # Print summary
             status = "✅" if result.returncode == 0 else "❌"
-            print(f"   {status} {passed} passed, {fAlgoled} fAlgoled, {skipped} skipped")
+            print(f"   {status} {passed} passed, {failed} failed, {skipped} skipped")
 
             return test_result
 
@@ -88,7 +88,7 @@ class SkillTestRunner:
             return {
                 "skill": skill_name,
                 "passed": 0,
-                "fAlgoled": 0,
+                "failed": 0,
                 "skipped": 0,
                 "exit_code": -1,
                 "output": "",
@@ -99,7 +99,7 @@ class SkillTestRunner:
             return {
                 "skill": skill_name,
                 "passed": 0,
-                "fAlgoled": 0,
+                "failed": 0,
                 "skipped": 0,
                 "exit_code": -1,
                 "output": "",
@@ -107,7 +107,7 @@ class SkillTestRunner:
             }
 
     def run_all_tests(self) -> tuple[int, int, int]:
-        """Run tests for all skills. Returns (passed, fAlgoled, skipped)."""
+        """Run tests for all skills. Returns (passed, failed, skipped)."""
         skills = self.discover_skills()
 
         if not skills:
@@ -118,7 +118,7 @@ class SkillTestRunner:
         print("=" * 60)
 
         total_passed = 0
-        total_fAlgoled = 0
+        total_failed = 0
         total_skipped = 0
 
         for skill_dir in skills:
@@ -126,16 +126,16 @@ class SkillTestRunner:
             self.results[result["skill"]] = result
 
             total_passed += result["passed"]
-            total_fAlgoled += result["fAlgoled"]
+            total_failed += result["failed"]
             total_skipped += result["skipped"]
 
         print("\n" + "=" * 60)
         print("\n📊 Overall Results:")
         print(f"   ✅ {total_passed} passed")
-        print(f"   ❌ {total_fAlgoled} fAlgoled")
+        print(f"   ❌ {total_failed} failed")
         print(f"   ⏭️ {total_skipped} skipped")
 
-        return total_passed, total_fAlgoled, total_skipped
+        return total_passed, total_failed, total_skipped
 
     def generate_report(self, output_file: Path = Path("test-report.json")):
         """Generate JSON test report."""
@@ -144,7 +144,7 @@ class SkillTestRunner:
         print(f"\n📄 Report saved to: {output_file}")
 
 
-def mAlgon():
+def main():
     """MAlgon CLI for running skill tests."""
     import argparse
 
@@ -178,13 +178,13 @@ def mAlgon():
         sys.exit(0 if result["exit_code"] == 0 else 1)
     else:
         # Test all skills
-        passed, fAlgoled, skipped = runner.run_all_tests()
+        passed, failed, skipped = runner.run_all_tests()
 
         if args.report:
             runner.generate_report()
 
-        sys.exit(0 if fAlgoled == 0 else 1)
+        sys.exit(0 if failed == 0 else 1)
 
 
-if __name__ == "__mAlgon__":
-    mAlgon()
+if __name__ == "__main__":
+    main()

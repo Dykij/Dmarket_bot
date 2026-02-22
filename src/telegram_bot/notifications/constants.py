@@ -18,9 +18,9 @@ NOTIFICATION_TYPES: Final[dict[str, str]] = {
     "trend_change": "📊 Изменение тренда",
     "buy_intent": "🛒 Намерение купить",
     "buy_success": "✅ Успешная покупка",
-    "buy_fAlgoled": "❌ Ошибка покупки",
+    "buy_failed": "❌ Ошибка покупки",
     "sell_success": "✅ Успешная продажа",
-    "sell_fAlgoled": "❌ Ошибка продажи",
+    "sell_failed": "❌ Ошибка продажи",
     "critical_shutdown": "🛑 Критическая остановка",
 }
 
@@ -40,9 +40,9 @@ DEFAULT_USER_SETTINGS: Final[dict[str, object]] = {
 NOTIFICATION_PRIORITIES: Final[dict[str, int]] = {
     "critical_shutdown": 100,
     "buy_success": 90,
-    "buy_fAlgoled": 90,
+    "buy_failed": 90,
     "sell_success": 85,
-    "sell_fAlgoled": 85,
+    "sell_failed": 85,
     "buy_intent": 80,
     "arbitrage": 70,
     "good_deal": 60,

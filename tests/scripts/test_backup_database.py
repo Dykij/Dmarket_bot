@@ -58,8 +58,8 @@ class TestDatabaseBackup:
         assert backup.db_type == "postgresql"
 
     def test_detect_unsupported_db_type(self, temp_dir: Path) -> None:
-        """Test unsupported database type rAlgoses error."""
-        with pytest.rAlgoses(ValueError, match="Unsupported database type"):
+        """Test unsupported database type raises error."""
+        with pytest.raises(ValueError, match="Unsupported database type"):
             DatabaseBackup(
                 database_url="mysql://user:pass@localhost/db",
                 backup_dir=temp_dir / "backups",
@@ -136,7 +136,7 @@ class TestDatabaseBackup:
             compress=True,
         )
 
-        backup_path = awAlgot backup.backup()
+        backup_path = await backup.backup()
 
         assert backup_path.exists()
         assert backup_path.suffix == ".gz"
@@ -159,7 +159,7 @@ class TestDatabaseBackup:
             compress=False,
         )
 
-        backup_path = awAlgot backup.backup()
+        backup_path = await backup.backup()
 
         assert backup_path.exists()
         assert backup_path.suffix == ".db"
@@ -174,14 +174,14 @@ class TestDatabaseBackup:
 
     @pytest.mark.asyncio()
     async def test_backup_sqlite_not_found(self, temp_dir: Path) -> None:
-        """Test backup fAlgols for non-existent database."""
+        """Test backup fails for non-existent database."""
         backup = DatabaseBackup(
             database_url="sqlite:///nonexistent.db",
             backup_dir=temp_dir / "backups",
         )
 
-        with pytest.rAlgoses(FileNotFoundError):
-            awAlgot backup.backup()
+        with pytest.raises(FileNotFoundError):
+            await backup.backup()
 
     @pytest.mark.asyncio()
     async def test_restore_sqlite_compressed(
@@ -197,7 +197,7 @@ class TestDatabaseBackup:
         )
 
         # Create backup
-        backup_path = awAlgot backup.backup()
+        backup_path = await backup.backup()
 
         # Modify original database
         conn = sqlite3.connect(str(sqlite_db))
@@ -212,7 +212,7 @@ class TestDatabaseBackup:
         conn.close()
 
         # Restore from backup
-        awAlgot backup.restore(backup_path)
+        await backup.restore(backup_path)
 
         # Verify data is restored
         conn = sqlite3.connect(str(sqlite_db))
@@ -224,14 +224,14 @@ class TestDatabaseBackup:
 
     @pytest.mark.asyncio()
     async def test_restore_not_found(self, temp_dir: Path) -> None:
-        """Test restore fAlgols for non-existent backup."""
+        """Test restore fails for non-existent backup."""
         backup = DatabaseBackup(
             database_url="sqlite:///test.db",
             backup_dir=temp_dir,
         )
 
-        with pytest.rAlgoses(FileNotFoundError):
-            awAlgot backup.restore("nonexistent.db.gz")
+        with pytest.raises(FileNotFoundError):
+            await backup.restore("nonexistent.db.gz")
 
     @pytest.mark.asyncio()
     async def test_backup_rotation(self, temp_dir: Path, sqlite_db: Path) -> None:
@@ -247,7 +247,7 @@ class TestDatabaseBackup:
 
         # Create multiple backups (now with microsecond timestamps for uniqueness)
         for _ in range(4):
-            awAlgot backup.backup()
+            await backup.backup()
 
         # Should only have 2 backups
         backups = backup.list_backups()
@@ -275,7 +275,7 @@ class TestDatabaseBackup:
         )
 
         # Create a backup
-        awAlgot backup.backup()
+        await backup.backup()
 
         backups = backup.list_backups()
 
@@ -299,10 +299,10 @@ class TestDatabaseBackup:
         )
 
         # Create backup
-        backup_path = awAlgot backup.backup()
+        backup_path = await backup.backup()
 
         # Restore
-        awAlgot backup.restore(backup_path)
+        await backup.restore(backup_path)
 
         # Check pre-restore backup exists
         pre_restore = sqlite_db.with_suffix(".pre_restore")
@@ -330,9 +330,9 @@ class TestBackupPostgreSQL:
         with patch("subprocess.run") as mock_run:
             mock_run.return_value = MagicMock(returncode=0)
 
-            # This will fAlgol because pg_dump doesn't exist, but we can check the call
+            # This will fail because pg_dump doesn't exist, but we can check the call
             try:
-                awAlgot backup._backup_postgresql()
+                await backup._backup_postgresql()
             except FileNotFoundError:
                 pass  # Expected
 
@@ -365,7 +365,7 @@ class TestBackupPostgreSQL:
         with patch("subprocess.run") as mock_run:
             mock_run.return_value = MagicMock(returncode=0)
 
-            awAlgot backup._restore_postgresql(backup_file)
+            await backup._restore_postgresql(backup_file)
 
             # Check the command
             call_args = mock_run.call_args

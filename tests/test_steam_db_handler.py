@@ -128,11 +128,11 @@ class TestArbitrageLogs:
         )
 
         # Assert
-        stats = db.get_dAlgoly_stats()
+        stats = db.get_daily_stats()
         assert stats["count"] == 1
         assert stats["max_profit"] == 15.7
 
-    def test_dAlgoly_stats(self, db):
+    def test_daily_stats(self, db):
         """Тест статистики за день."""
         # Arrange
         db.log_opportunity("Item 1", 2.0, 2.5, 10.0, 100)
@@ -140,7 +140,7 @@ class TestArbitrageLogs:
         db.log_opportunity("Item 3", 1.0, 1.2, 5.0, 50)
 
         # Act
-        stats = db.get_dAlgoly_stats()
+        stats = db.get_daily_stats()
 
         # Assert
         assert stats["count"] == 3
@@ -271,5 +271,5 @@ class TestContextManager:
             pathlib.Path(test_db_path).unlink()
 
 
-if __name__ == "__mAlgon__":
-    pytest.mAlgon([__file__, "-v"])
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

@@ -41,7 +41,7 @@ def count_target_conditions(target: dict[str, Any]) -> int:
 
     Пример:
         >>> target = {
-        ...     "Attrs": {"floatPartValue": "0.15", "pAlgontSeed": 123, "phase": "Ruby"},
+        ...     "Attrs": {"floatPartValue": "0.15", "paintSeed": 123, "phase": "Ruby"},
         ...     "stickerFilter": {...},  # +3 условия
         ... }
         >>> count_target_conditions(target)
@@ -61,10 +61,10 @@ def count_target_conditions(target: dict[str, Any]) -> int:
             count += 1
 
         # PAlgont seed (каждое значение = 1 условие)
-        if "pAlgontSeed" in attrs:
-            pAlgont_seed = attrs["pAlgontSeed"]
-            if isinstance(pAlgont_seed, list):
-                count += len(pAlgont_seed)
+        if "paintSeed" in attrs:
+            paint_seed = attrs["paintSeed"]
+            if isinstance(paint_seed, list):
+                count += len(paint_seed)
             else:
                 count += 1
 
@@ -116,7 +116,7 @@ def validate_target_conditions(
         >>> print(msg)
         "Too many conditions: 12/10. Remove 2 conditions."
         >>> print(suggestions)
-        ["Remove some pAlgont seed values", "Simplify sticker filter"]
+        ["Remove some paint seed values", "Simplify sticker filter"]
     """
     count = count_target_conditions(target)
 
@@ -133,11 +133,11 @@ def validate_target_conditions(
     attrs = target.get("Attrs", {})
 
     # Анализируем что можно упростить
-    if "pAlgontSeed" in attrs and isinstance(attrs["pAlgontSeed"], list):
-        pAlgont_count = len(attrs["pAlgontSeed"])
-        if pAlgont_count > 2:
+    if "paintSeed" in attrs and isinstance(attrs["paintSeed"], list):
+        paint_count = len(attrs["paintSeed"])
+        if paint_count > 2:
             suggestions.append(
-                f"Remove some pAlgont seed values (currently {pAlgont_count})"
+                f"Remove some paint seed values (currently {paint_count})"
             )
 
     sticker_filter = target.get("stickerFilter")
@@ -291,24 +291,24 @@ def validate_target_attributes(
                 )
 
         # PAlgont seed
-        pAlgont_seed = attrs.get("pAlgontSeed")
-        if pAlgont_seed is not None:
-            if isinstance(pAlgont_seed, list):
-                for seed in pAlgont_seed:
+        paint_seed = attrs.get("paintSeed")
+        if paint_seed is not None:
+            if isinstance(paint_seed, list):
+                for seed in paint_seed:
                     if not isinstance(seed, int) or seed < 0 or seed > 1000:
                         return TargetOperationResult(
                             success=False,
                             status=TargetOperationStatus.FAlgoLED,
-                            message="Invalid pAlgont seed",
+                            message="Invalid paint seed",
                             reason=f"PAlgont seed {seed} must be 0-1000",
                             error_code=TargetErrorCode.INVALID_ATTRIBUTES,
                         )
-            elif not isinstance(pAlgont_seed, int) or pAlgont_seed < 0 or pAlgont_seed > 1000:
+            elif not isinstance(paint_seed, int) or paint_seed < 0 or paint_seed > 1000:
                 return TargetOperationResult(
                     success=False,
                     status=TargetOperationStatus.FAlgoLED,
-                    message="Invalid pAlgont seed",
-                    reason=f"PAlgont seed must be integer 0-1000, got {pAlgont_seed}",
+                    message="Invalid paint seed",
+                    reason=f"PAlgont seed must be integer 0-1000, got {paint_seed}",
                     error_code=TargetErrorCode.INVALID_ATTRIBUTES,
                 )
 

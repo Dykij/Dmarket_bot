@@ -22,7 +22,7 @@ class TestAnalyzeTargetCompetition:
             return_value={"aggregatedPrices": [{"offerBestPrice": 1000}]}
         )
 
-        result = awAlgot analyze_target_competition(mock_api, "csgo", "AK-47 | Redline")
+        result = await analyze_target_competition(mock_api, "csgo", "AK-47 | Redline")
 
         assert "title" in result
         assert "game" in result
@@ -43,7 +43,7 @@ class TestAnalyzeTargetCompetition:
             return_value={"aggregatedPrices": [{"offerBestPrice": 1000}]}
         )
 
-        result = awAlgot analyze_target_competition(mock_api, "csgo", "Test Item")
+        result = await analyze_target_competition(mock_api, "csgo", "Test Item")
 
         assert result["total_orders"] == 0
         assert result["best_price"] == 0.0
@@ -66,7 +66,7 @@ class TestAnalyzeTargetCompetition:
             return_value={"aggregatedPrices": [{"offerBestPrice": 1000}]}
         )
 
-        result = awAlgot analyze_target_competition(mock_api, "csgo", "Test Item")
+        result = await analyze_target_competition(mock_api, "csgo", "Test Item")
 
         assert result["total_orders"] == 3
         assert result["competition_level"] == "low"
@@ -85,7 +85,7 @@ class TestAnalyzeTargetCompetition:
             return_value={"aggregatedPrices": [{"offerBestPrice": 2000}]}
         )
 
-        result = awAlgot analyze_target_competition(mock_api, "csgo", "Test Item")
+        result = await analyze_target_competition(mock_api, "csgo", "Test Item")
 
         assert result["total_orders"] == 10
         assert result["competition_level"] == "medium"
@@ -104,7 +104,7 @@ class TestAnalyzeTargetCompetition:
             return_value={"aggregatedPrices": [{"offerBestPrice": 2000}]}
         )
 
-        result = awAlgot analyze_target_competition(mock_api, "csgo", "Test Item")
+        result = await analyze_target_competition(mock_api, "csgo", "Test Item")
 
         assert result["total_orders"] == 20
         assert result["competition_level"] == "high"
@@ -126,7 +126,7 @@ class TestAnalyzeTargetCompetition:
             return_value={"aggregatedPrices": [{"offerBestPrice": 500}]}
         )
 
-        result = awAlgot analyze_target_competition(mock_api, "csgo", "Test Item")
+        result = await analyze_target_competition(mock_api, "csgo", "Test Item")
 
         assert result["best_price"] == 300.0  # Max of [100, 200, 300]
 
@@ -147,7 +147,7 @@ class TestAnalyzeTargetCompetition:
             return_value={"aggregatedPrices": [{"offerBestPrice": 500}]}
         )
 
-        result = awAlgot analyze_target_competition(mock_api, "csgo", "Test Item")
+        result = await analyze_target_competition(mock_api, "csgo", "Test Item")
 
         assert result["average_price"] == 200.0  # (100 + 200 + 300) / 3
 
@@ -159,7 +159,7 @@ class TestAnalyzeTargetCompetition:
         mock_api = AsyncMock()
         mock_api.get_targets_by_title = AsyncMock(side_effect=Exception("API Error"))
 
-        result = awAlgot analyze_target_competition(mock_api, "csgo", "Test Item")
+        result = await analyze_target_competition(mock_api, "csgo", "Test Item")
 
         assert "error" in result
         assert result["title"] == "Test Item"
@@ -173,7 +173,7 @@ class TestAnalyzeTargetCompetition:
         mock_api.get_targets_by_title = AsyncMock(return_value=[])
         mock_api.get_aggregated_prices_bulk = AsyncMock(return_value={})
 
-        awAlgot analyze_target_competition(mock_api, "csgo", "Test Item")
+        await analyze_target_competition(mock_api, "csgo", "Test Item")
 
         # Should use mapped game ID
         mock_api.get_targets_by_title.assert_called_once()
@@ -195,7 +195,7 @@ class TestAnalyzeTargetCompetition:
             return_value={"aggregatedPrices": [{"offerBestPrice": 1000}]}  # $10.00
         )
 
-        result = awAlgot analyze_target_competition(mock_api, "csgo", "Test Item")
+        result = await analyze_target_competition(mock_api, "csgo", "Test Item")
 
         assert result["recommended_price"] > 0
         assert result["strategy"] != ""
@@ -220,7 +220,7 @@ class TestAssessCompetition:
             }
         )
 
-        result = awAlgot assess_competition(mock_api, "csgo", "Test Item")
+        result = await assess_competition(mock_api, "csgo", "Test Item")
 
         assert "title" in result
         assert "game" in result
@@ -245,7 +245,7 @@ class TestAssessCompetition:
             }
         )
 
-        result = awAlgot assess_competition(
+        result = await assess_competition(
             mock_api, "csgo", "Test Item", max_competition=3
         )
 
@@ -267,7 +267,7 @@ class TestAssessCompetition:
             }
         )
 
-        result = awAlgot assess_competition(
+        result = await assess_competition(
             mock_api, "csgo", "Test Item", max_competition=3
         )
 
@@ -289,7 +289,7 @@ class TestAssessCompetition:
             }
         )
 
-        result = awAlgot assess_competition(mock_api, "csgo", "Test Item")
+        result = await assess_competition(mock_api, "csgo", "Test Item")
 
         assert result["should_proceed"] is True
         assert "Нет конкурентов" in result["recommendation"]
@@ -311,7 +311,7 @@ class TestAssessCompetition:
             }
         )
 
-        result = awAlgot assess_competition(
+        result = await assess_competition(
             mock_api, "csgo", "Test Item", max_competition=3
         )
 
@@ -329,7 +329,7 @@ class TestAssessCompetition:
             side_effect=Exception("API Error")
         )
 
-        result = awAlgot assess_competition(mock_api, "csgo", "Test Item")
+        result = await assess_competition(mock_api, "csgo", "Test Item")
 
         assert result["should_proceed"] is False
         assert "error" in result
@@ -351,7 +351,7 @@ class TestAssessCompetition:
             }
         )
 
-        awAlgot assess_competition(mock_api, "csgo", "Test Item", price_threshold=100.0)
+        await assess_competition(mock_api, "csgo", "Test Item", price_threshold=100.0)
 
         mock_api.get_buy_orders_competition.assert_called_once()
         call_kwargs = mock_api.get_buy_orders_competition.call_args[1]
@@ -373,7 +373,7 @@ class TestAssessCompetition:
         }
         mock_api.get_buy_orders_competition = AsyncMock(return_value=raw_response)
 
-        result = awAlgot assess_competition(mock_api, "csgo", "Test Item")
+        result = await assess_competition(mock_api, "csgo", "Test Item")
 
         assert result["raw_data"] == raw_response
 
@@ -417,7 +417,7 @@ class TestFilterLowCompetitionItems:
             {"title": "Item 4"},
         ]
 
-        result = awAlgot filter_low_competition_items(
+        result = await filter_low_competition_items(
             mock_api, "csgo", items, max_competition=3, request_delay=0
         )
 
@@ -446,7 +446,7 @@ class TestFilterLowCompetitionItems:
             {"title": "Item 3"},
         ]
 
-        result = awAlgot filter_low_competition_items(
+        result = await filter_low_competition_items(
             mock_api, "csgo", items, request_delay=0
         )
 
@@ -471,7 +471,7 @@ class TestFilterLowCompetitionItems:
 
         items = [{"title": "Test Item", "price": 100}]
 
-        result = awAlgot filter_low_competition_items(
+        result = await filter_low_competition_items(
             mock_api, "csgo", items, request_delay=0
         )
 
@@ -501,7 +501,7 @@ class TestFilterLowCompetitionItems:
         with patch("asyncio.sleep") as mock_sleep:
             mock_sleep.return_value = None
 
-            awAlgot filter_low_competition_items(
+            await filter_low_competition_items(
                 mock_api, "csgo", items, request_delay=0.5
             )
 
@@ -515,7 +515,7 @@ class TestFilterLowCompetitionItems:
 
         mock_api = AsyncMock()
 
-        result = awAlgot filter_low_competition_items(
+        result = await filter_low_competition_items(
             mock_api, "csgo", [], request_delay=0
         )
 
@@ -541,13 +541,13 @@ class TestFilterLowCompetitionItems:
         items = [{"title": "Test Item"}]
 
         # With max_competition=3, item should be filtered out
-        result_low = awAlgot filter_low_competition_items(
+        result_low = await filter_low_competition_items(
             mock_api, "csgo", items, max_competition=3, request_delay=0
         )
         assert len(result_low) == 0
 
         # With max_competition=10, item should pass
-        result_high = awAlgot filter_low_competition_items(
+        result_high = await filter_low_competition_items(
             mock_api, "csgo", items, max_competition=10, request_delay=0
         )
         assert len(result_high) == 1

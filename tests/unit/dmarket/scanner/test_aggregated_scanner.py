@@ -48,7 +48,7 @@ class TestAggregatedScanner:
         }
 
         # Act
-        opportunities = awAlgot scanner.pre_scan_opportunities(
+        opportunities = await scanner.pre_scan_opportunities(
             titles=["AK-47 | Redline (Field-Tested)", "AWP | Asiimov (Field-Tested)"],
             game="csgo",
             min_margin=0.10,
@@ -78,7 +78,7 @@ class TestAggregatedScanner:
         }
 
         # Act
-        opportunities = awAlgot scanner.pre_scan_opportunities(
+        opportunities = await scanner.pre_scan_opportunities(
             titles=["Low Margin Item"],
             game="csgo",
             min_margin=0.15,  # 15% minimum
@@ -89,13 +89,13 @@ class TestAggregatedScanner:
 
     @pytest.mark.asyncio()
     async def test_pre_scan_validates_title_limit(self, scanner):
-        """Test pre-scan rAlgoses error for too many titles."""
+        """Test pre-scan raises error for too many titles."""
         # Arrange
         too_many_titles = [f"Item {i}" for i in range(101)]
 
         # Act & Assert
-        with pytest.rAlgoses(ValueError, match="Maximum 100 titles"):
-            awAlgot scanner.pre_scan_opportunities(
+        with pytest.raises(ValueError, match="Maximum 100 titles"):
+            await scanner.pre_scan_opportunities(
                 titles=too_many_titles,
                 game="csgo",
             )
@@ -119,7 +119,7 @@ class TestAggregatedScanner:
 
         # Act
         all_titles = [f"Item {i}" for i in range(150)]  # 2 batches
-        opportunities = awAlgot scanner.batch_pre_scan(
+        opportunities = await scanner.batch_pre_scan(
             all_titles=all_titles,
             game="csgo",
             batch_size=100,

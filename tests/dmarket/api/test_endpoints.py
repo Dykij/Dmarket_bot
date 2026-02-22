@@ -31,7 +31,7 @@ class TestEndpointsConstants:
         """Test account endpoints."""
         assert Endpoints.BALANCE == "/account/v1/balance"
         assert Endpoints.USER_PROFILE == "/account/v1/user"
-        assert Endpoints.ACCOUNT_DETAlgoLS == "/api/v1/account/detAlgols"
+        assert Endpoints.ACCOUNT_DETAlgoLS == "/api/v1/account/details"
 
     def test_market_endpoints(self):
         """Test market endpoints."""
@@ -102,7 +102,7 @@ class TestStatusConstants:
         """Test transfer status constants."""
         assert Endpoints.TRANSFER_STATUS_PENDING == "TransferStatusPending"
         assert Endpoints.TRANSFER_STATUS_COMPLETED == "TransferStatusCompleted"
-        assert Endpoints.TRANSFER_STATUS_FAlgoLED == "TransferStatusFAlgoled"
+        assert Endpoints.TRANSFER_STATUS_FAlgoLED == "TransferStatusFailed"
 
 
 class TestErrorCodes:
@@ -200,9 +200,9 @@ class TestGetGameId:
         assert Endpoints.get_game_id("a8db") == "a8db"
         assert Endpoints.get_game_id("9a92") == "9a92"
 
-    def test_get_game_id_unknown_rAlgoses(self):
-        """Test that unknown game rAlgoses ValueError."""
-        with pytest.rAlgoses(ValueError, match="Unknown game"):
+    def test_get_game_id_unknown_raises(self):
+        """Test that unknown game raises ValueError."""
+        with pytest.raises(ValueError, match="Unknown game"):
             Endpoints.get_game_id("unknown_game")
 
 
@@ -289,9 +289,9 @@ class TestPriceConversion:
         assert Endpoints.price_to_cents(0.10) == 10
         assert Endpoints.price_to_cents(1.005) == 101  # rounds to nearest
 
-    def test_price_to_cents_negative_rAlgoses(self):
-        """Test that negative price rAlgoses ValueError."""
-        with pytest.rAlgoses(ValueError, match="negative"):
+    def test_price_to_cents_negative_raises(self):
+        """Test that negative price raises ValueError."""
+        with pytest.raises(ValueError, match="negative"):
             Endpoints.price_to_cents(-5.00)
 
     def test_cents_to_price(self):
@@ -305,9 +305,9 @@ class TestPriceConversion:
         assert Endpoints.cents_to_price("1250") == 12.50
         assert Endpoints.cents_to_price("99") == 0.99
 
-    def test_cents_to_price_invalid_rAlgoses(self):
-        """Test that invalid cents value rAlgoses ValueError."""
-        with pytest.rAlgoses(ValueError, match="Invalid cents"):
+    def test_cents_to_price_invalid_raises(self):
+        """Test that invalid cents value raises ValueError."""
+        with pytest.raises(ValueError, match="Invalid cents"):
             Endpoints.cents_to_price("not_a_number")
 
 

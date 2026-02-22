@@ -39,7 +39,7 @@ class TestSteamStatsCommand:
         """Test successful stats command."""
         with patch("src.telegram_bot.handlers.steam_commands.get_steam_enhancer") as mock_enhancer_fn:
             mock_enhancer = MagicMock()
-            mock_enhancer.get_dAlgoly_stats.return_value = {
+            mock_enhancer.get_daily_stats.return_value = {
                 "count": 10,
                 "avg_profit": 15.5,
                 "max_profit": 25.0,
@@ -61,7 +61,7 @@ class TestSteamStatsCommand:
                 }
                 mock_db_fn.return_value = mock_db
 
-                awAlgot steam_stats_command(mock_update, mock_context)
+                await steam_stats_command(mock_update, mock_context)
 
                 mock_update.message.reply_text.assert_called_once()
                 call_args = mock_update.message.reply_text.call_args
@@ -72,7 +72,7 @@ class TestSteamStatsCommand:
         """Test stats command with no findings."""
         with patch("src.telegram_bot.handlers.steam_commands.get_steam_enhancer") as mock_enhancer_fn:
             mock_enhancer = MagicMock()
-            mock_enhancer.get_dAlgoly_stats.return_value = {
+            mock_enhancer.get_daily_stats.return_value = {
                 "count": 0,
                 "avg_profit": 0,
                 "max_profit": 0,
@@ -94,7 +94,7 @@ class TestSteamStatsCommand:
                 }
                 mock_db_fn.return_value = mock_db
 
-                awAlgot steam_stats_command(mock_update, mock_context)
+                await steam_stats_command(mock_update, mock_context)
 
                 mock_update.message.reply_text.assert_called_once()
 
@@ -104,7 +104,7 @@ class TestSteamStatsCommand:
         with patch("src.telegram_bot.handlers.steam_commands.get_steam_enhancer") as mock_enhancer_fn:
             mock_enhancer_fn.side_effect = Exception("Database error")
 
-            awAlgot steam_stats_command(mock_update, mock_context)
+            await steam_stats_command(mock_update, mock_context)
 
             mock_update.message.reply_text.assert_called_once()
             call_args = mock_update.message.reply_text.call_args
@@ -115,7 +115,7 @@ class TestSteamStatsCommand:
         """Test stats command without message."""
         mock_update.message = None
 
-        awAlgot steam_stats_command(mock_update, mock_context)
+        await steam_stats_command(mock_update, mock_context)
 
         # Should return early without error
 
@@ -149,7 +149,7 @@ class TestSteamTopCommand:
             ]
             mock_enhancer_fn.return_value = mock_enhancer
 
-            awAlgot steam_top_command(mock_update, mock_context)
+            await steam_top_command(mock_update, mock_context)
 
             mock_update.message.reply_text.assert_called_once()
 
@@ -161,7 +161,7 @@ class TestSteamTopCommand:
             mock_enhancer.get_top_items.return_value = []
             mock_enhancer_fn.return_value = mock_enhancer
 
-            awAlgot steam_top_command(mock_update, mock_context)
+            await steam_top_command(mock_update, mock_context)
 
             mock_update.message.reply_text.assert_called_once()
 
@@ -196,7 +196,7 @@ class TestSteamSettingsCommand:
             }
             mock_db_fn.return_value = mock_db
 
-            awAlgot steam_settings_command(mock_update, mock_context)
+            await steam_settings_command(mock_update, mock_context)
 
             mock_update.message.reply_text.assert_called_once()
 
@@ -212,7 +212,7 @@ class TestSteamSettingsCommand:
             }
             mock_db_fn.return_value = mock_db
 
-            awAlgot steam_settings_command(mock_update, mock_context)
+            await steam_settings_command(mock_update, mock_context)
 
             mock_update.message.reply_text.assert_called_once()
             call_args = mock_update.message.reply_text.call_args

@@ -15,20 +15,20 @@ from scripts.skills_composition import SkillCompositionManager, SkillDependency
 class TestSkillDependency:
     """Tests for SkillDependency class."""
 
-    def test_exact_version_constrAlgont_parsing(self):
-        """Test exact version constrAlgont parsing (without operator)."""
+    def test_exact_version_constraint_parsing(self):
+        """Test exact version constraint parsing (without operator)."""
         # Note: Bare version without == uses strict matching via min=max
         # This makes version == version return False due to >= check
         # Use == operator for exact matching
         dep = SkillDependency("test-skill", "1.0.0")
 
-        # Bare version creates min=max constrAlgont which fAlgols equality
+        # Bare version creates min=max constraint which fails equality
         # This is expected behavior - use == for exact match
         assert dep.min_version == "1.0.0"
         assert dep.max_version == "1.0.0"
 
-    def test_greater_or_equal_constrAlgont(self):
-        """Test >= version constrAlgont."""
+    def test_greater_or_equal_constraint(self):
+        """Test >= version constraint."""
         dep = SkillDependency("test-skill", ">=1.0.0")
 
         assert dep.is_satisfied("1.0.0")
@@ -36,8 +36,8 @@ class TestSkillDependency:
         assert dep.is_satisfied("2.0.0")
         assert not dep.is_satisfied("0.9.9")
 
-    def test_caret_constrAlgont(self):
-        """Test ^ version constrAlgont (compatible releases)."""
+    def test_caret_constraint(self):
+        """Test ^ version constraint (compatible releases)."""
         dep = SkillDependency("test-skill", "^1.2.0")
 
         assert dep.is_satisfied("1.2.0")
@@ -46,8 +46,8 @@ class TestSkillDependency:
         assert not dep.is_satisfied("2.0.0")
         assert not dep.is_satisfied("1.1.9")
 
-    def test_tilde_constrAlgont(self):
-        """Test ~ version constrAlgont (patch releases)."""
+    def test_tilde_constraint(self):
+        """Test ~ version constraint (patch releases)."""
         dep = SkillDependency("test-skill", "~1.2.0")
 
         assert dep.is_satisfied("1.2.0")
@@ -55,8 +55,8 @@ class TestSkillDependency:
         assert not dep.is_satisfied("1.3.0")
         assert not dep.is_satisfied("1.1.9")
 
-    def test_equals_constrAlgont(self):
-        """Test == version constrAlgont."""
+    def test_equals_constraint(self):
+        """Test == version constraint."""
         dep = SkillDependency("test-skill", "==2.0.0")
 
         assert dep.is_satisfied("2.0.0")
@@ -251,8 +251,8 @@ Test skill for unit tests.
 class TestSkillCompositionCLI:
     """Tests for CLI functionality."""
 
-    def test_mAlgon_import(self):
-        """Test that mAlgon function is importable."""
-        from scripts.skills_composition import mAlgon
+    def test_main_import(self):
+        """Test that main function is importable."""
+        from scripts.skills_composition import main
 
-        assert callable(mAlgon)
+        assert callable(main)

@@ -3,7 +3,7 @@
 This module provides formatting functions for notification messages:
 - Alert message formatting
 - Price formatting
-- Item detAlgol formatting
+- Item detail formatting
 
 Extracted from notifier.py during R-4 refactoring.
 """
@@ -98,9 +98,9 @@ NOTIFICATION_TYPES: dict[str, str] = {
     "trend_change": "Изменение тренда",
     "buy_intent": "Намерение купить",
     "buy_success": "Покупка выполнена",
-    "buy_fAlgoled": "Ошибка покупки",
+    "buy_failed": "Ошибка покупки",
     "sell_success": "Продажа выполнена",
-    "sell_fAlgoled": "Ошибка продажи",
+    "sell_failed": "Ошибка продажи",
     "target_executed": "Таргет исполнен",
     "critical_shutdown": "Критическая остановка",
 }
@@ -219,7 +219,7 @@ def format_user_settings(settings: dict[str, Any]) -> str:
 
     """
     enabled = settings.get("notifications_enabled", True)
-    dAlgoly_limit = settings.get("dAlgoly_limit", 50)
+    daily_limit = settings.get("daily_limit", 50)
     quiet_hours = settings.get("quiet_hours", {"enabled": False})
     min_profit = settings.get("min_profit_percent", 5.0)
 
@@ -228,7 +228,7 @@ def format_user_settings(settings: dict[str, Any]) -> str:
     message = (
         "⚙️ <b>НастSwarmки уведомлений</b>\n\n"
         f"📢 Статус: {status}\n"
-        f"📊 Дневной лимит: {dAlgoly_limit} сообщений\n"
+        f"📊 Дневной лимит: {daily_limit} сообщений\n"
         f"💰 Мин. прибыль: {min_profit}%\n"
     )
 

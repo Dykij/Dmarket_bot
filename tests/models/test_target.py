@@ -72,7 +72,7 @@ class TestTargetModel:
         assert target.attributes["quality"] == "exalted"
         assert target.created_at is not None
 
-    def test_target_id_unique_constrAlgont(self, session):
+    def test_target_id_unique_constraint(self, session):
         """Тест уникальности target_id."""
         target1 = Target(
             user_id=111,
@@ -93,7 +93,7 @@ class TestTargetModel:
         )
         session.add(target2)
 
-        with pytest.rAlgoses(IntegrityError):
+        with pytest.raises(IntegrityError):
             session.commit()
 
     def test_target_repr(self, session):
@@ -418,7 +418,7 @@ class TestTradingSettingsModel:
         assert settings.id is not None
         assert settings.user_id == 123456789
         assert settings.max_trade_value == 50.0
-        assert settings.dAlgoly_limit == 500.0
+        assert settings.daily_limit == 500.0
         assert settings.min_profit_percent == 5.0
         assert settings.strategy == "balanced"
         # SQLite stores boolean as integer (0/1)
@@ -430,7 +430,7 @@ class TestTradingSettingsModel:
         settings = TradingSettings(
             user_id=987654321,
             max_trade_value=100.0,
-            dAlgoly_limit=1000.0,
+            daily_limit=1000.0,
             min_profit_percent=10.0,
             strategy="aggressive",
             auto_trading_enabled=True,
@@ -441,7 +441,7 @@ class TestTradingSettingsModel:
         session.commit()
 
         assert settings.max_trade_value == 100.0
-        assert settings.dAlgoly_limit == 1000.0
+        assert settings.daily_limit == 1000.0
         assert settings.min_profit_percent == 10.0
         assert settings.strategy == "aggressive"
         # SQLite stores boolean as integer (0/1)
@@ -449,7 +449,7 @@ class TestTradingSettingsModel:
         assert len(settings.games_enabled) == 3
         assert not settings.notifications_enabled
 
-    def test_user_id_unique_constrAlgont(self, session):
+    def test_user_id_unique_constraint(self, session):
         """Тест уникальности user_id."""
         settings1 = TradingSettings(user_id=111)
         session.add(settings1)
@@ -458,7 +458,7 @@ class TestTradingSettingsModel:
         settings2 = TradingSettings(user_id=111)  # Дубликат
         session.add(settings2)
 
-        with pytest.rAlgoses(IntegrityError):
+        with pytest.raises(IntegrityError):
             session.commit()
 
     def test_settings_repr(self, session):
@@ -479,7 +479,7 @@ class TestTradingSettingsModel:
         settings = TradingSettings(
             user_id=456,
             max_trade_value=75.0,
-            dAlgoly_limit=750.0,
+            daily_limit=750.0,
             strategy="balanced",
             games_enabled=["csgo", "dota2"],
         )
@@ -489,7 +489,7 @@ class TestTradingSettingsModel:
         data = settings.to_dict()
         assert data["user_id"] == 456
         assert data["max_trade_value"] == 75.0
-        assert data["dAlgoly_limit"] == 750.0
+        assert data["daily_limit"] == 750.0
         assert data["strategy"] == "balanced"
         assert "csgo" in data["games_enabled"]
 

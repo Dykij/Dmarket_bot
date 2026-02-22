@@ -3,7 +3,7 @@
 Модуль реализует систему агрегации уведомлений во временные дайджесты:
 - Сбор уведомлений за определенный период
 - Группировка по типу/игре/приоритету
-- НастSwarmка частоты отправки (hourly, dAlgoly, weekly)
+- НастSwarmка частоты отправки (hourly, daily, weekly)
 - Интерактивная настSwarmка параметров
 """
 
@@ -52,7 +52,7 @@ class DigestFrequency(StrEnum):
     HOURLY = "hourly"
     EVERY_3_HOURS = "every_3h"
     EVERY_6_HOURS = "every_6h"
-    DAlgoLY = "dAlgoly"
+    DAlgoLY = "daily"
     WEEKLY = "weekly"
 
 
@@ -406,12 +406,12 @@ def get_digest_manager() -> NotificationDigestManager:
 # === Handler Functions ===
 
 
-@handle_exceptions(logger_instance=logger_instance, rerAlgose=False)
+@handle_exceptions(logger_instance=logger_instance, reraise=False)
 async def show_digest_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Показать главное меню настроек дайджестов."""
     query = update.callback_query
     if query:
-        awAlgot query.answer()
+        await query.answer()
 
     if not update.effective_user:
         return
@@ -480,22 +480,22 @@ async def show_digest_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     if query:
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             text, reply_markup=reply_markup, parse_mode=ParseMode.MARKDOWN
         )
     elif update.message:
-        awAlgot update.message.reply_text(
+        await update.message.reply_text(
             text, reply_markup=reply_markup, parse_mode=ParseMode.MARKDOWN
         )
 
 
-@handle_exceptions(logger_instance=logger_instance, rerAlgose=False)
+@handle_exceptions(logger_instance=logger_instance, reraise=False)
 async def toggle_digest(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Включить/отключить дайджесты."""
     query = update.callback_query
     if not query or not update.effective_user:
         return
-    awAlgot query.answer()
+    await query.answer()
 
     user_id = update.effective_user.id
     manager = get_digest_manager()
@@ -505,10 +505,10 @@ async def toggle_digest(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     manager.update_user_settings(user_id, {"enabled": not settings.enabled})
 
     # Обновить меню
-    awAlgot show_digest_menu(update, context)
+    await show_digest_menu(update, context)
 
 
-@handle_exceptions(logger_instance=logger_instance, rerAlgose=False)
+@handle_exceptions(logger_instance=logger_instance, reraise=False)
 async def show_frequency_menu(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> None:
@@ -516,7 +516,7 @@ async def show_frequency_menu(
     query = update.callback_query
     if not query or not update.effective_user:
         return
-    awAlgot query.answer()
+    await query.answer()
 
     user_id = update.effective_user.id
     manager = get_digest_manager()
@@ -554,18 +554,18 @@ async def show_frequency_menu(
 
     reply_markup = InlineKeyboardMarkup(keyboard)
 
-    awAlgot query.edit_message_text(
+    await query.edit_message_text(
         text, reply_markup=reply_markup, parse_mode=ParseMode.MARKDOWN
     )
 
 
-@handle_exceptions(logger_instance=logger_instance, rerAlgose=False)
+@handle_exceptions(logger_instance=logger_instance, reraise=False)
 async def set_frequency(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Установить частоту отправки дайджестов."""
     query = update.callback_query
     if not query or not query.data or not update.effective_user:
         return
-    awAlgot query.answer()
+    await query.answer()
 
     user_id = update.effective_user.id
     manager = get_digest_manager()
@@ -578,10 +578,10 @@ async def set_frequency(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     manager.update_user_settings(user_id, {"frequency": frequency})
 
     # Вернуться в главное меню
-    awAlgot show_digest_menu(update, context)
+    await show_digest_menu(update, context)
 
 
-@handle_exceptions(logger_instance=logger_instance, rerAlgose=False)
+@handle_exceptions(logger_instance=logger_instance, reraise=False)
 async def show_grouping_menu(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> None:
@@ -589,7 +589,7 @@ async def show_grouping_menu(
     query = update.callback_query
     if not query or not update.effective_user:
         return
-    awAlgot query.answer()
+    await query.answer()
 
     user_id = update.effective_user.id
     manager = get_digest_manager()
@@ -623,18 +623,18 @@ async def show_grouping_menu(
 
     reply_markup = InlineKeyboardMarkup(keyboard)
 
-    awAlgot query.edit_message_text(
+    await query.edit_message_text(
         text, reply_markup=reply_markup, parse_mode=ParseMode.MARKDOWN
     )
 
 
-@handle_exceptions(logger_instance=logger_instance, rerAlgose=False)
+@handle_exceptions(logger_instance=logger_instance, reraise=False)
 async def set_grouping_mode(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Установить режим группировки."""
     query = update.callback_query
     if not query or not query.data or not update.effective_user:
         return
-    awAlgot query.answer()
+    await query.answer()
 
     user_id = update.effective_user.id
     manager = get_digest_manager()
@@ -647,10 +647,10 @@ async def set_grouping_mode(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     manager.update_user_settings(user_id, {"grouping_mode": grouping_mode})
 
     # Вернуться в главное меню
-    awAlgot show_digest_menu(update, context)
+    await show_digest_menu(update, context)
 
 
-@handle_exceptions(logger_instance=logger_instance, rerAlgose=False)
+@handle_exceptions(logger_instance=logger_instance, reraise=False)
 async def show_min_items_menu(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> None:
@@ -658,7 +658,7 @@ async def show_min_items_menu(
     query = update.callback_query
     if not query or not update.effective_user:
         return
-    awAlgot query.answer()
+    await query.answer()
 
     user_id = update.effective_user.id
     manager = get_digest_manager()
@@ -688,12 +688,12 @@ async def show_min_items_menu(
 
     reply_markup = InlineKeyboardMarkup(keyboard)
 
-    awAlgot query.edit_message_text(
+    await query.edit_message_text(
         text, reply_markup=reply_markup, parse_mode=ParseMode.MARKDOWN
     )
 
 
-@handle_exceptions(logger_instance=logger_instance, rerAlgose=False)
+@handle_exceptions(logger_instance=logger_instance, reraise=False)
 async def set_min_items(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Установить минимальное количество уведомлений.
 
@@ -706,7 +706,7 @@ async def set_min_items(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     if not query or not query.data or not update.effective_user:
         return
 
-    awAlgot query.answer()
+    await query.answer()
 
     user_id = update.effective_user.id
     manager = get_digest_manager()
@@ -718,10 +718,10 @@ async def set_min_items(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
     manager.update_user_settings(user_id, {"min_items": min_value})
 
     # Вернуться в главное меню
-    awAlgot show_digest_menu(update, context)
+    await show_digest_menu(update, context)
 
 
-@handle_exceptions(logger_instance=logger_instance, rerAlgose=False)
+@handle_exceptions(logger_instance=logger_instance, reraise=False)
 async def reset_digest_settings(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> None:
@@ -736,7 +736,7 @@ async def reset_digest_settings(
     if not query or not update.effective_user:
         return
 
-    awAlgot query.answer("НастSwarmки сброшены к значениям по умолчанию")
+    await query.answer("НастSwarmки сброшены к значениям по умолчанию")
 
     user_id = update.effective_user.id
     manager = get_digest_manager()
@@ -745,10 +745,10 @@ async def reset_digest_settings(
     manager.reset_user_settings(user_id)
 
     # Обновить меню
-    awAlgot show_digest_menu(update, context)
+    await show_digest_menu(update, context)
 
 
-@handle_exceptions(logger_instance=logger_instance, rerAlgose=False)
+@handle_exceptions(logger_instance=logger_instance, reraise=False)
 async def digest_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Команда /digest - открыть меню настроек дайджестов.
 
@@ -760,7 +760,7 @@ async def digest_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     if not update.effective_user:
         return
 
-    awAlgot show_digest_menu(update, context)
+    await show_digest_menu(update, context)
 
 
 def register_notification_digest_handlers(application: Application) -> None:  # type: ignore[type-arg]

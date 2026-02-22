@@ -13,7 +13,7 @@ class Dota2Strategy(BaseStrategy):
     """
     Strategy for Dota 2.
 
-    ConstrAlgonts:
+    Constraints:
     - Generally lower trade locks (often 0 days for P2P if not market restricted).
     - Lower risk premium needed compared to CS2.
     """

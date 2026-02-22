@@ -54,7 +54,7 @@ async def test_full_arbitrage_workflow_with_steam():
         mock_steam.return_value = {"price": 15.00, "volume": 150, "median_price": 15.50}
 
         # Enhance items with Steam data
-        results = awAlgot enhancer.enhance_items(input_items)
+        results = await enhancer.enhance_items(input_items)
 
         # Verify results
         assert len(results) > 0, (
@@ -128,7 +128,7 @@ async def test_scanner_filters_low_liquidity_items():
 
             results = []
             for item in mock_items:
-                steam_data = awAlgot mock_steam(item["title"])
+                steam_data = await mock_steam(item["title"])
                 if steam_data and steam_data["volume"] >= 50:
                     results.append({**item, "steam_volume": steam_data["volume"]})
 
@@ -193,7 +193,7 @@ async def test_cache_reduces_api_calls():
             # Cache miss - call API
             cached = db.get_steam_data(item_name)
             if not cached or not db.is_cache_actual(cached.get("last_updated"), hours=6):
-                fresh = awAlgot mock_steam(item_name)
+                fresh = await mock_steam(item_name)
                 db.update_steam_price(item_name, fresh["price"], fresh["volume"])
 
             assert mock_steam.call_count == 1
@@ -206,7 +206,7 @@ async def test_cache_reduces_api_calls():
                 # Use cached data, no API call
                 pass
             else:
-                awAlgot mock_steam(item_name)
+                await mock_steam(item_name)
 
             # Should not call API agAlgon
             assert mock_steam.call_count == 0
@@ -301,7 +301,7 @@ async def test_statistics_tracking():
             db.log_opportunity(name, dm_price, steam_price, profit, volume, liq)
 
         # Get statistics
-        stats = db.get_dAlgoly_stats()
+        stats = db.get_daily_stats()
 
         assert stats["count"] == 3
         assert 25 < stats["avg_profit"] < 35  # Average should be ~30%
@@ -340,14 +340,14 @@ async def test_rate_limit_protection():
         # Double-check reset took effect
         steam_module.steam_backoff_until = None
 
-        # First call triggers rate limit and rAlgoses RateLimitError
-        with pytest.rAlgoses(RateLimitError):
-            awAlgot steam_module.get_steam_price("Test Item")
+        # First call triggers rate limit and raises RateLimitError
+        with pytest.raises(RateLimitError):
+            await steam_module.get_steam_price("Test Item")
 
         # Check backoff is active after rate limit hit
         status = get_backoff_status()
         assert status["active"] is True
-        assert status["remAlgoning_seconds"] > 0
+        assert status["remaining_seconds"] > 0
 
     # Reset after test
     steam_module.steam_backoff_until = None
@@ -439,5 +439,5 @@ def test_database_persistence():
                 time.sleep(0.1)
 
 
-if __name__ == "__mAlgon__":
-    pytest.mAlgon([__file__, "-v", "-m", "e2e"])
+if __name__ == "__main__":
+    pytest.main([__file__, "-v", "-m", "e2e"])

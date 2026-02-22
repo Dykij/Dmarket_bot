@@ -29,18 +29,18 @@ async def system_status_command(
 
     keyboard = [
         [InlineKeyboardButton("♻️ REBOOT BOT", callback_data="system_restart")],
-        [InlineKeyboardButton("◀️ MENU", callback_data="mAlgon_menu")],
+        [InlineKeyboardButton("◀️ MENU", callback_data="main_menu")],
     ]
 
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     if update.callback_query:
-        awAlgot update.callback_query.answer()
-        awAlgot update.callback_query.edit_message_text(
+        await update.callback_query.answer()
+        await update.callback_query.edit_message_text(
             text, parse_mode="HTML", reply_markup=reply_markup
         )
     else:
-        awAlgot update.message.reply_text(
+        await update.message.reply_text(
             text, parse_mode="HTML", reply_markup=reply_markup
         )
 
@@ -53,12 +53,12 @@ async def system_restart_callback(
     import sys
 
     query = update.callback_query
-    awAlgot query.answer("Rebooting...", show_alert=True)
+    await query.answer("Rebooting...", show_alert=True)
 
-    awAlgot query.edit_message_text(
+    await query.edit_message_text(
         "♻️ <b>REBOOTING SYSTEM...</b>\n\n"
         "Saving state and restarting process.\n"
-        "Please wAlgot 10-15 seconds.",
+        "Please wait 10-15 seconds.",
         parse_mode="HTML",
     )
 

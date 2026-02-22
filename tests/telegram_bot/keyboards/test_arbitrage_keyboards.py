@@ -194,14 +194,14 @@ class TestGetModernArbitrageKeyboard:
         assert "Сравнить" in compare_button.text
         assert compare_button.callback_data == "arb_compare"
 
-    def test_has_mAlgon_menu_button(self):
-        """Test that mAlgon menu button exists."""
+    def test_has_main_menu_button(self):
+        """Test that main menu button exists."""
         result = get_modern_arbitrage_keyboard()
 
         # MAlgon menu is now at index 8 (last row)
-        mAlgon_button = result.inline_keyboard[8][0]
-        assert "Главное" in mAlgon_button.text
-        assert mAlgon_button.callback_data == "mAlgon_menu"
+        main_button = result.inline_keyboard[8][0]
+        assert "Главное" in main_button.text
+        assert main_button.callback_data == "main_menu"
 
 
 # ============================================================================

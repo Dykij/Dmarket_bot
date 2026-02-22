@@ -44,7 +44,7 @@ def check_dependency_graph(registry: dict) -> list[str]:
         
         # Check depends_on
         for dep in deps.get("depends_on", []):
-            # Skip external dependencies (contAlgon dots or slashes)
+            # Skip external dependencies (contain dots or slashes)
             if "." in dep or "/" in dep:
                 continue
             
@@ -55,7 +55,7 @@ def check_dependency_graph(registry: dict) -> list[str]:
         
         # Check used_by
         for user in deps.get("used_by", []):
-            # Skip module references (contAlgon dots or slashes)
+            # Skip module references (contain dots or slashes)
             if "." in user or "/" in user:
                 continue
             
@@ -95,7 +95,7 @@ def check_dependency_graph(registry: dict) -> list[str]:
     return errors
 
 
-def mAlgon() -> int:
+def main() -> int:
     """MAlgon dependency checking function.
     
     Returns:
@@ -108,7 +108,7 @@ def mAlgon() -> int:
     errors = check_dependency_graph(registry)
     
     if errors:
-        print("❌ Dependency graph validation fAlgoled:\n")
+        print("❌ Dependency graph validation failed:\n")
         for error in errors:
             print(f"  • {error}")
         print()
@@ -132,5 +132,5 @@ def mAlgon() -> int:
     return 0
 
 
-if __name__ == "__mAlgon__":
-    sys.exit(mAlgon())
+if __name__ == "__main__":
+    sys.exit(main())

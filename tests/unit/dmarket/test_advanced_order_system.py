@@ -161,14 +161,14 @@ class TestAdvancedOrderFilter:
         assert filt.phase == DopplerPhase.RUBY
 
     def test_create_pattern_filter(self):
-        """Test creating filter with pAlgont seed."""
-        filt = AdvancedOrderFilter(pAlgont_seed=661)
-        assert filt.pAlgont_seed == 661
+        """Test creating filter with paint seed."""
+        filt = AdvancedOrderFilter(paint_seed=661)
+        assert filt.paint_seed == 661
 
     def test_create_patterns_filter(self):
-        """Test creating filter with multiple pAlgont seeds."""
-        filt = AdvancedOrderFilter(pAlgont_seeds=[661, 670, 321])
-        assert filt.pAlgont_seeds == [661, 670, 321]
+        """Test creating filter with multiple paint seeds."""
+        filt = AdvancedOrderFilter(paint_seeds=[661, 670, 321])
+        assert filt.paint_seeds == [661, 670, 321]
 
     def test_create_stattrak_filter(self):
         """Test creating filter with StatTrak."""
@@ -187,17 +187,17 @@ class TestAdvancedOrderFilter:
         assert attrs["floatMin"] == "0.15"
         assert attrs["floatMax"] == "0.16"
 
-    def test_to_target_attrs_pAlgont_seed(self):
-        """Test converting pAlgont seed filter to target attrs."""
-        filt = AdvancedOrderFilter(pAlgont_seed=661)
+    def test_to_target_attrs_paint_seed(self):
+        """Test converting paint seed filter to target attrs."""
+        filt = AdvancedOrderFilter(paint_seed=661)
         attrs = filt.to_target_attrs()
-        assert attrs["pAlgontSeed"] == 661
+        assert attrs["paintSeed"] == 661
 
-    def test_to_target_attrs_pAlgont_seeds(self):
-        """Test converting pAlgont seeds filter to target attrs."""
-        filt = AdvancedOrderFilter(pAlgont_seeds=[661, 670])
+    def test_to_target_attrs_paint_seeds(self):
+        """Test converting paint seeds filter to target attrs."""
+        filt = AdvancedOrderFilter(paint_seeds=[661, 670])
         attrs = filt.to_target_attrs()
-        assert attrs["pAlgontSeed"] == [661, 670]
+        assert attrs["paintSeed"] == [661, 670]
 
     def test_to_target_attrs_phase(self):
         """Test converting Doppler phase filter to target attrs."""
@@ -233,14 +233,14 @@ class TestAdvancedOrderFilter:
         filt = AdvancedOrderFilter(float_min=0.15, float_max=0.16)
         assert filt.count_conditions() == 2
 
-    def test_count_conditions_pAlgont_seed(self):
-        """Test counting conditions with pAlgont seed."""
-        filt = AdvancedOrderFilter(pAlgont_seed=661)
+    def test_count_conditions_paint_seed(self):
+        """Test counting conditions with paint seed."""
+        filt = AdvancedOrderFilter(paint_seed=661)
         assert filt.count_conditions() == 1
 
-    def test_count_conditions_pAlgont_seeds(self):
-        """Test counting conditions with multiple pAlgont seeds."""
-        filt = AdvancedOrderFilter(pAlgont_seeds=[661, 670, 321])
+    def test_count_conditions_paint_seeds(self):
+        """Test counting conditions with multiple paint seeds."""
+        filt = AdvancedOrderFilter(paint_seeds=[661, 670, 321])
         assert filt.count_conditions() == 3
 
     def test_count_conditions_phase(self):
@@ -442,7 +442,7 @@ class TestAdvancedOrderManager:
             filter=AdvancedOrderFilter(float_min=0.15, float_max=0.16),
         )
 
-        result = awAlgot order_manager.create_order(order)
+        result = await order_manager.create_order(order)
 
         assert result.success is True
         assert order.target_id == "target_123"
@@ -459,12 +459,12 @@ class TestAdvancedOrderManager:
             filter=AdvancedOrderFilter(
                 float_min=0.0,
                 float_max=0.01,
-                pAlgont_seeds=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10],  # 10 seeds
+                paint_seeds=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10],  # 10 seeds
                 stat_trak=True,  # +1
             ),
         )
 
-        result = awAlgot order_manager.create_order(order)
+        result = await order_manager.create_order(order)
 
         assert result.success is False
         assert "Too many" in result.message
@@ -477,7 +477,7 @@ class TestAdvancedOrderManager:
             target_id="target_456",
         )
 
-        result = awAlgot order_manager.create_from_template("ak47_redline_premium_ft")
+        result = await order_manager.create_from_template("ak47_redline_premium_ft")
 
         assert result is not None
         assert result.success is True
@@ -485,7 +485,7 @@ class TestAdvancedOrderManager:
     @pytest.mark.asyncio()
     async def test_create_from_template_not_found(self, order_manager):
         """Test creating order from non-existent template."""
-        result = awAlgot order_manager.create_from_template("non_existent_template")
+        result = await order_manager.create_from_template("non_existent_template")
         assert result is None
 
     @pytest.mark.asyncio()
@@ -502,10 +502,10 @@ class TestAdvancedOrderManager:
             item_title="Test",
             max_price_usd=50.0,
         )
-        awAlgot order_manager.create_order(order)
+        await order_manager.create_order(order)
 
         # Now cancel it
-        result = awAlgot order_manager.cancel_order("target_789")
+        result = await order_manager.cancel_order("target_789")
 
         assert result is True
         assert order_manager.active_orders["target_789"].is_active is False
@@ -513,7 +513,7 @@ class TestAdvancedOrderManager:
     @pytest.mark.asyncio()
     async def test_cancel_order_not_found(self, order_manager):
         """Test cancelling non-existent order."""
-        result = awAlgot order_manager.cancel_order("non_existent")
+        result = await order_manager.cancel_order("non_existent")
         assert result is False
 
     @pytest.mark.asyncio()
@@ -535,10 +535,10 @@ class TestAdvancedOrderManager:
                 item_title=f"Item {i}",
                 max_price_usd=50.0,
             )
-            awAlgot order_manager.create_order(order)
+            await order_manager.create_order(order)
 
         # Cancel all
-        cancelled = awAlgot order_manager.cancel_all_orders()
+        cancelled = await order_manager.cancel_all_orders()
         assert cancelled == 3
 
 
@@ -608,13 +608,13 @@ class TestQuickCreateFunctions:
         """Test creating pattern order."""
         order = create_pattern_order(
             "AK-47 | Case Hardened (Field-Tested)",
-            pAlgont_seeds=[661, 670, 321],
+            paint_seeds=[661, 670, 321],
             max_price=100.0,
             expected_premium=10.0,
         )
         assert order.item_title == "AK-47 | Case Hardened (Field-Tested)"
         assert order.max_price_usd == 100.0
-        assert order.filter.pAlgont_seeds == [661, 670, 321]
+        assert order.filter.paint_seeds == [661, 670, 321]
         # Expected sell = 100 * 10 = 1000
         assert order.expected_sell_price == 1000.0
         assert "661" in order.notes
@@ -623,7 +623,7 @@ class TestQuickCreateFunctions:
         """Test creating pattern order with default premium."""
         order = create_pattern_order(
             "Test Item",
-            pAlgont_seeds=[123],
+            paint_seeds=[123],
             max_price=50.0,
         )
         # Default premium is 2.0
@@ -682,7 +682,7 @@ class TestIntegration:
         assert len(templates) > 0
 
         # 2. Create order from template
-        result = awAlgot manager.create_from_template("ak47_redline_premium_ft")
+        result = await manager.create_from_template("ak47_redline_premium_ft")
         assert result.success is True
 
         # 3. Get active orders
@@ -690,7 +690,7 @@ class TestIntegration:
         assert len(active) == 1
 
         # 4. Cancel order
-        cancelled = awAlgot manager.cancel_all_orders()
+        cancelled = await manager.cancel_all_orders()
         assert cancelled == 1
 
         # 5. Verify no active orders

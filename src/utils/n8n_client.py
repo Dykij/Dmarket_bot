@@ -15,13 +15,13 @@ Usage:
 
     async with N8NClient(base_url="http://localhost:5678") as client:
         # Trigger a workflow
-        result = awAlgot client.trigger_workflow(
+        result = await client.trigger_workflow(
             workflow_id="arbitrage-alert",
             data={"item": "AK-47", "profit": 15.5}
         )
 
         # Use pre-configured triggers
-        awAlgot TradingWorkflows.trigger_arbitrage_alert(
+        await TradingWorkflows.trigger_arbitrage_alert(
             client,
             opportunity={"item_name": "AK-47", "profit_percent": 15.5}
         )
@@ -88,7 +88,7 @@ class WorkflowExecutionResult:
         success: Whether execution was successful
         execution_id: Execution identifier
         data: Response data from workflow
-        error: Error message if fAlgoled
+        error: Error message if failed
     """
 
     success: bool
@@ -108,7 +108,7 @@ class WorkflowType(StrEnum):
     ARBITRAGE_ALERT = "arbitrage-alert"
     PRICE_ALERT = "price-alert"
     TRADE_NOTIFICATION = "trade-notification"
-    DAlgoLY_REPORT = "dAlgoly-report"
+    DAlgoLY_REPORT = "daily-report"
     BALANCE_UPDATE = "balance-update"
     ERROR_NOTIFICATION = "error-notification"
 
@@ -136,7 +136,7 @@ class N8NClient:
 
     Example:
         >>> async with N8NClient("http://localhost:5678") as client:
-        ...     awAlgot client.trigger_workflow("my-workflow", {"data": "value"})
+        ...     await client.trigger_workflow("my-workflow", {"data": "value"})
     """
 
     def __init__(
@@ -179,13 +179,13 @@ class N8NClient:
     async def __aexit__(self, *args: Any) -> None:
         """Async context manager exit."""
         if self._client:
-            awAlgot self._client.aclose()
+            await self._client.aclose()
             self._client = None
 
     def _ensure_client(self) -> httpx.AsyncClient:
         """Ensure client is initialized."""
         if not self._client:
-            rAlgose RuntimeError(
+            raise RuntimeError(
                 "Client not initialized. Use async context manager: "
                 "async with N8NClient() as client: ..."
             )
@@ -210,16 +210,16 @@ class N8NClient:
             data: Optional data to pass to the workflow
 
         Returns:
-            WorkflowExecutionResult with execution detAlgols
+            WorkflowExecutionResult with execution details
         """
         client = self._ensure_client()
 
         try:
-            response = awAlgot client.post(
+            response = await client.post(
                 f"/api/v1/workflows/{workflow_id}/execute",
                 json=data or {},
             )
-            response.rAlgose_for_status()
+            response.raise_for_status()
 
             result = response.json()
 
@@ -237,7 +237,7 @@ class N8NClient:
 
         except httpx.HTTPStatusError as e:
             logger.warning(
-                "n8n_workflow_trigger_fAlgoled",
+                "n8n_workflow_trigger_failed",
                 workflow_id=workflow_id,
                 status_code=e.response.status_code,
                 error=str(e),
@@ -278,11 +278,11 @@ class N8NClient:
         client = self._ensure_client()
 
         try:
-            response = awAlgot client.post(
+            response = await client.post(
                 f"/webhook/{webhook_path}",
                 json=data,
             )
-            response.rAlgose_for_status()
+            response.raise_for_status()
 
             result = response.json() if response.text else {}
 
@@ -298,7 +298,7 @@ class N8NClient:
 
         except httpx.HTTPStatusError as e:
             logger.warning(
-                "n8n_webhook_fAlgoled",
+                "n8n_webhook_failed",
                 webhook_path=webhook_path,
                 status_code=e.response.status_code,
             )
@@ -330,8 +330,8 @@ class N8NClient:
         client = self._ensure_client()
 
         try:
-            response = awAlgot client.get("/api/v1/workflows")
-            response.rAlgose_for_status()
+            response = await client.get("/api/v1/workflows")
+            response.raise_for_status()
 
             data = response.json()
             workflows = []
@@ -357,7 +357,7 @@ class N8NClient:
             return workflows
 
         except Exception as e:
-            logger.exception("n8n_list_workflows_fAlgoled", error=str(e))
+            logger.exception("n8n_list_workflows_failed", error=str(e))
             return []
 
     async def get_workflow(self, workflow_id: str) -> N8NWorkflow | None:
@@ -372,8 +372,8 @@ class N8NClient:
         client = self._ensure_client()
 
         try:
-            response = awAlgot client.get(f"/api/v1/workflows/{workflow_id}")
-            response.rAlgose_for_status()
+            response = await client.get(f"/api/v1/workflows/{workflow_id}")
+            response.raise_for_status()
 
             w = response.json()
 
@@ -387,11 +387,11 @@ class N8NClient:
         except httpx.HTTPStatusError as e:
             if e.response.status_code == 404:
                 return None
-            rAlgose
+            raise
 
         except Exception as e:
             logger.exception(
-                "n8n_get_workflow_fAlgoled",
+                "n8n_get_workflow_failed",
                 workflow_id=workflow_id,
                 error=str(e),
             )
@@ -409,18 +409,18 @@ class N8NClient:
         client = self._ensure_client()
 
         try:
-            response = awAlgot client.patch(
+            response = await client.patch(
                 f"/api/v1/workflows/{workflow_id}",
                 json={"active": True},
             )
-            response.rAlgose_for_status()
+            response.raise_for_status()
 
             logger.info("n8n_workflow_activated", workflow_id=workflow_id)
             return True
 
         except Exception as e:
             logger.exception(
-                "n8n_activate_workflow_fAlgoled",
+                "n8n_activate_workflow_failed",
                 workflow_id=workflow_id,
                 error=str(e),
             )
@@ -438,18 +438,18 @@ class N8NClient:
         client = self._ensure_client()
 
         try:
-            response = awAlgot client.patch(
+            response = await client.patch(
                 f"/api/v1/workflows/{workflow_id}",
                 json={"active": False},
             )
-            response.rAlgose_for_status()
+            response.raise_for_status()
 
             logger.info("n8n_workflow_deactivated", workflow_id=workflow_id)
             return True
 
         except Exception as e:
             logger.exception(
-                "n8n_deactivate_workflow_fAlgoled",
+                "n8n_deactivate_workflow_failed",
                 workflow_id=workflow_id,
                 error=str(e),
             )
@@ -464,7 +464,7 @@ class N8NClient:
         client = self._ensure_client()
 
         try:
-            response = awAlgot client.get("/healthz")
+            response = await client.get("/healthz")
             return response.status_code == 200
         except Exception:
             return False
@@ -508,7 +508,7 @@ class TradingWorkflows:
             "timestamp": datetime.now(UTC).isoformat(),
         }
 
-        return awAlgot client.send_webhook(
+        return await client.send_webhook(
             WorkflowType.ARBITRAGE_ALERT,
             data,
         )
@@ -542,7 +542,7 @@ class TradingWorkflows:
             "timestamp": datetime.now(UTC).isoformat(),
         }
 
-        return awAlgot client.send_webhook(
+        return await client.send_webhook(
             WorkflowType.PRICE_ALERT,
             data,
         )
@@ -556,7 +556,7 @@ class TradingWorkflows:
 
         Args:
             client: N8N client instance
-            trade_data: Trade detAlgols
+            trade_data: Trade details
 
         Returns:
             Workflow execution result
@@ -571,17 +571,17 @@ class TradingWorkflows:
             "timestamp": datetime.now(UTC).isoformat(),
         }
 
-        return awAlgot client.send_webhook(
+        return await client.send_webhook(
             WorkflowType.TRADE_NOTIFICATION,
             data,
         )
 
     @staticmethod
-    async def trigger_dAlgoly_report(
+    async def trigger_daily_report(
         client: N8NClient,
         report_data: dict[str, Any],
     ) -> WorkflowExecutionResult:
-        """Trigger dAlgoly report workflow.
+        """Trigger daily report workflow.
 
         Args:
             client: N8N client instance
@@ -591,7 +591,7 @@ class TradingWorkflows:
             Workflow execution result
         """
         data = {
-            "type": "dAlgoly_report",
+            "type": "daily_report",
             "date": datetime.now(UTC).date().isoformat(),
             "total_trades": report_data.get("total_trades", 0),
             "profit": report_data.get("profit", 0),
@@ -600,7 +600,7 @@ class TradingWorkflows:
             "timestamp": datetime.now(UTC).isoformat(),
         }
 
-        return awAlgot client.send_webhook(
+        return await client.send_webhook(
             WorkflowType.DAlgoLY_REPORT,
             data,
         )
@@ -631,7 +631,7 @@ class TradingWorkflows:
             "timestamp": datetime.now(UTC).isoformat(),
         }
 
-        return awAlgot client.send_webhook(
+        return await client.send_webhook(
             WorkflowType.ERROR_NOTIFICATION,
             data,
         )

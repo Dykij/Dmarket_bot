@@ -72,7 +72,7 @@ class TestMarketDepthAnalyzerInitialization:
 
 
 class TestMarketDepthAnalysis:
-    """Test mAlgon analysis functionality."""
+    """Test main analysis functionality."""
 
     @pytest.mark.asyncio()
     async def test_analyze_with_provided_items(
@@ -85,7 +85,7 @@ class TestMarketDepthAnalysis:
 
         analyzer = MarketDepthAnalyzer(dmarket_api=mock_api)
 
-        result = awAlgot analyzer.analyze(
+        result = await analyzer.analyze(
             game="csgo",
             items=["AK-47 | Redline (Field-Tested)"],
             limit=10,
@@ -109,7 +109,7 @@ class TestMarketDepthAnalysis:
 
         analyzer = MarketDepthAnalyzer(dmarket_api=mock_api)
 
-        result = awAlgot analyzer.analyze(game="csgo", items=None, limit=10)
+        result = await analyzer.analyze(game="csgo", items=None, limit=10)
 
         assert result["items_analyzed"] > 0
         mock_api.get_market_items.assert_called_once()
@@ -121,7 +121,7 @@ class TestMarketDepthAnalysis:
 
         analyzer = MarketDepthAnalyzer(dmarket_api=mock_api)
 
-        result = awAlgot analyzer.analyze(game="csgo", items=None, limit=10)
+        result = await analyzer.analyze(game="csgo", items=None, limit=10)
 
         assert result["items_analyzed"] == 0
         assert result["market_depth"] == []
@@ -136,7 +136,7 @@ class TestMarketDepthAnalysis:
 
         analyzer = MarketDepthAnalyzer(dmarket_api=mock_api)
 
-        result = awAlgot analyzer.analyze(
+        result = await analyzer.analyze(
             game="csgo",
             items=["Test Item"],
             limit=10,
@@ -308,7 +308,7 @@ class TestBackwardCompatibility:
             return_value=sample_aggregated_prices
         )
 
-        result = awAlgot analyze_market_depth(
+        result = await analyze_market_depth(
             game="csgo",
             items=["Test Item"],
             limit=10,
@@ -393,7 +393,7 @@ class TestEdgeCases:
 
         analyzer = MarketDepthAnalyzer(dmarket_api=mock_api)
 
-        result = awAlgot analyzer.analyze(
+        result = await analyzer.analyze(
             game="csgo",
             items=["Test"],
             limit=10,

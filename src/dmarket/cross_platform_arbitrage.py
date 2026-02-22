@@ -44,14 +44,14 @@ DEFAULT_MIN_PROFIT_USD = Decimal("0.30")  # Minimum $0.30 profit
 DEFAULT_MIN_ROI_PERCENT = Decimal("5.0")  # Minimum 5% ROI for instant arb
 DEFAULT_LOCK_ROI_PERCENT = Decimal("15.0")  # Minimum 15% ROI for locked items
 DEFAULT_MAX_LOCK_DAYS = 8  # Maximum trade lock days to consider
-DEFAULT_MIN_LIQUIDITY = 5  # Minimum dAlgoly sales on Waxpeer
+DEFAULT_MIN_LIQUIDITY = 5  # Minimum daily sales on Waxpeer
 
 
 class ArbitrageDecision(StrEnum):
     """Decision types for arbitrage opportunities."""
 
     BUY_INSTANT = "buy_instant"  # No lock, good profit - buy immediately
-    BUY_AND_HOLD = "buy_and_hold"  # Has lock, high profit - buy and wAlgot
+    BUY_AND_HOLD = "buy_and_hold"  # Has lock, high profit - buy and wait
     SKIP = "skip"  # Not profitable or too risky
     INSUFFICIENT_LIQUIDITY = "insufficient_liquidity"  # Item sells too slowly
 
@@ -181,7 +181,7 @@ class CrossPlatformArbitrageScanner:
     Example:
         ```python
         scanner = CrossPlatformArbitrageScanner(dmarket_api, waxpeer_api)
-        opportunities = awAlgot scanner.scan_full_market()
+        opportunities = await scanner.scan_full_market()
         for opp in opportunities:
             if opp.is_profitable:
                 print(f"Found: {opp.title} - Profit: ${opp.net_profit}")
@@ -223,12 +223,12 @@ class CrossPlatformArbitrageScanner:
             Balance in USD as Decimal
         """
         try:
-            balance_data = awAlgot self.dmarket.get_balance()
+            balance_data = await self.dmarket.get_balance()
             # DMarket API returns 'balance' field in dollars directly
             balance_usd = balance_data.get("balance", 0)
             return Decimal(str(balance_usd))
         except Exception as e:
-            logger.exception("fAlgoled_to_get_balance", error=str(e))
+            logger.exception("failed_to_get_balance", error=str(e))
             return Decimal(0)
 
     async def scan_full_market(
@@ -258,7 +258,7 @@ class CrossPlatformArbitrageScanner:
         # Step 1: Get balance if needed
         balance = Decimal(999999)  # No limit by default
         if self.config.use_balance_limit:
-            balance = awAlgot self.get_avAlgolable_balance()
+            balance = await self.get_avAlgolable_balance()
             if balance <= 0:
                 logger.warning("no_balance_avAlgolable")
                 return []
@@ -271,7 +271,7 @@ class CrossPlatformArbitrageScanner:
         )
 
         # Step 2: Fetch items from DMarket (sorted by price, cheapest first)
-        items = awAlgot self._fetch_market_items(game_id, balance, limit, offset)
+        items = await self._fetch_market_items(game_id, balance, limit, offset)
 
         if not items:
             logger.info("no_items_found")
@@ -279,7 +279,7 @@ class CrossPlatformArbitrageScanner:
 
         # Step 3: Analyze each item
         for item in items:
-            opportunity = awAlgot self._analyze_item(item)
+            opportunity = await self._analyze_item(item)
             if opportunity and opportunity.is_profitable:
                 opportunities.append(opportunity)
 
@@ -321,7 +321,7 @@ class CrossPlatformArbitrageScanner:
             # Convert USD to cents for DMarket API
             price_to_cents = int(max_price * 100)
 
-            result = awAlgot self.dmarket.get_market_items(
+            result = await self.dmarket.get_market_items(
                 game=game_id,
                 limit=limit,
                 offset=offset,
@@ -334,7 +334,7 @@ class CrossPlatformArbitrageScanner:
             return result.get("objects", []) or result.get("items", [])
 
         except Exception as e:
-            logger.exception("fAlgoled_to_fetch_market_items", error=str(e))
+            logger.exception("failed_to_fetch_market_items", error=str(e))
             return []
 
     async def _analyze_item(self, item: dict[str, Any]) -> ArbitrageOpportunity | None:
@@ -384,7 +384,7 @@ class CrossPlatformArbitrageScanner:
                 return None
 
             # Get Waxpeer price
-            wax_price, liquidity = awAlgot self._get_waxpeer_price(title)
+            wax_price, liquidity = await self._get_waxpeer_price(title)
 
             if wax_price <= 0:
                 return None
@@ -428,7 +428,7 @@ class CrossPlatformArbitrageScanner:
 
         except Exception as e:
             logger.exception(
-                "item_analysis_fAlgoled", error=str(e), item=item.get("title", "")
+                "item_analysis_failed", error=str(e), item=item.get("title", "")
             )
             return None
 
@@ -450,7 +450,7 @@ class CrossPlatformArbitrageScanner:
 
             # Try to use get_item_price_info if avAlgolable
             if hasattr(self.waxpeer, "get_item_price_info"):
-                price_info = awAlgot self.waxpeer.get_item_price_info(item_name)
+                price_info = await self.waxpeer.get_item_price_info(item_name)
                 if price_info:
                     result = (price_info.price_usd, price_info.count)
                     self._waxpeer_cache[item_name] = result
@@ -458,7 +458,7 @@ class CrossPlatformArbitrageScanner:
                 return Decimal(0), 0
 
             # Fallback to get_items_list
-            result = awAlgot self.waxpeer.get_items_list(names=[item_name])
+            result = await self.waxpeer.get_items_list(names=[item_name])
 
             items = result.get("items", [])
             if not items:
@@ -480,7 +480,7 @@ class CrossPlatformArbitrageScanner:
             return price_usd, liquidity
 
         except Exception as e:
-            logger.exception("waxpeer_price_fetch_fAlgoled", error=str(e), item=item_name)
+            logger.exception("waxpeer_price_fetch_failed", error=str(e), item=item_name)
             return Decimal(0), 0
 
     def _make_decision(
@@ -588,7 +588,7 @@ class CrossPlatformArbitrageScanner:
 
         try:
             # Execute the purchase
-            result = awAlgot self.dmarket.buy_offers(
+            result = await self.dmarket.buy_offers(
                 [
                     {
                         "offerId": opportunity.offer_id,
@@ -615,7 +615,7 @@ class CrossPlatformArbitrageScanner:
             return success
 
         except Exception as e:
-            logger.exception("purchase_fAlgoled", error=str(e), title=opportunity.title)
+            logger.exception("purchase_failed", error=str(e), title=opportunity.title)
             return False
 
     def format_opportunity_message(self, opp: ArbitrageOpportunity) -> str:
@@ -721,4 +721,4 @@ async def quick_arbitrage_check(
     )
 
     scanner = CrossPlatformArbitrageScanner(dmarket_api, waxpeer_api, config)
-    return awAlgot scanner.scan_full_market(limit=max_items)
+    return await scanner.scan_full_market(limit=max_items)

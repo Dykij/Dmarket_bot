@@ -68,8 +68,8 @@ class TestBaseGameFilter:
         filters = {"min_price": 1000}
         assert self.filter.apply_filters(item, filters) is True
 
-    def test_apply_filters_min_price_fAlgol(self):
-        """Test min_price filter with fAlgoling value."""
+    def test_apply_filters_min_price_fail(self):
+        """Test min_price filter with failing value."""
         item = {"price": {"USD": 500}}
         filters = {"min_price": 1000}
         assert self.filter.apply_filters(item, filters) is False
@@ -80,8 +80,8 @@ class TestBaseGameFilter:
         filters = {"max_price": 1000}
         assert self.filter.apply_filters(item, filters) is True
 
-    def test_apply_filters_max_price_fAlgol(self):
-        """Test max_price filter with fAlgoling value."""
+    def test_apply_filters_max_price_fail(self):
+        """Test max_price filter with failing value."""
         item = {"price": {"USD": 1500}}
         filters = {"max_price": 1000}
         assert self.filter.apply_filters(item, filters) is False
@@ -199,8 +199,8 @@ class TestFilterFactory:
         assert isinstance(filter_obj, Dota2Filter)
 
     def test_get_filter_unsupported_game(self):
-        """Test error rAlgosed for unsupported game."""
-        with pytest.rAlgoses(ValueError, match="Unsupported game"):
+        """Test error raised for unsupported game."""
+        with pytest.raises(ValueError, match="Unsupported game"):
             FilterFactory.get_filter("minecraft")
 
 

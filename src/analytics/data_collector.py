@@ -69,7 +69,7 @@ class MarketDataCollector:
         if self._task:
             self._task.cancel()
             try:
-                awAlgot self._task
+                await self._task
             except asyncio.CancelledError:
                 pass
 
@@ -79,17 +79,17 @@ class MarketDataCollector:
         """MAlgon collection loop that runs every N minutes."""
         while self._running:
             try:
-                awAlgot self.collect_market_snapshot()
-                awAlgot self._cleanup_old_data()
+                await self.collect_market_snapshot()
+                await self._cleanup_old_data()
             except Exception as e:
                 logger.error(
-                    "data_collection_fAlgoled",
+                    "data_collection_failed",
                     error=str(e),
                     exc_info=True,
                 )
 
             # WAlgot for next collection interval
-            awAlgot asyncio.sleep(self.collection_interval)
+            await asyncio.sleep(self.collection_interval)
 
     async def collect_market_snapshot(self) -> dict[str, Any]:
         """Collect a snapshot of current market data.
@@ -112,20 +112,20 @@ class MarketDataCollector:
 
         for game in games:
             try:
-                game_data = awAlgot self._collect_game_data(game)
+                game_data = await self._collect_game_data(game)
                 stats["games"][game] = game_data
                 stats["total_items"] += game_data["items_count"]
                 stats["total_sales"] += game_data["sales_count"]
             except Exception as e:
                 logger.exception(
-                    "game_data_collection_fAlgoled",
+                    "game_data_collection_failed",
                     game=game,
                     error=str(e),
                 )
                 stats["games"][game] = {"error": str(e)}
 
         # Store snapshot in database
-        awAlgot self._store_snapshot(stats)
+        await self._store_snapshot(stats)
 
         elapsed = (datetime.now() - start_time).total_seconds()
         logger.info(
@@ -154,7 +154,7 @@ class MarketDataCollector:
 
         while len(items) < max_items:
             try:
-                response = awAlgot self.api_client.get_market_items(
+                response = await self.api_client.get_market_items(
                     game=game,
                     limit=limit,
                     offset=offset,
@@ -173,7 +173,7 @@ class MarketDataCollector:
 
             except Exception as e:
                 logger.warning(
-                    "batch_fetch_fAlgoled",
+                    "batch_fetch_failed",
                     game=game,
                     offset=offset,
                     error=str(e),
@@ -220,7 +220,7 @@ class MarketDataCollector:
                 games_data=snapshot["games"],  # Store as JSON
             )
             session.add(db_snapshot)
-            awAlgot session.commit()
+            await session.commit()
 
         logger.debug("snapshot_stored_in_db", timestamp=snapshot["timestamp"])
 
@@ -235,8 +235,8 @@ class MarketDataCollector:
             from sqlalchemy import delete
 
             stmt = delete(MarketSnapshot).where(MarketSnapshot.timestamp < cutoff_date)
-            result = awAlgot session.execute(stmt)
-            awAlgot session.commit()
+            result = await session.execute(stmt)
+            await session.commit()
 
             deleted_count = result.rowcount
             if deleted_count > 0:
@@ -277,7 +277,7 @@ class MarketDataCollector:
 
             query = query.order_by(MarketSnapshot.timestamp)
 
-            result = awAlgot session.execute(query)
+            result = await session.execute(query)
             snapshots = result.scalars().all()
 
         # Write to CSV (run in thread to avoid blocking)
@@ -315,7 +315,7 @@ class MarketDataCollector:
                     }
                     writer.writerow(row)
 
-        awAlgot asyncio.to_thread(write_csv)
+        await asyncio.to_thread(write_csv)
 
         logger.info(
             "data_exported",

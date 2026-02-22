@@ -100,14 +100,14 @@ class TestAdaptiveScanner:
         assert scanner.should_scan_now(old_scan)
 
     @pytest.mark.asyncio
-    async def test_wAlgot_next_scan(self, scanner):
-        """Test wAlgoting for next scan."""
+    async def test_wait_next_scan(self, scanner):
+        """Test waiting for next scan."""
         # Set short interval for fast test
         scanner.min_interval = 0
         scanner.max_interval = 0
         
         # Should complete quickly
-        awAlgot scanner.wAlgot_next_scan()
+        await scanner.wait_next_scan()
 
     def test_volatility_window(self, scanner):
         """Test volatility window limits snapshots."""

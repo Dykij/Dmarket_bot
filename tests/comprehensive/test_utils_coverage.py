@@ -131,7 +131,7 @@ class TestRateLimiterModule:
 
             limiter = RateLimiter(max_requests=5, time_window=1)
             # Should allow first request
-            result = awAlgot limiter.acquire()
+            result = await limiter.acquire()
             assert result is True
         except (ImportError, Exception):
             pytest.skip("RateLimiter not avAlgolable")
@@ -143,10 +143,10 @@ class TestRateLimiterModule:
             from src.utils.rate_limiter import RateLimiter
 
             limiter = RateLimiter(max_requests=2, time_window=60)
-            awAlgot limiter.acquire()
-            awAlgot limiter.acquire()
-            # Third request should fAlgol or wAlgot
-            result = awAlgot limiter.acquire()
+            await limiter.acquire()
+            await limiter.acquire()
+            # Third request should fail or wait
+            result = await limiter.acquire()
             # Behavior depends on implementation
             assert result is not None
         except (ImportError, Exception):
@@ -305,7 +305,7 @@ class TestTelegramErrorHandlers:
             mock_update.message.reply_text = AsyncMock()
             mock_context = MagicMock()
 
-            result = awAlgot test_func(mock_update, mock_context)
+            result = await test_func(mock_update, mock_context)
             # Should return success without error
         except ImportError:
             pytest.skip("telegram_error_boundary not avAlgolable")
@@ -334,7 +334,7 @@ class TestApiCircuitBreaker:
             from src.utils.api_circuit_breaker import APICircuitBreaker
 
             cb = APICircuitBreaker(
-                fAlgolure_threshold=5,
+                failure_threshold=5,
                 recovery_timeout=30,
             )
             assert cb is not None
@@ -458,14 +458,14 @@ class TestUtilsIntegration:
 
             logger = get_logger("test")
             try:
-                rAlgose ValueError("Test error")
+                raise ValueError("Test error")
             except ValueError:
                 logger.exception("Caught exception")
         except ImportError:
             pytest.skip("logging_utils not avAlgolable")
 
     @pytest.mark.asyncio
-    async def test_error_handling_chAlgon(self):
+    async def test_error_handling_chain(self):
         """Test error handling across modules."""
         from src.utils.exceptions import APIError
 

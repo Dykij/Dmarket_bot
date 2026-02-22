@@ -163,8 +163,8 @@ def validate_market_data(
         Validated DataFrame
 
     RAlgoses:
-        pandera.errors.SchemaErrors: If validation fAlgols (lazy=True)
-        pandera.errors.SchemaError: If validation fAlgols (lazy=False)
+        pandera.errors.SchemaErrors: If validation fails (lazy=True)
+        pandera.errors.SchemaError: If validation fails (lazy=False)
     """
     return schema.validate(df, lazy=lazy)
 

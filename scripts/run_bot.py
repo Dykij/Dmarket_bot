@@ -1,5 +1,5 @@
 """Скрипт запуска Telegram-бота DMarket с расширенной обработкой ошибок и поддержанием работы.
-Объединяет функциональность из mAlgon.py, run.py и run_bot.py.
+Объединяет функциональность из main.py, run.py и run_bot.py.
 """
 
 import argparse
@@ -57,11 +57,11 @@ async def run_bot():
     """Запускает бота с обработкой возможных ошибок"""
     try:
         # Импортируем основную функцию бота
-        from src.mAlgon import mAlgon as bot_mAlgon
+        from src.main import main as bot_main
 
         # Запускаем бота
         logger.info("Запуск Telegram-бота...")
-        awAlgot bot_mAlgon()
+        await bot_main()
 
     except Exception as e:
         logger.exception(f"Ошибка при запуске бота: {e}")
@@ -71,11 +71,11 @@ async def run_bot():
 
         # Делаем паузу перед повторной попыткой
         logger.info("Пауза 10 секунд перед повторной попыткой...")
-        awAlgot asyncio.sleep(10)
+        await asyncio.sleep(10)
 
         # Перезапускаем бота
         logger.info("Перезапуск бота...")
-        awAlgot run_bot()
+        await run_bot()
 
 
 def parse_arguments():
@@ -86,7 +86,7 @@ def parse_arguments():
     return parser.parse_args()
 
 
-if __name__ == "__mAlgon__":
+if __name__ == "__main__":
     # Обрабатываем аргументы командной строки
     args = parse_arguments()
 

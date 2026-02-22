@@ -20,7 +20,7 @@ async def show_market_status(
     """Show current market status and sentiment analysis."""
     query = update.callback_query
     if query:
-        awAlgot query.answer()
+        await query.answer()
 
     # Get market sentiment analyzer from context
     sentiment = context.application.bot_data.get("market_sentiment")
@@ -65,13 +65,13 @@ async def show_market_status(
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     if query:
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             text=message,
             reply_markup=reply_markup,
             parse_mode="Markdown",
         )
     else:
-        awAlgot update.effective_message.reply_text(
+        await update.effective_message.reply_text(
             text=message,
             reply_markup=reply_markup,
             parse_mode="Markdown",
@@ -84,7 +84,7 @@ async def show_x5_opportunities(
     """Show current X5 hunting opportunities."""
     query = update.callback_query
     if query:
-        awAlgot query.answer()
+        await query.answer()
 
     sentiment = context.application.bot_data.get("market_sentiment")
 
@@ -117,13 +117,13 @@ async def show_x5_opportunities(
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     if query:
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             text=message,
             reply_markup=reply_markup,
             parse_mode="Markdown",
         )
     else:
-        awAlgot update.effective_message.reply_text(
+        await update.effective_message.reply_text(
             text=message,
             reply_markup=reply_markup,
             parse_mode="Markdown",
@@ -133,29 +133,29 @@ async def show_x5_opportunities(
 async def toggle_x5_hunt(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Toggle X5 hunt mode on/off."""
     query = update.callback_query
-    awAlgot query.answer()
+    await query.answer()
 
     sentiment = context.application.bot_data.get("market_sentiment")
 
     if not sentiment:
-        awAlgot query.answer("⚠️ Market Sentiment не инициализирован", show_alert=True)
+        await query.answer("⚠️ Market Sentiment не инициализирован", show_alert=True)
         return
 
     # Toggle hunt mode
     sentiment.high_risk_hunt = not sentiment.high_risk_hunt
     status = "ВКЛ 🟢" if sentiment.high_risk_hunt else "ВЫКЛ 🔴"
 
-    awAlgot query.answer(f"X5 Охота: {status}")
+    await query.answer(f"X5 Охота: {status}")
 
     # Refresh smart menu
-    awAlgot show_smart_menu(update, context)
+    await show_smart_menu(update, context)
 
 
 async def show_smart_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Show smart trading menu with adaptive limits."""
     query = update.callback_query
     if query:
-        awAlgot query.answer()
+        await query.answer()
 
     # Get components
     api_client = context.application.bot_data.get("dmarket_api")
@@ -166,7 +166,7 @@ async def show_smart_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     balance = 0.0
     try:
         if api_client and hasattr(api_client, "get_balance"):
-            balance_data = awAlgot api_client.get_balance()
+            balance_data = await api_client.get_balance()
             if isinstance(balance_data, dict):
                 # DMarket API returns 'balance' field in dollars directly
                 try:
@@ -253,19 +253,19 @@ async def show_smart_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
             InlineKeyboardButton(text="🛑 СТОП", callback_data="panic_stop"),
         ],
         [
-            InlineKeyboardButton(text="◀️ Главное меню", callback_data="mAlgon_menu"),
+            InlineKeyboardButton(text="◀️ Главное меню", callback_data="main_menu"),
         ],
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     if query:
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             text=message,
             reply_markup=reply_markup,
             parse_mode="Markdown",
         )
     else:
-        awAlgot update.effective_message.reply_text(
+        await update.effective_message.reply_text(
             text=message,
             reply_markup=reply_markup,
             parse_mode="Markdown",
@@ -277,7 +277,7 @@ async def start_smart_arbitrage(
 ) -> None:
     """Start smart arbitrage with adaptive limits."""
     query = update.callback_query
-    awAlgot query.answer("🚀 Запуск Smart Arbitrage...")
+    await query.answer("🚀 Запуск Smart Arbitrage...")
 
     api_client = context.application.bot_data.get("dmarket_api")
     sentiment = context.application.bot_data.get("market_sentiment")
@@ -286,14 +286,14 @@ async def start_smart_arbitrage(
 
     # Check components
     if not api_client or not scanner_manager:
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             "⚠️ Необходимые компоненты не инициализированы.\nПроверьте логи запуска бота."
         )
         return
 
     try:
         # Get balance - DMarket API returns 'balance' field in dollars directly
-        balance_data = awAlgot api_client.get_balance()
+        balance_data = await api_client.get_balance()
         if isinstance(balance_data, dict):
             try:
                 balance = float(balance_data.get("balance", 0))
@@ -303,7 +303,7 @@ async def start_smart_arbitrage(
             balance = 0.0
 
         if balance < 1.0:
-            awAlgot query.edit_message_text(
+            await query.edit_message_text(
                 f"⚠️ Недостаточный баланс: ${balance:.2f}\n"
                 "Минимальный баланс для Smart Arbitrage: $1.00"
             )
@@ -356,7 +356,7 @@ async def start_smart_arbitrage(
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
 
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             text=message,
             reply_markup=reply_markup,
             parse_mode="Markdown",
@@ -371,7 +371,7 @@ async def start_smart_arbitrage(
 
     except Exception as e:
         logger.exception("smart_arbitrage_start_error", error=str(e))
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             f"❌ Ошибка запуска: {e!s}\n\nПроверьте подключение к DMarket API."
         )
 
@@ -379,17 +379,17 @@ async def start_smart_arbitrage(
 async def scan_x5_now(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Manually trigger X5 opportunity scan."""
     query = update.callback_query
-    awAlgot query.answer("🔍 Сканирование X5 возможностей...")
+    await query.answer("🔍 Сканирование X5 возможностей...")
 
     sentiment = context.application.bot_data.get("market_sentiment")
 
     if not sentiment:
-        awAlgot query.answer("⚠️ Market Sentiment не инициализирован", show_alert=True)
+        await query.answer("⚠️ Market Sentiment не инициализирован", show_alert=True)
         return
 
     try:
         # Run scan
-        opportunities = awAlgot sentiment.scan_for_x5_opportunities()
+        opportunities = await sentiment.scan_for_x5_opportunities()
 
         if opportunities:
             message = sentiment.get_x5_opportunities_message()
@@ -415,7 +415,7 @@ async def scan_x5_now(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
 
-        awAlgot query.edit_message_text(
+        await query.edit_message_text(
             text=message,
             reply_markup=reply_markup,
             parse_mode="Markdown",
@@ -423,7 +423,7 @@ async def scan_x5_now(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
 
     except Exception as e:
         logger.exception("x5_scan_error", error=str(e))
-        awAlgot query.answer(f"❌ Ошибка: {e!s}", show_alert=True)
+        await query.answer(f"❌ Ошибка: {e!s}", show_alert=True)
 
 
 def register_market_sentiment_handlers(application) -> None:

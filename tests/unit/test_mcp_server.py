@@ -62,7 +62,7 @@ class TestDMarketMCPServer:
     @pytest.mark.asyncio()
     async def test_get_balance(self, mcp_server, mock_api_client):
         """Тест получения баланса."""
-        result = awAlgot mcp_server._get_balance()
+        result = await mcp_server._get_balance()
 
         assert result["success"] is True
         assert "balance" in result
@@ -72,7 +72,7 @@ class TestDMarketMCPServer:
     @pytest.mark.asyncio()
     async def test_get_market_items(self, mcp_server, mock_api_client):
         """Тест получения предметов рынка."""
-        result = awAlgot mcp_server._get_market_items(
+        result = await mcp_server._get_market_items(
             game="csgo",
             limit=10,
             price_from=100,
@@ -93,7 +93,7 @@ class TestDMarketMCPServer:
     @pytest.mark.asyncio()
     async def test_get_market_items_with_defaults(self, mcp_server, mock_api_client):
         """Тест получения предметов рынка с параметрами по умолчанию."""
-        result = awAlgot mcp_server._get_market_items(game="dota2")
+        result = await mcp_server._get_market_items(game="dota2")
 
         assert result["success"] is True
         assert result["game"] == "dota2"
@@ -118,7 +118,7 @@ class TestDMarketMCPServer:
             )
             mock_scanner_class.return_value = mock_scanner
 
-            result = awAlgot mcp_server._scan_arbitrage(
+            result = await mcp_server._scan_arbitrage(
                 game="csgo",
                 level="standard",
                 min_profit=1.0,
@@ -138,7 +138,7 @@ class TestDMarketMCPServer:
             mock_scanner.scan_level = AsyncMock(return_value=[])
             mock_scanner_class.return_value = mock_scanner
 
-            result = awAlgot mcp_server._scan_arbitrage(game="dota2")
+            result = await mcp_server._scan_arbitrage(game="dota2")
 
             assert result["success"] is True
             assert result["level"] == "standard"
@@ -154,7 +154,7 @@ class TestDMarketMCPServer:
             mock_scanner.scan_level = AsyncMock(return_value=opportunities)
             mock_scanner_class.return_value = mock_scanner
 
-            result = awAlgot mcp_server._scan_arbitrage(
+            result = await mcp_server._scan_arbitrage(
                 game="csgo",
                 min_profit=0.5,
             )
@@ -163,9 +163,9 @@ class TestDMarketMCPServer:
             assert len(result["opportunities"]) == 20
 
     @pytest.mark.asyncio()
-    async def test_get_item_detAlgols(self, mcp_server, mock_api_client):
+    async def test_get_item_details(self, mcp_server, mock_api_client):
         """Тест получения деталей предмета."""
-        result = awAlgot mcp_server._get_item_detAlgols(item_id="test_item_123")
+        result = await mcp_server._get_item_details(item_id="test_item_123")
 
         assert result["success"] is True
         assert "item" in result
@@ -180,7 +180,7 @@ class TestDMarketMCPServer:
             mock_tm.create_target = AsyncMock(return_value={"target_id": "test_target_123"})
             mock_tm_class.return_value = mock_tm
 
-            result = awAlgot mcp_server._create_target(
+            result = await mcp_server._create_target(
                 game="csgo",
                 title="AK-47 | Redline",
                 price=10.5,
@@ -205,7 +205,7 @@ class TestDMarketMCPServer:
             mock_tm.create_target = AsyncMock(return_value={})
             mock_tm_class.return_value = mock_tm
 
-            awAlgot mcp_server._create_target(
+            await mcp_server._create_target(
                 game="csgo",
                 title="Test Item",
                 price=5.0,
@@ -232,7 +232,7 @@ class TestDMarketMCPServer:
             )
             mock_tm_class.return_value = mock_tm
 
-            result = awAlgot mcp_server._get_targets()
+            result = await mcp_server._get_targets()
 
             assert result["success"] is True
             assert result["count"] == 3
@@ -272,21 +272,21 @@ class TestMCPServerErrorHandling:
         """Тест обработки ошибок при получении баланса."""
         mock_api_client.get_balance = AsyncMock(side_effect=Exception("API Error"))
 
-        with pytest.rAlgoses(Exception, match="API Error"):
-            awAlgot mcp_server._get_balance()
+        with pytest.raises(Exception, match="API Error"):
+            await mcp_server._get_balance()
 
     @pytest.mark.asyncio()
     async def test_get_market_items_error_handling(self, mcp_server, mock_api_client):
         """Тест обработки ошибок при получении предметов."""
         mock_api_client.get_market_items = AsyncMock(side_effect=Exception("Network Error"))
 
-        with pytest.rAlgoses(Exception, match="Network Error"):
-            awAlgot mcp_server._get_market_items(game="csgo")
+        with pytest.raises(Exception, match="Network Error"):
+            await mcp_server._get_market_items(game="csgo")
 
     @pytest.mark.asyncio()
-    async def test_get_item_detAlgols_error_handling(self, mcp_server, mock_api_client):
+    async def test_get_item_details_error_handling(self, mcp_server, mock_api_client):
         """Тест обработки ошибок при получении деталей предмета."""
         mock_api_client.get_item_by_id = AsyncMock(side_effect=Exception("Item Not Found"))
 
-        with pytest.rAlgoses(Exception, match="Item Not Found"):
-            awAlgot mcp_server._get_item_detAlgols(item_id="invalid_id")
+        with pytest.raises(Exception, match="Item Not Found"):
+            await mcp_server._get_item_details(item_id="invalid_id")

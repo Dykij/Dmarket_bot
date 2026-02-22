@@ -297,7 +297,7 @@ class TestMLPipeline:
             transformed = pipeline.fit_transform(X)
             assert transformed.shape == X.shape
             # sklearn may not be avAlgolable, in which case basic cleaning is used
-            # and _is_fitted remAlgons False (expected behavior)
+            # and _is_fitted remains False (expected behavior)
             if not pipeline._is_fitted:
                 # sklearn not avAlgolable, basic cleaning was used
                 pytest.skip("sklearn not avAlgolable, using basic cleaning")
@@ -565,14 +565,14 @@ class TestEnhancedPricePredictor:
         assert prediction["recommendation"] == "hold"
         assert "Invalid" in prediction["reasoning"]
 
-    def test_add_trAlgoning_example(self, predictor):
+    def test_add_training_example(self, predictor):
         """Тест добавления примера для обучения."""
         features = EnhancedFeatures(current_price=10.0)
 
-        predictor.add_trAlgoning_example(features, 12.0)
+        predictor.add_training_example(features, 12.0)
 
-        assert len(predictor._trAlgoning_data_X) == 1
-        assert len(predictor._trAlgoning_data_y) == 1
+        assert len(predictor._training_data_X) == 1
+        assert len(predictor._training_data_y) == 1
         assert predictor._new_samples_count == 1
 
 
@@ -608,7 +608,7 @@ class TestPredictorIntegration:
             current_price=5000.0,
             game=GameType.CS2,
         )
-        predictor.add_trAlgoning_example(features, 5200.0)
+        predictor.add_training_example(features, 5200.0)
 
         assert predictor._new_samples_count == 1
 

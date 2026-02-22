@@ -110,10 +110,10 @@ class TestAttributesModel:
         attrs = AttributesModel(floatValue="0.25")
         assert attrs.float_value == "0.25"
 
-    def test_pAlgont_seed_alias(self) -> None:
-        """Test pAlgontSeed alias."""
-        attrs = AttributesModel(pAlgontSeed=123)
-        assert attrs.pAlgont_seed == 123
+    def test_paint_seed_alias(self) -> None:
+        """Test paintSeed alias."""
+        attrs = AttributesModel(paintSeed=123)
+        assert attrs.paint_seed == 123
 
     def test_phase_attribute(self) -> None:
         """Test phase attribute for Doppler knives."""
@@ -128,7 +128,7 @@ class TestAttributesModel:
         assert attrs.rarity is None
         assert attrs.float_value is None
         assert attrs.phase is None
-        assert attrs.pAlgont_seed is None
+        assert attrs.paint_seed is None
 
 
 class TestMarketItemModel:
@@ -274,7 +274,7 @@ class TestCreateTargetRequest:
 
     def test_amount_validation_min(self) -> None:
         """Test amount minimum validation."""
-        with pytest.rAlgoses(ValidationError):
+        with pytest.raises(ValidationError):
             CreateTargetRequest(
                 Title="Test",
                 Amount=0,  # Should be >= 1
@@ -283,7 +283,7 @@ class TestCreateTargetRequest:
 
     def test_amount_validation_max(self) -> None:
         """Test amount maximum validation."""
-        with pytest.rAlgoses(ValidationError):
+        with pytest.raises(ValidationError):
             CreateTargetRequest(
                 Title="Test",
                 Amount=101,  # Should be <= 100
@@ -671,7 +671,7 @@ class TestDMarketAPIError:
 
     def test_validate_error_from_dict(self) -> None:
         """Test error validation from dict."""
-        error = DMarketAPIError(error={"code": "ERR_001", "detAlgols": "test"})
+        error = DMarketAPIError(error={"code": "ERR_001", "details": "test"})
         assert error.error["code"] == "ERR_001"
 
 

@@ -42,11 +42,11 @@ async def find_price_anomalies(
     )
 
     # Initialize API client
-    api_client, should_close = awAlgot _init_api_client(dmarket_api)
+    api_client, should_close = await _init_api_client(dmarket_api)
 
     try:
         # Fetch market items
-        items = awAlgot _fetch_market_items(api_client, game, min_price, max_price)
+        items = await _fetch_market_items(api_client, game, min_price, max_price)
         if not items:
             return []
 
@@ -64,7 +64,7 @@ async def find_price_anomalies(
         return []
     finally:
         if should_close:
-            awAlgot _close_api_client(api_client)
+            await _close_api_client(api_client)
 
 
 async def _init_api_client(
@@ -96,7 +96,7 @@ async def _fetch_market_items(
         List of items or empty list if error
 
     """
-    response = awAlgot api_client.get_market_items(
+    response = await api_client.get_market_items(
         game=game,
         limit=200,
         offset=0,
@@ -333,4 +333,4 @@ def _sort_and_limit_results(
 async def _close_api_client(api_client: DMarketAPI) -> None:
     """Close API client if it has close method."""
     if hasattr(api_client, "_close_client"):
-        awAlgot api_client._close_client()
+        await api_client._close_client()

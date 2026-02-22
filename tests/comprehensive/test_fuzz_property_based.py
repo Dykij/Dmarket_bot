@@ -122,7 +122,7 @@ class TestAPIClientProperties:
         """Test API client accepts various key formats."""
         from src.dmarket.dmarket_api import DMarketAPI
 
-        # Should not rAlgose on any valid string keys
+        # Should not raise on any valid string keys
         api = DMarketAPI(public_key, secret_key)
         assert api is not None
 
@@ -234,11 +234,11 @@ class TestCircuitBreakerProperties:
 
         cb = APICircuitBreaker(
             name=f"fuzz_test_{threshold}_{timeout}",
-            fAlgolure_threshold=threshold,
+            failure_threshold=threshold,
             recovery_timeout=timeout,
         )
 
-        assert cb._fAlgolure_threshold == threshold
+        assert cb._failure_threshold == threshold
         assert cb._recovery_timeout == timeout
 
 

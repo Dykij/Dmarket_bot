@@ -31,7 +31,7 @@ class TestPriceParsingFuzz:
         """Price parsing should never crash on arbitrary input."""
 
         def parse_price(s: str) -> float | None:
-            """Parse price string to float, returning None on fAlgolure."""
+            """Parse price string to float, returning None on failure."""
             try:
                 # Remove common currency symbols and whitespace
                 cleaned = s.strip().replace("$", "").replace(",", "").replace(" ", "")
@@ -41,7 +41,7 @@ class TestPriceParsingFuzz:
             except (ValueError, TypeError, AttributeError):
                 return None
 
-        # Should never rAlgose an exception
+        # Should never raise an exception
         result = parse_price(price_str)
         assert result is None or isinstance(result, (int, float))
 

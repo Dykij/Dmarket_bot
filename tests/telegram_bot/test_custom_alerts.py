@@ -309,7 +309,7 @@ class TestAlertChecking:
         )
 
         prices = {"Test Item": Decimal("90.0")}  # Below target
-        triggered = awAlgot manager.check_alerts(prices)
+        triggered = await manager.check_alerts(prices)
 
         assert len(triggered) == 1
         assert triggered[0].current_value == Decimal("90.0")
@@ -324,7 +324,7 @@ class TestAlertChecking:
         )
 
         prices = {"Test Item": Decimal("110.0")}  # Above target
-        triggered = awAlgot manager.check_alerts(prices)
+        triggered = await manager.check_alerts(prices)
 
         assert len(triggered) == 0
 
@@ -339,11 +339,11 @@ class TestAlertChecking:
         prices = {"Test": Decimal("90.0")}
 
         # First trigger
-        triggered1 = awAlgot manager.check_alerts(prices)
+        triggered1 = await manager.check_alerts(prices)
         assert len(triggered1) == 1
 
         # Second trigger (should be rate limited)
-        triggered2 = awAlgot manager.check_alerts(prices)
+        triggered2 = await manager.check_alerts(prices)
         assert len(triggered2) == 0  # Rate limited
 
 

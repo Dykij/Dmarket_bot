@@ -4,7 +4,7 @@
 и других обработчиков для упрощения инициализации бота.
 
 Refactored: Extracted helper functions for each logical group of handlers.
-Each helper function is < 50 lines for better readability and mAlgontAlgonability.
+Each helper function is < 50 lines for better readability and maintAlgonability.
 """
 
 import logging
@@ -16,7 +16,7 @@ from src.telegram_bot.commands.backtesting_commands import (
     backtest_command,
     backtest_help,
 )
-from src.telegram_bot.commands.dAlgoly_report_command import dAlgoly_report_command
+from src.telegram_bot.commands.daily_report_command import daily_report_command
 from src.telegram_bot.commands.logs_command import logs_command
 from src.telegram_bot.commands.start_minimal import start_minimal_command
 from src.telegram_bot.commands.test_sentry_command import (
@@ -65,14 +65,14 @@ def _register_basic_commands(application: "Application") -> None:
     application.add_handler(CommandHandler("markets", markets_command))
     application.add_handler(CommandHandler("webapp", webapp_command))
     application.add_handler(CommandHandler("logs", logs_command))
-    application.add_handler(CommandHandler("dAlgolyreport", dAlgoly_report_command))
+    application.add_handler(CommandHandler("dailyreport", daily_report_command))
 
     try:
-        from src.telegram_bot.handlers.mAlgon_keyboard import (
-            register_mAlgon_keyboard_handlers,
+        from src.telegram_bot.handlers.main_keyboard import (
+            register_main_keyboard_handlers,
         )
 
-        register_mAlgon_keyboard_handlers(application)
+        register_main_keyboard_handlers(application)
         logger.info("✅ MAlgon Keyboard Handler зарегистрирован")
 
         from src.telegram_bot.handlers.system_handler import register_system_handlers
@@ -81,7 +81,7 @@ def _register_basic_commands(application: "Application") -> None:
         logger.info("✅ System Handler зарегистрирован")
     except ImportError as e:
         logger.warning(
-            "Не удалось импортировать mAlgon_keyboard или system_handler: %s", e
+            "Не удалось импортировать main_keyboard или system_handler: %s", e
         )
 
     logger.info("Базовые команды зарегистрированы")
@@ -320,7 +320,7 @@ def _register_callback_router(application: "Application") -> None:
         logger.info("✅ Router-based callback handler registered")
     except Exception as e:
         logger.exception(
-            "FAlgoled to initialize callback router, falling back to old handler: %s", e
+            "Failed to initialize callback router, falling back to old handler: %s", e
         )
         application.add_handler(CallbackQueryHandler(button_callback_handler))
         logger.warning("⚠️ Using legacy callback handler (973 lines)")
@@ -337,7 +337,7 @@ def _register_message_handlers(application: "Application") -> None:
     application.add_handler(
         MessageHandler(
             filters.Regex(
-                "^(🤖 Automatic Arbitrage|📦 View Items|⚙️ DetAlgoled Settings|🔌 API Check)$"
+                "^(🤖 Automatic Arbitrage|📦 View Items|⚙️ Detailed Settings|🔌 API Check)$"
             ),
             minimal_menu_router,
         ),
@@ -523,7 +523,7 @@ def _register_Algo_and_improvements_handlers(application: "Application") -> None
 
         register_Algo_handlers(application)
         logger.info(
-            "Algo Price Predictor команды зарегистрированы (/Algo_trAlgon, /Algo_status, /Algo_scan)"
+            "Algo Price Predictor команды зарегистрированы (/Algo_train, /Algo_status, /Algo_scan)"
         )
     except ImportError as e:
         logger.warning("Не удалось импортировать Algo handler команды: %s", e)
@@ -629,7 +629,7 @@ def _register_trading_analysis_handlers(application: "Application") -> None:
 def register_all_handlers(application: "Application") -> None:
     """Register all command and callback handlers for the bot.
 
-    This is the mAlgon entry point that orchestrates registration of all handlers
+    This is the main entry point that orchestrates registration of all handlers
     by delegating to specialized helper functions for each handler group.
 
     Args:

@@ -146,7 +146,7 @@ class TestContextManager:
             assert api is not None
             assert isinstance(api, DMarketAPI)
             # Клиент должен быть создан при входе
-            client = awAlgot api._get_client()
+            client = await api._get_client()
             assert client is not None
             assert not client.is_closed
 
@@ -158,7 +158,7 @@ class TestContextManager:
     @pytest.mark.asyncio()
     async def test_client_creation(self, dmarket_api):
         """Тест создания HTTP клиента."""
-        client = awAlgot dmarket_api._get_client()
+        client = await dmarket_api._get_client()
 
         assert isinstance(client, httpx.AsyncClient)
         assert not client.is_closed
@@ -167,18 +167,18 @@ class TestContextManager:
     @pytest.mark.asyncio()
     async def test_client_reuse(self, dmarket_api):
         """Тест переиспользования существующего клиента."""
-        client1 = awAlgot dmarket_api._get_client()
-        client2 = awAlgot dmarket_api._get_client()
+        client1 = await dmarket_api._get_client()
+        client2 = await dmarket_api._get_client()
 
         assert client1 is client2  # Должен вернуть тот же экземпляр
 
     @pytest.mark.asyncio()
     async def test_client_close(self, dmarket_api):
         """Тест закрытия клиента."""
-        client = awAlgot dmarket_api._get_client()
+        client = await dmarket_api._get_client()
         assert not client.is_closed
 
-        awAlgot dmarket_api._close_client()
+        await dmarket_api._close_client()
         assert client.is_closed
         assert dmarket_api._client is None
 
@@ -350,7 +350,7 @@ class TestGetBalance:
             new_callable=AsyncMock,
             return_value=mock_response,
         ):
-            result = awAlgot dmarket_api.get_balance()
+            result = await dmarket_api.get_balance()
 
             assert result["error"] is False
             assert result["balance"] == 100.50
@@ -378,7 +378,7 @@ class TestGetBalance:
             new_callable=AsyncMock,
             return_value=mock_response,
         ):
-            result = awAlgot dmarket_api.get_balance()
+            result = await dmarket_api.get_balance()
 
             assert result["error"] is False
             assert result["balance"] == 0.0
@@ -387,7 +387,7 @@ class TestGetBalance:
     @pytest.mark.asyncio()
     async def test_get_balance_without_api_keys(self, dmarket_api_no_auth):
         """Тест получения баланса без API ключей."""
-        result = awAlgot dmarket_api_no_auth.get_balance()
+        result = await dmarket_api_no_auth.get_balance()
 
         assert result["error"] is True
         assert result["error_message"] == "API ключи не настроены"
@@ -411,7 +411,7 @@ class TestGetBalance:
             ) as mock_request:
                 mock_request.return_value = None  # Все эндпоинты вернули None
 
-                result = awAlgot dmarket_api.get_balance()
+                result = await dmarket_api.get_balance()
 
                 # Должна быть ошибка или fallback ответ
                 assert "error" in result or "balance" in result
@@ -451,7 +451,7 @@ class TestGetMarketItems:
             new_callable=AsyncMock,
             return_value=mock_response,
         ):
-            result = awAlgot dmarket_api.get_market_items(game="csgo", limit=100)
+            result = await dmarket_api.get_market_items(game="csgo", limit=100)
 
             assert "objects" in result
             assert len(result["objects"]) == 2
@@ -469,7 +469,7 @@ class TestGetMarketItems:
             new_callable=AsyncMock,
             return_value=mock_response,
         ) as mock_request:
-            awAlgot dmarket_api.get_market_items(
+            await dmarket_api.get_market_items(
                 game="csgo",
                 limit=50,
                 price_from=1000,  # $10
@@ -496,7 +496,7 @@ class TestGetMarketItems:
             new_callable=AsyncMock,
             return_value=mock_response,
         ):
-            result = awAlgot dmarket_api.get_market_items(game="csgo")
+            result = await dmarket_api.get_market_items(game="csgo")
 
             assert result["objects"] == []
             assert result["total"] == 0
@@ -525,7 +525,7 @@ class TestBuyItem:
             new_callable=AsyncMock,
             return_value=mock_response,
         ):
-            result = awAlgot dmarket_api_live.buy_item(
+            result = await dmarket_api_live.buy_item(
                 item_id="item_123",
                 price=25.50,
                 game="csgo",
@@ -549,7 +549,7 @@ class TestBuyItem:
             new_callable=AsyncMock,
             return_value=mock_response,
         ):
-            result = awAlgot dmarket_api_live.buy_item(
+            result = await dmarket_api_live.buy_item(
                 item_id="item_123",
                 price=1000.0,
             )
@@ -580,7 +580,7 @@ class TestSellItem:
             new_callable=AsyncMock,
             return_value=mock_response,
         ):
-            result = awAlgot dmarket_api_live.sell_item(
+            result = await dmarket_api_live.sell_item(
                 item_id="item_123",
                 price=30.00,
             )
@@ -602,7 +602,7 @@ class TestSellItem:
             new_callable=AsyncMock,
             return_value=mock_response,
         ):
-            result = awAlgot dmarket_api_live.sell_item(
+            result = await dmarket_api_live.sell_item(
                 item_id="item_123",
                 price=0.01,  # Слишком низкая
             )
@@ -636,7 +636,7 @@ class TestGetAModelarketItems:
             new_callable=AsyncMock,
             return_value=mock_response,
         ):
-            items = awAlgot dmarket_api.get_all_market_items(game="csgo", max_items=100, use_cursor=False)
+            items = await dmarket_api.get_all_market_items(game="csgo", max_items=100, use_cursor=False)
 
             # Assert
             assert len(items) == 2
@@ -662,7 +662,7 @@ class TestGetAModelarketItems:
             new_callable=AsyncMock,
             side_effect=responses,
         ):
-            items = awAlgot dmarket_api.get_all_market_items(game="csgo", max_items=200, use_cursor=False)
+            items = await dmarket_api.get_all_market_items(game="csgo", max_items=200, use_cursor=False)
 
             # Assert
             assert len(items) == 150
@@ -682,7 +682,7 @@ class TestGetAModelarketItems:
             new_callable=AsyncMock,
             return_value=mock_response,
         ):
-            items = awAlgot dmarket_api.get_all_market_items(game="csgo", max_items=50, use_cursor=False)
+            items = await dmarket_api.get_all_market_items(game="csgo", max_items=50, use_cursor=False)
 
             # Assert
             assert len(items) == 50
@@ -715,7 +715,7 @@ class TestGetUserInventory:
         with patch.object(dmarket_api, "_request", new_callable=AsyncMock) as mock_req:
             mock_req.return_value = mock_response
             # Use game_id parameter matching actual method signature
-            result = awAlgot dmarket_api.get_user_inventory(game_id="a8db99ca-dc45-4c0e-9989-11ba71ed97a2")
+            result = await dmarket_api.get_user_inventory(game_id="a8db99ca-dc45-4c0e-9989-11ba71ed97a2")
 
             # Assert
             assert result["Total"] == 1
@@ -732,7 +732,7 @@ class TestGetUserInventory:
         with patch.object(dmarket_api, "_request", new_callable=AsyncMock) as mock_req:
             mock_req.return_value = mock_response
             # Use game_id and limit parameters matching actual method signature
-            awAlgot dmarket_api.get_user_inventory(game_id="a8db99ca-dc45-4c0e-9989-11ba71ed97a2", limit=50)
+            await dmarket_api.get_user_inventory(game_id="a8db99ca-dc45-4c0e-9989-11ba71ed97a2", limit=50)
 
             # Assert
             mock_req.assert_called_once()
@@ -752,7 +752,7 @@ class TestCacheManagement:
     async def test_clear_cache(self, dmarket_api):
         """Тест очистки всего кэша."""
         # Act
-        awAlgot dmarket_api.clear_cache()
+        await dmarket_api.clear_cache()
 
         # Assert - метод должен выполниться без ошибок
         assert True
@@ -761,14 +761,14 @@ class TestCacheManagement:
     async def test_clear_cache_for_endpoint(self, dmarket_api):
         """Тест очистки кэша для конкретного endpoint."""
         # Act
-        awAlgot dmarket_api.clear_cache_for_endpoint("/account/v1/balance")
+        await dmarket_api.clear_cache_for_endpoint("/account/v1/balance")
 
         # Assert - метод должен выполниться без ошибок
         assert True
 
 
 # ============================================================================
-# Тесты get_user_profile и get_account_detAlgols
+# Тесты get_user_profile и get_account_details
 # ============================================================================
 
 
@@ -782,20 +782,20 @@ class TestAccountMethods:
         mock_response = {
             "id": "user_123",
             "username": "test_user",
-            "emAlgol": "test@example.com",
+            "email": "test@example.com",
         }
 
         # Act
         with patch.object(dmarket_api, "_request", new_callable=AsyncMock) as mock_req:
             mock_req.return_value = mock_response
-            result = awAlgot dmarket_api.get_user_profile()
+            result = await dmarket_api.get_user_profile()
 
             # Assert
             assert result["id"] == "user_123"
             assert result["username"] == "test_user"
 
     @pytest.mark.asyncio()
-    async def test_get_account_detAlgols_success(self, dmarket_api):
+    async def test_get_account_details_success(self, dmarket_api):
         """Тест получения деталей аккаунта."""
         # Arrange
         mock_response = {"balance": {"USD": "10000"}, "settings": {}}
@@ -803,7 +803,7 @@ class TestAccountMethods:
         # Act
         with patch.object(dmarket_api, "_request", new_callable=AsyncMock) as mock_req:
             mock_req.return_value = mock_response
-            result = awAlgot dmarket_api.get_account_detAlgols()
+            result = await dmarket_api.get_account_details()
 
             # Assert
             assert "balance" in result
@@ -831,7 +831,7 @@ class TestOfferManagement:
         # Act
         with patch.object(dmarket_api, "_request", new_callable=AsyncMock) as mock_req:
             mock_req.return_value = mock_response
-            result = awAlgot dmarket_api.list_user_offers(game_id="a8db")
+            result = await dmarket_api.list_user_offers(game_id="a8db")
 
             # Assert
             assert result["Total"] == 1
@@ -849,7 +849,7 @@ class TestOfferManagement:
         # Act
         with patch.object(dmarket_api, "_request", new_callable=AsyncMock) as mock_req:
             mock_req.return_value = mock_response
-            result = awAlgot dmarket_api.create_offers(offers_data)
+            result = await dmarket_api.create_offers(offers_data)
 
             # Assert
             assert len(result["Result"]) == 1
@@ -867,7 +867,7 @@ class TestOfferManagement:
         # Act
         with patch.object(dmarket_api, "_request", new_callable=AsyncMock) as mock_req:
             mock_req.return_value = mock_response
-            result = awAlgot dmarket_api.update_offer_prices(offers_update)
+            result = await dmarket_api.update_offer_prices(offers_update)
 
             # Assert
             assert result["Result"][0]["Status"] == "Updated"
@@ -887,7 +887,7 @@ class TestOfferManagement:
         # Act
         with patch.object(dmarket_api, "_request", new_callable=AsyncMock) as mock_req:
             mock_req.return_value = mock_response
-            result = awAlgot dmarket_api.remove_offers(offer_ids)
+            result = await dmarket_api.remove_offers(offer_ids)
 
             # Assert
             assert len(result["Result"]) == 2
@@ -920,7 +920,7 @@ class TestGetSuggestedPrice:
             dmarket_api, "get_market_items", new_callable=AsyncMock
         ) as mock_req:
             mock_req.return_value = mock_response
-            result = awAlgot dmarket_api.get_suggested_price(
+            result = await dmarket_api.get_suggested_price(
                 item_name="AK-47 | Redline (Field-Tested)", game="csgo"
             )
 
@@ -938,7 +938,7 @@ class TestGetSuggestedPrice:
             dmarket_api, "get_market_items", new_callable=AsyncMock
         ) as mock_req:
             mock_req.return_value = mock_response
-            result = awAlgot dmarket_api.get_suggested_price(
+            result = await dmarket_api.get_suggested_price(
                 item_name="Nonexistent Item", game="csgo"
             )
 
@@ -968,7 +968,7 @@ class TestRequestMethod:
             mock_client.get = AsyncMock(return_value=mock_response)
             mock_get_client.return_value = mock_client
 
-            result = awAlgot dmarket_api._request(
+            result = await dmarket_api._request(
                 "GET", "/test/endpoint", params={"key": "value"}
             )
 
@@ -992,7 +992,7 @@ class TestRequestMethod:
             mock_client.post = AsyncMock(return_value=mock_response)
             mock_get_client.return_value = mock_client
 
-            result = awAlgot dmarket_api._request(
+            result = await dmarket_api._request(
                 "POST", "/test/create", data={"name": "test"}
             )
 
@@ -1029,7 +1029,7 @@ class TestRequestMethod:
             mock_get_client.return_value = mock_client
 
             with patch("asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
-                result = awAlgot dmarket_api._request("GET", "/test")
+                result = await dmarket_api._request("GET", "/test")
 
                 # Assert
                 assert result == {"success": True}
@@ -1065,7 +1065,7 @@ class TestRequestMethod:
             mock_get_client.return_value = mock_client
 
             with patch("asyncio.sleep", new_callable=AsyncMock):
-                result = awAlgot dmarket_api._request("GET", "/test")
+                result = await dmarket_api._request("GET", "/test")
 
                 # Assert
                 assert result == {"recovered": True}
@@ -1094,11 +1094,11 @@ class TestRequestMethod:
             )
             mock_get_client.return_value = mock_client
 
-            result = awAlgot dmarket_api._request("GET", "/test")
+            result = await dmarket_api._request("GET", "/test")
 
             # Assert - the result indicates an error occurred
             assert isinstance(result, dict)
-            # Either 'error' key exists, OR 'code' indicates fAlgolure
+            # Either 'error' key exists, OR 'code' indicates failure
             has_error_key = "error" in result
             has_error_code = result.get("code") == "REQUEST_FAlgoLED"
             assert has_error_key or has_error_code
@@ -1121,14 +1121,14 @@ class TestRequestMethod:
             mock_client = AsyncMock()
             mock_client.get = AsyncMock(
                 side_effect=[
-                    httpx.ConnectError("FAlgoled"),
+                    httpx.ConnectError("Failed"),
                     success_response,
                 ]
             )
             mock_get_client.return_value = mock_client
 
             with patch("asyncio.sleep", new_callable=AsyncMock):
-                result = awAlgot dmarket_api._request("GET", "/test")
+                result = await dmarket_api._request("GET", "/test")
 
                 # Assert
                 assert result == {"ok": True}
@@ -1155,11 +1155,11 @@ class TestRequestMethod:
             mock_get_client.return_value = mock_client
 
             with patch("asyncio.sleep", new_callable=AsyncMock):
-                result = awAlgot dmarket_api._request("GET", "/test")
+                result = await dmarket_api._request("GET", "/test")
 
                 # Assert - the result indicates an error occurred
                 assert isinstance(result, dict)
-                # Either 'error' key exists, OR 'code' indicates fAlgolure
+                # Either 'error' key exists, OR 'code' indicates failure
                 has_error_key = "error" in result
                 has_error_code = result.get("code") == "REQUEST_FAlgoLED"
                 assert has_error_key or has_error_code
@@ -1179,12 +1179,12 @@ class TestRequestMethod:
         # Используем callable для side_effect чтобы исключение
         # выбрасывалось внутри json() вызова, а не снаружи
 
-        def rAlgose_json_error():
-            rAlgose json.JSONDecodeError("Bad JSON", "", 0)
+        def raise_json_error():
+            raise json.JSONDecodeError("Bad JSON", "", 0)
 
-        mock_response.json = MagicMock(side_effect=rAlgose_json_error)
+        mock_response.json = MagicMock(side_effect=raise_json_error)
         mock_response.text = "Text response"
-        mock_response.rAlgose_for_status = MagicMock()
+        mock_response.raise_for_status = MagicMock()
 
         # Act
         with patch.object(
@@ -1194,7 +1194,7 @@ class TestRequestMethod:
             mock_client.get = AsyncMock(return_value=mock_response)
             mock_get_client.return_value = mock_client
 
-            result = awAlgot dmarket_api._request("GET", "/test")
+            result = await dmarket_api._request("GET", "/test")
 
             # Assert
             assert result["text"] == "Text response"
@@ -1216,7 +1216,7 @@ class TestRequestMethod:
             mock_client.delete = AsyncMock(return_value=mock_response)
             mock_get_client.return_value = mock_client
 
-            result = awAlgot dmarket_api._request("DELETE", "/item/123")
+            result = await dmarket_api._request("DELETE", "/item/123")
 
             # Assert
             assert result == {"deleted": True}
@@ -1237,7 +1237,7 @@ class TestRequestMethod:
             mock_client.put = AsyncMock(return_value=mock_response)
             mock_get_client.return_value = mock_client
 
-            result = awAlgot dmarket_api._request("PUT", "/item", data={})
+            result = await dmarket_api._request("PUT", "/item", data={})
 
             # Assert
             assert result == {"updated": True}
@@ -1264,7 +1264,7 @@ class TestHighLevelAPIMethods:
             mock_request.return_value = mock_response
 
             # Act
-            result = awAlgot dmarket_api.get_deposit_status(deposit_id)
+            result = await dmarket_api.get_deposit_status(deposit_id)
 
             # Assert
             assert result == mock_response
@@ -1295,7 +1295,7 @@ class TestHighLevelAPIMethods:
             mock_request.return_value = mock_response
 
             # Act
-            result = awAlgot dmarket_api.get_aggregated_prices(titles, game_id)
+            result = await dmarket_api.get_aggregated_prices(titles, game_id)
 
             # Assert
             assert result == mock_response
@@ -1324,7 +1324,7 @@ class TestHighLevelAPIMethods:
             mock_request.return_value = mock_response
 
             # Act
-            result = awAlgot dmarket_api.get_sales_history_aggregator(
+            result = await dmarket_api.get_sales_history_aggregator(
                 game_id=game_id, title=title, limit=10
             )
 
@@ -1356,7 +1356,7 @@ class TestHighLevelAPIMethods:
             mock_request.return_value = mock_response
 
             # Act
-            result = awAlgot dmarket_api.get_market_meta(game)
+            result = await dmarket_api.get_market_meta(game)
 
             # Assert
             assert result == mock_response
@@ -1387,7 +1387,7 @@ class TestHighLevelAPIMethods:
             mock_request.return_value = mock_response
 
             # Act
-            result = awAlgot dmarket_api.get_user_targets(game_id=game_id, limit=50)
+            result = await dmarket_api.get_user_targets(game_id=game_id, limit=50)
 
             # Assert
             assert result == mock_response
@@ -1416,7 +1416,7 @@ class TestHighLevelAPIMethods:
             mock_request.return_value = mock_response
 
             # Act
-            result = awAlgot dmarket_api.delete_targets(target_ids)
+            result = await dmarket_api.delete_targets(target_ids)
 
             # Assert
             assert result == mock_response
@@ -1442,7 +1442,7 @@ class TestHighLevelAPIMethods:
             mock_request.return_value = mock_response
 
             # Act
-            result = awAlgot dmarket_api.edit_offer(offer_id, new_price)
+            result = await dmarket_api.edit_offer(offer_id, new_price)
 
             # Assert
             assert result == mock_response
@@ -1467,7 +1467,7 @@ class TestHighLevelAPIMethods:
             mock_request.return_value = mock_response
 
             # Act
-            result = awAlgot dmarket_api.delete_offer(offer_id)
+            result = await dmarket_api.delete_offer(offer_id)
 
             # Assert
             assert result == mock_response
@@ -1496,7 +1496,7 @@ class TestHighLevelAPIMethods:
             mock_request.return_value = mock_response
 
             # Act
-            result = awAlgot dmarket_api.list_offers_by_title(
+            result = await dmarket_api.list_offers_by_title(
                 game_id=game_id, title=title, limit=50
             )
 
@@ -1526,7 +1526,7 @@ class TestHighLevelAPIMethods:
             mock_request.return_value = mock_response
 
             # Act
-            result = awAlgot dmarket_api.list_market_items(game_id=game_id, limit=25)
+            result = await dmarket_api.list_market_items(game_id=game_id, limit=25)
 
             # Assert
             assert result == mock_response
@@ -1564,7 +1564,7 @@ class TestHighLevelAPIMethods:
             mock_request.return_value = mock_response
 
             # Act
-            result = awAlgot dmarket_api.create_targets(game_id, targets)
+            result = await dmarket_api.create_targets(game_id, targets)
 
             # Assert
             assert result == mock_response
@@ -1598,7 +1598,7 @@ class TestHighLevelAPIMethods:
             mock_request.return_value = mock_response
 
             # Act
-            result = awAlgot dmarket_api.buy_offers(offers)
+            result = await dmarket_api.buy_offers(offers)
 
             # Assert
             assert result == mock_response
@@ -1630,7 +1630,7 @@ class TestHighLevelAPIMethods:
             mock_request.return_value = mock_response
 
             # Act
-            result = awAlgot dmarket_api.get_targets_by_title(game_id, title)
+            result = await dmarket_api.get_targets_by_title(game_id, title)
 
             # Assert
             assert result == mock_response
@@ -1666,7 +1666,7 @@ class TestHighLevelAPIMethods:
             mock_request.return_value = mock_response
 
             # Act
-            result = awAlgot dmarket_api.list_user_inventory(
+            result = await dmarket_api.list_user_inventory(
                 game_id=game_id, limit=limit, offset=offset
             )
 
@@ -1707,7 +1707,7 @@ class TestHighLevelAPIMethods:
             mock_request.return_value = mock_response
 
             # Act
-            result = awAlgot dmarket_api.get_closed_targets(
+            result = await dmarket_api.get_closed_targets(
                 limit=limit,
                 status=status,
                 from_timestamp=from_ts,
@@ -1757,7 +1757,7 @@ class TestAdditionalMarketplaceMethods:
             mock_request.return_value = mock_response
 
             # Act
-            result = awAlgot dmarket_api.get_sales_history(
+            result = await dmarket_api.get_sales_history(
                 game=game, title=title, days=days, currency=currency
             )
 
@@ -1794,7 +1794,7 @@ class TestAdditionalMarketplaceMethods:
             mock_request.return_value = mock_response
 
             # Act
-            result = awAlgot dmarket_api.get_item_price_history(
+            result = await dmarket_api.get_item_price_history(
                 game=game, title=title, period=period, currency=currency
             )
 
@@ -1825,7 +1825,7 @@ class TestAdditionalMarketplaceMethods:
 
             # Act & Assert для каждого периода
             for period in periods:
-                result = awAlgot dmarket_api.get_item_price_history(
+                result = await dmarket_api.get_item_price_history(
                     game=game, title=title, period=period
                 )
 
@@ -1853,7 +1853,7 @@ class TestAdditionalMarketplaceMethods:
             mock_request.return_value = mock_response
 
             # Act
-            result = awAlgot dmarket_api.get_market_meta(game=game)
+            result = await dmarket_api.get_market_meta(game=game)
 
             # Assert
             assert result == mock_response
@@ -1875,7 +1875,7 @@ class TestAdditionalMarketplaceMethods:
             mock_request.return_value = mock_response
 
             # Act
-            result = awAlgot dmarket_api.get_market_meta()
+            result = await dmarket_api.get_market_meta()
 
             # Assert
             assert result == mock_response
@@ -1958,7 +1958,7 @@ async def test_get_supported_games_success(dmarket_api):
         mock_request.return_value = expected_games
 
         # Act
-        result = awAlgot dmarket_api.get_supported_games()
+        result = await dmarket_api.get_supported_games()
 
         # Assert
         assert isinstance(result, list)
@@ -1991,7 +1991,7 @@ async def test_get_supported_games_empty_response(dmarket_api):
         mock_request.return_value = []
 
         # Act
-        result = awAlgot dmarket_api.get_supported_games()
+        result = await dmarket_api.get_supported_games()
 
         # Assert
         assert isinstance(result, list)
@@ -2007,7 +2007,7 @@ async def test_get_supported_games_invalid_format(dmarket_api):
         mock_request.return_value = {"error": "Invalid response"}
 
         # Act
-        result = awAlgot dmarket_api.get_supported_games()
+        result = await dmarket_api.get_supported_games()
 
         # Assert
         assert isinstance(result, list)
@@ -2026,8 +2026,8 @@ async def test_get_supported_games_http_error(dmarket_api):
         )
 
         # Act & Assert
-        with pytest.rAlgoses(httpx.HTTPStatusError):
-            awAlgot dmarket_api.get_supported_games()
+        with pytest.raises(httpx.HTTPStatusError):
+            await dmarket_api.get_supported_games()
 
 
 @pytest.mark.asyncio()
@@ -2038,7 +2038,7 @@ async def test_get_supported_games_generic_exception(dmarket_api):
         mock_request.side_effect = ValueError("Unexpected error")
 
         # Act
-        result = awAlgot dmarket_api.get_supported_games()
+        result = await dmarket_api.get_supported_games()
 
         # Assert
         # При неожиданной ошибке возвращаем пустой список
@@ -2061,7 +2061,7 @@ async def test_get_supported_games_filters_enabled_games(dmarket_api):
         mock_request.return_value = games
 
         # Act
-        result = awAlgot dmarket_api.get_supported_games()
+        result = await dmarket_api.get_supported_games()
         enabled_only = [g for g in result if g.get("enabled", False)]
 
         # Assert

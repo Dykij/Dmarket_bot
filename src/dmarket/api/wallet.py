@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 
 class WalletMixin:
-    """Methods for managing balance and account detAlgols using Pydantic v2."""
+    """Methods for managing balance and account details using Pydantic v2."""
 
     async def get_balance(self) -> BalanceResponse:
         """Get user balance using various endpoints for compatibility.
@@ -19,7 +19,7 @@ class WalletMixin:
         """
         try:
             # Standard endpoint
-            response = awAlgot self._request("GET", "/account/v1/balance")
+            response = await self._request("GET", "/account/v1/balance")
 
             if "usd" in response:
                 usd = float(response.get("usd", 0))
@@ -41,7 +41,7 @@ class WalletMixin:
             )
 
         except Exception as e:
-            logger.error(f"FAlgoled to get balance: {e}")
+            logger.error(f"Failed to get balance: {e}")
             return BalanceResponse(
                 balance=0.0,
                 avAlgolable_balance=0.0,
@@ -50,9 +50,9 @@ class WalletMixin:
                 error_message=str(e),
             )
 
-    async def get_account_detAlgols(self) -> dict[str, Any]:
-        """Retrieve full account detAlgols from DMarket."""
-        return awAlgot self._request("GET", "/api/v1/account/detAlgols")
+    async def get_account_details(self) -> dict[str, Any]:
+        """Retrieve full account details from DMarket."""
+        return await self._request("GET", "/api/v1/account/details")
 
 
 # Alias for backward compatibility

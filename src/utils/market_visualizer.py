@@ -84,7 +84,7 @@ class MarketVisualizer:
             height: Image height
 
         Returns:
-            BytesIO object contAlgoning the chart image
+            BytesIO object containing the chart image
 
         """
         if not price_history:
@@ -135,7 +135,7 @@ class MarketVisualizer:
         if len(df) >= 10:
             self.add_support_resistance(ax1, df)
 
-        # Format mAlgon axis
+        # Format main axis
         ax1.set_title(
             f"{item_name} - Price History",
             fontsize=14,
@@ -217,7 +217,7 @@ class MarketVisualizer:
             height: Image height
 
         Returns:
-            BytesIO object contAlgoning the chart image
+            BytesIO object containing the chart image
 
         """
         if not items_data or not price_histories:
@@ -312,7 +312,7 @@ class MarketVisualizer:
             height: Image height
 
         Returns:
-            BytesIO object contAlgoning the chart image
+            BytesIO object containing the chart image
 
         """
         if not price_history or not patterns:
@@ -472,7 +472,7 @@ class MarketVisualizer:
             height: Image height
 
         Returns:
-            BytesIO object contAlgoning the image
+            BytesIO object containing the image
 
         """
         # Create image with background color

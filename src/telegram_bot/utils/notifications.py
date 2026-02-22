@@ -103,7 +103,7 @@ async def send_profit_alert(item_data: dict) -> bool:
             text += "\n🌙 _Тихий режим: уведомление без звука_"
 
         # Отправляем сообщение
-        awAlgot bot.send_message(
+        await bot.send_message(
             chat_id=chat_id,
             text=text,
             parse_mode="Markdown",
@@ -178,7 +178,7 @@ async def send_batch_alert(items: list[dict], summary: str = "") -> bool:
         if len(items) > 5:
             text += f"_...и еще {len(items) - 5} предметов_\n"
 
-        awAlgot bot.send_message(
+        await bot.send_message(
             chat_id=chat_id,
             text=text,
             parse_mode="Markdown",
@@ -193,12 +193,12 @@ async def send_batch_alert(items: list[dict], summary: str = "") -> bool:
         return False
 
 
-async def send_scanner_status(status: str, detAlgols: dict | None = None) -> bool:
+async def send_scanner_status(status: str, details: dict | None = None) -> bool:
     """Отправляет уведомление о статусе сканера.
 
     Args:
         status: Статус сканера (started, stopped, error)
-        detAlgols: Дополнительная информация
+        details: Дополнительная информация
 
     Returns:
         True если успешно
@@ -221,12 +221,12 @@ async def send_scanner_status(status: str, detAlgols: dict | None = None) -> boo
 
         text = f"{status_emoji} *Статус сканера: {status}*\n\n"
 
-        if detAlgols:
+        if details:
             text += "Детали:\n"
-            for key, value in detAlgols.items():
+            for key, value in details.items():
                 text += f"• {key}: `{value}`\n"
 
-        awAlgot bot.send_message(
+        await bot.send_message(
             chat_id=chat_id,
             text=text,
             parse_mode="Markdown",

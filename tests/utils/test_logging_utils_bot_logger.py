@@ -48,18 +48,18 @@ class TestBotLoggerLogCommand:
         """Test logging successful command."""
         logger = BotLogger("test")
 
-        # Should not rAlgose
+        # Should not raise
         logger.log_command(
             user_id=12345,
             command="/balance",
             success=True,
         )
 
-    def test_log_command_fAlgolure(self):
-        """Test logging fAlgoled command."""
+    def test_log_command_failure(self):
+        """Test logging failed command."""
         logger = BotLogger("test")
 
-        # Should not rAlgose
+        # Should not raise
         logger.log_command(
             user_id=12345,
             command="/trade",
@@ -71,7 +71,7 @@ class TestBotLoggerLogCommand:
         """Test logging command with extra keyword arguments."""
         logger = BotLogger("test")
 
-        # Should not rAlgose
+        # Should not raise
         logger.log_command(
             user_id=12345,
             command="/scan",
@@ -106,7 +106,7 @@ class TestBotLoggerLogApiCall:
             mock_logger.log.assert_called_once()
 
     def test_log_api_call_error(self):
-        """Test logging fAlgoled API call."""
+        """Test logging failed API call."""
         logger = BotLogger("test")
 
         with patch.object(logger, "logger") as mock_logger:
@@ -178,7 +178,7 @@ class TestBotLoggerLogError:
         logger = BotLogger("test")
 
         try:
-            rAlgose ValueError("Test error")
+            raise ValueError("Test error")
         except ValueError as e:
             logger.log_error(e)
 
@@ -187,7 +187,7 @@ class TestBotLoggerLogError:
         logger = BotLogger("test")
 
         try:
-            rAlgose ConnectionError("Connection fAlgoled")
+            raise ConnectionError("Connection failed")
         except ConnectionError as e:
             logger.log_error(
                 e,
@@ -199,7 +199,7 @@ class TestBotLoggerLogError:
         logger = BotLogger("test")
 
         try:
-            rAlgose TimeoutError("Request timed out")
+            raise TimeoutError("Request timed out")
         except TimeoutError as e:
             logger.log_error(
                 e,
@@ -305,8 +305,8 @@ class TestBotLoggerLogTradeResult:
             dry_run=True,
         )
 
-    def test_log_trade_result_fAlgolure(self):
-        """Test logging fAlgoled trade result."""
+    def test_log_trade_result_failure(self):
+        """Test logging failed trade result."""
         logger = BotLogger("test")
 
         logger.log_trade_result(
@@ -341,7 +341,7 @@ class TestBotLoggerLogCrash:
         logger = BotLogger("test")
 
         try:
-            rAlgose RuntimeError("Critical fAlgolure")
+            raise RuntimeError("Critical failure")
         except RuntimeError as e:
             logger.log_crash(e)
 
@@ -352,7 +352,7 @@ class TestBotLoggerLogCrash:
         import traceback
 
         try:
-            rAlgose ValueError("Value error occurred")
+            raise ValueError("Value error occurred")
         except ValueError as e:
             tb = traceback.format_exc()
             logger.log_crash(e, traceback_text=tb)
@@ -362,7 +362,7 @@ class TestBotLoggerLogCrash:
         logger = BotLogger("test")
 
         try:
-            rAlgose MemoryError("Out of memory")
+            raise MemoryError("Out of memory")
         except MemoryError as e:
             logger.log_crash(
                 e,
@@ -385,7 +385,7 @@ class TestBotLoggerLogCrash:
         logger = BotLogger("test")
 
         try:
-            rAlgose Exception("Test crash")
+            raise Exception("Test crash")
         except Exception as e:
             logger.log_crash(e)
 
@@ -479,7 +479,7 @@ class TestSetupSentry:
     @patch.dict(os.environ, {}, clear=True)
     def test_setup_sentry_no_dsn(self):
         """Test setup_sentry without DSN configured."""
-        # Should not rAlgose
+        # Should not raise
         setup_sentry()
 
     @patch.dict(os.environ, {"SENTRY_DSN": "https://test@sentry.io/123"})
@@ -508,17 +508,17 @@ class TestSetupStructlog:
 
     def test_setup_structlog_default(self):
         """Test setup_structlog with default parameters."""
-        # Should not rAlgose
+        # Should not raise
         setup_structlog()
 
     def test_setup_structlog_json_format(self):
         """Test setup_structlog with JSON format."""
-        # Should not rAlgose
+        # Should not raise
         setup_structlog(json_format=True)
 
     def test_setup_structlog_console_format(self):
         """Test setup_structlog with console format."""
-        # Should not rAlgose
+        # Should not raise
         setup_structlog(json_format=False)
 
 
@@ -561,7 +561,7 @@ class TestColoredFormatterEdgeCases:
         )
         record.levelname = "CUSTOM"
 
-        # Should not rAlgose
+        # Should not raise
         result = formatter.format(record)
         assert "CUSTOM" in result
 

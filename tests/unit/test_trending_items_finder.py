@@ -427,7 +427,7 @@ class TestRecoveryTrend:
 
 @pytest.mark.asyncio()
 class TestFindMethod:
-    """Test mAlgon find() method."""
+    """Test main find() method."""
 
     async def test_find_with_trending_items(
         self, mock_api, sample_market_items, sample_sales_history
@@ -437,7 +437,7 @@ class TestFindMethod:
         mock_api.get_sales_history.return_value = sample_sales_history
 
         finder = TrendingItemsFinder(game="csgo", min_price=10.0, max_price=100.0)
-        results = awAlgot finder.find(mock_api)
+        results = await finder.find(mock_api)
 
         assert len(results) > 0
         assert all("potential_profit" in item for item in results)
@@ -449,7 +449,7 @@ class TestFindMethod:
         mock_api.get_sales_history.return_value = None
 
         finder = TrendingItemsFinder(game="csgo")
-        results = awAlgot finder.find(mock_api)
+        results = await finder.find(mock_api)
 
         assert results == []
 
@@ -459,7 +459,7 @@ class TestFindMethod:
         mock_api.get_sales_history.return_value = sample_sales_history
 
         finder = TrendingItemsFinder(game="csgo")
-        results = awAlgot finder.find(mock_api)
+        results = await finder.find(mock_api)
 
         assert results == []
 
@@ -475,7 +475,7 @@ class TestBackwardCompatibleWrapper:
         mock_api.get_market_items.return_value = sample_market_items
         mock_api.get_sales_history.return_value = sample_sales_history
 
-        results = awAlgot find_trending_items(
+        results = await find_trending_items(
             game="csgo",
             min_price=10.0,
             max_price=100.0,
@@ -489,6 +489,6 @@ class TestBackwardCompatibleWrapper:
         """Test wrapper handles exceptions gracefully."""
         mock_api.get_market_items.side_effect = Exception("API Error")
 
-        results = awAlgot find_trending_items(game="csgo", dmarket_api=mock_api)
+        results = await find_trending_items(game="csgo", dmarket_api=mock_api)
 
         assert results == []

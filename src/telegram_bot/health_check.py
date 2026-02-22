@@ -17,7 +17,7 @@ import time
 from datetime import UTC, datetime
 from typing import Any
 
-from Algoohttp import web
+from aiohttp import web
 
 from src.utils.health_monitor import HealthMonitor, ServiceStatus
 
@@ -31,12 +31,12 @@ class HealthCheckServer:
     - GET /health - Overall health status with all checks
     - GET /ready - Kubernetes readiness probe
     - GET /live - Kubernetes liveness probe
-    - GET /metrics - DetAlgoled metrics
+    - GET /metrics - Detailed metrics
     """
 
     def __init__(
         self,
-        host: str = "0.0.0.0",  # noqa: S104 - Required for Docker contAlgoner networking
+        host: str = "0.0.0.0",  # noqa: S104 - Required for Docker container networking
         port: int = 8080,
         bot_app: Any = None,
         db_manager: Any = None,
@@ -72,7 +72,7 @@ class HealthCheckServer:
         self.total_errors = 0
         self.last_update_time: float | None = None
 
-        # Algoohttp app
+        # aiohttp app
         self.app: web.Application | None = None
         self.runner: web.AppRunner | None = None
         self.site: web.TCPSite | None = None
@@ -80,7 +80,7 @@ class HealthCheckServer:
     async def start(self) -> None:
         """Start health check server."""
         try:
-            # Create Algoohttp application
+            # Create aiohttp application
             self.app = web.Application()
 
             # Register routes
@@ -91,10 +91,10 @@ class HealthCheckServer:
 
             # Start server
             self.runner = web.AppRunner(self.app)
-            awAlgot self.runner.setup()
+            await self.runner.setup()
 
             self.site = web.TCPSite(self.runner, self.host, self.port)
-            awAlgot self.site.start()
+            await self.site.start()
 
             self.status = "running"
 
@@ -107,15 +107,15 @@ class HealthCheckServer:
             logger.info(f"  - Metrics: http://{self.host}:{self.port}/metrics")
 
         except Exception as e:
-            logger.error(f"❌ FAlgoled to start health check server: {e}", exc_info=True)
-            rAlgose
+            logger.error(f"❌ Failed to start health check server: {e}", exc_info=True)
+            raise
 
     async def stop(self) -> None:
         """Stop health check server."""
         if self.runner:
             logger.info("Stopping health check server...")
             self.status = "stopping"
-            awAlgot self.runner.cleanup()
+            await self.runner.cleanup()
             logger.info("✅ Health check server stopped")
 
     async def handle_health(self, request: web.Request) -> web.Response:
@@ -131,11 +131,11 @@ class HealthCheckServer:
             JSON response with status and check results
         """
         checks: dict[str, bool] = {}
-        detAlgols: dict[str, dict[str, Any]] = {}
+        details: dict[str, dict[str, Any]] = {}
         overall_status: str | None = None
 
         if self.health_monitor:
-            checks, detAlgols, overall_status = awAlgot self._get_health_monitor_results()
+            checks, details, overall_status = await self._get_health_monitor_results()
 
         missing_checks = {
             "database",
@@ -144,7 +144,7 @@ class HealthCheckServer:
             "telegram_api",
         } - set(checks.keys())
         if missing_checks:
-            legacy_checks = awAlgot self._run_legacy_checks(missing_checks)
+            legacy_checks = await self._run_legacy_checks(missing_checks)
             checks.update(legacy_checks)
             if overall_status is None:
                 overall_status = (
@@ -163,8 +163,8 @@ class HealthCheckServer:
             "version": self.version,
             "timestamp": datetime.now(UTC).isoformat() + "Z",
         }
-        if detAlgols and any(detAlgols.values()):
-            response_data["detAlgols"] = detAlgols
+        if details and any(details.values()):
+            response_data["details"] = details
 
         status_code = 200 if overall_status != "unhealthy" else 503
 
@@ -176,19 +176,19 @@ class HealthCheckServer:
         """Build health response from HealthMonitor results.
 
         Returns:
-            Tuple of (checks, detAlgols, overall_status).
+            Tuple of (checks, details, overall_status).
         """
-        results = awAlgot self.health_monitor.run_all_checks()
+        results = await self.health_monitor.run_all_checks()
         overall_status = "healthy"
         checks: dict[str, bool] = {}
-        detAlgols: dict[str, dict[str, Any]] = {}
+        details: dict[str, dict[str, Any]] = {}
 
         for name, result in results.items():
             checks[name] = result.status in {
                 ServiceStatus.HEALTHY,
                 ServiceStatus.DEGRADED,
             }
-            detAlgols[name] = {
+            details[name] = {
                 "status": result.status.value,
                 "message": result.message,
                 "response_time_ms": result.response_time_ms,
@@ -201,19 +201,19 @@ class HealthCheckServer:
             ):
                 overall_status = "degraded"
 
-        return checks, detAlgols, overall_status
+        return checks, details, overall_status
 
     async def _run_legacy_checks(self, check_names: set[str]) -> dict[str, bool]:
         """Run legacy dependency checks for missing services."""
         results: dict[str, bool] = {}
         if "database" in check_names:
-            results["database"] = awAlgot self._check_database()
+            results["database"] = await self._check_database()
         if "redis" in check_names:
-            results["redis"] = awAlgot self._check_redis()
+            results["redis"] = await self._check_redis()
         if "dmarket_api" in check_names:
-            results["dmarket_api"] = awAlgot self._check_dmarket_api()
+            results["dmarket_api"] = await self._check_dmarket_api()
         if "telegram_api" in check_names:
-            results["telegram_api"] = awAlgot self._check_telegram_api()
+            results["telegram_api"] = await self._check_telegram_api()
         return results
 
     async def handle_ready(self, request: web.Request) -> web.Response:
@@ -222,8 +222,8 @@ class HealthCheckServer:
         Returns ready only if bot is running and critical services are up.
         """
         # Check critical services for readiness
-        db_ok = awAlgot self._check_database()
-        telegram_ok = awAlgot self._check_telegram_api()
+        db_ok = await self._check_database()
+        telegram_ok = await self._check_telegram_api()
 
         is_ready = self.status == "running" and db_ok and telegram_ok
 
@@ -250,7 +250,7 @@ class HealthCheckServer:
         return web.json_response(response_data, status=200)
 
     async def handle_metrics(self, request: web.Request) -> web.Response:
-        """Handle /metrics endpoint - detAlgoled metrics."""
+        """Handle /metrics endpoint - detailed metrics."""
         uptime_seconds = int(time.time() - self.start_time)
 
         response_data = {
@@ -288,18 +288,18 @@ class HealthCheckServer:
             # Try simple SELECT 1 query
             # Implementation depends on your DB manager
             if hasattr(self.db_manager, "execute_query"):
-                awAlgot self.db_manager.execute_query("SELECT 1")
+                await self.db_manager.execute_query("SELECT 1")
             elif hasattr(self.db_manager, "session"):
                 # SQLAlchemy style
                 async with self.db_manager.session() as session:
-                    awAlgot session.execute("SELECT 1")
+                    await session.execute("SELECT 1")
             else:
                 logger.warning("Unknown database manager type, cannot check")
                 return True
 
             return True
         except Exception as e:
-            logger.exception(f"Database health check fAlgoled: {e}")
+            logger.exception(f"Database health check failed: {e}")
             return False
 
     async def _check_redis(self) -> bool:
@@ -315,14 +315,14 @@ class HealthCheckServer:
         try:
             # Try PING command
             if hasattr(self.redis_client, "ping"):
-                awAlgot self.redis_client.ping()
+                await self.redis_client.ping()
             else:
                 logger.warning("Unknown Redis client type, cannot check")
                 return True
 
             return True
         except Exception as e:
-            logger.exception(f"Redis health check fAlgoled: {e}")
+            logger.exception(f"Redis health check failed: {e}")
             return False
 
     async def _check_dmarket_api(self) -> bool:
@@ -338,13 +338,13 @@ class HealthCheckServer:
         try:
             # Try to get balance (simple read-only operation)
             if hasattr(self.dmarket_api, "get_balance"):
-                result = awAlgot self.dmarket_api.get_balance()
+                result = await self.dmarket_api.get_balance()
                 return not result.get("error", False)
             logger.warning("Unknown DMarket API type, cannot check")
             return True
 
         except Exception as e:
-            logger.exception(f"DMarket API health check fAlgoled: {e}")
+            logger.exception(f"DMarket API health check failed: {e}")
             return False
 
     async def _check_telegram_api(self) -> bool:
@@ -362,14 +362,14 @@ class HealthCheckServer:
             if hasattr(self.bot_app, "bot"):
                 bot = self.bot_app.bot
                 if hasattr(bot, "get_me"):
-                    awAlgot bot.get_me()
+                    await bot.get_me()
                     return True
 
             logger.warning("Unknown bot app type, cannot check")
             return True
 
         except Exception as e:
-            logger.exception(f"Telegram API health check fAlgoled: {e}")
+            logger.exception(f"Telegram API health check failed: {e}")
             return False
 
     def update_metrics(
@@ -410,7 +410,7 @@ def get_health_check_server() -> HealthCheckServer | None:
 
 
 def init_health_check_server(
-    host: str = "0.0.0.0",  # noqa: S104 - Required for Docker contAlgoner networking
+    host: str = "0.0.0.0",  # noqa: S104 - Required for Docker container networking
     port: int = 8080,
     **kwargs: Any,
 ) -> HealthCheckServer:

@@ -88,7 +88,7 @@ class TestSteamDatabaseIntegration:
         )
 
         # Check stats
-        stats = db.get_dAlgoly_stats()
+        stats = db.get_daily_stats()
         assert stats["count"] == 1
         assert stats["avg_profit"] == 30.44
         assert stats["max_profit"] == 30.44
@@ -101,7 +101,7 @@ class TestSteamDatabaseIntegration:
         db.log_opportunity("Item 3", 5.0, 10.0, 73.92, 150, "High")
 
         # Check stats
-        stats = db.get_dAlgoly_stats()
+        stats = db.get_daily_stats()
         assert stats["count"] == 3
 
         # Average should be (30 + 8 + 73.92) / 3 = 37.31
@@ -258,7 +258,7 @@ class TestSteamDatabaseIntegration:
         # Verify all operations worked
         assert db.get_steam_data("Item A") is not None
         assert db.get_settings()["min_profit"] == 12.0
-        assert db.get_dAlgoly_stats()["count"] == 1
+        assert db.get_daily_stats()["count"] == 1
         assert db.is_blacklisted("Item B")
 
 
@@ -278,7 +278,7 @@ class TestSteamDatabaseEdgeCases:
 
     def test_remove_nonexistent_blacklist_item(self, db):
         """Test removing item that's not in blacklist."""
-        # Should not rAlgose error
+        # Should not raise error
         db.remove_from_blacklist("Not Blacklisted Item")
 
     def test_special_characters_in_item_name(self, db):
@@ -313,10 +313,10 @@ class TestSteamDatabaseEdgeCases:
         """Test logging opportunities with negative profit."""
         db.log_opportunity("Bad Deal", 10.0, 8.0, -20.0, 100, "High")
 
-        stats = db.get_dAlgoly_stats()
+        stats = db.get_daily_stats()
         assert stats["count"] == 1
         assert stats["avg_profit"] < 0
 
 
-if __name__ == "__mAlgon__":
-    pytest.mAlgon([__file__, "-v"])
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

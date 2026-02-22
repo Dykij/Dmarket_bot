@@ -90,7 +90,7 @@ class TestDatabaseHealthCheck:
         mock_session = AsyncMock()
         mock_session.execute = AsyncMock(return_value=MagicMock())
         
-        result = awAlgot check_database(mock_session)
+        result = await check_database(mock_session)
         
         assert result.name == "database"
         assert result.healthy is True
@@ -101,13 +101,13 @@ class TestDatabaseHealthCheck:
         """Test database health check when unhealthy."""
         from src.api.health import check_database
         
-        # Mock async session that rAlgoses exception
+        # Mock async session that raises exception
         mock_session = AsyncMock()
         mock_session.execute = AsyncMock(
             side_effect=Exception("Connection refused")
         )
         
-        result = awAlgot check_database(mock_session)
+        result = await check_database(mock_session)
         
         assert result.name == "database"
         assert result.healthy is False
@@ -125,7 +125,7 @@ class TestRedisHealthCheck:
         mock_redis = AsyncMock()
         mock_redis.ping = AsyncMock(return_value=True)
         
-        result = awAlgot check_redis(mock_redis)
+        result = await check_redis(mock_redis)
         
         assert result.name == "redis"
         assert result.healthy is True
@@ -141,7 +141,7 @@ class TestRedisHealthCheck:
             side_effect=Exception("Connection refused")
         )
         
-        result = awAlgot check_redis(mock_redis)
+        result = await check_redis(mock_redis)
         
         assert result.name == "redis"
         assert result.healthy is False
@@ -159,7 +159,7 @@ class TestDMarketAPIHealthCheck:
         mock_api = AsyncMock()
         mock_api.get_balance = AsyncMock(return_value={"balance": 100.0})
         
-        result = awAlgot check_dmarket_api(mock_api)
+        result = await check_dmarket_api(mock_api)
         
         assert result.name == "dmarket_api"
         assert result.healthy is True
@@ -175,7 +175,7 @@ class TestDMarketAPIHealthCheck:
             side_effect=Exception("API timeout")
         )
         
-        result = awAlgot check_dmarket_api(mock_api)
+        result = await check_dmarket_api(mock_api)
         
         assert result.name == "dmarket_api"
         assert result.healthy is False

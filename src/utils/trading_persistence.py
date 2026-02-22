@@ -19,12 +19,12 @@
     persistence = TradingPersistence(database, dmarket_api, telegram_bot)
 
     # Сохранить покупку
-    awAlgot persistence.save_purchase(
+    await persistence.save_purchase(
         asset_id="abc123", title="AK-47 | Redline", buy_price=10.50, game="csgo"
     )
 
     # Восстановить при старте
-    pending = awAlgot persistence.recover_pending_trades()
+    pending = await persistence.recover_pending_trades()
     ```
 """
 
@@ -157,11 +157,11 @@ class TradingPersistence:
                 },
             )
 
-            awAlgot session.execute(stmt)
-            awAlgot session.commit()
+            await session.execute(stmt)
+            await session.commit()
 
             # Получаем созданную запись
-            result = awAlgot session.execute(
+            result = await session.execute(
                 select(PendingTrade).where(PendingTrade.asset_id == asset_id)
             )
             trade = result.scalar_one()
@@ -216,8 +216,8 @@ class TradingPersistence:
                 .values(**update_values)
             )
 
-            result = awAlgot session.execute(stmt)
-            awAlgot session.commit()
+            result = await session.execute(stmt)
+            await session.commit()
 
             if result.rowcount > 0:
                 logger.debug(f"Status updated: {asset_id} -> {status}")
@@ -242,7 +242,7 @@ class TradingPersistence:
         """
         async with self.db.get_async_session() as session:
             # Получаем текущую запись для расчета прибыли
-            result = awAlgot session.execute(
+            result = await session.execute(
                 select(PendingTrade).where(PendingTrade.asset_id == asset_id)
             )
             trade = result.scalar_one_or_none()
@@ -265,8 +265,8 @@ class TradingPersistence:
                 )
             )
 
-            awAlgot session.execute(stmt)
-            awAlgot session.commit()
+            await session.execute(stmt)
+            await session.commit()
 
             # Format price safely
             price_str = f"${price:.2f}" if price else "unknown"
@@ -314,7 +314,7 @@ class TradingPersistence:
 
             query = query.order_by(PendingTrade.created_at.desc())
 
-            result = awAlgot session.execute(query)
+            result = await session.execute(query)
             return list(result.scalars().all())
 
     async def get_trade_by_asset_id(self, asset_id: str) -> PendingTrade | None:
@@ -327,7 +327,7 @@ class TradingPersistence:
             PendingTrade или None
         """
         async with self.db.get_async_session() as session:
-            result = awAlgot session.execute(
+            result = await session.execute(
                 select(PendingTrade).where(PendingTrade.asset_id == asset_id)
             )
             return result.scalar_one_or_none()
@@ -344,7 +344,7 @@ class TradingPersistence:
         """
         logger.info("🔍 Recovering pending trades after restart...")
 
-        pending_trades = awAlgot self.get_pending_trades()
+        pending_trades = await self.get_pending_trades()
 
         if not pending_trades:
             logger.info("✅ No pending trades to recover")
@@ -358,7 +358,7 @@ class TradingPersistence:
         inventory_ids: set[str] = set()
         if self.api:
             try:
-                inventory = awAlgot self.api.get_user_inventory()
+                inventory = await self.api.get_user_inventory()
                 if isinstance(inventory, dict):
                     items = inventory.get("objects", inventory.get("Items", []))
                     for item in items:
@@ -371,15 +371,15 @@ class TradingPersistence:
                             inventory_ids.add(item_id)
                 logger.info(f"📋 Current inventory: {len(inventory_ids)} items")
             except Exception as e:
-                logger.exception(f"FAlgoled to get inventory: {e}")
+                logger.exception(f"Failed to get inventory: {e}")
 
         # Обрабатываем каждую незавершенную сделку
         for trade in pending_trades:
-            action = awAlgot self._process_pending_trade(trade, inventory_ids)
+            action = await self._process_pending_trade(trade, inventory_ids)
             results.append(action)
 
         # Уведомляем в Telegram
-        awAlgot self._send_recovery_summary(results)
+        await self._send_recovery_summary(results)
 
         return results
 
@@ -424,7 +424,7 @@ class TradingPersistence:
             PendingTradeStatus.LISTED,
         }:
             # Продался пока бот был выключен
-            awAlgot self.mark_as_sold(trade.asset_id)
+            await self.mark_as_sold(trade.asset_id)
             result["action"] = "marked_sold"
             result["status"] = PendingTradeStatus.SOLD
             logger.info(
@@ -478,13 +478,13 @@ class TradingPersistence:
 
             admin_chat_id = os.getenv("ADMIN_CHAT_ID")
             if admin_chat_id:
-                awAlgot self.tg.send_message(
+                await self.tg.send_message(
                     chat_id=admin_chat_id,
                     text=message,
                     parse_mode="Markdown",
                 )
         except Exception as e:
-            logger.exception(f"FAlgoled to send recovery summary: {e}")
+            logger.exception(f"Failed to send recovery summary: {e}")
 
     async def get_statistics(self) -> dict[str, Any]:
         """Получить статистику по сделкам.
@@ -494,7 +494,7 @@ class TradingPersistence:
         """
         async with self.db.get_async_session() as session:
             # Общее количество по статусам
-            all_trades = awAlgot session.execute(select(PendingTrade))
+            all_trades = await session.execute(select(PendingTrade))
             trades = list(all_trades.scalars().all())
 
             stats: dict[str, Any] = {
@@ -545,8 +545,8 @@ class TradingPersistence:
                 PendingTrade.updated_at < cutoff,
             )
 
-            result = awAlgot session.execute(stmt)
-            awAlgot session.commit()
+            result = await session.execute(stmt)
+            await session.commit()
 
             deleted = result.rowcount or 0
             if deleted > 0:

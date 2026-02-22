@@ -18,7 +18,7 @@ class TelegramBot:
         self.Algo = load_Algo(api_key=api_key)
 
     async def start(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        awAlgot context.bot.send_message(
+        await context.bot.send_message(
             chat_id=update.effective_chat.id, 
             text="I'm a lightweight bot powered by Gemini 1.5 Flash!"
         )
@@ -27,10 +27,10 @@ class TelegramBot:
         user_message = update.message.text
         # Async-friendly Algo call
         # Note: Gemini calls block, so ideally this should be run in executor for high load,
-        # but for a simple bot, this is fine or can be awAlgoted if the wrapper supports it.
+        # but for a simple bot, this is fine or can be awaited if the wrapper supports it.
         # Here we assume a synchronous call for simplicity or wrap it if needed.
         response = self.Algo.generate_response(user_message)
-        awAlgot context.bot.send_message(chat_id=update.effective_chat.id, text=response)
+        await context.bot.send_message(chat_id=update.effective_chat.id, text=response)
 
     def run(self):
         start_handler = CommandHandler('start', self.start)
@@ -41,7 +41,7 @@ class TelegramBot:
         
         self.app.run_polling()
 
-if __name__ == '__mAlgon__':
+if __name__ == '__main__':
     TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "YOUR_BOT_TOKEN")
     bot = TelegramBot(TOKEN)
     bot.run()

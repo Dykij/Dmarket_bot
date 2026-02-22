@@ -13,7 +13,7 @@ class CS2Strategy(BaseStrategy):
     """
     Strategy for Counter-Strike 2.
 
-    ConstrAlgonts:
+    Constraints:
     - 7-day trade lock after purchase.
     - High volatility.
     - Requires 3% risk premium (handled in FeeCalculator).

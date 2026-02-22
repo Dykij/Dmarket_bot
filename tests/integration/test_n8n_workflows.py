@@ -14,20 +14,20 @@ class TestN8NWorkflowIntegration:
     """Integration tests for n8n workflow functionality."""
 
     @pytest.mark.asyncio
-    async def test_dAlgoly_report_workflow_integration(self):
-        """Test dAlgoly trading report workflow end-to-end."""
+    async def test_daily_report_workflow_integration(self):
+        """Test daily trading report workflow end-to-end."""
         try:
             from src.api import n8n_integration
             
             # Mock the stats endpoint
-            with patch.object(n8n_integration, 'get_dAlgoly_stats') as mock_stats:
+            with patch.object(n8n_integration, 'get_daily_stats') as mock_stats:
                 mock_stats.return_value = {
                     "total_trades": 10,
                     "total_profit": 150.50,
                     "success_rate": 85.5
                 }
                 
-                result = awAlgot mock_stats()
+                result = await mock_stats()
                 
                 assert result["total_trades"] == 10
                 assert result["total_profit"] > 0
@@ -57,7 +57,7 @@ class TestN8NWorkflowIntegration:
             with patch.object(n8n_integration, 'receive_arbitrage_alert') as mock_webhook:
                 mock_webhook.return_value = {"status": "received", "alert_id": "test-123"}
                 
-                result = awAlgot mock_webhook(payload)
+                result = await mock_webhook(payload)
                 
                 assert result["status"] == "received"
                 assert "alert_id" in result
@@ -78,8 +78,8 @@ class TestN8NWorkflowIntegration:
                 mock_dmarket.return_value = {"items": [{"name": "Test Item", "price": 1000}]}
                 mock_waxpeer.return_value = {"items": [{"name": "Test Item", "price": 1200}]}
                 
-                dmarket_result = awAlgot mock_dmarket("csgo")
-                waxpeer_result = awAlgot mock_waxpeer("csgo")
+                dmarket_result = await mock_dmarket("csgo")
+                waxpeer_result = await mock_waxpeer("csgo")
                 
                 assert len(dmarket_result["items"]) > 0
                 assert len(waxpeer_result["items"]) > 0
@@ -141,7 +141,7 @@ class TestArbitrageScannerIntegration:
                     "cross_platform": []
                 }
                 
-                result = awAlgot mock_scan("csgo", 50)
+                result = await mock_scan("csgo", 50)
                 
                 assert "dmarket_only" in result
                 assert "cross_platform" in result
@@ -170,7 +170,7 @@ class TestArbitrageScannerIntegration:
                     "expected_profit": 470
                 }
                 
-                result = awAlgot mock_create("Test Item", 850, 1120)
+                result = await mock_create("Test Item", 850, 1120)
                 
                 assert result["target_price"] > 0
                 assert result["expected_profit"] > 0
@@ -190,7 +190,7 @@ class TestConfigEngineeringIntegration:
             
             # Mock ConfigEngineer
             engineer = MagicMock()
-            engineer.explAlgon_arbitrage = AsyncMock(return_value="Algo generated explanation")
+            engineer.explain_arbitrage = AsyncMock(return_value="Algo generated explanation")
             
             # Mock arbitrage opportunity
             opportunity = {
@@ -200,7 +200,7 @@ class TestConfigEngineeringIntegration:
                 "profit": 270
             }
             
-            result = awAlgot engineer.explAlgon_arbitrage(opportunity)
+            result = await engineer.explain_arbitrage(opportunity)
             
             assert isinstance(result, str)
             assert len(result) > 0
@@ -231,11 +231,11 @@ class TestConfigEngineeringIntegration:
             from src.Algo import Config_engineering_integration
             
             engineer = MagicMock()
-            engineer.explAlgon_arbitrage_fallback = MagicMock(
+            engineer.explain_arbitrage_fallback = MagicMock(
                 return_value="Fallback explanation"
             )
             
-            result = engineer.explAlgon_arbitrage_fallback({"item_name": "Test"})
+            result = engineer.explain_arbitrage_fallback({"item_name": "Test"})
             
             assert isinstance(result, str)
             

@@ -57,7 +57,7 @@ class TestCompleteArbitrageFlow:
                     "liquidity_score": 3
                 }]
                 
-                opportunities = awAlgot mock_scan("csgo", 50)
+                opportunities = await mock_scan("csgo", 50)
                 
                 assert len(opportunities) > 0
                 assert opportunities[0]["profit"] > 0
@@ -71,7 +71,7 @@ class TestCompleteArbitrageFlow:
                     "expected_roi": 55.3
                 }
                 
-                target = awAlgot mock_create(
+                target = await mock_create(
                     "AK-47 | Redline (Field-Tested)",
                     850,
                     1120
@@ -116,13 +116,13 @@ class TestCompleteArbitrageFlow:
                     "recommended_action": "hold_in_dmarket_inventory"
                 }
                 
-                decision = awAlgot mock_decide(
+                decision = await mock_decide(
                     "AK-47 | Redline (FT)",
                     850,
                     "csgo"
                 )
                 
-                assert decision["strategy"] in ["sell_dmarket", "hold_for_waxpeer", "wAlgot"]
+                assert decision["strategy"] in ["sell_dmarket", "hold_for_waxpeer", "wait"]
                 assert "reason" in decision
                 
         except ImportError as e:
@@ -158,7 +158,7 @@ class TestCompleteArbitrageFlow:
                     }]
                 }
                 
-                prices = awAlgot mock_prices("csgo")
+                prices = await mock_prices("csgo")
                 assert len(prices["items"]) > 0
                 
             # Step 3: Mock arbitrage webhook
@@ -169,7 +169,7 @@ class TestCompleteArbitrageFlow:
                     "notification_sent": True
                 }
                 
-                result = awAlgot mock_alert({
+                result = await mock_alert({
                     "item_name": "Test Item",
                     "profit": 200
                 })
@@ -206,8 +206,8 @@ class TestCompleteArbitrageFlow:
             
             # Step 2: Mock Algo explanation generation
             mock_engineer = MagicMock()
-            mock_engineer.explAlgon_arbitrage = AsyncMock(return_value="""
-🎓 Let me explAlgon this opportunity!
+            mock_engineer.explain_arbitrage = AsyncMock(return_value="""
+🎓 Let me explain this opportunity!
 
 📦 Item: AK-47 | Redline (Field-Tested)
 
@@ -221,7 +221,7 @@ Expected profit: $2.70 (31.7% ROI)
 📖 Source: Live API data
             """)
             
-            explanation = awAlgot mock_engineer.explAlgon_arbitrage(
+            explanation = await mock_engineer.explain_arbitrage(
                 opportunity,
                 user_level="intermediate",
                 include_reasoning=True

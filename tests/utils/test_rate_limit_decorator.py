@@ -72,7 +72,7 @@ class TestRateLimitDecorator:
             return "success"
 
         # Act
-        result = awAlgot test_command(mock_update, mock_context)
+        result = await test_command(mock_update, mock_context)
 
         # Assert
         assert result == "success"
@@ -95,7 +95,7 @@ class TestRateLimitDecorator:
             return "success"
 
         # Act
-        result = awAlgot test_command(mock_update, mock_context)
+        result = await test_command(mock_update, mock_context)
 
         # Assert
         assert result is None
@@ -123,7 +123,7 @@ class TestRateLimitDecorator:
             return "success"
 
         # Act
-        result = awAlgot test_command(mock_update, mock_context)
+        result = await test_command(mock_update, mock_context)
 
         # Assert
         assert result is None
@@ -147,7 +147,7 @@ class TestRateLimitWhitelist:
             return "success"
 
         # Act
-        result = awAlgot test_command(mock_update, mock_context)
+        result = await test_command(mock_update, mock_context)
 
         # Assert
         assert result == "success"
@@ -169,7 +169,7 @@ class TestRateLimitWhitelist:
             return "success"
 
         # Act
-        result = awAlgot test_command(mock_update, mock_context)
+        result = await test_command(mock_update, mock_context)
 
         # Assert
         assert result == "success"
@@ -206,7 +206,7 @@ class TestRateLimitCallbackQuery:
             return "success"
 
         # Act
-        result = awAlgot test_command(update, mock_context)
+        result = await test_command(update, mock_context)
 
         # Assert
         assert result is None
@@ -231,7 +231,7 @@ class TestRateLimitEdgeCases:
             return "success"
 
         # Act
-        result = awAlgot test_command(update, mock_context)
+        result = await test_command(update, mock_context)
 
         # Assert
         assert result == "success"
@@ -248,7 +248,7 @@ class TestRateLimitEdgeCases:
 
         # Act
         with patch("src.utils.rate_limit_decorator.logger") as mock_logger:
-            result = awAlgot test_command(mock_update, mock_context)
+            result = await test_command(mock_update, mock_context)
 
         # Assert
         assert result == "success"
@@ -270,7 +270,7 @@ class TestRateLimitEdgeCases:
             return "success"
 
         # Act
-        result = awAlgot test_command(mock_update, mock_context)
+        result = await test_command(mock_update, mock_context)
 
         # Assert
         assert result == "success"
@@ -290,7 +290,7 @@ class TestRateLimitEdgeCases:
             return "success"
 
         # Act
-        result = awAlgot test_command(mock_update, mock_context)
+        result = await test_command(mock_update, mock_context)
 
         # Assert
         assert result == "success"

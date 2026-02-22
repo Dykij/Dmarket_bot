@@ -1,4 +1,4 @@
-"""Modular mAlgon keyboard handler for DMarket Bot."""
+"""Modular main keyboard handler for DMarket Bot."""
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.constants import ParseMode
@@ -24,7 +24,7 @@ from src.utils.canonical_logging import get_logger
 logger = get_logger(__name__)
 
 
-def get_mAlgon_keyboard(balance: float | None = None) -> InlineKeyboardMarkup:
+def get_main_keyboard(balance: float | None = None) -> InlineKeyboardMarkup:
     balance_text = f"💰 ${balance:.2f}" if balance else "💰 Баланс"
     keyboard = [
         [InlineKeyboardButton("🤖 АВТО-ТОРГОВЛЯ", callback_data="auto_trade_start")],
@@ -46,42 +46,42 @@ def get_mAlgon_keyboard(balance: float | None = None) -> InlineKeyboardMarkup:
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user = update.effective_user
-    awAlgot update.message.reply_text(
+    await update.message.reply_text(
         f"👋 Привет, {user.first_name}!\n\nВыберите действие:",
         parse_mode=ParseMode.HTML,
-        reply_markup=get_mAlgon_keyboard(),
+        reply_markup=get_main_keyboard(),
     )
 
 
-async def mAlgon_menu_callback(
+async def main_menu_callback(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> None:
     query = update.callback_query
-    awAlgot query.answer()
-    awAlgot query.edit_message_text(
+    await query.answer()
+    await query.edit_message_text(
         "👋 <b>Главное меню</b>",
         parse_mode=ParseMode.HTML,
-        reply_markup=get_mAlgon_keyboard(),
+        reply_markup=get_main_keyboard(),
     )
 
 
 async def emergency_stop(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
-    awAlgot query.answer("⚠️ ЭКСТРЕННАЯ ОСТАНОВКА!")
-    awAlgot query.edit_message_text(
+    await query.answer("⚠️ ЭКСТРЕННАЯ ОСТАНОВКА!")
+    await query.edit_message_text(
         "🛑 Все процессы остановлены.",
         reply_markup=InlineKeyboardMarkup(
-            [[InlineKeyboardButton("◀️ Главное меню", callback_data="mAlgon_menu")]]
+            [[InlineKeyboardButton("◀️ Главное меню", callback_data="main_menu")]]
         ),
     )
 
 
-def register_mAlgon_keyboard_handlers(application) -> None:
+def register_main_keyboard_handlers(application) -> None:
     from telegram.ext import CallbackQueryHandler, CommandHandler
 
     application.add_handler(CommandHandler("start", start_command))
     application.add_handler(
-        CallbackQueryHandler(mAlgon_menu_callback, pattern="^mAlgon_menu$")
+        CallbackQueryHandler(main_menu_callback, pattern="^main_menu$")
     )
     application.add_handler(
         CallbackQueryHandler(auto_trade_start, pattern="^auto_trade_start$")
@@ -114,4 +114,4 @@ def register_mAlgon_keyboard_handlers(application) -> None:
     application.add_handler(
         CallbackQueryHandler(emergency_stop, pattern="^emergency_stop$")
     )
-    logger.info("✅ Modular mAlgon keyboard handlers registered")
+    logger.info("✅ Modular main keyboard handlers registered")

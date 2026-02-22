@@ -10,14 +10,14 @@ API Documentation: https://docs.waxpeer.com/
 Пример использования:
     ```python
     async with WaxpeerAPI(api_key="your_key") as api:
-        balance = awAlgot api.get_balance()
+        balance = await api.get_balance()
         print(f"Баланс: ${balance.wallet}")
 
         # Получить цены для арбитража
-        prices = awAlgot api.get_items_list(["AK-47 | Redline (Field-Tested)"])
+        prices = await api.get_items_list(["AK-47 | Redline (Field-Tested)"])
 
         # Выставить предмет на продажу
-        awAlgot api.list_single_item("12345", price_usd=10.50)
+        await api.list_single_item("12345", price_usd=10.50)
     ```
 """
 
@@ -136,7 +136,7 @@ class WaxpeerAPI:  # noqa: PLR0904
     Пример использования:
         ```python
         async with WaxpeerAPI(api_key="your_key") as api:
-            balance = awAlgot api.get_balance()
+            balance = await api.get_balance()
             print(f"Баланс: ${balance.wallet}")
         ```
     """
@@ -195,14 +195,14 @@ class WaxpeerAPI:  # noqa: PLR0904
     async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         """Закрытие HTTP клиента при выходе из контекста."""
         if self._client:
-            awAlgot self._client.aclose()
+            await self._client.aclose()
             self._client = None
 
     @property
     def client(self) -> httpx.AsyncClient:
         """Получение HTTP клиента."""
         if self._client is None:
-            rAlgose RuntimeError(
+            raise RuntimeError(
                 "WaxpeerAPI must be used as async context manager: "
                 "async with WaxpeerAPI(...) as api:"
             )
@@ -243,7 +243,7 @@ class WaxpeerAPI:  # noqa: PLR0904
 
         for attempt in range(self.max_retries):
             try:
-                response = awAlgot self.client.request(
+                response = await self.client.request(
                     method=method,
                     url=url,
                     params=params,
@@ -252,21 +252,21 @@ class WaxpeerAPI:  # noqa: PLR0904
 
                 # Проверка статуса
                 if response.status_code == 429:
-                    rAlgose WaxpeerRateLimitError("Rate limit exceeded")
+                    raise WaxpeerRateLimitError("Rate limit exceeded")
 
                 if response.status_code == 401:
-                    rAlgose WaxpeerAuthError("Invalid API key")
+                    raise WaxpeerAuthError("Invalid API key")
 
                 if response.status_code == 403:
-                    rAlgose WaxpeerAuthError("Access denied")
+                    raise WaxpeerAuthError("Access denied")
 
-                response.rAlgose_for_status()
+                response.raise_for_status()
                 data = response.json()
 
                 # Проверка успешности ответа
                 if not data.get("success", True):
                     error_msg = data.get("msg", "Unknown error")
-                    rAlgose WaxpeerAPIError(error_msg)
+                    raise WaxpeerAPIError(error_msg)
 
                 logger.debug(
                     "waxpeer_request_success",
@@ -294,13 +294,13 @@ class WaxpeerAPI:  # noqa: PLR0904
 
             except (WaxpeerAuthError, WaxpeerRateLimitError):
                 # Не повторяем при ошибках аутентификации или rate limit
-                rAlgose
+                raise
 
             # Ожидание перед повтором
             if attempt < self.max_retries - 1:
-                awAlgot asyncio.sleep(self.retry_delay * (attempt + 1))
+                await asyncio.sleep(self.retry_delay * (attempt + 1))
 
-        rAlgose last_error or WaxpeerAPIError("Max retries exceeded")
+        raise last_error or WaxpeerAPIError("Max retries exceeded")
 
     # === User & Balance ===
 
@@ -318,7 +318,7 @@ class WaxpeerAPI:  # noqa: PLR0904
             - can_trade: Готов ли к торговле
             - tradelink: Steam Trade Link
         """
-        data = awAlgot self._request("GET", "user")
+        data = await self._request("GET", "user")
         return data.get("user", {})
 
     async def get_balance(self) -> WaxpeerBalance:
@@ -328,7 +328,7 @@ class WaxpeerAPI:  # noqa: PLR0904
         Returns:
             Объект WaxpeerBalance с данными о балансе
         """
-        user_data = awAlgot self.get_user()
+        user_data = await self.get_user()
         wallet_mils = user_data.get("wallet", 0)
         can_trade = user_data.get("can_trade", False)
 
@@ -349,7 +349,7 @@ class WaxpeerAPI:  # noqa: PLR0904
         Returns:
             Список объектов WaxpeerItem
         """
-        data = awAlgot self._request("GET", "my-items")
+        data = await self._request("GET", "my-items")
         items = []
 
         for item_data in data.get("items", []):
@@ -392,7 +392,7 @@ class WaxpeerAPI:  # noqa: PLR0904
             ]
         }
 
-        data = awAlgot self._request("POST", "list-items-steam", json_data=payload)
+        data = await self._request("POST", "list-items-steam", json_data=payload)
         logger.info(
             "waxpeer_items_listed",
             count=len(items),
@@ -418,7 +418,7 @@ class WaxpeerAPI:  # noqa: PLR0904
             Ответ API
         """
         price_mils = int(Decimal(str(price_usd)) * 1000)
-        return awAlgot self.list_items(
+        return await self.list_items(
             [{"item_id": item_id, "price": price_mils}],
             game=game,
         )
@@ -440,7 +440,7 @@ class WaxpeerAPI:  # noqa: PLR0904
 
         payload = {"items": [{"item_id": item_id, "price": new_price_mils}]}
 
-        data = awAlgot self._request("POST", "edit-items", json_data=payload)
+        data = await self._request("POST", "edit-items", json_data=payload)
         logger.info(
             "waxpeer_price_updated",
             item_id=item_id,
@@ -458,7 +458,7 @@ class WaxpeerAPI:  # noqa: PLR0904
         Returns:
             Ответ API
         """
-        data = awAlgot self._request(
+        data = await self._request(
             "POST",
             "remove-items",
             json_data={"items": item_ids},
@@ -475,7 +475,7 @@ class WaxpeerAPI:  # noqa: PLR0904
         Returns:
             Ответ API с количеством снятых предметов
         """
-        data = awAlgot self._request("POST", "remove-all")
+        data = await self._request("POST", "remove-all")
         logger.info("waxpeer_all_items_removed")
         return data
 
@@ -506,7 +506,7 @@ class WaxpeerAPI:  # noqa: PLR0904
         """
         # Waxpeer принимает названия через запятую
         names_param = ",".join(item_names)
-        return awAlgot self._request(
+        return await self._request(
             "GET",
             "get-items-list",
             params={
@@ -533,7 +533,7 @@ class WaxpeerAPI:  # noqa: PLR0904
         Returns:
             Словарь с ценами и данными о ликвидности
         """
-        return awAlgot self.get_market_prices(names, game)
+        return await self.get_market_prices(names, game)
 
     async def get_item_price_info(self, item_name: str) -> WaxpeerPriceInfo | None:
         """
@@ -545,7 +545,7 @@ class WaxpeerAPI:  # noqa: PLR0904
         Returns:
             WaxpeerPriceInfo или None если предмет не найден
         """
-        data = awAlgot self.get_market_prices([item_name])
+        data = await self.get_market_prices([item_name])
         items = data.get("items", [])
 
         if not items:
@@ -573,7 +573,7 @@ class WaxpeerAPI:  # noqa: PLR0904
         Returns:
             Минимальная цена в долларах или None если нет предложений
         """
-        info = awAlgot self.get_item_price_info(item_name)
+        info = await self.get_item_price_info(item_name)
         return info.price_usd if info else None
 
     async def get_bulk_prices(
@@ -591,7 +591,7 @@ class WaxpeerAPI:  # noqa: PLR0904
         Returns:
             Словарь {item_name: {"price": int, "count": int}}
         """
-        data = awAlgot self._request(
+        data = await self._request(
             "GET",
             "prices",
             params={"game": game.value},
@@ -616,7 +616,7 @@ class WaxpeerAPI:  # noqa: PLR0904
         Returns:
             Список предметов из инвентаря Steam
         """
-        data = awAlgot self._request(
+        data = await self._request(
             "GET",
             "inventory/fetch",
             params={
@@ -644,7 +644,7 @@ class WaxpeerAPI:  # noqa: PLR0904
         Returns:
             Список предметов из инвентаря Steam
         """
-        data = awAlgot self._request(
+        data = await self._request(
             "GET",
             "get-my-inventory",
             params={
@@ -667,7 +667,7 @@ class WaxpeerAPI:  # noqa: PLR0904
         Returns:
             {"success": bool, "valid": bool, "steam_id": str}
         """
-        return awAlgot self._request(
+        return await self._request(
             "GET",
             "check-tradelink",
             params={"tradelink": tradelink},
@@ -690,7 +690,7 @@ class WaxpeerAPI:  # noqa: PLR0904
         Returns:
             Список сделок
         """
-        data = awAlgot self._request(
+        data = await self._request(
             "GET",
             "history",
             params={"skip": skip, "limit": limit},
@@ -707,7 +707,7 @@ class WaxpeerAPI:  # noqa: PLR0904
         Returns:
             Список продаж
         """
-        history = awAlgot self.get_history(limit=limit)
+        history = await self.get_history(limit=limit)
         return [h for h in history if h.get("status") == "sold"]
 
     # === Status Check ===
@@ -719,7 +719,7 @@ class WaxpeerAPI:  # noqa: PLR0904
         Returns:
             True если пользователь онлайн и готов к торговле
         """
-        user = awAlgot self.get_user()
+        user = await self.get_user()
         return user.get("can_trade", False)
 
     async def get_trade_link(self) -> str | None:
@@ -729,5 +729,5 @@ class WaxpeerAPI:  # noqa: PLR0904
         Returns:
             Trade Link или None
         """
-        user = awAlgot self.get_user()
+        user = await self.get_user()
         return user.get("tradelink")
