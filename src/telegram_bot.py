@@ -196,6 +196,39 @@ async def cmd_settings(message: types.Message):
         parse_mode="Markdown"
     )
 
+@router.message(Command("panic"))
+async def cmd_panic(message: types.Message):
+    global is_running
+    
+    # 1. Kill the loop
+    is_running = False
+    if trading_task:
+        trading_task.cancel()
+    
+    await message.answer("🔥 **PANIC PROTOCOL INITIATED** 🔥\nStopping bot and deleting ALL targets...", parse_mode="Markdown")
+    
+    # 2. Delete targets via API
+    async with AsyncDMarketClient(Config.PUBLIC_KEY, Config.SECRET_KEY) as client:
+        try:
+            # Fetch active targets
+            resp = await client.get_user_targets(game=Config.GAME_ID)
+            items = resp.get("Items", [])
+            
+            if not items:
+                await message.answer("✅ No active targets found. You are safe.")
+                return
+            
+            # Prepare delete payload
+            targets_to_delete = [{"TargetID": item["TargetID"]} for item in items]
+            count = len(targets_to_delete)
+            
+            # Execute mass delete
+            await client.delete_target(targets_to_delete)
+            await message.answer(f"🗑 **Deleted {count} targets!**\nInventory/Balance preserved.", parse_mode="Markdown")
+            
+        except Exception as e:
+            await message.answer(f"❌ **CRITICAL ERROR during Panic:** {e}\nCHECK MANUALLY!")
+
 @router.message(Command("help"))
 async def cmd_help(message: types.Message):
     await message.answer(
