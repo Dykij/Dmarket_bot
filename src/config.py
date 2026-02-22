@@ -37,6 +37,20 @@ class Config:
     WALL_BREAKER_PCT = 2.0   # If gap between 1st and 2nd listing > 2%, target 2nd price
     INVENTORY_DECAY_HOURS = 24 # Start lowering price after 24 hours
     DECAY_RATE_PCT = 1.0     # Lower price by 1% per decay cycle
+    
+    # --- Advanced Attributes (Float/Phase) ---
+    # Prefer Low Float when placing targets? 
+    # If True, bot will specifically target 'FT-0' (0.15-0.18) etc.
+    PREFER_LOW_FLOAT = True
+    
+    # DMarket Codes for Float Ranges
+    FLOAT_CODES = {
+        "FN": ["FN-0", "FN-1"], # Top tier Factory New
+        "MW": ["MW-0", "MW-1"], # Top tier Minimal Wear
+        "FT": ["FT-0", "FT-1"], # Top tier Field-Tested (0.15-0.21)
+        "WW": ["WW-0"],         # Top tier Well-Worn
+        "BS": ["BS-0"]          # Top tier Battle-Scarred
+    }
 
     # --- Operation Mode ---
     DRY_RUN = True           # True = Simulation (Paper Trading), False = Real Money!
