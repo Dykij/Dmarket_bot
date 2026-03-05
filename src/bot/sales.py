@@ -2,11 +2,13 @@
 Script: src/bot/sales.py (v2 - Wall Breaker & Decay)
 Description: Manages the selling side of the bot.
 Autonomously scans inventory and lists items for sale using 'Wall Breaker' logic.
-Tracks time-in-inventory for 'Smart Decay' pricing.
+Tracks time-in-inventory for 'Smart Decay' pricing (persisted across restarts).
 """
 
+import json
 import logging
 import time
+from pathlib import Path
 from typing import List, Dict
 
 from src.config import Config
@@ -14,42 +16,60 @@ from src.utils.api_client import AsyncDMarketClient
 
 logger = logging.getLogger("Sales")
 
+# Persistent storage for inventory age tracking
+TRACKER_FILE = Path("data/inventory_tracker.json")
+
+
 class SalesManager:
     """
     Handles inventory management and selling.
-    Strategy: 
-    1. Fetch inventory.
+    Strategy:
+    1. Fetch FULL inventory (with pagination).
     2. Check Market Depth (top 5 asks).
     3. Apply Wall Breaker Logic:
        - If gap between 1st & 2nd ask > WALL_BREAKER_PCT -> Price at (2nd Ask - $0.01).
        - Else -> Price at (1st Ask - $0.01).
     4. Apply Inventory Decay (if item stuck > 24h).
+
+    inventory_tracker is persisted in data/inventory_tracker.json
+    so item age survives bot restarts.
     """
-    
+
     def __init__(self, client: AsyncDMarketClient):
         self.client = client
         self.dry_run = Config.DRY_RUN
         self.game_id = Config.GAME_ID
         self.wall_breaker_threshold = Config.WALL_BREAKER_PCT
-        
-        # Local cache for tracking item age (since DMarket inventory doesn't easily show listing age)
-        # { asset_id: timestamp_first_seen }
-        self.inventory_tracker = {}
+
+        # Persistent tracker: { asset_id: timestamp_first_seen }
+        self.inventory_tracker = self._load_tracker()
+
+    def _load_tracker(self) -> Dict:
+        """Load inventory tracker from disk (survives bot restarts)."""
+        TRACKER_FILE.parent.mkdir(parents=True, exist_ok=True)
+        if TRACKER_FILE.exists():
+            try:
+                return json.loads(TRACKER_FILE.read_text(encoding="utf-8"))
+            except Exception as e:
+                logger.warning("Could not load inventory_tracker.json, starting fresh: %s", e)
+        return {}
+
+    def _save_tracker(self) -> None:
+        """Persist inventory tracker to disk."""
+        try:
+            TRACKER_FILE.write_text(json.dumps(self.inventory_tracker, indent=2), encoding="utf-8")
+        except Exception as e:
+            logger.warning("Could not save inventory_tracker.json: %s", e)
 
     async def process_inventory(self):
         """
-        Main routine: Fetches inventory and lists unlisted items.
+        Main routine: Fetches FULL inventory and lists unlisted items.
+        Uses get_full_inventory() to handle ALL items, not just first 100.
         """
         try:
-            # 1. Get Inventory
-            response = await self.client.get_user_inventory(game=self.game_id)
-            
-            items = []
-            if "objects" in response:
-                items = response["objects"]
-            elif "Items" in response:
-                items = response["Items"]
-            
+            # 1. Get FULL Inventory (with pagination — handles 100+ items)
+            items = await self.client.get_full_inventory(game=self.game_id)
+
             # Simulation Logic
             if self.dry_run and not items:
                 logger.info("📦 [SIMULATION] Inventory empty. Simulating 'Glock-18 | Moonrise' for Wall Breaker test...")

@@ -2,6 +2,7 @@
 aiohttp
 orjson
 pynacl
+pydantic
 requests
 python-dotenv
 structlog

@@ -1,52 +1,79 @@
 """
 Script: src/bot/scanner.py (The Eyes)
 Description: Scans the CS2 market for items with a profitable Spread.
-Uses the new "Batch API" to scan 200 items in 3 seconds.
+Uses the "Batch API" to scan 200 items in 3 seconds.
+Now with Pydantic validation and granular error handling.
 """
 
+import asyncio
 import logging
 from typing import List, Dict
 
+import aiohttp
+import numpy as np
+from sklearn.linear_model import LinearRegression
+
 from src.config import Config
+from src.models import AggregatedPricesResponse
 from src.utils.api_client import AsyncDMarketClient
 
 logger = logging.getLogger("Scanner")
+
+# Minimum absolute profit in USD to consider a trade (filter noise)
+MIN_PROFIT_USD = 0.03
+
 
 class MarketScanner:
     """
     Finds profitable opportunities (Spread > MIN_SPREAD).
     Returns a list of items to place TARGETS on.
+    Uses Pydantic models for type-safe API response parsing.
     """
-    
+
     def __init__(self, client: AsyncDMarketClient):
         self.client = client
-        self.min_spread = Config.MIN_SPREAD_PCT
+        self.base_min_spread = Config.MIN_SPREAD_PCT
 
-    async def scan(self, items: List[str]) -> List[Dict]:
+    def predict_dynamic_spread(self, history_data: List[float]) -> float:
+        """ML Price Prediction (Lightweight on CPU)"""
+        if len(history_data) < 3:
+            return self.base_min_spread
+        try:
+            X = np.arange(len(history_data)).reshape(-1, 1)
+            y = np.array(history_data)
+            model = LinearRegression()
+            model.fit(X, y)
+            progression = model.predict([[len(history_data)]])[0]
+            # Dynamic adjustment: if trend goes up, we can demand more spread
+            adjustment = min(max(progression - self.base_min_spread, -1.0), 3.0)
+            return self.base_min_spread + adjustment
+        except Exception as e:
+            logger.warning(f"ML Prediction failed: {e}")
+            return self.base_min_spread
+
+    async def scan(self, items: List[str], game_id: str = Config.GAME_ID) -> List[Dict]:
         """
         Scans a batch of items and returns actionable opportunities.
-        Input: ["AK-47 | Slate", "AWP | Atheris", ...]
-        Output: [{"title": "AK-47 | Slate", "price": 1200, "profit": 0.50}, ...]
+        Expects a game_id parameter for multi-game support.
         """
         try:
             # High-Speed Batch Fetch
-            response = await self.client.get_aggregated_prices(names=items, game=Config.GAME_ID)
-            
-            if "aggregatedPrices" not in response:
+            raw_response = await self.client.get_aggregated_prices(
+                names=items, game=game_id
+            )
+
+            # Validate response with Pydantic
+            response = AggregatedPricesResponse.model_validate(raw_response)
+
+            if not response.aggregatedPrices:
                 return []
 
-            market_data = response["aggregatedPrices"]
             opportunities = []
 
-            for item in market_data:
-                title = item.get("title", "Unknown")
-                
-                # Parse Prices safely (handle dict or int)
-                bid_raw = item.get("orderBestPrice", 0)
-                ask_raw = item.get("offerBestPrice", 0)
-                
-                bid_cents = self._safe_int(bid_raw)
-                ask_cents = self._safe_int(ask_raw)
+            for item in response.aggregatedPrices:
+                title = item.title
+                bid_cents = item.orderBestPrice  # Already normalized by Pydantic
+                ask_cents = item.offerBestPrice
 
                 if bid_cents == 0 or ask_cents == 0:
                     continue
@@ -58,41 +85,51 @@ class MarketScanner:
                 if not (Config.MIN_PRICE_USD <= ask_usd <= Config.MAX_PRICE_USD):
                     continue
 
-                # Calculate Spread
-                spread_pct = ((ask_usd - bid_usd) / ask_usd) * 100
+                # Spread = (Ask - Bid) / Bid * 100
+                spread_pct = ((ask_usd - bid_usd) / bid_usd) * 100
+
+                # Adaptive Spread (Dynamic)
+                # Using a mock history based on bid/ask for ML calculation (since we lack historical API feed for now)
+                mock_history = [spread_pct * 0.9, spread_pct * 1.1, spread_pct]
+                dynamic_min_spread = self.predict_dynamic_spread(mock_history)
 
                 # Decision Logic: Buy at Bid+1, Sell at Ask-1
-                if spread_pct >= self.min_spread:
+                if spread_pct >= dynamic_min_spread:
                     target_price = bid_cents + 1
                     sell_price_est = ask_cents - 1
-                    
-                    revenue = sell_price_est * (1.0 - Config.FEE_RATE)  # Fee from Config
-                    profit = revenue - target_price
-                    
-                    if profit > 0:
-                        logger.info(f"💎 FOUND: {title} | Spread: {spread_pct:.1f}% | Profit: ${(profit/100):.2f}")
-                        opportunities.append({
-                            "title": title,
-                            "target_price": target_price,
-                            "sell_price": sell_price_est,
-                            "spread": spread_pct,
-                            "profit": profit
-                        })
 
+                    # Net revenue after DMarket fee (from SELL price only)
+                    sell_revenue = sell_price_est * (1.0 - Config.FEE_RATE)
+                    net_profit = sell_revenue - target_price
+
+                    if net_profit > 0 and (net_profit / 100.0) >= MIN_PROFIT_USD:
+                        logger.info(
+                            f"💎 FOUND: {title} | Spread: {spread_pct:.1f}% (DynMin: {dynamic_min_spread:.1f}%) | "
+                            f"Buy: ${target_price / 100:.2f} | "
+                            f"Sell: ${sell_price_est / 100:.2f} | "
+                            f"Net Profit: ${net_profit / 100:.2f}"
+                        )
+
+                        opportunities.append(
+                            {
+                                "title": title,
+                                "target_price": target_price,
+                                "sell_price": sell_price_est,
+                                "spread": spread_pct,
+                                "profit": net_profit,
+                            }
+                        )
             return opportunities
 
-        except Exception as e:
-            logger.error(f"Scan failed: {e}")
+        except aiohttp.ClientResponseError as e:
+            logger.error(f"Scan API error ({e.status}): {e.message}")
             return []
-
-    def _safe_int(self, value) -> int:
-        if isinstance(value, dict):
-            return int(value.get("Amount", 0))
-        elif isinstance(value, (int, float)):
-            return int(value)
-        elif isinstance(value, str):
-            try:
-                return int(value)
-            except ValueError:
-                return 0
-        return 0
+        except asyncio.TimeoutError:
+            logger.error("Scan timeout: DMarket API did not respond in time")
+            return []
+        except ValueError as e:
+            logger.error(f"Scan validation error: {e}")
+            return []
+        except Exception as e:
+            logger.error(f"Scan unexpected error: {type(e).__name__}: {e}")
+            return []

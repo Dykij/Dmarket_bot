@@ -8,9 +8,12 @@ import asyncio
 import logging
 import json
 import sys
+from pathlib import Path
 
-# Add project root to sys.path
-sys.path.append("D:\\Dmarket_bot")
+# Dynamic project root — works on any machine
+PROJECT_ROOT = Path(__file__).parent.parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 from src.config import Config
 from src.utils.api_client import AsyncDMarketClient
