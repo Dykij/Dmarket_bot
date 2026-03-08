@@ -1,80 +1,76 @@
-# 🦅 DMarket HFT Predator (v3.0)
+# 🦅 DMarket HFT Predator (v3.1)
 
 **High-Frequency Trading Bot for CS2 skins.**
-Автономная торговая система, работающая по стратегии "Spread Capture" с элементами умного управления инвентарем.
+Автономная торговая система, работающая по гибридной схеме: **Rigid Math (Markov) + Fluid AI (LLM) + Agentic Sandbox.**
 
 ---
 
 ## 🚀 Основные Возможности
 
-### 1. ⚡ HFT Core (Ядро)
-- **Скорость:** Сканирует 100+ предметов за 2-3 секунды (SACS-2026 Optimized).
-- **Стратегия:** Ищет предметы, где разница между покупкой (Bid) и продажей (Ask) превышает динамический спред.
-- **Resilience:** Circuit Breaker (пауза при ошибках API) + Token Bucket Rate Limiter (5 RPS).
+### 1. ⚡ Hardware Acceleration (Phase 14)
 
-### 2. 🧠 Smart Logic (Интеллект)
-- **📊 ML Price Prediction:** Интегрированная регрессия (`scikit-learn`) для предсказания тренда и адаптивного порога прибыли.
-- **🧱 Wall Breaker:** Бот анализирует "стакан" цен. Если разрыв между 1-м и 2-м продавцом большой (>2%), бот не демпингует, а встает по высокой цене (под 2-го продавца), увеличивая маржу.
-- **⏳ Inventory Decay:** Если предмет завис в инвентаре (>24ч), бот автоматически снижает цену на 1% каждые 24 часа.
-- **🎯 Smart Targeting:** Фильтр по Float Value с использованием Pydantic-валидации всех ответов DMarket.
+- **CUDA Support (`CuPy`):** Марковский предиктор (`markov_model.py`) использует тензорные ядра для мгновенной классификации 10,000+ предметов в одном GPU-пакете.
+- **LLM Engine (`GGUF`):** Инференс Arkady 27B через `llama-cpp-python` с полным оффлоудом на VRAM (RTX 5060 Ti) и поддержкой **Flash Attention 2**.
 
-### 3. 📱 Telegram & Monitoring
-- **📢 Real-time Alerts:** Мгновенные уведомления о каждой ставке и продаже.
-- **📈 SQLite Tracker:** Все сделки сохраняются в локальную БД для анализа доходности.
-- **💬 Telegram Control Center:** `/start`, `/stop`, `/panic`, `/balance`, `/status`.
+### 2. 🛡️ Security Hardening (Phase 13)
+
+- **V1-V4 Protection:** Заморозка констант модуля, хранение TLS-отпечатков в **OS Keyring**, HMAC-подпись Git-чекпоинтов.
+- **Price Validator:** Жесткий фильтр цен ($0.10–$50,000) до вызова ИИ, защита от Data Poisoning и некорректных форматов (напр. `"1e5"`).
+- **Agentic Sandbox:** ИИ не имеет прямого доступа к API. Решение проходит через **Pydantic Gate**, проверяющий лимиты и уверенность (Confidence).
+
+### 3. 🧠 Hybrid Architecture
+
+- **📊 Markov Chain Predictor:** 3-уровневая классификация рынка (STABLE / VOLATILE / ANOMALOUS). Блокирует аномальные всплески до LLM-анализа.
+- **🎯 Smart Logic:** Обработка стаканов, Wall Breaker и автоматическое управление инвентарем.
+
+---
+
+## 🏗 Технический Стек
+
+| Компонент | Технология |
+| :--- | :--- |
+| **Quant Math** | `cupy` (CUDA 12.x) / `numpy` |
+| **LLM Inference** | `llama-cpp-python` (GGUF Q4_K_M) |
+| **Validation** | `pydantic` v2 |
+| **Security** | `keyring`, `hashlib` (HMAC-SHA256) |
+| **API Client** | Async REST + Ed25519 Signing |
 
 ---
 
 ## 🛠 Установка и Запуск
 
-### Требования
-- Python 3.11+
-- Аккаунт DMarket (Public/Secret Keys)
-- Telegram Bot Token (от @BotFather)
+### Настройка GPU (WSL2 / Windows)
 
-### Настройка
-1. Клонировать репозиторий.
-2. Создать файл `.env`:
-   ```env
-   DMARKET_PUBLIC_KEY=your_public_key
-   DMARKET_SECRET_KEY=your_secret_key
-   TELEGRAM_BOT_TOKEN=your_tg_token
-   TELEGRAM_CHAT_ID=your_chat_id
-   ```
-3. Установить зависимости:
+1. Установить CUDA 12.x.
+2. Установить зависимости:
+
    ```bash
-   pip install -r requirements.txt
+   pip install cupy-cuda12x pydantic keyring llama-cpp-python
+   ```
+
+3. Добавить TLS fingerprint в хранилище:
+
+   ```bash
+   python -c "import keyring; keyring.set_password('dmarket_bot', 'cert_fp', '<sha256_hex>')"
    ```
 
 ### Запуск
-```bash
-# Запуск Telegram-интерфейса (рекомендуется)
-python src/telegram_bot.py
 
-# Или запуск ядра напрямую в консоли
-python src/bot/main.py
+```bash
+# Режим сканнера с Марковской фильтрацией и GGUF-анализом
+python src/autonomous_scanner.py
 ```
 
 ---
 
-## ⚙️ Конфигурация (`src/config.py`)
+## ⚙️ Безопасность (`src/trade_gate.py`)
 
-| Параметр | Описание | Дефолт |
-| :--- | :--- | :--- |
-| `DRY_RUN` | Режим симуляции (без траты денег) | `True` |
-| `MIN_SPREAD_PCT` | Минимальная прибыль для входа | `7.0%` |
-| `MAX_PRICE_USD` | Максимальная цена предмета | `$20.00` |
-| `WALL_BREAKER_PCT` | Порог для стратегии "Пробой Стены" | `2.0%` |
+Бот использует **TradeExecutionGate**, который блокирует сделки если:
 
----
-
-## 🏗 Архитектура
-Проект очищен от легаси-кода.
-- `src/bot/scanner.py` — Глаза (Поиск спредов).
-- `src/bot/trader.py` — Руки (Покупка, Таргеты).
-- `src/bot/sales.py` — Продажи (Wall Breaker, Decay).
-- `src/telegram_bot.py` — Мозг (Управление).
+- `Confidence` модели < 70%.
+- Сумма сделки > $50.00 (настраиваемый лимит).
+- Цена не прошла повторную валидацию после ответа ИИ.
 
 ---
 
-*DevOp Branch. Stable Build v3.0.*
+*Phase 14: CUDA Acceleration & Agentic Sandbox Build.*
