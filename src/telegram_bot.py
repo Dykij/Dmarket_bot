@@ -27,6 +27,7 @@ from src.config import Config
 from src.utils.api_client import AsyncDMarketClient
 # We import main bot logic to run it as a task
 from src.bot.main import main as hft_main
+from src.db.profit_tracker import db as profit_db
 
 load_dotenv()
 
@@ -154,8 +155,30 @@ async def btn_status(message: types.Message):
         f"📊 **System Status:**\n"
         f"State: {status}\n"
         f"Mode: {mode}\n"
+        f"Strategy: {Config.ACTIVE_STRATEGY}\n"
         f"Spread Target: >{Config.MIN_SPREAD_PCT}%\n"
         f"Game: CS2",
+        parse_mode="Markdown"
+    )
+
+@router.message(Command("daily"))
+async def cmd_daily_briefing(message: types.Message):
+    if str(message.from_user.id) != str(ADMIN_ID):
+        return
+        
+    pnl_data = profit_db.get_today_pnl()
+    profit = pnl_data["profit"]
+    trades = pnl_data["trades"]
+    
+    emoji = "📈" if profit > 0 else "📉" if profit < 0 else "⚖️"
+    
+    await message.answer(
+        f"🌅 **DAILY BRIEFING**\n\n"
+        f"{emoji} **Today's P&L:** ${profit:.2f}\n"
+        f"🔄 **Completed Trades:** {trades}\n\n"
+        f"*(Dashboard stubs operational. Fetching live inventory targets...)*\n\n"
+        f"**Active Mode:** {Config.ACTIVE_STRATEGY}\n"
+        f"**Risk Cap:** {Config.MAX_POSITION_RISK_PCT}% per item",
         parse_mode="Markdown"
     )
 
@@ -240,6 +263,7 @@ async def cmd_help(message: types.Message):
         "💰 `/balance` - Check DMarket USD Balance\n"
         "📦 `/inventory` - View bought items\n"
         "📊 `/status` - Check if bot is RUNNING or STOPPED\n"
+        "🌅 `/daily` - View Daily P&L Briefing\n"
         "⚙️ `/settings` - View current config (Risk/Profit)\n\n"
         "**Support:**\n"
         "If bot crashes, check logs or restart script.",
@@ -252,6 +276,7 @@ async def set_commands(bot: Bot):
         types.BotCommand(command="stop", description="🛑 EMERGENCY STOP"),
         types.BotCommand(command="balance", description="💰 Check Balance"),
         types.BotCommand(command="status", description="📊 Bot Status"),
+        types.BotCommand(command="daily", description="🌅 Daily Briefing"),
         types.BotCommand(command="inventory", description="📦 Show Inventory"),
         types.BotCommand(command="settings", description="⚙️ Settings"),
         types.BotCommand(command="help", description="🆘 Help & Guide")

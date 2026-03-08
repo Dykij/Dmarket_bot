@@ -10,8 +10,18 @@ import logging
 from typing import List, Dict
 
 import aiohttp
+import json
 import numpy as np
 from sklearn.linear_model import LinearRegression
+
+try:
+    # Attempt to load the PyO3 Rust extension module
+    import rust_core
+    RUST_CORE_AVAILABLE = True
+    logging.info("🦀 Rust Core Engine loaded successfully. Polling will be optimized.")
+except ImportError:
+    RUST_CORE_AVAILABLE = False
+    logging.warning("⚠️ Rust Core Engine not found. Falling back to native Python aiohttp.")
 
 from src.config import Config
 from src.models import AggregatedPricesResponse
@@ -33,6 +43,12 @@ class MarketScanner:
     def __init__(self, client: AsyncDMarketClient):
         self.client = client
         self.base_min_spread = Config.MIN_SPREAD_PCT
+        
+        # Initialize Rust poller if compiled
+        self.rust_poller = None
+        if RUST_CORE_AVAILABLE:
+            api_url = getattr(client, "api_url", "https://api.dmarket.com")
+            self.rust_poller = rust_core.RustPoller(api_url)
 
     def predict_dynamic_spread(self, history_data: List[float]) -> float:
         """ML Price Prediction (Lightweight on CPU)"""
@@ -57,10 +73,16 @@ class MarketScanner:
         Expects a game_id parameter for multi-game support.
         """
         try:
-            # High-Speed Batch Fetch
-            raw_response = await self.client.get_aggregated_prices(
-                names=items, game=game_id
-            )
+            if self.rust_poller:
+                # 🦀 High-Frequency Rust Poller
+                logger.info(f"Rust Core: Fast-polling {len(items)} items...")
+                raw_json = self.rust_poller.poll_market_sync(game_id, len(items))
+                raw_response = json.loads(raw_json)
+            else:
+                # 🐍 Native Python aiohttp fallback
+                raw_response = await self.client.get_aggregated_prices(
+                    names=items, game=game_id
+                )
 
             # Validate response with Pydantic
             response = AggregatedPricesResponse.model_validate(raw_response)

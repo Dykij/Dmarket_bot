@@ -33,11 +33,6 @@ class Config:
     SCAN_INTERVAL = 2        # Seconds between scan cycles
     BATCH_SIZE = 20          # Items per API call
 
-    # --- Smart Strategy ---
-    WALL_BREAKER_PCT = 2.0   # If gap between 1st and 2nd listing > 2%, target 2nd price
-    INVENTORY_DECAY_HOURS = 24 # Start lowering price after 24 hours
-    DECAY_RATE_PCT = 1.0     # Lower price by 1% per decay cycle
-    
     # --- Advanced Attributes (Float/Phase) ---
     # Prefer Low Float when placing targets? 
     # If True, bot will specifically target 'FT-0' (0.15-0.18) etc.
@@ -54,3 +49,10 @@ class Config:
 
     # --- Operation Mode ---
     DRY_RUN = True           # True = Simulation (Paper Trading), False = Real Money!
+    
+    # --- Multi-Strategy Engine ---
+    ACTIVE_STRATEGY = "MarketMaker"  # Options: MarketMaker, SpreadHunter
+    
+    # --- Dynamic Position Sizing ---
+    USE_DYNAMIC_SIZING = True
+    MAX_POSITION_RISK_PCT = 5.0 # Max capital risk per single item (Kelly Criterion proxy)
