@@ -2,7 +2,7 @@
 price_validator.py — Strict price sanity checks (V3 hardening).
 
 Blocks Data Poisoning attacks by rejecting prices outside the
-sane CS2 market range BEFORE any AI agent sees the data.
+sane CS2 market range BEFORE execution.
 
 Handles:
 - Scientific notation strings ("1e5")

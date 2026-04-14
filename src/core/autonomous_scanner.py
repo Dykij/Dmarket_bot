@@ -4,7 +4,7 @@ Autonomous DMarket Scanner v3.1 — Pure Script / Math Pipeline.
 Pipeline:
   1. DMarketAPIClient initialization.
   2. InventoryManager initialization.
-  3. Start the Target Sniping Loop (Math based, no LLMs).
+  3. Start the Target Sniping Loop (Math based).
 """
 
 import asyncio
@@ -28,7 +28,7 @@ logger = logging.getLogger("AutonomousScanner")
 async def run_autonomous_scanner():
     print("\n" + "=" * 50)
     print("🚀 ZAПУСК АВТОНОМНОГО СКАННЕРА DMARKET v3.1")
-    print("   (Target Sniping + Pure Math, No LLM)")
+    print("   (Target Sniping + Pure Math Engine)")
     print("=" * 50 + "\n")
 
     # Try multiple .env locations
