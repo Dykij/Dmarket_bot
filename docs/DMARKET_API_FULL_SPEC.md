@@ -28,6 +28,7 @@
 8. [История и статистика](#история-и-статистика)
 9. [Коды игр](#коды-игр)
 10. [Обработка ошибок](#обработка-ошибок)
+11. [🌐 Справочник API (Official Swagger Dump)](#🌐-справочник-api-official-swagger-dump)
 
 ---
 
@@ -1358,3 +1359,2628 @@ async def wAlgot_for_deposit(deposit_id, max_wAlgot=300):
 ---
 
 **Документация актуальна на 28 декабря 2025 г. Всегда проверяйте официальную документацию DMarket для получения последних обновлений API.**
+
+
+## 🌐 Справочник API (Official Swagger Dump)
+
+- AccountgetGet user profilegetGet account balance
+- getGet user profile
+- getGet account balance
+- Sell ItemspostDeposit assetsgetGet deposit statusgetList user offerspostBatch create offerspostBatch update offerspostBatch delete offersgetList market items
+- postDeposit assets
+- getGet deposit status
+- getList user offers
+- postBatch create offers
+- postBatch update offers
+- postBatch delete offers
+- getList market items
+- Inventory/itemsgetList user inventorypostSync inventory with SteampostWithdraw assetsgetList user items by gamegetList low-fee items
+- getList user inventory
+- postSync inventory with Steam
+- postWithdraw assets
+- getList user items by game
+- getList low-fee items
+- Sold user itemsgetList user closed offers
+- getList user closed offers
+- Buy itemsgetList offers by titlegetFind buy orders (targets) by item titlepostGet aggregated market prices for item titlesgetList user targetsgetList user closed targetspostCreate targetspostRemove targetspatchBuy offers
+- getList offers by title
+- getFind buy orders (targets) by item title
+- postGet aggregated market prices for item titles
+- getList user targets
+- getList user closed targets
+- postCreate targets
+- postRemove targets
+- patchBuy offers
+- AggregatorgetGet item sales history
+- getGet item sales history
+- getGet user profile
+- getGet account balance
+- postDeposit assets
+- getGet deposit status
+- getList user offers
+- postBatch create offers
+- postBatch update offers
+- postBatch delete offers
+- getList market items
+- getList user inventory
+- postSync inventory with Steam
+- postWithdraw assets
+- getList user items by game
+- getList low-fee items
+- getList user closed offers
+- getList offers by title
+- getFind buy orders (targets) by item title
+- postGet aggregated market prices for item titles
+- getList user targets
+- getList user closed targets
+- postCreate targets
+- postRemove targets
+- patchBuy offers
+- getGet item sales history
+[API docs by Redocly](https://redocly.com/redoc/)
+
+Download OpenAPI specification:
+Welcome to the DMarket Trading API section. Our JSON-based API enables you to manage your DMarket inventory through the methods featured below. In order to use the API, please generate your personal API keys in the account settings.
+Request signature instructions
+A valid HTTP request to the trading API must include 3 request headers:
+1. X-Api-Key: public key (must be a hex string in lowercase)
+To get you your own public key, use [https://dmarket.com/](https://dmarket.com/) (details : [https://dmarket.com/faq#tradingAPI](https://dmarket.com/faq#tradingAPI))
+
+2. X-Sign-Date: timestamp or current time
+Example: 1605619994. Must not be older than 2 minutes from the request time.
+
+3. X-Request-Sign: signature
+
+X-Api-Key: public key (must be a hex string in lowercase) To get you your own public key, use [https://dmarket.com/](https://dmarket.com/) (details : [https://dmarket.com/faq#tradingAPI](https://dmarket.com/faq#tradingAPI))
+X-Sign-Date: timestamp or current time Example: 1605619994. Must not be older than 2 minutes from the request time.
+X-Request-Sign: signature
+The SHA256 signature scheme is used for signing requests and proving items’ origin and ownership through public-private key pairs. Private and public keys diversification is aimed to provide secure back-to-back communication and the ability to rotate keys in case of security breaches on any side of the integration.
+To make a signature, take the following steps:
+1. Build non-signed string formula (HTTP Method) + (Route path + HTTP query params) + (body string) + (timestamp) ). Example:  POST/get-item?Amount=%220.25%22&Limit=%22100%22&Offset=%22150%22&Order=%22desc%22&1605619994)
+
+2. After you’ve created a non-signed string with a default concatenation method, sign it with NACL [https://en.wikipedia.org/wiki/NaCl_(software)](https://en.wikipedia.org/wiki/NaCl_(software)) using you secret key.
+
+3. Encode the result string with hex
+
+4. Add your signature string to HTTP request headers X-Request-Sign (dmar ed25519 signature)
+
+Build non-signed string formula (HTTP Method) + (Route path + HTTP query params) + (body string) + (timestamp) ). Example: POST/get-item?Amount=%220.25%22&Limit=%22100%22&Offset=%22150%22&Order=%22desc%22&1605619994)
+After you’ve created a non-signed string with a default concatenation method, sign it with NACL [https://en.wikipedia.org/wiki/NaCl_(software)](https://en.wikipedia.org/wiki/NaCl_(software)) using you secret key.
+Encode the result string with hex
+Add your signature string to HTTP request headers X-Request-Sign (dmar ed25519 signature)
+You can check out examples on [https://github.com/dmarket/dm-trading-tools](https://github.com/dmarket/dm-trading-tools).
+DMarket uses rate limiting to control the rate of API requests. Please read FAQ for details [https://dmarket.com/faq#startUsingTradingAPI](https://dmarket.com/faq#startUsingTradingAPI).
+
+Getting general user profile information.
+
+### Responses
+OK
+Unauthorized
+Not Found
+Internal Server Error
+OK
+
+### Response samples
+- 200
+- 401
+- 404
+- 500
+- default
+
+```
+{"agreementsInfo": {"isConfirmed": true,"updated": 0},"countryCode": "string","countryCodeFromIP": "string","email": "string","features": [{"enabled": true,"name": "P2P"}],"ga_client_id": "string","hasActiveSubscriptions": true,"hasHistoryEvents": true,"id": "string","imageUrl": "string","isEmailVerified": true,"isPasswordSet": true,"level": 0,"linkedGames": [{"gameId": "string","gameUserId": "string","username": "string"}],"migrated": true,"publicKey": "string","regType": "steam","restrictions": [{"expirationTime": 0,"name": "P2POfferCreation"}],"settings": {"enabledDeviceConfirmation": true,"isSubscribedToNewsletters": true,"targetsLimit": 0,"tradingApiToken": "string"},"steamAccount": {"apiKey": "string","apiKeyStatus": "New","icon": "string","isProfilePrivate": true,"level": 0,"steamId": "string","tradeUrl": "string","username": "string"},"twitchAccount": {"icon": "string","userId": "string","username": "string"},"username": "string"}
+```
+
+- "agreementsInfo": {"isConfirmed": true,"updated": 0},
+- "isConfirmed": true,
+- "updated": 0
+- "countryCode": "string",
+- "countryCodeFromIP": "string",
+- "email": "string",
+- "features": [{"enabled": true,"name": "P2P"}],
+- {"enabled": true,"name": "P2P"}
+- "enabled": true,
+- "name": "P2P"
+- "ga_client_id": "string",
+- "hasActiveSubscriptions": true,
+- "hasHistoryEvents": true,
+- "id": "string",
+- "imageUrl": "string",
+- "isEmailVerified": true,
+- "isPasswordSet": true,
+- "level": 0,
+- "linkedGames": [{"gameId": "string","gameUserId": "string","username": "string"}],
+- {"gameId": "string","gameUserId": "string","username": "string"}
+- "gameId": "string",
+- "gameUserId": "string",
+- "username": "string"
+- "migrated": true,
+- "publicKey": "string",
+- "regType": "steam",
+- "restrictions": [{"expirationTime": 0,"name": "P2POfferCreation"}],
+- {"expirationTime": 0,"name": "P2POfferCreation"}
+- "expirationTime": 0,
+- "name": "P2POfferCreation"
+- "settings": {"enabledDeviceConfirmation": true,"isSubscribedToNewsletters": true,"targetsLimit": 0,"tradingApiToken": "string"},
+- "enabledDeviceConfirmation": true,
+- "isSubscribedToNewsletters": true,
+- "targetsLimit": 0,
+- "tradingApiToken": "string"
+- "steamAccount": {"apiKey": "string","apiKeyStatus": "New","icon": "string","isProfilePrivate": true,"level": 0,"steamId": "string","tradeUrl": "string","username": "string"},
+- "apiKey": "string",
+- "apiKeyStatus": "New",
+- "icon": "string",
+- "isProfilePrivate": true,
+- "level": 0,
+- "steamId": "string",
+- "tradeUrl": "string",
+- "username": "string"
+- "twitchAccount": {"icon": "string","userId": "string","username": "string"},
+- "icon": "string",
+- "userId": "string",
+- "username": "string"
+- "username": "string"
+- "isConfirmed": true,
+- "updated": 0
+- {"enabled": true,"name": "P2P"}
+- "enabled": true,
+- "name": "P2P"
+- "enabled": true,
+- "name": "P2P"
+- {"gameId": "string","gameUserId": "string","username": "string"}
+- "gameId": "string",
+- "gameUserId": "string",
+- "username": "string"
+- "gameId": "string",
+- "gameUserId": "string",
+- "username": "string"
+- {"expirationTime": 0,"name": "P2POfferCreation"}
+- "expirationTime": 0,
+- "name": "P2POfferCreation"
+- "expirationTime": 0,
+- "name": "P2POfferCreation"
+- "enabledDeviceConfirmation": true,
+- "isSubscribedToNewsletters": true,
+- "targetsLimit": 0,
+- "tradingApiToken": "string"
+- "apiKey": "string",
+- "apiKeyStatus": "New",
+- "icon": "string",
+- "isProfilePrivate": true,
+- "level": 0,
+- "steamId": "string",
+- "tradeUrl": "string",
+- "username": "string"
+- "icon": "string",
+- "userId": "string",
+- "username": "string"
+
+Getting the current USD & DMC balance that is available for trading items / buying subscriptions. The response format is in coins (cents for USD, dimoshi for DMC).
+
+### Responses
+OK
+Not found
+Conflict
+Internal Server Error
+OK
+
+### Response samples
+- 200
+- 404
+- 409
+- 500
+- default
+
+```
+{"dmc": "string","dmcAvailableToWithdraw": "string","usd": "string","usdAvailableToWithdraw": "string"}
+```
+
+- "dmc": "string",
+- "dmcAvailableToWithdraw": "string",
+- "usd": "string",
+- "usdAvailableToWithdraw": "string"
+
+Transferring items from a 3rd party inventory (e.g. a Steam game) to a Dmarket inventory.
+
+##### Request Body schema: application/jsonrequired
+List of asset id to deposit.
+
+### Responses
+A successful response.
+An unexpected error response
+
+### Request samples
+- Payload
+
+```
+{"AssetID": ["string"]}
+```
+
+- "AssetID": ["string"]
+- "string"
+- "string"
+
+### Response samples
+- 200
+- default
+
+```
+{"DepositID": "string"}
+```
+
+- "DepositID": "string"
+
+Get information about current deposit transfers.
+
+##### path Parameters
+Deposit operation unique identifier.
+
+### Responses
+A successful response.
+An unexpected error response
+
+### Response samples
+- 200
+- default
+
+```
+{"DepositID": "string","AssetID": ["string"],"Status": "TransferStatusPending","Error": "string","Assets": [{"InGameAssetID": "string","DmarketAssetID": "string"}],"SteamDepositInfo": {"TradeOfferID": "string","Message": "string"}}
+```
+
+- "DepositID": "string",
+- "AssetID": ["string"],
+- "string"
+- "Status": "TransferStatusPending",
+- "Error": "string",
+- "Assets": [{"InGameAssetID": "string","DmarketAssetID": "string"}],
+- {"InGameAssetID": "string","DmarketAssetID": "string"}
+- "InGameAssetID": "string",
+- "DmarketAssetID": "string"
+- "SteamDepositInfo": {"TradeOfferID": "string","Message": "string"}
+- "TradeOfferID": "string",
+- "Message": "string"
+- "string"
+- {"InGameAssetID": "string","DmarketAssetID": "string"}
+- "InGameAssetID": "string",
+- "DmarketAssetID": "string"
+- "InGameAssetID": "string",
+- "DmarketAssetID": "string"
+- "TradeOfferID": "string",
+- "Message": "string"
+
+Get the list of offers of the current user for further management (remove from sale/change price, etc.). The price amount format is in USD i.e. 0.5 is 50 cents. 'gameId' param values are: CS:GO - a8db, Team Fortress 2 - tf2, Dota 2 - 9a92, Rust - rust.
+
+##### query Parameters
+Game identifier on market.
+On sale offer current status.
+Sort user offers by one of predefined sort types.
+- UserOffersSortTypeDefault: Default sort type for user offers.
+- UserOffersSortTypeDateNewestFirst: Sort user offers by date showing newest first.
+Price range filtering.
+Price range filtering.
+Currency code to use with price range filter.
+Offsets items in response.
+Limits number or returned items in response.
+Cursor is a next page identifier.
+
+A successful response.
+An unexpected error response
+
+- 200
+- default
+
+```
+{"Items": [{"AssetID": "string","VariantID": "string","Title": "string","ImageURL": "string","GameID": "string","GameType": "GameTypeBlockchain","Location": "AssetLocationInGame","Withdrawable": true,"Depositable": true,"Tradable": true,"Attributes": [{"Name": "string","Value": "string"}],"Offer": {"OfferID": "string","Price": {"Currency": "string","Amount": 0.1},"Fee": {"Currency": "string","Amount": 0.1},"CreatedDate": "string"},"MarketPrice": {"Currency": "string","Amount": 0.1},"InstantPrice": {"Currency": "string","Amount": 0.1},"ClassID": "string"}],"Total": "string","Cursor": "string"}
+```
+
+- "Items": [{"AssetID": "string","VariantID": "string","Title": "string","ImageURL": "string","GameID": "string","GameType": "GameTypeBlockchain","Location": "AssetLocationInGame","Withdrawable": true,"Depositable": true,"Tradable": true,"Attributes": [{"Name": "string","Value": "string"}],"Offer": {"OfferID": "string","Price": {"Currency": "string","Amount": 0.1},"Fee": {"Currency": "string","Amount": 0.1},"CreatedDate": "string"},"MarketPrice": {"Currency": "string","Amount": 0.1},"InstantPrice": {"Currency": "string","Amount": 0.1},"ClassID": "string"}],
+- {"AssetID": "string","VariantID": "string","Title": "string","ImageURL": "string","GameID": "string","GameType": "GameTypeBlockchain","Location": "AssetLocationInGame","Withdrawable": true,"Depositable": true,"Tradable": true,"Attributes": [{"Name": "string","Value": "string"}],"Offer": {"OfferID": "string","Price": {"Currency": "string","Amount": 0.1},"Fee": {"Currency": "string","Amount": 0.1},"CreatedDate": "string"},"MarketPrice": {"Currency": "string","Amount": 0.1},"InstantPrice": {"Currency": "string","Amount": 0.1},"ClassID": "string"}
+- "AssetID": "string",
+- "VariantID": "string",
+- "Title": "string",
+- "ImageURL": "string",
+- "GameID": "string",
+- "GameType": "GameTypeBlockchain",
+- "Location": "AssetLocationInGame",
+- "Withdrawable": true,
+- "Depositable": true,
+- "Tradable": true,
+- "Attributes": [{"Name": "string","Value": "string"}],
+- {"Name": "string","Value": "string"}
+- "Name": "string",
+- "Value": "string"
+- "Offer": {"OfferID": "string","Price": {"Currency": "string","Amount": 0.1},"Fee": {"Currency": "string","Amount": 0.1},"CreatedDate": "string"},
+- "OfferID": "string",
+- "Price": {"Currency": "string","Amount": 0.1},
+- "Currency": "string",
+- "Amount": 0.1
+- "Fee": {"Currency": "string","Amount": 0.1},
+- "Currency": "string",
+- "Amount": 0.1
+- "CreatedDate": "string"
+- "MarketPrice": {"Currency": "string","Amount": 0.1},
+- "Currency": "string",
+- "Amount": 0.1
+- "InstantPrice": {"Currency": "string","Amount": 0.1},
+- "Currency": "string",
+- "Amount": 0.1
+- "ClassID": "string"
+- "Total": "string",
+- "Cursor": "string"
+- {"AssetID": "string","VariantID": "string","Title": "string","ImageURL": "string","GameID": "string","GameType": "GameTypeBlockchain","Location": "AssetLocationInGame","Withdrawable": true,"Depositable": true,"Tradable": true,"Attributes": [{"Name": "string","Value": "string"}],"Offer": {"OfferID": "string","Price": {"Currency": "string","Amount": 0.1},"Fee": {"Currency": "string","Amount": 0.1},"CreatedDate": "string"},"MarketPrice": {"Currency": "string","Amount": 0.1},"InstantPrice": {"Currency": "string","Amount": 0.1},"ClassID": "string"}
+- "AssetID": "string",
+- "VariantID": "string",
+- "Title": "string",
+- "ImageURL": "string",
+- "GameID": "string",
+- "GameType": "GameTypeBlockchain",
+- "Location": "AssetLocationInGame",
+- "Withdrawable": true,
+- "Depositable": true,
+- "Tradable": true,
+- "Attributes": [{"Name": "string","Value": "string"}],
+- {"Name": "string","Value": "string"}
+- "Name": "string",
+- "Value": "string"
+- "Offer": {"OfferID": "string","Price": {"Currency": "string","Amount": 0.1},"Fee": {"Currency": "string","Amount": 0.1},"CreatedDate": "string"},
+- "OfferID": "string",
+- "Price": {"Currency": "string","Amount": 0.1},
+- "Currency": "string",
+- "Amount": 0.1
+- "Fee": {"Currency": "string","Amount": 0.1},
+- "Currency": "string",
+- "Amount": 0.1
+- "CreatedDate": "string"
+- "MarketPrice": {"Currency": "string","Amount": 0.1},
+- "Currency": "string",
+- "Amount": 0.1
+- "InstantPrice": {"Currency": "string","Amount": 0.1},
+- "Currency": "string",
+- "Amount": 0.1
+- "ClassID": "string"
+- "AssetID": "string",
+- "VariantID": "string",
+- "Title": "string",
+- "ImageURL": "string",
+- "GameID": "string",
+- "GameType": "GameTypeBlockchain",
+- "Location": "AssetLocationInGame",
+- "Withdrawable": true,
+
+- "Depositable": true,
+- "Tradable": true,
+- "Attributes": [{"Name": "string","Value": "string"}],
+- {"Name": "string","Value": "string"}
+- "Name": "string",
+- "Value": "string"
+- "Offer": {"OfferID": "string","Price": {"Currency": "string","Amount": 0.1},"Fee": {"Currency": "string","Amount": 0.1},"CreatedDate": "string"},
+- "OfferID": "string",
+- "Price": {"Currency": "string","Amount": 0.1},
+- "Currency": "string",
+- "Amount": 0.1
+- "Fee": {"Currency": "string","Amount": 0.1},
+- "Currency": "string",
+- "Amount": 0.1
+- "CreatedDate": "string"
+- "MarketPrice": {"Currency": "string","Amount": 0.1},
+- "Currency": "string",
+- "Amount": 0.1
+- "InstantPrice": {"Currency": "string","Amount": 0.1},
+- "Currency": "string",
+- "Amount": 0.1
+- "ClassID": "string"
+- {"Name": "string","Value": "string"}
+- "Name": "string",
+- "Value": "string"
+- "Name": "string",
+- "Value": "string"
+- "OfferID": "string",
+- "Price": {"Currency": "string","Amount": 0.1},
+- "Currency": "string",
+- "Amount": 0.1
+- "Fee": {"Currency": "string","Amount": 0.1},
+- "Currency": "string",
+- "Amount": 0.1
+- "CreatedDate": "string"
+- "Currency": "string",
+- "Amount": 0.1
+- "Currency": "string",
+- "Amount": 0.1
+- "Currency": "string",
+- "Amount": 0.1
+- "Currency": "string",
+- "Amount": 0.1
+
+Create multiple offers in a single request.
+
+##### Request Body schema: application/jsonrequired
+
+### Responses
+A successful response.
+An unexpected error response
+
+### Request samples
+- Payload
+
+```
+{"requests": [{"assetId": "9179b887-04ef-4ce5-ab3a-b5bbd39ea3c8","priceCents": 0}]}
+```
+
+- "requests": [{"assetId": "9179b887-04ef-4ce5-ab3a-b5bbd39ea3c8","priceCents": 0}]
+- {"assetId": "9179b887-04ef-4ce5-ab3a-b5bbd39ea3c8","priceCents": 0}
+- "assetId": "9179b887-04ef-4ce5-ab3a-b5bbd39ea3c8",
+- "priceCents": 0
+- {"assetId": "9179b887-04ef-4ce5-ab3a-b5bbd39ea3c8","priceCents": 0}
+- "assetId": "9179b887-04ef-4ce5-ab3a-b5bbd39ea3c8",
+- "priceCents": 0
+- "assetId": "9179b887-04ef-4ce5-ab3a-b5bbd39ea3c8",
+- "priceCents": 0
+
+### Response samples
+- 200
+- default
+
+```
+{"offers": [{"id": "string","assetId": "string"}],"failed": [{"assetId": "string","code": "string","message": "string"}]}
+```
+
+- "offers": [{"id": "string","assetId": "string"}],
+- {"id": "string","assetId": "string"}
+- "id": "string",
+- "assetId": "string"
+- "failed": [{"assetId": "string","code": "string","message": "string"}]
+- {"assetId": "string","code": "string","message": "string"}
+- "assetId": "string",
+- "code": "string",
+- "message": "string"
+- {"id": "string","assetId": "string"}
+- "id": "string",
+- "assetId": "string"
+- "id": "string",
+- "assetId": "string"
+- {"assetId": "string","code": "string","message": "string"}
+- "assetId": "string",
+- "code": "string",
+- "message": "string"
+- "assetId": "string",
+- "code": "string",
+- "message": "string"
+
+Update multiple offers in a single request.
+
+##### Request Body schema: application/jsonrequired
+
+### Responses
+A successful response.
+An unexpected error response
+
+### Request samples
+- Payload
+
+```
+{"requests": [{"offerId": "string","priceCents": 0}]}
+```
+
+- "requests": [{"offerId": "string","priceCents": 0}]
+- {"offerId": "string","priceCents": 0}
+- "offerId": "string",
+- "priceCents": 0
+- {"offerId": "string","priceCents": 0}
+- "offerId": "string",
+- "priceCents": 0
+- "offerId": "string",
+- "priceCents": 0
+
+### Response samples
+- 200
+- default
+
+```
+{"offers": [{"id": "string","assetId": "string"}],"failed": [{"offerId": "string","code": "string","message": "string"}]}
+```
+
+- "offers": [{"id": "string","assetId": "string"}],
+- {"id": "string","assetId": "string"}
+- "id": "string",
+- "assetId": "string"
+- "failed": [{"offerId": "string","code": "string","message": "string"}]
+- {"offerId": "string","code": "string","message": "string"}
+- "offerId": "string",
+- "code": "string",
+- "message": "string"
+- {"id": "string","assetId": "string"}
+- "id": "string",
+- "assetId": "string"
+- "id": "string",
+- "assetId": "string"
+- {"offerId": "string","code": "string","message": "string"}
+- "offerId": "string",
+- "code": "string",
+- "message": "string"
+- "offerId": "string",
+- "code": "string",
+- "message": "string"
+
+Delete multiple offers in a single request.
+
+##### Request Body schema: application/jsonrequired
+
+### Responses
+A successful response.
+An unexpected error response
+
+### Request samples
+- Payload
+
+```
+{"requests": [{"offerId": "string"}]}
+```
+
+- "requests": [{"offerId": "string"}]
+- {"offerId": "string"}
+- "offerId": "string"
+- {"offerId": "string"}
+- "offerId": "string"
+- "offerId": "string"
+
+### Response samples
+- 200
+- default
+
+```
+{"offers": [{"id": "string","assetId": "string"}],"failed": [{"offerId": "string","code": "string","message": "string"}]}
+```
+
+- "offers": [{"id": "string","assetId": "string"}],
+- {"id": "string","assetId": "string"}
+- "id": "string",
+- "assetId": "string"
+- "failed": [{"offerId": "string","code": "string","message": "string"}]
+- {"offerId": "string","code": "string","message": "string"}
+- "offerId": "string",
+- "code": "string",
+- "message": "string"
+- {"id": "string","assetId": "string"}
+- "id": "string",
+- "assetId": "string"
+- "id": "string",
+- "assetId": "string"
+- {"offerId": "string","code": "string","message": "string"}
+- "offerId": "string",
+- "code": "string",
+- "message": "string"
+- "offerId": "string",
+- "code": "string",
+- "message": "string"
+
+Get the list of items that are available for purchase on DMarket. The response format is in coins (cents for USD). 'gameId' param values are: CS:GO - a8db, Team Fortress 2 - tf2, Dota 2 - 9a92, Rust - rust.
+
+##### query Parameters
+gameId
+title
+limit
+offset
+orderBy
+orderDir
+treeFilters
+currency
+priceFrom
+priceTo
+comma separated offer types to filter
+next page identifier
+
+### Responses
+OK
+Internal Server Error
+OK
+
+### Response samples
+- 200
+- 500
+- default
+
+```
+{"cursor": "string","objects": [{"amount": 0,"classId": "string","createdAt": 0,"description": "string","discount": 0,"extra": {"ability": "string","backgroundColor": "string","category": "string","categoryPath": "string","class": ["string"],"collection": ["string"],"exterior": "field-tested","floatValue": 0,"gameId": "string","gems": [{"image": "string","name": "string","type": "string"}],"grade": "string","groupId": "string","growth": 0,"hero": "string","inspectInGame": "string","isNew": true,"itemType": "string","linkId": "string","name": "string","nameColor": "string","offerId": "string","quality": "string","rarity": "string","serialNumber": 0,"stickers": [{"image": "string","name": "string"}],"subscribers": 0,"tagName": "string","tradable": true,"tradeLock": 0,"tradeLockDuration": 0,"type": "string","videos": 0,"viewAtSteam": "string","withdrawable": true},"extraDoc": "viewAtSteam","gameId": "string","gameType": "blockchain","image": "string","inMarket": true,"instantPrice": {"DMC": "string","USD": "string"},"instantTargetId": "string","itemId": "string","lockStatus": true,"owner": "string","ownerDetails": {"avatar": "string","id": "string","wallet": "string"},"ownersBlockchainId": "string","price": {"DMC": "string","USD": "string"},"recommendedPrice": {"d3": {"DMC": "string","USD": "string"},"d7": {"DMC": "string","USD": "string"},"d7Plus": {"DMC": "string","USD": "string"}},"slug": "string","status": "default","suggestedPrice": {"DMC": "string","USD": "string"},"title": "string","type": "item"}],"total": null}
+```
+
+- "cursor": "string",
+- "objects": [{"amount": 0,"classId": "string","createdAt": 0,"description": "string","discount": 0,"extra": {"ability": "string","backgroundColor": "string","category": "string","categoryPath": "string","class": ["string"],"collection": ["string"],"exterior": "field-tested","floatValue": 0,"gameId": "string","gems": [{"image": "string","name": "string","type": "string"}],"grade": "string","groupId": "string","growth": 0,"hero": "string","inspectInGame": "string","isNew": true,"itemType": "string","linkId": "string","name": "string","nameColor": "string","offerId": "string","quality": "string","rarity": "string","serialNumber": 0,"stickers": [{"image": "string","name": "string"}],"subscribers": 0,"tagName": "string","tradable": true,"tradeLock": 0,"tradeLockDuration": 0,"type": "string","videos": 0,"viewAtSteam": "string","withdrawable": true},"extraDoc": "viewAtSteam","gameId": "string","gameType": "blockchain","image": "string","inMarket": true,"instantPrice": {"DMC": "string","USD": "string"},"instantTargetId": "string","itemId": "string","lockStatus": true,"owner": "string","ownerDetails": {"avatar": "string","id": "string","wallet": "string"},"ownersBlockchainId": "string","price": {"DMC": "string","USD": "string"},"recommendedPrice": {"d3": {"DMC": "string","USD": "string"},"d7": {"DMC": "string","USD": "string"},"d7Plus": {"DMC": "string","USD": "string"}},"slug": "string","status": "default","suggestedPrice": {"DMC": "string","USD": "string"},"title": "string","type": "item"}],
+
+- {"amount": 0,"classId": "string","createdAt": 0,"description": "string","discount": 0,"extra": {"ability": "string","backgroundColor": "string","category": "string","categoryPath": "string","class": ["string"],"collection": ["string"],"exterior": "field-tested","floatValue": 0,"gameId": "string","gems": [{"image": "string","name": "string","type": "string"}],"grade": "string","groupId": "string","growth": 0,"hero": "string","inspectInGame": "string","isNew": true,"itemType": "string","linkId": "string","name": "string","nameColor": "string","offerId": "string","quality": "string","rarity": "string","serialNumber": 0,"stickers": [{"image": "string","name": "string"}],"subscribers": 0,"tagName": "string","tradable": true,"tradeLock": 0,"tradeLockDuration": 0,"type": "string","videos": 0,"viewAtSteam": "string","withdrawable": true},"extraDoc": "viewAtSteam","gameId": "string","gameType": "blockchain","image": "string","inMarket": true,"instantPrice": {"DMC": "string","USD": "string"},"instantTargetId": "string","itemId": "string","lockStatus": true,"owner": "string","ownerDetails": {"avatar": "string","id": "string","wallet": "string"},"ownersBlockchainId": "string","price": {"DMC": "string","USD": "string"},"recommendedPrice": {"d3": {"DMC": "string","USD": "string"},"d7": {"DMC": "string","USD": "string"},"d7Plus": {"DMC": "string","USD": "string"}},"slug": "string","status": "default","suggestedPrice": {"DMC": "string","USD": "string"},"title": "string","type": "item"}
+- "amount": 0,
+- "classId": "string",
+- "createdAt": 0,
+- "description": "string",
+- "discount": 0,
+- "extra": {"ability": "string","backgroundColor": "string","category": "string","categoryPath": "string","class": ["string"],"collection": ["string"],"exterior": "field-tested","floatValue": 0,"gameId": "string","gems": [{"image": "string","name": "string","type": "string"}],"grade": "string","groupId": "string","growth": 0,"hero": "string","inspectInGame": "string","isNew": true,"itemType": "string","linkId": "string","name": "string","nameColor": "string","offerId": "string","quality": "string","rarity": "string","serialNumber": 0,"stickers": [{"image": "string","name": "string"}],"subscribers": 0,"tagName": "string","tradable": true,"tradeLock": 0,"tradeLockDuration": 0,"type": "string","videos": 0,"viewAtSteam": "string","withdrawable": true},
+- "ability": "string",
+- "backgroundColor": "string",
+- "category": "string",
+- "categoryPath": "string",
+- "class": ["string"],
+- "string"
+- "collection": ["string"],
+- "string"
+- "exterior": "field-tested",
+- "floatValue": 0,
+- "gameId": "string",
+- "gems": [{"image": "string","name": "string","type": "string"}],
+- {"image": "string","name": "string","type": "string"}
+- "image": "string",
+- "name": "string",
+- "type": "string"
+- "grade": "string",
+- "groupId": "string",
+- "growth": 0,
+- "hero": "string",
+- "inspectInGame": "string",
+- "isNew": true,
+- "itemType": "string",
+- "linkId": "string",
+- "name": "string",
+- "nameColor": "string",
+- "offerId": "string",
+- "quality": "string",
+- "rarity": "string",
+- "serialNumber": 0,
+- "stickers": [{"image": "string","name": "string"}],
+- {"image": "string","name": "string"}
+- "image": "string",
+- "name": "string"
+- "subscribers": 0,
+- "tagName": "string",
+- "tradable": true,
+- "tradeLock": 0,
+- "tradeLockDuration": 0,
+- "type": "string",
+- "videos": 0,
+- "viewAtSteam": "string",
+- "withdrawable": true
+- "extraDoc": "viewAtSteam",
+- "gameId": "string",
+- "gameType": "blockchain",
+- "image": "string",
+- "inMarket": true,
+- "instantPrice": {"DMC": "string","USD": "string"},
+- "DMC": "string",
+- "USD": "string"
+- "instantTargetId": "string",
+- "itemId": "string",
+- "lockStatus": true,
+- "owner": "string",
+- "ownerDetails": {"avatar": "string","id": "string","wallet": "string"},
+- "avatar": "string",
+- "id": "string",
+- "wallet": "string"
+- "ownersBlockchainId": "string",
+- "price": {"DMC": "string","USD": "string"},
+- "DMC": "string",
+- "USD": "string"
+- "recommendedPrice": {"d3": {"DMC": "string","USD": "string"},"d7": {"DMC": "string","USD": "string"},"d7Plus": {"DMC": "string","USD": "string"}},
+- "d3": {"DMC": "string","USD": "string"},
+- "DMC": "string",
+- "USD": "string"
+- "d7": {"DMC": "string","USD": "string"},
+- "DMC": "string",
+- "USD": "string"
+- "d7Plus": {"DMC": "string","USD": "string"}
+- "DMC": "string",
+- "USD": "string"
+- "slug": "string",
+- "status": "default",
+- "suggestedPrice": {"DMC": "string","USD": "string"},
+- "DMC": "string",
+
+- "USD": "string"
+- "title": "string",
+- "type": "item"
+- "total": null
+- {"amount": 0,"classId": "string","createdAt": 0,"description": "string","discount": 0,"extra": {"ability": "string","backgroundColor": "string","category": "string","categoryPath": "string","class": ["string"],"collection": ["string"],"exterior": "field-tested","floatValue": 0,"gameId": "string","gems": [{"image": "string","name": "string","type": "string"}],"grade": "string","groupId": "string","growth": 0,"hero": "string","inspectInGame": "string","isNew": true,"itemType": "string","linkId": "string","name": "string","nameColor": "string","offerId": "string","quality": "string","rarity": "string","serialNumber": 0,"stickers": [{"image": "string","name": "string"}],"subscribers": 0,"tagName": "string","tradable": true,"tradeLock": 0,"tradeLockDuration": 0,"type": "string","videos": 0,"viewAtSteam": "string","withdrawable": true},"extraDoc": "viewAtSteam","gameId": "string","gameType": "blockchain","image": "string","inMarket": true,"instantPrice": {"DMC": "string","USD": "string"},"instantTargetId": "string","itemId": "string","lockStatus": true,"owner": "string","ownerDetails": {"avatar": "string","id": "string","wallet": "string"},"ownersBlockchainId": "string","price": {"DMC": "string","USD": "string"},"recommendedPrice": {"d3": {"DMC": "string","USD": "string"},"d7": {"DMC": "string","USD": "string"},"d7Plus": {"DMC": "string","USD": "string"}},"slug": "string","status": "default","suggestedPrice": {"DMC": "string","USD": "string"},"title": "string","type": "item"}
+- "amount": 0,
+- "classId": "string",
+- "createdAt": 0,
+- "description": "string",
+- "discount": 0,
+- "extra": {"ability": "string","backgroundColor": "string","category": "string","categoryPath": "string","class": ["string"],"collection": ["string"],"exterior": "field-tested","floatValue": 0,"gameId": "string","gems": [{"image": "string","name": "string","type": "string"}],"grade": "string","groupId": "string","growth": 0,"hero": "string","inspectInGame": "string","isNew": true,"itemType": "string","linkId": "string","name": "string","nameColor": "string","offerId": "string","quality": "string","rarity": "string","serialNumber": 0,"stickers": [{"image": "string","name": "string"}],"subscribers": 0,"tagName": "string","tradable": true,"tradeLock": 0,"tradeLockDuration": 0,"type": "string","videos": 0,"viewAtSteam": "string","withdrawable": true},
+- "ability": "string",
+- "backgroundColor": "string",
+- "category": "string",
+- "categoryPath": "string",
+- "class": ["string"],
+- "string"
+- "collection": ["string"],
+- "string"
+- "exterior": "field-tested",
+- "floatValue": 0,
+- "gameId": "string",
+- "gems": [{"image": "string","name": "string","type": "string"}],
+- {"image": "string","name": "string","type": "string"}
+- "image": "string",
+- "name": "string",
+- "type": "string"
+- "grade": "string",
+- "groupId": "string",
+- "growth": 0,
+- "hero": "string",
+- "inspectInGame": "string",
+- "isNew": true,
+- "itemType": "string",
+- "linkId": "string",
+- "name": "string",
+- "nameColor": "string",
+- "offerId": "string",
+- "quality": "string",
+- "rarity": "string",
+- "serialNumber": 0,
+- "stickers": [{"image": "string","name": "string"}],
+- {"image": "string","name": "string"}
+- "image": "string",
+- "name": "string"
+- "subscribers": 0,
+- "tagName": "string",
+- "tradable": true,
+- "tradeLock": 0,
+- "tradeLockDuration": 0,
+- "type": "string",
+- "videos": 0,
+- "viewAtSteam": "string",
+- "withdrawable": true
+- "extraDoc": "viewAtSteam",
+- "gameId": "string",
+- "gameType": "blockchain",
+- "image": "string",
+- "inMarket": true,
+- "instantPrice": {"DMC": "string","USD": "string"},
+- "DMC": "string",
+- "USD": "string"
+- "instantTargetId": "string",
+- "itemId": "string",
+- "lockStatus": true,
+- "owner": "string",
+- "ownerDetails": {"avatar": "string","id": "string","wallet": "string"},
+- "avatar": "string",
+- "id": "string",
+- "wallet": "string"
+- "ownersBlockchainId": "string",
+- "price": {"DMC": "string","USD": "string"},
+- "DMC": "string",
+- "USD": "string"
+- "recommendedPrice": {"d3": {"DMC": "string","USD": "string"},"d7": {"DMC": "string","USD": "string"},"d7Plus": {"DMC": "string","USD": "string"}},
+- "d3": {"DMC": "string","USD": "string"},
+- "DMC": "string",
+- "USD": "string"
+- "d7": {"DMC": "string","USD": "string"},
+- "DMC": "string",
+- "USD": "string"
+- "d7Plus": {"DMC": "string","USD": "string"}
+- "DMC": "string",
+- "USD": "string"
+- "slug": "string",
+- "status": "default",
+
+- "suggestedPrice": {"DMC": "string","USD": "string"},
+- "DMC": "string",
+- "USD": "string"
+- "title": "string",
+- "type": "item"
+- "amount": 0,
+- "classId": "string",
+- "createdAt": 0,
+- "description": "string",
+- "discount": 0,
+- "extra": {"ability": "string","backgroundColor": "string","category": "string","categoryPath": "string","class": ["string"],"collection": ["string"],"exterior": "field-tested","floatValue": 0,"gameId": "string","gems": [{"image": "string","name": "string","type": "string"}],"grade": "string","groupId": "string","growth": 0,"hero": "string","inspectInGame": "string","isNew": true,"itemType": "string","linkId": "string","name": "string","nameColor": "string","offerId": "string","quality": "string","rarity": "string","serialNumber": 0,"stickers": [{"image": "string","name": "string"}],"subscribers": 0,"tagName": "string","tradable": true,"tradeLock": 0,"tradeLockDuration": 0,"type": "string","videos": 0,"viewAtSteam": "string","withdrawable": true},
+- "ability": "string",
+- "backgroundColor": "string",
+- "category": "string",
+- "categoryPath": "string",
+- "class": ["string"],
+- "string"
+- "collection": ["string"],
+- "string"
+- "exterior": "field-tested",
+- "floatValue": 0,
+- "gameId": "string",
+- "gems": [{"image": "string","name": "string","type": "string"}],
+- {"image": "string","name": "string","type": "string"}
+- "image": "string",
+- "name": "string",
+- "type": "string"
+- "grade": "string",
+- "groupId": "string",
+- "growth": 0,
+- "hero": "string",
+- "inspectInGame": "string",
+- "isNew": true,
+- "itemType": "string",
+- "linkId": "string",
+- "name": "string",
+- "nameColor": "string",
+- "offerId": "string",
+- "quality": "string",
+- "rarity": "string",
+- "serialNumber": 0,
+- "stickers": [{"image": "string","name": "string"}],
+- {"image": "string","name": "string"}
+- "image": "string",
+- "name": "string"
+- "subscribers": 0,
+- "tagName": "string",
+- "tradable": true,
+- "tradeLock": 0,
+- "tradeLockDuration": 0,
+- "type": "string",
+- "videos": 0,
+- "viewAtSteam": "string",
+- "withdrawable": true
+- "extraDoc": "viewAtSteam",
+- "gameId": "string",
+- "gameType": "blockchain",
+- "image": "string",
+- "inMarket": true,
+- "instantPrice": {"DMC": "string","USD": "string"},
+- "DMC": "string",
+- "USD": "string"
+- "instantTargetId": "string",
+- "itemId": "string",
+- "lockStatus": true,
+- "owner": "string",
+- "ownerDetails": {"avatar": "string","id": "string","wallet": "string"},
+- "avatar": "string",
+- "id": "string",
+- "wallet": "string"
+- "ownersBlockchainId": "string",
+- "price": {"DMC": "string","USD": "string"},
+- "DMC": "string",
+- "USD": "string"
+- "recommendedPrice": {"d3": {"DMC": "string","USD": "string"},"d7": {"DMC": "string","USD": "string"},"d7Plus": {"DMC": "string","USD": "string"}},
+- "d3": {"DMC": "string","USD": "string"},
+- "DMC": "string",
+- "USD": "string"
+- "d7": {"DMC": "string","USD": "string"},
+- "DMC": "string",
+- "USD": "string"
+- "d7Plus": {"DMC": "string","USD": "string"}
+- "DMC": "string",
+- "USD": "string"
+- "slug": "string",
+- "status": "default",
+- "suggestedPrice": {"DMC": "string","USD": "string"},
+- "DMC": "string",
+- "USD": "string"
+- "title": "string",
+- "type": "item"
+- "ability": "string",
+- "backgroundColor": "string",
+- "category": "string",
+- "categoryPath": "string",
+- "class": ["string"],
+- "string"
+- "collection": ["string"],
+- "string"
+- "exterior": "field-tested",
+- "floatValue": 0,
+- "gameId": "string",
+- "gems": [{"image": "string","name": "string","type": "string"}],
+- {"image": "string","name": "string","type": "string"}
+- "image": "string",
+- "name": "string",
+- "type": "string"
+- "grade": "string",
+- "groupId": "string",
+- "growth": 0,
+- "hero": "string",
+- "inspectInGame": "string",
+- "isNew": true,
+- "itemType": "string",
+- "linkId": "string",
+- "name": "string",
+- "nameColor": "string",
+- "offerId": "string",
+- "quality": "string",
+- "rarity": "string",
+- "serialNumber": 0,
+- "stickers": [{"image": "string","name": "string"}],
+- {"image": "string","name": "string"}
+- "image": "string",
+- "name": "string"
+- "subscribers": 0,
+- "tagName": "string",
+- "tradable": true,
+- "tradeLock": 0,
+- "tradeLockDuration": 0,
+- "type": "string",
+- "videos": 0,
+- "viewAtSteam": "string",
+- "withdrawable": true
+- "string"
+- "string"
+- {"image": "string","name": "string","type": "string"}
+- "image": "string",
+- "name": "string",
+- "type": "string"
+- "image": "string",
+- "name": "string",
+- "type": "string"
+- {"image": "string","name": "string"}
+- "image": "string",
+
+- "name": "string"
+- "image": "string",
+- "name": "string"
+- "DMC": "string",
+- "USD": "string"
+- "avatar": "string",
+- "id": "string",
+- "wallet": "string"
+- "DMC": "string",
+- "USD": "string"
+- "d3": {"DMC": "string","USD": "string"},
+- "DMC": "string",
+- "USD": "string"
+- "d7": {"DMC": "string","USD": "string"},
+- "DMC": "string",
+- "USD": "string"
+- "d7Plus": {"DMC": "string","USD": "string"}
+- "DMC": "string",
+- "USD": "string"
+- "DMC": "string",
+- "USD": "string"
+- "DMC": "string",
+- "USD": "string"
+- "DMC": "string",
+- "USD": "string"
+- "DMC": "string",
+- "USD": "string"
+
+Get user inventory details. Both 3rd party (e.g. Steam) and DMarket inventories are merged into one list. The price amount format is in USD i.e. 0.5 is 50 cents. 'gameId' param values are: CS:GO - a8db, Team Fortress 2 - tf2, Dota 2 - 9a92, Rust - rust.
+
+##### query Parameters
+Game identifier on market.
+Filter assets in inventory by asset's title.
+Show only deposited on market assets.
+Filter assets only with Steam trade-lock. Can be applied only for Steam-based games.
+Filter assets only with Steam trade-lock lock not more than specified number of days. Can be applied only for Steam-based games.
+Filter inventory by specified asset ID list.
+Sort inventory by one of predefined sort types.
+- UserInventorySortTypeDefault: Default sort type for user inventory.
+Inventory asset presentation type.
+Offsets items in response.
+Limits number or returned items in response.
+Cursor is a next page identifier.
+
+A successful response.
+An unexpected error response
+
+- 200
+- default
+
+```
+{"Items": [{"AssetID": "string","VariantID": "string","Title": "string","ImageURL": "string","GameID": "string","GameType": "GameTypeBlockchain","Location": "AssetLocationInGame","Withdrawable": true,"Depositable": true,"Tradable": true,"Attributes": [{"Name": "string","Value": "string"}],"Offer": {"OfferID": "string","Price": {"Currency": "string","Amount": 0.1},"Fee": {"Currency": "string","Amount": 0.1},"CreatedDate": "string"},"MarketPrice": {"Currency": "string","Amount": 0.1},"InstantPrice": {"Currency": "string","Amount": 0.1},"ClassID": "string"}],"Total": "string","Cursor": "string"}
+```
+
+- "Items": [{"AssetID": "string","VariantID": "string","Title": "string","ImageURL": "string","GameID": "string","GameType": "GameTypeBlockchain","Location": "AssetLocationInGame","Withdrawable": true,"Depositable": true,"Tradable": true,"Attributes": [{"Name": "string","Value": "string"}],"Offer": {"OfferID": "string","Price": {"Currency": "string","Amount": 0.1},"Fee": {"Currency": "string","Amount": 0.1},"CreatedDate": "string"},"MarketPrice": {"Currency": "string","Amount": 0.1},"InstantPrice": {"Currency": "string","Amount": 0.1},"ClassID": "string"}],
+- {"AssetID": "string","VariantID": "string","Title": "string","ImageURL": "string","GameID": "string","GameType": "GameTypeBlockchain","Location": "AssetLocationInGame","Withdrawable": true,"Depositable": true,"Tradable": true,"Attributes": [{"Name": "string","Value": "string"}],"Offer": {"OfferID": "string","Price": {"Currency": "string","Amount": 0.1},"Fee": {"Currency": "string","Amount": 0.1},"CreatedDate": "string"},"MarketPrice": {"Currency": "string","Amount": 0.1},"InstantPrice": {"Currency": "string","Amount": 0.1},"ClassID": "string"}
+- "AssetID": "string",
+- "VariantID": "string",
+- "Title": "string",
+- "ImageURL": "string",
+- "GameID": "string",
+- "GameType": "GameTypeBlockchain",
+- "Location": "AssetLocationInGame",
+- "Withdrawable": true,
+- "Depositable": true,
+- "Tradable": true,
+- "Attributes": [{"Name": "string","Value": "string"}],
+- {"Name": "string","Value": "string"}
+- "Name": "string",
+- "Value": "string"
+- "Offer": {"OfferID": "string","Price": {"Currency": "string","Amount": 0.1},"Fee": {"Currency": "string","Amount": 0.1},"CreatedDate": "string"},
+- "OfferID": "string",
+- "Price": {"Currency": "string","Amount": 0.1},
+- "Currency": "string",
+- "Amount": 0.1
+- "Fee": {"Currency": "string","Amount": 0.1},
+- "Currency": "string",
+- "Amount": 0.1
+- "CreatedDate": "string"
+- "MarketPrice": {"Currency": "string","Amount": 0.1},
+- "Currency": "string",
+- "Amount": 0.1
+- "InstantPrice": {"Currency": "string","Amount": 0.1},
+- "Currency": "string",
+- "Amount": 0.1
+- "ClassID": "string"
+- "Total": "string",
+- "Cursor": "string"
+- {"AssetID": "string","VariantID": "string","Title": "string","ImageURL": "string","GameID": "string","GameType": "GameTypeBlockchain","Location": "AssetLocationInGame","Withdrawable": true,"Depositable": true,"Tradable": true,"Attributes": [{"Name": "string","Value": "string"}],"Offer": {"OfferID": "string","Price": {"Currency": "string","Amount": 0.1},"Fee": {"Currency": "string","Amount": 0.1},"CreatedDate": "string"},"MarketPrice": {"Currency": "string","Amount": 0.1},"InstantPrice": {"Currency": "string","Amount": 0.1},"ClassID": "string"}
+- "AssetID": "string",
+- "VariantID": "string",
+- "Title": "string",
+- "ImageURL": "string",
+- "GameID": "string",
+- "GameType": "GameTypeBlockchain",
+- "Location": "AssetLocationInGame",
+- "Withdrawable": true,
+- "Depositable": true,
+- "Tradable": true,
+- "Attributes": [{"Name": "string","Value": "string"}],
+- {"Name": "string","Value": "string"}
+- "Name": "string",
+- "Value": "string"
+- "Offer": {"OfferID": "string","Price": {"Currency": "string","Amount": 0.1},"Fee": {"Currency": "string","Amount": 0.1},"CreatedDate": "string"},
+- "OfferID": "string",
+- "Price": {"Currency": "string","Amount": 0.1},
+- "Currency": "string",
+- "Amount": 0.1
+- "Fee": {"Currency": "string","Amount": 0.1},
+- "Currency": "string",
+- "Amount": 0.1
+- "CreatedDate": "string"
+- "MarketPrice": {"Currency": "string","Amount": 0.1},
+- "Currency": "string",
+- "Amount": 0.1
+- "InstantPrice": {"Currency": "string","Amount": 0.1},
+- "Currency": "string",
+- "Amount": 0.1
+- "ClassID": "string"
+- "AssetID": "string",
+- "VariantID": "string",
+- "Title": "string",
+- "ImageURL": "string",
+- "GameID": "string",
+- "GameType": "GameTypeBlockchain",
+- "Location": "AssetLocationInGame",
+- "Withdrawable": true,
+
+- "Depositable": true,
+- "Tradable": true,
+- "Attributes": [{"Name": "string","Value": "string"}],
+- {"Name": "string","Value": "string"}
+- "Name": "string",
+- "Value": "string"
+- "Offer": {"OfferID": "string","Price": {"Currency": "string","Amount": 0.1},"Fee": {"Currency": "string","Amount": 0.1},"CreatedDate": "string"},
+- "OfferID": "string",
+- "Price": {"Currency": "string","Amount": 0.1},
+- "Currency": "string",
+- "Amount": 0.1
+- "Fee": {"Currency": "string","Amount": 0.1},
+- "Currency": "string",
+- "Amount": 0.1
+- "CreatedDate": "string"
+- "MarketPrice": {"Currency": "string","Amount": 0.1},
+- "Currency": "string",
+- "Amount": 0.1
+- "InstantPrice": {"Currency": "string","Amount": 0.1},
+- "Currency": "string",
+- "Amount": 0.1
+- "ClassID": "string"
+- {"Name": "string","Value": "string"}
+- "Name": "string",
+- "Value": "string"
+- "Name": "string",
+- "Value": "string"
+- "OfferID": "string",
+- "Price": {"Currency": "string","Amount": 0.1},
+- "Currency": "string",
+- "Amount": 0.1
+- "Fee": {"Currency": "string","Amount": 0.1},
+- "Currency": "string",
+- "Amount": 0.1
+- "CreatedDate": "string"
+- "Currency": "string",
+- "Amount": 0.1
+- "Currency": "string",
+- "Amount": 0.1
+- "Currency": "string",
+- "Amount": 0.1
+- "Currency": "string",
+- "Amount": 0.1
+
+Updating DMarket inventory details to sync them with data from Steam.
+
+##### Request Body schema: application/jsonrequired
+
+### Responses
+A successful response.
+An unexpected error response
+
+### Request samples
+- Payload
+
+```
+{"Type": "UnknownSyncType","GameID": "UnknownGame"}
+```
+
+- "Type": "UnknownSyncType",
+- "GameID": "UnknownGame"
+
+### Response samples
+- 200
+- default
+
+```
+{ }
+```
+
+Withdraw assets. 'gameId' param values are: CS:GO - a8db, Team Fortress 2 - tf2, Dota 2 - 9a92, Rust - rust
+
+##### Request Body schema: application/jsonrequired
+
+### Responses
+OK
+Bad body request
+Internal Server Error
+OK
+
+### Request samples
+- Payload
+
+```
+{"assets": [{"classId": "string","gameId": "string","id": "string"}],"requestId": "string"}
+```
+
+- "assets": [{"classId": "string","gameId": "string","id": "string"}],
+- {"classId": "string","gameId": "string","id": "string"}
+- "classId": "string",
+- "gameId": "string",
+- "id": "string"
+- "requestId": "string"
+- {"classId": "string","gameId": "string","id": "string"}
+- "classId": "string",
+- "gameId": "string",
+- "id": "string"
+- "classId": "string",
+- "gameId": "string",
+- "id": "string"
+
+### Response samples
+- 200
+- 400
+- 500
+- default
+
+```
+{"transferId": "string"}
+```
+
+- "transferId": "string"
+
+Getting user inventory details filtered by a certain game, including DMarket-stored and Steam-stored items. Items for sale are not included. gameId param values are: CS:GO - a8db, Team Fortress 2 - tf2, Dota 2 - 9a92, Rust - rust
+
+##### query Parameters
+gameId
+title
+limit
+offset
+orderBy
+orderDir
+treeFilters
+currency
+priceFrom
+priceTo
+classIds
+next page identifier
+
+### Responses
+OK
+Internal Server Error
+OK
+
+### Response samples
+- 200
+- 500
+- default
+
+```
+{"cursor": "string","objects": [{"amount": 0,"classId": "string","createdAt": 0,"description": "string","discount": 0,"extra": {"ability": "string","backgroundColor": "string","category": "string","categoryPath": "string","class": ["string"],"collection": ["string"],"exterior": "field-tested","floatValue": 0,"gameId": "string","gems": [{"image": "string","name": "string","type": "string"}],"grade": "string","groupId": "string","growth": 0,"hero": "string","inspectInGame": "string","isNew": true,"itemType": "string","linkId": "string","name": "string","nameColor": "string","offerId": "string","quality": "string","rarity": "string","serialNumber": 0,"stickers": [{"image": "string","name": "string"}],"subscribers": 0,"tagName": "string","tradable": true,"tradeLock": 0,"tradeLockDuration": 0,"type": "string","videos": 0,"viewAtSteam": "string","withdrawable": true},"extraDoc": "viewAtSteam","gameId": "string","gameType": "blockchain","image": "string","inMarket": true,"instantPrice": {"DMC": "string","USD": "string"},"instantTargetId": "string","itemId": "string","lockStatus": true,"owner": "string","ownerDetails": {"avatar": "string","id": "string","wallet": "string"},"ownersBlockchainId": "string","price": {"DMC": "string","USD": "string"},"recommendedPrice": {"d3": {"DMC": "string","USD": "string"},"d7": {"DMC": "string","USD": "string"},"d7Plus": {"DMC": "string","USD": "string"}},"slug": "string","status": "default","suggestedPrice": {"DMC": "string","USD": "string"},"title": "string","type": "item"}],"total": null}
+```
+
+- "cursor": "string",
+- "objects": [{"amount": 0,"classId": "string","createdAt": 0,"description": "string","discount": 0,"extra": {"ability": "string","backgroundColor": "string","category": "string","categoryPath": "string","class": ["string"],"collection": ["string"],"exterior": "field-tested","floatValue": 0,"gameId": "string","gems": [{"image": "string","name": "string","type": "string"}],"grade": "string","groupId": "string","growth": 0,"hero": "string","inspectInGame": "string","isNew": true,"itemType": "string","linkId": "string","name": "string","nameColor": "string","offerId": "string","quality": "string","rarity": "string","serialNumber": 0,"stickers": [{"image": "string","name": "string"}],"subscribers": 0,"tagName": "string","tradable": true,"tradeLock": 0,"tradeLockDuration": 0,"type": "string","videos": 0,"viewAtSteam": "string","withdrawable": true},"extraDoc": "viewAtSteam","gameId": "string","gameType": "blockchain","image": "string","inMarket": true,"instantPrice": {"DMC": "string","USD": "string"},"instantTargetId": "string","itemId": "string","lockStatus": true,"owner": "string","ownerDetails": {"avatar": "string","id": "string","wallet": "string"},"ownersBlockchainId": "string","price": {"DMC": "string","USD": "string"},"recommendedPrice": {"d3": {"DMC": "string","USD": "string"},"d7": {"DMC": "string","USD": "string"},"d7Plus": {"DMC": "string","USD": "string"}},"slug": "string","status": "default","suggestedPrice": {"DMC": "string","USD": "string"},"title": "string","type": "item"}],
+
+- {"amount": 0,"classId": "string","createdAt": 0,"description": "string","discount": 0,"extra": {"ability": "string","backgroundColor": "string","category": "string","categoryPath": "string","class": ["string"],"collection": ["string"],"exterior": "field-tested","floatValue": 0,"gameId": "string","gems": [{"image": "string","name": "string","type": "string"}],"grade": "string","groupId": "string","growth": 0,"hero": "string","inspectInGame": "string","isNew": true,"itemType": "string","linkId": "string","name": "string","nameColor": "string","offerId": "string","quality": "string","rarity": "string","serialNumber": 0,"stickers": [{"image": "string","name": "string"}],"subscribers": 0,"tagName": "string","tradable": true,"tradeLock": 0,"tradeLockDuration": 0,"type": "string","videos": 0,"viewAtSteam": "string","withdrawable": true},"extraDoc": "viewAtSteam","gameId": "string","gameType": "blockchain","image": "string","inMarket": true,"instantPrice": {"DMC": "string","USD": "string"},"instantTargetId": "string","itemId": "string","lockStatus": true,"owner": "string","ownerDetails": {"avatar": "string","id": "string","wallet": "string"},"ownersBlockchainId": "string","price": {"DMC": "string","USD": "string"},"recommendedPrice": {"d3": {"DMC": "string","USD": "string"},"d7": {"DMC": "string","USD": "string"},"d7Plus": {"DMC": "string","USD": "string"}},"slug": "string","status": "default","suggestedPrice": {"DMC": "string","USD": "string"},"title": "string","type": "item"}
+- "amount": 0,
+- "classId": "string",
+- "createdAt": 0,
+- "description": "string",
+- "discount": 0,
+- "extra": {"ability": "string","backgroundColor": "string","category": "string","categoryPath": "string","class": ["string"],"collection": ["string"],"exterior": "field-tested","floatValue": 0,"gameId": "string","gems": [{"image": "string","name": "string","type": "string"}],"grade": "string","groupId": "string","growth": 0,"hero": "string","inspectInGame": "string","isNew": true,"itemType": "string","linkId": "string","name": "string","nameColor": "string","offerId": "string","quality": "string","rarity": "string","serialNumber": 0,"stickers": [{"image": "string","name": "string"}],"subscribers": 0,"tagName": "string","tradable": true,"tradeLock": 0,"tradeLockDuration": 0,"type": "string","videos": 0,"viewAtSteam": "string","withdrawable": true},
+- "ability": "string",
+- "backgroundColor": "string",
+- "category": "string",
+- "categoryPath": "string",
+- "class": ["string"],
+- "string"
+- "collection": ["string"],
+- "string"
+- "exterior": "field-tested",
+- "floatValue": 0,
+- "gameId": "string",
+- "gems": [{"image": "string","name": "string","type": "string"}],
+- {"image": "string","name": "string","type": "string"}
+- "image": "string",
+- "name": "string",
+- "type": "string"
+- "grade": "string",
+- "groupId": "string",
+- "growth": 0,
+- "hero": "string",
+- "inspectInGame": "string",
+- "isNew": true,
+- "itemType": "string",
+- "linkId": "string",
+- "name": "string",
+- "nameColor": "string",
+- "offerId": "string",
+- "quality": "string",
+- "rarity": "string",
+- "serialNumber": 0,
+- "stickers": [{"image": "string","name": "string"}],
+- {"image": "string","name": "string"}
+- "image": "string",
+- "name": "string"
+- "subscribers": 0,
+- "tagName": "string",
+- "tradable": true,
+- "tradeLock": 0,
+- "tradeLockDuration": 0,
+- "type": "string",
+- "videos": 0,
+- "viewAtSteam": "string",
+- "withdrawable": true
+- "extraDoc": "viewAtSteam",
+- "gameId": "string",
+- "gameType": "blockchain",
+- "image": "string",
+- "inMarket": true,
+- "instantPrice": {"DMC": "string","USD": "string"},
+- "DMC": "string",
+- "USD": "string"
+- "instantTargetId": "string",
+- "itemId": "string",
+- "lockStatus": true,
+- "owner": "string",
+- "ownerDetails": {"avatar": "string","id": "string","wallet": "string"},
+- "avatar": "string",
+- "id": "string",
+- "wallet": "string"
+- "ownersBlockchainId": "string",
+- "price": {"DMC": "string","USD": "string"},
+- "DMC": "string",
+- "USD": "string"
+- "recommendedPrice": {"d3": {"DMC": "string","USD": "string"},"d7": {"DMC": "string","USD": "string"},"d7Plus": {"DMC": "string","USD": "string"}},
+- "d3": {"DMC": "string","USD": "string"},
+- "DMC": "string",
+- "USD": "string"
+- "d7": {"DMC": "string","USD": "string"},
+- "DMC": "string",
+- "USD": "string"
+- "d7Plus": {"DMC": "string","USD": "string"}
+- "DMC": "string",
+- "USD": "string"
+- "slug": "string",
+- "status": "default",
+- "suggestedPrice": {"DMC": "string","USD": "string"},
+- "DMC": "string",
+
+- "USD": "string"
+- "title": "string",
+- "type": "item"
+- "total": null
+- {"amount": 0,"classId": "string","createdAt": 0,"description": "string","discount": 0,"extra": {"ability": "string","backgroundColor": "string","category": "string","categoryPath": "string","class": ["string"],"collection": ["string"],"exterior": "field-tested","floatValue": 0,"gameId": "string","gems": [{"image": "string","name": "string","type": "string"}],"grade": "string","groupId": "string","growth": 0,"hero": "string","inspectInGame": "string","isNew": true,"itemType": "string","linkId": "string","name": "string","nameColor": "string","offerId": "string","quality": "string","rarity": "string","serialNumber": 0,"stickers": [{"image": "string","name": "string"}],"subscribers": 0,"tagName": "string","tradable": true,"tradeLock": 0,"tradeLockDuration": 0,"type": "string","videos": 0,"viewAtSteam": "string","withdrawable": true},"extraDoc": "viewAtSteam","gameId": "string","gameType": "blockchain","image": "string","inMarket": true,"instantPrice": {"DMC": "string","USD": "string"},"instantTargetId": "string","itemId": "string","lockStatus": true,"owner": "string","ownerDetails": {"avatar": "string","id": "string","wallet": "string"},"ownersBlockchainId": "string","price": {"DMC": "string","USD": "string"},"recommendedPrice": {"d3": {"DMC": "string","USD": "string"},"d7": {"DMC": "string","USD": "string"},"d7Plus": {"DMC": "string","USD": "string"}},"slug": "string","status": "default","suggestedPrice": {"DMC": "string","USD": "string"},"title": "string","type": "item"}
+- "amount": 0,
+- "classId": "string",
+- "createdAt": 0,
+- "description": "string",
+- "discount": 0,
+- "extra": {"ability": "string","backgroundColor": "string","category": "string","categoryPath": "string","class": ["string"],"collection": ["string"],"exterior": "field-tested","floatValue": 0,"gameId": "string","gems": [{"image": "string","name": "string","type": "string"}],"grade": "string","groupId": "string","growth": 0,"hero": "string","inspectInGame": "string","isNew": true,"itemType": "string","linkId": "string","name": "string","nameColor": "string","offerId": "string","quality": "string","rarity": "string","serialNumber": 0,"stickers": [{"image": "string","name": "string"}],"subscribers": 0,"tagName": "string","tradable": true,"tradeLock": 0,"tradeLockDuration": 0,"type": "string","videos": 0,"viewAtSteam": "string","withdrawable": true},
+- "ability": "string",
+- "backgroundColor": "string",
+- "category": "string",
+- "categoryPath": "string",
+- "class": ["string"],
+- "string"
+- "collection": ["string"],
+- "string"
+- "exterior": "field-tested",
+- "floatValue": 0,
+- "gameId": "string",
+- "gems": [{"image": "string","name": "string","type": "string"}],
+- {"image": "string","name": "string","type": "string"}
+- "image": "string",
+- "name": "string",
+- "type": "string"
+- "grade": "string",
+- "groupId": "string",
+- "growth": 0,
+- "hero": "string",
+- "inspectInGame": "string",
+- "isNew": true,
+- "itemType": "string",
+- "linkId": "string",
+- "name": "string",
+- "nameColor": "string",
+- "offerId": "string",
+- "quality": "string",
+- "rarity": "string",
+- "serialNumber": 0,
+- "stickers": [{"image": "string","name": "string"}],
+- {"image": "string","name": "string"}
+- "image": "string",
+- "name": "string"
+- "subscribers": 0,
+- "tagName": "string",
+- "tradable": true,
+- "tradeLock": 0,
+- "tradeLockDuration": 0,
+- "type": "string",
+- "videos": 0,
+- "viewAtSteam": "string",
+- "withdrawable": true
+- "extraDoc": "viewAtSteam",
+- "gameId": "string",
+- "gameType": "blockchain",
+- "image": "string",
+- "inMarket": true,
+- "instantPrice": {"DMC": "string","USD": "string"},
+- "DMC": "string",
+- "USD": "string"
+- "instantTargetId": "string",
+- "itemId": "string",
+- "lockStatus": true,
+- "owner": "string",
+- "ownerDetails": {"avatar": "string","id": "string","wallet": "string"},
+- "avatar": "string",
+- "id": "string",
+- "wallet": "string"
+- "ownersBlockchainId": "string",
+- "price": {"DMC": "string","USD": "string"},
+- "DMC": "string",
+- "USD": "string"
+- "recommendedPrice": {"d3": {"DMC": "string","USD": "string"},"d7": {"DMC": "string","USD": "string"},"d7Plus": {"DMC": "string","USD": "string"}},
+- "d3": {"DMC": "string","USD": "string"},
+- "DMC": "string",
+- "USD": "string"
+- "d7": {"DMC": "string","USD": "string"},
+- "DMC": "string",
+- "USD": "string"
+- "d7Plus": {"DMC": "string","USD": "string"}
+- "DMC": "string",
+- "USD": "string"
+- "slug": "string",
+- "status": "default",
+
+- "suggestedPrice": {"DMC": "string","USD": "string"},
+- "DMC": "string",
+- "USD": "string"
+- "title": "string",
+- "type": "item"
+- "amount": 0,
+- "classId": "string",
+- "createdAt": 0,
+- "description": "string",
+- "discount": 0,
+- "extra": {"ability": "string","backgroundColor": "string","category": "string","categoryPath": "string","class": ["string"],"collection": ["string"],"exterior": "field-tested","floatValue": 0,"gameId": "string","gems": [{"image": "string","name": "string","type": "string"}],"grade": "string","groupId": "string","growth": 0,"hero": "string","inspectInGame": "string","isNew": true,"itemType": "string","linkId": "string","name": "string","nameColor": "string","offerId": "string","quality": "string","rarity": "string","serialNumber": 0,"stickers": [{"image": "string","name": "string"}],"subscribers": 0,"tagName": "string","tradable": true,"tradeLock": 0,"tradeLockDuration": 0,"type": "string","videos": 0,"viewAtSteam": "string","withdrawable": true},
+- "ability": "string",
+- "backgroundColor": "string",
+- "category": "string",
+- "categoryPath": "string",
+- "class": ["string"],
+- "string"
+- "collection": ["string"],
+- "string"
+- "exterior": "field-tested",
+- "floatValue": 0,
+- "gameId": "string",
+- "gems": [{"image": "string","name": "string","type": "string"}],
+- {"image": "string","name": "string","type": "string"}
+- "image": "string",
+- "name": "string",
+- "type": "string"
+- "grade": "string",
+- "groupId": "string",
+- "growth": 0,
+- "hero": "string",
+- "inspectInGame": "string",
+- "isNew": true,
+- "itemType": "string",
+- "linkId": "string",
+- "name": "string",
+- "nameColor": "string",
+- "offerId": "string",
+- "quality": "string",
+- "rarity": "string",
+- "serialNumber": 0,
+- "stickers": [{"image": "string","name": "string"}],
+- {"image": "string","name": "string"}
+- "image": "string",
+- "name": "string"
+- "subscribers": 0,
+- "tagName": "string",
+- "tradable": true,
+- "tradeLock": 0,
+- "tradeLockDuration": 0,
+- "type": "string",
+- "videos": 0,
+- "viewAtSteam": "string",
+- "withdrawable": true
+- "extraDoc": "viewAtSteam",
+- "gameId": "string",
+- "gameType": "blockchain",
+- "image": "string",
+- "inMarket": true,
+- "instantPrice": {"DMC": "string","USD": "string"},
+- "DMC": "string",
+- "USD": "string"
+- "instantTargetId": "string",
+- "itemId": "string",
+- "lockStatus": true,
+- "owner": "string",
+- "ownerDetails": {"avatar": "string","id": "string","wallet": "string"},
+- "avatar": "string",
+- "id": "string",
+- "wallet": "string"
+- "ownersBlockchainId": "string",
+- "price": {"DMC": "string","USD": "string"},
+- "DMC": "string",
+- "USD": "string"
+- "recommendedPrice": {"d3": {"DMC": "string","USD": "string"},"d7": {"DMC": "string","USD": "string"},"d7Plus": {"DMC": "string","USD": "string"}},
+- "d3": {"DMC": "string","USD": "string"},
+- "DMC": "string",
+- "USD": "string"
+- "d7": {"DMC": "string","USD": "string"},
+- "DMC": "string",
+- "USD": "string"
+- "d7Plus": {"DMC": "string","USD": "string"}
+- "DMC": "string",
+- "USD": "string"
+- "slug": "string",
+- "status": "default",
+- "suggestedPrice": {"DMC": "string","USD": "string"},
+- "DMC": "string",
+- "USD": "string"
+- "title": "string",
+- "type": "item"
+- "ability": "string",
+- "backgroundColor": "string",
+- "category": "string",
+- "categoryPath": "string",
+- "class": ["string"],
+- "string"
+- "collection": ["string"],
+- "string"
+- "exterior": "field-tested",
+- "floatValue": 0,
+- "gameId": "string",
+- "gems": [{"image": "string","name": "string","type": "string"}],
+- {"image": "string","name": "string","type": "string"}
+- "image": "string",
+- "name": "string",
+- "type": "string"
+- "grade": "string",
+- "groupId": "string",
+- "growth": 0,
+- "hero": "string",
+- "inspectInGame": "string",
+- "isNew": true,
+- "itemType": "string",
+- "linkId": "string",
+- "name": "string",
+- "nameColor": "string",
+- "offerId": "string",
+- "quality": "string",
+- "rarity": "string",
+- "serialNumber": 0,
+- "stickers": [{"image": "string","name": "string"}],
+- {"image": "string","name": "string"}
+- "image": "string",
+- "name": "string"
+- "subscribers": 0,
+- "tagName": "string",
+- "tradable": true,
+- "tradeLock": 0,
+- "tradeLockDuration": 0,
+- "type": "string",
+- "videos": 0,
+- "viewAtSteam": "string",
+- "withdrawable": true
+- "string"
+- "string"
+- {"image": "string","name": "string","type": "string"}
+- "image": "string",
+- "name": "string",
+- "type": "string"
+- "image": "string",
+- "name": "string",
+- "type": "string"
+- {"image": "string","name": "string"}
+- "image": "string",
+
+- "name": "string"
+- "image": "string",
+- "name": "string"
+- "DMC": "string",
+- "USD": "string"
+- "avatar": "string",
+- "id": "string",
+- "wallet": "string"
+- "DMC": "string",
+- "USD": "string"
+- "d3": {"DMC": "string","USD": "string"},
+- "DMC": "string",
+- "USD": "string"
+- "d7": {"DMC": "string","USD": "string"},
+- "DMC": "string",
+- "USD": "string"
+- "d7Plus": {"DMC": "string","USD": "string"}
+- "DMC": "string",
+- "USD": "string"
+- "DMC": "string",
+- "USD": "string"
+- "DMC": "string",
+- "USD": "string"
+- "DMC": "string",
+- "USD": "string"
+- "DMC": "string",
+- "USD": "string"
+
+Get the list of items with lower fees. The new list of items every day. 'gameId' param values are: CS:GO - a8db, Team Fortress 2 - tf2, Dota 2 - 9a92, Rust - rust. 'offerType' param values are: 'dmarket', 'p2p'.
+
+##### query Parameters
+enums: CS:GO - a8db, Team Fortress 2 - tf2, Dota 2 - 9a92, Rust - rust
+enums: "dmarket", "p2p"
+limit
+offset
+
+### Responses
+OK
+Internal Server Error
+OK
+
+### Response samples
+- 200
+- 500
+- default
+
+```
+{"defaultFee": {"fraction": "string","minAmount": 0},"reducedFees": [{"expiresAt": 0,"fraction": "string","maxPrice": 0,"minPrice": 0,"title": "string"}]}
+```
+
+- "defaultFee": {"fraction": "string","minAmount": 0},
+- "fraction": "string",
+- "minAmount": 0
+- "reducedFees": [{"expiresAt": 0,"fraction": "string","maxPrice": 0,"minPrice": 0,"title": "string"}]
+- {"expiresAt": 0,"fraction": "string","maxPrice": 0,"minPrice": 0,"title": "string"}
+- "expiresAt": 0,
+- "fraction": "string",
+- "maxPrice": 0,
+- "minPrice": 0,
+- "title": "string"
+- "fraction": "string",
+- "minAmount": 0
+- {"expiresAt": 0,"fraction": "string","maxPrice": 0,"minPrice": 0,"title": "string"}
+- "expiresAt": 0,
+- "fraction": "string",
+- "maxPrice": 0,
+- "minPrice": 0,
+- "title": "string"
+- "expiresAt": 0,
+- "fraction": "string",
+- "maxPrice": 0,
+- "minPrice": 0,
+- "title": "string"
+
+Get the list of the user’s closed sell offers. The price amount format is in USD, i.e. 0.5 is 50 cents.
+
+##### query Parameters
+Limits number of returned closed offers in response.
+Cursor is next page identifier.
+
+### Responses
+A successful response.
+An unexpected error response
+
+### Response samples
+- 200
+- default
+
+```
+{"Trades": [{"OfferID": "string","TargetID": "string","AssetID": "string","Price": {"Currency": "string","Amount": 0.1},"CurrencyCode": "string","Amount": "string","Title": "string","Fee": {"Amount": {"Currency": "string","Amount": 0.1},"Percent": "string","IsPersonal": true},"OfferCreatedAt": "string","OfferClosedAt": "string","Status": "successful","FinalizationTime": "string"}],"Total": "string","Cursor": "string"}
+```
+
+- "Trades": [{"OfferID": "string","TargetID": "string","AssetID": "string","Price": {"Currency": "string","Amount": 0.1},"CurrencyCode": "string","Amount": "string","Title": "string","Fee": {"Amount": {"Currency": "string","Amount": 0.1},"Percent": "string","IsPersonal": true},"OfferCreatedAt": "string","OfferClosedAt": "string","Status": "successful","FinalizationTime": "string"}],
+- {"OfferID": "string","TargetID": "string","AssetID": "string","Price": {"Currency": "string","Amount": 0.1},"CurrencyCode": "string","Amount": "string","Title": "string","Fee": {"Amount": {"Currency": "string","Amount": 0.1},"Percent": "string","IsPersonal": true},"OfferCreatedAt": "string","OfferClosedAt": "string","Status": "successful","FinalizationTime": "string"}
+- "OfferID": "string",
+- "TargetID": "string",
+- "AssetID": "string",
+- "Price": {"Currency": "string","Amount": 0.1},
+- "Currency": "string",
+- "Amount": 0.1
+- "CurrencyCode": "string",
+- "Amount": "string",
+- "Title": "string",
+- "Fee": {"Amount": {"Currency": "string","Amount": 0.1},"Percent": "string","IsPersonal": true},
+- "Amount": {"Currency": "string","Amount": 0.1},
+- "Currency": "string",
+- "Amount": 0.1
+- "Percent": "string",
+- "IsPersonal": true
+- "OfferCreatedAt": "string",
+- "OfferClosedAt": "string",
+- "Status": "successful",
+- "FinalizationTime": "string"
+- "Total": "string",
+- "Cursor": "string"
+- {"OfferID": "string","TargetID": "string","AssetID": "string","Price": {"Currency": "string","Amount": 0.1},"CurrencyCode": "string","Amount": "string","Title": "string","Fee": {"Amount": {"Currency": "string","Amount": 0.1},"Percent": "string","IsPersonal": true},"OfferCreatedAt": "string","OfferClosedAt": "string","Status": "successful","FinalizationTime": "string"}
+- "OfferID": "string",
+- "TargetID": "string",
+- "AssetID": "string",
+- "Price": {"Currency": "string","Amount": 0.1},
+- "Currency": "string",
+- "Amount": 0.1
+- "CurrencyCode": "string",
+- "Amount": "string",
+- "Title": "string",
+- "Fee": {"Amount": {"Currency": "string","Amount": 0.1},"Percent": "string","IsPersonal": true},
+- "Amount": {"Currency": "string","Amount": 0.1},
+- "Currency": "string",
+- "Amount": 0.1
+- "Percent": "string",
+- "IsPersonal": true
+- "OfferCreatedAt": "string",
+- "OfferClosedAt": "string",
+- "Status": "successful",
+- "FinalizationTime": "string"
+- "OfferID": "string",
+- "TargetID": "string",
+- "AssetID": "string",
+- "Price": {"Currency": "string","Amount": 0.1},
+- "Currency": "string",
+- "Amount": 0.1
+- "CurrencyCode": "string",
+- "Amount": "string",
+- "Title": "string",
+- "Fee": {"Amount": {"Currency": "string","Amount": 0.1},"Percent": "string","IsPersonal": true},
+- "Amount": {"Currency": "string","Amount": 0.1},
+- "Currency": "string",
+- "Amount": 0.1
+- "Percent": "string",
+- "IsPersonal": true
+- "OfferCreatedAt": "string",
+- "OfferClosedAt": "string",
+- "Status": "successful",
+- "FinalizationTime": "string"
+- "Currency": "string",
+- "Amount": 0.1
+- "Amount": {"Currency": "string","Amount": 0.1},
+- "Currency": "string",
+- "Amount": 0.1
+- "Percent": "string",
+- "IsPersonal": true
+- "Currency": "string",
+- "Amount": 0.1
+
+Get the list of all offers for a single item title. The price amount format is in USD, i.e. 0.5 is 50 cents.
+
+##### query Parameters
+Item name on market.
+Limit.
+Cursor is next page identifier.
+
+### Responses
+A successful response.
+An unexpected error response
+
+### Response samples
+- 200
+- default
+
+```
+{"objects": [{"amount": 0,"classId": "string","createdAt": 0,"description": "string","discount": 0,"extra": {"ability": "string","backgroundColor": "string","category": "string","categoryPath": "string","class": ["string"],"collection": ["string"],"exterior": "field-tested","floatValue": 0,"gameId": "string","gems": [{"image": "string","name": "string","type": "string"}],"grade": "string","groupId": "string","growth": 0,"hero": "string","inspectInGame": "string","isNew": true,"itemType": "string","linkId": "string","name": "string","nameColor": "string","offerId": "string","quality": "string","rarity": "string","serialNumber": 0,"stickers": [{"image": "string","name": "string"}],"subscribers": 0,"tagName": "string","tradable": true,"tradeLock": 0,"tradeLockDuration": 0,"type": "string","videos": 0,"viewAtSteam": "string","withdrawable": true},"extraDoc": "viewAtSteam","gameId": "string","gameType": "blockchain","image": "string","inMarket": true,"instantPrice": {"DMC": "string","USD": "string"},"instantTargetId": "string","itemId": "string","lockStatus": true,"owner": "string","ownerDetails": {"avatar": "string","id": "string","wallet": "string"},"ownersBlockchainId": "string","price": {"DMC": "string","USD": "string"},"recommendedPrice": {"d3": {"DMC": "string","USD": "string"},"d7": {"DMC": "string","USD": "string"},"d7Plus": {"DMC": "string","USD": "string"}},"slug": "string","status": "default","suggestedPrice": {"DMC": "string","USD": "string"},"title": "string","type": "item"}],"total": null,"cursor": "string"}
+```
+
+- "objects": [{"amount": 0,"classId": "string","createdAt": 0,"description": "string","discount": 0,"extra": {"ability": "string","backgroundColor": "string","category": "string","categoryPath": "string","class": ["string"],"collection": ["string"],"exterior": "field-tested","floatValue": 0,"gameId": "string","gems": [{"image": "string","name": "string","type": "string"}],"grade": "string","groupId": "string","growth": 0,"hero": "string","inspectInGame": "string","isNew": true,"itemType": "string","linkId": "string","name": "string","nameColor": "string","offerId": "string","quality": "string","rarity": "string","serialNumber": 0,"stickers": [{"image": "string","name": "string"}],"subscribers": 0,"tagName": "string","tradable": true,"tradeLock": 0,"tradeLockDuration": 0,"type": "string","videos": 0,"viewAtSteam": "string","withdrawable": true},"extraDoc": "viewAtSteam","gameId": "string","gameType": "blockchain","image": "string","inMarket": true,"instantPrice": {"DMC": "string","USD": "string"},"instantTargetId": "string","itemId": "string","lockStatus": true,"owner": "string","ownerDetails": {"avatar": "string","id": "string","wallet": "string"},"ownersBlockchainId": "string","price": {"DMC": "string","USD": "string"},"recommendedPrice": {"d3": {"DMC": "string","USD": "string"},"d7": {"DMC": "string","USD": "string"},"d7Plus": {"DMC": "string","USD": "string"}},"slug": "string","status": "default","suggestedPrice": {"DMC": "string","USD": "string"},"title": "string","type": "item"}],
+
+- {"amount": 0,"classId": "string","createdAt": 0,"description": "string","discount": 0,"extra": {"ability": "string","backgroundColor": "string","category": "string","categoryPath": "string","class": ["string"],"collection": ["string"],"exterior": "field-tested","floatValue": 0,"gameId": "string","gems": [{"image": "string","name": "string","type": "string"}],"grade": "string","groupId": "string","growth": 0,"hero": "string","inspectInGame": "string","isNew": true,"itemType": "string","linkId": "string","name": "string","nameColor": "string","offerId": "string","quality": "string","rarity": "string","serialNumber": 0,"stickers": [{"image": "string","name": "string"}],"subscribers": 0,"tagName": "string","tradable": true,"tradeLock": 0,"tradeLockDuration": 0,"type": "string","videos": 0,"viewAtSteam": "string","withdrawable": true},"extraDoc": "viewAtSteam","gameId": "string","gameType": "blockchain","image": "string","inMarket": true,"instantPrice": {"DMC": "string","USD": "string"},"instantTargetId": "string","itemId": "string","lockStatus": true,"owner": "string","ownerDetails": {"avatar": "string","id": "string","wallet": "string"},"ownersBlockchainId": "string","price": {"DMC": "string","USD": "string"},"recommendedPrice": {"d3": {"DMC": "string","USD": "string"},"d7": {"DMC": "string","USD": "string"},"d7Plus": {"DMC": "string","USD": "string"}},"slug": "string","status": "default","suggestedPrice": {"DMC": "string","USD": "string"},"title": "string","type": "item"}
+- "amount": 0,
+- "classId": "string",
+- "createdAt": 0,
+- "description": "string",
+- "discount": 0,
+- "extra": {"ability": "string","backgroundColor": "string","category": "string","categoryPath": "string","class": ["string"],"collection": ["string"],"exterior": "field-tested","floatValue": 0,"gameId": "string","gems": [{"image": "string","name": "string","type": "string"}],"grade": "string","groupId": "string","growth": 0,"hero": "string","inspectInGame": "string","isNew": true,"itemType": "string","linkId": "string","name": "string","nameColor": "string","offerId": "string","quality": "string","rarity": "string","serialNumber": 0,"stickers": [{"image": "string","name": "string"}],"subscribers": 0,"tagName": "string","tradable": true,"tradeLock": 0,"tradeLockDuration": 0,"type": "string","videos": 0,"viewAtSteam": "string","withdrawable": true},
+- "ability": "string",
+- "backgroundColor": "string",
+- "category": "string",
+- "categoryPath": "string",
+- "class": ["string"],
+- "string"
+- "collection": ["string"],
+- "string"
+- "exterior": "field-tested",
+- "floatValue": 0,
+- "gameId": "string",
+- "gems": [{"image": "string","name": "string","type": "string"}],
+- {"image": "string","name": "string","type": "string"}
+- "image": "string",
+- "name": "string",
+- "type": "string"
+- "grade": "string",
+- "groupId": "string",
+- "growth": 0,
+- "hero": "string",
+- "inspectInGame": "string",
+- "isNew": true,
+- "itemType": "string",
+- "linkId": "string",
+- "name": "string",
+- "nameColor": "string",
+- "offerId": "string",
+- "quality": "string",
+- "rarity": "string",
+- "serialNumber": 0,
+- "stickers": [{"image": "string","name": "string"}],
+- {"image": "string","name": "string"}
+- "image": "string",
+- "name": "string"
+- "subscribers": 0,
+- "tagName": "string",
+- "tradable": true,
+- "tradeLock": 0,
+- "tradeLockDuration": 0,
+- "type": "string",
+- "videos": 0,
+- "viewAtSteam": "string",
+- "withdrawable": true
+- "extraDoc": "viewAtSteam",
+- "gameId": "string",
+- "gameType": "blockchain",
+- "image": "string",
+- "inMarket": true,
+- "instantPrice": {"DMC": "string","USD": "string"},
+- "DMC": "string",
+- "USD": "string"
+- "instantTargetId": "string",
+- "itemId": "string",
+- "lockStatus": true,
+- "owner": "string",
+- "ownerDetails": {"avatar": "string","id": "string","wallet": "string"},
+- "avatar": "string",
+- "id": "string",
+- "wallet": "string"
+- "ownersBlockchainId": "string",
+- "price": {"DMC": "string","USD": "string"},
+- "DMC": "string",
+- "USD": "string"
+- "recommendedPrice": {"d3": {"DMC": "string","USD": "string"},"d7": {"DMC": "string","USD": "string"},"d7Plus": {"DMC": "string","USD": "string"}},
+- "d3": {"DMC": "string","USD": "string"},
+- "DMC": "string",
+- "USD": "string"
+- "d7": {"DMC": "string","USD": "string"},
+- "DMC": "string",
+- "USD": "string"
+- "d7Plus": {"DMC": "string","USD": "string"}
+- "DMC": "string",
+- "USD": "string"
+- "slug": "string",
+- "status": "default",
+- "suggestedPrice": {"DMC": "string","USD": "string"},
+- "DMC": "string",
+
+- "USD": "string"
+- "title": "string",
+- "type": "item"
+- "total": null,
+- "cursor": "string"
+- {"amount": 0,"classId": "string","createdAt": 0,"description": "string","discount": 0,"extra": {"ability": "string","backgroundColor": "string","category": "string","categoryPath": "string","class": ["string"],"collection": ["string"],"exterior": "field-tested","floatValue": 0,"gameId": "string","gems": [{"image": "string","name": "string","type": "string"}],"grade": "string","groupId": "string","growth": 0,"hero": "string","inspectInGame": "string","isNew": true,"itemType": "string","linkId": "string","name": "string","nameColor": "string","offerId": "string","quality": "string","rarity": "string","serialNumber": 0,"stickers": [{"image": "string","name": "string"}],"subscribers": 0,"tagName": "string","tradable": true,"tradeLock": 0,"tradeLockDuration": 0,"type": "string","videos": 0,"viewAtSteam": "string","withdrawable": true},"extraDoc": "viewAtSteam","gameId": "string","gameType": "blockchain","image": "string","inMarket": true,"instantPrice": {"DMC": "string","USD": "string"},"instantTargetId": "string","itemId": "string","lockStatus": true,"owner": "string","ownerDetails": {"avatar": "string","id": "string","wallet": "string"},"ownersBlockchainId": "string","price": {"DMC": "string","USD": "string"},"recommendedPrice": {"d3": {"DMC": "string","USD": "string"},"d7": {"DMC": "string","USD": "string"},"d7Plus": {"DMC": "string","USD": "string"}},"slug": "string","status": "default","suggestedPrice": {"DMC": "string","USD": "string"},"title": "string","type": "item"}
+- "amount": 0,
+- "classId": "string",
+- "createdAt": 0,
+- "description": "string",
+- "discount": 0,
+- "extra": {"ability": "string","backgroundColor": "string","category": "string","categoryPath": "string","class": ["string"],"collection": ["string"],"exterior": "field-tested","floatValue": 0,"gameId": "string","gems": [{"image": "string","name": "string","type": "string"}],"grade": "string","groupId": "string","growth": 0,"hero": "string","inspectInGame": "string","isNew": true,"itemType": "string","linkId": "string","name": "string","nameColor": "string","offerId": "string","quality": "string","rarity": "string","serialNumber": 0,"stickers": [{"image": "string","name": "string"}],"subscribers": 0,"tagName": "string","tradable": true,"tradeLock": 0,"tradeLockDuration": 0,"type": "string","videos": 0,"viewAtSteam": "string","withdrawable": true},
+- "ability": "string",
+- "backgroundColor": "string",
+- "category": "string",
+- "categoryPath": "string",
+- "class": ["string"],
+- "string"
+- "collection": ["string"],
+- "string"
+- "exterior": "field-tested",
+- "floatValue": 0,
+- "gameId": "string",
+- "gems": [{"image": "string","name": "string","type": "string"}],
+- {"image": "string","name": "string","type": "string"}
+- "image": "string",
+- "name": "string",
+- "type": "string"
+- "grade": "string",
+- "groupId": "string",
+- "growth": 0,
+- "hero": "string",
+- "inspectInGame": "string",
+- "isNew": true,
+- "itemType": "string",
+- "linkId": "string",
+- "name": "string",
+- "nameColor": "string",
+- "offerId": "string",
+- "quality": "string",
+- "rarity": "string",
+- "serialNumber": 0,
+- "stickers": [{"image": "string","name": "string"}],
+- {"image": "string","name": "string"}
+- "image": "string",
+- "name": "string"
+- "subscribers": 0,
+- "tagName": "string",
+- "tradable": true,
+- "tradeLock": 0,
+- "tradeLockDuration": 0,
+- "type": "string",
+- "videos": 0,
+- "viewAtSteam": "string",
+- "withdrawable": true
+- "extraDoc": "viewAtSteam",
+- "gameId": "string",
+- "gameType": "blockchain",
+- "image": "string",
+- "inMarket": true,
+- "instantPrice": {"DMC": "string","USD": "string"},
+- "DMC": "string",
+- "USD": "string"
+- "instantTargetId": "string",
+- "itemId": "string",
+- "lockStatus": true,
+- "owner": "string",
+- "ownerDetails": {"avatar": "string","id": "string","wallet": "string"},
+- "avatar": "string",
+- "id": "string",
+- "wallet": "string"
+- "ownersBlockchainId": "string",
+- "price": {"DMC": "string","USD": "string"},
+- "DMC": "string",
+- "USD": "string"
+- "recommendedPrice": {"d3": {"DMC": "string","USD": "string"},"d7": {"DMC": "string","USD": "string"},"d7Plus": {"DMC": "string","USD": "string"}},
+- "d3": {"DMC": "string","USD": "string"},
+- "DMC": "string",
+- "USD": "string"
+- "d7": {"DMC": "string","USD": "string"},
+- "DMC": "string",
+- "USD": "string"
+- "d7Plus": {"DMC": "string","USD": "string"}
+- "DMC": "string",
+- "USD": "string"
+- "slug": "string",
+
+- "status": "default",
+- "suggestedPrice": {"DMC": "string","USD": "string"},
+- "DMC": "string",
+- "USD": "string"
+- "title": "string",
+- "type": "item"
+- "amount": 0,
+- "classId": "string",
+- "createdAt": 0,
+- "description": "string",
+- "discount": 0,
+- "extra": {"ability": "string","backgroundColor": "string","category": "string","categoryPath": "string","class": ["string"],"collection": ["string"],"exterior": "field-tested","floatValue": 0,"gameId": "string","gems": [{"image": "string","name": "string","type": "string"}],"grade": "string","groupId": "string","growth": 0,"hero": "string","inspectInGame": "string","isNew": true,"itemType": "string","linkId": "string","name": "string","nameColor": "string","offerId": "string","quality": "string","rarity": "string","serialNumber": 0,"stickers": [{"image": "string","name": "string"}],"subscribers": 0,"tagName": "string","tradable": true,"tradeLock": 0,"tradeLockDuration": 0,"type": "string","videos": 0,"viewAtSteam": "string","withdrawable": true},
+- "ability": "string",
+- "backgroundColor": "string",
+- "category": "string",
+- "categoryPath": "string",
+- "class": ["string"],
+- "string"
+- "collection": ["string"],
+- "string"
+- "exterior": "field-tested",
+- "floatValue": 0,
+- "gameId": "string",
+- "gems": [{"image": "string","name": "string","type": "string"}],
+- {"image": "string","name": "string","type": "string"}
+- "image": "string",
+- "name": "string",
+- "type": "string"
+- "grade": "string",
+- "groupId": "string",
+- "growth": 0,
+- "hero": "string",
+- "inspectInGame": "string",
+- "isNew": true,
+- "itemType": "string",
+- "linkId": "string",
+- "name": "string",
+- "nameColor": "string",
+- "offerId": "string",
+- "quality": "string",
+- "rarity": "string",
+- "serialNumber": 0,
+- "stickers": [{"image": "string","name": "string"}],
+- {"image": "string","name": "string"}
+- "image": "string",
+- "name": "string"
+- "subscribers": 0,
+- "tagName": "string",
+- "tradable": true,
+- "tradeLock": 0,
+- "tradeLockDuration": 0,
+- "type": "string",
+- "videos": 0,
+- "viewAtSteam": "string",
+- "withdrawable": true
+- "extraDoc": "viewAtSteam",
+- "gameId": "string",
+- "gameType": "blockchain",
+- "image": "string",
+- "inMarket": true,
+- "instantPrice": {"DMC": "string","USD": "string"},
+- "DMC": "string",
+- "USD": "string"
+- "instantTargetId": "string",
+- "itemId": "string",
+- "lockStatus": true,
+- "owner": "string",
+- "ownerDetails": {"avatar": "string","id": "string","wallet": "string"},
+- "avatar": "string",
+- "id": "string",
+- "wallet": "string"
+- "ownersBlockchainId": "string",
+- "price": {"DMC": "string","USD": "string"},
+- "DMC": "string",
+- "USD": "string"
+- "recommendedPrice": {"d3": {"DMC": "string","USD": "string"},"d7": {"DMC": "string","USD": "string"},"d7Plus": {"DMC": "string","USD": "string"}},
+- "d3": {"DMC": "string","USD": "string"},
+- "DMC": "string",
+- "USD": "string"
+- "d7": {"DMC": "string","USD": "string"},
+- "DMC": "string",
+- "USD": "string"
+- "d7Plus": {"DMC": "string","USD": "string"}
+- "DMC": "string",
+- "USD": "string"
+- "slug": "string",
+- "status": "default",
+- "suggestedPrice": {"DMC": "string","USD": "string"},
+- "DMC": "string",
+- "USD": "string"
+- "title": "string",
+- "type": "item"
+- "ability": "string",
+- "backgroundColor": "string",
+- "category": "string",
+- "categoryPath": "string",
+- "class": ["string"],
+- "string"
+- "collection": ["string"],
+- "string"
+- "exterior": "field-tested",
+- "floatValue": 0,
+- "gameId": "string",
+- "gems": [{"image": "string","name": "string","type": "string"}],
+- {"image": "string","name": "string","type": "string"}
+- "image": "string",
+- "name": "string",
+- "type": "string"
+- "grade": "string",
+- "groupId": "string",
+- "growth": 0,
+- "hero": "string",
+- "inspectInGame": "string",
+- "isNew": true,
+- "itemType": "string",
+- "linkId": "string",
+- "name": "string",
+- "nameColor": "string",
+- "offerId": "string",
+- "quality": "string",
+- "rarity": "string",
+- "serialNumber": 0,
+- "stickers": [{"image": "string","name": "string"}],
+- {"image": "string","name": "string"}
+- "image": "string",
+- "name": "string"
+- "subscribers": 0,
+- "tagName": "string",
+- "tradable": true,
+- "tradeLock": 0,
+- "tradeLockDuration": 0,
+- "type": "string",
+- "videos": 0,
+- "viewAtSteam": "string",
+- "withdrawable": true
+- "string"
+- "string"
+- {"image": "string","name": "string","type": "string"}
+- "image": "string",
+- "name": "string",
+- "type": "string"
+- "image": "string",
+- "name": "string",
+- "type": "string"
+- {"image": "string","name": "string"}
+
+- "image": "string",
+- "name": "string"
+- "image": "string",
+- "name": "string"
+- "DMC": "string",
+- "USD": "string"
+- "avatar": "string",
+- "id": "string",
+- "wallet": "string"
+- "DMC": "string",
+- "USD": "string"
+- "d3": {"DMC": "string","USD": "string"},
+- "DMC": "string",
+- "USD": "string"
+- "d7": {"DMC": "string","USD": "string"},
+- "DMC": "string",
+- "USD": "string"
+- "d7Plus": {"DMC": "string","USD": "string"}
+- "DMC": "string",
+- "USD": "string"
+- "DMC": "string",
+- "USD": "string"
+- "DMC": "string",
+- "USD": "string"
+- "DMC": "string",
+- "USD": "string"
+- "DMC": "string",
+- "USD": "string"
+
+Returns aggregated buy orders (targets) for a specific game and item title. Use this endpoint to see current demand: how many buy orders exist and at what prices.
+Path parameters:
+- game_id: Game identifier (e.g., csgo, dota2, rust).
+- title: Exact in-game item title.
+Response contains a list of orders with fields: amount (number of items requested), price (best price for that title and attributes), title, and attributes (quality/rarity/skin parameters, depending on the game).
+
+##### path Parameters
+
+### Responses
+A successful response.
+An unexpected error response
+
+### Response samples
+- 200
+- default
+
+```
+{"orders": [{"amount": "string","price": "string","title": "string","attributes": { }}]}
+```
+
+- "orders": [{"amount": "string","price": "string","title": "string","attributes": { }}]
+- {"amount": "string","price": "string","title": "string","attributes": { }}
+- "amount": "string",
+- "price": "string",
+- "title": "string",
+- "attributes": { }
+- {"amount": "string","price": "string","title": "string","attributes": { }}
+- "amount": "string",
+- "price": "string",
+- "title": "string",
+- "attributes": { }
+- "amount": "string",
+- "price": "string",
+- "title": "string",
+- "attributes": { }
+
+Returns aggregated pricing for specified item titles, including best buy (order) and best sell (offer) prices and the total number of orders/offers per title. Use this to quickly assess market depth and price levels.
+Request body:
+- filter.game: Game identifier.
+- filter.titles[]: List of exact item titles to aggregate.
+- limit, cursor: Pagination controls.
+Response:
+- aggregatedPrices[]: For each title: orderBestPrice, orderCount, offerBestPrice, offerCount.
+- nextCursor: Use to fetch the next page.
+
+##### Request Body schema: application/jsonrequired
+
+### Responses
+A successful response.
+An unexpected error response.
+
+### Request samples
+- Payload
+
+```
+{"cursor": "string","limit": "string","filter": {"game": "string","titles": ["string"]}}
+```
+
+- "cursor": "string",
+- "limit": "string",
+- "filter": {"game": "string","titles": ["string"]}
+- "game": "string",
+- "titles": ["string"]
+- "string"
+- "game": "string",
+- "titles": ["string"]
+- "string"
+- "string"
+
+### Response samples
+- 200
+- default
+
+```
+{"aggregatedPrices": [{"title": "string","orderBestPrice": {"Currency": "string","Amount": "string"},"orderCount": "string","offerBestPrice": {"Currency": "string","Amount": "string"},"offerCount": "string"}],"nextCursor": "string"}
+```
+
+- "aggregatedPrices": [{"title": "string","orderBestPrice": {"Currency": "string","Amount": "string"},"orderCount": "string","offerBestPrice": {"Currency": "string","Amount": "string"},"offerCount": "string"}],
+- {"title": "string","orderBestPrice": {"Currency": "string","Amount": "string"},"orderCount": "string","offerBestPrice": {"Currency": "string","Amount": "string"},"offerCount": "string"}
+- "title": "string",
+- "orderBestPrice": {"Currency": "string","Amount": "string"},
+- "Currency": "string",
+- "Amount": "string"
+- "orderCount": "string",
+- "offerBestPrice": {"Currency": "string","Amount": "string"},
+- "Currency": "string",
+- "Amount": "string"
+- "offerCount": "string"
+- "nextCursor": "string"
+- {"title": "string","orderBestPrice": {"Currency": "string","Amount": "string"},"orderCount": "string","offerBestPrice": {"Currency": "string","Amount": "string"},"offerCount": "string"}
+- "title": "string",
+- "orderBestPrice": {"Currency": "string","Amount": "string"},
+- "Currency": "string",
+- "Amount": "string"
+- "orderCount": "string",
+- "offerBestPrice": {"Currency": "string","Amount": "string"},
+- "Currency": "string",
+- "Amount": "string"
+- "offerCount": "string"
+- "title": "string",
+- "orderBestPrice": {"Currency": "string","Amount": "string"},
+- "Currency": "string",
+- "Amount": "string"
+- "orderCount": "string",
+- "offerBestPrice": {"Currency": "string","Amount": "string"},
+- "Currency": "string",
+- "Amount": "string"
+- "offerCount": "string"
+- "Currency": "string",
+- "Amount": "string"
+- "Currency": "string",
+- "Amount": "string"
+
+Get the list of user's targets. 'gameId' param values are: CS:GO - a8db, Team Fortress 2 - tf2, Dota 2 - 9a92, Rust - rust. The price amount format is in USD, i.e. 0.5 is 50 cents.
+
+##### query Parameters
+Game identifier on market.
+Price range filtering.
+Price range filtering.
+Currency code to use with price range filter.
+Filter user targets by asset's title.
+Filter by unique target identifier.
+Target current status.
+- TargetStatusInactive: Target currently inactive.
+- TargetStatusActive: Target currently active and can be matched with complaint offers.
+Sort user targets by one of predefined sort types.
+- UserTargetsSortTypeDefault: Default sort type for user targets.
+Offsets items in response.
+Limits number or returned items in response.
+Cursor is next page identifier.
+
+### Responses
+A successful response.
+An unexpected error response
+
+### Response samples
+- 200
+- default
+
+```
+{"Items": [{"TargetID": "string","Title": "string","Amount": "string","Status": "TargetStatusInactive","GameID": "string","GameType": "GameTypeBlockchain","Attributes": [{"Name": "string","Value": "string"}],"Price": {"Currency": "string","Amount": 0.1}}],"Total": "string","Cursor": "string"}
+```
+
+- "Items": [{"TargetID": "string","Title": "string","Amount": "string","Status": "TargetStatusInactive","GameID": "string","GameType": "GameTypeBlockchain","Attributes": [{"Name": "string","Value": "string"}],"Price": {"Currency": "string","Amount": 0.1}}],
+- {"TargetID": "string","Title": "string","Amount": "string","Status": "TargetStatusInactive","GameID": "string","GameType": "GameTypeBlockchain","Attributes": [{"Name": "string","Value": "string"}],"Price": {"Currency": "string","Amount": 0.1}}
+- "TargetID": "string",
+- "Title": "string",
+- "Amount": "string",
+- "Status": "TargetStatusInactive",
+- "GameID": "string",
+- "GameType": "GameTypeBlockchain",
+- "Attributes": [{"Name": "string","Value": "string"}],
+- {"Name": "string","Value": "string"}
+- "Name": "string",
+- "Value": "string"
+- "Price": {"Currency": "string","Amount": 0.1}
+- "Currency": "string",
+- "Amount": 0.1
+- "Total": "string",
+- "Cursor": "string"
+- {"TargetID": "string","Title": "string","Amount": "string","Status": "TargetStatusInactive","GameID": "string","GameType": "GameTypeBlockchain","Attributes": [{"Name": "string","Value": "string"}],"Price": {"Currency": "string","Amount": 0.1}}
+- "TargetID": "string",
+- "Title": "string",
+- "Amount": "string",
+- "Status": "TargetStatusInactive",
+- "GameID": "string",
+- "GameType": "GameTypeBlockchain",
+- "Attributes": [{"Name": "string","Value": "string"}],
+- {"Name": "string","Value": "string"}
+- "Name": "string",
+- "Value": "string"
+- "Price": {"Currency": "string","Amount": 0.1}
+- "Currency": "string",
+- "Amount": 0.1
+- "TargetID": "string",
+- "Title": "string",
+- "Amount": "string",
+- "Status": "TargetStatusInactive",
+- "GameID": "string",
+- "GameType": "GameTypeBlockchain",
+- "Attributes": [{"Name": "string","Value": "string"}],
+- {"Name": "string","Value": "string"}
+- "Name": "string",
+- "Value": "string"
+- "Price": {"Currency": "string","Amount": 0.1}
+- "Currency": "string",
+- "Amount": 0.1
+- {"Name": "string","Value": "string"}
+- "Name": "string",
+- "Value": "string"
+- "Name": "string",
+- "Value": "string"
+- "Currency": "string",
+- "Amount": 0.1
+
+Get the list of the user’s closed targets. The price amount format is in USD, i.e. 0.5 is 50 cents.
+
+##### query Parameters
+Limits number of returned closed targets in response.
+Cursor is next page identifier.
+
+### Responses
+A successful response.
+An unexpected error response
+
+### Response samples
+- 200
+- default
+
+```
+{"Trades": [{"OfferID": "string","TargetID": "string","AssetID": "string","Price": {"Currency": "string","Amount": 0.1},"CurrencyCode": "string","Amount": "string","Title": "string","ClosedAt": "string","Status": "successful","FinalizationTime": "string"}],"Total": "string","Cursor": "string"}
+```
+
+- "Trades": [{"OfferID": "string","TargetID": "string","AssetID": "string","Price": {"Currency": "string","Amount": 0.1},"CurrencyCode": "string","Amount": "string","Title": "string","ClosedAt": "string","Status": "successful","FinalizationTime": "string"}],
+- {"OfferID": "string","TargetID": "string","AssetID": "string","Price": {"Currency": "string","Amount": 0.1},"CurrencyCode": "string","Amount": "string","Title": "string","ClosedAt": "string","Status": "successful","FinalizationTime": "string"}
+- "OfferID": "string",
+- "TargetID": "string",
+- "AssetID": "string",
+- "Price": {"Currency": "string","Amount": 0.1},
+- "Currency": "string",
+- "Amount": 0.1
+- "CurrencyCode": "string",
+- "Amount": "string",
+- "Title": "string",
+- "ClosedAt": "string",
+- "Status": "successful",
+- "FinalizationTime": "string"
+- "Total": "string",
+- "Cursor": "string"
+- {"OfferID": "string","TargetID": "string","AssetID": "string","Price": {"Currency": "string","Amount": 0.1},"CurrencyCode": "string","Amount": "string","Title": "string","ClosedAt": "string","Status": "successful","FinalizationTime": "string"}
+- "OfferID": "string",
+- "TargetID": "string",
+- "AssetID": "string",
+- "Price": {"Currency": "string","Amount": 0.1},
+- "Currency": "string",
+- "Amount": 0.1
+- "CurrencyCode": "string",
+- "Amount": "string",
+- "Title": "string",
+- "ClosedAt": "string",
+- "Status": "successful",
+- "FinalizationTime": "string"
+- "OfferID": "string",
+- "TargetID": "string",
+- "AssetID": "string",
+- "Price": {"Currency": "string","Amount": 0.1},
+- "Currency": "string",
+- "Amount": 0.1
+- "CurrencyCode": "string",
+- "Amount": "string",
+- "Title": "string",
+- "ClosedAt": "string",
+- "Status": "successful",
+- "FinalizationTime": "string"
+- "Currency": "string",
+- "Amount": 0.1
+
+The request for target creation requires the following fields: "GameID" param (values are: CS:GO - a8db, Team Fortress 2 - tf2, Dota 2 - 9a92, Rust - rust) and array of "Targets". The price amount format is in USD, i.e. 0.5 is 50 cents, "Title" - full item name. Also, additional attributes ("Attrs" field in #/components/schemas/marketplaceCreateTargetRequest) for each item such as "phase", "floatPartValue" and "paintSeed" are available. You can check possible values of additional attributes here. Limitations: maximum "Amount" value is 100; maximum quantity of targets in one request is 100; maximum number of created targets for one game is individual for each user and can be different for each game. You can contact our customer support team to find out your Target's limit.
+
+##### Request Body schema: application/jsonrequired
+GameID of same assets in one single target entity.
+List of targets to create.
+
+### Responses
+A successful response.
+An unexpected error response
+
+### Request samples
+- Payload
+
+```
+{"GameID": "string","Targets": [{"Amount": "string","Price": {"Currency": "string","Amount": 0.1},"Title": "string","Attrs": {"paintSeed": 0,"phase": "","floatPartValue": ""}}]}
+```
+
+- "GameID": "string",
+- "Targets": [{"Amount": "string","Price": {"Currency": "string","Amount": 0.1},"Title": "string","Attrs": {"paintSeed": 0,"phase": "","floatPartValue": ""}}]
+- {"Amount": "string","Price": {"Currency": "string","Amount": 0.1},"Title": "string","Attrs": {"paintSeed": 0,"phase": "","floatPartValue": ""}}
+- "Amount": "string",
+- "Price": {"Currency": "string","Amount": 0.1},
+- "Currency": "string",
+- "Amount": 0.1
+- "Title": "string",
+- "Attrs": {"paintSeed": 0,"phase": "","floatPartValue": ""}
+- "paintSeed": 0,
+- "phase": "",
+- "floatPartValue": ""
+- {"Amount": "string","Price": {"Currency": "string","Amount": 0.1},"Title": "string","Attrs": {"paintSeed": 0,"phase": "","floatPartValue": ""}}
+- "Amount": "string",
+- "Price": {"Currency": "string","Amount": 0.1},
+- "Currency": "string",
+- "Amount": 0.1
+- "Title": "string",
+- "Attrs": {"paintSeed": 0,"phase": "","floatPartValue": ""}
+- "paintSeed": 0,
+- "phase": "",
+- "floatPartValue": ""
+- "Amount": "string",
+- "Price": {"Currency": "string","Amount": 0.1},
+- "Currency": "string",
+- "Amount": 0.1
+- "Title": "string",
+- "Attrs": {"paintSeed": 0,"phase": "","floatPartValue": ""}
+- "paintSeed": 0,
+- "phase": "",
+- "floatPartValue": ""
+- "Currency": "string",
+- "Amount": 0.1
+- "paintSeed": 0,
+- "phase": "",
+- "floatPartValue": ""
+
+- 200
+- default
+
+```
+{"Result": [{"CreateTarget": {"Amount": "string","Price": {"Currency": "string","Amount": 0.1},"Title": "string","Attrs": {"paintSeed": 0,"phase": "","floatPartValue": ""}},"TargetID": "string","Successful": true,"Error": {"Code": "Internal","Message": "string"}}]}
+```
+
+- "Result": [{"CreateTarget": {"Amount": "string","Price": {"Currency": "string","Amount": 0.1},"Title": "string","Attrs": {"paintSeed": 0,"phase": "","floatPartValue": ""}},"TargetID": "string","Successful": true,"Error": {"Code": "Internal","Message": "string"}}]
+- {"CreateTarget": {"Amount": "string","Price": {"Currency": "string","Amount": 0.1},"Title": "string","Attrs": {"paintSeed": 0,"phase": "","floatPartValue": ""}},"TargetID": "string","Successful": true,"Error": {"Code": "Internal","Message": "string"}}
+- "CreateTarget": {"Amount": "string","Price": {"Currency": "string","Amount": 0.1},"Title": "string","Attrs": {"paintSeed": 0,"phase": "","floatPartValue": ""}},
+- "Amount": "string",
+- "Price": {"Currency": "string","Amount": 0.1},
+- "Currency": "string",
+- "Amount": 0.1
+- "Title": "string",
+- "Attrs": {"paintSeed": 0,"phase": "","floatPartValue": ""}
+- "paintSeed": 0,
+- "phase": "",
+- "floatPartValue": ""
+- "TargetID": "string",
+- "Successful": true,
+- "Error": {"Code": "Internal","Message": "string"}
+- "Code": "Internal",
+- "Message": "string"
+- {"CreateTarget": {"Amount": "string","Price": {"Currency": "string","Amount": 0.1},"Title": "string","Attrs": {"paintSeed": 0,"phase": "","floatPartValue": ""}},"TargetID": "string","Successful": true,"Error": {"Code": "Internal","Message": "string"}}
+- "CreateTarget": {"Amount": "string","Price": {"Currency": "string","Amount": 0.1},"Title": "string","Attrs": {"paintSeed": 0,"phase": "","floatPartValue": ""}},
+- "Amount": "string",
+- "Price": {"Currency": "string","Amount": 0.1},
+- "Currency": "string",
+- "Amount": 0.1
+- "Title": "string",
+- "Attrs": {"paintSeed": 0,"phase": "","floatPartValue": ""}
+- "paintSeed": 0,
+- "phase": "",
+- "floatPartValue": ""
+- "TargetID": "string",
+- "Successful": true,
+- "Error": {"Code": "Internal","Message": "string"}
+- "Code": "Internal",
+- "Message": "string"
+- "CreateTarget": {"Amount": "string","Price": {"Currency": "string","Amount": 0.1},"Title": "string","Attrs": {"paintSeed": 0,"phase": "","floatPartValue": ""}},
+- "Amount": "string",
+- "Price": {"Currency": "string","Amount": 0.1},
+- "Currency": "string",
+- "Amount": 0.1
+- "Title": "string",
+- "Attrs": {"paintSeed": 0,"phase": "","floatPartValue": ""}
+- "paintSeed": 0,
+- "phase": "",
+- "floatPartValue": ""
+- "TargetID": "string",
+- "Successful": true,
+- "Error": {"Code": "Internal","Message": "string"}
+- "Code": "Internal",
+- "Message": "string"
+- "Amount": "string",
+- "Price": {"Currency": "string","Amount": 0.1},
+- "Currency": "string",
+- "Amount": 0.1
+- "Title": "string",
+- "Attrs": {"paintSeed": 0,"phase": "","floatPartValue": ""}
+- "paintSeed": 0,
+- "phase": "",
+- "floatPartValue": ""
+- "Currency": "string",
+- "Amount": 0.1
+- "paintSeed": 0,
+- "phase": "",
+- "floatPartValue": ""
+- "Code": "Internal",
+- "Message": "string"
+
+Remove targets.
+
+##### Request Body schema: application/jsonrequired
+Targets list to delete.
+
+### Responses
+A successful response.
+An unexpected error response
+
+### Request samples
+- Payload
+
+```
+{"Targets": [{"TargetID": "string"}]}
+```
+
+- "Targets": [{"TargetID": "string"}]
+- {"TargetID": "string"}
+- "TargetID": "string"
+- {"TargetID": "string"}
+- "TargetID": "string"
+- "TargetID": "string"
+
+### Response samples
+- 200
+- default
+
+```
+{"Result": [{"DeleteTarget": {"TargetID": "string"},"Successful": true,"Error": {"Code": "Internal","Message": "string"}}]}
+```
+
+- "Result": [{"DeleteTarget": {"TargetID": "string"},"Successful": true,"Error": {"Code": "Internal","Message": "string"}}]
+- {"DeleteTarget": {"TargetID": "string"},"Successful": true,"Error": {"Code": "Internal","Message": "string"}}
+- "DeleteTarget": {"TargetID": "string"},
+- "TargetID": "string"
+- "Successful": true,
+- "Error": {"Code": "Internal","Message": "string"}
+- "Code": "Internal",
+- "Message": "string"
+- {"DeleteTarget": {"TargetID": "string"},"Successful": true,"Error": {"Code": "Internal","Message": "string"}}
+- "DeleteTarget": {"TargetID": "string"},
+- "TargetID": "string"
+- "Successful": true,
+- "Error": {"Code": "Internal","Message": "string"}
+- "Code": "Internal",
+- "Message": "string"
+- "DeleteTarget": {"TargetID": "string"},
+- "TargetID": "string"
+- "Successful": true,
+- "Error": {"Code": "Internal","Message": "string"}
+- "Code": "Internal",
+- "Message": "string"
+- "TargetID": "string"
+- "Code": "Internal",
+- "Message": "string"
+
+Buy the selected offers from the market. As the result of the operation: the offer is removed, the items are transferred to the buyer, the purchase amount is transferred to the seller, the fee is transferred to DMarket. The price amount format is in coins (cents for USD).
+
+##### Request Body schema: application/jsonrequired
+
+### Responses
+No content
+Bad request
+Unauthorized
+Internal Server Error
+No content
+
+### Request samples
+- Payload
+
+```
+{"offers": [{"offerId": "string","price": {"amount": "string","currency": "USD"},"type": "dmarket"}]}
+```
+
+- "offers": [{"offerId": "string","price": {"amount": "string","currency": "USD"},"type": "dmarket"}]
+- {"offerId": "string","price": {"amount": "string","currency": "USD"},"type": "dmarket"}
+- "offerId": "string",
+- "price": {"amount": "string","currency": "USD"},
+- "amount": "string",
+- "currency": "USD"
+- "type": "dmarket"
+- {"offerId": "string","price": {"amount": "string","currency": "USD"},"type": "dmarket"}
+- "offerId": "string",
+- "price": {"amount": "string","currency": "USD"},
+- "amount": "string",
+- "currency": "USD"
+- "type": "dmarket"
+- "offerId": "string",
+- "price": {"amount": "string","currency": "USD"},
+- "amount": "string",
+- "currency": "USD"
+- "type": "dmarket"
+- "amount": "string",
+- "currency": "USD"
+
+### Response samples
+- 200
+- 400
+- 401
+- 500
+- default
+
+```
+{"dmOffersFailReason": {"code": "string"},"dmOffersStatus": {"property1": {"started": true},"property2": {"started": true}},"orderId": "string","p2pOffersStatus": {"property1": {"started": true},"property2": {"started": true}},"status": "TxPending","txId": "string"}
+```
+
+- "dmOffersFailReason": {"code": "string"},
+- "code": "string"
+- "dmOffersStatus": {"property1": {"started": true},"property2": {"started": true}},
+- "property1": {"started": true},
+- "started": true
+- "property2": {"started": true}
+- "started": true
+- "orderId": "string",
+- "p2pOffersStatus": {"property1": {"started": true},"property2": {"started": true}},
+- "property1": {"started": true},
+- "started": true
+- "property2": {"started": true}
+- "started": true
+- "status": "TxPending",
+- "txId": "string"
+- "code": "string"
+- "property1": {"started": true},
+- "started": true
+- "property2": {"started": true}
+- "started": true
+- "started": true
+- "started": true
+- "property1": {"started": true},
+- "started": true
+- "property2": {"started": true}
+- "started": true
+- "started": true
+- "started": true
+
+Get the item sales history. Up to 12 last months.
+
+##### query Parameters
+filters is a list of filters. For example: exterior[]=factory new,phase[]=phase-1,phase[]=phase-2,float[]=2,float[]=133.
+tx_operation_type is a type of transaction to return. Values: "", "Target", "Offer".
+limit is a maximum number of sales to return. min: 1 max: 20
+
+### Responses
+A successful response.
+An unexpected error response.
+
+### Response samples
+- 200
+- default
+
+```
+{"sales": [{"price": "string","date": "string","txOperationType": "Offer","offerAttributes": { },"orderAttributes": { }}]}
+```
+
+- "sales": [{"price": "string","date": "string","txOperationType": "Offer","offerAttributes": { },"orderAttributes": { }}]
+- {"price": "string","date": "string","txOperationType": "Offer","offerAttributes": { },"orderAttributes": { }}
+- "price": "string",
+- "date": "string",
+- "txOperationType": "Offer",
+- "offerAttributes": { },
+- "orderAttributes": { }
+- {"price": "string","date": "string","txOperationType": "Offer","offerAttributes": { },"orderAttributes": { }}
+- "price": "string",
+- "date": "string",
+- "txOperationType": "Offer",
+- "offerAttributes": { },
+- "orderAttributes": { }
+- "price": "string",
+- "date": "string",
+- "txOperationType": "Offer",
+- "offerAttributes": { },
+- "orderAttributes": { }
+

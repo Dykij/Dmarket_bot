@@ -267,41 +267,11 @@ def upgrade():
 
 ---
 
-## WebSocket
+## Примечание по WebSocket
 
-### WebSocket постоянно переподключается
+> **DMarket и CSFloat НЕ предоставляют публичного WebSocket API для торговли.**
+> Бот использует только асинхронный HTTP/2 пул. Любые секции про WebSocket из старых версий неактуальны.
 
-**Причина:** Нестабильное соединение
-
-**Решение:**
-```bash
-# Проверить сеть
-ping api.dmarket.com
-
-# Увеличить reconnect delay
-self.reconnect_delay = 10  # вместо 5
-```
-
-### WebSocket не подключается вообще
-
-**Причина:** Endpoint недоступен
-
-**Решение:**
-1. Проверить документацию DMarket API
-2. Использовать polling режим (автоматически)
-3. Контакт DMarket support для уточнения WebSocket доступности
-
-### Health alert "WebSocket не подключен"
-
-**Это норма**, если:
-- WebSocket endpoint недоступен
-- Вы выбрали polling режим
-
-**Проблема**, если:
-- WebSocket раньше работал, теперь нет
-- API тоже недоступен
-
----
 
 ## n8n Integration
 
@@ -534,23 +504,11 @@ httpx_mock.add_response(
 
 **Решение:** Заменить `DMarketAPIError` на `APIError` и `RateLimitError` на `RateLimitExceeded`
 
-### 5. Ошибка: Несоответствие версий моделей ML
+### 5. Ошибка: Модули ML не найдены
 
-**Файлы:** `tests/ml/test_enhanced_predictor.py`, `tests/ml/test_price_predictor.py`
-
-**Причина:** MODEL_VERSION обновлен в исходном коде, но не в тестах
-
-**Решение:** Обновить ожидаемые версии:
-- `EnhancedPricePredictor`: `"2.0.0"` → `"2.1.0"`
-- `AdaptivePricePredictor`: `"1.0.0"` → `"1.1.0"`
-
-### 6. Ошибка: TradeClassifier возвращает SKIP вместо ожидаемого сигнала
-
-**Файл:** `tests/ml/test_trade_classifier.py`
-
-**Причина:** Без `price_history` и `sales_history` классификатор определяет высокий риск/низкую ликвидность
-
-**Решение:** Передавать данные истории цен и продаж в тестах
+> **Примечание:** Все ML/AI модули были удалены из проекта в апреле 2026.
+> Бот теперь использует детерминистическую математическую валидацию через `price_validator.py`.
+> Если вы видите ошибки связанные с ML — это означает что в коде остались устаревшие импорты.
 
 ### 7. Ошибка: test_cache_stampede_prevention timeout
 
@@ -572,10 +530,9 @@ httpx_mock.add_response(
 | **Провалено** | 1 (minor) |
 
 ### Пропущенные тесты (причины):
-- `fastapi` не установлен (web dashboard, n8n integration)
+- `fastapi` не установлен (web dashboard — удалён)
 - `pytest-benchmark` не установлен (performance benchmarks)
 - `psutil` не установлен (memory profiling)
-- `Ollama` недоступна (Model integration tests)
 - Требуются реальные API ключи (VCR cassette recording)
 
 ---
@@ -584,14 +541,10 @@ httpx_mock.add_response(
 
 1. **Установите все опциональные зависимости:**
    ```bash
-   pip install fastapi pytest-benchmark psutil
+   pip install pytest-benchmark psutil
    ```
 
-2. **Для полного тестирования ML:**
-   - Установите Ollama локально
-   - НастSwarmте API ключи в `.env`
-
-3. **Performance тесты:**
+2. **Performance тесты:**
    - Используйте `pytest-benchmark` для бенчмарков
    - Увеличьте timeout для длительных тестов
 

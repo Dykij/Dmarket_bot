@@ -1,1 +1,0 @@
-# Waxpeer tests package

@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 async def _run_trading_loop() -> None:
     """Inner trading loop — importted lazily to avoid circular imports."""
-    from src.bot.main import main as bot_main
+    from src.core.autonomous_scanner import run_autonomous_scanner as bot_main
     await bot_main()
 
 

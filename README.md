@@ -1,7 +1,7 @@
-# 🦅 DMarket HFT Predator (v3.1)
+# 🦅 DMarket Target Sniper (v3.2)
 
-**High-Frequency Trading Bot for CS2 skins.**
-Автономная торговая система, работающая по гибридной схеме: **Rigid Math (Markov) + Fluid AI (LLM) + Agentic Sandbox.**
+**Statistical Arbitrage & Limit Market Making Bot for CS2 and Rust skins.**
+Автономная торговая система, работающая чисто на математических скриптах и целевом снайпинге (Target Sniping).
 
 ---
 
@@ -10,18 +10,17 @@
 ### 1. ⚡ Hardware Acceleration (Phase 14)
 
 - **CUDA Support (`CuPy`):** Марковский предиктор (`markov_model.py`) использует тензорные ядра для мгновенной классификации 10,000+ предметов в одном GPU-пакете.
-- **LLM Engine (`GGUF`):** Инференс Arkady 27B через `llama-cpp-python` с полным оффлоудом на VRAM (RTX 5060 Ti) и поддержкой **Flash Attention 2**.
 
 ### 2. 🛡️ Security Hardening (Phase 13)
 
 - **V1-V4 Protection:** Заморозка констант модуля, хранение TLS-отпечатков в **OS Keyring**, HMAC-подпись Git-чекпоинтов.
-- **Price Validator:** Жесткий фильтр цен ($0.10–$50,000) до вызова ИИ, защита от Data Poisoning и некорректных форматов (напр. `"1e5"`).
-- **Agentic Sandbox:** ИИ не имеет прямого доступа к API. Решение проходит через **Pydantic Gate**, проверяющий лимиты и уверенность (Confidence).
+- **Price Validator:** Жесткий фильтр цен ($0.10–$50,000) для защиты от Data Poisoning и некорректных форматов (напр. `"1e5"`).
+- **Trade Gate:** Решение проходит через **Pydantic Gate**, проверяющий лимиты и математические критерии прибыльности (мин 5% маржа).
 
-### 3. 🧠 Hybrid Architecture
+### 3. 🧠 Smart Math Architecture
 
-- **📊 Markov Chain Predictor:** 3-уровневая классификация рынка (STABLE / VOLATILE / ANOMALOUS). Блокирует аномальные всплески до LLM-анализа.
-- **🎯 Smart Logic:** Обработка стаканов, Wall Breaker и автоматическое управление инвентарем.
+- **📊 Markov Chain Predictor:** 3-уровневая классификация рынка (STABLE / VOLATILE / ANOMALOUS). Блокирует аномальные всплески.
+- **🎯 Target Sniping:** Обработка стаканов цен, оценка флоатов и стикеров с автоматическим размещением лимитных ордеров (Batch Create).
 
 ---
 
@@ -30,7 +29,6 @@
 | Компонент | Технология |
 | :--- | :--- |
 | **Quant Math** | `cupy` (CUDA 12.x) / `numpy` |
-| **LLM Inference** | `llama-cpp-python` (GGUF Q4_K_M) |
 | **Validation** | `pydantic` v2 |
 | **Security** | `keyring`, `hashlib` (HMAC-SHA256) |
 | **API Client** | Async REST + Ed25519 Signing |
@@ -45,7 +43,7 @@
 2. Установить зависимости:
 
    ```bash
-   pip install cupy-cuda12x pydantic keyring llama-cpp-python
+   pip install cupy-cuda12x pydantic keyring
    ```
 
 3. Добавить TLS fingerprint в хранилище:
@@ -57,7 +55,7 @@
 ### Запуск
 
 ```bash
-# Режим сканнера с Марковской фильтрацией и GGUF-анализом
+# Режим сканнера с Марковской фильтрацией и Target Sniping
 python src/autonomous_scanner.py
 ```
 
@@ -67,10 +65,10 @@ python src/autonomous_scanner.py
 
 Бот использует **TradeExecutionGate**, который блокирует сделки если:
 
-- `Confidence` модели < 70%.
 - Сумма сделки > $50.00 (настраиваемый лимит).
-- Цена не прошла повторную валидацию после ответа ИИ.
+- Цена не прошла повторную валидацию.
+- Маржа сделки с учетом комиссии составляет менее 5%.
 
 ---
 
-*Phase 14: CUDA Acceleration & Agentic Sandbox Build.*
+*Phase 14: CUDA Acceleration & Scripting Pipeline Build.*

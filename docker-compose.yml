@@ -1,0 +1,34 @@
+version: "3.9"
+
+services:
+  dmarket_scanner:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: dmarket_scanner
+    command: ["python", "-m", "src", "--test"]
+    env_file:
+      - .env
+    environment:
+      - ROLE=SCANNER
+    networks:
+      - dmarket_net
+    restart: always
+
+  dmarket_trader:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: dmarket_trader
+    command: ["python", "-m", "src"]
+    env_file:
+      - .env
+    environment:
+      - ROLE=TRADER
+    networks:
+      - dmarket_net
+    restart: always
+
+networks:
+  dmarket_net:
+    driver: bridge

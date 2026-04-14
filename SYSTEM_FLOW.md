@@ -39,7 +39,7 @@ sequenceDiagram
     DM-->>API: Market Listings
     
     loop Analysis
-        TM->>TM: Calculate Profit (Buy + Fees < Sell)
+        TM->>TM: Calculate Profit Validate (net_received - buy_price > min_margin)
         alt Profitable
             TM->>API: purchase_item(itemId, price)
             API->>Sign: Sign Transaction (POST)

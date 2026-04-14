@@ -20,8 +20,8 @@ class Config:
     GAME_ID = "a8db" # Counter-Strike 2
 
     # --- Trading Parameters ---
-    MIN_SPREAD_PCT = 7.0     # Minimum 7% profit margin (Ask - Bid)
-    FEE_RATE = 0.07          # DMarket Fee (7% standard, 5% with subscription)
+    MIN_SPREAD_PCT = 5.0     # Minimum 5% profit margin (Ask - Bid)
+    FEE_RATE = 0.05          # DMarket Fee (7% standard, 5% with subscription)
     
     # --- Risk Management ---
     MIN_PRICE_USD = 0.50     # Ignore cheap trash (<$0.50)
