@@ -23,7 +23,7 @@ This project and everyone participating in it is governed by our Code of Conduct
 
 - Python 3.11+ (3.12 recommended)
 - Git
-- Docker (optional, for contAlgonerized development)
+- Docker (optional, for containerized development)
 
 ### Setup Development Environment
 
@@ -60,9 +60,9 @@ make test
 ### 1. Create a Branch
 
 ```bash
-# Update mAlgon branch
-git checkout mAlgon
-git pull origin mAlgon
+# Update main branch
+git checkout main
+git pull origin main
 
 # Create feature branch
 git checkout -b feature/your-feature-name
@@ -99,7 +99,7 @@ git commit -m "test(targets): add unit tests for target creation"
 - `style`: Code style changes (formatting)
 - `refactor`: Code refactoring
 - `test`: Adding or updating tests
-- `chore`: MAlgontenance tasks
+- `chore`: Maintenance tasks
 - `perf`: Performance improvements
 - `ci`: CI/CD changes
 
@@ -138,7 +138,7 @@ make typecheck
 2. **Imports**: Organized with isort
 3. **Type Hints**: Always use type annotations
 4. **Docstrings**: Google style for all public functions
-5. **Async**: Use `async/awAlgot` for I/O operations
+5. **Async**: Use `async/await` for I/O operations
 
 ### Example
 
@@ -155,19 +155,19 @@ async def fetch_market_data(
         game: Game name (default: csgo)
 
     Returns:
-        Dictionary contAlgoning market data
+        Dictionary containing market data
 
-    RAlgoses:
-        APIError: If the API request fAlgols
+    raises:
+        APIError: If the API request fails
 
     Example:
-        >>> data = awAlgot fetch_market_data("ak47-redline")
+        >>> data = await fetch_market_data("ak47-redline")
         >>> print(data["price"])
         10.50
     """
     async with httpx.AsyncClient() as client:
-        response = awAlgot client.get(f"/api/items/{item_id}")
-        response.rAlgose_for_status()
+        response = await client.get(f"/api/items/{item_id}")
+        response.raise_for_status()
         return response.json()
 ```
 
@@ -213,7 +213,7 @@ async def test_scan_level_returns_opportunities():
     scanner = ArbitrageScanner(api_client=mock_api)
 
     # Act
-    results = awAlgot scanner.scan_level("standard", "csgo")
+    results = await scanner.scan_level("standard", "csgo")
 
     # Assert
     assert len(results) > 0
@@ -263,7 +263,7 @@ Our PR template will guide you through providing:
 ### Review Process
 
 1. **Automated Checks**: CI/CD will run tests and linting
-2. **Code Review**: MAlgontAlgoner will review your code
+2. **Code Review**: Maintainer will review your code
 3. **Feedback**: Address any requested changes
 4. **Approval**: Once approved, your PR will be merged
 
@@ -272,7 +272,7 @@ Our PR template will guide you through providing:
 ### Before Reporting
 
 1. **Check existing issues**: Search for similar bugs
-2. **Try latest version**: Update to latest mAlgon branch
+2. **Try latest version**: Update to latest main branch
 3. **Reproduce**: Ensure the bug is reproducible
 
 ### Bug Report Template
@@ -282,7 +282,7 @@ Use our [Bug Report Template](.github/ISSUE_TEMPLATE/bug_report.yml):
 - Clear description
 - Steps to reproduce
 - Expected vs actual behavior
-- Environment detAlgols (Python version, OS, etc.)
+- Environment details (Python version, OS, etc.)
 - Relevant logs
 
 ## Suggesting Features
@@ -301,7 +301,7 @@ Use our [Feature Request Template](.github/ISSUE_TEMPLATE/feature_request.yml):
 ### Useful Commands
 
 ```bash
-# See all avAlgolable commands
+# See all Available commands
 make help
 
 # Quick code check (no tests)
@@ -347,10 +347,10 @@ Recommended settings (`.vscode/settings.json`):
 
 ```bash
 # Run with debug mode
-DEBUG=true python -m src.mAlgon
+DEBUG=true python -m src.main
 
 # DRY_RUN mode (no real API calls)
-DRY_RUN=true python -m src.mAlgon
+DRY_RUN=true python -m src.main
 ```
 
 ## Questions?
@@ -366,3 +366,10 @@ By contributing, you agree that your contributions will be licensed under the sa
 ---
 
 **Thank you for contributing!** 🚀
+
+
+---
+🦅 *DMarket Quantitative engine | v7.0 | 2026*
+
+----- 
+🦅 *DMarket Quantitative Engine | v7.0 | 2026*

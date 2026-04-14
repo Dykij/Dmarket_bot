@@ -337,7 +337,7 @@ openapi-generator-cli generate \
 # API Reference
 
 **Версия**: 1.0.0
-**Последнее обновление: Январь 2026 г.
+**Последнее обновление: Апрель 2026 г.
 
 ---
 
@@ -364,7 +364,7 @@ DMarketAPI(
 - `public_key`: Your DMarket API public key
 - `secret_key`: Your DMarket API secret key
 - `api_url`: DMarket API base URL
-- `max_retries`: Maximum number of retries for fAlgoled requests
+- `max_retries`: Maximum number of retries for failed requests
 - `connection_timeout`: Connection timeout in seconds
 - `enable_cache`: Enable response caching
 
@@ -377,7 +377,7 @@ DMarketAPI(
 Get user's account balance.
 
 ```python
-balance = awAlgot api.get_balance()
+balance = await api.get_balance()
 print(f"Balance: ${balance['balance']:.2f}")
 ```
 
@@ -385,7 +385,7 @@ print(f"Balance: ${balance['balance']:.2f}")
 ```python
 {
     "balance": 100.50,
-    "avAlgolable_balance": 95.25,
+    "Available_balance": 95.25,
     "total_balance": 100.50,
     "has_funds": True,
     "error": False
@@ -409,7 +409,7 @@ Get items from the marketplace.
 - `sort`: Sort order ("price", "price_desc", "date")
 
 ```python
-items = awAlgot api.get_market_items(
+items = await api.get_market_items(
     game="csgo",
     limit=50,
     price_from=5.0,
@@ -423,7 +423,7 @@ items = awAlgot api.get_market_items(
 Get all market items using automatic pagination.
 
 ```python
-all_items = awAlgot api.get_all_market_items(
+all_items = await api.get_all_market_items(
     game="csgo",
     max_items=500
 )
@@ -436,7 +436,7 @@ all_items = awAlgot api.get_all_market_items(
 Purchase an item from the marketplace.
 
 ```python
-result = awAlgot api.buy_item(
+result = await api.buy_item(
     item_id="item_12345",
     price=25.50,
     game="csgo"
@@ -448,7 +448,7 @@ result = awAlgot api.buy_item(
 List an item for sale.
 
 ```python
-result = awAlgot api.sell_item(
+result = await api.sell_item(
     item_id="item_67890",
     price=30.75,
     game="csgo"
@@ -462,7 +462,7 @@ result = awAlgot api.sell_item(
 Get user's inventory items.
 
 ```python
-inventory = awAlgot api.get_user_inventory(
+inventory = await api.get_user_inventory(
     game="csgo",
     limit=50
 )
@@ -496,8 +496,8 @@ Clear cache for specific endpoint.
 
 ```python
 async with DMarketAPI(public_key, secret_key) as api:
-    balance = awAlgot api.get_balance()
-    items = awAlgot api.get_market_items("csgo")
+    balance = await api.get_balance()
+    items = await api.get_market_items("csgo")
 ```
 
 ## Configuration Management
@@ -546,7 +546,7 @@ config = Config.load("config/production.yaml")
 
 ```python
 db = DatabaseManager("postgresql://user:pass@localhost/db")
-awAlgot db.init_database()
+await db.init_database()
 ```
 
 #### User Management
@@ -556,7 +556,7 @@ awAlgot db.init_database()
 Get existing user or create new one.
 
 ```python
-user = awAlgot db.get_or_create_user(
+user = await db.get_or_create_user(
     telegram_id=123456789,
     username="john_doe",
     first_name="John",
@@ -571,7 +571,7 @@ user = awAlgot db.get_or_create_user(
 Log bot command execution.
 
 ```python
-awAlgot db.log_command(
+await db.log_command(
     user_id=user.id,
     command="/balance",
     success=True,
@@ -586,7 +586,7 @@ awAlgot db.log_command(
 Save market data for analytics.
 
 ```python
-awAlgot db.save_market_data(
+await db.save_market_data(
     item_id="item_123",
     game="csgo",
     item_name="AK-47 | Redline",
@@ -635,7 +635,7 @@ chart = generator.create_price_history_chart(
 )
 
 # Send chart via Telegram
-awAlgot context.bot.send_photo(
+await context.bot.send_photo(
     chat_id=update.effective_chat.id,
     photo=chart
 )
@@ -703,24 +703,24 @@ The API client includes built-in rate limiting to respect DMarket's API limits:
 
 ```python
 # Clear all cache
-awAlgot api.clear_cache()
+await api.clear_cache()
 
 # Clear specific endpoint cache
-awAlgot api.clear_cache_for_endpoint("/marketplace-api/v1/items")
+await api.clear_cache_for_endpoint("/marketplace-api/v1/items")
 
 # Disable caching for specific request
-items = awAlgot api.get_market_items("csgo", force_refresh=True)
+items = await api.get_market_items("csgo", force_refresh=True)
 ```
 
 ## Logging
 
 ### Log Levels
 
-- **DEBUG**: DetAlgoled debugging information
+- **DEBUG**: Detailed debugging information
 - **INFO**: General operational messages
 - **WARNING**: Warning messages for unusual situations
-- **ERROR**: Error messages for fAlgoled operations
-- **CRITICAL**: Critical errors that may cause application fAlgolure
+- **ERROR**: Error messages for failed operations
+- **CRITICAL**: Critical errors that may cause application failure
 
 ### Structured Logging
 
@@ -766,7 +766,7 @@ from unittest.mock import patch, AsyncMock
 # Mock API response
 with patch.object(api, '_request') as mock_request:
     mock_request.return_value = {"balance": 100.0}
-    balance = awAlgot api.get_balance()
+    balance = await api.get_balance()
     assert balance["balance"] == 100.0
 ```
 
@@ -786,3 +786,10 @@ pytest tests/test_dmarket_api.py -v
 pytest -n auto
 ```
 
+
+
+---
+🦅 *DMarket Quantitative engine | v7.0 | 2026*
+
+----- 
+🦅 *DMarket Quantitative Engine | v7.0 | 2026*

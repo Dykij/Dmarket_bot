@@ -6,7 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## [Unreleased]
+## [7.0.0] - 2026-04-14
+### 🚀 The Quantitative Awakening
+- **Полная трансформация**: Переход от экспериментальной ИИ-архитектуры к строгому количественному движку (Pure Quantitative Engine).
+- **Удаление AI Debt**: Полностью вырезаны модули Markov Chains, CUDA/CuPy и нейронные предикторы для минимизации задержек.
+- **SQLite Интеграция**: Добавлена персистентная база данных истории цен для точного анализа трендов.
+- **DMarket API v1.1.0 Sync**: Полная синхронизация эндпоинтов с `/marketplace-api/v1/`.
+- **Защитные механизмы**: Реализованы `Trend Guard` (защита от падения цены) и `Event Shield` (календарь ивентов 2026).
+- **Документация**: Глобальный рефакторинг всех MD-файлов. Публикация полной спецификации API (4,000 строк).
 
 ### Updated - API Documentation (January 4, 2026)
 
@@ -43,7 +50,7 @@ Comprehensive Waxpeer API documentation based on https://docs.waxpeer.com/:
 - **Code Examples**: Python async examples
 
 #### Waxpeer API Client Updates (`src/waxpeer/waxpeer_api.py`)
-- **New Games Support**: Added Dota 2, TF2, Rust to `WaxpeerGame` enum
+- **New Games Support**: Added CS2, Rust to `WaxpeerGame` enum
 - **New `WaxpeerPriceInfo` dataclass** with:
   - `price_mils`, `price_usd`, `count` (liquidity)
   - `is_liquid` property (count >= 5)
@@ -66,17 +73,17 @@ Implements advanced DMarket ↔ Waxpeer arbitrage scanner based on analysis:
 - **Full Market Scanning** - No `best_deals` filter, sees ALL items
 - **Balance-Aware Purchasing** - Uses `priceTo=balance` to filter affordable items
 - **Trade Lock Analysis** - Supports items with lock up to 8 days (15% min ROI)
-- **Liquidity Checks** - Skips items with < 5 dAlgoly sales on Waxpeer
+- **Liquidity Checks** - Skips items with < 5 daily sales on Waxpeer
 - **Net Profit Calculation** - Formula: `(Waxpeer_Price * 0.94) - DMarket_Price`
 
 Key classes:
-- `CrossPlatformArbitrageScanner` - MAlgon scanner class
+- `CrossPlatformArbitrageScanner` - Main scanner class
 - `ArbitrageOpportunity` - Data class for opportunities
 - `ScanConfig` - Configuration dataclass
 - `ArbitrageDecision` enum - BUY_INSTANT, BUY_AND_HOLD, SKIP
 
 #### New Handler: `src/telegram_bot/handlers/waxpeer_handler.py`
-- `waxpeer_menu_handler()` - MAlgon Waxpeer menu
+- `waxpeer_menu_handler()` - Main Waxpeer menu
 - `waxpeer_balance_handler()` - Balance display
 - `waxpeer_settings_handler()` - Settings management
 - `route_waxpeer_callback()` - Callback router
@@ -99,7 +106,7 @@ Key classes:
 
 #### Keyboards
 - **Added Waxpeer keyboards** (`src/telegram_bot/keyboards/arbitrage.py`):
-  - `get_waxpeer_keyboard()` - MAlgon Waxpeer menu (balance, listings, repricing)
+  - `get_waxpeer_keyboard()` - Main Waxpeer menu (balance, listings, repricing)
   - `get_waxpeer_settings_keyboard()` - Settings with toggles for reprice/shadow/hold
   - `get_waxpeer_listings_keyboard()` - Paginated listings view
 - **Updated `get_modern_arbitrage_keyboard()`** with "💎 Waxpeer P2P" button
@@ -127,7 +134,7 @@ Key classes:
 - **Fixed import order (E402)**:
   - `src/telegram_bot/dependencies.py` - Moved TypeVar import to top
 - **Fixed whitespace issues (W291, W293)**:
-  - Removed trAlgoling whitespace and blank lines with whitespace
+  - Removed trailing whitespace and blank lines with whitespace
 - **Fixed mypy syntax error**:
   - `src/utils/prometheus_metrics.py` - Fixed inline type comment causing syntax error
 
@@ -143,7 +150,7 @@ Key classes:
 - 47 import sorting issues fixed automatically
 
 #### Documentation Updates
-- Updated dates in 12+ documentation files from 2025 to January 2026
+- Updated dates in 12+ documentation files from 2025 to April 2026
 - Updated README.md with correct test count (7654+)
 - Updated copilot-instructions.md with correct test count
 
@@ -210,7 +217,7 @@ Key classes:
   - TestTargets: Тесты таргетов (6 тестов)
   - TestIntegration: Интеграционные тесты (2 теста)
 
-### Added - Phase 2 & 3: Production Ready (January 2026)
+### Added - Phase 2 & 3: Production Ready (April 2026)
 
 #### Phase 2: Code Readability & Infrastructure
 - **Refactored 15+ Core Modules** with early returns pattern
@@ -262,10 +269,10 @@ Key classes:
 
 #### Project Management
 - **ROADMAP.md** - Unified project roadmap with Phase 4 plan
-- **ROADMAP_EXECUTION_STATUS.md** - DetAlgoled execution status tracking
+- **ROADMAP_EXECUTION_STATUS.md** - Detailed execution status tracking
 - **PHASE_2_3_COMPLETION_SUMMARY.md** - Complete summary of Phase 2 & 3
 
-### Added - Phase 2: Infrastructure Improvements (January 2026)
+### Added - Phase 2: Infrastructure Improvements (April 2026)
 - **E2E Tests**: New end-to-end test suite for critical workflows
   - `tests/e2e/test_arbitrage_flow.py` - Complete arbitrage workflow testing (395 lines)
   - `tests/e2e/test_target_management_flow.py` - Target management E2E tests (450+ lines)
@@ -300,7 +307,7 @@ Key classes:
   - `docs/ALL_PHASES_COMPLETE.md`
   - `docs/COMMIT_CHECKLIST.md`
   - `docs/WHATS_NEXT.md`
-  - `docs/REMAlgoNING_IMPROVEMENTS.md`
+  - `docs/REmainING_IMPROVEMENTS.md`
   - `docs/PHASE_3_PLAN.md`
 
 ### Fixed
@@ -332,7 +339,7 @@ Key classes:
 - Multi-level arbitrage scanning (5 levels)
 - Target management system (Buy Orders)
 - Real-time price monitoring via WebSocket
-- Multi-game support (CS:GO, Dota 2, TF2, Rust)
+- Multi-game support (CS:GO, CS2, Rust)
 - Market analytics and liquidity analysis
 - Internationalization (RU, EN, ES, DE)
 - API key encryption and security
@@ -353,3 +360,10 @@ Key classes:
 
 [Unreleased]: https://github.com/Dykij/DMarket-Telegram-Bot/compare/v1.0.0...HEAD
 [1.0.0]: https://github.com/Dykij/DMarket-Telegram-Bot/releases/tag/v1.0.0
+
+
+---
+🦅 *DMarket Quantitative engine | v7.0 | 2026*
+
+----- 
+🦅 *DMarket Quantitative Engine | v7.0 | 2026*

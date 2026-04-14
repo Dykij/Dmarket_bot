@@ -30,3 +30,10 @@ The bot enforces a multi-tier safety check before any capital commitment:
 
 ## 5. Deployment
 Optimized for `python:3.11-slim` Docker environments. Hand-tuned Garbage Collection (GC) ensures minimal latency during market scans.
+
+
+---
+🦅 *DMarket Quantitative engine | v7.0 | 2026*
+
+----- 
+🦅 *DMarket Quantitative Engine | v7.0 | 2026*

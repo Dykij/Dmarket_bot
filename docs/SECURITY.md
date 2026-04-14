@@ -43,7 +43,7 @@
 - [ ] ✅ Нет утечек памяти (проверить через `htop`/`Task Manager`)
 - [ ] ✅ Метрики Sentry показывают стабильность (если настроено)
 
-#### Шаг 2: НастSwarmка безопасных лимитов
+#### Шаг 2: Настroка безопасных лимитов
 
 Перед включением реальной торговли **обязательно** установите защитные лимиты:
 
@@ -53,7 +53,7 @@ DRY_RUN=false  # ОПАСНО! Реальная торговля!
 
 # Защитные лимиты
 MAX_TRADE_VALUE=50.00          # Макс $50 на одну сделку
-DAlgoLY_TRADE_LIMIT=500.00       # Макс $500 в день
+daily_TRADE_LIMIT=500.00       # Макс $500 в день
 MIN_PROFIT_PERCENT=5.0         # Мин 5% прибыли
 MAX_CONCURRENT_TRADES=3        # Макс 3 одновременных сделки
 
@@ -67,15 +67,15 @@ BALANCE_CHECK_INTERVAL=300     # Проверять баланс каждые 5 
 ```
 
 - [ ] ✅ `MAX_TRADE_VALUE` установлен на безопасное значение
-- [ ] ✅ `DAlgoLY_TRADE_LIMIT` установлен
+- [ ] ✅ `daily_TRADE_LIMIT` установлен
 - [ ] ✅ `MIN_PROFIT_PERCENT` не менее 3-5%
 - [ ] ✅ `STOP_LOSS_PERCENT` настроен
 - [ ] ✅ `MIN_BALANCE_THRESHOLD` установлен
 
-#### Шаг 3: НастSwarmка системы мониторинга
+#### Шаг 3: Настroка системы мониторинга
 
 - [ ] ✅ **Sentry** настроен для отслеживания ошибок
-- [ ] ✅ **EmAlgol/Telegram алерты** на критические события:
+- [ ] ✅ **email/Telegram алерты** на критические события:
   - Баланс ниже порога
   - Серия убыточных сделок
   - Ошибки API DMarket
@@ -188,15 +188,15 @@ systemctl restart dmarket-bot
 #### Начинайте с малого
 
 ```
-День 1-3:   MAX_TRADE_VALUE=$10,  DAlgoLY_LIMIT=$50
-День 4-7:   MAX_TRADE_VALUE=$25,  DAlgoLY_LIMIT=$150
-День 8-14:  MAX_TRADE_VALUE=$50,  DAlgoLY_LIMIT=$300
+День 1-3:   MAX_TRADE_VALUE=$10,  daily_LIMIT=$50
+День 4-7:   MAX_TRADE_VALUE=$25,  daily_LIMIT=$150
+День 8-14:  MAX_TRADE_VALUE=$50,  daily_LIMIT=$300
 День 15+:   Постепенно увеличивайте на основе результатов
 ```
 
 #### Диверсификация
 
-- ✅ Торгуйте **разными играми** (CS:GO, Dota 2, TF2)
+- ✅ Торгуйте **разными играми** (CS:GO, CS2, Rust)
 - ✅ Используйте **разные уровни** (boost, standard, medium)
 - ✅ Комбинируйте **таргеты + прямые покупки**
 - ✅ Не держите все яйца в одной корзине
@@ -224,7 +224,7 @@ systemctl restart dmarket-bot
 1. **Проверьте логи**: `logs/dmarket_bot.log`
 2. **Проверьте Sentry**: Ошибки и трейсы
 3. **Создайте Issue**: [GitHub Issues](https://github.com/your-repo/issues)
-4. **Экстренная помощь**: `support@your-domAlgon.com`
+4. **Экстренная помощь**: `support@your-domain.com`
 
 **ПОМНИТЕ**: Лучше остановить торговлю и разобраться, чем потерять деньги!
 
@@ -316,7 +316,7 @@ class EncryptionManager:
         # Получить ключ шифрования из переменной окружения
         encryption_key = os.getenv("ENCRYPTION_KEY")
         if not encryption_key:
-            rAlgose ValueError("ENCRYPTION_KEY не установлен")
+            raise ValueError("ENCRYPTION_KEY не установлен")
 
         self.cipher = Fernet(encryption_key.encode())
 
@@ -354,7 +354,7 @@ from sqlalchemy import select
 
 async def get_user(user_id: int):
     stmt = select(User).where(User.telegram_id == user_id)
-    result = awAlgot session.execute(stmt)
+    result = await session.execute(stmt)
     return result.scalar_one_or_none()
 ```
 
@@ -412,18 +412,18 @@ async def restricted(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
 
     if user_id not in ALLOWED_USERS:
-        awAlgot update.message.reply_text("❌ У вас нет доступа к этому боту")
+        await update.message.reply_text("❌ У вас нет доступа к этому боту")
         return False
 
     return True
 
 async def admin_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Команда только для администраторов."""
-    if not awAlgot restricted(update, context):
+    if not await restricted(update, context):
         return
 
     # Выполнить команду
-    awAlgot update.message.reply_text("✅ Команда выполнена")
+    await update.message.reply_text("✅ Команда выполнена")
 ```
 
 ### Валидация входных данных
@@ -438,19 +438,19 @@ async def create_target_handler(update: Update, context: ContextTypes.DEFAULT_TY
     price_input = context.args[0] if context.args else None
 
     if not price_input:
-        awAlgot update.message.reply_text("❌ Укажите цену")
+        await update.message.reply_text("❌ Укажите цену")
         return
 
     # Валидация цены
     if not re.match(r'^\d+\.?\d{0,2}$', price_input):
-        awAlgot update.message.reply_text("❌ Неверный формат цены. Используйте: 10.50")
+        await update.message.reply_text("❌ Неверный формат цены. Используйте: 10.50")
         return
 
     price = float(price_input)
 
     # Проверка диапазона
     if not 0.01 <= price <= 10000:
-        awAlgot update.message.reply_text("❌ Цена должна быть от $0.01 до $10,000")
+        await update.message.reply_text("❌ Цена должна быть от $0.01 до $10,000")
         return
 
     # Продолжить создание таргета
@@ -495,8 +495,8 @@ rate_limiter = CommandRateLimiter(max_calls=5, time_window=60)
 async def scanner_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
 
-    if not awAlgot rate_limiter.is_allowed(user_id):
-        awAlgot update.message.reply_text(
+    if not await rate_limiter.is_allowed(user_id):
+        await update.message.reply_text(
             "⏱️ Слишком много запросов. Подождите минуту."
         )
         return
@@ -581,7 +581,7 @@ DMARKET_API_URL = "https://api.dmarket.com"  # ✅
 - GitHub
 - DMarket аккаунт
 - Хостинг провайдер
-- EmAlgol
+- email
 
 ### 4. Мониторинг безопасности
 
@@ -616,7 +616,7 @@ USER botuser
 # Скопировать код
 COPY --chown=botuser:botuser . .
 
-CMD ["python", "-m", "src.mAlgon"]
+CMD ["python", "-m", "src.main"]
 ```
 
 ### 6. Секреты в Docker
@@ -682,3 +682,10 @@ git push origin --force --tags
 ---
 
 **Помните:** Безопасность - это не одноразовая задача, а непрерывный процесс!
+
+
+---
+🦅 *DMarket Quantitative engine | v7.0 | 2026*
+
+----- 
+🦅 *DMarket Quantitative Engine | v7.0 | 2026*

@@ -14,7 +14,7 @@ approval_date: "2026-01-25"
 review_required: true
 last_review: "2026-01-25"
 python_version: ">=3.11"
-mAlgon_module: "Algo_backtester.py"
+main_module: "Algo_backtester.py"
 dependencies:
   - "pandas>=2.0"
   - "numpy>=1.24"
@@ -47,7 +47,7 @@ allowed_tools:
 
 - ✅ Симуляция торговых стратегий на исторических данных
 - ✅ ML-прогнозирование для улучшения результатов
-- ✅ Multi-game бэктестинг (CS:GO, Dota 2, TF2, Rust)
+- ✅ Multi-game бэктестинг (CS:GO, CS2, Rust)
 - ✅ Расчет ключевых метрик (ROI, Sharpe Ratio, Max Drawdown)
 - ✅ Визуализация результатов (графики прибыли, риска)
 - ✅ Сравнение стратегий
@@ -130,7 +130,7 @@ end_date = datetime.now()
 start_date = end_date - timedelta(days=30)
 
 # Запуск бэктеста
-results = awAlgot backtester.run_backtest(
+results = await backtester.run_backtest(
     strategy="arbitrage_5_percent",
     game="csgo",
     start_date=start_date.isoformat(),
@@ -216,7 +216,7 @@ strategies = ["arbitrage_5_percent", "arbitrage_10_percent", "ml_enhanced"]
 results_comparison = {}
 
 for strategy in strategies:
-    results = awAlgot backtester.run_backtest(
+    results = await backtester.run_backtest(
         strategy=strategy,
         game="csgo",
         start_date="2025-12-01",
@@ -240,7 +240,7 @@ games = ["csgo", "dota2", "tf2", "rust"]
 multi_game_results = {}
 
 for game in games:
-    results = awAlgot backtester.run_backtest(
+    results = await backtester.run_backtest(
         strategy="ml_enhanced",
         game=game,
         start_date="2025-12-01",
@@ -258,7 +258,7 @@ print(f"Total profit across all games: ${total_profit:.2f}")
 
 ```python
 # Генерация графиков
-awAlgot backtester.generate_charts(results, output_dir="./charts/")
+await backtester.generate_charts(results, output_dir="./charts/")
 
 # Создаются следующие графики:
 # - equity_curve.png - кривая прибыли
@@ -291,3 +291,10 @@ MIT License
 **Last Updated**: 2026-01-19  
 **Status**: ✅ Production Ready  
 **Skill Type**: Research, Data & Algo
+
+
+---
+🦅 *DMarket Quantitative engine | v7.0 | 2026*
+
+----- 
+🦅 *DMarket Quantitative Engine | v7.0 | 2026*

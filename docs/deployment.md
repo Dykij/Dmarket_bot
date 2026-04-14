@@ -1,7 +1,7 @@
 # 🚀 Deployment Guide
 
 **Версия**: 1.0.0
-**Последнее обновление: Январь 2026 г.
+**Последнее обновление: Апрель 2026 г.
 
 ---
 
@@ -99,7 +99,7 @@ heroku addons:create heroku-postgresql:hobby-dev
 heroku addons:create heroku-redis:hobby-dev
 
 # Деплой
-git push heroku mAlgon
+git push heroku main
 ```
 
 ### AWS (EC2 + RDS)
@@ -147,7 +147,7 @@ nano .env
 alembic upgrade head
 
 # Запуск
-python -m src.mAlgon
+python -m src.main
 ```
 
 ### Systemd Service
@@ -163,7 +163,7 @@ User=bot
 WorkingDirectory=/home/bot/DMarket-Telegram-Bot
 Environment="PATH=/home/bot/DMarket-Telegram-Bot/.venv/bin"
 EnvironmentFile=/home/bot/DMarket-Telegram-Bot/.env
-ExecStart=/home/bot/DMarket-Telegram-Bot/.venv/bin/python -m src.mAlgon
+ExecStart=/home/bot/DMarket-Telegram-Bot/.venv/bin/python -m src.main
 Restart=always
 
 [Install]
@@ -193,3 +193,10 @@ SENTRY_DSN=https://xxx@sentry.io/xxx
 ---
 
 **Подробнее**: [ARCHITECTURE.md](ARCHITECTURE.md)
+
+
+---
+🦅 *DMarket Quantitative engine | v7.0 | 2026*
+
+----- 
+🦅 *DMarket Quantitative Engine | v7.0 | 2026*

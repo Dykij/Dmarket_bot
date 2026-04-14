@@ -123,7 +123,7 @@ GET /account/v1/user
 {
   "id": "string",
   "username": "string",
-  "emAlgol": "string",
+  "email": "string",
   "settings": {
     "targetsLimit": 0
   }
@@ -142,7 +142,7 @@ GET /account/v1/balance
 ```json
 {
   "balance": 12.34,
-  "avAlgolable_balance": 10.00,
+  "Available_balance": 10.00,
   "total_balance": 12.34,
   "error": false,
   "has_funds": true,
@@ -153,7 +153,7 @@ GET /account/v1/balance
 | Поле | Тип | Описание |
 |------|-----|----------|
 | `balance` | float | Баланс в долларах (основное поле) |
-| `avAlgolable_balance` | float | Доступный баланс в долларах |
+| `Available_balance` | float | Доступный баланс в долларах |
 | `total_balance` | float | Общий баланс включая заблокированные средства |
 | `has_funds` | boolean | Достаточно ли средств (balance >= $1.00) |
 | `usd.amount` | integer | Legacy: баланс в центах для обратной совместимости |
@@ -161,7 +161,7 @@ GET /account/v1/balance
 **Пример использования**:
 ```python
 # Новый формат (рекомендуется)
-balance_data = awAlgot api.get_balance()
+balance_data = await api.get_balance()
 balance_usd = balance_data["balance"]  # Уже в долларах
 
 # Legacy формат (deprecated)
@@ -173,9 +173,9 @@ balance_usd = balance_cents / 100
 ```json
 {
   "usd": "1234",
-  "usdAvAlgolableToWithdraw": "1000",
+  "usdAvailableToWithdraw": "1000",
   "dmc": "5000",
-  "dmcAvAlgolableToWithdraw": "4500"
+  "dmcAvailableToWithdraw": "4500"
 }
 ```
 
@@ -365,7 +365,7 @@ POST /marketplace-api/v1/user-targets/create
       "Attrs": {
         "floatPartValue": 0.25,
         "phase": "Phase 2",
-        "pAlgontSeed": 123
+        "paintSeed": 123
       }
     }
   ]
@@ -379,7 +379,7 @@ POST /marketplace-api/v1/user-targets/create
 - `Attrs` - Дополнительные атрибуты (опционально):
   - `floatPartValue` - Float значение (например, 0.15 для FN)
   - `phase` - Фаза допплера (для Doppler ножей)
-  - `pAlgontSeed` - Паттерн (для Case Hardened)
+  - `paintSeed` - Паттерн (для Case Hardened)
 
 **Ограничения**:
 - Максимум 100 таргетов в одном запросе
@@ -726,7 +726,7 @@ PATCH /exchange/v1/offers-buy
 **Статусы транзакции**:
 - `TxPending` - В обработке
 - `TxSuccess` - Успешно
-- `TxFAlgoled` - Ошибка
+- `Txfailed` - Ошибка
 
 ---
 
@@ -854,7 +854,7 @@ DMarket применяет ограничение частоты запросо�
 ```python
 if response.status_code == 429:
     retry_after = int(response.headers.get('Retry-After', 60))
-    awAlgot asyncio.sleep(retry_after)
+    await asyncio.sleep(retry_after)
     # Повторить запрос
 ```
 
@@ -867,7 +867,7 @@ if response.status_code == 429:
 ```python
 cursor = None
 while True:
-    response = awAlgot api.get_market_items(cursor=cursor)
+    response = await api.get_market_items(cursor=cursor)
     items = response.get('objects', [])
     if not items:
         break
@@ -885,7 +885,7 @@ while True:
 ### 3. Обрабатывайте ошибки
 Всегда обрабатывайте ошибки и используйте retry логику:
 ```python
-@retry(stop=stop_after_attempt(3), wAlgot=wAlgot_exponential(min=1, max=10))
+@retry(stop=stop_after_attempt(3), wait=wait_exponential(min=1, max=10))
 async def api_call():
     # API запрос
     pass
@@ -909,7 +909,7 @@ async def api_call():
 ```python
 async def find_arbitrage(api_client, game='a8db', min_profit_percent=5.0):
     # Получаем предметы с рынка
-    items = awAlgot api_client.get_market_items(
+    items = await api_client.get_market_items(
         game=game,
         limit=100,
         price_from=100,  # От $1
@@ -952,7 +952,7 @@ async def create_smart_targets(api_client, game='a8db'):
     targets = []
     for skin in popular_skins:
         # Получаем среднюю цену
-        aggregated = awAlgot api_client.get_aggregated_prices(
+        aggregated = await api_client.get_aggregated_prices(
             game=game,
             titles=[skin]
         )
@@ -971,7 +971,7 @@ async def create_smart_targets(api_client, game='a8db'):
             })
 
     # Создаем таргеты
-    result = awAlgot api_client.create_targets(game=game, targets=targets)
+    result = await api_client.create_targets(game=game, targets=targets)
     return result
 ```
 
@@ -980,26 +980,26 @@ async def create_smart_targets(api_client, game='a8db'):
 ```python
 async def auto_trade(api_client, game='a8db', balance_limit=50.0):
     # Проверяем баланс
-    balance_data = awAlgot api_client.get_balance()
+    balance_data = await api_client.get_balance()
     balance = float(balance_data['usd']) / 100
 
     if balance < balance_limit:
         return {'error': 'Insufficient balance'}
 
     # Ищем выгодные предложения
-    opportunities = awAlgot find_arbitrage(api_client, game=game, min_profit_percent=10.0)
+    opportunities = await find_arbitrage(api_client, game=game, min_profit_percent=10.0)
 
     results = []
     for opp in opportunities[:5]:  # Берем топ-5
         # Покупаем
-        buy_result = awAlgot api_client.buy_item(
+        buy_result = await api_client.buy_item(
             item_id=opp['item_id'],
             price=opp['buy_price']
         )
 
         if buy_result.get('success'):
             # Выставляем на продажу
-            sell_result = awAlgot api_client.sell_item(
+            sell_result = await api_client.sell_item(
                 item_id=buy_result['new_item_id'],
                 price=opp['sell_price']
             )
@@ -1012,7 +1012,7 @@ async def auto_trade(api_client, game='a8db', balance_limit=50.0):
             })
 
         # Задержка между сделками
-        awAlgot asyncio.sleep(2)
+        await asyncio.sleep(2)
 
     return results
 ```
@@ -1072,7 +1072,7 @@ async def auto_trade(api_client, game='a8db', balance_limit=50.0):
 **Статусы операций**:
 - `TransferStatusPending` - в обработке
 - `TransferStatusCompleted` - завершено
-- `TransferStatusFAlgoled` - ошибка
+- `TransferStatusfailed` - ошибка
 
 ### 5. Inventory Sync
 
@@ -1092,7 +1092,7 @@ async def check_arbitrage_opportunities(api_client, items_to_check):
     """Проверить несколько предметов на арбитражные возможности."""
 
     # Получить агрегированные цены
-    result = awAlgot api_client.get_aggregated_prices(
+    result = await api_client.get_aggregated_prices(
         game='csgo',
         titles=[item['title'] for item in items_to_check],
         limit=100
@@ -1138,13 +1138,13 @@ async def create_smart_targets(api_client, game='csgo'):
 
     for item_title in popular_items:
         # Проверить существующие таргеты
-        existing_targets = awAlgot api_client.get_targets_by_title(
+        existing_targets = await api_client.get_targets_by_title(
             game_id=game,
             title=item_title
         )
 
         # Получить текущие цены
-        prices = awAlgot api_client.get_aggregated_prices(
+        prices = await api_client.get_aggregated_prices(
             game=game,
             titles=[item_title]
         )
@@ -1170,7 +1170,7 @@ async def create_smart_targets(api_client, game='csgo'):
 
     # Создать все таргеты одним запросом
     if targets_to_create:
-        result = awAlgot api_client.create_targets(
+        result = await api_client.create_targets(
             game=game,
             targets=targets_to_create
         )
@@ -1184,21 +1184,21 @@ async def deposit_and_monitor(api_client, asset_ids):
     """Перевести предметы из Steam и отслеживать статус."""
 
     # Инициировать депозит
-    deposit_result = awAlgot api_client.deposit_assets(
+    deposit_result = await api_client.deposit_assets(
         asset_ids=asset_ids
     )
 
     deposit_id = deposit_result.get('DepositID')
 
     if not deposit_id:
-        rAlgose ValueError("FAlgoled to initiate deposit")
+        raise ValueError("failed to initiate deposit")
 
     # Мониторинг статуса
     max_attempts = 30
     attempt = 0
 
     while attempt < max_attempts:
-        status = awAlgot api_client.get_deposit_status(deposit_id)
+        status = await api_client.get_deposit_status(deposit_id)
 
         if status['Status'] == 'TransferStatusCompleted':
             return {
@@ -1206,7 +1206,7 @@ async def deposit_and_monitor(api_client, asset_ids):
                 'deposit_id': deposit_id,
                 'assets': status.get('Assets', [])
             }
-        elif status['Status'] == 'TransferStatusFAlgoled':
+        elif status['Status'] == 'TransferStatusfailed':
             return {
                 'success': False,
                 'error': status.get('Error'),
@@ -1214,12 +1214,12 @@ async def deposit_and_monitor(api_client, asset_ids):
             }
 
         # Ожидание перед следующей проверкой
-        awAlgot asyncio.sleep(10)
+        await asyncio.sleep(10)
         attempt += 1
 
     return {
         'success': False,
-        'error': 'Timeout wAlgoting for deposit completion',
+        'error': 'Timeout waiting for deposit completion',
         'deposit_id': deposit_id
     }
 ```
@@ -1251,7 +1251,7 @@ async def deposit_and_monitor(api_client, asset_ids):
 # Старый метод (v1.0)
 offset = 0
 while True:
-    items = awAlgot api.get_market_items(game='csgo', offset=offset, limit=100)
+    items = await api.get_market_items(game='csgo', offset=offset, limit=100)
     if not items['objects']:
         break
     offset += 100
@@ -1259,7 +1259,7 @@ while True:
 # Новый метод (v1.1.0) - рекомендуется
 cursor = None
 while True:
-    items = awAlgot api.get_market_items(game='csgo', cursor=cursor, limit=100)
+    items = await api.get_market_items(game='csgo', cursor=cursor, limit=100)
     if not items['objects']:
         break
     cursor = items.get('cursor')
@@ -1271,12 +1271,12 @@ while True:
 ```python
 # Старый метод - множественные запросы
 for item_title in items:
-    offers = awAlgot api.get_offers_by_title(title=item_title)
-    targets = awAlgot api.get_targets_by_title(game, item_title)
+    offers = await api.get_offers_by_title(title=item_title)
+    targets = await api.get_targets_by_title(game, item_title)
     # Обработка...
 
 # Новый метод - один запрос
-prices = awAlgot api.get_aggregated_prices(
+prices = await api.get_aggregated_prices(
     game='csgo',
     titles=items
 )
@@ -1293,13 +1293,13 @@ prices = awAlgot api.get_aggregated_prices(
 ```python
 # Проверить до 100 предметов за раз
 titles = get_items_to_check()[:100]
-prices = awAlgot api.get_aggregated_prices(game='csgo', titles=titles)
+prices = await api.get_aggregated_prices(game='csgo', titles=titles)
 ```
 
 ❌ **Неправильно** - много отдельных запросов:
 ```python
 for title in titles:
-    price = awAlgot api.get_aggregated_prices(game='csgo', titles=[title])
+    price = await api.get_aggregated_prices(game='csgo', titles=[title])
 ```
 
 ### 2. Использование cursor для больших данных
@@ -1309,7 +1309,7 @@ for title in titles:
 all_items = []
 cursor = None
 while True:
-    response = awAlgot api.get_user_inventory(game='csgo', cursor=cursor, limit=100)
+    response = await api.get_user_inventory(game='csgo', cursor=cursor, limit=100)
     all_items.extend(response['Items'])
     cursor = response.get('Cursor')
     if not cursor:
@@ -1321,26 +1321,26 @@ while True:
 ✅ **Правильно** - проверить перед созданием:
 ```python
 # Сначала проверить существующие
-existing = awAlgot api.get_targets_by_title(game='csgo', title=item_title)
+existing = await api.get_targets_by_title(game='csgo', title=item_title)
 if not existing['orders']:
     # Только тогда создавать новый
-    awAlgot api.create_targets(...)
+    await api.create_targets(...)
 ```
 
 ### 4. Мониторинг статусов операций
 
 ✅ **Правильно** - с таймаутом и экспоненциальной задержкой:
 ```python
-async def wAlgot_for_deposit(deposit_id, max_wAlgot=300):
+async def wait_for_deposit(deposit_id, max_wait=300):
     start_time = time.time()
     delay = 5
 
-    while time.time() - start_time < max_wAlgot:
-        status = awAlgot api.get_deposit_status(deposit_id)
+    while time.time() - start_time < max_wait:
+        status = await api.get_deposit_status(deposit_id)
         if status['Status'] != 'TransferStatusPending':
             return status
 
-        awAlgot asyncio.sleep(delay)
+        await asyncio.sleep(delay)
         delay = min(delay * 1.5, 30)  # Экспоненциальная задержка до 30 сек
 ```
 
@@ -3984,3 +3984,10 @@ An unexpected error response.
 - "offerAttributes": { },
 - "orderAttributes": { }
 
+
+
+---
+🦅 *DMarket Quantitative engine | v7.0 | 2026*
+
+----- 
+🦅 *DMarket Quantitative Engine | v7.0 | 2026*

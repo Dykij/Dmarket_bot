@@ -1,26 +1,27 @@
-# 🦅 DMarket Target Sniper (v3.2)
+# 🦅 DMarket Quantitative Arbitrage Engine (v7.0)
 
-**Statistical Arbitrage & Limit Market Making Bot for CS2 and Rust skins.**
-Автономная торговая система, работающая чисто на математических скриптах и целевом снайпинге (Target Sniping).
+**High-Performance Deterministic Trading & Target Sniping for CS2 and Rust.**
+
+Автономная торговая система, работающая на строгих математических алгоритмах и количественном анализе рынка. Полностью очищена от legacy-кода и экспериментальных ИИ-моделей в пользу максимальной предсказуемости и профита.
 
 ---
 
 ## 🚀 Основные Возможности
 
-### 1. ⚡ Hardware Acceleration (Phase 14)
+### 1. 📈 Pure Quantitative Core
+- **Deterministic Math:** Все решения о покупке принимаются на основе жесткой формулы прибыли (Net Margin >= 5%) с учетом всех комиссий платформы.
+- **SQLite Price Intelligence:** Локальная база данных истории цен для выявления краткосрочных трендов и рыночных аномалий.
+- **CSFloat Oracle:** Интеграция с внешним оракулом цен для валидации офферов DMarket в реальном времени.
 
-- **CUDA Support (`CuPy`):** Марковский предиктор (`markov_model.py`) использует тензорные ядра для мгновенной классификации 10,000+ предметов в одном GPU-пакете.
+### 2. 🛡️ Protection Layer (The Shield)
+- **Trend Guard:** Автоматическая блокировка покупок при обнаружении устойчивого нисходящего тренда (Anti-Crash система).
+- **Event Shield (2026):** Динамическая корректировка риск-множителей на основе календаря событий CS2/Rust (Мажоры, Сейлы, Вайпы).
+- **Asset Whitelisting:** Концентрация ресурсов на высоколиквидных предметах (CS2 и Rust), исключая Dota 2 и TF2.
 
-### 2. 🛡️ Security Hardening (Phase 13)
-
-- **V1-V4 Protection:** Заморозка констант модуля, хранение TLS-отпечатков в **OS Keyring**, HMAC-подпись Git-чекпоинтов.
-- **Price Validator:** Жесткий фильтр цен ($0.10–$50,000) для защиты от Data Poisoning и некорректных форматов (напр. `"1e5"`).
-- **Trade Gate:** Решение проходит через **Pydantic Gate**, проверяющий лимиты и математические критерии прибыльности (мин 5% маржа).
-
-### 3. 🧠 Smart Math Architecture
-
-- **📊 Markov Chain Predictor:** 3-уровневая классификация рынка (STABLE / VOLATILE / ANOMALOUS). Блокирует аномальные всплески.
-- **🎯 Target Sniping:** Обработка стаканов цен, оценка флоатов и стикеров с автоматическим размещением лимитных ордеров (Batch Create).
+### 3. ⚡ High-Frequency Readiness
+- **Batch Operations:** Поддержка пакетного создания (`batchCreate`) и удаления таргетов для минимизации задержек.
+- **Async Execution:** Полностью асинхронный клиент на `aiohttp` с поддержкой Ed25519 (NACL) подписи.
+- **Telegram Interface:** Управление и мониторинг через защищенного Telegram-бота.
 
 ---
 
@@ -28,47 +29,50 @@
 
 | Компонент | Технология |
 | :--- | :--- |
-| **Quant Math** | `cupy` (CUDA 12.x) / `numpy` |
-| **Validation** | `pydantic` v2 |
-| **Security** | `keyring`, `hashlib` (HMAC-SHA256) |
+| **Logic Core** | Python 3.11+, NumPy |
+| **Database** | SQLite 3 (Persistent History) |
 | **API Client** | Async REST + Ed25519 Signing |
+| **Interface** | Aiogram 3.x (Telegram) |
 
 ---
 
 ## 🛠 Установка и Запуск
 
-### Настройка GPU (WSL2 / Windows)
-
-1. Установить CUDA 12.x.
+### Быстрый старт
+1. Клонировать репозиторий:
+   ```bash
+   git clone https://github.com/Dykij/Dmarket_bot.git
+   ```
 2. Установить зависимости:
-
    ```bash
-   pip install cupy-cuda12x pydantic keyring
+   pip install -r requirements.txt
    ```
-
-3. Добавить TLS fingerprint в хранилище:
-
+3. Настроить конфигурацию в `.env` (см. `.env.example`).
+4. Инициализировать базу данных:
    ```bash
-   python -c "import keyring; keyring.set_password('dmarket_bot', 'cert_fp', '<sha256_hex>')"
+   python scripts/init_db.py
    ```
-
-### Запуск
-
-```bash
-# Режим сканнера с Марковской фильтрацией и Target Sniping
-python src/autonomous_scanner.py
-```
+5. Запустить двигатель:
+   ```bash
+   python src/main.py
+   ```
 
 ---
 
-## ⚙️ Безопасность (`src/trade_gate.py`)
-
-Бот использует **TradeExecutionGate**, который блокирует сделки если:
-
-- Сумма сделки > $50.00 (настраиваемый лимит).
-- Цена не прошла повторную валидацию.
-- Маржа сделки с учетом комиссии составляет менее 5%.
+## 📊 Стратегия "Pure Snap"
+Бот использует стратегию **Target Sniping**, выставляя лимитные ордера на покупку ниже рыночной цены. 
+Алгоритм выбирает цели на основе:
+1. Текущей глубины стакана.
+2. Истории продаж за последние 7 дней (из SQLite DB).
+3. Валидации через CSFloat Oracle.
 
 ---
 
-*Phase 14: CUDA Acceleration & Scripting Pipeline Build.*
+*Phase 7: Pure Quantitative Awakening - Release 2026.*
+
+
+---
+🦅 *DMarket Quantitative engine | v7.0 | 2026*
+
+----- 
+🦅 *DMarket Quantitative Engine | v7.0 | 2026*

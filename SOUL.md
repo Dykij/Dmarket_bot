@@ -5,9 +5,9 @@
 The DMarket bot operates on strictly defined mathematical workflows where data parsing, execution, and validation are segregated roles. This ensures fast execution and strict bounds on losses, preserving absolute capital integrity. It minimizes API latency and optimizes operations via quantitative algorithms rather than any heuristic LLM logic.
 
 **Базовые механизмы:**
-*   **Target Engine:** Использование Markov Chains для отсеивания аномалий спреда и целевых вычислений профита стикеров/флоатов.
-*   **Context Compression:** Пакетный сбор данных через асинхронные сокеты.
-*   **Deterministic Feedback:** Код должен проходить строгие unit-тесты (Target Sniping margin > 5%).
+*   **Quantitative Engine:** Детерминированный расчет профита на основе NumPy и сверки со стаканом цен.
+*   **Trend Guard:** Фильтрация нисходящих трендов через SQLite Price History.
+*   **Event Shield:** Динамическая корректировка порогов риска под календарь 2026.
 
 ---
 
@@ -38,8 +38,15 @@ To maintain secure boundaries and prevent the system from executing loss-making 
 
 **Brigade Dmarket (Execution & Safety):**
 Strict pipeline ensuring safe and fast deal execution:
-`Scanner/Fetcher` -> `Price Validator` -> `Target Sniping Logic` -> `Risk Manager` -> `REST/Batch Executor`
+`Scanner/Fetcher` -> `Price Validator` -> `Quantitative Core` -> `Risk Manager` -> `REST/Batch Executor`
 - **Scanner**: Reads real-time order books.
 - **Price Validator**: Scans for price anomalies, scientific notations, bait orders.
-- **Target Logic**: Evaluates item attributes (pattern, float) mathematically and computes fair limit price.
+- **Quantitative Core**: Evaluates item attributes (pattern, float) mathematically and computes fair limit price based on market depth and SQLite history.
 - **Risk Manager**: Performs final checks against Dmarket constraints and account balances (5% bounds).
+
+
+---
+🦅 *DMarket Quantitative engine | v7.0 | 2026*
+
+----- 
+🦅 *DMarket Quantitative Engine | v7.0 | 2026*

@@ -1,64 +1,53 @@
-# System Flow Diagram: Critical ChAlgon
+# SYSTEM_FLOW - DMarket Quantitative Engine
 
-This document visualizes the critical data flow for the DMarket Trading Bot, from user interaction/scheduler trigger to the final API call execution.
+Этот документ описывает логическую цепочку работы бота в режиме **Phase 7 (Pure Quantitative)**.
 
-## Critical ChAlgon Sequence
+---
 
-```mermAlgod
-sequenceDiagram
-    participant User as User/Scheduler
-    participant TG as Telegram Bot
-    participant TM as TradeManager (ArbitrageTrader)
-    participant API as DMarketAPI (Client)
-    participant Sign as Signer (Ed25519)
-    participant Cache as Redis/Cache
-    participant DM as DMarket Network
+## 🔄 Основной торговый цикл (The Loop)
 
-    User->>TG: Send Command / Trigger Scan
-    TG->>TM: Initiate Trading Action (e.g., start_auto_trading)
-    
-    rect rgb(200, 255, 200)
-        Note over TM, API: Core Trading Logic
-        TM->>TM: check_limits()
-        TM->>API: check_balance()
-        API->>Cache: Check Cache (GET /balance)
-        alt Cache Hit
-            Cache-->>API: Return Cached Data
-        else Cache Miss
-            API->>Sign: generate_signature(method, path, body)
-            Sign-->>API: Signed Headers (X-Request-Sign)
-            API->>DM: HTTP GET /account/v1/balance
-            DM-->>API: JSON Response
-            API->>Cache: Store Result
-        end
-        API-->>TM: Balance Data
-    end
-
-    TM->>API: get_market_items(game, price_range)
-    API->>DM: HTTP GET /exchange/v1/market/items
-    DM-->>API: Market Listings
-    
-    loop Analysis
-        TM->>TM: Calculate Profit Validate (net_received - buy_price > min_margin)
-        alt Profitable
-            TM->>API: purchase_item(itemId, price)
-            API->>Sign: Sign Transaction (POST)
-            API->>DM: HTTP POST /exchange/v1/offers/create
-            DM-->>API: Purchase Success
-            
-            TM->>API: list_item_for_sale(itemId, price)
-            API->>Sign: Sign Listing (POST)
-            API->>DM: HTTP POST /exchange/v1/user/items/sell
-            DM-->>API: Listing Success
-        end
-    end
-
-    TM-->>TG: Notify User (Success/FAlgol)
+```mermaid
+graph TD
+    A[Start Cycle] --> B[Market Probe: Get Top Items]
+    B --> C[SQLite DB: Check Price History]
+    C --> D{Trend Guard OK?}
+    D -- No --> E[Skip Item]
+    D -- Yes --> F[Calculate ROI with 5% Buffer]
+    F --> G{Profit >= 5%?}
+    G -- No --> E
+    G -- Yes --> H[CSFloat Oracle: Price Validation]
+    H --> I{Oracle Verified?}
+    I -- No --> E
+    I -- Yes --> J[Target Sniper: Place Batch Order]
+    J --> K[Telegram Notification]
+    K --> A
 ```
 
-## Key Components
+---
 
-1.  **Telegram Handler (`src/telegram_bot`)**: Entry point for manual commands.
-2.  **Trade Manager (`src/dmarket/arbitrage/trader.py`)**: Central logic for profit calculation, limits, and orchestration.
-3.  **API Client (`src/dmarket/api/client.py`)**: Handles HTTP communication, rate limiting, and caching.
-4.  **Signer (`nacl.signing`)**: Crucial security component. Requests *must* be signed with Ed25519 key.
+## 🛡 Компоненты защиты
+
+### 1. Trend Guard (SQLite)
+Сверяет текущую цену с последними 10 записями в базе данных. Если цена ниже скользящей средней (SMA-5) более чем на 10%, покупка блокируется.
+
+### 2. Event Shield
+Считывает `data/cs2_events.json`. Если текущая дата попадает в интервал Major или Steam Sale, маржинальный порог автоматически повышается до 10% для компенсации волатильности.
+
+### 3. Pydantic Gate
+Каждый объект сделки проходит через схему валидации, которая блокирует некорректные типы данных, отрицательные цены и предметы не из белого списка (CS2/Rust).
+
+---
+
+## 📡 Сетевой уровень
+
+- **Transport**: `aiohttp` (Asynchronous HTTP).
+- **Security**: Ed25519 NACL signatures for every request.
+- **Speed**: Пакетная обработка (`Batching`) до 50 таргетов в одном запросе.
+
+---
+
+*Last Updated: April 2026*
+
+
+---
+🦅 *DMarket Quantitative engine | v7.0 | 2026*

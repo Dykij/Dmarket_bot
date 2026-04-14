@@ -6,7 +6,7 @@
 
 | Документ | Описание |
 |----------|----------|
-| [ARCHITECTURE.md](ARCHITECTURE.md) | Текущая архитектура Quantitative Arbitrage Engine v6.0 |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | Текущая архитектура Quantitative Arbitrage Engine v7.0 |
 | [DMARKET_API_FULL_SPEC.md](DMARKET_API_FULL_SPEC.md) | Полная спецификация DMarket API v2 (Ed25519, Endpoints) |
 | [API_COMPLETE_REFERENCE.md](API_COMPLETE_REFERENCE.md) | Краткий справочник всех API эндпоинтов |
 | [STEAM_API_REFERENCE.md](STEAM_API_REFERENCE.md) | Справочник Steam Web API для инспекции предметов |
@@ -25,3 +25,10 @@
 4. Секреты защищены через **In-Memory Vault** (XOR-маскирование в heap).
 
 > **Примечание:** Этот бот НЕ использует AI, ML, LLM или нейросети. Все решения принимаются чистой математикой.
+
+
+---
+🦅 *DMarket Quantitative engine | v7.0 | 2026*
+
+----- 
+🦅 *DMarket Quantitative Engine | v7.0 | 2026*

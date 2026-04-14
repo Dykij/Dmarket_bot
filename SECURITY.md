@@ -17,7 +17,7 @@ Instead, please report them via GitHub Security Advisories:
 
 1. Go to the [Security tab](https://github.com/Dykij/DMarket-Telegram-Bot/security/advisories)
 2. Click "Report a vulnerability"
-3. Fill out the form with as much detAlgol as possible
+3. Fill out the form with as much detail as possible
 
 ### What to Include
 
@@ -85,7 +85,7 @@ Please include the following information in your report:
 
 4. **Rate Limiting**
    - Implement rate limiting for all external APIs
-   - Protect agAlgonst DDoS attacks
+   - Protect against DDoS attacks
    - Monitor unusual activity
 
 ## Security Features
@@ -123,3 +123,10 @@ We'd like to thank the following people for responsibly disclosing security issu
 ---
 
 **Last Updated**: December 28, 2025
+
+
+---
+🦅 *DMarket Quantitative engine | v7.0 | 2026*
+
+----- 
+🦅 *DMarket Quantitative Engine | v7.0 | 2026*
