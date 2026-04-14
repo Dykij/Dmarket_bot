@@ -15,6 +15,9 @@ anysqlite>=0.0.5                   # Async SQLite for hishel caching
 aiometer>=1.0.0                    # Concurrent task throttling and rate limiting
 asyncer>=0.0.12                    # Type-safe parallel task execution by Tiangolo
 anyio>=4.0.0                       # Async backend abstraction (required by asyncer)
+hvac>=2.3.0                        # HashiCorp Vault client (Phase 3.2 extension)
+maturin>=1.5.0                     # Rust/Python build system (Phase 1.1 extension)
+pyo3-binconfig>=0.21.0             # PyO3 configuration (Phase 1.1 extension)
 
 # Database & Caching
 sqlalchemy>=2.0.40                 # Latest SQLAlchemy 2.0

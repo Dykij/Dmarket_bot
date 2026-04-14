@@ -85,6 +85,15 @@ class SnipingLoop:
         One cycle: Scan Market -> Analyze -> Trend Guard -> Event Shield -> Oracle -> Target.
         """
         logger.info(f"Scanning market for opportunities in {game_id}...")
+        
+        # --- BALANCE-AWARE: Fetch current balance ---
+        try:
+            current_balance = await self.client.get_real_balance()
+            logger.info(f"💵 Current Sniper Balance: ${current_balance:.2f}")
+        except Exception as e:
+            logger.error(f"Failed to fetch balance, using safe default: {e}")
+            current_balance = 10.0 # Strict fallback
+            
         response = await self.client.get_market_items_v2(game_id, limit=100)
         items = response.get("objects", [])
         
@@ -94,6 +103,11 @@ class SnipingLoop:
         for item in items:
             item_id = item.get("itemId")
             base_price = float(item.get("price", {}).get("USD", 0)) / 100.0
+            
+            # --- BALANCE-AWARE: Selection Filter ---
+            # Never target items more expensive than current balance
+            if base_price > current_balance:
+                continue
             title = item.get("title", "")
             
             # Skip if above budget

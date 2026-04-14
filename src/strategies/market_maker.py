@@ -6,7 +6,7 @@ class MarketMaker(BaseStrategy):
     def __init__(self):
         super().__init__("MarketMaker")
 
-    def evaluate_opportunity(self, market_data: Dict[str, Any]) -> Dict[str, Any]:
+    def evaluate_opportunity(self, market_data: Dict[str, Any], current_balance: float = 50.0) -> Dict[str, Any]:
         """
         Market Maker logic: Find the spread, undercut the lowest Ask, and calculate
         position size dynamically based on available balance and volatility proxy.
@@ -30,10 +30,6 @@ class MarketMaker(BaseStrategy):
 
         if spread_pct >= Config.MIN_SPREAD_PCT:
             # We have a valid opportunity
-            # Get current available balance from the injected data or assume 
-            # some balance parameter (for simplicity, we assume $50 here if not provided)
-            current_balance = market_data.get("current_balance", 50.0)
-            
             # Using spread_pct as a volatility proxy (higher spread = more risk adjustment)
             volatility_proxy = max(1.0, spread_pct / Config.MIN_SPREAD_PCT)
             

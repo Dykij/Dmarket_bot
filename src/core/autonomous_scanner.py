@@ -33,11 +33,13 @@ async def run_autonomous_scanner():
 
     # Try multiple .env locations
     for env_candidate in [
+        os.path.join(os.getcwd(), ".env"),
         os.path.join(BASE_DIR, "config", ".env"),
         os.path.join(BASE_DIR, ".env"),
     ]:
         if os.path.isfile(env_candidate):
             load_dotenv(dotenv_path=env_candidate)
+            vault.re_initialize()
             break
 
     api = None
@@ -49,6 +51,11 @@ async def run_autonomous_scanner():
     if pub_key and sec_key and len(sec_key) >= 64:
         logger.info("Keys loaded via Vault, initializing DMarket API Client...")
         api = DMarketAPIClient(public_key=pub_key, secret_key=sec_key)
+        inv_mgr = InventoryManager(api)
+    elif os.getenv("DRY_RUN", "false").lower() == "true" or "--test" in sys.argv:
+        logger.info("🛠 TEST MODE: Initializing Mock API client...")
+        # Use dummy keys for test mode to prevent crash-loop
+        api = DMarketAPIClient(public_key="0" * 64, secret_key="0" * 128)
         inv_mgr = InventoryManager(api)
     else:
         logger.warning("API keys not found or invalid! Proceeding without placing real mock orders.")

@@ -7,7 +7,10 @@ import urllib.parse
 from typing import Optional, Dict, List, Any
 from functools import wraps
 from nacl.signing import SigningKey
+import structlog
 from tenacity import retry, stop_after_attempt, wait_exponential
+
+logger = structlog.get_logger("DMarketAPI")
 
 class SecurityViolation(Exception):
     """Raised when request parameters violate safety allowlists."""
@@ -109,9 +112,17 @@ class DMarketAPIClient:
         """ Fetches the current USD & DMC balance. Returns USD float. """
         try:
             res = await self.make_request("GET", "/account/v1/balance")
-            # balance is returned as string in cents
-            return float(res.get('usd', 0)) / 100.0
-        except Exception:
+            # --- Phase 7.1: Support New Balance Format (Jan 2026) ---
+            # Try new 'balance' field first, then fallback to 'usd.amount'
+            if "balance" in res:
+                return float(res["balance"])
+            
+            usd_data = res.get('usd', 0)
+            if isinstance(usd_data, dict):
+                return float(usd_data.get('amount', 0)) / 100.0
+            return float(usd_data) / 100.0
+        except Exception as e:
+            logger.error(f"Balance fetch error: {e}")
             return 0.0
 
     async def get_user_inventory(self, game_id: str, limit: int = 50, cursor: Optional[str] = None):
