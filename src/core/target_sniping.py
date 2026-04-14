@@ -29,9 +29,8 @@ class SnipingLoop:
         self.event_shield = EventShield()
         self.liquidity = LiquidityManager()
         
-        # Focusing strictly on CS2 (a8db) and Rust.
-        self.target_games = ["a8db", "rust"] 
-        self.running = False
+        # Phase 7.8: Hybrid scanning state
+        self.deep_scan_counter = 0
         
         # Risk factors
         self.buy_budget = 500.0  # Max USD for a single item
@@ -57,8 +56,8 @@ class SnipingLoop:
                 # Manual garbage collection during the non-critical anti-detection delay
                 gc.collect()
                 
-                # Anti-detection delay
-                await asyncio.sleep(5) 
+                # Anti-detection delay (Increased for v7.8 24/7 stability)
+                await asyncio.sleep(10) 
         except asyncio.CancelledError:
             logger.info("Sniping loop cancelled.")
         except Exception as e:
@@ -70,22 +69,53 @@ class SnipingLoop:
 
     async def run_cycle(self, game_id: str):
         """
-        Oracle Factory + Dynamic Fees + TVM + Liquidity Enforcements.
+        Oracle Factory + Dynamic Fees + TVM + Persistent Pagination (v7.7/v7.8 Hybrid).
         """
-        logger.info(f"Scanning market for opportunities in {game_id}...")
-        
         try:
-            current_balance = await self.client.get_real_balance()
-            logger.info(f"💵 Current Sniper Balance: ${current_balance:.2f}")
+            # --- PHASE 7.8 HYBRID SCANNING LOGIC ---
+            self.deep_scan_counter += 1
+            is_fresh_cycle = (self.deep_scan_counter % 5 == 0)
             
+            cursor_key = f"dmarket_cursor_{game_id}"
+            
+            if is_fresh_cycle:
+                logger.info(f"🔄 FRESH CYCLE (Page 1) for {game_id} to catch new listings.")
+                current_cursor = "" # Force restart
+            else:
+                current_cursor = price_db.get_state(cursor_key) or ""
+            
+            logger.info(f"Scanning market for {game_id} (Cursor: {current_cursor or 'START'})...")
+            current_balance = await self.client.get_real_balance()
             oracle = OracleFactory.get_oracle(game_id)
             if not oracle:
-                logger.warning(f"No oracle found for game {game_id}")
                 return
 
-            response = await self.client.get_market_items_v2(game_id, limit=100)
+            try:
+                response = await self.client.get_market_items_v2(game_id, limit=100, cursor=current_cursor)
+            except Exception as e:
+                if "400" in str(e) or "expired" in str(e).lower():
+                    logger.warning(f"⚠️ Cursor expired for {game_id}. Resetting scanning state.")
+                    price_db.save_state(cursor_key, "")
+                    response = await self.client.get_market_items_v2(game_id, limit=100, cursor="")
+                else:
+                    raise e
+
             items = response.get("objects", [])
+            next_cursor = response.get("cursor", "")
             
+            # --- PHASE 7.8: Deep Page Empty Response Guard ---
+            if not items and next_cursor and not is_fresh_cycle:
+                logger.warning(f"📭 Empty deep page for {game_id}. Resetting to check fresh items.")
+                price_db.save_state(cursor_key, "")
+                return
+            
+            # --- Persistence Updates (v7.8) ---
+            if not is_fresh_cycle: # Only save cursor if we are doing a deep scan
+                if next_cursor:
+                    price_db.save_state(cursor_key, next_cursor)
+                else:
+                    price_db.save_state(cursor_key, "")
+
             sniping_targets = []
             current_margin = self.min_profit_margin
             
@@ -120,12 +150,14 @@ class SnipingLoop:
                 expected_sell = ref_price if ref_price > 0 else total_ev
                 
                 # --- 6. TVM-AWARE PROFIT VALIDATION ---
-                # Assume 7-day hold for all items (V7.6 standard)
-                target_buy_price = round(expected_sell * 0.85, 2)
+                # v7.8 Index Delay Guard: Lower expected sell by 1% for Rust to account for stale SCMM data
+                safe_expected_sell = expected_sell * 0.99 if game_id == "rust" else expected_sell
+                
+                target_buy_price = round(safe_expected_sell * 0.85, 2)
                 try:
                     net_margin = validate_arbitrage_profit(
                         buy_price=target_buy_price, 
-                        expected_sell_price=expected_sell, 
+                        expected_sell_price=safe_expected_sell, 
                         fee_markup=fee_rate, 
                         min_profit_margin=current_margin,
                         lock_days=7

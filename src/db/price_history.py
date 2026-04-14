@@ -39,10 +39,13 @@ class PriceHistoryDB:
                 )
             """)
             self.conn.execute("""
-                CREATE INDEX IF NOT EXISTS idx_ph_name_time
-                ON price_history (hash_name, recorded_at DESC)
+                CREATE TABLE IF NOT EXISTS scanning_state (
+                    key         TEXT PRIMARY KEY,
+                    value       TEXT NOT NULL,
+                    updated_at  REAL NOT NULL
+                )
             """)
-        logger.info(f"💾 PriceHistoryDB initialized at {self.db_path}")
+        logger.info(f"💾 PriceHistoryDB initialized at {self.db_path} (v7.7 Persistence active)")
 
     # ------------------------------------------------------------------
     # Write
@@ -132,6 +135,20 @@ class PriceHistoryDB:
             (hash_name, cutoff),
         ).fetchone()
         return row["avg_price"] if row and row["avg_price"] else None
+
+    # --- Scanning State Persistence (v7.7) ---
+    def save_state(self, key: str, value: str):
+        with self.conn:
+            self.conn.execute(
+                "INSERT OR REPLACE INTO scanning_state (key, value, updated_at) VALUES (?, ?, ?)",
+                (key, value, time.time())
+            )
+
+    def get_state(self, key: str) -> Optional[str]:
+        row = self.conn.execute(
+            "SELECT value FROM scanning_state WHERE key = ?", (key,)
+        ).fetchone()
+        return row["value"] if row else None
 
     def close(self):
         self.conn.close()

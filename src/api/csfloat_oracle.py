@@ -46,10 +46,10 @@ class CSFloatOracle:
         stop=stop_after_attempt(5),
         wait=wait_exponential(multiplier=2, min=4, max=60)
     )
-    async def get_item_price(self, hash_name: str) -> float:
+    async def get_item_price(self, hash_name: str, offset: int = 0) -> float:
         """
         Retrieves the lowest listed price for an item on CSFloat.
-        First checks SQLite cache; only hits the API if the cached price is stale.
+        Supports paginated deep-scanning (v7.7).
         Every observation is persisted to the price_history table for trend analysis.
         """
         # --- SQLite Cache Check ---
@@ -62,7 +62,8 @@ class CSFloatOracle:
         session = await self.get_session()
         
         encoded_name = urllib.parse.quote(hash_name)
-        url = f"{self.BASE_URL}/listings?market_hash_name={encoded_name}&sort_by=lowest_price&type=buy_now&limit=1"
+        # Use offset for deep scanning (v7.7)
+        url = f"{self.BASE_URL}/listings?market_hash_name={encoded_name}&sort_by=lowest_price&type=buy_now&limit=1&offset={offset}"
         
         async with session.get(url) as response:
             if response.status == 429:

@@ -27,6 +27,10 @@ class DMarketAPIClient:
         self._session: Optional[aiohttp.ClientSession] = None
         self._lock = asyncio.Lock()
         
+        # --- v7.7 Fee Cache ---
+        self._fee_cache: Dict[str, Dict[str, Any]] = {} 
+        self._fee_cache_ttl = 43200 # 12 hours
+
         try:
             # Handle both 128-char and 64-char keys (seed selection)
             clean_secret = self.secret_key[:64] if len(self.secret_key) == 128 else self.secret_key
@@ -156,8 +160,14 @@ class DMarketAPIClient:
     async def get_item_fee(self, game_id: str, item_id: str, price_cents: int) -> float:
         """
         Fetches dynamic fee for a specific item at a given price.
-        Returns fee multiplier (e.g., 0.05 for 5%).
+        Implements 12-hour caching (v7.7) to avoid rate limits.
         """
+        now = time.time()
+        if item_id in self._fee_cache:
+            cached = self._fee_cache[item_id]
+            if now - cached["timestamp"] < self._fee_cache_ttl:
+                return cached["fee"]
+
         try:
             params = {
                 "gameId": game_id,
@@ -166,9 +176,10 @@ class DMarketAPIClient:
                 "currency": "USD"
             }
             res = await self.make_request("GET", "/exchange/v1/market/fee", params=params)
-            # DMarket returns fee in absolute cents or percentage
-            # Assuming 'fee' field exists in response with percentage
             fee_pct = float(res.get("fee", 5.0)) / 100.0
+            
+            # Update Cache
+            self._fee_cache[item_id] = {"fee": fee_pct, "timestamp": now}
             return fee_pct
         except Exception as e:
             logger.warning(f"Could not fetch dynamic fee for {item_id}, fallback to 5%: {e}")

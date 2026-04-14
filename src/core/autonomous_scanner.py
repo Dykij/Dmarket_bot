@@ -11,6 +11,8 @@ import asyncio
 import os
 import sys
 import logging
+import time
+from logging.handlers import RotatingFileHandler
 from dotenv import load_dotenv
 
 BASE_DIR = "/mnt/d/Dmarket_bot" if sys.platform != "win32" else "D:/Dmarket_bot"
@@ -21,80 +23,62 @@ from src.inventory_manager import InventoryManager
 from src.core.target_sniping import SnipingLoop
 from src.utils.vault import vault
 
-# Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+def setup_logging():
+    """Configures rotating file logs (v7.7) to prevent disk overflow."""
+    log_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    log_file = os.path.join(BASE_DIR, "logs", "bot_24_7.log")
+    os.makedirs(os.path.dirname(log_file), exist_ok=True)
+
+    # 10MB per file, keep 5 backups
+    handler = RotatingFileHandler(log_file, maxBytes=10*1024*1024, backupCount=5)
+    handler.setFormatter(log_formatter)
+    handler.setLevel(logging.INFO)
+
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.INFO)
+    root_logger.addHandler(handler)
+    
+    # Also log to console
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(log_formatter)
+    root_logger.addHandler(console_handler)
+
+setup_logging()
 logger = logging.getLogger("AutonomousScanner")
 
 async def run_autonomous_scanner():
-    print("\n" + "=" * 50)
-    print("🚀 ZAПУСК АВТОНОМНОГО СКАННЕРА DMARKET v3.1")
-    print("   (Target Sniping + Pure Math Engine)")
-    print("=" * 50 + "\n")
+    """Main Entry with Infinite Autonomy Loop (v7.7/7.8)."""
+    retry_delay = 5
+    
+    while True:
+        try:
+            # Re-initialize vault and environment each major restart
+            for env_candidate in [os.path.join(os.getcwd(), ".env"), os.path.join(BASE_DIR, ".env")]:
+                if os.path.isfile(env_candidate):
+                    load_dotenv(dotenv_path=env_candidate)
+                    vault.re_initialize()
+                    break
+            
+            pub_key = os.environ.get("DMARKET_PUBLIC_KEY", "").strip()
+            sec_key = vault.get_dmarket_secret()
+            
+            if not pub_key or not sec_key:
+                logger.error("No API keys found. Retrying in 30s...")
+                await asyncio.sleep(30)
+                continue
 
-    # Try multiple .env locations
-    for env_candidate in [
-        os.path.join(os.getcwd(), ".env"),
-        os.path.join(BASE_DIR, "config", ".env"),
-        os.path.join(BASE_DIR, ".env"),
-    ]:
-        if os.path.isfile(env_candidate):
-            load_dotenv(dotenv_path=env_candidate)
-            vault.re_initialize()
+            api = DMarketAPIClient(public_key=pub_key, secret_key=sec_key)
+            bot = SnipingLoop(api)
+            
+            logger.info("🚀 QUANTITATIVE ENGINE v7.8 (24/7 Deep Scan Active)")
+            await bot.start()
+            
+        except asyncio.CancelledError:
             break
-
-    api = None
-    inv_mgr = None
-    
-    pub_key = os.environ.get("DMARKET_PUBLIC_KEY", "").strip()
-    sec_key = vault.get_dmarket_secret()
-    
-    if pub_key and sec_key and len(sec_key) >= 64:
-        logger.info("Keys loaded via Vault, initializing DMarket API Client...")
-        api = DMarketAPIClient(public_key=pub_key, secret_key=sec_key)
-        inv_mgr = InventoryManager(api)
-    elif os.getenv("DRY_RUN", "false").lower() == "true" or "--test" in sys.argv:
-        logger.info("🛠 TEST MODE: Initializing Mock API client...")
-        # Use dummy keys for test mode to prevent crash-loop
-        api = DMarketAPIClient(public_key="0" * 64, secret_key="0" * 128)
-        inv_mgr = InventoryManager(api)
-    else:
-        logger.warning("API keys not found or invalid! Proceeding without placing real mock orders.")
-        # Minimal skeleton setup or mock if need be.
-        return
-
-    # Phase B: Balance + Inventory Checks periodically or initially
-    try:
-        balance = await api.get_real_balance()
-        logger.info(f"💵 Real Account Balance: ${balance:.2f}")
-    except Exception as e:
-        logger.error(f"Failed to get balance: {e}")
-
-    if inv_mgr:
-        # Pre-fetch initially
-        await inv_mgr.fetch_inventory()
-        inventory = inv_mgr.get_inventory()
-        if inventory:
-            logger.info(f"📦 Found {len(inventory)} items in inventory.")
-        else:
-            logger.info("📭 Inventory is empty.")
-
-    # Phase A: Target Sniping Loop
-    logger.info("Initiating Target Sniping Engine...")
-    bot = SnipingLoop(api)
-    
-    async def continuous_resale():
-        while bot.running:
-            await bot.auto_resale(inv_mgr)
-            await asyncio.sleep(60)  # Check inventory every minute
-    
-    # Start the async loop and auto-resale concurrently
-    try:
-        await asyncio.gather(
-            bot.start(),
-            continuous_resale()
-        )
-    except Exception as e:
-        logger.error(f"Scanner crashed: {e}")
+        except Exception as e:
+            logger.error(f"⚠️ CRITICAL ENGINE CRASH: {e}")
+            await asyncio.sleep(retry_delay)
+            retry_delay = min(retry_delay * 2, 3600)
 
 if __name__ == "__main__":
     try:

@@ -116,7 +116,7 @@ async def btn_stop(message: types.Message):
 async def btn_balance(message: types.Message):
     api = DMarketAPIClient(Config.PUBLIC_KEY, vault.get_dmarket_secret())
     try:
-        usd = api.get_real_balance()
+        usd = await api.get_real_balance()
         await message.answer(f"💰 **Balance:** ${usd:.2f}", parse_mode="Markdown")
     except Exception as e:
         await message.answer(f"❌ Error: {e}")
@@ -128,7 +128,10 @@ async def btn_inventory(message: types.Message):
     api = DMarketAPIClient(Config.PUBLIC_KEY, vault.get_dmarket_secret())
     try:
         resp = await api.get_user_inventory("a8db")
-        items = resp.get("objects", []) or resp.get("Items", [])
+        # Handle both list and dict formats from different API versions
+        items = resp.get("objects", []) if isinstance(resp, dict) else []
+        if not items and hasattr(resp, "get"):
+            items = resp.get("Items", [])
         
         count = len(items)
         msg = f"📦 **Inventory ({count} items):**\n"
@@ -154,7 +157,8 @@ async def cmd_test_trade(message: types.Message):
         return
         
     item_name = args[1].strip()
-    await message.answer(f"⏳ **Testing Arbitrage for**: `{item_name}`\n1. Fetching DMarket Orderbook...\n2. Validating with CSFloat Oracle...", parse_mode="Markdown")
+    safe_item_name = item_name.replace("*", "\\*").replace("_", "\\_")
+    await message.answer(f"⏳ **Testing Arbitrage for**: `{safe_item_name}`\n1. Fetching DMarket Orderbook...\n2. Validating with CSFloat Oracle...", parse_mode="Markdown")
     
     dm_api = DMarketAPIClient(Config.PUBLIC_KEY, vault.get_dmarket_secret())
     cs_api = CSFloatOracle(os.getenv("CSFLOAT_API_KEY", ""))
@@ -182,7 +186,7 @@ async def cmd_test_trade(message: types.Message):
             margin = validate_arbitrage_profit(dm_best_price, cs_price, fee_markup=0.05, min_profit_margin=0.05)
             await message.answer(
                 f"✅ **Arbitrage Validated!**\n"
-                f"🎯 Target: `{item_name}`\n"
+                f"🎯 Target: `{safe_item_name}`\n"
                 f"📉 DMarket Best: `${dm_best_price:.2f}`\n"
                 f"📈 CSFloat Oracle: `${cs_price:.2f}`\n"
                 f"💰 **Net Margin:** {margin*100:.1f}%\n"
@@ -192,7 +196,7 @@ async def cmd_test_trade(message: types.Message):
         except PriceValidationError as pe:
             await message.answer(
                 f"⛔ **Trade Blocked by Risk Constraints!**\n"
-                f"🎯 Target: `{item_name}`\n"
+                f"🎯 Target: `{safe_item_name}`\n"
                 f"📉 DMarket Best: `${dm_best_price:.2f}`\n"
                 f"📈 CSFloat Oracle: `${cs_price:.2f}`\n"
                 f"⚠️ *Reason:* {pe}\n"

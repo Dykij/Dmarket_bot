@@ -22,18 +22,19 @@ class RustOracle:
             self._session = aiohttp.ClientSession()
         return self._session
 
-    async def get_item_price(self, hash_name: str) -> float:
+    async def get_item_price(self, hash_name: str, offset: int = 0) -> float:
         """
         Fetches the index/market price for Rust items.
+        Supports offset-based pagination (v7.7).
         """
         cached = price_db.get_latest_price(hash_name, max_age_seconds=self.CACHE_TTL)
         if cached is not None:
             return cached
 
         session = await self.get_session()
-        # Note: SCMM API might need specific mapping or hash name encoding
         try:
-            url = f"{self.BASE_URL}/stats/item/{hash_name}"
+            # Note: Pagination in SCMM is often handled via listing query params
+            url = f"{self.BASE_URL}/stats/item/{hash_name}?offset={offset}"
             async with session.get(url) as response:
                 if response.status == 200:
                     data = await response.json()
