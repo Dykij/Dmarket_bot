@@ -84,55 +84,42 @@ def validate_price(
 
     return value
 
-def validate_arbitrage_profit(buy_price: float, expected_sell_price: float, fee_markup: float = 0.05, min_profit_margin: float = 0.05) -> float:
+def validate_arbitrage_profit(
+    buy_price: float, 
+    expected_sell_price: float, 
+    fee_markup: float = 0.05, 
+    min_profit_margin: float = 0.05,
+    lock_days: int = 7,
+    penalty_per_day: float = 0.005  # 0.5% per day penalty
+) -> float:
     """
-    Strict validation to ensure an intra-exchange arbitrage trade is profitable.
-    
-    Mathematical constraint:
-    Net Received = expected_sell_price * (1 - fee_markup)
-    Profit = Net Received - buy_price
-    Profit Margin = Profit / buy_price
-    
-    Parameters
-    ----------
-    buy_price : float
-        The price we intend to buy the item for.
-    expected_sell_price : float
-        The estimated market price we intend to sell the item for.
-    fee_markup : float
-        The platform fee for selling. Defaults to 0.05 (5%).
-    min_profit_margin : float
-        The minimum relative margin required on capital. Defaults to 0.05 (5%).
-        
-    Returns
-    -------
-    float
-        The calculated positive profit margin.
-        
-    Raises
-    ------
-    PriceValidationError
-        If the trade would result in a loss or profit below the minimum margin.
+    Validation to ensure an intra-exchange arbitrage trade is profitable, 
+    accounting for TVM (Time Value of Money) / Trade Hold penalties.
     """
     net_received = expected_sell_price * (1.0 - fee_markup)
     actual_profit = net_received - buy_price
     
     if actual_profit <= 0:
         raise PriceValidationError(
-            f"Absolute LOSS Trade Detected: Buy at ${buy_price:.2f}, Sell at ${expected_sell_price:.2f} "
-            f"(Fee: {fee_markup*100:.1f}%). Net received: ${net_received:.2f}. "
-            f"Net Loss: ${actual_profit:.2f}. Blocked."
+            f"Absolute LOSS Trade Detected: Buy ${buy_price:.2f}, Sell ${expected_sell_price:.2f} "
+            f"(Fee: {fee_markup*100:.1f}%). Blocked."
         )
         
     profit_margin_pct = actual_profit / buy_price
     
-    if profit_margin_pct < min_profit_margin:
+    # --- TVM Penalty (v7.6) ---
+    # Adjust margin by time penalty: Margin_Adj = Margin - (Penalty * Days)
+    # This reflects that $100 profit today is better than $100 profit in 7 days.
+    tvm_adjusted_margin = profit_margin_pct - (penalty_per_day * lock_days)
+    
+    if tvm_adjusted_margin < min_profit_margin:
         raise PriceValidationError(
-            f"Insufficient Margin: Expected margin {profit_margin_pct*100:.2f}% is below "
-            f"minimum threshold {min_profit_margin*100:.2f}%. Blocked."
+            f"Insufficient TVM-Adjusted Margin: Raw {profit_margin_pct*100:.2f}% -> "
+            f"TVM Adj {tvm_adjusted_margin*100:.2f}% is below threshold {min_profit_margin*100:.2f}%. "
+            f"Blocked (7-day lock penalty applied)."
         )
         
-    return profit_margin_pct
+    return tvm_adjusted_margin
 
 def validate_slippage(target_price: float, current_market_price: float, max_slippage_pct: float = 0.02) -> None:
     """

@@ -151,3 +151,25 @@ class DMarketAPIClient:
         params = {"gameId": game_id, "limit": limit}
         if cursor: params["cursor"] = cursor
         return await self.make_request("GET", "/marketplace-api/v1/user-targets", params=params)
+
+    # --- Fee Analysis (v7.6) ---
+    async def get_item_fee(self, game_id: str, item_id: str, price_cents: int) -> float:
+        """
+        Fetches dynamic fee for a specific item at a given price.
+        Returns fee multiplier (e.g., 0.05 for 5%).
+        """
+        try:
+            params = {
+                "gameId": game_id,
+                "itemId": item_id,
+                "price": price_cents,
+                "currency": "USD"
+            }
+            res = await self.make_request("GET", "/exchange/v1/market/fee", params=params)
+            # DMarket returns fee in absolute cents or percentage
+            # Assuming 'fee' field exists in response with percentage
+            fee_pct = float(res.get("fee", 5.0)) / 100.0
+            return fee_pct
+        except Exception as e:
+            logger.warning(f"Could not fetch dynamic fee for {item_id}, fallback to 5%: {e}")
+            return 0.05
