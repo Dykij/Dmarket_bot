@@ -29,19 +29,25 @@ class VaultClient:
 
     def get_secret(self, path: str, key: str, mount_point: str = "secret") -> Optional[str]:
         """
-        Retrieves a secret from Vault.
-        Example: get_secret('dmarket', 'api_key')
+        Retrieves a secret from Vault KV v2.
+        Example: get_secret('dmarket', 'secret_key')
         """
         if not self.client:
             if not self.connect():
                 return None
         
         try:
+            # kv.v2.read_secret_version is the correct method for KV v2
             read_response = self.client.secrets.kv.v2.read_secret_version(
                 path=path,
                 mount_point=mount_point
             )
-            return read_response['data']['data'].get(key)
+            # data structure for KV2 is response['data']['data']
+            data = read_response.get('data', {}).get('data', {})
+            secret = data.get(key)
+            if not secret:
+                logger.error(f"Key '{key}' not found in secret path '{mount_point}/{path}'")
+            return secret
         except Exception as e:
-            logger.error(f"Error reading secret '{key}' from path '{path}': {e}")
+            logger.error(f"Failed to read secret '{key}' from '{mount_point}/{path}': {e}")
             return None

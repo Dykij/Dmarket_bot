@@ -14,9 +14,11 @@ import logging
 import time
 from logging.handlers import RotatingFileHandler
 from dotenv import load_dotenv
+from pathlib import Path
 
-BASE_DIR = "/mnt/d/Dmarket_bot" if sys.platform != "win32" else "D:/Dmarket_bot"
-sys.path.append(BASE_DIR)
+BASE_DIR = str(Path(__file__).resolve().parent.parent.parent)
+if BASE_DIR not in sys.path:
+    sys.path.append(BASE_DIR)
 
 from src.api.dmarket_api_client import DMarketAPIClient
 from src.inventory_manager import InventoryManager
@@ -68,7 +70,9 @@ async def run_autonomous_scanner():
                 continue
 
             api = DMarketAPIClient(public_key=pub_key, secret_key=sec_key)
+            inventory_mgr = InventoryManager(api)
             bot = SnipingLoop(api)
+            bot.inventory_mgr = inventory_mgr # Link the manager
             
             logger.info("🚀 QUANTITATIVE ENGINE v7.8 (24/7 Deep Scan Active)")
             await bot.start()

@@ -12,3 +12,5 @@ pyo3 = { version = "0.21.0", features = ["extension-module"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 regex = "1.10"
+ed25519-dalek = "2.1"
+hex = "0.4"

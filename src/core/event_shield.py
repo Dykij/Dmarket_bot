@@ -132,3 +132,7 @@ class EventShield:
         })
         self.save_events()
         logger.info(f"📅 Added event: {name} ({start} — {end})")
+
+
+# Singleton instance
+event_shield = EventShield()

@@ -1,4 +1,5 @@
 import aiohttp
+import os
 import asyncio
 import json
 import time
@@ -16,27 +17,57 @@ class SecurityViolation(Exception):
     """Raised when request parameters violate safety allowlists."""
     pass
 
+from src.utils.vault import vault
+
 class DMarketAPIClient:
     """ DMarket Trading API v2 Client (TargetSniper Optimized Async) """
     BASE_URL = "https://api.dmarket.com"
     
-    def __init__(self, public_key: str, secret_key: str):
+    def __init__(self, public_key: str, secret_key: str, base_url: str = "https://api.dmarket.com"):
         self.public_key = public_key
         self.secret_key = secret_key
-        self._last_request_time = 0.0
+        self.BASE_URL = base_url
         self._session: Optional[aiohttp.ClientSession] = None
         self._lock = asyncio.Lock()
+        self._last_request_time = 0.0
+        self._rate_limit_delay = 0.22  # 4-5 requests per second
         
-        # --- v7.7 Fee Cache ---
-        self._fee_cache: Dict[str, Dict[str, Any]] = {} 
-        self._fee_cache_ttl = 43200 # 12 hours
-
+        # --- PHASE 7.8: Safe Key Initialization ---
+        self._signing_key = None
+        is_sandbox = os.getenv("DRY_RUN", "true").lower() == "true"
+        
+        # Performance: Check for Rust core (v7.8)
+        self._has_rust_signer = False
+        self._rust_signer = None
         try:
-            # Handle both 128-char and 64-char keys (seed selection)
-            clean_secret = self.secret_key[:64] if len(self.secret_key) == 128 else self.secret_key
-            self._signing_key = SigningKey(bytes.fromhex(clean_secret))
-        except Exception as e:
-            raise ValueError(f"Failed to initialize Ed25519 key: {e}")
+            import rust_core
+            self._has_rust_signer = True
+            self._rust_signer = rust_core.generate_signature_rs
+            logger.info("🚀 High-performance Rust signer active.")
+        except ImportError:
+            logger.warning("Rust Signer not found, using Python (pynacl) fallback.")
+
+        # Python Fallback Initialization
+        if not self._has_rust_signer:
+            try:
+                if secret_key and len(secret_key) >= 64:
+                    clean_secret = secret_key[:64]
+                    self._signing_key = SigningKey(bytes.fromhex(clean_secret))
+                elif not is_sandbox:
+                    logger.error("DMarket Secret Key is invalid or missing in Production!")
+                else:
+                    # In sandbox, we use a dummy signing key if none is provided
+                    self._signing_key = SigningKey(bytes.fromhex("0" * 64))
+            except Exception as e:
+                if not is_sandbox:
+                    logger.error(f"Failed to initialize Ed25519 key: {e}")
+                else:
+                    logger.debug(f"Skipping key initialization in Sandbox: {e}")
+                    self._signing_key = SigningKey(bytes.fromhex("0" * 64))
+
+        # Fee Cache (v7.7)
+        self._fee_cache: Dict[str, Dict[str, Any]] = {}
+        self._fee_cache_ttl = 43200  # 12 hours
 
     async def get_session(self) -> aiohttp.ClientSession:
         if self._session is None or self._session.closed:
@@ -58,23 +89,42 @@ class DMarketAPIClient:
             if elapsed < jitter:
                 await asyncio.sleep(jitter - elapsed)
             self._last_request_time = time.time()
+            self._last_request_time = time.time()
 
     def _generate_signature(self, method: str, api_path: str, body: str, timestamp: str) -> str:
-        """ API v2 Ed25519 signature scheme. (Zero-copy in NaCl bindings) """
+        """ API v2 Ed25519 signature scheme. (Rust or NaCl bindings) """
+        # Try Rust first (microsecond precision)
+        if self._has_rust_signer and self.secret_key:
+            try:
+                # Rust expects the full hex secret
+                return self._rust_signer(method, api_path, body, timestamp, self.secret_key)
+            except Exception as e:
+                logger.warning(f"Rust signer failed, falling back to Python: {e}")
+
+        # Python Fallback
         signature_prefix = f"{method.upper()}{api_path}{body}{timestamp}"
         signed_message = self._signing_key.sign(signature_prefix.encode('utf-8'))
         return signed_message.signature.hex()
 
     @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
     async def make_request(self, method: str, path: str, params: Optional[Dict[str, Any]] = None, body: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-        await self._wait_for_rate_limit()
+        """ Executes API request with Dry Run support ($0.00 Risk). """
         method = method.upper()
+        
+        # --- SANDBOX GUARD ---
+        is_write_op = method in ["POST", "PUT", "DELETE", "PATCH"]
+        if is_write_op and os.getenv("DRY_RUN", "true").lower() == "true":
+            logger.info(f"🧪 [DRY RUN] Simulating {method} to {path}")
+            # Mock success response for batch operations to keep simulation loop running
+            if "batch" in path or "create" in path or "delete" in path:
+                return {"status": "success", "simulated": True, "message": "Simulation Mode Active"}
+            return {}
+
+        await self._wait_for_rate_limit()
         timestamp = str(int(time.time()))
         
         api_path = path
         if params:
-            # Ensure keys are sorted to keep signature deterministic if needed, 
-            # though standard urlencode is usually fine.
             query_string = urllib.parse.urlencode(params)
             api_path = f"{path}?{query_string}"
             
@@ -113,21 +163,19 @@ class DMarketAPIClient:
 
     # --- Account & Inventory ---
     async def get_real_balance(self) -> float:
-        """ Fetches the current USD & DMC balance. Returns USD float. """
+        """ Fetches the current USD & DMC balance. Supports Real Balance in Dry Run. """
         try:
+            # We fetch the real account balance even in Dry Run to ground the simulation in reality
             res = await self.make_request("GET", "/account/v1/balance")
-            # --- Phase 7.1: Support New Balance Format (Jan 2026) ---
-            # Try new 'balance' field first, then fallback to 'usd.amount'
-            if "balance" in res:
-                return float(res["balance"])
-            
-            usd_data = res.get('usd', 0)
-            if isinstance(usd_data, dict):
-                return float(usd_data.get('amount', 0)) / 100.0
-            return float(usd_data) / 100.0
+            # DMarket balance is usually in cents or has a specific structure
+            # Logic: USD section
+            usd_balance = float(res.get("usd", 0)) / 100.0
+            return usd_balance
         except Exception as e:
-            logger.error(f"Balance fetch error: {e}")
-            return 0.0
+            if os.getenv("DRY_RUN", "true").lower() == "true":
+                logger.debug(f"Real balance fetch failed, using fallback: {e}")
+                return 10000.0 
+            raise e
 
     async def get_user_inventory(self, game_id: str, limit: int = 50, cursor: Optional[str] = None):
         """ Fetches items owned by the user but NOT currently on sale. """
@@ -149,6 +197,13 @@ class DMarketAPIClient:
     async def batch_delete_targets(self, targets: List[Dict[str, Any]]):
         """ Mass deletion of targets. Path verified via Swagger 2026. """
         return await self.make_request("POST", "/marketplace-api/v1/user-targets/delete", body={"Targets": targets})
+
+    async def buy_items(self, offers: List[Dict[str, Any]]):
+        """ 
+        Instant Purchase of existing market listings.
+        Payload: [{"offerId": "...", "price": {"amount": "123", "currency": "USD"}}]
+        """
+        return await self.make_request("POST", "/exchange/v1/market/buy", body={"offers": offers})
 
     async def get_user_targets(self, game_id: str, limit: int = 50, cursor: Optional[str] = None):
         """ List active buy orders. """
@@ -182,5 +237,6 @@ class DMarketAPIClient:
             self._fee_cache[item_id] = {"fee": fee_pct, "timestamp": now}
             return fee_pct
         except Exception as e:
-            logger.warning(f"Could not fetch dynamic fee for {item_id}, fallback to 5%: {e}")
+            if os.getenv("DRY_RUN", "true").lower() != "true":
+                logger.warning(f"Could not fetch dynamic fee for {item_id}, fallback to 5%: {e}")
             return 0.05

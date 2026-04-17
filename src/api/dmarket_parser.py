@@ -40,16 +40,34 @@ class ParsedSkinData(BaseModel):
         return values
         return values
 
+def validate_batch_response(raw_json: str):
+    """
+    Parses a batch marketplace response using Rust (high speed) or Python fallback.
+    """
+    if HAS_RUST_PARSER:
+        try:
+            return dmarket_parser_rs.parse_market_response_rs(raw_json)
+        except Exception as e:
+            logger.warning(f"Rust Batch Parser failed: {e}")
+
+    # Python Fallback
+    try:
+        data = json.loads(raw_json)
+        objects = data.get("objects", [])
+        return [ParsedSkinData(**item) for item in objects]
+    except Exception as e:
+        logger.error(f"Batch Validation Error: {e}")
+        return []
+
 def validate_dmarket_response(raw_json: str):
     """
-    Validates incoming API data from DMarket strictly via Rust (if available)
-    or Pandera/Pydantic fallback to prevent Prompt Injection.
+    Validates single API data from DMarket strictly via Rust (if available)
+    or Pydantic fallback.
     """
     # Try high-performance Rust parser first
     if HAS_RUST_PARSER:
         try:
             rust_data = dmarket_parser_rs.validate_dmarket_response_rs(raw_json)
-            logger.info(f"Rust Parser validated skin: {rust_data.name}")
             return rust_data
         except Exception as e:
             logger.warning(f"Rust Parser failed, falling back to Python: {e}")
@@ -57,9 +75,8 @@ def validate_dmarket_response(raw_json: str):
     # Fallback to Python implementation
     try:
         data = json.loads(raw_json)
-        # Using Pydantic for object level parsing first
+        # Using Pydantic for object level parsing
         parsed_data = ParsedSkinData(**data)
-        logger.info(f"Python Parser validated and sanitized skin: {parsed_data.name}")
         return parsed_data
     except Exception as e:
         logger.error(f"Data Validation Error: {e}")
