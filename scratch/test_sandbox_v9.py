@@ -29,6 +29,11 @@ v12.2 additions (Phase 2.1-2.5):
 23. Multi-level liquidity filter
 24. DMarket API v2 batch-create
 25. DMarket API v2 batch-edit
+
+v12.2 Phase 3.1 (Clock Sync / NTP-like):
+26. ClockSync initialization
+27. ClockSync offset calculation
+28. ClockSync status reporting
 """
 
 import asyncio
@@ -464,10 +469,89 @@ async def test_v2_batch_edit():
         await client.close()
 
 
+# ============================================================================
+# v12.2 Phase 3.1: Clock Sync (NTP-like)
+# ============================================================================
+
+async def test_clock_sync_init():
+    """Test 26: ClockSync initialization and singleton."""
+    from src.utils.clock_sync import clock_sync
+    # Reset to clean state
+    clock_sync._offset = 0.0
+    clock_sync._last_sync = 0.0
+    # Check that we have a ClockSync instance with expected methods
+    has_methods = (
+        hasattr(clock_sync, 'sync_with_dmarket') and
+        hasattr(clock_sync, 'now') and
+        hasattr(clock_sync, 'needs_refresh') and
+        hasattr(clock_sync, 'get_status')
+    )
+    # Check default state
+    status = clock_sync.get_status()
+    record("ClockSync Init",
+           has_methods and status["needs_refresh"] is True and status["is_healthy"] is True,
+           f"methods={has_methods}, offset={status['offset_seconds']}s, needs_refresh={status['needs_refresh']}")
+
+
+async def test_clock_sync_offset():
+    """Test 27: ClockSync offset calculation works correctly."""
+    from src.utils.clock_sync import ClockSync
+    # Create isolated instance for testing
+    test_sync = ClockSync()
+    # Manually set offset (simulating successful sync)
+    test_sync._offset = 5.0
+    test_sync._last_sync = time.time()
+    test_sync._sync_count = 1
+
+    local_ts = time.time()
+    server_ts = test_sync.now()
+    computed_offset = server_ts - local_ts
+
+    # Should be ~5.0s (within tolerance)
+    record("ClockSync Offset",
+           abs(computed_offset - 5.0) < 0.5,
+           f"expected=5.0s, got={computed_offset:.3f}s")
+
+
+async def test_clock_sync_status():
+    """Test 28: ClockSync status reporting."""
+    from src.utils.clock_sync import ClockSync
+    test_sync = ClockSync()
+
+    # Initial state
+    initial_status = test_sync.get_status()
+    initial_ok = (
+        initial_status["offset_seconds"] == 0.0
+        and initial_status["needs_refresh"] is True
+        and initial_status["is_healthy"] is True  # 0s offset = healthy
+    )
+
+    # After simulated sync
+    test_sync._offset = -2.5
+    test_sync._last_sync = time.time()
+    test_sync._sync_count = 1
+    after_status = test_sync.get_status()
+    after_ok = (
+        after_status["offset_seconds"] == -2.5
+        and after_status["needs_refresh"] is False
+        and after_status["is_healthy"] is True
+        and after_status["sync_count"] == 1
+    )
+
+    # With unhealthy drift
+    test_sync._offset = -150.0
+    unhealthy_status = test_sync.get_status()
+    unhealthy_ok = unhealthy_status["is_healthy"] is False
+
+    record("ClockSync Status",
+           initial_ok and after_ok and unhealthy_ok,
+           f"initial={initial_ok}, after_sync={after_ok}, unhealthy_detected={unhealthy_ok}")
+
+
 async def main():
     os.environ["DRY_RUN"] = "true"
     logger.info("="*60)
-    logger.info("VERIFICATION SUITE v12.2 — STATUS + FEE + TRIMMED + LIQUIDITY + V2")
+    logger.info("VERIFICATION SUITE v12.2 — STATUS + FEE + TRIMMED + LIQUIDITY + V2 + CLOCK")
     logger.info("="*60)
 
     tests = [
@@ -497,6 +581,10 @@ async def main():
         test_liquidity_filter,
         test_v2_batch_create,
         test_v2_batch_edit,
+        # v12.2 Phase 3.1: ClockSync
+        test_clock_sync_init,
+        test_clock_sync_offset,
+        test_clock_sync_status,
     ]
 
     for t in tests:

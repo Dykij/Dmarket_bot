@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## [12.2.0] - 2026-06-01
-### 🛡️ Asset Status + Dynamic Fee + Wash Trading + V2 Batch
+### 🛡️ Asset Status + Dynamic Fee + Wash Trading + V2 Batch + ClockSync
 #### Phase 2.1: Asset Status Tracking
 - New `asset_status` table: tracks `trade_protected`, `reverted`, `active`, `sold`
 - `get_user_inventory_detailed()` — fetches inventory with `FinalizationTime` field
@@ -38,14 +38,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `get_user_offers_v2()` — GET /exchange/v1/user-offers
 - Up to 100 items per batch (vs 1 in v1)
 
+#### Phase 3.1: ClockSync (NTP-like) — NEW
+- `src/utils/clock_sync.py` — syncs local clock with DMarket server via HEAD request
+- Pre-check X-Sign-Date before signing (prevents 401 from clock drift > 120s)
+- Refreshes every 6 hours
+- Auto-fallback to local time if server unreachable
+- Health status reporting (offset, drift, is_healthy)
+
+#### Phase 3.2: v12.2 Audit Sandbox — NEW
+- `scratch/sandbox_v12_2_audit.py` — measures impact of new filters
+- Compares v12.1 baseline vs v12.2 (with wash trading + liquidity + status)
+- Reports filter effectiveness (% rejected by each filter)
+- Real-market adjustment analysis
+
+#### Documentation Updates
+- `docs/STRATEGY_ROADMAP.md` — v12.2 status (all 6 strategies + new defenses)
+- `ROADMAP_DMARKET2026.md` — Phase 2.4 (v12.2 Defenses) and Phase 3.2 sections
+
 #### Bug Fixes
 - Fixed pre-existing dead code in `_calculate_float_premium` (BS case was unreachable)
 - Fixed `not x is False` boolean logic in `_sync_inventory_statuses`
 - Added missing `cleanup_old_targets()` method to `PriceHistoryDB`
 
 #### Tests
-- 25/25 tests passing (was 17/17)
-- 8 new tests: trade_protected, reverted, FinalizationTime, bulk_fee, trimmed_mean, liquidity, v2 batch create/edit
+- 28/28 tests passing (was 17/17 in v12.0)
+- 11 new tests: trade_protected, reverted, FinalizationTime, bulk_fee, trimmed_mean,
+  liquidity, v2 batch create/edit, clocksync init/offset/status
 
 ## [12.0.0] - 2026-06-01
 ### 🚀 Intra-Spread Engine: Strategy A

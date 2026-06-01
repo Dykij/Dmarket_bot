@@ -74,6 +74,16 @@ class DMarketAPIClient:
             # High-performance connection pooling
             connector = aiohttp.TCPConnector(limit=100, ssl=False, keepalive_timeout=60)
             self._session = aiohttp.ClientSession(connector=connector)
+
+            # v12.2: Initial clock sync with DMarket server
+            from src.utils.clock_sync import clock_sync
+            await clock_sync.sync_with_dmarket(self._session)
+            status = clock_sync.get_status()
+            if status["is_healthy"]:
+                logger.info(f"🕐 ClockSync OK: offset={status['offset_seconds']}s")
+            else:
+                logger.warning(f"🕐 ClockSync drift: offset={status['offset_seconds']}s (may cause 401 errors)")
+
         return self._session
 
     async def close(self):
@@ -110,7 +120,7 @@ class DMarketAPIClient:
     async def make_request(self, method: str, path: str, params: Optional[Dict[str, Any]] = None, body: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """ Executes API request with Dry Run support ($0.00 Risk). """
         method = method.upper()
-        
+
         # --- SANDBOX GUARD ---
         is_write_op = method in ["POST", "PUT", "DELETE", "PATCH"]
         if is_write_op and os.getenv("DRY_RUN", "true").lower() == "true":
@@ -121,7 +131,13 @@ class DMarketAPIClient:
             return {}
 
         await self._wait_for_rate_limit()
-        timestamp = str(int(time.time()))
+
+        # v12.2: Use server-corrected time for X-Sign-Date
+        # Sync with DMarket if needed (prevents 401 from clock drift > 120s)
+        from src.utils.clock_sync import clock_sync
+        await clock_sync.ensure_synced()
+
+        timestamp = str(int(clock_sync.now()))
         
         api_path = path
         if params:
