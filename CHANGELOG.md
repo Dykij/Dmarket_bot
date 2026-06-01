@@ -17,8 +17,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `create_offer()`, `batch_create_offers()`, `delete_offers()`, `edit_offer()` — sell pipeline
 - **Refactored target_sniping.py**: bid-based filter (5%+ spread), CS2Cap oracle validation
 - **New docs/STRATEGY_ROADMAP.md**: Full A-F strategy comparison
-- **Verification Suite**: 14/14 tests passing
-- **Sandbox Audit**: 6/50 opportunities → $4.57 profit on $38.85 risk (Strategy A)
+- **Verification Suite**: 17/17 tests passing
+- **Sandbox Audit**: 6/50 opportunities → $8.62 profit on $41.35 risk (+62% with Low-Fee + Float)
+
+### Phase 1.1: Low-Fee Filter (v12.0)
+- **24h cached low-fee items list**: avoids 1 API call per cycle
+- **Auto-refresh every 100 cycles** in `target_sniping._refresh_low_fee_cache()`
+- **Helper methods**: `save_low_fee_items`, `get_low_fee_rate`, `low_fee_cache_size`
+- **DB migration**: new `low_fee_cache` table in state DB
+- **Effect**: 20% of items get 2.5% fee instead of 5% → +1-2% margin
+
+### Phase 1.2: Float Premium (v12.0)
+- **FN-0 (float <0.01)**: 1.20x premium
+- **FN (0.01-0.07)**: 1.10x premium
+- **FT-0 (0.15-0.18)**: 1.15x premium
+- **MW/FT (default)**: 1.0x
+- **WW (0.38-0.45)**: 0.95x
+- **BS (≥0.45)**: 0.90x
+- **Method**: `SnipingLoop._calculate_float_premium(attrs)`
+- **Effect**: +$1-2/day additional profit on FN-0/FT-0 items
 
 
 ## [11.0.0] - 2026-05

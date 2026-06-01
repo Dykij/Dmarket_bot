@@ -12,7 +12,7 @@ import sqlite3
 import logging
 import time
 from pathlib import Path
-from typing import Optional, List, Tuple, Dict
+from typing import Optional, List, Tuple, Dict, Any
 
 logger = logging.getLogger("PriceHistoryDB")
 
@@ -96,6 +96,15 @@ class PriceHistoryDB:
                 )
             """)
             self.state_conn.execute("CREATE INDEX IF NOT EXISTS idx_targets_created ON active_targets(created_at)")
+
+            # v12.0: Low-fee items cache (refreshed daily)
+            self.state_conn.execute("""
+                CREATE TABLE IF NOT EXISTS low_fee_cache (
+                    title       TEXT PRIMARY KEY,
+                    fee_rate    REAL    NOT NULL,
+                    fetched_at  REAL    NOT NULL
+                )
+            """)
             
             # Temporary safety check: remove price_history from state_db if it exists after migration
             try:
@@ -310,6 +319,41 @@ class PriceHistoryDB:
             (item_id, cutoff)
         ).fetchone()
         return row is not None
+
+    # ------------------------------------------------------------------
+    # v12.0: Low-fee items cache (State DB, 24h TTL)
+    # ------------------------------------------------------------------
+    def save_low_fee_items(self, items: List[Dict[str, Any]]):
+        """Replace the entire low-fee cache with fresh items from DMarket."""
+        with self.state_conn:
+            self.state_conn.execute("DELETE FROM low_fee_cache")
+            now = time.time()
+            self.state_conn.executemany(
+                "INSERT OR REPLACE INTO low_fee_cache (title, fee_rate, fetched_at) VALUES (?, ?, ?)",
+                [(item["title"], item["fee_rate"], now) for item in items if item.get("title")]
+            )
+
+    def get_low_fee_rate(self, title: str, max_age_seconds: int = 86400) -> Optional[float]:
+        """Returns the cached low-fee rate for a title, or None if not in cache / expired."""
+        cutoff = time.time() - max_age_seconds
+        row = self.state_conn.execute(
+            "SELECT fee_rate FROM low_fee_cache WHERE title = ? AND fetched_at > ?",
+            (title, cutoff)
+        ).fetchone()
+        return row["fee_rate"] if row else None
+
+    def low_fee_cache_size(self) -> int:
+        row = self.state_conn.execute("SELECT COUNT(*) as c FROM low_fee_cache").fetchone()
+        return row["c"] or 0
+
+    def low_fee_cache_age_seconds(self) -> Optional[float]:
+        """Returns the age (seconds) of the oldest entry, or None if cache is empty."""
+        row = self.state_conn.execute(
+            "SELECT MIN(fetched_at) as oldest FROM low_fee_cache"
+        ).fetchone()
+        if not row or not row["oldest"]:
+            return None
+        return time.time() - row["oldest"]
 
     def close(self):
         self.state_conn.close()

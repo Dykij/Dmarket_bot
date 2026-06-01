@@ -237,11 +237,26 @@ class SnipingLoop:
 
                 # Calculate profit: list at best_bid - 0.01
                 list_price = round(best_bid - Config.INTRA_LIST_DISCOUNT, 2)
+
+                # v12.0 Phase 1.2: Float Premium (FN-0, FT-0, FN)
+                attrs_list = item.get("attributes", [])
+                attrs = {a.get("name"): a.get("value") for a in attrs_list}
+                float_premium = self._calculate_float_premium(attrs)
+                if float_premium > 1.0:
+                    list_price = round(list_price * float_premium, 2)
+                    if is_sandbox:
+                        logger.debug(f"Float premium {float_premium:.2f}x applied to {title}")
+
                 if list_price < base_price * 1.02:
                     # Less than 2% gross — too thin after fees
                     continue
 
+                # v12.0 Phase 1.1: Low-Fee Filter (prefer low-fee items)
                 fee_rate = await self.client.get_item_fee(game_id, item_id, base_price_cents)
+                cached_low_fee = price_db.get_low_fee_rate(title)
+                if cached_low_fee is not None and cached_low_fee < fee_rate:
+                    # Use the lower cached rate (it might differ slightly from dynamic)
+                    fee_rate = min(fee_rate, cached_low_fee)
 
                 try:
                     net_margin = validate_arbitrage_profit(
@@ -320,6 +335,10 @@ class SnipingLoop:
             # Periodic repricing
             if self.reprice_counter % 60 == 0:  # Every ~60 cycles
                 await self.reprice_unsold_offers(game_id)
+
+            # v12.0 Phase 1.1: Refresh low-fee cache every 100 cycles
+            if self.deep_scan_counter % 100 == 0:
+                await self._refresh_low_fee_cache(game_id)
 
             # Equity report
             equity = price_db.get_total_equity(current_balance)
@@ -423,6 +442,63 @@ class SnipingLoop:
         stale = [it for it in selling_items if it['acquired_at'] < cutoff]
         if stale:
             logger.info(f"[REPRICE] {len(stale)} items pending repricing (>{Config.REPRICE_AFTER_HOURS}h listed)")
+
+    # ------------------------------------------------------------------
+    # v12.0 Phase 1.1: Low-fee cache
+    # ------------------------------------------------------------------
+    async def _refresh_low_fee_cache(self, game_id: str):
+        """Refresh the low-fee items cache from DMarket (24h TTL)."""
+        age = price_db.low_fee_cache_age_seconds()
+        if age is not None and age < 86400:
+            return  # Fresh enough
+        try:
+            await self._simulate_network_latency()
+            self._maybe_inject_error("get_low_fee_items")
+            items = await self.client.get_low_fee_items(game_id)
+            if items:
+                price_db.save_low_fee_items(items)
+                logger.info(f"[LOW-FEE] Cached {len(items)} low-fee items (refreshed)")
+        except Exception as e:
+            logger.debug(f"Low-fee cache refresh failed: {e}")
+
+    # ------------------------------------------------------------------
+    # v12.0 Phase 1.2: Float Premium
+    # ------------------------------------------------------------------
+    @staticmethod
+    def _calculate_float_premium(attrs: Dict[str, Any]) -> float:
+        """
+        Returns a price multiplier based on item's float value.
+
+        Float ranges (CS2):
+        - FN-0: 0.00 - 0.01  (best) → 1.20x
+        - FN:   0.00 - 0.07   → 1.10x
+        - MW:   0.07 - 0.15   → 1.00x
+        - FT-0: 0.15 - 0.18   → 1.15x
+        - FT:   0.15 - 0.38   → 1.00x
+        - WW:   0.38 - 0.45   → 0.95x
+        - BS:   0.45 - 1.00   → 0.90x
+
+        Returns 1.0 (no premium) if float not available.
+        """
+        try:
+            float_str = attrs.get("floatPartValue")
+            if not float_str:
+                return 1.0
+            float_val = float(float_str)
+        except (ValueError, TypeError):
+            return 1.0
+
+        if float_val < 0.01:
+            return 1.20  # FN-0
+        if float_val < 0.07:
+            return 1.10  # FN
+        if 0.15 <= float_val <= 0.18:
+            return 1.15  # FT-0
+        if 0.38 <= float_val < 0.45:
+            return 0.95  # WW
+        if float_val >= 0.45:
+            return 0.90  # BS
+        return 1.0  # MW / regular FT
 
 
 if __name__ == "__main__":

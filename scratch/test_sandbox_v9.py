@@ -222,10 +222,77 @@ async def test_bifurcated_sqlite():
     record("Bifurcated SQLite", state_exists and history_exists, f"state={state_exists}, history={history_exists}")
 
 
+async def test_low_fee_cache():
+    """Test 15: Low-fee items cache."""
+    from src.db.price_history import price_db
+    test_items = [
+        {"title": "AK-47 | Redline (Field-Tested)", "fee_rate": 0.025},
+        {"title": "AWP | Asiimov (Field-Tested)", "fee_rate": 0.02},
+    ]
+    price_db.save_low_fee_items(test_items)
+    rate = price_db.get_low_fee_rate("AK-47 | Redline (Field-Tested)")
+    age = price_db.low_fee_cache_age_seconds()
+    size = price_db.low_fee_cache_size()
+    record("Low-Fee Cache", rate == 0.025 and age is not None and age < 60 and size == 2,
+           f"rate={rate}, age={age:.1f}s, size={size}")
+
+
+async def test_float_premium_calculation():
+    """Test 16: Float premium calculation."""
+    from src.core.target_sniping import SnipingLoop
+    from src.api.dmarket_api_client import DMarketAPIClient
+    client = DMarketAPIClient("pub", "sec")
+    bot = SnipingLoop(client)
+    await client.close()
+
+    # FN-0: float < 0.01 → 1.20x
+    fn0 = bot._calculate_float_premium({"floatPartValue": "0.005"})
+    # FN: 0.01 <= float < 0.07 → 1.10x
+    fn = bot._calculate_float_premium({"floatPartValue": "0.04"})
+    # FT-0: 0.15 <= float <= 0.18 → 1.15x
+    ft0 = bot._calculate_float_premium({"floatPartValue": "0.16"})
+    # MW / regular FT: → 1.0x
+    mw = bot._calculate_float_premium({"floatPartValue": "0.10"})
+    # WW: → 0.95x
+    ww = bot._calculate_float_premium({"floatPartValue": "0.40"})
+    # BS: float >= 0.45 → 0.90x
+    bs = bot._calculate_float_premium({"floatPartValue": "0.55"})
+    # No float → 1.0x
+    none = bot._calculate_float_premium({})
+
+    ok = (fn0 == 1.20 and fn == 1.10 and ft0 == 1.15 and mw == 1.0 and ww == 0.95 and bs == 0.90 and none == 1.0)
+    record("Float Premium Calculation", ok,
+           f"FN-0={fn0} FN={fn} FT-0={ft0} MW={mw} WW={ww} BS={bs} none={none}")
+
+
+async def test_strategy_a_with_filters():
+    """Test 17: Strategy A end-to-end with low-fee + float filters."""
+    from src.db.price_history import price_db
+    from src.api.dmarket_api_client import DMarketAPIClient
+    client = DMarketAPIClient("pub", "sec")
+    try:
+        # Mock aggregated prices
+        agg = {
+            "AK-47 | Redline (FT)": {"best_ask": 10.0, "best_bid": 11.5, "ask_count": 3, "bid_count": 2},
+            "AWP | Asiimov (FT)":  {"best_ask": 60.0, "best_bid": 70.0, "ask_count": 2, "bid_count": 1},
+        }
+        # Without float premium: list_price = best_bid - 0.01
+        # With FN-0 float: list_price = 11.49 * 1.20 = 13.79
+        # Spread: (13.79 / 10.0) - 1 = 37.9% — profitable!
+        list_price_no_float = round(agg["AK-47 | Redline (FT)"]["best_bid"] - 0.01, 2)
+        list_price_fn0 = round(list_price_no_float * 1.20, 2)
+        spread_fn0 = (list_price_fn0 / agg["AK-47 | Redline (FT)"]["best_ask"]) - 1
+        record("Strategy A + Float Premium",
+               spread_fn0 > 0.30,
+               f"AK-47 FN-0 spread: {spread_fn0*100:.1f}% (${list_price_fn0})")
+    finally:
+        await client.close()
+
+
 async def main():
     os.environ["DRY_RUN"] = "true"
     logger.info("="*60)
-    logger.info("VERIFICATION SUITE v12.0 — INTRA-SPREAD STRATEGY A")
+    logger.info("VERIFICATION SUITE v12.0 — STRATEGY A + LOW-FEE + FLOAT")
     logger.info("="*60)
 
     tests = [
@@ -243,6 +310,9 @@ async def main():
         test_price_history_trend,
         test_event_shield,
         test_bifurcated_sqlite,
+        test_low_fee_cache,
+        test_float_premium_calculation,
+        test_strategy_a_with_filters,
     ]
 
     for t in tests:
