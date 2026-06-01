@@ -78,6 +78,24 @@ class Config:
     REPRICE_AFTER_HOURS = 24
     REPRICE_DISCOUNT_PCT = 2.0
 
+    # --- v12.2: Wash Trading Detection (Phase 2.3) ---
+    WASH_TRADING_DETECTION = True
+    TRIMMED_MEAN_BOOST_PCT = 24.0   # ±24% from mean = outlier
+    TRIMMED_MEAN_MAX_OUTLIERS = 3   # max points to remove
+    WASH_TRADING_DIVERGENCE_PCT = 50.0  # raw>trimmed*1.5 = flagged
+
+    # --- v12.2: Multi-level Liquidity Filter (Phase 2.4) ---
+    USE_LIQUIDITY_FILTER = True
+    MIN_TOTAL_SALES = 80            # ALL_SALES — total historical observations
+    LIQUIDITY_DAYS = 23             # DAYS_COUNT — lookback window
+    MIN_SALES_IN_WINDOW = 11        # SALE_COUNT — sales in window
+    MAX_FIRST_SALE_AGE_DAYS = 20    # FIRST_SALE — oldest sale in window
+    MAX_LAST_SALE_AGE_DAYS = 3      # LAST_SALE — most recent sale age
+
+    # --- v12.2: Dynamic Fee Bulk (Phase 2.2) ---
+    FEE_BATCH_SIZE = 50             # items per fee request
+    FEE_CACHE_TTL = 43200           # 12 hours
+
     # --- Bot Metadata ---
-    BOT_VERSION = "12.0"
+    BOT_VERSION = "12.2"
     BOT_NAME = "DMarket Intra-Spread Engine"

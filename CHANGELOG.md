@@ -6,6 +6,47 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [12.2.0] - 2026-06-01
+### 🛡️ Asset Status + Dynamic Fee + Wash Trading + V2 Batch
+#### Phase 2.1: Asset Status Tracking
+- New `asset_status` table: tracks `trade_protected`, `reverted`, `active`, `sold`
+- `get_user_inventory_detailed()` — fetches inventory with `FinalizationTime` field
+- `get_transaction_history()` — detects DMarket rollbacks
+- `update_asset_status()`, `is_trade_locked()`, `mark_reverted()` — DB methods
+- `_sync_inventory_statuses()` — auto-sync every 20 cycles
+- `_skip_if_locked()` — prevents double-buy of reverted/locked items
+
+#### Phase 2.2: Dynamic Fee Per Item (Bulk)
+- `get_item_fee_bulk()` — fetches fees for up to 50 items in 1 request
+- Replaces per-item `get_item_fee()` calls in main loop
+- Reduces API calls from N → N/50
+
+#### Phase 2.3: Trimmed Mean (Wash Trading Detection)
+- `get_trimmed_mean()` — removes outliers ±24% from mean
+- `detect_wash_trading()` — flags inflated prices (raw >> trimmed)
+- Configurable `boost_pct` and `max_outliers`
+
+#### Phase 2.4: Multi-level Liquidity Filter
+- `get_liquidity_metrics()` — total_sales, window sales, age of first/last sale
+- `passes_liquidity_filter()` — Config-driven thresholds
+- 5 thresholds: MIN_TOTAL_SALES, MIN_SALES_IN_WINDOW, MAX_FIRST/LAST_SALE_AGE
+
+#### Phase 2.5: DMarket API v2 Batch Migration
+- `batch_create_offers_v2()` — POST /exchange/v1/user-offers/batch-create
+- `batch_edit_offers_v2()` — PATCH /exchange/v1/user-offers/batch-edit
+- `batch_delete_offers_v2()` — POST /exchange/v1/user-offers/batch-close
+- `get_user_offers_v2()` — GET /exchange/v1/user-offers
+- Up to 100 items per batch (vs 1 in v1)
+
+#### Bug Fixes
+- Fixed pre-existing dead code in `_calculate_float_premium` (BS case was unreachable)
+- Fixed `not x is False` boolean logic in `_sync_inventory_statuses`
+- Added missing `cleanup_old_targets()` method to `PriceHistoryDB`
+
+#### Tests
+- 25/25 tests passing (was 17/17)
+- 8 new tests: trade_protected, reverted, FinalizationTime, bulk_fee, trimmed_mean, liquidity, v2 batch create/edit
+
 ## [12.0.0] - 2026-06-01
 ### 🚀 Intra-Spread Engine: Strategy A
 - **CSFloat → CS2Cap Oracle Migration**: BUFF163 + 41 markets price reference

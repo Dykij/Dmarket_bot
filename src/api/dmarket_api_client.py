@@ -183,6 +183,145 @@ class DMarketAPIClient:
         if cursor: params["cursor"] = cursor
         return await self.make_request("GET", "/marketplace-api/v1/user-inventory", params=params)
 
+    # --- v12.2: Detailed Inventory with Status (Phase 2.1) ---
+    async def get_user_inventory_detailed(self, game_id: str, limit: int = 100,
+                                          cursor: Optional[str] = None,
+                                          basic: bool = False) -> List[Dict[str, Any]]:
+        """
+        Fetch user inventory with FULL status info: trade_protected, reverted, FinalizationTime.
+
+        Returns list of items with normalized fields:
+        [{
+            "itemId": "...",
+            "title": "...",
+            "status": "active" | "trade_protected" | "reverted" | "sold",
+            "FinalizationTime": 1234567890.0,  # Unix timestamp when status changes
+            "price": {"USD": "102", "DMC": ""},
+            "createdAt": 1234567890.0,
+        }]
+
+        Endpoint: GET /exchange/v1/user-inventory?gameId=a8db&basic={basic}&limit=100
+        basic=true returns minimal fields, basic=false returns full status
+        """
+        all_items: List[Dict[str, Any]] = []
+        current_cursor = cursor or ""
+
+        for _ in range(10):  # max 10 pages = 1000 items
+            params = {
+                "gameId": game_id,
+                "limit": limit,
+                "basic": str(basic).lower(),
+            }
+            if current_cursor:
+                params["cursor"] = current_cursor
+            try:
+                res = await self.make_request("GET", "/exchange/v1/user-inventory", params=params)
+            except Exception as e:
+                logger.warning(f"Detailed inventory fetch failed: {e}")
+                return all_items
+
+            items = res.get("items", res.get("objects", []))
+            for it in items:
+                status = it.get("status", "active")
+                if isinstance(status, str):
+                    status_lower = status.lower()
+                else:
+                    status_lower = "active"
+
+                # FinalizationTime can be int (seconds) or string
+                fin_raw = it.get("FinalizationTime") or it.get("finalizationTime") or 0
+                try:
+                    finalization_time = float(fin_raw) if fin_raw else 0.0
+                except (ValueError, TypeError):
+                    finalization_time = 0.0
+
+                # createdAt
+                created_raw = it.get("createdAt") or it.get("acquiredAt") or 0
+                try:
+                    created_at = float(created_raw) if created_raw else 0.0
+                except (ValueError, TypeError):
+                    created_at = 0.0
+
+                all_items.append({
+                    "itemId": it.get("itemId", ""),
+                    "title": it.get("title", ""),
+                    "status": status_lower,
+                    "FinalizationTime": finalization_time,
+                    "price": it.get("price", {}),
+                    "createdAt": created_at,
+                })
+
+            current_cursor = res.get("cursor", "")
+            if not current_cursor:
+                break
+
+        return all_items
+
+    async def get_transaction_history(self, days: int = 30, limit: int = 100,
+                                      transaction_type: Optional[str] = None) -> List[Dict[str, Any]]:
+        """
+        Get recent transactions to detect rollbacks (reverted status).
+
+        Returns list of transactions:
+        [{
+            "type": "buy" | "sell" | "reverted",
+            "itemId": "...",
+            "amount": 100.0,  # USD value
+            "status": "completed" | "reverted" | "trade_protected",
+            "timestamp": 1234567890.0,
+        }]
+
+        Endpoint: GET /exchange/v1/transactions?days=30&limit=100
+        """
+        params = {
+            "days": days,
+            "limit": limit,
+        }
+        if transaction_type:
+            params["type"] = transaction_type
+        try:
+            res = await self.make_request("GET", "/exchange/v1/transactions", params=params)
+        except Exception as e:
+            logger.debug(f"Transaction history fetch failed: {e}")
+            return []
+
+        txs = res.get("transactions", res.get("items", []))
+        normalized = []
+        for tx in txs:
+            ts_raw = tx.get("createdAt") or tx.get("timestamp") or 0
+            try:
+                ts = float(ts_raw) if ts_raw else 0.0
+            except (ValueError, TypeError):
+                ts = 0.0
+
+            amount_raw = tx.get("amount", 0)
+            if isinstance(amount_raw, dict):
+                cents = amount_raw.get("USD", 0)
+                try:
+                    amount = float(cents) / 100.0
+                except (ValueError, TypeError):
+                    amount = 0.0
+            else:
+                try:
+                    amount = float(amount_raw) / 100.0
+                except (ValueError, TypeError):
+                    amount = 0.0
+
+            status = tx.get("status", "completed")
+            tx_type = tx.get("type", "")
+            # Map DMarket status to our schema
+            if status in ("reverted", "rollback", "rolled_back"):
+                tx_type = "reverted"
+
+            normalized.append({
+                "type": tx_type,
+                "itemId": tx.get("itemId", ""),
+                "amount": amount,
+                "status": status,
+                "timestamp": ts,
+            })
+        return normalized
+
     async def get_user_offers(self, game_id: str, limit: int = 50, cursor: Optional[str] = None):
         """ Fetches items the user currently has listed for sale. """
         params = {"gameId": game_id, "limit": limit}
@@ -240,6 +379,51 @@ class DMarketAPIClient:
             if os.getenv("DRY_RUN", "true").lower() != "true":
                 logger.warning(f"Could not fetch dynamic fee for {item_id}, fallback to 5%: {e}")
             return 0.05
+
+    # --- v12.2: Bulk fee fetching (Phase 2.2) ---
+    async def get_item_fee_bulk(self, game_id: str, item_ids: List[str]) -> Dict[str, float]:
+        """
+        Batch fetch fees for up to N items in 1 request.
+        Returns: {item_id: fee_rate} (e.g., {"abc123": 0.025})
+
+        Endpoint: GET /exchange/v1/items/bulk-fee?gameId=a8db&itemIds=id1,id2,...
+        Up to 50 items per request.
+        """
+        if not item_ids:
+            return {}
+
+        results: Dict[str, float] = {}
+        chunk_size = 50
+        for chunk_start in range(0, len(item_ids), chunk_size):
+            chunk = item_ids[chunk_start:chunk_start + chunk_size]
+            try:
+                # Comma-separated item IDs (DMarket bulk format)
+                ids_param = ",".join(chunk)
+                res = await self.make_request(
+                    "GET",
+                    "/exchange/v1/items/bulk-fee",
+                    params={"gameId": game_id, "itemIds": ids_param}
+                )
+                # Response: {"fees": [{"itemId": "abc", "fee": 2.5}, ...]}
+                for entry in res.get("fees", []):
+                    fid = entry.get("itemId", "")
+                    fee_raw = entry.get("fee", 5.0)
+                    try:
+                        fee_pct = float(fee_raw) / 100.0
+                    except (ValueError, TypeError):
+                        fee_pct = 0.05
+                    if fid:
+                        results[fid] = fee_pct
+                        # Update single-item cache too
+                        self._fee_cache[fid] = {"fee": fee_pct, "timestamp": time.time()}
+            except Exception as e:
+                logger.debug(f"Bulk fee fetch failed for chunk of {len(chunk)}: {e}")
+                # Fallback to 5% for failed items
+                for fid in chunk:
+                    if fid not in results:
+                        results[fid] = 0.05
+
+        return results
 
     # --- v12.0: Aggregated Prices (Strategy A core) ---
     async def get_aggregated_prices(self, game_id: str, titles: List[str]) -> Dict[str, Dict[str, Any]]:
@@ -410,3 +594,72 @@ class DMarketAPIClient:
             "price": {"amount": str(int(new_price_usd * 100)), "currency": "USD"},
         }
         return await self.make_request("PATCH", "/marketplace-api/v1/user-offers/edit", body=body)
+
+    # ------------------------------------------------------------------
+    # v12.2 Phase 2.5: API v2 Batch Endpoints
+    # ------------------------------------------------------------------
+    async def batch_create_offers_v2(self, offers: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """
+        v2: Batch list up to 100 items in a single request.
+
+        Endpoint: POST /exchange/v1/user-offers/batch-create
+        Body: {"offers": [{"assetId": "...", "price": {"amount": "123", "currency": "USD"}}, ...]}
+        """
+        body_offers = []
+        for o in offers:
+            body_offers.append({
+                "assetId": o["asset_id"],
+                "price": {"amount": str(int(o["price_usd"] * 100)), "currency": "USD"},
+            })
+        return await self.make_request(
+            "POST",
+            "/exchange/v1/user-offers/batch-create",
+            body={"offers": body_offers}
+        )
+
+    async def batch_edit_offers_v2(self, edits: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """
+        v2: Batch reprice up to 100 offers in a single request.
+
+        Endpoint: PATCH /exchange/v1/user-offers/batch-edit
+        Body: {"edits": [{"offerId": "...", "price": {"amount": "123", "currency": "USD"}}, ...]}
+        """
+        body_edits = []
+        for e in edits:
+            body_edits.append({
+                "offerId": e["offer_id"],
+                "price": {"amount": str(int(e["new_price_usd"] * 100)), "currency": "USD"},
+            })
+        return await self.make_request(
+            "PATCH",
+            "/exchange/v1/user-offers/batch-edit",
+            body={"edits": body_edits}
+        )
+
+    async def batch_delete_offers_v2(self, offer_ids: List[str]) -> Dict[str, Any]:
+        """
+        v2: Batch cancel (delist) up to 100 offers in a single request.
+
+        Endpoint: POST /exchange/v1/user-offers/batch-close
+        Body: {"offerIds": ["...", "..."]}
+        """
+        return await self.make_request(
+            "POST",
+            "/exchange/v1/user-offers/batch-close",
+            body={"offerIds": offer_ids}
+        )
+
+    async def get_user_offers_v2(self, game_id: str, limit: int = 100,
+                                 cursor: Optional[str] = None,
+                                 status: Optional[str] = None) -> Dict[str, Any]:
+        """
+        v2: List active offers with optional status filter.
+
+        Endpoint: GET /exchange/v1/user-offers?gameId=a8db&status=active&limit=100
+        """
+        params = {"gameId": game_id, "limit": limit}
+        if cursor:
+            params["cursor"] = cursor
+        if status:
+            params["status"] = status
+        return await self.make_request("GET", "/exchange/v1/user-offers", params=params)

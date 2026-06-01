@@ -101,12 +101,17 @@ class SnipingLoop:
         3. Filter: 5%+ spread
         4. Validate with CS2Cap oracle
         5. Buy at ask, list at bid - 0.01
+        6. v12.2: Sync asset statuses (trade_protected, reverted)
         """
         try:
             self.deep_scan_counter += 1
             self.reprice_counter += 1
             is_fresh_cycle = (self.deep_scan_counter % 5 == 0)
             cursor_key = f"dmarket_cursor_{game_id}"
+
+            # v12.2: Sync inventory statuses every 20 cycles (not every cycle to avoid rate limits)
+            if self.deep_scan_counter % 20 == 0:
+                await self._sync_inventory_statuses(game_id)
 
             if is_fresh_cycle:
                 logger.info(f"FRESH CYCLE (Page 1) for {game_id} to catch new listings.")
@@ -163,6 +168,21 @@ class SnipingLoop:
             instant_buys = []
             current_margin = self.min_profit_margin
 
+            # v12.2 Phase 2.2: Pre-fetch fees in bulk for all candidate items
+            # to avoid 1 API call per item
+            candidate_item_ids = []
+            for item in items:
+                if not item.get("title") or not item.get("itemId"):
+                    continue
+                base_price_cents = int(item.get("price", {}).get("USD", 0))
+                if base_price_cents <= 0:
+                    continue
+                candidate_item_ids.append(item.get("itemId"))
+
+            bulk_fees: Dict[str, float] = {}
+            if candidate_item_ids:
+                bulk_fees = await self.client.get_item_fee_bulk(game_id, candidate_item_ids)
+
             for item in items:
                 title = item.get("title", "")
                 item_id = item.get("itemId")
@@ -173,6 +193,10 @@ class SnipingLoop:
                     continue
 
                 if price_db.has_target_been_placed(item_id):
+                    continue
+
+                # v12.2 Phase 2.1: Skip if asset is reverted or trade_protected
+                if self._skip_if_locked(item_id, title):
                     continue
 
                 from src.config import Config
@@ -189,6 +213,33 @@ class SnipingLoop:
                     continue
 
                 if price_db.is_crashing(title):
+                    continue
+
+                # v12.2 Phase 2.4: Multi-level liquidity verification
+                from src.config import Config
+                if Config.USE_LIQUIDITY_FILTER:
+                    liquidity = price_db.get_liquidity_metrics(title)
+                    if not liquidity["is_liquid"]:
+                        is_sandbox = os.getenv("DRY_RUN", "true").lower() == "true"
+                        if is_sandbox:
+                            price_db.log_decision(
+                                title, 'skip', 'Low liquidity',
+                                f"{liquidity['reason']} (sales={liquidity['total_sales']})"
+                            )
+                        continue
+
+                # v12.2 Phase 2.3: Wash trading detection (trimmed mean)
+                from src.config import Config
+                if Config.WASH_TRADING_DETECTION and not price_db.detect_wash_trading(
+                    title, days=14, boost_pct=Config.TRIMMED_MEAN_BOOST_PCT,
+                    max_outliers=Config.TRIMMED_MEAN_MAX_OUTLIERS
+                ):
+                    is_sandbox = os.getenv("DRY_RUN", "true").lower() == "true"
+                    if is_sandbox:
+                        price_db.log_decision(
+                            title, 'skip', 'Wash trading detected',
+                            'Raw mean >> trimmed mean — price inflated by anomalies'
+                        )
                     continue
 
                 history = price_db.get_recent_prices(title, days=14)
@@ -252,7 +303,11 @@ class SnipingLoop:
                     continue
 
                 # v12.0 Phase 1.1: Low-Fee Filter (prefer low-fee items)
-                fee_rate = await self.client.get_item_fee(game_id, item_id, base_price_cents)
+                # v12.2 Phase 2.2: Use bulk fee instead of per-item API call
+                fee_rate = bulk_fees.get(item_id, 0.05)
+                if fee_rate == 0.05:
+                    # Fall back to per-item call only if bulk missed this item
+                    fee_rate = await self.client.get_item_fee(game_id, item_id, base_price_cents)
                 cached_low_fee = price_db.get_low_fee_rate(title)
                 if cached_low_fee is not None and cached_low_fee < fee_rate:
                     # Use the lower cached rate (it might differ slightly from dynamic)
@@ -325,6 +380,11 @@ class SnipingLoop:
                         price_db.add_virtual_item(title, base_price, trade_lock_hours=168)
                         vwap = price_db.calculate_vwap(title)
                         logger.info(f"[SIM] SNIPED! {title} @ ${base_price} → list ${list_price} (spread: {item_data['best_bid']-item_data['best_ask']:.2f}, VWAP: ${vwap:.2f})")
+                        # v12.2 Phase 2.1: Track asset status (trade_protected for 7 days)
+                        price_db.update_asset_status(
+                            item_id, title, "trade_protected",
+                            finalization_time=time.time() + 168 * 3600
+                        )
 
                     price_db.record_placed_target(item_id, title, base_price)
                     self.liquidity.record_spend(base_price)
@@ -499,6 +559,92 @@ class SnipingLoop:
         if float_val >= 0.45:
             return 0.90  # BS
         return 1.0  # MW / regular FT
+
+    # ------------------------------------------------------------------
+    # v12.2 Phase 2.1: Inventory Status Sync (trade_protected, reverted)
+    # ------------------------------------------------------------------
+    async def _sync_inventory_statuses(self, game_id: str) -> None:
+        """
+        Synchronize asset statuses with DMarket's authoritative state.
+        Updates asset_status table with:
+        - status='trade_protected' if item is locked
+        - status='reverted' if DMarket rolled back the transaction
+        - status='active' if item is now tradable
+
+        Also detects rollbacks via transaction history.
+        """
+        if os.getenv("DRY_RUN", "true").lower() == "true":
+            # In sandbox we just simulate; status changes happen rarely
+            return
+
+        try:
+            # 1. Fetch detailed inventory from DMarket
+            inv_items = await self.client.get_user_inventory_detailed(game_id, limit=100)
+            if not inv_items:
+                return
+
+            updated_count = 0
+            for item in inv_items:
+                item_id = item.get("itemId", "")
+                if not item_id:
+                    continue
+                status = item.get("status", "active")
+                finalization_time = item.get("FinalizationTime", 0.0)
+                title = item.get("title", "")
+
+                # Update local status from DMarket's authoritative state
+                old_status = price_db.get_asset_status(item_id)
+                if not old_status or old_status["status"] != status:
+                    price_db.update_asset_status(item_id, title, status, finalization_time)
+                    updated_count += 1
+                    if status == "reverted":
+                        logger.warning(
+                            f"[STATUS] Asset {title} ({item_id}) was REVERTED by DMarket"
+                        )
+                    elif status == "trade_protected":
+                        logger.info(
+                            f"[STATUS] Asset {title} ({item_id}) is trade_protected until {finalization_time}"
+                        )
+
+            if updated_count > 0:
+                logger.info(f"[STATUS-SYNC] Updated {updated_count} asset statuses")
+
+            # 2. Cross-check with transaction history for rollbacks
+            txs = await self.client.get_transaction_history(days=7, limit=50)
+            reverted_count = 0
+            for tx in txs:
+                if tx.get("type") == "reverted" or tx.get("status") == "reverted":
+                    item_id = tx.get("itemId", "")
+                    # Only mark if we previously knew the item
+                    if item_id and price_db.is_known_item(item_id):
+                        if price_db.get_asset_status(item_id):
+                            price_db.mark_reverted(item_id)
+                            reverted_count += 1
+            if reverted_count > 0:
+                logger.warning(f"[STATUS-SYNC] {reverted_count} newly-reverted items detected")
+
+        except Exception as e:
+            logger.debug(f"Inventory status sync failed: {e}")
+
+    def _skip_if_locked(self, item_id: str, title: str) -> bool:
+        """
+        Returns True if the item should be SKIPPED due to:
+        - We already own it (would double-buy)
+        - It's currently trade_protected
+        - It's been reverted
+        """
+        if price_db.is_known_item(item_id):
+            asset = price_db.get_asset_status(item_id)
+            if asset:
+                if asset["status"] == "reverted":
+                    logger.debug(f"[SKIP] {title} was reverted, skipping")
+                    return True
+                if asset["status"] == "trade_protected":
+                    fin = asset["finalization_time"]
+                    if fin <= 0 or fin > time.time():
+                        logger.debug(f"[SKIP] {title} is trade_protected")
+                        return True
+        return False
 
 
 if __name__ == "__main__":
