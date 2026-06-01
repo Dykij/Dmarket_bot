@@ -600,16 +600,26 @@ async def main():
         test_clock_sync_status,
     ]
 
-    # v12.2 Phase 3.4: Telegram bot tests (sync, run after async tests)
+    # v12.2 Phase 3.4 + 3.5: Telegram bot tests (sync, run after async tests)
     from scratch.test_telegram_bot import (
-        test_main_keyboard, test_inline_status_keyboard, test_inline_inventory_keyboard,
+        test_main_keyboard,
+        test_inline_status_keyboard_stopped, test_inline_status_keyboard_running,
+        test_inline_inventory_keyboard,
         test_admin_access, test_bot_module_imports, test_commands_registration,
         test_keyboard_button_count, test_emoji_unicode_in_buttons,
         test_callback_data_format, test_input_field_placeholder,
+        test_resilience_safe_call,
+        test_resilience_retry_async_success,
+        test_resilience_retry_async_retries_then_succeeds,
+        test_resilience_bot_state_lock,
+        test_resilience_no_sys_exit_at_import,
+        test_fsm_states,
+        test_signal_handlers,
     )
     sync_tests = [
         test_main_keyboard,
-        test_inline_status_keyboard,
+        test_inline_status_keyboard_stopped,
+        test_inline_status_keyboard_running,
         test_inline_inventory_keyboard,
         test_admin_access,
         test_bot_module_imports,
@@ -618,6 +628,13 @@ async def main():
         test_emoji_unicode_in_buttons,
         test_callback_data_format,
         test_input_field_placeholder,
+        test_resilience_safe_call,
+        test_resilience_retry_async_success,
+        test_resilience_retry_async_retries_then_succeeds,
+        test_resilience_bot_state_lock,
+        test_resilience_no_sys_exit_at_import,
+        test_fsm_states,
+        test_signal_handlers,
     ]
 
     for t in tests:

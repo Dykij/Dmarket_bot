@@ -69,6 +69,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `.env.example` updated with TELEGRAM_ADMIN_ID placeholder
 - `scratch/test_sandbox_v9.py` extended with 10 telegram tests (28 async + 10 sync = 38 total)
 
+#### Phase 3.5: Telegram Bot Hardening (resilience & error recovery)
+- **sys.path auto-fix** (variant 4 from plan): bot works from any cwd
+- **No sys.exit() at import time**: missing token logs error but doesn't kill the process
+- **`safe_call` decorator**: wraps every handler — any uncaught exception is reported to user via Telegram, never crashes the dispatcher
+- **`@router.errors()`** global handler: catches anything that slips through
+- **`retry_async` utility**: exponential backoff (1s → 2s → 4s → 8s) for retriable errors (TimeoutError, ConnectionError, OSError, aiohttp.ClientError); non-retriable errors fail fast
+- **`BotState` class**: thread-safe with `asyncio.Lock`; one place to manage sniping loop, client, flags
+- **PANIC button** now reuses the running bot's client (no more duplicate API calls)
+- **/test FSM flow**: pressing the button (vs. typing `/test <item>`) now enters a state waiting for the item name; /cancel exits
+- **Graceful shutdown** on SIGTERM / SIGINT: `dp.stop_polling()` + state cleanup + admin notification; cleans up PID file
+- **Logs to file** (`logs/telegram_bot.log`) + stdout; aiogram log noise reduced to WARNING
+- **Old `bot.py` archived** as `bot_legacy_broken.py.bak` (had hardcoded Windows path)
+- **Launcher hardening** (variant 1 from plan):
+  - Auto-detects project root from any cwd (5 strategies: scripts-relative, common paths, walk-up)
+  - Validates Python ≥ 3.11
+  - Prefers local `.venv/bin/python` over system `python3`
+  - Validates `.env` has all required keys (without exposing values)
+  - Refuses to start if a stale PID file points to a live process
+  - DRY_RUN defaults to `true` (safe) with explicit confirmation for LIVE mode
+  - Color-coded status output
+  - Writes PID to `.run/telegram_bot.pid` and cleans it up on exit
+  - `set -u` (not `set -e`) for graceful error messages
+- **19 telegram tests** in `scratch/test_telegram_bot.py` (was 11): added tests for safe_call, retry_async, BotState lock, no-sys.exit, FSM, signal handlers
+- **46/46 tests passing** (was 38/38)
+
 #### Bug Fixes
 - Fixed pre-existing dead code in `_calculate_float_premium` (BS case was unreachable)
 - Fixed `not x is False` boolean logic in `_sync_inventory_statuses`
