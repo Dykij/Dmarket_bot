@@ -51,9 +51,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Reports filter effectiveness (% rejected by each filter)
 - Real-market adjustment analysis
 
-#### Documentation Updates
+#### Phase 3.3: Documentation Updates
 - `docs/STRATEGY_ROADMAP.md` — v12.2 status (all 6 strategies + new defenses)
 - `ROADMAP_DMARKET2026.md` — Phase 2.4 (v12.2 Defenses) and Phase 3.2 sections
+
+#### Phase 3.4: Telegram Control Bot — NEW
+- `src/telegram/control_bot.py` — full-featured Telegram bot (replaces old bot.py)
+- **Main reply keyboard** (10 buttons): Start/Stop, Balance, Status, Inventory, Profits, Test, Settings, Panic, Help
+- **Inline keyboards** with state-dependent START/STOP buttons
+- **Commands** (13 total): /start, /start_bot, /stop_bot, /panic, /balance, /status, /inventory, /profits, /test, /settings, /clock, /refresh, /help
+- **Access control**: only admin (TELEGRAM_ADMIN_ID) can interact
+- **Live integration**: starts/stops real `SnipingLoop`, queries real DMarket balance
+- **Callbacks**: btn:start, btn:stop, btn:balance, btn:inventory, btn:profits, btn:refresh_status
+- **Bot verified live**: @DmarketPayonnerBot (ID: 8585707237), admin 458765683
+- `scripts/start_telegram_bot.sh` — one-command launcher
+- `scratch/test_telegram_bot.py` — 11 unit tests for keyboards, access, callbacks
+- `.env.example` updated with TELEGRAM_ADMIN_ID placeholder
+- `scratch/test_sandbox_v9.py` extended with 10 telegram tests (28 async + 10 sync = 38 total)
 
 #### Bug Fixes
 - Fixed pre-existing dead code in `_calculate_float_premium` (BS case was unreachable)

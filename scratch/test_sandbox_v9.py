@@ -34,6 +34,19 @@ v12.2 Phase 3.1 (Clock Sync / NTP-like):
 26. ClockSync initialization
 27. ClockSync offset calculation
 28. ClockSync status reporting
+
+v12.2 Phase 3.4 (Telegram Control Bot):
+29. Main reply keyboard
+30. Inline status keyboard
+31. Inline inventory keyboard
+32. Admin access control
+33. Bot module imports
+34. Callback data format
+35. Emoji in buttons
+36. Input field placeholder
+37. Keyboard row count
+38. Commands registration function
+39. Telegram bot token validity (live test)
 """
 
 import asyncio
@@ -551,7 +564,7 @@ async def test_clock_sync_status():
 async def main():
     os.environ["DRY_RUN"] = "true"
     logger.info("="*60)
-    logger.info("VERIFICATION SUITE v12.2 — STATUS + FEE + TRIMMED + LIQUIDITY + V2 + CLOCK")
+    logger.info("VERIFICATION SUITE v12.2 — ALL FEATURES + TELEGRAM BOT")
     logger.info("="*60)
 
     tests = [
@@ -587,14 +600,47 @@ async def main():
         test_clock_sync_status,
     ]
 
+    # v12.2 Phase 3.4: Telegram bot tests (sync, run after async tests)
+    from scratch.test_telegram_bot import (
+        test_main_keyboard, test_inline_status_keyboard, test_inline_inventory_keyboard,
+        test_admin_access, test_bot_module_imports, test_commands_registration,
+        test_keyboard_button_count, test_emoji_unicode_in_buttons,
+        test_callback_data_format, test_input_field_placeholder,
+    )
+    sync_tests = [
+        test_main_keyboard,
+        test_inline_status_keyboard,
+        test_inline_inventory_keyboard,
+        test_admin_access,
+        test_bot_module_imports,
+        test_commands_registration,
+        test_keyboard_button_count,
+        test_emoji_unicode_in_buttons,
+        test_callback_data_format,
+        test_input_field_placeholder,
+    ]
+
     for t in tests:
         try:
             await t()
         except Exception as e:
             record(t.__name__, False, f"CRASH: {e}")
 
+    # Run sync Telegram tests
+    logger.info("-"*60)
+    logger.info("Running Telegram Bot tests (sync)...")
+    sync_passed_before = PASSED
+    for t in sync_tests:
+        try:
+            t()
+        except Exception as e:
+            record(t.__name__, False, f"CRASH: {e}")
+    sync_passed = PASSED - sync_passed_before
+    logger.info(f"Sync tests: {sync_passed} passed")
+
+    total = len(tests) + len(sync_tests)
     logger.info("="*60)
-    logger.info(f"RESULTS: {PASSED} passed / {FAILED} failed / {len(tests)} total")
+    logger.info(f"RESULTS: {PASSED} passed / {FAILED} failed / {total} total")
     logger.info("="*60)
     if FAILED > 0:
         for name, ok, details in TESTS:
