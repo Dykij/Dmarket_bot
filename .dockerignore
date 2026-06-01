@@ -1,0 +1,126 @@
+# ============================================================================
+# .dockerignore - Exclude unnecessary files from Docker build context
+# Reduces image size by ~50%+ and speeds up builds
+# Updated: January 2026
+# ============================================================================
+
+# Git files
+.git/
+.gitignore
+.gitattributes
+.github/
+
+# Python cache and compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Testing and coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+.hypothesis/
+
+# Type checking and linting
+.mypy_cache/
+.ruff_cache/
+.dmypy.json
+dmypy.json
+
+# IDE and editor files
+.vscode/
+.idea/
+.cursor/
+.claude/
+*.swp
+*.swo
+*~
+.DS_Store
+.cursorrules
+
+# Documentation (not needed in production image)
+docs/
+docs-site/
+docs-sphinx/
+*.md
+!README.md
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+
+# Development files
+tests/
+scripts/
+examples/
+Makefile
+docker-compose.yml
+docker-compose.*.yml
+!Dockerfile
+!Dockerfile.dev
+
+# Config files not needed in production
+config/ecosystem.config.js
+config/hooks.yaml
+config/prometheus.yml
+config/mypy-fast.ini
+config/pytest-fast.ini
+config/.yamllint.yml
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+*.egg
+
+# Logs and data (copied at runtime via volumes)
+logs/
+data/
+backups/
+*.log
+*.db
+*.sqlite
+*.sqlite3
+bot_database.db*
+
+# Environment files (use Docker secrets instead)
+.env
+.env.*
+!.env.example
+
+# Kubernetes and monitoring configs
+k8s/
+grafana/
+nginx/
+n8n/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.bak
+*.swp
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Poetry/pip files (dependencies already in image)
+poetry.lock
+requirements.in

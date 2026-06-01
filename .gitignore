@@ -1,0 +1,42 @@
+# Ignore secrets and transient data
+.env
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage
+htmlcov/
+dist/
+build/
+*.egg-info/
+.idea/
+.vscode/
+.DS_Store
+*.log
+logs/
+.mypy_cache/
+.ruff_cache/
+
+# Rust build artifacts
+rust_core_src/target/
+**/*.so
+**/*.pyd
+
+# Data files
+data/*.db
+data/*.pkl
+data/*.pickle
+!data/.gitkeep
+!data/cs2_events.json
+
+# Local databases and caches
+*.db
+*.sqlite
+data/market_data.db
+data/blackboard.json
+history_dump.txt
+research_report.json
+memory/*.md
+legacy/
+src/scripts/research_assistant.py

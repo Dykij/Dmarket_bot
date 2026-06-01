@@ -1,0 +1,12 @@
+from src.db.price_history import price_db
+idle = price_db.get_virtual_inventory('idle')
+selling = price_db.get_virtual_inventory('selling')
+sold = price_db.get_virtual_inventory('sold')
+total_buy_cost = sum(i['buy_price'] for i in sold)
+profit = sum(i['buy_price'] * 0.05 for i in sold)
+print(f"--- SIMULATION RESULTS ---")
+print(f"Items Acquired: {len(idle) + len(selling) + len(sold)}")
+print(f"Items On Scale: {len(selling)}")
+print(f"Items Sold:     {len(sold)}")
+print(f"Total Invested: ${total_buy_cost:.2f}")
+print(f"Net Profit:     ${profit:.2f}")

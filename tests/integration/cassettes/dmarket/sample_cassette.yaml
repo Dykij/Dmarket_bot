@@ -1,0 +1,21 @@
+
+interactions:
+- request:
+    body: null
+    headers:
+      Accept:
+      - application/json
+      User-Agent:
+      - DMarketBot/1.0
+    method: GET
+    uri: https://api.dmarket.com/exchange/v1/market/items?gameId=a8db&limit=10
+  response:
+    body:
+      string: '{"objects":[{"itemId":"test_001","title":"Test Item","price":{"USD":"1000"}}],"total":{"items":1}}'
+    headers:
+      Content-Type:
+      - application/json
+    status:
+      code: 200
+      message: OK
+version: 1

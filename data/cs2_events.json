@@ -1,0 +1,172 @@
+[
+  {
+    "name": "Steam Spring Sale 2026",
+    "start": "2026-03-19",
+    "end": "2026-03-26",
+    "type": "steam_sale",
+    "effect": "opportunity",
+    "affected_categories": ["rifle", "knife", "gloves", "pistol", "smg"],
+    "margin_multiplier": 1.5,
+    "notes": "Игроки продают скины для покупки игр. Цены временно падают 5-10%. Хорошее время для долгосрочных покупок. Цены восстанавливаются за 2-3 недели."
+  },
+  {
+    "name": "Dead Hand Collection Release",
+    "start": "2026-03-10",
+    "end": "2026-03-24",
+    "type": "case_release",
+    "effect": "caution",
+    "affected_categories": ["rifle", "pistol", "smg"],
+    "margin_multiplier": 1.8,
+    "notes": "Новая коллекция Dead Hand через Armory. Скины из конкурирующих коллекций (похожие модели) могут просесть на 5-15%."
+  },
+  {
+    "name": "IEM Cologne Major 2026",
+    "start": "2026-06-02",
+    "end": "2026-06-21",
+    "type": "major",
+    "effect": "caution",
+    "affected_categories": ["sticker", "souvenir", "capsule", "autograph"],
+    "margin_multiplier": 2.0,
+    "notes": "Первый CS2 Major 2026. LANXESS Arena, Кёльн. Стикеры и сувениры обвалятся после турнира. Не покупать стикеры/капсулы до финала. Обычные скины могут подешеветь на 3-5% из-за переключения внимания на стикеры."
+  },
+  {
+    "name": "Steam Next Fest June 2026",
+    "start": "2026-06-15",
+    "end": "2026-06-22",
+    "type": "steam_event",
+    "effect": "caution",
+    "affected_categories": [],
+    "margin_multiplier": 1.3,
+    "notes": "Steam Next Fest привлекает внимание к новым играм. Незначительное давление на рынок скинов CS2/Rust, так как часть аудитории тестирует демо-версии."
+  },
+  {
+    "name": "Steam Summer Sale 2026",
+    "start": "2026-06-25",
+    "end": "2026-07-09",
+    "type": "steam_sale",
+    "effect": "opportunity",
+    "affected_categories": ["rifle", "knife", "gloves", "pistol", "smg", "shotgun", "machinegun"],
+    "margin_multiplier": 1.5,
+    "notes": "Главная распродажа года. Массовые продажи скинов для покупки игр. Цены просаживаются на 5-15%. Скупать ножи и перчатки — они восстанавливаются быстрее всего (2-3 недели)."
+  },
+  {
+    "name": "Rust Monthly Wipe — July 2026",
+    "start": "2026-07-02",
+    "end": "2026-07-03",
+    "type": "rust_wipe",
+    "effect": "opportunity",
+    "affected_categories": [],
+    "margin_multiplier": 1.2,
+    "notes": "Принудительный ежемесячный вайп Rust (первый четверг месяца). Всплеск активности = мини-рост цен на скины Rust в течение 1-2 дней до вайпа."
+  },
+  {
+    "name": "Rust Monthly Wipe — August 2026",
+    "start": "2026-08-06",
+    "end": "2026-08-07",
+    "type": "rust_wipe",
+    "effect": "opportunity",
+    "affected_categories": [],
+    "margin_multiplier": 1.2,
+    "notes": "Ежемесячный вайп Rust. Короткий всплеск спроса на скины Rust."
+  },
+  {
+    "name": "Rust Monthly Wipe — September 2026",
+    "start": "2026-09-03",
+    "end": "2026-09-04",
+    "type": "rust_wipe",
+    "effect": "opportunity",
+    "affected_categories": [],
+    "margin_multiplier": 1.2,
+    "notes": "Ежемесячный вайп Rust."
+  },
+  {
+    "name": "Rust Monthly Wipe — October 2026",
+    "start": "2026-10-01",
+    "end": "2026-10-02",
+    "type": "rust_wipe",
+    "effect": "opportunity",
+    "affected_categories": [],
+    "margin_multiplier": 1.2,
+    "notes": "Ежемесячный вайп Rust."
+  },
+  {
+    "name": "Steam Autumn Sale 2026",
+    "start": "2026-10-01",
+    "end": "2026-10-08",
+    "type": "steam_sale",
+    "effect": "opportunity",
+    "affected_categories": ["rifle", "knife", "gloves", "pistol"],
+    "margin_multiplier": 1.4,
+    "notes": "Осенняя распродажа Steam. Меньше влияния чем Summer/Winter, но цены всё равно проседают на 3-8%. Хорошее окно для точечных покупок."
+  },
+  {
+    "name": "Steam Next Fest October 2026",
+    "start": "2026-10-19",
+    "end": "2026-10-26",
+    "type": "steam_event",
+    "effect": "caution",
+    "affected_categories": [],
+    "margin_multiplier": 1.3,
+    "notes": "Октябрьский Steam Next Fest. Минимальное влияние на рынок скинов."
+  },
+  {
+    "name": "CS2 Halloween Event 2026 (Ожидается)",
+    "start": "2026-10-28",
+    "end": "2026-11-04",
+    "type": "cs2_event",
+    "effect": "caution",
+    "affected_categories": ["case", "collection"],
+    "margin_multiplier": 1.5,
+    "notes": "Valve иногда выпускает Хэллоуин-контент. Если будет новый кейс/коллекция — давление на рынок существующих скинов аналогичного типа."
+  },
+  {
+    "name": "Rust Monthly Wipe — November 2026",
+    "start": "2026-11-05",
+    "end": "2026-11-06",
+    "type": "rust_wipe",
+    "effect": "opportunity",
+    "affected_categories": [],
+    "margin_multiplier": 1.2,
+    "notes": "Ежемесячный вайп Rust."
+  },
+  {
+    "name": "PGL Major Singapore 2026",
+    "start": "2026-11-25",
+    "end": "2026-12-13",
+    "type": "major",
+    "effect": "caution",
+    "affected_categories": ["sticker", "souvenir", "capsule", "autograph"],
+    "margin_multiplier": 2.0,
+    "notes": "Второй CS2 Major 2026. Singapore Indoor Stadium. Аналогично Cologne — массовый обвал стикеров и сувениров. НЕ покупать стикеры/капсулы. Обычные скины можно брать осторожно с повышенной маржой."
+  },
+  {
+    "name": "Rust Monthly Wipe — December 2026",
+    "start": "2026-12-03",
+    "end": "2026-12-04",
+    "type": "rust_wipe",
+    "effect": "opportunity",
+    "affected_categories": [],
+    "margin_multiplier": 1.2,
+    "notes": "Декабрьский ежемесячный вайп Rust."
+  },
+  {
+    "name": "Steam Winter Sale 2026",
+    "start": "2026-12-17",
+    "end": "2027-01-04",
+    "type": "steam_sale",
+    "effect": "opportunity",
+    "affected_categories": ["rifle", "knife", "gloves", "pistol", "smg", "shotgun", "machinegun"],
+    "margin_multiplier": 1.5,
+    "notes": "Зимняя распродажа Steam. Вторая по масштабу после летней. Массовые продажи скинов. Цены просаживаются на 5-15%. Лучшее время для покупки ножей/перчаток на долгосрочное хранение."
+  },
+  {
+    "name": "CS2 Operation (Прогноз, дата неизвестна)",
+    "start": "2026-09-01",
+    "end": "2026-11-30",
+    "type": "operation",
+    "effect": "caution",
+    "affected_categories": ["rifle", "smg", "pistol", "shotgun"],
+    "margin_multiplier": 2.5,
+    "notes": "⚠️ ПРОГНОЗ: Valve не анонсировала дату операции. Обновите эту запись через Telegram /add_event когда появится официальная информация. Новые скины операции давят на аналогичные существующие скины (-10-25%)."
+  }
+]

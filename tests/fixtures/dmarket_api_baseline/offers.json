@@ -1,0 +1,18 @@
+{
+  "Items": [
+    {
+      "ItemId": "12345",
+      "Title": "AK-47 | Redline (Field-Tested)",
+      "Price": {
+        "USD": "1000"
+      },
+      "SuggestedPrice": {
+        "USD": "1200"
+      },
+      "Discount": 16,
+      "ClassId": "123456789",
+      "GameId": "a8db"
+    }
+  ],
+  "Total": 1
+}
