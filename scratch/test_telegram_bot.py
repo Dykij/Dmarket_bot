@@ -300,14 +300,14 @@ def test_fsm_states():
 
 
 def test_signal_handlers():
-    """Test 17: _install_signal_handlers exists and accepts (loop, bot)."""
+    """Test 17: _install_signal_handlers exists and accepts (loop, bot, dp)."""
     from src.telegram.control_bot import _install_signal_handlers
     import inspect
     sig = inspect.signature(_install_signal_handlers)
     params = list(sig.parameters.keys())
     record(
         "_install_signal_handlers signature",
-        params == ["loop", "bot"],
+        params == ["loop", "bot", "dp"],
         f"signature={params}",
     )
 
