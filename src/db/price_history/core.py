@@ -1,0 +1,204 @@
+"""
+core.py — PriceHistoryDB orchestrator (bifurcated SQLite, v8.0).
+
+Splits trading state and historical analysis into two physical databases:
+    dmarket_state.db   — (OLTP) Fast transactions: orders, inventory, scan state
+    dmarket_history.db — (OLAP) Bulk analytical data: price observations
+
+Composes focused mixins for each table group:
+    history.py      — price_history (observations + liquidity + wash trading)
+    state.py        — scanning_state (cursor, etc.)
+    inventory.py    — virtual_inventory + decision_logs + missed_opportunities
+    targets.py      — active_targets (placed buy orders)
+    asset_status.py — asset_status (v12.2 trade_protected, reverted)
+    low_fee.py      — low_fee_cache (v12.0 daily refresh)
+"""
+
+from __future__ import annotations
+
+import logging
+import sqlite3
+from pathlib import Path
+
+from .asset_status import _AssetStatusMixin
+from .history import _HistoryMixin
+from .inventory import _InventoryMixin
+from .low_fee import _LowFeeMixin
+from .state import _StateMixin
+from .targets import _TargetsMixin
+
+logger = logging.getLogger("PriceHistoryDB")
+
+
+class PriceHistoryDB(  # type: ignore[misc]
+    _HistoryMixin,
+    _StateMixin,
+    _InventoryMixin,
+    _TargetsMixin,
+    _AssetStatusMixin,
+    _LowFeeMixin,
+):
+    """Bifurcated SQLite-backed price history with trend analysis."""
+
+    def __init__(
+        self,
+        state_db: str = "dmarket_state.db",
+        history_db: str = "dmarket_history.db",
+    ) -> None:
+        self.data_dir = Path(__file__).parent.parent.parent / "data"
+        self.data_dir.mkdir(parents=True, exist_ok=True)
+
+        self.state_path = self.data_dir / state_db
+        self.history_path = self.data_dir / history_db
+
+        # Initialize Connections
+        self.state_conn = sqlite3.connect(str(self.state_path), check_same_thread=False)
+        self.state_conn.row_factory = sqlite3.Row
+
+        self.history_conn = sqlite3.connect(str(self.history_path), check_same_thread=False)
+        self.history_conn.row_factory = sqlite3.Row
+
+        self._init_schemas()
+
+    def _init_schemas(self) -> None:
+        """Initialize appropriate tables in each database."""
+        # --- STATE DB (OLTP) ---
+        with self.state_conn:
+            self.state_conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS scanning_state (
+                    key         TEXT PRIMARY KEY,
+                    value       TEXT NOT NULL,
+                    updated_at  REAL NOT NULL
+                )
+            """
+            )
+            self.state_conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS virtual_inventory (
+                    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                    hash_name   TEXT    NOT NULL,
+                    buy_price   REAL    NOT NULL,
+                    sell_price  REAL,
+                    fee_paid    REAL,
+                    profit      REAL,
+                    status      TEXT    NOT NULL DEFAULT 'idle', -- 'idle', 'selling', 'sold'
+                    acquired_at REAL    NOT NULL,
+                    unlock_at   REAL    NOT NULL DEFAULT 0, -- v9.0 Trade Lock timestamp
+                    sold_at     REAL
+                )
+            """
+            )
+            # Migration: Ensure unlock_at exists in older DBs
+            try:
+                self.state_conn.execute(
+                    "ALTER TABLE virtual_inventory ADD COLUMN unlock_at REAL NOT NULL DEFAULT 0"
+                )
+            except sqlite3.OperationalError:
+                pass  # Column already exists
+
+            self.state_conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS missed_opportunities (
+                    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                    hash_name   TEXT    NOT NULL,
+                    price       REAL    NOT NULL,
+                    expected_sell REAL  NOT NULL,
+                    reason      TEXT    NOT NULL,
+                    timestamp   REAL    NOT NULL
+                )
+            """
+            )
+            self.state_conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS decision_logs (
+                    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                    hash_name   TEXT    NOT NULL,
+                    decision    TEXT    NOT NULL, -- 'buy', 'skip', 'target'
+                    reason      TEXT    NOT NULL,
+                    details     TEXT,
+                    timestamp   REAL    NOT NULL
+                )
+            """
+            )
+            self.state_conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS active_targets (
+                    item_id     TEXT PRIMARY KEY,
+                    hash_name   TEXT    NOT NULL,
+                    price       REAL    NOT NULL,
+                    created_at  REAL    NOT NULL
+                )
+            """
+            )
+            self.state_conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_targets_created ON active_targets(created_at)"
+            )
+
+            # v12.0: Low-fee items cache (refreshed daily)
+            self.state_conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS low_fee_cache (
+                    title       TEXT PRIMARY KEY,
+                    fee_rate    REAL    NOT NULL,
+                    fetched_at  REAL    NOT NULL
+                )
+            """
+            )
+
+            # v12.2: Asset status tracking (trade_protected, reverted, FinalizationTime)
+            self.state_conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS asset_status (
+                    item_id             TEXT PRIMARY KEY,
+                    title               TEXT    NOT NULL,
+                    status              TEXT    NOT NULL DEFAULT 'active',
+                    finalization_time   REAL    NOT NULL DEFAULT 0,
+                    created_at          REAL    NOT NULL,
+                    updated_at          REAL    NOT NULL
+                )
+            """
+            )
+            self.state_conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_asset_status ON asset_status(status, updated_at)"
+            )
+
+            # Temporary safety check: remove price_history from state_db if it exists after migration
+            try:
+                self.state_conn.execute("DROP TABLE IF EXISTS price_history")
+            except sqlite3.OperationalError:
+                pass
+
+        # --- HISTORY DB (OLAP) ---
+        with self.history_conn:
+            self.history_conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS price_history (
+                    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                    hash_name   TEXT    NOT NULL,
+                    price       REAL    NOT NULL,
+                    source      TEXT    NOT NULL DEFAULT 'cs2cap',
+                    recorded_at REAL    NOT NULL
+                )
+            """
+            )
+            self.history_conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_price_recorded ON price_history(recorded_at)"
+            )
+            self.history_conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_price_name ON price_history(hash_name)"
+            )
+
+            # Optimization Pragmas for History (Analytical heavy)
+            self.history_conn.execute("PRAGMA journal_mode = WAL")
+            self.history_conn.execute("PRAGMA synchronous = normal")
+            self.history_conn.execute("PRAGMA temp_store = memory")
+
+        logger.info(
+            f"💾 Engine v8.0 Bifurcation: State@{self.state_path.name}, "
+            f"History@{self.history_path.name}"
+        )
+
+    def close(self) -> None:
+        self.state_conn.close()
+        self.history_conn.close()
