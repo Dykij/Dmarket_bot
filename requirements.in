@@ -1,0 +1,98 @@
+# Core Dependencies (Updated: January 2025)
+python-telegram-bot>=22.0           # Latest stable (June 2025)
+python-dotenv>=1.1.0               # Latest stable
+httpx>=0.28.0                      # Latest with HTTP/2 support
+requests>=2.32.0                   # Latest stable
+aiohttp>=3.13.0                    # Latest async HTTP
+aiofiles>=25.0.0                   # Latest async file I/O
+pydantic>=2.10.0                   # Latest with improved validation
+structlog>=25.0.0                  # Latest structured logging
+tenacity>=9.0.0                    # Latest retry library
+circuitbreaker>=2.1.0              # Latest circuit breaker
+stamina>=25.2.0                    # Production-grade retries with safe defaults, instrumentation
+hishel[httpx]>=1.1.8               # RFC 9111-compliant HTTP caching for httpx
+anysqlite>=0.0.5                   # Async SQLite for hishel caching
+aiometer>=1.0.0                    # Concurrent task throttling and rate limiting
+asyncer>=0.0.12                    # Type-safe parallel task execution by Tiangolo
+anyio>=4.0.0                       # Async backend abstraction (required by asyncer)
+hvac>=2.3.0                        # HashiCorp Vault client (Phase 3.2 extension)
+maturin>=1.5.0                     # Rust/Python build system (Phase 1.1 extension)
+pyo3-binconfig>=0.21.0             # PyO3 configuration (Phase 1.1 extension)
+
+# Database & Caching
+sqlalchemy>=2.0.40                 # Latest SQLAlchemy 2.0
+alembic>=1.17.0                    # Latest migrations
+asyncpg>=0.31.0                    # PostgreSQL async driver
+redis>=7.0.0                       # Latest Redis client
+aiocache>=0.12.3                   # Async caching
+orjson>=3.11.0                     # Fast JSON (2-3x faster)
+aiosqlite>=0.21.0                  # Async SQLite driver
+
+# Data Analysis & Visualization
+pandas>=2.3.0                      # Latest pandas
+matplotlib>=3.10.0                 # Latest plotting
+seaborn>=0.13.2                    # Latest statistical visualization
+plotly>=6.0.0                      # Latest interactive plots
+numpy>=2.3.0                       # Latest NumPy 2.x
+
+# Security & Authentication
+cryptography>=46.0.0               # Latest stable
+pyjwt>=2.10.0                      # Latest JWT
+bcrypt>=5.0.0                      # Latest bcrypt
+PyNaCl>=1.6.0                      # Ed25519 signatures for DMarket API
+
+# Monitoring & Logging
+sentry-sdk>=2.40.0                 # Latest Sentry SDK
+prometheus-client>=0.23.0          # Latest Prometheus
+
+# Development Dependencies
+# Code Quality
+ruff>=0.14.0                       # Latest Ruff (replaces flake8, isort, black)
+black>=25.0.0                      # Latest Black formatter
+mypy>=1.19.0                       # Latest MyPy
+pre-commit>=4.0.0                  # Latest pre-commit
+bandit>=1.9.0                      # Latest security linter
+safety>=3.0.0                      # Latest dependency checker
+vulture>=2.14                      # Dead code detection
+interrogate>=1.7.0                 # Docstring coverage
+pyupgrade>=3.21.0                  # Syntax modernization
+radon>=6.0.1                       # Code complexity metrics
+
+# Testing
+pytest>=8.4.0                      # Latest pytest
+pytest-asyncio>=0.23.0              # Latest async support
+pytest-cov>=7.0.0                  # Latest coverage plugin
+pytest-mock>=3.15.0                # Latest mocking
+pytest-xdist>=3.8.0                # Parallel tests
+pytest-httpx>=0.35.0               # HTTP mocking for integration tests
+hypothesis>=6.130.0                # Property-based testing
+coverage>=7.12.0                   # Latest coverage
+codecov>=2.1.0                     # Codecov integration
+factory-boy>=3.3.3                 # Latest factory boy
+vcrpy>=7.0.0                       # HTTP interaction recording for tests (P1-18)
+pytest-recording>=0.13.2           # pytest VCR.py integration (P1-18)
+pact-python>=2.2.0                 # Contract testing with Pact (P1-21)
+
+# Documentation
+sphinx>=8.0.0                      # Latest Sphinx
+sphinx-rtd-theme>=3.0.0            # Latest RTD theme
+sphinx-autodoc-typehints>=3.0.0    # Latest typehints plugin
+mkdocs>=1.6.0                      # Latest MkDocs
+mkdocs-material>=9.7.0             # Latest Material theme
+
+# Type Stubs
+types-requests>=2.32.0             # Latest types for requests
+types-redis>=4.6.0                 # Types for Redis
+types-pyjwt>=1.7.0                 # Types for PyJWT
+types-PyYAML>=6.0.12               # Type stubs for yaml
+
+# Utilities
+click>=8.3.0                       # Latest Click
+rich>=14.0.0                       # Latest Rich
+typer>=0.20.0                      # Latest Typer
+pydantic-settings>=2.12.0          # Latest settings
+schedule>=1.2.2                    # Latest scheduler
+apscheduler>=3.10.0                # Advanced Python Scheduler for DailyReportScheduler
+
+# Dependency Injection (P2-17)
+dependency-injector>=4.41.0        # DI framework for Python

@@ -1,0 +1,40 @@
+name: HFT Bot CI
+
+on:
+  push:
+    branches: [ "main", "dev", "DEvOp" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    - name: Lint with Ruff
+      run: |
+        ruff check . --select=E9,F63,F7,F82 --target-version=py311
+        ruff check . --exit-zero
+    - name: Run Smoke Tests
+      env:
+        PYTHONPATH: ${{ github.workspace }}
+        DMARKET_PUBLIC_KEY: "mock_key"
+        DMARKET_SECRET_KEY: "mock_secret"
+        TELEGRAM_BOT_TOKEN: "mock_token"
+        TELEGRAM_CHAT_ID: "123456"
+      run: |
+        # Create dummy .env file to satisfy dotenv
+        touch .env
+        # Check imports for new components
+        python -c "import src.config; import src.bot.main; import src.bot.scanner; import src.bot.trader; import src.bot.sales; import src.telegram_bot; print('Core imports successful')"

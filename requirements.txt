@@ -1,0 +1,16 @@
+# Core
+aiohttp
+orjson
+pynacl
+pydantic
+requests
+python-dotenv
+structlog
+aiosqlite
+aiogram
+
+# Testing & Dev
+pytest
+pytest-asyncio
+ruff
+pytest-cov

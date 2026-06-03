@@ -1,0 +1,177 @@
+# Pre-commit hooks для автоматической проверки кода
+# Установка: pip install pre-commit && pre-commit install
+# Запуск вручную: pre-commit run --all-files
+# Обновление хуков: pre-commit autoupdate
+# Последнее обновление: Декабрь 2025
+
+default_language_version:
+  python: python3.12
+
+repos:
+  # ============================================================================
+  # RUFF - Современный быстрый линтер и форматтер (v0.8.6 - Декабрь 2025)
+  # ============================================================================
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.6
+    hooks:
+      # Линтинг и автоисправление с preview rules для экспериментальных фиксов
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix, --preview]
+        types_or: [python, pyi]
+      # Форматирование кода (замена Black) с preview features
+      - id: ruff-format
+        args: [--preview]
+        types_or: [python, pyi]
+
+  # ============================================================================
+  # MYPY - Проверка типов (v1.15.0 - Декабрь 2025)
+  # ============================================================================
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.15.0
+    hooks:
+      - id: mypy
+        args:
+          - --config-file=pyproject.toml
+          - --show-error-codes
+          - --pretty
+          - --show-column-numbers
+          - --cache-dir=.mypy_cache  # Incremental cache для ускорения
+          - --install-types
+          - --non-interactive
+        additional_dependencies:
+          - types-requests
+          - types-redis
+          - types-PyYAML
+          - types-psutil
+          - types-aiofiles          # Async file operations
+          - types-cachetools        # Caching utilities
+          - sqlalchemy[mypy]  # SQLAlchemy plugin для MyPy
+          - pydantic  # Для поддержки Pydantic моделей
+        files: ^src/
+        exclude: ^(tests/|scripts/)
+
+  # ============================================================================
+  # БАЗОВЫЕ ПРОВЕРКИ ФАЙЛОВ
+  # ============================================================================
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+      - id: end-of-file-fixer
+      - id: check-yaml
+        args: [--unsafe]
+      - id: check-toml
+      - id: check-json
+      - id: pretty-format-json
+        args: [--autofix, --indent=2]
+      - id: check-xml
+      - id: check-added-large-files
+        args: [--maxkb=1000]
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: check-docstring-first
+      - id: check-executables-have-shebangs
+      - id: check-shebang-scripts-are-executable
+      - id: mixed-line-ending
+        args: [--fix=lf]
+      - id: detect-private-key
+      - id: check-ast
+        description: "Проверка валидности Python AST"
+      - id: check-builtin-literals
+        description: "Требует использования литералов вместо конструкторов"
+      - id: debug-statements
+        description: "Проверка наличия breakpoint() и pdb"
+      - id: name-tests-test
+        args: [--pytest-test-first]
+      - id: requirements-txt-fixer
+        description: "Сортирует requirements.txt"
+      - id: check-symlinks
+
+  # ============================================================================
+  # PYUPGRADE - Модернизация синтаксиса Python
+  # ============================================================================
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v3.20.0
+    hooks:
+      - id: pyupgrade
+        args: [--py312-plus]
+
+  # ============================================================================
+  # BANDIT - Проверка безопасности
+  # ============================================================================
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.7.10
+    hooks:
+      - id: bandit
+        args: [-c, pyproject.toml, -r, src/]
+        additional_dependencies: ["bandit[toml]"]
+        exclude: ^tests/
+
+  # ============================================================================
+  # VULTURE - Поиск мертвого кода
+  # ============================================================================
+  - repo: https://github.com/jendrikseipp/vulture
+    rev: v2.14
+    hooks:
+      - id: vulture
+        args: [--min-confidence=80, src/]
+
+  # ============================================================================
+  # INTERROGATE - Проверка docstrings
+  # ============================================================================
+  - repo: https://github.com/econchick/interrogate
+    rev: 1.7.0
+    hooks:
+      - id: interrogate
+        args: [--fail-under=85, -vv, src/]
+        exclude: tests/
+
+  # ============================================================================
+  # GITGUARDIAN - Проверка секретов
+  # ============================================================================
+  - repo: https://github.com/gitguardian/ggshield
+    rev: v1.34.0
+    hooks:
+      - id: ggshield
+        language: python
+        stages: [commit]
+
+  # ============================================================================
+  # ЛОКАЛЬНЫЕ ХУКИ
+  # ============================================================================
+  - repo: local
+    hooks:
+      # Проверка кириллицы в скриптах
+      - id: check-cyrillic
+        name: Check for Cyrillic in scripts
+        entry: python scripts/check_cyrillic.py
+        language: system
+        types_or: [shell, batch, powershell, python]
+        files: \.(sh|bash|bat|cmd|ps1|psm1|psd1|py)$
+        exclude: ^(tests/|docs/|src/telegram_bot/localization\.py|scripts/check_cyrillic\.py)
+
+      # Pytest - запуск тестов
+      - id: pytest-check
+        name: pytest-check
+        entry: pytest
+        language: system
+        pass_filenames: false
+        always_run: true
+        args: [--tb=short, -x, --maxfail=1]
+
+# ============================================================================
+# КОНФИГУРАЦИЯ PRE-COMMIT CI
+# ============================================================================
+ci:
+  autofix_commit_msg: |
+    [pre-commit.ci] auto fixes from pre-commit.com hooks
+
+    for more information, see https://pre-commit.ci
+  autofix_prs: true
+  autoupdate_branch: ''
+  autoupdate_commit_msg: '[pre-commit.ci] pre-commit autoupdate'
+  autoupdate_schedule: weekly
+  skip: [pytest-check]  # Пропускаем pytest в CI (будет в GitHub Actions)
+  submodules: false
+

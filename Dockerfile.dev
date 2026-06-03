@@ -1,0 +1,90 @@
+# ============================================================================
+# Development Dockerfile for DMarket Telegram Bot
+# Optimized for GitHub Copilot and VS Code Dev Containers
+# BuildKit enabled for faster builds
+# Last updated: January 2026
+# ============================================================================
+#
+# Repository Structure:
+# ├── src/          - Application source code
+# ├── config/       - Configuration files (YAML, JSON, hooks, Prometheus)
+# ├── tests/        - Test suite (pytest, hypothesis, VCR)
+# ├── docs/         - Documentation (Markdown)
+# ├── scripts/      - Utility scripts
+# ├── alembic/      - Database migrations
+# └── .vscode/      - VS Code settings and skills
+#
+# syntax=docker/dockerfile:1.6
+FROM python:3.13-slim
+
+# Prevent Python from writing pyc files and buffering stdout/stderr
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONPATH=/app \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    curl \
+    wget \
+    gcc \
+    g++ \
+    libpq-dev \
+    # For GitHub CLI
+    gnupg \
+    # For debugging
+    htop \
+    vim \
+    # For MCP servers
+    nodejs \
+    npm \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install global npm packages for MCP
+RUN npm install -g \
+    @upstash/context7-mcp \
+    @anthropic/mcp-sqlite \
+    @anthropic/mcp-github \
+    @anthropic/mcp-fetch \
+    @anthropic/mcp-sequential-thinking \
+    skillsmp-mcp-server
+
+# Create non-root user (matches VS Code default)
+RUN groupadd --gid 1000 vscode \
+    && useradd --uid 1000 --gid 1000 -m vscode \
+    && mkdir -p /app \
+    && chown -R vscode:vscode /app
+
+WORKDIR /app
+
+# Copy requirements first for better caching
+COPY --chown=vscode:vscode requirements.txt .
+
+# Install Python dependencies
+RUN pip install --upgrade pip \
+    && pip install -r requirements.txt \
+    # Development tools
+    && pip install \
+        pytest \
+        pytest-asyncio \
+        pytest-cov \
+        pytest-mock \
+        hypothesis \
+        mypy \
+        ruff \
+        pre-commit \
+        ipython \
+        ipdb \
+        watchdog
+
+# Switch to non-root user
+USER vscode
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD python -c "print('healthy')" || exit 1
+
+# Default command for dev container
+CMD ["sleep", "infinity"]
