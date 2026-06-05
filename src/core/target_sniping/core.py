@@ -93,11 +93,15 @@ class SnipingLoop(  # type: ignore[misc]
 
                 gc.collect()
 
+                # Phase 4: honour Config.SCAN_INTERVAL (was hardcoded 5s —
+                # would burn DMarket + CS2Cap quotas in minutes on Starter).
+                from src.config import Config
+
                 if self.empty_page_count > 0:
-                    delay = min(10 * (self.empty_page_count * 2), 60)
+                    delay = min(Config.SCAN_INTERVAL * self.empty_page_count, 300)
                     logger.info(f"Market appears quiet. Sleeping for {delay}s...")
                 else:
-                    delay = 5  # Faster than v9.0 — Strategy A needs more data
+                    delay = Config.SCAN_INTERVAL
 
                 await asyncio.sleep(delay)
         except asyncio.CancelledError:
@@ -202,6 +206,27 @@ class SnipingLoop(  # type: ignore[misc]
             current_margin = self.min_profit_margin
             instant_buys: List[Dict[str, Any]] = []
 
+            # Phase 1: Pre-rank candidates by DMarket bid-ask spread and
+            # fetch CS2Cap prices for the top-K in a single /prices/batch
+            # call. This replaces N per-item CS2Cap calls and stays within
+            # the Starter 50K/month budget.
+            cs_snapshots: Dict[str, Any] = {}
+            if oracle is not None and Config.CS2CAP_SELECTIVE_MODE and items:
+                ranked = self._rank_candidates_by_spread(items, agg_prices)
+                top_titles = [
+                    t for t, _ in ranked[: Config.CS2CAP_TOP_K_VALIDATE]
+                ]
+                if top_titles and hasattr(oracle, "get_prices_batch"):
+                    try:
+                        cs_snapshots = await oracle.get_prices_batch(top_titles)
+                        logger.info(
+                            f"CS2Cap selective validation: "
+                            f"{len(cs_snapshots)}/{len(top_titles)} snapshots"
+                        )
+                    except Exception as e:
+                        logger.debug(f"CS2Cap batch failed (non-fatal): {e}")
+                        cs_snapshots = {}
+
             for item in items:
                 # Reload candidate_item_ids was unused; reuse
                 if not item.get("title") or not item.get("itemId"):
@@ -214,6 +239,7 @@ class SnipingLoop(  # type: ignore[misc]
                     bulk_fees=bulk_fees,
                     current_balance=current_balance,
                     current_margin=current_margin,
+                    cs_snapshots=cs_snapshots,
                 )
                 if candidate is not None:
                     instant_buys.append(candidate)

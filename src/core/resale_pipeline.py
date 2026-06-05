@@ -110,13 +110,14 @@ class ResalePipeline:
         # Check CS2Cap for reference price
         cs2cap_price = 0.0
         cross_data: Optional[CrossMarketData] = None
-        indicators: Optional[Dict[str, float]] = None
 
         if self.cs2cap:
             try:
                 cs2cap_price = await self.cs2cap.get_item_price(title)
                 cross_data = await self.cs2cap.get_cross_market_data(title)
-                indicators = await self.cs2cap.get_market_indicators(title)
+                # NOTE (Phase 8): get_market_indicators (RSI/MACD) is a
+                # Quant-tier feature. On Starter/Pro it always returns None
+                # — was being awaited per item for nothing. Removed.
             except Exception as e:
                 logger.debug(f"CS2Cap fetch failed for {title}: {e}")
 
@@ -149,11 +150,9 @@ class ResalePipeline:
         except PriceValidationError:
             return None
 
-        # Indicator check (RSI oversold = good buy signal)
-        if indicators:
-            rsi = indicators.get("rsi", 50.0)
-            if rsi > 70:  # Overbought, skip
-                return None
+        # NOTE (Phase 8): get_market_indicators (RSI) is a Quant-tier
+        # CS2Cap feature. On Starter/Pro it always returned None, so this
+        # block was effectively dead code — removed together with the call.
 
         # Execute buy
         buy_offer = {
@@ -202,94 +201,169 @@ class ResalePipeline:
 
     async def sell_inventory_items(self, max_items: int = 10) -> List[Dict[str, Any]]:
         """
-        Check virtual inventory for items past trade lock,
-        get CS2Cap price, and list on DMarket for sale.
+        List trade-unlocked items for sale on DMarket.
+
+        Phase 5 optimization: replaces per-item CS2Cap calls and per-item
+        DMarket create_offer calls with two batched calls:
+          1. CS2Cap /prices/batch for all unique titles in 1 call
+          2. DMarket batch_create_offers_v2 for all items in 1 call
         """
         items = price_db.get_virtual_inventory(status='idle', only_unlocked=True)
-        listed = []
+        if not items:
+            return []
 
-        for item in items[:max_items]:
+        # Slice the candidate set first — we only price-check the first
+        # max_items to keep CS2Cap usage bounded.
+        candidates = items[:max_items]
+        unique_titles = list({it['hash_name'] for it in candidates})
+
+        # --- 1. CS2Cap batch (1 call for all unique titles) ---
+        cs_prices: Dict[str, float] = {}
+        if self.cs2cap and unique_titles:
+            try:
+                snapshots = await self.cs2cap.get_prices_batch(unique_titles)
+                cs_prices = {
+                    title: snap.min_price
+                    for title, snap in snapshots.items()
+                    if snap.has_data
+                }
+            except AttributeError:
+                # Fallback for CSFloat fallback oracle (no batch endpoint)
+                for title in unique_titles:
+                    try:
+                        p = await self.cs2cap.get_item_price(title)
+                        if p > 0:
+                            cs_prices[title] = p
+                    except Exception as e:
+                        logger.debug(f"CS2Cap fallback price check failed for {title}: {e}")
+            except Exception as e:
+                logger.debug(f"CS2Cap batch price check failed: {e}")
+
+        # --- 2. Build the list of (item, sell_price) that pass the
+        #    profitability filter. ---
+        ready_to_list: List[Tuple[Dict[str, Any], float, float]] = []  # (item, sell_price, profit_pct)
+        for item in candidates:
             title = item['hash_name']
             buy_price = item['buy_price']
-
-            # Get CS2Cap price
-            cs2cap_price = 0.0
-            if self.cs2cap:
-                try:
-                    cs2cap_price = await self.cs2cap.get_item_price(title)
-                except Exception as e:
-                    logger.debug(f"CS2Cap price check failed for {title}: {e}")
-
+            cs2cap_price = cs_prices.get(title, 0.0)
             if cs2cap_price <= 0:
                 continue
 
-            # Calculate sell price
             sell_price = self._calculate_sell_price(
                 buy_price=buy_price,
                 cs2cap_price=cs2cap_price,
                 cross_data=None,
                 fee_rate=Config.FEE_RATE,
             )
-
-            # Check if profitable after all fees
             net_after_sell = sell_price * (1 - Config.FEE_RATE)
             profit_pct = ((net_after_sell - buy_price) / buy_price) * 100
-
             if profit_pct < Config.MIN_SPREAD_PCT:
                 logger.debug(
                     f"Skipping {title}: profit {profit_pct:.1f}% < {Config.MIN_SPREAD_PCT}%"
                 )
                 continue
+            ready_to_list.append((item, sell_price, profit_pct))
 
-            # Try to create sell offer
-            try:
-                if os.getenv("DRY_RUN", "true").lower() == "true":
-                    # Dry run: just log and update status
-                    price_db.update_virtual_status(item['id'], 'selling')
-                    logger.info(
-                        f"[SIM] LISTED: {title} @ ${sell_price:.2f} | "
-                        f"Bought: ${buy_price:.2f} | CS2Cap: ${cs2cap_price:.2f} | "
-                        f"Profit: {profit_pct:.1f}%"
-                    )
-                    listed.append({
-                        "title": title,
-                        "sell_price": sell_price,
-                        "buy_price": buy_price,
-                        "profit_pct": profit_pct,
-                        "status": "listed_sim",
-                    })
-                else:
-                    # Real: create sell offer on DMarket
-                    # Need to find the item_id in inventory
-                    resp = await self.api.get_user_inventory(Config.GAME_ID)
-                    inventory_items = resp.get("objects", [])
-                    matching = None
-                    for inv_item in inventory_items:
-                        if inv_item.get("title") == title:
-                            matching = inv_item
-                            break
+        if not ready_to_list:
+            return []
 
-                    if matching:
-                        result = await self.api.create_sell_offer(
-                            Config.GAME_ID,
-                            matching.get("itemId", ""),
-                            sell_price,
-                        )
-                        price_db.update_virtual_status(item['id'], 'selling')
-                        logger.info(
-                            f"✅ LISTED: {title} @ ${sell_price:.2f} | "
-                            f"Bought: ${buy_price:.2f} | Profit: {profit_pct:.1f}%"
-                        )
-                        listed.append({
-                            "title": title,
-                            "sell_price": sell_price,
-                            "buy_price": buy_price,
-                            "profit_pct": profit_pct,
-                            "status": "listed",
-                            "offer_id": result.get("offerId", ""),
-                        })
-            except Exception as e:
-                logger.error(f"Failed to list {title}: {e}")
+        listed: List[Dict[str, Any]] = []
+        is_dry_run = os.getenv("DRY_RUN", "true").lower() == "true"
+
+        if is_dry_run:
+            # DRY_RUN: no real DMarket call — just update status + log
+            for item, sell_price, profit_pct in ready_to_list:
+                title = item['hash_name']
+                buy_price = item['buy_price']
+                price_db.update_virtual_status(item['id'], 'selling')
+                logger.info(
+                    f"[SIM] LISTED: {title} @ ${sell_price:.2f} | "
+                    f"Bought: ${buy_price:.2f} | CS2Cap: ${cs_prices.get(title, 0):.2f} | "
+                    f"Profit: {profit_pct:.1f}%"
+                )
+                listed.append({
+                    "title": title,
+                    "sell_price": sell_price,
+                    "buy_price": buy_price,
+                    "profit_pct": profit_pct,
+                    "status": "listed_sim",
+                })
+            return listed
+
+        # --- 3. PRODUCTION: lookup asset_ids and batch-list in 1 call ---
+        # We need each item's asset_id to call batch_create_offers_v2.
+        # Paginate DMarket user_offers to find them (one pass, not per-item).
+        asset_by_title: Dict[str, str] = {}
+        try:
+            cursor = None
+            for _ in range(10):  # safety cap
+                resp = await self.api.get_user_offers(
+                    Config.GAME_ID, limit=100, cursor=cursor
+                )
+                for obj in resp.get("items") or resp.get("objects") or []:
+                    title = obj.get("title", "")
+                    asset_id = obj.get("assetId") or obj.get("itemId") or ""
+                    if title and asset_id and title not in asset_by_title:
+                        asset_by_title[title] = asset_id
+                cursor = resp.get("cursor")
+                if not cursor:
+                    break
+        except Exception as e:
+            logger.error(f"Failed to enumerate offers for asset lookup: {e}")
+
+        batch_payload: List[Dict[str, Any]] = []
+        plan: List[Tuple[Dict[str, Any], float, float]] = []
+        for item, sell_price, profit_pct in ready_to_list:
+            title = item['hash_name']
+            asset_id = asset_by_title.get(title)
+            if not asset_id:
+                logger.warning(
+                    f"No asset_id for {title} in user_offers — "
+                    f"skipping batch listing (item may not be on DMarket yet)"
+                )
+                continue
+            batch_payload.append({"asset_id": asset_id, "price_usd": sell_price})
+            plan.append((item, sell_price, profit_pct))
+
+        if not batch_payload:
+            return []
+
+        # 1 batch call for all offers
+        try:
+            result = await self.api.batch_create_offers_v2(batch_payload)
+        except Exception as e:
+            logger.error(f"batch_create_offers_v2 failed: {e}")
+            return []
+
+        # Update statuses + collect results.
+        # The v2 endpoint returns {"offers": [{"offerId": "...", "assetId": "...", ...}]}
+        # or {"items": [...]} depending on schema. We just iterate and
+        # flip status for each item we sent.
+        offer_id_by_asset: Dict[str, str] = {}
+        for entry in (result.get("offers") or result.get("items") or []):
+            aid = entry.get("assetId") or entry.get("asset_id") or ""
+            oid = entry.get("offerId") or entry.get("offer_id") or ""
+            if aid and oid:
+                offer_id_by_asset[aid] = oid
+
+        for (item, sell_price, profit_pct) in plan:
+            title = item['hash_name']
+            buy_price = item['buy_price']
+            asset_id = asset_by_title.get(title, "")
+            price_db.update_virtual_status(item['id'], 'selling')
+            offer_id = offer_id_by_asset.get(asset_id, "")
+            logger.info(
+                f"LISTED: {title} @ ${sell_price:.2f} | "
+                f"Bought: ${buy_price:.2f} | Profit: {profit_pct:.1f}%"
+            )
+            listed.append({
+                "title": title,
+                "sell_price": sell_price,
+                "buy_price": buy_price,
+                "profit_pct": profit_pct,
+                "status": "listed",
+                "offer_id": offer_id,
+            })
 
         return listed
 

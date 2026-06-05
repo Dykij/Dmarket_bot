@@ -104,36 +104,32 @@ class InventoryManager:
         """
         Fetch inventory + offers + CS2Cap prices for each item.
         Returns enriched data with current market values.
+
+        Phase 6 optimization: merges the two near-identical loops over
+        inventory and offers into a single pass, deduplicates titles, and
+        fetches CS2Cap prices in one /prices/batch call (1 HTTP request
+        instead of N).
         """
         inventory = await self.fetch_inventory(game_id)
         offers = await self.fetch_active_offers(game_id)
 
-        # Enrich with CS2Cap prices
-        enriched_items = []
+        # --- One pass over (inventory + offers) with a status flag ---
+        enriched_items: List[Dict[str, Any]] = []
+        unique_titles: List[str] = []
 
         for item in inventory:
             title = item.get("title", "")
             item_id = item.get("itemId", "")
             price_cents = int(item.get("price", {}).get("USD", 0))
             buy_price = price_cents / 100.0
-
-            cs2cap_price = 0.0
-            profit_pct = 0.0
-
-            if self.cs2cap and title:
-                try:
-                    cs2cap_price = await self.cs2cap.get_item_price(title)
-                    if cs2cap_price > 0 and buy_price > 0:
-                        profit_pct = ((cs2cap_price * 0.95 - buy_price) / buy_price) * 100
-                except Exception:
-                    pass
-
+            if title and title not in unique_titles:
+                unique_titles.append(title)
             enriched_items.append({
                 "item_id": item_id,
                 "title": title,
                 "buy_price": buy_price,
-                "cs2cap_price": cs2cap_price,
-                "profit_pct": profit_pct,
+                "cs2cap_price": 0.0,
+                "profit_pct": 0.0,
                 "status": "inventory",
             })
 
@@ -142,21 +138,46 @@ class InventoryManager:
             offer_id = offer.get("offerId", "")
             price_cents = int(offer.get("price", {}).get("USD", 0))
             list_price = price_cents / 100.0
-
-            cs2cap_price = 0.0
-            if self.cs2cap and title:
-                try:
-                    cs2cap_price = await self.cs2cap.get_item_price(title)
-                except Exception:
-                    pass
-
+            if title and title not in unique_titles:
+                unique_titles.append(title)
             enriched_items.append({
                 "item_id": offer_id,
                 "title": title,
                 "list_price": list_price,
-                "cs2cap_price": cs2cap_price,
+                "cs2cap_price": 0.0,
                 "status": "on_sale",
             })
+
+        # --- 1 CS2Cap call for all unique titles (Phase 6 batch) ---
+        cs_prices: Dict[str, float] = {}
+        if self.cs2cap and unique_titles:
+            try:
+                snapshots = await self.cs2cap.get_prices_batch(unique_titles)
+                cs_prices = {
+                    t: s.min_price for t, s in snapshots.items() if s.has_data
+                }
+            except AttributeError:
+                # Fallback for CSFloat oracle (no batch endpoint)
+                for title in unique_titles:
+                    try:
+                        p = await self.cs2cap.get_item_price(title)
+                        if p > 0:
+                            cs_prices[title] = p
+                    except Exception:
+                        pass
+            except Exception as e:
+                logger.debug(f"CS2Cap batch failed in fetch_all_with_cs2cap: {e}")
+
+        # --- Backfill the enriched_items with the batched prices ---
+        for entry in enriched_items:
+            title = entry.get("title", "")
+            cs2cap_price = cs_prices.get(title, 0.0)
+            entry["cs2cap_price"] = cs2cap_price
+            buy_price = entry.get("buy_price", 0.0)
+            if cs2cap_price > 0 and buy_price > 0:
+                entry["profit_pct"] = (
+                    (cs2cap_price * 0.95 - buy_price) / buy_price
+                ) * 100
 
         return {
             "inventory": enriched_items,
@@ -228,24 +249,41 @@ class InventoryManager:
         """
         Check CS2Cap prices for all held items.
         Returns list of items with current market value.
+
+        Phase 6 optimization: uses CS2Cap /prices/batch in 1 call instead
+        of N per-item calls.
         """
         items = price_db.get_virtual_inventory(status='idle', only_unlocked=False)
-        results = []
+        if not items:
+            return []
 
+        unique_titles = list({it['hash_name'] for it in items})
+        cs_prices: Dict[str, float] = {}
+        if self.cs2cap and unique_titles:
+            try:
+                snapshots = await self.cs2cap.get_prices_batch(unique_titles)
+                cs_prices = {
+                    t: s.min_price for t, s in snapshots.items() if s.has_data
+                }
+            except AttributeError:
+                for title in unique_titles:
+                    try:
+                        p = await self.cs2cap.get_item_price(title)
+                        if p > 0:
+                            cs_prices[title] = p
+                    except Exception:
+                        pass
+            except Exception as e:
+                logger.debug(f"CS2Cap batch failed in check_held_items_prices: {e}")
+
+        results: List[Dict[str, Any]] = []
         for item in items:
             title = item['hash_name']
             buy_price = item['buy_price']
-
-            cs2cap_price = 0.0
+            cs2cap_price = cs_prices.get(title, 0.0)
             unrealized_pnl = 0.0
-
-            if self.cs2cap:
-                try:
-                    cs2cap_price = await self.cs2cap.get_item_price(title)
-                    if cs2cap_price > 0:
-                        unrealized_pnl = ((cs2cap_price * 0.95 - buy_price) / buy_price) * 100
-                except Exception:
-                    pass
+            if cs2cap_price > 0 and buy_price > 0:
+                unrealized_pnl = ((cs2cap_price * 0.95 - buy_price) / buy_price) * 100
 
             results.append({
                 "title": title,

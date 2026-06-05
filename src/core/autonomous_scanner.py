@@ -22,7 +22,6 @@ if BASE_DIR not in sys.path:
 
 from src.api.dmarket_api_client import DMarketAPIClient
 from src.inventory_manager import InventoryManager
-from src.core.target_sniping import SnipingLoop
 from src.utils.vault import vault
 
 def setup_logging():
@@ -39,7 +38,7 @@ def setup_logging():
     root_logger = logging.getLogger()
     root_logger.setLevel(logging.INFO)
     root_logger.addHandler(handler)
-    
+
     # Also log to console
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(log_formatter)
@@ -47,6 +46,18 @@ def setup_logging():
 
 setup_logging()
 logger = logging.getLogger("AutonomousScanner")
+
+# Phase 1: Feature-flag selection between v12.0 and legacy v10.0 loops.
+# v12.0 uses DMarket batch endpoints (aggregated_prices, fee_bulk) and the
+# selective CS2Cap top-K validation. The legacy loop hits CS2Cap 3× per item
+# per cycle, which exceeds the Starter 40 RPM / 50K-month budget.
+_USE_V12 = os.getenv("USE_V12_LOOP", "true").lower() == "true"
+if _USE_V12:
+    from src.core.target_sniping.core import SnipingLoop
+    logger.info("🔀 Using SnipingLoop v12.0 (batched endpoints + selective CS2Cap)")
+else:
+    from src.core.target_sniping import SnipingLoop
+    logger.warning("⚠️  Using legacy v10.0 SnipingLoop (per-item CS2Cap, quota-heavy)")
 
 async def run_autonomous_scanner():
     """Main Entry with Infinite Autonomy Loop (v7.7/7.8)."""

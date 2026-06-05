@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import logging
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from src.api.cs2cap_oracle import RateLimitException
 from src.core.sandbox_scenarios import scenario_engine
@@ -26,6 +26,42 @@ logger = logging.getLogger("SnipingBot")
 class _FilterMixin:
     """Per-item candidate evaluation (filter loop)."""
 
+    @staticmethod
+    def _rank_candidates_by_spread(
+        items: List[Dict[str, Any]],
+        agg_prices: Dict[str, Dict[str, Any]],
+    ) -> List[Tuple[str, float]]:
+        """
+        Rank items by DMarket bid-ask spread (best_bid - best_ask) descending.
+
+        Returns: [(title, spread_usd), ...] sorted best-spread first.
+        Items with no agg_prices entry or zero bid/ask are filtered out.
+
+        Used by Phase 1 selective CS2Cap validation: the bot pre-fetches
+        CS2Cap prices for the top-K spreads, validating only the items
+        most likely to clear all filters.
+        """
+        from src.config import Config
+
+        ranked: List[Tuple[str, float]] = []
+        for it in items:
+            title = it.get("title", "")
+            if not title:
+                continue
+            agg = agg_prices.get(title, {})
+            best_bid = agg.get("best_bid", 0.0) or 0.0
+            best_ask = agg.get("best_ask", 0.0) or 0.0
+            if best_bid <= 0 or best_ask <= 0:
+                continue
+            # Apply the same minimum-spread gate the per-item filter uses
+            if best_bid <= best_ask * (1 + Config.INTRA_MIN_SPREAD_PCT / 100.0):
+                continue
+            spread = best_bid - best_ask
+            if spread > 0:
+                ranked.append((title, spread))
+        ranked.sort(key=lambda x: x[1], reverse=True)
+        return ranked
+
     async def _evaluate_candidate(
         self,
         *,
@@ -36,12 +72,19 @@ class _FilterMixin:
         bulk_fees: Dict[str, float],
         current_balance: float,
         current_margin: float,
+        cs_snapshots: Optional[Dict[str, Any]] = None,
     ) -> Optional[Dict[str, Any]]:
         """
         Evaluate a single market item and return a buy payload, or None.
 
         Returns a dict {buy_offer, title, item_id, base_price, list_price,
         best_bid, best_ask} if the item passes all filters; None otherwise.
+
+        cs_snapshots: optional dict {title: PriceSnapshot} pre-populated by the
+        caller via a single CS2Cap /prices/batch call. When supplied, the
+        CS2Cap validation step here is a dict lookup (free) instead of a
+        per-item HTTP call. Falls back to per-item oracle.get_item_price
+        only if the title is missing from the snapshots (selective mode miss).
         """
         from src.config import Config
 
@@ -129,18 +172,30 @@ class _FilterMixin:
         if best_bid <= best_ask * (1 + Config.INTRA_MIN_SPREAD_PCT / 100.0):
             return None
 
-        # CS2Cap oracle validation (sanity check)
+        # CS2Cap oracle validation (Phase 1: selective, top-K via batch).
+        # In selective mode the caller pre-fetches CS2Cap snapshots for the
+        # top-K candidates and passes them in cs_snapshots. We do a dict
+        # lookup here (free) instead of a per-item HTTP call.
         is_sandbox = os.getenv("DRY_RUN", "true").lower() == "true"
-        try:
-            cs_price = await oracle.get_item_price(title)
+        cs_price = 0.0
+        cs_snap = (cs_snapshots or {}).get(title)
+        if cs_snap is not None and getattr(cs_snap, "has_data", False):
+            cs_price = cs_snap.min_price
             if is_sandbox:
                 cs_price *= scenario_engine.get_price_modifier()
-        except (RateLimitException, Exception) as e:
-            if isinstance(e, RateLimitException) or "429" in str(e):
-                logger.error(f"Oracle rate limited during {game_id} scan.")
-                self.empty_page_count = 5
-                return None
-            raise e
+        else:
+            # Title not in the pre-fetched snapshots (not in top-K) or
+            # selective mode is off — fall back to per-item call.
+            try:
+                cs_price = await oracle.get_item_price(title)
+                if is_sandbox:
+                    cs_price *= scenario_engine.get_price_modifier()
+            except (RateLimitException, Exception) as e:
+                if isinstance(e, RateLimitException) or "429" in str(e):
+                    logger.error(f"Oracle rate limited during {game_id} scan.")
+                    self.empty_page_count = 5
+                    return None
+                raise e
 
         # CS2Cap reference: ensure oracle price is not way below our buy
         # (this would mean the item is genuinely overvalued on DMarket)

@@ -262,18 +262,21 @@ class SnipingLoop:
 
                 # --- Cross-Market Data (CS2Cap only) ---
                 cross_market_data: Optional[CrossMarketData] = None
-                indicators: Optional[Dict[str, float]] = None
 
                 if cs2cap and Config.CROSS_MARKET_ENABLED:
                     try:
                         cross_market_data = await self._get_cross_market_data(title, cs2cap)
                         if cross_market_data:
-                            indicators = await cs2cap.get_market_indicators(title)
                             # Update ref_price with global min ask (more accurate)
                             if cross_market_data.global_min_ask > 0:
                                 ref_price = min(ref_price, cross_market_data.global_min_ask) if ref_price > 0 else cross_market_data.global_min_ask
                     except Exception as e:
                         logger.debug(f"Cross-market fetch failed for {title}: {e}")
+
+                # NOTE (Phase 8): get_market_indicators (RSI/MACD) requires
+                # CS2Cap Quant tier ($179/mo). On Starter/Pro it always
+                # returns None — was being awaited per item per cycle for
+                # nothing. Removed. Re-enable when upgrading to Quant.
 
                 # --- Price validation ---
                 expected_sell = ref_price if ref_price > 0 else total_ev

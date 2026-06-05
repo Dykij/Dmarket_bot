@@ -24,6 +24,23 @@ class Config:
     MIN_SPREAD_PCT = 5.0      # Minimum 5% profit margin (Ask - Bid)
     FEE_RATE = 0.05           # DMarket Fee (7% standard, 5% with subscription)
 
+    # --- v12.0 Intra-Spread Strategy (Strategy A) ---
+    # These knobs were referenced in the v12.0 loop but never declared in
+    # Config (pre-existing latent bug — would have crashed on first cycle
+    # if v12.0 had been wired in). Defined here with the original intent.
+    INTRA_MIN_SPREAD_PCT = 5.0    # Min DMarket bid-vs-ask spread to consider (%)
+    INTRA_LIST_DISCOUNT = 0.01    # Undercut vs best_bid when listing (USD)
+
+    # --- v12.2 Liquidity / Wash-Trading Filters ---
+    # Used by _FilterMixin._evaluate_candidate. Defaults match v12.2 intent.
+    USE_LIQUIDITY_FILTER = True
+    WASH_TRADING_DETECTION = True
+    TRIMMED_MEAN_BOOST_PCT = 5.0        # % boost over trimmed mean
+    TRIMMED_MEAN_MAX_OUTLIERS = 2        # max outliers to trim
+
+    # --- Repricing ---
+    REPRICE_AFTER_HOURS = 24     # Hours after which to reprice a stale offer
+
     # --- Risk Management ---
     MIN_PRICE_USD = 0.50      # Ignore cheap trash (<$0.50)
     MAX_PRICE_USD = 20.00     # Ignore high-risk items (>$20.00)
@@ -31,8 +48,17 @@ class Config:
     MAX_OPEN_TARGETS = 50     # Limit active buy orders (Safety cap)
 
     # --- Performance ---
-    SCAN_INTERVAL = 2         # Seconds between scan cycles
-    BATCH_SIZE = 20           # Items per API call
+    # SCAN_INTERVAL=30s aligns with the CS2Cap Starter tier budget
+    # (50K requests/month ≈ 2 calls/cycle × 43,200 cycles/month = 86,400 calls).
+    # Combined with BATCH_SIZE=100 and top-K CS2Cap validation, we stay
+    # well under the 50K/month quota at 24/7.
+    SCAN_INTERVAL = 30        # Seconds between scan cycles
+    BATCH_SIZE = 100          # Items per DMarket page (max supported)
+
+    # --- CS2Cap Batch Settings (Phase 3) ---
+    CS2CAP_BATCH_SIZE = 100            # Max items per /prices/batch call
+    CS2CAP_TOP_K_VALIDATE = 5          # Validate only top-K items via CS2Cap per cycle
+    CS2CAP_SELECTIVE_MODE = True       # True = top-K only; False = all (uses more quota)
 
     # --- Advanced Attributes (Float/Phase) ---
     PREFER_LOW_FLOAT = True
@@ -61,6 +87,12 @@ class Config:
     # --- CS2Cap API ---
     CS2CAP_API_KEY = os.getenv("CS2CAP_API_KEY", "")
     CS2CAP_ORACLE_PRIMARY = True  # Use CS2Cap as primary oracle for CS2
+    CS2CAP_TIER = os.getenv("CS2CAP_TIER", "starter")  # free | starter | pro | quant
+
+    # --- Loop Selection (Phase 1) ---
+    # True  = v12.0 SnipingLoop (uses aggregated_prices + fee_bulk + selective CS2Cap)
+    # False = legacy v10.0 loop (per-item CS2Cap calls, 3×N per cycle)
+    USE_V12_LOOP = os.getenv("USE_V12_LOOP", "true").lower() == "true"
 
     # --- Self-Reflection ---
     # Analyze last N trades to adjust strategy parameters

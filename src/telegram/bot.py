@@ -307,10 +307,9 @@ async def cmd_test_trade(message: types.Message):
         if cs2cap:
             cross_data = await cs2cap.get_cross_market_data(item_name)
 
-        # Indicators
-        indicators = {}
-        if cs2cap:
-            indicators = await cs2cap.get_market_indicators(item_name)
+        # NOTE (Phase 8): get_market_indicators (RSI/MACD) is a Quant-tier
+        # feature. On Starter/Pro it always returns None — removed to avoid
+        # a wasted await on every /test_trade command.
 
         # Validate
         estimated_sell = cs2cap_price * 0.98

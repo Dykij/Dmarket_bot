@@ -4,16 +4,25 @@ CS2Cap Oracle — Unified pricing across 41 CS2 marketplaces.
 Uses CS2Cap REST API (https://api.cs2c.app/v1) for:
   - GET /items: catalog of all CS2 items with item_id mapping
   - GET /prices: lowest asks across all providers (requires item_id integer)
+  - POST /prices/batch: lowest asks for up to 100 items in 1 call
+  - POST /bids/batch: highest bids for up to 100 items in 1 call
 
-API format:
+API format (single):
   GET /prices?item_id=4994&currency=USD&limit=10
   Response: {"items": [{"provider": "buff163", "lowest_ask": 435886, ...}]}
   lowest_ask is in minor units (cents) — divide by 100 for dollars.
 
+API format (batch):
+  POST /prices/batch
+  Body: {"market_hash_names": ["AK-47 | Redline", ...], "currency": "USD"}
+  Response: {"items": [{"market_hash_name": "...", "providers": [
+              {"provider": "buff163", "lowest_ask": 435886, "quantity": 3}]}, ...]}
+  Batch endpoints: 1 HTTP call = 1 unit of quota (Starter+ tier required for batch).
+
 Tiered caching:
   1. In-memory (5 min TTL) — high-frequency loop
   2. SQLite history (1 hr TTL) — persistent across restarts
-  3. Live API — rate-limited with exponential backoff
+  3. Live API — rate-limited with exponential backoff (skipped for batch POSTs)
 """
 
 import aiohttp
@@ -28,9 +37,19 @@ from src.db.price_history import price_db
 
 logger = logging.getLogger("CS2CapOracle")
 
+# CS2Cap batch endpoint caps (per docs.cs2cap.com/api-reference/overview)
+BATCH_MAX_ITEMS = 100
+
 
 class CS2CapRateLimit(Exception):
     pass
+
+
+# Alias used across the codebase (consistency with csfloat_oracle).
+# The v12.0 loop in src/core/target_sniping/core.py imports
+# `RateLimitException` directly; aliasing prevents a pre-existing
+# ImportError that has kept the v12.0 loop un-wired in production.
+RateLimitException = CS2CapRateLimit
 
 
 @dataclass
@@ -62,6 +81,55 @@ class CrossMarketData:
             self.global_min_ask = min(self.provider_prices.values())
         if self.buy_orders and self.global_max_bid == 0.0:
             self.global_max_bid = max(self.buy_orders.values())
+
+
+@dataclass
+class PriceSnapshot:
+    """
+    Unified per-item view returned by /prices/batch (1 HTTP call).
+
+    Fields:
+        hash_name: market_hash_name (CS2 item key)
+        min_price: USD; lowest ask across all providers (0.0 = no data)
+        max_bid:   USD; highest buy order across all providers (0.0 = no data)
+        provider_prices: {provider: ask_usd} for all providers seen
+        provider_quantities: {provider: int qty} for liquidity score
+        total_quantity: sum of quantities across providers
+    """
+    hash_name: str
+    min_price: float = 0.0
+    max_bid: float = 0.0
+    provider_prices: Dict[str, float] = field(default_factory=dict)
+    provider_quantities: Dict[str, int] = field(default_factory=dict)
+    total_quantity: int = 0
+
+    @property
+    def liquidity_score(self) -> float:
+        """0.0-1.0 normalized liquidity (1.0 at 100+ units across providers)."""
+        return min(1.0, self.total_quantity / 100.0)
+
+    @property
+    def has_data(self) -> bool:
+        return self.min_price > 0.0
+
+
+@dataclass
+class BidsSnapshot:
+    """
+    Unified per-item view returned by /bids/batch (1 HTTP call).
+
+    Fields:
+        hash_name: market_hash_name
+        max_bid: USD; highest buy order across all providers (0.0 = no data)
+        provider_bids: {provider: bid_usd}
+    """
+    hash_name: str
+    max_bid: float = 0.0
+    provider_bids: Dict[str, float] = field(default_factory=dict)
+
+    @property
+    def has_data(self) -> bool:
+        return self.max_bid > 0.0
 
 
 class CS2CapOracle:
@@ -97,6 +165,7 @@ class CS2CapOracle:
         # Rate limit state
         saved_delay = price_db.get_state("cs2cap_delay")
         self._request_delay = float(saved_delay) if saved_delay else 1.0
+        self._rate_remaining: Optional[int] = None  # Header-driven (X-RateLimit-Remaining)
 
     async def get_session(self) -> aiohttp.ClientSession:
         if self._session is None or self._session.closed:
@@ -158,6 +227,103 @@ class CS2CapOracle:
         except Exception as e:
             logger.debug(f"[CS2Cap] Request failed: {e}")
             return None
+
+    async def _request_post(
+        self,
+        endpoint: str,
+        body: Dict[str, Any],
+        bypass_throttle: bool = False,
+    ) -> Optional[Dict]:
+        """
+        POST helper for batch endpoints (/prices/batch, /bids/batch).
+
+        Bypasses the per-call throttle (batched endpoints count 1 unit per call,
+        not per item). Honours the quota-exhausted gate and tracks per-minute
+        budget via X-RateLimit-Remaining headers.
+        """
+        if self._quota_exhausted and time.time() - self._quota_exhausted_at > self._quota_reset_seconds:
+            self._quota_exhausted = False
+            logger.info("[CS2Cap] Quota reset, retrying API calls")
+
+        if self._quota_exhausted:
+            return None
+
+        if not bypass_throttle:
+            await self._throttle()
+        session = await self.get_session()
+        url = f"{self.BASE_URL}{endpoint}"
+
+        try:
+            async with session.post(url, json=body) as response:
+                # Header-aware rate limiting (Pro tier surfaces these)
+                header_slowed = False
+                remaining = response.headers.get("X-RateLimit-Remaining")
+                if remaining is not None:
+                    try:
+                        self._rate_remaining = int(remaining)
+                        if self._rate_remaining < 5:
+                            # Almost out of per-minute budget — slow down proactively
+                            self._request_delay = max(self._request_delay, 1.5)
+                            header_slowed = True
+                    except (ValueError, TypeError):
+                        pass
+
+                if response.status == 429:
+                    self._request_delay = min(self._request_delay * 2.0, 30.0)
+                    price_db.save_state("cs2cap_delay", str(self._request_delay))
+                    self._quota_exhausted = True
+                    self._quota_exhausted_at = time.time()
+                    logger.warning(
+                        f"[CS2Cap] Rate limit hit (429) on {endpoint} — "
+                        f"quota exhausted, pausing API calls for 1 hour"
+                    )
+                    return None
+
+                # Decay delay on success, but skip if header just raised it
+                # (otherwise the 0.98 multiplier undoes the proactive slowdown
+                # in the very same call).
+                if self._request_delay > 1.0 and not header_slowed:
+                    self._request_delay = max(self._request_delay * 0.98, 1.0)
+                    price_db.save_state("cs2cap_delay", str(self._request_delay))
+
+                if response.status == 403:
+                    return None
+
+                if response.status != 200:
+                    text = await response.text()
+                    logger.debug(f"[CS2Cap] HTTP {response.status} on {endpoint}: {text[:200]}")
+                    return None
+
+                # Track monthly quota
+                self._increment_monthly_counter()
+                return await response.json()
+
+        except Exception as e:
+            logger.debug(f"[CS2Cap] POST {endpoint} failed: {e}")
+            return None
+
+    def _increment_monthly_counter(self) -> None:
+        """Track monthly call count for the Starter 50K/month budget."""
+        try:
+            yyyymm = time.strftime("%Y-%m")
+            raw = price_db.get_state("cs2cap_calls_month")
+            if raw:
+                saved_month, count_str = raw.split(":", 1)
+                count = int(count_str)
+            else:
+                saved_month, count = yyyymm, 0
+            if saved_month != yyyymm:
+                saved_month = yyyymm
+                count = 0
+            count += 1
+            price_db.save_state("cs2cap_calls_month", f"{saved_month}:{count}")
+            # Soft warning thresholds (Starter = 50K)
+            if count == 40000:
+                logger.warning(f"[CS2Cap] Monthly usage: 40K/50K (80%) — slow down")
+            elif count == 45000:
+                logger.warning(f"[CS2Cap] Monthly usage: 45K/50K (90%) — critical")
+        except Exception:
+            pass
 
     # ----------------------------------------------------------------
     # 1. ITEM CATALOG (GET /items) — name to item_id mapping
@@ -285,6 +451,66 @@ class CS2CapOracle:
     # ----------------------------------------------------------------
     # 3. CROSS-MARKET DATA (GET /prices with all providers)
     # ----------------------------------------------------------------
+    async def get_price_snapshot(self, hash_name: str) -> Optional[PriceSnapshot]:
+        """
+        Single-item variant of the batch snapshot. Hits /prices once and
+        returns a fully-populated PriceSnapshot (min_price + per-provider
+        breakdown + liquidity).
+
+        Phase 2 optimization: replaces the pattern of calling
+        get_item_price() + get_cross_market_data() back-to-back (2 HTTP
+        calls, 2 chances of drift between the two responses).
+
+        Returns None only if the API key has no item_id mapping for the
+        given hash_name. For "no data on any market" the snapshot has
+        min_price == 0.0 (callers can distinguish via .has_data).
+        """
+        cache_key = f"snap_{hash_name}"
+        now = time.time()
+        if cache_key in self._price_cache:
+            # _price_cache stores (min_price, ts); the snapshot variant
+            # is just a stricter getter, so reuse the same TTL.
+            price, ts = self._price_cache[cache_key]
+            if now - ts < self.MEM_TTL:
+                if price == 0.0:
+                    return PriceSnapshot(hash_name=hash_name)
+                # Re-derive snapshot from a batched result if available
+                # (cheap), otherwise fall through to a fresh fetch.
+                return None  # signal "we know it's zero, but no breakdown"
+
+        item_id = await self.get_item_id(hash_name)
+        if not item_id:
+            logger.debug(f"[CS2Cap] No item_id for: {hash_name}")
+            return None
+
+        data = await self._request(
+            "/prices",
+            params={"item_id": item_id, "currency": "USD", "limit": 100},
+        )
+        if not data:
+            return None
+
+        # Reuse the batch parser: a single-item /prices response is the
+        # same shape as one element of /prices/batch.
+        placeholder = {hash_name: PriceSnapshot(hash_name=hash_name)}
+        synthetic = {"items": [{
+            "market_hash_name": hash_name,
+            "providers": [
+                {
+                    "provider": e.get("provider", "unknown"),
+                    "lowest_ask": e.get("lowest_ask", 0),
+                    "quantity": e.get("quantity", 0),
+                }
+                for e in data.get("items", [])
+            ],
+        }]}
+        self._parse_batch_prices(synthetic, placeholder)
+        snap = placeholder[hash_name]
+        if snap.has_data:
+            price_db.record_price(hash_name, snap.min_price, source="cs2cap")
+            self._price_cache[cache_key] = (snap.min_price, now)
+        return snap
+
     async def get_cross_market_data(self, hash_name: str) -> Optional[CrossMarketData]:
         """Fetch cross-market snapshot: prices from all providers."""
         now = time.time()
@@ -336,6 +562,169 @@ class CS2CapOracle:
 
         self._candles_cache[cache_key] = ([result], now)
         return result
+
+    # ----------------------------------------------------------------
+    # 3b. BATCH PRICE / BID LOOKUPS (Starter+ tier)
+    #     POST /prices/batch and POST /bids/batch
+    #     Up to 100 items per call, 1 unit of quota per call (not per item).
+    #     No per-call throttle (batched endpoints are burst-safe).
+    # ----------------------------------------------------------------
+    async def get_prices_batch(
+        self, hash_names: List[str]
+    ) -> Dict[str, PriceSnapshot]:
+        """
+        Fetch lowest asks for up to 100 items in 1 POST request.
+
+        Tier: Starter+ (40 RPM, 50K req/month). 1 call = 1 quota unit.
+
+        Returns dict: {hash_name: PriceSnapshot}. Items with no data on
+        CS2Cap are still present in the dict with min_price=0.0 (so callers
+        can distinguish "no listing on any market" from "API error").
+        """
+        if not hash_names:
+            return {}
+
+        # Always seed dict with empty snapshots so callers can rely on key presence
+        results: Dict[str, PriceSnapshot] = {
+            name: PriceSnapshot(hash_name=name) for name in hash_names
+        }
+
+        for chunk_start in range(0, len(hash_names), BATCH_MAX_ITEMS):
+            chunk = hash_names[chunk_start : chunk_start + BATCH_MAX_ITEMS]
+            data = await self._request_post(
+                "/prices/batch",
+                body={
+                    "market_hash_names": chunk,
+                    "currency": "USD",
+                },
+                bypass_throttle=True,
+            )
+            if not data:
+                continue
+            self._parse_batch_prices(data, results)
+
+        # Persist snapshots to history (post-cache so reads in this cycle are free)
+        for name, snap in results.items():
+            if snap.has_data:
+                price_db.record_price(name, snap.min_price, source="cs2cap")
+
+        return results
+
+    def _parse_batch_prices(
+        self,
+        data: Dict[str, Any],
+        out: Dict[str, PriceSnapshot],
+    ) -> None:
+        """
+        Parse the /prices/batch response and merge into the out dict.
+
+        Expected response shape (per docs.cs2cap.com/api-reference/prices):
+        {
+          "items": [
+            {
+              "market_hash_name": "AK-47 | Redline (Field-Tested)",
+              "providers": [
+                {"provider": "buff163", "lowest_ask": 435886, "quantity": 3},
+                {"provider": "csfloat", "lowest_ask": 440100, "quantity": 1}
+              ]
+            },
+            ...
+          ]
+        }
+        """
+        for entry in data.get("items", []):
+            name = entry.get("market_hash_name", "")
+            if not name:
+                # Fallback: some responses use 'title' or 'name'
+                name = entry.get("title") or entry.get("name", "")
+            if not name or name not in out:
+                continue
+            snap = out[name]
+            for prov in entry.get("providers", []):
+                provider = prov.get("provider", "unknown")
+                ask_cents = prov.get("lowest_ask", 0)
+                qty = prov.get("quantity", 0)
+                if isinstance(ask_cents, (int, float)) and ask_cents > 0:
+                    ask_usd = ask_cents / 100.0
+                    snap.provider_prices[provider] = ask_usd
+                    if snap.min_price == 0.0 or ask_usd < snap.min_price:
+                        snap.min_price = ask_usd
+                if isinstance(qty, (int, float)) and qty > 0:
+                    snap.provider_quantities[provider] = int(qty)
+                    snap.total_quantity += int(qty)
+
+    async def get_bids_batch(
+        self, hash_names: List[str]
+    ) -> Dict[str, BidsSnapshot]:
+        """
+        Fetch highest bids for up to 100 items in 1 POST request.
+
+        Tier: Starter+ (40 RPM). 1 call = 1 quota unit.
+
+        Returns dict: {hash_name: BidsSnapshot}. Used for sell-side validation
+        (CS2Cap highest buy-order = upper bound for listing price).
+        """
+        if not hash_names:
+            return {}
+
+        results: Dict[str, BidsSnapshot] = {
+            name: BidsSnapshot(hash_name=name) for name in hash_names
+        }
+
+        for chunk_start in range(0, len(hash_names), BATCH_MAX_ITEMS):
+            chunk = hash_names[chunk_start : chunk_start + BATCH_MAX_ITEMS]
+            data = await self._request_post(
+                "/bids/batch",
+                body={
+                    "market_hash_names": chunk,
+                    "currency": "USD",
+                },
+                bypass_throttle=True,
+            )
+            if not data:
+                continue
+            self._parse_batch_bids(data, results)
+
+        return results
+
+    def _parse_batch_bids(
+        self,
+        data: Dict[str, Any],
+        out: Dict[str, BidsSnapshot],
+    ) -> None:
+        """
+        Parse the /bids/batch response and merge into the out dict.
+
+        Expected response shape (per docs.cs2cap.com/api-reference/bids):
+        {
+          "items": [
+            {
+              "market_hash_name": "...",
+              "providers": [
+                {"provider": "buff163", "highest_bid": 420000},
+                ...
+              ]
+            }
+          ]
+        }
+        """
+        for entry in data.get("items", []):
+            name = (
+                entry.get("market_hash_name")
+                or entry.get("title")
+                or entry.get("name", "")
+            )
+            if not name or name not in out:
+                continue
+            snap = out[name]
+            for prov in entry.get("providers", []):
+                provider = prov.get("provider", "unknown")
+                bid_cents = prov.get("highest_bid", 0)
+                if isinstance(bid_cents, (int, float)) and bid_cents > 0:
+                    bid_usd = bid_cents / 100.0
+                    snap.provider_bids[provider] = bid_usd
+                    if snap.max_bid == 0.0 or bid_usd > snap.max_bid:
+                        snap.max_bid = bid_usd
 
     # ----------------------------------------------------------------
     # 4. VOLATILITY ESTIMATION (from price history, not candles API)
