@@ -30,6 +30,7 @@ class _FilterMixin:
     def _rank_candidates_by_spread(
         items: List[Dict[str, Any]],
         agg_prices: Dict[str, Dict[str, Any]],
+        max_price_usd: float = None,
     ) -> List[Tuple[str, float]]:
         """
         Rank items by DMarket bid-ask spread (best_bid - best_ask) descending.
@@ -40,6 +41,10 @@ class _FilterMixin:
         Used by Phase 1 selective CS2Cap validation: the bot pre-fetches
         CS2Cap prices for the top-K spreads, validating only the items
         most likely to clear all filters.
+
+        max_price_usd: optional cap to exclude items too expensive for our
+        balance (avoids wasting CS2Cap quota on $1000 Karambits when balance
+        is $43.91).
         """
         from src.config import Config
 
@@ -48,6 +53,13 @@ class _FilterMixin:
             title = it.get("title", "")
             if not title:
                 continue
+            # Exclude items too expensive for our budget (avoid wasting
+            # CS2Cap quota on items we can't actually buy)
+            if max_price_usd is not None:
+                base_price_cents = int(it.get("price", {}).get("USD", 0))
+                base_price = base_price_cents / 100.0
+                if base_price > max_price_usd:
+                    continue
             agg = agg_prices.get(title, {})
             best_bid = agg.get("best_bid", 0.0) or 0.0
             best_ask = agg.get("best_ask", 0.0) or 0.0
@@ -56,9 +68,15 @@ class _FilterMixin:
             # Apply the same minimum-spread gate the per-item filter uses
             if best_bid <= best_ask * (1 + Config.INTRA_MIN_SPREAD_PCT / 100.0):
                 continue
+            # Rank by market spread (best_bid - best_ask) — items with the
+            # biggest intra-market spread are the most likely to clear all
+            # filters. The per-item _evaluate_candidate will check the
+            # actual listing edge (base_price vs best_bid) AND cross-market
+            # data (CS2Cap provider bid) before recommending a buy.
             spread = best_bid - best_ask
             if spread > 0:
                 ranked.append((title, spread))
+        # Sort by spread descending — biggest market opportunities first
         ranked.sort(key=lambda x: x[1], reverse=True)
         return ranked
 
@@ -73,6 +91,7 @@ class _FilterMixin:
         current_balance: float,
         current_margin: float,
         cs_snapshots: Optional[Dict[str, Any]] = None,
+        cs_bids: Optional[Dict[str, Any]] = None,
     ) -> Optional[Dict[str, Any]]:
         """
         Evaluate a single market item and return a buy payload, or None.
@@ -112,6 +131,75 @@ class _FilterMixin:
         if base_price > max_risk_price:
             return None
 
+        # Per-cycle diag (one log per cycle)
+        if not hasattr(self, "_diag_cycle_id") or self._diag_cycle_id != getattr(self, "_cur_cycle", -1):
+            self._diag_cycle_id = getattr(self, "_cur_cycle", -1)
+            agg_keys = list(agg_prices.keys())[:3] if agg_prices else []
+            cs_keys = list(cs_snapshots.keys())[:3] if cs_snapshots else []
+            cs_bid_keys = list(cs_bids.keys())[:3] if cs_bids else []
+            logger.info(
+                f"[DIAG] item={title!r} base=\${base_price:.2f} | "
+                f"agg_titles={len(agg_prices)} (sample={agg_keys}) | "
+                f"cs_snap_titles={len(cs_snapshots)} (sample={cs_keys}) | "
+                f"cs_bid_titles={len(cs_bids)} (sample={cs_bid_keys})"
+            )
+        # Per-item diag for top-5 candidates (those in cs_snapshots)
+        if cs_snapshots and title in cs_snapshots:
+            agg_for_this = agg_prices.get(title, {})
+            logger.info(
+                f"[DIAG-TOP5] {title!r} base=\${base_price:.2f} | "
+                f"DM_bid=\${agg_for_this.get('best_bid', 0):.2f} "
+                f"DM_ask=\${agg_for_this.get('best_ask', 0):.2f}"
+            )
+
+        # --- Strategy A: bid-ask spread analysis (needed by cross-market threshold) ---
+        agg = agg_prices.get(title, {})
+        best_bid = agg.get("best_bid", 0.0)
+        best_ask = agg.get("best_ask", 0.0)
+        ask_count = agg.get("ask_count", 0)
+        bid_count = agg.get("bid_count", 0)
+
+        # --- Strategy C: cross-market arb (CS2Cap provider bids) ---
+        # Run BEFORE liquidity/wash-trading checks: a strong cross-market
+        # signal (provider bid >> DMarket ask) is sufficient evidence of
+        # mispricing even for items with no DMarket sales history.
+        cross_market_provider = None
+        cross_market_bid = 0.0
+        if Config.CROSS_MARKET_ENABLED and cs_bids:
+            bid_snap = cs_bids.get(title)
+            if bid_snap is not None and getattr(bid_snap, "has_data", False):
+                # Find provider with highest bid (best cross-market target)
+                provider_bids = getattr(bid_snap, "provider_bids", {}) or {}
+                if provider_bids:
+                    cross_market_provider, cross_market_bid = max(
+                        provider_bids.items(), key=lambda kv: kv[1]
+                    )
+                    # Cross-market must beat: DMarket ask * (1 + min_spread)
+                    cm_threshold = best_ask * (1 + Config.INTRA_MIN_SPREAD_PCT / 100.0)
+                    if best_ask > 0 and cross_market_bid > cm_threshold:
+                        # Cross-market viable! Override intra-spread requirements.
+                        logger.info(
+                            f"Cross-market arb HIT: {title} "
+                            f"DM_ask=${best_ask:.2f} < "
+                            f"{cross_market_provider}_bid=${cross_market_bid:.2f} "
+                            f"(+{((cross_market_bid/best_ask)-1)*100:.1f}%)"
+                        )
+                    else:
+                        if best_ask > 0:
+                            logger.debug(
+                                f"Cross-market miss: {title} "
+                                f"DM_ask=${best_ask:.2f} >= "
+                                f"{cross_market_provider}_bid=${cross_market_bid:.2f} "
+                                f"(threshold=${cm_threshold:.2f})"
+                            )
+                        cross_market_provider = None
+                        cross_market_bid = 0.0
+            elif cs_bids:
+                logger.debug(
+                    f"Cross-market: {title} not in cs_bids "
+                    f"(has_data={getattr(bid_snap, 'has_data', 'N/A')})"
+                )
+
         if not self.liquidity.can_spend(base_price, game_id, current_balance):
             return None
 
@@ -119,7 +207,7 @@ class _FilterMixin:
             return None
 
         # v12.2 Phase 2.4: Multi-level liquidity verification
-        if Config.USE_LIQUIDITY_FILTER:
+        if Config.USE_LIQUIDITY_FILTER and cross_market_provider is None:
             liquidity = price_db.get_liquidity_metrics(title)
             if not liquidity["is_liquid"]:
                 is_sandbox = os.getenv("DRY_RUN", "true").lower() == "true"
@@ -133,11 +221,15 @@ class _FilterMixin:
                 return None
 
         # v12.2 Phase 2.3: Wash trading detection (trimmed mean)
-        if Config.WASH_TRADING_DETECTION and not price_db.detect_wash_trading(
-            title,
-            days=14,
-            boost_pct=Config.TRIMMED_MEAN_BOOST_PCT,
-            max_outliers=Config.TRIMMED_MEAN_MAX_OUTLIERS,
+        if (
+            Config.WASH_TRADING_DETECTION
+            and cross_market_provider is None
+            and not price_db.detect_wash_trading(
+                title,
+                days=14,
+                boost_pct=Config.TRIMMED_MEAN_BOOST_PCT,
+                max_outliers=Config.TRIMMED_MEAN_MAX_OUTLIERS,
+            )
         ):
             is_sandbox = os.getenv("DRY_RUN", "true").lower() == "true"
             if is_sandbox:
@@ -151,25 +243,27 @@ class _FilterMixin:
 
         history = price_db.get_recent_prices(title, days=14)
         prices_only = [p for p, _ in history]
-        try:
-            validate_volatility(prices_only)
-        except PriceValidationError:
-            return None
+        # Skip volatility validation if we have a strong cross-market signal.
+        if not prices_only and cross_market_provider is None:
+            try:
+                validate_volatility(prices_only)
+            except PriceValidationError:
+                return None
 
-        # --- Strategy A: bid-ask spread analysis ---
-        agg = agg_prices.get(title, {})
-        best_bid = agg.get("best_bid", 0.0)
-        best_ask = agg.get("best_ask", 0.0)
-        ask_count = agg.get("ask_count", 0)
-        bid_count = agg.get("bid_count", 0)
+        # --- Strategy C: cross-market arb (CS2Cap provider bids) ---
+        # (Now runs BEFORE liquidity/wash-trading checks — see above.)
 
         if best_ask <= 0 or best_bid <= 0:
             return None
         if ask_count < 1 or bid_count < 1:
             return None  # No real demand
 
-        # Spread check: best_bid > best_ask * 1.05
-        if best_bid <= best_ask * (1 + Config.INTRA_MIN_SPREAD_PCT / 100.0):
+        # Spread check: best_bid > best_ask * (1 + threshold)
+        # Skip if NO cross-market arb available either
+        if (
+            best_bid <= best_ask * (1 + Config.INTRA_MIN_SPREAD_PCT / 100.0)
+            and cross_market_provider is None
+        ):
             return None
 
         # CS2Cap oracle validation (Phase 1: selective, top-K via batch).
@@ -210,8 +304,18 @@ class _FilterMixin:
                 )
             return None
 
-        # Calculate profit: list at best_bid - 0.01
-        list_price = round(best_bid - Config.INTRA_LIST_DISCOUNT, 2)
+        # Calculate profit: list at best_bid - 0.01, but use cross-market bid
+        # as upper bound (don't list above what other platforms pay)
+        if cross_market_provider and cross_market_bid > best_bid:
+            # Cross-market reference is higher than DMarket bid — use it as
+            # list price (DMarket bid may rise to meet it, or our listing
+            # will be competitive enough for Steam-originated buyers)
+            list_price = round(
+                min(cross_market_bid * 0.97, cross_market_bid - Config.INTRA_LIST_DISCOUNT),
+                2,
+            )
+        else:
+            list_price = round(best_bid - Config.INTRA_LIST_DISCOUNT, 2)
 
         # v12.0 Phase 1.2: Float Premium (FN-0, FT-0, FN)
         attrs_list = item.get("attributes", [])
@@ -282,4 +386,6 @@ class _FilterMixin:
             "list_price": list_price,
             "best_bid": best_bid,
             "best_ask": best_ask,
+            "strategy": "cross_market" if cross_market_provider else "intra_spread",
+            "target_platform": cross_market_provider or "dmarket",
         }

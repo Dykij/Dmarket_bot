@@ -28,8 +28,9 @@ class Config:
     # These knobs were referenced in the v12.0 loop but never declared in
     # Config (pre-existing latent bug — would have crashed on first cycle
     # if v12.0 had been wired in). Defined here with the original intent.
-    INTRA_MIN_SPREAD_PCT = 5.0    # Min DMarket bid-vs-ask spread to consider (%)
+    INTRA_MIN_SPREAD_PCT = 2.5    # Min spread (intra-DMarket OR cross-market) to consider (%)
     INTRA_LIST_DISCOUNT = 0.01    # Undercut vs best_bid when listing (USD)
+    CROSS_MARKET_ENABLED = True   # Use CS2Cap provider bids for cross-market arb detection
 
     # --- v12.2 Liquidity / Wash-Trading Filters ---
     # Used by _FilterMixin._evaluate_candidate. Defaults match v12.2 intent.
@@ -37,6 +38,10 @@ class Config:
     WASH_TRADING_DETECTION = True
     TRIMMED_MEAN_BOOST_PCT = 5.0        # % boost over trimmed mean
     TRIMMED_MEAN_MAX_OUTLIERS = 2        # max outliers to trim
+
+    # --- Liquidity metrics (used in price_history/history.py) ---
+    MIN_TOTAL_SALES = 5                  # Min historical sales to consider "liquid"
+    MIN_SALES_IN_WINDOW = 2              # Min sales in the recent window
 
     # --- Repricing ---
     REPRICE_AFTER_HOURS = 24     # Hours after which to reprice a stale offer
@@ -59,6 +64,8 @@ class Config:
     CS2CAP_BATCH_SIZE = 100            # Max items per /prices/batch call
     CS2CAP_TOP_K_VALIDATE = 5          # Validate only top-K items via CS2Cap per cycle
     CS2CAP_SELECTIVE_MODE = True       # True = top-K only; False = all (uses more quota)
+    AGG_SCAN_TOP_N = 20                # v12.3: top-N most-traded items from agg-prices scan per cycle
+    LISTINGS_FETCH_LIMIT = 30          # v12.3: N listings per title (DMarket doesn't sort by price; higher = more chance of getting the actual cheapest)
 
     # --- Advanced Attributes (Float/Phase) ---
     PREFER_LOW_FLOAT = True
@@ -78,7 +85,7 @@ class Config:
 
     # --- Dynamic Position Sizing ---
     USE_DYNAMIC_SIZING = True
-    MAX_POSITION_RISK_PCT = 5.0  # Max capital risk per single item (Kelly Criterion proxy)
+    MAX_POSITION_RISK_PCT = float(os.getenv("MAX_POSITION_RISK_PCT", "5.0"))  # Max capital risk per single item (Kelly Criterion proxy)
 
     # =================================================================
     # CS2Cap Integration (arXiv-inspired improvements)

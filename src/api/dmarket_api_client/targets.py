@@ -34,9 +34,11 @@ class _TargetsMixin:
         """
         Instant Purchase of existing market listings.
         Payload: [{"offerId": "...", "price": {"amount": "123", "currency": "USD"}}]
+        Endpoint: PATCH /exchange/v1/offers-buy (verified 2026-06-06, was 404 on
+        /exchange/v1/market/buy)
         """
         return await self.make_request(
-            "POST", "/exchange/v1/market/buy", body={"offers": offers}
+            "PATCH", "/exchange/v1/offers-buy", body={"offers": offers}
         )
 
     async def get_user_targets(

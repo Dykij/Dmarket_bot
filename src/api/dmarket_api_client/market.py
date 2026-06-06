@@ -39,50 +39,85 @@ class _MarketMixin:
         self, game_id: str, titles: Optional[List[str]] = None
     ) -> Dict[str, Dict[str, Any]]:
         """
-        Batch fetch of best_bid + best_ask + count for up to 100 items in 1 request.
+        Batch fetch of best_bid + best_ask + count for up to 100 items per request.
         Returns: {title: {"best_ask": float, "best_bid": float, "ask_count": int, "bid_count": int}}
 
         Endpoint: POST /marketplace-api/v1/aggregated-prices
-        Body: {"limit": 100, "filter": {"game": "a8db"}}
+        Body: {"limit": 100, "filter": {"game": "a8db", "titles": ["...", "..."]}}
         Response: {"aggregatedPrices": [{title, orderBestPrice, offerBestPrice, orderCount, offerCount}, ...]}
+
+        When `titles` is provided, chunks to 100 per request and asks DMarket
+        to filter by those specific titles. Without `titles`, returns DMarket's
+        top-100 (not what we want for sniping).
         """
         results: Dict[str, Dict[str, Any]] = {}
-        title_filter = set(titles) if titles else None
 
-        try:
-            res = await self.make_request(
-                "POST",
-                "/marketplace-api/v1/aggregated-prices",
-                body={"limit": 100, "filter": {"game": game_id}},
-            )
-            for entry in res.get("aggregatedPrices", []):
-                title = entry.get("title", "")
-                if not title:
-                    continue
-                if title_filter and title not in title_filter:
-                    continue
-                # orderBestPrice = best ASK (lowest sell), offerBestPrice = best BID (highest buy)
-                # Amount is in cents as a string
-                try:
+        # If no titles given, ask DMarket for its top page (used for discovery)
+        if not titles:
+            try:
+                res = await self.make_request(
+                    "POST",
+                    "/marketplace-api/v1/aggregated-prices",
+                    body={"limit": 100, "filter": {"game": game_id}},
+                )
+                for entry in res.get("aggregatedPrices", []):
+                    title = entry.get("title", "")
+                    if not title:
+                        continue
                     ask_obj = entry.get("orderBestPrice") or {}
-                    best_ask = float(ask_obj.get("Amount", "0")) / 100.0
-                except (ValueError, TypeError, AttributeError):
-                    best_ask = 0.0
-                try:
                     bid_obj = entry.get("offerBestPrice") or {}
-                    best_bid = float(bid_obj.get("Amount", "0")) / 100.0
-                except (ValueError, TypeError, AttributeError):
-                    best_bid = 0.0
-                results[title] = {
-                    "best_ask": best_ask,
-                    "best_bid": best_bid,
-                    "ask_count": int(entry.get("orderCount", 0)),
-                    "bid_count": int(entry.get("offerCount", 0)),
-                }
-        except Exception as e:
-            logger.warning(f"Aggregated prices batch failed: {e}")
-            if title_filter:
-                for t in title_filter:
+                    try:
+                        best_ask = float(ask_obj.get("Amount", "0")) / 100.0
+                    except (ValueError, TypeError, AttributeError):
+                        best_ask = 0.0
+                    try:
+                        best_bid = float(bid_obj.get("Amount", "0")) / 100.0
+                    except (ValueError, TypeError, AttributeError):
+                        best_bid = 0.0
+                    results[title] = {
+                        "best_ask": best_ask,
+                        "best_bid": best_bid,
+                        "ask_count": int(entry.get("orderCount", 0)),
+                        "bid_count": int(entry.get("offerCount", 0)),
+                    }
+            except Exception as e:
+                logger.warning(f"Aggregated prices batch failed: {e}")
+            return results
+
+        # Chunked fetch with explicit title filter
+        for chunk_start in range(0, len(titles), 100):
+            chunk = titles[chunk_start : chunk_start + 100]
+            try:
+                res = await self.make_request(
+                    "POST",
+                    "/marketplace-api/v1/aggregated-prices",
+                    body={"limit": 100, "filter": {"game": game_id, "titles": chunk}},
+                )
+                for entry in res.get("aggregatedPrices", []):
+                    title = entry.get("title", "")
+                    if not title:
+                        continue
+                    ask_obj = entry.get("orderBestPrice") or {}
+                    bid_obj = entry.get("offerBestPrice") or {}
+                    try:
+                        best_ask = float(ask_obj.get("Amount", "0")) / 100.0
+                    except (ValueError, TypeError, AttributeError):
+                        best_ask = 0.0
+                    try:
+                        best_bid = float(bid_obj.get("Amount", "0")) / 100.0
+                    except (ValueError, TypeError, AttributeError):
+                        best_bid = 0.0
+                    results[title] = {
+                        "best_ask": best_ask,
+                        "best_bid": best_bid,
+                        "ask_count": int(entry.get("orderCount", 0)),
+                        "bid_count": int(entry.get("offerCount", 0)),
+                    }
+            except Exception as e:
+                logger.warning(
+                    f"Aggregated prices batch failed (chunk {chunk_start}-{chunk_start+len(chunk)}): {e}"
+                )
+                for t in chunk:
                     if t not in results:
                         results[t] = {
                             "best_ask": 0.0,

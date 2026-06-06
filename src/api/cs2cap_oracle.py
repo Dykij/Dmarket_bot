@@ -622,8 +622,10 @@ class CS2CapOracle:
         {
           "items": [
             {
+              "item_id": 12632,
               "market_hash_name": "AK-47 | Redline (Field-Tested)",
-              "providers": [
+              "phase": null,
+              "quotes": [
                 {"provider": "buff163", "lowest_ask": 435886, "quantity": 3},
                 {"provider": "csfloat", "lowest_ask": 440100, "quantity": 1}
               ]
@@ -640,7 +642,10 @@ class CS2CapOracle:
             if not name or name not in out:
                 continue
             snap = out[name]
-            for prov in entry.get("providers", []):
+            # Actual API field is "quotes" (verified 2026-06-06), but accept
+            # legacy "providers" for back-compat.
+            quotes = entry.get("quotes") or entry.get("providers", [])
+            for prov in quotes:
                 provider = prov.get("provider", "unknown")
                 ask_cents = prov.get("lowest_ask", 0)
                 qty = prov.get("quantity", 0)
@@ -699,10 +704,12 @@ class CS2CapOracle:
         {
           "items": [
             {
-              "market_hash_name": "...",
-              "providers": [
-                {"provider": "buff163", "highest_bid": 420000},
-                ...
+              "item_id": 12632,
+              "market_hash_name": "AK-47 | Redline (Field-Tested)",
+              "phase": null,
+              "quotes": [
+                {"provider": "buff163", "highest_bid": 2926},
+                {"provider": "c5", "highest_bid": 5778}
               ]
             }
           ]
@@ -717,7 +724,10 @@ class CS2CapOracle:
             if not name or name not in out:
                 continue
             snap = out[name]
-            for prov in entry.get("providers", []):
+            # Actual API field is "quotes" (verified 2026-06-06), but accept
+            # legacy "providers" for back-compat.
+            quotes = entry.get("quotes") or entry.get("providers", [])
+            for prov in quotes:
                 provider = prov.get("provider", "unknown")
                 bid_cents = prov.get("highest_bid", 0)
                 if isinstance(bid_cents, (int, float)) and bid_cents > 0:

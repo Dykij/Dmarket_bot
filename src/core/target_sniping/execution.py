@@ -41,7 +41,45 @@ class _ExecutionMixin:
         await self._simulate_network_latency()
         self._maybe_inject_error("buy_items")
         buy_payloads = [item["buy_offer"] for item in instant_buys]
-        await self.client.buy_items(buy_payloads)
+        buy_response = await self.client.buy_items(buy_payloads)
+
+        # v12.3: DMarket returns 200 OK with `status: 'TxFailed'` and
+        # `dmOffersFailReason: {code: 'OfferNotFound'}` if the listing was
+        # already taken by another bot. We must check the response body
+        # before recording the spend locally.
+        successful_titles = set()
+        if isinstance(buy_response, dict):
+            status = buy_response.get("status", "")
+            if status and status != "TxFailed":
+                # All offers succeeded
+                successful_titles = {
+                    item_data["title"] for item_data in instant_buys
+                }
+            else:
+                # Inspect dmOffersStatus to find successes
+                dm_offers_status = buy_response.get("dmOffersStatus", {}) or {}
+                for offer_id, info in dm_offers_status.items():
+                    if info.get("started") or info.get("success"):
+                        # Map offer_id back to title (best effort: any offer that started)
+                        for item_data in instant_buys:
+                            if (
+                                item_data["buy_offer"].get("offerId")
+                                == offer_id
+                            ):
+                                successful_titles.add(item_data["title"])
+                                break
+                fail_reason = buy_response.get("dmOffersFailReason", {}) or {}
+                if fail_reason:
+                    logger.warning(
+                        f"Buy failed: {fail_reason.get('code', 'unknown')} "
+                        f"for {fail_reason.get('offerId', '?')[:12]}..."
+                    )
+                elif status == "TxFailed":
+                    logger.warning(f"Buy TxFailed: {buy_response}")
+            logger.info(
+                f"Buy response: status={status} "
+                f"successful={len(successful_titles)}/{len(instant_buys)}"
+            )
 
         for item_data in instant_buys:
             title = item_data["title"]
@@ -84,5 +122,14 @@ class _ExecutionMixin:
                     finalization_time=time.time() + 168 * 3600,
                 )
 
-            price_db.record_placed_target(item_id, title, base_price)
-            self.liquidity.record_spend(base_price)
+            # v12.3: Only record local spend/target if the actual buy succeeded.
+            # For DRY_RUN, always record (simulated). For production, gate on
+            # successful_titles which is populated from the buy response.
+            is_dry = os.getenv("DRY_RUN", "true").lower() == "true"
+            if is_dry or title in successful_titles:
+                price_db.record_placed_target(item_id, title, base_price)
+                self.liquidity.record_spend(base_price)
+            else:
+                logger.info(
+                    f"Skipping local record for {title!r} — buy did not succeed"
+                )

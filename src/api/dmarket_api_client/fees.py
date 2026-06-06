@@ -28,6 +28,10 @@ class _FeesMixin:
         """
         Fetches dynamic fee for a specific item at a given price.
         Implements 12-hour caching (v7.7) to avoid rate limits.
+
+        v12.3: DMarket removed the per-item fee endpoint (/exchange/v1/market/fee
+        returns 404 as of 2026-06-06). We use a hard 5% default to avoid
+        5x retry timeouts.
         """
         now = time.time()
         if item_id in self._fee_cache:
@@ -35,25 +39,10 @@ class _FeesMixin:
             if now - cached["timestamp"] < self._fee_cache_ttl:
                 return cached["fee"]
 
-        try:
-            params = {
-                "gameId": game_id,
-                "itemId": item_id,
-                "price": price_cents,
-                "currency": "USD",
-            }
-            res = await self.make_request("GET", "/exchange/v1/market/fee", params=params)
-            fee_pct = float(res.get("fee", 5.0)) / 100.0
-
-            # Update Cache
-            self._fee_cache[item_id] = {"fee": fee_pct, "timestamp": now}
-            return fee_pct
-        except Exception as e:
-            if os.getenv("DRY_RUN", "true").lower() != "true":
-                logger.warning(
-                    f"Could not fetch dynamic fee for {item_id}, fallback to 5%: {e}"
-                )
-            return 0.05
+        # v12.3: Skip the network call entirely — DMarket has no per-item
+        # fee endpoint anymore. Cached value of 5% (CS2 default).
+        self._fee_cache[item_id] = {"fee": 0.05, "timestamp": now}
+        return 0.05
 
     # --- v12.2: Bulk fee fetching (Phase 2.2) ---
     # NOTE: DMarket does NOT expose a bulk-fee endpoint (verified 2026-06-06:
