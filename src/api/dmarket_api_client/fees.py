@@ -56,49 +56,52 @@ class _FeesMixin:
             return 0.05
 
     # --- v12.2: Bulk fee fetching (Phase 2.2) ---
+    # NOTE: DMarket does NOT expose a bulk-fee endpoint (verified 2026-06-06:
+    # /exchange/v1/items/bulk-fee, /v1/exchange/fee, /marketplace-api/v1/fees
+    # all return 404). The aggregated-prices response also doesn't include fees.
+    # We use DMarket's standard CS2 fee rate (5%) as a conservative default.
+    _DMARKET_CS2_FEE_RATE = 0.05
+    _bulk_fee_endpoint_unavailable = True  # circuit breaker (set True if endpoint found)
+
     async def get_item_fee_bulk(self, game_id: str, item_ids: List[str]) -> Dict[str, float]:
         """
-        Batch fetch fees for up to N items in 1 request.
-        Returns: {item_id: fee_rate} (e.g., {"abc123": 0.025})
-
-        Endpoint: GET /exchange/v1/items/bulk-fee?gameId=a8db&itemIds=id1,id2,...
-        Up to 50 items per request.
+        Returns {item_id: fee_rate} for all given item_ids.
+        DMarket doesn't expose fees via API, so we use the default 5% for CS2.
         """
         if not item_ids:
             return {}
+        if self._bulk_fee_endpoint_unavailable:
+            return {fid: self._DMARKET_CS2_FEE_RATE for fid in item_ids}
 
+        # Legacy path — kept for if/when DMarket re-enables bulk-fee endpoint
         results: Dict[str, float] = {}
         chunk_size = 50
         for chunk_start in range(0, len(item_ids), chunk_size):
             chunk = item_ids[chunk_start : chunk_start + chunk_size]
             try:
-                # Comma-separated item IDs (DMarket bulk format)
                 ids_param = ",".join(chunk)
                 res = await self.make_request(
                     "GET",
                     "/exchange/v1/items/bulk-fee",
                     params={"gameId": game_id, "itemIds": ids_param},
                 )
-                # Response: {"fees": [{"itemId": "abc", "fee": 2.5}, ...]}
                 for entry in res.get("fees", []):
                     fid = entry.get("itemId", "")
                     fee_raw = entry.get("fee", 5.0)
                     try:
                         fee_pct = float(fee_raw) / 100.0
                     except (ValueError, TypeError):
-                        fee_pct = 0.05
+                        fee_pct = self._DMARKET_CS2_FEE_RATE
                     if fid:
                         results[fid] = fee_pct
-                        # Update single-item cache too
                         self._fee_cache[fid] = {
                             "fee": fee_pct,
                             "timestamp": time.time(),
                         }
             except Exception as e:
                 logger.debug(f"Bulk fee fetch failed for chunk of {len(chunk)}: {e}")
-                # Fallback to 5% for failed items
+                self._bulk_fee_endpoint_unavailable = True  # trip circuit breaker
                 for fid in chunk:
                     if fid not in results:
-                        results[fid] = 0.05
-
+                        results[fid] = self._DMARKET_CS2_FEE_RATE
         return results

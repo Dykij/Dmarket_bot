@@ -21,7 +21,10 @@ class VaultProvider:
         return cls._instance
 
     def _initialize(self):
-        load_dotenv()
+        from pathlib import Path
+        project_root = Path(__file__).resolve().parent.parent.parent
+        env_path = project_root / ".env"
+        load_dotenv(dotenv_path=str(env_path), override=True)
         vault_url = os.getenv("VAULT_ADDR")
         vault_token = os.getenv("VAULT_TOKEN")
         

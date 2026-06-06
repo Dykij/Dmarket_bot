@@ -43,7 +43,7 @@ class Config:
 
     # --- Risk Management ---
     MIN_PRICE_USD = 0.50      # Ignore cheap trash (<$0.50)
-    MAX_PRICE_USD = 20.00     # Ignore high-risk items (>$20.00)
+    MAX_PRICE_USD = float(os.getenv("MAX_PRICE_USD", "20.00"))  # Ignore high-risk items (>$X)
 
     MAX_OPEN_TARGETS = 50     # Limit active buy orders (Safety cap)
 

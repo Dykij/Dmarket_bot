@@ -36,54 +36,53 @@ class _MarketMixin:
 
     # --- v12.0: Aggregated Prices (Strategy A core) ---
     async def get_aggregated_prices(
-        self, game_id: str, titles: List[str]
+        self, game_id: str, titles: Optional[List[str]] = None
     ) -> Dict[str, Dict[str, Any]]:
         """
         Batch fetch of best_bid + best_ask + count for up to 100 items in 1 request.
         Returns: {title: {"best_ask": float, "best_bid": float, "ask_count": int, "bid_count": int}}
 
         Endpoint: POST /marketplace-api/v1/aggregated-prices
-        Body: {"gameId": "a8db", "titles": ["AK-47 | Redline (Field-Tested)", ...]}
+        Body: {"limit": 100, "filter": {"game": "a8db"}}
+        Response: {"aggregatedPrices": [{title, orderBestPrice, offerBestPrice, orderCount, offerCount}, ...]}
         """
-        if not titles:
-            return {}
-
-        # Chunk to 100 per request (DMarket limit)
         results: Dict[str, Dict[str, Any]] = {}
-        for chunk_start in range(0, len(titles), 100):
-            chunk = titles[chunk_start : chunk_start + 100]
-            try:
-                res = await self.make_request(
-                    "POST",
-                    "/marketplace-api/v1/aggregated-prices",
-                    body={"gameId": game_id, "titles": chunk},
-                )
-                # Response format: {"aggregatedPrices": [{title, bestAsk, bestBid, ...}, ...]}
-                for entry in res.get("aggregatedPrices", []):
-                    title = entry.get("title", "")
-                    if not title:
-                        continue
-                    # bestAsk and bestBid are in cents (strings) per DMarket format
-                    best_ask_cents = entry.get("bestAsk", "0")
-                    best_bid_cents = entry.get("bestBid", "0")
-                    try:
-                        best_ask = float(best_ask_cents) / 100.0 if best_ask_cents else 0.0
-                    except (ValueError, TypeError):
-                        best_ask = 0.0
-                    try:
-                        best_bid = float(best_bid_cents) / 100.0 if best_bid_cents else 0.0
-                    except (ValueError, TypeError):
-                        best_bid = 0.0
-                    results[title] = {
-                        "best_ask": best_ask,
-                        "best_bid": best_bid,
-                        "ask_count": int(entry.get("askCount", 0)),
-                        "bid_count": int(entry.get("bidCount", 0)),
-                    }
-            except Exception as e:
-                logger.warning(f"Aggregated prices batch failed: {e}")
-                # Fill with zeros for failed items
-                for t in chunk:
+        title_filter = set(titles) if titles else None
+
+        try:
+            res = await self.make_request(
+                "POST",
+                "/marketplace-api/v1/aggregated-prices",
+                body={"limit": 100, "filter": {"game": game_id}},
+            )
+            for entry in res.get("aggregatedPrices", []):
+                title = entry.get("title", "")
+                if not title:
+                    continue
+                if title_filter and title not in title_filter:
+                    continue
+                # orderBestPrice = best ASK (lowest sell), offerBestPrice = best BID (highest buy)
+                # Amount is in cents as a string
+                try:
+                    ask_obj = entry.get("orderBestPrice") or {}
+                    best_ask = float(ask_obj.get("Amount", "0")) / 100.0
+                except (ValueError, TypeError, AttributeError):
+                    best_ask = 0.0
+                try:
+                    bid_obj = entry.get("offerBestPrice") or {}
+                    best_bid = float(bid_obj.get("Amount", "0")) / 100.0
+                except (ValueError, TypeError, AttributeError):
+                    best_bid = 0.0
+                results[title] = {
+                    "best_ask": best_ask,
+                    "best_bid": best_bid,
+                    "ask_count": int(entry.get("orderCount", 0)),
+                    "bid_count": int(entry.get("offerCount", 0)),
+                }
+        except Exception as e:
+            logger.warning(f"Aggregated prices batch failed: {e}")
+            if title_filter:
+                for t in title_filter:
                     if t not in results:
                         results[t] = {
                             "best_ask": 0.0,
