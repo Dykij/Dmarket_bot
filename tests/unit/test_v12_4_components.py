@@ -553,3 +553,37 @@ class TestConfigKeys:
         assert Config.CS2CAP_CACHE_TTL_SECONDS > 0
         assert hasattr(Config, "CS2CAP_CACHE_REFRESH_TOP_N")
         assert Config.CS2CAP_CACHE_REFRESH_TOP_N > 0
+
+    def test_first_sale_age_days_present(self):
+        """Regression: Config.MAX_FIRST_SALE_AGE_DAYS missing crashed
+        every cycle in 2026-06-07 dry-run (Discovered in 30-min test)."""
+        from src.config import Config
+        assert hasattr(Config, "MAX_FIRST_SALE_AGE_DAYS")
+        assert Config.MAX_FIRST_SALE_AGE_DAYS > 0
+        assert Config.MAX_FIRST_SALE_AGE_DAYS <= 365
+
+    def test_all_config_refs_resolved(self):
+        """
+        Regression: scan all .py files for Config.X references and assert
+        every referenced key exists. Prevents runtime AttributeError on
+        new code paths.
+        """
+        import re
+        import os
+        from src.config import Config
+
+        missing = []
+        for root, dirs, files in os.walk("src"):
+            if "__pycache__" in root:
+                continue
+            for f in files:
+                if not f.endswith(".py"):
+                    continue
+                path = os.path.join(root, f)
+                with open(path) as fh:
+                    content = fh.read()
+                refs = set(re.findall(r"Config\.([A-Z_][A-Z_0-9]+)", content))
+                for r in refs:
+                    if not hasattr(Config, r):
+                        missing.append(f"{path}: Config.{r}")
+        assert not missing, f"Missing Config keys: {missing}"

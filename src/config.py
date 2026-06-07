@@ -42,6 +42,7 @@ class Config:
     # --- Liquidity metrics (used in price_history/history.py) ---
     MIN_TOTAL_SALES = 5                  # Min historical sales to consider "liquid"
     MIN_SALES_IN_WINDOW = 2              # Min sales in the recent window
+    MAX_FIRST_SALE_AGE_DAYS = int(os.getenv("MAX_FIRST_SALE_AGE_DAYS", "30"))  # Reject items whose first recorded sale is older than N days (stale / pre-restart artifacts)
 
     # --- Repricing ---
     REPRICE_AFTER_HOURS = 24     # Hours after which to reprice a stale offer
@@ -58,6 +59,11 @@ class Config:
     MAX_SNIPING_PRICE_USD = float(os.getenv("MAX_SNIPING_PRICE_USD", "5.00"))
 
     MAX_OPEN_TARGETS = 50     # Limit active buy orders (Safety cap)
+
+    # --- Inventory & Sale Age (used in price_history/history.py + telegram) ---
+    MAX_LAST_SALE_AGE_DAYS = int(os.getenv("MAX_LAST_SALE_AGE_DAYS", "30"))  # Reject items whose last sale is older than N days
+    MAX_OPEN_INVENTORY = int(os.getenv("MAX_OPEN_INVENTORY", "200"))  # Telegram cap on open inventory items
+    BOT_VERSION = os.getenv("BOT_VERSION", "v12.4.1")  # Reported in /start, /status
 
     # --- Performance ---
     # SCAN_INTERVAL=30s aligns with the CS2Cap Starter tier budget
