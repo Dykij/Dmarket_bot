@@ -99,6 +99,7 @@ class RiskManager:
         # Drawdown tracking
         self._peak_equity: float = initial_equity_usd
         self._current_equity: float = initial_equity_usd
+        self._current_drawdown_pct: float = 0.0
         self._max_drawdown_seen: float = 0.0
 
         # Trade history for the day (for /status)

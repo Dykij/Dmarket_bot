@@ -1,17 +1,24 @@
 #!/usr/bin/env bash
 # =============================================================
-# 24/7 Watchdog for DMarket Bot (v12.5)
+# 24/7 Watchdog for DMarket Bot (v12.6 — exit-code aware)
 # =============================================================
 # This watchdog supervises the main trading bot. If the bot
 # process dies, crashes, or hangs (no log activity for N min),
-# the watchdog restarts it and notifies via Telegram.
+# the watchdog decides what to do based on the bot's exit code:
+#
+#   exit 0  → clean shutdown (don't restart)
+#   exit 1+ → fatal error (don't restart; user must fix)
+#   crash   → no exit code captured (process killed/hung); restart
 #
 # Usage:
 #   ./watchdog.sh                  # start + supervise
 #   ./watchdog.sh --once           # single check (for cron)
+#   ./watchdog.sh --reset          # clear fatal state and restart
 #
-# State: writes the bot's child PID to /tmp/dmarket_bot.pid
-# and heartbeat time to data/watchdog_heartbeat.txt.
+# State:
+#   /tmp/dmarket_bot.pid             — bot's PID
+#   data/watchdog_heartbeat.txt      — last heartbeat timestamp
+#   data/watchdog_state.json         — last exit code (written by bot)
 # =============================================================
 set -euo pipefail
 
@@ -19,16 +26,21 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 PID_FILE="/tmp/dmarket_bot.pid"
 HB_FILE="${PROJECT_ROOT}/data/watchdog_heartbeat.txt"
+STATE_FILE="${PROJECT_ROOT}/data/watchdog_state.json"
 LOG_FILE="${PROJECT_ROOT}/logs/watchdog.log"
-HEARTBEAT_TIMEOUT_S=300   # 5 min without a log line = hung bot
+HEARTBEAT_TIMEOUT_S=300   # 5 min without heartbeat = hung
 RESTART_BACKOFF_S=30      # min wait between restarts
 MAX_RESTARTS_PER_HOUR=10
 SINGLE_CHECK=false
+RESET_STATE=false
 
 mkdir -p "${PROJECT_ROOT}/logs" "${PROJECT_ROOT}/data"
 
 if [[ "${1:-}" == "--once" ]]; then
     SINGLE_CHECK=true
+fi
+if [[ "${1:-}" == "--reset" ]]; then
+    RESET_STATE=true
 fi
 
 log() {
@@ -81,9 +93,25 @@ is_bot_responsive() {
     return 0
 }
 
+read_last_exit_code() {
+    # Reads the JSON state file the bot wrote on exit. Returns
+    # the exit code, or empty string if no state file exists.
+    if [[ ! -f "${STATE_FILE}" ]]; then
+        return 1
+    fi
+    # Crude JSON parse — exit code is at "exit_code":N
+    grep -oE '"exit_code"[[:space:]]*:[[:space:]]*-?[0-9]+' "${STATE_FILE}" \
+        | grep -oE -- '-?[0-9]+$' || return 1
+}
+
+clear_state() {
+    rm -f "${STATE_FILE}"
+}
+
 start_bot() {
     log "Starting DMarket bot..."
     cd "${PROJECT_ROOT}"
+    clear_state
     # setsid so the bot survives this script exiting; redirect both
     # stdout+stderr to the bot's log; write its PID to PID_FILE.
     setsid bash -c '
@@ -118,23 +146,43 @@ kill_bot() {
     rm -f "${PROJECT_ROOT}/bot.lock"
 }
 
+# --- main per-check decision tree ---
 check_once() {
     if is_bot_alive; then
+        # Bot is running. Check responsiveness.
         if is_bot_responsive; then
-            # All good
             return 0
-        else
-            log "Bot alive but unresponsive (no heartbeat for ${HEARTBEAT_TIMEOUT_S}s). Killing."
-            send_telegram "⏰ Bot unresponsive for ${HEARTBEAT_TIMEOUT_S}s — restarting"
-            kill_bot
-            sleep "${RESTART_BACKOFF_S}"
-            start_bot
         fi
-    else
-        log "Bot not running. Starting."
-        send_telegram "🔄 Bot was down — restarting"
+        # Hung but alive → kill and restart (assume transient).
+        log "Bot alive but unresponsive (no heartbeat for ${HEARTBEAT_TIMEOUT_S}s). Killing."
+        send_telegram "⏰ Bot unresponsive for ${HEARTBEAT_TIMEOUT_S}s — restarting"
+        kill_bot
+        sleep "${RESTART_BACKOFF_S}"
         start_bot
+        return 0
     fi
+
+    # Bot is not running. Why?
+    local last_exit
+    last_exit=$(read_last_exit_code || echo "")
+    if [[ -n "${last_exit}" ]] && (( last_exit > 0 )); then
+        # Fatal: bot exited with non-zero code → user must fix.
+        log "Bot is DOWN (last exit code = ${last_exit}, fatal). NOT restarting."
+        send_telegram "🚨 Bot stopped with FATAL exit code ${last_exit}.
+Inspect the log: /tmp/bot_dryrun/bot.log
+Run './scripts/watchdog.sh --reset' once you've fixed the issue."
+        return 1
+    fi
+
+    if [[ -n "${last_exit}" ]] && (( last_exit == 0 )); then
+        log "Bot exited cleanly (code 0). Not restarting."
+        return 0
+    fi
+
+    # No exit code captured → crash or external kill → restart.
+    log "Bot not running (no exit code captured). Restarting."
+    send_telegram "🔄 Bot was down (crash/kill) — restarting"
+    start_bot
 }
 
 # Rate-limit restarts
@@ -156,6 +204,12 @@ RECORD_RESTART() {
     cutoff=$(($(date +%s) - 86400))
     awk -v c="${cutoff}" '$1 > c' "${RATE_FILE}" > "${RATE_FILE}.tmp" && mv "${RATE_FILE}.tmp" "${RATE_FILE}"
 }
+
+if ${RESET_STATE}; then
+    log "Reset state file (cleared fatal-exit memory)"
+    clear_state
+    exit 0
+fi
 
 if ${SINGLE_CHECK}; then
     check_once

@@ -41,8 +41,11 @@ from src.core.target_sniping.pricing import _PricingMixin
 from src.core.target_sniping.resale import _ResaleMixin
 from src.core.target_sniping.sandbox import _SandboxMixin
 from src.db.price_history import price_db
+from src.risk.fatal_errors import classify, is_fatal
+from src.risk.error_reporter import ErrorReporter
 from src.risk.liquidity_manager import LiquidityManager
 from src.telegram.notifier import notifier
+from src.core.daily_briefing import DailyBriefingScheduler
 
 logger = logging.getLogger("SnipingBot")
 
@@ -92,7 +95,6 @@ class SnipingLoop(  # type: ignore[misc]
         )
 
         # v12.5: Daily briefing scheduler (started in start())
-        from src.core.daily_briefing import DailyBriefingScheduler
         self.briefing_scheduler: Optional[DailyBriefingScheduler] = None
 
     async def _fetch_cheapest_listings(
@@ -169,7 +171,7 @@ class SnipingLoop(  # type: ignore[misc]
     async def start(self) -> None:
         self.running = True
         logger.info(
-            f"Starting DMarket Intra-Spread Loop v12.5 | Targets: {self.target_games}"
+            f"Starting DMarket Intra-Spread Loop v12.6 | Targets: {self.target_games}"
         )
 
         gc.disable()
@@ -266,8 +268,27 @@ class SnipingLoop(  # type: ignore[misc]
         except asyncio.CancelledError:
             logger.info("Sniping loop cancelled.")
         except Exception as e:
-            logger.error(f"Critical error in sniping cycle: {e}")
-            await asyncio.sleep(30)
+            # v12.6: bubble up fatal errors. The outer supervisor
+            # decides whether to retry (transient) or exit (fatal).
+            # run_cycle already classified and re-raised fatal ones,
+            # so anything landing here is either a transient from
+            # outside the cycle, or another fatal from setup. We
+            # re-raise and let the supervisor's classifier decide.
+            classification = classify(e)
+            if classification in ("FATAL", "UNKNOWN"):
+                report = ErrorReporter(e, context={
+                    "phase": "start",
+                    "cycle_count": cycle_count,
+                    "boot_rss_mb": f"{boot_rss_mb:.1f}",
+                    "current_rss_mb": f"{process.memory_info().rss / (1024*1024):.1f}",
+                })
+                logger.error(report.format_log())
+            else:
+                logger.warning(
+                    f"[v12.6] Transient start-level error "
+                    f"({classification}): {type(e).__name__}: {e}"
+                )
+            raise
         finally:
             # v12.5: Stop daily briefing scheduler
             if self.briefing_scheduler is not None:
@@ -623,19 +644,31 @@ class SnipingLoop(  # type: ignore[misc]
                 price_db.cleanup_old_targets()
 
         except Exception as e:
-            # v12.4: Distinguish circuit-breaker opens (expected) from
-            # real cycle failures (unexpected). Breaker open means
-            # DMarket is rate-limiting or down; the outer loop's
-            # SCAN_INTERVAL sleep will throttle us back to normal.
-            from src.api.dmarket_api_client.backoff import CircuitOpenError
-
-            if isinstance(e, CircuitOpenError):
-                logger.warning(
-                    f"[v12.4] Cycle paused — {e.breaker_name} circuit OPEN "
-                    f"({e.cooldown_remaining:.1f}s remaining)"
-                )
-            elif "RateLimit" not in str(e):
-                logger.error(f"Cycle failed for {game_id}: {e}")
+            # v12.6 error policy:
+            # - CircuitOpenError / RateLimit → log & continue (DMarket
+            #   is throttling; the next sleep will naturally pace us).
+            # - Other transient (timeout, network) → log & continue.
+            # - FATAL / UNKNOWN (our code bug, db corruption) →
+            #   log with structured report, then RE-RAISE so the outer
+            #   supervisor exits with a distinct code. The watchdog
+            #   will not auto-restart.
+            classification = classify(e)
+            if classification in ("FATAL", "UNKNOWN"):
+                report = ErrorReporter(e, context={
+                    "phase": "run_cycle",
+                    "game_id": game_id,
+                    "cycle": self.deep_scan_counter,
+                    "balance": f"${current_balance:.2f}",
+                    "items_in_page": len(items) if "items" in dir() else "?",
+                })
+                logger.error(report.format_log())
+                # Re-raise so the outer loop can exit with the right code.
+                raise
+            # Transient — log a short warning, let the cycle skip.
+            logger.warning(
+                f"[v12.6] Transient cycle error ({classification}) for "
+                f"{game_id}: {type(e).__name__}: {e}"
+            )
 
 
 if __name__ == "__main__":
