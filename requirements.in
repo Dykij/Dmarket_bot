@@ -1,19 +1,22 @@
-# Core Dependencies (Updated: January 2025)
-python-telegram-bot>=22.0           # Latest stable (June 2025)
-python-dotenv>=1.1.0               # Latest stable
-httpx>=0.28.0                      # Latest with HTTP/2 support
-requests>=2.32.0                   # Latest stable
-aiohttp>=3.13.0                    # Latest async HTTP
-aiofiles>=25.0.0                   # Latest async file I/O
-pydantic>=2.10.0                   # Latest with improved validation
-structlog>=25.0.0                  # Latest structured logging
-tenacity>=9.0.0                    # Latest retry library
-circuitbreaker>=2.1.0              # Latest circuit breaker
-stamina>=25.2.0                    # Production-grade retries with safe defaults, instrumentation
-hishel[httpx]>=1.1.8               # RFC 9111-compliant HTTP caching for httpx
+# Core Dependencies (Updated: June 2026)
+# NOTE: Codebase uses aiogram 3.x (NOT python-telegram-bot).
+# The bot module imports `from aiogram import Bot, Dispatcher`.
+aiogram>=3.10.0                    # Async Telegram Bot framework (3.28.2 installed)
+python-dotenv>=1.1.0               # .env loader
+httpx>=0.28.0                      # HTTP/2 client
+requests>=2.32.0                   # Sync HTTP fallback
+aiohttp>=3.13.0                    # Async HTTP (used by DMarketAPIClient)
+aiofiles>=25.0.0                   # Async file I/O
+pydantic>=2.10.0                   # Validation
+structlog>=25.0.0                  # Structured logging
+tenacity>=9.0.0                    # Retry library
+psutil>=6.0.0                      # Process/PSI utilities (lock file, watchdog, leaks)
+circuitbreaker>=2.1.0              # Circuit breaker pattern
+stamina>=25.2.0                    # Production-grade retries w/ instrumentation
+hishel>=1.1.8                      # RFC 9111 HTTP caching
 anysqlite>=0.0.5                   # Async SQLite for hishel caching
 aiometer>=1.0.0                    # Concurrent task throttling and rate limiting
-asyncer>=0.0.12                    # Type-safe parallel task execution by Tiangolo
+asyncer>=0.0.12                    # Type-safe parallel task execution
 anyio>=4.0.0                       # Async backend abstraction (required by asyncer)
 hvac>=2.3.0                        # HashiCorp Vault client (Phase 3.2 extension)
 maturin>=1.5.0                     # Rust/Python build system (Phase 1.1 extension)

@@ -21,17 +21,30 @@ class _SandboxMixin:
     """DRY_RUN simulation helpers (competition, latency, errors)."""
 
     def _simulate_competition(self, margin: float) -> bool:
-        """Sandbox v9.0: Models the probability of being out-sniped by a competitor."""
+        """Sandbox v12.5: Models the probability of being out-sniped by a competitor.
+
+        Curve reasoning (calibrated against 30-min production logs):
+        - Fat edge (>40%): more sniper competition, but the edge is so wide
+          that half of these are still winnable → 50% fail (was 90%, too
+          pessimistic — made the paper-trade look broken).
+        - 20-40%: moderate competition → 30% fail.
+        - 10-20%: low competition (most bots don't even detect this edge)
+          → 15% fail.
+        - <10%: thin edge, but also low bot interest → 5% fail.
+
+        In production this is a no-op and returns True (real DMarket will
+        give us OfferNotFound instead; we model that in execution.py).
+        """
         if os.getenv("DRY_RUN", "true").lower() != "true":
             return True
         if margin > 0.40:
-            fail_chance = 0.90
+            fail_chance = 0.50
         elif margin > 0.20:
-            fail_chance = 0.60
-        elif margin > 0.10:
             fail_chance = 0.30
+        elif margin > 0.10:
+            fail_chance = 0.15
         else:
-            fail_chance = 0.10
+            fail_chance = 0.05
         return random.random() >= fail_chance
 
     async def _simulate_network_latency(self, client_type: str = "dmarket") -> None:

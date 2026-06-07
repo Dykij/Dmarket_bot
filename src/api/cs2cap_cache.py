@@ -30,6 +30,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 import time
 from typing import Any, Dict, List, Optional
 
@@ -146,13 +147,24 @@ class CS2CapCache:
 
         self._stop_event = asyncio.Event()
 
-        # O4: Warm up the item catalog in the BACKGROUND (non-blocking).
-        # Loading 38K items = 380 API calls = 5-10 minutes. We don't
-        # want to block bot startup, so we launch a task and return
-        # immediately. The cache.refresh_now() will populate prices
-        # using whatever catalog entries are already known.
-        if Config.CS2CAP_CATALOG_WARMUP_ON_START:
+        # v12.5: Catalog warmup is OFF by default.
+        # Loading 38K items = ~380 API calls per restart = ~11.5K/month
+        # of a 50K Starter budget (23%!) just to be able to resolve
+        # hash_name → item_id for items we will never trade.
+        # The catalog is only needed by get_item_id() which is rarely used;
+        # the per-cycle hot path uses aggregated_prices (DMarket) + prices/batch
+        # (CS2Cap) and doesn't need the catalog. Skipping warmup saves quota
+        # for actual price lookups.
+        # Override with CS2CAP_CATALOG_WARMUP_ON_START=1 if your strategy
+        # relies on get_item_id().
+        if os.getenv("CS2CAP_CATALOG_WARMUP_ON_START", "0").lower() in ("1", "true", "yes"):
             asyncio.create_task(self._warm_catalog_bg())
+        else:
+            logger.info(
+                "[CS2CapCache] Catalog warmup SKIPPED (default) to save ~380 "
+                "CS2Cap calls/restart. Set CS2CAP_CATALOG_WARMUP_ON_START=1 "
+                "to re-enable."
+            )
 
         if Config.CS2CAP_CACHE_REFRESH_ON_START:
             try:

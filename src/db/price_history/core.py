@@ -82,10 +82,15 @@ class PriceHistoryDB(  # type: ignore[misc]
                     sell_price  REAL,
                     fee_paid    REAL,
                     profit      REAL,
-                    status      TEXT    NOT NULL DEFAULT 'idle', -- 'idle', 'selling', 'sold'
+                    status      TEXT    NOT NULL DEFAULT 'idle', -- 'idle', 'listed', 'selling', 'sold', 'failed'
                     acquired_at REAL    NOT NULL,
                     unlock_at   REAL    NOT NULL DEFAULT 0, -- v9.0 Trade Lock timestamp
-                    sold_at     REAL
+                    sold_at     REAL,
+                    -- v12.5: production sell-side columns
+                    dm_item_id   TEXT,    -- DMarket's real itemId (for /user-offers/create)
+                    dm_offer_id  TEXT,    -- DMarket's offerId once listed (for /edit and /delete)
+                    listed_at    REAL,    -- when we successfully called create_sell_offers_batch
+                    list_error   TEXT     -- last error from a failed listing attempt
                 )
             """
             )
@@ -96,6 +101,28 @@ class PriceHistoryDB(  # type: ignore[misc]
                 )
             except sqlite3.OperationalError:
                 pass  # Column already exists
+            # v12.5 migrations: production sell-side columns
+            for col, typedef in (
+                ("dm_item_id", "TEXT"),
+                ("dm_offer_id", "TEXT"),
+                ("listed_at", "REAL"),
+                ("list_error", "TEXT"),
+            ):
+                try:
+                    self.state_conn.execute(
+                        f"ALTER TABLE virtual_inventory ADD COLUMN {col} {typedef}"
+                    )
+                except sqlite3.OperationalError:
+                    pass  # already exists
+            self.state_conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_vinv_dm_item ON virtual_inventory(dm_item_id)"
+            )
+            self.state_conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_vinv_dm_offer ON virtual_inventory(dm_offer_id)"
+            )
+            self.state_conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_vinv_status ON virtual_inventory(status)"
+            )
 
             self.state_conn.execute(
                 """
@@ -161,6 +188,42 @@ class PriceHistoryDB(  # type: ignore[misc]
             )
             self.state_conn.execute(
                 "CREATE INDEX IF NOT EXISTS idx_asset_status ON asset_status(status, updated_at)"
+            )
+
+            # v12.5: Equity snapshots for crash-recovery + daily PnL.
+            # Keeps last 90 days of snapshots for backtesting risk metrics.
+            self.state_conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS equity_snapshots (
+                    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                    taken_at    REAL    NOT NULL,
+                    snapshot_date TEXT  NOT NULL,  -- YYYY-MM-DD (UTC)
+                    cash        REAL    NOT NULL,
+                    assets      REAL    NOT NULL,
+                    total       REAL    NOT NULL,
+                    realized_pnl REAL   NOT NULL DEFAULT 0,
+                    note        TEXT
+                )
+            """
+            )
+            self.state_conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_equity_date ON equity_snapshots(snapshot_date)"
+            )
+
+            # v12.5: Risk event log (kill-switch trips, soft-halts, etc.)
+            self.state_conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS risk_events (
+                    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                    ts          REAL    NOT NULL,
+                    event_type  TEXT    NOT NULL,  -- 'soft_halt', 'daily_halt', 'drawdown_halt', 'max_trades'
+                    severity    TEXT    NOT NULL DEFAULT 'warning',  -- 'info', 'warning', 'critical'
+                    details     TEXT    NOT NULL
+                )
+            """
+            )
+            self.state_conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_risk_ts ON risk_events(ts)"
             )
 
             # Temporary safety check: remove price_history from state_db if it exists after migration

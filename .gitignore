@@ -20,6 +20,8 @@ logs/
 
 # Local databases and caches
 *.db
+*.db-shm
+*.db-wal
 *.sqlite
 data/market_data.db
 data/blackboard.json

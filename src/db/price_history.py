@@ -1,12 +1,25 @@
 """
-PriceHistoryDB — Native Bifurcated SQLite storage (v8.0).
+⚠️  DEPRECATED — DO NOT USE THIS FILE.
 
-Splits trading state and historical analysis into two distinct physical databases:
-1. dmarket_state.db   — (OLTP) Fast transactions: orders, inventory, scan state.
-2. dmarket_history.db — (OLAP) Bulk analytical data: price observations.
+The active implementation lives in `src/db/price_history/` (a Python
+package with mixin-based architecture). Python prefers packages over
+modules of the same name, so this file is shadowed by the package.
 
-This eliminates write-lock contention during heavy market scans.
+This file is kept ONLY for historical reference and will be removed
+in a future cleanup. All edits should go to the package files:
+    src/db/price_history/core.py        — PriceHistoryDB orchestrator
+    src/db/price_history/inventory.py    — virtual_inventory + helpers
+    src/db/price_history/state.py        — scanning_state
+    src/db/price_history/history.py      — price observations
+    src/db/price_history/targets.py      — active_targets
+    src/db/price_history/asset_status.py — asset_status (v12.2)
+    src/db/price_history/low_fee.py      — low_fee_cache
+
+Original (v8.0 monolithic) implementation preserved below for reference.
 """
+
+# Original (deprecated) implementation follows. Kept for git history only.
+# DO NOT IMPORT FROM THIS FILE — use `src.db.price_history.price_db` instead.
 
 import sqlite3
 import logging
@@ -14,7 +27,36 @@ import time
 from pathlib import Path
 from typing import Optional, List, Tuple, Dict
 
-logger = logging.getLogger("PriceHistoryDB")
+logger = logging.getLogger("PriceHistoryDB_DEPRECATED")
+# Intentionally NOT creating a PriceHistoryDB instance here to avoid
+# double-init with the package version.
+
+class _DeprecatedStub:
+    """Stub that raises if anyone tries to use this file."""
+    def __getattr__(self, name):
+        raise RuntimeError(
+            f"src.db.price_history (the .py file) is DEPRECATED. "
+            f"Use `from src.db.price_history import price_db` instead. "
+            f"You tried to access: {name}"
+        )
+
+# If anyone somehow imports `from src.db.price_history import X` from this
+# file, give them a clear error.
+_globals = list(globals().keys())
+# Preserve only module metadata; replace classes with stubs.
+_DELETED = ('PriceHistoryDB', 'price_db')
+for _name in _DELETED:
+    if _name in _globals:
+        del globals()[_name]
+
+# Show a deprecation warning at import time
+import warnings
+warnings.warn(
+    "src.db.price_history (the .py file) is deprecated; "
+    "use the package at src.db.price_history/ instead.",
+    DeprecationWarning,
+    stacklevel=2,
+)
 
 
 class PriceHistoryDB:
@@ -55,10 +97,15 @@ class PriceHistoryDB:
                     sell_price  REAL,
                     fee_paid    REAL,
                     profit      REAL,
-                    status      TEXT    NOT NULL DEFAULT 'idle', -- 'idle', 'selling', 'sold'
+                    status      TEXT    NOT NULL DEFAULT 'idle', -- 'idle', 'listed', 'selling', 'sold', 'failed'
                     acquired_at REAL    NOT NULL,
                     unlock_at   REAL    NOT NULL DEFAULT 0, -- v9.0 Trade Lock timestamp
-                    sold_at     REAL
+                    sold_at     REAL,
+                    -- v12.5: production sell-side columns
+                    dm_item_id   TEXT,    -- DMarket's real itemId (for the /user-offers/create endpoint)
+                    dm_offer_id  TEXT,    -- DMarket's offerId once we list it (for /edit and /delete)
+                    listed_at    REAL,    -- when we successfully called create_sell_offer
+                    list_error   TEXT     -- last error from a failed listing attempt
                 )
             """)
             # Migration: Ensure unlock_at exists in older DBs
@@ -66,6 +113,28 @@ class PriceHistoryDB:
                 self.state_conn.execute("ALTER TABLE virtual_inventory ADD COLUMN unlock_at REAL NOT NULL DEFAULT 0")
             except sqlite3.OperationalError:
                 pass # Column already exists
+            # v12.5 migrations: production sell-side columns
+            for col, typedef in (
+                ("dm_item_id", "TEXT"),
+                ("dm_offer_id", "TEXT"),
+                ("listed_at", "REAL"),
+                ("list_error", "TEXT"),
+            ):
+                try:
+                    self.state_conn.execute(
+                        f"ALTER TABLE virtual_inventory ADD COLUMN {col} {typedef}"
+                    )
+                except sqlite3.OperationalError:
+                    pass  # already exists
+            self.state_conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_vinv_dm_item ON virtual_inventory(dm_item_id)"
+            )
+            self.state_conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_vinv_dm_offer ON virtual_inventory(dm_offer_id)"
+            )
+            self.state_conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_vinv_status ON virtual_inventory(status)"
+            )
 
             self.state_conn.execute("""
                 CREATE TABLE IF NOT EXISTS missed_opportunities (
@@ -280,6 +349,103 @@ class PriceHistoryDB:
                 "UPDATE virtual_inventory SET status = ? WHERE id = ?",
                 (new_status, item_id)
             )
+
+    # ------------------------------------------------------------------
+    # v12.5: Production sell-side helpers
+    # ------------------------------------------------------------------
+    def attach_dm_item_id(self, row_id: int, dm_item_id: str) -> None:
+        """Link a virtual_inventory row to its real DMarket itemId.
+
+        Called when we either:
+        - Bought an item and DMarket returned the itemId (after a successful buy)
+        - Pulled an item from DMarket inventory sync and want to track it locally
+        """
+        if not dm_item_id:
+            return
+        with self.state_conn:
+            self.state_conn.execute(
+                "UPDATE virtual_inventory SET dm_item_id = ? WHERE id = ?",
+                (dm_item_id, row_id),
+            )
+
+    def find_by_dm_item_id(self, dm_item_id: str) -> Optional[sqlite3.Row]:
+        """Look up virtual_inventory by DMarket's itemId (for inventory sync)."""
+        if not dm_item_id:
+            return None
+        return self.state_conn.execute(
+            "SELECT * FROM virtual_inventory WHERE dm_item_id = ? ORDER BY id DESC LIMIT 1",
+            (dm_item_id,),
+        ).fetchone()
+
+    def find_by_dm_offer_id(self, dm_offer_id: str) -> Optional[sqlite3.Row]:
+        """Look up virtual_inventory by DMarket's offerId (for sell notifications)."""
+        if not dm_offer_id:
+            return None
+        return self.state_conn.execute(
+            "SELECT * FROM virtual_inventory WHERE dm_offer_id = ? ORDER BY id DESC LIMIT 1",
+            (dm_offer_id,),
+        ).fetchone()
+
+    def mark_listed(self, row_id: int, dm_offer_id: str, list_price: float) -> None:
+        """Mark a virtual item as successfully listed on DMarket.
+
+        Status flow: idle → listed (or re-listed: selling → listed).
+        listed_at is the timestamp used by reprice_unsold_offers to detect
+        stale listings (older than REPRICE_AFTER_HOURS).
+        """
+        with self.state_conn:
+            self.state_conn.execute(
+                """UPDATE virtual_inventory
+                   SET status = 'listed',
+                       dm_offer_id = ?,
+                       sell_price = ?,
+                       listed_at = ?,
+                       list_error = NULL
+                   WHERE id = ?""",
+                (dm_offer_id, list_price, time.time(), row_id),
+            )
+
+    def mark_list_failed(self, row_id: int, error_msg: str) -> None:
+        """Record a failed listing attempt; status stays 'idle' so we retry next cycle."""
+        with self.state_conn:
+            self.state_conn.execute(
+                """UPDATE virtual_inventory
+                   SET list_error = ?
+                   WHERE id = ?""",
+                (error_msg[:500] if error_msg else None, row_id),
+            )
+
+    def get_stale_listings(self, max_age_seconds: int) -> List[sqlite3.Row]:
+        """Get items that have been listed for >max_age_seconds (caller passes REPRICE_AFTER_HOURS * 3600).
+
+        Used by reprice_unsold_offers to find listings that haven't sold and need price drops.
+        """
+        cutoff = time.time() - max_age_seconds
+        return self.state_conn.execute(
+            """SELECT * FROM virtual_inventory
+               WHERE status = 'listed'
+                 AND listed_at IS NOT NULL
+                 AND listed_at < ?
+               ORDER BY listed_at ASC""",
+            (cutoff,),
+        ).fetchall()
+
+    def get_recent_sales(self, since_ts: float) -> List[sqlite3.Row]:
+        """Get items sold since timestamp (for daily PnL calc)."""
+        return self.state_conn.execute(
+            """SELECT * FROM virtual_inventory
+               WHERE status = 'sold' AND sold_at > ?
+               ORDER BY sold_at DESC""",
+            (since_ts,),
+        ).fetchall()
+
+    def get_daily_realized_pnl(self, since_ts: float) -> float:
+        """Sum of profit on items sold since timestamp (for daily briefing)."""
+        row = self.state_conn.execute(
+            "SELECT COALESCE(SUM(profit), 0) as pnl FROM virtual_inventory WHERE status = 'sold' AND sold_at > ?",
+            (since_ts,),
+        ).fetchone()
+        return float(row["pnl"] or 0.0)
 
     def record_virtual_sale(self, item_id: int, sell_price: float, fee_paid: float):
         with self.state_conn:

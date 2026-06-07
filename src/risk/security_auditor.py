@@ -1,3 +1,4 @@
+import logging
 import re
 from typing import Optional
 
@@ -49,7 +50,7 @@ class SecurityAuditor:
         Redacts detected sensitive information or blocks prompt injections.
         """
         sanitized_text = text
-        
+
         for pattern in cls.PROMPT_INJECTION_PATTERNS:
             if pattern.search(text):
                 return "[BLOCKED_BY_SECURITY_AUDITOR: PROMPT_INJECTION_DETECTED]"
@@ -58,6 +59,47 @@ class SecurityAuditor:
             # Replace the captured group or the whole match with REDACTED
             sanitized_text = pattern.sub("[REDACTED_BY_SECURITY_AUDITOR]", sanitized_text)
         return sanitized_text
+
+    @classmethod
+    def as_logging_filter(cls) -> "logging.Filter":
+        """
+        v12.5: Return a logging.Filter that scrubs secrets from every
+        log record before it's emitted. Plug into a handler via
+        `handler.addFilter(SecurityAuditor.as_logging_filter())`.
+
+        Redaction policy:
+        - If the record's message contains a known secret pattern,
+          it is REPLACED with a redacted version (not blocked, so
+          the line still gets emitted with timestamp + level).
+        - If it contains a prompt-injection pattern, the entire
+          message is replaced with [BLOCKED].
+        - The original record is never destroyed — the filter only
+          mutates `record.msg` / `record.args` in place.
+        """
+        class _SecretScrubFilter(logging.Filter):
+            def filter(self, record: logging.LogRecord) -> bool:
+                try:
+                    if record.msg and isinstance(record.msg, str):
+                        scrubbed = cls.sanitize(record.msg)
+                        if scrubbed != record.msg:
+                            record.msg = scrubbed
+                            record.args = ()
+                    elif record.args:
+                        # msg is a template; format and check
+                        try:
+                            rendered = record.msg % record.args
+                            scrubbed = cls.sanitize(rendered)
+                            if scrubbed != rendered:
+                                record.msg = scrubbed
+                                record.args = ()
+                        except Exception:
+                            pass
+                except Exception:
+                    # Never let the filter break logging
+                    pass
+                return True
+
+        return _SecretScrubFilter()
 
 # ======= Example Usage =======
 if __name__ == "__main__":

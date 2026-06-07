@@ -22,7 +22,8 @@ import gc
 import logging
 import os
 import time
-from typing import Any, Dict, List
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 from src.api.cs2cap_oracle import RateLimitException
 from src.api.dmarket_api_client import DMarketAPIClient
@@ -41,6 +42,7 @@ from src.core.target_sniping.resale import _ResaleMixin
 from src.core.target_sniping.sandbox import _SandboxMixin
 from src.db.price_history import price_db
 from src.risk.liquidity_manager import LiquidityManager
+from src.telegram.notifier import notifier
 
 logger = logging.getLogger("SnipingBot")
 
@@ -77,6 +79,21 @@ class SnipingLoop(  # type: ignore[misc]
 
         # v12.4: In-memory CS2Cap cache (initialised in start())
         self.cs2cap_cache: Optional[CS2CapCache] = None
+
+        # v12.5: Risk orchestration + self-reflection
+        from src.analytics.self_reflection import self_reflection
+        from src.risk.risk_manager import RiskManager
+        self.self_reflection = self_reflection
+        self.risk = RiskManager(
+            daily_loss_limit_usd=float(os.getenv("MAX_DAILY_LOSS_USD", "10.00")),
+            daily_trade_limit=int(os.getenv("MAX_DAILY_TRADES", "200")),
+            max_drawdown_pct=float(os.getenv("MAX_DRAWDOWN_PCT", "15.0")),
+            soft_halt_drawdown_pct=float(os.getenv("SOFT_HALT_DRAWDOWN_PCT", "5.0")),
+        )
+
+        # v12.5: Daily briefing scheduler (started in start())
+        from src.core.daily_briefing import DailyBriefingScheduler
+        self.briefing_scheduler: Optional[DailyBriefingScheduler] = None
 
     async def _fetch_cheapest_listings(
         self, game_id: str, titles: List[str]
@@ -151,30 +168,100 @@ class SnipingLoop(  # type: ignore[misc]
 
     async def start(self) -> None:
         self.running = True
-        logger.info(f"Starting DMarket Intra-Spread Loop v12.4 | Targets: {self.target_games}")
+        logger.info(
+            f"Starting DMarket Intra-Spread Loop v12.5 | Targets: {self.target_games}"
+        )
 
         gc.disable()
 
         # v12.4: launch in-memory CS2Cap cache (background refresh task)
         await self._init_cs2cap_cache()
 
+        # v12.5: Launch daily briefing scheduler (background task).
+        # Sends a startup briefing after 30s, then one every UTC midnight.
+        try:
+            from src.telegram.notifier import notifier
+            self.briefing_scheduler = DailyBriefingScheduler(
+                risk=self.risk,
+                get_balance=lambda: self.client.get_real_balance(),
+            )
+            self.briefing_scheduler.start()
+        except Exception as e:
+            logger.warning(f"[v12.5] Could not start daily briefing scheduler: {e}")
+
+        # v12.5: Leak detection — sample RSS on every loop. If we grow
+        # past 500 MB or >2x the boot-time RSS, the loop is leaking and
+        # we should log a warning so the watchdog can decide to restart.
+        import psutil
+        process = psutil.Process()
+        boot_rss_mb = process.memory_info().rss / (1024 * 1024)
+        cycle_count = 0
+
+        # v12.5: Watchdog heartbeat. The external watchdog.sh script
+        # checks this file; if it stops updating for >5 min, the
+        # process is considered hung and gets restarted.
+        heartbeat_path = Path(
+            os.getenv("WATCHDOG_HEARTBEAT_FILE", "data/watchdog_heartbeat.txt")
+        )
+        try:
+            heartbeat_path.parent.mkdir(parents=True, exist_ok=True)
+        except Exception:
+            pass
+
+        def _write_heartbeat() -> None:
+            try:
+                heartbeat_path.write_text(str(int(time.time())), encoding="utf-8")
+            except Exception:
+                pass
+
+        _write_heartbeat()  # initial
+
         try:
             while self.running:
                 for game_id in self.target_games:
                     await self.run_cycle(game_id)
 
-                gc.collect()
+                cycle_count += 1
+                _write_heartbeat()  # per-cycle heartbeat
 
-                # Phase 4: honour Config.SCAN_INTERVAL (was hardcoded 5s —
-                # would burn DMarket + CS2Cap quotas in minutes on Starter).
+                # Periodic GC + memory sample (every 10 cycles = ~5 min)
+                if cycle_count % 10 == 0:
+                    gc.collect()
+                    rss_mb = process.memory_info().rss / (1024 * 1024)
+                    if rss_mb > 500 or rss_mb > 2 * boot_rss_mb:
+                        logger.warning(
+                            f"[v12.5 LEAK?] RSS={rss_mb:.1f}MB "
+                            f"(boot={boot_rss_mb:.1f}MB). Will restart on next "
+                            f"out-of-band error."
+                        )
+                        # Aggressive GC + drop references
+                        gc.collect()
+                        gc.collect()
+
+                # v12.5: Self-reflection (every SELF_REFLECTION_INTERVAL cycles).
+                # Applies parameter adjustments to the current run.
+                try:
+                    reflection = await self.self_reflection.maybe_run_reflection(cycle_count)
+                    if reflection is not None and reflection.confidence > 0.3:
+                        # Apply adjusted spread/risk/vol params to Config
+                        # so subsequent candidates see them
+                        from src.config import Config
+                        new_spread = self.self_reflection.get_adjusted_spread(
+                            Config.MIN_SPREAD_PCT, reflection
+                        )
+                        if new_spread != Config.MIN_SPREAD_PCT:
+                            logger.info(
+                                f"[v12.5] Self-reflection: MIN_SPREAD_PCT "
+                                f"{Config.MIN_SPREAD_PCT:.2f}% → {new_spread:.2f}%"
+                            )
+                            Config.MIN_SPREAD_PCT = new_spread
+                except Exception as e:
+                    logger.debug(f"[v12.5] self_reflection error: {e}")
+
+                # v12.5: Quota-aware adaptive scan interval.
                 from src.config import Config
 
-                if self.empty_page_count > 0:
-                    delay = min(Config.SCAN_INTERVAL * self.empty_page_count, 300)
-                    logger.info(f"Market appears quiet. Sleeping for {delay}s...")
-                else:
-                    delay = Config.SCAN_INTERVAL
-
+                delay = self._compute_scan_delay()
                 await asyncio.sleep(delay)
         except asyncio.CancelledError:
             logger.info("Sniping loop cancelled.")
@@ -182,11 +269,73 @@ class SnipingLoop(  # type: ignore[misc]
             logger.error(f"Critical error in sniping cycle: {e}")
             await asyncio.sleep(30)
         finally:
+            # v12.5: Stop daily briefing scheduler
+            if self.briefing_scheduler is not None:
+                try:
+                    await self.briefing_scheduler.stop()
+                except Exception as e:
+                    logger.debug(f"Briefing shutdown error: {e}")
             if self.cs2cap_cache is not None:
                 await self.cs2cap_cache.stop()
             await OracleFactory.close_all()
             if self.client:
                 await self.client.close()
+
+    def _compute_scan_delay(self) -> float:
+        """
+        v12.5: Quota-aware adaptive scan interval.
+
+        Strategy:
+        - Base: Config.SCAN_INTERVAL (default 30s)
+        - If empty page: back off exponentially up to 5 min
+        - If CS2Cap quota >80% used: double the delay (slow & steady)
+        - If CS2Cap quota >95% used: triple the delay (preserve what's left)
+        - If CS2Cap cooldown active: wait out the cooldown
+        - If the cache is stale: don't add extra delay (we still have
+          the in-memory cache; the hot path doesn't need fresh data to
+          do the math).
+        """
+        from src.config import Config
+
+        delay = float(Config.SCAN_INTERVAL)
+
+        if self.empty_page_count > 0:
+            delay = min(delay * self.empty_page_count, 300.0)
+
+        quota_aware = os.getenv("SCAN_INTERVAL_QUOTA_AWARE", "true").lower() in (
+            "1", "true", "yes",
+        )
+        if quota_aware and self.cs2cap_cache is not None:
+            try:
+                stats = self.cs2cap_cache.stats()
+                monthly_limit = max(1, stats.get("monthly_limit", 50000))
+                used_pct = (stats.get("monthly_used", 0) * 100.0) / monthly_limit
+                cooldown = stats.get("cooldown_remaining_s") or 0.0
+                if cooldown > 0:
+                    delay = max(delay, cooldown + 5.0)
+                    logger.debug(
+                        f"[v12.5] CS2Cap cooldown {cooldown:.0f}s — sleeping that long"
+                    )
+                elif used_pct >= 95.0:
+                    delay = min(delay * 3.0, 300.0)
+                    if not hasattr(self, "_last_quota_warn") or (
+                        time.time() - self._last_quota_warn > 300
+                    ):
+                        self._last_quota_warn = time.time()
+                        logger.warning(
+                            f"[v12.5] CS2Cap quota at {used_pct:.1f}% — "
+                            f"scan interval tripled to {delay:.0f}s"
+                        )
+                elif used_pct >= 80.0:
+                    delay = min(delay * 2.0, 300.0)
+            except Exception as e:
+                logger.debug(f"[v12.5] quota-aware check failed: {e}")
+
+        delay = max(
+            float(os.getenv("SCAN_INTERVAL_MIN_SECONDS", "30")),
+            min(delay, float(os.getenv("SCAN_INTERVAL_MAX_SECONDS", "300"))),
+        )
+        return delay
 
     async def _init_cs2cap_cache(self) -> None:
         """
@@ -436,6 +585,20 @@ class SnipingLoop(  # type: ignore[misc]
                 f"Assets: ${equity['assets']:.2f} | "
                 f"TOTAL: ${equity['total']:.2f} (Items: {equity['count']})"
             )
+            # v12.5: Telegram equity milestone (every $5 change, throttled
+            # to 1/min by the notifier). Don't spam every cycle.
+            if not hasattr(self, "_last_milestone") or (
+                abs(equity["total"] - self._last_milestone) >= 5.0
+            ):
+                self._last_milestone = equity["total"]
+                asyncio.create_task(
+                    notifier.equity_milestone(
+                        cash=equity["cash"],
+                        assets_value=equity["assets"],
+                        total=equity["total"],
+                        items_count=equity["count"],
+                    )
+                )
 
             # v12.4: Periodic diagnostic snapshot (every 10 cycles)
             if self.deep_scan_counter % 10 == 0:

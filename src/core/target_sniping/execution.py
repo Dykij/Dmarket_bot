@@ -7,12 +7,14 @@ Mixed into `SnipingLoop` (see `core.py`).
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import os
 import time
 from typing import Any, Dict, List
 
 from src.db.price_history import price_db
+from src.telegram.notifier import notifier
 
 logger = logging.getLogger("SnipingBot")
 
@@ -31,9 +33,21 @@ class _ExecutionMixin:
 
         In DRY_RUN: simulates the buy and updates virtual inventory.
         In production: calls the real buy_items endpoint.
+
+        v12.5: Pre-trade risk check via self.risk.pre_trade_check()
+        before processing each item. Soft-halt halves the size, hard
+        halts skip the trade entirely.
         """
         if not instant_buys:
             return
+
+        # v12.5: Update risk manager's equity view before checks
+        if hasattr(self, "risk"):
+            try:
+                equity_now = price_db.get_total_equity(current_balance)
+                self.risk._update_equity(equity_now["total"])
+            except Exception as e:
+                logger.debug(f"Risk equity update failed: {e}")
 
         logger.info(
             f"Executing INSTANT BUY for {len(instant_buys)} items (Strategy A)..."
@@ -48,8 +62,25 @@ class _ExecutionMixin:
         # already taken by another bot. We must check the response body
         # before recording the spend locally.
         successful_titles = set()
+        bought_items: List[Dict[str, Any]] = []  # v12.5: [{itemId, title}, ...]
         if isinstance(buy_response, dict):
             status = buy_response.get("status", "")
+            # v12.5: DMarket's /exchange/v1/market/buy response usually
+            # contains an `Items` array with the newly-acquired assets,
+            # each with their new itemId. We need those to list them
+            # for sale later. Shape (per DMarket API v1.1):
+            #   {"Items": [{"itemId": "abc", "title": "...", "price": {...}}]}
+            for key in ("Items", "items", "AcquiredItems"):
+                raw = buy_response.get(key)
+                if isinstance(raw, list):
+                    for it in raw:
+                        if isinstance(it, dict) and it.get("itemId"):
+                            bought_items.append({
+                                "itemId": str(it["itemId"]),
+                                "title": it.get("title", ""),
+                            })
+                    if bought_items:
+                        break
             if status and status != "TxFailed":
                 # All offers succeeded
                 successful_titles = {
@@ -78,7 +109,8 @@ class _ExecutionMixin:
                     logger.warning(f"Buy TxFailed: {buy_response}")
             logger.info(
                 f"Buy response: status={status} "
-                f"successful={len(successful_titles)}/{len(instant_buys)}"
+                f"successful={len(successful_titles)}/{len(instant_buys)} "
+                f"bought_items={len(bought_items)}"
             )
 
         for item_data in instant_buys:
@@ -86,13 +118,58 @@ class _ExecutionMixin:
             item_id = item_data["item_id"]
             base_price = item_data["base_price"]
             list_price = item_data["list_price"]
+            # v12.5: pass real per-item margin to the competition model so
+            # the simulator actually differentiates between 5% and 60% edge.
+            # Hardcoding 0.15 previously meant every buy saw the same 30%
+            # fail rate regardless of how fat the spread was.
+            best_bid = item_data.get("best_bid", 0.0)
+            best_ask = item_data.get("best_ask", 0.0)
+            item_margin = (
+                (best_bid - best_ask) / best_ask
+                if best_ask > 0
+                else 0.0
+            )
+
+            # v12.5: Find the new dm_item_id for this buy (for sell-side)
+            new_dm_item_id = ""
+            for bi in bought_items:
+                if bi["title"] == title and bi["itemId"]:
+                    new_dm_item_id = bi["itemId"]
+                    break
 
             if os.getenv("DRY_RUN", "true").lower() == "true":
-                if not self._simulate_competition(0.15):
+                if not self._simulate_competition(item_margin):
                     logger.warning(
                         f"[SIM] COMPETITION! {title} was sniped by another bot first."
                     )
                     continue
+
+                # v12.5: Risk manager pre-trade check (soft/hard halts)
+                if hasattr(self, "risk"):
+                    risk_check = self.risk.pre_trade_check(
+                        proposed_size_usd=base_price,
+                        current_equity_usd=current_balance,
+                        game_id=game_id,
+                        item_title=title,
+                    )
+                    if not risk_check.allowed:
+                        logger.warning(
+                            f"[RISK] BLOCKED {title} @ ${base_price:.2f}: {risk_check.reason}"
+                        )
+                        try:
+                            price_db.record_risk_event(
+                                "pre_trade_block",
+                                "warning",
+                                f"{title} @ ${base_price:.2f}: {risk_check.reason}",
+                            )
+                        except Exception:
+                            pass
+                        continue
+                    if risk_check.adjusted_size_usd is not None and risk_check.adjusted_size_usd < base_price:
+                        logger.info(
+                            f"[RISK] Soft-adjusted {title}: ${base_price:.2f} → "
+                            f"${risk_check.adjusted_size_usd:.2f}"
+                        )
 
                 held_count = len(
                     [
@@ -107,7 +184,19 @@ class _ExecutionMixin:
                     )
                     continue
 
+                # v12.5: capture the new row_id so we can attach dm_item_id
+                # in production (or leave it empty in DRY).
                 price_db.add_virtual_item(title, base_price, trade_lock_hours=168)
+                # Find the row we just inserted (most recent idle for this title)
+                row = price_db.state_conn.execute(
+                    "SELECT id FROM virtual_inventory "
+                    "WHERE hash_name = ? AND status = 'idle' "
+                    "ORDER BY id DESC LIMIT 1",
+                    (title,),
+                ).fetchone()
+                if row and new_dm_item_id:
+                    price_db.attach_dm_item_id(int(row["id"]), new_dm_item_id)
+
                 vwap = price_db.calculate_vwap(title)
                 logger.info(
                     f"[SIM] SNIPED! {title} @ ${base_price} → list ${list_price} "
@@ -121,14 +210,86 @@ class _ExecutionMixin:
                     "trade_protected",
                     finalization_time=time.time() + 168 * 3600,
                 )
+                # v12.5: Record trade outcome (negative PnL = cost)
+                if hasattr(self, "risk"):
+                    self.risk.record_trade_outcome(
+                        pnl_usd=-base_price,  # spend is a negative PnL event
+                        trade_type="buy",
+                        item_title=title,
+                    )
+                # v12.5: Telegram buy notification (throttled to 1/min)
+                asyncio.create_task(
+                    notifier.buy(
+                        title=title,
+                        price_usd=base_price,
+                        expected_sell_usd=list_price,
+                        strategy=item_data.get("strategy", "intra_spread"),
+                    )
+                )
 
             # v12.3: Only record local spend/target if the actual buy succeeded.
             # For DRY_RUN, always record (simulated). For production, gate on
             # successful_titles which is populated from the buy response.
             is_dry = os.getenv("DRY_RUN", "true").lower() == "true"
             if is_dry or title in successful_titles:
+                # v12.5: Pre-trade risk check (production path)
+                if not is_dry and hasattr(self, "risk"):
+                    risk_check = self.risk.pre_trade_check(
+                        proposed_size_usd=base_price,
+                        current_equity_usd=current_balance,
+                        game_id=game_id,
+                        item_title=title,
+                    )
+                    if not risk_check.allowed:
+                        logger.warning(
+                            f"[RISK] BLOCKED buy {title} @ ${base_price:.2f}: "
+                            f"{risk_check.reason}"
+                        )
+                        try:
+                            price_db.record_risk_event(
+                                "pre_trade_block",
+                                "warning",
+                                f"{title} @ ${base_price:.2f}: {risk_check.reason}",
+                            )
+                        except Exception:
+                            pass
+                        continue
                 price_db.record_placed_target(item_id, title, base_price)
                 self.liquidity.record_spend(base_price)
+                # v12.5: Record trade outcome (negative PnL = spend)
+                if hasattr(self, "risk"):
+                    self.risk.record_trade_outcome(
+                        pnl_usd=-base_price,
+                        trade_type="buy",
+                        item_title=title,
+                    )
+                # v12.5: Production-side dm_item_id attach. If we didn't
+                # capture it from the buy response above (e.g. the response
+                # didn't include Items), the inventory sync will pick it up
+                # within the next cycle.
+                if not is_dry and new_dm_item_id:
+                    # Find the most recent virtual_inventory row for this
+                    # title that has no dm_item_id and attach it.
+                    row = price_db.state_conn.execute(
+                        "SELECT id FROM virtual_inventory "
+                        "WHERE hash_name = ? AND status = 'idle' "
+                        "AND (dm_item_id IS NULL OR dm_item_id = '') "
+                        "ORDER BY id DESC LIMIT 1",
+                        (title,),
+                    ).fetchone()
+                    if row:
+                        price_db.attach_dm_item_id(int(row["id"]), new_dm_item_id)
+                # v12.5: Production-side buy notification (in addition to the
+                # DRY notification above; one will no-op because of the throttle)
+                if not is_dry:
+                    asyncio.create_task(
+                        notifier.buy(
+                            title=title,
+                            price_usd=base_price,
+                            expected_sell_usd=list_price,
+                            strategy=item_data.get("strategy", "intra_spread"),
+                        )
+                    )
             else:
                 logger.info(
                     f"Skipping local record for {title!r} — buy did not succeed"

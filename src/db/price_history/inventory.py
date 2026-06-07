@@ -153,3 +153,228 @@ class _InventoryMixin:
                    WHERE id = ?""",
                 (sell_price, fee_paid, profit, time.time(), item_id),
             )
+
+    # ------------------------------------------------------------------
+    # v12.5: Production sell-side helpers
+    # ------------------------------------------------------------------
+    def attach_dm_item_id(self, row_id: int, dm_item_id: str) -> None:
+        """Link a virtual_inventory row to its real DMarket itemId.
+
+        Called when we either:
+        - Bought an item and DMarket returned the itemId in the buy response
+        - Pulled an item from DMarket inventory sync and want to track it locally
+        """
+        if not dm_item_id:
+            return
+        with self.state_conn:
+            self.state_conn.execute(
+                "UPDATE virtual_inventory SET dm_item_id = ? WHERE id = ?",
+                (dm_item_id, row_id),
+            )
+
+    def find_by_dm_item_id(self, dm_item_id: str) -> sqlite3.Row | None:
+        """Look up virtual_inventory by DMarket's itemId (for inventory sync)."""
+        if not dm_item_id:
+            return None
+        return self.state_conn.execute(
+            "SELECT * FROM virtual_inventory WHERE dm_item_id = ? ORDER BY id DESC LIMIT 1",
+            (dm_item_id,),
+        ).fetchone()
+
+    def find_by_dm_offer_id(self, dm_offer_id: str) -> sqlite3.Row | None:
+        """Look up virtual_inventory by DMarket's offerId (for sell notifications)."""
+        if not dm_offer_id:
+            return None
+        return self.state_conn.execute(
+            "SELECT * FROM virtual_inventory WHERE dm_offer_id = ? ORDER BY id DESC LIMIT 1",
+            (dm_offer_id,),
+        ).fetchone()
+
+    def mark_listed(self, row_id: int, dm_offer_id: str, list_price: float) -> None:
+        """Mark a virtual item as successfully listed on DMarket.
+
+        Status flow: idle → listed (or re-listed: selling → listed).
+        listed_at is the timestamp used by reprice_unsold_offers to detect
+        stale listings (older than REPRICE_AFTER_HOURS).
+        """
+        with self.state_conn:
+            self.state_conn.execute(
+                """UPDATE virtual_inventory
+                   SET status = 'listed',
+                       dm_offer_id = ?,
+                       sell_price = ?,
+                       listed_at = ?,
+                       list_error = NULL
+                   WHERE id = ?""",
+                (dm_offer_id, list_price, time.time(), row_id),
+            )
+
+    def mark_list_failed(self, row_id: int, error_msg: str) -> None:
+        """Record a failed listing attempt; status stays 'idle' so we retry next cycle."""
+        with self.state_conn:
+            self.state_conn.execute(
+                """UPDATE virtual_inventory
+                   SET list_error = ?
+                   WHERE id = ?""",
+                (error_msg[:500] if error_msg else None, row_id),
+            )
+
+    def get_stale_listings(self, max_age_seconds: int) -> List[sqlite3.Row]:
+        """Get items that have been listed for >max_age_seconds.
+
+        Used by reprice_unsold_offers to find listings that haven't sold.
+        """
+        cutoff = time.time() - max_age_seconds
+        return self.state_conn.execute(
+            """SELECT * FROM virtual_inventory
+               WHERE status = 'listed'
+                 AND listed_at IS NOT NULL
+                 AND listed_at < ?
+               ORDER BY listed_at ASC""",
+            (cutoff,),
+        ).fetchall()
+
+    def get_recent_sales(self, since_ts: float) -> List[sqlite3.Row]:
+        """Get items sold since timestamp (for daily PnL calc)."""
+        return self.state_conn.execute(
+            """SELECT * FROM virtual_inventory
+               WHERE status = 'sold' AND sold_at > ?
+               ORDER BY sold_at DESC""",
+            (since_ts,),
+        ).fetchall()
+
+    def get_daily_realized_pnl(self, since_ts: float) -> float:
+        """Sum of profit on items sold since timestamp (for daily briefing)."""
+        row = self.state_conn.execute(
+            "SELECT COALESCE(SUM(profit), 0) as pnl "
+            "FROM virtual_inventory WHERE status = 'sold' AND sold_at > ?",
+            (since_ts,),
+        ).fetchone()
+        return float(row["pnl"] or 0.0)
+
+    def has_dm_item_id(self, row_id: int) -> bool:
+        """Check if a virtual_inventory row already has its dm_item_id linked."""
+        row = self.state_conn.execute(
+            "SELECT dm_item_id FROM virtual_inventory WHERE id = ?", (row_id,)
+        ).fetchone()
+        return bool(row and row["dm_item_id"])
+
+    # ------------------------------------------------------------------
+    # v12.5: Equity snapshots + risk events
+    # ------------------------------------------------------------------
+    def record_equity_snapshot(
+        self,
+        cash: float,
+        assets: float,
+        total: float,
+        realized_pnl: float,
+        note: str = "",
+    ) -> int:
+        """
+        Record an equity snapshot for crash-recovery and historical analysis.
+
+        Snapshots are deduplicated per UTC day — calling this multiple times
+        on the same day updates the existing snapshot in-place.
+
+        Returns the snapshot row id.
+        """
+        today = time.strftime("%Y-%m-%d", time.gmtime())
+        ts = time.time()
+        with self.state_conn:
+            existing = self.state_conn.execute(
+                "SELECT id FROM equity_snapshots WHERE snapshot_date = ?", (today,)
+            ).fetchone()
+            if existing:
+                self.state_conn.execute(
+                    """UPDATE equity_snapshots
+                       SET taken_at = ?, cash = ?, assets = ?, total = ?,
+                           realized_pnl = ?, note = ?
+                       WHERE id = ?""",
+                    (ts, cash, assets, total, realized_pnl, note, existing["id"]),
+                )
+                return int(existing["id"])
+            cur = self.state_conn.execute(
+                """INSERT INTO equity_snapshots
+                   (taken_at, snapshot_date, cash, assets, total, realized_pnl, note)
+                   VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                (ts, today, cash, assets, total, realized_pnl, note),
+            )
+            return int(cur.lastrowid)
+
+    def get_equity_snapshot_today(self) -> dict | None:
+        """Get today's equity snapshot (or None if not yet recorded)."""
+        today = time.strftime("%Y-%m-%d", time.gmtime())
+        row = self.state_conn.execute(
+            """SELECT * FROM equity_snapshots WHERE snapshot_date = ?
+               ORDER BY id DESC LIMIT 1""",
+            (today,),
+        ).fetchone()
+        if not row:
+            return None
+        return {
+            "cash": row["cash"],
+            "assets": row["assets"],
+            "total": row["total"],
+            "realized_pnl": row["realized_pnl"],
+            "note": row["note"] or "",
+            "taken_at": row["taken_at"],
+        }
+
+    def get_equity_snapshots(self, days: int = 30) -> list[dict]:
+        """Get last N days of equity snapshots (oldest first)."""
+        cutoff = time.time() - days * 86400
+        rows = self.state_conn.execute(
+            """SELECT * FROM equity_snapshots
+               WHERE taken_at > ?
+               ORDER BY taken_at ASC""",
+            (cutoff,),
+        ).fetchall()
+        return [
+            {
+                "date": r["snapshot_date"],
+                "cash": r["cash"],
+                "assets": r["assets"],
+                "total": r["total"],
+                "realized_pnl": r["realized_pnl"],
+                "note": r["note"] or "",
+                "taken_at": r["taken_at"],
+            }
+            for r in rows
+        ]
+
+    def record_risk_event(
+        self,
+        event_type: str,
+        severity: str = "warning",
+        details: str = "",
+    ) -> int:
+        """Record a risk event (soft-halt, daily-halt, drawdown-trip, etc.).
+
+        Used for audit trail + daily briefing diagnostics.
+        """
+        with self.state_conn:
+            cur = self.state_conn.execute(
+                """INSERT INTO risk_events (ts, event_type, severity, details)
+                   VALUES (?, ?, ?, ?)""",
+                (time.time(), event_type, severity, details[:1000]),
+            )
+            return int(cur.lastrowid)
+
+    def get_risk_events_today(self) -> list[dict]:
+        """Get today's risk events (for the daily briefing)."""
+        midnight = time.time() - (time.time() % 86400)
+        rows = self.state_conn.execute(
+            """SELECT * FROM risk_events
+               WHERE ts > ?
+               ORDER BY ts DESC""",
+            (midnight,),
+        ).fetchall()
+        return [
+            {
+                "ts": r["ts"],
+                "type": r["event_type"],
+                "severity": r["severity"],
+                "details": r["details"],
+            }
+            for r in rows
+        ]

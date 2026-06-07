@@ -24,7 +24,15 @@ class VaultProvider:
         from pathlib import Path
         project_root = Path(__file__).resolve().parent.parent.parent
         env_path = project_root / ".env"
-        load_dotenv(dotenv_path=str(env_path), override=True)
+        # v12.5: override=False (default). We MUST NOT clobber an env var
+        # that was explicitly set on the command line / by the orchestrator
+        # (e.g. `DRY_RUN=false python -m src.__main__`). Previously
+        # override=True caused a subtle bug: the .env value would silently
+        # win over runtime env vars, which meant that flipping DRY_RUN
+        # via the command line had no effect after any code path that
+        # imported dmarket_api_client (which transitively imports this
+        # vault at module load time).
+        load_dotenv(dotenv_path=str(env_path), override=False)
         vault_url = os.getenv("VAULT_ADDR")
         vault_token = os.getenv("VAULT_TOKEN")
         
