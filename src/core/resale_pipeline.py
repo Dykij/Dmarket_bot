@@ -16,18 +16,17 @@ Integrates arXiv improvements:
 - Multi-market price validation
 """
 
-import asyncio
 import logging
 import os
 import time
 from typing import Any, Dict, List, Optional, Tuple
 
 from src.api.dmarket_api_client import DMarketAPIClient
-from src.api.cs2cap_oracle import CS2CapOracle, CrossMarketData
+from src.api.cs2cap_oracle import CrossMarketData
 from src.api.oracle_factory import OracleFactory
 from src.config import Config
 from src.db.price_history import price_db
-from src.risk.price_validator import validate_arbitrage_profit, validate_slippage, PriceValidationError
+from src.risk.price_validator import validate_arbitrage_profit, PriceValidationError
 from src.analytics.self_reflection import self_reflection
 
 logger = logging.getLogger("ResalePipeline")
@@ -159,7 +158,7 @@ class ResalePipeline:
             "offerId": item_id,
             "price": {"amount": str(price_cents), "currency": "USD"}
         }
-        result = await self.api.buy_items([buy_offer])
+        await self.api.buy_items([buy_offer])
         is_dry_run = os.getenv("DRY_RUN", "true").lower() == "true"
 
         # Record in virtual inventory

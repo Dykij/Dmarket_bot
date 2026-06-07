@@ -1,9 +1,12 @@
 import json
 import re
 import structlog
-from typing import Annotated, Optional
 import pandera as pa
 from pydantic import BaseModel, root_validator, Field
+
+# v0.20+ renamed SchemaModel → DataFrameModel; alias for back-compat.
+if not hasattr(pa, "SchemaModel"):
+    pa.SchemaModel = pa.DataFrameModel  # type: ignore[attr-defined]
 
 # --- Phase 1.1: Rust Integration ---
 try:
@@ -18,12 +21,12 @@ logger = structlog.get_logger("DmarketValidator")
 class DmarketSkinSchema(pa.SchemaModel):
     item_id: pa.typing.Series[str] = pa.Field(str_matches=r"^[0-9A-Fa-f]+$")
     price_usd: pa.typing.Series[float] = pa.Field(ge=0.01)
-    name: pa.typing.Series[str] = pa.Field(allow_duplicates=True)
-    
+    name: pa.typing.Series[str] = pa.Field()  # allow_duplicates removed in pandera 0.20+
+
     @pa.check("name", name="prompt_injection_check")
     def sanitize_input(cls, item_names: pa.typing.Series[str]) -> pa.typing.Series[bool]:
         """Prompt Injection sanitization. Ensures no system commands or escape chars inside the skin name."""
-        return item_names.str.contains(r"[\<\>\{\}\$\`\\]") == False
+        return not item_names.str.contains(r"[\<\>\{\}\$\`\\]")
 
 class ParsedSkinData(BaseModel):
     item_id: str = Field(description="DMarket Skin Unique ID")
@@ -37,7 +40,6 @@ class ParsedSkinData(BaseModel):
         # Remove potentially malicious characters from string inputs
         sanitized = re.sub(r'[\<\>\{\}\$\`\\]', '', name)
         values["name"] = sanitized
-        return values
         return values
 
 def validate_batch_response(raw_json: str):

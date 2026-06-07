@@ -1,7 +1,6 @@
 import asyncio
 import os
 import sys
-import json
 import logging
 from datetime import datetime
 
@@ -56,7 +55,7 @@ async def verify_isolation():
         # Try to import the CORE engine into a trading context
         from src.llm_engine import LLMEngine
         engine = LLMEngine(role="SRE")
-        print(f"  ✅ Successfully imported Core LLMEngine into DMarket context.")
+        print("  ✅ Successfully imported Core LLMEngine into DMarket context.")
         print(f"  ✅ Model Path: {engine.model_path}")
     except Exception as e:
         print(f"  ❌ Import failed: {e}")

@@ -10,7 +10,7 @@ Features:
 
 import logging
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from src.api.dmarket_api_client import DMarketAPIClient
 from src.api.oracle_factory import OracleFactory

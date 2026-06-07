@@ -27,6 +27,7 @@ class _ExecutionMixin:
         *,
         instant_buys: List[Dict[str, Any]],
         current_balance: float,
+        game_id: str = "",
     ) -> None:
         """
         Execute a batch of instant buys produced by the filter loop.

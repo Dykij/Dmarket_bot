@@ -84,7 +84,7 @@ class CSFloatOracle:
         try:
             async with session.get(url) as response:
                 if response.status == 429:
-                    logger.warning(f"[CSFloat] 429 Rate Limit! Penalizing delay in State DB.")
+                    logger.warning("[CSFloat] 429 Rate Limit! Penalizing delay in State DB.")
                     self.request_delay = min(self.request_delay * 2.0, 20.0) 
                     price_db.save_state("csfloat_delay", str(self.request_delay))
                     raise RateLimitException("429 Too Many Requests")

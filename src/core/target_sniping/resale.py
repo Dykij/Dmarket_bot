@@ -489,7 +489,7 @@ class _ResaleMixin:
         from src.config import Config
 
         is_dry = os.getenv("DRY_RUN", "true").lower() == "true"
-        cutoff = time.time() - (Config.REPRICE_AFTER_HOURS * 3600)
+        time.time() - (Config.REPRICE_AFTER_HOURS * 3600)
         stale = price_db.get_stale_listings(int(Config.REPRICE_AFTER_HOURS * 3600))
         if not stale:
             return

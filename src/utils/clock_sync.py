@@ -140,7 +140,6 @@ class ClockSync:
                 local_ts = (local_ts_before + local_ts_after) / 2.0
 
                 new_offset = server_ts - local_ts
-                old_offset = self._offset
                 self._offset = new_offset
                 self._last_sync = time.time()
                 self._sync_count += 1

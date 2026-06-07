@@ -8,7 +8,6 @@ Mixed into `SnipingLoop` (see `core.py`).
 from __future__ import annotations
 
 import logging
-import os
 from typing import Any, Dict
 
 from src.db.price_history import price_db

@@ -28,7 +28,7 @@ from .fees import _FeesMixin
 from .market import _MarketMixin
 from .offers import _OffersMixin
 from .targets import _TargetsMixin
-from .backoff import CircuitBreaker, CircuitOpenError, jittered_sleep, should_trip
+from .backoff import CircuitBreaker, CircuitOpenError, should_trip
 
 logger = structlog.get_logger("DMarketAPI")
 
@@ -263,7 +263,7 @@ class DMarketAPIClient(  # type: ignore[misc]
             raise
         except CircuitOpenError:
             raise
-        except aiohttp.ClientResponseError as e:
+        except aiohttp.ClientResponseError:
             # Already handled above for trippable codes; for non-trippable
             # (4xx) the breaker was not touched, so just re-raise.
             raise

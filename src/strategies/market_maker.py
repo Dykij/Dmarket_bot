@@ -8,7 +8,7 @@ Improvements:
 4. Better volatility estimation (not just spread proxy)
 """
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 from src.strategies.base import BaseStrategy
 from src.config import Config
 
@@ -67,7 +67,7 @@ class MarketMaker(BaseStrategy):
         )
 
         # --- Position Sizing (with reflection adjustment) ---
-        adjusted_risk = self_reflection.get_adjusted_risk_pct(Config.MAX_POSITION_RISK_PCT, reflection)
+        self_reflection.get_adjusted_risk_pct(Config.MAX_POSITION_RISK_PCT, reflection)
         quantity = self.calculate_position_size(
             current_balance=current_balance,
             item_price=target_price,

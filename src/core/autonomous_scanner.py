@@ -32,7 +32,6 @@ import os
 import sys
 import logging
 import time
-import traceback
 from dotenv import load_dotenv
 from pathlib import Path
 
@@ -47,7 +46,6 @@ from src.risk.fatal_errors import (
     AuthError,
     ConfigError,
     classify,
-    is_fatal,
 )
 from src.risk.error_reporter import ErrorReporter, _write_exit_state, fatal_exit
 

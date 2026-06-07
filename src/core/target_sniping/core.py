@@ -25,7 +25,6 @@ import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from src.api.cs2cap_oracle import RateLimitException
 from src.api.dmarket_api_client import DMarketAPIClient
 from src.api.cs2cap_cache import CS2CapCache
 from src.api.oracle_factory import OracleFactory
@@ -33,7 +32,6 @@ from src.analytics.rare_valuation import RareValuationEngine
 from src.analytics.stickers_evaluator import StickerEvaluator
 from src.config import Config
 from src.core.event_shield import event_shield
-from src.core.sandbox_scenarios import scenario_engine
 from src.core.target_sniping.execution import _ExecutionMixin
 from src.core.target_sniping.filter import _FilterMixin
 from src.core.target_sniping.inventory import _InventoryMixin
@@ -41,7 +39,7 @@ from src.core.target_sniping.pricing import _PricingMixin
 from src.core.target_sniping.resale import _ResaleMixin
 from src.core.target_sniping.sandbox import _SandboxMixin
 from src.db.price_history import price_db
-from src.risk.fatal_errors import classify, is_fatal
+from src.risk.fatal_errors import classify
 from src.risk.error_reporter import ErrorReporter
 from src.risk.liquidity_manager import LiquidityManager
 from src.telegram.notifier import notifier
@@ -182,7 +180,6 @@ class SnipingLoop(  # type: ignore[misc]
         # v12.5: Launch daily briefing scheduler (background task).
         # Sends a startup briefing after 30s, then one every UTC midnight.
         try:
-            from src.telegram.notifier import notifier
             self.briefing_scheduler = DailyBriefingScheduler(
                 risk=self.risk,
                 get_balance=lambda: self.client.get_real_balance(),
@@ -585,7 +582,8 @@ class SnipingLoop(  # type: ignore[misc]
             # --- Step 5: Execute instant buys (delegated) ---
             if instant_buys:
                 await self._execute_instant_buys(
-                    instant_buys=instant_buys, current_balance=current_balance
+                    instant_buys=instant_buys, current_balance=current_balance,
+                    game_id=game_id,
                 )
 
             if self.deep_scan_counter % self.resale_cycle_limit == 0:

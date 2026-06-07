@@ -1,5 +1,4 @@
 import os
-import sys
 from typing import Any
 from src.config import Config
 

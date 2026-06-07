@@ -335,11 +335,6 @@ async def cmd_test_trade(message: types.Message):
                 for prov, price in sorted(cross_data.provider_prices.items(), key=lambda x: x[1])[:5]:
                     msg += f"  {prov}: ${price:.2f}\n"
 
-            if indicators:
-                rsi = indicators.get("rsi", 50)
-                msg += f"\nRSI: {rsi:.1f}\n"
-                msg += f"BB Position: {indicators.get('bb_position', 0.5):.2f}\n"
-
             await message.answer(msg)
 
         except PriceValidationError as pe:

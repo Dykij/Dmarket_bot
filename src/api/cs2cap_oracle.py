@@ -320,9 +320,9 @@ class CS2CapOracle:
             price_db.save_state("cs2cap_calls_month", f"{saved_month}:{count}")
             # Soft warning thresholds (Starter = 50K)
             if count == 40000:
-                logger.warning(f"[CS2Cap] Monthly usage: 40K/50K (80%) — slow down")
+                logger.warning("[CS2Cap] Monthly usage: 40K/50K (80%) — slow down")
             elif count == 45000:
-                logger.warning(f"[CS2Cap] Monthly usage: 45K/50K (90%) — critical")
+                logger.warning("[CS2Cap] Monthly usage: 45K/50K (90%) — critical")
         except Exception:
             pass
 

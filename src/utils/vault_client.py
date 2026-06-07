@@ -1,6 +1,5 @@
 import logging
 import hvac
-import os
 from typing import Optional
 
 logger = logging.getLogger("VaultClient")

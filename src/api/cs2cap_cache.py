@@ -32,7 +32,7 @@ import asyncio
 import logging
 import os
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from src.api.cs2cap_oracle import BidsSnapshot, CS2CapOracle, PriceSnapshot
 from src.config import Config

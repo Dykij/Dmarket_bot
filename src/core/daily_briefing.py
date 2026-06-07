@@ -236,7 +236,7 @@ class DailyBriefingScheduler:
             if ok:
                 logger.info(f"[Briefing] Sent ({note})")
             else:
-                logger.info(f"[Briefing] Notifier returned False (probably disabled)")
+                logger.info("[Briefing] Notifier returned False (probably disabled)")
             return ok
         except Exception as e:
             logger.exception(f"[Briefing] Failed to send ({note}): {e}")

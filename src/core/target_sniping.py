@@ -17,7 +17,7 @@ import logging
 import os
 import gc
 import time
-from typing import List, Dict, Any, Optional
+from typing import Dict, Optional
 from src.api.dmarket_api_client import DMarketAPIClient
 from src.api.oracle_factory import OracleFactory
 from src.api.cs2cap_oracle import CS2CapOracle, CS2CapRateLimit, CrossMarketData
@@ -29,7 +29,7 @@ from src.db.price_history import price_db
 from src.core.event_shield import event_shield
 from src.core.sandbox_scenarios import scenario_engine
 from src.api.csfloat_oracle import RateLimitException
-from src.analytics.self_reflection import self_reflection, ReflectionResult
+from src.analytics.self_reflection import self_reflection
 from src.strategies.market_maker import MarketMaker
 from src.strategies.cross_market import CrossMarketStrategy
 from src.core.resale_pipeline import ResalePipeline
@@ -95,7 +95,7 @@ class SnipingLoop:
                     await self.run_cycle(game_id)
 
                 # Run self-reflection periodically
-                reflection = await self_reflection.maybe_run_reflection(self.deep_scan_counter)
+                await self_reflection.maybe_run_reflection(self.deep_scan_counter)
 
                 # Periodically check inventory for resale (every 5 cycles)
                 if self.deep_scan_counter % 5 == 0:
@@ -297,7 +297,7 @@ class SnipingLoop:
 
                 # --- Profit validation (with self-reflection adjustment) ---
                 try:
-                    net_margin = validate_arbitrage_profit(
+                    validate_arbitrage_profit(
                         buy_price=target_buy_price,
                         expected_sell_price=safe_expected_sell,
                         fee_markup=fee_rate,
@@ -322,7 +322,7 @@ class SnipingLoop:
                     strategy_result = self.cross_market.evaluate_opportunity_enhanced(
                         market_data=market_data,
                         cross_market_data=cross_market_data,
-                        indicators=indicators,
+                        indicators=None,  # removed in Phase 8; pass None for now
                         turnover_penalty=turnover_penalty,
                         reflection_result=reflection,
                     )

@@ -6,7 +6,6 @@ import time
 import random
 import urllib.parse
 from typing import Optional, Dict, List, Any
-from functools import wraps
 from nacl.signing import SigningKey
 import structlog
 from tenacity import retry, stop_after_attempt, wait_exponential
@@ -17,7 +16,6 @@ class SecurityViolation(Exception):
     """Raised when request parameters violate safety allowlists."""
     pass
 
-from src.utils.vault import vault
 
 class DMarketAPIClient:
     """ DMarket Trading API v2 Client (TargetSniper Optimized Async) """

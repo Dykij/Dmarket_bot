@@ -5,7 +5,12 @@ import os
 import time
 from typing import Literal
 
-import grpc
+try:
+    import grpc
+    HAS_GRPC = True
+except ImportError:
+    HAS_GRPC = False
+    grpc = None  # type: ignore[assignment]
 from pydantic import BaseModel, Field
 
 # This would ideally be generated from .proto files

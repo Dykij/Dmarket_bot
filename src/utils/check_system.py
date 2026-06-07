@@ -1,8 +1,6 @@
 import asyncio
 import os
 import sys
-import json
-import aiohttp
 from datetime import datetime
 
 # Настройка путей для работы внутри D:\Dmarket_bot
@@ -11,7 +9,7 @@ sys.path.append(BASE_DIR)
 
 async def check_dmarket_auth():
     """Проверка валидности ключей и авторизации DMarket."""
-    print(f"[1/2] Проверка авторизации DMarket API (Ed25519)...")
+    print("[1/2] Проверка авторизации DMarket API (Ed25519)...")
     try:
         from dmarket_auth import DMarketAuth
         auth = DMarketAuth()
@@ -40,7 +38,7 @@ async def check_persistence_layer():
     if os.path.exists(db_path):
         print(f"  ✅ База данных SQLite найдена: {db_path}")
     else:
-        print(f"  ⚠️ Предупреждение: База данных еще не создана.")
+        print("  ⚠️ Предупреждение: База данных еще не создана.")
     
     try:
         test_file = os.path.join(BASE_DIR, "storage_test.tmp")

@@ -29,7 +29,7 @@ class DynamicRiskManager:
                 logger.warning(f"SOFT HALT ACTIVE (Drawdown: {current_drawdown*100:.2f}%). Rejecting BUY order to reduce exposure.")
                 return None
             else:
-                logger.info(f"SOFT HALT ACTIVE. Permitting SELL order for risk reduction.")
+                logger.info("SOFT HALT ACTIVE. Permitting SELL order for risk reduction.")
                 
         # 2. ADAPTIVE SIZING
         adjusted_amount = original_amount

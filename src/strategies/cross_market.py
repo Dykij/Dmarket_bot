@@ -53,7 +53,6 @@ class CrossMarketStrategy(BaseStrategy):
 
         # --- 1. Direct Cross-Market Arbitrage ---
         # Can we buy on DMarket and sell on another market for profit?
-        best_sell_price = cross_market_data.global_min_ask  # We'd sell here
 
         # Find all sell prices above our buy price (potential sell venues)
         profitable_sells = [
@@ -72,7 +71,7 @@ class CrossMarketStrategy(BaseStrategy):
 
         # Best sell venue
         sell_provider, sell_price = max(profitable_sells, key=lambda x: x[1])
-        gross_margin_pct = ((sell_price - dmarket_price) / dmarket_price) * 100.0
+        ((sell_price - dmarket_price) / dmarket_price) * 100.0
 
         # --- 2. Apply Fee/Slippage Model ---
         # DMarket fee (5%) + potential sell-side fee on destination

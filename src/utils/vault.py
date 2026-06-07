@@ -1,7 +1,5 @@
 import os
-import ctypes
 import logging
-from typing import Optional
 from dotenv import load_dotenv
 from src.utils.vault_client import VaultClient
 

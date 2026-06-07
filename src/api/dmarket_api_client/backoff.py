@@ -19,15 +19,12 @@ Solution: circuit breaker pattern + jittered backoff.
 
 from __future__ import annotations
 
-import asyncio
 import logging
 import random
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
-from typing import Optional
 
-import aiohttp
 
 logger = logging.getLogger("DMarketAPI.Backoff")
 

@@ -47,6 +47,9 @@ PyNaCl>=1.6.0                      # Ed25519 signatures for DMarket API
 # Monitoring & Logging
 sentry-sdk>=2.40.0                 # Latest Sentry SDK
 prometheus-client>=0.23.0          # Latest Prometheus
+fastapi>=0.110.0                   # Telemetry HTTP server (Prometheus /metrics endpoint)
+uvicorn>=0.29.0                    # ASGI server for fastapi (telemetry.py)
+starlette>=0.40.0                  # Required by fastapi (telemetry.py)
 
 # Development Dependencies
 # Code Quality
@@ -60,6 +63,11 @@ vulture>=2.14                      # Dead code detection
 interrogate>=1.7.0                 # Docstring coverage
 pyupgrade>=3.21.0                  # Syntax modernization
 radon>=6.0.1                       # Code complexity metrics
+
+# Optional / Advanced Features (not required for core bot)
+# pandera>=0.20.0                  # DataFrame validation in dmarket_parser (install if using)
+# grpcio>=1.60.0                   # gRPC trade gate (experimental, src/risk/trade_gate_grpc.py)
+# market_data_fetcher              # Manual test script dep (src/utils/test_live_prices.py)
 
 # Testing
 pytest>=8.4.0                      # Latest pytest

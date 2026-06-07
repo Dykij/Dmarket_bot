@@ -154,7 +154,7 @@ class _FilterMixin:
             cs_keys = list((cs_snapshots or {}).keys())[:3]
             cs_bid_keys = list((cs_bids or {}).keys())[:3]
             logger.info(
-                f"[DIAG] item={title!r} base=\${base_price:.2f} | "
+                f"[DIAG] item={title!r} base=${base_price:.2f} | "
                 f"agg_titles={len(agg_prices)} (sample={agg_keys}) | "
                 f"cs_snap_titles={len(cs_snapshots or {})} (sample={cs_keys}) | "
                 f"cs_bid_titles={len(cs_bids or {})} (sample={cs_bid_keys})"
@@ -163,9 +163,9 @@ class _FilterMixin:
         if cs_snapshots and title in cs_snapshots:
             agg_for_this = agg_prices.get(title, {})
             logger.info(
-                f"[DIAG-TOP5] {title!r} base=\${base_price:.2f} | "
-                f"DM_bid=\${agg_for_this.get('best_bid', 0):.2f} "
-                f"DM_ask=\${agg_for_this.get('best_ask', 0):.2f}"
+                f"[DIAG-TOP5] {title!r} base=${base_price:.2f} | "
+                f"DM_bid=${agg_for_this.get('best_bid', 0):.2f} "
+                f"DM_ask=${agg_for_this.get('best_ask', 0):.2f}"
             )
 
         # --- Strategy A: bid-ask spread analysis (needed by cross-market threshold) ---
@@ -358,7 +358,7 @@ class _FilterMixin:
             fee_rate = min(fee_rate, cached_low_fee)
 
         try:
-            net_margin = validate_arbitrage_profit(
+            validate_arbitrage_profit(
                 buy_price=base_price,
                 expected_sell_price=list_price,
                 fee_markup=fee_rate,
