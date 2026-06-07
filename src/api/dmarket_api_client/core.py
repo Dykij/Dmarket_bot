@@ -28,6 +28,7 @@ from .fees import _FeesMixin
 from .market import _MarketMixin
 from .offers import _OffersMixin
 from .targets import _TargetsMixin
+from .backoff import CircuitBreaker, CircuitOpenError, jittered_sleep, should_trip
 
 logger = structlog.get_logger("DMarketAPI")
 
@@ -97,6 +98,18 @@ class DMarketAPIClient(  # type: ignore[misc]
         # Fee Cache (v7.7)
         self._fee_cache: Dict[str, Dict[str, Any]] = {}
         self._fee_cache_ttl = 43200  # 12 hours
+
+        # v12.4 P1: Circuit breaker for DMarket endpoints
+        # Opens after 3 consecutive 429/5xx failures, exponentially backs
+        # off (30s → 60s → 120s → 300s) with jitter to prevent thundering
+        # herd. Protects against OfferNotFound races and rate-limit storms.
+        self._breaker = CircuitBreaker(
+            name="dmarket",
+            fail_threshold=3,
+            base_cooldown=30.0,
+            max_cooldown=300.0,
+            jitter_pct=0.2,
+        )
 
     async def get_session(self) -> aiohttp.ClientSession:
         """Return the shared aiohttp session, creating it on first use."""
@@ -179,6 +192,16 @@ class DMarketAPIClient(  # type: ignore[misc]
                 return {"status": "success", "simulated": True, "message": "Simulation Mode Active"}
             return {}
 
+        # v12.4 P1: Circuit breaker check
+        if not self._breaker.allow_request():
+            cooldown_remaining = (
+                self._breaker.current_cooldown - (time.time() - self._breaker.opened_at)
+            )
+            raise CircuitOpenError(
+                breaker_name=self._breaker.name,
+                cooldown_remaining=max(0.0, cooldown_remaining),
+            )
+
         await self._wait_for_rate_limit()
 
         # v12.2: Use server-corrected time for X-Sign-Date
@@ -207,16 +230,44 @@ class DMarketAPIClient(  # type: ignore[misc]
         url = f"{self.BASE_URL}{api_path}"
         session = await self.get_session()
 
-        async with session.request(
-            method, url, headers=headers, json=body if body else None
-        ) as response:
-            if response.status != 200:
-                text = await response.text()
-                raise aiohttp.ClientResponseError(
-                    request_info=response.request_info,
-                    history=response.history,
-                    status=response.status,
-                    message=f"DMarket API Error: {text}",
-                    headers=response.headers,
-                )
-            return await response.json()
+        try:
+            async with session.request(
+                method, url, headers=headers, json=body if body else None
+            ) as response:
+                if response.status != 200:
+                    text = await response.text()
+                    # v12.4: Trip the breaker for 429 / 5xx (rate-limit / server errors)
+                    if should_trip(response.status):
+                        self._breaker.record_failure(
+                            aiohttp.ClientResponseError(
+                                request_info=response.request_info,
+                                history=response.history,
+                                status=response.status,
+                                message=f"DMarket API Error: {text}",
+                                headers=response.headers,
+                            )
+                        )
+                    raise aiohttp.ClientResponseError(
+                        request_info=response.request_info,
+                        history=response.history,
+                        status=response.status,
+                        message=f"DMarket API Error: {text}",
+                        headers=response.headers,
+                    )
+                # Success: close the breaker if it was HALF_OPEN
+                self._breaker.record_success()
+                return await response.json()
+        except (asyncio.TimeoutError, aiohttp.ClientConnectionError) as e:
+            # Network errors count as breaker failures
+            self._breaker.record_failure(e)
+            raise
+        except CircuitOpenError:
+            raise
+        except aiohttp.ClientResponseError as e:
+            # Already handled above for trippable codes; for non-trippable
+            # (4xx) the breaker was not touched, so just re-raise.
+            raise
+
+    def circuit_breaker_status(self) -> dict:
+        """Diagnostic snapshot of the circuit breaker state."""
+        return self._breaker.status()

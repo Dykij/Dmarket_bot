@@ -50,6 +50,13 @@ class Config:
     MIN_PRICE_USD = 0.50      # Ignore cheap trash (<$0.50)
     MAX_PRICE_USD = float(os.getenv("MAX_PRICE_USD", "20.00"))  # Ignore high-risk items (>$X)
 
+    # --- v12.4 Balance Protection (Hard Cap) ---
+    # Instant-buy path is restricted to items < $5 to protect against
+    # 7-day trade-lock freeze. With balance $43, 3-4 concurrent holds
+    # ($15-20) would freeze 35-50% of the bank. Cap at $5 keeps at least
+    # $30 liquid for continued turnover.
+    MAX_SNIPING_PRICE_USD = float(os.getenv("MAX_SNIPING_PRICE_USD", "5.00"))
+
     MAX_OPEN_TARGETS = 50     # Limit active buy orders (Safety cap)
 
     # --- Performance ---
@@ -66,6 +73,14 @@ class Config:
     CS2CAP_SELECTIVE_MODE = True       # True = top-K only; False = all (uses more quota)
     AGG_SCAN_TOP_N = 20                # v12.3: top-N most-traded items from agg-prices scan per cycle
     LISTINGS_FETCH_LIMIT = 30          # v12.3: N listings per title (DMarket doesn't sort by price; higher = more chance of getting the actual cheapest)
+
+    # --- v12.4 In-Memory CS2Cap Cache ---
+    # P0-B: Eliminate per-cycle CS2Cap calls. Background task refreshes
+    # the top-100 most-traded titles every N seconds. In-cycle validation
+    # is pure dict lookups (sub-ms latency).
+    CS2CAP_CACHE_TTL_SECONDS = int(os.getenv("CS2CAP_CACHE_TTL_SECONDS", "300"))  # 5 min
+    CS2CAP_CACHE_REFRESH_TOP_N = 100   # how many titles to keep warm
+    CS2CAP_CACHE_REFRESH_ON_START = True  # prime cache before first cycle
 
     # --- Advanced Attributes (Float/Phase) ---
     PREFER_LOW_FLOAT = True

@@ -127,6 +127,22 @@ class _FilterMixin:
         if base_price > self.buy_budget or base_price > current_balance:
             return None
 
+        # v12.4 P0-C: Hard cap on instant-buy price (balance protection).
+        # 7-day trade-lock means each snipe freezes the spend for a week.
+        # With balance <$100, instant-buy only items < MAX_SNIPING_PRICE_USD
+        # to ensure continued turnover after the lock expires.
+        # Items > cap are left for the buy-order (target) path, which does
+        # not freeze cash until the order fills.
+        if base_price > Config.MAX_SNIPING_PRICE_USD:
+            if os.getenv("DRY_RUN", "true").lower() == "true":
+                price_db.log_decision(
+                    title,
+                    "skip",
+                    "Above instant-buy cap",
+                    f"${base_price:.2f} > ${Config.MAX_SNIPING_PRICE_USD:.2f}",
+                )
+            return None
+
         max_risk_price = current_balance * (Config.MAX_POSITION_RISK_PCT / 100.0)
         if base_price > max_risk_price:
             return None
@@ -135,13 +151,13 @@ class _FilterMixin:
         if not hasattr(self, "_diag_cycle_id") or self._diag_cycle_id != getattr(self, "_cur_cycle", -1):
             self._diag_cycle_id = getattr(self, "_cur_cycle", -1)
             agg_keys = list(agg_prices.keys())[:3] if agg_prices else []
-            cs_keys = list(cs_snapshots.keys())[:3] if cs_snapshots else []
-            cs_bid_keys = list(cs_bids.keys())[:3] if cs_bids else []
+            cs_keys = list((cs_snapshots or {}).keys())[:3]
+            cs_bid_keys = list((cs_bids or {}).keys())[:3]
             logger.info(
                 f"[DIAG] item={title!r} base=\${base_price:.2f} | "
                 f"agg_titles={len(agg_prices)} (sample={agg_keys}) | "
-                f"cs_snap_titles={len(cs_snapshots)} (sample={cs_keys}) | "
-                f"cs_bid_titles={len(cs_bids)} (sample={cs_bid_keys})"
+                f"cs_snap_titles={len(cs_snapshots or {})} (sample={cs_keys}) | "
+                f"cs_bid_titles={len(cs_bids or {})} (sample={cs_bid_keys})"
             )
         # Per-item diag for top-5 candidates (those in cs_snapshots)
         if cs_snapshots and title in cs_snapshots:

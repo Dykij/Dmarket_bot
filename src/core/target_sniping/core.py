@@ -26,6 +26,7 @@ from typing import Any, Dict, List
 
 from src.api.cs2cap_oracle import RateLimitException
 from src.api.dmarket_api_client import DMarketAPIClient
+from src.api.cs2cap_cache import CS2CapCache
 from src.api.oracle_factory import OracleFactory
 from src.analytics.rare_valuation import RareValuationEngine
 from src.analytics.stickers_evaluator import StickerEvaluator
@@ -73,6 +74,9 @@ class SnipingLoop(  # type: ignore[misc]
         self.empty_page_count = 0
         self.resale_cycle_limit = 10
         self.reprice_counter = 0
+
+        # v12.4: In-memory CS2Cap cache (initialised in start())
+        self.cs2cap_cache: Optional[CS2CapCache] = None
 
     async def _fetch_cheapest_listings(
         self, game_id: str, titles: List[str]
@@ -147,9 +151,12 @@ class SnipingLoop(  # type: ignore[misc]
 
     async def start(self) -> None:
         self.running = True
-        logger.info(f"Starting DMarket Intra-Spread Loop v12.0 | Targets: {self.target_games}")
+        logger.info(f"Starting DMarket Intra-Spread Loop v12.4 | Targets: {self.target_games}")
 
         gc.disable()
+
+        # v12.4: launch in-memory CS2Cap cache (background refresh task)
+        await self._init_cs2cap_cache()
 
         try:
             while self.running:
@@ -175,9 +182,33 @@ class SnipingLoop(  # type: ignore[misc]
             logger.error(f"Critical error in sniping cycle: {e}")
             await asyncio.sleep(30)
         finally:
+            if self.cs2cap_cache is not None:
+                await self.cs2cap_cache.stop()
             await OracleFactory.close_all()
             if self.client:
                 await self.client.close()
+
+    async def _init_cs2cap_cache(self) -> None:
+        """
+        v12.4: initialise the in-memory CS2Cap cache.
+
+        The cache is fed by a background task (CS2CapCache.start) that
+        refreshes the top-100 most-traded titles every CS2CAP_CACHE_TTL_SECONDS.
+        The hot path (run_cycle) reads from the cache, so no per-cycle
+        CS2Cap HTTP calls are made.
+        """
+        oracle = OracleFactory.get_oracle(Config.GAME_ID)
+        if oracle is None:
+            logger.warning(
+                "[v12.4] No oracle available for CS2Cap cache; will fall back to per-cycle batch."
+            )
+            return
+        self.cs2cap_cache = CS2CapCache(
+            oracle=oracle,
+            dmarket_client=self.client,
+            game_id=Config.GAME_ID,
+        )
+        await self.cs2cap_cache.start()
 
     async def run_cycle(self, game_id: str) -> None:
         """
@@ -295,18 +326,46 @@ class SnipingLoop(  # type: ignore[misc]
             current_margin = self.min_profit_margin
             instant_buys: List[Dict[str, Any]] = []
 
-            # Phase 1: Pre-rank candidates by DMarket bid-ask spread and
-            # fetch CS2Cap prices for the top-K in a single /prices/batch
-            # call. This replaces N per-item CS2Cap calls and stays within
-            # the Starter 50K/month budget.
+            # v12.4: Read CS2Cap asks/bids from in-memory cache (P0-B).
+            # The cache is refreshed by a background task every
+            # CS2CAP_CACHE_TTL_SECONDS (default 5 min). Per-cycle HTTP
+            # calls to CS2Cap are eliminated — validation is a sub-ms
+            # dict lookup. Falls back to legacy per-cycle batch if the
+            # cache is unavailable (e.g. oracle import failed).
             cs_snapshots: Dict[str, Any] = {}
             cs_bids: Dict[str, Any] = {}
-            if oracle is not None and Config.CS2CAP_SELECTIVE_MODE and items:
+            cache_used = False
+            if self.cs2cap_cache is not None and not self.cs2cap_cache.is_stale():
+                cache_used = True
                 # Cap ranker at items we can actually afford to avoid wasting
                 # CS2Cap quota on $1000 Karambits we can't buy. We use
-                # min(balance, MAX_PRICE_USD) — the per-item 5% risk check
-                # happens later in _evaluate_candidate.
-                max_price_cap = min(current_balance, Config.MAX_PRICE_USD)
+                # min(balance, MAX_SNIPING_PRICE_USD) — the per-item 5% risk
+                # check happens later in _evaluate_candidate.
+                max_price_cap = min(current_balance, Config.MAX_SNIPING_PRICE_USD)
+                ranked = self._rank_candidates_by_spread(
+                    items, agg_prices, max_price_usd=max_price_cap
+                )
+                top_titles = [
+                    t for t, _ in ranked[: Config.CS2CAP_TOP_K_VALIDATE]
+                ]
+                for t in top_titles:
+                    ask = self.cs2cap_cache.get_ask(t)
+                    bid = self.cs2cap_cache.get_bid(t)
+                    if ask is not None:
+                        cs_snapshots[t] = ask
+                    if bid is not None:
+                        cs_bids[t] = bid
+                if top_titles:
+                    cache_stats = self.cs2cap_cache.stats()
+                    logger.info(
+                        f"[CS2CapCache HIT] top_titles={len(top_titles)} "
+                        f"snapshots={len(cs_snapshots)} bids={len(cs_bids)} "
+                        f"age={cache_stats['age_seconds']:.0f}s "
+                        f"refreshes={cache_stats['refresh_count']}"
+                    )
+            elif oracle is not None and Config.CS2CAP_SELECTIVE_MODE and items:
+                # Legacy path: cache not available (e.g. CS2Cap API key missing)
+                max_price_cap = min(current_balance, Config.MAX_SNIPING_PRICE_USD)
                 ranked = self._rank_candidates_by_spread(
                     items, agg_prices, max_price_usd=max_price_cap
                 )
@@ -315,17 +374,13 @@ class SnipingLoop(  # type: ignore[misc]
                 ]
                 if top_titles and hasattr(oracle, "get_prices_batch"):
                     try:
-                        # Fetch ASKS (for ceiling/overprice check) and BIDS
-                        # (for cross-market arb) in parallel — 1+1 = 2 quota
-                        # units, still well under Starter 50K budget.
-                        import asyncio
                         asks_task = oracle.get_prices_batch(top_titles)
                         bids_task = oracle.get_bids_batch(top_titles) if hasattr(oracle, "get_bids_batch") else None
                         cs_snapshots = await asks_task
                         if bids_task is not None:
                             cs_bids = await bids_task
                         logger.info(
-                            f"CS2Cap selective validation: "
+                            f"CS2Cap selective validation (legacy path): "
                             f"{len(cs_snapshots)}/{len(top_titles)} asks, "
                             f"{len(cs_bids)}/{len(top_titles)} bids"
                         )
@@ -333,6 +388,11 @@ class SnipingLoop(  # type: ignore[misc]
                         logger.debug(f"CS2Cap batch failed (non-fatal): {e}")
                         cs_snapshots = {}
                         cs_bids = {}
+            if not cache_used and self.cs2cap_cache is not None:
+                logger.debug(
+                    f"[CS2CapCache MISS] cache_stale={self.cs2cap_cache.is_stale()} "
+                    f"ask_count={len(self.cs2cap_cache._ask_cache)}"
+                )
 
             for item in items:
                 # Reload candidate_item_ids was unused; reuse
@@ -377,11 +437,41 @@ class SnipingLoop(  # type: ignore[misc]
                 f"TOTAL: ${equity['total']:.2f} (Items: {equity['count']})"
             )
 
+            # v12.4: Periodic diagnostic snapshot (every 10 cycles)
+            if self.deep_scan_counter % 10 == 0:
+                cache_stats = (
+                    self.cs2cap_cache.stats()
+                    if self.cs2cap_cache is not None
+                    else {"ask_count": 0, "bid_count": 0, "is_stale": True}
+                )
+                cb_stats = self.client.circuit_breaker_status()
+                logger.info(
+                    f"[v12.4 DIAG] CS2Cap cache: {cache_stats['ask_count']} asks, "
+                    f"{cache_stats['bid_count']} bids, "
+                    f"stale={cache_stats['is_stale']}, "
+                    f"age={cache_stats.get('age_seconds')}s, "
+                    f"refreshes={cache_stats['refresh_count']} | "
+                    f"CB: state={cb_stats['state']}, "
+                    f"opens={cb_stats['total_opens']}, "
+                    f"fails={cb_stats['consecutive_failures']}"
+                )
+
             if self.deep_scan_counter % 200 == 0:
                 price_db.cleanup_old_targets()
 
         except Exception as e:
-            if "RateLimit" not in str(e):
+            # v12.4: Distinguish circuit-breaker opens (expected) from
+            # real cycle failures (unexpected). Breaker open means
+            # DMarket is rate-limiting or down; the outer loop's
+            # SCAN_INTERVAL sleep will throttle us back to normal.
+            from src.api.dmarket_api_client.backoff import CircuitOpenError
+
+            if isinstance(e, CircuitOpenError):
+                logger.warning(
+                    f"[v12.4] Cycle paused — {e.breaker_name} circuit OPEN "
+                    f"({e.cooldown_remaining:.1f}s remaining)"
+                )
+            elif "RateLimit" not in str(e):
                 logger.error(f"Cycle failed for {game_id}: {e}")
 
 
