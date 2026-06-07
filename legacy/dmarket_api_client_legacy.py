@@ -1,3 +1,30 @@
+"""
+⚠️  LEGACY — DO NOT USE. MOVED FROM src/api/dmarket_api_client.py ON 2026-06-07.
+
+The active implementation is the package at src/api/dmarket_api_client/
+(its __init__.py exports DMarketAPIClient). This monolithic file used to
+shadow the package, but its endpoints have since drifted from DMarket's
+real API (verified 2026-06-06):
+
+  - buy_items()  POST /exchange/v1/market/buy        → 404 in prod
+  - get_item_fee() GET /exchange/v1/market/fee        → 404 in prod
+  - delete_sell_offer() DELETE /exchange/v1/offers    → wrong endpoint
+  - get_user_offers() uses /marketplace-api/v1/user-offers
+    while the v2 version uses /exchange/v1/user-offers
+
+The package's targets.py:33-42 documents the corrected endpoints. The
+package's fees.py:30-44 documents the 404s and the 5% hard-coded fallback.
+
+Python's package-import-shadow mechanism now routes all real usage to
+the package (see src/api/dmarket_api_client/__init__.py). This file is
+preserved ONLY for git archaeology and the v8.0 → v12.0 migration trail.
+
+Deletion criteria (same as src/db/price_history.py):
+  1. The package has been stable for ≥1 release.
+  2. A grep across the repo shows 0 references to this file.
+  3. No production breakage reported for ≥30 days.
+"""
+
 import aiohttp
 import os
 import asyncio
