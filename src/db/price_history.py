@@ -50,7 +50,7 @@ for _name in _DELETED:
         del globals()[_name]
 
 # Show a deprecation warning at import time
-import warnings
+import warnings  # noqa: E402
 warnings.warn(
     "src.db.price_history (the .py file) is deprecated; "
     "use the package at src.db.price_history/ instead.",
@@ -450,7 +450,8 @@ class PriceHistoryDB:
     def record_virtual_sale(self, item_id: int, sell_price: float, fee_paid: float):
         with self.state_conn:
             row = self.state_conn.execute("SELECT buy_price FROM virtual_inventory WHERE id = ?", (item_id,)).fetchone()
-            if not row: return
+            if not row:
+                return
             profit = sell_price - row["buy_price"] - fee_paid
             self.state_conn.execute(
                 """UPDATE virtual_inventory 

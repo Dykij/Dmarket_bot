@@ -145,7 +145,8 @@ def validate_volatility(recent_prices: list[float], max_std_dev_pct: float = 0.1
         return # Not enough data
         
     mean = sum(recent_prices) / len(recent_prices)
-    if mean <= 0: return
+    if mean <= 0:
+        return
     
     variance = sum((p - mean) ** 2 for p in recent_prices) / len(recent_prices)
     std_dev = math.sqrt(variance)

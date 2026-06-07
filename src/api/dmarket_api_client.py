@@ -161,8 +161,10 @@ class DMarketAPIClient:
     async def get_market_items_v2(self, game_id: str, limit: int = 100, cursor: Optional[str] = None, **filters):
         """ High-throughput Marketplace v2 scan. """
         params = {"currency": "USD", "gameId": game_id, "limit": limit}
-        if cursor: params["cursor"] = cursor
-        if filters: params.update(filters)
+        if cursor:
+            params["cursor"] = cursor
+        if filters:
+            params.update(filters)
         return await self.make_request("GET", "/exchange/v1/market/items", params=params)
 
     # --- Account & Inventory ---
@@ -184,13 +186,15 @@ class DMarketAPIClient:
     async def get_user_inventory(self, game_id: str, limit: int = 50, cursor: Optional[str] = None):
         """ Fetches items owned by the user but NOT currently on sale. """
         params = {"gameId": game_id, "limit": limit}
-        if cursor: params["cursor"] = cursor
+        if cursor:
+            params["cursor"] = cursor
         return await self.make_request("GET", "/marketplace-api/v1/user-inventory", params=params)
 
     async def get_user_offers(self, game_id: str, limit: int = 50, cursor: Optional[str] = None):
         """ Fetches items the user currently has listed for sale. """
         params = {"gameId": game_id, "limit": limit}
-        if cursor: params["cursor"] = cursor
+        if cursor:
+            params["cursor"] = cursor
         return await self.make_request("GET", "/marketplace-api/v1/user-offers", params=params)
 
     # --- Trading Ops (Targets / Buy Orders) ---
@@ -212,7 +216,8 @@ class DMarketAPIClient:
     async def get_user_targets(self, game_id: str, limit: int = 50, cursor: Optional[str] = None):
         """ List active buy orders. """
         params = {"gameId": game_id, "limit": limit}
-        if cursor: params["cursor"] = cursor
+        if cursor:
+            params["cursor"] = cursor
         return await self.make_request("GET", "/marketplace-api/v1/user-targets", params=params)
 
     # --- Sell Offers (Listing items for sale) ---
@@ -263,13 +268,15 @@ class DMarketAPIClient:
     async def get_user_active_offers(self, game_id: str, limit: int = 50, cursor: Optional[str] = None) -> Dict[str, Any]:
         """Get items currently listed for sale."""
         params = {"gameId": game_id, "limit": limit}
-        if cursor: params["cursor"] = cursor
+        if cursor:
+            params["cursor"] = cursor
         return await self.make_request("GET", "/marketplace-api/v1/user-offers", params=params)
 
     async def get_user_closed_offers(self, game_id: str, limit: int = 50, cursor: Optional[str] = None) -> Dict[str, Any]:
         """Get closed/sold offers history."""
         params = {"gameId": game_id, "limit": limit}
-        if cursor: params["cursor"] = cursor
+        if cursor:
+            params["cursor"] = cursor
         return await self.make_request("GET", "/marketplace-api/v1/user-offers/closed", params=params)
 
     # --- Fee Analysis (v7.6) ---

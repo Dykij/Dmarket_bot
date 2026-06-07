@@ -87,7 +87,8 @@ class CircuitBreaker:
         peak = max(snapshot[1] for snapshot in self.snapshots)
         current = self.snapshots[-1][1]
         
-        if peak <= 0: return False
+        if peak <= 0:
+            return False
         
         drawdown = (peak - current) / peak
         if drawdown >= self.max_dd:
@@ -99,7 +100,7 @@ class CircuitBreaker:
         return False
 
 
-from src.risk.dynamic_manager import DynamicRiskManager
+from src.risk.dynamic_manager import DynamicRiskManager  # noqa: E402
 
 # 3. Decoupled Event-Driven Pipeline using gRPC
 class TradeExecutionPipeline:

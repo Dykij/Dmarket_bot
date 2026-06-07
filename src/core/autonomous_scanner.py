@@ -39,15 +39,15 @@ BASE_DIR = str(Path(__file__).resolve().parent.parent.parent)
 if BASE_DIR not in sys.path:
     sys.path.append(BASE_DIR)
 
-from src.api.dmarket_api_client import DMarketAPIClient
-from src.inventory_manager import InventoryManager
-from src.utils.vault import vault
-from src.risk.fatal_errors import (
+from src.api.dmarket_api_client import DMarketAPIClient  # noqa: E402
+from src.inventory_manager import InventoryManager  # noqa: E402
+from src.utils.vault import vault  # noqa: E402
+from src.risk.fatal_errors import (  # noqa: E402
     AuthError,
     ConfigError,
     classify,
 )
-from src.risk.error_reporter import ErrorReporter, _write_exit_state, fatal_exit
+from src.risk.error_reporter import ErrorReporter, _write_exit_state, fatal_exit  # noqa: E402
 
 
 def setup_logging() -> None:

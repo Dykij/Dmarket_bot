@@ -41,7 +41,7 @@ try:
 except ImportError:
     psutil = None  # type: ignore[assignment]
 
-from src.risk.fatal_errors import classify, exit_code_for
+from src.risk.fatal_errors import classify, exit_code_for  # noqa: E402
 
 
 # Width of the visual separator in the log block.

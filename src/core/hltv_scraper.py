@@ -94,12 +94,14 @@ class EventScraper:
         try:
             # Simplify: Extract the year first
             year_match = re.search(r'202\d', date_str)
-            if not year_match: return None
+            if not year_match:
+                return None
             year = year_match.group()
             
             # Split the range
             parts = date_str.replace(",", "").split(" - ")
-            if len(parts) != 2: return None
+            if len(parts) != 2:
+                return None
             
             start_raw = f"{parts[0]} {year}"
             # End might be "Feb 08 2026" or just "08 2026"
@@ -114,12 +116,13 @@ class EventScraper:
             end_dt = datetime.strptime(end_raw, "%b %d %Y")
             
             return start_dt.strftime("%Y-%m-%d"), end_dt.strftime("%Y-%m-%d")
-        except:
+        except Exception:
             return None
 
     def update_local_calendar(self, new_events: list):
         """Merge new events into data/cs2_events.json."""
-        if not new_events: return
+        if not new_events:
+            return
         
         try:
             with open(EVENTS_FILE, "r", encoding="utf-8") as f:

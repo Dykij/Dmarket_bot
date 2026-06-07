@@ -29,11 +29,11 @@ from .market import _MarketMixin
 from .offers import _OffersMixin
 from .targets import _TargetsMixin
 from .backoff import CircuitBreaker, CircuitOpenError, should_trip
+from src.utils.vault import vault  # noqa: F401  # backward compat re-export
 
 logger = structlog.get_logger("DMarketAPI")
 
 # Preserve the original module-level vault import for backward compat
-from src.utils.vault import vault  # noqa: F401
 
 
 class DMarketAPIClient(  # type: ignore[misc]

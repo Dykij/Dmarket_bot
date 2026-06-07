@@ -57,7 +57,8 @@ class VaultProvider:
         if self._vault_client:
             # The client handles KV v2 logic
             secret = self._vault_client.get_secret("dmarket", "secret_key")
-            if secret: return secret
+            if secret:
+                return secret
 
         if self._secret:
             return self._obfuscate(self._secret).decode("utf-8")

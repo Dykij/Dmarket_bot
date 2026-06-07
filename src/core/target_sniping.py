@@ -413,7 +413,8 @@ class SnipingLoop:
                     matching_id = None
                     for itm in (items or []):
                         if itm.get("title") == t["hash_name"]:
-                            matching_id = itm.get("itemId"); break
+                            matching_id = itm.get("itemId")
+                            break
                     if matching_id:
                         price_db.record_placed_target(matching_id, t["hash_name"], t["Price"]["Amount"]/100.0)
                         self.liquidity.record_spend(t["Price"]["Amount"]/100.0)
@@ -425,7 +426,8 @@ class SnipingLoop:
                         for itm in (items or []):
                             listing_price = int(itm.get("price", {}).get("USD", 0)) / 100.0
                             if listing_price <= (t["Price"]["Amount"] / 100.0):
-                                can_buy = True; break
+                                can_buy = True
+                                break
                         if can_buy and random.random() < 0.9:
                             name = t.get("hash_name", "Unknown item")
                             buy_price = t["Price"]["Amount"] / 100.0
@@ -485,16 +487,22 @@ class SnipingLoop:
     def _simulate_competition(self, margin: float) -> bool:
         """Sandbox v9.0: Models the probability of being out-sniped."""
         import random
-        if os.getenv("DRY_RUN", "true").lower() != "true": return True
-        if margin > 0.40: fail_chance = 0.90
-        elif margin > 0.20: fail_chance = 0.60
-        elif margin > 0.10: fail_chance = 0.30
-        else: fail_chance = 0.10
+        if os.getenv("DRY_RUN", "true").lower() != "true":
+            return True
+        if margin > 0.40:
+            fail_chance = 0.90
+        elif margin > 0.20:
+            fail_chance = 0.60
+        elif margin > 0.10:
+            fail_chance = 0.30
+        else:
+            fail_chance = 0.10
         return random.random() >= fail_chance
 
     async def _simulate_network_latency(self, client_type: str = "dmarket"):
         """Sandbox v9.5: Mimics real-world network RTT."""
-        if os.getenv("DRY_RUN", "true").lower() != "true": return
+        if os.getenv("DRY_RUN", "true").lower() != "true":
+            return
         import random
         if client_type == "csfloat":
             base_lat, jitter = 600, 400
@@ -505,7 +513,8 @@ class SnipingLoop:
 
     def _maybe_inject_error(self, method_name: str):
         """Sandbox v9.5: Randomly injects API errors."""
-        if os.getenv("DRY_RUN", "true").lower() != "true": return
+        if os.getenv("DRY_RUN", "true").lower() != "true":
+            return
         import random
         if random.random() < 0.05:
             error_code = random.choice([429, 500, 502, 503])
@@ -515,7 +524,8 @@ class SnipingLoop:
     async def auto_resale(self, game_id: str):
         """Scans virtual inventory and lists profitable items."""
         import random
-        if os.getenv("DRY_RUN", "true").lower() != "true": return
+        if os.getenv("DRY_RUN", "true").lower() != "true":
+            return
         items = price_db.get_virtual_inventory(status='idle', only_unlocked=True)
         locked_count = len(price_db.get_virtual_inventory(status='idle', only_unlocked=False)) - len(items)
         selling_items = price_db.get_virtual_inventory(status='selling')
@@ -527,14 +537,17 @@ class SnipingLoop:
                 price_db.update_virtual_status(item['id'], 'sold')
                 logger.info(f"[SIM] ITEM SOLD! {item['hash_name']} | Exit Profit logged.")
 
-        if not items: return
+        if not items:
+            return
         logger.info(f"Scanning Virtual Inventory for resale ({len(items)} items)...")
         for item in items:
             oracle = OracleFactory.get_oracle(game_id)
-            if not oracle: continue
+            if not oracle:
+                continue
             try:
                 current_price = await oracle.get_item_price(item['hash_name'])
-                if current_price <= 0: continue
+                if current_price <= 0:
+                    continue
                 buy_price = item['buy_price']
                 target_sell = round(buy_price * 1.05, 2)
                 market_profit = round(current_price * 0.95 - buy_price, 2)
