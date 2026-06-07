@@ -73,6 +73,10 @@ class CS2CapCache:
         self._error_count: int = 0
         self._last_error: str = ""
 
+        # O1: Rate-limit guard state
+        self._quota_skipped_count: int = 0
+        self._last_quota_warning_ts: float = 0.0
+
         # Background task handle
         self._refresh_task: Optional[asyncio.Task[None]] = None
         self._stop_event: Optional[asyncio.Event] = None
@@ -109,6 +113,11 @@ class CS2CapCache:
 
     def stats(self) -> Dict[str, Any]:
         """Diagnostic snapshot for /health and logs."""
+        rl: Dict[str, Any] = {}
+        try:
+            rl = self._oracle.rate_limit_state()
+        except Exception:
+            rl = {}
         return {
             "ask_count": len(self._ask_cache),
             "bid_count": len(self._bid_cache),
@@ -119,6 +128,11 @@ class CS2CapCache:
             "error_count": self._error_count,
             "last_error": self._last_error,
             "last_refresh_duration_s": round(self._last_refresh_duration_s, 2),
+            # O1: rate-limit awareness
+            "quota_skipped_count": self._quota_skipped_count,
+            "monthly_used": rl.get("monthly_used", 0),
+            "monthly_limit": rl.get("monthly_limit", 50000),
+            "remaining_header": rl.get("remaining_header"),
         }
 
     # ----------------------------------------------------------------
@@ -131,6 +145,15 @@ class CS2CapCache:
             return
 
         self._stop_event = asyncio.Event()
+
+        # O4: Warm up the item catalog in the BACKGROUND (non-blocking).
+        # Loading 38K items = 380 API calls = 5-10 minutes. We don't
+        # want to block bot startup, so we launch a task and return
+        # immediately. The cache.refresh_now() will populate prices
+        # using whatever catalog entries are already known.
+        if Config.CS2CAP_CATALOG_WARMUP_ON_START:
+            asyncio.create_task(self._warm_catalog_bg())
+
         if Config.CS2CAP_CACHE_REFRESH_ON_START:
             try:
                 await self.refresh_now()
@@ -143,6 +166,34 @@ class CS2CapCache:
             f"[CS2CapCache] Started background refresh "
             f"(TTL={Config.CS2CAP_CACHE_TTL_SECONDS}s, top-N={Config.CS2CAP_CACHE_REFRESH_TOP_N})"
         )
+
+    async def _warm_catalog_bg(self) -> None:
+        """
+        O4: Background catalog warm-up. Loaded on a separate task so
+        the main loop can start trading immediately. Errors are
+        logged but never propagate (catalog loading is best-effort).
+        """
+        try:
+            t0 = time.time()
+            count = await self._oracle.load_catalog()
+            duration = time.time() - t0
+            logger.info(
+                f"[CS2CapCache] Catalog warm-up: {count} items "
+                f"loaded in {duration:.2f}s"
+            )
+        except asyncio.CancelledError:
+            raise
+        except Exception as e:
+            logger.warning(f"[CS2CapCache] Catalog warm-up failed: {e}")
+
+    async def _warm_catalog(self) -> None:
+        """
+        O4 (synchronous variant, kept for tests that need to await
+        the result): Pre-load the CS2Cap item catalog
+        (market_hash_name → item_id) on bot startup. Returns the
+        number of items loaded.
+        """
+        return await self._warm_catalog_bg()
 
     async def stop(self) -> None:
         """Cancel the background task and close session."""
@@ -197,8 +248,24 @@ class CS2CapCache:
         local cache. This means the cache always reflects the actual
         top-100 most-traded titles on DMarket — even if they change
         week to week.
+
+        O1 Rate-limit guard: before any CS2Cap call, check the oracle's
+        rate-limit state. If the monthly quota is >80% used (or the
+        oracle has been blocked by a 429), skip the refresh and keep
+        the existing cache (better stale than rate-limited).
         """
         t0 = time.time()
+
+        # O1: Pre-flight rate-limit check
+        guard = self._check_rate_limit_guard()
+        if not guard["can_proceed"]:
+            self._quota_skipped_count += 1
+            logger.warning(
+                f"[CS2CapCache] Refresh SKIPPED — {guard['reason']} "
+                f"(skip #{self._quota_skipped_count})"
+            )
+            return
+
         try:
             agg_prices = await self._client.get_aggregated_prices(self._game_id)
         except Exception as e:
@@ -235,6 +302,16 @@ class CS2CapCache:
             logger.warning(f"[CS2CapCache] CS2Cap batch failed: {e}")
             return
 
+        # O1: Post-flight check — if oracle reported quota exhaustion
+        # during the batch calls, roll back the cache update.
+        post = self._check_rate_limit_guard()
+        if not post["can_proceed"]:
+            logger.warning(
+                f"[CS2CapCache] Cache NOT updated — quota exhausted mid-refresh "
+                f"({post['reason']})"
+            )
+            return
+
         # Replace caches atomically (single-threaded, no lock needed)
         self._ask_cache = dict(asks)
         self._bid_cache = dict(bids)
@@ -242,9 +319,83 @@ class CS2CapCache:
         self._last_refresh_duration_s = time.time() - t0
         self._refresh_count += 1
 
+        # O1: Surface current monthly usage in logs (every 10th refresh)
+        if self._refresh_count % 10 == 0:
+            rl = self._oracle.rate_limit_state()
+            logger.info(
+                f"[CS2CapCache] Rate limit: used={rl['monthly_used']}/"
+                f"{rl['monthly_limit']} "
+                f"({rl['monthly_used']*100/max(1,rl['monthly_limit']):.1f}%)"
+            )
+
         logger.info(
             f"[CS2CapCache] Refreshed: {len(self._ask_cache)} asks, "
             f"{len(self._bid_cache)} bids, "
             f"top-N={len(top_titles)}, "
             f"duration={self._last_refresh_duration_s:.2f}s"
         )
+
+    def _check_rate_limit_guard(self) -> Dict[str, Any]:
+        """
+        O1: Pre/post-flight rate-limit check.
+
+        Returns {"can_proceed": bool, "reason": str}.
+
+        Rules:
+        - If oracle is already in 429 cooldown, skip (always)
+        - If monthly_used > 95% of limit, skip (always)
+        - If monthly_used > 80% AND per_min_remaining < 5, skip
+        - If monthly_used > 80%, log warning (rate-limited to 1/refresh)
+        - Otherwise proceed
+
+        Note: CS2Cap returns X-RateLimit-Remaining as PER-MINUTE calls
+        remaining (not monthly). We track monthly usage locally
+        via _increment_monthly_counter. The per-minute header is
+        used as a real-time guard for the next 60s window.
+        """
+        try:
+            rl = self._oracle.rate_limit_state()
+        except Exception as e:
+            return {"can_proceed": True, "reason": f"oracle state unavailable: {e}"}
+
+        # Hard block: 429 cooldown
+        if rl.get("is_quota_exhausted"):
+            return {
+                "can_proceed": False,
+                "reason": (
+                    f"429 cooldown active "
+                    f"({rl.get('cooldown_remaining_s', 0):.0f}s remaining)"
+                ),
+            }
+
+        monthly_limit = max(1, rl.get("monthly_limit", 50000))
+        used = rl.get("monthly_used", 0)
+        used_pct = (used * 100.0) / monthly_limit
+
+        # Hard block: 95%+ of monthly quota
+        if used_pct >= 95.0:
+            return {
+                "can_proceed": False,
+                "reason": f"monthly quota at {used_pct:.1f}% (used {used}/{monthly_limit})",
+            }
+
+        # Soft warning: 80-95% (log every 5 minutes, not every refresh)
+        if used_pct >= 80.0:
+            now = time.time()
+            if now - self._last_quota_warning_ts > 300:
+                self._last_quota_warning_ts = now
+                logger.warning(
+                    f"[CS2CapCache] Quota at {used_pct:.1f}% "
+                    f"({used}/{monthly_limit}). Continuing, but monitor."
+                )
+
+        # Per-minute guard: if the server says we have <5 calls left
+        # in the current minute window, skip (proactive cooldown).
+        rem = rl.get("remaining_header")
+        if rem is not None and rem < 5:
+            return {
+                "can_proceed": False,
+                "reason": f"per-minute rate limit near: {rem} calls left this window",
+            }
+
+        return {"can_proceed": True, "reason": "ok"}

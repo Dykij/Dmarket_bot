@@ -76,11 +76,12 @@ class Config:
 
     # --- v12.4 In-Memory CS2Cap Cache ---
     # P0-B: Eliminate per-cycle CS2Cap calls. Background task refreshes
-    # the top-100 most-traded titles every N seconds. In-cycle validation
+    # the top-N most-traded titles every N seconds. In-cycle validation
     # is pure dict lookups (sub-ms latency).
     CS2CAP_CACHE_TTL_SECONDS = int(os.getenv("CS2CAP_CACHE_TTL_SECONDS", "300"))  # 5 min
-    CS2CAP_CACHE_REFRESH_TOP_N = 100   # how many titles to keep warm
+    CS2CAP_CACHE_REFRESH_TOP_N = int(os.getenv("CS2CAP_CACHE_REFRESH_TOP_N", "200"))  # 200 = O2: 2x coverage, same HTTP cost
     CS2CAP_CACHE_REFRESH_ON_START = True  # prime cache before first cycle
+    CS2CAP_CATALOG_WARMUP_ON_START = int(os.getenv("CS2CAP_CATALOG_WARMUP_ON_START", "1"))  # 1 = O4: warm catalog on boot
 
     # --- Advanced Attributes (Float/Phase) ---
     PREFER_LOW_FLOAT = True

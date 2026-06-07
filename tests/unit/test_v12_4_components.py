@@ -241,6 +241,13 @@ class TestCS2CapCacheRefresh:
         from src.api.cs2cap_oracle import PriceSnapshot, BidsSnapshot
 
         oracle = MagicMock()
+        oracle.rate_limit_state = MagicMock(return_value={
+            "monthly_used": 0,
+            "monthly_limit": 50000,
+            "remaining_header": 50000,
+            "is_quota_exhausted": False,
+            "cooldown_remaining_s": 0.0,
+        })
         dmarket_client = AsyncMock()
 
         dmarket_client.get_aggregated_prices = AsyncMock(
@@ -280,6 +287,13 @@ class TestCS2CapCacheRefresh:
         from src.api.cs2cap_cache import CS2CapCache
 
         oracle = MagicMock()
+        oracle.rate_limit_state = MagicMock(return_value={
+            "monthly_used": 0,
+            "monthly_limit": 50000,
+            "remaining_header": 50000,
+            "is_quota_exhausted": False,
+            "cooldown_remaining_s": 0.0,
+        })
         dmarket_client = AsyncMock()
         dmarket_client.get_aggregated_prices = AsyncMock(side_effect=RuntimeError("network"))
 
@@ -297,6 +311,13 @@ class TestCS2CapCacheRefresh:
         from src.api.cs2cap_cache import CS2CapCache
 
         oracle = MagicMock()
+        oracle.rate_limit_state = MagicMock(return_value={
+            "monthly_used": 0,
+            "monthly_limit": 50000,
+            "remaining_header": 50000,
+            "is_quota_exhausted": False,
+            "cooldown_remaining_s": 0.0,
+        })
         dmarket_client = AsyncMock()
         dmarket_client.get_aggregated_prices = AsyncMock(return_value={})
 
@@ -313,6 +334,14 @@ class TestCS2CapCacheRefresh:
         from src.api.cs2cap_cache import CS2CapCache
 
         oracle = MagicMock()
+        oracle.rate_limit_state = MagicMock(return_value={
+            "monthly_used": 0,
+            "monthly_limit": 50000,
+            "remaining_header": 50000,
+            "is_quota_exhausted": False,
+            "cooldown_remaining_s": 0.0,
+        })
+        oracle.load_catalog = AsyncMock(return_value=38000)
         dmarket_client = AsyncMock()
         dmarket_client.get_aggregated_prices = AsyncMock(return_value={})
 

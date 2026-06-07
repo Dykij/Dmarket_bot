@@ -33,6 +33,7 @@ import time
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Tuple
 
+from src.config import Config
 from src.db.price_history import price_db
 
 logger = logging.getLogger("CS2CapOracle")
@@ -325,9 +326,62 @@ class CS2CapOracle:
         except Exception:
             pass
 
+    def rate_limit_state(self) -> Dict[str, Any]:
+        """
+        Public read of the rate-limit state for the cache layer.
+
+        Returns:
+            {
+                "monthly_used": int,       # local counter (best-effort)
+                "monthly_limit": int,      # from config (50K for Starter)
+                "remaining_header": int|None,  # last seen X-RateLimit-Remaining
+                "per_min_remaining": int|None, # currently always None
+                "is_quota_exhausted": bool,
+                "cooldown_remaining_s": float,
+            }
+        """
+        try:
+            yyyymm = time.strftime("%Y-%m")
+            raw = price_db.get_state("cs2cap_calls_month")
+            if raw:
+                saved_month, count_str = raw.split(":", 1)
+                count = int(count_str) if saved_month == yyyymm else 0
+            else:
+                count = 0
+        except Exception:
+            count = 0
+        tier = (getattr(Config, "CS2CAP_TIER", "starter") or "starter").lower()
+        limit_map = {"free": 1000, "starter": 50000, "pro": 500000, "quant": 1000000}
+        monthly_limit = limit_map.get(tier, 50000)
+        cooldown_remaining = 0.0
+        if self._quota_exhausted:
+            cooldown_remaining = max(
+                0.0, self._quota_reset_seconds - (time.time() - self._quota_exhausted_at)
+            )
+        return {
+            "monthly_used": count,
+            "monthly_limit": monthly_limit,
+            "remaining_header": self._rate_remaining,
+            "per_min_remaining": None,
+            "is_quota_exhausted": self._quota_exhausted,
+            "cooldown_remaining_s": cooldown_remaining,
+        }
+
     # ----------------------------------------------------------------
     # 1. ITEM CATALOG (GET /items) — name to item_id mapping
     # ----------------------------------------------------------------
+    async def load_catalog(self) -> int:
+        """
+        O4: Public catalog loader — pre-populates the hash_name → item_id
+        map on bot startup. Returns the number of items loaded.
+
+        If the catalog was loaded within the last ITEMS_MEM_TTL (24h),
+        returns immediately from in-memory cache. Otherwise, tries
+        SQLite cache, then falls back to the CS2Cap API.
+        """
+        await self._load_catalog()
+        return len(self._item_catalog)
+
     async def _load_catalog(self) -> None:
         """Load item catalog for name-to-id mapping. Paginated (API max 100/page)."""
         now = time.time()
