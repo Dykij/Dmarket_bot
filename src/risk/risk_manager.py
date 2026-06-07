@@ -292,4 +292,8 @@ class RiskManager:
 
 
 # Convenience: a global default (replaced per bot instance in autonomous_scanner)
+# TODO(remove-default-risk-manager): this singleton is never imported anywhere
+# in src/ (grep proves 1 match — its own definition). It is a leftover from
+# an earlier design where external scripts might import it. Safe to delete
+# once we have unit-test coverage that exercises RiskManager directly.
 default_risk_manager = RiskManager()

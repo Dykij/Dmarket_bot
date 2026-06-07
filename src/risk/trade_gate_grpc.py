@@ -39,10 +39,12 @@ class TradeDecision(BaseModel):
 
 # 2. Deterministic Circuit Breaker with Local Disk Fallback (LDF)
 class CircuitBreaker:
-    def __init__(self, max_drawdown_pct: float = 0.03, window_seconds: int = 3600, state_path: str = "/tmp/cb_state.json"):
+    def __init__(self, max_drawdown_pct: float = 0.03, window_seconds: int = 3600, state_path: str | None = None):
         self.max_dd = max_drawdown_pct
         self.window = window_seconds
-        self.state_path = state_path
+        self.state_path = state_path or os.environ.get(
+            "CIRCUIT_BREAKER_STATE_PATH", "/tmp/cb_state.json"
+        )  # nosec: B108 - in-container ephemeral; override via env in production
         self.snapshots = []
         self.is_tripped = False
         self._load_state()

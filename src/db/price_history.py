@@ -16,6 +16,15 @@ in a future cleanup. All edits should go to the package files:
     src/db/price_history/low_fee.py      — low_fee_cache
 
 Original (v8.0 monolithic) implementation preserved below for reference.
+
+TODO(remove-deprecated-shim): Delete this entire file once:
+  1. The package at src/db/price_history/ has been stable for ≥1 release.
+  2. A grep across the repo (excluding this file) shows 0 references to
+     `from src.db.price_history import X` (other than the package import).
+  3. The DeprecationWarning has been logged in production for ≥30 days
+     with no breakage reported.
+Until then, the file is harmless — Python's package import shadow
+mechanism routes all real usage to src/db/price_history/__init__.py.
 """
 
 # Original (deprecated) implementation follows. Kept for git history only.

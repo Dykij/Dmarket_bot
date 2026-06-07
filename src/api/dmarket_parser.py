@@ -8,6 +8,11 @@ from pydantic import BaseModel, root_validator, Field
 if not hasattr(pa, "SchemaModel"):
     pa.SchemaModel = pa.DataFrameModel  # type: ignore[attr-defined]
 
+# TODO(pandera-1.0-migration): replace `pa.SchemaModel` alias above with
+# `pa.DataFrameModel` directly and update `DmarketSkinSchema` inheritance.
+# Track: https://github.com/pandera-dev/pandera/issues — the alias shim
+# breaks in pandera 1.0+. Currently emits FutureWarning on import.
+
 # --- Phase 1.1: Rust Integration ---
 try:
     import dmarket_parser_rs

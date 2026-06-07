@@ -114,7 +114,7 @@ class DMarketAPIClient:
     async def make_request(self, method: str, path: str, params: Optional[Dict[str, Any]] = None, body: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """ Executes API request with Dry Run support ($0.00 Risk). """
         method = method.upper()
-        
+
         # --- SANDBOX GUARD ---
         is_write_op = method in ["POST", "PUT", "DELETE", "PATCH"]
         if is_write_op and os.getenv("DRY_RUN", "true").lower() == "true":
@@ -123,6 +123,13 @@ class DMarketAPIClient:
             if "batch" in path or "create" in path or "delete" in path:
                 return {"status": "success", "simulated": True, "message": "Simulation Mode Active"}
             return {}
+
+        # TODO(offline-dry-run): GET/HEAD still hit the real DMarket API even when
+        # DRY_RUN=true. This consumes the monthly CS2Cap/DMarket quota during
+        # paper-trading. For a fully offline sandbox, add a JSON-fixture mock
+        # keyed on (game_id, path) and short-circuit reads here when DRY_RUN
+        # is set and the fixture exists. Currently acceptable: production keys
+        # have plenty of quota and the simulation period is short.
 
         await self._wait_for_rate_limit()
         timestamp = str(int(time.time()))

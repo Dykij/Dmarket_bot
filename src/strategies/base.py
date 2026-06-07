@@ -169,6 +169,17 @@ class BaseStrategy(ABC):
             self._daily_trade_count = 0
             self._daily_trades_reset_ts = day_start
 
+    # TODO(unify-daily-counters): This `_reset_daily_counter` mechanism
+    # duplicates `RiskManager._maybe_roll_day` (src/risk/risk_manager.py:266).
+    # Both use UTC, so they agree — no actual race condition. But there are
+    # TWO sources of truth for "how many trades today", and they can drift
+    # if a maintenance window mutates one without the other. Plan: have
+    # BaseStrategy delegate to a shared DailyCounter helper, or remove
+    # the strategy-level counter entirely and have callers read
+    # `risk.get_state().trades_today`. Until then, ensure any new
+    # trade-recording path increments BOTH `_daily_trade_count` (here) and
+    # `risk.record_trade_outcome` (elsewhere). See target_sniping.py:447.
+
     def calculate_turnover_penalty(self) -> float:
         """
         Calculate penalty for excessive trading frequency.
