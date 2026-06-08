@@ -486,3 +486,183 @@ class TestPumpAlertDataclass:
             expires_at=time.time() - 3600,
         )
         assert alert.is_active is False
+
+
+# =====================================================================
+# TestPumpDetectorPersistence (v12.7: SQLite-backed blacklist)
+# =====================================================================
+
+class FakePumpRow:
+    """Stand-in for sqlite3.Row for the persistence layer tests."""
+    def __init__(self, d: dict) -> None:
+        self._d = d
+    def __getitem__(self, k):
+        return self._d[k]
+    def keys(self):
+        return self._d.keys()
+
+
+class PersistentMockPriceDB(MockPriceDB):
+    """
+    Extends MockPriceDB with the new pump_blacklist persistence methods.
+    Implements the same surface as price_db's real methods so we can
+    test persistence without a real SQLite file.
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.pump_blacklist: dict[str, dict] = {}
+        self.persist_calls: int = 0
+        self.delete_calls: int = 0
+        self.cleanup_calls: int = 0
+
+    def add_pump_blacklist_entry(self, hash_name, old_price, new_price,
+                                 pct_change, detected_at, expires_at, alerted=False):
+        self.persist_calls += 1
+        self.pump_blacklist[hash_name] = {
+            "hash_name": hash_name,
+            "old_price": old_price,
+            "new_price": new_price,
+            "pct_change": pct_change,
+            "detected_at": detected_at,
+            "expires_at": expires_at,
+            "alerted": 1 if alerted else 0,
+        }
+
+    def get_active_pump_blacklist(self):
+        now = time.time()
+        return [
+            FakePumpRow(v)
+            for v in self.pump_blacklist.values()
+            if v["expires_at"] > now
+        ]
+
+    def delete_pump_blacklist_entry(self, hash_name):
+        self.delete_calls += 1
+        self.pump_blacklist.pop(hash_name, None)
+
+    def cleanup_expired_pump_blacklist(self) -> int:
+        self.cleanup_calls += 1
+        now = time.time()
+        expired = [k for k, v in self.pump_blacklist.items() if v["expires_at"] <= now]
+        for k in expired:
+            del self.pump_blacklist[k]
+        return len(expired)
+
+    def count_active_pump_blacklist(self) -> int:
+        now = time.time()
+        return sum(1 for v in self.pump_blacklist.values() if v["expires_at"] > now)
+
+    def get_pump_blacklist_total_detections(self) -> int:
+        return len(self.pump_blacklist)
+
+
+class TestPumpDetectorPersistence:
+    """v12.7: blacklist survives watchdog restarts via SQLite."""
+
+    def test_detection_persists_to_db(self) -> None:
+        db = PersistentMockPriceDB()
+        _seed_observation(db, "AK-47 | Redline (FT)", 10.0, seconds_ago=7200)
+        det = _make_detector(db, blacklist=86400)
+        det.check_price("AK-47 | Redline (FT)", 12.0)
+        assert db.persist_calls == 1
+        assert "AK-47 | Redline (FT)" in db.pump_blacklist
+        entry = db.pump_blacklist["AK-47 | Redline (FT)"]
+        assert entry["old_price"] == 10.0
+        assert entry["new_price"] == 12.0
+        assert entry["pct_change"] == pytest.approx(20.0, rel=1e-6)
+        assert entry["expires_at"] > time.time()
+        assert entry["alerted"] == 0  # initially False
+
+    def test_restore_from_disk_rehydrates_blacklist(self) -> None:
+        """Simulate watchdog restart: fresh PumpDetector, restore from DB."""
+        db = PersistentMockPriceDB()
+        _seed_observation(db, "AK-47 | Redline (FT)", 10.0, seconds_ago=7200)
+
+        # Phase 1: detection, write to DB
+        det1 = _make_detector(db, blacklist=86400)
+        det1.check_price("AK-47 | Redline (FT)", 12.0)
+        assert det1.is_blacklisted("AK-47 | Redline (FT)") is True
+
+        # Phase 2: simulate restart — new detector, same DB
+        det2 = _make_detector(db, blacklist=86400)
+        assert det2.is_blacklisted("AK-47 | Redline (FT)") is False  # cold
+        restored = det2.restore_from_disk()
+        assert restored == 1
+        assert det2.is_blacklisted("AK-47 | Redline (FT)") is True  # hot
+
+    def test_restore_skips_expired_entries(self) -> None:
+        db = PersistentMockPriceDB()
+        # Plant an expired entry
+        db.add_pump_blacklist_entry(
+            hash_name="OLD",
+            old_price=10.0,
+            new_price=20.0,
+            pct_change=100.0,
+            detected_at=time.time() - 100000,
+            expires_at=time.time() - 3600,  # expired 1h ago
+        )
+        det = _make_detector(db)
+        restored = det.restore_from_disk()
+        assert restored == 0
+        assert not det.is_blacklisted("OLD")
+
+    def test_restore_with_no_price_db_is_safe(self) -> None:
+        det = PumpDetector(price_db=None, notifier=MagicMock())
+        restored = det.restore_from_disk()
+        assert restored == 0
+
+    def test_restore_handles_db_failure(self) -> None:
+        """DB failure must not crash the bot."""
+        class BrokenDB:
+            def get_active_pump_blacklist(self):
+                raise RuntimeError("DB is down")
+        det = PumpDetector(price_db=BrokenDB(), notifier=MagicMock())
+        restored = det.restore_from_disk()  # must not raise
+        assert restored == 0
+
+    def test_unblock_also_removes_from_db(self) -> None:
+        db = PersistentMockPriceDB()
+        _seed_observation(db, "AK-47 | Redline (FT)", 10.0, seconds_ago=7200)
+        det = _make_detector(db)
+        det.check_price("AK-47 | Redline (FT)", 12.0)
+        assert "AK-47 | Redline (FT)" in db.pump_blacklist
+        det.unblock("AK-47 | Redline (FT)")
+        assert "AK-47 | Redline (FT)" not in db.pump_blacklist
+        assert db.delete_calls == 1
+
+    def test_cleanup_expired_calls_db_cleanup(self) -> None:
+        db = PersistentMockPriceDB()
+        # Plant an entry that's already expired
+        db.add_pump_blacklist_entry(
+            hash_name="STALE",
+            old_price=10.0,
+            new_price=12.0,
+            pct_change=20.0,
+            detected_at=time.time() - 100000,
+            expires_at=time.time() - 1,
+        )
+        # In-memory side: pre-populate an expired entry
+        det = _make_detector(db, blacklist=1)
+        det._blacklist["STALE"] = PumpAlert(
+            hash_name="STALE",
+            old_price=10.0,
+            new_price=12.0,
+            pct_change=20.0,
+            detected_at=time.time() - 100,
+            expires_at=time.time() - 1,  # expired
+        )
+        time.sleep(1.2)
+        removed = det.cleanup_expired()
+        assert removed == 1
+        assert db.cleanup_calls == 1
+
+    def test_detection_works_without_persistence_methods(self) -> None:
+        """Backward compat: if price_db has no persistence methods,
+        detection still works (in-memory only)."""
+        db = MockPriceDB()  # base class, no pump_* methods
+        _seed_observation(db, "AK-47 | Redline (FT)", 10.0, seconds_ago=7200)
+        det = _make_detector(db)
+        alert = det.check_price("AK-47 | Redline (FT)", 12.0)
+        assert alert is not None
+        assert det.is_blacklisted("AK-47 | Redline (FT)") is True

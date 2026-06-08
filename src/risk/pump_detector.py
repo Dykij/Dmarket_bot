@@ -138,6 +138,47 @@ class PumpDetector:
             return False
         return True
 
+    def restore_from_disk(self) -> int:
+        """
+        v12.7: Re-populate the in-memory blacklist from price_db on
+        bot startup. Returns count of entries restored. This is what
+        makes the 24h protection survive watchdog restarts.
+
+        Idempotent — safe to call multiple times. Late-loaded entries
+        are marked as 'alerted=True' so we don't re-send Telegram
+        alerts on every restart (the user already saw them).
+        """
+        if self._price_db is None:
+            logger.debug("[PumpDetector] restore_from_disk: no price_db, skip")
+            return 0
+        if not hasattr(self._price_db, "get_active_pump_blacklist"):
+            # price_db doesn't expose the new method (very old test fixture)
+            return 0
+        try:
+            rows = self._price_db.get_active_pump_blacklist()
+        except Exception as e:
+            logger.debug(f"[PumpDetector] restore_from_disk: DB read failed: {e}")
+            return 0
+
+        restored = 0
+        for row in rows:
+            title = row["hash_name"]
+            self._blacklist[title] = PumpAlert(
+                hash_name=title,
+                old_price=row["old_price"],
+                new_price=row["new_price"],
+                pct_change=row["pct_change"],
+                detected_at=row["detected_at"],
+                expires_at=row["expires_at"],
+                alerted=bool(row["alerted"]),
+            )
+            restored += 1
+        if restored:
+            logger.info(
+                f"[PumpDetector] restored {restored} blacklist entries from disk"
+            )
+        return restored
+
     def check_price(self, hash_name: str, current_price: float) -> Optional[PumpAlert]:
         """
         Run a spike check for one item. Returns PumpAlert if newly detected,
@@ -199,6 +240,23 @@ class PumpDetector:
         self._total_detections += 1
         self._last_scan_ts = now
 
+        # v12.7: Persist to SQLite so a watchdog restart doesn't lose
+        # the 24h protection. Best-effort: if the DB write fails, the
+        # in-memory blacklist still works for this session.
+        if self._price_db is not None and hasattr(self._price_db, "add_pump_blacklist_entry"):
+            try:
+                self._price_db.add_pump_blacklist_entry(
+                    hash_name=hash_name,
+                    old_price=old_price,
+                    new_price=current_price,
+                    pct_change=pct_change,
+                    detected_at=now,
+                    expires_at=now + self.blacklist_seconds,
+                    alerted=False,
+                )
+            except Exception as e:
+                logger.debug(f"[PumpDetector] persist failed: {e}")
+
         logger.warning(
             f"[PumpDetector] SPIKE DETECTED: {hash_name} "
             f"${old_price:.2f} → ${current_price:.2f} ({pct_change:+.1f}% in "
@@ -246,17 +304,30 @@ class PumpDetector:
         Manually unblock a title (admin override, e.g. via /risk Telegram
         command). Returns True if something was unblocked.
         """
+        removed = False
         if hash_name in self._blacklist:
             del self._blacklist[hash_name]
+            removed = True
+        if self._price_db is not None and hasattr(self._price_db, "delete_pump_blacklist_entry"):
+            try:
+                self._price_db.delete_pump_blacklist_entry(hash_name)
+            except Exception as e:
+                logger.debug(f"[PumpDetector] unblock DB delete failed: {e}")
+        if removed:
             logger.info(f"[PumpDetector] manually unblocked: {hash_name}")
-            return True
-        return False
+        return removed
 
     def cleanup_expired(self) -> int:
         """Remove expired entries. Returns count removed. Call periodically."""
         expired = [k for k, v in self._blacklist.items() if not v.is_active]
         for k in expired:
             del self._blacklist[k]
+        # v12.7: Best-effort DB cleanup
+        if self._price_db is not None and hasattr(self._price_db, "cleanup_expired_pump_blacklist"):
+            try:
+                self._price_db.cleanup_expired_pump_blacklist()
+            except Exception as e:
+                logger.debug(f"[PumpDetector] DB cleanup failed: {e}")
         return len(expired)
 
     # ----------------------------------------------------------------

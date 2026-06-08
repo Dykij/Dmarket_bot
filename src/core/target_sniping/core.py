@@ -96,6 +96,18 @@ class SnipingLoop(  # type: ignore[misc]
             price_db=price_db,
             notifier=notifier,
         )
+        # v12.7: Restore blacklist from disk (survives watchdog restarts).
+        # Done at __init__ time because price_db is the same instance the
+        # detector was constructed with — no async needed.
+        try:
+            restored = self.pump_detector.restore_from_disk()
+            if restored > 0:
+                logger.info(
+                    f"[v12.7] PumpDetector: restored {restored} blacklist "
+                    f"entries from persistent store"
+                )
+        except Exception as e:
+            logger.debug(f"[v12.7] PumpDetector restore_from_disk failed: {e}")
         self.risk = RiskManager(
             daily_loss_limit_usd=float(os.getenv("MAX_DAILY_LOSS_USD", "10.00")),
             daily_trade_limit=int(os.getenv("MAX_DAILY_TRADES", "200")),
