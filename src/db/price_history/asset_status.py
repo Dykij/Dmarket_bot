@@ -3,6 +3,8 @@ asset_status.py — asset_status table (v12.2 trade_protected, reverted).
 
 Mixin with the v12.2 asset-status tracking. Mixed into `PriceHistoryDB`
 (see `core.py`).
+
+v12.7: write methods wrapped with @with_db_retry.
 """
 
 from __future__ import annotations
@@ -10,6 +12,8 @@ from __future__ import annotations
 import logging
 import time
 from typing import Any, Dict, List, Optional
+
+from src.db.db_retry import with_db_retry
 
 logger = logging.getLogger("PriceHistoryDB")
 
@@ -20,6 +24,7 @@ class _AssetStatusMixin:
     # These attributes are set on the instance by PriceHistoryDB.__init__
     state_conn: Any
 
+    @with_db_retry(operation_name="update_asset_status")
     def update_asset_status(
         self,
         item_id: str,

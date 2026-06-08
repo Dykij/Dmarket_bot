@@ -3,12 +3,16 @@ low_fee.py — low_fee_cache table (v12.0 daily refresh).
 
 Mixin with the small low-fee cache table. Mixed into `PriceHistoryDB`
 (see `core.py`).
+
+v12.7: write methods wrapped with @with_db_retry.
 """
 
 from __future__ import annotations
 
 import time
 from typing import Any, Dict, List, Optional
+
+from src.db.db_retry import with_db_retry
 
 
 class _LowFeeMixin:
@@ -17,6 +21,7 @@ class _LowFeeMixin:
     # These attributes are set on the instance by PriceHistoryDB.__init__
     state_conn: Any
 
+    @with_db_retry(operation_name="save_low_fee_items")
     def save_low_fee_items(self, items: List[Dict[str, Any]]) -> None:
         """Replace the entire low-fee cache with fresh items from DMarket."""
         with self.state_conn:

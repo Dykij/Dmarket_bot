@@ -6,12 +6,13 @@ Splits trading state and historical analysis into two physical databases:
     dmarket_history.db — (OLAP) Bulk analytical data: price observations
 
 Composes focused mixins for each table group:
-    history.py      — price_history (observations + liquidity + wash trading)
-    state.py        — scanning_state (cursor, etc.)
-    inventory.py    — virtual_inventory + decision_logs + missed_opportunities
-    targets.py      — active_targets (placed buy orders)
-    asset_status.py — asset_status (v12.2 trade_protected, reverted)
-    low_fee.py      — low_fee_cache (v12.0 daily refresh)
+    history.py       — price_history (observations + liquidez + wash trading)
+    state.py         — scanning_state (cursor, etc.)
+    inventory.py     — virtual_inventory + decision_logs + missed_opportunities
+    targets.py       — active_targets (placed buy orders)
+    asset_status.py  — asset_status (v12.2 trade_protected, reverted)
+    low_fee.py       — low_fee_cache (v12.0 daily refresh)
+    pump_blacklist.py — pump_blacklist (v12.7 FOMO protection, persistent)
 """
 
 from __future__ import annotations
@@ -24,6 +25,7 @@ from .asset_status import _AssetStatusMixin
 from .history import _HistoryMixin
 from .inventory import _InventoryMixin
 from .low_fee import _LowFeeMixin
+from .pump_blacklist import _PumpBlacklistMixin
 from .state import _StateMixin
 from .targets import _TargetsMixin
 
@@ -37,6 +39,7 @@ class PriceHistoryDB(  # type: ignore[misc]
     _TargetsMixin,
     _AssetStatusMixin,
     _LowFeeMixin,
+    _PumpBlacklistMixin,
 ):
     """Bifurcated SQLite-backed price history with trend analysis."""
 
@@ -224,6 +227,28 @@ class PriceHistoryDB(  # type: ignore[misc]
             )
             self.state_conn.execute(
                 "CREATE INDEX IF NOT EXISTS idx_risk_ts ON risk_events(ts)"
+            )
+
+            # v12.7: Persistent pump-blacklist (survives watchdog restarts).
+            # The PumpDetector in src/risk/pump_detector.py writes here
+            # on every spike detection and reads here at boot. Without
+            # this table, the 24h FOMO protection would be lost on
+            # any restart (e.g. memory-leak kill by watchdog).
+            self.state_conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS pump_blacklist (
+                    hash_name   TEXT PRIMARY KEY,
+                    old_price   REAL    NOT NULL,
+                    new_price   REAL    NOT NULL,
+                    pct_change  REAL    NOT NULL,
+                    detected_at REAL    NOT NULL,
+                    expires_at  REAL    NOT NULL,
+                    alerted     INTEGER NOT NULL DEFAULT 0
+                )
+            """
+            )
+            self.state_conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_pump_expires ON pump_blacklist(expires_at)"
             )
 
             # Temporary safety check: remove price_history from state_db if it exists after migration

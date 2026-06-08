@@ -4,12 +4,16 @@ history.py — Price history (price_history) reads + writes + analytics.
 Mixin with the OLAP-side methods: observation writes, recent-price queries,
 liquidity metrics, trimmed mean, and wash-trading detection.
 Mixed into `PriceHistoryDB` (see `core.py`).
+
+v12.7: write methods wrapped with @with_db_retry.
 """
 
 from __future__ import annotations
 
 import time
 from typing import Any, Dict, List, Optional, Tuple
+
+from src.db.db_retry import with_db_retry
 
 
 class _HistoryMixin:
@@ -21,6 +25,7 @@ class _HistoryMixin:
     # ------------------------------------------------------------------
     # Write (HISTORY)
     # ------------------------------------------------------------------
+    @with_db_retry(operation_name="record_price")
     def record_price(self, hash_name: str, price: float, source: str = "cs2cap") -> None:
         """Insert a new price observation into the history DB."""
         with self.history_conn:

@@ -3,6 +3,13 @@ inventory.py — virtual_inventory + decision_logs + missed_opportunities.
 
 Mixin with the sandbox-side inventory tables. Mixed into
 `PriceHistoryDB` (see `core.py`).
+
+v12.7: write methods wrapped with @with_db_retry so concurrent
+background-task writes retry on transient 'database is locked'.
+The hot-path sniping loop calls add_virtual_item, update_virtual_status,
+mark_listed, etc. on every buy/sell — losing one of these due to a
+lock contention would mean a lost trade record or a stale inventory
+state.
 """
 
 from __future__ import annotations
@@ -11,6 +18,8 @@ import logging
 import sqlite3
 import time
 from typing import Any, Dict, List
+
+from src.db.db_retry import with_db_retry
 
 logger = logging.getLogger("PriceHistoryDB")
 
@@ -26,6 +35,7 @@ class _InventoryMixin:
     # ------------------------------------------------------------------
     # Virtual Assets (STATE)
     # ------------------------------------------------------------------
+    @with_db_retry(operation_name="add_virtual_item")
     def add_virtual_item(
         self, hash_name: str, buy_price: float, trade_lock_hours: int = 168
     ) -> None:
@@ -83,6 +93,7 @@ class _InventoryMixin:
         ).fetchone()
         return row["avg_price"] or 0.0
 
+    @with_db_retry(operation_name="record_missed_opportunity")
     def record_missed_opportunity(
         self, hash_name: str, price: float, expected_sell: float, reason: str
     ) -> None:
@@ -95,6 +106,7 @@ class _InventoryMixin:
                 (hash_name, price, expected_sell, reason, time.time()),
             )
 
+    @with_db_retry(operation_name="log_decision")
     def log_decision(
         self, hash_name: str, decision: str, reason: str, details: str = ""
     ) -> None:
@@ -132,6 +144,7 @@ class _InventoryMixin:
         self.state_conn.row_factory = sqlite3.Row
         logger.info(f"🔄 [DB] State restored from: {src.name}")
 
+    @with_db_retry(operation_name="update_virtual_status")
     def update_virtual_status(self, item_id: int, new_status: str) -> None:
         with self.state_conn:
             self.state_conn.execute(
@@ -139,6 +152,7 @@ class _InventoryMixin:
                 (new_status, item_id),
             )
 
+    @with_db_retry(operation_name="record_virtual_sale")
     def record_virtual_sale(self, item_id: int, sell_price: float, fee_paid: float) -> None:
         with self.state_conn:
             row = self.state_conn.execute(
@@ -157,6 +171,7 @@ class _InventoryMixin:
     # ------------------------------------------------------------------
     # v12.5: Production sell-side helpers
     # ------------------------------------------------------------------
+    @with_db_retry(operation_name="attach_dm_item_id")
     def attach_dm_item_id(self, row_id: int, dm_item_id: str) -> None:
         """Link a virtual_inventory row to its real DMarket itemId.
 
@@ -190,6 +205,7 @@ class _InventoryMixin:
             (dm_offer_id,),
         ).fetchone()
 
+    @with_db_retry(operation_name="mark_listed")
     def mark_listed(self, row_id: int, dm_offer_id: str, list_price: float) -> None:
         """Mark a virtual item as successfully listed on DMarket.
 
@@ -209,6 +225,7 @@ class _InventoryMixin:
                 (dm_offer_id, list_price, time.time(), row_id),
             )
 
+    @with_db_retry(operation_name="mark_list_failed")
     def mark_list_failed(self, row_id: int, error_msg: str) -> None:
         """Record a failed listing attempt; status stays 'idle' so we retry next cycle."""
         with self.state_conn:
@@ -262,6 +279,7 @@ class _InventoryMixin:
     # ------------------------------------------------------------------
     # v12.5: Equity snapshots + risk events
     # ------------------------------------------------------------------
+    @with_db_retry(operation_name="record_equity_snapshot")
     def record_equity_snapshot(
         self,
         cash: float,
@@ -342,6 +360,7 @@ class _InventoryMixin:
             for r in rows
         ]
 
+    @with_db_retry(operation_name="record_risk_event")
     def record_risk_event(
         self,
         event_type: str,

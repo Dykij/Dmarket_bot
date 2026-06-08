@@ -3,6 +3,9 @@ targets.py — active_targets table (placed buy orders).
 
 Mixin with the small targets table. Mixed into `PriceHistoryDB`
 (see `core.py`).
+
+v12.7: write methods wrapped with @with_db_retry so concurrent
+background-task writes retry on transient 'database is locked'.
 """
 
 from __future__ import annotations
@@ -10,6 +13,8 @@ from __future__ import annotations
 import logging
 import time
 from typing import Any
+
+from src.db.db_retry import with_db_retry
 
 logger = logging.getLogger("PriceHistoryDB")
 
@@ -20,6 +25,7 @@ class _TargetsMixin:
     # These attributes are set on the instance by PriceHistoryDB.__init__
     state_conn: Any
 
+    @with_db_retry(operation_name="record_placed_target")
     def record_placed_target(self, item_id: str, hash_name: str, price: float) -> None:
         with self.state_conn:
             self.state_conn.execute(
@@ -38,6 +44,7 @@ class _TargetsMixin:
         ).fetchone()
         return row is not None
 
+    @with_db_retry(operation_name="cleanup_old_targets")
     def cleanup_old_targets(self, max_age_seconds: int = 7776000) -> int:
         """
         Remove active_targets entries older than max_age_seconds (default 90 days).

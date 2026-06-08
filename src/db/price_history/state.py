@@ -3,6 +3,11 @@ state.py — scanning_state (cursor, etc.) persistence.
 
 Mixin with the small key/value table for scan cursors and other
 small persistent state. Mixed into `PriceHistoryDB` (see `core.py`).
+
+v12.7: write methods wrapped with @with_db_retry so concurrent
+background-task writes (CS2CapCache refresh, briefing scheduler)
+retry on transient 'database is locked' instead of losing the
+cursor update.
 """
 
 from __future__ import annotations
@@ -11,6 +16,8 @@ import sqlite3
 import time
 from typing import List, Optional, Tuple
 
+from src.db.db_retry import with_db_retry
+
 
 class _StateMixin:
     """scanning_state table (key/value, OLTP side)."""
@@ -18,6 +25,7 @@ class _StateMixin:
     # These attributes are set on the instance by PriceHistoryDB.__init__
     state_conn: object
 
+    @with_db_retry(operation_name="save_state")
     def save_state(self, key: str, value: str) -> None:
         with self.state_conn:  # type: ignore[attr-defined]
             self.state_conn.execute(  # type: ignore[attr-defined]
