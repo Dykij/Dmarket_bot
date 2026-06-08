@@ -61,6 +61,15 @@ class _TelegramNotifier:
         "critical": 1.0,      # daily loss limit — almost never throttled
     }
 
+    # v12.7: Circuit breaker thresholds. After N consecutive send
+    # failures (HTTP non-200, network error, etc.) the notifier opens
+    # the circuit for COOLDOWN_S seconds, during which it silently
+    # no-ops to avoid hammering a down Telegram API. After the cooldown
+    # a single probe is sent on the next call; if it succeeds the
+    # circuit closes, otherwise it stays open another COOLDOWN_S.
+    CB_FAIL_THRESHOLD: int = 5
+    CB_COOLDOWN_S: float = 300.0  # 5 min
+
     def __init__(self) -> None:
         self._token: str = ""
         self._chat_id: str = ""
@@ -73,6 +82,12 @@ class _TelegramNotifier:
         self._total_throttled: int = 0
         self._total_failed: int = 0
         self._recent_messages: Deque[Tuple[float, str]] = deque(maxlen=50)
+
+        # v12.7: circuit breaker state
+        self._cb_consecutive_failures: int = 0
+        self._cb_opened_at: float = 0.0  # 0.0 = closed
+        self._cb_total_opens: int = 0
+        self._cb_total_short_circuits: int = 0  # sends blocked by open CB
 
     def configure(self) -> None:
         """Re-read .env values. Idempotent; call after env changes."""
@@ -127,6 +142,14 @@ class _TelegramNotifier:
         """Send a single message. Returns True on success, False on throttled/failed."""
         if not self._enabled:
             return False
+
+        # v12.7: Circuit breaker check (before throttle so we don't
+        # count CB-blocked sends as 'throttled' — those are different
+        # concerns: throttle is rate-limiting, CB is fault-isolation).
+        if self._cb_is_open():
+            self._cb_total_short_circuits += 1
+            return False
+
         if self._should_throttle(severity):
             self._total_throttled += 1
             logger.debug(
@@ -154,17 +177,20 @@ class _TelegramNotifier:
                     self._last_sent_at[severity] = time.time()
                     self._total_sent += 1
                     self._recent_messages.append((time.time(), severity))
+                    self._cb_record_success()
                     return True
                 body = await resp.text()
                 # 429 = rate limited by Telegram; back off
                 if resp.status == 429:
                     self._total_failed += 1
                     self._last_sent_at[severity] = time.time()  # force throttle
+                    self._cb_record_failure()  # CB counts 429s too
                     logger.warning(
                         f"[notifier] Telegram 429 (rate limit): {body[:200]}"
                     )
                 else:
                     self._total_failed += 1
+                    self._cb_record_failure()
                     # Don't spam the log on transient errors
                     now = time.time()
                     if now - self._last_error_log > 60:
@@ -175,11 +201,68 @@ class _TelegramNotifier:
                 return False
         except Exception as e:
             self._total_failed += 1
+            self._cb_record_failure()
             now = time.time()
             if now - self._last_error_log > 60:
                 self._last_error_log = now
                 logger.warning(f"[notifier] send failed: {e}")
             return False
+
+    # ----------------------------------------------------------------
+    # v12.7: Circuit breaker internals
+    # ----------------------------------------------------------------
+    def _cb_is_open(self) -> bool:
+        """True if the circuit is currently OPEN (blocking sends)."""
+        if self._cb_opened_at == 0.0:
+            return False  # closed
+        # If the cooldown has elapsed, transition to half-open: the
+        # next send becomes a probe; success closes, failure re-opens.
+        # We reset _cb_opened_at here so that _cb_record_failure can
+        # re-open the circuit (otherwise the "if _cb_opened_at == 0.0"
+        # guard would block the re-open).
+        if time.time() - self._cb_opened_at >= self.CB_COOLDOWN_S:
+            self._cb_opened_at = 0.0
+            return False
+        return True
+
+    def _cb_record_success(self) -> None:
+        """Call after a successful send. Closes the circuit if open."""
+        if self._cb_opened_at > 0.0:
+            logger.info(
+                f"[notifier] Circuit breaker CLOSED after "
+                f"{self._cb_consecutive_failures} consecutive failures"
+            )
+        self._cb_consecutive_failures = 0
+        self._cb_opened_at = 0.0
+
+    def _cb_record_failure(self) -> None:
+        """Call after a send failure. Opens the circuit if threshold hit."""
+        self._cb_consecutive_failures += 1
+        if (
+            self._cb_opened_at == 0.0
+            and self._cb_consecutive_failures >= self.CB_FAIL_THRESHOLD
+        ):
+            self._cb_opened_at = time.time()
+            self._cb_total_opens += 1
+            logger.warning(
+                f"[notifier] Circuit breaker OPENED after "
+                f"{self._cb_consecutive_failures} consecutive failures. "
+                f"Cooldown: {self.CB_COOLDOWN_S:.0f}s"
+            )
+
+    def cb_force_close(self) -> None:
+        """Manual reset (admin override). Closes the circuit immediately."""
+        if self._cb_opened_at > 0.0:
+            logger.info("[notifier] Circuit breaker manually CLOSED")
+        self._cb_opened_at = 0.0
+        self._cb_consecutive_failures = 0
+
+    def cb_force_open(self) -> None:
+        """Manual trip (admin override). Opens the circuit for cooldown."""
+        self._cb_opened_at = time.time()
+        self._cb_total_opens += 1
+        self._cb_consecutive_failures = self.CB_FAIL_THRESHOLD
+        logger.warning("[notifier] Circuit breaker manually OPENED")
 
     # ---- High-level helpers used by the trading loop ----
 
@@ -287,6 +370,15 @@ class _TelegramNotifier:
             "throttle_windows": dict(self.THROTTLE_S),
             "last_sent_per_severity": dict(self._last_sent_at),
             "recent_count": len(self._recent_messages),
+            "circuit_breaker": {
+                "state": "open" if self._cb_is_open() else "closed",
+                "consecutive_failures": self._cb_consecutive_failures,
+                "fail_threshold": self.CB_FAIL_THRESHOLD,
+                "cooldown_s": self.CB_COOLDOWN_S,
+                "total_opens": self._cb_total_opens,
+                "total_short_circuits": self._cb_total_short_circuits,
+                "opened_at": self._cb_opened_at,
+            },
         }
 
 
