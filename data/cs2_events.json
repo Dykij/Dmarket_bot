@@ -168,5 +168,15 @@
     "affected_categories": ["rifle", "smg", "pistol", "shotgun"],
     "margin_multiplier": 2.5,
     "notes": "⚠️ ПРОГНОЗ: Valve не анонсировала дату операции. Обновите эту запись через Telegram /add_event когда появится официальная информация. Новые скины операции давят на аналогичные существующие скины (-10-25%)."
+  },
+  {
+    "name": "Armory Collection Rotation (Q2 2026)",
+    "start": "2026-04-01",
+    "end": "2026-06-30",
+    "type": "armory_rotation",
+    "effect": "caution",
+    "affected_categories": ["rifle", "pistol", "smg"],
+    "margin_multiplier": 1.4,
+    "notes": "⚠️ VALVE ARMORY: периодически Valve ротирует коллекции в Armory. Источник: cs2-inventory.com/blog (2026). Скины из коллекций, которые уходят из Armory, могут потерять 5-15% ликвидности на 2-4 недели. Скины, которые ВОЗВРАЩАЮТСЯ в Armory, могут вырасти на 5-10% за 1-2 недели. Точные даты Valve не анонсирует — отслеживайте обновления Armory через HLTV/Reddit."
   }
 ]

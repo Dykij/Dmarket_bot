@@ -83,13 +83,25 @@ class SnipingLoop(  # type: ignore[misc]
 
         # v12.5: Risk orchestration + self-reflection
         from src.analytics.self_reflection import self_reflection
+        from src.risk.pump_detector import PumpDetector
         from src.risk.risk_manager import RiskManager
+        from src.telegram.notifier import notifier
         self.self_reflection = self_reflection
+        # v12.6: Pump detector — blocks FOMO buys on items with sudden
+        # price spikes (>PUMP_THRESHOLD_PCT in 1h, default 15%). The
+        # detector reads price_db (already populated by the sniping loop)
+        # and shares the Telegram notifier. Late-binding of price_db is
+        # done in start() once everything is wired.
+        self.pump_detector = PumpDetector(
+            price_db=price_db,
+            notifier=notifier,
+        )
         self.risk = RiskManager(
             daily_loss_limit_usd=float(os.getenv("MAX_DAILY_LOSS_USD", "10.00")),
             daily_trade_limit=int(os.getenv("MAX_DAILY_TRADES", "200")),
             max_drawdown_pct=float(os.getenv("MAX_DRAWDOWN_PCT", "15.0")),
             soft_halt_drawdown_pct=float(os.getenv("SOFT_HALT_DRAWDOWN_PCT", "5.0")),
+            pump_detector=self.pump_detector,
         )
 
         # v12.5: Daily briefing scheduler (started in start())
@@ -560,6 +572,29 @@ class SnipingLoop(  # type: ignore[misc]
                     f"[CS2CapCache MISS] cache_stale={self.cs2cap_cache.is_stale()} "
                     f"ask_count={len(self.cs2cap_cache._ask_cache)}"
                 )
+
+            # v12.6: Pump detection sweep — we just observed fresh prices
+            # for ~100 items. Run the spike check on each so that any
+            # item with >PUMP_THRESHOLD_PCT move in the last hour gets
+            # blacklisted and alerted. Cheap (in-memory DB read); runs
+            # BEFORE the filter loop so the filter can skip blacklisted
+            # items automatically (via risk.pre_trade_check below).
+            if self.pump_detector is not None:
+                pd_count = 0
+                for title, agg in agg_prices.items():
+                    best_ask = agg.get("best_ask", 0.0) or 0.0
+                    if best_ask > 0:
+                        # Use ask price as the "current price" proxy
+                        # (best_ask is what we'd actually pay to buy).
+                        self.pump_detector.check_price(title, best_ask)
+                        pd_count += 1
+                if self.deep_scan_counter % 10 == 0:
+                    pd_stats = self.pump_detector.stats()
+                    logger.info(
+                        f"[PumpDetector] checked {pd_count} items; "
+                        f"blacklist={pd_stats['active_blacklist_size']} "
+                        f"detections={pd_stats['total_detections']}"
+                    )
 
             for item in items:
                 # Reload candidate_item_ids was unused; reuse

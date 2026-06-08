@@ -204,6 +204,16 @@ class DailyBriefingScheduler:
             if risk_state.daily_halt_active:
                 msg_lines.append("🔴 <b>Daily loss limit hit</b> — trading halted until midnight")
 
+            # v12.6: Pump-blacklist summary (active items still blocked)
+            if self._risk.pump_detector is not None:
+                pd_stats = self._risk.pump_detector.stats()
+                active = pd_stats.get("active_blacklist_size", 0)
+                if active > 0:
+                    msg_lines.append(
+                        f"🚨 <b>Pump-blacklist:</b> {active} item(s) blocked "
+                        f"(total detections: {pd_stats.get('total_detections', 0)})"
+                    )
+
             # 4. Risk events today
             events = price_db.get_risk_events_today()
             if events:

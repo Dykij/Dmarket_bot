@@ -26,7 +26,15 @@ import os
 import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
+
+if TYPE_CHECKING:
+    # Forward reference: pump_detector is injected at runtime by
+    # SnipingLoop.__init__ to avoid the circular import (pump_detector
+    # imports nothing from risk_manager, but risk_manager would re-import
+    # pump_detector's type for annotations, which is the kind of edge
+    # that gets you into trouble during test setup).
+    from src.risk.pump_detector import PumpDetector
 
 logger = logging.getLogger("RiskManager")
 
@@ -78,6 +86,7 @@ class RiskManager:
         max_drawdown_pct: float = 15.0,
         soft_halt_drawdown_pct: float = 5.0,
         initial_equity_usd: float = 0.0,
+        pump_detector: Optional["PumpDetector"] = None,
     ) -> None:
         # Read limits from env (with defaults)
         self.daily_loss_limit_usd = daily_loss_limit_usd if daily_loss_limit_usd is not None else float(
@@ -88,6 +97,11 @@ class RiskManager:
         )
         self.max_drawdown_pct = max_drawdown_pct
         self.soft_halt_drawdown_pct = soft_halt_drawdown_pct
+
+        # v12.6: Optional pump detector (block buys on suspected FOMO spikes)
+        # The detector is injected by SnipingLoop.__init__ to avoid
+        # circular imports. If absent, the pump check is a no-op.
+        self.pump_detector = pump_detector
 
         # State
         self._today: str = self._current_date()
@@ -107,6 +121,13 @@ class RiskManager:
 
         self._soft_halt_active: bool = False
 
+    def attach_pump_detector(self, pump_detector: "PumpDetector") -> None:
+        """
+        Late-bind the pump detector. Called from SnipingLoop.__init__
+        after both objects are constructed (avoids circular imports).
+        """
+        self.pump_detector = pump_detector
+
     # ----------------------------------------------------------------
     # Public API
     # ----------------------------------------------------------------
@@ -122,16 +143,32 @@ class RiskManager:
 
         Order of checks (cheapest first):
         1. New day? Reset counters.
-        2. Daily trade count limit.
-        3. Daily loss limit.
-        4. Drawdown → soft halt (only blocks BUYs, not SELLs)
-        5. Hard drawdown → block everything.
-        6. Equity track peak (for max drawdown calc).
+        2. Pump-detector blacklist check (item-specific, blocks FOMO buys).
+        3. Daily trade count limit.
+        4. Daily loss limit.
+        5. Drawdown → soft halt (only blocks BUYs, not SELLs)
+        6. Hard drawdown → block everything.
+        7. Equity track peak (for max drawdown calc).
         """
         self._maybe_roll_day()
         self._update_equity(current_equity_usd)
 
-        # 1. Daily trade count
+        # 1. Pump-detector blacklist check (v12.6) — runs BEFORE all the
+        # global halts so an item-specific FOMO block doesn't trip the
+        # daily counters. This is purely item-scoped.
+        if self.pump_detector is not None and item_title:
+            if self.pump_detector.is_blacklisted(item_title):
+                self._daily_blocked += 1
+                return PreTradeCheck(
+                    allowed=False,
+                    reason=(
+                        f"Pump-blacklisted: {item_title} (price spike detected, "
+                        f"buys blocked for 24h)"
+                    ),
+                    triggered_halt=False,  # item-specific, not a global halt
+                )
+
+        # 2. Daily trade count
         if self._daily_trade_count >= self.daily_trade_limit:
             self._daily_blocked += 1
             return PreTradeCheck(
@@ -143,7 +180,7 @@ class RiskManager:
                 triggered_halt=True,
             )
 
-        # 2. Daily loss limit
+        # 3. Daily loss limit
         if self._daily_realized_pnl <= -self.daily_loss_limit_usd:
             self._daily_blocked += 1
             return PreTradeCheck(
@@ -155,7 +192,7 @@ class RiskManager:
                 triggered_halt=True,
             )
 
-        # 3. Hard drawdown kill switch
+        # 4. Hard drawdown kill switch
         if self._current_drawdown_pct >= self.max_drawdown_pct:
             self._daily_blocked += 1
             return PreTradeCheck(
@@ -167,7 +204,7 @@ class RiskManager:
                 triggered_halt=True,
             )
 
-        # 4. Soft halt (only on BUYs; we don't block sells)
+        # 5. Soft halt (only on BUYs; we don't block sells)
         if self._current_drawdown_pct >= self.soft_halt_drawdown_pct:
             self._soft_halt_active = True
             # Reduce size by 50% in soft-halt
@@ -188,7 +225,7 @@ class RiskManager:
                 adjusted_size_usd=reduced,
             )
 
-        # 5. No halt
+        # 6. No halt
         self._soft_halt_active = False
         self._daily_passed += 1
         return PreTradeCheck(
@@ -255,6 +292,15 @@ class RiskManager:
             lines.append("  ⚠️ Soft-halt active: size halved on next buy")
         if state.daily_halt_active:
             lines.append("  🔴 Daily loss limit hit — trading halted until midnight")
+        # v12.6: Pump detector summary
+        if self.pump_detector is not None:
+            pd_stats = self.pump_detector.stats()
+            active = pd_stats.get("active_blacklist_size", 0)
+            if active > 0:
+                lines.append(
+                    f"  🚨 Pump-blacklist: {active} active item(s) "
+                    f"(total detections: {pd_stats.get('total_detections', 0)})"
+                )
         return lines
 
     # ----------------------------------------------------------------
