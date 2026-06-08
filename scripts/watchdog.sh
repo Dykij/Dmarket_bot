@@ -79,6 +79,22 @@ is_bot_alive() {
 }
 
 is_bot_responsive() {
+    # v12.7: prefer HTTP /readyz over file timestamp. The HTTP endpoint
+    # is updated by the trading loop on every cycle, so it reflects
+    # real activity. Falls back to file heartbeat if the HTTP server
+    # is disabled (HEALTH_PORT not set) or unreachable.
+    local port="${HEALTH_PORT:-}"
+    if [[ -n "${port}" ]]; then
+        local http_code
+        http_code=$(curl -s -o /dev/null -w '%{http_code}' \
+            -m 5 "http://127.0.0.1:${port}/readyz" 2>/dev/null || echo "000")
+        # 200 = ready, 503 = running but halted/down. Both mean
+        # the bot is responsive. 000 = unreachable.
+        if [[ "${http_code}" == "200" || "${http_code}" == "503" ]]; then
+            return 0
+        fi
+        # Fall through to file heartbeat check
+    fi
     if [[ ! -f "${HB_FILE}" ]]; then
         return 1
     fi

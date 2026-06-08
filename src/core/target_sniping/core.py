@@ -400,6 +400,16 @@ class SnipingLoop(  # type: ignore[misc]
         6. v12.2: Sync asset statuses (trade_protected, reverted)
         """
         try:
+            # v12.7: Mark cycle as in-progress (early-return safe). This
+            # makes /healthz report real cycle activity even when the
+            # cycle returns early due to no aggregated prices. The
+            # full metrics (equity, halts, pump) are updated further
+            # down at the end of a successful cycle.
+            try:
+                from src.utils.health_server import health_state
+                health_state.mark_cycle(0.0, 0.0, 0.0)
+            except Exception:
+                pass
             self.deep_scan_counter += 1
             self.reprice_counter += 1
             is_fresh_cycle = self.deep_scan_counter % 5 == 0
@@ -639,6 +649,41 @@ class SnipingLoop(  # type: ignore[misc]
                 f"Assets: ${equity['assets']:.2f} | "
                 f"TOTAL: ${equity['total']:.2f} (Items: {equity['count']})"
             )
+
+            # v12.7: Update HTTP health server metrics (no-op if disabled).
+            # All calls are O(1) in-memory writes; safe to do every cycle.
+            try:
+                from src.utils.health_server import health_state
+                risk_state = self.risk.get_state()
+                health_state.mark_cycle(
+                    equity_usd=equity["total"],
+                    peak_equity_usd=risk_state.peak_equity_usd,
+                    drawdown_pct=risk_state.current_drawdown_pct,
+                )
+                health_state.set_daily_stats(
+                    pnl_usd=-risk_state.daily_loss_usd,
+                    trade_count=risk_state.daily_trade_count,
+                )
+                health_state.set_halts(
+                    soft_halt=risk_state.soft_halt_active,
+                    daily_halt=risk_state.daily_halt_active,
+                )
+                if self.pump_detector is not None:
+                    pd_stats = self.pump_detector.stats()
+                    health_state.set_pump_stats(
+                        blacklist_size=pd_stats["active_blacklist_size"],
+                        total_detections=pd_stats["total_detections"],
+                    )
+                if self.cs2cap_cache is not None:
+                    cache_stats = self.cs2cap_cache.stats()
+                    used = cache_stats.get("monthly_used", 0)
+                    limit = cache_stats.get("monthly_limit", 50000)
+                    quota_pct = (used / limit * 100.0) if limit > 0 else None
+                    health_state.set_cs2cap_quota_pct(quota_pct)
+            except Exception as e:
+                # Never let health telemetry break the trading loop.
+                logger.debug(f"[health_state] update failed: {e}")
+
             # v12.5: Telegram equity milestone (every $5 change, throttled
             # to 1/min by the notifier). Don't spam every cycle.
             if not hasattr(self, "_last_milestone") or (

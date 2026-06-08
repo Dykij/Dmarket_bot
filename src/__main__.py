@@ -117,35 +117,59 @@ async def run_bot() -> None:
         os.environ["DRY_RUN"] = "true"
         Config.DRY_RUN = True
 
-    while True:
-        try:
-            logger.info("Starting DMarket trading bot...")
-            await _run_trading_loop()
-            # If bot_main returns normally (shouldn't happen), restart
-            logger.warning(
-                "Bot main loop exited unexpectedly. Restarting in %ss...",
-                retry_delay,
-            )
-            consecutive_crashes = 0
-        except KeyboardInterrupt:
-            logger.info("Bot stopped by user (KeyboardInterrupt).")
-            break
-        except asyncio.CancelledError:
-            logger.info("Bot task cancelled. Shutting down...")
-            break
-        except Exception as e:
-            consecutive_crashes += 1
-            logger.exception(
-                "Bot crashed with error: %s. Restarting in %ss (crash #%d)...",
-                e,
-                retry_delay,
-                consecutive_crashes,
-            )
-            # Exponential backoff capped at 5 min; reset on first success
-            retry_delay = min(retry_delay * 2, max_retry_delay)
+    # v12.7: Optional HTTP /healthz + /readyz + /metrics server. Starts
+    # only when HEALTH_PORT is set in the env. Defaults OFF so we don't
+    # expose the port to the network unless an operator wants it. The
+    # watchdog can then curl /readyz instead of reading the heartbeat
+    # file.
+    from src.utils.health_server import (
+        health_state,
+        is_enabled as health_server_enabled,
+        start_health_server,
+        stop_health_server,
+    )
+    health_runner = None
+    if health_server_enabled():
+        health_runner = await start_health_server()
+    health_state.set_shutting_down(False)
 
-        await asyncio.sleep(retry_delay)
-        logger.info("Restarting bot...")
+    try:
+        while True:
+            try:
+                logger.info("Starting DMarket trading bot...")
+                await _run_trading_loop()
+                # If bot_main returns normally (shouldn't happen), restart
+                logger.warning(
+                    "Bot main loop exited unexpectedly. Restarting in %ss...",
+                    retry_delay,
+                )
+                consecutive_crashes = 0
+            except KeyboardInterrupt:
+                logger.info("Bot stopped by user (KeyboardInterrupt).")
+                break
+            except asyncio.CancelledError:
+                logger.info("Bot task cancelled. Shutting down...")
+                break
+            except Exception as e:
+                consecutive_crashes += 1
+                logger.exception(
+                    "Bot crashed with error: %s. Restarting in %ss (crash #%d)...",
+                    e,
+                    retry_delay,
+                    consecutive_crashes,
+                )
+                # Exponential backoff capped at 5 min; reset on first success
+                retry_delay = min(retry_delay * 2, max_retry_delay)
+
+            await asyncio.sleep(retry_delay)
+            logger.info("Restarting bot...")
+    finally:
+        # Mark as shutting down BEFORE stopping the server so the
+        # endpoint reports 503 during the brief drain window (lets
+        # any monitoring dashboard know the bot is going down).
+        health_state.set_shutting_down(True)
+        if health_runner is not None:
+            await stop_health_server(health_runner)
 
 
 def main() -> None:
