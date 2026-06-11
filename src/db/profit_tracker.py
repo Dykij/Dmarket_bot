@@ -7,7 +7,9 @@ logger = logging.getLogger("ProfitTracker")
 
 class ProfitTrackerDB:
     def __init__(self, db_path: str = "dmarket_trading.db"):
-        self.db_path = Path(__file__).parent.parent.parent / "data" / db_path
+        # v12.8: Resolve DB path from project ROOT, not from src/.
+        # File path: src/db/profit_tracker.py → 4 .parent levels.
+        self.db_path = Path(__file__).parent.parent.parent.parent / "data" / db_path
         # Ensure data dir exists
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self.conn = sqlite3.connect(self.db_path, check_same_thread=False)

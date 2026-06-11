@@ -48,7 +48,11 @@ class PriceHistoryDB(  # type: ignore[misc]
         state_db: str = "dmarket_state.db",
         history_db: str = "dmarket_history.db",
     ) -> None:
-        self.data_dir = Path(__file__).parent.parent.parent / "data"
+        # v12.8: Resolve data_dir from project ROOT, not from src/.
+        # File path: src/db/price_history/core.py → 4 .parent levels
+        # to reach the project root. (Previous: 3 .parent levels = src/,
+        # which silently wrote to src/data/ — now fixed.)
+        self.data_dir = Path(__file__).parent.parent.parent.parent / "data"
         self.data_dir.mkdir(parents=True, exist_ok=True)
 
         self.state_path = self.data_dir / state_db
@@ -219,8 +223,8 @@ class PriceHistoryDB(  # type: ignore[misc]
                 CREATE TABLE IF NOT EXISTS risk_events (
                     id          INTEGER PRIMARY KEY AUTOINCREMENT,
                     ts          REAL    NOT NULL,
-                    event_type  TEXT    NOT NULL,  -- 'soft_halt', 'daily_halt', 'drawdown_halt', 'max_trades'
-                    severity    TEXT    NOT NULL DEFAULT 'warning',  -- 'info', 'warning', 'critical'
+                    event_type  TEXT    NOT NULL,
+                    severity    TEXT    NOT NULL DEFAULT 'warning',
                     details     TEXT    NOT NULL
                 )
             """
@@ -251,11 +255,18 @@ class PriceHistoryDB(  # type: ignore[misc]
                 "CREATE INDEX IF NOT EXISTS idx_pump_expires ON pump_blacklist(expires_at)"
             )
 
-            # Temporary safety check: remove price_history from state_db if it exists after migration
-            try:
-                self.state_conn.execute("DROP TABLE IF EXISTS price_history")
-            except sqlite3.OperationalError:
-                pass
+            # v12.8: Optimization Pragmas for State (OLTP). The state
+            # DB is the hot path — concurrent writes from the sniping
+            # loop, the daily-briefing scheduler, and the CS2Cap cache
+            # refresh can collide. WAL mode lets readers proceed
+            # without blocking writers, and synchronous=normal trades
+            # a tiny durability risk for a big write-throughput win
+            # (the bot's worst-case loss is a missed CS2Cap
+            # observation, not data corruption — the WAL is still
+            # crash-safe on power loss).
+            self.state_conn.execute("PRAGMA journal_mode = WAL")
+            self.state_conn.execute("PRAGMA synchronous = normal")
+            self.state_conn.execute("PRAGMA temp_store = memory")
 
         # --- HISTORY DB (OLAP) ---
         with self.history_conn:
@@ -277,7 +288,12 @@ class PriceHistoryDB(  # type: ignore[misc]
                 "CREATE INDEX IF NOT EXISTS idx_price_name ON price_history(hash_name)"
             )
 
-            # Optimization Pragmas for History (Analytical heavy)
+            # Optimization Pragmas for History (Analytical heavy).
+            # WAL mode lets readers proceed without blocking writers,
+            # and synchronous=normal trades a tiny durability risk for
+            # a big write-throughput win (bot's worst-case loss is a
+            # missed CS2Cap observation, not data corruption — the WAL
+            # is still crash-safe on power loss).
             self.history_conn.execute("PRAGMA journal_mode = WAL")
             self.history_conn.execute("PRAGMA synchronous = normal")
             self.history_conn.execute("PRAGMA temp_store = memory")
