@@ -66,7 +66,7 @@ async def on_startup(bot: Bot) -> None:
             f"Use /help for commands.",
         )
     except Exception as e:
-        logger.error(f"Could not notify admin: {e}")
+        logger.error(f"Could not notify admin: {e}", exc_info=True)
 
 
 # ============================================================
@@ -102,7 +102,7 @@ async def on_shutdown(bot: Bot) -> None:
             os.unlink(pid_file)
             logger.info(f"Removed PID file: {pid_file}")
         except OSError as e:
-            logger.warning(f"Could not remove PID file {pid_file}: {e}")
+            logger.warning(f"Could not remove PID file {pid_file}: {e}", exc_info=True)
     logger.info("Shutdown complete.")
 
 

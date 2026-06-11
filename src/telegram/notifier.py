@@ -205,7 +205,7 @@ class _TelegramNotifier:
             now = time.time()
             if now - self._last_error_log > 60:
                 self._last_error_log = now
-                logger.warning(f"[notifier] send failed: {e}")
+                logger.warning(f"[notifier] send failed: {e}", exc_info=True)
             return False
 
     # ----------------------------------------------------------------

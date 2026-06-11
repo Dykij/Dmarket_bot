@@ -118,7 +118,7 @@ class SnipingLoop:
         except asyncio.CancelledError:
             logger.info("Sniping loop cancelled.")
         except Exception as e:
-            logger.error(f"Critical error in sniping cycle: {e}")
+            logger.error(f"Critical error in sniping cycle: {e}", exc_info=True)
             await asyncio.sleep(30)
         finally:
             await OracleFactory.close_all()
@@ -463,7 +463,7 @@ class SnipingLoop:
 
         except Exception as e:
             if "RateLimit" not in str(e):
-                logger.error(f"Cycle failed for {game_id}: {e}")
+                logger.error(f"Cycle failed for {game_id}: {e}", exc_info=True)
 
     async def _get_cross_market_data(
         self, hash_name: str, cs2cap: CS2CapOracle

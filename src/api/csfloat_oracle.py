@@ -113,7 +113,7 @@ class CSFloatOracle:
         except RateLimitException:
             raise
         except Exception as e:
-            logger.error(f"[CSFloat] Oracle Error: {e}")
+            logger.error(f"[CSFloat] Oracle Error: {e}", exc_info=True)
             return 0.0
 
     async def close(self):

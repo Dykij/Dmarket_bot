@@ -54,7 +54,7 @@ try:
     _TOKEN, _ADMIN_ID = _load_config()
     logger.info(f"Configuration loaded (admin_id={_ADMIN_ID})")
 except Exception as e:
-    logger.error(f"Configuration error: {e}")
+    logger.error(f"Configuration error: {e}", exc_info=True)
     logger.error(
         "Please create a .env file with TELEGRAM_BOT_TOKEN and TELEGRAM_ADMIN_ID"
     )

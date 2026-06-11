@@ -84,17 +84,18 @@ async def retry_async(
         except retriable as e:
             last_exc = e
             if attempt == max_attempts:
-                logger.error(f"{operation} failed after {max_attempts} attempts: {e}")
+                logger.error(f"{operation} failed after {max_attempts} attempts: {e}", exc_info=True)
                 break
             delay = min(base_delay * (2 ** (attempt - 1)), max_delay)
             logger.warning(
                 f"{operation} attempt {attempt}/{max_attempts} failed: {e}. "
-                f"Retrying in {delay:.1f}s"
+                f"Retrying in {delay:.1f}s",
+                exc_info=True,
             )
             await asyncio.sleep(delay)
         except Exception as e:
             # Non-retriable: re-raise immediately
-            logger.error(f"{operation} non-retriable error: {e}")
+            logger.error(f"{operation} non-retriable error: {e}", exc_info=True)
             raise
     raise last_exc
 

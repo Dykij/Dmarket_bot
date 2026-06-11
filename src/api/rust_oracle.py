@@ -43,7 +43,7 @@ class RustOracle:
                         price_db.record_price(hash_name, price, source="scmm")
                         return price
         except Exception as e:
-            logger.error(f"SCMM fetch failed for {hash_name}: {e}")
+            logger.error(f"SCMM fetch failed for {hash_name}: {e}", exc_info=True)
 
         return 0.0
 

@@ -34,7 +34,7 @@ class ProfitTracker:
                 )
                 await db.commit()
         except Exception as e:
-            logger.error(f"Failed to record trade to DB: {e}")
+            logger.error(f"Failed to record trade to DB: {e}", exc_info=True)
 
 
 profit_db = ProfitTracker()

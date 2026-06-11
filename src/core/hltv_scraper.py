@@ -41,7 +41,7 @@ class EventScraper:
                     html = await response.text()
                     return self._parse_html(html)
         except Exception as e:
-            logger.error(f"⚠️ Scraper error: {e}")
+            logger.error(f"⚠️ Scraper error: {e}", exc_info=True)
             return []
 
     def _parse_html(self, html: str):
@@ -144,7 +144,7 @@ class EventScraper:
                 logger.info("ℹ️ No new unique events found.")
                 
         except Exception as e:
-            logger.error(f"❌ Failed to update calendar file: {e}")
+            logger.error(f"❌ Failed to update calendar file: {e}", exc_info=True)
 
 async def main():
     scraper = EventScraper()

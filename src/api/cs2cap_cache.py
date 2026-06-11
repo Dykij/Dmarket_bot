@@ -170,7 +170,7 @@ class CS2CapCache:
             try:
                 await self.refresh_now()
             except Exception as e:
-                logger.warning(f"[CS2CapCache] Initial refresh failed: {e}")
+                logger.warning(f"[CS2CapCache] Initial refresh failed: {e}", exc_info=True)
         self._refresh_task = asyncio.create_task(
             self._refresh_loop(), name="cs2cap-cache-refresh"
         )
@@ -196,7 +196,7 @@ class CS2CapCache:
         except asyncio.CancelledError:
             raise
         except Exception as e:
-            logger.warning(f"[CS2CapCache] Catalog warm-up failed: {e}")
+            logger.warning(f"[CS2CapCache] Catalog warm-up failed: {e}", exc_info=True)
 
     async def _warm_catalog(self) -> None:
         """
@@ -241,7 +241,7 @@ class CS2CapCache:
             except Exception as e:
                 self._error_count += 1
                 self._last_error = str(e)
-                logger.error(f"[CS2CapCache] Refresh loop error: {e}")
+                logger.error(f"[CS2CapCache] Refresh loop error: {e}", exc_info=True)
                 # Backoff on error
                 try:
                     await asyncio.wait_for(
@@ -283,7 +283,7 @@ class CS2CapCache:
         except Exception as e:
             self._error_count += 1
             self._last_error = f"agg_prices: {e}"
-            logger.warning(f"[CS2CapCache] agg_prices failed: {e}")
+            logger.warning(f"[CS2CapCache] agg_prices failed: {e}", exc_info=True)
             return
 
         if not agg_prices:
@@ -311,7 +311,7 @@ class CS2CapCache:
         except Exception as e:
             self._error_count += 1
             self._last_error = f"batch: {e}"
-            logger.warning(f"[CS2CapCache] CS2Cap batch failed: {e}")
+            logger.warning(f"[CS2CapCache] CS2Cap batch failed: {e}", exc_info=True)
             return
 
         # O1: Post-flight check — if oracle reported quota exhaustion

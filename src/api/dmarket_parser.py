@@ -55,7 +55,7 @@ def validate_batch_response(raw_json: str):
         try:
             return dmarket_parser_rs.parse_market_response_rs(raw_json)
         except Exception as e:
-            logger.warning(f"Rust Batch Parser failed: {e}")
+            logger.warning(f"Rust Batch Parser failed: {e}", exc_info=True)
 
     # Python Fallback
     try:
@@ -63,7 +63,7 @@ def validate_batch_response(raw_json: str):
         objects = data.get("objects", [])
         return [ParsedSkinData(**item) for item in objects]
     except Exception as e:
-        logger.error(f"Batch Validation Error: {e}")
+        logger.error(f"Batch Validation Error: {e}", exc_info=True)
         return []
 
 def validate_dmarket_response(raw_json: str):
@@ -77,7 +77,7 @@ def validate_dmarket_response(raw_json: str):
             rust_data = dmarket_parser_rs.validate_dmarket_response_rs(raw_json)
             return rust_data
         except Exception as e:
-            logger.warning(f"Rust Parser failed, falling back to Python: {e}")
+            logger.warning(f"Rust Parser failed, falling back to Python: {e}", exc_info=True)
 
     # Fallback to Python implementation
     try:
@@ -86,7 +86,7 @@ def validate_dmarket_response(raw_json: str):
         parsed_data = ParsedSkinData(**data)
         return parsed_data
     except Exception as e:
-        logger.error(f"Data Validation Error: {e}")
+        logger.error(f"Data Validation Error: {e}", exc_info=True)
         return None
 
 if __name__ == "__main__":

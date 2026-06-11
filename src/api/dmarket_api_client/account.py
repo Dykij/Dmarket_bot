@@ -84,7 +84,7 @@ class _AccountMixin:
                     "GET", "/exchange/v1/user-inventory", params=params
                 )
             except Exception as e:
-                logger.warning(f"Detailed inventory fetch failed: {e}")
+                logger.warning(f"Detailed inventory fetch failed: {e}", exc_info=True)
                 return all_items
 
             items = res.get("items", res.get("objects", []))

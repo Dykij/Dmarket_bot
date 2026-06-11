@@ -210,7 +210,7 @@ class SnipingLoop(  # type: ignore[misc]
             )
             self.briefing_scheduler.start()
         except Exception as e:
-            logger.warning(f"[v12.5] Could not start daily briefing scheduler: {e}")
+            logger.warning(f"[v12.5] Could not start daily briefing scheduler: {e}", exc_info=True)
 
         # v12.5: Leak detection — sample RSS on every loop. If we grow
         # past 500 MB or >2x the boot-time RSS, the loop is leaking and
@@ -307,7 +307,8 @@ class SnipingLoop(  # type: ignore[misc]
             else:
                 logger.warning(
                     f"[v12.6] Transient start-level error "
-                    f"({classification}): {type(e).__name__}: {e}"
+                    f"({classification}): {type(e).__name__}: {e}",
+                    exc_info=True,
                 )
             raise
         finally:
@@ -462,7 +463,7 @@ class SnipingLoop(  # type: ignore[misc]
                 self._maybe_inject_error("get_aggregated_prices_top")
                 agg_prices = await self.client.get_aggregated_prices(game_id)
             except Exception as e:
-                logger.warning(f"get_aggregated_prices (top) failed: {e}")
+                logger.warning(f"get_aggregated_prices (top) failed: {e}", exc_info=True)
                 return
 
             if not agg_prices:
@@ -757,7 +758,8 @@ class SnipingLoop(  # type: ignore[misc]
             # Transient — log a short warning, let the cycle skip.
             logger.warning(
                 f"[v12.6] Transient cycle error ({classification}) for "
-                f"{game_id}: {type(e).__name__}: {e}"
+                f"{game_id}: {type(e).__name__}: {e}",
+                exc_info=True,
             )
 
 

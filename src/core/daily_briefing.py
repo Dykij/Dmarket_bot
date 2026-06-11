@@ -237,7 +237,7 @@ class DailyBriefingScheduler:
                     note=note,
                 )
             except Exception as e:
-                logger.warning(f"[Briefing] Failed to record equity snapshot: {e}")
+                logger.warning(f"[Briefing] Failed to record equity snapshot: {e}", exc_info=True)
 
             # 6. Send via Telegram (severity=info, throttled to 1/min by
             # the notifier — but daily briefings are only 1/day so OK).

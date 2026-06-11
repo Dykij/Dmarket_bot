@@ -87,7 +87,7 @@ class _ResaleMixin:
                 if sold_count > 0:
                     logger.info(f"[RESALE] Recorded {sold_count} new sale(s) since last sync")
             except Exception as e:
-                logger.warning(f"[RESALE] _sync_sold_offers failed: {e}")
+                logger.warning(f"[RESALE] _sync_sold_offers failed: {e}", exc_info=True)
 
             # Reconcile DMarket inventory with local DB (picks up new items
             # the bot bought since last sync, with their real itemId).
@@ -96,7 +96,7 @@ class _ResaleMixin:
                 if synced > 0:
                     logger.info(f"[RESALE] Inventory sync: {synced} new item(s) linked")
             except Exception as e:
-                logger.warning(f"[RESALE] _sync_real_inventory failed: {e}")
+                logger.warning(f"[RESALE] _sync_real_inventory failed: {e}", exc_info=True)
 
         # DRY: simulate sales of `selling` items
         if is_dry:
@@ -105,7 +105,7 @@ class _ResaleMixin:
             try:
                 await self._check_external_sales(game_id)
             except Exception as e:
-                logger.warning(f"[RESALE] _check_external_sales failed: {e}")
+                logger.warning(f"[RESALE] _check_external_sales failed: {e}", exc_info=True)
 
         if not unlocked_idle:
             return
@@ -423,7 +423,7 @@ class _ResaleMixin:
             try:
                 resp = await self.client.create_sell_offers_batch(game_id, batch_payload)
             except Exception as e:
-                logger.warning(f"[RESALE] create_sell_offers_batch failed: {e}")
+                logger.warning(f"[RESALE] create_sell_offers_batch failed: {e}", exc_info=True)
                 for (row_id, _dm_id, title, _lp, _bp) in chunk:
                     price_db.mark_list_failed(row_id, str(e)[:200])
                 continue
@@ -530,7 +530,8 @@ class _ResaleMixin:
                 logger.debug(f"[REPRICE] Row access error (skip): {e}")
             except Exception as e:
                 logger.warning(
-                    f"[REPRICE] Failed to edit {it['hash_name']} ({offer_id[:12]}...): {e}"
+                    f"[REPRICE] Failed to edit {it['hash_name']} ({offer_id[:12]}...): {e}",
+                    exc_info=True,
                 )
         if repriced > 0:
             logger.info(f"[REPRICE] Repriced {repriced} item(s) successfully")

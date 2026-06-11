@@ -294,7 +294,8 @@ async def start_health_server(
     except OSError as e:
         logger.warning(
             f"[health_server] could not bind {use_host}:{use_port}: {e}. "
-            f"Bot continues without health server."
+            f"Bot continues without health server.",
+            exc_info=True,
         )
         await runner.cleanup()
         return None

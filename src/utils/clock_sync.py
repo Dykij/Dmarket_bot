@@ -130,7 +130,7 @@ class ClockSync:
                             server_dt = server_dt.replace(tzinfo=timezone.utc)
                         server_ts = server_dt.timestamp()
                     except (TypeError, ValueError) as e:
-                        logger.warning(f"ClockSync: Failed to parse Date header '{date_str}': {e}")
+                        logger.warning(f"ClockSync: Failed to parse Date header '{date_str}': {e}", exc_info=True)
                         return False
 
                 # Calculate offset
@@ -168,10 +168,10 @@ class ClockSync:
             logger.warning("ClockSync: DMarket HEAD request timed out")
             return False
         except aiohttp.ClientError as e:
-            logger.warning(f"ClockSync: Network error: {e}")
+            logger.warning(f"ClockSync: Network error: {e}", exc_info=True)
             return False
         except Exception as e:
-            logger.warning(f"ClockSync: Unexpected error: {e}")
+            logger.warning(f"ClockSync: Unexpected error: {e}", exc_info=True)
             return False
         finally:
             if own_session:

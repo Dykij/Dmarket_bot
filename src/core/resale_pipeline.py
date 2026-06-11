@@ -308,7 +308,7 @@ class ResalePipeline:
                 if not cursor:
                     break
         except Exception as e:
-            logger.error(f"Failed to enumerate offers for asset lookup: {e}")
+            logger.error(f"Failed to enumerate offers for asset lookup: {e}", exc_info=True)
 
         batch_payload: List[Dict[str, Any]] = []
         plan: List[Tuple[Dict[str, Any], float, float]] = []
@@ -331,7 +331,7 @@ class ResalePipeline:
         try:
             result = await self.api.batch_create_offers_v2(batch_payload)
         except Exception as e:
-            logger.error(f"batch_create_offers_v2 failed: {e}")
+            logger.error(f"batch_create_offers_v2 failed: {e}", exc_info=True)
             return []
 
         # Update statuses + collect results.

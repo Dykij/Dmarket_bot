@@ -23,7 +23,7 @@ class VaultClient:
             logger.info(f"Successfully connected to Vault at {self.url}")
             return True
         except Exception as e:
-            logger.error(f"Error connecting to Vault: {e}")
+            logger.error(f"Error connecting to Vault: {e}", exc_info=True)
             return False
 
     def get_secret(self, path: str, key: str, mount_point: str = "secret") -> Optional[str]:
@@ -45,8 +45,8 @@ class VaultClient:
             data = read_response.get('data', {}).get('data', {})
             secret = data.get(key)
             if not secret:
-                logger.error(f"Key '{key}' not found in secret path '{mount_point}/{path}'")
+                logger.error(f"Key '{key}' not found in secret path '{mount_point}/{path}'", exc_info=True)
             return secret
         except Exception as e:
-            logger.error(f"Failed to read secret '{key}' from '{mount_point}/{path}': {e}")
+            logger.error(f"Failed to read secret '{key}' from '{mount_point}/{path}': {e}", exc_info=True)
             return None

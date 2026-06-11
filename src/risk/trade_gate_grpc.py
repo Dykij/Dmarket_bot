@@ -59,7 +59,7 @@ class CircuitBreaker:
                     self.is_tripped = data.get("is_tripped", False)
                 logger.info(f"CircuitBreaker: Loaded LDF state from {self.state_path}. Tripped: {self.is_tripped}")
             except Exception as e:
-                logger.error(f"CircuitBreaker: Failed to load LDF state: {e}")
+                logger.error(f"CircuitBreaker: Failed to load LDF state: {e}", exc_info=True)
 
     def _save_state(self):
         """Persist state to local disk."""
@@ -71,7 +71,7 @@ class CircuitBreaker:
                     "last_update": time.time()
                 }, f)
         except Exception as e:
-            logger.error(f"CircuitBreaker: Failed to save LDF state: {e}")
+            logger.error(f"CircuitBreaker: Failed to save LDF state: {e}", exc_info=True)
 
     def update_portfolio_value(self, current_val: float):
         now = time.time()
@@ -171,9 +171,9 @@ class TradeExecutionPipeline:
                             logger.warning(f"Signer rejected trade: {response.error_message}")
                             
                     except Exception as rpc_error:
-                        logger.error(f"gRPC Communication failed: {rpc_error}")
+                        logger.error(f"gRPC Communication failed: {rpc_error}", exc_info=True)
 
                 except Exception as e:
-                    logger.error(f"Execution pipeline error: {e}")
+                    logger.error(f"Execution pipeline error: {e}", exc_info=True)
                 finally:
                     self.decision_queue.task_done()

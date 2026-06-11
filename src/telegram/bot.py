@@ -582,7 +582,7 @@ async def run_trading_wrapper():
     except asyncio.CancelledError:
         logger.info("Trading Task Cancelled")
     except Exception as e:
-        logger.error(f"Trading Crash: {e}")
+        logger.error(f"Trading Crash: {e}", exc_info=True)
         if ADMIN_ID:
             await bot.send_message(ADMIN_ID, f"CRITICAL ERROR: {e}")
 

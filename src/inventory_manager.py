@@ -65,7 +65,7 @@ class InventoryManager:
             return inventory
 
         except Exception as e:
-            logger.error(f"Failed to fetch DMarket inventory: {e}")
+            logger.error(f"Failed to fetch DMarket inventory: {e}", exc_info=True)
             return self.cached_inventory
 
     async def fetch_active_offers(self, game_id: str = "a8db") -> List[Dict[str, Any]]:
@@ -97,7 +97,7 @@ class InventoryManager:
             return offers
 
         except Exception as e:
-            logger.error(f"Failed to fetch active offers: {e}")
+            logger.error(f"Failed to fetch active offers: {e}", exc_info=True)
             return []
 
     async def fetch_all_with_cs2cap(self, game_id: str = "a8db") -> Dict[str, Any]:

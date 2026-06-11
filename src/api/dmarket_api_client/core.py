@@ -90,7 +90,7 @@ class DMarketAPIClient(  # type: ignore[misc]
                     self._signing_key = SigningKey(bytes.fromhex("0" * 64))
             except Exception as e:
                 if not is_sandbox:
-                    logger.error(f"Failed to initialize Ed25519 key: {e}")
+                    logger.error(f"Failed to initialize Ed25519 key: {e}", exc_info=True)
                 else:
                     logger.debug(f"Skipping key initialization in Sandbox: {e}")
                     self._signing_key = SigningKey(bytes.fromhex("0" * 64))
@@ -159,7 +159,7 @@ class DMarketAPIClient(  # type: ignore[misc]
                 # Rust expects the full hex secret
                 return self._rust_signer(method, api_path, body, timestamp, self.secret_key)
             except Exception as e:
-                logger.warning(f"Rust signer failed, falling back to Python: {e}")
+                logger.warning(f"Rust signer failed, falling back to Python: {e}", exc_info=True)
 
         # Python Fallback
         signature_prefix = f"{method.upper()}{api_path}{body}{timestamp}"

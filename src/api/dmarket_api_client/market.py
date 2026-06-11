@@ -79,7 +79,7 @@ class _MarketMixin:
                         "bid_count": int(entry.get("offerCount", 0)),
                     }
             except Exception as e:
-                logger.warning(f"Aggregated prices batch failed: {e}")
+                logger.warning(f"Aggregated prices batch failed: {e}", exc_info=True)
             return results
 
         # Chunked fetch with explicit title filter
@@ -113,7 +113,8 @@ class _MarketMixin:
                     }
             except Exception as e:
                 logger.warning(
-                    f"Aggregated prices batch failed (chunk {chunk_start}-{chunk_start+len(chunk)}): {e}"
+                    f"Aggregated prices batch failed (chunk {chunk_start}-{chunk_start+len(chunk)}): {e}",
+                    exc_info=True,
                 )
                 for t in chunk:
                     if t not in results:

@@ -34,7 +34,7 @@ class EventShield:
             else:
                 logger.warning(f"📅 Event calendar not found at {EVENTS_FILE}. Running without event awareness.")
         except Exception as e:
-            logger.error(f"Failed to load event calendar: {e}")
+            logger.error(f"Failed to load event calendar: {e}", exc_info=True)
 
     def reload(self):
         """Hot-reload events (e.g. after Telegram /add_event command)."""
@@ -114,7 +114,7 @@ class EventShield:
             with open(EVENTS_FILE, "w", encoding="utf-8") as f:
                 json.dump(self.events, f, indent=2, ensure_ascii=False)
         except Exception as e:
-            logger.error(f"Failed to save event calendar: {e}")
+            logger.error(f"Failed to save event calendar: {e}", exc_info=True)
 
     def add_event(self, name: str, start: str, end: str, effect: str = "caution",
                   margin_multiplier: float = 2.0, affected_categories: Optional[List[str]] = None,
