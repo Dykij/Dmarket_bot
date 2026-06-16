@@ -147,6 +147,9 @@ class _ResaleMixin:
                 sell_price = round((it["sell_price"] or it["buy_price"] * 1.05), 2)
                 fee = round(sell_price * 0.05, 4)
                 price_db.record_virtual_sale(int(it["id"]), sell_price, fee)
+                # v13.1: Simulate TP funds hold (7 days)
+                hold_until = time.time() + 7 * 24 * 3600
+                price_db.set_funds_hold(int(it["id"]), hold_until)
                 profit = sell_price - (it["buy_price"] or 0) - fee
                 logger.info(
                     f"[SIM] SOLD! {it['hash_name']} | "
@@ -258,6 +261,8 @@ class _ResaleMixin:
         PROD: For every `listed` local item, check if its dm_offer_id
         has been closed in DMarket's user-offers/closed. If so, mark
         it sold locally and notify. Returns count of newly-detected sells.
+
+        v13.1: Handles Trade Protection funds hold and rollback refunds.
         """
         listed = price_db.get_virtual_inventory(status="listed")
         if not listed:
@@ -270,30 +275,34 @@ class _ResaleMixin:
         except Exception as e:
             logger.debug(f"get_user_closed_offers failed: {e}")
             return 0
-        closed = closed_resp.get("objects", [])
-        closed_offer_ids = {o.get("offerId", "") for o in closed}
+        closed_list = closed_resp.get("objects", [])
+        # v13.1: Keep full closed record dicts keyed by offerId
+        closed_by_id: Dict[str, Dict[str, Any]] = {
+            o.get("offerId", ""): o for o in closed_list
+        }
         for it in listed:
             offer_id = it["dm_offer_id"] or ""
-            # Only process if we have an offer_id AND it appears in
-            # the closed list (i.e. the item actually sold on DMarket).
-            # Previously this had a `not offer_id` branch that incorrectly
-            # treated items-without-offer-id as sold, which caused
-            # every "listed" item with a missing dm_offer_id to be
-            # immediately marked sold. Bug: most freshly-listed items
-            # had offer_ids, but the bug made some tests falsely pass.
-            if not offer_id or offer_id not in closed_offer_ids:
+            if not offer_id or offer_id not in closed_by_id:
                 continue
-            # Find the closed record to get the actual sell price
-            match = next(
-                (o for o in closed if o.get("offerId", "") == offer_id),
-                None,
-            )
+            match = closed_by_id[offer_id]
+            # v13.1: Handle rollbacks — item reverted, DMarket refunded 100%
+            closed_status = match.get("status", "")
+            if closed_status == "reverted":
+                price_db.set_rollback_refund(offer_id)
+                logger.info(
+                    f"[ROLLBACK] {it['hash_name']} was reverted on DMarket — "
+                    f"100% refund applied, PnL neutral."
+                )
+                # Mark as sold with zero PnL
+                price_db.update_virtual_status(int(it["id"]), "sold")
+                price_db.record_virtual_sale(int(it["id"]), float(it["buy_price"] or 0), 0.0)
+                detected += 1
+                continue
             sell_price = 0.0
             fee = 0.0
-            if match:
-                sp = int(match.get("price", {}).get("USD", 0))
-                sell_price = sp / 100.0
-                fee = round(sell_price * SELL_FEE_RATE, 4)
+            sp = int(match.get("price", {}).get("USD", 0))
+            sell_price = sp / 100.0
+            fee = round(sell_price * SELL_FEE_RATE, 4)
             # Fall back to our last known listed price if closed records
             # are paginated away.
             if sell_price <= 0:
@@ -302,6 +311,14 @@ class _ResaleMixin:
             if sell_price <= 0:
                 continue
             price_db.record_virtual_sale(int(it["id"]), sell_price, fee)
+            # v13.1: Track funds hold from Trade Protection
+            finalization_time = match.get("FinalizationTime", 0.0)
+            if finalization_time > time.time():
+                price_db.set_funds_hold(int(it["id"]), finalization_time)
+                logger.info(
+                    f"[FUNDS-HOLD] {it['hash_name']}: ${sell_price:.2f} frozen "
+                    f"until {time.ctime(finalization_time)} (Trade Protection)"
+                )
             profit = sell_price - float(it["buy_price"] or 0) - fee
             logger.info(
                 f"[SELL] {it['hash_name']} | "

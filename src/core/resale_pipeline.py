@@ -144,7 +144,7 @@ class ResalePipeline:
                 expected_sell_price=estimated_sell_price,
                 fee_markup=fee_rate,
                 min_profit_margin=adjusted_min_spread / 100.0,
-                lock_days=0,  # v13.0: instant marketplace resale
+                lock_days=7,  # v13.1: TP funds hold prevents capital reuse
             )
         except PriceValidationError:
             return None

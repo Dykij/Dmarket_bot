@@ -108,6 +108,17 @@ class PriceHistoryDB(  # type: ignore[misc]
                 )
             """
             )
+            # v13.1 migration: funds hold tracking for Trade Protection
+            for col, typedef in (
+                ("funds_hold_until", "REAL"),
+                ("rollback_refund", "INTEGER NOT NULL DEFAULT 0"),
+            ):
+                try:
+                    self.state_conn.execute(
+                        f"ALTER TABLE virtual_inventory ADD COLUMN {col} {typedef}"
+                    )
+                except sqlite3.OperationalError:
+                    pass
             # Migration: Ensure unlock_at exists in older DBs
             try:
                 self.state_conn.execute(

@@ -99,7 +99,8 @@ class _InventoryMixin:
         return self.state_conn.execute(query, params).fetchall()
 
     def get_total_equity(self, current_balance: float) -> Dict[str, float]:
-        """Sandbox v9.5: Calculates Total Equity (Cash + Virtual Asset Value)."""
+        """Sandbox v9.5: Calculates Total Equity (Cash + Virtual Asset Value).
+        v13.1: includes frozen_funds from Trade Protection holds."""
         row = self.state_conn.execute(
             "SELECT SUM(buy_price) as total_value, COUNT(*) as item_count "
             "FROM virtual_inventory WHERE status != 'sold'"
@@ -108,12 +109,56 @@ class _InventoryMixin:
         asset_value = row["total_value"] or 0.0
         item_count = row["item_count"] or 0
 
+        frozen = self.get_frozen_funds()
+
         return {
             "cash": current_balance,
+            "frozen": frozen,
+            "available": max(0.0, current_balance - frozen),
             "assets": asset_value,
             "total": current_balance + asset_value,
             "count": item_count,
         }
+
+    def get_frozen_funds(self) -> float:
+        """Total sell_price of sold items whose funds are still held (Trade Protection)."""
+        now = time.time()
+        row = self.state_conn.execute(
+            "SELECT SUM(sell_price) as total FROM virtual_inventory "
+            "WHERE status = 'sold' AND funds_hold_until IS NOT NULL AND funds_hold_until > ?",
+            (now,),
+        ).fetchone()
+        return float(row["total"] or 0.0)
+
+    def set_funds_hold(self, row_id: int, hold_until: float) -> None:
+        """Mark a sold item's proceeds as frozen until hold_until."""
+        with self.state_conn:
+            self.state_conn.execute(
+                "UPDATE virtual_inventory SET funds_hold_until = ? WHERE id = ?",
+                (hold_until, row_id),
+            )
+
+    def set_rollback_refund(self, dm_offer_id: str) -> None:
+        """Mark item as rollback refund (net PnL = 0, not a loss)."""
+        row = self.find_by_dm_offer_id(dm_offer_id)
+        if row:
+            with self.state_conn:
+                self.state_conn.execute(
+                    "UPDATE virtual_inventory SET rollback_refund = 1, profit = 0, "
+                    "fee_paid = 0 WHERE id = ?",
+                    (int(row["id"]),),
+                )
+
+    def release_expired_funds(self) -> int:
+        """Release funds holds that have expired. Returns count of released items."""
+        now = time.time()
+        with self.state_conn:
+            cursor = self.state_conn.execute(
+                "UPDATE virtual_inventory SET funds_hold_until = NULL "
+                "WHERE funds_hold_until IS NOT NULL AND funds_hold_until <= ?",
+                (now,),
+            )
+            return cursor.rowcount
 
     def calculate_vwap(self, hash_name: str) -> float:
         """Calculates Volume-Weighted Average Price for currently held items."""

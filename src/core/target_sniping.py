@@ -302,7 +302,7 @@ class SnipingLoop:
                         expected_sell_price=safe_expected_sell,
                         fee_markup=fee_rate,
                         min_profit_margin=current_margin,
-                        lock_days=0  # v13.0: instant marketplace resale
+                        lock_days=7  # v13.1: TP funds hold prevents capital reuse
                     )
                 except PriceValidationError as e:
                     if is_sandbox:

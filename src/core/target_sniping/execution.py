@@ -38,24 +38,23 @@ class _ExecutionMixin:
         current_balance: float,
         game_id: str = "",
     ) -> None:
-        """
-        Execute a batch of instant buys produced by the filter loop.
-
-        In DRY_RUN: simulates the buy and updates virtual inventory.
-        In production: calls the real buy_items endpoint.
-
-        v12.5: Pre-trade risk check via self.risk.pre_trade_check()
-        before processing each item. Soft-halt halves the size, hard
-        halts skip the trade entirely.
-        """
+        """..."""
         if not instant_buys:
             return
 
-        # v12.5: Update risk manager's equity view before checks
+        # v13.1: Calculate available balance (excludes frozen TP-held funds)
+        available_balance = current_balance
         if hasattr(self, "risk"):
             try:
+                price_db.release_expired_funds()
                 equity_now = price_db.get_total_equity(current_balance)
                 self.risk._update_equity(equity_now["total"])
+                available_balance = equity_now["available"]
+                if equity_now["frozen"] > 0:
+                    logger.info(
+                        f"[FUNDS] ${available_balance:.2f} available / "
+                        f"${current_balance:.2f} total (${equity_now['frozen']:.2f} frozen in TP holds)"
+                    )
             except Exception as e:
                 logger.debug(f"Risk equity update failed: {e}")
 
@@ -210,7 +209,7 @@ class _ExecutionMixin:
                 if hasattr(self, "risk"):
                     risk_check = self.risk.pre_trade_check(
                         proposed_size_usd=base_price,
-                        current_equity_usd=current_balance,
+                        current_equity_usd=available_balance,
                         game_id=game_id,
                         item_title=title,
                     )

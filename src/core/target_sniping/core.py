@@ -715,11 +715,16 @@ class SnipingLoop(  # type: ignore[misc]
             if self.deep_scan_counter % 100 == 0:
                 await self._refresh_low_fee_cache(game_id)
 
+            # v13.1: Release expired TP holds before equity report
+            price_db.release_expired_funds()
+
             # Equity report
             equity = price_db.get_total_equity(current_balance)
+            frozen_str = f" Frozen: ${equity['frozen']:.2f} |" if equity.get("frozen", 0) > 0 else ""
             logger.info(
-                f"[EQUITY] Cash: ${equity['cash']:.2f} | "
-                f"Assets: ${equity['assets']:.2f} | "
+                f"[EQUITY] Available: ${equity['available']:.2f} | "
+                f"Cash: ${equity['cash']:.2f} |{frozen_str}"
+                f" Assets: ${equity['assets']:.2f} | "
                 f"TOTAL: ${equity['total']:.2f} (Items: {equity['count']})"
             )
 
