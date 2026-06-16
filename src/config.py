@@ -22,7 +22,9 @@ class Config:
 
     # --- Trading Parameters ---
     MIN_SPREAD_PCT = 5.0      # Minimum 5% profit margin (Ask - Bid)
-    FEE_RATE = 0.05           # DMarket Fee (7% standard, 5% with subscription)
+    FEE_RATE = 0.05           # DMarket Sell fee (5% standard, 2-10% actual range)
+    TARGET_FEE_RATE = 0.025   # DMarket Trade/Buy fee when using targets (2.5%)
+    WITHDRAWAL_FEE_RATE = 0.02  # Estimated withdrawal fee (1-3%, for net PnL)
 
     # --- v12.0 Intra-Spread Strategy (Strategy A) ---
     # These knobs were referenced in the v12.0 loop but never declared in
@@ -90,6 +92,7 @@ class Config:
 
     # --- Advanced Attributes (Float/Phase) ---
     PREFER_LOW_FLOAT = True
+    FLOAT_PREMIUM_ENABLED = os.getenv("FLOAT_PREMIUM_ENABLED", "false").lower() == "true"
     FLOAT_CODES = {
         "FN": ["FN-0", "FN-1"],
         "MW": ["MW-0", "MW-1"],
@@ -100,6 +103,13 @@ class Config:
 
     # --- Operation Mode ---
     DRY_RUN = True
+    MARKETPLACE_INSTANT_RESALE = os.getenv("MARKETPLACE_INSTANT_RESALE", "true").lower() == "true"
+
+    # --- v13.0: Trade lock hours (0 = instant resale on DMarket marketplace) ---
+    # DMarket allows IMMEDIATE re-listing of marketplace-bought items.
+    # Steam Trade Protection blocks withdrawal to Steam only, not re-selling.
+    # Set to positive value only if items come from Steam deposits.
+    TRADE_LOCK_HOURS = int(os.getenv("TRADE_LOCK_HOURS", "0"))
 
     # --- Multi-Strategy Engine ---
     ACTIVE_STRATEGY = "MarketMaker"  # Options: MarketMaker, SpreadHunter, CrossMarket
@@ -109,6 +119,8 @@ class Config:
     MAX_POSITION_RISK_PCT = float(os.getenv("MAX_POSITION_RISK_PCT", "5.0"))  # Max capital risk per single item (Kelly Criterion proxy)
     MAX_SAME_ITEM_HOLDINGS = int(os.getenv("MAX_SAME_ITEM_HOLDINGS", "3"))  # v12.7: max units of same item (saturation filter + execution guard)
     MAX_CONCURRENT_POSITIONS = int(os.getenv("MAX_CONCURRENT_POSITIONS", "50"))  # v12.8: total concurrent holdings cap
+    MAX_TOTAL_INVENTORY_VALUE = float(os.getenv("MAX_TOTAL_INVENTORY_VALUE", "100.0"))  # Max total $ value of held inventory
+    MAX_TOTAL_INVENTORY_ITEMS = int(os.getenv("MAX_TOTAL_INVENTORY_ITEMS", "30"))  # Max total count of held items
 
     # =================================================================
     # CS2Cap Integration (arXiv-inspired improvements)

@@ -179,6 +179,7 @@ class _ExecutionMixin:
             item_id = item_data["item_id"]
             base_price = item_data["base_price"]
             list_price = item_data["list_price"]
+            is_rare = item_data.get("is_rare", False)
             # v12.5: pass real per-item margin to the competition model so
             # the simulator actually differentiates between 5% and 60% edge.
             # Hardcoding 0.15 previously meant every buy saw the same 30%
@@ -232,6 +233,21 @@ class _ExecutionMixin:
                             f"${risk_check.adjusted_size_usd:.2f}"
                         )
 
+                # v13.0: Total inventory cap check
+                total_equity = price_db.get_total_equity(0.0)
+                current_held_value = total_equity["assets"]
+                current_held_count = total_equity["count"]
+                if current_held_count >= Config.MAX_TOTAL_INVENTORY_ITEMS:
+                    logger.warning(
+                        f"[INV-CAP] Already holding {current_held_count}/{Config.MAX_TOTAL_INVENTORY_ITEMS} items. Skipping {title}."
+                    )
+                    continue
+                if current_held_value + base_price > Config.MAX_TOTAL_INVENTORY_VALUE:
+                    logger.warning(
+                        f"[INV-CAP] Inventory value ${current_held_value:.2f} + ${base_price:.2f} > ${Config.MAX_TOTAL_INVENTORY_VALUE:.2f} cap. Skipping {title}."
+                    )
+                    continue
+
                 held_count = len(
                     [
                         x
@@ -247,8 +263,7 @@ class _ExecutionMixin:
 
                 # v12.5: capture the new row_id so we can attach dm_item_id
                 # in production (or leave it empty in DRY).
-                price_db.add_virtual_item(title, base_price, trade_lock_hours=168)
-                # Find the row we just inserted (most recent idle for this title)
+                price_db.add_virtual_item(title, base_price, trade_lock_hours=Config.TRADE_LOCK_HOURS, exclusive=is_rare)
                 row = price_db.state_conn.execute(
                     "SELECT id FROM virtual_inventory "
                     "WHERE hash_name = ? AND status = 'idle' "
@@ -257,19 +272,21 @@ class _ExecutionMixin:
                 ).fetchone()
                 if row and new_dm_item_id:
                     price_db.attach_dm_item_id(int(row["id"]), new_dm_item_id)
+                if is_rare and row:
+                    price_db.mark_exclusive(int(row["id"]))
 
                 vwap = price_db.calculate_vwap(title)
                 logger.info(
                     f"[SIM] SNIPED! {title} @ ${base_price} → list ${list_price} "
                     f"(spread: {item_data['best_bid']-item_data['best_ask']:.2f}, "
-                    f"VWAP: ${vwap:.2f})"
+                    f"VWAP: ${vwap:.2f}, rare={is_rare})"
                 )
-                # v12.2 Phase 2.1: Track asset status (trade_protected for 7 days)
+                # v12.2 Phase 2.1: Track asset status (trade_protected for N hours)
                 price_db.update_asset_status(
                     item_id,
                     title,
                     "trade_protected",
-                    finalization_time=time.time() + 168 * 3600,
+                    finalization_time=time.time() + Config.TRADE_LOCK_HOURS * 3600,
                 )
                 # v12.5: Record trade outcome (negative PnL = cost)
                 if hasattr(self, "risk"):

@@ -192,7 +192,7 @@ class InventoryManager:
 
     def mark_item_purchased(self, title: str, buy_price: float, item_id: str = ""):
         """Mark an item as purchased in the virtual inventory."""
-        price_db.add_virtual_item(title, buy_price, trade_lock_hours=168)
+        price_db.add_virtual_item(title, buy_price, trade_lock_hours=Config.TRADE_LOCK_HOURS)
         if item_id:
             price_db.record_placed_target(item_id, title, buy_price)
         logger.info(f"📝 Marked as purchased: {title} @ ${buy_price:.2f}")

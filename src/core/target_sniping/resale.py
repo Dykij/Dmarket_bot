@@ -114,12 +114,24 @@ class _ResaleMixin:
         if not unlocked_idle:
             return
 
-        logger.info(f"[RESALE] Scanning {len(unlocked_idle)} unlocked item(s) for listing")
+        # v13.0: Skip exclusive (keep-forever) items — they shouldn't be auto-listed
+        unlocked_non_exclusive = [
+            item for item in unlocked_idle
+            if not item.get("exclusive")
+        ]
+        exclusive_count = len(unlocked_idle) - len(unlocked_non_exclusive)
+        if exclusive_count > 0:
+            logger.info(f"[RESALE] Skipping {exclusive_count} exclusive item(s) — kept for rarity")
+
+        if not unlocked_non_exclusive:
+            return
+
+        logger.info(f"[RESALE] Scanning {len(unlocked_non_exclusive)} unlocked item(s) for listing")
 
         if is_dry:
-            await self._dry_list_unlocked(unlocked_idle, game_id)
+            await self._dry_list_unlocked(unlocked_non_exclusive, game_id)
         else:
-            await self._prod_list_unlocked(unlocked_idle, game_id)
+            await self._prod_list_unlocked(unlocked_non_exclusive, game_id)
 
     # ----------------------------------------------------------------
     # DRY-mode helpers

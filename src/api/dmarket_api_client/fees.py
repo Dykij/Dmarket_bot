@@ -19,9 +19,11 @@ logger = structlog.get_logger("DMarketAPI")
 _LIQUID_FEE = 0.02
 _STANDARD_FEE = 0.05
 _HIGH_FEE = 0.07
+_MAX_FEE = 0.10
 
 _VOLUME_HIGH = 50
 _VOLUME_MEDIUM = 10
+_VOLUME_MIN = 5
 
 
 class _FeesMixin:
@@ -42,8 +44,10 @@ class _FeesMixin:
             return _LIQUID_FEE
         elif volume >= _VOLUME_MEDIUM:
             return _STANDARD_FEE
-        elif volume > 0:
+        elif volume >= _VOLUME_MIN:
             return _HIGH_FEE
+        elif volume > 0:
+            return _MAX_FEE
         return _STANDARD_FEE
 
     async def get_item_fee(
@@ -76,11 +80,13 @@ class _FeesMixin:
         game_id: str,
         item_ids: List[str],
         title_volume: Optional[Dict[str, int]] = None,
+        item_id_to_title: Optional[Dict[str, str]] = None,
     ) -> Dict[str, float]:
         """
         Returns {item_id: fee_rate} for all given item_ids.
         Uses volume-based estimation when title_volume is provided.
         title_volume: {title: ask_count + bid_count} from aggregated prices.
+        item_id_to_title: {item_id: title} mapping to resolve volume per item.
         """
         if not item_ids:
             return {}
@@ -95,9 +101,13 @@ class _FeesMixin:
                     results[fid] = cached["fee"]
                     continue
 
-            if title_volume:
-                volume = title_volume.get(fid, 0)
-                fee = self._estimate_fee_from_volume(volume, volume)
+            if title_volume and item_id_to_title:
+                title = item_id_to_title.get(fid, "")
+                if title:
+                    volume = title_volume.get(title, 0)
+                    fee = self._estimate_fee_from_volume(volume, volume)
+                else:
+                    fee = self._DMARKET_CS2_FEE_RATE
             else:
                 fee = self._DMARKET_CS2_FEE_RATE
 

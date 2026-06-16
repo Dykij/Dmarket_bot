@@ -128,6 +128,13 @@ class PriceHistoryDB(  # type: ignore[misc]
                     )
                 except sqlite3.OperationalError:
                     pass  # already exists
+            # v13.0 migration: exclusive flag for keep-forever items
+            try:
+                self.state_conn.execute(
+                    "ALTER TABLE virtual_inventory ADD COLUMN exclusive INTEGER NOT NULL DEFAULT 0"
+                )
+            except sqlite3.OperationalError:
+                pass  # already exists
             self.state_conn.execute(
                 "CREATE INDEX IF NOT EXISTS idx_vinv_dm_item ON virtual_inventory(dm_item_id)"
             )

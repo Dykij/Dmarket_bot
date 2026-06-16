@@ -3,7 +3,61 @@
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+and this project adheres to [Semantic Versioning](https://semver.org/v2.0.0.html).
+
+
+## [13.0.0] - 2026-06-17
+### 🔓 Capital Velocity Unlocked — Instant Marketplace Resale
+
+#### Critical Fix — DMarket Trade Protection Model
+- **TRADE_LOCK_HOURS=0**: DMarket allows IMMEDIATE re-listing of marketplace-bought items.
+  Steam Trade Protection blocks withdrawal to Steam only, not re-selling on DMarket.
+  Previous hardcoded 168h (7-day) lock was artificially freezing capital.
+  ([DMarket Trade Protection blog Sep 2025](https://dmarket.com/blog/steam-trade-protection-dmarket-update/))
+- **Config.TRADE_LOCK_HOURS**: env-configurable, default 0. Set to positive hours if items
+  come from Steam deposits (not marketplace instant-buys).
+- **resale_cycle_limit = 1**: resale EVERY cycle, not every 10 cycles.
+- **auto_resale() after every execution**: items are listed within seconds of purchase.
+
+#### Fee System Overhaul
+- **10% fee tier** for illiquid items (volume < 5). DMarket actual range: 2-10%.
+  Previous: 2%/5%/7% with 5% fallback. Now: 2%/5%/7%/10%.
+- **title_volume bug fixed**: `get_item_fee_bulk()` now receives `item_id_to_title` mapping
+  from core.py. Previous: volume lookup always returned 0 (5% fallback).
+  Now: uses `agg_prices` volume to estimate per-item liquidity fee.
+- **Withdrawal fee** (2%) added to `validate_arbitrage_profit()` in filter.py.
+  Config: `WITHDRAWAL_FEE_RATE = 0.02`.
+- **Fee-aware minimum spread gate**: skip items where `spread < total_fee * 2 + 3%`.
+  Prevents buy on items whose gross spread can't cover fees.
+
+#### Pricing & Listing Fixes
+- **CS2Cap ask price as list reference**: `list_price = cs2cap_min_price * 0.97` when
+  CS2Cap data available. Previous: used only DMarket bid. Matches user strategy
+  "цена CS2Cap + комиссия".
+- **Float premium off by default**: `FLOAT_PREMIUM_ENABLED=false`. DMarket prices
+  already incorporate float discount → applying premium was double-counting.
+  Enable via env `FLOAT_PREMIUM_ENABLED=true`.
+
+#### Inventory Management
+- **Exclusive (keep-forever) flag**: column `exclusive` in `virtual_inventory`.
+  Auto-detection: FN-0 float, expensive stickers (>$2), rare phase/pattern.
+  Exclusive items are skipped during `auto_resale`.
+- **Total inventory cap**: `MAX_TOTAL_INVENTORY_VALUE` ($100) and
+  `MAX_TOTAL_INVENTORY_ITEMS` (30). Prevents unbounded inventory growth.
+
+#### Strategy Integration (from research)
+- **StickerEvaluator** integrated into v13 filter pipeline. Detects rare stickers
+  (Katowice 2014, Crown Foil, Howl) → flags item as exclusive if value >$2.
+- **Pattern/phase premium**: `_calculate_pattern_premium()` for Doppler Ruby/Sapphire,
+  Emerald, Black Pearl, Phase 2/4. `has_rare_phase_or_pattern()` for exclusive flag.
+- **lock_days=0** in all `validate_arbitrage_profit()` calls. TVM penalty was
+  incorrect for marketplace-to-marketplace trading.
+
+#### Research-Backed
+- Frontiers AI paper (Guede-Fernández 2025): LSTM/NHiTS → 20% 6mo return,
+  Mil-Spec mid-tier optimal, diversification improves Sharpe.
+- ScienceDirect (Reichenbach 2025): 66.9% historical returns, fees + volatility = main risks.
+- CS2Cap pricing: Starter $19 (50k req), Pro $79 (candles + history), Quant $179 (arb scanner).
 
 
 ## [7.0.0] - 2026-04-14

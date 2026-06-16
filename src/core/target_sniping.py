@@ -302,7 +302,7 @@ class SnipingLoop:
                         expected_sell_price=safe_expected_sell,
                         fee_markup=fee_rate,
                         min_profit_margin=current_margin,
-                        lock_days=7
+                        lock_days=0  # v13.0: instant marketplace resale
                     )
                 except PriceValidationError as e:
                     if is_sandbox:
@@ -395,7 +395,7 @@ class SnipingLoop:
                             logger.warning(f"[SATURATION] Already holding {held_count}x {title}. Skipping instant buy.")
                             continue
 
-                        price_db.add_virtual_item(title, int(b["price"]["amount"])/100.0, trade_lock_hours=168)
+                        price_db.add_virtual_item(title, int(b["price"]["amount"])/100.0, trade_lock_hours=Config.TRADE_LOCK_HOURS)
                         vwap = price_db.calculate_vwap(title)
                         logger.info(f"[SIM] Item Acquired via SNIPE! VWAP: ${vwap:.2f} | Adding: {title} (7d Lock)")
 
@@ -440,7 +440,7 @@ class SnipingLoop:
                             if not self._simulate_competition(0.15):
                                 logger.warning(f"[SIM] COMPETITION! Target fulfillment for {name} failed.")
                                 continue
-                            price_db.add_virtual_item(name, buy_price, trade_lock_hours=168)
+                            price_db.add_virtual_item(name, buy_price, trade_lock_hours=Config.TRADE_LOCK_HOURS)
                             logger.info(f"[SIM] Target Sniped! Acquired: {name} @ ${buy_price} (7d Lock)")
 
                 # Record trades for turnover tracking

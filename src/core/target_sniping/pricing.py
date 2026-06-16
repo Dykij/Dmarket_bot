@@ -16,7 +16,7 @@ logger = logging.getLogger("SnipingBot")
 
 
 class _PricingMixin:
-    """Float premium + low-fee cache helpers."""
+    """Float premium + low-fee cache helpers + pattern/phase premium."""
 
     # These attributes are set on the instance by SnipingLoop.__init__
     client: Any  # DMarketAPIClient
@@ -62,6 +62,73 @@ class _PricingMixin:
         if float_val >= 0.45:
             return 0.90  # BS
         return 1.0  # MW / regular FT
+
+    # ------------------------------------------------------------------
+    # v13.0 Phase 1.3: Pattern / Phase Premium
+    # ------------------------------------------------------------------
+    @staticmethod
+    def _calculate_pattern_premium(attrs: Dict[str, Any]) -> float:
+        """
+        Returns a price multiplier based on rare phases, patterns, and paint seeds.
+
+        Known premium patterns (CS2):
+        - Doppler Phase 2 / Phase 4 → 1.05-1.15x
+        - Doppler Ruby → 2.0x+, Sapphire → 3.0x+, Emerald → 1.5x+
+        - Gamma Doppler Phase 2 → 1.05x
+        - Low paintSeed (<10) on some patterns → 1.02-1.05x (corner/webbing)
+
+        Returns 1.0 (no premium) if no rare attributes detected.
+        """
+        try:
+            phase = attrs.get("phase", "")
+            paint_seed_str = attrs.get("paintSeed", "0")
+            paint_seed = int(paint_seed_str)
+        except (ValueError, TypeError):
+            phase = ""
+            paint_seed = 0
+
+        multiplier = 1.0
+
+        # Doppler phase premium
+        if phase in ("Ruby", "ruby"):
+            multiplier = 2.0
+        elif phase in ("Sapphire", "sapphire"):
+            multiplier = 3.0
+        elif phase in ("Black Pearl", "blackpearl", "black_pearl"):
+            multiplier = 1.5
+        elif phase in ("Emerald", "emerald"):
+            multiplier = 1.5
+        elif phase in ("Phase 2", "phase2", "P2"):
+            multiplier = 1.10
+        elif phase in ("Phase 4", "phase4", "P4"):
+            multiplier = 1.05
+        elif phase in ("Phase 1", "phase1", "P1"):
+            multiplier = 1.02
+        elif phase in ("Phase 3", "phase3", "P3"):
+            multiplier = 1.0
+
+        # Rare paint seeds (e.g., pattern 661, 955, 151 for web/triangle patterns)
+        if not multiplier > 1.0 and paint_seed in (661, 955, 151, 321, 268, 131, 202, 760, 437, 569):
+            multiplier = 1.05
+
+        # Very low paint seed (clean corners on some knives)
+        if not multiplier > 1.0 and 0 < paint_seed < 5:
+            multiplier = 1.03
+
+        return multiplier
+
+    @staticmethod
+    def has_rare_phase_or_pattern(attrs: Dict[str, Any]) -> bool:
+        """Check if item has rare phase or pattern worth exclusive keeping."""
+        try:
+            phase = attrs.get("phase", "")
+            paint_seed_str = attrs.get("paintSeed", "0")
+            paint_seed = int(paint_seed_str)
+        except (ValueError, TypeError):
+            return False
+        rare_phases = ("Ruby", "Sapphire", "Black Pearl", "Emerald", "Phase 2", "Phase 4")
+        rare_seeds = (661, 955, 151, 321, 268, 131, 202, 760, 437, 569)
+        return phase in rare_phases or paint_seed in rare_seeds
 
     # ------------------------------------------------------------------
     # v12.0 Phase 1.1: Low-fee cache

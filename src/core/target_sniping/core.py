@@ -75,7 +75,7 @@ class SnipingLoop(  # type: ignore[misc]
         self.buy_budget = Config.MAX_PRICE_USD
         self.running = False
         self.empty_page_count = 0
-        self.resale_cycle_limit = 10
+        self.resale_cycle_limit = 1  # v13.0: resale every cycle (instant)
         self.reprice_counter = 0
 
         # v12.4: In-memory CS2Cap cache (initialised in start())
@@ -537,9 +537,25 @@ class SnipingLoop(  # type: ignore[misc]
                 and int(item.get("price", {}).get("USD", 0)) > 0
             ]
 
+            # Build mappings for fee-by-volume estimation
+            item_id_to_title: Dict[str, str] = {
+                item["itemId"]: item["title"]
+                for item in items
+                if item.get("itemId") and item.get("title")
+            }
+            title_volume: Dict[str, int] = {}
+            for title, agg in agg_prices.items():
+                ask_cnt = agg.get("ask_count", 0) or 0
+                bid_cnt = agg.get("bid_count", 0) or 0
+                title_volume[title] = ask_cnt + bid_cnt
+
             bulk_fees: Dict[str, float] = {}
             if candidate_item_ids:
-                bulk_fees = await self.client.get_item_fee_bulk(game_id, candidate_item_ids)
+                bulk_fees = await self.client.get_item_fee_bulk(
+                    game_id, candidate_item_ids,
+                    title_volume=title_volume,
+                    item_id_to_title=item_id_to_title,
+                )
 
             # --- Step 4: Filter and validate (delegated) ---
             current_margin = self.min_profit_margin
@@ -688,8 +704,7 @@ class SnipingLoop(  # type: ignore[misc]
                     instant_buys=instant_buys, current_balance=current_balance,
                     game_id=game_id,
                 )
-
-            if self.deep_scan_counter % self.resale_cycle_limit == 0:
+                # v13.0: List immediately after purchase (capital velocity fix)
                 await self.auto_resale(game_id)
 
             # Periodic repricing

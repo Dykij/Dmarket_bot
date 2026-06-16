@@ -38,22 +38,52 @@ class _InventoryMixin:
     # ------------------------------------------------------------------
     @with_db_retry(operation_name="add_virtual_item")
     def add_virtual_item(
-        self, hash_name: str, buy_price: float, trade_lock_hours: int = 168
+        self, hash_name: str, buy_price: float, trade_lock_hours: int = 0,
+        exclusive: bool = False,
     ) -> None:
-        """Add item to virtual sandbox inventory (v9.0 with Trade Lock)."""
+        """Add item to virtual sandbox inventory (v9.0 with Trade Lock).
+
+        exclusive: mark item as keep-forever (skipped during auto-resale).
+        """
         now = time.time()
         unlock_at = now + (trade_lock_hours * 3600)
         with self.state_conn:
             self.state_conn.execute(
                 "INSERT INTO virtual_inventory "
-                "(hash_name, buy_price, acquired_at, unlock_at, status) "
-                "VALUES (?, ?, ?, ?, 'idle')",
-                (hash_name, buy_price, now, unlock_at),
+                "(hash_name, buy_price, acquired_at, unlock_at, status, exclusive) "
+                "VALUES (?, ?, ?, ?, 'idle', ?)",
+                (hash_name, buy_price, now, unlock_at, 1 if exclusive else 0),
             )
         logger.info(
             f"📦 [DB] Virtual item added: {hash_name} "
-            f"(Unlocked at: {time.ctime(unlock_at)})"
+            f"(Unlocked at: {time.ctime(unlock_at)}, exclusive={exclusive})"
         )
+
+    def is_exclusive(self, row_id: int) -> bool:
+        """Check if a virtual_inventory row is marked exclusive."""
+        row = self.state_conn.execute(
+            "SELECT exclusive FROM virtual_inventory WHERE id = ?", (row_id,)
+        ).fetchone()
+        return bool(row and row["exclusive"])
+
+    def mark_exclusive(self, row_id: int) -> None:
+        """Mark a virtual_inventory row as exclusive (keep-forever)."""
+        with self.state_conn:
+            self.state_conn.execute(
+                "UPDATE virtual_inventory SET exclusive = 1 WHERE id = ?",
+                (row_id,),
+            )
+
+    def get_non_exclusive_inventory(
+        self, status: str = "idle", only_unlocked: bool = False
+    ) -> List[sqlite3.Row]:
+        """Fetch virtual items that are NOT marked exclusive."""
+        query = "SELECT * FROM virtual_inventory WHERE status = ? AND (exclusive IS NULL OR exclusive = 0)"
+        params = [status]
+        if only_unlocked:
+            query += " AND unlock_at <= ?"
+            params.append(time.time())
+        return self.state_conn.execute(query, params).fetchall()
 
     def get_virtual_inventory(
         self, status: str = "idle", only_unlocked: bool = False

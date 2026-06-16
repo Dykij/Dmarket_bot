@@ -352,27 +352,68 @@ class _FilterMixin:
                 )
             return None
 
-        # Calculate profit: list at best_bid - 0.01, but use cross-market bid
-        # as upper bound (don't list above what other platforms pay)
+        # Calculate profit: list at best_bid - 0.01, but use CS2Cap ask or
+        # cross-market bid as reference when available.
+        cs_ask_price = 0.0
+        cs_snap = (cs_snapshots or {}).get(title)
+        if cs_snap is not None and getattr(cs_snap, "has_data", False):
+            cs_ask_price = cs_snap.min_price
+
+        list_price = round(best_bid - Config.INTRA_LIST_DISCOUNT, 2)
+
+        # Use CS2Cap lowest ask as list price reference when available
+        if cs_ask_price > 0:
+            # Don't list above CS2Cap ask — compete with cheapest marketplace
+            cs_list_price = round(cs_ask_price * 0.97, 2)
+            if cs_list_price > list_price:
+                list_price = cs_list_price
+
+        # Cross-market bid override (highest bid across all marketplaces)
         if cross_market_provider and cross_market_bid > best_bid:
-            # Cross-market reference is higher than DMarket bid — use it as
-            # list price (DMarket bid may rise to meet it, or our listing
-            # will be competitive enough for Steam-originated buyers)
             list_price = round(
                 min(cross_market_bid * 0.97, cross_market_bid - Config.INTRA_LIST_DISCOUNT),
                 2,
             )
-        else:
-            list_price = round(best_bid - Config.INTRA_LIST_DISCOUNT, 2)
 
         # v12.0 Phase 1.2: Float Premium (FN-0, FT-0, FN)
-        attrs_list = item.get("attributes", [])
-        attrs = {a.get("name"): a.get("value") for a in attrs_list}
-        float_premium = self._calculate_float_premium(attrs)
-        if float_premium > 1.0:
-            list_price = round(list_price * float_premium, 2)
-            if is_sandbox:
-                logger.debug(f"Float premium {float_premium:.2f}x applied to {title}")
+        # Disabled by default — DMarket market prices already reflect float
+        is_rare = False  # v13.0: auto-detect rare items for exclusive flag
+
+        if Config.FLOAT_PREMIUM_ENABLED:
+            attrs_list = item.get("attributes", [])
+            attrs = {a.get("name"): a.get("value") for a in attrs_list}
+            float_premium = self._calculate_float_premium(attrs)
+            if float_premium > 1.0:
+                list_price = round(list_price * float_premium, 2)
+                if is_sandbox:
+                    logger.debug(f"Float premium {float_premium:.2f}x applied to {title}")
+                # FN-0 (0.00-0.01) items are rare — auto-exclusive
+                is_rare = float_premium >= 1.20
+
+        # v13.0: Sticker detection — expensive stickers make item worthy of exclusive keep
+        item_stickers = item.get("stickers", [])
+        if item_stickers and hasattr(self, "stickers"):
+            try:
+                sticker_value = self.stickers.calculate_added_value(item_stickers)
+                if sticker_value > 2.0:  # Stickers add >$2 value → flag as rare
+                    is_rare = True
+                    if is_sandbox:
+                        logger.info(f"[RARE] {title}: sticker value ${sticker_value:.2f} → exclusive keep")
+            except Exception:
+                pass  # non-fatal
+
+        # v13.0: Rare phase/pattern detection (Doppler Ruby/Sapphire, rare paint seeds)
+        if not is_rare:
+            try:
+                if hasattr(self, "_calculate_pattern_premium"):
+                    attrs_list = item.get("attributes", [])
+                    pat_attrs = {a.get("name"): a.get("value") for a in attrs_list}
+                    if self._calculate_pattern_premium(pat_attrs) > 1.0:
+                        is_rare = True
+                        if is_sandbox:
+                            logger.info(f"[RARE] {title}: rare phase/pattern → exclusive keep")
+            except Exception:
+                pass  # non-fatal
 
         if list_price < base_price * 1.02:
             # Less than 2% gross — too thin after fees
@@ -390,12 +431,23 @@ class _FilterMixin:
             fee_rate = min(fee_rate, cached_low_fee)
 
         try:
+            # Include withdrawal fee in total cost (v13.0)
+            total_fee = fee_rate + Config.WITHDRAWAL_FEE_RATE
+            # v13.0: Fee-aware minimum spread gate — skip items where
+            # gross spread can't cover the fees even in best case.
+            spread_ratio = (best_bid - best_ask) / best_ask if best_ask > 0 else 0
+            min_spread_for_fee = total_fee * 2.0 + 0.03
+            if spread_ratio < min_spread_for_fee:
+                if is_sandbox:
+                    price_db.log_decision(title, "skip", "Spread too thin for fee",
+                                          f"spread={spread_ratio:.1%} need>{min_spread_for_fee:.1%} fee={total_fee:.1%}")
+                return None
             validate_arbitrage_profit(
                 buy_price=base_price,
                 expected_sell_price=list_price,
-                fee_markup=fee_rate,
+                fee_markup=total_fee,
                 min_profit_margin=current_margin,
-                lock_days=7,
+                lock_days=0,  # v13.0: instant marketplace resale
             )
         except PriceValidationError as e:
             if is_sandbox:
@@ -451,4 +503,5 @@ class _FilterMixin:
             "best_ask": best_ask,
             "strategy": "cross_market" if cross_market_provider else "intra_spread",
             "target_platform": cross_market_provider or "dmarket",
+            "is_rare": is_rare,
         }

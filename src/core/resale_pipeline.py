@@ -144,7 +144,7 @@ class ResalePipeline:
                 expected_sell_price=estimated_sell_price,
                 fee_markup=fee_rate,
                 min_profit_margin=adjusted_min_spread / 100.0,
-                lock_days=7,
+                lock_days=0,  # v13.0: instant marketplace resale
             )
         except PriceValidationError:
             return None
@@ -162,7 +162,7 @@ class ResalePipeline:
         is_dry_run = os.getenv("DRY_RUN", "true").lower() == "true"
 
         # Record in virtual inventory
-        price_db.add_virtual_item(title, buy_price, trade_lock_hours=168)
+        price_db.add_virtual_item(title, buy_price, trade_lock_hours=Config.TRADE_LOCK_HOURS)
         price_db.record_placed_target(item_id, title, buy_price)
 
         # Calculate sell price based on CS2Cap
