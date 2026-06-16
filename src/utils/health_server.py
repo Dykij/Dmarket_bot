@@ -23,6 +23,9 @@ Design:
 - The aiohttp app binds to 127.0.0.1:<port> by default (NOT 0.0.0.0).
   External exposure would be a security issue; the watchdog runs on the
   same host.
+- v12.9: Optional basic auth via HEALTH_USERNAME / HEALTH_PASSWORD env vars.
+  If HEALTH_PASSWORD is set, all endpoints require HTTP basic auth.
+  Without it, endpoints are unauthenticated (safe on localhost only).
 - All handlers are sync (return JSON) — no I/O, no DB.
 - Failure mode: if the aiohttp server fails to bind (port in use),
   the bot logs a warning and continues without it. Health is degraded
@@ -31,6 +34,7 @@ Design:
 
 from __future__ import annotations
 
+import base64
 import logging
 import os
 import time
@@ -77,6 +81,8 @@ class HealthState:
         self._cs2cap_quota_pct: Optional[float] = None
         self._shutting_down: bool = False
         self._last_error: Optional[str] = None
+        self._dmarket_cb: Optional[Dict[str, Any]] = None
+        self._cs2cap_cb: Optional[Dict[str, Any]] = None
 
     # ----- setters (called by the trading loop) -----
     def mark_cycle(self, equity_usd: float, peak_equity_usd: float,
@@ -101,6 +107,12 @@ class HealthState:
 
     def set_cs2cap_quota_pct(self, pct: Optional[float]) -> None:
         self._cs2cap_quota_pct = pct
+
+    def set_circuit_breakers(self, dmarket_cb: Optional[Dict[str, Any]] = None,
+                             cs2cap_cb: Optional[Dict[str, Any]] = None) -> None:
+        """v12.7: Track circuit breaker states for diagnostics (P4-2)."""
+        self._dmarket_cb = dmarket_cb
+        self._cs2cap_cb = cs2cap_cb
 
     def record_error(self, error: str) -> None:
         """Track the most recent fatal/non-fatal error (for diagnostics)."""
@@ -148,6 +160,11 @@ class HealthState:
                     else None
                 ),
             },
+            "circuit_breakers": {
+                "dmarket": self._dmarket_cb or {"state": "unknown"},
+                "cs2cap": self._cs2cap_cb or {"state": "unknown"},
+                "telegram": self._get_telegram_cb_status(),
+            },
             "last_error": self._last_error,
         }
 
@@ -159,6 +176,14 @@ class HealthState:
             return False
         # Soft halt is OK (the bot still trades at half size).
         return True
+
+    def _get_telegram_cb_status(self) -> Dict[str, Any]:
+        """v12.7: Get Telegram notifier circuit breaker status."""
+        try:
+            from src.telegram.notifier import notifier
+            return notifier.stats().get("circuit_breaker", {"state": "unknown"})
+        except Exception:
+            return {"state": "unknown"}
 
 
 # Module-level singleton, importable as:
@@ -248,6 +273,46 @@ async def _handle_metrics(_request: "web.Request") -> "web.Response":
 
 
 # =====================================================================
+# Optional Basic Auth (v12.9)
+# =====================================================================
+
+def _check_auth(request: "web.Request") -> bool:
+    """Check HTTP basic auth against HEALTH_USERNAME / HEALTH_PASSWORD.
+    
+    If HEALTH_PASSWORD is not set, auth is disabled (localhost-only mode).
+    Returns True if auth passes or is disabled.
+    """
+    expected_user = os.getenv("HEALTH_USERNAME", "")
+    expected_pass = os.getenv("HEALTH_PASSWORD", "")
+    if not expected_pass:
+        return True  # No password set = localhost-only, no auth needed
+    
+    auth_header = request.headers.get("Authorization", "")
+    if not auth_header.startswith("Basic "):
+        return False
+    
+    try:
+        decoded = base64.b64decode(auth_header[6:]).decode("utf-8")
+        user, _, password = decoded.partition(":")
+        return user == expected_user and password == expected_pass
+    except Exception:
+        return False
+
+
+@web.middleware
+async def _auth_middleware(request: "web.Request", handler: Any) -> "web.Response":
+    """Apply basic auth to all health endpoints if HEALTH_PASSWORD is set."""
+    if not _check_auth(request):
+        return web.Response(
+            status=401,
+            text='{"error":"unauthorized"}',
+            content_type="application/json",
+            headers={"WWW-Authenticate": 'Basic realm="health metrics"'},
+        )
+    return await handler(request)
+
+
+# =====================================================================
 # Server lifecycle
 # =====================================================================
 
@@ -281,7 +346,7 @@ async def start_health_server(
 
     use_host = os.getenv("HEALTH_HOST", DEFAULT_HOST) if host is None else host
 
-    app = web.Application()
+    app = web.Application(middlewares=[_auth_middleware])
     app.router.add_get("/healthz", _handle_healthz)
     app.router.add_get("/readyz", _handle_readyz)
     app.router.add_get("/metrics", _handle_metrics)

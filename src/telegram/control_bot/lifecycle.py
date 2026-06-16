@@ -18,7 +18,7 @@ from aiogram import Bot, Dispatcher, types
 
 from src.config import Config
 
-from .state import _ADMIN_ID, state
+from .state import _ADMIN_IDS, state
 
 logger = logging.getLogger("TelegramControl.lifecycle")
 
@@ -44,7 +44,7 @@ async def set_commands(bot: Bot) -> None:
         types.BotCommand(command="help", description="🆘 Show all commands"),
     ]
     await bot.set_my_commands(commands)
-    logger.info(f"Registered {len(commands)} commands for admin_id={_ADMIN_ID}")
+    logger.info(f"Registered {len(commands)} commands for admins={_ADMIN_IDS}")
 
 
 # ============================================================
@@ -54,19 +54,20 @@ async def on_startup(bot: Bot) -> None:
     """Called on bot startup: log info + notify admin."""
     me = await bot.get_me()
     logger.info(f"Bot started: @{me.username} (id={me.id})")
-    logger.info(f"Admin ID: {_ADMIN_ID}")
+    logger.info(f"Admin IDs: {_ADMIN_IDS}")
     logger.info(f"Mode: {'DRY_RUN' if Config.DRY_RUN else 'LIVE TRADING'}")
-    try:
-        await bot.send_message(
-            _ADMIN_ID,
-            f"🤖 *Bot Online!*\n\n"
-            f"Version: v{Config.BOT_VERSION}\n"
-            f"Mode: {'🧪 SIMULATION' if Config.DRY_RUN else '💸 LIVE'}\n"
-            f"Time: `{time.strftime('%Y-%m-%d %H:%M:%S')}`\n\n"
-            f"Use /help for commands.",
-        )
-    except Exception as e:
-        logger.error(f"Could not notify admin: {e}", exc_info=True)
+    for admin_id in _ADMIN_IDS:
+        try:
+            await bot.send_message(
+                str(admin_id),
+                f"🤖 *Bot Online!*\n\n"
+                f"Version: v{Config.BOT_VERSION}\n"
+                f"Mode: {'🧪 SIMULATION' if Config.DRY_RUN else '💸 LIVE'}\n"
+                f"Time: `{time.strftime('%Y-%m-%d %H:%M:%S')}`\n\n"
+                f"Use /help for commands.",
+            )
+        except Exception as e:
+            logger.error(f"Could not notify admin {admin_id}: {e}", exc_info=True)
 
 
 # ============================================================
@@ -83,14 +84,15 @@ async def on_shutdown(bot: Bot) -> None:
         await state.stop()
     except Exception:
         logger.exception("Error stopping sniping loop on shutdown")
-    try:
-        await bot.send_message(
-            _ADMIN_ID,
-            "🛑 *Bot shutting down.*\n"
-            f"Time: `{time.strftime('%Y-%m-%d %H:%M:%S')}`",
-        )
-    except Exception:
-        pass
+    for admin_id in _ADMIN_IDS:
+        try:
+            await bot.send_message(
+                str(admin_id),
+                "🛑 *Bot shutting down.*\n"
+                f"Time: `{time.strftime('%Y-%m-%d %H:%M:%S')}`",
+            )
+        except Exception:
+            pass
     try:
         await bot.session.close()
     except Exception:

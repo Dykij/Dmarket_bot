@@ -3,6 +3,7 @@ import asyncio
 import logging
 import time
 import urllib.parse
+from typing import Dict, Tuple
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 from src.db.price_history import price_db
 
@@ -31,7 +32,7 @@ class CSFloatOracle:
         self._last_request_time = 0.0
         
         # --- In-Memory Quick Cache (High-frequency layer) ---
-        self._mem_cache = {} # {hash_name: (price, timestamp)}
+        self._mem_cache: Dict[str, Tuple[float, float]] = {}  # {hash_name: (price, timestamp)}
 
     async def get_session(self):
         if self._session is None or self._session.closed:

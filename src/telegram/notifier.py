@@ -162,7 +162,11 @@ class _TelegramNotifier:
         if session is None:
             return False
 
+        # v12.9: Security — never log the URL containing the bot token.
+        # CVE-2026-27003 showed that logging bot URLs = token leak.
+        # Use a redacted placeholder for any logging context instead.
         url = f"https://api.telegram.org/bot{self._token}/sendMessage"
+        _redacted_url = "https://api.telegram.org/bot<REDACTED>/sendMessage"
         payload: Dict[str, Any] = {
             "chat_id": self._chat_id,
             "text": text[:4000],  # Telegram hard cap is 4096

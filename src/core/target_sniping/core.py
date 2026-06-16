@@ -65,7 +65,7 @@ class SnipingLoop(  # type: ignore[misc]
         self.valuation = RareValuationEngine()
         self.stickers = StickerEvaluator()
         self.liquidity = LiquidityManager()
-        self.inventory_mgr = None
+        self.inventory_mgr: Any = None
 
         from src.config import Config
 
@@ -118,6 +118,10 @@ class SnipingLoop(  # type: ignore[misc]
 
         # v12.5: Daily briefing scheduler (started in start())
         self.briefing_scheduler: Optional[DailyBriefingScheduler] = None
+
+        # Rate-limit diagnostics
+        self._last_quota_warn: float = 0.0
+        self._last_milestone: float = 0.0
 
     async def _fetch_cheapest_listings(
         self, game_id: str, titles: List[str]
@@ -185,10 +189,19 @@ class SnipingLoop(  # type: ignore[misc]
 
     @property
     def min_profit_margin(self) -> float:
-        """Dynamic margin: base * event multiplier (v7.8)."""
+        """Dynamic margin: base * event multiplier + volatility regime adjustment (v12.7)."""
         from src.config import Config
 
-        return (Config.MIN_SPREAD_PCT / 100.0) * event_shield.get_margin_multiplier()
+        base = Config.MIN_SPREAD_PCT
+        # Apply self-reflection adjustment (from trade history analysis)
+        reflection = self.self_reflection._cached_result
+        adjusted = self.self_reflection.get_adjusted_spread(base, reflection)
+        # Apply volatility regime adjustment (from recent market conditions)
+        vol_adj = self.self_reflection.get_volatility_regime_adjustment()
+        adjusted += vol_adj
+        # Ensure minimum floor
+        adjusted = max(1.0, adjusted)
+        return (adjusted / 100.0) * event_shield.get_margin_multiplier()
 
     async def start(self) -> None:
         self.running = True
@@ -423,6 +436,10 @@ class SnipingLoop(  # type: ignore[misc]
                 health_state.mark_cycle(0.0, 0.0, 0.0)
             except Exception:
                 pass
+
+            # v12.7: Clear per-cycle oracle price cache (P1-5).
+            self._clear_oracle_cache()
+
             self.deep_scan_counter += 1
             self.reprice_counter += 1
             is_fresh_cycle = self.deep_scan_counter % 5 == 0
@@ -619,23 +636,51 @@ class SnipingLoop(  # type: ignore[misc]
                         f"detections={pd_stats['total_detections']}"
                     )
 
-            for item in items:
-                # Reload candidate_item_ids was unused; reuse
-                if not item.get("title") or not item.get("itemId"):
-                    continue
-                candidate = await self._evaluate_candidate(
-                    item=item,
-                    game_id=game_id,
-                    oracle=oracle,
-                    agg_prices=agg_prices,
-                    bulk_fees=bulk_fees,
-                    current_balance=current_balance,
-                    current_margin=current_margin,
-                    cs_snapshots=cs_snapshots,
-                    cs_bids=cs_bids,
+            # v12.7: Parallel candidate evaluation (P0-2).
+            # _evaluate_candidate is mostly read-only (SQLite + dict lookups).
+            # HTTP fallback path (oracle.get_item_price) is rare when cache is warm.
+            # Semaphore caps concurrent fallback HTTP calls to prevent rate-limit storm.
+
+            # v12.8: Pre-compute saturation counts ONCE before parallel loop (P-1).
+            # Was O(N²): each candidate called get_virtual_inventory (N table scans).
+            # Now: 1 table scan → dict lookup per candidate (O(1)).
+            raw_inv = price_db.get_virtual_inventory(status="idle", only_unlocked=False)
+            saturation_counts: Dict[str, int] = {}
+            for inv_item in raw_inv:
+                hn = inv_item["hash_name"]
+                saturation_counts[hn] = saturation_counts.get(hn, 0) + 1
+
+            candidates_to_eval = [
+                item for item in items
+                if item.get("title") and item.get("itemId")
+            ]
+            if candidates_to_eval:
+                _eval_sem = asyncio.Semaphore(10)
+
+                async def _eval_with_sem(item):
+                    async with _eval_sem:
+                        return await self._evaluate_candidate(
+                            item=item,
+                            game_id=game_id,
+                            oracle=oracle,
+                            agg_prices=agg_prices,
+                            bulk_fees=bulk_fees,
+                            current_balance=current_balance,
+                            current_margin=current_margin,
+                            cs_snapshots=cs_snapshots,
+                            cs_bids=cs_bids,
+                            saturation_counts=saturation_counts,
+                        )
+
+                results = await asyncio.gather(
+                    *[_eval_with_sem(item) for item in candidates_to_eval],
+                    return_exceptions=True,
                 )
-                if candidate is not None:
-                    instant_buys.append(candidate)
+                for r in results:
+                    if isinstance(r, dict) and r is not None:
+                        instant_buys.append(r)
+                    elif isinstance(r, Exception):
+                        logger.debug(f"Candidate eval error: {r}")
 
             # --- Step 5: Execute instant buys (delegated) ---
             if instant_buys:
@@ -708,9 +753,17 @@ class SnipingLoop(  # type: ignore[misc]
                         cash=equity["cash"],
                         assets_value=equity["assets"],
                         total=equity["total"],
-                        items_count=equity["count"],
+                        items_count=int(equity["count"]),
                     )
                 )
+
+            # v12.9: Log sanitization — hash_name is omitted from INFO-level
+            # cycle logs to prevent trade-strategy leakage. Use DEBUG level
+            # for full item details (enabled via LOG_LEVEL=DEBUG).
+            logger.debug(
+                f"[v12.9 CYCLE] game={game_id} cycle={self.deep_scan_counter} "
+                f"candidates={len(candidates_to_eval)} buys={len(instant_buys)}"
+            )
 
             # v12.4: Periodic diagnostic snapshot (every 10 cycles)
             if self.deep_scan_counter % 10 == 0:

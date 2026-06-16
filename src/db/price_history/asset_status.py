@@ -22,7 +22,7 @@ class _AssetStatusMixin:
     """v12.2 asset_status table (trade_protected, reverted, FinalizationTime)."""
 
     # These attributes are set on the instance by PriceHistoryDB.__init__
-    state_conn: Any
+    state_conn: Any  # sqlite3.Connection
 
     @with_db_retry(operation_name="update_asset_status")
     def update_asset_status(

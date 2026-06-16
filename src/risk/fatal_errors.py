@@ -1,5 +1,5 @@
 """
-Fatal error classification for the DMarket bot.
+Fatal error classification for the DMarket bot (v12.7).
 
 The contract is:
     TRANSIENT  → bot may safely retry (network blip, rate limit)
@@ -13,6 +13,11 @@ issue, edit the .env / code, and relaunch manually.
 This module is the single source of truth for "is this exception
 fatal?" — both the outer supervisor (`autonomous_scanner.py`) and
 the inner cycle (`target_sniping/core.py`) call `classify()`.
+
+v12.7: Added granular error codes for better diagnostics:
+    7 = rate limit (transient but worth tracking)
+    8 = circuit breaker open (transient)
+    9 = quota exhausted (needs attention)
 """
 
 from __future__ import annotations
@@ -39,6 +44,18 @@ class DatabaseCorruption(FatalError):
 
 class LogicBug(FatalError):
     """Uncaught bug in our code (KeyError/AttributeError wrapped)."""
+
+
+class RateLimitError(FatalError):
+    """API rate limit hit (429). Transient but worth tracking separately."""
+
+
+class CircuitBreakerOpen(FatalError):
+    """Circuit breaker is open (too many consecutive failures)."""
+
+
+class QuotaExhausted(FatalError):
+    """API quota exhausted (CS2Cap monthly limit, DMarket secret limit)."""
 
 
 # Transient: bot may safely retry without user intervention.
@@ -93,7 +110,13 @@ def classify(exc: BaseException) -> str:
     - TRANSIENT_EXCEPTIONS (network/CB)       → TRANSIENT
     - LOGIC_BUG_EXCEPTIONS (our bugs)          → FATAL
     - anything else                            → UNKNOWN (treat as FATAL)
+
+    v12.7: RateLimitError and CircuitBreakerOpen are TRANSIENT
+    (not FATAL) since they resolve automatically.
     """
+    # Rate limit / circuit breaker are transient (auto-resolve)
+    if isinstance(exc, (RateLimitError, CircuitBreakerOpen, QuotaExhausted)):
+        return "TRANSIENT"
     if isinstance(exc, FatalError):
         return "FATAL"
     if isinstance(exc, TRANSIENT_EXCEPTIONS):
@@ -121,6 +144,9 @@ def exit_code_for(exc: BaseException) -> int:
         4 = database corruption
         5 = logic bug (our code)
         6 = unknown
+        7 = rate limit (transient, but worth tracking)
+        8 = circuit breaker open (transient)
+        9 = quota exhausted (needs attention)
     """
     if isinstance(exc, ConfigError):
         return 2
@@ -130,6 +156,12 @@ def exit_code_for(exc: BaseException) -> int:
         return 4
     if isinstance(exc, LogicBug):
         return 5
+    if isinstance(exc, RateLimitError):
+        return 7
+    if isinstance(exc, CircuitBreakerOpen):
+        return 8
+    if isinstance(exc, QuotaExhausted):
+        return 9
     if isinstance(exc, FatalError):
         return 1
     if isinstance(exc, _LOGIC_BUG_EXCEPTIONS):

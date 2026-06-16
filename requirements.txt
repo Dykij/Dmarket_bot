@@ -8,6 +8,10 @@ python-dotenv
 structlog
 aiosqlite
 aiogram
+hvac
+
+# Security
+cryptography
 
 # Testing & Dev
 pytest

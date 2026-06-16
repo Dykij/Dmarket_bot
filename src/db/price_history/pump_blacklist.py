@@ -39,7 +39,7 @@ class _PumpBlacklistMixin:
     """v12.7: pump_blacklist table — survives watchdog restarts."""
 
     # These attributes are set on the instance by PriceHistoryDB.__init__
-    state_conn: Any
+    state_conn: Any  # sqlite3.Connection
 
     @with_db_retry(operation_name="add_pump_blacklist_entry")
     def add_pump_blacklist_entry(

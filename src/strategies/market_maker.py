@@ -11,6 +11,7 @@ Improvements:
 from typing import Any, Dict
 from src.strategies.base import BaseStrategy
 from src.config import Config
+from src.analytics.self_reflection import self_reflection
 
 class MarketMaker(BaseStrategy):
     def __init__(self):
@@ -47,7 +48,6 @@ class MarketMaker(BaseStrategy):
         net_margin_pct = (net_profit / target_price) * 100.0
 
         # --- Self-Reflection Adjustment ---
-        from src.analytics.self_reflection import self_reflection
         reflection = self_reflection._cached_result
         adjusted_min_spread = self_reflection.get_adjusted_spread(Config.MIN_SPREAD_PCT, reflection)
 
@@ -66,14 +66,29 @@ class MarketMaker(BaseStrategy):
             turnover_penalty=turnover_penalty,
         )
 
-        # --- Position Sizing (with reflection adjustment) ---
-        self_reflection.get_adjusted_risk_pct(Config.MAX_POSITION_RISK_PCT, reflection)
-        quantity = self.calculate_position_size(
-            current_balance=current_balance,
-            item_price=target_price,
-            volatility_score=volatility_score,
-            sharpe_estimate=sharpe_estimate,
+        # --- Position Sizing (v12.7: ATR-enhanced P2-5) ---
+        # Use reflection-adjusted risk percentage (was silently discarded before v12.7)
+        adjusted_risk_pct = self_reflection.get_adjusted_risk_pct(
+            Config.MAX_POSITION_RISK_PCT, reflection
         )
+        ohlcv = market_data.get("ohlcv")
+        if ohlcv and len(ohlcv.get("high", [])) >= 15:
+            atr = self.calculate_atr(
+                ohlcv["high"], ohlcv["low"], ohlcv["close"], period=14
+            )
+            quantity = self.atr_position_size(
+                balance=current_balance,
+                atr=atr,
+                item_price=target_price,
+                risk_per_trade_pct=adjusted_risk_pct,
+            )
+        else:
+            quantity = self.calculate_position_size(
+                current_balance=current_balance,
+                item_price=target_price,
+                volatility_score=volatility_score,
+                sharpe_estimate=sharpe_estimate,
+            )
 
         if quantity <= 0:
             return {"action": "none"}

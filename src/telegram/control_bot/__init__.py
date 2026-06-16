@@ -12,7 +12,7 @@ Module: src.telegram.control_bot.bot (provides main())
 # --- State & access control ---
 from .state import (
     BotState,
-    _ADMIN_ID,
+    _ADMIN_IDS,
     _TOKEN,
     _load_config,
     is_admin,
@@ -102,7 +102,7 @@ from .bot import _lazy_bot, create_bot, main, master_router, router
 
 __all__ = [
     # State
-    "BotState", "_ADMIN_ID", "_TOKEN", "_load_config", "is_admin", "state",
+    "BotState", "_ADMIN_IDS", "_TOKEN", "_load_config", "is_admin", "state",
     # Resilience
     "dmarket_client", "retry_async", "safe_call",
     # Keyboards (constants)

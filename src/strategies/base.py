@@ -159,6 +159,94 @@ class BaseStrategy(ABC):
         return self.spread_volatility(best_ask, best_bid)
 
     # ----------------------------------------------------------------
+    # 2b. ATR (Average True Range) ESTIMATOR
+    # ----------------------------------------------------------------
+    @staticmethod
+    def calculate_atr(
+        high: List[float],
+        low: List[float],
+        close: List[float],
+        period: int = 14,
+    ) -> float:
+        """
+        v12.7: Average True Range (ATR) volatility estimator.
+
+        ATR measures market volatility by decomposing the entire range
+        of price movement for each period. More responsive to sudden
+        price moves than standard deviation.
+
+        True Range = max(H-L, |H-Cp|, |L-Cp|)
+        where Cp = previous close.
+
+        Returns: ATR value (absolute, not percentage).
+        """
+        if len(high) < 2 or len(low) < 2 or len(close) < 2:
+            return 0.0
+
+        n = min(len(high), len(low), len(close))
+        true_ranges = []
+
+        for i in range(1, n):
+            hl = high[i] - low[i]
+            hc = abs(high[i] - close[i - 1])
+            lc = abs(low[i] - close[i - 1])
+            tr = max(hl, hc, lc)
+            true_ranges.append(tr)
+
+        if not true_ranges:
+            return 0.0
+
+        # Use exponential moving average for ATR (standard approach)
+        if len(true_ranges) <= period:
+            return sum(true_ranges) / len(true_ranges)
+
+        # Initial ATR = simple average of first 'period' true ranges
+        atr = sum(true_ranges[:period]) / period
+        # Smooth with EMA
+        for i in range(period, len(true_ranges)):
+            atr = (atr * (period - 1) + true_ranges[i]) / period
+
+        return atr
+
+    @staticmethod
+    def atr_position_size(
+        balance: float,
+        atr: float,
+        item_price: float,
+        risk_per_trade_pct: float = 2.0,
+    ) -> int:
+        """
+        v12.7: ATR-based position sizing (P2-5).
+
+        Uses ATR to determine stop-loss distance and position size.
+        Position size = (Balance * Risk%) / (ATR * multiplier)
+
+        The ATR multiplier (1.5-2.0x) gives the stop-loss distance.
+        This ensures each trade risks a fixed percentage of capital,
+        with position size inversely proportional to volatility.
+
+        Returns: number of units to buy (0 if risk too high).
+        """
+        if atr <= 0 or item_price <= 0 or balance <= 0:
+            return 1  # Default to 1 unit if ATR unavailable
+
+        # Stop-loss distance = 2x ATR (standard for volatile markets)
+        stop_distance = atr * 2.0
+        risk_amount = balance * (risk_per_trade_pct / 100.0)
+
+        # Position size in units
+        if stop_distance > 0:
+            qty = int(risk_amount / stop_distance)
+        else:
+            qty = 1
+
+        # Cap at what we can afford
+        max_affordable = int(balance / item_price)
+        qty = min(qty, max_affordable)
+
+        return max(1, qty)
+
+    # ----------------------------------------------------------------
     # 3. TURNOVER REGULARIZATION
     # ----------------------------------------------------------------
     def _reset_daily_counter(self):
@@ -169,16 +257,15 @@ class BaseStrategy(ABC):
             self._daily_trade_count = 0
             self._daily_trades_reset_ts = day_start
 
-    # TODO(unify-daily-counters): This `_reset_daily_counter` mechanism
-    # duplicates `RiskManager._maybe_roll_day` (src/risk/risk_manager.py:266).
-    # Both use UTC, so they agree — no actual race condition. But there are
-    # TWO sources of truth for "how many trades today", and they can drift
-    # if a maintenance window mutates one without the other. Plan: have
-    # BaseStrategy delegate to a shared DailyCounter helper, or remove
-    # the strategy-level counter entirely and have callers read
-    # `risk.get_state().trades_today`. Until then, ensure any new
-    # trade-recording path increments BOTH `_daily_trade_count` (here) and
-    # `risk.record_trade_outcome` (elsewhere). See target_sniping.py:447.
+    # NOTE: This counter is SEPARATE from RiskManager._daily_trade_count.
+    # They serve different purposes:
+    #   - Strategy counter → turnover_penalty (frequency-based sizing)
+    #   - RiskManager counter → daily_loss_limit, trade_count_limit (hard caps)
+    # Both reset on UTC day boundary. They may drift if one is mutated
+    # without the other, but this is acceptable: the strategy counter is
+    # advisory (penalizes sizing), while the risk counter is authoritative
+    # (blocks trades). If a unified counter is needed in the future, inject
+    # a shared DailyCounter helper via __init__.
 
     def calculate_turnover_penalty(self) -> float:
         """

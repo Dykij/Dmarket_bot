@@ -20,6 +20,7 @@ from src.api.cs2cap_oracle import CS2CapOracle
 from src.api.dmarket_api_client import DMarketAPIClient
 from src.config import Config
 
+from ..formatters import escape_md
 from ..keyboards import BTN_TEST, get_main_keyboard
 from ..resilience import retry_async, safe_call
 
@@ -90,12 +91,18 @@ async def cmd_cancel(message, state_fsm: FSMContext):
 
 async def _do_test(message, item_name: str) -> None:
     """Run the actual arbitrage test (DMarket + CS2Cap oracle)."""
-    await message.answer(f"⏳ Testing `{item_name}`...")
+    safe_name = escape_md(item_name)
+    await message.answer(f"⏳ Testing `{safe_name}`...")
 
-    client = DMarketAPIClient(Config.PUBLIC_KEY, Config.SECRET_KEY)
+    from src.utils.vault import vault
+    secret = (
+        vault.get_dmarket_secret()
+        if hasattr(vault, "get_dmarket_secret")
+        else Config.SECRET_KEY
+    )
+    client = DMarketAPIClient(Config.PUBLIC_KEY, secret)  # type: ignore[arg-type]
     oracle = CS2CapOracle(
-        os.getenv("CS2C_API_KEY", ""),
-        tier=os.getenv("CS2C_TIER", "free"),
+        os.getenv("CS2CAP_API_KEY", ""),
     )
     try:
         market = await retry_async(
@@ -112,7 +119,7 @@ async def _do_test(message, item_name: str) -> None:
         )
 
         if not found:
-            await message.answer(f"❌ `{item_name}` not found on DMarket.")
+            await message.answer(f"❌ `{safe_name}` not found on DMarket.")
             return
 
         dm_price = float(found.get("price", {}).get("USD", 0)) / 100.0
@@ -135,7 +142,7 @@ async def _do_test(message, item_name: str) -> None:
         spread = ((best_bid - best_ask) / best_ask * 100) if best_ask > 0 else 0
 
         text = (
-            f"🧪 *Arbitrage Test:* `{item_name}`\n\n"
+            f"🧪 *Arbitrage Test:* `{safe_name}`\n\n"
             f"📉 *DMarket:*\n"
             f"   Cheapest listing: `${dm_price:.2f}`\n"
             f"   Best ask: `${best_ask:.2f}`\n"

@@ -18,6 +18,12 @@ logger = structlog.get_logger("DMarketAPI")
 class _AccountMixin:
     """Read-only account endpoints (balance, inventory, transactions)."""
 
+    # Declared here so mypy knows the composed class has this method.
+    async def make_request(
+        self, method: str, path: str,
+        params: Any = None, body: Any = None,
+    ) -> Any: ...
+
     async def get_real_balance(self) -> float:
         """Fetches the current USD & DMC balance. Supports Real Balance in Dry Run."""
         try:
@@ -146,7 +152,7 @@ class _AccountMixin:
 
         Endpoint: GET /exchange/v1/transactions?days=30&limit=100
         """
-        params = {
+        params: Dict[str, Any] = {
             "days": days,
             "limit": limit,
         }

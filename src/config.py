@@ -30,7 +30,6 @@ class Config:
     # if v12.0 had been wired in). Defined here with the original intent.
     INTRA_MIN_SPREAD_PCT = 2.5    # Min spread (intra-DMarket OR cross-market) to consider (%)
     INTRA_LIST_DISCOUNT = 0.01    # Undercut vs best_bid when listing (USD)
-    CROSS_MARKET_ENABLED = True   # Use CS2Cap provider bids for cross-market arb detection
 
     # --- v12.2 Liquidity / Wash-Trading Filters ---
     # Used by _FilterMixin._evaluate_candidate. Defaults match v12.2 intent.
@@ -108,6 +107,8 @@ class Config:
     # --- Dynamic Position Sizing ---
     USE_DYNAMIC_SIZING = True
     MAX_POSITION_RISK_PCT = float(os.getenv("MAX_POSITION_RISK_PCT", "5.0"))  # Max capital risk per single item (Kelly Criterion proxy)
+    MAX_SAME_ITEM_HOLDINGS = int(os.getenv("MAX_SAME_ITEM_HOLDINGS", "3"))  # v12.7: max units of same item (saturation filter + execution guard)
+    MAX_CONCURRENT_POSITIONS = int(os.getenv("MAX_CONCURRENT_POSITIONS", "50"))  # v12.8: total concurrent holdings cap
 
     # =================================================================
     # CS2Cap Integration (arXiv-inspired improvements)

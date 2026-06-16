@@ -12,6 +12,21 @@ from src.config import Config
 from src.utils.clock_sync import clock_sync
 
 
+def escape_md(text: str) -> str:
+    """Escape Telegram MarkdownV2 special characters in user-supplied text.
+
+    CVE-2026-23807: item names from API or user input must be sanitised
+    before rendering with ParseMode.MARKDOWN. Unescaped `_`, `*`, `` ` ``
+    can crash message rendering or inject misleading links.
+
+    For v1-style markdown (ParseMode.MARKDOWN, which this bot uses), the
+    primary threats are `_`, `*`, `` ` ``, `[`, and `]`.
+    """
+    for ch in ("_", "*", "`", "[", "]"):
+        text = text.replace(ch, "\\" + ch)
+    return text
+
+
 def format_balance(balance: float, equity: dict) -> str:
     """Format the balance text shown in /balance and btn:balance."""
     return (

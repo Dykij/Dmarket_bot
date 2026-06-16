@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import sqlite3
 import time
-from typing import List, Optional, Tuple
+from typing import Any, List, Optional, Tuple
 
 from src.db.db_retry import with_db_retry
 
@@ -23,12 +23,12 @@ class _StateMixin:
     """scanning_state table (key/value, OLTP side)."""
 
     # These attributes are set on the instance by PriceHistoryDB.__init__
-    state_conn: object
+    state_conn: Any  # sqlite3.Connection (set by PriceHistoryDB.__init__)
 
     @with_db_retry(operation_name="save_state")
     def save_state(self, key: str, value: str) -> None:
-        with self.state_conn:  # type: ignore[attr-defined]
-            self.state_conn.execute(  # type: ignore[attr-defined]
+        with self.state_conn:
+            self.state_conn.execute(
                 "INSERT OR REPLACE INTO scanning_state (key, value, updated_at) "
                 "VALUES (?, ?, ?)",
                 (key, value, time.time()),

@@ -33,7 +33,7 @@ import logging
 import os
 import time
 from dataclasses import dataclass
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger("PumpDetector")
 
@@ -69,8 +69,8 @@ class PumpDetector:
 
     def __init__(
         self,
-        price_db: Optional[object] = None,
-        notifier: Optional[object] = None,
+        price_db: Optional[Any] = None,
+        notifier: Optional[Any] = None,
         threshold_pct: Optional[float] = None,
         window_seconds: Optional[int] = None,
         blacklist_seconds: Optional[int] = None,
@@ -337,7 +337,7 @@ class PumpDetector:
         """Return currently active (non-expired) blacklisted items."""
         return [a for a in self._blacklist.values() if a.is_active]
 
-    def stats(self) -> Dict[str, object]:
+    def stats(self) -> Dict[str, Any]:
         return {
             "threshold_pct": self.threshold_pct,
             "window_seconds": self.window_seconds,

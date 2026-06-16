@@ -28,7 +28,7 @@ router = Router(name="telegram-control-lifecycle")
 async def cmd_start(message):
     mode = "🧪 SIMULATION (DRY_RUN)" if Config.DRY_RUN else "💸 LIVE TRADING"
     text = (
-        f"🤖 *DMarket Sniper v{Config.BOT_VERSION} — Control Center*\n\n"
+        f"🤖 *DMarket Sniper — Control Center*\n\n"
         f"📌 *Mode:* {mode}\n"
         f"🎯 *Strategy:* {Config.ACTIVE_STRATEGY}\n"
         f"💵 *Min Spread:* {Config.INTRA_MIN_SPREAD_PCT}%\n"
@@ -66,7 +66,7 @@ async def cmd_help(message):
 @safe_call
 async def cmd_settings(message):
     text = (
-        f"⚙️ *Configuration (v{Config.BOT_VERSION})*\n\n"
+        f"⚙️ *Configuration*\n\n"
         f"*Risk:*\n"
         f"   Min spread: {Config.INTRA_MIN_SPREAD_PCT}%\n"
         f"   Min price: ${Config.MIN_PRICE_USD}\n"

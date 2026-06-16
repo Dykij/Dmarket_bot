@@ -53,6 +53,10 @@ CLOSED_OFFERS_LOOKBACK_DAYS = int(os.getenv("CLOSED_OFFERS_LOOKBACK_DAYS", "7"))
 class _ResaleMixin:
     """Post-buy pipeline (list, sell, reprice)."""
 
+    # These attributes are set on the instance by SnipingLoop.__init__
+    client: Any  # DMarketAPIClient
+    cs2cap_cache: Any  # CS2CapCache (or None)
+
     # ----------------------------------------------------------------
     # auto_resale — DRY + PROD paths
     # ----------------------------------------------------------------
@@ -430,20 +434,34 @@ class _ResaleMixin:
 
             # DMarket returns 200 with `status: 'success'` or partial errors.
             # Map each item back by index and update local DB.
+            # v2 endpoint format: {"offers": [{"id": "...", "assetId": "..."}], "failed": [...]}
             success_count = 0
             for idx, (row_id, dm_id, title, lp, bp) in enumerate(chunk):
-                # Default: assume success unless we find an error for this index
                 offer_id = None
                 err = None
                 if isinstance(resp, dict):
-                    # If there's a per-item status list, use it
-                    item_status = resp.get("Items", []) or resp.get("items", [])
-                    if idx < len(item_status):
-                        item_info = item_status[idx]
+                    # v2 format: "offers" array with "id" and "assetId"
+                    v2_offers = resp.get("offers", [])
+                    if idx < len(v2_offers):
+                        item_info = v2_offers[idx]
                         if isinstance(item_info, dict):
-                            offer_id = item_info.get("offerId") or item_info.get("OfferID")
-                            err = item_info.get("error") or item_info.get("Error")
-                    # Or a top-level error
+                            offer_id = item_info.get("id") or item_info.get("offerId") or item_info.get("OfferID")
+                    # Fallback to old format: "Items" or "items" array
+                    if not offer_id:
+                        item_status = resp.get("Items", []) or resp.get("items", [])
+                        if idx < len(item_status):
+                            item_info = item_status[idx]
+                            if isinstance(item_info, dict):
+                                offer_id = item_info.get("offerId") or item_info.get("OfferID")
+                                err = item_info.get("error") or item_info.get("Error")
+                    # Check failed array (v2 format)
+                    if not offer_id:
+                        v2_failed = resp.get("failed", [])
+                        for fail in v2_failed:
+                            if fail.get("assetId") == dm_id:
+                                err = fail.get("message") or fail.get("code")
+                                break
+                    # Top-level error check
                     if not offer_id and resp.get("status") == "error":
                         err = resp.get("message", "unknown error")
                 if offer_id:
@@ -481,10 +499,11 @@ class _ResaleMixin:
     # ----------------------------------------------------------------
     async def reprice_unsold_offers(self, game_id: str) -> None:
         """
-        v12.5: Auto-reprice items listed for >REPRICE_AFTER_HOURS that haven't sold.
+        v12.7: Auto-reprice items listed for >REPRICE_AFTER_HOURS that haven't sold.
 
+        Uses batch_edit_offers_v2 (up to 100 per request) instead of per-offer edit.
         DRY: just log.
-        PROD: edit_sell_offer with a 5% lower price (configurable via SELL_REPRICE_DROP_PCT).
+        PROD: batch edit with a 5% lower price (configurable via SELL_REPRICE_DROP_PCT).
         """
         from src.config import Config
 
@@ -501,16 +520,22 @@ class _ResaleMixin:
             return
 
         logger.info(
-            f"[REPRICE] {len(stale)} item(s) listed >{Config.REPRICE_AFTER_HOURS}h, dropping {REPRICE_DROP_PCT}%"
+            f"[REPRICE] {len(stale)} item(s) listed >{Config.REPRICE_AFTER_HOURS}h, "
+            f"dropping {REPRICE_DROP_PCT}%"
         )
-        repriced = 0
+
+        # v12.7: Batch repricing (up to 100 per request) instead of per-offer edit.
+        edits_batch = []
+        skipped = 0
         for it in stale:
             try:
                 offer_id = it["dm_offer_id"] or ""
                 if not offer_id:
+                    skipped += 1
                     continue
                 old_price = float(it["sell_price"] or 0)
                 if old_price <= 0:
+                    skipped += 1
                     continue
                 # Drop the price, but never below buy_price * 1.01 (avoid loss)
                 new_price = round(old_price * (1 - REPRICE_DROP_PCT / 100.0), 2)
@@ -519,19 +544,40 @@ class _ResaleMixin:
                     logger.debug(
                         f"[REPRICE] {it['hash_name']} at floor (${floor:.2f}), skipping"
                     )
+                    skipped += 1
                     continue
-                await self.client.edit_sell_offer(offer_id, new_price)
-                price_db.mark_listed(int(it["id"]), offer_id, new_price)
-                repriced += 1
-                logger.info(
-                    f"[REPRICE] {it['hash_name']} ${old_price:.2f} → ${new_price:.2f}"
-                )
+                edits_batch.append({
+                    "offer_id": offer_id,
+                    "new_price_usd": new_price,
+                    "db_id": int(it["id"]),
+                    "title": it["hash_name"],
+                    "old_price": old_price,
+                })
             except (KeyError, IndexError) as e:
                 logger.debug(f"[REPRICE] Row access error (skip): {e}")
+                skipped += 1
+
+        # Send in chunks of 100 (DMarket batch limit)
+        repriced = 0
+        for chunk_start in range(0, len(edits_batch), 100):
+            chunk = edits_batch[chunk_start:chunk_start + 100]
+            try:
+                await self.client.batch_edit_offers_v2(chunk)
+                # Mark all as repriced in DB
+                for edit in chunk:
+                    price_db.mark_listed(edit["db_id"], edit["offer_id"], edit["new_price_usd"])
+                    repriced += 1
+                    logger.info(
+                        f"[REPRICE] {edit['title']} ${edit['old_price']:.2f} → "
+                        f"${edit['new_price_usd']:.2f}"
+                    )
             except Exception as e:
                 logger.warning(
-                    f"[REPRICE] Failed to edit {it['hash_name']} ({offer_id[:12]}...): {e}",
+                    f"[REPRICE] Batch edit failed (chunk {chunk_start}-{chunk_start+len(chunk)}): {e}",
                     exc_info=True,
                 )
+
         if repriced > 0:
             logger.info(f"[REPRICE] Repriced {repriced} item(s) successfully")
+        if skipped > 0:
+            logger.debug(f"[REPRICE] Skipped {skipped} item(s)")

@@ -17,6 +17,12 @@ logger = structlog.get_logger("DMarketAPI")
 class _MarketMixin:
     """Read-only market data endpoints (no writes)."""
 
+    # Declared here so mypy knows the composed class has this method.
+    async def make_request(
+        self, method: str, path: str,
+        params: Any = None, body: Any = None,
+    ) -> Any: ...
+
     async def get_market_items_v2(
         self,
         game_id: str,
@@ -173,13 +179,13 @@ class _MarketMixin:
         """
         Daily list of items with reduced DMarket fees (2-3% vs 5%).
 
-        Endpoint: GET /marketplace-api/v1/low-fee-items
+        Endpoint: GET /exchange/v1/customized-fees
         """
         try:
             res = await self.make_request(
-                "GET", "/marketplace-api/v1/low-fee-items", params={"gameId": game_id}
+                "GET", "/exchange/v1/customized-fees", params={"gameId": game_id}
             )
-            items = res.get("items", [])
+            items = res.get("items", []) or res.get("customizedFees", [])
             normalized = []
             for it in items:
                 title = it.get("title", "")

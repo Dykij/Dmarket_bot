@@ -3,7 +3,7 @@ import json
 import logging
 import os
 import time
-from typing import Literal
+from typing import List, Literal, Tuple
 
 try:
     import grpc
@@ -45,7 +45,7 @@ class CircuitBreaker:
         self.state_path = state_path or os.environ.get(
             "CIRCUIT_BREAKER_STATE_PATH", "/tmp/cb_state.json"
         )  # nosec: B108 - in-container ephemeral; override via env in production
-        self.snapshots = []
+        self.snapshots: List[Tuple[float, float]] = []
         self.is_tripped = False
         self._load_state()
         

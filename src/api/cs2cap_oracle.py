@@ -35,6 +35,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from src.config import Config
 from src.db.price_history import price_db
+from src.api.dmarket_api_client.backoff import CircuitBreaker
 
 logger = logging.getLogger("CS2CapOracle")
 
@@ -155,9 +156,20 @@ class CS2CapOracle:
         self._quota_exhausted_at: float = 0.0
         self._quota_reset_seconds = 3600  # Reset after 1 hour
 
+        # v12.7: Circuit breaker for CS2Cap API (P3-5).
+        # Opens after 3 consecutive failures (429, 5xx, network errors).
+        # Exponential cooldown: 30s → 60s → 120s → 300s with ±20% jitter.
+        self._breaker = CircuitBreaker(
+            name="cs2cap",
+            fail_threshold=3,
+            base_cooldown=30.0,
+            max_cooldown=300.0,
+            jitter_pct=0.2,
+        )
+
         # Caches
         self._price_cache: Dict[str, Tuple[float, float]] = {}
-        self._candles_cache: Dict[str, Tuple[List[Dict], float]] = {}
+        self._candles_cache: Dict[str, Tuple[List[Any], float]] = {}
 
         # Item catalog: market_hash_name -> item_id
         self._item_catalog: Dict[str, int] = {}
@@ -170,7 +182,10 @@ class CS2CapOracle:
 
     async def get_session(self) -> aiohttp.ClientSession:
         if self._session is None or self._session.closed:
-            headers = {}
+            headers = {
+                "Accept-Encoding": "gzip, deflate",
+                "Accept": "application/json",
+            }
             if self.api_key:
                 headers["Authorization"] = f"Bearer {self.api_key}"
             self._session = aiohttp.ClientSession(
@@ -180,14 +195,27 @@ class CS2CapOracle:
         return self._session
 
     async def _throttle(self):
+        """Smart throttle: adapts to X-RateLimit-Remaining header.
+
+        When header shows remaining < 10: slow to 2s/request.
+        When header shows remaining < 5: slow to 5s/request.
+        Normal operation: 1s/request (Starter tier: 40 RPM = 1.5s/request).
+        """
         async with self._lock:
+            # Adapt delay based on header-aware remaining quota
+            if self._rate_remaining is not None:
+                if self._rate_remaining < 5:
+                    self._request_delay = max(self._request_delay, 5.0)
+                elif self._rate_remaining < 10:
+                    self._request_delay = max(self._request_delay, 2.0)
+
             elapsed = asyncio.get_event_loop().time() - self._last_request_time
             if elapsed < self._request_delay:
                 await asyncio.sleep(self._request_delay - elapsed)
             self._last_request_time = asyncio.get_event_loop().time()
 
     async def _request(self, endpoint: str, params: Optional[Dict[str, Any]] = None) -> Optional[Dict]:
-        """Throttled API request with rate limit handling."""
+        """Throttled API request with rate limit handling and circuit breaker."""
         # Reset quota after 1 hour
         if self._quota_exhausted and time.time() - self._quota_exhausted_at > self._quota_reset_seconds:
             self._quota_exhausted = False
@@ -195,6 +223,11 @@ class CS2CapOracle:
             logger.info("[CS2Cap] Quota reset, retrying API calls")
 
         if self._quota_exhausted:
+            return None
+
+        # v12.7: Circuit breaker check (P3-5).
+        if not self._breaker.allow_request():
+            logger.debug("[CS2Cap] Circuit breaker OPEN, skipping request")
             return None
 
         await self._throttle()
@@ -208,6 +241,7 @@ class CS2CapOracle:
                     price_db.save_state("cs2cap_delay", str(self._request_delay))
                     self._quota_exhausted = True
                     self._quota_exhausted_at = time.time()
+                    self._breaker.record_failure(Exception("429 Rate Limit"))
                     logger.warning("[CS2Cap] Rate limit hit (429) — quota exhausted, pausing API calls for 1 hour")
                     return None
 
@@ -216,16 +250,21 @@ class CS2CapOracle:
                     price_db.save_state("cs2cap_delay", str(self._request_delay))
 
                 if response.status == 403:
+                    self._breaker.record_failure(Exception("403 Forbidden"))
                     return None
 
                 if response.status != 200:
                     text = await response.text()
+                    self._breaker.record_failure(Exception(f"HTTP {response.status}"))
                     logger.debug(f"[CS2Cap] HTTP {response.status}: {text[:200]}")
                     return None
 
+                # Success: record in circuit breaker
+                self._breaker.record_success()
                 return await response.json()
 
         except Exception as e:
+            self._breaker.record_failure(e)
             logger.debug(f"[CS2Cap] Request failed: {e}")
             return None
 
@@ -247,6 +286,11 @@ class CS2CapOracle:
             logger.info("[CS2Cap] Quota reset, retrying API calls")
 
         if self._quota_exhausted:
+            return None
+
+        # v12.7: Circuit breaker check (P3-5).
+        if not self._breaker.allow_request():
+            logger.debug("[CS2Cap] Circuit breaker OPEN, skipping POST request")
             return None
 
         if not bypass_throttle:
@@ -274,6 +318,7 @@ class CS2CapOracle:
                     price_db.save_state("cs2cap_delay", str(self._request_delay))
                     self._quota_exhausted = True
                     self._quota_exhausted_at = time.time()
+                    self._breaker.record_failure(Exception(f"429 Rate Limit on {endpoint}"))
                     logger.warning(
                         f"[CS2Cap] Rate limit hit (429) on {endpoint} — "
                         f"quota exhausted, pausing API calls for 1 hour"
@@ -288,18 +333,23 @@ class CS2CapOracle:
                     price_db.save_state("cs2cap_delay", str(self._request_delay))
 
                 if response.status == 403:
+                    self._breaker.record_failure(Exception(f"403 Forbidden on {endpoint}"))
                     return None
 
                 if response.status != 200:
                     text = await response.text()
+                    self._breaker.record_failure(Exception(f"HTTP {response.status} on {endpoint}"))
                     logger.debug(f"[CS2Cap] HTTP {response.status} on {endpoint}: {text[:200]}")
                     return None
 
+                # Success: record in circuit breaker
+                self._breaker.record_success()
                 # Track monthly quota
                 self._increment_monthly_counter()
                 return await response.json()
 
         except Exception as e:
+            self._breaker.record_failure(e)
             logger.debug(f"[CS2Cap] POST {endpoint} failed: {e}")
             return None
 
@@ -365,6 +415,50 @@ class CS2CapOracle:
             "per_min_remaining": None,
             "is_quota_exhausted": self._quota_exhausted,
             "cooldown_remaining_s": cooldown_remaining,
+        }
+
+    def circuit_breaker_status(self) -> Dict[str, Any]:
+        """v12.7: Circuit breaker diagnostic snapshot (P3-5)."""
+        return self._breaker.status()
+
+    def is_price_stale(self, hash_name: str, max_age_seconds: Optional[float] = None) -> bool:
+        """
+        v12.7: Check if cached price for item is stale (P4-3).
+
+        Returns True if:
+        - No cached price exists, OR
+        - Cached price is older than max_age_seconds (default: MEM_TTL * 2)
+
+        Useful for detecting when to force-refresh vs use cache.
+        """
+        if max_age_seconds is None:
+            max_age_seconds = self.MEM_TTL * 2  # 10 minutes default
+
+        now = time.time()
+        cache_key = f"{hash_name}_0"
+
+        # Check in-memory cache
+        if cache_key in self._price_cache:
+            _, ts = self._price_cache[cache_key]
+            if now - ts < max_age_seconds:
+                return False  # Fresh
+
+        # Check SQLite cache
+        cached_ts = price_db.get_latest_price_timestamp(hash_name)
+        if cached_ts is not None and (now - cached_ts) < max_age_seconds:
+            return False  # Fresh in SQLite
+
+        return True  # Stale or missing
+
+    def cache_stats(self) -> Dict[str, Any]:
+        """v12.7: Cache diagnostics for health endpoint."""
+        now = time.time()
+        mem_fresh = sum(1 for _, ts in self._price_cache.values() if now - ts < self.MEM_TTL)
+        mem_stale = sum(1 for _, ts in self._price_cache.values() if now - ts >= self.MEM_TTL)
+        return {
+            "memory_cache": {"fresh": mem_fresh, "stale": mem_stale, "total": len(self._price_cache)},
+            "catalog_size": len(self._item_catalog),
+            "catalog_age_s": round(now - self._catalog_ts, 1) if self._catalog_ts > 0 else None,
         }
 
     # ----------------------------------------------------------------
@@ -799,11 +893,11 @@ class CS2CapOracle:
         Uses Garman-Klass estimator for better accuracy.
         Falls back to simple std dev if insufficient data.
         """
-        history = price_db.get_price_history(hash_name, hours=168, max_records=168)
+        history = price_db.get_recent_prices(hash_name, days=7)
         if len(history) < 5:
             return 0.0
 
-        prices = [h["price"] for h in history if h["price"] > 0]
+        prices = [h[0] for h in history if h[0] > 0]
         if len(prices) < 5:
             return 0.0
 

@@ -137,6 +137,7 @@ class RiskManager:
         current_equity_usd: float,
         game_id: str = "a8db",
         item_title: str = "",
+        current_position_count: int = 0,
     ) -> PreTradeCheck:
         """
         Pre-trade risk check. Returns PreTradeCheck with .allowed.
@@ -146,16 +147,15 @@ class RiskManager:
         2. Pump-detector blacklist check (item-specific, blocks FOMO buys).
         3. Daily trade count limit.
         4. Daily loss limit.
-        5. Drawdown → soft halt (only blocks BUYs, not SELLs)
-        6. Hard drawdown → block everything.
-        7. Equity track peak (for max drawdown calc).
+        5. Concurrent positions cap (v12.8).
+        6. Drawdown → soft halt (only blocks BUYs, not SELLs)
+        7. Hard drawdown → block everything.
+        8. Equity track peak (for max drawdown calc).
         """
         self._maybe_roll_day()
         self._update_equity(current_equity_usd)
 
-        # 1. Pump-detector blacklist check (v12.6) — runs BEFORE all the
-        # global halts so an item-specific FOMO block doesn't trip the
-        # daily counters. This is purely item-scoped.
+        # 1. Pump-detector blacklist check (v12.6)
         if self.pump_detector is not None and item_title:
             if self.pump_detector.is_blacklisted(item_title):
                 self._daily_blocked += 1
@@ -165,7 +165,7 @@ class RiskManager:
                         f"Pump-blacklisted: {item_title} (price spike detected, "
                         f"buys blocked for 24h)"
                     ),
-                    triggered_halt=False,  # item-specific, not a global halt
+                    triggered_halt=False,
                 )
 
         # 2. Daily trade count
@@ -192,7 +192,20 @@ class RiskManager:
                 triggered_halt=True,
             )
 
-        # 4. Hard drawdown kill switch
+        # 4. Concurrent positions cap (v12.8)
+        max_positions = int(os.getenv("MAX_CONCURRENT_POSITIONS", "50"))
+        if current_position_count >= max_positions:
+            self._daily_blocked += 1
+            return PreTradeCheck(
+                allowed=False,
+                reason=(
+                    f"Concurrent positions cap reached: "
+                    f"{current_position_count}/{max_positions}"
+                ),
+                triggered_halt=True,
+            )
+
+        # 5. Hard drawdown kill switch
         if self._current_drawdown_pct >= self.max_drawdown_pct:
             self._daily_blocked += 1
             return PreTradeCheck(
@@ -335,11 +348,3 @@ class RiskManager:
             self._current_drawdown_pct = dd * 100.0
             if self._current_drawdown_pct > self._max_drawdown_seen * 100.0:
                 self._max_drawdown_seen = dd
-
-
-# Convenience: a global default (replaced per bot instance in autonomous_scanner)
-# TODO(remove-default-risk-manager): this singleton is never imported anywhere
-# in src/ (grep proves 1 match — its own definition). It is a leftover from
-# an earlier design where external scripts might import it. Safe to delete
-# once we have unit-test coverage that exercises RiskManager directly.
-default_risk_manager = RiskManager()

@@ -80,7 +80,7 @@ class InventoryManager:
 
         try:
             while page < max_pages:
-                response = await self.api.get_user_active_offers(
+                response = await self.api.get_user_offers(
                     game_id=game_id, limit=50, cursor=cursor
                 )
                 items = response.get("objects", [])

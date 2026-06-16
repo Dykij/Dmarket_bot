@@ -17,7 +17,7 @@ import logging
 import os
 import gc
 import time
-from typing import Dict, Optional
+from typing import Any, Dict, Optional
 from src.api.dmarket_api_client import DMarketAPIClient
 from src.api.oracle_factory import OracleFactory
 from src.api.cs2cap_oracle import CS2CapOracle, CS2CapRateLimit, CrossMarketData
@@ -50,7 +50,7 @@ class SnipingLoop:
         self.valuation = RareValuationEngine()
         self.stickers = StickerEvaluator()
         self.liquidity = LiquidityManager()
-        self.inventory_mgr = None
+        self.inventory_mgr: Any = None
         self.resale_pipeline = ResalePipeline(client)
 
         from src.config import Config

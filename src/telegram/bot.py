@@ -17,6 +17,21 @@ Commands:
 /help        — Help guide
 """
 
+"""
+WARNING: This module is DEPRECATED (v10 legacy).
+Use src/telegram/control_bot/ instead.
+
+Security issues in this file (v12.9+):
+- 9 instances of raw exception `{e}` leaked to users (CVE-2026-32982)
+- 9 instances of Config.SECRET_KEY bypassing vault (vault discipline)
+- No ThrottlingMiddleware (CVE-2026-35628)
+- No SecurityAuditor logging filter
+- No HealthServer integration
+
+All fixes below are hot-patches. The module should be removed once
+control_bot/ fully replaces it.
+"""
+
 import asyncio
 import logging
 import os
@@ -41,11 +56,41 @@ from src.analytics.self_reflection import self_reflection
 
 load_dotenv()
 
-logging.basicConfig(level=logging.INFO)
+from src.utils.logging_setup import configure_logging
+configure_logging(component="bot_legacy")
 logger = logging.getLogger("TelegramControl")
 
 TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 ADMIN_ID = os.getenv("TELEGRAM_CHAT_ID")
+ADMIN_IDS_STR = os.getenv("TELEGRAM_ADMIN_IDS", "")
+ADMIN_IDS: set[str] = set()
+if ADMIN_IDS_STR:
+    ADMIN_IDS = {x.strip() for x in ADMIN_IDS_STR.split(",") if x.strip()}
+if ADMIN_ID:
+    ADMIN_IDS.add(ADMIN_ID)
+
+
+def _is_admin(user_id: int | None) -> bool:
+    """Check if user is an authorized admin."""
+    if user_id is None:
+        return False
+    return str(user_id) in ADMIN_IDS
+
+
+def _get_api_client() -> DMarketAPIClient:
+    """Create DMarketAPIClient using vault (not Config.SECRET_KEY raw).
+
+    v12.9: All production code must go through vault so the secret key
+    is encrypted in memory via Fernet.
+    """
+    from src.utils.vault import vault
+    secret = (
+        vault.get_dmarket_secret()
+        if hasattr(vault, "get_dmarket_secret")
+        else Config.SECRET_KEY
+    )
+    return DMarketAPIClient(Config.PUBLIC_KEY, secret)
+
 
 if not TOKEN:
     logger.error("TELEGRAM_BOT_TOKEN missing!")
@@ -75,17 +120,30 @@ main_kb = ReplyKeyboardMarkup(
 # CORE COMMANDS
 # =================================================================
 
-@router.message(Command("start"))
-async def cmd_start(message: types.Message):
-    if str(message.from_user.id) != str(ADMIN_ID):
-        return
+def _admin_only(handler):
+    """Decorator to restrict handler to authorized admins only."""
+    from functools import wraps
 
+    @wraps(handler)
+    async def wrapper(message: types.Message, *args, **kwargs):
+        if not _is_admin(message.from_user.id if message.from_user else None):
+            logger.warning(
+                f"Unauthorized command attempt from user_id={message.from_user.id if message.from_user else 'unknown'}"
+            )
+            return
+        return await handler(message, *args, **kwargs)
+    return wrapper
+
+
+@router.message(Command("start"))
+@_admin_only
+async def cmd_start(message: types.Message):
     cs2cap_status = "Connected" if os.getenv("CS2CAP_API_KEY") else "Not configured"
     oracle = OracleFactory.get_cross_market_oracle(Config.GAME_ID)
     oracle_type = "CS2Cap (41 markets)" if oracle else "CSFloat (fallback)"
 
     await message.answer(
-        f"DMarket Quantitative Engine v10.0\n"
+        f"DMarket Quantitative Engine\n"
         f"Mode: {'SIMULATION' if Config.DRY_RUN else 'LIVE TRADING'}\n"
         f"Oracle: {oracle_type}\n"
         f"CS2Cap: {cs2cap_status}\n\n"
@@ -95,6 +153,7 @@ async def cmd_start(message: types.Message):
 
 
 @router.message(F.text == "START BOT")
+@_admin_only
 async def btn_start(message: types.Message):
     global trading_task, is_running
 
@@ -108,6 +167,7 @@ async def btn_start(message: types.Message):
 
 
 @router.message(F.text == "STOP BOT")
+@_admin_only
 async def btn_stop(message: types.Message):
     global trading_task, is_running
 
@@ -131,18 +191,21 @@ async def btn_stop(message: types.Message):
 # =================================================================
 
 @router.message(F.text == "BALANCE")
+@_admin_only
 async def btn_balance(message: types.Message):
-    api = DMarketAPIClient(Config.PUBLIC_KEY, Config.SECRET_KEY)
+    api = _get_api_client()
     try:
         usd = await api.get_real_balance()
         await message.answer(f"Balance: ${usd:.2f} USD")
     except Exception as e:
-        await message.answer(f"Error: {e}")
+        logger.exception(f"btn_balance failed: {e}")
+        await message.answer("❌ Error fetching balance. Check logs.")
     finally:
         await api.close()
 
 
 @router.message(F.text == "STATUS")
+@_admin_only
 async def btn_status(message: types.Message):
     status = "RUNNING" if is_running else "STOPPED"
     mode = "SIMULATION" if Config.DRY_RUN else "LIVE"
@@ -170,8 +233,9 @@ async def btn_status(message: types.Message):
 # =================================================================
 
 @router.message(F.text == "INVENTORY")
+@_admin_only
 async def btn_inventory(message: types.Message):
-    api = DMarketAPIClient(Config.PUBLIC_KEY, Config.SECRET_KEY)
+    api = _get_api_client()
     try:
         inv_mgr = InventoryManager(api)
         data = await inv_mgr.fetch_all_with_cs2cap(Config.GAME_ID)
@@ -198,7 +262,8 @@ async def btn_inventory(message: types.Message):
         msg += f"\nInventory: {data['inventory_count']} | On Sale: {data['offers_count']}"
         await message.answer(msg)
     except Exception as e:
-        await message.answer(f"Error: {e}")
+        logger.exception(f"btn_inventory failed: {e}")
+        await message.answer("❌ Error fetching inventory. Check logs.")
     finally:
         await api.close()
 
@@ -208,8 +273,9 @@ async def btn_inventory(message: types.Message):
 # =================================================================
 
 @router.message(F.text == "SELL")
+@_admin_only
 async def btn_sell(message: types.Message):
-    api = DMarketAPIClient(Config.PUBLIC_KEY, Config.SECRET_KEY)
+    api = _get_api_client()
     try:
         pipeline = ResalePipeline(api)
         listed = await pipeline.sell_inventory_items(max_items=5)
@@ -228,7 +294,8 @@ async def btn_sell(message: types.Message):
 
         await message.answer(msg)
     except Exception as e:
-        await message.answer(f"Error: {e}")
+        logger.exception(f"btn_sell failed: {e}")
+        await message.answer("❌ Error listing items. Check logs.")
     finally:
         await api.close()
 
@@ -238,8 +305,9 @@ async def btn_sell(message: types.Message):
 # =================================================================
 
 @router.message(F.text == "PORTFOLIO")
+@_admin_only
 async def btn_portfolio(message: types.Message):
-    api = DMarketAPIClient(Config.PUBLIC_KEY, Config.SECRET_KEY)
+    api = _get_api_client()
     try:
         balance = await api.get_real_balance()
         inv_mgr = InventoryManager(api)
@@ -258,7 +326,8 @@ async def btn_portfolio(message: types.Message):
         )
         await message.answer(msg)
     except Exception as e:
-        await message.answer(f"Error: {e}")
+        logger.exception(f"btn_portfolio failed: {e}")
+        await message.answer("❌ Error fetching portfolio. Check logs.")
     finally:
         await api.close()
 
@@ -268,8 +337,9 @@ async def btn_portfolio(message: types.Message):
 # =================================================================
 
 @router.message(Command("test_trade"))
+@_admin_only
 async def cmd_test_trade(message: types.Message):
-    args = message.text.split(maxsplit=1)
+    args = (message.text or "").split(maxsplit=1)
     if len(args) < 2:
         await message.answer(
             "Usage: /test_trade <Item Name>\n"
@@ -280,7 +350,7 @@ async def cmd_test_trade(message: types.Message):
     item_name = args[1].strip()
     await message.answer(f"Testing arbitrage for: {item_name}\nFetching DMarket + CS2Cap data...")
 
-    dm_api = DMarketAPIClient(Config.PUBLIC_KEY, Config.SECRET_KEY)
+    dm_api = _get_api_client()
     cs2cap = OracleFactory.get_cross_market_oracle(Config.GAME_ID)
 
     try:
@@ -347,7 +417,8 @@ async def cmd_test_trade(message: types.Message):
             )
 
     except Exception as e:
-        await message.answer(f"API Error: {e}")
+        logger.exception(f"cmd_test_trade failed: {e}")
+        await message.answer("❌ API Error during test. Check logs.")
     finally:
         await dm_api.close()
         if cs2cap:
@@ -359,9 +430,10 @@ async def cmd_test_trade(message: types.Message):
 # =================================================================
 
 @router.message(Command("pagination"))
+@_admin_only
 async def cmd_pagination(message: types.Message):
     """Test pagination across all DMarket pages."""
-    api = DMarketAPIClient(Config.PUBLIC_KEY, Config.SECRET_KEY)
+    api = _get_api_client()
     try:
         total_items = 0
         page = 0
@@ -387,7 +459,8 @@ async def cmd_pagination(message: types.Message):
             f"Status: {'OK' if total_items > 0 else 'No items found'}"
         )
     except Exception as e:
-        await message.answer(f"Pagination error: {e}")
+        logger.exception(f"cmd_pagination failed: {e}")
+        await message.answer("❌ Pagination error. Check logs.")
     finally:
         await api.close()
 
@@ -397,6 +470,7 @@ async def cmd_pagination(message: types.Message):
 # =================================================================
 
 @router.message(Command("reflection"))
+@_admin_only
 async def cmd_reflection(message: types.Message):
     reflection = await self_reflection.analyze_recent_trades()
     if reflection is None:
@@ -424,9 +498,10 @@ async def cmd_reflection(message: types.Message):
 # =================================================================
 
 @router.message(Command("prices"))
+@_admin_only
 async def cmd_prices(message: types.Message):
     """Check CS2Cap prices for all held items."""
-    api = DMarketAPIClient(Config.PUBLIC_KEY, Config.SECRET_KEY)
+    api = _get_api_client()
     try:
         inv_mgr = InventoryManager(api)
         items = await inv_mgr.check_held_items_prices()
@@ -457,6 +532,7 @@ async def cmd_prices(message: types.Message):
 
 @router.message(F.text == "CONFIG")
 @router.message(Command("settings"))
+@_admin_only
 async def btn_config(message: types.Message):
     oracle = OracleFactory.get_cross_market_oracle(Config.GAME_ID)
     oracle_type = "CS2Cap" if oracle else "CSFloat"
@@ -482,11 +558,10 @@ async def btn_config(message: types.Message):
 # =================================================================
 
 @router.message(Command("daily"))
+@_admin_only
 async def cmd_daily(message: types.Message):
-    if str(message.from_user.id) != str(ADMIN_ID):
-        return
 
-    api = DMarketAPIClient(Config.PUBLIC_KEY, Config.SECRET_KEY)
+    api = _get_api_client()
     try:
         balance = await api.get_real_balance()
         inv_mgr = InventoryManager(api)
@@ -504,7 +579,8 @@ async def cmd_daily(message: types.Message):
             f"Risk Cap: {Config.MAX_POSITION_RISK_PCT}% per item"
         )
     except Exception as e:
-        await message.answer(f"Error: {e}")
+        logger.exception(f"cmd_daily failed: {e}")
+        await message.answer("❌ Error fetching daily briefing. Check logs.")
     finally:
         await api.close()
 
@@ -514,6 +590,7 @@ async def cmd_daily(message: types.Message):
 # =================================================================
 
 @router.message(Command("panic"))
+@_admin_only
 async def cmd_panic(message: types.Message):
     global is_running
 
@@ -523,7 +600,7 @@ async def cmd_panic(message: types.Message):
 
     await message.answer("PANIC PROTOCOL INITIATED\nStopping bot...")
 
-    api = DMarketAPIClient(Config.PUBLIC_KEY, Config.SECRET_KEY)
+    api = _get_api_client()
     try:
         resp = await api.get_user_targets(Config.GAME_ID)
         items = resp.get("Items", resp.get("objects", []))
@@ -539,7 +616,8 @@ async def cmd_panic(message: types.Message):
         await message.answer(f"Deleted {count} targets!")
 
     except Exception as e:
-        await message.answer(f"Error during panic: {e}")
+        logger.exception(f"cmd_panic failed: {e}")
+        await message.answer("❌ Panic error. Check logs.")
     finally:
         await api.close()
 
@@ -549,6 +627,7 @@ async def cmd_panic(message: types.Message):
 # =================================================================
 
 @router.message(Command("help"))
+@_admin_only
 async def cmd_help(message: types.Message):
     await message.answer(
         "DMarket Bot Help\n\n"

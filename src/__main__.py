@@ -178,6 +178,7 @@ def main() -> None:
     import signal
     import time
 
+    import hashlib
     lock_file = PROJECT_ROOT / "bot.lock"
     our_pid = os.getpid()
 
@@ -185,44 +186,55 @@ def main() -> None:
         # Check for existing lock file (prevent double-start)
         if lock_file.exists():
             try:
-                pid_str = lock_file.read_text(encoding="utf-8").strip()
-                # psutil is now a real dep; use it to check PID liveness
-                import psutil
-                if pid_str.isdigit() and psutil.pid_exists(int(pid_str)):
-                    other_pid = int(pid_str)
-                    if other_pid == our_pid:
-                        logger.warning("Lock file points to our own PID; reusing.")
-                    else:
-                        try:
-                            p = psutil.Process(other_pid)
-                            cmd = " ".join(p.cmdline()[:3]) if p.cmdline() else "?"
-                            logger.error(
-                                "Bot already running with PID %s (%s). Exiting.",
-                                other_pid, cmd,
-                            )
-                        except (psutil.NoSuchProcess, psutil.AccessDenied):
-                            logger.error(
-                                "Bot already running with PID %s. Exiting.",
-                                other_pid,
-                            )
-                        sys.exit(1)
-                else:
+                content = lock_file.read_text(encoding="utf-8").strip()
+                lines = content.split("\n")
+                pid_str = lines[0].strip()
+                stored_hash = lines[2].strip() if len(lines) > 2 else ""
+
+                # v12.9: Integrity check — verify the stored hash
+                expected_hash = hashlib.sha256(
+                    f"{pid_str}\n".encode("utf-8")
+                ).hexdigest()[:16]
+                if stored_hash and stored_hash != expected_hash:
                     logger.warning(
-                        "Stale lock file (PID %s not running). Overwriting.", pid_str
+                        "Lock file integrity check FAILED (tampered?). Overwriting."
                     )
+                else:
+                    import psutil
+                    if pid_str.isdigit() and psutil.pid_exists(int(pid_str)):
+                        other_pid = int(pid_str)
+                        if other_pid == our_pid:
+                            logger.warning("Lock file points to our own PID; reusing.")
+                        else:
+                            try:
+                                p = psutil.Process(other_pid)
+                                cmd = " ".join(p.cmdline()[:3]) if p.cmdline() else "?"
+                                logger.error(
+                                    "Bot already running with PID %s (%s). Exiting.",
+                                    other_pid, cmd,
+                                )
+                            except (psutil.NoSuchProcess, psutil.AccessDenied):
+                                logger.error(
+                                    "Bot already running with PID %s. Exiting.",
+                                    other_pid,
+                                )
+                            sys.exit(1)
             except Exception as e:
                 logger.warning("Could not read lock file: %s. Proceeding.", e)
 
-        # Create lock file with current PID + start time
+        # Create lock file with current PID + start time + integrity hash
+        integrity_hash = hashlib.sha256(
+            f"{our_pid}\n".encode("utf-8")
+        ).hexdigest()[:16]
         lock_file.write_text(
-            f"{our_pid}\n{int(time.time())}\n",
+            f"{our_pid}\n{int(time.time())}\n{integrity_hash}\n",
             encoding="utf-8",
         )
 
         def _cleanup() -> None:
             try:
                 if lock_file.exists():
-                    current = lock_file.read_text(encoding="utf-8").split("\n")[0]
+                    current = lock_file.read_text(encoding="utf-8").split("\n")[0].strip()
                     if current == str(our_pid):
                         lock_file.unlink()
             except Exception:
@@ -249,7 +261,7 @@ def main() -> None:
     finally:
         try:
             if lock_file.exists():
-                current = lock_file.read_text(encoding="utf-8").split("\n")[0]
+                current = lock_file.read_text(encoding="utf-8").split("\n")[0].strip()
                 if current == str(our_pid):
                     lock_file.unlink()
         except Exception:

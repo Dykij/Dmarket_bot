@@ -1,48 +1,31 @@
-import os
-from nacl.signing import SigningKey
-from datetime import datetime, timezone
-from dotenv import load_dotenv
+"""
+DEPRECATED — This module is kept for backward compatibility only.
 
-env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.env')
-load_dotenv(dotenv_path=env_path)
+All signing logic has been consolidated into `src.api.dmarket_api_client.core`.
+This class is no longer imported by any module. It exists solely so that
+legacy code referencing `DMarketAuth` does not crash on import.
+
+The standalone .env load here was problematic (C-3): it looked for .env
+relative to this file's directory rather than the project root, causing
+silent config drift. The centralized .env loading in `src.config` is the
+single source of truth.
+"""
+
+import logging
+logger = logging.getLogger("DMarketAuth")
+logger.warning(
+    "DMarketAuth is DEPRECATED. Use src.api.dmarket_api_client.DMarketAPIClient directly."
+)
+
 
 class DMarketAuth:
+    """DEPRECATED — kept for backward compat only. Do not use."""
+
     def __init__(self):
-        self.public_key = os.getenv("DMARKET_PUBLIC_KEY", "").strip().strip('\'"')
-        self.secret_key = os.getenv("DMARKET_SECRET_KEY", "").strip().strip('\'"')
-            
-        if not self.public_key or not self.secret_key:
-            print("[WARNING] DMARKET API Keys not found in .env!")
+        from src.config import Config
+        self.public_key = Config.PUBLIC_KEY or ""
+        self.secret_key = ""
 
     def generate_headers(self, method: str, path: str, body: str = "") -> dict:
-        """
-        Generates Ed25519 signature for DMarket API v2.
-        Formula: Method + Path + Body + Timestamp
-        Note: Path should include query parameters if any.
-        """
-        if not self.public_key or not self.secret_key:
-            return {}
-
-        timestamp = str(int(datetime.now(timezone.utc).timestamp()))
-        # v2 Signature String: Method + Path (including params) + Body + Timestamp
-        string_to_sign = method.upper() + path + body + timestamp
-        
-        try:
-            # If the key is 128 chars (concatenated pair), take only the first 64 chars (32-byte seed)
-            clean_secret = self.secret_key[:64] if len(self.secret_key) == 128 else self.secret_key
-            secret_bytes = bytes.fromhex(clean_secret)
-            sign_key = SigningKey(secret_bytes)
-            signature = sign_key.sign(string_to_sign.encode('utf-8')).signature.hex()
-        except ValueError:
-            print("[Error] Secret Key is not a valid hexadecimal string. Cannot sign request.")
-            return {}
-        except Exception as e:
-            print(f"[Error] Cryptographic signing failed: {e}")
-            return {}
-
-        return {
-            "X-Api-Key": self.public_key,
-            "X-Request-Sign": f"dmar ed25519 {signature}",
-            "X-Sign-Date": timestamp,
-            "Content-Type": "application/json"
-        }
+        logger.error("DMarketAuth.generate_headers called — this class is deprecated.")
+        return {}

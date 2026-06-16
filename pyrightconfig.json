@@ -19,8 +19,8 @@
     "**/cassettes",
     "**/pacts"
   ],
-  "pythonVersion": "3.11",
-  "pythonPlatform": "Windows",
+  "pythonVersion": "3.13",
+  "pythonPlatform": "Linux",
   "venvPath": ".",
   "venv": ".venv",
   "typeCheckingMode": "basic",
@@ -45,23 +45,22 @@
   "reportPropertyTypeMismatch": "warning",
   "reportFunctionMemberAccess": "warning",
   "stubPath": "./typings",
-  "autoSearchPaths": true,
   "extraPaths": [
     "src"
   ],
   "executionEnvironments": [
     {
       "root": "src",
-      "pythonVersion": "3.11",
-      "pythonPlatform": "Windows",
+      "pythonVersion": "3.13",
+      "pythonPlatform": "Linux",
       "extraPaths": [
         "src"
       ]
     },
     {
       "root": "tests",
-      "pythonVersion": "3.11",
-      "pythonPlatform": "Windows",
+      "pythonVersion": "3.13",
+      "pythonPlatform": "Linux",
       "extraPaths": [
         "src",
         "tests"

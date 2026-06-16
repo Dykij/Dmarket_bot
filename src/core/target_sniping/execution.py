@@ -11,8 +11,9 @@ import asyncio
 import logging
 import os
 import time
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
+from src.config import Config
 from src.db.price_history import price_db
 from src.telegram.notifier import notifier
 
@@ -21,6 +22,14 @@ logger = logging.getLogger("SnipingBot")
 
 class _ExecutionMixin:
     """Instant-buy execution pipeline."""
+
+    # These attributes are set on the instance by SnipingLoop.__init__
+    client: Any  # DMarketAPIClient
+    liquidity: Any  # LiquidityManager
+
+    async def _simulate_network_latency(self, client_type: str = "dmarket") -> None: ...  # type: ignore[empty-body]
+    def _maybe_inject_error(self, method_name: str) -> None: ...  # type: ignore[empty-body]
+    def _simulate_competition(self, margin: float) -> bool: ...  # type: ignore[empty-body]
 
     async def _execute_instant_buys(
         self,
@@ -53,9 +62,60 @@ class _ExecutionMixin:
         logger.info(
             f"Executing INSTANT BUY for {len(instant_buys)} items (Strategy A)..."
         )
+
+        # v12.9: Parallel slippage protection.
+        # Re-verify listing prices haven't increased >5% since scan.
+        # Uses asyncio.gather for all items instead of sequential loop.
+        _MAX_SLIPPAGE_PCT = 5.0
+
+        async def _check_slippage(item_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+            try:
+                title = item_data["title"]
+                expected_price = item_data["base_price"]
+                resp = await self.client.get_market_items_v2(
+                    game_id, limit=5, title=title
+                )
+                current_listings = resp.get("objects", [])
+                if current_listings:
+                    matching = [
+                        lst for lst in current_listings
+                        if lst.get("itemId") == item_data["item_id"]
+                    ]
+                    if matching:
+                        cheapest_cents = min(
+                            int(lst.get("price", {}).get("USD", 0))
+                            for lst in matching
+                        )
+                    else:
+                        cheapest_cents = int(
+                            current_listings[0].get("price", {}).get("USD", 0)
+                        )
+                    current_price = cheapest_cents / 100.0
+                    slippage_pct = (
+                        ((current_price - expected_price) / expected_price) * 100
+                        if expected_price > 0 else 0
+                    )
+                    if slippage_pct > _MAX_SLIPPAGE_PCT:
+                        logger.warning(
+                            f"[SLIPPAGE] {title}: expected ${expected_price:.2f}, "
+                            f"now ${current_price:.2f} (+{slippage_pct:.1f}% > {_MAX_SLIPPAGE_PCT}%). Skipping."
+                        )
+                        return None
+                return item_data
+            except Exception as e:
+                logger.debug(f"Slippage check failed for {item_data.get('title', '?')}: {e}")
+                return item_data  # proceed on check failure
+
+        results = await asyncio.gather(*[_check_slippage(d) for d in instant_buys])
+        verified_buys = [r for r in results if r is not None]
+
+        if not verified_buys:
+            logger.info("[SLIPPAGE] All buys filtered by slippage protection.")
+            return
+
         await self._simulate_network_latency()
         self._maybe_inject_error("buy_items")
-        buy_payloads = [item["buy_offer"] for item in instant_buys]
+        buy_payloads = [item["buy_offer"] for item in verified_buys]
         buy_response = await self.client.buy_items(buy_payloads)
 
         # v12.3: DMarket returns 200 OK with `status: 'TxFailed'` and
@@ -85,7 +145,7 @@ class _ExecutionMixin:
             if status and status != "TxFailed":
                 # All offers succeeded
                 successful_titles = {
-                    item_data["title"] for item_data in instant_buys
+                    item_data["title"] for item_data in verified_buys
                 }
             else:
                 # Inspect dmOffersStatus to find successes
@@ -93,7 +153,7 @@ class _ExecutionMixin:
                 for offer_id, info in dm_offers_status.items():
                     if info.get("started") or info.get("success"):
                         # Map offer_id back to title (best effort: any offer that started)
-                        for item_data in instant_buys:
+                        for item_data in verified_buys:
                             if (
                                 item_data["buy_offer"].get("offerId")
                                 == offer_id
@@ -110,11 +170,11 @@ class _ExecutionMixin:
                     logger.warning(f"Buy TxFailed: {buy_response}")
             logger.info(
                 f"Buy response: status={status} "
-                f"successful={len(successful_titles)}/{len(instant_buys)} "
+                f"successful={len(successful_titles)}/{len(verified_buys)} "
                 f"bought_items={len(bought_items)}"
             )
 
-        for item_data in instant_buys:
+        for item_data in verified_buys:
             title = item_data["title"]
             item_id = item_data["item_id"]
             base_price = item_data["base_price"]
@@ -179,7 +239,7 @@ class _ExecutionMixin:
                         if x["hash_name"] == title
                     ]
                 )
-                if held_count >= 5:
+                if held_count >= Config.MAX_SAME_ITEM_HOLDINGS:
                     logger.warning(
                         f"[SATURATION] Already holding {held_count}x {title}. Skipping."
                     )

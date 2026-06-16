@@ -8,29 +8,55 @@ Mixin with fee-lookup endpoints. Mixed into `DMarketAPIClient`
 from __future__ import annotations
 
 import time
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import structlog
 
 logger = structlog.get_logger("DMarketAPI")
 
+# CS2 fee tiers based on DMarket's dynamic fee policy (March 2026):
+# Liquid items (high volume) -> 2%, less liquid -> up to 10%.
+_LIQUID_FEE = 0.02
+_STANDARD_FEE = 0.05
+_HIGH_FEE = 0.07
+
+_VOLUME_HIGH = 50
+_VOLUME_MEDIUM = 10
+
 
 class _FeesMixin:
     """Fee-lookup endpoints with a 12-hour cache (v7.7)."""
 
-    # These attributes are set on the instance by DMarketAPIClient.__init__
     _fee_cache: Dict[str, Dict[str, Any]]
     _fee_cache_ttl: int
 
-    # --- Fee Analysis (v7.6) ---
-    async def get_item_fee(self, game_id: str, item_id: str, price_cents: int) -> float:
-        """
-        Fetches dynamic fee for a specific item at a given price.
-        Implements 12-hour caching (v7.7) to avoid rate limits.
+    async def make_request(
+        self, method: str, path: str,
+        params: Any = None, body: Any = None,
+    ) -> Any: ...
 
-        v12.3: DMarket removed the per-item fee endpoint (/exchange/v1/market/fee
-        returns 404 as of 2026-06-06). We use a hard 5% default to avoid
-        5x retry timeouts.
+    @staticmethod
+    def _estimate_fee_from_volume(ask_count: int = 0, bid_count: int = 0) -> float:
+        volume = (ask_count or 0) + (bid_count or 0)
+        if volume >= _VOLUME_HIGH:
+            return _LIQUID_FEE
+        elif volume >= _VOLUME_MEDIUM:
+            return _STANDARD_FEE
+        elif volume > 0:
+            return _HIGH_FEE
+        return _STANDARD_FEE
+
+    async def get_item_fee(
+        self,
+        game_id: str,
+        item_id: str,
+        price_cents: int,
+        ask_count: int = 0,
+        bid_count: int = 0,
+    ) -> float:
+        """
+        Fee for a single item. Uses volume-based estimation
+        when DMarket's per-item fee endpoint is unavailable.
         """
         now = time.time()
         if item_id in self._fee_cache:
@@ -38,58 +64,44 @@ class _FeesMixin:
             if now - cached["timestamp"] < self._fee_cache_ttl:
                 return cached["fee"]
 
-        # v12.3: Skip the network call entirely — DMarket has no per-item
-        # fee endpoint anymore. Cached value of 5% (CS2 default).
-        self._fee_cache[item_id] = {"fee": 0.05, "timestamp": now}
-        return 0.05
+        fee = self._estimate_fee_from_volume(ask_count, bid_count)
+        self._fee_cache[item_id] = {"fee": fee, "timestamp": now}
+        return fee
 
-    # --- v12.2: Bulk fee fetching (Phase 2.2) ---
-    # NOTE: DMarket does NOT expose a bulk-fee endpoint (verified 2026-06-06:
-    # /exchange/v1/items/bulk-fee, /v1/exchange/fee, /marketplace-api/v1/fees
-    # all return 404). The aggregated-prices response also doesn't include fees.
-    # We use DMarket's standard CS2 fee rate (5%) as a conservative default.
     _DMARKET_CS2_FEE_RATE = 0.05
-    _bulk_fee_endpoint_unavailable = True  # circuit breaker (set True if endpoint found)
+    _bulk_fee_endpoint_unavailable = True
 
-    async def get_item_fee_bulk(self, game_id: str, item_ids: List[str]) -> Dict[str, float]:
+    async def get_item_fee_bulk(
+        self,
+        game_id: str,
+        item_ids: List[str],
+        title_volume: Optional[Dict[str, int]] = None,
+    ) -> Dict[str, float]:
         """
         Returns {item_id: fee_rate} for all given item_ids.
-        DMarket doesn't expose fees via API, so we use the default 5% for CS2.
+        Uses volume-based estimation when title_volume is provided.
+        title_volume: {title: ask_count + bid_count} from aggregated prices.
         """
         if not item_ids:
             return {}
-        if self._bulk_fee_endpoint_unavailable:
-            return {fid: self._DMARKET_CS2_FEE_RATE for fid in item_ids}
 
-        # Legacy path — kept for if/when DMarket re-enables bulk-fee endpoint
         results: Dict[str, float] = {}
-        chunk_size = 50
-        for chunk_start in range(0, len(item_ids), chunk_size):
-            chunk = item_ids[chunk_start : chunk_start + chunk_size]
-            try:
-                ids_param = ",".join(chunk)
-                res = await self.make_request(
-                    "GET",
-                    "/exchange/v1/items/bulk-fee",
-                    params={"gameId": game_id, "itemIds": ids_param},
-                )
-                for entry in res.get("fees", []):
-                    fid = entry.get("itemId", "")
-                    fee_raw = entry.get("fee", 5.0)
-                    try:
-                        fee_pct = float(fee_raw) / 100.0
-                    except (ValueError, TypeError):
-                        fee_pct = self._DMARKET_CS2_FEE_RATE
-                    if fid:
-                        results[fid] = fee_pct
-                        self._fee_cache[fid] = {
-                            "fee": fee_pct,
-                            "timestamp": time.time(),
-                        }
-            except Exception as e:
-                logger.debug(f"Bulk fee fetch failed for chunk of {len(chunk)}: {e}")
-                self._bulk_fee_endpoint_unavailable = True  # trip circuit breaker
-                for fid in chunk:
-                    if fid not in results:
-                        results[fid] = self._DMARKET_CS2_FEE_RATE
+        now = time.time()
+
+        for fid in item_ids:
+            if fid in self._fee_cache:
+                cached = self._fee_cache[fid]
+                if now - cached["timestamp"] < self._fee_cache_ttl:
+                    results[fid] = cached["fee"]
+                    continue
+
+            if title_volume:
+                volume = title_volume.get(fid, 0)
+                fee = self._estimate_fee_from_volume(volume, volume)
+            else:
+                fee = self._DMARKET_CS2_FEE_RATE
+
+            results[fid] = fee
+            self._fee_cache[fid] = {"fee": fee, "timestamp": now}
+
         return results

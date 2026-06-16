@@ -8,6 +8,7 @@ out of the indicator code so each piece stays small and focused.
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Any
 
 from .enums import Signal, Trend
 from .models import PriceAnalysis, TrendAnalysis
@@ -19,6 +20,9 @@ class _TrendMixin:
     Mixed into `PriceAnalytics` (see `core.py`).
     Uses `Signal` and `Trend` enums and `PriceAnalysis` / `TrendAnalysis` models.
     """
+
+    # Declared here for mypy; actual implementation lives in _IndicatorMixin.
+    calculate_sma: Any
 
     def analyze_trend(
         self,

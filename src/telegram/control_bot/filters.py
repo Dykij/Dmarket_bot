@@ -14,19 +14,19 @@ logger = logging.getLogger("TelegramControl.filters")
 router = Router(name="telegram-control-filters")
 
 
-@router.message(lambda m: not is_admin(m.from_user.id))
+@router.message(lambda m: m.from_user is None or not is_admin(m.from_user.id))
 async def reject_non_admin(message: types.Message):
     """Silently ignore messages from non-admin users."""
     logger.warning(
-        f"Unauthorized access attempt from user_id={message.from_user.id}"
+        f"Unauthorized access attempt from user_id={message.from_user.id if message.from_user else 'unknown'}"
     )
 
 
-@router.callback_query(lambda c: not is_admin(c.from_user.id))
+@router.callback_query(lambda c: c.from_user is None or not is_admin(c.from_user.id))
 async def reject_non_admin_callback(callback: types.CallbackQuery):
     """Silently ignore callbacks from non-admin users, but show alert."""
     logger.warning(
-        f"Unauthorized callback from user_id={callback.from_user.id}"
+        f"Unauthorized callback from user_id={callback.from_user.id if callback.from_user else 'unknown'}"
     )
     await callback.answer("⛔ Access denied", show_alert=True)
 

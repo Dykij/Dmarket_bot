@@ -1,0 +1,19 @@
+# Конфиги и метаданные
+.editorconfig
+.dockerignore
+*.toml
+*.yaml
+*.yml
+.env*
+.secrets*
+*.pickle
+*.pkl
+
+# Бинарные файлы
+*.pickle
+
+# Кеши и логи
+data/
+
+# Документация (если не нужна)
+*.md

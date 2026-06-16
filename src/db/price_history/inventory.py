@@ -15,6 +15,7 @@ state.
 from __future__ import annotations
 
 import logging
+import re
 import sqlite3
 import time
 from typing import Any, Dict, List
@@ -28,9 +29,9 @@ class _InventoryMixin:
     """Virtual inventory tables (sandbox OLTP)."""
 
     # These attributes are set on the instance by PriceHistoryDB.__init__
-    state_conn: Any
-    data_dir: Any
-    state_path: Any
+    state_conn: Any  # sqlite3.Connection
+    data_dir: Any  # pathlib.Path
+    state_path: Any  # pathlib.Path
 
     # ------------------------------------------------------------------
     # Virtual Assets (STATE)
@@ -63,7 +64,7 @@ class _InventoryMixin:
 
         if only_unlocked:
             query += " AND unlock_at <= ?"
-            params.append(time.time())
+            params.append(time.time())  # type: ignore[arg-type]
 
         return self.state_conn.execute(query, params).fetchall()
 
@@ -119,10 +120,18 @@ class _InventoryMixin:
                 (hash_name, decision, reason, details, time.time()),
             )
 
+    def _sanitize_tag(self, tag: str) -> str:
+        """Sanitize tag to prevent path traversal. Only alphanumeric, underscore, hyphen."""
+        sanitized = re.sub(r'[^a-zA-Z0-9_-]', '_', tag)
+        if sanitized != tag:
+            logger.warning(f"Sanitized backup tag '{tag}' → '{sanitized}'")
+        return sanitized[:128]
+
     def backup_state(self, tag: str = "snapshot") -> None:
         """Creates a snapshot of the current trading state."""
         import shutil
 
+        tag = self._sanitize_tag(tag)
         dest = self.data_dir / f"state_{tag}.db"
         self.state_conn.commit()
         shutil.copy2(self.state_path, dest)
@@ -133,6 +142,7 @@ class _InventoryMixin:
         import shutil
         import sqlite3
 
+        tag = self._sanitize_tag(tag)
         src = self.data_dir / f"state_{tag}.db"
         if not src.exists():
             logger.error(f"❌ [DB] Snapshot {tag} not found!")

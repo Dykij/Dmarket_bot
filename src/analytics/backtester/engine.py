@@ -146,9 +146,9 @@ class Backtester:
         final_balance = balance
         for position in positions.values():
             # Estimate value at last known price
-            history = price_histories.get(position.item_title)
-            if history is not None and history.points:
-                last_price = history.points[-1].price
+            pos_history = price_histories.get(position.item_title)
+            if pos_history is not None and pos_history.points:
+                last_price = pos_history.points[-1].price
                 final_balance += last_price * position.quantity
 
         # Calculate metrics

@@ -61,9 +61,16 @@ class PriceHistoryDB(  # type: ignore[misc]
         # Initialize Connections
         self.state_conn = sqlite3.connect(str(self.state_path), check_same_thread=False)
         self.state_conn.row_factory = sqlite3.Row
+        # v12.7: Enable WAL mode for better concurrent read/write (P0-4).
+        # WAL allows readers and one writer simultaneously, reducing
+        # "database is locked" errors in async contexts.
+        self.state_conn.execute("PRAGMA journal_mode=WAL")
+        self.state_conn.execute("PRAGMA busy_timeout=5000")
 
         self.history_conn = sqlite3.connect(str(self.history_path), check_same_thread=False)
         self.history_conn.row_factory = sqlite3.Row
+        self.history_conn.execute("PRAGMA journal_mode=WAL")
+        self.history_conn.execute("PRAGMA busy_timeout=5000")
 
         self._init_schemas()
 

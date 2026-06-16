@@ -12,6 +12,7 @@ import os
 from typing import Any, Dict, List, Optional, Tuple
 
 from src.api.cs2cap_oracle import RateLimitException
+from src.config import Config
 from src.core.sandbox_scenarios import scenario_engine
 from src.db.price_history import price_db
 from src.risk.price_validator import (
@@ -26,27 +27,45 @@ logger = logging.getLogger("SnipingBot")
 class _FilterMixin:
     """Per-item candidate evaluation (filter loop)."""
 
+    # These attributes are set on the instance by SnipingLoop.__init__
+    client: Any  # DMarketAPIClient
+    buy_budget: float
+    liquidity: Any  # LiquidityManager
+    _diag_cycle_id: int
+
+    def _skip_if_locked(self, item_id: str, title: str) -> bool: ...  # type: ignore[empty-body]
+    def _calculate_float_premium(self, attrs: Dict[str, Any]) -> float: ...  # type: ignore[empty-body]
+
+    # v12.7: Per-cycle oracle price cache (P1-5).
+    # Avoids duplicate HTTP calls for the same title within a single cycle.
+    # Cleared at the start of each run_cycle via _clear_oracle_cache().
+    _oracle_price_cache: Dict[str, float] = {}
+
+    def _clear_oracle_cache(self) -> None:
+        """Clear the per-cycle oracle price cache. Called at start of run_cycle."""
+        self._oracle_price_cache.clear()
+
     @staticmethod
     def _rank_candidates_by_spread(
         items: List[Dict[str, Any]],
         agg_prices: Dict[str, Dict[str, Any]],
-        max_price_usd: float = None,
+        max_price_usd: Optional[float] = None,
     ) -> List[Tuple[str, float]]:
         """
-        Rank items by DMarket bid-ask spread (best_bid - best_ask) descending.
+        v12.7: Rank items by volume-weighted spread score (P2-3).
 
-        Returns: [(title, spread_usd), ...] sorted best-spread first.
+        Formula: score = spread_usd * sqrt(ask_count + bid_count)
+        This prioritizes items with both good spread AND reasonable volume,
+        avoiding low-liquidity items that are hard to sell.
+
+        Returns: [(title, score), ...] sorted best-score first.
         Items with no agg_prices entry or zero bid/ask are filtered out.
-
-        Used by Phase 1 selective CS2Cap validation: the bot pre-fetches
-        CS2Cap prices for the top-K spreads, validating only the items
-        most likely to clear all filters.
 
         max_price_usd: optional cap to exclude items too expensive for our
         balance (avoids wasting CS2Cap quota on $1000 Karambits when balance
         is $43.91).
         """
-        from src.config import Config
+        import math
 
         ranked: List[Tuple[str, float]] = []
         for it in items:
@@ -63,20 +82,24 @@ class _FilterMixin:
             agg = agg_prices.get(title, {})
             best_bid = agg.get("best_bid", 0.0) or 0.0
             best_ask = agg.get("best_ask", 0.0) or 0.0
+            ask_count = agg.get("ask_count", 0) or 0
+            bid_count = agg.get("bid_count", 0) or 0
             if best_bid <= 0 or best_ask <= 0:
                 continue
             # Apply the same minimum-spread gate the per-item filter uses
             if best_bid <= best_ask * (1 + Config.INTRA_MIN_SPREAD_PCT / 100.0):
                 continue
-            # Rank by market spread (best_bid - best_ask) — items with the
-            # biggest intra-market spread are the most likely to clear all
-            # filters. The per-item _evaluate_candidate will check the
-            # actual listing edge (base_price vs best_bid) AND cross-market
-            # data (CS2Cap provider bid) before recommending a buy.
+            # v12.7: Volume-weighted spread score
+            # spread * sqrt(volume) — rewards both spread width and liquidity
             spread = best_bid - best_ask
-            if spread > 0:
+            volume = ask_count + bid_count
+            if spread > 0 and volume > 0:
+                score = spread * math.sqrt(volume)
+                ranked.append((title, score))
+            elif spread > 0:
+                # No volume data — use spread only (fallback)
                 ranked.append((title, spread))
-        # Sort by spread descending — biggest market opportunities first
+        # Sort by score descending — best opportunities first
         ranked.sort(key=lambda x: x[1], reverse=True)
         return ranked
 
@@ -92,6 +115,7 @@ class _FilterMixin:
         current_margin: float,
         cs_snapshots: Optional[Dict[str, Any]] = None,
         cs_bids: Optional[Dict[str, Any]] = None,
+        saturation_counts: Optional[Dict[str, int]] = None,
     ) -> Optional[Dict[str, Any]]:
         """
         Evaluate a single market item and return a buy payload, or None.
@@ -105,7 +129,6 @@ class _FilterMixin:
         per-item HTTP call. Falls back to per-item oracle.get_item_price
         only if the title is missing from the snapshots (selective mode miss).
         """
-        from src.config import Config
 
         title = item.get("title", "")
         item_id = item.get("itemId")
@@ -286,6 +309,7 @@ class _FilterMixin:
         # In selective mode the caller pre-fetches CS2Cap snapshots for the
         # top-K candidates and passes them in cs_snapshots. We do a dict
         # lookup here (free) instead of a per-item HTTP call.
+        # v12.7: Also check per-cycle cache to avoid duplicate HTTP calls (P1-5).
         is_sandbox = os.getenv("DRY_RUN", "true").lower() == "true"
         cs_price = 0.0
         cs_snap = (cs_snapshots or {}).get(title)
@@ -293,11 +317,19 @@ class _FilterMixin:
             cs_price = cs_snap.min_price
             if is_sandbox:
                 cs_price *= scenario_engine.get_price_modifier()
+        elif title in self._oracle_price_cache:
+            # v12.7: Per-cycle cache hit — avoid HTTP call (P1-5).
+            cs_price = self._oracle_price_cache[title]
+            if is_sandbox:
+                cs_price *= scenario_engine.get_price_modifier()
         else:
             # Title not in the pre-fetched snapshots (not in top-K) or
             # selective mode is off — fall back to per-item call.
             try:
                 cs_price = await oracle.get_item_price(title)
+                # v12.7: Cache the result for this cycle (P1-5).
+                if cs_price > 0:
+                    self._oracle_price_cache[title] = cs_price
                 if is_sandbox:
                     cs_price *= scenario_engine.get_price_modifier()
             except (RateLimitException, Exception) as e:
@@ -370,22 +402,37 @@ class _FilterMixin:
                 price_db.log_decision(title, "skip", "Low profit", str(e))
             return None
 
-        if is_sandbox:
-            if base_price > current_balance:
-                price_db.record_missed_opportunity(
-                    title, base_price, list_price, "Insufficient Balance"
-                )
+        # v12.7: Inventory saturation check (P2-4).
+        # Limits concentration risk: max N units of same hash_name.
+        # Uses Config.MAX_SAME_ITEM_HOLDINGS (env-configurable, default 3).
+        # v12.8: Uses pre-computed saturation_counts (O(1) lookup) when available,
+        # avoiding N separate DB calls for each candidate in the parallel loop.
+        if saturation_counts is not None:
+            held_count = saturation_counts.get(title, 0)
+        else:
             held_count = len(
                 [
                     x
-                    for x in price_db.get_virtual_inventory(status="idle")
+                    for x in price_db.get_virtual_inventory(status="idle", only_unlocked=False)
                     if x["hash_name"] == title
                 ]
             )
-            if held_count >= 5:
+        if held_count >= Config.MAX_SAME_ITEM_HOLDINGS:
+            if is_sandbox:
                 price_db.record_missed_opportunity(
                     title, base_price, list_price, f"Saturation Limit ({held_count})"
                 )
+            else:
+                logger.debug(
+                    f"[SATURATION] {title}: already holding {held_count} units, "
+                    f"max={Config.MAX_SAME_ITEM_HOLDINGS}. Skipping."
+                )
+            return None
+
+        if is_sandbox and base_price > current_balance:
+            price_db.record_missed_opportunity(
+                title, base_price, list_price, "Insufficient Balance"
+            )
 
         # --- Decide: instant buy vs target ---
         # For intra-spread strategy, we typically instant-buy

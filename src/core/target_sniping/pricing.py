@@ -18,6 +18,12 @@ logger = logging.getLogger("SnipingBot")
 class _PricingMixin:
     """Float premium + low-fee cache helpers."""
 
+    # These attributes are set on the instance by SnipingLoop.__init__
+    client: Any  # DMarketAPIClient
+
+    async def _simulate_network_latency(self, client_type: str = "dmarket") -> None: ...
+    def _maybe_inject_error(self, method_name: str) -> None: ...
+
     # ------------------------------------------------------------------
     # v12.0 Phase 1.2: Float Premium
     # ------------------------------------------------------------------

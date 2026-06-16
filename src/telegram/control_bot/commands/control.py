@@ -102,7 +102,7 @@ async def _cancel_all_offers() -> tuple[int, Optional[Exception]]:
             if hasattr(vault, "get_dmarket_secret")
             else Config.SECRET_KEY
         )
-        state.client = DMarketAPIClient(Config.PUBLIC_KEY, secret)
+        state.client = DMarketAPIClient(Config.PUBLIC_KEY, secret)  # type: ignore[arg-type]
         client_to_close = state.client
 
     try:

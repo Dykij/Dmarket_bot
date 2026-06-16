@@ -9,6 +9,10 @@ Allows the package to be executed directly. The actual `main()` is in
 import asyncio
 import sys
 
+from src.utils.logging_setup import configure_logging
+
+configure_logging(component="control_bot")
+
 from .bot import main
 
 if __name__ == "__main__":

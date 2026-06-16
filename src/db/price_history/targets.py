@@ -23,7 +23,7 @@ class _TargetsMixin:
     """active_targets table (placed buy orders)."""
 
     # These attributes are set on the instance by PriceHistoryDB.__init__
-    state_conn: Any
+    state_conn: Any  # sqlite3.Connection
 
     @with_db_retry(operation_name="record_placed_target")
     def record_placed_target(self, item_id: str, hash_name: str, price: float) -> None:

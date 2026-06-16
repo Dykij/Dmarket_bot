@@ -23,6 +23,10 @@ logger = logging.getLogger("TelegramControl.resilience")
 def safe_call(func: Callable[..., Awaitable[Any]]) -> Callable[..., Awaitable[Any]]:
     """Wrap a handler so any uncaught exception is logged and reported to the user.
 
+    CVE-2026-32982: NEVER send the raw exception string to the user.
+    Exception messages can leak file paths, API keys, and internal state.
+    The full traceback is logged server-side for debugging.
+
     Searches the args for an aiogram Message / CallbackQuery, or a duck-typed
     object with an `answer()` method. Reports the error to that object.
 
@@ -51,7 +55,7 @@ def safe_call(func: Callable[..., Awaitable[Any]]) -> Callable[..., Awaitable[An
                     message = a
                     break
             try:
-                err_text = f"❌ Internal error: `{e}`\n\nCheck logs/telegram_bot.log for details."
+                err_text = "❌ Internal error.\n\nCheck logs for details."
                 if message:
                     await message.answer(err_text)
                 if callback_obj is not None:
@@ -104,6 +108,9 @@ async def retry_async(
 async def dmarket_client():
     """Async context manager that creates + closes DMarketAPIClient safely.
 
+    Uses vault for secret key (falls back to Config.SECRET_KEY in dev).
+    See state.py:start() for the same pattern.
+
     Example:
         async with dmarket_client() as client:
             balance = await retry_async(
@@ -111,7 +118,13 @@ async def dmarket_client():
                 operation="balance",
             )
     """
-    client = DMarketAPIClient(Config.PUBLIC_KEY, Config.SECRET_KEY)
+    from src.utils.vault import vault
+    secret = (
+        vault.get_dmarket_secret()
+        if hasattr(vault, "get_dmarket_secret")
+        else Config.SECRET_KEY
+    )
+    client = DMarketAPIClient(Config.PUBLIC_KEY, secret)
     try:
         yield client
     finally:

@@ -13,6 +13,12 @@ from typing import Any, Dict, List, Optional
 class _TargetsMixin:
     """Buy-side target endpoints (create, list, delete, instant buy)."""
 
+    # Declared here so mypy knows the composed class has this method.
+    async def make_request(
+        self, method: str, path: str,
+        params: Any = None, body: Any = None,
+    ) -> Any: ...
+
     # --- Trading Ops (Targets / Buy Orders) ---
     async def batch_create_targets(self, targets: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Creation of targets (buy orders). Path verified via Swagger 2026."""

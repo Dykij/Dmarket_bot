@@ -2,13 +2,16 @@
 state.py — Configuration, access control, and bot state.
 
 Contains:
-- `_load_config()` — validate and load TELEGRAM_BOT_TOKEN + TELEGRAM_ADMIN_ID from .env
-- `_TOKEN`, `_ADMIN_ID` — module-level config constants
+- `_load_config()` — validate and load TELEGRAM_BOT_TOKEN + TELEGRAM_ADMIN_IDS from .env
+- `_TOKEN`, `_ADMIN_IDS` — module-level config constants (set of ints)
 - `is_admin(user_id)` — access control check
 - `BotState` — thread-safe state container for the sniping loop + DMarket client
 - `state` — singleton instance of BotState
 
-Imported as: from src.telegram.control_bot import state, is_admin, BotState, _TOKEN, _ADMIN_ID
+Supports multiple admin IDs via TELEGRAM_ADMIN_IDS (comma-separated)
+with TELEGRAM_ADMIN_ID as legacy fallback.
+
+Imported as: from src.telegram.control_bot import state, is_admin, BotState, _TOKEN, _ADMIN_IDS
 """
 
 import asyncio
@@ -33,41 +36,69 @@ logger = logging.getLogger("TelegramControl.state")
 # ============================================================
 # Configuration loading
 # ============================================================
-def _load_config() -> tuple[Optional[str], Optional[int]]:
-    """Load token + admin id; returns (token, admin_id) or raises ValueError."""
+def _load_config() -> tuple[Optional[str], set[int]]:
+    """Load token + admin ids; returns (token, admin_ids_set).
+
+    Reads TELEGRAM_ADMIN_IDS (comma-separated) and TELEGRAM_CHAT_ID
+    (legacy single ID). All valid IDs are merged into the admin set.
+
+    Raises ValueError if token is missing or no valid admin ID found.
+    """
     token = os.getenv("TELEGRAM_BOT_TOKEN")
-    admin_id_str = os.getenv("TELEGRAM_ADMIN_ID")
+    admin_ids: set[int] = set()
+
+    # Read comma-separated admin IDs (primary)
+    admin_ids_str = os.getenv("TELEGRAM_ADMIN_IDS", "")
+    for part in admin_ids_str.split(","):
+        part = part.strip()
+        if part:
+            try:
+                admin_ids.add(int(part))
+            except (TypeError, ValueError):
+                logger.warning(f"Ignoring non-numeric TELEGRAM_ADMIN_IDS entry: {part!r}")
+
+    # Legacy single admin ID (fallback)
+    legacy_id_str = os.getenv("TELEGRAM_ADMIN_ID", "")
+    if legacy_id_str and legacy_id_str.strip():
+        try:
+            admin_ids.add(int(legacy_id_str.strip()))
+        except (TypeError, ValueError):
+            logger.warning(f"Ignoring non-numeric TELEGRAM_ADMIN_ID: {legacy_id_str!r}")
 
     if not token or token.strip() == "":
         raise ValueError("TELEGRAM_BOT_TOKEN not set in .env!")
-    if not admin_id_str or admin_id_str.strip() == "":
-        raise ValueError("TELEGRAM_ADMIN_ID not set in .env!")
-    try:
-        admin_id = int(admin_id_str)
-    except (TypeError, ValueError):
-        raise ValueError(f"TELEGRAM_ADMIN_ID must be numeric, got: {admin_id_str!r}")
-    return token.strip(), admin_id
+    if not admin_ids:
+        raise ValueError(
+            "No valid admin IDs found. "
+            "Set TELEGRAM_ADMIN_IDS (comma-separated) or TELEGRAM_ADMIN_ID in .env!"
+        )
+    return token.strip(), admin_ids
 
 
 # Module-level: validate eagerly, expose constants. Never sys.exit() — just log.
 try:
-    _TOKEN, _ADMIN_ID = _load_config()
-    logger.info(f"Configuration loaded (admin_id={_ADMIN_ID})")
+    _TOKEN, _ADMIN_IDS = _load_config()
+    logger.info(f"Configuration loaded (admins={len(_ADMIN_IDS)})")
 except Exception as e:
     logger.error(f"Configuration error: {e}", exc_info=True)
     logger.error(
-        "Please create a .env file with TELEGRAM_BOT_TOKEN and TELEGRAM_ADMIN_ID"
+        "Please create a .env file with TELEGRAM_BOT_TOKEN and "
+        "TELEGRAM_ADMIN_IDS (comma-separated) or TELEGRAM_ADMIN_ID"
     )
     _TOKEN = ""
-    _ADMIN_ID = 0
+    _ADMIN_IDS = {0}
 
 
 # ============================================================
 # Access control
 # ============================================================
 def is_admin(user_id: int) -> bool:
-    """Only the configured admin can control the bot."""
-    return user_id == _ADMIN_ID
+    """Check if user is in the configured admin set.
+
+    Supports multiple admin IDs via TELEGRAM_ADMIN_IDS (comma-separated)
+    and legacy TELEGRAM_ADMIN_ID for backward compatibility.
+    """
+    return user_id in _ADMIN_IDS
 
 
 # ============================================================
@@ -103,7 +134,7 @@ class BotState:
                 if hasattr(vault, "get_dmarket_secret")
                 else Config.SECRET_KEY
             )
-            self.client = DMarketAPIClient(Config.PUBLIC_KEY, secret)
+            self.client = DMarketAPIClient(Config.PUBLIC_KEY, secret)  # type: ignore[arg-type]
             self.sniping_loop = SnipingLoop(client=self.client)
             self.is_running = True
             self.sniping_task = asyncio.create_task(self.sniping_loop.start())

@@ -19,7 +19,7 @@ class _LowFeeMixin:
     """low_fee_cache table (v12.0 daily refresh)."""
 
     # These attributes are set on the instance by PriceHistoryDB.__init__
-    state_conn: Any
+    state_conn: Any  # sqlite3.Connection
 
     @with_db_retry(operation_name="save_low_fee_items")
     def save_low_fee_items(self, items: List[Dict[str, Any]]) -> None:

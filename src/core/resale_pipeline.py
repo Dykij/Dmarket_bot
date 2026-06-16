@@ -55,7 +55,7 @@ class ResalePipeline:
         Scan DMarket for underpriced items, validate against CS2Cap, buy.
         Returns list of purchased items.
         """
-        purchased = []
+        purchased: List[Dict[str, Any]] = []
         cursor = None
         pages_scanned = 0
         max_pages = 20  # Safety limit for pagination
@@ -240,7 +240,7 @@ class ResalePipeline:
 
         # --- 2. Build the list of (item, sell_price) that pass the
         #    profitability filter. ---
-        ready_to_list: List[Tuple[Dict[str, Any], float, float]] = []  # (item, sell_price, profit_pct)
+        ready_to_list: List[Tuple[Any, float, float]] = []  # (item, sell_price, profit_pct)
         for item in candidates:
             title = item['hash_name']
             buy_price = item['buy_price']
@@ -311,7 +311,7 @@ class ResalePipeline:
             logger.error(f"Failed to enumerate offers for asset lookup: {e}", exc_info=True)
 
         batch_payload: List[Dict[str, Any]] = []
-        plan: List[Tuple[Dict[str, Any], float, float]] = []
+        plan: List[Tuple[Any, float, float]] = []
         for item, sell_price, profit_pct in ready_to_list:
             title = item['hash_name']
             asset_id = asset_by_title.get(title)
@@ -335,13 +335,13 @@ class ResalePipeline:
             return []
 
         # Update statuses + collect results.
-        # The v2 endpoint returns {"offers": [{"offerId": "...", "assetId": "...", ...}]}
+        # The v2 endpoint returns {"offers": [{"id": "...", "assetId": "...", ...}]}
         # or {"items": [...]} depending on schema. We just iterate and
         # flip status for each item we sent.
         offer_id_by_asset: Dict[str, str] = {}
         for entry in (result.get("offers") or result.get("items") or []):
             aid = entry.get("assetId") or entry.get("asset_id") or ""
-            oid = entry.get("offerId") or entry.get("offer_id") or ""
+            oid = entry.get("id") or entry.get("offerId") or entry.get("offer_id") or ""
             if aid and oid:
                 offer_id_by_asset[aid] = oid
 
@@ -423,7 +423,7 @@ class ResalePipeline:
         real_offers = []
         try:
             real_inventory = (await self.api.get_user_inventory(Config.GAME_ID)).get("objects", [])
-            real_offers = (await self.api.get_user_active_offers(Config.GAME_ID)).get("objects", [])
+            real_offers = (await self.api.get_user_offers(Config.GAME_ID)).get("objects", [])
         except Exception as e:
             logger.debug(f"Failed to fetch real inventory: {e}")
 

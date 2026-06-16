@@ -34,7 +34,8 @@ class VaultClient:
         if not self.client:
             if not self.connect():
                 return None
-        
+
+        assert self.client is not None  # connect() guarantees client is set
         try:
             # kv.v2.read_secret_version is the correct method for KV v2
             read_response = self.client.secrets.kv.v2.read_secret_version(

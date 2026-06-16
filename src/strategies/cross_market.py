@@ -145,16 +145,25 @@ class CrossMarketStrategy(BaseStrategy):
             turnover_penalty=turnover_penalty,
         ) * signal_quality
 
-        # --- 8. Position Sizing ---
+        # --- 8. Position Sizing (v12.7: ATR-enhanced P2-5) ---
         volatility_score = max(1.0, cross_market_data.volatility_24h * 10) if cross_market_data.volatility_24h > 0 else 1.0
         sharpe_estimate = max(0.1, net_margin_pct / (volatility_score + 0.01))
 
-        quantity = self.calculate_position_size(
-            current_balance=market_data.get("current_balance", 50.0),
-            item_price=dmarket_price,
-            volatility_score=volatility_score,
-            sharpe_estimate=sharpe_estimate,
-        )
+        # Use ATR-based sizing if cross-market data has OHLC, else legacy
+        if hasattr(cross_market_data, 'atr') and cross_market_data.atr > 0:
+            quantity = self.atr_position_size(
+                balance=market_data.get("current_balance", 50.0),
+                atr=cross_market_data.atr,
+                item_price=dmarket_price,
+                risk_per_trade_pct=2.0,
+            )
+        else:
+            quantity = self.calculate_position_size(
+                current_balance=market_data.get("current_balance", 50.0),
+                item_price=dmarket_price,
+                volatility_score=volatility_score,
+                sharpe_estimate=sharpe_estimate,
+            )
 
         if quantity <= 0:
             return {"action": "none"}

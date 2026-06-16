@@ -282,6 +282,14 @@ update-deps: $(VENV)
 	@$(VENV_PIP) install --upgrade -r requirements.txt
 	@echo Зависимости обновлены!
 
+# Генерация ключа шифрования для Fernet
+generate-encryption-key: $(VENV)
+	@echo Генерация ключа шифрования (Fernet)...
+	@$(VENV_PYTHON) -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+	@echo ""
+	@echo "Скопируйте ключ выше в ENCRYPTION_KEY в .env файле"
+	@echo "ВНИМАНИЕ: Без этого ключа при DRY_RUN=false бот не запустится!"
+
 # Очистка временных файлов
 clean:
 	@echo Очистка временных файлов...

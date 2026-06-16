@@ -10,19 +10,56 @@ class SecurityAuditor:
     
     Scans outputs and logs for hardcoded API keys, environment variables,
     and sensitive tokens before they are saved or broadcasted to Telegram.
+
+    v12.9: Expanded pattern coverage for all known key formats used by
+    DMarket, CS2Cap, CSFloat, Waxpeer, Telegram, GitHub, and common
+    cloud providers.
     """
     
-    # Common patterns for sensitive keys (DumpsterDiver/Gitleaks style)
+    # Common patterns for sensitive keys (Gitleaks 8.x compatible patterns)
     PATTERNS = [
-        re.compile(r"(?i)(?:api_key|apikey|secret|token|password|t_token|auth)[=:\s]+['\"]?([a-zA-Z0-9\-_]{16,})['\"]?"),
-        re.compile(r"(?i)sk-[a-zA-Z0-9]{32,}"),  # typical OpenAI/generic secret key
-        re.compile(r"(?i)Bearer\s+[a-zA-Z0-9\-\._~+\/]+=*"), # JWT / Bearer tokens
-        re.compile(r"(?i)dmarket_[a-zA-Z0-9]{20,}"), # Dmarket specific (mock pattern)
-        re.compile(r"(?i)[\w-]+\.env"), # mentions of .env files being dumped
-        re.compile(r"(?i)-----BEGIN\s+(?:RSA|OPENSSH|PGP|DSA|EC)\s+PRIVATE\s+KEY-----"), # Private keys
-        re.compile(r"(?i)(?:ghp_|github_pat_)[a-zA-Z0-9_]{36,}"), # Github tokens
-        re.compile(r"(?i)xox[baprs]-[0-9]+-[0-9]+-[a-zA-Z0-9]+"), # Slack tokens
-        re.compile(r"(?i)bot[0-9]+:[a-zA-Z0-9_-]{35,}"), # Telegram bot tokens
+        # Generic key-value patterns
+        re.compile(r"(?i)(?:api_key|apikey|secret|token|password|t_token|auth|private_key|access_key)"
+                   r"[=:\s]+['\"]?([a-zA-Z0-9\-_/+]{16,})['\"]?"),
+        # OpenAI / generic secret keys
+        re.compile(r"(?i)sk-[a-zA-Z0-9]{20,}"),
+        re.compile(r"(?i)pk-[a-zA-Z0-9]{20,}"),
+        # JWT / Bearer tokens
+        re.compile(r"(?i)Bearer\s+[a-zA-Z0-9\-\._~+\/=]{20,}"),
+        # Hex-encoded Ed25519 secrets (64 hex chars = 32 bytes, or 128 hex = 64 bytes)
+        re.compile(r"(?i)(?:DMARKET_SECRET_KEY|secret_key)[=:\s]+['\"]?([a-fA-F0-9]{64,128})['\"]?"),
+        re.compile(r"(?i)[a-fA-F0-9]{128}"),
+        # DMarket public keys
+        re.compile(r"(?i)DMARKET_PUBLIC_KEY[=:\s]+['\"]?[a-fA-F0-9]{64,}['\"]?"),
+        # .env references
+        re.compile(r"(?i)[a-zA-Z0-9_-]+\.env"),
+        # Private keys (PEM)
+        re.compile(r"(?i)-----BEGIN\s+(?:RSA|OPENSSH|PGP|DSA|EC|PRIVATE)\s+KEY-----"),
+        # SSH private keys (OPENSSH format)
+        re.compile(r"(?i)-----BEGIN\s+OPENSSH\s+PRIVATE\s+KEY-----"),
+        # GitHub tokens
+        re.compile(r"(?i)(?:ghp_|gho_|ghu_|ghs_|ghr_|github_pat_)[a-zA-Z0-9_]{36,}"),
+        # Slack tokens
+        re.compile(r"(?i)xox[baprs]-[0-9]+-[0-9]+-[a-zA-Z0-9]+"),
+        # Slack webhooks
+        re.compile(r"(?i)hooks\.slack\.com/services/T[a-zA-Z0-9_]{8,}/B[a-zA-Z0-9_]{8,}/[a-zA-Z0-9_]{24,}"),
+        # Telegram bot tokens
+        re.compile(r"(?i)[0-9]{8,10}:[a-zA-Z0-9_-]{35,}"),
+        # CS2Cap / CSFloat / Waxpeer API keys
+        re.compile(r"(?i)(?:CS2CAP_API_KEY|CSFLOAT_API_KEY|WAXPEER_API_KEY)"
+                   r"[=:\s]+['\"]?[a-zA-Z0-9]{16,}['\"]?"),
+        # AWS keys
+        re.compile(r"(?i)AKIA[0-9A-Z]{16}"),
+        # Google service account keys
+        re.compile(r"(?i)\"type\":\s*\"service_account\""),
+        # Sentry DSN (contains project secret)
+        re.compile(r"(?i)https://[a-f0-9]{32}@[a-zA-Z0-9]+\.ingest\.sentry\.io"),
+        # Generic base64-encoded credentials
+        re.compile(r"(?i)(?:Basic\s+)[a-zA-Z0-9+/=]{20,}"),
+        # Fernet keys
+        re.compile(r"(?i)[a-zA-Z0-9_-]{40,}(?:\.[a-zA-Z0-9_-]{40,})+"),
+        # HashiCorp Vault tokens
+        re.compile(r"(?i)hvs\.[a-zA-Z0-9_-]{36,}"),
     ]
 
     # Patterns indicating potential prompt injection or system prompt leakage attempts

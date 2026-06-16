@@ -14,6 +14,7 @@ Analyzes recent trades to:
 
 import logging
 import math
+import time
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
@@ -269,6 +270,68 @@ class SelfReflectionEngine:
             return base_max
         adjusted = base_max + reflection.recommended_volatility_adjustment
         return max(0.1, min(1.0, adjusted))  # Clamp to 10-100%
+
+    def get_volatility_regime_adjustment(self) -> float:
+        """
+        v12.7: Dynamic spread adjustment based on market volatility regime.
+
+        Classifies recent market conditions and adjusts MIN_SPREAD_PCT:
+        - HIGH volatility (>2% avg daily moves): +1.5% spread (be selective)
+        - MEDIUM volatility (0.5-2%): no adjustment
+        - LOW volatility (<0.5%): -0.5% spread (capture more opportunities)
+
+        Returns: adjustment to add to MIN_SPREAD_PCT (can be negative).
+        """
+        try:
+            # Sample recent price volatility from DB
+            rows = price_db.history_conn.execute(
+                """SELECT hash_name, price, recorded_at
+                   FROM price_history
+                   WHERE recorded_at > ? AND price > 0
+                   ORDER BY recorded_at DESC
+                   LIMIT 500""",
+                (time.time() - 86400,)  # Last 24h
+            ).fetchall()
+
+            if len(rows) < 50:
+                return 0.0  # Not enough data
+
+            # Group by item and calculate per-item volatility
+            from collections import defaultdict
+            item_prices: Dict[str, List[float]] = defaultdict(list)
+            for row in rows:
+                item_prices[row["hash_name"]].append(row["price"])
+
+            volatilities = []
+            for prices in item_prices.values():
+                if len(prices) < 3:
+                    continue
+                # Calculate average absolute return
+                returns = []
+                for i in range(1, len(prices)):
+                    if prices[i-1] > 0:
+                        returns.append(abs(prices[i] / prices[i-1] - 1))
+                if returns:
+                    volatilities.append(sum(returns) / len(returns))
+
+            if not volatilities:
+                return 0.0
+
+            avg_vol = sum(volatilities) / len(volatilities)
+
+            # Classify regime and return adjustment
+            if avg_vol > 0.02:  # >2% avg daily move
+                logger.info(f"[VOL-REGIME] HIGH volatility ({avg_vol:.2%}), tightening spread +1.5%")
+                return 1.5
+            elif avg_vol < 0.005:  # <0.5% avg daily move
+                logger.info(f"[VOL-REGIME] LOW volatility ({avg_vol:.2%}), loosening spread -0.5%")
+                return -0.5
+            else:
+                return 0.0
+
+        except Exception as e:
+            logger.debug(f"Volatility regime detection failed: {e}")
+            return 0.0
 
 
 # Singleton

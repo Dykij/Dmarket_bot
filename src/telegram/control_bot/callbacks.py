@@ -40,6 +40,8 @@ router = Router(name="telegram-control-callbacks")
 @router.callback_query(F.data == CB_START)
 @safe_call
 async def cb_start(callback: types.CallbackQuery):
+    if callback.message is None:
+        return
     await callback.message.answer("Use 🚀 START BOT button or /start_bot command.")
     await callback.answer()
 
@@ -47,6 +49,8 @@ async def cb_start(callback: types.CallbackQuery):
 @router.callback_query(F.data == CB_STOP)
 @safe_call
 async def cb_stop(callback: types.CallbackQuery):
+    if callback.message is None:
+        return
     await callback.message.answer("Use 🛑 STOP BOT button or /stop_bot command.")
     await callback.answer()
 
@@ -54,6 +58,8 @@ async def cb_stop(callback: types.CallbackQuery):
 @router.callback_query(F.data == CB_BALANCE)
 @safe_call
 async def cb_balance(callback: types.CallbackQuery):
+    if callback.message is None or not isinstance(callback.message, types.Message):
+        return
     await callback.message.edit_text("💰 Fetching balance...")
     try:
         async with dmarket_client() as client:
@@ -67,13 +73,16 @@ async def cb_balance(callback: types.CallbackQuery):
                 text, reply_markup=get_inline_balance_kb()
             )
     except Exception as e:
-        await callback.message.edit_text(f"❌ Error: `{e}`")
+        logger.exception(f"cb_balance error: {e}")
+        await callback.message.edit_text("❌ Error fetching balance. Check logs.")
     await callback.answer()
 
 
 @router.callback_query(F.data == CB_INVENTORY)
 @safe_call
 async def cb_inventory(callback: types.CallbackQuery):
+    if callback.message is None or not isinstance(callback.message, types.Message):
+        return
     idle = price_db.get_virtual_inventory(status='idle', only_unlocked=False)
     selling = price_db.get_virtual_inventory(status='selling')
     sold = price_db.get_virtual_inventory(status='sold')
@@ -87,6 +96,8 @@ async def cb_inventory(callback: types.CallbackQuery):
 @router.callback_query(F.data == CB_PROFITS)
 @safe_call
 async def cb_profits(callback: types.CallbackQuery):
+    if callback.message is None or not isinstance(callback.message, types.Message):
+        return
     sold = price_db.get_virtual_inventory(status='sold')
     idle = price_db.get_virtual_inventory(status='idle', only_unlocked=True)
     text = format_profits_summary(sold, idle, [], detailed=False)
@@ -99,6 +110,8 @@ async def cb_profits(callback: types.CallbackQuery):
 @router.callback_query(F.data == CB_REFRESH_STATUS)
 @safe_call
 async def cb_refresh_status(callback: types.CallbackQuery):
+    if callback.message is None or not isinstance(callback.message, types.Message):
+        return
     st = await state.status()
     is_running = st["is_running"]
     balance_data = await _fetch_balance_data()
@@ -128,6 +141,7 @@ async def _fetch_balance_data() -> Optional[dict]:
 
 
 @router.callback_query(F.data == CB_NOOP)
+@safe_call
 async def cb_noop(callback: types.CallbackQuery):
     """No-op for buttons that reflect state (e.g., '🟡 RUNNING' shows but does nothing)."""
     await callback.answer()

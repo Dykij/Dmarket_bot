@@ -10,6 +10,7 @@ from __future__ import annotations
 import logging
 import os
 import time
+from typing import Any
 
 from src.db.price_history import price_db
 
@@ -18,6 +19,9 @@ logger = logging.getLogger("SnipingBot")
 
 class _InventoryMixin:
     """v12.2 inventory status sync (trade_protected, reverted)."""
+
+    # These attributes are set on the instance by SnipingLoop.__init__
+    client: Any  # DMarketAPIClient
 
     # ------------------------------------------------------------------
     # v12.2 Phase 2.1: Inventory Status Sync (trade_protected, reverted)

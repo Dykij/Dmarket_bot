@@ -49,6 +49,18 @@ class _HistoryMixin:
         ).fetchone()
         return row["price"] if row else None
 
+    def get_latest_price_timestamp(
+        self, hash_name: str, max_age_seconds: int = 10800
+    ) -> Optional[float]:
+        """v12.7: Get timestamp of most recent price for staleness check (P4-3)."""
+        cutoff = time.time() - max_age_seconds
+        row = self.history_conn.execute(
+            "SELECT recorded_at FROM price_history WHERE hash_name = ? AND recorded_at > ? "
+            "ORDER BY recorded_at DESC LIMIT 1",
+            (hash_name, cutoff),
+        ).fetchone()
+        return row["recorded_at"] if row else None
+
     def get_recent_prices(self, hash_name: str, days: int = 7) -> List[Tuple[float, float]]:
         cutoff = time.time() - (days * 86400)
         rows = self.history_conn.execute(
@@ -102,7 +114,7 @@ class _HistoryMixin:
         first_sale_age_days = (now - oldest_ts) / 86400.0
         last_sale_age_days = (now - newest_ts) / 86400.0
 
-        metrics = {
+        metrics: Dict[str, Any] = {
             "total_sales": len(prices),
             "sales_in_window": len(prices),
             "first_sale_age_days": first_sale_age_days,

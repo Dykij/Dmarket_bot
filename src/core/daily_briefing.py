@@ -51,7 +51,7 @@ class DailyBriefingScheduler:
         self,
         risk,  # RiskManager instance
         get_balance: Callable[[], Awaitable[float]],
-        get_equity: Optional[Callable[[float], dict]] = None,
+        get_equity: Optional[Callable[[float], Awaitable[dict]]] = None,
         hour: int = 0,
         minute: int = 0,
     ) -> None:
@@ -66,7 +66,7 @@ class DailyBriefingScheduler:
         """
         self._risk = risk
         self._get_balance = get_balance
-        self._get_equity = get_equity or self._default_equity
+        self._get_equity: Callable[[float], Awaitable[dict]] = get_equity or self._default_equity
         self._hour = hour
         self._minute = minute
         self._task: Optional[asyncio.Task] = None

@@ -70,11 +70,10 @@ async def collect_from_sales_history(
                 # Parse price (cents to USD)
                 price_raw = sale.get("price", {})
                 if isinstance(price_raw, dict):
-                    price_cents = int(
-                        price_raw.get("USD", price_raw.get("amount", 0))
-                    )
+                    usd_val = price_raw.get("USD") or price_raw.get("amount") or 0
+                    price_cents = int(usd_val)
                 else:
-                    price_cents = int(price_raw)
+                    price_cents = int(price_raw or 0)
 
                 price_usd = Decimal(price_cents) / 100
 
