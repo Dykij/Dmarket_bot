@@ -119,7 +119,7 @@ class TestResalePipeline:
 
         mock_api = MagicMock(spec=DMarketAPIClient)
         mock_api.get_user_inventory = AsyncMock(return_value={"objects": []})
-        mock_api.get_user_active_offers = AsyncMock(return_value={"objects": []})
+        mock_api.get_user_offers = AsyncMock(return_value={"objects": []})
         pipeline = ResalePipeline(mock_api)
 
         status = await pipeline.get_inventory_status()
@@ -223,21 +223,21 @@ class TestDMarketSellMethods:
 
     def test_import(self):
         from src.api.dmarket_api_client import DMarketAPIClient
-        assert hasattr(DMarketAPIClient, 'create_sell_offer')
         assert hasattr(DMarketAPIClient, 'create_sell_offers_batch')
-        assert hasattr(DMarketAPIClient, 'edit_sell_offer')
-        assert hasattr(DMarketAPIClient, 'delete_sell_offer')
-        assert hasattr(DMarketAPIClient, 'get_user_active_offers')
+        assert hasattr(DMarketAPIClient, 'batch_create_offers_v2')
+        assert hasattr(DMarketAPIClient, 'batch_edit_offers_v2')
+        assert hasattr(DMarketAPIClient, 'batch_delete_offers_v2')
+        assert hasattr(DMarketAPIClient, 'get_user_offers')
         assert hasattr(DMarketAPIClient, 'get_user_closed_offers')
 
     @pytest.mark.asyncio
-    async def test_create_sell_offer_dry_run(self):
+    async def test_create_offer_dry_run(self):
         from src.api.dmarket_api_client import DMarketAPIClient
 
         mock_api = MagicMock(spec=DMarketAPIClient)
-        mock_api.create_sell_offer = AsyncMock(return_value={"offerId": "offer_123"})
+        mock_api.create_offer = AsyncMock(return_value={"offerId": "offer_123"})
 
-        result = await mock_api.create_sell_offer("a8db", "item_123", 10.50)
+        result = await mock_api.create_offer("asset_123", 10.50)
         assert result["offerId"] == "offer_123"
 
     @pytest.mark.asyncio
