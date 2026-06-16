@@ -4,7 +4,7 @@ commands — All /command and reply-keyboard button handlers.
 Composed from focused sub-modules, each with its own router:
     lifecycle.py  — /start, /help, /settings
     control.py    — /start_bot, /stop_bot, /panic (and _cancel_all_offers)
-    views.py      — /balance, /status, /inventory, /profits
+    views.py      — /balance, /status, /inventory, /profits, /portfolio, /daily, /analyze, /sell, /prices
     test.py       — /test (with FSM), /cancel (TestItemFSM, _do_test)
     utils.py      — /clock, /refresh
 
@@ -21,7 +21,18 @@ from .control import _cancel_all_offers, cmd_panic, cmd_start_bot, cmd_stop_bot
 from .lifecycle import cmd_help, cmd_settings, cmd_start
 from .test import TestItemFSM, _do_test, cmd_cancel, cmd_test, cmd_test_receive
 from .utils import cmd_clock, cmd_refresh
-from .views import _fetch_balance_data, cmd_balance, cmd_inventory, cmd_profits, cmd_status
+from .views import (
+    _fetch_balance_data,
+    cmd_analyze,
+    cmd_balance,
+    cmd_daily,
+    cmd_inventory,
+    cmd_portfolio,
+    cmd_prices,
+    cmd_profits,
+    cmd_sell_top,
+    cmd_status,
+)
 
 # Combined router — order matters for filters, but aiogram routes by handler
 # type not by order, so it's fine to combine all sub-routers into one.
@@ -56,6 +67,11 @@ __all__ = [
     "cmd_status",
     "cmd_inventory",
     "cmd_profits",
+    "cmd_portfolio",
+    "cmd_daily",
+    "cmd_analyze",
+    "cmd_sell_top",
+    "cmd_prices",
     "_fetch_balance_data",
     # Test
     "cmd_test",

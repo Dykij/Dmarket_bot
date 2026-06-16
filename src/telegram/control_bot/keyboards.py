@@ -2,9 +2,14 @@
 keyboards.py — Reply and inline keyboards with constants.
 
 Constants:
-- BTN_* — text labels for the 10 reply-keyboard buttons
+- BTN_* — text labels for the 12 reply-keyboard buttons
 - CB_* — callback_data strings for inline buttons
+
+v13.2: Added SELL-TOP, PORTFOLIO, DAILY-BRIEF, ANALYZE buttons.
+       Added inline keyboards for new features.
 """
+
+import logging
 
 from aiogram.types import (
     ReplyKeyboardMarkup,
@@ -13,21 +18,23 @@ from aiogram.types import (
     InlineKeyboardButton,
 )
 
+logger = logging.getLogger("TelegramControl.keyboards")
 
 # ============================================================
 # Reply keyboard button text constants
 # ============================================================
-BTN_START = "🚀 START BOT"
-BTN_STOP = "🛑 STOP BOT"
+BTN_START = "🚀 START"
+BTN_STOP = "🛑 STOP"
 BTN_BALANCE = "💰 BALANCE"
 BTN_STATUS = "📊 STATUS"
 BTN_INVENTORY = "📦 INVENTORY"
 BTN_PROFITS = "📈 PROFITS"
-BTN_TEST = "🧪 TEST ITEM"
-BTN_SETTINGS = "⚙️ SETTINGS"
+BTN_PORTFOLIO = "💼 PORTFOLIO"
+BTN_SELL_TOP = "🔍 SELL-TOP"
+BTN_DAILY = "📅 DAILY"
+BTN_ANALYZE = "🧠 ANALYZE"
 BTN_PANIC = "🔥 PANIC"
-BTN_HELP = "🆘 HELP"
-
+BTN_SETTINGS = "⚙️ SETTINGS"
 
 # ============================================================
 # Inline keyboard callback_data constants
@@ -37,6 +44,10 @@ CB_STOP = "btn:stop"
 CB_BALANCE = "btn:balance"
 CB_INVENTORY = "btn:inventory"
 CB_PROFITS = "btn:profits"
+CB_PORTFOLIO = "btn:portfolio"
+CB_SELL_TOP = "btn:sell_top"
+CB_DAILY = "btn:daily"
+CB_ANALYZE = "btn:analyze"
 CB_REFRESH_STATUS = "btn:refresh_status"
 CB_NOOP = "noop"
 
@@ -45,18 +56,30 @@ CB_NOOP = "noop"
 # Keyboards
 # ============================================================
 def get_main_keyboard() -> ReplyKeyboardMarkup:
-    """Main reply keyboard — always visible at the bottom of the chat."""
-    return ReplyKeyboardMarkup(
+    """Main reply keyboard — always visible at the bottom of the chat.
+
+    Layout (6 rows, 2 cols):
+      1. 🚀 START     │ 🛑 STOP
+      2. 💰 BALANCE   │ 📊 STATUS
+      3. 📦 INVENTORY │ 📈 PROFITS
+      4. 💼 PORTFOLIO │ 🔍 SELL-TOP
+      5. 📅 DAILY     │ 🧠 ANALYZE
+      6. 🔥 PANIC     │ ⚙️ SETTINGS
+    """
+    kb = ReplyKeyboardMarkup(
         keyboard=[
             [KeyboardButton(text=BTN_START), KeyboardButton(text=BTN_STOP)],
             [KeyboardButton(text=BTN_BALANCE), KeyboardButton(text=BTN_STATUS)],
             [KeyboardButton(text=BTN_INVENTORY), KeyboardButton(text=BTN_PROFITS)],
-            [KeyboardButton(text=BTN_TEST), KeyboardButton(text=BTN_SETTINGS)],
-            [KeyboardButton(text=BTN_PANIC), KeyboardButton(text=BTN_HELP)],
+            [KeyboardButton(text=BTN_PORTFOLIO), KeyboardButton(text=BTN_SELL_TOP)],
+            [KeyboardButton(text=BTN_DAILY), KeyboardButton(text=BTN_ANALYZE)],
+            [KeyboardButton(text=BTN_PANIC), KeyboardButton(text=BTN_SETTINGS)],
         ],
         resize_keyboard=True,
         input_field_placeholder="Choose action or /help",
     )
+    logger.debug("Main keyboard created: 12 buttons, 6 rows")
+    return kb
 
 
 def get_inline_status_kb(is_running: bool) -> InlineKeyboardMarkup:
@@ -78,6 +101,10 @@ def get_inline_status_kb(is_running: bool) -> InlineKeyboardMarkup:
         ],
         [
             InlineKeyboardButton(text="📈 Profits", callback_data=CB_PROFITS),
+            InlineKeyboardButton(text="💼 Portfolio", callback_data=CB_PORTFOLIO),
+        ],
+        [
+            InlineKeyboardButton(text="📅 Daily", callback_data=CB_DAILY),
             InlineKeyboardButton(text="🔄 Refresh", callback_data=CB_REFRESH_STATUS),
         ],
     ])
@@ -95,7 +122,7 @@ def get_inline_inventory_kb() -> InlineKeyboardMarkup:
 
 
 def get_inline_balance_kb() -> InlineKeyboardMarkup:
-    """Inline keyboard for balance message (used by /balance and btn:balance)."""
+    """Inline keyboard for balance message."""
     return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="🔄 Refresh", callback_data=CB_BALANCE)],
     ])
@@ -105,5 +132,32 @@ def get_inline_profits_kb() -> InlineKeyboardMarkup:
     """Inline keyboard for profits message."""
     return InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="🔄 Refresh", callback_data=CB_PROFITS)],
+        [InlineKeyboardButton(text="⬅️ Status", callback_data=CB_REFRESH_STATUS)],
+    ])
+
+
+def get_inline_portfolio_kb() -> InlineKeyboardMarkup:
+    """Inline keyboard for portfolio message."""
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="🔄 Refresh", callback_data=CB_PORTFOLIO)],
+        [InlineKeyboardButton(text="⬅️ Status", callback_data=CB_REFRESH_STATUS)],
+    ])
+
+
+def get_inline_daily_kb() -> InlineKeyboardMarkup:
+    """Inline keyboard for daily briefing message."""
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text="🔄 Refresh", callback_data=CB_DAILY),
+            InlineKeyboardButton(text="🧠 Analyze", callback_data=CB_ANALYZE),
+        ],
+        [InlineKeyboardButton(text="⬅️ Status", callback_data=CB_REFRESH_STATUS)],
+    ])
+
+
+def get_inline_analyze_kb() -> InlineKeyboardMarkup:
+    """Inline keyboard for analyze/reflection message."""
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="🔄 Re-run", callback_data=CB_ANALYZE)],
         [InlineKeyboardButton(text="⬅️ Status", callback_data=CB_REFRESH_STATUS)],
     ])

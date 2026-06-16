@@ -27,16 +27,21 @@ logger = logging.getLogger("TelegramControl.lifecycle")
 # Commands registration
 # ============================================================
 async def set_commands(bot: Bot) -> None:
-    """Register all 13 commands in the Telegram bot menu."""
+    """Register all commands in the Telegram bot menu. v13.2: 18 commands."""
     commands = [
         types.BotCommand(command="start", description="🚀 Open Control Panel"),
         types.BotCommand(command="start_bot", description="▶️ Start sniping loop"),
         types.BotCommand(command="stop_bot", description="⏸ Stop sniping loop"),
         types.BotCommand(command="panic", description="🔥 Emergency stop + cancel offers"),
         types.BotCommand(command="balance", description="💰 Real DMarket balance"),
-        types.BotCommand(command="status", description="📊 Bot status"),
+        types.BotCommand(command="status", description="📊 Bot status + equity"),
         types.BotCommand(command="inventory", description="📦 View inventory"),
         types.BotCommand(command="profits", description="📈 P&L summary"),
+        types.BotCommand(command="portfolio", description="💼 Portfolio overview"),
+        types.BotCommand(command="daily", description="📅 Daily briefing"),
+        types.BotCommand(command="analyze", description="🧠 Strategy analysis"),
+        types.BotCommand(command="sell", description="🔍 Sell top-5 idle items"),
+        types.BotCommand(command="prices", description="📊 CS2Cap price check"),
         types.BotCommand(command="test", description="🧪 Test arbitrage for an item"),
         types.BotCommand(command="settings", description="⚙️ View config"),
         types.BotCommand(command="clock", description="🕐 Clock sync status"),

@@ -1,12 +1,14 @@
 """
-views.py — Read-only info commands: balance, status, inventory, profits.
+views.py — Read-only info commands: balance, status, inventory, profits,
+portfolio, daily briefing, analysis, prices, sell-top.
 
-All read from the local DB and (for status/balance) a single DMarket call.
+v13.2: Added portfolio, daily, analyze, prices, sell-top with logging.
 """
 
 from __future__ import annotations
 
 import logging
+import time
 from typing import Optional
 
 from aiogram import F, Router
@@ -16,15 +18,24 @@ from src.db.price_history import price_db
 
 from ..formatters import (
     format_balance,
+    format_daily_summary,
     format_inventory_summary,
+    format_portfolio_summary,
     format_profits_summary,
     format_status,
 )
 from ..keyboards import (
+    BTN_ANALYZE,
+    BTN_DAILY,
+    BTN_PORTFOLIO,
+    BTN_SELL_TOP,
     get_inline_balance_kb,
+    get_inline_daily_kb,
     get_inline_inventory_kb,
+    get_inline_portfolio_kb,
     get_inline_profits_kb,
     get_inline_status_kb,
+    get_inline_analyze_kb,
 )
 from ..resilience import dmarket_client, retry_async, safe_call
 from ..state import state
@@ -40,6 +51,7 @@ router = Router(name="telegram-control-views")
 @router.message(F.text == "💰 BALANCE")
 @safe_call
 async def cmd_balance(message):
+    logger.info("cmd_balance by user %s", message.from_user.id)
     async with dmarket_client() as client:
         balance = await retry_async(
             lambda: client.get_real_balance(),
@@ -50,12 +62,15 @@ async def cmd_balance(message):
             format_balance(balance, equity),
             reply_markup=get_inline_balance_kb(),
         )
+        logger.debug("cmd_balance ok — cash=%.2f available=%.2f frozen=%.2f",
+                      balance, equity["available"], equity.get("frozen", 0))
 
 
 @router.message(Command("status"))
 @router.message(F.text == "📊 STATUS")
 @safe_call
 async def cmd_status(message):
+    logger.info("cmd_status by user %s", message.from_user.id)
     st = await state.status()
     is_running = st["is_running"]
     balance_data = await _fetch_balance_data()
@@ -63,10 +78,11 @@ async def cmd_status(message):
         format_status(is_running, balance_data),
         reply_markup=get_inline_status_kb(is_running),
     )
+    logger.debug("cmd_status ok — running=%s", is_running)
 
 
 async def _fetch_balance_data() -> Optional[dict]:
-    """Fetch balance + equity. Returns dict with cash_str/locked_str/total_str or None on error."""
+    """Fetch balance + equity. Returns dict with all equity fields for formatters."""
     try:
         async with dmarket_client() as client:
             balance = await retry_async(
@@ -74,12 +90,16 @@ async def _fetch_balance_data() -> Optional[dict]:
                 operation="status.balance",
             )
             equity = price_db.get_total_equity(balance)
+            frozen = equity.get("frozen", 0)
             return {
                 "cash_str": f"${equity['cash']:.2f}",
+                "avail_str": f"${equity['available']:.2f}",
+                "frozen_str": f"${frozen:.2f}" if frozen > 0 else "",
                 "locked_str": f"${equity['assets']:.2f} ({equity['count']} items)",
                 "total_str": f"${equity['total']:.2f}",
             }
-    except Exception:
+    except Exception as e:
+        logger.debug("_fetch_balance_data failed: %s", e)
         return None
 
 
@@ -87,6 +107,7 @@ async def _fetch_balance_data() -> Optional[dict]:
 @router.message(F.text == "📦 INVENTORY")
 @safe_call
 async def cmd_inventory(message):
+    logger.info("cmd_inventory by user %s", message.from_user.id)
     idle = price_db.get_virtual_inventory(status="idle", only_unlocked=False)
     selling = price_db.get_virtual_inventory(status="selling")
     sold = price_db.get_virtual_inventory(status="sold")
@@ -94,12 +115,14 @@ async def cmd_inventory(message):
         format_inventory_summary(idle, selling, sold),
         reply_markup=get_inline_inventory_kb(),
     )
+    logger.debug("cmd_inventory ok — idle=%d selling=%d sold=%d", len(idle), len(selling), len(sold))
 
 
 @router.message(Command("profits"))
 @router.message(F.text == "📈 PROFITS")
 @safe_call
 async def cmd_profits(message):
+    logger.info("cmd_profits by user %s", message.from_user.id)
     sold = price_db.get_virtual_inventory(status="sold")
     idle = price_db.get_virtual_inventory(status="idle", only_unlocked=True)
     selling = price_db.get_virtual_inventory(status="selling")
@@ -107,3 +130,135 @@ async def cmd_profits(message):
         format_profits_summary(sold, idle, selling, detailed=True),
         reply_markup=get_inline_profits_kb(),
     )
+    logger.debug("cmd_profits ok — sold=%d idle=%d", len(sold), len(idle))
+
+
+# ============================================================
+# Portfolio / Daily / Analyze
+# ============================================================
+@router.message(Command("portfolio"))
+@router.message(F.text == BTN_PORTFOLIO)
+@safe_call
+async def cmd_portfolio(message):
+    logger.info("cmd_portfolio by user %s", message.from_user.id)
+    equity = price_db.get_total_equity(0.0)
+    sold = price_db.get_virtual_inventory(status="sold")
+    await message.answer(
+        format_portfolio_summary(equity, sold),
+        reply_markup=get_inline_portfolio_kb(),
+    )
+    logger.debug("cmd_portfolio ok — total=%.2f frozen=%.2f",
+                  equity["total"], equity.get("frozen", 0))
+
+
+@router.message(Command("daily"))
+@router.message(F.text == BTN_DAILY)
+@safe_call
+async def cmd_daily(message):
+    logger.info("cmd_daily by user %s", message.from_user.id)
+    now = time.time()
+    day_start = now - 86400
+    sold_today = price_db.get_recent_sales(day_start)
+    today_pnl = sum(it["profit"] or 0 for it in sold_today)
+    today_trades = len(sold_today)
+    today_wins = sum(1 for it in sold_today if (it["profit"] or 0) > 0)
+    equity = price_db.get_total_equity(0.0)
+    await message.answer(
+        format_daily_summary(today_pnl, today_trades, today_wins,
+                             equity["total"], equity["assets"],
+                             equity.get("frozen", 0)),
+        reply_markup=get_inline_daily_kb(),
+    )
+    logger.debug("cmd_daily ok — pnl=%.2f trades=%d frozen=%.2f",
+                  today_pnl, today_trades, equity.get("frozen", 0))
+
+
+@router.message(Command("analyze"))
+@router.message(F.text == BTN_ANALYZE)
+@safe_call
+async def cmd_analyze(message):
+    logger.info("cmd_analyze by user %s", message.from_user.id)
+    try:
+        from src.analytics.self_reflection import self_reflection
+        report = self_reflection.analyze_recent_trades()
+        if report:
+            text = (
+                f"🧠 *Strategy Analysis*\n\n"
+                f"Sharpe: {report.get('sharpe_ratio', 0):.2f}\n"
+                f"Sortino: {report.get('sortino_ratio', 0):.2f}\n"
+                f"Max Drawdown: {report.get('max_drawdown_pct', 0):.1f}%\n"
+                f"Win Rate: {report.get('win_rate', 0):.1f}%\n"
+                f"Total Trades: {report.get('total_trades', 0)}\n"
+                f"Avg Profit/Trade: {report.get('avg_profit', 0):+.2f}\n\n"
+                f"Recommendations:\n{report.get('recommendations', 'None')}\n\n"
+                f"_Minimum 10 trades for adjustments._"
+            )
+        else:
+            text = "🧠 *Strategy Analysis* — Not enough trade data yet.\nMinimum 10 trades required."
+        await message.answer(text, reply_markup=get_inline_analyze_kb())
+        logger.debug("cmd_analyze ok — report=%s", bool(report))
+    except Exception as e:
+        logger.exception("cmd_analyze failed: %s", e)
+        await message.answer("❌ Analysis failed. Check logs.")
+
+
+# ============================================================
+# Sell-Top
+# ============================================================
+@router.message(Command("sell"))
+@router.message(F.text == BTN_SELL_TOP)
+@safe_call
+async def cmd_sell_top(message):
+    logger.info("cmd_sell_top by user %s", message.from_user.id)
+    try:
+        from src.core.resale_pipeline import ResalePipeline
+        async with dmarket_client() as client:
+            pipeline = ResalePipeline(client)
+            result = await pipeline.sell_inventory_items(max_items=5)
+            if result is not None and result > 0:
+                text = f"🔍 *Sell Complete*\n\nListed {result} item(s) for sale."
+            else:
+                text = "🔍 *Sell* — No idle items to list or all are trade-locked."
+            await message.answer(text)
+            logger.info("cmd_sell_top ok — listed=%s items", result)
+    except Exception as e:
+        logger.exception("cmd_sell_top failed: %s", e)
+        await message.answer("❌ Sell failed. Check logs.")
+
+
+# ============================================================
+# Prices — CS2Cap price check for held items
+# ============================================================
+@router.message(Command("prices"))
+@safe_call
+async def cmd_prices(message):
+    logger.info("cmd_prices by user %s", message.from_user.id)
+    try:
+        from src.api.cs2cap_oracle import CrossMarketOracle
+        from src.api.oracle_factory import OracleFactory
+        idle = price_db.get_virtual_inventory(status="idle", only_unlocked=False)
+        if not idle:
+            await message.answer("📊 *Prices* — No items in inventory.")
+            return
+        oracle = OracleFactory.get_oracle("a8db")
+        if oracle is None:
+            await message.answer("📊 *Prices* — CS2Cap oracle unavailable.")
+            return
+        text = "📊 *CS2Cap Prices* (41 marketplaces)\n\n"
+        for it in list(idle)[:10]:
+            title = it["hash_name"]
+            try:
+                cs_price = await oracle.get_item_price(title)
+                buy_price = it["buy_price"]
+                if cs_price > 0:
+                    margin = (cs_price - buy_price) / buy_price * 100 if buy_price > 0 else 0
+                    text += f"`{title[:25]}`\n  Buy: ${buy_price:.2f} → CS2Cap: ${cs_price:.2f} ({margin:+.1f}%)\n"
+                else:
+                    text += f"`{title[:25]}` — no CS2Cap data\n"
+            except Exception:
+                text += f"`{title[:25]}` — error fetching\n"
+        await message.answer(text)
+        logger.debug("cmd_prices ok — checked %d items", len(idle[:10]))
+    except Exception as e:
+        logger.exception("cmd_prices failed: %s", e)
+        await message.answer("❌ Price check failed. Check logs.")
