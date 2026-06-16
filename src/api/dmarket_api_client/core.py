@@ -72,7 +72,7 @@ class DMarketAPIClient(  # type: ignore[misc]
         self._has_rust_signer = False
         self._rust_signer: Any = None
         try:
-            import rust_core
+            import dmarket_parser_rs as rust_core
 
             self._has_rust_signer = True
             self._rust_signer = rust_core.generate_signature_rs

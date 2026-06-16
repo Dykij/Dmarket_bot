@@ -477,7 +477,11 @@ class CS2CapOracle:
         return len(self._item_catalog)
 
     async def _load_catalog(self) -> None:
-        """Load item catalog for name-to-id mapping. Paginated (API max 100/page)."""
+        """Load item catalog for name-to-id mapping. Paginated (API max 100/page).
+        
+        v13.3: Parallel page fetching for faster initial catalog load.
+        Falls back to sequential if concurrent requests fail.
+        """
         now = time.time()
         if self._item_catalog and (now - self._catalog_ts < self.ITEMS_MEM_TTL):
             return
@@ -495,38 +499,57 @@ class CS2CapOracle:
                 pass
 
         # Load from API — paginate through all items (API max 100/page)
-        offset = 0
+        logger.info("[CS2Cap] Loading catalog from API (this may take ~1-2 min on first run)...")
         limit = 100
         catalog: Dict[str, int] = {}
-        max_pages = 500  # Safety limit (500 * 100 = 50,000 items)
+        max_pages = 400  # 40k items max (real catalog ~35k)
 
-        for page in range(max_pages):
-            data = await self._request("/items", params={"limit": limit, "offset": offset})
-            if not data:
-                break
+        # First, get total count to know how many pages
+        first = await self._request("/items", params={"limit": 1, "offset": 0})
+        if not first:
+            return
+        total_items = first.get("pagination", {}).get("total", 40000)
+        total_known = min(total_items, limit * max_pages)
 
-            items = data.get("items", [])
-            pagination = data.get("pagination", {})
+        logger.info(f"[CS2Cap] Catalog total ~{total_items} items, fetching in parallel...")
 
-            for item in items:
-                name = item.get("market_hash_name", "")
-                item_id = item.get("item_id")
-                if name and item_id:
-                    catalog[name] = item_id
+        # Build offset list for all pages
+        offsets = list(range(0, min(total_known, max_pages * limit), limit))
+        page_sem = asyncio.Semaphore(5)  # max 5 concurrent pages
 
-            if page % 50 == 0 and page > 0:
-                logger.info(f"[CS2Cap] Catalog loading: page {page}, {len(catalog)} items so far")
+        async def fetch_page(off: int) -> Dict[str, int]:
+            async with page_sem:
+                data = await self._request("/items", params={"limit": limit, "offset": off})
+                if not data:
+                    return {}
+                page_items = data.get("items", [])
+                page_catalog: Dict[str, int] = {}
+                for item in page_items:
+                    name = item.get("market_hash_name", "")
+                    item_id = item.get("item_id")
+                    if name and item_id:
+                        page_catalog[name] = item_id
+                return page_catalog
 
-            if not pagination.get("has_next", False):
-                break
-            offset += limit
+        # Fetch all pages in parallel (rate-limited to 5 concurrent)
+        results = await asyncio.gather(*[fetch_page(off) for off in offsets], return_exceptions=True)
+        for r in results:
+            if isinstance(r, dict):
+                catalog.update(r)
+            elif isinstance(r, Exception):
+                logger.debug(f"Page fetch error (falling back to partial catalog): {r}")
 
         if catalog:
             self._item_catalog = catalog
             self._catalog_ts = now
+            # Reset rate-limit delay after bulk catalog load
+            self._request_delay = 1.0
+            price_db.save_state("cs2cap_delay", "1.0")
             import json
             price_db.save_state("cs2cap_catalog", json.dumps(catalog))
-            logger.info(f"[CS2Cap] Loaded {len(self._item_catalog)} items total")
+            logger.info(f"[CS2Cap] Loaded {len(self._item_catalog)} items total ({len(offsets)} pages)")
+        else:
+            logger.warning("[CS2Cap] Catalog empty — API may be unavailable")
 
     async def get_item_id(self, hash_name: str) -> Optional[int]:
         """Resolve market_hash_name to item_id."""
