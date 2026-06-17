@@ -19,10 +19,9 @@ from ..keyboards import BTN_PANIC, BTN_START, BTN_STOP, BTN_TEST
 from . import control, lifecycle, test, utils, views
 from .control import _cancel_all_offers, cmd_panic, cmd_start_bot, cmd_stop_bot
 from .lifecycle import cmd_help, cmd_settings, cmd_start
-from .test import TestItemFSM, _do_test, cmd_cancel, cmd_test, cmd_test_receive
+from .test import TestItemFSM, _do_test, cmd_cancel, cmd_test, cmd_test_btn, cmd_test_receive
 from .utils import cmd_clock, cmd_refresh
 from .views import (
-    _fetch_balance_data,
     cmd_analyze,
     cmd_balance,
     cmd_daily,
@@ -34,8 +33,6 @@ from .views import (
     cmd_status,
 )
 
-# Combined router — order matters for filters, but aiogram routes by handler
-# type not by order, so it's fine to combine all sub-routers into one.
 router = Router(name="telegram-control-commands")
 router.include_router(lifecycle.router)
 router.include_router(control.router)
@@ -44,41 +41,13 @@ router.include_router(test.router)
 router.include_router(utils.router)
 
 __all__ = [
-    # Master router
     "router",
-    # Buttons
-    "BTN_PANIC",
-    "BTN_START",
-    "BTN_STOP",
-    "BTN_TEST",
-    # FSM
+    "BTN_PANIC", "BTN_START", "BTN_STOP", "BTN_TEST",
     "TestItemFSM",
-    # Lifecycle
-    "cmd_start",
-    "cmd_help",
-    "cmd_settings",
-    # Control
-    "cmd_start_bot",
-    "cmd_stop_bot",
-    "cmd_panic",
-    "_cancel_all_offers",
-    # Views
-    "cmd_balance",
-    "cmd_status",
-    "cmd_inventory",
-    "cmd_profits",
-    "cmd_portfolio",
-    "cmd_daily",
-    "cmd_analyze",
-    "cmd_sell_top",
-    "cmd_prices",
-    "_fetch_balance_data",
-    # Test
-    "cmd_test",
-    "cmd_test_receive",
-    "cmd_cancel",
-    "_do_test",
-    # Utils
-    "cmd_clock",
-    "cmd_refresh",
+    "cmd_start", "cmd_help", "cmd_settings",
+    "cmd_start_bot", "cmd_stop_bot", "cmd_panic", "_cancel_all_offers",
+    "cmd_balance", "cmd_status", "cmd_inventory", "cmd_profits",
+    "cmd_portfolio", "cmd_daily", "cmd_analyze", "cmd_sell_top", "cmd_prices",
+    "cmd_test", "cmd_test_btn", "cmd_test_receive", "cmd_cancel", "_do_test",
+    "cmd_clock", "cmd_refresh",
 ]

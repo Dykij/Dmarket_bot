@@ -482,3 +482,25 @@ class _InventoryMixin:
             }
             for r in rows
         ]
+
+    def get_virtual_inventory_locked_value(self) -> float:
+        """v14.4: Total USD value of idle-but-trade-locked items."""
+        now = time.time()
+        row = self.state_conn.execute(
+            "SELECT COALESCE(SUM(buy_price), 0) as total "
+            "FROM virtual_inventory "
+            "WHERE status = 'idle' AND unlock_at > ?",
+            (now,),
+        ).fetchone()
+        return float(row["total"] or 0)
+
+    def get_virtual_inventory_weekly_sales(self) -> float:
+        """v14.4: Total USD sales in the last 7 days."""
+        cutoff = time.time() - 7 * 24 * 3600
+        row = self.state_conn.execute(
+            "SELECT COALESCE(SUM(sell_price - fee_paid), 0) as total "
+            "FROM virtual_inventory "
+            "WHERE status = 'sold' AND sold_at > ?",
+            (cutoff,),
+        ).fetchone()
+        return float(row["total"] or 0)

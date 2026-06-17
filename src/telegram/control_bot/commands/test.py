@@ -41,9 +41,8 @@ class TestItemFSM(StatesGroup):
 # Test item (with FSM)
 # ============================================================
 @router.message(Command("test"))
-@router.message(F.text == BTN_TEST)
 @safe_call
-async def cmd_test(message, state_fsm: FSMContext):
+async def cmd_test(message, state_fsm: FSMContext | None = None):
     """If called with /test <item>, run it; otherwise enter FSM to ask for name."""
     if message.text and message.text.startswith("/test"):
         args = message.text.split(maxsplit=1)
@@ -54,7 +53,8 @@ async def cmd_test(message, state_fsm: FSMContext):
                 "Example: `/test AK-47 | Redline (Field-Tested)`\n\n"
                 "Or just send me the item name:"
             )
-            await state_fsm.set_state(TestItemFSM.waiting_for_item)
+            if state_fsm:
+                await state_fsm.set_state(TestItemFSM.waiting_for_item)
             return
         item_name = args[1].strip()
     else:
@@ -64,10 +64,22 @@ async def cmd_test(message, state_fsm: FSMContext):
             "Send me the item name to test, e.g.:\n"
             "`AK-47 | Redline (Field-Tested)`"
         )
-        await state_fsm.set_state(TestItemFSM.waiting_for_item)
+        if state_fsm:
+            await state_fsm.set_state(TestItemFSM.waiting_for_item)
         return
 
     await _do_test(message, item_name)
+
+@router.message(F.text == BTN_TEST)
+@safe_call
+async def cmd_test_btn(message, state_fsm: FSMContext):
+    """Button handler — enter FSM immediately."""
+    await message.answer(
+        "🧪 *Test Arbitrage*\n\n"
+        "Send me the item name to test, e.g.:\n"
+        "`AK-47 | Redline (Field-Tested)`"
+    )
+    await state_fsm.set_state(TestItemFSM.waiting_for_item)
 
 
 @router.message(TestItemFSM.waiting_for_item)

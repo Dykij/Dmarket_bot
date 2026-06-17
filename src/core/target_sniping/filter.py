@@ -14,10 +14,23 @@ from typing import Any, Dict, List, Optional, Tuple
 from src.api.cs2cap_oracle import RateLimitException
 from src.config import Config
 from src.core.sandbox_scenarios import scenario_engine
+from src.core.target_sniping.ranking import rank_candidates_by_spread
+from src.core.target_sniping.validations import (
+    check_adverse_selection,
+    check_bait_detection,
+    check_cvd_vpin,
+    check_obi,
+    check_roll_spread,
+    check_vol_regime,
+    check_volume_profile_poc,
+    check_vwap_filter,
+    compute_microstructure_scores,
+    evaluate_cross_market_arb,
+    evaluate_fee_slippage_tod,
+)
 from src.db.price_history import price_db
 from src.risk.price_validator import (
     PriceValidationError,
-    validate_arbitrage_profit,
     validate_volatility,
 )
 
@@ -51,57 +64,7 @@ class _FilterMixin:
         agg_prices: Dict[str, Dict[str, Any]],
         max_price_usd: Optional[float] = None,
     ) -> List[Tuple[str, float]]:
-        """
-        v12.7: Rank items by volume-weighted spread score (P2-3).
-
-        Formula: score = spread_usd * sqrt(ask_count + bid_count)
-        This prioritizes items with both good spread AND reasonable volume,
-        avoiding low-liquidity items that are hard to sell.
-
-        Returns: [(title, score), ...] sorted best-score first.
-        Items with no agg_prices entry or zero bid/ask are filtered out.
-
-        max_price_usd: optional cap to exclude items too expensive for our
-        balance (avoids wasting CS2Cap quota on $1000 Karambits when balance
-        is $43.91).
-        """
-        import math
-
-        ranked: List[Tuple[str, float]] = []
-        for it in items:
-            title = it.get("title", "")
-            if not title:
-                continue
-            # Exclude items too expensive for our budget (avoid wasting
-            # CS2Cap quota on items we can't actually buy)
-            if max_price_usd is not None:
-                base_price_cents = int(it.get("price", {}).get("USD", 0))
-                base_price = base_price_cents / 100.0
-                if base_price > max_price_usd:
-                    continue
-            agg = agg_prices.get(title, {})
-            best_bid = agg.get("best_bid", 0.0) or 0.0
-            best_ask = agg.get("best_ask", 0.0) or 0.0
-            ask_count = agg.get("ask_count", 0) or 0
-            bid_count = agg.get("bid_count", 0) or 0
-            if best_bid <= 0 or best_ask <= 0:
-                continue
-            # Apply the same minimum-spread gate the per-item filter uses
-            if best_bid <= best_ask * (1 + Config.INTRA_MIN_SPREAD_PCT / 100.0):
-                continue
-            # v12.7: Volume-weighted spread score
-            # spread * sqrt(volume) — rewards both spread width and liquidity
-            spread = best_bid - best_ask
-            volume = ask_count + bid_count
-            if spread > 0 and volume > 0:
-                score = spread * math.sqrt(volume)
-                ranked.append((title, score))
-            elif spread > 0:
-                # No volume data — use spread only (fallback)
-                ranked.append((title, spread))
-        # Sort by score descending — best opportunities first
-        ranked.sort(key=lambda x: x[1], reverse=True)
-        return ranked
+        return rank_candidates_by_spread(items, agg_prices, max_price_usd)
 
     async def _evaluate_candidate(
         self,
@@ -116,6 +79,8 @@ class _FilterMixin:
         cs_snapshots: Optional[Dict[str, Any]] = None,
         cs_bids: Optional[Dict[str, Any]] = None,
         saturation_counts: Optional[Dict[str, int]] = None,
+        effective_balance: Optional[float] = None,
+        dynamic_max_price: Optional[float] = None,
     ) -> Optional[Dict[str, Any]]:
         """
         Evaluate a single market item and return a buy payload, or None.
@@ -149,41 +114,46 @@ class _FilterMixin:
             return None
 
         # --- v14.0 Bait/Spoof Detection ---
-        # Detects listings whose price has changed multiple times in the
-        # last 5 minutes — likely a bait listing (seller re-posts at a
-        # different price as soon as someone tries to buy).
-        if Config.BAIT_DETECTION_ENABLED:
-            bait_prices = price_db.get_recent_prices(title, days=0.0035)
-            if bait_prices and len(bait_prices) > 1:
-                changes = 0
-                prev_p = None
-                for p, _ in bait_prices:
-                    if prev_p is not None and abs(p - prev_p) > 0.01:
-                        changes += 1
-                    prev_p = p
-                if changes > Config.BAIT_MAX_PRICE_CHANGES:
-                    return None
+        bait_result = check_bait_detection(title, base_price)
+        if not bait_result["pass"]:
+            return None
 
         if base_price > self.buy_budget or base_price > current_balance:
             return None
 
-        # v12.4 P0-C: Hard cap on instant-buy price (balance protection).
-        # 7-day trade-lock means each snipe freezes the spend for a week.
-        # With balance <$100, instant-buy only items < MAX_SNIPING_PRICE_USD
-        # to ensure continued turnover after the lock expires.
-        # Items > cap are left for the buy-order (target) path, which does
-        # not freeze cash until the order fills.
-        if base_price > Config.MAX_SNIPING_PRICE_USD:
+        # v14.4: Dynamic snipe price cap (Half Kelly based on effective balance)
+        # Balances $43 → max $5.00 floor. $500 → max $50. $2000 → max $200.
+        _dyn_max = dynamic_max_price or Config.MAX_SNIPING_PRICE_USD
+        if base_price > _dyn_max:
             if os.getenv("DRY_RUN", "true").lower() == "true":
                 price_db.log_decision(
                     title,
                     "skip",
-                    "Above instant-buy cap",
-                    f"${base_price:.2f} > ${Config.MAX_SNIPING_PRICE_USD:.2f}",
+                    "Above balance-aware cap",
+                    f"${base_price:.2f} > ${_dyn_max:.2f} "
+                    f"(eff_balance={effective_balance or current_balance:.2f})",
                 )
             return None
 
-        max_risk_price = current_balance * (Config.MAX_POSITION_RISK_PCT / 100.0)
+        # v14.4: Fractional Kelly position sizing
+        # Kelly formula: f* = win_rate - (1 - win_rate) / win_loss_ratio
+        # Half Kelly = 0.5 * f* (reduced drawdown, same growth direction)
+        kelly_risk_pct = Config.MAX_POSITION_RISK_PCT
+        if Config.KELLY_ENABLED and hasattr(self, "risk"):
+            try:
+                risk_state = self.risk.get_state()
+                wr = getattr(risk_state, "win_rate", 0.55) or 0.55
+                wlr = getattr(risk_state, "win_loss_ratio", 1.5) or 1.5
+                win_rate = max(0.30, min(0.80, wr))
+                win_loss_ratio = max(1.0, wlr)
+                kelly_f = win_rate - (1.0 - win_rate) / win_loss_ratio
+                kelly_risk_pct = max(
+                    Config.KELLY_FLOOR_PCT,
+                    kelly_f * 100.0 * Config.KELLY_FRACTION,
+                )
+            except Exception:
+                pass
+        max_risk_price = (effective_balance or current_balance) * (kelly_risk_pct / 100.0)
         if base_price > max_risk_price:
             return None
 
@@ -216,19 +186,29 @@ class _FilterMixin:
         bid_count = agg.get("bid_count", 0)
 
         # --- v14.0 OBI (Order Book Imbalance) ---
-        # Quantifies buy-vs-sell pressure from aggregated order book depth.
-        # Positive skew = buyers dominate → price likely rises → prioritize.
-        # Negative skew = sellers dominate → price likely falls → skip.
-        obi_signal = 0.0
-        if Config.OBI_ENABLED and ask_count > 0 and bid_count > 0:
-            safe_bid = best_bid or 0.01
-            safe_ask = best_ask or 0.01
-            bid_volume = safe_bid * bid_count
-            ask_volume = safe_ask * ask_count
-            obi_ratio = bid_volume / ask_volume if ask_volume > 0 else 1.0
-            if obi_ratio < Config.OBI_MIN_RATIO:
+        obi_result = check_obi(ask_count, bid_count, best_ask, best_bid)
+        if not obi_result["pass"]:
+            return None
+        obi_signal = obi_result["signal"]
+
+        # --- v14.3 Queue Imbalance (large-tick asset signal) ---
+        if Config.QUEUE_IMBALANCE_ENABLED and ask_count > 0:
+            from src.analysis.microstructure import queue_imbalance
+            qi = queue_imbalance(bid_count, ask_count)
+            if qi is not None and qi < Config.QI_SELL_THRESHOLD:
                 return None
-            obi_signal = obi_ratio
+
+        # --- v14.3 Multi-Level OBI (depth-weighted from DOM cache) ---
+        multi_obi = 0.0
+        if Config.MULTI_LEVEL_OBI_ENABLED and ask_count > 0:
+            from src.analysis.microstructure import multi_level_obi
+            dom_listings = getattr(self, '_dom_cache', {}).get(title, [])
+            multi_obi = multi_level_obi(
+                best_bid, best_ask, bid_count, ask_count,
+                listings=dom_listings, levels=Config.MULTI_LEVEL_OBI_DEPTH,
+            )
+            if multi_obi < -0.3:
+                return None
 
         # --- v14.0 OFI (Order Flow Imbalance) ---
         # Compares current bid/ask counts with previous cycle snapshot.
@@ -245,45 +225,9 @@ class _FilterMixin:
                     return None
 
         # --- Strategy C: cross-market arb (CS2Cap provider bids) ---
-        # Run BEFORE liquidity/wash-trading checks: a strong cross-market
-        # signal (provider bid >> DMarket ask) is sufficient evidence of
-        # mispricing even for items with no DMarket sales history.
-        cross_market_provider = None
-        cross_market_bid = 0.0
-        if Config.CROSS_MARKET_ENABLED and cs_bids:
-            bid_snap = cs_bids.get(title)
-            if bid_snap is not None and getattr(bid_snap, "has_data", False):
-                # Find provider with highest bid (best cross-market target)
-                provider_bids = getattr(bid_snap, "provider_bids", {}) or {}
-                if provider_bids:
-                    cross_market_provider, cross_market_bid = max(
-                        provider_bids.items(), key=lambda kv: kv[1]
-                    )
-                    # Cross-market must beat: DMarket ask * (1 + min_spread)
-                    cm_threshold = best_ask * (1 + Config.INTRA_MIN_SPREAD_PCT / 100.0)
-                    if best_ask > 0 and cross_market_bid > cm_threshold:
-                        # Cross-market viable! Override intra-spread requirements.
-                        logger.info(
-                            f"Cross-market arb HIT: {title} "
-                            f"DM_ask=${best_ask:.2f} < "
-                            f"{cross_market_provider}_bid=${cross_market_bid:.2f} "
-                            f"(+{((cross_market_bid/best_ask)-1)*100:.1f}%)"
-                        )
-                    else:
-                        if best_ask > 0:
-                            logger.debug(
-                                f"Cross-market miss: {title} "
-                                f"DM_ask=${best_ask:.2f} >= "
-                                f"{cross_market_provider}_bid=${cross_market_bid:.2f} "
-                                f"(threshold=${cm_threshold:.2f})"
-                            )
-                        cross_market_provider = None
-                        cross_market_bid = 0.0
-            elif cs_bids:
-                logger.debug(
-                    f"Cross-market: {title} not in cs_bids "
-                    f"(has_data={getattr(bid_snap, 'has_data', 'N/A')})"
-                )
+        cross_market = evaluate_cross_market_arb(title, best_ask, cs_bids)
+        cross_market_provider = cross_market["provider"]
+        cross_market_bid = cross_market["bid"]
 
         if not self.liquidity.can_spend(base_price, game_id, current_balance):
             return None
@@ -335,48 +279,44 @@ class _FilterMixin:
             except PriceValidationError:
                 return None
 
-        # --- Strategy C: cross-market arb (CS2Cap provider bids) ---
-        # (Now runs BEFORE liquidity/wash-trading checks — see above.)
-
         if best_ask <= 0 or best_bid <= 0:
             return None
         if ask_count < 1 or bid_count < 1:
             return None  # No real demand
 
         # --- v14.1 VWAP undervaluation check ---
-        # v14.2: Uses accumulated trade_history (growing window)
-        # instead of ephemeral _sales_cache (fixed 7d/30-sale window).
-        vwap_signal_val = 0.0
-        if Config.VWAP_FILTER_ENABLED:
-            item_sales = price_db.get_trade_history(title, days=30, limit=200)
-            if not item_sales:
-                item_sales = (self._sales_cache or {}).get(title, [])
-            if item_sales:
-                from src.analysis.microstructure import compute_vwap, vwap_signal
-                vwap_signal_val_raw = vwap_signal(
-                    best_ask, item_sales, Config.VWAP_DISCOUNT_THRESHOLD
-                )
-                if vwap_signal_val_raw is None and best_ask > 0:
-                    vwap, _, _ = compute_vwap(item_sales)
-                    if vwap > 0 and best_ask > vwap:
-                        return None
-                elif vwap_signal_val_raw is not None:
-                    vwap_signal_val = vwap_signal_val_raw
+        vwap_result = check_vwap_filter(title, best_ask, getattr(self, '_sales_cache', None))
+        if not vwap_result["pass"]:
+            return None
+        vwap_signal_val = vwap_result["signal"]
 
         # --- v14.1 CVD / VPIN signals ---
-        # v14.2: Uses accumulated trade_history for growing data windows.
-        cvd_val = 0.0
-        vpin_val = 0.0
-        trade_records = price_db.get_trade_history(title, days=30, limit=200)
-        if not trade_records:
-            trade_records = (self._sales_cache or {}).get(title, [])
-        if trade_records and len(trade_records) >= 3:
-            from src.analysis.microstructure import compute_cvd, compute_vpin, cvd_divergence
-            cvd_val = compute_cvd(trade_records)
-            if Config.VPIN_ENABLED:
-                vpin_val = compute_vpin(trade_records, Config.VPIN_BUCKETS) or 0.0
-                if vpin_val > Config.VPIN_THRESHOLD:
-                    return None
+        cvd_vpin_result = check_cvd_vpin(title, getattr(self, '_sales_cache', None))
+        if not cvd_vpin_result["pass"]:
+            return None
+        cvd_val = cvd_vpin_result["cvd"]
+        vpin_val = cvd_vpin_result["vpin"]
+        trade_records = cvd_vpin_result["trade_records"]
+
+        # --- v14.3 Adverse Selection (Kyle λ + Amihud) ---
+        adverse_result = check_adverse_selection(title, trade_records)
+        if not adverse_result["pass"]:
+            return None
+        adverse_pass = True
+
+        # --- v14.3 Realized Volatility Regime ---
+        vol_result = check_vol_regime(title, trade_records)
+        if not vol_result["pass"]:
+            return None
+        vol_regime = vol_result["regime"]
+
+        # --- v14.3 Roll's Model (effective spread check) ---
+        roll_result = check_roll_spread(title, trade_records, best_ask)
+        if not roll_result["pass"]:
+            return None
+
+        # --- v14.3 Volume Profile / POC (price magnet) ---
+        poc_price = check_volume_profile_poc(title, trade_records)
 
         # Spread check: best_bid > best_ask * (1 + threshold)
         # Skip if NO cross-market arb available either
@@ -511,56 +451,19 @@ class _FilterMixin:
             # Use the lower cached rate (it might differ slightly from dynamic)
             fee_rate = min(fee_rate, cached_low_fee)
 
-        try:
-            # Include withdrawal fee in total cost (v13.0)
-            total_fee = fee_rate + Config.WITHDRAWAL_FEE_RATE
-            # v13.0: Fee-aware minimum spread gate — skip items where
-            # gross spread can't cover the fees even in best case.
-            spread_ratio = (best_bid - best_ask) / best_ask if best_ask > 0 else 0
-            min_spread_for_fee = total_fee * 2.0 + 0.03
-            if spread_ratio < min_spread_for_fee:
-                if is_sandbox:
-                    price_db.log_decision(title, "skip", "Spread too thin for fee",
-                                          f"spread={spread_ratio:.1%} need>{min_spread_for_fee:.1%} fee={total_fee:.1%}")
-                return None
-
-            # v14.1 Slippage gate — add expected market impact to fee model
-            effective_margin = current_margin
-            if Config.SLIPPAGE_GATE_ENABLED:
-                from src.analysis.microstructure import estimate_slippage
-                daily_vol = (ask_count + bid_count) * 10  # rough estimate from agg_prices
-                expected_slippage = estimate_slippage(
-                    buy_price=base_price,
-                    order_qty=1,
-                    daily_volume=max(daily_vol, 1),
-                    best_ask=best_ask,
-                    best_bid=best_bid,
-                    temp_impact_bps=Config.SLIPPAGE_TEMP_IMPACT_BPS,
-                    perm_impact_bps=Config.SLIPPAGE_PERM_IMPACT_BPS,
-                )
-                effective_margin += expected_slippage * 100.0  # convert to percentage
-
-            # v14.1 Time-of-day adjustment — lower barriers at night
-            if Config.TOD_ENABLED:
-                from src.analysis.microstructure import tod_multiplier
-                tod_m = tod_multiplier(
-                    Config.TOD_NIGHT_START_UTC,
-                    Config.TOD_NIGHT_END_UTC,
-                    Config.TOD_NIGHT_MULTIPLIER,
-                    Config.TOD_DAY_MULTIPLIER,
-                )
-                effective_margin *= tod_m
-
-            validate_arbitrage_profit(
-                buy_price=base_price,
-                expected_sell_price=list_price,
-                fee_markup=total_fee,
-                min_profit_margin=effective_margin,
-                lock_days=7,  # v13.1: TP funds hold prevents capital reuse for up to 7 days
-            )
-        except PriceValidationError as e:
-            if is_sandbox:
-                price_db.log_decision(title, "skip", "Low profit", str(e))
+        fee_result = evaluate_fee_slippage_tod(
+            title=title,
+            base_price=base_price,
+            best_ask=best_ask,
+            best_bid=best_bid,
+            ask_count=ask_count,
+            bid_count=bid_count,
+            fee_rate=fee_rate,
+            current_margin=current_margin,
+            list_price=list_price,
+            is_sandbox=is_sandbox,
+        )
+        if not fee_result["pass"]:
             return None
 
         # v12.7: Inventory saturation check (P2-4).
@@ -590,10 +493,48 @@ class _FilterMixin:
                 )
             return None
 
+        # v14.4: Lock-aware inventory cap — prevent over-concentration during trade-lock
+        # At $43 with $5 items: max ~6 simultaneous holdings (80% liquid fraction)
+        if Config.LOCK_AWARE_CAP_ENABLED:
+            _eff_bal = effective_balance or current_balance
+            total_locked = price_db.get_virtual_inventory_locked_value()
+            liquid_remaining = _eff_bal * Config.LOCK_AWARE_LIQUID_FRACTION
+            if total_locked + base_price > liquid_remaining:
+                if is_sandbox:
+                    price_db.record_missed_opportunity(
+                        title, base_price, list_price,
+                        f"Lock-Aware Cap (locked=${total_locked:.2f} + "
+                        f"${base_price:.2f} > ${liquid_remaining:.2f} liquid)"
+                    )
+                else:
+                    logger.debug(
+                        f"[LOCK-CAP] {title}: ${total_locked:.2f} locked + "
+                        f"${base_price:.2f} exceeds ${liquid_remaining:.2f} liquid buffer. Skipping."
+                    )
+                return None
+
         if is_sandbox and base_price > current_balance:
             price_db.record_missed_opportunity(
                 title, base_price, list_price, "Insufficient Balance"
             )
+
+        # --- v14.3 Composite Score ---
+        micro = compute_microstructure_scores(
+            title=title,
+            best_ask=best_ask,
+            best_bid=best_bid,
+            ask_count=ask_count,
+            bid_count=bid_count,
+            trade_records=trade_records,
+            vwap_signal_val=vwap_signal_val,
+            cvd_val=cvd_val,
+            vpin_val=vpin_val,
+            adverse_pass=adverse_pass,
+            vol_regime=vol_regime,
+            prev_agg_prices=getattr(self, '_prev_agg_prices', None),
+        )
+        composite_score = micro["composite_score"]
+        composite_components = micro["components"]
 
         # --- Decide: instant buy vs target ---
         # For intra-spread strategy, we typically instant-buy

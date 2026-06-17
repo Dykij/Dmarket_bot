@@ -6,6 +6,7 @@ Composes:
     _ResaleMixin     (auto_resale, reprice_unsold_offers)
     _InventoryMixin  (sync_inventory_statuses, skip_if_locked)
     _SandboxMixin    (DRY_RUN helpers: competition, latency, errors)
+    _ScannerMixin    (parallel listing fetcher, float/phase scan)
     _FilterMixin     (per-item candidate evaluation)
     _ExecutionMixin  (instant-buy execution)
 
@@ -18,15 +19,11 @@ Provides the public entry points:
 from __future__ import annotations
 
 import asyncio
-import gc
 import logging
 import os
-import time
-from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from src.api.dmarket_api_client import DMarketAPIClient
-from src.api.cs2cap_cache import CS2CapCache
 from src.api.oracle_factory import OracleFactory
 from src.analytics.rare_valuation import RareValuationEngine
 from src.analytics.stickers_evaluator import StickerEvaluator
@@ -38,21 +35,26 @@ from src.core.target_sniping.inventory import _InventoryMixin
 from src.core.target_sniping.pricing import _PricingMixin
 from src.core.target_sniping.resale import _ResaleMixin
 from src.core.target_sniping.sandbox import _SandboxMixin
+from src.core.target_sniping.scanner import _ScannerMixin
+from src.core.target_sniping.scheduler import _SchedulerMixin
+from src.core.target_sniping.telemetry import _TelemetryMixin
 from src.db.price_history import price_db
 from src.risk.fatal_errors import classify
 from src.risk.error_reporter import ErrorReporter
 from src.risk.liquidity_manager import LiquidityManager
 from src.telegram.notifier import notifier
-from src.core.daily_briefing import DailyBriefingScheduler
 
 logger = logging.getLogger("SnipingBot")
 
 
 class SnipingLoop(  # type: ignore[misc]
+    _SchedulerMixin,
+    _TelemetryMixin,
     _PricingMixin,
     _ResaleMixin,
     _InventoryMixin,
     _SandboxMixin,
+    _ScannerMixin,
     _FilterMixin,
     _ExecutionMixin,
 ):
@@ -123,156 +125,6 @@ class SnipingLoop(  # type: ignore[misc]
         self._last_quota_warn: float = 0.0
         self._last_milestone: float = 0.0
 
-    async def _fetch_cheapest_listings(
-        self, game_id: str, titles: List[str]
-    ) -> List[Dict[str, Any]]:
-        """
-        v12.3: For each top-traded title, fetch the N cheapest DMarket
-        listings and return a list of buy candidates (one per title: the
-        cheapest listing available).
-
-        This replaces the v12.0 page-of-100-listings scan, which was
-        dominated by overpriced listings (a single page contains random
-        listings, not necessarily the cheapest). With the agg-prices-first
-        approach, we know which items are interesting (high market
-        activity, wide bid-ask spread) and then find the actual cheapest
-        listing for each.
-
-        Returns: list of listing dicts (same shape as
-        get_market_items_v2["objects"]), ready for the existing per-item
-        filter.
-        """
-        if not titles:
-            return []
-
-        # Parallel fetch: DMarket market-items endpoint has 600 RPM, so
-        # 20 titles in parallel is safe.
-        async def _fetch_one(title: str) -> List[Dict[str, Any]]:
-            try:
-                resp = await self.client.get_market_items_v2(
-                    game_id,
-                    limit=Config.LISTINGS_FETCH_LIMIT,
-                    title=title,
-                )
-                return resp.get("objects", [])
-            except Exception as e:
-                logger.debug(f"Listing fetch failed for {title!r}: {e}")
-                return []
-
-        results = await asyncio.gather(*[_fetch_one(t) for t in titles])
-
-        # Pick the cheapest listing per title. If multiple titles return
-        # the same listing object (rare), dedupe.
-        cheapest: List[Dict[str, Any]] = []
-        seen_ids = set()
-        for title, listings in zip(titles, results):
-            if not listings:
-                continue
-            sorted_by_price = sorted(
-                listings,
-                key=lambda x: int(x.get("price", {}).get("USD", 0)),
-            )
-            for cand in sorted_by_price:
-                item_id = cand.get("itemId", "")
-                if not item_id or item_id in seen_ids:
-                    continue
-                seen_ids.add(item_id)
-                cheapest.append(cand)
-                break  # only need the cheapest per title
-
-            # v14.0: Save all listings for DOM gap analysis in resale
-            if not hasattr(self, '_dom_cache'):
-                self._dom_cache: Dict[str, List[Dict[str, Any]]] = {}
-            self._dom_cache[title] = sorted_by_price
-
-        logger.info(
-            f"[v12.3 SCAN] top_titles={len(titles)} "
-            f"fetched_listings={sum(len(r) for r in results)} "
-            f"buy_candidates={len(cheapest)}"
-        )
-        return cheapest
-
-    async def _fetch_float_filtered_listings(
-        self, game_id: str, top_titles: List[str]
-    ) -> List[Dict[str, Any]]:
-        """
-        v14.0: Secondary scan for low-float and rare-phase items that may
-        be listed at general market price without float/phase premium.
-
-        Uses DMarket treeFilters to find:
-        - FN-0..FN-3 and MW-0..MW-1 (low-float, near-perfect wear)
-        - Doppler Ruby/Sapphire/Black Pearl/Emerald phases
-
-        Only runs on items matching high-value patterns (knives, Doppler, etc.)
-        to avoid wasting API calls on $0.10 consumer-grade skins.
-        """
-        FLOAT_FILTER = "floatPart=FN-0,FN-1,FN-2,FN-3,MW-0,MW-1"
-        PHASE_FILTERS = {
-            "ruby": "phase=ruby",
-            "sapphire": "phase=sapphire",
-            "black-pearl": "phase=black-pearl",
-            "emerald": "phase=emerald",
-        }
-        HIGH_VALUE_PATTERNS = [
-            "Doppler", "Gamma Doppler", "Fade", "Marble Fade",
-            "Crimson Web", "Case Hardened", "Emerald",
-            "Lore", "Howl", "Medusa", "Hydroponic",
-            "Poseidon", "Fire Serpent", "Dragon Lore",
-        ]
-
-        def _is_high_value(title: str) -> bool:
-            if "★" in title:
-                return True
-            return any(p in title for p in HIGH_VALUE_PATTERNS)
-
-        candidates: List[Dict[str, Any]] = []
-        calls_made = 0
-        max_calls = Config.FLOAT_PHASE_MAX_EXTRA_CALLS
-
-        for title in top_titles:
-            if calls_made >= max_calls:
-                break
-            if not _is_high_value(title):
-                continue
-
-            # 1. Low-float filter
-            try:
-                resp = await self.client.get_market_items_v2(
-                    game_id, title=title, limit=10, treeFilters=FLOAT_FILTER,
-                )
-                calls_made += 1
-                for obj in resp.get("objects", []):
-                    if obj.get("itemId"):
-                        candidates.append(obj)
-            except Exception as e:
-                logger.debug(f"[v14.0 FLOAT] Low-float fetch failed for {title!r}: {e}")
-                continue
-
-            if calls_made >= max_calls:
-                break
-
-            # 2. Doppler rare-phase filters
-            if "Doppler" in title or "Gamma Doppler" in title:
-                for phase_name, phase_filter in PHASE_FILTERS.items():
-                    if calls_made >= max_calls:
-                        break
-                    try:
-                        resp = await self.client.get_market_items_v2(
-                            game_id, title=title, limit=5, treeFilters=phase_filter,
-                        )
-                        calls_made += 1
-                        for obj in resp.get("objects", []):
-                            if obj.get("itemId"):
-                                candidates.append(obj)
-                    except Exception as e:
-                        logger.debug(
-                            f"[v14.0 FLOAT] Phase filter ({phase_name}) "
-                            f"failed for {title!r}: {e}"
-                        )
-                        continue
-
-        return candidates
-
     @property
     def min_profit_margin(self) -> float:
         """Dynamic margin: base * event multiplier + volatility regime adjustment (v12.7)."""
@@ -288,218 +140,6 @@ class SnipingLoop(  # type: ignore[misc]
         # Ensure minimum floor
         adjusted = max(1.0, adjusted)
         return (adjusted / 100.0) * event_shield.get_margin_multiplier()
-
-    async def start(self) -> None:
-        self.running = True
-        logger.info(
-            f"Starting DMarket Intra-Spread Loop v12.6 | Targets: {self.target_games}"
-        )
-
-        gc.disable()
-
-        # v12.4: launch in-memory CS2Cap cache (background refresh task)
-        await self._init_cs2cap_cache()
-
-        # v12.5: Launch daily briefing scheduler (background task).
-        # Sends a startup briefing after 30s, then one every UTC midnight.
-        try:
-            self.briefing_scheduler = DailyBriefingScheduler(
-                risk=self.risk,
-                get_balance=lambda: self.client.get_real_balance(),
-            )
-            self.briefing_scheduler.start()
-        except Exception as e:
-            logger.warning(f"[v12.5] Could not start daily briefing scheduler: {e}", exc_info=True)
-
-        # v12.5: Leak detection — sample RSS on every loop. If we grow
-        # past 500 MB or >2x the boot-time RSS, the loop is leaking and
-        # we should log a warning so the watchdog can decide to restart.
-        import psutil
-        process = psutil.Process()
-        boot_rss_mb = process.memory_info().rss / (1024 * 1024)
-        cycle_count = 0
-
-        # v12.5: Watchdog heartbeat. The external watchdog.sh script
-        # checks this file; if it stops updating for >5 min, the
-        # process is considered hung and gets restarted.
-        heartbeat_path = Path(
-            os.getenv("WATCHDOG_HEARTBEAT_FILE", "data/watchdog_heartbeat.txt")
-        )
-        try:
-            heartbeat_path.parent.mkdir(parents=True, exist_ok=True)
-        except Exception:
-            pass
-
-        def _write_heartbeat() -> None:
-            try:
-                heartbeat_path.write_text(str(int(time.time())), encoding="utf-8")
-            except Exception:
-                pass
-
-        _write_heartbeat()  # initial
-
-        try:
-            while self.running:
-                for game_id in self.target_games:
-                    await self.run_cycle(game_id)
-
-                cycle_count += 1
-                _write_heartbeat()  # per-cycle heartbeat
-
-                # Periodic GC + memory sample (every 10 cycles = ~5 min)
-                if cycle_count % 10 == 0:
-                    gc.collect()
-                    rss_mb = process.memory_info().rss / (1024 * 1024)
-                    if rss_mb > 500 or rss_mb > 2 * boot_rss_mb:
-                        logger.warning(
-                            f"[v12.5 LEAK?] RSS={rss_mb:.1f}MB "
-                            f"(boot={boot_rss_mb:.1f}MB). Will restart on next "
-                            f"out-of-band error."
-                        )
-                        # Aggressive GC + drop references
-                        gc.collect()
-                        gc.collect()
-
-                # v12.5: Self-reflection (every SELF_REFLECTION_INTERVAL cycles).
-                # Applies parameter adjustments to the current run.
-                try:
-                    reflection = await self.self_reflection.maybe_run_reflection(cycle_count)
-                    if reflection is not None and reflection.confidence > 0.3:
-                        # Apply adjusted spread/risk/vol params to Config
-                        # so subsequent candidates see them
-                        from src.config import Config
-                        new_spread = self.self_reflection.get_adjusted_spread(
-                            Config.MIN_SPREAD_PCT, reflection
-                        )
-                        if new_spread != Config.MIN_SPREAD_PCT:
-                            logger.info(
-                                f"[v12.5] Self-reflection: MIN_SPREAD_PCT "
-                                f"{Config.MIN_SPREAD_PCT:.2f}% → {new_spread:.2f}%"
-                            )
-                            Config.MIN_SPREAD_PCT = new_spread
-                except Exception as e:
-                    logger.debug(f"[v12.5] self_reflection error: {e}")
-
-                # v12.5: Quota-aware adaptive scan interval.
-                from src.config import Config
-
-                delay = self._compute_scan_delay()
-                await asyncio.sleep(delay)
-        except asyncio.CancelledError:
-            logger.info("Sniping loop cancelled.")
-        except Exception as e:
-            # v12.6: bubble up fatal errors. The outer supervisor
-            # decides whether to retry (transient) or exit (fatal).
-            # run_cycle already classified and re-raised fatal ones,
-            # so anything landing here is either a transient from
-            # outside the cycle, or another fatal from setup. We
-            # re-raise and let the supervisor's classifier decide.
-            classification = classify(e)
-            if classification in ("FATAL", "UNKNOWN"):
-                report = ErrorReporter(e, context={
-                    "phase": "start",
-                    "cycle_count": cycle_count,
-                    "boot_rss_mb": f"{boot_rss_mb:.1f}",
-                    "current_rss_mb": f"{process.memory_info().rss / (1024*1024):.1f}",
-                })
-                logger.error(report.format_log())
-            else:
-                logger.warning(
-                    f"[v12.6] Transient start-level error "
-                    f"({classification}): {type(e).__name__}: {e}",
-                    exc_info=True,
-                )
-            raise
-        finally:
-            # v12.5: Stop daily briefing scheduler
-            if self.briefing_scheduler is not None:
-                try:
-                    await self.briefing_scheduler.stop()
-                except Exception as e:
-                    logger.debug(f"Briefing shutdown error: {e}")
-            if self.cs2cap_cache is not None:
-                await self.cs2cap_cache.stop()
-            await OracleFactory.close_all()
-            if self.client:
-                await self.client.close()
-
-    def _compute_scan_delay(self) -> float:
-        """
-        v12.5: Quota-aware adaptive scan interval.
-
-        Strategy:
-        - Base: Config.SCAN_INTERVAL (default 30s)
-        - If empty page: back off exponentially up to 5 min
-        - If CS2Cap quota >80% used: double the delay (slow & steady)
-        - If CS2Cap quota >95% used: triple the delay (preserve what's left)
-        - If CS2Cap cooldown active: wait out the cooldown
-        - If the cache is stale: don't add extra delay (we still have
-          the in-memory cache; the hot path doesn't need fresh data to
-          do the math).
-        """
-        from src.config import Config
-
-        delay = float(Config.SCAN_INTERVAL)
-
-        if self.empty_page_count > 0:
-            delay = min(delay * self.empty_page_count, 300.0)
-
-        quota_aware = os.getenv("SCAN_INTERVAL_QUOTA_AWARE", "true").lower() in (
-            "1", "true", "yes",
-        )
-        if quota_aware and self.cs2cap_cache is not None:
-            try:
-                stats = self.cs2cap_cache.stats()
-                monthly_limit = max(1, stats.get("monthly_limit", 50000))
-                used_pct = (stats.get("monthly_used", 0) * 100.0) / monthly_limit
-                cooldown = stats.get("cooldown_remaining_s") or 0.0
-                if cooldown > 0:
-                    delay = max(delay, cooldown + 5.0)
-                    logger.debug(
-                        f"[v12.5] CS2Cap cooldown {cooldown:.0f}s — sleeping that long"
-                    )
-                elif used_pct >= 95.0:
-                    delay = min(delay * 3.0, 300.0)
-                    if not hasattr(self, "_last_quota_warn") or (
-                        time.time() - self._last_quota_warn > 300
-                    ):
-                        self._last_quota_warn = time.time()
-                        logger.warning(
-                            f"[v12.5] CS2Cap quota at {used_pct:.1f}% — "
-                            f"scan interval tripled to {delay:.0f}s"
-                        )
-                elif used_pct >= 80.0:
-                    delay = min(delay * 2.0, 300.0)
-            except Exception as e:
-                logger.debug(f"[v12.5] quota-aware check failed: {e}")
-
-        delay = max(
-            float(os.getenv("SCAN_INTERVAL_MIN_SECONDS", "30")),
-            min(delay, float(os.getenv("SCAN_INTERVAL_MAX_SECONDS", "300"))),
-        )
-        return delay
-
-    async def _init_cs2cap_cache(self) -> None:
-        """
-        v12.4: initialise the in-memory CS2Cap cache.
-
-        The cache is fed by a background task (CS2CapCache.start) that
-        refreshes the top-100 most-traded titles every CS2CAP_CACHE_TTL_SECONDS.
-        The hot path (run_cycle) reads from the cache, so no per-cycle
-        CS2Cap HTTP calls are made.
-        """
-        oracle = OracleFactory.get_oracle(Config.GAME_ID)
-        if oracle is None:
-            logger.warning(
-                "[v12.4] No oracle available for CS2Cap cache; will fall back to per-cycle batch."
-            )
-            return
-        self.cs2cap_cache = CS2CapCache(
-            oracle=oracle,
-            dmarket_client=self.client,
-            game_id=Config.GAME_ID,
-        )
-        await self.cs2cap_cache.start()
 
     async def run_cycle(self, game_id: str) -> None:
         """
@@ -543,9 +183,44 @@ class SnipingLoop(  # type: ignore[misc]
 
             logger.info(f"Scanning {game_id} (Cursor: {current_cursor or 'START'})...")
             current_balance = await self.client.get_real_balance()
+            # v14.4: Reserve buffer — effective balance for trading
+            effective_balance = max(0.0, current_balance - Config.BALANCE_RESERVE_USD)
+            # v14.4: Dynamic max snipe price (Half Kelly: max(floor, eff_balance * fraction))
+            dynamic_max_price = max(
+                Config.MAX_SNIPING_PRICE_FLOOR,
+                effective_balance * Config.MAX_SNIPING_PRICE_BALANCE_FRACTION,
+            )
+            # Override with env if explicitly set (backward compat)
+            if os.getenv("MAX_SNIPING_PRICE_USD"):
+                dynamic_max_price = Config.MAX_SNIPING_PRICE_USD
+            dynamic_max_price = min(dynamic_max_price, effective_balance)
+            logger.debug(
+                f"[v14.4 BALANCE] raw=${current_balance:.2f} "
+                f"reserve=${Config.BALANCE_RESERVE_USD} "
+                f"effective=${effective_balance:.2f} "
+                f"max_item=${dynamic_max_price:.2f}"
+            )
             oracle = OracleFactory.get_oracle(game_id)
             if not oracle:
                 return
+
+            # v14.4: Capital velocity check — pause buying if capital locked in trades
+            if Config.CAPITAL_VELOCITY_ENABLED and effective_balance > 0:
+                try:
+                    weekly_sales = price_db.get_virtual_inventory_weekly_sales()
+                    avg_balance = price_db.get_state("avg_balance") or str(effective_balance)
+                    avg_balance_f = float(avg_balance)
+                    velocity = weekly_sales / max(avg_balance_f, 0.01)
+                    if velocity < Config.CAPITAL_VELOCITY_MIN:
+                        logger.info(
+                            f"[v14.4 VELOCITY] ${weekly_sales:.2f}/week sales "
+                            f"vs ${avg_balance_f:.2f} avg balance = {velocity:.2f}x "
+                            f"(min {Config.CAPITAL_VELOCITY_MIN}x). "
+                            f"Skipping buy cycle — capital locked in trade-hold."
+                        )
+                        return
+                except Exception:
+                    pass
 
             # --- Step 1: Scan market (v12.3: aggregated-prices-first) ---
             # v12.0 used `get_market_items_v2` (page of 100 listings, sorted
@@ -687,11 +362,9 @@ class SnipingLoop(  # type: ignore[misc]
             cache_used = False
             if self.cs2cap_cache is not None and not self.cs2cap_cache.is_stale():
                 cache_used = True
-                # Cap ranker at items we can actually afford to avoid wasting
-                # CS2Cap quota on $1000 Karambits we can't buy. We use
-                # min(balance, MAX_SNIPING_PRICE_USD) — the per-item 5% risk
-                # check happens later in _evaluate_candidate.
-                max_price_cap = min(current_balance, Config.MAX_SNIPING_PRICE_USD)
+                # v14.4: Dynamic price cap based on effective balance (Kelly-style)
+                # Balances under $50 → items ≤ $5. Balances $500+ → up to $50.
+                max_price_cap = min(effective_balance, dynamic_max_price)
                 ranked = self._rank_candidates_by_spread(
                     items, agg_prices, max_price_usd=max_price_cap
                 )
@@ -715,7 +388,7 @@ class SnipingLoop(  # type: ignore[misc]
                     )
             elif oracle is not None and Config.CS2CAP_SELECTIVE_MODE and items:
                 # Legacy path: cache not available (e.g. CS2Cap API key missing)
-                max_price_cap = min(current_balance, Config.MAX_SNIPING_PRICE_USD)
+                max_price_cap = min(effective_balance, dynamic_max_price)
                 ranked = self._rank_candidates_by_spread(
                     items, agg_prices, max_price_usd=max_price_cap
                 )
@@ -831,6 +504,8 @@ class SnipingLoop(  # type: ignore[misc]
                             cs_snapshots=cs_snapshots,
                             cs_bids=cs_bids,
                             saturation_counts=saturation_counts,
+                            effective_balance=effective_balance,
+                            dynamic_max_price=dynamic_max_price,
                         )
 
                 results = await asyncio.gather(
@@ -882,81 +557,9 @@ class SnipingLoop(  # type: ignore[misc]
                 f"TOTAL: ${equity['total']:.2f} (Items: {equity['count']})"
             )
 
-            # v12.7: Update HTTP health server metrics (no-op if disabled).
-            # All calls are O(1) in-memory writes; safe to do every cycle.
-            try:
-                from src.utils.health_server import health_state
-                risk_state = self.risk.get_state()
-                health_state.mark_cycle(
-                    equity_usd=equity["total"],
-                    peak_equity_usd=risk_state.peak_equity_usd,
-                    drawdown_pct=risk_state.current_drawdown_pct,
-                )
-                health_state.set_daily_stats(
-                    pnl_usd=-risk_state.daily_loss_usd,
-                    trade_count=risk_state.daily_trade_count,
-                )
-                health_state.set_halts(
-                    soft_halt=risk_state.soft_halt_active,
-                    daily_halt=risk_state.daily_halt_active,
-                )
-                if self.pump_detector is not None:
-                    pd_stats = self.pump_detector.stats()
-                    health_state.set_pump_stats(
-                        blacklist_size=pd_stats["active_blacklist_size"],
-                        total_detections=pd_stats["total_detections"],
-                    )
-                if self.cs2cap_cache is not None:
-                    cache_stats = self.cs2cap_cache.stats()
-                    used = cache_stats.get("monthly_used", 0)
-                    limit = cache_stats.get("monthly_limit", 50000)
-                    quota_pct = (used / limit * 100.0) if limit > 0 else None
-                    health_state.set_cs2cap_quota_pct(quota_pct)
-            except Exception as e:
-                # Never let health telemetry break the trading loop.
-                logger.debug(f"[health_state] update failed: {e}")
-
-            # v12.5: Telegram equity milestone (every $5 change, throttled
-            # to 1/min by the notifier). Don't spam every cycle.
-            if not hasattr(self, "_last_milestone") or (
-                abs(equity["total"] - self._last_milestone) >= 5.0
-            ):
-                self._last_milestone = equity["total"]
-                asyncio.create_task(
-                    notifier.equity_milestone(
-                        cash=equity["cash"],
-                        assets_value=equity["assets"],
-                        total=equity["total"],
-                        items_count=int(equity["count"]),
-                    )
-                )
-
-            # v12.9: Log sanitization — hash_name is omitted from INFO-level
-            # cycle logs to prevent trade-strategy leakage. Use DEBUG level
-            # for full item details (enabled via LOG_LEVEL=DEBUG).
-            logger.debug(
-                f"[v12.9 CYCLE] game={game_id} cycle={self.deep_scan_counter} "
-                f"candidates={len(candidates_to_eval)} buys={len(instant_buys)}"
-            )
-
-            # v12.4: Periodic diagnostic snapshot (every 10 cycles)
-            if self.deep_scan_counter % 10 == 0:
-                cache_stats = (
-                    self.cs2cap_cache.stats()
-                    if self.cs2cap_cache is not None
-                    else {"ask_count": 0, "bid_count": 0, "is_stale": True}
-                )
-                cb_stats = self.client.circuit_breaker_status()
-                logger.info(
-                    f"[v12.4 DIAG] CS2Cap cache: {cache_stats['ask_count']} asks, "
-                    f"{cache_stats['bid_count']} bids, "
-                    f"stale={cache_stats['is_stale']}, "
-                    f"age={cache_stats.get('age_seconds')}s, "
-                    f"refreshes={cache_stats['refresh_count']} | "
-                    f"CB: state={cb_stats['state']}, "
-                    f"opens={cb_stats['total_opens']}, "
-                    f"fails={cb_stats['consecutive_failures']}"
-                )
+            self._update_health_metrics(equity)
+            self._send_equity_milestone(equity)
+            self._log_cycle_diag(game_id, len(candidates_to_eval), len(instant_buys))
 
             if self.deep_scan_counter % 200 == 0:
                 price_db.cleanup_old_targets()

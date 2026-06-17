@@ -6,6 +6,75 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/v2.0.0.html).
 
 
+## [14.4.0] - 2026-06-17
+### 🐳 Docker + v14.4 Balance-Aware Trading + Full Restructuring
+
+#### Added — v14.4 Balance-Aware Trading (8 features)
+- **Dynamic Max Item Price**: `max($5.00 floor, balance × 10%)` adapts to account size.
+  At $43 → $5, at $500 → $50, at $2000 → $200.
+- **Reserve Buffer**: `BALANCE_RESERVE_USD=$10` unspendable safety margin.
+  `effective_balance = max(0, balance - reserve)`.
+- **Fractional Kelly Position Sizing**: Half Kelly (KELLY_FRACTION=0.50).
+  Reduces drawdown by ~50% while keeping 85% of growth rate.
+  Config: `KELLY_ENABLED`, `KELLY_FRACTION`, `KELLY_FLOOR_PCT`.
+- **Lock-Aware Inventory Cap**: `≤80% capital in trade-lock simultaneously`.
+  Formula: `max_items = (balance × liquid_fraction) / max_item_price`.
+  Config: `LOCK_AWARE_CAP_ENABLED`, `LOCK_AWARE_LIQUID_FRACTION`.
+- **Capital Velocity Constraint**: Minimum 0.5× weekly sell-through rate.
+  Pauses buying if locked items exceed velocity threshold.
+  Config: `CAPITAL_VELOCITY_ENABLED`, `CAPITAL_VELOCITY_MIN`.
+- **Drawdown-Aware Spending Freeze**: Stop buying at >15% drawdown from peak balance.
+  Only sells allowed until recovery. Config: `DRAWDOWN_FREEZE_ENABLED`,
+  `DRAWDOWN_FREEZE_THRESHOLD`.
+- **Balance-Tiered Pre-Filter**: `dynamic_max_price` in ranker skips items out of budget.
+- **Sandbox Affordable/Missed Report**: v14.4 balance-aware simulation output.
+
+#### Added — Docker Production Deployment
+- **Multi-stage Dockerfile**: Builder (Rust + Python deps) → Runtime (~250 MB).
+  Supports x86_64 + aarch64/ARM64 (Raspberry Pi 4/5, mini-PCs).
+  `tini` init, non-root user, health check via `/healthz`.
+- **docker-compose.yml**: Single-service + optional Telegram admin bot.
+  Volume mounts for `data/` (SQLite) and `logs/` (persistent).
+  Memory limits: 512M (main), 256M (telegram).
+- **.dockerignore**: +Rust target/ exclusion (saves 432 MB).
+
+#### Changed — Architecture Restructuring (9+ files split)
+- **`src/core/target_sniping/core.py`** (994→562 lines): extracted `_ScannerMixin`,
+  `_SchedulerMixin`, `_TelemetryMixin` into separate files.
+- **`src/api/cs2cap_oracle.py`** (959→subpackage): split into `models.py`,
+  `client.py`, `catalog.py`, `prices.py`, `utils.py` (max 373 lines).
+- **`src/analysis/microstructure.py`** (779→subpackage): split into `obi.py`,
+  `volume.py`, `volatility.py`, `signals.py` (max 319 lines).
+- **`src/core/target_sniping/resale.py`** (737→260+443+91): split into
+  `resale.py`, `resale_dry.py`, `resale_prod.py`.
+- **`src/core/target_sniping/filter.py`** (700→519): extracted `ranking.py`,
+  `validations.py`.
+- **Deprecated shims**: `backtester.py`, `price_analytics.py`,
+  `target_sniping.py` (legacy v10) kept as re-export stubs.
+
+#### Fixed — Telegram Control Bot (Total Refactoring)
+- Fixed `Config.ADMIN_ID` → `Config.ADMIN_IDS` in facade and all commands.
+- Fixed `CrossMarketOracle` dead import → `CS2CapOracle` in `views.py`.
+- Fixed `format_status()` MarkdownV2 entity parsing at offset 419.
+- Fixed `format_inventory_summary()` `sqlite3.Row.get()` → `_row_bool()` helper.
+- Fixed `cmd_sell_top`/`cb_sell_top` list-vs-int comparison.
+- Fixed `cb_analyze`/`cmd_analyze` missing `await` on async `analyze_recent_trades()`.
+- Added `BTN_TEST`, `BTN_PRICES`, `BTN_CLOCK`, `BTN_REFRESH` buttons (16 total, 8 rows).
+- Split `cmd_test` into `cmd_test` (command) + `cmd_test_btn` (button) to fix FSM injection.
+- Consolidated duplicate `_fetch_balance_data()` into `resilience.py`.
+
+#### Tests
+- **102 bottleneck tests** (`tests/test_bottlenecks.py`): microstructure validation,
+  quota tracking, DB stress, validator coverage.
+- **289 total tests** passing (unit + bottleneck + sandbox).
+- Sandbox updated to v14.4 with balance-aware Affordable/Missed report.
+
+#### Documentation
+- **README.md**: Updated to v14.4. Added Docker deployment section, Raspberry Pi /
+  mini-PC compatibility, balance-aware trading docs, new architecture diagrams,
+  full environment variable reference.
+
+
 ## [13.0.0] - 2026-06-17
 ### 🔓 Capital Velocity Unlocked — Instant Marketplace Resale
 

@@ -26,18 +26,22 @@ from ..formatters import (
 )
 from ..keyboards import (
     BTN_ANALYZE,
+    BTN_CLOCK,
     BTN_DAILY,
     BTN_PORTFOLIO,
+    BTN_PRICES,
+    BTN_REFRESH,
     BTN_SELL_TOP,
+    BTN_TEST,
+    get_inline_analyze_kb,
     get_inline_balance_kb,
     get_inline_daily_kb,
     get_inline_inventory_kb,
     get_inline_portfolio_kb,
     get_inline_profits_kb,
     get_inline_status_kb,
-    get_inline_analyze_kb,
 )
-from ..resilience import dmarket_client, retry_async, safe_call
+from ..resilience import dmarket_client, fetch_balance_data, retry_async, safe_call
 from ..state import state
 
 logger = logging.getLogger("TelegramControl.commands.views")
@@ -73,34 +77,12 @@ async def cmd_status(message):
     logger.info("cmd_status by user %s", message.from_user.id)
     st = await state.status()
     is_running = st["is_running"]
-    balance_data = await _fetch_balance_data()
+    balance_data = await fetch_balance_data()
     await message.answer(
         format_status(is_running, balance_data),
         reply_markup=get_inline_status_kb(is_running),
     )
     logger.debug("cmd_status ok — running=%s", is_running)
-
-
-async def _fetch_balance_data() -> Optional[dict]:
-    """Fetch balance + equity. Returns dict with all equity fields for formatters."""
-    try:
-        async with dmarket_client() as client:
-            balance = await retry_async(
-                lambda: client.get_real_balance(),
-                operation="status.balance",
-            )
-            equity = price_db.get_total_equity(balance)
-            frozen = equity.get("frozen", 0)
-            return {
-                "cash_str": f"${equity['cash']:.2f}",
-                "avail_str": f"${equity['available']:.2f}",
-                "frozen_str": f"${frozen:.2f}" if frozen > 0 else "",
-                "locked_str": f"${equity['assets']:.2f} ({equity['count']} items)",
-                "total_str": f"${equity['total']:.2f}",
-            }
-    except Exception as e:
-        logger.debug("_fetch_balance_data failed: %s", e)
-        return None
 
 
 @router.message(Command("inventory"))
@@ -180,7 +162,7 @@ async def cmd_analyze(message):
     logger.info("cmd_analyze by user %s", message.from_user.id)
     try:
         from src.analytics.self_reflection import self_reflection
-        report = self_reflection.analyze_recent_trades()
+        report = await self_reflection.analyze_recent_trades()
         if report:
             text = (
                 f"🧠 *Strategy Analysis*\n\n"
@@ -215,8 +197,9 @@ async def cmd_sell_top(message):
         async with dmarket_client() as client:
             pipeline = ResalePipeline(client)
             result = await pipeline.sell_inventory_items(max_items=5)
-            if result is not None and result > 0:
-                text = f"🔍 *Sell Complete*\n\nListed {result} item(s) for sale."
+            listed_count = len(result) if isinstance(result, list) else (result if isinstance(result, int) else 0)
+            if listed_count > 0:
+                text = f"🔍 *Sell Complete*\n\nListed {listed_count} item(s) for sale."
             else:
                 text = "🔍 *Sell* — No idle items to list or all are trade-locked."
             await message.answer(text)
@@ -230,11 +213,12 @@ async def cmd_sell_top(message):
 # Prices — CS2Cap price check for held items
 # ============================================================
 @router.message(Command("prices"))
+@router.message(F.text == BTN_PRICES)
 @safe_call
 async def cmd_prices(message):
     logger.info("cmd_prices by user %s", message.from_user.id)
     try:
-        from src.api.cs2cap_oracle import CrossMarketOracle
+        from src.api.cs2cap_oracle import CS2CapOracle
         from src.api.oracle_factory import OracleFactory
         idle = price_db.get_virtual_inventory(status="idle", only_unlocked=False)
         if not idle:

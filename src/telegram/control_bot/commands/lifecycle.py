@@ -27,12 +27,14 @@ router = Router(name="telegram-control-lifecycle")
 @safe_call
 async def cmd_start(message):
     mode = "🧪 SIMULATION (DRY_RUN)" if Config.DRY_RUN else "💸 LIVE TRADING"
+    from ..formatters import escape_md
     text = (
         f"🤖 *DMarket Sniper — Control Center*\n\n"
-        f"📌 *Mode:* {mode}\n"
-        f"🎯 *Strategy:* {Config.ACTIVE_STRATEGY}\n"
+        f"📌 *Mode:* {escape_md(mode)}\n"
+        f"🎯 *Strategy:* {escape_md(Config.ACTIVE_STRATEGY)}\n"
         f"💵 *Min Spread:* {Config.INTRA_MIN_SPREAD_PCT}%\n"
-        f"💼 *Max Position:* {Config.MAX_POSITION_RISK_PCT}% of balance\n\n"
+        f"💼 *Max Position:* {Config.MAX_POSITION_RISK_PCT}% of balance\n"
+        f"💰 *Reserve:* ${Config.BALANCE_RESERVE_USD:.0f}\n\n"
         f"Use the buttons below or type /help for all commands."
     )
     await message.answer(text, reply_markup=get_main_keyboard())

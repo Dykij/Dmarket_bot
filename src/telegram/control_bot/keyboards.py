@@ -35,6 +35,10 @@ BTN_DAILY = "📅 DAILY"
 BTN_ANALYZE = "🧠 ANALYZE"
 BTN_PANIC = "🔥 PANIC"
 BTN_SETTINGS = "⚙️ SETTINGS"
+BTN_PRICES = "📊 PRICES"
+BTN_TEST = "🧪 TEST"
+BTN_CLOCK = "🕐 CLOCK"
+BTN_REFRESH = "🔄 REFRESH"
 
 # ============================================================
 # Inline keyboard callback_data constants
@@ -58,13 +62,15 @@ CB_NOOP = "noop"
 def get_main_keyboard() -> ReplyKeyboardMarkup:
     """Main reply keyboard — always visible at the bottom of the chat.
 
-    Layout (6 rows, 2 cols):
+    Layout (8 rows, 2 cols):
       1. 🚀 START     │ 🛑 STOP
       2. 💰 BALANCE   │ 📊 STATUS
       3. 📦 INVENTORY │ 📈 PROFITS
       4. 💼 PORTFOLIO │ 🔍 SELL-TOP
       5. 📅 DAILY     │ 🧠 ANALYZE
-      6. 🔥 PANIC     │ ⚙️ SETTINGS
+      6. 📊 PRICES    │ 🧪 TEST
+      7. 🕐 CLOCK     │ 🔄 REFRESH
+      8. 🔥 PANIC     │ ⚙️ SETTINGS
     """
     kb = ReplyKeyboardMarkup(
         keyboard=[
@@ -73,12 +79,14 @@ def get_main_keyboard() -> ReplyKeyboardMarkup:
             [KeyboardButton(text=BTN_INVENTORY), KeyboardButton(text=BTN_PROFITS)],
             [KeyboardButton(text=BTN_PORTFOLIO), KeyboardButton(text=BTN_SELL_TOP)],
             [KeyboardButton(text=BTN_DAILY), KeyboardButton(text=BTN_ANALYZE)],
+            [KeyboardButton(text=BTN_PRICES), KeyboardButton(text=BTN_TEST)],
+            [KeyboardButton(text=BTN_CLOCK), KeyboardButton(text=BTN_REFRESH)],
             [KeyboardButton(text=BTN_PANIC), KeyboardButton(text=BTN_SETTINGS)],
         ],
         resize_keyboard=True,
         input_field_placeholder="Choose action or /help",
     )
-    logger.debug("Main keyboard created: 12 buttons, 6 rows")
+    logger.debug("Main keyboard created: 16 buttons, 8 rows")
     return kb
 
 

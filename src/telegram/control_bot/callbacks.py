@@ -41,7 +41,7 @@ from .keyboards import (
     get_inline_status_kb,
     get_inline_analyze_kb,
 )
-from .resilience import dmarket_client, retry_async, safe_call
+from .resilience import dmarket_client, fetch_balance_data, retry_async, safe_call
 from .state import state
 
 logger = logging.getLogger("TelegramControl.callbacks")
@@ -184,7 +184,7 @@ async def cb_analyze(callback: types.CallbackQuery):
     await callback.message.edit_text("🧠 Running analysis...")
     try:
         from src.analytics.self_reflection import self_reflection
-        report = self_reflection.analyze_recent_trades()
+        report = await self_reflection.analyze_recent_trades()
         if report:
             text = (
                 f"🧠 *Strategy Analysis*\n\n"
@@ -220,7 +220,8 @@ async def cb_sell_top(callback: types.CallbackQuery):
         async with dmarket_client() as client:
             pipeline = ResalePipeline(client)
             result = await pipeline.sell_inventory_items(max_items=5)
-            if result is not None and result > 0:
+            listed_count = len(result) if isinstance(result, list) else (result if isinstance(result, int) else 0)
+            if listed_count > 0:
                 text = f"🔍 *Sell Complete*\n\nListed {result} item(s) for sale."
             else:
                 text = "🔍 *Sell* — No idle items to list or all are trade-locked."
@@ -240,35 +241,13 @@ async def cb_refresh_status(callback: types.CallbackQuery):
     logger.info("cb_refresh_status triggered")
     st = await state.status()
     is_running = st["is_running"]
-    balance_data = await _fetch_balance_data()
+    balance_data = await fetch_balance_data()
     text = format_status(is_running, balance_data)
     await callback.message.edit_text(
         text, reply_markup=get_inline_status_kb(is_running)
     )
     logger.debug("cb_refresh_status ok — running=%s", is_running)
     await callback.answer()
-
-
-async def _fetch_balance_data() -> Optional[dict]:
-    """Fetch balance + equity. Returns dict with cash_str/avail_str/frozen_str/locked_str/total_str."""
-    try:
-        async with dmarket_client() as client:
-            balance = await retry_async(
-                lambda: client.get_real_balance(),
-                operation="cb.balance_data",
-            )
-            equity = price_db.get_total_equity(balance)
-            frozen = equity.get("frozen", 0)
-            return {
-                "cash_str": f"${equity['cash']:.2f}",
-                "avail_str": f"${equity['available']:.2f}",
-                "frozen_str": f"${frozen:.2f}" if frozen > 0 else "",
-                "locked_str": f"${equity['assets']:.2f} ({equity['count']} items)",
-                "total_str": f"${equity['total']:.2f}",
-            }
-    except Exception as e:
-        logger.debug("_fetch_balance_data failed: %s", e)
-        return None
 
 
 @router.callback_query(F.data == CB_NOOP)

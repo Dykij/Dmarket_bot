@@ -61,20 +61,26 @@ def format_status(
 
     return (
         f"📊 *Bot Status*\n\n"
-        f"*State:* {state_str}\n"
-        f"*Mode:* {mode}\n"
-        f"*Strategy:* {Config.ACTIVE_STRATEGY}\n"
-        f"*Version:* v{Config.BOT_VERSION}\n\n"
+        f"*State:* {escape_md(state_str)}\n"
+        f"*Mode:* {escape_md(mode)}\n"
+        f"*Strategy:* {escape_md(Config.ACTIVE_STRATEGY)}\n"
+        f"*Version:* {escape_md(Config.BOT_VERSION)}\n\n"
         f"💰 *Equity:*\n"
-        f"   Cash: {cash_str}\n"
-        f"   Available: {avail_str}{frozen_line}\n"
-        f"   Locked: {locked_str}\n"
-        f"   *Total:* {total_str}\n\n"
+        f"   Cash: {escape_md(cash_str)}\n"
+        f"   Available: {escape_md(avail_str)}{escape_md(frozen_line)}\n"
+        f"   Locked: {escape_md(locked_str)}\n"
+        f"   *Total:* {escape_md(total_str)}\n\n"
         f"⚙️ *Risk:*\n"
         f"   Min spread: {Config.INTRA_MIN_SPREAD_PCT}%\n"
         f"   Max position: {Config.MAX_POSITION_RISK_PCT}%\n"
         f"   Fee rate: {Config.FEE_RATE*100:.1f}%\n"
         f"   TP lock: {Config.TRADE_LOCK_HOURS}h\n\n"
+        f"💳 *v14.4 Balance-Aware:*\n"
+        f"   Reserve: ${Config.BALANCE_RESERVE_USD:.2f}\n"
+        f"   Kelly fraction: {Config.KELLY_FRACTION:.0%} Half Kelly\n"
+        f"   Dynamic max item: {Config.MAX_SNIPING_PRICE_FLOOR:.0f}—{Config.MAX_SNIPING_PRICE_BALANCE_FRACTION:.0%}×eff_balance\n"
+        f"   Lock-aware cap: {Config.LOCK_AWARE_LIQUID_FRACTION:.0%} liquid\n"
+        f"   Velocity min: {Config.CAPITAL_VELOCITY_MIN}x/wk\n\n"
         f"🕐 *Clock Sync:*\n"
         f"   Offset: {cs['offset_seconds']}s\n"
         f"   Synced: {cs['sync_count']}x | Healthy: {cs['is_healthy']}"
@@ -88,9 +94,16 @@ def format_inventory_summary(
     top_n: int = 5,
 ) -> str:
     """Format inventory text shown in /inventory and btn:inventory."""
+
+    def _row_bool(row, key: str) -> bool:
+        try:
+            return bool(row[key])
+        except (KeyError, IndexError, TypeError):
+            return False
+
     locked = [it for it in idle if it['unlock_at'] > time.time()]
     unlocked = [it for it in idle if it['unlock_at'] <= time.time()]
-    exclusive_count = sum(1 for it in idle if it.get("exclusive"))
+    exclusive_count = sum(1 for it in idle if _row_bool(it, "exclusive"))
 
     text = (
         f"📦 *Virtual Inventory*\n\n"
@@ -108,7 +121,7 @@ def format_inventory_summary(
         top = sorted(all_items, key=lambda x: -x['buy_price'])[:top_n]
         text += f"\n*Top {min(top_n, len(top))} items by value:*\n"
         for it in top:
-            exclusive_mark = " ⭐" if it.get("exclusive") else ""
+            exclusive_mark = " ⭐" if _row_bool(it, "exclusive") else ""
             status_emoji = "🔒" if it['unlock_at'] > time.time() else "🔓"
             text += f"  {status_emoji} `{it['hash_name'][:30]}` — ${it['buy_price']:.2f}{exclusive_mark}\n"
 
