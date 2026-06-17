@@ -93,8 +93,52 @@ Patch (0.0.X): Bug fixes, small tweaks
 
 Current: **v13.4**
 
+## Automated Changelog Generation (git-release pattern)
+
+Based on `git-release` skill (⭐4 on SkillsMP):
+
+### Detect bump type from commits since last tag
+
+```bash
+# What type of version bump?
+git log $(git describe --tags --abbrev=0 2>/dev/null || echo "HEAD~10")..HEAD --oneline | \
+  grep -c "^feat\|^fix\|BREAKING"
+```
+
+### Generate changelog entry
+
+```bash
+source .venv/bin/activate
+python -c "
+import subprocess, re
+# Get commits since last tag
+tag = subprocess.run(['git', 'describe', '--tags', '--abbrev=0'], 
+                      capture_output=True, text=True).stdout.strip()
+log = subprocess.run(['git', 'log', f'{tag}..HEAD', '--oneline', '--no-merges'],
+                      capture_output=True, text=True).stdout
+
+# Categorize
+feats = [l for l in log.split('\n') if l.startswith('feat')]
+fixes = [l for l in log.split('\n') if l.startswith('fix')]
+perfs = [l for l in log.split('\n') if l.startswith('perf')]
+docs = [l for l in log.split('\n') if l.startswith('docs')]
+
+has_breaking = any('BREAKING' in l for l in log.split('\n'))
+
+if has_breaking: bump = 'major'
+elif feats: bump = 'minor'
+elif fixes or perfs: bump = 'patch'
+else: bump = 'none'
+
+print(f'Recommended bump: {bump}')
+print(f'Feat: {len(feats)}, Fix: {len(fixes)}, Perf: {len(perfs)}, Docs: {len(docs)}')
+"
+```
+
 ## Related Files
 
 - `CHANGELOG.md` — Full version history
 - `MEMORY.md` — Strategic context
 - `README.md` — Project overview
+- Source skill: https://github.com/mgiovani/cc-arsenal/tree/main/skills/git-release
+- SkillsMP: https://skillsmp.com
