@@ -52,12 +52,54 @@ class Config:
     MIN_PRICE_USD = 0.50      # Ignore cheap trash (<$0.50)
     MAX_PRICE_USD = float(os.getenv("MAX_PRICE_USD", "20.00"))  # Ignore high-risk items (>$X)
 
-    # --- v12.4 Balance Protection (Hard Cap) ---
-    # Instant-buy path is restricted to items < $5 to protect against
-    # 7-day trade-lock freeze. With balance $43, 3-4 concurrent holds
-    # ($15-20) would freeze 35-50% of the bank. Cap at $5 keeps at least
-    # $30 liquid for continued turnover.
-    MAX_SNIPING_PRICE_USD = float(os.getenv("MAX_SNIPING_PRICE_USD", "5.00"))
+    # --- v14.4 Dynamic Balance-Aware Position Sizing ---
+    # RESEARCH BASIS: Half Kelly Criterion, Risk of Ruin (Wikipedia/Investopedia)
+    # The bot adapts its maximum item price, inventory cap, and position size
+    # dynamically based on actual DMarket balance. This prevents:
+    #   - Overspending when balance is low ($43 → items ≤ $5)
+    #   - Underspending when balance grows ($500 → items ≤ $50)
+    #   - Capital freeze from 7-day trade-lock (lock-aware inventory cap)
+    #   - Risk of ruin from over-concentration (Fractional Kelly sizing)
+
+    # --- Reserve Buffer ---
+    # Unspendable safety margin. Effective trading balance = max(0, balance - reserve)
+    # Protects against: withdrawal requests, fee spikes, pending order holds.
+    BALANCE_RESERVE_USD = float(os.getenv("BALANCE_RESERVE_USD", "10.00"))
+
+    # --- Dynamic Max Snipe Price ---
+    # Formula: max(floor, balance * fraction)
+    # At $43 → $5 floor. At $500 → $50. At $2000 → $200.
+    # This is the Half Kelly approach: use a fraction of Kelly (50%) for safety.
+    MAX_SNIPING_PRICE_FLOOR = float(os.getenv("MAX_SNIPING_PRICE_FLOOR", "5.00"))
+    MAX_SNIPING_PRICE_BALANCE_FRACTION = float(os.getenv("MAX_SNIPING_PRICE_BALANCE_FRACTION", "0.10"))
+    MAX_SNIPING_PRICE_USD = float(os.getenv("MAX_SNIPING_PRICE_USD", "5.00"))  # kept as env-overridable ceiling
+
+    # --- Fractional Kelly Position Sizing ---
+    # Kelly formula: f* = win_rate - (1 - win_rate) / win_loss_ratio
+    # Half Kelly = 0.5 * f* (reduces drawdown by ~50%, growth rate by ~15%)
+    KELLY_ENABLED = os.getenv("KELLY_ENABLED", "true").lower() == "true"
+    KELLY_FRACTION = float(os.getenv("KELLY_FRACTION", "0.50"))  # 0.50 = Half Kelly
+    KELLY_FLOOR_PCT = float(os.getenv("KELLY_FLOOR_PCT", "3.0"))  # minimum position risk % even if Kelly says less
+
+    # --- Lock-Aware Inventory Cap ---
+    # Dynamic ceiling: max items = (balance * liquid_fraction) / max_item_price
+    # At $43 with $5 items: cap ≈ 6. At $500 with $50 items: cap ≈ 8.
+    # Prevents all capital from being frozen in trade-lock simultaneously.
+    LOCK_AWARE_CAP_ENABLED = os.getenv("LOCK_AWARE_CAP_ENABLED", "true").lower() == "true"
+    LOCK_AWARE_LIQUID_FRACTION = float(os.getenv("LOCK_AWARE_LIQUID_FRACTION", "0.80"))
+
+    # --- Capital Velocity Constraint ---
+    # Ensures bot doesn't freeze all capital in trade-lock. Minimum
+    # weekly sell-through rate relative to average balance.
+    # velocity < 1.0 → bot pauses buying until locked items sell.
+    CAPITAL_VELOCITY_ENABLED = os.getenv("CAPITAL_VELOCITY_ENABLED", "true").lower() == "true"
+    CAPITAL_VELOCITY_MIN = float(os.getenv("CAPITAL_VELOCITY_MIN", "0.50"))
+
+    # --- Drawdown-Aware Spending Freeze ---
+    # If current balance drops below peak * (1 - threshold), stop buying.
+    # Only sells allowed until balance recovers above the threshold.
+    DRAWDOWN_FREEZE_ENABLED = os.getenv("DRAWDOWN_FREEZE_ENABLED", "true").lower() == "true"
+    DRAWDOWN_FREEZE_THRESHOLD = float(os.getenv("DRAWDOWN_FREEZE_THRESHOLD", "0.15"))
 
     MAX_OPEN_TARGETS = 50     # Limit active buy orders (Safety cap)
 
@@ -196,6 +238,19 @@ class Config:
 
     # --- v14.1 Order Book Microstructure (DMarket-native) ---
 
+    # Stoikov Micro-Price (OBI-adjusted fair price — better than simple volume-weighted)
+    STOIKOV_MICRO_PRICE_ENABLED = os.getenv("STOIKOV_MICRO_PRICE_ENABLED", "true").lower() == "true"
+    STOIKOV_CALIBRATION = float(os.getenv("STOIKOV_CALIBRATION", "0.35"))  # calibration constant for mid adjustment
+
+    # Multi-Level OBI (depth-weighted from listing DOM data)
+    MULTI_LEVEL_OBI_ENABLED = os.getenv("MULTI_LEVEL_OBI_ENABLED", "true").lower() == "true"
+    MULTI_LEVEL_OBI_DEPTH = int(os.getenv("MULTI_LEVEL_OBI_DEPTH", "5"))  # number of depth levels
+
+    # Queue Imbalance (bid/ask queue ratio for large-tick assets)
+    QUEUE_IMBALANCE_ENABLED = os.getenv("QUEUE_IMBALANCE_ENABLED", "true").lower() == "true"
+    QI_BUY_THRESHOLD = float(os.getenv("QI_BUY_THRESHOLD", "1.5"))   # qi > N → strong buy signal
+    QI_SELL_THRESHOLD = float(os.getenv("QI_SELL_THRESHOLD", "0.5"))  # qi < N → skip
+
     # A-S (Avellaneda-Stoikov) Market Making — inventory-aware listing price
     AS_ENABLED = os.getenv("AS_ENABLED", "true").lower() == "true"
     AS_RISK_AVERSION = float(os.getenv("AS_RISK_AVERSION", "0.3"))   # gamma — higher = more aggressive inventory management
@@ -204,6 +259,7 @@ class Config:
     # VWAP (Volume-Weighted Average Price) buy filter
     VWAP_FILTER_ENABLED = os.getenv("VWAP_FILTER_ENABLED", "true").lower() == "true"
     VWAP_DISCOUNT_THRESHOLD = float(os.getenv("VWAP_DISCOUNT_THRESHOLD", "0.90"))  # buy if best_ask < VWAP * 0.90 (10% undervaluation)
+    VWAP_BANDS_ENABLED = os.getenv("VWAP_BANDS_ENABLED", "false").lower() == "true"  # VWAP bands for listing price
 
     # Slippage gate (Almgren-Chriss simplified)
     SLIPPAGE_GATE_ENABLED = os.getenv("SLIPPAGE_GATE_ENABLED", "true").lower() == "true"
@@ -219,12 +275,35 @@ class Config:
     VPIN_BUCKETS = int(os.getenv("VPIN_BUCKETS", "8"))          # number of volume buckets
     VPIN_THRESHOLD = float(os.getenv("VPIN_THRESHOLD", "0.8"))  # VPIN > this → toxic flow
 
+    # Adverse Selection (Kyle λ / Amihud illiquidity)
+    ADVERSER_SELECTION_ENABLED = os.getenv("ADVERSER_SELECTION_ENABLED", "true").lower() == "true"
+    KYLE_LAMBDA_MAX = float(os.getenv("KYLE_LAMBDA_MAX", "0.05"))
+    AMIHUD_ILLIQUIDITY_MAX = float(os.getenv("AMIHUD_ILLIQUIDITY_MAX", "0.10"))
+
+    # Realized Volatility Regime (Parkinson + standard deviation from trade_history)
+    VOL_REGIME_ENABLED = os.getenv("VOL_REGIME_ENABLED", "true").lower() == "true"
+    VOL_REGIME_HIGH_THRESHOLD = float(os.getenv("VOL_REGIME_HIGH_THRESHOLD", "0.50"))  # annualized vol > this → "high"
+
+    # Roll's Model (effective spread from price autocorrelation)
+    ROLL_MODEL_ENABLED = os.getenv("ROLL_MODEL_ENABLED", "true").lower() == "true"
+
+    # Volume Profile / POC (Point of Control — price magnet)
+    VOLUME_PROFILE_ENABLED = os.getenv("VOLUME_PROFILE_ENABLED", "true").lower() == "true"
+    VP_NUM_BUCKETS = int(os.getenv("VP_NUM_BUCKETS", "10"))
+
+    # Smart Cancel/Reprice (order-book-aware listing management)
+    SMART_REPRICE_ENABLED = os.getenv("SMART_REPRICE_ENABLED", "true").lower() == "true"
+
+    # Composite Score (weighted signal ranking — replaces simple spread sorting)
+    COMPOSITE_SCORE_ENABLED = os.getenv("COMPOSITE_SCORE_ENABLED", "true").lower() == "true"
+
     # Time-of-day seasonality
     TOD_ENABLED = os.getenv("TOD_ENABLED", "true").lower() == "true"
     TOD_NIGHT_MULTIPLIER = float(os.getenv("TOD_NIGHT_MULTIPLIER", "0.85"))  # lower spread threshold at night (buy more aggressively)
     TOD_DAY_MULTIPLIER = float(os.getenv("TOD_DAY_MULTIPLIER", "1.0"))       # normal during day
     TOD_NIGHT_START_UTC = int(os.getenv("TOD_NIGHT_START_UTC", "4"))         # 04:00 UTC (~00:00 EST)
     TOD_NIGHT_END_UTC = int(os.getenv("TOD_NIGHT_END_UTC", "10"))            # 10:00 UTC (~06:00 EST)
+    TOD_WEEKEND_ENABLED = os.getenv("TOD_WEEKEND_ENABLED", "true").lower() == "true"  # day-of-week adjustment
 
     # --- Sharpe-Optimized Objective ---
     # Instead of flat threshold, use risk-adjusted objective

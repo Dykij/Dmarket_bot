@@ -89,6 +89,10 @@ dist/
 *.egg-info/
 *.egg
 
+# Rust build artifacts (compiled in-container, not from host)
+src/rust_core/target/
+rust_core_src/target/
+
 # Logs and data (copied at runtime via volumes)
 logs/
 data/

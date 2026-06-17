@@ -20,7 +20,7 @@ import pytest
 @pytest.fixture
 def mock_price_db():
     """Bypass SQLite writes (record_price / save_state) in tests."""
-    with patch("src.api.cs2cap_oracle.price_db") as db:
+    with patch("src.api.cs2cap_oracle.client.price_db") as db:
         db.get_state = MagicMock(return_value=None)
         db.save_state = MagicMock()
         db.get_latest_price = MagicMock(return_value=None)

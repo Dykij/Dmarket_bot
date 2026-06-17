@@ -132,3 +132,30 @@ async def dmarket_client():
             await client.close()
         except Exception:
             logger.exception("Error closing DMarket client")
+
+
+async def fetch_balance_data() -> dict | None:
+    """Fetch balance + equity from DMarket API. Shared by callbacks and views.
+
+    Returns dict with cash_str/avail_str/frozen_str/locked_str/total_str,
+    or None on failure. Used by /status, STATUS button, and cb_refresh_status.
+    """
+    from src.db.price_history import price_db
+    try:
+        async with dmarket_client() as client:
+            balance = await retry_async(
+                lambda: client.get_real_balance(),
+                operation="fetch_balance_data",
+            )
+            equity = price_db.get_total_equity(balance)
+            frozen = equity.get("frozen", 0)
+            return {
+                "cash_str": f"${equity['cash']:.2f}",
+                "avail_str": f"${equity['available']:.2f}",
+                "frozen_str": f"${frozen:.2f}" if frozen > 0 else "",
+                "locked_str": f"${equity['assets']:.2f} ({equity['count']} items)",
+                "total_str": f"${equity['total']:.2f}",
+            }
+    except Exception as e:
+        logger.debug("fetch_balance_data failed: %s", e)
+        return None

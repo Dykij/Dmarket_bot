@@ -20,17 +20,20 @@ from .state import (
 )
 
 # --- Resilience utilities ---
-from .resilience import dmarket_client, retry_async, safe_call
+from .resilience import dmarket_client, fetch_balance_data, retry_async, safe_call
 
 # --- Keyboards (with BTN_* and CB_* constants) ---
 from .keyboards import (
     BTN_ANALYZE,
     BTN_BALANCE,
+    BTN_CLOCK,
     BTN_DAILY,
     BTN_INVENTORY,
     BTN_PANIC,
     BTN_PORTFOLIO,
+    BTN_PRICES,
     BTN_PROFITS,
+    BTN_REFRESH,
     BTN_SELL_TOP,
     BTN_SETTINGS,
     BTN_START,
@@ -94,6 +97,7 @@ from .commands import (
     cmd_status,
     cmd_stop_bot,
     cmd_test,
+    cmd_test_btn,
     cmd_test_receive,
 )
 
@@ -136,10 +140,11 @@ __all__ = [
     "BotState", "_ADMIN_IDS", "_TOKEN", "_load_config", "is_admin", "state",
     # Resilience
     "dmarket_client", "retry_async", "safe_call",
-    # Keyboards (constants)
-    "BTN_ANALYZE", "BTN_BALANCE", "BTN_DAILY",
-    "BTN_INVENTORY", "BTN_PANIC", "BTN_PORTFOLIO", "BTN_PROFITS",
-    "BTN_SELL_TOP", "BTN_SETTINGS", "BTN_START", "BTN_STATUS", "BTN_STOP", "BTN_TEST",
+    # Keyboards (constants — 16 reply buttons + 11 inline callbacks)
+    "BTN_ANALYZE", "BTN_BALANCE", "BTN_CLOCK", "BTN_DAILY",
+    "BTN_INVENTORY", "BTN_PANIC", "BTN_PORTFOLIO", "BTN_PRICES",
+    "BTN_PROFITS", "BTN_REFRESH", "BTN_SELL_TOP", "BTN_SETTINGS",
+    "BTN_START", "BTN_STATUS", "BTN_STOP", "BTN_TEST",
     "CB_ANALYZE", "CB_BALANCE", "CB_DAILY", "CB_INVENTORY",
     "CB_NOOP", "CB_PORTFOLIO", "CB_PROFITS", "CB_REFRESH_STATUS",
     "CB_SELL_TOP", "CB_START", "CB_STOP",

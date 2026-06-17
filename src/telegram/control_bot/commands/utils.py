@@ -9,11 +9,12 @@ from __future__ import annotations
 
 import logging
 
-from aiogram import Router
+from aiogram import F, Router
 from aiogram.filters import Command
 
 from src.utils.clock_sync import clock_sync
 
+from ..keyboards import BTN_CLOCK, BTN_REFRESH
 from ..resilience import safe_call
 
 logger = logging.getLogger("TelegramControl.commands.utils")
@@ -24,6 +25,7 @@ router = Router(name="telegram-control-utils")
 # Misc: clock, refresh
 # ============================================================
 @router.message(Command("clock"))
+@router.message(F.text == BTN_CLOCK)
 @safe_call
 async def cmd_clock(message):
     cs = clock_sync.get_status()
@@ -41,6 +43,7 @@ async def cmd_clock(message):
 
 
 @router.message(Command("refresh"))
+@router.message(F.text == BTN_REFRESH)
 @safe_call
 async def cmd_refresh(message):
     await message.answer("🔄 Refreshing clocksync + caches...")

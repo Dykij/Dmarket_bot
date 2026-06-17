@@ -55,6 +55,12 @@ class RiskState:
     last_reset_date: str = ""
     blocked_count_today: int = 0
     passed_count_today: int = 0
+    # v14.4: Kelly Criterion inputs
+    win_rate: float = 0.55
+    win_loss_ratio: float = 1.5
+    total_wins: int = 0
+    total_losses: int = 0
+    drawdown_freeze_active: bool = False
 
 
 @dataclass
@@ -115,6 +121,13 @@ class RiskManager:
         self._current_equity: float = initial_equity_usd
         self._current_drawdown_pct: float = 0.0
         self._max_drawdown_seen: float = 0.0
+
+        # v14.4: Kelly Criterion tracking (total wins/losses for win rate)
+        self._total_wins: int = 0
+        self._total_losses: int = 0
+        self._avg_win_usd: float = 0.0
+        self._avg_loss_usd: float = 0.0
+        self._drawdown_freeze_active: bool = False
 
         # Trade history for the day (for /status)
         self._trades_today: List[Dict[str, Any]] = []
@@ -217,7 +230,26 @@ class RiskManager:
                 triggered_halt=True,
             )
 
-        # 5. Soft halt (only on BUYs; we don't block sells)
+        # v14.4: Drawdown-aware spending freeze (configurable threshold)
+        # If drawdown > DRAWDOWN_FREEZE_THRESHOLD, only allow sells
+        # Research basis: Risk of Ruin — small accounts must freeze buys on large drawdowns
+        from src.config import Config
+        if Config.DRAWDOWN_FREEZE_ENABLED and self._current_drawdown_pct >= Config.DRAWDOWN_FREEZE_THRESHOLD * 100:
+            if proposed_size_usd > 0:  # buy-side check
+                self._drawdown_freeze_active = True
+                self._daily_blocked += 1
+                return PreTradeCheck(
+                    allowed=False,
+                    reason=(
+                        f"Drawdown freeze: {self._current_drawdown_pct:.1f}% >= "
+                        f"{Config.DRAWDOWN_FREEZE_THRESHOLD * 100:.1f}%. Sells only until recovery."
+                    ),
+                    triggered_halt=True,
+                )
+        else:
+            self._drawdown_freeze_active = False
+
+        # 5b. Soft halt (only on BUYs; we don't block sells)
         if self._current_drawdown_pct >= self.soft_halt_drawdown_pct:
             self._soft_halt_active = True
             # Reduce size by 50% in soft-halt
@@ -269,10 +301,23 @@ class RiskManager:
             "pnl_usd": pnl_usd,
             "ts": time.time(),
         })
+        # v14.4: Track wins/losses for Kelly Criterion
+        if trade_type == "sell" and pnl_usd != 0:
+            n = self._total_wins + self._total_losses + 1
+            if pnl_usd > 0:
+                self._total_wins += 1
+                self._avg_win_usd = (self._avg_win_usd * (self._total_wins - 1) + pnl_usd) / self._total_wins
+            else:
+                self._total_losses += 1
+                abs_loss = abs(pnl_usd)
+                self._avg_loss_usd = (self._avg_loss_usd * (self._total_losses - 1) + abs_loss) / self._total_losses
 
     def get_state(self) -> RiskState:
         """Snapshot of current risk state (for /status, daily briefing, logs)."""
         self._maybe_roll_day()
+        total = self._total_wins + self._total_losses
+        wr = (self._total_wins / total) if total > 0 else 0.55
+        wlr = (self._avg_win_usd / self._avg_loss_usd) if self._avg_loss_usd > 0 else 1.5
         return RiskState(
             daily_loss_usd=min(0.0, self._daily_realized_pnl),  # negative or zero
             daily_loss_limit_usd=self.daily_loss_limit_usd,
@@ -287,6 +332,11 @@ class RiskManager:
             last_reset_date=self._today,
             blocked_count_today=self._daily_blocked,
             passed_count_today=self._daily_passed,
+            win_rate=round(wr, 3),
+            win_loss_ratio=round(wlr, 3),
+            total_wins=self._total_wins,
+            total_losses=self._total_losses,
+            drawdown_freeze_active=self._drawdown_freeze_active,
         )
 
     def get_daily_briefing_lines(self) -> List[str]:
