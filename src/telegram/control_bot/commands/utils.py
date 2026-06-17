@@ -54,4 +54,5 @@ async def cmd_refresh(message):
             f"   Last sync: `{cs['last_sync_ago_seconds']}s ago`"
         )
     except Exception as e:
-        await message.answer(f"❌ Refresh failed: `{e}`")
+        logger.warning(f"Refresh failed: {e}", exc_info=False)
+        await message.answer("❌ Refresh failed. Check logs for details.")

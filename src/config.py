@@ -159,6 +159,73 @@ class Config:
     VOLATILITY_MAX_ANNUALIZED = 0.60    # Max 60% annualized vol
     VOLATILITY_LOOKBACK_SALES = 20      # Number of recent sales for vol calc
 
+    # =================================================================
+    # v14.0 Order Book Microstructure Enhancements
+    # =================================================================
+
+    # --- OBI (Order Book Imbalance) ---
+    # Measures pressure ratio: bid_volume / ask_volume from agg_prices.
+    # OBI > 1.0 = buyer pressure, OBI < 1.0 = seller pressure.
+    OBI_ENABLED = os.getenv("OBI_ENABLED", "true").lower() == "true"
+    OBI_MIN_RATIO = float(os.getenv("OBI_MIN_RATIO", "0.7"))       # skip if below (seller-dominated)
+    OBI_BOOST_RATIO = float(os.getenv("OBI_BOOST_RATIO", "1.3"))   # boost priority if above (buyer-dominated)
+
+    # --- OFI (Order Flow Imbalance) ---
+    # Tracks delta of bid/ask counts between cycles. Positive = growing demand.
+    OFI_ENABLED = os.getenv("OFI_ENABLED", "true").lower() == "true"
+    OFI_BUY_THRESHOLD = int(os.getenv("OFI_BUY_THRESHOLD", "5"))       # ofi > N → buy signal
+    OFI_SELL_THRESHOLD = int(os.getenv("OFI_SELL_THRESHOLD", "-10"))   # ofi < N → skip
+
+    # --- Bait/Spoof Detection ---
+    # Detects listings with rapidly changing prices (bait traps).
+    BAIT_DETECTION_ENABLED = os.getenv("BAIT_DETECTION_ENABLED", "true").lower() == "true"
+    BAIT_MAX_PRICE_CHANGES = int(os.getenv("BAIT_MAX_PRICE_CHANGES", "3"))  # max price changes in 5 min
+
+    # --- Micro-Price (Volume-Adjusted Fair Price) ---
+    # Weighted mid-price for more accurate listing price vs simple cs2cap * 0.97.
+    MICRO_PRICE_ENABLED = os.getenv("MICRO_PRICE_ENABLED", "true").lower() == "true"
+
+    # --- DOM Gap Analysis ---
+    # Places listings into price gaps in the market depth profile.
+    DOM_GAP_ENABLED = os.getenv("DOM_GAP_ENABLED", "true").lower() == "true"
+
+    # --- Float/Phase Scanning ---
+    # Secondary scan for low-float and rare-phase items potentially undervalued.
+    FLOAT_PHASE_SCAN_ENABLED = os.getenv("FLOAT_PHASE_SCAN_ENABLED", "true").lower() == "true"
+    FLOAT_PHASE_MAX_EXTRA_CALLS = int(os.getenv("FLOAT_PHASE_MAX_EXTRA_CALLS", "10"))
+
+    # --- v14.1 Order Book Microstructure (DMarket-native) ---
+
+    # A-S (Avellaneda-Stoikov) Market Making — inventory-aware listing price
+    AS_ENABLED = os.getenv("AS_ENABLED", "true").lower() == "true"
+    AS_RISK_AVERSION = float(os.getenv("AS_RISK_AVERSION", "0.3"))   # gamma — higher = more aggressive inventory management
+    AS_TIME_HORIZON_DAYS = float(os.getenv("AS_TIME_HORIZON_DAYS", "7"))  # T — trade lock + settlement horizon
+
+    # VWAP (Volume-Weighted Average Price) buy filter
+    VWAP_FILTER_ENABLED = os.getenv("VWAP_FILTER_ENABLED", "true").lower() == "true"
+    VWAP_DISCOUNT_THRESHOLD = float(os.getenv("VWAP_DISCOUNT_THRESHOLD", "0.90"))  # buy if best_ask < VWAP * 0.90 (10% undervaluation)
+
+    # Slippage gate (Almgren-Chriss simplified)
+    SLIPPAGE_GATE_ENABLED = os.getenv("SLIPPAGE_GATE_ENABLED", "true").lower() == "true"
+    SLIPPAGE_TEMP_IMPACT_BPS = float(os.getenv("SLIPPAGE_TEMP_IMPACT_BPS", "5.0"))  # bps per 1% participation
+    SLIPPAGE_PERM_IMPACT_BPS = float(os.getenv("SLIPPAGE_PERM_IMPACT_BPS", "2.0"))  # bps per 1% of daily volume
+
+    # CVD (Cumulative Volume Delta)
+    CVD_ENABLED = os.getenv("CVD_ENABLED", "true").lower() == "true"
+    CVD_WINDOW_ITEMS = int(os.getenv("CVD_WINDOW_ITEMS", "5"))  # fetch last-sales for top N items per cycle
+
+    # VPIN-lite (Volume-Synchronized Probability of Informed Trading)
+    VPIN_ENABLED = os.getenv("VPIN_ENABLED", "true").lower() == "true"
+    VPIN_BUCKETS = int(os.getenv("VPIN_BUCKETS", "8"))          # number of volume buckets
+    VPIN_THRESHOLD = float(os.getenv("VPIN_THRESHOLD", "0.8"))  # VPIN > this → toxic flow
+
+    # Time-of-day seasonality
+    TOD_ENABLED = os.getenv("TOD_ENABLED", "true").lower() == "true"
+    TOD_NIGHT_MULTIPLIER = float(os.getenv("TOD_NIGHT_MULTIPLIER", "0.85"))  # lower spread threshold at night (buy more aggressively)
+    TOD_DAY_MULTIPLIER = float(os.getenv("TOD_DAY_MULTIPLIER", "1.0"))       # normal during day
+    TOD_NIGHT_START_UTC = int(os.getenv("TOD_NIGHT_START_UTC", "4"))         # 04:00 UTC (~00:00 EST)
+    TOD_NIGHT_END_UTC = int(os.getenv("TOD_NIGHT_END_UTC", "10"))            # 10:00 UTC (~06:00 EST)
+
     # --- Sharpe-Optimized Objective ---
     # Instead of flat threshold, use risk-adjusted objective
     SHARPE_OPTIMIZATION_ENABLED = True

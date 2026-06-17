@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import math
 import os
 import random
 import time
@@ -415,7 +416,20 @@ class _ResaleMixin:
                 title = it["hash_name"]
                 if title not in asks:
                     snap = self.cs2cap_cache.get_ask(title)
-                    asks[title] = snap.min_price if snap and snap.has_data else 0.0
+                    if not snap or not snap.has_data:
+                        asks[title] = 0.0
+                        continue
+                    # v14.0 Micro-Price: volume-weighted fair price instead of raw min_price
+                    if Config.MICRO_PRICE_ENABLED:
+                        bid_snap = self.cs2cap_cache.get_bid(title)
+                        if bid_snap and bid_snap.has_data and snap.provider_prices and bid_snap.provider_bids:
+                            ask_total = sum(snap.provider_prices.values())
+                            bid_total = sum(bid_snap.provider_bids.values())
+                            if ask_total > 0 and bid_total > 0:
+                                micro = (snap.min_price * bid_total + bid_snap.max_bid * ask_total) / (bid_total + ask_total)
+                                asks[title] = micro
+                                continue
+                    asks[title] = snap.min_price
 
         # Build payload: (row_id, dm_item_id, title, list_price, buy_price)
         payloads: List[Tuple[int, str, str, float, float]] = []
@@ -430,7 +444,64 @@ class _ResaleMixin:
             if cs_price < target_sell:
                 # Not enough margin after fees
                 continue
-            list_price = round(min(cs_price * 0.97, cs_price - LIST_PRICE_DISCOUNT), 2)
+
+            # v14.1 A-S (Avellaneda-Stoikov) — inventory-aware reservation price
+            if Config.AS_ENABLED and self.cs2cap_cache is not None:
+                bid_snap = self.cs2cap_cache.get_bid(title)
+                ask_snap = self.cs2cap_cache.get_ask(title)
+                if ask_snap and ask_snap.has_data:
+                    mid_price = cs_price
+                    if bid_snap and bid_snap.has_data:
+                        mid_price = (ask_snap.min_price + bid_snap.max_bid) / 2.0
+                    inventory_qty = len(price_db.get_virtual_inventory(
+                        status="idle", only_unlocked=False,
+                    ))
+                    same_item = len([
+                        x for x in price_db.get_virtual_inventory(
+                            status="idle", only_unlocked=False,
+                        ) if x.get("hash_name") == title
+                    ])
+                    vol_est = 0.40  # default CS2 skin annualized vol
+                    try:
+                        hist = price_db.get_recent_prices(title, days=14)
+                        if hist and len(hist) >= 3:
+                            log_returns = []
+                            for i in range(1, len(hist)):
+                                prev_p = hist[i - 1][0]
+                                curr_p = hist[i][0]
+                                if prev_p > 0:
+                                    log_returns.append(abs(math.log(curr_p / prev_p)))
+                            if log_returns:
+                                daily_vol = sum(log_returns) / len(log_returns)
+                                vol_est = daily_vol * math.sqrt(365)
+                    except Exception:
+                        pass
+                    from src.analysis.microstructure import reservation_price
+                    reserv = reservation_price(
+                        mid_price=mid_price,
+                        inventory_qty=same_item,
+                        target_qty=0,
+                        max_qty=max(1, Config.MAX_SAME_ITEM_HOLDINGS),
+                        volatility=vol_est,
+                        gamma=Config.AS_RISK_AVERSION,
+                        T_days=Config.AS_TIME_HORIZON_DAYS,
+                    )
+                    cs_price = max(target_sell * 1.01, reserv)
+
+            # v14.0: DOM Gap-aware listing price
+            if Config.DOM_GAP_ENABLED and hasattr(self, '_dom_cache'):
+                dom_listings = self._dom_cache.get(title, [])
+                if dom_listings and len(dom_listings) > 1:
+                    from src.analysis.orderbook import find_gap_price
+                    gap_price = find_gap_price(dom_listings, target_sell)
+                    if gap_price > target_sell:
+                        list_price = gap_price
+                    else:
+                        list_price = round(min(cs_price * 0.97, cs_price - LIST_PRICE_DISCOUNT), 2)
+                else:
+                    list_price = round(min(cs_price * 0.97, cs_price - LIST_PRICE_DISCOUNT), 2)
+            else:
+                list_price = round(min(cs_price * 0.97, cs_price - LIST_PRICE_DISCOUNT), 2)
             payloads.append((int(it["id"]), it["dm_item_id"], title, list_price, buy_price))
 
         if not payloads:

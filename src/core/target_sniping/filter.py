@@ -147,6 +147,23 @@ class _FilterMixin:
 
         if base_price < Config.MIN_PRICE_USD:
             return None
+
+        # --- v14.0 Bait/Spoof Detection ---
+        # Detects listings whose price has changed multiple times in the
+        # last 5 minutes — likely a bait listing (seller re-posts at a
+        # different price as soon as someone tries to buy).
+        if Config.BAIT_DETECTION_ENABLED:
+            bait_prices = price_db.get_recent_prices(title, days=0.0035)
+            if bait_prices and len(bait_prices) > 1:
+                changes = 0
+                prev_p = None
+                for p, _ in bait_prices:
+                    if prev_p is not None and abs(p - prev_p) > 0.01:
+                        changes += 1
+                    prev_p = p
+                if changes > Config.BAIT_MAX_PRICE_CHANGES:
+                    return None
+
         if base_price > self.buy_budget or base_price > current_balance:
             return None
 
@@ -197,6 +214,35 @@ class _FilterMixin:
         best_ask = agg.get("best_ask", 0.0)
         ask_count = agg.get("ask_count", 0)
         bid_count = agg.get("bid_count", 0)
+
+        # --- v14.0 OBI (Order Book Imbalance) ---
+        # Quantifies buy-vs-sell pressure from aggregated order book depth.
+        # Positive skew = buyers dominate → price likely rises → prioritize.
+        # Negative skew = sellers dominate → price likely falls → skip.
+        obi_signal = 0.0
+        if Config.OBI_ENABLED and ask_count > 0 and bid_count > 0:
+            safe_bid = best_bid or 0.01
+            safe_ask = best_ask or 0.01
+            bid_volume = safe_bid * bid_count
+            ask_volume = safe_ask * ask_count
+            obi_ratio = bid_volume / ask_volume if ask_volume > 0 else 1.0
+            if obi_ratio < Config.OBI_MIN_RATIO:
+                return None
+            obi_signal = obi_ratio
+
+        # --- v14.0 OFI (Order Flow Imbalance) ---
+        # Compares current bid/ask counts with previous cycle snapshot.
+        # Rising bids + falling asks = momentum in our favor.
+        if Config.OFI_ENABLED and hasattr(self, '_prev_agg_prices'):
+            prev = self._prev_agg_prices.get(title, {})
+            if prev:
+                prev_ask_cnt = prev.get("ask_count", 0) or 0
+                prev_bid_cnt = prev.get("bid_count", 0) or 0
+                curr_ask_cnt = ask_count or 0
+                curr_bid_cnt = bid_count or 0
+                ofi = (curr_bid_cnt - prev_bid_cnt) - (curr_ask_cnt - prev_ask_cnt)
+                if ofi < Config.OFI_SELL_THRESHOLD:
+                    return None
 
         # --- Strategy C: cross-market arb (CS2Cap provider bids) ---
         # Run BEFORE liquidity/wash-trading checks: a strong cross-market
@@ -296,6 +342,41 @@ class _FilterMixin:
             return None
         if ask_count < 1 or bid_count < 1:
             return None  # No real demand
+
+        # --- v14.1 VWAP undervaluation check ---
+        # v14.2: Uses accumulated trade_history (growing window)
+        # instead of ephemeral _sales_cache (fixed 7d/30-sale window).
+        vwap_signal_val = 0.0
+        if Config.VWAP_FILTER_ENABLED:
+            item_sales = price_db.get_trade_history(title, days=30, limit=200)
+            if not item_sales:
+                item_sales = (self._sales_cache or {}).get(title, [])
+            if item_sales:
+                from src.analysis.microstructure import compute_vwap, vwap_signal
+                vwap_signal_val_raw = vwap_signal(
+                    best_ask, item_sales, Config.VWAP_DISCOUNT_THRESHOLD
+                )
+                if vwap_signal_val_raw is None and best_ask > 0:
+                    vwap, _, _ = compute_vwap(item_sales)
+                    if vwap > 0 and best_ask > vwap:
+                        return None
+                elif vwap_signal_val_raw is not None:
+                    vwap_signal_val = vwap_signal_val_raw
+
+        # --- v14.1 CVD / VPIN signals ---
+        # v14.2: Uses accumulated trade_history for growing data windows.
+        cvd_val = 0.0
+        vpin_val = 0.0
+        trade_records = price_db.get_trade_history(title, days=30, limit=200)
+        if not trade_records:
+            trade_records = (self._sales_cache or {}).get(title, [])
+        if trade_records and len(trade_records) >= 3:
+            from src.analysis.microstructure import compute_cvd, compute_vpin, cvd_divergence
+            cvd_val = compute_cvd(trade_records)
+            if Config.VPIN_ENABLED:
+                vpin_val = compute_vpin(trade_records, Config.VPIN_BUCKETS) or 0.0
+                if vpin_val > Config.VPIN_THRESHOLD:
+                    return None
 
         # Spread check: best_bid > best_ask * (1 + threshold)
         # Skip if NO cross-market arb available either
@@ -442,11 +523,39 @@ class _FilterMixin:
                     price_db.log_decision(title, "skip", "Spread too thin for fee",
                                           f"spread={spread_ratio:.1%} need>{min_spread_for_fee:.1%} fee={total_fee:.1%}")
                 return None
+
+            # v14.1 Slippage gate — add expected market impact to fee model
+            effective_margin = current_margin
+            if Config.SLIPPAGE_GATE_ENABLED:
+                from src.analysis.microstructure import estimate_slippage
+                daily_vol = (ask_count + bid_count) * 10  # rough estimate from agg_prices
+                expected_slippage = estimate_slippage(
+                    buy_price=base_price,
+                    order_qty=1,
+                    daily_volume=max(daily_vol, 1),
+                    best_ask=best_ask,
+                    best_bid=best_bid,
+                    temp_impact_bps=Config.SLIPPAGE_TEMP_IMPACT_BPS,
+                    perm_impact_bps=Config.SLIPPAGE_PERM_IMPACT_BPS,
+                )
+                effective_margin += expected_slippage * 100.0  # convert to percentage
+
+            # v14.1 Time-of-day adjustment — lower barriers at night
+            if Config.TOD_ENABLED:
+                from src.analysis.microstructure import tod_multiplier
+                tod_m = tod_multiplier(
+                    Config.TOD_NIGHT_START_UTC,
+                    Config.TOD_NIGHT_END_UTC,
+                    Config.TOD_NIGHT_MULTIPLIER,
+                    Config.TOD_DAY_MULTIPLIER,
+                )
+                effective_margin *= tod_m
+
             validate_arbitrage_profit(
                 buy_price=base_price,
                 expected_sell_price=list_price,
                 fee_markup=total_fee,
-                min_profit_margin=current_margin,
+                min_profit_margin=effective_margin,
                 lock_days=7,  # v13.1: TP funds hold prevents capital reuse for up to 7 days
             )
         except PriceValidationError as e:
