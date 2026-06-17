@@ -262,3 +262,50 @@ class _HistoryMixin:
         # If raw mean is much higher than trimmed mean, wash trading suspected
         divergence = ((raw - trimmed) / trimmed) * 100.0
         return divergence < divergence_pct
+
+    # ------------------------------------------------------------------
+    # v14.1 Trade History (CVD / VPIN / VWAP accumulation)
+    # ------------------------------------------------------------------
+    @with_db_retry(operation_name="save_trades_batch")
+    def save_trades_batch(
+        self, hash_name: str, trades: List[Dict[str, Any]],
+    ) -> int:
+        """Bulk-insert trade records into trade_history. Returns count inserted."""
+        now = time.time()
+        inserted = 0
+        with self.history_conn:
+            for t in trades:
+                price = t.get("price", 0.0)
+                if price <= 0:
+                    continue
+                trade_date = t.get("date")
+                self.history_conn.execute(
+                    "INSERT OR IGNORE INTO trade_history "
+                    "(hash_name, price, trade_date, recorded_at) "
+                    "VALUES (?, ?, ?, ?)",
+                    (hash_name, price, str(trade_date) if trade_date else None, now),
+                )
+                inserted += 1
+        return inserted
+
+    def get_trade_history(
+        self, hash_name: str, days: int = 30, limit: int = 200,
+    ) -> List[Dict[str, Any]]:
+        """Read accumulated trade history for microstructure analysis."""
+        cutoff = time.time() - (days * 86400)
+        rows = self.history_conn.execute(
+            "SELECT price, recorded_at FROM trade_history "
+            "WHERE hash_name = ? AND recorded_at > ? "
+            "ORDER BY recorded_at ASC LIMIT ?",
+            (hash_name, cutoff, limit),
+        ).fetchall()
+        return [{"price": r["price"]} for r in rows]  # compatible with microstructure API
+
+    def cleanup_old_trades(self, days: int = 90) -> int:
+        """Prune trade_history records older than N days. Returns count deleted."""
+        cutoff = time.time() - (days * 86400)
+        cursor = self.history_conn.execute(
+            "DELETE FROM trade_history WHERE recorded_at < ?", (cutoff,)
+        )
+        self.history_conn.commit()
+        return cursor.rowcount

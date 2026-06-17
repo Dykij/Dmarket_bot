@@ -180,12 +180,98 @@ class SnipingLoop(  # type: ignore[misc]
                 cheapest.append(cand)
                 break  # only need the cheapest per title
 
+            # v14.0: Save all listings for DOM gap analysis in resale
+            if not hasattr(self, '_dom_cache'):
+                self._dom_cache: Dict[str, List[Dict[str, Any]]] = {}
+            self._dom_cache[title] = sorted_by_price
+
         logger.info(
             f"[v12.3 SCAN] top_titles={len(titles)} "
             f"fetched_listings={sum(len(r) for r in results)} "
             f"buy_candidates={len(cheapest)}"
         )
         return cheapest
+
+    async def _fetch_float_filtered_listings(
+        self, game_id: str, top_titles: List[str]
+    ) -> List[Dict[str, Any]]:
+        """
+        v14.0: Secondary scan for low-float and rare-phase items that may
+        be listed at general market price without float/phase premium.
+
+        Uses DMarket treeFilters to find:
+        - FN-0..FN-3 and MW-0..MW-1 (low-float, near-perfect wear)
+        - Doppler Ruby/Sapphire/Black Pearl/Emerald phases
+
+        Only runs on items matching high-value patterns (knives, Doppler, etc.)
+        to avoid wasting API calls on $0.10 consumer-grade skins.
+        """
+        FLOAT_FILTER = "floatPart=FN-0,FN-1,FN-2,FN-3,MW-0,MW-1"
+        PHASE_FILTERS = {
+            "ruby": "phase=ruby",
+            "sapphire": "phase=sapphire",
+            "black-pearl": "phase=black-pearl",
+            "emerald": "phase=emerald",
+        }
+        HIGH_VALUE_PATTERNS = [
+            "Doppler", "Gamma Doppler", "Fade", "Marble Fade",
+            "Crimson Web", "Case Hardened", "Emerald",
+            "Lore", "Howl", "Medusa", "Hydroponic",
+            "Poseidon", "Fire Serpent", "Dragon Lore",
+        ]
+
+        def _is_high_value(title: str) -> bool:
+            if "★" in title:
+                return True
+            return any(p in title for p in HIGH_VALUE_PATTERNS)
+
+        candidates: List[Dict[str, Any]] = []
+        calls_made = 0
+        max_calls = Config.FLOAT_PHASE_MAX_EXTRA_CALLS
+
+        for title in top_titles:
+            if calls_made >= max_calls:
+                break
+            if not _is_high_value(title):
+                continue
+
+            # 1. Low-float filter
+            try:
+                resp = await self.client.get_market_items_v2(
+                    game_id, title=title, limit=10, treeFilters=FLOAT_FILTER,
+                )
+                calls_made += 1
+                for obj in resp.get("objects", []):
+                    if obj.get("itemId"):
+                        candidates.append(obj)
+            except Exception as e:
+                logger.debug(f"[v14.0 FLOAT] Low-float fetch failed for {title!r}: {e}")
+                continue
+
+            if calls_made >= max_calls:
+                break
+
+            # 2. Doppler rare-phase filters
+            if "Doppler" in title or "Gamma Doppler" in title:
+                for phase_name, phase_filter in PHASE_FILTERS.items():
+                    if calls_made >= max_calls:
+                        break
+                    try:
+                        resp = await self.client.get_market_items_v2(
+                            game_id, title=title, limit=5, treeFilters=phase_filter,
+                        )
+                        calls_made += 1
+                        for obj in resp.get("objects", []):
+                            if obj.get("itemId"):
+                                candidates.append(obj)
+                    except Exception as e:
+                        logger.debug(
+                            f"[v14.0 FLOAT] Phase filter ({phase_name}) "
+                            f"failed for {title!r}: {e}"
+                        )
+                        continue
+
+        return candidates
 
     @property
     def min_profit_margin(self) -> float:
@@ -487,6 +573,9 @@ class SnipingLoop(  # type: ignore[misc]
                 logger.warning(f"No aggregated prices for {game_id}; skipping cycle.")
                 return
 
+            # v14.0: Save snapshot for OFI (Order Flow Imbalance) on next cycle
+            self._prev_agg_prices = agg_prices.copy()
+
             # v12.3: Pick top N items by market volume (ask_count + bid_count)
             # to keep the cycle under ~10s. N=20 → 20 listing fetches
             # (~2s at 10 RPS market-items limit).
@@ -505,6 +594,32 @@ class SnipingLoop(  # type: ignore[misc]
             items = await self._fetch_cheapest_listings(
                 game_id=game_id, titles=top_titles
             )
+
+            # --- v14.0 Float/Phase secondary scan ---
+            # Some items (Doppler knives, low-float weapons) may be listed
+            # at general market price without float/phase premium. A second
+            # scan with treeFilters catches these undervalued listings.
+            if Config.FLOAT_PHASE_SCAN_ENABLED and items:
+                try:
+                    float_items = await self._fetch_float_filtered_listings(
+                        game_id=game_id, top_titles=top_titles
+                    )
+                    if float_items:
+                        seen = {it.get("itemId") for it in items if it.get("itemId")}
+                        new_count = 0
+                        for cand in float_items:
+                            if cand.get("itemId") not in seen:
+                                seen.add(cand.get("itemId"))
+                                items.append(cand)
+                                new_count += 1
+                        if new_count > 0:
+                            logger.info(
+                                f"[v14.0 FLOAT] Found {new_count} additional "
+                                f"low-float/rare-phase candidates"
+                            )
+                except Exception as e:
+                    logger.debug(f"[v14.0 FLOAT] Secondary scan failed: {e}")
+
             next_cursor = ""  # cursor-based pagination is replaced by agg-prices scan
 
             if not items:
@@ -629,6 +744,36 @@ class SnipingLoop(  # type: ignore[misc]
                     f"ask_count={len(self.cs2cap_cache._ask_cache)}"
                 )
 
+            # v14.1: Pre-fetch DMarket last-sales for CVD/VPIN/VWAP analysis
+            # Only for top candidates, uses DMarket API (not cs2cap quota).
+            self._sales_cache: Dict[str, List[Dict[str, Any]]] = {}
+            if Config.CVD_ENABLED or Config.VWAP_FILTER_ENABLED or Config.VPIN_ENABLED:
+                sales_titles = list({t for t, _ in ranked[: Config.CVD_WINDOW_ITEMS]}
+                                    if ranked else top_titles[: Config.CVD_WINDOW_ITEMS])
+                if sales_titles:
+                    try:
+                        for t in sales_titles:
+                            try:
+                                sales = await self.client.get_last_sales(
+                                    game_id, t, days=7, limit=30
+                                )
+                                if sales:
+                                    self._sales_cache[t] = sales
+                                    # v14.1: Accumulate into trade_history for CVD/VPIN
+                                    try:
+                                        price_db.save_trades_batch(t, sales)
+                                    except Exception:
+                                        pass  # non-fatal — DB write failure shouldn't block trading
+                            except Exception:
+                                pass
+                        if self._sales_cache:
+                            logger.debug(
+                                f"[v14.1 SALES] Fetched last-sales for "
+                                f"{len(self._sales_cache)} items for CVD/VPIN/VWAP"
+                            )
+                    except Exception as e:
+                        logger.debug(f"[v14.1 SALES] Pre-fetch failed: {e}")
+
             # v12.6: Pump detection sweep — we just observed fresh prices
             # for ~100 items. Run the spike check on each so that any
             # item with >PUMP_THRESHOLD_PCT move in the last hour gets
@@ -714,6 +859,15 @@ class SnipingLoop(  # type: ignore[misc]
             # v12.0 Phase 1.1: Refresh low-fee cache every 100 cycles
             if self.deep_scan_counter % 100 == 0:
                 await self._refresh_low_fee_cache(game_id)
+
+            # v14.1: Cleanup old trade_history every 200 cycles (~100 min)
+            if self.deep_scan_counter % 200 == 0:
+                try:
+                    deleted = price_db.cleanup_old_trades(days=90)
+                    if deleted > 0:
+                        logger.info(f"[v14.1] Pruned {deleted} old trade_history records")
+                except Exception:
+                    pass
 
             # v13.1: Release expired TP holds before equity report
             price_db.release_expired_funds()

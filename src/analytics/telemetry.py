@@ -63,7 +63,7 @@ class TelemetryServer:
     """
     Wrapper to run the FastAPI app concurrently with the primary Bot asyncio loop.
     """
-    def __init__(self, host="0.0.0.0", port=9090):  # nosec: B104 - telemetry endpoint must bind 0.0.0.0 inside container
+    def __init__(self, host="127.0.0.1", port=9190):  # v14.1: bind localhost by default for security
         self.config = uvicorn.Config(app=app, host=host, port=port, log_level="warning")
         self.server = uvicorn.Server(self.config)
 

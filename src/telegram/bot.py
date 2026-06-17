@@ -1,6 +1,9 @@
 """
 Telegram Control Center — v10.0 with CS2Cap Integration.
 
+DEPRECATED — DO NOT USE. Migrated to src/telegram/control_bot/.
+Known vulnerabilities: CVE-2026-32982 (exception leaks), CVE-2026-35628 (no rate limit).
+
 Commands:
 /start       — Control panel
 /status      — Bot status + CS2Cap connection
@@ -31,6 +34,17 @@ Security issues in this file (v12.9+):
 All fixes below are hot-patches. The module should be removed once
 control_bot/ fully replaces it.
 """
+
+# v14.1: Hard-block execution of this deprecated module.
+# All functionality moved to src/telegram/control_bot/.
+# Importing this module at runtime raises an error to prevent accidental use.
+import os as _os
+if _os.environ.get("ALLOW_LEGACY_TELEGRAM_BOT", "").lower() not in ("1", "true", "yes"):
+    raise RuntimeError(
+        "src/telegram/bot.py is DEPRECATED. "
+        "Use src/telegram/control_bot/ instead. "
+        "Set ALLOW_LEGACY_TELEGRAM_BOT=1 to bypass (unsafe)."
+    )
 
 import asyncio
 import logging

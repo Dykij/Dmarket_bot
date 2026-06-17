@@ -18,6 +18,7 @@ Composes focused mixins for each table group:
 from __future__ import annotations
 
 import logging
+import os
 import sqlite3
 from pathlib import Path
 
@@ -71,6 +72,13 @@ class PriceHistoryDB(  # type: ignore[misc]
         self.history_conn.row_factory = sqlite3.Row
         self.history_conn.execute("PRAGMA journal_mode=WAL")
         self.history_conn.execute("PRAGMA busy_timeout=5000")
+
+        # v14.1: Hardened file permissions — restrict to owner only
+        try:
+            os.chmod(str(self.state_path), 0o600)
+            os.chmod(str(self.history_path), 0o600)
+        except OSError:
+            pass
 
         self._init_schemas()
 
@@ -312,6 +320,48 @@ class PriceHistoryDB(  # type: ignore[misc]
             self.history_conn.execute(
                 "CREATE INDEX IF NOT EXISTS idx_price_name ON price_history(hash_name)"
             )
+
+            # v14.1: Trade-level sales history for CVD/VPIN/VWAP
+            # Accumulated from DMarket /trade-aggregator/v1/last-sales every cycle.
+            # Enables microstructure instruments with growing data windows
+            # (vs the fixed 7d/30-sale window of the API endpoint).
+            self.history_conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS trade_history (
+                    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                    hash_name   TEXT    NOT NULL,
+                    price       REAL    NOT NULL,
+                    trade_date  TEXT,
+                    recorded_at REAL    NOT NULL,
+                    source      TEXT    NOT NULL DEFAULT 'dmarket_last_sales'
+                )
+            """
+            )
+            self.history_conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_trade_name ON trade_history(hash_name)"
+            )
+            self.history_conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_trade_time ON trade_history(recorded_at)"
+            )
+            # Create unique index; if duplicates already exist (from sandbox runs),
+            # deduplicate by keeping only the earliest id per (name, price, date) group.
+            try:
+                self.history_conn.execute(
+                    "CREATE UNIQUE INDEX IF NOT EXISTS idx_trade_unique "
+                    "ON trade_history(hash_name, price, trade_date)"
+                )
+            except sqlite3.IntegrityError:
+                self.history_conn.execute(
+                    "DELETE FROM trade_history WHERE id NOT IN ("
+                    "  SELECT MIN(id) FROM trade_history "
+                    "  GROUP BY COALESCE(hash_name,''), price, COALESCE(trade_date,'')"
+                    ")"
+                )
+                self.history_conn.commit()
+                self.history_conn.execute(
+                    "CREATE UNIQUE INDEX IF NOT EXISTS idx_trade_unique "
+                    "ON trade_history(hash_name, price, trade_date)"
+                )
 
             # Optimization Pragmas for History (Analytical heavy).
             # WAL mode lets readers proceed without blocking writers,
