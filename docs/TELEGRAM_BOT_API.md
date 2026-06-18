@@ -2,10 +2,18 @@
 
 **Версия Bot API**: 9.2 (обновление от 15 августа 2025 г.)
 **Базовый URL**: `https://api.telegram.org/bot<token>/METHOD_NAME`
-**Дата документа**: 4 января 2026 г.
+**Дата документа**: Январь 2026 г. (актуализировано: Июнь 2026)
 **Официальная документация**: [https://core.telegram.org/bots/api](https://core.telegram.org/bots/api)
-**Changelog**: [https://core.telegram.org/bots/api-changelog](https://core.telegram.org/bots/api-changelog)
-**Новости**: [@BotNews](https://t.me/BotNews) | **Обсуждение**: [@BotTalk](https://t.me/BotTalk)
+
+---
+
+**🧩 Наш бот (@DmarketPayonnerBot): 16 inline-кнопок в 8 рядах**
+- STATUS, INVENTORY, BALANCE, SELL-TOP, ANALYZE, TEST, PRICES, CLOCK, REFRESH, PANIC, STOP, START, HELP, LOGOUT, DONATE, CANCEL
+- Админ-фильтр: `@_admin_only` на всех хендлерах
+- ThrottlingMiddleware: 0.5s cooldown между сообщениями
+- Форматирование: MarkdownV2 с `escape_md()` защитой
+
+---
 
 > **Ключевые возможности Bot API 9.2 (15 августа 2025):**
 > - ✅ **Checklists** - `checklist_task_id` в `ReplyParameters` для ответа на конкретные пункты чек-листов

@@ -1,6 +1,6 @@
-# Contributing to DMarket Telegram Bot
+# Contributing to DMarket Quantitative Engine (v14.4)
 
-First off, thank you for considering contributing to DMarket Telegram Bot! 🎉
+First off, thank you for considering contributing to DMarket Quantitative Engine! 🎉
 
 ## Table of Contents
 
@@ -21,16 +21,17 @@ This project and everyone participating in it is governed by our Code of Conduct
 
 ### Prerequisites
 
-- Python 3.11+ (3.12 recommended)
+- Python 3.13+ (3.11+ with minor adjustments)
+- Rust toolchain (for `maturin` — optional, Python fallback available)
 - Git
-- Docker (optional, for containerized development)
+- Docker 20.10+ (optional, for containerized development)
 
 ### Setup Development Environment
 
 ```bash
 # Clone the repository
-git clone https://github.com/Dykij/DMarket-Telegram-Bot.git
-cd DMarket-Telegram-Bot
+git clone https://github.com/Dykij/Dmarket_bot.git
+cd Dmarket_bot
 
 # Create virtual environment
 python -m venv .venv
@@ -42,17 +43,32 @@ python -m venv .venv
 source .venv/bin/activate
 
 # Install dependencies
-make install-dev
-
-# or manually:
 pip install -r requirements.txt
-pip install -r requirements-dev.txt
 
-# Install pre-commit hooks
+# Build Rust module (optional — Python fallback if skipped)
+cd src/rust_core && maturin develop --release && cd ../..
+
+# Pre-commit hooks
 pre-commit install
 
-# Run tests to verify setup
+# Run tests
 make test
+```
+
+### Docker Development
+
+```bash
+# Build and run the bot
+docker compose up -d
+
+# Run with Telegram admin panel
+docker compose --profile telegram up -d
+
+# Watch logs
+docker compose logs -f
+
+# Rebuild after source changes
+docker compose build --no-cache
 ```
 
 ## Development Workflow
@@ -355,9 +371,9 @@ DRY_RUN=true python -m src.main
 
 ## Questions?
 
-- 💬 [GitHub Discussions](https://github.com/Dykij/DMarket-Telegram-Bot/discussions)
+- 💬 [GitHub Discussions](https://github.com/Dykij/Dmarket_bot/discussions)
 - 📚 [Documentation](./docs/)
-- 🐛 [Issue Tracker](https://github.com/Dykij/DMarket-Telegram-Bot/issues)
+- 🐛 [Issue Tracker](https://github.com/Dykij/Dmarket_bot/issues)
 
 ## License
 
@@ -369,7 +385,4 @@ By contributing, you agree that your contributions will be licensed under the sa
 
 
 ---
-🦅 *DMarket Quantitative engine | v7.0 | 2026*
-
------ 
-🦅 *DMarket Quantitative Engine | v7.0 | 2026*
+🦅 *DMarket Quantitative Engine | v14.4 | June 2026*
