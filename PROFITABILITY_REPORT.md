@@ -1,9 +1,11 @@
-# Strategy Profitability Report - 2026-04-15 21:26
+# Strategy Profitability Report (v14.4)
 
 ## Simulation Metadata
 - **Mode**: Sandbox (Dry Run)
-- **Strategy**: Target Sniping v7.8
-- **Oracle**: Multi-Game Factory (CSFloat/SCMM)
+- **Strategy**: Balance-Aware Target Sniping v14.4
+- **Oracle**: CS2Cap (41 marketplaces) + DMarket aggregated prices
+- **Balance Gate**: max($5.00, effective_balance × 0.10), reserve=$10
+- **Kelly**: Half Kelly (0.50), drawdown freeze at 15%
 
 ## Observations
-Check `logs/bot_24_7.log` for specific 'TARGET LOCKED' entries captured during this run.
+Check `logs/bot_24_7.log` for cycle logs. Run `python tests/sandbox_full_cycle.py` for the latest v14.4 balance-aware simulation with Affordable/Missed report.

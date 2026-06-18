@@ -1,557 +1,243 @@
-# 🔧 Troubleshooting Guide - Все ошибки и их решения
+# 🔧 Troubleshooting Guide — Все ошибки и их решения (v14.4)
 
-> **Объединённое руководство по устранению неполадок DMarket Telegram Bot**
+> **Объединённое руководство по устранению неполадок DMarket Quantitative Engine**
 > 
-> **Последнее обновление:** Апрель 2026
+> **Последнее обновление:** Июнь 2026 | **Версия:** 14.4
 
 ---
 
 ## 📋 Содержание
 
+- [Docker](#docker)
 - [Установка и настройка](#установка-и-настройка)
 - [Telegram Bot](#telegram-bot)
 - [DMarket API](#dmarket-api)
-- [Steam API](#steam-api)
-- [База данных и миграции](#база-данных-и-миграции)
-- [SSL и Webhook](#ssl-и-webhook)
-- [WebSocket](#websocket)
-- [n8n Integration](#n8n-integration)
-- [Auto-buy и Trading](#auto-buy-и-trading)
-- [Contract Testing](#contract-testing)
-- [Исправленные баги](#исправленные-баги-changelog)
+- [База данных](#база-данных-и-миграции)
+- [v14.4 Balance-Aware](#v144-balance-aware-специфичные-ошибки)
+- [Rust модуль](#rust-модуль)
+- [Исправленные баги](#исправленные-баги)
+
+---
+
+## 🐳 Docker
+
+### Контейнер не запускается
+```bash
+docker compose logs dmarket_bot
+# Проверьте:
+# 1. .env заполнен правильно
+# 2. Dockerfile собран (docker compose build)
+# 3. Порты не заняты
+# 4. curl -sf http://127.0.0.1:9091/healthz (health check)
+```
+
+### Ошибка: TelemetryConflictError / terminated by other getUpdates request
+**Причина:** Telegram bot работает в polling mode с другим инстансом.
+**Решение:** Убедитесь, что только один процесс использует TELEGRAM_BOT_TOKEN.
+
+### Health check failing
+```bash
+# Проверьте, что HEALTH_PORT=9091 установлен в .env
+curl http://127.0.0.1:9091/healthz
+# Если нет ответа — бот не запущен или порт занят
+```
+
+### Memory limit reached
+```yaml
+# В docker-compose.yml увеличьте memory limit
+deploy:
+  resources:
+    limits:
+      memory: 1G  # было 512M
+```
+
+### Docker build fails on ARM64 (Raspberry Pi)
+```bash
+# Проверьте, что Dockerfile multi-stage компилирует Rust
+# Rust работает на ARM64 — dmarket_parser_rs должен собраться
+# Если Rust сборка падает — бот запустится в Python fallback режиме
+```
+
+### Rust module failed to compile in Docker
+Бот автоматически использует Python fallback. Лог покажет:
+```
+WARNING: Rust Signer not found, using Python (pynacl) fallback.
+```
+Это не критично — все функции работают, просто медленнее.
 
 ---
 
 ## Установка и настройка
 
 ### Ошибка: ModuleNotFoundError
-
-**Причина:** Не установлены зависимости
-
-**Решение:**
 ```bash
-# С Poetry (рекомендуется)
-poetry install
-
-# С pip
 pip install -r requirements.txt
+# Rust модуль опционален. Его отсутствие — не ошибка.
+```
+
+### Ошибка: Rust toolchain not found (при maturin develop)
+```bash
+# Установить Rust:
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+# Или пропустить — бот работает с Python fallback
 ```
 
 ### Ошибка: Database connection failed
-
-**Причина:** Неправильная конфигурация базы данных
-
-**Решение:**
-1. Проверьте `DATABASE_URL` в `.env` файле
-2. Убедитесь что PostgreSQL запущен: `sudo systemctl status postgresql`
-3. Проверьте логин/пароль в DATABASE_URL
-4. Проверьте что база данных создана
-
-### Ошибка: Telegram Bot API error
-
-**Причина:** Неправильный токен бота
-
-**Решение:** Проверьте `TELEGRAM_BOT_TOKEN` в `.env` файле
-
-### Ошибка: Invalid bot token
-
-**Причина:** Токен скопирован с ошибками
-
-**Решение:** Проверьте что токен скопирован правильно, без лишних пробелов
+Для SQLite (по умолчанию) — ошибок не бывает. Бот создаёт БД автоматически.
 
 ---
 
-## Telegram Bot
+## Telegram Bot (v14.4)
 
-### Ошибка: DMarket API authentication failed
+### Кнопки не работают / игнорируются
+**Проверьте:**
+1. `ADMIN_IDS` в Config (не `ADMIN_ID` — множественное число)
+2. Telegram bot token жив (@BotFather → /mybots)
+3. Нет другого процесса, запущенного с тем же токеном
 
-**Причина:** Неверные API ключи
+### Ошибка: entity offset X beyond message length (MarkdownV2)
+**Исправлено в v14.4**: все сообщения экранируются через `escape_md()`.
 
-**Решение:**
-1. Проверьте что API ключи активны в DMarket настройках
-2. Проверьте что нет лишних пробелов в ключах
-3. Попробуйте пересоздать API ключи
+### Кнопка TEST зависает / FSM не завершается
+**Исправлено в v14.4**: `cmd_test` разделена на две: команда и кнопка.
+После нажатия TEST — отправьте title предмета. CANCEL = выход.
+
+### Команда ANALYZE не отвечает
+**Исправлено в v14.4**: добавлен `await` перед `analyze_recent_trades()`.
+
+### Команда SELL-TOP не продаёт
+**Исправлено в v14.4**: `sell_inventory_items()` возвращает `list[int]`, сравнение фиксировано.
+
+### /start не работает (Markdown parse error)
+**Исправлено в v14.4**: все специальные символы экранируются.
+
+### Ошибка: got an unexpected keyword argument 'title'
+При отправке цены/статуса. Проверьте, что кнопка отправляет правильный формат.
 
 ---
 
 ## DMarket API
 
 ### Ошибка: 401 Unauthorized
-
-**Причина:** Истёкшие или неверные API ключи
+**Причины:**
+1. Истёкшие API ключи
+2. Clock drift >120 секунд (авто-синхронизация через ClockSync)
+3. Rust подпись не совпадает с Python fallback
 
 **Решение:**
-1. Проверьте `DMARKET_PUBLIC_KEY` и `DMARKET_SECRET_KEY` в `.env`
-2. Перегенерируйте ключи в личном кабинете DMarket
-3. Убедитесь что ключи имеют правильные permissions
+```bash
+# Проверьте ключи в .env
+# Перегенерируйте в https://dmarket.com/account/api-settings
+```
 
 ### Ошибка: 429 Rate Limit
+**Решение:** Circuit breaker делает exponential backoff (30s → 60s → 120s → 300s). Ждите.
 
-**Причина:** Превышен лимит запросов
+### Ошибка: RetryError / CANCEL_PANIC_OFFER_FAILED
+**Сценарий:** Ошибка при отмене ордера через PANIC.
+**Не критично.** Транзиторная ошибка DMarket API. Повторите PANIC через цикл.
 
-**Решение:**
-```python
-# Увеличьте паузу между запросами
-await asyncio.sleep(3)  # Было 1-2 секунды
-
-# Используйте кэш
-if cached and age < 6_hours:
-    return cached
-```
-
----
-
-## Steam API
-
-### Ошибка 1: `KeyError: 'lowest_price'`
-
-**Причина:** Предмет не найден или `success: false`
-
-**Решение:**
-```python
-if data.get('success'):
-    price = data.get('lowest_price', '$0')
-else:
-    print("Предмет не найден")
-```
-
-### Ошибка 2: `ValueError: could not convert string to float`
-
-**Причина:** Не очищена строка цены от символов
-
-**Решение:**
-```python
-price_str = data['lowest_price']  # "$1,234.56"
-price = float(price_str.replace('$', '').replace(',', ''))
-```
-
-### Ошибка 3: Постоянно 429 ошибка
-
-**Причина:** Слишком много запросов
-
-**Решение:**
-```python
-# Увеличьте паузу
-await asyncio.sleep(3)  # Было 1-2 секунды
-
-# Используйте кэш
-if cached and age < 6_hours:
-    return cached
-```
-
-### Ошибка 4: Timeout при запросах
-
-**Причина:** Медленный интернет или перегрузка Steam
-
-**Решение:**
-```python
-# Увеличьте timeout
-async with httpx.AsyncClient(timeout=30.0) as client:
-    ...
-
-# Добавьте retry
-for attempt in range(3):
-    try:
-        response = await client.get(url, timeout=30)
-        break
-    except httpx.TimeoutException:
-        if attempt == 2:
-            raise
-        await asyncio.sleep(5)
-```
+### Ошибка: RefreshTokenRequiredError / offers v1 migrated to v2
+**Решение:** Обновите API ключи. Все эндпоинты на v2.
 
 ---
 
 ## База данных и миграции
 
-### Ошибка: "Target database is not up to date"
+v14.4 использует **Dual SQLite** (state.db + history.db). Создаются автоматически.
 
-```
-alembic.util.exc.CommandError: Target database is not up to date.
-```
-
-**Решение:**
+### Нет таблиц / пустая БД
+Бот создаёт таблицы при первом запуске. Проверьте права на `data/`:
 ```bash
-# Пометить БД как актуальную
-alembic stamp head
-
-# Или применить миграции
-alembic upgrade head
+chmod 600 data/*.db
 ```
 
-### Ошибка: Конфликт миграций
-
-```
-FAILED: Multiple head revisions are present
-```
-
-**Решение:**
-```bash
-# Создать merge миграцию
-alembic merge -m "Merge heads" <rev1> <rev2>
-
-# Применить merge
-alembic upgrade head
-```
-
-### Ошибка при откате миграции
-
-```
-sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) no such table
-```
-
-**Решение:** Проверьте метод `downgrade()` - он должен корректно удалять таблицы в обратном порядке:
-
-```python
-def downgrade():
-    """Правильный порядок удаления."""
-    # Сначала удалить foreign keys
-    op.drop_constraint('fk_user_settings_user_id', 'user_settings')
-
-    # Затем индексы
-    op.drop_index('ix_user_settings_user_id')
-
-    # Потом таблицы
-    op.drop_table('user_settings')
-```
-
-### Ошибка: SQLite doesn't support ALTER COLUMN
-
-```
-NotImplementedError: ALTER COLUMN is not supported by SQLite
-```
-
-**Решение:** Используйте `batch_alter_table`:
-
-```python
-def upgrade():
-    """Изменение колонки в SQLite."""
-    with op.batch_alter_table('users') as batch_op:
-        batch_op.alter_column(
-            'email',
-            type_=sa.String(255),
-            existing_type=sa.String(100)
-        )
-```
+### SQLite database is locked
+**Решение:** Исправлено в v14.4 — WAL mode включён для параллельного доступа.
 
 ---
 
-## SSL и Webhook
+## v14.4 Balance-Aware специфичные ошибки
 
-### Ошибка: "certificate verify failed"
+### Бот не покупает — "Drawdown freeze active"
+**Причина:** Баланс упал более чем на 15% от пика.
+**Решение:** Бот продолжит только продавать. Когда баланс восстановится — покупки возобновятся автоматически.
 
-**Причина:** Невалидный SSL сертификат
+### Бот не покупает — "Capital velocity too low"
+**Причина:** Менее 0.5× оборота капитала в неделю.
+**Решение:** Продайте замороженные предметы вручную или подождите естественного оборота.
 
-**Решение:**
-1. Проверьте, что используете валидный сертификат от CA
-2. Для Let's Encrypt убедитесь, что домен доступен публично
-3. Проверьте, что сертификат не истек: `openssl x509 -enddate -noout -in cert.pem`
+### Бот не покупает — "Lock-aware cap reached"
+**Причина:** Более 80% капитала в trade-lock.
+**Решение:** Дождитесь разморозки предметов (7 дней). Уменьшите `LOCK_AWARE_LIQUID_FRACTION`.
 
-### Ошибка: "SSL: error:0200100D:system library:fopen:Permission denied"
+### Бот не покупает — "Price exceeds dynamic max"
+**Причина:** Цена предмета выше `max($5.00, balance × 10%)`.
+**Решение:** Пополните баланс или уменьшите `MAX_SNIPING_PRICE_FLOOR`.
 
-**Причина:** Нет прав на чтение сертификатов
+### "Half Kelly: no trade history, using MAX_POSITION_RISK_PCT"
+**Причина:** Нет завершённых сделок для расчёта win rate.
+**Решение:** После первых 3-5 сделок бот автоматически перейдёт на Kelly sizing.
 
-**Решение:**
-1. Проверьте права доступа: `chmod 600 key.pem`
-2. Убедитесь, что nginx может читать файлы в volume
-
-### Telegram отклоняет webhook
-
-**Причина:** Неправильная конфигурация webhook
-
-**Решение:**
-1. Используйте только валидные CA-signed сертификаты
-2. Проверьте, что домен в WEBHOOK_URL совпадает с CN в сертификате
-3. Убедитесь, что используете HTTPS (не HTTP)
-4. Проверьте доступность webhook извне: `curl -I https://your-domain.com/telegram-webhook`
+### Sandbox: "Affordable: X | Missed: Y"
+Это нормальный вывод симуляции. Missed — предметы, которые бот мог бы купить при большем балансе.
 
 ---
 
-## Примечание по WebSocket
+## Rust модуль
 
-> **DMarket и CSFloat НЕ предоставляют публичного WebSocket API для торговли.**
-> Бот использует только асинхронный HTTP/2 пул. Любые секции про WebSocket из старых версий неактуальны.
-
-
-## n8n Integration
-
-### n8n container Won't Start
-
+### Rust module not found
 ```bash
-# Check logs
-docker logs dmarket-n8n
-
-# Common issues:
-# 1. PostgreSQL not ready → wait 30s, try again
-# 2. Port 5678 in use → Change port in docker-compose.yml
-# 3. Missing encryption key → Set N8N_ENCRYPTION_KEY in .env
+cd src/rust_core && maturin develop --release
 ```
+Или просто используйте Python fallback (не требует Rust).
 
-### Can't Access n8n UI
-
-```bash
-# Check if running
-docker ps | grep n8n
-
-# Check port binding
-netstat -tlnp | grep 5678
-
-# Access from host machine
-curl http://localhost:5678/healthz
+### Rust parse error (aggregated-prices)
 ```
-
-### Workflow fails: "Cannot reach bot API"
-
-```bash
-# Test connectivity from n8n container
-docker exec dmarket-n8n ping bot
-
-# If fails, check Docker network
-docker network inspect dmarket-telegram-bot_bot-network
-
-# Ensure both containers in same network
+WARNING: Rust Aggregated Prices parser failed, falling back to Python
 ```
+Не критично. Python работает корректно.
 
-### Workflow fails: "Telegram API error"
-
-1. **Check credentials**: Credentials → Test connection
-2. **Check bot token**: Must be valid from @BotFather
-3. **Check chat ID**: Use @userinfobot to get your ID
-4. **Check permissions**: Bot must be able to send messages
+### dmarket_parser_rs ImportError
+**Причина:** `.so` файл не собран под вашу архитектуру.
+**Решение:** `maturin develop --release` соберёт под текущую платформу.
 
 ---
 
-## Auto-buy и Trading
+## Исправленные баги (v14.4 changelog)
 
-### Бот не покупает предметы
+### Docker
+- Новый multi-stage Dockerfile (убрал 432 MB Rust target/ из финального образа)
+- Non-root user (uid 1000), tini init, healthcheck
+- docker-compose с persistent volumes и memory limits
 
-**Проверьте:**
-1. `DRY_RUN=false` в `.env`
-2. Баланс Available > 0 (не Locked)
-3. Логи на ошибки 401 Unauthorized
+### Telegram
+- `_ADMIN_ID` → `_ADMIN_IDS` (множественное число)
+- `CrossMarketOracle` → `CS2CapOracle` (dead import)
+- MarkdownV2 escaping для всех сообщений
+- `sqlite3.Row.get()` → `_row_bool()` helper
+- `await analyze_recent_trades()` (был пропущенный await)
+- `sell_inventory_items()` list → int сравнение
+- `cmd_test` split into command + button (FSM fix)
 
-### Предметы не выставляются на продажу
-
-**Проверьте:**
-1. Inventory Manager запущен
-2. Предметы в статусе `at_inventory`
-3. Логи на ошибки API
-
-### Undercutting не работает
-
-**Проверьте:**
-1. `UNDERCUT_ENABLED=true`
-2. Есть активные лоты
-3. Цена не достигла порога `MIN_PROFIT_MARGIN`
-
-### Ошибка: "Auto-buy is disabled"
-
-**Решение:** Включите автопокупку:
-```bash
-/autobuy on
-```
-
-### Ошибка: "Discount 18.0% < 30.0%"
-
-**Решение:** Снизьте порог скидки в настройках или дождитесь более выгодного предложения.
-
-### Ошибка: "Price $150.00 > $100.00"
-
-**Решение:** Увеличьте максимальную цену в настройках:
-```python
-config.max_price_usd = 200.0
-```
-
----
-
-## Contract Testing
-
-### Pact Not Installed
-
-```bash
-# Error: pact-python not installed
-pip install pact-python>=2.2.0
-
-# Tests will be skipped automatically if not installed
-pytest tests/contracts/ -v
-```
-
-### Contract Verification failed
-
-```
-Contract verification failed!
-Expected: {"usd": "1234"}
-Got: {"balance": {"usd": 1234}}
-```
-
-**Решение:** Update expected response structure in `DMarketContracts`.
-
-### Pact Server Port Conflict
-
-```
-Address already in use: 1234
-```
-
-**Решение:** Change port in conftest.py or kill process using port:
-
-```bash
-# Find process
-lsof -i :1234
-
-# Kill it
-kill -9 <PID>
-```
-
----
-
-## Исправленные баги (Changelog)
-
-### Апрель 2026 - Code Quality Fixes
-
-#### Linting Fixes
-- **Fixed undefined variable errors (F821)**:
-  - `src/dmarket/auto_buyer.py` - Added TYPE_CHECKING import for TradingPersistence
-  - `src/dmarket/intramarket_arbitrage.py` - Fixed duplicate code with key_parts/composite_key
-  - `src/dmarket/price_anomaly_detector.py` - Made `_init_api_client` async
-
-- **Fixed unused variable warnings (F841)**:
-  - Properly marked unused but intentional variables with underscore prefix
-  - Updated files: `item_value_evaluator.py`, `price_analyzer.py`, `command_center.py`
-  - Updated handlers: `extended_stats_handler.py`, `market_sentiment_handler.py`
-  - Updated utils: `collectors_hold.py`
-
-- **Fixed type comparison issues (E721)**:
-  - `src/utils/env_validator.py` - Changed `==` to `is` for type comparisons
-
-- **Fixed import order (E402)**:
-  - `src/telegram_bot/dependencies.py` - Moved TypeVar import to top
-
-- **Fixed mypy syntax error**:
-  - `src/utils/prometheus_metrics.py` - Fixed inline type comment causing syntax error
-
-#### Test Fixes
-- **Fixed MCP Server tests**:
-  - Corrected patch paths for `ArbitrageScanner` and `TargetManager`
-  - Fixed test accessing internal `_request_handlers` attribute
-
-- **Fixed price_anomaly_detector tests**:
-  - Made `_init_api_client` function async to match test expectations
-
-- Test collection errors reduced from 17 to 6 (65% improvement)
-- Virtualenv issues fixed (documented: use `poetry run pytest`)
-- File mismatch error for duplicate test files fixed
-- Import errors for optional dependencies handled gracefully
+### Core
+- Volume-tier fix: title_volume lookup получает реальные данные
+- Таблицы SQLite создаются при первом запуске
+- Lock-файл защищён SHA-256 хешем
 
 ---
 
 ## 📚 Полезные ссылки
 
-- [Error Handling Guide](ERROR_HANDLING_COMPLETE_GUIDE.md) - Руководство по обработке ошибок
-- [DMarket API Documentation](https://docs.dmarket.com/)
-- [Telegram Bot API](TELEGRAM_BOT_API.md)
-- [Steam API Reference](STEAM_API_REFERENCE.md)
-- [Database Migrations](DATABASE_MIGRATIONS.md)
-- [n8n Deployment Guide](N8N_DEPLOYMENT_GUIDE.md)
-
----
-
-**Версия:** 1.0  
-**Создано:** Апрель 2026  
-**Автор:** DMarket Telegram Bot Team
-
----
-
-## 🔍 Найденные и исправленные ошибки (Апрель 2026)
-
-### 1. Ошибка: `RateLimiter is required for DMarketRateLimiter`
-
-**Причина:** Отсутствует зависимость `RateLimiter`
-
-**Решение:**
-```bash
-pip install RateLimiter
-```
-
-### 2. Ошибка: Cache TTL=0 неправильное поведение
-
-**Файл:** `src/dmarket/scanner/cache.py`
-
-**Причина:** При TTL=0 кэш должен означать "никогда не истекает", но код проверял `time.time() - timestamp > 0` что всегда истинно.
-
-**Решение:** Добавлена проверка `if self._ttl > 0` перед проверкой истечения срока.
-
-### 3. Ошибка: httpx mock не соответствует URL с query параметрами
-
-**Файл:** `tests/integration/test_api_with_httpx_mock.py`
-
-**Причина:** URL с query параметрами в разном порядке не совпадают при точном сравнении.
-
-**Решение:** Использовать regex для URL matching:
-```python
-import re
-httpx_mock.add_response(
-    url=re.compile(r"https://api\.dmarket\.com/exchange/v1/market/items\?.*"),
-    method="GET",
-    json=response,
-)
-```
-
-### 4. Ошибка: `DMarketAPIError` не найден
-
-**Файл:** `tests/integration/test_dmarket_vcr.py`
-
-**Причина:** Класс переименован в `APIError`
-
-**Решение:** Заменить `DMarketAPIError` на `APIError` и `RateLimitError` на `RateLimitExceeded`
-
-### 5. Ошибка: Модули ML не найдены
-
-> **Примечание:** Все ML/AI модули были удалены из проекта в апреле 2026.
-> Бот теперь использует детерминистическую математическую валидацию через `price_validator.py`.
-> Если вы видите ошибки связанные с ML — это означает что в коде остались устаревшие импорты.
-
-### 7. Ошибка: test_cache_stampede_prevention timeout
-
-**Файл:** `tests/performance/test_performance_suite.py`
-
-**Причина:** Тест зависает из-за deadlock с asyncio.Lock
-
-**Решение:** Добавлен skip маркер для этого теста
-
----
-
-## 📊 Сводка результатов тестирования
-
-| Метрика | Значение |
-|---------|----------|
-| **Всего тестов** | ~4700+ |
-| **Прошло** | 4705 |
-| **Пропущено** | 58 |
-| **Провалено** | 1 (minor) |
-
-### Пропущенные тесты (причины):
-- `fastapi` не установлен (web dashboard — удалён)
-- `pytest-benchmark` не установлен (performance benchmarks)
-- `psutil` не установлен (memory profiling)
-- Требуются реальные API ключи (VCR cassette recording)
-
----
-
-## 🛠️ Рекомендации
-
-1. **Установите все опциональные зависимости:**
-   ```bash
-   pip install pytest-benchmark psutil
-   ```
-
-2. **Performance тесты:**
-   - Используйте `pytest-benchmark` для бенчмарков
-   - Увеличьте timeout для длительных тестов
+- [ARCHITECTURE.md](ARCHITECTURE.md) — архитектура v14.4
+- [QUICK_START.md](QUICK_START.md) — быстрый старт
+- [deployment.md](deployment.md) — Docker + bare metal deployment
+- [DMarket API](https://docs.dmarket.com/)
+- [Telegram Bot API](https://core.telegram.org/bots/api)
 
 
+**Версия:** 14.4  
+**Создано:** Июнь 2026  
 
----
-🦅 *DMarket Quantitative engine | v7.0 | 2026*
 
------ 
-🦅 *DMarket Quantitative Engine | v7.0 | 2026*
+🦅 *DMarket Quantitative Engine | v14.4 | June 2026*
