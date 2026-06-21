@@ -1,47 +1,106 @@
 """
-pricing.py — Float premium + low-fee cache refresh.
+pricing.py — Float premium + pattern/phase premium + low-fee cache refresh.
 
 Mixin with the pricing-related helpers used by the sniping loop.
 Mixed into `SnipingLoop` (see `core.py`).
+
+v14.6: Extended with dirty BS, round-float, float-date, Crimson Web,
+       Fire & Ice, Fade %, and Blue Gem detection.
 """
 
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from src.db.price_history import price_db
 
 logger = logging.getLogger("SnipingBot")
 
 
+# Float ranges that have specific premium values
+_FLOAT_PREMIUM_TABLE = [
+    # (min_float, max_float, multiplier, label)
+    (0.000, 0.001, 1.25, "FN-double-zero"),
+    (0.001, 0.010, 1.20, "FN-0"),
+    (0.010, 0.030, 1.12, "FN-1"),
+    (0.030, 0.070, 1.08, "FN"),
+    (0.070, 0.080, 1.08, "MW-0"),
+    (0.080, 0.100, 1.05, "MW"),
+    (0.150, 0.180, 1.15, "FT-0"),
+    (0.380, 0.390, 1.08, "WW-0"),
+    (0.450, 0.460, 1.10, "BS-0"),
+    (0.950, 1.000, 1.30, "BS-dirty"),
+]
+
+_ROUND_FLOATS = {0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875}
+
+# Phase premiums (Doppler, Gamma Doppler, etc.)
+_PHASE_PREMIUM: Dict[str, float] = {
+    "Ruby": 5.0,
+    "ruby": 5.0,
+    "Sapphire": 5.0,
+    "sapphire": 5.0,
+    "Black Pearl": 4.0,
+    "blackpearl": 4.0,
+    "black_pearl": 4.0,
+    "Emerald": 4.0,
+    "emerald": 4.0,
+    "Phase 2": 1.5,
+    "phase2": 1.5,
+    "P2": 1.5,
+    "Phase 4": 1.3,
+    "phase4": 1.3,
+    "P4": 1.3,
+    "Phase 1": 1.02,
+    "phase1": 1.02,
+    "P1": 1.02,
+    "Phase 3": 1.0,
+    "phase3": 1.0,
+    "P3": 1.0,
+}
+
+# Blue Gem paint seeds (Case Hardened patterns with >70% blue)
+_BLUE_GEM_SEEDS: set[int] = {
+    661,  # AK-47 #1 pattern
+    955,  # Five-SeveN #1
+    151,  # AK-47 #2
+    321,  # Five-SeveN #2
+    268,  # AK-47 #3
+    131,  # Five-SeveN #3
+    202, 760, 437, 569,  # Additional blue gems
+    387, 470, 670, 828,  # Extended blue gem patterns
+}
+
+# Fire & Ice paint seeds (Marble Fade knives — max red + max blue, no yellow)
+_FIRE_ICE_SEEDS: set[int] = {
+    152, 412, 541, 601, 649, 670, 777, 853, 922, 947,
+}
+
+# Crimson Web seeds with 3+ webs on playside (most valuable)
+_CRIMSON_WEB_3WEB_SEEDS: set[int] = {
+    34, 71, 112, 189, 233, 341, 444, 509, 558, 633,
+    704, 779, 812, 887, 921,
+}
+
+
 class _PricingMixin:
     """Float premium + low-fee cache helpers + pattern/phase premium."""
 
-    # These attributes are set on the instance by SnipingLoop.__init__
     client: Any  # DMarketAPIClient
 
     async def _simulate_network_latency(self, client_type: str = "dmarket") -> None: ...
     def _maybe_inject_error(self, method_name: str) -> None: ...
 
     # ------------------------------------------------------------------
-    # v12.0 Phase 1.2: Float Premium
+    # Float Premium (v14.6: enhanced with dirty BS, round float, dates)
     # ------------------------------------------------------------------
     @staticmethod
     def _calculate_float_premium(attrs: Dict[str, Any]) -> float:
-        """
-        Returns a price multiplier based on item's float value.
+        """Returns a price multiplier based on item's float value.
 
-        Float ranges (CS2):
-        - FN-0: 0.00 - 0.01  (best) → 1.20x
-        - FN:   0.00 - 0.07   → 1.10x
-        - MW:   0.07 - 0.15   → 1.00x
-        - FT-0: 0.15 - 0.18   → 1.15x
-        - FT:   0.15 - 0.38   → 1.00x
-        - WW:   0.38 - 0.45   → 0.95x
-        - BS:   0.45 - 1.00   → 0.90x
-
-        Returns 1.0 (no premium) if float not available.
+        Covers: FN double-zero, FN-0, MW-0, FT-0 (trade-up demand),
+        BS-0, dirty BS (0.95+), round floats, float dates.
         """
         try:
             float_str = attrs.get("floatPartValue")
@@ -51,33 +110,36 @@ class _PricingMixin:
         except (ValueError, TypeError):
             return 1.0
 
-        if float_val < 0.01:
-            return 1.20  # FN-0
-        if float_val < 0.07:
-            return 1.10  # FN
-        if 0.15 <= float_val <= 0.18:
-            return 1.15  # FT-0
-        if 0.38 <= float_val < 0.45:
-            return 0.95  # WW
-        if float_val >= 0.45:
-            return 0.90  # BS
-        return 1.0  # MW / regular FT
+        multiplier = 1.0
+
+        # 1. Standard float premium
+        for lo, hi, mult, _label in _FLOAT_PREMIUM_TABLE:
+            if lo <= float_val < hi:
+                multiplier = mult
+                break
+
+        # 2. Round-float premium (collectors love 0.5, 0.25, etc.)
+        for rf in _ROUND_FLOATS:
+            if abs(float_val - rf) < 0.00001:
+                multiplier = max(multiplier, 1.15)
+                break
+
+        # 3. Float-date detection (0.21021992xxxx = 21 Feb 1992)
+        if _is_float_date(float_val):
+            multiplier = max(multiplier, 1.10)
+
+        return multiplier
 
     # ------------------------------------------------------------------
-    # v13.0 Phase 1.3: Pattern / Phase Premium
+    # Pattern / Phase / Paint Premium (v14.6: Crimson Web, Fire & Ice, Fade, Blue Gem)
     # ------------------------------------------------------------------
     @staticmethod
     def _calculate_pattern_premium(attrs: Dict[str, Any]) -> float:
-        """
-        Returns a price multiplier based on rare phases, patterns, and paint seeds.
+        """Returns a price multiplier based on rare phases, patterns, paint seeds.
 
-        Known premium patterns (CS2):
-        - Doppler Phase 2 / Phase 4 → 1.05-1.15x
-        - Doppler Ruby → 2.0x+, Sapphire → 3.0x+, Emerald → 1.5x+
-        - Gamma Doppler Phase 2 → 1.05x
-        - Low paintSeed (<10) on some patterns → 1.02-1.05x (corner/webbing)
-
-        Returns 1.0 (no premium) if no rare attributes detected.
+        Covers: Doppler phases (Ruby/Sapphire/Emerald/Black Pearl/P1-P4),
+        Blue Gem (Case Hardened), Fire & Ice (Marble Fade),
+        Crimson Web (3+ webs), Fade percentage.
         """
         try:
             phase = attrs.get("phase", "")
@@ -89,31 +151,37 @@ class _PricingMixin:
 
         multiplier = 1.0
 
-        # Doppler phase premium
-        if phase in ("Ruby", "ruby"):
-            multiplier = 2.0
-        elif phase in ("Sapphire", "sapphire"):
-            multiplier = 3.0
-        elif phase in ("Black Pearl", "blackpearl", "black_pearl"):
-            multiplier = 1.5
-        elif phase in ("Emerald", "emerald"):
-            multiplier = 1.5
-        elif phase in ("Phase 2", "phase2", "P2"):
-            multiplier = 1.10
-        elif phase in ("Phase 4", "phase4", "P4"):
-            multiplier = 1.05
-        elif phase in ("Phase 1", "phase1", "P1"):
-            multiplier = 1.02
-        elif phase in ("Phase 3", "phase3", "P3"):
-            multiplier = 1.0
+        # 1. Phase-based premium (Doppler, Gamma Doppler, etc.)
+        phase_mult = _PHASE_PREMIUM.get(phase, 1.0)
+        if phase_mult > multiplier:
+            multiplier = phase_mult
 
-        # Rare paint seeds (e.g., pattern 661, 955, 151 for web/triangle patterns)
-        if not multiplier > 1.0 and paint_seed in (661, 955, 151, 321, 268, 131, 202, 760, 437, 569):
+        # 2. Blue Gem detection (Case Hardened patterns)
+        if paint_seed in _BLUE_GEM_SEEDS:
+            multiplier = max(multiplier, 3.0)
+
+        # 3. Fire & Ice detection (Marble Fade)
+        if paint_seed in _FIRE_ICE_SEEDS:
+            multiplier = max(multiplier, 5.0)
+
+        # 4. Crimson Web 3+ webs
+        if paint_seed in _CRIMSON_WEB_3WEB_SEEDS:
+            multiplier = max(multiplier, 2.0)
+
+        # 5. Generic rare seeds (if not already matched by specific set)
+        if multiplier == 1.0 and paint_seed in (661, 955, 151, 321, 268, 131, 202, 760, 437, 569):
             multiplier = 1.05
 
-        # Very low paint seed (clean corners on some knives)
-        if not multiplier > 1.0 and 0 < paint_seed < 5:
+        # 6. Very low paint seed (clean corners on some knives)
+        if multiplier == 1.0 and 0 < paint_seed < 5:
             multiplier = 1.03
+
+        # 7. Fade % premium (from paint_seed mapping to fade percentage)
+        fade_pct = _estimate_fade_pct(paint_seed)
+        if fade_pct >= 98:
+            multiplier = max(multiplier, 2.5 if fade_pct >= 100 else 2.0)
+        elif fade_pct >= 95:
+            multiplier = max(multiplier, 1.5)
 
         return multiplier
 
@@ -126,12 +194,34 @@ class _PricingMixin:
             paint_seed = int(paint_seed_str)
         except (ValueError, TypeError):
             return False
-        rare_phases = ("Ruby", "Sapphire", "Black Pearl", "Emerald", "Phase 2", "Phase 4")
-        rare_seeds = (661, 955, 151, 321, 268, 131, 202, 760, 437, 569)
-        return phase in rare_phases or paint_seed in rare_seeds
+        rare_phases = (
+            "Ruby", "Sapphire", "Black Pearl", "Emerald",
+            "Phase 2", "Phase 4", "P2", "P4",
+        )
+        rare_sets = _BLUE_GEM_SEEDS | _FIRE_ICE_SEEDS | _CRIMSON_WEB_3WEB_SEEDS
+        generic_rare = {661, 955, 151, 321, 268, 131, 202, 760, 437, 569}
+        return (
+            phase in rare_phases
+            or paint_seed in rare_sets
+            or paint_seed in generic_rare
+        )
 
     # ------------------------------------------------------------------
-    # v12.0 Phase 1.1: Low-fee cache
+    # Dirty BS detection
+    # ------------------------------------------------------------------
+    @staticmethod
+    def is_dirty_bs(attrs: Dict[str, Any]) -> bool:
+        """Detect Battle-Scarred items with float > 0.95 that change appearance."""
+        try:
+            float_str = attrs.get("floatPartValue")
+            if not float_str:
+                return False
+            return float(float_str) > 0.95
+        except (ValueError, TypeError):
+            return False
+
+    # ------------------------------------------------------------------
+    # Low-fee cache
     # ------------------------------------------------------------------
     async def _refresh_low_fee_cache(self, game_id: str) -> None:
         """Refresh the low-fee items cache from DMarket (24h TTL)."""
@@ -147,3 +237,45 @@ class _PricingMixin:
                 logger.info(f"[LOW-FEE] Cached {len(items)} low-fee items (refreshed)")
         except Exception as e:
             logger.debug(f"Low-fee cache refresh failed: {e}")
+
+
+# ------------------------------------------------------------------
+# Standalone helpers (called from filter pipeline)
+# ------------------------------------------------------------------
+
+def _is_float_date(value: float) -> bool:
+    """Detect if float encodes a date: 0.DDMMYYYYxxxxx"""
+    s = f"{value:.10f}"[2:]
+    try:
+        day = int(s[0:2])
+        month = int(s[2:4])
+        year = int(s[4:8])
+        if 1 <= day <= 31 and 1 <= month <= 12 and 1970 <= year <= 2026:
+            return True
+    except (ValueError, IndexError):
+        pass
+    return False
+
+
+def _estimate_fade_pct(paint_seed: int) -> int:
+    """Estimate Fade percentage from paint_seed (approximate).
+
+    Real fade % requires 3D rendering. This is a heuristic approximation.
+    Seeds 0-100 tend to be low fade, 900-1000 tend to be high fade.
+    """
+    if paint_seed <= 0:
+        return 85
+    fade = 80 + (paint_seed % 20)
+    if 900 <= paint_seed <= 1000:
+        fade = 95 + (paint_seed % 5)
+    return min(fade, 100)
+
+
+def get_float_premium(attrs: Dict[str, Any]) -> float:
+    """Standalone float premium calculator (for use outside mixin)."""
+    return _PricingMixin._calculate_float_premium(attrs)
+
+
+def get_pattern_premium(attrs: Dict[str, Any]) -> float:
+    """Standalone pattern premium calculator (for use outside mixin)."""
+    return _PricingMixin._calculate_pattern_premium(attrs)

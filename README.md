@@ -1,8 +1,8 @@
-# 🦅 DMarket Quantitative Engine v14.4
+# 🦅 DMarket Quantitative Engine v14.6
 
 **Algorithmic CS2 skin trading bot for DMarket marketplace + CS2Cap multi-market oracle (41 marketplaces).**
 
-Автономная торговая система на строгих количественных алгоритмах. Стратегия: intra-market spread sniping + cross-market arbitrage + order book microstructure — с мгновенной капитализацией спреда (TRADE_LOCK_HOURS=0).
+Автономная торговая система на строгих количественных алгоритмах. Стратегия: intra-market spread sniping + cross-market arbitrage + order book microstructure + **value detection layers (v14.6)** — с мгновенной капитализацией спреда (TRADE_LOCK_HOURS=0).
 
 ---
 
@@ -13,6 +13,24 @@
 Бот сканирует DMarket marketplace в поиске моментальных арбитражных возможностей — когда текущая цена продавца (`best_ask`) значительно ниже ближайшего bid-ордера (`best_bid`) или когда на внешнем маркетплейсе (CSFloat, Skinport, Buff163) бай-ордер выше DMarket ask. Находит — покупает мгновенно — **немедленно выставляет на продажу** по агрегированным ценам CS2Cap (41 маркетплейс) с учётом комиссий.
 
 **Ключевое отличие:** DMarket разрешает мгновенную перепродажу предметов, купленных на marketplace. Steam Trade Protection (7 дней) блокирует только вывод в Steam, не внутриплатформенную торговлю. Бот использует это: capital velocity ~3-5 сделок/день на единицу капитала.
+
+### v14.6 Value Detection Layers (New)
+
+Начиная с v14.6, бот использует **9 слоёв детекции ценности**, вдохновлённых анализом TA (Технологии Автоматизации):
+
+| Слой | Что даёт | Множитель |
+|---|---|---|
+| **Float Premium** | Перепродажа скинов с редким флоатом (FN-0, dirty BS) | 1.08–1.30× |
+| **Round-Float** | Коллекционные ровные флоаты (0.5, 0.25, 0.125) | 1.15× |
+| **Float-Date** | Флоаты, образующие дату (0.21021992xxxx) | 1.08× |
+| **Pattern Premium** | Doppler Ruby/Sapphire, Blue Gem, Fire & Ice, Crimson Web | 1.5–5.0× |
+| **Sticker Combo** | 4× одинаковых = +100%, team/event match = +10% | до 3.0× |
+| **Filler Tracker** | Скины для крафтов (повышенный спрос) | 1.15× |
+| **Seasonal Timing** | Сезонные/недельные/часовые циклы цен | 0.85–1.15× |
+| **Commission Opt.** | Приоритет предметов с 2% комиссией | +15% score |
+| **Dirty BS** | BS скины с float > 0.95 (чёрные/цветные) | 1.10× |
+
+Все слои работают **через DMarket API** — 0 HTTP-запросов дополнительно. Никакого скрапинга.
 
 ### v14.4 Balance-Aware Trading
 
@@ -56,6 +74,7 @@
   │      └─ best_ask, best_bid, ask_count, bid_count
   │
   ├─ 2. Ранжирование: score = spread_$ × √(ask+bid_count)
+  │      └─ ⭐ Commission Optimizer: +15% за 2% fee, +8% за filler
   │      └─ отбор top-N (20) по volume-weighted spread
   │
   ├─ 3. Честные листинги (parallel)
@@ -71,11 +90,12 @@
   │      └─ POST /prices/batch + POST /bids/batch (100 items each)
   │      └─ Hot path: sub-ms dict lookup
   │
-  ├─ 6. === ФИЛЬТРЫ (v14.4 pipeline, _evaluate_candidate) ===
+  ├─ 6. === ФИЛЬТРЫ (v14.6 pipeline, _evaluate_candidate) ===
   │      │
   │      ├─ 🆕 Dynamic max price: max(floor, balance * fraction) ⭐v14.4
   │      ├─ 🆕 Drawdown freeze: balance < peak * 85% → skip buying ⭐v14.4
   │      ├─ 🆕 Capital velocity: weekly sales < 0.5x → pause ⭐v14.4
+  │      ├─ ⭐ Seasonal timing: dynamic spread threshold ⭐v14.6
   │      ├─ 🟢 Bait Detection: >3 изменений цены за 5 мин → skip
   │      ├─ 🟢 OBI: bid_volume/ask_volume < 0.7 → skip (seller-dominated)
   │      ├─ 🟢 OFI: delta(bid-ask) < -10 → skip (falling demand)
@@ -93,21 +113,29 @@
   │      ├─ 🆕 Kelly sizing: position = Half Kelly × capital ⭐v14.4
   │      ├─ 🆕 Lock-aware cap: ≤80% capital in trade-lock ⭐v14.4
   │      ├─ Saturation: ≤3 same item, ≤dynamic_max items, ≤$100 total
-  │      └─ Rare flags: stickers >$2, Ruby/Sapphire, FN-0 → exclusive
+  │      └─ ⭐ Rare flags: v14.6 value detection → exclusive
   │
-  ├─ 7. Slippage protection (parallel re-verify prices)
+  ├─ 7. ⭐ VALUE DETECTION LAYERS (v14.6):
+  │      ├─ Float Premium (FN-0 1.20x, double-zero 1.25x, dirty BS 1.30x)
+  │      ├─ Pattern Premium (Ruby 5x, Blue Gem 3x, Fire & Ice 5x)
+  │      ├─ Sticker Combo (4x same = +100%, team match = +10%)
+  │      ├─ Filler Demand (+15% for trade-up filler skins)
+  │      ├─ Round-Float / Float-Date bonuses (1.08-1.15x)
+  │      └─ All applied to list_price → adjusted_value
   │
-  ├─ 8. Execute instant-buys → POST /exchange/v1/market/buy
+  ├─ 8. Slippage protection (parallel re-verify prices)
   │
-  ├─ 9. Auto-resale (immediate, each cycle)
+  ├─ 9. Execute instant-buys → POST /exchange/v1/market/buy
+  │
+  ├─10. Auto-resale (immediate, each cycle)
   │      ├─ 🟢 A-S: reservation_price с inventory skew
   │      ├─ 🟢 Micro-Price: volume-adjusted fair price
   │      ├─ 🟢 DOM Gap: вставка в ценовые разрывы
   │      └─ Batch listing: POST /v2/offers:batchCreate
   │
-  ├─10. Reprice stale listings (every 200 cycles, drop 5%)
+  ├─11. Reprice stale listings (every 200 cycles, drop 5%)
   │
-  └─11. 🟢 Cleanup trade_history >90 days (every 200 cycles)
+  └─12. 🟢 Cleanup trade_history >90 days (every 200 cycles)
 ```
 
 ---
