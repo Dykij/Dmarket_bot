@@ -1,7 +1,7 @@
-# DMarket Quantitative Engine — Technical Architecture (v14.4)
+# DMarket Quantitative Engine — Technical Architecture (v14.6)
 
 ## 1. System Overview
-The DMarket Quantitative Engine is a high-performance algorithmic CS2 skin trading bot that combines intra-market spread sniping, cross-market arbitrage through CS2Cap oracle, and order book microstructure analysis — all with **balance-aware capital management** (v14.4). It operates as a deterministic state machine with Rust-accelerated critical paths.
+The DMarket Quantitative Engine is a high-performance algorithmic CS2 skin trading bot that combines intra-market spread sniping, cross-market arbitrage through CS2Cap oracle, order book microstructure analysis, and **value detection layers (v14.6)** — all with **balance-aware capital management** (v14.4). It operates as a deterministic state machine with Rust-accelerated critical paths.
 
 ## 2. Architecture Diagram
 
@@ -88,6 +88,22 @@ All DMarket interactions use Ed25519 signing (Rust pynacl with Python fallback).
 | Lock-Aware Cap | `locked_value > balance × 0.80` | SKIP |
 | Capital Velocity | `weekly_sales / avg_balance < 0.5` | PAUSE |
 
+### 4.3 v14.6 Value Detection Layer
+
+Nine modules that enrich the `adjusted_value` per item, all using data already returned by DMarket's REST API (zero scraping):
+
+| Module | File | Premium | Data Source |
+|---|---|---|---|
+| Float Premium | `pricing.py` | 1.08–1.30× | `floatPartValue` |
+| Pattern Premium | `pricing.py` | 1.0–5.0× | `phase` + `paintSeed` |
+| Sticker Combo | `stickers_evaluator.py` | up to 3.0× | `stickers` array |
+| Filler Tracker | `filler_tracker.py` | 1.15× | Static set of 35 filler skins |
+| Seasonal Timing | `seasonal.py` | 0.85–1.15× | System clock |
+| Round-Float | `pricing.py` | 1.15× | `floatPartValue` |
+| Float-Date | `pricing.py` | 1.08× | `floatPartValue` |
+| Dirty BS | `pricing.py` | 1.10× | `floatPartValue` > 0.95 |
+| Commission Opt. | `ranking.py` | +15% score | `low_fee_items` cache |
+
 ## 5. Analysis Instruments (12 tools)
 
 | Tool | Data Source | Purpose | API Calls |
@@ -150,4 +166,4 @@ All DMarket interactions use Ed25519 signing (Rust pynacl with Python fallback).
 | SQLite DB size | ~2 MB (growing) |
 
 
-🦅 *DMarket Quantitative Engine | v14.4 | June 2026*
+🦅 *DMarket Quantitative Engine | v14.6 | June 2026*

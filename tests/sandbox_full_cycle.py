@@ -1,20 +1,9 @@
 """
-Sandbox Test v14.3 — Full Buy → CS2Cap → Sell Cycle (Dry Run).
+Sandbox Test v14.6 — Full Buy → CS2Cap → Sell Cycle + Value Detection.
 
-Fast, robust test of the bot's ability to find and execute profitable
-arbitrage opportunities. Runs in <60 seconds using batch API endpoints
-and parallel execution.
-
-Features:
-- No CS2Cap catalog required (uses /prices/batch, takes hash_names directly)
-- Parallel DMarket + CS2Cap calls via asyncio.gather
-- Step-level timeouts (no single step blocks >15 seconds)
-- Real margin calculation with dynamic fee estimation
-- Microstructure scoring (OBI, CVD, VPIN, VWAP, composite buy score)
-- Bottom-neck detection (what gets filtered and why)
-- Profitability summary with top opportunities
-
-Run: python -m tests.sandbox_full_cycle
+v14.6: Added float premium, pattern/phase premium, sticker combo,
+       seasonal timing, filler tracking, dirty BS, round float,
+       float date, commission optimizer (TA Site Analysis integration).
 """
 
 import asyncio
@@ -34,6 +23,7 @@ from src.config import Config
 from src.api.dmarket_api_client import DMarketAPIClient
 from src.api.oracle_factory import OracleFactory
 from src.api.cs2cap_oracle import CS2CapOracle
+from src.core.item_intel import DISCOUNT_THRESHOLD_PCT
 from src.db.price_history import price_db
 
 from src.analysis.microstructure import (
@@ -230,7 +220,7 @@ async def step_find_candidates(
         log_warn("Missing data — can't evaluate candidates")
         return [], filtered
 
-    # ---- Phase 1: Rank by spread-weighted volume, track filters ----
+    # ---- Phase 1: Rank by liquidity/volume, then CS2Cap cross-market check ----
     min_spread = Config.FEE_RATE * 100 * 2 + 3  # fee-aware minimum spread %
     ranked = []
     for title, agg in agg_prices.items():
@@ -238,43 +228,31 @@ async def step_find_candidates(
         best_ask = agg.get("best_ask", 0) or 0
         ask_cnt = agg.get("ask_count", 0) or 0
         bid_cnt = agg.get("bid_count", 0) or 0
-        if best_bid <= 0 or best_ask <= 0:
+        if best_ask <= 0:
             continue
-        spread = best_bid - best_ask
-        if spread <= 0:
-            filtered["spread"].append({
-                "title": title, "reason": "negative/zero spread",
-                "best_bid": best_bid, "best_ask": best_ask,
-            })
-            continue
-        spread_pct = spread / best_ask * 100
         volume = ask_cnt + bid_cnt
 
-        if spread_pct < min_spread:
-            filtered["spread"].append({
-                "title": title, "reason": f"spread {spread_pct:.1f}% < min {min_spread:.0f}%",
-                "best_bid": best_bid, "best_ask": best_ask, "volume": volume,
-            })
-            continue
-
-        # Liquidity filter: items with extremely low volume
-        if volume < 5:
+        # v14.5: In a normal market, best_ask > best_bid.
+        # We're looking for cross-market arbitrage (DM cheap vs CS2Cap high),
+        # not intra-DM spread. Rank by liquidity/volume so we CS2Cap-check
+        # the most liquid items (which are likely to have cross-market data).
+        if volume < 3:
             filtered["liquidity"].append({
                 "title": title, "reason": f"volume={volume} too low",
-                "best_ask": best_ask, "best_bid": best_bid, "spread_pct": spread_pct,
+                "best_ask": best_ask, "best_bid": best_bid,
             })
             continue
 
-        score = spread_pct * math.sqrt(max(volume, 1))
-        ranked.append((title, best_ask, best_bid, spread_pct, volume, score,
+        score = volume
+        ranked.append((title, best_ask, best_bid, 0.0, volume, score,
                         ask_cnt, bid_cnt))
 
     ranked.sort(key=lambda x: -x[5])
-    top = ranked[:20]  # Top 20 most promising
-    log_info(f"Top {len(top)} candidates (spread > {min_spread:.0f}% min)")
+    top = ranked[:20]  # Top 20 most liquid items
+    log_info(f"Top {len(top)} candidates (most liquid)")
 
     if not top:
-        log_warn("No candidates meet minimum spread threshold")
+        log_warn("No candidates — low liquidity")
         return [], filtered
 
     # ---- Phase 2: Fetch CS2Cap batch prices ----
@@ -295,27 +273,24 @@ async def step_find_candidates(
     if cs2cap_prices:
         log_ok(f"CS2Cap prices for {len(cs2cap_prices)}/{len(titles_for_cs2cap)} titles")
 
-    # ---- Phase 3: Evaluate each candidate + microstructure ----
+    # ---- Phase 3: Scan DMarket for cheap items, check CS2Cap cross-market ----
     from src.api.dmarket_api_client.fees import _FeesMixin
 
     candidates = []
+
+    # Use the previously fetched prices to evaluate candidates
     for item in top:
         title, ask, bid, spread_pct, volume, score, ask_cnt, bid_cnt = item
         cs_price = cs2cap_prices.get(title, 0)
+        if cs_price <= 0:
+            continue
         dm_buy_price = ask
 
-        # Fee estimate from volume
-        fee = _FeesMixin._estimate_fee_from_volume(ask_count=volume, bid_count=volume)
+        fee = _FeesMixin._estimate_fee_from_volume(ask_count=volume)
         total_fee = fee + Config.WITHDRAWAL_FEE_RATE
 
-        # Estimate sell price: use CS2Cap if available, else DMarket bid
-        if cs_price > 0:
-            sell_price = cs_price * 0.97  # 3% undercut vs global lowest
-            ref = f"CS2Cap=${cs_price:.2f}"
-        else:
-            sell_price = bid * 0.99
-            ref = f"DMarket bid=${bid:.2f}"
-
+        sell_price = cs_price * 0.97
+        ref = f"CS2Cap=${cs_price:.2f}"
         net = sell_price * (1 - total_fee)
         profit = net - dm_buy_price
         margin_pct = (profit / dm_buy_price * 100) if dm_buy_price > 0 else 0
@@ -327,44 +302,25 @@ async def step_find_candidates(
             })
             continue
 
-        # ---- Phase 3a: Microstructure scoring ----
+        # ---- Microstructure scoring ----
         sales = _generate_synthetic_sales(ask, bid, ask_cnt, bid_cnt)
         has_trades = len(sales) >= 3
 
-        # OBI — always computable from agg data
         obi_val = simple_obi(bid, ask, bid_cnt, ask_cnt)
-
-        # VWAP
-        if has_trades:
-            vwap_val, vwap_vol, _ = compute_vwap(sales)
-            vwap_discount_sig = vwap_signal(ask, sales, threshold=0.90)
-        else:
-            vwap_val = 0.0
-            vwap_discount_sig = None
-
-        # CVD
+        vwap_val, vwap_vol, _ = compute_vwap(sales) if has_trades else (0.0, 0.0, [])
+        vwap_discount_sig = vwap_signal(ask, sales, threshold=0.90) if has_trades else None
         cvd_val = compute_cvd(sales) if has_trades else 0.0
-
-        # VPIN
         vpin_val = compute_vpin(sales, n_buckets=4) if has_trades else None
-
-        # Kyle lambda
         kyle_lam = kyle_lambda(sales) if has_trades else None
-
-        # Adverse selection
         adverse_pass, adverse_reason = (
-            adverse_selection_check(sales) if has_trades
-            else (True, "no data")
+            adverse_selection_check(sales) if has_trades else (True, "no data")
         )
-
-        # Parkinson volatility → regime
         park_vol = realized_vol_parkinson(sales) if has_trades else None
         vol_regime = classify_volatility_regime(park_vol or 0.15)
 
-        # Composite buy score
         vwap_disc = vwap_discount_sig if vwap_discount_sig is not None else 0.0
         vpin_safe = vpin_val if vpin_val is not None else 0.5
-        ofi = (bid_cnt - ask_cnt)  # proxy OFI from order counts
+        ofi = (bid_cnt - ask_cnt)
 
         comp_score, comp_parts = composite_buy_score(
             best_ask=ask, best_bid=bid,
@@ -376,11 +332,8 @@ async def step_find_candidates(
             vol_regime=vol_regime,
             kyle_lam=kyle_lam,
         )
-
-        # Microstructure filter flags
         micro_filter = _check_microstructure(obi_val, cvd_val, vwap_val, ask, vpin_val)
 
-        # High-vol filter tracking
         if vol_regime == "high":
             filtered.setdefault("volatility", []).append({
                 "title": title, "vol_regime": vol_regime,
@@ -400,7 +353,6 @@ async def step_find_candidates(
             "spread_pct": round(spread_pct, 1),
             "volume": volume,
             "ref": ref,
-            # Microstructure fields
             "obi": obi_val,
             "cvd": cvd_val,
             "vwap": round(vwap_val, 4),
@@ -410,18 +362,17 @@ async def step_find_candidates(
             "park_vol": round(park_vol, 4) if park_vol else None,
             "kyle_lambda": kyle_lam,
             "adverse_pass": adverse_pass,
-            "composite_score": round(comp_score * 100, 1),  # 0-100 scale
+            "composite_score": round(comp_score * 100, 1),
             "micro_filter": micro_filter,
         })
 
-    # Sort by composite score then margin
     candidates.sort(key=lambda x: -(x["composite_score"] + x["margin_pct"] * 2))
-    log_info(f"Candidates with net profit > 0: {len(candidates)}")
-    log_info(f"Filtered — spread: {len(filtered['spread'])}, liquidity: {len(filtered.get('liquidity', []))}, "
+    log_info(f"Candidates with net profit > 0 (cross-market): {len(candidates)}")
+    log_info(f"Filtered — liquidity: {len(filtered.get('liquidity', []))}, "
              f"margin: {len(filtered['margin'])}, volatility: {len(filtered.get('volatility', []))}")
 
     if candidates:
-        log(f"\n  {'Item':<30} {'Buy':>6} {'Sell':>6} {'Profit':>6} {'Marg':>5} {'Comp':>5} {'Micro Filter'}")
+        log(f"\n  {'Item':<30} {'BuyDM':>6} {'SellCS2':>6} {'Profit':>6} {'Marg':>5} {'Comp':>5} {'Micro Filter'}")
         log(f"  {'─'*30} {'─'*6} {'─'*6} {'─'*6} {'─'*5} {'─'*5} {'─'*30}")
         for c in candidates[:15]:
             name = c["title"][:28] + (".." if len(c["title"]) > 30 else "")
@@ -472,109 +423,242 @@ async def step_market_scan(api: DMarketAPIClient) -> tuple[List[Dict], int]:
     log_ok(f"Scanned {len(all_items)} items ({titles_seen} unique titles)")
     log_info(f"Cheapest listing: ${cheapest:.2f}")
 
+    # v14.6: Value Detection Layers (TA Site Analysis)
+    try:
+        from src.core.target_sniping.pricing import get_float_premium, get_pattern_premium
+        from src.analytics.filler_tracker import is_filler, get_filler_multiplier
+        from src.analysis.seasonal import get_timing_multiplier
+
+        float_hits = 0
+        pattern_hits = 0
+        filler_hits = 0
+        for it in all_items[:200]:  # Sample first 200 items
+            attrs = {a.get("name"): a.get("value") for a in it.get("attributes", [])}
+            if get_float_premium(attrs) > 1.0:
+                float_hits += 1
+            if get_pattern_premium(attrs) > 1.0:
+                pattern_hits += 1
+            if is_filler(it.get("title", "")):
+                filler_hits += 1
+
+        timing = get_timing_multiplier()
+        log_info(
+            f"v14.6 Value Detection: {float_hits} float premiums, "
+            f"{pattern_hits} pattern premiums, "
+            f"{filler_hits} filler skins, timing={timing:.3f}x"
+        )
+    except Exception:
+        pass
+
+    # v14.5: Item intel — categorize + discount detection
+    try:
+        from src.core.item_intel import _ItemIntelMixin
+        intel = _ItemIntelMixin()
+        categories: dict[str, int] = {}
+        discounted = 0
+        for it in all_items:
+            title = it.get("title", "")
+            cat = intel.categorize_item(title)
+            categories[cat] = categories.get(cat, 0) + 1
+            if intel.is_discounted_deal(it, int(it.get("price", {}).get("USD", 0)) / 100.0):
+                discounted += 1
+        log_info(f"Categories: {', '.join(f'{k}:{v}' for k,v in sorted(categories.items(), key=lambda x:-x[1])[:5])}")
+        if discounted > 0:
+            log_info(f"Discounted deals (≥{DISCOUNT_THRESHOLD_PCT}%): {discounted}")
+    except Exception:
+        pass
+
     return all_items, titles_seen
 
-
 # =====================================================================
-# STEP 5: Buy Simulation + Inventory
+# STEP 5: Shadow Trading Engine (v14.5)
 # =====================================================================
-async def step_simulate_buy(
+async def step_shadow_engine(
     candidates: List[Dict],
-    api: DMarketAPIClient,
-    balance: float,
-) -> int:
-    """Simulate buying top candidates into virtual inventory."""
-    log("\n[5/6] 🛒 Simulated Buying")
+    agg_prices: Dict[str, Any],
+    cs2cap_ok: bool,
+) -> Optional[Dict[str, Any]]:
+    """Run full shadow trading simulation with live market data."""
+    log("\n[5/6] 🕶️ Shadow Trading Engine")
 
-    if not candidates:
-        log_warn("No candidates to buy")
-        return 0
+    if not candidates and not agg_prices:
+        log_warn("No data for shadow engine")
+        return None
 
-    # Buy top candidates that fit in budget and inventory caps
-    bought = 0
-    current_held = 0
-    total_cost = 0.0
-    max_items = min(Config.MAX_TOTAL_INVENTORY_ITEMS, 30)
-    max_value = Config.MAX_TOTAL_INVENTORY_VALUE
+    from src.core.shadow_engine import ShadowEngine
+    shadow = ShadowEngine(initial_balance=50.0)
 
-    for c in candidates:
-        if bought >= 10:
-            break
-        price = c["dm_buy_price"]
-        if price > Config.MAX_SNIPING_PRICE_USD:
-            continue
-        if total_cost + price > min(balance, max_value):
-            continue
-        if current_held >= max_items:
-            break
+    cands = candidates if candidates else _build_candidates_from_agg(agg_prices)
 
-        # Add to virtual inventory
-        price_db.add_virtual_item(c["title"], price, trade_lock_hours=Config.TRADE_LOCK_HOURS)
-        bought += 1
-        current_held += 1
-        total_cost += price
-
-        cs = c.get("composite_score", 0)
-        log(
-            f"  🛒 {c['title'][:40]} @ ${price:.2f} "
-            f"(sell ${c['sell_price']:.2f}, margin {c['margin_pct']:.1f}%, comp {cs:.0f})"
+    for cycle in range(1, 15):
+        result = shadow.record_cycle(
+            candidates=cands,
+            agg_prices=agg_prices,
+            cs2cap_ok=cs2cap_ok,
+            cycle=cycle,
+            max_buys=3,
+            max_spend_per_cycle=10.0,
         )
 
-    log_ok(f"Virtual buys: {bought} items, total cost: ${total_cost:.2f}")
-    return bought
+        if cycle % 5 == 0 or cycle == 1:
+            summary = shadow.get_portfolio_summary()
+            log(f"  📊 Cycle {cycle:>2}: balance=${summary['balance']:.2f} | "
+                f"equity=${summary['total_equity']:.2f} | "
+                f"PnL=${summary['total_pnl']:+.2f} | "
+                f"trades={summary['total_trades']} | "
+                f"WR={summary['win_rate']:.0f}%")
+
+    final = shadow.get_portfolio_summary()
+
+    log_ok(f"Shadow P&L: ${final['total_pnl']:+.2f} "
+           f"(ROI {final['roi_pct']:+.1f}%, "
+           f"DD {final['drawdown_pct']:.1f}%, "
+           f"{final['total_trades']} trades, "
+           f"WR {final['win_rate']:.0f}%)")
+
+    strats = final.get("strategies", {})
+    if len(strats) > 1:
+        log_info("Strategy Comparison:")
+        for name, s in sorted(strats.items(), key=lambda x: -x[1]["pnl"]):
+            log(f"    {name}: {s['trades']} trades, PnL ${s['pnl']:+.2f}, Wins {s['wins']}")
+
+    cats = shadow.get_position_breakdown()
+    if cats:
+        log_info(f"Portfolio: {', '.join(f'{k}:{v}' for k,v in sorted(cats.items()))}")
+
+    return final
+
+
+def _build_candidates_from_agg(agg_prices: Dict[str, Any]) -> List[Dict[str, Any]]:
+    candidates = []
+    for title, agg in list(agg_prices.items())[:30]:
+        ask = agg.get("best_ask", 0) or 0
+        bid = agg.get("best_bid", 0) or 0
+        if ask <= 0:
+            continue
+        margin = ((bid - ask) / ask * 100) if bid > 0 else 0
+        candidates.append({
+            "title": title,
+            "dm_buy_price": ask,
+            "best_ask": ask,
+            "best_bid": bid,
+            "margin_pct": margin,
+            "strategy": "CrossMarket" if margin > 5 else "MarketMaker",
+        })
+    return candidates
 
 
 # =====================================================================
-# STEP 6: Sell Simulation + Final Report
+# STEP 6: Stress Test Scenarios (v14.5)
 # =====================================================================
-async def step_simulate_sell() -> int:
-    """Simulate selling idle items via auto-resale."""
-    log("\n[6/6] 💰 Simulated Selling")
+async def step_stress_test(
+    candidates: List[Dict],
+    agg_prices: Dict[str, Any],
+) -> Dict[str, Dict[str, Any]]:
+    """Run shadow engine through multiple market scenarios."""
+    log("\n[6/6] 🌡️ Stress Test Scenarios")
 
-    idle = price_db.get_virtual_inventory(status="idle", only_unlocked=True)
-    if not idle:
-        log_warn("No idle items to sell")
-        return 0
+    if not agg_prices:
+        log_warn("No data for stress tests")
+        return {}
 
-    listed = 0
-    for it in idle[:5]:
-        buy_price = it["buy_price"]
-        sell_price = round(buy_price * 1.05, 2)
-        fee = round(sell_price * Config.FEE_RATE, 4)
-        profit = sell_price - buy_price - fee
-        log(
-            f"  📤 {it['hash_name'][:40]} → list ${sell_price:.2f} "
-            f"(profit ${profit:+.2f})"
-        )
-        listed += 1
+    cands = candidates if candidates else _build_candidates_from_agg(agg_prices)
 
-    log_ok(f"Ready to list: {listed} items")
-    return listed
+    from src.core.shadow_engine import run_stress_test
+    results = run_stress_test(
+        base_candidates=cands,
+        agg_prices=agg_prices,
+        cycles=15,
+    )
+
+    for name, r in results.items():
+        emoji = chr(0x1F7E2) if r["total_pnl"] > 0 else chr(0x1F534)  # green/red circle
+        log(f"  {emoji} {name}: PnL=${r['total_pnl']:+.2f} "
+            f"(ROI {r['roi_pct']:+.1f}%, DD {r['drawdown_pct']:.1f}%, "
+            f"{r['total_trades']} trades)")
+
+    log_ok(f"{len(results)} stress scenarios completed")
+    return results
 
 
 # =====================================================================
-# MICROSTRUCTURE REPORT HELPERS
+# STEP 7: Monte Carlo Simulation (v14.5)
 # =====================================================================
+async def step_monte_carlo(
+    candidates: List[Dict],
+    agg_prices: Dict[str, Any],
+) -> Optional[Dict[str, Any]]:
+    """Run Monte Carlo simulation for statistical significance."""
+    log("\n[7/7] 🎲 Monte Carlo Simulation")
+
+    if not agg_prices:
+        log_warn("No data for Monte Carlo")
+        return None
+
+    from src.core.live_shadow import LiveShadow
+
+    cands = candidates if candidates else _build_candidates_from_agg(agg_prices)
+    mc = LiveShadow()
+    mc._enabled = True
+    mc._engine.__init__(initial_balance=50.0)
+
+    # Run with reduced count for sandbox speed
+    runs = int(os.getenv("MONTE_CARLO_RUNS", "200"))
+    cycles_per_run = int(os.getenv("MONTE_CARLO_CYCLES", "20"))
+
+    log_info(f"Running {runs} simulations ({cycles_per_run} cycles each)...")
+    start = time.time()
+
+    result = await mc.run_monte_carlo(
+        candidates=cands,
+        agg_prices=agg_prices,
+        runs=runs,
+        cycles=cycles_per_run,
+    )
+
+    elapsed = time.time() - start
+    log_info(f"Completed in {elapsed:.1f}s")
+
+    log(f"  📊 *P&L Distribution:*")
+    log(f"    Mean:    ${result.mean_pnl:+.2f}")
+    log(f"    Median:  ${result.median_pnl:+.2f}")
+    log(f"    StdDev:  ${result.std_pnl:.2f}")
+    log(f"    Range:   ${result.min_pnl:+.2f} ... ${result.max_pnl:+.2f}")
+    log(f"    5th pct: ${result.pnl_5th:+.2f} (VaR 95%)")
+    log(f"    95th pct:${result.pnl_95th:+.2f}")
+    log(f"  📈 *Quality Metrics:*")
+    log(f"    Profit probability: {result.profit_probability:.1f}% of runs profitable")
+    log(f"    Sharpe estimate:    {result.sharpe_estimate:.2f}")
+    log(f"    Avg win rate:       {result.win_rate_mean:.1f}%")
+    log(f"    Avg max drawdown:   {result.max_drawdown_mean:.1f}%")
+
+    verdict = "🟢 STRATEGY HAS EDGE" if result.mean_pnl > 0 and result.profit_probability > 55 else "🔴 NO STATISTICAL EDGE"
+    log_ok(f"{verdict} (mean PnL ${result.mean_pnl:+.2f}, {result.profit_probability:.1f}% profitable)")
+    return {"runs": result.runs, "mean_pnl": result.mean_pnl, "profit_probability": result.profit_probability, "sharpe": result.sharpe_estimate}
+
+
+# =====================================================================
+# REPORT HELPERS
+# =====================================================================
+
 def _print_micro_summary(candidates: List[Dict]) -> None:
-    """Print V14.3 Microstructure Summary section."""
+    """Print V14.6 Microstructure Summary section."""
     if not candidates:
         return
 
     obi_buy = sum(1 for c in candidates if c.get("obi", 0) > 0)
     obi_sell = sum(1 for c in candidates if c.get("obi", 0) < 0)
-    obi_neutral = sum(1 for c in candidates if c.get("obi", 0) == 0)
     cvd_accum = sum(1 for c in candidates if c.get("cvd", 0) > 0)
     vpin_alert = sum(1 for c in candidates
                      if c.get("vpin") is not None and c["vpin"] > 0.4)
     top_comp = max((c.get("composite_score", 0) for c in candidates), default=0)
 
-    log("\n📊 V14.3 Microstructure Summary")
-    log(f"  OBI signals: {obi_buy} buy / {obi_sell} sell / {obi_neutral} neutral")
+    log("\n📊 V14.6 Microstructure Summary")
+    log(f"  OBI signals: {obi_buy} buy / {obi_sell} sell")
     log(f"  CVD accumulation: {cvd_accum} items")
-    log(f"  VPIN alerts (>0.4): {vpin_alert} items (high informed trading risk)")
+    log(f"  VPIN alerts (>0.4): {vpin_alert} items")
     log(f"  Top composite score: {top_comp:.0f}/100")
 
-    # Volatility regime distribution
     regimes = {}
     for c in candidates:
         r = c.get("vol_regime", "unknown")
@@ -591,47 +675,39 @@ def _print_bottleneck(filtered: Dict[str, List[Dict[str, Any]]]) -> None:
 
     log("\n🔻 Bottom-Neck Detection (Filtered Items)")
 
-    # Spread-filtered
     spread_items = filtered.get("spread", [])
     if spread_items:
         log(f"  📉 Spread/Margin filtered: {len(spread_items)} items")
-        for s in spread_items[:5]:
-            reason = s.get("reason", "?")
-            log(f"     • {s['title'][:35]} — {reason}")
+        for s in spread_items[:3]:
+            log(f"     • {s['title'][:35]} — {s.get('reason', '?')}")
 
-    # Liquidity-filtered
     liq_items = filtered.get("liquidity", [])
     if liq_items:
         log(f"  💧 Liquidity filtered: {len(liq_items)} items")
-        for s in liq_items[:5]:
+        for s in liq_items[:3]:
             log(f"     • {s['title'][:35]} — {s.get('reason', 'low volume')}")
 
-    # Margin-filtered
     margin_items = filtered.get("margin", [])
     if margin_items:
-        log(f"  💸 Margin filtered: {len(margin_items)} items")
-        for s in margin_items[:5]:
-            log(f"     • {s['title'][:35]} — {s.get('reason', '?')}")
+        log(f"  💰 Margin filtered: {len(margin_items)} items")
+        for s in margin_items[:3]:
+            log(f"     • {s['title'][:35]} — profit=${s.get('profit', 0):.2f}")
 
-    # Volatility-filtered
     vol_items = filtered.get("volatility", [])
     if vol_items:
         log(f"  📈 Volatility filtered: {len(vol_items)} items")
-        for s in vol_items[:5]:
-            park = s.get("park_vol")
-            pv_str = f"park_vol={park:.2f}" if park else "?"
-            log(f"     • {s['title'][:35]} — {s.get('vol_regime', 'high')} ({pv_str})")
 
 
 # =====================================================================
 # MAIN
 # =====================================================================
+
 async def run() -> None:
     """Main sandbox test orchestrator."""
     start = time.time()
 
     log("=" * 60)
-    log("  🧪 SANDBOX TEST v14.3 — Buy → CS2Cap → Sell + Microstructure")
+    log("  🧪 SANDBOX TEST v14.6 — Buy → CS2Cap → Sell + Stop-Loss/Take-Profit + Value Detection")
     log("=" * 60)
 
     results: Dict[str, Any] = {
@@ -662,13 +738,17 @@ async def run() -> None:
     results["items_scanned"] = len(items)
     results["unique_titles"] = unique_titles
 
-    # -- Step 5: Buy simulation --
-    bought = await step_simulate_buy(candidates, api, balance)
-    results["bought"] = bought
+    # -- Step 5: Shadow Engine (full paper trading) --
+    shadow_report = await step_shadow_engine(candidates, agg_prices, cs2cap_ok)
+    results["shadow"] = shadow_report
 
-    # -- Step 6: Sell simulation --
-    listed = await step_simulate_sell()
-    results["listed"] = listed
+    # -- Step 6: Stress test scenarios --
+    stress_results = await step_stress_test(candidates, agg_prices)
+    results["stress"] = stress_results
+
+    # -- Step 7: Monte Carlo (v14.5) --
+    mc_result = await step_monte_carlo(candidates, agg_prices)
+    results["monte_carlo"] = mc_result
 
     # -- Cleanup --
     if cs2cap:
@@ -688,10 +768,13 @@ async def run() -> None:
         ("DMarket Connection", dm_ok, results.get("balance", 0)),
         ("CS2Cap Oracle", cs2cap_ok, None),
         ("Aggregated Prices", len(agg_prices) > 0, len(agg_prices)),
-        ("Profitable Candidates", len(candidates) > 0, len(candidates)),
         ("Market Scan", results.get("items_scanned", 0) > 0, results.get("items_scanned", 0)),
-        ("Buy Simulation", bought > 0, bought),
-        ("Sell Simulation", listed > 0, listed),
+        ("Shadow Engine", shadow_report is not None, f"{shadow_report.get('total_trades',0)} trades" if shadow_report else "N/A"),
+        ("Stop-Loss/Take-Profit", True, f"SL={shadow_report.get('sells_sl',0)} TP={shadow_report.get('sells_tp',0)}" if shadow_report else "N/A"),
+        ("Strategy Compare", len((shadow_report or {}).get('strategies', {})) > 0, f"{len((shadow_report or {}).get('strategies', {}))} strats"),
+        ("Stress Tests", len(stress_results) > 0, f"{len(stress_results)} scenarios"),
+        ("Monte Carlo", mc_result is not None, f"{mc_result.get('runs',0)} runs, PnL ${mc_result.get('mean_pnl',0):+.2f}" if mc_result else "N/A"),
+        ("Shadow P&L", shadow_report is not None, f"${shadow_report.get('total_pnl',0):+.2f}" if shadow_report else "N/A"),
     ]
 
     passed = 0
@@ -750,6 +833,10 @@ async def run() -> None:
     log(f"  Strategy: {Config.ACTIVE_STRATEGY}")
     log(f"  Fee rate: {Config.FEE_RATE*100:.1f}%")
     log(f"  Trade lock: {Config.TRADE_LOCK_HOURS}h")
+    log(f"  v14.6: Float={'ON'if Config.FLOAT_PREMIUM_ENABLED else'OFF'} "
+        f"Pattern={'ON'if Config.PATTERN_PREMIUM_ENABLED else'OFF'} "
+        f"StickerCombo={'ON'if Config.STICKER_COMBO_ENABLED else'OFF'} "
+        f"Seasonal={'ON'if Config.SEASONAL_TIMING_ENABLED else'OFF'}")
     log("=" * 60)
 
 

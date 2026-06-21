@@ -106,7 +106,7 @@ class Config:
     # --- Inventory & Sale Age (used in price_history/history.py + telegram) ---
     MAX_LAST_SALE_AGE_DAYS = int(os.getenv("MAX_LAST_SALE_AGE_DAYS", "30"))  # Reject items whose last sale is older than N days
     MAX_OPEN_INVENTORY = int(os.getenv("MAX_OPEN_INVENTORY", "200"))  # Telegram cap on open inventory items
-    BOT_VERSION = os.getenv("BOT_VERSION", "v12.4.1")  # Reported in /start, /status
+    BOT_VERSION = os.getenv("BOT_VERSION", "v14.6.0")  # Reported in /start, /status
 
     # --- Performance ---
     # SCAN_INTERVAL=30s aligns with the CS2Cap Starter tier budget
@@ -134,7 +134,7 @@ class Config:
 
     # --- Advanced Attributes (Float/Phase) ---
     PREFER_LOW_FLOAT = True
-    FLOAT_PREMIUM_ENABLED = os.getenv("FLOAT_PREMIUM_ENABLED", "false").lower() == "true"
+    FLOAT_PREMIUM_ENABLED = os.getenv("FLOAT_PREMIUM_ENABLED", "true").lower() == "true"
     FLOAT_CODES = {
         "FN": ["FN-0", "FN-1"],
         "MW": ["MW-0", "MW-1"],
@@ -143,8 +143,18 @@ class Config:
         "BS": ["BS-0"]
     }
 
+    # --- v14.6 Value Detection Layers (TA Site Analysis) ---
+    PATTERN_PREMIUM_ENABLED = os.getenv("PATTERN_PREMIUM_ENABLED", "true").lower() == "true"
+    STICKER_COMBO_ENABLED = os.getenv("STICKER_COMBO_ENABLED", "true").lower() == "true"
+    SEASONAL_TIMING_ENABLED = os.getenv("SEASONAL_TIMING_ENABLED", "true").lower() == "true"
+    FILLER_TRACKING_ENABLED = os.getenv("FILLER_TRACKING_ENABLED", "true").lower() == "true"
+    DIRTY_BS_ENABLED = os.getenv("DIRTY_BS_ENABLED", "true").lower() == "true"
+    ROUND_FLOAT_ENABLED = os.getenv("ROUND_FLOAT_ENABLED", "true").lower() == "true"
+    FLOAT_DATE_ENABLED = os.getenv("FLOAT_DATE_ENABLED", "true").lower() == "true"
+    COMMISSION_OPTIMIZER_ENABLED = os.getenv("COMMISSION_OPTIMIZER_ENABLED", "true").lower() == "true"
+
     # --- Operation Mode ---
-    DRY_RUN = True
+    DRY_RUN = os.getenv("DRY_RUN", "true").lower() == "true"
     MARKETPLACE_INSTANT_RESALE = os.getenv("MARKETPLACE_INSTANT_RESALE", "true").lower() == "true"
 
     # --- v13.0: Trade lock hours (0 = instant resale on DMarket marketplace) ---

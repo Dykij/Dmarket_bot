@@ -6,6 +6,64 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/v2.0.0.html).
 
 
+## [14.6.0] - 2026-06-21
+### 🦅 v14.6 Value Detection Layers — TA Site Analysis Integration
+
+#### Added — v14.6 Value Detection (9 layers)
+- **Float Premium (ENABLED)** — `FLOAT_PREMIUM_ENABLED=true` now default.
+  Premiums: FN double-zero 1.25×, FN-0 1.20×, FT-0 1.15× (trade-up demand),
+  MW-0 1.08×, dirty BS (0.95+) 1.30×.
+- **Round-Float Detection** — Collectors pay premium for floats at 0.125, 0.25,
+  0.375, 0.5, 0.625, 0.75, 0.875 (+15%).
+- **Float-Date Detection** — `0.DDMMYYYYxxxxx` encodes dates (e.g.
+  0.21021992xxxx = 21 Feb 1992). +8% premium for date floats.
+- **Pattern Premium** — Doppler phases (Ruby/Sapphire 5×, Emerald/Black Pearl
+  4×, Phase 2 1.5×, Phase 4 1.3×), Blue Gem Case Hardened (3×), Fire & Ice
+  Marble Fade (5×), Crimson Web 3+ webs (2×), Fade %.
+- **Sticker Combo Calculator** — 4 identical stickers = +100% of one sticker,
+  same team/event 3+ stickers = +10%, Katowice 2014 (28 variants, special
+  15% handling), worn stickers = 0.
+- **Filler Skin Tracker** — 35 well-known filler skins get +15% demand
+  multiplier (higher trade-up contract demand).
+- **Seasonal Timing Engine** — Dynamic spread threshold based on:
+  - Seasonal: spring +10%, summer −10%, autumn +8%, year-end −8%
+  - Weekly: Wednesday +5% (drop reset dip)
+  - Hourly: daytime +3% (selling pressure), nighttime −3% (buying pressure)
+- **Commission Optimizer** — Items with 2% fee get +15% score boost in ranker.
+  Filler skins get +8% score boost (faster turnover).
+- **Dirty BS, Round-Float, Float-Date** integrated into `list_price` in filter
+  pipeline (all trigger adjusted value for sell pricing).
+
+#### Changed
+- **`src/config.py`** — `FLOAT_PREMIUM_ENABLED=true` by default,
+  `BOT_VERSION=v14.6.0`, 8 new env-configurable v14.6 flags.
+- **`src/core/target_sniping/pricing.py`** — Complete rewrite: expanded float
+  premium table, phase/paint premium dictionaries with Blue Gem, Fire & Ice,
+  Crimson Web seeds, Fade % estimator, `_is_float_date()`, `is_dirty_bs()`.
+- **`src/core/target_sniping/filter.py`** — Added 5 value detection layers
+  between honest-listing and is_rare flag. Seasonal timing applied to
+  `INTRA_MIN_SPREAD_PCT`. Filler/sticker/float-date bonuses in list_price.
+- **`src/core/target_sniping/ranking.py`** — Commission optimizer (+15% for
+  low-fee items, +8% for filler skins) in `rank_candidates_by_spread()`.
+- **`src/analytics/stickers_evaluator.py`** — Complete rewrite: combo premium
+  (4× stick, team/event match, Katowice 2014), 28 Katowice 2014 sticker prices,
+  `calculate_combo_premium()` method.
+
+#### Added — New Modules
+- **`src/analysis/seasonal.py`** — Seasonal/weekly/hourly timing multipliers.
+  Composite `get_timing_multiplier()` for dynamic spread threshold.
+- **`src/analytics/filler_tracker.py`** — 35 filler skin names + `is_filler()`
+  and `get_filler_multiplier()` helpers.
+- **`tests/test_v14_6_value_detection.py`** — 52 unit tests covering all new
+  layers (float, pattern, sticker, seasonal, filler, dirty BS, round float).
+
+#### Fixed
+- **`tests/sandbox_full_cycle.py`** — Added missing `_print_micro_summary()`
+  and `_print_bottleneck()` report helper functions. Updated to v14.6 with
+  value detection in market scan step.
+
+---
+
 ## [14.4.0] - 2026-06-17
 ### 🐳 Docker + v14.4 Balance-Aware Trading + Full Restructuring
 

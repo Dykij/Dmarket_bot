@@ -52,10 +52,15 @@ class _FilterMixin:
     # v12.7: Per-cycle oracle price cache (P1-5).
     # Avoids duplicate HTTP calls for the same title within a single cycle.
     # Cleared at the start of each run_cycle via _clear_oracle_cache().
-    _oracle_price_cache: Dict[str, float] = {}
+    _oracle_price_cache: Dict[str, float]
+
+    def _ensure_oracle_cache(self) -> None:
+        if not hasattr(self, '_oracle_price_cache') or not isinstance(self._oracle_price_cache, dict):
+            object.__setattr__(self, '_oracle_price_cache', {})
 
     def _clear_oracle_cache(self) -> None:
         """Clear the per-cycle oracle price cache. Called at start of run_cycle."""
+        self._ensure_oracle_cache()
         self._oracle_price_cache.clear()
 
     @staticmethod
@@ -273,7 +278,7 @@ class _FilterMixin:
         history = price_db.get_recent_prices(title, days=14)
         prices_only = [p for p, _ in history]
         # Skip volatility validation if we have a strong cross-market signal.
-        if not prices_only and cross_market_provider is None:
+        if prices_only and cross_market_provider is None:
             try:
                 validate_volatility(prices_only)
             except PriceValidationError:
@@ -318,10 +323,20 @@ class _FilterMixin:
         # --- v14.3 Volume Profile / POC (price magnet) ---
         poc_price = check_volume_profile_poc(title, trade_records)
 
+        # v14.6: Seasonal timing — dynamically adjust spread threshold
+        effective_min_spread = Config.INTRA_MIN_SPREAD_PCT
+        if Config.SEASONAL_TIMING_ENABLED:
+            try:
+                from src.analysis.seasonal import get_timing_multiplier
+                timing_mult = get_timing_multiplier()
+                effective_min_spread *= timing_mult
+            except Exception:
+                pass  # non-fatal
+
         # Spread check: best_bid > best_ask * (1 + threshold)
         # Skip if NO cross-market arb available either
         if (
-            best_bid <= best_ask * (1 + Config.INTRA_MIN_SPREAD_PCT / 100.0)
+            best_bid <= best_ask * (1 + effective_min_spread / 100.0)
             and cross_market_provider is None
         ):
             return None
@@ -387,7 +402,7 @@ class _FilterMixin:
             # Don't list above CS2Cap ask — compete with cheapest marketplace
             cs_list_price = round(cs_ask_price * 0.97, 2)
             if cs_list_price > list_price:
-                list_price = cs_list_price
+                list_price = min(cs_list_price, list_price * 1.10)  # cap at 10% above DM bid
 
         # Cross-market bid override (highest bid across all marketplaces)
         if cross_market_provider and cross_market_bid > best_bid:
@@ -396,45 +411,97 @@ class _FilterMixin:
                 2,
             )
 
-        # v12.0 Phase 1.2: Float Premium (FN-0, FT-0, FN)
-        # Disabled by default — DMarket market prices already reflect float
-        is_rare = False  # v13.0: auto-detect rare items for exclusive flag
+        # =================================================================
+        # v14.6: Value Detection Layers (TA Site Analysis)
+        # =================================================================
+        # Parse attributes once for all detectors
+        attrs_list = item.get("attributes", [])
+        attrs = {a.get("name"): a.get("value") for a in attrs_list}
+        is_rare = False  # auto-detect rare items for exclusive flag
 
+        # --- Layer 1: Float Premium (enhanced: dirty BS, round float, float dates) ---
+        float_premium = 1.0
         if Config.FLOAT_PREMIUM_ENABLED:
-            attrs_list = item.get("attributes", [])
-            attrs = {a.get("name"): a.get("value") for a in attrs_list}
             float_premium = self._calculate_float_premium(attrs)
             if float_premium > 1.0:
                 list_price = round(list_price * float_premium, 2)
                 if is_sandbox:
-                    logger.debug(f"Float premium {float_premium:.2f}x applied to {title}")
-                # FN-0 (0.00-0.01) items are rare — auto-exclusive
+                    logger.debug(f"[FLOAT] {title}: premium {float_premium:.2f}x → list=${list_price:.2f}")
                 is_rare = float_premium >= 1.20
 
-        # v13.0: Sticker detection — expensive stickers make item worthy of exclusive keep
+        # --- Layer 1b: Dirty BS bonus (float > 0.95, appearance-changing skins) ---
+        if Config.DIRTY_BS_ENABLED and not is_rare:
+            try:
+                if self.is_dirty_bs(attrs):
+                    list_price = round(list_price * 1.10, 2)
+                    if is_sandbox:
+                        logger.info(f"[DIRTY-BS] {title}: dirty BS premium 1.10x → list=${list_price:.2f}")
+            except Exception:
+                pass
+
+        # --- Layer 2: Filler demand multiplier ---
+        if Config.FILLER_TRACKING_ENABLED:
+            try:
+                from src.analytics.filler_tracker import get_filler_multiplier
+                filler_mult = get_filler_multiplier(title)
+                if filler_mult > 1.0:
+                    list_price = round(list_price * filler_mult, 2)
+                    if is_sandbox:
+                        logger.debug(f"[FILLER] {title}: demand multiplier {filler_mult:.2f}x → list=${list_price:.2f}")
+            except Exception:
+                pass
+
+        # --- Layer 3: Pattern/Phase/Paint Premium (Doppler, Blue Gem, Fire & Ice, etc.) ---
+        pattern_premium = 1.0
+        if Config.PATTERN_PREMIUM_ENABLED:
+            try:
+                if hasattr(self, "_calculate_pattern_premium"):
+                    pattern_premium = self._calculate_pattern_premium(attrs)
+                    if pattern_premium > 1.0:
+                        list_price = round(list_price * pattern_premium, 2)
+                        if is_sandbox:
+                            logger.info(
+                                f"[PATTERN] {title}: premium {pattern_premium:.2f}x "
+                                f"(phase={attrs.get('phase', '?')} seed={attrs.get('paintSeed', '?')}) "
+                                f"→ list=${list_price:.2f}"
+                            )
+                        is_rare = True
+            except Exception:
+                pass
+
+        # --- Layer 4: Sticker Value + Combo Premium ---
         item_stickers = item.get("stickers", [])
+        sticker_value = 0.0
         if item_stickers and hasattr(self, "stickers"):
             try:
                 sticker_value = self.stickers.calculate_added_value(item_stickers)
-                if sticker_value > 2.0:  # Stickers add >$2 value → flag as rare
+                if sticker_value > 1.0:
+                    # Add sticker value to list price (market pays extra for stickered items)
+                    list_price = round(list_price + sticker_value * 0.5, 2)
+                    if is_sandbox:
+                        logger.info(
+                            f"[STICKER] {title}: value ${sticker_value:.2f} "
+                            f"(applied 50% = ${sticker_value*0.5:.2f}) → list=${list_price:.2f}"
+                        )
+                if sticker_value > 2.0:
                     is_rare = True
                     if is_sandbox:
                         logger.info(f"[RARE] {title}: sticker value ${sticker_value:.2f} → exclusive keep")
             except Exception:
-                pass  # non-fatal
+                pass
 
-        # v13.0: Rare phase/pattern detection (Doppler Ruby/Sapphire, rare paint seeds)
-        if not is_rare:
+        # --- Layer 5: Float-date bonus ---
+        if Config.FLOAT_DATE_ENABLED and not is_rare:
             try:
-                if hasattr(self, "_calculate_pattern_premium"):
-                    attrs_list = item.get("attributes", [])
-                    pat_attrs = {a.get("name"): a.get("value") for a in attrs_list}
-                    if self._calculate_pattern_premium(pat_attrs) > 1.0:
-                        is_rare = True
+                from src.core.target_sniping.pricing import _is_float_date
+                float_str = attrs.get("floatPartValue", "")
+                if float_str:
+                    if _is_float_date(float(float_str)):
+                        list_price = round(list_price * 1.08, 2)
                         if is_sandbox:
-                            logger.info(f"[RARE] {title}: rare phase/pattern → exclusive keep")
+                            logger.info(f"[FLOAT-DATE] {title}: date float → 1.08x → list=${list_price:.2f}")
             except Exception:
-                pass  # non-fatal
+                pass
 
         if list_price < base_price * 1.02:
             # Less than 2% gross — too thin after fees
