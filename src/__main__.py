@@ -133,6 +133,14 @@ async def run_bot() -> None:
         health_runner = await start_health_server()
     health_state.set_shutting_down(False)
 
+    # v14.5: Config hot-reload — watch .env for changes
+    from src.utils.config_watcher import config_watcher as _cfg_watcher
+    await _cfg_watcher.start()
+
+    # v14.5: Live shadow mode (paper trading alongside real bot)
+    from src.core.live_shadow import live_shadow as _shadow
+    _shadow.start()
+
     try:
         while True:
             try:
@@ -144,6 +152,7 @@ async def run_bot() -> None:
                     retry_delay,
                 )
                 consecutive_crashes = 0
+                retry_delay = 5  # reset after successful run
             except KeyboardInterrupt:
                 logger.info("Bot stopped by user (KeyboardInterrupt).")
                 break
@@ -170,6 +179,8 @@ async def run_bot() -> None:
         health_state.set_shutting_down(True)
         if health_runner is not None:
             await stop_health_server(health_runner)
+        await _cfg_watcher.stop()
+        _shadow.stop()
 
 
 def main() -> None:
@@ -230,6 +241,7 @@ def main() -> None:
             f"{our_pid}\n{int(time.time())}\n{integrity_hash}\n",
             encoding="utf-8",
         )
+        lock_file.chmod(0o600)
 
         def _cleanup() -> None:
             try:

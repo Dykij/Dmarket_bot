@@ -18,6 +18,12 @@ logs/
 .mypy_cache/
 .ruff_cache/
 
+# Build artifacts
+test_results.xml
+src_files.txt
+scratch/
+bot.lock
+
 # Local databases and caches
 *.db
 *.db-shm

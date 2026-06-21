@@ -1,8 +1,12 @@
+import logging
 import os
 from typing import Dict, Optional
 from src.api.cs2cap_oracle import CS2CapOracle
 from src.api.csfloat_oracle import CSFloatOracle
 from src.api.rust_oracle import RustOracle
+
+logger = logging.getLogger("OracleFactory")
+
 
 class OracleFactory:
     """
@@ -11,8 +15,13 @@ class OracleFactory:
     CS2: Uses CS2Cap (41 marketplaces) as primary oracle.
           Falls back to CSFloat if CS2CAP_API_KEY is not set.
     Rust: Uses SCMM (rust.scmm.app).
+
+    v14.7: Graceful degradation — when CS2Cap is unavailable (circuit open,
+    rate limited, network error), downstream code can fall back to DMarket
+    aggregated_prices via OracleFactory.is_degraded().
     """
     _oracles: Dict[str, object] = {}
+    _degraded: Dict[str, bool] = {}  # per-game degradation flags
 
     @classmethod
     def get_oracle(cls, game_id: str):
@@ -31,7 +40,26 @@ class OracleFactory:
         else:
             return None
 
+        cls._degraded[game_id] = False
         return cls._oracles[game_id]
+
+    @classmethod
+    def mark_degraded(cls, game_id: str) -> None:
+        """Mark oracle as degraded — downstream should use DMarket fallback."""
+        cls._degraded[game_id] = True
+        logger.warning(f"[OracleFactory] {game_id} oracle degraded → DMarket fallback")
+
+    @classmethod
+    def mark_healthy(cls, game_id: str) -> None:
+        """Mark oracle as healthy after recovery."""
+        if cls._degraded.get(game_id, False):
+            cls._degraded[game_id] = False
+            logger.info(f"[OracleFactory] {game_id} oracle recovered")
+
+    @classmethod
+    def is_degraded(cls, game_id: str) -> bool:
+        """Check if oracle is currently in degraded mode."""
+        return cls._degraded.get(game_id, False)
 
     @classmethod
     def get_cross_market_oracle(cls, game_id: str) -> Optional[CS2CapOracle]:

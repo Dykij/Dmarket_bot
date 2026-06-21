@@ -99,7 +99,7 @@ class Config:
     # If current balance drops below peak * (1 - threshold), stop buying.
     # Only sells allowed until balance recovers above the threshold.
     DRAWDOWN_FREEZE_ENABLED = os.getenv("DRAWDOWN_FREEZE_ENABLED", "true").lower() == "true"
-    DRAWDOWN_FREEZE_THRESHOLD = float(os.getenv("DRAWDOWN_FREEZE_THRESHOLD", "0.15"))
+    DRAWDOWN_FREEZE_THRESHOLD = float(os.getenv("DRAWDOWN_FREEZE_THRESHOLD", "0.15"))  # decimal: 0.15 = 15% drawdown freeze
 
     MAX_OPEN_TARGETS = 50     # Limit active buy orders (Safety cap)
 
