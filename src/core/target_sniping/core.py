@@ -421,8 +421,11 @@ class SnipingLoop(  # type: ignore[misc]
             # Only for top candidates, uses DMarket API (not cs2cap quota).
             self._sales_cache: Dict[str, List[Dict[str, Any]]] = {}
             if Config.CVD_ENABLED or Config.VWAP_FILTER_ENABLED or Config.VPIN_ENABLED:
-                sales_titles = list({t for t, _ in ranked[: Config.CVD_WINDOW_ITEMS]}
-                                    if ranked else top_titles[: Config.CVD_WINDOW_ITEMS])
+                sales_titles: List[str] = []
+                if 'ranked' in dir():
+                    sales_titles = list({t for t, _ in ranked[: Config.CVD_WINDOW_ITEMS]})
+                elif top_titles:
+                    sales_titles = top_titles[: Config.CVD_WINDOW_ITEMS]
                 if sales_titles:
                     try:
                         for t in sales_titles:
@@ -520,12 +523,75 @@ class SnipingLoop(  # type: ignore[misc]
 
             # --- Step 5: Execute instant buys (delegated) ---
             if instant_buys:
+                # v14.5: Strategy selector — dynamically choose strategy per cycle
+                try:
+                    from src.core.strategy_selector import strategy_selector
+                    from datetime import datetime, timezone
+                    now = datetime.now(timezone.utc)
+                    is_weekend = now.weekday() >= 5
+                    is_night = 3 <= now.hour < 8
+                    spreads = [
+                        ((b["best_bid"] - b["best_ask"]) / max(b["best_ask"], 0.01)) * 100
+                        for b in instant_buys if b.get("best_ask", 0) > 0
+                    ]
+                    avg_spread = sum(spreads) / max(len(spreads), 1)
+                    event_active = event_shield.get_active_events() != []
+                    drawdown = getattr(self.risk, '_current_drawdown_pct', 0.0)
+
+                    strategy_selector.select(
+                        cycle=self.deep_scan_counter,
+                        cs2cap_ok=len(cs_snapshots) > 0,
+                        avg_spread_pct=avg_spread,
+                        avg_volatility=0.15,
+                        is_weekend=is_weekend,
+                        is_night=is_night,
+                        event_active=event_active,
+                        drawdown_pct=drawdown,
+                    )
+                except Exception:
+                    pass
+
+                # v14.5: Limit orders — place buy targets for wide-spread items
+                try:
+                    from src.core.limit_orders import _LimitOrderMixin
+                    limit_mixin = _LimitOrderMixin()
+                    limit_mixin.client = self.client
+                    limit_targets, instant_targets = limit_mixin._categorize_candidates(instant_buys)
+                    if limit_targets:
+                        placed = await limit_mixin._execute_limit_orders(
+                            candidates=limit_targets,
+                            game_id=game_id,
+                            current_balance=current_balance,
+                        )
+                        if placed > 0:
+                            logger.info(f"[LIMIT] {placed} buy target(s) placed for wide-spread items")
+                    instant_buys = instant_targets  # only instant-buy the rest
+                except Exception as e:
+                    logger.debug(f"[LIMIT] Limit order flow failed: {e}")
+
                 await self._execute_instant_buys(
                     instant_buys=instant_buys, current_balance=current_balance,
                     game_id=game_id,
                 )
                 # v13.0: List immediately after purchase (capital velocity fix)
                 await self.auto_resale(game_id)
+
+            # v14.7: Position guard — stop-loss + take-profit via composition
+            if self.deep_scan_counter % 3 == 0:
+                check_stop, check_tp = 0, 0
+                try:
+                    from src.core.target_sniping.position_guard import _PositionGuardMixin
+                    pg = _PositionGuardMixin()
+                    pg.client = self.client
+                    pg.cs2cap_cache = self.cs2cap_cache
+                    check_stop = await pg.check_stop_losses(game_id)
+                    check_tp = await pg.check_take_profits(game_id)
+                except Exception as e:
+                    logger.debug(f"Position guard check failed: {e}")
+                if check_stop or check_tp:
+                    logger.info(
+                        f"[POS-GUARD] stop-loss={check_stop} take-profit={check_tp}"
+                    )
 
             # Periodic repricing
             if self.reprice_counter % 60 == 0:  # Every ~60 cycles
@@ -561,6 +627,17 @@ class SnipingLoop(  # type: ignore[misc]
             self._send_equity_milestone(equity)
             self._log_cycle_diag(game_id, len(candidates_to_eval), len(instant_buys))
 
+            # v14.5: Feed live shadow engine (paper trading alongside real bot)
+            try:
+                from src.core.live_shadow import live_shadow
+                live_shadow.feed_cycle(
+                    candidates=instant_buys,
+                    agg_prices=agg_prices,
+                    cs2cap_ok=len(cs_snapshots) > 0,
+                )
+            except Exception:
+                pass
+
             if self.deep_scan_counter % 200 == 0:
                 price_db.cleanup_old_targets()
 
@@ -579,7 +656,7 @@ class SnipingLoop(  # type: ignore[misc]
                     "phase": "run_cycle",
                     "game_id": game_id,
                     "cycle": self.deep_scan_counter,
-                    "balance": f"${current_balance:.2f}",
+                    "balance": f"${current_balance:.2f}" if "current_balance" in dir() else "?",
                     "items_in_page": len(items) if "items" in dir() else "?",
                 })
                 logger.error(report.format_log())

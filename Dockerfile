@@ -35,7 +35,8 @@ RUN pip install --upgrade pip setuptools wheel \
 # Copy Rust crate source and build, then clean up build artifacts
 COPY src/rust_core/ src/rust_core/
 WORKDIR /app/src/rust_core
-RUN maturin develop --release \
+RUN maturin build --release \
+    && pip install target/wheels/*.whl \
     && rm -rf target/ \
     && rm -rf ~/.cargo/registry/ ~/.cargo/git/
 

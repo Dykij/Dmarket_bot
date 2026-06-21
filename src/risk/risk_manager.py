@@ -42,7 +42,8 @@ logger = logging.getLogger("RiskManager")
 @dataclass
 class RiskState:
     """Snapshot of the current risk posture (for /status and briefings)."""
-    daily_loss_usd: float = 0.0
+    daily_loss_usd: float = 0.0  # deprecated — use daily_realized_pnl
+    daily_realized_pnl: float = 0.0  # can be positive (profit) or negative (loss)
     daily_loss_limit_usd: float = 0.0
     daily_trade_count: int = 0
     daily_trade_limit: int = 0
@@ -61,6 +62,7 @@ class RiskState:
     total_wins: int = 0
     total_losses: int = 0
     drawdown_freeze_active: bool = False
+    consecutive_losses: int = 0
 
 
 @dataclass
@@ -128,6 +130,8 @@ class RiskManager:
         self._avg_win_usd: float = 0.0
         self._avg_loss_usd: float = 0.0
         self._drawdown_freeze_active: bool = False
+        self._consecutive_losses: int = 0
+        self._max_consecutive_losses: int = 0
 
         # Trade history for the day (for /status)
         self._trades_today: List[Dict[str, Any]] = []
@@ -218,7 +222,44 @@ class RiskManager:
                 triggered_halt=True,
             )
 
-        # 5. Hard drawdown kill switch
+        # 4.5. v14.7: Consecutive loss streak — halve position after 3+ losses
+        if self._consecutive_losses >= 3 and proposed_size_usd > 0:
+            reduced = round(proposed_size_usd * 0.5, 2)
+            if reduced < 0.50:
+                self._daily_blocked += 1
+                return PreTradeCheck(
+                    allowed=False,
+                    reason=(
+                        f"Consecutive loss streak: {self._consecutive_losses} losses, "
+                        f"position ${reduced:.2f} below floor $0.50"
+                    ),
+                )
+            logger.warning(
+                f"[Risk] {self._consecutive_losses} consecutive losses — "
+                f"halving position: ${proposed_size_usd:.2f} → ${reduced:.2f}"
+            )
+            proposed_size_usd = reduced
+
+        # 5. v14.4: Drawdown-aware spending freeze (must come BEFORE hard kill-switch)
+        from src.config import Config
+        raw = Config.DRAWDOWN_FREEZE_THRESHOLD
+        freeze_threshold_pct = raw * 100.0 if raw < 1.0 else raw
+        if Config.DRAWDOWN_FREEZE_ENABLED and self._current_drawdown_pct >= freeze_threshold_pct:
+            if proposed_size_usd > 0:
+                self._drawdown_freeze_active = True
+                self._daily_blocked += 1
+                return PreTradeCheck(
+                    allowed=False,
+                    reason=(
+                        f"Drawdown freeze: {self._current_drawdown_pct:.1f}% >= "
+                        f"{freeze_threshold_pct:.1f}%. Sells only until recovery."
+                    ),
+                    triggered_halt=True,
+                )
+        else:
+            self._drawdown_freeze_active = False
+
+        # 6. Hard drawdown kill switch
         if self._current_drawdown_pct >= self.max_drawdown_pct:
             self._daily_blocked += 1
             return PreTradeCheck(
@@ -230,31 +271,11 @@ class RiskManager:
                 triggered_halt=True,
             )
 
-        # v14.4: Drawdown-aware spending freeze (configurable threshold)
-        # If drawdown > DRAWDOWN_FREEZE_THRESHOLD, only allow sells
-        # Research basis: Risk of Ruin — small accounts must freeze buys on large drawdowns
-        from src.config import Config
-        if Config.DRAWDOWN_FREEZE_ENABLED and self._current_drawdown_pct >= Config.DRAWDOWN_FREEZE_THRESHOLD * 100:
-            if proposed_size_usd > 0:  # buy-side check
-                self._drawdown_freeze_active = True
-                self._daily_blocked += 1
-                return PreTradeCheck(
-                    allowed=False,
-                    reason=(
-                        f"Drawdown freeze: {self._current_drawdown_pct:.1f}% >= "
-                        f"{Config.DRAWDOWN_FREEZE_THRESHOLD * 100:.1f}%. Sells only until recovery."
-                    ),
-                    triggered_halt=True,
-                )
-        else:
-            self._drawdown_freeze_active = False
-
-        # 5b. Soft halt (only on BUYs; we don't block sells)
+        # 7. Soft halt — reduce size by 50% at 5%+ drawdown (only for buys)
         if self._current_drawdown_pct >= self.soft_halt_drawdown_pct:
             self._soft_halt_active = True
-            # Reduce size by 50% in soft-halt
             reduced = round(proposed_size_usd * 0.5, 2)
-            if reduced < 0.50:  # below floor
+            if reduced < 0.50:
                 self._daily_blocked += 1
                 return PreTradeCheck(
                     allowed=False,
@@ -270,7 +291,7 @@ class RiskManager:
                 adjusted_size_usd=reduced,
             )
 
-        # 6. No halt
+        # 8. No halt
         self._soft_halt_active = False
         self._daily_passed += 1
         return PreTradeCheck(
@@ -307,10 +328,13 @@ class RiskManager:
             if pnl_usd > 0:
                 self._total_wins += 1
                 self._avg_win_usd = (self._avg_win_usd * (self._total_wins - 1) + pnl_usd) / self._total_wins
+                self._consecutive_losses = 0
             else:
                 self._total_losses += 1
                 abs_loss = abs(pnl_usd)
                 self._avg_loss_usd = (self._avg_loss_usd * (self._total_losses - 1) + abs_loss) / self._total_losses
+                self._consecutive_losses += 1
+                self._max_consecutive_losses = max(self._max_consecutive_losses, self._consecutive_losses)
 
     def get_state(self) -> RiskState:
         """Snapshot of current risk state (for /status, daily briefing, logs)."""
@@ -319,7 +343,8 @@ class RiskManager:
         wr = (self._total_wins / total) if total > 0 else 0.55
         wlr = (self._avg_win_usd / self._avg_loss_usd) if self._avg_loss_usd > 0 else 1.5
         return RiskState(
-            daily_loss_usd=min(0.0, self._daily_realized_pnl),  # negative or zero
+            daily_loss_usd=min(0.0, self._daily_realized_pnl),  # backward compat
+            daily_realized_pnl=self._daily_realized_pnl,
             daily_loss_limit_usd=self.daily_loss_limit_usd,
             daily_trade_count=self._daily_trade_count,
             daily_trade_limit=self.daily_trade_limit,
@@ -337,6 +362,7 @@ class RiskManager:
             total_wins=self._total_wins,
             total_losses=self._total_losses,
             drawdown_freeze_active=self._drawdown_freeze_active,
+            consecutive_losses=self._consecutive_losses,
         )
 
     def get_daily_briefing_lines(self) -> List[str]:
@@ -344,7 +370,7 @@ class RiskManager:
         state = self.get_state()
         lines = [
             f"📅 <b>Daily Risk Report</b> ({state.last_reset_date})",
-            f"  Realized PnL today: <b>${-state.daily_loss_usd:+.2f}</b> "
+            f"  Realized PnL today: <b>${state.daily_realized_pnl:+.2f}</b> "
             f"(limit -${state.daily_loss_limit_usd:.2f})",
             f"  Trades: {state.daily_trade_count}/{state.daily_trade_limit} "
             f"(blocked: {state.blocked_count_today})",

@@ -240,7 +240,7 @@ class TestPreTradeCheckDailyLossLimit:
 
 class TestPreTradeCheckDrawdown:
     def test_hard_drawdown_blocks(self) -> None:
-        """15% DD = max_drawdown_pct default → block."""
+        """15% DD = max_drawdown_pct default → block (v14.7: freeze fires first for buys)."""
         rm = _make_manager(
             max_drawdown_pct=15.0,
             soft_halt_drawdown_pct=5.0,
@@ -252,7 +252,7 @@ class TestPreTradeCheckDrawdown:
             current_equity_usd=85.0,
         )
         assert result.allowed is False
-        assert "Max drawdown hit" in result.reason
+        assert ("Max drawdown" in result.reason or "Drawdown freeze" in result.reason)
         assert result.triggered_halt is True
 
     def test_just_above_soft_halt_below_hard(self) -> None:

@@ -83,6 +83,10 @@ class _ScannerMixin:
             if not hasattr(self, '_dom_cache'):
                 self._dom_cache: Dict[str, List[Dict[str, Any]]] = {}
             self._dom_cache[title] = sorted_by_price
+            # v14.7: Prune stale entries — keep only last N titles (FIFO cap)
+            if len(self._dom_cache) > Config.AGG_SCAN_TOP_N * 3:
+                oldest = next(iter(self._dom_cache))
+                del self._dom_cache[oldest]
 
         logger.info(
             f"[v12.3 SCAN] top_titles={len(titles)} "

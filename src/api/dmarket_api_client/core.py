@@ -60,6 +60,7 @@ class DMarketAPIClient(  # type: ignore[misc]
         self.secret_key = secret_key
         self.BASE_URL = base_url
         self._session: Optional[aiohttp.ClientSession] = None
+        self._session_lock = asyncio.Lock()
         self._lock = asyncio.Lock()
         self._last_request_time = 0.0
         self._rate_limit_delay = 0.22  # 4-5 requests per second
@@ -173,7 +174,11 @@ class DMarketAPIClient(  # type: ignore[misc]
 
     async def get_session(self) -> aiohttp.ClientSession:
         """Return the shared aiohttp session, creating it on first use."""
-        if self._session is None or self._session.closed:
+        if self._session is not None and not self._session.closed:
+            return self._session
+        async with self._session_lock:
+            if self._session is not None and not self._session.closed:
+                return self._session
             # v12.7: High-performance connection pooling with per-host limits.
             # limit=100: total concurrent connections across all hosts.
             # limit_per_host=20: prevent connection starvation to single host.
@@ -292,16 +297,6 @@ class DMarketAPIClient(  # type: ignore[misc]
                 return {"status": "success", "simulated": True, "message": "Simulation Mode Active"}
             return {}
 
-        # v12.4 P1: Circuit breaker check
-        if not self._breaker.allow_request():
-            cooldown_remaining = (
-                self._breaker.current_cooldown - (time.time() - self._breaker.opened_at)
-            )
-            raise CircuitOpenError(
-                breaker_name=self._breaker.name,
-                cooldown_remaining=max(0.0, cooldown_remaining),
-            )
-
         # v12.7: Per-endpoint rate limiting (P0-3).
         # Public endpoints (market data, no auth): 600 RPM (~10 RPS).
         # Private endpoints (auth required): stricter (~2 RPS).
@@ -340,6 +335,16 @@ class DMarketAPIClient(  # type: ignore[misc]
         url = f"{self.BASE_URL}{api_path}"
         session = await self.get_session()
 
+        # v12.4 P1: Circuit breaker check (inside try so @retry doesn't re-attempt)
+        if not self._breaker.allow_request():
+            cooldown_remaining = (
+                self._breaker.current_cooldown - (time.time() - self._breaker.opened_at)
+            )
+            raise CircuitOpenError(
+                breaker_name=self._breaker.name,
+                cooldown_remaining=max(0.0, cooldown_remaining),
+            )
+
         try:
             async with session.request(
                 method, url, headers=headers, json=body if body else None
@@ -366,13 +371,29 @@ class DMarketAPIClient(  # type: ignore[misc]
                     )
                 # Success: close the breaker if it was HALF_OPEN
                 self._breaker.record_success()
-                return await response.json()
+                # v14.7: Parse X-RateLimit-Remaining for adaptive pacing
+                response_json = await response.json()
+                remaining = response.headers.get("X-RateLimit-Remaining")
+                if remaining is not None:
+                    try:
+                        rem = int(remaining)
+                        if rem < 5:
+                            self._rate_limit_delay = 1.0
+                        elif rem < 10:
+                            self._rate_limit_delay = 0.5
+                        else:
+                            self._rate_limit_delay = 0.22
+                    except ValueError:
+                        pass
+                return response_json
         except (asyncio.TimeoutError, aiohttp.ClientConnectionError) as e:
             # Network errors count as breaker failures
             self._breaker.record_failure(e)
             raise
         except CircuitOpenError:
-            raise
+            # Circuit is open — do not retry, return empty response immediately
+            logger.debug(f"Circuit breaker OPEN, returning empty response for {method} {path}")
+            return {}
         except aiohttp.ClientResponseError:
             # Already handled above for trippable codes; for non-trippable
             # (4xx) the breaker was not touched, so just re-raise.

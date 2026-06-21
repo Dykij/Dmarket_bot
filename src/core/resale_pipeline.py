@@ -55,6 +55,15 @@ class ResalePipeline:
         Scan DMarket for underpriced items, validate against CS2Cap, buy.
         Returns list of purchased items.
         """
+        from src.risk.risk_manager import RiskManager
+        from src.risk.pump_detector import PumpDetector
+        risk = RiskManager(
+            daily_loss_limit_usd=float(os.getenv("MAX_DAILY_LOSS_USD", "10.00")),
+            daily_trade_limit=int(os.getenv("MAX_DAILY_TRADES", "200")),
+            max_drawdown_pct=float(os.getenv("MAX_DRAWDOWN_PCT", "15.0")),
+        )
+        pump = PumpDetector(price_db=price_db)
+
         purchased: List[Dict[str, Any]] = []
         cursor = None
         pages_scanned = 0
@@ -74,10 +83,32 @@ class ResalePipeline:
                 if len(purchased) >= max_items:
                     return purchased
 
+                title = item.get("title", "")
+                price_cents = int(item.get("price", {}).get("USD", 0))
+                buy_price = price_cents / 100.0
+
+                risk_check = risk.pre_trade_check(
+                    proposed_size_usd=buy_price,
+                    current_equity_usd=balance,
+                    game_id=Config.GAME_ID,
+                    item_title=title,
+                )
+                if not risk_check.allowed:
+                    logger.debug(f"Risk blocked {title}: {risk_check.reason}")
+                    continue
+
+                if pump.is_blacklisted(title):
+                    continue
+
                 result = await self._evaluate_and_buy(item, balance)
                 if result:
                     purchased.append(result)
                     balance -= result["buy_price"]
+                    risk.record_trade_outcome(
+                        pnl_usd=-result["buy_price"],
+                        trade_type="buy",
+                        item_title=title,
+                    )
 
             pages_scanned += 1
 
@@ -144,7 +175,7 @@ class ResalePipeline:
                 expected_sell_price=estimated_sell_price,
                 fee_markup=fee_rate,
                 min_profit_margin=adjusted_min_spread / 100.0,
-                lock_days=7,  # v13.1: TP funds hold prevents capital reuse
+                lock_days=Config.TRADE_LOCK_HOURS / 24.0,  # actual trade lock in days
             )
         except PriceValidationError:
             return None
@@ -154,12 +185,15 @@ class ResalePipeline:
         # block was effectively dead code — removed together with the call.
 
         # Execute buy
+        is_dry_run = os.getenv("DRY_RUN", "true").lower() == "true"
         buy_offer = {
             "offerId": item_id,
             "price": {"amount": str(price_cents), "currency": "USD"}
         }
-        await self.api.buy_items([buy_offer])
-        is_dry_run = os.getenv("DRY_RUN", "true").lower() == "true"
+        if is_dry_run:
+            logger.info(f"[SIM] Would buy: {title} @ ${buy_price:.2f}")
+        else:
+            await self.api.buy_items([buy_offer])
 
         # Record in virtual inventory
         price_db.add_virtual_item(title, buy_price, trade_lock_hours=Config.TRADE_LOCK_HOURS)
@@ -290,12 +324,21 @@ class ResalePipeline:
             return listed
 
         # --- 3. PRODUCTION: lookup asset_ids and batch-list in 1 call ---
-        # We need each item's asset_id to call batch_create_offers_v2.
-        # Paginate DMarket user_offers to find them (one pass, not per-item).
+        # First check user inventory (all owned items, listed or not),
+        # then fall back to user_offers for items already on sale.
         asset_by_title: Dict[str, str] = {}
         try:
+            # Primary lookup: real inventory (includes newly purchased items)
+            inv_resp = await self.api.get_user_inventory(Config.GAME_ID)
+            for obj in inv_resp.get("objects") or inv_resp.get("items") or []:
+                title = obj.get("title", "")
+                asset_id = obj.get("assetId") or obj.get("itemId") or ""
+                if title and asset_id:
+                    asset_by_title[title] = asset_id
+
+            # Fallback: also scan active offers for items not in inventory
             cursor = None
-            for _ in range(10):  # safety cap
+            for _ in range(5):
                 resp = await self.api.get_user_offers(
                     Config.GAME_ID, limit=100, cursor=cursor
                 )
@@ -308,7 +351,7 @@ class ResalePipeline:
                 if not cursor:
                     break
         except Exception as e:
-            logger.error(f"Failed to enumerate offers for asset lookup: {e}", exc_info=True)
+            logger.error(f"Failed to enumerate assets for lookup: {e}", exc_info=True)
 
         batch_payload: List[Dict[str, Any]] = []
         plan: List[Tuple[Any, float, float]] = []
@@ -453,11 +496,14 @@ class ResalePipeline:
     # 5. TURNOVER
     # =================================================================
 
+    _turnover_mm: Any = None
+
     def _get_turnover_penalty(self) -> float:
         """Calculate turnover penalty from today's trade count."""
-        from src.strategies.market_maker import MarketMaker
-        mm = MarketMaker()
-        return mm.calculate_turnover_penalty()
+        if self._turnover_mm is None:
+            from src.strategies.market_maker import MarketMaker
+            self._turnover_mm = MarketMaker()
+        return self._turnover_mm.calculate_turnover_penalty()
 
     async def close(self):
         if self.cs2cap:
