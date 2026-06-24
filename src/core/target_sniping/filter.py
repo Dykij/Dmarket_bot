@@ -156,9 +156,12 @@ class _FilterMixin:
                     Config.KELLY_FLOOR_PCT,
                     kelly_f * 100.0 * Config.KELLY_FRACTION,
                 )
+                # Cap by the hard position limit and the dynamic item price cap
+                kelly_risk_pct = min(kelly_risk_pct, Config.MAX_POSITION_RISK_PCT)
             except Exception:
                 pass
         max_risk_price = (effective_balance or current_balance) * (kelly_risk_pct / 100.0)
+        max_risk_price = min(max_risk_price, dynamic_max_price or Config.MAX_SNIPING_PRICE_USD)
         if base_price > max_risk_price:
             return None
 
@@ -191,13 +194,15 @@ class _FilterMixin:
         bid_count = agg.get("bid_count", 0)
 
         # --- v14.0 OBI (Order Book Imbalance) ---
-        obi_result = check_obi(ask_count, bid_count, best_ask, best_bid)
-        if not obi_result["pass"]:
-            return None
-        obi_signal = obi_result["signal"]
+        obi_signal = 0.0
+        if Config.STRICT_MICROSTRUCTURE_FILTERS:
+            obi_result = check_obi(ask_count, bid_count, best_ask, best_bid)
+            if not obi_result["pass"]:
+                return None
+            obi_signal = obi_result["signal"]
 
         # --- v14.3 Queue Imbalance (large-tick asset signal) ---
-        if Config.QUEUE_IMBALANCE_ENABLED and ask_count > 0:
+        if Config.STRICT_MICROSTRUCTURE_FILTERS and Config.QUEUE_IMBALANCE_ENABLED and ask_count > 0:
             from src.analysis.microstructure import queue_imbalance
             qi = queue_imbalance(bid_count, ask_count)
             if qi is not None and qi < Config.QI_SELL_THRESHOLD:
@@ -205,7 +210,7 @@ class _FilterMixin:
 
         # --- v14.3 Multi-Level OBI (depth-weighted from DOM cache) ---
         multi_obi = 0.0
-        if Config.MULTI_LEVEL_OBI_ENABLED and ask_count > 0:
+        if Config.STRICT_MICROSTRUCTURE_FILTERS and Config.MULTI_LEVEL_OBI_ENABLED and ask_count > 0:
             from src.analysis.microstructure import multi_level_obi
             dom_listings = getattr(self, '_dom_cache', {}).get(title, [])
             multi_obi = multi_level_obi(
@@ -218,7 +223,7 @@ class _FilterMixin:
         # --- v14.0 OFI (Order Flow Imbalance) ---
         # Compares current bid/ask counts with previous cycle snapshot.
         # Rising bids + falling asks = momentum in our favor.
-        if Config.OFI_ENABLED and hasattr(self, '_prev_agg_prices'):
+        if Config.STRICT_MICROSTRUCTURE_FILTERS and Config.OFI_ENABLED and hasattr(self, '_prev_agg_prices'):
             prev = self._prev_agg_prices.get(title, {})
             if prev:
                 prev_ask_cnt = prev.get("ask_count", 0) or 0
@@ -288,40 +293,55 @@ class _FilterMixin:
             return None
         if ask_count < 1 or bid_count < 1:
             return None  # No real demand
+        if (ask_count + bid_count) < Config.MIN_BID_ASK_COUNT:
+            return None  # Too thin order book
 
         # --- v14.1 VWAP undervaluation check ---
-        vwap_result = check_vwap_filter(title, best_ask, getattr(self, '_sales_cache', None))
-        if not vwap_result["pass"]:
-            return None
-        vwap_signal_val = vwap_result["signal"]
+        vwap_signal_val = 0.0
+        if Config.STRICT_MICROSTRUCTURE_FILTERS:
+            vwap_result = check_vwap_filter(title, best_ask, getattr(self, '_sales_cache', None))
+            if not vwap_result["pass"]:
+                return None
+            vwap_signal_val = vwap_result["signal"]
 
         # --- v14.1 CVD / VPIN signals ---
-        cvd_vpin_result = check_cvd_vpin(title, getattr(self, '_sales_cache', None))
-        if not cvd_vpin_result["pass"]:
-            return None
-        cvd_val = cvd_vpin_result["cvd"]
-        vpin_val = cvd_vpin_result["vpin"]
-        trade_records = cvd_vpin_result["trade_records"]
+        cvd_val = 0.0
+        vpin_val = 0.0
+        trade_records: List[Dict[str, Any]] = []
+        if Config.STRICT_MICROSTRUCTURE_FILTERS:
+            cvd_vpin_result = check_cvd_vpin(title, getattr(self, '_sales_cache', None))
+            if not cvd_vpin_result["pass"]:
+                return None
+            cvd_val = cvd_vpin_result["cvd"]
+            vpin_val = cvd_vpin_result["vpin"]
+            trade_records = cvd_vpin_result["trade_records"]
 
         # --- v14.3 Adverse Selection (Kyle λ + Amihud) ---
-        adverse_result = check_adverse_selection(title, trade_records)
-        if not adverse_result["pass"]:
-            return None
         adverse_pass = True
+        if Config.STRICT_MICROSTRUCTURE_FILTERS:
+            adverse_result = check_adverse_selection(title, trade_records)
+            if not adverse_result["pass"]:
+                return None
+            adverse_pass = True
 
         # --- v14.3 Realized Volatility Regime ---
-        vol_result = check_vol_regime(title, trade_records)
-        if not vol_result["pass"]:
-            return None
-        vol_regime = vol_result["regime"]
+        vol_regime = "medium"
+        if Config.STRICT_MICROSTRUCTURE_FILTERS:
+            vol_result = check_vol_regime(title, trade_records)
+            if not vol_result["pass"]:
+                return None
+            vol_regime = vol_result["regime"]
 
         # --- v14.3 Roll's Model (effective spread check) ---
-        roll_result = check_roll_spread(title, trade_records, best_ask)
-        if not roll_result["pass"]:
-            return None
+        if Config.STRICT_MICROSTRUCTURE_FILTERS:
+            roll_result = check_roll_spread(title, trade_records, best_ask)
+            if not roll_result["pass"]:
+                return None
 
         # --- v14.3 Volume Profile / POC (price magnet) ---
-        poc_price = check_volume_profile_poc(title, trade_records)
+        poc_price = 0.0
+        if Config.STRICT_MICROSTRUCTURE_FILTERS:
+            poc_price = check_volume_profile_poc(title, trade_records)
 
         # v14.6: Seasonal timing — dynamically adjust spread threshold
         effective_min_spread = Config.INTRA_MIN_SPREAD_PCT
@@ -332,14 +352,6 @@ class _FilterMixin:
                 effective_min_spread *= timing_mult
             except Exception:
                 pass  # non-fatal
-
-        # Spread check: best_bid > best_ask * (1 + threshold)
-        # Skip if NO cross-market arb available either
-        if (
-            best_bid <= best_ask * (1 + effective_min_spread / 100.0)
-            and cross_market_provider is None
-        ):
-            return None
 
         # CS2Cap oracle validation (Phase 1: selective, top-K via batch).
         # In selective mode the caller pre-fetches CS2Cap snapshots for the
@@ -375,6 +387,32 @@ class _FilterMixin:
                     return None
                 raise e
 
+        # Spread / opportunity gate.
+        # Intra-DMarket spread arbitrage is rare because bid < ask on normal
+        # markets. Also allow cross-market underpriced items: DMarket ask is
+        # cheaper than the CS2Cap lowest ask, so we can buy on DMarket and
+        # resell at the CS2Cap reference price.
+        has_intra_spread = best_bid > best_ask * (1 + effective_min_spread / 100.0)
+        has_cross_market = cross_market_provider is not None
+
+        required_margin = Config.FEE_RATE + Config.WITHDRAWAL_FEE_RATE + (Config.MIN_SPREAD_PCT / 100.0)
+        has_cs2cap_discount = (
+            cs_price > 0
+            and base_price < cs_price * (1 - required_margin)
+        )
+
+        if not (has_intra_spread or has_cross_market or has_cs2cap_discount):
+            if is_sandbox:
+                price_db.log_decision(
+                    title,
+                    "skip",
+                    "No spread or cross-market edge",
+                    f"bid={best_bid:.2f} ask={best_ask:.2f} "
+                    f"dm_ask={base_price:.2f} cs_ask={cs_price:.2f} "
+                    f"need_margin={required_margin:.1%}",
+                )
+            return None
+
         # CS2Cap reference: ensure oracle price is not way below our buy
         # (this would mean the item is genuinely overvalued on DMarket)
         if cs_price > 0 and base_price > cs_price * 1.5:
@@ -395,14 +433,22 @@ class _FilterMixin:
         if cs_snap is not None and getattr(cs_snap, "has_data", False):
             cs_ask_price = cs_snap.min_price
 
+        # Base list price: prefer CS2Cap reference. For cross-market
+        # underpriced items best_bid may be below our buy price, so listing
+        # at best_bid - 0.01 would guarantee a loss.
         list_price = round(best_bid - Config.INTRA_LIST_DISCOUNT, 2)
 
         # Use CS2Cap lowest ask as list price reference when available
         if cs_ask_price > 0:
             # Don't list above CS2Cap ask — compete with cheapest marketplace
             cs_list_price = round(cs_ask_price * 0.97, 2)
-            if cs_list_price > list_price:
-                list_price = min(cs_list_price, list_price * 1.10)  # cap at 10% above DM bid
+            # For cross-market buys, always use the CS2Cap reference if it
+            # covers our cost. Otherwise keep the higher of the two prices.
+            min_profitable = base_price * (1 + required_margin)
+            if base_price > best_bid or cs_list_price > list_price:
+                list_price = max(cs_list_price, min_profitable)
+            else:
+                list_price = max(list_price, min_profitable)
 
         # Cross-market bid override (highest bid across all marketplaces)
         if cross_market_provider and cross_market_bid > best_bid:
@@ -529,6 +575,7 @@ class _FilterMixin:
             current_margin=current_margin,
             list_price=list_price,
             is_sandbox=is_sandbox,
+            cs_ask_price=cs_ask_price,
         )
         if not fee_result["pass"]:
             return None
@@ -586,22 +633,25 @@ class _FilterMixin:
             )
 
         # --- v14.3 Composite Score ---
-        micro = compute_microstructure_scores(
-            title=title,
-            best_ask=best_ask,
-            best_bid=best_bid,
-            ask_count=ask_count,
-            bid_count=bid_count,
-            trade_records=trade_records,
-            vwap_signal_val=vwap_signal_val,
-            cvd_val=cvd_val,
-            vpin_val=vpin_val,
-            adverse_pass=adverse_pass,
-            vol_regime=vol_regime,
-            prev_agg_prices=getattr(self, '_prev_agg_prices', None),
-        )
-        composite_score = micro["composite_score"]
-        composite_components = micro["components"]
+        composite_score = 0.0
+        composite_components = {}
+        if Config.STRICT_MICROSTRUCTURE_FILTERS:
+            micro = compute_microstructure_scores(
+                title=title,
+                best_ask=best_ask,
+                best_bid=best_bid,
+                ask_count=ask_count,
+                bid_count=bid_count,
+                trade_records=trade_records,
+                vwap_signal_val=vwap_signal_val,
+                cvd_val=cvd_val,
+                vpin_val=vpin_val,
+                adverse_pass=adverse_pass,
+                vol_regime=vol_regime,
+                prev_agg_prices=getattr(self, '_prev_agg_prices', None),
+            )
+            composite_score = micro["composite_score"]
+            composite_components = micro["components"]
 
         # --- Decide: instant buy vs target ---
         # For intra-spread strategy, we typically instant-buy

@@ -59,11 +59,13 @@ class CircuitBreaker:
     base_cooldown: float = 30.0       # first OPEN duration (seconds)
     max_cooldown: float = 300.0       # cap for exponential backoff
     jitter_pct: float = 0.2           # ±20% jitter on wait times
+    half_open_timeout: float = 60.0   # max seconds in HALF_OPEN before auto-close
 
     state: CircuitState = CircuitState.CLOSED
     consecutive_failures: int = 0
     current_cooldown: float = 0.0  # initialised in __post_init__
     opened_at: float = 0.0
+    half_opened_at: float = 0.0    # when we entered HALF_OPEN
     total_opens: int = 0
     last_error: str = ""
 
@@ -82,14 +84,23 @@ class CircuitBreaker:
             if elapsed >= self.current_cooldown:
                 # Transition to HALF_OPEN: allow ONE test request
                 self.state = CircuitState.HALF_OPEN
+                self.half_opened_at = time.time()
                 logger.info(
                     f"[CB:{self.name}] OPEN → HALF_OPEN "
                     f"(cooldown={self.current_cooldown:.1f}s elapsed={elapsed:.1f}s)"
                 )
                 return True
             return False
-        # HALF_OPEN: only allow one in-flight test
-        return True
+        # HALF_OPEN: only one in-flight test; auto-close on timeout
+        if time.time() - self.half_opened_at > self.half_open_timeout:
+            self.state = CircuitState.CLOSED
+            self.consecutive_failures = 0
+            logger.info(
+                f"[CB:{self.name}] HALF_OPEN timed out after "
+                f"{self.half_open_timeout:.0f}s → CLOSED"
+            )
+            return True
+        return self.consecutive_failures == 0
 
     def record_success(self) -> None:
         """Mark a successful request (closes the circuit if it was open)."""
@@ -161,14 +172,17 @@ def jittered_sleep(base_seconds: float, jitter_pct: float = 0.2) -> float:
     return duration
 
 
-# HTTP status codes that should NOT trip the breaker
-# (404 for a specific resource, 400 for bad payload, etc.)
-NON_TRIPPING_STATUSES = {400, 401, 403, 404, 422}
+# HTTP status codes that should NOT trip the breaker.
+# 400/401/403/404/422 are client-side or resource-specific.
+# 503 "Service Unavailable" is usually a temporary DMarket internal issue
+# (e.g. elasticsearch unavailable) and should not punish the bot with a
+# long circuit-breaker cooldown. The @retry decorator will still retry.
+NON_TRIPPING_STATUSES = {400, 401, 403, 404, 422, 503}
 
 
 def should_trip(status: int) -> bool:
     """Return True if an HTTP status should count as a circuit-breaker failure."""
     if status in NON_TRIPPING_STATUSES:
         return False
-    # 429 (rate limit) and 5xx (server errors) should trip
+    # 429 (rate limit) and hard 5xx (500, 502, 504) should trip
     return status == 429 or status >= 500

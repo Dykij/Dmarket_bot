@@ -23,11 +23,13 @@ import logging
 import os
 from typing import Any, Dict, List, Optional
 
+from src.api.cs2cap_cache import CS2CapCache
 from src.api.dmarket_api_client import DMarketAPIClient
 from src.api.oracle_factory import OracleFactory
 from src.analytics.rare_valuation import RareValuationEngine
 from src.analytics.stickers_evaluator import StickerEvaluator
 from src.config import Config
+from src.core.daily_briefing import DailyBriefingScheduler
 from src.core.event_shield import event_shield
 from src.core.target_sniping.execution import _ExecutionMixin
 from src.core.target_sniping.filter import _FilterMixin
@@ -87,7 +89,6 @@ class SnipingLoop(  # type: ignore[misc]
         from src.analytics.self_reflection import self_reflection
         from src.risk.pump_detector import PumpDetector
         from src.risk.risk_manager import RiskManager
-        from src.telegram.notifier import notifier
         self.self_reflection = self_reflection
         # v12.6: Pump detector — blocks FOMO buys on items with sudden
         # price spikes (>PUMP_THRESHOLD_PCT in 1h, default 15%). The
@@ -208,17 +209,23 @@ class SnipingLoop(  # type: ignore[misc]
             if Config.CAPITAL_VELOCITY_ENABLED and effective_balance > 0:
                 try:
                     weekly_sales = price_db.get_virtual_inventory_weekly_sales()
-                    avg_balance = price_db.get_state("avg_balance") or str(effective_balance)
-                    avg_balance_f = float(avg_balance)
-                    velocity = weekly_sales / max(avg_balance_f, 0.01)
-                    if velocity < Config.CAPITAL_VELOCITY_MIN:
-                        logger.info(
-                            f"[v14.4 VELOCITY] ${weekly_sales:.2f}/week sales "
-                            f"vs ${avg_balance_f:.2f} avg balance = {velocity:.2f}x "
-                            f"(min {Config.CAPITAL_VELOCITY_MIN}x). "
-                            f"Skipping buy cycle — capital locked in trade-hold."
-                        )
-                        return
+                    locked_value = price_db.get_virtual_inventory_locked_value()
+                    # With no sales history and no locked inventory, velocity is
+                    # undefined; don't block the very first purchases.
+                    if weekly_sales <= 0 and locked_value <= 0:
+                        pass
+                    else:
+                        avg_balance = price_db.get_state("avg_balance") or str(effective_balance)
+                        avg_balance_f = float(avg_balance)
+                        velocity = weekly_sales / max(avg_balance_f, 0.01)
+                        if velocity < Config.CAPITAL_VELOCITY_MIN:
+                            logger.info(
+                                f"[v14.4 VELOCITY] ${weekly_sales:.2f}/week sales "
+                                f"vs ${avg_balance_f:.2f} avg balance = {velocity:.2f}x "
+                                f"(min {Config.CAPITAL_VELOCITY_MIN}x). "
+                                f"Skipping buy cycle — capital locked in trade-hold."
+                            )
+                            return
                 except Exception:
                     pass
 
@@ -294,6 +301,47 @@ class SnipingLoop(  # type: ignore[misc]
                             )
                 except Exception as e:
                     logger.debug(f"[v14.0 FLOAT] Secondary scan failed: {e}")
+
+            # --- v14.8 Price-Range secondary scan (wide-net conveyor) ---
+            # Discover cheap/under-the-radar items by price bucket, then fetch
+            # their aggregated prices so they go through the same validator.
+            # Throttled: runs every N cycles to respect DMarket rate limits.
+            if (
+                Config.PRICE_RANGE_SCAN_ENABLED
+                and self.deep_scan_counter % Config.PRICE_RANGE_CYCLE_INTERVAL == 0
+            ):
+                try:
+                    pr_items = await self._fetch_price_range_listings(
+                        game_id=game_id,
+                        min_usd=Config.PRICE_RANGE_MIN_USD,
+                        max_usd=min(Config.PRICE_RANGE_MAX_USD, dynamic_max_price),
+                        max_pages=Config.PRICE_RANGE_MAX_PAGES,
+                        max_titles=Config.PRICE_RANGE_MAX_TITLES,
+                    )
+                    if pr_items:
+                        pr_titles = [
+                            it.get("title") for it in pr_items if it.get("title")
+                        ]
+                        pr_agg = await self.client.get_aggregated_prices(
+                            game_id, titles=pr_titles
+                        )
+                        agg_prices.update(pr_agg)
+                        seen = {
+                            it.get("itemId") for it in items if it.get("itemId")
+                        }
+                        new_count = 0
+                        for cand in pr_items:
+                            if cand.get("itemId") not in seen:
+                                seen.add(cand.get("itemId"))
+                                items.append(cand)
+                                new_count += 1
+                        if new_count > 0:
+                            logger.info(
+                                f"[v14.8 PRICE-RANGE] Added {new_count} "
+                                f"price-bucket candidates to the pipeline"
+                            )
+                except Exception as e:
+                    logger.debug(f"[v14.8 PRICE-RANGE] Secondary scan failed: {e}")
 
             next_cursor = ""  # cursor-based pagination is replaced by agg-prices scan
 
@@ -416,6 +464,26 @@ class SnipingLoop(  # type: ignore[misc]
                     f"[CS2CapCache MISS] cache_stale={self.cs2cap_cache.is_stale()} "
                     f"ask_count={len(self.cs2cap_cache._ask_cache)}"
                 )
+
+            # v14.9: Extra CS2Cap batch for cross-market buy targets.
+            # Cross-market targets need prices for all traded titles, not just
+            # the top-K that pass the intra-spread filter. One extra batch per
+            # cycle is still well within the Starter 50K/month budget.
+            cs_target_snapshots: Dict[str, Any] = {}
+            if (
+                Config.CROSS_MARKET_TARGET_ENABLED
+                and oracle is not None
+                and hasattr(oracle, "get_prices_batch")
+            ):
+                try:
+                    target_titles = list(agg_prices.keys())[:100]
+                    cs_target_snapshots = await oracle.get_prices_batch(target_titles)
+                    logger.info(
+                        f"[CS2CapTarget] fetched {len(cs_target_snapshots)} "
+                        f"cross-market reference prices"
+                    )
+                except Exception as e:
+                    logger.debug(f"[CS2CapTarget] batch failed: {e}")
 
             # v14.1: Pre-fetch DMarket last-sales for CVD/VPIN/VWAP analysis
             # Only for top candidates, uses DMarket API (not cs2cap quota).
@@ -566,6 +634,17 @@ class SnipingLoop(  # type: ignore[misc]
                         if placed > 0:
                             logger.info(f"[LIMIT] {placed} buy target(s) placed for wide-spread items")
                     instant_buys = instant_targets  # only instant-buy the rest
+
+                    # v14.9: Cross-market buy targets — when DMarket ask is above
+                    # CS2Cap, post liquidity at CS2Cap-reference prices.
+                    cross_placed = await limit_mixin._execute_cross_market_targets(
+                        game_id=game_id,
+                        agg_prices=agg_prices,
+                        cs_snapshots=cs_target_snapshots or cs_snapshots,
+                        current_balance=current_balance,
+                    )
+                    if cross_placed > 0:
+                        logger.info(f"[CROSS-MARKET TARGET] {cross_placed} target(s) placed")
                 except Exception as e:
                     logger.debug(f"[LIMIT] Limit order flow failed: {e}")
 

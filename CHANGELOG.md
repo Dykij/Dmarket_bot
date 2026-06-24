@@ -6,6 +6,55 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/v2.0.0.html).
 
 
+## [14.8.0] - 2026-06-24
+### 🦅 v14.8 Cross-Market Target Discovery — Fix Bot Opportunity Pipeline
+
+#### Fixed
+- **DMarket aggregated-prices 503 handling** — `503 Service Unavailable` no longer
+  trips the circuit breaker, allowing transient DMarket errors to retry cleanly.
+- **Over-strict microstructure filters** — `STRICT_MICROSTRUCTURE_FILTERS` now
+  defaults to `false`; OBI/OFI/VWAP/VPIN/Roll/Adverse-Selection/Vol-Regime gates
+  are skipped for low-balance CS2 markets where they killed every candidate.
+- **Fee model mismatch** — `WITHDRAWAL_FEE_RATE` lowered to `0.5%` and
+  `MIN_SPREAD_PCT` to `0.5%` so cross-market edges are not discarded by
+  pessimistic cost assumptions.
+- **Cross-market buy list_price** — `limit_orders._execute_cross_market_targets`
+  now posts DMarket buy targets derived from CS2Cap lowest ask minus fees
+  instead of using the DMarket best ask.
+- **Cross-market fee validation** — `evaluate_fee_slippage_tod` accepts a
+  `cs_ask_price` reference so cross-market discounts are validated against
+  the external venue price.
+
+#### Added
+- **Cross-market target executor** — `src/core/limit_orders.py`:
+  `_execute_cross_market_targets()` posts up to
+  `CROSS_MARKET_TARGET_MAX_PER_CYCLE` DMarket buy targets per cycle.
+- **CS2Cap batch priming for targets** — `src/core/target_sniping/core.py`
+  fetches `CS2Cap` snapshots for aggregated-price titles so cross-market
+  targets have fresh reference data.
+- **Cross-market underpriced gate** — `src/core/target_sniping/filter.py`
+  flags DMarket items priced below CS2Cap ask minus target fee as
+  `cross_market_target` candidates.
+- **Liquidity gate** — `MIN_BID_ASK_COUNT` filter rejects items with
+  insufficient order-book depth.
+- **Config hot-reload keys** — `src/utils/config_watcher.py` watches new
+  cross-market and filter env vars.
+- **Sandbox diagnostic script** — `scripts/sandbox_filter_check.py` simulates
+  the full filter/target pipeline with real DMarket + CS2Cap data.
+- **API diagnostic script** — `scripts/test_dmarket_api.py` checks DMarket
+  balance and aggregated-prices connectivity.
+
+#### Changed
+- `src/config.py` — env overrides for `MIN_SPREAD_PCT`,
+  `WITHDRAWAL_FEE_RATE`, `MIN_TOTAL_SALES`, `MIN_BID_ASK_COUNT`,
+  `INTRA_MIN_SPREAD_PCT=0.3`, and new `CROSS_MARKET_TARGET_*` settings.
+- `.env` — `DRY_RUN=true`, relaxed spreads/fees, enabled price-range scan,
+  limit orders, and cross-market targets.
+- `tests/unit/test_v12_selective_cs2cap.py` — isolated from `.env` so unit
+  tests are deterministic.
+- `ANALYSIS_REPORT.md` — removed; analysis was performed and converted into
+  these code changes.
+
 ## [14.6.0] - 2026-06-21
 ### 🦅 v14.6 Value Detection Layers — TA Site Analysis Integration
 
