@@ -401,7 +401,28 @@ class _FilterMixin:
             and base_price < cs_price * (1 - required_margin)
         )
 
+        # v14.8.1: DMarket-internal underpriced check. Only call last-sales
+        # when no other edge exists, to respect rate limits.
+        has_dmarket_underpriced = False
+        dm_underpriced_ref = 0.0
         if not (has_intra_spread or has_cross_market or has_cs2cap_discount):
+            try:
+                from src.core.target_sniping.underpriced import is_dmarket_underpriced
+                up = await is_dmarket_underpriced(
+                    self.client, game_id, title, base_price, fee_rate=bulk_fees.get(item_id, Config.FEE_RATE)
+                )
+                if up.get("underpriced"):
+                    has_dmarket_underpriced = True
+                    dm_underpriced_ref = up.get("reference_price", 0.0)
+                    if is_sandbox:
+                        price_db.log_decision(
+                            title, "pass", "DMarket underpriced vs sales",
+                            f"base={base_price:.2f} ref={dm_underpriced_ref:.2f} margin={up.get('margin_pct', 0):.1f}%"
+                        )
+            except Exception as e:
+                logger.debug(f"DMarket underpriced check failed for {title}: {e}")
+
+        if not (has_intra_spread or has_cross_market or has_cs2cap_discount or has_dmarket_underpriced):
             if is_sandbox:
                 price_db.log_decision(
                     title,
@@ -555,7 +576,11 @@ class _FilterMixin:
 
         # v12.0 Phase 1.1: Low-Fee Filter (prefer low-fee items)
         # v12.2 Phase 2.2: Use bulk fee instead of per-item API call
+        # v14.8.1: Use reduced fee from low-fee scan if available.
         fee_rate = bulk_fees.get(item_id, 0.05)
+        low_fee_override = item.get("_low_fee_rate")
+        if low_fee_override is not None and low_fee_override < fee_rate:
+            fee_rate = low_fee_override
         if fee_rate == 0.05:
             # Fall back to per-item call only if bulk missed this item
             fee_rate = await self.client.get_item_fee(game_id, item_id, base_price_cents)
@@ -668,7 +693,11 @@ class _FilterMixin:
             "list_price": list_price,
             "best_bid": best_bid,
             "best_ask": best_ask,
-            "strategy": "cross_market" if cross_market_provider else "intra_spread",
+            "strategy": (
+                "dmarket_underpriced" if has_dmarket_underpriced
+                else ("cross_market" if cross_market_provider else "intra_spread")
+            ),
             "target_platform": cross_market_provider or "dmarket",
+            "dm_underpriced_ref": dm_underpriced_ref,
             "is_rare": is_rare,
         }

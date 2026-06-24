@@ -11,6 +11,7 @@ from src.api.oracle_factory import OracleFactory
 from src.api.cs2cap_oracle import CS2CapOracle
 from src.core.limit_orders import _LimitOrderMixin
 from src.core.target_sniping.filter import _FilterMixin
+from src.core.target_sniping.underpriced import fetch_low_fee_titles, is_dmarket_underpriced
 from src.core.limit_orders import _LimitOrderMixin
 from src.risk.liquidity_manager import LiquidityManager
 from src.utils.vault import vault
@@ -96,7 +97,7 @@ async def _fetch_listings(
     dmarket: DMarketAPIClient,
     agg_prices: Dict[str, Any],
     metrics: "SandboxMetrics",
-) -> List[Dict[str, Any]]:
+) -> tuple[List[Dict[str, Any]], Dict[str, float]]:
     """Fetch cheapest listing per top title + optional price-range scan."""
     log("\n[PIPELINE] Fetching listings")
 
@@ -179,8 +180,49 @@ async def _fetch_listings(
                 new += 1
         log_info(f"Price-range unique listings added: {new}")
 
+    # --- v14.8.1 Low-fee items secondary scan ---
+    if Config.LOW_FEE_ITEMS_SCAN_ENABLED:
+        log_info("Low-fee items scan enabled")
+        low_fee_map = await fetch_low_fee_titles(dmarket, Config.GAME_ID)
+        if low_fee_map:
+            log_info(f"  Low-fee titles: {len(low_fee_map)}")
+            lf_titles = list(low_fee_map.keys())[: Config.LOW_FEE_ITEMS_SCAN_LIMIT]
+            sem = asyncio.Semaphore(2)
+
+            async def fetch_low_fee_one(title: str) -> List[Dict[str, Any]]:
+                async with sem:
+                    try:
+                        resp = await dmarket.get_market_items_v2(
+                            Config.GAME_ID,
+                            limit=Config.LISTINGS_FETCH_LIMIT,
+                            title=title,
+                        )
+                        await asyncio.sleep(0.2)
+                        return resp.get("objects", [])
+                    except Exception as e:
+                        log_err(f"low-fee fetch {title}: {e}")
+                        return []
+
+            lf_listings_per_title = await asyncio.gather(
+                *[fetch_low_fee_one(t) for t in lf_titles]
+            )
+            lf_added = 0
+            for title, listings in zip(lf_titles, lf_listings_per_title):
+                for lst in sorted(
+                    listings,
+                    key=lambda x: int(x.get("price", {}).get("USD", 0)),
+                ):
+                    item_id = lst.get("itemId", "")
+                    if item_id and item_id not in seen_ids:
+                        seen_ids.add(item_id)
+                        lst["_low_fee_rate"] = low_fee_map.get(title, 0.05)
+                        items.append(lst)
+                        lf_added += 1
+                        break
+            log_info(f"  Low-fee unique listings added: {lf_added}")
+
     metrics.listings_fetched = len(items)
-    return items
+    return items, low_fee_map
 
 
 async def _fetch_cs2cap_snapshots(
@@ -210,6 +252,7 @@ async def _run_filters(
     cs_asks: Dict[str, float],
     cs_bids: Dict[str, float],
     metrics: "SandboxMetrics",
+    low_fee_map: Dict[str, float],
 ) -> None:
     """Run filter pipeline on fetched listings and count results."""
     log("\n[PIPELINE] Running filter pipeline")
@@ -238,9 +281,13 @@ async def _run_filters(
     if bulk_fees is None:
         bulk_fees = {}
 
+    # Fetch CS2Cap snapshots for aggregated titles AND low-fee titles
+    # so low-fee candidates have cross-market reference data.
+    low_fee_titles = list(low_fee_map.keys()) if Config.LOW_FEE_ITEMS_SCAN_ENABLED else []
     all_agg_titles = list(agg_prices.keys())[:100]
+    snapshot_titles = list(dict.fromkeys(all_agg_titles + low_fee_titles))[:200]
     oracle = OracleFactory.get_oracle(Config.GAME_ID)
-    cs_asks_full, cs_bids_full = await _fetch_cs2cap_snapshots(oracle, all_agg_titles)
+    cs_asks_full, cs_bids_full = await _fetch_cs2cap_snapshots(oracle, snapshot_titles)
     metrics.cs2cap_asks = len(cs_asks_full)
     metrics.cs2cap_bids = len(cs_bids_full)
 
@@ -291,6 +338,13 @@ async def _run_filters(
         elif strategy == "intra_spread":
             instant += 1
             log_ok(f"Instant candidate: {title[:40]} @ ${result.get('base_price', 0):.2f}")
+        elif strategy == "dmarket_underpriced":
+            metrics.dmarket_underpriced += 1
+            ref = result.get("dm_underpriced_ref", 0.0)
+            log_ok(f"DMarket underpriced: {title[:40]} @ ${result.get('base_price', 0):.2f} (ref ${ref:.2f})")
+
+        if it.get("_low_fee_rate") is not None:
+            metrics.low_fee_candidates += 1
 
     # Separate cross-market buy target placement simulation
     limit_mixin = _LimitOrderMixin()
@@ -330,19 +384,12 @@ async def run_pipeline_test(metrics: "SandboxMetrics") -> None:
         if not agg_prices:
             return
 
-        items = await _fetch_listings(dmarket, agg_prices, metrics)
+        items, low_fee_map = await _fetch_listings(dmarket, agg_prices, metrics)
         if not items:
             log_warn("No listings fetched — skipping filter run")
             return
 
-        cs_asks = {}
-        cs_bids = {}
-        if cs2cap is not None:
-            cs_asks, cs_bids = await _fetch_cs2cap_snapshots(
-                cs2cap, list(agg_prices.keys())[:100]
-            )
-
-        await _run_filters(dmarket, items, agg_prices, cs_asks, cs_bids, metrics)
+        await _run_filters(dmarket, items, agg_prices, {}, {}, metrics, low_fee_map)
     finally:
         await dmarket.close()
         await OracleFactory.close_all()

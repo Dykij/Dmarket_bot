@@ -126,7 +126,8 @@ class TestShouldTrip:
     def test_5xx_trips(self):
         from src.api.dmarket_api_client.backoff import should_trip
         assert should_trip(500) is True
-        assert should_trip(503) is True
+        # 503 is a transient DMarket overload; retry instead of tripping.
+        assert should_trip(503) is False
         assert should_trip(599) is True
 
     def test_4xx_does_not_trip(self):

@@ -81,6 +81,8 @@ class SandboxMetrics:
     listings_fetched: int = 0
     instant_candidates: int = 0
     cross_market_targets: int = 0
+    dmarket_underpriced: int = 0
+    low_fee_candidates: int = 0
     filter_reasons: Dict[str, int] = field(default_factory=dict)
 
     # Live cycle
@@ -106,6 +108,8 @@ class SandboxMetrics:
         log(f"  Listings fetched:     {self.listings_fetched}")
         log(f"  Instant candidates:   {self.instant_candidates}")
         log(f"  Cross-market targets: {self.cross_market_targets}")
+        log(f"  DMarket underpriced:  {self.dmarket_underpriced}")
+        log(f"  Low-fee candidates:   {self.low_fee_candidates}")
         log(f"  Live cycles:          {self.cycles}")
         log(f"  Live candidates:      {self.live_candidates}")
         log(f"  Live errors:          {self.live_errors}")
