@@ -204,7 +204,7 @@ def check_slippage(
         return 0.0
     from src.analysis.microstructure import estimate_slippage
 
-    daily_vol = (ask_cnt + bid_cnt) * 10
+    daily_vol = (ask_cnt + bid_cnt) * (24 * 3600 // Config.SCAN_INTERVAL)
     expected_slippage = estimate_slippage(
         buy_price=base_price,
         order_qty=1,
@@ -256,14 +256,27 @@ def evaluate_cross_market_arb(
         provider_bids = getattr(bid_snap, "provider_bids", {}) or {}
         if provider_bids:
             provider, bid = max(provider_bids.items(), key=lambda kv: kv[1])
-            cm_threshold = best_ask * (1 + Config.INTRA_MIN_SPREAD_PCT / 100.0)
+            # v14.8: fee-aware cross-market gate.
+            # The external bid must cover DMarket ask + DMarket sell fee +
+            # destination marketplace fee + withdrawal cost + target margin.
+            if Config.CROSS_MARKET_FEE_AWARE:
+                cm_threshold = best_ask * (
+                    1
+                    + Config.FEE_RATE
+                    + Config.CROSS_MARKET_DESTINATION_FEE
+                    + Config.WITHDRAWAL_FEE_RATE
+                    + Config.INTRA_MIN_SPREAD_PCT / 100.0
+                )
+            else:
+                cm_threshold = best_ask * (1 + Config.INTRA_MIN_SPREAD_PCT / 100.0)
             if best_ask > 0 and bid > cm_threshold:
                 is_viable = True
                 logger.info(
                     f"Cross-market arb HIT: {title} "
                     f"DM_ask=${best_ask:.2f} < "
                     f"{provider}_bid=${bid:.2f} "
-                    f"(+{((bid / best_ask) - 1) * 100:.1f}%)"
+                    f"(+{((bid / best_ask) - 1) * 100:.1f}%, "
+                    f"fee-aware threshold=${cm_threshold:.2f})"
                 )
             else:
                 if best_ask > 0:
@@ -355,40 +368,67 @@ def evaluate_fee_slippage_tod(
     list_price: float,
     is_sandbox: bool = False,
     item_id: Optional[str] = None,
+    cs_ask_price: Optional[float] = None,
 ) -> dict:
     """Fee calculation with slippage, TOD adjustment, and arbitrage profit validation.
 
+    Supports both intra-DMarket spread and cross-market underpriced opportunities.
     Returns {"pass": bool, "reason": str|None}
     """
     from src.risk.price_validator import PriceValidationError, validate_arbitrage_profit
 
-    logger = logging.getLogger("SnipingBot")
+    # v14.8: fee-aware minimum spread.
+    # Intra-DMarket arbitrage must cover the sell fee, a realistic withdrawal
+    # cost, and the target profit margin. No double-counting of buyer fees:
+    # DMarket does not charge the buyer on instant purchases.
+    total_cost = fee_rate + Config.WITHDRAWAL_FEE_RATE
+    min_spread_for_fee = total_cost + current_margin
 
-    total_fee = fee_rate + Config.WITHDRAWAL_FEE_RATE
     spread_ratio = (best_bid - best_ask) / best_ask if best_ask > 0 else 0
-    min_spread_for_fee = total_fee * 2.0 + 0.03
 
-    if spread_ratio < min_spread_for_fee:
-        if is_sandbox:
-            price_db.log_decision(
-                title,
-                "skip",
-                "Spread too thin for fee",
-                f"spread={spread_ratio:.1%} need>{min_spread_for_fee:.1%} fee={total_fee:.1%}",
-            )
-        return {"pass": False, "reason": "Spread too thin for fee"}
+    # Cross-market underpriced opportunity: DMarket ask is cheaper than the
+    # external market ask. We can buy on DMarket and resell at/near CS2Cap ask.
+    cs_ask_price = cs_ask_price or 0.0
+    has_cross_market_discount = (
+        cs_ask_price > 0
+        and base_price < cs_ask_price * (1 - min_spread_for_fee)
+    )
+
+    if not has_cross_market_discount:
+        if spread_ratio < min_spread_for_fee:
+            if is_sandbox:
+                price_db.log_decision(
+                    title,
+                    "skip",
+                    "Spread too thin for fee",
+                    f"spread={spread_ratio:.1%} need>{min_spread_for_fee:.1%} cost={total_cost:.1%}",
+                )
+            return {"pass": False, "reason": "Spread too thin for fee"}
+
+        # Additional safety: require spread at least 1.3x the fee stack so a small
+        # bid/ask move doesn't instantly erase the edge.
+        if spread_ratio < total_cost * 1.3:
+            if is_sandbox:
+                price_db.log_decision(
+                    title,
+                    "skip",
+                    "Spread/fee ratio too low",
+                    f"spread={spread_ratio:.1%} cost={total_cost:.1%}",
+                )
+            return {"pass": False, "reason": "Spread/fee ratio too low"}
 
     effective_margin = current_margin
-    effective_margin += check_slippage(ask_count, bid_count, base_price, best_ask, best_bid)
+    # check_slippage returns percentage points; convert to decimal fraction
+    effective_margin += check_slippage(ask_count, bid_count, base_price, best_ask, best_bid) / 100.0
     effective_margin *= check_tod_adjustment()
 
     try:
         validate_arbitrage_profit(
             buy_price=base_price,
             expected_sell_price=list_price,
-            fee_markup=total_fee,
+            fee_markup=total_cost,
             min_profit_margin=effective_margin,
-            lock_days=7,
+            lock_days=Config.TRADE_LOCK_HOURS / 24.0,
         )
     except PriceValidationError as e:
         if is_sandbox:
