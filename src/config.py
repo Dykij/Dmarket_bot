@@ -107,7 +107,7 @@ class Config:
     # --- Inventory & Sale Age (used in price_history/history.py + telegram) ---
     MAX_LAST_SALE_AGE_DAYS = int(os.getenv("MAX_LAST_SALE_AGE_DAYS", "30"))  # Reject items whose last sale is older than N days
     MAX_OPEN_INVENTORY = int(os.getenv("MAX_OPEN_INVENTORY", "200"))  # Telegram cap on open inventory items
-    BOT_VERSION = os.getenv("BOT_VERSION", "v14.8.0")  # Reported in /start, /status
+    BOT_VERSION = os.getenv("BOT_VERSION", "v14.8.1")  # Reported in /start, /status
 
     # --- Performance ---
     # SCAN_INTERVAL=30s aligns with the CS2Cap Starter tier budget
@@ -121,8 +121,8 @@ class Config:
     CS2CAP_BATCH_SIZE = 100            # Max items per /prices/batch call
     CS2CAP_TOP_K_VALIDATE = 5          # Validate only top-K items via CS2Cap per cycle
     CS2CAP_SELECTIVE_MODE = True       # True = top-K only; False = all (uses more quota)
-    AGG_SCAN_TOP_N = int(os.getenv("AGG_SCAN_TOP_N", "50"))  # v12.3: top-N most-traded items from agg-prices scan per cycle (max 100)
-    LISTINGS_FETCH_LIMIT = int(os.getenv("LISTINGS_FETCH_LIMIT", "10"))  # v12.3: N listings per title (DMarket doesn't sort by price; higher = more chance of getting the actual cheapest)
+    AGG_SCAN_TOP_N = int(os.getenv("AGG_SCAN_TOP_N", "100"))  # v14.8.1: full aggregated-prices payload (max 100)
+    LISTINGS_FETCH_LIMIT = int(os.getenv("LISTINGS_FETCH_LIMIT", "20"))  # v14.8.1: more listings per title for true cheapest
 
     # --- v14.8 Price-Range Market Scan (wide-net pipeline) ---
     # Enables scanning DMarket by price buckets instead of only top-N volume.
@@ -131,9 +131,15 @@ class Config:
     PRICE_RANGE_SCAN_ENABLED = os.getenv("PRICE_RANGE_SCAN_ENABLED", "false").lower() == "true"
     PRICE_RANGE_MIN_USD = float(os.getenv("PRICE_RANGE_MIN_USD", "0.50"))
     PRICE_RANGE_MAX_USD = float(os.getenv("PRICE_RANGE_MAX_USD", "5.00"))
-    PRICE_RANGE_MAX_TITLES = int(os.getenv("PRICE_RANGE_MAX_TITLES", "100"))  # per cycle
-    PRICE_RANGE_MAX_PAGES = int(os.getenv("PRICE_RANGE_MAX_PAGES", "5"))      # 5 * 100 listings = 500 listings
-    PRICE_RANGE_CYCLE_INTERVAL = int(os.getenv("PRICE_RANGE_CYCLE_INTERVAL", "5"))  # run every N cycles
+    PRICE_RANGE_MAX_TITLES = int(os.getenv("PRICE_RANGE_MAX_TITLES", "200"))  # per cycle
+    PRICE_RANGE_MAX_PAGES = int(os.getenv("PRICE_RANGE_MAX_PAGES", "10"))     # 10 * 100 listings = 1000 listings
+    PRICE_RANGE_CYCLE_INTERVAL = int(os.getenv("PRICE_RANGE_CYCLE_INTERVAL", "3"))  # run every N cycles
+
+    # --- v14.8.1 Low-Fee Items Scan ---
+    # DMarket's /exchange/v1/customized-fees endpoint returns items with reduced
+    # sell fees. Prioritizing them improves net margin.
+    LOW_FEE_ITEMS_SCAN_ENABLED = os.getenv("LOW_FEE_ITEMS_SCAN_ENABLED", "true").lower() == "true"
+    LOW_FEE_ITEMS_SCAN_LIMIT = int(os.getenv("LOW_FEE_ITEMS_SCAN_LIMIT", "100"))
 
     # --- v14.8 Cross-Market Arbitrage Calibration ---
     # Fee-aware cross-market gate: require bid on external marketplace to cover
@@ -146,10 +152,21 @@ class Config:
     # above external markets. Provides liquidity and catches sellers hitting our
     # price without requiring instant underpriced listings.
     CROSS_MARKET_TARGET_ENABLED = os.getenv("CROSS_MARKET_TARGET_ENABLED", "true").lower() == "true"
-    CROSS_MARKET_TARGET_MARGIN = float(os.getenv("CROSS_MARKET_TARGET_MARGIN", "0.03"))
+    CROSS_MARKET_TARGET_MARGIN = float(os.getenv("CROSS_MARKET_TARGET_MARGIN", "0.02"))
     CROSS_MARKET_TARGET_MAX_PER_CYCLE = int(
-        os.getenv("CROSS_MARKET_TARGET_MAX_PER_CYCLE", "10")
+        os.getenv("CROSS_MARKET_TARGET_MAX_PER_CYCLE", "20")
     )
+
+    # --- v14.8.1 DMarket-Internal Underpriced Detection ---
+    # Flag DMarket listings that are cheaper than the lower percentile of
+    # recent DMarket sales. This catches mispriced items even when CS2Cap has
+    # no edge, but requires extra /last-sales calls (rate-limited).
+    DMARKET_INTERNAL_UNDERPRICED_ENABLED = (
+        os.getenv("DMARKET_INTERNAL_UNDERPRICED_ENABLED", "true").lower() == "true"
+    )
+    DM_UNDERPRICED_SALES_DAYS = int(os.getenv("DM_UNDERPRICED_SALES_DAYS", "7"))
+    DM_UNDERPRICED_PERCENTILE = float(os.getenv("DM_UNDERPRICED_PERCENTILE", "0.25"))
+    DM_UNDERPRICED_MIN_MARGIN_PCT = float(os.getenv("DM_UNDERPRICED_MIN_MARGIN_PCT", "5.0"))
 
     # --- v14.8 Microstructure Filter Toggle ---
     # For low-balance / low-frequency CS2 markets, strict HFT-style filters

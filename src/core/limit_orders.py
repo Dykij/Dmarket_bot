@@ -156,11 +156,18 @@ class _LimitOrderMixin:
         if not (LIMIT_ORDER_ENABLED and Config.CROSS_MARKET_TARGET_ENABLED):
             return 0
 
-        targets_to_place: List[Dict[str, Any]] = []
+        # Track titles we already targeted this session to avoid duplicates.
+        if not hasattr(self, "_placed_cross_targets"):
+            self._placed_cross_targets: set[str] = set()
+
         total_cost = Config.FEE_RATE + Config.WITHDRAWAL_FEE_RATE
         required_margin = total_cost + Config.CROSS_MARKET_TARGET_MARGIN
 
+        candidates: List[Dict[str, Any]] = []
         for title, agg in agg_prices.items():
+            if title in self._placed_cross_targets:
+                continue
+
             cs_snap = cs_snapshots.get(title)
             if cs_snap is None or not getattr(cs_snap, "has_data", False):
                 continue
@@ -187,17 +194,26 @@ class _LimitOrderMixin:
             if target_price < Config.MIN_PRICE_USD:
                 continue
 
-            targets_to_place.append({
+            # Potential margin if filled and sold at CS2Cap ask.
+            margin = (cs_ask - target_price) / target_price if target_price > 0 else 0.0
+            candidates.append({
                 "title": title,
                 "price": {"amount": str(int(target_price * 100)), "currency": "USD"},
                 "game_id": game_id,
+                "target_price": target_price,
+                "margin": margin,
             })
 
-            if len(targets_to_place) >= Config.CROSS_MARKET_TARGET_MAX_PER_CYCLE:
-                break
+        # Sort by best margin and cap at max per cycle.
+        candidates.sort(key=lambda x: x["margin"], reverse=True)
+        targets_to_place = candidates[:Config.CROSS_MARKET_TARGET_MAX_PER_CYCLE]
 
         if not targets_to_place:
             return 0
+
+        # Remember titles so we don't re-target them in the next cycle.
+        for t in targets_to_place:
+            self._placed_cross_targets.add(t["title"])
 
         is_dry = os.getenv("DRY_RUN", "true").lower() == "true"
         if is_dry:

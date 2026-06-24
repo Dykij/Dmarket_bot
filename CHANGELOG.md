@@ -6,6 +6,32 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/v2.0.0.html).
 
 
+## [14.8.1] - 2026-06-24
+### 🦅 v14.8.1 Wide-Net Conveyor + Low-Fee + DMarket-Internal Underpriced
+
+#### Added
+- **Low-fee items scan** — `src/api/dmarket_api_client/market.py` now parses the
+  `/exchange/v1/customized-fees` `reducedFees` list and `src/core/target_sniping/scanner.py`
+  fetches their cheapest listings for the pipeline.
+- **DMarket-internal underpriced detection** — `src/core/target_sniping/underpriced.py`
+  flags listings cheaper than the local price-history percentile. Falls back to
+  DMarket `/last-sales` when available (currently requires JWT auth, so local
+  history is the primary source).
+- **Unit tests** for underpriced percentile logic and history-based detection
+  (`tests/unit/test_underpriced.py`).
+
+#### Changed
+- `.env` and `src/config.py` — `AGG_SCAN_TOP_N=100`, `PRICE_RANGE_MAX_PAGES=10`,
+  `PRICE_RANGE_MAX_TITLES=200`, `LISTINGS_FETCH_LIMIT=20`,
+  `CROSS_MARKET_TARGET_MARGIN=0.02`, `CROSS_MARKET_TARGET_MAX_PER_CYCLE=20`.
+- `src/core/limit_orders.py` — cross-market targets are sorted by margin and
+  session-level dedup is applied via `_placed_cross_targets`.
+- `src/core/target_sniping/filter.py` — uses reduced fee from low-fee scan and
+  allows DMarket-internal underpriced as a fourth opportunity gate.
+- `src/utils/config_watcher.py` — hot-reload keys for new v14.8.1 settings.
+- `tests/unit/test_v12_4_components.py` — updated to reflect that 503 no longer
+  trips the circuit breaker.
+
 ## [14.8.0] - 2026-06-24
 ### 🦅 v14.8 Cross-Market Target Discovery — Fix Bot Opportunity Pipeline
 

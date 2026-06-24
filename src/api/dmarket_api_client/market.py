@@ -143,26 +143,38 @@ class _MarketMixin:
             return []
 
     # --- v12.0: Low Fee Items (Strategy C) ---
-    async def get_low_fee_items(self, game_id: str) -> List[Dict[str, Any]]:
+    async def get_low_fee_items(
+        self, game_id: str, limit: int = 100
+    ) -> List[Dict[str, Any]]:
         """
-        Daily list of items with reduced DMarket fees (2-3% vs 5%).
+        Daily list of items with reduced DMarket fees (2-3% vs 5-10%).
 
         Endpoint: GET /exchange/v1/customized-fees
         """
         try:
             res = await self.make_request(
-                "GET", "/exchange/v1/customized-fees", params={"gameId": game_id}
+                "GET",
+                "/exchange/v1/customized-fees",
+                params={"gameId": game_id, "limit": limit},
             )
-            items = res.get("items", []) or res.get("customizedFees", [])
+            items = (
+                res.get("reducedFees", [])
+                or res.get("items", [])
+                or res.get("customizedFees", [])
+            )
             normalized = []
             for it in items:
                 title = it.get("title", "")
-                fee = it.get("fee", 0.05)
-                if isinstance(fee, str):
+                fraction = it.get("fraction", "")
+                fee = 0.05
+                if isinstance(fraction, str):
                     try:
-                        fee = float(fee) / 100.0
+                        # API returns fraction as decimal string, e.g. "0.02".
+                        fee = float(fraction)
                     except ValueError:
                         fee = 0.05
+                elif isinstance(fraction, (int, float)):
+                    fee = float(fraction)
                 normalized.append({"title": title, "fee_rate": fee})
             return normalized
         except Exception as e:

@@ -343,6 +343,37 @@ class SnipingLoop(  # type: ignore[misc]
                 except Exception as e:
                     logger.debug(f"[v14.8 PRICE-RANGE] Secondary scan failed: {e}")
 
+            # --- v14.8.1 Low-fee items secondary scan ---
+            # Items with reduced DMarket fees have better net margin. Fetch
+            # their cheapest listings and merge into the pipeline.
+            try:
+                lf_items = await self._fetch_low_fee_listings(
+                    game_id=game_id,
+                    max_titles=Config.LOW_FEE_ITEMS_SCAN_LIMIT,
+                )
+                if lf_items:
+                    lf_titles = [it.get("title") for it in lf_items if it.get("title")]
+                    lf_agg = await self.client.get_aggregated_prices(
+                        game_id, titles=lf_titles
+                    )
+                    agg_prices.update(lf_agg)
+                    seen = {
+                        it.get("itemId") for it in items if it.get("itemId")
+                    }
+                    new_count = 0
+                    for cand in lf_items:
+                        if cand.get("itemId") not in seen:
+                            seen.add(cand.get("itemId"))
+                            items.append(cand)
+                            new_count += 1
+                    if new_count > 0:
+                        logger.info(
+                            f"[v14.8.1 LOW-FEE] Added {new_count} "
+                            f"low-fee candidates to the pipeline"
+                        )
+            except Exception as e:
+                logger.debug(f"[v14.8.1 LOW-FEE] Secondary scan failed: {e}")
+
             next_cursor = ""  # cursor-based pagination is replaced by agg-prices scan
 
             if not items:
