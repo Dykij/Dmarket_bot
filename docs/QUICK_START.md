@@ -1,8 +1,8 @@
-# 🚀 Быстрый старт: DMarket Quantitative Engine (v14.4)
+# 🚀 Быстрый старт: DMarket Quantitative Engine (v14.9)
 
 **Дата**: Июнь 2026 г.
-**Версия**: 14.4.0
-**Концепция**: Balance-Aware Quantitative Trading Engine
+**Версия**: 14.9.0
+**Концепция**: Value Detection Scanner + Spread Sniper (dual-signal)
 
 ---
 
@@ -88,21 +88,27 @@ DRY_RUN=true
 
 ---
 
-## 🧬 v14.4 Новые возможности
+## 🧬 v14.9 Новые возможности
 
-### Balance-Aware Trading
+### Balance-Aware Trading (v14.4+)
 - **Dynamic Max Price**: `max($5.00, balance × 10%)`. При $43 → $5, при $500 → $50
-- **Reserve Buffer**: $10 всегда неприкосновенны
+- **Reserve Buffer**: $5 всегда неприкосновенны (снижено с $10 в v14.9)
 - **Half Kelly**: Келли (50%) для размера позиции
 - **Drawdown Freeze**: При просадке >15% — стоп покупок
 - **Capital Velocity**: Минимум 0.5× оборота/неделю
+
+### Value Scanner (v14.9)
+- **Dual-Signal Pipeline**: VALUE (rarity-based) + SPREAD (intra-market)
+- **Relaxed Microstructure**: HFT фильтры отключены по умолчанию
+- **Expanded Coverage**: 500 titles/cycle, 50 CS2Cap validations
 
 ### Docker
 - Multi-stage build для x86_64 + ARM64 (Raspberry Pi, Celeron)
 - Health check `/healthz`, memory limits, persistent volumes
 
-### Архитектура
+### Архитектура (v14.9)
 - Модули разбиты: cs2cap_oracle (5 файлов), microstructure (4), target_sniping (16+)
+- **NEW v14.9**: value_pipelines.py — Dual-signal evaluation (VALUE + SPREAD)
 - Telegram: 16 кнопок, все исправлены и протестированы
 - Тесты: 289 (unit + bottleneck + sandbox)
 
@@ -129,4 +135,4 @@ DRY_RUN=true
 | CANCEL | Отмена операции |
 
 
-🦅 *DMarket Quantitative Engine | v14.4 | June 2026*
+🦅 *DMarket Quantitative Engine | v14.9 | June 2026*

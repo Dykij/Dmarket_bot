@@ -1398,7 +1398,7 @@ async def start_target_creation(user_id: int, item_title: str):
 
 
 ---
-🦅 *DMarket Quantitative engine | v7.0 | 2026*
+🦅 *DMarket Quantitative Engine | v14.9 | June 2026*
 
 ----- 
-🦅 *DMarket Quantitative Engine | v7.0 | 2026*
+🦅 *DMarket Quantitative Engine | v14.9 | June 2026*

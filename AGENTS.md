@@ -113,13 +113,103 @@ Reactions are lightweight social signals. Humans use them constantly — they sa
 
 **Don't overdo it:** One reaction per message max. Pick the one that fits best.
 
+## Subagent Orchestration
+
+When a task is large, multi-faceted, or crosses several subsystems, **decompose it into smaller independent tasks and delegate them to subagents** in parallel. This keeps context focused, avoids token bloat, and improves both speed and quality.
+
+### When to delegate
+
+- **Exploration / audit tasks** that touch multiple directories (`src/core/`, `src/risk/`, `src/db/`, `src/telegram/`, etc.).
+- **Parallel analysis** of independent modules (e.g. risk layer + analytics + Telegram UI).
+- **Heavy research tasks** where several perspectives or code regions are needed at once.
+- Any task that would otherwise require reading 10+ files or making multi-file changes in one shot.
+
+### Rate limits and concurrency
+
+- **Default subagent concurrency: 2 parallel tasks** for this workspace.
+- Do **not** spawn more than 3 subagents at once unless the task explicitly requires it and you can tolerate provider throttling.
+- If provider rate limits are hit, reduce concurrency and retry; never chase higher parallelism when it causes timeouts.
+- Keep each subagent task focused: one area of responsibility, clear deliverables, read-only by default.
+
+### How to delegate
+
+1. Split the big task into 2-4 independent sub-tasks.
+2. Launch them as parallel `task` calls.
+3. Wait for results.
+4. Synthesize the reports and decide on next steps in the main session.
+5. Only then make edits, preferably in small focused batches.
+
+### Recommended subagent types
+
+- `explore` for read-only codebase analysis.
+- `general` for multi-step research or execution tasks.
+- `scout` for external docs / dependency research.
+
+---
+
+## ⚠️ Git Workflow & Quality Gates (MANDATORY)
+
+This project uses a **quality gate** (inspired by `no-mistakes`) to prevent broken code from reaching `origin`.
+
+### Git Operation Rules
+
+1. **Never push directly to `origin`** — raw `git push` is BLOCKED by `opencode.json` permission system
+2. **Always use the gate** — the `git-gate` skill enforces the validation pipeline
+3. **Pre-commit (LIGHT)** — fast checks before any commit:
+   - Syntax check (`python -m py_compile`)
+   - Diff review (did you review what you're committing?)
+   - Fast lint (`ruff` fatal errors only)
+   - Secrets scan (basic grep for password/token/secret)
+4. **Pre-push (FULL)** — complete validation in worktree:
+   - All tests (`pytest`)
+   - Sandbox (`tests.sandbox_full_cycle`)
+   - AI code review (correctness, safety, style)
+   - Security audit (ENCRYPTION_KEY, DRY_RUN, debug flags)
+   - Rust build (if `rust_core/` changed)
+
+### Allowed Git Commands
+
+| Command | Status | Why |
+|---------|--------|-----|
+| `git status` | ✅ Allow | Read-only, safe |
+| `git log` | ✅ Allow | Read-only, safe |
+| `git diff` | ✅ Allow | Read-only, safe |
+| `git commit` | ⚠️ Ask | Must review diff first |
+| `git push` | ❌ Deny | Must pass gate |
+| `git push --force` | ❌ Deny | Never allowed |
+
+### Bypassing the Gate
+
+In emergencies, you can bypass. But:
+- Log the reason to `memory/YYYY-MM-DD.md`
+- Accept full responsibility for any consequences
+- Bypass is audited — future sessions can see it happened
+
+### Workflow Skills
+
+When a task requires multiple skills, use `skill-workflow-integrator` to chain them automatically:
+- **Deploy Gate:** `git-gate` → `full-test-suite` → `pre-deploy-audit` → `code-reviewer` → `commit-changelog`
+- **API Change:** `api-migration` → `full-test-suite` → `code-reviewer` → `git-gate`
+- **Telegram Feature:** `telegram-module-dev` → `code-reviewer` → `full-test-suite` → `git-gate`
+- **Rust Build:** `rust-build` → `full-test-suite` → `code-reviewer` → `git-gate`
+- **Strategy Update:** `strategy-validate` → `code-reviewer` → `full-test-suite` → `git-gate`
+
+### Relevant Files
+
+- `.opencode/skills/git-gate/SKILL.md` — Gate definition
+- `.opencode/skills/skill-workflow-integrator/SKILL.md` — Workflow orchestrator
+- `opencode.json` — Permission config (blocks raw `git push`)
+- `.opencode/skills/git-gate/git-gate.sh` — Standalone gate script
+
+---
+
 ## Tools
 
 Skills provide your tools. When you need one, check its `SKILL.md`. Keep local notes (camera names, SSH details, voice preferences) in `TOOLS.md`.
 
 **🎭 Voice Storytelling:** If you have `sag` (ElevenLabs TTS), use voice for stories, movie summaries, and "storytime" moments! Way more engaging than walls of text. Surprise people with funny voices.
 
-**📝 Platform Formatting:**
+**📝 Platform Formatting:
 
 - **Discord/WhatsApp:** No markdown tables! Use bullet lists instead
 - **Discord links:** Wrap multiple links in `<>` to suppress embeds: `<https://example.com>`
@@ -213,7 +303,7 @@ This is a starting point. Add your own conventions, style, and rules as you figu
 
 
 ---
-🦅 *DMarket Quantitative engine | v7.0 | 2026*
+🦅 *DMarket Quantitative Engine | v14.9 | June 2026*
 
 ----- 
-🦅 *DMarket Quantitative Engine | v7.0 | 2026*
+🦅 *DMarket Quantitative Engine | v14.9 | June 2026*

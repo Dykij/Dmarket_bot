@@ -6,8 +6,8 @@ We release patches for security vulnerabilities. Which versions are eligible for
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 14.4.x  | :white_check_mark: |
-| < 14.4  | :x:                |
+| 14.9.x  | :white_check_mark: |
+| < 14.9  | :x:                |
 
 ## Reporting a Vulnerability
 
@@ -126,7 +126,7 @@ We'd like to thank the following people for responsibly disclosing security issu
 
 
 ---
-🦅 *DMarket Quantitative engine | v7.0 | 2026*
+🦅 *DMarket Quantitative Engine | v14.9 | June 2026*
 
 ----- 
-🦅 *DMarket Quantitative Engine | v7.0 | 2026*
+🦅 *DMarket Quantitative Engine | v14.9 | June 2026*

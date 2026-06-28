@@ -1,4 +1,4 @@
-# SYSTEM_FLOW - DMarket Quantitative Engine (v14.4)
+# SYSTEM_FLOW - DMarket Quantitative Engine (v14.9)
 
 Этот документ описывает логическую цепочку работы бота в режиме **v14.4 (Balance-Aware Quantitative Engine)**.
 
@@ -9,12 +9,13 @@
 ```mermaid
 graph TD
     A[Start Cycle] --> B[Aggregated Prices batch 100]
-    B --> C[Rank: spread × sqrt(bid+ask count)]
+    B --> C[Rank: spread × sqrt bid+ask count]
     C --> D[Top-20: honest listings + DOM cache]
     D --> E[Bulk fee 4 tiers + CS2Cap cache]
     E --> F{Balance Gate}
-    F -- balance OK --> G{15 filters pipeline}
-    G -- pass --> H[Kelly position sizing]
+    F -- balance OK --> G{Dual-Signal Pipeline}
+    G -- VALUE signal --> H[Kelly position sizing]
+    G -- SPREAD signal --> H
     H --> I[Execute instant-buy]
     I --> J[Auto-resale immediate]
     J --> K[Reprice stale every 200 cycles]
@@ -25,7 +26,22 @@ graph TD
     L --> A
 ```
 
-### v14.4 Balance-Aware Gates (new in cycle)
+### v14.9 Dual-Signal Pipeline (replaces 15-filter pipeline)
+
+```
+VALUE SIGNAL (primary):
+  rarity_mult × cs2cap_ask > ask × (1 + FEE_RATE + WITHDRAWAL_FEE + MIN_MARGIN)
+  → Float premium (1.08-1.30×)
+  → Pattern/phase premium (1.0-5.0×)
+  → Sticker combo (+50-100%)
+  → Filler demand (1.15×)
+  → est_sell = cs2cap_ask × rarity_mult
+  → BUY if est_sell > ask × cost
+
+SPREAD SIGNAL (fallback):
+  best_bid > best_ask × (1 + FEE_RATE + WITHDRAWAL_FEE + MIN_MARGIN)
+  → Classic intra-market spread arbitrage
+```
 
 ```
 BALANCE GATE:
@@ -51,19 +67,22 @@ LOCK-AWARE CAP:
 
 ## 🛡 Компоненты защиты
 
-### 1. Balance Gate (v14.4)
+### 1. Balance Gate (v14.4+)
 Dynamic max price, reserve buffer, drawdown freeze. Адаптация под текущий баланс DMarket.
 
-### 2. Trend Guard (SQLite)
+### 2. Value Detection Scanner (v14.9)
+Dual-signal pipeline: VALUE (rarity-based) + SPREAD (intra-market fallback). Покупка редких предметов даже без естественного спреда.
+
+### 3. Trend Guard (SQLite)
 Сверяет текущую цену с последними 10 записями в базе данных. Если цена ниже скользящей средней (SMA-5) более чем на 10%, покупка блокируется.
 
-### 3. Event Shield
+### 4. Event Shield
 Считывает `data/cs2_events.json`. Если текущая дата попадает в интервал Major или Steam Sale, маржинальный порог автоматически повышается до 10% для компенсации волатильности.
 
-### 4. Kelly Position Sizing (v14.4)
+### 5. Kelly Position Sizing (v14.4+)
 Fractional Half Kelly: `KELLY_FRACTION=0.50`. Снижает просадку на ~50% при 85% от полного роста.
 
-### 5. Pydantic Gate
+### 6. Pydantic Gate
 Каждый объект сделки проходит через схему валидации, которая блокирует некорректные типы данных, отрицательные цены и предметы не из белого списка (CS2).
 
 ---
@@ -88,4 +107,4 @@ Fractional Half Kelly: `KELLY_FRACTION=0.50`. Снижает просадку н
 
 ---
 
-🦅 *DMarket Quantitative Engine | v14.4 | June 2026*
+🦅 *DMarket Quantitative Engine | v14.9 | June 2026*

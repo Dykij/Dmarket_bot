@@ -1,6 +1,6 @@
-# 🚀 Deployment Guide (v14.4)
+# 🚀 Deployment Guide (v14.9)
 
-**Версия**: 14.4.0
+**Версия**: 14.9.0
 **Последнее обновление**: Июнь 2026
 
 ---
@@ -44,7 +44,7 @@ docker compose logs -f
 docker compose --profile telegram up -d
 ```
 
-### docker-compose.yml (v14.4)
+### docker-compose.yml (v14.9)
 
 ```yaml
 services:
@@ -226,4 +226,4 @@ healthcheck:
 **Подробнее**: [ARCHITECTURE.md](ARCHITECTURE.md), [QUICK_START.md](QUICK_START.md)
 
 
-🦅 *DMarket Quantitative Engine | v14.4 | June 2026*
+🦅 *DMarket Quantitative Engine | v14.9 | June 2026*
