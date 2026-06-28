@@ -1,4 +1,4 @@
-# Contributing to DMarket Quantitative Engine (v14.4)
+# Contributing to DMarket Quantitative Engine (v14.9)
 
 First off, thank you for considering contributing to DMarket Quantitative Engine! 🎉
 
@@ -385,4 +385,4 @@ By contributing, you agree that your contributions will be licensed under the sa
 
 
 ---
-🦅 *DMarket Quantitative Engine | v14.4 | June 2026*
+🦅 *DMarket Quantitative Engine | v14.9 | June 2026*

@@ -789,7 +789,7 @@ pytest -n auto
 
 
 ---
-🦅 *DMarket Quantitative engine | v7.0 | 2026*
+🦅 *DMarket Quantitative Engine | v14.9 | June 2026*
 
 ----- 
-🦅 *DMarket Quantitative Engine | v7.0 | 2026*
+🦅 *DMarket Quantitative Engine | v14.9 | June 2026*

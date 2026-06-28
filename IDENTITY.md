@@ -1,4 +1,4 @@
-# IDENTITY - Quantitative Arbitrage Engine (v14.4)
+# IDENTITY - Quantitative Arbitrage Engine (v14.9)
 
 Этот файл определяет поведение и "личность" торговой системы. Строго механическое, алгоритмическое исполнение торговых стратегий.
 
@@ -38,4 +38,4 @@
 
 ---
 
-🦅 *DMarket Quantitative Engine | v14.4 | June 2026*
+🦅 *DMarket Quantitative Engine | v14.9 | June 2026*

@@ -1,8 +1,8 @@
-# 🔧 Troubleshooting Guide — Все ошибки и их решения (v14.4)
+# 🔧 Troubleshooting Guide — Все ошибки и их решения (v14.9)
 
 > **Объединённое руководство по устранению неполадок DMarket Quantitative Engine**
 > 
-> **Последнее обновление:** Июнь 2026 | **Версия:** 14.4
+> **Последнее обновление:** Июнь 2026 | **Версия:** 14.9
 
 ---
 
@@ -87,7 +87,7 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
 ---
 
-## Telegram Bot (v14.4)
+## Telegram Bot (v14.9)
 
 ### Кнопки не работают / игнорируются
 **Проверьте:**
@@ -157,7 +157,7 @@ chmod 600 data/*.db
 
 ---
 
-## v14.4 Balance-Aware специфичные ошибки
+## v14.9 Balance-Aware специфичные ошибки
 
 ### Бот не покупает — "Drawdown freeze active"
 **Причина:** Баланс упал более чем на 15% от пика.
@@ -204,7 +204,7 @@ WARNING: Rust Aggregated Prices parser failed, falling back to Python
 
 ---
 
-## Исправленные баги (v14.4 changelog)
+## Исправленные баги (v14.9 changelog)
 
 ### Docker
 - Новый multi-stage Dockerfile (убрал 432 MB Rust target/ из финального образа)
@@ -229,15 +229,15 @@ WARNING: Rust Aggregated Prices parser failed, falling back to Python
 
 ## 📚 Полезные ссылки
 
-- [ARCHITECTURE.md](ARCHITECTURE.md) — архитектура v14.4
+- [ARCHITECTURE.md](ARCHITECTURE.md) — архитектура v14.9
 - [QUICK_START.md](QUICK_START.md) — быстрый старт
 - [deployment.md](deployment.md) — Docker + bare metal deployment
 - [DMarket API](https://docs.dmarket.com/)
 - [Telegram Bot API](https://core.telegram.org/bots/api)
 
 
-**Версия:** 14.4  
+**Версия:** 14.9  
 **Создано:** Июнь 2026  
 
 
-🦅 *DMarket Quantitative Engine | v14.4 | June 2026*
+🦅 *DMarket Quantitative Engine | v14.9 | June 2026*
