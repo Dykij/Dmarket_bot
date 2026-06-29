@@ -7,8 +7,9 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+import random
+from dataclasses import dataclass, field
+from typing import Any, Callable, Dict, List, Optional
 
 from src.sandbox.core import BashSandbox, SandboxCommand, SandboxConfig, SandboxResult
 from src.cot_audit.core import CoTLogEntry, CoTReport, FormatStyle
@@ -16,6 +17,22 @@ from src.reflexion.core import ReflexionConfig, SnapshotManager, SnapshotManifes
 from src.workflow.chains import AgentRole, WorkflowBuilder
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class RetryConfig:
+    max_retries: int = 3
+    base_delay: float = 1.0
+    max_delay: float = 30.0
+    jitter: bool = True
+
+
+@dataclass
+class RetryResult:
+    success: bool
+    attempts: int
+    total_delay_ms: float
+    last_error: Optional[str] = None
 
 
 @dataclass
@@ -30,11 +47,12 @@ class AgentFacade:
     Единый фасад для всех архитектурных компонентов OpenCode.
     """
 
-    def __init__(self, repo_root: str = ".", work_dir: str = "."):
+    def __init__(self, repo_root: str = ".", work_dir: str = ".", retry_config: Optional[RetryConfig] = None):
         self.sandbox = BashSandbox(SandboxConfig(work_dir=work_dir))
         self.cot_report: CoTReport = CoTReport(session_id="auto")
         self.snapshot_manager = SnapshotManager(ReflexionConfig(repo_root=repo_root))
         self.workflow_builder: Optional[WorkflowBuilder] = None
+        self.retry_config = retry_config or RetryConfig()
 
     # ── Safe Bash Interface ──
 
@@ -94,18 +112,71 @@ class AgentFacade:
 
     # ── Combined Operations ──
 
-    async def execute_with_snapshot(self, command: str, label: str = "exec") -> SandboxResult:
+    def _compute_backoff(self, attempt: int) -> float:
+        """Compute exponential backoff delay with optional jitter."""
+        delay = min(
+            self.retry_config.base_delay * (2 ** attempt),
+            self.retry_config.max_delay,
+        )
+        if self.retry_config.jitter:
+            delay *= (0.5 + random.random() * 0.5)
+        return delay
+
+    async def execute_with_snapshot(
+        self,
+        command: str,
+        label: str = "exec",
+        max_retries: Optional[int] = None,
+        on_retry: Optional[Callable[[int, float, Exception], None]] = None,
+    ) -> SandboxResult:
         """
-        Выполняет команду с автоматической точкой восстановления.
-        Если команда не удалась — автоматический rollback.
+        Выполняет команду с автоматической точкой восстановления и retry.
+        При ошибке: rollback → backoff → retry (до max_retries попыток).
         """
+        retries = max_retries if max_retries is not None else self.retry_config.max_retries
         manifest = self.create_snapshot(label)
-        try:
-            result = await self.safe_bash(command)
-            if result.status.value != "success":
-                raise RuntimeError(f"Command failed: {result.stderr}")
-            return result
-        except Exception as e:
-            self._log_cot("Auto-Rollback", f"Exception: {e}")
-            self.rollback(manifest.id)
-            raise
+        last_error: Optional[Exception] = None
+        total_delay_ms = 0.0
+
+        for attempt in range(retries + 1):
+            try:
+                result = await self.safe_bash(command)
+                if result.status.value != "success":
+                    raise RuntimeError(f"Command failed: {result.stderr}")
+                if attempt > 0:
+                    self._log_cot(
+                        "Retry Success",
+                        f"Succeeded on attempt {attempt + 1}/{retries + 1}",
+                        reasoning=f"Total delay: {total_delay_ms:.0f}ms",
+                    )
+                return result
+            except Exception as e:
+                last_error = e
+                self._log_cot(
+                    "Attempt Failed",
+                    f"Attempt {attempt + 1}/{retries + 1}: {e}",
+                    reasoning="Will retry after rollback" if attempt < retries else "Max retries reached",
+                )
+
+                # Rollback to snapshot before retry
+                self.rollback(manifest.id)
+
+                # If not last attempt, wait with exponential backoff
+                if attempt < retries:
+                    delay = self._compute_backoff(attempt)
+                    total_delay_ms += delay * 1000
+                    self._log_cot(
+                        "Backoff Wait",
+                        f"Waiting {delay:.2f}s before retry {attempt + 2}/{retries + 1}",
+                    )
+                    if on_retry:
+                        on_retry(attempt + 1, delay, e)
+                    await asyncio.sleep(delay)
+
+        # All retries exhausted
+        self._log_cot(
+            "All Retries Exhausted",
+            f"Failed after {retries + 1} attempts",
+            reasoning=f"Last error: {last_error}",
+        )
+        raise last_error
