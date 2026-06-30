@@ -1,7 +1,12 @@
 import json
 import re
 import structlog
-from pydantic import BaseModel, root_validator, Field
+from pydantic import BaseModel, Field
+
+try:
+    from pydantic import model_validator  # Pydantic v2
+except ImportError:
+    from pydantic import root_validator as model_validator  # Pydantic v1 fallback
 from typing import Dict, List, Any
 
 try:
@@ -40,7 +45,7 @@ class ParsedSkinData(BaseModel):
     price_usd: float = Field(description="Price in USD")
     name: str = Field(description="Skin Name")
     
-    @root_validator(pre=True)
+    @model_validator(mode="before")
     def injection_protection(cls, values):
         """Pre-validation sanitizer for Prompt Injection"""
         name = values.get("name", "")
@@ -123,15 +128,12 @@ def parse_aggregated_prices(raw_json: str) -> List[Dict[str, Any]]:
         entries = data.get("aggregatedPrices", [])
         for entry in entries:
             title = entry.get("title", "")
-            ask_obj = entry.get("orderBestPrice") or {}
-            bid_obj = entry.get("offerBestPrice") or {}
-            ask_amount = ask_obj.get("Amount", "0")
+            # DMarket API: orderBestPrice = best BUY order = BID
+            #            offerBestPrice = best SELL offer = ASK
+            bid_obj = entry.get("orderBestPrice") or {}
+            ask_obj = entry.get("offerBestPrice") or {}
             bid_amount = bid_obj.get("Amount", "0")
-
-            try:
-                best_ask = float(ask_amount) / 100.0
-            except (ValueError, TypeError):
-                best_ask = 0.0
+            ask_amount = ask_obj.get("Amount", "0")
 
             try:
                 best_bid = float(bid_amount) / 100.0
@@ -139,13 +141,18 @@ def parse_aggregated_prices(raw_json: str) -> List[Dict[str, Any]]:
                 best_bid = 0.0
 
             try:
-                ask_count = int(entry.get("orderCount", 0))
+                best_ask = float(ask_amount) / 100.0
             except (ValueError, TypeError):
-                ask_count = 0
+                best_ask = 0.0
+
             try:
-                bid_count = int(entry.get("offerCount", 0))
+                bid_count = int(entry.get("orderCount", 0))
             except (ValueError, TypeError):
                 bid_count = 0
+            try:
+                ask_count = int(entry.get("offerCount", 0))
+            except (ValueError, TypeError):
+                ask_count = 0
             result.append({
                 "title": title,
                 "best_ask": best_ask,
@@ -170,26 +177,26 @@ def parse_aggregated_prices_from_dict(data: dict) -> List[Dict[str, Any]]:
         entries = data.get("aggregatedPrices", [])
         for entry in entries:
             title = entry.get("title", "")
-            ask_obj = entry.get("orderBestPrice") or {}
-            bid_obj = entry.get("offerBestPrice") or {}
-            ask_amount = ask_obj.get("Amount", "0")
+            bid_obj = entry.get("orderBestPrice") or {}
+            ask_obj = entry.get("offerBestPrice") or {}
             bid_amount = bid_obj.get("Amount", "0")
-            try:
-                best_ask = float(ask_amount) / 100.0
-            except (ValueError, TypeError):
-                best_ask = 0.0
+            ask_amount = ask_obj.get("Amount", "0")
             try:
                 best_bid = float(bid_amount) / 100.0
             except (ValueError, TypeError):
                 best_bid = 0.0
             try:
-                ask_count = int(entry.get("orderCount", 0))
+                best_ask = float(ask_amount) / 100.0
             except (ValueError, TypeError):
-                ask_count = 0
+                best_ask = 0.0
             try:
-                bid_count = int(entry.get("offerCount", 0))
+                bid_count = int(entry.get("orderCount", 0))
             except (ValueError, TypeError):
                 bid_count = 0
+            try:
+                ask_count = int(entry.get("offerCount", 0))
+            except (ValueError, TypeError):
+                ask_count = 0
             result.append({
                 "title": title,
                 "best_ask": best_ask,
@@ -199,4 +206,6 @@ def parse_aggregated_prices_from_dict(data: dict) -> List[Dict[str, Any]]:
             })
     except Exception as e:
         logger.error(f"Aggregated prices parse (dict) error: {e}")
+        return []
+
     return result

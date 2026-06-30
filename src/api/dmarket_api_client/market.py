@@ -90,14 +90,11 @@ class _MarketMixin:
                     f"Aggregated prices batch failed (chunk {chunk_start}-{chunk_start+len(chunk)}): {e}",
                     exc_info=True,
                 )
-                for t in chunk:
-                    if t not in results:
-                        results[t] = {
-                            "best_ask": 0.0,
-                            "best_bid": 0.0,
-                            "ask_count": 0,
-                            "bid_count": 0,
-                        }
+                # Do NOT inject zero-filled entries — downstream fee/profit
+                # calculators may misinterpret best_ask=0.0 as a free item
+                # and attempt wildly incorrect trades.  Items from failed
+                # chunks simply won't appear in results, which callers
+                # should treat as "price unknown" (skip trade).
 
         return results
 

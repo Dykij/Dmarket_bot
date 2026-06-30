@@ -279,13 +279,14 @@ class _HistoryMixin:
                 if price <= 0:
                     continue
                 trade_date = t.get("date")
-                self.history_conn.execute(
+                cursor = self.history_conn.execute(
                     "INSERT OR IGNORE INTO trade_history "
                     "(hash_name, price, trade_date, recorded_at) "
                     "VALUES (?, ?, ?, ?)",
                     (hash_name, price, str(trade_date) if trade_date else None, now),
                 )
-                inserted += 1
+                if cursor.rowcount and cursor.rowcount > 0:
+                    inserted += 1
         return inserted
 
     def get_trade_history(

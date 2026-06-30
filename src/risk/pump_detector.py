@@ -283,17 +283,14 @@ class PumpDetector:
                     severity="warning",
                 )
                 try:
-                    loop = asyncio.get_event_loop()
-                    if loop.is_running():
-                        loop.create_task(coro)
-                    else:
-                        # No running loop (sync test). Run inline.
-                        loop.run_until_complete(coro)
+                    loop = asyncio.get_running_loop()
+                    loop.create_task(coro)
+                    alert.alerted = True
+                    self._total_alerts_sent += 1
                 except RuntimeError:
-                    # No loop bound (e.g. called from __init__).
+                    # No running loop (e.g. called from sync test or __init__).
+                    # Skip notification — it's best-effort anyway.
                     pass
-                alert.alerted = True
-                self._total_alerts_sent += 1
             except Exception as e:
                 logger.debug(f"[PumpDetector] Telegram alert failed: {e}")
 

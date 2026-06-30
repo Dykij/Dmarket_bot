@@ -35,6 +35,7 @@ Usage:
 
 from __future__ import annotations
 
+import asyncio
 import functools
 import inspect
 import logging
@@ -97,7 +98,7 @@ def with_db_retry(
                 for attempt in range(1, max_attempts + 1):
                     try:
                         return await func(*args, **kwargs)
-                    except BaseException as exc:
+                    except Exception as exc:
                         if not _is_transient(exc) or attempt >= max_attempts:
                             raise
                         last_exc = exc
@@ -106,7 +107,7 @@ def with_db_retry(
                             f"[db_retry] {op} attempt {attempt}/{max_attempts} "
                             f"failed: {exc}. Retrying in {delay:.3f}s"
                         )
-                        time.sleep(delay)
+                        await asyncio.sleep(delay)
                 # Should never reach here (we either return or raise), but
                 # the type checker needs an explicit exit.
                 assert last_exc is not None
@@ -120,7 +121,7 @@ def with_db_retry(
             for attempt in range(1, max_attempts + 1):
                 try:
                     return func(*args, **kwargs)
-                except BaseException as exc:
+                except Exception as exc:
                     if not _is_transient(exc) or attempt >= max_attempts:
                         raise
                     last_exc = exc

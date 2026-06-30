@@ -260,6 +260,14 @@ def _write_exit_state(exit_code: int, exc: BaseException, context: Optional[Dict
         logger.debug(f"[fatal_exit] could not persist state file: {e}")
 
 
+async def _send_report_with_timeout(report: "ErrorReporter") -> None:
+    """Send Telegram report with a 2s timeout (fire-and-forget helper)."""
+    try:
+        await asyncio.wait_for(report.send_telegram(), timeout=2.0)
+    except Exception:
+        pass
+
+
 def fatal_exit(exc: BaseException, context: Optional[Dict[str, Any]] = None) -> None:
     """
     One-shot helper for the outer supervisor.
@@ -277,15 +285,14 @@ def fatal_exit(exc: BaseException, context: Optional[Dict[str, Any]] = None) -> 
     # already in the event loop (typical), we schedule the task.
     # If that fails, the log is the source of truth.
     try:
-        loop = asyncio.get_event_loop()
-        if loop.is_running():
-            asyncio.create_task(report.send_telegram())
-            # Give it 2s to actually fire before we tear down the loop.
-            # Without this the task may be cancelled.
-            time.sleep(2.0)
-        else:
-            loop.run_until_complete(report.send_telegram())
-    except Exception as e:
-        logger.debug(f"[fatal_exit] telegram send failed: {e}")
+        loop = asyncio.get_running_loop()
+        # Cannot use run_until_complete on a running loop — just schedule
+        loop.create_task(_send_report_with_timeout(report))
+    except RuntimeError:
+        # No running loop (called from sync context) — run directly
+        try:
+            asyncio.run(asyncio.wait_for(report.send_telegram(), timeout=2.0))
+        except Exception:
+            pass
 
     sys.exit(report.exit_code)

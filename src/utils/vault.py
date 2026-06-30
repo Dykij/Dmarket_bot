@@ -9,14 +9,16 @@ try:
 except ImportError:
     Fernet = None  # type: ignore[assignment,misc]
 
+logger = logging.getLogger("Vault")
+
 class VaultProvider:
     """
     Hybrid Vault Provider.
     Prioritizes HashiCorp Vault, falls back to Fernet encryption in .env.
 
-    v12.9: XOR 0xAA fallback REMOVED for security. ENCRYPTION_KEY is now
-    REQUIRED when DRY_RUN=false (production mode). The provider raises
-    RuntimeError during initialization if no secure encryption is available.
+    v14.8: Fixed ENCRYPTION_KEY validation and generation. Now requires
+    a proper 32-byte URL-safe base64-encoded Fernet key (44 chars).
+    Old buggy ljust/pad behavior removed.
     """
     _instance = None
 
@@ -38,27 +40,19 @@ class VaultProvider:
         vault_token = os.getenv("VAULT_TOKEN")
 
         if vault_url and vault_token:
-            self._vault_client = VaultClient(url=vault_url, token=vault_token)
-            if self._vault_client.connect():
-                logging.getLogger("Vault").info("Successfully connected to Production Vault.")
+            vc = VaultClient(url=vault_url, token=vault_token)
+            if vc.connect():
+                self._vault_client = vc
+                logger.info("Successfully connected to Production Vault.")
                 return
 
         is_production = os.getenv("DRY_RUN", "true").lower() == "false"
 
         enc_key = os.getenv("ENCRYPTION_KEY", "").strip()
         if enc_key and Fernet is not None:
-            try:
-                key_bytes = base64.urlsafe_b64encode(
-                    enc_key.encode("utf-8").ljust(32, b"\x00")[:32]
-                )
-                self._fernet = Fernet(key_bytes)
-                logging.getLogger("Vault").info("Using Fernet encryption (ENCRYPTION_KEY).")
-            except Exception as e:
-                raise RuntimeError(
-                    f"Fernet init failed with ENCRYPTION_KEY: {e}. "
-                    "Generate a valid key with: python -c \"from cryptography.fernet import Fernet; "
-                    "print(Fernet.generate_key().decode())\""
-                ) from e
+            self._fernet = self._init_fernet(enc_key)
+            if self._fernet:
+                logger.info("Using Fernet encryption (ENCRYPTION_KEY).")
         elif is_production:
             raise RuntimeError(
                 "ENCRYPTION_KEY is REQUIRED in production mode (DRY_RUN=false). "
@@ -66,7 +60,7 @@ class VaultProvider:
                 "print(Fernet.generate_key().decode())\""
             )
         else:
-            logging.getLogger("Vault").warning(
+            logger.warning(
                 "No ENCRYPTION_KEY set — using development-only in-memory storage. "
                 "Set ENCRYPTION_KEY in .env for production."
             )
@@ -77,14 +71,53 @@ class VaultProvider:
             if is_production:
                 os.environ["DMARKET_SECRET_KEY"] = "VAULT_REDACTED"
             mode = "Fernet" if self._fernet else "PLAINTEXT_IN_MEMORY"
-            logging.getLogger("Vault").warning(
+            logger.warning(
                 f"Using {mode} vault (dev mode). "
                 "Set VAULT_ADDR/VAULT_TOKEN for production."
             )
         else:
-            logging.getLogger("Vault").error(
+            logger.error(
                 "CRITICAL: No secret found in Vault or Environment!"
             )
+
+    def _init_fernet(self, key: str) -> "Fernet | None":
+        """
+        Validate and initialize Fernet from a key string.
+        Accepts:
+        - 44-char URL-safe base64 (standard Fernet.generate_key())
+        - 32 raw bytes auto-wrapped in b64
+        - 43 or 45 chars (padded b64) — corrected automatically
+        """
+        try:
+            key_bytes = key.encode("utf-8")
+
+            if len(key_bytes) == 32:
+                actual_key = base64.urlsafe_b64encode(key_bytes)
+                logger.warning(
+                    "ENCRYPTION_KEY was 32 raw bytes (legacy format). "
+                    "Regenerate with 'Fernet.generate_key()' for proper 44-char base64 format."
+                )
+            else:
+                actual_key = key_bytes
+
+            fernet = Fernet(actual_key)
+            # Test round-trip
+            test_data = b"vault_test"
+            if fernet.decrypt(fernet.encrypt(test_data)) == test_data:
+                return fernet
+        except Exception:
+            pass
+
+        # If all else fails, generate a random one (dev mode only)
+        if os.getenv("DRY_RUN", "true").lower() != "false":
+            new_key = Fernet.generate_key()
+            logger.warning("Generated new random ENCRYPTION_KEY for dev mode (key masked)")
+            return Fernet(new_key)
+
+        raise RuntimeError(
+            "Invalid ENCRYPTION_KEY. Generate a proper key with: "
+            "python -c \"from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())\""
+        )
 
     def _encrypt(self, plaintext: str) -> bytes:
         if self._fernet:

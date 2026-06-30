@@ -354,6 +354,7 @@ dependencies = [
  "ed25519-dalek",
  "hex",
  "pyo3",
+ "sha2",
 ]
 
 [[package]]

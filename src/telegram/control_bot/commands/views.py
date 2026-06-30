@@ -166,13 +166,13 @@ async def cmd_analyze(message):
         if report:
             text = (
                 f"🧠 *Strategy Analysis*\n\n"
-                f"Sharpe: {report.get('sharpe_ratio', 0):.2f}\n"
-                f"Sortino: {report.get('sortino_ratio', 0):.2f}\n"
-                f"Max Drawdown: {report.get('max_drawdown_pct', 0):.1f}%\n"
-                f"Win Rate: {report.get('win_rate', 0):.1f}%\n"
-                f"Total Trades: {report.get('total_trades', 0)}\n"
-                f"Avg Profit/Trade: {report.get('avg_profit', 0):+.2f}\n\n"
-                f"Recommendations:\n{report.get('recommendations', 'None')}\n\n"
+                f"Sharpe: {getattr(report, 'sharpe_ratio', 0):.2f}\n"
+                f"Sortino: {getattr(report, 'sortino_ratio', 0):.2f}\n"
+                f"Max Drawdown: {getattr(report, 'max_drawdown_pct', 0):.1f}%\n"
+                f"Win Rate: {getattr(report, 'win_rate', 0):.1f}%\n"
+                f"Total Trades: {getattr(report, 'total_trades', 0)}\n"
+                f"Avg Profit/Trade: {getattr(report, 'avg_profit', 0):+.2f}\n\n"
+                f"Recommendations:\n{getattr(report, 'recommendations', 'None')}\n\n"
                 f"_Minimum 10 trades for adjustments._"
             )
         else:
@@ -246,3 +246,80 @@ async def cmd_prices(message):
     except Exception as e:
         logger.exception("cmd_prices failed: %s", e)
         await message.answer("❌ Price check failed. Check logs.")
+
+
+# ============================================================
+# Charts (v14.5)
+# ============================================================
+@router.message(Command("chart"))
+@router.message(F.text == "📈 CHART")
+async def cmd_chart(message):
+    """Send equity curve chart."""
+    try:
+        from src.utils.charts import generate_equity_chart
+        buf = generate_equity_chart(days=30)
+        if buf is None:
+            await message.answer("📈 Not enough data for equity chart yet. Build some trade history first.")
+            return
+        from aiogram.types import BufferedInputFile
+        await message.answer_photo(
+            BufferedInputFile(buf.read(), "equity_chart.png"),
+            caption="📈 *Equity Curve* (30 days)",
+        )
+    except Exception as e:
+        logger.exception("cmd_chart failed: %s", e)
+        await message.answer("❌ Chart generation failed. Check matplotlib availability.")
+
+
+@router.message(Command("pnl"))
+@router.message(F.text == "📊 PNL")
+async def cmd_pnl_chart(message):
+    """Send daily P&L chart."""
+    try:
+        from src.utils.charts import generate_pnl_chart
+        buf = generate_pnl_chart(days=30)
+        if buf is None:
+            await message.answer("📊 Not enough P&L history yet.")
+            return
+        from aiogram.types import BufferedInputFile
+        await message.answer_photo(
+            BufferedInputFile(buf.read(), "pnl_chart.png"),
+            caption="📊 *Daily P&L* (30 days)",
+        )
+    except Exception as e:
+        logger.exception("cmd_pnl_chart failed: %s", e)
+        await message.answer("❌ Chart generation failed.")
+
+
+# ============================================================
+# Live Shadow (v14.5)
+# ============================================================
+@router.message(Command("shadow"))
+async def cmd_shadow(message):
+    """Show live shadow trading status + real-vs-shadow comparison."""
+    try:
+        from src.core.live_shadow import live_shadow
+
+        if not live_shadow.enabled:
+            await message.answer("🕶️ *Shadow mode is disabled.* Set `LIVE_SHADOW_ENABLED=true` in `.env`")
+            return
+
+        status = live_shadow.get_status()
+        text = (
+            f"🕶️ *Live Shadow Trading*\n\n"
+            f"Cycles: {status['cycles']} | Balance: ${status['balance']:.2f}\n"
+            f"Total Equity: ${status['total_equity']:.2f}\n"
+            f"Shadow P&L: ${status['total_pnl']:+.2f} "
+            f"(ROI {status['roi_pct']:+.1f}%)\n"
+            f"Drawdown: {status['drawdown_pct']:.1f}%\n"
+            f"Trades: {status['total_trades']} | WR: {status['win_rate']:.0f}%\n"
+            f"Avg Profit: ${status['avg_profit']:.2f} | "
+            f"Avg Loss: ${status['avg_loss']:.2f}\n\n"
+            f"📦 Positions: idle={status['positions']['idle']} | "
+            f"selling={status['positions']['selling']} | "
+            f"sold={status['positions']['sold']}"
+        )
+        await message.answer(text)
+    except Exception as e:
+        logger.exception("cmd_shadow failed: %s", e)
+        await message.answer("❌ Shadow status unavailable.")

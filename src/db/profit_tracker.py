@@ -3,6 +3,8 @@ import logging
 from pathlib import Path
 from datetime import datetime
 
+from decimal import Decimal
+from src.utils.decimal_helpers import D, quantize
 from src.db.db_retry import with_db_retry
 
 logger = logging.getLogger("ProfitTracker")
@@ -44,7 +46,7 @@ class ProfitTrackerDB:
         logger.info(f"💾 Profit Tracker DB initialized at {self.db_path}")
 
     @with_db_retry(operation_name="profit_tracker.record_trade")
-    def record_trade(self, item_name: str, buy_price: float, sell_price: float, fee_rate: float):
+    def record_trade(self, item_name: str, buy_price: Decimal, sell_price: Decimal, fee_rate: Decimal):
         """Record a completed round-trip trade."""
         fee_amount = sell_price * fee_rate
         net_profit = (sell_price - fee_amount) - buy_price
@@ -53,7 +55,7 @@ class ProfitTrackerDB:
             self.conn.execute('''
                 INSERT INTO trades (item_name, buy_price, sell_price, fee_amount, net_profit)
                 VALUES (?, ?, ?, ?, ?)
-            ''', (item_name, buy_price, sell_price, fee_amount, net_profit))
+            ''', (item_name, float(buy_price), float(sell_price), float(fee_amount), float(net_profit)))
 
             # Upsert daily PnL
             today = datetime.now().date().isoformat()

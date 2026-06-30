@@ -37,6 +37,7 @@ from src.api.oracle_factory import OracleFactory
 from src.config import Config
 from src.core.target_sniping.resale_dry import _ResaleDryMixin
 from src.core.target_sniping.resale_prod import _ResaleProdMixin
+from src.core.target_sniping.position_guard import _PositionGuardMixin
 from src.db.price_history import price_db
 from src.telegram.notifier import notifier
 
@@ -53,7 +54,7 @@ INVENTORY_SYNC_MAX_PAGES = int(os.getenv("INVENTORY_SYNC_MAX_PAGES", "5"))  # pa
 CLOSED_OFFERS_LOOKBACK_DAYS = int(os.getenv("CLOSED_OFFERS_LOOKBACK_DAYS", "7"))  # how far back to scan for sales
 
 
-class _ResaleMixin(_ResaleDryMixin, _ResaleProdMixin):
+class _ResaleMixin(_ResaleDryMixin, _ResaleProdMixin, _PositionGuardMixin):
     """Post-buy pipeline (list, sell, reprice)."""
 
     # These attributes are set on the instance by SnipingLoop.__init__
@@ -120,7 +121,7 @@ class _ResaleMixin(_ResaleDryMixin, _ResaleProdMixin):
         # v13.0: Skip exclusive (keep-forever) items — they shouldn't be auto-listed
         unlocked_non_exclusive = [
             item for item in unlocked_idle
-            if not item.get("exclusive")
+            if not dict(item).get("exclusive")
         ]
         exclusive_count = len(unlocked_idle) - len(unlocked_non_exclusive)
         if exclusive_count > 0:
@@ -130,6 +131,28 @@ class _ResaleMixin(_ResaleDryMixin, _ResaleProdMixin):
             return
 
         logger.info(f"[RESALE] Scanning {len(unlocked_non_exclusive)} unlocked item(s) for listing")
+
+        # v14.5: Stop-loss & take-profit checks (before listing new items)
+        if is_dry:
+            try:
+                stopped = await self.check_stop_losses(game_id)
+                if stopped > 0:
+                    logger.info(f"[STOP-LOSS] Simulated liquidation of {stopped} item(s)")
+                profited = await self.check_take_profits(game_id)
+                if profited > 0:
+                    logger.info(f"[TAKE-PROFIT] Simulated profit-taking on {profited} item(s)")
+            except Exception as e:
+                logger.warning(f"[POSITION-GUARD] Stop/take check failed: {e}", exc_info=True)
+        else:
+            try:
+                stopped = await self.check_stop_losses(game_id)
+                if stopped > 0:
+                    logger.warning(f"[STOP-LOSS] Liquidated {stopped} item(s) at loss")
+                profited = await self.check_take_profits(game_id)
+                if profited > 0:
+                    logger.info(f"[TAKE-PROFIT] Took profit on {profited} item(s)")
+            except Exception as e:
+                logger.warning(f"[POSITION-GUARD] Stop/take check failed: {e}", exc_info=True)
 
         if is_dry:
             await self._dry_list_unlocked(unlocked_non_exclusive, game_id)
@@ -153,7 +176,6 @@ class _ResaleMixin(_ResaleDryMixin, _ResaleProdMixin):
         from src.config import Config
 
         is_dry = os.getenv("DRY_RUN", "true").lower() == "true"
-        time.time() - (Config.REPRICE_AFTER_HOURS * 3600)
         stale = price_db.get_stale_listings(int(Config.REPRICE_AFTER_HOURS * 3600))
         if not stale:
             return
@@ -185,15 +207,17 @@ class _ResaleMixin(_ResaleDryMixin, _ResaleProdMixin):
                     continue
                 # v14.3 Smart Reprice — order-book-aware price adjustment
                 new_price = old_price   # default: no change yet
+                floor = round(float(it["buy_price"] or 0) * 1.01, 2)
                 if Config.SMART_REPRICE_ENABLED and hasattr(self, '_prev_agg_prices'):
                     from src.analysis.microstructure import smart_reprice_signal
                     agg_now = getattr(self, '_prev_agg_prices', {}).get(it["hash_name"], {})
+                    prev_agg = getattr(self, '_prev_agg_prices_prior', {}).get(it["hash_name"], {})
                     if agg_now:
                         signal, suggested = smart_reprice_signal(
                             current_bid_count=agg_now.get("bid_count", 0) or 0,
                             current_ask_count=agg_now.get("ask_count", 0) or 0,
-                            prev_bid_count=agg_now.get("bid_count", 0) or 0,
-                            prev_ask_count=agg_now.get("ask_count", 0) or 0,
+                            prev_bid_count=prev_agg.get("bid_count", 0) or 0,
+                            prev_ask_count=prev_agg.get("ask_count", 0) or 0,
                             listed_price=old_price,
                             best_bid=agg_now.get("best_bid", 0.0) or 0.0,
                             best_ask=agg_now.get("best_ask", 0.0) or 0.0,

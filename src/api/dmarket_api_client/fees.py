@@ -105,7 +105,7 @@ class _FeesMixin:
                 title = item_id_to_title.get(fid, "")
                 if title:
                     volume = title_volume.get(title, 0)
-                    fee = self._estimate_fee_from_volume(volume, volume)
+                    fee = self._estimate_fee_from_volume(ask_count=volume)
                 else:
                     fee = self._DMARKET_CS2_FEE_RATE
             else:

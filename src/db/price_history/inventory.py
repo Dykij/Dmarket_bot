@@ -227,6 +227,10 @@ class _InventoryMixin:
         # Reconnect
         self.state_conn = sqlite3.connect(str(self.state_path), check_same_thread=False)
         self.state_conn.row_factory = sqlite3.Row
+        self.state_conn.execute("PRAGMA journal_mode=WAL")
+        self.state_conn.execute("PRAGMA busy_timeout=5000")
+        self.state_conn.execute("PRAGMA synchronous=NORMAL")
+        self.state_conn.execute("PRAGMA temp_store=MEMORY")
         logger.info(f"🔄 [DB] State restored from: {src.name}")
 
     @with_db_retry(operation_name="update_virtual_status")

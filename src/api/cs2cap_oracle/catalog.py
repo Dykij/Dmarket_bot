@@ -55,17 +55,10 @@ class _CatalogMixin:
         catalog: Dict[str, int] = {}
         max_pages = 400  # 40k items max (real catalog ~35k)
 
-        # First, get total count to know how many pages
-        first = await self._request("/items", params={"limit": 1, "offset": 0})
-        if not first:
-            return
-        total_items = first.get("pagination", {}).get("total", 40000)
-        total_known = min(total_items, limit * max_pages)
+        logger.info(f"[CS2Cap] Fetching catalog in parallel (max {max_pages} pages)...")
 
-        logger.info(f"[CS2Cap] Catalog total ~{total_items} items, fetching in parallel...")
-
-        # Build offset list for all pages
-        offsets = list(range(0, min(total_known, max_pages * limit), limit))
+        # Build offset list for all possible pages
+        offsets = list(range(0, max_pages * limit, limit))
         page_sem = asyncio.Semaphore(5)  # max 5 concurrent pages
 
         async def fetch_page(off: int) -> Dict[str, int]:

@@ -251,6 +251,8 @@ class _ResaleProdMixin:
                         if bid_snap and bid_snap.has_data and snap.provider_prices and bid_snap.provider_bids:
                             ask_total = sum(snap.provider_prices.values())
                             bid_total = sum(bid_snap.provider_bids.values())
+                            ask_count = len(snap.provider_prices)
+                            bid_count = len(bid_snap.provider_bids)
                             if ask_total > 0 and bid_total > 0:
                                 mid_price = (snap.min_price * bid_total + bid_snap.max_bid * ask_total) / (bid_total + ask_total)
                                 # v14.3 Stoikov Micro-Price — OBI-adjusted
@@ -260,7 +262,7 @@ class _ResaleProdMixin:
                                     if spread > 0:
                                         obi_est = simple_obi(
                                             bid_snap.max_bid, snap.min_price,
-                                            bid_count=bid_total, ask_count=ask_total,
+                                            bid_count=bid_count, ask_count=ask_count,
                                         )
                                         mid_price = stoikov_micro_price(
                                             mid_price, spread, obi_est,
@@ -298,7 +300,7 @@ class _ResaleProdMixin:
                     same_item = len([
                         x for x in price_db.get_virtual_inventory(
                             status="idle", only_unlocked=False,
-                        ) if x.get("hash_name") == title
+                        ) if x["hash_name"] == title
                     ])
                     vol_est = 0.40  # default CS2 skin annualized vol
                     try:

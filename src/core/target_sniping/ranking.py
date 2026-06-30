@@ -55,7 +55,9 @@ def rank_candidates_by_spread(
         if best_bid <= 0 or best_ask <= 0:
             continue
 
-        # v14.6: Seasonal timing adjustment on spread threshold
+        # v14.8: Fee-aware ranking. Prefer high margin% * liquidity rather than
+        # absolute spread, so a 10% margin on a $2 item ranks above a 2% margin
+        # on a $20 item with the same volume.
         effective_min_spread = Config.INTRA_MIN_SPREAD_PCT
         if Config.SEASONAL_TIMING_ENABLED:
             try:
@@ -64,21 +66,26 @@ def rank_candidates_by_spread(
             except Exception:
                 pass
 
-        if best_bid <= best_ask * (1 + effective_min_spread / 100.0):
-            continue
         spread = best_bid - best_ask
-        volume = ask_count + bid_count
-        if spread > 0 and volume > 0:
-            score = spread * math.sqrt(volume)
-        elif spread > 0:
-            score = spread
-        else:
+        spread_pct = spread / best_ask if best_ask > 0 else 0.0
+        if spread_pct < effective_min_spread / 100.0:
             continue
 
-        # v14.6: Commission optimizer — boost low-fee items
-        if Config.COMMISSION_OPTIMIZER_ENABLED and low_fee_titles is not None:
-            if title in low_fee_titles:
-                score *= 1.15  # +15% boost for 2% fee items (wider effective margin)
+        # Estimated cost to buy + sell + cash out. Low-fee items get a lower
+        # effective cost and therefore a higher score.
+        fee_estimate = Config.FEE_RATE + Config.WITHDRAWAL_FEE_RATE
+        if Config.COMMISSION_OPTIMIZER_ENABLED and low_fee_titles is not None and title in low_fee_titles:
+            fee_estimate *= 0.70  # ~30% cheaper fee stack (e.g. 2% vs 4.5%)
+
+        net_margin = spread_pct - fee_estimate
+        if net_margin <= 0:
+            continue
+
+        volume = ask_count + bid_count
+        liquidity = math.sqrt(max(volume, 1))
+        # Score = expected net margin × liquidity. Items with no volume still
+        # score margin × 1, but liquidity is strongly preferred.
+        score = net_margin * liquidity
 
         # v14.6: Filler skin boost — higher demand = faster resale
         if Config.FILLER_TRACKING_ENABLED:

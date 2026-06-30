@@ -16,6 +16,7 @@ from pathlib import Path
 from typing import Any, Optional
 
 from src.api.cs2cap_cache import CS2CapCache
+from src.api.cs2cap_oracle import CS2CapOracle
 from src.api.oracle_factory import OracleFactory
 from src.config import Config
 from src.core.daily_briefing import DailyBriefingScheduler
@@ -49,7 +50,7 @@ class _SchedulerMixin:
             f"Starting DMarket Intra-Spread Loop v12.6 | Targets: {self.target_games}"
         )
 
-        gc.disable()
+        gc.set_threshold(700, 10, 5)  # Less aggressive GC, but still enabled
 
         # v12.4: launch in-memory CS2Cap cache (background refresh task)
         await self._init_cs2cap_cache()
@@ -246,6 +247,12 @@ class _SchedulerMixin:
         if oracle is None:
             logger.warning(
                 "[v12.4] No oracle available for CS2Cap cache; will fall back to per-cycle batch."
+            )
+            return
+        if not isinstance(oracle, CS2CapOracle):
+            logger.warning(
+                f"[v12.4] Oracle for {Config.GAME_ID} is {type(oracle).__name__}, "
+                "not CS2CapOracle; in-memory cache disabled."
             )
             return
         self.cs2cap_cache = CS2CapCache(
