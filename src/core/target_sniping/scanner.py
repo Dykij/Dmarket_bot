@@ -65,7 +65,10 @@ class _ScannerMixin:
                     logger.debug(f"Listing fetch failed for {title!r}: {e}")
                     return []
 
-        results = await asyncio.gather(*[_fetch_one(t) for t in titles])
+        results = await asyncio.gather(
+            *[_fetch_one(t) for t in titles], return_exceptions=True
+        )
+        results = [r if not isinstance(r, Exception) else [] for r in results]
 
         # Pick the cheapest listing per title. If multiple titles return
         # the same listing object (rare), dedupe.
@@ -228,7 +231,10 @@ class _ScannerMixin:
                     logger.debug(f"Low-fee listing fetch failed for {title!r}: {e}")
                     return []
 
-        results = await asyncio.gather(*[_fetch_one(t) for t in titles])
+        results = await asyncio.gather(
+            *[_fetch_one(t) for t in titles], return_exceptions=True
+        )
+        results = [r if not isinstance(r, Exception) else [] for r in results]
         cheapest: List[Dict[str, Any]] = []
         seen_ids = set()
         for title, listings in zip(titles, results):

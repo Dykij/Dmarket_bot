@@ -1,0 +1,13 @@
+{
+  "exit_code": 6,
+  "exc_type": "ImportError",
+  "message": "cannot import name '_calculate_float_premium' from 'src.core.target_sniping.pricing' (/home/deck/dmarket/Dmarket_bot-main/src/core/target_sniping/pricing.py)",
+  "context": {
+    "phase": "runtime",
+    "uptime_s": 161,
+    "consecutive_transient": 0,
+    "successful_cycles": 1,
+    "process": "RSS=100.2MB VMS=187.0MB open_fds=14 threads=2"
+  },
+  "timestamp": "2026-06-27T15:35:20.272476+00:00"
+}

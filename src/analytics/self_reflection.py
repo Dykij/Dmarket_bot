@@ -135,11 +135,8 @@ class SelfReflectionEngine:
             if status == "sold" and sell > 0:
                 profit = sell - buy - fee
                 hold = (sold_at - acquired) / 86400 if sold_at and acquired else 0.0
-            elif status in ("idle", "selling"):
-                profit = 0.0
-                hold = 0.0
             else:
-                continue
+                continue  # skip idle/selling — not yet realized
 
             trades.append(TradeRecord(
                 hash_name=row["hash_name"],

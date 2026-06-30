@@ -14,6 +14,7 @@ import time
 from typing import Dict, Any, List, Optional
 import logging
 from src.config import Config
+from decimal import Decimal
 
 logger = logging.getLogger("Strategy")
 
@@ -30,28 +31,28 @@ class BaseStrategy(ABC):
     # ----------------------------------------------------------------
     def calculate_position_size(
         self,
-        current_balance: float,
-        item_price: float,
-        volatility_score: float = 1.0,
-        sharpe_estimate: float = 1.0,
+        current_balance: Decimal,
+        item_price: Decimal,
+        volatility_score: Decimal = Decimal("1.0"),
+        sharpe_estimate: Decimal = Decimal("1.0"),
     ) -> int:
         """
         Dynamic Position Sizing (Pseudo-Kelly Criterion, v2).
         Uses volatility AND Sharpe ratio estimate for more conservative sizing.
         """
-        if not Config.USE_DYNAMIC_SIZING or current_balance <= 0:
+        if not Config.USE_DYNAMIC_SIZING or current_balance <= Decimal("0"):
             return 1
 
-        max_risk_amount = current_balance * (Config.MAX_POSITION_RISK_PCT / 100.0)
+        max_risk_amount = current_balance * (Config.MAX_POSITION_RISK_PCT / Decimal("100"))
 
         # Adjust risk based on volatility (higher vol = lower risk)
-        adjusted_risk = max_risk_amount / max(volatility_score, 1.0)
+        adjusted_risk = max_risk_amount / max(volatility_score, Decimal("1.0"))
 
         # Further adjust by Sharpe (low Sharpe = less conviction = smaller size)
-        if sharpe_estimate < 1.0:
-            adjusted_risk *= max(0.3, sharpe_estimate)
-        elif sharpe_estimate > 2.0:
-            adjusted_risk *= min(1.5, sharpe_estimate / 1.5)
+        if sharpe_estimate < Decimal("1.0"):
+            adjusted_risk *= max(Decimal("0.3"), sharpe_estimate)
+        elif sharpe_estimate > Decimal("2.0"):
+            adjusted_risk *= min(Decimal("1.5"), sharpe_estimate / Decimal("1.5"))
 
         if item_price > adjusted_risk:
             self.logger.warning(
@@ -241,8 +242,11 @@ class BaseStrategy(ABC):
             qty = 1
 
         # Cap at what we can afford
-        max_affordable = int(balance / item_price)
+        max_affordable = int(balance / item_price) if item_price > 0 else 0
         qty = min(qty, max_affordable)
+
+        if qty <= 0 or max_affordable <= 0:
+            return 0
 
         return max(1, qty)
 
@@ -334,7 +338,7 @@ class BaseStrategy(ABC):
         # Compose objective
         objective = (
             sharpe_proxy * 0.6
-            + (spread_pct / Config.MIN_SPREAD_PCT) * 0.3
+            + (spread_pct / max(float(Config.MIN_SPREAD_PCT), 0.01)) * 0.3
             + volume_bonus * 0.1
         ) * liquidity_premium * turnover_penalty
 

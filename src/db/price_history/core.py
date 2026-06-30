@@ -123,7 +123,7 @@ class PriceHistoryDB(  # type: ignore[misc]
             ):
                 try:
                     self.state_conn.execute(
-                        f"ALTER TABLE virtual_inventory ADD COLUMN {col} {typedef}"
+                        f"ALTER TABLE virtual_inventory ADD COLUMN [{col}] {typedef}"
                     )
                 except sqlite3.OperationalError:
                     pass
@@ -143,7 +143,7 @@ class PriceHistoryDB(  # type: ignore[misc]
             ):
                 try:
                     self.state_conn.execute(
-                        f"ALTER TABLE virtual_inventory ADD COLUMN {col} {typedef}"
+                        f"ALTER TABLE virtual_inventory ADD COLUMN [{col}] {typedef}"
                     )
                 except sqlite3.OperationalError:
                     pass  # already exists
@@ -379,5 +379,9 @@ class PriceHistoryDB(  # type: ignore[misc]
         )
 
     def close(self) -> None:
-        self.state_conn.close()
-        self.history_conn.close()
+        for conn in (self.state_conn, self.history_conn):
+            try:
+                conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+            except Exception:
+                pass
+            conn.close()

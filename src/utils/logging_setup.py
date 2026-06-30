@@ -67,10 +67,15 @@ def configure_logging(
         root.addHandler(file_handler)
 
     # Install SecurityAuditor redaction filter on ALL handlers
-    from src.risk.security_auditor import SecurityAuditor
-    audit_filter = SecurityAuditor.as_logging_filter()
-    for handler in root.handlers:
-        handler.addFilter(audit_filter)
+    try:
+        from src.risk.security_auditor import SecurityAuditor
+        audit_filter = SecurityAuditor.as_logging_filter()
+        for handler in root.handlers:
+            handler.addFilter(audit_filter)
+    except Exception as e:
+        logging.getLogger(__name__).warning(
+            "SecurityAuditor filter not installed: %s", e
+        )
 
     logger = logging.getLogger(__name__)
     logger.info(

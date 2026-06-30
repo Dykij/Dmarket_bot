@@ -18,7 +18,7 @@ os.environ["DRY_RUN"] = "true"
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - 🧪 [SANDBOX] - %(levelname)s - %(message)s')
 logger = logging.getLogger("StrategySimulator")
 
-async def run_simulation(duration_minutes: int = 10):
+async def run_simulation(duration_minutes: int = 5):
     """
     Runs the Sniping Strategy on real-time market data without spending money.
     Analyzes potential profitability including Resale.
@@ -27,8 +27,8 @@ async def run_simulation(duration_minutes: int = 10):
     logger.info(f"Starting Strategy Simulation for {duration_minutes} minutes...")
     
     # --- Pre-simulation: Clear virtual inventory to have clean data ---
-    with price_db.conn:
-        price_db.conn.execute("DELETE FROM virtual_inventory")
+    with price_db.state_conn:
+        price_db.state_conn.execute("DELETE FROM virtual_inventory")
 
     # Initialize API and Bot
     pub_key = os.getenv("DMARKET_PUBLIC_KEY", "sim_key")
@@ -70,18 +70,23 @@ async def run_simulation(duration_minutes: int = 10):
     
     total_acquired = len(idle) + len(selling) + len(sold)
     total_buy_cost = sum(i['buy_price'] for i in (idle + selling + sold))
-    # For simulation, we assume sold items realized 5% profit as per auto_resale logic
-    realized_revenue = sum(i['buy_price'] * 1.05 for i in sold)
-    
+    # v14.8: use the actual simulated sell prices stored in the DB. If a row
+    # has no sell_price, fall back to the 5% markup used by the dry-resale logic.
+    realized_revenue = 0.0
+    for i in sold:
+        sell_price = i.get('sell_price') or i['buy_price'] * 1.05
+        realized_revenue += sell_price * (1 - Config.FEE_RATE)
+    sold_cost = sum(i['buy_price'] for i in sold)
+
     print("\n" + "="*50)
-    print("📊 FINAL SANDBOX PERFORMANCE REPORT (10 min)")
+    print(f"📊 FINAL SANDBOX PERFORMANCE REPORT ({duration_minutes} min)")
     print("="*50)
     print(f"Items Acquired:    {total_acquired}")
     print(f"Items Sold:        {len(sold)}")
-    print(f"Items On Sale:      {len(selling)}")
+    print(f"Items On Sale:     {len(selling)}")
     print(f"Total Buy Cost:    ${total_buy_cost:.2f}")
     print(f"Realized Revenue:  ${realized_revenue:.2f}")
-    print(f"Net Profit (Est):  ${(realized_revenue - sum(i['buy_price'] for i in sold)):.2f}")
+    print(f"Net Profit (Est):  ${(realized_revenue - sold_cost):.2f}")
     print("="*50 + "\n")
     
     generate_report_metadata()
@@ -98,4 +103,4 @@ def generate_report_metadata():
         f.write("Check `logs/bot_24_7.log` for specific 'TARGET LOCKED' entries captured during this run.\n")
 
 if __name__ == "__main__":
-    asyncio.run(run_simulation(duration_minutes=10))
+    asyncio.run(run_simulation(duration_minutes=5))

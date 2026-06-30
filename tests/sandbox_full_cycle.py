@@ -16,10 +16,11 @@ from typing import Any, Dict, List, Optional, Tuple
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-os.environ["DRY_RUN"] = "false"  # Allow real market data reads (no buys are executed)
+os.environ["DRY_RUN"] = "true"  # Sandbox: read-only, no real buys
 os.environ.setdefault("ENCRYPTION_KEY", "test-key-for-sandbox-reads-only")
 
 from src.config import Config
+from src.utils.decimal_helpers import D, quantize
 from src.api.dmarket_api_client import DMarketAPIClient
 from src.api.oracle_factory import OracleFactory
 from src.api.cs2cap_oracle import CS2CapOracle
@@ -281,24 +282,36 @@ async def step_find_candidates(
     # Use the previously fetched prices to evaluate candidates
     for item in top:
         title, ask, bid, spread_pct, volume, score, ask_cnt, bid_cnt = item
-        cs_price = cs2cap_prices.get(title, 0)
-        if cs_price <= 0:
-            continue
-        dm_buy_price = ask
+        cs_price = D(str(cs2cap_prices.get(title, 0)))
+        dm_buy_price = D(str(ask))
 
+        # v14.8: choose the best exit: cross-market (CS2Cap ask) or intra-DMarket bid.
         fee = _FeesMixin._estimate_fee_from_volume(ask_count=volume)
-        total_fee = fee + Config.WITHDRAWAL_FEE_RATE
+        best_sell_price = 0.0
+        ref = ""
 
-        sell_price = cs_price * 0.97
-        ref = f"CS2Cap=${cs_price:.2f}"
-        net = sell_price * (1 - total_fee)
-        profit = net - dm_buy_price
+        # Intra-DMarket: list at best bid, pay DMarket sell fee
+        intra_sell = bid * (1 - fee)
+        if bid > 0 and intra_sell > best_sell_price:
+            best_sell_price = intra_sell
+            ref = f"DMarket bid=${bid:.2f}"
+
+        # Cross-market: sell on cheapest CS2Cap marketplace
+        if cs_price > 0:
+            destination_fee = 0.025
+            cross_sell = D(str(cs_price)) * (D("1") - D(str(destination_fee))) * (D("1") - Config.WITHDRAWAL_FEE_RATE)
+            if cross_sell > best_sell_price:
+                best_sell_price = cross_sell
+                ref = f"CS2Cap=${cs_price:.2f}"
+
+        sell_price = D(str(best_sell_price))
+        profit = sell_price - dm_buy_price
         margin_pct = (profit / dm_buy_price * 100) if dm_buy_price > 0 else 0
 
         if profit <= 0 or margin_pct < 1:
             filtered["margin"].append({
                 "title": title, "reason": f"profit=${profit:.3f} margin={margin_pct:.1f}%",
-                "best_ask": ask, "cs2cap_price": cs_price, "sell_price": sell_price,
+                "best_ask": ask, "best_bid": bid, "cs2cap_price": cs_price, "sell_price": sell_price,
             })
             continue
 
@@ -346,8 +359,8 @@ async def step_find_candidates(
             "cs2cap_price": cs_price,
             "sell_price": sell_price,
             "fee": fee,
-            "total_fee": total_fee,
-            "net": net,
+            "total_fee": fee,
+            "net": sell_price,
             "profit": profit,
             "margin_pct": margin_pct,
             "spread_pct": round(spread_pct, 1),
@@ -367,7 +380,7 @@ async def step_find_candidates(
         })
 
     candidates.sort(key=lambda x: -(x["composite_score"] + x["margin_pct"] * 2))
-    log_info(f"Candidates with net profit > 0 (cross-market): {len(candidates)}")
+    log_info(f"Candidates with net profit > 0: {len(candidates)}")
     log_info(f"Filtered — liquidity: {len(filtered.get('liquidity', []))}, "
              f"margin: {len(filtered['margin'])}, volatility: {len(filtered.get('volatility', []))}")
 
@@ -539,7 +552,7 @@ def _build_candidates_from_agg(agg_prices: Dict[str, Any]) -> List[Dict[str, Any
         margin = ((bid - ask) / ask * 100) if bid > 0 else 0
         candidates.append({
             "title": title,
-            "dm_buy_price": ask,
+            "dm_buy_price": D(str(ask)),
             "best_ask": ask,
             "best_bid": bid,
             "margin_pct": margin,
@@ -827,6 +840,170 @@ async def run() -> None:
         log(f"\n  ⚠️ Errors ({len(results['errors'])}):")
         for e in results["errors"]:
             log(f"     - {e}")
+
+    # ==================================================================
+    # v14.7: CONTINUOUS SCAN + CS2Cap TIER PROJECTION
+    # ==================================================================
+    log("\n" + "=" * 60)
+    log("  🔄 v14.7: CONTINUOUS PROFITABILITY SCAN")
+    log("=" * 60)
+
+    TIER_SPECS = {
+        "starter": {"rpm": 40, "monthly": 50000},
+        "pro": {"rpm": 100, "monthly": 500000},
+    }
+
+    scan_start = time.time()
+    scan_duration = int(os.getenv("SANDBOX_SCAN_DURATION_SECONDS", "180"))  # default 3 min
+    cycles = 0
+    scan_candidates_total = 0
+    scan_profitable_total = 0
+    scan_invest_total = 0.0
+    scan_profit_total = 0.0
+    cs2cap_calls_total = 0
+
+    while time.time() - scan_start < scan_duration:
+        cycles += 1
+        c_start = time.time()
+
+        # Per-cycle: fetch agg prices
+        try:
+            agg = await with_timeout(10, api.get_aggregated_prices(Config.GAME_ID), "agg-prices")
+        except Exception:
+            agg = {}
+        if not agg:
+            await asyncio.sleep(Config.SCAN_INTERVAL)
+            continue
+
+        items = [(t, a) for t, a in agg.items()
+                 if (a.get("best_ask", 0) or 0) > 0
+                 and (a.get("best_ask", 0) or 0) <= Config.MAX_PRICE_USD]
+
+        scan_candidates_total += len(items)
+
+        # CS2Cap batch validation (top 50)
+        if cs2cap and items:
+            titles = [t for t, _ in items[:50]]
+            try:
+                snaps = await with_timeout(12, cs2cap.get_prices_batch(titles), f"cs2cap-batch-{cycles}")
+                cs2cap_calls_total += 1
+                if snaps:
+                    for title, agg in items[:50]:
+                        if title not in snaps:
+                            continue
+                        ask = agg.get("best_ask", 0) or 0
+                        bid = agg.get("best_bid", 0) or 0
+                        if ask <= 0:
+                            continue
+                        # v14.8: best exit = intra-DM bid or cross-market ask
+                        fee = _FeesMixin._estimate_fee_from_volume(
+                            ask_count=agg.get("ask_count", 0) or 0,
+                            bid_count=agg.get("bid_count", 0) or 0,
+                        )
+                        best_sell = bid * (1 - fee)
+                        snap = snaps.get(title)
+                        cs_price = D(str(getattr(snap, "min_price", 0))) if snap else D("0")
+                        if cs_price > 0:
+                            cross_sell = D(str(cs_price)) * (D("1") - D("0.025")) * (D("1") - Config.WITHDRAWAL_FEE_RATE)
+                            if cross_sell > best_sell:
+                                best_sell = cross_sell
+                        profit = best_sell - ask
+                        if profit > 0:
+                            scan_profitable_total += 1
+                            scan_invest_total += ask
+                            scan_profit_total += profit
+            except Exception:
+                pass
+
+        elapsed = time.time() - scan_start
+        remaining = scan_duration - elapsed
+        if remaining > Config.SCAN_INTERVAL:
+            await asyncio.sleep(Config.SCAN_INTERVAL)
+        elif remaining > 0:
+            await asyncio.sleep(remaining)
+
+    scan_elapsed = time.time() - scan_start
+
+    # ── 10-min profitability report ──
+    log(f"\n  ⏱️  Duration: {scan_elapsed:.0f}s ({cycles} cycles)")
+    log(f"  📦 Items scanned: {scan_candidates_total}")
+    log(f"  📞 CS2Cap calls: {cs2cap_calls_total}")
+    log(f"\n  💰 PROFITABILITY (10 minutes):")
+    log(f"  Profitable items found: {scan_profitable_total}")
+    scan_roi = (scan_profit_total / max(scan_invest_total, 0.01)) * 100
+    log(f"  Total est. investment:  ${scan_invest_total:.2f}")
+    log(f"  Total est. profit:     ${scan_profit_total:+.2f}")
+    log(f"  Est. ROI:              {scan_roi:+.1f}%")
+    avg_per_cycle = scan_profitable_total / max(cycles, 1)
+    avg_profit_cycle = scan_profit_total / max(cycles, 1)
+    log(f"  Per cycle: {avg_per_cycle:.1f} profitable items, ${avg_profit_cycle:+.2f} profit")
+
+    # ── CS2Cap Tier Projection ──
+    log(f"\n  ⭐ CS2Cap TIER COMPARISON (Starter → Pro):")
+    log(f"  {'─' * 50}")
+    tier = (Config.CS2CAP_TIER or "starter").lower()
+    current_rpm = TIER_SPECS.get(tier, TIER_SPECS["starter"])["rpm"]
+    pro_rpm = TIER_SPECS["pro"]["rpm"]
+    ratio = pro_rpm // current_rpm
+
+    log(f"  {'Metric':<30} {'STARTER (now)':>10} {'PRO':>10}")
+    log(f"  {'─' * 30} {'─' * 10} {'─' * 10}")
+    log(f"  {'RPM':<30} {current_rpm:>10} {pro_rpm:>10}")
+    s_quota = f"{TIER_SPECS[tier]['monthly']:,}"
+    p_quota = f"{TIER_SPECS['pro']['monthly']:,}"
+    log(f"  {'Monthly quota':<30} {s_quota:>10} {p_quota:>10}")
+    log(f"  {'Candidates/cycle':<30} {50:>10} {min(50*ratio, 500):>10}")
+
+    daily_starter = round(scan_profit_total * (86400 / max(scan_elapsed, 1)), 2)
+    daily_pro = round(scan_profit_total * ratio * (86400 / max(scan_elapsed, 1)), 2)
+    monthly_starter = round(daily_starter * 30, 2)
+    monthly_pro = round(daily_pro * 30, 2)
+
+    s_day = f"${daily_starter:.2f}"
+    p_day = f"${daily_pro:.2f}"
+    s_month = f"${monthly_starter:.2f}"
+    p_month = f"${monthly_pro:.2f}"
+    log(f"  {'Est. profit/day':<30} {s_day:>10} {p_day:>10}")
+    log(f"  {'Est. profit/month':<30} {s_month:>10} {p_month:>10}")
+
+    # Quota check
+    quota_per_day = cs2cap_calls_total * (86400 / max(scan_elapsed, 1))
+    starter_quota_used = quota_per_day * 30
+    pro_quota_used = quota_per_day * ratio * 30
+    log(f"\n  📊 QUOTA USAGE (monthly estimate):")
+    s_q = f"{starter_quota_used:,.0f} / 50,000"
+    p_q = f"{pro_quota_used:,.0f} / 500,000"
+    s_ok = "OK" if starter_quota_used < 50000 else "LIMIT"
+    p_ok = "OK" if pro_quota_used < 500000 else "LIMIT"
+    log(f"  Starter: {s_q} ({'✅' if s_ok == 'OK' else '❌'} {s_ok})")
+    log(f"  Pro:     {p_q} ({'✅' if p_ok == 'OK' else '❌'} {p_ok})")
+
+    # Key insight
+    log(f"\n  🚀 KEY INSIGHT:")
+    if scan_profitable_total > 0:
+        inc_profit = daily_pro - daily_starter
+        pro_quota_mult = TIER_SPECS['pro']['monthly'] // max(TIER_SPECS[tier]['monthly'], 1)
+        log(f"  Pro tier ({ratio}x RPM, {pro_quota_mult}x quota) enables:")
+        log(f"  - {ratio}x more CS2Cap validations per cycle -> wider scan coverage")
+        log(f"  - ~{ratio}x more profitable candidates found per day")
+        log(f"  - ${inc_profit:+.2f}/day incremental profit (est.)")
+        log(f"  - Pro quota headroom allows continuous 24/7 operation")
+    else:
+        log(f"  No profitable items found in this 10-min window.")
+        log(f"  Pro tier broadens scan coverage → higher chance of finding edge.")
+        log(f"  Current market may be flat — try different time of day (night ≈ more opportunities).")
+
+    # Verdict
+    log(f"\n  📋 VERDICT:")
+    if scan_profitable_total > 0:
+        log(f"  ✅ Bot finds profitable items: {scan_profitable_total} skins in 10 min")
+        log(f"  📊 ROI: {scan_roi:+.1f}% | PnL: ${scan_profit_total:+.2f}")
+    elif scan_candidates_total > 0:
+        log(f"  ⚠️ {scan_candidates_total} items scanned, 0 profitable")
+        log(f"  CS2Cap prices are close to DMarket — market is efficient right now")
+        log(f"  Recommendation: lower MIN_SPREAD_PCT to 1.5% or try night hours")
+    else:
+        log(f"  ❌ No items scanned — check API connection")
 
     log(f"\n  Bot version: v{Config.BOT_VERSION}")
     log(f"  Mode: {'DRY_RUN' if Config.DRY_RUN else 'LIVE'}")

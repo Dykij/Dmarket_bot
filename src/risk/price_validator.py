@@ -13,9 +13,12 @@ Handles:
 
 import math
 from typing import Union
+from decimal import Decimal
 
-MIN_PRICE_USD = 0.10
-MAX_PRICE_USD = 50_000.00
+from src.utils.decimal_helpers import D, quantize
+
+MIN_PRICE_USD = Decimal("0.10")
+MAX_PRICE_USD = Decimal("50000")
 
 
 class PriceValidationError(Exception):
@@ -24,9 +27,9 @@ class PriceValidationError(Exception):
 
 
 def validate_price(
-    price: Union[float, int, str],
+    price: Union[Decimal, float, int, str],
     label: str = "price",
-) -> float:
+) -> Decimal:
     """
     Validate and coerce a price value to a safe float.
 
@@ -51,7 +54,7 @@ def validate_price(
     """
     # Coerce to float safely
     try:
-        value = float(price)
+        value = Decimal(str(price))
     except (ValueError, TypeError) as e:
         raise PriceValidationError(
             f"[V3] {label}={price!r} is not a valid number: {e}"
@@ -85,32 +88,37 @@ def validate_price(
     return value
 
 def validate_arbitrage_profit(
-    buy_price: float, 
-    expected_sell_price: float, 
-    fee_markup: float = 0.05, 
-    min_profit_margin: float = 0.05,
+    buy_price: Decimal,
+    expected_sell_price: Decimal,
+    fee_markup: Decimal = Decimal("0.05"),
+    min_profit_margin: Decimal = Decimal("0.05"),
     lock_days: int = 7,
-    penalty_per_day: float = 0.005  # 0.5% per day penalty
-) -> float:
+    penalty_per_day: Decimal = Decimal("0.005")  # 0.5% per day penalty
+) -> Decimal:
     """
-    Validation to ensure an intra-exchange arbitrage trade is profitable, 
+    Validation to ensure an intra-exchange arbitrage trade is profitable,
     accounting for TVM (Time Value of Money) / Trade Hold penalties.
     """
-    net_received = expected_sell_price * (1.0 - fee_markup)
+    if buy_price <= 0:
+        raise PriceValidationError(
+            f"Buy price must be > 0, got ${buy_price:.2f}"
+        )
+
+    net_received = expected_sell_price * (Decimal("1") - fee_markup)
     actual_profit = net_received - buy_price
-    
-    if actual_profit <= 0:
+
+    if actual_profit <= Decimal("0"):
         raise PriceValidationError(
             f"Absolute LOSS Trade Detected: Buy ${buy_price:.2f}, Sell ${expected_sell_price:.2f} "
             f"(Fee: {fee_markup*100:.1f}%). Blocked."
         )
-        
+
     profit_margin_pct = actual_profit / buy_price
     
     # --- TVM Penalty (v7.6) ---
     # Adjust margin by time penalty: Margin_Adj = Margin - (Penalty * Days)
     # This reflects that $100 profit today is better than $100 profit in 7 days.
-    tvm_adjusted_margin = profit_margin_pct - (penalty_per_day * lock_days)
+    tvm_adjusted_margin = profit_margin_pct - (penalty_per_day * Decimal(lock_days))
     
     if tvm_adjusted_margin < min_profit_margin:
         raise PriceValidationError(
@@ -121,14 +129,18 @@ def validate_arbitrage_profit(
         
     return tvm_adjusted_margin
 
-def validate_slippage(target_price: float, current_market_price: float, max_slippage_pct: float = 0.02) -> None:
+def validate_slippage(target_price: Decimal, current_market_price: Decimal, max_slippage_pct: Decimal = Decimal("0.02")) -> None:
     """
     Slippage Control (Iteration 31).
     Ensures that the price we are about to execute against hasn't shifted significantly.
     """
-    if current_market_price <= 0:
+    if current_market_price <= Decimal("0"):
         raise PriceValidationError("Market price is invalid (<=0).")
-        
+    if target_price <= Decimal("0"):
+        raise PriceValidationError(
+            f"Target price is invalid (<=0): {target_price}"
+        )
+
     slippage = abs(current_market_price - target_price) / target_price
     if slippage > max_slippage_pct:
         raise PriceValidationError(
@@ -136,21 +148,23 @@ def validate_slippage(target_price: float, current_market_price: float, max_slip
             f"by {slippage*100:.2f}% (Max {max_slippage_pct*100:.2f}%). Blocked."
         )
 
-def validate_volatility(recent_prices: list[float], max_std_dev_pct: float = 0.15) -> None:
+def validate_volatility(recent_prices: list[Decimal], max_std_dev_pct: Decimal = Decimal("0.15")) -> None:
     """
     Volatility Check (Iteration 29).
     Blocks purchasing assets that are exhibiting extreme price volatility (pump and dumps).
     """
     if not recent_prices or len(recent_prices) < 2:
         return # Not enough data
-        
-    mean = sum(recent_prices) / len(recent_prices)
+
+    prices_float = [float(p) for p in recent_prices]
+
+    mean = sum(prices_float) / len(prices_float)
     if mean <= 0:
         return
-    
-    variance = sum((p - mean) ** 2 for p in recent_prices) / len(recent_prices)
+
+    variance = sum((p - mean) ** 2 for p in prices_float) / len(prices_float)
     std_dev = math.sqrt(variance)
-    
+
     std_dev_pct = std_dev / mean
     
     if std_dev_pct > max_std_dev_pct:

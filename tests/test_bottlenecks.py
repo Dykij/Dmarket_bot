@@ -362,7 +362,7 @@ class TestValidateArbitrageProfitEdge:
         assert margin > 0
 
     def test_zero_buy_price_raises_zero_division(self):
-        with pytest.raises(ZeroDivisionError):
+        with pytest.raises(PriceValidationError):
             validate_arbitrage_profit(buy_price=0.0, expected_sell_price=10.0)
 
     def test_negative_buy_price_raises(self):

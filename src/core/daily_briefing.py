@@ -100,6 +100,7 @@ class DailyBriefingScheduler:
 
     async def send_now(self, note: str = "") -> bool:
         """Force-send a briefing right now (e.g. on bot startup, /briefing command)."""
+        self._last_sent_date = self._current_date()
         return await self._send_briefing(note=note or "manual")
 
     async def _run(self) -> None:
@@ -164,12 +165,12 @@ class DailyBriefingScheduler:
             balance = await self._safe_get_balance()
             equity = await self._safe_get_equity(balance)
             risk_state = self._risk.get_state()
-            realized_today = -risk_state.daily_loss_usd
+            realized_today = getattr(risk_state, 'daily_realized_pnl', -risk_state.daily_loss_usd)
             holdings = equity.get("count", 0) if isinstance(equity, dict) else 0
             sold_today = price_db.state_conn.execute(
                 "SELECT COUNT(*) as c FROM virtual_inventory "
                 "WHERE status='sold' AND sold_at > ?",
-                (time.time() - 86400,),
+                (self._today_start_ts(),),
             ).fetchone()["c"]
 
             # 2. Compute delta vs yesterday (if snapshot exists)
@@ -257,6 +258,12 @@ class DailyBriefingScheduler:
         return datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
     @staticmethod
+    def _today_start_ts() -> float:
+        now = datetime.now(timezone.utc)
+        midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        return midnight.timestamp()
+
+    @staticmethod
     def _is_dry() -> bool:
         import os
         return os.getenv("DRY_RUN", "true").lower() == "true"
@@ -277,4 +284,4 @@ class DailyBriefingScheduler:
 
     async def _default_equity(self, balance: float) -> dict:
         """Default equity calculator using price_db (DB-only, no network)."""
-        return price_db.get_total_equity(balance)
+        return await asyncio.to_thread(price_db.get_total_equity, balance)

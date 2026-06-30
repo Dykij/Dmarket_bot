@@ -535,7 +535,8 @@ async def cmd_prices(message: types.Message):
 
         await message.answer(msg)
     except Exception as e:
-        await message.answer(f"Error: {e}")
+        logger.warning(f"Prices command failed: {type(e).__name__}")
+        await message.answer("Error fetching prices. Check logs for details.")
     finally:
         await api.close()
 
@@ -677,7 +678,7 @@ async def run_trading_wrapper():
     except Exception as e:
         logger.error(f"Trading Crash: {e}", exc_info=True)
         if ADMIN_ID:
-            await bot.send_message(ADMIN_ID, f"CRITICAL ERROR: {e}")
+            await bot.send_message(ADMIN_ID, "CRITICAL ERROR: Trading loop crashed. Check logs.")
 
 
 async def set_commands(bot_instance: Bot):

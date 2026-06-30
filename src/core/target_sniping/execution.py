@@ -105,12 +105,45 @@ class _ExecutionMixin:
                 logger.debug(f"Slippage check failed for {item_data.get('title', '?')}: {e}")
                 return item_data  # proceed on check failure
 
-        results = await asyncio.gather(*[_check_slippage(d) for d in instant_buys])
-        verified_buys = [r for r in results if r is not None]
+        results = await asyncio.gather(
+            *[_check_slippage(d) for d in instant_buys], return_exceptions=True
+        )
+        verified_buys = [r for r in results if r is not None and not isinstance(r, Exception)]
 
         if not verified_buys:
             logger.info("[SLIPPAGE] All buys filtered by slippage protection.")
             return
+
+        # v14.9: Pre-trade risk check (PROD path, runs before purchase)
+        is_dry = os.getenv("DRY_RUN", "true").lower() == "true"
+        if not is_dry:
+            pre_checked = []
+            for item_data in verified_buys:
+                if hasattr(self, "risk"):
+                    risk_check = self.risk.pre_trade_check(
+                        proposed_size_usd=item_data["base_price"],
+                        current_equity_usd=available_balance,
+                        game_id=game_id,
+                        item_title=item_data["title"],
+                    )
+                    if not risk_check.allowed:
+                        logger.warning(
+                            f"[RISK] BLOCKED {item_data['title']} @ ${item_data['base_price']:.2f}: "
+                            f"{risk_check.reason}"
+                        )
+                        try:
+                            price_db.record_risk_event(
+                                "pre_trade_block", "warning",
+                                f"{item_data['title']} @ ${item_data['base_price']:.2f}: {risk_check.reason}",
+                            )
+                        except Exception:
+                            pass
+                        continue
+                pre_checked.append(item_data)
+            verified_buys = pre_checked
+            if not verified_buys:
+                logger.info("[RISK] All buys blocked by pre-trade check.")
+                return
 
         await self._simulate_network_latency()
         self._maybe_inject_error("buy_items")
@@ -173,16 +206,14 @@ class _ExecutionMixin:
                 f"bought_items={len(bought_items)}"
             )
 
+        is_dry = os.getenv("DRY_RUN", "true").lower() == "true"
+
         for item_data in verified_buys:
             title = item_data["title"]
             item_id = item_data["item_id"]
             base_price = item_data["base_price"]
             list_price = item_data["list_price"]
             is_rare = item_data.get("is_rare", False)
-            # v12.5: pass real per-item margin to the competition model so
-            # the simulator actually differentiates between 5% and 60% edge.
-            # Hardcoding 0.15 previously meant every buy saw the same 30%
-            # fail rate regardless of how fat the spread was.
             best_bid = item_data.get("best_bid", 0.0)
             best_ask = item_data.get("best_ask", 0.0)
             item_margin = (
@@ -191,14 +222,41 @@ class _ExecutionMixin:
                 else 0.0
             )
 
-            # v12.5: Find the new dm_item_id for this buy (for sell-side)
             new_dm_item_id = ""
             for bi in bought_items:
                 if bi["title"] == title and bi["itemId"]:
                     new_dm_item_id = bi["itemId"]
                     break
 
-            if os.getenv("DRY_RUN", "true").lower() == "true":
+            # v14.5: Inventory cap checks (apply in both DRY and PROD)
+            total_equity = price_db.get_total_equity(0.0)
+            current_held_value = total_equity["assets"]
+            current_held_count = total_equity["count"]
+            if current_held_count >= Config.MAX_TOTAL_INVENTORY_ITEMS:
+                logger.warning(
+                    f"[INV-CAP] Already holding {current_held_count}/{Config.MAX_TOTAL_INVENTORY_ITEMS} items. Skipping {title}."
+                )
+                continue
+            if current_held_value + base_price > Config.MAX_TOTAL_INVENTORY_VALUE:
+                logger.warning(
+                    f"[INV-CAP] Inventory value ${current_held_value:.2f} + ${base_price:.2f} > ${Config.MAX_TOTAL_INVENTORY_VALUE:.2f} cap. Skipping {title}."
+                )
+                continue
+
+            held_count = len(
+                [
+                    x
+                    for x in price_db.get_virtual_inventory(status="idle")
+                    if x["hash_name"] == title
+                ]
+            )
+            if held_count >= Config.MAX_SAME_ITEM_HOLDINGS:
+                logger.warning(
+                    f"[SATURATION] Already holding {held_count}x {title}. Skipping."
+                )
+                continue
+
+            if is_dry:
                 if not self._simulate_competition(item_margin):
                     logger.warning(
                         f"[SIM] COMPETITION! {title} was sniped by another bot first."
@@ -231,34 +289,6 @@ class _ExecutionMixin:
                             f"[RISK] Soft-adjusted {title}: ${base_price:.2f} → "
                             f"${risk_check.adjusted_size_usd:.2f}"
                         )
-
-                # v13.0: Total inventory cap check
-                total_equity = price_db.get_total_equity(0.0)
-                current_held_value = total_equity["assets"]
-                current_held_count = total_equity["count"]
-                if current_held_count >= Config.MAX_TOTAL_INVENTORY_ITEMS:
-                    logger.warning(
-                        f"[INV-CAP] Already holding {current_held_count}/{Config.MAX_TOTAL_INVENTORY_ITEMS} items. Skipping {title}."
-                    )
-                    continue
-                if current_held_value + base_price > Config.MAX_TOTAL_INVENTORY_VALUE:
-                    logger.warning(
-                        f"[INV-CAP] Inventory value ${current_held_value:.2f} + ${base_price:.2f} > ${Config.MAX_TOTAL_INVENTORY_VALUE:.2f} cap. Skipping {title}."
-                    )
-                    continue
-
-                held_count = len(
-                    [
-                        x
-                        for x in price_db.get_virtual_inventory(status="idle")
-                        if x["hash_name"] == title
-                    ]
-                )
-                if held_count >= Config.MAX_SAME_ITEM_HOLDINGS:
-                    logger.warning(
-                        f"[SATURATION] Already holding {held_count}x {title}. Skipping."
-                    )
-                    continue
 
                 # v12.5: capture the new row_id so we can attach dm_item_id
                 # in production (or leave it empty in DRY).
@@ -307,34 +337,14 @@ class _ExecutionMixin:
             # v12.3: Only record local spend/target if the actual buy succeeded.
             # For DRY_RUN, always record (simulated). For production, gate on
             # successful_titles which is populated from the buy response.
-            is_dry = os.getenv("DRY_RUN", "true").lower() == "true"
             if is_dry or title in successful_titles:
-                # v12.5: Pre-trade risk check (production path)
-                if not is_dry and hasattr(self, "risk"):
-                    risk_check = self.risk.pre_trade_check(
-                        proposed_size_usd=base_price,
-                        current_equity_usd=current_balance,
-                        game_id=game_id,
-                        item_title=title,
-                    )
-                    if not risk_check.allowed:
-                        logger.warning(
-                            f"[RISK] BLOCKED buy {title} @ ${base_price:.2f}: "
-                            f"{risk_check.reason}"
-                        )
-                        try:
-                            price_db.record_risk_event(
-                                "pre_trade_block",
-                                "warning",
-                                f"{title} @ ${base_price:.2f}: {risk_check.reason}",
-                            )
-                        except Exception:
-                            pass
-                        continue
                 price_db.record_placed_target(item_id, title, base_price)
+                # v14.5: Ensure virtual_inventory row exists in PROD (DRY creates it earlier)
+                if not is_dry and not new_dm_item_id:
+                    price_db.add_virtual_item(title, base_price, trade_lock_hours=Config.TRADE_LOCK_HOURS, exclusive=is_rare)
                 self.liquidity.record_spend(base_price)
-                # v12.5: Record trade outcome (negative PnL = spend)
-                if hasattr(self, "risk"):
+                # v14.5: record_trade_outcome already called in DRY block above
+                if not is_dry and hasattr(self, "risk"):
                     self.risk.record_trade_outcome(
                         pnl_usd=-base_price,
                         trade_type="buy",
@@ -356,6 +366,12 @@ class _ExecutionMixin:
                     ).fetchone()
                     if row:
                         price_db.attach_dm_item_id(int(row["id"]), new_dm_item_id)
+                # v14.5: Track trade protection status immediately in PROD
+                if not is_dry:
+                    price_db.update_asset_status(
+                        item_id, title, "trade_protected",
+                        finalization_time=time.time() + Config.TRADE_LOCK_HOURS * 3600,
+                    )
                 # v12.5: Production-side buy notification (in addition to the
                 # DRY notification above; one will no-op because of the throttle)
                 if not is_dry:

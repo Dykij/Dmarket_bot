@@ -22,85 +22,17 @@ class _OffersMixin:
     async def get_user_offers(
         self, game_id: str, limit: int = 50, cursor: Optional[str] = None
     ) -> Dict[str, Any]:
-        """Fetches items the user currently has listed for sale."""
+        """Fetches items the user currently has listed for sale.
+
+        Endpoint: GET /exchange/v1/user-offers (per Swagger v1.1.0)
+        """
         params = {"gameId": game_id, "limit": limit}
         if cursor:
             params["cursor"] = cursor
         return await self.make_request(
-            "GET", "/marketplace-api/v1/user-offers", params=params
+            "GET", "/exchange/v1/user-offers", params=params
         )
 
-    # --- v12.0: Sell Endpoints (resale pipeline) ---
-    async def create_offer(self, asset_id: str, price_usd: float) -> Dict[str, Any]:
-        """
-        List an owned item for sale on DMarket.
-
-        Endpoint: POST /marketplace-api/v1/user-offers/create
-        Body: {"assetId": "...", "price": {"amount": "123", "currency": "USD"}}
-        """
-        body = {
-            "assetId": asset_id,
-            "price": {"amount": str(int(price_usd * 100)), "currency": "USD"},
-        }
-        return await self.make_request(
-            "POST", "/marketplace-api/v1/user-offers/create", body=body
-        )
-
-    async def batch_create_offers(self, offers: List[Dict[str, Any]]) -> Dict[str, Any]:
-        """
-        Batch list items for sale.
-
-        Endpoint: POST /marketplace-api/v1/user-offers/create-batch (if available)
-        or POST /marketplace-api/v1/user-offers/create with array
-        """
-        body_offers = []
-        for o in offers:
-            body_offers.append(
-                {
-                    "assetId": o["asset_id"],
-                    "price": {
-                        "amount": str(int(o["price_usd"] * 100)),
-                        "currency": "USD",
-                    },
-                }
-            )
-        return await self.make_request(
-            "POST",
-            "/marketplace-api/v1/user-offers/create",
-            body={"offers": body_offers},
-        )
-
-    async def delete_offers(self, offer_ids: List[str]) -> Dict[str, Any]:
-        """
-        Cancel (delist) one or more offers.
-
-        Endpoint: POST /marketplace-api/v1/user-offers/close
-        Body: {"offerIds": ["...", "..."]}
-        """
-        return await self.make_request(
-            "POST",
-            "/marketplace-api/v1/user-offers/close",
-            body={"offerIds": offer_ids},
-        )
-
-    async def edit_offer(self, offer_id: str, new_price_usd: float) -> Dict[str, Any]:
-        """
-        Reprice an existing offer.
-
-        Endpoint: PATCH /marketplace-api/v1/user-offers/edit
-        Body: {"offerId": "...", "price": {"amount": "123", "currency": "USD"}}
-        """
-        body = {
-            "offerId": offer_id,
-            "price": {"amount": str(int(new_price_usd * 100)), "currency": "USD"},
-        }
-        return await self.make_request(
-            "PATCH", "/marketplace-api/v1/user-offers/edit", body=body
-        )
-
-    # ------------------------------------------------------------------
-    # v12.2 Phase 2.5: API v2 Batch Endpoints
-    # ------------------------------------------------------------------
     # ------------------------------------------------------------------
     # March 2026: Official v2 Batch Endpoints (Marketplace API v2)
     # Endpoint format: POST /marketplace-api/v2/offers:{action}
@@ -118,7 +50,7 @@ class _OffersMixin:
             requests.append(
                 {
                     "assetId": o["asset_id"],
-                    "priceCents": int(o["price_usd"] * 100),
+                    "priceCents": int(round(o["price_usd"] * 100)),
                 }
             )
         return await self.make_request(
@@ -139,7 +71,7 @@ class _OffersMixin:
             requests.append(
                 {
                     "offerId": e["offer_id"],
-                    "priceCents": int(e["new_price_usd"] * 100),
+                    "priceCents": int(round(e["new_price_usd"] * 100)),
                 }
             )
         return await self.make_request(

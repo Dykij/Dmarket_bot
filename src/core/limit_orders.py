@@ -25,7 +25,7 @@ from src.config import Config
 logger = logging.getLogger("LimitOrders")
 
 LIMIT_ORDER_ENABLED = os.getenv("LIMIT_ORDER_ENABLED", "true").lower() == "true"
-LIMIT_ORDER_MIN_SPREAD_PCT = float(os.getenv("LIMIT_ORDER_MIN_SPREAD_PCT", "10.0"))
+LIMIT_ORDER_MIN_SPREAD_PCT = float(os.getenv("LIMIT_ORDER_MIN_SPREAD_PCT", "3.0"))
 LIMIT_ORDER_MAX_PER_CYCLE = int(os.getenv("LIMIT_ORDER_MAX_PER_CYCLE", "5"))
 LIMIT_ORDER_TARGET_DISCOUNT = float(os.getenv("LIMIT_ORDER_TARGET_DISCOUNT", "0.03"))  # 3% below bid
 
