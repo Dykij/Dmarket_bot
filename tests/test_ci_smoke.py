@@ -30,8 +30,9 @@ class TestEnvironmentSetup:
         project_root = Path(__file__).parent.parent
         essential_dirs = [
             project_root / "src",
-            project_root / "src" / "dmarket",
-            project_root / "src" / "telegram_bot",
+            project_root / "src" / "api",
+            project_root / "src" / "core",
+            project_root / "src" / "telegram",
             project_root / "src" / "utils",
             project_root / "tests",
         ]
@@ -49,8 +50,9 @@ class TestModuleImports:
         # Arrange & Act & Assert
         try:
             import src  # noqa: F401
-            import src.dmarket  # noqa: F401
-            import src.telegram_bot  # noqa: F401
+            import src.api  # noqa: F401
+            import src.core  # noqa: F401
+            import src.telegram  # noqa: F401
             import src.utils  # noqa: F401
         except ImportError as e:
             raise AssertionError(f"Import failed: {e}") from e

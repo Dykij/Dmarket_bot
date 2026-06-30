@@ -35,19 +35,26 @@ class _AccountMixin:
             return usd_balance
         except Exception as e:
             if os.getenv("DRY_RUN", "true").lower() == "true":
-                logger.debug(f"Real balance fetch failed, using fallback: {e}")
-                return 10000.0
+                fallback = float(os.getenv("DRY_RUN_BALANCE_FALLBACK", "1000.0"))
+                logger.warning(
+                    f"Real balance fetch failed in DRY_RUN, using fallback ${fallback:.2f}: {e}"
+                )
+                return fallback
             raise e
 
     async def get_user_inventory(
         self, game_id: str, limit: int = 50, cursor: Optional[str] = None
     ) -> Dict[str, Any]:
-        """Fetches items owned by the user but NOT currently on sale."""
-        params = {"gameId": game_id, "limit": limit}
+        """Fetches items owned by the user but NOT currently on sale.
+
+        Endpoint: GET /exchange/v1/user-inventory (NEW per Swagger v1.1.0)
+        Returns: {"objects": [...], "cursor": "..."} for backward compat.
+        """
+        params: Dict[str, Any] = {"gameId": game_id, "limit": limit, "basic": "true"}
         if cursor:
             params["cursor"] = cursor
         return await self.make_request(
-            "GET", "/marketplace-api/v1/user-inventory", params=params
+            "GET", "/exchange/v1/user-inventory", params=params
         )
 
     # --- v12.2: Detailed Inventory with Status (Phase 2.1) ---

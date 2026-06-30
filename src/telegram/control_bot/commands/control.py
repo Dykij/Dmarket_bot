@@ -82,8 +82,9 @@ async def cmd_panic(message):
         else:
             await message.answer("✅ No active offers found.")
     else:
+        logger.warning(f"PANIC: cancel offers failed: {err}")
         await message.answer(
-            f"⚠️ Could not cancel offers: `{err}`\n"
+            "⚠️ Could not cancel offers. Check logs for details.\n"
             "Cancel manually if needed."
         )
     await message.answer("🔥 *Panic complete. You are safe.*")
@@ -92,43 +93,73 @@ async def cmd_panic(message):
 
 async def _cancel_all_offers() -> tuple[int, Optional[Exception]]:
     """Cancel all active offers on DMarket. Returns (count, error)."""
-    client_to_close = None
-    if state.client is None:
-        # Bot was not running — create a temp client just for cancellation
-        from src.utils.vault import vault
+    async with state.lock:
+        client_to_close = None
+        if state.client is None:
+            # Bot was not running — create a temp client just for cancellation
+            from src.utils.vault import vault
 
-        secret = (
-            vault.get_dmarket_secret()
-            if hasattr(vault, "get_dmarket_secret")
-            else Config.SECRET_KEY
-        )
-        state.client = DMarketAPIClient(Config.PUBLIC_KEY, secret)  # type: ignore[arg-type]
-        client_to_close = state.client
+            secret = (
+                vault.get_dmarket_secret()
+                if hasattr(vault, "get_dmarket_secret")
+                else Config.SECRET_KEY
+            )
+            state.client = DMarketAPIClient(Config.PUBLIC_KEY, secret)  # type: ignore[arg-type]
+            client_to_close = state.client
+
+        try:
+            offers_resp = await retry_async(
+                lambda: state.client.get_user_offers_v2(Config.GAME_ID, limit=100),  # type: ignore[union-attr]
+                operation="PANIC: list offers",
+            )
+            offer_ids = [
+                o.get("offerId", "")
+                for o in offers_resp.get("items", [])
+                if o.get("offerId")
+            ]
+            if offer_ids:
+                await retry_async(
+                    lambda: state.client.batch_delete_offers_v2(offer_ids),  # type: ignore[union-attr]
+                    operation="PANIC: cancel offers",
+                )
+                return len(offer_ids), None
+            return 0, None
+        except Exception as e:
+            logger.exception("PANIC cancellation failed")
+            return 0, e
+        finally:
+            if client_to_close is not None:
+                try:
+                    await client_to_close.close()
+                except Exception:
+                    pass
+                state.client = None
+
+
+# ============================================================
+# Liquidate: sell all unlocked inventory at market bid
+# ============================================================
+@router.message(Command("liquidate"))
+@safe_call
+async def cmd_liquidate(message):
+    """Force-sell ALL unlocked inventory at best bid for emergency exit."""
+    await message.answer("💧 *LIQUIDATION INITIATED*\nSelling all unlocked inventory at best bid...")
+
+    from src.core.target_sniping.position_guard import _PositionGuardMixin
+    guard = _PositionGuardMixin()
+    guard.client = state.client
 
     try:
-        offers_resp = await retry_async(
-            lambda: state.client.get_user_offers_v2(Config.GAME_ID, limit=100),  # type: ignore[union-attr]
-            operation="PANIC: list offers",
-        )
-        offer_ids = [
-            o.get("offerId", "")
-            for o in offers_resp.get("items", [])
-            if o.get("offerId")
-        ]
-        if offer_ids:
-            await retry_async(
-                lambda: state.client.batch_delete_offers_v2(offer_ids),  # type: ignore[union-attr]
-                operation="PANIC: cancel offers",
-            )
-            return len(offer_ids), None
-        return 0, None
+        result = await guard.emergency_liquidate_all(Config.GAME_ID)
     except Exception as e:
-        logger.exception("PANIC cancellation failed")
-        return 0, e
-    finally:
-        if client_to_close is not None:
-            try:
-                await client_to_close.close()
-            except Exception:
-                pass
-            state.client = None
+        logger.exception("Liquidation failed")
+        await message.answer("❌ Liquidation failed. Check logs for details.")
+        return
+
+    await message.answer(
+        f"💧 *Liquidation Complete*\n\n"
+        f"Items listed: {result['liquidated']}\n"
+        f"Total value: ${result['total_value']:.2f}\n"
+        f"Errors: {result['errors']}"
+    )
+    logger.warning(f"LIQUIDATION executed by admin {message.from_user.id}: {result}")

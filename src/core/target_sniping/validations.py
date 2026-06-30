@@ -13,6 +13,7 @@ from typing import Any, Dict, List, Optional
 
 from src.config import Config
 from src.db.price_history import price_db
+from src.utils.decimal_helpers import D, quantize
 
 
 def check_bait_detection(title: str, base_price: float) -> dict:
@@ -39,12 +40,13 @@ def check_obi(
     obi_signal = 0.0
     if not Config.OBI_ENABLED or ask_cnt <= 0 or bid_cnt <= 0:
         return {"pass": True, "signal": obi_signal}
-    safe_bid = best_bid or 0.01
-    safe_ask = best_ask or 0.01
+    safe_bid = float(best_bid) if best_bid and float(best_bid) > 0 else 0.01
+    safe_ask = float(best_ask) if best_ask and float(best_ask) > 0 else 0.01
     bid_volume = safe_bid * bid_cnt
     ask_volume = safe_ask * ask_cnt
     obi_ratio = bid_volume / ask_volume if ask_volume > 0 else 1.0
-    if obi_ratio < Config.OBI_MIN_RATIO:
+    obi_min = float(Config.OBI_MIN_RATIO)
+    if obi_ratio < obi_min:
         return {"pass": False, "signal": obi_ratio}
     return {"pass": True, "signal": obi_ratio}
 
@@ -219,17 +221,17 @@ def check_slippage(
 
 def check_tod_adjustment() -> float:
     """Time-of-day / day-of-week margin multiplier."""
-    if not Config.TOD_ENABLED:
+    if not Config.TIME_OF_DAY_ENABLED:
         return 1.0
     from src.analysis.microstructure import tod_multiplier, day_of_week_multiplier
 
     tod_m = tod_multiplier(
-        Config.TOD_NIGHT_START_UTC,
-        Config.TOD_NIGHT_END_UTC,
-        Config.TOD_NIGHT_MULTIPLIER,
-        Config.TOD_DAY_MULTIPLIER,
+        Config.TIME_OF_DAY_NIGHT_START_UTC,
+        Config.TIME_OF_DAY_NIGHT_END_UTC,
+        Config.TIME_OF_DAY_NIGHT_MULTIPLIER,
+        Config.TIME_OF_DAY_DAY_MULTIPLIER,
     )
-    if Config.TOD_WEEKEND_ENABLED:
+    if Config.TIME_OF_DAY_WEEKEND_ENABLED:
         tod_m *= day_of_week_multiplier()
     return tod_m
 

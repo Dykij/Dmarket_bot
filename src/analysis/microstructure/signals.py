@@ -97,9 +97,10 @@ def composite_buy_score(
     """
     components: Dict[str, float] = {}
 
-    # Spread quality (0..1)
-    spread_pct = (best_bid - best_ask) / max(best_ask, 0.01)
-    components["spread"] = min(1.0, max(0.0, spread_pct / 0.15))
+    # Spread quality (0..1) — how narrow is the spread?
+    # 0.15 = 15% spread → score 0.0; smaller spread → higher score
+    spread_pct = (best_ask - best_bid) / max(best_ask, 0.01)
+    components["spread"] = max(0.0, 1.0 - spread_pct / 0.15)
 
     # OBI (0..1), already in [-1,1] range; map to 0..1
     components["obi"] = (obi + 1.0) / 2.0

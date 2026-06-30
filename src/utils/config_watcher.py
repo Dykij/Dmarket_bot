@@ -95,27 +95,30 @@ class ConfigWatcher:
         """Re-read .env and update Config attributes."""
         changed = []
         try:
-            with open(_ENV_PATH, "r") as f:
-                for line in f:
-                    line = line.strip()
-                    if not line or line.startswith("#") or "=" not in line:
-                        continue
-                    key, _, value = line.partition("=")
-                    key = key.strip()
-                    value = value.strip().strip('"').strip("'")
-                    if not value:
-                        continue
-                    if key in self._reloadable_keys:
-                        old = getattr(Config, key, None)
-                        self._apply(key, value)
-                        new = getattr(Config, key, None)
-                        if old != new:
-                            changed.append(f"{key}={new}")
-
-            if changed:
-                logger.info(f"[ConfigWatcher] Reloaded {len(changed)} key(s): {', '.join(changed[:8])}")
+            # 1) Re-parse .env via python-dotenv (respects env overrides)
+            from dotenv import dotenv_values
+            env_vals = dotenv_values(_ENV_PATH)
         except Exception as e:
-            logger.warning(f"[ConfigWatcher] Reload failed: {e}")
+            logger.warning(f"[ConfigWatcher] Failed to read .env: {e}")
+            return
+        for key, value in env_vals.items():
+            if key not in self._reloadable_keys or value is None:
+                continue
+            if not isinstance(value, str) or not value.strip():
+                continue
+            try:
+                old = getattr(Config, key, None)
+                self._apply(key, value)
+                new = getattr(Config, key, None)
+                if old != new:
+                    changed.append(f"{key}={new}")
+            except Exception:
+                continue
+
+        if changed:
+            logger.info(f"[ConfigWatcher] Reloaded {len(changed)} key(s): {', '.join(changed[:8])}")
+        else:
+            logger.info("[ConfigWatcher] No configuration changes detected")
 
     @staticmethod
     def _apply(key: str, value: str) -> None:

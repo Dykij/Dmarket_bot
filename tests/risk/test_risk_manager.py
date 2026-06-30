@@ -145,14 +145,15 @@ class TestPreTradeCheckHappyPath:
         assert s.current_drawdown_pct == pytest.approx(8.33, rel=1e-2)
 
     def test_zero_equity_does_not_divide_by_zero(self) -> None:
-        """If equity is 0 and peak is 0, drawdown calc must not crash."""
+        """If equity is 0, trade is blocked (safety gate). No crash on drawdown calc."""
         rm = _make_manager()
         result = rm.pre_trade_check(
             proposed_size_usd=1.0,
             current_equity_usd=0.0,  # no balance
         )
-        # No crash, drawdown stays 0
-        assert result.allowed is True
+        # No crash, drawdown stays 0, but trade blocked as safety measure
+        assert result.allowed is False
+        assert "Zero or negative equity" in result.reason
         assert rm.get_state().current_drawdown_pct == 0.0
 
 
@@ -171,7 +172,7 @@ class TestPreTradeCheckDailyTradeLimit:
         result = rm.pre_trade_check(proposed_size_usd=1.0, current_equity_usd=50.0)
         assert result.allowed is False
         assert "Daily trade count limit reached" in result.reason
-        assert result.triggered_halt is True
+        assert result.triggered_halt is False  # Cap, not a halt — auto-resets next day
 
     def test_limit_at_exact_boundary(self) -> None:
         """At limit (count == limit), the next call must block."""

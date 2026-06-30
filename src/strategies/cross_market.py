@@ -43,7 +43,8 @@ class CrossMarketStrategy(BaseStrategy):
         Evaluate an item using cross-market data from CS2Cap.
         """
         item_name = market_data.get("title", "UnknownItem")
-        dmarket_price = market_data.get("best_ask", 0.0) / 100.0 if market_data.get("best_ask", 0) > 100 else market_data.get("best_ask", 0.0)
+        raw_ask = market_data.get("best_ask", 0.0)
+        dmarket_price = raw_ask / 100.0 if isinstance(raw_ask, (int, float)) and raw_ask > 100 else float(raw_ask)
 
         if dmarket_price <= 0 or dmarket_price < Config.MIN_PRICE_USD:
             return {"action": "none"}
@@ -71,11 +72,14 @@ class CrossMarketStrategy(BaseStrategy):
 
         # Best sell venue
         sell_provider, sell_price = max(profitable_sells, key=lambda x: x[1])
-        ((sell_price - dmarket_price) / dmarket_price) * 100.0
+        gross_margin_pct = ((sell_price - dmarket_price) / dmarket_price) * 100.0
+
+        if gross_margin_pct < Config.MIN_SPREAD_PCT:
+            return {"action": "none"}
 
         # --- 2. Apply Fee/Slippage Model ---
-        # DMarket fee (5%) + potential sell-side fee on destination
-        net_sell = sell_price * 0.95  # Assume ~5% fee on sell side
+        dest_fee_pct = float(Config.CROSS_MARKET_DESTINATION_FEE)
+        net_sell = sell_price * (1 - dest_fee_pct)
         net_margin_pct = ((net_sell - dmarket_price) / dmarket_price) * 100.0
 
         # Adjusted spread for self-reflection
@@ -128,10 +132,11 @@ class CrossMarketStrategy(BaseStrategy):
             return {"action": "none"}
 
         # --- 6. Bid-Arbitrage Check ---
-        # If there's a buy order above our target price, instant sell is possible
+        # If there's a buy order above our target price after fees, instant sell is possible
+        dest_fee_pct = float(Config.CROSS_MARKET_DESTINATION_FEE)
         instant_sell_opportunity = False
         for provider, bid in cross_market_data.buy_orders.items():
-            if bid > dmarket_price * 1.03:  # At least 3% above buy price
+            if bid * (1 - dest_fee_pct) > dmarket_price:
                 instant_sell_opportunity = True
                 break
 
@@ -171,9 +176,12 @@ class CrossMarketStrategy(BaseStrategy):
         # --- 9. Determine Target Price ---
         # Target slightly below best buy order, or undercut current ask
         if instant_sell_opportunity:
-            # Place target slightly below best bid (guaranteed instant sell)
+            # Place target at best bid accounting for destination fee (guaranteed instant sell)
             best_bid = cross_market_data.global_max_bid
-            target_price = round(best_bid * 0.98, 2) if best_bid > 0 else round(dmarket_price * 0.95, 2)
+            if best_bid > 0:
+                target_price = round(best_bid * (1 - dest_fee_pct), 2)
+            else:
+                target_price = round(dmarket_price * 0.95, 2)
         else:
             # Target below DMarket ask
             target_price = round(dmarket_price * 0.95, 2)

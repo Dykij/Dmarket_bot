@@ -34,8 +34,12 @@ class MarketMaker(BaseStrategy):
         # --- Turnover Penalty ---
         turnover_penalty = self.calculate_turnover_penalty()
 
-        # --- Price Target ---
-        target_price = best_ask - 0.01
+        # --- Price Target (spread-proportional undercut) ---
+        spread = best_ask - best_bid
+        if spread <= 0:
+            return {"action": "none"}
+        undercut = max(0.01, spread * 0.05)  # 5% of spread, min $0.01
+        target_price = round(best_ask - undercut, 2)
 
         # --- Fee Calculation ---
         estimated_fee = target_price * Config.FEE_RATE
@@ -55,12 +59,12 @@ class MarketMaker(BaseStrategy):
             return {"action": "none"}
 
         # --- Sharpe-Adjusted Objective ---
-        volatility_score = max(1.0, spread_pct / Config.MIN_SPREAD_PCT)
-        sharpe_estimate = net_margin_pct / (volatility_score * Config.MIN_SPREAD_PCT + 0.01)
+        volatility_score = max(1.0, spread_pct / float(Config.MIN_SPREAD_PCT))
+        sharpe_estimate = net_margin_pct / (volatility_score * float(Config.MIN_SPREAD_PCT) + 0.01)
 
         objective_score = self.calculate_objective_score(
             expected_return_pct=net_margin_pct,
-            volatility=spread_pct / 100.0,
+            volatility=volatility_score * Config.MIN_SPREAD_PCT / 100.0,  # vol proxy from spread level
             liquidity_score=0.5,  # Default, no cross-market data
             spread_pct=spread_pct,
             turnover_penalty=turnover_penalty,

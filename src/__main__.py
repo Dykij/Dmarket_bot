@@ -255,10 +255,14 @@ def main() -> None:
         atexit.register(_cleanup)
 
         # Signal handlers for graceful shutdown
+        # Note: asyncio.run() overrides signal.signal() with loop.add_signal_handler(),
+        # so these are only effective if asyncio is not yet running.
         def _signal_handler(signum, frame):  # noqa: ARG001
             logger.info("Received signal %s, shutting down gracefully...", signum)
             _cleanup()
-            sys.exit(0)
+            # Do NOT sys.exit() here — let asyncio.run() tear down the loop
+            # and the finally block handle cleanup.
+            raise SystemExit(0)
 
         signal.signal(signal.SIGTERM, _signal_handler)
         signal.signal(signal.SIGINT, _signal_handler)

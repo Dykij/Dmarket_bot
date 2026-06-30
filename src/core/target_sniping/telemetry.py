@@ -37,7 +37,7 @@ class _TelemetryMixin:
                 drawdown_pct=risk_state.current_drawdown_pct,
             )
             health_state.set_daily_stats(
-                pnl_usd=-risk_state.daily_loss_usd,
+                pnl_usd=getattr(risk_state, 'daily_realized_pnl', -risk_state.daily_loss_usd),
                 trade_count=risk_state.daily_trade_count,
             )
             health_state.set_halts(

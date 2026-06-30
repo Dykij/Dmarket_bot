@@ -25,7 +25,7 @@ from .lifecycle import (
     on_startup,
     set_commands,
 )
-from .state import _TOKEN
+from .state import _TOKEN, is_admin
 
 logger = logging.getLogger("TelegramControl.bot")
 
@@ -85,6 +85,30 @@ class ThrottlingMiddleware:
         return await handler(event, data)
 
 
+class AdminOnlyMiddleware:
+    """Blocks all non-admin messages and callbacks before they reach handlers.
+
+    This MUST run before the ThrottlingMiddleware so unauthorized
+    users cannot cause rate-limiting side-effects.
+    """
+
+    async def __call__(
+        self,
+        handler,
+        event,
+        data: dict,
+    ) -> object:
+        from aiogram.types import CallbackQuery, Message
+
+        if isinstance(event, (Message, CallbackQuery)):
+            user_id = event.from_user.id if event.from_user else None
+            if user_id is None or not is_admin(user_id):
+                if isinstance(event, CallbackQuery):
+                    await event.answer("⛔ Access denied", show_alert=True)
+                return  # Block the event silently
+        return await handler(event, data)
+
+
 # ============================================================
 # Lazy bot/dispatcher singleton
 # ============================================================
@@ -101,6 +125,8 @@ def create_bot() -> tuple[Bot, Dispatcher]:
     )
     storage = MemoryStorage()
     dp = Dispatcher(storage=storage)
+    dp.message.middleware(AdminOnlyMiddleware())
+    dp.callback_query.middleware(AdminOnlyMiddleware())
     dp.message.middleware(ThrottlingMiddleware())
     dp.callback_query.middleware(ThrottlingMiddleware())
     return bot, dp

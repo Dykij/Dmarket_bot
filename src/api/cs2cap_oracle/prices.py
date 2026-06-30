@@ -110,9 +110,7 @@ class _PricesMixin:
             if now - ts < self.MEM_TTL:
                 if price == 0.0:
                     return PriceSnapshot(hash_name=hash_name)
-                # Re-derive snapshot from a batched result if available
-                # (cheap), otherwise fall through to a fresh fetch.
-                return None  # signal "we know it's zero, but no breakdown"
+                return PriceSnapshot(hash_name=hash_name, min_price=price)
 
         item_id = await self.get_item_id(hash_name)
         if not item_id:

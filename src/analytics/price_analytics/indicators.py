@@ -139,23 +139,40 @@ class _IndicatorMixin:
         if len(prices) < slow + signal:
             return None
 
-        # Calculate EMAs
-        ema_fast = self.calculate_ema(prices, fast)
-        ema_slow = self.calculate_ema(prices, slow)
+        # Precompute all fast EMAs in one O(n) pass
+        fast_mult = 2 / (fast + 1)
+        fast_emas = []
+        if len(prices) >= fast:
+            ema = sum(prices[:fast]) / fast
+            fast_emas.append(ema)
+            for price in prices[fast:]:
+                ema = (price * fast_mult) + (ema * (1 - fast_mult))
+                fast_emas.append(ema)
 
-        if ema_fast is None or ema_slow is None:
+        # Precompute all slow EMAs in one O(n) pass
+        slow_mult = 2 / (slow + 1)
+        slow_emas = []
+        if len(prices) >= slow:
+            ema = sum(prices[:slow]) / slow
+            slow_emas.append(ema)
+            for price in prices[slow:]:
+                ema = (price * slow_mult) + (ema * (1 - slow_mult))
+                slow_emas.append(ema)
+
+        if not fast_emas or not slow_emas:
             return None
 
-        macd_line = ema_fast - ema_slow
+        macd_line = fast_emas[-1] - slow_emas[-1]
 
-        # Calculate MACD history for signal line
-        macd_history = []
-        for i in range(slow - 1, len(prices)):
-            subset = prices[: i + 1]
-            fast_ema = self.calculate_ema(subset, fast)
-            slow_ema = self.calculate_ema(subset, slow)
-            if fast_ema is not None and slow_ema is not None:
-                macd_history.append(fast_ema - slow_ema)
+        # Build MACD history aligned to slow EMA start (O(n), no recomputation)
+        # fast_emas[i] -> prices[fast + i], slow_emas[i] -> prices[slow + i]
+        # Alignment: slow_emas[0] pairs with fast_emas[slow - fast]
+        offset = slow - fast
+        min_len = min(len(fast_emas) - offset, len(slow_emas))
+        macd_history = [
+            fast_emas[offset + j] - slow_emas[j]
+            for j in range(min_len)
+        ]
 
         if len(macd_history) < signal:
             return None
@@ -200,7 +217,7 @@ class _IndicatorMixin:
             Bollinger Bands or None if insufficient data
         """
         period = period or self.bollinger_period
-        num_std = num_std or self.bollinger_std
+        num_std = num_std if num_std is not None else self.bollinger_std
 
         if len(prices) < period:
             return None

@@ -39,6 +39,19 @@ if TYPE_CHECKING:
 logger = logging.getLogger("RiskManager")
 
 
+def _get_drawdown_freeze_threshold() -> float:
+    """Read drawdown freeze threshold from Config (module-level, no hot import)."""
+    from src.config import Config
+    raw = float(Config.DRAWDOWN_FREEZE_THRESHOLD)
+    return raw * 100.0 if raw < 1.0 else raw
+
+
+def _is_drawdown_freeze_enabled() -> bool:
+    """Read drawdown freeze enabled flag from Config (module-level, no hot import)."""
+    from src.config import Config
+    return Config.DRAWDOWN_FREEZE_ENABLED
+
+
 @dataclass
 class RiskState:
     """Snapshot of the current risk posture (for /status and briefings)."""
@@ -132,6 +145,7 @@ class RiskManager:
         self._drawdown_freeze_active: bool = False
         self._consecutive_losses: int = 0
         self._max_consecutive_losses: int = 0
+        self._last_proposed_size: float = 0.0
 
         # Trade history for the day (for /status)
         self._trades_today: List[Dict[str, Any]] = []
@@ -194,7 +208,7 @@ class RiskManager:
                     f"Daily trade count limit reached: "
                     f"{self._daily_trade_count}/{self.daily_trade_limit}"
                 ),
-                triggered_halt=True,
+                triggered_halt=False,  # Cap, not a halt — auto-resets next day
             )
 
         # 3. Daily loss limit
@@ -222,7 +236,29 @@ class RiskManager:
                 triggered_halt=True,
             )
 
+        # 4.2. Balance gate — ensure proposed trade fits within available equity
+        if proposed_size_usd > 0:
+            if current_equity_usd <= 0:
+                self._daily_blocked += 1
+                return PreTradeCheck(
+                    allowed=False,
+                    reason=f"Zero or negative equity: ${current_equity_usd:.2f} — cannot trade",
+                )
+            from src.config import Config
+            effective_balance = current_equity_usd - float(getattr(Config, "BALANCE_RESERVE_USD", 0.0))
+            if proposed_size_usd > effective_balance:
+                self._daily_blocked += 1
+                return PreTradeCheck(
+                    allowed=False,
+                    reason=(
+                        f"Insufficient balance: ${proposed_size_usd:.2f} > "
+                        f"${effective_balance:.2f} available "
+                        f"(equity ${current_equity_usd:.2f} - reserve)"
+                    ),
+                )
+
         # 4.5. v14.7: Consecutive loss streak — halve position after 3+ losses
+        self._last_proposed_size = proposed_size_usd
         if self._consecutive_losses >= 3 and proposed_size_usd > 0:
             reduced = round(proposed_size_usd * 0.5, 2)
             if reduced < 0.50:
@@ -241,10 +277,8 @@ class RiskManager:
             proposed_size_usd = reduced
 
         # 5. v14.4: Drawdown-aware spending freeze (must come BEFORE hard kill-switch)
-        from src.config import Config
-        raw = Config.DRAWDOWN_FREEZE_THRESHOLD
-        freeze_threshold_pct = raw * 100.0 if raw < 1.0 else raw
-        if Config.DRAWDOWN_FREEZE_ENABLED and self._current_drawdown_pct >= freeze_threshold_pct:
+        freeze_threshold_pct = _get_drawdown_freeze_threshold()
+        if _is_drawdown_freeze_enabled() and self._current_drawdown_pct >= freeze_threshold_pct:
             if proposed_size_usd > 0:
                 self._drawdown_freeze_active = True
                 self._daily_blocked += 1
@@ -272,7 +306,9 @@ class RiskManager:
             )
 
         # 7. Soft halt — reduce size by 50% at 5%+ drawdown (only for buys)
-        if self._current_drawdown_pct >= self.soft_halt_drawdown_pct:
+        # Skip if already reduced by consecutive-loss halving (prevents double-halve)
+        already_reduced = self._consecutive_losses >= 3 and proposed_size_usd < self._last_proposed_size
+        if self._current_drawdown_pct >= self.soft_halt_drawdown_pct and not already_reduced:
             self._soft_halt_active = True
             reduced = round(proposed_size_usd * 0.5, 2)
             if reduced < 0.50:
@@ -413,6 +449,9 @@ class RiskManager:
             self._daily_blocked = 0
             self._daily_passed = 0
             self._trades_today = []
+            # Reset consecutive-loss tracking on new day to allow recovery
+            self._consecutive_losses = 0
+            self._drawdown_freeze_active = False
 
     def _update_equity(self, current_equity_usd: float) -> None:
         """Update peak/current equity and recompute drawdown."""

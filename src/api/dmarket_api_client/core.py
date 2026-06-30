@@ -23,7 +23,7 @@ from typing import Any, Dict, Optional
 import aiohttp
 import structlog
 from nacl.signing import SigningKey
-from tenacity import retry, stop_after_attempt, wait_exponential
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
 from .account import _AccountMixin
 from .exceptions import SecurityViolation  # noqa: F401  (re-exported)
@@ -49,16 +49,13 @@ class DMarketAPIClient(  # type: ignore[misc]
     """DMarket Trading API v2 Client (TargetSniper Optimized Async)."""
 
     BASE_URL = "https://api.dmarket.com"
+    _FALLBACK_BASE_URL = "https://trading.dmarket.com"
 
-    def __init__(
-        self,
-        public_key: str,
-        secret_key: str,
-        base_url: str = "https://api.dmarket.com",
-    ) -> None:
+    def __init__(self, public_key: str, secret_key: str, base_url: str = "https://api.dmarket.com") -> None:
         self.public_key = public_key
         self.secret_key = secret_key
         self.BASE_URL = base_url
+        self._vault_redacted = False
         self._session: Optional[aiohttp.ClientSession] = None
         self._session_lock = asyncio.Lock()
         self._lock = asyncio.Lock()
@@ -98,8 +95,10 @@ class DMarketAPIClient(  # type: ignore[misc]
                     self._encrypted_secret = raw_secret.encode("utf-8")
             except Exception:
                 self._encrypted_secret = raw_secret.encode("utf-8")
-            # Clear the raw secret from local scope
+            # Clear the raw secret from local scope and overwrite instance attribute
             raw_secret = ""
+            self.secret_key = "VAULT_REDACTED"  # overwrite plaintext — encrypted copy in _encrypted_secret
+            self._vault_redacted = True
 
         # Python Fallback Initialization
         if not self._has_rust_signer:
@@ -200,6 +199,7 @@ class DMarketAPIClient(  # type: ignore[misc]
             self._session = aiohttp.ClientSession(
                 connector=connector,
                 headers=default_headers,
+                timeout=aiohttp.ClientTimeout(total=30, connect=10),
             )
 
             # v12.2: Initial clock sync with DMarket server
@@ -227,10 +227,12 @@ class DMarketAPIClient(  # type: ignore[misc]
 
         Public endpoints (market data): ~10 RPS (600 RPM).
         Private endpoints (auth required): ~2 RPS (stricter).
+        Uses adaptive _rate_limit_delay when server signals low quota.
         """
         async with self._lock:
             if is_public_endpoint:
-                jitter = random.uniform(0.08, 0.12)  # ~8-12 RPS for public
+                base_delay = min(self._rate_limit_delay, 0.3)
+                jitter = random.uniform(base_delay * 0.8, base_delay * 1.2)
             else:
                 jitter = random.uniform(0.3, 0.4)  # ~2.5-3.3 RPS for private
             now = time.time()
@@ -249,7 +251,9 @@ class DMarketAPIClient(  # type: ignore[misc]
         from lingering in process memory between requests.
         """
         # v12.9: Decrypt the secret on the fly (zeroed after use)
-        raw_secret = self._decrypt_secret() or self.secret_key
+        raw_secret = self._decrypt_secret()
+        if not raw_secret and not self._vault_redacted:
+            raw_secret = self.secret_key
 
         # Try Rust first (microsecond precision)
         if self._has_rust_signer and raw_secret:
@@ -271,7 +275,11 @@ class DMarketAPIClient(  # type: ignore[misc]
         self._secure_zero(raw_secret)
         raise RuntimeError("No signing key available for Ed25519 signature")
 
-    @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=2, max=10))
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=2, max=10),
+        retry=retry_if_exception_type((aiohttp.ClientResponseError, asyncio.TimeoutError, aiohttp.ClientConnectionError)),
+    )
     async def make_request(
         self,
         method: str,
@@ -283,7 +291,13 @@ class DMarketAPIClient(  # type: ignore[misc]
         method = method.upper()
 
         # --- SANDBOX GUARD ---
-        is_write_op = method in ["POST", "PUT", "DELETE", "PATCH"]
+        # Some read-only endpoints use POST (e.g. aggregated-prices).
+        # Do not simulate these in DRY_RUN; otherwise market scans get empty mocks.
+        _READ_POST_PATHS = ("/marketplace-api/v1/aggregated-prices",)
+        is_write_op = (
+            method in ["POST", "PUT", "DELETE", "PATCH"]
+            and not any(path.startswith(p) for p in _READ_POST_PATHS)
+        )
         if is_write_op and os.getenv("DRY_RUN", "true").lower() == "true":
             logger.info(f"🧪 [DRY RUN] Simulating {method} to {path}")
             # Mock success response for write operations to keep simulation loop running
@@ -351,6 +365,16 @@ class DMarketAPIClient(  # type: ignore[misc]
             ) as response:
                 if response.status != 200:
                     text = await response.text()
+                    # v15.0: If we get a 429 and fallback is available, switch
+                    # to trading.dmarket.com for the rest of the session.
+                    if response.status == 429 and \
+                       self._FALLBACK_BASE_URL and \
+                       self.BASE_URL != self._FALLBACK_BASE_URL:
+                        logger.warning(
+                            f"[CB:{self._breaker.name}] 429 from {self.BASE_URL} → "
+                            f"switching to fallback {self._FALLBACK_BASE_URL}"
+                        )
+                        self.BASE_URL = self._FALLBACK_BASE_URL
                     # v12.4: Trip the breaker for 429 / 5xx (rate-limit / server errors)
                     if should_trip(response.status):
                         self._breaker.record_failure(
@@ -371,7 +395,8 @@ class DMarketAPIClient(  # type: ignore[misc]
                     )
                 # Success: close the breaker if it was HALF_OPEN
                 self._breaker.record_success()
-                # v14.7: Parse X-RateLimit-Remaining for adaptive pacing
+                # v15.0: Adaptive backoff via Retry-After / X-RateLimit-Remaining
+                self._adaptive_backoff(response)
                 response_json = await response.json()
                 remaining = response.headers.get("X-RateLimit-Remaining")
                 if remaining is not None:
@@ -391,9 +416,10 @@ class DMarketAPIClient(  # type: ignore[misc]
             self._breaker.record_failure(e)
             raise
         except CircuitOpenError:
-            # Circuit is open — do not retry, return empty response immediately
-            logger.debug(f"Circuit breaker OPEN, returning empty response for {method} {path}")
-            return {}
+            # Circuit is open — log clearly and re-raise so callers can
+            # distinguish "circuit blocked" from "API returned empty data".
+            logger.warning(f"Circuit breaker OPEN for {method} {path}, re-raising")
+            raise
         except aiohttp.ClientResponseError:
             # Already handled above for trippable codes; for non-trippable
             # (4xx) the breaker was not touched, so just re-raise.
@@ -402,3 +428,24 @@ class DMarketAPIClient(  # type: ignore[misc]
     def circuit_breaker_status(self) -> dict:
         """Diagnostic snapshot of the circuit breaker state."""
         return self._breaker.status()
+
+    # ------------------------------------------------------------------
+    # v15.0: Adaptive backoff helpers
+    # ------------------------------------------------------------------
+    def _adaptive_backoff(self, response: aiohttp.ClientResponse) -> None:
+        """Parse rate-limit headers and apply proactive backoff."""
+        from .backoff import extract_backoff_from_headers
+
+        retry_after, remaining, reset_in = extract_backoff_from_headers(dict(response.headers))
+
+        if retry_after is not None and retry_after > 0:
+            self._breaker.apply_retry_after(retry_after)
+        if remaining is not None:
+            self._breaker.apply_rate_limit_remaining(remaining, reset_in)
+            # Also update local per-call delay for legacy pacing
+            if remaining < 5:
+                self._rate_limit_delay = 1.0
+            elif remaining < 10:
+                self._rate_limit_delay = 0.5
+            else:
+                self._rate_limit_delay = 0.22

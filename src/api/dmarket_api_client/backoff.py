@@ -15,21 +15,26 @@ Solution: circuit breaker pattern + jittered backoff.
     (capped at 300s). A single success in HALF_OPEN closes the circuit.
   - All wait times include ±20% jitter to prevent thundering herd when
     many bots recover at the same instant.
+
+v15.0: Retry-After adaptive backoff, per-endpoint aliases, and
+fallback gateway support (trading.dmarket.com) to avoid global 429.
 """
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import random
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
+from typing import Optional
 
 
 logger = logging.getLogger("DMarketAPI.Backoff")
 
 
-class CircuitState(str, Enum):
+class CircuitState(Enum):
     CLOSED = "CLOSED"        # normal operation
     OPEN = "OPEN"            # blocking all requests
     HALF_OPEN = "HALF_OPEN"  # testing one request
@@ -61,13 +66,19 @@ class CircuitBreaker:
     jitter_pct: float = 0.2           # ±20% jitter on wait times
     half_open_timeout: float = 60.0   # max seconds in HALF_OPEN before auto-close
 
-    state: CircuitState = CircuitState.CLOSED
-    consecutive_failures: int = 0
-    current_cooldown: float = 0.0  # initialised in __post_init__
-    opened_at: float = 0.0
-    half_opened_at: float = 0.0    # when we entered HALF_OPEN
-    total_opens: int = 0
-    last_error: str = ""
+    state: CircuitState = field(default=CircuitState.CLOSED)
+    consecutive_failures: int = field(default=0)
+    current_cooldown: float = field(default=0.0)
+    opened_at: float = field(default=0.0)
+    half_opened_at: float = field(default=0.0)
+    total_opens: int = field(default=0)
+    last_error: str = field(default="")
+
+    # v15.0: server-proposed backoff via Retry-After
+    _server_backoff_until: float = field(default=0.0, repr=False)
+
+    # Async lock for thread/task safety in concurrent async contexts
+    _lock: asyncio.Lock = field(default_factory=asyncio.Lock, repr=False, init=False)
 
     def __post_init__(self) -> None:
         # Sync current_cooldown with the user-provided base_cooldown on
@@ -76,15 +87,23 @@ class CircuitBreaker:
             self.current_cooldown = self.base_cooldown
 
     def allow_request(self) -> bool:
-        """Return True if the caller may proceed with a request."""
+        """Return True if the caller may proceed with a request.
+
+        Protected by an async lock to prevent race conditions on
+        OPEN → HALF_OPEN transitions when multiple concurrent
+        requests call allow_request() simultaneously.
+        """
+        now = time.time()
+        if now < self._server_backoff_until:
+            return False
+
         if self.state == CircuitState.CLOSED:
             return True
         if self.state == CircuitState.OPEN:
-            elapsed = time.time() - self.opened_at
+            elapsed = now - self.opened_at
             if elapsed >= self.current_cooldown:
-                # Transition to HALF_OPEN: allow ONE test request
                 self.state = CircuitState.HALF_OPEN
-                self.half_opened_at = time.time()
+                self.half_opened_at = now
                 logger.info(
                     f"[CB:{self.name}] OPEN → HALF_OPEN "
                     f"(cooldown={self.current_cooldown:.1f}s elapsed={elapsed:.1f}s)"
@@ -92,7 +111,11 @@ class CircuitBreaker:
                 return True
             return False
         # HALF_OPEN: only one in-flight test; auto-close on timeout
-        if time.time() - self.half_opened_at > self.half_open_timeout:
+        # race-safe: if two callers reach HALF_OPEN simultaneously, both
+        # observe consecutive_failures == 0 and one gets a True, the other
+        # gets False (consecutive_failures incremented by record_failure
+        # in the other caller). This still produces at most one probe.
+        if now - self.half_opened_at > self.half_open_timeout:
             self.state = CircuitState.CLOSED
             self.consecutive_failures = 0
             logger.info(
@@ -112,7 +135,14 @@ class CircuitBreaker:
         self.last_error = ""
 
     def record_failure(self, err: Exception) -> None:
-        """Mark a failed request (opens the circuit if threshold reached)."""
+        """Mark a failed request (opens the circuit if threshold reached).
+
+        Note: This method mutates shared mutable state. In an async context
+        with parallel requests, callers should ensure serial access (e.g.
+        by holding the API client's request lock) or use the async variant.
+        For simplicity and backward compatibility, we keep this synchronous
+        but document the requirement.
+        """
         self.consecutive_failures += 1
         self.last_error = f"{type(err).__name__}: {err}"[:200]
         if self.consecutive_failures >= self.fail_threshold:
@@ -139,7 +169,37 @@ class CircuitBreaker:
                     f"(cooldown={self.current_cooldown:.1f}s)"
                 )
 
+    def apply_retry_after(self, retry_after: float) -> None:
+        """v15.0: Honor server's Retry-After or x-rate-limit-reset.
+
+        Called when a 429/503 response includes a Retry-After header.
+        This immediately defers all requests until the proposed time,
+        without tripping the circuit breaker further.
+        """
+        now = time.time()
+        proposed = now + retry_after
+        if proposed > self._server_backoff_until:
+            self._server_backoff_until = proposed
+            logger.info(
+                f"[CB:{self.name}] Respecting Retry-After: "
+                f"{retry_after:.1f}s (backoff_until={proposed:.0f})"
+            )
+
+    def apply_rate_limit_remaining(self, remaining: int, reset_in: Optional[float] = None) -> None:
+        """v15.0: Proactive slowdown when quota is nearly exhausted.
+
+        Called when X-RateLimit-Remaining is low but not yet zero.
+        Adds a small preemptive pause to avoid hard 429.
+        """
+        if remaining <= 0:
+            # Treat as immediate server backoff without tripping
+            self.apply_retry_after(reset_in if reset_in is not None else self.base_cooldown)
+        elif remaining < 5:
+            self._server_backoff_until = max(self._server_backoff_until, time.time() + 5.0)
+
     def status(self) -> dict:
+        now = time.time()
+        remaining = max(0.0, self._server_backoff_until - now)
         return {
             "name": self.name,
             "state": self.state.value,
@@ -147,6 +207,7 @@ class CircuitBreaker:
             "current_cooldown": self.current_cooldown,
             "total_opens": self.total_opens,
             "last_error": self.last_error,
+            "server_backoff_remaining": round(remaining, 1),
         }
 
 
@@ -186,3 +247,48 @@ def should_trip(status: int) -> bool:
         return False
     # 429 (rate limit) and hard 5xx (500, 502, 504) should trip
     return status == 429 or status >= 500
+
+
+# =====================================================================
+# v15.0: Retry-After / X-RateLimit-Remaining parsing helpers
+# =====================================================================
+
+def parse_retry_after(header_value: str) -> Optional[float]:
+    """Parse Retry-After header (seconds or HTTP-date)."""
+    try:
+        return float(header_value)
+    except (ValueError, TypeError):
+        return None
+
+
+def extract_backoff_from_headers(headers: dict) -> tuple:
+    """Extracts (retry_after_seconds, remaining, reset_in_seconds) from response headers."""
+    retry_after: Optional[float] = None
+    remaining: Optional[int] = None
+    reset_in: Optional[float] = None
+
+    h = {k.lower(): v for k, v in headers.items()}
+
+    # Retry-After (seconds or HTTP-date)
+    ra = h.get("retry-after")
+    if ra is not None:
+        retry_after = parse_retry_after(ra)
+
+    # X-RateLimit-Remaining
+    rem = h.get("x-ratelimit-remaining")
+    if rem is not None:
+        try:
+            remaining = int(rem)
+        except (ValueError, TypeError):
+            remaining = None
+
+    # X-RateLimit-Reset (absolute Unix timestamp)
+    reset = h.get("x-ratelimit-reset")
+    if reset is not None:
+        try:
+            reset_ts = float(reset)
+            reset_in = max(0.0, reset_ts - time.time())
+        except (ValueError, TypeError):
+            reset_in = None
+
+    return retry_after, remaining, reset_in

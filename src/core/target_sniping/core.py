@@ -256,6 +256,8 @@ class SnipingLoop(  # type: ignore[misc]
                 return
 
             # v14.0: Save snapshot for OFI (Order Flow Imbalance) on next cycle
+            # Rotate: keep previous cycle's data for delta calculations
+            self._prev_agg_prices_prior = getattr(self, '_prev_agg_prices', {})
             self._prev_agg_prices = agg_prices.copy()
 
             # v12.3: Pick top N items by market volume (ask_count + bid_count)
@@ -430,6 +432,11 @@ class SnipingLoop(  # type: ignore[misc]
             current_margin = self.min_profit_margin
             instant_buys: List[Dict[str, Any]] = []
 
+            # v14.9: Value Detection Scanner pipeline.
+            # Uses the new dual-signal approach: VALUE (rarity-based) + SPREAD (bid-ask edge).
+            # This is the core refactor for the "buy cheap, sell at premium" strategy.
+            from src.core.target_sniping.value_pipelines import evaluate_combined_signal
+
             # v12.4: Read CS2Cap asks/bids from in-memory cache (P0-B).
             # The cache is refreshed by a background task every
             # CS2CAP_CACHE_TTL_SECONDS (default 5 min). Per-cycle HTTP
@@ -593,8 +600,58 @@ class SnipingLoop(  # type: ignore[misc]
             if candidates_to_eval:
                 _eval_sem = asyncio.Semaphore(10)
 
+                # v14.9: Dual-signal evaluation with value detection scanner.
+                # First, try the new evaluate_combined_signal for rarity-based buys.
+                # If that returns None, fall back to legacy _evaluate_candidate.
                 async def _eval_with_sem(item):
                     async with _eval_sem:
+                        title = item.get("title", "")
+                        # Get aggregated price data
+                        agg = agg_prices.get(title, {})
+                        best_bid = agg.get("best_bid", 0.0)
+                        best_ask = agg.get("best_ask", 0.0)
+                        # Get CS2Cap reference price
+                        cs2cap_ask = 0.0
+                        if title in cs_snapshots:
+                            cs2cap_ask = cs_snapshots[title]
+                        elif hasattr(self, 'cs2cap_cache') and self.cs2cap_cache is not None:
+                            cs_val = self.cs2cap_cache.get_ask(title)
+                            if cs_val is not None:
+                                cs2cap_ask = cs_val
+
+                        # Try VALUE signal first
+                        if Config.VALUE_SCAN_ENABLED and cs2cap_ask > 0:
+                            from src.core.target_sniping.value_pipelines import evaluate_combined_signal
+                            value_result = evaluate_combined_signal(
+                                title=title,
+                                item=item,
+                                cs2cap_ask=cs2cap_ask,
+                                best_bid=best_bid,
+                                best_ask=best_ask,
+                                fee_rate=bulk_fees.get(item.get("itemId"), Config.FEE_RATE),
+                                current_margin=current_margin,
+                            )
+                            if value_result is not None:
+                                # Build buy payload from value signal
+                                buy_offer = {
+                                    "offerId": item.get("itemId"),
+                                    "price": item.get("price", {}),
+                                }
+                                return {
+                                    "buy_offer": buy_offer,
+                                    "title": title,
+                                    "item_id": item.get("itemId"),
+                                    "base_price": value_result["base_price"],
+                                    "list_price": value_result["list_price"],
+                                    "best_bid": best_bid,
+                                    "best_ask": best_ask,
+                                    "strategy": "value_scanner",
+                                    "target_platform": "dmarket",
+                                    "is_rare": True,
+                                    "value_signal": value_result,
+                                }
+
+                        # Fallback to legacy spread-based evaluation
                         return await self._evaluate_candidate(
                             item=item,
                             game_id=game_id,

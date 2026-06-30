@@ -59,13 +59,22 @@ class EventShield:
 
     def get_margin_multiplier(self) -> float:
         """
-        Returns the highest margin multiplier from all currently active events.
+        Returns the most impactful margin multiplier from active events.
+        - For caution events (>1.0): use max (most conservative)
+        - For opportunity events (<1.0): use min (most aggressive)
         If no event is active, returns 1.0 (no change).
         """
         active = self.get_active_events()
         if not active:
             return 1.0
-        return max(ev.get("margin_multiplier", 1.0) for ev in active)
+
+        caution_mult = [ev.get("margin_multiplier", 1.0) for ev in active if ev.get("effect") == "caution"]
+        opp_mult = [ev.get("margin_multiplier", 1.0) for ev in active if ev.get("effect") == "opportunity"]
+
+        caution = max(caution_mult) if caution_mult else 1.0
+        opp = min(opp_mult) if opp_mult else 1.0
+
+        return caution * opp
 
     def is_category_risky(self, item_title: str) -> bool:
         """

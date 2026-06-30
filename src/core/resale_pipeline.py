@@ -37,10 +37,12 @@ class ResalePipeline:
     End-to-end buy-sell pipeline with CS2Cap price intelligence.
     """
 
-    def __init__(self, api_client: DMarketAPIClient):
+    def __init__(self, api_client: DMarketAPIClient, risk=None):
+        from src.risk.risk_manager import RiskManager
         self.api = api_client
         self.cs2cap = OracleFactory.get_cross_market_oracle(Config.GAME_ID)
         self._sell_price_cache: Dict[str, Tuple[float, float]] = {}  # hash_name -> (price, ts)
+        self._risk = risk or RiskManager()
 
     # =================================================================
     # 1. SCAN & BUY — Find cheap items on DMarket
@@ -55,13 +57,8 @@ class ResalePipeline:
         Scan DMarket for underpriced items, validate against CS2Cap, buy.
         Returns list of purchased items.
         """
-        from src.risk.risk_manager import RiskManager
         from src.risk.pump_detector import PumpDetector
-        risk = RiskManager(
-            daily_loss_limit_usd=float(os.getenv("MAX_DAILY_LOSS_USD", "10.00")),
-            daily_trade_limit=int(os.getenv("MAX_DAILY_TRADES", "200")),
-            max_drawdown_pct=float(os.getenv("MAX_DRAWDOWN_PCT", "15.0")),
-        )
+        risk = self._risk
         pump = PumpDetector(price_db=price_db)
 
         purchased: List[Dict[str, Any]] = []

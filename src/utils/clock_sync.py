@@ -110,6 +110,7 @@ class ClockSync:
 
         try:
             async with self._lock:
+                local_ts_before = time.time()
                 # Send HEAD request to DMarket — minimal payload
                 # DMarket returns Date header in RFC 2822 format
                 async with session.head(
@@ -134,7 +135,6 @@ class ClockSync:
                         return False
 
                 # Calculate offset
-                local_ts_before = time.time()
                 # Use the average of before/after to account for round-trip
                 local_ts_after = time.time()
                 local_ts = (local_ts_before + local_ts_after) / 2.0

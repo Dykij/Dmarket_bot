@@ -89,7 +89,11 @@ class CS2CapOracle(_CatalogMixin, _PricesMixin, _UtilsMixin):
         self._rate_remaining: Optional[int] = None  # Header-driven (X-RateLimit-Remaining)
 
     async def get_session(self) -> aiohttp.ClientSession:
-        if self._session is None or self._session.closed:
+        if self._session is not None and not self._session.closed:
+            return self._session
+        async with self._lock:
+            if self._session is not None and not self._session.closed:
+                return self._session
             headers = {
                 "Accept-Encoding": "gzip, deflate",
                 "Accept": "application/json",
@@ -100,7 +104,7 @@ class CS2CapOracle(_CatalogMixin, _PricesMixin, _UtilsMixin):
                 headers=headers,
                 timeout=aiohttp.ClientTimeout(total=15)
             )
-        return self._session
+            return self._session
 
     async def _throttle(self):
         """Smart throttle: adapts to X-RateLimit-Remaining header.
@@ -117,17 +121,19 @@ class CS2CapOracle(_CatalogMixin, _PricesMixin, _UtilsMixin):
                 elif self._rate_remaining < 10:
                     self._request_delay = max(self._request_delay, 2.0)
 
-            elapsed = asyncio.get_event_loop().time() - self._last_request_time
+            elapsed = time.monotonic() - self._last_request_time
             if elapsed < self._request_delay:
                 await asyncio.sleep(self._request_delay - elapsed)
-            self._last_request_time = asyncio.get_event_loop().time()
+            self._last_request_time = time.monotonic()
 
     async def _request(self, endpoint: str, params: Optional[Dict[str, Any]] = None) -> Optional[Dict]:
         """Throttled API request with rate limit handling and circuit breaker."""
         # Reset quota after 1 hour
         if self._quota_exhausted and time.time() - self._quota_exhausted_at > self._quota_reset_seconds:
             self._quota_exhausted = False
-            self._request_delay = 1.0
+            async with self._lock:
+                self._request_delay = 1.0
+            price_db.save_state("cs2cap_delay", "1.0")
             logger.info("[CS2Cap] Quota reset, retrying API calls")
 
         if self._quota_exhausted:
@@ -145,7 +151,8 @@ class CS2CapOracle(_CatalogMixin, _PricesMixin, _UtilsMixin):
         try:
             async with session.get(url, params=params) as response:
                 if response.status == 429:
-                    self._request_delay = min(self._request_delay * 2.0, 30.0)
+                    async with self._lock:
+                        self._request_delay = min(self._request_delay * 2.0, 30.0)
                     price_db.save_state("cs2cap_delay", str(self._request_delay))
                     self._quota_exhausted = True
                     self._quota_exhausted_at = time.time()
@@ -154,7 +161,8 @@ class CS2CapOracle(_CatalogMixin, _PricesMixin, _UtilsMixin):
                     return None
 
                 if self._request_delay > 1.0:
-                    self._request_delay = max(self._request_delay * 0.98, 1.0)
+                    async with self._lock:
+                        self._request_delay = max(self._request_delay * 0.98, 1.0)
                     price_db.save_state("cs2cap_delay", str(self._request_delay))
 
                 if response.status == 403:
@@ -169,6 +177,7 @@ class CS2CapOracle(_CatalogMixin, _PricesMixin, _UtilsMixin):
 
                 # Success: record in circuit breaker
                 self._breaker.record_success()
+                self._increment_monthly_counter()
                 return await response.json()
 
         except Exception as e:
@@ -213,16 +222,17 @@ class CS2CapOracle(_CatalogMixin, _PricesMixin, _UtilsMixin):
                 remaining = response.headers.get("X-RateLimit-Remaining")
                 if remaining is not None:
                     try:
-                        self._rate_remaining = int(remaining)
-                        if self._rate_remaining < 5:
-                            # Almost out of per-minute budget — slow down proactively
-                            self._request_delay = max(self._request_delay, 1.5)
-                            header_slowed = True
+                        async with self._lock:
+                            self._rate_remaining = int(remaining)
+                            if self._rate_remaining < 5:
+                                self._request_delay = max(self._request_delay, 1.5)
+                                header_slowed = True
                     except (ValueError, TypeError):
                         pass
 
                 if response.status == 429:
-                    self._request_delay = min(self._request_delay * 2.0, 30.0)
+                    async with self._lock:
+                        self._request_delay = min(self._request_delay * 2.0, 30.0)
                     price_db.save_state("cs2cap_delay", str(self._request_delay))
                     self._quota_exhausted = True
                     self._quota_exhausted_at = time.time()
@@ -237,7 +247,8 @@ class CS2CapOracle(_CatalogMixin, _PricesMixin, _UtilsMixin):
                 # (otherwise the 0.98 multiplier undoes the proactive slowdown
                 # in the very same call).
                 if self._request_delay > 1.0 and not header_slowed:
-                    self._request_delay = max(self._request_delay * 0.98, 1.0)
+                    async with self._lock:
+                        self._request_delay = max(self._request_delay * 0.98, 1.0)
                     price_db.save_state("cs2cap_delay", str(self._request_delay))
 
                 if response.status == 403:
@@ -329,7 +340,7 @@ class CS2CapOracle(_CatalogMixin, _PricesMixin, _UtilsMixin):
         """v12.7: Circuit breaker diagnostic snapshot (P3-5)."""
         return self._breaker.status()
 
-    def is_price_stale(self, hash_name: str, max_age_seconds: Optional[float] = None) -> bool:
+    def is_price_stale(self, hash_name: str, offset: int = 0, max_age_seconds: Optional[float] = None) -> bool:
         """
         v12.7: Check if cached price for item is stale (P4-3).
 
@@ -343,7 +354,7 @@ class CS2CapOracle(_CatalogMixin, _PricesMixin, _UtilsMixin):
             max_age_seconds = self.MEM_TTL * 2  # 10 minutes default
 
         now = time.time()
-        cache_key = f"{hash_name}_0"
+        cache_key = f"{hash_name}_{offset}"
 
         # Check in-memory cache
         if cache_key in self._price_cache:

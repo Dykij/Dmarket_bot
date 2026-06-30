@@ -9,8 +9,7 @@ from src.db.price_history import price_db
 
 logger = logging.getLogger("CSFloatOracle")
 
-class RateLimitException(Exception):
-    pass
+from src.api.cs2cap_oracle.models import CS2CapRateLimit as RateLimitException  # unified exception
 
 class CSFloatOracle:
     """
@@ -35,18 +34,22 @@ class CSFloatOracle:
         self._mem_cache: Dict[str, Tuple[float, float]] = {}  # {hash_name: (price, timestamp)}
 
     async def get_session(self):
-        if self._session is None or self._session.closed:
+        if self._session is not None and not self._session.closed:
+            return self._session
+        async with self._lock:
+            if self._session is not None and not self._session.closed:
+                return self._session
             self._session = aiohttp.ClientSession(
                 headers={"Authorization": self.api_key} if self.api_key else {}
             )
-        return self._session
+            return self._session
 
     async def _throttle(self):
         async with self._lock:
-            elapsed = asyncio.get_event_loop().time() - self._last_request_time
+            elapsed = time.monotonic() - self._last_request_time
             if elapsed < self.request_delay:
                 await asyncio.sleep(self.request_delay - elapsed)
-            self._last_request_time = asyncio.get_event_loop().time()
+            self._last_request_time = time.monotonic()
 
     @retry(
         retry=retry_if_exception_type(RateLimitException),
@@ -64,15 +67,16 @@ class CSFloatOracle:
         now = time.time()
         
         # --- 1. Memory Layer ---
-        if hash_name in self._mem_cache:
-            m_price, m_time = self._mem_cache[hash_name]
+        cache_key = f"{hash_name}_{offset}"
+        if cache_key in self._mem_cache:
+            m_price, m_time = self._mem_cache[cache_key]
             if now - m_time < self.MEM_TTL:
                 return m_price
 
         # --- 2. History DB Layer (Bifurcated SQLite) ---
         cached = price_db.get_latest_price(hash_name, max_age_seconds=self.CACHE_TTL)
         if cached is not None:
-            self._mem_cache[hash_name] = (cached, now)
+            self._mem_cache[cache_key] = (cached, now)
             return cached
 
         # --- 3. Live API Layer ---
@@ -94,6 +98,9 @@ class CSFloatOracle:
                     self.request_delay = max(self.request_delay * 0.98, 1.0)
                     price_db.save_state("csfloat_delay", str(self.request_delay))
 
+                if response.status == 404:
+                    logger.debug(f"[CSFloat] No listing for {hash_name}")
+                    return 0.0
                 response.raise_for_status()
                 res_json = await response.json()
                 
@@ -106,7 +113,7 @@ class CSFloatOracle:
 
                     # Sync All Layers
                     price_db.record_price(hash_name, final_price, source="csfloat")
-                    self._mem_cache[hash_name] = (final_price, now)
+                    self._mem_cache[cache_key] = (final_price, now)
                     return final_price
                 
                 return 0.0

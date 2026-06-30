@@ -39,6 +39,8 @@ class TradeDecision(BaseModel):
 
 # 2. Deterministic Circuit Breaker with Local Disk Fallback (LDF)
 class CircuitBreaker:
+    UNTRIP_COOLDOWN_SECONDS = 3600
+
     def __init__(self, max_drawdown_pct: float = 0.03, window_seconds: int = 3600, state_path: str | None = None):
         self.max_dd = max_drawdown_pct
         self.window = window_seconds
@@ -47,6 +49,7 @@ class CircuitBreaker:
         )  # nosec: B108 - in-container ephemeral; override via env in production
         self.snapshots: List[Tuple[float, float]] = []
         self.is_tripped = False
+        self._tripped_at: float = 0.0
         self._load_state()
         
     def _load_state(self):
@@ -57,6 +60,7 @@ class CircuitBreaker:
                     data = json.load(f)
                     self.snapshots = data.get("snapshots", [])
                     self.is_tripped = data.get("is_tripped", False)
+                    self._tripped_at = data.get("tripped_at", 0.0)
                 logger.info(f"CircuitBreaker: Loaded LDF state from {self.state_path}. Tripped: {self.is_tripped}")
             except Exception as e:
                 logger.error(f"CircuitBreaker: Failed to load LDF state: {e}", exc_info=True)
@@ -65,9 +69,10 @@ class CircuitBreaker:
         """Persist state to local disk."""
         try:
             with open(self.state_path, "w") as f:
-                json.dump({
+                    json.dump({
                     "snapshots": self.snapshots,
                     "is_tripped": self.is_tripped,
+                    "tripped_at": self._tripped_at,
                     "last_update": time.time()
                 }, f)
         except Exception as e:
@@ -82,6 +87,12 @@ class CircuitBreaker:
         
     def check_drawdown(self) -> bool:
         if self.is_tripped:
+            if self._tripped_at > 0 and time.time() - self._tripped_at > self.UNTRIP_COOLDOWN_SECONDS:
+                self.is_tripped = False
+                self._tripped_at = 0.0
+                self._save_state()
+                logger.info("CircuitBreaker auto-reset after cooldown expired")
+                return False
             return True
         if not self.snapshots:
             return False
@@ -95,6 +106,7 @@ class CircuitBreaker:
         drawdown = (peak - current) / peak
         if drawdown >= self.max_dd:
             self.is_tripped = True
+            self._tripped_at = time.time()
             self._save_state()
             logger.critical(f"CIRCUIT BREAKER TRIPPED! Drawdown {drawdown*100:.2f}% exceeded {self.max_dd*100:.2f}% limit.")
             return True
@@ -157,7 +169,8 @@ class TradeExecutionPipeline:
                         target_price=decision.price,
                         max_slippage_percent=0.01,
                         hmm_market_regime_zt=decision.market_regime,
-                        timestamp_ms=int(time.time() * 1000)
+                        timestamp_ms=int(time.time() * 1000),
+                        trade_amount=adjusted_amount,
                     )
                     
                     # 3. Request Signing & Execution securely

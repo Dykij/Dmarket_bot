@@ -34,6 +34,7 @@ notifier silently no-ops.
 
 from __future__ import annotations
 
+import html
 import logging
 import os
 import time
@@ -279,9 +280,10 @@ class _TelegramNotifier:
     ) -> bool:
         """Alert: we just bought something."""
         margin = ((expected_sell_usd - price_usd) / price_usd * 100) if price_usd > 0 else 0
+        safe_title = html.escape(str(title))
         text = (
             f"🟢 <b>BOUGHT</b>\n"
-            f"<code>{title}</code>\n"
+            f"<code>{safe_title}</code>\n"
             f"Buy: ${price_usd:.2f} → Sell target: ${expected_sell_usd:.2f} "
             f"(<b>{margin:+.1f}%</b>)\n"
             f"Strategy: {strategy}"
@@ -297,9 +299,10 @@ class _TelegramNotifier:
     ) -> bool:
         """Alert: an item was sold."""
         emoji = "🟢" if profit_usd >= 0 else "🔴"
+        safe_title = html.escape(str(title))
         text = (
             f"{emoji} <b>SOLD</b>\n"
-            f"<code>{title}</code>\n"
+            f"<code>{safe_title}</code>\n"
             f"Buy: ${buy_price_usd:.2f} → Sell: ${sell_price_usd:.2f}\n"
             f"PnL: <b>${profit_usd:+.2f}</b>"
         )
@@ -336,9 +339,10 @@ class _TelegramNotifier:
 
     async def circuit_open(self, name: str, cooldown_s: float) -> bool:
         """Alert: a circuit breaker tripped."""
+        safe_name = html.escape(str(name))
         return await self._send_raw(
             f"⛔ <b>CIRCUIT BREAKER</b>\n"
-            f"<code>{name}</code> is OPEN\n"
+            f"<code>{safe_name}</code> is OPEN\n"
             f"Cooldown: {cooldown_s:.0f}s",
             severity="warning",
         )

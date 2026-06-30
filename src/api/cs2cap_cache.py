@@ -157,8 +157,10 @@ class CS2CapCache:
         # for actual price lookups.
         # Override with CS2CAP_CATALOG_WARMUP_ON_START=1 if your strategy
         # relies on get_item_id().
-        if os.getenv("CS2CAP_CATALOG_WARMUP_ON_START", "0").lower() in ("1", "true", "yes"):
-            asyncio.create_task(self._warm_catalog_bg())
+        if Config.CS2CAP_CATALOG_WARMUP_ON_START:
+            self._catalog_warmup_task = asyncio.create_task(
+                self._warm_catalog_bg(), name="cs2cap-catalog-warmup"
+            )
         else:
             logger.info(
                 "[CS2CapCache] Catalog warmup SKIPPED (default) to save ~380 "
@@ -218,6 +220,14 @@ class CS2CapCache:
             except (asyncio.CancelledError, Exception):
                 pass
             self._refresh_task = None
+        # Also cancel catalog warmup if it's still running
+        if hasattr(self, '_catalog_warmup_task') and self._catalog_warmup_task is not None:
+            self._catalog_warmup_task.cancel()
+            try:
+                await self._catalog_warmup_task
+            except (asyncio.CancelledError, Exception):
+                pass
+            self._catalog_warmup_task = None
         logger.info("[CS2CapCache] Stopped")
 
     async def _refresh_loop(self) -> None:
@@ -307,7 +317,16 @@ class CS2CapCache:
         try:
             asks_task = self._oracle.get_prices_batch(top_titles)
             bids_task = self._oracle.get_bids_batch(top_titles)
-            asks, bids = await asyncio.gather(asks_task, bids_task)
+            asks_result, bids_result = await asyncio.gather(
+                asks_task, bids_task, return_exceptions=True
+            )
+            if isinstance(asks_result, Exception) or isinstance(bids_result, Exception):
+                self._error_count += 1
+                err = asks_result if isinstance(asks_result, Exception) else bids_result
+                self._last_error = f"batch: {err}"
+                logger.warning(f"[CS2CapCache] CS2Cap batch failed: {err}", exc_info=True)
+                return
+            asks, bids = asks_result, bids_result
         except Exception as e:
             self._error_count += 1
             self._last_error = f"batch: {e}"

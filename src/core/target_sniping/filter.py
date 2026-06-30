@@ -188,10 +188,10 @@ class _FilterMixin:
 
         # --- Strategy A: bid-ask spread analysis (needed by cross-market threshold) ---
         agg = agg_prices.get(title, {})
-        best_bid = agg.get("best_bid", 0.0)
-        best_ask = agg.get("best_ask", 0.0)
-        ask_count = agg.get("ask_count", 0)
-        bid_count = agg.get("bid_count", 0)
+        best_bid = float(agg.get("best_bid") or 0.0)
+        best_ask = float(agg.get("best_ask") or 0.0)
+        ask_count = int(agg.get("ask_count") or 0)
+        bid_count = int(agg.get("bid_count") or 0)
 
         # --- v14.0 OBI (Order Book Imbalance) ---
         obi_signal = 0.0
