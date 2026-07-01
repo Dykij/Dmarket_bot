@@ -202,6 +202,20 @@ WARNING: Rust Aggregated Prices parser failed, falling back to Python
 **Причина:** `.so` файл не собран под вашу архитектуру.
 **Решение:** `maturin develop --release` соберёт под текущую платформу.
 
+## NIM Orchestrator (v14.9)
+
+### NIM models not loading
+**Причина:** `NVIDIA_NIM_ENABLED=false` или нет API ключей.
+**Решение:** Установите `NVIDIA_NIM_ENABLED=true` в `.env` и добавьте NVIDIA NIM API ключи.
+
+### Circuit breaker tripped
+**Причина:** Все NIM модели вернули ошибку.
+**Решение:** Circuit breaker автоматически восстановится через `NIM_CB_COOLDOWN_MS` (по умолчанию 60s).
+
+### Stream failover not working
+**Причина:** Модель не поддерживает streaming.
+**Решение:** Проверьте `NIM_MAX_STREAM_RETRIES` и модель в `NIM_ROUTER_STRATEGY`.
+
 ---
 
 ## Исправленные баги (v14.9 changelog)

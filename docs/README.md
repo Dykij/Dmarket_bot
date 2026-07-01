@@ -21,7 +21,7 @@
 
 Бот работает как **Value Detection Scanner + Spread Sniper**:
 
-1. **Value Scanner (Primary):** protosXP
+1. **Value Scanner (Primary):**
    - Поиск редких предметов (float, pattern, stickers) на DMarket
    - Оценка fair_price = cs2cap_ask × rarity_premium
    - Покупка если fair_price > ask × (1 + fee + margin)
@@ -62,6 +62,26 @@ Item Scanned
 - Kelly Sizing
 - Lock-Aware Cap
 - Capital Velocity
+
+## Новые модули (v14.9)
+
+### NIM Orchestrator (`src/nim_orchestrator/`)
+Оркестратор NVIDIA NIM с 121+ бесплатными моделями, circuit breaker и ротацией API ключей.
+
+### Reflexion Layer (`src/reflexion/`)
+State/Snapshot паттерн с rollback через git или content-based backup.
+
+### Workflow Chains (`src/workflow/`)
+Async pipeline с Conductor паттерном для декомпозиции на подагенты.
+
+### Bash Sandbox (`src/sandbox/`)
+Безопасное выполнение shell команд с timeout и фильтрацией.
+
+### CoT Audit (`src/cot_audit/`)
+Форматирование chain-of-thought рассуждений и инкрементальный кэш метаданных.
+
+### Integration Facade (`src/integration/`)
+Единый интерфейс для всех подсистем: `safe_bash()`, `get_cot_markdown()`, `create_snapshot()`.
 
 
 🦅 *DMarket Quantitative Engine | v14.9 | June 2026*
