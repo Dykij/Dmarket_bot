@@ -89,6 +89,63 @@ Classic intra-market arbitrage:
 - Lock-aware cap (≤80%)
 - Capital velocity (min 0.5×/week)
 
+### NIM Orchestrator (v14.9)
+
+**Location:** `src/nim_orchestrator/`
+
+NVIDIA NIM free endpoint pool with transparent model failover:
+- 121+ free NVIDIA NIM models with circuit breaker
+- API key pool rotation and stream-through failover
+- Task groups: heavy-reasoning | fast-coding | code-specialized
+- RoundRobin routing strategy with configurable cooldown
+
+### Reflexion Layer (v14.9)
+
+**Location:** `src/reflexion/`
+
+State/Snapshot pattern with rollback capabilities:
+- Git-based snapshot integration
+- Content-based backup fallback for non-git environments
+- Automatic pruning of old snapshots
+
+### Workflow Chains (v14.9)
+
+**Location:** `src/workflow/`
+
+Async pipeline with Conductor pattern (Parser→Coder→Tester):
+- `Conductor` orchestration with asyncio.Queue + TaskGroup
+- Support for multiple workers per role
+- DAG-based dependency resolution
+- Graceful shutdown with sentinel pattern
+
+### Bash Sandbox (v14.9)
+
+**Location:** `src/sandbox/`
+
+Lightweight sandbox with timeout/security checks:
+- Timeout enforcement (asyncio.wait_for)
+- Allowed/disallowed command lists with regex patterns
+- Max output size limiting
+- Docker isolation helper
+
+### CoT Audit (v14.9)
+
+**Location:** `src/cot_audit/`
+
+Chain-of-thought formatting and incremental metadata cache:
+- Markdown/Numbered/Bullet output styles
+- Incremental scan with mtime+md5 invalidation
+- Automatic .file exclusion
+
+### Integration Facade (v14.9)
+
+**Location:** `src/integration/`
+
+Unified interface for all subsystems:
+- `safe_bash()`, `get_cot_markdown()`, `create_snapshot()`, `execute_with_snapshot()`
+- E2E full cycle testing
+- Load testing (1000 concurrent tasks)
+
 ## Data Flow
 
 ```
@@ -121,6 +178,12 @@ Cycle Start
 | `src/api/cs2cap_cache.py` | In-memory price cache |
 | `src/config.py` | All parameters (v14.9 defaults) |
 | `src/risk/risk_manager.py` | Drawdown, Kelly, etc. |
+| `src/nim_orchestrator/orchestrator.py` | NIM model failover pool |
+| `src/reflexion/core.py` | State snapshots and rollback |
+| `src/workflow/chains.py` | Async pipeline orchestration |
+| `src/sandbox/core.py` | Safe shell execution |
+| `src/cot_audit/core.py` | Chain-of-thought formatting |
+| `src/integration/agent_facade.py` | Unified subsystem interface |
 
 
 🦅 *DMarket Quantitative Engine | v14.9 Architecture*

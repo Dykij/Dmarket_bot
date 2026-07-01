@@ -94,6 +94,15 @@ git checkout -b fix/bug-description
 - Update documentation as needed
 - Ensure all tests pass
 
+### Key Modules (v14.9)
+
+- `src/nim_orchestrator/` — NVIDIA NIM model failover pool
+- `src/reflexion/` — State snapshots and rollback
+- `src/workflow/` — Async pipeline orchestration
+- `src/sandbox/` — Safe shell execution
+- `src/cot_audit/` — Chain-of-thought formatting
+- `src/integration/` — Unified subsystem interface
+
 ### 3. Commit Changes
 
 We follow [Conventional Commits](https://www.conventionalcommits.org/):

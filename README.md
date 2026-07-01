@@ -140,6 +140,27 @@ src/
 │   ├── pricing.py                 # Float/pattern/sticker premium
 │   └── resale.py                  # Auto-resale logic
 │
+├── nim_orchestrator/              # ⭐ NEW v14.9: NVIDIA NIM pool
+│   ├── orchestrator.py            # Model failover & routing
+│   ├── pool.py                    # API key rotation
+│   ├── router.py                  # RoundRobin strategy
+│   └── stream.py                  # Stream-through failover
+│
+├── reflexion/                     # ⭐ NEW v14.9: State snapshots
+│   └── core.py                    # Git-based rollback
+│
+├── workflow/                      # ⭐ NEW v14.9: Async pipelines
+│   └── chains.py                  # Conductor pattern
+│
+├── sandbox/                       # ⭐ NEW v14.9: Shell execution
+│   └── core.py                    # Timeout & security checks
+│
+├── cot_audit/                     # ⭐ NEW v14.9: CoT formatting
+│   └── core.py                    # Markdown/numbered styles
+│
+├── integration/                   # ⭐ NEW v14.9: Unified facade
+│   └── agent_facade.py            # safe_bash(), create_snapshot()
+│
 ├── risk/                          # Risk management
 │   ├── risk_manager.py            # Drawdown, Kelly, etc.
 │   ├── pump_detector.py           # FOMO spike detection
