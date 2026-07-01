@@ -96,7 +96,6 @@ git checkout -b fix/bug-description
 
 ### Key Modules (v14.9)
 
-- `src/nim_orchestrator/` — NVIDIA NIM model failover pool
 - `src/reflexion/` — State snapshots and rollback
 - `src/workflow/` — Async pipeline orchestration
 - `src/sandbox/` — Safe shell execution
