@@ -1,5 +1,6 @@
 # Ignore secrets and transient data
 .env
+.env.backup*
 .venv/
 venv/
 __pycache__/
