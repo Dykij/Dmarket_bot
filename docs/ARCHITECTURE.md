@@ -89,16 +89,6 @@ Classic intra-market arbitrage:
 - Lock-aware cap (≤80%)
 - Capital velocity (min 0.5×/week)
 
-### NIM Orchestrator (v14.9)
-
-**Location:** `src/nim_orchestrator/`
-
-NVIDIA NIM free endpoint pool with transparent model failover:
-- 121+ free NVIDIA NIM models with circuit breaker
-- API key pool rotation and stream-through failover
-- Task groups: heavy-reasoning | fast-coding | code-specialized
-- RoundRobin routing strategy with configurable cooldown
-
 ### Reflexion Layer (v14.9)
 
 **Location:** `src/reflexion/`
@@ -178,7 +168,6 @@ Cycle Start
 | `src/api/cs2cap_cache.py` | In-memory price cache |
 | `src/config.py` | All parameters (v14.9 defaults) |
 | `src/risk/risk_manager.py` | Drawdown, Kelly, etc. |
-| `src/nim_orchestrator/orchestrator.py` | NIM model failover pool |
 | `src/reflexion/core.py` | State snapshots and rollback |
 | `src/workflow/chains.py` | Async pipeline orchestration |
 | `src/sandbox/core.py` | Safe shell execution |

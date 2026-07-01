@@ -298,26 +298,4 @@ class Config:
     DRAWDOWN_PENALTY_WEIGHT = Decimal("0.5")
     OBJECTIVE_FUNCTION = "sharpe_adjusted"
 
-    # ====================================================================
-    # NIM Orchestrator — NVIDIA NIM Free Endpoint Pool (v1.1)
-    # ====================================================================
-    # The orchestrator provides transparent model failover across 121+
-    # free NVIDIA NIM models with circuit breaker, API key pool rotation,
-    # and stream-through failover. See src/nim_orchestrator/
-    # Task groups: heavy-reasoning | fast-coding | code-specialized
-    NIM_ENABLED = os.getenv("NVIDIA_NIM_ENABLED", "true").lower() == "true"
-    NIM_BASE_URL = os.getenv("NVIDIA_NIM_BASE_URL", "https://integrate.api.nvidia.com/v1")
-    NIM_REQUEST_TIMEOUT_MS = int(os.getenv("NIM_REQUEST_TIMEOUT_MS", "120000"))
-    NIM_DEFAULT_TIMEOUT = float(os.getenv("NIM_DEFAULT_TIMEOUT", str(NIM_REQUEST_TIMEOUT_MS / 1000.0)))
-    NIM_MAX_RETRIES = int(os.getenv("NIM_MAX_RETRIES", "4"))
-    NIM_MAX_STREAM_RETRIES = int(os.getenv("NIM_MAX_STREAM_RETRIES", "2"))
-    NIM_ROUTER_STRATEGY = os.getenv("NIM_ROUTER_STRATEGY", "RoundRobin")
-    NIM_CB_THRESHOLD = int(os.getenv("NIM_CB_THRESHOLD", "3"))
-    NIM_CB_COOLDOWN_MS = int(os.getenv("NIM_CIRCUIT_BREAKER_COOLDOWN_MS", "60000"))
-    NIM_CB_COOLDOWN_BASE = float(os.getenv("NIM_CB_COOLDOWN_BASE", str(NIM_CB_COOLDOWN_MS / 1000.0)))
-    NIM_CB_COOLDOWN_MAX = float(os.getenv("NIM_CB_COOLDOWN_MAX", "300.0"))
-    NIM_CB_JITTER_PCT = float(os.getenv("NIM_CB_JITTER_PCT", "0.2"))
-    NIM_CB_HALF_OPEN_TIMEOUT = float(os.getenv("NIM_CB_HALF_OPEN_TIMEOUT", "60.0"))
-    NIM_PROBE_INTERVAL = float(os.getenv("NIM_PROBE_INTERVAL", "30.0"))
-    NIM_RL_WARN = int(os.getenv("NIM_RL_WARN", "5"))
-    NIM_PREEMPTIVE_SLOWDOWN = float(os.getenv("NIM_PREEMPTIVE_SLOWDOWN", "5.0"))
+

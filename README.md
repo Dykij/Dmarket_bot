@@ -140,12 +140,6 @@ src/
 │   ├── pricing.py                 # Float/pattern/sticker premium
 │   └── resale.py                  # Auto-resale logic
 │
-├── nim_orchestrator/              # ⭐ NEW v14.9: NVIDIA NIM pool
-│   ├── orchestrator.py            # Model failover & routing
-│   ├── pool.py                    # API key rotation
-│   ├── router.py                  # RoundRobin strategy
-│   └── stream.py                  # Stream-through failover
-│
 ├── reflexion/                     # ⭐ NEW v14.9: State snapshots
 │   └── core.py                    # Git-based rollback
 │

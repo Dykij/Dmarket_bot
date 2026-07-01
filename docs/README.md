@@ -65,9 +65,6 @@ Item Scanned
 
 ## Новые модули (v14.9)
 
-### NIM Orchestrator (`src/nim_orchestrator/`)
-Оркестратор NVIDIA NIM с 121+ бесплатными моделями, circuit breaker и ротацией API ключей.
-
 ### Reflexion Layer (`src/reflexion/`)
 State/Snapshot паттерн с rollback через git или content-based backup.
 
