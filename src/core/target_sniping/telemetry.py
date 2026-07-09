@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any, Optional
+from typing import Any
 
 from src.telegram.notifier import notifier
 
@@ -20,7 +20,7 @@ class _TelemetryMixin:
     """Health-state, equity milestones, and per-cycle diagnostics."""
 
     client: Any
-    cs2cap_cache: Optional[Any]
+    multi_source_oracle: Any | None
     deep_scan_counter: int
     risk: Any
     pump_detector: Any
@@ -50,12 +50,9 @@ class _TelemetryMixin:
                     blacklist_size=pd_stats["active_blacklist_size"],
                     total_detections=pd_stats["total_detections"],
                 )
-            if self.cs2cap_cache is not None:
-                cache_stats = self.cs2cap_cache.stats()
-                used = cache_stats.get("monthly_used", 0)
-                limit = cache_stats.get("monthly_limit", 50000)
-                quota_pct = (used / limit * 100.0) if limit > 0 else None
-                health_state.set_cs2cap_quota_pct(quota_pct)
+            if self.multi_source_oracle is not None:
+                self.multi_source_oracle.get_stats()
+                health_state.set_cs2cap_quota_pct(0)  # No quota for free oracle
         except Exception as e:
             logger.debug(f"[health_state] update failed: {e}")
 
@@ -75,25 +72,23 @@ class _TelemetryMixin:
             )
 
     def _log_cycle_diag(self, game_id: str, candidates_len: int, buys_len: int) -> None:
-        """v12.9 + v12.4: Sanitized cycle log + periodic CS2Cap/breaker diagnostic."""
+        """v15.0: Sanitized cycle log + periodic MultiSource diagnostic."""
         logger.debug(
-            f"[v12.9 CYCLE] game={game_id} cycle={self.deep_scan_counter} "
+            f"[v15.0 CYCLE] game={game_id} cycle={self.deep_scan_counter} "
             f"candidates={candidates_len} buys={buys_len}"
         )
 
         if self.deep_scan_counter % 10 == 0:
-            cache_stats = (
-                self.cs2cap_cache.stats()
-                if self.cs2cap_cache is not None
-                else {"ask_count": 0, "bid_count": 0, "is_stale": True}
+            oracle_stats = (
+                self.multi_source_oracle.get_stats()
+                if self.multi_source_oracle is not None
+                else {"cached_refs": 0, "marketcsgo": {"items_cached": 0}}
             )
             cb_stats = self.client.circuit_breaker_status()
             logger.info(
-                f"[v12.4 DIAG] CS2Cap cache: {cache_stats['ask_count']} asks, "
-                f"{cache_stats['bid_count']} bids, "
-                f"stale={cache_stats['is_stale']}, "
-                f"age={cache_stats.get('age_seconds')}s, "
-                f"refreshes={cache_stats['refresh_count']} | "
+                f"[v15.0 DIAG] MultiSource: {oracle_stats.get('cached_refs', 0)} refs, "
+                f"MCsgo={oracle_stats.get('marketcsgo', {}).get('items_cached', 0)} items, "
+                f"Waxpeer={oracle_stats.get('waxpeer', {}).get('items_cached', 0)} items | "
                 f"CB: state={cb_stats['state']}, "
                 f"opens={cb_stats['total_opens']}, "
                 f"fails={cb_stats['consecutive_failures']}"

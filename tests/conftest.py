@@ -368,6 +368,29 @@ def mock_async_client() -> AsyncMock:
     return client
 
 
+@pytest.fixture(autouse=True)
+def _reset_config_singleton() -> Generator[None, None, None]:
+    """Reset the global Config singleton before each test.
+
+    Prevents state leakage when tests monkeypatch env vars — the
+    singleton is re-initialized from the (possibly patched) environment
+    before every test and restored afterwards.
+    """
+    try:
+        from src.config import reset_config
+
+        reset_config()
+    except Exception:
+        pass  # Config not yet importable (early collection phase)
+    yield
+    try:
+        from src.config import reset_config
+
+        reset_config()
+    except Exception:
+        pass
+
+
 @pytest.fixture()
 def mock_sentry() -> Generator[MagicMock, None, None]:
     """Фикстура для мокирования Sentry SDK в тестах.

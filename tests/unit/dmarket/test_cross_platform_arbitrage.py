@@ -44,7 +44,7 @@ class TestCrossPlatformArbitrageConstants:
         from src.dmarket.cross_platform_arbitrage import CS2_GAME_ID
 
         assert isinstance(CS2_GAME_ID, str)
-        assert len(CS2_GAME_ID) == 36  # UUID format
+        assert len(CS2_GAME_ID) >= 4  # DMarket game ID (e.g. "a8db" or full UUID)
 
     def test_default_min_profit_usd(self) -> None:
         """Test DEFAULT_MIN_PROFIT_USD is $0.30."""

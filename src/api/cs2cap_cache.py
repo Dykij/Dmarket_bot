@@ -3,7 +3,7 @@ cs2cap_cache.py — v12.4 in-memory CS2Cap price cache.
 
 Goal: zero CS2Cap HTTP calls during the hot path (run_cycle).
 A background task refreshes the top-N most-traded titles every
-CS2CAP_CACHE_TTL_SECONDS (default 5 min). The hot path only does
+ORACLE_CACHE_TTL_SECONDS (default 5 min). The hot path only does
 dict lookups (sub-ms).
 
 Architecture:
@@ -29,10 +29,10 @@ snapshot), but the v12.3 loop reads from the cache exclusively.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
-import os
 import time
-from typing import Any, Dict, Optional
+from typing import Any
 
 from src.api.cs2cap_oracle import BidsSnapshot, CS2CapOracle, PriceSnapshot
 from src.config import Config
@@ -64,8 +64,8 @@ class CS2CapCache:
         self._game_id = game_id
 
         # In-memory stores (the hot path)
-        self._ask_cache: Dict[str, PriceSnapshot] = {}
-        self._bid_cache: Dict[str, BidsSnapshot] = {}
+        self._ask_cache: dict[str, PriceSnapshot] = {}
+        self._bid_cache: dict[str, BidsSnapshot] = {}
 
         # Bookkeeping
         self._last_refresh_ts: float = 0.0
@@ -79,20 +79,20 @@ class CS2CapCache:
         self._last_quota_warning_ts: float = 0.0
 
         # Background task handle
-        self._refresh_task: Optional[asyncio.Task[None]] = None
-        self._stop_event: Optional[asyncio.Event] = None
+        self._refresh_task: asyncio.Task[None] | None = None
+        self._stop_event: asyncio.Event | None = None
 
     # ----------------------------------------------------------------
     # Public API (hot path — must be fast)
     # ----------------------------------------------------------------
-    def get_ask(self, hash_name: str) -> Optional[PriceSnapshot]:
+    def get_ask(self, hash_name: str) -> PriceSnapshot | None:
         """Sub-ms dict lookup. Returns None if not in cache or stale."""
         snap = self._ask_cache.get(hash_name)
         if snap is None:
             return None
         return snap
 
-    def get_bid(self, hash_name: str) -> Optional[BidsSnapshot]:
+    def get_bid(self, hash_name: str) -> BidsSnapshot | None:
         """Sub-ms dict lookup for bids."""
         return self._bid_cache.get(hash_name)
 
@@ -107,14 +107,14 @@ class CS2CapCache:
         return snap.max_bid if snap and snap.has_data else 0.0
 
     def is_stale(self) -> bool:
-        """True if cache is older than CS2CAP_CACHE_TTL_SECONDS."""
+        """True if cache is older than ORACLE_CACHE_TTL_SECONDS."""
         if self._last_refresh_ts == 0.0:
             return True
-        return (time.time() - self._last_refresh_ts) > Config.CS2CAP_CACHE_TTL_SECONDS
+        return (time.time() - self._last_refresh_ts) > Config.ORACLE_CACHE_TTL_SECONDS
 
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Diagnostic snapshot for /health and logs."""
-        rl: Dict[str, Any] = {}
+        rl: dict[str, Any] = {}
         try:
             rl = self._oracle.rate_limit_state()
         except Exception:
@@ -155,20 +155,20 @@ class CS2CapCache:
         # the per-cycle hot path uses aggregated_prices (DMarket) + prices/batch
         # (CS2Cap) and doesn't need the catalog. Skipping warmup saves quota
         # for actual price lookups.
-        # Override with CS2CAP_CATALOG_WARMUP_ON_START=1 if your strategy
+        # Override with ORACLE_CACHE_REFRESH_ON_START=1 if your strategy
         # relies on get_item_id().
-        if Config.CS2CAP_CATALOG_WARMUP_ON_START:
+        if Config.ORACLE_CACHE_REFRESH_ON_START:
             self._catalog_warmup_task = asyncio.create_task(
                 self._warm_catalog_bg(), name="cs2cap-catalog-warmup"
             )
         else:
             logger.info(
                 "[CS2CapCache] Catalog warmup SKIPPED (default) to save ~380 "
-                "CS2Cap calls/restart. Set CS2CAP_CATALOG_WARMUP_ON_START=1 "
+                "CS2Cap calls/restart. Set ORACLE_CACHE_REFRESH_ON_START=1 "
                 "to re-enable."
             )
 
-        if Config.CS2CAP_CACHE_REFRESH_ON_START:
+        if Config.ORACLE_CACHE_REFRESH_ON_START:
             try:
                 await self.refresh_now()
             except Exception as e:
@@ -178,7 +178,7 @@ class CS2CapCache:
         )
         logger.info(
             f"[CS2CapCache] Started background refresh "
-            f"(TTL={Config.CS2CAP_CACHE_TTL_SECONDS}s, top-N={Config.CS2CAP_CACHE_REFRESH_TOP_N})"
+            f"(TTL={Config.ORACLE_CACHE_TTL_SECONDS}s, top-N={Config.ORACLE_CACHE_REFRESH_TOP_N})"
         )
 
     async def _warm_catalog_bg(self) -> None:
@@ -215,18 +215,14 @@ class CS2CapCache:
             self._stop_event.set()
         if self._refresh_task is not None:
             self._refresh_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError, Exception):
                 await self._refresh_task
-            except (asyncio.CancelledError, Exception):
-                pass
             self._refresh_task = None
         # Also cancel catalog warmup if it's still running
         if hasattr(self, '_catalog_warmup_task') and self._catalog_warmup_task is not None:
             self._catalog_warmup_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError, Exception):
                 await self._catalog_warmup_task
-            except (asyncio.CancelledError, Exception):
-                pass
             self._catalog_warmup_task = None
         logger.info("[CS2CapCache] Stopped")
 
@@ -239,7 +235,7 @@ class CS2CapCache:
                 try:
                     await asyncio.wait_for(
                         self._stop_event.wait(),
-                        timeout=Config.CS2CAP_CACHE_TTL_SECONDS,
+                        timeout=Config.ORACLE_CACHE_TTL_SECONDS,
                     )
                     # Stop event set → exit
                     return
@@ -308,7 +304,7 @@ class CS2CapCache:
                 + agg_prices[t].get("bid_count", 0)
             ),
             reverse=True,
-        )[: Config.CS2CAP_CACHE_REFRESH_TOP_N]
+        )[: Config.ORACLE_CACHE_REFRESH_TOP_N]
 
         if not top_titles:
             return
@@ -366,7 +362,7 @@ class CS2CapCache:
             f"duration={self._last_refresh_duration_s:.2f}s"
         )
 
-    def _check_rate_limit_guard(self) -> Dict[str, Any]:
+    def _check_rate_limit_guard(self) -> dict[str, Any]:
         """
         O1: Pre/post-flight rate-limit check.
 

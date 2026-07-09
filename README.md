@@ -1,10 +1,10 @@
-# 🦅 DMarket Quantitative Engine v14.9
+# 🦅 DMarket Quantitative Engine v14.10
 
-**Algorithmic CS2 skin trading bot for DMarket marketplace + CS2Cap multi-market oracle (41 marketplaces).**
+**Algorithmic CS2 skin trading bot for DMarket marketplace + Multi-Source Oracle (4 external APIs).**
 
 Автономная торговая система на строгих количественных алгоритмах. Стратегия: **Value Detection Scanner** + intra-market spread sniping + cross-market arbitrage — с мгновенной капитализацией спреда (TRADE_LOCK_HOURS=0).
 
-**Ключевое отличие v14.9:** Бот теперь использует **dual-signal pipeline** — Value Scanner (primary) и Spread Sniper (secondary). Это позволяет находить недооцененные предметы по rarity (float, pattern, sticker) даже без естественного bid/ask спреда.
+**Ключевое отличие v14.10:** Async-safe SQLite (все DB-операции вынесены из event loop в thread pool), исправлены dead validators, устранены undefined name баги, Config singleton test isolation через `reset_config()`.
 
 ---
 
@@ -251,7 +251,33 @@ TELEGRAM_BOT_TOKEN=your_bot_token
 | **Risk manager** | Drawdown, Kelly, pump detector |
 | **Security** | Fernet vault, log redaction |
 | **Docker** | Multi-stage build (x86_64 + ARM64) |
-| **Tests** | 289 tests (unit + bottleneck + sandbox) |
+| **Tests** | 817+ tests (unit + integration + sandbox) |
+
+---
+
+## 📋 Changelog (v14.10)
+
+### Async SQLite Safety
+- Все синхронные `sqlite3.execute()` вызовы в async контексте обёрнуты в `await price_db.run_in_thread()`
+- Bounded `ThreadPoolExecutor(max_workers=2)` для DB-операций
+- Затронуты: execution.py, resale_prod.py, core.py, daily_briefing.py, self_reflection.py, bot.py
+
+### Bug Fixes
+- `config.py`: Dead validators `validate_max_price` и `validate_night_end` теперь реально проверяют значения
+- `filter.py`: `is_sandbox` (undefined name) → `Config.DRY_RUN`
+- `scanner.py`: `Optional[str]` → `str | None` (missing import)
+- `signals.py`: spread component clamp — не выходит за [0, 1]
+- `cs2cap_cache.py`: CS2CAP_* → ORACLE_* миграция Config атрибутов
+
+### Test Infrastructure
+- `conftest.py`: autouse `_reset_config_singleton` fixture для изоляции тестов
+- `config.py`: `reset_config()` функция для переинициализации singleton
+
+### Code Quality
+- 8 unused imports удалены (ruff F401)
+- 4 unused variables исправлены (F841)
+- 8 unsorted imports исправлены (I001)
+- `_secure_zero` документирован честно (не обнуляет память)
 
 ---
 
@@ -260,5 +286,5 @@ TELEGRAM_BOT_TOKEN=your_bot_token
 Экспериментальное торговое ПО. Рынок CS2 скинов волатилен. Никакая стратегия не гарантирует прибыль. Используйте на свой страх и риск. **Начинайте с DRY_RUN=true** и малого капитала ($20-50).
 
 ```
-🦅 DMarket Quantitative Engine | v14.9 | June 2026
+🦅 DMarket Quantitative Engine | v14.10 | July 2026
 ```

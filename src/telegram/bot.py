@@ -39,6 +39,7 @@ control_bot/ fully replaces it.
 # All functionality moved to src/telegram/control_bot/.
 # Importing this module at runtime raises an error to prevent accidental use.
 import os as _os
+
 if _os.environ.get("ALLOW_LEGACY_TELEGRAM_BOT", "").lower() not in ("1", "true", "yes"):
     raise RuntimeError(
         "src/telegram/bot.py is DEPRECATED. "
@@ -50,27 +51,29 @@ import asyncio
 import logging
 import os
 import sys
-from typing import Optional
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from aiogram import Bot, Dispatcher, Router, types, F
+from aiogram import Bot, Dispatcher, F, Router, types
 from aiogram.filters import Command
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
 from dotenv import load_dotenv
 
-from src.config import Config
+from src.analytics.self_reflection import self_reflection
 from src.api.dmarket_api_client import DMarketAPIClient
 from src.api.oracle_factory import OracleFactory
-from src.risk.price_validator import validate_arbitrage_profit, PriceValidationError
-from src.db.price_history import price_db
+from src.config import Config
 from src.core.resale_pipeline import ResalePipeline
+from src.db.price_history import price_db
 from src.inventory_manager import InventoryManager
-from src.analytics.self_reflection import self_reflection
+from src.risk.price_validator import PriceValidationError, validate_arbitrage_profit
 
 load_dotenv()
 
+import contextlib
+
 from src.utils.logging_setup import configure_logging
+
 configure_logging(component="bot_legacy")
 logger = logging.getLogger("TelegramControl")
 
@@ -115,7 +118,7 @@ dp = Dispatcher()
 router = Router()
 dp.include_router(router)
 
-trading_task: Optional[asyncio.Task] = None
+trading_task: asyncio.Task | None = None
 is_running = False
 
 # --- Keyboards ---
@@ -192,10 +195,8 @@ async def btn_stop(message: types.Message):
     is_running = False
     if trading_task:
         trading_task.cancel()
-        try:
+        with contextlib.suppress(asyncio.CancelledError):
             await trading_task
-        except asyncio.CancelledError:
-            pass
 
     await message.answer("Bot STOPPED. Orders remain active.")
 
@@ -226,10 +227,18 @@ async def btn_status(message: types.Message):
     oracle = OracleFactory.get_cross_market_oracle(Config.GAME_ID)
     oracle_type = "CS2Cap" if oracle else "CSFloat"
 
-    daily_trades = price_db.state_conn.execute(
+    max_ts_row = await price_db.run_in_thread(
+        lambda: price_db.state_conn.execute(
+            "SELECT MAX(created_at) - 86400 FROM active_targets"
+        ).fetchone()
+    )
+    max_ts = max_ts_row[0] if max_ts_row and max_ts_row[0] else 0
+    daily_trades_row = await price_db.run_in_thread(
+        price_db.state_conn.execute,
         "SELECT COUNT(*) FROM active_targets WHERE created_at > ?",
-        (price_db.state_conn.execute("SELECT MAX(created_at) - 86400 FROM active_targets").fetchone()[0] or 0,),
-    ).fetchone()[0] or 0
+        (max_ts,),
+    )
+    daily_trades = (await price_db.run_in_thread(daily_trades_row.fetchone))[0] or 0
 
     await message.answer(
         f"Status: {status}\n"

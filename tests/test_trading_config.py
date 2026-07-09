@@ -88,19 +88,19 @@ class TestLiquidityMetrics:
 
 
 class TestCS2CapBatchSettings:
-    """CS2Cap batch and cache parameters."""
+    """Oracle batch and cache parameters (renamed from CS2Cap in v14.9)."""
 
     def test_cs2cap_batch_size_positive(self):
-        assert Config.CS2CAP_BATCH_SIZE > 0
+        assert Config.ORACLE_BATCH_SIZE > 0
 
     def test_cs2cap_top_k_validate_positive(self):
-        assert Config.CS2CAP_TOP_K_VALIDATE > 0
+        assert Config.ORACLE_TOP_K_VALIDATE > 0
 
     def test_cs2cap_cache_ttl_positive(self):
-        assert Config.CS2CAP_CACHE_TTL_SECONDS > 0
+        assert Config.ORACLE_CACHE_TTL_SECONDS > 0
 
     def test_cs2cap_cache_refresh_top_n_positive(self):
-        assert Config.CS2CAP_CACHE_REFRESH_TOP_N > 0
+        assert Config.ORACLE_CACHE_REFRESH_TOP_N > 0
 
     def test_agg_scan_top_n_positive(self):
         assert Config.AGG_SCAN_TOP_N > 0

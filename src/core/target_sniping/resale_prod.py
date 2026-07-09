@@ -10,7 +10,7 @@ import asyncio
 import logging
 import math
 import time
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 from src.config import Config
 from src.db.price_history import price_db
@@ -31,10 +31,10 @@ class _ResaleProdMixin:
         local virtual_inventory with its real dm_item_id. Returns count
         of newly linked items.
         """
-        from src.core.target_sniping.resale import INVENTORY_SYNC_MAX_PAGES
+        from src.core.target_sniping.resale_constants import INVENTORY_SYNC_MAX_PAGES
 
         new_count = 0
-        cursor: Optional[str] = None
+        cursor: str | None = None
         for _ in range(INVENTORY_SYNC_MAX_PAGES):
             try:
                 resp = await self.client.get_user_inventory(
@@ -59,19 +59,25 @@ class _ResaleProdMixin:
                 # avg price from the most recent buy cycle as a proxy, or
                 # fall back to 0.0 (PnL will be wrong but listing still works).
                 inferred_price = 0.0
-                avg_row = price_db.state_conn.execute(
+                avg_row = await price_db.run_in_thread(
+                    price_db.state_conn.execute,
                     "SELECT AVG(buy_price) as p FROM virtual_inventory "
                     "WHERE hash_name = ? AND status IN ('sold','listed')",
                     (title,),
-                ).fetchone()
+                )
+                avg_row = await price_db.run_in_thread(avg_row.fetchone)
                 if avg_row and avg_row["p"]:
                     inferred_price = float(avg_row["p"])
-                new_id = price_db.state_conn.execute(
+                cursor_obj = await price_db.run_in_thread(
+                    price_db.state_conn.execute,
                     "INSERT INTO virtual_inventory "
                     "(hash_name, buy_price, status, acquired_at, unlock_at) "
                     "VALUES (?, ?, 'idle', ?, ?)",
                     (title, inferred_price, time.time(), time.time()),
-                ).lastrowid
+                )
+                new_id = await price_db.run_in_thread(
+                    lambda c: c.lastrowid, cursor_obj
+                )
                 price_db.attach_dm_item_id(int(new_id), dm_item_id)
                 new_count += 1
             cursor = resp.get("cursor")
@@ -87,7 +93,7 @@ class _ResaleProdMixin:
 
         v13.1: Handles Trade Protection funds hold and rollback refunds.
         """
-        from src.core.target_sniping.resale import SELL_FEE_RATE
+        from src.core.target_sniping.resale_constants import SELL_FEE_RATE
 
         listed = price_db.get_virtual_inventory(status="listed")
         if not listed:
@@ -102,7 +108,7 @@ class _ResaleProdMixin:
             return 0
         closed_list = closed_resp.get("objects", [])
         # v13.1: Keep full closed record dicts keyed by offerId
-        closed_by_id: Dict[str, Dict[str, Any]] = {
+        closed_by_id: dict[str, dict[str, Any]] = {
             o.get("offerId", ""): o for o in closed_list
         }
         for it in listed:
@@ -181,7 +187,7 @@ class _ResaleProdMixin:
         """
         return 0
 
-    async def _prod_list_unlocked(self, items: List[Any], game_id: str) -> None:
+    async def _prod_list_unlocked(self, items: list[Any], game_id: str) -> None:
         """
         PROD: Batch-list unlocked items on DMarket.
 
@@ -193,7 +199,7 @@ class _ResaleProdMixin:
         5. Call create_sell_offers_batch in chunks of LIST_BATCH_SIZE
         6. Track success/failure per item
         """
-        from src.core.target_sniping.resale import (
+        from src.core.target_sniping.resale_constants import (
             LIST_BATCH_SIZE,
             LIST_MIN_MARGIN_PCT,
             LIST_PRICE_DISCOUNT,
@@ -219,7 +225,7 @@ class _ResaleProdMixin:
             except (IndexError, KeyError):
                 return default
 
-        listable: List[Any] = []
+        listable: list[Any] = []
         for it in items:
             dm_id = _row_get(it, "dm_item_id", "")
             if not dm_id:
@@ -236,7 +242,7 @@ class _ResaleProdMixin:
             return
 
         # Get CS2Cap asks via cache (sub-ms, no HTTP)
-        asks: Dict[str, float] = {}
+        asks: dict[str, float] = {}
         if self.cs2cap_cache is not None:
             for it in listable:
                 title = it["hash_name"]
@@ -257,7 +263,10 @@ class _ResaleProdMixin:
                                 mid_price = (snap.min_price * bid_total + bid_snap.max_bid * ask_total) / (bid_total + ask_total)
                                 # v14.3 Stoikov Micro-Price — OBI-adjusted
                                 if Config.STOIKOV_MICRO_PRICE_ENABLED:
-                                    from src.analysis.microstructure import stoikov_micro_price, simple_obi
+                                    from src.analysis.microstructure import (
+                                        simple_obi,
+                                        stoikov_micro_price,
+                                    )
                                     spread = bid_snap.max_bid - snap.min_price
                                     if spread > 0:
                                         obi_est = simple_obi(
@@ -273,7 +282,7 @@ class _ResaleProdMixin:
                     asks[title] = snap.min_price
 
         # Build payload: (row_id, dm_item_id, title, list_price, buy_price)
-        payloads: List[Tuple[int, str, str, float, float]] = []
+        payloads: list[tuple[int, str, str, float, float]] = []
         for it in listable:
             title = it["hash_name"]
             buy_price = float(it["buy_price"] or 0)
@@ -294,7 +303,7 @@ class _ResaleProdMixin:
                     mid_price = cs_price
                     if bid_snap and bid_snap.has_data:
                         mid_price = (ask_snap.min_price + bid_snap.max_bid) / 2.0
-                    inventory_qty = len(price_db.get_virtual_inventory(
+                    len(price_db.get_virtual_inventory(
                         status="idle", only_unlocked=False,
                     ))
                     same_item = len([
