@@ -25,10 +25,10 @@ Public API:
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
-import time
+from collections.abc import Awaitable, Callable
 from datetime import datetime, timezone
-from typing import Awaitable, Callable, Optional
 
 from src.db.price_history import price_db
 from src.telegram.notifier import notifier
@@ -51,7 +51,7 @@ class DailyBriefingScheduler:
         self,
         risk,  # RiskManager instance
         get_balance: Callable[[], Awaitable[float]],
-        get_equity: Optional[Callable[[float], Awaitable[dict]]] = None,
+        get_equity: Callable[[float], Awaitable[dict]] | None = None,
         hour: int = 0,
         minute: int = 0,
     ) -> None:
@@ -69,9 +69,9 @@ class DailyBriefingScheduler:
         self._get_equity: Callable[[float], Awaitable[dict]] = get_equity or self._default_equity
         self._hour = hour
         self._minute = minute
-        self._task: Optional[asyncio.Task] = None
-        self._stop_event: Optional[asyncio.Event] = None
-        self._last_sent_date: Optional[str] = None
+        self._task: asyncio.Task | None = None
+        self._stop_event: asyncio.Event | None = None
+        self._last_sent_date: str | None = None
         self._startup_sent: bool = False
         self._consecutive_failures: int = 0
 
@@ -91,10 +91,8 @@ class DailyBriefingScheduler:
             self._stop_event.set()
         if self._task is not None:
             self._task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError, Exception):
                 await self._task
-            except (asyncio.CancelledError, Exception):
-                pass
             self._task = None
         logger.info("[Briefing] Scheduler stopped")
 
@@ -167,11 +165,13 @@ class DailyBriefingScheduler:
             risk_state = self._risk.get_state()
             realized_today = getattr(risk_state, 'daily_realized_pnl', -risk_state.daily_loss_usd)
             holdings = equity.get("count", 0) if isinstance(equity, dict) else 0
-            sold_today = price_db.state_conn.execute(
+            sold_today_cur = await price_db.run_in_thread(
+                price_db.state_conn.execute,
                 "SELECT COUNT(*) as c FROM virtual_inventory "
                 "WHERE status='sold' AND sold_at > ?",
                 (self._today_start_ts(),),
-            ).fetchone()["c"]
+            )
+            sold_today = (await price_db.run_in_thread(sold_today_cur.fetchone))["c"]
 
             # 2. Compute delta vs yesterday (if snapshot exists)
             snapshots = price_db.get_equity_snapshots(days=2)

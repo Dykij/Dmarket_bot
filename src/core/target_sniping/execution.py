@@ -8,10 +8,11 @@ Mixed into `SnipingLoop` (see `core.py`).
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
 import os
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from src.config import Config
 from src.db.price_history import price_db
@@ -34,7 +35,7 @@ class _ExecutionMixin:
     async def _execute_instant_buys(
         self,
         *,
-        instant_buys: List[Dict[str, Any]],
+        instant_buys: list[dict[str, Any]],
         current_balance: float,
         game_id: str = "",
     ) -> None:
@@ -67,7 +68,7 @@ class _ExecutionMixin:
         # Uses asyncio.gather for all items instead of sequential loop.
         _MAX_SLIPPAGE_PCT = 5.0
 
-        async def _check_slippage(item_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        async def _check_slippage(item_data: dict[str, Any]) -> dict[str, Any] | None:
             try:
                 title = item_data["title"]
                 expected_price = item_data["base_price"]
@@ -131,13 +132,11 @@ class _ExecutionMixin:
                             f"[RISK] BLOCKED {item_data['title']} @ ${item_data['base_price']:.2f}: "
                             f"{risk_check.reason}"
                         )
-                        try:
+                        with contextlib.suppress(Exception):
                             price_db.record_risk_event(
                                 "pre_trade_block", "warning",
                                 f"{item_data['title']} @ ${item_data['base_price']:.2f}: {risk_check.reason}",
                             )
-                        except Exception:
-                            pass
                         continue
                 pre_checked.append(item_data)
             verified_buys = pre_checked
@@ -155,7 +154,7 @@ class _ExecutionMixin:
         # already taken by another bot. We must check the response body
         # before recording the spend locally.
         successful_titles = set()
-        bought_items: List[Dict[str, Any]] = []  # v12.5: [{itemId, title}, ...]
+        bought_items: list[dict[str, Any]] = []  # v12.5: [{itemId, title}, ...]
         if isinstance(buy_response, dict):
             status = buy_response.get("status", "")
             # v12.5: DMarket's /exchange/v1/market/buy response usually
@@ -275,14 +274,12 @@ class _ExecutionMixin:
                         logger.warning(
                             f"[RISK] BLOCKED {title} @ ${base_price:.2f}: {risk_check.reason}"
                         )
-                        try:
+                        with contextlib.suppress(Exception):
                             price_db.record_risk_event(
                                 "pre_trade_block",
                                 "warning",
                                 f"{title} @ ${base_price:.2f}: {risk_check.reason}",
                             )
-                        except Exception:
-                            pass
                         continue
                     if risk_check.adjusted_size_usd is not None and risk_check.adjusted_size_usd < base_price:
                         logger.info(
@@ -293,12 +290,14 @@ class _ExecutionMixin:
                 # v12.5: capture the new row_id so we can attach dm_item_id
                 # in production (or leave it empty in DRY).
                 price_db.add_virtual_item(title, base_price, trade_lock_hours=Config.TRADE_LOCK_HOURS, exclusive=is_rare)
-                row = price_db.state_conn.execute(
+                row = await price_db.run_in_thread(
+                    price_db.state_conn.execute,
                     "SELECT id FROM virtual_inventory "
                     "WHERE hash_name = ? AND status = 'idle' "
                     "ORDER BY id DESC LIMIT 1",
                     (title,),
-                ).fetchone()
+                )
+                row = await price_db.run_in_thread(row.fetchone)
                 if row and new_dm_item_id:
                     price_db.attach_dm_item_id(int(row["id"]), new_dm_item_id)
                 if is_rare and row:
@@ -357,13 +356,15 @@ class _ExecutionMixin:
                 if not is_dry and new_dm_item_id:
                     # Find the most recent virtual_inventory row for this
                     # title that has no dm_item_id and attach it.
-                    row = price_db.state_conn.execute(
+                    row = await price_db.run_in_thread(
+                        price_db.state_conn.execute,
                         "SELECT id FROM virtual_inventory "
                         "WHERE hash_name = ? AND status = 'idle' "
                         "AND (dm_item_id IS NULL OR dm_item_id = '') "
                         "ORDER BY id DESC LIMIT 1",
                         (title,),
-                    ).fetchone()
+                    )
+                    row = await price_db.run_in_thread(row.fetchone)
                     if row:
                         price_db.attach_dm_item_id(int(row["id"]), new_dm_item_id)
                 # v14.5: Track trade protection status immediately in PROD

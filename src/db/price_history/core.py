@@ -1,5 +1,5 @@
 """
-core.py — PriceHistoryDB orchestrator (bifurcated SQLite, v8.0).
+core.py — PriceHistoryDB orchestrator (bifurcated SQLite, v14.9).
 
 Splits trading state and historical analysis into two physical databases:
     dmarket_state.db   — (OLTP) Fast transactions: orders, inventory, scan state
@@ -13,14 +13,23 @@ Composes focused mixins for each table group:
     asset_status.py  — asset_status (v12.2 trade_protected, reverted)
     low_fee.py       — low_fee_cache (v12.0 daily refresh)
     pump_blacklist.py — pump_blacklist (v12.7 FOMO protection, persistent)
+
+v14.9 Improvements:
+- Performance PRAGMAs (cache_size, temp_store, mmap_size, synchronous)
+- Periodic PRAGMA optimize
 """
 
 from __future__ import annotations
 
+import asyncio
+import contextlib
 import logging
 import os
 import sqlite3
+from collections.abc import Callable
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from typing import Any
 
 from .asset_status import _AssetStatusMixin
 from .history import _HistoryMixin
@@ -31,6 +40,9 @@ from .state import _StateMixin
 from .targets import _TargetsMixin
 
 logger = logging.getLogger("PriceHistoryDB")
+
+# Thread pool for async SQLite operations — bounded to prevent thread explosion
+_db_executor = ThreadPoolExecutor(max_workers=2, thread_name_prefix="sqlite")
 
 
 class PriceHistoryDB(  # type: ignore[misc]
@@ -67,11 +79,21 @@ class PriceHistoryDB(  # type: ignore[misc]
         # "database is locked" errors in async contexts.
         self.state_conn.execute("PRAGMA journal_mode=WAL")
         self.state_conn.execute("PRAGMA busy_timeout=5000")
+        # v14.9: Performance PRAGMAs
+        self.state_conn.execute("PRAGMA synchronous=NORMAL")  # Balance speed/reliability
+        self.state_conn.execute("PRAGMA cache_size=-64000")   # 64MB cache
+        self.state_conn.execute("PRAGMA temp_store=MEMORY")   # Temp tables in memory
+        self.state_conn.execute("PRAGMA mmap_size=268435456") # 256MB memory-mapped I/O
 
         self.history_conn = sqlite3.connect(str(self.history_path), check_same_thread=False)
         self.history_conn.row_factory = sqlite3.Row
         self.history_conn.execute("PRAGMA journal_mode=WAL")
         self.history_conn.execute("PRAGMA busy_timeout=5000")
+        # v14.9: Performance PRAGMAs
+        self.history_conn.execute("PRAGMA synchronous=NORMAL")
+        self.history_conn.execute("PRAGMA cache_size=-64000")   # 64MB cache
+        self.history_conn.execute("PRAGMA temp_store=MEMORY")
+        self.history_conn.execute("PRAGMA mmap_size=268435456") # 256MB memory-mapped I/O
 
         # v14.1: Hardened file permissions — restrict to owner only
         try:
@@ -81,6 +103,32 @@ class PriceHistoryDB(  # type: ignore[misc]
             pass
 
         self._init_schemas()
+
+    def optimize(self) -> None:
+        """v14.9: Periodic PRAGMA optimize for query planner statistics.
+        
+        Call this periodically (e.g., every 1000 cycles) to keep
+        the query planner statistics up to date.
+        """
+        with contextlib.suppress(Exception):
+            self.state_conn.execute("PRAGMA optimize")
+            self.history_conn.execute("PRAGMA optimize")
+            logger.debug("[v14.9] SQLite PRAGMA optimize completed")
+
+    async def run_in_thread(self, fn: Callable[..., Any], *args: Any, **kwargs: Any) -> Any:
+        """Run a synchronous DB operation in the thread pool to avoid
+        blocking the async event loop.
+
+        Usage in async code:
+            row = await price_db.run_in_thread(
+                price_db.state_conn.execute, "SELECT ...", (param,)
+            )
+            rows = await price_db.run_in_thread(row.fetchall)
+        """
+        loop = asyncio.get_running_loop()
+        return await loop.run_in_executor(
+            _db_executor, lambda: fn(*args, **kwargs)
+        )
 
     def _init_schemas(self) -> None:
         """Initialize appropriate tables in each database."""
@@ -121,12 +169,10 @@ class PriceHistoryDB(  # type: ignore[misc]
                 ("funds_hold_until", "REAL"),
                 ("rollback_refund", "INTEGER NOT NULL DEFAULT 0"),
             ):
-                try:
+                with contextlib.suppress(sqlite3.OperationalError):
                     self.state_conn.execute(
                         f"ALTER TABLE virtual_inventory ADD COLUMN [{col}] {typedef}"
                     )
-                except sqlite3.OperationalError:
-                    pass
             # Migration: Ensure unlock_at exists in older DBs
             try:
                 self.state_conn.execute(
@@ -380,8 +426,6 @@ class PriceHistoryDB(  # type: ignore[misc]
 
     def close(self) -> None:
         for conn in (self.state_conn, self.history_conn):
-            try:
+            with contextlib.suppress(Exception):
                 conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
-            except Exception:
-                pass
             conn.close()

@@ -1,0 +1,228 @@
+"""
+multi_source_oracle.py — Unified price beacon.
+
+Combines Market.CSGO, Waxpeer, CSFloat, Steam, and DMarket
+to provide fair pricing without CS2Cap subscription.
+
+Architecture:
+  MultiSourceOracle
+    ├── MarketCsgoOracle  (26K items, batch, free)
+    ├── WaxpeerOracle     (21K items, batch, free)
+    ├── CSFloatOracle     (per-item, free with key)
+    ├── SteamOracle       (per-item, free)
+    ├── CandleBuilder     (from DMarket snapshots)
+    └── FairPriceCalculator (median with outlier removal)
+"""
+
+from __future__ import annotations
+
+import asyncio
+import logging
+import time
+from dataclasses import dataclass
+from typing import Any
+
+from src.api.candle_builder import Candle, candle_builder
+from src.api.fair_price_calculator import FairPriceCalculator, FairPriceResult
+from src.api.market_csgo_oracle import MarketCsgoOracle
+from src.api.steam_oracle import SteamOracle
+from src.api.waxpeer_oracle import WaxpeerOracle
+
+logger = logging.getLogger("MultiSourceOracle")
+
+
+@dataclass
+class PriceReference:
+    """Multi-source price reference for a single item."""
+    title: str
+    marketcsgo_price: float = 0.0
+    waxpeer_price: float = 0.0
+    waxpeer_steam_price: float = 0.0
+    csfloat_price: float = 0.0
+    steam_price: float = 0.0
+    dmarket_best_ask: float = 0.0
+    dmarket_best_bid: float = 0.0
+    sources_count: int = 0
+
+    @property
+    def has_data(self) -> bool:
+        return self.sources_count > 0
+
+
+class MultiSourceOracle:
+    """
+    Unified price beacon using free marketplace APIs.
+    Replaces CS2Cap for pricing decisions.
+    """
+
+    def __init__(self) -> None:
+        import os
+        self.marketcsgo = MarketCsgoOracle()
+        self.waxpeer = WaxpeerOracle()
+        self.steam = SteamOracle(api_key=os.getenv("STEAM_API_KEY", ""))
+        self.csfloat: Any = None  # lazy init (needs API key)
+        self.candles = candle_builder
+        self.fair_price = FairPriceCalculator()
+
+        self._ref_cache: dict[str, PriceReference] = {}
+        self._cache_ts: float = 0.0
+        self._cache_ttl: float = 900.0  # 15 minutes
+
+        # Stats
+        self._api_calls = 0
+        self._cache_hits = 0
+
+    def _init_csfloat(self) -> Any:
+        """Lazy init CSFloat oracle (needs API key)."""
+        if self.csfloat is None:
+            try:
+                import os
+
+                from src.api.csfloat_oracle import CSFloatOracle
+                key = os.getenv("CSFLOAT_API_KEY", "")
+                self.csfloat = CSFloatOracle(api_key=key)
+            except Exception:
+                pass
+        return self.csfloat
+
+    async def load_all_sources(self) -> dict[str, int]:
+        """Load batch data from Market.CSGO and Waxpeer."""
+        results = {}
+        mc, wp = await asyncio.gather(
+            self.marketcsgo.load_items(),
+            self.waxpeer.load_items(),
+            return_exceptions=True,
+        )
+        results["marketcsgo"] = mc if isinstance(mc, int) else 0
+        results["waxpeer"] = wp if isinstance(wp, int) else 0
+        return results
+
+    async def get_fair_price(
+        self,
+        title: str,
+        dmarket_buy_price: float = 0.0,
+    ) -> FairPriceResult:
+        """
+        Calculate fair sell price for an item using all available sources.
+        This is the main method for the pricing beacon.
+        """
+        now = time.time()
+
+        # Check cache
+        if title in self._ref_cache and now - self._cache_ts < self._cache_ttl:
+            self._cache_hits += 1
+            ref = self._ref_cache[title]
+        else:
+            self._api_calls += 1
+            # Query all sources in parallel
+            mc_task = asyncio.create_task(self.marketcsgo.get_item_price(title))
+            wp_task = asyncio.create_task(self.waxpeer.get_item_price(title))
+            st_task = asyncio.create_task(self.steam.get_item_price(title))
+
+            mc_price, wp_price, st_price = await asyncio.gather(
+                mc_task, wp_task, st_task, return_exceptions=True
+            )
+
+            if isinstance(mc_price, Exception):
+                mc_price = 0.0
+            if isinstance(wp_price, Exception):
+                wp_price = 0.0
+            if isinstance(st_price, Exception):
+                st_price = 0.0
+
+            # CSFloat (optional)
+            cs_price = 0.0
+            cs = self._init_csfloat()
+            if cs:
+                try:
+                    cs_price = await cs.get_item_price(title)
+                except Exception:
+                    cs_price = 0.0
+
+            # Get volumes (for future liquidity weighting)
+            await self.marketcsgo.get_item_volume(title)
+            await self.waxpeer.get_item_volume(title)
+
+            ref = PriceReference(
+                title=title,
+                marketcsgo_price=mc_price,
+                waxpeer_price=wp_price,
+                waxpeer_steam_price=await self.waxpeer.get_item_steam_price(title),
+                csfloat_price=cs_price,
+                steam_price=st_price,
+                sources_count=sum(1 for p in [mc_price, wp_price, cs_price, st_price] if p > 0),
+            )
+            self._ref_cache[title] = ref
+
+        # Build prices dict for FairPriceCalculator
+        prices: dict[str, float] = {}
+        volumes: dict[str, int] = {}
+
+        if ref.marketcsgo_price > 0:
+            prices["marketcsgo"] = ref.marketcsgo_price
+            volumes["marketcsgo"] = await self.marketcsgo.get_item_volume(title)
+        if ref.waxpeer_price > 0:
+            prices["waxpeer"] = ref.waxpeer_price
+            volumes["waxpeer"] = await self.waxpeer.get_item_volume(title)
+        if ref.csfloat_price > 0:
+            prices["csfloat"] = ref.csfloat_price
+        if ref.steam_price > 0:
+            prices["steam"] = ref.steam_price
+
+        return self.fair_price.calculate(
+            title=title,
+            prices=prices,
+            volumes=volumes,
+            dmarket_buy_price=dmarket_buy_price,
+        )
+
+    async def get_fair_prices_batch(
+        self,
+        titles: list[str],
+        dmarket_buy_price: float = 0.0,
+    ) -> dict[str, FairPriceResult]:
+        """Calculate fair prices for multiple items."""
+        results: dict[str, FairPriceResult] = {}
+        for title in titles:
+            results[title] = await self.get_fair_price(title, dmarket_buy_price)
+        return results
+
+    def record_dmarket_snapshot(self, agg_prices: dict[str, Any]) -> None:
+        """Record DMarket snapshot for candle building."""
+        self.candles.record_snapshot(agg_prices)
+
+    def get_candles(
+        self, title: str, interval: str = "1h", count: int = 100
+    ) -> list[Candle]:
+        """Get OHLCV candles from DMarket snapshots."""
+        return self.candles.get_candles(title, interval=interval, count=count)
+
+    def get_volatility(self, title: str) -> dict[str, float]:
+        """Get volatility metrics from DMarket candles."""
+        return self.candles.get_volatility(title)
+
+    def get_stats(self) -> dict[str, Any]:
+        """Get oracle statistics."""
+        return {
+            "marketcsgo": self.marketcsgo.get_stats(),
+            "waxpeer": self.waxpeer.get_stats(),
+            "candle_stats": self.candles.get_stats(),
+            "cached_refs": len(self._ref_cache),
+            "api_calls": self._api_calls,
+            "cache_hits": self._cache_hits,
+        }
+
+    async def close(self) -> None:
+        """Close all oracle sessions."""
+        await asyncio.gather(
+            self.marketcsgo.close(),
+            self.waxpeer.close(),
+            self.steam.close(),
+            return_exceptions=True,
+        )
+        if self.csfloat and hasattr(self.csfloat, "close"):
+            await self.csfloat.close()
+
+
+# Singleton
+multi_source_oracle = MultiSourceOracle()

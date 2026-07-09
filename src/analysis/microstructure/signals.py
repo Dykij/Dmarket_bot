@@ -8,9 +8,6 @@ Functions:
 
 from __future__ import annotations
 
-from typing import Dict, Optional, Tuple
-
-
 # ══════════════════════════════════════════════════════════════════════
 # 14. SMART CANCEL / REPRICE SIGNAL
 # ══════════════════════════════════════════════════════════════════════
@@ -24,7 +21,7 @@ def smart_reprice_signal(
     listed_price: float,
     best_bid: float,
     best_ask: float,
-) -> Tuple[str, Optional[float]]:
+) -> tuple[str, float | None]:
     """
     Decide whether to cancel/reprice a listing based on order book dynamics.
 
@@ -77,8 +74,8 @@ def composite_buy_score(
     vwap_discount: float,
     adverse_pass: bool,
     vol_regime: str,
-    kyle_lam: Optional[float] = None,
-) -> Tuple[float, Dict[str, float]]:
+    kyle_lam: float | None = None,
+) -> tuple[float, dict[str, float]]:
     """
     Weighted composite score for ranking candidates.
 
@@ -95,12 +92,13 @@ def composite_buy_score(
       - adverse_clean: low market impact
       - vol_ok: not in high-vol regime
     """
-    components: Dict[str, float] = {}
+    components: dict[str, float] = {}
 
     # Spread quality (0..1) — how narrow is the spread?
     # 0.15 = 15% spread → score 0.0; smaller spread → higher score
+    # Negative spread (bid > ask = arbitrage) → clamp to 1.0
     spread_pct = (best_ask - best_bid) / max(best_ask, 0.01)
-    components["spread"] = max(0.0, 1.0 - spread_pct / 0.15)
+    components["spread"] = min(1.0, max(0.0, 1.0 - spread_pct / 0.15))
 
     # OBI (0..1), already in [-1,1] range; map to 0..1
     components["obi"] = (obi + 1.0) / 2.0

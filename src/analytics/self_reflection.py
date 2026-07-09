@@ -16,7 +16,7 @@ import logging
 import math
 import time
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from src.config import Config
 from src.db.price_history import price_db
@@ -35,8 +35,8 @@ class TradeRecord:
     profit: float = 0.0
     hold_days: float = 0.0
     timestamp: float = 0.0
-    strategy_params: Dict[str, Any] = field(default_factory=dict)
-    market_conditions: Dict[str, Any] = field(default_factory=dict)
+    strategy_params: dict[str, Any] = field(default_factory=dict)
+    market_conditions: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -65,10 +65,10 @@ class SelfReflectionEngine:
 
     def __init__(self):
         self._last_reflection_cycle = 0
-        self._cached_result: Optional[ReflectionResult] = None
+        self._cached_result: ReflectionResult | None = None
         self._reflection_count = 0
 
-    async def maybe_run_reflection(self, cycle_count: int) -> Optional[ReflectionResult]:
+    async def maybe_run_reflection(self, cycle_count: int) -> ReflectionResult | None:
         """
         Run reflection if enough cycles have passed.
         Called from the main sniping loop.
@@ -100,22 +100,24 @@ class SelfReflectionEngine:
 
         return result
 
-    async def analyze_recent_trades(self) -> Optional[ReflectionResult]:
+    async def analyze_recent_trades(self) -> ReflectionResult | None:
         """
         Analyze recent trades from the virtual inventory and calculate
         performance metrics + parameter recommendations.
         """
         # Get virtual inventory with PnL
         try:
-            rows = price_db.state_conn.execute(
+            cursor = await price_db.run_in_thread(
+                price_db.state_conn.execute,
                 """SELECT hash_name, buy_price, sell_price, fee_paid, profit,
                           status, acquired_at, sold_at
                    FROM virtual_inventory
                    WHERE status IN ('sold', 'idle', 'selling')
                    ORDER BY acquired_at DESC
                    LIMIT ?""",
-                (Config.SELF_REFLECTION_WINDOW,)
-            ).fetchall()
+                (Config.SELF_REFLECTION_WINDOW,),
+            )
+            rows = await price_db.run_in_thread(cursor.fetchall)
         except Exception as e:
             logger.debug(f"Self-reflection query failed: {e}")
             return None
@@ -154,7 +156,7 @@ class SelfReflectionEngine:
 
         return self._calculate_metrics(trades)
 
-    def _calculate_metrics(self, trades: List[TradeRecord]) -> ReflectionResult:
+    def _calculate_metrics(self, trades: list[TradeRecord]) -> ReflectionResult:
         """Calculate Sharpe, Sortino, drawdown, and parameter recommendations."""
         result = ReflectionResult()
         result.total_trades_analyzed = len(trades)
@@ -242,7 +244,7 @@ class SelfReflectionEngine:
 
         return result
 
-    def get_adjusted_spread(self, base_spread: float, reflection: Optional[ReflectionResult] = None) -> float:
+    def get_adjusted_spread(self, base_spread: float, reflection: ReflectionResult | None = None) -> float:
         """Apply self-reflection adjustment to MIN_SPREAD_PCT."""
         if reflection is None:
             reflection = self._cached_result
@@ -250,7 +252,7 @@ class SelfReflectionEngine:
             return base_spread
         return base_spread + reflection.recommended_spread_adjustment
 
-    def get_adjusted_risk_pct(self, base_risk: float, reflection: Optional[ReflectionResult] = None) -> float:
+    def get_adjusted_risk_pct(self, base_risk: float, reflection: ReflectionResult | None = None) -> float:
         """Apply self-reflection adjustment to MAX_POSITION_RISK_PCT."""
         if reflection is None:
             reflection = self._cached_result
@@ -259,7 +261,7 @@ class SelfReflectionEngine:
         adjusted = base_risk + reflection.recommended_risk_adjustment
         return max(1.0, min(10.0, adjusted))  # Clamp to 1-10%
 
-    def get_adjusted_volatility_max(self, base_max: float, reflection: Optional[ReflectionResult] = None) -> float:
+    def get_adjusted_volatility_max(self, base_max: float, reflection: ReflectionResult | None = None) -> float:
         """Apply self-reflection adjustment to volatility threshold."""
         if reflection is None:
             reflection = self._cached_result
@@ -268,7 +270,7 @@ class SelfReflectionEngine:
         adjusted = base_max + reflection.recommended_volatility_adjustment
         return max(0.1, min(1.0, adjusted))  # Clamp to 10-100%
 
-    def get_volatility_regime_adjustment(self) -> float:
+    async def get_volatility_regime_adjustment(self) -> float:
         """
         v12.7: Dynamic spread adjustment based on market volatility regime.
 
@@ -281,21 +283,23 @@ class SelfReflectionEngine:
         """
         try:
             # Sample recent price volatility from DB
-            rows = price_db.history_conn.execute(
+            cursor = await price_db.run_in_thread(
+                price_db.history_conn.execute,
                 """SELECT hash_name, price, recorded_at
                    FROM price_history
                    WHERE recorded_at > ? AND price > 0
                    ORDER BY recorded_at DESC
                    LIMIT 500""",
-                (time.time() - 86400,)  # Last 24h
-            ).fetchall()
+                (time.time() - 86400,),
+            )
+            rows = await price_db.run_in_thread(cursor.fetchall)
 
             if len(rows) < 50:
                 return 0.0  # Not enough data
 
             # Group by item and calculate per-item volatility
             from collections import defaultdict
-            item_prices: Dict[str, List[float]] = defaultdict(list)
+            item_prices: dict[str, list[float]] = defaultdict(list)
             for row in rows:
                 item_prices[row["hash_name"]].append(row["price"])
 

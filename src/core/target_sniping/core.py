@@ -21,13 +21,12 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from src.api.cs2cap_cache import CS2CapCache
-from src.api.dmarket_api_client import DMarketAPIClient
-from src.api.oracle_factory import OracleFactory
 from src.analytics.rare_valuation import RareValuationEngine
 from src.analytics.stickers_evaluator import StickerEvaluator
+from src.api.dmarket_api_client import DMarketAPIClient
+from src.api.oracle_factory import OracleFactory
 from src.config import Config
 from src.core.daily_briefing import DailyBriefingScheduler
 from src.core.event_shield import event_shield
@@ -41,8 +40,8 @@ from src.core.target_sniping.scanner import _ScannerMixin
 from src.core.target_sniping.scheduler import _SchedulerMixin
 from src.core.target_sniping.telemetry import _TelemetryMixin
 from src.db.price_history import price_db
-from src.risk.fatal_errors import classify
 from src.risk.error_reporter import ErrorReporter
+from src.risk.fatal_errors import classify
 from src.risk.liquidity_manager import LiquidityManager
 from src.telegram.notifier import notifier
 
@@ -82,8 +81,8 @@ class SnipingLoop(  # type: ignore[misc]
         self.resale_cycle_limit = 1  # v13.0: resale every cycle (instant)
         self.reprice_counter = 0
 
-        # v12.4: In-memory CS2Cap cache (initialised in start())
-        self.cs2cap_cache: Optional[CS2CapCache] = None
+        # v15.0: MultiSource oracle (Market.CSGO + Waxpeer + CSFloat + Steam)
+        self.multi_source_oracle: Any | None = None
 
         # v12.5: Risk orchestration + self-reflection
         from src.analytics.self_reflection import self_reflection
@@ -110,7 +109,7 @@ class SnipingLoop(  # type: ignore[misc]
                     f"entries from persistent store"
                 )
         except Exception as e:
-            logger.debug(f"[v12.7] PumpDetector restore_from_disk failed: {e}")
+            logger.warning(f"[v12.7] PumpDetector restore_from_disk failed: {e} — blacklist treated as empty")
         self.risk = RiskManager(
             daily_loss_limit_usd=float(os.getenv("MAX_DAILY_LOSS_USD", "10.00")),
             daily_trade_limit=int(os.getenv("MAX_DAILY_TRADES", "200")),
@@ -120,14 +119,14 @@ class SnipingLoop(  # type: ignore[misc]
         )
 
         # v12.5: Daily briefing scheduler (started in start())
-        self.briefing_scheduler: Optional[DailyBriefingScheduler] = None
+        self.briefing_scheduler: DailyBriefingScheduler | None = None
 
         # Rate-limit diagnostics
         self._last_quota_warn: float = 0.0
         self._last_milestone: float = 0.0
 
     @property
-    def min_profit_margin(self) -> float:
+    async def get_min_profit_margin(self) -> float:
         """Dynamic margin: base * event multiplier + volatility regime adjustment (v12.7)."""
         from src.config import Config
 
@@ -136,7 +135,7 @@ class SnipingLoop(  # type: ignore[misc]
         reflection = self.self_reflection._cached_result
         adjusted = self.self_reflection.get_adjusted_spread(base, reflection)
         # Apply volatility regime adjustment (from recent market conditions)
-        vol_adj = self.self_reflection.get_volatility_regime_adjustment()
+        vol_adj = await self.self_reflection.get_volatility_regime_adjustment()
         adjusted += vol_adj
         # Ensure minimum floor
         adjusted = max(1.0, adjusted)
@@ -148,7 +147,7 @@ class SnipingLoop(  # type: ignore[misc]
         1. Scan 50 items
         2. Get aggregated prices (best_bid, best_ask)
         3. Filter: 5%+ spread
-        4. Validate with CS2Cap oracle
+        4. Validate with MultiSource oracle
         5. Buy at ask, list at bid - 0.01
         6. v12.2: Sync asset statuses (trade_protected, reverted)
         """
@@ -161,8 +160,8 @@ class SnipingLoop(  # type: ignore[misc]
             try:
                 from src.utils.health_server import health_state
                 health_state.mark_cycle(0.0, 0.0, 0.0)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"[HEALTH] mark_cycle failed: {e}")
 
             # v12.7: Clear per-cycle oracle price cache (P1-5).
             self._clear_oracle_cache()
@@ -226,8 +225,8 @@ class SnipingLoop(  # type: ignore[misc]
                                 f"Skipping buy cycle — capital locked in trade-hold."
                             )
                             return
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.warning(f"[v14.4 VELOCITY] Capital velocity check failed: {e}")
 
             # --- Step 1: Scan market (v12.3: aggregated-prices-first) ---
             # v12.0 used `get_market_items_v2` (page of 100 listings, sorted
@@ -409,18 +408,18 @@ class SnipingLoop(  # type: ignore[misc]
             ]
 
             # Build mappings for fee-by-volume estimation
-            item_id_to_title: Dict[str, str] = {
+            item_id_to_title: dict[str, str] = {
                 item["itemId"]: item["title"]
                 for item in items
                 if item.get("itemId") and item.get("title")
             }
-            title_volume: Dict[str, int] = {}
+            title_volume: dict[str, int] = {}
             for title, agg in agg_prices.items():
                 ask_cnt = agg.get("ask_count", 0) or 0
                 bid_cnt = agg.get("bid_count", 0) or 0
                 title_volume[title] = ask_cnt + bid_cnt
 
-            bulk_fees: Dict[str, float] = {}
+            bulk_fees: dict[str, float] = {}
             if candidate_item_ids:
                 bulk_fees = await self.client.get_item_fee_bulk(
                     game_id, candidate_item_ids,
@@ -429,105 +428,61 @@ class SnipingLoop(  # type: ignore[misc]
                 )
 
             # --- Step 4: Filter and validate (delegated) ---
-            current_margin = self.min_profit_margin
-            instant_buys: List[Dict[str, Any]] = []
+            current_margin = await self.get_min_profit_margin()
+            instant_buys: list[dict[str, Any]] = []
 
             # v14.9: Value Detection Scanner pipeline.
             # Uses the new dual-signal approach: VALUE (rarity-based) + SPREAD (bid-ask edge).
             # This is the core refactor for the "buy cheap, sell at premium" strategy.
-            from src.core.target_sniping.value_pipelines import evaluate_combined_signal
 
-            # v12.4: Read CS2Cap asks/bids from in-memory cache (P0-B).
-            # The cache is refreshed by a background task every
-            # CS2CAP_CACHE_TTL_SECONDS (default 5 min). Per-cycle HTTP
-            # calls to CS2Cap are eliminated — validation is a sub-ms
-            # dict lookup. Falls back to legacy per-cycle batch if the
-            # cache is unavailable (e.g. oracle import failed).
-            cs_snapshots: Dict[str, Any] = {}
-            cs_bids: Dict[str, Any] = {}
-            cache_used = False
-            if self.cs2cap_cache is not None and not self.cs2cap_cache.is_stale():
-                cache_used = True
-                # v14.4: Dynamic price cap based on effective balance (Kelly-style)
-                # Balances under $50 → items ≤ $5. Balances $500+ → up to $50.
-                max_price_cap = min(effective_balance, dynamic_max_price)
-                ranked = self._rank_candidates_by_spread(
-                    items, agg_prices, max_price_usd=max_price_cap
-                )
-                top_titles = [
-                    t for t, _ in ranked[: Config.CS2CAP_TOP_K_VALIDATE]
-                ]
+            # v15.0: MultiSource oracle validation (Market.CSGO + Waxpeer + CSFloat + Steam).
+            # FairPriceCalculator determines optimal sell price from multiple sources.
+            # No paid subscriptions required.
+            cs_snapshots: dict[str, Any] = {}
+            cs_bids: dict[str, Any] = {}
+
+            max_price_cap = min(effective_balance, dynamic_max_price)
+            ranked = self._rank_candidates_by_spread(
+                items, agg_prices, max_price_usd=max_price_cap
+            )
+            top_titles = [
+                t for t, _ in ranked[: Config.ORACLE_TOP_K_VALIDATE]
+            ]
+
+            if self.multi_source_oracle is not None and top_titles:
+                # Get fair prices from MultiSource oracle
+                fair_prices = await self.multi_source_oracle.get_fair_prices_batch(top_titles)
                 for t in top_titles:
-                    ask = self.cs2cap_cache.get_ask(t)
-                    bid = self.cs2cap_cache.get_bid(t)
-                    if ask is not None:
-                        cs_snapshots[t] = ask
-                    if bid is not None:
-                        cs_bids[t] = bid
-                if top_titles:
-                    cache_stats = self.cs2cap_cache.stats()
-                    logger.info(
-                        f"[CS2CapCache HIT] top_titles={len(top_titles)} "
-                        f"snapshots={len(cs_snapshots)} bids={len(cs_bids)} "
-                        f"age={cache_stats['age_seconds']:.0f}s "
-                        f"refreshes={cache_stats['refresh_count']}"
-                    )
-            elif oracle is not None and Config.CS2CAP_SELECTIVE_MODE and items:
-                # Legacy path: cache not available (e.g. CS2Cap API key missing)
-                max_price_cap = min(effective_balance, dynamic_max_price)
-                ranked = self._rank_candidates_by_spread(
-                    items, agg_prices, max_price_usd=max_price_cap
-                )
-                top_titles = [
-                    t for t, _ in ranked[: Config.CS2CAP_TOP_K_VALIDATE]
-                ]
-                if top_titles and hasattr(oracle, "get_prices_batch"):
-                    try:
-                        asks_task = oracle.get_prices_batch(top_titles)
-                        bids_task = oracle.get_bids_batch(top_titles) if hasattr(oracle, "get_bids_batch") else None
-                        cs_snapshots = await asks_task
-                        if bids_task is not None:
-                            cs_bids = await bids_task
-                        logger.info(
-                            f"CS2Cap selective validation (legacy path): "
-                            f"{len(cs_snapshots)}/{len(top_titles)} asks, "
-                            f"{len(cs_bids)}/{len(top_titles)} bids"
-                        )
-                    except Exception as e:
-                        logger.debug(f"CS2Cap batch failed (non-fatal): {e}")
-                        cs_snapshots = {}
-                        cs_bids = {}
-            if not cache_used and self.cs2cap_cache is not None:
-                logger.debug(
-                    f"[CS2CapCache MISS] cache_stale={self.cs2cap_cache.is_stale()} "
-                    f"ask_count={len(self.cs2cap_cache._ask_cache)}"
+                    fp = fair_prices.get(t)
+                    if fp and fp.fair_price > 0:
+                        cs_snapshots[t] = fp
+                logger.info(
+                    f"[MultiSource] top_titles={len(top_titles)} "
+                    f"priced={len(cs_snapshots)}"
                 )
 
-            # v14.9: Extra CS2Cap batch for cross-market buy targets.
-            # Cross-market targets need prices for all traded titles, not just
-            # the top-K that pass the intra-spread filter. One extra batch per
-            # cycle is still well within the Starter 50K/month budget.
-            cs_target_snapshots: Dict[str, Any] = {}
+            # v15.0: MultiSource batch for cross-market buy targets.
+            # Get fair prices for all traded titles from Market.CSGO + Waxpeer.
+            cs_target_snapshots: dict[str, Any] = {}
             if (
                 Config.CROSS_MARKET_TARGET_ENABLED
-                and oracle is not None
-                and hasattr(oracle, "get_prices_batch")
+                and self.multi_source_oracle is not None
             ):
                 try:
                     target_titles = list(agg_prices.keys())[:100]
-                    cs_target_snapshots = await oracle.get_prices_batch(target_titles)
+                    cs_target_snapshots = await self.multi_source_oracle.get_fair_prices_batch(target_titles)
                     logger.info(
-                        f"[CS2CapTarget] fetched {len(cs_target_snapshots)} "
+                        f"[MultiSource] fetched {len(cs_target_snapshots)} "
                         f"cross-market reference prices"
                     )
                 except Exception as e:
-                    logger.debug(f"[CS2CapTarget] batch failed: {e}")
+                    logger.debug(f"[MultiSource] batch failed: {e}")
 
             # v14.1: Pre-fetch DMarket last-sales for CVD/VPIN/VWAP analysis
-            # Only for top candidates, uses DMarket API (not cs2cap quota).
-            self._sales_cache: Dict[str, List[Dict[str, Any]]] = {}
+            # Only for top candidates, uses DMarket API.
+            self._sales_cache: dict[str, list[dict[str, Any]]] = {}
             if Config.CVD_ENABLED or Config.VWAP_FILTER_ENABLED or Config.VPIN_ENABLED:
-                sales_titles: List[str] = []
+                sales_titles: list[str] = []
                 if 'ranked' in dir():
                     sales_titles = list({t for t, _ in ranked[: Config.CVD_WINDOW_ITEMS]})
                 elif top_titles:
@@ -544,10 +499,12 @@ class SnipingLoop(  # type: ignore[misc]
                                     # v14.1: Accumulate into trade_history for CVD/VPIN
                                     try:
                                         price_db.save_trades_batch(t, sales)
-                                    except Exception:
-                                        pass  # non-fatal — DB write failure shouldn't block trading
-                            except Exception:
-                                pass
+                                    except Exception as e:
+                                        # DB write failure → next cycle's CVD/VPIN/VWAP filters
+                                        # operate on stale data → potential mispricing
+                                        logger.warning(f"[TRADES] save_trades_batch failed for {t}: {e}")
+                            except Exception as e:
+                                logger.debug(f"[SALES] Sales cache fetch failed: {e}")
                         if self._sales_cache:
                             logger.debug(
                                 f"[v14.1 SALES] Fetched last-sales for "
@@ -588,7 +545,7 @@ class SnipingLoop(  # type: ignore[misc]
             # Was O(N²): each candidate called get_virtual_inventory (N table scans).
             # Now: 1 table scan → dict lookup per candidate (O(1)).
             raw_inv = price_db.get_virtual_inventory(status="idle", only_unlocked=False)
-            saturation_counts: Dict[str, int] = {}
+            saturation_counts: dict[str, int] = {}
             for inv_item in raw_inv:
                 hn = inv_item["hash_name"]
                 saturation_counts[hn] = saturation_counts.get(hn, 0) + 1
@@ -610,18 +567,17 @@ class SnipingLoop(  # type: ignore[misc]
                         agg = agg_prices.get(title, {})
                         best_bid = agg.get("best_bid", 0.0)
                         best_ask = agg.get("best_ask", 0.0)
-                        # Get CS2Cap reference price
+                        # Get reference price from MultiSource oracle
                         cs2cap_ask = 0.0
                         if title in cs_snapshots:
-                            cs2cap_ask = cs_snapshots[title]
-                        elif hasattr(self, 'cs2cap_cache') and self.cs2cap_cache is not None:
-                            cs_val = self.cs2cap_cache.get_ask(title)
-                            if cs_val is not None:
-                                cs2cap_ask = cs_val
+                            fp = cs_snapshots[title]
+                            cs2cap_ask = fp.fair_price if hasattr(fp, 'fair_price') else fp
 
                         # Try VALUE signal first
                         if Config.VALUE_SCAN_ENABLED and cs2cap_ask > 0:
-                            from src.core.target_sniping.value_pipelines import evaluate_combined_signal
+                            from src.core.target_sniping.value_pipelines import (
+                                evaluate_combined_signal,
+                            )
                             value_result = evaluate_combined_signal(
                                 title=title,
                                 item=item,
@@ -632,24 +588,64 @@ class SnipingLoop(  # type: ignore[misc]
                                 current_margin=current_margin,
                             )
                             if value_result is not None:
-                                # Build buy payload from value signal
-                                buy_offer = {
-                                    "offerId": item.get("itemId"),
-                                    "price": item.get("price", {}),
-                                }
-                                return {
-                                    "buy_offer": buy_offer,
-                                    "title": title,
-                                    "item_id": item.get("itemId"),
-                                    "base_price": value_result["base_price"],
-                                    "list_price": value_result["list_price"],
-                                    "best_bid": best_bid,
-                                    "best_ask": best_ask,
-                                    "strategy": "value_scanner",
-                                    "target_platform": "dmarket",
-                                    "is_rare": True,
-                                    "value_signal": value_result,
-                                }
+                                vs_base_price = value_result["base_price"]
+
+                                # v14.9.1: Safety checks for value scanner path
+                                # (previously bypassed LiquidityManager, saturation, lock-aware cap)
+
+                                # Saturation check — prevent over-concentration
+                                vs_held = saturation_counts.get(title, 0)
+                                if vs_held >= Config.MAX_SAME_ITEM_HOLDINGS:
+                                    logger.debug(
+                                        f"[VALUE-SCAN] {title}: saturation limit "
+                                        f"({vs_held}/{Config.MAX_SAME_ITEM_HOLDINGS}). Skipping."
+                                    )
+                                else:
+                                    # Lock-aware inventory cap
+                                    vs_skip = False
+                                    if Config.LOCK_AWARE_CAP_ENABLED:
+                                        vs_eff_bal = effective_balance or current_balance
+                                        vs_locked = price_db.get_virtual_inventory_locked_value()
+                                        vs_liquid_remaining = vs_eff_bal * Config.LOCK_AWARE_LIQUID_FRACTION
+                                        if vs_locked + vs_base_price > vs_liquid_remaining:
+                                            logger.debug(
+                                                f"[VALUE-SCAN] {title}: lock-aware cap "
+                                                f"(${vs_locked:.2f}+${vs_base_price:.2f} > "
+                                                f"${vs_liquid_remaining:.2f}). Skipping."
+                                            )
+                                            vs_skip = True
+
+                                    # LiquidityManager daily spend gate
+                                    if not vs_skip and self.liquidity is not None:
+                                        from src.db.price_history.core import get_game_id_from_title
+                                        vs_game_id = get_game_id_from_title(title) or game_id
+                                        if not self.liquidity.can_spend(
+                                            vs_base_price, vs_game_id, current_balance
+                                        ):
+                                            logger.debug(
+                                                f"[VALUE-SCAN] {title}: LiquidityManager "
+                                                f"daily spend limit reached. Skipping."
+                                            )
+                                            vs_skip = True
+
+                                    if not vs_skip:
+                                        buy_offer = {
+                                            "offerId": item.get("itemId"),
+                                            "price": item.get("price", {}),
+                                        }
+                                        return {
+                                            "buy_offer": buy_offer,
+                                            "title": title,
+                                            "item_id": item.get("itemId"),
+                                            "base_price": vs_base_price,
+                                            "list_price": value_result["list_price"],
+                                            "best_bid": best_bid,
+                                            "best_ask": best_ask,
+                                            "strategy": "value_scanner",
+                                            "target_platform": "dmarket",
+                                            "is_rare": True,
+                                            "value_signal": value_result,
+                                        }
 
                         # Fallback to legacy spread-based evaluation
                         return await self._evaluate_candidate(
@@ -681,8 +677,9 @@ class SnipingLoop(  # type: ignore[misc]
             if instant_buys:
                 # v14.5: Strategy selector — dynamically choose strategy per cycle
                 try:
-                    from src.core.strategy_selector import strategy_selector
                     from datetime import datetime, timezone
+
+                    from src.core.strategy_selector import strategy_selector
                     now = datetime.now(timezone.utc)
                     is_weekend = now.weekday() >= 5
                     is_night = 3 <= now.hour < 8
@@ -696,7 +693,7 @@ class SnipingLoop(  # type: ignore[misc]
 
                     strategy_selector.select(
                         cycle=self.deep_scan_counter,
-                        cs2cap_ok=len(cs_snapshots) > 0,
+                        oracle_ok=len(cs_snapshots) > 0,
                         avg_spread_pct=avg_spread,
                         avg_volatility=0.15,
                         is_weekend=is_weekend,
@@ -704,10 +701,8 @@ class SnipingLoop(  # type: ignore[misc]
                         event_active=event_active,
                         drawdown_pct=drawdown,
                     )
-                except Exception:
-                    pass
-
-                # v14.5: Limit orders — place buy targets for wide-spread items
+                except Exception as e:
+                    logger.warning(f"[STRATEGY] strategy_selector.select failed: {e}")
                 try:
                     from src.core.limit_orders import _LimitOrderMixin
                     limit_mixin = _LimitOrderMixin()
@@ -724,7 +719,7 @@ class SnipingLoop(  # type: ignore[misc]
                     instant_buys = instant_targets  # only instant-buy the rest
 
                     # v14.9: Cross-market buy targets — when DMarket ask is above
-                    # CS2Cap, post liquidity at CS2Cap-reference prices.
+                    # MultiSource oracle: post liquidity at reference prices.
                     cross_placed = await limit_mixin._execute_cross_market_targets(
                         game_id=game_id,
                         agg_prices=agg_prices,
@@ -750,7 +745,7 @@ class SnipingLoop(  # type: ignore[misc]
                     from src.core.target_sniping.position_guard import _PositionGuardMixin
                     pg = _PositionGuardMixin()
                     pg.client = self.client
-                    pg.cs2cap_cache = self.cs2cap_cache
+                    pg.multi_source_oracle = self.multi_source_oracle
                     check_stop = await pg.check_stop_losses(game_id)
                     check_tp = await pg.check_take_profits(game_id)
                 except Exception as e:
@@ -774,8 +769,8 @@ class SnipingLoop(  # type: ignore[misc]
                     deleted = price_db.cleanup_old_trades(days=90)
                     if deleted > 0:
                         logger.info(f"[v14.1] Pruned {deleted} old trade_history records")
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.warning(f"[v14.1] cleanup_old_trades failed: {e}")
 
             # v13.1: Release expired TP holds before equity report
             price_db.release_expired_funds()
@@ -802,8 +797,8 @@ class SnipingLoop(  # type: ignore[misc]
                     agg_prices=agg_prices,
                     cs2cap_ok=len(cs_snapshots) > 0,
                 )
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"[SHADOW] live_shadow.feed_cycle failed: {e}")
 
             if self.deep_scan_counter % 200 == 0:
                 price_db.cleanup_old_targets()

@@ -10,31 +10,47 @@ modules and are composed here.
 from __future__ import annotations
 
 import asyncio
-import base64
-import ctypes
 import json
 import os
 import random
-import sys
 import time
 import urllib.parse
-from typing import Any, Dict, Optional
+from typing import Any
 
 import aiohttp
 import structlog
 from nacl.signing import SigningKey
-from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
+from tenacity import (
+    retry,
+    retry_if_exception,
+    stop_after_attempt,
+    wait_exponential,
+)
+
+from src.utils.vault import vault  # noqa: F401  # backward compat re-export
 
 from .account import _AccountMixin
+from .backoff import CircuitBreaker, CircuitOpenError, should_trip
 from .exceptions import SecurityViolation  # noqa: F401  (re-exported)
 from .fees import _FeesMixin
 from .market import _MarketMixin
 from .offers import _OffersMixin
 from .targets import _TargetsMixin
-from .backoff import CircuitBreaker, CircuitOpenError, should_trip
-from src.utils.vault import vault  # noqa: F401  # backward compat re-export
 
 logger = structlog.get_logger("DMarketAPI")
+
+
+def _retry_on_transient(exc: BaseException) -> bool:
+    """Retry only on transient errors: timeouts, connection errors, and 5xx.
+    
+    Non-retryable: 400, 401, 403, 404, 422 (client errors — won't succeed on retry).
+    """
+    if isinstance(exc, (asyncio.TimeoutError, aiohttp.ClientConnectionError)):
+        return True
+    if isinstance(exc, aiohttp.ClientResponseError):
+        # Retry on 5xx server errors, but NOT on 4xx client errors
+        return exc.status >= 500
+    return False
 
 # Preserve the original module-level vault import for backward compat
 
@@ -56,7 +72,7 @@ class DMarketAPIClient(  # type: ignore[misc]
         self.secret_key = secret_key
         self.BASE_URL = base_url
         self._vault_redacted = False
-        self._session: Optional[aiohttp.ClientSession] = None
+        self._session: aiohttp.ClientSession | None = None
         self._session_lock = asyncio.Lock()
         self._lock = asyncio.Lock()
         self._last_request_time = 0.0
@@ -83,7 +99,7 @@ class DMarketAPIClient(  # type: ignore[misc]
         # and zeroed out immediately after signing. This prevents the key from
         # lingering in process memory for the lifetime of the client (which could
         # be weeks in a 24/7 trading loop).
-        self._encrypted_secret: Optional[bytes] = None
+        self._encrypted_secret: bytes | None = None
         if secret_key and len(secret_key) >= 64:
             raw_secret = secret_key[:64]
             # Encrypt using the VaultProvider's Fernet (if available)
@@ -125,7 +141,7 @@ class DMarketAPIClient(  # type: ignore[misc]
                     self._signing_key = SigningKey(bytes.fromhex("0" * 64))
 
         # Fee Cache (v7.7)
-        self._fee_cache: Dict[str, Dict[str, Any]] = {}
+        self._fee_cache: dict[str, dict[str, Any]] = {}
         self._fee_cache_ttl = 43200  # 12 hours
 
         # v12.4 P1: Circuit breaker for DMarket endpoints
@@ -145,21 +161,12 @@ class DMarketAPIClient(  # type: ignore[misc]
     # ------------------------------------------------------------------
     @staticmethod
     def _secure_zero(data: str) -> None:
-        """Overwrite a string's internal buffer with zeros.
-        
-        This is a best-effort mitigation. Python strings are immutable,
-        so we cannot truly zero them, but we can ensure the variable is
-        eligible for GC and nothing else references it.
-        """
-        if sys.getrefcount(data) > 3:
-            return
-        try:
-            buf = ctypes.create_string_buffer(data.encode("utf-8"))
-            ctypes.memset(buf, 0, len(buf))
-        except Exception:
-            pass
+        """Release reference for GC. Python strings are immutable — true
+        zeroing is impossible without ctypes (and even then unreliable).
+        This is a best-effort hint, NOT a security guarantee."""
+        del data
 
-    def _decrypt_secret(self) -> Optional[str]:
+    def _decrypt_secret(self) -> str | None:
         """Decrypt the stored encrypted secret. Returns hex string or None."""
         if self._encrypted_secret is None:
             return None
@@ -278,15 +285,15 @@ class DMarketAPIClient(  # type: ignore[misc]
     @retry(
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=1, min=2, max=10),
-        retry=retry_if_exception_type((aiohttp.ClientResponseError, asyncio.TimeoutError, aiohttp.ClientConnectionError)),
+        retry=retry_if_exception(_retry_on_transient),
     )
     async def make_request(
         self,
         method: str,
         path: str,
-        params: Optional[Dict[str, Any]] = None,
-        body: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        params: dict[str, Any] | None = None,
+        body: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """Execute API request with Dry Run support ($0.00 Risk)."""
         method = method.upper()
 
@@ -398,18 +405,6 @@ class DMarketAPIClient(  # type: ignore[misc]
                 # v15.0: Adaptive backoff via Retry-After / X-RateLimit-Remaining
                 self._adaptive_backoff(response)
                 response_json = await response.json()
-                remaining = response.headers.get("X-RateLimit-Remaining")
-                if remaining is not None:
-                    try:
-                        rem = int(remaining)
-                        if rem < 5:
-                            self._rate_limit_delay = 1.0
-                        elif rem < 10:
-                            self._rate_limit_delay = 0.5
-                        else:
-                            self._rate_limit_delay = 0.22
-                    except ValueError:
-                        pass
                 return response_json
         except (asyncio.TimeoutError, aiohttp.ClientConnectionError) as e:
             # Network errors count as breaker failures

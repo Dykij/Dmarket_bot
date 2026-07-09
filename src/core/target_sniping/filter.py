@@ -9,9 +9,9 @@ from __future__ import annotations
 
 import logging
 import os
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
-from src.api.cs2cap_oracle import RateLimitException
+from src.api.exceptions import RateLimitException
 from src.config import Config
 from src.core.sandbox_scenarios import scenario_engine
 from src.core.target_sniping.ranking import rank_candidates_by_spread
@@ -47,12 +47,14 @@ class _FilterMixin:
     _diag_cycle_id: int
 
     def _skip_if_locked(self, item_id: str, title: str) -> bool: ...  # type: ignore[empty-body]
-    def _calculate_float_premium(self, attrs: Dict[str, Any]) -> float: ...  # type: ignore[empty-body]
+    def _calculate_float_premium(self, attrs: dict[str, Any]) -> float: ...  # type: ignore[empty-body]
+    @staticmethod
+    def is_dirty_bs(attrs: dict[str, Any]) -> bool: ...  # type: ignore[empty-body]
 
     # v12.7: Per-cycle oracle price cache (P1-5).
     # Avoids duplicate HTTP calls for the same title within a single cycle.
     # Cleared at the start of each run_cycle via _clear_oracle_cache().
-    _oracle_price_cache: Dict[str, float]
+    _oracle_price_cache: dict[str, float]
 
     def _ensure_oracle_cache(self) -> None:
         if not hasattr(self, '_oracle_price_cache') or not isinstance(self._oracle_price_cache, dict):
@@ -65,28 +67,28 @@ class _FilterMixin:
 
     @staticmethod
     def _rank_candidates_by_spread(
-        items: List[Dict[str, Any]],
-        agg_prices: Dict[str, Dict[str, Any]],
-        max_price_usd: Optional[float] = None,
-    ) -> List[Tuple[str, float]]:
+        items: list[dict[str, Any]],
+        agg_prices: dict[str, dict[str, Any]],
+        max_price_usd: float | None = None,
+    ) -> list[tuple[str, float]]:
         return rank_candidates_by_spread(items, agg_prices, max_price_usd)
 
     async def _evaluate_candidate(
         self,
         *,
-        item: Dict[str, Any],
+        item: dict[str, Any],
         game_id: str,
         oracle: Any,
-        agg_prices: Dict[str, Dict[str, Any]],
-        bulk_fees: Dict[str, float],
+        agg_prices: dict[str, dict[str, Any]],
+        bulk_fees: dict[str, float],
         current_balance: float,
         current_margin: float,
-        cs_snapshots: Optional[Dict[str, Any]] = None,
-        cs_bids: Optional[Dict[str, Any]] = None,
-        saturation_counts: Optional[Dict[str, int]] = None,
-        effective_balance: Optional[float] = None,
-        dynamic_max_price: Optional[float] = None,
-    ) -> Optional[Dict[str, Any]]:
+        cs_snapshots: dict[str, Any] | None = None,
+        cs_bids: dict[str, Any] | None = None,
+        saturation_counts: dict[str, int] | None = None,
+        effective_balance: float | None = None,
+        dynamic_max_price: float | None = None,
+    ) -> dict[str, Any] | None:
         """
         Evaluate a single market item and return a buy payload, or None.
 
@@ -140,10 +142,28 @@ class _FilterMixin:
                 )
             return None
 
+        # v14.9: Drawdown freeze + daily loss gate (pre-trade risk check)
+        # This is the CRITICAL safety gate: blocks buys during drawdown freeze,
+        # daily loss limit, consecutive loss streak, and pump-blacklist.
+        if hasattr(self, "risk") and self.risk is not None:
+            risk_check = self.risk.pre_trade_check(
+                proposed_size_usd=base_price,
+                current_equity_usd=current_balance,
+                game_id=game_id,
+                item_title=title,
+            )
+            if not risk_check.allowed:
+                if Config.DRY_RUN:
+                    price_db.log_decision(
+                        title, "skip", "Risk blocked",
+                        risk_check.reason,
+                    )
+                return None
+
         # v14.4: Fractional Kelly position sizing
         # Kelly formula: f* = win_rate - (1 - win_rate) / win_loss_ratio
         # Half Kelly = 0.5 * f* (reduced drawdown, same growth direction)
-        kelly_risk_pct = Config.MAX_POSITION_RISK_PCT
+        kelly_risk_pct = float(Config.MAX_POSITION_RISK_PCT)
         if Config.KELLY_ENABLED and hasattr(self, "risk"):
             try:
                 risk_state = self.risk.get_state()
@@ -153,13 +173,16 @@ class _FilterMixin:
                 win_loss_ratio = max(1.0, wlr)
                 kelly_f = win_rate - (1.0 - win_rate) / win_loss_ratio
                 kelly_risk_pct = max(
-                    Config.KELLY_FLOOR_PCT,
-                    kelly_f * 100.0 * Config.KELLY_FRACTION,
+                    float(Config.KELLY_FLOOR_PCT),
+                    kelly_f * 100.0 * float(Config.KELLY_FRACTION),
                 )
                 # Cap by the hard position limit and the dynamic item price cap
-                kelly_risk_pct = min(kelly_risk_pct, Config.MAX_POSITION_RISK_PCT)
-            except Exception:
-                pass
+                kelly_risk_pct = min(kelly_risk_pct, float(Config.MAX_POSITION_RISK_PCT))
+            except Exception as e:
+                # Kelly sizing failed — use CONSERVATIVE fallback (half-cap)
+                # to avoid over-sizing when risk state is unavailable.
+                logger.warning(f"[KELLY] Risk state unavailable, using half-cap fallback: {e}")
+                kelly_risk_pct = float(Config.MAX_POSITION_RISK_PCT) * 0.5
         max_risk_price = (effective_balance or current_balance) * (kelly_risk_pct / 100.0)
         max_risk_price = min(max_risk_price, dynamic_max_price or Config.MAX_SNIPING_PRICE_USD)
         if base_price > max_risk_price:
@@ -194,12 +217,11 @@ class _FilterMixin:
         bid_count = int(agg.get("bid_count") or 0)
 
         # --- v14.0 OBI (Order Book Imbalance) ---
-        obi_signal = 0.0
         if Config.STRICT_MICROSTRUCTURE_FILTERS:
             obi_result = check_obi(ask_count, bid_count, best_ask, best_bid)
             if not obi_result["pass"]:
                 return None
-            obi_signal = obi_result["signal"]
+            obi_result["signal"]
 
         # --- v14.3 Queue Imbalance (large-tick asset signal) ---
         if Config.STRICT_MICROSTRUCTURE_FILTERS and Config.QUEUE_IMBALANCE_ENABLED and ask_count > 0:
@@ -307,7 +329,7 @@ class _FilterMixin:
         # --- v14.1 CVD / VPIN signals ---
         cvd_val = 0.0
         vpin_val = 0.0
-        trade_records: List[Dict[str, Any]] = []
+        trade_records: list[dict[str, Any]] = []
         if Config.STRICT_MICROSTRUCTURE_FILTERS:
             cvd_vpin_result = check_cvd_vpin(title, getattr(self, '_sales_cache', None))
             if not cvd_vpin_result["pass"]:
@@ -339,9 +361,8 @@ class _FilterMixin:
                 return None
 
         # --- v14.3 Volume Profile / POC (price magnet) ---
-        poc_price = 0.0
         if Config.STRICT_MICROSTRUCTURE_FILTERS:
-            poc_price = check_volume_profile_poc(title, trade_records)
+            check_volume_profile_poc(title, trade_records)
 
         # v14.6: Seasonal timing — dynamically adjust spread threshold
         effective_min_spread = Config.INTRA_MIN_SPREAD_PCT
@@ -503,8 +524,8 @@ class _FilterMixin:
                     list_price = round(list_price * 1.10, 2)
                     if is_sandbox:
                         logger.info(f"[DIRTY-BS] {title}: dirty BS premium 1.10x → list=${list_price:.2f}")
-            except Exception:
-                pass
+            except (ValueError, TypeError, AttributeError) as e:
+                logger.debug(f"[DIRTY-BS] {title}: detection failed: {e}")
 
         # --- Layer 2: Filler demand multiplier ---
         if Config.FILLER_TRACKING_ENABLED:
@@ -515,8 +536,8 @@ class _FilterMixin:
                     list_price = round(list_price * filler_mult, 2)
                     if is_sandbox:
                         logger.debug(f"[FILLER] {title}: demand multiplier {filler_mult:.2f}x → list=${list_price:.2f}")
-            except Exception:
-                pass
+            except (ImportError, KeyError, TypeError) as e:
+                logger.debug(f"[FILLER] {title}: lookup failed: {e}")
 
         # --- Layer 3: Pattern/Phase/Paint Premium (Doppler, Blue Gem, Fire & Ice, etc.) ---
         pattern_premium = 1.0
@@ -533,8 +554,8 @@ class _FilterMixin:
                                 f"→ list=${list_price:.2f}"
                             )
                         is_rare = True
-            except Exception:
-                pass
+            except (ValueError, TypeError, AttributeError) as e:
+                logger.debug(f"[PATTERN] {title}: premium calc failed: {e}")
 
         # --- Layer 4: Sticker Value + Combo Premium ---
         item_stickers = item.get("stickers", [])
@@ -554,8 +575,8 @@ class _FilterMixin:
                     is_rare = True
                     if is_sandbox:
                         logger.info(f"[RARE] {title}: sticker value ${sticker_value:.2f} → exclusive keep")
-            except Exception:
-                pass
+            except (ValueError, TypeError, AttributeError) as e:
+                logger.debug(f"[STICKER] {title}: value calc failed: {e}")
 
         # --- Layer 5: Float-date bonus ---
         if Config.FLOAT_DATE_ENABLED and not is_rare:
@@ -567,8 +588,8 @@ class _FilterMixin:
                         list_price = round(list_price * 1.08, 2)
                         if is_sandbox:
                             logger.info(f"[FLOAT-DATE] {title}: date float → 1.08x → list=${list_price:.2f}")
-            except Exception:
-                pass
+            except (ValueError, TypeError, ImportError) as e:
+                logger.debug(f"[FLOAT-DATE] {title}: detection failed: {e}")
 
         if list_price < base_price * 1.02:
             # Less than 2% gross — too thin after fees
@@ -658,8 +679,6 @@ class _FilterMixin:
             )
 
         # --- v14.3 Composite Score ---
-        composite_score = 0.0
-        composite_components = {}
         if Config.STRICT_MICROSTRUCTURE_FILTERS:
             micro = compute_microstructure_scores(
                 title=title,
@@ -675,8 +694,8 @@ class _FilterMixin:
                 vol_regime=vol_regime,
                 prev_agg_prices=getattr(self, '_prev_agg_prices', None),
             )
-            composite_score = micro["composite_score"]
-            composite_components = micro["components"]
+            micro["composite_score"]
+            micro["components"]
 
         # --- Decide: instant buy vs target ---
         # For intra-spread strategy, we typically instant-buy

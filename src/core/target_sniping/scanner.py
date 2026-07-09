@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any, Dict, List
+from typing import Any
 
 from src.config import Config
 from src.core.target_sniping.underpriced import fetch_low_fee_titles
@@ -24,8 +24,8 @@ class _ScannerMixin:
     client: Any  # DMarketAPIClient
 
     async def _fetch_cheapest_listings(
-        self, game_id: str, titles: List[str]
-    ) -> List[Dict[str, Any]]:
+        self, game_id: str, titles: list[str]
+    ) -> list[dict[str, Any]]:
         """
         v12.3: For each top-traded title, fetch the N cheapest DMarket
         listings and return a list of buy candidates (one per title: the
@@ -50,7 +50,7 @@ class _ScannerMixin:
         # 100 titles per cycle.
         sem = asyncio.Semaphore(3)
 
-        async def _fetch_one(title: str) -> List[Dict[str, Any]]:
+        async def _fetch_one(title: str) -> list[dict[str, Any]]:
             async with sem:
                 try:
                     resp = await self.client.get_market_items_v2(
@@ -72,9 +72,9 @@ class _ScannerMixin:
 
         # Pick the cheapest listing per title. If multiple titles return
         # the same listing object (rare), dedupe.
-        cheapest: List[Dict[str, Any]] = []
+        cheapest: list[dict[str, Any]] = []
         seen_ids = set()
-        for title, listings in zip(titles, results):
+        for title, listings in zip(titles, results, strict=False):
             if not listings:
                 continue
             sorted_by_price = sorted(
@@ -91,7 +91,7 @@ class _ScannerMixin:
 
             # v14.0: Save all listings for DOM gap analysis in resale
             if not hasattr(self, '_dom_cache'):
-                self._dom_cache: Dict[str, List[Dict[str, Any]]] = {}
+                self._dom_cache: dict[str, list[dict[str, Any]]] = {}
             self._dom_cache[title] = sorted_by_price
             # v14.7: Prune stale entries — keep only last N titles (FIFO cap)
             if len(self._dom_cache) > Config.AGG_SCAN_TOP_N * 3:
@@ -112,7 +112,7 @@ class _ScannerMixin:
         max_usd: float = 5.00,
         max_pages: int = 10,
         max_titles: int = 100,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         v14.8: Wide-net scan for items in a specific price bucket.
 
@@ -130,15 +130,15 @@ class _ScannerMixin:
         price_from_cents = int(min_usd * 100)
         price_to_cents = int(max_usd * 100)
 
-        all_listings: List[Dict[str, Any]] = []
-        cursor: Optional[str] = None
+        all_listings: list[dict[str, Any]] = []
+        cursor: str | None = None
         pages = 0
         sem = asyncio.Semaphore(3)  # conservative: price-range scan is heavy
 
-        async def _page() -> Dict[str, Any]:
+        async def _page() -> dict[str, Any]:
             async with sem:
                 try:
-                    params: Dict[str, Any] = {
+                    params: dict[str, Any] = {
                         "limit": 100,
                         "priceFrom": str(price_from_cents),
                         "priceTo": str(price_to_cents),
@@ -167,7 +167,7 @@ class _ScannerMixin:
                 break
 
         # Pick cheapest listing per unique title
-        by_title: Dict[str, Dict[str, Any]] = {}
+        by_title: dict[str, dict[str, Any]] = {}
         for it in all_listings:
             title = it.get("title", "")
             if not title:
@@ -200,7 +200,7 @@ class _ScannerMixin:
         self,
         game_id: str,
         max_titles: int = 100,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         v14.8.1: Fetch DMarket low-fee items and return their cheapest listings.
 
@@ -217,7 +217,7 @@ class _ScannerMixin:
         titles = list(low_fee_map.keys())[:max_titles]
         sem = asyncio.Semaphore(3)
 
-        async def _fetch_one(title: str) -> List[Dict[str, Any]]:
+        async def _fetch_one(title: str) -> list[dict[str, Any]]:
             async with sem:
                 try:
                     resp = await self.client.get_market_items_v2(
@@ -235,9 +235,9 @@ class _ScannerMixin:
             *[_fetch_one(t) for t in titles], return_exceptions=True
         )
         results = [r if not isinstance(r, Exception) else [] for r in results]
-        cheapest: List[Dict[str, Any]] = []
+        cheapest: list[dict[str, Any]] = []
         seen_ids = set()
-        for title, listings in zip(titles, results):
+        for title, listings in zip(titles, results, strict=False):
             if not listings:
                 continue
             sorted_by_price = sorted(
@@ -261,8 +261,8 @@ class _ScannerMixin:
         return cheapest
 
     async def _fetch_float_filtered_listings(
-        self, game_id: str, top_titles: List[str]
-    ) -> List[Dict[str, Any]]:
+        self, game_id: str, top_titles: list[str]
+    ) -> list[dict[str, Any]]:
         """
         v14.0: Secondary scan for low-float and rare-phase items that may
         be listed at general market price without float/phase premium.
@@ -293,7 +293,7 @@ class _ScannerMixin:
                 return True
             return any(p in title for p in HIGH_VALUE_PATTERNS)
 
-        candidates: List[Dict[str, Any]] = []
+        candidates: list[dict[str, Any]] = []
         calls_made = 0
         max_calls = Config.FLOAT_PHASE_MAX_EXTRA_CALLS
 
