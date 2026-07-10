@@ -14,9 +14,6 @@ Used by SnipingLoop to select the active strategy each cycle.
 from __future__ import annotations
 
 import logging
-from typing import Optional
-
-from src.config import Config
 
 logger = logging.getLogger("StrategySelector")
 

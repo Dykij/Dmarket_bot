@@ -8,7 +8,7 @@ Mixin with read-only account endpoints. Mixed into `DMarketAPIClient`
 from __future__ import annotations
 
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import structlog
 
@@ -43,14 +43,14 @@ class _AccountMixin:
             raise e
 
     async def get_user_inventory(
-        self, game_id: str, limit: int = 50, cursor: Optional[str] = None
-    ) -> Dict[str, Any]:
+        self, game_id: str, limit: int = 50, cursor: str | None = None
+    ) -> dict[str, Any]:
         """Fetches items owned by the user but NOT currently on sale.
 
         Endpoint: GET /exchange/v1/user-inventory (NEW per Swagger v1.1.0)
         Returns: {"objects": [...], "cursor": "..."} for backward compat.
         """
-        params: Dict[str, Any] = {"gameId": game_id, "limit": limit, "basic": "true"}
+        params: dict[str, Any] = {"gameId": game_id, "limit": limit, "basic": "true"}
         if cursor:
             params["cursor"] = cursor
         return await self.make_request(
@@ -62,9 +62,9 @@ class _AccountMixin:
         self,
         game_id: str,
         limit: int = 100,
-        cursor: Optional[str] = None,
+        cursor: str | None = None,
         basic: bool = False,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Fetch user inventory with FULL status info: trade_protected, reverted, FinalizationTime.
 
@@ -81,7 +81,7 @@ class _AccountMixin:
         Endpoint: GET /exchange/v1/user-inventory?gameId=a8db&basic={basic}&limit=100
         basic=true returns minimal fields, basic=false returns full status
         """
-        all_items: List[Dict[str, Any]] = []
+        all_items: list[dict[str, Any]] = []
         current_cursor = cursor or ""
 
         for _ in range(10):  # max 10 pages = 1000 items
@@ -103,10 +103,7 @@ class _AccountMixin:
             items = res.get("items", res.get("objects", []))
             for it in items:
                 status = it.get("status", "active")
-                if isinstance(status, str):
-                    status_lower = status.lower()
-                else:
-                    status_lower = "active"
+                status_lower = status.lower() if isinstance(status, str) else "active"
 
                 # FinalizationTime can be int (seconds) or string
                 fin_raw = it.get("FinalizationTime") or it.get("finalizationTime") or 0
@@ -143,8 +140,8 @@ class _AccountMixin:
         self,
         days: int = 30,
         limit: int = 100,
-        transaction_type: Optional[str] = None,
-    ) -> List[Dict[str, Any]]:
+        transaction_type: str | None = None,
+    ) -> list[dict[str, Any]]:
         """
         Get recent transactions to detect rollbacks (reverted status).
 
@@ -159,7 +156,7 @@ class _AccountMixin:
 
         Endpoint: GET /exchange/v1/transactions?days=30&limit=100
         """
-        params: Dict[str, Any] = {
+        params: dict[str, Any] = {
             "days": days,
             "limit": limit,
         }

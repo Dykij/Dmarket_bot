@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 
 async def collect_from_sales_history(
-    api: "IDMarketAPI",
+    api: IDMarketAPI,
     game: str,
     title: str,
     days: int,
@@ -98,7 +98,7 @@ async def collect_from_sales_history(
 
 
 async def collect_from_aggregated(
-    api: "IDMarketAPI",
+    api: IDMarketAPI,
     game: str,
     title: str,
 ) -> list[PricePoint]:

@@ -1,5 +1,5 @@
 """
-Fatal error classification for the DMarket bot (v12.7).
+Fatal error classification for the DMarket bot (v14.9).
 
 The contract is:
     TRANSIENT  → bot may safely retry (network blip, rate limit)
@@ -14,16 +14,14 @@ This module is the single source of truth for "is this exception
 fatal?" — both the outer supervisor (`autonomous_scanner.py`) and
 the inner cycle (`target_sniping/core.py`) call `classify()`.
 
-v12.7: Added granular error codes for better diagnostics:
-    7 = rate limit (transient but worth tracking)
-    8 = circuit breaker open (transient)
-    9 = quota exhausted (needs attention)
+v14.9: Integrated unified exception hierarchy from src.utils.exceptions.
+    All bot exceptions now inherit from BotError with structured context.
+    Exception chaining supported via `raise ... from ...` pattern.
 """
 
 from __future__ import annotations
 
 import asyncio
-from typing import Tuple, Type
 
 
 class FatalError(Exception):
@@ -59,7 +57,7 @@ class QuotaExhausted(FatalError):
 
 
 # Transient: bot may safely retry without user intervention.
-TRANSIENT_EXCEPTIONS: Tuple[Type[BaseException], ...] = (
+TRANSIENT_EXCEPTIONS: tuple[type[BaseException], ...] = (
     asyncio.TimeoutError,
     asyncio.CancelledError,
     ConnectionError,
@@ -86,10 +84,48 @@ try:
 except ImportError:
     pass
 
+# Unified exception hierarchy (v14.9)
+try:
+    from src.utils.exceptions import (
+        APIError,
+        AuthenticationError,
+        BotError,
+        DrawdownFreeze,
+        PumpDetected,
+        RateLimitExceeded,
+        RiskError,
+    )
+    from src.utils.exceptions import (
+        CircuitBreakerOpen as UnifiedCircuitBreakerOpen,
+    )
+    from src.utils.exceptions import (
+        ConfigError as UnifiedConfigError,
+    )
+    from src.utils.exceptions import (
+        DatabaseCorruption as UnifiedDatabaseCorruption,
+    )
+    from src.utils.exceptions import (
+        QuotaExhausted as UnifiedQuotaExhausted,
+    )
+
+    # Map unified exceptions to classification
+    _UNIFIED_TRANSIENT: tuple[type[BaseException], ...] = (
+        RateLimitExceeded,
+        UnifiedCircuitBreakerOpen,
+    )
+    _UNIFIED_FATAL: tuple[type[BaseException], ...] = (
+        AuthenticationError,
+        UnifiedConfigError,
+        UnifiedDatabaseCorruption,
+        UnifiedQuotaExhausted,
+    )
+except ImportError:
+    _UNIFIED_TRANSIENT = ()
+    _UNIFIED_FATAL = ()
 
 # These are almost always bugs in our code. We treat them as FATAL
 # (raise up, log with traceback, exit). The user fixes the code.
-_LOGIC_BUG_EXCEPTIONS: Tuple[Type[BaseException], ...] = (
+_LOGIC_BUG_EXCEPTIONS: tuple[type[BaseException], ...] = (
     AttributeError,
     KeyError,
     NameError,
@@ -109,16 +145,22 @@ def classify(exc: BaseException) -> str:
     - FatalError subclasses (explicit markers) → FATAL
     - TRANSIENT_EXCEPTIONS (network/CB)       → TRANSIENT
     - LOGIC_BUG_EXCEPTIONS (our bugs)          → FATAL
+    - Unified hierarchy (BotError subclasses)  → mapped by type
     - anything else                            → UNKNOWN (treat as FATAL)
 
-    v12.7: RateLimitError and CircuitBreakerOpen are TRANSIENT
-    (not FATAL) since they resolve automatically.
+    v14.9: Integrated unified exception hierarchy.
     """
-    # Rate limit / circuit breaker are transient (auto-resolve)
+    # Legacy: Rate limit / circuit breaker are transient (auto-resolve)
     if isinstance(exc, (RateLimitError, CircuitBreakerOpen, QuotaExhausted)):
         return "TRANSIENT"
     if isinstance(exc, FatalError):
         return "FATAL"
+    # Unified hierarchy (v14.9)
+    if _UNIFIED_TRANSIENT and isinstance(exc, _UNIFIED_TRANSIENT):
+        return "TRANSIENT"
+    if _UNIFIED_FATAL and isinstance(exc, _UNIFIED_FATAL):
+        return "FATAL"
+    # Network / IO transient errors
     if isinstance(exc, TRANSIENT_EXCEPTIONS):
         return "TRANSIENT"
     if isinstance(exc, _LOGIC_BUG_EXCEPTIONS):
@@ -147,7 +189,10 @@ def exit_code_for(exc: BaseException) -> int:
         7 = rate limit (transient, but worth tracking)
         8 = circuit breaker open (transient)
         9 = quota exhausted (needs attention)
+        10 = risk error (drawdown freeze, pump detected)
+        11 = trading error (price validation, order rejected)
     """
+    # Legacy exceptions
     if isinstance(exc, ConfigError):
         return 2
     if isinstance(exc, AuthError):
@@ -162,6 +207,41 @@ def exit_code_for(exc: BaseException) -> int:
         return 8
     if isinstance(exc, QuotaExhausted):
         return 9
+    # Unified hierarchy (v14.9)
+    if _UNIFIED_FATAL:
+        from src.utils.exceptions import (
+            AuthenticationError,
+        )
+        from src.utils.exceptions import (
+            ConfigError as UConfigError,
+        )
+        from src.utils.exceptions import (
+            DatabaseCorruption as UDBCorruption,
+        )
+        from src.utils.exceptions import (
+            QuotaExhausted as UQuota,
+        )
+        if isinstance(exc, UConfigError):
+            return 2
+        if isinstance(exc, AuthenticationError):
+            return 3
+        if isinstance(exc, UDBCorruption):
+            return 4
+        if isinstance(exc, UQuota):
+            return 9
+    if _UNIFIED_TRANSIENT:
+        from src.utils.exceptions import CircuitBreakerOpen as UCB
+        from src.utils.exceptions import RateLimitExceeded
+        if isinstance(exc, RateLimitExceeded):
+            return 7
+        if isinstance(exc, UCB):
+            return 8
+    from src.utils.exceptions import DrawdownFreeze, PumpDetected, TradingError
+    if isinstance(exc, (DrawdownFreeze, PumpDetected)):
+        return 10
+    if isinstance(exc, TradingError):
+        return 11
+    # Fallback
     if isinstance(exc, FatalError):
         return 1
     if isinstance(exc, _LOGIC_BUG_EXCEPTIONS):

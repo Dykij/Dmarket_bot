@@ -11,10 +11,10 @@ Usage: call config_watcher.start() during bot init, modify .env anytime.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
 import os
 from pathlib import Path
-from typing import Optional
 
 from src.config import Config
 
@@ -56,7 +56,7 @@ class ConfigWatcher:
 
     def __init__(self):
         self._last_mtime: float = 0.0
-        self._task: Optional[asyncio.Task] = None
+        self._task: asyncio.Task | None = None
         self._running = False
 
     async def start(self) -> None:
@@ -72,10 +72,8 @@ class ConfigWatcher:
         self._running = False
         if self._task:
             self._task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self._task
-            except asyncio.CancelledError:
-                pass
             self._task = None
 
     async def _watch_loop(self) -> None:

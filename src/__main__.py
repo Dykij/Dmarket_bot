@@ -124,9 +124,11 @@ async def run_bot() -> None:
     # file.
     from src.utils.health_server import (
         health_state,
-        is_enabled as health_server_enabled,
         start_health_server,
         stop_health_server,
+    )
+    from src.utils.health_server import (
+        is_enabled as health_server_enabled,
     )
     health_runner = None
     if health_server_enabled():
@@ -186,10 +188,9 @@ async def run_bot() -> None:
 def main() -> None:
     """Main entry point with lock file protection."""
     import atexit
+    import hashlib
     import signal
     import time
-
-    import hashlib
     lock_file = PROJECT_ROOT / "bot.lock"
     our_pid = os.getpid()
 
@@ -204,7 +205,7 @@ def main() -> None:
 
                 # v12.9: Integrity check — verify the stored hash
                 expected_hash = hashlib.sha256(
-                    f"{pid_str}\n".encode("utf-8")
+                    f"{pid_str}\n".encode()
                 ).hexdigest()[:16]
                 if stored_hash and stored_hash != expected_hash:
                     logger.warning(
@@ -235,7 +236,7 @@ def main() -> None:
 
         # Create lock file with current PID + start time + integrity hash
         integrity_hash = hashlib.sha256(
-            f"{our_pid}\n".encode("utf-8")
+            f"{our_pid}\n".encode()
         ).hexdigest()[:16]
         lock_file.write_text(
             f"{our_pid}\n{int(time.time())}\n{integrity_hash}\n",

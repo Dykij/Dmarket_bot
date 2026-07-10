@@ -43,6 +43,8 @@ class PriceReference:
     dmarket_best_ask: float = 0.0
     dmarket_best_bid: float = 0.0
     sources_count: int = 0
+    marketcsgo_volume: int = 0
+    waxpeer_volume: int = 0
 
     @property
     def has_data(self) -> bool:
@@ -139,9 +141,9 @@ class MultiSourceOracle:
                 except Exception:
                     cs_price = 0.0
 
-            # Get volumes (for future liquidity weighting)
-            await self.marketcsgo.get_item_volume(title)
-            await self.waxpeer.get_item_volume(title)
+            # Get volumes ONCE and store in PriceReference (avoid re-fetch on cache hit)
+            mc_vol = await self.marketcsgo.get_item_volume(title)
+            wp_vol = await self.waxpeer.get_item_volume(title)
 
             ref = PriceReference(
                 title=title,
@@ -151,6 +153,8 @@ class MultiSourceOracle:
                 csfloat_price=cs_price,
                 steam_price=st_price,
                 sources_count=sum(1 for p in [mc_price, wp_price, cs_price, st_price] if p > 0),
+                marketcsgo_volume=mc_vol if isinstance(mc_vol, int) else 0,
+                waxpeer_volume=wp_vol if isinstance(wp_vol, int) else 0,
             )
             self._ref_cache[title] = ref
 
@@ -160,10 +164,10 @@ class MultiSourceOracle:
 
         if ref.marketcsgo_price > 0:
             prices["marketcsgo"] = ref.marketcsgo_price
-            volumes["marketcsgo"] = await self.marketcsgo.get_item_volume(title)
+            volumes["marketcsgo"] = ref.marketcsgo_volume
         if ref.waxpeer_price > 0:
             prices["waxpeer"] = ref.waxpeer_price
-            volumes["waxpeer"] = await self.waxpeer.get_item_volume(title)
+            volumes["waxpeer"] = ref.waxpeer_volume
         if ref.csfloat_price > 0:
             prices["csfloat"] = ref.csfloat_price
         if ref.steam_price > 0:
@@ -181,10 +185,22 @@ class MultiSourceOracle:
         titles: list[str],
         dmarket_buy_price: float = 0.0,
     ) -> dict[str, FairPriceResult]:
-        """Calculate fair prices for multiple items."""
+        """Calculate fair prices for multiple items in parallel."""
+        sem = asyncio.Semaphore(10)  # cap concurrent oracle calls
+
+        async def _fetch_one(t: str) -> tuple[str, FairPriceResult]:
+            async with sem:
+                result = await self.get_fair_price(t, dmarket_buy_price)
+                return t, result
+
+        pairs = await asyncio.gather(
+            *[_fetch_one(t) for t in titles],
+            return_exceptions=True,
+        )
         results: dict[str, FairPriceResult] = {}
-        for title in titles:
-            results[title] = await self.get_fair_price(title, dmarket_buy_price)
+        for pair in pairs:
+            if isinstance(pair, tuple):
+                results[pair[0]] = pair[1]
         return results
 
     def record_dmarket_snapshot(self, agg_prices: dict[str, Any]) -> None:

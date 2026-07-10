@@ -13,8 +13,9 @@ Provides the public entry points:
 
 from __future__ import annotations
 
-import structlog
 from decimal import Decimal
+
+import structlog
 
 from .indicators import _IndicatorMixin
 from .liquidity import _LiquidityMixin

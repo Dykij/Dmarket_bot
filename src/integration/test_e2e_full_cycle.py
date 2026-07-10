@@ -2,8 +2,6 @@
 E2E Test: Bug Detection → Workflow → Error → Rollback → Retry
 """
 
-import asyncio
-import tempfile
 from pathlib import Path
 
 import pytest
@@ -47,11 +45,11 @@ async def test_e2e_bug_detection_to_rollback(agent):
         return {"fixed": True}
 
     workflow.register_handler(AgentRole.PARSER, buggy_handler)
-    buggy_step = workflow.add_step(AgentRole.PARSER, {"action": "fix_bug"})
+    workflow.add_step(AgentRole.PARSER, {"action": "fix_bug"})
 
     try:
         await agent.run_workflow()
-        assert False, "Workflow should have failed"
+        raise AssertionError("Workflow should have failed")
     except Exception:
         pass  # Expected failure
 

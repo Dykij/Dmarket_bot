@@ -7,8 +7,8 @@ the kill-switch that cancels all DMarket offers.
 
 from __future__ import annotations
 
+import contextlib
 import logging
-from typing import Optional
 
 from aiogram import F, Router
 from aiogram.filters import Command
@@ -91,7 +91,7 @@ async def cmd_panic(message):
     logger.warning(f"PANIC executed by admin {message.from_user.id}")
 
 
-async def _cancel_all_offers() -> tuple[int, Optional[Exception]]:
+async def _cancel_all_offers() -> tuple[int, Exception | None]:
     """Cancel all active offers on DMarket. Returns (count, error)."""
     async with state.lock:
         client_to_close = None
@@ -129,10 +129,8 @@ async def _cancel_all_offers() -> tuple[int, Optional[Exception]]:
             return 0, e
         finally:
             if client_to_close is not None:
-                try:
+                with contextlib.suppress(Exception):
                     await client_to_close.close()
-                except Exception:
-                    pass
                 state.client = None
 
 
@@ -151,7 +149,7 @@ async def cmd_liquidate(message):
 
     try:
         result = await guard.emergency_liquidate_all(Config.GAME_ID)
-    except Exception as e:
+    except Exception:
         logger.exception("Liquidation failed")
         await message.answer("❌ Liquidation failed. Check logs for details.")
         return

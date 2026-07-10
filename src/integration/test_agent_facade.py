@@ -2,14 +2,11 @@
 Test suite for the Agent Facade (integration layer).
 """
 
-import asyncio
-import tempfile
 from pathlib import Path
 
 import pytest
 
 from src.integration.agent_facade import AgentFacade
-from src.cot_audit.core import FormatStyle
 from src.sandbox.core import BashSandbox, SandboxConfig
 
 
@@ -26,7 +23,6 @@ async def test_safe_bash_echo(agent):
 
 async def test_safe_bash_timeout(agent):
     # Configure sandbox to allow 'sleep' command for this test
-    from src.sandbox.core import SandboxConfig
     agent.sandbox = BashSandbox(SandboxConfig(timeout_seconds=1, allowed_commands=["sleep"]))
     result = await agent.safe_bash("sleep 5")
     assert result.status.value == "timeout"

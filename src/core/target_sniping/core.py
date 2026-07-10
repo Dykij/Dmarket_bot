@@ -81,6 +81,11 @@ class SnipingLoop(  # type: ignore[misc]
         self.resale_cycle_limit = 1  # v13.0: resale every cycle (instant)
         self.reprice_counter = 0
 
+        # v14.0: Previous aggregated prices for OFI (Order Flow Imbalance).
+        # Initialized here to prevent race condition on first cycle.
+        self._prev_agg_prices: dict[str, Any] = {}
+        self._prev_agg_prices_prior: dict[str, Any] = {}
+
         # v15.0: MultiSource oracle (Market.CSGO + Waxpeer + CSFloat + Steam)
         self.multi_source_oracle: Any | None = None
 

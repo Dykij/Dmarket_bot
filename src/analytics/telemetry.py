@@ -1,9 +1,10 @@
 import asyncio
 import logging
-from fastapi import FastAPI
-from prometheus_client import generate_latest, CONTENT_TYPE_LATEST, Gauge, Histogram
-from starlette.responses import Response
+
 import uvicorn
+from fastapi import FastAPI
+from prometheus_client import CONTENT_TYPE_LATEST, Gauge, Histogram, generate_latest
+from starlette.responses import Response
 
 logger = logging.getLogger("Telemetry")
 logger.setLevel(logging.INFO)

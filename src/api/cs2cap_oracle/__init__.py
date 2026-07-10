@@ -2,6 +2,7 @@
 CS2Cap Oracle subpackage — unified pricing across 41 CS2 marketplaces.
 """
 
+from .client import CS2CapOracle
 from .models import (
     BATCH_MAX_ITEMS,
     BidsSnapshot,
@@ -11,7 +12,6 @@ from .models import (
     PriceSnapshot,
     RateLimitException,
 )
-from .client import CS2CapOracle
 
 __all__ = [
     "BATCH_MAX_ITEMS",

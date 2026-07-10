@@ -48,7 +48,7 @@ def create_price_analytics(
     rsi_period: int = 14,
     macd_fast: int = 12,
     macd_slow: int = 26,
-) -> "PriceAnalytics":
+) -> PriceAnalytics:
     """Factory function — convenience wrapper for `PriceAnalytics(...)`.
 
     Args:

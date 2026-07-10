@@ -7,7 +7,6 @@ v13.2: Added portfolio, daily, analyze, sell_top callbacks with logging.
 
 import logging
 import time
-from typing import Optional
 
 from aiogram import F, Router, types
 
@@ -33,13 +32,13 @@ from .keyboards import (
     CB_SELL_TOP,
     CB_START,
     CB_STOP,
+    get_inline_analyze_kb,
     get_inline_balance_kb,
     get_inline_daily_kb,
     get_inline_inventory_kb,
     get_inline_portfolio_kb,
     get_inline_profits_kb,
     get_inline_status_kb,
-    get_inline_analyze_kb,
 )
 from .resilience import dmarket_client, fetch_balance_data, retry_async, safe_call
 from .state import state

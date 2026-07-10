@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import logging
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from src.config import Config
 
@@ -45,7 +45,7 @@ class _LimitOrderMixin:
     async def _execute_limit_orders(
         self,
         *,
-        candidates: List[Dict[str, Any]],
+        candidates: list[dict[str, Any]],
         game_id: str,
         current_balance: float,
     ) -> int:
@@ -58,12 +58,12 @@ class _LimitOrderMixin:
         if not LIMIT_ORDER_ENABLED:
             return 0
 
-        targets_to_place: List[Dict[str, Any]] = []
+        targets_to_place: list[dict[str, Any]] = []
         for cand in candidates[:LIMIT_ORDER_MAX_PER_CYCLE]:
             title = cand.get("title", "")
             best_bid = cand.get("best_bid", 0.0)
             best_ask = cand.get("best_ask", 0.0)
-            base_price = cand.get("base_price", 0.0)
+            cand.get("base_price", 0.0)
 
             if best_ask <= 0 or best_bid <= 0:
                 continue
@@ -108,16 +108,16 @@ class _LimitOrderMixin:
 
     def _categorize_candidates(
         self,
-        candidates: List[Dict[str, Any]],
-    ) -> tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+        candidates: list[dict[str, Any]],
+    ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
         """
         Split candidates into:
           - limit_order: wide spread → place target
           - instant_buy: moderate spread → instant-buy at ask
         Narrow spread items (<5%) are dropped.
         """
-        limit_targets: List[Dict[str, Any]] = []
-        instant_targets: List[Dict[str, Any]] = []
+        limit_targets: list[dict[str, Any]] = []
+        instant_targets: list[dict[str, Any]] = []
 
         for cand in candidates:
             best_ask = cand.get("best_ask", 0.0)
@@ -137,8 +137,8 @@ class _LimitOrderMixin:
         self,
         *,
         game_id: str,
-        agg_prices: Dict[str, Any],
-        cs_snapshots: Dict[str, Any],
+        agg_prices: dict[str, Any],
+        cs_snapshots: dict[str, Any],
         current_balance: float,
     ) -> int:
         """
@@ -151,7 +151,6 @@ class _LimitOrderMixin:
 
         Returns number of targets placed.
         """
-        from src.config import Config
 
         if not (LIMIT_ORDER_ENABLED and Config.CROSS_MARKET_TARGET_ENABLED):
             return 0
@@ -163,7 +162,7 @@ class _LimitOrderMixin:
         total_cost = Config.FEE_RATE + Config.WITHDRAWAL_FEE_RATE
         required_margin = total_cost + Config.CROSS_MARKET_TARGET_MARGIN
 
-        candidates: List[Dict[str, Any]] = []
+        candidates: list[dict[str, Any]] = []
         for title, agg in agg_prices.items():
             if title in self._placed_cross_targets:
                 continue

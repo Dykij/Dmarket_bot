@@ -7,10 +7,11 @@ Mixed into SnipingLoop via _ResaleMixin (see resale.py).
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
 import random
 import time
-from typing import Any, List
+from typing import Any
 
 from src.api.oracle_factory import OracleFactory
 from src.db.price_history import price_db
@@ -64,16 +65,14 @@ class _ResaleDryMixin:
                     except Exception as e:
                         logger.debug(f"risk.record_trade_outcome (sim sell) failed: {e}")
 
-    async def _dry_list_unlocked(self, items: List[Any], game_id: str) -> None:
+    async def _dry_list_unlocked(self, items: list[Any], game_id: str) -> None:
         """DRY: Simulate listing unlocked items at buy_price * 1.05."""
         oracle = OracleFactory.get_oracle(game_id)
         for item in items:
             current_price = 0.0
             if oracle:
-                try:
+                with contextlib.suppress(Exception):
                     current_price = await oracle.get_item_price(item["hash_name"])
-                except Exception:
-                    pass
             if current_price <= 0:
                 current_price = item["buy_price"] * 1.05
             buy_price = item["buy_price"]

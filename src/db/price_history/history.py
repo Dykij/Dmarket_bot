@@ -11,7 +11,7 @@ v12.7: write methods wrapped with @with_db_retry.
 from __future__ import annotations
 
 import time
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 from src.db.db_retry import with_db_retry
 
@@ -40,7 +40,7 @@ class _HistoryMixin:
     # ------------------------------------------------------------------
     def get_latest_price(
         self, hash_name: str, max_age_seconds: int = 10800
-    ) -> Optional[float]:
+    ) -> float | None:
         cutoff = time.time() - max_age_seconds
         row = self.history_conn.execute(
             "SELECT price FROM price_history WHERE hash_name = ? AND recorded_at > ? "
@@ -51,7 +51,7 @@ class _HistoryMixin:
 
     def get_latest_price_timestamp(
         self, hash_name: str, max_age_seconds: int = 10800
-    ) -> Optional[float]:
+    ) -> float | None:
         """v12.7: Get timestamp of most recent price for staleness check (P4-3)."""
         cutoff = time.time() - max_age_seconds
         row = self.history_conn.execute(
@@ -61,7 +61,7 @@ class _HistoryMixin:
         ).fetchone()
         return row["recorded_at"] if row else None
 
-    def get_recent_prices(self, hash_name: str, days: int = 7) -> List[Tuple[float, float]]:
+    def get_recent_prices(self, hash_name: str, days: int = 7) -> list[tuple[float, float]]:
         cutoff = time.time() - (days * 86400)
         rows = self.history_conn.execute(
             "SELECT price, recorded_at FROM price_history "
@@ -74,15 +74,12 @@ class _HistoryMixin:
         prices = self.get_recent_prices(hash_name, days=14)
         if len(prices) < consecutive_drops + 1:
             return False
-        for i in range(consecutive_drops):
-            if prices[i][0] >= prices[i + 1][0]:
-                return False
-        return True
+        return all(prices[i][0] < prices[i + 1][0] for i in range(consecutive_drops))
 
     # ------------------------------------------------------------------
     # v12.2 Phase 2.4: Multi-level liquidity verification
     # ------------------------------------------------------------------
-    def get_liquidity_metrics(self, hash_name: str, days: int = 23) -> Dict[str, Any]:
+    def get_liquidity_metrics(self, hash_name: str, days: int = 23) -> dict[str, Any]:
         """
         Calculate liquidity metrics for an asset based on historical price observations.
         Mirrors the Gemini-recommended multi-level filter:
@@ -114,7 +111,7 @@ class _HistoryMixin:
         first_sale_age_days = (now - oldest_ts) / 86400.0
         last_sale_age_days = (now - newest_ts) / 86400.0
 
-        metrics: Dict[str, Any] = {
+        metrics: dict[str, Any] = {
             "total_sales": len(prices),
             "sales_in_window": len(prices),
             "first_sale_age_days": first_sale_age_days,
@@ -159,7 +156,7 @@ class _HistoryMixin:
         metrics = self.get_liquidity_metrics(hash_name)
         return metrics["is_liquid"]
 
-    def get_avg_price(self, hash_name: str, days: int = 7) -> Optional[float]:
+    def get_avg_price(self, hash_name: str, days: int = 7) -> float | None:
         cutoff = time.time() - (days * 86400)
         row = self.history_conn.execute(
             "SELECT AVG(price) as avg_price FROM price_history "
@@ -177,7 +174,7 @@ class _HistoryMixin:
         days: int = 14,
         boost_pct: float = 24.0,
         max_outliers: int = 3,
-    ) -> Optional[float]:
+    ) -> float | None:
         """
         Compute the trimmed mean of historical prices.
 
@@ -268,7 +265,7 @@ class _HistoryMixin:
     # ------------------------------------------------------------------
     @with_db_retry(operation_name="save_trades_batch")
     def save_trades_batch(
-        self, hash_name: str, trades: List[Dict[str, Any]],
+        self, hash_name: str, trades: list[dict[str, Any]],
     ) -> int:
         """Bulk-insert trade records into trade_history. Returns count inserted."""
         now = time.time()
@@ -291,7 +288,7 @@ class _HistoryMixin:
 
     def get_trade_history(
         self, hash_name: str, days: int = 30, limit: int = 200,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Read accumulated trade history for microstructure analysis."""
         cutoff = time.time() - (days * 86400)
         rows = self.history_conn.execute(

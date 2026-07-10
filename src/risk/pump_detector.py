@@ -33,7 +33,7 @@ import logging
 import os
 import time
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 logger = logging.getLogger("PumpDetector")
 
@@ -69,11 +69,11 @@ class PumpDetector:
 
     def __init__(
         self,
-        price_db: Optional[Any] = None,
-        notifier: Optional[Any] = None,
-        threshold_pct: Optional[float] = None,
-        window_seconds: Optional[int] = None,
-        blacklist_seconds: Optional[int] = None,
+        price_db: Any | None = None,
+        notifier: Any | None = None,
+        threshold_pct: float | None = None,
+        window_seconds: int | None = None,
+        blacklist_seconds: int | None = None,
     ) -> None:
         # Read env-overridable thresholds
         self.threshold_pct = (
@@ -93,7 +93,7 @@ class PumpDetector:
         )
 
         # Active blacklist: hash_name -> PumpAlert
-        self._blacklist: Dict[str, PumpAlert] = {}
+        self._blacklist: dict[str, PumpAlert] = {}
 
         # Diagnostics
         self._total_detections: int = 0
@@ -179,7 +179,7 @@ class PumpDetector:
             )
         return restored
 
-    def check_price(self, hash_name: str, current_price: float) -> Optional[PumpAlert]:
+    def check_price(self, hash_name: str, current_price: float) -> PumpAlert | None:
         """
         Run a spike check for one item. Returns PumpAlert if newly detected,
         None otherwise. Call this from the hot path (every cycle) so that
@@ -213,7 +213,7 @@ class PumpDetector:
         # recent is sorted DESC by recorded_at: [latest, ..., oldest]
         # Find the latest observation that is OLDER than window_start
         # (i.e. the price "before" the spike window).
-        old_price: Optional[float] = None
+        old_price: float | None = None
         for price, ts in recent:
             if ts <= window_start:
                 old_price = price
@@ -330,11 +330,11 @@ class PumpDetector:
     # ----------------------------------------------------------------
     # Diagnostics for /status and daily briefing
     # ----------------------------------------------------------------
-    def get_active_blacklist(self) -> List[PumpAlert]:
+    def get_active_blacklist(self) -> list[PumpAlert]:
         """Return currently active (non-expired) blacklisted items."""
         return [a for a in self._blacklist.values() if a.is_active]
 
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         return {
             "threshold_pct": self.threshold_pct,
             "window_seconds": self.window_seconds,

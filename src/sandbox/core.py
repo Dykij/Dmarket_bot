@@ -12,14 +12,9 @@ import logging
 import os
 import re
 import shlex
-import subprocess
-import tempfile
-from dataclasses import dataclass, field
 from enum import Enum
-from pathlib import Path
-from typing import List, Optional, Pattern, Union
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +29,7 @@ class SandboxResultStatus(str, Enum):
 
 class SandboxCommand(BaseModel):
     command: str
-    cwd: Optional[str] = None
+    cwd: str | None = None
     env: dict = Field(default_factory=dict)
 
 
@@ -42,7 +37,7 @@ class SandboxResult(BaseModel):
     status: SandboxResultStatus
     stdout: str = ""
     stderr: str = ""
-    returncode: Optional[int] = None
+    returncode: int | None = None
     duration_ms: int = 0
 
 
@@ -51,8 +46,8 @@ class SandboxConfig(BaseModel):
     max_memory_mb: int = 256  # Soft limit, requires Docker or cgroups for enforcement
     max_output_bytes: int = 1024 * 1024  # 1MB
     work_dir: str = "."
-    allowed_commands: List[str] = Field(default_factory=lambda: ["git", "python", "pytest", "ls", "cat", "echo", "grep", "find", "pip", "cargo", "rustc"])
-    disallowed_patterns: List[str] = Field(default_factory=lambda: [
+    allowed_commands: list[str] = Field(default_factory=lambda: ["git", "python", "pytest", "ls", "cat", "echo", "grep", "find", "pip", "cargo", "rustc"])
+    disallowed_patterns: list[str] = Field(default_factory=lambda: [
         r"(\s|^)(rm\s+-rf\s+/|rm\s+/\s+-rf|mkfs\.|dd\s+if=|>:/?\s*/\s*\w+)",
         r"(\s|^)(curl|wget)\s+.*\|\s*sh\s*",  
     ])
@@ -68,7 +63,7 @@ class BashSandbox:
     Легковесная песочница для выполнения bash-команд.
     """
 
-    def __init__(self, config: Optional[SandboxConfig] = None):
+    def __init__(self, config: SandboxConfig | None = None):
         self.config = config or SandboxConfig()
         self._disallowed_re = [re.compile(p, re.IGNORECASE) for p in self.config.disallowed_patterns]
 
@@ -84,7 +79,7 @@ class BashSandbox:
                 if not any(cmd.startswith(a) for a in self.config.allowed_commands):
                     raise SandboxSecurityError(f"Command not in allowed list: {tokens[0]}")
 
-    async def execute(self, command: Union[str, SandboxCommand]) -> SandboxResult:
+    async def execute(self, command: str | SandboxCommand) -> SandboxResult:
         if isinstance(command, str):
             command = SandboxCommand(command=command)
 
@@ -93,15 +88,36 @@ class BashSandbox:
         except SandboxSecurityError as e:
             return SandboxResult(status=SandboxResultStatus.DISALLOWED, stderr=str(e))
 
+        # SECURITY: Use create_subprocess_exec with shlex.split() to avoid
+        # shell metacharacter injection.
+        try:
+            args = shlex.split(command.command)
+        except ValueError as e:
+            return SandboxResult(
+                status=SandboxResultStatus.ERROR,
+                stderr=f"Failed to parse command: {e}",
+            )
+
+        return await self._execute_args(
+            args, cwd=command.cwd, env=command.env,
+        )
+
+    async def _execute_args(
+        self,
+        args: list[str],
+        cwd: str | None = None,
+        env: dict | None = None,
+    ) -> SandboxResult:
+        """Execute a pre-parsed command list (no shell injection risk)."""
         start = asyncio.get_event_loop().time()
 
         try:
-            proc = await asyncio.create_subprocess_shell(
-                command.command,
+            proc = await asyncio.create_subprocess_exec(
+                *args,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
-                cwd=command.cwd or self.config.work_dir,
-                env={**os.environ, **command.env},
+                cwd=cwd or self.config.work_dir,
+                env={**os.environ, **(env or {})},
                 limit=self.config.max_output_bytes,
             )
             try:
@@ -124,7 +140,7 @@ class BashSandbox:
         except Exception as exc:
             return SandboxResult(status=SandboxResultStatus.ERROR, stderr=str(exc))
 
-    async def execute_in_docker(self, command: Union[str, SandboxCommand], image: str = "python:3.11-slim") -> SandboxResult:
+    async def execute_in_docker(self, command: str | SandboxCommand, image: str = "python:3.11-slim") -> SandboxResult:
         """
         Execute a command inside a Docker container for full isolation.
         Requires Docker to be installed and running.
@@ -133,4 +149,5 @@ class BashSandbox:
             command = SandboxCommand(command=command)
 
         docker_cmd = f"docker run --rm -v {self.config.work_dir}:/workspace -w /workspace {image} bash -c {shlex.quote(command.command)}"
-        return await self.execute(docker_cmd)
+        docker_args = shlex.split(docker_cmd)
+        return await self._execute_args(docker_args)

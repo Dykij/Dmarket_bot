@@ -1,6 +1,6 @@
 import logging
+
 import hvac
-from typing import Optional
 
 logger = logging.getLogger("VaultClient")
 
@@ -12,7 +12,7 @@ class VaultClient:
     def __init__(self, url: str, token: str):
         self.url = url
         self.token = token
-        self.client: Optional[hvac.Client] = None
+        self.client: hvac.Client | None = None
 
     def connect(self):
         try:
@@ -26,14 +26,13 @@ class VaultClient:
             logger.error(f"Error connecting to Vault: {e}", exc_info=True)
             return False
 
-    def get_secret(self, path: str, key: str, mount_point: str = "secret") -> Optional[str]:
+    def get_secret(self, path: str, key: str, mount_point: str = "secret") -> str | None:
         """
         Retrieves a secret from Vault KV v2.
         Example: get_secret('dmarket', 'secret_key')
         """
-        if not self.client:
-            if not self.connect():
-                return None
+        if not self.client and not self.connect():
+            return None
 
         assert self.client is not None  # connect() guarantees client is set
         try:

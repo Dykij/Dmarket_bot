@@ -11,9 +11,7 @@ Functions:
 
 from __future__ import annotations
 
-import math
-from typing import Any, Dict, List, Optional, Tuple
-
+from typing import Any
 
 # ══════════════════════════════════════════════════════════════════════
 # 1. STOIKOV MICRO-PRICE (OBI-adjusted fair price)
@@ -67,7 +65,7 @@ def multi_level_obi(
     best_ask: float,
     bid_count: int,
     ask_count: int,
-    listings: Optional[List[Dict[str, Any]]] = None,
+    listings: list[dict[str, Any]] | None = None,
     levels: int = 5,
 ) -> float:
     """
@@ -79,7 +77,7 @@ def multi_level_obi(
 
     Returns OBI in [-1, 1]. Positive = buyer pressure.
     """
-    sell_prices: List[float] = []
+    sell_prices: list[float] = []
     if listings:
         for li in listings:
             px = int(li.get("price", {}).get("USD", 0)) / 100.0
@@ -115,7 +113,7 @@ def multi_level_obi(
 def queue_imbalance(
     bid_count: int,
     ask_count: int,
-) -> Optional[float]:
+) -> float | None:
     """
     Queue size ratio. Best for large-tick assets (like CS2 skins
     where prices move in discrete $0.01-$0.05 steps).
@@ -176,7 +174,7 @@ def reservation_spread(
     volatility: float,
     gamma: float = 0.3,
     T_days: float = 7.0,
-) -> Tuple[float, float]:
+) -> tuple[float, float]:
     sigma_sq = max(volatility, 0.01) ** 2
     half_spread = gamma * sigma_sq * (T_days / 365.0) * mid_price * 0.5
     bid_price = reservation - half_spread

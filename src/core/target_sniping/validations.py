@@ -9,11 +9,10 @@ imports from src.analysis.microstructure as needed.
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from src.config import Config
 from src.db.price_history import price_db
-from src.utils.decimal_helpers import D, quantize
 
 
 def check_bait_detection(title: str, base_price: float) -> dict:
@@ -54,7 +53,7 @@ def check_obi(
 def check_vwap_filter(
     title: str,
     best_ask: float,
-    sales_cache: Optional[Dict[str, List[Dict[str, Any]]]] = None,
+    sales_cache: dict[str, list[dict[str, Any]]] | None = None,
 ) -> dict:
     """VWAP undervaluation check: skip if best_ask sits above VWAP."""
     vwap_signal_val = 0.0
@@ -81,7 +80,7 @@ def check_vwap_filter(
 
 def check_cvd_vpin(
     title: str,
-    sales_cache: Optional[Dict[str, List[Dict[str, Any]]]] = None,
+    sales_cache: dict[str, list[dict[str, Any]]] | None = None,
 ) -> dict:
     """CVD / VPIN signals: cumulative volume delta and informed-trading probability."""
     cvd_val = 0.0
@@ -112,7 +111,7 @@ def check_cvd_vpin(
 
 def check_adverse_selection(
     title: str,
-    trade_records: List[Dict[str, Any]],
+    trade_records: list[dict[str, Any]],
 ) -> dict:
     """Kyle λ + Amihud adverse-selection check."""
     if (
@@ -135,7 +134,7 @@ def check_adverse_selection(
 
 def check_vol_regime(
     title: str,
-    trade_records: List[Dict[str, Any]],
+    trade_records: list[dict[str, Any]],
 ) -> dict:
     """Realized volatility regime classification (Parkinson)."""
     vol_regime = "medium"
@@ -146,8 +145,8 @@ def check_vol_regime(
     ):
         return {"pass": True, "regime": vol_regime, "annual_vol": 0.0}
     from src.analysis.microstructure import (
-        realized_vol_parkinson,
         classify_volatility_regime,
+        realized_vol_parkinson,
     )
 
     annual_vol = realized_vol_parkinson(trade_records) or 0.0
@@ -159,7 +158,7 @@ def check_vol_regime(
 
 def check_roll_spread(
     title: str,
-    trade_records: List[Dict[str, Any]],
+    trade_records: list[dict[str, Any]],
     best_ask: float,
 ) -> dict:
     """Roll's effective spread model check."""
@@ -180,7 +179,7 @@ def check_roll_spread(
 
 def check_volume_profile_poc(
     title: str,
-    trade_records: List[Dict[str, Any]],
+    trade_records: list[dict[str, Any]],
 ) -> float:
     """Volume Profile Point of Control (price magnet)."""
     if (
@@ -223,7 +222,7 @@ def check_tod_adjustment() -> float:
     """Time-of-day / day-of-week margin multiplier."""
     if not Config.TIME_OF_DAY_ENABLED:
         return 1.0
-    from src.analysis.microstructure import tod_multiplier, day_of_week_multiplier
+    from src.analysis.microstructure import day_of_week_multiplier, tod_multiplier
 
     tod_m = tod_multiplier(
         Config.TIME_OF_DAY_NIGHT_START_UTC,
@@ -239,7 +238,7 @@ def check_tod_adjustment() -> float:
 def evaluate_cross_market_arb(
     title: str,
     best_ask: float,
-    cs_bids: Optional[Dict[str, Any]] = None,
+    cs_bids: dict[str, Any] | None = None,
 ) -> dict:
     """Cross-market arbitrage check (CS2Cap provider bids vs DMarket ask).
 
@@ -311,7 +310,7 @@ def compute_microstructure_scores(
     vpin_val: float,
     adverse_pass: bool,
     vol_regime: str,
-    prev_agg_prices: Optional[Dict[str, Dict[str, Any]]] = None,
+    prev_agg_prices: dict[str, dict[str, Any]] | None = None,
 ) -> dict:
     """Composite buy score from microstructure signals.
 
@@ -325,9 +324,11 @@ def compute_microstructure_scores(
 
     from src.analysis.microstructure import (
         composite_buy_score,
-        compute_cvd as _cvd_local,
         kyle_lambda,
         simple_obi,
+    )
+    from src.analysis.microstructure import (
+        compute_cvd as _cvd_local,
     )
 
     _s_obi = simple_obi(best_bid, best_ask, bid_count, ask_count)
@@ -369,8 +370,8 @@ def evaluate_fee_slippage_tod(
     current_margin: float,
     list_price: float,
     is_sandbox: bool = False,
-    item_id: Optional[str] = None,
-    cs_ask_price: Optional[float] = None,
+    item_id: str | None = None,
+    cs_ask_price: float | None = None,
 ) -> dict:
     """Fee calculation with slippage, TOD adjustment, and arbitrage profit validation.
 

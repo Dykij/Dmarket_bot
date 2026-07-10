@@ -28,26 +28,29 @@ v12.5 changes:
 """
 
 import asyncio
+import logging
 import os
 import sys
-import logging
 import time
-from dotenv import load_dotenv
 from pathlib import Path
+
+from dotenv import load_dotenv
 
 BASE_DIR = str(Path(__file__).resolve().parent.parent.parent)
 if BASE_DIR not in sys.path:
     sys.path.append(BASE_DIR)
 
+import contextlib
+
 from src.api.dmarket_api_client import DMarketAPIClient  # noqa: E402
 from src.inventory_manager import InventoryManager  # noqa: E402
-from src.utils.vault import vault  # noqa: E402
+from src.risk.error_reporter import ErrorReporter, _write_exit_state, fatal_exit  # noqa: E402
 from src.risk.fatal_errors import (  # noqa: E402
     AuthError,
     ConfigError,
     classify,
 )
-from src.risk.error_reporter import ErrorReporter, _write_exit_state, fatal_exit  # noqa: E402
+from src.utils.vault import vault  # noqa: E402
 
 
 def setup_logging() -> None:
@@ -128,16 +131,12 @@ async def run_autonomous_scanner() -> None:
     heartbeat_path = Path(
         os.getenv("WATCHDOG_HEARTBEAT_FILE", "data/watchdog_heartbeat.txt")
     )
-    try:
+    with contextlib.suppress(Exception):
         heartbeat_path.parent.mkdir(parents=True, exist_ok=True)
-    except Exception:
-        pass
 
     def _write_heartbeat() -> None:
-        try:
+        with contextlib.suppress(Exception):
             heartbeat_path.write_text(str(int(time.time())), encoding="utf-8")
-        except Exception:
-            pass
 
     _write_heartbeat()  # initial
 

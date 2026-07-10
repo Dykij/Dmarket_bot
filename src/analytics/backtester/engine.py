@@ -47,7 +47,7 @@ class Backtester:
     async def run(
         self,
         strategy: TradingStrategy,
-        price_histories: dict[str, "PriceHistory"],
+        price_histories: dict[str, PriceHistory],
         start_date: datetime,
         end_date: datetime,
         initial_balance: Decimal,
@@ -187,9 +187,9 @@ class Backtester:
 
     def _get_price_at_date(
         self,
-        history: "PriceHistory",
+        history: PriceHistory,
         date: datetime,
-    ) -> "PricePoint | None":
+    ) -> PricePoint | None:
         """Get price point closest to given date.
 
         Args:
@@ -203,7 +203,7 @@ class Backtester:
             return None
 
         # Find closest point
-        closest: "PricePoint | None" = None
+        closest: PricePoint | None = None
         min_diff = timedelta(days=365)
 
         for point in history.points:

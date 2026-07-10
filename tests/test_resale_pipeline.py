@@ -1,5 +1,5 @@
 """
-Tests for ResalePipeline, InventoryManager, Pagination, and full buy→sell flow.
+Tests for ResalePipeline, InventoryManager, Pagination, and full buy→sell flow (v14.9).
 
 Run with: python -m pytest tests/test_resale_pipeline.py -v
 """
@@ -17,7 +17,7 @@ import pytest
 # =====================================================================
 
 class TestResalePipeline:
-    """Tests for the buy→CS2Cap→sell pipeline."""
+    """Tests for the buy→Oracle→sell pipeline."""
 
     def test_import(self):
         from src.core.resale_pipeline import ResalePipeline
@@ -32,32 +32,34 @@ class TestResalePipeline:
 
         sell = pipeline._calculate_sell_price(
             buy_price=10.0,
-            cs2cap_price=15.0,
+            oracle_price=15.0,
             cross_data=None,
             fee_rate=0.05,
         )
-        # Should be ~CS2Cap * 0.98 = 14.70, but at least 10 * 1.05 / 0.95 = 11.05
+        # Should be ~Oracle * 0.98 = 14.70, but at least 10 * 1.05 / 0.95 = 11.05
         assert sell >= 11.05
         assert sell <= 15.0
 
     def test_calculate_sell_price_min_margin(self):
         from src.core.resale_pipeline import ResalePipeline
         from src.api.dmarket_api_client import DMarketAPIClient
+        from src.config import Config
 
         mock_api = MagicMock(spec=DMarketAPIClient)
         pipeline = ResalePipeline(mock_api)
 
-        # Even if CS2Cap is low, min margin should be enforced
+        # Even if oracle is low, min margin should be enforced
         sell = pipeline._calculate_sell_price(
             buy_price=10.0,
-            cs2cap_price=10.5,  # Very low margin
+            oracle_price=10.5,  # Very low margin
             cross_data=None,
             fee_rate=0.05,
         )
-        # Min sell = 10 * 1.05 / 0.95 = 11.05
-        assert sell >= 11.05
+        # Min sell = buy_price * (1 + MIN_SPREAD_PCT/100) / (1 - fee_rate)
+        min_sell = 10.0 * (1 + Config.MIN_SPREAD_PCT / 100.0) / (1 - 0.05)
+        assert sell == pytest.approx(min_sell, abs=0.01)
 
-    def test_calculate_sell_price_cs2cap_zero(self):
+    def test_calculate_sell_price_oracle_zero(self):
         from src.core.resale_pipeline import ResalePipeline
         from src.api.dmarket_api_client import DMarketAPIClient
 
@@ -66,7 +68,7 @@ class TestResalePipeline:
 
         sell = pipeline._calculate_sell_price(
             buy_price=10.0,
-            cs2cap_price=0.0,
+            oracle_price=0.0,
             cross_data=None,
             fee_rate=0.05,
         )
@@ -75,21 +77,21 @@ class TestResalePipeline:
 
     def test_calculate_sell_price_with_cross_data(self):
         from src.core.resale_pipeline import ResalePipeline
-        from src.api.cs2cap_oracle import CrossMarketData
         from src.api.dmarket_api_client import DMarketAPIClient
+        from dataclasses import dataclass
+
+        @dataclass
+        class MockCrossData:
+            global_max_bid: float = 13.0
 
         mock_api = MagicMock(spec=DMarketAPIClient)
         pipeline = ResalePipeline(mock_api)
 
-        cross = CrossMarketData(
-            hash_name="test",
-            global_max_bid=13.0,
-            provider_prices={"csfloat": 15.0},
-        )
+        cross = MockCrossData(global_max_bid=13.0)
 
         sell = pipeline._calculate_sell_price(
             buy_price=10.0,
-            cs2cap_price=15.0,
+            oracle_price=15.0,
             cross_data=cross,
             fee_rate=0.05,
         )
@@ -519,9 +521,9 @@ class TestConfigIntegration:
     def test_all_new_config_params(self):
         from src.config import Config
 
-        # CS2Cap
-        assert hasattr(Config, "CS2CAP_API_KEY")
-        assert hasattr(Config, "CS2CAP_ORACLE_PRIMARY")
+        # Oracle (replaced CS2Cap)
+        assert hasattr(Config, "ORACLE_BATCH_SIZE")
+        assert hasattr(Config, "ORACLE_TOP_K_VALIDATE")
 
         # Self-reflection
         assert hasattr(Config, "SELF_REFLECTION_WINDOW")

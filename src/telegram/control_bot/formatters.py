@@ -9,7 +9,6 @@ v13.2: Added funds hold display, portfolio formatting, daily summary.
 
 import logging
 import time
-from typing import Optional
 
 from src.config import Config
 from src.utils.clock_sync import clock_sync
@@ -40,7 +39,7 @@ def format_balance(balance: float, equity: dict) -> str:
 
 def format_status(
     is_running: bool,
-    balance_data: Optional[dict] = None,
+    balance_data: dict | None = None,
 ) -> str:
     """Format the status text shown in /status and btn:refresh_status."""
     state_str = "🟢 RUNNING" if is_running else "🔴 STOPPED"

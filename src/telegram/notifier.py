@@ -39,7 +39,7 @@ import logging
 import os
 import time
 from collections import deque
-from typing import Any, Deque, Dict, Optional, Set, Tuple
+from typing import Any
 
 import aiohttp
 
@@ -55,7 +55,7 @@ class _TelegramNotifier:
 
     # Throttle windows (seconds). A new message of severity X is held
     # back if one was sent in the last THROTTLE_S[X] seconds.
-    THROTTLE_S: Dict[str, float] = {
+    THROTTLE_S: dict[str, float] = {
         "info": 60.0,        # buy/sell — at most 1/min
         "warning": 30.0,     # circuit breaker — at most 1/30s
         "error": 10.0,        # crashes — at most 1/10s
@@ -74,15 +74,15 @@ class _TelegramNotifier:
     def __init__(self) -> None:
         self._token: str = ""
         self._chat_id: str = ""
-        self._admin_ids: Set[str] = set()
-        self._last_sent_at: Dict[str, float] = {}
-        self._session: Optional[aiohttp.ClientSession] = None
+        self._admin_ids: set[str] = set()
+        self._last_sent_at: dict[str, float] = {}
+        self._session: aiohttp.ClientSession | None = None
         self._enabled: bool = False
         self._last_error_log: float = 0.0
         self._total_sent: int = 0
         self._total_throttled: int = 0
         self._total_failed: int = 0
-        self._recent_messages: Deque[Tuple[float, str]] = deque(maxlen=50)
+        self._recent_messages: deque[tuple[float, str]] = deque(maxlen=50)
 
         # v12.7: circuit breaker state
         self._cb_consecutive_failures: int = 0
@@ -113,7 +113,7 @@ class _TelegramNotifier:
                 "[notifier] disabled (token/chat_id missing or placeholder)"
             )
 
-    async def _ensure_session(self) -> Optional[aiohttp.ClientSession]:
+    async def _ensure_session(self) -> aiohttp.ClientSession | None:
         if not self._enabled:
             return None
         if self._session is None or self._session.closed:
@@ -168,7 +168,7 @@ class _TelegramNotifier:
         # Use a redacted placeholder for any logging context instead.
         url = f"https://api.telegram.org/bot{self._token}/sendMessage"
         _redacted_url = "https://api.telegram.org/bot<REDACTED>/sendMessage"
-        payload: Dict[str, Any] = {
+        payload: dict[str, Any] = {
             "chat_id": self._chat_id,
             "text": text[:4000],  # Telegram hard cap is 4096
             "disable_notification": silent,
@@ -368,7 +368,7 @@ class _TelegramNotifier:
         """Send an arbitrary message with the given severity."""
         return await self._send_raw(text, severity=severity)
 
-    def stats(self) -> Dict[str, Any]:
+    def stats(self) -> dict[str, Any]:
         """Diagnostic info for /status and logs."""
         return {
             "enabled": self._enabled,

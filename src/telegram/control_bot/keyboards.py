@@ -12,10 +12,10 @@ v13.2: Added SELL-TOP, PORTFOLIO, DAILY-BRIEF, ANALYZE buttons.
 import logging
 
 from aiogram.types import (
-    ReplyKeyboardMarkup,
-    KeyboardButton,
-    InlineKeyboardMarkup,
     InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    KeyboardButton,
+    ReplyKeyboardMarkup,
 )
 
 logger = logging.getLogger("TelegramControl.keyboards")

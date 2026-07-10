@@ -10,10 +10,12 @@ Provides:
 import asyncio
 import functools
 import logging
+from collections.abc import Awaitable, Callable
 from contextlib import asynccontextmanager
-from typing import Any, Awaitable, Callable
+from typing import Any
 
 from aiogram import types
+
 from src.api.dmarket_api_client import DMarketAPIClient
 from src.config import Config
 

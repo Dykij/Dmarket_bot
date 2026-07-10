@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import sqlite3
 import time
-from typing import Any, List, Optional, Tuple
+from typing import Any
 
 from src.db.db_retry import with_db_retry
 
@@ -34,20 +34,20 @@ class _StateMixin:
                 (key, value, time.time()),
             )
 
-    def get_state(self, key: str) -> Optional[str]:
+    def get_state(self, key: str) -> str | None:
         row = self.state_conn.execute(
             "SELECT value FROM scanning_state WHERE key = ?", (key,)
         ).fetchone()
         return row["value"] if row else None
 
-    def get_state_with_ts(self, key: str) -> Tuple[Optional[str], float]:
+    def get_state_with_ts(self, key: str) -> tuple[str | None, float]:
         """Return (value, updated_at) for a state key. updated_at=0 if missing."""
         row = self.state_conn.execute(
             "SELECT value, updated_at FROM scanning_state WHERE key = ?", (key,)
         ).fetchone()
         return (row["value"], row["updated_at"]) if row else (None, 0.0)
 
-    def get_all_state(self) -> List[sqlite3.Row]:
+    def get_all_state(self) -> list[sqlite3.Row]:
         """Return all state rows (for snapshot/diagnostics)."""
         return self.state_conn.execute(
             "SELECT key, value, updated_at FROM scanning_state ORDER BY key"

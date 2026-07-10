@@ -13,9 +13,7 @@ from src.cot_audit.core import (
     CoTReport,
     FormatStyle,
     IncrementalMetadataCache,
-    MetadataEntry,
 )
-
 
 # ── CoT Report Tests ──
 

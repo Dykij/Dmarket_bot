@@ -7,7 +7,7 @@ Mixin with the offer-lifecycle endpoints. Mixed into `DMarketAPIClient`
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 
 class _OffersMixin:
@@ -20,8 +20,8 @@ class _OffersMixin:
     ) -> Any: ...
 
     async def get_user_offers(
-        self, game_id: str, limit: int = 50, cursor: Optional[str] = None
-    ) -> Dict[str, Any]:
+        self, game_id: str, limit: int = 50, cursor: str | None = None
+    ) -> dict[str, Any]:
         """Fetches items the user currently has listed for sale.
 
         Endpoint: GET /exchange/v1/user-offers (per Swagger v1.1.0)
@@ -38,7 +38,7 @@ class _OffersMixin:
     # Endpoint format: POST /marketplace-api/v2/offers:{action}
     # Prices in integer cents, body uses "requests" array
     # ------------------------------------------------------------------
-    async def batch_create_offers_v2(self, offers: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def batch_create_offers_v2(self, offers: list[dict[str, Any]]) -> dict[str, Any]:
         """
         v2: Batch list up to 100 items in a single request.
 
@@ -59,7 +59,7 @@ class _OffersMixin:
             body={"requests": requests},
         )
 
-    async def batch_edit_offers_v2(self, edits: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def batch_edit_offers_v2(self, edits: list[dict[str, Any]]) -> dict[str, Any]:
         """
         v2: Batch reprice up to 100 offers in a single request.
 
@@ -80,7 +80,7 @@ class _OffersMixin:
             body={"requests": requests},
         )
 
-    async def batch_delete_offers_v2(self, offer_ids: List[str]) -> Dict[str, Any]:
+    async def batch_delete_offers_v2(self, offer_ids: list[str]) -> dict[str, Any]:
         """
         v2: Batch cancel (delist) up to 100 offers in a single request.
 
@@ -98,9 +98,9 @@ class _OffersMixin:
         self,
         game_id: str,
         limit: int = 50,
-        cursor: Optional[str] = None,
-        status: Optional[str] = None,
-    ) -> Dict[str, Any]:
+        cursor: str | None = None,
+        status: str | None = None,
+    ) -> dict[str, Any]:
         """
         Fetch closed (sold/reverted/trade_protected) offers.
 
@@ -117,8 +117,8 @@ class _OffersMixin:
         )
 
     async def create_sell_offers_batch(
-        self, game_id: str, payload: List[Dict[str, Any]]
-    ) -> Dict[str, Any]:
+        self, game_id: str, payload: list[dict[str, Any]]
+    ) -> dict[str, Any]:
         """
         Alias for batch_create_offers_v2 with item_id → asset_id key mapping.
         Used by resale.py _prod_list_unlocked.
@@ -135,9 +135,9 @@ class _OffersMixin:
         self,
         game_id: str,
         limit: int = 100,
-        cursor: Optional[str] = None,
-        status: Optional[str] = None,
-    ) -> Dict[str, Any]:
+        cursor: str | None = None,
+        status: str | None = None,
+    ) -> dict[str, Any]:
         """
         v2: List active offers with optional status filter.
 

@@ -16,7 +16,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 from src.config import Config
 from src.db.price_history import price_db
@@ -53,7 +53,7 @@ class _PositionGuardMixin:
             return 0
 
         now = __import__("time").time()
-        items_to_liquidate: List[Tuple[Any, float, str]] = []  # (item, sell_price, reason)
+        items_to_liquidate: list[tuple[Any, float, str]] = []  # (item, sell_price, reason)
 
         for it in items:
             buy_price = float(it["buy_price"] or 0)
@@ -96,7 +96,7 @@ class _PositionGuardMixin:
         if not items:
             return 0
 
-        items_to_sell: List[Tuple[Any, float, str]] = []
+        items_to_sell: list[tuple[Any, float, str]] = []
 
         for it in items:
             buy_price = float(it["buy_price"] or 0)
@@ -121,7 +121,7 @@ class _PositionGuardMixin:
 
         return await self._execute_liquidation(items_to_sell, game_id, "TAKE-PROFIT")
 
-    async def emergency_liquidate_all(self, game_id: str) -> Dict[str, Any]:
+    async def emergency_liquidate_all(self, game_id: str) -> dict[str, Any]:
         """
         Force-sell ALL unlocked inventory at current best bid.
         Used for emergency exit or /liquidate Telegram command.
@@ -137,7 +137,7 @@ class _PositionGuardMixin:
         if not all_items:
             return {"liquidated": 0, "total_value": 0.0, "errors": 0}
 
-        liquidate_list: List[Tuple[Any, float, str]] = []
+        liquidate_list: list[tuple[Any, float, str]] = []
         for it in all_items:
             try:
                 price = await self._get_current_price(it["hash_name"], use_bid=True)
@@ -175,13 +175,13 @@ class _PositionGuardMixin:
                 price = await oracle.get_item_price(hash_name)
                 if price > 0:
                     return price
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"[POSITION-GUARD] Oracle price fetch failed for {hash_name}: {e}")
         return 0.0
 
     async def _execute_liquidation(
         self,
-        items: List[Tuple[Any, float, str]],
+        items: list[tuple[Any, float, str]],
         game_id: str,
         tag: str,
     ) -> int:
@@ -193,9 +193,9 @@ class _PositionGuardMixin:
         is_dry = os.getenv("DRY_RUN", "true").lower() == "true"
         liquidated = 0
 
-        batch: List[Dict[str, Any]] = []
+        batch: list[dict[str, Any]] = []
         # Map virtual_inventory ids to plan entries
-        id_to_plan: Dict[int, Tuple[Any, float, str]] = {}
+        id_to_plan: dict[int, tuple[Any, float, str]] = {}
         for item, sell_price, reason in items:
             row = dict(item)
             dm_id = row.get("dm_item_id") or row.get("asset_id") or ""
@@ -209,7 +209,7 @@ class _PositionGuardMixin:
             return 0
 
         if is_dry:
-            for it_id, (item, sell_price, reason) in id_to_plan.items():
+            for _it_id, (item, sell_price, reason) in id_to_plan.items():
                 buy_price = float(item["buy_price"] or 0)
                 fee = round(sell_price * Config.FEE_RATE, 4)
                 profit = sell_price - buy_price - fee
@@ -239,7 +239,7 @@ class _PositionGuardMixin:
             offer_entries = result.get("offers") or result.get("items") or []
             for entry in offer_entries:
                 aid = entry.get("assetId") or entry.get("asset_id") or ""
-                for it_id, (item, sell_price, reason) in id_to_plan.items():
+                for _it_id, (item, sell_price, reason) in id_to_plan.items():
                     if item.get("dm_item_id") == aid or item.get("asset_id") == aid:
                         buy_price = float(item["buy_price"] or 0)
                         fee = round(sell_price * Config.FEE_RATE, 4)

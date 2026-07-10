@@ -29,7 +29,7 @@ class TradingStrategy(ABC):
     @abstractmethod
     def should_buy(
         self,
-        price_history: "PriceHistory",
+        price_history: PriceHistory,
         current_price: Decimal,
         balance: Decimal,
         positions: dict[str, Position],
@@ -49,7 +49,7 @@ class TradingStrategy(ABC):
     @abstractmethod
     def should_sell(
         self,
-        price_history: "PriceHistory",
+        price_history: PriceHistory,
         current_price: Decimal,
         position: Position,
     ) -> tuple[bool, Decimal, int]:
@@ -95,7 +95,7 @@ class SimpleArbitrageStrategy(TradingStrategy):
 
     def should_buy(
         self,
-        price_history: "PriceHistory",
+        price_history: PriceHistory,
         current_price: Decimal,
         balance: Decimal,
         positions: dict[str, Position],
@@ -127,7 +127,7 @@ class SimpleArbitrageStrategy(TradingStrategy):
 
     def should_sell(
         self,
-        price_history: "PriceHistory",
+        price_history: PriceHistory,
         current_price: Decimal,
         position: Position,
     ) -> tuple[bool, Decimal, int]:

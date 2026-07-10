@@ -1,6 +1,6 @@
 # 🦅 DMarket Quantitative Engine v14.10
 
-**Algorithmic CS2 skin trading bot for DMarket marketplace + Multi-Source Oracle (4 external APIs).**
+**Algorithmic CS2 skin trading bot for DMarket marketplace + Multi-Source Oracle (4 free external APIs).**
 
 Автономная торговая система на строгих количественных алгоритмах. Стратегия: **Value Detection Scanner** + intra-market spread sniping + cross-market arbitrage — с мгновенной капитализацией спреда (TRADE_LOCK_HOURS=0).
 
@@ -12,7 +12,7 @@
 
 ### Концепция
 
-Бот сканирует DMarket marketplace в поиске **недооцененных предметов** — тех, у которых редкие атрибуты (float, phase, pattern, stickers) позволяют продать их дороже рыночной цены, или когда текущая цена продавца (`best_ask`) значительно ниже ближайшего bid-ордера (`best_bid`), или когда на внешнем маркетплейсе (CSFloat, Skinport, Buff163) бай-ордер выше DMarket ask. Находит — покупает мгновенно — **немедленно выставляет на продажу** по агрегированным ценам CS2Cap (41 маркетплейс) с учётом комиссий.
+Бот сканирует DMarket marketplace в поиске **недооцененных предметов** — тех, у которых редкие атрибуты (float, phase, pattern, stickers) позволяют продать их дороже рыночной цены, или когда текущая цена продавца (`best_ask`) значительно ниже ближайшего bid-ордера (`best_bid`), или когда на внешнем маркетплейсе (Market.CSGO, Waxpeer, CSFloat, Steam) бай-ордер выше DMarket ask. Находит — покупает мгновенно — **немедленно выставляет на продажу** по агрегированным ценам Multi-Source Oracle (4 бесплатных источника) с учётом комиссий.
 
 **Ключевое отличие:** DMarket разрешает мгновенную перепродажу предметов, купленных на marketplace. Steam Trade Protection (7 дней) блокирует только вывод в Steam, не внутриплатформенную торговлю. Бот использует это: capital velocity ~3-5 сделок/день на единицу капитала.
 
@@ -26,7 +26,7 @@
 
 ```
 Предмет с редким float/pattern/sticker
-    → Оцениваем fair_price = cs2cap_ask × rarity_premium
+    → Оцениваем fair_price = multi_source_price × rarity_premium
     → Если fair_price > ask × (1 + fee + min_margin)
         → BUY (даже если нет natural spread!)
 ```
@@ -56,9 +56,10 @@ best_bid > best_ask × (1 + fee + margin) → BUY
 
 | Инструмент | Суть | Для чего |
 |---|---|---|
-| **Value Signal Evaluator** | rarity_premium × cs2cap_ask vs buy_price | Находить недооцененные редкости |
+| **Value Signal Evaluator** | rarity_premium × fair_price vs buy_price | Находить недооцененные редкости |
 | **Spread Signal Evaluator** | best_bid vs best_ask | Ликвидные предметы с естественным спредом |
-| **CS2Cap Cache** | In-memory 5-min TTL | Быстрый lookup цен без API calls |
+| **Multi-Source Oracle** | Market.CSGO + Waxpeer + CSFloat + Steam | Агрегация цен с 4 бесплатных источников |
+| **Fair Price Calculator** | Median with outlier removal | Корректная оценка рыночной цены |
 | **Dynamic Fee Lookup** | 2/5/7/10% tiers | Корректный профит после комиссий |
 
 ### Risk Management
@@ -80,8 +81,8 @@ best_bid > best_ask × (1 + fee + margin) → BUY
   ├─ 1. DMarket aggregated-prices (batch 100 titles)
   │      └─ best_ask, best_bid, ask_count, bid_count
   │
-  ├─ 2. CS2Cap Cache refresh (in-memory, if needed)
-  │      └─ POST /prices/batch + /bids/batch
+  ├─ 2. Multi-Source Oracle refresh (Market.CSGO + Waxpeer + CSFloat + Steam)
+  │      └─ Fair Price Calculator: median with outlier removal
   │
   ├─ 3. Fetch cheapest listings per title (parallel)
   │      └─ GET /market/items?title=X&limit=30
@@ -91,7 +92,7 @@ best_bid > best_ask × (1 + fee + margin) → BUY
   │      ├─ Оценка pattern/phase premium (1.0-5.0×)
   │      ├─ Оценка sticker combo (+50-100%)
   │      ├─ Оценка filler demand (1.15×)
-  │      ├─ est_sell = cs2cap_ask × premium_mult
+  │      ├─ est_sell = fair_price × premium_mult
   │      └─ BUY если est_sell > ask × (1 + fee + margin)
   │
   ├─ 5. Spread Fallback Pipeline (если value не прошёл):
@@ -100,7 +101,7 @@ best_bid > best_ask × (1 + fee + margin) → BUY
   ├─ 6. Execute buys → POST /exchange/v1/market/buy
   │
   ├─ 7. Auto-resale (A-S reservation price)
-  │      └─ List at min(cs2cap_ask × 0.97, rarity_adjusted_price)
+  │      └─ List at min(fair_price × 0.97, rarity_adjusted_price)
   │
   └─ 8. Equity report + health metrics
 ```
@@ -116,7 +117,8 @@ best_bid > best_ask × (1 + fee + margin) → BUY
 | **Runtime** | Python 3.13+ (asyncio) | Основной движок |
 | **Rust core** | PyO3 / ed25519-dalek | Ed25519 подпись (5-10× быстрее Python) |
 | **Database** | SQLite 3 (WAL mode, dual DB) | OLTP: состояние. OLAP: история цен |
-| **Market data** | DMarket API v2 + CS2Cap REST | Цены, ордера, листинги, комиссии |
+| **Market data** | DMarket API v2 + Multi-Source Oracle | Цены, ордера, листинги, комиссии |
+| **Price sources** | Market.CSGO, Waxpeer, CSFloat, Steam | Бесплатные внешние источники цен |
 | **Rate limiting** | Adaptive throttle + circuit breaker | API quota management |
 | **Security** | Vault (Fernet) + log redaction | API ключи |
 | **Interface** | Aiogram 3.x (Telegram) | Управление, мониторинг |
@@ -128,8 +130,13 @@ best_bid > best_ask × (1 + fee + margin) → BUY
 src/
 ├── api/                           # Внешние API
 │   ├── dmarket_api_client/        # DMarket REST v2
-│   ├── cs2cap_oracle/             # CS2Cap REST
-│   └── cs2cap_cache.py            # In-memory cache
+│   ├── multi_source_oracle/       # Multi-Source Oracle (4 free APIs)
+│   ├── market_csgo_oracle.py      # Market.CSGO price oracle
+│   ├── waxpeer_oracle.py          # Waxpeer price oracle
+│   ├── csfloat_oracle.py          # CSFloat price oracle
+│   ├── steam_oracle.py            # Steam Community Market oracle
+│   ├── fair_price_calculator.py   # Median price aggregation
+│   └── candle_builder.py          # OHLCV candles from DMarket
 │
 ├── core/target_sniping/           # Основной торговый пайплайн
 │   ├── core.py                    # SnipingLoop orchestrator
@@ -192,7 +199,7 @@ cd Dmarket_bot
 
 # 2. Создать .env
 cp .env.example .env
-# Заполнить ключи в ._CI: DMARKET_PUBLIC_KEY, DMARKET_SECRET_KEY, CS2CAP_API_KEY, TELEGRAM_BOT_TOKEN
+# Заполнить ключи: DMARKET_PUBLIC_KEY, DMARKET_SECRET_KEY, TELEGRAM_BOT_TOKEN
 
 # 3. Запустить в DRY_RUN (без торговли)
 docker compose up -d
@@ -215,9 +222,9 @@ VALUE_SCAN_MIN_PROFIT_USD=0.20   # $0.20 min absolute profit
 
 # ===== v14.9 MICROSTRUCTURE (off by default for Value Scanner) =====
 STRICT_MICROSTRUCTURE_FILTERS=false
-OBI_ENABLED=false
+OBI_ENABLED=true
 OFI_ENABLED=false
-VWAP_FILTER_ENABLED=false
+VWAP_FILTER_ENABLED=true
 CVD_ENABLED=false
 VPIN_ENABLED=false
 
@@ -226,12 +233,15 @@ PRICE_RANGE_SCAN_ENABLED=true
 PRICE_RANGE_MIN_USD=0.50
 PRICE_RANGE_MAX_USD=20.00
 PRICE_RANGE_MAX_TITLES=500       # Scan more items per cycle
-CS2CAP_TOP_K_VALIDATE=50         # Validate 50 items vs CS2Cap
+
+# ===== MULTI-SOURCE ORACLE (free, no API keys required) =====
+# Market.CSGO, Waxpeer, CSFloat, Steam — all free
+# Optional: CSFLOAT_API_KEY for higher rate limits
+# Optional: STEAM_API_KEY for Steam Community Market
 
 # ===== КЛЮЧИ =====
 DMARKET_PUBLIC_KEY=your_public_key
 DMARKET_SECRET_KEY=your_secret_key
-CS2CAP_API_KEY=your_cs2cap_key
 TELEGRAM_BOT_TOKEN=your_bot_token
 ```
 
@@ -244,7 +254,7 @@ TELEGRAM_BOT_TOKEN=your_bot_token
 | **Версия** | v14.9 |
 | **Стратегия** | Value Detection Scanner + Spread Sniper (dual-signal) |
 | **DMarket API** | v2 batch endpoints |
-| **CS2Cap** | Starter tier, 41 marketplace |
+| **Price Oracle** | Multi-Source (Market.CSGO + Waxpeer + CSFloat + Steam) |
 | **Value Signals** | Float, Pattern, Sticker, Filler (9 layers total) |
 | **Balance-aware** | Dynamic max price, Kelly sizing, drawdown freeze |
 | **Fee model** | 4-tier dynamic (2/5/7/10%) + hot-fee cache |

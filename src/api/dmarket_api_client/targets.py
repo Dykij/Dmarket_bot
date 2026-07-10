@@ -7,7 +7,7 @@ Mixin with target-order endpoints. Mixed into `DMarketAPIClient`
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 
 class _TargetsMixin:
@@ -20,7 +20,7 @@ class _TargetsMixin:
     ) -> Any: ...
 
     # --- Trading Ops (Targets / Buy Orders) ---
-    async def batch_create_targets(self, targets: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def batch_create_targets(self, targets: list[dict[str, Any]]) -> dict[str, Any]:
         """Creation of targets (buy orders). Path verified via Swagger 2026."""
         return await self.make_request(
             "POST",
@@ -28,7 +28,7 @@ class _TargetsMixin:
             body={"Targets": targets},
         )
 
-    async def batch_delete_targets(self, targets: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def batch_delete_targets(self, targets: list[dict[str, Any]]) -> dict[str, Any]:
         """Mass deletion of targets. Path verified via Swagger 2026."""
         return await self.make_request(
             "POST",
@@ -36,7 +36,7 @@ class _TargetsMixin:
             body={"Targets": targets},
         )
 
-    async def buy_items(self, offers: List[Dict[str, Any]]) -> Dict[str, Any]:
+    async def buy_items(self, offers: list[dict[str, Any]]) -> dict[str, Any]:
         """
         Instant Purchase of existing market listings.
         Payload: [{"offerId": "...", "price": {"amount": "123", "currency": "USD"}}]
@@ -48,8 +48,8 @@ class _TargetsMixin:
         )
 
     async def get_user_targets(
-        self, game_id: str, limit: int = 50, cursor: Optional[str] = None
-    ) -> Dict[str, Any]:
+        self, game_id: str, limit: int = 50, cursor: str | None = None
+    ) -> dict[str, Any]:
         """List active buy orders."""
         params = {"gameId": game_id, "limit": limit}
         if cursor:

@@ -24,15 +24,13 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import math
 import os
 import random
 import statistics
 import time
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
-from src.config import Config
 from src.core.shadow_engine import ShadowEngine
 
 logger = logging.getLogger("LiveShadow")
@@ -56,7 +54,7 @@ class MonteCarloResult:
     profit_probability: float  # % of runs that were profitable
     sharpe_estimate: float
     max_drawdown_mean: float
-    distribution: List[float]  # full distribution for histograms
+    distribution: list[float]  # full distribution for histograms
 
 
 class LiveShadow:
@@ -68,7 +66,7 @@ class LiveShadow:
         self._started = False
         self._total_cycles: int = 0
         self._last_feed: float = 0.0
-        self._monte_carlo_task: Optional[asyncio.Task] = None
+        self._monte_carlo_task: asyncio.Task | None = None
 
     @property
     def enabled(self) -> bool:
@@ -97,10 +95,10 @@ class LiveShadow:
     def feed_cycle(
         self,
         *,
-        candidates: List[Dict[str, Any]],
-        agg_prices: Dict[str, Any],
+        candidates: list[dict[str, Any]],
+        agg_prices: dict[str, Any],
         cs2cap_ok: bool = False,
-    ) -> Optional[Dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         """
         Feed one trading cycle's data into the shadow engine.
         Called from the main bot loop each cycle.
@@ -144,7 +142,7 @@ class LiveShadow:
             logger.debug(f"[LiveShadow] Cycle feed error: {e}")
             return None
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Get live shadow status for Telegram / health server."""
         if not self._enabled:
             return {"enabled": False}
@@ -158,7 +156,7 @@ class LiveShadow:
             **summary,
         }
 
-    def compare_with_real(self, real_equity: float) -> Dict[str, Any]:
+    def compare_with_real(self, real_equity: float) -> dict[str, Any]:
         """Compare shadow P&L with real bot P&L."""
         shadow_summary = self._engine.get_portfolio_summary()
         shadow_pnl = shadow_summary["total_pnl"]
@@ -175,7 +173,7 @@ class LiveShadow:
         }
 
     @staticmethod
-    def _build_candidates(agg_prices: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _build_candidates(agg_prices: dict[str, Any]) -> list[dict[str, Any]]:
         cands = []
         for title, agg in list(agg_prices.items())[:20]:
             ask = agg.get("best_ask", 0) or 0
@@ -199,8 +197,8 @@ class LiveShadow:
 
     async def run_monte_carlo(
         self,
-        candidates: List[Dict[str, Any]],
-        agg_prices: Dict[str, Any],
+        candidates: list[dict[str, Any]],
+        agg_prices: dict[str, Any],
         runs: int = MONTE_CARLO_RUNS,
         cycles: int = 30,
     ) -> MonteCarloResult:
@@ -217,13 +215,13 @@ class LiveShadow:
         if not cands:
             raise ValueError("No candidates for Monte Carlo")
 
-        pnls: List[float] = []
-        win_rates: List[float] = []
-        max_dds: List[float] = []
+        pnls: list[float] = []
+        win_rates: list[float] = []
+        max_dds: list[float] = []
 
         sem = asyncio.Semaphore(50)  # limit concurrency
 
-        async def _run_one(run_id: int) -> Tuple[float, float, float]:
+        async def _run_one(run_id: int) -> tuple[float, float, float]:
             """Run a single Monte Carlo simulation with random noise."""
             async with sem:
                 engine = ShadowEngine(initial_balance=SHADOW_BALANCE)
@@ -306,13 +304,12 @@ class LiveShadow:
             distribution=pnls_sorted,
         )
 
-    async def run_monte_carlo_async(self) -> Optional[MonteCarloResult]:
+    async def run_monte_carlo_async(self) -> MonteCarloResult | None:
         """Run Monte Carlo asynchronously — can be called from Telegram."""
         if self._monte_carlo_task and not self._monte_carlo_task.done():
             return None  # already running
 
         # Use last known agg_prices from the main bot
-        from src.core.target_sniping.core import SnipingLoop
         return None  # will be called from bot context
 
 

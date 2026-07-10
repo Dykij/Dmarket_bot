@@ -22,20 +22,17 @@ Usage:
 
 from __future__ import annotations
 
-import json
-from decimal import Decimal
-from src.utils.decimal_helpers import D, quantize
 import logging
-import math
 import os
 import random
 import sqlite3
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 from src.config import Config
+from src.utils.decimal_helpers import D
 
 logger = logging.getLogger("ShadowEngine")
 
@@ -88,8 +85,8 @@ class ShadowEngine:
         self._balance = D(str(initial_balance))
         self._initial_balance = D(str(initial_balance))
         self._peak_balance = D(str(initial_balance))
-        self._positions: Dict[str, List[ShadowPosition]] = {}
-        self._snapshots: List[ShadowSnapshot] = []
+        self._positions: dict[str, list[ShadowPosition]] = {}
+        self._snapshots: list[ShadowSnapshot] = []
         self._cycle_count: int = 0
         self._total_trades: int = 0
         self._total_wins: int = 0
@@ -98,14 +95,14 @@ class ShadowEngine:
         self._gross_loss: float = 0.0
 
         # Multi-strategy comparison
-        self._strategy_stats: Dict[str, StrategyComparison] = {
+        self._strategy_stats: dict[str, StrategyComparison] = {
             "MarketMaker": StrategyComparison(name="MarketMaker"),
             "CrossMarket": StrategyComparison(name="CrossMarket"),
             "Conservative": StrategyComparison(name="Conservative"),
         }
 
         # DB
-        self._conn: Optional[sqlite3.Connection] = None
+        self._conn: sqlite3.Connection | None = None
         self._init_db()
 
     # ─────────────────────────────────────────────
@@ -184,15 +181,15 @@ class ShadowEngine:
     def record_cycle(
         self,
         *,
-        candidates: List[Dict[str, Any]],
-        agg_prices: Dict[str, Any],
+        candidates: list[dict[str, Any]],
+        agg_prices: dict[str, Any],
         cs2cap_ok: bool,
         cycle: int,
         max_buys: int = 3,
         max_spend_per_cycle: float = 15.0,
         stop_loss_pct: float = 20.0,
         take_profit_pct: float = 15.0,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Record one trading cycle into the shadow portfolio.
         Called from the sandbox or optionally from the real bot.
@@ -200,7 +197,7 @@ class ShadowEngine:
         Returns summary of this cycle's shadow actions.
         """
         self._cycle_count = cycle
-        cycle_result: Dict[str, Any] = {
+        cycle_result: dict[str, Any] = {
             "cycle": cycle,
             "buys": 0,
             "sells_sl": 0,
@@ -295,7 +292,7 @@ class ShadowEngine:
         )
         return cycle_result
 
-    def _get_market_price(self, title: str, agg_prices: Dict[str, Any]) -> float:
+    def _get_market_price(self, title: str, agg_prices: dict[str, Any]) -> float:
         """Get current market price from agg_prices with random fluctuation."""
         agg = agg_prices.get(title, {})
         ask = agg.get("best_ask", 0.0) or 0.0
@@ -367,7 +364,7 @@ class ShadowEngine:
     # Reports
     # ─────────────────────────────────────────────
 
-    def get_portfolio_summary(self) -> Dict[str, Any]:
+    def get_portfolio_summary(self) -> dict[str, Any]:
         assets = sum(
             p.current_price for positions in self._positions.values()
             for p in positions if p.status in ("idle", "selling")
@@ -412,11 +409,11 @@ class ShadowEngine:
             },
         }
 
-    def get_strategy_comparison(self) -> List[StrategyComparison]:
+    def get_strategy_comparison(self) -> list[StrategyComparison]:
         return [s for s in self._strategy_stats.values() if s.trades > 0]
 
-    def get_position_breakdown(self) -> Dict[str, int]:
-        cats: Dict[str, int] = {}
+    def get_position_breakdown(self) -> dict[str, int]:
+        cats: dict[str, int] = {}
         for plist in self._positions.values():
             for p in plist:
                 if p.status in ("idle", "selling"):
@@ -448,15 +445,15 @@ STRESS_SCENARIOS = [
 
 
 def run_stress_test(
-    base_candidates: List[Dict[str, Any]],
-    agg_prices: Dict[str, Any],
+    base_candidates: list[dict[str, Any]],
+    agg_prices: dict[str, Any],
     cycles: int = 30,
-) -> Dict[str, Dict[str, Any]]:
+) -> dict[str, dict[str, Any]]:
     """
     Run the same candidates through all stress scenarios
     and compare results. Each scenario runs N cycles.
     """
-    results: Dict[str, Dict[str, Any]] = {}
+    results: dict[str, dict[str, Any]] = {}
 
     for scenario in STRESS_SCENARIOS:
         engine = ShadowEngine(initial_balance=100.0)

@@ -5,10 +5,10 @@ v14.6: Extended with combo detection (4x same = +100%, team/set matching +10%,
 Katowice 2014 special handling, wear penalty).
 """
 
-from typing import Dict, List, Any
+from typing import Any
 
 # Rare sticker base prices (unapplied, USD)
-_RARE_STICKERS: Dict[str, float] = {
+_RARE_STICKERS: dict[str, float] = {
     "Titan | Katowice 2014": 15000.0,
     "iBUYPOWER | Katowice 2014": 20000.0,
     "Reason Gaming | Katowice 2014": 10000.0,
@@ -18,7 +18,7 @@ _RARE_STICKERS: Dict[str, float] = {
 }
 
 # Katowice 2014 sticker base prices
-_KATOWICE_2014: Dict[str, float] = {
+_KATOWICE_2014: dict[str, float] = {
     "Titan | Katowice 2014": 15000.0,
     "Titan (Holo) | Katowice 2014": 60000.0,
     "iBUYPOWER | Katowice 2014": 20000.0,
@@ -81,7 +81,7 @@ class StickerEvaluator:
     # ------------------------------------------------------------------
     # Combo premium (v14.6)
     # ------------------------------------------------------------------
-    def calculate_combo_premium(self, stickers: List[Dict[str, Any]]) -> float:
+    def calculate_combo_premium(self, stickers: list[dict[str, Any]]) -> float:
         """Calculate additional USD value from sticker combinations.
 
         Rules (from TA site analysis):
@@ -129,7 +129,7 @@ class StickerEvaluator:
     # ------------------------------------------------------------------
     # Core methods
     # ------------------------------------------------------------------
-    def _sticker_price(self, sticker: Dict[str, Any]) -> float:
+    def _sticker_price(self, sticker: dict[str, Any]) -> float:
         """Get estimated unapplied price for a sticker."""
         name = sticker.get("name", "")
         price = _RARE_STICKERS.get(name, 0.0)
@@ -137,7 +137,7 @@ class StickerEvaluator:
             price = _KATOWICE_2014.get(name, 0.0)
         return price
 
-    def calculate_added_value(self, stickers: List[Dict[str, Any]]) -> float:
+    def calculate_added_value(self, stickers: list[dict[str, Any]]) -> float:
         """Calculates the estimated USD value added by stickers.
 
         Uses exponential decay for wear penalty on applied stickers.
@@ -146,7 +146,7 @@ class StickerEvaluator:
         total_added_value = 0.0
 
         for s in stickers:
-            name = s.get("name", "")
+            s.get("name", "")
             try:
                 wear = float(s.get("wear", 0.0))
             except (ValueError, TypeError):
@@ -167,7 +167,7 @@ class StickerEvaluator:
 
         return round(total_added_value, 2)
 
-    def is_undervalued(self, item_price: float, base_price: float, stickers: List[Dict[str, Any]]) -> bool:
+    def is_undervalued(self, item_price: float, base_price: float, stickers: list[dict[str, Any]]) -> bool:
         """Validates if item is undervalued compared to baseline + SPP value."""
         sticker_value = self.calculate_added_value(stickers)
         return item_price < (base_price + sticker_value) * 0.95

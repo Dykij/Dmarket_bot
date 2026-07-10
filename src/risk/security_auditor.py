@@ -75,10 +75,7 @@ class SecurityAuditor:
         Scans the text for potential security leaks and basic prompt injections.
         Returns True if a leak or injection attempt is detected, False otherwise.
         """
-        for pattern in cls.PATTERNS + cls.PROMPT_INJECTION_PATTERNS:
-            if pattern.search(text):
-                return True
-        return False
+        return any(pattern.search(text) for pattern in cls.PATTERNS + cls.PROMPT_INJECTION_PATTERNS)
 
     @classmethod
     def sanitize(cls, text: str) -> str:

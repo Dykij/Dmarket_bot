@@ -1,0 +1,69 @@
+# archy.yaml — Architecture health config for DMarket Bot
+# https://github.com/hslee16/Archy
+
+# Layer definitions (enforced import rules)
+# Each layer has a name and a list of module patterns
+layers:
+  core:
+    modules:
+      - src.core.*
+  api:
+    modules:
+      - src.api.*
+  risk:
+    modules:
+      - src.risk.*
+  db:
+    modules:
+      - src.db.*
+  utils:
+    modules:
+      - src.utils.*
+  telegram:
+    modules:
+      - src.telegram.*
+  strategies:
+    modules:
+      - src.strategies.*
+
+# Forbidden imports (which layers cannot import from which)
+# Note: Some exceptions are documented for legitimate architectural patterns
+forbid:
+  # Utils should not import from most layers (exception: db for charts, risk for logging, telegram for health)
+  - from: utils
+    to: core
+  - from: utils
+    to: api
+  # - from: utils
+  #   to: db  # Exception: charts.py needs price_db for historical data
+  # - from: utils
+  #   to: risk  # Exception: logging_setup.py needs SecurityAuditor for audit filter
+  # - from: utils
+  #   to: telegram  # Exception: health_server.py needs notifier for circuit breaker status
+  - from: utils
+    to: strategies
+
+  # DB should not import from most layers
+  - from: db
+    to: core
+  - from: db
+    to: api
+  - from: db
+    to: risk
+  - from: db
+    to: telegram
+  - from: db
+    to: strategies
+
+# Exclude patterns (files/dirs to ignore)
+exclude:
+  - tests
+  - scripts
+  - docs
+  - legacy
+  - .venv
+  - __pycache__
+
+# Root package
+roots:
+  - src

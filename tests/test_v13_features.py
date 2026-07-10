@@ -104,12 +104,12 @@ class TestTradeLockHours:
     def test_withdrawal_fee_configured(self):
         """WITHDRAWAL_FEE_RATE is set."""
         from src.config import Config
-        assert Config.WITHDRAWAL_FEE_RATE == 0.02
+        assert Config.WITHDRAWAL_FEE_RATE == 0.005
 
     def test_float_premium_disabled(self):
-        """FLOAT_PREMIUM_ENABLED is false by default."""
+        """FLOAT_PREMIUM_ENABLED is true by default."""
         from src.config import Config
-        assert Config.FLOAT_PREMIUM_ENABLED is False
+        assert Config.FLOAT_PREMIUM_ENABLED is True
 
 
 # =====================================================================
@@ -355,40 +355,40 @@ class TestPatternPremium:
         assert premium == 1.0
 
     def test_doppler_ruby(self):
-        """Doppler Ruby → 2.0x."""
+        """Doppler Ruby → 5.0x."""
         from src.core.target_sniping.pricing import _PricingMixin
         premium = _PricingMixin._calculate_pattern_premium({"phase": "Ruby"})
-        assert premium == 2.0
+        assert premium == 5.0
 
     def test_doppler_sapphire(self):
-        """Doppler Sapphire → 3.0x."""
+        """Doppler Sapphire → 5.0x."""
         from src.core.target_sniping.pricing import _PricingMixin
         premium = _PricingMixin._calculate_pattern_premium({"phase": "Sapphire"})
-        assert premium == 3.0
+        assert premium == 5.0
 
     def test_black_pearl(self):
-        """Black Pearl → 1.5x."""
+        """Black Pearl → 4.0x."""
         from src.core.target_sniping.pricing import _PricingMixin
         premium = _PricingMixin._calculate_pattern_premium({"phase": "black_pearl"})
-        assert premium == 1.5
+        assert premium == 4.0
 
     def test_phase_2(self):
-        """Phase 2 → 1.10x."""
+        """Phase 2 → 1.5x."""
         from src.core.target_sniping.pricing import _PricingMixin
         premium = _PricingMixin._calculate_pattern_premium({"phase": "P2"})
-        assert premium == 1.10
+        assert premium == 1.5
 
     def test_phase_4(self):
-        """Phase 4 → 1.05x."""
+        """Phase 4 → 1.3x."""
         from src.core.target_sniping.pricing import _PricingMixin
         premium = _PricingMixin._calculate_pattern_premium({"phase": "P4"})
-        assert premium == 1.05
+        assert premium == 1.3
 
     def test_rare_paint_seed(self):
-        """Rare paintSeed 661 → 1.05x."""
+        """Rare paintSeed 661 → 3.0x (Blue Gem)."""
         from src.core.target_sniping.pricing import _PricingMixin
         premium = _PricingMixin._calculate_pattern_premium({"paintSeed": "661"})
-        assert premium == 1.05
+        assert premium == 3.0
 
     def test_low_paint_seed(self):
         """Very low paintSeed < 5 → 1.03x."""
@@ -405,15 +405,15 @@ class TestConfigV13:
 
     def test_max_total_inventory_value(self):
         from src.config import Config
-        assert Config.MAX_TOTAL_INVENTORY_VALUE == 100.0
+        assert Config.MAX_TOTAL_INVENTORY_VALUE == 200.0
 
     def test_max_total_inventory_items(self):
         from src.config import Config
-        assert Config.MAX_TOTAL_INVENTORY_ITEMS == 30
+        assert Config.MAX_TOTAL_INVENTORY_ITEMS == 50
 
     def test_withdrawal_fee_rate(self):
         from src.config import Config
-        assert Config.WITHDRAWAL_FEE_RATE == 0.02
+        assert Config.WITHDRAWAL_FEE_RATE == 0.005
 
     def test_target_fee_rate(self):
         from src.config import Config
@@ -421,4 +421,4 @@ class TestConfigV13:
 
     def test_float_premium_disabled_default(self):
         from src.config import Config
-        assert Config.FLOAT_PREMIUM_ENABLED is False
+        assert Config.FLOAT_PREMIUM_ENABLED is True

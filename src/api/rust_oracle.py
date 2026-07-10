@@ -1,7 +1,9 @@
-import aiohttp
 import asyncio
 import logging
 import time
+
+import aiohttp
+
 from src.db.price_history import price_db
 
 logger = logging.getLogger("RustOracle")

@@ -1,6 +1,4 @@
 import logging
-import math
-from typing import Optional
 
 logger = logging.getLogger("DynamicRiskManager")
 logger.setLevel(logging.INFO)
@@ -70,7 +68,7 @@ class DynamicRiskManager:
                             original_amount: float, 
                             current_regime: int, 
                             hawkes_intensity: float,
-                            current_drawdown: float) -> Optional[float]:
+                            current_drawdown: float) -> float | None:
         """
         Calculates the risk-adjusted execution amount.
         Returns None if the trade should be dropped/rejected.

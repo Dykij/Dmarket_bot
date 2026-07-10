@@ -1,11 +1,17 @@
 """
-Structured error reporter for the DMarket bot.
+Structured error reporter for the DMarket bot (v14.9).
 
 Produces a single human-readable block (for logs) and a shorter
 Telegram-friendly version (≤ 3500 chars). The block is intentionally
 self-contained: file:line, function name, exception type, message,
 and runtime context (cycle, game, balance, RSS, uptime). That way
 the user can identify the failure without scrolling through logs.
+
+v14.9 Improvements (based on PythonHub best practices):
+- Structured JSON logging with correlation IDs
+- Exception chaining support (`raise ... from ...`)
+- Fluent context builder pattern
+- Structured context fields (request_id, cycle_id, item_id)
 
 Usage:
     from src.risk.error_reporter import ErrorReporter
@@ -22,6 +28,15 @@ Usage:
         logger.error(report.format_log())
         await report.send_telegram(...)
         sys.exit(report.exit_code)
+
+    # v14.9: Fluent context builder
+    try:
+        ...
+    except Exception as e:
+        report = ErrorReporter(e) \
+            .with_context(cycle=cycle_count, item_id=item_id) \
+            .with_context(balance=current_balance)
+        report.log_and_exit()
 """
 
 from __future__ import annotations
@@ -32,7 +47,7 @@ import os
 import sys
 import time
 import traceback
-from typing import Any, Dict, Optional
+from typing import Any
 
 logger = logging.getLogger("ErrorReporter")
 
@@ -41,8 +56,9 @@ try:
 except ImportError:
     psutil = None  # type: ignore[assignment]
 
-from src.risk.fatal_errors import classify, exit_code_for  # noqa: E402
+import contextlib
 
+from src.risk.fatal_errors import classify, exit_code_for  # noqa: E402
 
 # Width of the visual separator in the log block.
 _BAR = "═" * 64
@@ -55,13 +71,15 @@ class ErrorReporter:
 
     Holds the original traceback so it can be re-formatted
     for both the log (full multiline) and Telegram (compact).
+
+    v14.9: Added fluent context builder and structured JSON logging.
     """
 
     def __init__(
         self,
         exc: BaseException,
-        context: Optional[Dict[str, Any]] = None,
-        tb: Optional[str] = None,
+        context: dict[str, Any] | None = None,
+        tb: str | None = None,
     ) -> None:
         self.exc = exc
         self.context = dict(context or {})
@@ -70,6 +88,13 @@ class ErrorReporter:
         self._classification = classify(exc)
         # Pre-compute the location string from the formatted traceback.
         self._location = self._extract_location(self.tb)
+        # v14.9: Extract cause chain for exception chaining
+        self._cause_chain = self._extract_cause_chain(exc)
+
+    def with_context(self, **kwargs: Any) -> ErrorReporter:
+        """Fluent context builder. Adds key-value pairs to the report."""
+        self.context.update(kwargs)
+        return self
 
     @property
     def classification(self) -> str:
@@ -78,6 +103,18 @@ class ErrorReporter:
     @property
     def exit_code(self) -> int:
         return self._exit_code
+
+    @staticmethod
+    def _extract_cause_chain(exc: BaseException) -> list[str]:
+        """Extract exception cause chain for structured logging."""
+        chain = []
+        current = exc
+        seen = set()
+        while current and id(current) not in seen:
+            seen.add(id(current))
+            chain.append(f"{type(current).__name__}: {str(current)[:200]}")
+            current = current.__cause__ or current.__context__
+        return chain
 
     @staticmethod
     def _extract_location(tb: str) -> str:
@@ -194,6 +231,37 @@ class ErrorReporter:
             body = body[:3450] + "\n<code>... (truncated)</code>"
         return body
 
+    def format_json(self) -> dict[str, Any]:
+        """
+        v14.9: Structured JSON report for log aggregation systems.
+
+        Returns a dict suitable for json.dumps() or structlog integration.
+        Includes correlation IDs, cause chain, and all context fields.
+        """
+        utc = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        return {
+            "timestamp": utc,
+            "level": "ERROR",
+            "classification": self._classification,
+            "exit_code": self._exit_code,
+            "exception": {
+                "type": type(self.exc).__name__,
+                "message": str(self.exc)[:500],
+                "location": self._location,
+                "cause_chain": self._cause_chain,
+            },
+            "context": self.context,
+            "process": {
+                "pid": os.getpid(),
+                "stats": self._process_stats(),
+            },
+            "action": (
+                "retry"
+                if self._classification == "TRANSIENT"
+                else f"exit_{self._exit_code}"
+            ),
+        }
+
     async def send_telegram(self) -> None:
         """
         Best-effort Telegram send. Never raises — logging is the
@@ -207,26 +275,40 @@ class ErrorReporter:
             import aiohttp
 
             url = f"https://api.telegram.org/bot{token}/sendMessage"
-            async with aiohttp.ClientSession() as session:
-                async with session.post(
-                    url,
-                    json={
-                        "chat_id": chat_id,
-                        "text": self.format_telegram(),
-                        "parse_mode": "HTML",
-                        "disable_web_page_preview": True,
-                    },
-                    timeout=aiohttp.ClientTimeout(total=10),
-                ) as resp:
-                    if resp.status >= 400:
-                        logger.debug(
-                            f"[telegram error report] HTTP {resp.status}"
-                        )
+            async with aiohttp.ClientSession() as session, session.post(
+                url,
+                json={
+                    "chat_id": chat_id,
+                    "text": self.format_telegram(),
+                    "parse_mode": "HTML",
+                    "disable_web_page_preview": True,
+                },
+                timeout=aiohttp.ClientTimeout(total=10),
+            ) as resp:
+                if resp.status >= 400:
+                    logger.debug(
+                        f"[telegram error report] HTTP {resp.status}"
+                    )
         except Exception as e:
             logger.debug(f"[telegram error report] send failed: {e}")
 
+    def log_and_exit(self) -> None:
+        """
+        v14.9: Convenience method. Logs full report, persists exit state,
+        attempts Telegram send, and exits. One-call error handling.
+        """
+        logger.error(self.format_log())
+        _write_exit_state(self.exit_code, self.exc, context=self.context)
+        try:
+            loop = asyncio.get_running_loop()
+            loop.create_task(_send_report_with_timeout(self))
+        except RuntimeError:
+            with contextlib.suppress(Exception):
+                asyncio.run(asyncio.wait_for(self.send_telegram(), timeout=2.0))
+        sys.exit(self.exit_code)
 
-def _write_exit_state(exit_code: int, exc: BaseException, context: Optional[Dict[str, Any]] = None) -> None:
+
+def _write_exit_state(exit_code: int, exc: BaseException, context: dict[str, Any] | None = None) -> None:
     """
     Persist the bot's exit code to a JSON file the watchdog reads.
 
@@ -238,8 +320,8 @@ def _write_exit_state(exit_code: int, exc: BaseException, context: Optional[Dict
     """
     try:
         import json
-        from pathlib import Path
         from datetime import datetime, timezone
+        from pathlib import Path
 
         state_path = Path(
             os.getenv("WATCHDOG_STATE_FILE", "data/watchdog_state.json")
@@ -260,15 +342,13 @@ def _write_exit_state(exit_code: int, exc: BaseException, context: Optional[Dict
         logger.debug(f"[fatal_exit] could not persist state file: {e}")
 
 
-async def _send_report_with_timeout(report: "ErrorReporter") -> None:
+async def _send_report_with_timeout(report: ErrorReporter) -> None:
     """Send Telegram report with a 2s timeout (fire-and-forget helper)."""
-    try:
+    with contextlib.suppress(Exception):
         await asyncio.wait_for(report.send_telegram(), timeout=2.0)
-    except Exception:
-        pass
 
 
-def fatal_exit(exc: BaseException, context: Optional[Dict[str, Any]] = None) -> None:
+def fatal_exit(exc: BaseException, context: dict[str, Any] | None = None) -> None:
     """
     One-shot helper for the outer supervisor.
 
@@ -290,9 +370,7 @@ def fatal_exit(exc: BaseException, context: Optional[Dict[str, Any]] = None) -> 
         loop.create_task(_send_report_with_timeout(report))
     except RuntimeError:
         # No running loop (called from sync context) — run directly
-        try:
+        with contextlib.suppress(Exception):
             asyncio.run(asyncio.wait_for(report.send_telegram(), timeout=2.0))
-        except Exception:
-            pass
 
     sys.exit(report.exit_code)

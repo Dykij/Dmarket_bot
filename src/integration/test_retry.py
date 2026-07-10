@@ -2,14 +2,11 @@
 Tests for auto-retry with exponential backoff in execute_with_snapshot().
 """
 
-import asyncio
 import time
-from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from src.integration.agent_facade import AgentFacade, RetryConfig, RetryResult
+from src.integration.agent_facade import AgentFacade, RetryConfig
 
 
 @pytest.fixture

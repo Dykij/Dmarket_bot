@@ -1,5 +1,6 @@
 import json
 import re
+
 import structlog
 from pydantic import BaseModel, Field
 
@@ -7,7 +8,7 @@ try:
     from pydantic import model_validator  # Pydantic v2
 except ImportError:
     from pydantic import root_validator as model_validator  # Pydantic v1 fallback
-from typing import Dict, List, Any
+from typing import Any
 
 try:
     import pandera as pa
@@ -103,7 +104,7 @@ if __name__ == "__main__":
     print(validate_dmarket_response(test_payload))
 
 
-def parse_aggregated_prices(raw_json: str) -> List[Dict[str, Any]]:
+def parse_aggregated_prices(raw_json: str) -> list[dict[str, Any]]:
     """
     Parse DMarket aggregated-prices response using Rust or Python fallback.
 
@@ -122,7 +123,7 @@ def parse_aggregated_prices(raw_json: str) -> List[Dict[str, Any]]:
             logger.warning(f"Rust Aggregated Prices parser failed: {e}", exc_info=True)
 
     # Python fallback
-    result: List[Dict[str, Any]] = []
+    result: list[dict[str, Any]] = []
     try:
         data = json.loads(raw_json)
         entries = data.get("aggregatedPrices", [])
@@ -167,12 +168,12 @@ def parse_aggregated_prices(raw_json: str) -> List[Dict[str, Any]]:
     return result
 
 
-def parse_aggregated_prices_from_dict(data: dict) -> List[Dict[str, Any]]:
+def parse_aggregated_prices_from_dict(data: dict) -> list[dict[str, Any]]:
     """
     Parse aggregated-prices from an already-deserialized Python dict.
     Falls back to Python parsing (no Rust re-serialization overhead).
     """
-    result: List[Dict[str, Any]] = []
+    result: list[dict[str, Any]] = []
     try:
         entries = data.get("aggregatedPrices", [])
         for entry in entries:

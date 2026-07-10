@@ -3,15 +3,12 @@ Test suite for Bash Sandbox (core.py).
 Covers: unit, integration, property-based, timeout, forbidden commands.
 """
 
-import asyncio
 import pytest
 
 from src.sandbox.core import (
     BashSandbox,
-    SandboxCommand,
     SandboxConfig,
     SandboxResultStatus,
-    SandboxSecurityError,
 )
 
 

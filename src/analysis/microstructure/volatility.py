@@ -16,7 +16,7 @@ import logging
 import math
 from collections import Counter, defaultdict
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 logger = logging.getLogger("Microstructure")
 
@@ -54,8 +54,8 @@ def day_of_week_multiplier() -> float:
 
 
 def kyle_lambda(
-    sales: List[Dict[str, Any]],
-) -> Optional[float]:
+    sales: list[dict[str, Any]],
+) -> float | None:
     """
     Kyle's lambda - price impact sensitivity to volume.
 
@@ -84,8 +84,8 @@ def kyle_lambda(
 
 
 def amihud_illiquidity(
-    sales: List[Dict[str, Any]],
-) -> Optional[float]:
+    sales: list[dict[str, Any]],
+) -> float | None:
     """
     Amihud illiquidity ratio: avg(|return| / dollar_volume).
 
@@ -112,10 +112,10 @@ def amihud_illiquidity(
 
 
 def adverse_selection_check(
-    sales: List[Dict[str, Any]],
+    sales: list[dict[str, Any]],
     max_kyle: float = 0.05,
     max_amihud: float = 0.10,
-) -> Tuple[bool, str]:
+) -> tuple[bool, str]:
     """
     Combined adverse selection check.
 
@@ -137,8 +137,8 @@ def adverse_selection_check(
 # ══════════════════════════════════════════════════════════════════════
 
 
-def realized_vol_std(sales: List[Dict[str, Any]],
-                     annualize_factor: float = 365.0) -> Optional[float]:
+def realized_vol_std(sales: list[dict[str, Any]],
+                     annualize_factor: float = 365.0) -> float | None:
     """Standard deviation of trade prices -> annualized vol."""
     prices = [s["price"] for s in sales if s.get("price", 0) > 0]
     if len(prices) < 3:
@@ -149,8 +149,8 @@ def realized_vol_std(sales: List[Dict[str, Any]],
     return round(daily_vol * math.sqrt(annualize_factor), 4)
 
 
-def realized_vol_parkinson(sales: List[Dict[str, Any]],
-                           annualize_factor: float = 365.0) -> Optional[float]:
+def realized_vol_parkinson(sales: list[dict[str, Any]],
+                           annualize_factor: float = 365.0) -> float | None:
     """
     Parkinson high-low range estimator.
     Uses max/min price within a bucket as proxy for intraday range.
@@ -190,7 +190,7 @@ def classify_volatility_regime(annualized_vol: float) -> str:
 # ══════════════════════════════════════════════════════════════════════
 
 
-def roll_effective_spread(prices: List[float]) -> Optional[float]:
+def roll_effective_spread(prices: list[float]) -> float | None:
     """
     Roll (1984) model: effective bid-ask spread estimation
     from price-change serial covariance.
@@ -217,7 +217,7 @@ def roll_effective_spread(prices: List[float]) -> Optional[float]:
     return round(spread, 6)
 
 
-def roll_signal(prices: List[float], best_ask: float) -> Optional[str]:
+def roll_signal(prices: list[float], best_ask: float) -> str | None:
     """
     Compare Roll-effective-spread to observed spread.
 
@@ -247,9 +247,9 @@ def roll_signal(prices: List[float], best_ask: float) -> Optional[str]:
 
 
 def volume_profile_poc(
-    sales: List[Dict[str, Any]],
+    sales: list[dict[str, Any]],
     num_buckets: int = 10,
-) -> Optional[float]:
+) -> float | None:
     """
     Point of Control - the price level with the highest trade volume.
 
@@ -276,10 +276,10 @@ def volume_profile_poc(
 
 
 def volume_profile_value_area(
-    sales: List[Dict[str, Any]],
+    sales: list[dict[str, Any]],
     value_area_pct: float = 0.70,
     num_buckets: int = 10,
-) -> Optional[Tuple[float, float, float]]:
+) -> tuple[float, float, float] | None:
     """
     Value Area - the price range containing value_area_pct% of total volume.
     Returns (VALUE_AREA_HIGH, POC, VALUE_AREA_LOW) or None.
@@ -292,7 +292,7 @@ def volume_profile_value_area(
     if p_max <= p_min:
         return (p_max, poc, p_min)
     bucket_width = (p_max - p_min) / num_buckets
-    bucket_vols: Dict[float, int] = defaultdict(int)
+    bucket_vols: dict[float, int] = defaultdict(int)
     for p in prices:
         bucket = int((p - p_min) / bucket_width)
         bucket = min(num_buckets - 1, max(0, bucket))

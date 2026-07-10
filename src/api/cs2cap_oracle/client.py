@@ -25,11 +25,12 @@ Tiered caching:
   3. Live API — rate-limited with exponential backoff (skipped for batch POSTs)
 """
 
-import aiohttp
 import asyncio
 import logging
 import time
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
+
+import aiohttp
 
 from src.api.dmarket_api_client.backoff import CircuitBreaker
 from src.config import Config
@@ -56,13 +57,13 @@ class CS2CapOracle(_CatalogMixin, _PricesMixin, _UtilsMixin):
 
     def __init__(self, api_key: str = ""):
         self.api_key = api_key
-        self._session: Optional[aiohttp.ClientSession] = None
+        self._session: aiohttp.ClientSession | None = None
         self._lock = asyncio.Lock()
         self._last_request_time = 0.0
         self._request_delay = 1.0
         self._quota_exhausted = False
         self._quota_exhausted_at: float = 0.0
-        self._quota_reset_seconds = 3600  # Reset after 1 hour
+        self._quota_reset_seconds = 60  # Reset after 60s (per-minute limit, not hourly)
 
         # v12.7: Circuit breaker for CS2Cap API (P3-5).
         # Opens after 3 consecutive failures (429, 5xx, network errors).
@@ -76,17 +77,17 @@ class CS2CapOracle(_CatalogMixin, _PricesMixin, _UtilsMixin):
         )
 
         # Caches
-        self._price_cache: Dict[str, Tuple[float, float]] = {}
-        self._candles_cache: Dict[str, Tuple[List[Any], float]] = {}
+        self._price_cache: dict[str, tuple[float, float]] = {}
+        self._candles_cache: dict[str, tuple[list[Any], float]] = {}
 
         # Item catalog: market_hash_name -> item_id
-        self._item_catalog: Dict[str, int] = {}
+        self._item_catalog: dict[str, int] = {}
         self._catalog_ts: float = 0.0
 
         # Rate limit state
         saved_delay = price_db.get_state("cs2cap_delay")
         self._request_delay = float(saved_delay) if saved_delay else 1.0
-        self._rate_remaining: Optional[int] = None  # Header-driven (X-RateLimit-Remaining)
+        self._rate_remaining: int | None = None  # Header-driven (X-RateLimit-Remaining)
 
     async def get_session(self) -> aiohttp.ClientSession:
         if self._session is not None and not self._session.closed:
@@ -126,7 +127,7 @@ class CS2CapOracle(_CatalogMixin, _PricesMixin, _UtilsMixin):
                 await asyncio.sleep(self._request_delay - elapsed)
             self._last_request_time = time.monotonic()
 
-    async def _request(self, endpoint: str, params: Optional[Dict[str, Any]] = None) -> Optional[Dict]:
+    async def _request(self, endpoint: str, params: dict[str, Any] | None = None) -> dict | None:
         """Throttled API request with rate limit handling and circuit breaker."""
         # Reset quota after 1 hour
         if self._quota_exhausted and time.time() - self._quota_exhausted_at > self._quota_reset_seconds:
@@ -188,9 +189,9 @@ class CS2CapOracle(_CatalogMixin, _PricesMixin, _UtilsMixin):
     async def _request_post(
         self,
         endpoint: str,
-        body: Dict[str, Any],
+        body: dict[str, Any],
         bypass_throttle: bool = False,
-    ) -> Optional[Dict]:
+    ) -> dict | None:
         """
         POST helper for batch endpoints (/prices/batch, /bids/batch).
 
@@ -288,14 +289,14 @@ class CS2CapOracle(_CatalogMixin, _PricesMixin, _UtilsMixin):
             count += 1
             price_db.save_state("cs2cap_calls_month", f"{saved_month}:{count}")
             # Soft warning thresholds (Starter = 50K)
-            if count == 40000:
-                logger.warning("[CS2Cap] Monthly usage: 40K/50K (80%) — slow down")
-            elif count == 45000:
-                logger.warning("[CS2Cap] Monthly usage: 45K/50K (90%) — critical")
+            if count >= 45000:
+                logger.warning("[CS2Cap] Monthly usage: 45K+/50K (90%+) — critical")
+            elif count >= 40000:
+                logger.warning("[CS2Cap] Monthly usage: 40K+/50K (80%+) — slow down")
         except Exception:
             pass
 
-    def rate_limit_state(self) -> Dict[str, Any]:
+    def rate_limit_state(self) -> dict[str, Any]:
         """
         Public read of the rate-limit state for the cache layer.
 
@@ -336,11 +337,11 @@ class CS2CapOracle(_CatalogMixin, _PricesMixin, _UtilsMixin):
             "cooldown_remaining_s": cooldown_remaining,
         }
 
-    def circuit_breaker_status(self) -> Dict[str, Any]:
+    def circuit_breaker_status(self) -> dict[str, Any]:
         """v12.7: Circuit breaker diagnostic snapshot (P3-5)."""
         return self._breaker.status()
 
-    def is_price_stale(self, hash_name: str, offset: int = 0, max_age_seconds: Optional[float] = None) -> bool:
+    def is_price_stale(self, hash_name: str, offset: int = 0, max_age_seconds: float | None = None) -> bool:
         """
         v12.7: Check if cached price for item is stale (P4-3).
 
@@ -369,7 +370,7 @@ class CS2CapOracle(_CatalogMixin, _PricesMixin, _UtilsMixin):
 
         return True  # Stale or missing
 
-    def cache_stats(self) -> Dict[str, Any]:
+    def cache_stats(self) -> dict[str, Any]:
         """v12.7: Cache diagnostics for health endpoint."""
         now = time.time()
         mem_fresh = sum(1 for _, ts in self._price_cache.values() if now - ts < self.MEM_TTL)

@@ -11,12 +11,8 @@ silent config drift. The centralized .env loading in `src.config` is the
 single source of truth.
 """
 
-import hashlib
-import hmac
 import logging
-import os
 import time
-from typing import Optional
 
 import nacl.signing
 
@@ -33,7 +29,7 @@ class DMarketAuth:
         from src.config import Config
         self.public_key = Config.PUBLIC_KEY or ""
         self.secret_key = Config.SECRET_KEY or ""
-        self._signing_key: Optional[nacl.signing.SigningKey] = None
+        self._signing_key: nacl.signing.SigningKey | None = None
         if self.secret_key:
             try:
                 raw_bytes = bytes.fromhex(self.secret_key)

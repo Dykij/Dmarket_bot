@@ -1,0 +1,96 @@
+{
+  "cycles": [
+    {
+      "edges": [
+        {
+          "lines": [
+            9,
+            9
+          ],
+          "source": "src.analysis.microstructure",
+          "target": "src.analysis.microstructure"
+        }
+      ],
+      "modules": [
+        "src.analysis.microstructure"
+      ]
+    },
+    {
+      "edges": [
+        {
+          "lines": [
+            6,
+            6
+          ],
+          "source": "src.analytics.backtester",
+          "target": "src.analytics.backtester"
+        }
+      ],
+      "modules": [
+        "src.analytics.backtester"
+      ]
+    },
+    {
+      "edges": [
+        {
+          "lines": [
+            6,
+            6
+          ],
+          "source": "src.analytics.price_analytics",
+          "target": "src.analytics.price_analytics"
+        }
+      ],
+      "modules": [
+        "src.analytics.price_analytics"
+      ]
+    },
+    {
+      "edges": [
+        {
+          "lines": [
+            17,
+            17
+          ],
+          "source": "src.telegram.control_bot",
+          "target": "src.telegram.control_bot"
+        }
+      ],
+      "modules": [
+        "src.telegram.control_bot"
+      ]
+    }
+  ],
+  "score": {
+    "components": {
+      "acyclicity": 0.9827586206896551,
+      "complexity": 0.6445868945868947,
+      "depth": 0.36363636363636365,
+      "equality": 0.3212309542902967,
+      "modularity": 0.7082350820263206
+    },
+    "inputs": {
+      "call_edge_count": 245,
+      "calls_per_edge": 2.9591836734693877,
+      "cc_max": 178,
+      "cc_mean": 3.843304843304843,
+      "cc_total": 5396,
+      "community_count": 62,
+      "cycle_count": 4,
+      "edge_count": 430,
+      "function_count": 1404,
+      "max_depth": 14,
+      "modularity_weighted_community_count": 66,
+      "module_count": 232,
+      "propagation_cost": 0.05122250297265161,
+      "raw_gini": 0.6787690457097033,
+      "raw_modularity": 0.5623526230394809,
+      "raw_modularity_weighted": 0.640661755826591,
+      "tangle_ratio": 0.017241379310344827,
+      "total_calls": 725
+    },
+    "overall": 0.554470050185173
+  },
+  "sdp_violations": [],
+  "violations": []
+}

@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from src.db.db_retry import with_db_retry
 
@@ -56,7 +56,7 @@ class _AssetStatusMixin:
                     (item_id, title, status, finalization_time, now, now),
                 )
 
-    def get_asset_status(self, item_id: str) -> Optional[Dict[str, Any]]:
+    def get_asset_status(self, item_id: str) -> dict[str, Any] | None:
         """Get the current status of an asset. Returns None if unknown."""
         row = self.state_conn.execute(
             "SELECT * FROM asset_status WHERE item_id = ?", (item_id,)
@@ -72,14 +72,14 @@ class _AssetStatusMixin:
             "updated_at": row["updated_at"],
         }
 
-    def get_active_assets(self) -> List[Dict[str, Any]]:
+    def get_active_assets(self) -> list[dict[str, Any]]:
         """Return all assets with status='active' (tradable)."""
         rows = self.state_conn.execute(
             "SELECT * FROM asset_status WHERE status = 'active' ORDER BY updated_at DESC"
         ).fetchall()
         return [dict(r) for r in rows]
 
-    def get_trade_protected_assets(self) -> List[Dict[str, Any]]:
+    def get_trade_protected_assets(self) -> list[dict[str, Any]]:
         """Return all assets that are still in trade_protected status."""
         rows = self.state_conn.execute(
             "SELECT * FROM asset_status WHERE status = 'trade_protected' "
@@ -87,7 +87,7 @@ class _AssetStatusMixin:
         ).fetchall()
         return [dict(r) for r in rows]
 
-    def get_reverted_assets(self) -> List[Dict[str, Any]]:
+    def get_reverted_assets(self) -> list[dict[str, Any]]:
         """Return all assets that have been reverted (DMarket rolled back the transaction)."""
         rows = self.state_conn.execute(
             "SELECT * FROM asset_status WHERE status = 'reverted' ORDER BY updated_at DESC"

@@ -8,6 +8,7 @@ they pressed the button instead of using `/test <name>` directly.
 
 from __future__ import annotations
 
+import contextlib
 import logging
 import os
 
@@ -175,11 +176,7 @@ async def _do_test(message, item_name: str) -> None:
 
         await message.answer(text)
     finally:
-        try:
+        with contextlib.suppress(Exception):
             await client.close()
-        except Exception:
-            pass
-        try:
+        with contextlib.suppress(Exception):
             await oracle.close()
-        except Exception:
-            pass

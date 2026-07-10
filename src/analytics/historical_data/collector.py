@@ -34,7 +34,7 @@ class HistoricalDataCollector:
 
     def __init__(
         self,
-        api: "IDMarketAPI",
+        api: IDMarketAPI,
         cache_ttl_minutes: int = 60,
     ) -> None:
         """Initialize collector.
