@@ -7,8 +7,6 @@ import asyncio
 import gc
 import time
 
-import pytest
-
 from src.workflow.chains import AgentRole, TaskStatus, WorkflowBuilder
 
 
@@ -17,7 +15,6 @@ async def test_load_1000_concurrent_workflow_tasks():
     Spawn 1000 concurrent tasks in batches and ensure no deadlock or leak.
     """
     total_tasks = 1000
-    batch_size = 100
 
     # Simple fast handler (no real I/O to be lightweight)
     async def fast_handler(payload):

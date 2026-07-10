@@ -1,15 +1,18 @@
-import aiohttp
 import asyncio
 import logging
 import time
 import urllib.parse
-from typing import Dict, Tuple
-from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
+from typing import Any
+
+import aiohttp
+from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
+
 from src.db.price_history import price_db
 
 logger = logging.getLogger("CSFloatOracle")
 
-from src.api.cs2cap_oracle.models import CS2CapRateLimit as RateLimitException  # unified exception
+from src.api.exceptions import RateLimitException
+
 
 class CSFloatOracle:
     """
@@ -31,7 +34,7 @@ class CSFloatOracle:
         self._last_request_time = 0.0
         
         # --- In-Memory Quick Cache (High-frequency layer) ---
-        self._mem_cache: Dict[str, Tuple[float, float]] = {}  # {hash_name: (price, timestamp)}
+        self._mem_cache: dict[str, tuple[float, float]] = {}  # {hash_name: (price, timestamp)}
 
     async def get_session(self):
         if self._session is not None and not self._session.closed:
@@ -39,9 +42,13 @@ class CSFloatOracle:
         async with self._lock:
             if self._session is not None and not self._session.closed:
                 return self._session
-            self._session = aiohttp.ClientSession(
-                headers={"Authorization": self.api_key} if self.api_key else {}
-            )
+            headers = {
+                "User-Agent": "DMarketBot/15.0",
+                "Accept": "application/json",
+            }
+            if self.api_key:
+                headers["Authorization"] = self.api_key
+            self._session = aiohttp.ClientSession(headers=headers)
             return self._session
 
     async def _throttle(self):
@@ -123,6 +130,45 @@ class CSFloatOracle:
         except Exception as e:
             logger.error(f"[CSFloat] Oracle Error: {e}", exc_info=True)
             return 0.0
+
+    async def get_sales_history(
+        self, hash_name: str, limit: int = 50
+    ) -> list[dict[str, Any]]:
+        """
+        Fetch recent sales from CSFloat.
+        Returns list of {"price": float, "date": str, "float_value": float}.
+        """
+        await self._throttle()
+        session = await self.get_session()
+
+        encoded_name = urllib.parse.quote(hash_name)
+        url = f"{self.BASE_URL}/history?market_hash_name={encoded_name}&limit={limit}"
+
+        try:
+            async with session.get(url) as response:
+                if response.status == 429:
+                    logger.warning("[CSFloat] 429 on sales history")
+                    return []
+                if response.status != 200:
+                    return []
+
+                data = await response.json()
+                sales = []
+                for entry in data.get("data", []):
+                    price_cents = entry.get("price", 0)
+                    float_val = entry.get("float_value", 0)
+                    sold_at = entry.get("sold_at", "")
+                    if price_cents > 0:
+                        sales.append({
+                            "price": price_cents / 100.0,
+                            "float_value": float_val,
+                            "date": sold_at,
+                        })
+                return sales
+
+        except Exception as e:
+            logger.debug(f"[CSFloat] Sales history error for {hash_name}: {e}")
+            return []
 
     async def close(self):
         if self._session and not self._session.closed:

@@ -13,7 +13,6 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-
 _SEASONAL_MAP = {
     # Spring growth (Feb-Apr): aggressive buying
     (2, 0): 1.10,

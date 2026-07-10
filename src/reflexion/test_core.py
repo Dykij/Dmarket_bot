@@ -3,12 +3,10 @@ Test suite for the Reflexive Engine (core.py).
 Covers: unit, property-based, integration, snapshot/rollback.
 """
 
-import os
 import tempfile
 from pathlib import Path
 
 import pytest
-from pydantic import ValidationError
 
 from src.reflexion.core import (
     FileSnapshot,
@@ -16,9 +14,8 @@ from src.reflexion.core import (
     SnapshotManager,
     SnapshotManifest,
     SnapshotState,
-    make_snapshot,
-    rollback_to,
     _hash_file,
+    rollback_to,
 )
 
 
@@ -112,8 +109,8 @@ def test_snapshot_prune(dummy_repo):
 # ── Property-based / Invariant tests ──
 
 
-import hypothesis
-from hypothesis import given, strategies as st
+from hypothesis import given
+from hypothesis import strategies as st
 
 
 # Property: hash_file for same content is deterministic

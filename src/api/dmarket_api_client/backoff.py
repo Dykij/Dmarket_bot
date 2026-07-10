@@ -28,8 +28,6 @@ import random
 import time
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional
-
 
 logger = logging.getLogger("DMarketAPI.Backoff")
 
@@ -149,14 +147,16 @@ class CircuitBreaker:
             if self.state != CircuitState.OPEN:
                 # Apply jitter to cooldown: -20% to +20%
                 jitter = 1.0 + random.uniform(-self.jitter_pct, self.jitter_pct)
-                cooldown = self.current_cooldown * jitter
+                self.current_cooldown = min(
+                    self.base_cooldown * jitter, self.max_cooldown
+                )
                 self.opened_at = time.time()
                 self.state = CircuitState.OPEN
                 self.total_opens += 1
                 logger.warning(
                     f"[CB:{self.name}] → OPEN "
                     f"(failures={self.consecutive_failures}, "
-                    f"cooldown={cooldown:.1f}s, err={self.last_error})"
+                    f"cooldown={self.current_cooldown:.1f}s, err={self.last_error})"
                 )
             else:
                 # Already open: extend cooldown exponentially
@@ -185,7 +185,7 @@ class CircuitBreaker:
                 f"{retry_after:.1f}s (backoff_until={proposed:.0f})"
             )
 
-    def apply_rate_limit_remaining(self, remaining: int, reset_in: Optional[float] = None) -> None:
+    def apply_rate_limit_remaining(self, remaining: int, reset_in: float | None = None) -> None:
         """v15.0: Proactive slowdown when quota is nearly exhausted.
 
         Called when X-RateLimit-Remaining is low but not yet zero.
@@ -253,7 +253,7 @@ def should_trip(status: int) -> bool:
 # v15.0: Retry-After / X-RateLimit-Remaining parsing helpers
 # =====================================================================
 
-def parse_retry_after(header_value: str) -> Optional[float]:
+def parse_retry_after(header_value: str) -> float | None:
     """Parse Retry-After header (seconds or HTTP-date)."""
     try:
         return float(header_value)
@@ -263,9 +263,9 @@ def parse_retry_after(header_value: str) -> Optional[float]:
 
 def extract_backoff_from_headers(headers: dict) -> tuple:
     """Extracts (retry_after_seconds, remaining, reset_in_seconds) from response headers."""
-    retry_after: Optional[float] = None
-    remaining: Optional[int] = None
-    reset_in: Optional[float] = None
+    retry_after: float | None = None
+    remaining: int | None = None
+    reset_in: float | None = None
 
     h = {k.lower(): v for k, v in headers.items()}
 

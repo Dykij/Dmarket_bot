@@ -1,0 +1,14 @@
+{
+  "checkpoints": [
+    {
+      "id": "checkpoint-20260709-100000",
+      "timestamp": "2026-07-09T10:00:00Z",
+      "description": "Test checkpoint for validation",
+      "stash_ref": "stash@{0}",
+      "files_changed": 1,
+      "operation": "test"
+    }
+  ],
+  "max_checkpoints": 10,
+  "auto_cleanup_days": 7
+}

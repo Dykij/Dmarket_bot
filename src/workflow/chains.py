@@ -7,15 +7,13 @@ Workflow Chains — асинхронные пайплайны (Conductor pattern
 from __future__ import annotations
 
 import asyncio
-import dataclasses
 import enum
-import hashlib
-import inspect
 import time
 import traceback
 import uuid
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
-from typing import Any, Awaitable, Callable, Coroutine, Dict, List, Optional, TypeVar
+from typing import Any, TypeVar
 
 T = TypeVar("T")
 
@@ -39,21 +37,21 @@ class TaskStatus(str, enum.Enum):
 class AgentTask:
     id: str
     role: AgentRole
-    payload: Dict[str, Any]
+    payload: dict[str, Any]
     status: TaskStatus = TaskStatus.PENDING
-    result: Optional[Dict[str, Any]] = None
-    error: Optional[str] = None
-    started_at: Optional[float] = None
-    finished_at: Optional[float] = None
-    depends_on: List[str] = field(default_factory=list)
+    result: dict[str, Any] | None = None
+    error: str | None = None
+    started_at: float | None = None
+    finished_at: float | None = None
+    depends_on: list[str] = field(default_factory=list)
 
 
 class TaskRegistry:
     """In-memory DAG for task dependencies and state."""
 
     def __init__(self):
-        self._tasks: Dict[str, AgentTask] = {}
-        self._dependencies: Dict[str, List[str]] = {}
+        self._tasks: dict[str, AgentTask] = {}
+        self._dependencies: dict[str, list[str]] = {}
 
     def add(self, task: AgentTask) -> None:
         self._tasks[task.id] = task
@@ -79,7 +77,7 @@ class TaskRegistry:
 class WorkItem:
     """Unit of work passed between agents in the queue."""
 
-    def __init__(self, task: AgentTask, callback: Optional[Callable[[AgentTask], Awaitable[None]]] = None, future: Optional[asyncio.Future] = None):
+    def __init__(self, task: AgentTask, callback: Callable[[AgentTask], Awaitable[None]] | None = None, future: asyncio.Future | None = None):
         self.task = task
         self.callback = callback
         self.future: asyncio.Future = future if future is not None else asyncio.get_event_loop().create_future()
@@ -91,17 +89,17 @@ class Conductor:
     Each agent role has its own worker pool size (default 1).
     """
 
-    def __init__(self, max_workers_per_role: Optional[Dict[AgentRole, int]] = None):
-        self.queues: Dict[AgentRole, asyncio.Queue[WorkItem]] = {}
-        self.workers: List[asyncio.Task] = []
+    def __init__(self, max_workers_per_role: dict[AgentRole, int] | None = None):
+        self.queues: dict[AgentRole, asyncio.Queue[WorkItem]] = {}
+        self.workers: list[asyncio.Task] = []
         self.registry = TaskRegistry()
-        self._handlers: Dict[AgentRole, Callable[[Dict[str, Any]], Awaitable[Dict[str, Any]]]] = {}
+        self._handlers: dict[AgentRole, Callable[[dict[str, Any]], Awaitable[dict[str, Any]]]] = {}
         self.max_workers = max_workers_per_role or {}
 
-    def register_handler(self, role: AgentRole, handler: Callable[[Dict[str, Any]], Awaitable[Dict[str, Any]]]) -> None:
+    def register_handler(self, role: AgentRole, handler: Callable[[dict[str, Any]], Awaitable[dict[str, Any]]]) -> None:
         self._handlers[role] = handler
 
-    def submit(self, task: AgentTask, callback: Optional[Callable[[AgentTask], Awaitable[None]]] = None) -> asyncio.Future:
+    def submit(self, task: AgentTask, callback: Callable[[AgentTask], Awaitable[None]] | None = None) -> asyncio.Future:
         if task.role not in self._handlers:
             raise ValueError(f"No handler registered for role {task.role}")
         if task.role not in self.queues:
@@ -136,7 +134,7 @@ class Conductor:
                 result = await handler(task.payload)
                 task.result = result
                 task.status = TaskStatus.SUCCESS
-            except Exception as exc:
+            except Exception:
                 task.status = TaskStatus.FAILURE
                 task.error = traceback.format_exc()
             task.finished_at = time.time()
@@ -169,9 +167,9 @@ class WorkflowBuilder:
 
     def __init__(self):
         self.conductor = Conductor()
-        self._tasks: List[AgentTask] = []
+        self._tasks: list[AgentTask] = []
 
-    def add_step(self, role: AgentRole, payload: Dict[str, Any], depends_on: Optional[List[str]] = None) -> str:
+    def add_step(self, role: AgentRole, payload: dict[str, Any], depends_on: list[str] | None = None) -> str:
         task_id = f"{role.value}_{uuid.uuid4().hex[:8]}"
         task = AgentTask(
             id=task_id,
@@ -182,11 +180,11 @@ class WorkflowBuilder:
         self._tasks.append(task)
         return task_id
 
-    def register_handler(self, role: AgentRole, handler: Callable[[Dict[str, Any]], Awaitable[Dict[str, Any]]]) -> WorkflowBuilder:
+    def register_handler(self, role: AgentRole, handler: Callable[[dict[str, Any]], Awaitable[dict[str, Any]]]) -> WorkflowBuilder:
         self.conductor.register_handler(role, handler)
         return self
 
-    async def run(self) -> List[AgentTask]:
+    async def run(self) -> list[AgentTask]:
         futures = []
         for task in self._tasks:
             fut = self.conductor.submit(task)

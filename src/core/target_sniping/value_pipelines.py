@@ -23,22 +23,23 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from src.config import Config
-from src.db.price_history import price_db
-from src.utils.decimal_helpers import D, quantize
 from src.core.target_sniping.pricing import (
     get_float_premium,
     get_pattern_premium,
 )
+from src.db.price_history import price_db
+from src.utils.decimal_helpers import D, quantize
 
 logger = logging.getLogger("SnipingBot")
 
 
 def calculate_value_premium(
-    attrs: Dict[str, Any],
-    stickers: List[Dict[str, Any]],
+    attrs: dict[str, Any],
+    stickers: list[dict[str, Any]],
+    base_price_usd: float = 0.0,
 ) -> Decimal:
     """
     Calculate total rarity/value premium for an item based on:
@@ -54,25 +55,57 @@ def calculate_value_premium(
     # Pattern/phase premium
     pattern_mult = D(get_pattern_premium(attrs))
 
-    # Sticker premium (simplified: $ amount per sticker)
+    # Sticker premium — uses StickerEvaluator for value-based estimation
+    # instead of crude combo counting (counts identical names only).
     sticker_mult = D("1.0")
     if stickers and Config.STICKER_COMBO_ENABLED:
-        # Simple sticker combo: 4 same stickers = +100%
-        # Count stickers and unique sticker counts
-        from collections import Counter
-        names = [s.get("name", "") for s in stickers if s.get("name")]
-        if names:
-            most_common = Counter(names).most_common(1)[0][1]
-            if most_common >= 4:
-                sticker_mult = D("2.0")  # +100%
-            elif most_common == 3:
-                sticker_mult = D("1.5")  # +50%
-            elif most_common == 2:
-                sticker_mult = D("1.2")  # +20%
+        from src.analytics.stickers_evaluator import StickerEvaluator
+        evaluator = StickerEvaluator()
+        added_usd = evaluator.calculate_added_value(stickers)
+        if added_usd > 0:
+            # Convert USD added value to a multiplier based on item price.
+            # For a $10 item with $5 sticker value → multiplier = 1.5x
+            # Cap at 5x to prevent overvaluation from extremely rare stickers.
+            if base_price_usd > 0:
+                sticker_ratio = added_usd / base_price_usd
+                sticker_mult = D(str(min(1.0 + sticker_ratio, 5.0)))
+            else:
+                # Fallback: old combo logic if no base price available
+                from collections import Counter
+                names = [s.get("name", "") for s in stickers if s.get("name")]
+                if names:
+                    most_common = Counter(names).most_common(1)[0][1]
+                    if most_common >= 4:
+                        sticker_mult = D("2.0")
+                    elif most_common == 3:
+                        sticker_mult = D("1.5")
+                    elif most_common == 2:
+                        sticker_mult = D("1.2")
 
-    # Use the maximum of all premiums (they're multiplicative, but we want
-    # the dominant one as the primary driver)
-    return max(float_mult, pattern_mult, sticker_mult, D("1.0"))
+    # Weighted product: combine premiums with dampening to avoid explosion.
+    # Each non-trivial premium contributes multiplicatively but with a
+    # dampening factor so a 5.0x pattern + 1.25x float = ~5.6x not 6.25x.
+    combined = D("1.0")
+    premiums = []
+    if float_mult > D("1.0"):
+        premiums.append(float_mult)
+    if pattern_mult > D("1.0"):
+        premiums.append(pattern_mult)
+    if sticker_mult > D("1.0"):
+        premiums.append(sticker_mult)
+
+    if not premiums:
+        return D("1.0")
+
+    # Dominant premium (largest) gets full weight, secondary ones get 50% dampening
+    premiums_sorted = sorted(premiums, reverse=True)
+    combined = premiums_sorted[0]  # dominant at full weight
+    for p in premiums_sorted[1:]:
+        # Dampen secondary premiums: 1.0 + (premium - 1.0) * 0.5
+        dampened = D("1.0") + (p - D("1.0")) * D("0.5")
+        combined *= dampened
+
+    return combined
 
 
 def estimate_fair_sell_price(
@@ -99,10 +132,10 @@ def evaluate_value_signal(
     title: str,
     base_price: Decimal,
     cs2cap_ask: Decimal,
-    attrs: Dict[str, Any],
-    stickers: List[Dict[str, Any]],
+    attrs: dict[str, Any],
+    stickers: list[dict[str, Any]],
     fee_rate: Decimal,
-) -> Optional[Dict[str, Any]]:
+) -> dict[str, Any] | None:
     """
     Evaluate the VALUE signal for a candidate item.
 
@@ -115,7 +148,7 @@ def evaluate_value_signal(
         return None
 
     # Calculate rarity premium
-    premium_mult = calculate_value_premium(attrs, stickers)
+    premium_mult = calculate_value_premium(attrs, stickers, base_price_usd=float(base_price))
     if premium_mult <= 1 and not Config.VALUE_SCAN_MIN_PREMIUM > 1:
         # No rarity detected and we're not forcing value-only mode
         return None
@@ -166,7 +199,7 @@ def evaluate_spread_signal(
     best_ask: Decimal,
     fee_rate: Decimal,
     current_margin: Decimal,
-) -> Optional[Dict[str, Any]]:
+) -> dict[str, Any] | None:
     """
     Evaluate the SPREAD signal (traditional intra-market spread).
     Returns dict or None.
@@ -200,13 +233,13 @@ def evaluate_spread_signal(
 
 def evaluate_combined_signal(
     title: str,
-    item: Dict[str, Any],
+    item: dict[str, Any],
     cs2cap_ask: Decimal,
     best_bid: Decimal,
     best_ask: Decimal,
     fee_rate: Decimal,
     current_margin: Decimal,
-) -> Optional[Dict[str, Any]]:
+) -> dict[str, Any] | None:
     """
     Main entry point: evaluate BOTH value and spread signals.
 
@@ -222,7 +255,7 @@ def evaluate_combined_signal(
     base_price = D(int(item.get("price", {}).get("USD", 0))) / Decimal(100)
     if base_price <= 0:
         return None
-    
+
     # Extract attributes
     attrs_list = item.get("attributes", []) or []
     attrs = {a.get("name"): a.get("value") for a in attrs_list}

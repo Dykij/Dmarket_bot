@@ -9,7 +9,6 @@ bot.py — Main entry point: create bot/dispatcher, wire routers, run main().
 import asyncio
 import logging
 import time
-from typing import Optional
 
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
@@ -112,8 +111,8 @@ class AdminOnlyMiddleware:
 # ============================================================
 # Lazy bot/dispatcher singleton
 # ============================================================
-_bot: Optional[Bot] = None
-_dp: Optional[Dispatcher] = None
+_bot: Bot | None = None
+_dp: Dispatcher | None = None
 
 
 def create_bot() -> tuple[Bot, Dispatcher]:

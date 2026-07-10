@@ -13,12 +13,12 @@ Mixed into `_FilterMixin` (see `filter.py`).
 
 from __future__ import annotations
 
+import contextlib
 import logging
 import os
 import re
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
-from src.config import Config
 from src.db.price_history import price_db
 
 logger = logging.getLogger("ItemIntel")
@@ -30,7 +30,7 @@ USE_CATEGORY_FILTER = os.getenv("USE_CATEGORY_FILTER", "true").lower() == "true"
 USE_CROSS_WEAR_GUARD = os.getenv("USE_CROSS_WEAR_GUARD", "true").lower() == "true"
 
 # Skin name → weapon type patterns
-_WEAPON_PATTERNS: Dict[str, re.Pattern] = {
+_WEAPON_PATTERNS: dict[str, re.Pattern] = {
     "rifle": re.compile(
         r"\b(AK-47|M4A4|M4A1-S|AUG|SG 553|FAMAS|Galil AR|SSG 08|AWP|SCAR-20|G3SG1)\b", re.I
     ),
@@ -90,7 +90,7 @@ class _ItemIntelMixin:
 
     def compute_technical_score(
         self, title: str, current_price: float, listing_count: int = 0,
-    ) -> Tuple[float, str]:
+    ) -> tuple[float, str]:
         """
         Compute a 0..1 technical score from RSI/MACD/Bollinger.
         Returns (score, signal_desc).
@@ -165,33 +165,27 @@ class _ItemIntelMixin:
     # 2. DMarket discount/marker detection
     # ─────────────────────────────────────────────
 
-    def extract_dmarket_markers(self, item: Dict[str, Any]) -> Dict[str, Any]:
+    def extract_dmarket_markers(self, item: dict[str, Any]) -> dict[str, Any]:
         """
         Extract discount, suggestedPrice, tagName, and other markers
         from a DMarket market-items listing object.
         """
-        markers: Dict[str, Any] = {}
+        markers: dict[str, Any] = {}
 
         discount = item.get("discount")
         if discount is not None:
-            try:
+            with contextlib.suppress(ValueError, TypeError):
                 markers["discount_pct"] = float(discount)
-            except (ValueError, TypeError):
-                pass
 
         suggested = item.get("suggestedPrice", {})
         if isinstance(suggested, dict):
-            try:
+            with contextlib.suppress(ValueError, TypeError):
                 markers["suggested_price_usd"] = float(suggested.get("USD", 0)) / 100.0
-            except (ValueError, TypeError):
-                pass
 
         instant = item.get("instantPrice", {})
         if isinstance(instant, dict):
-            try:
+            with contextlib.suppress(ValueError, TypeError):
                 markers["instant_price_usd"] = float(instant.get("USD", 0)) / 100.0
-            except (ValueError, TypeError):
-                pass
 
         extra = item.get("extra", {})
         if isinstance(extra, dict):
@@ -202,7 +196,7 @@ class _ItemIntelMixin:
 
         return markers
 
-    def is_discounted_deal(self, item: Dict[str, Any], base_price: float) -> bool:
+    def is_discounted_deal(self, item: dict[str, Any], base_price: float) -> bool:
         """Check if the item has a significant DMarket discount."""
         if not USE_DISCOUNT_FILTER:
             return False
@@ -221,12 +215,9 @@ class _ItemIntelMixin:
 
         # Check for "Best Price" / "Лучшая цена" marker
         tag = markers.get("tag_name", "")
-        if tag and ("best" in tag.lower() or "лучш" in tag.lower() or "cheapest" in tag.lower()):
-            return True
+        return bool(tag and ("best" in tag.lower() or "лучш" in tag.lower() or "cheapest" in tag.lower()))
 
-        return False
-
-    def get_marker_bonus(self, item: Dict[str, Any]) -> float:
+    def get_marker_bonus(self, item: dict[str, Any]) -> float:
         """
         Return a score multiplier (>=1.0) for items with favourable DMarket markers.
         """
@@ -292,9 +283,7 @@ class _ItemIntelMixin:
     def is_blocked_category(self, title: str) -> bool:
         """Return True if this category should be entirely skipped."""
         cat = self.categorize_item(title)
-        if cat == "graffiti":
-            return True
-        return False
+        return cat == "graffiti"
 
     # ─────────────────────────────────────────────
     # 4. Cross-wear grouping (family-level guard)
@@ -342,7 +331,7 @@ class _ItemIntelMixin:
     # ─────────────────────────────────────────────
 
     @staticmethod
-    def check_event_risk(title: str) -> Optional[str]:
+    def check_event_risk(title: str) -> str | None:
         """
         Check if the item category is risky during active events.
         Returns None if safe, or a reason string if blocked.

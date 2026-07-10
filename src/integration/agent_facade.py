@@ -8,13 +8,14 @@ from __future__ import annotations
 import asyncio
 import logging
 import random
-from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, Optional
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import Any
 
-from src.sandbox.core import BashSandbox, SandboxCommand, SandboxConfig, SandboxResult
 from src.cot_audit.core import CoTLogEntry, CoTReport, FormatStyle
 from src.reflexion.core import ReflexionConfig, SnapshotManager, SnapshotManifest
-from src.workflow.chains import AgentRole, WorkflowBuilder
+from src.sandbox.core import BashSandbox, SandboxCommand, SandboxConfig, SandboxResult
+from src.workflow.chains import WorkflowBuilder
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +33,7 @@ class RetryResult:
     success: bool
     attempts: int
     total_delay_ms: float
-    last_error: Optional[str] = None
+    last_error: str | None = None
 
 
 @dataclass
@@ -47,16 +48,16 @@ class AgentFacade:
     Единый фасад для всех архитектурных компонентов OpenCode.
     """
 
-    def __init__(self, repo_root: str = ".", work_dir: str = ".", retry_config: Optional[RetryConfig] = None):
+    def __init__(self, repo_root: str = ".", work_dir: str = ".", retry_config: RetryConfig | None = None):
         self.sandbox = BashSandbox(SandboxConfig(work_dir=work_dir))
         self.cot_report: CoTReport = CoTReport(session_id="auto")
         self.snapshot_manager = SnapshotManager(ReflexionConfig(repo_root=repo_root))
-        self.workflow_builder: Optional[WorkflowBuilder] = None
+        self.workflow_builder: WorkflowBuilder | None = None
         self.retry_config = retry_config or RetryConfig()
 
     # ── Safe Bash Interface ──
 
-    async def safe_bash(self, command: str, cwd: Optional[str] = None, env: Optional[Dict[str, str]] = None) -> SandboxResult:
+    async def safe_bash(self, command: str, cwd: str | None = None, env: dict[str, str] | None = None) -> SandboxResult:
         """
         Безопасное выполнение bash-команд через Sandbox.
         """
@@ -70,7 +71,7 @@ class AgentFacade:
 
     # ── CoT Logging ──
 
-    def _log_cot(self, title: str, content: str, reasoning: Optional[str] = None) -> None:
+    def _log_cot(self, title: str, content: str, reasoning: str | None = None) -> None:
         step = len(self.cot_report.entries) + 1
         entry = CoTLogEntry(step_number=step, title=title, content=content, reasoning=reasoning)
         self.cot_report.entries.append(entry)
@@ -103,7 +104,7 @@ class AgentFacade:
         self._log_cot("Workflow Started", "New workflow chain initialized")
         return self.workflow_builder
 
-    async def run_workflow(self) -> List[Any]:
+    async def run_workflow(self) -> list[Any]:
         """Запускает workflow и возвращает результаты."""
         if not self.workflow_builder:
             raise RuntimeError("No workflow builder initialized. Call start_workflow() first.")
@@ -126,8 +127,8 @@ class AgentFacade:
         self,
         command: str,
         label: str = "exec",
-        max_retries: Optional[int] = None,
-        on_retry: Optional[Callable[[int, float, Exception], None]] = None,
+        max_retries: int | None = None,
+        on_retry: Callable[[int, float, Exception], None] | None = None,
     ) -> SandboxResult:
         """
         Выполняет команду с автоматической точкой восстановления и retry.
@@ -135,7 +136,7 @@ class AgentFacade:
         """
         retries = max_retries if max_retries is not None else self.retry_config.max_retries
         manifest = self.create_snapshot(label)
-        last_error: Optional[Exception] = None
+        last_error: Exception | None = None
         total_delay_ms = 0.0
 
         for attempt in range(retries + 1):

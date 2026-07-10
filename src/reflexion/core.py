@@ -7,15 +7,11 @@ from __future__ import annotations
 
 import datetime
 import hashlib
-import json
 import os
 import shutil
 import subprocess
-import tempfile
-from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Callable, Dict, List, Optional, Protocol, Union
 
 from pydantic import BaseModel, Field, ValidationError
 
@@ -32,15 +28,15 @@ class FileSnapshot(BaseModel):
     sha256: str
     size: int
     mtime: float
-    content_b64: Optional[str] = None  # lazy
+    content_b64: str | None = None  # lazy
 
 
 class SnapshotManifest(BaseModel):
     id: str
     timestamp: str
     state: SnapshotState = SnapshotState.PENDING
-    files: List[FileSnapshot] = Field(default_factory=list)
-    git_commit: Optional[str] = None
+    files: list[FileSnapshot] = Field(default_factory=list)
+    git_commit: str | None = None
 
     def to_json(self) -> str:
         return self.model_dump_json(indent=2)
@@ -72,7 +68,7 @@ class StateStore:
             raise FileNotFoundError(f"Snapshot {snapshot_id} not found")
         return SnapshotManifest.model_validate_json(path.read_text())
 
-    def list_all(self) -> List[SnapshotManifest]:
+    def list_all(self) -> list[SnapshotManifest]:
         manifests = []
         for f in sorted(self.root.glob("*.json")):
             try:
@@ -111,7 +107,7 @@ class SnapshotManager:
         """Create a new snapshot of the current repo state."""
         repo = Path(self.config.repo_root)
         snapshot_id = f"{label}_{datetime.datetime.utcnow().strftime('%Y%m%d_%H%M%S')}_{os.urandom(4).hex()}"
-        files: List[FileSnapshot] = []
+        files: list[FileSnapshot] = []
 
         for root, _, filenames in os.walk(repo):
             if ".git" in root:

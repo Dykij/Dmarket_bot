@@ -7,17 +7,17 @@ v14.6: Commission optimizer — boosts score for low-fee items.
 from __future__ import annotations
 
 import math
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 from src.config import Config
 
 
 def rank_candidates_by_spread(
-    items: List[Dict[str, Any]],
-    agg_prices: Dict[str, Dict[str, Any]],
-    max_price_usd: Optional[float] = None,
-    low_fee_titles: Optional[set] = None,
-) -> List[Tuple[str, float]]:
+    items: list[dict[str, Any]],
+    agg_prices: dict[str, dict[str, Any]],
+    max_price_usd: float | None = None,
+    low_fee_titles: set | None = None,
+) -> list[tuple[str, float]]:
     """
     v12.7: Rank items by volume-weighted spread score (P2-3).
 
@@ -37,7 +37,7 @@ def rank_candidates_by_spread(
 
     low_fee_titles: optional set of titles known to have 2% commission.
     """
-    ranked: List[Tuple[str, float]] = []
+    ranked: list[tuple[str, float]] = []
     for it in items:
         title = it.get("title", "")
         if not title:
@@ -68,12 +68,12 @@ def rank_candidates_by_spread(
 
         spread = best_bid - best_ask
         spread_pct = spread / best_ask if best_ask > 0 else 0.0
-        if spread_pct < effective_min_spread / 100.0:
+        if spread_pct < float(effective_min_spread) / 100.0:
             continue
 
         # Estimated cost to buy + sell + cash out. Low-fee items get a lower
         # effective cost and therefore a higher score.
-        fee_estimate = Config.FEE_RATE + Config.WITHDRAWAL_FEE_RATE
+        fee_estimate = float(Config.FEE_RATE + Config.WITHDRAWAL_FEE_RATE)
         if Config.COMMISSION_OPTIMIZER_ENABLED and low_fee_titles is not None and title in low_fee_titles:
             fee_estimate *= 0.70  # ~30% cheaper fee stack (e.g. 2% vs 4.5%)
 

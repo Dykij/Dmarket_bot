@@ -3,7 +3,7 @@ import json
 import logging
 import os
 import time
-from typing import List, Literal, Tuple
+from typing import Literal
 
 try:
     import grpc
@@ -47,7 +47,7 @@ class CircuitBreaker:
         self.state_path = state_path or os.environ.get(
             "CIRCUIT_BREAKER_STATE_PATH", "/tmp/cb_state.json"
         )  # nosec: B108 - in-container ephemeral; override via env in production
-        self.snapshots: List[Tuple[float, float]] = []
+        self.snapshots: list[tuple[float, float]] = []
         self.is_tripped = False
         self._tripped_at: float = 0.0
         self._load_state()
@@ -56,7 +56,7 @@ class CircuitBreaker:
         """Load state from local disk to survive container restarts."""
         if os.path.exists(self.state_path):
             try:
-                with open(self.state_path, "r") as f:
+                with open(self.state_path) as f:
                     data = json.load(f)
                     self.snapshots = data.get("snapshots", [])
                     self.is_tripped = data.get("is_tripped", False)
@@ -115,6 +115,7 @@ class CircuitBreaker:
 
 
 from src.risk.dynamic_manager import DynamicRiskManager  # noqa: E402
+
 
 # 3. Decoupled Event-Driven Pipeline using gRPC
 class TradeExecutionPipeline:

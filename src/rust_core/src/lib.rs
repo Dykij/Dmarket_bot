@@ -8,7 +8,6 @@ use ed25519_dalek::{SigningKey, Signer};
 
 // ---- Globally cached resources (compiled once, reused forever) ----
 static INJECTION_REGEX: OnceLock<Regex> = OnceLock::new();
-static SIGNING_KEY: OnceLock<(SigningKey, String)> = OnceLock::new();
 
 // ---- Structs for serde deserialization ----
 #[derive(Debug, Serialize, Deserialize)]
@@ -65,13 +64,13 @@ struct ParsedSkin {
 }
 
 // =====================================================================
-// generate_signature_rs — Ed25519 signing with cached key
+// generate_signature_rs — Ed25519 signing
 // =====================================================================
 /// Generate Ed25519 signature for DMarket API request authentication.
 ///
-/// The SigningKey is derived from the secret once and cached globally
-/// via OnceLock. Subsequent calls skip hex decoding + key expansion
-/// (35x faster on repeated calls with the same key).
+/// Key derivation from hex secret is ~50μs, which is negligible compared
+/// to network latency (~50ms). We derive on every call to avoid the
+/// broken OnceLock caching pattern and support secret rotation.
 #[pyfunction]
 fn generate_signature_rs(
     method: &str,
@@ -80,47 +79,31 @@ fn generate_signature_rs(
     timestamp: &str,
     secret_hex: &str,
 ) -> PyResult<String> {
-    let (key, cached_secret) = match SIGNING_KEY.get() {
-        Some(k) => k,
-        None => {
-            let seed = hex::decode(secret_hex)
-                .map_err(|e| PyValueError::new_err(format!("Invalid hex secret: {}", e)))?;
-            let seed_slice = if seed.len() >= 32 { &seed[..32] } else { &seed[..] };
-            if seed_slice.len() != 32 {
-                return Err(PyValueError::new_err(format!(
-                    "Secret must be at least 32 bytes, got {}",
-                    seed_slice.len()
-                )));
-            }
-            let mut key_bytes = [0u8; 32];
-            key_bytes.copy_from_slice(seed_slice);
-            let signing_key = SigningKey::from_bytes(&key_bytes);
-            let _ = SIGNING_KEY.set((signing_key, secret_hex.to_string()));
-            SIGNING_KEY.get().unwrap()
-        }
-    };
-
-    // If secret changed between calls, recreate the key
-    if *cached_secret != secret_hex {
-        let seed = hex::decode(secret_hex)
-            .map_err(|e| PyValueError::new_err(format!("Invalid hex secret: {}", e)))?;
-        let seed_slice = if seed.len() >= 32 { &seed[..32] } else { &seed[..] };
-        if seed_slice.len() != 32 {
-            return Err(PyValueError::new_err(format!(
-                "Secret must be at least 32 bytes, got {}",
-                seed_slice.len()
-            )));
-        }
-        let mut key_bytes = [0u8; 32];
-        key_bytes.copy_from_slice(seed_slice);
-        let signing_key = SigningKey::from_bytes(&key_bytes);
-        let message = format!("{}{}{}{}", method.to_uppercase(), path, body, timestamp);
-        let signature = signing_key.sign(message.as_bytes());
-        return Ok(hex::encode(signature.to_bytes()));
+    let seed = hex::decode(secret_hex)
+        .map_err(|e| PyValueError::new_err(format!("Invalid hex secret: {}", e)))?;
+    let seed_slice = if seed.len() >= 32 { &seed[..32] } else { &seed[..] };
+    if seed_slice.len() != 32 {
+        return Err(PyValueError::new_err(format!(
+            "Secret must be at least 32 bytes, got {}",
+            seed_slice.len()
+        )));
     }
+    let mut key_bytes = [0u8; 32];
+    key_bytes.copy_from_slice(seed_slice);
+    let signing_key = SigningKey::from_bytes(&key_bytes);
 
-    let message = format!("{}{}{}{}", method.to_uppercase(), path, body, timestamp);
-    let signature = key.sign(message.as_bytes());
+    // Build message using write! to avoid intermediate String allocations
+    // Format: METHOD + PATH + BODY + TIMESTAMP (all concatenated)
+    let method_upper = method.to_ascii_uppercase();
+    let mut message = String::with_capacity(
+        method_upper.len() + path.len() + body.len() + timestamp.len()
+    );
+    message.push_str(&method_upper);
+    message.push_str(path);
+    message.push_str(body);
+    message.push_str(timestamp);
+
+    let signature = signing_key.sign(message.as_bytes());
     Ok(hex::encode(signature.to_bytes()))
 }
 
@@ -173,14 +156,8 @@ fn validate_dmarket_response_rs(raw_json: &str) -> PyResult<ParsedSkin> {
         Regex::new(r"[<>{}$`\\]").expect("Invalid regex pattern")
     });
 
-    #[derive(Deserialize)]
-    struct SingleSkin {
-        item_id: String,
-        price_usd: f64,
-        name: String,
-    }
-
-    let mut data: SingleSkin = serde_json::from_str(raw_json)
+    // Reuse SkinData which has correct camelCase serde rename attributes
+    let mut data: SkinData = serde_json::from_str(raw_json)
         .map_err(|e| {
             PyValueError::new_err(format!("JSON Deserialization Error: {}", e))
         })?;
@@ -189,22 +166,29 @@ fn validate_dmarket_response_rs(raw_json: &str) -> PyResult<ParsedSkin> {
         data.name = re.replace_all(&data.name, "").to_string();
     }
 
+    let price = match data.price_usd {
+        serde_json::Value::Number(n) => n.as_f64().unwrap_or(0.0),
+        serde_json::Value::String(s) => s.parse::<f64>().unwrap_or(0.0) / 100.0,
+        _ => 0.0,
+    };
+
     Ok(ParsedSkin {
         item_id: data.item_id,
-        price_usd: data.price_usd,
+        price_usd: price,
         name: data.name,
     })
 }
 
 // =====================================================================
-// parse_aggregated_prices_rs — Fast aggregated-prices parsing (new)
+// parse_aggregated_prices_rs — Fast aggregated-prices parsing
 // =====================================================================
 /// Parse DMarket aggregated-prices response in Rust.
 ///
 /// Input: JSON from POST /marketplace-api/v1/aggregated-prices
 /// Output: list of dicts: {title, best_ask, best_bid, ask_count, bid_count}
 ///
-/// Speed: 5-10x faster than Python json.loads + looping.
+/// v14.9.1: Optimized to do parsing in pure Rust, then construct Python
+/// objects in a single GIL acquisition (was holding GIL during loop).
 #[pyfunction]
 fn parse_aggregated_prices_rs(raw_json: &str) -> PyResult<Py<PyList>> {
     let re = INJECTION_REGEX.get_or_init(|| {
@@ -224,10 +208,18 @@ fn parse_aggregated_prices_rs(raw_json: &str) -> PyResult<Py<PyList>> {
         None => return Python::with_gil(|py| Ok(PyList::empty_bound(py).unbind())),
     };
 
-    Python::with_gil(|py| {
-        let results = PyList::empty_bound(py);
+    // Phase 1: Parse all data in pure Rust (no GIL needed)
+    struct ParsedEntry {
+        title: String,
+        best_ask: f64,
+        best_bid: f64,
+        ask_count: i64,
+        bid_count: i64,
+    }
 
-        for entry in entries {
+    let parsed: Vec<ParsedEntry> = entries
+        .into_iter()
+        .map(|entry| {
             let mut title = entry.title;
             if re.is_match(&title) {
                 title = re.replace_all(&title, "").to_string();
@@ -250,12 +242,27 @@ fn parse_aggregated_prices_rs(raw_json: &str) -> PyResult<Py<PyList>> {
             let ask_count = entry.order_count.unwrap_or(0);
             let bid_count = entry.offer_count.unwrap_or(0);
 
+            ParsedEntry {
+                title,
+                best_ask,
+                best_bid,
+                ask_count,
+                bid_count,
+            }
+        })
+        .collect();
+
+    // Phase 2: Construct Python objects in single GIL acquisition
+    Python::with_gil(|py| {
+        let results = PyList::empty_bound(py);
+
+        for entry in &parsed {
             let dict = PyDict::new_bound(py);
-            dict.set_item("title", title)?;
-            dict.set_item("best_ask", best_ask)?;
-            dict.set_item("best_bid", best_bid)?;
-            dict.set_item("ask_count", ask_count)?;
-            dict.set_item("bid_count", bid_count)?;
+            dict.set_item("title", &entry.title)?;
+            dict.set_item("best_ask", entry.best_ask)?;
+            dict.set_item("best_bid", entry.best_bid)?;
+            dict.set_item("ask_count", entry.ask_count)?;
+            dict.set_item("bid_count", entry.bid_count)?;
             results.append(dict)?;
         }
 

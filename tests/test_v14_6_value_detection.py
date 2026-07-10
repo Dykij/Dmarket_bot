@@ -61,7 +61,7 @@ class TestFloatPremium:
 
     def test_normal_mw(self):
         premium = get_float_premium({"floatPartValue": "0.10"})
-        assert premium == 1.0, f"Normal MW should be 1.0x, got {premium}"
+        assert premium == 1.03, f"Normal MW (0.10) should be 1.03x (FT-2 range), got {premium}"
 
     def test_no_float(self):
         premium = get_float_premium({})

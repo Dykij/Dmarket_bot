@@ -4,6 +4,7 @@ Covers: unit, integration, async, pipeline correctness.
 """
 
 import asyncio
+
 import pytest
 
 from src.workflow.chains import (
@@ -13,7 +14,6 @@ from src.workflow.chains import (
     TaskRegistry,
     TaskStatus,
     WorkflowBuilder,
-    WorkItem,
 )
 
 pytestmark = pytest.mark.asyncio
@@ -76,7 +76,7 @@ async def test_conductor_single_task():
     conductor = Conductor()
     conductor.register_handler(AgentRole.PARSER, handler)
     task = AgentTask(id="t1", role=AgentRole.PARSER, payload={"x": 1})
-    future = conductor.submit(task)
+    conductor.submit(task)
     await conductor.start()
     await asyncio.sleep(0.05)
     await conductor.shutdown()
@@ -107,7 +107,7 @@ async def test_conductor_pipeline():
 
     parser_id = builder.add_step(AgentRole.PARSER, {"file": "main.py"})
     coder_id = builder.add_step(AgentRole.CODER, {"code_ref": "prev"}, depends_on=[parser_id])
-    tester_id = builder.add_step(AgentRole.TESTER, {"code_ref": "prev"}, depends_on=[coder_id])
+    builder.add_step(AgentRole.TESTER, {"code_ref": "prev"}, depends_on=[coder_id])
 
     tasks = await builder.run()
     assert len(tasks) == 3
@@ -122,7 +122,7 @@ async def test_conductor_failure_handling():
     conductor = Conductor()
     conductor.register_handler(AgentRole.PARSER, bad_handler)
     task = AgentTask(id="t1", role=AgentRole.PARSER, payload={})
-    future = conductor.submit(task)
+    conductor.submit(task)
     await conductor.start()
     await asyncio.sleep(0.05)
     await conductor.shutdown()

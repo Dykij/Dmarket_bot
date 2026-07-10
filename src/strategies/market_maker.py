@@ -8,16 +8,18 @@ Improvements:
 4. Better volatility estimation (not just spread proxy)
 """
 
-from typing import Any, Dict
-from src.strategies.base import BaseStrategy
-from src.config import Config
+from typing import Any
+
 from src.analytics.self_reflection import self_reflection
+from src.config import Config
+from src.strategies.base import BaseStrategy
+
 
 class MarketMaker(BaseStrategy):
     def __init__(self):
         super().__init__("MarketMaker")
 
-    def evaluate_opportunity(self, market_data: Dict[str, Any], current_balance: float = 50.0) -> Dict[str, Any]:
+    def evaluate_opportunity(self, market_data: dict[str, Any], current_balance: float = 50.0) -> dict[str, Any]:
         """
         Enhanced Market Maker logic with risk-adjusted objectives.
         """

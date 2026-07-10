@@ -6,13 +6,14 @@ or public tournament calendars.
 Updates data/cs2_events.json automatically.
 """
 
-import aiohttp
 import asyncio
-import re
 import json
 import logging
+import re
 from datetime import datetime
 from pathlib import Path
+
+import aiohttp
 
 logger = logging.getLogger("EventScraper")
 
@@ -125,7 +126,7 @@ class EventScraper:
             return
         
         try:
-            with open(EVENTS_FILE, "r", encoding="utf-8") as f:
+            with open(EVENTS_FILE, encoding="utf-8") as f:
                 current = json.load(f)
             
             existing_names = {ev["name"] for ev in current}

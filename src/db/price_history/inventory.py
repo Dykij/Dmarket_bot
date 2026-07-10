@@ -18,7 +18,7 @@ import logging
 import re
 import sqlite3
 import time
-from typing import Any, Dict, List
+from typing import Any
 
 from src.db.db_retry import with_db_retry
 
@@ -76,7 +76,7 @@ class _InventoryMixin:
 
     def get_non_exclusive_inventory(
         self, status: str = "idle", only_unlocked: bool = False
-    ) -> List[sqlite3.Row]:
+    ) -> list[sqlite3.Row]:
         """Fetch virtual items that are NOT marked exclusive."""
         query = "SELECT * FROM virtual_inventory WHERE status = ? AND (exclusive IS NULL OR exclusive = 0)"
         params = [status]
@@ -87,7 +87,7 @@ class _InventoryMixin:
 
     def get_virtual_inventory(
         self, status: str = "idle", only_unlocked: bool = False
-    ) -> List[sqlite3.Row]:
+    ) -> list[sqlite3.Row]:
         """Fetch virtual items. v9.0 adds only_unlocked filter."""
         query = "SELECT * FROM virtual_inventory WHERE status = ?"
         params = [status]
@@ -98,7 +98,7 @@ class _InventoryMixin:
 
         return self.state_conn.execute(query, params).fetchall()
 
-    def get_total_equity(self, current_balance: float) -> Dict[str, float]:
+    def get_total_equity(self, current_balance: float) -> dict[str, float]:
         """Sandbox v9.5: Calculates Total Equity (Cash + Virtual Asset Value).
         v13.1: includes frozen_funds from Trade Protection holds."""
         row = self.state_conn.execute(
@@ -325,7 +325,7 @@ class _InventoryMixin:
                 (error_msg[:500] if error_msg else None, row_id),
             )
 
-    def get_stale_listings(self, max_age_seconds: int) -> List[sqlite3.Row]:
+    def get_stale_listings(self, max_age_seconds: int) -> list[sqlite3.Row]:
         """Get items that have been listed for >max_age_seconds.
 
         Used by reprice_unsold_offers to find listings that haven't sold.
@@ -340,7 +340,7 @@ class _InventoryMixin:
             (cutoff,),
         ).fetchall()
 
-    def get_recent_sales(self, since_ts: float) -> List[sqlite3.Row]:
+    def get_recent_sales(self, since_ts: float) -> list[sqlite3.Row]:
         """Get items sold since timestamp (for daily PnL calc)."""
         return self.state_conn.execute(
             """SELECT * FROM virtual_inventory

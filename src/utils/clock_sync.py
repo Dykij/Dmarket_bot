@@ -18,9 +18,8 @@ Falls back to local time if server is unreachable.
 """
 
 import asyncio
-import time
 import logging
-from typing import Optional
+import time
 from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
 
@@ -93,7 +92,7 @@ class ClockSync:
             return True
         return (time.time() - self._last_sync) > self.REFRESH_INTERVAL_SECONDS
 
-    async def sync_with_dmarket(self, session: Optional[aiohttp.ClientSession] = None) -> bool:
+    async def sync_with_dmarket(self, session: aiohttp.ClientSession | None = None) -> bool:
         """
         Sync local clock with DMarket server via HEAD request.
 
@@ -177,7 +176,7 @@ class ClockSync:
             if own_session:
                 await session.close()
 
-    async def ensure_synced(self, session: Optional[aiohttp.ClientSession] = None) -> bool:
+    async def ensure_synced(self, session: aiohttp.ClientSession | None = None) -> bool:
         """
         Ensures we have a recent sync. Performs sync if needed.
 

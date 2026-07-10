@@ -7,7 +7,7 @@ Mixed into `DMarketAPIClient` (see `core.py`).
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import structlog
 
@@ -27,9 +27,9 @@ class _MarketMixin:
         self,
         game_id: str,
         limit: int = 100,
-        cursor: Optional[str] = None,
+        cursor: str | None = None,
         **filters: Any,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """High-throughput Marketplace v2 scan."""
         params = {"currency": "USD", "gameId": game_id, "limit": limit}
         if cursor:
@@ -40,8 +40,8 @@ class _MarketMixin:
 
     # --- v12.0: Aggregated Prices (Strategy A core) ---
     async def get_aggregated_prices(
-        self, game_id: str, titles: Optional[List[str]] = None
-    ) -> Dict[str, Dict[str, Any]]:
+        self, game_id: str, titles: list[str] | None = None
+    ) -> dict[str, dict[str, Any]]:
         """
         Batch fetch of best_bid + best_ask + count for up to 100 items per request.
         Returns: {title: {"best_ask": float, "best_bid": float, "ask_count": int, "bid_count": int}}
@@ -50,7 +50,7 @@ class _MarketMixin:
         """
         from src.api.dmarket_parser import parse_aggregated_prices_from_dict
 
-        results: Dict[str, Dict[str, Any]] = {}
+        results: dict[str, dict[str, Any]] = {}
 
         if not titles:
             try:
@@ -101,7 +101,7 @@ class _MarketMixin:
     # --- v12.0: Last Sales (Strategy B) ---
     async def get_last_sales(
         self, game_id: str, title: str, days: int = 30, limit: int = 20
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Fetch real DMarket sale transactions for an item.
 
@@ -142,7 +142,7 @@ class _MarketMixin:
     # --- v12.0: Low Fee Items (Strategy C) ---
     async def get_low_fee_items(
         self, game_id: str, limit: int = 100
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
         Daily list of items with reduced DMarket fees (2-3% vs 5-10%).
 

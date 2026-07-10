@@ -26,7 +26,7 @@ import os
 import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     # Forward reference: pump_detector is injected at runtime by
@@ -83,7 +83,7 @@ class PreTradeCheck:
     """Result of a pre-trade risk check."""
     allowed: bool
     reason: str = ""
-    adjusted_size_usd: Optional[float] = None  # if non-None, override proposed size
+    adjusted_size_usd: float | None = None  # if non-None, override proposed size
     triggered_halt: bool = False  # True if this check tripped a kill-switch
 
 
@@ -102,12 +102,12 @@ class RiskManager:
 
     def __init__(
         self,
-        daily_loss_limit_usd: Optional[float] = None,
-        daily_trade_limit: Optional[int] = None,
+        daily_loss_limit_usd: float | None = None,
+        daily_trade_limit: int | None = None,
         max_drawdown_pct: float = 15.0,
         soft_halt_drawdown_pct: float = 5.0,
         initial_equity_usd: float = 0.0,
-        pump_detector: Optional["PumpDetector"] = None,
+        pump_detector: PumpDetector | None = None,
     ) -> None:
         # Read limits from env (with defaults)
         self.daily_loss_limit_usd = daily_loss_limit_usd if daily_loss_limit_usd is not None else float(
@@ -148,11 +148,11 @@ class RiskManager:
         self._last_proposed_size: float = 0.0
 
         # Trade history for the day (for /status)
-        self._trades_today: List[Dict[str, Any]] = []
+        self._trades_today: list[dict[str, Any]] = []
 
         self._soft_halt_active: bool = False
 
-    def attach_pump_detector(self, pump_detector: "PumpDetector") -> None:
+    def attach_pump_detector(self, pump_detector: PumpDetector) -> None:
         """
         Late-bind the pump detector. Called from SnipingLoop.__init__
         after both objects are constructed (avoids circular imports).
@@ -360,7 +360,7 @@ class RiskManager:
         })
         # v14.4: Track wins/losses for Kelly Criterion
         if trade_type == "sell" and pnl_usd != 0:
-            n = self._total_wins + self._total_losses + 1
+            self._total_wins + self._total_losses + 1
             if pnl_usd > 0:
                 self._total_wins += 1
                 self._avg_win_usd = (self._avg_win_usd * (self._total_wins - 1) + pnl_usd) / self._total_wins
@@ -401,7 +401,7 @@ class RiskManager:
             consecutive_losses=self._consecutive_losses,
         )
 
-    def get_daily_briefing_lines(self) -> List[str]:
+    def get_daily_briefing_lines(self) -> list[str]:
         """Human-readable lines for the daily Telegram briefing."""
         state = self.get_state()
         lines = [

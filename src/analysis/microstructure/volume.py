@@ -11,15 +11,14 @@ Functions:
 from __future__ import annotations
 
 import math
-from typing import Any, Dict, List, Optional, Tuple
-
+from typing import Any
 
 # ══════════════════════════════════════════════════════════════════════
 # 5. VWAP (Volume-Weighted Average Price)
 # ══════════════════════════════════════════════════════════════════════
 
 
-def compute_vwap(sales: List[Dict[str, Any]]) -> Tuple[float, int, float]:
+def compute_vwap(sales: list[dict[str, Any]]) -> tuple[float, int, float]:
     if not sales:
         return 0.0, 0, 0.0
     prices = [s["price"] for s in sales]
@@ -27,10 +26,10 @@ def compute_vwap(sales: List[Dict[str, Any]]) -> Tuple[float, int, float]:
     total_weight = sum(weights)
     if total_weight == 0:
         return 0.0, 0, 0.0
-    vwap = sum(p * w for p, w in zip(prices, weights)) / total_weight
+    vwap = sum(p * w for p, w in zip(prices, weights, strict=False)) / total_weight
     if len(prices) > 1:
         variance = sum(w * (p - vwap) ** 2
-                       for p, w in zip(prices, weights)) / total_weight
+                       for p, w in zip(prices, weights, strict=False)) / total_weight
         std_dev = math.sqrt(variance)
     else:
         std_dev = 0.0
@@ -38,8 +37,8 @@ def compute_vwap(sales: List[Dict[str, Any]]) -> Tuple[float, int, float]:
 
 
 def vwap_signal(
-    best_ask: float, sales: List[Dict[str, Any]], threshold: float = 0.90
-) -> Optional[float]:
+    best_ask: float, sales: list[dict[str, Any]], threshold: float = 0.90
+) -> float | None:
     vwap, _, _ = compute_vwap(sales)
     if vwap <= 0:
         return None
@@ -49,8 +48,8 @@ def vwap_signal(
     return None
 
 
-def vwap_bands(sales: List[Dict[str, Any]], num_std: float = 2.0
-               ) -> Tuple[float, float, float]:
+def vwap_bands(sales: list[dict[str, Any]], num_std: float = 2.0
+               ) -> tuple[float, float, float]:
     """(vwap, lower_band, upper_band) for mean-reversion trading."""
     vwap, _, std = compute_vwap(sales)
     return vwap, round(vwap - num_std * std, 4), round(vwap + num_std * std, 4)
@@ -86,7 +85,7 @@ def estimate_slippage(
 
 def classify_trade_lee_ready(
     price: float, prev_mid: float, prev_bid: float = 0.0, prev_ask: float = 0.0
-) -> Optional[int]:
+) -> int | None:
     if price <= 0:
         return None
     mid = (prev_bid + prev_ask) / 2.0 if prev_bid > 0 and prev_ask > 0 else prev_mid
@@ -99,7 +98,7 @@ def classify_trade_lee_ready(
     return None
 
 
-def compute_cvd(sales: List[Dict[str, Any]], prev_mid: float = 0.0) -> float:
+def compute_cvd(sales: list[dict[str, Any]], prev_mid: float = 0.0) -> float:
     cvd = 0.0
     running_mid = prev_mid
     for s in sales:
@@ -113,7 +112,7 @@ def compute_cvd(sales: List[Dict[str, Any]], prev_mid: float = 0.0) -> float:
     return round(cvd, 4)
 
 
-def cvd_divergence(cvd: float, price_change_pct: float) -> Optional[str]:
+def cvd_divergence(cvd: float, price_change_pct: float) -> str | None:
     if cvd > 5 and price_change_pct < -0.01:
         return "bullish"
     if cvd < -5 and price_change_pct > 0.01:
@@ -126,7 +125,7 @@ def cvd_divergence(cvd: float, price_change_pct: float) -> Optional[str]:
 # ══════════════════════════════════════════════════════════════════════
 
 
-def compute_vpin(sales: List[Dict[str, Any]], n_buckets: int = 8) -> Optional[float]:
+def compute_vpin(sales: list[dict[str, Any]], n_buckets: int = 8) -> float | None:
     if not sales or len(sales) < n_buckets * 2:
         return None
     total_volume = sum(s.get("amount", 1) for s in sales)

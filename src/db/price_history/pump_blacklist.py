@@ -28,7 +28,7 @@ from __future__ import annotations
 import logging
 import sqlite3
 import time
-from typing import Any, List
+from typing import Any
 
 from src.db.db_retry import with_db_retry
 
@@ -69,7 +69,7 @@ class _PumpBlacklistMixin:
                  detected_at, expires_at, 1 if alerted else 0),
             )
 
-    def get_active_pump_blacklist(self) -> List[sqlite3.Row]:
+    def get_active_pump_blacklist(self) -> list[sqlite3.Row]:
         """Return non-expired pump-blacklist entries (used at boot to
         restore in-memory state)."""
         now = time.time()

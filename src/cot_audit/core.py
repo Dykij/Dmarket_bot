@@ -5,16 +5,11 @@ CoT Audit & Metadata Cache — форматирование Chain-of-Thought и 
 
 from __future__ import annotations
 
-import dataclasses
 import hashlib
-import json
 import os
 import time
-from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple
-from functools import lru_cache
 
 from pydantic import BaseModel, Field
 
@@ -30,14 +25,14 @@ class CoTLogEntry(BaseModel):
     step_number: int
     title: str
     content: str
-    reasoning: Optional[str] = None
+    reasoning: str | None = None
     timestamp: float = Field(default_factory=time.time)
 
 
 class CoTReport(BaseModel):
     session_id: str
-    entries: List[CoTLogEntry] = Field(default_factory=list)
-    final_answer: Optional[str] = None
+    entries: list[CoTLogEntry] = Field(default_factory=list)
+    final_answer: str | None = None
 
     def to_markdown(self) -> str:
         lines = [f"# Chain-of-Thought Report: {self.session_id}\n"]
@@ -71,8 +66,8 @@ class MetadataEntry(BaseModel):
 class MetadataCache(BaseModel):
     version: str = "2.0"
     root: str
-    entries: Dict[str, MetadataEntry] = Field(default_factory=dict)
-    dir_mtimes: Dict[str, float] = Field(default_factory=dict)
+    entries: dict[str, MetadataEntry] = Field(default_factory=dict)
+    dir_mtimes: dict[str, float] = Field(default_factory=dict)
     last_scan: float = 0.0
 
 
@@ -100,7 +95,7 @@ class IncrementalMetadataCache:
 
     CHUNK_SIZE = 65536  # 64KB
 
-    def __init__(self, root: str, cache_file: Optional[str] = None):
+    def __init__(self, root: str, cache_file: str | None = None):
         self.root = Path(root)
         self.cache_file = Path(cache_file) if cache_file else self.root / ".metadata_cache.json"
         self._cache: MetadataCache = self._load_cache()
@@ -116,13 +111,13 @@ class IncrementalMetadataCache:
     def _save_cache(self) -> None:
         self.cache_file.write_text(self._cache.model_dump_json(indent=2))
 
-    def _scan_dir(self, dir_path: Path, rel_prefix: str) -> Tuple[Dict[str, MetadataEntry], Set[str], bool]:
+    def _scan_dir(self, dir_path: Path, rel_prefix: str) -> tuple[dict[str, MetadataEntry], set[str], bool]:
         """
         Recursively scan a single directory using os.scandir().
         Returns: (entries, changed_set, dir_changed)
         """
-        entries: Dict[str, MetadataEntry] = {}
-        changed: Set[str] = set()
+        entries: dict[str, MetadataEntry] = {}
+        changed: set[str] = set()
         dir_changed = False
 
         try:
@@ -171,14 +166,13 @@ class IncrementalMetadataCache:
 
         return entries, changed, dir_changed
 
-    def scan(self) -> Dict[str, MetadataEntry]:
+    def scan(self) -> dict[str, MetadataEntry]:
         """
         Perform incremental scan with directory-level mtime optimization.
         Skips entire subtrees whose directory mtime hasn't changed.
         """
-        current_entries: Dict[str, MetadataEntry] = {}
-        changed: Set[str] = set()
-        new_dir_mtimes: Dict[str, float] = {}
+        current_entries: dict[str, MetadataEntry] = {}
+        changed: set[str] = set()
 
         # Phase 1: scan root directory
         root_entries, root_changed, _ = self._scan_dir(self.root, "")
@@ -205,6 +199,6 @@ class IncrementalMetadataCache:
             del self._cache.entries[rel]
             self._save_cache()
 
-    def get(self, path: str) -> Optional[MetadataEntry]:
+    def get(self, path: str) -> MetadataEntry | None:
         rel = str(Path(path).relative_to(self.root))
         return self._cache.entries.get(rel)

@@ -8,7 +8,7 @@ Mixin with fee-lookup endpoints. Mixed into `DMarketAPIClient`
 from __future__ import annotations
 
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import structlog
 
@@ -29,7 +29,7 @@ _VOLUME_MIN = 5
 class _FeesMixin:
     """Fee-lookup endpoints with a 12-hour cache (v7.7)."""
 
-    _fee_cache: Dict[str, Dict[str, Any]]
+    _fee_cache: dict[str, dict[str, Any]]
     _fee_cache_ttl: int
 
     async def make_request(
@@ -78,10 +78,10 @@ class _FeesMixin:
     async def get_item_fee_bulk(
         self,
         game_id: str,
-        item_ids: List[str],
-        title_volume: Optional[Dict[str, int]] = None,
-        item_id_to_title: Optional[Dict[str, str]] = None,
-    ) -> Dict[str, float]:
+        item_ids: list[str],
+        title_volume: dict[str, int] | None = None,
+        item_id_to_title: dict[str, str] | None = None,
+    ) -> dict[str, float]:
         """
         Returns {item_id: fee_rate} for all given item_ids.
         Uses volume-based estimation when title_volume is provided.
@@ -91,7 +91,7 @@ class _FeesMixin:
         if not item_ids:
             return {}
 
-        results: Dict[str, float] = {}
+        results: dict[str, float] = {}
         now = time.time()
 
         for fid in item_ids:

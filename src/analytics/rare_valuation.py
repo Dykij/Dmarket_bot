@@ -1,4 +1,5 @@
-from typing import Dict, Any
+from typing import Any
+
 
 class RareValuationEngine:
     """
@@ -12,7 +13,7 @@ class RareValuationEngine:
         # Expanded Tier-1 Pattern Seeds (e.g., Case Hardened Blue Gem / Fade 100%)
         self.RARE_SEEDS = {902, 661, 321, 151, 670, 760, 417, 387, 809, 838}
         
-    def get_rare_score(self, attrs: Dict[str, Any]) -> float:
+    def get_rare_score(self, attrs: dict[str, Any]) -> float:
         """
         Calculates multiplier for base price (1.0 = Market API Price).
         """
@@ -53,7 +54,7 @@ class RareValuationEngine:
             
         return score
 
-    def estimate_market_value(self, base_price: float, attrs: Dict[str, Any]) -> float:
+    def estimate_market_value(self, base_price: float, attrs: dict[str, Any]) -> float:
         """Calculates deterministic Estimated Value (EV) adjusted for rarity."""
         multiplier = self.get_rare_score(attrs)
         return round(base_price * multiplier, 2)

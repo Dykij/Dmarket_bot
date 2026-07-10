@@ -14,9 +14,7 @@ from __future__ import annotations
 
 import io
 import logging
-import os
-from datetime import datetime, timezone
-from typing import Optional
+from datetime import datetime
 
 from src.db.price_history import price_db
 
@@ -25,14 +23,14 @@ logger = logging.getLogger("Charts")
 try:
     import matplotlib
     matplotlib.use("Agg")  # non-interactive backend
-    import matplotlib.pyplot as plt
     import matplotlib.dates as mdates
+    import matplotlib.pyplot as plt
     HAS_MATPLOTLIB = True
 except ImportError:
     HAS_MATPLOTLIB = False
 
 
-def generate_equity_chart(days: int = 30) -> Optional[io.BytesIO]:
+def generate_equity_chart(days: int = 30) -> io.BytesIO | None:
     """Generate equity curve chart for last N days."""
     if not HAS_MATPLOTLIB:
         return None
@@ -75,7 +73,7 @@ def generate_equity_chart(days: int = 30) -> Optional[io.BytesIO]:
     return buf
 
 
-def generate_pnl_chart(days: int = 30) -> Optional[io.BytesIO]:
+def generate_pnl_chart(days: int = 30) -> io.BytesIO | None:
     """Generate daily P&L bar chart."""
     if not HAS_MATPLOTLIB:
         return None
@@ -118,7 +116,7 @@ def generate_pnl_chart(days: int = 30) -> Optional[io.BytesIO]:
     return buf
 
 
-def generate_drawdown_chart(days: int = 90) -> Optional[io.BytesIO]:
+def generate_drawdown_chart(days: int = 90) -> io.BytesIO | None:
     """Generate drawdown chart with peak tracking."""
     if not HAS_MATPLOTLIB:
         return None
@@ -159,7 +157,7 @@ def generate_drawdown_chart(days: int = 90) -> Optional[io.BytesIO]:
     return buf
 
 
-def generate_win_loss_chart() -> Optional[io.BytesIO]:
+def generate_win_loss_chart() -> io.BytesIO | None:
     """Generate win/loss pie chart from virtual_inventory."""
     if not HAS_MATPLOTLIB:
         return None

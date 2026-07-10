@@ -11,7 +11,7 @@ Requires: CS2CapOracle (not CSFloat fallback).
 
 import logging
 import math
-from typing import Any, Dict, Optional
+from typing import Any
 
 from src.config import Config
 from src.strategies.base import BaseStrategy
@@ -27,18 +27,18 @@ class CrossMarketStrategy(BaseStrategy):
     def __init__(self):
         super().__init__("CrossMarket")
 
-    def evaluate_opportunity(self, market_data: Dict[str, Any]) -> Dict[str, Any]:
+    def evaluate_opportunity(self, market_data: dict[str, Any]) -> dict[str, Any]:
         """Basic evaluation without cross-market data (fallback)."""
         return {"action": "none"}
 
     def evaluate_opportunity_enhanced(
         self,
-        market_data: Dict[str, Any],
-        cross_market_data: Optional[Any] = None,
-        indicators: Optional[Dict[str, float]] = None,
+        market_data: dict[str, Any],
+        cross_market_data: Any | None = None,
+        indicators: dict[str, float] | None = None,
         turnover_penalty: float = 1.0,
-        reflection_result: Optional[Any] = None,
-    ) -> Dict[str, Any]:
+        reflection_result: Any | None = None,
+    ) -> dict[str, Any]:
         """
         Evaluate an item using cross-market data from CS2Cap.
         """

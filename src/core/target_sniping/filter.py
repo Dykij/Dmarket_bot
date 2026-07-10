@@ -164,7 +164,7 @@ class _FilterMixin:
         # Kelly formula: f* = win_rate - (1 - win_rate) / win_loss_ratio
         # Half Kelly = 0.5 * f* (reduced drawdown, same growth direction)
         kelly_risk_pct = float(Config.MAX_POSITION_RISK_PCT)
-        if Config.KELLY_ENABLED and hasattr(self, "risk"):
+        if Config.KELLY_ENABLED and hasattr(self, "risk") and self.risk is not None:
             try:
                 risk_state = self.risk.get_state()
                 wr = getattr(risk_state, "win_rate", 0.55) or 0.55

@@ -38,7 +38,7 @@ import base64
 import logging
 import os
 import time
-from typing import Any, Dict, Optional
+from typing import Any
 
 try:
     from aiohttp import web
@@ -78,11 +78,11 @@ class HealthState:
         self._daily_halt_active: bool = False
         self._pump_blacklist_size: int = 0
         self._pump_total_detections: int = 0
-        self._cs2cap_quota_pct: Optional[float] = None
+        self._cs2cap_quota_pct: float | None = None
         self._shutting_down: bool = False
-        self._last_error: Optional[str] = None
-        self._dmarket_cb: Optional[Dict[str, Any]] = None
-        self._cs2cap_cb: Optional[Dict[str, Any]] = None
+        self._last_error: str | None = None
+        self._dmarket_cb: dict[str, Any] | None = None
+        self._cs2cap_cb: dict[str, Any] | None = None
 
     # ----- setters (called by the trading loop) -----
     def mark_cycle(self, equity_usd: float, peak_equity_usd: float,
@@ -105,11 +105,11 @@ class HealthState:
         self._pump_blacklist_size = blacklist_size
         self._pump_total_detections = total_detections
 
-    def set_cs2cap_quota_pct(self, pct: Optional[float]) -> None:
+    def set_cs2cap_quota_pct(self, pct: float | None) -> None:
         self._cs2cap_quota_pct = pct
 
-    def set_circuit_breakers(self, dmarket_cb: Optional[Dict[str, Any]] = None,
-                             cs2cap_cb: Optional[Dict[str, Any]] = None) -> None:
+    def set_circuit_breakers(self, dmarket_cb: dict[str, Any] | None = None,
+                             cs2cap_cb: dict[str, Any] | None = None) -> None:
         """v12.7: Track circuit breaker states for diagnostics (P4-2)."""
         self._dmarket_cb = dmarket_cb
         self._cs2cap_cb = cs2cap_cb
@@ -122,7 +122,7 @@ class HealthState:
         self._shutting_down = value
 
     # ----- getters (called by HTTP handlers) -----
-    def snapshot(self) -> Dict[str, Any]:
+    def snapshot(self) -> dict[str, Any]:
         """JSON-friendly snapshot. Always returns a fresh dict."""
         return {
             "status": "shutting_down" if self._shutting_down else "ok",
@@ -177,7 +177,7 @@ class HealthState:
         # Soft halt is OK (the bot still trades at half size).
         return True
 
-    def _get_telegram_cb_status(self) -> Dict[str, Any]:
+    def _get_telegram_cb_status(self) -> dict[str, Any]:
         """v12.7: Get Telegram notifier circuit breaker status."""
         try:
             from src.telegram.notifier import notifier
@@ -195,7 +195,7 @@ health_state = HealthState()
 # HTTP handlers
 # =====================================================================
 
-async def _handle_healthz(_request: "web.Request") -> "web.Response":
+async def _handle_healthz(_request: web.Request) -> web.Response:
     """Liveness: returns 200 if the process is alive, 503 if shutting down."""
     snap = health_state.snapshot()
     status = snap["status"]
@@ -204,7 +204,7 @@ async def _handle_healthz(_request: "web.Request") -> "web.Response":
     return web.json_response(snap, status=200)
 
 
-async def _handle_readyz(_request: "web.Request") -> "web.Response":
+async def _handle_readyz(_request: web.Request) -> web.Response:
     """Readiness: 200 if bot is willing to trade, 503 if halted."""
     snap = health_state.snapshot()
     ready = health_state.is_ready()
@@ -214,7 +214,7 @@ async def _handle_readyz(_request: "web.Request") -> "web.Response":
     )
 
 
-async def _handle_metrics(_request: "web.Request") -> "web.Response":
+async def _handle_metrics(_request: web.Request) -> web.Response:
     """Prometheus text exposition format (best-effort)."""
     snap = health_state.snapshot()
     lines: list[str] = []
@@ -276,7 +276,7 @@ async def _handle_metrics(_request: "web.Request") -> "web.Response":
 # Optional Basic Auth (v12.9)
 # =====================================================================
 
-def _check_auth(request: "web.Request") -> bool:
+def _check_auth(request: web.Request) -> bool:
     """Check HTTP basic auth against HEALTH_USERNAME / HEALTH_PASSWORD.
     
     If HEALTH_PASSWORD is not set, auth is disabled (localhost-only mode).
@@ -300,7 +300,7 @@ def _check_auth(request: "web.Request") -> bool:
 
 
 @web.middleware
-async def _auth_middleware(request: "web.Request", handler: Any) -> "web.Response":
+async def _auth_middleware(request: web.Request, handler: Any) -> web.Response:
     """Apply basic auth to all health endpoints if HEALTH_PASSWORD is set."""
     if not _check_auth(request):
         return web.Response(
@@ -321,9 +321,9 @@ DEFAULT_PORT = 9090
 
 
 async def start_health_server(
-    host: Optional[str] = None,
-    port: Optional[int] = None,
-) -> "Optional[web.AppRunner]":
+    host: str | None = None,
+    port: int | None = None,
+) -> web.AppRunner | None:
     """
     Start the aiohttp health server. Returns the AppRunner (for shutdown)
     or None if aiohttp is not available / port is busy.
@@ -372,7 +372,7 @@ async def start_health_server(
     return runner
 
 
-async def stop_health_server(runner: Optional["web.AppRunner"]) -> None:
+async def stop_health_server(runner: web.AppRunner | None) -> None:
     """Cleanly shut down the health server (called on bot exit)."""
     if runner is None:
         return

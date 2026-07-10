@@ -4,7 +4,7 @@ CS2Cap Oracle — Utils mixin (volatility, health check, teardown).
 
 import logging
 import math
-from typing import Any, Dict, Optional
+from typing import Any
 
 from src.db.price_history import price_db
 
@@ -44,7 +44,7 @@ class _UtilsMixin:
         var_ret = sum((r - mean_ret) ** 2 for r in returns) / (len(returns) - 1)
         return math.sqrt(var_ret) * math.sqrt(365)
 
-    async def get_market_indicators(self, hash_name: str) -> Optional[Dict[str, float]]:
+    async def get_market_indicators(self, hash_name: str) -> dict[str, float] | None:
         """
         Get market indicators (RSI, MACD, etc.) for an item.
         Not available on free tier — returns None gracefully.
@@ -54,7 +54,7 @@ class _UtilsMixin:
     # ----------------------------------------------------------------
     # 5. HEALTH CHECK
     # ----------------------------------------------------------------
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self) -> dict[str, Any]:
         """Check CS2Cap API health."""
         data = await self._request("/prices", params={"item_id": 4994, "limit": 1})
         if data is not None:

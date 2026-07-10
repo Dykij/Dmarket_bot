@@ -1,7 +1,9 @@
-import os
 import base64
 import logging
+import os
+
 from dotenv import load_dotenv
+
 from src.utils.vault_client import VaultClient
 
 try:
@@ -24,7 +26,7 @@ class VaultProvider:
 
     def __new__(cls):
         if not cls._instance:
-            cls._instance = super(VaultProvider, cls).__new__(cls)
+            cls._instance = super().__new__(cls)
             cls._instance._secret = None
             cls._instance._vault_client = None
             cls._instance._fernet = None

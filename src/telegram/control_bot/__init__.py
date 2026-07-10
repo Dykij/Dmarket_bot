@@ -10,17 +10,70 @@ Module: src.telegram.control_bot.bot (provides main())
 """
 
 # --- State & access control ---
-from .state import (
-    BotState,
-    _ADMIN_IDS,
-    _TOKEN,
-    _load_config,
-    is_admin,
-    state,
+# --- Bot wiring (entry point) ---
+from .bot import _lazy_bot, create_bot, main, master_router, router
+
+# --- Callbacks ---
+from .callbacks import (
+    cb_analyze,
+    cb_balance,
+    cb_daily,
+    cb_inventory,
+    cb_noop,
+    cb_portfolio,
+    cb_profits,
+    cb_refresh_status,
+    cb_sell_top,
+    cb_start,
+    cb_stop,
 )
 
-# --- Resilience utilities ---
-from .resilience import dmarket_client, fetch_balance_data, retry_async, safe_call
+# --- Commands & FSM ---
+from .commands import (
+    BTN_PANIC,
+    BTN_START,
+    BTN_STOP,
+    BTN_TEST,
+    TestItemFSM,
+    cmd_analyze,
+    cmd_balance,
+    cmd_cancel,
+    cmd_clock,
+    cmd_daily,
+    cmd_help,
+    cmd_inventory,
+    cmd_panic,
+    cmd_portfolio,
+    cmd_prices,
+    cmd_profits,
+    cmd_refresh,
+    cmd_sell_top,
+    cmd_settings,
+    cmd_start,
+    cmd_start_bot,
+    cmd_status,
+    cmd_stop_bot,
+    cmd_test,
+    cmd_test_btn,
+    cmd_test_receive,
+)
+
+# --- Filters & error handler ---
+from .filters import (
+    on_router_error,
+    reject_non_admin,
+    reject_non_admin_callback,
+)
+
+# --- Formatters ---
+from .formatters import (
+    format_balance,
+    format_daily_summary,
+    format_inventory_summary,
+    format_portfolio_summary,
+    format_profits_summary,
+    format_status,
+)
 
 # --- Keyboards (with BTN_* and CB_* constants) ---
 from .keyboards import (
@@ -61,68 +114,6 @@ from .keyboards import (
     get_main_keyboard,
 )
 
-# --- Formatters ---
-from .formatters import (
-    format_balance,
-    format_daily_summary,
-    format_inventory_summary,
-    format_portfolio_summary,
-    format_profits_summary,
-    format_status,
-)
-
-# --- Commands & FSM ---
-from .commands import (
-    BTN_PANIC,
-    BTN_START,
-    BTN_STOP,
-    BTN_TEST,
-    TestItemFSM,
-    cmd_analyze,
-    cmd_balance,
-    cmd_cancel,
-    cmd_clock,
-    cmd_daily,
-    cmd_help,
-    cmd_inventory,
-    cmd_panic,
-    cmd_portfolio,
-    cmd_prices,
-    cmd_profits,
-    cmd_refresh,
-    cmd_sell_top,
-    cmd_settings,
-    cmd_start,
-    cmd_start_bot,
-    cmd_status,
-    cmd_stop_bot,
-    cmd_test,
-    cmd_test_btn,
-    cmd_test_receive,
-)
-
-# --- Callbacks ---
-from .callbacks import (
-    cb_analyze,
-    cb_balance,
-    cb_daily,
-    cb_inventory,
-    cb_noop,
-    cb_portfolio,
-    cb_profits,
-    cb_refresh_status,
-    cb_sell_top,
-    cb_start,
-    cb_stop,
-)
-
-# --- Filters & error handler ---
-from .filters import (
-    on_router_error,
-    reject_non_admin,
-    reject_non_admin_callback,
-)
-
 # --- Lifecycle ---
 from .lifecycle import (
     _graceful_shutdown,
@@ -132,8 +123,16 @@ from .lifecycle import (
     set_commands,
 )
 
-# --- Bot wiring (entry point) ---
-from .bot import _lazy_bot, create_bot, main, master_router, router
+# --- Resilience utilities ---
+from .resilience import dmarket_client, fetch_balance_data, retry_async, safe_call
+from .state import (
+    _ADMIN_IDS,
+    _TOKEN,
+    BotState,
+    _load_config,
+    is_admin,
+    state,
+)
 
 __all__ = [
     # State

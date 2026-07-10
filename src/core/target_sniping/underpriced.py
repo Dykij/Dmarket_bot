@@ -6,13 +6,12 @@ sales history, even when no external marketplace (CS2Cap) edge exists.
 
 from __future__ import annotations
 
-import statistics
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from src.config import Config
 
 
-def _percentile(values: List[float], p: float) -> Optional[float]:
+def _percentile(values: list[float], p: float) -> float | None:
     """Return the p-th percentile of a sorted list (0 <= p <= 1)."""
     if not values:
         return None
@@ -32,8 +31,8 @@ async def is_dmarket_underpriced(
     game_id: str,
     title: str,
     current_price: float,
-    fee_rate: Optional[float] = None,
-) -> Dict[str, Any]:
+    fee_rate: float | None = None,
+) -> dict[str, Any]:
     """
     Check if a DMarket listing is underpriced vs recent market reference.
 
@@ -49,7 +48,7 @@ async def is_dmarket_underpriced(
     if current_price <= 0 or not title:
         return result
 
-    prices: List[float] = []
+    prices: list[float] = []
 
     # 1. Local price history (CS2Cap / DMarket prices recorded by the bot).
     try:
@@ -94,7 +93,7 @@ async def is_dmarket_underpriced(
     return result
 
 
-async def fetch_low_fee_titles(client, game_id: str) -> Dict[str, float]:
+async def fetch_low_fee_titles(client, game_id: str) -> dict[str, float]:
     """
     Fetch DMarket low-fee items and return {title: fee_rate}.
 
@@ -104,7 +103,7 @@ async def fetch_low_fee_titles(client, game_id: str) -> Dict[str, float]:
         return {}
 
     items = await client.get_low_fee_items(game_id, limit=Config.LOW_FEE_ITEMS_SCAN_LIMIT)
-    result: Dict[str, float] = {}
+    result: dict[str, float] = {}
     for it in items[: Config.LOW_FEE_ITEMS_SCAN_LIMIT]:
         title = it.get("title", "")
         fee = it.get("fee_rate", 0.05)

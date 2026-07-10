@@ -169,6 +169,15 @@ repos:
         always_run: true
         args: [--tb=short, -x, --maxfail=1]
 
+      # Archy - проверка архитектурного здоровья
+      - id: archy-check
+        name: archy-check
+        entry: archy check .
+        language: system
+        pass_filenames: false
+        always_run: false
+        stages: [commit]
+
 # ============================================================================
 # КОНФИГУРАЦИЯ PRE-COMMIT CI
 # ============================================================================

@@ -1,12 +1,12 @@
 """
-ResalePipeline — Buy cheap on DMarket → Check CS2Cap → Sell on DMarket.
+ResalePipeline — Buy cheap on DMarket → Validate price → Sell on DMarket.
 
 Full cycle:
 1. Scan DMarket listings for underpriced items
-2. Validate against CS2Cap (41 marketplaces)
+2. Validate against MultiSourceOracle (Market.CSGO + Waxpeer + CSFloat + Steam)
 3. Buy items on DMarket
 4. Track in virtual inventory
-5. List for sale on DMarket at CS2Cap-referenced price + margin
+5. List for sale on DMarket at oracle-referenced price + margin
 6. Manage inventory (mark items, remember state)
 
 Integrates arXiv improvements:
@@ -19,29 +19,28 @@ Integrates arXiv improvements:
 import logging
 import os
 import time
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
+from src.analytics.self_reflection import self_reflection
 from src.api.dmarket_api_client import DMarketAPIClient
-from src.api.cs2cap_oracle import CrossMarketData
 from src.api.oracle_factory import OracleFactory
 from src.config import Config
 from src.db.price_history import price_db
-from src.risk.price_validator import validate_arbitrage_profit, PriceValidationError
-from src.analytics.self_reflection import self_reflection
+from src.risk.price_validator import PriceValidationError, validate_arbitrage_profit
 
 logger = logging.getLogger("ResalePipeline")
 
 
 class ResalePipeline:
     """
-    End-to-end buy-sell pipeline with CS2Cap price intelligence.
+    End-to-end buy-sell pipeline with MultiSourceOracle price intelligence.
     """
 
     def __init__(self, api_client: DMarketAPIClient, risk=None):
         from src.risk.risk_manager import RiskManager
         self.api = api_client
-        self.cs2cap = OracleFactory.get_cross_market_oracle(Config.GAME_ID)
-        self._sell_price_cache: Dict[str, Tuple[float, float]] = {}  # hash_name -> (price, ts)
+        self.oracle = OracleFactory.get_cross_market_oracle(Config.GAME_ID)
+        self._sell_price_cache: dict[str, tuple[float, float]] = {}  # hash_name -> (price, ts)
         self._risk = risk or RiskManager()
 
     # =================================================================
@@ -52,16 +51,16 @@ class ResalePipeline:
         self,
         balance: float,
         max_items: int = 10,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """
-        Scan DMarket for underpriced items, validate against CS2Cap, buy.
+        Scan DMarket for underpriced items, validate against oracle, buy.
         Returns list of purchased items.
         """
         from src.risk.pump_detector import PumpDetector
         risk = self._risk
         pump = PumpDetector(price_db=price_db)
 
-        purchased: List[Dict[str, Any]] = []
+        purchased: list[dict[str, Any]] = []
         cursor = None
         pages_scanned = 0
         max_pages = 20  # Safety limit for pagination
@@ -116,10 +115,10 @@ class ResalePipeline:
         return purchased
 
     async def _evaluate_and_buy(
-        self, item: Dict[str, Any], balance: float
-    ) -> Optional[Dict[str, Any]]:
+        self, item: dict[str, Any], balance: float
+    ) -> dict[str, Any] | None:
         """
-        Evaluate a single DMarket item: check CS2Cap price → decide to buy.
+        Evaluate a single DMarket item: check oracle price → decide to buy.
         """
         item_id = item.get("itemId", "")
         title = item.get("title", "")
@@ -134,26 +133,23 @@ class ResalePipeline:
         if price_db.has_target_been_placed(item_id):
             return None
 
-        # Check CS2Cap for reference price
-        cs2cap_price = 0.0
-        cross_data: Optional[CrossMarketData] = None
+        # Check oracle for reference price
+        oracle_price = 0.0
+        cross_data = None
 
-        if self.cs2cap:
+        if self.oracle:
             try:
-                cs2cap_price = await self.cs2cap.get_item_price(title)
-                cross_data = await self.cs2cap.get_cross_market_data(title)
-                # NOTE (Phase 8): get_market_indicators (RSI/MACD) is a
-                # Quant-tier feature. On Starter/Pro it always returns None
-                # — was being awaited per item for nothing. Removed.
+                oracle_price = await self.oracle.get_item_price(title)
+                cross_data = await self.oracle.get_cross_market_data(title)
             except Exception as e:
-                logger.debug(f"CS2Cap fetch failed for {title}: {e}")
+                logger.debug(f"Oracle fetch failed for {title}: {e}")
 
-        if cs2cap_price <= 0:
+        if oracle_price <= 0:
             return None
 
-        # Calculate margin: CS2Cap best price vs DMarket buy price
-        # We'll sell on DMarket at ~CS2Cap price (or slightly below to undercut)
-        estimated_sell_price = cs2cap_price * 0.98  # Slight undercut for faster sale
+        # Calculate margin: oracle best price vs DMarket buy price
+        # We'll sell on DMarket at ~oracle price (or slightly below to undercut)
+        estimated_sell_price = oracle_price * 0.98  # Slight undercut for faster sale
         fee_rate = await self.api.get_item_fee(Config.GAME_ID, item_id, price_cents)
 
         # Turnover penalty
@@ -171,15 +167,11 @@ class ResalePipeline:
                 buy_price=buy_price,
                 expected_sell_price=estimated_sell_price,
                 fee_markup=fee_rate,
-                min_profit_margin=adjusted_min_spread / 100.0,
-                lock_days=Config.TRADE_LOCK_HOURS / 24.0,  # actual trade lock in days
+                min_profit_margin=float(adjusted_min_spread) / 100.0,
+                lock_days=int(Config.TRADE_LOCK_HOURS) // 24,  # actual trade lock in days
             )
         except PriceValidationError:
             return None
-
-        # NOTE (Phase 8): get_market_indicators (RSI) is a Quant-tier
-        # CS2Cap feature. On Starter/Pro it always returned None, so this
-        # block was effectively dead code — removed together with the call.
 
         # Execute buy
         is_dry_run = os.getenv("DRY_RUN", "true").lower() == "true"
@@ -196,10 +188,10 @@ class ResalePipeline:
         price_db.add_virtual_item(title, buy_price, trade_lock_hours=Config.TRADE_LOCK_HOURS)
         price_db.record_placed_target(item_id, title, buy_price)
 
-        # Calculate sell price based on CS2Cap
+        # Calculate sell price based on oracle
         sell_price = self._calculate_sell_price(
             buy_price=buy_price,
-            cs2cap_price=cs2cap_price,
+            oracle_price=oracle_price,
             cross_data=cross_data,
             fee_rate=fee_rate,
         )
@@ -209,7 +201,7 @@ class ResalePipeline:
 
         logger.info(
             f"{log_prefix}BOUGHT: {title} @ ${buy_price:.2f} | "
-            f"CS2Cap: ${cs2cap_price:.2f} -> Sell target: ${sell_price:.2f} | "
+            f"Oracle: ${oracle_price:.2f} -> Sell target: ${sell_price:.2f} | "
             f"Margin: {net_margin*100:.1f}%"
         )
 
@@ -217,7 +209,7 @@ class ResalePipeline:
             "item_id": item_id,
             "title": title,
             "buy_price": buy_price,
-            "cs2cap_price": cs2cap_price,
+            "oracle_price": oracle_price,
             "estimated_sell_price": sell_price,
             "net_margin_pct": net_margin * 100,
             "fee_rate": fee_rate,
@@ -229,13 +221,13 @@ class ResalePipeline:
     # 2. SELL — List purchased items on DMarket
     # =================================================================
 
-    async def sell_inventory_items(self, max_items: int = 10) -> List[Dict[str, Any]]:
+    async def sell_inventory_items(self, max_items: int = 10) -> list[dict[str, Any]]:
         """
         List trade-unlocked items for sale on DMarket.
 
-        Phase 5 optimization: replaces per-item CS2Cap calls and per-item
+        Phase 5 optimization: replaces per-item oracle calls and per-item
         DMarket create_offer calls with two batched calls:
-          1. CS2Cap /prices/batch for all unique titles in 1 call
+          1. Oracle /prices/batch for all unique titles in 1 call
           2. DMarket batch_create_offers_v2 for all items in 1 call
         """
         items = price_db.get_virtual_inventory(status='idle', only_unlocked=True)
@@ -243,15 +235,15 @@ class ResalePipeline:
             return []
 
         # Slice the candidate set first — we only price-check the first
-        # max_items to keep CS2Cap usage bounded.
+        # max_items to keep oracle usage bounded.
         candidates = items[:max_items]
         unique_titles = list({it['hash_name'] for it in candidates})
 
-        # --- 1. CS2Cap batch (1 call for all unique titles) ---
-        cs_prices: Dict[str, float] = {}
-        if self.cs2cap and unique_titles:
+        # --- 1. Oracle batch (1 call for all unique titles) ---
+        cs_prices: dict[str, float] = {}
+        if self.oracle and unique_titles:
             try:
-                snapshots = await self.cs2cap.get_prices_batch(unique_titles)
+                snapshots = await self.oracle.get_prices_batch(unique_titles)
                 cs_prices = {
                     title: snap.min_price
                     for title, snap in snapshots.items()
@@ -261,27 +253,27 @@ class ResalePipeline:
                 # Fallback for CSFloat fallback oracle (no batch endpoint)
                 for title in unique_titles:
                     try:
-                        p = await self.cs2cap.get_item_price(title)
+                        p = await self.oracle.get_item_price(title)
                         if p > 0:
                             cs_prices[title] = p
                     except Exception as e:
-                        logger.debug(f"CS2Cap fallback price check failed for {title}: {e}")
+                        logger.debug(f"Oracle fallback price check failed for {title}: {e}")
             except Exception as e:
-                logger.debug(f"CS2Cap batch price check failed: {e}")
+                logger.debug(f"Oracle batch price check failed: {e}")
 
         # --- 2. Build the list of (item, sell_price) that pass the
         #    profitability filter. ---
-        ready_to_list: List[Tuple[Any, float, float]] = []  # (item, sell_price, profit_pct)
+        ready_to_list: list[tuple[Any, float, float]] = []  # (item, sell_price, profit_pct)
         for item in candidates:
             title = item['hash_name']
             buy_price = item['buy_price']
-            cs2cap_price = cs_prices.get(title, 0.0)
-            if cs2cap_price <= 0:
+            oracle_price = cs_prices.get(title, 0.0)
+            if oracle_price <= 0:
                 continue
 
             sell_price = self._calculate_sell_price(
                 buy_price=buy_price,
-                cs2cap_price=cs2cap_price,
+                oracle_price=oracle_price,
                 cross_data=None,
                 fee_rate=Config.FEE_RATE,
             )
@@ -297,7 +289,7 @@ class ResalePipeline:
         if not ready_to_list:
             return []
 
-        listed: List[Dict[str, Any]] = []
+        listed: list[dict[str, Any]] = []
         is_dry_run = os.getenv("DRY_RUN", "true").lower() == "true"
 
         if is_dry_run:
@@ -308,7 +300,7 @@ class ResalePipeline:
                 price_db.update_virtual_status(item['id'], 'selling')
                 logger.info(
                     f"[SIM] LISTED: {title} @ ${sell_price:.2f} | "
-                    f"Bought: ${buy_price:.2f} | CS2Cap: ${cs_prices.get(title, 0):.2f} | "
+                    f"Bought: ${buy_price:.2f} | Oracle: ${cs_prices.get(title, 0):.2f} | "
                     f"Profit: {profit_pct:.1f}%"
                 )
                 listed.append({
@@ -323,7 +315,7 @@ class ResalePipeline:
         # --- 3. PRODUCTION: lookup asset_ids and batch-list in 1 call ---
         # First check user inventory (all owned items, listed or not),
         # then fall back to user_offers for items already on sale.
-        asset_by_title: Dict[str, str] = {}
+        asset_by_title: dict[str, str] = {}
         try:
             # Primary lookup: real inventory (includes newly purchased items)
             inv_resp = await self.api.get_user_inventory(Config.GAME_ID)
@@ -350,8 +342,8 @@ class ResalePipeline:
         except Exception as e:
             logger.error(f"Failed to enumerate assets for lookup: {e}", exc_info=True)
 
-        batch_payload: List[Dict[str, Any]] = []
-        plan: List[Tuple[Any, float, float]] = []
+        batch_payload: list[dict[str, Any]] = []
+        plan: list[tuple[Any, float, float]] = []
         for item, sell_price, profit_pct in ready_to_list:
             title = item['hash_name']
             asset_id = asset_by_title.get(title)
@@ -378,7 +370,7 @@ class ResalePipeline:
         # The v2 endpoint returns {"offers": [{"id": "...", "assetId": "...", ...}]}
         # or {"items": [...]} depending on schema. We just iterate and
         # flip status for each item we sent.
-        offer_id_by_asset: Dict[str, str] = {}
+        offer_id_by_asset: dict[str, str] = {}
         for entry in (result.get("offers") or result.get("items") or []):
             aid = entry.get("assetId") or entry.get("asset_id") or ""
             oid = entry.get("id") or entry.get("offerId") or entry.get("offer_id") or ""
@@ -413,34 +405,34 @@ class ResalePipeline:
     def _calculate_sell_price(
         self,
         buy_price: float,
-        cs2cap_price: float,
-        cross_data: Optional[CrossMarketData],
+        oracle_price: float,
+        cross_data: Any | None,
         fee_rate: float,
     ) -> float:
         """
-        Calculate optimal sell price on DMarket based on CS2Cap data.
-        Strategy: undercut CS2Cap min by 2% for faster sale,
+        Calculate optimal sell price on DMarket based on oracle data.
+        Strategy: undercut oracle min by 2% for faster sale,
         but ensure minimum profit margin.
         """
-        if cs2cap_price <= 0:
+        if oracle_price <= 0:
             return buy_price * 1.10  # Fallback: 10% margin
 
-        # Base: slightly below CS2Cap min ask
-        target_sell = cs2cap_price * 0.98
+        # Base: slightly below oracle min ask
+        target_sell = oracle_price * 0.98
 
         # Check cross-market data for better pricing
-        if cross_data and cross_data.global_max_bid > 0:
+        if cross_data and hasattr(cross_data, 'global_max_bid') and cross_data.global_max_bid > 0:
             # If there's a buy order above our target, price to fill it
             if cross_data.global_max_bid > target_sell * 0.95:
                 target_sell = min(target_sell, cross_data.global_max_bid * 0.99)
 
         # Ensure minimum profit after fees
-        min_sell_for_profit = buy_price * (1 + Config.MIN_SPREAD_PCT / 100.0) / (1 - fee_rate)
+        min_sell_for_profit = buy_price * (1 + float(Config.MIN_SPREAD_PCT) / 100.0) / (1 - fee_rate)
         target_sell = max(target_sell, min_sell_for_profit)
 
-        # Don't exceed CS2Cap price (no point listing much higher)
-        # But if min margin requires higher price, allow up to 10% above CS2Cap
-        max_allowed = cs2cap_price * 1.10
+        # Don't exceed oracle price (no point listing much higher)
+        # But if min margin requires higher price, allow up to 10% above oracle
+        max_allowed = oracle_price * 1.10
         target_sell = min(target_sell, max_allowed)
 
         return round(target_sell, 2)
@@ -449,7 +441,7 @@ class ResalePipeline:
     # 4. INVENTORY MANAGEMENT
     # =================================================================
 
-    async def get_inventory_status(self) -> Dict[str, Any]:
+    async def get_inventory_status(self) -> dict[str, Any]:
         """
         Get full inventory status: virtual + real DMarket inventory.
         """
@@ -503,5 +495,5 @@ class ResalePipeline:
         return self._turnover_mm.calculate_turnover_penalty()
 
     async def close(self):
-        if self.cs2cap:
-            await self.cs2cap.close()
+        if self.oracle:
+            await self.oracle.close()

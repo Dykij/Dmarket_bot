@@ -9,6 +9,7 @@ lifecycle.py — Bot startup, shutdown, signal handlers.
 """
 
 import asyncio
+import contextlib
 import logging
 import os
 import signal
@@ -90,18 +91,14 @@ async def on_shutdown(bot: Bot) -> None:
     except Exception:
         logger.exception("Error stopping sniping loop on shutdown")
     for admin_id in _ADMIN_IDS:
-        try:
+        with contextlib.suppress(Exception):
             await bot.send_message(
                 str(admin_id),
                 "🛑 *Bot shutting down.*\n"
                 f"Time: `{time.strftime('%Y-%m-%d %H:%M:%S')}`",
             )
-        except Exception:
-            pass
-    try:
+    with contextlib.suppress(Exception):
         await bot.session.close()
-    except Exception:
-        pass
     # Clean up PID file if launcher set one
     pid_file = os.getenv("TELEGRAM_BOT_PID_FILE")
     if pid_file and os.path.exists(pid_file):

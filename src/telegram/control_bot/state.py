@@ -15,9 +15,9 @@ Imported as: from src.telegram.control_bot import state, is_admin, BotState, _TO
 """
 
 import asyncio
+import contextlib
 import logging
 import os
-from typing import Optional
 
 from src.api.dmarket_api_client import DMarketAPIClient
 from src.config import Config
@@ -36,7 +36,7 @@ logger = logging.getLogger("TelegramControl.state")
 # ============================================================
 # Configuration loading
 # ============================================================
-def _load_config() -> tuple[Optional[str], set[int]]:
+def _load_config() -> tuple[str | None, set[int]]:
     """Load token + admin ids; returns (token, admin_ids_set).
 
     Reads TELEGRAM_ADMIN_IDS (comma-separated) and TELEGRAM_CHAT_ID
@@ -118,10 +118,10 @@ class BotState:
 
     def __init__(self) -> None:
         self.lock = asyncio.Lock()
-        self.sniping_loop: Optional[SnipingLoop] = None
-        self.sniping_task: Optional[asyncio.Task] = None
+        self.sniping_loop: SnipingLoop | None = None
+        self.sniping_task: asyncio.Task | None = None
         self.is_running: bool = False
-        self.client: Optional[DMarketAPIClient] = None
+        self.client: DMarketAPIClient | None = None
 
     async def start(self) -> bool:
         """Start the sniping loop. Returns True if started, False if already running."""
@@ -148,10 +148,8 @@ class BotState:
             self.is_running = False
             if self.sniping_task:
                 self.sniping_task.cancel()
-                try:
+                with contextlib.suppress(asyncio.CancelledError):
                     await self.sniping_task
-                except asyncio.CancelledError:
-                    pass
                 self.sniping_task = None
             if self.client:
                 try:

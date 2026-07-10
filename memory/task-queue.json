@@ -1,0 +1,54 @@
+{
+  "queue": [
+    {
+      "id": "task-003",
+      "task": "Test Playwright MCP with actual browser",
+      "priority": "high",
+      "added": "2026-07-09T12:00:00Z",
+      "estimated_duration": "5m",
+      "status": "pending",
+      "dependencies": []
+    },
+    {
+      "id": "task-004",
+      "task": "Create visual regression baseline",
+      "priority": "medium",
+      "added": "2026-07-09T12:01:00Z",
+      "estimated_duration": "10m",
+      "status": "pending",
+      "dependencies": ["task-003"]
+    },
+    {
+      "id": "task-005",
+      "task": "Test GitHub MCP with real API calls",
+      "priority": "medium",
+      "added": "2026-07-09T12:02:00Z",
+      "estimated_duration": "5m",
+      "status": "pending",
+      "dependencies": []
+    }
+  ],
+  "current_task": null,
+  "completed": [
+    {
+      "id": "task-001",
+      "task": "Test checkpoint manager functionality",
+      "priority": "high",
+      "added": "2026-07-09T10:00:00Z",
+      "completed": "2026-07-09T10:05:00Z",
+      "status": "completed",
+      "result": "Checkpoint creation and rollback successful"
+    },
+    {
+      "id": "task-002",
+      "task": "Test message queue functionality",
+      "priority": "medium",
+      "added": "2026-07-09T10:01:00Z",
+      "completed": "2026-07-09T10:06:00Z",
+      "status": "completed",
+      "result": "Task queue management working correctly"
+    }
+  ],
+  "max_queue_size": 20,
+  "auto_process": true
+}

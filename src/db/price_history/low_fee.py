@@ -10,7 +10,7 @@ v12.7: write methods wrapped with @with_db_retry.
 from __future__ import annotations
 
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from src.db.db_retry import with_db_retry
 
@@ -22,7 +22,7 @@ class _LowFeeMixin:
     state_conn: Any  # sqlite3.Connection
 
     @with_db_retry(operation_name="save_low_fee_items")
-    def save_low_fee_items(self, items: List[Dict[str, Any]]) -> None:
+    def save_low_fee_items(self, items: list[dict[str, Any]]) -> None:
         """Replace the entire low-fee cache with fresh items from DMarket."""
         with self.state_conn:
             self.state_conn.execute("DELETE FROM low_fee_cache")
@@ -39,7 +39,7 @@ class _LowFeeMixin:
 
     def get_low_fee_rate(
         self, title: str, max_age_seconds: int = 86400
-    ) -> Optional[float]:
+    ) -> float | None:
         """Returns the cached low-fee rate for a title, or None if not in cache / expired."""
         cutoff = time.time() - max_age_seconds
         row = self.state_conn.execute(
@@ -54,7 +54,7 @@ class _LowFeeMixin:
         ).fetchone()
         return row["c"] or 0
 
-    def low_fee_cache_age_seconds(self) -> Optional[float]:
+    def low_fee_cache_age_seconds(self) -> float | None:
         """Returns the age (seconds) of the oldest entry, or None if cache is empty."""
         row = self.state_conn.execute(
             "SELECT MIN(fetched_at) as oldest FROM low_fee_cache"

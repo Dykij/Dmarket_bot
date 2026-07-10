@@ -8,9 +8,9 @@ Reads data/cs2_events.json and adjusts bot behavior during active events:
 
 import json
 import logging
-from datetime import datetime, date
+from datetime import date, datetime
 from pathlib import Path
-from typing import List, Dict, Any, Optional
+from typing import Any
 
 logger = logging.getLogger("EventShield")
 
@@ -21,14 +21,14 @@ class EventShield:
     """Protects the bot from event-driven price crashes and detects buying opportunities."""
 
     def __init__(self):
-        self.events: List[Dict[str, Any]] = []
+        self.events: list[dict[str, Any]] = []
         self._load_events()
 
     def _load_events(self):
         """Load events from JSON file."""
         try:
             if EVENTS_FILE.exists():
-                with open(EVENTS_FILE, "r", encoding="utf-8") as f:
+                with open(EVENTS_FILE, encoding="utf-8") as f:
                     self.events = json.load(f)
                 logger.info(f"📅 EventShield loaded {len(self.events)} events from calendar.")
             else:
@@ -43,7 +43,7 @@ class EventShield:
     # ------------------------------------------------------------------
     # Queries
     # ------------------------------------------------------------------
-    def get_active_events(self, check_date: Optional[date] = None) -> List[Dict[str, Any]]:
+    def get_active_events(self, check_date: date | None = None) -> list[dict[str, Any]]:
         """Return all events active on the given date (defaults to today)."""
         today = check_date or date.today()
         active = []
@@ -126,7 +126,7 @@ class EventShield:
             logger.error(f"Failed to save event calendar: {e}", exc_info=True)
 
     def add_event(self, name: str, start: str, end: str, effect: str = "caution",
-                  margin_multiplier: float = 2.0, affected_categories: Optional[List[str]] = None,
+                  margin_multiplier: float = 2.0, affected_categories: list[str] | None = None,
                   notes: str = ""):
         """Add a new event and persist."""
         self.events.append({

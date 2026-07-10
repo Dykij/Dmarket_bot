@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import Optional
 
 from aiogram import F, Router
 from aiogram.filters import Command
@@ -26,13 +25,10 @@ from ..formatters import (
 )
 from ..keyboards import (
     BTN_ANALYZE,
-    BTN_CLOCK,
     BTN_DAILY,
     BTN_PORTFOLIO,
     BTN_PRICES,
-    BTN_REFRESH,
     BTN_SELL_TOP,
-    BTN_TEST,
     get_inline_analyze_kb,
     get_inline_balance_kb,
     get_inline_daily_kb,
@@ -218,7 +214,6 @@ async def cmd_sell_top(message):
 async def cmd_prices(message):
     logger.info("cmd_prices by user %s", message.from_user.id)
     try:
-        from src.api.cs2cap_oracle import CS2CapOracle
         from src.api.oracle_factory import OracleFactory
         idle = price_db.get_virtual_inventory(status="idle", only_unlocked=False)
         if not idle:

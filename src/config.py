@@ -221,7 +221,7 @@ class Config(BaseSettings):
     VOLATILITY_LOOKBACK_SALES: int = Field(default=20, ge=1)
 
     # --- Order Book Microstructure ---
-    OBI_ENABLED: bool = False
+    OBI_ENABLED: bool = True
     OBI_MIN_RATIO: float = Field(default=0.5, ge=0.0)
     OBI_BOOST_RATIO: float = Field(default=1.3, ge=1.0)
 
@@ -252,7 +252,7 @@ class Config(BaseSettings):
     AS_RISK_AVERSION: float = Field(default=0.3, ge=0.0, le=1.0)
     AS_TIME_HORIZON_DAYS: float = Field(default=7.0, ge=0.1)
 
-    VWAP_FILTER_ENABLED: bool = False
+    VWAP_FILTER_ENABLED: bool = True
     VWAP_DISCOUNT_THRESHOLD: float = Field(default=0.90, ge=0.0, le=1.0)
     VWAP_BANDS_ENABLED: bool = False
 

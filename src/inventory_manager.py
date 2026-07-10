@@ -11,7 +11,7 @@ Features:
 import asyncio
 import logging
 import time
-from typing import Any, Dict, List
+from typing import Any
 
 from src.api.dmarket_api_client import DMarketAPIClient
 from src.api.oracle_factory import OracleFactory
@@ -30,14 +30,14 @@ class InventoryManager:
     def __init__(self, api_client: DMarketAPIClient):
         self.api = api_client
         self.cs2cap = OracleFactory.get_cross_market_oracle(Config.GAME_ID)
-        self.cached_inventory: List[Dict[str, Any]] = []
-        self.cached_offers: List[Dict[str, Any]] = []
+        self.cached_inventory: list[dict[str, Any]] = []
+        self.cached_offers: list[dict[str, Any]] = []
 
     # =================================================================
     # 1. INVENTORY FETCHING (with full pagination)
     # =================================================================
 
-    async def fetch_inventory(self, game_id: str = "a8db") -> List[Dict[str, Any]]:
+    async def fetch_inventory(self, game_id: str = "a8db") -> list[dict[str, Any]]:
         """
         Fetches the primary user inventory (items NOT on sale).
         v14.7: Parallel pagination with asyncio.gather for 3x speed.
@@ -62,7 +62,7 @@ class InventoryManager:
             page = 1
 
             # Collect remaining page cursors
-            pages_to_fetch: List[str] = []
+            pages_to_fetch: list[str] = []
             while cursor and page < max_pages:
                 pages_to_fetch.append(cursor)
                 page += 1
@@ -78,7 +78,7 @@ class InventoryManager:
             logger.error(f"Failed to fetch DMarket inventory: {e}", exc_info=True)
             return self.cached_inventory
 
-    async def fetch_active_offers(self, game_id: str = "a8db") -> List[Dict[str, Any]]:
+    async def fetch_active_offers(self, game_id: str = "a8db") -> list[dict[str, Any]]:
         """
         Fetches items currently listed for sale on DMarket.
         Full pagination support.
@@ -110,7 +110,7 @@ class InventoryManager:
             logger.error(f"Failed to fetch active offers: {e}", exc_info=True)
             return []
 
-    async def fetch_all_with_cs2cap(self, game_id: str = "a8db") -> Dict[str, Any]:
+    async def fetch_all_with_cs2cap(self, game_id: str = "a8db") -> dict[str, Any]:
         """
         Fetch inventory + offers + CS2Cap prices for each item.
         Returns enriched data with current market values.
@@ -124,8 +124,8 @@ class InventoryManager:
         offers = await self.fetch_active_offers(game_id)
 
         # --- One pass over (inventory + offers) with a status flag ---
-        enriched_items: List[Dict[str, Any]] = []
-        unique_titles: List[str] = []
+        enriched_items: list[dict[str, Any]] = []
+        unique_titles: list[str] = []
 
         for item in inventory:
             title = item.get("title", "")
@@ -159,7 +159,7 @@ class InventoryManager:
             })
 
         # --- 1 CS2Cap call for all unique titles (Phase 6 batch) ---
-        cs_prices: Dict[str, float] = {}
+        cs_prices: dict[str, float] = {}
         if self.cs2cap and unique_titles:
             try:
                 snapshots = await self.cs2cap.get_prices_batch(unique_titles)
@@ -225,7 +225,7 @@ class InventoryManager:
     # 3. P&L TRACKING
     # =================================================================
 
-    def get_portfolio_summary(self, current_balance: float = 0.0) -> Dict[str, Any]:
+    def get_portfolio_summary(self, current_balance: float = 0.0) -> dict[str, Any]:
         """Get full portfolio summary with PnL."""
         equity = price_db.get_total_equity(current_balance)
 
@@ -257,7 +257,7 @@ class InventoryManager:
     # 4. CS2Cap PRICE CHECK FOR HELD ITEMS
     # =================================================================
 
-    async def check_held_items_prices(self) -> List[Dict[str, Any]]:
+    async def check_held_items_prices(self) -> list[dict[str, Any]]:
         """
         Check CS2Cap prices for all held items.
         Returns list of items with current market value.
@@ -270,7 +270,7 @@ class InventoryManager:
             return []
 
         unique_titles = list({it['hash_name'] for it in items})
-        cs_prices: Dict[str, float] = {}
+        cs_prices: dict[str, float] = {}
         if self.cs2cap and unique_titles:
             try:
                 snapshots = await self.cs2cap.get_prices_batch(unique_titles)
@@ -288,7 +288,7 @@ class InventoryManager:
             except Exception as e:
                 logger.debug(f"CS2Cap batch failed in check_held_items_prices: {e}")
 
-        results: List[Dict[str, Any]] = []
+        results: list[dict[str, Any]] = []
         for item in items:
             title = item['hash_name']
             buy_price = item['buy_price']
@@ -312,10 +312,10 @@ class InventoryManager:
     # 5. CACHE
     # =================================================================
 
-    def get_inventory(self) -> List[Dict[str, Any]]:
+    def get_inventory(self) -> list[dict[str, Any]]:
         """Returns the last fetched inventory cache."""
         return self.cached_inventory
 
-    def get_offers(self) -> List[Dict[str, Any]]:
+    def get_offers(self) -> list[dict[str, Any]]:
         """Returns the last fetched offers cache."""
         return self.cached_offers

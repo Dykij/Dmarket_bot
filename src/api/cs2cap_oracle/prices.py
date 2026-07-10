@@ -4,7 +4,7 @@ CS2Cap Oracle — Prices mixin (ask/bid lookups, single + batch).
 
 import logging
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from src.db.price_history import price_db
 
@@ -87,7 +87,7 @@ class _PricesMixin:
     # ----------------------------------------------------------------
     # 3. CROSS-MARKET DATA (GET /prices with all providers)
     # ----------------------------------------------------------------
-    async def get_price_snapshot(self, hash_name: str) -> Optional[PriceSnapshot]:
+    async def get_price_snapshot(self, hash_name: str) -> PriceSnapshot | None:
         """
         Single-item variant of the batch snapshot. Hits /prices once and
         returns a fully-populated PriceSnapshot (min_price + per-provider
@@ -145,7 +145,7 @@ class _PricesMixin:
             self._price_cache[cache_key] = (snap.min_price, now)
         return snap
 
-    async def get_cross_market_data(self, hash_name: str) -> Optional[CrossMarketData]:
+    async def get_cross_market_data(self, hash_name: str) -> CrossMarketData | None:
         """Fetch cross-market snapshot: prices from all providers."""
         now = time.time()
         cache_key = f"cross_{hash_name}"
@@ -204,8 +204,8 @@ class _PricesMixin:
     #     No per-call throttle (batched endpoints are burst-safe).
     # ----------------------------------------------------------------
     async def get_prices_batch(
-        self, hash_names: List[str]
-    ) -> Dict[str, PriceSnapshot]:
+        self, hash_names: list[str]
+    ) -> dict[str, PriceSnapshot]:
         """
         Fetch lowest asks for up to 100 items in 1 POST request.
 
@@ -219,7 +219,7 @@ class _PricesMixin:
             return {}
 
         # Always seed dict with empty snapshots so callers can rely on key presence
-        results: Dict[str, PriceSnapshot] = {
+        results: dict[str, PriceSnapshot] = {
             name: PriceSnapshot(hash_name=name) for name in hash_names
         }
 
@@ -246,8 +246,8 @@ class _PricesMixin:
 
     def _parse_batch_prices(
         self,
-        data: Dict[str, Any],
-        out: Dict[str, PriceSnapshot],
+        data: dict[str, Any],
+        out: dict[str, PriceSnapshot],
     ) -> None:
         """
         Parse the /prices/batch response and merge into the out dict.
@@ -293,8 +293,8 @@ class _PricesMixin:
                     snap.total_quantity += int(qty)
 
     async def get_bids_batch(
-        self, hash_names: List[str]
-    ) -> Dict[str, BidsSnapshot]:
+        self, hash_names: list[str]
+    ) -> dict[str, BidsSnapshot]:
         """
         Fetch highest bids for up to 100 items in 1 POST request.
 
@@ -306,7 +306,7 @@ class _PricesMixin:
         if not hash_names:
             return {}
 
-        results: Dict[str, BidsSnapshot] = {
+        results: dict[str, BidsSnapshot] = {
             name: BidsSnapshot(hash_name=name) for name in hash_names
         }
 
@@ -328,8 +328,8 @@ class _PricesMixin:
 
     def _parse_batch_bids(
         self,
-        data: Dict[str, Any],
-        out: Dict[str, BidsSnapshot],
+        data: dict[str, Any],
+        out: dict[str, BidsSnapshot],
     ) -> None:
         """
         Parse the /bids/batch response and merge into the out dict.

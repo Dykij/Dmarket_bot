@@ -25,33 +25,20 @@ doesn't lose state.
 
 from __future__ import annotations
 
-import asyncio
 import logging
-import math
 import os
-import random
-import time
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
-from src.api.oracle_factory import OracleFactory
 from src.config import Config
+from src.core.target_sniping.position_guard import _PositionGuardMixin
+from src.core.target_sniping.resale_constants import (
+    REPRICE_DROP_PCT,
+)
 from src.core.target_sniping.resale_dry import _ResaleDryMixin
 from src.core.target_sniping.resale_prod import _ResaleProdMixin
-from src.core.target_sniping.position_guard import _PositionGuardMixin
 from src.db.price_history import price_db
-from src.telegram.notifier import notifier
 
 logger = logging.getLogger("SnipingBot")
-
-# Tunables (env-overridable for fine-tuning without code changes)
-LIST_BATCH_SIZE = int(os.getenv("SELL_BATCH_SIZE", "10"))  # max items per /user-offers/create call
-LIST_MIN_MARGIN_PCT = float(os.getenv("SELL_MIN_MARGIN_PCT", "3.0"))  # min gross margin to list
-LIST_PRICE_DISCOUNT = float(os.getenv("SELL_LIST_DISCOUNT", "0.01"))  # undercut vs oracle by $0.01
-REPRICE_DROP_PCT = float(os.getenv("SELL_REPRICE_DROP_PCT", "5.0"))  # drop price by 5% on reprice
-SELL_MAX_OPEN_LISTINGS = int(os.getenv("SELL_MAX_OPEN_LISTINGS", "50"))  # cap on simultaneous listed items
-SELL_FEE_RATE = float(os.getenv("SELL_FEE_RATE", str(Config.FEE_RATE)))  # 5% DMarket fee (with subscription)
-INVENTORY_SYNC_MAX_PAGES = int(os.getenv("INVENTORY_SYNC_MAX_PAGES", "5"))  # pagination cap
-CLOSED_OFFERS_LOOKBACK_DAYS = int(os.getenv("CLOSED_OFFERS_LOOKBACK_DAYS", "7"))  # how far back to scan for sales
 
 
 class _ResaleMixin(_ResaleDryMixin, _ResaleProdMixin, _PositionGuardMixin):
@@ -173,7 +160,6 @@ class _ResaleMixin(_ResaleDryMixin, _ResaleProdMixin, _PositionGuardMixin):
         DRY: just log.
         PROD: batch edit with a 5% lower price (configurable via SELL_REPRICE_DROP_PCT).
         """
-        from src.config import Config
 
         is_dry = os.getenv("DRY_RUN", "true").lower() == "true"
         stale = price_db.get_stale_listings(int(Config.REPRICE_AFTER_HOURS * 3600))
@@ -193,7 +179,6 @@ class _ResaleMixin(_ResaleDryMixin, _ResaleProdMixin, _PositionGuardMixin):
 
         # v12.7: Batch repricing (up to 100 per request) instead of per-offer edit.
         edits_batch = []
-        smart_edits = []   # v14.3: smart OFI-aware repricing
         skipped = 0
         for it in stale:
             try:

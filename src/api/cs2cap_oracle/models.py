@@ -3,7 +3,6 @@ CS2Cap Oracle data models — exceptions, dataclasses, and constants.
 """
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List
 
 BATCH_MAX_ITEMS = 100
 
@@ -32,8 +31,8 @@ class CrossMarketData:
     hash_name: str
     global_min_ask: float = 0.0
     global_max_bid: float = 0.0
-    provider_prices: Dict[str, float] = field(default_factory=dict)
-    buy_orders: Dict[str, float] = field(default_factory=dict)
+    provider_prices: dict[str, float] = field(default_factory=dict)
+    buy_orders: dict[str, float] = field(default_factory=dict)
     sales_count: int = 0
     avg_sale_price: float = 0.0
     volatility_1h: float = 0.0
@@ -66,8 +65,8 @@ class PriceSnapshot:
     hash_name: str
     min_price: float = 0.0
     max_bid: float = 0.0
-    provider_prices: Dict[str, float] = field(default_factory=dict)
-    provider_quantities: Dict[str, int] = field(default_factory=dict)
+    provider_prices: dict[str, float] = field(default_factory=dict)
+    provider_quantities: dict[str, int] = field(default_factory=dict)
     total_quantity: int = 0
 
     @property
@@ -92,7 +91,7 @@ class BidsSnapshot:
     """
     hash_name: str
     max_bid: float = 0.0
-    provider_bids: Dict[str, float] = field(default_factory=dict)
+    provider_bids: dict[str, float] = field(default_factory=dict)
 
     @property
     def has_data(self) -> bool:

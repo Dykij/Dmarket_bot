@@ -2,7 +2,6 @@
 Performance tests for IncrementalMetadataCache with 10k+ files.
 """
 
-import os
 import tempfile
 import time
 from pathlib import Path

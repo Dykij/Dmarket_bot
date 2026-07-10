@@ -1,6 +1,8 @@
 import os
 from typing import Any
+
 from src.config import Config
+
 
 class ConfigManager:
     """

@@ -1,10 +1,10 @@
-import sqlite3
+import contextlib
 import logging
-from pathlib import Path
+import sqlite3
 from datetime import datetime
-
 from decimal import Decimal
-from src.utils.decimal_helpers import D, quantize
+from pathlib import Path
+
 from src.db.db_retry import with_db_retry
 
 logger = logging.getLogger("ProfitTracker")
@@ -81,10 +81,8 @@ class ProfitTrackerDB:
     def close(self):
         """v12.8: Clean shutdown with WAL checkpoint."""
         if self.conn:
-            try:
+            with contextlib.suppress(Exception):
                 self.conn.execute("PRAGMA wal_checkpoint(FULL)")
-            except Exception:
-                pass
             self.conn.close()
 
 # Global DB instance for easy access

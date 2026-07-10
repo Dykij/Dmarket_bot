@@ -8,13 +8,13 @@ Improvements over original:
 4. Self-reflection integration (adaptive parameters)
 """
 
-from abc import ABC, abstractmethod
+import logging
 import math
 import time
-from typing import Dict, Any, List, Optional
-import logging
+from abc import ABC, abstractmethod
+from typing import Any
+
 from src.config import Config
-from decimal import Decimal
 
 logger = logging.getLogger("Strategy")
 
@@ -31,28 +31,22 @@ class BaseStrategy(ABC):
     # ----------------------------------------------------------------
     def calculate_position_size(
         self,
-        current_balance: Decimal,
-        item_price: Decimal,
-        volatility_score: Decimal = Decimal("1.0"),
-        sharpe_estimate: Decimal = Decimal("1.0"),
+        current_balance: float,
+        item_price: float,
+        volatility_score: float = 1.0,
+        sharpe_estimate: float = 1.0,
     ) -> int:
-        """
-        Dynamic Position Sizing (Pseudo-Kelly Criterion, v2).
-        Uses volatility AND Sharpe ratio estimate for more conservative sizing.
-        """
-        if not Config.USE_DYNAMIC_SIZING or current_balance <= Decimal("0"):
+        """Dynamic Position Sizing (Pseudo-Kelly Criterion, v2)."""
+        if not Config.USE_DYNAMIC_SIZING or current_balance <= 0:
             return 1
 
-        max_risk_amount = current_balance * (Config.MAX_POSITION_RISK_PCT / Decimal("100"))
+        max_risk_amount = current_balance * (Config.MAX_POSITION_RISK_PCT / 100.0)
+        adjusted_risk = max_risk_amount / max(volatility_score, 1.0)
 
-        # Adjust risk based on volatility (higher vol = lower risk)
-        adjusted_risk = max_risk_amount / max(volatility_score, Decimal("1.0"))
-
-        # Further adjust by Sharpe (low Sharpe = less conviction = smaller size)
-        if sharpe_estimate < Decimal("1.0"):
-            adjusted_risk *= max(Decimal("0.3"), sharpe_estimate)
-        elif sharpe_estimate > Decimal("2.0"):
-            adjusted_risk *= min(Decimal("1.5"), sharpe_estimate / Decimal("1.5"))
+        if sharpe_estimate < 1.0:
+            adjusted_risk *= max(0.3, sharpe_estimate)
+        elif sharpe_estimate > 2.0:
+            adjusted_risk *= min(1.5, sharpe_estimate / 1.5)
 
         if item_price > adjusted_risk:
             self.logger.warning(
@@ -76,10 +70,10 @@ class BaseStrategy(ABC):
 
     @staticmethod
     def garman_klass_volatility(
-        open_prices: List[float],
-        high: List[float],
-        low: List[float],
-        close: List[float],
+        open_prices: list[float],
+        high: list[float],
+        low: list[float],
+        close: list[float],
     ) -> float:
         """
         Garman-Klass volatility estimator.
@@ -110,7 +104,7 @@ class BaseStrategy(ABC):
         return math.sqrt(sum_sq / count) * math.sqrt(252)
 
     @staticmethod
-    def realized_volatility(prices: List[float]) -> float:
+    def realized_volatility(prices: list[float]) -> float:
         """Realized volatility from close-to-close log returns."""
         if len(prices) < 2:
             return 0.0
@@ -132,8 +126,8 @@ class BaseStrategy(ABC):
         hash_name: str = "",
         best_ask: float = 0.0,
         best_bid: float = 0.0,
-        ohlcv_data: Optional[Dict[str, List[float]]] = None,
-        recent_prices: Optional[List[float]] = None,
+        ohlcv_data: dict[str, list[float]] | None = None,
+        recent_prices: list[float] | None = None,
     ) -> float:
         """
         Get the best available volatility estimate.
@@ -164,9 +158,9 @@ class BaseStrategy(ABC):
     # ----------------------------------------------------------------
     @staticmethod
     def calculate_atr(
-        high: List[float],
-        low: List[float],
-        close: List[float],
+        high: list[float],
+        low: list[float],
+        close: list[float],
         period: int = 14,
     ) -> float:
         """
@@ -236,10 +230,7 @@ class BaseStrategy(ABC):
         risk_amount = balance * (risk_per_trade_pct / 100.0)
 
         # Position size in units
-        if stop_distance > 0:
-            qty = int(risk_amount / stop_distance)
-        else:
-            qty = 1
+        qty = int(risk_amount / stop_distance) if stop_distance > 0 else 1
 
         # Cap at what we can afford
         max_affordable = int(balance / item_price) if item_price > 0 else 0
@@ -348,7 +339,7 @@ class BaseStrategy(ABC):
     # 5. ENHANCED OPPORTUNITY EVALUATION (abstract)
     # ----------------------------------------------------------------
     @abstractmethod
-    def evaluate_opportunity(self, market_data: Dict[str, Any]) -> Dict[str, Any]:
+    def evaluate_opportunity(self, market_data: dict[str, Any]) -> dict[str, Any]:
         """
         Strategy core logic to analyze market data and return an action plan.
         Should return a dictionary containing:
@@ -362,12 +353,12 @@ class BaseStrategy(ABC):
 
     def evaluate_opportunity_enhanced(
         self,
-        market_data: Dict[str, Any],
-        cross_market_data: Optional[Any] = None,
-        indicators: Optional[Dict[str, float]] = None,
+        market_data: dict[str, Any],
+        cross_market_data: Any | None = None,
+        indicators: dict[str, float] | None = None,
         turnover_penalty: float = 1.0,
-        reflection_result: Optional[Any] = None,
-    ) -> Dict[str, Any]:
+        reflection_result: Any | None = None,
+    ) -> dict[str, Any]:
         """
         Enhanced evaluation that uses CS2Cap cross-market data + indicators.
         Override in subclasses for strategy-specific logic.
