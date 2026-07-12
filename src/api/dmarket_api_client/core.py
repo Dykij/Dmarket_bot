@@ -19,6 +19,15 @@ from typing import Any
 
 import aiohttp
 import structlog
+
+# v15.2: orjson is 2-3x faster than stdlib json for serialization
+try:
+    import orjson
+    def _dumps(obj: Any) -> str:
+        return orjson.dumps(obj).decode("utf-8")
+except ImportError:
+    def _dumps(obj: Any) -> str:
+        return json.dumps(obj)
 from nacl.signing import SigningKey
 from tenacity import (
     retry,
@@ -343,7 +352,7 @@ class DMarketAPIClient(  # type: ignore[misc]
             query_string = urllib.parse.urlencode(params)
             api_path = f"{path}?{query_string}"
 
-        body_str = json.dumps(body) if body else ""
+        body_str = _dumps(body) if body else ""
         signature = self._generate_signature(method, api_path, body_str, timestamp)
 
         headers = {

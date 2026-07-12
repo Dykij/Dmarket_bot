@@ -23,6 +23,7 @@ backrefs==7.0
 bandit==1.9.4
 bcrypt==5.0.0
 black==26.5.1
+cachetools==7.1.4
 certifi==2026.5.20
 cffi==2.0.0
 cfgv==3.5.0

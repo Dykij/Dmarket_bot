@@ -26,11 +26,13 @@ import contextlib
 import logging
 import os
 import sqlite3
+import time as _time
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
 
+from .analytics_logs import _AnalyticsLogsMixin
 from .asset_status import _AssetStatusMixin
 from .history import _HistoryMixin
 from .inventory import _InventoryMixin
@@ -42,13 +44,15 @@ from .targets import _TargetsMixin
 logger = logging.getLogger("PriceHistoryDB")
 
 # Thread pool for async SQLite operations — bounded to prevent thread explosion
-_db_executor = ThreadPoolExecutor(max_workers=2, thread_name_prefix="sqlite")
+# v15.1: Increased from 2 to 4 workers for better concurrency
+_db_executor = ThreadPoolExecutor(max_workers=4, thread_name_prefix="sqlite")
 
 
 class PriceHistoryDB(  # type: ignore[misc]
     _HistoryMixin,
     _StateMixin,
     _InventoryMixin,
+    _AnalyticsLogsMixin,
     _TargetsMixin,
     _AssetStatusMixin,
     _LowFeeMixin,
@@ -113,7 +117,18 @@ class PriceHistoryDB(  # type: ignore[misc]
         with contextlib.suppress(Exception):
             self.state_conn.execute("PRAGMA optimize")
             self.history_conn.execute("PRAGMA optimize")
-            logger.debug("[v14.9] SQLite PRAGMA optimize completed")
+            # v15.1: ANALYZE updates query planner statistics for better index usage
+            self.state_conn.execute("ANALYZE")
+            self.history_conn.execute("ANALYZE")
+            logger.debug("[v14.9] SQLite PRAGMA optimize + ANALYZE completed")
+
+    def get_thread_pool_stats(self) -> dict[str, Any]:
+        """v15.1: Thread pool monitoring for health checks."""
+        return {
+            "max_workers": _db_executor._max_workers,
+            "active_threads": len(_db_executor._threads),
+            "pending_tasks": _db_executor._work_queue.qsize() if hasattr(_db_executor, '_work_queue') else 0,
+        }
 
     async def run_in_thread(self, fn: Callable[..., Any], *args: Any, **kwargs: Any) -> Any:
         """Run a synchronous DB operation in the thread pool to avoid
@@ -131,7 +146,47 @@ class PriceHistoryDB(  # type: ignore[misc]
         )
 
     def _init_schemas(self) -> None:
-        """Initialize appropriate tables in each database."""
+        """Initialize appropriate tables in each database.
+        
+        v15.1: Schema versioning — tracks which migrations have been applied.
+        Each migration has a unique version number. Applied migrations are
+        recorded in the `schema_version` table to prevent re-execution.
+        """
+        # --- Schema versioning table (both DBs) ---
+        for conn in (self.state_conn, self.history_conn):
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS schema_version (
+                    version     INTEGER PRIMARY KEY,
+                    description TEXT    NOT NULL,
+                    applied_at  REAL    NOT NULL
+                )
+            """)
+
+        def _get_version(conn: sqlite3.Connection) -> int:
+            row = conn.execute("SELECT MAX(version) FROM schema_version").fetchone()
+            return row[0] if row and row[0] else 0
+
+        def _apply_migration(conn: sqlite3.Connection, version: int, desc: str, sql: str) -> None:
+            current = _get_version(conn)
+            if version <= current:
+                return
+            try:
+                conn.execute(sql)
+                conn.execute(
+                    "INSERT INTO schema_version (version, description, applied_at) VALUES (?, ?, ?)",
+                    (version, desc, _time.time()),
+                )
+                logger.info(f"[DB] Migration v{version}: {desc}")
+            except sqlite3.OperationalError as e:
+                if "already exists" in str(e).lower():
+                    # Column/table already exists — record as applied
+                    conn.execute(
+                        "INSERT OR IGNORE INTO schema_version (version, description, applied_at) VALUES (?, ?, ?)",
+                        (version, desc, _time.time()),
+                    )
+                else:
+                    raise
+
         # --- STATE DB (OLTP) ---
         with self.state_conn:
             self.state_conn.execute(
@@ -165,10 +220,22 @@ class PriceHistoryDB(  # type: ignore[misc]
             """
             )
             # v13.1 migration: funds hold tracking for Trade Protection
+            _ALLOWED_COLUMNS = {
+                "funds_hold_until": "REAL",
+                "rollback_refund": "INTEGER NOT NULL DEFAULT 0",
+                "dm_item_id": "TEXT",
+                "dm_offer_id": "TEXT",
+                "listed_at": "REAL",
+                "list_error": "TEXT",
+                "unlock_at": "REAL NOT NULL DEFAULT 0",
+                "exclusive": "INTEGER NOT NULL DEFAULT 0",
+            }
             for col, typedef in (
                 ("funds_hold_until", "REAL"),
                 ("rollback_refund", "INTEGER NOT NULL DEFAULT 0"),
             ):
+                if col not in _ALLOWED_COLUMNS or _ALLOWED_COLUMNS[col] != typedef:
+                    continue
                 with contextlib.suppress(sqlite3.OperationalError):
                     self.state_conn.execute(
                         f"ALTER TABLE virtual_inventory ADD COLUMN [{col}] {typedef}"
@@ -187,6 +254,8 @@ class PriceHistoryDB(  # type: ignore[misc]
                 ("listed_at", "REAL"),
                 ("list_error", "TEXT"),
             ):
+                if col not in _ALLOWED_COLUMNS or _ALLOWED_COLUMNS[col] != typedef:
+                    continue
                 try:
                     self.state_conn.execute(
                         f"ALTER TABLE virtual_inventory ADD COLUMN [{col}] {typedef}"
@@ -209,6 +278,10 @@ class PriceHistoryDB(  # type: ignore[misc]
             self.state_conn.execute(
                 "CREATE INDEX IF NOT EXISTS idx_vinv_status ON virtual_inventory(status)"
             )
+            # v15.1: Composite index for common query pattern (status + acquired_at)
+            self.state_conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_vinv_status_acquired ON virtual_inventory(status, acquired_at)"
+            )
 
             self.state_conn.execute(
                 """
@@ -222,6 +295,13 @@ class PriceHistoryDB(  # type: ignore[misc]
                 )
             """
             )
+            # v15.2: Index for missed_opportunities queries
+            self.state_conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_missed_ts ON missed_opportunities(timestamp)"
+            )
+            self.state_conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_missed_name ON missed_opportunities(hash_name)"
+            )
             self.state_conn.execute(
                 """
                 CREATE TABLE IF NOT EXISTS decision_logs (
@@ -233,6 +313,13 @@ class PriceHistoryDB(  # type: ignore[misc]
                     timestamp   REAL    NOT NULL
                 )
             """
+            )
+            # v15.2: Index for decision_logs queries
+            self.state_conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_decision_ts ON decision_logs(timestamp)"
+            )
+            self.state_conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_decision_name ON decision_logs(hash_name)"
             )
             self.state_conn.execute(
                 """
@@ -365,6 +452,11 @@ class PriceHistoryDB(  # type: ignore[misc]
             )
             self.history_conn.execute(
                 "CREATE INDEX IF NOT EXISTS idx_price_name ON price_history(hash_name)"
+            )
+            # v15.2: Composite index for the most common query pattern
+            # (hash_name + recorded_at DESC) — avoids merge-sort of separate indexes
+            self.history_conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_price_name_time ON price_history(hash_name, recorded_at DESC)"
             )
 
             # v14.1: Trade-level sales history for CVD/VPIN/VWAP

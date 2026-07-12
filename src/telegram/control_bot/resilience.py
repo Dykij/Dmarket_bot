@@ -5,9 +5,10 @@ Provides:
 - safe_call: wraps a handler so exceptions are reported to the user, not the dispatcher
 - retry_async: exponential backoff for retriable errors
 - dmarket_client: async context manager that creates + closes DMarketAPIClient safely
+
+v15.2: Uses tenacity for retry logic.
 """
 
-import asyncio
 import functools
 import logging
 from collections.abc import Awaitable, Callable
@@ -79,31 +80,32 @@ async def retry_async(
 
     Retriable exceptions: TimeoutError, ConnectionError, OSError, aiohttp.ClientError.
     Other exceptions fail fast (re-raised immediately).
+
+    v15.2: Uses tenacity for consistent retry behavior.
     """
     import aiohttp
+    import tenacity
 
-    retriable = (TimeoutError, ConnectionError, OSError, aiohttp.ClientError)
-    last_exc: Any = None
-    for attempt in range(1, max_attempts + 1):
-        try:
-            return await coro_factory()
-        except retriable as e:
-            last_exc = e
-            if attempt == max_attempts:
-                logger.error(f"{operation} failed after {max_attempts} attempts: {e}", exc_info=True)
-                break
-            delay = min(base_delay * (2 ** (attempt - 1)), max_delay)
-            logger.warning(
-                f"{operation} attempt {attempt}/{max_attempts} failed: {e}. "
-                f"Retrying in {delay:.1f}s",
-                exc_info=True,
-            )
-            await asyncio.sleep(delay)
-        except Exception as e:
-            # Non-retriable: re-raise immediately
-            logger.error(f"{operation} non-retriable error: {e}", exc_info=True)
-            raise
-    raise last_exc
+    @tenacity.retry(
+        retry=tenacity.retry_if_exception_type(
+            (TimeoutError, ConnectionError, OSError, aiohttp.ClientError)
+        ),
+        stop=tenacity.stop_after_attempt(max_attempts),
+        wait=tenacity.wait_exponential(multiplier=base_delay, max=max_delay),
+        before_sleep=tenacity.before_sleep_log(logger, 30),  # WARNING level
+        reraise=True,
+    )
+    async def _do_retry() -> Any:
+        return await coro_factory()
+
+    try:
+        return await _do_retry()
+    except (TimeoutError, ConnectionError, OSError, aiohttp.ClientError) as e:
+        logger.error(f"{operation} failed after {max_attempts} attempts: {e}", exc_info=True)
+        raise
+    except Exception as e:
+        logger.error(f"{operation} non-retriable error: {e}", exc_info=True)
+        raise
 
 
 @asynccontextmanager
