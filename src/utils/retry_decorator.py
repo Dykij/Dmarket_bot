@@ -1,6 +1,11 @@
-"""Retry decorator."""
+"""Retry decorator.
+
+v15.2: Uses tenacity for battle-tested retry logic with jitter, logging, etc.
+"""
 import functools
 from typing import Any, Callable
+
+import tenacity
 
 
 def retry_on_failure(
@@ -8,20 +13,18 @@ def retry_on_failure(
     min_wait: float = 1.0,
     max_wait: float = 10.0,
 ) -> Callable:
-    """Decorator for async functions that retries on NetworkError."""
+    """Decorator for async functions that retries on exceptions.
+
+    v15.2: Wraps tenacity for consistent retry behavior across the codebase.
+    """
     def decorator(func: Callable) -> Callable:
+        @tenacity.retry(
+            stop=tenacity.stop_after_attempt(max_attempts),
+            wait=tenacity.wait_exponential(multiplier=min_wait, max=max_wait),
+            reraise=True,
+        )
         @functools.wraps(func)
         async def wrapper(*args: Any, **kwargs: Any) -> Any:
-            import asyncio
-            last_exc = None
-            for attempt in range(max_attempts):
-                try:
-                    return await func(*args, **kwargs)
-                except Exception as e:
-                    last_exc = e
-                    if attempt < max_attempts - 1:
-                        wait = min(min_wait * (2 ** attempt), max_wait)
-                        await asyncio.sleep(wait)
-            raise last_exc  # type: ignore
+            return await func(*args, **kwargs)
         return wrapper
     return decorator

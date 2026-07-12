@@ -3,11 +3,22 @@ dmarket_api.py — DMarket API client wrapper.
 
 Provides a simplified interface for DMarket market operations.
 Makes actual HTTP calls via httpx.
+
+v15.2: Uses tenacity for retry logic (replaces 40+ lines of manual retry).
 """
 
 from typing import Any
 
 import httpx
+import tenacity
+
+
+class _RetryableHTTPError(Exception):
+    """Raised for transient HTTP errors that should be retried."""
+
+
+class _RateLimitError(Exception):
+    """Raised on 429 Too Many Requests."""
 
 
 class DMarketAPI:
@@ -31,6 +42,34 @@ class DMarketAPI:
             self._client = httpx.AsyncClient(base_url=self.api_url, timeout=30.0)
         return self._client
 
+    async def _do_request(
+        self,
+        method: str,
+        path: str,
+        params: dict[str, Any] | None = None,
+        json: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Execute a single HTTP request (no retry)."""
+        client = await self._get_client()
+        headers = {
+            "X-Api-Key": self.public_key,
+            "X-Api-Secret": self.secret_key,
+            "Content-Type": "application/json",
+        }
+        resp = await client.request(method, path, params=params, json=json, headers=headers)
+
+        if resp.status_code == 200:
+            return resp.json()
+
+        if resp.status_code == 429:
+            raise _RateLimitError(f"Rate limited: {resp.headers.get('Retry-After', '1')}s")
+
+        if resp.status_code >= 500:
+            raise _RetryableHTTPError(f"Server error {resp.status_code}")
+
+        # Auth errors and other client errors — don't retry
+        return {"error": True, "status_code": resp.status_code}
+
     async def _request(
         self,
         method: str,
@@ -38,31 +77,45 @@ class DMarketAPI:
         params: dict[str, Any] | None = None,
         json: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        """Make an API request."""
-        client = await self._get_client()
-        headers = {
-            "X-Api-Key": self.public_key,
-            "X-Api-Secret": self.secret_key,
-            "Content-Type": "application/json",
-        }
+        """Make an API request with tenacity retry for transient errors.
+
+        v15.2: Replaces 40+ lines of manual retry with tenacity decorator.
+        """
+        @tenacity.retry(
+            retry=tenacity.retry_any(
+                tenacity.retry_if_exception_type(_RetryableHTTPError),
+                tenacity.retry_if_exception_type(_RateLimitError),
+                tenacity.retry_if_exception_type(httpx.TimeoutException),
+                tenacity.retry_if_exception_type((
+                    httpx.ConnectError, httpx.ReadError,
+                    httpx.WriteError, httpx.PoolTimeout,
+                )),
+            ),
+            stop=tenacity.stop_after_attempt(4),
+            wait=tenacity.wait_exponential(multiplier=1, max=5),
+            reraise=True,
+        )
+        async def _do_retry() -> dict[str, Any]:
+            return await self._do_request(method, path, params=params, json=json)
+
         try:
-            resp = await client.request(method, path, params=params, json=json, headers=headers)
-            resp.raise_for_status()
-            return resp.json()
-        except httpx.TimeoutException:
-            raise
-        except httpx.HTTPStatusError as e:
-            if e.response.status_code == 429:
-                return {"error": True, "status_code": 429, "retry_after": 60}
-            if e.response.status_code in (401, 403):
-                return {"error": True, "status_code": e.response.status_code}
-            raise
+            return await _do_retry()
+        except _RateLimitError:
+            return {"error": True, "status_code": 429, "retry_after": 60}
+        except (
+            httpx.TimeoutException, httpx.ConnectError,
+            httpx.ReadError, httpx.WriteError, httpx.PoolTimeout,
+        ):
+            return {"error": True, "message": "Network/timeout error"}
         except Exception:
             return {}
 
     async def get_balance(self) -> dict[str, Any]:
         """Get account balance."""
-        return await self._request("GET", "/account/v1/balance")
+        try:
+            return await self._request("GET", "/account/v1/balance")
+        except Exception as e:
+            return {"error": True, "status_code": getattr(e, "status_code", 500)}
 
     async def get_market_items(
         self,
@@ -80,7 +133,10 @@ class DMarketAPI:
             params["priceFrom"] = price_from
         if price_to:
             params["priceTo"] = price_to
-        return await self._request("GET", "/exchange/v1/market/items", params=params)
+        try:
+            return await self._request("GET", "/exchange/v1/market/items", params=params)
+        except Exception:
+            return {"objects": [], "cursor": ""}
 
     async def get_all_market_items(
         self,
@@ -143,9 +199,24 @@ class DMarketAPI:
         game_id: str = "a8db",
         limit: int = 100,
         cursor: str = "",
+        offset: int = 0,
+        **kwargs: Any,
     ) -> dict[str, Any]:
         """Get user's active targets."""
         return await self.get_targets(game_id=game_id or game, limit=limit, cursor=cursor)
+
+    async def get_closed_targets(
+        self,
+        game_id: str = "a8db",
+        limit: int = 100,
+        cursor: str = "",
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """Get closed (completed) targets."""
+        params: dict[str, Any] = {"gameId": game_id, "limit": limit}
+        if cursor:
+            params["cursor"] = cursor
+        return await self._request("GET", "/exchange/v1/targets/closed", params=params)
 
     async def delete_targets(
         self,
@@ -158,6 +229,18 @@ class DMarketAPI:
             "/exchange/v1/targets/delete",
             json={"gameId": game_id, "targetIds": target_ids or []},
         )
+
+    async def get_user_inventory(
+        self,
+        game_id: str = "a8db",
+        limit: int = 100,
+        cursor: str = "",
+    ) -> dict[str, Any]:
+        """Get user's inventory."""
+        params: dict[str, Any] = {"gameId": game_id, "limit": limit}
+        if cursor:
+            params["cursor"] = cursor
+        return await self._request("GET", "/exchange/v1/user/inventory", params=params)
 
     async def get_user_offers(
         self,

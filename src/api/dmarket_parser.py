@@ -1,14 +1,24 @@
 import json
 import re
+from typing import Any
 
 import structlog
+
+# v15.2: orjson is 5-10x faster than stdlib json for parsing
+try:
+    import orjson
+    def _loads(s: str | bytes) -> Any:
+        return orjson.loads(s)
+except ImportError:
+    def _loads(s: str | bytes) -> Any:
+        return json.loads(s)
+
 from pydantic import BaseModel, Field
 
 try:
     from pydantic import model_validator  # Pydantic v2
 except ImportError:
     from pydantic import root_validator as model_validator  # Pydantic v1 fallback
-from typing import Any
 
 try:
     import pandera as pa
@@ -67,7 +77,7 @@ def validate_batch_response(raw_json: str):
 
     # Python Fallback
     try:
-        data = json.loads(raw_json)
+        data = _loads(raw_json)
         objects = data.get("objects", [])
         return [ParsedSkinData(**item) for item in objects]
     except Exception as e:
@@ -89,7 +99,7 @@ def validate_dmarket_response(raw_json: str):
 
     # Fallback to Python implementation
     try:
-        data = json.loads(raw_json)
+        data = _loads(raw_json)
         # Using Pydantic for object level parsing
         parsed_data = ParsedSkinData(**data)
         return parsed_data
@@ -125,7 +135,7 @@ def parse_aggregated_prices(raw_json: str) -> list[dict[str, Any]]:
     # Python fallback
     result: list[dict[str, Any]] = []
     try:
-        data = json.loads(raw_json)
+        data = _loads(raw_json)
         entries = data.get("aggregatedPrices", [])
         for entry in entries:
             title = entry.get("title", "")

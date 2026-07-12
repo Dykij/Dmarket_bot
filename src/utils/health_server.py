@@ -30,6 +30,7 @@ Design:
 - Failure mode: if the aiohttp server fails to bind (port in use),
   the bot logs a warning and continues without it. Health is degraded
   but trading is not affected.
+- v15.2: Uses prometheus_client for proper metric types and formatting.
 """
 
 from __future__ import annotations
@@ -48,7 +49,34 @@ except ImportError:  # pragma: no cover
     # if a future refactor breaks that assumption.
     web = None  # type: ignore[assignment]
 
+# v15.2: prometheus_client for proper metric types
+try:
+    from prometheus_client import CONTENT_TYPE_LATEST, Counter, Gauge, generate_latest
+    HAS_PROMETHEUS = True
+except ImportError:
+    HAS_PROMETHEUS = False
+
 logger = logging.getLogger("HealthServer")
+
+
+# =====================================================================
+# Prometheus Metrics (v15.2)
+# =====================================================================
+
+if HAS_PROMETHEUS:
+    METRIC_UPTIME = Gauge("bot_uptime_seconds", "Seconds since bot process started")
+    METRIC_CYCLES = Counter("bot_cycle_count_total", "Total scan cycles completed")
+    METRIC_SECONDS_SINCE_CYCLE = Gauge("bot_seconds_since_last_cycle", "Seconds since last scan cycle")
+    METRIC_EQUITY = Gauge("bot_equity_usd", "Current equity in USD")
+    METRIC_EQUITY_PEAK = Gauge("bot_equity_peak_usd", "Peak equity in USD")
+    METRIC_DRAWDOWN = Gauge("bot_equity_drawdown_pct", "Current drawdown percentage")
+    METRIC_DAILY_PNL = Gauge("bot_daily_pnl_usd", "Realized PnL for current UTC day")
+    METRIC_DAILY_TRADES = Gauge("bot_daily_trade_count", "Trade count for current UTC day")
+    METRIC_SOFT_HALT = Gauge("bot_soft_halt_active", "1 if soft-halt is active")
+    METRIC_DAILY_HALT = Gauge("bot_daily_halt_active", "1 if daily halt is active")
+    METRIC_PUMP_BLACKLIST = Gauge("bot_pump_blacklist_size", "Active pump-blacklisted items")
+    METRIC_PUMP_DETECTIONS = Counter("bot_pump_total_detections_total", "Total pump detections")
+    METRIC_CS2CAP_QUOTA = Gauge("bot_cs2cap_quota_used_pct", "CS2Cap monthly quota used %")
 
 
 # =====================================================================
@@ -93,20 +121,41 @@ class HealthState:
         self._peak_equity_usd = peak_equity_usd
         self._drawdown_pct = drawdown_pct
 
+        # v15.2: Update prometheus metrics
+        if HAS_PROMETHEUS:
+            METRIC_CYCLES.inc()
+            METRIC_EQUITY.set(equity_usd)
+            METRIC_EQUITY_PEAK.set(peak_equity_usd)
+            METRIC_DRAWDOWN.set(drawdown_pct)
+
     def set_daily_stats(self, pnl_usd: float, trade_count: int) -> None:
         self._daily_pnl_usd = pnl_usd
         self._daily_trade_count = trade_count
+        # v15.2: Update prometheus metrics
+        if HAS_PROMETHEUS:
+            METRIC_DAILY_PNL.set(pnl_usd)
+            METRIC_DAILY_TRADES.set(trade_count)
 
     def set_halts(self, soft_halt: bool, daily_halt: bool) -> None:
         self._soft_halt_active = soft_halt
         self._daily_halt_active = daily_halt
+        # v15.2: Update prometheus metrics
+        if HAS_PROMETHEUS:
+            METRIC_SOFT_HALT.set(1 if soft_halt else 0)
+            METRIC_DAILY_HALT.set(1 if daily_halt else 0)
 
     def set_pump_stats(self, blacklist_size: int, total_detections: int) -> None:
         self._pump_blacklist_size = blacklist_size
         self._pump_total_detections = total_detections
+        # v15.2: Update prometheus metrics
+        if HAS_PROMETHEUS:
+            METRIC_PUMP_BLACKLIST.set(blacklist_size)
 
     def set_cs2cap_quota_pct(self, pct: float | None) -> None:
         self._cs2cap_quota_pct = pct
+        # v15.2: Update prometheus metrics
+        if HAS_PROMETHEUS and pct is not None:
+            METRIC_CS2CAP_QUOTA.set(pct)
 
     def set_circuit_breakers(self, dmarket_cb: dict[str, Any] | None = None,
                              cs2cap_cb: dict[str, Any] | None = None) -> None:
@@ -215,57 +264,27 @@ async def _handle_readyz(_request: web.Request) -> web.Response:
 
 
 async def _handle_metrics(_request: web.Request) -> web.Response:
-    """Prometheus text exposition format (best-effort)."""
+    """Prometheus metrics endpoint.
+    
+    v15.2: Uses prometheus_client.generate_latest() for proper formatting.
+    Falls back to manual text if prometheus_client is not installed.
+    """
+    # Update uptime metric
+    if HAS_PROMETHEUS:
+        METRIC_UPTIME.set(time.time() - health_state._boot_ts)
+        sc = time.time() - health_state._last_cycle_ts if health_state._last_cycle_ts > 0 else 0
+        METRIC_SECONDS_SINCE_CYCLE.set(sc)
+
+        return web.Response(
+            text=generate_latest().decode("utf-8"),
+            content_type=CONTENT_TYPE_LATEST,
+        )
+
+    # Fallback: manual text format (if prometheus_client not installed)
     snap = health_state.snapshot()
     lines: list[str] = []
-
-    # Process metrics
-    lines.append("# HELP bot_uptime_seconds Seconds since bot process started.")
-    lines.append("# TYPE bot_uptime_seconds gauge")
     lines.append(f"bot_uptime_seconds {snap['uptime_s']}")
-
-    lines.append("# HELP bot_cycle_count_total Total scan cycles completed.")
-    lines.append("# TYPE bot_cycle_count_total counter")
     lines.append(f"bot_cycle_count_total {snap['process']['cycle_count']}")
-
-    sc = snap["process"]["seconds_since_last_cycle"]
-    if sc is not None:
-        lines.append("# HELP bot_seconds_since_last_cycle Seconds since last scan cycle.")
-        lines.append("# TYPE bot_seconds_since_last_cycle gauge")
-        lines.append(f"bot_seconds_since_last_cycle {sc}")
-
-    # Equity metrics
-    lines.append("# HELP bot_equity_usd Current equity in USD.")
-    lines.append("# TYPE bot_equity_usd gauge")
-    lines.append(f"bot_equity_usd {snap['equity']['current_usd']}")
-    lines.append(f"bot_equity_peak_usd {snap['equity']['peak_usd']}")
-    lines.append(f"bot_equity_drawdown_pct {snap['equity']['drawdown_pct']}")
-
-    # Daily stats
-    lines.append("# HELP bot_daily_pnl_usd Realized PnL for current UTC day.")
-    lines.append("# TYPE bot_daily_pnl_usd gauge")
-    lines.append(f"bot_daily_pnl_usd {snap['daily']['pnl_usd']}")
-    lines.append(f"bot_daily_trade_count {snap['daily']['trade_count']}")
-
-    # Halts (1/0)
-    lines.append("# HELP bot_soft_halt_active 1 if soft-halt is active, else 0.")
-    lines.append("# TYPE bot_soft_halt_active gauge")
-    lines.append(f"bot_soft_halt_active {1 if snap['halts']['soft_halt_active'] else 0}")
-    lines.append(f"bot_daily_halt_active {1 if snap['halts']['daily_halt_active'] else 0}")
-
-    # Pump detector
-    lines.append("# HELP bot_pump_blacklist_size Active pump-blacklisted items.")
-    lines.append("# TYPE bot_pump_blacklist_size gauge")
-    lines.append(f"bot_pump_blacklist_size {snap['pump_detector']['active_blacklist_size']}")
-    lines.append(f"bot_pump_total_detections_total {snap['pump_detector']['total_detections']}")
-
-    # CS2Cap quota
-    quota = snap["cs2cap"]["monthly_quota_used_pct"]
-    if quota is not None:
-        lines.append("# HELP bot_cs2cap_quota_used_pct Percent of CS2Cap monthly quota used.")
-        lines.append("# TYPE bot_cs2cap_quota_used_pct gauge")
-        lines.append(f"bot_cs2cap_quota_used_pct {quota}")
-
     return web.Response(
         text="\n".join(lines) + "\n",
         content_type="text/plain; version=0.0.4",
@@ -282,6 +301,8 @@ def _check_auth(request: web.Request) -> bool:
     If HEALTH_PASSWORD is not set, auth is disabled (localhost-only mode).
     Returns True if auth passes or is disabled.
     """
+    import hmac
+
     expected_user = os.getenv("HEALTH_USERNAME", "")
     expected_pass = os.getenv("HEALTH_PASSWORD", "")
     if not expected_pass:
@@ -294,7 +315,8 @@ def _check_auth(request: web.Request) -> bool:
     try:
         decoded = base64.b64decode(auth_header[6:]).decode("utf-8")
         user, _, password = decoded.partition(":")
-        return user == expected_user and password == expected_pass
+        # v15.2: Timing-safe comparison to prevent side-channel attacks
+        return hmac.compare_digest(user, expected_user) and hmac.compare_digest(password, expected_pass)
     except Exception:
         return False
 

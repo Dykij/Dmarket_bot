@@ -30,6 +30,7 @@ redis>=7.0.0                       # Latest Redis client
 aiocache>=0.12.3                   # Async caching
 orjson>=3.11.0                     # Fast JSON (2-3x faster)
 aiosqlite>=0.21.0                  # Async SQLite driver
+cachetools>=5.5.0                  # TTL caches for sync code (v15.2)
 
 # Data Analysis & Visualization
 pandas>=2.3.0                      # Latest pandas

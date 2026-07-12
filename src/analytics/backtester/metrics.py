@@ -3,11 +3,15 @@ metrics.py — Pure functions for backtest performance metrics.
 
 These are stateless, module-level functions, so they can be unit-tested
 in isolation and reused outside the Backtester.
+
+v15.2: Uses numpy for vectorized math. Fixed Sharpe ratio annualization bug.
 """
 
 from __future__ import annotations
 
 from decimal import Decimal
+
+import numpy as np
 
 
 def calculate_max_drawdown(balance_history: list[Decimal]) -> Decimal:
@@ -18,21 +22,18 @@ def calculate_max_drawdown(balance_history: list[Decimal]) -> Decimal:
 
     Returns:
         Maximum drawdown as percentage
+    
+    v15.2: Uses numpy for vectorized peak tracking.
     """
     if len(balance_history) < 2:
         return Decimal(0)
 
-    peak = balance_history[0]
-    max_drawdown = Decimal(0)
+    arr = np.array([float(b) for b in balance_history], dtype=np.float64)
+    peak = np.maximum.accumulate(arr)
+    drawdown = np.where(peak > 0, (peak - arr) / peak, 0.0)
+    max_dd = float(np.max(drawdown))
 
-    for balance in balance_history[1:]:
-        if balance > peak:
-            peak = balance
-        else:
-            drawdown = (peak - balance) / peak if peak > 0 else Decimal(0)
-            max_drawdown = max(max_drawdown, drawdown)
-
-    return max_drawdown * 100
+    return Decimal(str(round(max_dd * 100, 2)))
 
 
 def calculate_sharpe_ratio(
@@ -46,31 +47,23 @@ def calculate_sharpe_ratio(
         risk_free_rate: Annual risk-free rate
 
     Returns:
-        Sharpe ratio
+        Sharpe ratio (annualized)
+    
+    v15.2: Uses numpy. Fixed annualization bug (sqrt(365) was canceling out).
     """
     if len(balance_history) < 2:
         return 0.0
 
-    # Calculate daily returns
-    returns: list[float] = []
-    for i in range(1, len(balance_history)):
-        if balance_history[i - 1] > 0:
-            daily_return = float(
-                (balance_history[i] - balance_history[i - 1])
-                / balance_history[i - 1]
-            )
-            returns.append(daily_return)
+    arr = np.array([float(b) for b in balance_history], dtype=np.float64)
+    # Daily returns
+    returns = np.diff(arr) / arr[:-1]
+    returns = returns[np.isfinite(returns)]
 
-    if not returns:
-        return 0.0
-
-    # Calculate mean and std dev
-    mean_return = sum(returns) / len(returns)
     if len(returns) < 2:
         return 0.0
 
-    variance = sum((r - mean_return) ** 2 for r in returns) / (len(returns) - 1)
-    std_dev = variance**0.5
+    mean_return = np.mean(returns)
+    std_dev = np.std(returns, ddof=1)
 
     if std_dev == 0:
         return 0.0
@@ -79,7 +72,8 @@ def calculate_sharpe_ratio(
     daily_rf = (1 + risk_free_rate) ** (1 / 365) - 1
     excess_return = mean_return - daily_rf
 
-    # Sharpe ratio (annualized)
-    sharpe = (excess_return * (365**0.5)) / (std_dev * (365**0.5))
+    # v15.2 FIX: Sharpe = (mean - rf) / std * sqrt(365)
+    # Previous code had (excess * sqrt(365)) / (std * sqrt(365)) which simplifies to excess/std
+    sharpe = excess_return / std_dev * (365 ** 0.5)
 
     return float(round(sharpe, 2))

@@ -5,13 +5,16 @@ collector.py — Orchestrator: cache + per-source fan-out + batch API.
 an in-memory TTL cache keyed by `game:title:days`. It also exposes a
 `collect_batch` helper that fans out across titles and a `clear_cache`
 + `get_cache_stats` pair for the admin tooling (Telegram, CLI).
+
+v15.2: Uses cachetools.TTLCache for O(1) eviction instead of manual dict.
 """
 
 from __future__ import annotations
 
 import logging
-from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING, Any
+
+from cachetools import TTLCache
 
 from .models import PriceHistory
 from .sources import collect_from_aggregated, collect_from_sales_history
@@ -44,8 +47,10 @@ class HistoricalDataCollector:
             cache_ttl_minutes: Cache TTL in minutes
         """
         self.api = api
-        self._cache: dict[str, tuple[datetime, PriceHistory]] = {}
-        self._cache_ttl = timedelta(minutes=cache_ttl_minutes)
+        # v15.2: cachetools.TTLCache — automatic TTL expiration, O(1) eviction
+        self._cache: TTLCache[str, PriceHistory] = TTLCache(
+            maxsize=1000, ttl=cache_ttl_minutes * 60
+        )
 
     async def collect_price_history(
         self,
@@ -67,12 +72,10 @@ class HistoricalDataCollector:
         """
         cache_key = f"{game}:{title}:{days}"
 
-        # Check cache
+        # v15.2: cachetools handles TTL automatically
         if use_cache and cache_key in self._cache:
-            cached_time, cached_data = self._cache[cache_key]
-            if datetime.now(UTC) - cached_time < self._cache_ttl:
-                logger.debug("cache_hit", extra={"key": cache_key})
-                return cached_data
+            logger.debug("cache_hit", extra={"key": cache_key})
+            return self._cache[cache_key]
 
         logger.info(
             "collecting_price_history",
@@ -107,8 +110,8 @@ class HistoricalDataCollector:
             points=points,
         )
 
-        # Update cache
-        self._cache[cache_key] = (datetime.now(UTC), history)
+        # v15.2: cachetools handles TTL automatically
+        self._cache[cache_key] = history
 
         logger.info(
             "price_history_collected",
@@ -161,16 +164,13 @@ class HistoricalDataCollector:
 
         Returns:
             Dictionary with cache stats
+        
+        v15.2: Simplified — cachetools handles TTL internally.
         """
-        now = datetime.now(UTC)
-        valid_count = sum(
-            1 for ts, _ in self._cache.values() if now - ts < self._cache_ttl
-        )
-
         return {
             "total_entries": len(self._cache),
-            "valid_entries": valid_count,
-            "ttl_minutes": self._cache_ttl.total_seconds() / 60,
+            "maxsize": self._cache.maxsize,
+            "ttl_seconds": self._cache.ttl,
         }
 
 

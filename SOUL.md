@@ -1,5 +1,5 @@
 # SOUL (System of Understanding Logic)
-## DMarket Target Sniper Core (v14.4)
+## DMarket Target Sniper Core (v15.2)
 
 ### Core Philosophy
 The DMarket bot operates on strictly defined mathematical workflows where data parsing, execution, and validation are segregated roles. This ensures fast execution and strict bounds on losses, preserving absolute capital integrity. It minimizes API latency and optimizes operations via quantitative algorithms rather than any heuristic LLM logic.
@@ -10,6 +10,7 @@ The DMarket bot operates on strictly defined mathematical workflows where data p
 *   **Fractional Kelly:** Half Kelly (50%) позиционирование — снижает просадку на ~50% при 85% роста.
 *   **Trend Guard:** Фильтрация нисходящих трендов через SQLite Price History.
 *   **Docker Production:** Multi-stage контейнеризация (x86_64 + ARM64) с health check и persistent volumes.
+*   **Performance Stack:** orjson (5-10x JSON), numpy (10-50x math), cachetools (O(1) TTL), composite indexes.
 
 ---
 

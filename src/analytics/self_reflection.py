@@ -10,6 +10,8 @@ Analyzes recent trades to:
   2. Detect which strategy parameters lead to wins/losses
   3. Auto-adjust MIN_SPREAD_PCT, MAX_POSITION_RISK_PCT, VOLATILITY thresholds
   4. Track PnL attribution (what worked, what didn't)
+
+v15.2: Uses numpy for vectorized Sharpe/Sortino/drawdown computation.
 """
 
 import logging
@@ -17,6 +19,8 @@ import math
 import time
 from dataclasses import dataclass, field
 from typing import Any
+
+import numpy as np
 
 from src.config import Config
 from src.db.price_history import price_db
@@ -180,35 +184,33 @@ class SelfReflectionEngine:
             result.confidence = len(trades) / Config.MIN_TRADES_FOR_ADJUSTMENT
             return result
 
+        # v15.2: Vectorized computation with numpy
+        ret_arr = np.array(returns, dtype=np.float64)
+
         # --- Sharpe Ratio ---
-        mean_ret = sum(returns) / len(returns)
-        variance = sum((r - mean_ret) ** 2 for r in returns) / (len(returns) - 1)
-        std_dev = math.sqrt(variance) if variance > 0 else 1e-10
+        mean_ret = np.mean(ret_arr)
+        std_dev = np.std(ret_arr, ddof=1)
+        if std_dev < 1e-10:
+            std_dev = 1e-10
 
         # Annualize (assume ~1 trade/day for conservative estimate)
-        result.sharpe_ratio = (mean_ret / std_dev) * math.sqrt(252) if std_dev > 0 else 0.0
+        result.sharpe_ratio = float((mean_ret / std_dev) * math.sqrt(252))
 
         # --- Sortino Ratio (only downside deviation) ---
-        downside_returns = [r for r in returns if r < 0]
-        if downside_returns:
-            downside_var = sum(r ** 2 for r in downside_returns) / len(downside_returns)
-            downside_std = math.sqrt(downside_var)
-            result.sortino_ratio = (mean_ret / downside_std) * math.sqrt(252) if downside_std > 0 else 0.0
+        downside_returns = ret_arr[ret_arr < 0]
+        if len(downside_returns) > 0:
+            downside_std = np.std(downside_returns, ddof=1)
+            if downside_std < 1e-10:
+                downside_std = 1e-10
+            result.sortino_ratio = float((mean_ret / downside_std) * math.sqrt(252))
         else:
             result.sortino_ratio = float('inf') if mean_ret > 0 else 0.0
 
-        # --- Max Drawdown ---
-        cumulative = 0.0
-        peak = 0.0
-        max_dd = 0.0
-        for r in returns:
-            cumulative += r
-            if cumulative > peak:
-                peak = cumulative
-            dd = peak - cumulative
-            if dd > max_dd:
-                max_dd = dd
-        result.max_drawdown = max_dd
+        # --- Max Drawdown (vectorized) ---
+        cumulative = np.cumsum(ret_arr)
+        peak = np.maximum.accumulate(cumulative)
+        drawdown = peak - cumulative
+        result.max_drawdown = float(np.max(drawdown))
 
         # --- Parameter Recommendations ---
         # Based on arXiv: Profit-Guided Loss Functions
