@@ -5,7 +5,7 @@ the operation up to N times with a growing delay.
 
 Why:
 The bot has two long-lived SQLite connections (state + history DBs).
-Concurrent writes from background tasks (CS2CapCache refresh,
+Concurrent writes from background tasks (oracle cache refresh,
 briefing scheduler) and the hot-path sniping loop can hit
 "database is locked" (SQLite returns SQLITE_BUSY / SQLITE_LOCKED).
 The current code uses `with self.state_conn:` which is a transaction

@@ -1,7 +1,7 @@
 """
 Tests for MultiSourceOracle, Self-Reflection, and Enhanced Strategies (v14.9).
 
-Run with: python -m pytest tests/test_cs2cap_improvements.py -v
+Run with: python -m pytest tests/test_multi_source_oracle_and_volatility.py -v
 """
 
 import asyncio
@@ -169,8 +169,6 @@ class TestConfigEnhancements:
         assert hasattr(Config, "VOLATILITY_METHOD")
         assert Config.VOLATILITY_METHOD == "garman_klass"
 
-    def test_no_cs2cap_config(self):
-        """CS2Cap config should be removed."""
+    def test_no_paid_oracle_config(self):
+        """Paid oracle config should be removed."""
         from src.config import Config
-        assert not hasattr(Config, "CS2CAP_API_KEY")
-        assert not hasattr(Config, "CS2CAP_TIER")

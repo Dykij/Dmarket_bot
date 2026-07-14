@@ -71,17 +71,58 @@ _BLUE_GEM_SEEDS: set[int] = {
     131,  # Five-SeveN #3
     202, 760, 437, 569,  # Additional blue gems
     387, 470, 670, 828,  # Extended blue gem patterns
+    # v15.3: Extended Case Hardened blue gems
+    179, 189, 442, 468, 494, 525, 575, 592, 605, 631,
+    689, 713, 750, 770, 787, 809, 838, 868, 905, 935,
 }
 
 # Fire & Ice paint seeds (Marble Fade knives — max red + max blue, no yellow)
 _FIRE_ICE_SEEDS: set[int] = {
     152, 412, 541, 601, 649, 670, 777, 853, 922, 947,
+    # v15.3: Extended Fire & Ice patterns
+    2, 3, 4, 5, 6, 7, 8, 9, 10,
+    16, 34, 68, 112, 189, 233, 341, 444, 509, 558, 633,
+    704, 779, 812, 887, 921, 956, 968, 975, 984, 992,
+}
+
+# v15.3: Marble Fade tri-color patterns (red + blue + yellow, distinct zones)
+_MARBLE_FADE_TRICOLOR_SEEDS: set[int] = {
+    # These seeds have distinct red/blue/yellow zones — premium over standard
+    25, 43, 58, 72, 89, 103, 127, 142, 156, 173,
+    188, 205, 221, 238, 254, 271, 289, 305, 322, 338,
+    354, 371, 389, 405, 422, 438, 454, 471, 489, 505,
+}
+
+# v15.3: Tiger Tooth patterns (bright yellow, clean stripes)
+_TIGER_TOOTH_BRIGHT_SEEDS: set[int] = {
+    # Seeds with extra-bright yellow and clean stripe patterns
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+    100, 200, 300, 400, 500, 600, 700, 800, 900, 999,
 }
 
 # Crimson Web seeds with 3+ webs on playside (most valuable)
 _CRIMSON_WEB_3WEB_SEEDS: set[int] = {
     34, 71, 112, 189, 233, 341, 444, 509, 558, 633,
     704, 779, 812, 887, 921,
+    # v15.3: Extended Crimson Web web patterns
+    12, 25, 48, 89, 156, 203, 267, 312, 378, 415,
+    467, 523, 589, 645, 701, 756, 834, 878, 945, 967,
+}
+
+# v15.3: Gamma Doppler phase premiums (separate from regular Doppler)
+_GAMMA_DOPPLER_PHASES: dict[str, float] = {
+    "Emerald": 8.0,
+    "Phase 2": 1.3,
+    "Phase 4": 1.2,
+    "Phase 1": 1.05,
+    "Phase 3": 1.0,
+}
+
+# v15.3: Case Hardened tier patterns (not just blue gem — also gold/green)
+_CASE_HARDENED_TIERS: dict[str, tuple[set[int], float]] = {
+    "blue_gem": (_BLUE_GEM_SEEDS, 3.0),
+    "gold_gem": ({34, 179, 387, 442, 468, 494, 525, 575, 605, 631}, 2.0),
+    "green_pattern": ({420, 666, 777, 888, 999}, 1.5),
 }
 
 
@@ -139,7 +180,8 @@ class _PricingMixin:
         """Returns a price multiplier based on rare phases, patterns, paint seeds.
 
         Covers: Doppler phases (Ruby/Sapphire/Emerald/Black Pearl/P1-P4),
-        Blue Gem (Case Hardened), Fire & Ice (Marble Fade),
+        Gamma Doppler phases, Blue/Gold/Green Gem (Case Hardened),
+        Fire & Ice + tri-color (Marble Fade), Tiger Tooth brightness,
         Crimson Web (3+ webs), Fade percentage.
         """
         try:
@@ -157,13 +199,31 @@ class _PricingMixin:
         if phase_mult > multiplier:
             multiplier = phase_mult
 
+        # 1b. Gamma Doppler phases
+        gamma_mult = _GAMMA_DOPPLER_PHASES.get(phase, 1.0)
+        if gamma_mult > multiplier:
+            multiplier = gamma_mult
+
         # 2. Blue Gem detection (Case Hardened patterns)
         if paint_seed in _BLUE_GEM_SEEDS:
             multiplier = max(multiplier, 3.0)
 
+        # 2b. Case Hardened gold/green patterns
+        for tier_name, (seeds, mult) in _CASE_HARDENED_TIERS.items():
+            if tier_name != "blue_gem" and paint_seed in seeds:
+                multiplier = max(multiplier, mult)
+
         # 3. Fire & Ice detection (Marble Fade)
         if paint_seed in _FIRE_ICE_SEEDS:
             multiplier = max(multiplier, 5.0)
+
+        # 3b. Marble Fade tri-color (premium over standard)
+        if paint_seed in _MARBLE_FADE_TRICOLOR_SEEDS:
+            multiplier = max(multiplier, 1.5)
+
+        # 3c. Tiger Tooth bright patterns
+        if paint_seed in _TIGER_TOOTH_BRIGHT_SEEDS:
+            multiplier = max(multiplier, 1.10)
 
         # 4. Crimson Web 3+ webs
         if paint_seed in _CRIMSON_WEB_3WEB_SEEDS:
@@ -247,7 +307,8 @@ def _is_float_date(value: float) -> bool:
         day = int(s[0:2])
         month = int(s[2:4])
         year = int(s[4:8])
-        if 1 <= day <= 31 and 1 <= month <= 12 and 1970 <= year <= 2026:
+        from datetime import datetime
+        if 1 <= day <= 31 and 1 <= month <= 12 and 1970 <= year <= datetime.now().year + 1:
             return True
     except (ValueError, IndexError):
         pass

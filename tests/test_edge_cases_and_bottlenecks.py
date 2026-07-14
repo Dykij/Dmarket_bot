@@ -3,9 +3,7 @@
 Covers:
   1. Microstructure function edge cases (zero, negative, empty inputs)
   2. Validator boundary conditions
-  3. CS2Cap model invariants
-  4. Rate limit / quota simulation
-  5. Database stress pattern (rapid writes)
+  3. Database stress pattern (rapid writes)
 """
 
 from __future__ import annotations
@@ -27,12 +25,6 @@ from src.analysis.microstructure import (
     simple_obi,
     smart_reprice_signal,
     stoikov_micro_price,
-)
-from src.api.cs2cap_oracle import (
-    BATCH_MAX_ITEMS,
-    BidsSnapshot,
-    CrossMarketData,
-    PriceSnapshot,
 )
 from src.risk.price_validator import (
     PriceValidationError,
@@ -433,272 +425,7 @@ class TestValidateVolatilityEdge:
 
 
 # ══════════════════════════════════════════════════════════════════════
-# 3. CS2CAP MODEL INVARIANTS
-# ══════════════════════════════════════════════════════════════════════
-
-
-class TestBidsSnapshotHasData:
-    """Edge cases for BidsSnapshot.has_data."""
-
-    def test_max_bid_zero_returns_false(self):
-        snap = BidsSnapshot(hash_name="test_item", max_bid=0.0)
-        assert snap.has_data is False
-
-    def test_max_bid_positive_returns_true(self):
-        snap = BidsSnapshot(hash_name="test_item", max_bid=5.0)
-        assert snap.has_data is True
-
-    def test_max_bid_negative_returns_false(self):
-        snap = BidsSnapshot(hash_name="test_item", max_bid=-1.0)
-        assert snap.has_data is False
-
-    def test_default_has_data_false(self):
-        snap = BidsSnapshot(hash_name="default_item")
-        assert snap.has_data is False
-
-
-class TestPriceSnapshotLiquidityScore:
-    """Tests for PriceSnapshot.liquidity_score calculation."""
-
-    def test_zero_quantity_zero_score(self):
-        snap = PriceSnapshot(hash_name="item", total_quantity=0)
-        assert snap.liquidity_score == 0.0
-
-    def test_half_capacity_score(self):
-        snap = PriceSnapshot(hash_name="item", total_quantity=50)
-        assert snap.liquidity_score == 0.5
-
-    def test_capacity_score(self):
-        snap = PriceSnapshot(hash_name="item", total_quantity=100)
-        assert snap.liquidity_score == 1.0
-
-    def test_above_capacity_capped_at_one(self):
-        snap = PriceSnapshot(hash_name="item", total_quantity=500)
-        assert snap.liquidity_score == 1.0
-
-    def test_has_data_when_min_price_zero(self):
-        snap = PriceSnapshot(hash_name="item", min_price=0.0)
-        assert snap.has_data is False
-
-    def test_has_data_when_min_price_positive(self):
-        snap = PriceSnapshot(hash_name="item", min_price=0.01)
-        assert snap.has_data is True
-
-    def test_provider_quantities_contribute_to_total(self):
-        snap = PriceSnapshot(
-            hash_name="item",
-            provider_quantities={"buff163": 10, "skinport": 7},
-        )
-        assert snap.total_quantity == 0  # not auto-summed
-        assert isinstance(snap.liquidity_score, float)
-
-
-class TestCrossMarketDataPostInit:
-    """Tests for CrossMarketData.__post_init__ auto-population."""
-
-    def test_global_min_ask_populated_from_provider_prices(self):
-        data = CrossMarketData(
-            hash_name="AK-47 | Redline",
-            provider_prices={"buff163": 15.0, "skinport": 12.0, "csfloat": 18.0},
-        )
-        assert data.global_min_ask == 12.0
-
-    def test_global_max_bid_populated_from_buy_orders(self):
-        data = CrossMarketData(
-            hash_name="AK-47 | Redline",
-            buy_orders={"buff163": 10.0, "csfloat": 11.5, "skinport": 9.0},
-        )
-        assert data.global_max_bid == 11.5
-
-    def test_both_populated_simultaneously(self):
-        data = CrossMarketData(
-            hash_name="AK-47 | Redline",
-            provider_prices={"buff163": 15.0, "csfloat": 14.0},
-            buy_orders={"buff163": 10.0, "csfloat": 11.0},
-        )
-        assert data.global_min_ask == 14.0
-        assert data.global_max_bid == 11.0
-
-    def test_explicit_values_not_overwritten(self):
-        data = CrossMarketData(
-            hash_name="AK-47 | Redline",
-            global_min_ask=20.0,
-            global_max_bid=5.0,
-            provider_prices={"buff163": 15.0},
-            buy_orders={"buff163": 10.0},
-        )
-        assert data.global_min_ask == 20.0
-        assert data.global_max_bid == 5.0
-
-    def test_empty_provider_prices_min_ask_zero(self):
-        data = CrossMarketData(
-            hash_name="AK-47 | Redline",
-            provider_prices={},
-        )
-        assert data.global_min_ask == 0.0
-
-    def test_empty_buy_orders_max_bid_zero(self):
-        data = CrossMarketData(
-            hash_name="AK-47 | Redline",
-            buy_orders={},
-        )
-        assert data.global_max_bid == 0.0
-
-    def test_defaults_unchanged_with_no_data(self):
-        data = CrossMarketData(hash_name="test")
-        assert data.global_min_ask == 0.0
-        assert data.global_max_bid == 0.0
-        assert data.sales_count == 0
-        assert data.avg_sale_price == 0.0
-        assert data.liquidity_score == 0.0
-
-
-class TestBatchMaxItems:
-    """Verify BATCH_MAX_ITEMS constant."""
-
-    def test_batch_max_items_is_100(self):
-        assert BATCH_MAX_ITEMS == 100
-
-    def test_batch_max_items_is_integer(self):
-        assert isinstance(BATCH_MAX_ITEMS, int)
-
-    def test_batch_max_items_positive(self):
-        assert BATCH_MAX_ITEMS > 0
-
-
-# ══════════════════════════════════════════════════════════════════════
-# 4. RATE LIMIT / QUOTA SIMULATION
-# ══════════════════════════════════════════════════════════════════════
-
-
-class TestQuotaSimulation:
-    """Simulate CS2Cap quota states without external API calls."""
-
-    QUOTA_LIMIT = 50000  # Starter tier
-
-    def _simulate_quota_usage(self, used: int) -> float:
-        """Return usage percentage for given used count."""
-        return used / self.QUOTA_LIMIT
-
-    def test_80_percent_usage_is_40000(self):
-        pct = self._simulate_quota_usage(40000)
-        assert pct == pytest.approx(0.80)
-
-    def test_95_percent_usage_is_47500(self):
-        pct = self._simulate_quota_usage(47500)
-        assert pct == pytest.approx(0.95)
-
-    def test_100_percent_usage_is_50000(self):
-        pct = self._simulate_quota_usage(50000)
-        assert pct == pytest.approx(1.00)
-
-    def test_over_quota_usage(self):
-        pct = self._simulate_quota_usage(55000)
-        assert pct > 1.0
-
-    def test_zero_usage(self):
-        pct = self._simulate_quota_usage(0)
-        assert pct == 0.0
-
-
-class TestAdaptiveDelayLogic:
-    """Simulate the adaptive delay logic from CS2CapOracle._throttle."""
-
-    def _compute_adaptive_delay(self, rate_remaining: int | None, current_delay: float) -> float:
-        """Reproduce the throttle logic from CS2CapOracle._throttle."""
-        if rate_remaining is not None:
-            if rate_remaining < 5:
-                return max(current_delay, 5.0)
-            elif rate_remaining < 10:
-                return max(current_delay, 2.0)
-        return current_delay
-
-    def test_no_header_no_change(self):
-        assert self._compute_adaptive_delay(None, 1.0) == 1.0
-
-    def test_remaining_below_5_boosts_to_5(self):
-        assert self._compute_adaptive_delay(3, 1.0) == 5.0
-        assert self._compute_adaptive_delay(0, 1.0) == 5.0
-        assert self._compute_adaptive_delay(4, 2.0) == 5.0
-
-    def test_remaining_below_5_preserves_higher_delay(self):
-        assert self._compute_adaptive_delay(2, 7.0) == 7.0
-
-    def test_remaining_below_10_boosts_to_2(self):
-        assert self._compute_adaptive_delay(6, 1.0) == 2.0
-        assert self._compute_adaptive_delay(8, 1.5) == 2.0
-
-    def test_remaining_below_10_preserves_higher_delay(self):
-        assert self._compute_adaptive_delay(7, 3.0) == 3.0
-
-    def test_remaining_10_or_above_no_change(self):
-        assert self._compute_adaptive_delay(10, 1.0) == 1.0
-        assert self._compute_adaptive_delay(50, 1.0) == 1.0
-
-    def test_delay_decay_on_success(self):
-        """After a successful request, delay decays: max(delay * 0.98, 1.0)."""
-        delay = 5.0
-        for _ in range(3):
-            delay = max(delay * 0.98, 1.0)
-        assert delay < 5.0
-        assert delay >= 1.0
-
-    def test_delay_never_below_one(self):
-        delay = 1.001
-        delay = max(delay * 0.98, 1.0)
-        assert delay >= 1.0
-
-    def test_429_backoff_doubles_capped_at_30(self):
-        delay = 1.0
-        delay = min(delay * 2.0, 30.0)
-        assert delay == 2.0
-
-        delay = min(delay * 2.0, 30.0)
-        assert delay == 4.0
-
-        delay = min(delay * 2.0, 30.0)
-        assert delay == 8.0
-
-        # Jump to edge
-        delay = min(16.0 * 2.0, 30.0)
-        assert delay == 30.0
-
-        delay = min(30.0 * 2.0, 30.0)
-        assert delay == 30.0
-
-
-class TestQuotaMonthlyTracking:
-    """Simulate monthly quota tracking logic."""
-    LIMIT = 50000
-
-    def _check_quota_warnings(self, used: int) -> list[str]:
-        """Simulate warning messages emitted at different thresholds."""
-        warnings = []
-        if used >= 40000:
-            warnings.append(f"Monthly usage: {used}/50000 (80%)")
-        if used >= 45000:
-            warnings.append(f"Monthly usage: {used}/50000 (90%)")
-        if used >= 50000:
-            warnings.append("Quota exhausted")
-        return warnings
-
-    def test_no_warning_below_80_percent(self):
-        assert len(self._check_quota_warnings(30000)) == 0
-
-    def test_warning_at_80_percent(self):
-        assert len(self._check_quota_warnings(40000)) == 1
-
-    def test_both_warnings_at_90_percent(self):
-        assert len(self._check_quota_warnings(45000)) == 2
-
-    def test_exhaustion_at_100_percent(self):
-        warnings = self._check_quota_warnings(50000)
-        assert len(warnings) == 3
-        assert "Quota exhausted" in warnings[-1]
-
-
-# ══════════════════════════════════════════════════════════════════════
-# 5. DATABASE STRESS PATTERN
+# 3. DATABASE STRESS PATTERN
 # ══════════════════════════════════════════════════════════════════════
 
 
@@ -721,7 +448,7 @@ class TestDatabaseStressPattern:
                 id          INTEGER PRIMARY KEY AUTOINCREMENT,
                 hash_name   TEXT    NOT NULL,
                 price       REAL    NOT NULL,
-                source      TEXT    NOT NULL DEFAULT 'cs2cap',
+                source      TEXT    NOT NULL DEFAULT 'oracle',
                 recorded_at REAL    NOT NULL
             )
             """
@@ -752,7 +479,7 @@ class TestDatabaseStressPattern:
                     conn,
                     hash_name=f"item_{i % 10}",
                     price=10.0 + i * 0.01,
-                    source="cs2cap",
+                    source="oracle",
                 )
 
         elapsed = time.perf_counter() - start
@@ -764,7 +491,7 @@ class TestDatabaseStressPattern:
         conn = in_memory_db
         with conn:
             for i in range(50):
-                self._write_record(conn, "test_item", float(i), "cs2cap")
+                self._write_record(conn, "test_item", float(i), "oracle")
 
         rows = conn.execute(
             "SELECT COUNT(*) as cnt FROM price_history WHERE hash_name = ?",
@@ -778,7 +505,7 @@ class TestDatabaseStressPattern:
 
         conn.execute("BEGIN")
         for i in range(self.RECORDS):
-            self._write_record(conn, f"batched_{i % 5}", 5.0 + i * 0.1, "cs2cap")
+            self._write_record(conn, f"batched_{i % 5}", 5.0 + i * 0.1, "oracle")
         conn.commit()
 
         elapsed = time.perf_counter() - start
@@ -791,13 +518,13 @@ class TestDatabaseStressPattern:
         # First batch to populate index
         with conn:
             for i in range(self.RECORDS):
-                self._write_record(conn, f"idx_test_{i}", float(i), "cs2cap")
+                self._write_record(conn, f"idx_test_{i}", float(i), "oracle")
 
         # Second batch — index should not cause quadratic slowdown
         start = time.perf_counter()
         with conn:
             for i in range(self.RECORDS):
-                self._write_record(conn, f"idx_test_{i}", float(i + self.RECORDS), "cs2cap")
+                self._write_record(conn, f"idx_test_{i}", float(i + self.RECORDS), "oracle")
         elapsed = time.perf_counter() - start
 
         # With index, 100 more writes should still be fast

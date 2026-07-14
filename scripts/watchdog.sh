@@ -28,13 +28,15 @@ PID_FILE="/tmp/dmarket_bot.pid"
 HB_FILE="${PROJECT_ROOT}/data/watchdog_heartbeat.txt"
 STATE_FILE="${PROJECT_ROOT}/data/watchdog_state.json"
 LOG_FILE="${PROJECT_ROOT}/logs/watchdog.log"
+ARCHIVE_DIR="${PROJECT_ROOT}/logs/archive"
 HEARTBEAT_TIMEOUT_S=300   # 5 min without heartbeat = hung
 RESTART_BACKOFF_S=30      # min wait between restarts
 MAX_RESTARTS_PER_HOUR=10
 SINGLE_CHECK=false
 RESET_STATE=false
+LAST_ARCHIVE_RUN=0
 
-mkdir -p "${PROJECT_ROOT}/logs" "${PROJECT_ROOT}/data"
+mkdir -p "${PROJECT_ROOT}/logs" "${PROJECT_ROOT}/data" "${ARCHIVE_DIR}"
 
 if [[ "${1:-}" == "--once" ]]; then
     SINGLE_CHECK=true
@@ -58,6 +60,35 @@ send_telegram() {
         -d "chat_id=${chat}" \
         -d "text=${msg}" \
         "https://api.telegram.org/bot${token}/sendMessage" >/dev/null 2>&1 || true
+}
+
+archive_logs() {
+    # Compress rotated logs older than 1 day, remove archives older than 30 days
+    local today
+    today=$(date +%Y-%m-%d)
+
+    # Compress rotated bot logs (bot_24_7.log.1, .log.2, etc.)
+    find "${PROJECT_ROOT}/logs" -maxdepth 1 -name "bot_24_7.log.*" -type f -mtime +1 2>/dev/null | while read -r logfile; do
+        local base
+        base=$(basename "${logfile}")
+        local archive_name="${ARCHIVE_DIR}/${base}.${today}.gz"
+        if [ ! -f "${archive_name}" ]; then
+            gzip -c "${logfile}" > "${archive_name}" 2>/dev/null && rm -f "${logfile}"
+        fi
+    done
+
+    # Compress old dry_run logs
+    find "${PROJECT_ROOT}/logs" -maxdepth 1 -name "dry_run_*.log" -type f -mtime +1 2>/dev/null | while read -r logfile; do
+        local base
+        base=$(basename "${logfile}")
+        local archive_name="${ARCHIVE_DIR}/${base}.${today}.gz"
+        if [ ! -f "${archive_name}" ]; then
+            gzip -c "${logfile}" > "${archive_name}" 2>/dev/null && rm -f "${logfile}"
+        fi
+    done
+
+    # Remove archives older than 30 days
+    find "${ARCHIVE_DIR}" -name "*.gz" -type f -mtime +30 -delete 2>/dev/null || true
 }
 
 is_bot_alive() {
@@ -133,7 +164,7 @@ start_bot() {
     setsid bash -c '
         DRY_RUN="${DRY_RUN:-true}" \
         USE_V12_LOOP=true \
-        exec python -m src.__main__ > /tmp/bot_dryrun/bot.log 2>&1 &
+        exec python -m src.__main__ >> '"${PROJECT_ROOT}"'/logs/bot_24_7.log 2>&1 &
         echo $! > /tmp/dmarket_bot.pid
     '
     sleep 3
@@ -245,5 +276,13 @@ while true; do
     fi
     check_once
     RECORD_RESTART || true
+
+    # Run log archiving every 6 hours (21600s)
+    now=$(date +%s)
+    if (( now - LAST_ARCHIVE_RUN >= 21600 )); then
+        archive_logs
+        LAST_ARCHIVE_RUN=${now}
+    fi
+
     sleep 60
 done

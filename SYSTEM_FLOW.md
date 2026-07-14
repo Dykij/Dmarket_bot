@@ -11,7 +11,7 @@ graph TD
     A[Start Cycle] --> B[Aggregated Prices batch 100]
     B --> C[Rank: spread × sqrt bid+ask count]
     C --> D[Top-20: honest listings + DOM cache]
-    D --> E[Bulk fee 4 tiers + CS2Cap cache]
+    D --> E[Bulk fee 4 tiers + oracle cache]
     E --> F{Balance Gate}
     F -- balance OK --> G{Dual-Signal Pipeline}
     G -- VALUE signal --> H[Kelly position sizing]
@@ -30,12 +30,12 @@ graph TD
 
 ```
 VALUE SIGNAL (primary):
-  rarity_mult × cs2cap_ask > ask × (1 + FEE_RATE + WITHDRAWAL_FEE + MIN_MARGIN)
+  rarity_mult × oracle_ask > ask × (1 + FEE_RATE + WITHDRAWAL_FEE + MIN_MARGIN)
   → Float premium (1.08-1.30×)
   → Pattern/phase premium (1.0-5.0×)
   → Sticker combo (+50-100%)
   → Filler demand (1.15×)
-  → est_sell = cs2cap_ask × rarity_mult
+  → est_sell = oracle_ask × rarity_mult
   → BUY if est_sell > ask × cost
 
 SPREAD SIGNAL (fallback):
@@ -92,7 +92,7 @@ Fractional Half Kelly: `KELLY_FRACTION=0.50`. Снижает просадку н
 - **Transport**: `aiohttp` (Asynchronous HTTP).
 - **Security**: Ed25519 NACL signatures with Rust (fast) or pynacl (fallback).
 - **Speed**: Пакетная обработка (`Batching`) до 100 таргетов в одном запросе.
-- **Quota**: CS2Cap Starter tier (50K req/mo) с in-memory cache (5 min TTL).
+- **Quota**: Free oracles with in-memory cache (5 min TTL).
 
 ---
 

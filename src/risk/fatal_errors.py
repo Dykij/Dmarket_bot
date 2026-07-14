@@ -33,7 +33,7 @@ class ConfigError(FatalError):
 
 
 class AuthError(FatalError):
-    """DMarket / CS2Cap / Telegram returned 401/403 — key invalid."""
+    """DMarket / Oracle / Telegram returned 401/403 — key invalid."""
 
 
 class DatabaseCorruption(FatalError):
@@ -53,7 +53,7 @@ class CircuitBreakerOpen(FatalError):
 
 
 class QuotaExhausted(FatalError):
-    """API quota exhausted (CS2Cap monthly limit, DMarket secret limit)."""
+    """API quota exhausted (oracle monthly limit, DMarket secret limit)."""
 
 
 # Transient: bot may safely retry without user intervention.
@@ -87,13 +87,8 @@ except ImportError:
 # Unified exception hierarchy (v14.9)
 try:
     from src.utils.exceptions import (
-        APIError,
         AuthenticationError,
-        BotError,
-        DrawdownFreeze,
-        PumpDetected,
         RateLimitExceeded,
-        RiskError,
     )
     from src.utils.exceptions import (
         CircuitBreakerOpen as UnifiedCircuitBreakerOpen,

@@ -148,7 +148,16 @@ def mock_dmarket_api():
 def mock_blacklist():
     """Create mock blacklist filter."""
     blacklist = MagicMock()
-    blacklist.is_blacklisted = MagicMock(return_value=False)
+    _blocked = {"katowice 2014", "sticker"}
+
+    def _is_blacklisted(item):
+        if isinstance(item, dict):
+            title = item.get("title", item.get("item", {}).get("title", ""))
+        else:
+            title = str(item)
+        return any(b in title.lower() for b in _blocked)
+
+    blacklist.is_blacklisted = MagicMock(side_effect=_is_blacklisted)
     return blacklist
 
 
@@ -284,7 +293,7 @@ class TestCompleteTradingCycle:
         from src.dmarket.blacklist_filters import ItemBlacklistFilter
 
         # Setup blacklist with sticker items blocked
-        blacklist = ItemBlacklistFilter()
+        blacklist = ItemBlacklistFilter(blacklist=["katowice 2014", "sticker"])
 
         # Mock market with a blacklisted item
         mock_dmarket_api.get_market_items = AsyncMock(

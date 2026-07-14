@@ -31,6 +31,9 @@ _ROOT = Path(__file__).resolve().parent.parent.parent
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
+from src.config import reset_config  # noqa: E402
+reset_config()  # Ensure clean config state
+
 from src.risk.fatal_errors import (  # noqa: E402
     AuthError,
     ConfigError,

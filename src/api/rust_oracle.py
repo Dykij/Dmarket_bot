@@ -28,7 +28,9 @@ class RustOracle:
         async with self._lock:
             if self._session is not None and not self._session.closed:
                 return self._session
-            self._session = aiohttp.ClientSession()
+            self._session = aiohttp.ClientSession(
+                timeout=aiohttp.ClientTimeout(total=15, connect=5)
+            )
             return self._session
 
     async def _throttle(self):

@@ -1,7 +1,7 @@
 """DMarket-internal underpriced detection helpers.
 
 v14.8.1: Detect DMarket listings that are cheap relative to recent DMarket
-sales history, even when no external marketplace (CS2Cap) edge exists.
+sales history, even when no external marketplace (oracle) edge exists.
 """
 
 from __future__ import annotations
@@ -50,7 +50,7 @@ async def is_dmarket_underpriced(
 
     prices: list[float] = []
 
-    # 1. Local price history (CS2Cap / DMarket prices recorded by the bot).
+    # 1. Local price history (oracle / DMarket prices recorded by the bot).
     try:
         from src.db.price_history import price_db
         history = price_db.get_recent_prices(title, days=Config.DM_UNDERPRICED_SALES_DAYS)

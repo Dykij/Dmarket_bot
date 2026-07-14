@@ -30,10 +30,6 @@ from .callbacks import (
 
 # --- Commands & FSM ---
 from .commands import (
-    BTN_PANIC,
-    BTN_START,
-    BTN_STOP,
-    BTN_TEST,
     TestItemFSM,
     cmd_analyze,
     cmd_balance,
@@ -138,7 +134,7 @@ __all__ = [
     # State
     "BotState", "_ADMIN_IDS", "_TOKEN", "_load_config", "is_admin", "state",
     # Resilience
-    "dmarket_client", "retry_async", "safe_call",
+    "dmarket_client", "fetch_balance_data", "retry_async", "safe_call",
     # Keyboards (constants — 16 reply buttons + 11 inline callbacks)
     "BTN_ANALYZE", "BTN_BALANCE", "BTN_CLOCK", "BTN_DAILY",
     "BTN_INVENTORY", "BTN_PANIC", "BTN_PORTFOLIO", "BTN_PRICES",
@@ -158,7 +154,7 @@ __all__ = [
     "cmd_analyze", "cmd_balance", "cmd_cancel", "cmd_clock", "cmd_daily",
     "cmd_help", "cmd_inventory", "cmd_panic", "cmd_portfolio", "cmd_prices",
     "cmd_profits", "cmd_refresh", "cmd_sell_top", "cmd_settings", "cmd_start",
-    "cmd_start_bot", "cmd_status", "cmd_stop_bot", "cmd_test", "cmd_test_receive",
+    "cmd_start_bot", "cmd_status", "cmd_stop_bot", "cmd_test", "cmd_test_btn", "cmd_test_receive",
     # Callbacks
     "cb_analyze", "cb_balance", "cb_daily", "cb_inventory", "cb_noop",
     "cb_portfolio", "cb_profits", "cb_refresh_status", "cb_sell_top",

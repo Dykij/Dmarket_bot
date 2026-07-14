@@ -16,7 +16,7 @@ Coverage:
 - Multiple simultaneous blacklists
 - Idempotency: repeated check_price() for same item does not double-count
 
-No external API. No real Telegram calls. No real CS2Cap. ~1s total runtime.
+No external API. No real Telegram calls. No real Oracle. ~1s total runtime.
 """
 
 from __future__ import annotations

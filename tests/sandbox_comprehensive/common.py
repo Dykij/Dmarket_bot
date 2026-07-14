@@ -26,7 +26,7 @@ logging.basicConfig(level=logging.WARNING)
 from src.config import Config
 from src.api.dmarket_api_client import DMarketAPIClient
 from src.api.oracle_factory import OracleFactory
-from src.api.cs2cap_oracle import CS2CapOracle
+from src.api.multi_source_oracle import MultiSourceOracle
 
 
 def log(msg: str = "") -> None:
@@ -68,14 +68,14 @@ class SandboxMetrics:
 
     # Connectivity
     dmarket_connected: bool = False
-    cs2cap_connected: bool = False
+    oracle_connected: bool = False
     balance: float = 0.0
 
     # Prices
     agg_titles: int = 0
     agg_with_bids: int = 0
-    cs2cap_asks: int = 0
-    cs2cap_bids: int = 0
+    oracle_asks: int = 0
+    oracle_bids: int = 0
 
     # Pipeline
     listings_fetched: int = 0
@@ -101,10 +101,10 @@ class SandboxMetrics:
         log("  COMPREHENSIVE SANDBOX REPORT v14.8")
         log("=" * 70)
         log(f"  DMarket connected:    {self.dmarket_connected}")
-        log(f"  CS2Cap connected:     {self.cs2cap_connected}")
+        log(f"  Oracle connected:     {self.oracle_connected}")
         log(f"  Balance:              ${self.balance:.2f}")
         log(f"  Aggregated titles:    {self.agg_titles} ({self.agg_with_bids} with bids)")
-        log(f"  CS2Cap snapshots:     {self.cs2cap_asks} asks, {self.cs2cap_bids} bids")
+        log(f"  Oracle snapshots:     {self.oracle_asks} asks, {self.oracle_bids} bids")
         log(f"  Listings fetched:     {self.listings_fetched}")
         log(f"  Instant candidates:   {self.instant_candidates}")
         log(f"  Cross-market targets: {self.cross_market_targets}")
@@ -125,8 +125,8 @@ class SandboxMetrics:
         log("=" * 70)
 
 
-async def setup_clients() -> tuple[DMarketAPIClient, Optional[CS2CapOracle]]:
-    """Initialize DMarket + CS2Cap clients."""
+async def setup_clients() -> tuple[DMarketAPIClient, Optional[MultiSourceOracle]]:
+    """Initialize DMarket + Oracle clients."""
     dmarket = DMarketAPIClient(Config.PUBLIC_KEY, Config.SECRET_KEY)
-    cs2cap = OracleFactory.get_cross_market_oracle(Config.GAME_ID)
-    return dmarket, cs2cap
+    oracle = OracleFactory.get_oracle(Config.GAME_ID)
+    return dmarket, oracle

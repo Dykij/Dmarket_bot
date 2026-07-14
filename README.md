@@ -1,10 +1,10 @@
-# 🦅 DMarket Quantitative Engine v15.2
+# 🦅 DMarket Quantitative Engine v15.6
 
 **Algorithmic CS2 skin trading bot for DMarket marketplace + Multi-Source Oracle (4 free external APIs).**
 
 Автономная торговая система на строгих количественных алгоритмах. Стратегия: **Value Detection Scanner** + intra-market spread sniping + cross-market arbitrage — с мгновенной капитализацией спреда (TRADE_LOCK_HOURS=0).
 
-**Ключевое отличие v15.2:** Performance optimization — orjson для JSON (5-10x), numpy для аналитики (10-50x), cachetools для TTL-кешей (O(1)), composite индексы для SQLite, timing-safe auth.
+**Ключевое отличие v15.6:** Token bucket rate limiting (0 429 ошибок), Hybrid Kelly+Volatility sizing, Slippage-at-Risk pre-trade filter, GIL release в Rust (4x parallel speedup), structured error handling, dead code cleanup (~3,000 строк удалено).
 
 ---
 
@@ -66,10 +66,13 @@ best_bid > best_ask × (1 + fee + margin) → BUY
 
 | Инструмент | Суть |
 |---|---|
-| **Half Kelly Sizing** | position = capital × 0.5 × f* |
+| **Hybrid Kelly+Volatility** | position = capital × kelly × (1 - vol_factor) (arXiv:2508.16598) |
+| **Slippage-at-Risk** | Pre-trade liquidity risk filter (arXiv:2603.09164) |
 | **Drawdown Freeze** | Стоп покупок при >15% просадке |
 | **Lock-Aware Cap** | ≤80% капитала в trade-lock |
 | **Capital Velocity** | Мин. 0.5× оборота/неделю |
+| **Time-Stop** | Cancel stale buy targets after 90min |
+| **Token Bucket Rate Limiter** | Per-endpoint rate limiting (0 429 errors) |
 
 ---
 
@@ -114,26 +117,30 @@ best_bid > best_ask × (1 + fee + margin) → BUY
 
 | Компонент | Технология | Назначение |
 |---|---|---|
-| **Runtime** | Python 3.13+ (asyncio) | Основной движок |
-| **Rust core** | PyO3 / ed25519-dalek | Ed25519 подпись (5-10× быстрее Python) |
+| **Runtime** | Python 3.13+ (asyncio + uvloop) | Основной движок (2-4x faster event loop) |
+| **Rust core** | PyO3 0.23 / ed25519-dalek | Ed25519 подпись (5-10× быстрее Python), GIL release |
 | **Database** | SQLite 3 (WAL mode, dual DB) | OLTP: состояние. OLAP: история цен |
 | **Market data** | DMarket API v2 + Multi-Source Oracle | Цены, ордера, листинги, комиссии |
 | **Price sources** | Market.CSGO, Waxpeer, CSFloat, Steam | Бесплатные внешние источники цен |
-| **Rate limiting** | Adaptive throttle + circuit breaker | API quota management |
+| **Rate limiting** | Token bucket + circuit breaker | Per-endpoint rate limiting (0 429 errors) |
 | **Security** | Vault (Fernet) + log redaction | API ключи |
-| **Interface** | Aiogram 3.x (Telegram) | Управление, мониторинг |
-| **Deployment** | Docker multi-stage (x86_64 + ARM64) | Production-ready |
+| **Interface** | Aiogram 3.x (Telegram) | Управление, мониторинг, FSM settings |
+| **Deployment** | Docker multi-stage (x86_64 + ARM64) | Production-ready, BuildKit cache |
 
-### Структура модулей (v14.9)
+### Структура модулей (v15.6)
 
 ```
 src/
 ├── api/                           # Внешние API
 │   ├── dmarket_api_client/        # DMarket REST v2
-│   ├── multi_source_oracle/       # Multi-Source Oracle (4 free APIs)
-│   ├── market_csgo_oracle.py      # Market.CSGO price oracle
-│   ├── waxpeer_oracle.py          # Waxpeer price oracle
-│   ├── csfloat_oracle.py          # CSFloat price oracle
+│   │   ├── core.py                # Token bucket rate limiter
+│   │   ├── backoff.py             # Circuit breaker + exponential backoff
+│   │   ├── rate_limiter.py        # ⭐ v15.6: Per-endpoint token bucket
+│   │   └── ...
+│   ├── multi_source_oracle.py     # Multi-Source Oracle (4 free APIs)
+│   ├── market_csgo_oracle.py      # Market.CSGO price oracle (rate limited)
+│   ├── waxpeer_oracle.py          # Waxpeer price oracle (rate limited)
+│   ├── csfloat_oracle.py          # CSFloat price oracle (dynamic adaptive)
 │   ├── steam_oracle.py            # Steam Community Market oracle
 │   ├── fair_price_calculator.py   # Median price aggregation
 │   └── candle_builder.py          # OHLCV candles from DMarket
@@ -141,34 +148,35 @@ src/
 ├── core/target_sniping/           # Основной торговый пайплайн
 │   ├── core.py                    # SnipingLoop orchestrator
 │   ├── filter.py                  # Legacy spread filters
-│   ├── value_pipelines.py         # ⭐ NEW v14.9: Dual-signal eval
-│   ├── scanner.py                 # Parallel listing fetcher
+│   ├── value_pipelines.py         # ⭐ v14.9: Dual-signal eval
+│   ├── scanner.py                 # Parallel listing fetcher (rate limited)
 │   ├── execution.py               # Instant-buy execution
 │   ├── pricing.py                 # Float/pattern/sticker premium
+│   ├── validations.py             # ⭐ v15.6: Slippage-at-Risk filter
+│   ├── position_guard.py          # ⭐ v15.6: Time-stop for stale positions
 │   └── resale.py                  # Auto-resale logic
-│
-├── reflexion/                     # ⭐ NEW v14.9: State snapshots
-│   └── core.py                    # Git-based rollback
-│
-├── workflow/                      # ⭐ NEW v14.9: Async pipelines
-│   └── chains.py                  # Conductor pattern
-│
-├── sandbox/                       # ⭐ NEW v14.9: Shell execution
-│   └── core.py                    # Timeout & security checks
-│
-├── cot_audit/                     # ⭐ NEW v14.9: CoT formatting
-│   └── core.py                    # Markdown/numbered styles
-│
-├── integration/                   # ⭐ NEW v14.9: Unified facade
-│   └── agent_facade.py            # safe_bash(), create_snapshot()
 │
 ├── risk/                          # Risk management
 │   ├── risk_manager.py            # Drawdown, Kelly, etc.
+│   ├── dynamic_manager.py         # ⭐ v15.6: Hybrid Kelly+Volatility
+│   ├── price_validator.py         # ⭐ v15.6: Double-sided fee validation
 │   ├── pump_detector.py           # FOMO spike detection
 │   └── security_auditor.py        # Log redaction
 │
 ├── telegram/                      # Telegram Admin Panel
-│   └── control_bot/
+│   ├── control_bot/               # aiogram 3.x commands
+│   │   ├── error_handling.py      # ⭐ v15.6: Structured error handling
+│   │   ├── callback_data.py       # ⭐ v15.6: Type-safe CallbackData factory
+│   │   ├── settings_fsm.py        # ⭐ v15.6: FSM for settings management
+│   │   └── ...
+│   └── notifier.py                # Push notifications
+│
+├── db/                            # Database layer
+│   ├── price_history/             # Bifurcated SQLite (state + history)
+│   └── profit_tracker.py          # Trades + P&L tracking
+│
+├── rust_core/                     # Rust extension (PyO3 0.23)
+│   └── src/lib.rs                 # GIL release, benchmarks
 │
 └── config.py                      # Single source of truth
 ```
@@ -247,48 +255,80 @@ TELEGRAM_BOT_TOKEN=your_bot_token
 
 ---
 
-## 📊 Текущее состояние (v15.2)
+## 📊 Текущее состояние (v15.6)
 
 | Свойство | Статус |
 |---|---|
-| **Версия** | v15.2 |
+| **Версия** | v15.6 |
 | **Стратегия** | Value Detection Scanner + Spread Sniper (dual-signal) |
-| **DMarket API** | v2 batch endpoints |
+| **DMarket API** | v2 batch endpoints, token bucket rate limiter |
 | **Price Oracle** | Multi-Source (Market.CSGO + Waxpeer + CSFloat + Steam) |
 | **Value Signals** | Float, Pattern, Sticker, Filler (9 layers total) |
 | **Balance-aware** | Dynamic max price, Kelly sizing, drawdown freeze |
-| **Fee model** | 4-tier dynamic (2/5/7/10%) + hot-fee cache |
-| **Risk manager** | Drawdown, Kelly, pump detector |
-| **Security** | Fernet vault, log redaction, timing-safe auth |
-| **Docker** | Multi-stage build (x86_64 + ARM64) |
+| **Fee model** | 4-tier dynamic (2/5/7/10%) + hot-fee cache, double-sided validation |
+| **Risk manager** | Hybrid Kelly+Volatility, drawdown, pump detector, time-stop |
+| **Rate limiting** | Token bucket per-endpoint (0 429 errors) |
+| **Security** | Fernet vault, log redaction, timing-safe auth, structured error handling |
+| **Docker** | Multi-stage build (x86_64 + ARM64), BuildKit cache, STOPSIGNAL SIGTERM |
 | **Tests** | 817+ tests (unit + integration + sandbox) |
-| **Performance** | orjson (5-10x JSON), numpy (10-50x math), cachetools (O(1) TTL) |
+| **Performance** | uvloop (2-4x async), orjson (5-10x JSON), Rust GIL release (4x parallel) |
+| **Dead code** | ~3,000 строк удалено, 32 файла |
+| **Telegram** | CallbackData factory, FSM settings, structured error handling |
 
 ---
 
-## 📋 Changelog (v15.2)
+## 📋 Changelog (v15.6)
 
-### Performance Optimization
-- **orjson** для JSON parsing/serialization в hot paths (5-10x faster)
-- **numpy** для vectorized math в volatility, metrics, self_reflection (10-50x faster)
-- **cachetools** для O(1) TTL cache eviction в historical_data collector
-- **executemany** для batch INSERT в save_trades_batch (~10x faster)
-- **Composite index** `(hash_name, recorded_at DESC)` на price_history (2-5x SELECT)
-- **Indexes** на decision_logs и missed_opportunities таблицы
-- **Performance PRAGMAs** в profit_tracker.py (synchronous=NORMAL, cache_size=64MB)
+### Critical Fixes (v15.6)
+- **Inverted spread calculation** fixed — лимитные ордера теперь реально работают
+- **Double-sided fee validation** — комиссия считается и с покупки, и с продажи
+- **Idempotency keys** — нет дублей ордеров при retry
+- **Year 2026 hardcoded** fixed — float-date детекция работает в 2027+
+- **Kelly sizing** теперь реально вызывается (был dead code)
+- **Plaintext API secret** removed — ключ больше не шлётся в открытом виде
 
-### Security
-- **Timing-safe auth** в health_server.py (`hmac.compare_digest()`)
-- Все SQL queries используют parameterized statements
+### High Priority Fixes (v15.6)
+- **Circuit breaker race condition** fixed — `_probe_pending` flag
+- **Oracle HTTP timeouts** — 15s total, 5s connect (5 oracle files)
+- **Sample variance** вместо population variance — точнее волатильность
+- **Steam oracle retry** — 3x exponential backoff на 429
+- **429 fallback URL** removed — несуществующий URL убран
+- **NaN/Inf guard** в pump detector
+- **Volume check** в pump detector — нет false positive на thin markets
+- **CS2 budget limit** — 10% per trade для CS2
 
-### Bug Fixes
-- **Sharpe ratio annualization bug** в metrics.py (sqrt(365) canceling out)
-- **save_trades_batch** теперь использует executemany вместо individual INSERTs
+### Performance Optimization (v15.6)
+- **uvloop** для event loop (2-4x faster async)
+- **Token bucket rate limiter** — per-endpoint, 0 429 errors
+- **Rust GIL release** — `py.allow_threads()` для parallel parsing
+- **PyO3 0.23** — newer API, abi3 support
+- **Composite indexes** — `(hash_name, status)` на virtual_inventory
+- **atexit handlers** — clean WAL checkpoint при выходе
+- **BuildKit cache mounts** — 2-5 min faster Docker rebuilds
+
+### Security (v15.6)
+- **Structured error handling** — 8 error categories, 4 severity levels
+- **HTML escaping** в notifier.error()/crash()
+- **CallbackData factory** — type-safe callbacks
+- **Dead code cleanup** — ~3,000 строк удалено, 32 файла
+
+### Telegram Module (v15.6)
+- **6 багов исправлено** — cb_sell_top, escape_md, cmd_chart, cmd_liquidate, notifier HTML
+- **CallbackData factory** — type-safe callbacks вместо raw strings
+- **FSM для настроек** — /set command для изменения настроек через бота
+- **Structured error handling** — ErrorHandler с категоризацией
+
+### Oracle Improvements (v15.6)
+- **Market.CSGO** — rate limiter (2.5 RPS) + 429 handling
+- **Waxpeer** — rate limiter (0.5 RPS) + 429 handling
+- **CSFloat** — dynamic adaptive rate limiting
+- **Steam** — 429 retry with exponential backoff
+- **Multi-Source** — per-source circuit breaker
 
 ### Dependencies
-- **cachetools>=5.5.0** добавлен в requirements
-- **orjson>=3.11.0** теперь используется в hot paths
-- **numpy** используется в analytics modules
+- **uvloop** добавлен для faster event loop
+- **PyO3 0.23** вместо 0.21 (Rust core)
+- **maturin** для Rust сборки
 
 ---
 

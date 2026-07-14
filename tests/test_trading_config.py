@@ -2,7 +2,7 @@
 Test suite for src.config.Config — the trading engine configuration.
 
 Covers: all mandatory attributes, Balance-Aware v14.4 parameters,
-v14.6 value detection layers, CS2Cap batch settings, liquidity metrics,
+v14.6 value detection layers, Oracle batch settings, liquidity metrics,
 and the regression for MAX_FIRST_SALE_AGE_DAYS (2026-06-07 crash fix).
 """
 
@@ -87,19 +87,19 @@ class TestLiquidityMetrics:
         assert Config.BOT_VERSION
 
 
-class TestCS2CapBatchSettings:
-    """Oracle batch and cache parameters (renamed from CS2Cap in v14.9)."""
+class TestOracleBatchSettings:
+    """Oracle batch and cache parameters."""
 
-    def test_cs2cap_batch_size_positive(self):
+    def test_oracle_batch_size_positive(self):
         assert Config.ORACLE_BATCH_SIZE > 0
 
-    def test_cs2cap_top_k_validate_positive(self):
+    def test_oracle_top_k_validate_positive(self):
         assert Config.ORACLE_TOP_K_VALIDATE > 0
 
-    def test_cs2cap_cache_ttl_positive(self):
+    def test_oracle_cache_ttl_positive(self):
         assert Config.ORACLE_CACHE_TTL_SECONDS > 0
 
-    def test_cs2cap_cache_refresh_top_n_positive(self):
+    def test_oracle_cache_refresh_top_n_positive(self):
         assert Config.ORACLE_CACHE_REFRESH_TOP_N > 0
 
     def test_agg_scan_top_n_positive(self):

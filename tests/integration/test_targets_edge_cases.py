@@ -24,7 +24,7 @@ class TestTargetsEdgeCases:
     ) -> None:
         """Тест создания таргета с минимальной ценой."""
         httpx_mock.add_response(
-            url="https://api.dmarket.com/marketplace-api/v1/user-targets/create",
+            url="https://api.dmarket.com/exchange/v1/targets/create",
             method="POST",
             json={
                 "Result": [
@@ -58,7 +58,7 @@ class TestTargetsEdgeCases:
     ) -> None:
         """Тест создания таргета с максимальным количеством."""
         httpx_mock.add_response(
-            url="https://api.dmarket.com/marketplace-api/v1/user-targets/create",
+            url="https://api.dmarket.com/exchange/v1/targets/create",
             method="POST",
             json={
                 "Result": [
@@ -91,7 +91,7 @@ class TestTargetsEdgeCases:
     ) -> None:
         """Тест создания таргета с специальными атрибутами."""
         httpx_mock.add_response(
-            url="https://api.dmarket.com/marketplace-api/v1/user-targets/create",
+            url="https://api.dmarket.com/exchange/v1/targets/create",
             method="POST",
             json={
                 "Result": [
@@ -129,7 +129,7 @@ class TestTargetsEdgeCases:
     ) -> None:
         """Тест создания нескольких таргетов одним запросом."""
         httpx_mock.add_response(
-            url="https://api.dmarket.com/marketplace-api/v1/user-targets/create",
+            url="https://api.dmarket.com/exchange/v1/targets/create",
             method="POST",
             json={
                 "Result": [
@@ -165,7 +165,7 @@ class TestTargetsEdgeCases:
     ) -> None:
         """Тест создания дублирующегося таргета."""
         httpx_mock.add_response(
-            url="https://api.dmarket.com/marketplace-api/v1/user-targets/create",
+            url="https://api.dmarket.com/exchange/v1/targets/create",
             method="POST",
             status_code=409,
             json={
@@ -194,7 +194,7 @@ class TestTargetsEdgeCases:
     ) -> None:
         """Тест превышения лимита таргетов."""
         httpx_mock.add_response(
-            url="https://api.dmarket.com/marketplace-api/v1/user-targets/create",
+            url="https://api.dmarket.com/exchange/v1/targets/create",
             method="POST",
             status_code=400,
             json={
@@ -222,7 +222,7 @@ class TestTargetsEdgeCases:
     ) -> None:
         """Тест удаления несуществующего таргета."""
         httpx_mock.add_response(
-            url="https://api.dmarket.com/marketplace-api/v1/user-targets/delete",
+            url="https://api.dmarket.com/exchange/v1/targets/delete",
             method="POST",
             status_code=404,
             json={
@@ -248,7 +248,7 @@ class TestTargetsEdgeCases:
 
         httpx_mock.add_response(
             url=re.compile(
-                r"https://api\.dmarket\.com/marketplace-api/v1/user-targets\?.*"
+                r"https://api\.dmarket\.com/exchange/v1/targets\?.*"
             ),
             method="GET",
             json={
@@ -286,7 +286,7 @@ class TestTargetsEdgeCases:
         # Первая страница
         httpx_mock.add_response(
             url=re.compile(
-                r"https://api\.dmarket\.com/marketplace-api/v1/user-targets\?.*"
+                r"https://api\.dmarket\.com/exchange/v1/targets\?.*"
             ),
             method="GET",
             json={
@@ -309,7 +309,7 @@ class TestTargetsEdgeCases:
         # Вторая страница
         httpx_mock.add_response(
             url=re.compile(
-                r"https://api\.dmarket\.com/marketplace-api/v1/user-targets\?.*"
+                r"https://api\.dmarket\.com/exchange/v1/targets\?.*"
             ),
             method="GET",
             json={
@@ -342,7 +342,7 @@ class TestTargetsEdgeCases:
     ) -> None:
         """Тест создания таргета с Unicode символами в названии."""
         httpx_mock.add_response(
-            url="https://api.dmarket.com/marketplace-api/v1/user-targets/create",
+            url="https://api.dmarket.com/exchange/v1/targets/create",
             method="POST",
             json={
                 "Result": [
@@ -378,7 +378,7 @@ class TestTargetsEdgeCases:
 
         httpx_mock.add_response(
             url=re.compile(
-                r"https://api\.dmarket\.com/marketplace-api/v1/user-targets/closed\?.*"
+                r"https://api\.dmarket\.com/exchange/v1/targets/closed\?.*"
             ),
             method="GET",
             json={
@@ -417,7 +417,7 @@ class TestTargetsValidation:
     ) -> None:
         """Тест создания таргета с нулевой ценой (должно быть отклонено)."""
         httpx_mock.add_response(
-            url="https://api.dmarket.com/marketplace-api/v1/user-targets/create",
+            url="https://api.dmarket.com/exchange/v1/targets/create",
             method="POST",
             status_code=400,
             json={
@@ -445,7 +445,7 @@ class TestTargetsValidation:
     ) -> None:
         """Тест создания таргета с отрицательной ценой."""
         httpx_mock.add_response(
-            url="https://api.dmarket.com/marketplace-api/v1/user-targets/create",
+            url="https://api.dmarket.com/exchange/v1/targets/create",
             method="POST",
             status_code=400,
             json={
@@ -473,7 +473,7 @@ class TestTargetsValidation:
     ) -> None:
         """Тест создания таргета с нулевым количеством."""
         httpx_mock.add_response(
-            url="https://api.dmarket.com/marketplace-api/v1/user-targets/create",
+            url="https://api.dmarket.com/exchange/v1/targets/create",
             method="POST",
             status_code=400,
             json={
@@ -501,7 +501,7 @@ class TestTargetsValidation:
     ) -> None:
         """Тест создания таргета с количеством выше лимита."""
         httpx_mock.add_response(
-            url="https://api.dmarket.com/marketplace-api/v1/user-targets/create",
+            url="https://api.dmarket.com/exchange/v1/targets/create",
             method="POST",
             status_code=400,
             json={
@@ -529,7 +529,7 @@ class TestTargetsValidation:
     ) -> None:
         """Тест создания таргета с пустым названием."""
         httpx_mock.add_response(
-            url="https://api.dmarket.com/marketplace-api/v1/user-targets/create",
+            url="https://api.dmarket.com/exchange/v1/targets/create",
             method="POST",
             status_code=400,
             json={
@@ -557,7 +557,7 @@ class TestTargetsValidation:
     ) -> None:
         """Тест создания таргета с некорректной валютой."""
         httpx_mock.add_response(
-            url="https://api.dmarket.com/marketplace-api/v1/user-targets/create",
+            url="https://api.dmarket.com/exchange/v1/targets/create",
             method="POST",
             status_code=400,
             json={

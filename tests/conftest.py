@@ -370,25 +370,20 @@ def mock_async_client() -> AsyncMock:
 
 @pytest.fixture(autouse=True)
 def _reset_config_singleton() -> Generator[None, None, None]:
-    """Reset the global Config singleton before each test.
-
-    Prevents state leakage when tests monkeypatch env vars — the
-    singleton is re-initialized from the (possibly patched) environment
-    before every test and restored afterwards.
-    """
+    """Reset the global Config singleton before each test."""
     try:
         from src.config import reset_config
-
         reset_config()
     except Exception:
-        pass  # Config not yet importable (early collection phase)
+        import logging
+        logging.getLogger("conftest").warning("Config reset (setup) failed", exc_info=True)
     yield
     try:
         from src.config import reset_config
-
         reset_config()
     except Exception:
-        pass
+        import logging
+        logging.getLogger("conftest").warning("Config reset (teardown) failed", exc_info=True)
 
 
 @pytest.fixture()

@@ -17,8 +17,12 @@ logger = logging.getLogger("TelegramControl.formatters")
 
 
 def escape_md(text: str) -> str:
-    """Escape Telegram MarkdownV2 special characters in user-supplied text."""
-    for ch in ("_", "*", "`", "[", "]"):
+    """Escape Telegram MarkdownV2 special characters in user-supplied text.
+
+    Full list from Telegram docs (v10.1):
+    '_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!'
+    """
+    for ch in ("_", "*", "[", "]", "(", ")", "~", "`", ">", "#", "+", "-", "=", "|", "{", "}", ".", "!"):
         text = text.replace(ch, "\\" + ch)
     return text
 

@@ -48,7 +48,10 @@ class CSFloatOracle:
             }
             if self.api_key:
                 headers["Authorization"] = self.api_key
-            self._session = aiohttp.ClientSession(headers=headers)
+            self._session = aiohttp.ClientSession(
+                headers=headers,
+                timeout=aiohttp.ClientTimeout(total=15, connect=5),
+            )
             return self._session
 
     async def _throttle(self):
@@ -169,6 +172,85 @@ class CSFloatOracle:
         except Exception as e:
             logger.debug(f"[CSFloat] Sales history error for {hash_name}: {e}")
             return []
+
+    async def get_listings_filtered(
+        self,
+        hash_name: str,
+        *,
+        min_float: float | None = None,
+        max_float: float | None = None,
+        paint_seed: int | None = None,
+        paint_index: int | None = None,
+        sort_by: str = "lowest_price",
+        limit: int = 10,
+    ) -> list[dict[str, Any]]:
+        """
+        Search CSFloat listings with skin-characteristic filters.
+
+        Returns list of {price, float_value, paint_seed, paint_index,
+        stickers, collection, rarity, is_stattrak, is_souvenir}.
+        """
+        await self._throttle()
+        session = await self.get_session()
+
+        encoded_name = urllib.parse.quote(hash_name)
+        params = f"market_hash_name={encoded_name}&sort_by={sort_by}&type=buy_now&limit={limit}"
+        if min_float is not None:
+            params += f"&min_float={min_float}"
+        if max_float is not None:
+            params += f"&max_float={max_float}"
+        if paint_seed is not None:
+            params += f"&paint_seed={paint_seed}"
+        if paint_index is not None:
+            params += f"&paint_index={paint_index}"
+
+        url = f"{self.BASE_URL}/listings?{params}"
+
+        try:
+            async with session.get(url) as response:
+                if response.status == 429:
+                    logger.warning("[CSFloat] 429 on filtered listings")
+                    return []
+                if response.status != 200:
+                    return []
+
+                res_json = await response.json()
+                results = []
+                for entry in res_json.get("data", []):
+                    item = entry.get("item", {})
+                    results.append({
+                        "price": entry.get("price", 0) / 100.0,
+                        "float_value": item.get("float_value", 0),
+                        "paint_seed": item.get("paint_seed", 0),
+                        "paint_index": item.get("paint_index", 0),
+                        "stickers": item.get("stickers", []),
+                        "collection": item.get("collection", ""),
+                        "rarity": item.get("rarity", 0),
+                        "quality": item.get("quality", 0),
+                        "is_stattrak": item.get("is_stattrak", False),
+                        "is_souvenir": item.get("is_souvenir", False),
+                        "market_hash_name": item.get("market_hash_name", ""),
+                        "listing_id": entry.get("id", ""),
+                    })
+                return results
+
+        except Exception as e:
+            logger.debug(f"[CSFloat] Filtered listings error: {e}")
+            return []
+
+    async def scan_low_floats(
+        self,
+        hash_name: str,
+        max_float: float = 0.01,
+        limit: int = 20,
+    ) -> list[dict[str, Any]]:
+        """Find ultra-low-float listings for a specific item."""
+        return await self.get_listings_filtered(
+            hash_name,
+            max_float=max_float,
+            sort_by="lowest_float",
+            limit=limit,
+        )
 
     async def close(self):
         if self._session and not self._session.closed:

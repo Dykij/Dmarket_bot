@@ -7,7 +7,7 @@ The DMarket Bot v14.9 is a **Value Detection Scanner + Spread Sniper** for CS2 s
 Key architectural changes in v14.9:
 - **Dual-signal pipeline**: VALUE (rarity-based) + SPREAD (intra-market)
 - **Relaxed microstructure**: HFT filters disabled by default
-- **Expanded scan coverage**: 500 titles/cycle, 50 CS2Cap validations
+- **Expanded scan coverage**: 500 titles/cycle, 50 oracle validations
 
 ## System Architecture
 
@@ -16,9 +16,9 @@ Key architectural changes in v14.9:
 │               DMarket Bot v14.9                      │
 │                                                     │
 │  ┌────────────┐  ┌────────────┐  ┌─────────────┐   │
-│  │ Aggregated │  │ CS2Cap     │  │ Price-Range │   │
+│  │ Aggregated │  │ MultiSource│  │ Price-Range │   │
 │  │ Prices API │  │ Oracle     │  │ Scanner     │   │
-│  │ (100 items)│  │ (41 mkts)  │  │ (500 items) │   │
+│  │ (100 items)│  │ (multi mkt)│  │ (500 items) │   │
 │  └─────┬──────┘  └─────┬──────┘  └──────┬──────┘   │
 │        │               │                │          │
 │        └───────────────┼────────────────┘          │
@@ -62,7 +62,7 @@ Evaluates each item for rarity value:
 - Sticker combo: 4× same, team match
 - Filler demand: trade-up skins
 
-Returns: `est_sell_price = cs2cap_ask × rarity_mult`
+Returns: `est_sell_price = oracle_ask × rarity_mult`
 
 ### Spread Sniper (Legacy)
 
@@ -72,9 +72,9 @@ Classic intra-market arbitrage:
 - `has_intra_spread = best_bid > best_ask × margin`
 - Only triggers if Value signal fails
 
-### CS2Cap Cache
+### Oracle Cache
 
-**Location:** `src/api/cs2cap_cache.py`
+**Location:** `src/api/oracle_cache.py`
 
 - In-memory cache (5-min TTL)
 - 200-item coverage
@@ -142,13 +142,13 @@ Unified interface for all subsystems:
 Cycle Start
     │
     ├── Fetch aggregated prices (100 titles)
-    ├── Fetch CS2Cap cache (200 titles)
+    ├── Fetch oracle cache (200 titles)
     ├── Fetch cheapest listings (parallel)
     │
     ├── For each item:
     │   ├── Evaluate VALUE signal
     │   │   ├── Calculate rarity premium
-    │   │   └── est_sell = cs2cap × premium
+    │   │   └── est_sell = oracle_ask × premium
     │   │       └── If est_sell > ask × cost: BUY
     │   └── Else evaluate SPREAD signal
     │       └── If best_bid > ask × margin: BUY
@@ -165,7 +165,7 @@ Cycle Start
 | `src/core/target_sniping/value_pipelines.py` | Dual-signal evaluation (v14.9) |
 | `src/core/target_sniping/filter.py` | Legacy spread filters |
 | `src/core/target_sniping/pricing.py` | Rarity premium calculators |
-| `src/api/cs2cap_cache.py` | In-memory price cache |
+| `src/api/oracle_cache.py` | In-memory price cache |
 | `src/config.py` | All parameters (v14.9 defaults) |
 | `src/risk/risk_manager.py` | Drawdown, Kelly, etc. |
 | `src/reflexion/core.py` | State snapshots and rollback |

@@ -207,6 +207,93 @@ When a task requires multiple skills, use `skill-workflow-integrator` to chain t
 
 Skills provide your tools. When you need one, check its `SKILL.md`. Keep local notes (camera names, SSH details, voice preferences) in `TOOLS.md`.
 
+---
+
+## 🔧 MCP/LSP/Plugins — Mandatory Usage
+
+**When working on ANY request or generating code, ALWAYS use the full toolchain:**
+
+### MCP Servers (12 active)
+
+| Server | When to use |
+|---|---|
+| `sequential-thinking` | Complex multi-step problems, planning |
+| `filesystem` | File operations, reading/writing |
+| `fetch` | HTTP requests, API calls |
+| `git` | Version control operations |
+| `sqlite` | Database queries, price history |
+| `memory` | Knowledge graph, entity tracking |
+| `web-search` | Research, documentation lookup |
+| `archy` | Architecture health checks before/after changes |
+| `playwright` | Browser automation, UI testing |
+| `github` | PR management, issue tracking |
+| `context7` | Real-time library docs (aiohttp, SQLAlchemy, Pydantic) |
+| `semgrep` | Security scanning — ALWAYS scan generated code |
+
+### LSP/CLI Tools
+
+| Tool | When to use |
+|---|---|
+| `ty` | Type check Python code after generation |
+| `semgrep` | Security scan Python code |
+| `taplo` | Validate TOML files (pyproject.toml, Cargo.toml) |
+| `rust-analyzer` | Rust code intelligence |
+| `ruff` | Lint and format Python code |
+| `pyright` | Python type checking |
+| `archy` | Architecture health checks |
+
+### Plugins (4 active)
+
+| Plugin | When to use |
+|---|---|
+| `opencode-vibeguard` | Code quality guard |
+| `opencode-rate-limit-retry` | API rate limit handling |
+| `opencode-notificator` | Notifications |
+| `opencode-dynamic-context-pruning` | Context optimization |
+
+### Mandatory Workflow for Code Generation
+
+When generating or modifying code, follow this pipeline:
+
+1. **Before writing:** Use `context7` to check library docs if using external packages
+2. **While writing:** Use `sequential-thinking` for complex logic
+3. **After writing:** Run validation:
+   - Python: `ty check` → `ruff check` → `semgrep scan`
+   - Rust: `cargo clippy` → `cargo test`
+   - TOML: `taplo lint`
+4. **Before commit:** Use `archy check` to verify architecture health
+5. **After commit:** Use `git-gate` skill for quality gate
+
+### Security Scanning (MANDATORY)
+
+**ALWAYS scan generated code with Semgrep:**
+
+```bash
+# After generating Python code
+/home/deck/dmarket/Dmarket_bot-main/.venv/bin/semgrep scan --config auto <file_or_dir> --quiet
+
+# After generating Rust code
+/home/deck/dmarket/Dmarket_bot-main/.venv/bin/semgrep scan --config auto <file_or_dir> --quiet
+```
+
+If Semgrep finds issues, FIX THEM before presenting code to user.
+
+### Type Checking (MANDATORY)
+
+**ALWAYS type-check generated Python code:**
+
+```bash
+/home/deck/dmarket/Dmarket_bot-main/.venv/bin/ty check <file_or_dir> --project /home/deck/dmarket/Dmarket_bot-main
+```
+
+If ty finds issues, FIX THEM before presenting code to user.
+
+---
+
+## Tools
+
+Skills provide your tools. When you need one, check its `SKILL.md`. Keep local notes (camera names, SSH details, voice preferences) in `TOOLS.md`.
+
 **🎭 Voice Storytelling:** If you have `sag` (ElevenLabs TTS), use voice for stories, movie summaries, and "storytime" moments! Way more engaging than walls of text. Surprise people with funny voices.
 
 **📝 Platform Formatting:

@@ -23,7 +23,7 @@ class _ResaleProdMixin:
     """Production resale — real DMarket API calls."""
 
     client: Any
-    cs2cap_cache: Any
+    oracle: Any
 
     async def _sync_real_inventory(self, game_id: str) -> int:
         """
@@ -193,8 +193,8 @@ class _ResaleProdMixin:
 
         Strategy:
         1. Group items by hash_name
-        2. For each unique title, fetch CS2Cap price from cache (free)
-        3. If CS2Cap says price > buy_price * (1 + min_margin), list it
+        2. For each unique title, fetch oracle price from cache (free)
+        3. If oracle says price > buy_price * (1 + min_margin), list it
         4. Cap simultaneous listings to SELL_MAX_OPEN_LISTINGS
         5. Call create_sell_offers_batch in chunks of LIST_BATCH_SIZE
         6. Track success/failure per item
@@ -241,19 +241,19 @@ class _ResaleProdMixin:
         if not listable:
             return
 
-        # Get CS2Cap asks via cache (sub-ms, no HTTP)
+        # Get oracle asks via cache (sub-ms, no HTTP)
         asks: dict[str, float] = {}
-        if self.cs2cap_cache is not None:
+        if self.oracle is not None:
             for it in listable:
                 title = it["hash_name"]
                 if title not in asks:
-                    snap = self.cs2cap_cache.get_ask(title)
+                    snap = self.oracle.get_ask(title)
                     if not snap or not snap.has_data:
                         asks[title] = 0.0
                         continue
                     # v14.0 Micro-Price: volume-weighted fair price instead of raw min_price
                     if Config.MICRO_PRICE_ENABLED:
-                        bid_snap = self.cs2cap_cache.get_bid(title)
+                        bid_snap = self.oracle.get_bid(title)
                         if bid_snap and bid_snap.has_data and snap.provider_prices and bid_snap.provider_bids:
                             ask_total = sum(snap.provider_prices.values())
                             bid_total = sum(bid_snap.provider_bids.values())
@@ -296,9 +296,9 @@ class _ResaleProdMixin:
                 continue
 
             # v14.1 A-S (Avellaneda-Stoikov) — inventory-aware reservation price
-            if Config.AS_ENABLED and self.cs2cap_cache is not None:
-                bid_snap = self.cs2cap_cache.get_bid(title)
-                ask_snap = self.cs2cap_cache.get_ask(title)
+            if Config.AS_ENABLED and self.oracle is not None:
+                bid_snap = self.oracle.get_bid(title)
+                ask_snap = self.oracle.get_ask(title)
                 if ask_snap and ask_snap.has_data:
                     mid_price = cs_price
                     if bid_snap and bid_snap.has_data:
@@ -339,7 +339,7 @@ class _ResaleProdMixin:
                     cs_price = max(target_sell * 1.01, reserv)
 
             # v14.3: VWAP Bands — list near upper band for mean-reversion target
-            if Config.VWAP_BANDS_ENABLED and self.cs2cap_cache is not None:
+            if Config.VWAP_BANDS_ENABLED and self.oracle is not None:
                 from src.analysis.microstructure import vwap_bands
                 item_sales_vwap = price_db.get_trade_history(title, days=30, limit=200)
                 if item_sales_vwap and len(item_sales_vwap) >= 5:
@@ -387,7 +387,7 @@ class _ResaleProdMixin:
                 resp = await self.client.create_sell_offers_batch(game_id, batch_payload)
             except Exception as e:
                 logger.warning(f"[RESALE] create_sell_offers_batch failed: {e}", exc_info=True)
-                for (row_id, _dm_id, title, _lp, _bp) in chunk:
+                for (row_id, _dm_id, _title, _lp, _bp) in chunk:
                     price_db.mark_list_failed(row_id, str(e)[:200])
                 continue
 

@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 
 async def test_steam_integration():
     """Тестирует всю цепочку Steam интеграции."""
+    import pytest
     from src.dmarket.steam_api import calculate_arbitrage, get_steam_price
     from src.dmarket.steam_arbitrage_enhancer import get_steam_enhancer
     from src.utils.steam_db_handler import get_steam_db
@@ -43,20 +44,23 @@ async def test_steam_integration():
             logger.info(f"   Цена: ${steam_data['price']:.2f}")
             logger.info(f"   Объем: {steam_data['volume']} шт/день")
         else:
-            logger.warning("⚠️ Steam API вернул None")
+            logger.warning("⚠️ Steam API вернул None — skipping remaining tests")
+            pytest.skip("Steam API unavailable")
+            return
     except Exception as e:
         logger.error(f"❌ Ошибка Steam API: {e}")
+        pytest.skip(f"Steam API error: {e}")
         return
 
     # Тест 3: Расчет арбитража
     logger.info("\n[TEST 3] Проверка расчета арбитража...")
     dmarket_price = 2.0
     steam_price = 2.5
-    profit = calculate_arbitrage(dmarket_price, steam_price)
+    arb_result = calculate_arbitrage(dmarket_price, steam_price)
     logger.info("✅ Расчет работает!")
     logger.info(f"   DMarket: ${dmarket_price:.2f}")
     logger.info(f"   Steam: ${steam_price:.2f}")
-    logger.info(f"   Профит: {profit:.1f}%")
+    logger.info(f"   Профит: {arb_result['margin_pct']:.1f}%")
 
     # Тест 4: Кэширование
     logger.info("\n[TEST 4] Проверка кэширования...")

@@ -52,7 +52,7 @@ class _TelemetryMixin:
                 )
             if self.multi_source_oracle is not None:
                 self.multi_source_oracle.get_stats()
-                health_state.set_cs2cap_quota_pct(0)  # No quota for free oracle
+                health_state.set_oracle_sources_active(0)  # No quota for free oracle
         except Exception as e:
             logger.debug(f"[health_state] update failed: {e}")
 

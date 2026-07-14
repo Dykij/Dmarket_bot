@@ -360,7 +360,7 @@ class BaseStrategy(ABC):
         reflection_result: Any | None = None,
     ) -> dict[str, Any]:
         """
-        Enhanced evaluation that uses CS2Cap cross-market data + indicators.
+        Enhanced evaluation that uses oracle cross-market data + indicators.
         Override in subclasses for strategy-specific logic.
         Default: delegate to evaluate_opportunity.
         """

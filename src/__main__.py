@@ -4,6 +4,13 @@ import asyncio
 import logging
 import os
 import sys
+
+# v15.5: uvloop — 2-4x faster event loop (Linux/macOS)
+try:
+    import uvloop
+    uvloop.install()
+except ImportError:
+    pass  # fallback to default asyncio event loop
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 

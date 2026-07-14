@@ -184,7 +184,7 @@ async def main() -> int:
             Config.GAME_ID, candidate_ids, title_volume=title_volume, item_id_to_title=item_id_to_title
         )
 
-        # CS2Cap snapshots for all aggregated-price titles so cross-market
+        # Oracle snapshots for all aggregated-price titles so cross-market
         # targets and filter validation have reference prices.
         cs_snapshots: dict = {}
         cs_bids: dict = {}
@@ -195,9 +195,9 @@ async def main() -> int:
                     cs_snapshots = await oracle.get_prices_batch(all_agg_titles)
                 if hasattr(oracle, "get_bids_batch"):
                     cs_bids = await oracle.get_bids_batch(all_agg_titles)
-                print(f"  CS2Cap snapshots: {len(cs_snapshots)} asks, {len(cs_bids)} bids")
+                print(f"  Oracle snapshots: {len(cs_snapshots)} asks, {len(cs_bids)} bids")
             except Exception as e:
-                print(f"  CS2Cap batch failed: {e}")
+                print(f"  Oracle batch failed: {e}")
 
         loop = _DummySnipingLoop(client, liquidity, Config.MAX_PRICE_USD)
         current_margin = Config.MIN_SPREAD_PCT / 100.0
@@ -261,7 +261,7 @@ async def main() -> int:
             print(f"  {k}: {v}")
 
         # Cross-market target simulation
-        print("\n[4/3] Simulating cross-market buy targets (DMarket ask > CS2Cap ask)...")
+        print("\n[4/3] Simulating cross-market buy targets (DMarket ask > Oracle ask)...")
         limit_mixin = _LimitOrderMixin()
         limit_mixin.client = client
         cross_targets = await limit_mixin._execute_cross_market_targets(

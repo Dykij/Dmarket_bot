@@ -14,6 +14,7 @@ from typing import Any
 from src.api.exceptions import RateLimitException
 from src.config import Config
 from src.core.sandbox_scenarios import scenario_engine
+from src.core.target_sniping.filter_evaluator import _FilterEvaluatorMixin
 from src.core.target_sniping.ranking import rank_candidates_by_spread
 from src.core.target_sniping.validations import (
     check_adverse_selection,
@@ -21,6 +22,7 @@ from src.core.target_sniping.validations import (
     check_cvd_vpin,
     check_obi,
     check_roll_spread,
+    check_slippage_at_risk,
     check_vol_regime,
     check_volume_profile_poc,
     check_vwap_filter,
@@ -37,7 +39,7 @@ from src.risk.price_validator import (
 logger = logging.getLogger("SnipingBot")
 
 
-class _FilterMixin:
+class _FilterMixin(_FilterEvaluatorMixin):
     """Per-item candidate evaluation (filter loop)."""
 
     # These attributes are set on the instance by SnipingLoop.__init__
@@ -96,8 +98,8 @@ class _FilterMixin:
         best_bid, best_ask} if the item passes all filters; None otherwise.
 
         cs_snapshots: optional dict {title: PriceSnapshot} pre-populated by the
-        caller via a single CS2Cap /prices/batch call. When supplied, the
-        CS2Cap validation step here is a dict lookup (free) instead of a
+        caller via a single oracle /prices/batch call. When supplied, the
+        oracle validation step here is a dict lookup (free) instead of a
         per-item HTTP call. Falls back to per-item oracle.get_item_price
         only if the title is missing from the snapshots (selective mode miss).
         """
@@ -223,6 +225,16 @@ class _FilterMixin:
                 return None
             obi_result["signal"]
 
+        # --- v15.5 Slippage-at-Risk (arXiv:2603.09164) ---
+        if Config.STRICT_MICROSTRUCTURE_FILTERS:
+            sar = check_slippage_at_risk(
+                title, base_price, best_ask, best_bid, ask_count, bid_count
+            )
+            if not sar["pass"]:
+                if os.getenv("DRY_RUN", "true").lower() == "true":
+                    price_db.log_decision(title, "skip", "Slippage-at-Risk", sar.get("reason", ""))
+                return None
+
         # --- v14.3 Queue Imbalance (large-tick asset signal) ---
         if Config.STRICT_MICROSTRUCTURE_FILTERS and Config.QUEUE_IMBALANCE_ENABLED and ask_count > 0:
             from src.analysis.microstructure import queue_imbalance
@@ -256,7 +268,7 @@ class _FilterMixin:
                 if ofi < Config.OFI_SELL_THRESHOLD:
                     return None
 
-        # --- Strategy C: cross-market arb (CS2Cap provider bids) ---
+        # --- Strategy C: cross-market arb (oracle provider bids) ---
         cross_market = evaluate_cross_market_arb(title, best_ask, cs_bids)
         cross_market_provider = cross_market["provider"]
         cross_market_bid = cross_market["bid"]
@@ -374,8 +386,8 @@ class _FilterMixin:
             except Exception:
                 pass  # non-fatal
 
-        # CS2Cap oracle validation (Phase 1: selective, top-K via batch).
-        # In selective mode the caller pre-fetches CS2Cap snapshots for the
+        # Oracle validation (Phase 1: selective, top-K via batch).
+        # In selective mode the caller pre-fetches oracle snapshots for the
         # top-K candidates and passes them in cs_snapshots. We do a dict
         # lookup here (free) instead of a per-item HTTP call.
         # v12.7: Also check per-cycle cache to avoid duplicate HTTP calls (P1-5).
@@ -411,13 +423,13 @@ class _FilterMixin:
         # Spread / opportunity gate.
         # Intra-DMarket spread arbitrage is rare because bid < ask on normal
         # markets. Also allow cross-market underpriced items: DMarket ask is
-        # cheaper than the CS2Cap lowest ask, so we can buy on DMarket and
-        # resell at the CS2Cap reference price.
+        # cheaper than the oracle lowest ask, so we can buy on DMarket and
+        # resell at the oracle reference price.
         has_intra_spread = best_bid > best_ask * (1 + effective_min_spread / 100.0)
         has_cross_market = cross_market_provider is not None
 
         required_margin = Config.FEE_RATE + Config.WITHDRAWAL_FEE_RATE + (Config.MIN_SPREAD_PCT / 100.0)
-        has_cs2cap_discount = (
+        has_oracle_discount = (
             cs_price > 0
             and base_price < cs_price * (1 - required_margin)
         )
@@ -426,7 +438,7 @@ class _FilterMixin:
         # when no other edge exists, to respect rate limits.
         has_dmarket_underpriced = False
         dm_underpriced_ref = 0.0
-        if not (has_intra_spread or has_cross_market or has_cs2cap_discount):
+        if not (has_intra_spread or has_cross_market or has_oracle_discount):
             try:
                 from src.core.target_sniping.underpriced import is_dmarket_underpriced
                 up = await is_dmarket_underpriced(
@@ -443,7 +455,7 @@ class _FilterMixin:
             except Exception as e:
                 logger.debug(f"DMarket underpriced check failed for {title}: {e}")
 
-        if not (has_intra_spread or has_cross_market or has_cs2cap_discount or has_dmarket_underpriced):
+        if not (has_intra_spread or has_cross_market or has_oracle_discount or has_dmarket_underpriced):
             if is_sandbox:
                 price_db.log_decision(
                     title,
@@ -455,7 +467,7 @@ class _FilterMixin:
                 )
             return None
 
-        # CS2Cap reference: ensure oracle price is not way below our buy
+        # Oracle reference: ensure oracle price is not way below our buy
         # (this would mean the item is genuinely overvalued on DMarket)
         if cs_price > 0 and base_price > cs_price * 1.5:
             # DMarket price is 50%+ above BUFF163 — likely overpriced, skip
@@ -468,23 +480,23 @@ class _FilterMixin:
                 )
             return None
 
-        # Calculate profit: list at best_bid - 0.01, but use CS2Cap ask or
+        # Calculate profit: list at best_bid - 0.01, but use oracle ask or
         # cross-market bid as reference when available.
         cs_ask_price = 0.0
         cs_snap = (cs_snapshots or {}).get(title)
         if cs_snap is not None and getattr(cs_snap, "has_data", False):
             cs_ask_price = cs_snap.min_price
 
-        # Base list price: prefer CS2Cap reference. For cross-market
+        # Base list price: prefer oracle reference. For cross-market
         # underpriced items best_bid may be below our buy price, so listing
         # at best_bid - 0.01 would guarantee a loss.
         list_price = round(best_bid - Config.INTRA_LIST_DISCOUNT, 2)
 
-        # Use CS2Cap lowest ask as list price reference when available
+        # Use oracle lowest ask as list price reference when available
         if cs_ask_price > 0:
-            # Don't list above CS2Cap ask — compete with cheapest marketplace
+            # Don't list above oracle ask — compete with cheapest marketplace
             cs_list_price = round(cs_ask_price * 0.97, 2)
-            # For cross-market buys, always use the CS2Cap reference if it
+            # For cross-market buys, always use the oracle reference if it
             # covers our cost. Otherwise keep the higher of the two prices.
             min_profitable = base_price * (1 + required_margin)
             if base_price > best_bid or cs_list_price > list_price:

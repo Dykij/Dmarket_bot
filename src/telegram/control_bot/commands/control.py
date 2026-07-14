@@ -141,6 +141,10 @@ async def _cancel_all_offers() -> tuple[int, Exception | None]:
 @safe_call
 async def cmd_liquidate(message):
     """Force-sell ALL unlocked inventory at best bid for emergency exit."""
+    if state.client is None:
+        await message.answer("❌ Bot is not running. Start the bot first with /start_bot")
+        return
+
     await message.answer("💧 *LIQUIDATION INITIATED*\nSelling all unlocked inventory at best bid...")
 
     from src.core.target_sniping.position_guard import _PositionGuardMixin

@@ -213,7 +213,7 @@ WARNING: Rust Aggregated Prices parser failed, falling back to Python
 
 ### Telegram
 - `_ADMIN_ID` → `_ADMIN_IDS` (множественное число)
-- `CrossMarketOracle` → `CS2CapOracle` (dead import)
+- `CrossMarketOracle` → `MultiSourceOracle` (dead import)
 - MarkdownV2 escaping для всех сообщений
 - `sqlite3.Row.get()` → `_row_bool()` helper
 - `await analyze_recent_trades()` (был пропущенный await)

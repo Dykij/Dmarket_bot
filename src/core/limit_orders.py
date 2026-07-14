@@ -29,9 +29,9 @@ LIMIT_ORDER_MIN_SPREAD_PCT = float(os.getenv("LIMIT_ORDER_MIN_SPREAD_PCT", "3.0"
 LIMIT_ORDER_MAX_PER_CYCLE = int(os.getenv("LIMIT_ORDER_MAX_PER_CYCLE", "5"))
 LIMIT_ORDER_TARGET_DISCOUNT = float(os.getenv("LIMIT_ORDER_TARGET_DISCOUNT", "0.03"))  # 3% below bid
 
-# Cross-market buy targets: place orders on DMarket at CS2Cap ask minus costs.
+# Cross-market buy targets: place orders on DMarket at oracle ask minus costs.
 # This lets the bot provide liquidity and catch sellers who hit our price,
-# even when DMarket's best ask is above CS2Cap (the normal state).
+# even when DMarket's best ask is above oracle (the normal state).
 CROSS_MARKET_TARGET_ENABLED = os.getenv("CROSS_MARKET_TARGET_ENABLED", "true").lower() == "true"
 CROSS_MARKET_TARGET_MARGIN = float(os.getenv("CROSS_MARKET_TARGET_MARGIN", "0.03"))  # 3% target profit
 CROSS_MARKET_TARGET_MAX_PER_CYCLE = int(os.getenv("CROSS_MARKET_TARGET_MAX_PER_CYCLE", "10"))
@@ -68,7 +68,7 @@ class _LimitOrderMixin:
             if best_ask <= 0 or best_bid <= 0:
                 continue
 
-            spread_pct = ((best_bid - best_ask) / best_ask) * 100.0
+            spread_pct = ((best_ask - best_bid) / best_ask) * 100.0
             if spread_pct < LIMIT_ORDER_MIN_SPREAD_PCT:
                 continue
 
@@ -124,7 +124,7 @@ class _LimitOrderMixin:
             best_bid = cand.get("best_bid", 0.0)
             if best_ask <= 0:
                 continue
-            spread_pct = ((best_bid - best_ask) / best_ask) * 100.0 if best_bid > 0 else 0
+            spread_pct = ((best_ask - best_bid) / best_ask) * 100.0 if best_bid > 0 else 0
 
             if spread_pct >= LIMIT_ORDER_MIN_SPREAD_PCT:
                 limit_targets.append(cand)
@@ -142,12 +142,12 @@ class _LimitOrderMixin:
         current_balance: float,
     ) -> int:
         """
-        Place DMarket buy targets priced from CS2Cap lowest ask minus costs.
+        Place DMarket buy targets priced from oracle lowest ask minus costs.
 
-        When DMarket best ask is above CS2Cap (the usual case), we cannot
+        When DMarket best ask is above oracle (the usual case), we cannot
         instant-buy profitably. Instead we post buy orders slightly below
-        CS2Cap ask. If a DMarket seller hits our price, we buy cheap and can
-        resell at/near CS2Cap reference.
+        oracle ask. If a DMarket seller hits our price, we buy cheap and can
+        resell at/near oracle reference.
 
         Returns number of targets placed.
         """
@@ -179,7 +179,7 @@ class _LimitOrderMixin:
             if best_ask <= 0:
                 continue
 
-            # Target: CS2Cap ask minus fees and target profit.
+            # Target: oracle ask minus fees and target profit.
             target_price = round(cs_ask * (1 - required_margin), 2)
 
             # Only place if our target is below current DMarket ask
@@ -193,7 +193,7 @@ class _LimitOrderMixin:
             if target_price < Config.MIN_PRICE_USD:
                 continue
 
-            # Potential margin if filled and sold at CS2Cap ask.
+            # Potential margin if filled and sold at oracle ask.
             margin = (cs_ask - target_price) / target_price if target_price > 0 else 0.0
             candidates.append({
                 "title": title,

@@ -1,10 +1,10 @@
 """
-InventoryManager — Tracks DMarket inventory + CS2Cap price data.
+InventoryManager — Tracks DMarket inventory + oracle price data.
 
 Features:
 - Full pagination for inventory/offers
 - Marks purchased items in virtual_inventory table
-- CS2Cap price checks for each held item
+- Oracle price checks for each held item
 - PnL tracking per item
 """
 
@@ -24,12 +24,12 @@ logger = logging.getLogger("InventoryManager")
 class InventoryManager:
     """
     Manages User's DMarket Inventory for Auto-Resale Tracking.
-    Full pagination support + CS2Cap price intelligence.
+    Full pagination support + oracle price intelligence.
     """
 
     def __init__(self, api_client: DMarketAPIClient):
         self.api = api_client
-        self.cs2cap = OracleFactory.get_cross_market_oracle(Config.GAME_ID)
+        self.oracle = OracleFactory.get_cross_market_oracle(Config.GAME_ID)
         self.cached_inventory: list[dict[str, Any]] = []
         self.cached_offers: list[dict[str, Any]] = []
 
@@ -110,14 +110,14 @@ class InventoryManager:
             logger.error(f"Failed to fetch active offers: {e}", exc_info=True)
             return []
 
-    async def fetch_all_with_cs2cap(self, game_id: str = "a8db") -> dict[str, Any]:
+    async def fetch_all_with_oracle(self, game_id: str = "a8db") -> dict[str, Any]:
         """
-        Fetch inventory + offers + CS2Cap prices for each item.
+        Fetch inventory + offers + oracle prices for each item.
         Returns enriched data with current market values.
 
         Phase 6 optimization: merges the two near-identical loops over
         inventory and offers into a single pass, deduplicates titles, and
-        fetches CS2Cap prices in one /prices/batch call (1 HTTP request
+        fetches oracle prices in one /prices/batch call (1 HTTP request
         instead of N).
         """
         inventory = await self.fetch_inventory(game_id)
@@ -138,7 +138,7 @@ class InventoryManager:
                 "item_id": item_id,
                 "title": title,
                 "buy_price": buy_price,
-                "cs2cap_price": 0.0,
+                "oracle_price": 0.0,
                 "profit_pct": 0.0,
                 "status": "inventory",
             })
@@ -154,15 +154,15 @@ class InventoryManager:
                 "item_id": offer_id,
                 "title": title,
                 "list_price": list_price,
-                "cs2cap_price": 0.0,
+                "oracle_price": 0.0,
                 "status": "on_sale",
             })
 
-        # --- 1 CS2Cap call for all unique titles (Phase 6 batch) ---
+        # --- 1 oracle call for all unique titles (Phase 6 batch) ---
         cs_prices: dict[str, float] = {}
-        if self.cs2cap and unique_titles:
+        if self.oracle and unique_titles:
             try:
-                snapshots = await self.cs2cap.get_prices_batch(unique_titles)
+                snapshots = await self.oracle.get_prices_batch(unique_titles)
                 cs_prices = {
                     t: s.min_price for t, s in snapshots.items() if s.has_data
                 }
@@ -170,23 +170,23 @@ class InventoryManager:
                 # Fallback for CSFloat oracle (no batch endpoint)
                 for title in unique_titles:
                     try:
-                        p = await self.cs2cap.get_item_price(title)
+                        p = await self.oracle.get_item_price(title)
                         if p > 0:
                             cs_prices[title] = p
                     except Exception:
                         pass
             except Exception as e:
-                logger.debug(f"CS2Cap batch failed in fetch_all_with_cs2cap: {e}")
+                logger.debug(f"Oracle batch failed in fetch_all_with_oracle: {e}")
 
         # --- Backfill the enriched_items with the batched prices ---
         for entry in enriched_items:
             title = entry.get("title", "")
-            cs2cap_price = cs_prices.get(title, 0.0)
-            entry["cs2cap_price"] = cs2cap_price
+            oracle_price = cs_prices.get(title, 0.0)
+            entry["oracle_price"] = oracle_price
             buy_price = entry.get("buy_price", 0.0)
-            if cs2cap_price > 0 and buy_price > 0:
+            if oracle_price > 0 and buy_price > 0:
                 entry["profit_pct"] = (
-                    (cs2cap_price * 0.95 - buy_price) / buy_price
+                    (oracle_price * 0.95 - buy_price) / buy_price
                 ) * 100
 
         return {
@@ -254,15 +254,15 @@ class InventoryManager:
         }
 
     # =================================================================
-    # 4. CS2Cap PRICE CHECK FOR HELD ITEMS
+    # 4. ORACLE PRICE CHECK FOR HELD ITEMS
     # =================================================================
 
     async def check_held_items_prices(self) -> list[dict[str, Any]]:
         """
-        Check CS2Cap prices for all held items.
+        Check oracle prices for all held items.
         Returns list of items with current market value.
 
-        Phase 6 optimization: uses CS2Cap /prices/batch in 1 call instead
+        Phase 6 optimization: uses oracle /prices/batch in 1 call instead
         of N per-item calls.
         """
         items = price_db.get_virtual_inventory(status='idle', only_unlocked=False)
@@ -271,36 +271,36 @@ class InventoryManager:
 
         unique_titles = list({it['hash_name'] for it in items})
         cs_prices: dict[str, float] = {}
-        if self.cs2cap and unique_titles:
+        if self.oracle and unique_titles:
             try:
-                snapshots = await self.cs2cap.get_prices_batch(unique_titles)
+                snapshots = await self.oracle.get_prices_batch(unique_titles)
                 cs_prices = {
                     t: s.min_price for t, s in snapshots.items() if s.has_data
                 }
             except AttributeError:
                 for title in unique_titles:
                     try:
-                        p = await self.cs2cap.get_item_price(title)
+                        p = await self.oracle.get_item_price(title)
                         if p > 0:
                             cs_prices[title] = p
                     except Exception:
                         pass
             except Exception as e:
-                logger.debug(f"CS2Cap batch failed in check_held_items_prices: {e}")
+                logger.debug(f"Oracle batch failed in check_held_items_prices: {e}")
 
         results: list[dict[str, Any]] = []
         for item in items:
             title = item['hash_name']
             buy_price = item['buy_price']
-            cs2cap_price = cs_prices.get(title, 0.0)
+            oracle_price = cs_prices.get(title, 0.0)
             unrealized_pnl = 0.0
-            if cs2cap_price > 0 and buy_price > 0:
-                unrealized_pnl = ((cs2cap_price * 0.95 - buy_price) / buy_price) * 100
+            if oracle_price > 0 and buy_price > 0:
+                unrealized_pnl = ((oracle_price * 0.95 - buy_price) / buy_price) * 100
 
             results.append({
                 "title": title,
                 "buy_price": buy_price,
-                "cs2cap_price": cs2cap_price,
+                "oracle_price": oracle_price,
                 "unrealized_pnl_pct": unrealized_pnl,
                 "status": item['status'],
                 "acquired": time.ctime(item['acquired_at']),

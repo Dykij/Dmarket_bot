@@ -126,3 +126,10 @@ class DatabaseCorruption(DataError):
 
 class DataStaleError(DataError):
     """Data is too stale to use."""
+
+
+# --- Network Errors ---
+
+
+class NetworkError(BotError):
+    """Network connectivity error (timeout, connection refused, DNS failure)."""

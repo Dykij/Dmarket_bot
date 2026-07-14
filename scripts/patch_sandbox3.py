@@ -15,8 +15,8 @@ content = content.replace(
 
 # Also wrap csEntrerie  285 and 905
 content = content.replace(
-    '        cs_price = cs2cap_prices.get(title, 0)',
-    '        cs_price = D(str(cs2cap_prices.get(title, 0)))'
+    '        cs_price = oracle_prices.get(title, 0)',
+    '        cs_price = D(str(oracle_prices.get(title, 0)))'
 )
 
 # For line 905 if it exists

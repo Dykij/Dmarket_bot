@@ -1,9 +1,11 @@
 """
 Unit tests for v12.4 components.
 
-P0-B: In-memory CS2Cap cache (cs2cap_cache.py)
-P0-C: MAX_SNIPING_PRICE_USD enforcement in _evaluate_candidate
-P1:   Circuit breaker (backoff.py) + jittered_sleep
+NOTE: This file is DEPRECATED. The CS2Cap oracle module (cs2cap_oracle.py,
+cs2cap_cache.py) has been removed and replaced by multi_source_oracle.py.
+Tests for CS2Cap-specific components are skipped if the module is missing.
+
+P1: Circuit breaker (backoff.py) + jittered_sleep
 
 Run with: pytest tests/unit/test_v12_4_components.py -v
 """
@@ -143,8 +145,16 @@ class TestShouldTrip:
 
 
 # ====================================================================
-# P0-B: CS2CapCache tests
+# P0-B: CS2CapCache tests (DEPRECATED — module removed)
 # ====================================================================
+try:
+    from src.api.cs2cap_cache import CS2CapCache
+    from src.api.cs2cap_oracle import PriceSnapshot, BidsSnapshot
+    _HAS_CS2CAP = True
+except ImportError:
+    _HAS_CS2CAP = False
+
+@pytest.mark.skipif(not _HAS_CS2CAP, reason="cs2cap_cache module removed")
 class TestCS2CapCacheHotPath:
     """Hot-path operations must be sub-ms dict lookups (no asyncio)."""
 
@@ -233,6 +243,7 @@ class TestCS2CapCacheHotPath:
         assert st["is_stale"] is False
 
 
+@pytest.mark.skipif(not _HAS_CS2CAP, reason="cs2cap_cache module removed")
 class TestCS2CapCacheRefresh:
     """Background refresh task lifecycle."""
 
@@ -351,8 +362,9 @@ class TestCS2CapCacheRefresh:
         )
         # Disable on-start refresh to keep test fast
         from src.config import Config
-        original = Config.CS2CAP_CACHE_REFRESH_ON_START
-        Config.CS2CAP_CACHE_REFRESH_ON_START = False
+        attr_name = "ORACLE_CACHE_REFRESH_ON_START"
+        original = getattr(Config, attr_name, False)
+        setattr(Config, attr_name, False)
         try:
             await cache.start()
             assert cache._refresh_task is not None
@@ -360,7 +372,7 @@ class TestCS2CapCacheRefresh:
             await cache.stop()
             assert cache._refresh_task is None or cache._refresh_task.done()
         finally:
-            Config.CS2CAP_CACHE_REFRESH_ON_START = original
+            setattr(Config, attr_name, original)
 
 
 # ====================================================================
@@ -548,12 +560,12 @@ class TestConfigKeys:
         assert Config.MAX_SNIPING_PRICE_USD > 0
         assert Config.MAX_SNIPING_PRICE_USD <= Config.MAX_PRICE_USD
 
-    def test_cs2cap_cache_ttl_present(self):
+    def test_oracle_cache_ttl_present(self):
         from src.config import Config
-        assert hasattr(Config, "CS2CAP_CACHE_TTL_SECONDS")
-        assert Config.CS2CAP_CACHE_TTL_SECONDS > 0
-        assert hasattr(Config, "CS2CAP_CACHE_REFRESH_TOP_N")
-        assert Config.CS2CAP_CACHE_REFRESH_TOP_N > 0
+        assert hasattr(Config, "ORACLE_CACHE_TTL_SECONDS")
+        assert Config.ORACLE_CACHE_TTL_SECONDS > 0
+        assert hasattr(Config, "ORACLE_CACHE_REFRESH_TOP_N")
+        assert Config.ORACLE_CACHE_REFRESH_TOP_N > 0
 
     def test_first_sale_age_days_present(self):
         """Regression: Config.MAX_FIRST_SALE_AGE_DAYS missing crashed

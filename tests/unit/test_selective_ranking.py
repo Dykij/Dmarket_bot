@@ -1,9 +1,9 @@
 """
-Unit tests for v12.0 SnipingLoop selective-CS2Cap ranking.
+Unit tests for v12.0 SnipingLoop selective-oracle ranking.
 
 Phase 1: _rank_candidates_by_spread must sort by DMarket bid-ask spread
 descending and filter out items that don't clear the spread gate.
-Run: python -m pytest tests/unit/test_v12_selective_cs2cap.py -v
+Run: python -m pytest tests/unit/test_v12_selective_oracle.py -v
 """
 
 import pytest
@@ -93,7 +93,7 @@ class TestRankCandidatesBySpread:
         assert [t for t, _ in result] == ["Known"]
 
     def test_top_k_selection(self):
-        """Verify the calling pattern in core.py: ranked[:CS2CAP_TOP_K_VALIDATE]."""
+        """Verify the calling pattern in core.py: ranked[:ORACLE_TOP_K_VALIDATE]."""
         items = [{"title": f"Item {i}"} for i in range(10)]
         agg = {}
         for i in range(10):

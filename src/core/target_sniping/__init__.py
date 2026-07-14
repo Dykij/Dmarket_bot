@@ -3,7 +3,7 @@ target_sniping — Strategy A intra-DMarket spread arbitrage.
 
 Composed from focused mixins:
     core.py       — SnipingLoop lifecycle + run_cycle
-    scheduler.py  — _SchedulerMixin (start, scan delay, CS2Cap cache)
+    scheduler.py  — _SchedulerMixin (start, scan delay, oracle cache)
     telemetry.py  — _TelemetryMixin (health, equity, diag)
     pricing.py    — _PricingMixin (float premium, low-fee cache)
     resale.py     — _ResaleMixin (auto_resale, reprice)

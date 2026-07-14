@@ -32,16 +32,21 @@ TAKE_PROFIT_ENABLED = os.getenv("TAKE_PROFIT_ENABLED", "true").lower() == "true"
 STOP_LOSS_MIN_AGE_HOURS = int(os.getenv("STOP_LOSS_MIN_AGE_HOURS", "1"))  # don't trigger on very fresh items
 LIQUIDATE_AT_BID_DISCOUNT = float(os.getenv("LIQUIDATE_AT_BID_DISCOUNT", "0.01"))  # $0.01 below bid for fast exit
 
+# v15.5: Time-stop — cancel buy targets sitting too long without fill
+# Source: Reddit r/algotrading "90-minute time-stop for dead positions"
+TIME_STOP_ENABLED = os.getenv("TIME_STOP_ENABLED", "true").lower() == "true"
+TIME_STOP_MINUTES = int(os.getenv("TIME_STOP_MINUTES", "90"))  # cancel after 90min
+
 
 class _PositionGuardMixin:
     """Stop-loss, take-profit, and liquidation logic."""
 
     client: Any  # DMarketAPIClient
-    cs2cap_cache: Any  # CS2CapCache (or None)
+    oracle: Any  # Oracle cache (or None)
 
     async def check_stop_losses(self, game_id: str) -> int:
         """
-        Scan all idle (unlocked) items. If current CS2Cap price has dropped
+        Scan all idle (unlocked) items. If current oracle price has dropped
         below the stop-loss threshold relative to buy price, force-sell.
         Returns number of items liquidated.
         """
@@ -158,13 +163,13 @@ class _PositionGuardMixin:
         return {"liquidated": count, "total_value": round(total_value, 2), "errors": len(liquidate_list) - count}
 
     async def _get_current_price(self, hash_name: str, use_bid: bool = False) -> float:
-        """Get current market price from CS2Cap cache or oracle."""
-        if self.cs2cap_cache is not None:
+        """Get current market price from oracle cache or oracle."""
+        if self.oracle is not None:
             if use_bid:
-                bid = self.cs2cap_cache.get_bid(hash_name)
+                bid = self.oracle.get_bid(hash_name)
                 if bid is not None and bid > 0:
                     return bid
-            ask = self.cs2cap_cache.get_ask(hash_name)
+            ask = self.oracle.get_ask(hash_name)
             if ask is not None and ask > 0:
                 return ask
 
@@ -178,6 +183,62 @@ class _PositionGuardMixin:
             except Exception as e:
                 logger.debug(f"[POSITION-GUARD] Oracle price fetch failed for {hash_name}: {e}")
         return 0.0
+
+    async def check_stale_targets(self, game_id: str) -> int:
+        """v15.5: Cancel buy targets sitting too long without fill (time-stop).
+
+        Source: Reddit r/algotrading — "90-minute time-stop for dead positions"
+        Prevents capital lockup in unfilled orders.
+        """
+        if not TIME_STOP_ENABLED:
+            return 0
+
+        now = __import__("time").time()
+        cutoff = now - (TIME_STOP_MINUTES * 60)
+
+        targets = price_db.get_active_targets()
+        if not targets:
+            return 0
+
+        stale: list[dict] = []
+        for t in targets:
+            created = float(t.get("created_at", 0))
+            if created > 0 and created < cutoff:
+                stale.append(t)
+
+        if not stale:
+            return 0
+
+        is_dry = os.getenv("DRY_RUN", "true").lower() == "true"
+        cancelled = 0
+
+        if is_dry:
+            for t in stale:
+                age_min = (now - float(t.get("created_at", 0))) / 60
+                logger.info(
+                    f"[TIME-STOP-SIM] Would cancel stale target: "
+                    f"{t.get('hash_name', '?')} (age {age_min:.0f}min > {TIME_STOP_MINUTES}min)"
+                )
+                cancelled += 1
+            return cancelled
+
+        try:
+            target_ids = [t["item_id"] for t in stale if t.get("item_id")]
+            if target_ids:
+                await self.client.batch_delete_targets(
+                    [{"targetId": tid} for tid in target_ids]
+                )
+                for t in stale:
+                    age_min = (now - float(t.get("created_at", 0))) / 60
+                    logger.info(
+                        f"[TIME-STOP] Cancelled stale target: "
+                        f"{t.get('hash_name', '?')} (age {age_min:.0f}min)"
+                    )
+                    cancelled += 1
+        except Exception as e:
+            logger.warning(f"[TIME-STOP] Batch cancel failed: {e}")
+
+        return cancelled
 
     async def _execute_liquidation(
         self,

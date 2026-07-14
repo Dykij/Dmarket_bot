@@ -50,7 +50,9 @@ class SteamOracle:
         async with self._lock:
             if self._session is not None and not self._session.closed:
                 return self._session
-            self._session = aiohttp.ClientSession()
+            self._session = aiohttp.ClientSession(
+                timeout=aiohttp.ClientTimeout(total=15, connect=5)
+            )
             return self._session
 
     async def _throttle(self) -> None:
@@ -91,14 +93,17 @@ class SteamOracle:
             "market_hash_name": hash_name,
         }
 
-        try:
-            async with session.get(self.BASE_URL, params=params) as resp:
-                if resp.status == 429:
-                    logger.warning("[Steam] Rate limited, backing off")
-                    await asyncio.sleep(5.0)
-                    return 0.0
-                if resp.status != 200:
-                    return 0.0
+        for attempt in range(3):
+            try:
+                async with session.get(self.BASE_URL, params=params) as resp:
+                    if resp.status == 429:
+                        wait = 5.0 * (attempt + 1)
+                        logger.warning(f"[Steam] Rate limited, backing off {wait}s (attempt {attempt+1})")
+                        await asyncio.sleep(wait)
+                        continue
+                    if resp.status != 200:
+                        logger.debug(f"[Steam] HTTP {resp.status} for {hash_name}")
+                        return 0.0
 
                 data = await resp.json()
                 if not data.get("success"):
@@ -120,9 +125,13 @@ class SteamOracle:
 
                 return 0.0
 
-        except Exception as e:
-            logger.debug(f"[Steam] Error fetching {hash_name}: {e}")
-            return 0.0
+            except Exception as e:
+                logger.debug(f"[Steam] Error fetching {hash_name}: {e}")
+                if attempt < 2:
+                    await asyncio.sleep(2.0 * (attempt + 1))
+                    continue
+                return 0.0
+        return 0.0
 
     async def get_prices_batch(self, hash_names: list[str]) -> dict[str, float]:
         """

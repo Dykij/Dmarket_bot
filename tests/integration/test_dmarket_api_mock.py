@@ -107,50 +107,15 @@ class TestDMarketAPIWithHTTPXMock:
         httpx_mock: HTTPXMock,
     ) -> None:
         """Тест обработки ошибки аутентификации (401)."""
-        # API делает 5 попыток при 401:
-        # 1. Direct Balance Request: /account/v1/balance
-        # 2. Fallback #1: /account/v1/balance (повторный вызов того же URL)
-        # 3-5. Fallback #2-4: другие эндпоинты
-
-        # Регистрируем /account/v1/balance ДВАЖДЫ (pytest-httpx 0.35.0 не поддерживает can_reuse)
-        # Первый мок - для Direct Balance Request
         httpx_mock.add_response(
             url="https://api.dmarket.com/account/v1/balance",
             method="GET",
             status_code=401,
             json={"error": "Unauthorized", "message": "Invalid API credentials"},
         )
-        # ВтоSwarm мок - для Fallback #1 (тот же URL)
-        httpx_mock.add_response(
-            url="https://api.dmarket.com/account/v1/balance",
-            method="GET",
-            status_code=401,
-            json={"error": "Unauthorized"},
-        )
-        # Fallback #2
-        httpx_mock.add_response(
-            url="https://api.dmarket.com/api/v1/account/wallet/balance",
-            method="GET",
-            status_code=401,
-            json={"error": "Unauthorized"},
-        )
-        httpx_mock.add_response(
-            url="https://api.dmarket.com/exchange/v1/user/balance",
-            method="GET",
-            status_code=401,
-            json={"error": "Unauthorized"},
-        )
-        httpx_mock.add_response(
-            url="https://api.dmarket.com/api/v1/account/balance",
-            method="GET",
-            status_code=401,
-            json={"error": "Unauthorized"},
-        )
 
-        # Выполнение
         balance = await mock_dmarket_api.get_balance()
 
-        # API должен вернуть fallback или пустой результат
         assert balance is not None
 
     async def test_get_market_items_success(
@@ -273,7 +238,7 @@ class TestDMarketAPIWithHTTPXMock:
         }
 
         httpx_mock.add_response(
-            url="https://api.dmarket.com/marketplace-api/v1/user-targets/create",
+            url="https://api.dmarket.com/exchange/v1/targets/create",
             method="POST",
             json=expected_response,
             status_code=200,
@@ -300,7 +265,7 @@ class TestDMarketAPIWithHTTPXMock:
     ) -> None:
         """Тест ошибки валидации при создании таргетов."""
         httpx_mock.add_response(
-            url="https://api.dmarket.com/marketplace-api/v1/user-targets/create",
+            url="https://api.dmarket.com/exchange/v1/targets/create",
             method="POST",
             status_code=400,
             json={

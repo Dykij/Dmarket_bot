@@ -26,7 +26,7 @@ def validate_price(
     except (ValueError, TypeError) as e:
         raise PriceValidationError(
             f"[V3] {label}={price!r} is not a valid number: {e}"
-        )
+        ) from e
 
     if math.isnan(value) or math.isinf(value):
         raise PriceValidationError(
@@ -57,23 +57,31 @@ def validate_arbitrage_profit(
     buy_price: float,
     expected_sell_price: float,
     fee_markup: float = 0.05,
+    buy_fee_markup: float = 0.05,
     min_profit_margin: float = 0.05,
     lock_days: int = 7,
     penalty_per_day: float = 0.005,
 ) -> float:
-    """Validate arbitrage trade is profitable after fees and TVM penalty."""
+    """Validate arbitrage trade is profitable after fees and TVM penalty.
+
+    Applies fees to BOTH sides:
+      - buy_fee_markup: DMarket fee on purchase (default 5%)
+      - fee_markup: DMarket fee on sale (default 5%)
+    """
     if buy_price <= 0:
         raise PriceValidationError(
             f"Buy price must be > 0, got ${buy_price:.2f}"
         )
 
     net_received = expected_sell_price * (1.0 - fee_markup)
-    actual_profit = net_received - buy_price
+    net_cost = buy_price * (1.0 + buy_fee_markup)
+    actual_profit = net_received - net_cost
 
     if actual_profit <= 0:
         raise PriceValidationError(
-            f"Absolute LOSS Trade Detected: Buy ${buy_price:.2f}, Sell ${expected_sell_price:.2f} "
-            f"(Fee: {fee_markup*100:.1f}%). Blocked."
+            f"Absolute LOSS Trade Detected: Buy ${buy_price:.2f} (+{buy_fee_markup*100:.1f}% fee), "
+            f"Sell ${expected_sell_price:.2f} (-{fee_markup*100:.1f}% fee). "
+            f"Net cost ${net_cost:.2f}, net received ${net_received:.2f}. Blocked."
         )
 
     profit_margin_pct = actual_profit / buy_price
@@ -130,7 +138,7 @@ def validate_volatility(
         return
 
     mean_return = sum(returns) / len(returns)
-    variance = sum((r - mean_return) ** 2 for r in returns) / len(returns)
+    variance = sum((r - mean_return) ** 2 for r in returns) / (len(returns) - 1)
     std_dev = math.sqrt(variance)
 
     if std_dev > max_std_dev_pct:

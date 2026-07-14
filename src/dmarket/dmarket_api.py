@@ -53,7 +53,6 @@ class DMarketAPI:
         client = await self._get_client()
         headers = {
             "X-Api-Key": self.public_key,
-            "X-Api-Secret": self.secret_key,
             "Content-Type": "application/json",
         }
         resp = await client.request(method, path, params=params, json=json, headers=headers)
