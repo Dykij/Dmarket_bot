@@ -256,12 +256,12 @@ class TestNotificationDeliveryIntegration:
     @pytest.mark.asyncio()
     async def test_delivery_with_keyboard(self, mock_bot):
         """Test notification delivery with inline keyboard."""
-        from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+        from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
         user_id = 123456789
         message = "Test notification"
         keyboard = InlineKeyboardMarkup(
-            [[InlineKeyboardButton("View Details", callback_data="view_details")]]
+            inline_keyboard=[[InlineKeyboardButton(text="View Details", callback_data="view_details")]]
         )
 
         await mock_bot.send_message(

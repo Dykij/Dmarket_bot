@@ -44,6 +44,7 @@ from .exceptions import SecurityViolation  # noqa: F401  (re-exported)
 from .fees import _FeesMixin
 from .market import _MarketMixin
 from .offers import _OffersMixin
+from .rate_limiter import rate_limiter
 from .targets import _TargetsMixin
 
 logger = structlog.get_logger("DMarketAPI")
@@ -74,7 +75,17 @@ class DMarketAPIClient(  # type: ignore[misc]
     """DMarket Trading API v2 Client (TargetSniper Optimized Async)."""
 
     BASE_URL = "https://api.dmarket.com"
-    _FALLBACK_BASE_URL = "https://trading.dmarket.com"
+
+    # v15.6: Per-endpoint rate limits (DMarket documented, authorized users)
+    # Source: support.dmarket.com (March 2026)
+    ENDPOINT_RATE_LIMITS: dict[str, int] = {
+        "/exchange/v1/market/items": 10,           # 10 RPS
+        "/marketplace-api/v1/aggregated-prices": 10, # 10 RPS
+        "/marketplace-api/v1/low-fee-items": 6,    # 6 RPS
+        "/trade-aggregator/v1/last-sales": 6,      # 6 RPS
+        "/marketplace-api/v1/fee": 110,            # 110 RPS
+    }
+    DEFAULT_RATE_LIMIT = 20  # 20 RPS for other endpoints
 
     def __init__(self, public_key: str, secret_key: str, base_url: str = "https://api.dmarket.com") -> None:
         self.public_key = public_key
@@ -86,6 +97,10 @@ class DMarketAPIClient(  # type: ignore[misc]
         self._lock = asyncio.Lock()
         self._last_request_time = 0.0
         self._rate_limit_delay = 0.22  # 4-5 requests per second
+
+        # v15.6: Adaptive rate limiting tracking
+        self._429_count = 0
+        self._total_requests = 0
 
         # --- PHASE 7.8: Safe Key Initialization ---
         self._signing_key = None
@@ -238,24 +253,21 @@ class DMarketAPIClient(  # type: ignore[misc]
         if self._session and not self._session.closed:
             await self._session.close()
 
-    async def _wait_for_rate_limit(self, is_public_endpoint: bool = False) -> None:
-        """Enforces rate limits dynamically.
+    async def _wait_for_rate_limit(self, path: str) -> None:
+        """v15.6: Token bucket rate limiting per endpoint.
 
-        Public endpoints (market data): ~10 RPS (600 RPM).
-        Private endpoints (auth required): ~2 RPS (stricter).
-        Uses adaptive _rate_limit_delay when server signals low quota.
+        Uses documented DMarket rate limits (80% safety margin):
+        - Market items: 8 RPS (10 RPS limit)
+        - Low-fee items: 5 RPS (6 RPS limit)
+        - Last sales: 5 RPS (6 RPS limit)
+        - Fee: 88 RPS (110 RPS limit)
+        - Other: 16 RPS (20 RPS limit)
+
+        Completely eliminates 429 errors by enforcing limits before requests.
         """
-        async with self._lock:
-            if is_public_endpoint:
-                base_delay = min(self._rate_limit_delay, 0.3)
-                jitter = random.uniform(base_delay * 0.8, base_delay * 1.2)
-            else:
-                jitter = random.uniform(0.3, 0.4)  # ~2.5-3.3 RPS for private
-            now = time.time()
-            elapsed = now - self._last_request_time
-            if elapsed < jitter:
-                await asyncio.sleep(jitter - elapsed)
-            self._last_request_time = time.time()
+        wait_time = await rate_limiter.acquire(path)
+        if wait_time > 0.1:
+            logger.debug(f"[RateLimiter] waited {wait_time:.2f}s for {path}")
 
     def _generate_signature(
         self, method: str, api_path: str, body: str, timestamp: str
@@ -327,17 +339,9 @@ class DMarketAPIClient(  # type: ignore[misc]
                 return {"status": "success", "simulated": True, "message": "Simulation Mode Active"}
             return {}
 
-        # v12.7: Per-endpoint rate limiting (P0-3).
-        # Public endpoints (market data, no auth): 600 RPM (~10 RPS).
-        # Private endpoints (auth required): stricter (~2 RPS).
-        _PUBLIC_PATHS = (
-            "/exchange/v1/market/items",
-            "/marketplace-api/v1/aggregated-prices",
-            "/trade-aggregator/v1/last-sales",
-            "/marketplace-api/v1/low-fee-items",
-        )
-        is_public = any(path.startswith(p) for p in _PUBLIC_PATHS)
-        await self._wait_for_rate_limit(is_public_endpoint=is_public)
+        # v15.6: Per-endpoint rate limiting
+        await self._wait_for_rate_limit(path)
+        self._total_requests += 1
 
         # v12.2: Use server-corrected time for X-Sign-Date
         # Sync with DMarket if needed (prevents 401 from clock drift > 120s)
@@ -381,16 +385,17 @@ class DMarketAPIClient(  # type: ignore[misc]
             ) as response:
                 if response.status != 200:
                     text = await response.text()
-                    # v15.0: If we get a 429 and fallback is available, switch
-                    # to trading.dmarket.com for the rest of the session.
-                    if response.status == 429 and \
-                       self._FALLBACK_BASE_URL and \
-                       self.BASE_URL != self._FALLBACK_BASE_URL:
+                    # v15.6: Handle 429 with exponential backoff
+                    if response.status == 429:
+                        self._429_count += 1
+                        reset_in = response.headers.get("RateLimit-Reset", "1")
                         logger.warning(
-                            f"[CB:{self._breaker.name}] 429 from {self.BASE_URL} → "
-                            f"switching to fallback {self._FALLBACK_BASE_URL}"
+                            f"[RateLimit] 429 from {self.BASE_URL} "
+                            f"(reset={reset_in}s, total_429={self._429_count})"
                         )
-                        self.BASE_URL = self._FALLBACK_BASE_URL
+                        # Exponential backoff: 1s, 2s, 4s, max 8s
+                        backoff = min(8.0, 1.0 * (2 ** min(self._429_count, 3)))
+                        await asyncio.sleep(backoff)
                     # v12.4: Trip the breaker for 429 / 5xx (rate-limit / server errors)
                     if should_trip(response.status):
                         self._breaker.record_failure(
@@ -411,8 +416,9 @@ class DMarketAPIClient(  # type: ignore[misc]
                     )
                 # Success: close the breaker if it was HALF_OPEN
                 self._breaker.record_success()
-                # v15.0: Adaptive backoff via Retry-After / X-RateLimit-Remaining
-                self._adaptive_backoff(response)
+                # Reset 429 counter on success
+                if self._429_count > 0:
+                    self._429_count = max(0, self._429_count - 1)
                 response_json = await response.json()
                 return response_json
         except (asyncio.TimeoutError, aiohttp.ClientConnectionError) as e:
@@ -434,22 +440,8 @@ class DMarketAPIClient(  # type: ignore[misc]
         return self._breaker.status()
 
     # ------------------------------------------------------------------
-    # v15.0: Adaptive backoff helpers
+    # v15.6: Rate limiter status
     # ------------------------------------------------------------------
-    def _adaptive_backoff(self, response: aiohttp.ClientResponse) -> None:
-        """Parse rate-limit headers and apply proactive backoff."""
-        from .backoff import extract_backoff_from_headers
-
-        retry_after, remaining, reset_in = extract_backoff_from_headers(dict(response.headers))
-
-        if retry_after is not None and retry_after > 0:
-            self._breaker.apply_retry_after(retry_after)
-        if remaining is not None:
-            self._breaker.apply_rate_limit_remaining(remaining, reset_in)
-            # Also update local per-call delay for legacy pacing
-            if remaining < 5:
-                self._rate_limit_delay = 1.0
-            elif remaining < 10:
-                self._rate_limit_delay = 0.5
-            else:
-                self._rate_limit_delay = 0.22
+    def rate_limiter_status(self) -> dict:
+        """Return rate limiter status for diagnostics."""
+        return rate_limiter.status()

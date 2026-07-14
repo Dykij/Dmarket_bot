@@ -5,7 +5,7 @@ Mixin with the small key/value table for scan cursors and other
 small persistent state. Mixed into `PriceHistoryDB` (see `core.py`).
 
 v12.7: write methods wrapped with @with_db_retry so concurrent
-background-task writes (CS2CapCache refresh, briefing scheduler)
+background-task writes (oracle cache refresh, briefing scheduler)
 retry on transient 'database is locked' instead of losing the
 cursor update.
 """

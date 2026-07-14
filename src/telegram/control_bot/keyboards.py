@@ -2,9 +2,10 @@
 keyboards.py — Reply and inline keyboards with constants.
 
 Constants:
-- BTN_* — text labels for the 12 reply-keyboard buttons
-- CB_* — callback_data strings for inline buttons
+- BTN_* — text labels for the 16 reply-keyboard buttons
+- CB_* — callback_data strings for inline buttons (legacy, kept for backward compat)
 
+v15.6: Added CallbackData factories for type-safe callbacks.
 v13.2: Added SELL-TOP, PORTFOLIO, DAILY-BRIEF, ANALYZE buttons.
        Added inline keyboards for new features.
 """
@@ -17,6 +18,8 @@ from aiogram.types import (
     KeyboardButton,
     ReplyKeyboardMarkup,
 )
+
+from .callback_data import ConfirmCallback, MenuCallback, SettingsCallback
 
 logger = logging.getLogger("TelegramControl.keyboards")
 
@@ -41,7 +44,7 @@ BTN_CLOCK = "🕐 CLOCK"
 BTN_REFRESH = "🔄 REFRESH"
 
 # ============================================================
-# Inline keyboard callback_data constants
+# Inline keyboard callback_data constants (legacy, kept for compat)
 # ============================================================
 CB_START = "btn:start"
 CB_STOP = "btn:stop"
@@ -96,24 +99,24 @@ def get_inline_status_kb(is_running: bool) -> InlineKeyboardMarkup:
         [
             InlineKeyboardButton(
                 text="🟡 RUNNING" if is_running else "🟢 START",
-                callback_data=CB_NOOP if is_running else CB_START,
+                callback_data=CB_NOOP if is_running else MenuCallback(action="start").pack(),
             ),
             InlineKeyboardButton(
                 text="🔴 STOP" if is_running else "⚪ STOPPED",
-                callback_data=CB_STOP if is_running else CB_NOOP,
+                callback_data=MenuCallback(action="stop").pack() if is_running else CB_NOOP,
             ),
         ],
         [
-            InlineKeyboardButton(text="💰 Balance", callback_data=CB_BALANCE),
-            InlineKeyboardButton(text="📦 Inventory", callback_data=CB_INVENTORY),
+            InlineKeyboardButton(text="💰 Balance", callback_data=MenuCallback(action="balance").pack()),
+            InlineKeyboardButton(text="📦 Inventory", callback_data=MenuCallback(action="inventory").pack()),
         ],
         [
-            InlineKeyboardButton(text="📈 Profits", callback_data=CB_PROFITS),
-            InlineKeyboardButton(text="💼 Portfolio", callback_data=CB_PORTFOLIO),
+            InlineKeyboardButton(text="📈 Profits", callback_data=MenuCallback(action="profits").pack()),
+            InlineKeyboardButton(text="💼 Portfolio", callback_data=MenuCallback(action="portfolio").pack()),
         ],
         [
-            InlineKeyboardButton(text="📅 Daily", callback_data=CB_DAILY),
-            InlineKeyboardButton(text="🔄 Refresh", callback_data=CB_REFRESH_STATUS),
+            InlineKeyboardButton(text="📅 Daily", callback_data=MenuCallback(action="daily").pack()),
+            InlineKeyboardButton(text="🔄 Refresh", callback_data=MenuCallback(action="refresh_status").pack()),
         ],
     ])
 
@@ -122,33 +125,33 @@ def get_inline_inventory_kb() -> InlineKeyboardMarkup:
     """Inline keyboard for inventory message."""
     return InlineKeyboardMarkup(inline_keyboard=[
         [
-            InlineKeyboardButton(text="🔄 Refresh", callback_data=CB_INVENTORY),
-            InlineKeyboardButton(text="📈 Profits", callback_data=CB_PROFITS),
+            InlineKeyboardButton(text="🔄 Refresh", callback_data=MenuCallback(action="inventory").pack()),
+            InlineKeyboardButton(text="📈 Profits", callback_data=MenuCallback(action="profits").pack()),
         ],
-        [InlineKeyboardButton(text="⬅️ Back to Status", callback_data=CB_REFRESH_STATUS)],
+        [InlineKeyboardButton(text="⬅️ Back to Status", callback_data=MenuCallback(action="refresh_status").pack())],
     ])
 
 
 def get_inline_balance_kb() -> InlineKeyboardMarkup:
     """Inline keyboard for balance message."""
     return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="🔄 Refresh", callback_data=CB_BALANCE)],
+        [InlineKeyboardButton(text="🔄 Refresh", callback_data=MenuCallback(action="balance").pack())],
     ])
 
 
 def get_inline_profits_kb() -> InlineKeyboardMarkup:
     """Inline keyboard for profits message."""
     return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="🔄 Refresh", callback_data=CB_PROFITS)],
-        [InlineKeyboardButton(text="⬅️ Status", callback_data=CB_REFRESH_STATUS)],
+        [InlineKeyboardButton(text="🔄 Refresh", callback_data=MenuCallback(action="profits").pack())],
+        [InlineKeyboardButton(text="⬅️ Status", callback_data=MenuCallback(action="refresh_status").pack())],
     ])
 
 
 def get_inline_portfolio_kb() -> InlineKeyboardMarkup:
     """Inline keyboard for portfolio message."""
     return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="🔄 Refresh", callback_data=CB_PORTFOLIO)],
-        [InlineKeyboardButton(text="⬅️ Status", callback_data=CB_REFRESH_STATUS)],
+        [InlineKeyboardButton(text="🔄 Refresh", callback_data=MenuCallback(action="portfolio").pack())],
+        [InlineKeyboardButton(text="⬅️ Status", callback_data=MenuCallback(action="refresh_status").pack())],
     ])
 
 
@@ -156,16 +159,16 @@ def get_inline_daily_kb() -> InlineKeyboardMarkup:
     """Inline keyboard for daily briefing message."""
     return InlineKeyboardMarkup(inline_keyboard=[
         [
-            InlineKeyboardButton(text="🔄 Refresh", callback_data=CB_DAILY),
-            InlineKeyboardButton(text="🧠 Analyze", callback_data=CB_ANALYZE),
+            InlineKeyboardButton(text="🔄 Refresh", callback_data=MenuCallback(action="daily").pack()),
+            InlineKeyboardButton(text="🧠 Analyze", callback_data=MenuCallback(action="analyze").pack()),
         ],
-        [InlineKeyboardButton(text="⬅️ Status", callback_data=CB_REFRESH_STATUS)],
+        [InlineKeyboardButton(text="⬅️ Status", callback_data=MenuCallback(action="refresh_status").pack())],
     ])
 
 
 def get_inline_analyze_kb() -> InlineKeyboardMarkup:
     """Inline keyboard for analyze/reflection message."""
     return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="🔄 Re-run", callback_data=CB_ANALYZE)],
-        [InlineKeyboardButton(text="⬅️ Status", callback_data=CB_REFRESH_STATUS)],
+        [InlineKeyboardButton(text="🔄 Re-run", callback_data=MenuCallback(action="analyze").pack())],
+        [InlineKeyboardButton(text="⬅️ Status", callback_data=MenuCallback(action="refresh_status").pack())],
     ])

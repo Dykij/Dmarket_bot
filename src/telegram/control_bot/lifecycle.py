@@ -42,7 +42,7 @@ async def set_commands(bot: Bot) -> None:
         types.BotCommand(command="daily", description="📅 Daily briefing"),
         types.BotCommand(command="analyze", description="🧠 Strategy analysis"),
         types.BotCommand(command="sell", description="🔍 Sell top-5 idle items"),
-        types.BotCommand(command="prices", description="📊 CS2Cap price check"),
+        types.BotCommand(command="prices", description="📊 Oracle price check"),
         types.BotCommand(command="test", description="🧪 Test arbitrage for an item"),
         types.BotCommand(command="settings", description="⚙️ View config"),
         types.BotCommand(command="clock", description="🕐 Clock sync status"),

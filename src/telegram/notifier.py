@@ -25,7 +25,7 @@ Design:
 Usage (from any module, even from inside a coroutine):
     from src.telegram.notifier import notifier
     await notifier.buy(title="AK-47 | Redline (FT)", price=1.50)
-    await notifier.error("Circuit breaker tripped for CS2Cap")
+    await notifier.error("Circuit breaker tripped for oracle")
 
 Configuration is read from .env (TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID,
 TELEGRAM_ADMIN_IDS). If either is missing or a placeholder, the
@@ -325,15 +325,17 @@ class _TelegramNotifier:
 
     async def error(self, message: str) -> bool:
         """Alert: non-fatal error (use sparingly)."""
+        safe_message = html.escape(message[:3500])
         return await self._send_raw(
-            f"⚠️ <b>ERROR</b>\n{message[:3500]}",
+            f"⚠️ <b>ERROR</b>\n{safe_message}",
             severity="warning",
         )
 
     async def crash(self, message: str) -> bool:
         """Alert: process is about to crash/restart (severity=critical)."""
+        safe_message = html.escape(message[:3500])
         return await self._send_raw(
-            f"🔴 <b>CRASH</b>\n{message[:3500]}",
+            f"🔴 <b>CRASH</b>\n{safe_message}",
             severity="critical",
         )
 

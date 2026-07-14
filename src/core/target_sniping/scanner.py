@@ -45,10 +45,9 @@ class _ScannerMixin:
         if not titles:
             return []
 
-        # Parallel fetch: DMarket market-items endpoint has 600 RPM.
-        # Cap concurrency to avoid connection/rate-limit storms when scanning
-        # 100 titles per cycle.
-        sem = asyncio.Semaphore(3)
+        # Parallel fetch: DMarket market-items endpoint has 10 RPS limit.
+        # Cap concurrency to 2 with 400ms pacing = ~5 RPS (safe margin).
+        sem = asyncio.Semaphore(2)
 
         async def _fetch_one(title: str) -> list[dict[str, Any]]:
             async with sem:
@@ -58,8 +57,9 @@ class _ScannerMixin:
                         limit=Config.LISTINGS_FETCH_LIMIT,
                         title=title,
                     )
-                    # Tiny pacing to avoid DMarket burst-rate limiter
-                    await asyncio.sleep(0.1)
+                    # Pacing: 400ms between requests = 2.5 RPS per semaphore slot
+                    # With 2 slots = 5 RPS total (50% of DMarket limit)
+                    await asyncio.sleep(0.4)
                     return resp.get("objects", [])
                 except Exception as e:
                     logger.debug(f"Listing fetch failed for {title!r}: {e}")
@@ -133,7 +133,7 @@ class _ScannerMixin:
         all_listings: list[dict[str, Any]] = []
         cursor: str | None = None
         pages = 0
-        sem = asyncio.Semaphore(3)  # conservative: price-range scan is heavy
+        sem = asyncio.Semaphore(2)  # 2 concurrent, 400ms pacing = 5 RPS
 
         async def _page() -> dict[str, Any]:
             async with sem:
@@ -145,9 +145,11 @@ class _ScannerMixin:
                     }
                     if cursor:
                         params["cursor"] = cursor
-                    return await self.client.get_market_items_v2(
+                    resp = await self.client.get_market_items_v2(
                         game_id, **params
                     )
+                    await asyncio.sleep(0.4)  # 400ms pacing
+                    return resp
                 except Exception as e:
                     logger.debug(f"[PRICE-RANGE] page fetch failed: {e}")
                     return {}
@@ -183,7 +185,7 @@ class _ScannerMixin:
                 if price_cents < existing_cents:
                     by_title[title] = it
 
-        # Keep only max_titles cheapest (so we don't blow up CS2Cap quota)
+        # Keep only max_titles cheapest (so we don't blow up oracle quota)
         sorted_items = sorted(
             by_title.values(),
             key=lambda x: int(x.get("price", {}).get("USD", 0)),
@@ -215,7 +217,7 @@ class _ScannerMixin:
             return []
 
         titles = list(low_fee_map.keys())[:max_titles]
-        sem = asyncio.Semaphore(3)
+        sem = asyncio.Semaphore(2)  # 2 concurrent, 400ms pacing = 5 RPS
 
         async def _fetch_one(title: str) -> list[dict[str, Any]]:
             async with sem:
@@ -225,7 +227,7 @@ class _ScannerMixin:
                         limit=Config.LISTINGS_FETCH_LIMIT,
                         title=title,
                     )
-                    await asyncio.sleep(0.1)
+                    await asyncio.sleep(0.4)  # 400ms pacing
                     return resp.get("objects", [])
                 except Exception as e:
                     logger.debug(f"Low-fee listing fetch failed for {title!r}: {e}")

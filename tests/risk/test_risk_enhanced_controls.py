@@ -88,31 +88,49 @@ class TestDrawdownFreezeThreshold:
     def test_decimal_threshold_converts_to_percent(self):
         """v14.7: 0.15 (decimal) correctly converts to 15% for comparison."""
         rm = _make_manager(max_drawdown_pct=20.0, initial_equity_usd=100.0)
-        # peak=100, current=85 → 15% drawdown
         import os
-        os.environ["DRAWDOWN_FREEZE_ENABLED"] = "true"
-        os.environ["DRAWDOWN_FREEZE_THRESHOLD"] = "0.15"
-        from src.config import Config
-        Config.DRAWDOWN_FREEZE_ENABLED = True
-        Config.DRAWDOWN_FREEZE_THRESHOLD = 0.15
+        original_enabled = os.environ.get("DRAWDOWN_FREEZE_ENABLED")
+        original_threshold = os.environ.get("DRAWDOWN_FREEZE_THRESHOLD")
+        try:
+            os.environ["DRAWDOWN_FREEZE_ENABLED"] = "true"
+            os.environ["DRAWDOWN_FREEZE_THRESHOLD"] = "0.15"
+            from src.config import Config
+            Config.DRAWDOWN_FREEZE_ENABLED = True
+            Config.DRAWDOWN_FREEZE_THRESHOLD = 0.15
 
-        result = rm.pre_trade_check(proposed_size_usd=50.0, current_equity_usd=85.0)
-        assert result.allowed is False
-        assert "Drawdown freeze" in result.reason
+            result = rm.pre_trade_check(proposed_size_usd=50.0, current_equity_usd=85.0)
+            assert result.allowed is False
+            assert "Drawdown freeze" in result.reason
+        finally:
+            for var, val in [("DRAWDOWN_FREEZE_ENABLED", original_enabled), ("DRAWDOWN_FREEZE_THRESHOLD", original_threshold)]:
+                if val is not None:
+                    os.environ[var] = val
+                elif var in os.environ:
+                    del os.environ[var]
 
     def test_percent_threshold_works_directly(self):
         """v14.7: 15.0 (percent) works as threshold directly."""
         rm = _make_manager(max_drawdown_pct=20.0, initial_equity_usd=100.0)
         import os
-        os.environ["DRAWDOWN_FREEZE_ENABLED"] = "true"
-        os.environ["DRAWDOWN_FREEZE_THRESHOLD"] = "10.0"
-        from src.config import Config
-        Config.DRAWDOWN_FREEZE_ENABLED = True
-        Config.DRAWDOWN_FREEZE_THRESHOLD = 10.0
+        original_enabled = os.environ.get("DRAWDOWN_FREEZE_ENABLED")
+        original_threshold = os.environ.get("DRAWDOWN_FREEZE_THRESHOLD")
+        try:
+            os.environ["DRAWDOWN_FREEZE_ENABLED"] = "true"
+            # Use 0.10 (10%) instead of 10.0 to respect Config field constraint (le=1.0)
+            os.environ["DRAWDOWN_FREEZE_THRESHOLD"] = "0.10"
+            from src.config import Config
+            Config.DRAWDOWN_FREEZE_ENABLED = True
+            Config.DRAWDOWN_FREEZE_THRESHOLD = 0.10
 
-        # peak=100, current=92 → 8% drawdown (below 10% freeze)
-        result = rm.pre_trade_check(proposed_size_usd=50.0, current_equity_usd=92.0)
-        assert result.allowed is True  # No freeze at 8%
+            # peak=100, current=92 → 8% drawdown (below 10% freeze)
+            result = rm.pre_trade_check(proposed_size_usd=50.0, current_equity_usd=92.0)
+            assert result.allowed is True  # No freeze at 8%
+        finally:
+            for var, val in [("DRAWDOWN_FREEZE_ENABLED", original_enabled), ("DRAWDOWN_FREEZE_THRESHOLD", original_threshold)]:
+                if val is not None:
+                    os.environ[var] = val
+                elif var in os.environ:
+                    del os.environ[var]
 
 
 class TestRiskState:

@@ -2,6 +2,7 @@
 callbacks.py — Inline-button callback handlers (btn:start, btn:stop, etc.)
 
 Each handler responds to a specific callback_data and re-renders the message.
+v15.6: Migrated to CallbackData factory for type-safe callbacks.
 v13.2: Added portfolio, daily, analyze, sell_top callbacks with logging.
 """
 
@@ -12,6 +13,7 @@ from aiogram import F, Router, types
 
 from src.db.price_history import price_db
 
+from .callback_data import MenuCallback
 from .formatters import (
     format_balance,
     format_daily_summary,
@@ -21,17 +23,6 @@ from .formatters import (
     format_status,
 )
 from .keyboards import (
-    CB_ANALYZE,
-    CB_BALANCE,
-    CB_DAILY,
-    CB_INVENTORY,
-    CB_NOOP,
-    CB_PORTFOLIO,
-    CB_PROFITS,
-    CB_REFRESH_STATUS,
-    CB_SELL_TOP,
-    CB_START,
-    CB_STOP,
     get_inline_analyze_kb,
     get_inline_balance_kb,
     get_inline_daily_kb,
@@ -47,27 +38,27 @@ logger = logging.getLogger("TelegramControl.callbacks")
 router = Router(name="telegram-control-callbacks")
 
 
-@router.callback_query(F.data == CB_START)
+@router.callback_query(MenuCallback.filter(F.action == "start"))
 @safe_call
 async def cb_start(callback: types.CallbackQuery):
-    if callback.message is None:
-        return
-    logger.info("cb_start triggered by admin %s", callback.from_user.id)
-    await callback.message.answer("Use 🚀 START button or /start_bot command.")
+    """Handle start button — delegates to cmd_start_bot."""
+    from .commands.control import cmd_start_bot
+    if callback.message and isinstance(callback.message, types.Message):
+        await cmd_start_bot(callback.message)
     await callback.answer()
 
 
-@router.callback_query(F.data == CB_STOP)
+@router.callback_query(MenuCallback.filter(F.action == "stop"))
 @safe_call
 async def cb_stop(callback: types.CallbackQuery):
-    if callback.message is None:
-        return
-    logger.info("cb_stop triggered by admin %s", callback.from_user.id)
-    await callback.message.answer("Use 🛑 STOP button or /stop_bot command.")
+    """Handle stop button — delegates to cmd_stop_bot."""
+    from .commands.control import cmd_stop_bot
+    if callback.message and isinstance(callback.message, types.Message):
+        await cmd_stop_bot(callback.message)
     await callback.answer()
 
 
-@router.callback_query(F.data == CB_BALANCE)
+@router.callback_query(MenuCallback.filter(F.action == "balance"))
 @safe_call
 async def cb_balance(callback: types.CallbackQuery):
     if callback.message is None or not isinstance(callback.message, types.Message):
@@ -92,7 +83,7 @@ async def cb_balance(callback: types.CallbackQuery):
     await callback.answer()
 
 
-@router.callback_query(F.data == CB_INVENTORY)
+@router.callback_query(MenuCallback.filter(F.action == "inventory"))
 @safe_call
 async def cb_inventory(callback: types.CallbackQuery):
     if callback.message is None or not isinstance(callback.message, types.Message):
@@ -109,7 +100,7 @@ async def cb_inventory(callback: types.CallbackQuery):
     await callback.answer()
 
 
-@router.callback_query(F.data == CB_PROFITS)
+@router.callback_query(MenuCallback.filter(F.action == "profits"))
 @safe_call
 async def cb_profits(callback: types.CallbackQuery):
     if callback.message is None or not isinstance(callback.message, types.Message):
@@ -125,7 +116,7 @@ async def cb_profits(callback: types.CallbackQuery):
     await callback.answer()
 
 
-@router.callback_query(F.data == CB_PORTFOLIO)
+@router.callback_query(MenuCallback.filter(F.action == "portfolio"))
 @safe_call
 async def cb_portfolio(callback: types.CallbackQuery):
     if callback.message is None or not isinstance(callback.message, types.Message):
@@ -145,7 +136,7 @@ async def cb_portfolio(callback: types.CallbackQuery):
     await callback.answer()
 
 
-@router.callback_query(F.data == CB_DAILY)
+@router.callback_query(MenuCallback.filter(F.action == "daily"))
 @safe_call
 async def cb_daily(callback: types.CallbackQuery):
     if callback.message is None or not isinstance(callback.message, types.Message):
@@ -174,7 +165,7 @@ async def cb_daily(callback: types.CallbackQuery):
     await callback.answer()
 
 
-@router.callback_query(F.data == CB_ANALYZE)
+@router.callback_query(MenuCallback.filter(F.action == "analyze"))
 @safe_call
 async def cb_analyze(callback: types.CallbackQuery):
     if callback.message is None or not isinstance(callback.message, types.Message):
@@ -207,7 +198,7 @@ async def cb_analyze(callback: types.CallbackQuery):
     await callback.answer()
 
 
-@router.callback_query(F.data == CB_SELL_TOP)
+@router.callback_query(MenuCallback.filter(F.action == "sell_top"))
 @safe_call
 async def cb_sell_top(callback: types.CallbackQuery):
     if callback.message is None or not isinstance(callback.message, types.Message):
@@ -221,18 +212,18 @@ async def cb_sell_top(callback: types.CallbackQuery):
             result = await pipeline.sell_inventory_items(max_items=5)
             listed_count = len(result) if isinstance(result, list) else (result if isinstance(result, int) else 0)
             if listed_count > 0:
-                text = f"🔍 *Sell Complete*\n\nListed {result} item(s) for sale."
+                text = f"🔍 *Sell Complete*\n\nListed {listed_count} item(s) for sale."
             else:
                 text = "🔍 *Sell* — No idle items to list or all are trade-locked."
             await callback.message.edit_text(text)
-            logger.info("cb_sell_top ok — listed=%s", result)
+            logger.info("cb_sell_top ok — listed=%s", listed_count)
     except Exception as e:
         logger.exception("cb_sell_top error: %s", e)
         await callback.message.edit_text("❌ Sell failed. Check logs.")
     await callback.answer()
 
 
-@router.callback_query(F.data == CB_REFRESH_STATUS)
+@router.callback_query(MenuCallback.filter(F.action == "refresh_status"))
 @safe_call
 async def cb_refresh_status(callback: types.CallbackQuery):
     if callback.message is None or not isinstance(callback.message, types.Message):
@@ -249,7 +240,7 @@ async def cb_refresh_status(callback: types.CallbackQuery):
     await callback.answer()
 
 
-@router.callback_query(F.data == CB_NOOP)
+@router.callback_query(F.data == "noop")
 @safe_call
 async def cb_noop(callback: types.CallbackQuery):
     """No-op for buttons that reflect state (e.g., '🟡 RUNNING' shows but does nothing)."""

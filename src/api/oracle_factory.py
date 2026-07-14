@@ -19,7 +19,7 @@ logger = logging.getLogger("OracleFactory")
 class OracleFactory:
     """
     Factory Pattern to provide game-specific pricing oracles.
-    Always uses MultiSourceOracle (free, no CS2Cap dependency).
+    Always uses MultiSourceOracle (free, no paid oracle dependency).
     """
 
     _oracles: dict[str, Any] = {}

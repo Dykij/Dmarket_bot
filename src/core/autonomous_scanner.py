@@ -64,10 +64,10 @@ logger = logging.getLogger("AutonomousScanner")
 _USE_V12 = os.getenv("USE_V12_LOOP", "true").lower() == "true"
 if _USE_V12:
     from src.core.target_sniping.core import SnipingLoop
-    logger.info("🔀 Using SnipingLoop v12.0 (batched endpoints + selective CS2Cap)")
+    logger.info("🔀 Using SnipingLoop v12.0 (batched endpoints + selective oracle)")
 else:
     from src.core.target_sniping import SnipingLoop
-    logger.warning("⚠️  Using legacy v10.0 SnipingLoop (per-item CS2Cap, quota-heavy)")
+    logger.warning("⚠️  Using legacy v10.0 SnipingLoop (per-item oracle, quota-heavy)")
 
 
 def _format_process_stats() -> str:

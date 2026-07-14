@@ -30,7 +30,7 @@ To maintain secure boundaries and prevent the system from executing loss-making 
 1. **Validation Matrix**
    When the Executor submits a task, the Validator verifies the trade across dimensions:
    - **Syntax & Execution:** API compliance.
-   - **Resource Constraint:** Are API Rate Limits respected? Is CS2Cap quota OK?
+   - **Resource Constraint:** Are API Rate Limits respected? Are oracle rate limits OK?
    - **Balance Check:** Does effective balance (total - reserve) support this position?
    - **Drawdown Check:** Is balance above peak × 85%?
 
@@ -46,7 +46,7 @@ Strict pipeline ensuring safe and fast deal execution:
 `Scanner/Fetcher` -> `Price Validator` -> `Quantitative Core` -> `Risk Manager (Kelly + Drawdown)` -> `Balance Gate` -> `REST/Batch Executor`
 - **Scanner**: Reads real-time order books every 30s cycle.
 - **Price Validator**: 15+ filters (bait, OBI, OFI, VWAP, VPIN, slippage, Kelly, lock-aware cap).
-- **Quantitative Core**: Evaluates item attributes (pattern, float) mathematically and computes fair limit price based on market depth and CS2Cap cache.
+- **Quantitative Core**: Evaluates item attributes (pattern, float) mathematically and computes fair limit price based on market depth and oracle cache.
 - **Risk Manager**: Kelly sizing, drawdown freeze, capital velocity check.
 - **Balance Gate**: Dynamic max price = max($5 floor, effective_balance × 10%).
 

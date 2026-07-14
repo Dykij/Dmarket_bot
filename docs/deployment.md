@@ -197,7 +197,7 @@ sudo systemctl start dmarket-bot
 - [ ] Memory limits в docker-compose.yml (512M)
 - [ ] Health check настроен (HTTP :9091/healthz)
 - [ ] Баланс DMarket ≥ $20 (минимум для работы balance-аware)
-- [ ] CS2Cap quota настроена (Starter = 50K req/mo)
+- [ ] Oracle rate limits configured
 - [ ] Telegram bot token жив и без конфликтов
 - [ ] Lock file механизм активен (bot.lock)
 

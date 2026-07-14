@@ -8,12 +8,15 @@ Endpoint: GET https://api.waxpeer.com/v1/prices?game=csgo
 Response: {"items": [{"name": "...", "count": 388, "min": 31449,
            "steam_price": 29626, ...}, ...]}
 
-Price unit: cents (31449 = $314.49 on Waxpeer, $3.14 after /100)
+Price unit: mills (1/1000 USD) — 31848 = $31.848
+
+Rate limit: ~1 req/sec (no official docs, community reports)
+Source: Reddit r/csgomarketforum, community testing
 
 Limitations:
-  - Prices in cents (need /100)
+  - Prices in mills (need /1000)
   - No float/phase data
-  - Steam price reference is also in cents
+  - Steam price reference is also in mills
 """
 
 from __future__ import annotations
@@ -36,12 +39,25 @@ class WaxpeerOracle:
     BASE_URL = "https://api.waxpeer.com/v1/prices"
     CACHE_TTL = 900        # 15 minutes (full dump refresh)
     MEM_TTL = 900          # 15 minutes (in-memory)
+    RATE_LIMIT = 1.0       # ~1 req/sec (community estimate)
+    SAFETY_MARGIN = 0.5    # Use 50% of limit = 0.5 RPS
 
     def __init__(self) -> None:
         self._session: aiohttp.ClientSession | None = None
         self._lock = asyncio.Lock()
         self._items_cache: dict[str, dict[str, Any]] = {}
         self._items_cache_ts: float = 0.0
+        # v15.6: Rate limiting
+        self._last_request_time = 0.0
+        self._request_delay = 1.0 / (self.RATE_LIMIT * self.SAFETY_MARGIN)  # 2.0s
+
+    async def _throttle(self) -> None:
+        """v15.6: Enforce rate limit (~1 RPS documented, 0.5 RPS safe)."""
+        async with self._lock:
+            elapsed = time.monotonic() - self._last_request_time
+            if elapsed < self._request_delay:
+                await asyncio.sleep(self._request_delay - elapsed)
+            self._last_request_time = time.monotonic()
 
     async def _get_session(self) -> aiohttp.ClientSession:
         if self._session is not None and not self._session.closed:
@@ -50,7 +66,8 @@ class WaxpeerOracle:
             if self._session is not None and not self._session.closed:
                 return self._session
             self._session = aiohttp.ClientSession(
-                headers={"User-Agent": "DMarketBot/15.0"}
+                headers={"User-Agent": "DMarketBot/15.0"},
+                timeout=aiohttp.ClientTimeout(total=15, connect=5),
             )
             return self._session
 
@@ -60,11 +77,23 @@ class WaxpeerOracle:
         if self._items_cache and now - self._items_cache_ts < self.CACHE_TTL:
             return len(self._items_cache)
 
+        await self._throttle()
         session = await self._get_session()
         try:
             async with session.get(
                 self.BASE_URL, params={"game": "csgo"}
             ) as resp:
+                if resp.status == 429:
+                    # v15.6: Handle 429 with exponential backoff
+                    retry_after = resp.headers.get("Retry-After", "5")
+                    try:
+                        wait_time = float(retry_after) + 1.0
+                    except (ValueError, TypeError):
+                        wait_time = 5.0
+                    logger.warning(f"[Waxpeer] 429 Rate Limited, waiting {wait_time:.1f}s")
+                    await asyncio.sleep(wait_time)
+                    return len(self._items_cache)  # Return cached data
+
                 if resp.status != 200:
                     logger.warning(f"[Waxpeer] Fetch failed: {resp.status}")
                     return 0

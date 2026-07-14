@@ -51,7 +51,7 @@ class _SandboxMixin:
         """Sandbox v9.5: Mimics real-world network RTT (Round Trip Time) with Jitter."""
         if os.getenv("DRY_RUN", "true").lower() != "true":
             return
-        if client_type == "cs2cap":
+        if client_type == "oracle":
             base_lat, jitter = 600, 400
         else:
             base_lat, jitter = 200, 200

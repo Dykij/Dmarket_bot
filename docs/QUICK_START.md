@@ -20,7 +20,7 @@
 - ✅ Docker 20.10+ **или** Python 3.13+ + Rust toolchain
 - ✅ Telegram Bot Token ([@BotFather](https://t.me/BotFather))
 - ✅ DMarket API Keys ([DMarket Profile](https://dmarket.com/profile/api))
-- ✅ CS2Cap API Key (Starter $19/mo: [cs2cap.com](https://cs2cap.com))
+- ✅ Free oracles (Market.CSGO + Waxpeer + CSFloat + Steam — no API key needed)
 - ✅ Мини-ПК или Raspberry Pi 4/5 с Linux
 
 ---
@@ -32,7 +32,7 @@ git clone https://github.com/Dykij/Dmarket_bot.git
 cd Dmarket_bot
 cp .env.example .env
 # Заполните ключи в .env:
-#   DMARKET_PUBLIC_KEY, DMARKET_SECRET_KEY, CS2CAP_API_KEY, TELEGRAM_BOT_TOKEN
+#   DMARKET_PUBLIC_KEY, DMARKET_SECRET_KEY, TELEGRAM_BOT_TOKEN
 
 docker compose up -d          # запуск торгового бота
 docker compose logs -f        # смотреть логи
@@ -76,7 +76,6 @@ python -m src
 # КЛЮЧИ (обязательно)
 DMARKET_PUBLIC_KEY=your_key
 DMARKET_SECRET_KEY=your_secret
-CS2CAP_API_KEY=your_cs2cap_key
 TELEGRAM_BOT_TOKEN=your_bot_token
 ENCRYPTION_KEY=your_fernet_key
 
@@ -100,14 +99,14 @@ DRY_RUN=true
 ### Value Scanner (v14.9)
 - **Dual-Signal Pipeline**: VALUE (rarity-based) + SPREAD (intra-market)
 - **Relaxed Microstructure**: HFT фильтры отключены по умолчанию
-- **Expanded Coverage**: 500 titles/cycle, 50 CS2Cap validations
+- **Expanded Coverage**: 500 titles/cycle, 50 oracle validations
 
 ### Docker
 - Multi-stage build для x86_64 + ARM64 (Raspberry Pi, Celeron)
 - Health check `/healthz`, memory limits, persistent volumes
 
 ### Архитектура (v14.9)
-- Модули разбиты: cs2cap_oracle (5 файлов), microstructure (4), target_sniping (16+)
+- Модули разбиты: multi_source_oracle (5 файлов), microstructure (4), target_sniping (16+)
 - **NEW v14.9**: value_pipelines.py — Dual-signal evaluation (VALUE + SPREAD)
 - Telegram: 16 кнопок, все исправлены и протестированы
 - Тесты: 289 (unit + bottleneck + sandbox)

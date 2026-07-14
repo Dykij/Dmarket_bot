@@ -12,7 +12,7 @@ Algorithm:
   4. Apply dynamic margin based on liquidity
   5. Return fair sell price for DMarket listing
 
-This replaces CS2Cap's cross-market pricing for the specific
+This replaces paid oracle cross-market pricing for the specific
 use case of "what price should I list this item at on DMarket".
 """
 

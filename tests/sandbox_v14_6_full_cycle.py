@@ -1,5 +1,5 @@
 """
-Sandbox Test v14.6 — Full Buy → CS2Cap → Sell Cycle + Value Detection.
+Sandbox Test v14.6 — Full Buy → Oracle → Sell Cycle + Value Detection.
 
 v14.6: Added float premium, pattern/phase premium, sticker combo,
        seasonal timing, filler tracking, dirty BS, round float,
@@ -23,7 +23,7 @@ from src.config import Config
 from src.utils.decimal_helpers import D, quantize
 from src.api.dmarket_api_client import DMarketAPIClient
 from src.api.oracle_factory import OracleFactory
-from src.api.cs2cap_oracle import CS2CapOracle
+from src.api.multi_source_oracle import MultiSourceOracle
 from src.core.item_intel import DISCOUNT_THRESHOLD_PCT
 from src.db.price_history import price_db
 
@@ -150,15 +150,15 @@ async def step_dmarket_connect() -> tuple[DMarketAPIClient, float, bool]:
 
 
 # =====================================================================
-# STEP 2: CS2Cap + DMarket Aggregated Prices (PARALLEL)
+# STEP 2: Oracle + DMarket Aggregated Prices (PARALLEL)
 # =====================================================================
 async def step_fetch_prices(
     api: DMarketAPIClient,
-) -> tuple[Optional[CS2CapOracle], Dict[str, Any], bool]:
-    """Fetch CS2Cap prices + DMarket aggregated prices in parallel."""
-    log("\n[2/6] 📊 Fetching Prices (DMarket + CS2Cap in parallel)")
+) -> tuple[Optional[MultiSourceOracle], Dict[str, Any], bool]:
+    """Fetch Oracle prices + DMarket aggregated prices in parallel."""
+    log("\n[2/6] 📊 Fetching Prices (DMarket + Oracle in parallel)")
 
-    cs2cap = OracleFactory.get_cross_market_oracle(Config.GAME_ID)
+    oracle = OracleFactory.get_oracle(Config.GAME_ID)
 
     # --- DMarket: get aggregated prices (batch 100 titles) ---
     async def fetch_agg() -> Dict[str, Any]:
@@ -168,27 +168,27 @@ async def step_fetch_prices(
             log_err(f"aggregated_prices: {e}")
             return {}
 
-    # --- CS2Cap: health check ---
-    async def check_cs2cap() -> bool:
-        if not cs2cap:
+    # --- Oracle: health check ---
+    async def check_oracle() -> bool:
+        if not oracle:
             return False
         try:
-            h = await cs2cap.health_check()
+            h = await oracle.health_check()
             return h.get("status") == "healthy"
         except Exception:
             return False
 
     # Run both in parallel
     agg_task = asyncio.create_task(with_timeout(15, fetch_agg(), "aggregated-prices"))
-    cs2cap_task = asyncio.create_task(with_timeout(10, check_cs2cap(), "cs2cap-health"))
+    oracle_task = asyncio.create_task(with_timeout(10, check_oracle(), "oracle-health"))
 
     agg_prices = await agg_task or {}
-    cs2cap_ok = await cs2cap_task or False
+    oracle_ok = await oracle_task or False
 
-    if cs2cap_ok:
-        log_ok(f"CS2Cap connected (41 marketplaces)")
+    if oracle_ok:
+        log_ok(f"Oracle connected")
     else:
-        log_warn("CS2Cap unavailable — price comparisons will be limited")
+        log_warn("Oracle unavailable — price comparisons will be limited")
 
     if agg_prices:
         # Count valid entries
@@ -197,17 +197,17 @@ async def step_fetch_prices(
     else:
         log_warn("No aggregated prices returned from DMarket")
 
-    return cs2cap, agg_prices, cs2cap_ok
+    return oracle, agg_prices, oracle_ok
 
 
 # =====================================================================
 # STEP 3: Find Profitable Candidates + Microstructure Scoring
 # =====================================================================
 async def step_find_candidates(
-    cs2cap: Optional[CS2CapOracle],
+    oracle: Optional[MultiSourceOracle],
     agg_prices: Dict[str, Any],
 ) -> Tuple[List[Dict[str, Any]], Dict[str, List[Dict[str, Any]]]]:
-    """Use batch CS2Cap prices to find arbitrage opportunities + score microstructure."""
+    """Use batch Oracle prices to find arbitrage opportunities + score microstructure."""
     log("\n[3/6] 🔍 Finding Profitable Candidates + Microstructure Scoring")
 
     # Track filtered items for bottom-neck detection
@@ -217,11 +217,11 @@ async def step_find_candidates(
         "margin": [],       # items with negative profit after fees
     }
 
-    if not agg_prices or not cs2cap:
+    if not agg_prices or not oracle:
         log_warn("Missing data — can't evaluate candidates")
         return [], filtered
 
-    # ---- Phase 1: Rank by liquidity/volume, then CS2Cap cross-market check ----
+    # ---- Phase 1: Rank by liquidity/volume, then Oracle cross-market check ----
     min_spread = Config.FEE_RATE * 100 * 2 + 3  # fee-aware minimum spread %
     ranked = []
     for title, agg in agg_prices.items():
@@ -234,8 +234,8 @@ async def step_find_candidates(
         volume = ask_cnt + bid_cnt
 
         # v14.5: In a normal market, best_ask > best_bid.
-        # We're looking for cross-market arbitrage (DM cheap vs CS2Cap high),
-        # not intra-DM spread. Rank by liquidity/volume so we CS2Cap-check
+        # We're looking for cross-market arbitrage (DM cheap vs Oracle high),
+        # not intra-DM spread. Rank by liquidity/volume so we Oracle-check
         # the most liquid items (which are likely to have cross-market data).
         if volume < 3:
             filtered["liquidity"].append({
@@ -256,25 +256,25 @@ async def step_find_candidates(
         log_warn("No candidates — low liquidity")
         return [], filtered
 
-    # ---- Phase 2: Fetch CS2Cap batch prices ----
-    titles_for_cs2cap = [t[0] for t in top]
-    cs2cap_prices: Dict[str, float] = {}
+    # ---- Phase 2: Fetch Oracle batch prices ----
+    titles_for_oracle = [t[0] for t in top]
+    oracle_prices: Dict[str, float] = {}
 
-    cs2cap_snaps = await with_timeout(
+    oracle_snaps = await with_timeout(
         15,
-        cs2cap.get_prices_batch(titles_for_cs2cap),
-        f"CS2Cap batch ({len(titles_for_cs2cap)} items)",
+        oracle.get_prices_batch(titles_for_oracle),
+        f"Oracle batch ({len(titles_for_oracle)} items)",
     ) or {}
 
-    for title in titles_for_cs2cap:
-        snap = cs2cap_snaps.get(title)
+    for title in titles_for_oracle:
+        snap = oracle_snaps.get(title)
         if snap and getattr(snap, "has_data", False):
-            cs2cap_prices[title] = snap.min_price
+            oracle_prices[title] = snap.min_price
 
-    if cs2cap_prices:
-        log_ok(f"CS2Cap prices for {len(cs2cap_prices)}/{len(titles_for_cs2cap)} titles")
+    if oracle_prices:
+        log_ok(f"Oracle prices for {len(oracle_prices)}/{len(titles_for_oracle)} titles")
 
-    # ---- Phase 3: Scan DMarket for cheap items, check CS2Cap cross-market ----
+    # ---- Phase 3: Scan DMarket for cheap items, check Oracle cross-market ----
     from src.api.dmarket_api_client.fees import _FeesMixin
 
     candidates = []
@@ -282,10 +282,10 @@ async def step_find_candidates(
     # Use the previously fetched prices to evaluate candidates
     for item in top:
         title, ask, bid, spread_pct, volume, score, ask_cnt, bid_cnt = item
-        cs_price = D(str(cs2cap_prices.get(title, 0)))
+        cs_price = D(str(oracle_prices.get(title, 0)))
         dm_buy_price = D(str(ask))
 
-        # v14.8: choose the best exit: cross-market (CS2Cap ask) or intra-DMarket bid.
+        # v14.8: choose the best exit: cross-market (Oracle ask) or intra-DMarket bid.
         fee = _FeesMixin._estimate_fee_from_volume(ask_count=volume)
         best_sell_price = 0.0
         ref = ""
@@ -296,13 +296,13 @@ async def step_find_candidates(
             best_sell_price = intra_sell
             ref = f"DMarket bid=${bid:.2f}"
 
-        # Cross-market: sell on cheapest CS2Cap marketplace
+        # Cross-market: sell on cheapest Oracle marketplace
         if cs_price > 0:
             destination_fee = 0.025
             cross_sell = D(str(cs_price)) * (D("1") - D(str(destination_fee))) * (D("1") - Config.WITHDRAWAL_FEE_RATE)
             if cross_sell > best_sell_price:
                 best_sell_price = cross_sell
-                ref = f"CS2Cap=${cs_price:.2f}"
+                ref = f"Oracle=${cs_price:.2f}"
 
         sell_price = D(str(best_sell_price))
         profit = sell_price - dm_buy_price
@@ -311,7 +311,7 @@ async def step_find_candidates(
         if profit <= 0 or margin_pct < 1:
             filtered["margin"].append({
                 "title": title, "reason": f"profit=${profit:.3f} margin={margin_pct:.1f}%",
-                "best_ask": ask, "best_bid": bid, "cs2cap_price": cs_price, "sell_price": sell_price,
+                "best_ask": ask, "best_bid": bid, "oracle_price": cs_price, "sell_price": sell_price,
             })
             continue
 
@@ -356,7 +356,7 @@ async def step_find_candidates(
         candidates.append({
             "title": title,
             "dm_buy_price": dm_buy_price,
-            "cs2cap_price": cs_price,
+            "oracle_price": cs_price,
             "sell_price": sell_price,
             "fee": fee,
             "total_fee": fee,
@@ -489,7 +489,7 @@ async def step_market_scan(api: DMarketAPIClient) -> tuple[List[Dict], int]:
 async def step_shadow_engine(
     candidates: List[Dict],
     agg_prices: Dict[str, Any],
-    cs2cap_ok: bool,
+    oracle_ok: bool,
 ) -> Optional[Dict[str, Any]]:
     """Run full shadow trading simulation with live market data."""
     log("\n[5/6] 🕶️ Shadow Trading Engine")
@@ -507,7 +507,7 @@ async def step_shadow_engine(
         result = shadow.record_cycle(
             candidates=cands,
             agg_prices=agg_prices,
-            cs2cap_ok=cs2cap_ok,
+            oracle_ok=oracle_ok,
             cycle=cycle,
             max_buys=3,
             max_spend_per_cycle=10.0,
@@ -720,12 +720,12 @@ async def run() -> None:
     start = time.time()
 
     log("=" * 60)
-    log("  🧪 SANDBOX TEST v14.6 — Buy → CS2Cap → Sell + Stop-Loss/Take-Profit + Value Detection")
+    log("  🧪 SANDBOX TEST v14.6 — Buy → Oracle → Sell + Stop-Loss/Take-Profit + Value Detection")
     log("=" * 60)
 
     results: Dict[str, Any] = {
         "dmarket_ok": False,
-        "cs2cap_ok": False,
+        "oracle_ok": False,
         "balance": 0.0,
         "candidates": 0,
         "bought": 0,
@@ -739,11 +739,11 @@ async def run() -> None:
     results["balance"] = balance
 
     # -- Step 2: Fetch prices (parallel) --
-    cs2cap, agg_prices, cs2cap_ok = await step_fetch_prices(api)
-    results["cs2cap_ok"] = cs2cap_ok
+    oracle, agg_prices, oracle_ok = await step_fetch_prices(api)
+    results["oracle_ok"] = oracle_ok
 
-    # -- Step 3: Find candidates + microstructure (batch CS2Cap) --
-    candidates, filtered = await step_find_candidates(cs2cap, agg_prices)
+    # -- Step 3: Find candidates + microstructure (batch Oracle) --
+    candidates, filtered = await step_find_candidates(oracle, agg_prices)
     results["candidates"] = len(candidates)
 
     # -- Step 4: Market scan --
@@ -752,7 +752,7 @@ async def run() -> None:
     results["unique_titles"] = unique_titles
 
     # -- Step 5: Shadow Engine (full paper trading) --
-    shadow_report = await step_shadow_engine(candidates, agg_prices, cs2cap_ok)
+    shadow_report = await step_shadow_engine(candidates, agg_prices, oracle_ok)
     results["shadow"] = shadow_report
 
     # -- Step 6: Stress test scenarios --
@@ -764,8 +764,8 @@ async def run() -> None:
     results["monte_carlo"] = mc_result
 
     # -- Cleanup --
-    if cs2cap:
-        await cs2cap.close()
+    if oracle:
+        await oracle.close()
     await api.close()
 
     elapsed = time.time() - start
@@ -779,7 +779,7 @@ async def run() -> None:
 
     checks = [
         ("DMarket Connection", dm_ok, results.get("balance", 0)),
-        ("CS2Cap Oracle", cs2cap_ok, None),
+        ("Oracle", oracle_ok, None),
         ("Aggregated Prices", len(agg_prices) > 0, len(agg_prices)),
         ("Market Scan", results.get("items_scanned", 0) > 0, results.get("items_scanned", 0)),
         ("Shadow Engine", shadow_report is not None, f"{shadow_report.get('total_trades',0)} trades" if shadow_report else "N/A"),
@@ -842,7 +842,7 @@ async def run() -> None:
             log(f"     - {e}")
 
     # ==================================================================
-    # v14.7: CONTINUOUS SCAN + CS2Cap TIER PROJECTION
+    # v14.7: CONTINUOUS SCAN + ORACLE TIER PROJECTION
     # ==================================================================
     log("\n" + "=" * 60)
     log("  🔄 v14.7: CONTINUOUS PROFITABILITY SCAN")
@@ -860,7 +860,7 @@ async def run() -> None:
     scan_profitable_total = 0
     scan_invest_total = 0.0
     scan_profit_total = 0.0
-    cs2cap_calls_total = 0
+    oracle_calls_total = 0
 
     while time.time() - scan_start < scan_duration:
         cycles += 1
@@ -881,12 +881,12 @@ async def run() -> None:
 
         scan_candidates_total += len(items)
 
-        # CS2Cap batch validation (top 50)
-        if cs2cap and items:
+        # Oracle batch validation (top 50)
+        if oracle and items:
             titles = [t for t, _ in items[:50]]
             try:
-                snaps = await with_timeout(12, cs2cap.get_prices_batch(titles), f"cs2cap-batch-{cycles}")
-                cs2cap_calls_total += 1
+                snaps = await with_timeout(12, oracle.get_prices_batch(titles), f"oracle-batch-{cycles}")
+                oracle_calls_total += 1
                 if snaps:
                     for title, agg in items[:50]:
                         if title not in snaps:
@@ -927,7 +927,7 @@ async def run() -> None:
     # ── 10-min profitability report ──
     log(f"\n  ⏱️  Duration: {scan_elapsed:.0f}s ({cycles} cycles)")
     log(f"  📦 Items scanned: {scan_candidates_total}")
-    log(f"  📞 CS2Cap calls: {cs2cap_calls_total}")
+    log(f"  📞 Oracle calls: {oracle_calls_total}")
     log(f"\n  💰 PROFITABILITY (10 minutes):")
     log(f"  Profitable items found: {scan_profitable_total}")
     scan_roi = (scan_profit_total / max(scan_invest_total, 0.01)) * 100
@@ -938,10 +938,10 @@ async def run() -> None:
     avg_profit_cycle = scan_profit_total / max(cycles, 1)
     log(f"  Per cycle: {avg_per_cycle:.1f} profitable items, ${avg_profit_cycle:+.2f} profit")
 
-    # ── CS2Cap Tier Projection ──
-    log(f"\n  ⭐ CS2Cap TIER COMPARISON (Starter → Pro):")
+    # ── Oracle Tier Projection ──
+    log(f"\n  ⭐ ORACLE TIER COMPARISON (Starter → Pro):")
     log(f"  {'─' * 50}")
-    tier = (Config.CS2CAP_TIER or "starter").lower()
+    tier = (getattr(Config, 'ORACLE_TIER', None) or "starter").lower()
     current_rpm = TIER_SPECS.get(tier, TIER_SPECS["starter"])["rpm"]
     pro_rpm = TIER_SPECS["pro"]["rpm"]
     ratio = pro_rpm // current_rpm
@@ -967,7 +967,7 @@ async def run() -> None:
     log(f"  {'Est. profit/month':<30} {s_month:>10} {p_month:>10}")
 
     # Quota check
-    quota_per_day = cs2cap_calls_total * (86400 / max(scan_elapsed, 1))
+    quota_per_day = oracle_calls_total * (86400 / max(scan_elapsed, 1))
     starter_quota_used = quota_per_day * 30
     pro_quota_used = quota_per_day * ratio * 30
     log(f"\n  📊 QUOTA USAGE (monthly estimate):")
@@ -984,7 +984,7 @@ async def run() -> None:
         inc_profit = daily_pro - daily_starter
         pro_quota_mult = TIER_SPECS['pro']['monthly'] // max(TIER_SPECS[tier]['monthly'], 1)
         log(f"  Pro tier ({ratio}x RPM, {pro_quota_mult}x quota) enables:")
-        log(f"  - {ratio}x more CS2Cap validations per cycle -> wider scan coverage")
+        log(f"  - {ratio}x more Oracle validations per cycle -> wider scan coverage")
         log(f"  - ~{ratio}x more profitable candidates found per day")
         log(f"  - ${inc_profit:+.2f}/day incremental profit (est.)")
         log(f"  - Pro quota headroom allows continuous 24/7 operation")
@@ -1000,7 +1000,7 @@ async def run() -> None:
         log(f"  📊 ROI: {scan_roi:+.1f}% | PnL: ${scan_profit_total:+.2f}")
     elif scan_candidates_total > 0:
         log(f"  ⚠️ {scan_candidates_total} items scanned, 0 profitable")
-        log(f"  CS2Cap prices are close to DMarket — market is efficient right now")
+        log(f"  Oracle prices are close to DMarket — market is efficient right now")
         log(f"  Recommendation: lower MIN_SPREAD_PCT to 1.5% or try night hours")
     else:
         log(f"  ❌ No items scanned — check API connection")

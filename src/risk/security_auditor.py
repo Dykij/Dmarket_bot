@@ -12,7 +12,7 @@ class SecurityAuditor:
     and sensitive tokens before they are saved or broadcasted to Telegram.
 
     v12.9: Expanded pattern coverage for all known key formats used by
-    DMarket, CS2Cap, CSFloat, Waxpeer, Telegram, GitHub, and common
+    DMarket, CSFloat, Waxpeer, Telegram, GitHub, and common
     cloud providers.
     """
     
@@ -45,8 +45,8 @@ class SecurityAuditor:
         re.compile(r"(?i)hooks\.slack\.com/services/T[a-zA-Z0-9_]{8,}/B[a-zA-Z0-9_]{8,}/[a-zA-Z0-9_]{24,}"),
         # Telegram bot tokens
         re.compile(r"(?i)[0-9]{8,10}:[a-zA-Z0-9_-]{35,}"),
-        # CS2Cap / CSFloat / Waxpeer API keys
-        re.compile(r"(?i)(?:CS2CAP_API_KEY|CSFLOAT_API_KEY|WAXPEER_API_KEY)"
+        # CSFloat / Waxpeer API keys
+        re.compile(r"(?i)(?:CSFLOAT_API_KEY|WAXPEER_API_KEY)"
                    r"[=:\s]+['\"]?[a-zA-Z0-9]{16,}['\"]?"),
         # AWS keys
         re.compile(r"(?i)AKIA[0-9A-Z]{16}"),

@@ -240,7 +240,7 @@ def evaluate_cross_market_arb(
     best_ask: float,
     cs_bids: dict[str, Any] | None = None,
 ) -> dict:
-    """Cross-market arbitrage check (CS2Cap provider bids vs DMarket ask).
+    """Cross-market arbitrage check (oracle provider bids vs DMarket ask).
 
     Returns {"provider": str|None, "bid": float, "is_viable": bool}
     """
@@ -390,7 +390,7 @@ def evaluate_fee_slippage_tod(
     spread_ratio = (best_bid - best_ask) / best_ask if best_ask > 0 else 0
 
     # Cross-market underpriced opportunity: DMarket ask is cheaper than the
-    # external market ask. We can buy on DMarket and resell at/near CS2Cap ask.
+    # external market ask. We can buy on DMarket and resell at/near oracle ask.
     cs_ask_price = cs_ask_price or 0.0
     has_cross_market_discount = (
         cs_ask_price > 0
@@ -439,3 +439,66 @@ def evaluate_fee_slippage_tod(
         return {"pass": False, "reason": str(e)}
 
     return {"pass": True, "reason": None}
+
+
+def check_slippage_at_risk(
+    title: str,
+    base_price: float,
+    best_ask: float,
+    best_bid: float,
+    ask_count: int,
+    bid_count: int,
+    max_slippage_pct: float = 0.05,
+) -> dict:
+    """v15.5: Slippage-at-Risk pre-trade filter.
+
+    Source: arXiv:2603.09164 — "Forward-looking liquidity risk framework"
+    Estimates expected slippage based on order book depth and spread.
+    Rejects trades where expected slippage exceeds threshold.
+
+    Concentration penalty: if a single seller dominates the book,
+    reduce confidence (higher effective slippage).
+    """
+    if best_ask <= 0 or best_bid <= 0:
+        return {"pass": True, "slippage": 0.0}
+
+    # Spread-based slippage estimate
+    spread_pct = (best_ask - best_bid) / best_ask if best_ask > 0 else 0.0
+
+    # Depth-based adjustment: thin book = higher slippage
+    # ask_count represents number of listings at best ask
+    depth_factor = 1.0
+    if ask_count <= 1:
+        depth_factor = 2.0  # single seller = 2x slippage risk
+    elif ask_count <= 3:
+        depth_factor = 1.5  # thin book
+    elif ask_count <= 10:
+        depth_factor = 1.0  # normal
+    else:
+        depth_factor = 0.8  # deep book = lower slippage
+
+    # Concentration penalty: if bid_count / ask_count is very low,
+    # the book is one-sided (sellers dominate)
+    concentration = 1.0
+    if bid_count > 0 and ask_count > 0:
+        ratio = bid_count / ask_count
+        if ratio < 0.3:
+            concentration = 1.5  # heavily one-sided
+        elif ratio < 0.5:
+            concentration = 1.2
+
+    estimated_slippage = spread_pct * depth_factor * concentration
+
+    if estimated_slippage > max_slippage_pct:
+        return {
+            "pass": False,
+            "slippage": estimated_slippage,
+            "reason": (
+                f"Slippage-at-Risk {estimated_slippage*100:.1f}% > "
+                f"{max_slippage_pct*100:.1f}% threshold "
+                f"(spread={spread_pct*100:.1f}%, depth={depth_factor:.1f}x, "
+                f"conc={concentration:.1f}x, asks={ask_count}, bids={bid_count})"
+            ),
+        }
+
+    return {"pass": True, "slippage": estimated_slippage}

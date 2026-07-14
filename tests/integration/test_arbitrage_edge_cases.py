@@ -54,16 +54,6 @@ class TestArbitrageScannerEdgeCases:
             status_code=200,
         )
 
-        # Мок для aggregated-prices (вызывается автоматически)
-        httpx_mock.add_response(
-            url=re.compile(
-                r"https://api\.dmarket\.com/marketplace-api/v1/aggregated-prices.*"
-            ),
-            method="POST",
-            json={"aggregatedPrices": []},
-            status_code=200,
-        )
-
         scanner = ArbitrageScanner(mock_dmarket_api)
         opportunities = await scanner.scan_level(level="standard", game="csgo")
 

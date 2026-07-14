@@ -97,7 +97,7 @@ class LiveShadow:
         *,
         candidates: list[dict[str, Any]],
         agg_prices: dict[str, Any],
-        cs2cap_ok: bool = False,
+        oracle_ok: bool = False,
     ) -> dict[str, Any] | None:
         """
         Feed one trading cycle's data into the shadow engine.
@@ -122,7 +122,7 @@ class LiveShadow:
             result = self._engine.record_cycle(
                 candidates=cands,
                 agg_prices=agg_prices,
-                cs2cap_ok=cs2cap_ok,
+                oracle_ok=oracle_ok,
                 cycle=self._total_cycles,
                 max_buys=2,
                 max_spend_per_cycle=SHADOW_BALANCE * 0.05,
@@ -248,7 +248,7 @@ class LiveShadow:
                     engine.record_cycle(
                         candidates=cands,
                         agg_prices=noisy_agg,
-                        cs2cap_ok=True,
+                        oracle_ok=True,
                         cycle=cycle,
                         max_buys=2,
                         max_spend_per_cycle=SHADOW_BALANCE * 0.03,

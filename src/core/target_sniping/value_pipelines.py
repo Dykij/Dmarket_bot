@@ -110,19 +110,19 @@ def calculate_value_premium(
 
 def estimate_fair_sell_price(
     base_ask: Decimal,
-    cs2cap_ask: Decimal,
+    oracle_ask: Decimal,
     premium_mult: Decimal,
 ) -> Decimal:
     """
     Estimate the expected sell price for an item based on:
     - Base ask price (what we would pay)
-    - CS2Cap reference price (market floor)
+    - Oracle reference price (market floor)
     - Premium multiplier from rarity
 
-    We todo: want to sell at min(CS2Cap ask * premium, but also above cost + fees).
+    We todo: want to sell at min(oracle ask * premium, but also above cost + fees).
     """
-    # Fair value with premium applied to CS2Cap reference
-    fair_value = cs2cap_ask * premium_mult
+    # Fair value with premium applied to oracle reference
+    fair_value = oracle_ask * premium_mult
     # Or use base ask + premium (whichever is higher)
     fair_value = max(fair_value, base_ask * premium_mult)
     return quantize(fair_value)
@@ -131,7 +131,7 @@ def estimate_fair_sell_price(
 def evaluate_value_signal(
     title: str,
     base_price: Decimal,
-    cs2cap_ask: Decimal,
+    oracle_ask: Decimal,
     attrs: dict[str, Any],
     stickers: list[dict[str, Any]],
     fee_rate: Decimal,
@@ -144,7 +144,7 @@ def evaluate_value_signal(
     if not Config.VALUE_SCAN_ENABLED:
         return None
 
-    if cs2cap_ask <= 0:
+    if oracle_ask <= 0:
         return None
 
     # Calculate rarity premium
@@ -154,7 +154,7 @@ def evaluate_value_signal(
         return None
 
     # Calculate estimated sell price with premium
-    est_sell = estimate_fair_sell_price(base_price, cs2cap_ask, premium_mult)
+    est_sell = estimate_fair_sell_price(base_price, oracle_ask, premium_mult)
 
     # Must sell at profit after fees
     required_sell = base_price * (Decimal(1) + fee_rate + Config.WITHDRAWAL_FEE_RATE + Config.VALUE_SCAN_MIN_PROFIT_PCT / Decimal(100))
@@ -177,7 +177,7 @@ def evaluate_value_signal(
             title,
             "pass_value",
             "Value signal — rarity-based",
-            f"base=${base_price:.2f} fair=${cs2cap_ask:.2f} "
+            f"base=${base_price:.2f} fair=${oracle_ask:.2f} "
             f"premium={premium_mult:.2f}x est_sell=${est_sell:.2f} "
             f"profit=${estimated_profit:.2f} ({estimated_roi:.1f}%)",
         )
@@ -234,7 +234,7 @@ def evaluate_spread_signal(
 def evaluate_combined_signal(
     title: str,
     item: dict[str, Any],
-    cs2cap_ask: Decimal,
+    oracle_ask: Decimal,
     best_bid: Decimal,
     best_ask: Decimal,
     fee_rate: Decimal,
@@ -265,7 +265,7 @@ def evaluate_combined_signal(
     value_result = evaluate_value_signal(
         title=title,
         base_price=base_price,
-        cs2cap_ask=cs2cap_ask,
+        oracle_ask=oracle_ask,
         attrs=attrs,
         stickers=stickers,
         fee_rate=fee_rate,

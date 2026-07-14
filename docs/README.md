@@ -23,7 +23,7 @@
 
 1. **Value Scanner (Primary):**
    - Поиск редких предметов (float, pattern, stickers) на DMarket
-   - Оценка fair_price = cs2cap_ask × rarity_premium
+   - Оценка fair_price = oracle_ask × rarity_premium
    - Покупка если fair_price > ask × (1 + fee + margin)
 
 2. **Spread Sniper (Secondary):**
@@ -38,7 +38,7 @@ Item Scanned
     │   ├── Float premium? (FN-0, dirty BS)
     │   ├── Pattern premium? (Ruby, Blue Gem)
     │   ├── Sticker combo? (4× same)
-    │   └── est_sell = cs2cap × premium_mult
+     │   └── est_sell = oracle_ask × premium_mult
     │       └── BUY if est_sell > ask × cost
     │
     └── Spread Signal (fallback):

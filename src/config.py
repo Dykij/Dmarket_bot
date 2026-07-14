@@ -10,7 +10,7 @@ v14.9 Improvements (based on PythonHub best practices):
 - Fail-fast on invalid config at startup
 - Environment variable validation with defaults
 - Type coercion and constraints (ge, le, etc.)
-- Removed CS2Cap backward compatibility (replaced by MultiSourceOracle)
+- Removed paid oracle backward compatibility (replaced by MultiSourceOracle)
 """
 
 from __future__ import annotations

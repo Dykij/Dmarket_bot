@@ -1,4 +1,4 @@
-"""Filter + cross-market target pipeline test (uses live DMarket + CS2Cap)."""
+"""Filter + cross-market target pipeline test (uses live DMarket + Oracle)."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional
 from src.config import Config
 from src.api.dmarket_api_client import DMarketAPIClient
 from src.api.oracle_factory import OracleFactory
-from src.api.cs2cap_oracle import CS2CapOracle
+from src.api.multi_source_oracle import MultiSourceOracle
 from src.core.limit_orders import _LimitOrderMixin
 from src.core.target_sniping.filter import _FilterMixin
 from src.core.target_sniping.underpriced import fetch_low_fee_titles, is_dmarket_underpriced
@@ -52,10 +52,10 @@ class _DummySnipingLoop(_FilterMixin):
 
 async def _check_connectivity(
     dmarket: DMarketAPIClient,
-    cs2cap: Optional[CS2CapOracle],
+    oracle: Optional[MultiSourceOracle],
     metrics: "SandboxMetrics",
 ) -> tuple[Dict[str, Any], bool]:
-    """Check DMarket + CS2Cap connectivity and fetch aggregated prices."""
+    """Check DMarket + Oracle connectivity and fetch aggregated prices."""
     log("\n[PIPELINE] API connectivity")
 
     balance = await with_timeout(10, dmarket.get_real_balance(), "dmarket balance")
@@ -76,21 +76,21 @@ async def _check_connectivity(
     metrics.agg_with_bids = sum(1 for a in agg_prices.values() if a.get("best_ask", 0) > 0)
     log_ok(f"DMarket aggregated: {metrics.agg_titles} titles, {metrics.agg_with_bids} with asks")
 
-    cs2cap_ok = False
-    if cs2cap is not None:
+    oracle_ok = False
+    if oracle is not None:
         try:
-            h = await with_timeout(10, cs2cap.health_check(), "cs2cap health")
-            cs2cap_ok = bool(h and h.get("status") == "healthy")
+            h = await with_timeout(10, oracle.health_check(), "oracle health")
+            oracle_ok = bool(h and h.get("status") == "healthy")
         except Exception as e:
-            log_warn(f"CS2Cap health check failed: {e}")
+            log_warn(f"Oracle health check failed: {e}")
 
-    metrics.cs2cap_connected = cs2cap_ok
-    if cs2cap_ok:
-        log_ok("CS2Cap connected")
+    metrics.oracle_connected = oracle_ok
+    if oracle_ok:
+        log_ok("Oracle connected")
     else:
-        log_warn("CS2Cap not available — cross-market targets disabled")
+        log_warn("Oracle not available — cross-market targets disabled")
 
-    return agg_prices, cs2cap_ok
+    return agg_prices, oracle_ok
 
 
 async def _fetch_listings(
@@ -225,11 +225,11 @@ async def _fetch_listings(
     return items, low_fee_map
 
 
-async def _fetch_cs2cap_snapshots(
-    oracle: Optional[CS2CapOracle],
+async def _fetch_oracle_snapshots(
+    oracle: Optional[MultiSourceOracle],
     titles: List[str],
 ) -> tuple[Dict[str, float], Dict[str, float]]:
-    """Fetch CS2Cap ask/bid snapshots for titles."""
+    """Fetch Oracle ask/bid snapshots for titles."""
     asks: Dict[str, float] = {}
     bids: Dict[str, float] = {}
     if oracle is None:
@@ -239,9 +239,9 @@ async def _fetch_cs2cap_snapshots(
             asks = await oracle.get_prices_batch(titles)
         if hasattr(oracle, "get_bids_batch"):
             bids = await oracle.get_bids_batch(titles)
-        log_info(f"CS2Cap snapshots: {len(asks)} asks, {len(bids)} bids")
+        log_info(f"Oracle snapshots: {len(asks)} asks, {len(bids)} bids")
     except Exception as e:
-        log_warn(f"CS2Cap batch failed: {e}")
+        log_warn(f"Oracle batch failed: {e}")
     return asks, bids
 
 
@@ -281,15 +281,15 @@ async def _run_filters(
     if bulk_fees is None:
         bulk_fees = {}
 
-    # Fetch CS2Cap snapshots for aggregated titles AND low-fee titles
+    # Fetch Oracle snapshots for aggregated titles AND low-fee titles
     # so low-fee candidates have cross-market reference data.
     low_fee_titles = list(low_fee_map.keys()) if Config.LOW_FEE_ITEMS_SCAN_ENABLED else []
     all_agg_titles = list(agg_prices.keys())[:100]
     snapshot_titles = list(dict.fromkeys(all_agg_titles + low_fee_titles))[:200]
     oracle = OracleFactory.get_oracle(Config.GAME_ID)
-    cs_asks_full, cs_bids_full = await _fetch_cs2cap_snapshots(oracle, snapshot_titles)
-    metrics.cs2cap_asks = len(cs_asks_full)
-    metrics.cs2cap_bids = len(cs_bids_full)
+    cs_asks_full, cs_bids_full = await _fetch_oracle_snapshots(oracle, snapshot_titles)
+    metrics.oracle_asks = len(cs_asks_full)
+    metrics.oracle_bids = len(cs_bids_full)
 
     instant = 0
     cross = 0
@@ -377,10 +377,10 @@ async def run_pipeline_test(metrics: "SandboxMetrics") -> None:
         return
 
     dmarket = DMarketAPIClient(public_key=pub_key, secret_key=sec_key)
-    cs2cap = OracleFactory.get_cross_market_oracle(Config.GAME_ID)
+    oracle = OracleFactory.get_oracle(Config.GAME_ID)
 
     try:
-        agg_prices, _cs2cap_ok = await _check_connectivity(dmarket, cs2cap, metrics)
+        agg_prices, _oracle_ok = await _check_connectivity(dmarket, oracle, metrics)
         if not agg_prices:
             return
 

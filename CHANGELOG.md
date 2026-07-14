@@ -6,6 +6,74 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/v2.0.0.html).
 
 
+## [15.6.0] - 2026-07-14
+### 🚀 v15.6 Rate Limiting, Error Handling & Dead Code Cleanup
+
+#### Added
+- **Token bucket rate limiter** (`rate_limiter.py`) — per-endpoint rate limiting, 0 429 errors
+- **Hybrid Kelly+Volatility sizing** (arXiv:2508.16598) — better drawdown control
+- **Slippage-at-Risk pre-trade filter** (arXiv:2603.09164) — reject bad fills
+- **Time-stop for stale positions** — cancel buy targets after 90min
+- **CallbackData factory** (`callback_data.py`) — type-safe callbacks
+- **FSM for settings** (`settings_fsm.py`) — /set command for changing settings via bot
+- **Structured error handling** (`error_handling.py`) — 8 error categories, 4 severity levels
+- **uvloop** for 2-4x faster event loop
+- **Rust GIL release** — `py.allow_threads()` for parallel parsing
+- **PyO3 0.23** — newer API, abi3 support
+- **BuildKit cache mounts** — 2-5 min faster Docker rebuilds
+- **.dockerignore** — faster builds, smaller context
+- **Composite index** `(hash_name, status)` on virtual_inventory
+- **atexit handlers** — clean WAL checkpoint on exit
+- **Indexes** on `trades(trade_date)` and `trades(item_name)`
+
+#### Changed
+- **Market.CSGO oracle** — added rate limiter (2.5 RPS) + 429 handling
+- **Waxpeer oracle** — added rate limiter (0.5 RPS) + 429 handling
+- **Steam oracle** — added 429 retry with exponential backoff
+- **Multi-Source Oracle** — per-source circuit breaker, sequential calls
+- **Scanner** — Semaphore(2) + 400ms pacing (5 RPS safe margin)
+- **DMarket API client** — removed broken fallback URL, added token bucket
+- **Dockerfile** — BuildKit cache, STOPSIGNAL SIGTERM, better health check
+- **Rust core** — LTO + strip for smaller binaries
+
+#### Fixed
+- **Inverted spread calculation** in `limit_orders.py` — limiter orders now work
+- **Double-sided fee validation** in `price_validator.py` — buy + sell fees
+- **Idempotency keys** in `targets.py` and `offers.py` — no duplicate orders
+- **Year 2026 hardcoded** in `pricing.py` — float-date detection works in 2027+
+- **Kelly dead code** in `dynamic_manager.py` — Kelly sizing now called
+- **Plaintext API secret** in `dmarket_api.py` — removed X-Api-Secret header
+- **Circuit breaker race condition** in `backoff.py` — `_probe_pending` flag
+- **Oracle HTTP timeouts** — 15s total, 5s connect (5 oracle files)
+- **Sample variance** in `price_validator.py` — `/ (len-1)` instead of `/ len`
+- **429 fallback URL** removed — non-existent URL removed
+- **NaN/Inf guard** in `pump_detector.py`
+- **Volume check** in `pump_detector.py` — no false positive on thin markets
+- **CS2 budget limit** in `liquidity_manager.py` — 10% per trade
+- **cb_sell_top bug** in `callbacks.py` — uses `listed_count` instead of `result`
+- **escape_md incomplete** in `formatters.py` — all 18 MarkdownV2 special chars
+- **cmd_chart/pnl_chart** missing `@safe_call` decorator
+- **cmd_liquidate** missing None-check on `state.client`
+- **notifier.error()/crash()** — added HTML escaping
+
+#### Removed
+- **Dead code cleanup** — ~3,000 lines, 32 files removed
+- **src/telegram_bot/** — entire package (wrong library, python-telegram-bot)
+- **src/telegram/bot.py** — deprecated, hard-blocked, has CVEs
+- **src/api/dmarket_auth.py** — deprecated, replaced by dmarket_api_client
+- **src/api/skinport_oracle.py** — empty stub
+- **src/core/target_sniping.py** — dead monolith shadowed by package
+- **src/dmarket/** — 11 dead files (never imported)
+- **src/utils/** — 8 stub files (no-op implementations)
+- **Broken fallback URL** — trading.dmarket.com doesn't exist
+
+#### Security
+- Structured error handling with 8 categories (API, DB, Auth, Network, etc.)
+- HTML escaping in notifier.error()/crash() — no HTML breakage
+- Type-safe CallbackData factory — no callback injection
+- Never leak exception details to users (CVE-2026-32982)
+
+
 ## [15.2.0] - 2026-07-12
 ### ⚡ v15.2 Performance & Security Optimization
 
@@ -64,7 +132,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/v2.0.0.html
 #### Added
 - **Dual-Signal Pipeline**: Primary VALUE signal (rarity-based) + secondary SPREAD signal (intra-market).
   - `src/core/target_sniping/value_pipelines.py` — new module with `evaluate_combined_signal()`
-  - Value signal: rarity premium × cs2cap_ask vs buy_price
+  - Value signal: rarity premium × oracle_ask vs buy_price
   - Spread signal: best_bid vs best_ask with fee-aware margin
   - Pipeline prioritizes VALUE over SPREAD (can buy without natural spread)
 - **New Config Parameters** (`.env`):
@@ -81,7 +149,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/v2.0.0.html
   - `CVD_ENABLED=false`, `VPIN_ENABLED=false`
   - These are **optional** and can be re-enabled for hybrid mode.
 - **Relaxed liquidity filter**: `MIN_TOTAL_SALES=3` (was 5), `MIN_BID_ASK_COUNT=2` (was 5)
-- **Expanded CS2Cap validation**: `CS2CAP_TOP_K_VALIDATE=50` (was 5)
+- **Expanded oracle validation**: `ORACLE_TOP_K_VALIDATE=50` (was 5)
 - **Expanded price-range scan**: `PRICE_RANGE_MAX_TITLES=500` (was 200), `PRICE_RANGE_CYCLE_INTERVAL=1` (was 3)
 - **Reduced reserve**: `BALANCE_RESERVE_USD=5.00` (was $10) — deploy more capital
 - **Increased FEE_RATE**: `0.05` (was 0.03) — realistic for CS2 sell fees
@@ -133,11 +201,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/v2.0.0.html
   `MIN_SPREAD_PCT` to `0.5%` so cross-market edges are not discarded by
   pessimistic cost assumptions.
 - **Cross-market buy list_price** — `limit_orders._execute_cross_market_targets`
-  now posts DMarket buy targets derived from CS2Cap lowest ask minus fees
+  now posts DMarket buy targets derived from oracle lowest ask minus fees
   instead of using the DMarket best ask.
 - **Cross-market fee validation** — `evaluate_fee_slippage_tod` accepts a
   `cs_ask_price` parameter so cross-market discounts (buy on DMarket, sell on
-  CS2Cap) are evaluated with the destination market in mind.
+  free oracles) are evaluated with the destination market in mind.
 
 #### Added
 - `src/core/target_sniping/underpriced.py` — DMarket-internal underpriced
@@ -157,7 +225,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/v2.0.0.html
 - **Position Guard** (`src/core/target_sniping/position_guard.py`) — monitors
   existing inventory for stop-loss and take-profit conditions.
 - `check_stop_losses()` and `check_take_profits()` called every 3 cycles.
-- Smart reprice — adjusts stale listings based on CS2Cap reference.
+- Smart reprice — adjusts stale listings based on oracle reference.
 
 #### Changed
 - **v14.0 Microstructure filters** now fully wired:
@@ -197,7 +265,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/v2.0.0.html
 - **Strategy Selector** — dynamically switches between MarketMaker, SpreadHunter,
   CrossMarket based on market conditions.
 - **Limit Orders** — places buy targets for wide-spread items; cross-market buy
-  targets when DMarket ask > CS2Cap ask.
+  targets when DMarket ask > oracle ask.
 - **Live Shadow Engine** — paper-trading running alongside real bot for validation.
 
 
@@ -269,7 +337,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/v2.0.0.html
 - **v12.7** — Per-cycle oracle price cache, PumpDetector restore from disk
 - **v12.6** — Pump detection, error classification (FATAL/UNKNOWN/TRANSIENT)
 - **v12.5** — SecurityAuditor log filter, DailyBriefingScheduler
-- **v12.4** — CS2Cap in-memory cache (5-min TTL, 200 items)
+- **v12.4** — Oracle in-memory cache (5-min TTL, 200 items)
 - **v12.3** — Aggregated-prices-first scan (v12.3 fix for cross-market arb)
 - **v12.2** — Liquidity filter, wash-trading detection, multi-level verification
 - **v12.1** — Bulk fee estimation (4 tiers)

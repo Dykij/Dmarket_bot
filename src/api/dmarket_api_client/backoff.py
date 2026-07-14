@@ -77,6 +77,8 @@ class CircuitBreaker:
 
     # Async lock for thread/task safety in concurrent async contexts
     _lock: asyncio.Lock = field(default_factory=asyncio.Lock, repr=False, init=False)
+    # Flag to prevent concurrent HALF_OPEN probes (sync-safe)
+    _probe_pending: bool = field(default=False, repr=False, init=False)
 
     def __post_init__(self) -> None:
         # Sync current_cooldown with the user-provided base_cooldown on
@@ -87,9 +89,9 @@ class CircuitBreaker:
     def allow_request(self) -> bool:
         """Return True if the caller may proceed with a request.
 
-        Protected by an async lock to prevent race conditions on
-        OPEN → HALF_OPEN transitions when multiple concurrent
-        requests call allow_request() simultaneously.
+        Uses _probe_pending flag to ensure at most one in-flight test
+        request in HALF_OPEN state, preventing race conditions when
+        multiple concurrent tasks call allow_request() simultaneously.
         """
         now = time.time()
         if now < self._server_backoff_until:
@@ -102,26 +104,27 @@ class CircuitBreaker:
             if elapsed >= self.current_cooldown:
                 self.state = CircuitState.HALF_OPEN
                 self.half_opened_at = now
+                self._probe_pending = True
                 logger.info(
                     f"[CB:{self.name}] OPEN → HALF_OPEN "
                     f"(cooldown={self.current_cooldown:.1f}s elapsed={elapsed:.1f}s)"
                 )
                 return True
             return False
-        # HALF_OPEN: only one in-flight test; auto-close on timeout
-        # race-safe: if two callers reach HALF_OPEN simultaneously, both
-        # observe consecutive_failures == 0 and one gets a True, the other
-        # gets False (consecutive_failures incremented by record_failure
-        # in the other caller). This still produces at most one probe.
+        # HALF_OPEN: allow exactly one probe request at a time
         if now - self.half_opened_at > self.half_open_timeout:
             self.state = CircuitState.CLOSED
             self.consecutive_failures = 0
+            self._probe_pending = False
             logger.info(
                 f"[CB:{self.name}] HALF_OPEN timed out after "
                 f"{self.half_open_timeout:.0f}s → CLOSED"
             )
             return True
-        return self.consecutive_failures == 0
+        if self._probe_pending:
+            return False  # another task is already probing
+        self._probe_pending = True
+        return True
 
     def record_success(self) -> None:
         """Mark a successful request (closes the circuit if it was open)."""
@@ -131,16 +134,15 @@ class CircuitBreaker:
         self.consecutive_failures = 0
         self.current_cooldown = self.base_cooldown
         self.last_error = ""
+        self._probe_pending = False
 
     def record_failure(self, err: Exception) -> None:
         """Mark a failed request (opens the circuit if threshold reached).
 
-        Note: This method mutates shared mutable state. In an async context
-        with parallel requests, callers should ensure serial access (e.g.
-        by holding the API client's request lock) or use the async variant.
-        For simplicity and backward compatibility, we keep this synchronous
-        but document the requirement.
+        Clears the _probe_pending flag so the next request can retry
+        the HALF_OPEN probe after cooldown.
         """
+        self._probe_pending = False
         self.consecutive_failures += 1
         self.last_error = f"{type(err).__name__}: {err}"[:200]
         if self.consecutive_failures >= self.fail_threshold:

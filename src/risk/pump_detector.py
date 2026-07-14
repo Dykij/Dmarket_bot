@@ -1,25 +1,29 @@
 """
-pump_detector.py — Detects abnormal price spikes and blocks FOMO buys.
+pump_detector.py — Detects abnormal price spikes AND price drops.
 
 When an item's price spikes >PUMP_THRESHOLD_PCT (default 15%) within a
 short window (default 1h) without a corresponding volume surge, it's
-likely a pump-and-dump setup (Chinese collector groups, FOMO spirals,
-steam-tweet cascades, etc.). The user explicitly asked for:
+likely a pump-and-dump setup. The user explicitly asked for:
 
   > При обнаружении пампа (резкий рост цены >15% за 1ч без фундаментальных
   > причин) — блокируем покупки этого предмета на 24 часа и шлём алерт
   > в Telegram. Это защитит от FOMO покупок на пике.
+
+v15.4: Added falling item detection — when oracle_price drops >DUMP_THRESHOLD_PCT
+       (default 10%) in a short window, cancel pending buy orders for that item.
+       This protects from buying items that are actively crashing.
 
 So the behavior is:
   1. On every cycle, when we observe a new price for a title, check
      against price_db's recent history.
   2. If the max 1h change is >15% (configurable via env), blacklist
      the title for 24h and fire a Telegram warning.
-  3. RiskManager.pre_trade_check consults the blacklist and blocks
+  3. If the oracle price drops >10% in 1h, mark item for order cancellation.
+  4. RiskManager.pre_trade_check consults the blacklist and blocks
      any buy on a blacklisted title.
 
 Data source: price_db.get_recent_prices(hash_name, days=7) — already
-populated by CS2Cap / DMarket cycles. No extra API calls.
+populated by oracle / DMarket cycles. No extra API calls.
 
 The detector is intentionally lightweight:
   - In-memory blacklist (no extra DB writes).
@@ -30,6 +34,7 @@ The detector is intentionally lightweight:
 from __future__ import annotations
 
 import logging
+import math
 import os
 import time
 from dataclasses import dataclass
@@ -66,6 +71,9 @@ class PumpDetector:
     DEFAULT_THRESHOLD_PCT: float = 15.0
     DEFAULT_WINDOW_SECONDS: int = 3600          # 1h
     DEFAULT_BLACKLIST_SECONDS: int = 24 * 3600  # 24h
+    # v15.4: Falling item detection thresholds
+    DEFAULT_DUMP_THRESHOLD_PCT: float = 10.0    # -10% = dump
+    DEFAULT_DUMP_WINDOW_SECONDS: int = 3600     # 1h
 
     def __init__(
         self,
@@ -95,8 +103,12 @@ class PumpDetector:
         # Active blacklist: hash_name -> PumpAlert
         self._blacklist: dict[str, PumpAlert] = {}
 
+        # v15.4: Items flagged for order cancellation (price dropping)
+        self._dump_flags: dict[str, float] = {}  # hash_name -> detected_at
+
         # Diagnostics
         self._total_detections: int = 0
+        self._total_dumps_detected: int = 0
         self._total_alerts_sent: int = 0
         self._last_scan_ts: float = 0.0
 
@@ -191,6 +203,9 @@ class PumpDetector:
         """
         if not hash_name or current_price <= 0:
             return None
+        if math.isnan(current_price) or math.isinf(current_price):
+            logger.debug(f"[PumpDetector] Rejecting NaN/Inf price for {hash_name}")
+            return None
         if self._price_db is None:
             return None
 
@@ -207,7 +222,7 @@ class PumpDetector:
         except Exception as e:
             logger.debug(f"[PumpDetector] get_recent_prices({hash_name}) failed: {e}")
             return None
-        if not recent:
+        if not recent or len(recent) < 3:
             return None
 
         # recent is sorted DESC by recorded_at: [latest, ..., oldest]
@@ -220,6 +235,12 @@ class PumpDetector:
                 break
         if old_price is None or old_price <= 0:
             # Not enough history to compute a baseline.
+            return None
+
+        # Require minimum volume: at least 2 observations in the window
+        # to avoid false positives on thin-market items
+        observations_in_window = sum(1 for _, ts in recent if ts > window_start)
+        if observations_in_window < 2:
             return None
 
         pct_change = ((current_price - old_price) / old_price) * 100.0
@@ -296,6 +317,88 @@ class PumpDetector:
 
         return alert
 
+    # ----------------------------------------------------------------
+    # v15.4: Falling item detection — protect from buying crashing items
+    # ----------------------------------------------------------------
+    def check_price_drop(self, hash_name: str, oracle_price: float) -> bool:
+        """Check if oracle price has dropped significantly.
+
+        Returns True if item is flagged as falling (should cancel buy orders).
+        Uses the same price_db history as pump detection.
+        """
+        if not hash_name or oracle_price <= 0:
+            return False
+        if self._price_db is None:
+            return False
+
+        now = time.time()
+        window_start = now - self.DEFAULT_DUMP_WINDOW_SECONDS
+
+        try:
+            recent = self._price_db.get_recent_prices(hash_name, days=2)
+        except Exception:
+            return False
+        if not recent:
+            return False
+
+        # Find price before the window
+        old_price: float | None = None
+        for price, ts in recent:
+            if ts <= window_start:
+                old_price = price
+                break
+        if old_price is None or old_price <= 0:
+            return False
+
+        pct_change = ((oracle_price - old_price) / old_price) * 100.0
+
+        # Only flag if price DROPPED by more than threshold
+        if pct_change > -self.DEFAULT_DUMP_THRESHOLD_PCT:
+            return False
+
+        self._dump_flags[hash_name] = now
+        self._total_dumps_detected += 1
+
+        logger.warning(
+            f"[PumpDetector] PRICE DROP: {hash_name} "
+            f"${old_price:.2f} → ${oracle_price:.2f} ({pct_change:+.1f}% in "
+            f"{self.DEFAULT_DUMP_WINDOW_SECONDS // 60}m). "
+            f"Orders should be cancelled."
+        )
+
+        # Fire Telegram warning
+        if self._notifier is not None:
+            try:
+                import asyncio
+                coro = self._notifier.custom(
+                    text=(
+                        f"📉 <b>PRICE DROP DETECTED</b>\n"
+                        f"<code>{hash_name}</code>\n"
+                        f"${old_price:.2f} → ${oracle_price:.2f} "
+                        f"(<b>{pct_change:+.1f}%</b> in {self.DEFAULT_DUMP_WINDOW_SECONDS // 60}m)\n"
+                        f"Cancel pending buy orders for this item."
+                    ),
+                    severity="warning",
+                )
+                try:
+                    loop = asyncio.get_running_loop()
+                    loop.create_task(coro)
+                except RuntimeError:
+                    pass
+            except Exception as e:
+                logger.debug(f"[PumpDetector] Telegram dump alert failed: {e}")
+
+        return True
+
+    def is_dump_flagged(self, hash_name: str, ttl_seconds: int = 3600) -> bool:
+        """Check if item was recently flagged as falling price."""
+        if hash_name not in self._dump_flags:
+            return False
+        if time.time() - self._dump_flags[hash_name] > ttl_seconds:
+            del self._dump_flags[hash_name]
+            return False
+        return True
+
     def unblock(self, hash_name: str) -> bool:
         """
         Manually unblock a title (admin override, e.g. via /risk Telegram
@@ -341,6 +444,8 @@ class PumpDetector:
             "blacklist_seconds": self.blacklist_seconds,
             "active_blacklist_size": len(self.get_active_blacklist()),
             "total_detections": self._total_detections,
+            "total_dumps_detected": self._total_dumps_detected,
+            "active_dump_flags": len(self._dump_flags),
             "total_alerts_sent": self._total_alerts_sent,
             "last_scan_ts": self._last_scan_ts,
         }

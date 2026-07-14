@@ -1,7 +1,7 @@
 """
 api/exceptions.py — Shared API exceptions (v14.9).
 
-Moved from cs2cap_oracle.models to be used by all oracles.
+Shared across all oracle implementations.
 """
 
 from __future__ import annotations

@@ -38,7 +38,7 @@ fn generate_signature_rs(
 }
 
 #[pymodule]
-fn rust_core(_py: Python, m: &PyModule) -> PyResult<()> {
+fn rust_core(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(generate_signature_rs, m)?)?;
     Ok(())
 }

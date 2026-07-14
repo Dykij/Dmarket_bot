@@ -99,12 +99,12 @@ class TestHealthState:
         assert snap["pump_detector"]["active_blacklist_size"] == 3
         assert snap["pump_detector"]["total_detections"] == 7
 
-    def test_set_cs2cap_quota(self) -> None:
+    def test_set_oracle_sources_active(self) -> None:
         s = HealthState()
-        s.set_cs2cap_quota_pct(45.5)
-        assert s.snapshot()["cs2cap"]["monthly_quota_used_pct"] == 45.5
-        s.set_cs2cap_quota_pct(None)
-        assert s.snapshot()["cs2cap"]["monthly_quota_used_pct"] is None
+        s.set_oracle_sources_active(45.5)
+        assert s.snapshot()["oracle"]["sources_active"] == 45.5
+        s.set_oracle_sources_active(None)
+        assert s.snapshot()["oracle"]["sources_active"] is None
 
     def test_record_error(self) -> None:
         s = HealthState()
@@ -163,7 +163,7 @@ def fresh_health_state() -> HealthState:
     s.set_halts(soft_halt=False, daily_halt=False)
     s.set_daily_stats(pnl_usd=0.0, trade_count=0)
     s.set_pump_stats(blacklist_size=0, total_detections=0)
-    s.set_cs2cap_quota_pct(None)
+    s.set_oracle_sources_active(None)
     s.record_error("")
     return s
 
@@ -245,7 +245,7 @@ async def test_metrics_returns_prometheus_format(
 ) -> None:
     fresh_health_state.mark_cycle(50.0, 60.0, 5.0)
     fresh_health_state.set_pump_stats(blacklist_size=2, total_detections=5)
-    fresh_health_state.set_cs2cap_quota_pct(42.5)
+    fresh_health_state.set_oracle_sources_active(42.5)
 
     resp = await http_client.get("/metrics")
     assert resp.status == 200
@@ -260,7 +260,7 @@ async def test_metrics_returns_prometheus_format(
     assert "bot_equity_drawdown_pct 5.0" in text
     assert "bot_pump_blacklist_size 2" in text
     assert "bot_pump_total_detections_total 5" in text
-    assert "bot_cs2cap_quota_used_pct 42.5" in text
+    assert "bot_oracle_sources_active 42.5" in text
 
     # Every metric line should end with a number (Prometheus format)
     for line in text.split("\n"):
@@ -280,10 +280,10 @@ async def test_metrics_returns_prometheus_format(
 async def test_metrics_omits_quota_when_none(
     http_client: TestClient, fresh_health_state: HealthState
 ) -> None:
-    fresh_health_state.set_cs2cap_quota_pct(None)
+    fresh_health_state.set_oracle_sources_active(None)
     resp = await http_client.get("/metrics")
     text = await resp.text()
-    assert "bot_cs2cap_quota_used_pct" not in text
+    assert "bot_oracle_sources_active" not in text
 
 
 # =====================================================================

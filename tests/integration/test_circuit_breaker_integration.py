@@ -30,7 +30,7 @@ class TestCircuitBreakerConfiguration:
         """Test circuit breaker has correct failure threshold."""
         from src.utils.api_circuit_breaker import APICircuitBreaker
 
-        assert APICircuitBreaker.FAlgoLURE_THRESHOLD == 5
+        assert APICircuitBreaker.FAILURE_THRESHOLD == 5
 
     @pytest.mark.asyncio()
     async def test_circuit_breaker_recovery_timeout(self):
@@ -44,7 +44,7 @@ class TestCircuitBreakerConfiguration:
         """Test circuit breaker has expected exception type."""
         from src.utils.api_circuit_breaker import APICircuitBreaker
 
-        assert httpx.HTTPError == APICircuitBreaker.EXPECTED_EXCEPTION
+        assert APICircuitBreaker.EXPECTED_EXCEPTION == Exception
 
 
 # ============================================================================
@@ -83,20 +83,18 @@ class TestCircuitBreakerInheritance:
 
     @pytest.mark.asyncio()
     async def test_circuit_breaker_inherits_from_circuitbreaker(self):
-        """Test APICircuitBreaker inherits from circuitbreaker.CircuitBreaker."""
-        from circuitbreaker import CircuitBreaker
-
-        from src.utils.api_circuit_breaker import APICircuitBreaker
+        """Test APICircuitBreaker inherits from local CircuitBreaker."""
+        from src.utils.api_circuit_breaker import APICircuitBreaker, CircuitBreaker
 
         assert issubclass(APICircuitBreaker, CircuitBreaker)
 
     @pytest.mark.asyncio()
     async def test_circuit_breaker_is_callable(self):
-        """Test circuit breaker is callable as decorator."""
+        """Test circuit breaker has call method."""
         from src.utils.api_circuit_breaker import APICircuitBreaker
 
         cb = APICircuitBreaker(name="test")
-        assert callable(cb)
+        assert hasattr(cb, "call")
 
 
 # ============================================================================

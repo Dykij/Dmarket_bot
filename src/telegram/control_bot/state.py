@@ -23,8 +23,8 @@ from src.api.dmarket_api_client import DMarketAPIClient
 from src.config import Config
 
 # Phase 1: Feature-flag selection (mirrors autonomous_scanner.py).
-# v12.0 SnipingLoop = batched DMarket endpoints + selective CS2Cap top-K.
-# Legacy v10.0 = per-item CS2Cap, exceeds Starter 50K/month quota.
+# v12.0 SnipingLoop = batched DMarket endpoints + selective oracle top-K.
+# Legacy v10.0 = per-item oracle, exceeds Starter 50K/month quota.
 if os.getenv("USE_V12_LOOP", "true").lower() == "true":
     from src.core.target_sniping.core import SnipingLoop
 else:

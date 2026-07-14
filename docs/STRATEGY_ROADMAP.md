@@ -12,14 +12,14 @@
 The DMarket bot is a **Value Detection Scanner + Spread Sniper** that:
 
 1. **Finds** undervalued items by rarity (float, pattern, stickers) — **even without natural spread**
-2. **Buys** at DMarket ask, sells at rarity-adjusted price (cs2cap ask × premium)
+2. **Buys** at DMarket ask, sells at rarity-adjusted price (oracle ask × premium)
 3. **Falls back** to intra-market spread sniping for liquid items
-4. **Uses CS2Cap** as external price oracle (BUFF163 + 41 markets)
+4. **Uses MultiSourceOracle** as external price oracle (BUFF163 + free marketplaces)
 5. **Compounds** capital through high-frequency, low-margin volume trading
 6. **Defends** with risk gates: drawdown freeze, Kelly sizing, lock-aware cap
 
 The bot operates **only inside DMarket**, using a **dual-signal pipeline**:
-- **VALUE signal** (primary): rarity premium × cs2cap ask vs buy price
+- **VALUE signal** (primary): rarity premium × oracle ask vs buy price
 - **SPREAD signal** (secondary): best_bid > best_ask × margin
 
 ---
@@ -33,14 +33,14 @@ The bot operates **only inside DMarket**, using a **dual-signal pipeline**:
 **Pipeline:**
 ```
  1. Aggregated prices batch 100 titles
- 2. CS2Cap cache (in-memory, 5-min TTL)
+ 2. Oracle cache (in-memory, 5-min TTL)
  3. Fetch cheapest listings per title (parallel)
  4. VALUE SIGNAL EVALUATION (v14.9, NEW):
     - Float premium → 1.08-1.30×
     - Pattern/phase → 1.0-5.0× (Ruby, Blue Gem, Fire & Ice)
     - Sticker combo → +50-100%
     - Filler demand → 1.15×
-    - est_sell = cs2cap_ask × rarity_mult
+     - est_sell = oracle_ask × rarity_mult
     - BUY if est_sell > ask × (1 + fee + margin)
  5. SPREAD FALLBACK (if value fails):
     - best_bid > best_ask × (1 + fee + margin)
@@ -53,7 +53,7 @@ The bot operates **only inside DMarket**, using a **dual-signal pipeline**:
 
 | Signal | Trigger | Typical Items | Frequency |
 |---|---|---|---|
-| **VALUE** | rarity_mult × cs2cap > ask × cost | Ruby, FN-0, Blue Gem, stickered | Rare but high margin (8-20%) |
+| **VALUE** | rarity_mult × oracle_ask > ask × cost | Ruby, FN-0, Blue Gem, stickered | Rare but high margin (8-20%) |
 | **SPREAD** | best_bid > ask × margin | Liquid skins, volatile periods | Common but lower margin (3-7%) |
 
 ---
@@ -82,7 +82,7 @@ Strict HFT filters are **off by default** for Value Scanner:
 | Parameter | v14.6 | v14.9 | Change |
 |---|---|---|---|
 | PRICE_RANGE_MAX_TITLES | 200 | 500 | +150% coverage |
-| CS2CAP_TOP_K_VALIDATE | 5 | 50 | +900% validation |
+| ORACLE_TOP_K_VALIDATE | 5 | 50 | +900% validation |
 | MIN_TOTAL_SALES | 5 | 3 | More illiquid items |
 | MIN_BID_ASK_COUNT | 5 | 2 | Thinner items |
 | BALANCE_RESERVE_USD | $10 | $5 | Deploy more capital |
@@ -100,13 +100,13 @@ Strict HFT filters are **off by default** for Value Scanner:
 
 **Buy criteria (VALUE signal):**
 ```
-cs2cap_ask × rarity_mult > ask × (1 + FEE_RATE + WITHDRAWAL_FEE + MIN_MARGIN)
+oracle_ask × rarity_mult > ask × (1 + FEE_RATE + WITHDRAWAL_FEE + MIN_MARGIN)
 ```
 
 **Examples:**
-- FN-0 Doppler Ruby: cs2cap $120 × 5.0 = $600 fair → buy at $100 → sell at $480
+- FN-0 Doppler Ruby: oracle $120 × 5.0 = $600 fair → buy at $100 → sell at $480
 - 4× Katowice Sticker: base $20 + $10 sticker value → sell at $35
-- Dirty BS AK-47: cs2cap $15 × 1.30 = $19.50 → buy at $12 → sell at $17
+- Dirty BS AK-47: oracle $15 × 1.30 = $19.50 → buy at $12 → sell at $17
 
 **Pros:**
 - Captures rare mispriced items (high margin)
@@ -161,7 +161,7 @@ best_bid > best_ask × (1 + FEE_RATE + WITHDRAWAL_FEE + MIN_MARGIN)
 ```
 
 ### Per-Trade Filters
-1. **Value gate:** rarity_mult × cs2cap > ask × cost (primary)
+1. **Value gate:** rarity_mult × oracle_ask > ask × cost (primary)
 2. **Spread gate:** best_bid > best_ask × margin (secondary/fallback)
 3. **Bait detection:** rapid price changes
 4. **Liquidity:** min 3 sales (relaxed)
@@ -192,7 +192,7 @@ CVD_ENABLED = False
 VPIN_ENABLED = False
 
 # v14.9 — Expanded Scan Coverage
-CS2CAP_TOP_K_VALIDATE = 50
+ORACLE_TOP_K_VALIDATE = 50
 PRICE_RANGE_MAX_TITLES = 500
 MIN_TOTAL_SALES = 3
 MIN_BID_ASK_COUNT = 2

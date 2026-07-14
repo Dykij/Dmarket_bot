@@ -15,7 +15,7 @@ class TestVaultIntegration(unittest.TestCase):
         vp._vault_client = None
         vp._secret = None
 
-    @patch('src.utils.vault_client.VaultClient')
+    @patch('src.utils.vault.VaultClient')
     def test_vault_production_connectivity(self, MockVaultClient):
         """Verify that VaultProvider tries to connect to Production Vault when env vars are set."""
         os.environ["VAULT_ADDR"] = "http://localhost:8200"

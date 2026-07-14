@@ -183,7 +183,7 @@ class ShadowEngine:
         *,
         candidates: list[dict[str, Any]],
         agg_prices: dict[str, Any],
-        cs2cap_ok: bool,
+        oracle_ok: bool,
         cycle: int,
         max_buys: int = 3,
         max_spend_per_cycle: float = 15.0,
@@ -476,7 +476,7 @@ def run_stress_test(
             engine.record_cycle(
                 candidates=base_candidates,
                 agg_prices=modified_agg,
-                cs2cap_ok=True,
+                oracle_ok=True,
                 cycle=cycle,
                 max_buys=2,
                 max_spend_per_cycle=10.0,

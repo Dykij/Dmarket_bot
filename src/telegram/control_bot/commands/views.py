@@ -206,7 +206,7 @@ async def cmd_sell_top(message):
 
 
 # ============================================================
-# Prices — CS2Cap price check for held items
+# Prices — Oracle price check for held items
 # ============================================================
 @router.message(Command("prices"))
 @router.message(F.text == BTN_PRICES)
@@ -221,9 +221,9 @@ async def cmd_prices(message):
             return
         oracle = OracleFactory.get_oracle("a8db")
         if oracle is None:
-            await message.answer("📊 *Prices* — CS2Cap oracle unavailable.")
+            await message.answer("📊 *Prices* — Oracle unavailable.")
             return
-        text = "📊 *CS2Cap Prices* (41 marketplaces)\n\n"
+        text = "📊 *Oracle Prices*\n\n"
         for it in list(idle)[:10]:
             title = it["hash_name"]
             try:
@@ -231,9 +231,9 @@ async def cmd_prices(message):
                 buy_price = it["buy_price"]
                 if cs_price > 0:
                     margin = (cs_price - buy_price) / buy_price * 100 if buy_price > 0 else 0
-                    text += f"`{title[:25]}`\n  Buy: ${buy_price:.2f} → CS2Cap: ${cs_price:.2f} ({margin:+.1f}%)\n"
+                    text += f"`{title[:25]}`\n  Buy: ${buy_price:.2f} → Oracle: ${cs_price:.2f} ({margin:+.1f}%)\n"
                 else:
-                    text += f"`{title[:25]}` — no CS2Cap data\n"
+                    text += f"`{title[:25]}` — no oracle data\n"
             except Exception:
                 text += f"`{title[:25]}` — error fetching\n"
         await message.answer(text)
@@ -248,6 +248,7 @@ async def cmd_prices(message):
 # ============================================================
 @router.message(Command("chart"))
 @router.message(F.text == "📈 CHART")
+@safe_call
 async def cmd_chart(message):
     """Send equity curve chart."""
     try:
@@ -268,6 +269,7 @@ async def cmd_chart(message):
 
 @router.message(Command("pnl"))
 @router.message(F.text == "📊 PNL")
+@safe_call
 async def cmd_pnl_chart(message):
     """Send daily P&L chart."""
     try:

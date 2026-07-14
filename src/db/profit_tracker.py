@@ -48,6 +48,13 @@ class ProfitTrackerDB:
                     trades_count INTEGER DEFAULT 0
                 )
             ''')
+            # v15.5: Indexes for audit/reporting queries
+            self.conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_trades_date ON trades(trade_date)"
+            )
+            self.conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_trades_item ON trades(item_name)"
+            )
         logger.info(f"💾 Profit Tracker DB initialized at {self.db_path}")
 
     @with_db_retry(operation_name="profit_tracker.record_trade")
@@ -92,3 +99,7 @@ class ProfitTrackerDB:
 
 # Global DB instance for easy access
 db = ProfitTrackerDB()
+
+# v15.5: Register shutdown hook for clean WAL checkpoint
+import atexit as _atexit
+_atexit.register(db.close)

@@ -11,7 +11,7 @@ Two operating modes:
                    over buy price. The PnL is paper-tracked.
 
   DRY_RUN=false  — real production. The bot fetches the user's real
-                   DMarket inventory, prices each item using the CS2Cap
+                   DMarket inventory, prices each item using the oracle
                    cache, and calls the batch create_sell_offers API.
                    Periodically checks for items that have sold (via
                    /user-offers/closed) and records the realized PnL.
@@ -46,7 +46,7 @@ class _ResaleMixin(_ResaleDryMixin, _ResaleProdMixin, _PositionGuardMixin):
 
     # These attributes are set on the instance by SnipingLoop.__init__
     client: Any  # DMarketAPIClient
-    cs2cap_cache: Any  # CS2CapCache (or None)
+    oracle: Any  # Oracle cache (or None)
 
     # ----------------------------------------------------------------
     # auto_resale — DRY + PROD paths
@@ -58,7 +58,7 @@ class _ResaleMixin(_ResaleDryMixin, _ResaleProdMixin, _PositionGuardMixin):
         Flow (both modes):
         1. List all `idle` items past their 7-day trade lock.
         2. If DRY: simulate listing + random sales.
-        3. If PROD: price via CS2Cap cache + batch list on DMarket.
+        3. If PROD: price via oracle cache + batch list on DMarket.
 
         Skips if no items. Errors are logged but never crash the loop.
         """

@@ -32,7 +32,7 @@ def rank_candidates_by_spread(
     Items with no agg_prices entry or zero bid/ask are filtered out.
 
     max_price_usd: optional cap to exclude items too expensive for our
-    balance (avoids wasting CS2Cap quota on $1000 Karambits when balance
+    balance (avoids wasting oracle quota on $1000 Karambits when balance
     is $43.91).
 
     low_fee_titles: optional set of titles known to have 2% commission.

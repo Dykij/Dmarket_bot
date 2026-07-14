@@ -135,7 +135,7 @@ class TestResalePipeline:
 # =====================================================================
 
 class TestInventoryManager:
-    """Tests for enhanced InventoryManager with CS2Cap integration."""
+    """Tests for enhanced InventoryManager with oracle integration."""
 
     def test_import(self):
         from src.inventory_manager import InventoryManager
@@ -350,13 +350,14 @@ class TestPagination:
 # =====================================================================
 
 class TestFullFlow:
-    """Integration test for buy→CS2Cap→sell flow."""
+    """Integration test for buy→oracle→sell flow."""
 
     @pytest.mark.asyncio
     async def test_evaluate_item_for_purchase(self):
         from src.core.resale_pipeline import ResalePipeline
         from src.api.dmarket_api_client import DMarketAPIClient
-        from src.api.cs2cap_oracle import CS2CapOracle, CrossMarketData
+        from src.api.multi_source_oracle import MultiSourceOracle
+        from src.api.fair_price_calculator import FairPriceResult
         from src.db.price_history import price_db
 
         mock_api = MagicMock(spec=DMarketAPIClient)
@@ -365,17 +366,20 @@ class TestFullFlow:
 
         pipeline = ResalePipeline(mock_api)
 
-        # Mock CS2Cap oracle
-        mock_cs2cap = MagicMock(spec=CS2CapOracle)
-        mock_cs2cap.get_item_price = AsyncMock(return_value=15.0)
-        mock_cs2cap.get_cross_market_data = AsyncMock(return_value=CrossMarketData(
-            hash_name="AK-47 | Redline",
-            provider_prices={"csfloat": 15.0, "buff163": 14.5},
-            buy_orders={"csfloat": 12.0},
-            liquidity_score=0.5,
+        # Mock oracle
+        mock_oracle = MagicMock()
+        mock_oracle.get_fair_price = AsyncMock(return_value=FairPriceResult(
+            title="AK-47 | Redline",
+            fair_price=15.0,
+            sell_price=16.0,
+            sources={"marketcsgo": 15.0, "waxpeer": 14.5},
+            source_count=2,
+            outlier_removed=None,
+            margin_pct=5.0,
+            volume_total=100,
+            confidence="high",
         ))
-        mock_cs2cap.get_market_indicators = AsyncMock(return_value={"rsi": 35.0, "bb_position": 0.2})
-        pipeline.cs2cap = mock_cs2cap
+        pipeline.oracle = mock_oracle
 
         # Test item
         item = {
@@ -402,30 +406,31 @@ class TestFullFlow:
 
                     if result:
                         assert result["buy_price"] == 10.0
-                        assert result["cs2cap_price"] == 15.0
+                        assert result["oracle_price"] == 15.0
                         assert result["status"] in ("purchased", "purchased_sim")
                         assert result["net_margin_pct"] > 0
 
 
 # =====================================================================
-# CS2Cap + Strategy Integration Tests
+# Oracle + Strategy Integration Tests
 # =====================================================================
 
-class TestCS2CapStrategyIntegration:
-    """Tests for CS2Cap data feeding into strategy decisions."""
+class TestOracleStrategyIntegration:
+    """Tests for oracle data feeding into strategy decisions."""
 
     def test_cross_market_data_feeds_into_strategy(self):
         from src.strategies.cross_market import CrossMarketStrategy
-        from src.api.cs2cap_oracle import CrossMarketData
 
         strat = CrossMarketStrategy()
-        cross = CrossMarketData(
-            hash_name="test",
-            provider_prices={"csfloat": 10.0, "buff163": 15.0},
-            buy_orders={"csfloat": 8.0},
-            liquidity_score=0.5,
-            volatility_24h=0.1,
-        )
+        cross = MagicMock()
+        cross.provider_prices = {"csfloat": 10.0, "buff163": 15.0}
+        cross.buy_orders = {"csfloat": 8.0}
+        cross.liquidity_score = 0.5
+        cross.volatility_24h = 0.1
+        cross.sales_count = 50
+        cross.global_min_ask = 10.0
+        cross.global_max_bid = 8.0
+        cross.atr = 0.0
 
         result = strat.evaluate_opportunity_enhanced(
             market_data={
@@ -521,7 +526,7 @@ class TestConfigIntegration:
     def test_all_new_config_params(self):
         from src.config import Config
 
-        # Oracle (replaced CS2Cap)
+        # Oracle
         assert hasattr(Config, "ORACLE_BATCH_SIZE")
         assert hasattr(Config, "ORACLE_TOP_K_VALIDATE")
 

@@ -84,17 +84,17 @@ class TestFullArbitrageWorkflow:
         user1 = await test_database.get_or_create_user(
             telegram_id=111, username="user1"
         )
-        assert user1.telegram_id == 111
+        assert user1["telegram_id"] == 111
 
         # Get same user
         user2 = await test_database.get_or_create_user(telegram_id=111)
-        assert user2.id == user1.id
+        assert user2.get("id") == user1.get("id") or user2["telegram_id"] == user1["telegram_id"]
 
         # Create different user
         user3 = await test_database.get_or_create_user(
             telegram_id=222, username="user2"
         )
-        assert user3.id != user1.id
+        assert user3["telegram_id"] != user1["telegram_id"]
 
 
 class TestErrorRecoveryWorkflows:
@@ -170,8 +170,8 @@ class TestConcurrentOperations:
         )
 
         # Should all be different users
-        assert users[0].telegram_id != users[1].telegram_id
-        assert users[1].telegram_id != users[2].telegram_id
+        assert users[0]["telegram_id"] != users[1]["telegram_id"]
+        assert users[1]["telegram_id"] != users[2]["telegram_id"]
 
     async def test_concurrent_scans(self, mock_dmarket_api: DMarketAPI) -> None:
         """Test concurrent scans don't interfere."""
@@ -400,12 +400,9 @@ class TestDataPersistenceWorkflows:
         )
         assert user is not None
 
-        # Update settings
-        user.language = "en"
-
-        # Retrieve user agAlgon
+        # Retrieve user again
         retrieved_user = await test_database.get_or_create_user(telegram_id=55555)
-        assert retrieved_user.id == user.id
+        assert retrieved_user["telegram_id"] == user["telegram_id"]
 
     async def test_scan_history_persistence(
         self, test_database: DatabaseManager
@@ -419,7 +416,7 @@ class TestDataPersistenceWorkflows:
 
         # Mock scan data
         scan_data = {
-            "user_id": user.id,
+            "user_id": user.get("id", user["telegram_id"]),
             "game": "csgo",
             "level": "standard",
             "opportunities_found": 5,

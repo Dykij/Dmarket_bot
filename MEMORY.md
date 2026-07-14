@@ -6,7 +6,7 @@ The project has evolved from a heuristic-based AI bot to a **Value Detection Sca
 ### Key Milestones
 - **June 2026 (v14.9)**: Value Detection Scanner refactor. Dual-signal pipeline (VALUE + SPREAD).
   - Relaxed HFT microstructure filters (disabled by default)
-  - Expanded scan coverage (500 titles, 50 CS2Cap validations)
+  - Expanded scan coverage (500 titles, 50 oracle validations)
   - Vault security fix (Fernet key generation)
   - README + docs updated
 - **June 2026 (v14.4)**: Balance-aware trading (8 features). Kelly sizing, drawdown freeze, dynamic max price, lock-aware cap, capital velocity. Full architecture restructuring (9+ files split). Docker multi-stage deployment. 289 tests.
@@ -18,7 +18,7 @@ The project has evolved from a heuristic-based AI bot to a **Value Detection Sca
 
 **Primary Signal — VALUE:**
 ```
-rarity_mult × cs2cap_ask > ask × (1 + FEE_RATE + WITHDRAWAL_FEE + MIN_MARGIN)
+rarity_mult × oracle_ask > ask × (1 + FEE_RATE + WITHDRAWAL_FEE + MIN_MARGIN)
 ```
 - Float premium: FN-0 1.20×, dirty BS 1.30×
 - Pattern premium: Ruby 5×, Blue Gem 3×, Fire & Ice 5×
@@ -33,7 +33,7 @@ best_bid > best_ask × (1 + FEE_RATE + WITHDRAWAL_FEE + MIN_MARGIN)
 **Key Changes:**
 - `STRICT_MICROSTRUCTURE_FILTERS=false` (HFT filters off for value scanner)
 - `OBI_ENABLED=false`, `OFI_ENABLED=false`, `VWAP_FILTER_ENABLED=false` (etc.)
-- `CS2CAP_TOP_K_VALIDATE=50` (was 5)
+- `ORACLE_TOP_K_VALIDATE=50` (was 5)
 - `MIN_TOTAL_SALES=3` (was 5)
 - `BALANCE_RESERVE_USD=5.00` (was $10)
 - `FEE_RATE=0.05` (realistic for CS2)
@@ -79,7 +79,7 @@ If balance drops below peak × (1 - threshold), stop buying. `DRAWDOWN_FREEZE_TH
 v14.4 sandbox simulation reports what was affordable vs what was missed due to balance constraints.
 
 ### Architecture Restructuring (June 2026 → v14.9)
-- **cs2cap_oracle** (959 lines → 5 files, max 373 each): models, client, catalog, prices, utils
+- **multi_source_oracle** (959 lines → 5 files, max 373 each): models, client, catalog, prices, utils
 - **microstructure** (779 lines → 4 files, max 319 each): obi, volume, volatility, signals
 - **target_sniping core** (994 → 562 + scanner + scheduler + telemetry)
 - **resale** (737 → 260 + 443 + 91): base, dry, prod
@@ -96,7 +96,7 @@ v14.4 sandbox simulation reports what was affordable vs what was missed due to b
 
 ### Telegram Control Bot (June 2026 Fixes)
 - 16 admin buttons (8 rows) — STATUS, INVENTORY, BALANCE, SELL-TOP, ANALYZE, TEST, PRICES, CLOCK, REFRESH, PANIC, STOP, START, HELP, LOGOUT, DONATE, CANCEL
-- Fixed: `ADMIN_ID` → `ADMIN_IDS`, `CrossMarketOracle` → `CTH2CapOracle`, MarkdownV2 escaping
+- Fixed: `ADMIN_ID` → `ADMIN_IDS`, `CrossMarketOracle` → `MultiSourceOracle`, MarkdownV2 escaping
 
 ### Security (June 2026 → v14.9)
 - Full security audit: 18+ vulns fixed (3 Critical, 5 High, 5 Medium, 4 Low)
@@ -114,7 +114,7 @@ v14.4 sandbox simulation reports what was affordable vs what was missed due to b
 - Cont, Cucuringu, Zhang (2021): OFI cross-impact of order flow imbalance
 - Frontiers AI (2025): LSTM → 20% 6mo vs 5-10% B&H. Mil-Spec mid-tier optimal
 - ScienceDirect (2025): 66.9% historical returns. Fees + volatility = main risks
-- CS2Cap: 41 marketplaces. Starter $19/mo (50k req). Pro $79. Quant $179
+- MultiSourceOracle: free oracles (Market.CSGO + Waxpeer + CSFloat + Steam)
 
 ### Environment Variables (v14.9)
 New v14.9:
@@ -128,15 +128,15 @@ Changed v14.9:
 - `OBI_ENABLED=false`
 - `OFI_ENABLED=false`
 - `VWAP_FILTER_ENABLED=false`
-- `CS2CAP_TOP_K_VALIDATE=50`
+- `ORACLE_TOP_K_VALIDATE=50`
 - `MIN_TOTAL_SALES=3`
 - `BALANCE_RESERVE_USD=5.00`
 - `FEE_RATE=0.05`
 
 ### Known Constraints (2026)
-- **API Limits**: CS2Cap Starter = 50K req/month, DMarket circuit breaker at 3 consecutive failures
+- **API Limits**: Oracle rate limits, DMarket circuit breaker at 3 consecutive failures
 - **Value Scanner**: Requires real DMarket data (rare items in listings). Sandbox may not find value signals.
-- **Single-venue**: Execution only on DMarket (CS2Cap used only as oracle)
+- **Single-venue**: Execution only on DMarket (MultiSourceOracle used only as oracle)
 - **Balance**: Current $43.91 → dynamic max price ~$5
 
 

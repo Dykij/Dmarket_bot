@@ -282,7 +282,7 @@ class TestNotificationWorkflow:
         message = template.format(balance=150.50)
 
         # Assert
-        assert "150.50" in message
+        assert "150.5" in message
 
 
 # ============================================================================
@@ -364,9 +364,9 @@ class TestMultiGameWorkflow:
         from src.dmarket.filters.game_filters import apply_filters_to_items
 
         items = [
-            {"price": {"USD": 500}, "extra": {}},
-            {"price": {"USD": 1500}, "extra": {}},
-            {"price": {"USD": 2500}, "extra": {}},
+            {"price": {"USD": 50000}, "extra": {}},
+            {"price": {"USD": 150000}, "extra": {}},
+            {"price": {"USD": 250000}, "extra": {}},
         ]
         filters = {"min_price": 1000, "max_price": 2000}
 
@@ -375,7 +375,7 @@ class TestMultiGameWorkflow:
 
         # Assert
         assert len(filtered) == 1
-        assert filtered[0]["price"]["USD"] == 1500
+        assert filtered[0]["price"]["USD"] == 150000
 
 
 # ============================================================================

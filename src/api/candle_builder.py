@@ -4,7 +4,7 @@ candle_builder.py — Build OHLCV candles from DMarket price snapshots.
 Collects aggregated prices (best_bid, best_ask, bid_count, ask_count)
 every cycle and builds 1min/5min/15min/1h/4h/1d candles in SQLite.
 
-Replaces CS2Cap's /prices/candles endpoint for DMarket-only strategies.
+Replaces paid oracle candle endpoints for DMarket-only strategies.
 """
 
 from __future__ import annotations

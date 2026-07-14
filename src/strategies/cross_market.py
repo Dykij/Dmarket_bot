@@ -1,12 +1,12 @@
 """
-CrossMarketStrategy — Multi-marketplace arbitrage via CS2Cap.
+CrossMarketStrategy — Multi-marketplace arbitrage via MultiSourceOracle.
 
-Uses CS2Cap's 41-market data to find:
+Uses multi-source oracle data to find:
   1. Direct arbitrage: Buy cheap on DMarket, sell high on another market
   2. Bid arbitrage: Place buy targets at prices below highest buy orders
   3. Indicator-driven: Use RSI/MACD/Bollinger to time entries
 
-Requires: CS2CapOracle (not CSFloat fallback).
+Requires: MultiSourceOracle (not CSFloat fallback).
 """
 
 import logging
@@ -21,7 +21,7 @@ logger = logging.getLogger("CrossMarket")
 
 class CrossMarketStrategy(BaseStrategy):
     """
-    Strategy that leverages CS2Cap cross-market data for 41-market arbitrage.
+    Strategy that leverages MultiSourceOracle cross-market data for arbitrage.
     """
 
     def __init__(self):
@@ -40,7 +40,7 @@ class CrossMarketStrategy(BaseStrategy):
         reflection_result: Any | None = None,
     ) -> dict[str, Any]:
         """
-        Evaluate an item using cross-market data from CS2Cap.
+        Evaluate an item using cross-market data from the oracle.
         """
         item_name = market_data.get("title", "UnknownItem")
         raw_ask = market_data.get("best_ask", 0.0)
@@ -135,7 +135,7 @@ class CrossMarketStrategy(BaseStrategy):
         # If there's a buy order above our target price after fees, instant sell is possible
         dest_fee_pct = float(Config.CROSS_MARKET_DESTINATION_FEE)
         instant_sell_opportunity = False
-        for provider, bid in cross_market_data.buy_orders.items():
+        for _provider, bid in cross_market_data.buy_orders.items():
             if bid * (1 - dest_fee_pct) > dmarket_price:
                 instant_sell_opportunity = True
                 break

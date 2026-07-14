@@ -1,6 +1,6 @@
 [package]
 name = "dmarket_parser_rs"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 
 [lib]
@@ -8,9 +8,24 @@ name = "dmarket_parser_rs"
 crate-type = ["cdylib"]
 
 [dependencies]
-pyo3 = { version = "0.21.0", features = ["extension-module"] }
+pyo3 = { version = "0.23", features = ["extension-module"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 regex = "1.10"
 ed25519-dalek = "=2.1"
 hex = "0.4"
+
+# v15.5: Optional simd-json for large payload parsing (2-4x faster)
+[dependencies.simd-json]
+version = "0.14"
+optional = true
+
+[features]
+default = []
+fast-json = ["simd-json"]
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true

@@ -67,12 +67,14 @@ class LiquidityManager:
                            f"Spend: ${current_daily_spend:.2f}, New: ${amount:.2f}, Max: ${max_daily:.2f}")
             return False
 
-        # 2. Check CS2 Specific Limit (10%)
-        if game_id == "rust":
-            max_rust = total_balance * self.rust_budget_pct
-            if amount > max_rust:
-                logger.warning(f"Rust budget limit exceeded per trade. "
-                               f"Req: ${amount:.2f}, Max: ${max_rust:.2f}")
+        # 2. Check Per-Game Budget Limit (10% of balance per trade)
+        if game_id in ("rust", "a8db"):  # a8db = CS2
+            max_per_trade = total_balance * self.rust_budget_pct
+            if amount > max_per_trade:
+                logger.warning(
+                    f"{game_id.upper()} budget limit exceeded per trade. "
+                    f"Req: ${amount:.2f}, Max: ${max_per_trade:.2f}"
+                )
                 return False
 
         return True

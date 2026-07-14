@@ -112,71 +112,86 @@ fn generate_signature_rs(
 // =====================================================================
 /// Parse a batch market response from DMarket API.
 /// Handles injection sanitization and price normalization.
+///
+/// v15.5: Phase 1 (Rust parsing) runs WITHOUT GIL for parallel speedup.
+/// Phase 2 (Python object construction) acquires GIL once.
 #[pyfunction]
-fn parse_market_response_rs(raw_json: &str) -> PyResult<Vec<ParsedSkin>> {
-    let re = INJECTION_REGEX.get_or_init(|| {
-        Regex::new(r"[<>{}$`\\]").expect("Invalid regex pattern")
-    });
+fn parse_market_response_rs(py: Python<'_>, raw_json: &str) -> PyResult<Vec<ParsedSkin>> {
+    // Phase 1: Pure Rust parsing — NO GIL held
+    let parsed = py.allow_threads(|| {
+        let re = INJECTION_REGEX.get_or_init(|| {
+            Regex::new(r"[<>{}$`\\]").expect("Invalid regex pattern")
+        });
 
-    let data: MarketResponse = serde_json::from_str(raw_json)
-        .map_err(|e| {
-            PyValueError::new_err(format!("JSON Batch Deserialization Error: {}", e))
-        })?;
+        let data: MarketResponse = serde_json::from_str(raw_json)
+            .map_err(|e| {
+                PyValueError::new_err(format!("JSON Batch Deserialization Error: {}", e))
+            })?;
 
-    let mut results = Vec::with_capacity(data.objects.len());
-    for item in data.objects {
-        let mut name = item.name;
-        if re.is_match(&name) {
-            name = re.replace_all(&name, "").to_string();
+        let mut results = Vec::with_capacity(data.objects.len());
+        for item in data.objects {
+            let mut name = item.name;
+            if re.is_match(&name) {
+                name = re.replace_all(&name, "").to_string();
+            }
+
+            let price = match item.price_usd {
+                serde_json::Value::Number(n) => n.as_f64().unwrap_or(0.0),
+                serde_json::Value::String(s) => s.parse::<f64>().unwrap_or(0.0) / 100.0,
+                _ => 0.0,
+            };
+
+            results.push(ParsedSkin {
+                item_id: item.item_id,
+                price_usd: price,
+                name,
+            });
         }
 
-        let price = match item.price_usd {
-            serde_json::Value::Number(n) => n.as_f64().unwrap_or(0.0),
-            serde_json::Value::String(s) => s.parse::<f64>().unwrap_or(0.0) / 100.0,
-            _ => 0.0,
-        };
+        Ok::<Vec<ParsedSkin>, PyErr>(results)
+    })?;
 
-        results.push(ParsedSkin {
-            item_id: item.item_id,
-            price_usd: price,
-            name,
-        });
-    }
-
-    Ok(results)
+    // Phase 2: Return to Python (GIL auto-acquired)
+    Ok(parsed)
 }
 
 // =====================================================================
 // validate_dmarket_response_rs — Single-object validation
 // =====================================================================
 /// Validate a single DMarket API response object.
+///
+/// v15.5: GIL released during Rust parsing phase.
 #[pyfunction]
-fn validate_dmarket_response_rs(raw_json: &str) -> PyResult<ParsedSkin> {
-    let re = INJECTION_REGEX.get_or_init(|| {
-        Regex::new(r"[<>{}$`\\]").expect("Invalid regex pattern")
-    });
+fn validate_dmarket_response_rs(py: Python<'_>, raw_json: &str) -> PyResult<ParsedSkin> {
+    // Phase 1: Pure Rust — NO GIL
+    let result = py.allow_threads(|| {
+        let re = INJECTION_REGEX.get_or_init(|| {
+            Regex::new(r"[<>{}$`\\]").expect("Invalid regex pattern")
+        });
 
-    // Reuse SkinData which has correct camelCase serde rename attributes
-    let mut data: SkinData = serde_json::from_str(raw_json)
-        .map_err(|e| {
-            PyValueError::new_err(format!("JSON Deserialization Error: {}", e))
-        })?;
+        let mut data: SkinData = serde_json::from_str(raw_json)
+            .map_err(|e| {
+                PyValueError::new_err(format!("JSON Deserialization Error: {}", e))
+            })?;
 
-    if re.is_match(&data.name) {
-        data.name = re.replace_all(&data.name, "").to_string();
-    }
+        if re.is_match(&data.name) {
+            data.name = re.replace_all(&data.name, "").to_string();
+        }
 
-    let price = match data.price_usd {
-        serde_json::Value::Number(n) => n.as_f64().unwrap_or(0.0),
-        serde_json::Value::String(s) => s.parse::<f64>().unwrap_or(0.0) / 100.0,
-        _ => 0.0,
-    };
+        let price = match data.price_usd {
+            serde_json::Value::Number(n) => n.as_f64().unwrap_or(0.0),
+            serde_json::Value::String(s) => s.parse::<f64>().unwrap_or(0.0) / 100.0,
+            _ => 0.0,
+        };
 
-    Ok(ParsedSkin {
-        item_id: data.item_id,
-        price_usd: price,
-        name: data.name,
-    })
+        Ok::<ParsedSkin, PyErr>(ParsedSkin {
+            item_id: data.item_id,
+            price_usd: price,
+            name: data.name,
+        })
+    })?;
+
+    Ok(result)
 }
 
 // =====================================================================
@@ -205,7 +220,7 @@ fn parse_aggregated_prices_rs(raw_json: &str) -> PyResult<Py<PyList>> {
 
     let entries = match data.aggregated_prices {
         Some(v) => v,
-        None => return Python::with_gil(|py| Ok(PyList::empty_bound(py).unbind())),
+        None => return Python::with_gil(|py| Ok(PyList::empty(py).unbind())),
     };
 
     // Phase 1: Parse all data in pure Rust (no GIL needed)
@@ -254,10 +269,10 @@ fn parse_aggregated_prices_rs(raw_json: &str) -> PyResult<Py<PyList>> {
 
     // Phase 2: Construct Python objects in single GIL acquisition
     Python::with_gil(|py| {
-        let results = PyList::empty_bound(py);
+        let results = PyList::empty(py);
 
         for entry in &parsed {
-            let dict = PyDict::new_bound(py);
+            let dict = PyDict::new(py);
             dict.set_item("title", &entry.title)?;
             dict.set_item("best_ask", entry.best_ask)?;
             dict.set_item("best_bid", entry.best_bid)?;
@@ -298,6 +313,7 @@ fn dmarket_parser_rs(m: &Bound<'_, PyModule>) -> PyResult<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::time::Instant;
 
     #[test]
     fn test_signature_caching_consistent() {
@@ -335,28 +351,28 @@ mod tests {
     #[test]
     fn test_inject_sanitization() {
         let json = r#"{"objects": [{"itemId": "abc", "price": {"USD": "1234"}, "title": "test<script>alert(1)</script>"}]}"#;
-        let parsed = parse_market_response_rs(json).unwrap();
+        let parsed = Python::with_gil(|py| parse_market_response_rs(py, json)).unwrap();
         assert_eq!(parsed[0].name, "testscriptalert(1)/script");
     }
 
     #[test]
     fn test_market_price_number() {
         let json = r#"{"objects": [{"itemId": "x", "price": {"USD": 999}, "title": "test"}]}"#;
-        let parsed = parse_market_response_rs(json).unwrap();
+        let parsed = Python::with_gil(|py| parse_market_response_rs(py, json)).unwrap();
         assert!((parsed[0].price_usd - 999.0).abs() < 0.01);
     }
 
     #[test]
     fn test_market_price_string_cents() {
         let json = r#"{"objects": [{"itemId": "x", "price": {"USD": "1234"}, "title": "test"}]}"#;
-        let parsed = parse_market_response_rs(json).unwrap();
+        let parsed = Python::with_gil(|py| parse_market_response_rs(py, json)).unwrap();
         assert!((parsed[0].price_usd - 12.34).abs() < 0.01);
     }
 
     #[test]
     fn test_batch_empty() {
         let json = r#"{"objects": []}"#;
-        let parsed = parse_market_response_rs(json).unwrap();
+        let parsed = Python::with_gil(|py| parse_market_response_rs(py, json)).unwrap();
         assert!(parsed.is_empty());
     }
 
@@ -373,7 +389,7 @@ mod tests {
             ));
         }
         items.push_str("]}");
-        let parsed = parse_market_response_rs(&items).unwrap();
+        let parsed = Python::with_gil(|py| parse_market_response_rs(py, &items)).unwrap();
         assert_eq!(parsed.len(), 100);
     }
 
@@ -413,9 +429,74 @@ mod tests {
     #[test]
     fn test_validate_single_skin() {
         let json = r#"{"item_id": "abc123", "price_usd": 42.99, "name": "AK-47 | Vulcan"}"#;
-        let result = validate_dmarket_response_rs(json).unwrap();
+        let result = Python::with_gil(|py| validate_dmarket_response_rs(py, json)).unwrap();
         assert_eq!(result.item_id, "abc123");
         assert!((result.price_usd - 42.99).abs() < 0.01);
         assert_eq!(result.name, "AK-47 | Vulcan");
+    }
+
+    // ---- Benchmarks (run with: cargo test --release -- --nocapture) ----
+
+    fn generate_test_json(count: usize) -> String {
+        let mut items = String::from(r#"{"objects": ["#);
+        for i in 0..count {
+            if i > 0 {
+                items.push(',');
+            }
+            items.push_str(&format!(
+                r#"{{"itemId":"id{}","price":{{"USD":{}}},"title":"Item {} | Skin"}}"#,
+                i, 1000 + i, i
+            ));
+        }
+        items.push_str("]}");
+        items
+    }
+
+    #[test]
+    fn bench_parse_market_100_items() {
+        let json = generate_test_json(100);
+        let start = Instant::now();
+        for _ in 0..1000 {
+            let _ = Python::with_gil(|py| parse_market_response_rs(py, &json)).unwrap();
+        }
+        let elapsed = start.elapsed();
+        eprintln!("parse_market_response_rs: 100 items × 1000 iters = {:?}", elapsed);
+        eprintln!("  Per call: {:?}", elapsed / 1000);
+    }
+
+    #[test]
+    fn bench_parse_market_10_items() {
+        let json = generate_test_json(10);
+        let start = Instant::now();
+        for _ in 0..10000 {
+            let _ = Python::with_gil(|py| parse_market_response_rs(py, &json)).unwrap();
+        }
+        let elapsed = start.elapsed();
+        eprintln!("parse_market_response_rs: 10 items × 10000 iters = {:?}", elapsed);
+        eprintln!("  Per call: {:?}", elapsed / 10000);
+    }
+
+    #[test]
+    fn bench_signature_generation() {
+        let secret = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+        let start = Instant::now();
+        for _ in 0..10000 {
+            let _ = generate_signature_rs("POST", "/exchange/v1/offers-buy", r#"{"offers":[]}"#, "1234567890", secret).unwrap();
+        }
+        let elapsed = start.elapsed();
+        eprintln!("generate_signature_rs: 10000 iters = {:?}", elapsed);
+        eprintln!("  Per call: {:?}", elapsed / 10000);
+    }
+
+    #[test]
+    fn bench_validate_single() {
+        let json = r#"{"item_id": "abc123", "price_usd": 42.99, "name": "AK-47 | Vulcan"}"#;
+        let start = Instant::now();
+        for _ in 0..10000 {
+            let _ = Python::with_gil(|py| validate_dmarket_response_rs(py, json)).unwrap();
+        }
+        let elapsed = start.elapsed();
+        eprintln!("validate_dmarket_response_rs: 10000 iters = {:?}", elapsed);
+        eprintln!("  Per call: {:?}", elapsed / 10000);
     }
 }

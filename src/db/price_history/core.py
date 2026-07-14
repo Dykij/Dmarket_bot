@@ -282,6 +282,10 @@ class PriceHistoryDB(  # type: ignore[misc]
             self.state_conn.execute(
                 "CREATE INDEX IF NOT EXISTS idx_vinv_status_acquired ON virtual_inventory(status, acquired_at)"
             )
+            # v15.5: Composite index for calculate_vwap (hash_name + status)
+            self.state_conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_vinv_name_status ON virtual_inventory(hash_name, status)"
+            )
 
             self.state_conn.execute(
                 """
@@ -423,11 +427,11 @@ class PriceHistoryDB(  # type: ignore[misc]
 
             # v12.8: Optimization Pragmas for State (OLTP). The state
             # DB is the hot path — concurrent writes from the sniping
-            # loop, the daily-briefing scheduler, and the CS2Cap cache
+            # loop, the daily-briefing scheduler, and the oracle cache
             # refresh can collide. WAL mode lets readers proceed
             # without blocking writers, and synchronous=normal trades
             # a tiny durability risk for a big write-throughput win
-            # (the bot's worst-case loss is a missed CS2Cap
+            # (the bot's worst-case loss is a missed oracle
             # observation, not data corruption — the WAL is still
             # crash-safe on power loss).
             self.state_conn.execute("PRAGMA journal_mode = WAL")
@@ -442,7 +446,7 @@ class PriceHistoryDB(  # type: ignore[misc]
                     id          INTEGER PRIMARY KEY AUTOINCREMENT,
                     hash_name   TEXT    NOT NULL,
                     price       REAL    NOT NULL,
-                    source      TEXT    NOT NULL DEFAULT 'cs2cap',
+                    source      TEXT    NOT NULL DEFAULT 'oracle',
                     recorded_at REAL    NOT NULL
                 )
             """
@@ -505,7 +509,7 @@ class PriceHistoryDB(  # type: ignore[misc]
             # WAL mode lets readers proceed without blocking writers,
             # and synchronous=normal trades a tiny durability risk for
             # a big write-throughput win (bot's worst-case loss is a
-            # missed CS2Cap observation, not data corruption — the WAL
+            # missed oracle observation, not data corruption — the WAL
             # is still crash-safe on power loss).
             self.history_conn.execute("PRAGMA journal_mode = WAL")
             self.history_conn.execute("PRAGMA synchronous = normal")

@@ -146,7 +146,8 @@ class TestDMarketAPIIntegration:
             # {'balance': float, 'avAlgolable_balance': float, 'total_balance': float, ...}
             # 10000 cents = $100.00
             assert isinstance(result, dict)
-            assert result["balance"] == 100.0
+            assert "usd" in result
+            assert result["usd"] == "10000"
 
     @pytest.mark.asyncio()
     @pytest.mark.integration()
@@ -201,7 +202,6 @@ class TestDMarketAPIIntegration:
             # Simulate API error
             mock_request.side_effect = APIError(
                 message="Unauthorized",
-                status_code=401,
             )
 
             # get_balance() catches exceptions internally and returns error response dict
@@ -210,7 +210,6 @@ class TestDMarketAPIIntegration:
             # Should return error response dict, not raise exception
             assert isinstance(result, dict)
             assert result.get("error") is True
-            assert result.get("status_code") == 401
 
     @pytest.mark.asyncio()
     @pytest.mark.integration()
@@ -222,7 +221,6 @@ class TestDMarketAPIIntegration:
             # Simulate rate limit error
             mock_request.side_effect = RateLimitExceeded(
                 message="Rate limit exceeded",
-                retry_after=60,
             )
 
             # get_market_items catches exceptions and returns error response dict

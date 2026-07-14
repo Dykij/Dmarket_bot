@@ -2,7 +2,7 @@
 multi_source_oracle.py — Unified price beacon.
 
 Combines Market.CSGO, Waxpeer, CSFloat, Steam, and DMarket
-to provide fair pricing without CS2Cap subscription.
+to provide fair pricing without paid subscription.
 
 Architecture:
   MultiSourceOracle
@@ -54,7 +54,7 @@ class PriceReference:
 class MultiSourceOracle:
     """
     Unified price beacon using free marketplace APIs.
-    Replaces CS2Cap for pricing decisions.
+    Replaces paid oracles for pricing decisions.
     """
 
     def __init__(self) -> None:
@@ -68,11 +68,47 @@ class MultiSourceOracle:
 
         self._ref_cache: dict[str, PriceReference] = {}
         self._cache_ts: float = 0.0
-        self._cache_ttl: float = 900.0  # 15 minutes
+        self._cache_ttl: float = 900.0  # 15 minutes (default)
+
+        # v15.3: Dynamic TTL based on volatility
+        self._ttl_low_vol: float = 1800.0   # 30 min for stable items
+        self._ttl_medium_vol: float = 900.0  # 15 min for normal items
+        self._ttl_high_vol: float = 300.0    # 5 min for volatile items
 
         # Stats
         self._api_calls = 0
         self._cache_hits = 0
+
+        # v15.1: Circuit breaker per source
+        self._source_failures: dict[str, int] = {}
+        self._source_open_until: dict[str, float] = {}
+        self._failure_threshold = 5
+        self._recovery_timeout = 60.0
+
+    def _is_source_available(self, source: str) -> bool:
+        """Check if source circuit breaker is closed (available)."""
+        import time
+        until = self._source_open_until.get(source, 0.0)
+        if until > 0 and time.time() < until:
+            return False
+        if until > 0 and time.time() >= until:
+            # Half-open: allow one attempt
+            self._source_open_until[source] = 0.0
+            self._source_failures[source] = 0
+        return True
+
+    def _record_source_failure(self, source: str) -> None:
+        """Record source failure, open circuit if threshold reached."""
+        import time
+        self._source_failures[source] = self._source_failures.get(source, 0) + 1
+        if self._source_failures[source] >= self._failure_threshold:
+            self._source_open_until[source] = time.time() + self._recovery_timeout
+            logger.warning(f"[CircuitBreaker] {source} OPEN — {self._source_failures[source]} failures")
+
+    def _record_source_success(self, source: str) -> None:
+        """Record source success, reset circuit breaker."""
+        self._source_failures[source] = 0
+        self._source_open_until[source] = 0.0
 
     def _init_csfloat(self) -> Any:
         """Lazy init CSFloat oracle (needs API key)."""
@@ -107,52 +143,59 @@ class MultiSourceOracle:
         """
         Calculate fair sell price for an item using all available sources.
         This is the main method for the pricing beacon.
+
+        v15.6: Each oracle has its own rate limiter (prevents 429).
+        Circuit breaker per source prevents cascade failures.
         """
         now = time.time()
 
+        # v15.3: Dynamic TTL based on volatility
+        ttl = self._get_dynamic_ttl(title)
+
         # Check cache
-        if title in self._ref_cache and now - self._cache_ts < self._cache_ttl:
+        if title in self._ref_cache and now - self._cache_ts < ttl:
             self._cache_hits += 1
             ref = self._ref_cache[title]
         else:
             self._api_calls += 1
-            # Query all sources in parallel
-            mc_task = asyncio.create_task(self.marketcsgo.get_item_price(title))
-            wp_task = asyncio.create_task(self.waxpeer.get_item_price(title))
-            st_task = asyncio.create_task(self.steam.get_item_price(title))
 
-            mc_price, wp_price, st_price = await asyncio.gather(
-                mc_task, wp_task, st_task, return_exceptions=True
-            )
-
-            if isinstance(mc_price, Exception):
-                mc_price = 0.0
-            if isinstance(wp_price, Exception):
-                wp_price = 0.0
-            if isinstance(st_price, Exception):
-                st_price = 0.0
-
-            # CSFloat (optional)
-            cs_price = 0.0
-            cs = self._init_csfloat()
-            if cs:
+            # v15.6: Query sources with circuit breaker protection
+            async def _safe_call(source: str, coro):
+                """Wrap oracle call with circuit breaker."""
+                if not self._is_source_available(source):
+                    logger.debug(f"[Oracle] {source} circuit breaker OPEN, skipping")
+                    return 0.0
                 try:
-                    cs_price = await cs.get_item_price(title)
-                except Exception:
-                    cs_price = 0.0
+                    result = await coro
+                    self._record_source_success(source)
+                    return result
+                except Exception as e:
+                    self._record_source_failure(source)
+                    logger.debug(f"[Oracle] {source} failed: {e}")
+                    return 0.0
 
-            # Get volumes ONCE and store in PriceReference (avoid re-fetch on cache hit)
-            mc_vol = await self.marketcsgo.get_item_volume(title)
-            wp_vol = await self.waxpeer.get_item_volume(title)
+            # v15.6: Sequential calls with per-oracle rate limiting
+            # Each oracle has its own internal rate limiter, so parallel
+            # calls will be serialized automatically
+            mc_price = await _safe_call("marketcsgo", self.marketcsgo.get_item_price(title))
+            wp_price = await _safe_call("waxpeer", self.waxpeer.get_item_price(title))
+            st_price = await _safe_call("steam", self.steam.get_item_price(title))
+            mc_vol = await _safe_call("marketcsgo_vol", self.marketcsgo.get_item_volume(title))
+            wp_vol = await _safe_call("waxpeer_vol", self.waxpeer.get_item_volume(title))
+            wp_steam = await _safe_call("waxpeer_steam", self.waxpeer.get_item_steam_price(title))
+
+            # CSFloat (optional, lazy init)
+            cs = self._init_csfloat()
+            cs_price = await _safe_call("csfloat", cs.get_item_price(title)) if cs else 0.0
 
             ref = PriceReference(
                 title=title,
-                marketcsgo_price=mc_price,
-                waxpeer_price=wp_price,
-                waxpeer_steam_price=await self.waxpeer.get_item_steam_price(title),
-                csfloat_price=cs_price,
-                steam_price=st_price,
-                sources_count=sum(1 for p in [mc_price, wp_price, cs_price, st_price] if p > 0),
+                marketcsgo_price=mc_price if isinstance(mc_price, (int, float)) else 0.0,
+                waxpeer_price=wp_price if isinstance(wp_price, (int, float)) else 0.0,
+                waxpeer_steam_price=wp_steam if isinstance(wp_steam, (int, float)) else 0.0,
+                csfloat_price=cs_price if isinstance(cs_price, (int, float)) else 0.0,
+                steam_price=st_price if isinstance(st_price, (int, float)) else 0.0,
+                sources_count=sum(1 for p in [mc_price, wp_price, cs_price, st_price] if isinstance(p, (int, float)) and p > 0),
                 marketcsgo_volume=mc_vol if isinstance(mc_vol, int) else 0,
                 waxpeer_volume=wp_vol if isinstance(wp_vol, int) else 0,
             )
@@ -206,6 +249,26 @@ class MultiSourceOracle:
     def record_dmarket_snapshot(self, agg_prices: dict[str, Any]) -> None:
         """Record DMarket snapshot for candle building."""
         self.candles.record_snapshot(agg_prices)
+
+    def _get_dynamic_ttl(self, title: str) -> float:
+        """Get cache TTL based on item volatility from candle data.
+
+        Stable items → longer cache (30 min)
+        Volatile items → shorter cache (5 min)
+        Unknown → default (15 min)
+        """
+        try:
+            vol_data = self.candles.get_volatility(title)
+            vol_pct = vol_data.get("volatility_pct", 0.0)
+            if vol_pct <= 0:
+                return self._ttl_medium_vol  # No data → default
+            if vol_pct < 5.0:
+                return self._ttl_low_vol     # Stable → 30 min
+            if vol_pct > 20.0:
+                return self._ttl_high_vol    # Volatile → 5 min
+            return self._ttl_medium_vol      # Normal → 15 min
+        except Exception:
+            return self._ttl_medium_vol
 
     def get_candles(
         self, title: str, interval: str = "1h", count: int = 100

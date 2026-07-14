@@ -24,7 +24,7 @@ class _ResaleDryMixin:
     """Simulated resale — no real DMarket API calls."""
 
     client: Any
-    cs2cap_cache: Any
+    oracle: Any
 
     def _dry_simulate_sales(self) -> None:
         """DRY: Mark some `listed` items as sold (40% per cycle)."""
