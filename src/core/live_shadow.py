@@ -221,7 +221,7 @@ class LiveShadow:
 
         sem = asyncio.Semaphore(50)  # limit concurrency
 
-        async def _run_one(run_id: int) -> tuple[float, float, float]:
+        async def _run_one(_run_id: int) -> tuple[float, float, float]:
             """Run a single Monte Carlo simulation with random noise."""
             async with sem:
                 engine = ShadowEngine(initial_balance=SHADOW_BALANCE)

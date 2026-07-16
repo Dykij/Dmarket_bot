@@ -127,7 +127,7 @@ class TestPatternPremium:
 
     def test_emerald(self):
         premium = get_pattern_premium({"phase": "Emerald", "paintSeed": "0"})
-        assert premium == 4.0, f"Emerald should be 4.0x, got {premium}"
+        assert premium == 8.0, f"Emerald (Gamma Doppler) should be 8.0x (v15.3), got {premium}"
 
     def test_phase_2(self):
         premium = get_pattern_premium({"phase": "Phase 2", "paintSeed": "0"})
@@ -150,8 +150,8 @@ class TestPatternPremium:
         assert premium >= 2.0, f"Crimson Web 3+ web should be >= 2.0x, got {premium}"
 
     def test_normal_pattern(self):
-        premium = get_pattern_premium({"phase": "Phase 3", "paintSeed": "500"})
-        assert premium == 1.0, f"Normal pattern should be 1.0x, got {premium}"
+        premium = get_pattern_premium({"phase": "Phase 3", "paintSeed": "101"})
+        assert premium == 1.0, f"Normal pattern (Phase 3, seed 101) should be 1.0x, got {premium}"
 
 
 # =========================================================================

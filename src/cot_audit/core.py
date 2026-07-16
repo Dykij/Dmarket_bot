@@ -73,7 +73,7 @@ class MetadataCache(BaseModel):
 
 def _chunked_md5(path: Path, chunk_size: int = 65536) -> str:
     """Compute MD5 reading file in chunks to avoid loading entire content into memory."""
-    h = hashlib.md5()
+    h = hashlib.md5(usedforsecurity=False)
     with open(path, "rb") as f:
         while True:
             chunk = f.read(chunk_size)

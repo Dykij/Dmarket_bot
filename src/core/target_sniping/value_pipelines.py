@@ -149,8 +149,11 @@ def evaluate_value_signal(
 
     # Calculate rarity premium
     premium_mult = calculate_value_premium(attrs, stickers, base_price_usd=float(base_price))
-    if premium_mult <= 1 and not Config.VALUE_SCAN_MIN_PREMIUM > 1:
-        # No rarity detected and we're not forcing value-only mode
+
+    # v15.7 FIX: Skip when no rarity premium detected.
+    # Original logic was confusing: `premium_mult <= 1 and not Config.VALUE_SCAN_MIN_PREMIUM > 1`
+    # Always skip items with no premium (mult <= 1.0) — there's no value signal to trade on.
+    if premium_mult <= Decimal("1.0"):
         return None
 
     # Calculate estimated sell price with premium

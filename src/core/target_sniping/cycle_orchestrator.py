@@ -102,7 +102,6 @@ class CycleOrchestrator:
 
     async def _stage_scan(self, ctx: CycleContext) -> CycleContext:
         """Stage 2: Market scan — aggregated prices + secondary scans."""
-        import os
 
         cursor = "" if ctx.is_fresh_cycle else (price_db.get_state(ctx.cursor_key) or "")
 

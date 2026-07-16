@@ -182,6 +182,11 @@ class Config(BaseSettings):
     DRY_RUN: bool = True
     MARKETPLACE_INSTANT_RESALE: bool = True
 
+    @property
+    def IS_DRY_RUN(self) -> bool:
+        """Cached DRY_RUN check — avoids repeated os.getenv() calls in hot path."""
+        return self.DRY_RUN
+
     # --- Trade lock ---
     TRADE_LOCK_HOURS: int = Field(default=0, ge=0)
 
@@ -278,6 +283,21 @@ class Config(BaseSettings):
 
     VOLUME_PROFILE_ENABLED: bool = False
     VP_NUM_BUCKETS: int = Field(default=10, ge=2)
+
+    # --- v15.7: Event Detection ---
+    EVENT_DETECTION_ENABLED: bool = True
+    EVENT_VOLUME_SPIKE_THRESHOLD: float = Field(default=3.0, ge=1.0)
+    EVENT_IMPACT_WINDOW_HOURS: int = Field(default=24, ge=1)
+
+    # --- v15.7: Supply Tracking ---
+    SUPPLY_TRACKING_ENABLED: bool = True
+    SUPPLY_THIN_MARKET_THRESHOLD: int = Field(default=5, ge=1)
+    SUPPLY_MARGIN_BOOST_ENABLED: bool = True
+
+    # --- v15.7: Volume Profile Refinement ---
+    VP_REFINEMENT_ENABLED: bool = True
+    VP_POC_WEIGHT: float = Field(default=0.3, ge=0.0, le=1.0)
+    VP_VALUE_AREA_PCT: float = Field(default=0.70, ge=0.5, le=0.95)
 
     SMART_REPRICE_ENABLED: bool = False
 

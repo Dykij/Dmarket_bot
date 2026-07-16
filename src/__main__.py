@@ -99,15 +99,30 @@ def _configure_logging() -> None:
 _configure_logging()
 logger = logging.getLogger(__name__)
 
+# v15.6: Module-level shutdown flag for graceful shutdown
+_shutdown_requested = False
+
 
 async def _run_trading_loop() -> None:
     """Inner trading loop — imported lazily to avoid circular imports."""
     from src.core.autonomous_scanner import run_autonomous_scanner as bot_main
-    await bot_main()
+    try:
+        await bot_main()
+    except SystemExit:
+        # v15.6: Catch SystemExit from fatal_exit() and re-raise
+        # so run_bot() can handle it gracefully
+        raise
+    except asyncio.CancelledError:
+        # v15.6: Catch CancelledError and re-raise
+        raise
 
 
 async def run_bot() -> None:
-    """Runs the bot in a safe infinite loop (NO recursion)."""
+    """Runs the bot in a safe infinite loop (NO recursion).
+
+    v15.6: Improved graceful shutdown — properly cancels all pending tasks
+    on SIGTERM to avoid 'Task was destroyed but it is pending!' errors.
+    """
     from src.config import Config
 
     retry_delay = 5
@@ -150,8 +165,39 @@ async def run_bot() -> None:
     from src.core.live_shadow import live_shadow as _shadow
     _shadow.start()
 
+    # v15.6: Graceful shutdown helper — cancel all pending tasks
+    async def _graceful_shutdown() -> None:
+        """Cancel all pending asyncio tasks and wait for them to finish."""
+        try:
+            logger.info("Graceful shutdown: cancelling pending tasks...")
+            # Get all tasks except the current one
+            current_task = asyncio.current_task()
+            tasks = [t for t in asyncio.all_tasks() if t is not current_task and not t.done()]
+            if tasks:
+                logger.info(f"Cancelling {len(tasks)} pending tasks...")
+                for task in tasks:
+                    task.cancel()
+                # Wait for all tasks to finish with timeout
+                try:
+                    await asyncio.wait(tasks, timeout=10.0, return_when=asyncio.ALL_COMPLETED)
+                except asyncio.TimeoutError:
+                    logger.warning("Some tasks did not finish within 10s timeout")
+                except Exception as e:
+                    logger.debug(f"Error waiting for tasks: {e}")
+            logger.info("Graceful shutdown complete.")
+        except RuntimeError as e:
+            # Event loop is already closed — can't cancel tasks
+            logger.debug(f"Graceful shutdown skipped (event loop closing): {e}")
+        except Exception as e:
+            logger.debug(f"Graceful shutdown error: {e}")
+
     try:
         while True:
+            # v15.6: Check shutdown flag
+            if _shutdown_requested:
+                logger.info("Shutdown requested. Exiting cleanly...")
+                break
+
             try:
                 logger.info("Starting DMarket trading bot...")
                 await _run_trading_loop()
@@ -166,8 +212,13 @@ async def run_bot() -> None:
                 logger.info("Bot stopped by user (KeyboardInterrupt).")
                 break
             except asyncio.CancelledError:
-                logger.info("Bot task cancelled. Shutting down...")
+                logger.info("Bot task cancelled. Shutting down gracefully...")
+                await _graceful_shutdown()
                 break
+            except SystemExit as e:
+                logger.info(f"SystemExit({e.code}). Shutting down...")
+                await _graceful_shutdown()
+                raise  # Re-raise to exit the loop
             except Exception as e:
                 consecutive_crashes += 1
                 logger.exception(
@@ -182,6 +233,8 @@ async def run_bot() -> None:
             await asyncio.sleep(retry_delay)
             logger.info("Restarting bot...")
     finally:
+        # v15.6: Graceful shutdown — cancel pending tasks
+        await _graceful_shutdown()
         # Mark as shutting down BEFORE stopping the server so the
         # endpoint reports 503 during the brief drain window (lets
         # any monitoring dashboard know the bot is going down).
@@ -257,20 +310,26 @@ def main() -> None:
                     current = lock_file.read_text(encoding="utf-8").split("\n")[0].strip()
                     if current == str(our_pid):
                         lock_file.unlink()
-            except Exception:
-                pass
+            except OSError as e:
+                logger.debug(f"Lock file cleanup failed: {e}")
 
         atexit.register(_cleanup)
 
         # Signal handlers for graceful shutdown
-        # Note: asyncio.run() overrides signal.signal() with loop.add_signal_handler(),
-        # so these are only effective if asyncio is not yet running.
-        def _signal_handler(signum, frame):  # noqa: ARG001
+        # v15.6: Cancel the current task to trigger graceful shutdown
+        def _signal_handler(signum, _frame):  # noqa: ARG001
+            global _shutdown_requested
             logger.info("Received signal %s, shutting down gracefully...", signum)
+            _shutdown_requested = True
             _cleanup()
-            # Do NOT sys.exit() here — let asyncio.run() tear down the loop
-            # and the finally block handle cleanup.
-            raise SystemExit(0)
+            # Cancel the current task to break out of the event loop
+            try:
+                current = asyncio.current_task()
+                if current and not current.done():
+                    current.cancel()
+            except RuntimeError:
+                # No event loop running
+                pass
 
         signal.signal(signal.SIGTERM, _signal_handler)
         signal.signal(signal.SIGINT, _signal_handler)
@@ -288,8 +347,8 @@ def main() -> None:
                 current = lock_file.read_text(encoding="utf-8").split("\n")[0].strip()
                 if current == str(our_pid):
                     lock_file.unlink()
-        except Exception:
-            pass
+        except OSError as e:
+            logger.debug(f"Final lock cleanup failed: {e}")
 
 
 if __name__ == "__main__":

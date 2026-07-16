@@ -75,7 +75,7 @@ if HAS_PROMETHEUS:
     METRIC_SOFT_HALT = Gauge("bot_soft_halt_active", "1 if soft-halt is active")
     METRIC_DAILY_HALT = Gauge("bot_daily_halt_active", "1 if daily halt is active")
     METRIC_PUMP_BLACKLIST = Gauge("bot_pump_blacklist_size", "Active pump-blacklisted items")
-    METRIC_PUMP_DETECTIONS = Counter("bot_pump_total_detections_total", "Total pump detections")
+    METRIC_PUMP_DETECTIONS = Gauge("bot_pump_total_detections_total", "Total pump detections")
     METRIC_ORACLE_SOURCES = Gauge("bot_oracle_sources_active", "Number of active oracle sources")
 
 
@@ -150,6 +150,7 @@ class HealthState:
         # v15.2: Update prometheus metrics
         if HAS_PROMETHEUS:
             METRIC_PUMP_BLACKLIST.set(blacklist_size)
+            METRIC_PUMP_DETECTIONS.set(total_detections)
 
     def set_oracle_sources_active(self, pct: float | None) -> None:
         self._oracle_sources_active = pct
@@ -277,7 +278,8 @@ async def _handle_metrics(_request: web.Request) -> web.Response:
 
         return web.Response(
             text=generate_latest().decode("utf-8"),
-            content_type=CONTENT_TYPE_LATEST,
+            content_type="text/plain; version=0.0.4",
+            charset="utf-8",
         )
 
     # Fallback: manual text format (if prometheus_client not installed)

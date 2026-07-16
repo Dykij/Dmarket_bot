@@ -370,10 +370,12 @@ class TestValidateArbitrageProfitEdge:
             validate_arbitrage_profit(buy_price=1.0, expected_sell_price=0.0)
 
     def test_insufficient_tvm_margin_raises(self):
+        # v15.7 FIX: Use higher sell price to pass "Absolute LOSS" check first,
+        # then hit "Insufficient TVM-Adjusted Margin" check
         with pytest.raises(PriceValidationError, match="Insufficient TVM-Adjusted"):
             validate_arbitrage_profit(
-                buy_price=10.0, expected_sell_price=10.6, fee_markup=0.05,
-                min_profit_margin=0.05, lock_days=7, penalty_per_day=0.005,
+                buy_price=10.0, expected_sell_price=11.5, fee_markup=0.05,
+                min_profit_margin=0.10, lock_days=7, penalty_per_day=0.005,
             )
 
     def test_exact_breakeven_raises(self):
@@ -384,11 +386,14 @@ class TestValidateArbitrageProfitEdge:
             )
 
     def test_min_margin_zero_with_tvm_adjustment(self):
+        # v15.7 FIX: Function applies fees to BOTH sides (buy_fee_markup + fee_markup)
+        # net_received = 12 * 0.95 = 11.4, net_cost = 10 * 1.05 = 10.5
+        # actual_profit = 0.9, margin = 0.9/10 = 0.09
         margin = validate_arbitrage_profit(
             buy_price=10.0, expected_sell_price=12.0, fee_markup=0.05,
             min_profit_margin=0.0, lock_days=0, penalty_per_day=0.0,
         )
-        assert margin == pytest.approx(0.14, abs=0.01)  # (12*0.95 - 10)/10 = 0.14
+        assert margin == pytest.approx(0.09, abs=0.01)
 
     def test_high_lock_days_eats_margin(self):
         with pytest.raises(PriceValidationError, match="Insufficient TVM-Adjusted"):

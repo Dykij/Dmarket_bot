@@ -19,7 +19,7 @@ from aiogram.types import (
     ReplyKeyboardMarkup,
 )
 
-from .callback_data import ConfirmCallback, MenuCallback, SettingsCallback
+from .callback_data import MenuCallback
 
 logger = logging.getLogger("TelegramControl.keyboards")
 

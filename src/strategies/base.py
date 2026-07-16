@@ -261,6 +261,21 @@ class BaseStrategy(ABC):
     # advisory (penalizes sizing), while the risk counter is authoritative
     # (blocks trades). If a unified counter is needed in the future, inject
     # a shared DailyCounter helper via __init__.
+    #
+    # v15.7: Added sync_risk_manager() to periodically sync the strategy
+    # counter with RiskManager to prevent drift over long runs.
+    _risk_manager: Any | None = None
+
+    def set_risk_manager(self, risk_manager: Any) -> None:
+        """Inject RiskManager reference for counter synchronization."""
+        self._risk_manager = risk_manager
+
+    def sync_risk_manager(self) -> None:
+        """Sync strategy counter with RiskManager to prevent drift."""
+        if self._risk_manager is not None:
+            rm_count = getattr(self._risk_manager, '_daily_trade_count', 0)
+            if rm_count > self._daily_trade_count:
+                self._daily_trade_count = rm_count
 
     def calculate_turnover_penalty(self) -> float:
         """

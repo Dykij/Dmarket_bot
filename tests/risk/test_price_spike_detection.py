@@ -77,8 +77,17 @@ class MockPriceDB:
 
 
 def _seed_observation(db: MockPriceDB, title: str, price: float, seconds_ago: float) -> None:
-    """Insert a synthetic observation (timestamp = now - seconds_ago)."""
-    db.add(title, price, time.time() - seconds_ago)
+    """Insert synthetic observations for PumpDetector baseline.
+    
+    v15.7: PumpDetector now requires len(recent) >= 3 and
+    observations_in_window >= 2. We seed 3 observations:
+    1. Old observation at seconds_ago (baseline reference)
+    2. Two recent observations in the window (same price)
+    """
+    now = time.time()
+    db.add(title, price, now - seconds_ago)  # baseline
+    db.add(title, price, now - min(seconds_ago * 0.3, 600))  # in window
+    db.add(title, price, now - min(seconds_ago * 0.1, 300))  # in window
 
 
 def _make_detector(
