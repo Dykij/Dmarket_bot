@@ -43,5 +43,6 @@ price_db = PriceHistoryDB()
 
 # v15.5: Register shutdown hook for clean WAL checkpoint
 import atexit
+
 atexit.register(price_db.close)
 

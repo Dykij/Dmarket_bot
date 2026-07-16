@@ -109,7 +109,10 @@ class _ExecutionMixin:
         results = await asyncio.gather(
             *[_check_slippage(d) for d in instant_buys], return_exceptions=True
         )
-        verified_buys = [r for r in results if r is not None and not isinstance(r, Exception)]
+        verified_buys: list[dict[str, Any]] = [
+            r for r in results
+            if r is not None and isinstance(r, dict)
+        ]
 
         if not verified_buys:
             logger.info("[SLIPPAGE] All buys filtered by slippage protection.")
@@ -324,7 +327,8 @@ class _ExecutionMixin:
                         item_title=title,
                     )
                 # v12.5: Telegram buy notification (throttled to 1/min)
-                asyncio.create_task(
+                # v15.7 FIX: Hold task reference to prevent GC before completion
+                task = asyncio.create_task(
                     notifier.buy(
                         title=title,
                         price_usd=base_price,
@@ -332,6 +336,9 @@ class _ExecutionMixin:
                         strategy=item_data.get("strategy", "intra_spread"),
                     )
                 )
+                self._background_tasks = getattr(self, '_background_tasks', set())
+                self._background_tasks.add(task)
+                task.add_done_callback(self._background_tasks.discard)
 
             # v12.3: Only record local spend/target if the actual buy succeeded.
             # For DRY_RUN, always record (simulated). For production, gate on
@@ -376,7 +383,7 @@ class _ExecutionMixin:
                 # v12.5: Production-side buy notification (in addition to the
                 # DRY notification above; one will no-op because of the throttle)
                 if not is_dry:
-                    asyncio.create_task(
+                    task = asyncio.create_task(
                         notifier.buy(
                             title=title,
                             price_usd=base_price,
@@ -384,6 +391,9 @@ class _ExecutionMixin:
                             strategy=item_data.get("strategy", "intra_spread"),
                         )
                     )
+                    self._background_tasks = getattr(self, '_background_tasks', set())
+                    self._background_tasks.add(task)
+                    task.add_done_callback(self._background_tasks.discard)
             else:
                 logger.info(
                     f"Skipping local record for {title!r} — buy did not succeed"

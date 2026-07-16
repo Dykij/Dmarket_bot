@@ -4,7 +4,7 @@ app_signals.py — Signal handling for graceful shutdown.
 
 import asyncio
 import signal
-from typing import Callable
+from collections.abc import Callable
 
 
 class SignalHandler:
@@ -24,7 +24,7 @@ class SignalHandler:
         signal.signal(signal.SIGINT, self._handle_signal)
         signal.signal(signal.SIGTERM, self._handle_signal)
 
-    def _handle_signal(self, signum: int, frame: object) -> None:
+    def _handle_signal(self, signum: int, _frame: object) -> None:
         """Handle received signal."""
         self._shutdown_event.set()
         if self._shutdown_callback:

@@ -3,7 +3,8 @@
 v15.2: Uses tenacity for battle-tested retry logic with jitter, logging, etc.
 """
 import functools
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 import tenacity
 

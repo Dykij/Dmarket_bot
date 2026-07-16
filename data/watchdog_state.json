@@ -4,10 +4,10 @@
   "message": "coroutine ignored GeneratorExit",
   "context": {
     "phase": "runtime",
-    "uptime_s": 64,
+    "uptime_s": 46,
     "consecutive_transient": 0,
     "successful_cycles": 1,
-    "process": "RSS=100.9MB VMS=606.2MB open_fds=8 threads=8"
+    "process": "RSS=101.2MB VMS=606.3MB open_fds=8 threads=8"
   },
-  "timestamp": "2026-07-14T09:47:08.454644+00:00"
+  "timestamp": "2026-07-14T12:22:54.190810+00:00"
 }

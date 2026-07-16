@@ -79,7 +79,7 @@ if [ -z "$PROJECT_ROOT" ]; then
     exit 1
 fi
 
-cd "$PROJECT_ROOT"
+cd "$PROJECT_ROOT" || exit 1
 ok "Project root: $PROJECT_ROOT"
 
 # --- Python interpreter selection ---
@@ -149,7 +149,7 @@ else
     warn "LIVE mode: real money at risk!"
     # Confirm
     if [ -t 0 ] && [ -z "${CI:-}" ]; then
-        read -p "Continue in LIVE mode? (type 'yes' to confirm): " confirm
+        read -r -p "Continue in LIVE mode? (type 'yes' to confirm): " confirm
         if [ "$confirm" != "yes" ]; then
             err "Aborted"
             exit 1

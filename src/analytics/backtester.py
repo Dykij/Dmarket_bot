@@ -4,8 +4,8 @@ Python resolves `src.analytics.backtester` to the `backtester/` package director
 Re-exports kept for backward compatibility — use the package directly.
 """
 from src.analytics.backtester import (
-    BacktestResult,
     Backtester,
+    BacktestResult,
     Position,
     SimpleArbitrageStrategy,
     Trade,

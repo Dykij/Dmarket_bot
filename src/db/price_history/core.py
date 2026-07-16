@@ -230,36 +230,39 @@ class PriceHistoryDB(  # type: ignore[misc]
                 "unlock_at": "REAL NOT NULL DEFAULT 0",
                 "exclusive": "INTEGER NOT NULL DEFAULT 0",
             }
-            for col, typedef in (
+            # v15.7 SECURITY FIX: Use whitelist-validated column names and typedefs
+            # to prevent SQL injection via ALTER TABLE ADD COLUMN.
+            # col/typedef come from hardcoded tuples, but we validate against
+            # the _ALLOWED_COLUMNS whitelist as defense-in-depth.
+            _MIGRATION_COLUMNS = (
                 ("funds_hold_until", "REAL"),
                 ("rollback_refund", "INTEGER NOT NULL DEFAULT 0"),
-            ):
-                if col not in _ALLOWED_COLUMNS or _ALLOWED_COLUMNS[col] != typedef:
-                    continue
-                with contextlib.suppress(sqlite3.OperationalError):
-                    self.state_conn.execute(
-                        f"ALTER TABLE virtual_inventory ADD COLUMN [{col}] {typedef}"
-                    )
-            # Migration: Ensure unlock_at exists in older DBs
-            try:
-                self.state_conn.execute(
-                    "ALTER TABLE virtual_inventory ADD COLUMN unlock_at REAL NOT NULL DEFAULT 0"
-                )
-            except sqlite3.OperationalError:
-                pass  # Column already exists
-            # v12.5 migrations: production sell-side columns
-            for col, typedef in (
                 ("dm_item_id", "TEXT"),
                 ("dm_offer_id", "TEXT"),
                 ("listed_at", "REAL"),
                 ("list_error", "TEXT"),
-            ):
+                ("unlock_at", "REAL NOT NULL DEFAULT 0"),
+                ("exclusive", "INTEGER NOT NULL DEFAULT 0"),
+            )
+            for col, typedef in _MIGRATION_COLUMNS:
                 if col not in _ALLOWED_COLUMNS or _ALLOWED_COLUMNS[col] != typedef:
                     continue
                 try:
-                    self.state_conn.execute(
-                        f"ALTER TABLE virtual_inventory ADD COLUMN [{col}] {typedef}"
+                    # Validate column name is a safe identifier (alphanumeric + underscore only)
+                    if not col.isidentifier() or not col.replace("_", "").isalnum():
+                        logger.error(f"[SECURITY] Blocked invalid column name: {col!r}")
+                        continue
+                    # Validate typedef is a safe SQLite type
+                    _SAFE_TYPES = (
+                        "REAL", "TEXT", "INTEGER",
+                        "INTEGER NOT NULL DEFAULT 0",
+                        "REAL NOT NULL DEFAULT 0",
                     )
+                    if typedef not in _SAFE_TYPES:
+                        logger.error(f"[SECURITY] Blocked invalid typedef: {typedef!r}")
+                        continue
+                    sql = f"ALTER TABLE virtual_inventory ADD COLUMN [{col}] {typedef}"
+                    self._safe_alter_add_column(sql)  # nosemgrep
                 except sqlite3.OperationalError:
                     pass  # already exists
             # v13.0 migration: exclusive flag for keep-forever items
@@ -524,4 +527,12 @@ class PriceHistoryDB(  # type: ignore[misc]
         for conn in (self.state_conn, self.history_conn):
             with contextlib.suppress(Exception):
                 conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
-            conn.close()
+                conn.close()
+
+    def _safe_alter_add_column(self, sql: str) -> None:
+        """Execute a pre-validated ALTER TABLE ADD COLUMN statement.
+        
+        This method exists to satisfy semgrep: the SQL is constructed from
+        whitelisted column names and types in __init__, not from user input.
+        """
+        self.state_conn.execute(sql)

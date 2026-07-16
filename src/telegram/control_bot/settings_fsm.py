@@ -20,7 +20,6 @@ from aiogram import F, Router, types
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 
-from .callback_data import SettingsCallback
 from .resilience import safe_call
 from .state import is_admin
 

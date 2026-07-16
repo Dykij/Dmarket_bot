@@ -12,7 +12,6 @@ from __future__ import annotations
 import asyncio
 import json
 import os
-import random
 import time
 import urllib.parse
 from typing import Any
@@ -20,14 +19,31 @@ from typing import Any
 import aiohttp
 import structlog
 
-# v15.2: orjson is 2-3x faster than stdlib json for serialization
+# v15.7: msgspec is 5-10x faster than orjson for serialization + validation
 try:
-    import orjson
+    import msgspec
     def _dumps(obj: Any) -> str:
-        return orjson.dumps(obj).decode("utf-8")
+        return msgspec.json.encode(obj).decode("utf-8")
+    def _loads(data: bytes | str) -> Any:
+        if isinstance(data, str):
+            data = data.encode("utf-8")
+        return msgspec.json.decode(data)
 except ImportError:
-    def _dumps(obj: Any) -> str:
-        return json.dumps(obj)
+    try:
+        import orjson
+        def _dumps(obj: Any) -> str:
+            return orjson.dumps(obj).decode("utf-8")
+        def _loads(data: bytes | str) -> Any:
+            if isinstance(data, str):
+                data = data.encode("utf-8")
+            return orjson.loads(data)
+    except ImportError:
+        def _dumps(obj: Any) -> str:
+            return json.dumps(obj)
+        def _loads(data: bytes | str) -> Any:
+            if isinstance(data, bytes):
+                data = data.decode("utf-8")
+            return json.loads(data)
 from nacl.signing import SigningKey
 from tenacity import (
     retry,
@@ -385,9 +401,10 @@ class DMarketAPIClient(  # type: ignore[misc]
             ) as response:
                 if response.status != 200:
                     text = await response.text()
-                    # v15.6: Handle 429 with exponential backoff
+                    # v15.6: Handle 429 with exponential backoff + monitoring
                     if response.status == 429:
                         self._429_count += 1
+                        rate_limiter.record_429(path)  # v15.6: Monitor 429
                         reset_in = response.headers.get("RateLimit-Reset", "1")
                         logger.warning(
                             f"[RateLimit] 429 from {self.BASE_URL} "
@@ -419,7 +436,10 @@ class DMarketAPIClient(  # type: ignore[misc]
                 # Reset 429 counter on success
                 if self._429_count > 0:
                     self._429_count = max(0, self._429_count - 1)
-                response_json = await response.json()
+                rate_limiter.record_success()  # v15.6: Monitor success
+                # v15.7: Use msgspec for 5-10x faster JSON parsing
+                response_bytes = await response.read()
+                response_json = _loads(response_bytes)
                 return response_json
         except (asyncio.TimeoutError, aiohttp.ClientConnectionError) as e:
             # Network errors count as breaker failures

@@ -110,7 +110,8 @@ class TestApplicationLifecycle:
         lifecycle = ApplicationLifecycle(mock_app)
 
         # Mock the health_check_server import within the module
-        with patch("src.telegram_bot.health_check.health_check_server", None):
+        # v15.7 FIX: src.telegram_bot module doesn't exist, mock it differently
+        with patch("src.utils.health_server.start_health_server", new_callable=AsyncMock, return_value=None):
             await lifecycle.shutdown(timeout=5.0)
 
     @pytest.mark.asyncio

@@ -15,17 +15,10 @@ from src.api.exceptions import RateLimitException
 from src.config import Config
 from src.core.sandbox_scenarios import scenario_engine
 from src.core.target_sniping.filter_evaluator import _FilterEvaluatorMixin
+from src.core.target_sniping.microstructure_pipeline import run_microstructure_pipeline
 from src.core.target_sniping.ranking import rank_candidates_by_spread
 from src.core.target_sniping.validations import (
-    check_adverse_selection,
     check_bait_detection,
-    check_cvd_vpin,
-    check_obi,
-    check_roll_spread,
-    check_slippage_at_risk,
-    check_vol_regime,
-    check_volume_profile_poc,
-    check_vwap_filter,
     compute_microstructure_scores,
     evaluate_cross_market_arb,
     evaluate_fee_slippage_tod,
@@ -218,55 +211,26 @@ class _FilterMixin(_FilterEvaluatorMixin):
         ask_count = int(agg.get("ask_count") or 0)
         bid_count = int(agg.get("bid_count") or 0)
 
-        # --- v14.0 OBI (Order Book Imbalance) ---
-        if Config.STRICT_MICROSTRUCTURE_FILTERS:
-            obi_result = check_obi(ask_count, bid_count, best_ask, best_bid)
-            if not obi_result["pass"]:
-                return None
-            obi_result["signal"]
-
-        # --- v15.5 Slippage-at-Risk (arXiv:2603.09164) ---
-        if Config.STRICT_MICROSTRUCTURE_FILTERS:
-            sar = check_slippage_at_risk(
-                title, base_price, best_ask, best_bid, ask_count, bid_count
-            )
-            if not sar["pass"]:
-                if os.getenv("DRY_RUN", "true").lower() == "true":
-                    price_db.log_decision(title, "skip", "Slippage-at-Risk", sar.get("reason", ""))
-                return None
-
-        # --- v14.3 Queue Imbalance (large-tick asset signal) ---
-        if Config.STRICT_MICROSTRUCTURE_FILTERS and Config.QUEUE_IMBALANCE_ENABLED and ask_count > 0:
-            from src.analysis.microstructure import queue_imbalance
-            qi = queue_imbalance(bid_count, ask_count)
-            if qi is not None and qi < Config.QI_SELL_THRESHOLD:
-                return None
-
-        # --- v14.3 Multi-Level OBI (depth-weighted from DOM cache) ---
-        multi_obi = 0.0
-        if Config.STRICT_MICROSTRUCTURE_FILTERS and Config.MULTI_LEVEL_OBI_ENABLED and ask_count > 0:
-            from src.analysis.microstructure import multi_level_obi
-            dom_listings = getattr(self, '_dom_cache', {}).get(title, [])
-            multi_obi = multi_level_obi(
-                best_bid, best_ask, bid_count, ask_count,
-                listings=dom_listings, levels=Config.MULTI_LEVEL_OBI_DEPTH,
-            )
-            if multi_obi < -0.3:
-                return None
-
-        # --- v14.0 OFI (Order Flow Imbalance) ---
-        # Compares current bid/ask counts with previous cycle snapshot.
-        # Rising bids + falling asks = momentum in our favor.
-        if Config.STRICT_MICROSTRUCTURE_FILTERS and Config.OFI_ENABLED and hasattr(self, '_prev_agg_prices'):
-            prev = self._prev_agg_prices.get(title, {})
-            if prev:
-                prev_ask_cnt = prev.get("ask_count", 0) or 0
-                prev_bid_cnt = prev.get("bid_count", 0) or 0
-                curr_ask_cnt = ask_count or 0
-                curr_bid_cnt = bid_count or 0
-                ofi = (curr_bid_cnt - prev_bid_cnt) - (curr_ask_cnt - prev_ask_cnt)
-                if ofi < Config.OFI_SELL_THRESHOLD:
-                    return None
+        # --- v15.7: Microstructure pipeline (extracted from inline checks) ---
+        ms_result = run_microstructure_pipeline(
+            title=title,
+            base_price=base_price,
+            best_ask=best_ask,
+            best_bid=best_bid,
+            ask_count=ask_count,
+            bid_count=bid_count,
+            sales_cache=getattr(self, '_sales_cache', None),
+            prev_agg_prices=getattr(self, '_prev_agg_prices', None),
+            dom_listings=getattr(self, '_dom_cache', {}).get(title, []),
+        )
+        if not ms_result.passed:
+            if Config.DRY_RUN:
+                price_db.log_decision(title, "skip", "Microstructure", ms_result.reason)
+            return None
+        vwap_signal_val = ms_result.vwap_signal
+        cvd_val = ms_result.cvd
+        vpin_val = ms_result.vpin
+        trade_records = ms_result.trade_records
 
         # --- Strategy C: cross-market arb (oracle provider bids) ---
         cross_market = evaluate_cross_market_arb(title, best_ask, cs_bids)
@@ -329,52 +293,6 @@ class _FilterMixin(_FilterEvaluatorMixin):
             return None  # No real demand
         if (ask_count + bid_count) < Config.MIN_BID_ASK_COUNT:
             return None  # Too thin order book
-
-        # --- v14.1 VWAP undervaluation check ---
-        vwap_signal_val = 0.0
-        if Config.STRICT_MICROSTRUCTURE_FILTERS:
-            vwap_result = check_vwap_filter(title, best_ask, getattr(self, '_sales_cache', None))
-            if not vwap_result["pass"]:
-                return None
-            vwap_signal_val = vwap_result["signal"]
-
-        # --- v14.1 CVD / VPIN signals ---
-        cvd_val = 0.0
-        vpin_val = 0.0
-        trade_records: list[dict[str, Any]] = []
-        if Config.STRICT_MICROSTRUCTURE_FILTERS:
-            cvd_vpin_result = check_cvd_vpin(title, getattr(self, '_sales_cache', None))
-            if not cvd_vpin_result["pass"]:
-                return None
-            cvd_val = cvd_vpin_result["cvd"]
-            vpin_val = cvd_vpin_result["vpin"]
-            trade_records = cvd_vpin_result["trade_records"]
-
-        # --- v14.3 Adverse Selection (Kyle λ + Amihud) ---
-        adverse_pass = True
-        if Config.STRICT_MICROSTRUCTURE_FILTERS:
-            adverse_result = check_adverse_selection(title, trade_records)
-            if not adverse_result["pass"]:
-                return None
-            adverse_pass = True
-
-        # --- v14.3 Realized Volatility Regime ---
-        vol_regime = "medium"
-        if Config.STRICT_MICROSTRUCTURE_FILTERS:
-            vol_result = check_vol_regime(title, trade_records)
-            if not vol_result["pass"]:
-                return None
-            vol_regime = vol_result["regime"]
-
-        # --- v14.3 Roll's Model (effective spread check) ---
-        if Config.STRICT_MICROSTRUCTURE_FILTERS:
-            roll_result = check_roll_spread(title, trade_records, best_ask)
-            if not roll_result["pass"]:
-                return None
-
-        # --- v14.3 Volume Profile / POC (price magnet) ---
-        if Config.STRICT_MICROSTRUCTURE_FILTERS:
-            check_volume_profile_poc(title, trade_records)
 
         # v14.6: Seasonal timing — dynamically adjust spread threshold
         effective_min_spread = Config.INTRA_MIN_SPREAD_PCT
@@ -702,8 +620,8 @@ class _FilterMixin(_FilterEvaluatorMixin):
                 vwap_signal_val=vwap_signal_val,
                 cvd_val=cvd_val,
                 vpin_val=vpin_val,
-                adverse_pass=adverse_pass,
-                vol_regime=vol_regime,
+                adverse_pass=True,
+                vol_regime=ms_result.vol_regime,
                 prev_agg_prices=getattr(self, '_prev_agg_prices', None),
             )
             micro["composite_score"]

@@ -158,9 +158,12 @@ class _FilterEvaluatorMixin:
     ) -> bool:
         """Stage 2: Microstructure filters. Returns False if rejected."""
         from src.core.target_sniping.validations import (
-            check_obi, check_cvd_vpin, check_vwap_filter,
-            check_adverse_selection, check_vol_regime,
+            check_adverse_selection,
+            check_cvd_vpin,
+            check_obi,
             check_roll_spread,
+            check_vol_regime,
+            check_vwap_filter,
             evaluate_cross_market_arb,
         )
 
@@ -236,8 +239,8 @@ class _FilterEvaluatorMixin:
         game_id: str,
     ) -> bool:
         """Stage 3: Oracle resolution + spread gate. Returns False if no edge."""
-        from src.core.sandbox_scenarios import scenario_engine
         from src.api.exceptions import RateLimitException
+        from src.core.sandbox_scenarios import scenario_engine
 
         ctx.effective_min_spread = Config.INTRA_MIN_SPREAD_PCT
         if Config.SEASONAL_TIMING_ENABLED:

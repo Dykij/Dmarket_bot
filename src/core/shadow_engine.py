@@ -160,13 +160,13 @@ class ShadowEngine:
             p.current_price for positions in self._positions.values()
             for p in positions if p.status in ("idle", "selling")
         )
-        total = self._balance + assets_value
+        total = float(self._balance) + assets_value
         self._snapshots.append(ShadowSnapshot(
-            ts=time.time(), cash=self._balance, assets=assets_value,
+            ts=time.time(), cash=float(self._balance), assets=assets_value,
             total=total, cycle=self._cycle_count,
         ))
         if total > self._peak_balance:
-            self._peak_balance = total
+            self._peak_balance = D(str(total))
         if self._conn:
             with self._conn:
                 self._conn.execute(
@@ -217,7 +217,7 @@ class ShadowEngine:
                 if current_price <= 0:
                     continue
 
-                loss_pct = ((pos.buy_price - D(str(current_price))) / pos.buy_price) * 100
+                loss_pct = ((pos.buy_price - current_price) / pos.buy_price) * 100
                 profit_pct = ((current_price - pos.buy_price) / pos.buy_price) * 100
 
                 fee = current_price * Config.FEE_RATE
@@ -340,7 +340,7 @@ class ShadowEngine:
                 stats.wins += 1
             else:
                 stats.losses += 1
-            total = self._balance + sum(
+            total = float(self._balance) + sum(
                 p.current_price for positions in self._positions.values()
                 for p in positions if p.status in ("idle", "selling")
             )
@@ -369,10 +369,10 @@ class ShadowEngine:
             p.current_price for positions in self._positions.values()
             for p in positions if p.status in ("idle", "selling")
         )
-        total = self._balance + assets
-        pnl = total - self._initial_balance
-        roi = (pnl / self._initial_balance * 100) if self._initial_balance > 0 else 0
-        dd = ((self._peak_balance - total) / self._peak_balance * 100) if self._peak_balance > 0 else 0
+        total = float(self._balance) + assets
+        pnl = total - float(self._initial_balance)
+        roi = (pnl / float(self._initial_balance) * 100) if self._initial_balance > 0 else 0
+        dd = ((float(self._peak_balance) - total) / float(self._peak_balance) * 100) if self._peak_balance > 0 else 0
 
         total_trades = self._total_wins + self._total_losses
         win_rate = (self._total_wins / max(total_trades, 1)) * 100

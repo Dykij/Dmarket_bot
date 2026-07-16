@@ -102,4 +102,5 @@ db = ProfitTrackerDB()
 
 # v15.5: Register shutdown hook for clean WAL checkpoint
 import atexit as _atexit
+
 _atexit.register(db.close)
