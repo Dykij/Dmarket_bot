@@ -2,6 +2,7 @@
 ranking.py — Volume-weighted spread ranking (standalone, extracted from filter.py).
 
 v14.6: Commission optimizer — boosts score for low-fee items.
+v15.8: Algo-pack integration — trend strength (LIS) and regime-adjusted scoring.
 """
 
 from __future__ import annotations
@@ -12,11 +13,34 @@ from typing import Any
 from src.config import Config
 
 
+# Singleton regime detector (shared across ranking calls within a cycle)
+_regime_detector = None
+_trend_cache: dict[str, float] = {}
+
+
+def _get_regime_detector():
+    """Lazy-init regime detector singleton."""
+    global _regime_detector
+    if _regime_detector is None:
+        try:
+            from src.analysis.algo_pack.regime_detector import MarkovRegimeDetector
+            _regime_detector = MarkovRegimeDetector()
+        except Exception:
+            pass
+    return _regime_detector
+
+
+def clear_trend_cache() -> None:
+    """Clear trend cache between cycles."""
+    _trend_cache.clear()
+
+
 def rank_candidates_by_spread(
     items: list[dict[str, Any]],
     agg_prices: dict[str, dict[str, Any]],
     max_price_usd: float | None = None,
     low_fee_titles: set | None = None,
+    price_histories: dict[str, list[float]] | None = None,
 ) -> list[tuple[str, float]]:
     """
     v12.7: Rank items by volume-weighted spread score (P2-3).
@@ -28,6 +52,9 @@ def rank_candidates_by_spread(
     v14.6: Commission optimizer — items with 2% fee get +15% score boost
     (higher effective profit margin due to lower fees).
 
+    v15.8: Trend boost — items in uptrend get +10% score boost (LIS).
+           Regime-adjusted spread threshold (Markov detector).
+
     Returns: [(title, score), ...] sorted best-score first.
     Items with no agg_prices entry or zero bid/ask are filtered out.
 
@@ -36,6 +63,8 @@ def rank_candidates_by_spread(
     is $43.91).
 
     low_fee_titles: optional set of titles known to have 2% commission.
+
+    price_histories: optional dict {title: [prices...]} for trend analysis.
     """
     ranked: list[tuple[str, float]] = []
     for it in items:
@@ -66,9 +95,23 @@ def rank_candidates_by_spread(
             except Exception:
                 pass
 
+        # v15.8: Regime-adjusted spread threshold
+        regime_mult = 1.0
+        detector = _get_regime_detector()
+        if detector is not None:
+            try:
+                from src.analysis.algo_pack.ewma import ewma_volatility
+                # Use a simple price change estimate from best_bid/best_ask
+                price_change = (best_bid - best_ask) / max(best_ask, 0.01)
+                regime = detector.update(price_change, abs(price_change) * 0.5)
+                params = detector.get_params()
+                regime_mult = params.min_spread_mult
+            except Exception:
+                pass
+
         spread = best_bid - best_ask
         spread_pct = spread / best_ask if best_ask > 0 else 0.0
-        if spread_pct < float(effective_min_spread) / 100.0:
+        if spread_pct < float(effective_min_spread) / 100.0 * regime_mult:
             continue
 
         # Estimated cost to buy + sell + cash out. Low-fee items get a lower
@@ -93,6 +136,18 @@ def rank_candidates_by_spread(
                 from src.analytics.filler_tracker import is_filler
                 if is_filler(title):
                     score *= 1.08  # +8% for filler skins (faster turnover)
+            except Exception:
+                pass
+
+        # v15.8: Trend boost — items in uptrend get +10% score (LIS algorithm)
+        if price_histories and title in price_histories:
+            try:
+                from src.analysis.algo_pack.trend_strength import trend_strength as _ts
+                ts = _ts(price_histories[title])
+                if ts > 0.6:
+                    score *= 1.10  # +10% for uptrend
+                elif ts < 0.3:
+                    score *= 0.85  # -15% for downtrend
             except Exception:
                 pass
 

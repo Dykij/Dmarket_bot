@@ -1,6 +1,6 @@
-# SYSTEM_FLOW - DMarket Quantitative Engine (v15.7)
+# SYSTEM_FLOW - DMarket Quantitative Engine (v15.8)
 
-Этот документ описывает логическую цепочку работы бота в режиме **v15.7 (Balance-Aware Quantitative Engine)**.
+Этот документ описывает логическую цепочку работы бота в режиме **v15.8 (Algo-Pack Integrated Quantitative Engine)**.
 
 ---
 

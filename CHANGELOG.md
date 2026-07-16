@@ -6,6 +6,37 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/v2.0.0.html).
 
 
+## [15.8.0] - 2026-07-16
+### 🧮 v15.8 Algo-Pack Integration + Pipeline Optimization
+
+#### Added
+- **algo_pack module** (`src/analysis/algo_pack/`) — 15 algorithms from CP-Algorithms, arXiv, Habr, GeeksforGeeks
+  - `sell_optimizer.py` — Ternary Search for optimal sell price (max expected profit)
+  - `trend_strength.py` — LIS (Longest Increasing Subsequence) for trend detection
+  - `ewma.py` — EWMA forecast + RiskMetrics volatility + Dual EWMA regime + Adaptive Kelly
+  - `sliding_window.py` — O(1) min/max via monotone deque
+  - `regime_detector.py` — 2-state Markov chain (trending/ranging) with adaptive parameters
+  - `bayesian_stats.py` — Beta distribution for conservative win rate estimation
+  - `spread_optimizer.py` — Binary Search for adaptive MIN_SPREAD from trade history
+- **48 unit tests** for all algo_pack modules
+- **Regime-adjusted ranking** — Markov detector adjusts spread threshold per market regime
+- **Trend boost** — LIS-based trend strength multiplies ranking score (+10% uptrend, -15% downtrend)
+- **Bayesian Kelly sizing** — Replaced simple Kelly with Bayesian + EWMA volatility-adjusted Kelly
+- **Ternary search sell optimizer** — Optimal discount from price history (replaces fixed 3% discount)
+- **Full documentation rewrite** — README, CHANGELOG, SYSTEM_FLOW, ARCHITECTURE all updated to v15.8
+
+#### Changed
+- `ranking.py` — +regime detector, +trend strength boost, +price_histories parameter
+- `filter.py` — Bayesian Kelly with EWMA volatility adjustment (fallback to standard Kelly)
+- `filter_evaluator.py` — Ternary search after value detection layers
+- Version bump v15.7 → v15.8 across all documentation
+
+#### Quality
+- **1,549 tests passing** (48 new algo_pack tests)
+- **0 security findings** (Semgrep clean)
+- **0 unused imports** (ruff F-codes clean)
+- All algo_pack self-checks passing (7/7)
+
 ## [15.7.1] - 2026-07-16
 ### 🔧 v15.7.1 Code Quality & Lint Fixes
 

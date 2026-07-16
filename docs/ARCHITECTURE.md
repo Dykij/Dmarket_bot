@@ -1,10 +1,10 @@
-# DMarket Bot — Architecture (v15.7)
+# DMarket Bot — Architecture (v15.8)
 
 ## Overview
 
-The DMarket Bot v15.7 is a **Value Detection Scanner + Spread Sniper** for CS2 skins on the DMarket marketplace.
+The DMarket Bot v15.8 is a **Value Detection Scanner + Spread Sniper** for CS2 skins on the DMarket marketplace.
 
-Key architectural changes in v15.7:
+Key architectural changes in v15.8:
 - **Dual-signal pipeline**: VALUE (rarity-based) + SPREAD (intra-market)
 - **Relaxed microstructure**: HFT filters disabled by default
 - **Expanded scan coverage**: 500 titles/cycle, 50 oracle validations
@@ -13,7 +13,7 @@ Key architectural changes in v15.7:
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│               DMarket Bot v15.7                      │
+│               DMarket Bot v15.8                      │
 │                                                     │
 │  ┌────────────┐  ┌────────────┐  ┌─────────────┐   │
 │  │ Aggregated │  │ MultiSource│  │ Price-Range │   │
@@ -52,7 +52,7 @@ Key architectural changes in v15.7:
 
 ## Components
 
-### Value Scanner (v15.7)
+### Value Scanner (v15.8)
 
 **Location:** `src/core/target_sniping/value_pipelines.py`
 
@@ -89,7 +89,7 @@ Classic intra-market arbitrage:
 - Lock-aware cap (≤80%)
 - Capital velocity (min 0.5×/week)
 
-### Reflexion Layer (v15.7)
+### Reflexion Layer (v15.8)
 
 **Location:** `src/reflexion/`
 
@@ -98,7 +98,7 @@ State/Snapshot pattern with rollback capabilities:
 - Content-based backup fallback for non-git environments
 - Automatic pruning of old snapshots
 
-### Workflow Chains (v15.7)
+### Workflow Chains (v15.8)
 
 **Location:** `src/workflow/`
 
@@ -108,7 +108,7 @@ Async pipeline with Conductor pattern (Parser→Coder→Tester):
 - DAG-based dependency resolution
 - Graceful shutdown with sentinel pattern
 
-### Bash Sandbox (v15.7)
+### Bash Sandbox (v15.8)
 
 **Location:** `src/sandbox/`
 
@@ -118,7 +118,7 @@ Lightweight sandbox with timeout/security checks:
 - Max output size limiting
 - Docker isolation helper
 
-### CoT Audit (v15.7)
+### CoT Audit (v15.8)
 
 **Location:** `src/cot_audit/`
 
@@ -127,7 +127,7 @@ Chain-of-thought formatting and incremental metadata cache:
 - Incremental scan with mtime+md5 invalidation
 - Automatic .file exclusion
 
-### Integration Facade (v15.7)
+### Integration Facade (v15.8)
 
 **Location:** `src/integration/`
 
@@ -162,11 +162,11 @@ Cycle Start
 
 | File | Purpose |
 |---|---|
-| `src/core/target_sniping/value_pipelines.py` | Dual-signal evaluation (v15.7) |
+| `src/core/target_sniping/value_pipelines.py` | Dual-signal evaluation (v15.8) |
 | `src/core/target_sniping/filter.py` | Legacy spread filters |
 | `src/core/target_sniping/pricing.py` | Rarity premium calculators |
 | `src/api/oracle_cache.py` | In-memory price cache |
-| `src/config.py` | All parameters (v15.7 defaults) |
+| `src/config.py` | All parameters (v15.8 defaults) |
 | `src/risk/risk_manager.py` | Drawdown, Kelly, etc. |
 | `src/reflexion/core.py` | State snapshots and rollback |
 | `src/workflow/chains.py` | Async pipeline orchestration |
@@ -175,4 +175,4 @@ Cycle Start
 | `src/integration/agent_facade.py` | Unified subsystem interface |
 
 
-🦅 *DMarket Quantitative Engine | v15.7 Architecture*
+🦅 *DMarket Quantitative Engine | v15.8 Architecture*
