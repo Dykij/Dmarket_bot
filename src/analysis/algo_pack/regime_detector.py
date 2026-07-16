@@ -125,6 +125,140 @@ class MarkovRegimeDetector:
 
 
 # ══════════════════════════════════════════════════════════════════════
+# Hurst Exponent — Regime Strength Estimator
+# ══════════════════════════════════════════════════════════════════════
+
+
+def hurst_exponent(prices: list[float], max_lag: int = 20) -> float | None:
+    """Estimate Hurst exponent via Rescaled Range (R/S) analysis.
+
+    Reference: Mandelbrot (1972), Lo & MacKinlay (1988)
+
+    H > 0.5 → trending (persistent, momentum strategies work)
+    H = 0.5 → random walk (no predictability)
+    H < 0.5 → mean-reverting (anti-persistent, reversion strategies work)
+
+    Args:
+        prices: Price series (oldest first).
+        max_lag: Maximum lag for R/S calculation (default 20).
+
+    Returns:
+        Hurst exponent [0, 1] or None if insufficient data.
+    """
+    if len(prices) < max_lag * 2:
+        return None
+
+    returns = []
+    for i in range(1, len(prices)):
+        if prices[i - 1] > 0:
+            returns.append((prices[i] - prices[i - 1]) / prices[i - 1])
+
+    if len(returns) < max_lag:
+        return None
+
+    rs_values: list[tuple[float, float]] = []
+
+    for lag in range(2, min(max_lag + 1, len(returns) // 2)):
+        # Split returns into non-overlapping windows of size `lag`
+        num_windows = len(returns) // lag
+        if num_windows < 1:
+            continue
+
+        rs_list: list[float] = []
+        for w in range(num_windows):
+            window = returns[w * lag:(w + 1) * lag]
+            mean_r = sum(window) / lag
+
+            # Cumulative deviations from mean
+            cumdev = 0.0
+            max_cumdev = float('-inf')
+            min_cumdev = float('inf')
+            for r in window:
+                cumdev += r - mean_r
+                max_cumdev = max(max_cumdev, cumdev)
+                min_cumdev = min(min_cumdev, cumdev)
+
+            R = max_cumdev - min_cumdev
+            S = (sum((r - mean_r) ** 2 for r in window) / lag) ** 0.5
+
+            if S > 1e-12:
+                rs_list.append(R / S)
+
+        if rs_list:
+            avg_rs = sum(rs_list) / len(rs_list)
+            rs_values.append((math.log(lag), math.log(max(avg_rs, 1e-10))))
+
+    if len(rs_values) < 3:
+        return None
+
+    # Linear regression: log(R/S) = H * log(n) + c
+    n = len(rs_values)
+    sum_x = sum(x for x, _ in rs_values)
+    sum_y = sum(y for _, y in rs_values)
+    sum_xy = sum(x * y for x, y in rs_values)
+    sum_x2 = sum(x * x for x, _ in rs_values)
+
+    denom = n * sum_x2 - sum_x * sum_x
+    if abs(denom) < 1e-12:
+        return None
+
+    H = (n * sum_xy - sum_x * sum_y) / denom
+    return round(max(0.0, min(1.0, H)), 4)
+
+
+def regime_with_hurst(
+    detector: MarkovRegimeDetector,
+    prices: list[float],
+    price_change_pct: float,
+    volatility: float,
+) -> tuple[str, float | None, RegimeParams]:
+    """Combined regime detection: Markov HMM + Hurst exponent.
+
+    Provides double verification:
+    - HMM says "trending" AND Hurst > 0.6 → strong trend confirmed
+    - HMM says "ranging" AND Hurst < 0.4 → strong mean-reversion confirmed
+    - Disagreement → use HMM but reduce confidence
+
+    Args:
+        detector: MarkovRegimeDetector instance.
+        prices: Recent price history for Hurst calculation.
+        price_change_pct: Latest price change percentage.
+        volatility: Latest volatility estimate.
+
+    Returns:
+        (regime, hurst_value, params)
+    """
+    regime = detector.update(price_change_pct, volatility)
+    hurst = hurst_exponent(prices)
+    params = detector.get_params()
+
+    if hurst is not None:
+        # Adjust params based on Hurst confirmation
+        if regime == "trending" and hurst > 0.6:
+            # Strong trend confirmed — boost confidence
+            params.kelly_mult *= 1.1
+            params.take_profit_mult *= 1.1
+        elif regime == "ranging" and hurst < 0.4:
+            # Strong mean-reversion confirmed — tighten
+            params.kelly_mult *= 0.9
+            params.take_profit_mult *= 0.9
+        elif regime == "trending" and hurst < 0.4:
+            # HMM says trend but Hurst says reversion — reduce confidence
+            params.kelly_mult *= 0.7
+            logger.warning(
+                f"[Regime] Conflict: HMM={regime}, Hurst={hurst:.2f} — reducing confidence"
+            )
+        elif regime == "ranging" and hurst > 0.6:
+            # HMM says range but Hurst says trend — reduce confidence
+            params.kelly_mult *= 0.7
+            logger.warning(
+                f"[Regime] Conflict: HMM={regime}, Hurst={hurst:.2f} — reducing confidence"
+            )
+
+    return regime, hurst, params
+
+
+# ══════════════════════════════════════════════════════════════════════
 # Self-check
 # ══════════════════════════════════════════════════════════════════════
 

@@ -151,6 +151,56 @@ def rank_candidates_by_spread(
             except Exception:
                 pass
 
+        # v15.9: Bollinger Squeeze — volatility contraction = breakout imminent
+        if price_histories and title in price_histories:
+            try:
+                from src.analysis.microstructure.volatility import (
+                    bollinger_bandwidth,
+                    bollinger_pctb,
+                    bollinger_squeeze_signal,
+                )
+                ph = price_histories[title]
+                if len(ph) >= 20:
+                    squeeze = bollinger_squeeze_signal(ph, period=20, squeeze_threshold=0.02)
+                    pctb = bollinger_pctb(ph, best_ask, period=20)
+
+                    if squeeze == "squeeze":
+                        # Squeeze detected — breakout imminent
+                        if pctb is not None and pctb < 0.3:
+                            # Price near lower band + squeeze = potential upside breakout
+                            score *= 1.15  # +15% for squeeze near support
+                        else:
+                            score *= 1.08  # +8% for squeeze (direction unknown)
+                    elif squeeze == "expanded":
+                        # Bands expanded — volatility contracting expected
+                        score *= 0.95  # -5% for expanded bands
+
+                    # %B signal: oversold = boost, overbought = penalize
+                    if pctb is not None:
+                        if pctb < 0.0:
+                            score *= 1.10  # +10% for oversold (below lower band)
+                        elif pctb > 1.0:
+                            score *= 0.85  # -15% for overbought (above upper band)
+            except Exception:
+                pass
+
+        # v15.9: Hurst Exponent — regime strength confirmation
+        if price_histories and title in price_histories:
+            try:
+                from src.analysis.algo_pack.regime_detector import hurst_exponent
+                ph = price_histories[title]
+                if len(ph) >= 40:
+                    hurst = hurst_exponent(ph, max_lag=20)
+                    if hurst is not None:
+                        if hurst > 0.6:
+                            # Strong trend — boost trend-following score
+                            score *= 1.08  # +8% for trending regime
+                        elif hurst < 0.4:
+                            # Mean-reverting — boost reversion score
+                            score *= 1.05  # +5% for mean-reversion regime
+            except Exception:
+                pass
+
         ranked.append((title, score))
     ranked.sort(key=lambda x: x[1], reverse=True)
     return ranked

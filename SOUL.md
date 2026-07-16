@@ -1,5 +1,5 @@
 # SOUL (System of Understanding Logic)
-## DMarket Target Sniper Core (v15.2)
+## DMarket Target Sniper Core (v15.9)
 
 ### Core Philosophy
 The DMarket bot operates on strictly defined mathematical workflows where data parsing, execution, and validation are segregated roles. This ensures fast execution and strict bounds on losses, preserving absolute capital integrity. It minimizes API latency and optimizes operations via quantitative algorithms rather than any heuristic LLM logic.
@@ -9,6 +9,10 @@ The DMarket bot operates on strictly defined mathematical workflows where data p
 *   **Balance-Aware Trading:** Все лимиты адаптируются под баланс — max item price, position size, inventory cap, drawdown freeze.
 *   **Fractional Kelly:** Half Kelly (50%) позиционирование — снижает просадку на ~50% при 85% роста.
 *   **Trend Guard:** Фильтрация нисходящих трендов через SQLite Price History.
+*   **Hawkes Process:** Детекция ажиотажа (listing clusters) — блокирует покупки при frenzy (>3x baseline intensity).
+*   **Bollinger Bands:** Squeeze detection + %B — ловля прорывов, фильтр перекупленности.
+*   **DEMA/TEMA/MACD:** Быстрые кросоверы для ловли моментума без лага.
+*   **Hurst Exponent:** Двойная верификация режима (тренд vs mean-reversion).
 *   **Docker Production:** Multi-stage контейнеризация (x86_64 + ARM64) с health check и persistent volumes.
 *   **Performance Stack:** orjson (5-10x JSON), numpy (10-50x math), cachetools (O(1) TTL), composite indexes.
 
@@ -45,7 +49,7 @@ To maintain secure boundaries and prevent the system from executing loss-making 
 Strict pipeline ensuring safe and fast deal execution:
 `Scanner/Fetcher` -> `Price Validator` -> `Quantitative Core` -> `Risk Manager (Kelly + Drawdown)` -> `Balance Gate` -> `REST/Batch Executor`
 - **Scanner**: Reads real-time order books every 30s cycle.
-- **Price Validator**: 15+ filters (bait, OBI, OFI, VWAP, VPIN, slippage, Kelly, lock-aware cap).
+- **Price Validator**: 21 filters (bait, OBI, OFI, VWAP, VPIN, Hawkes, Bollinger, DEMA, MACD, Hurst, slippage, Kelly, lock-aware cap).
 - **Quantitative Core**: Evaluates item attributes (pattern, float) mathematically and computes fair limit price based on market depth and oracle cache.
 - **Risk Manager**: Kelly sizing, drawdown freeze, capital velocity check.
 - **Balance Gate**: Dynamic max price = max($5 floor, effective_balance × 10%).
@@ -53,4 +57,4 @@ Strict pipeline ensuring safe and fast deal execution:
 
 ---
 
-🦅 *DMarket Quantitative Engine | v14.4 | June 2026*
+🦅 *DMarket Quantitative Engine | v15.9 | July 2026*

@@ -9,10 +9,10 @@
 ![Tests](https://img.shields.io/badge/Tests-1549%20passed-44CC11?logo=pytest&logoColor=white)
 ![Architecture](https://img.shields.io/badge/Architecture-Score%200.85-0969DA)
 ![Security](https://img.shields.io/badge/Semgrep-0%20findings-FF6B35)
-![Version](https://img.shields.io/badge/Version-15.8-purple)
+![Version](https://img.shields.io/badge/Version-15.9-purple)
 
 *Автономная торговая система на строгих количественных алгоритмах.*
-*Value Detection Scanner + Spread Sniping + Algo-Pack (15 алгоритмов).*
+*Value Detection Scanner + Spread Sniping + Algo-Pack (20 алгоритмов).*
 
 </div>
 
@@ -39,11 +39,15 @@
 | Особенность | Описание |
 |---|---|
 | **Dual-Signal Pipeline** | Value Detection (rarity) + Spread Sniper (intra-market) |
-| **15 алгоритмов** | Ternary Search, LIS, EWMA, Markov Regime, Bayesian Kelly, Sliding Window, и др. |
-| **16 microstructure фильтров** | OBI, OFI, VWAP, VPIN, CVD, Queue Imbalance, и др. |
+| **20 алгоритмов** | Ternary Search, LIS, EWMA, Markov Regime, Bayesian Kelly, Hawkes, Bollinger, DEMA, MACD, Hurst, и др. |
+| **21 microstructure фильтров** | OBI, OFI, VWAP, VPIN, CVD, Queue Imbalance, Hawkes, Bollinger, DEMA, MACD, Hurst, и др. |
 | **Multi-Source Oracle** | 5 бесплатных источников цен (Market.CSGO, Waxpeer, CSFloat, Steam, DMarket) |
 | **Instant Resale** | Покупка → мгновенная перепродажа без Steam Trade Lock |
 | **Half Kelly + Bayesian** | Адаптивное размер позиции с учётом волатильности (EWMA) |
+| **Hawkes Process** | Детекция ажиотажа (listing clusters) — блокирует покупки при frenzy |
+| **Bollinger Bands** | Squeeze detection + %B — ловля прорывов, фильтр перекупленности |
+| **DEMA/TEMA/MACD** | Быстрые кросоверы для ловли моментума |
+| **Hurst Exponent** | Двойная верификация режима (тренд vs mean-reversion) |
 | **Rust Core** | Ed25519 подпись через PyO3 (zero-copy) |
 | **1,549 тестов** | Unit + Integration + Sandbox + Strategy Simulation |
 
@@ -145,13 +149,25 @@ score = net_margin × √(ask_count + bid_count)
 
 ## 🧮 Алгоритмы (algo_pack)
 
-Пакет из **15 алгоритмов**, реализованных в `src/analysis/algo_pack/`. Источники: CP-Algorithms, arXiv, Habr, GeeksforGeeks, RiskMetrics.
+Пакет из **20 алгоритмов**, реализованных в `src/analysis/algo_pack/` и `src/analysis/microstructure/`. Источники: CP-Algorithms, arXiv, Habr, GeeksforGeeks, RiskMetrics, Reddit r/algotrading, QuantStrategy, Springer.
 
-### Реализованные и протестированные (48/48 tests)
+### v15.9: Новые алгоритмы (добавлены 16.07.2026)
+
+| # | Алгоритм | Файл | Формула | Внедрено в | Что делает |
+|---|---|---|---|---|---|
+| 9 | **Hawkes Process** | `algo_pack/hawkes.py` | `λ(t) = μ + Σ α × e^(-β × (t - tᵢ))` | `microstructure_pipeline.py` шаг 12 | Детекция ажиотажа: если >3x baseline intensity → блокирует покупку |
+| 10 | **Bollinger Bands** | `microstructure/volatility.py` | `MA(N) ± K × σ(N)`, `%B = (P - L) / (U - L)` | `microstructure_pipeline.py` шаг 13, `ranking.py` | Squeeze detection (прорыв), %B фильтр перекупленности |
+| 11 | **DEMA** | `algo_pack/ewma.py` | `DEMA = 2 × EMA(N) - EMA(EMA(N))` | `microstructure_pipeline.py` шаг 14 | Быстрый EMA без лага, crossover detection |
+| 12 | **TEMA** | `algo_pack/ewma.py` | `TEMA = 3 × EMA - 3 × EMA² + EMA³` | `microstructure_pipeline.py` шаг 14 | Самый быстрый EMA, -70% lag |
+| 13 | **EMA Crossover** | `algo_pack/ewma.py` | `fast_DEMA(9) vs slow_DEMA(21)` | `microstructure_pipeline.py` шаг 14 | Бычий/медвежий crossover сигнал |
+| 14 | **MACD** | `algo_pack/ewma.py` | `MACD = EMA(12) - EMA(26)`, `Signal = EMA(MACD, 9)` | `microstructure_pipeline.py` шаг 15 | Моментум confirmation, histogram analysis |
+| 15 | **Hurst Exponent** | `algo_pack/regime_detector.py` | `H = log(R/S) / log(N)` | `microstructure_pipeline.py` шаг 16, `ranking.py` | Режим: H>0.5 тренд, H<0.5 mean-reversion |
+
+### v15.8: Существующие алгоритмы
 
 | # | Алгоритм | Файл | Суть | Внедрено в |
 |---|---|---|---|---|
-| 1 | **Ternary Search** | `sell_optimizer.py` | Оптимальный折扣продажи (max expected profit) | `filter_evaluator.py` |
+| 1 | **Ternary Search** | `sell_optimizer.py` | Оптимальная скидка продажи (max expected profit) | `filter_evaluator.py` |
 | 2 | **LIS** (O(n log n)) | `trend_strength.py` | Детекция тренда через longest increasing subsequence | `ranking.py` |
 | 3 | **EWMA** | `ewma.py` | Предсказание цены + волатильность (RiskMetrics) | `filter.py` (Kelly) |
 | 4 | **Sliding Window** | `sliding_window.py` | O(1) min/max через monotone deque | Microstructure |
@@ -160,13 +176,18 @@ score = net_margin × √(ask_count + bid_count)
 | 7 | **Binary Search** | `spread_optimizer.py` | Адаптивный MIN_SPREAD из trade history | Параметры |
 | 8 | **Dual EWMA Vol** | `ewma.py` | Volatility regime (expanding/contracting) | Risk |
 
-### Как алгоритмы совмещаются
+### v15.9: Обновлённый пайплайн
 
 ```
-Current Pipeline (v15.8):
+Current Pipeline (v15.9):
   Scanner
-    → Rank(spread × √vol × regime_mult × trend_LIS)     ← Markov + LIS
-    → Filter(16 microstructure + regime-adjusted)        ← Sliding Window
+    → Rank(spread × √vol × regime_mult × trend_LIS × bollinger × hurst)
+    │   ← Markov + LIS + Bollinger squeeze + Hurst regime
+    → Filter(21 microstructure + regime-adjusted)
+    │   ← OBI, OFI, VWAP, VPIN, CVD, Queue Imbalance
+    │   ← Hawkes (ажиотаж block), Bollinger (overbought block)
+    │   ← DEMA (bearish block), MACD (bearish block)
+    │   ← Hurst (informational)
     → BayesianKelly(EWMA-vol-adjusted)                   ← Bayesian + EWMA
     → ValueDetection(float, pattern, sticker)
     → TernaryOptimalSellPrice                            ← Ternary Search
@@ -174,20 +195,41 @@ Current Pipeline (v15.8):
     → Execute
 ```
 
+### Composite Score — v15.9 компоненты
+
+| Компонент | Вес | Что измеряет | Диапазон |
+|-----------|-----|--------------|----------|
+| `spread` | 2.0 | Ширина спреда | 0..1 |
+| `obi` | 1.5 | Давление покупателей | 0..1 |
+| `ofi` | 1.0 | Изменение спроса | 0..1 |
+| `cvd` | 0.5 | Накопление/распределение | 0..1 |
+| `vpin` | 1.0 | Информированная торговля | 0..1 |
+| `vwap` | 1.0 | Скидка к VWAP | 0..1 |
+| `adverse` | 2.0 | Adverse selection | 0..1 |
+| `vol_regime` | 0.5 | Режим волатильности | 0..1 |
+| `kyle` | 1.0 | Price impact | 0..1 |
+| **`hawkes`** | **1.5** | **Ажиотаж (quiet=1.0, frenzy=0.0)** | 0..1 |
+| **`bollinger`** | **1.0** | **Squeeze + %B signal** | 0..1 |
+| **`dema`** | **0.8** | **DEMA crossover direction** | 0..1 |
+| **`macd`** | **0.8** | **MACD momentum** | 0..1 |
+| **`hurst`** | **0.5** | **Regime strength** | 0..1 |
+
 ### Ожидаемый эффект
 
-| Метрика | Без algo_pack | С algo_pack |
-|---|---|---|
-| **Sharpe Ratio** | 1.0× | +15-25% |
-| **Max Drawdown** | -15% | -20-30% |
-| **Win Rate** | 55% | 58-62% |
-| **Sell Price Accuracy** | Fixed 3% discount | Optimal 1-10% |
+| Метрика | Без algo_pack | С algo_pack (v15.8) | С algo_pack (v15.9) |
+|---|---|---|---|
+| **Sharpe Ratio** | 1.0× | +15-25% | +20-30% |
+| **Max Drawdown** | -15% | -20-30% | -25-35% |
+| **Win Rate** | 55% | 58-62% | 60-65% |
+| **Sell Price Accuracy** | Fixed 3% discount | Optimal 1-10% | Optimal 1-10% |
+| **FOMO Protection** | None | Pump detector | Hawkes + Pump |
+| **Timing** | Basic | Regime-adjusted | Bollinger + DEMA + MACD |
 
 ---
 
 ## 🛠 Финансовые инструменты
 
-### Microstructure Filters (16 фильтров)
+### Microstructure Filters (21 фильтров)
 
 | # | Фильтр | Config Key | Описание |
 |---|---|---|---|
@@ -207,6 +249,11 @@ Current Pipeline (v15.8):
 | 14 | **Composite Score** | `COMPOSITE_SCORE_ENABLED` | Composite microstructure score |
 | 15 | **Event Detection** | `EVENT_DETECTION_ENABLED` | CS2 event monitoring (updates, tournaments) |
 | 16 | **Supply Tracking** | `SUPPLY_TRACKING_ENABLED` | Listing count monitoring (thin market boost) |
+| 17 | **Hawkes Process** | `HAWKES_ENABLED` | Ажиотаж detection — блокирует покупки при frenzy (>3x intensity) |
+| 18 | **Bollinger Bands** | `BOLLINGER_ENABLED` | Squeeze detection + %B — фильтр перекупленности (>1.0) |
+| 19 | **DEMA Crossover** | `DEMA_ENABLED` | Быстрый EMA crossover — блокирует при bearish |
+| 20 | **MACD** | `MACD_ENABLED` | Моментум confirmation — блокирует при bearish |
+| 21 | **Hurst Exponent** | `HURST_ENABLED` | Режим strength — informational (H>0.5 тренд, H<0.5 reversion) |
 
 ### Risk Management
 
@@ -258,13 +305,20 @@ START CYCLE (run_cycle)
   ├─ 4. _stage_evaluate (parallel)
   │      ├─ Rank by spread × √volume × regime_mult × trend_LIS
   │      │     ├─ Markov regime detection
-  │      │     └─ LIS trend strength
-  │      ├─ 16 microstructure filters
+  │      │     ├─ LIS trend strength
+  │      │     ├─ Bollinger squeeze detection (v15.9)
+  │      │     └─ Hurst exponent regime strength (v15.9)
+  │      ├─ 21 microstructure filters
   │      │     ├─ OBI, OFI, VWAP, VPIN, CVD
   │      │     ├─ Queue Imbalance, Multi-Level OBI
   │      │     ├─ Adverse Selection, Vol Regime
   │      │     ├─ Roll Model, Volume Profile
   │      │     ├─ Slippage Gate, Micro Price
+  │      │     ├─ Hawkes Process (v15.9) — ажиотаж block
+  │      │     ├─ Bollinger Bands (v15.9) — overbought block
+  │      │     ├─ DEMA Crossover (v15.9) — bearish block
+  │      │     ├─ MACD (v15.9) — bearish block
+  │      │     ├─ Hurst Exponent (v15.9) — informational
   │      │     └─ Composite Score, Event Detection
   │      ├─ Value Detection (float, pattern, sticker premiums)
   │      ├─ Bayesian Kelly sizing (EWMA volatility)
@@ -327,16 +381,17 @@ src/
 │   └── autonomous_scanner.py      # Background scanner
 │
 ├── analysis/
-│   ├── algo_pack/                  # v15.8: 15 algorithms
+│   ├── algo_pack/                  # v15.9: 20 algorithms
 │   │   ├── __init__.py
 │   │   ├── sell_optimizer.py       # Ternary Search
 │   │   ├── trend_strength.py       # LIS (Longest Increasing Subsequence)
-│   │   ├── ewma.py                 # EWMA + Dual Vol + Adaptive Kelly
+│   │   ├── ewma.py                 # EWMA + Dual Vol + Adaptive Kelly + DEMA/TEMA/MACD
 │   │   ├── sliding_window.py       # O(1) Min/Max (Monotone Deque)
-│   │   ├── regime_detector.py      # Markov Chain Regime
+│   │   ├── regime_detector.py      # Markov Chain Regime + Hurst Exponent
 │   │   ├── bayesian_stats.py       # Beta Distribution + Bayesian Kelly
-│   │   └── spread_optimizer.py     # Binary Search for MIN_SPREAD
-│   ├── microstructure/             # OBI, OFI, VWAP, VPIN, etc.
+│   │   ├── spread_optimizer.py     # Binary Search for MIN_SPREAD
+│   │   └── hawkes.py              # v15.9: Hawkes Process (ажиотаж detection)
+│   ├── microstructure/             # OBI, OFI, VWAP, VPIN, Bollinger, etc.
 │   ├── seasonal.py                 # Seasonal timing
 │   └── stickers_evaluator.py       # Sticker value calculation
 │
@@ -488,6 +543,6 @@ Proprietary. All rights reserved.
 
 <div align="center">
 
-🦅 *DMarket Quantitative Engine | v15.8 | July 2026*
+🦅 *DMarket Quantitative Engine | v15.9 | July 2026*
 
 </div>

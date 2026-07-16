@@ -255,6 +255,115 @@ def roll_signal(prices: list[float], best_ask: float) -> str | None:
 # ══════════════════════════════════════════════════════════════════════
 
 
+# ══════════════════════════════════════════════════════════════════════
+# 13a. BOLLINGER BANDS (Volatility Envelope / Mean Reversion)
+# ══════════════════════════════════════════════════════════════════════
+
+
+def bollinger_bands(
+    prices: list[float],
+    period: int = 20,
+    num_std: float = 2.0,
+) -> tuple[float, float, float] | None:
+    """
+    Bollinger Bands: MA(N) ± K × σ(N).
+
+    Reference: Bollinger (2002) "Bollinger on Bollinger Bands"
+
+    Args:
+        prices: Price series (oldest first).
+        period: Lookback period (default 20).
+        num_std: Number of standard deviations (default 2.0).
+
+    Returns:
+        (upper, middle, lower) or None if insufficient data.
+    """
+    if len(prices) < period:
+        return None
+
+    recent = prices[-period:]
+    arr = np.array(recent, dtype=np.float64)
+    middle = float(np.mean(arr))
+    std = float(np.std(arr, ddof=1))
+
+    upper = middle + num_std * std
+    lower = middle - num_std * std
+    return round(upper, 4), round(middle, 4), round(lower, 4)
+
+
+def bollinger_pctb(
+    prices: list[float],
+    current_price: float,
+    period: int = 20,
+    num_std: float = 2.0,
+) -> float | None:
+    """
+    %B: Where current price sits within Bollinger Bands.
+
+    %B < 0   = below lower band (oversold / potential buy)
+    %B = 0.5 = at middle band
+    %B > 1.0 = above upper band (overbought / avoid)
+
+    Returns:
+        %B value or None if bands can't be computed.
+    """
+    bands = bollinger_bands(prices, period, num_std)
+    if bands is None:
+        return None
+    upper, _, lower = bands
+    band_width = upper - lower
+    if band_width < 1e-10:
+        return 0.5
+    return round((current_price - lower) / band_width, 4)
+
+
+def bollinger_bandwidth(
+    prices: list[float],
+    period: int = 20,
+    num_std: float = 2.0,
+) -> float | None:
+    """
+    Bandwidth: (Upper - Lower) / Middle.
+
+    Low bandwidth (< 0.02) = squeeze → expect breakout.
+    High bandwidth (> 0.10) = expanded → expect contraction.
+
+    Returns:
+        Bandwidth ratio or None.
+    """
+    bands = bollinger_bands(prices, period, num_std)
+    if bands is None:
+        return None
+    upper, middle, lower = bands
+    if middle < 1e-10:
+        return None
+    return round((upper - lower) / middle, 4)
+
+
+def bollinger_squeeze_signal(
+    prices: list[float],
+    period: int = 20,
+    num_std: float = 2.0,
+    squeeze_threshold: float = 0.02,
+) -> str:
+    """
+    Detect Bollinger Band squeeze (volatility contraction).
+
+    Returns:
+        "squeeze"   — bandwidth < threshold, breakout imminent
+        "expanded"  — bandwidth > 3x threshold, expect contraction
+        "normal"    — typical volatility
+    """
+    bw = bollinger_bandwidth(prices, period, num_std)
+    if bw is None:
+        return "normal"
+    if bw < squeeze_threshold:
+        return "squeeze"
+    elif bw > squeeze_threshold * 3:
+        return "expanded"
+    return "normal"
+
+
 def volume_profile_poc(
     sales: list[dict[str, Any]],
     num_buckets: int = 10,

@@ -75,6 +75,12 @@ def composite_buy_score(
     adverse_pass: bool,
     vol_regime: str,
     kyle_lam: float | None = None,
+    hawkes_activity: str = "normal",
+    bollinger_squeeze: str = "normal",
+    bollinger_pctb: float = 0.5,
+    dema_crossover: str = "neutral",
+    macd_signal_val: str = "neutral",
+    hurst_exponent: float | None = None,
 ) -> tuple[float, dict[str, float]]:
     """
     Weighted composite score for ranking candidates.
@@ -91,6 +97,11 @@ def composite_buy_score(
       - vwap_undervalued: discount to VWAP
       - adverse_clean: low market impact
       - vol_ok: not in high-vol regime
+      - hawkes_ok: not in frenzy (ажиотаж)
+      - bollinger: squeeze + %B signal
+      - dema: DEMA crossover direction
+      - macd: MACD momentum
+      - hurst: regime strength
     """
     components: dict[str, float] = {}
 
@@ -128,6 +139,46 @@ def composite_buy_score(
     else:
         components["kyle"] = 0.5
 
+    # ═══════════════════════════════════════════════════════════════════
+    # v15.9: NEW ALGORITHM COMPONENTS
+    # ═══════════════════════════════════════════════════════════════════
+
+    # Hawkes activity (0..1): quiet=1.0, normal=0.8, elevated=0.4, frenzy=0.0
+    hawkes_scores = {"quiet": 1.0, "normal": 0.8, "elevated": 0.4, "frenzy": 0.0}
+    components["hawkes"] = hawkes_scores.get(hawkes_activity, 0.5)
+
+    # Bollinger Bands (0..1): squeeze near support = high, overbought = low
+    if bollinger_squeeze == "squeeze":
+        if bollinger_pctb < 0.3:
+            components["bollinger"] = 0.9  # squeeze near lower band
+        else:
+            components["bollinger"] = 0.7  # squeeze, direction unknown
+    elif bollinger_pctb < 0.0:
+        components["bollinger"] = 0.8  # oversold
+    elif bollinger_pctb > 1.0:
+        components["bollinger"] = 0.2  # overbought
+    else:
+        components["bollinger"] = 0.5  # neutral
+
+    # DEMA Crossover (0..1): bullish=1.0, neutral=0.5, bearish=0.0
+    dema_scores = {"bullish": 1.0, "neutral": 0.5, "bearish": 0.0}
+    components["dema"] = dema_scores.get(dema_crossover, 0.5)
+
+    # MACD (0..1): bullish=1.0, neutral=0.5, bearish=0.0
+    macd_scores = {"bullish": 1.0, "neutral": 0.5, "bearish": 0.0}
+    components["macd"] = macd_scores.get(macd_signal_val, 0.5)
+
+    # Hurst Exponent (0..1): trending (>0.6)=0.8, random=0.5, mean-reverting (<0.4)=0.7
+    if hurst_exponent is not None:
+        if hurst_exponent > 0.6:
+            components["hurst"] = 0.8  # trending — good for momentum
+        elif hurst_exponent < 0.4:
+            components["hurst"] = 0.7  # mean-reverting — good for reversion
+        else:
+            components["hurst"] = 0.5  # random walk
+    else:
+        components["hurst"] = 0.5  # unknown
+
     weights = {
         "spread": 2.0,
         "obi": 1.5,
@@ -138,6 +189,12 @@ def composite_buy_score(
         "adverse": 2.0,
         "vol_regime": 0.5,
         "kyle": 1.0,
+        # v15.9: New algorithm weights
+        "hawkes": 1.5,      # High weight — ажиотаж detection is critical
+        "bollinger": 1.0,   # Medium weight — squeeze/overbought detection
+        "dema": 0.8,        # Medium weight — crossover confirmation
+        "macd": 0.8,        # Medium weight — momentum confirmation
+        "hurst": 0.5,       # Low weight — informational (regime strength)
     }
 
     weighted_sum = sum(components[k] * weights[k] for k in weights)

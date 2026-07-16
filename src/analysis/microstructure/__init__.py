@@ -42,6 +42,10 @@ from src.analysis.microstructure.signals import (
 from src.analysis.microstructure.volatility import (
     adverse_selection_check,
     amihud_illiquidity,
+    bollinger_bands,
+    bollinger_bandwidth,
+    bollinger_pctb,
+    bollinger_squeeze_signal,
     classify_volatility_regime,
     day_of_week_multiplier,
     kyle_lambda,
@@ -71,10 +75,11 @@ __all__ = [
     # signals
     "composite_buy_score", "smart_reprice_signal",
     # volatility
-    "adverse_selection_check", "amihud_illiquidity", "classify_volatility_regime",
-    "day_of_week_multiplier", "kyle_lambda", "realized_vol_parkinson",
-    "realized_vol_std", "roll_effective_spread", "roll_signal",
-    "tod_multiplier", "volume_profile_poc", "volume_profile_value_area",
+    "adverse_selection_check", "amihud_illiquidity", "bollinger_bands",
+    "bollinger_bandwidth", "bollinger_pctb", "bollinger_squeeze_signal",
+    "classify_volatility_regime", "day_of_week_multiplier", "kyle_lambda",
+    "realized_vol_parkinson", "realized_vol_std", "roll_effective_spread",
+    "roll_signal", "tod_multiplier", "volume_profile_poc", "volume_profile_value_area",
     # volume
     "classify_trade_lee_ready", "compute_cvd", "compute_vpin", "compute_vwap",
     "cvd_divergence", "estimate_slippage", "vwap_bands", "vwap_signal",

@@ -242,6 +242,9 @@ class _FilterMixin(_FilterEvaluatorMixin):
         bid_count = int(agg.get("bid_count") or 0)
 
         # --- v15.7: Microstructure pipeline (extracted from inline checks) ---
+        # v15.9: Fetch price_history early for Hawkes, Bollinger, DEMA, MACD, Hurst
+        _early_history = price_db.get_recent_prices(title, days=14)
+        _early_prices = [p for p, _ in _early_history] if _early_history else []
         ms_result = run_microstructure_pipeline(
             title=title,
             base_price=base_price,
@@ -252,6 +255,7 @@ class _FilterMixin(_FilterEvaluatorMixin):
             sales_cache=getattr(self, '_sales_cache', None),
             prev_agg_prices=getattr(self, '_prev_agg_prices', None),
             dom_listings=getattr(self, '_dom_cache', {}).get(title, []),
+            price_history=_early_prices if _early_prices else None,
         )
         if not ms_result.passed:
             if Config.DRY_RUN:
@@ -308,8 +312,9 @@ class _FilterMixin(_FilterEvaluatorMixin):
                 )
             return None
 
-        history = price_db.get_recent_prices(title, days=14)
-        prices_only = [p for p, _ in history]
+        # v15.9: Reuse early price history fetch (avoid duplicate DB call)
+        history = _early_history
+        prices_only = _early_prices
         # Skip volatility validation if we have a strong cross-market signal.
         if prices_only and cross_market_provider is None:
             try:
@@ -653,6 +658,13 @@ class _FilterMixin(_FilterEvaluatorMixin):
                 adverse_pass=True,
                 vol_regime=ms_result.vol_regime,
                 prev_agg_prices=getattr(self, '_prev_agg_prices', None),
+                # v15.9: New algorithm signals from microstructure pipeline
+                hawkes_activity=ms_result.hawkes_activity,
+                bollinger_squeeze=ms_result.bollinger_squeeze,
+                bollinger_pctb=ms_result.bollinger_pctb,
+                dema_crossover=ms_result.dema_crossover,
+                macd_signal_val=ms_result.macd_signal,
+                hurst_exponent=ms_result.hurst_exponent,
             )
             micro["composite_score"]
             micro["components"]
