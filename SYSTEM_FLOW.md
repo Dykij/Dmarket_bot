@@ -1,6 +1,6 @@
-# SYSTEM_FLOW - DMarket Quantitative Engine (v14.9)
+# SYSTEM_FLOW - DMarket Quantitative Engine (v15.7)
 
-Этот документ описывает логическую цепочку работы бота в режиме **v14.4 (Balance-Aware Quantitative Engine)**.
+Этот документ описывает логическую цепочку работы бота в режиме **v15.7 (Balance-Aware Quantitative Engine)**.
 
 ---
 
@@ -26,7 +26,7 @@ graph TD
     L --> A
 ```
 
-### v14.9 Dual-Signal Pipeline (replaces 15-filter pipeline)
+### v15.7 Dual-Signal Pipeline (replaces 15-filter pipeline)
 
 ```
 VALUE SIGNAL (primary):

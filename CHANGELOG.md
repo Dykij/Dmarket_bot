@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/v2.0.0.html).
 
 
+## [15.7.1] - 2026-07-16
+### 🔧 v15.7.1 Code Quality & Lint Fixes
+
+#### Fixed
+- **Unused imports removed:** `field` from `knowledge_base.py` and `query_profiler.py`, `os` from `microstructure_pipeline.py`, `price_db` from `microstructure_pipeline.py`, `CONTENT_TYPE_LATEST` from `health_server.py`
+- **Unused variable removed:** `now` in `event_detection.py:_merge_events()`, `ranked` in `cycle_orchestrator.py:_stage_evaluate()`
+- **f-string without placeholders:** Fixed in `event_detection.py` (line 116)
+- **SIM auto-fixes:** Collapsible if-statements, contextlib.suppress patterns, simplified returns (3 files)
+
+#### Quality
+- **Ruff lint:** 214 → 203 issues (11 F-code bugs fixed, remaining are E501 cosmetic + E402 intentional)
+- **Semgrep security scan:** 0 findings (clean)
+- **Architecture score:** 0.50 (no cycles, modularity 0.85)
+- **All 1,501 tests passing** (3 pre-existing warnings)
+
+
 ## [15.6.0] - 2026-07-14
 ### 🚀 v15.6 Rate Limiting, Error Handling & Dead Code Cleanup
 

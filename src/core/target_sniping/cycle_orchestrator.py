@@ -233,7 +233,7 @@ class CycleOrchestrator:
         from src.core.target_sniping.ranking import rank_candidates_by_spread
 
         max_price_cap = min(ctx.effective_balance, ctx.dynamic_max_price)
-        ranked = rank_candidates_by_spread(ctx.items, ctx.agg_prices, max_price_usd=max_price_cap)
+        rank_candidates_by_spread(ctx.items, ctx.agg_prices, max_price_usd=max_price_cap)
 
         raw_inv = price_db.get_virtual_inventory(status="idle", only_unlocked=False)
         sat_counts: dict[str, int] = {}

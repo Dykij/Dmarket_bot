@@ -51,7 +51,7 @@ except ImportError:  # pragma: no cover
 
 # v15.2: prometheus_client for proper metric types
 try:
-    from prometheus_client import CONTENT_TYPE_LATEST, Counter, Gauge, generate_latest
+    from prometheus_client import Counter, Gauge, generate_latest
     HAS_PROMETHEUS = True
 except ImportError:
     HAS_PROMETHEUS = False
