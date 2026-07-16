@@ -311,6 +311,13 @@ def compute_microstructure_scores(
     adverse_pass: bool,
     vol_regime: str,
     prev_agg_prices: dict[str, dict[str, Any]] | None = None,
+    # v15.9: New algorithm signals
+    hawkes_activity: str = "normal",
+    bollinger_squeeze: str = "normal",
+    bollinger_pctb: float = 0.5,
+    dema_crossover: str = "neutral",
+    macd_signal_val: str = "neutral",
+    hurst_exponent: float | None = None,
 ) -> dict:
     """Composite buy score from microstructure signals.
 
@@ -354,6 +361,13 @@ def compute_microstructure_scores(
         adverse_pass=adverse_pass,
         vol_regime=vol_regime,
         kyle_lam=_kyle,
+        # v15.9: New algorithm signals
+        hawkes_activity=hawkes_activity,
+        bollinger_squeeze=bollinger_squeeze,
+        bollinger_pctb=bollinger_pctb,
+        dema_crossover=dema_crossover,
+        macd_signal_val=macd_signal_val,
+        hurst_exponent=hurst_exponent,
     )
 
     return {"composite_score": composite_score, "components": composite_components}

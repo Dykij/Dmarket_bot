@@ -43,6 +43,14 @@ class MicrostructureResult:
     vol_regime: str = "medium"
     trade_records: list[dict[str, Any]] = field(default_factory=list)
     multi_obi: float = 0.0
+    # v15.9: New algorithm signals
+    hawkes_intensity: float = 0.0
+    hawkes_activity: str = "normal"
+    bollinger_squeeze: str = "normal"
+    bollinger_pctb: float = 0.5
+    dema_crossover: str = "neutral"
+    macd_signal: str = "neutral"
+    hurst_exponent: float | None = None
 
 
 def run_microstructure_pipeline(
@@ -56,10 +64,11 @@ def run_microstructure_pipeline(
     sales_cache: dict[str, list[dict[str, Any]]] | None = None,
     prev_agg_prices: dict[str, Any] | None = None,
     dom_listings: list[dict[str, Any]] | None = None,
+    price_history: list[float] | None = None,
 ) -> MicrostructureResult:
     """
     Run all enabled microstructure checks in order.
-    
+
     Returns MicrostructureResult with passed=False if any check fails.
     All checks are gated by Config.STRICT_MICROSTRUCTURE_FILTERS.
     """
@@ -160,5 +169,107 @@ def run_microstructure_pipeline(
 
     # 11. Volume Profile / POC
     check_volume_profile_poc(title, result.trade_records)
+
+    # ═══════════════════════════════════════════════════════════════════
+    # v15.9: NEW ALGORITHMS — Hawkes, Bollinger, DEMA, MACD, Hurst
+    # ═══════════════════════════════════════════════════════════════════
+
+    # 12. Hawkes Process — detect ажиотаж (listing clusters)
+    try:
+        from src.analysis.algo_pack.hawkes import (
+            HawkesEstimator,
+            classify_activity_level,
+        )
+
+        # Build timestamps from trade records (seconds since epoch)
+        trade_timestamps: list[float] = []
+        for tr in result.trade_records:
+            ts = tr.get("timestamp", 0)
+            if ts > 0:
+                trade_timestamps.append(float(ts))
+
+        if len(trade_timestamps) >= 3:
+            hawkes = HawkesEstimator(baseline=0.01, alpha=0.5, beta=0.1)
+            for ts in sorted(trade_timestamps):
+                hawkes.update(ts)
+            result.hawkes_intensity = hawkes.get_intensity_ratio()
+            result.hawkes_activity = classify_activity_level(result.hawkes_intensity)
+
+            # Block buying during frenzy (ажиотаж)
+            if result.hawkes_activity == "frenzy":
+                result.passed = False
+                result.reason = (
+                    f"Hawkes frenzy: intensity={result.hawkes_intensity:.1f}x "
+                    f"(>{3.0}x threshold)"
+                )
+                return result
+    except Exception as e:
+        logger.debug(f"[Hawkes] Skipped: {e}")
+
+    # 13. Bollinger Bands — squeeze detection + %B
+    if price_history and len(price_history) >= 20:
+        try:
+            from src.analysis.microstructure.volatility import (
+                bollinger_pctb,
+                bollinger_squeeze_signal,
+            )
+
+            result.bollinger_squeeze = bollinger_squeeze_signal(
+                price_history, period=20, squeeze_threshold=0.02
+            )
+            result.bollinger_pctb = bollinger_pctb(
+                price_history, base_price, period=20
+            ) or 0.5
+
+            # Block buying if price is above upper Bollinger Band (overbought)
+            if result.bollinger_pctb > 1.0 and result.bollinger_squeeze != "squeeze":
+                result.passed = False
+                result.reason = (
+                    f"Bollinger overbought: %B={result.bollinger_pctb:.2f} > 1.0"
+                )
+                return result
+        except Exception as e:
+            logger.debug(f"[Bollinger] Skipped: {e}")
+
+    # 14. DEMA Crossover — momentum direction
+    if price_history and len(price_history) >= 22:
+        try:
+            from src.analysis.algo_pack.ewma import ema_crossover
+
+            result.dema_crossover = ema_crossover(
+                price_history, fast_period=9, slow_period=21
+            )
+
+            # Block buying on bearish crossover (momentum against us)
+            if result.dema_crossover == "bearish":
+                result.passed = False
+                result.reason = "DEMA bearish crossover"
+                return result
+        except Exception as e:
+            logger.debug(f"[DEMA] Skipped: {e}")
+
+    # 15. MACD — momentum confirmation
+    if price_history and len(price_history) >= 27:
+        try:
+            from src.analysis.algo_pack.ewma import macd_signal as _macd_sig
+
+            result.macd_signal = _macd_sig(price_history)
+
+            # Block buying on bearish MACD
+            if result.macd_signal == "bearish":
+                result.passed = False
+                result.reason = "MACD bearish signal"
+                return result
+        except Exception as e:
+            logger.debug(f"[MACD] Skipped: {e}")
+
+    # 16. Hurst Exponent — regime strength (informational, no blocking)
+    if price_history and len(price_history) >= 40:
+        try:
+            from src.analysis.algo_pack.regime_detector import hurst_exponent
+
+            result.hurst_exponent = hurst_exponent(price_history, max_lag=20)
+        except Exception as e:
+            logger.debug(f"[Hurst] Skipped: {e}")
 
     return result
