@@ -1,6 +1,9 @@
 # Ignore secrets and transient data
 .env
 .env.backup*
+.opencode/
+opencode.json
+.local/
 .venv/
 venv/
 __pycache__/
@@ -24,6 +27,7 @@ test_results.xml
 src_files.txt
 scratch/
 bot.lock
+bot.pid
 
 # Local databases and caches
 *.db
