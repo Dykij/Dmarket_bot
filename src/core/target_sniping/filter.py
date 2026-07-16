@@ -158,6 +158,7 @@ class _FilterMixin(_FilterEvaluatorMixin):
         # v14.4: Fractional Kelly position sizing
         # Kelly formula: f* = win_rate - (1 - win_rate) / win_loss_ratio
         # Half Kelly = 0.5 * f* (reduced drawdown, same growth direction)
+        # v15.8: Bayesian win rate + EWMA volatility adjustment
         kelly_risk_pct = float(Config.MAX_POSITION_RISK_PCT)
         if Config.KELLY_ENABLED and hasattr(self, "risk") and self.risk is not None:
             try:
@@ -166,11 +167,40 @@ class _FilterMixin(_FilterEvaluatorMixin):
                 wlr = getattr(risk_state, "win_loss_ratio", 1.5) or 1.5
                 win_rate = max(0.30, min(0.80, wr))
                 win_loss_ratio = max(1.0, wlr)
-                kelly_f = win_rate - (1.0 - win_rate) / win_loss_ratio
-                kelly_risk_pct = max(
-                    float(Config.KELLY_FLOOR_PCT),
-                    kelly_f * 100.0 * float(Config.KELLY_FRACTION),
-                )
+
+                # v15.8: Try Bayesian Kelly with EWMA volatility adjustment
+                try:
+                    from src.analysis.algo_pack.bayesian_stats import BetaDistribution
+                    from src.analysis.algo_pack.ewma import adaptive_kelly_fraction
+
+                    # Build Beta distribution from risk state
+                    total_wins = getattr(risk_state, "total_wins", 0) or 0
+                    total_losses = getattr(risk_state, "total_losses", 0) or 0
+                    beta_dist = BetaDistribution(alpha=2.0 + total_wins, beta=2.0 + total_losses)
+
+                    # Get price history for volatility estimation
+                    price_hist = price_db.get_recent_prices(title, days=7)
+                    prices = [p for p, _ in price_hist] if price_hist else []
+
+                    # Adaptive Kelly: Bayesian win rate + EWMA volatility
+                    kelly_f = adaptive_kelly_fraction(
+                        win_rate=beta_dist.mean,
+                        win_loss_ratio=win_loss_ratio,
+                        prices=prices,
+                        base_fraction=float(Config.KELLY_FRACTION),
+                    )
+                    kelly_risk_pct = max(
+                        float(Config.KELLY_FLOOR_PCT),
+                        kelly_f * 100.0,
+                    )
+                except Exception:
+                    # Fallback to standard Kelly
+                    kelly_f = win_rate - (1.0 - win_rate) / win_loss_ratio
+                    kelly_risk_pct = max(
+                        float(Config.KELLY_FLOOR_PCT),
+                        kelly_f * 100.0 * float(Config.KELLY_FRACTION),
+                    )
+
                 # Cap by the hard position limit and the dynamic item price cap
                 kelly_risk_pct = min(kelly_risk_pct, float(Config.MAX_POSITION_RISK_PCT))
             except Exception as e:

@@ -360,6 +360,27 @@ class _FilterEvaluatorMixin:
             except (ValueError, TypeError):
                 pass
 
+        # v15.8: Ternary search for optimal sell price
+        # Uses price history to find the discount that maximizes expected profit.
+        # Only adjusts UPWARD (never lowers the list_price from value detection).
+        try:
+            from src.analysis.algo_pack.sell_optimizer import find_optimal_sell_price
+            from src.db.price_history import price_db as _pdb
+            hist = _pdb.get_recent_prices(ctx.title, days=30)
+            if hist and len(hist) >= 10:
+                prices = [p for p, _ in hist]
+                optimal = find_optimal_sell_price(
+                    fair_price=ctx.list_price,
+                    cost_price=ctx.base_price,
+                    fee_rate=0.05,
+                    price_history=prices,
+                )
+                # Only adjust if the optimal price is HIGHER and reasonable
+                if optimal > ctx.list_price and optimal > ctx.base_price * 1.02:
+                    ctx.list_price = optimal
+        except Exception:
+            pass  # fallback to original list_price
+
     def _stage_fee_and_caps(
         self,
         ctx: EvalContext,
