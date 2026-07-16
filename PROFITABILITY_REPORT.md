@@ -2,7 +2,7 @@
 
 ## Simulation Metadata
 - **Mode**: Sandbox (Dry Run)
-- **Strategy**: Value Detection Scanner v14.9
+- **Strategy**: Value Detection Scanner v15.7
 - **Oracle**: MultiSourceOracle (free oracles)
 
 ## Observations

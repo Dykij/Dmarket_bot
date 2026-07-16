@@ -113,7 +113,7 @@ class EventDetector:
                 event = CS2Event(
                     event_type="new_case",
                     title=f"New item: {item['title']}",
-                    description=f"Recently added item with high activity",
+                    description="Recently added item with high activity",
                     detected_at=now,
                     impact_estimate=-5.0,  # new items typically depress existing prices
                     affected_categories=[item["title"]],
@@ -209,7 +209,6 @@ class EventDetector:
         self, existing: list[CS2Event], new: list[CS2Event]
     ) -> list[CS2Event]:
         """Merge new events with existing, deduplicate, expire old ones."""
-        now = time.time()
         # Remove expired events
         active = [e for e in existing if e.is_active]
 

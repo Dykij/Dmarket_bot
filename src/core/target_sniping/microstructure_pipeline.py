@@ -12,12 +12,10 @@ enabled checks in order and returns a MicrostructureResult.
 from __future__ import annotations
 
 import logging
-import os
 from dataclasses import dataclass, field
 from typing import Any
 
 from src.config import Config
-from src.db.price_history import price_db
 from src.core.target_sniping.validations import (
     check_adverse_selection,
     check_cvd_vpin,
