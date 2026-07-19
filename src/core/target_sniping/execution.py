@@ -75,7 +75,7 @@ class _ExecutionMixin:
                             f"${current_balance:.2f} total (${equity_now['frozen']:.2f} frozen in TP holds)"
                         )
             except Exception as e:
-                logger.debug(f"Risk equity update failed: {e}")
+                logger.warning(f"Risk equity update failed (using raw balance): {e}")
 
         logger.info(
             f"Executing INSTANT BUY for {len(instant_buys)} items (Strategy A)..."

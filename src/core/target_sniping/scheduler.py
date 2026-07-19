@@ -100,7 +100,11 @@ class _SchedulerMixin:
                 # Main trading loop
                 while self.running:
                     for game_id in self.target_games:
-                        await self.run_cycle(game_id)
+                        try:
+                            await self.run_cycle(game_id)
+                        except Exception as e:
+                            logger.error(f"[CYCLE] run_cycle failed for {game_id}: {e}", exc_info=True)
+                            await asyncio.sleep(5)  # Brief pause before retry
 
                     cycle_count += 1
                     _write_heartbeat()

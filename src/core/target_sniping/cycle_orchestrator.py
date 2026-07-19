@@ -150,7 +150,7 @@ class CycleOrchestrator:
         # Float/phase scan (every 5 cycles)
         if self.deep_scan_counter % 5 == 0:
             try:
-                fp_items = await self._fetch_float_phase_listings(ctx.game_id)
+                fp_items = await self._fetch_float_filtered_listings(ctx.game_id)
                 for cand in fp_items:
                     if cand.get("itemId") not in seen:
                         seen.add(cand.get("itemId"))
@@ -233,7 +233,10 @@ class CycleOrchestrator:
         from src.core.target_sniping.ranking import rank_candidates_by_spread
 
         max_price_cap = min(ctx.effective_balance, ctx.dynamic_max_price)
-        rank_candidates_by_spread(ctx.items, ctx.agg_prices, max_price_usd=max_price_cap)
+        ranked = rank_candidates_by_spread(ctx.items, ctx.agg_prices, max_price_usd=max_price_cap)
+        if ranked:
+            ranked_titles = {t for t, _ in ranked}
+            ctx.items.sort(key=lambda it: ranked.index((it.get("title", ""), 0)) if (it.get("title", ""), 0) in ranked else 999)
 
         raw_inv = price_db.get_virtual_inventory(status="idle", only_unlocked=False)
         sat_counts: dict[str, int] = {}
@@ -260,7 +263,7 @@ class CycleOrchestrator:
 
         results = await asyncio.gather(*[_eval(it) for it in candidates], return_exceptions=True)
         for r in results:
-            if isinstance(r, dict) and r.get("action") == "buy":
+            if isinstance(r, dict) and r.get("buy_offer"):
                 ctx.instant_buys.append(r)
             elif isinstance(r, Exception):
                 logger.debug(f"[EVAL] candidate failed: {r}")

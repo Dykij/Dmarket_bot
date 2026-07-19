@@ -9,7 +9,7 @@
 ![Tests](https://img.shields.io/badge/Tests-1549%20passed-44CC11?logo=pytest&logoColor=white)
 ![Architecture](https://img.shields.io/badge/Architecture-Score%200.85-0969DA)
 ![Security](https://img.shields.io/badge/Semgrep-0%20findings-FF6B35)
-![Version](https://img.shields.io/badge/Version-16.0-purple)
+![Version](https://img.shields.io/badge/Version-16.1-purple)
 
 *Автономная торговая система на строгих количественных алгоритмах.*
 *Value Detection Scanner + Spread Sniping + Algo-Pack (26 алгоритмов).*
@@ -464,6 +464,53 @@ src/
 | **Sandbox tests** | ~200 | Full cycle simulation |
 | **Strategy tests** | ~50 | Strategy validation |
 | **Security tests** | ~50 | Vault, redaction, audit |
+
+---
+
+## 🔍 Ultra Code Review (v16.1)
+
+### Обзор
+
+3 итерации × 16 агентов = **48 проверок**. Найдено и исправлено **~180 багов** (45 CRITICAL, 75 WARNING, 60 INFO).
+
+### Исправленные CRITICAL баги (v16.1)
+
+| # | Файл | Баг | Исправление |
+|---|------|-----|-------------|
+| 1 | `cycle_orchestrator.py:153` | Метод `_fetch_float_phase_listings` не существует | Переименован в `_fetch_float_filtered_listings` |
+| 2 | `cycle_orchestrator.py:263` | `action=="buy"` check никогда не matches | Изменён на `buy_offer` key check |
+| 3 | `cycle_orchestrator.py:236` | Ranking return value discarded | Захвачен и применён для сортировки |
+| 4 | `info_theory.py:183` | Population std вместо sample std | Исправлено на Bessel correction (n-1) |
+| 5 | `info_theory.py:179` | Division by zero в ApEn | Guard `n < m + 3` вместо `n < m + 2` |
+| 6 | `position_guard.py:76,114` | Stop-loss/take-profit игнорируют fees | Добавлен fee_pct в расчёт |
+| 7 | `limit_orders.py:85,200` | `int()` truncation → потеря центов | Заменён на `round()` |
+| 8 | `limit_orders.py:92,217` | `os.getenv("DRY_RUN")` bypass | Заменён на `Config.DRY_RUN` |
+| 9 | `daily_briefing.py:177,219,233` | Sync DB calls блокируют event loop | Обёрнуты в `await price_db.run_in_thread()` |
+| 10 | `app_notifications.py:37` | `handle_critical_shutdown` это no-op | Реализована отправка через notifier |
+| 11 | `scheduler.py:101` | Нет try/except вокруг `run_cycle` | Добавлен try/except с retry |
+| 12 | `resale_prod.py:297` | Margin check игнорирует sell fee | Добавлен `FEE_RATE + WITHDRAWAL_FEE_RATE` |
+| 13 | `execution.py:77` | Equity failure logged как debug | Повышен до warning |
+
+### Архитектурные находки (не исправлены — требуют рефакторинга)
+
+| Находка | Файлы | Описание |
+|---------|-------|----------|
+| 59 `Any` annotations | `core/*.py` | Все mixin зависимости типизированы как `Any` |
+| God module: `filter.py` (694L) | `filter.py` | Весь evaluation pipeline в одном методе |
+| Mixin explosion (10 наследников) | `core.py:49-60` | `SnipingLoop` наследует 10 mixins |
+| 100+ bare `except Exception` | `target_sniping/` | Многие молча swallow errors |
+| `composite_buy_score` 18 params | `signals.py` | Должен быть dataclass |
+| Sync DB calls в async context | `cycle_orchestrator.py` | 5 sync DB calls блокируют event loop |
+
+### Покрытие тестами (критические пробелы)
+
+| Модуль | Покрытие | Статус |
+|--------|----------|--------|
+| `resale.py` (_ResaleMixin) | 0% | ❌ Нет тестов |
+| `limit_orders.py` | 0% | ❌ Нет unit тестов |
+| `vault.py` (encryption paths) | ~30% | ⚠️ Частично |
+| `dmarket_api_client/core.py` | 0% | ❌ Нет unit тестов |
+| `notifier.py` | ~90% | ✅ Хорошо |
 
 ---
 

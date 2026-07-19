@@ -36,4 +36,10 @@ class NotificationManager:
 
     async def handle_critical_shutdown(self, reason: str = "") -> None:
         """Send critical shutdown notification."""
-        pass
+        try:
+            from src.telegram.notifier import notifier
+            msg = f"🔴 <b>CRITICAL SHUTDOWN</b>\n{reason}" if reason else "🔴 <b>CRITICAL SHUTDOWN</b>\nNo reason specified"
+            await notifier.custom(msg, severity="critical")
+        except Exception as e:
+            import logging
+            logging.getLogger("NotificationManager").error(f"Failed to send critical shutdown notification: {e}")

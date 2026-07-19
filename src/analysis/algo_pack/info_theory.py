@@ -176,11 +176,12 @@ class InformationTheorySignals:
             r = self.APEN_R
 
         n = len(data)
-        if n < m + 2:
+        if n < m + 3:
             return 0.0
 
-        # Tolerance: r × std
-        std = math.sqrt(sum((x - sum(data) / n) ** 2 for x in data) / n)
+        # Tolerance: r × std (sample std with Bessel correction)
+        mean_val = sum(data) / n
+        std = math.sqrt(sum((x - mean_val) ** 2 for x in data) / (n - 1))
         r_tolerance = r * std if std > 0 else 1e-10
 
         def _count_matches(template_len: int) -> int:
@@ -207,6 +208,10 @@ class InformationTheorySignals:
             if c_m > 0 and c_m1 == 0:
                 n_pairs = (n - m) * (n - m - 1) if n > m + 1 else 1
                 return math.log(max(n_pairs, 1)) - math.log(max(c_m, 1))
+            # FIX W4: When c_m == 0 but c_m1 > 0, extremely irregular signal
+            if c_m == 0 and c_m1 > 0:
+                norm_m1 = (n - m - 1) * (n - m - 2) if n > m + 2 else 1
+                return math.log(max(norm_m1, 1)) - math.log(max(c_m1, 1))
             return 0.0
 
         # ApEn = ln(c_m / c_m1)

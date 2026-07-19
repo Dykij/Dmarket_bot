@@ -2,6 +2,40 @@
 
 All notable changes to this project will be documented in this file.
 
+## [16.1] - 2026-07-19
+
+### Fixed — Ultra Code Review (48 agent runs, ~180 bugs)
+
+**Pipeline-Breaking Fixes:**
+- `cycle_orchestrator.py`: Fixed method name `_fetch_float_phase_listings` → `_fetch_float_filtered_listings`
+- `cycle_orchestrator.py`: Fixed `action=="buy"` check → `buy_offer` key check (items now reach execution)
+- `cycle_orchestrator.py`: Ranking return value now captured and applied for evaluation ordering
+- `cycle_orchestrator.py`: Added missing `oracle` + `current_balance` params to `_eval` call
+
+**Financial Safety Fixes:**
+- `position_guard.py`: Stop-loss/take-profit now include sell-side fees in calculation
+- `limit_orders.py`: Fixed `int()` → `round()` for price cents (prevents off-by-one cent loss)
+- `limit_orders.py`: Fixed `os.getenv("DRY_RUN")` → `Config.DRY_RUN` (prevents bypass)
+- `resale_prod.py`: Margin check now includes `FEE_RATE + WITHDRAWAL_FEE_RATE`
+- `execution.py`: Equity failure log level raised from debug to warning
+
+**Async/DB Safety Fixes:**
+- `daily_briefing.py`: Wrapped 3 sync DB calls in `await price_db.run_in_thread()`
+- `scheduler.py`: Added try/except around `run_cycle` (prevents single error from killing bot)
+- `app_notifications.py`: Implemented `handle_critical_shutdown` (was a no-op)
+
+**Algorithm Fixes:**
+- `info_theory.py`: Fixed population std → sample std (Bessel correction) for ApEn
+- `info_theory.py`: Fixed division by zero guard `n < m + 2` → `n < m + 3`
+- `info_theory.py`: Fixed asymmetric c_m==0 handling in ApEn
+
+### Architecture Findings (documented, not fixed)
+- 59 `Any` type annotations in `core/` mixins
+- `filter.py` god module (694 lines)
+- 100+ bare `except Exception` blocks
+- `composite_buy_score` has 18 positional parameters
+- `resale.py` and `limit_orders.py` have 0% test coverage
+
 ## [16.0] - 2026-07-17
 
 ### Added

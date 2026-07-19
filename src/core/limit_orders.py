@@ -82,14 +82,14 @@ class _LimitOrderMixin:
 
             targets_to_place.append({
                 "title": title,
-                "price": {"amount": str(int(target_price * 100)), "currency": "USD"},
+                "price": {"amount": str(round(target_price * 100)), "currency": "USD"},
                 "game_id": game_id,
             })
 
         if not targets_to_place:
             return 0
 
-        is_dry = os.getenv("DRY_RUN", "true").lower() == "true"
+        is_dry = Config.DRY_RUN
         if is_dry:
             logger.info(
                 f"[LIMIT] Would place {len(targets_to_place)} buy target(s): "
@@ -197,7 +197,7 @@ class _LimitOrderMixin:
             margin = (cs_ask - target_price) / target_price if target_price > 0 else 0.0
             candidates.append({
                 "title": title,
-                "price": {"amount": str(int(target_price * 100)), "currency": "USD"},
+                "price": {"amount": str(round(target_price * 100)), "currency": "USD"},
                 "game_id": game_id,
                 "target_price": target_price,
                 "margin": margin,
@@ -214,7 +214,7 @@ class _LimitOrderMixin:
         for t in targets_to_place:
             self._placed_cross_targets.add(t["title"])
 
-        is_dry = os.getenv("DRY_RUN", "true").lower() == "true"
+        is_dry = Config.DRY_RUN
         if is_dry:
             logger.info(
                 f"[CROSS-MARKET TARGET] Would place {len(targets_to_place)} buy target(s): "

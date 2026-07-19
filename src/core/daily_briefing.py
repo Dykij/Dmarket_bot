@@ -174,7 +174,7 @@ class DailyBriefingScheduler:
             sold_today = (await price_db.run_in_thread(sold_today_cur.fetchone))["c"]
 
             # 2. Compute delta vs yesterday (if snapshot exists)
-            snapshots = price_db.get_equity_snapshots(days=2)
+            snapshots = await price_db.run_in_thread(price_db.get_equity_snapshots, days=2)
             yesterday_total = snapshots[-2]["total"] if len(snapshots) >= 2 else None
             delta_str = ""
             if yesterday_total is not None and yesterday_total > 0:
@@ -216,7 +216,7 @@ class DailyBriefingScheduler:
                     )
 
             # 4. Risk events today
-            events = price_db.get_risk_events_today()
+            events = await price_db.run_in_thread(price_db.get_risk_events_today)
             if events:
                 msg_lines.append("")
                 msg_lines.append(f"⚠️ <b>Risk events today: {len(events)}</b>")
@@ -230,7 +230,8 @@ class DailyBriefingScheduler:
             # 5. Record equity snapshot FIRST (so a Telegram failure
             # doesn't lose the data).
             try:
-                price_db.record_equity_snapshot(
+                await price_db.run_in_thread(
+                    price_db.record_equity_snapshot,
                     cash=equity["cash"],
                     assets=equity["assets"],
                     total=equity["total"],

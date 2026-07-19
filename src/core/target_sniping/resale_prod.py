@@ -294,7 +294,7 @@ class _ResaleProdMixin:
             if cs_price <= buy_price:
                 # Oracle says price <= what we paid; skip (no point listing)
                 continue
-            target_sell = buy_price * (1 + LIST_MIN_MARGIN_PCT / 100.0)
+            target_sell = buy_price * (1 + LIST_MIN_MARGIN_PCT / 100.0 + Config.FEE_RATE + Config.WITHDRAWAL_FEE_RATE)
             if cs_price < target_sell:
                 # Not enough margin after fees
                 continue
@@ -307,9 +307,6 @@ class _ResaleProdMixin:
                     mid_price = cs_price
                     if bid_snap and bid_snap.has_data:
                         mid_price = (ask_snap.min_price + bid_snap.max_bid) / 2.0
-                    len(price_db.get_virtual_inventory(
-                        status="idle", only_unlocked=False,
-                    ))
                     same_item = len([
                         x for x in price_db.get_virtual_inventory(
                             status="idle", only_unlocked=False,

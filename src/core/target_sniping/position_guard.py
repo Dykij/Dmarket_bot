@@ -74,7 +74,10 @@ class _PositionGuardMixin:
                 continue
 
             loss_pct = ((buy_price - current_price) / buy_price) * 100.0
-            if loss_pct >= STOP_LOSS_PCT:
+            # Include sell-side fees in loss calculation for accurate trigger
+            fee_pct = (Config.FEE_RATE + Config.WITHDRAWAL_FEE_RATE) * 100.0
+            realized_loss_pct = loss_pct + fee_pct
+            if realized_loss_pct >= STOP_LOSS_PCT:
                 logger.warning(
                     f"[STOP-LOSS] {it['hash_name']}: "
                     f"bought ${buy_price:.2f}, now ${current_price:.2f} "
@@ -112,7 +115,10 @@ class _PositionGuardMixin:
                 continue
 
             profit_pct = ((current_price - buy_price) / buy_price) * 100.0
-            if profit_pct >= TAKE_PROFIT_PCT:
+            # Include sell-side fees in profit calculation for accurate trigger
+            fee_pct = (Config.FEE_RATE + Config.WITHDRAWAL_FEE_RATE) * 100.0
+            realized_profit_pct = profit_pct - fee_pct
+            if realized_profit_pct >= TAKE_PROFIT_PCT:
                 logger.info(
                     f"[TAKE-PROFIT] {it['hash_name']}: "
                     f"bought ${buy_price:.2f}, now ${current_price:.2f} "
