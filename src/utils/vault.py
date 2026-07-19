@@ -1,3 +1,4 @@
+from src.config import Config
 import base64
 import logging
 import os
@@ -48,7 +49,7 @@ class VaultProvider:
                 logger.info("Successfully connected to Production Vault.")
                 return
 
-        is_production = os.getenv("DRY_RUN", "true").lower() == "false"
+        is_production = not Config.DRY_RUN
 
         enc_key = os.getenv("ENCRYPTION_KEY", "").strip()
         if enc_key and Fernet is not None:
@@ -107,11 +108,11 @@ class VaultProvider:
             test_data = b"vault_test"
             if fernet.decrypt(fernet.encrypt(test_data)) == test_data:
                 return fernet
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Fernet init failed with provided key: {e}")
 
         # If all else fails, generate a random one (dev mode only)
-        if os.getenv("DRY_RUN", "true").lower() != "false":
+        if Config.DRY_RUN:
             new_key = Fernet.generate_key()
             logger.warning("Generated new random ENCRYPTION_KEY for dev mode (key masked)")
             return Fernet(new_key)
@@ -124,11 +125,23 @@ class VaultProvider:
     def _encrypt(self, plaintext: str) -> bytes:
         if self._fernet:
             return self._fernet.encrypt(plaintext.encode("utf-8"))
+        # In production without Fernet, refuse to store secrets unencrypted
+        if not Config.DRY_RUN:
+            raise RuntimeError(
+                "Cannot encrypt secret: no Fernet key available. "
+                "Set ENCRYPTION_KEY in .env or connect to Vault."
+            )
         return plaintext.encode("utf-8")
 
     def _decrypt(self, data: bytes) -> str:
         if self._fernet:
             return self._fernet.decrypt(data).decode("utf-8")
+        # In production without Fernet, refuse to decrypt
+        if not Config.DRY_RUN:
+            raise RuntimeError(
+                "Cannot decrypt secret: no Fernet key available. "
+                "Set ENCRYPTION_KEY in .env or connect to Vault."
+            )
         return data.decode("utf-8")
 
     def get_dmarket_secret(self) -> str:
