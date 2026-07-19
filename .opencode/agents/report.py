@@ -145,6 +145,7 @@ Was this finding useful?
         "correctness", "security", "performance", "architecture",
         "domain", "test_coverage", "async_safety", "db_safety",
         "api_safety", "config_safety", "error_recovery", "duplication",
+        "kelly_sizing", "fee_calculation", "drawdown_monitor",
     ]:
         count = agent_counts.get(agent, 0)
         status = "✅" if count > 0 else "❌"
