@@ -183,8 +183,15 @@ def main():
     )
     parser.add_argument(
         "--diff",
-        required=True,
-        help="Git diff content",
+        required=False,
+        default=None,
+        help="Git diff content (inline)",
+    )
+    parser.add_argument(
+        "--diff-file",
+        required=False,
+        default=None,
+        help="Path to file containing git diff",
     )
     parser.add_argument(
         "--output",
@@ -193,7 +200,16 @@ def main():
     )
     args = parser.parse_args()
 
-    run_agent(args.agent, args.files, args.diff, args.output)
+    # Load diff from file if provided, otherwise use inline diff
+    if args.diff_file:
+        with open(args.diff_file) as f:
+            diff = f.read()
+    elif args.diff:
+        diff = args.diff
+    else:
+        raise ValueError("Either --diff or --diff-file must be provided")
+
+    run_agent(args.agent, args.files, diff, args.output)
 
 
 if __name__ == "__main__":
