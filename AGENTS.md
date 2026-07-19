@@ -145,6 +145,17 @@ When a task is large, multi-faceted, or crosses several subsystems, **decompose 
 - `general` for multi-step research or execution tasks.
 - `scout` for external docs / dependency research.
 
+### ⚠️ Ultra Code Review = ALL 16 Agents (MANDATORY)
+
+When user requests "Ultra Code Review", "Code Review в режиме Ультра", "ultra review":
+- **ALWAYS** launch ALL 16 agents across 3 batches
+- **NEVER** stop at 6 or 12 agents
+- Batch 1 (6 agents): Correctness, Security, Performance, Architecture, Domain, Test Coverage
+- Batch 2 (6 agents): Async Safety, DB Safety, API Safety, Config Safety, Error Recovery, Duplication
+- Batch 3 (4 agents): Architecture Deep, Algorithm Complexity, Pipeline Flow, Financial Instruments
+- If rate-limited: reduce parallelism but STILL complete ALL agents
+- Skill file: `.opencode/skills/deep-code-review/SKILL.md`
+
 ---
 
 ## ⚠️ Git Workflow & Quality Gates (MANDATORY)
