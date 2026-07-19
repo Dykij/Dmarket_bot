@@ -261,13 +261,17 @@ class HMMRegimeDetector:
         )
 
     def _forward_backward(self, returns: list[float]) -> float:
-        """Forward-backward algorithm for log-likelihood computation."""
+        """Forward-backward algorithm for log-likelihood computation.
+        
+        Stores per-timestep forward probabilities in self._gamma for M-step.
+        """
         n = len(returns)
         K = self.N_STATES
 
-        # Forward pass
+        # Forward pass — store per-timestep normalized forward probs
         log_likelihood = 0.0
         alpha = list(self.params.pi)
+        self._gamma: list[list[float]] = []  # per-timestep state probs
 
         for t in range(n):
             # Emission probabilities
@@ -296,28 +300,28 @@ class HMMRegimeDetector:
             else:
                 alpha = [1.0 / K] * K
 
+            # Store normalized forward probs for this timestep
+            self._gamma.append(list(alpha))
+
         return log_likelihood
 
     def _update_params(self, returns: list[float]) -> None:
-        """M-step: update transition and emission parameters."""
+        """M-step: update transition and emission parameters.
+        
+        Uses per-timestep forward probabilities (gamma) from _forward_backward.
+        """
         n = len(returns)
         K = self.N_STATES
+        gamma = self._gamma  # per-timestep state probabilities from E-step
 
-        # Simplified update: re-estimate means and stds
-        # from state-weighted data
+        # Update means and stds from state-weighted data
         for s in range(K):
-            # Weight by forward probability
             weighted_sum = 0.0
             weighted_sq_sum = 0.0
             weight_total = 0.0
 
             for t in range(n):
-                # Compute state probability at time t
-                z = (returns[t] - self.params.means[s]) / max(self.params.stds[s], 1e-6)
-                emit = math.exp(-0.5 * z * z) / (max(self.params.stds[s], 1e-6) * math.sqrt(2 * math.pi))
-
-                # Weight = forward probability × emission
-                w = self._forward_probs[s] * emit
+                w = gamma[t][s]  # per-timestep weight for state s
                 weighted_sum += w * returns[t]
                 weighted_sq_sum += w * returns[t] ** 2
                 weight_total += w
@@ -331,13 +335,22 @@ class HMMRegimeDetector:
                 self.params.means[s] = 0.7 * self.params.means[s] + 0.3 * new_mean
                 self.params.stds[s] = 0.7 * self.params.stds[s] + 0.3 * new_std
 
-        # Update transition matrix (simplified)
-        # Count transitions weighted by state probabilities
+        # Update transition matrix using per-timestep posteriors
         counts = [[0.0] * K for _ in range(K)]
         for t in range(n - 1):
             for i in range(K):
                 for j in range(K):
-                    counts[i][j] += self._forward_probs[i] * self._forward_probs[j]
+                    # gamma[t][i] = P(state=i at t), transition[i][j] = P(j|i)
+                    counts[i][j] += gamma[t][i] * self.params.transition[i][j]
+            # Normalize by the total probability at t+1
+            total_p = sum(
+                sum(gamma[t][ii] * self.params.transition[ii][jj] for ii in range(K))
+                for jj in range(K)
+            )
+            if total_p > 1e-10:
+                for i in range(K):
+                    for j in range(K):
+                        counts[i][j] /= total_p
 
         # Normalize rows
         for i in range(K):

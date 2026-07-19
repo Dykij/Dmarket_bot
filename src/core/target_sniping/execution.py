@@ -391,6 +391,7 @@ class _ExecutionMixin:
                             "offerId": item_id,
                             "price": {"amount": str(round(risk_check.adjusted_size_usd * 100)), "currency": "USD"},
                         }
+                        base_price = risk_check.adjusted_size_usd  # Update local variable
 
                 # v12.5: capture the new row_id so we can attach dm_item_id
                 # in production (or leave it empty in DRY).

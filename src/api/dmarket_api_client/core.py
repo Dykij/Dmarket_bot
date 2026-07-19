@@ -297,7 +297,8 @@ class DMarketAPIClient(  # type: ignore[misc]
         # v12.9: Decrypt the secret on the fly (zeroed after use)
         raw_secret = self._decrypt_secret()
         if not raw_secret and not self._vault_redacted:
-            raw_secret = self.secret_key
+            # SECURITY FIX: Don't fall back to plaintext key — raise instead
+            raise RuntimeError("Failed to decrypt secret and vault not redacted. Cannot sign.")
 
         # Try Rust first (microsecond precision)
         if self._has_rust_signer and raw_secret:

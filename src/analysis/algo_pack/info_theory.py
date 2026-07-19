@@ -96,9 +96,9 @@ class InformationTheorySignals:
         if normalized < 0.4:
             regime = "trending"
         elif normalized > 0.75:
-            regime = "mean_reverting"
-        else:
             regime = "random"
+        else:
+            regime = "mean_reverting"
 
         # 5. Predictability (inverse of entropy)
         predictability = 1.0 - normalized

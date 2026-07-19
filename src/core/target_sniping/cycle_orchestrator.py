@@ -235,8 +235,14 @@ class CycleOrchestrator:
         max_price_cap = min(ctx.effective_balance, ctx.dynamic_max_price)
         ranked = rank_candidates_by_spread(ctx.items, ctx.agg_prices, max_price_usd=max_price_cap)
         if ranked:
-            ranked_titles = {t for t, _ in ranked}
-            ctx.items.sort(key=lambda it: ranked.index((it.get("title", ""), 0)) if (it.get("title", ""), 0) in ranked else 999)
+            try:
+                ranked_titles = {t for t, _ in ranked}
+                ctx.items.sort(key=lambda it: next(
+                    (i for i, (t, _) in enumerate(ranked) if t == it.get("title", "")),
+                    len(ranked)
+                ))
+            except (ValueError, TypeError):
+                pass  # ranked format unexpected, skip sorting
 
         raw_inv = price_db.get_virtual_inventory(status="idle", only_unlocked=False)
         sat_counts: dict[str, int] = {}

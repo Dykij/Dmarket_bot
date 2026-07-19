@@ -138,9 +138,9 @@ def bayesian_kelly(
     """
     # Use 80% credible lower bound (conservative)
     wr = win_dist.conservative_estimate(0.80)
-    wlr = max(win_loss_ratio, 1.0)
+    wlr = win_loss_ratio  # Don't clamp — let kelly_f go negative if wlr < 1
 
-    kelly_f = wr - (1 - wr) / wlr
+    kelly_f = wr - (1 - wr) / max(wlr, 0.01)  # Guard against division by zero
     return max(0.0, kelly_f * fraction)
 
 

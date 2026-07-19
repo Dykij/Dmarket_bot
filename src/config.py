@@ -326,6 +326,11 @@ class Config(BaseSettings):
     DRAWDOWN_PENALTY_WEIGHT: float = Field(default=0.5, ge=0.0)
     OBJECTIVE_FUNCTION: str = "sharpe_adjusted"
 
+    # --- Ornstein-Uhlenbeck Mean-Reversion ---
+    OU_ENTRY_Z_SCORE: float = Field(default=-1.5, le=0.0)
+    OU_STOP_Z_SCORE: float = Field(default=-3.0, le=0.0)
+    OU_MIN_R_SQUARED: float = Field(default=0.3, ge=0.0, le=1.0)
+
     # --- Backward Compatibility Aliases ---
     @property
     def TOD_ENABLED(self) -> bool:

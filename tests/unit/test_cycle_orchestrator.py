@@ -181,7 +181,7 @@ class TestStageEvaluate:
         orch = _make_orchestrator()
         mock_db.get_virtual_inventory.return_value = []
 
-        buy_result = {"action": "buy", "title": "AK-47", "base_price": 10.0}
+        buy_result = {"buy_offer": {"offerId": "test"}, "title": "AK-47", "base_price": 10.0}
         orch._evaluate_candidate = AsyncMock(return_value=buy_result)
 
         ctx = _make_ctx()
@@ -195,7 +195,7 @@ class TestStageEvaluate:
             result = await CycleOrchestrator._stage_evaluate(orch, ctx)
 
         assert len(result.instant_buys) == 1
-        assert result.instant_buys[0]["action"] == "buy"
+        assert "buy_offer" in result.instant_buys[0]
 
     @pytest.mark.asyncio
     @patch("src.core.target_sniping.cycle_orchestrator.price_db")
