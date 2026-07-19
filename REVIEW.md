@@ -1,64 +1,73 @@
-# Review Instructions — DMarket Trading Bot
+# Code Review Instructions — DMarket Bot
 
 ## What Important means here
 
-Reserve Important for findings that would break behavior, leak data,
-or block a rollback:
-- Incorrect trading logic (wrong fee calc, missing balance check)
-- SQL injection or hardcoded secrets
-- Race conditions in order placement
-- Drawdown freeze bypass
-- Financial loss potential ($1+ per trade)
+Reserve Important for findings that would:
+- Lose real money (negative trades, fee miscalculation, balance bypass)
+- Break production (crash, data corruption, API failure)
+- Compromise security (secret leakage, injection, auth bypass)
+- Violate trading invariants (drawdown freeze bypass, idempotency failure)
 
-Style, naming, and refactoring suggestions are Nit at most.
+Style, naming, formatting, and refactoring suggestions are Nit at most.
+
+## Severity mapping
+
+| Finding type | Severity |
+|-------------|----------|
+| Financial loss | IMPORTANT |
+| Production crash | IMPORTANT |
+| Security vulnerability | IMPORTANT |
+| Performance issue (O(n²)) | IMPORTANT |
+| Missing error handling | IMPORTANT |
+| Code duplication | NIT |
+| Style/naming | NIT |
+| Missing documentation | NIT |
+| Suggestion | NIT |
 
 ## Cap the nits
 
-Report at most five Nits per review. If you found more, say "plus N
-similar items" in the summary instead of posting them inline. If
-everything you found is a Nit, lead the summary with "No blocking
-issues."
+Report at most 5 Nits per review. If you found more, say "plus N similar items" in the summary instead of posting them inline. If everything you found is a Nit, lead the summary with "No blocking issues."
 
 ## Do not report
 
-- Anything CI already enforces: lint, formatting, type errors
-- Generated files under `src/gen/` and any `*.lock` file
+- Anything CI already enforces: lint, formatting, type errors (ruff, ty)
+- Generated files (`.opencode/agents/prompts/*.txt`)
 - Test-only code that intentionally violates production rules
-- `__pycache__/`, `.mypy_cache/`, `.ruff_cache/`
-- `node_modules/`, `vendor/`, `third_party/`
+- Pre-existing issues that existed before this PR
 
 ## Always check
 
-- New API routes have an integration test
-- Log lines don't include email addresses, user IDs, or request bodies
-- Database queries are parameterized (no f-strings in SQL)
 - Balance is checked BEFORE every trade
-- Drawdown freeze is respected (balance < 85% of peak → no buys)
-- Kelly sizing uses Half Kelly (50%), never full Kelly
-- All trades have idempotent client_order_id
-- Rate limiting is respected (10 req/s DMarket API)
-- Error handling doesn't swallow exceptions silently
-- Async code doesn't have blocking calls (time.sleep, requests, open())
-
-## Re-review behavior
-
-After the first review, suppress new Nits and post Important findings only.
-This prevents round-7 on style alone.
+- Drawdown freeze is enforced (>15% drawdown → only sells)
+- Kelly sizing uses Half-Kelly with 3%/10% bounds
+- Both buy AND sell fees are accounted in margin calculation
+- Idempotency keys are used for all orders
+- Circuit breaker halts after 5 consecutive failures
+- API rate limits are respected (10 req/s DMarket)
+- Secrets are not logged or hardcoded
+- SQL queries use parameterized statements
 
 ## Verification bar
 
-Each finding MUST include:
-- file:line reference to SOURCE code (not just naming)
-- Direct code citation supporting the claim
-- NOT: "this function looks like it might..."
-- YES: "line 142: `if balance:` — missing zero-check"
+Require evidence before posting a finding:
+- Must have exact file:line reference
+- Must explain the trigger condition
+- Must explain the financial/production impact
+- "This might be wrong" is NOT a finding
 
-## Domain-specific rules
+## Re-review convergence
 
-This is a CS2 skin trading bot. Flag as Important:
-- Any code path that could lose real money
-- Missing balance validation before trade execution
-- Incorrect fee calculation (buy fee OR sell fee missing)
-- Race conditions in concurrent order placement
-- Stale price data used for trade decisions
-- Missing idempotency on order creation
+After the first review:
+- Suppress new Nits
+- Post only Important findings
+- Auto-resolve threads where the fix is correct
+
+## Summary format
+
+Lead with a one-line tally: "3 Important, 2 Nits"
+If no Important issues: "No blocking issues found"
+
+## Output: inline comments
+
+Post findings as inline comments on the specific lines where issues were found.
+Use GitHub API to create review comments with suggestion blocks when possible.
