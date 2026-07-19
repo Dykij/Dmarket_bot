@@ -3,6 +3,7 @@ name: Deep Code Review (MiMo V2.5 Pro)
 on:
   pull_request:
     types: [opened, synchronize]
+  workflow_dispatch:
 
 permissions:
   contents: read
