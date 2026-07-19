@@ -43,13 +43,23 @@ jobs:
             echo "Looking for open PR on branch: $BRANCH"
             PR_NUM=$(gh pr list --repo "${{ github.repository }}" \
               --head "$BRANCH" --state open --json number \
-              --jq '.[0].number // empty')
+              --jq '.[0].number // empty' 2>&1) || {
+              echo "::warning::Failed to detect PR: $PR_NUM"
+              echo "found=false" >> $GITHUB_OUTPUT
+              exit 0
+            }
             if [ -z "$PR_NUM" ]; then
               echo "::warning::No open PR found for branch $BRANCH. Skipping comment."
               echo "found=false" >> $GITHUB_OUTPUT
               exit 0
             fi
             echo "PR number from branch lookup: $PR_NUM"
+          fi
+          # Validate PR number is a positive integer
+          if ! [[ "$PR_NUM" =~ ^[0-9]+$ ]] || [ "$PR_NUM" -le 0 ]; then
+            echo "::warning::Invalid PR number: $PR_NUM"
+            echo "found=false" >> $GITHUB_OUTPUT
+            exit 0
           fi
           echo "pr_number=$PR_NUM" >> $GITHUB_OUTPUT
           echo "found=true" >> $GITHUB_OUTPUT
@@ -69,6 +79,12 @@ jobs:
 
           # Save diff to file (avoids single-quote escaping issues)
           git diff origin/main...HEAD > /tmp/review_diff.txt
+
+          # Validate diff file
+          if [ ! -s /tmp/review_diff.txt ]; then
+            echo "::error::Failed to generate diff or diff is empty"
+            exit 1
+          fi
           echo "diff_file=/tmp/review_diff.txt" >> $GITHUB_OUTPUT
 
           # Save stats
@@ -241,40 +257,66 @@ jobs:
           script: |
             const fs = require('fs');
             const report = fs.readFileSync('report.md', 'utf8');
-            const prNumber = parseInt('${{ steps.pr.outputs.pr_number }}');
+            // Sanitize PR number: extract only digits
+            const prRaw = '${{ steps.pr.outputs.pr_number }}';
+            const prNumber = parseInt(prRaw.replace(/[^0-9]/g, ''), 10);
             
-            if (!prNumber || isNaN(prNumber)) {
-              console.log('No PR number found, skipping comment');
+            if (!prNumber || isNaN(prNumber) || prNumber <= 0) {
+              console.log('No valid PR number found, skipping comment');
               return;
             }
             
             console.log(`Posting review to PR #${prNumber}`);
             
+            // Retry helper with exponential backoff
+            async function withRetry(fn, maxRetries = 3, delay = 1000) {
+              for (let i = 0; i < maxRetries; i++) {
+                try {
+                  return await fn();
+                } catch (error) {
+                  if (i < maxRetries - 1) {
+                    const retryAfter = error.headers?.['retry-after'] || delay;
+                    console.log(`Retry ${i + 1}/${maxRetries} after ${retryAfter}ms...`);
+                    await new Promise(r => setTimeout(r, retryAfter));
+                    delay *= 2;
+                  } else {
+                    throw error;
+                  }
+                }
+              }
+            }
+            
             // Find existing comment
-            const comments = await github.rest.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: prNumber,
-            });
+            const comments = await withRetry(() =>
+              github.rest.issues.listComments({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+              })
+            );
             
             const existing = comments.data.find(c => c.body.includes('Deep Code Review'));
             
             if (existing) {
               console.log(`Updating existing comment ${existing.id}`);
-              await github.rest.issues.updateComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                comment_id: existing.id,
-                body: report
-              });
+              await withRetry(() =>
+                github.rest.issues.updateComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: existing.id,
+                  body: report
+                })
+              );
             } else {
               console.log('Creating new comment');
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: prNumber,
-                body: report
-              });
+              await withRetry(() =>
+                github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: prNumber,
+                  body: report
+                })
+              );
             }
             
             console.log('Review comment posted successfully');
