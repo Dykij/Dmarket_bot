@@ -9,10 +9,10 @@
 ![Tests](https://img.shields.io/badge/Tests-1549%20passed-44CC11?logo=pytest&logoColor=white)
 ![Architecture](https://img.shields.io/badge/Architecture-Score%200.85-0969DA)
 ![Security](https://img.shields.io/badge/Semgrep-0%20findings-FF6B35)
-![Version](https://img.shields.io/badge/Version-15.9-purple)
+![Version](https://img.shields.io/badge/Version-16.0-purple)
 
 *Автономная торговая система на строгих количественных алгоритмах.*
-*Value Detection Scanner + Spread Sniping + Algo-Pack (20 алгоритмов).*
+*Value Detection Scanner + Spread Sniping + Algo-Pack (26 алгоритмов).*
 
 </div>
 
@@ -149,9 +149,20 @@ score = net_margin × √(ask_count + bid_count)
 
 ## 🧮 Алгоритмы (algo_pack)
 
-Пакет из **20 алгоритмов**, реализованных в `src/analysis/algo_pack/` и `src/analysis/microstructure/`. Источники: CP-Algorithms, arXiv, Habr, GeeksforGeeks, RiskMetrics, Reddit r/algotrading, QuantStrategy, Springer.
+Пакет из **26 алгоритмов**, реализованных в `src/analysis/algo_pack/` и `src/analysis/microstructure/`. Источники: CP-Algorithms, arXiv, Habr, GeeksforGeeks, RiskMetrics, Reddit r/algotrading, QuantStrategy, Springer.
 
-### v15.9: Новые алгоритмы (добавлены 16.07.2026)
+### v16.0: Новые алгоритмы (добавлены 17.07.2026)
+
+| # | Алгоритм | Файл | Формула | Внедрено в | Что делает |
+|---|---|---|---|---|---|
+| 16 | **GARCH(1,1)** | `algo_pack/garch.py` | `σ²_t = ω + α × ε²_{t-1} + β × σ²_{t-1}` | `filter.py` (Kelly), Risk | Volatility forecasting — замена EWMA для >30 наблюдений |
+| 17 | **HMM Regime (4-state)** | `algo_pack/hmm_regime.py` | Baum-Welch + Viterbi decoding | `filter.py` (CRISIS gate), `ranking.py` | CRISIS/BEAR/RECOVERY/BULL — блокирует покупки при CRISIS |
+| 18 | **Ornstein-Uhlenbeck** | `algo_pack/ou_process.py` | `dX = θ(μ - X)dt + σdW` | `microstructure_pipeline.py` | Mean-reversion сигналы (Z-score entry/exit) |
+| 19 | **Event-Driven** | `algo_pack/event_driven.py` | CS2 Major calendar + seasonal | `filter.py` (seasonal timing) | Pre-event accumulation, сезонные паттерны |
+| 20 | **Pair Trading** | `algo_pack/pair_trading.py` | Engle-Granger cointegration | `filter.py` (cross-market) | Cointegration-based арбитраж между correlated items |
+| 21 | **Information Theory** | `algo_pack/info_theory.py` | Shannon Entropy, Approximate Entropy | `microstructure_pipeline.py` | Regime detection, signal quality measurement |
+
+### v15.9: Алгоритмы
 
 | # | Алгоритм | Файл | Формула | Внедрено в | Что делает |
 |---|---|---|---|---|---|
@@ -176,21 +187,24 @@ score = net_margin × √(ask_count + bid_count)
 | 7 | **Binary Search** | `spread_optimizer.py` | Адаптивный MIN_SPREAD из trade history | Параметры |
 | 8 | **Dual EWMA Vol** | `ewma.py` | Volatility regime (expanding/contracting) | Risk |
 
-### v15.9: Обновлённый пайплайн
+### v16.0: Обновлённый пайплайн
 
 ```
-Current Pipeline (v15.9):
+Current Pipeline (v16.0):
   Scanner
     → Rank(spread × √vol × regime_mult × trend_LIS × bollinger × hurst)
     │   ← Markov + LIS + Bollinger squeeze + Hurst regime
+    │   ← HMM 4-state regime (CRISIS/BEAR/RECOVERY/BULL)
     → Filter(21 microstructure + regime-adjusted)
     │   ← OBI, OFI, VWAP, VPIN, CVD, Queue Imbalance
     │   ← Hawkes (ажиотаж block), Bollinger (overbought block)
     │   ← DEMA (bearish block), MACD (bearish block)
-    │   ← Hurst (informational)
-    → BayesianKelly(EWMA-vol-adjusted)                   ← Bayesian + EWMA
+    │   ← Hurst (informational), OU Process (mean-reversion)
+    │   ← HMM CRISIS gate (hard block all buys)
+    │   ← Event-Driven (seasonal timing adjustment)
+    → BayesianKelly(GARCH-vol-adjusted)                      ← Bayesian + GARCH
     → ValueDetection(float, pattern, sticker)
-    → TernaryOptimalSellPrice                            ← Ternary Search
+    → TernaryOptimalSellPrice                               ← Ternary Search
     → FeeEval + Caps
     → Execute
 ```
@@ -381,7 +395,7 @@ src/
 │   └── autonomous_scanner.py      # Background scanner
 │
 ├── analysis/
-│   ├── algo_pack/                  # v15.9: 20 algorithms
+│   ├── algo_pack/                  # v16.0: 26 algorithms
 │   │   ├── __init__.py
 │   │   ├── sell_optimizer.py       # Ternary Search
 │   │   ├── trend_strength.py       # LIS (Longest Increasing Subsequence)
@@ -390,7 +404,13 @@ src/
 │   │   ├── regime_detector.py      # Markov Chain Regime + Hurst Exponent
 │   │   ├── bayesian_stats.py       # Beta Distribution + Bayesian Kelly
 │   │   ├── spread_optimizer.py     # Binary Search for MIN_SPREAD
-│   │   └── hawkes.py              # v15.9: Hawkes Process (ажиотаж detection)
+│   │   ├── hawkes.py              # Hawkes Process (ажиотаж detection)
+│   │   ├── garch.py               # v16.0: GARCH(1,1) Volatility Forecasting
+│   │   ├── hmm_regime.py          # v16.0: HMM 4-State Regime Detection
+│   │   ├── ou_process.py          # v16.0: Ornstein-Uhlenbeck Mean-Reversion
+│   │   ├── event_driven.py        # v16.0: Event-Driven Strategy (CS2 Major, Steam Sale)
+│   │   ├── pair_trading.py        # v16.0: Pair Trading (Cointegration)
+│   │   └── info_theory.py         # v16.0: Information Theory (Entropy, MI)
 │   ├── microstructure/             # OBI, OFI, VWAP, VPIN, Bollinger, etc.
 │   ├── seasonal.py                 # Seasonal timing
 │   └── stickers_evaluator.py       # Sticker value calculation
@@ -535,6 +555,40 @@ curl http://localhost:8080/metrics       # Prometheus metrics
 
 ---
 
+## 🔧 Ultra Code Review — v16.0 (19.07.2026)
+
+Проведён полный **Ultra Code Review** (5 итераций, 6 параллельных агентов). Найдено и исправлено **9 багов**:
+
+### Исправленные баги
+
+| # | Файл | Severity | Описание |
+|---|---|---|---|
+| 1 | `execution.py:71` | 🔴 CRITICAL | `equity_now["available"]` accessed outside `isinstance(dict)` check — potential TypeError crash |
+| 2 | `execution.py:414` | 🟡 WARNING | `item_data['best_bid']` without `.get()` — KeyError if key missing |
+| 3 | `resale_prod.py:159` | 🔴 CRITICAL | Unheld `asyncio.create_task` — task GC'd before completion, silent exception loss |
+| 4 | `resale_prod.py:433` | 🔴 CRITICAL | Unheld `asyncio.create_task` — same GC risk for listing notifications |
+| 5 | `autonomous_scanner.py:241` | 🟡 WARNING | Unheld `asyncio.create_task` — Telegram alert GC'd before send |
+| 6 | `position_guard.py:261` | 🟡 WARNING | Redundant `dict(item)` conversion (both branches identical) |
+| 7 | `resale_dry.py:50` | 🔴 CRITICAL | Unheld `asyncio.create_task` — sell notification GC'd before send |
+| 8 | `workflow/chains.py:109` | 🟡 WARNING | Unheld `asyncio.create_task` — enqueue task GC'd before completion |
+| 9 | `core.py:174` | 🟡 WARNING | `ctx.current_balance` accessed in except block before ctx is populated |
+
+### Паттерн исправления (asyncio.create_task)
+
+Все unheld tasks исправлены по единому паттерну:
+```python
+# BEFORE (GC risk):
+asyncio.create_task(notifier.sell(...))
+
+# AFTER (safe):
+_task = asyncio.create_task(notifier.sell(...))
+self._background_tasks = getattr(self, '_background_tasks', set())
+self._background_tasks.add(_task)
+_task.add_done_callback(self._background_tasks.discard)
+```
+
+---
+
 ## 📄 Лицензия
 
 Proprietary. All rights reserved.
@@ -543,6 +597,6 @@ Proprietary. All rights reserved.
 
 <div align="center">
 
-🦅 *DMarket Quantitative Engine | v15.9 | July 2026*
+🦅 *DMarket Quantitative Engine | v16.0 | July 2026*
 
 </div>

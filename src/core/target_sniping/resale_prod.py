@@ -68,17 +68,17 @@ class _ResaleProdMixin:
                 avg_row = await price_db.run_in_thread(avg_row.fetchone)
                 if avg_row and avg_row["p"]:
                     inferred_price = float(avg_row["p"])
+                # v15.10: Single INSERT with dm_item_id to avoid phantom rows on crash
                 cursor_obj = await price_db.run_in_thread(
                     price_db.state_conn.execute,
                     "INSERT INTO virtual_inventory "
-                    "(hash_name, buy_price, status, acquired_at, unlock_at) "
-                    "VALUES (?, ?, 'idle', ?, ?)",
-                    (title, inferred_price, time.time(), time.time()),
+                    "(hash_name, buy_price, status, acquired_at, unlock_at, dm_item_id) "
+                    "VALUES (?, ?, 'idle', ?, ?, ?)",
+                    (title, inferred_price, time.time(), time.time(), dm_item_id),
                 )
                 new_id = await price_db.run_in_thread(
                     lambda c: c.lastrowid, cursor_obj
                 )
-                price_db.attach_dm_item_id(int(new_id), dm_item_id)
                 new_count += 1
             cursor = resp.get("cursor")
             if not cursor or len(items) < 50:
@@ -156,7 +156,8 @@ class _ResaleProdMixin:
                 f"Buy: ${it['buy_price']:.2f} → Sell: ${sell_price:.2f} "
                 f"| PnL: ${profit:+.2f}"
             )
-            asyncio.create_task(
+            # v15.10 FIX: Store task reference to prevent GC before completion
+            _task = asyncio.create_task(
                 notifier.sell(
                     title=it["hash_name"],
                     buy_price_usd=float(it["buy_price"] or 0),
@@ -164,6 +165,9 @@ class _ResaleProdMixin:
                     profit_usd=profit,
                 )
             )
+            self._background_tasks = getattr(self, '_background_tasks', set())
+            self._background_tasks.add(_task)
+            _task.add_done_callback(self._background_tasks.discard)
             # v12.5: record sell outcome in risk manager (positive PnL)
             if hasattr(self, "risk"):
                 try:
@@ -430,7 +434,8 @@ class _ResaleProdMixin:
                     logger.info(
                         f"[LIST] {title} @ ${lp:.2f} (offerId={offer_id[:12]}...)"
                     )
-                    asyncio.create_task(
+                    # v15.10 FIX: Store task reference to prevent GC before completion
+                    _task = asyncio.create_task(
                         notifier.buy(  # reuse buy() helper; it just announces
                             title=f"LISTED: {title}",
                             price_usd=bp,
@@ -438,6 +443,9 @@ class _ResaleProdMixin:
                             strategy="resale",
                         )
                     )
+                    self._background_tasks = getattr(self, '_background_tasks', set())
+                    self._background_tasks.add(_task)
+                    _task.add_done_callback(self._background_tasks.discard)
                 else:
                     err_msg = (err or "no offerId in response")[:200]
                     price_db.mark_list_failed(row_id, err_msg)
