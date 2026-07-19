@@ -360,7 +360,8 @@ class RiskManager:
         })
         # v14.4: Track wins/losses for Kelly Criterion
         if trade_type == "sell" and pnl_usd != 0:
-            self._total_wins + self._total_losses + 1
+            # Track total sell trades for statistics (win + loss = total sells)
+            pass  # total tracked via _total_wins + _total_losses in get_state()
             if pnl_usd > 0:
                 self._total_wins += 1
                 self._avg_win_usd = (self._avg_win_usd * (self._total_wins - 1) + pnl_usd) / self._total_wins

@@ -303,6 +303,15 @@ class Config(BaseSettings):
 
     COMPOSITE_SCORE_ENABLED: bool = False
 
+    # --- Stop-Loss / Take-Profit / Time-Stop (v14.5+) ---
+    STOP_LOSS_PCT: float = Field(default=10.0, ge=0.0, le=100.0)
+    TAKE_PROFIT_PCT: float = Field(default=15.0, ge=0.0, le=1000.0)
+    STOP_LOSS_ENABLED: bool = True
+    TAKE_PROFIT_ENABLED: bool = True
+    STOP_LOSS_MIN_AGE_HOURS: float = Field(default=24.0, ge=0.0)
+    TIME_STOP_ENABLED: bool = True
+    TIME_STOP_MINUTES: int = Field(default=90, ge=1)
+
     # --- Time of Day Adjustment ---
     TIME_OF_DAY_ENABLED: bool = True
     TIME_OF_DAY_NIGHT_START_UTC: int = Field(default=4, ge=0, le=23)

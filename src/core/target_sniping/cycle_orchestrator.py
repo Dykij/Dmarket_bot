@@ -273,24 +273,19 @@ class CycleOrchestrator:
             return ctx
 
         logger.info(f"[EXECUTE] {len(ctx.instant_buys)} candidates to buy")
-        for buy in ctx.instant_buys:
-            try:
-                # v15.2: Re-check balance before EACH buy
-                ctx.balance_during = await self.client.get_real_balance()
-                effective_now = max(0.0, ctx.balance_during - Config.BALANCE_RESERVE_USD)
+        # v15.2: Re-check balance before execution batch
+        ctx.balance_during = await self.client.get_real_balance()
+        effective_now = max(0.0, ctx.balance_during - Config.BALANCE_RESERVE_USD)
 
-                if buy["base_price"] > effective_now:
-                    logger.warning(
-                        f"[BALANCE] Insufficient for {buy['title']}: "
-                        f"${buy['base_price']:.2f} > ${effective_now:.2f} effective. Skipping."
-                    )
-                    continue
-
-                await self._execute_buy(buy, ctx.game_id, effective_now)
-                ctx.total_spent += buy["base_price"]
-
-            except Exception as e:
-                logger.warning(f"[EXECUTE] buy failed: {e}")
+        try:
+            await self._execute_instant_buys(
+                instant_buys=ctx.instant_buys,
+                current_balance=effective_now,
+                game_id=ctx.game_id,
+            )
+            ctx.total_spent += sum(b.get("base_price", 0.0) for b in ctx.instant_buys)
+        except Exception as e:
+            logger.warning(f"[EXECUTE] instant buys failed: {e}")
 
         return ctx
 

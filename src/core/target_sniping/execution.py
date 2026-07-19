@@ -178,6 +178,8 @@ class _ExecutionMixin:
                 _total_equity = {"count": 0, "assets": 0.0}
         _cumulative_count = _total_equity["count"]
         _cumulative_value = _total_equity["assets"]
+        # FIX: Fetch existing inventory ONCE before loop (eliminates N+1 DB query)
+        _existing_held_all = await price_db.run_in_thread(price_db.get_virtual_inventory, "idle")
         for item_data in verified_buys:
             if _cumulative_count >= Config.MAX_TOTAL_INVENTORY_ITEMS:
                 logger.warning(
@@ -194,9 +196,8 @@ class _ExecutionMixin:
                 continue
             # Saturation check: limit same-item holdings
             _held_count = len([x for x in _pre_buy_filtered if x["title"] == item_data["title"]])
-            # Also count existing holdings from DB
-            _existing_held = await price_db.run_in_thread(price_db.get_virtual_inventory, "idle")
-            _existing_count = len([x for x in _existing_held if x["hash_name"] == item_data["title"]])
+            # Also count existing holdings from DB (uses pre-fetched inventory)
+            _existing_count = len([x for x in _existing_held_all if x["hash_name"] == item_data["title"]])
             if _held_count + _existing_count >= Config.MAX_SAME_ITEM_HOLDINGS:
                 logger.warning(
                     f"[SATURATION] Already holding {_existing_count}x {item_data['title']} "

@@ -557,21 +557,34 @@ curl http://localhost:8080/metrics       # Prometheus metrics
 
 ## 🔧 Ultra Code Review — v16.0 (19.07.2026)
 
-Проведён полный **Ultra Code Review** (5 итераций, 6 параллельных агентов). Найдено и исправлено **9 багов**:
+Проведён полный **Ultra Code Review** (5 итераций, все 6 агентов: Correctness, Security, Performance, Architecture, Domain, Test Coverage). Найдено и исправлено **14 багов**:
 
-### Исправленные баги
+### Исправленные баги (Iteration 1 — Critical Fixes)
 
 | # | Файл | Severity | Описание |
 |---|---|---|---|
-| 1 | `execution.py:71` | 🔴 CRITICAL | `equity_now["available"]` accessed outside `isinstance(dict)` check — potential TypeError crash |
-| 2 | `execution.py:414` | 🟡 WARNING | `item_data['best_bid']` without `.get()` — KeyError if key missing |
-| 3 | `resale_prod.py:159` | 🔴 CRITICAL | Unheld `asyncio.create_task` — task GC'd before completion, silent exception loss |
-| 4 | `resale_prod.py:433` | 🔴 CRITICAL | Unheld `asyncio.create_task` — same GC risk for listing notifications |
-| 5 | `autonomous_scanner.py:241` | 🟡 WARNING | Unheld `asyncio.create_task` — Telegram alert GC'd before send |
-| 6 | `position_guard.py:261` | 🟡 WARNING | Redundant `dict(item)` conversion (both branches identical) |
-| 7 | `resale_dry.py:50` | 🔴 CRITICAL | Unheld `asyncio.create_task` — sell notification GC'd before send |
-| 8 | `workflow/chains.py:109` | 🟡 WARNING | Unheld `asyncio.create_task` — enqueue task GC'd before completion |
-| 9 | `core.py:174` | 🟡 WARNING | `ctx.current_balance` accessed in except block before ctx is populated |
+| 1 | `config.py` | 🔴 CRITICAL | Missing `STOP_LOSS_PCT`, `TAKE_PROFIT_PCT`, `STOP_LOSS_ENABLED`, `TAKE_PROFIT_ENABLED`, `STOP_LOSS_MIN_AGE_HOURS`, `TIME_STOP_ENABLED`, `TIME_STOP_MINUTES` fields — startup crash |
+| 2 | `risk_manager.py:363` | 🔴 CRITICAL | Dead code: `self._total_wins + self._total_losses + 1` — result discarded (expression evaluated but not assigned) |
+| 3 | `cycle_orchestrator.py:289` | 🔴 CRITICAL | `_execute_buy()` method does not exist in SnipingLoop — runtime AttributeError crash |
+| 4 | `filter_evaluator.py:228` | 🔴 CRITICAL | `evaluate_cross_market_arb()` always called with `cs_bids=None` — cross-market arb never works in new pipeline |
+| 5 | `execution.py:196-199` | 🟡 WARNING | N+1 query: `get_virtual_inventory("idle")` called inside loop for each item — O(n) DB calls per cycle |
+| 6 | `execution.py:331` | 🟡 WARNING | Redundant `get_total_equity()` call inside post-buy loop |
+| 7 | `resale_prod.py:159` | 🔴 CRITICAL | Unheld `asyncio.create_task` — task GC'd before completion |
+| 8 | `resale_prod.py:433` | 🔴 CRITICAL | Unheld `asyncio.create_task` — same GC risk for listing notifications |
+| 9 | `resale_dry.py:50` | 🔴 CRITICAL | Unheld `asyncio.create_task` — sell notification GC'd before send |
+| 10 | `autonomous_scanner.py:241` | 🟡 WARNING | Unheld `asyncio.create_task` — Telegram alert GC'd before send |
+| 11 | `position_guard.py:261` | 🟡 WARNING | Redundant `dict(item)` conversion |
+| 12 | `workflow/chains.py:109` | 🟡 WARNING | Unheld `asyncio.create_task` — enqueue task GC'd |
+| 13 | `core.py:174` | 🟡 WARNING | `ctx.current_balance` accessed in except block before ctx populated |
+| 14 | `execution.py:71` | 🔴 CRITICAL | `equity_now["available"]` accessed outside `isinstance(dict)` check |
+
+### Новые модули (v16.0)
+
+| Модуль | Файл | Описание |
+|---|---|---|
+| **TWAP Executor** | `src/strategies/twap.py` | Time-Weighted Average Price — anti-slippage execution for large orders (qty >= 5). Splits orders into slices over time. |
+| **Canary A/B Testing** | `src/strategies/canary_mode.py` | A/B testing framework for strategy variants. Split capital CONTROL/TREATMENT, z-test significance, Cohen's h effect size. |
+| **Sticker Premium Cache** | `src/core/target_sniping/sticker_cache.py` | Two-tier sticker evaluation: luxury rejection (Katowice 2014) + mid-range premium (Souvenir Major, Holo). |
 
 ### Паттерн исправления (asyncio.create_task)
 

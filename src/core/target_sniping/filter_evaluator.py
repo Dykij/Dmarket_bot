@@ -155,6 +155,7 @@ class _FilterEvaluatorMixin:
         self,
         ctx: EvalContext,
         agg_prices: dict[str, dict[str, Any]],
+        cs_bids: dict[str, Any] | None = None,
     ) -> bool:
         """Stage 2: Microstructure filters. Returns False if rejected."""
         from src.core.target_sniping.validations import (
@@ -225,7 +226,7 @@ class _FilterEvaluatorMixin:
                 if not roll["pass"]:
                     return False
 
-        cross = evaluate_cross_market_arb(ctx.title, ctx.best_ask, None)
+        cross = evaluate_cross_market_arb(ctx.title, ctx.best_ask, cs_bids)
         ctx.cross_market_provider = cross.get("provider")
         ctx.cross_market_bid = cross.get("bid", 0.0)
 
