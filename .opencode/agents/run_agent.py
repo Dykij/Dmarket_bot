@@ -26,6 +26,10 @@ AGENTS = [
     "config_safety",
     "error_recovery",
     "duplication",
+    # Trading-specific agents
+    "kelly_sizing",
+    "fee_calculation",
+    "drawdown_monitor",
 ]
 
 
