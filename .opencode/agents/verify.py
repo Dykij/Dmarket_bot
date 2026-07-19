@@ -166,10 +166,20 @@ def main():
     parser = argparse.ArgumentParser(description="Verify Code Review findings")
     parser.add_argument("--input", required=True, help="Input deduped JSON file")
     parser.add_argument("--output", required=True, help="Output verified JSON file")
-    parser.add_argument("--diff", required=True, help="Git diff content")
+    parser.add_argument("--diff", required=False, default=None, help="Git diff content (inline)")
+    parser.add_argument("--diff-file", required=False, default=None, help="Path to file containing git diff")
     args = parser.parse_args()
 
-    verify_findings(args.input, args.output, args.diff)
+    # Load diff from file if provided, otherwise use inline diff
+    if args.diff_file:
+        with open(args.diff_file) as f:
+            diff = f.read()
+    elif args.diff:
+        diff = args.diff
+    else:
+        raise ValueError("Either --diff or --diff-file must be provided")
+
+    verify_findings(args.input, args.output, diff)
 
 
 if __name__ == "__main__":
