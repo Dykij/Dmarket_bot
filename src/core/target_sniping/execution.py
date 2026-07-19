@@ -16,6 +16,7 @@ from typing import Any
 
 from src.config import Config
 from src.db.price_history import price_db
+from src.strategies.twap import TWAPExecutor
 from src.telegram.notifier import notifier
 
 logger = logging.getLogger("SnipingBot")
@@ -27,6 +28,20 @@ class _ExecutionMixin:
     # These attributes are set on the instance by SnipingLoop.__init__
     client: Any  # DMarketAPIClient
     liquidity: Any  # LiquidityManager
+
+    # v15.10: TWAP executor for anti-slippage on large orders
+    _twap_executor: TWAPExecutor | None = None
+
+    def _get_twap_executor(self) -> TWAPExecutor:
+        """Lazy-init TWAP executor."""
+        if self._twap_executor is None:
+            self._twap_executor = TWAPExecutor(
+                client=self.client,
+                max_slices=int(os.getenv("TWAP_MAX_SLICES", "5")),
+                min_interval_seconds=float(os.getenv("TWAP_MIN_INTERVAL_S", "30")),
+                max_slippage_pct=float(os.getenv("TWAP_MAX_SLIPPAGE_PCT", "5.0")),
+            )
+        return self._twap_executor
 
     async def _simulate_network_latency(self, client_type: str = "dmarket") -> None: ...  # type: ignore[empty-body]
     def _maybe_inject_error(self, method_name: str) -> None: ...  # type: ignore[empty-body]
@@ -45,17 +60,20 @@ class _ExecutionMixin:
 
         # v13.1: Calculate available balance (excludes frozen TP-held funds)
         available_balance = current_balance
+        _cached_equity = None  # BUG-15 FIX: Cache equity to avoid redundant DB calls
         if hasattr(self, "risk"):
             try:
-                price_db.release_expired_funds()
-                equity_now = price_db.get_total_equity(current_balance)
-                self.risk._update_equity(equity_now["total"])
-                available_balance = equity_now["available"]
-                if equity_now["frozen"] > 0:
-                    logger.info(
-                        f"[FUNDS] ${available_balance:.2f} available / "
-                        f"${current_balance:.2f} total (${equity_now['frozen']:.2f} frozen in TP holds)"
-                    )
+                await price_db.run_in_thread(price_db.release_expired_funds)
+                equity_now = await price_db.run_in_thread(price_db.get_total_equity, current_balance)
+                if isinstance(equity_now, dict):
+                    _cached_equity = equity_now  # Cache for pre-buy cap check below
+                    self.risk._update_equity(equity_now["total"])
+                    available_balance = equity_now["available"]
+                    if equity_now["frozen"] > 0:
+                        logger.info(
+                            f"[FUNDS] ${available_balance:.2f} available / "
+                            f"${current_balance:.2f} total (${equity_now['frozen']:.2f} frozen in TP holds)"
+                        )
             except Exception as e:
                 logger.debug(f"Risk equity update failed: {e}")
 
@@ -103,8 +121,8 @@ class _ExecutionMixin:
                         return None
                 return item_data
             except Exception as e:
-                logger.debug(f"Slippage check failed for {item_data.get('title', '?')}: {e}")
-                return item_data  # proceed on check failure
+                logger.warning(f"Slippage check failed for {item_data.get('title', '?')}: {e}")
+                return None  # fail-closed: block buy when verification fails
 
         results = await asyncio.gather(
             *[_check_slippage(d) for d in instant_buys], return_exceptions=True
@@ -119,7 +137,7 @@ class _ExecutionMixin:
             return
 
         # v14.9: Pre-trade risk check (PROD path, runs before purchase)
-        is_dry = os.getenv("DRY_RUN", "true").lower() == "true"
+        is_dry = Config.DRY_RUN
         if not is_dry:
             pre_checked = []
             for item_data in verified_buys:
@@ -136,7 +154,8 @@ class _ExecutionMixin:
                             f"{risk_check.reason}"
                         )
                         with contextlib.suppress(Exception):
-                            price_db.record_risk_event(
+                            await price_db.run_in_thread(
+                                price_db.record_risk_event,
                                 "pre_trade_block", "warning",
                                 f"{item_data['title']} @ ${item_data['base_price']:.2f}: {risk_check.reason}",
                             )
@@ -147,10 +166,62 @@ class _ExecutionMixin:
                 logger.info("[RISK] All buys blocked by pre-trade check.")
                 return
 
+        # FIX: Inventory cap checks BEFORE buy API call with cumulative tracking
+        # Query equity ONCE, then track cumulative spend to prevent TOCTOU
+        _pre_buy_filtered = []
+        # BUG-15 FIX: Use cached equity from risk update above (avoid redundant DB call)
+        if isinstance(_cached_equity, dict):
+            _total_equity = _cached_equity
+        else:
+            _total_equity = await price_db.run_in_thread(price_db.get_total_equity, 0.0)
+            if not isinstance(_total_equity, dict):
+                _total_equity = {"count": 0, "assets": 0.0}
+        _cumulative_count = _total_equity["count"]
+        _cumulative_value = _total_equity["assets"]
+        for item_data in verified_buys:
+            if _cumulative_count >= Config.MAX_TOTAL_INVENTORY_ITEMS:
+                logger.warning(
+                    f"[INV-CAP] Already holding {_cumulative_count}/{Config.MAX_TOTAL_INVENTORY_ITEMS} items. "
+                    f"Skipping {item_data['title']}."
+                )
+                continue
+            if _cumulative_value + item_data["base_price"] > Config.MAX_TOTAL_INVENTORY_VALUE:
+                logger.warning(
+                    f"[INV-CAP] Inventory value ${_cumulative_value:.2f} + "
+                    f"${item_data['base_price']:.2f} > ${Config.MAX_TOTAL_INVENTORY_VALUE:.2f} cap. "
+                    f"Skipping {item_data['title']}."
+                )
+                continue
+            # Saturation check: limit same-item holdings
+            _held_count = len([x for x in _pre_buy_filtered if x["title"] == item_data["title"]])
+            # Also count existing holdings from DB
+            _existing_held = await price_db.run_in_thread(price_db.get_virtual_inventory, "idle")
+            _existing_count = len([x for x in _existing_held if x["hash_name"] == item_data["title"]])
+            if _held_count + _existing_count >= Config.MAX_SAME_ITEM_HOLDINGS:
+                logger.warning(
+                    f"[SATURATION] Already holding {_existing_count}x {item_data['title']} "
+                    f"(cap: {Config.MAX_SAME_ITEM_HOLDINGS}). Skipping."
+                )
+                continue
+            _cumulative_count += 1
+            _cumulative_value += item_data["base_price"]
+            _pre_buy_filtered.append(item_data)
+        verified_buys = _pre_buy_filtered
+        if not verified_buys:
+            logger.info("[INV-CAP] All buys filtered by inventory cap.")
+            return
+
         await self._simulate_network_latency()
         self._maybe_inject_error("buy_items")
         buy_payloads = [item["buy_offer"] for item in verified_buys]
-        buy_response = await self.client.buy_items(buy_payloads)
+        # BUG-12 FIX: Catch CircuitOpenError — circuit breaker blocked the request
+        try:
+            buy_response = await self.client.buy_items(buy_payloads)
+        except Exception as e:
+            if "CircuitOpen" in type(e).__name__ or "circuit" in str(e).lower():
+                logger.warning("[CB] Buy blocked by circuit breaker — skipping cycle")
+                return
+            raise
 
         # v12.3: DMarket returns 200 OK with `status: 'TxFailed'` and
         # `dmOffersFailReason: {code: 'OfferNotFound'}` if the listing was
@@ -173,14 +244,29 @@ class _ExecutionMixin:
                             bought_items.append({
                                 "itemId": str(it["itemId"]),
                                 "title": it.get("title", ""),
+                                # BUG-3 FIX: Store offerId from response if available
+                                "offerId": it.get("offerId", ""),
                             })
                     if bought_items:
                         break
             if status and status != "TxFailed":
-                # All offers succeeded
-                successful_titles = {
-                    item_data["title"] for item_data in verified_buys
-                }
+                # v15.10: Always check per-offer status, not just top-level.
+                # DMarket can return partial success with non-TxFailed status.
+                dm_offers_status = buy_response.get("dmOffersStatus", {}) or {}
+                if dm_offers_status:
+                    # Per-offer granularity available — use it
+                    for offer_id, info in dm_offers_status.items():
+                        if info.get("started") or info.get("success"):
+                            for item_data in verified_buys:
+                                if item_data["buy_offer"].get("offerId") == offer_id:
+                                    successful_titles.add(item_data["title"])
+                                    break
+                else:
+                    # No per-offer status — only assume success if status is not TxFailed
+                    if status != "TxFailed":
+                        successful_titles = {
+                            item_data["title"] for item_data in verified_buys
+                        }
             else:
                 # Inspect dmOffersStatus to find successes
                 dm_offers_status = buy_response.get("dmOffersStatus", {}) or {}
@@ -208,7 +294,7 @@ class _ExecutionMixin:
                 f"bought_items={len(bought_items)}"
             )
 
-        is_dry = os.getenv("DRY_RUN", "true").lower() == "true"
+        is_dry = Config.DRY_RUN
 
         for item_data in verified_buys:
             title = item_data["title"]
@@ -218,45 +304,53 @@ class _ExecutionMixin:
             is_rare = item_data.get("is_rare", False)
             best_bid = item_data.get("best_bid", 0.0)
             best_ask = item_data.get("best_ask", 0.0)
+            # v15.10: Use actual buy→sell spread, not bid-ask (which is negative)
             item_margin = (
-                (best_bid - best_ask) / best_ask
-                if best_ask > 0
+                (list_price - base_price) / base_price
+                if base_price > 0
                 else 0.0
             )
 
             new_dm_item_id = ""
+            # FIX: Match by offerId (unique) instead of title (can have duplicates)
             for bi in bought_items:
-                if bi["title"] == title and bi["itemId"]:
+                if bi.get("offerId") == item_data.get("buy_offer", {}).get("offerId") and bi.get("itemId"):
                     new_dm_item_id = bi["itemId"]
                     break
+            # Fallback: match by title if offerId not available
+            if not new_dm_item_id:
+                for bi in bought_items:
+                    if bi["title"] == title and bi.get("itemId"):
+                        new_dm_item_id = bi["itemId"]
+                        break
 
-            # v14.5: Inventory cap checks (apply in both DRY and PROD)
-            total_equity = price_db.get_total_equity(0.0)
-            current_held_value = total_equity["assets"]
-            current_held_count = total_equity["count"]
-            if current_held_count >= Config.MAX_TOTAL_INVENTORY_ITEMS:
-                logger.warning(
-                    f"[INV-CAP] Already holding {current_held_count}/{Config.MAX_TOTAL_INVENTORY_ITEMS} items. Skipping {title}."
-                )
-                continue
-            if current_held_value + base_price > Config.MAX_TOTAL_INVENTORY_VALUE:
-                logger.warning(
-                    f"[INV-CAP] Inventory value ${current_held_value:.2f} + ${base_price:.2f} > ${Config.MAX_TOTAL_INVENTORY_VALUE:.2f} cap. Skipping {title}."
-                )
-                continue
+            # BUG-11 FIX: Post-buy inventory check — WARNING ONLY (items already bought).
+            # Pre-buy cap check (lines 167-188) already enforced. Skipping local
+            # recording here would create phantom inventory (bought on DMarket but untracked).
+            try:
+                total_equity = await price_db.run_in_thread(price_db.get_total_equity, 0.0)
+                if isinstance(total_equity, dict):
+                    current_held_value = total_equity.get("assets", 0.0)
+                    current_held_count = total_equity.get("count", 0)
+                    if current_held_count >= Config.MAX_TOTAL_INVENTORY_ITEMS:
+                        logger.warning(
+                            f"[INV-CAP] Post-buy: holding {current_held_count}/{Config.MAX_TOTAL_INVENTORY_ITEMS} items. "
+                            f"Item {title} already bought — recording anyway."
+                        )
+                    if current_held_value + base_price > Config.MAX_TOTAL_INVENTORY_VALUE:
+                        logger.warning(
+                            f"[INV-CAP] Post-buy: inventory value ${current_held_value:.2f} + ${base_price:.2f} > "
+                            f"${Config.MAX_TOTAL_INVENTORY_VALUE:.2f} cap. Item {title} already bought — recording anyway."
+                        )
+            except Exception:
+                pass  # Post-buy check is advisory only
 
-            held_count = len(
-                [
-                    x
-                    for x in price_db.get_virtual_inventory(status="idle")
-                    if x["hash_name"] == title
-                ]
-            )
+            held_items = await price_db.run_in_thread(price_db.get_virtual_inventory, "idle")
+            held_count = len([x for x in held_items if x["hash_name"] == title])
             if held_count >= Config.MAX_SAME_ITEM_HOLDINGS:
                 logger.warning(
-                    f"[SATURATION] Already holding {held_count}x {title}. Skipping."
+                    f"[SATURATION] Post-buy: already holding {held_count}x {title}. Already bought — recording anyway."
                 )
-                continue
 
             if is_dry:
                 if not self._simulate_competition(item_margin):
@@ -278,7 +372,8 @@ class _ExecutionMixin:
                             f"[RISK] BLOCKED {title} @ ${base_price:.2f}: {risk_check.reason}"
                         )
                         with contextlib.suppress(Exception):
-                            price_db.record_risk_event(
+                            await price_db.run_in_thread(
+                                price_db.record_risk_event,
                                 "pre_trade_block",
                                 "warning",
                                 f"{title} @ ${base_price:.2f}: {risk_check.reason}",
@@ -289,10 +384,16 @@ class _ExecutionMixin:
                             f"[RISK] Soft-adjusted {title}: ${base_price:.2f} → "
                             f"${risk_check.adjusted_size_usd:.2f}"
                         )
+                        # BUG-1 FIX: Actually apply the adjusted size to the item data
+                        item_data["base_price"] = risk_check.adjusted_size_usd
+                        item_data["buy_offer"] = {
+                            "offerId": item_id,
+                            "price": {"amount": str(round(risk_check.adjusted_size_usd * 100)), "currency": "USD"},
+                        }
 
                 # v12.5: capture the new row_id so we can attach dm_item_id
                 # in production (or leave it empty in DRY).
-                price_db.add_virtual_item(title, base_price, trade_lock_hours=Config.TRADE_LOCK_HOURS, exclusive=is_rare)
+                await price_db.run_in_thread(price_db.add_virtual_item, title, base_price, Config.TRADE_LOCK_HOURS, is_rare)
                 row = await price_db.run_in_thread(
                     price_db.state_conn.execute,
                     "SELECT id FROM virtual_inventory "
@@ -302,22 +403,24 @@ class _ExecutionMixin:
                 )
                 row = await price_db.run_in_thread(row.fetchone)
                 if row and new_dm_item_id:
-                    price_db.attach_dm_item_id(int(row["id"]), new_dm_item_id)
+                    await price_db.run_in_thread(price_db.attach_dm_item_id, int(row["id"]), new_dm_item_id)
                 if is_rare and row:
-                    price_db.mark_exclusive(int(row["id"]))
+                    await price_db.run_in_thread(price_db.mark_exclusive, int(row["id"]))
 
-                vwap = price_db.calculate_vwap(title)
+                vwap_raw = await price_db.run_in_thread(price_db.calculate_vwap, title)
+                vwap = float(vwap_raw) if isinstance(vwap_raw, (int, float)) else 0.0
                 logger.info(
                     f"[SIM] SNIPED! {title} @ ${base_price} → list ${list_price} "
-                    f"(spread: {item_data['best_bid']-item_data['best_ask']:.2f}, "
+                    f"(spread: {item_data.get('best_bid', 0)-item_data.get('best_ask', 0):.2f}, "
                     f"VWAP: ${vwap:.2f}, rare={is_rare})"
                 )
                 # v12.2 Phase 2.1: Track asset status (trade_protected for N hours)
-                price_db.update_asset_status(
+                await price_db.run_in_thread(
+                    price_db.update_asset_status,
                     item_id,
                     title,
                     "trade_protected",
-                    finalization_time=time.time() + Config.TRADE_LOCK_HOURS * 3600,
+                    time.time() + Config.TRADE_LOCK_HOURS * 3600,
                 )
                 # v12.5: Record trade outcome (negative PnL = cost)
                 if hasattr(self, "risk"):
@@ -344,11 +447,19 @@ class _ExecutionMixin:
             # For DRY_RUN, always record (simulated). For production, gate on
             # successful_titles which is populated from the buy response.
             if is_dry or title in successful_titles:
-                price_db.record_placed_target(item_id, title, base_price)
+                await price_db.run_in_thread(price_db.record_placed_target, item_id, title, base_price)
                 # v14.5: Ensure virtual_inventory row exists in PROD (DRY creates it earlier)
                 if not is_dry and not new_dm_item_id:
-                    price_db.add_virtual_item(title, base_price, trade_lock_hours=Config.TRADE_LOCK_HOURS, exclusive=is_rare)
-                self.liquidity.record_spend(base_price)
+                    await price_db.run_in_thread(price_db.add_virtual_item, title, base_price, Config.TRADE_LOCK_HOURS, is_rare)
+                # BUG-2 FIX: Use atomic can_spend_and_record to prevent TOCTOU
+                # (filter.py can_spend() is advisory; this is the real gate)
+                try:
+                    if not await self.liquidity.can_spend_and_record(base_price, game_id, available_balance):
+                        logger.warning(f"[LIQUIDITY] Spend rejected at execution for {title} ${base_price:.2f}")
+                        continue
+                except (TypeError, AttributeError):
+                    # Fallback for mocks or missing method
+                    self.liquidity.record_spend(base_price)
                 # v14.5: record_trade_outcome already called in DRY block above
                 if not is_dry and hasattr(self, "risk"):
                     self.risk.record_trade_outcome(
@@ -373,12 +484,13 @@ class _ExecutionMixin:
                     )
                     row = await price_db.run_in_thread(row.fetchone)
                     if row:
-                        price_db.attach_dm_item_id(int(row["id"]), new_dm_item_id)
+                        await price_db.run_in_thread(price_db.attach_dm_item_id, int(row["id"]), new_dm_item_id)
                 # v14.5: Track trade protection status immediately in PROD
                 if not is_dry:
-                    price_db.update_asset_status(
+                    await price_db.run_in_thread(
+                        price_db.update_asset_status,
                         item_id, title, "trade_protected",
-                        finalization_time=time.time() + Config.TRADE_LOCK_HOURS * 3600,
+                        time.time() + Config.TRADE_LOCK_HOURS * 3600,
                     )
                 # v12.5: Production-side buy notification (in addition to the
                 # DRY notification above; one will no-op because of the throttle)

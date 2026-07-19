@@ -27,6 +27,7 @@ v12.5 changes:
 - Sends a Telegram alert on every restart (best-effort, non-blocking).
 """
 
+from src.config import Config
 import asyncio
 import logging
 import os
@@ -96,7 +97,7 @@ async def _send_startup_notification(target_games: list) -> None:
         from src.telegram.notifier import notifier
 
         mode = (
-            "🧪 DRY_RUN" if os.getenv("DRY_RUN", "true").lower() == "true" else "💸 LIVE"
+            "🧪 DRY_RUN" if Config.DRY_RUN else "💸 LIVE"
         )
         await notifier.custom(
             f"🟢 <b>DMarket bot started</b>\n"
@@ -237,7 +238,12 @@ async def run_autonomous_scanner() -> None:
                     # Send a Telegram ping on first transient — not a
                     # panic, just a heads-up. Subsequent transients
                     # are silent (Telegram could spam).
-                    asyncio.create_task(report.send_telegram())
+                    # v15.10 FIX: Store task reference to prevent GC before completion
+                    _bg_tasks = getattr(run_autonomous_scanner, '_bg_tasks', set())
+                    _task = asyncio.create_task(report.send_telegram())
+                    _bg_tasks.add(_task)
+                    _task.add_done_callback(_bg_tasks.discard)
+                    run_autonomous_scanner._bg_tasks = _bg_tasks
                 await asyncio.sleep(retry_delay)
                 retry_delay = min(retry_delay * 2, max_retry)
 

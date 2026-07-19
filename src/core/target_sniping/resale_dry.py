@@ -47,7 +47,8 @@ class _ResaleDryMixin:
                     f"| PnL: ${profit:+.2f}"
                 )
                 # v12.5: notify + record in risk manager
-                asyncio.create_task(
+                # v15.10 FIX: Store task reference to prevent GC before completion
+                _task = asyncio.create_task(
                     notifier.sell(
                         title=it["hash_name"],
                         buy_price_usd=float(it["buy_price"] or 0),
@@ -55,6 +56,9 @@ class _ResaleDryMixin:
                         profit_usd=profit,
                     )
                 )
+                self._background_tasks = getattr(self, '_background_tasks', set())
+                self._background_tasks.add(_task)
+                _task.add_done_callback(self._background_tasks.discard)
                 if hasattr(self, "risk"):
                     try:
                         self.risk.record_trade_outcome(

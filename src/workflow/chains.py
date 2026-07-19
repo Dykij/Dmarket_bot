@@ -95,6 +95,7 @@ class Conductor:
         self.registry = TaskRegistry()
         self._handlers: dict[AgentRole, Callable[[dict[str, Any]], Awaitable[dict[str, Any]]]] = {}
         self.max_workers = max_workers_per_role or {}
+        self._pending_tasks: set[asyncio.Task] = set()  # v15.10: Prevent GC of pending enqueue tasks
 
     def register_handler(self, role: AgentRole, handler: Callable[[dict[str, Any]], Awaitable[dict[str, Any]]]) -> None:
         self._handlers[role] = handler
@@ -106,7 +107,10 @@ class Conductor:
             self.queues[task.role] = asyncio.Queue()
         self.registry.add(task)
         item = WorkItem(task, callback)
-        asyncio.create_task(self._enqueue_when_ready(item))
+        # v15.10 FIX: Store task reference to prevent GC before completion
+        _task = asyncio.create_task(self._enqueue_when_ready(item))
+        self._pending_tasks.add(_task)
+        _task.add_done_callback(self._pending_tasks.discard)
         return item.future
 
     async def _enqueue_when_ready(self, item: WorkItem) -> None:

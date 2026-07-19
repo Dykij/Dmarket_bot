@@ -24,18 +24,17 @@ from src.telegram.notifier import notifier
 
 logger = logging.getLogger("PositionGuard")
 
-# Tunables
-STOP_LOSS_PCT = float(os.getenv("STOP_LOSS_PCT", "20.0"))       # sell if price drops 20% below buy
-TAKE_PROFIT_PCT = float(os.getenv("TAKE_PROFIT_PCT", "15.0"))    # sell if profit reaches 15%
-STOP_LOSS_ENABLED = os.getenv("STOP_LOSS_ENABLED", "true").lower() == "true"
-TAKE_PROFIT_ENABLED = os.getenv("TAKE_PROFIT_ENABLED", "true").lower() == "true"
-STOP_LOSS_MIN_AGE_HOURS = int(os.getenv("STOP_LOSS_MIN_AGE_HOURS", "1"))  # don't trigger on very fresh items
-LIQUIDATE_AT_BID_DISCOUNT = float(os.getenv("LIQUIDATE_AT_BID_DISCOUNT", "0.01"))  # $0.01 below bid for fast exit
+# BUG-9 FIX: Use Config fields instead of os.getenv (validated, typed, centralized)
+STOP_LOSS_PCT = Config.STOP_LOSS_PCT
+TAKE_PROFIT_PCT = Config.TAKE_PROFIT_PCT
+STOP_LOSS_ENABLED = Config.STOP_LOSS_ENABLED
+TAKE_PROFIT_ENABLED = Config.TAKE_PROFIT_ENABLED
+STOP_LOSS_MIN_AGE_HOURS = Config.STOP_LOSS_MIN_AGE_HOURS
+LIQUIDATE_AT_BID_DISCOUNT = float(os.getenv("LIQUIDATE_AT_BID_DISCOUNT", "0.01"))
 
 # v15.5: Time-stop — cancel buy targets sitting too long without fill
-# Source: Reddit r/algotrading "90-minute time-stop for dead positions"
-TIME_STOP_ENABLED = os.getenv("TIME_STOP_ENABLED", "true").lower() == "true"
-TIME_STOP_MINUTES = int(os.getenv("TIME_STOP_MINUTES", "90"))  # cancel after 90min
+TIME_STOP_ENABLED = Config.TIME_STOP_ENABLED
+TIME_STOP_MINUTES = Config.TIME_STOP_MINUTES
 
 
 class _PositionGuardMixin:
@@ -150,7 +149,7 @@ class _PositionGuardMixin:
                 logger.warning(f"[EMERGENCY-LIQ] Price fetch failed for {it['hash_name']}: {e}")
                 price = 0.0
             if price <= 0:
-                buy_px = float(it.get("buy_price") or 0)
+                buy_px = float(dict(it).get("buy_price") or 0)
                 if buy_px <= 0:
                     logger.warning(f"[EMERGENCY-LIQ] No price for {it['hash_name']}, skipping (would sell at $0)")
                     continue
@@ -202,14 +201,15 @@ class _PositionGuardMixin:
 
         stale: list[dict] = []
         for t in targets:
-            created = float(t.get("created_at", 0))
+            t_dict = dict(t) if not isinstance(t, dict) else t
+            created = float(t_dict.get("created_at", 0))
             if created > 0 and created < cutoff:
-                stale.append(t)
+                stale.append(t_dict)
 
         if not stale:
             return 0
 
-        is_dry = os.getenv("DRY_RUN", "true").lower() == "true"
+        is_dry = Config.DRY_RUN
         cancelled = 0
 
         if is_dry:
@@ -251,20 +251,20 @@ class _PositionGuardMixin:
         In DRY_RUN, simulates the sales. In PROD, calls DMarket API.
         Returns count of successfully liquidated items.
         """
-        is_dry = os.getenv("DRY_RUN", "true").lower() == "true"
+        is_dry = Config.DRY_RUN
         liquidated = 0
 
         batch: list[dict[str, Any]] = []
         # Map virtual_inventory ids to plan entries
         id_to_plan: dict[int, tuple[Any, float, str]] = {}
         for item, sell_price, reason in items:
-            row = dict(item)
+            row = dict(item) if not isinstance(item, dict) else item
             dm_id = row.get("dm_item_id") or row.get("asset_id") or ""
             if not dm_id:
                 logger.warning(f"[{tag}] No dm_item_id for {row['hash_name']}, skipping")
                 continue
             batch.append({"asset_id": dm_id, "price_usd": round(sell_price, 2)})
-            id_to_plan[row["id"]] = (item, sell_price, reason)
+            id_to_plan[row["id"]] = (row, sell_price, reason)
 
         if not batch:
             return 0
@@ -272,7 +272,7 @@ class _PositionGuardMixin:
         if is_dry:
             for _it_id, (item, sell_price, reason) in id_to_plan.items():
                 buy_price = float(item["buy_price"] or 0)
-                fee = round(sell_price * Config.FEE_RATE, 4)
+                fee = round(sell_price * (Config.FEE_RATE + Config.WITHDRAWAL_FEE_RATE), 4)
                 profit = sell_price - buy_price - fee
                 price_db.update_virtual_status(item["id"], "sold")
                 price_db.record_virtual_sale(
@@ -283,7 +283,8 @@ class _PositionGuardMixin:
                     f"${buy_price:.2f} → ${sell_price:.2f} "
                     f"(P&L ${profit:+.2f}, {reason})"
                 )
-                asyncio.create_task(
+                # BUG-10 FIX: Store task reference to prevent GC before completion
+                task = asyncio.create_task(
                     notifier.sell(
                         title=item["hash_name"],
                         buy_price_usd=buy_price,
@@ -291,6 +292,9 @@ class _PositionGuardMixin:
                         profit_usd=round(profit, 4),
                     )
                 )
+                self._background_tasks = getattr(self, '_background_tasks', set())
+                self._background_tasks.add(task)
+                task.add_done_callback(self._background_tasks.discard)
                 liquidated += 1
             return liquidated
 
@@ -303,7 +307,7 @@ class _PositionGuardMixin:
                 for _it_id, (item, sell_price, reason) in id_to_plan.items():
                     if item.get("dm_item_id") == aid or item.get("asset_id") == aid:
                         buy_price = float(item["buy_price"] or 0)
-                        fee = round(sell_price * Config.FEE_RATE, 4)
+                        fee = round(sell_price * (Config.FEE_RATE + Config.WITHDRAWAL_FEE_RATE), 4)
                         profit = sell_price - buy_price - fee
                         price_db.update_virtual_status(item["id"], "selling")
                         logger.info(
@@ -311,7 +315,8 @@ class _PositionGuardMixin:
                             f"${buy_price:.2f} → ${sell_price:.2f} "
                             f"(P&L ${profit:+.2f}, {reason})"
                         )
-                        _asyncio.create_task(
+                        # BUG-10 FIX: Store task reference to prevent GC
+                        task = _asyncio.create_task(
                             notifier.sell(
                                 title=item["hash_name"],
                                 buy_price_usd=buy_price,
@@ -319,6 +324,9 @@ class _PositionGuardMixin:
                                 profit_usd=round(profit, 4),
                             )
                         )
+                        self._background_tasks = getattr(self, '_background_tasks', set())
+                        self._background_tasks.add(task)
+                        task.add_done_callback(self._background_tasks.discard)
                         liquidated += 1
                         break
         except Exception as e:
