@@ -228,10 +228,43 @@ jobs:
             --diff-file "${{ steps.context.outputs.diff_file }}" \
             --output results/duplication.json
 
+      - name: Run Agent 13 - Kelly Sizing
+        env:
+          MIMO_API_KEY: ${{ secrets.MIMO_API_KEY }}
+          MIMO_BASE_URL: ${{ secrets.MIMO_BASE_URL }}
+        run: |
+          python3 .opencode/agents/run_agent.py \
+            --agent kelly_sizing \
+            --files "${{ steps.context.outputs.files }}" \
+            --diff-file "${{ steps.context.outputs.diff_file }}" \
+            --output results/kelly_sizing.json
+
+      - name: Run Agent 14 - Fee Calculation
+        env:
+          MIMO_API_KEY: ${{ secrets.MIMO_API_KEY }}
+          MIMO_BASE_URL: ${{ secrets.MIMO_BASE_URL }}
+        run: |
+          python3 .opencode/agents/run_agent.py \
+            --agent fee_calculation \
+            --files "${{ steps.context.outputs.files }}" \
+            --diff-file "${{ steps.context.outputs.diff_file }}" \
+            --output results/fee_calculation.json
+
+      - name: Run Agent 15 - Drawdown Monitor
+        env:
+          MIMO_API_KEY: ${{ secrets.MIMO_API_KEY }}
+          MIMO_BASE_URL: ${{ secrets.MIMO_BASE_URL }}
+        run: |
+          python3 .opencode/agents/run_agent.py \
+            --agent drawdown_monitor \
+            --files "${{ steps.context.outputs.files }}" \
+            --diff-file "${{ steps.context.outputs.diff_file }}" \
+            --output results/drawdown_monitor.json
+
       - name: Deduplication
         run: |
           python3 .opencode/agents/dedup.py \
-            --input results/correctness.json results/security.json results/performance.json results/architecture.json results/domain.json results/test_coverage.json results/async_safety.json results/db_safety.json results/api_safety.json results/config_safety.json results/error_recovery.json results/duplication.json \
+            --input results/correctness.json results/security.json results/performance.json results/architecture.json results/domain.json results/test_coverage.json results/async_safety.json results/db_safety.json results/api_safety.json results/config_safety.json results/error_recovery.json results/duplication.json results/kelly_sizing.json results/fee_calculation.json results/drawdown_monitor.json \
             --output results/deduped.json
 
       - name: Verification
