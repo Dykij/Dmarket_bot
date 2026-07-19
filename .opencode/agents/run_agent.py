@@ -45,7 +45,7 @@ def call_mimo_api(system_prompt: str, user_message: str) -> str:
     if not api_key:
         raise ValueError("MIMO_API_KEY environment variable not set")
 
-    client = OpenAI(base_url=base_url, api_key=api_key)
+    client = OpenAI(base_url=base_url, api_key=api_key, timeout=60.0)
 
     response = client.chat.completions.create(
         model="mimo-v2.5-pro",
@@ -57,7 +57,8 @@ def call_mimo_api(system_prompt: str, user_message: str) -> str:
         max_tokens=4000,
     )
 
-    return response.choices[0].message.content
+    content = response.choices[0].message.content
+    return content if content else ""
 
 
 def parse_findings(content: str) -> list:
@@ -142,14 +143,22 @@ Each finding should be an object with these fields:
 Return a JSON array of findings. If no issues found, return [].
 """
 
-    # Call MiMo API
+    # Call MiMo API with retry
     print(f"[{agent_name}] Calling MiMo API...")
-    try:
-        response = call_mimo_api(system_prompt, user_message)
-        print(f"[{agent_name}] Got response ({len(response)} chars)")
-    except Exception as e:
-        print(f"[{agent_name}] ERROR: {e}")
-        response = f"Error calling API: {e}"
+    response = ""
+    for attempt in range(3):
+        try:
+            response = call_mimo_api(system_prompt, user_message)
+            print(f"[{agent_name}] Got response ({len(response)} chars)")
+            break
+        except Exception as e:
+            print(f"[{agent_name}] Attempt {attempt + 1}/3 failed: {e}")
+            if attempt < 2:
+                import time
+                time.sleep(2 ** attempt)  # Exponential backoff: 1s, 2s
+            else:
+                print(f"[{agent_name}] All attempts failed")
+                response = f"Error calling API after 3 attempts: {e}"
 
     # Parse findings
     findings = parse_findings(response)
@@ -202,8 +211,12 @@ def main():
 
     # Load diff from file if provided, otherwise use inline diff
     if args.diff_file:
-        with open(args.diff_file) as f:
-            diff = f.read()
+        diff_path = Path(args.diff_file)
+        if not diff_path.exists():
+            raise FileNotFoundError(f"Diff file not found: {args.diff_file}")
+        diff = diff_path.read_text()
+        if not diff.strip():
+            print(f"[{args.agent}] WARNING: Diff file is empty")
     elif args.diff:
         diff = args.diff
     else:
