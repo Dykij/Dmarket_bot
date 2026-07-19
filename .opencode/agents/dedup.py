@@ -39,6 +39,11 @@ def group_by_file_line(findings: list) -> dict:
     for finding in findings:
         file = finding.get("file", "unknown")
         line = finding.get("line", 0)
+        # Ensure line is an integer (LLM may return string)
+        try:
+            line = int(line)
+        except (ValueError, TypeError):
+            line = 0
 
         # Group by file and line range (±3 lines for overlap)
         key = (file, max(0, line - 3), line + 3)
