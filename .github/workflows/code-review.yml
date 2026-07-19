@@ -283,25 +283,125 @@ jobs:
             --input results/verified.json \
             --output report.md
 
-      - name: Post PR comment
+      - name: Generate machine-readable output
+        if: always()
+        run: |
+          python3 -c "
+          import json, sys
+          try:
+              with open('results/verified.json') as f:
+                  data = json.load(f)
+              findings = data.get('findings', [])
+              important = sum(1 for f in findings if f.get('severity') == 'IMPORTANT')
+              nits = sum(1 for f in findings if f.get('severity') == 'NIT')
+              pre_existing = sum(1 for f in findings if f.get('severity') == 'PRE_EXISTING')
+              output = {'normal': important, 'nit': nits, 'pre_existing': pre_existing}
+          except Exception:
+              output = {'normal': 0, 'nit': 0, 'pre_existing': 0}
+          
+          with open('check_run_output.json', 'w') as f:
+              json.dump(output, f)
+          
+          print(json.dumps(output))
+          "
+
+      - name: Post inline review comments
         if: steps.pr.outputs.found == 'true'
         uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs');
             const report = fs.readFileSync('report.md', 'utf8');
-            // Sanitize PR number: extract only digits
             const prRaw = '${{ steps.pr.outputs.pr_number }}';
             const prNumber = parseInt(prRaw.replace(/[^0-9]/g, ''), 10);
             
             if (!prNumber || isNaN(prNumber) || prNumber <= 0) {
-              console.log('No valid PR number found, skipping comment');
+              console.log('No valid PR number, skipping');
               return;
             }
             
-            console.log(`Posting review to PR #${prNumber}`);
+            // Read REVIEW.md if exists
+            let reviewInstructions = '';
+            try {
+              reviewInstructions = fs.readFileSync('REVIEW.md', 'utf8');
+            } catch (e) {
+              console.log('No REVIEW.md found, using defaults');
+            }
             
-            // Retry helper with exponential backoff
+            // Parse findings from verified.json
+            let findings = [];
+            try {
+              const verified = JSON.parse(fs.readFileSync('results/verified.json', 'utf8'));
+              findings = verified.findings || [];
+            } catch (e) {
+              console.log('Failed to parse verified.json:', e.message);
+            }
+            
+            // Filter: only Important findings with file:line
+            const importantFindings = findings.filter(f => 
+              f.severity === 'IMPORTANT' && 
+              f.file && f.file !== 'N/A' && 
+              f.line && f.line > 0
+            );
+            
+            console.log(`Found ${importantFindings.length} inline comment candidates`);
+            
+            // Cap nits at 5 (from REVIEW.md convention)
+            const nitFindings = findings.filter(f => f.severity === 'NIT').slice(0, 5);
+            
+            // Create inline comments on PR diff
+            const comments = [];
+            for (const finding of importantFindings) {
+              comments.push({
+                path: finding.file,
+                line: finding.line,
+                body: `🔴 **${finding.title}**\n\n${finding.description}\n\n**Trigger:** ${finding.trigger || 'N/A'}\n**Impact:** ${finding.impact || 'N/A'}\n\n**Fix:**\n\`\`\`\n${finding.fix || 'See description'}\n\`\`\``
+              });
+            }
+            
+            // Add nits as inline comments
+            for (const finding of nitFindings) {
+              if (finding.file && finding.file !== 'N/A' && finding.line > 0) {
+                comments.push({
+                  path: finding.file,
+                  line: finding.line,
+                  body: `🟡 **${finding.title}**\n\n${finding.description}`
+                });
+              }
+            }
+            
+            // Post as PR review (not just comment)
+            const summaryTally = `**${importantFindings.length} Important, ${nitFindings.length} Nits**`;
+            const summary = importantFindings.length === 0 
+              ? `## Deep Code Review\n\nNo blocking issues found.\n\n${summaryTally}`
+              : `## Deep Code Review\n\n${summaryTally}\n\n---\n\n${report}`;
+            
+            try {
+              await withRetry(() =>
+                github.rest.pulls.createReview({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: prNumber,
+                  event: 'COMMENT',
+                  body: summary,
+                  comments: comments.filter(c => c.path && c.line > 0).slice(0, 50) // GitHub limit
+                })
+              );
+              console.log(`Posted review with ${comments.length} inline comments`);
+            } catch (e) {
+              console.log(`Failed to create review: ${e.message}`);
+              // Fallback: post as comment
+              await withRetry(() =>
+                github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: prNumber,
+                  body: summary
+                })
+              );
+            }
+            
+            // Helper: retry with backoff
             async function withRetry(fn, maxRetries = 3, delay = 1000) {
               for (let i = 0; i < maxRetries; i++) {
                 try {
@@ -309,7 +409,6 @@ jobs:
                 } catch (error) {
                   if (i < maxRetries - 1) {
                     const retryAfter = error.headers?.['retry-after'] || delay;
-                    console.log(`Retry ${i + 1}/${maxRetries} after ${retryAfter}ms...`);
                     await new Promise(r => setTimeout(r, retryAfter));
                     delay *= 2;
                   } else {
@@ -319,40 +418,7 @@ jobs:
               }
             }
             
-            // Find existing comment
-            const comments = await withRetry(() =>
-              github.rest.issues.listComments({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: prNumber,
-              })
-            );
-            
-            const existing = comments.data.find(c => c.body.includes('Deep Code Review'));
-            
-            if (existing) {
-              console.log(`Updating existing comment ${existing.id}`);
-              await withRetry(() =>
-                github.rest.issues.updateComment({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  comment_id: existing.id,
-                  body: report
-                })
-              );
-            } else {
-              console.log('Creating new comment');
-              await withRetry(() =>
-                github.rest.issues.createComment({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  issue_number: prNumber,
-                  body: report
-                })
-              );
-            }
-            
-            console.log('Review comment posted successfully');
+            console.log('Review posted successfully');
 
       - name: Upload report artifact
         if: always()
