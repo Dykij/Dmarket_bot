@@ -21,3 +21,4 @@ For each finding:
 
 Do NOT report: style, naming, formatting, imports ordering.
 Return ONLY concrete, reproducible findings in JSON format.
+# Trigger Code Review
