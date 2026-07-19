@@ -564,3 +564,4 @@ class TestKellyGuard:
             kelly_risk_pct = max(3.0, kelly_f * 100.0 * 0.5)
 
         assert kelly_risk_pct >= 3.0, "Floor should apply"
+
