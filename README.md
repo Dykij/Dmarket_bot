@@ -9,10 +9,10 @@
 ![Tests](https://img.shields.io/badge/Tests-500%2B%20passed-44CC11?logo=pytest&logoColor=white)
 ![Architecture](https://img.shields.io/badge/Architecture-Score%200.85-0969DA)
 ![Security](https://img.shields.io/badge/Semgrep-0%20findings-FF6B35)
-![Version](https://img.shields.io/badge/Version-16.1-purple)
+![Version](https://img.shields.io/badge/Version-16.2-purple)
 
 *Автономная торговая система на строгих количественных алгоритмах.*
-*Value Detection Scanner + Spread Sniping + Algo-Pack (26 алгоритмов).*
+*Value Detection Scanner + Spread Sniping + Algo-Pack (30+ алгоритмов).*
 
 </div>
 
@@ -30,7 +30,7 @@
 - [Быстрый старт](#быстрый-старт)
 - [Конфигурация](#конфигурация)
 - [Мониторинг](#мониторинг)
-- [Code Review (v16.1)](#code-review-v161)
+- [Code Review (v16.2)](#code-review-v162)
 
 ---
 
@@ -39,15 +39,17 @@
 | Особенность | Описание |
 |---|---|
 | **Dual-Signal Pipeline** | Value Detection (rarity) + Spread Sniper (intra-market) |
-| **26 алгоритмов** | Ternary Search, LIS, EWMA, Markov, Bayesian Kelly, Hawkes, Bollinger, DEMA, MACD, Hurst, GARCH, HMM, OU, Pair Trading, Info Theory |
+| **30+ алгоритмов** | GARCH, HMM, OU, Hawkes, Bollinger, DEMA, MACD, Hurst, VPIN, Thompson Sampling, Almgren-Chriss |
 | **21 microstructure фильтров** | OBI, OFI, VWAP, VPIN, CVD, Queue Imbalance, Hawkes, Bollinger, DEMA, MACD, Hurst |
-| **Multi-Source Oracle** | 5 источников цен (Market.CSGO, Waxpeer, CSFloat, Steam, DMarket) |
+| **Multi-Source Oracle** | 5 источников цен (Market.CSGO, Waxpeer, CSFloat, Steam, DMarket) + Data Freshness Guard |
 | **Instant Resale** | Покупка -> мгновенная перепродажа без Steam Trade Lock |
-| **Half Kelly + Bayesian** | Адаптивный размер позиции с учётом волатильности (GARCH) |
+| **Bayesian Kelly + GARCH** | Адаптивный размер позиции с учётом волатильности и regime |
 | **HMM 4-State Regime** | CRISIS/BEAR/RECOVERY/BULL — блокирует покупки при CRISIS |
+| **Thompson Sampling** | Bayesian A/B testing для выбора стратегии (заменяет CanaryMode) |
+| **Almgren-Chriss** | Optimal execution trajectory (заменяет TWAP) |
+| **State Reconciliation** | Periodic сверка virtual_inventory с реальным DMarket inventory |
+| **Capital Ledger** | Atomic balance reservation для параллельных стратегий |
 | **Rust Core** | Ed25519 подпись через PyO3 (zero-copy) |
-| **TWAP Executor** | Anti-slippage исполнение крупных ордеров |
-| **Fee-Aware Guards** | Stop-loss/take-profit/margin с учётом комиссий |
 
 ---
 
@@ -88,7 +90,7 @@ score = net_margin x sqrt(ask_count + bid_count)
 
 ## Алгоритмы (algo_pack)
 
-26 алгоритмов в `src/analysis/algo_pack/` и `src/analysis/microstructure/`.
+30+ алгоритмов в `src/analysis/algo_pack/` и `src/analysis/microstructure/`.
 
 ### Core Algorithms (v15.8)
 
@@ -99,7 +101,7 @@ score = net_margin x sqrt(ask_count + bid_count)
 | 3 | **EWMA** | `ewma.py` | Предсказание цены + волатильность (RiskMetrics) |
 | 4 | **Sliding Window** | `sliding_window.py` | O(1) min/max через monotone deque |
 | 5 | **Markov Regime** | `regime_detector.py` | Trending vs Ranging -> адаптивные параметры |
-| 6 | **Bayesian Stats** | `bayesian_stats.py` | Beta distribution для win rate |
+| 6 | **Bayesian Stats** | `bayesian_stats.py` | Beta distribution для win rate + confidence-weighted Kelly |
 | 7 | **Binary Search** | `spread_optimizer.py` | Адаптивный MIN_SPREAD из trade history |
 | 8 | **Dual EWMA Vol** | `ewma.py` | Volatility regime (expanding/contracting) |
 
@@ -123,7 +125,17 @@ score = net_margin x sqrt(ask_count + bid_count)
 | 17 | **Pair Trading** | `pair_trading.py` | Cointegration-based arbitrage |
 | 18 | **Information Theory** | `info_theory.py` | Shannon Entropy, ApEn, Mutual Information |
 
-### Pipeline (v16.1)
+### New Algorithms (v16.2)
+
+| # | Алгоритм | Файл | Что делает |
+|---|---|---|---|
+| 19 | **Thompson Sampling** | `thompson_sampling.py` | Bayesian A/B testing для выбора стратегии |
+| 20 | **VPIN** | `vpin.py` | Volume-Synchronized PIN — toxicity of order flow |
+| 21 | **Almgren-Chriss** | `strategies/almgren_chriss.py` | Optimal execution trajectory (sinh-based) |
+| 22 | **Confidence-Weighted Kelly** | `bayesian_stats.py` | Kelly с учётом GARCH vol + HMM regime + entropy |
+| 23 | **Entropy Regime** | `info_theory.py` | Shannon entropy regime в composite score |
+
+### Pipeline (v16.2)
 
 ```
 Scanner
@@ -134,11 +146,13 @@ Scanner
      <- DEMA (bearish block), MACD (bearish block)
      <- HMM CRISIS gate (hard block all buys)
      <- OU Process (mean-reversion), Event-Driven (seasonal)
-  -> BayesianKelly(GARCH-vol-adjusted)
+     <- Entropy Regime (trending/random/mean_reverting)
+  -> BayesianKelly(GARCH-vol-adjusted, confidence-weighted)
   -> ValueDetection(float, pattern, sticker)
   -> TernaryOptimalSellPrice
   -> FeeEval + Caps + Fee-Aware Guards
-  -> Execute (TWAP for large orders)
+  -> Execute (Almgren-Chriss for large orders)
+  -> StateReconciliation (every 10 cycles)
 ```
 
 ### Composite Score
@@ -157,6 +171,7 @@ Scanner
 | `dema` | 0.8 | DEMA crossover direction |
 | `macd` | 0.8 | MACD momentum |
 | `hurst` | 0.5 | Regime strength |
+| `entropy` | 1.0 | Predictability (trending/random/mean_reverting) |
 
 ---
 
@@ -169,6 +184,7 @@ START CYCLE (run_cycle)
   |      +-- Balance check (effective = total - reserved)
   |      +-- Oracle initialization (Multi-Source refresh)
   |      +-- Cycle counters reset
+  |      +-- State Reconciliation (every 10 cycles)
   |
   +-- 2. _stage_scan
   |      +-- DMarket aggregated-prices
@@ -180,26 +196,30 @@ START CYCLE (run_cycle)
   |      +-- Sales cache (trade history)
   |      +-- Pump detection scan
   |      +-- MultiSource oracle fair prices
+  |      +-- Data Freshness Guard (staleness check)
   |
   +-- 4. _stage_evaluate (parallel)
   |      +-- Rank candidates by spread
   |      +-- 21 microstructure filters
   |      +-- Value Detection (float, pattern, sticker)
-  |      +-- Bayesian Kelly sizing (GARCH volatility)
+  |      +-- Bayesian Kelly sizing (GARCH volatility + HMM regime)
   |      +-- Ternary search optimal sell price
   |      +-- Fee evaluation + inventory caps
+  |      +-- Capital Ledger reservation
   |
   +-- 5. _stage_execute
   |      +-- Slippage protection (pre-trade check)
   |      +-- Risk manager pre-trade check (fee-aware)
   |      +-- POST /exchange/v1/market/buy
   |      +-- Post-buy: virtual inventory tracking
+  |      +-- Almgren-Chriss execution (for qty >= 5)
   |
   +-- 6. _stage_postprocess
          +-- Auto-resale (fee-aware margin check)
          +-- Repricing unsold offers
          +-- Telegram notifications
          +-- Telemetry + cycle metrics
+         +-- State Reconciliation (periodic)
 ```
 
 ---
@@ -237,7 +257,7 @@ START CYCLE (run_cycle)
 | Инструмент | Описание |
 |---|---|
 | **Half Kelly (50%)** | `f* = win_rate - (1 - win_rate) / win_loss_ratio` |
-| **Bayesian Kelly + GARCH** | Volatility-adjusted, conservative with small samples |
+| **Confidence-Weighted Kelly** | Kelly с учётом GARCH vol regime + HMM state + entropy regime |
 | **Fee-Aware Stop-Loss** | Включает sell fees в расчёт loss percentage |
 | **Fee-Aware Take-Profit** | Включает sell fees в расчёт profit percentage |
 | **Drawdown Freeze** | Стоп покупок при >15% просадке от пика |
@@ -247,18 +267,28 @@ START CYCLE (run_cycle)
 | **Time-Stop** | Cancel stale buy targets after 90min |
 | **Consecutive Loss Halving** | 3+ проигрышей подряд -> размер позиции halved |
 | **HMM CRISIS Gate** | Hard block всех покупок при CRISIS regime |
-| **Token Bucket Rate Limiter** | Per-endpoint rate limiting |
-| **Circuit Breaker** | Auto-recovery после transient failures |
+| **Capital Ledger** | Atomic balance reservation для параллельных стратегий |
+| **State Reconciliation** | Periodic сверка virtual_inventory с реальным DMarket inventory |
+| **Portfolio Concentration** | Collection + category + item-level concentration limits |
+| **Lock Tracker** | Force-repricing для items >48h с убытком, opportunity cost |
 
-### Multi-Source Oracle (5 источников)
+### Execution
 
-| Источник | Тип | Обновление |
-|---|---|---|
-| **Market.CSGO** | Buy orders | 5 min |
-| **Waxpeer** | Buy orders | 5 min |
-| **CSFloat** | Market prices | 5 min |
-| **Steam** | Market prices | 30 min |
-| **DMarket** | Real-time | Each cycle |
+| Инструмент | Описание |
+|---|---|
+| **Almgren-Chriss** | Optimal execution trajectory: `x_k = X * sinh(κ(T-k)) / sinh(κT)` |
+| **Slippage Protection** | Pre-trade slippage estimation + abort threshold |
+| **Fee-Aware Guards** | Stop-loss/take-profit/margin с учётом комиссий |
+
+### Multi-Source Oracle (5 источников + Freshness Guard)
+
+| Источник | Тип | Обновление | Freshness |
+|---|---|---|---|
+| **Market.CSGO** | Buy orders | 5 min | ✅ Staleness check |
+| **Waxpeer** | Buy orders | 5 min | ✅ Staleness check |
+| **CSFloat** | Market prices | 5 min | ✅ Staleness check |
+| **Steam** | Market prices | 30 min | ✅ Staleness check |
+| **DMarket** | Real-time | Each cycle | ✅ Always fresh |
 
 ---
 
@@ -284,6 +314,7 @@ START CYCLE (run_cycle)
 src/
 +-- __main__.py                    # Entry point
 +-- config.py                      # Configuration (Pydantic env-based)
++-- inventory_manager.py           # Inventory management + pagination
 |
 +-- core/
 |   +-- target_sniping/
@@ -293,7 +324,7 @@ src/
 |   |   +-- filter_evaluator.py    # Multi-stage evaluation pipeline
 |   |   +-- ranking.py             # Spread ranking + regime + trend
 |   |   +-- pricing.py             # Price calculations (float, pattern, fade)
-|   |   +-- execution.py           # Buy execution + slippage + TWAP
+|   |   +-- execution.py           # Buy execution + slippage
 |   |   +-- position_guard.py      # Stop-loss/take-profit (fee-aware)
 |   |   +-- resale.py              # Resale mixin (DRY/PROD routing)
 |   |   +-- resale_prod.py         # Production resale + AS pricing
@@ -307,20 +338,16 @@ src/
 |   |   +-- telemetry.py           # Equity milestone alerts
 |   |   +-- sticker_cache.py       # Two-tier sticker evaluation
 |   |   +-- underpriced.py         # Underpriced detection
-|   +-- app_notifications.py       # Critical shutdown alerts
-|   +-- app_recovery.py            # State recovery stub
-|   +-- autonomous_scanner.py      # Background scanner
-|   +-- config_manager.py          # Config bridge (env fallback)
-|   +-- daily_briefing.py          # Daily P&L + risk report
+|   +-- state_reconciliation.py    # Virtual vs real inventory sync
+|   +-- capital_ledger.py          # Atomic balance reservation
 |   +-- event_detection.py         # CS2 event monitoring
-|   +-- event_shield.py            # Event calendar shield
-|   +-- limit_orders.py            # Buy-target (limit order) execution
+|   +-- supply_tracking.py         # Supply monitoring
+|   +-- daily_briefing.py          # Daily P&L + risk report
 |   +-- live_shadow.py             # Shadow trading engine
 |   +-- sandbox.py                 # Sandbox simulation
-|   +-- supply_tracking.py         # Supply monitoring
 |
 +-- analysis/
-|   +-- algo_pack/                  # 26 algorithms
+|   +-- algo_pack/                  # 30+ algorithms
 |   |   +-- garch.py               # GARCH(1,1) volatility
 |   |   +-- hmm_regime.py          # HMM 4-state regime detection
 |   |   +-- ou_process.py          # Ornstein-Uhlenbeck mean-reversion
@@ -329,12 +356,14 @@ src/
 |   |   +-- info_theory.py         # Information theory (entropy, MI)
 |   |   +-- hawkes.py              # Hawkes process (frenzy detection)
 |   |   +-- ewma.py                # EWMA + DEMA/TEMA/MACD
-|   |   +-- bayesian_stats.py      # Bayesian Kelly
+|   |   +-- bayesian_stats.py      # Bayesian Kelly + confidence-weighted
 |   |   +-- regime_detector.py     # Markov regime + Hurst
 |   |   +-- sell_optimizer.py      # Ternary search optimal sell
 |   |   +-- spread_optimizer.py    # Binary search MIN_SPREAD
 |   |   +-- trend_strength.py      # LIS trend detection
 |   |   +-- sliding_window.py      # O(1) min/max deque
+|   |   +-- thompson_sampling.py   # Thompson Sampling A/B testing
+|   |   +-- vpin.py                # VPIN toxicity detection
 |   +-- microstructure/             # OBI, OFI, VWAP, VPIN, etc.
 |   +-- seasonal.py                 # Seasonal timing
 |   +-- stickers_evaluator.py       # Sticker value calculation
@@ -342,15 +371,20 @@ src/
 +-- analytics/
 |   +-- knowledge_base.py           # Adaptive market knowledge
 |   +-- filler_tracker.py           # Filler skin tracking
-|   +-- backtester.py               # Strategy backtesting
+|   +-- backtester/                 # Strategy backtesting (walk-forward)
 |   +-- self_reflection.py          # Self-reflection engine
 |
 +-- risk/
 |   +-- risk_manager.py             # Risk management (drawdown, limits, Kelly)
+|   +-- dynamic_manager.py          # Dynamic risk adjustments
+|   +-- price_validator.py          # Price validation
+|   +-- concentration_risk.py       # Portfolio concentration risk
+|   +-- lock_tracker.py             # Advanced lock tracking + force reprice
 |   +-- pump_detector.py            # Pump detection + blacklist
 |   +-- security_auditor.py         # Secret leak detection
 |   +-- fatal_errors.py             # Error classification (FATAL/TRANSIENT)
 |   +-- error_reporter.py           # Error reporting + formatting
+|   +-- incident_manager.py         # Incident tracking
 |
 +-- db/
 |   +-- price_history/
@@ -358,10 +392,11 @@ src/
 |   |   +-- core.py                 # SQLite connection management
 |   |   +-- history.py              # Price history queries
 |   |   +-- inventory.py            # Virtual inventory CRUD
-|   |   +-- models.py               # DB models
+|   |   +-- analytics_logs.py       # Analytics logging
 |   |   +-- low_fee.py              # Low-fee item tracking
 |   |   +-- sources.py              # Price source tracking
 |   |   +-- db_retry.py             # Retry decorator for SQLite
+|   +-- profit_tracker.py           # Profit tracking DB
 |
 +-- api/
 |   +-- dmarket_api_client/         # DMarket API client
@@ -370,25 +405,33 @@ src/
 |   |   +-- trading.py              # Buy/sell/target API
 |   |   +-- offers.py               # Offer management
 |   |   +-- backoff.py              # Circuit breaker
-|   +-- multi_source_oracle.py      # 5-source price oracle
+|   +-- multi_source_oracle.py      # 5-source price oracle + freshness guard
 |   +-- oracle_factory.py           # Oracle factory
+|   +-- fair_price_calculator.py    # Median-based fair price
+|   +-- market_csgo_oracle.py       # Market.CSGO oracle
+|   +-- waxpeer_oracle.py           # Waxpeer oracle
+|   +-- csfloat_oracle.py           # CSFloat oracle
+|   +-- steam_oracle.py             # Steam oracle
+|   +-- candle_builder.py           # OHLCV candle builder
 |   +-- dmarket_parser.py           # Response parsing
-|   +-- health.py                   # API health checks
+|
++-- strategies/
+|   +-- base.py                     # Base strategy + ATR sizing
+|   +-- almgren_chriss.py           # Almgren-Chriss optimal execution
+|   +-- market_maker.py             # Market making strategy
+|   +-- cross_market.py             # Cross-market arbitrage
+|   +-- canary_mode.py              # Legacy A/B testing (replaced by Thompson)
 |
 +-- telegram/
 |   +-- notifier.py                 # Trade notifications + throttling
 |   +-- control_bot/                # Telegram bot commands
-|
-+-- strategies/
-|   +-- base.py                     # Base strategy + ATR sizing
-|   +-- twap.py                     # TWAP executor (anti-slippage)
-|   +-- canary_mode.py              # A/B testing framework
 |
 +-- utils/
 |   +-- vault.py                    # Fernet encryption + Vault client
 |   +-- health_server.py            # Health/metrics endpoint
 |   +-- rate_limiter.py             # Token bucket rate limiter
 |   +-- query_profiler.py           # SQLite query profiling
+|   +-- charts.py                   # Chart generation
 ```
 
 ---
@@ -403,8 +446,7 @@ src/
 | **Integration tests** | ~40 passed | API, DB, pipeline integration |
 | **Telegram tests** | ~30 passed | Notifier, throttling, circuit breaker |
 | **Microstructure tests** | ~50 passed | OBI, OFI, VWAP, VPIN filters |
-
-**Pre-existing failures:** 15 (missing Config fields `EVENT_PROXIMITY_WEIGHT`, mock issues in execution tests)
+| **New algo tests** | 39 passed | Thompson, VPIN, ACH, Bayesian |
 
 ---
 
@@ -482,12 +524,25 @@ OU_ENTRY_Z_SCORE=-1.5
 OU_STOP_Z_SCORE=-3.0
 OU_MIN_R_SQUARED=0.3
 
+# Pair Trading
+PAIR_MIN_CORRELATION=0.5
+PAIR_MIN_CINTEGRATION=0.3
+
+# Event-Driven
+EVENT_PROXIMITY_WEIGHT=0.6
+SEASONAL_WEIGHT=0.4
+
 # Microstructure (all enabled by default)
 OBI_ENABLED=true
 OFI_ENABLED=true
 VWAP_FILTER_ENABLED=true
 VPIN_ENABLED=true
 CVD_ENABLED=true
+
+# VPIN (v16.2)
+VPIN_ENABLED=true
+VPIN_BUCKETS=8
+VPIN_THRESHOLD=0.8
 ```
 
 ---
@@ -514,11 +569,24 @@ curl http://localhost:8080/metrics       # Prometheus metrics
 
 ---
 
-## Code Review (v16.1)
+## Code Review (v16.2)
 
 ### Проведено: 3 итерации x 16 агентов = 48 проверок
 
 Найдено **~180 багов**, исправлено **22 CRITICAL**.
+
+### Новые алгоритмы (v16.2)
+
+| # | Алгоритм | Файл | Источник | Описание |
+|---|---|---|---|---|
+| 1 | **Thompson Sampling** | `thompson_sampling.py` | Thompson (1933) | Bayesian A/B testing для выбора стратегии |
+| 2 | **VPIN** | `vpin.py` | Easley et al. (2012) | Volume-Synchronized PIN — toxicity detection |
+| 3 | **Almgren-Chriss** | `almgren_chriss.py` | Almgren & Chriss (2000) | Optimal execution trajectory |
+| 4 | **Confidence-Weighted Kelly** | `bayesian_stats.py` | SSRN (2025) | Kelly с учётом GARCH + HMM + entropy |
+| 5 | **Entropy Regime** | `signals.py` | Shannon (1948) | Entropy regime в composite score |
+| 6 | **State Reconciliation** | `state_reconciliation.py` | ROADMAP | Virtual vs real inventory sync |
+| 7 | **Capital Ledger** | `capital_ledger.py` | ROADMAP | Atomic balance reservation |
+| 8 | **Data Freshness Guard** | `multi_source_oracle.py` | ROADMAP | Staleness threshold for oracle data |
 
 ### Исправления (v16.1)
 
@@ -549,6 +617,109 @@ curl http://localhost:8080/metrics       # Prometheus metrics
 
 ---
 
+## Развёртывание (Dry Run на сервере)
+
+### Быстрый старт на CityHost NL
+
+```bash
+# 1. Заказать KVM-75 NL на cityhost.ua (тест 5 дней за 99 UAH)
+# 2. Установить Ubuntu 22.04
+# 3. Подключиться по SSH
+# 4. Запустить установку:
+
+curl -sSL https://raw.githubusercontent.com/YOUR_USER/Dmarket_bot-main/main/scripts/setup_server.sh | sudo bash
+
+# 5. Настроить Telegram:
+nano /opt/dmarket-bot/.env
+# Вставить TELEGRAM_BOT_TOKEN и TELEGRAM_CHAT_ID
+
+# 6. Запустить dry run:
+systemctl start dmarket-dryrun
+systemctl enable dmarket-dryrun
+
+# 7. Проверить статус:
+systemctl status dmarket-dryrun
+tail -f /var/log/dmarket-bot/dry_run_14d.log
+```
+
+### Telegram уведомления
+
+Бот отправляет отчёты каждые **1.5 часа** с информацией:
+
+```
+📊 DMarket Bot — Отчёт
+
+⏰ Аптайм: 24.5ч
+🔄 Циклов: 2940 (✅2935 ❌5)
+⚡ Циклов/час: 120.0
+
+─── 📦 Предметы ───
+🔍 Просканировано: 44100
+🎯 Найдено: 2940
+✅ Прошло фильтры: 1470
+🛒 Куплено (симуляция): 588
+
+─── 💰 Финансы ───
+💵 Баланс: $1045.20
+📈 PnL: $45.20
+📊 ROI: 4.52%
+📉 Max Drawdown: 2.30%
+
+─── 🖥 Сервер ───
+🧠 RAM: 650 MB
+❌ Ошибок: 5
+```
+
+### Управление
+
+```bash
+# Статус
+systemctl status dmarket-dryrun
+
+# Логи
+tail -f /var/log/dmarket-bot/dry_run_14d.log
+
+# Перезапуск
+systemctl restart dmarket-dryrun
+
+# Остановка
+systemctl stop dmarket-dryrun
+
+# Отчёт
+cat /opt/dmarket-bot/logs/dry_run_14d_report.json
+```
+
+### Steam Deck OLED
+
+Можно запустить на Steam Deck в Desktop Mode:
+
+```bash
+# 1. Переключиться в Desktop Mode (Start → Switch to Desktop)
+# 2. Открыть Konsole (терминал)
+# 3. Установить Docker (опционально) или напрямую:
+
+git clone https://github.com/YOUR_USER/Dmarket_bot-main.git
+cd Dmarket_bot-main
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+
+# 4. Настроить .env
+cp .env.example .env
+nano .env  # вставить Telegram credentials
+
+# 5. Запустить
+PYTHONUNBUFFERED=1 python tests/sandbox/dry_run_14d.py
+
+# 6. Или через tmux (чтобы работало в фоне):
+tmux new -s dryrun
+PYTHONUNBUFFERED=1 python tests/sandbox/dry_run_14d.py
+# Ctrl+B, D —_detach
+# tmux attach -t dryrun —_подключиться обратно
+```
+
+---
+
 ## Лицензия
 
 Proprietary. All rights reserved.
@@ -557,6 +728,6 @@ Proprietary. All rights reserved.
 
 <div align="center">
 
-*DMarket Quantitative Engine | v16.1 | July 2026*
+*DMarket Quantitative Engine | v16.2 | July 2026*
 
 </div>

@@ -63,7 +63,7 @@ class DynamicRiskManager:
         if avg_loss <= 0:
             return 0.0
         return avg_profit / avg_loss
-        
+
     @staticmethod
     def volatility_regime_factor(recent_prices: list[float]) -> float:
         """v15.5: Compute volatility regime factor from recent prices.

@@ -27,8 +27,7 @@ from __future__ import annotations
 
 import logging
 import math
-from dataclasses import dataclass, field
-from typing import Any
+from dataclasses import dataclass
 
 logger = logging.getLogger("PairTrading")
 
@@ -284,42 +283,81 @@ class PairTradingEstimator:
 
     def _cointegration_test(self, spread: list[float]) -> float:
         """
-        Simplified cointegration test.
+        Augmented Dickey-Fuller (ADF) test for stationarity.
 
         Tests if the spread is stationary (mean-reverting).
-        Uses variance ratio test: Var(ΔS) / Var(S) should be high
-        for stationary series.
+        Uses the ADF test with critical values from statistical tables.
 
         Returns score in [0, 1]. Higher = more cointegrated.
+        Score = 1.0 if ADF stat < 1% critical value (strongly stationary)
+        Score = 0.0 if ADF stat > 10% critical value (unit root)
         """
         n = len(spread)
-        if n < 10:
+        if n < 20:
             return 0.0
 
-        # First difference
+        # ADF regression: ΔS_t = α + β*S_{t-1} + Σγ_i*ΔS_{t-i} + ε_t
+        # We use 1 lag (simplified)
         diff = [spread[i] - spread[i - 1] for i in range(1, n)]
+        lagged = spread[:-1]
+        lagged_diff = diff[:-1]  # lagged differences
 
-        # Variance ratio
-        var_level = sum((s - sum(spread) / n) ** 2 for s in spread) / n
-        var_diff = sum((d - sum(diff) / len(diff)) ** 2 for d in diff) / len(diff)
-
-        if var_level < 1e-10:
+        # OLS: diff = alpha + beta * lagged + gamma * lagged_diff + eps
+        n_obs = len(diff) - 1  # lose 1 observation for lag
+        if n_obs < 10:
             return 0.0
 
-        # For stationary series, var_diff / var_level should be high
-        ratio = var_diff / var_level
+        y = diff[1:]  # ΔS_t
+        x1 = lagged[1:]  # S_{t-1}
+        x2 = lagged_diff  # ΔS_{t-1}
+
+        # Compute OLS coefficients
+        mean_y = sum(y) / n_obs
+        mean_x1 = sum(x1) / n_obs
+        mean_x2 = sum(x2) / n_obs
+
+        # Center variables
+        yc = [yi - mean_y for yi in y]
+        x1c = [xi - mean_x1 for xi in x1]
+        x2c = [xi - mean_x2 for xi in x2]
+
+        # Compute beta for S_{t-1} (the key coefficient)
+        # Using simplified 2-variable OLS
+        sxx1 = sum(xi ** 2 for xi in x1c)
+        sxy1 = sum(yc[i] * x1c[i] for i in range(n_obs))
+
+        if sxx1 < 1e-10:
+            return 0.0
+
+        beta1 = sxy1 / sxx1
+
+        # Compute residuals and standard error
+        residuals = [yc[i] - beta1 * x1c[i] for i in range(n_obs)]
+        sse = sum(r ** 2 for r in residuals)
+        se_beta = math.sqrt(sse / ((n_obs - 2) * sxx1)) if n_obs > 2 else 1.0
+
+        # ADF test statistic
+        adf_stat = beta1 / se_beta if se_beta > 0 else 0.0
+
+        # Critical values for ADF test (from Dickey-Fuller tables)
+        # These are approximate values for large samples
+        critical_1pct = -3.43
+        critical_5pct = -2.86
+        critical_10pct = -2.57
 
         # Map to [0, 1] score
-        # AR(1) coefficient ρ = 1 - ratio/2
-        rho = 1.0 - ratio / 2.0
-
-        # Score: rho < 0.8 → cointegrated (stationary)
-        if rho < 0.5:
+        if adf_stat < critical_1pct:
+            # Strongly stationary at 1% level
             score = 1.0
-        elif rho < 0.8:
-            score = 1.0 - (rho - 0.5) / 0.3
+        elif adf_stat < critical_5pct:
+            # Stationary at 5% level
+            score = 0.8 + 0.2 * (critical_5pct - adf_stat) / (critical_5pct - critical_1pct)
+        elif adf_stat < critical_10pct:
+            # Stationary at 10% level
+            score = 0.5 + 0.3 * (critical_10pct - adf_stat) / (critical_10pct - critical_5pct)
         else:
-            score = 0.0
+            # Not stationary (unit root)
+            score = max(0.0, 0.5 * (1.0 - (adf_stat - critical_10pct) / abs(critical_10pct)))
 
         return max(0.0, min(1.0, score))
 

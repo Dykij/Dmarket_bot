@@ -153,7 +153,7 @@ class SnipingLoop(  # type: ignore[misc]
 
             classification = classify(e)
             if classification == "fatal":
-                report = ErrorReporter(classification="fatal", context={
+                report = ErrorReporter(e, context={
                     "game_id": game_id,
                     "cycle": self.deep_scan_counter,
                     "balance": f"${ctx.current_balance:.2f}",

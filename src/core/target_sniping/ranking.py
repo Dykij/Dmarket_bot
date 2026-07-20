@@ -100,7 +100,6 @@ def rank_candidates_by_spread(
         detector = _get_regime_detector()
         if detector is not None:
             try:
-                from src.analysis.algo_pack.ewma import ewma_volatility
                 # Use a simple price change estimate from best_bid/best_ask
                 price_change = (best_bid - best_ask) / max(best_ask, 0.01)
                 regime = detector.update(price_change, abs(price_change) * 0.5)
@@ -155,7 +154,6 @@ def rank_candidates_by_spread(
         if price_histories and title in price_histories:
             try:
                 from src.analysis.microstructure.volatility import (
-                    bollinger_bandwidth,
                     bollinger_pctb,
                     bollinger_squeeze_signal,
                 )

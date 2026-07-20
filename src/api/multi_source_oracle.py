@@ -103,7 +103,10 @@ class MultiSourceOracle:
         self._source_failures[source] = self._source_failures.get(source, 0) + 1
         if self._source_failures[source] >= self._failure_threshold:
             self._source_open_until[source] = time.time() + self._recovery_timeout
-            logger.warning(f"[CircuitBreaker] {source} OPEN — {self._source_failures[source]} failures")
+            logger.warning(
+                f"[CircuitBreaker] {source} OPEN — "
+                f"{self._source_failures[source]} failures"
+            )
 
     def _record_source_success(self, source: str) -> None:
         """Record source success, reset circuit breaker."""
@@ -195,7 +198,10 @@ class MultiSourceOracle:
                 waxpeer_steam_price=wp_steam if isinstance(wp_steam, (int, float)) else 0.0,
                 csfloat_price=cs_price if isinstance(cs_price, (int, float)) else 0.0,
                 steam_price=st_price if isinstance(st_price, (int, float)) else 0.0,
-                sources_count=sum(1 for p in [mc_price, wp_price, cs_price, st_price] if isinstance(p, (int, float)) and p > 0),
+                sources_count=sum(
+                    1 for p in [mc_price, wp_price, cs_price, st_price]
+                    if isinstance(p, (int, float)) and p > 0
+                ),
                 marketcsgo_volume=mc_vol if isinstance(mc_vol, int) else 0,
                 waxpeer_volume=wp_vol if isinstance(wp_vol, int) else 0,
             )

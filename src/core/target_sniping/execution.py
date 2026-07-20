@@ -346,8 +346,8 @@ class _ExecutionMixin:
             except Exception:
                 pass  # Post-buy check is advisory only
 
-            held_items = await price_db.run_in_thread(price_db.get_virtual_inventory, "idle")
-            held_count = len([x for x in held_items if x["hash_name"] == title])
+            # Reuse pre-fetched inventory (already loaded at line 182)
+            held_count = len([x for x in _existing_held_all if x["hash_name"] == title])
             if held_count >= Config.MAX_SAME_ITEM_HOLDINGS:
                 logger.warning(
                     f"[SATURATION] Post-buy: already holding {held_count}x {title}. Already bought — recording anyway."

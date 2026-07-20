@@ -194,8 +194,9 @@ class _FilterMixin(_FilterEvaluatorMixin):
                         kelly_f * 100.0,
                     )
                 except Exception:
-                    # Fallback to standard Kelly
+                    # Fallback to standard Kelly (consistent with Bayesian path)
                     kelly_f = win_rate - (1.0 - win_rate) / win_loss_ratio
+                    kelly_f = max(0.0, min(0.25, kelly_f))  # Clamp same as adaptive_kelly_fraction
                     kelly_risk_pct = max(
                         float(Config.KELLY_FLOOR_PCT),
                         kelly_f * 100.0 * float(Config.KELLY_FRACTION),

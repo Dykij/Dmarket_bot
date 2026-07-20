@@ -25,6 +25,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import random
+import threading
 import time
 from dataclasses import dataclass, field
 from enum import Enum
@@ -77,6 +78,8 @@ class CircuitBreaker:
 
     # Async lock for thread/task safety in concurrent async contexts
     _lock: asyncio.Lock = field(default_factory=asyncio.Lock, repr=False, init=False)
+    # Threading lock for sync methods (allow_request, record_failure)
+    _thread_lock: threading.Lock = field(default_factory=threading.Lock, repr=False, init=False)
     # Flag to prevent concurrent HALF_OPEN probes (sync-safe)
     _probe_pending: bool = field(default=False, repr=False, init=False)
 
@@ -92,84 +95,91 @@ class CircuitBreaker:
         Uses _probe_pending flag to ensure at most one in-flight test
         request in HALF_OPEN state, preventing race conditions when
         multiple concurrent tasks call allow_request() simultaneously.
+        Protected by threading lock for concurrent access safety.
         """
-        now = time.time()
-        if now < self._server_backoff_until:
-            return False
+        with self._thread_lock:
+            now = time.time()
+            if now < self._server_backoff_until:
+                return False
 
-        if self.state == CircuitState.CLOSED:
-            return True
-        if self.state == CircuitState.OPEN:
-            elapsed = now - self.opened_at
-            if elapsed >= self.current_cooldown:
-                self.state = CircuitState.HALF_OPEN
-                self.half_opened_at = now
-                self._probe_pending = True
+            if self.state == CircuitState.CLOSED:
+                return True
+            if self.state == CircuitState.OPEN:
+                elapsed = now - self.opened_at
+                if elapsed >= self.current_cooldown:
+                    self.state = CircuitState.HALF_OPEN
+                    self.half_opened_at = now
+                    self._probe_pending = True
+                    logger.info(
+                        f"[CB:{self.name}] OPEN → HALF_OPEN "
+                        f"(cooldown={self.current_cooldown:.1f}s elapsed={elapsed:.1f}s)"
+                    )
+                    return True
+                return False
+            # HALF_OPEN: allow exactly one probe request at a time
+            if now - self.half_opened_at > self.half_open_timeout:
+                self.state = CircuitState.CLOSED
+                self.consecutive_failures = 0
+                self._probe_pending = False
                 logger.info(
-                    f"[CB:{self.name}] OPEN → HALF_OPEN "
-                    f"(cooldown={self.current_cooldown:.1f}s elapsed={elapsed:.1f}s)"
+                    f"[CB:{self.name}] HALF_OPEN timed out after "
+                    f"{self.half_open_timeout:.0f}s → CLOSED"
                 )
                 return True
-            return False
-        # HALF_OPEN: allow exactly one probe request at a time
-        if now - self.half_opened_at > self.half_open_timeout:
-            self.state = CircuitState.CLOSED
-            self.consecutive_failures = 0
-            self._probe_pending = False
-            logger.info(
-                f"[CB:{self.name}] HALF_OPEN timed out after "
-                f"{self.half_open_timeout:.0f}s → CLOSED"
-            )
+            if self._probe_pending:
+                return False  # another task is already probing
+            self._probe_pending = True
             return True
-        if self._probe_pending:
-            return False  # another task is already probing
-        self._probe_pending = True
-        return True
 
     def record_success(self) -> None:
-        """Mark a successful request (closes the circuit if it was open)."""
-        if self.state != CircuitState.CLOSED:
-            logger.info(f"[CB:{self.name}] {self.state.value} → CLOSED (success)")
-        self.state = CircuitState.CLOSED
-        self.consecutive_failures = 0
-        self.current_cooldown = self.base_cooldown
-        self.last_error = ""
-        self._probe_pending = False
+        """Mark a successful request (closes the circuit if it was open).
+        Protected by threading lock for concurrent access safety.
+        """
+        with self._thread_lock:
+            if self.state != CircuitState.CLOSED:
+                logger.info(f"[CB:{self.name}] {self.state.value} → CLOSED (success)")
+            self.state = CircuitState.CLOSED
+            self.consecutive_failures = 0
+            self.current_cooldown = self.base_cooldown
+            self.last_error = ""
+            self._probe_pending = False
 
     def record_failure(self, err: Exception) -> None:
         """Mark a failed request (opens the circuit if threshold reached).
 
         Clears the _probe_pending flag so the next request can retry
         the HALF_OPEN probe after cooldown.
+        Protected by threading lock for concurrent access safety.
         """
-        self._probe_pending = False
-        self.consecutive_failures += 1
-        self.last_error = f"{type(err).__name__}: {err}"[:200]
-        if self.consecutive_failures >= self.fail_threshold:
-            if self.state != CircuitState.OPEN:
-                # Apply jitter to cooldown: -20% to +20%
-                jitter = 1.0 + random.uniform(-self.jitter_pct, self.jitter_pct)
-                self.current_cooldown = min(
-                    self.base_cooldown * jitter, self.max_cooldown
-                )
-                self.opened_at = time.time()
-                self.state = CircuitState.OPEN
-                self.total_opens += 1
-                logger.warning(
-                    f"[CB:{self.name}] → OPEN "
-                    f"(failures={self.consecutive_failures}, "
-                    f"cooldown={self.current_cooldown:.1f}s, err={self.last_error})"
-                )
-            else:
-                # Already open: extend cooldown exponentially
-                self.current_cooldown = min(
-                    self.current_cooldown * 2.0, self.max_cooldown
-                )
-                self.opened_at = time.time()
-                logger.warning(
-                    f"[CB:{self.name}] OPEN extended "
-                    f"(cooldown={self.current_cooldown:.1f}s)"
-                )
+        with self._thread_lock:
+            self._probe_pending = False
+            self.consecutive_failures += 1
+            self.last_error = f"{type(err).__name__}: {err}"[:200]
+            if self.consecutive_failures >= self.fail_threshold:
+                if self.state != CircuitState.OPEN:
+                    # Apply jitter to current cooldown (preserves exponential progression)
+                    jitter = 1.0 + random.uniform(-self.jitter_pct, self.jitter_pct)
+                    self.current_cooldown = min(
+                        self.current_cooldown * jitter, self.max_cooldown
+                    )
+                    self.opened_at = time.time()
+                    self.state = CircuitState.OPEN
+                    self.total_opens += 1
+                    logger.warning(
+                        f"[CB:{self.name}] → OPEN "
+                        f"(failures={self.consecutive_failures}, "
+                        f"cooldown={self.current_cooldown:.1f}s, err={self.last_error})"
+                    )
+                else:
+                    # Already open: extend cooldown exponentially
+                    self.current_cooldown = min(
+                        self.current_cooldown * 2.0, self.max_cooldown
+                    )
+                    self.opened_at = time.time()
+                    logger.warning(
+                        f"[CB:{self.name}] OPEN extended "
+                        f"(cooldown={self.current_cooldown:.1f}s)"
+                    )
 
     def apply_retry_after(self, retry_after: float) -> None:
         """v15.0: Honor server's Retry-After or x-rate-limit-reset.

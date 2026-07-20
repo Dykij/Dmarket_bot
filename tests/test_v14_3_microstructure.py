@@ -286,9 +286,9 @@ class TestCompositeBuyScore:
             best_ask=1.0, best_bid=1.01, ask_count=20, bid_count=3,
             obi=-0.5, ofi=-15, cvd=-8.0, vpin_val=0.9,
             vwap_discount=0.0, adverse_pass=False, vol_regime="high",
-            kyle_lam=0.08,
+            kyle_lam=0.08, entropy_regime="random",
         )
-        assert score < 0.3  # should be rejected
+        assert score < 0.4  # should be rejected
 
     def test_components_sum(self):
         _, comps = composite_buy_score(

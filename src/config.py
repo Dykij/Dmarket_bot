@@ -105,7 +105,7 @@ class Config(BaseSettings):
     # --- Inventory & Sale Age ---
     MAX_LAST_SALE_AGE_DAYS: int = Field(default=30, ge=1)
     MAX_OPEN_INVENTORY: int = Field(default=200, ge=1)
-    BOT_VERSION: str = "v14.9"
+    BOT_VERSION: str = "v16.2"
 
     # --- Performance ---
     SCAN_INTERVAL: int = Field(default=30, ge=1)
@@ -330,6 +330,16 @@ class Config(BaseSettings):
     OU_ENTRY_Z_SCORE: float = Field(default=-1.5, le=0.0)
     OU_STOP_Z_SCORE: float = Field(default=-3.0, le=0.0)
     OU_MIN_R_SQUARED: float = Field(default=0.3, ge=0.0, le=1.0)
+
+    # --- Pair Trading ---
+    PAIR_MIN_CORRELATION: float = Field(default=0.5, ge=0.0, le=1.0)
+    PAIR_MIN_CINTEGRATION: float = Field(default=0.3, ge=0.0, le=1.0)
+
+    # --- Event-Driven Strategy ---
+    EVENT_PROXIMITY_WEIGHT: float = Field(default=0.6, ge=0.0, le=1.0)
+    SEASONAL_WEIGHT: float = Field(default=0.4, ge=0.0, le=1.0)
+    ACCUMULATION_START_DAYS: int = Field(default=30, ge=1)
+    ACCUMULATION_PEAK_DAYS: int = Field(default=7, ge=1)
 
     # --- Backward Compatibility Aliases ---
     @property

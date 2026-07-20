@@ -258,7 +258,8 @@ class RiskManager:
                 )
 
         # 4.5. v14.7: Consecutive loss streak — halve position after 3+ losses
-        self._last_proposed_size = proposed_size_usd
+        # Note: _last_proposed_size is set AFTER reduction to track actual size used
+        consecutive_loss_reduced = False
         if self._consecutive_losses >= 3 and proposed_size_usd > 0:
             reduced = round(proposed_size_usd * 0.5, 2)
             if reduced < 0.50:
@@ -275,6 +276,10 @@ class RiskManager:
                 f"halving position: ${proposed_size_usd:.2f} → ${reduced:.2f}"
             )
             proposed_size_usd = reduced
+            consecutive_loss_reduced = True
+
+        # Track actual proposed size after all reductions
+        self._last_proposed_size = proposed_size_usd
 
         # 5. v14.4: Drawdown-aware spending freeze (must come BEFORE hard kill-switch)
         freeze_threshold_pct = _get_drawdown_freeze_threshold()
@@ -307,8 +312,7 @@ class RiskManager:
 
         # 7. Soft halt — reduce size by 50% at 5%+ drawdown (only for buys)
         # Skip if already reduced by consecutive-loss halving (prevents double-halve)
-        already_reduced = self._consecutive_losses >= 3 and proposed_size_usd < self._last_proposed_size
-        if self._current_drawdown_pct >= self.soft_halt_drawdown_pct and not already_reduced:
+        if self._current_drawdown_pct >= self.soft_halt_drawdown_pct and not consecutive_loss_reduced:
             self._soft_halt_active = True
             reduced = round(proposed_size_usd * 0.5, 2)
             if reduced < 0.50:

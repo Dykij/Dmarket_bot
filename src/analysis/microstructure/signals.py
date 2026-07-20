@@ -81,6 +81,7 @@ def composite_buy_score(
     dema_crossover: str = "neutral",
     macd_signal_val: str = "neutral",
     hurst_exponent: float | None = None,
+    entropy_regime: str = "random",
 ) -> tuple[float, dict[str, float]]:
     """
     Weighted composite score for ranking candidates.
@@ -179,6 +180,15 @@ def composite_buy_score(
     else:
         components["hurst"] = 0.5  # unknown
 
+    # Entropy Regime (0..1): trending=0.9, mean_reverting=0.7, random=0.3
+    # Source: arXiv information theory in finance
+    entropy_scores = {
+        "trending": 0.9,       # predictable → momentum strategies work
+        "mean_reverting": 0.7,  # predictable → reversion strategies work
+        "random": 0.3,          # unpredictable → reduce confidence
+    }
+    components["entropy"] = entropy_scores.get(entropy_regime, 0.5)
+
     weights = {
         "spread": 2.0,
         "obi": 1.5,
@@ -195,9 +205,10 @@ def composite_buy_score(
         "dema": 0.8,        # Medium weight — crossover confirmation
         "macd": 0.8,        # Medium weight — momentum confirmation
         "hurst": 0.5,       # Low weight — informational (regime strength)
+        "entropy": 1.0,     # Medium weight — predictability from information theory
     }
 
-    weighted_sum = sum(components[k] * weights[k] for k in weights)
+    weighted_sum = sum(components.get(k, 0.0) * weights[k] for k in weights)
     total_weight = sum(weights.values())
     total_score = weighted_sum / max(total_weight, 0.01)
 

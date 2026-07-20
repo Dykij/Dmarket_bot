@@ -32,11 +32,9 @@ Complexity: O(1) per signal (calendar lookup + interpolation)
 from __future__ import annotations
 
 import logging
-import math
 from dataclasses import dataclass, field
 from datetime import datetime, timezone, timedelta
 from enum import Enum
-from typing import Any
 
 logger = logging.getLogger("EventDriven")
 
@@ -516,7 +514,7 @@ def _demo() -> None:
     # Test near a Major (simulate being 10 days before)
     major_date = datetime(2026, 5, 5, tzinfo=timezone.utc)
     signal = strategy.get_signal(item_category="souvenir", now=major_date)
-    print(f"[EventDriven] 10 days before Major:")
+    print("[EventDriven] 10 days before Major:")
     print(f"  event_score={signal.event_score:.2f}")
     print(f"  nearest_event={signal.nearest_event}")
     print(f"  days_until={signal.days_until_event}")
@@ -525,7 +523,7 @@ def _demo() -> None:
     # Test during Steam sale
     sale_date = datetime(2026, 7, 1, tzinfo=timezone.utc)
     signal_sale = strategy.get_signal(item_category="all", now=sale_date)
-    print(f"\n[EventDriven] During Steam Sale:")
+    print("\n[EventDriven] During Steam Sale:")
     print(f"  event_score={signal_sale.event_score:.2f}")
     print(f"  nearest_event={signal_sale.nearest_event}")
     print(f"  action={signal_sale.action}")
@@ -533,7 +531,7 @@ def _demo() -> None:
     # Test normal day
     normal_date = datetime(2026, 3, 15, tzinfo=timezone.utc)
     signal_normal = strategy.get_signal(item_category="knife", now=normal_date)
-    print(f"\n[EventDriven] Normal day (March):")
+    print("\n[EventDriven] Normal day (March):")
     print(f"  seasonal_score={signal_normal.seasonal_score:.2f}")
     print(f"  seasonal_multiplier={signal_normal.seasonal_multiplier:.2f}")
     print(f"  action={signal_normal.action}")

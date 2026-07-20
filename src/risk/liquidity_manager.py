@@ -18,7 +18,8 @@ class LiquidityManager:
         self._db_loaded = False
 
     def _get_today(self) -> str:
-        return datetime.now().strftime("%Y-%m-%d")
+        from datetime import timezone
+        return datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
     def _load_from_db(self) -> None:
         """Load daily spend from SQLite on first access."""
@@ -59,7 +60,7 @@ class LiquidityManager:
         self._load_from_db()
         today = self._get_today()
         current_daily_spend = self.daily_spend_log.get(today, 0.0)
-        
+
         # 1. Check Daily Limit (15%)
         max_daily = total_balance * self.daily_limit_pct
         if (current_daily_spend + amount) > max_daily:

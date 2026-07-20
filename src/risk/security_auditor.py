@@ -15,7 +15,7 @@ class SecurityAuditor:
     DMarket, CSFloat, Waxpeer, Telegram, GitHub, and common
     cloud providers.
     """
-    
+
     # Common patterns for sensitive keys (Gitleaks 8.x compatible patterns)
     PATTERNS = [
         # Generic key-value patterns

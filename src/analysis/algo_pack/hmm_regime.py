@@ -29,7 +29,6 @@ import logging
 import math
 from dataclasses import dataclass, field
 from enum import IntEnum
-from typing import Any
 
 logger = logging.getLogger("HMMRegime")
 
@@ -336,23 +335,26 @@ class HMMRegimeDetector:
                 self.params.stds[s] = 0.7 * self.params.stds[s] + 0.3 * new_std
 
         # Update transition matrix using per-timestep posteriors
+        # Correct M-step: accumulate xi[t][i][j] = P(state=i at t, state=j at t+1)
+        # then normalize by gamma[t][i] to get transition[i][j]
+        # Since we only have forward probs (no backward pass), we approximate:
+        # xi[t][i][j] ≈ gamma[t][i] * transition[i][j] * gamma[t+1][j] / normalize
         counts = [[0.0] * K for _ in range(K)]
         for t in range(n - 1):
+            # Compute joint probability P(i at t, j at t+1) for all i,j
+            joint = [[0.0] * K for _ in range(K)]
+            joint_total = 0.0
             for i in range(K):
                 for j in range(K):
-                    # gamma[t][i] = P(state=i at t), transition[i][j] = P(j|i)
-                    counts[i][j] += gamma[t][i] * self.params.transition[i][j]
-            # Normalize by the total probability at t+1
-            total_p = sum(
-                sum(gamma[t][ii] * self.params.transition[ii][jj] for ii in range(K))
-                for jj in range(K)
-            )
-            if total_p > 1e-10:
+                    joint[i][j] = gamma[t][i] * self.params.transition[i][j] * gamma[t + 1][j]
+                    joint_total += joint[i][j]
+            # Normalize joint to get proper xi
+            if joint_total > 1e-10:
                 for i in range(K):
                     for j in range(K):
-                        counts[i][j] /= total_p
+                        counts[i][j] += joint[i][j] / joint_total
 
-        # Normalize rows
+        # Normalize rows to get transition probabilities
         for i in range(K):
             row_sum = sum(counts[i])
             if row_sum > 0:
