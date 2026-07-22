@@ -184,6 +184,7 @@ async def cmd_liquidate(message):
 async def cb_liquidate_confirm(callback: types.CallbackQuery):
     """Execute liquidation after confirmation."""
     if callback.message is None or not isinstance(callback.message, types.Message):
+        await callback.answer()
         return
 
     if state.client is None:
@@ -191,7 +192,9 @@ async def cb_liquidate_confirm(callback: types.CallbackQuery):
         await callback.answer()
         return
 
+    # Remove buttons immediately to prevent double-click
     await callback.message.edit_text("💧 *LIQUIDATION IN PROGRESS*\nSelling all unlocked inventory at best bid...")
+    await callback.answer()
 
     from src.core.target_sniping.position_guard import _PositionGuardMixin
     guard = _PositionGuardMixin()
@@ -202,7 +205,6 @@ async def cb_liquidate_confirm(callback: types.CallbackQuery):
     except Exception:
         logger.exception("Liquidation failed")
         await callback.message.edit_text("❌ Liquidation failed. Check logs for details.")
-        await callback.answer()
         return
 
     await callback.message.edit_text(
@@ -212,7 +214,6 @@ async def cb_liquidate_confirm(callback: types.CallbackQuery):
         f"Errors: {result['errors']}"
     )
     logger.warning(f"LIQUIDATION executed by admin {callback.from_user.id}: {result}")
-    await callback.answer()
 
 
 @router.callback_query(ConfirmCallback.filter((F.action == "no") & (F.context == "liquidate")))

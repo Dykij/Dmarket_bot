@@ -62,6 +62,7 @@ async def cb_stop(callback: types.CallbackQuery):
 @safe_call
 async def cb_balance(callback: types.CallbackQuery):
     if callback.message is None or not isinstance(callback.message, types.Message):
+        await callback.answer()
         return
     logger.info("cb_balance triggered")
     await callback.message.edit_text("💰 Fetching balance...")
@@ -87,6 +88,7 @@ async def cb_balance(callback: types.CallbackQuery):
 @safe_call
 async def cb_inventory(callback: types.CallbackQuery):
     if callback.message is None or not isinstance(callback.message, types.Message):
+        await callback.answer()
         return
     logger.info("cb_inventory triggered")
     idle = price_db.get_virtual_inventory(status='idle', only_unlocked=False)
@@ -104,6 +106,7 @@ async def cb_inventory(callback: types.CallbackQuery):
 @safe_call
 async def cb_profits(callback: types.CallbackQuery):
     if callback.message is None or not isinstance(callback.message, types.Message):
+        await callback.answer()
         return
     logger.info("cb_profits triggered")
     sold = price_db.get_virtual_inventory(status='sold')
@@ -120,6 +123,7 @@ async def cb_profits(callback: types.CallbackQuery):
 @safe_call
 async def cb_portfolio(callback: types.CallbackQuery):
     if callback.message is None or not isinstance(callback.message, types.Message):
+        await callback.answer()
         return
     logger.info("cb_portfolio triggered")
     try:
@@ -140,6 +144,7 @@ async def cb_portfolio(callback: types.CallbackQuery):
 @safe_call
 async def cb_daily(callback: types.CallbackQuery):
     if callback.message is None or not isinstance(callback.message, types.Message):
+        await callback.answer()
         return
     logger.info("cb_daily triggered")
     try:
@@ -169,6 +174,7 @@ async def cb_daily(callback: types.CallbackQuery):
 @safe_call
 async def cb_analyze(callback: types.CallbackQuery):
     if callback.message is None or not isinstance(callback.message, types.Message):
+        await callback.answer()
         return
     logger.info("cb_analyze triggered")
     await callback.message.edit_text("🧠 Running analysis...")
@@ -202,6 +208,7 @@ async def cb_analyze(callback: types.CallbackQuery):
 @safe_call
 async def cb_sell_top(callback: types.CallbackQuery):
     if callback.message is None or not isinstance(callback.message, types.Message):
+        await callback.answer()
         return
     logger.info("cb_sell_top triggered")
 
@@ -242,6 +249,7 @@ async def cb_sell_top(callback: types.CallbackQuery):
 @safe_call
 async def cb_refresh_status(callback: types.CallbackQuery):
     if callback.message is None or not isinstance(callback.message, types.Message):
+        await callback.answer()
         return
     logger.info("cb_refresh_status triggered")
     st = await state.status()
