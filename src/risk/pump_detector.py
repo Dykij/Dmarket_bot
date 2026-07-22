@@ -112,6 +112,10 @@ class PumpDetector:
         self._total_alerts_sent: int = 0
         self._last_scan_ts: float = 0.0
 
+        # Task reference tracking — prevents GC from collecting
+        # fire-and-forget tasks before they complete
+        self._background_tasks: set = set()
+
         # Late-binding injection (set by SnipingLoop.__init__ after creation)
         self._price_db = price_db
         self._notifier = notifier
@@ -305,7 +309,9 @@ class PumpDetector:
                 )
                 try:
                     loop = asyncio.get_running_loop()
-                    loop.create_task(coro)
+                    task = loop.create_task(coro)
+                    self._background_tasks.add(task)
+                    task.add_done_callback(self._background_tasks.discard)
                     alert.alerted = True
                     self._total_alerts_sent += 1
                 except RuntimeError:
@@ -382,7 +388,9 @@ class PumpDetector:
                 )
                 try:
                     loop = asyncio.get_running_loop()
-                    loop.create_task(coro)
+                    task = loop.create_task(coro)
+                    self._background_tasks.add(task)
+                    task.add_done_callback(self._background_tasks.discard)
                 except RuntimeError:
                     pass
             except Exception as e:

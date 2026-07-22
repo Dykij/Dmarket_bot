@@ -1,6 +1,7 @@
 # Ignore secrets and transient data
 .env
 .env.backup*
+test_key
 .opencode/
 opencode.json
 .local/
@@ -50,3 +51,4 @@ Cargo.lock
 
 # Zig compiler
 /tmp/zig*
+.archive/

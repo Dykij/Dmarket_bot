@@ -64,7 +64,7 @@
 ```
 1. Сканировать DMarket (10 req/s)
 2. Найти недооцененный предмет (rarity + spread signals)
-3. Купить мгновенно (POST /market/buy)
+3. Купить мгновенно (PATCH /exchange/v1/offers-buy)
 4. Сразу выставить на продажу по fair_price x 0.97
 5. Получить спред как прибыль
 ```
@@ -210,7 +210,7 @@ START CYCLE (run_cycle)
   +-- 5. _stage_execute
   |      +-- Slippage protection (pre-trade check)
   |      +-- Risk manager pre-trade check (fee-aware)
-  |      +-- POST /exchange/v1/market/buy
+  |      +-- PATCH /exchange/v1/offers-buy
   |      +-- Post-buy: virtual inventory tracking
   |      +-- Almgren-Chriss execution (for qty >= 5)
   |

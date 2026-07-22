@@ -361,16 +361,32 @@ def fatal_exit(exc: BaseException, context: dict[str, Any] | None = None) -> Non
     logger.error(report.format_log())
     _write_exit_state(report.exit_code, exc, context=context)
 
-    # Best-effort: try to send Telegram before exiting. If we're
-    # already in the event loop (typical), we schedule the task.
-    # If that fails, the log is the source of truth.
+    # Best-effort: try to send Telegram before exiting.
+    # We must WAIT for the send to complete — fire-and-forget tasks
+    # are killed by sys.exit() before they can run.
     try:
         loop = asyncio.get_running_loop()
-        # Cannot use run_until_complete on a running loop — just schedule
-        loop.create_task(_send_report_with_timeout(report))
+        # We're inside a running loop — create a task and run it
+        # to completion with a timeout before exiting.
+        try:
+            loop.run_until_complete(
+                asyncio.wait_for(report.send_telegram(), timeout=3.0)
+            )
+        except RuntimeError:
+            # run_until_complete can't be called on a running loop.
+            # Use a new thread to run the async send.
+            import concurrent.futures
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+                try:
+                    pool.submit(
+                        asyncio.run,
+                        asyncio.wait_for(report.send_telegram(), timeout=3.0),
+                    ).result(timeout=5.0)
+                except Exception:
+                    pass
     except RuntimeError:
         # No running loop (called from sync context) — run directly
         with contextlib.suppress(Exception):
-            asyncio.run(asyncio.wait_for(report.send_telegram(), timeout=2.0))
+            asyncio.run(asyncio.wait_for(report.send_telegram(), timeout=3.0))
 
     sys.exit(report.exit_code)

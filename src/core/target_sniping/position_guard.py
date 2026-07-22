@@ -16,6 +16,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
+import time
 from typing import Any
 
 from src.config import Config
@@ -31,10 +32,6 @@ STOP_LOSS_ENABLED = Config.STOP_LOSS_ENABLED
 TAKE_PROFIT_ENABLED = Config.TAKE_PROFIT_ENABLED
 STOP_LOSS_MIN_AGE_HOURS = Config.STOP_LOSS_MIN_AGE_HOURS
 LIQUIDATE_AT_BID_DISCOUNT = float(os.getenv("LIQUIDATE_AT_BID_DISCOUNT", "0.01"))
-
-# v15.5: Time-stop — cancel buy targets sitting too long without fill
-TIME_STOP_ENABLED = Config.TIME_STOP_ENABLED
-TIME_STOP_MINUTES = Config.TIME_STOP_MINUTES
 
 
 class _PositionGuardMixin:
@@ -56,7 +53,7 @@ class _PositionGuardMixin:
         if not items:
             return 0
 
-        now = __import__("time").time()
+        now = time.time()
         items_to_liquidate: list[tuple[Any, float, str]] = []  # (item, sell_price, reason)
 
         for it in items:
@@ -168,83 +165,34 @@ class _PositionGuardMixin:
         return {"liquidated": count, "total_value": round(total_value, 2), "errors": len(liquidate_list) - count}
 
     async def _get_current_price(self, hash_name: str, use_bid: bool = False) -> float:
-        """Get current market price from oracle cache or oracle."""
+        """Get current market price from oracle (FairPriceResult)."""
         if self.oracle is not None:
-            if use_bid:
-                bid = self.oracle.get_bid(hash_name)
-                if bid is not None and bid > 0:
-                    return bid
-            ask = self.oracle.get_ask(hash_name)
-            if ask is not None and ask > 0:
-                return ask
+            try:
+                result = await self.oracle.get_fair_price(hash_name)
+                if result and result.has_data:
+                    if use_bid and result.dmarket_best_bid > 0:
+                        return result.dmarket_best_bid
+                    if result.dmarket_best_ask > 0:
+                        return result.dmarket_best_ask
+                    # Fall back to fair price if no direct bid/ask
+                    fair = result.fair_price if hasattr(result, 'fair_price') else 0.0
+                    if fair > 0:
+                        return fair
+            except Exception as e:
+                logger.debug(f"[POSITION-GUARD] Oracle price fetch failed for {hash_name}: {e}")
 
         from src.api.oracle_factory import OracleFactory
         oracle = OracleFactory.get_oracle("a8db")
         if oracle:
             try:
-                price = await oracle.get_item_price(hash_name)
-                if price > 0:
-                    return price
+                result = await oracle.get_fair_price(hash_name)
+                if result and result.has_data:
+                    price = result.dmarket_best_ask if not use_bid else result.dmarket_best_bid
+                    if price > 0:
+                        return price
             except Exception as e:
                 logger.debug(f"[POSITION-GUARD] Oracle price fetch failed for {hash_name}: {e}")
         return 0.0
-
-    async def check_stale_targets(self, game_id: str) -> int:
-        """v15.5: Cancel buy targets sitting too long without fill (time-stop).
-
-        Source: Reddit r/algotrading — "90-minute time-stop for dead positions"
-        Prevents capital lockup in unfilled orders.
-        """
-        if not TIME_STOP_ENABLED:
-            return 0
-
-        now = __import__("time").time()
-        cutoff = now - (TIME_STOP_MINUTES * 60)
-
-        targets = price_db.get_active_targets()
-        if not targets:
-            return 0
-
-        stale: list[dict] = []
-        for t in targets:
-            t_dict = dict(t) if not isinstance(t, dict) else t
-            created = float(t_dict.get("created_at", 0))
-            if created > 0 and created < cutoff:
-                stale.append(t_dict)
-
-        if not stale:
-            return 0
-
-        is_dry = Config.DRY_RUN
-        cancelled = 0
-
-        if is_dry:
-            for t in stale:
-                age_min = (now - float(t.get("created_at", 0))) / 60
-                logger.info(
-                    f"[TIME-STOP-SIM] Would cancel stale target: "
-                    f"{t.get('hash_name', '?')} (age {age_min:.0f}min > {TIME_STOP_MINUTES}min)"
-                )
-                cancelled += 1
-            return cancelled
-
-        try:
-            target_ids = [t["item_id"] for t in stale if t.get("item_id")]
-            if target_ids:
-                await self.client.batch_delete_targets(
-                    [{"targetId": tid} for tid in target_ids]
-                )
-                for t in stale:
-                    age_min = (now - float(t.get("created_at", 0))) / 60
-                    logger.info(
-                        f"[TIME-STOP] Cancelled stale target: "
-                        f"{t.get('hash_name', '?')} (age {age_min:.0f}min)"
-                    )
-                    cancelled += 1
-        except Exception as e:
-            logger.warning(f"[TIME-STOP] Batch cancel failed: {e}")
-
-        return cancelled
 
     async def _execute_liquidation(
         self,

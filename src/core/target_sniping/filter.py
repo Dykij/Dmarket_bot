@@ -388,26 +388,46 @@ class _FilterMixin(_FilterEvaluatorMixin):
             and base_price < cs_price * (1 - required_margin)
         )
 
+        # NOV-2 FIX: When ALL oracles are down (cs_price == 0), block
+        # oracle-dependent strategies.  has_intra_spread is pure DMarket-internal
+        # (bid > ask × spread) and does NOT need oracle data — it remains allowed.
+        # has_dmarket_underpriced compares against historical sales which may be
+        # stale without oracle cross-check — block it when oracle data is absent.
+        oracle_data_available = cs_price > 0
+
         # v14.8.1: DMarket-internal underpriced check. Only call last-sales
         # when no other edge exists, to respect rate limits.
+        # NOV-2: Skip this path when oracle data is unavailable — without
+        # external price validation, historical sales may be stale/manipulated.
         has_dmarket_underpriced = False
         dm_underpriced_ref = 0.0
         if not (has_intra_spread or has_cross_market or has_oracle_discount):
-            try:
-                from src.core.target_sniping.underpriced import is_dmarket_underpriced
-                up = await is_dmarket_underpriced(
-                    self.client, game_id, title, base_price, fee_rate=bulk_fees.get(item_id, Config.FEE_RATE)
+            if not oracle_data_available:
+                logger.warning(
+                    f"[ORACLE-DOWN] {title}: all oracles unavailable, "
+                    f"blocking DMarket-underpriced strategy (no external price validation)"
                 )
-                if up.get("underpriced"):
-                    has_dmarket_underpriced = True
-                    dm_underpriced_ref = up.get("reference_price", 0.0)
-                    if is_sandbox:
-                        price_db.log_decision(
-                            title, "pass", "DMarket underpriced vs sales",
-                            f"base={base_price:.2f} ref={dm_underpriced_ref:.2f} margin={up.get('margin_pct', 0):.1f}%"
-                        )
-            except Exception as e:
-                logger.debug(f"DMarket underpriced check failed for {title}: {e}")
+                if is_sandbox:
+                    price_db.log_decision(
+                        title, "skip", "All oracles down",
+                        "cs_price=0.0, blocking oracle-dependent strategies"
+                    )
+            else:
+                try:
+                    from src.core.target_sniping.underpriced import is_dmarket_underpriced
+                    up = await is_dmarket_underpriced(
+                        self.client, game_id, title, base_price, fee_rate=bulk_fees.get(item_id, Config.FEE_RATE)
+                    )
+                    if up.get("underpriced"):
+                        has_dmarket_underpriced = True
+                        dm_underpriced_ref = up.get("reference_price", 0.0)
+                        if is_sandbox:
+                            price_db.log_decision(
+                                title, "pass", "DMarket underpriced vs sales",
+                                f"base={base_price:.2f} ref={dm_underpriced_ref:.2f} margin={up.get('margin_pct', 0):.1f}%"
+                            )
+                except Exception as e:
+                    logger.debug(f"DMarket underpriced check failed for {title}: {e}")
 
         if not (has_intra_spread or has_cross_market or has_oracle_discount or has_dmarket_underpriced):
             if is_sandbox:
@@ -666,16 +686,24 @@ class _FilterMixin(_FilterEvaluatorMixin):
                 dema_crossover=ms_result.dema_crossover,
                 macd_signal_val=ms_result.macd_signal,
                 hurst_exponent=ms_result.hurst_exponent,
+                hmm_regime=ms_result.hmm_regime,
             )
-            micro["composite_score"]
-            micro["components"]
+            composite_score = micro["composite_score"]
+            # Reject items with very poor microstructure scores
+            if composite_score < 0.2:
+                if is_sandbox:
+                    price_db.log_decision(
+                        title, "skip", "Microstructure score too low",
+                        f"composite={composite_score:.2f} < 0.2",
+                    )
+                return None
 
         # --- Decide: instant buy vs target ---
         # For intra-spread strategy, we typically instant-buy
         # (the spread exists right now, may not in 5 minutes)
         buy_offer = {
             "offerId": item_id,
-            "price": {"amount": str(int(base_price * 100)), "currency": "USD"},
+            "price": {"amount": str(int(round(base_price * 100))), "currency": "USD"},
         }
         return {
             "buy_offer": buy_offer,

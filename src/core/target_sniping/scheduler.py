@@ -55,7 +55,7 @@ class _SchedulerMixin:
             f"Starting DMarket Intra-Spread Loop v14.9 | Targets: {self.target_games}"
         )
 
-        gc.set_threshold(700, 10, 5)  # Less aggressive GC, but still enabled
+        gc.set_threshold(700, 10, 5)  # More frequent gen2 GC (default: 700, 10, 10)
 
         # v14.9: Use TaskGroup for structured concurrency
         # All background tasks managed in a single group for clean shutdown
@@ -151,8 +151,8 @@ class _SchedulerMixin:
                 if classification in ("FATAL", "UNKNOWN"):
                     report = ErrorReporter(exc, context={
                         "phase": "taskgroup",
-                        "cycle_count": cycle_count if 'cycle_count' in dir() else 0,
-                        "boot_rss_mb": f"{boot_rss_mb:.1f}" if 'boot_rss_mb' in dir() else "unknown",
+                        "cycle_count": cycle_count if 'cycle_count' in locals() else 0,
+                        "boot_rss_mb": f"{boot_rss_mb:.1f}" if 'boot_rss_mb' in locals() else "unknown",
                     })
                     logger.error(report.format_log())
                 else:

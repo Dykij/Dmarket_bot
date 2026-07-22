@@ -81,7 +81,8 @@ def composite_buy_score(
     dema_crossover: str = "neutral",
     macd_signal_val: str = "neutral",
     hurst_exponent: float | None = None,
-    entropy_regime: str = "random",
+    entropy_regime: str = "",
+    hmm_regime: str = "",
 ) -> tuple[float, dict[str, float]]:
     """
     Weighted composite score for ranking candidates.
@@ -189,6 +190,16 @@ def composite_buy_score(
     }
     components["entropy"] = entropy_scores.get(entropy_regime, 0.5)
 
+    # HMM Regime (0..1): BULL=0.9, RECOVERY=0.7, BEAR=0.3, CRISIS=0.0
+    # Source: Hamilton (1989) regime switching models
+    hmm_scores = {
+        "BULL": 0.9,
+        "RECOVERY": 0.7,
+        "BEAR": 0.3,
+        "CRISIS": 0.0,
+    }
+    components["hmm_regime"] = hmm_scores.get(hmm_regime, 0.5)
+
     weights = {
         "spread": 2.0,
         "obi": 1.5,
@@ -206,6 +217,7 @@ def composite_buy_score(
         "macd": 0.8,        # Medium weight — momentum confirmation
         "hurst": 0.5,       # Low weight — informational (regime strength)
         "entropy": 1.0,     # Medium weight — predictability from information theory
+        "hmm_regime": 1.5,  # High weight — regime detection is critical for risk
     }
 
     weighted_sum = sum(components.get(k, 0.0) * weights[k] for k in weights)

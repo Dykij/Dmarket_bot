@@ -22,10 +22,12 @@ v14.9 Improvements:
 from __future__ import annotations
 
 import asyncio
+import atexit
 import contextlib
 import logging
 import os
 import sqlite3
+import threading
 import time as _time
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
@@ -99,6 +101,15 @@ class PriceHistoryDB(  # type: ignore[misc]
         self.history_conn.execute("PRAGMA temp_store=MEMORY")
         self.history_conn.execute("PRAGMA mmap_size=268435456") # 256MB memory-mapped I/O
 
+        # Thread safety: one lock per connection to prevent concurrent
+        # access from the ThreadPoolExecutor workers (SQLite connections
+        # are NOT thread-safe even with WAL mode).
+        self._state_lock = threading.Lock()
+        self._history_lock = threading.Lock()
+        # Combined lock for run_in_thread — serializes all DB ops
+        # to prevent "database is locked" errors
+        self._db_lock = threading.Lock()
+
         # v14.1: Hardened file permissions — restrict to owner only
         try:
             os.chmod(str(self.state_path), 0o600)
@@ -107,6 +118,9 @@ class PriceHistoryDB(  # type: ignore[misc]
             pass
 
         self._init_schemas()
+
+        # Ensure connections are closed on process exit
+        atexit.register(self.close)
 
     def optimize(self) -> None:
         """v14.9: Periodic PRAGMA optimize for query planner statistics.
@@ -134,6 +148,9 @@ class PriceHistoryDB(  # type: ignore[misc]
         """Run a synchronous DB operation in the thread pool to avoid
         blocking the async event loop.
 
+        Uses a threading.Lock to serialize access to SQLite connections
+        (they are NOT thread-safe even with WAL mode).
+
         Usage in async code:
             row = await price_db.run_in_thread(
                 price_db.state_conn.execute, "SELECT ...", (param,)
@@ -142,8 +159,13 @@ class PriceHistoryDB(  # type: ignore[misc]
         """
         loop = asyncio.get_running_loop()
         return await loop.run_in_executor(
-            _db_executor, lambda: fn(*args, **kwargs)
+            _db_executor, lambda: self._run_locked(fn, *args, **kwargs)
         )
+
+    def _run_locked(self, fn: Callable[..., Any], *args: Any, **kwargs: Any) -> Any:
+        """Execute fn with the DB lock held."""
+        with self._db_lock:
+            return fn(*args, **kwargs)
 
     def _init_schemas(self) -> None:
         """Initialize appropriate tables in each database.

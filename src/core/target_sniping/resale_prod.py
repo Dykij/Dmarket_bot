@@ -245,45 +245,21 @@ class _ResaleProdMixin:
         if not listable:
             return
 
-        # Get oracle asks via cache (sub-ms, no HTTP)
+        # Get oracle fair prices for listing
         asks: dict[str, float] = {}
         if self.oracle is not None:
             for it in listable:
                 title = it["hash_name"]
                 if title not in asks:
-                    snap = self.oracle.get_ask(title)
-                    if not snap or not snap.has_data:
+                    try:
+                        result = await self.oracle.get_fair_price(title)
+                        if result and result.source_count > 0 and result.fair_price > 0:
+                            asks[title] = result.fair_price
+                        else:
+                            asks[title] = 0.0
+                    except Exception as e:
+                        logger.debug(f"[RESALE-PROD] Oracle price failed for {title}: {e}")
                         asks[title] = 0.0
-                        continue
-                    # v14.0 Micro-Price: volume-weighted fair price instead of raw min_price
-                    if Config.MICRO_PRICE_ENABLED:
-                        bid_snap = self.oracle.get_bid(title)
-                        if bid_snap and bid_snap.has_data and snap.provider_prices and bid_snap.provider_bids:
-                            ask_total = sum(snap.provider_prices.values())
-                            bid_total = sum(bid_snap.provider_bids.values())
-                            ask_count = len(snap.provider_prices)
-                            bid_count = len(bid_snap.provider_bids)
-                            if ask_total > 0 and bid_total > 0:
-                                mid_price = (snap.min_price * bid_total + bid_snap.max_bid * ask_total) / (bid_total + ask_total)
-                                # v14.3 Stoikov Micro-Price — OBI-adjusted
-                                if Config.STOIKOV_MICRO_PRICE_ENABLED:
-                                    from src.analysis.microstructure import (
-                                        simple_obi,
-                                        stoikov_micro_price,
-                                    )
-                                    spread = bid_snap.max_bid - snap.min_price
-                                    if spread > 0:
-                                        obi_est = simple_obi(
-                                            bid_snap.max_bid, snap.min_price,
-                                            bid_count=bid_count, ask_count=ask_count,
-                                        )
-                                        mid_price = stoikov_micro_price(
-                                            mid_price, spread, obi_est,
-                                            calibration=Config.STOIKOV_CALIBRATION,
-                                        )
-                                asks[title] = mid_price
-                                continue
-                    asks[title] = snap.min_price
 
         # Build payload: (row_id, dm_item_id, title, list_price, buy_price)
         payloads: list[tuple[int, str, str, float, float]] = []
@@ -301,43 +277,38 @@ class _ResaleProdMixin:
 
             # v14.1 A-S (Avellaneda-Stoikov) — inventory-aware reservation price
             if Config.AS_ENABLED and self.oracle is not None:
-                bid_snap = self.oracle.get_bid(title)
-                ask_snap = self.oracle.get_ask(title)
-                if ask_snap and ask_snap.has_data:
-                    mid_price = cs_price
-                    if bid_snap and bid_snap.has_data:
-                        mid_price = (ask_snap.min_price + bid_snap.max_bid) / 2.0
-                    same_item = len([
-                        x for x in price_db.get_virtual_inventory(
-                            status="idle", only_unlocked=False,
-                        ) if x["hash_name"] == title
-                    ])
-                    vol_est = 0.40  # default CS2 skin annualized vol
-                    try:
-                        hist = price_db.get_recent_prices(title, days=14)
-                        if hist and len(hist) >= 3:
-                            log_returns = []
-                            for i in range(1, len(hist)):
-                                prev_p = hist[i - 1][0]
-                                curr_p = hist[i][0]
-                                if prev_p > 0:
-                                    log_returns.append(abs(math.log(curr_p / prev_p)))
-                            if log_returns:
-                                daily_vol = sum(log_returns) / len(log_returns)
-                                vol_est = daily_vol * math.sqrt(365)
-                    except Exception:
-                        pass
-                    from src.analysis.microstructure import reservation_price
-                    reserv = reservation_price(
-                        mid_price=mid_price,
-                        inventory_qty=same_item,
-                        target_qty=0,
-                        max_qty=max(1, Config.MAX_SAME_ITEM_HOLDINGS),
-                        volatility=vol_est,
-                        gamma=Config.AS_RISK_AVERSION,
-                        T_days=Config.AS_TIME_HORIZON_DAYS,
-                    )
-                    cs_price = max(target_sell * 1.01, reserv)
+                mid_price = cs_price  # Use oracle fair price as mid
+                same_item = len([
+                    x for x in price_db.get_virtual_inventory(
+                        status="idle", only_unlocked=False,
+                    ) if x["hash_name"] == title
+                ])
+                vol_est = 0.40  # default CS2 skin annualized vol
+                try:
+                    hist = price_db.get_recent_prices(title, days=14)
+                    if hist and len(hist) >= 3:
+                        log_returns = []
+                        for i in range(1, len(hist)):
+                            prev_p = hist[i - 1][0]
+                            curr_p = hist[i][0]
+                            if prev_p > 0:
+                                log_returns.append(abs(math.log(curr_p / prev_p)))
+                        if log_returns:
+                            daily_vol = sum(log_returns) / len(log_returns)
+                            vol_est = daily_vol * math.sqrt(365)
+                except Exception:
+                    pass
+                from src.analysis.microstructure import reservation_price
+                reserv = reservation_price(
+                    mid_price=mid_price,
+                    inventory_qty=same_item,
+                    target_qty=0,
+                    max_qty=max(1, Config.MAX_SAME_ITEM_HOLDINGS),
+                    volatility=vol_est,
+                    gamma=Config.AS_RISK_AVERSION,
+                    T_days=Config.AS_TIME_HORIZON_DAYS,
+                )
+                cs_price = max(target_sell * 1.01, reserv)
 
             # v14.3: VWAP Bands — list near upper band for mean-reversion target
             if Config.VWAP_BANDS_ENABLED and self.oracle is not None:

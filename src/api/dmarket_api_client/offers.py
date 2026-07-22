@@ -55,7 +55,7 @@ class _OffersMixin:
                 "priceCents": int(round(o["price_usd"] * 100)),
             }
             if "clientOrderId" not in o:
-                entry["clientOrderId"] = _make_idempotency_key(o["asset_id"])
+                entry["clientOrderId"] = _make_idempotency_key(o["asset_id"], price_cents=entry["priceCents"])
             requests.append(entry)
         return await self.make_request(
             "POST",

@@ -224,16 +224,15 @@ class TWAPExecutor:
                 executed_slices.append(slice_obj)
                 continue
 
-            # Execute buy
+            # Execute buy using the existing client.buy_items method
             try:
-                # Use existing client buy method
-                result = await self.client.place_buy_order(
-                    item_id=item.get("itemId", ""),
-                    price_cents=int(current_price * 100),
-                    game_id=game_id,
-                )
+                buy_payload = {
+                    "offerId": item.get("itemId", ""),
+                    "price": {"amount": str(int(round(current_price * 100))), "currency": "USD"},
+                }
+                result = await self.client.buy_items([buy_payload])
 
-                if result and result.get("orderId"):
+                if result and isinstance(result, dict) and result.get("status") != "TxFailed":
                     slice_obj.status = SliceStatus.EXECUTED
                     slice_obj.execution_price = current_price
                     slice_obj.execution_time = datetime.utcnow()
@@ -248,7 +247,8 @@ class TWAPExecutor:
                     )
                 else:
                     slice_obj.status = SliceStatus.FAILED
-                    slice_obj.error = "Order placement returned no order ID"
+                    fail_reason = result.get("dmOffersFailReason", {}) if isinstance(result, dict) else {}
+                    slice_obj.error = f"Buy failed: {fail_reason.get('code', 'unknown') if fail_reason else 'no result'}"
 
             except Exception as e:
                 slice_obj.status = SliceStatus.FAILED

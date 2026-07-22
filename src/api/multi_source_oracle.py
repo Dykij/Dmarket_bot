@@ -85,6 +85,15 @@ class MultiSourceOracle:
         self._failure_threshold = 5
         self._recovery_timeout = 60.0
 
+        # v16.3: Data Freshness Guard — reject stale source data
+        self._source_timestamps: dict[str, float] = {}
+        self._freshness_thresholds: dict[str, float] = {
+            "marketcsgo": 600.0,   # 10 min
+            "waxpeer": 600.0,      # 10 min
+            "csfloat": 600.0,      # 10 min
+            "steam": 1800.0,       # 30 min (Steam is slower)
+        }
+
     def _is_source_available(self, source: str) -> bool:
         """Check if source circuit breaker is closed (available)."""
         import time
@@ -96,6 +105,24 @@ class MultiSourceOracle:
             self._source_open_until[source] = 0.0
             self._source_failures[source] = 0
         return True
+
+    def _is_source_fresh(self, source: str) -> bool:
+        """Data Freshness Guard: check if source data is within threshold."""
+        import time
+        ts = self._source_timestamps.get(source, 0.0)
+        if ts <= 0:
+            return True  # No timestamp yet, allow
+        threshold = self._freshness_thresholds.get(source, 600.0)
+        age = time.time() - ts
+        if age > threshold:
+            logger.debug(f"[FreshnessGuard] {source} data is {age:.0f}s old (threshold={threshold:.0f}s)")
+            return False
+        return True
+
+    def _record_source_timestamp(self, source: str) -> None:
+        """Record when source last returned fresh data."""
+        import time
+        self._source_timestamps[source] = time.time()
 
     def _record_source_failure(self, source: str) -> None:
         """Record source failure, open circuit if threshold reached."""
@@ -187,9 +214,19 @@ class MultiSourceOracle:
             wp_vol = await _safe_call("waxpeer_vol", self.waxpeer.get_item_volume(title))
             wp_steam = await _safe_call("waxpeer_steam", self.waxpeer.get_item_steam_price(title))
 
+            # v16.3: Record timestamps for fresh data
+            if isinstance(mc_price, (int, float)) and mc_price > 0:
+                self._record_source_timestamp("marketcsgo")
+            if isinstance(wp_price, (int, float)) and wp_price > 0:
+                self._record_source_timestamp("waxpeer")
+            if isinstance(st_price, (int, float)) and st_price > 0:
+                self._record_source_timestamp("steam")
+
             # CSFloat (optional, lazy init)
             cs = self._init_csfloat()
             cs_price = await _safe_call("csfloat", cs.get_item_price(title)) if cs else 0.0
+            if isinstance(cs_price, (int, float)) and cs_price > 0:
+                self._record_source_timestamp("csfloat")
 
             ref = PriceReference(
                 title=title,
@@ -208,18 +245,19 @@ class MultiSourceOracle:
             self._ref_cache[title] = ref
 
         # Build prices dict for FairPriceCalculator
+        # v16.3: Data Freshness Guard — exclude stale sources
         prices: dict[str, float] = {}
         volumes: dict[str, int] = {}
 
-        if ref.marketcsgo_price > 0:
+        if ref.marketcsgo_price > 0 and self._is_source_fresh("marketcsgo"):
             prices["marketcsgo"] = ref.marketcsgo_price
             volumes["marketcsgo"] = ref.marketcsgo_volume
-        if ref.waxpeer_price > 0:
+        if ref.waxpeer_price > 0 and self._is_source_fresh("waxpeer"):
             prices["waxpeer"] = ref.waxpeer_price
             volumes["waxpeer"] = ref.waxpeer_volume
-        if ref.csfloat_price > 0:
+        if ref.csfloat_price > 0 and self._is_source_fresh("csfloat"):
             prices["csfloat"] = ref.csfloat_price
-        if ref.steam_price > 0:
+        if ref.steam_price > 0 and self._is_source_fresh("steam"):
             prices["steam"] = ref.steam_price
 
         return self.fair_price.calculate(

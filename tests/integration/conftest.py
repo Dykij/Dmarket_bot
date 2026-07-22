@@ -11,7 +11,6 @@ import pytest_asyncio
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator, Generator
 
-    from src.dmarket.dmarket_api import DMarketAPI
     from src.utils.database import DatabaseManager
 
 
@@ -55,18 +54,6 @@ async def test_database() -> AsyncGenerator[DatabaseManager, None]:
     yield db
 
     await db.close()
-
-
-@pytest_asyncio.fixture
-async def mock_dmarket_api() -> DMarketAPI:
-    """Create DMarketAPI instance for mocking."""
-    from src.dmarket.dmarket_api import DMarketAPI
-
-    return DMarketAPI(
-        public_key="test_public_key",
-        secret_key="test_secret_key",
-        api_url="https://api.dmarket.com",
-    )
 
 
 @pytest.fixture()

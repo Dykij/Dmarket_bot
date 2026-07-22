@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from datetime import datetime
 
@@ -10,12 +11,14 @@ class LiquidityManager:
     - Daily Spend: Max 15% of total balance (revolving).
     
     v14.9.1: Daily spend persisted to SQLite to survive restarts.
+    v15.11: Atomic can_spend_and_record to prevent TOCTOU race.
     """
     def __init__(self):
         self.daily_spend_log: dict[str, float] = {}  # date_str -> amount
         self.rust_budget_pct = 0.10
         self.daily_limit_pct = 0.15
         self._db_loaded = False
+        self._lock = asyncio.Lock()
 
     def _get_today(self) -> str:
         from datetime import timezone
@@ -86,3 +89,15 @@ class LiquidityManager:
         self.daily_spend_log[today] = self.daily_spend_log.get(today, 0.0) + amount
         self._save_to_db()
         logger.info(f"Recorded spend: ${amount:.2f}. Total today: ${self.daily_spend_log[today]:.2f}")
+
+    async def can_spend_and_record(self, amount: float, game_id: str, total_balance: float) -> bool:
+        """Atomically check if spend is allowed AND record it.
+
+        Uses an asyncio.Lock to prevent TOCTOU race where two concurrent
+        buys both pass the check but together exceed the limit.
+        """
+        async with self._lock:
+            if not self.can_spend(amount, game_id, total_balance):
+                return False
+            self.record_spend(amount)
+            return True

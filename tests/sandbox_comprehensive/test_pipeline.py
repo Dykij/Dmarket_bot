@@ -9,10 +9,8 @@ from src.config import Config
 from src.api.dmarket_api_client import DMarketAPIClient
 from src.api.oracle_factory import OracleFactory
 from src.api.multi_source_oracle import MultiSourceOracle
-from src.core.limit_orders import _LimitOrderMixin
 from src.core.target_sniping.filter import _FilterMixin
 from src.core.target_sniping.underpriced import fetch_low_fee_titles, is_dmarket_underpriced
-from src.core.limit_orders import _LimitOrderMixin
 from src.risk.liquidity_manager import LiquidityManager
 from src.utils.vault import vault
 
@@ -345,19 +343,6 @@ async def _run_filters(
 
         if it.get("_low_fee_rate") is not None:
             metrics.low_fee_candidates += 1
-
-    # Separate cross-market buy target placement simulation
-    limit_mixin = _LimitOrderMixin()
-    limit_mixin.client = dmarket
-    cross_targets = await limit_mixin._execute_cross_market_targets(
-        game_id=Config.GAME_ID,
-        agg_prices=agg_prices,
-        cs_snapshots=cs_asks_full,
-        current_balance=metrics.balance,
-    )
-    cross += cross_targets
-    if cross_targets:
-        log_ok(f"Cross-market targets that would be placed: {cross_targets}")
 
     metrics.instant_candidates = instant
     metrics.cross_market_targets = cross

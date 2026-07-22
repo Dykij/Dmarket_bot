@@ -405,7 +405,7 @@ class DMarketAPIClient(  # type: ignore[misc]
                     # v15.6: Handle 429 with exponential backoff + monitoring
                     if response.status == 429:
                         self._429_count += 1
-                        rate_limiter.record_429(path)  # v15.6: Monitor 429
+                        await rate_limiter.record_429(path)  # v15.6: Monitor 429
                         reset_in = response.headers.get("RateLimit-Reset", "1")
                         logger.warning(
                             f"[RateLimit] 429 from {self.BASE_URL} "
@@ -437,7 +437,7 @@ class DMarketAPIClient(  # type: ignore[misc]
                 # Reset 429 counter on success
                 if self._429_count > 0:
                     self._429_count = max(0, self._429_count - 1)
-                rate_limiter.record_success()  # v15.6: Monitor success
+                await rate_limiter.record_success()  # v15.6: Monitor success
                 # v15.7: Use msgspec for 5-10x faster JSON parsing
                 response_bytes = await response.read()
                 response_json = _loads(response_bytes)

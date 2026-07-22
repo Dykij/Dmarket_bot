@@ -135,7 +135,7 @@ class EndpointRateLimiter:
         bucket = self._get_bucket(path)
         return await bucket.acquire()
 
-    def record_429(self, path: str) -> None:
+    async def record_429(self, path: str) -> None:
         """Record a 429 error for monitoring and adaptive rate limiting.
 
         Called by the API client when a 429 response is received.
@@ -152,7 +152,7 @@ class EndpointRateLimiter:
             self._429_timestamps.popleft()
 
         # Adapt safety margin based on 429 rate
-        self._adapt_safety_margin()
+        await self._adapt_safety_margin()
 
         logger.warning(
             f"[RateLimiter] 429 recorded for {path}. "
@@ -160,16 +160,16 @@ class EndpointRateLimiter:
             f"Total: {self._total_429}/{self._total_requests}"
         )
 
-    def record_success(self) -> None:
+    async def record_success(self) -> None:
         """Record a successful request for monitoring."""
         self._total_requests += 1
         # Periodically adapt safety margin
         now = time.monotonic()
         if now - self._last_adaptation > 60:  # Every 60 seconds
-            self._adapt_safety_margin()
+            await self._adapt_safety_margin()
             self._last_adaptation = now
 
-    def _adapt_safety_margin(self) -> None:
+    async def _adapt_safety_margin(self) -> None:
         """Adapt safety margin based on 429 error rate.
 
         High 429 rate → lower margin (more conservative)
@@ -198,17 +198,24 @@ class EndpointRateLimiter:
                 f"(429 rate: {rate_per_minute:.1f}/min)"
             )
             self._current_safety_margin = new_margin
-            self._update_bucket_rates()
+            await self._update_bucket_rates()
 
-    def _update_bucket_rates(self) -> None:
-        """Update all bucket rates with the current safety margin."""
+    async def _update_bucket_rates(self) -> None:
+        """Update all bucket rates with the current safety margin.
+        
+        Acquires each bucket's lock before modifying rate/capacity
+        to prevent data races with concurrent acquire() calls.
+        """
         for endpoint, limit in self.ENDPOINT_LIMITS.items():
             safe_limit = limit * self._current_safety_margin
             if endpoint in self._buckets:
-                self._buckets[endpoint].rate = safe_limit
-                self._buckets[endpoint].capacity = safe_limit
-        self._default_bucket.rate = self.DEFAULT_LIMIT * self._current_safety_margin
-        self._default_bucket.capacity = self.DEFAULT_LIMIT * self._current_safety_margin
+                bucket = self._buckets[endpoint]
+                async with bucket._lock:
+                    bucket.rate = safe_limit
+                    bucket.capacity = safe_limit
+        async with self._default_bucket._lock:
+            self._default_bucket.rate = self.DEFAULT_LIMIT * self._current_safety_margin
+            self._default_bucket.capacity = self.DEFAULT_LIMIT * self._current_safety_margin
 
     def status(self) -> dict[str, dict]:
         """Return status of all buckets for diagnostics."""

@@ -51,6 +51,7 @@ class MicrostructureResult:
     dema_crossover: str = "neutral"
     macd_signal: str = "neutral"
     hurst_exponent: float | None = None
+    hmm_regime: str = ""
 
 
 def run_microstructure_pipeline(
@@ -271,5 +272,32 @@ def run_microstructure_pipeline(
             result.hurst_exponent = hurst_exponent(price_history, max_lag=20)
         except Exception as e:
             logger.debug(f"[Hurst] Skipped: {e}")
+
+    # 17. HMM CRISIS Gate — hard block all buys during market crisis
+    if price_history and len(price_history) >= 50:
+        try:
+            import math
+            from src.analysis.algo_pack.hmm_regime import HMMRegimeDetector
+
+            log_returns = []
+            for i in range(1, len(price_history)):
+                if price_history[i - 1] > 0:
+                    log_returns.append(math.log(price_history[i] / price_history[i - 1]))
+
+            if len(log_returns) >= 50:
+                hmm = HMMRegimeDetector()
+                hmm.calibrate(log_returns)
+                hmm_result = hmm.update(log_returns[-1])
+                result.hmm_regime = hmm_result.most_likely_state
+
+                if hmm_result.most_likely_state == "CRISIS":
+                    result.passed = False
+                    result.reason = (
+                        f"HMM CRISIS regime detected "
+                        f"(confidence={hmm_result.state_confidence:.2f})"
+                    )
+                    return result
+        except Exception as e:
+            logger.debug(f"[HMM CRISIS] Skipped: {e}")
 
     return result

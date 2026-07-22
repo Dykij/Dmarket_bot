@@ -1,10 +1,12 @@
 use pyo3::prelude::*;
 use ed25519_dalek::{SigningKey, Signer};
 use hex;
-use sha2::{Sha512, Digest};
 
 /// DMarket v2 Signature Generator (Rust Optimized)
 /// Formula: (Method) + (Path+Query) + (Body) + (Timestamp)
+///
+/// Uses raw 32-byte seed directly (no SHA-512 hashing or RFC 8032 clamping).
+/// This matches the correct implementation in src/rust_core/src/lib.rs.
 #[pyfunction]
 fn generate_signature_rs(
     method: String,
@@ -22,13 +24,10 @@ fn generate_signature_rs(
         return Err(pyo3::exceptions::PyValueError::new_err("Secret key too short"));
     }
 
-    let hash = Sha512::digest(&secret[..32]);
-    let mut expanded = [0u8; 32];
-    expanded.copy_from_slice(&hash[..32]);
-    expanded[0] &= 248;
-    expanded[31] &= 127;
-    expanded[31] |= 64;
-    let signing_key = SigningKey::from_bytes(&expanded);
+    // Use raw 32-byte seed directly — no SHA-512 hashing or RFC 8032 clamping
+    let mut key_bytes = [0u8; 32];
+    key_bytes.copy_from_slice(&secret[..32]);
+    let signing_key = SigningKey::from_bytes(&key_bytes);
 
     let message = format!("{}{}{}{}", method.to_uppercase(), api_path, body, timestamp);
 

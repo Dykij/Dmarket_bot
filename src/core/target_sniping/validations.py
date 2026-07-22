@@ -318,6 +318,7 @@ def compute_microstructure_scores(
     dema_crossover: str = "neutral",
     macd_signal_val: str = "neutral",
     hurst_exponent: float | None = None,
+    hmm_regime: str = "",
 ) -> dict:
     """Composite buy score from microstructure signals.
 
@@ -368,6 +369,7 @@ def compute_microstructure_scores(
         dema_crossover=dema_crossover,
         macd_signal_val=macd_signal_val,
         hurst_exponent=hurst_exponent,
+        hmm_regime=hmm_regime,
     )
 
     return {"composite_score": composite_score, "components": composite_components}

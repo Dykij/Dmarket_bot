@@ -85,6 +85,10 @@ class _ExecutionMixin:
         # Re-verify listing prices haven't increased >5% since scan.
         # Uses asyncio.gather for all items instead of sequential loop.
         _MAX_SLIPPAGE_PCT = 5.0
+        # NOV-3: Oracle price drift threshold — if oracle fair price dropped
+        # more than this since evaluation, cancel the trade.  Accounts for
+        # the gap between scan (oracle fetch) and execution (now).
+        _MAX_ORACLE_DRIFT_PCT = 10.0
 
         async def _check_slippage(item_data: dict[str, Any]) -> dict[str, Any] | None:
             try:
@@ -94,31 +98,70 @@ class _ExecutionMixin:
                     game_id, limit=5, title=title
                 )
                 current_listings = resp.get("objects", [])
-                if current_listings:
-                    matching = [
-                        lst for lst in current_listings
-                        if lst.get("itemId") == item_data["item_id"]
-                    ]
-                    if matching:
-                        cheapest_cents = min(
-                            int(lst.get("price", {}).get("USD", 0))
-                            for lst in matching
-                        )
-                    else:
-                        cheapest_cents = int(
-                            current_listings[0].get("price", {}).get("USD", 0)
-                        )
-                    current_price = cheapest_cents / 100.0
-                    slippage_pct = (
-                        ((current_price - expected_price) / expected_price) * 100
-                        if expected_price > 0 else 0
+                if not current_listings:
+                    # Listing disappeared — item was already sold or removed.
+                    # Don't proceed with a stale price.
+                    logger.warning(
+                        f"[SLIPPAGE] {title}: listing no longer available. Skipping."
                     )
-                    if slippage_pct > _MAX_SLIPPAGE_PCT:
-                        logger.warning(
-                            f"[SLIPPAGE] {title}: expected ${expected_price:.2f}, "
-                            f"now ${current_price:.2f} (+{slippage_pct:.1f}% > {_MAX_SLIPPAGE_PCT}%). Skipping."
-                        )
-                        return None
+                    return None
+                matching = [
+                    lst for lst in current_listings
+                    if lst.get("itemId") == item_data["item_id"]
+                ]
+                if matching:
+                    cheapest_cents = min(
+                        int(lst.get("price", {}).get("USD", 0))
+                        for lst in matching
+                    )
+                else:
+                    cheapest_cents = int(
+                        current_listings[0].get("price", {}).get("USD", 0)
+                    )
+                current_price = cheapest_cents / 100.0
+                if current_price <= 0:
+                    logger.warning(f"[SLIPPAGE] {title}: price is 0. Skipping.")
+                    return None
+                slippage_pct = (
+                    ((current_price - expected_price) / expected_price) * 100
+                    if expected_price > 0 else 0
+                )
+                if slippage_pct > _MAX_SLIPPAGE_PCT:
+                    logger.warning(
+                        f"[SLIPPAGE] {title}: expected ${expected_price:.2f}, "
+                        f"now ${current_price:.2f} (+{slippage_pct:.1f}% > {_MAX_SLIPPAGE_PCT}%). Skipping."
+                    )
+                    return None
+
+                # NOV-3 FIX: Re-check oracle fair price before buy.
+                # If oracle price dropped significantly since evaluation,
+                # the trade may no longer be profitable after fees.
+                original_list_price = item_data.get("list_price", 0.0)
+                if original_list_price > 0 and hasattr(self, "oracle") and self.oracle is not None:
+                    try:
+                        fresh_result = await self.oracle.get_fair_price(title)
+                        if fresh_result and fresh_result.source_count > 0 and fresh_result.fair_price > 0:
+                            fresh_fair = fresh_result.fair_price
+                            # Check if oracle price dropped below profitability threshold
+                            required_sell = expected_price * (1 + Config.FEE_RATE + Config.WITHDRAWAL_FEE_RATE + 0.02)
+                            if fresh_fair < required_sell:
+                                logger.warning(
+                                    f"[ORACLE-DRIFT] {title}: oracle fair price dropped "
+                                    f"${original_list_price:.2f} → ${fresh_fair:.2f}, "
+                                    f"below required ${required_sell:.2f}. Skipping."
+                                )
+                                return None
+                            drift_pct = abs(fresh_fair - original_list_price) / original_list_price * 100
+                            if drift_pct > _MAX_ORACLE_DRIFT_PCT:
+                                logger.warning(
+                                    f"[ORACLE-DRIFT] {title}: oracle price drifted {drift_pct:.1f}% "
+                                    f"(${original_list_price:.2f} → ${fresh_fair:.2f}). Skipping."
+                                )
+                                return None
+                    except Exception as e:
+                        # Oracle re-check failed — proceed with caution
+                        logger.debug(f"[ORACLE-DRIFT] Re-check failed for {title}: {e}")
+
                 return item_data
             except Exception as e:
                 logger.warning(f"Slippage check failed for {item_data.get('title', '?')}: {e}")
@@ -469,6 +512,9 @@ class _ExecutionMixin:
                         trade_type="buy",
                         item_title=title,
                     )
+                # FIX: Decrement available balance after each successful buy
+                # to prevent overspending within a batch
+                available_balance -= base_price
                 # v12.5: Production-side dm_item_id attach. If we didn't
                 # capture it from the buy response above (e.g. the response
                 # didn't include Items), the inventory sync will pick it up

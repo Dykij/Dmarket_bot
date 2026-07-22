@@ -35,6 +35,11 @@ class VaultProvider:
         return cls._instance
 
     def _initialize(self):
+        # Clear old state before re-initializing to ensure new keys are used
+        self._secret = None
+        self._fernet = None
+        self._vault_client = None
+
         from pathlib import Path
         project_root = Path(__file__).resolve().parent.parent.parent
         env_path = project_root / ".env"

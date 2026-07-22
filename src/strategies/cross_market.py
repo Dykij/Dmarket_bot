@@ -28,8 +28,8 @@ class CrossMarketStrategy(BaseStrategy):
         super().__init__("CrossMarket")
 
     def evaluate_opportunity(self, market_data: dict[str, Any]) -> dict[str, Any]:
-        """Basic evaluation without cross-market data (fallback)."""
-        return {"action": "none"}
+        """Basic evaluation — delegates to enhanced version with no cross-market data."""
+        return self.evaluate_opportunity_enhanced(market_data)
 
     def evaluate_opportunity_enhanced(
         self,
@@ -44,7 +44,10 @@ class CrossMarketStrategy(BaseStrategy):
         """
         item_name = market_data.get("title", "UnknownItem")
         raw_ask = market_data.get("best_ask", 0.0)
-        dmarket_price = raw_ask / 100.0 if isinstance(raw_ask, (int, float)) and raw_ask > 100 else float(raw_ask)
+        # best_ask should already be in USD (divided by 100 by the parser).
+        # Only divide by 100 if the value is clearly in cents (> 1000 = $10+).
+        # Threshold > $1000 avoids misclassifying expensive items ($100-$999).
+        dmarket_price = raw_ask / 100.0 if isinstance(raw_ask, (int, float)) and raw_ask > 1000 else float(raw_ask)
 
         if dmarket_price <= 0 or dmarket_price < Config.MIN_PRICE_USD:
             return {"action": "none"}

@@ -386,14 +386,14 @@ class TestValidateArbitrageProfitEdge:
             )
 
     def test_min_margin_zero_with_tvm_adjustment(self):
-        # v15.7 FIX: Function applies fees to BOTH sides (buy_fee_markup + fee_markup)
-        # net_received = 12 * 0.95 = 11.4, net_cost = 10 * 1.05 = 10.5
-        # actual_profit = 0.9, margin = 0.9/10 = 0.09
+        # DMarket does NOT charge buyer fee (buy_fee_markup defaults to 0.0)
+        # net_received = 12 * 0.95 = 11.4, net_cost = 10 * 1.0 = 10.0
+        # actual_profit = 1.4, margin = 1.4/10 = 0.14
         margin = validate_arbitrage_profit(
             buy_price=10.0, expected_sell_price=12.0, fee_markup=0.05,
             min_profit_margin=0.0, lock_days=0, penalty_per_day=0.0,
         )
-        assert margin == pytest.approx(0.09, abs=0.01)
+        assert margin == pytest.approx(0.14, abs=0.01)
 
     def test_high_lock_days_eats_margin(self):
         with pytest.raises(PriceValidationError, match="Insufficient TVM-Adjusted"):

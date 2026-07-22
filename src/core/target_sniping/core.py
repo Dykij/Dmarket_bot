@@ -80,6 +80,7 @@ class SnipingLoop(  # type: ignore[misc]
         self._prev_agg_prices: dict[str, Any] = {}
         self._prev_agg_prices_prior: dict[str, Any] = {}
         self.multi_source_oracle: Any | None = None
+        self.oracle: Any | None = None
         self._sales_cache: dict[str, Any] = {}
 
         from src.analytics.self_reflection import self_reflection
@@ -152,7 +153,7 @@ class SnipingLoop(  # type: ignore[misc]
             from src.risk.fatal_errors import classify
 
             classification = classify(e)
-            if classification == "fatal":
+            if classification in ("FATAL", "UNKNOWN"):
                 report = ErrorReporter(e, context={
                     "game_id": game_id,
                     "cycle": self.deep_scan_counter,

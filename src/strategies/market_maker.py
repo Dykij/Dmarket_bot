@@ -44,7 +44,8 @@ class MarketMaker(BaseStrategy):
         target_price = round(best_ask - undercut, 2)
 
         # --- Fee Calculation ---
-        estimated_fee = target_price * Config.FEE_RATE
+        # DMarket charges fee on the SELL price, not the buy price
+        estimated_fee = best_ask * Config.FEE_RATE
         gross_profit = best_ask - target_price
         net_profit = gross_profit - estimated_fee
 

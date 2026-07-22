@@ -98,6 +98,7 @@ class CycleOrchestrator:
         ctx.dynamic_max_price = min(ctx.dynamic_max_price, ctx.effective_balance)
 
         ctx.oracle = OracleFactory.get_oracle(ctx.game_id)
+        self.oracle = ctx.oracle
         return ctx
 
     async def _stage_scan(self, ctx: CycleContext) -> CycleContext:
@@ -150,7 +151,8 @@ class CycleOrchestrator:
         # Float/phase scan (every 5 cycles)
         if self.deep_scan_counter % 5 == 0:
             try:
-                fp_items = await self._fetch_float_filtered_listings(ctx.game_id)
+                top_titles = [it.get("title", "") for it in items[:50]]
+                fp_items = await self._fetch_float_filtered_listings(ctx.game_id, top_titles)
                 for cand in fp_items:
                     if cand.get("itemId") not in seen:
                         seen.add(cand.get("itemId"))
@@ -260,6 +262,7 @@ class CycleOrchestrator:
             async with sem:
                 return await self._evaluate_candidate(
                     item=item, game_id=ctx.game_id,
+                    oracle=ctx.oracle,
                     agg_prices=ctx.agg_prices, bulk_fees=ctx.bulk_fees,
                     cs_snapshots=ctx.cs_snapshots, current_margin=ctx.current_margin,
                     effective_balance=ctx.effective_balance,

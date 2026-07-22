@@ -130,24 +130,31 @@ class FairPriceCalculator:
                 adjusted[source] = price
 
         # Remove outliers if we have >2 sources
+        # Check both min and max — remove both if both are outliers
+        outliers_removed: list[str] = []
         if len(adjusted) > 2:
             min_source = min(adjusted, key=adjusted.get)  # type: ignore
             max_source = max(adjusted, key=adjusted.get)  # type: ignore
 
-            # Only remove if outlier is >2x the median of others
+            # Remove min outlier if < 0.3× median of others
             others = {k: v for k, v in adjusted.items() if k != min_source}
             if others:
                 others_median = statistics.median(others.values())
                 if adjusted[min_source] < others_median * 0.3:
-                    outlier_removed = min_source
+                    outliers_removed.append(min_source)
                     del adjusted[min_source]
-                elif len(adjusted) > 2:
-                    others = {k: v for k, v in adjusted.items() if k != max_source}
-                    if others:
-                        others_median = statistics.median(others.values())
-                        if adjusted[max_source] > others_median * 2.0:
-                            outlier_removed = max_source
-                            del adjusted[max_source]
+
+            # Remove max outlier if > 2.0× median of others (re-check after min removal)
+            if len(adjusted) > 2:
+                max_source = max(adjusted, key=adjusted.get)  # type: ignore
+                others = {k: v for k, v in adjusted.items() if k != max_source}
+                if others:
+                    others_median = statistics.median(others.values())
+                    if adjusted[max_source] > others_median * 2.0:
+                        outliers_removed.append(max_source)
+                        del adjusted[max_source]
+
+        outlier_removed = ",".join(outliers_removed) if outliers_removed else None
 
         # Calculate median
         price_values = list(adjusted.values())

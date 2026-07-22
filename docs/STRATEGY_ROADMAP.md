@@ -44,7 +44,7 @@ The bot operates **only inside DMarket**, using a **dual-signal pipeline**:
     - BUY if est_sell > ask × (1 + fee + margin)
  5. SPREAD FALLBACK (if value fails):
     - best_bid > best_ask × (1 + fee + margin)
- 6. Execute buy → POST /exchange/v1/market/buy
+ 6. Execute buy → PATCH /exchange/v1/offers-buy
  7. Auto-resale at est_sell price
  8. Reprice stale every 200 cycles
 ```

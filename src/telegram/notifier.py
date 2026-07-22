@@ -34,6 +34,7 @@ notifier silently no-ops.
 
 from __future__ import annotations
 
+import atexit
 import html
 import logging
 import os
@@ -397,6 +398,22 @@ class _TelegramNotifier:
 #   await notifier.buy(...)
 notifier = _TelegramNotifier()
 notifier.configure()
+
+
+def _cleanup_notifier() -> None:
+    """Ensure the aiohttp session is closed on process exit."""
+    import asyncio
+    try:
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
+            loop.create_task(notifier.close())
+        else:
+            loop.run_until_complete(notifier.close())
+    except Exception:
+        pass
+
+
+atexit.register(_cleanup_notifier)
 
 
 def reconfigure() -> None:

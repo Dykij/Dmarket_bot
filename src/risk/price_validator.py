@@ -57,16 +57,17 @@ def validate_arbitrage_profit(
     buy_price: float,
     expected_sell_price: float,
     fee_markup: float = 0.05,
-    buy_fee_markup: float = 0.05,
+    buy_fee_markup: float = 0.0,
     min_profit_margin: float = 0.05,
     lock_days: int = 7,
     penalty_per_day: float = 0.005,
 ) -> float:
     """Validate arbitrage trade is profitable after fees and TVM penalty.
 
-    Applies fees to BOTH sides:
-      - buy_fee_markup: DMarket fee on purchase (default 5%)
+    Applies fees:
       - fee_markup: DMarket fee on sale (default 5%)
+      - buy_fee_markup: DMarket fee on purchase (default 0% — DMarket
+        does NOT charge a buyer fee on instant purchases)
     """
     if buy_price <= 0:
         raise PriceValidationError(

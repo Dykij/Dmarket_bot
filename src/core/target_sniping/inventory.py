@@ -28,16 +28,14 @@ class _InventoryMixin:
     # ------------------------------------------------------------------
     async def _sync_inventory_statuses(self, game_id: str) -> None:
         """
-        Synchronize asset statuses with DMarket's authoritative state.
-        Updates asset_status table with:
-        - status='trade_protected' if item is locked
-        - status='reverted' if DMarket rolled back the transaction
-        - status='active' if item is now tradable
+        v16.3 State Reconciliation: Synchronize virtual_inventory with
+        DMarket's authoritative state.
 
-        Also detects rollbacks via transaction history.
+        1. Updates asset_status table (trade_protected, reverted, active)
+        2. Detects phantom items (in virtual_inventory but not in real inventory)
+        3. Cross-checks transaction history for rollbacks
         """
         if os.getenv("DRY_RUN", "true").lower() == "true":
-            # In sandbox we just simulate; status changes happen rarely
             return
 
         try:
@@ -46,16 +44,18 @@ class _InventoryMixin:
             if not inv_items:
                 return
 
+            # Build set of real item IDs from DMarket
+            real_item_ids: set[str] = set()
             updated_count = 0
             for item in inv_items:
                 item_id = item.get("itemId", "")
                 if not item_id:
                     continue
+                real_item_ids.add(item_id)
                 status = item.get("status", "active")
                 finalization_time = item.get("FinalizationTime", 0.0)
                 title = item.get("title", "")
 
-                # Update local status from DMarket's authoritative state
                 old_status = price_db.get_asset_status(item_id)
                 if not old_status or old_status["status"] != status:
                     price_db.update_asset_status(item_id, title, status, finalization_time)
@@ -73,13 +73,29 @@ class _InventoryMixin:
             if updated_count > 0:
                 logger.info(f"[STATUS-SYNC] Updated {updated_count} asset statuses")
 
-            # 2. Cross-check with transaction history for rollbacks
+            # 2. v16.3: State Reconciliation — detect phantom items
+            virtual_idle = price_db.get_virtual_inventory(status="idle", only_unlocked=False)
+            phantom_count = 0
+            for vitem in virtual_idle:
+                dm_item_id = vitem.get("dm_item_id", "")
+                if dm_item_id and dm_item_id not in real_item_ids:
+                    # Item is in virtual_inventory but not in real DMarket inventory
+                    price_db.update_inventory_status(vitem["id"], "phantom")
+                    phantom_count += 1
+                    logger.warning(
+                        f"[RECONCILE] Phantom item detected: {vitem.get('hash_name', '?')} "
+                        f"(dm_item_id={dm_item_id}) — marked as phantom"
+                    )
+
+            if phantom_count > 0:
+                logger.warning(f"[RECONCILE] {phantom_count} phantom items detected")
+
+            # 3. Cross-check with transaction history for rollbacks
             txs = await self.client.get_transaction_history(days=7, limit=50)
             reverted_count = 0
             for tx in txs:
                 if tx.get("type") == "reverted" or tx.get("status") == "reverted":
                     item_id = tx.get("itemId", "")
-                    # Only mark if we previously knew the item
                     if item_id and price_db.is_known_item(item_id):
                         if price_db.get_asset_status(item_id):
                             price_db.mark_reverted(item_id)

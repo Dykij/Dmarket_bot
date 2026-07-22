@@ -5,7 +5,7 @@
 
 from collections.abc import Generator
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from telegram import CallbackQuery, Message, Update, User
@@ -56,18 +56,6 @@ def mock_telegram_context() -> MagicMock:
     context = MagicMock(spec=CallbackContext)
     context.user_data = {}
     return context
-
-
-# Группа фикстур для DMarket API
-@pytest.fixture()
-def mock_dmarket_api() -> Generator[MagicMock, None, None]:
-    """Создает мок DMarket API."""
-    with patch("src.dmarket.dmarket_api.DMarketAPI") as mock_api:
-        # НастSwarmка мока для типичных методов API
-        instance = mock_api.return_value
-        instance._generate_signature.return_value = {"X-Sign": "test_signature"}
-        instance.get_balance = AsyncMock(return_value={"dmc": 1000, "usd": 100})
-        yield instance
 
 
 # Группа фикстур для тестирования арбитража

@@ -250,7 +250,9 @@ class TestCrossMarketStrategy:
 
         strategy = CrossMarketStrategy()
 
-        market_data = {"title": "AK-47 | Redline", "best_ask": 1000, "current_balance": 50.0}
+        # best_ask in cents (DMarket API format): 1000 cents = $10.00
+        # Must be >1000 to trigger /100 conversion in cross_market.py
+        market_data = {"title": "AK-47 | Redline", "best_ask": 1001, "current_balance": 50.0}
 
         # Mock cross-market data
         cross_data = MagicMock()

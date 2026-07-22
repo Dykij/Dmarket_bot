@@ -105,25 +105,25 @@ class SteamOracle:
                         logger.debug(f"[Steam] HTTP {resp.status} for {hash_name}")
                         return 0.0
 
-                data = await resp.json()
-                if not data.get("success"):
+                    data = await resp.json()
+                    if not data.get("success"):
+                        return 0.0
+
+                    # Parse "median_price" or "lowest_price" field
+                    # Format: "$12.34" or "12,34"
+                    median_str = data.get("median_price") or data.get("lowest_price", "")
+                    if not median_str:
+                        return 0.0
+
+                    price = self._parse_price(median_str)
+                    if price > 0:
+                        # Convert Steam price to cash-equivalent
+                        cash_price = round(price * STEAM_TO_CASH_FACTOR, 2)
+                        price_db.record_price(f"steam:{hash_name}", cash_price, source="steam")
+                        self._mem_cache[hash_name] = (cash_price, now)
+                        return cash_price
+
                     return 0.0
-
-                # Parse "median_price" or "lowest_price" field
-                # Format: "$12.34" or "12,34"
-                median_str = data.get("median_price") or data.get("lowest_price", "")
-                if not median_str:
-                    return 0.0
-
-                price = self._parse_price(median_str)
-                if price > 0:
-                    # Convert Steam price to cash-equivalent
-                    cash_price = round(price * STEAM_TO_CASH_FACTOR, 2)
-                    price_db.record_price(f"steam:{hash_name}", cash_price, source="steam")
-                    self._mem_cache[hash_name] = (cash_price, now)
-                    return cash_price
-
-                return 0.0
 
             except Exception as e:
                 logger.debug(f"[Steam] Error fetching {hash_name}: {e}")

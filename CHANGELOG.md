@@ -2,6 +2,60 @@
 
 All notable changes to this project will be documented in this file.
 
+## [16.2] - 2026-07-22
+
+### Fixed — Security & Financial Safety Audit (3 rounds, 13 files)
+
+**Financial Safety Fixes (P1):**
+- `steam_oracle.py`: `resp.json()` moved inside `async with` context manager (was reading from closed connection)
+- `fair_price_calculator.py`: Outlier removal now handles both min AND max outliers independently (was only removing one)
+- `fair_price_calculator.py`: `outlier_removed` now tracks both removed sources via comma-separated string
+- `filter.py`, `filter_evaluator.py`, `almgren_chriss.py`, `twap.py`, `dmarket/targets.py`: `int(round(price * 100))` instead of `int(price * 100)` (prevents systematic truncation loss up to 0.99¢ per trade)
+- `filter.py`: Added guard blocking oracle-dependent strategies when ALL oracles are unavailable (NOV-2)
+- `execution.py`: Added oracle price re-check before buy execution — cancels trade if oracle drift >10% or fair price dropped below profitability threshold (NOV-3)
+
+**Idempotency Fix (P2):**
+- `targets.py`, `offers.py`: Deterministic idempotency key `{item_id}_{sha256(item_id+price_cents)}` instead of timestamp-based key (prevents duplicate orders on retry)
+
+**Code Quality (P2):**
+- `position_guard.py`: Added `import time` — replaced `__import__("time").time()` with `time.time()`
+
+**Infrastructure:**
+- Updated semgrep MCP config from deprecated `uvx semgrep-mcp` to `semgrep mcp`
+- Removed youtube-transcript MCP server (unused)
+- Added AGENTS.md sections: trading architecture, MCP server status, MimoCode limitations, audit status
+
+### Architecture — Dead Code Cleanup (v16.2)
+
+**Archived to `trash/dead_code_2026_07_22/`:**
+- `src/dmarket/dmarket_api.py` — Legacy DMarketAPI client (httpx-based). Replaced by `src/api/dmarket_api_client/` (aiohttp-based). Zero imports in production code; only used by 3 now-archived integration tests.
+- `src/dmarket/targets.py` — Legacy target management. Zero imports.
+- `src/core/limit_orders.py` — Limit order mixin. Never called from main loop (0 imports in `src/`). Target-based buying was never integrated into the trading pipeline.
+- `src/strategies/canary_mode.py` — Legacy A/B testing. Zero imports. Replaced by Thompson Sampling.
+- `src/strategies/almgren_chriss.py` — Almgren-Chriss executor. Zero imports in production (unused standalone; `TWAPExecutor` in `twap.py` is used instead).
+- `src/analytics/knowledge_base.py` — Zero imports.
+- `src/utils/retry_decorator.py` — Zero imports.
+- `tests/integration/test_targets_edge_cases.py` — Tested legacy target workflow.
+- `tests/integration/test_dmarket_api_integration.py` — Tested legacy DMarketAPI client.
+- `tests/integration/test_integration_edge_cases.py` — Tested legacy DMarketAPI edge cases.
+- `tests/unit/test_limit_orders.py` — Tested limit_orders.py.
+
+**Removed from production code:**
+- `position_guard.py`: Removed `check_stale_targets()` method (0 callers) and `TIME_STOP_ENABLED`/`TIME_STOP_MINUTES` constants.
+- `tests/sandbox_comprehensive/test_pipeline.py`: Removed `_LimitOrderMixin` import and cross-market target simulation block.
+
+**Removed directories:**
+- `src/dmarket/` — Entirely removed (was legacy API client + 5 empty zombie subdirectories).
+
+**NOT touched (still active):**
+- `src/api/dmarket_api_client/targets.py` — `get_user_targets()` used by Telegram control bot.
+- `src/db/profit_tracker.py` — Used by `tests/unit/test_db_risk_extended.py`.
+- `src/utils/database.py` — Used by `tests/integration/conftest.py`.
+
+**Key finding:** Target-based buying (limit orders via `create_targets`/`delete_targets`) was never integrated into the main trading loop. The bot operates exclusively via instant-buy (`buy_items()` / `PATCH /exchange/v1/offers-buy`) since v12.3.
+
+See `ANALYSIS_STAGE4.md` for full details and revalidation results.
+
 ## [16.1] - 2026-07-19
 
 ### Fixed — Ultra Code Review (48 agent runs, ~180 bugs)

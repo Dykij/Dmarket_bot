@@ -101,7 +101,7 @@ jobs:
           MIMO_API_KEY: ${{ secrets.MIMO_API_KEY }}
           MIMO_BASE_URL: ${{ secrets.MIMO_BASE_URL }}
         run: |
-          python3 .opencode/agents/run_agent.py \
+          python3 .mimocode/skills/deep-code-review/scripts/run_agent.py \
             --agent correctness \
             --files "${{ steps.context.outputs.files }}" \
             --diff-file "${{ steps.context.outputs.diff_file }}" \
@@ -112,7 +112,7 @@ jobs:
           MIMO_API_KEY: ${{ secrets.MIMO_API_KEY }}
           MIMO_BASE_URL: ${{ secrets.MIMO_BASE_URL }}
         run: |
-          python3 .opencode/agents/run_agent.py \
+          python3 .mimocode/skills/deep-code-review/scripts/run_agent.py \
             --agent security \
             --files "${{ steps.context.outputs.files }}" \
             --diff-file "${{ steps.context.outputs.diff_file }}" \
@@ -123,7 +123,7 @@ jobs:
           MIMO_API_KEY: ${{ secrets.MIMO_API_KEY }}
           MIMO_BASE_URL: ${{ secrets.MIMO_BASE_URL }}
         run: |
-          python3 .opencode/agents/run_agent.py \
+          python3 .mimocode/skills/deep-code-review/scripts/run_agent.py \
             --agent performance \
             --files "${{ steps.context.outputs.files }}" \
             --diff-file "${{ steps.context.outputs.diff_file }}" \
@@ -134,7 +134,7 @@ jobs:
           MIMO_API_KEY: ${{ secrets.MIMO_API_KEY }}
           MIMO_BASE_URL: ${{ secrets.MIMO_BASE_URL }}
         run: |
-          python3 .opencode/agents/run_agent.py \
+          python3 .mimocode/skills/deep-code-review/scripts/run_agent.py \
             --agent architecture \
             --files "${{ steps.context.outputs.files }}" \
             --diff-file "${{ steps.context.outputs.diff_file }}" \
@@ -145,7 +145,7 @@ jobs:
           MIMO_API_KEY: ${{ secrets.MIMO_API_KEY }}
           MIMO_BASE_URL: ${{ secrets.MIMO_BASE_URL }}
         run: |
-          python3 .opencode/agents/run_agent.py \
+          python3 .mimocode/skills/deep-code-review/scripts/run_agent.py \
             --agent domain \
             --files "${{ steps.context.outputs.files }}" \
             --diff-file "${{ steps.context.outputs.diff_file }}" \
@@ -156,7 +156,7 @@ jobs:
           MIMO_API_KEY: ${{ secrets.MIMO_API_KEY }}
           MIMO_BASE_URL: ${{ secrets.MIMO_BASE_URL }}
         run: |
-          python3 .opencode/agents/run_agent.py \
+          python3 .mimocode/skills/deep-code-review/scripts/run_agent.py \
             --agent test_coverage \
             --files "${{ steps.context.outputs.files }}" \
             --diff-file "${{ steps.context.outputs.diff_file }}" \
@@ -167,7 +167,7 @@ jobs:
           MIMO_API_KEY: ${{ secrets.MIMO_API_KEY }}
           MIMO_BASE_URL: ${{ secrets.MIMO_BASE_URL }}
         run: |
-          python3 .opencode/agents/run_agent.py \
+          python3 .mimocode/skills/deep-code-review/scripts/run_agent.py \
             --agent async_safety \
             --files "${{ steps.context.outputs.files }}" \
             --diff-file "${{ steps.context.outputs.diff_file }}" \
@@ -178,7 +178,7 @@ jobs:
           MIMO_API_KEY: ${{ secrets.MIMO_API_KEY }}
           MIMO_BASE_URL: ${{ secrets.MIMO_BASE_URL }}
         run: |
-          python3 .opencode/agents/run_agent.py \
+          python3 .mimocode/skills/deep-code-review/scripts/run_agent.py \
             --agent db_safety \
             --files "${{ steps.context.outputs.files }}" \
             --diff-file "${{ steps.context.outputs.diff_file }}" \
@@ -189,7 +189,7 @@ jobs:
           MIMO_API_KEY: ${{ secrets.MIMO_API_KEY }}
           MIMO_BASE_URL: ${{ secrets.MIMO_BASE_URL }}
         run: |
-          python3 .opencode/agents/run_agent.py \
+          python3 .mimocode/skills/deep-code-review/scripts/run_agent.py \
             --agent api_safety \
             --files "${{ steps.context.outputs.files }}" \
             --diff-file "${{ steps.context.outputs.diff_file }}" \
@@ -200,7 +200,7 @@ jobs:
           MIMO_API_KEY: ${{ secrets.MIMO_API_KEY }}
           MIMO_BASE_URL: ${{ secrets.MIMO_BASE_URL }}
         run: |
-          python3 .opencode/agents/run_agent.py \
+          python3 .mimocode/skills/deep-code-review/scripts/run_agent.py \
             --agent config_safety \
             --files "${{ steps.context.outputs.files }}" \
             --diff-file "${{ steps.context.outputs.diff_file }}" \
@@ -211,7 +211,7 @@ jobs:
           MIMO_API_KEY: ${{ secrets.MIMO_API_KEY }}
           MIMO_BASE_URL: ${{ secrets.MIMO_BASE_URL }}
         run: |
-          python3 .opencode/agents/run_agent.py \
+          python3 .mimocode/skills/deep-code-review/scripts/run_agent.py \
             --agent error_recovery \
             --files "${{ steps.context.outputs.files }}" \
             --diff-file "${{ steps.context.outputs.diff_file }}" \
@@ -222,7 +222,7 @@ jobs:
           MIMO_API_KEY: ${{ secrets.MIMO_API_KEY }}
           MIMO_BASE_URL: ${{ secrets.MIMO_BASE_URL }}
         run: |
-          python3 .opencode/agents/run_agent.py \
+          python3 .mimocode/skills/deep-code-review/scripts/run_agent.py \
             --agent duplication \
             --files "${{ steps.context.outputs.files }}" \
             --diff-file "${{ steps.context.outputs.diff_file }}" \
@@ -233,7 +233,7 @@ jobs:
           MIMO_API_KEY: ${{ secrets.MIMO_API_KEY }}
           MIMO_BASE_URL: ${{ secrets.MIMO_BASE_URL }}
         run: |
-          python3 .opencode/agents/run_agent.py \
+          python3 .mimocode/skills/deep-code-review/scripts/run_agent.py \
             --agent kelly_sizing \
             --files "${{ steps.context.outputs.files }}" \
             --diff-file "${{ steps.context.outputs.diff_file }}" \
@@ -244,7 +244,7 @@ jobs:
           MIMO_API_KEY: ${{ secrets.MIMO_API_KEY }}
           MIMO_BASE_URL: ${{ secrets.MIMO_BASE_URL }}
         run: |
-          python3 .opencode/agents/run_agent.py \
+          python3 .mimocode/skills/deep-code-review/scripts/run_agent.py \
             --agent fee_calculation \
             --files "${{ steps.context.outputs.files }}" \
             --diff-file "${{ steps.context.outputs.diff_file }}" \
@@ -255,7 +255,7 @@ jobs:
           MIMO_API_KEY: ${{ secrets.MIMO_API_KEY }}
           MIMO_BASE_URL: ${{ secrets.MIMO_BASE_URL }}
         run: |
-          python3 .opencode/agents/run_agent.py \
+          python3 .mimocode/skills/deep-code-review/scripts/run_agent.py \
             --agent drawdown_monitor \
             --files "${{ steps.context.outputs.files }}" \
             --diff-file "${{ steps.context.outputs.diff_file }}" \
@@ -263,7 +263,7 @@ jobs:
 
       - name: Deduplication
         run: |
-          python3 .opencode/agents/dedup.py \
+          python3 .mimocode/skills/deep-code-review/scripts/dedup.py \
             --input results/correctness.json results/security.json results/performance.json results/architecture.json results/domain.json results/test_coverage.json results/async_safety.json results/db_safety.json results/api_safety.json results/config_safety.json results/error_recovery.json results/duplication.json results/kelly_sizing.json results/fee_calculation.json results/drawdown_monitor.json \
             --output results/deduped.json
 
@@ -272,14 +272,14 @@ jobs:
           MIMO_API_KEY: ${{ secrets.MIMO_API_KEY }}
           MIMO_BASE_URL: ${{ secrets.MIMO_BASE_URL }}
         run: |
-          python3 .opencode/agents/verify.py \
+          python3 .mimocode/skills/deep-code-review/scripts/verify.py \
             --input results/deduped.json \
             --output results/verified.json \
             --diff-file "${{ steps.context.outputs.diff_file }}"
 
       - name: Generate report
         run: |
-          python3 .opencode/agents/report.py \
+          python3 .mimocode/skills/deep-code-review/scripts/report.py \
             --input results/verified.json \
             --output report.md
 

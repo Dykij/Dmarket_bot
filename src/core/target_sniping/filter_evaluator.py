@@ -438,12 +438,13 @@ class _FilterEvaluatorMixin:
                 cvd_val=ctx.cvd_val, vpin_val=ctx.vpin_val,
                 adverse_pass=ctx.adverse_pass, vol_regime=ctx.vol_regime,
                 prev_agg_prices=getattr(self, '_prev_agg_prices', None),
+                hmm_regime=getattr(ctx, 'hmm_regime', ''),
             )
 
         return {
             "buy_offer": {
                 "offerId": ctx.item_id,
-                "price": {"amount": str(int(ctx.base_price * 100)), "currency": "USD"},
+                "price": {"amount": str(int(round(ctx.base_price * 100))), "currency": "USD"},
             },
             "title": ctx.title,
             "item_id": ctx.item_id,
