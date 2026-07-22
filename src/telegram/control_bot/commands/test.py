@@ -106,13 +106,8 @@ async def _do_test(message, item_name: str) -> None:
     safe_name = escape_md(item_name)
     await message.answer(f"⏳ Testing `{safe_name}`...")
 
-    from src.utils.vault import vault
-    secret = (
-        vault.get_dmarket_secret()
-        if hasattr(vault, "get_dmarket_secret")
-        else Config.SECRET_KEY
-    )
-    client = DMarketAPIClient(Config.PUBLIC_KEY, secret)  # type: ignore[arg-type]
+    from ..resilience import get_dmarket_secret
+    client = DMarketAPIClient(Config.PUBLIC_KEY, get_dmarket_secret())  # type: ignore[arg-type]
     oracle = MultiSourceOracle()
     try:
         market = await retry_async(

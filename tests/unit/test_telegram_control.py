@@ -165,3 +165,166 @@ class TestResilience:
         """Test error_handling module is importable."""
         from src.telegram.control_bot import error_handling
         assert error_handling is not None
+
+
+# ═══════════════════════════════════════════════════════════════════
+# Sell Risk Gate Tests (P1 fix)
+# ═══════════════════════════════════════════════════════════════════
+
+class TestSellRiskGate:
+    """Tests for drawdown freeze check in /sell command."""
+
+    @pytest.mark.asyncio
+    async def test_sell_blocked_during_drawdown_freeze(self):
+        """When drawdown freeze is active, /sell should block with message."""
+        from unittest.mock import AsyncMock, MagicMock, patch
+
+        mock_risk_state = MagicMock()
+        mock_risk_state.drawdown_freeze_active = True
+        mock_risk_state.current_drawdown_pct = 18.5
+
+        mock_risk = MagicMock()
+        mock_risk.get_state.return_value = mock_risk_state
+
+        mock_loop = MagicMock()
+        mock_loop.risk = mock_risk
+
+        mock_message = AsyncMock()
+        mock_message.from_user.id = 12345
+
+        mock_state = MagicMock()
+        mock_state.sniping_loop = mock_loop
+
+        # cmd_sell_top does `from ..state import state` — patch at source module
+        with patch.dict("src.telegram.control_bot.state.__dict__", {"state": mock_state}):
+            from src.telegram.control_bot.commands.views import cmd_sell_top
+            await cmd_sell_top(mock_message)
+
+        mock_message.answer.assert_called_once()
+        call_text = mock_message.answer.call_args[0][0]
+        assert "Drawdown Freeze" in call_text
+        assert "18.5%" in call_text
+
+    @pytest.mark.asyncio
+    async def test_sell_proceeds_when_no_freeze(self):
+        """When drawdown freeze is NOT active, /sell should NOT show freeze message."""
+        from unittest.mock import AsyncMock, MagicMock, patch
+
+        mock_risk_state = MagicMock()
+        mock_risk_state.drawdown_freeze_active = False
+        mock_risk_state.current_drawdown_pct = 5.0
+
+        mock_risk = MagicMock()
+        mock_risk.get_state.return_value = mock_risk_state
+
+        mock_loop = MagicMock()
+        mock_loop.risk = mock_risk
+
+        mock_message = AsyncMock()
+        mock_message.from_user.id = 12345
+
+        mock_state = MagicMock()
+        mock_state.sniping_loop = mock_loop
+
+        # Just verify the freeze message is NOT sent — the sell itself may fail
+        # (no real API), but the risk gate should pass through.
+        with patch.dict("src.telegram.control_bot.state.__dict__", {"state": mock_state}):
+            from src.telegram.control_bot.commands.views import cmd_sell_top
+            # The function will proceed past risk gate, then fail on dmarket_client
+            # (which is OK — we just verify it didn't hit the freeze path)
+            try:
+                await cmd_sell_top(mock_message)
+            except Exception:
+                pass  # Expected — no real DMarket client
+
+        calls_text = str(mock_message.answer.call_args_list)
+        assert "Drawdown Freeze" not in calls_text
+
+
+# ═══════════════════════════════════════════════════════════════════
+# Liquidate Confirmation Tests (P1 fix)
+# ═══════════════════════════════════════════════════════════════════
+
+class TestLiquidateConfirmation:
+    """Tests for confirmation dialog in /liquidate command."""
+
+    @pytest.mark.asyncio
+    async def test_liquidate_shows_confirmation_no_sale(self):
+        """/liquidate should show confirmation dialog, NOT sell anything."""
+        from unittest.mock import AsyncMock, MagicMock, patch
+
+        mock_message = AsyncMock()
+        mock_message.from_user.id = 12345
+
+        mock_items = [
+            {"hash_name": "AK-47 | Redline", "buy_price": 12.50, "status": "idle"},
+            {"hash_name": "AWP | Asiimov", "buy_price": 35.00, "status": "idle"},
+        ]
+
+        import src.telegram.control_bot.commands.control as ctrl_mod
+        saved_state = ctrl_mod.state
+        mock_state = MagicMock()
+        mock_state.client = MagicMock()
+        ctrl_mod.state = mock_state
+
+        try:
+            with patch("src.db.price_history.price_db") as mock_db:
+                mock_db.get_virtual_inventory.return_value = mock_items
+                from src.telegram.control_bot.commands.control import cmd_liquidate
+                await cmd_liquidate(mock_message)
+        finally:
+            ctrl_mod.state = saved_state
+
+        # Should show confirmation dialog with item count and value
+        call_text = mock_message.answer.call_args[0][0]
+        assert "CONFIRMATION" in call_text
+        assert "2" in call_text  # 2 items
+        assert "$47.50" in call_text  # total value
+        # reply_markup should be present (inline keyboard)
+        assert mock_message.answer.call_kwargs.get("reply_markup") is not None
+
+    @pytest.mark.asyncio
+    async def test_liquidate_no_items_skips(self):
+        """/liquidate with no items should skip with message."""
+        from unittest.mock import AsyncMock, MagicMock, patch
+
+        mock_message = AsyncMock()
+        mock_message.from_user.id = 12345
+
+        import src.telegram.control_bot.commands.control as ctrl_mod
+        saved_state = ctrl_mod.state
+        mock_state = MagicMock()
+        mock_state.client = MagicMock()
+        ctrl_mod.state = mock_state
+
+        try:
+            with patch("src.db.price_history.price_db") as mock_db:
+                mock_db.get_virtual_inventory.return_value = []
+                from src.telegram.control_bot.commands.control import cmd_liquidate
+                await cmd_liquidate(mock_message)
+        finally:
+            ctrl_mod.state = saved_state
+
+        call_text = mock_message.answer.call_args[0][0]
+        assert "No unlocked items" in call_text
+
+    @pytest.mark.asyncio
+    async def test_liquidate_cancel_does_nothing(self):
+        """cb_liquidate_cancel should edit message to 'cancelled', no sale."""
+        from unittest.mock import AsyncMock, MagicMock, patch
+        from aiogram import types
+
+        mock_message = MagicMock(spec=types.Message)
+        mock_message.edit_text = AsyncMock()
+
+        mock_callback = AsyncMock()
+        mock_callback.message = mock_message
+        mock_callback.from_user.id = 12345
+
+        from src.telegram.control_bot.commands.control import cb_liquidate_cancel
+        await cb_liquidate_cancel(mock_callback)
+
+        mock_message.edit_text.assert_called_once()
+        call_text = mock_message.edit_text.call_args[0][0]
+        assert "cancelled" in call_text.lower()
+        mock_callback.answer.assert_called_once()

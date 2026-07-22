@@ -128,13 +128,8 @@ class BotState:
         async with self.lock:
             if self.is_running:
                 return False
-            from src.utils.vault import vault
-            secret = (
-                vault.get_dmarket_secret()
-                if hasattr(vault, "get_dmarket_secret")
-                else Config.SECRET_KEY
-            )
-            self.client = DMarketAPIClient(Config.PUBLIC_KEY, secret)  # type: ignore[arg-type]
+            from .resilience import get_dmarket_secret
+            self.client = DMarketAPIClient(Config.PUBLIC_KEY, get_dmarket_secret())
             self.sniping_loop = SnipingLoop(client=self.client)
             self.is_running = True
             self.sniping_task = asyncio.create_task(self.sniping_loop.start())

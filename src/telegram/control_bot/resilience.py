@@ -108,6 +108,19 @@ async def retry_async(
         raise
 
 
+def get_dmarket_secret() -> str:
+    """Get DMarket secret key from vault (prod) or Config (dev).
+
+    Centralized to avoid 4+ copy-pasted implementations.
+    """
+    from src.utils.vault import vault
+    return (
+        vault.get_dmarket_secret()
+        if hasattr(vault, "get_dmarket_secret")
+        else Config.SECRET_KEY
+    )
+
+
 @asynccontextmanager
 async def dmarket_client():
     """Async context manager that creates + closes DMarketAPIClient safely.
@@ -122,12 +135,7 @@ async def dmarket_client():
                 operation="balance",
             )
     """
-    from src.utils.vault import vault
-    secret = (
-        vault.get_dmarket_secret()
-        if hasattr(vault, "get_dmarket_secret")
-        else Config.SECRET_KEY
-    )
+    secret = get_dmarket_secret()
     client = DMarketAPIClient(Config.PUBLIC_KEY, secret)
     try:
         yield client

@@ -204,6 +204,21 @@ async def cb_sell_top(callback: types.CallbackQuery):
     if callback.message is None or not isinstance(callback.message, types.Message):
         return
     logger.info("cb_sell_top triggered")
+
+    # P1 FIX: Check risk gates before selling
+    from .state import state
+    risk = getattr(state.sniping_loop, "risk", None) if state.sniping_loop else None
+    if risk is not None:
+        risk_state = risk.get_state()
+        if risk_state.drawdown_freeze_active:
+            await callback.message.edit_text(
+                "⚠️ *Drawdown Freeze Active*\n\n"
+                f"Current drawdown: {risk_state.current_drawdown_pct:.1f}%\n"
+                "Selling is blocked during drawdown recovery."
+            )
+            await callback.answer()
+            return
+
     await callback.message.edit_text("🔍 Finding items to sell...")
     try:
         from src.core.resale_pipeline import ResalePipeline

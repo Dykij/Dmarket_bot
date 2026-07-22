@@ -10,13 +10,15 @@ from __future__ import annotations
 import contextlib
 import logging
 
-from aiogram import F, Router
+from aiogram import F, Router, types
 from aiogram.filters import Command
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 from src.api.dmarket_api_client import DMarketAPIClient
 from src.config import Config
 
 from ..keyboards import BTN_PANIC, BTN_START, BTN_STOP
+from ..callback_data import ConfirmCallback
 from ..resilience import retry_async, safe_call
 from ..state import state
 
@@ -97,14 +99,8 @@ async def _cancel_all_offers() -> tuple[int, Exception | None]:
         client_to_close = None
         if state.client is None:
             # Bot was not running — create a temp client just for cancellation
-            from src.utils.vault import vault
-
-            secret = (
-                vault.get_dmarket_secret()
-                if hasattr(vault, "get_dmarket_secret")
-                else Config.SECRET_KEY
-            )
-            state.client = DMarketAPIClient(Config.PUBLIC_KEY, secret)  # type: ignore[arg-type]
+            from ..resilience import get_dmarket_secret
+            state.client = DMarketAPIClient(Config.PUBLIC_KEY, get_dmarket_secret())  # type: ignore[arg-type]
             client_to_close = state.client
 
         try:
@@ -140,12 +136,62 @@ async def _cancel_all_offers() -> tuple[int, Exception | None]:
 @router.message(Command("liquidate"))
 @safe_call
 async def cmd_liquidate(message):
-    """Force-sell ALL unlocked inventory at best bid for emergency exit."""
+    """Show confirmation dialog before force-selling ALL unlocked inventory."""
     if state.client is None:
         await message.answer("❌ Bot is not running. Start the bot first with /start_bot")
         return
 
-    await message.answer("💧 *LIQUIDATION INITIATED*\nSelling all unlocked inventory at best bid...")
+    # P1 FIX: Show inventory summary and require confirmation
+    from src.db.price_history import price_db
+
+    idle_items = price_db.get_virtual_inventory(status="idle", only_unlocked=True)
+    if not idle_items:
+        await message.answer("💧 *Liquidate* — No unlocked items in inventory.")
+        return
+
+    total_value = sum(float(item.get("buy_price", 0)) for item in idle_items)
+    item_count = len(idle_items)
+    sample_names = [item.get("hash_name", "?") for item in idle_items[:5]]
+    names_text = "\n".join(f"  • {n}" for n in sample_names)
+    if item_count > 5:
+        names_text += f"\n  ... and {item_count - 5} more"
+
+    kb = InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(
+                text="✅ Yes, sell ALL",
+                callback_data=ConfirmCallback(action="yes", context="liquidate").pack(),
+            ),
+            InlineKeyboardButton(
+                text="❌ Cancel",
+                callback_data=ConfirmCallback(action="no", context="liquidate").pack(),
+            ),
+        ]
+    ])
+    await message.answer(
+        f"⚠️ *LIQUIDATION CONFIRMATION*\n\n"
+        f"Items to sell: **{item_count}**\n"
+        f"Total cost basis: **${total_value:.2f}**\n\n"
+        f"Items:\n{names_text}\n\n"
+        f"This will list ALL items at best bid. This action is **irreversible**.\n"
+        f"Confirm?",
+        reply_markup=kb,
+    )
+
+
+@router.callback_query(ConfirmCallback.filter((F.action == "yes") & (F.context == "liquidate")))
+@safe_call
+async def cb_liquidate_confirm(callback: types.CallbackQuery):
+    """Execute liquidation after confirmation."""
+    if callback.message is None or not isinstance(callback.message, types.Message):
+        return
+
+    if state.client is None:
+        await callback.message.edit_text("❌ Bot client unavailable. Start the bot first.")
+        await callback.answer()
+        return
+
+    await callback.message.edit_text("💧 *LIQUIDATION IN PROGRESS*\nSelling all unlocked inventory at best bid...")
 
     from src.core.target_sniping.position_guard import _PositionGuardMixin
     guard = _PositionGuardMixin()
@@ -155,13 +201,24 @@ async def cmd_liquidate(message):
         result = await guard.emergency_liquidate_all(Config.GAME_ID)
     except Exception:
         logger.exception("Liquidation failed")
-        await message.answer("❌ Liquidation failed. Check logs for details.")
+        await callback.message.edit_text("❌ Liquidation failed. Check logs for details.")
+        await callback.answer()
         return
 
-    await message.answer(
+    await callback.message.edit_text(
         f"💧 *Liquidation Complete*\n\n"
         f"Items listed: {result['liquidated']}\n"
         f"Total value: ${result['total_value']:.2f}\n"
         f"Errors: {result['errors']}"
     )
-    logger.warning(f"LIQUIDATION executed by admin {message.from_user.id}: {result}")
+    logger.warning(f"LIQUIDATION executed by admin {callback.from_user.id}: {result}")
+    await callback.answer()
+
+
+@router.callback_query(ConfirmCallback.filter((F.action == "no") & (F.context == "liquidate")))
+@safe_call
+async def cb_liquidate_cancel(callback: types.CallbackQuery):
+    """Cancel liquidation."""
+    if callback.message is not None and isinstance(callback.message, types.Message):
+        await callback.message.edit_text("❌ Liquidation cancelled.")
+    await callback.answer()

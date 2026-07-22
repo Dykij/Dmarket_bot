@@ -188,6 +188,22 @@ async def cmd_analyze(message):
 @safe_call
 async def cmd_sell_top(message):
     logger.info("cmd_sell_top by user %s", message.from_user.id)
+
+    # P1 FIX: Check risk gates before selling (same as main pipeline)
+    from ..state import state
+    risk = getattr(state.sniping_loop, "risk", None) if state.sniping_loop else None
+    if risk is not None:
+        risk_state = risk.get_state()
+        # Block if drawdown freeze is active — same gate as main pipeline
+        if risk_state.drawdown_freeze_active:
+            await message.answer(
+                "⚠️ *Drawdown Freeze Active*\n\n"
+                f"Current drawdown: {risk_state.current_drawdown_pct:.1f}%\n"
+                "Selling is blocked during drawdown recovery.\n"
+                "The bot will auto-sell when recovery threshold is reached."
+            )
+            return
+
     try:
         from src.core.resale_pipeline import ResalePipeline
         async with dmarket_client() as client:
@@ -292,6 +308,7 @@ async def cmd_pnl_chart(message):
 # Live Shadow (v14.5)
 # ============================================================
 @router.message(Command("shadow"))
+@safe_call
 async def cmd_shadow(message):
     """Show live shadow trading status + real-vs-shadow comparison."""
     try:

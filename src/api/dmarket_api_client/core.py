@@ -134,6 +134,14 @@ class DMarketAPIClient(  # type: ignore[misc]
         except ImportError:
             logger.warning("Rust Signer not found, using Python (pynacl) fallback.")
 
+        # Always init Python fallback as backup — if Rust crashes mid-session,
+        # the bot can degrade to Python instead of raising RuntimeError.
+        if secret_key and len(secret_key) >= 64:
+            try:
+                self._signing_key = SigningKey(bytes.fromhex(secret_key[:64]))
+            except Exception:
+                pass  # Rust is primary, Python is just backup
+
         # v12.9: Store the raw secret key in encrypted form only.
         # The SigningKey object is created on-the-fly during _generate_signature
         # and zeroed out immediately after signing. This prevents the key from

@@ -21,7 +21,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 
 from .resilience import safe_call
-from .state import is_admin
+from .state import is_admin, state
 
 logger = logging.getLogger("TelegramControl.settings_fsm")
 router = Router(name="telegram-control-settings")
@@ -144,17 +144,18 @@ async def cmd_set_setting(message: types.Message):
         )
         return
 
-    # Apply setting (via environment variable override)
+    # Apply setting (via environment variable override) — use lock for thread safety
     import os
-    os.environ[setting["name"]] = str(value)
+    async with state.lock:
+        os.environ[setting["name"]] = str(value)
 
-    # Reload config
-    try:
-        from src.config import Config
-        # Force reload by re-reading env
-        setattr(Config, setting["name"], value)
-    except Exception as e:
-        logger.warning(f"Failed to reload config: {e}")
+        # Reload config
+        try:
+            from src.config import Config
+            # Force reload by re-reading env
+            setattr(Config, setting["name"], value)
+        except Exception as e:
+            logger.warning(f"Failed to reload config: {e}")
 
     await message.answer(
         f"✅ *Setting Updated*\n\n"
