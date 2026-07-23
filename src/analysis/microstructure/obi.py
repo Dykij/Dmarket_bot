@@ -174,9 +174,56 @@ def reservation_spread(
     volatility: float,
     gamma: float = 0.3,
     T_days: float = 7.0,
+    kappa: float | None = None,
 ) -> tuple[float, float]:
+    """
+    Avellaneda-Stoikov optimal spread.
+
+    Original formula (verified against A-S 2008):
+        δ* = γσ²(T-t) + (2/γ)ln(1 + γ/κ)
+
+    Where κ = order arrival decay rate. When κ is None (unknown),
+    the adverse selection term is omitted — this UNDERSTATES the spread.
+
+    The `kappa` parameter enables the full formula when estimated
+    from historical listing event data.
+    """
+    import logging
+    import math
+
+    _logger = logging.getLogger("SnipingBot")
+
     sigma_sq = max(volatility, 0.01) ** 2
-    half_spread = gamma * sigma_sq * (T_days / 365.0) * mid_price * 0.5
-    bid_price = reservation - half_spread
-    ask_price = reservation + half_spread
+    T_years = T_days / 365.0
+
+    # Inventory risk component (always present)
+    inventory_risk = gamma * sigma_sq * T_years * mid_price
+
+    # Adverse selection component (only when kappa is known)
+    adverse_selection = 0.0
+    if kappa is not None and kappa > 0 and gamma > 0:
+        adverse_selection = (2.0 / gamma) * math.log(1.0 + gamma / kappa) * mid_price
+
+    # Full A-S half-spread
+    full_half_spread = (inventory_risk + adverse_selection) * 0.5
+
+    # Current simplified formula (what the code uses today)
+    simplified_half_spread = gamma * sigma_sq * T_years * mid_price * 0.5
+
+    # Diagnostic logging: compare the two formulas
+    spread_diff = full_half_spread - simplified_half_spread
+    spread_diff_pct = (spread_diff / max(simplified_half_spread, 0.001)) * 100
+
+    if spread_diff_pct > 5.0:  # Only log when difference is material
+        _logger.info(
+            f"[A-S AUDIT] {mid_price:.2f}: "
+            f"simplified_half_spread=${simplified_half_spread:.4f}, "
+            f"full_half_spread=${full_half_spread:.4f} "
+            f"(kappa={kappa:.2f}), "
+            f"adverse_selection=${adverse_selection:.4f}, "
+            f"understatement={spread_diff_pct:.1f}%"
+        )
+
+    bid_price = reservation - full_half_spread
+    ask_price = reservation + full_half_spread
     return round(bid_price, 4), round(ask_price, 4)

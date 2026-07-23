@@ -334,6 +334,33 @@ class RiskManager:
                 adjusted_size_usd=reduced,
             )
 
+        # 7.9. LVaR diagnostic logging (AUDIT MODE — does NOT block trades)
+        # Logs what Liquidity-Adjusted VaR would be for this position.
+        # LVaR = VaR + 0.5 * spread * position_size
+        # Source: Bangia et al. (1999) "Models of Market Risk: Exogenous Liquidity Risk"
+        try:
+            from src.config import Config
+            _title = item_title if 'item_title' in dir() else ""
+            _best_ask = getattr(self, '_last_best_ask', 0.0)
+            _best_bid = getattr(self, '_last_best_bid', 0.0)
+            if _best_ask > 0 and _best_bid > 0 and proposed_size_usd > 0:
+                _spread_pct = (_best_ask - _best_bid) / _best_ask
+                _liquidity_cost = 0.5 * _spread_pct * proposed_size_usd
+                _var_estimate = proposed_size_usd * 0.10  # 10% VaR assumption
+                _lvar = _var_estimate + _liquidity_cost
+                _lvar_pct = (_lvar / proposed_size_usd) * 100
+                logger.info(
+                    f"[LVaR AUDIT] {_title}: "
+                    f"position=${proposed_size_usd:.2f}, "
+                    f"spread={_spread_pct*100:.1f}%, "
+                    f"liquidity_cost=${_liquidity_cost:.4f}, "
+                    f"VaR=${_var_estimate:.2f}, "
+                    f"LVaR=${_lvar:.2f} ({_lvar_pct:.1f}%), "
+                    f"standard_VaR_understates_by=${_liquidity_cost:.4f}"
+                )
+        except Exception:
+            pass  # Diagnostic only — never block on logging failure
+
         # 8. No halt
         self._soft_halt_active = False
         self._daily_passed += 1

@@ -290,6 +290,20 @@ def run_microstructure_pipeline(
                 hmm_result = hmm.update(log_returns[-1])
                 result.hmm_regime = hmm_result.most_likely_state
 
+                # AUDIT: Log all regime detections for transition matrix calibration
+                _n_states = (
+                    len(hmm_result.state_probs)
+                    if hasattr(hmm_result, "state_probs")
+                    else "?"
+                )
+                logger.info(
+                    f"[HMM AUDIT] {title}: "
+                    f"regime={hmm_result.most_likely_state}, "
+                    f"conf={hmm_result.state_confidence:.3f}, "
+                    f"n_states={_n_states}, "
+                    f"returns={len(log_returns)}"
+                )
+
                 if hmm_result.most_likely_state == "CRISIS":
                     result.passed = False
                     result.reason = (

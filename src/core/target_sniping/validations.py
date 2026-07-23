@@ -14,6 +14,8 @@ from typing import Any
 from src.config import Config
 from src.db.price_history import price_db
 
+logger = logging.getLogger("SnipingBot")
+
 
 def check_bait_detection(title: str, base_price: float) -> dict:
     """Detect bait/spoof listings with rapidly changing prices."""
@@ -94,6 +96,15 @@ def check_cvd_vpin(
         cvd_val = compute_cvd(trade_records)
         if Config.VPIN_ENABLED:
             vpin_val = compute_vpin(trade_records, Config.VPIN_BUCKETS) or 0.0
+            # AUDIT: Log VPIN values to calibrate threshold for CS2 market
+            # Current threshold (0.8) is from equity HFT literature — may be too high
+            logger.info(
+                f"[VPIN AUDIT] {title}: vpin={vpin_val:.4f}, "
+                f"threshold={Config.VPIN_THRESHOLD}, "
+                f"trades={len(trade_records)}, "
+                f"buckets={Config.VPIN_BUCKETS}, "
+                f"would_block={'YES' if vpin_val > Config.VPIN_THRESHOLD else 'no'}"
+            )
             if vpin_val > Config.VPIN_THRESHOLD:
                 return {
                     "pass": False,
