@@ -136,6 +136,17 @@ class PriceHistoryDB(  # type: ignore[misc]
             self.history_conn.execute("ANALYZE")
             logger.debug("[v14.9] SQLite PRAGMA optimize + ANALYZE completed")
 
+    def wal_checkpoint(self) -> None:
+        """Periodic WAL checkpoint to prevent unbounded WAL file growth.
+        
+        Call every ~1000 cycles (or every few hours) during 24/7 operation.
+        TRUNCATE mode checkpoints and truncates the WAL file.
+        """
+        with contextlib.suppress(Exception):
+            self.state_conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+            self.history_conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+            logger.debug("[WAL] Checkpoint completed")
+
     def get_thread_pool_stats(self) -> dict[str, Any]:
         """v15.1: Thread pool monitoring for health checks."""
         return {

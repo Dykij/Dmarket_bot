@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import subprocess
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -345,3 +346,112 @@ class CycleOrchestrator:
             )
         except Exception:
             pass
+
+        # Persist risk state to SQLite (survives restarts for 24/7 operation)
+        try:
+            self.risk.save_state_to_db()
+        except Exception:
+            pass
+
+        # Periodic SQLite maintenance (every 1000 cycles / ~8 hours at 30s/cycle)
+        if self.deep_scan_counter % 1000 == 0:
+            try:
+                price_db.wal_checkpoint()
+                price_db.optimize()
+                price_db.cleanup_old_prices(days=30)
+                price_db.cleanup_old_trades(days=90)
+                logger.info(f"[DB] WAL checkpoint + optimize + cleanup at cycle {self.deep_scan_counter}")
+            except Exception:
+                pass
+            # Fallback: commit state to orphan branch (independent of GH Actions cache)
+            try:
+                await self._commit_state_to_branch()
+            except Exception as e:
+                logger.debug(f"[STATE-BACKUP] Failed: {e}")
+
+    async def _commit_state_to_branch(self) -> None:
+        """Fallback: commit SQLite state to orphan branch 'dryrun-state'.
+        
+        Independent of GitHub Actions cache — provides a second recovery
+        path if cache is evicted. Runs in a thread to avoid blocking the
+        event loop.
+        """
+        from pathlib import Path
+
+        def _do_commit() -> None:
+            try:
+                branch = "dryrun-state"
+                db_files = ["data/dmarket_state.db", "data/dmarket_history.db",
+                            "data/dmarket_trading.db"]
+                existing = [f for f in db_files if Path(f).exists()]
+                if not existing:
+                    return
+
+                # Ensure branch exists
+                result = subprocess.run(
+                    ["git", "rev-parse", "--verify", branch],
+                    capture_output=True, timeout=10
+                )
+                if result.returncode != 0:
+                    # Create orphan branch
+                    subprocess.run(
+                        ["git", "checkout", "--orphan", branch],
+                        capture_output=True, timeout=10
+                    )
+                    subprocess.run(
+                        ["git", "rm", "-rf", "."],
+                        capture_output=True, timeout=10
+                    )
+                else:
+                    subprocess.run(
+                        ["git", "checkout", branch],
+                        capture_output=True, timeout=10
+                    )
+
+                # Copy DB files to staging
+                for f in existing:
+                    subprocess.run(
+                        ["git", "add", f, f"{f}-wal", f"{f}-shm"],
+                        capture_output=True, timeout=10
+                    )
+
+                # Commit
+                import time
+                msg = f"state-backup cycle={self.deep_scan_counter} ts={int(time.time())}"
+                result = subprocess.run(
+                    ["git", "commit", "-m", msg, "--allow-empty"],
+                    capture_output=True, timeout=10, text=True
+                )
+                if result.returncode != 0 and "nothing to commit" not in result.stderr.lower():
+                    logger.warning(f"[STATE-BACKUP] git commit failed: {result.stderr[:200]}")
+
+                # Push to remote (for GitHub Actions persistence)
+                push_result = subprocess.run(
+                    ["git", "push", "origin", branch, "--force"],
+                    capture_output=True, timeout=30, text=True
+                )
+                if push_result.returncode != 0:
+                    logger.warning(
+                        f"[STATE-BACKUP] git push failed: {push_result.stderr[:200]}"
+                    )
+
+                # Return to previous branch
+                subprocess.run(
+                    ["git", "checkout", "-"],
+                    capture_output=True, timeout=10
+                )
+                logger.info(
+                    f"[STATE-BACKUP] Committed to '{branch}' at cycle {self.deep_scan_counter}"
+                )
+            except Exception as e:
+                logger.debug(f"[STATE-BACKUP] Git commit failed: {e}")
+                # Try to return to a valid branch
+                try:
+                    subprocess.run(
+                        ["git", "checkout", "master"],
+                        capture_output=True, timeout=10
+                    )
+                except Exception:
+                    pass
+
+        await asyncio.get_event_loop().run_in_executor(None, _do_commit)

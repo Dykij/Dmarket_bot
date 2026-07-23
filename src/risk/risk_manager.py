@@ -152,6 +152,9 @@ class RiskManager:
 
         self._soft_halt_active: bool = False
 
+        # Restore persisted state from SQLite (survives restarts for 24/7 ops)
+        self.restore_state_from_db()
+
     def attach_pump_detector(self, pump_detector: PumpDetector) -> None:
         """
         Late-bind the pump detector. Called from SnipingLoop.__init__
@@ -432,6 +435,81 @@ class RiskManager:
                     f"(total detections: {pd_stats.get('total_detections', 0)})"
                 )
         return lines
+
+    # ----------------------------------------------------------------
+    # State Persistence (survives restarts for 24/7 operation)
+    # ----------------------------------------------------------------
+    def save_state_to_db(self) -> None:
+        """Persist critical risk state to SQLite scanning_state table.
+        Call periodically (e.g. every cycle) to survive unexpected restarts."""
+        try:
+            import json
+
+            from src.db.price_history import price_db
+            state = {
+                "peak_equity": self._peak_equity,
+                "current_equity": self._current_equity,
+                "daily_realized_pnl": self._daily_realized_pnl,
+                "daily_trade_count": self._daily_trade_count,
+                "drawdown_freeze_active": self._drawdown_freeze_active,
+                "total_wins": self._total_wins,
+                "total_losses": self._total_losses,
+                "avg_win_usd": self._avg_win_usd,
+                "avg_loss_usd": self._avg_loss_usd,
+                "consecutive_losses": self._consecutive_losses,
+                "today": self._today,
+                "soft_halt_active": self._soft_halt_active,
+            }
+            price_db.save_state("risk_manager_state", json.dumps(state))
+        except Exception as e:
+            logger.debug(f"[RiskManager] save_state_to_db failed: {e}")
+
+    def restore_state_from_db(self) -> None:
+        """Restore critical risk state from SQLite after restart."""
+        try:
+            import json
+
+            from src.db.price_history import price_db
+            raw = price_db.get_state("risk_manager_state")
+            if not raw:
+                return
+            state = json.loads(raw)
+            # Only restore if same day — otherwise daily counters should reset
+            today = self._current_date()
+            saved_today = state.get("today", "")
+            if saved_today == today:
+                self._daily_realized_pnl = state.get("daily_realized_pnl", 0.0)
+                self._daily_trade_count = state.get("daily_trade_count", 0)
+                self._consecutive_losses = state.get("consecutive_losses", 0)
+                self._soft_halt_active = state.get("soft_halt_active", False)
+                logger.info(
+                    f"[RiskManager] Restored daily state: PnL=${self._daily_realized_pnl:+.2f}, "
+                    f"trades={self._daily_trade_count}, consecutive_losses={self._consecutive_losses}"
+                )
+            else:
+                logger.info(
+                    f"[RiskManager] Saved state from {saved_today}, today is {today} — daily counters reset"
+                )
+            # Always restore cross-day state (peak equity, drawdown freeze, Kelly)
+            self._peak_equity = state.get("peak_equity", self._peak_equity)
+            self._current_equity = state.get("current_equity", self._current_equity)
+            self._drawdown_freeze_active = state.get("drawdown_freeze_active", False)
+            self._total_wins = state.get("total_wins", 0)
+            self._total_losses = state.get("total_losses", 0)
+            self._avg_win_usd = state.get("avg_win_usd", 0.0)
+            self._avg_loss_usd = state.get("avg_loss_usd", 0.0)
+            # Recompute drawdown from restored peak
+            if self._peak_equity > 0:
+                dd = (self._peak_equity - self._current_equity) / self._peak_equity
+                self._current_drawdown_pct = dd * 100.0
+            logger.info(
+                f"[RiskManager] Restored: peak=${self._peak_equity:.2f}, "
+                f"drawdown={self._current_drawdown_pct:.1f}%, "
+                f"freeze={self._drawdown_freeze_active}, "
+                f"wins={self._total_wins}/losses={self._total_losses}"
+            )
+        except Exception as e:
+            logger.warning(f"[RiskManager] restore_state_from_db failed: {e}")
 
     # ----------------------------------------------------------------
     # Internals

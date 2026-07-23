@@ -22,6 +22,7 @@ Usage:
 
 from __future__ import annotations
 
+import contextlib
 import logging
 import os
 import random
@@ -359,6 +360,20 @@ class ShadowEngine:
                      round(stats.max_drawdown_pct, 2), round(stats.sharpe, 3),
                      round(stats.avg_profit_per_trade, 4)),
                 )
+
+    def close(self) -> None:
+        """Clean shutdown — flush state and close SQLite connection."""
+        try:
+            self._flush_to_db()
+            self._save_snapshot()
+        except Exception:
+            pass
+        if self._conn:
+            with contextlib.suppress(Exception):
+                self._conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+            with contextlib.suppress(Exception):
+                self._conn.close()
+            self._conn = None
 
     # ─────────────────────────────────────────────
     # Reports

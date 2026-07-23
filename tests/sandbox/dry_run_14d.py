@@ -35,7 +35,6 @@ import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
 
 # Setup path
 _ROOT = Path(__file__).resolve().parent.parent.parent
@@ -106,6 +105,7 @@ class SessionMetrics:
     errors: list[str] = field(default_factory=list)
     hourly_snapshots: list[dict] = field(default_factory=list)
     last_report_time: float = 0.0
+    _profitable_count: int = 0
 
     @property
     def uptime_hours(self) -> float:
@@ -115,10 +115,9 @@ class SessionMetrics:
     def win_rate(self) -> float:
         if self.total_items_bought == 0:
             return 0.0
-        profitable = sum(
-            1 for _ in range(self.total_items_bought)
-            if self.total_simulated_pnl > 0
-        )
+        # Track profitable trades properly via PnL per item
+        # Since we simulate PnL per buy, count positive-PnL items
+        profitable = getattr(self, '_profitable_count', 0)
         return profitable / self.total_items_bought * 100
 
     @property
@@ -302,6 +301,8 @@ async def run_single_cycle(cycle_id: int, metrics: SessionMetrics) -> CycleMetri
                 fee = sell_price * 0.05
                 pnl = sell_price - buy_price - fee
                 cycle.simulated_pnl += pnl
+                if pnl > 0:
+                    metrics._profitable_count = getattr(metrics, '_profitable_count', 0) + 1
 
         # 5. Update session metrics
         cycle.balance_before = metrics.current_balance

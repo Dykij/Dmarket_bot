@@ -88,8 +88,12 @@ class LiveShadow:
         logger.info(f"[LiveShadow] Started — initial balance ${SHADOW_BALANCE:.2f}")
 
     def stop(self) -> None:
-        """Stop live shadow tracking."""
+        """Stop live shadow tracking and close SQLite connection."""
         self._started = False
+        try:
+            self._engine.close()
+        except Exception:
+            pass
         logger.info(f"[LiveShadow] Stopped after {self._total_cycles} cycles")
 
     def feed_cycle(

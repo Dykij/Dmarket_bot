@@ -1,0 +1,323 @@
+name: 14-Day Dry Run (24/7)
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Action to perform'
+        required: true
+        default: 'start'
+        type: choice
+        options:
+          - start
+          - stop
+          - status
+      max_runtime_minutes:
+        description: 'Max bot runtime in minutes (0 = full 290m run). Use 15-20 for smoke test.'
+        required: false
+        default: '0'
+        type: string
+  schedule:
+    - cron: '0 */5 * * *'  # Every 5 hours
+
+# RISK 3 FIX: Concurrency guard — never run two dry-run jobs in parallel.
+# cancel-in-progress: false = don't kill a running job, skip the new one.
+# This is safer than cancel-in-progress: true (which would abort mid-trade).
+concurrency:
+  group: dry-run-14d
+  cancel-in-progress: false
+
+env:
+  DRY_RUN: "true"
+  ENVIRONMENT: "development"
+  PYTHONUNBUFFERED: "1"
+  DRY_RUN_BALANCE_FALLBACK: "1000.0"
+
+permissions:
+  contents: write   # write needed for orphan branch state backup
+  actions: write
+
+jobs:
+  dry-run:
+    name: Dry Run Cycle
+    runs-on: ubuntu-latest
+    # RISK 2 FIX: Explicit timeout — 5h with 1h margin
+    timeout-minutes: 300
+
+    steps:
+      - name: Check if stop requested
+        if: github.event.inputs.action == 'stop'
+        run: echo "::notice::Stop requested. Exiting." && exit 0
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history needed for orphan branch operations
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          # sqlite3 CLI for reconciliation (usually pre-installed on ubuntu-latest)
+          which sqlite3 || sudo apt-get install -y sqlite3
+
+      # Reconciliation: restore from BOTH sources, pick the fresher one.
+      # Uses SQLite updated_at (real write timestamp), NOT filesystem mtime
+      # (git checkout and cache restore both reset mtime to "now").
+      - name: Restore state from cache
+        uses: actions/cache@v4
+        id: cache-state
+        with:
+          path: |
+            data/
+            memory/
+          key: dry-run-db-${{ github.run_id }}
+          restore-keys: |
+            dry-run-db-
+
+      # Always try orphan branch (for reconciliation, not just fallback)
+      - name: Restore from orphan branch
+        id: orphan-restore
+        run: |
+          # Helper: extract real timestamp from SQLite scanning_state table.
+          # Returns updated_at of risk_manager_state key (written by bot on each cycle).
+          # Handles: missing file, missing table, missing key, corrupted DB.
+          get_sqlite_ts() {
+            local db_path="$1"
+            if [ ! -f "$db_path" ]; then
+              echo "0"
+              return
+            fi
+            local result
+            result=$(sqlite3 "$db_path" \
+              "SELECT COALESCE(updated_at, 0) FROM scanning_state WHERE key='risk_manager_state' LIMIT 1;" \
+              2>/dev/null) || result=""
+            # Empty result (no rows) or empty string → 0
+            if [ -z "$result" ]; then
+              echo "0"
+            else
+              echo "$result"
+            fi
+          }
+
+          # Read cache timestamp (if cache restored any DB)
+          CACHE_TS=0
+          if [ -f data/dmarket_state.db ]; then
+            CACHE_TS=$(get_sqlite_ts data/dmarket_state.db)
+          fi
+          echo "cache_ts=$CACHE_TS" >> "$GITHUB_OUTPUT"
+
+          # Try orphan branch
+          ORPHAN_TS=0
+          if git rev-parse --verify dryrun-state 2>/dev/null; then
+            echo "Orphan branch dryrun-state found, extracting..."
+            # Stash cache files temporarily
+            if [ -d data ] && ls data/*.db 1>/dev/null 2>&1; then
+              mkdir -p /tmp/cache-data
+              cp data/*.db /tmp/cache-data/ 2>/dev/null || true
+            fi
+            # Extract orphan branch files
+            git checkout dryrun-state -- data/ 2>/dev/null || true
+            git checkout master 2>/dev/null || git checkout main 2>/dev/null || true
+            if [ -f data/dmarket_state.db ]; then
+              ORPHAN_TS=$(get_sqlite_ts data/dmarket_state.db)
+            fi
+            echo "orphan_ts=$ORPHAN_TS" >> "$GITHUB_OUTPUT"
+
+            # Reconciliation: pick the source with newer SQLite timestamp
+            if [ "$CACHE_TS" != "0" ] && [ "$ORPHAN_TS" != "0" ]; then
+              # Compare as integers (Unix timestamps)
+              CACHE_INT=$(printf "%.0f" "$CACHE_TS")
+              ORPHAN_INT=$(printf "%.0f" "$ORPHAN_TS")
+              if [ "$CACHE_INT" -ge "$ORPHAN_INT" ]; then
+                echo "Cache is fresher (cache_ts=$CACHE_TS >= orphan_ts=$ORPHAN_TS), keeping cache"
+                rm -rf data/
+                mv /tmp/cache-data/ data/ 2>/dev/null || true
+              else
+                echo "Orphan branch is fresher (orphan_ts=$ORPHAN_TS > cache_ts=$CACHE_TS), keeping orphan"
+                rm -rf /tmp/cache-data
+              fi
+            elif [ "$CACHE_TS" != "0" ]; then
+              echo "Only cache has risk_manager_state, using cache"
+              rm -rf /tmp/cache-data
+            elif [ "$ORPHAN_TS" != "0" ]; then
+              echo "Only orphan has risk_manager_state, using orphan"
+            else
+              echo "No risk_manager_state in either source — first run or fresh DB"
+              # Keep whatever we have (cache if available, else orphan, else empty)
+              if [ -d /tmp/cache-data ] && ls /tmp/cache-data/*.db 1>/dev/null 2>&1; then
+                rm -rf data/
+                mv /tmp/cache-data/ data/ 2>/dev/null || true
+              fi
+            fi
+          else
+            echo "No orphan branch found"
+            echo "orphan_ts=0" >> "$GITHUB_OUTPUT"
+          fi
+          # Show what we ended up with
+          echo "=== After reconciliation ==="
+          ls -lh data/*.db 2>/dev/null || echo "  No DB files"
+          FINAL_TS=$(get_sqlite_ts data/dmarket_state.db)
+          echo "Final state timestamp: $FINAL_TS ($(date -d @"${FINAL_TS%%.*}" -u 2>/dev/null || echo 'unknown'))"
+
+      - name: Clean stale lock
+        run: |
+          rm -f bot.lock
+          mkdir -p data logs memory
+
+      - name: Configure git for state backup
+        run: |
+          git config user.email "dryrun-bot@github.actions"
+          git config user.name "DryRun Bot"
+
+      - name: Pre-run status
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          echo "=== Dry Run Status ==="
+          echo "DB files:"; ls -lh data/*.db 2>/dev/null || echo "  First run"
+          echo "Memory:"; ls -lh memory/ 2>/dev/null || echo "  No memory"
+          echo "========================"
+          # Notify about job start
+          if [ -n "$TELEGRAM_BOT_TOKEN" ] && [ -n "$TELEGRAM_CHAT_ID" ]; then
+            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+              -d chat_id="${TELEGRAM_CHAT_ID}" \
+              -d parse_mode="HTML" \
+              -d text="🔄 <b>Dry Run: job запущен</b>%0ARun #${{ github.run_number }}%0A${{ github.event.schedule && 'Cron-запуск' || 'Ручной запуск' }}" \
+              -d disable_web_page_preview=true || true
+          fi
+
+      # RISK 3: Notify if this run was delayed (previous run took too long)
+      - name: Check for delayed start
+        if: github.event.schedule != ''
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          # If the previous run's cache key exists with a different run_number,
+          # and the gap between runs is >6h, notify about the delay.
+          SCHEDULE_HOUR=$(date -u +%H)
+          EXPECTED_HOURS="00 05 10 15 20"
+          if ! echo "$EXPECTED_HOURS" | grep -q "$SCHEDULE_HOUR"; then
+            echo "::warning::Run started at unexpected hour $SCHEDULE_HOUR (may have been queued)"
+            if [ -n "$TELEGRAM_BOT_TOKEN" ] && [ -n "$TELEGRAM_CHAT_ID" ]; then
+              curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+                -d chat_id="${TELEGRAM_CHAT_ID}" \
+                -d parse_mode="HTML" \
+                -d text="⚠️ <b>Dry Run: delayed start</b>%0ARun #${{ github.run_number }} started at ${SCHEDULE_HOUR}:00 UTC (expected 00/05/10/15/20)%0APossible concurrency queue or missed cycle." \
+                -d disable_web_page_preview=true || true
+            fi
+          fi
+
+      # RISK 2 FIX: Bot runs with 290m timeout (10min buffer for teardown).
+      # On timeout, `timeout` sends SIGTERM → bot's signal handler runs
+      # graceful shutdown (save_state_to_db, WAL checkpoint, shadow.close).
+      # 10s task cancellation timeout + fast shutdown = <30s total.
+      - name: Run DMarket Bot (DRY_RUN)
+        env:
+          DMARKET_PUBLIC_KEY: ${{ secrets.DMARKET_PUBLIC_KEY }}
+          DMARKET_SECRET_KEY: ${{ secrets.DMARKET_SECRET_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          DRY_RUN: "true"
+        run: |
+          # Use custom runtime if provided (smoke test), otherwise full 290m
+          MAX_MIN="${{ github.event.inputs.max_runtime_minutes || '0' }}"
+          if [ "$MAX_MIN" != "0" ] && [ -n "$MAX_MIN" ]; then
+            TIMEOUT_SEC=$((MAX_MIN * 60))
+            echo "::notice::Smoke test mode — bot will run for ${MAX_MIN} minutes"
+          else
+            TIMEOUT_SEC=17400  # 290 minutes
+          fi
+          timeout ${TIMEOUT_SEC}s python -m src || EXIT_CODE=$?
+          
+          if [ "${EXIT_CODE:-0}" = "124" ]; then
+            echo "::notice::Timeout reached (expected — cron restarts)"
+          elif [ "${EXIT_CODE:-0}" != "0" ]; then
+            echo "::warning::Bot exited with code $EXIT_CODE"
+            # Telegram alert — operator must see this without checking GH UI
+            if [ -n "$TELEGRAM_BOT_TOKEN" ] && [ -n "$TELEGRAM_CHAT_ID" ]; then
+              curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+                -d chat_id="${TELEGRAM_CHAT_ID}" \
+                -d parse_mode="HTML" \
+                -d text="🚨 <b>Dry Run: бот упал</b>%0ARun #${{ github.run_number }}%0AExit code: ${EXIT_CODE}%0AПроверь логи: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+                -d disable_web_page_preview=true || true
+            fi
+          fi
+          exit 0
+
+      # RISK 2 FIX: Explicit cache save IMMEDIATELY after bot run.
+      # This runs BEFORE upload-artifact and BEFORE job timeout kill.
+      # If the bot was killed by timeout, the 10-minute buffer ensures
+      # this step has time to complete (~200MB upload = <1 minute).
+      - name: Save state to cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            data/
+            memory/
+          key: dry-run-db-${{ github.run_id }}
+
+      # Fallback: commit state to orphan branch
+      - name: Commit state to orphan branch
+        if: always()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          PUSH_OK=true
+          git checkout --orphan dryrun-state 2>/dev/null || git checkout dryrun-state 2>/dev/null || true
+          git rm -rf . 2>/dev/null || true
+          git add data/*.db data/*.db-shm data/*.db-wal 2>/dev/null || true
+          git add memory/*.json 2>/dev/null || true
+          TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          git commit -m "state-backup ${TIMESTAMP} run=${{ github.run_number }}" --allow-empty 2>/dev/null || echo "Nothing to commit"
+          
+          # Push with error handling
+          if ! git push origin dryrun-state --force 2>&1; then
+            echo "::warning::Failed to push state to orphan branch dryrun-state"
+            PUSH_OK=false
+          fi
+          
+          # Return to main branch
+          git checkout - 2>/dev/null || git checkout master 2>/dev/null || git checkout main 2>/dev/null || true
+          
+          # Notify on push failure
+          if [ "$PUSH_OK" = "false" ]; then
+            echo "::error::Orphan branch push failed — second recovery line is broken"
+            if [ -n "$TELEGRAM_BOT_TOKEN" ] && [ -n "$TELEGRAM_CHAT_ID" ]; then
+              curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+                -d chat_id="${TELEGRAM_CHAT_ID}" \
+                -d parse_mode="HTML" \
+                -d text="🚨 <b>Dry Run: push в orphan branch ОШИБКА</b>%0ARun #${{ github.run_number }}%0AВетка dryrun-state не обновлена.%0AКеш остаётся единственным источником восстановления." \
+                -d disable_web_page_preview=true || true
+            fi
+          fi
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dry-run-logs-${{ github.run_number }}
+          path: |
+            logs/*.log
+            logs/*.json
+          retention-days: 30
+          if-no-files-found: ignore
+
+      - name: Post-run status
+        if: always()
+        run: |
+          echo "=== Post-Run ==="
+          du -sh data/ 2>/dev/null || echo "  No data"
+          ls -lh data/*.db 2>/dev/null || echo "  No DB"
+          echo "Last log lines:"
+          tail -3 logs/bot_24_7.log 2>/dev/null || echo "  No log"
+          echo "================"

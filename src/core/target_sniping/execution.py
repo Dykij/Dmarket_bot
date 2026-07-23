@@ -487,6 +487,9 @@ class _ExecutionMixin:
                 self._background_tasks = getattr(self, '_background_tasks', set())
                 self._background_tasks.add(task)
                 task.add_done_callback(self._background_tasks.discard)
+                # FIX: Decrement available_balance in DRY mode too (prevents
+                # RiskManager from seeing stale balance for subsequent buys)
+                available_balance -= base_price
 
             # v12.3: Only record local spend/target if the actual buy succeeded.
             # For DRY_RUN, always record (simulated). For production, gate on

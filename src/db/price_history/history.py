@@ -10,10 +10,13 @@ v12.7: write methods wrapped with @with_db_retry.
 
 from __future__ import annotations
 
+import logging
 import time
 from typing import Any
 
 from src.db.db_retry import with_db_retry
+
+logger = logging.getLogger("PriceHistoryDB")
 
 
 class _HistoryMixin:
@@ -309,3 +312,19 @@ class _HistoryMixin:
         )
         self.history_conn.commit()
         return cursor.rowcount
+
+    def cleanup_old_prices(self, days: int = 30) -> int:
+        """Prune price_history records older than N days. Returns count deleted.
+        
+        For 24/7 operation: prevents unbounded table growth.
+        ~30s cycles × multiple oracles = ~50k rows/day → 30 days = ~1.5M rows.
+        """
+        cutoff = time.time() - (days * 86400)
+        cursor = self.history_conn.execute(
+            "DELETE FROM price_history WHERE recorded_at < ?", (cutoff,)
+        )
+        self.history_conn.commit()
+        deleted = cursor.rowcount
+        if deleted > 0:
+            logger.info(f"[DB] Cleaned up {deleted} old price_history records (>{days}d)")
+        return deleted
