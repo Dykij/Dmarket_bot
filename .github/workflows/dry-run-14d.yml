@@ -226,6 +226,9 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           DRY_RUN: "true"
+          # Rate limit fix: increase scan interval to avoid 429 errors
+          # DMarket API real limit is ~3-4 req/s (lower than documented 10)
+          SCAN_INTERVAL: "120"
         run: |
           # Use custom runtime if provided (smoke test), otherwise full 290m
           MAX_MIN="${{ github.event.inputs.max_runtime_minutes || '0' }}"
@@ -235,7 +238,7 @@ jobs:
           else
             TIMEOUT_SEC=17400  # 290 minutes
           fi
-          timeout ${TIMEOUT_SEC}s python -m src || EXIT_CODE=$?
+          timeout "${TIMEOUT_SEC}s" python -m src || EXIT_CODE=$?
           
           if [ "${EXIT_CODE:-0}" = "124" ]; then
             echo "::notice::Timeout reached (expected — cron restarts)"
