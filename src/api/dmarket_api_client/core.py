@@ -471,14 +471,14 @@ class DMarketAPIClient(  # type: ignore[misc]
                         f"[Backoff] success → delay reduced to "
                         f"{self._backoff_delay:.1f}s"
                     )
-                    # Reset 429 counter on success
-                    if self._429_count > 0:
-                        self._429_count = max(0, self._429_count - 1)
-                    await rate_limiter.record_success()  # v15.6: Monitor success
-                    # v15.7: Use msgspec for 5-10x faster JSON parsing
-                    response_bytes = await response.read()
-                    response_json = _loads(response_bytes)
-                    return response_json
+                # Reset 429 counter on success
+                if self._429_count > 0:
+                    self._429_count = max(0, self._429_count - 1)
+                await rate_limiter.record_success()  # v15.6: Monitor success
+                # v15.7: Use msgspec for 5-10x faster JSON parsing
+                response_bytes = await response.read()
+                response_json = _loads(response_bytes)
+                return response_json
         except (asyncio.TimeoutError, aiohttp.ClientConnectionError) as e:
             # Network errors count as breaker failures
             self._breaker.record_failure(e)
