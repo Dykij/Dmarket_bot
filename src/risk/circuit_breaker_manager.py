@@ -56,6 +56,7 @@ class ComponentBreaker:
     last_error: str = field(default="")
     last_success_at: float = field(default=0.0)
     last_failure_at: float = field(default=0.0)
+    _probe_pending: bool = field(default=False, repr=False, init=False)  # P1-14: HALF_OPEN guard
 
     def __post_init__(self) -> None:
         if self.current_cooldown == 0.0:
@@ -69,13 +70,17 @@ class ComponentBreaker:
             elapsed = time.time() - self.opened_at
             if elapsed >= self.current_cooldown:
                 self.state = ComponentState.HALF_OPEN
+                self._probe_pending = True  # P1-14: Mark probe in flight
                 logger.info(
                     f"[CB:{self.name}] OPEN → HALF_OPEN "
                     f"(cooldown={self.current_cooldown:.1f}s)"
                 )
                 return True
             return False
-        # HALF_OPEN — allow one probe
+        # HALF_OPEN — P1-14: Allow exactly one probe at a time
+        if self._probe_pending:
+            return False  # Another task is already probing
+        self._probe_pending = True
         return True
 
     def record_success(self) -> None:
@@ -87,9 +92,11 @@ class ComponentBreaker:
         self.current_cooldown = self.base_cooldown
         self.last_error = ""
         self.last_success_at = time.time()
+        self._probe_pending = False  # P1-14: Release probe lock
 
     def record_failure(self, error: Exception) -> None:
         """Record failed component call."""
+        self._probe_pending = False  # P1-14: Release probe lock
         self.consecutive_failures += 1
         self.last_error = f"{type(error).__name__}: {error}"[:200]
         self.last_failure_at = time.time()
@@ -185,8 +192,9 @@ class CircuitBreakerManager:
     def _load_from_db(self) -> None:
         """Load circuit breaker state from SQLite."""
         try:
-            from src.db.price_history import price_db
             import json
+
+            from src.db.price_history import price_db
 
             raw = price_db.get_state("circuit_breaker_state")
             if raw:
@@ -210,8 +218,9 @@ class CircuitBreakerManager:
     def _save_to_db(self) -> None:
         """Persist circuit breaker state to SQLite."""
         try:
-            from src.db.price_history import price_db
             import json
+
+            from src.db.price_history import price_db
 
             data = {name: breaker.to_dict() for name, breaker in self._breakers.items()}
             price_db.set_state("circuit_breaker_state", json.dumps(data))

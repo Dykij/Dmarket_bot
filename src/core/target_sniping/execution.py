@@ -77,6 +77,30 @@ class _ExecutionMixin:
             except Exception as e:
                 logger.warning(f"Risk equity update failed (using raw balance): {e}")
 
+        # v15.11: Pre-filter offers already blacklisted as stale (OfferNotFound).
+        # Prevents retrying offers that failed in a previous cycle within the
+        # same execution batch — avoids wasted API calls and 30s retry loops.
+        _STALE_TTL = 300.0  # 5 minutes
+        _now = time.monotonic()
+        failed_map: dict[str, float] = getattr(self, "_failed_offer_ids", {})
+        perm_failures: set[str] = getattr(self, "_permanent_failures", set())
+        # Prune expired entries
+        if failed_map:
+            expired = [k for k, ts in failed_map.items() if _now - ts > _STALE_TTL]
+            for k in expired:
+                del failed_map[k]
+        failed_ids = failed_map.keys()
+        all_blocked = failed_ids | perm_failures
+        if all_blocked:
+            _before = len(instant_buys)
+            instant_buys = [
+                d for d in instant_buys
+                if d.get("item_id") not in all_blocked
+            ]
+            skipped = _before - len(instant_buys)
+            if skipped:
+                logger.info(f"[STALE] Pre-filtered {skipped} blacklisted offers before buy")
+
         logger.info(
             f"Executing INSTANT BUY for {len(instant_buys)} items (Strategy A)..."
         )
@@ -141,6 +165,10 @@ class _ExecutionMixin:
                 if original_list_price > 0 and hasattr(self, "oracle") and self.oracle is not None:
                     try:
                         fresh_result = await self.oracle.get_fair_price(title)
+                        if not fresh_result or fresh_result.source_count <= 0 or fresh_result.fair_price <= 0:
+                            # P0 FIX: fail-closed when oracle returns no data
+                            logger.warning(f"[ORACLE-DRIFT] {title}: oracle returned no data — BLOCKING buy")
+                            return None
                         if fresh_result and fresh_result.source_count > 0 and fresh_result.fair_price > 0:
                             fresh_fair = fresh_result.fair_price
                             # Check if oracle price dropped below profitability threshold
@@ -160,8 +188,9 @@ class _ExecutionMixin:
                                 )
                                 return None
                     except Exception as e:
-                        # Oracle re-check failed — proceed with caution
-                        logger.debug(f"[ORACLE-DRIFT] Re-check failed for {title}: {e}")
+                        # P0-3 FIX: Oracle re-check failed — fail-closed, block buy
+                        logger.warning(f"[ORACLE-DRIFT] Re-check failed for {title}: {e} — BLOCKING buy (fail-closed)")
+                        return None
 
                 return item_data
             except Exception as e:
@@ -326,10 +355,31 @@ class _ExecutionMixin:
                                 break
                 fail_reason = buy_response.get("dmOffersFailReason", {}) or {}
                 if fail_reason:
+                    failed_code = fail_reason.get("code", "unknown")
+                    failed_offer_id = fail_reason.get("offerId", "")
                     logger.warning(
-                        f"Buy failed: {fail_reason.get('code', 'unknown')} "
-                        f"for {fail_reason.get('offerId', '?')[:12]}..."
+                        f"Buy failed: {failed_code} "
+                        f"for {failed_offer_id[:12]}..."
                     )
+                    # Blacklist stale offers to prevent retrying them next cycle
+                    if failed_code == "OfferNotFound" and failed_offer_id and hasattr(self, "_failed_offer_ids"):
+                        self._failed_offer_ids[failed_offer_id] = time.monotonic()
+                        # 3-strike permanent blacklist — prevents zombie retry cycles
+                        counts: dict[str, int] = getattr(self, "_failure_counts", {})
+                        counts[failed_offer_id] = counts.get(failed_offer_id, 0) + 1
+                        self._failure_counts = counts
+                        if counts[failed_offer_id] >= 3:
+                            self._permanent_failures.add(failed_offer_id)
+                            self._failed_offer_ids.pop(failed_offer_id, None)
+                            logger.warning(
+                                f"[STALE] Permanently blacklisted offer "
+                                f"{failed_offer_id[:12]}... (3 failures)"
+                            )
+                        else:
+                            logger.info(
+                                f"[STALE] Blacklisted offer {failed_offer_id[:12]}... "
+                                f"(total blacklisted: {len(self._failed_offer_ids)})"
+                            )
                 elif status == "TxFailed":
                     logger.warning(f"Buy TxFailed: {buy_response}")
             logger.info(
@@ -386,8 +436,8 @@ class _ExecutionMixin:
                             f"[INV-CAP] Post-buy: inventory value ${current_held_value:.2f} + ${base_price:.2f} > "
                             f"${Config.MAX_TOTAL_INVENTORY_VALUE:.2f} cap. Item {title} already bought — recording anyway."
                         )
-            except Exception:
-                pass  # Post-buy check is advisory only
+            except Exception as e:
+                logger.debug(f"[EXEC] Post-buy advisory check failed: {e}")
 
             # Reuse pre-fetched inventory (already loaded at line 182)
             held_count = len([x for x in _existing_held_all if x["hash_name"] == title])
@@ -487,9 +537,7 @@ class _ExecutionMixin:
                 self._background_tasks = getattr(self, '_background_tasks', set())
                 self._background_tasks.add(task)
                 task.add_done_callback(self._background_tasks.discard)
-                # FIX: Decrement available_balance in DRY mode too (prevents
-                # RiskManager from seeing stale balance for subsequent buys)
-                available_balance -= base_price
+                # P2-11: Removed duplicate decrement — line 570 handles both DRY and PROD
 
             # v12.3: Only record local spend/target if the actual buy succeeded.
             # For DRY_RUN, always record (simulated). For production, gate on

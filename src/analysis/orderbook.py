@@ -27,7 +27,7 @@ def find_gap_price(listings: list[dict[str, Any]], min_price: float) -> float:
         return round(min_price * 1.03, 2)
 
     prices = sorted(
-        int(item.get("price", {}).get("USD", 0)) / 100.0
+        int(round(item.get("price", {}).get("USD", 0))) / 100.0  # P1-4: round() prevents truncation
         for item in listings
         if int(item.get("price", {}).get("USD", 0)) > 0
     )
@@ -67,7 +67,7 @@ def compute_depth_profile(listings: list[dict[str, Any]]) -> dict[str, Any]:
     from collections import Counter
 
     prices = sorted(
-        int(item.get("price", {}).get("USD", 0)) / 100.0
+        int(round(item.get("price", {}).get("USD", 0))) / 100.0  # P1-4: round() prevents truncation
         for item in listings
         if int(item.get("price", {}).get("USD", 0)) > 0
     )
@@ -139,7 +139,7 @@ def detect_spoofing(
         return {"is_suspicious": False, "flags": [], "confidence": 0.0}
 
     prices = sorted(
-        int(item.get("price", {}).get("USD", 0)) / 100.0
+        int(round(item.get("price", {}).get("USD", 0))) / 100.0  # P1-4: round() prevents truncation
         for item in listings
         if int(item.get("price", {}).get("USD", 0)) > 0
     )

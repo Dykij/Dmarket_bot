@@ -1,16 +1,22 @@
 """
-filter_evaluator.py — Extracted evaluation stages from filter.py.
+filter_evaluator.py -- Extracted evaluation stages from filter.py.
 
 v15.1: Breaks the 647-line _evaluate_candidate() into 6 discrete stages.
 Each stage is a separate method that can be tested independently.
 
+P1-17 / P2-13: DEPRECATED -- This staged evaluator is dead code.
+Production uses filter.py::_evaluate_candidate() directly.
+This file is missing 15+ production filters (crash detection, wash trading,
+NOV-2 oracle guard, 8 microstructure algos, Bayesian Kelly).
+DO NOT wire this into production without completing the filter migration.
+
 Stages:
-    1. _stage_risk_gates      — validation, bait, balance, Kelly
-    2. _stage_microstructure  — OBI, OFI, VWAP, CVD, VPIN
-    3. _stage_oracle_resolve  — oracle price + spread gate
-    4. _stage_value_layers    — float, pattern, sticker premiums
-    5. _stage_fee_and_caps    — fee eval, saturation, lock-aware
-    6. _stage_assemble        — composite score + buy payload
+    1. _stage_risk_gates      -- validation, bait, balance, Kelly
+    2. _stage_microstructure  -- OBI, OFI, VWAP, CVD, VPIN
+    3. _stage_oracle_resolve  -- oracle price + spread gate
+    4. _stage_value_layers    -- float, pattern, sticker premiums
+    5. _stage_fee_and_caps    -- fee eval, saturation, lock-aware
+    6. _stage_assemble        -- composite score + buy payload
 """
 
 from __future__ import annotations
@@ -252,8 +258,8 @@ class _FilterEvaluatorMixin:
             try:
                 from src.analysis.seasonal import get_timing_multiplier
                 ctx.effective_min_spread *= get_timing_multiplier()
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"[FILTER] Seasonal timing unavailable: {e}")
 
         ctx.required_margin = Config.FEE_RATE + Config.WITHDRAWAL_FEE_RATE + (Config.MIN_SPREAD_PCT / 100.0)
 
@@ -287,8 +293,8 @@ class _FilterEvaluatorMixin:
                 if up.get("underpriced"):
                     ctx.has_dmarket_underpriced = True
                     ctx.dm_underpriced_ref = up.get("reference_price", 0.0)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"[FILTER] DMarket underpriced check failed: {e}")
 
         if not (has_intra or has_cross or has_oracle or ctx.has_dmarket_underpriced):
             return False
@@ -348,8 +354,8 @@ class _FilterEvaluatorMixin:
                     ctx.list_price = round(ctx.list_price + sv * 0.5, 2)
                 if sv > 2.0:
                     ctx.is_rare = True
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"[FILTER] Sticker premium calc failed: {e}")
 
         # 4. v15.3: Ultra-low-float bonus from CSFloat data
         if ctx.attrs:
@@ -383,8 +389,8 @@ class _FilterEvaluatorMixin:
                 # Only adjust if the optimal price is HIGHER and reasonable
                 if optimal > ctx.list_price and optimal > ctx.base_price * 1.02:
                     ctx.list_price = optimal
-        except Exception:
-            pass  # fallback to original list_price
+        except Exception as e:
+            logger.debug(f"[FILTER] Sell optimizer failed, using original price: {e}")
 
     def _stage_fee_and_caps(
         self,

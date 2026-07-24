@@ -8,8 +8,10 @@ Mixin with target-order endpoints. Mixed into `DMarketAPIClient`
 from __future__ import annotations
 
 import hashlib
-import time
+import logging
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 
 def _make_idempotency_key(item_id: str, *, price_cents: int = 0) -> str:
@@ -52,8 +54,9 @@ class _TargetsMixin:
                     price_obj = t_copy.get("price", t_copy.get("Price", {}))
                     if isinstance(price_obj, dict):
                         price_amount = int(price_obj.get("amount", price_obj.get("Amount", 0)))
-                except (ValueError, TypeError):
-                    pass
+                except (ValueError, TypeError) as exc:
+                    logger.warning(f"[Targets] Failed to parse price for idempotency key: {price_obj} ({exc})")
+                    price_amount = int(hashlib.sha256(str(price_obj).encode()).hexdigest()[:8], 16)  # P2-9: deterministic hash
                 t_copy["clientOrderId"] = _make_idempotency_key(title, price_cents=price_amount)
             enriched.append(t_copy)
         return await self.make_request(

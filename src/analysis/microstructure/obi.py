@@ -30,7 +30,7 @@ def stoikov_micro_price(
     Formula:  P_micro = mid_price + c * spread * obi
 
     obi within [-1, 1] where +1 = max buyer pressure, -1 = max seller pressure.
-    spread = best_bid - best_ask.
+    spread = best_ask - best_bid.  # P2-6: Fixed sign convention (was best_bid - best_ask)
 
     This micro-price is a better predictor of short-term mid-price
     movements than simple mid or VWAP (Stoikov 2017, Bieganowski 2026).

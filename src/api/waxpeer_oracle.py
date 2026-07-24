@@ -99,6 +99,10 @@ class WaxpeerOracle:
                     return 0
                 data = await resp.json()
                 items = data.get("items", [])
+                # P1-11: Don't wipe cache on empty response — preserve existing data
+                if not items:
+                    logger.warning(f"[Waxpeer] Empty items response, preserving cache ({len(self._items_cache)} items)")
+                    return len(self._items_cache)
                 self._items_cache = {}
                 for item in items:
                     name = item.get("name", "")

@@ -146,6 +146,8 @@ def realized_vol_std(sales: list[dict[str, Any]],
     """Standard deviation of trade prices -> annualized vol.
     
     v15.2: Uses numpy for vectorized computation (10-50x faster).
+    P2-8: Note: annualize_factor=365 assumes daily observations. For tick data,
+    caller should pass sqrt(trades_per_year) for correct annualization.
     """
     prices = [s["price"] for s in sales if s.get("price", 0) > 0]
     if len(prices) < 3:

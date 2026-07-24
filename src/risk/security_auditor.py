@@ -126,10 +126,13 @@ class SecurityAuditor:
                                 record.msg = scrubbed
                                 record.args = ()
                         except Exception:
-                            pass
+                            # P1-3: Fail-closed — redact entire message to prevent secret leakage
+                            record.msg = "[REDACTED - scrub filter error]"
+                            record.args = ()
                 except Exception:
-                    # Never let the filter break logging
-                    pass
+                    # P1-3: Fail-closed — redact rather than risk leaking secrets
+                    record.msg = "[REDACTED - scrub filter error]"
+                    record.args = ()
                 return True
 
         return _SecretScrubFilter()

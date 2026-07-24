@@ -127,11 +127,16 @@ class ConfigWatcher:
             elif hasattr(Config, key) and isinstance(getattr(Config, key), int):
                 setattr(Config, key, int(float(value)))
             elif hasattr(Config, key) and isinstance(getattr(Config, key), float):
-                setattr(Config, key, float(value))
+                # P1-19: Validate through Pydantic to enforce ge/le constraints
+                try:
+                    temp = Config.model_validate({key: float(value)})
+                    setattr(Config, key, getattr(temp, key))
+                except Exception:
+                    logger.warning(f"[ConfigWatcher] Validation failed for {key}={value}")
             elif hasattr(Config, key) and isinstance(getattr(Config, key), str):
                 setattr(Config, key, value)
-        except (ValueError, TypeError):
-            pass
+        except (ValueError, TypeError) as e:
+            logger.warning(f"[ConfigWatcher] Failed to apply {key}={value}: {e}")
 
     @staticmethod
     def _get_mtime() -> float:

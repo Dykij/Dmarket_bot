@@ -21,8 +21,9 @@ from typing import Any
 def compute_vwap(sales: list[dict[str, Any]]) -> tuple[float, int, float]:
     if not sales:
         return 0.0, 0, 0.0
-    prices = [s["price"] for s in sales]
-    weights = [s.get("amount", 1) for s in sales]
+    # P1-9: Filter zero/negative prices (consistent with volatility.py:150)
+    prices = [s["price"] for s in sales if s.get("price", 0) > 0]
+    weights = [s.get("amount", 1) for s in sales if s.get("price", 0) > 0]
     total_weight = sum(weights)
     if total_weight == 0:
         return 0.0, 0, 0.0

@@ -536,7 +536,11 @@ class RiskManager:
                 f"wins={self._total_wins}/losses={self._total_losses}"
             )
         except Exception as e:
-            logger.warning(f"[RiskManager] restore_state_from_db failed: {e}")
+            # P1-22: State restore failure → activate safe mode to prevent trading without risk limits
+            logger.error(f"[RiskManager] CRITICAL: restore_state_from_db failed: {e}", exc_info=True)
+            self._drawdown_freeze_active = True
+            self._soft_halt_active = True
+            logger.error("[RiskManager] SAFE MODE: drawdown freeze + soft halt activated due to state restore failure")
 
     # ----------------------------------------------------------------
     # Internals

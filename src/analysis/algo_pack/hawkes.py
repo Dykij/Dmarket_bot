@@ -67,8 +67,8 @@ class HawkesEstimator:
     """
 
     baseline: float = 0.01       # μ: baseline event rate
-    alpha: float = 0.5           # excitation per event
-    beta: float = 0.1            # decay speed
+    alpha: float = 0.05          # P1-8: excitation per event (was 0.5, ratio α/β must be <1)
+    beta: float = 0.10           # P1-8: decay speed (ratio α/β = 0.5, stationary)
 
     # Internal state
     _state: HawkesState = field(default_factory=HawkesState, init=False)

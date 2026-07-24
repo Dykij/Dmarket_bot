@@ -42,6 +42,7 @@ Usage:
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
 import os
 import sys
@@ -55,8 +56,6 @@ try:
     import psutil
 except ImportError:
     psutil = None  # type: ignore[assignment]
-
-import contextlib
 
 from src.risk.fatal_errors import classify, exit_code_for  # noqa: E402
 
@@ -274,6 +273,8 @@ class ErrorReporter:
                 return
             import aiohttp
 
+            # P1-15: Redact URL to prevent token leakage in tracebacks
+            _redacted_url = "https://api.telegram.org/bot<REDACTED>/sendMessage"
             url = f"https://api.telegram.org/bot{token}/sendMessage"
             async with aiohttp.ClientSession() as session, session.post(
                 url,
@@ -290,7 +291,8 @@ class ErrorReporter:
                         f"[telegram error report] HTTP {resp.status}"
                     )
         except Exception as e:
-            logger.debug(f"[telegram error report] send failed: {e}")
+            # P1-15: Log redacted URL to prevent token in tracebacks
+            logger.debug(f"[telegram error report] send failed to {_redacted_url}: {type(e).__name__}")
 
     def log_and_exit(self) -> None:
         """
@@ -301,10 +303,24 @@ class ErrorReporter:
         _write_exit_state(self.exit_code, self.exc, context=self.context)
         try:
             loop = asyncio.get_running_loop()
-            loop.create_task(_send_report_with_timeout(self))
+            if loop.is_running():
+                # Can't run_until_complete on a running loop — use a fresh one
+                new_loop = asyncio.new_event_loop()
+                try:
+                    new_loop.run_until_complete(
+                        asyncio.wait_for(self.send_telegram(), timeout=2.0)
+                    )
+                finally:
+                    new_loop.close()
+            else:
+                loop.run_until_complete(
+                    asyncio.wait_for(self.send_telegram(), timeout=2.0)
+                )
         except RuntimeError:
             with contextlib.suppress(Exception):
                 asyncio.run(asyncio.wait_for(self.send_telegram(), timeout=2.0))
+        except Exception:
+            pass  # Best-effort: don't crash on send failure
         sys.exit(self.exit_code)
 
 

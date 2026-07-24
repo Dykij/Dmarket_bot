@@ -59,7 +59,7 @@ class CircuitBreaker:
     """
 
     name: str
-    fail_threshold: int = 3           # consecutive failures before opening
+    fail_threshold: int = 5           # P1-26: aligned with spec and circuit_breaker_manager
     base_cooldown: float = 30.0       # first OPEN duration (seconds)
     max_cooldown: float = 300.0       # cap for exponential backoff
     jitter_pct: float = 0.2           # ±20% jitter on wait times
@@ -150,8 +150,23 @@ class CircuitBreaker:
         Clears the _probe_pending flag so the next request can retry
         the HALF_OPEN probe after cooldown.
         Protected by threading lock for concurrent access safety.
+
+        v16.4: DNS/connection errors are logged but do NOT increment the
+        breaker — they are transient network issues, not server failures.
         """
         with self._thread_lock:
+            # DNS and connection errors are transient — don't trip the breaker
+            try:
+                import aiohttp
+                if isinstance(err, (aiohttp.ClientConnectorError, ConnectionError, OSError)):
+                    logger.warning(
+                        f"[CB:{self.name}] Connection/DNS error (not tripping breaker): "
+                        f"{type(err).__name__}: {err}"
+                    )
+                    return
+            except ImportError:
+                pass
+
             self._probe_pending = False
             self.consecutive_failures += 1
             self.last_error = f"{type(err).__name__}: {err}"[:200]
@@ -250,7 +265,8 @@ def jittered_sleep(base_seconds: float, jitter_pct: float = 0.2) -> float:
 # 503 "Service Unavailable" is usually a temporary DMarket internal issue
 # (e.g. elasticsearch unavailable) and should not punish the bot with a
 # long circuit-breaker cooldown. The @retry decorator will still retry.
-NON_TRIPPING_STATUSES = {400, 401, 403, 404, 422, 503}
+# P1-12: 401/403 removed from NON_TRIPPING — auth failures should halt trading per SOUL.md
+NON_TRIPPING_STATUSES = {400, 404, 422, 503}
 
 
 def should_trip(status: int) -> bool:

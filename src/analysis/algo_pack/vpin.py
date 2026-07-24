@@ -36,8 +36,8 @@ from __future__ import annotations
 import logging
 import math
 from collections import deque
-from dataclasses import dataclass
 from collections.abc import Sequence
+from dataclasses import dataclass
 
 logger = logging.getLogger("VPIN")
 
@@ -101,21 +101,25 @@ class VPINEstimator:
             self._price_window.pop(0)
 
         if len(self._price_window) >= 5:
+            # P1-6: Compute returns for proper BVC z-score (Easley et al. 2012)
+            if self._last_price > 0 and len(self._price_window) >= 2:
+                returns = [
+                    (self._price_window[i] - self._price_window[i-1]) / max(self._price_window[i-1], 1e-10)
+                    for i in range(1, len(self._price_window))
+                ]
+                mean_r = sum(returns) / len(returns)
+                var_r = sum((r - mean_r) ** 2 for r in returns) / len(returns)
+                self._return_std = math.sqrt(max(var_r, 1e-10))
+                self._return_mean = mean_r
             mean_p = sum(self._price_window) / len(self._price_window)
-            var_p = sum(
-                (p - mean_p) ** 2 for p in self._price_window
-            ) / len(self._price_window)
             self._price_mean = mean_p
-            self._price_std = math.sqrt(max(var_p, 1e-10))
+            self._price_std = self._return_std if hasattr(self, '_return_std') else 1e-10
 
         # Classify trade using BVC
-        if self._last_price > 0 and self._price_std > 1e-10:
+        if self._last_price > 0 and hasattr(self, '_return_std') and self._return_std > 1e-10:
             trade_return = (price - self._last_price) / self._last_price
-            price_drift = (
-                (self._price_mean - self._last_price)
-                / max(self._last_price, 1e-10)
-            )
-            z = (trade_return - price_drift) / self._price_std
+            # P1-6: Use σ(returns) not σ(prices) for proper z-score
+            z = (trade_return - self._return_mean) / self._return_std
             p_buy = 0.5 * (1.0 + math.erf(z / math.sqrt(2)))
         else:
             p_buy = 0.5

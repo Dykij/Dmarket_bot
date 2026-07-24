@@ -33,7 +33,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 from enum import Enum
 
 logger = logging.getLogger("EventDriven")
@@ -112,7 +112,7 @@ class CS2EventCalendar:
 
     def _init_default_events(self) -> None:
         """Initialize with known CS2 Major schedule and recurring events."""
-        now = datetime.now(timezone.utc)
+        _now = datetime.now(timezone.utc)  # P2-2: prefixed with _ to indicate unused (kept for future relative-date logic)
 
         # CS2 Majors (typically May and November)
         # 2026 schedule (estimated based on historical pattern)
@@ -458,10 +458,10 @@ class EventDrivenStrategy:
         for pattern in self.calendar._seasonal_patterns:
             if pattern.month == current_month:
                 monthly_mult = pattern.multiplier
-                monthly_confidence = pattern.confidence
+                monthly_confidence = pattern.confidence  # noqa: F841 — P2-2: unused, planned for weighted combination
             if pattern.weekday == current_weekday:
                 weekday_mult = pattern.multiplier
-                weekday_confidence = pattern.confidence
+                weekday_confidence = pattern.confidence  # noqa: F841 — P2-2: unused, planned for weighted combination
 
         # Combined multiplier
         combined_mult = monthly_mult * weekday_mult

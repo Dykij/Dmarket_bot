@@ -150,7 +150,7 @@ class MultiSourceOracle:
                 key = os.getenv("CSFLOAT_API_KEY", "")
                 self.csfloat = CSFloatOracle(api_key=key)
             except Exception:
-                pass
+                logger.warning("[Oracle] CSFloat init failed", exc_info=True)
         return self.csfloat
 
     async def load_all_sources(self) -> dict[str, int]:
@@ -243,6 +243,7 @@ class MultiSourceOracle:
                 waxpeer_volume=wp_vol if isinstance(wp_vol, int) else 0,
             )
             self._ref_cache[title] = ref
+            self._cache_ts = now  # P0 FIX: update cache timestamp
 
         # Build prices dict for FairPriceCalculator
         # v16.3: Data Freshness Guard — exclude stale sources

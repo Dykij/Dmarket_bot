@@ -146,52 +146,45 @@ class DMarketAPIClient(  # type: ignore[misc]
         except ImportError:
             logger.warning("Rust Signer not found, using Python (pynacl) fallback.")
 
-        # Always init Python fallback as backup — if Rust crashes mid-session,
-        # the bot can degrade to Python instead of raising RuntimeError.
-        if secret_key and len(secret_key) >= 64:
-            try:
-                self._signing_key = SigningKey(bytes.fromhex(secret_key[:64]))
+        # v16.4: Use local variable for raw secret to prevent traceback leakage.
+        # If any exception occurs during key derivation, structlog's exc_info=True
+        # captures frame locals — a local variable is del'd before the frame exits,
+        # so self.secret_key never holds the plaintext hex.
+        self._encrypted_secret: bytes | None = None
+        _raw_key = secret_key  # local ref — never stored on self
+        if _raw_key and len(_raw_key) >= 64:
+            # Ed25519 signing key (Python fallback)
+            try:  # noqa: SIM105
+                self._signing_key = SigningKey(bytes.fromhex(_raw_key[:64]))
             except Exception:
                 pass  # Rust is primary, Python is just backup
 
-        # v12.9: Store the raw secret key in encrypted form only.
-        # The SigningKey object is created on-the-fly during _generate_signature
-        # and zeroed out immediately after signing. This prevents the key from
-        # lingering in process memory for the lifetime of the client (which could
-        # be weeks in a 24/7 trading loop).
-        self._encrypted_secret: bytes | None = None
-        if secret_key and len(secret_key) >= 64:
-            raw_secret = secret_key[:64]
             # Encrypt using the VaultProvider's Fernet (if available)
             try:
                 from src.utils.vault import vault
                 if vault._fernet is not None:
-                    self._encrypted_secret = vault._fernet.encrypt(raw_secret.encode("utf-8"))
+                    self._encrypted_secret = vault._fernet.encrypt(_raw_key[:64].encode("utf-8"))
                 else:
-                    self._encrypted_secret = raw_secret.encode("utf-8")
+                    self._encrypted_secret = _raw_key[:64].encode("utf-8")
             except Exception:
-                self._encrypted_secret = raw_secret.encode("utf-8")
-            # Clear the raw secret from local scope and overwrite instance attribute
-            raw_secret = ""
-            self.secret_key = "VAULT_REDACTED"  # overwrite plaintext — encrypted copy in _encrypted_secret
-            self._vault_redacted = True
+                self._encrypted_secret = _raw_key[:64].encode("utf-8")
+
+        # Clear raw key from local scope and overwrite instance attribute
+        del _raw_key
+        self.secret_key = "VAULT_REDACTED"
+        self._vault_redacted = True
 
         # Python Fallback Initialization
         if not self._has_rust_signer:
             try:
-                if secret_key and len(secret_key) >= 64:
-                    if self._encrypted_secret and len(self._encrypted_secret) > 128:
-                        clean_secret = self._decrypt_secret()
-                        if clean_secret:
-                            self._signing_key = SigningKey(bytes.fromhex(clean_secret))
-                            self._secure_zero(clean_secret)
-                        else:
-                            self._signing_key = SigningKey(bytes.fromhex(secret_key[:64]))
-                    else:
-                        self._signing_key = SigningKey(bytes.fromhex(secret_key[:64]))
-                elif not is_sandbox:
+                if self._encrypted_secret and len(self._encrypted_secret) > 128:
+                    clean_secret = self._decrypt_secret()
+                    if clean_secret:
+                        self._signing_key = SigningKey(bytes.fromhex(clean_secret))
+                        self._secure_zero(clean_secret)
+                if not self._signing_key and not is_sandbox:
                     logger.error("DMarket Secret Key is invalid or missing in Production!")
-                else:
+                elif not self._signing_key:
                     self._signing_key = SigningKey(bytes.fromhex("0" * 64))
             except Exception as e:
                 if not is_sandbox:
@@ -235,7 +228,8 @@ class DMarketAPIClient(  # type: ignore[misc]
             if vault._fernet is not None:
                 return vault._fernet.decrypt(self._encrypted_secret).decode("utf-8")
             return self._encrypted_secret.decode("utf-8")
-        except Exception:
+        except Exception as e:
+            logger.error(f"[DMarketClient] Secret decryption failed: {e}")
             return None
 
     async def get_session(self) -> aiohttp.ClientSession:
@@ -267,6 +261,7 @@ class DMarketAPIClient(  # type: ignore[misc]
                 connector=connector,
                 headers=default_headers,
                 timeout=aiohttp.ClientTimeout(total=30, connect=10),
+                json_serialize=_dumps,  # P0-1 FIX: use same serializer for body and signature
             )
 
             # v12.2: Initial clock sync with DMarket server
@@ -316,9 +311,12 @@ class DMarketAPIClient(  # type: ignore[misc]
         """
         # v12.9: Decrypt the secret on the fly (zeroed after use)
         raw_secret = self._decrypt_secret()
-        if not raw_secret and not self._vault_redacted:
-            # SECURITY FIX: Don't fall back to plaintext key — raise instead
-            raise RuntimeError("Failed to decrypt secret and vault not redacted. Cannot sign.")
+        if not raw_secret:
+            # P1-21: Fail immediately when secret decryption fails (removed dead guard)
+            raise RuntimeError(
+                "Failed to decrypt DMarket secret key. "
+                "Check VAULT_ENCRYPTION_KEY and encrypted_secret. Cannot sign requests."
+            )
 
         # Try Rust first (microsecond precision)
         if self._has_rust_signer and raw_secret:
@@ -427,10 +425,15 @@ class DMarketAPIClient(  # type: ignore[misc]
                         self._429_count += 1
                         await rate_limiter.record_429(path)
                         reset_in = response.headers.get("RateLimit-Reset", "1")
-                        # Adaptive backoff: increase delay on 429
+                        # P1-13: Use server-suggested backoff as floor
+                        try:
+                            parsed_reset = float(reset_in) if reset_in else 0.0
+                        except (ValueError, TypeError):
+                            parsed_reset = 0.0
+                        # Adaptive backoff: increase delay on 429, use max of server and adaptive
                         self._backoff_delay = min(
                             self._backoff_max,
-                            self._backoff_delay * self._backoff_up,
+                            max(self._backoff_delay * self._backoff_up, parsed_reset),
                         )
                         logger.warning(
                             f"[RateLimit] 429 from {self.BASE_URL} "

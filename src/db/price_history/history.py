@@ -304,15 +304,17 @@ class _HistoryMixin:
         ).fetchall()
         return [{"price": r["price"]} for r in rows]  # compatible with microstructure API
 
+    @with_db_retry(operation_name="cleanup_old_trades")  # P1-5: retry on transient lock
     def cleanup_old_trades(self, days: int = 90) -> int:
         """Prune trade_history records older than N days. Returns count deleted."""
         cutoff = time.time() - (days * 86400)
-        cursor = self.history_conn.execute(
-            "DELETE FROM trade_history WHERE recorded_at < ?", (cutoff,)
-        )
-        self.history_conn.commit()
-        return cursor.rowcount
+        with self.history_conn:  # P1-5: use context manager for auto-rollback
+            cursor = self.history_conn.execute(
+                "DELETE FROM trade_history WHERE recorded_at < ?", (cutoff,)
+            )
+            return cursor.rowcount
 
+    @with_db_retry(operation_name="cleanup_old_prices")  # P1-5: retry on transient lock
     def cleanup_old_prices(self, days: int = 30) -> int:
         """Prune price_history records older than N days. Returns count deleted.
         
@@ -320,11 +322,11 @@ class _HistoryMixin:
         ~30s cycles × multiple oracles = ~50k rows/day → 30 days = ~1.5M rows.
         """
         cutoff = time.time() - (days * 86400)
-        cursor = self.history_conn.execute(
-            "DELETE FROM price_history WHERE recorded_at < ?", (cutoff,)
-        )
-        self.history_conn.commit()
-        deleted = cursor.rowcount
+        with self.history_conn:  # P1-5: use context manager for auto-rollback
+            cursor = self.history_conn.execute(
+                "DELETE FROM price_history WHERE recorded_at < ?", (cutoff,)
+            )
+            deleted = cursor.rowcount
         if deleted > 0:
             logger.info(f"[DB] Cleaned up {deleted} old price_history records (>{days}d)")
         return deleted

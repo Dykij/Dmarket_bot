@@ -246,6 +246,14 @@ class _FilterMixin(_FilterEvaluatorMixin):
         ask_count = int(agg.get("ask_count") or 0)
         bid_count = int(agg.get("bid_count") or 0)
 
+        # P1-16: Cheap guards BEFORE expensive microstructure pipeline
+        if best_ask <= 0 or best_bid <= 0:
+            return None
+        if ask_count < 1 or bid_count < 1:
+            return None  # No real demand
+        if (ask_count + bid_count) < Config.MIN_BID_ASK_COUNT:
+            return None
+
         # --- v15.7: Microstructure pipeline (extracted from inline checks) ---
         # v15.9: Fetch price_history early for Hawkes, Bollinger, DEMA, MACD, Hurst
         _early_history = price_db.get_recent_prices(title, days=14)
@@ -327,12 +335,7 @@ class _FilterMixin(_FilterEvaluatorMixin):
             except PriceValidationError:
                 return None
 
-        if best_ask <= 0 or best_bid <= 0:
-            return None
-        if ask_count < 1 or bid_count < 1:
-            return None  # No real demand
-        if (ask_count + bid_count) < Config.MIN_BID_ASK_COUNT:
-            return None  # Too thin order book
+        # P1-16: Cheap guards moved before microstructure pipeline (see line 249)
 
         # v14.6: Seasonal timing — dynamically adjust spread threshold
         effective_min_spread = Config.INTRA_MIN_SPREAD_PCT
@@ -342,7 +345,7 @@ class _FilterMixin(_FilterEvaluatorMixin):
                 timing_mult = get_timing_multiplier()
                 effective_min_spread *= timing_mult
             except Exception:
-                pass  # non-fatal
+                logger.debug("Optional feature unavailable: seasonal timing", exc_info=True)
 
         # Oracle validation (Phase 1: selective, top-K via batch).
         # In selective mode the caller pre-fetches oracle snapshots for the

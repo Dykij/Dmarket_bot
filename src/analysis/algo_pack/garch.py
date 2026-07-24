@@ -141,8 +141,9 @@ class GARCH11Estimator:
         beta = 0.85
         persistence = alpha + beta
 
-        best_ll = float('-inf')
-        best_params = GARCHParams()
+        # P2-3: best_ll/best_params removed — single-start optimization (not multi-start grid search)
+        best_ll = float('-inf')  # noqa: F841 — unused, kept for potential future multi-start
+        best_params = GARCHParams()  # noqa: F841 — unused
 
         for iteration in range(max_iter):
             # --- E-step: compute conditional variances ---

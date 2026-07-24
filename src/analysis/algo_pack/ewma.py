@@ -14,8 +14,8 @@ Use cases:
 
 from __future__ import annotations
 
-import math
 import logging
+import math
 
 logger = logging.getLogger("EWMA")
 
@@ -354,9 +354,13 @@ def adaptive_kelly_fraction(
     Returns:
         Adjusted Kelly fraction [0, 1].
     """
-    # Standard Kelly
-    wlr = max(win_loss_ratio, 1.0)
-    kelly_f = win_rate - (1 - win_rate) / wlr
+    # P1-7: Removed max(wlr, 1.0) clamp that masked negative EV
+    # When wlr < 1/(1-win_rate), true Kelly is negative → don't trade
+    if win_loss_ratio <= 0:
+        return 0.0
+    kelly_f = win_rate - (1 - win_rate) / win_loss_ratio
+    if kelly_f < 0:
+        return 0.0  # P1-7: Negative edge → zero position
 
     # Volatility scaling
     vol = ewma_volatility(prices)

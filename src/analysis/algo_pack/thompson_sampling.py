@@ -140,7 +140,7 @@ class ThompsonStrategySelector:
         self.forgetting_factor = forgetting_factor
         self.min_pulls_per_arm = min_pulls_per_arm
         self._total_selections = 0
-        self._selection_history: list[str] = []
+        self._selection_history: list[str] = []  # P2-7: bounded below via periodic trim
 
     def select(self) -> ThompsonResult:
         """
