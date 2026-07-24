@@ -360,6 +360,12 @@ class CycleOrchestrator:
                 f"buys={len(ctx.instant_buys)} "
                 f"drawdown={risk_state.current_drawdown_pct:.1f}%"
             )
+            # v16.3: Store stats for TelegramReporter
+            self._last_balance = ctx.current_balance
+            self._last_listings = len(ctx.items)
+            self._last_candidates = len(ctx.instant_buys)
+            self._last_drawdown = risk_state.current_drawdown_pct
+            self._last_429 = getattr(self.client, '_429_count', 0)
         except Exception:
             pass
 

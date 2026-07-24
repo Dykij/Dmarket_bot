@@ -78,11 +78,30 @@ class _SchedulerMixin:
                         exc_info=True,
                     )
 
+                # v16.3: Telegram reporter — automated reports
+                from src.telegram.notifier import notifier
+                from src.telegram_reporter import TelegramReporter
+                from src.db.price_history import price_db
+
+                reporter = TelegramReporter(
+                    notifier=notifier,
+                    price_db=price_db,
+                    intervals={
+                        "hourly": Config.REPORT_INTERVAL_HOURLY,
+                        "cron": Config.REPORT_INTERVAL_CRON,
+                        "daily": Config.REPORT_INTERVAL_DAILY,
+                        "weekly": Config.REPORT_INTERVAL_WEEKLY,
+                    },
+                    get_stats=lambda: self._reporter_stats(),
+                )
+
                 # Leak detection - sample RSS on every loop
                 import psutil
                 process = psutil.Process()
                 boot_rss_mb = process.memory_info().rss / (1024 * 1024)
                 cycle_count = 0
+                import time as _time
+                _cycle_start = _time.monotonic()
 
                 # Watchdog heartbeat
                 heartbeat_path = Path(
@@ -99,6 +118,7 @@ class _SchedulerMixin:
 
                 # Main trading loop
                 while self.running:
+                    _cycle_start = _time.monotonic()
                     for game_id in self.target_games:
                         try:
                             await self.run_cycle(game_id)
@@ -108,6 +128,23 @@ class _SchedulerMixin:
 
                     cycle_count += 1
                     _write_heartbeat()
+
+                    # v16.3: Record cycle stats for Telegram reporter
+                    try:
+                        cycle_time = _time.monotonic() - _cycle_start
+                        reporter.record_cycle(
+                            balance=getattr(self, '_last_balance', 0.0),
+                            listings=getattr(self, '_last_listings', 0),
+                            candidates=getattr(self, '_last_candidates', 0),
+                            errors_429=getattr(self, '_last_429', 0),
+                            cycle_time=cycle_time,
+                            drawdown=getattr(self, '_last_drawdown', 0.0),
+                        )
+                        # Check and send reports every 3 cycles
+                        if cycle_count % 3 == 0:
+                            await reporter.check_and_send_reports()
+                    except Exception as e:
+                        logger.debug(f"[Reporter] record/check error: {e}")
 
                     # Periodic GC + memory sample (every 10 cycles)
                     if cycle_count % 10 == 0:
@@ -211,4 +248,34 @@ class _SchedulerMixin:
             min(delay, float(os.getenv("SCAN_INTERVAL_MAX_SECONDS", "300"))),
         )
         return delay
+
+    def _reporter_stats(self) -> dict[str, Any]:
+        """Collect stats for TelegramReporter from current bot state."""
+        stats: dict[str, Any] = {}
+        try:
+            # Oracle status
+            if hasattr(self, 'oracle') and self.oracle:
+                oracle = self.oracle
+                if hasattr(oracle, 'get_status'):
+                    stats["oracle_status"] = str(oracle.get_status())
+                elif hasattr(oracle, '_source_failures'):
+                    sources = []
+                    for src_name, failures in oracle._source_failures.items():
+                        status = "OK" if failures == 0 else f"FAIL({failures})"
+                        sources.append(f"{src_name}:{status}")
+                    stats["oracle_status"] = " | ".join(sources)
+            # Rate limiter
+            if hasattr(self, 'client') and hasattr(self.client, 'rate_limiter_status'):
+                rl = self.client.rate_limiter_status()
+                mon = rl.get("_monitoring", {})
+                stats["rate_limiter_margin"] = f"{mon.get('current_safety_margin', 0):.2f}"
+                stats["total_429"] = mon.get("total_429", 0)
+            # Risk state
+            if hasattr(self, 'risk') and self.risk:
+                rs = self.risk.get_state()
+                stats["drawdown"] = rs.current_drawdown_pct
+                stats["daily_trades"] = rs.daily_trade_count
+        except Exception as e:
+            logger.debug(f"[Reporter] stats collection error: {e}")
+        return stats
 

@@ -111,6 +111,12 @@ class Config(BaseSettings):
     SCAN_INTERVAL: int = Field(default=30, ge=1)
     BATCH_SIZE: int = Field(default=100, ge=1)
 
+    # --- Telegram Reports ---
+    REPORT_INTERVAL_HOURLY: int = Field(default=3600, ge=60)
+    REPORT_INTERVAL_CRON: int = Field(default=18000, ge=300)
+    REPORT_INTERVAL_DAILY: int = Field(default=86400, ge=3600)
+    REPORT_INTERVAL_WEEKLY: int = Field(default=604800, ge=86400)
+
     # --- Oracle Settings ---
     ORACLE_BATCH_SIZE: int = Field(default=100, ge=1)
     ORACLE_TOP_K_VALIDATE: int = Field(default=50, ge=1)
