@@ -88,7 +88,8 @@ class EndpointRateLimiter:
 
     # DMarket documented limits (authorized users, March 2026)
     ENDPOINT_LIMITS: dict[str, float] = {
-        "/exchange/v1/market/items": 10.0,
+        "/marketplace-api/v2/offers": 10.0,           # v2 marketplace listing
+        "/exchange/v1/market/items": 10.0,             # legacy (kept for compat)
         "/marketplace-api/v1/aggregated-prices": 10.0,
         "/marketplace-api/v1/low-fee-items": 6.0,
         "/trade-aggregator/v1/last-sales": 6.0,

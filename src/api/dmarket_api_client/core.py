@@ -95,7 +95,8 @@ class DMarketAPIClient(  # type: ignore[misc]
     # v15.6: Per-endpoint rate limits (DMarket documented, authorized users)
     # Source: support.dmarket.com (March 2026)
     ENDPOINT_RATE_LIMITS: dict[str, int] = {
-        "/exchange/v1/market/items": 10,           # 10 RPS
+        "/marketplace-api/v2/offers": 10,           # 10 RPS (v2 marketplace)
+        "/exchange/v1/market/items": 10,             # 10 RPS (legacy)
         "/marketplace-api/v1/aggregated-prices": 10, # 10 RPS
         "/marketplace-api/v1/low-fee-items": 6,    # 6 RPS
         "/trade-aggregator/v1/last-sales": 6,      # 6 RPS

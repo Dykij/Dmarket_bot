@@ -30,13 +30,20 @@ class _MarketMixin:
         cursor: str | None = None,
         **filters: Any,
     ) -> dict[str, Any]:
-        """High-throughput Marketplace v2 scan."""
-        params = {"currency": "USD", "gameId": game_id, "limit": limit}
+        """Marketplace v2 scan using /marketplace-api/v2/offers.
+
+        Returns: {"items": [...], "total": N, "cursor": "..."}
+        Supports: gameId, title, limit, cursor, priceFrom, priceTo,
+                  orderBy, orderDir, treeFilters.
+        """
+        params: dict[str, Any] = {"gameId": game_id, "limit": limit}
         if cursor:
             params["cursor"] = cursor
         if filters:
             params.update(filters)
-        return await self.make_request("GET", "/exchange/v1/market/items", params=params)
+        return await self.make_request(
+            "GET", "/marketplace-api/v2/offers", params=params
+        )
 
     # --- v12.0: Aggregated Prices (Strategy A core) ---
     async def get_aggregated_prices(
