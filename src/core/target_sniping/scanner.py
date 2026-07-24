@@ -79,10 +79,14 @@ class _ScannerMixin:
                 continue
             sorted_by_price = sorted(
                 listings,
-                key=lambda x: int(x.get("price", {}).get("USD", 0)),
+                key=lambda x: (
+                    int(x.get("priceCents", 0))
+                    or int(x.get("price", {}).get("USD", 0))
+                ),
             )
             for cand in sorted_by_price:
-                item_id = cand.get("itemId", "")
+                # v2 uses "offerId", v1 uses "itemId"
+                item_id = cand.get("offerId", "") or cand.get("itemId", "")
                 if not item_id or item_id in seen_ids:
                     continue
                 seen_ids.add(item_id)
@@ -182,24 +186,35 @@ class _ScannerMixin:
         # Pick cheapest listing per unique title
         by_title: dict[str, dict[str, Any]] = {}
         for it in all_listings:
-            title = it.get("title", "")
+            title = it.get("title", "") or it.get("attributes", {}).get("title", "")
             if not title:
                 continue
-            price_cents = int(it.get("price", {}).get("USD", 0))
+            # v2 uses "priceCents" (int), v1 uses "price.USD" (string cents)
+            price_cents = int(
+                it.get("priceCents", 0)
+                or it.get("price", {}).get("USD", 0)
+            )
             price = price_cents / 100.0
             if not (min_usd <= price <= max_usd):
                 continue
             if title not in by_title:
                 by_title[title] = it
             else:
-                existing_cents = int(by_title[title].get("price", {}).get("USD", 0))
+                existing = by_title[title]
+                existing_cents = int(
+                    existing.get("priceCents", 0)
+                    or existing.get("price", {}).get("USD", 0)
+                )
                 if price_cents < existing_cents:
                     by_title[title] = it
 
         # Keep only max_titles cheapest (so we don't blow up oracle quota)
         sorted_items = sorted(
             by_title.values(),
-            key=lambda x: int(x.get("price", {}).get("USD", 0)),
+            key=lambda x: (
+                int(x.get("priceCents", 0))
+                or int(x.get("price", {}).get("USD", 0))
+            ),
         )[:max_titles]
 
         logger.info(
@@ -239,7 +254,7 @@ class _ScannerMixin:
                         title=title,
                     )
                     await asyncio.sleep(0.4)  # 400ms pacing
-                    return resp.get("objects", [])
+                    return resp.get("objects", resp.get("items", []))
                 except Exception as e:
                     logger.debug(f"Low-fee listing fetch failed for {title!r}: {e}")
                     return []
@@ -255,10 +270,13 @@ class _ScannerMixin:
                 continue
             sorted_by_price = sorted(
                 listings,
-                key=lambda x: int(x.get("price", {}).get("USD", 0)),
+                key=lambda x: (
+                    int(x.get("priceCents", 0))
+                    or int(x.get("price", {}).get("USD", 0))
+                ),
             )
             for cand in sorted_by_price:
-                item_id = cand.get("itemId", "")
+                item_id = cand.get("offerId", "") or cand.get("itemId", "")
                 if not item_id or item_id in seen_ids:
                     continue
                 seen_ids.add(item_id)
