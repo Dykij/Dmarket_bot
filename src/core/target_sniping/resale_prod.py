@@ -58,7 +58,7 @@ class _ResaleProdMixin:
                 if not dm_item_id or not title:
                     continue
                 # Skip if already tracked
-                if price_db.find_by_dm_item_id(dm_item_id) is not None:
+                if await price_db.run_in_thread(price_db.find_by_dm_item_id, dm_item_id) is not None:  # P2-17: async
                     continue
                 # Infer buy price from item's history (best effort):
                 # DMarket inventory items don't include buy price. Use the
@@ -101,7 +101,7 @@ class _ResaleProdMixin:
         """
         from src.core.target_sniping.resale_constants import SELL_FEE_RATE
 
-        listed = price_db.get_virtual_inventory(status="listed")
+        listed = await price_db.run_in_thread(price_db.get_virtual_inventory, "listed")  # P2-17: async
         if not listed:
             return 0
         detected = 0
@@ -125,14 +125,14 @@ class _ResaleProdMixin:
             # v13.1: Handle rollbacks — item reverted, DMarket refunded 100%
             closed_status = match.get("status", "")
             if closed_status == "reverted":
-                price_db.set_rollback_refund(offer_id)
+                await price_db.run_in_thread(price_db.set_rollback_refund, offer_id)  # P2-17: async
                 logger.info(
                     f"[ROLLBACK] {it['hash_name']} was reverted on DMarket — "
                     f"100% refund applied, PnL neutral."
                 )
                 # Mark as sold with zero PnL
-                price_db.update_virtual_status(int(it["id"]), "sold")
-                price_db.record_virtual_sale(int(it["id"]), float(it["buy_price"] or 0), 0.0)
+                await price_db.run_in_thread(price_db.update_virtual_status, int(it["id"]), "sold")  # P2-17: async
+                await price_db.run_in_thread(price_db.record_virtual_sale, int(it["id"]), float(it["buy_price"] or 0), 0.0)  # P2-17: async
                 detected += 1
                 continue
             sell_price = 0.0
@@ -147,11 +147,11 @@ class _ResaleProdMixin:
                 fee = round(sell_price * SELL_FEE_RATE, 4)
             if sell_price <= 0:
                 continue
-            price_db.record_virtual_sale(int(it["id"]), sell_price, fee)
+            await price_db.run_in_thread(price_db.record_virtual_sale, int(it["id"]), sell_price, fee)  # P2-17: async
             # v13.1: Track funds hold from Trade Protection
             finalization_time = match.get("FinalizationTime", 0.0)
             if finalization_time > time.time():
-                price_db.set_funds_hold(int(it["id"]), finalization_time)
+                await price_db.run_in_thread(price_db.set_funds_hold, int(it["id"]), finalization_time)  # P2-17: async
                 logger.info(
                     f"[FUNDS-HOLD] {it['hash_name']}: ${sell_price:.2f} frozen "
                     f"until {time.ctime(finalization_time)} (Trade Protection)"
@@ -217,7 +217,7 @@ class _ResaleProdMixin:
         )
 
         # Cap on already-listed count
-        listed_count = len(price_db.get_virtual_inventory(status="listed"))
+        listed_count = len(await price_db.run_in_thread(price_db.get_virtual_inventory, "listed"))  # P2-17: async
         if listed_count >= SELL_MAX_OPEN_LISTINGS:
             logger.info(
                 f"[RESALE] {listed_count} items already listed (cap {SELL_MAX_OPEN_LISTINGS}). "
@@ -285,13 +285,13 @@ class _ResaleProdMixin:
             if Config.AS_ENABLED and self.oracle is not None:
                 mid_price = cs_price  # Use oracle fair price as mid
                 same_item = len([
-                    x for x in price_db.get_virtual_inventory(
-                        status="idle", only_unlocked=False,
+                    x for x in await price_db.run_in_thread(  # P2-17: async
+                        price_db.get_virtual_inventory, "idle", False,
                     ) if x["hash_name"] == title
                 ])
                 vol_est = 0.40  # default CS2 skin annualized vol
                 try:
-                    hist = price_db.get_recent_prices(title, days=14)
+                    hist = await price_db.run_in_thread(price_db.get_recent_prices, title, 14)  # P2-17: async
                     if hist and len(hist) >= 3:
                         log_returns = []
                         for i in range(1, len(hist)):
@@ -319,7 +319,7 @@ class _ResaleProdMixin:
             # v14.3: VWAP Bands — list near upper band for mean-reversion target
             if Config.VWAP_BANDS_ENABLED and self.oracle is not None:
                 from src.analysis.microstructure import vwap_bands
-                item_sales_vwap = price_db.get_trade_history(title, days=30, limit=200)
+                item_sales_vwap = await price_db.run_in_thread(price_db.get_trade_history, title, 30, 200)  # P2-17: async
                 if item_sales_vwap and len(item_sales_vwap) >= 5:
                     _, lower, upper = vwap_bands(item_sales_vwap, num_std=2.0)
                     if upper > cs_price and lower < cs_price:
@@ -366,7 +366,7 @@ class _ResaleProdMixin:
             except Exception as e:
                 logger.warning(f"[RESALE] create_sell_offers_batch failed: {e}", exc_info=True)
                 for (row_id, _dm_id, _title, _lp, _bp) in chunk:
-                    price_db.mark_list_failed(row_id, str(e)[:200])
+                    await price_db.run_in_thread(price_db.mark_list_failed, row_id, str(e)[:200])  # P2-17: async
                 continue
 
             # DMarket returns 200 with `status: 'success'` or partial errors.
@@ -402,7 +402,7 @@ class _ResaleProdMixin:
                     if not offer_id and resp.get("status") == "error":
                         err = resp.get("message", "unknown error")
                 if offer_id:
-                    price_db.mark_listed(row_id, offer_id, lp)
+                    await price_db.run_in_thread(price_db.mark_listed, row_id, offer_id, lp)  # P2-17: async
                     success_count += 1
                     listed_ok += 1
                     logger.info(
@@ -422,7 +422,7 @@ class _ResaleProdMixin:
                     _task.add_done_callback(self._background_tasks.discard)
                 else:
                     err_msg = (err or "no offerId in response")[:200]
-                    price_db.mark_list_failed(row_id, err_msg)
+                    await price_db.run_in_thread(price_db.mark_list_failed, row_id, err_msg)  # P2-17: async
                     logger.warning(
                         f"[LIST FAIL] {title} @ ${lp:.2f}: {err_msg}"
                     )
