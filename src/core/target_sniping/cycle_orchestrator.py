@@ -147,7 +147,12 @@ class CycleOrchestrator:
     async def _run_secondary_scans(self, ctx: CycleContext, cursor: str) -> list[dict[str, Any]]:
         """Run float/phase, price-range, and low-fee secondary scans."""
         items = list(ctx.items)
-        seen = {it.get("itemId") for it in items if it.get("itemId")}
+        # v2 uses "offerId", v1 uses "itemId"
+        seen = {
+            it.get("offerId", "") or it.get("itemId", "")
+            for it in items
+            if it.get("offerId") or it.get("itemId")
+        }
 
         # Float/phase scan (every 5 cycles)
         if self.deep_scan_counter % 5 == 0:
@@ -155,8 +160,9 @@ class CycleOrchestrator:
                 top_titles = [it.get("title", "") for it in items[:50]]
                 fp_items = await self._fetch_float_filtered_listings(ctx.game_id, top_titles)
                 for cand in fp_items:
-                    if cand.get("itemId") not in seen:
-                        seen.add(cand.get("itemId"))
+                    cid = cand.get("offerId", "") or cand.get("itemId", "")
+                    if cid and cid not in seen:
+                        seen.add(cid)
                         items.append(cand)
             except Exception as e:
                 logger.debug(f"[FLOAT] scan failed: {e}")
@@ -170,8 +176,9 @@ class CycleOrchestrator:
                     max_usd=min(Config.PRICE_RANGE_MAX_USD, ctx.dynamic_max_price),
                 )
                 for cand in pr_items:
-                    if cand.get("itemId") not in seen:
-                        seen.add(cand.get("itemId"))
+                    cid = cand.get("offerId", "") or cand.get("itemId", "")
+                    if cid and cid not in seen:
+                        seen.add(cid)
                         items.append(cand)
             except Exception as e:
                 logger.debug(f"[PRICE-RANGE] scan failed: {e}")
@@ -180,8 +187,9 @@ class CycleOrchestrator:
         try:
             lf_items = await self._fetch_low_fee_listings(ctx.game_id, max_titles=Config.LOW_FEE_ITEMS_SCAN_LIMIT)
             for cand in lf_items:
-                if cand.get("itemId") not in seen:
-                    seen.add(cand.get("itemId"))
+                cid = cand.get("offerId", "") or cand.get("itemId", "")
+                if cid and cid not in seen:
+                    seen.add(cid)
                     items.append(cand)
         except Exception as e:
             logger.debug(f"[LOW-FEE] scan failed: {e}")
@@ -191,7 +199,12 @@ class CycleOrchestrator:
     async def _stage_prefetch(self, ctx: CycleContext) -> CycleContext:
         """Stage 3: Pre-fetch bulk fees, sales cache, pump detection."""
         # Bulk fees
-        candidate_ids = [it.get("itemId") for it in ctx.items if it.get("itemId") and int(it.get("price", {}).get("USD", 0)) > 0]
+        candidate_ids = [
+            (it.get("offerId", "") or it.get("itemId", ""))
+            for it in ctx.items
+            if (it.get("offerId") or it.get("itemId"))
+            and int(it.get("priceCents", 0) or it.get("price", {}).get("USD", 0)) > 0
+        ]
         if candidate_ids:
             try:
                 ctx.bulk_fees = await self.client.get_item_fee_bulk(ctx.game_id, candidate_ids)
@@ -253,7 +266,10 @@ class CycleOrchestrator:
             hn = inv["hash_name"]
             sat_counts[hn] = sat_counts.get(hn, 0) + 1
 
-        candidates = [it for it in ctx.items if it.get("title") and it.get("itemId")]
+        candidates = [
+            it for it in ctx.items
+            if it.get("title") and (it.get("offerId") or it.get("itemId"))
+        ]
         if not candidates:
             return ctx
 

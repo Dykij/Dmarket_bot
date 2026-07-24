@@ -255,7 +255,11 @@ def evaluate_combined_signal(
       a) Undervalued rare items (value scanner mode)
       b) Liquid items with natural spread (HFT mode)
     """
-    base_price = D(int(item.get("price", {}).get("USD", 0))) / Decimal(100)
+    # v2 uses "priceCents" (int), v1 uses "price.USD" (string cents)
+    base_price = D(int(
+        item.get("priceCents", 0)
+        or item.get("price", {}).get("USD", 0)
+    )) / Decimal(100)
     if base_price <= 0:
         return None
 

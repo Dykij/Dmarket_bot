@@ -98,8 +98,12 @@ class _FilterMixin(_FilterEvaluatorMixin):
         """
 
         title = item.get("title", "")
-        item_id = item.get("itemId")
-        base_price_cents = int(item.get("price", {}).get("USD", 0))
+        # v2 uses "offerId"/"priceCents", v1 uses "itemId"/"price.USD"
+        item_id = item.get("offerId", "") or item.get("itemId", "")
+        base_price_cents = int(
+            item.get("priceCents", 0)
+            or item.get("price", {}).get("USD", 0)
+        )
         base_price = base_price_cents / 100.0
 
         if not title or not item_id or base_price <= 0:

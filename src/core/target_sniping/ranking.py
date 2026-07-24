@@ -72,7 +72,10 @@ def rank_candidates_by_spread(
         if not title:
             continue
         if max_price_usd is not None:
-            base_price_cents = int(it.get("price", {}).get("USD", 0))
+            base_price_cents = int(
+                it.get("priceCents", 0)
+                or it.get("price", {}).get("USD", 0)
+            )
             base_price = base_price_cents / 100.0
             if base_price > max_price_usd:
                 continue

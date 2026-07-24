@@ -107,16 +107,17 @@ class _ExecutionMixin:
                     return None
                 matching = [
                     lst for lst in current_listings
-                    if lst.get("itemId") == item_data["item_id"]
+                    if (lst.get("offerId", "") or lst.get("itemId", "")) == item_data["item_id"]
                 ]
                 if matching:
                     cheapest_cents = min(
-                        int(lst.get("price", {}).get("USD", 0))
+                        int(lst.get("priceCents", 0) or lst.get("price", {}).get("USD", 0))
                         for lst in matching
                     )
                 else:
                     cheapest_cents = int(
-                        current_listings[0].get("price", {}).get("USD", 0)
+                        current_listings[0].get("priceCents", 0)
+                        or current_listings[0].get("price", {}).get("USD", 0)
                     )
                 current_price = cheapest_cents / 100.0
                 if current_price <= 0:
@@ -284,11 +285,10 @@ class _ExecutionMixin:
                 raw = buy_response.get(key)
                 if isinstance(raw, list):
                     for it in raw:
-                        if isinstance(it, dict) and it.get("itemId"):
+                        if isinstance(it, dict) and (it.get("offerId") or it.get("itemId")):
                             bought_items.append({
-                                "itemId": str(it["itemId"]),
+                                "itemId": str(it.get("offerId", "") or it.get("itemId", "")),
                                 "title": it.get("title", ""),
-                                # BUG-3 FIX: Store offerId from response if available
                                 "offerId": it.get("offerId", ""),
                             })
                     if bought_items:

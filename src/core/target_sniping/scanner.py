@@ -341,7 +341,7 @@ class _ScannerMixin:
                 )
                 calls_made += 1
                 for obj in resp.get("objects", resp.get("items", [])):
-                    if obj.get("itemId"):
+                    if obj.get("offerId") or obj.get("itemId"):
                         candidates.append(obj)
             except Exception as e:
                 logger.debug(f"[v14.0 FLOAT] Low-float fetch failed for {title!r}: {e}")

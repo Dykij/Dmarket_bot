@@ -86,8 +86,12 @@ class _FilterEvaluatorMixin:
 
         ctx = EvalContext()
         ctx.title = item.get("title", "")
-        ctx.item_id = item.get("itemId")
-        ctx.base_price_cents = int(item.get("price", {}).get("USD", 0))
+        # v2 uses "offerId"/"priceCents", v1 uses "itemId"/"price.USD"
+        ctx.item_id = item.get("offerId", "") or item.get("itemId", "")
+        ctx.base_price_cents = int(
+            item.get("priceCents", 0)
+            or item.get("price", {}).get("USD", 0)
+        )
         ctx.base_price = ctx.base_price_cents / 100.0
         ctx.is_sandbox = os.getenv("DRY_RUN", "true").lower() == "true"
 
