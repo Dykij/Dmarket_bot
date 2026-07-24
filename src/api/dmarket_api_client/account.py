@@ -8,6 +8,7 @@ Mixin with read-only account endpoints. Mixed into `DMarketAPIClient`
 from __future__ import annotations
 
 import os
+import time
 from typing import Any
 
 import structlog
@@ -24,20 +25,39 @@ class _AccountMixin:
         params: Any = None, body: Any = None,
     ) -> Any: ...
 
+    # v16.3: In-memory balance cache to avoid $1000 fallback on 429
+    _cached_balance: float | None = None
+    _cached_balance_ts: float = 0.0
+    _BALANCE_CACHE_TTL: float = 300.0  # 5 minutes
+
     async def get_real_balance(self) -> float:
-        """Fetches the current USD & DMC balance. Supports Real Balance in Dry Run."""
+        """Fetches the current USD & DMC balance. Supports Real Balance in Dry Run.
+
+        v16.3: Caches last known real balance. On API failure, uses cached
+        value instead of hardcoded $1000 fallback. Cache TTL = 5 minutes.
+        """
         try:
-            # We fetch the real account balance even in Dry Run to ground the simulation in reality
             res = await self.make_request("GET", "/account/v1/balance")
-            # DMarket balance is usually in cents or has a specific structure
-            # Logic: USD section
             usd_balance = float(res.get("usd", 0)) / 100.0
+            # Update cache on success
+            type(self)._cached_balance = usd_balance
+            type(self)._cached_balance_ts = time.monotonic()
             return usd_balance
         except Exception as e:
+            # v16.3: Use cached balance if available and fresh
+            cached = type(self)._cached_balance
+            cache_age = time.monotonic() - type(self)._cached_balance_ts
+            if cached is not None and cache_age < type(self)._BALANCE_CACHE_TTL:
+                logger.warning(
+                    f"Balance fetch failed, using cached ${cached:.2f} "
+                    f"(age={cache_age:.0f}s): {e}"
+                )
+                return cached
+            # Fallback to env var only if no cache available
             if os.getenv("DRY_RUN", "true").lower() == "true":
                 fallback = float(os.getenv("DRY_RUN_BALANCE_FALLBACK", "1000.0"))
                 logger.warning(
-                    f"Real balance fetch failed in DRY_RUN, using fallback ${fallback:.2f}: {e}"
+                    f"Balance fetch failed (no cache), using fallback ${fallback:.2f}: {e}"
                 )
                 return fallback
             raise e

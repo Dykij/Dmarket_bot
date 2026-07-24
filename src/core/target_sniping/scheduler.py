@@ -52,7 +52,7 @@ class _SchedulerMixin:
     async def start(self) -> None:
         self.running = True
         logger.info(
-            f"Starting DMarket Intra-Spread Loop v14.9 | Targets: {self.target_games}"
+            f"Starting DMarket Intra-Spread Loop {Config.BOT_VERSION} | Targets: {self.target_games}"
         )
 
         gc.set_threshold(700, 10, 5)  # More frequent gen2 GC (default: 700, 10, 10)
@@ -74,7 +74,7 @@ class _SchedulerMixin:
                     )
                 except Exception as e:
                     logger.warning(
-                        f"[v14.9] Could not start daily briefing scheduler: {e}",
+                        f"[{Config.BOT_VERSION}] Could not start daily briefing scheduler: {e}",
                         exc_info=True,
                     )
 
@@ -115,7 +115,7 @@ class _SchedulerMixin:
                         rss_mb = process.memory_info().rss / (1024 * 1024)
                         if rss_mb > 500 or rss_mb > 2 * boot_rss_mb:
                             logger.warning(
-                                f"[v14.9 LEAK?] RSS={rss_mb:.1f}MB "
+                                f"[{Config.BOT_VERSION} LEAK?] RSS={rss_mb:.1f}MB "
                                 f"(boot={boot_rss_mb:.1f}MB). Will restart on next "
                                 f"out-of-band error."
                             )
@@ -131,12 +131,12 @@ class _SchedulerMixin:
                             )
                             if new_spread != Config.MIN_SPREAD_PCT:
                                 logger.info(
-                                    f"[v14.9] Self-reflection: MIN_SPREAD_PCT "
+                                    f"[{Config.BOT_VERSION}] Self-reflection: MIN_SPREAD_PCT "
                                     f"{Config.MIN_SPREAD_PCT:.2f}% -> {new_spread:.2f}%"
                                 )
                                 Config.MIN_SPREAD_PCT = new_spread
                     except Exception as e:
-                        logger.debug(f"[v14.9] self_reflection error: {e}")
+                        logger.debug(f"[{Config.BOT_VERSION}] self_reflection error: {e}")
 
                     # Quota-aware adaptive scan interval
                     delay = self._compute_scan_delay()
@@ -157,7 +157,7 @@ class _SchedulerMixin:
                     logger.error(report.format_log())
                 else:
                     logger.warning(
-                        f"[v14.9] Transient TaskGroup error "
+                        f"[{Config.BOT_VERSION}] Transient TaskGroup error "
                         f"({classification}): {type(exc).__name__}: {exc}",
                         exc_info=True,
                     )

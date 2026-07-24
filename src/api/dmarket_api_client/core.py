@@ -114,9 +114,20 @@ class DMarketAPIClient(  # type: ignore[misc]
         self._last_request_time = 0.0
         self._rate_limit_delay = 0.22  # 4-5 requests per second
 
+        # v16.3: Global concurrency semaphore — max 3 simultaneous HTTP
+        # requests to DMarket to stay within ~3 req/s real limit
+        self._semaphore = asyncio.Semaphore(3)
+
         # v15.6: Adaptive rate limiting tracking
         self._429_count = 0
         self._total_requests = 0
+
+        # v16.3: Dynamic backoff state (adaptive delays on 429)
+        self._backoff_delay = 2.0   # current delay in seconds
+        self._backoff_min = 2.0     # minimum delay
+        self._backoff_max = 60.0    # maximum delay
+        self._backoff_up = 1.8      # multiplier on 429
+        self._backoff_down = 0.9    # divisor on success
 
         # --- PHASE 7.8: Safe Key Initialization ---
         self._signing_key = None
@@ -405,24 +416,32 @@ class DMarketAPIClient(  # type: ignore[misc]
             )
 
         try:
-            async with session.request(
+            async with self._semaphore, session.request(
                 method, url, headers=headers, json=body if body else None
             ) as response:
                 if response.status != 200:
                     text = await response.text()
-                    # v15.6: Handle 429 with exponential backoff + monitoring
+                    # v16.3: Handle 429 with adaptive dynamic backoff
                     if response.status == 429:
                         self._429_count += 1
-                        await rate_limiter.record_429(path)  # v15.6: Monitor 429
+                        await rate_limiter.record_429(path)
                         reset_in = response.headers.get("RateLimit-Reset", "1")
+                        # Adaptive backoff: increase delay on 429
+                        self._backoff_delay = min(
+                            self._backoff_max,
+                            self._backoff_delay * self._backoff_up,
+                        )
                         logger.warning(
                             f"[RateLimit] 429 from {self.BASE_URL} "
-                            f"(reset={reset_in}s, total_429={self._429_count})"
+                            f"(reset={reset_in}s, total_429={self._429_count}, "
+                            f"backoff_delay={self._backoff_delay:.1f}s)"
                         )
-                        # Exponential backoff: 1s, 2s, 4s, max 8s
-                        backoff = min(8.0, 1.0 * (2 ** min(self._429_count, 3)))
-                        await asyncio.sleep(backoff)
-                    # v12.4: Trip the breaker for 429 / 5xx (rate-limit / server errors)
+                        logger.debug(
+                            f"[Backoff] delay={self._backoff_delay:.1f}s "
+                            f"(min={self._backoff_min}, max={self._backoff_max})"
+                        )
+                        await asyncio.sleep(self._backoff_delay)
+                    # v12.4: Trip the breaker for 429 / 5xx
                     if should_trip(response.status):
                         self._breaker.record_failure(
                             aiohttp.ClientResponseError(
@@ -442,14 +461,24 @@ class DMarketAPIClient(  # type: ignore[misc]
                     )
                 # Success: close the breaker if it was HALF_OPEN
                 self._breaker.record_success()
-                # Reset 429 counter on success
-                if self._429_count > 0:
-                    self._429_count = max(0, self._429_count - 1)
-                await rate_limiter.record_success()  # v15.6: Monitor success
-                # v15.7: Use msgspec for 5-10x faster JSON parsing
-                response_bytes = await response.read()
-                response_json = _loads(response_bytes)
-                return response_json
+                # v16.3: Gradually reduce backoff delay on success
+                if self._backoff_delay > self._backoff_min:
+                    self._backoff_delay = max(
+                        self._backoff_min,
+                        self._backoff_delay * self._backoff_down,
+                    )
+                    logger.debug(
+                        f"[Backoff] success → delay reduced to "
+                        f"{self._backoff_delay:.1f}s"
+                    )
+                    # Reset 429 counter on success
+                    if self._429_count > 0:
+                        self._429_count = max(0, self._429_count - 1)
+                    await rate_limiter.record_success()  # v15.6: Monitor success
+                    # v15.7: Use msgspec for 5-10x faster JSON parsing
+                    response_bytes = await response.read()
+                    response_json = _loads(response_bytes)
+                    return response_json
         except (asyncio.TimeoutError, aiohttp.ClientConnectionError) as e:
             # Network errors count as breaker failures
             self._breaker.record_failure(e)

@@ -60,7 +60,7 @@ class _ScannerMixin:
                     # Pacing: 400ms between requests = 2.5 RPS per semaphore slot
                     # With 2 slots = 5 RPS total (50% of DMarket limit)
                     await asyncio.sleep(0.4)
-                    return resp.get("objects", [])
+                    return resp.get("objects", resp.get("items", []))
                 except Exception as e:
                     logger.debug(f"Listing fetch failed for {title!r}: {e}")
                     return []
@@ -120,9 +120,8 @@ class _ScannerMixin:
         that never appear in the top-N volume scan. Returns the cheapest
         listing per unique title, capped at max_titles.
 
-        This is the core of the price-range conveyor: instead of waiting for
-        high-volume items to become profitable, we actively hunt across all
-        price tiers and let the fee-aware validator decide.
+        Pagination: DMarket API v2 uses cursor-based pagination.
+        Response returns "cursor" field for next page (or empty/None if last page).
         """
         if min_usd >= max_usd or max_pages <= 0 or max_titles <= 0:
             return []
@@ -133,9 +132,11 @@ class _ScannerMixin:
         all_listings: list[dict[str, Any]] = []
         cursor: str | None = None
         pages = 0
+        api_total = 0  # total count from API response (if available)
         sem = asyncio.Semaphore(2)  # 2 concurrent, 400ms pacing = 5 RPS
 
-        async def _page() -> dict[str, Any]:
+        async def _page(next_cursor: str | None) -> dict[str, Any]:
+            """Fetch one page. next_cursor passed explicitly (no closure fragility)."""
             async with sem:
                 try:
                     params: dict[str, Any] = {
@@ -143,8 +144,8 @@ class _ScannerMixin:
                         "priceFrom": str(price_from_cents),
                         "priceTo": str(price_to_cents),
                     }
-                    if cursor:
-                        params["cursor"] = cursor
+                    if next_cursor:
+                        params["cursor"] = next_cursor
                     resp = await self.client.get_market_items_v2(
                         game_id, **params
                     )
@@ -156,12 +157,22 @@ class _ScannerMixin:
 
         while pages < max_pages:
             pages += 1
-            resp = await _page()
-            items = resp.get("objects", [])
+            resp = await _page(cursor)
+            # DMarket v2 returns "objects" (legacy) or "items" (v2)
+            items = resp.get("objects", resp.get("items", []))
             if not items:
                 break
             all_listings.extend(items)
-            cursor = resp.get("cursor")
+            cursor = resp.get("cursor", "")
+            # Track API-reported total (if present)
+            if "total" in resp:
+                api_total = int(resp["total"])
+            logger.debug(
+                f"[PRICE-RANGE] page={pages} fetched={len(items)} "
+                f"total={len(all_listings)}/{api_total or '?'} "
+                f"has_cursor={bool(cursor)} "
+                f"remaining_pages={max_pages - pages}"
+            )
             if not cursor:
                 break
             # Stop early if we already have enough unique titles
@@ -311,7 +322,7 @@ class _ScannerMixin:
                     game_id, title=title, limit=10, treeFilters=FLOAT_FILTER,
                 )
                 calls_made += 1
-                for obj in resp.get("objects", []):
+                for obj in resp.get("objects", resp.get("items", [])):
                     if obj.get("itemId"):
                         candidates.append(obj)
             except Exception as e:
@@ -331,7 +342,7 @@ class _ScannerMixin:
                             game_id, title=title, limit=5, treeFilters=phase_filter,
                         )
                         calls_made += 1
-                        for obj in resp.get("objects", []):
+                        for obj in resp.get("objects", resp.get("items", [])):
                             if obj.get("itemId"):
                                 candidates.append(obj)
                     except Exception as e:

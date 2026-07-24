@@ -119,7 +119,7 @@ class Config(BaseSettings):
     ORACLE_CACHE_REFRESH_TOP_N: int = Field(default=200, ge=1)
     ORACLE_CACHE_REFRESH_ON_START: bool = True
     AGG_SCAN_TOP_N: int = Field(default=100, ge=1)
-    LISTINGS_FETCH_LIMIT: int = Field(default=20, ge=1)
+    LISTINGS_FETCH_LIMIT: int = Field(default=100, ge=1)
 
     # --- Price-Range Market Scan ---
     PRICE_RANGE_SCAN_ENABLED: bool = True
