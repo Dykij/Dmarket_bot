@@ -15,9 +15,15 @@ from typing import Any
 
 from src.api.oracle_factory import OracleFactory
 from src.db.price_history import price_db
-from src.telegram.notifier import notifier
+# P1-1: Lazy import to break core→telegram layer coupling
 
 logger = logging.getLogger("SnipingBot")
+
+
+def _get_notifier():
+    """P1-1: Lazy import notifier to avoid core→telegram coupling at import time."""
+    from src.telegram.notifier import notifier
+    return notifier
 
 
 class _ResaleDryMixin:
@@ -49,7 +55,7 @@ class _ResaleDryMixin:
                 # v12.5: notify + record in risk manager
                 # v15.10 FIX: Store task reference to prevent GC before completion
                 _task = asyncio.create_task(
-                    notifier.sell(
+                    _get_notifier().sell(
                         title=it["hash_name"],
                         buy_price_usd=float(it["buy_price"] or 0),
                         sell_price_usd=sell_price,

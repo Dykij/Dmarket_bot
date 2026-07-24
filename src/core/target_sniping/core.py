@@ -41,7 +41,7 @@ from src.core.target_sniping.scheduler import _SchedulerMixin
 from src.core.target_sniping.telemetry import _TelemetryMixin
 from src.db.price_history import price_db
 from src.risk.liquidity_manager import LiquidityManager
-from src.telegram.notifier import notifier
+# P1-1: Lazy import
 
 logger = logging.getLogger("SnipingBot")
 
@@ -82,13 +82,17 @@ class SnipingLoop(  # type: ignore[misc]
         self.multi_source_oracle: Any | None = None
         self.oracle: Any | None = None
         self._sales_cache: dict[str, Any] = {}
+        self._failed_offer_ids: dict[str, float] = {}  # OfferNotFound blacklist {id: ts}
+        self._failure_counts: dict[str, int] = {}  # strike counter per offer_id
+        self._permanent_failures: set[str] = set()  # 3-strike permanent blacklist
 
         from src.analytics.self_reflection import self_reflection
         from src.risk.pump_detector import PumpDetector
         from src.risk.risk_manager import RiskManager
 
         self.self_reflection = self_reflection
-        self.pump_detector = PumpDetector(price_db=price_db, notifier=notifier)
+        from src.telegram.notifier import notifier as _notifier_inst
+        self.pump_detector = PumpDetector(price_db=price_db, notifier=_notifier_inst)
 
         try:
             restored = self.pump_detector.restore_from_disk()

@@ -21,9 +21,15 @@ from typing import Any
 
 from src.config import Config
 from src.db.price_history import price_db
-from src.telegram.notifier import notifier
+# P1-1: Lazy import
 
 logger = logging.getLogger("PositionGuard")
+
+
+def _get_notifier():
+    """P1-1: Lazy import notifier to avoid core->telegram coupling at import time."""
+    from src.telegram.notifier import notifier
+    return notifier
 
 # BUG-9 FIX: Use Config fields instead of os.getenv (validated, typed, centralized)
 STOP_LOSS_PCT = Config.STOP_LOSS_PCT
@@ -241,7 +247,7 @@ class _PositionGuardMixin:
                 )
                 # BUG-10 FIX: Store task reference to prevent GC before completion
                 task = asyncio.create_task(
-                    notifier.sell(
+                    _get_notifier().sell(
                         title=item["hash_name"],
                         buy_price_usd=buy_price,
                         sell_price_usd=sell_price,
@@ -273,7 +279,7 @@ class _PositionGuardMixin:
                         )
                         # BUG-10 FIX: Store task reference to prevent GC
                         task = _asyncio.create_task(
-                            notifier.sell(
+                            _get_notifier().sell(
                                 title=item["hash_name"],
                                 buy_price_usd=buy_price,
                                 sell_price_usd=sell_price,

@@ -14,9 +14,15 @@ from typing import Any
 
 from src.config import Config
 from src.db.price_history import price_db
-from src.telegram.notifier import notifier
+# P1-1: Lazy import
 
 logger = logging.getLogger("SnipingBot")
+
+def _get_notifier():
+    """P1-1: Lazy import notifier to avoid core->telegram coupling at import time."""
+    from src.telegram.notifier import notifier
+    return notifier
+
 
 
 class _ResaleProdMixin:
@@ -158,7 +164,7 @@ class _ResaleProdMixin:
             )
             # v15.10 FIX: Store task reference to prevent GC before completion
             _task = asyncio.create_task(
-                notifier.sell(
+                _get_notifier().sell(
                     title=it["hash_name"],
                     buy_price_usd=float(it["buy_price"] or 0),
                     sell_price_usd=sell_price,
@@ -296,8 +302,8 @@ class _ResaleProdMixin:
                         if log_returns:
                             daily_vol = sum(log_returns) / len(log_returns)
                             vol_est = daily_vol * math.sqrt(365)
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.warning(f"[Resale] Volume estimation failed for {title}: {e}")
                 from src.analysis.microstructure import reservation_price
                 reserv = reservation_price(
                     mid_price=mid_price,
@@ -404,7 +410,7 @@ class _ResaleProdMixin:
                     )
                     # v15.10 FIX: Store task reference to prevent GC before completion
                     _task = asyncio.create_task(
-                        notifier.buy(  # reuse buy() helper; it just announces
+                        _get_notifier().buy(  # reuse buy() helper; it just announces
                             title=f"LISTED: {title}",
                             price_usd=bp,
                             expected_sell_usd=lp,

@@ -174,7 +174,7 @@ class ResalePipeline:
             return None
 
         # Execute buy
-        is_dry_run = os.getenv("DRY_RUN", "true").lower() == "true"
+        is_dry_run = Config.DRY_RUN
         buy_offer = {
             "offerId": item_id,
             "price": {"amount": str(price_cents), "currency": "USD"}
@@ -290,7 +290,7 @@ class ResalePipeline:
             return []
 
         listed: list[dict[str, Any]] = []
-        is_dry_run = os.getenv("DRY_RUN", "true").lower() == "true"
+        is_dry_run = Config.DRY_RUN
 
         if is_dry_run:
             # DRY_RUN: no real DMarket call — just update status + log

@@ -14,7 +14,7 @@ from typing import Any
 from src.api.exceptions import RateLimitException
 from src.config import Config
 from src.core.sandbox_scenarios import scenario_engine
-from src.core.target_sniping.filter_evaluator import _FilterEvaluatorMixin
+# P1-17: filter_evaluator.py removed (dead code, missing 15+ production filters)
 from src.core.target_sniping.microstructure_pipeline import run_microstructure_pipeline
 from src.core.target_sniping.ranking import rank_candidates_by_spread
 from src.core.target_sniping.validations import (
@@ -32,7 +32,7 @@ from src.risk.price_validator import (
 logger = logging.getLogger("SnipingBot")
 
 
-class _FilterMixin(_FilterEvaluatorMixin):
+class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead code)
     """Per-item candidate evaluation (filter loop)."""
 
     # These attributes are set on the instance by SnipingLoop.__init__
@@ -131,7 +131,7 @@ class _FilterMixin(_FilterEvaluatorMixin):
         # Balances $43 → max $5.00 floor. $500 → max $50. $2000 → max $200.
         _dyn_max = dynamic_max_price or Config.MAX_SNIPING_PRICE_USD
         if base_price > _dyn_max:
-            if os.getenv("DRY_RUN", "true").lower() == "true":
+            if Config.DRY_RUN:
                 price_db.log_decision(
                     title,
                     "skip",
@@ -294,7 +294,7 @@ class _FilterMixin(_FilterEvaluatorMixin):
         if Config.USE_LIQUIDITY_FILTER and cross_market_provider is None:
             liquidity = price_db.get_liquidity_metrics(title)
             if not liquidity["is_liquid"]:
-                is_sandbox = os.getenv("DRY_RUN", "true").lower() == "true"
+                is_sandbox = Config.DRY_RUN
                 if is_sandbox:
                     price_db.log_decision(
                         title,
@@ -315,7 +315,7 @@ class _FilterMixin(_FilterEvaluatorMixin):
                 max_outliers=Config.TRIMMED_MEAN_MAX_OUTLIERS,
             )
         ):
-            is_sandbox = os.getenv("DRY_RUN", "true").lower() == "true"
+            is_sandbox = Config.DRY_RUN
             if is_sandbox:
                 price_db.log_decision(
                     title,
@@ -352,7 +352,7 @@ class _FilterMixin(_FilterEvaluatorMixin):
         # top-K candidates and passes them in cs_snapshots. We do a dict
         # lookup here (free) instead of a per-item HTTP call.
         # v12.7: Also check per-cycle cache to avoid duplicate HTTP calls (P1-5).
-        is_sandbox = os.getenv("DRY_RUN", "true").lower() == "true"
+        is_sandbox = Config.DRY_RUN
         cs_price = 0.0
         cs_snap = (cs_snapshots or {}).get(title)
         if cs_snap is not None and getattr(cs_snap, "has_data", False):

@@ -38,6 +38,28 @@ class _HistoryMixin:
                 (hash_name, price, source, time.time()),
             )
 
+    @with_db_retry(operation_name="record_prices_batch")
+    def record_prices_batch(self, prices: list[tuple[str, float, str]]) -> int:
+        """P2-5: Bulk-insert price observations using executemany.
+        
+        Args:
+            prices: list of (hash_name, price, source) tuples
+            
+        Returns:
+            Number of rows inserted.
+        """
+        now = time.time()
+        rows = [(h, p, s, now) for h, p, s in prices if p > 0]
+        if not rows:
+            return 0
+        with self.history_conn:
+            self.history_conn.executemany(
+                "INSERT INTO price_history (hash_name, price, source, recorded_at) "
+                "VALUES (?, ?, ?, ?)",
+                rows,
+            )
+        return len(rows)
+
     # ------------------------------------------------------------------
     # Read (HISTORY)
     # ------------------------------------------------------------------

@@ -62,7 +62,7 @@ class _ResaleMixin(_ResaleDryMixin, _ResaleProdMixin, _PositionGuardMixin):
 
         Skips if no items. Errors are logged but never crash the loop.
         """
-        is_dry = os.getenv("DRY_RUN", "true").lower() == "true"
+        is_dry = Config.DRY_RUN
 
         # Report on trade-lock status
         all_idle = price_db.get_virtual_inventory(status="idle", only_unlocked=False)
@@ -161,7 +161,7 @@ class _ResaleMixin(_ResaleDryMixin, _ResaleProdMixin, _PositionGuardMixin):
         PROD: batch edit with a 5% lower price (configurable via SELL_REPRICE_DROP_PCT).
         """
 
-        is_dry = os.getenv("DRY_RUN", "true").lower() == "true"
+        is_dry = Config.DRY_RUN
         stale = price_db.get_stale_listings(int(Config.REPRICE_AFTER_HOURS * 3600))
         if not stale:
             return

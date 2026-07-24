@@ -24,6 +24,7 @@ Public API:
 
 from __future__ import annotations
 
+from src.config import Config  # P1-20: centralized DRY_RUN
 import asyncio
 import contextlib
 import logging
@@ -31,9 +32,15 @@ from collections.abc import Awaitable, Callable
 from datetime import datetime, timezone
 
 from src.db.price_history import price_db
-from src.telegram.notifier import notifier
+# P1-1: Lazy import
 
 logger = logging.getLogger("DailyBriefing")
+
+
+def _get_notifier():
+    """P1-1: Lazy import notifier to avoid core->telegram coupling at import time."""
+    from src.telegram.notifier import notifier
+    return notifier
 
 
 class DailyBriefingScheduler:
@@ -243,7 +250,7 @@ class DailyBriefingScheduler:
 
             # 6. Send via Telegram (severity=info, throttled to 1/min by
             # the notifier — but daily briefings are only 1/day so OK).
-            ok = await notifier.custom(text, severity="info")
+            ok = await _get_notifier().custom(text, severity="info")
             self._consecutive_failures = 0
             if ok:
                 logger.info(f"[Briefing] Sent ({note})")
@@ -267,7 +274,10 @@ class DailyBriefingScheduler:
     @staticmethod
     def _is_dry() -> bool:
         import os
-        return os.getenv("DRY_RUN", "true").lower() == "true"
+
+        from dotenv import load_dotenv
+        load_dotenv(override=False)
+        return Config.DRY_RUN
 
     async def _safe_get_balance(self) -> float:
         try:

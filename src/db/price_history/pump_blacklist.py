@@ -74,7 +74,7 @@ class _PumpBlacklistMixin:
         restore in-memory state)."""
         now = time.time()
         return self.state_conn.execute(
-            "SELECT * FROM pump_blacklist WHERE expires_at > ? ORDER BY detected_at DESC",
+            "SELECT id, hash_name, detected_at, expires_at, reason FROM pump_blacklist WHERE expires_at > ? ORDER BY detected_at DESC",
             (now,),
         ).fetchall()
 

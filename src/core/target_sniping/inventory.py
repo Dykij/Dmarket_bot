@@ -7,6 +7,7 @@ Mixin with the inventory-status helpers. Mixed into `SnipingLoop`
 
 from __future__ import annotations
 
+from src.config import Config  # P1-20: centralized DRY_RUN
 import logging
 import os
 import time
@@ -35,7 +36,7 @@ class _InventoryMixin:
         2. Detects phantom items (in virtual_inventory but not in real inventory)
         3. Cross-checks transaction history for rollbacks
         """
-        if os.getenv("DRY_RUN", "true").lower() == "true":
+        if Config.DRY_RUN:
             return
 
         try:

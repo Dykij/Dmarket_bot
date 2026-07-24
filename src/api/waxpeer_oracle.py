@@ -125,13 +125,12 @@ class WaxpeerOracle:
                         }
                 self._items_cache_ts = now
 
-                # Persist to SQLite
-                for name, item_data in self._items_cache.items():
-                    price_db.record_price(
-                        f"waxpeer:{name}",
-                        item_data["price"],
-                        source="waxpeer",
-                    )
+                # P2-5: Batch persist to SQLite (was N+1 individual INSERTs)
+                batch_rows = [
+                    (f"waxpeer:{name}", item_data["price"], "waxpeer")
+                    for name, item_data in self._items_cache.items()
+                ]
+                price_db.record_prices_batch(batch_rows)
 
                 logger.info(f"[Waxpeer] Loaded {len(self._items_cache)} items")
                 return len(self._items_cache)

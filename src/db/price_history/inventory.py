@@ -78,7 +78,7 @@ class _InventoryMixin:
         self, status: str = "idle", only_unlocked: bool = False
     ) -> list[sqlite3.Row]:
         """Fetch virtual items that are NOT marked exclusive."""
-        query = "SELECT * FROM virtual_inventory WHERE status = ? AND (exclusive IS NULL OR exclusive = 0)"
+        query = "SELECT id, hash_name, buy_price, sell_price, fee_paid, profit, status, acquired_at, unlock_at, sold_at, dm_item_id, dm_offer_id, listed_at, list_error, funds_hold_until, rollback_refund FROM virtual_inventory WHERE status = ? AND (exclusive IS NULL OR exclusive = 0)"
         params = [status]
         if only_unlocked:
             query += " AND unlock_at <= ?"
@@ -89,7 +89,7 @@ class _InventoryMixin:
         self, status: str = "idle", only_unlocked: bool = False
     ) -> list[sqlite3.Row]:
         """Fetch virtual items. v9.0 adds only_unlocked filter."""
-        query = "SELECT * FROM virtual_inventory WHERE status = ?"
+        query = "SELECT id, hash_name, buy_price, sell_price, fee_paid, profit, status, acquired_at, unlock_at, sold_at, dm_item_id, dm_offer_id, listed_at, list_error, funds_hold_until, rollback_refund FROM virtual_inventory WHERE status = ?"
         params = [status]
 
         if only_unlocked:
@@ -255,7 +255,7 @@ class _InventoryMixin:
         if not dm_item_id:
             return None
         return self.state_conn.execute(
-            "SELECT * FROM virtual_inventory WHERE dm_item_id = ? ORDER BY id DESC LIMIT 1",
+            "SELECT id, hash_name, buy_price, sell_price, fee_paid, profit, status, acquired_at, unlock_at, sold_at, dm_item_id, dm_offer_id, listed_at, list_error, funds_hold_until, rollback_refund FROM virtual_inventory WHERE dm_item_id = ? ORDER BY id DESC LIMIT 1",
             (dm_item_id,),
         ).fetchone()
 
@@ -264,7 +264,7 @@ class _InventoryMixin:
         if not dm_offer_id:
             return None
         return self.state_conn.execute(
-            "SELECT * FROM virtual_inventory WHERE dm_offer_id = ? ORDER BY id DESC LIMIT 1",
+            "SELECT id, hash_name, buy_price, sell_price, fee_paid, profit, status, acquired_at, unlock_at, sold_at, dm_item_id, dm_offer_id, listed_at, list_error, funds_hold_until, rollback_refund FROM virtual_inventory WHERE dm_offer_id = ? ORDER BY id DESC LIMIT 1",
             (dm_offer_id,),
         ).fetchone()
 
@@ -306,7 +306,10 @@ class _InventoryMixin:
         """
         cutoff = time.time() - max_age_seconds
         return self.state_conn.execute(
-            """SELECT * FROM virtual_inventory
+            """SELECT id, hash_name, buy_price, sell_price, fee_paid, profit, status,
+                      acquired_at, unlock_at, sold_at, dm_item_id, dm_offer_id,
+                      listed_at, list_error, funds_hold_until, rollback_refund
+               FROM virtual_inventory
                WHERE status = 'listed'
                  AND listed_at IS NOT NULL
                  AND listed_at < ?
@@ -317,7 +320,10 @@ class _InventoryMixin:
     def get_recent_sales(self, since_ts: float) -> list[sqlite3.Row]:
         """Get items sold since timestamp (for daily PnL calc)."""
         return self.state_conn.execute(
-            """SELECT * FROM virtual_inventory
+            """SELECT id, hash_name, buy_price, sell_price, fee_paid, profit, status,
+                      acquired_at, unlock_at, sold_at, dm_item_id, dm_offer_id,
+                      listed_at, list_error, funds_hold_until, rollback_refund
+               FROM virtual_inventory
                WHERE status = 'sold' AND sold_at > ?
                ORDER BY sold_at DESC""",
             (since_ts,),

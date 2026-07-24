@@ -59,7 +59,7 @@ class _AssetStatusMixin:
     def get_asset_status(self, item_id: str) -> dict[str, Any] | None:
         """Get the current status of an asset. Returns None if unknown."""
         row = self.state_conn.execute(
-            "SELECT * FROM asset_status WHERE item_id = ?", (item_id,)
+            "SELECT item_id, title, status, finalization_time, created_at, updated_at FROM asset_status WHERE item_id = ?", (item_id,)
         ).fetchone()
         if not row:
             return None
@@ -75,14 +75,14 @@ class _AssetStatusMixin:
     def get_active_assets(self) -> list[dict[str, Any]]:
         """Return all assets with status='active' (tradable)."""
         rows = self.state_conn.execute(
-            "SELECT * FROM asset_status WHERE status = 'active' ORDER BY updated_at DESC"
+            "SELECT item_id, title, status, finalization_time, created_at, updated_at FROM asset_status WHERE status = 'active' ORDER BY updated_at DESC"
         ).fetchall()
         return [dict(r) for r in rows]
 
     def get_trade_protected_assets(self) -> list[dict[str, Any]]:
         """Return all assets that are still in trade_protected status."""
         rows = self.state_conn.execute(
-            "SELECT * FROM asset_status WHERE status = 'trade_protected' "
+            "SELECT item_id, title, status, finalization_time, created_at, updated_at FROM asset_status WHERE status = 'trade_protected' "
             "ORDER BY finalization_time ASC"
         ).fetchall()
         return [dict(r) for r in rows]
@@ -90,7 +90,7 @@ class _AssetStatusMixin:
     def get_reverted_assets(self) -> list[dict[str, Any]]:
         """Return all assets that have been reverted (DMarket rolled back the transaction)."""
         rows = self.state_conn.execute(
-            "SELECT * FROM asset_status WHERE status = 'reverted' ORDER BY updated_at DESC"
+            "SELECT item_id, title, status, finalization_time, created_at, updated_at FROM asset_status WHERE status = 'reverted' ORDER BY updated_at DESC"
         ).fetchall()
         return [dict(r) for r in rows]
 

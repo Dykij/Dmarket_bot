@@ -9,6 +9,7 @@ modules and are composed here.
 
 from __future__ import annotations
 
+from src.config import Config  # P1-20: centralized DRY_RUN
 import asyncio
 import json
 import os
@@ -132,7 +133,7 @@ class DMarketAPIClient(  # type: ignore[misc]
 
         # --- PHASE 7.8: Safe Key Initialization ---
         self._signing_key = None
-        is_sandbox = os.getenv("DRY_RUN", "true").lower() == "true"
+        is_sandbox = Config.DRY_RUN
 
         # Performance: Check for Rust core (v7.8)
         self._has_rust_signer = False
@@ -361,7 +362,7 @@ class DMarketAPIClient(  # type: ignore[misc]
             method in ["POST", "PUT", "DELETE", "PATCH"]
             and not any(path.startswith(p) for p in _READ_POST_PATHS)
         )
-        if is_write_op and os.getenv("DRY_RUN", "true").lower() == "true":
+        if is_write_op and Config.DRY_RUN:
             logger.info(f"🧪 [DRY RUN] Simulating {method} to {path}")
             # Mock success response for write operations to keep simulation loop running
             if (

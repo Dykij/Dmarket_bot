@@ -7,6 +7,7 @@ Mixin with read-only account endpoints. Mixed into `DMarketAPIClient`
 
 from __future__ import annotations
 
+from src.config import Config  # P1-20: centralized DRY_RUN
 import os
 import time
 from typing import Any
@@ -54,7 +55,7 @@ class _AccountMixin:
                 )
                 return cached
             # Fallback to env var only if no cache available
-            if os.getenv("DRY_RUN", "true").lower() == "true":
+            if Config.DRY_RUN:
                 fallback = float(os.getenv("DRY_RUN_BALANCE_FALLBACK", "1000.0"))
                 logger.warning(
                     f"Balance fetch failed (no cache), using fallback ${fallback:.2f}: {e}"

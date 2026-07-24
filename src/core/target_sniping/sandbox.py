@@ -9,6 +9,7 @@ Mixed into `SnipingLoop` (see `core.py`).
 
 from __future__ import annotations
 
+from src.config import Config  # P1-20: centralized DRY_RUN
 import asyncio
 import logging
 import os
@@ -35,7 +36,7 @@ class _SandboxMixin:
         In production this is a no-op and returns True (real DMarket will
         give us OfferNotFound instead; we model that in execution.py).
         """
-        if os.getenv("DRY_RUN", "true").lower() != "true":
+        if not Config.DRY_RUN:
             return True
         if margin > 0.40:
             fail_chance = 0.50
@@ -49,7 +50,7 @@ class _SandboxMixin:
 
     async def _simulate_network_latency(self, client_type: str = "dmarket") -> None:
         """Sandbox v9.5: Mimics real-world network RTT (Round Trip Time) with Jitter."""
-        if os.getenv("DRY_RUN", "true").lower() != "true":
+        if not Config.DRY_RUN:
             return
         if client_type == "oracle":
             base_lat, jitter = 600, 400
@@ -60,7 +61,7 @@ class _SandboxMixin:
 
     def _maybe_inject_error(self, method_name: str) -> None:
         """Sandbox v9.5: Randomly injects API 429/5xx errors to test resilience."""
-        if os.getenv("DRY_RUN", "true").lower() != "true":
+        if not Config.DRY_RUN:
             return
         if random.random() < 0.05:
             error_code = random.choice([429, 500, 502, 503])

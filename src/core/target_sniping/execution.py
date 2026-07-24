@@ -17,9 +17,15 @@ from typing import Any
 from src.config import Config
 from src.db.price_history import price_db
 from src.strategies.twap import TWAPExecutor
-from src.telegram.notifier import notifier
+# P1-1: Lazy import
 
 logger = logging.getLogger("SnipingBot")
+
+def _get_notifier():
+    """P1-1: Lazy import notifier to avoid core->telegram coupling at import time."""
+    from src.telegram.notifier import notifier
+    return notifier
+
 
 
 class _ExecutionMixin:
@@ -527,7 +533,7 @@ class _ExecutionMixin:
                 # v12.5: Telegram buy notification (throttled to 1/min)
                 # v15.7 FIX: Hold task reference to prevent GC before completion
                 task = asyncio.create_task(
-                    notifier.buy(
+                    _get_notifier().buy(
                         title=title,
                         price_usd=base_price,
                         expected_sell_usd=list_price,
@@ -595,7 +601,7 @@ class _ExecutionMixin:
                 # DRY notification above; one will no-op because of the throttle)
                 if not is_dry:
                     task = asyncio.create_task(
-                        notifier.buy(
+                        _get_notifier().buy(
                             title=title,
                             price_usd=base_price,
                             expected_sell_usd=list_price,

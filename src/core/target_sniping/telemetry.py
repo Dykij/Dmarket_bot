@@ -11,9 +11,15 @@ import asyncio
 import logging
 from typing import Any
 
-from src.telegram.notifier import notifier
+# P1-1: Lazy import
 
 logger = logging.getLogger("SnipingBot")
+
+def _get_notifier():
+    """P1-1: Lazy import notifier to avoid core->telegram coupling at import time."""
+    from src.telegram.notifier import notifier
+    return notifier
+
 
 
 class _TelemetryMixin:
@@ -62,14 +68,20 @@ class _TelemetryMixin:
             abs(equity["total"] - self._last_milestone) >= 5.0
         ):
             self._last_milestone = equity["total"]
-            asyncio.create_task(
-                notifier.equity_milestone(
+            # Store task reference to prevent GC before completion
+            bg = getattr(self, "_background_tasks", set())
+            if not bg:
+                self._background_tasks = bg
+            task = asyncio.create_task(
+                _get_notifier().equity_milestone(
                     cash=equity["cash"],
                     assets_value=equity["assets"],
                     total=equity["total"],
                     items_count=int(equity["count"]),
                 )
             )
+            bg.add(task)
+            task.add_done_callback(bg.discard)
 
     def _log_cycle_diag(self, game_id: str, candidates_len: int, buys_len: int) -> None:
         """v15.0: Sanitized cycle log + periodic MultiSource diagnostic."""

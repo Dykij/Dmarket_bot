@@ -85,7 +85,7 @@ class _AnalyticsLogsMixin:
         """Get today's equity snapshot (or None)."""
         today = time.strftime("%Y-%m-%d", time.gmtime())
         row = self.state_conn.execute(
-            "SELECT * FROM equity_snapshots WHERE snapshot_date = ? ORDER BY id DESC LIMIT 1",
+            "SELECT id, snapshot_date, cash, assets, total, pnl, note, taken_at FROM equity_snapshots WHERE snapshot_date = ? ORDER BY id DESC LIMIT 1",
             (today,),
         ).fetchone()
         if not row:
@@ -103,7 +103,7 @@ class _AnalyticsLogsMixin:
         """Get last N days of equity snapshots (oldest first)."""
         cutoff = time.time() - days * 86400
         rows = self.state_conn.execute(
-            "SELECT * FROM equity_snapshots WHERE taken_at > ? ORDER BY taken_at ASC",
+            "SELECT id, snapshot_date, cash, assets, total, pnl, note, taken_at FROM equity_snapshots WHERE taken_at > ? ORDER BY taken_at ASC",
             (cutoff,),
         ).fetchall()
         return [
@@ -135,7 +135,7 @@ class _AnalyticsLogsMixin:
         """Get today's risk events."""
         midnight = time.time() - (time.time() % 86400)
         rows = self.state_conn.execute(
-            "SELECT * FROM risk_events WHERE ts > ? ORDER BY ts DESC",
+            "SELECT id, ts, event_type, severity, details FROM risk_events WHERE ts > ? ORDER BY ts DESC",
             (midnight,),
         ).fetchall()
         return [
