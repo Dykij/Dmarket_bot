@@ -103,7 +103,7 @@ class _ScannerMixin:
                 del self._dom_cache[oldest]
 
         logger.info(
-            f"[v12.3 SCAN] top_titles={len(titles)} "
+            f"[{Config.BOT_VERSION} SCAN] top_titles={len(titles)} "
             f"fetched_listings={sum(len(r) for r in results)} "
             f"buy_candidates={len(cheapest)}"
         )
@@ -218,7 +218,7 @@ class _ScannerMixin:
         )[:max_titles]
 
         logger.info(
-            f"[v14.8 PRICE-RANGE] bucket=${min_usd:.2f}-${max_usd:.2f} "
+            f"[{Config.BOT_VERSION} PRICE-RANGE] bucket=${min_usd:.2f}-${max_usd:.2f} "
             f"pages={pages} listings={len(all_listings)} "
             f"unique={len(by_title)} selected={len(sorted_items)}"
         )
@@ -286,7 +286,7 @@ class _ScannerMixin:
                 break
 
         logger.info(
-            f"[v14.8.1 LOW-FEE] titles={len(titles)} "
+            f"[{Config.BOT_VERSION} LOW-FEE] titles={len(titles)} "
             f"candidates={len(cheapest)}"
         )
         return cheapest
