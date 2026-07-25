@@ -57,9 +57,9 @@ class _InventoryMixin:
                 finalization_time = item.get("FinalizationTime", 0.0)
                 title = item.get("title", "")
 
-                old_status = price_db.get_asset_status(item_id)
+                old_status = await price_db.run_in_thread(price_db.get_asset_status, item_id)  # P2-17: async
                 if not old_status or old_status["status"] != status:
-                    price_db.update_asset_status(item_id, title, status, finalization_time)
+                    await price_db.run_in_thread(price_db.update_asset_status, item_id, title, status, finalization_time)  # P2-17: async
                     updated_count += 1
                     if status == "reverted":
                         logger.warning(
@@ -75,13 +75,13 @@ class _InventoryMixin:
                 logger.info(f"[STATUS-SYNC] Updated {updated_count} asset statuses")
 
             # 2. v16.3: State Reconciliation — detect phantom items
-            virtual_idle = price_db.get_virtual_inventory(status="idle", only_unlocked=False)
+            virtual_idle = await price_db.run_in_thread(price_db.get_virtual_inventory, "idle", False)  # P2-17: async
             phantom_count = 0
             for vitem in virtual_idle:
                 dm_item_id = vitem.get("dm_item_id", "")
                 if dm_item_id and dm_item_id not in real_item_ids:
                     # Item is in virtual_inventory but not in real DMarket inventory
-                    price_db.update_inventory_status(vitem["id"], "phantom")
+                    await price_db.run_in_thread(price_db.update_inventory_status, vitem["id"], "phantom")  # P2-17: async
                     phantom_count += 1
                     logger.warning(
                         f"[RECONCILE] Phantom item detected: {vitem.get('hash_name', '?')} "
@@ -97,9 +97,9 @@ class _InventoryMixin:
             for tx in txs:
                 if tx.get("type") == "reverted" or tx.get("status") == "reverted":
                     item_id = tx.get("itemId", "")
-                    if item_id and price_db.is_known_item(item_id):
-                        if price_db.get_asset_status(item_id):
-                            price_db.mark_reverted(item_id)
+                    if item_id and await price_db.run_in_thread(price_db.is_known_item, item_id):  # P2-17: async
+                        if await price_db.run_in_thread(price_db.get_asset_status, item_id):  # P2-17: async
+                            await price_db.run_in_thread(price_db.mark_reverted, item_id)  # P2-17: async
                             reverted_count += 1
             if reverted_count > 0:
                 logger.warning(

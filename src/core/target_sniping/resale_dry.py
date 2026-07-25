@@ -91,7 +91,7 @@ class _ResaleDryMixin:
                 # Market no longer supports our markup — hold off
                 continue
             list_price = round(min(current_price * 0.97, current_price - 0.01), 2)
-            price_db.mark_listed(int(item["id"]), dm_offer_id=f"sim-{int(time.time())}-{item['id']}", list_price=list_price)
+            await price_db.run_in_thread(price_db.mark_listed, int(item["id"]), f"sim-{int(time.time())}-{item['id']}", list_price)  # P2-17: async
             est_profit = round(list_price - buy_price - list_price * 0.05, 2)
             logger.info(
                 f"[SIM] LISTED: {item['hash_name']} | "
