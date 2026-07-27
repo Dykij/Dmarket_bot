@@ -12,7 +12,6 @@ from __future__ import annotations
 from src.config import Config  # P1-20: centralized DRY_RUN
 import asyncio
 import logging
-import os
 import random
 
 logger = logging.getLogger("SnipingBot")

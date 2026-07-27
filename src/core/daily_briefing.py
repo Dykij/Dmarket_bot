@@ -273,7 +273,6 @@ class DailyBriefingScheduler:
 
     @staticmethod
     def _is_dry() -> bool:
-        import os
 
         from dotenv import load_dotenv
         load_dotenv(override=False)

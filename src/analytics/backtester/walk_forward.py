@@ -26,7 +26,6 @@ from decimal import Decimal
 from typing import Any
 
 from .engine import Backtester
-from .metrics import calculate_max_drawdown, calculate_sharpe_ratio
 from .models import BacktestResult
 from .strategies import TradingStrategy
 

@@ -139,12 +139,12 @@ class _ResaleProdMixin:
             fee = 0.0
             sp = int(match.get("price", {}).get("USD", 0))
             sell_price = sp / 100.0
-            fee = round(sell_price * SELL_FEE_RATE, 4)
+            fee = round(sell_price * (Config.FEE_RATE + Config.WITHDRAWAL_FEE_RATE), 4)
             # Fall back to our last known listed price if closed records
             # are paginated away.
             if sell_price <= 0:
                 sell_price = float(it["sell_price"] or 0)
-                fee = round(sell_price * SELL_FEE_RATE, 4)
+                fee = round(sell_price * (Config.FEE_RATE + Config.WITHDRAWAL_FEE_RATE), 4)
             if sell_price <= 0:
                 continue
             await price_db.run_in_thread(price_db.record_virtual_sale, int(it["id"]), sell_price, fee)  # P2-17: async

@@ -180,7 +180,8 @@ class _ScannerMixin:
             if not cursor:
                 break
             # Stop early if we already have enough unique titles
-            if len({it.get("title", "") for it in all_listings}) >= max_titles * 2:
+            from src.core.target_sniping.item_utils import get_item_title
+            if len({get_item_title(it) for it in all_listings}) >= max_titles * 2:
                 break
 
         # Pick cheapest listing per unique title

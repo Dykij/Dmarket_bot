@@ -12,7 +12,6 @@ from __future__ import annotations
 from src.config import Config  # P1-20: centralized DRY_RUN
 import asyncio
 import json
-import os
 import time
 import urllib.parse
 from typing import Any
