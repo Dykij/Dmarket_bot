@@ -22,6 +22,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from src.config import Config
+from src.core.target_sniping.item_utils import get_item_title
 from src.db.price_history import price_db
 
 logger = logging.getLogger("SnipingBot")
@@ -157,7 +158,7 @@ class CycleOrchestrator:
         # Float/phase scan (every 5 cycles)
         if self.deep_scan_counter % 5 == 0:
             try:
-                top_titles = [it.get("title", "") for it in items[:50]]
+                top_titles = [get_item_title(it) for it in items[:50]]
                 fp_items = await self._fetch_float_filtered_listings(ctx.game_id, top_titles)
                 for cand in fp_items:
                     cid = cand.get("offerId", "") or cand.get("itemId", "")
@@ -254,7 +255,7 @@ class CycleOrchestrator:
             try:
                 ranked_titles = {t for t, _ in ranked}
                 ctx.items.sort(key=lambda it: next(
-                    (i for i, (t, _) in enumerate(ranked) if t == it.get("title", "")),
+                    (i for i, (t, _) in enumerate(ranked) if t == get_item_title(it)),
                     len(ranked)
                 ))
             except (ValueError, TypeError):
@@ -268,7 +269,8 @@ class CycleOrchestrator:
 
         candidates = [
             it for it in ctx.items
-            if it.get("title") and (it.get("offerId") or it.get("itemId"))
+            if get_item_title(it)
+            and (it.get("offerId") or it.get("itemId"))
         ]
         if not candidates:
             return ctx
@@ -282,6 +284,7 @@ class CycleOrchestrator:
                     oracle=ctx.oracle,
                     agg_prices=ctx.agg_prices, bulk_fees=ctx.bulk_fees,
                     cs_snapshots=ctx.cs_snapshots, current_margin=ctx.current_margin,
+                    current_balance=ctx.current_balance,
                     effective_balance=ctx.effective_balance,
                     dynamic_max_price=ctx.dynamic_max_price,
                     saturation_counts=sat_counts,

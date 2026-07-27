@@ -14,6 +14,7 @@ from typing import Any
 from src.api.exceptions import RateLimitException
 from src.config import Config
 from src.core.sandbox_scenarios import scenario_engine
+from src.core.target_sniping.item_utils import get_item_title
 # P1-17: filter_evaluator.py removed (dead code, missing 15+ production filters)
 from src.core.target_sniping.microstructure_pipeline import run_microstructure_pipeline
 from src.core.target_sniping.ranking import rank_candidates_by_spread
@@ -97,7 +98,7 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
         only if the title is missing from the snapshots (selective mode miss).
         """
 
-        title = item.get("title", "")
+        title = get_item_title(item)
         # v2 uses "offerId"/"priceCents", v1 uses "itemId"/"price.USD"
         item_id = item.get("offerId", "") or item.get("itemId", "")
         base_price_cents = int(

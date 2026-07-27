@@ -81,7 +81,7 @@ class Config(BaseSettings):
     # --- Dynamic Max Snipe Price ---
     MAX_SNIPING_PRICE_FLOOR: float = Field(default=5.00, ge=0.0)
     MAX_SNIPING_PRICE_BALANCE_FRACTION: float = Field(default=0.10, ge=0.0, le=1.0)
-    MAX_SNIPING_PRICE_USD: float = Field(default=5.00, ge=0.0)
+    MAX_SNIPING_PRICE_USD: float = Field(default=25.00, ge=0.0)
 
     # --- Fractional Kelly Position Sizing ---
     KELLY_ENABLED: bool = True

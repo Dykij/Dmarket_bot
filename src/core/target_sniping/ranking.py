@@ -11,6 +11,7 @@ import math
 from typing import Any
 
 from src.config import Config
+from src.core.target_sniping.item_utils import get_item_title
 
 
 # Singleton regime detector (shared across ranking calls within a cycle)
@@ -68,7 +69,7 @@ def rank_candidates_by_spread(
     """
     ranked: list[tuple[str, float]] = []
     for it in items:
-        title = it.get("title", "")
+        title = get_item_title(it)
         if not title:
             continue
         if max_price_usd is not None:

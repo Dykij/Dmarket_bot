@@ -421,6 +421,32 @@ class DMarketAPIClient(  # type: ignore[misc]
             ) as response:
                 if response.status != 200:
                     text = await response.text()
+                    # v16.5: Handle 401/403 — token expiration or revoked key.
+                    # These are non-retryable; halt trading immediately to
+                    # prevent wasted API calls with an invalid token.
+                    if response.status in (401, 403):
+                        logger.error(
+                            f"[AUTH] {response.status} from {path} — "
+                            f"token may be expired or key revoked. "
+                            f"HALTING all trading. Response: {text[:300]}"
+                        )
+                        # Trip the breaker to block further requests
+                        self._breaker.record_failure(
+                            aiohttp.ClientResponseError(
+                                request_info=response.request_info,
+                                history=response.history,
+                                status=response.status,
+                                message=f"Auth failure: {text}",
+                                headers=response.headers,
+                            )
+                        )
+                        raise aiohttp.ClientResponseError(
+                            request_info=response.request_info,
+                            history=response.history,
+                            status=response.status,
+                            message=f"Authentication failed ({response.status}): {text}",
+                            headers=response.headers,
+                        )
                     # v16.3: Handle 429 with adaptive dynamic backoff
                     if response.status == 429:
                         self._429_count += 1
