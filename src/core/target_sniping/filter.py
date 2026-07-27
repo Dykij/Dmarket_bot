@@ -498,7 +498,19 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
         # =================================================================
         # Parse attributes once for all detectors
         attrs_list = item.get("attributes", [])
-        attrs = {a.get("name"): a.get("value") for a in attrs_list}
+        # V2 API uses "key"/"value" pairs; handle both "name" and "key" conventions
+        if isinstance(attrs_list, list):
+            attrs = {}
+            for a in attrs_list:
+                if isinstance(a, dict):
+                    k = a.get("key") or a.get("name", "")
+                    v = a.get("value", "")
+                    if k:
+                        attrs[k] = v
+        elif isinstance(attrs_list, dict):
+            attrs = attrs_list
+        else:
+            attrs = {}
         is_rare = False  # auto-detect rare items for exclusive flag
 
         # --- Layer 1: Float Premium (enhanced: dirty BS, round float, float dates) ---

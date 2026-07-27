@@ -297,7 +297,8 @@ class _PositionGuardMixin:
             import asyncio as _asyncio
             for entry in batch:
                 try:
-                    await self.client.create_offer(entry["asset_id"], entry["price_usd"])
+                    single = [{"asset_id": entry["asset_id"], "price_usd": entry["price_usd"]}]
+                    await self.client.batch_create_offers_v2(single)
                     liquidated += 1
                 except Exception as e2:
                     logger.error(f"[{tag}] Individual sell fallback failed: {e2}")

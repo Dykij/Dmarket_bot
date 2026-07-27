@@ -81,7 +81,7 @@ class _InventoryMixin:
                 dm_item_id = vitem.get("dm_item_id", "")
                 if dm_item_id and dm_item_id not in real_item_ids:
                     # Item is in virtual_inventory but not in real DMarket inventory
-                    await price_db.run_in_thread(price_db.update_inventory_status, vitem["id"], "phantom")  # P2-17: async
+                    await price_db.run_in_thread(price_db.update_virtual_status, vitem["id"], "phantom")  # P2-17: async
                     phantom_count += 1
                     logger.warning(
                         f"[RECONCILE] Phantom item detected: {vitem.get('hash_name', '?')} "

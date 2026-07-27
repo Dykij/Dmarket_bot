@@ -186,7 +186,8 @@ class _ScannerMixin:
         # Pick cheapest listing per unique title
         by_title: dict[str, dict[str, Any]] = {}
         for it in all_listings:
-            title = it.get("title", "") or it.get("attributes", {}).get("title", "")
+            from src.core.target_sniping.item_utils import get_item_title
+            title = get_item_title(it)
             if not title:
                 continue
             # v2 uses "priceCents" (int), v1 uses "price.USD" (string cents)
