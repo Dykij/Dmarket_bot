@@ -211,7 +211,9 @@ class _TelegramNotifier:
             now = time.time()
             if now - self._last_error_log > 60:
                 self._last_error_log = now
-                logger.warning(f"[notifier] send failed: {e}", exc_info=True)
+                # Redact bot token from error message (CVE-2026-27003)
+                safe_err = str(e).replace(self._token, "<REDACTED>") if self._token else str(e)
+                logger.warning(f"[notifier] send failed: {safe_err}")
             return False
 
     # ----------------------------------------------------------------

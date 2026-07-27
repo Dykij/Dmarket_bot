@@ -86,7 +86,7 @@ except Exception as e:
         "TELEGRAM_ADMIN_IDS (comma-separated) or TELEGRAM_ADMIN_ID"
     )
     _TOKEN = ""
-    _ADMIN_IDS = {0}
+    _ADMIN_IDS = set()  # no admin access on misconfiguration (fail-closed)
 
 
 # ============================================================

@@ -94,6 +94,9 @@ class MarketCsgoOracle:
                     return 0
                 data = await resp.json()
                 items = data.get("items", [])
+                if not items:
+                    logger.warning("[Market.CSGO] Empty items response, preserving cache")
+                    return len(self._items_cache)
                 self._items_cache = {}
                 for item in items:
                     name = item.get("market_hash_name", "")

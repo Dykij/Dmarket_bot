@@ -39,7 +39,7 @@ class Config(BaseSettings):
     GAME_ID: str = "a8db"  # Counter-Strike 2
 
     # --- Trading Parameters ---
-    MIN_SPREAD_PCT: float = Field(default=0.1, ge=0.0, le=100.0)
+    MIN_SPREAD_PCT: float = Field(default=6.0, ge=0.0, le=100.0)
     FEE_RATE: float = Field(default=0.05, ge=0.0, le=1.0)
     TARGET_FEE_RATE: float = Field(default=0.025, ge=0.0, le=1.0)
     WITHDRAWAL_FEE_RATE: float = Field(default=0.005, ge=0.0, le=1.0)

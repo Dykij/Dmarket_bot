@@ -67,6 +67,7 @@ class MultiSourceOracle:
         self.fair_price = FairPriceCalculator()
 
         self._ref_cache: dict[str, PriceReference] = {}
+        self._ref_cache_ts: dict[str, float] = {}  # per-item TTL tracking
         self._cache_ts: float = 0.0
         self._cache_ttl: float = 900.0  # 15 minutes (default)
 
@@ -182,8 +183,9 @@ class MultiSourceOracle:
         # v15.3: Dynamic TTL based on volatility
         ttl = self._get_dynamic_ttl(title)
 
-        # Check cache
-        if title in self._ref_cache and now - self._cache_ts < ttl:
+        # Check cache (per-item timestamp for correct TTL)
+        _item_ts = self._ref_cache_ts.get(title, 0.0) if title in self._ref_cache else 0.0
+        if title in self._ref_cache and now - _item_ts < ttl:
             self._cache_hits += 1
             ref = self._ref_cache[title]
         else:
@@ -243,7 +245,8 @@ class MultiSourceOracle:
                 waxpeer_volume=wp_vol if isinstance(wp_vol, int) else 0,
             )
             self._ref_cache[title] = ref
-            self._cache_ts = now  # P0 FIX: update cache timestamp
+            self._cache_ts = now
+            self._ref_cache_ts[title] = now  # per-item TTL tracking
 
         # Build prices dict for FairPriceCalculator
         # v16.3: Data Freshness Guard — exclude stale sources
