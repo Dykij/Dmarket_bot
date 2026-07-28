@@ -147,15 +147,46 @@ def calculate_demand_score(
     if signal != "buy":
         result["reason"] = f"OBI signal: {signal} (not buy)"
         return result
-    
+
+    # v17.2: Peak avoidance — penalize if price >15% above 7-day median
+    reason_parts = []
+    try:
+        from src.db.price_history import price_db
+        import statistics
+        history = price_db.get_recent_prices(title, days=7)
+        prices = [p for p, _ in history if p > 0]
+
+        if len(prices) >= 5:
+            median_price = statistics.median(prices)
+
+            # Trend check: last 3 prices increasing = uptrend
+            if len(prices) >= 3:
+                last_3 = prices[-3:]
+                is_uptrend = all(last_3[i] > last_3[i-1] for i in range(1, len(last_3)))
+            else:
+                is_uptrend = False
+
+            if ask_price > median_price * 1.15:  # 15% above median
+                if is_uptrend:
+                    score *= 0.90  # 10% penalty (uptrend mitigates)
+                    reason_parts.append("uptrend-peak-10%")
+                else:
+                    score *= 0.85  # 15% penalty (normal case)
+                    reason_parts.append("peak-penalty-15%")
+    except Exception:
+        pass  # No penalty if no data available
+
     result["score"] = score
     result["demand_ratio"] = demand_ratio
     result["obi_signal"] = signal
     result["obi_value"] = obi
     result["micro_price"] = micro
     result["expected_hold_days"] = hold_days
-    result["reason"] = f"demand={demand_ratio:.1f}x vol={volume} hold={hold_days:.1f}d obi={obi:.2f}"
-    
+    reason_str = f"demand={demand_ratio:.1f}x vol={volume} hold={hold_days:.1f}d obi={obi:.2f}"
+    if reason_parts:
+        reason_str += " (" + ", ".join(reason_parts) + ")"
+    result["reason"] = reason_str
+
     return result
 
 

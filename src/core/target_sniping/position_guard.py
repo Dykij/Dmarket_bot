@@ -88,14 +88,42 @@ class _PositionGuardMixin:
                 )
                 items_to_liquidate.append((it, current_price, f"stop-loss {-loss_pct:.1f}%"))
 
-            # v17.1: Time-based stop-loss for demand strategy items
-            # If demand item held > DEMAND_MAX_HOLD_DAYS, force sell
+            # v17.2: Dynamic stop-loss for demand strategy items
             if Config.DEMAND_STRATEGY_ENABLED and it.get("strategy") == "demand":
                 age_days = age_hours / 24.0
-                if age_days > Config.DEMAND_MAX_HOLD_DAYS:
+                buy_price = float(it["buy_price"] or 0)
+
+                # Instant stop: if price dropped >5% since purchase, sell immediately
+                if buy_price > 0 and current_price < buy_price * 0.95 and age_days >= 1.0:
+                    loss_pct = (buy_price - current_price) / buy_price * 100
+                    logger.warning(
+                        f"[DEMAND-INSTANT-STOP] {it['hash_name']}: "
+                        f"price dropped {loss_pct:.1f}% in {age_days:.1f}d"
+                    )
+                    items_to_liquidate.append((it, current_price, f"demand-instant-stop {loss_pct:.1f}%"))
+                    continue  # Skip time-based check for this item
+
+                # Dynamic time-based stop: EWMA volatility → hold days
+                try:
+                    from src.analysis.algo_pack.ewma import ewma_volatility
+                    from src.db.price_history import price_db
+                    history = price_db.get_recent_prices(it["hash_name"], days=14)
+                    prices = [p for p, _ in history if p > 0]
+
+                    if len(prices) >= 10:
+                        vol = ewma_volatility(prices, alpha=0.06)
+                        # High vol (>3%) → shorter hold (2 days)
+                        # Low vol (<1%) → longer hold (5 days)
+                        dynamic_hold = max(2.0, min(6.0, 5.0 - (vol / 0.01) * 0.5))
+                    else:
+                        dynamic_hold = Config.DEMAND_MAX_HOLD_DAYS
+                except Exception:
+                    dynamic_hold = Config.DEMAND_MAX_HOLD_DAYS
+
+                if age_days > dynamic_hold:
                     logger.warning(
                         f"[DEMAND-TIMEOUT] {it['hash_name']}: "
-                        f"held {age_days:.1f}d > {Config.DEMAND_MAX_HOLD_DAYS:.1f}d max"
+                        f"{age_days:.1f}d > {dynamic_hold:.1f}d"
                     )
                     items_to_liquidate.append((it, current_price, f"demand-timeout {age_days:.1f}d"))
 
