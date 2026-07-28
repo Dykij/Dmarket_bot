@@ -154,6 +154,9 @@ class Config(BaseSettings):
     DM_UNDERPRICED_PERCENTILE: float = Field(default=0.25, ge=0.0, le=1.0)
     DM_UNDERPRICED_MIN_MARGIN_PCT: float = Field(default=3.0, ge=0.0)
 
+    # v17.0: Demand-based strategy for low balance
+    DEMAND_STRATEGY_ENABLED: bool = True
+
     # --- Microstructure Filter Toggle ---
     STRICT_MICROSTRUCTURE_FILTERS: bool = False
 

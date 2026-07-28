@@ -436,7 +436,31 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
                 except Exception as e:
                     logger.debug(f"DMarket underpriced check failed for {title}: {e}")
 
-        if not (has_intra_spread or has_cross_market or has_oracle_discount or has_dmarket_underpriced):
+        # v17.0: Demand-based strategy for low balance
+        # Find items with high buyer-to-seller ratios (demand > supply)
+        # Strategy: buy at ask, hold until demand pushes price up
+        has_demand_opportunity = False
+        demand_score = 0.0
+        if Config.DEMAND_STRATEGY_ENABLED and not (has_intra_spread or has_cross_market or has_oracle_discount or has_dmarket_underpriced):
+            try:
+                from src.core.target_sniping.demand_strategy import calculate_demand_score
+                agg_data = agg_prices.get(title, {})
+                if agg_data:
+                    ask_count = agg_data.get("ask_count", 0) or 0
+                    bid_count = agg_data.get("bid_count", 0) or 0
+                    ds = calculate_demand_score(title, base_price, best_bid, ask_count, bid_count)
+                    if ds["score"] > 0:
+                        has_demand_opportunity = True
+                        demand_score = ds["score"]
+                        if is_sandbox:
+                            price_db.log_decision(
+                                title, "pass", "Demand opportunity",
+                                f"score={ds['score']:.0f} {ds['reason']}"
+                            )
+            except Exception as e:
+                logger.debug(f"Demand strategy check failed for {title}: {e}")
+
+        if not (has_intra_spread or has_cross_market or has_oracle_discount or has_dmarket_underpriced or has_demand_opportunity):
             if is_sandbox:
                 price_db.log_decision(
                     title,
@@ -733,8 +757,9 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
             "best_bid": best_bid,
             "best_ask": best_ask,
             "strategy": (
-                "dmarket_underpriced" if has_dmarket_underpriced
-                else ("cross_market" if cross_market_provider else "intra_spread")
+                "demand" if has_demand_opportunity
+                else ("dmarket_underpriced" if has_dmarket_underpriced
+                else ("cross_market" if cross_market_provider else "intra_spread"))
             ),
             "target_platform": cross_market_provider or "dmarket",
             "dm_underpriced_ref": dm_underpriced_ref,
