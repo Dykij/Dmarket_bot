@@ -220,23 +220,17 @@ When a task requires multiple skills, use `skill-workflow-integrator` to chain t
 где реально совершаются сделки (покупка/продажа) — Dmarket
 (https://api.dmarket.com).
 
-Все остальные интеграции — это ОРАКУЛЫ (источники референсных цен),
-используемые ИСКЛЮЧИТЕЛЬНО для вычисления средней/справедливой цены
-предмета перед принятием решения о сделке на Dmarket:
-
-- Market.CSGO — https://market.csgo.com/en/api
-- Waxpeer — https://docs.waxpeer.com/
-- CSFloat — https://docs.csfloat.com/#introduction
-- Steam (Community Market / Inventory API)
+Основная стратегия (v17.2): **Order Book Imbalance (OBI) Demand-Based Trading**.
+Стратегия использует ТОЛЬКО данные DMarket (bid_count, ask_count, best_bid, best_ask).
+Внешние оракулы (Market.CSGO, Waxpeer, CSFloat, Steam) НЕ используются в demand-стратегии.
+Код оракулов сохранён для potential использования в других стратегиях (oracle discount, cross-market).
+Параметр `ORACLE_ENABLED_FOR_DEMAND = False` по умолчанию.
 
 При анализе и ревью кода:
-- НЕ считать вызовы Waxpeer/CSFloat/Market.CSGO/Steam как торговые операции —
-  это read-only запросы цен.
 - Ордера на покупку/продажу/выставление лота допустимы ТОЛЬКО через Dmarket API.
 - Если в коде найден вызов на исполнение сделки (buy/sell/list/withdraw)
   на любой площадке, кроме Dmarket — это баг архитектуры, требующий
   отдельного флага в отчёте (P0/критично).
-- Логика "справедливой цены" (fair price) — это агрегация данных оракулов
   (например, медиана/средневзвешенная по объёму), а не цена одной площадки.
   Ревью должно проверять корректность этой агрегации отдельно.
 
