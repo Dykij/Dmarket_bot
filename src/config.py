@@ -156,6 +156,9 @@ class Config(BaseSettings):
 
     # v17.0: Demand-based strategy for low balance
     DEMAND_STRATEGY_ENABLED: bool = True
+    DEMAND_MAX_HOLD_DAYS: float = Field(default=3.0, ge=1.0, le=14.0)
+    DEMAND_ADAPTIVE_THRESHOLDS: bool = True
+    ORACLE_ENABLED_FOR_DEMAND: bool = False  # Demand uses only DMarket data
 
     # --- Microstructure Filter Toggle ---
     STRICT_MICROSTRUCTURE_FILTERS: bool = False

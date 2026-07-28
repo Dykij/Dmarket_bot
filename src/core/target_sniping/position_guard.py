@@ -88,6 +88,17 @@ class _PositionGuardMixin:
                 )
                 items_to_liquidate.append((it, current_price, f"stop-loss {-loss_pct:.1f}%"))
 
+            # v17.1: Time-based stop-loss for demand strategy items
+            # If demand item held > DEMAND_MAX_HOLD_DAYS, force sell
+            if Config.DEMAND_STRATEGY_ENABLED and it.get("strategy") == "demand":
+                age_days = age_hours / 24.0
+                if age_days > Config.DEMAND_MAX_HOLD_DAYS:
+                    logger.warning(
+                        f"[DEMAND-TIMEOUT] {it['hash_name']}: "
+                        f"held {age_days:.1f}d > {Config.DEMAND_MAX_HOLD_DAYS:.1f}d max"
+                    )
+                    items_to_liquidate.append((it, current_price, f"demand-timeout {age_days:.1f}d"))
+
         if not items_to_liquidate:
             return 0
 
