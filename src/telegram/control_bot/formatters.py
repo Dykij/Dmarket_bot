@@ -126,7 +126,14 @@ def format_inventory_summary(
         for it in top:
             exclusive_mark = " ⭐" if _row_bool(it, "exclusive") else ""
             status_emoji = "🔒" if it['unlock_at'] > time.time() else "🔓"
-            text += f"  {status_emoji} `{it['hash_name'][:30]}` — ${it['buy_price']:.2f}{exclusive_mark}\n"
+            strategy = it.get("strategy", "")
+            demand_info = ""
+            if strategy == "demand":
+                q = it.get("demand_ratio", 0) or 0
+                obi = it.get("obi_score", 0) or 0
+                hold = it.get("hold_days", 0) or 0
+                demand_info = f" [Q={q:.1f} OBI={obi:.2f} {hold:.1f}d]"
+            text += f"  {status_emoji} `{it['hash_name'][:30]}` — ${it['buy_price']:.2f}{exclusive_mark}{demand_info}\n"
 
     return text
 

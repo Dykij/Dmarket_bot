@@ -40,23 +40,34 @@ class _InventoryMixin:
     def add_virtual_item(
         self, hash_name: str, buy_price: float, trade_lock_hours: int = 0,
         exclusive: bool = False,
+        strategy: str | None = None,
+        demand_ratio: float = 0.0,
+        obi_score: float = 0.0,
+        hold_days: float = 0.0,
     ) -> None:
         """Add item to virtual sandbox inventory (v9.0 with Trade Lock).
 
         exclusive: mark item as keep-forever (skipped during auto-resale).
+        strategy: trading strategy name (e.g., "demand", "intra_spread").
+        demand_ratio: Queue Imbalance ratio (bid_count / ask_count).
+        obi_score: Order Book Imbalance score [-1, 1].
+        hold_days: Expected hold time in days.
         """
         now = time.time()
         unlock_at = now + (trade_lock_hours * 3600)
         with self.state_conn:
             self.state_conn.execute(
                 "INSERT INTO virtual_inventory "
-                "(hash_name, buy_price, acquired_at, unlock_at, status, exclusive) "
-                "VALUES (?, ?, ?, ?, 'idle', ?)",
-                (hash_name, buy_price, now, unlock_at, 1 if exclusive else 0),
+                "(hash_name, buy_price, acquired_at, unlock_at, status, exclusive, "
+                "strategy, demand_ratio, obi_score, hold_days) "
+                "VALUES (?, ?, ?, ?, 'idle', ?, ?, ?, ?, ?)",
+                (hash_name, buy_price, now, unlock_at, 1 if exclusive else 0,
+                 strategy, demand_ratio, obi_score, hold_days),
             )
         logger.info(
             f"📦 [DB] Virtual item added: {hash_name} "
-            f"(Unlocked at: {time.ctime(unlock_at)}, exclusive={exclusive})"
+            f"(Unlocked at: {time.ctime(unlock_at)}, exclusive={exclusive}, "
+            f"strategy={strategy}, demand_ratio={demand_ratio:.1f})"
         )
 
     def is_exclusive(self, row_id: int) -> bool:
@@ -72,6 +83,21 @@ class _InventoryMixin:
             self.state_conn.execute(
                 "UPDATE virtual_inventory SET exclusive = 1 WHERE id = ?",
                 (row_id,),
+            )
+
+    @with_db_retry(operation_name="update_demand_metrics")
+    def update_demand_metrics(
+        self, row_id: int, strategy: str, demand_ratio: float, obi_score: float, hold_days: float
+    ) -> None:
+        """Update demand strategy metrics for a virtual_inventory row.
+
+        v17.2: Stores OBI metrics for performance tracking.
+        """
+        with self.state_conn:
+            self.state_conn.execute(
+                "UPDATE virtual_inventory SET strategy = ?, demand_ratio = ?, "
+                "obi_score = ?, hold_days = ? WHERE id = ?",
+                (strategy, demand_ratio, obi_score, hold_days, row_id),
             )
 
     def get_non_exclusive_inventory(

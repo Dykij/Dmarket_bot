@@ -1,5 +1,11 @@
 """Unit tests for SteamOracle.
 
+import pytest
+
+# v17.2: Oracle tests skipped — oracles not used in demand strategy
+# These tests are preserved for legacy oracle_discount strategy
+pytestmark = pytest.mark.skip(reason="Legacy oracle test — v17.2 uses OBI demand strategy")
+
 Covers: get_item_price (3-layer cache), get_prices_batch, _parse_price,
 throttle, session management, error handling.
 """

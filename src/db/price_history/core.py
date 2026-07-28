@@ -257,6 +257,11 @@ class PriceHistoryDB(  # type: ignore[misc]
                 "funds_hold_until": "REAL",
                 "rollback_refund": "INTEGER NOT NULL DEFAULT 0",
                 "dm_item_id": "TEXT",
+                # v17.2: Demand strategy metrics
+                "strategy": "TEXT",
+                "demand_ratio": "REAL",
+                "obi_score": "REAL",
+                "hold_days": "REAL",
                 "dm_offer_id": "TEXT",
                 "listed_at": "REAL",
                 "list_error": "TEXT",
@@ -271,6 +276,11 @@ class PriceHistoryDB(  # type: ignore[misc]
                 ("funds_hold_until", "REAL"),
                 ("rollback_refund", "INTEGER NOT NULL DEFAULT 0"),
                 ("dm_item_id", "TEXT"),
+                # v17.2: Demand strategy metrics
+                ("strategy", "TEXT"),
+                ("demand_ratio", "REAL"),
+                ("obi_score", "REAL"),
+                ("hold_days", "REAL"),
                 ("dm_offer_id", "TEXT"),
                 ("listed_at", "REAL"),
                 ("list_error", "TEXT"),

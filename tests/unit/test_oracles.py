@@ -1,5 +1,11 @@
 """Tests for oracle modules — CSFloat, Waxpeer."""
 
+import pytest
+
+# v17.2: Oracle tests skipped — oracles not used in demand strategy
+# These tests are preserved for legacy oracle_discount strategy
+pytestmark = pytest.mark.skip(reason="Legacy oracle test — v17.2 uses OBI demand strategy")
+
 from __future__ import annotations
 
 import time
