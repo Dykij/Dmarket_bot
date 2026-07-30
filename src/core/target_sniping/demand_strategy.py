@@ -146,6 +146,13 @@ def calculate_demand_score(
         result["reason"] = f"low liquidity ({total_orders} orders < {min_liquidity})"
         return result
 
+    # v17.6: Spread entropy filter — block/penalize wide spreads
+    spread_pct = (ask_price - best_bid) / ask_price if ask_price > 0 else 0
+    if Config.SPREAD_ENTROPY_ENABLED:
+        if spread_pct > Config.SPREAD_ENTROPY_HARD_BLOCK:
+            result["reason"] = f"spread too wide ({spread_pct:.1%} > {Config.SPREAD_ENTROPY_HARD_BLOCK:.0%})"
+            return result
+
     # v17.3: Normalized OBI (price-independent, [-1, 1])
     obi_norm = normalized_obi(bid_count, ask_count)
 
@@ -186,6 +193,33 @@ def calculate_demand_score(
 
     # Risk-adjusted score
     score = demand_ratio * volume / max(hold_days, 0.5)
+
+    # v17.6: Spread entropy soft penalty — penalize wide spreads
+    if Config.SPREAD_ENTROPY_ENABLED and spread_pct > Config.SPREAD_ENTROPY_SOFT_PENALTY:
+        score *= 0.5  # 50% penalty for spreads > 10%
+
+    # v17.6: Price-Volume Correlation (PVC) trend multiplier
+    # Compares price and volume changes over recent cycles
+    if Config.PVC_ENABLED:
+        try:
+            from src.db.price_history import price_db
+            history = price_db.get_recent_prices(title, days=3)
+            if len(history) >= 3:
+                prices = [p for p, _ in history if p > 0]
+                if len(prices) >= 3:
+                    price_change = (prices[-1] - prices[0]) / prices[0] if prices[0] > 0 else 0
+                    # Volume trend: use OBI history as proxy (higher OBI = more buying volume)
+                    obi_history = _obi_history.get(title, [])
+                    if len(obi_history) >= 3:
+                        vol_trend = obi_history[-1] - obi_history[0]
+                        # Price up + volume up = bullish → boost
+                        # Price up + volume down = divergence → penalize
+                        if price_change > 0 and vol_trend > 0:
+                            score *= 1.2  # 20% boost
+                        elif price_change > 0 and vol_trend < 0:
+                            score *= 0.8  # 20% penalty
+        except Exception:
+            pass  # Non-critical
 
     # Apply adaptive thresholds
     if demand_ratio < thresholds["min_demand_ratio"]:

@@ -171,6 +171,15 @@ class Config(BaseSettings):
     # v17.5: Dynamic liquidity threshold
     DYNAMIC_LIQUIDITY_ENABLED: bool = True
 
+    # v17.6: Advanced microstructure instruments
+    VOLUME_CLOCK_ENABLED: bool = False  # Volume clock resampling (needs /last-sales)
+    VOLUME_CLOCK_THRESHOLD: int = Field(default=10, ge=1)  # Trades before next cycle
+    VPIN_GATE_ENABLED: bool = False  # VPIN toxicity gate (needs /last-sales)
+    SPREAD_ENTROPY_ENABLED: bool = True  # Microstructure efficiency filter
+    SPREAD_ENTROPY_HARD_BLOCK: float = Field(default=0.20, ge=0.0, le=1.0)  # Block if spread > 20%
+    SPREAD_ENTROPY_SOFT_PENALTY: float = Field(default=0.10, ge=0.0, le=1.0)  # Penalize if spread > 10%
+    PVC_ENABLED: bool = True  # Price-Volume Correlation trend multiplier
+
     # --- Microstructure Filter Toggle ---
     STRICT_MICROSTRUCTURE_FILTERS: bool = False
 
