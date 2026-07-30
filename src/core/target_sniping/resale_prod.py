@@ -99,8 +99,6 @@ class _ResaleProdMixin:
 
         v13.1: Handles Trade Protection funds hold and rollback refunds.
         """
-        from src.core.target_sniping.resale_constants import SELL_FEE_RATE
-
         listed = await price_db.run_in_thread(price_db.get_virtual_inventory, "listed")  # P2-17: async
         if not listed:
             return 0
