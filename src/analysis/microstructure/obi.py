@@ -110,6 +110,68 @@ def multi_level_obi(
 # ══════════════════════════════════════════════════════════════════════
 
 
+def normalized_obi(bid_count: int, ask_count: int) -> float:
+    """
+    Normalized Order Book Imbalance in [-1, 1].
+
+    Formula: OBI_norm = (bid_count - ask_count) / (bid_count + ask_count)
+
+    This is the standard academic formulation (Cont et al. 2014).
+    Independent of price level — works across all item categories.
+
+    Returns:
+        +1.0 = all buyers, no sellers (maximum bullish)
+        -1.0 = all sellers, no buyers (maximum bearish)
+         0.0 = balanced
+
+    v17.3: Added as standard OBI metric for demand strategy.
+    """
+    total = bid_count + ask_count
+    if total == 0:
+        return 0.0
+    return round((bid_count - ask_count) / total, 4)
+
+
+def ofi(current_obi: float, previous_obi: float) -> float:
+    """
+    Order Flow Imbalance (OFI) — change in OBI between cycles.
+
+    OFI = OBI_current - OBI_previous
+
+    Academic basis: Cont, Kukanov & Stoikov (2014) — OFI is a stronger
+    predictor of short-term price movements than static OBI.
+
+    Returns:
+        > 0 = increasing buyer pressure (bullish momentum)
+        < 0 = increasing seller pressure (bearish momentum)
+
+    v17.3: Added for demand strategy signal persistence.
+    """
+    return round(current_obi - previous_obi, 4)
+
+
+def obi_z_score(current_obi: float, historical_obis: list[float]) -> float | None:
+    """
+    Z-score of current OBI relative to historical distribution.
+
+    z = (current - mean) / std
+
+    Used for adaptive threshold calibration per-item.
+    z > 1.5 = unusually high buyer pressure (strong signal)
+    z < -1.5 = unusually high seller pressure (avoid)
+
+    Returns None if insufficient history (<5 observations).
+    """
+    if len(historical_obis) < 5:
+        return None
+    import statistics
+    mean = statistics.mean(historical_obis)
+    std = statistics.stdev(historical_obis)
+    if std < 0.001:  # Avoid division by zero
+        return 0.0
+    return round((current_obi - mean) / std, 2)
+
+
 def queue_imbalance(
     bid_count: int,
     ask_count: int,
