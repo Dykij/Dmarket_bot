@@ -186,7 +186,7 @@ class HMMRegimeDetector:
         self.params.n_observations = len(returns)
         return self.params
 
-    def update(self, new_return: float) -> RegimeResult:
+    def update(self, new_return: float, vpin: float = 0.0) -> RegimeResult:
         """
         Update regime probabilities with new observation.
 
@@ -194,6 +194,8 @@ class HMMRegimeDetector:
 
         Args:
             new_return: Latest log return.
+            vpin: VPIN toxicity level [0, 1]. v17.7: If vpin > 0.6,
+                  shifts transition probabilities toward CRISIS/BEAR.
 
         Returns:
             RegimeResult with current state assessment.
@@ -201,6 +203,23 @@ class HMMRegimeDetector:
         # FIX C3: Check calibration state, not n_states (which is always 4)
         if self.params.n_observations < self.MIN_OBSERVATIONS:
             return RegimeResult()
+
+        # v17.7: HMM + VPIN integration — adjust transition probabilities
+        # When VPIN is high (toxic flow), increase probability of transitioning
+        # to CRISIS/BEAR states, even if price is rising
+        transition = self.params.transition
+        if vpin > 0.6:
+            # Boost transitions to bearish states (indices 0=CRISIS, 1=BEAR)
+            vpin_shift = min(0.3, (vpin - 0.6) * 0.75)  # max 30% shift
+            transition = [row[:] for row in transition]  # copy
+            for i in range(self.N_STATES):
+                # Shift probability mass from RECOVERY/BULL to CRISIS/BEAR
+                bullish_sum = transition[i][2] + transition[i][3]  # RECOVERY + BULL
+                bearish_target = vpin_shift * bullish_sum
+                transition[i][0] += bearish_target * 0.4  # CRISIS
+                transition[i][1] += bearish_target * 0.6  # BEAR
+                transition[i][2] -= bearish_target * 0.4  # RECOVERY
+                transition[i][3] -= bearish_target * 0.6  # BULL
 
         # Compute emission probabilities for each state
         emissions = []
@@ -217,7 +236,7 @@ class HMMRegimeDetector:
         for j in range(self.N_STATES):
             alpha_j = 0.0
             for i in range(self.N_STATES):
-                alpha_j += self._forward_probs[i] * self.params.transition[i][j]
+                alpha_j += self._forward_probs[i] * transition[i][j]
             alpha_j *= emissions[j]
             new_forward.append(alpha_j)
 

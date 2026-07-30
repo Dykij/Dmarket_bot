@@ -225,12 +225,16 @@ class GARCH11Estimator:
 
         return self.params
 
-    def forecast(self, steps: int = 10) -> GARCHForecast:
+    def forecast(self, steps: int = 10, pvc_factor: float = 1.0) -> GARCHForecast:
         """
         Generate volatility forecasts.
 
         Args:
             steps: Number of steps ahead to forecast.
+            pvc_factor: PVC (Price-Volume Correlation) adjustment factor.
+                        If PVC is negative (price up, volume down), pvc_factor > 1.0
+                        increases predicted volatility to tighten stop-losses.
+                        v17.7: GARCH + PVC integration.
 
         Returns:
             GARCHForecast with multi-step ahead forecasts.
@@ -239,16 +243,16 @@ class GARCH11Estimator:
         if not p.converged or p.n_observations < self.MIN_OBSERVATIONS:
             return GARCHForecast()
 
-        # Current conditional volatility
-        cond_vol = math.sqrt(max(p.current_var, 1e-10))
+        # Current conditional volatility (adjusted by PVC)
+        cond_vol = math.sqrt(max(p.current_var, 1e-10)) * pvc_factor
 
         # Multi-step forecasts
         # σ²_{t+h} = V_L + (α+β)^{h-1} * (σ²_{t+1} - V_L)
         forecasts = []
         for h in range(1, steps + 1):
             if h == 1:
-                # 1-step: use current conditional variance
-                f_var = p.current_var
+                # 1-step: use current conditional variance (PVC-adjusted)
+                f_var = p.current_var * (pvc_factor ** 2)
             else:
                 # h-step: mean-revert toward long-run
                 f_var = p.long_run_var + (p.persistence ** (h - 1)) * (

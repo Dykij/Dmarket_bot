@@ -180,6 +180,13 @@ class Config(BaseSettings):
     SPREAD_ENTROPY_SOFT_PENALTY: float = Field(default=0.10, ge=0.0, le=1.0)  # Penalize if spread > 10%
     PVC_ENABLED: bool = True  # Price-Volume Correlation trend multiplier
 
+    # v17.7: Algorithm integration parameters
+    OFI_KELLY_BOOST: float = Field(default=0.5, ge=0.0, le=2.0)  # OFI boost factor for Kelly
+    GARCH_PVC_ENABLED: bool = True  # GARCH + PVC volatility adjustment
+    GARCH_PVC_FACTOR: float = Field(default=1.2, ge=1.0, le=2.0)  # PVC negative → volatility *= factor
+    HMM_VPIN_ENABLED: bool = True  # HMM + VPIN regime shift
+    HAWKES_ENTROPY_ENABLED: bool = True  # Hawkes + spread entropy
+
     # --- Microstructure Filter Toggle ---
     STRICT_MICROSTRUCTURE_FILTERS: bool = False
 

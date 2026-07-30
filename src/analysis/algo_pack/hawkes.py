@@ -137,6 +137,33 @@ class HawkesEstimator:
         """
         return self._state.current_intensity / max(self._state.baseline, 1e-8)
 
+    def adjust_for_spread_entropy(self, spread_pct: float) -> None:
+        """Adjust Hawkes parameters based on spread entropy.
+
+        v17.7: Hawkes + Spread Entropy integration.
+
+        When spread is narrow (< 5%), market is efficient and events
+        are more likely to be meaningful (higher alpha). When spread
+        is wide (> 15%), market is noisy and events are less reliable
+        (lower alpha, higher beta for faster decay).
+
+        Args:
+            spread_pct: Current spread as decimal (0.05 = 5%).
+        """
+        s = self._state
+        if spread_pct < 0.05:
+            # Narrow spread: increase excitation (events are more meaningful)
+            s.alpha = min(0.10, self.alpha * 1.5)
+            s.beta = max(0.05, self.beta * 0.8)
+        elif spread_pct > 0.15:
+            # Wide spread: decrease excitation (market is noisy)
+            s.alpha = max(0.01, self.alpha * 0.5)
+            s.beta = min(0.20, self.beta * 1.5)
+        else:
+            # Normal spread: use default parameters
+            s.alpha = self.alpha
+            s.beta = self.beta
+
     def get_state(self) -> HawkesState:
         """Get copy of current state for debugging."""
         return HawkesState(

@@ -206,6 +206,20 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
                         kelly_f * 100.0 * float(Config.KELLY_FRACTION),
                     )
 
+                # v17.7: Kelly + OFI integration — boost position size when OFI is positive
+                # Higher OFI = stronger buyer momentum = higher confidence in trade
+                if Config.OFI_KELLY_BOOST > 0:
+                    ofi_val = 0.0
+                    try:
+                        from src.core.target_sniping.demand_strategy import _obi_ewma
+                        ofi_val = _obi_ewma.get(title, 0.0)
+                    except Exception:
+                        pass
+                    if ofi_val > 0:
+                        ofi_boost = 1.0 + Config.OFI_KELLY_BOOST * min(ofi_val, 1.0)
+                        kelly_risk_pct *= ofi_boost
+                        logger.debug(f"[KELLY+OFI] {title}: OFI={ofi_val:+.2f} boost={ofi_boost:.2f}x")
+
                 # Cap by the hard position limit and the dynamic item price cap
                 kelly_risk_pct = min(kelly_risk_pct, float(Config.MAX_POSITION_RISK_PCT))
             except Exception as e:
