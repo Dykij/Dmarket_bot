@@ -68,6 +68,27 @@ class CycleOrchestrator:
     _prev_agg_prices: dict[str, Any]
     _sales_cache: dict[str, Any]
 
+    @staticmethod
+    def _is_fresh_order(item: dict[str, Any], now: float, max_age_sec: float) -> bool:
+        """Check if an order is fresh (created within max_age_sec).
+
+        v17.5: Time-based order filter using createdAt field from DMarket API.
+        Returns True if the order is fresh or if createdAt is missing (safe default).
+        """
+        created = item.get("createdAt", 0)
+        if isinstance(created, str):
+            try:
+                import datetime
+                created = datetime.datetime.fromisoformat(
+                    created.replace("Z", "+00:00")
+                ).timestamp()
+            except (ValueError, AttributeError):
+                return True  # Can't parse — assume fresh
+        if not isinstance(created, (int, float)) or created <= 0:
+            return True  # No timestamp — assume fresh
+        age_sec = now - created
+        return age_sec <= max_age_sec
+
     async def _stage_prepare(self, ctx: CycleContext) -> CycleContext:
         """Stage 1: Prepare cycle — counters, balance, oracle."""
         from src.api.oracle_factory import OracleFactory
@@ -140,6 +161,20 @@ class CycleOrchestrator:
         )[:20]  # Top 20 by lowest ask
 
         ctx.items = await self._fetch_cheapest_listings(ctx.game_id, top_titles)
+
+        # v17.5: Time-based order filter — remove stale orders
+        if Config.AGE_FILTER_ENABLED and ctx.items:
+            import time as _time
+            now = _time.time()
+            max_age_sec = Config.AGE_FILTER_HOURS * 3600
+            before_count = len(ctx.items)
+            ctx.items = [
+                it for it in ctx.items
+                if self._is_fresh_order(it, now, max_age_sec)
+            ]
+            filtered = before_count - len(ctx.items)
+            if filtered > 0:
+                logger.debug(f"[AGE-FILTER] Removed {filtered} stale orders (>{Config.AGE_FILTER_HOURS:.0f}h)")
 
         # Secondary scans (float, price-range, low-fee)
         ctx.items = await self._run_secondary_scans(ctx, cursor)

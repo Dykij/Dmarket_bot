@@ -160,6 +160,17 @@ class Config(BaseSettings):
     DEMAND_ADAPTIVE_THRESHOLDS: bool = True
     ORACLE_ENABLED_FOR_DEMAND: bool = False  # Demand uses only DMarket data
 
+    # v17.5: JWT auth for /trade-aggregator/v1/last-sales
+    JWT_ENABLED: bool = False  # Enable JWT auth for last-sales endpoint
+    JWT_REFRESH_INTERVAL: int = Field(default=3500, ge=60)  # Refresh before expiry (seconds)
+
+    # v17.5: Time-based order filter
+    AGE_FILTER_ENABLED: bool = True
+    AGE_FILTER_HOURS: float = Field(default=24.0, ge=1.0, le=168.0)  # Max order age
+
+    # v17.5: Dynamic liquidity threshold
+    DYNAMIC_LIQUIDITY_ENABLED: bool = True
+
     # --- Microstructure Filter Toggle ---
     STRICT_MICROSTRUCTURE_FILTERS: bool = False
 

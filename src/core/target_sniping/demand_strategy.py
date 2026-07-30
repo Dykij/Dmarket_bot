@@ -130,10 +130,20 @@ def calculate_demand_score(
     # Get adaptive thresholds
     thresholds = get_adaptive_thresholds(ask_price)
 
-    # v17.3: Liquidity threshold — reject if too few orders
+    # v17.5: Dynamic liquidity threshold — adaptive by price segment
     total_orders = bid_count + ask_count
-    if total_orders < 5:
-        result["reason"] = f"low liquidity ({total_orders} orders < 5)"
+    if Config.DYNAMIC_LIQUIDITY_ENABLED:
+        if ask_price < 2.0:
+            min_liquidity = 3   # Cheap items: lower threshold (more opportunities)
+        elif ask_price < 10.0:
+            min_liquidity = 5   # Mid-range items
+        else:
+            min_liquidity = 10  # Expensive items: higher threshold (more manipulation risk)
+    else:
+        min_liquidity = 5  # Fixed fallback
+
+    if total_orders < min_liquidity:
+        result["reason"] = f"low liquidity ({total_orders} orders < {min_liquidity})"
         return result
 
     # v17.3: Normalized OBI (price-independent, [-1, 1])
@@ -251,7 +261,35 @@ def calculate_demand_score(
         reason_str += " (" + ", ".join(reason_parts) + ")"
     result["reason"] = reason_str
 
+    # v17.5: Log decision to decision_logs for backtest analysis
+    _log_demand_decision(title, ask_price, result)
+
     return result
+
+
+def _log_demand_decision(title: str, price: float, result: dict[str, Any]) -> None:
+    """Log demand strategy decision to decision_logs table.
+
+    v17.5: Enables future backtest and threshold calibration.
+    """
+    try:
+        from src.db.price_history import price_db
+        import json
+        details = json.dumps({
+            "obi_norm": result.get("obi_value", 0),
+            "ofi": result.get("ofi_value", 0),
+            "z_score": result.get("obi_z", 0),
+            "demand_ratio": result.get("demand_ratio", 0),
+            "score": result.get("score", 0),
+            "hold_days": result.get("expected_hold_days", 0),
+            "price": price,
+        })
+        decision = "pass" if result.get("score", 0) > 0 else "skip"
+        price_db.log_decision(
+            title, decision, "demand_strategy", result.get("reason", ""), details
+        )
+    except Exception:
+        pass  # Non-critical — don't break trading for logging
 
 
 def is_demand_opportunity(

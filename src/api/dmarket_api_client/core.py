@@ -130,6 +130,11 @@ class DMarketAPIClient(  # type: ignore[misc]
         self._backoff_up = 1.8      # multiplier on 429
         self._backoff_down = 0.9    # divisor on success
 
+        # v17.5: JWT token for endpoints requiring Authorization header
+        # (e.g., /trade-aggregator/v1/last-sales)
+        self._jwt_token: str | None = None
+        self._jwt_expires_at: float = 0.0
+
         # --- PHASE 7.8: Safe Key Initialization ---
         self._signing_key = None
         is_sandbox = Config.DRY_RUN
@@ -338,6 +343,52 @@ class DMarketAPIClient(  # type: ignore[misc]
         self._secure_zero(raw_secret)
         raise RuntimeError("No signing key available for Ed25519 signature")
 
+    async def _refresh_jwt(self) -> bool:
+        """Refresh JWT token for endpoints requiring Authorization header.
+
+        v17.5: DMarket /trade-aggregator/v1/last-sales requires JWT auth.
+        The token is obtained by signing a request with Ed25519 and exchanging
+        it for a short-lived JWT via /auth/v1/token.
+
+        Returns True if refresh succeeded, False otherwise.
+        """
+        if not Config.JWT_ENABLED:
+            return False
+
+        try:
+            import time as _time
+            # Check if current token is still valid
+            if self._jwt_token and _time.time() < self._jwt_expires_at - 60:
+                return True  # Token still valid
+
+            session = await self.get_session()
+            # Sign a timestamp to prove key ownership
+            timestamp = str(int(_time.time()))
+            signature = self._generate_signature("GET", "/auth/v1/token", "", timestamp)
+
+            headers = {
+                "X-Api-Key": self.public_key,
+                "X-Sign-Date": timestamp,
+                "X-Request-Sign": f"dmar ed25519 {signature}",
+            }
+
+            async with session.get(
+                f"{self.BASE_URL}/auth/v1/token", headers=headers
+            ) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    self._jwt_token = data.get("token", "")
+                    expires_in = data.get("expiresIn", Config.JWT_REFRESH_INTERVAL)
+                    self._jwt_expires_at = _time.time() + expires_in
+                    logger.info("[JWT] Token refreshed successfully")
+                    return True
+                else:
+                    logger.warning(f"[JWT] Token refresh failed: {resp.status}")
+                    return False
+        except Exception as e:
+            logger.debug(f"[JWT] Token refresh error: {e}")
+            return False
+
     @retry(
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=1, min=2, max=10),
@@ -400,6 +451,11 @@ class DMarketAPIClient(  # type: ignore[misc]
             "X-Request-Sign": f"dmar ed25519 {signature}",
             "Content-Type": "application/json",
         }
+
+        # v17.5: Add JWT Authorization header for trade-aggregator endpoints
+        if Config.JWT_ENABLED and "/trade-aggregator/" in path:
+            if await self._refresh_jwt() and self._jwt_token:
+                headers["Authorization"] = f"Bearer {self._jwt_token}"
 
         url = f"{self.BASE_URL}{api_path}"
         session = await self.get_session()
