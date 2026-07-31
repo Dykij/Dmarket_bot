@@ -166,7 +166,7 @@ class Config(BaseSettings):
 
     # v17.5: Time-based order filter
     AGE_FILTER_ENABLED: bool = True
-    AGE_FILTER_HOURS: float = Field(default=24.0, ge=1.0, le=168.0)  # Max order age
+    AGE_FILTER_HOURS: float = Field(default=72.0, ge=1.0, le=168.0)  # Max order age (3 days)
 
     # v17.5: Dynamic liquidity threshold
     DYNAMIC_LIQUIDITY_ENABLED: bool = True

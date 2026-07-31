@@ -307,6 +307,33 @@ class CycleOrchestrator:
             if get_item_title(it)
             and (it.get("offerId") or it.get("itemId"))
         ]
+
+        # v17.8: Demand strategy fallback — if no candidates from market items
+        # (e.g., time filter removed most), evaluate demand directly from agg_prices
+        if not candidates and ctx.agg_prices and Config.DEMAND_STRATEGY_ENABLED:
+            from src.core.target_sniping.demand_strategy import is_demand_opportunity
+            demand_opps = is_demand_opportunity(
+                ctx.agg_prices,
+                max_price=ctx.dynamic_max_price,
+                min_price=Config.MIN_PRICE_USD,
+            )
+            if demand_opps:
+                logger.info(f"[DEMAND-FALLBACK] {len(demand_opps)} candidates from agg_prices (no market items)")
+                # Convert demand opportunities to candidate format for _evaluate_candidate
+                for opp in demand_opps[:5]:  # Limit to top 5
+                    title = opp["title"]
+                    # Find matching agg_price entry for full data
+                    agg = ctx.agg_prices.get(title, {})
+                    if agg:
+                        synthetic_item = {
+                            "title": title,
+                            "offerId": f"demand-{title}",
+                            "priceCents": int(opp["ask_price"] * 100),
+                            "createdAt": "",  # No createdAt for synthetic
+                            "attributes": {},
+                        }
+                        candidates.append(synthetic_item)
+
         if not candidates:
             return ctx
 
