@@ -184,3 +184,37 @@ class _MarketMixin:
         except Exception as e:
             logger.debug(f"Low-fee items fetch failed: {e}")
             return []
+
+    # --- v17.10: Targets by Title (demand signal) ---
+    async def get_targets_by_title(
+        self, game_id: str, title: str
+    ) -> dict[str, Any]:
+        """
+        Get buy orders (targets) for a specific item title.
+
+        v17.10: Direct demand signal — shows how many people want to buy
+        an item and at what price. More accurate than aggregated bid_count.
+
+        Returns: {"orders": [...], "total_demand": int, "best_bid": float}
+        """
+        try:
+            resp = await self.make_request(
+                "GET",
+                f"/marketplace-api/v1/targets-by-title/{game_id}/{title}",
+            )
+            orders = resp.get("orders", [])
+            total_demand = sum(int(o.get("amount", 0)) for o in orders)
+            best_bid = 0.0
+            for o in orders:
+                price = int(o.get("price", 0)) / 100.0
+                if price > best_bid:
+                    best_bid = price
+            return {
+                "orders": orders,
+                "total_demand": total_demand,
+                "best_bid": best_bid,
+                "order_count": len(orders),
+            }
+        except Exception as e:
+            logger.debug(f"Targets by title failed for {title}: {e}")
+            return {"orders": [], "total_demand": 0, "best_bid": 0.0, "order_count": 0}
