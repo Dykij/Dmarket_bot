@@ -160,10 +160,6 @@ class Config(BaseSettings):
     DEMAND_ADAPTIVE_THRESHOLDS: bool = True
     ORACLE_ENABLED_FOR_DEMAND: bool = False  # Demand uses only DMarket data
 
-    # v17.5: JWT auth for /trade-aggregator/v1/last-sales
-    JWT_ENABLED: bool = False  # Enable JWT auth for last-sales endpoint
-    JWT_REFRESH_INTERVAL: int = Field(default=3500, ge=60)  # Refresh before expiry (seconds)
-
     # v17.5: Time-based order filter
     AGE_FILTER_ENABLED: bool = True
     AGE_FILTER_HOURS: float = Field(default=72.0, ge=1.0, le=168.0)  # Max order age (3 days)
@@ -172,9 +168,9 @@ class Config(BaseSettings):
     DYNAMIC_LIQUIDITY_ENABLED: bool = True
 
     # v17.6: Advanced microstructure instruments
-    VOLUME_CLOCK_ENABLED: bool = False  # Volume clock resampling (needs /last-sales)
+    VOLUME_CLOCK_ENABLED: bool = False  # Volume clock resampling (future)
     VOLUME_CLOCK_THRESHOLD: int = Field(default=10, ge=1)  # Trades before next cycle
-    VPIN_GATE_ENABLED: bool = False  # VPIN toxicity gate (needs /last-sales)
+    VPIN_GATE_ENABLED: bool = False  # VPIN toxicity gate (future)
     SPREAD_ENTROPY_ENABLED: bool = True  # Microstructure efficiency filter
     SPREAD_ENTROPY_HARD_BLOCK: float = Field(default=0.20, ge=0.0, le=1.0)  # Block if spread > 20%
     SPREAD_ENTROPY_SOFT_PENALTY: float = Field(default=0.10, ge=0.0, le=1.0)  # Penalize if spread > 10%
