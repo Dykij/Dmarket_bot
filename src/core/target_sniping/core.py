@@ -142,7 +142,10 @@ class SnipingLoop(  # type: ignore[misc]
                 return
 
             ctx = await self._stage_scan(ctx)
-            if not ctx.agg_prices or not ctx.items:
+            # v17.11: Only return early if BOTH agg_prices AND items are empty.
+            # If agg_prices exists, demand expansion in _stage_evaluate can still
+            # find candidates even when time filter removes all market items.
+            if not ctx.agg_prices and not ctx.items:
                 self.empty_page_count += 1
                 return
             self.empty_page_count = 0
