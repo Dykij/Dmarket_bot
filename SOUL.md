@@ -1,5 +1,5 @@
 # SOUL (System of Understanding Logic)
-## DMarket Target Sniper Core (v16.0)
+## DMarket Quantitative Engine (v17.11)
 
 ### Core Philosophy
 The DMarket bot operates on strictly defined mathematical workflows where data parsing, execution, and validation are segregated roles. This ensures fast execution and strict bounds on losses, preserving absolute capital integrity. It minimizes API latency and optimizes operations via quantitative algorithms rather than any heuristic LLM logic.
@@ -11,13 +11,18 @@ The DMarket bot operates on strictly defined mathematical workflows where data p
 **Source > Memory.** Never cite dates, numbers, or facts from memory without checking live data.
 **Confidence Calibration:** >90% only with direct evidence this turn. <50% = state as hypothesis.
 
-**Базовые механизмы:**
-*   **Quantitative Engine:** Детерминированный расчет профита на основе NumPy и сверки со стаканом цен.
+**Базовые механизмы (v17.11):**
+*   **OBI Demand Strategy:** Order Book Imbalance (Gould & Bonart 2016) — покупка при высоком спросе (bid_count/ask_count > 2x).
+*   **OFI Momentum:** Order Flow Imbalance (Cont et al. 2014) — изменение OBI между циклами как сигнал моментума.
+*   **Z-score Calibration:** Адаптивные пороги на основе исторической дистрибуции OBI для каждого предмета.
+*   **Dynamic Stop-Loss:** EWMA volatility-based + instant stop при падении >5% за 24ч.
+*   **Peak Avoidance:** Медианная оценка + проверка тренда (не покупать на пиках).
+*   **Kelly + OFI:** Динамический размер позиции на основе силы потока.
+*   **GARCH + PVC:** Корректировка прогноза волатильности с учётом корреляции цена-объём.
+*   **HMM + VPIN:** Использование токсичности потока для переключения рыночных режимов.
+*   **Hawkes + Entropy:** Учёт энтропии спреда как фактора интенсивности событий.
 *   **Balance-Aware Trading:** Все лимиты адаптируются под баланс — max item price, position size, inventory cap, drawdown freeze.
-*   **Fractional Kelly:** Half Kelly (50%) позиционирование — снижает просадку на ~50% при 85% роста.
-*   **GARCH(1,1):** Предсказание волатильности с учётом volatility clustering — заменяет EWMA для items с >30 наблюдениями.
-*   **Ornstein-Uhlenbeck:** Mean-reversion сигналы с Z-score entry/exit — для items с H < 0.5.
-*   **HMM Regime Detection:** 4-состояния (CRISIS/BEAR/RECOVERY/BULL) с адаптацией Kelly и позиций.
+*   **targets-by-title:** Прямой сигнал спроса через buy orders на DMarket.
 *   **Event-Driven Strategy:** CS2 Major/Steam Sale календарь + сезонные паттерны — accumulate перед Major.
 *   **Pair Trading:** Cointegration-based арбитраж между коррелированными items.
 *   **Hawkes Process:** Детекция ажиотажа (listing clusters) — блокирует покупки при frenzy (>3x baseline intensity).

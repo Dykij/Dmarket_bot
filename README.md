@@ -7,7 +7,7 @@
 ![Python](https://img.shields.io/badge/Python-3.13+-3776AB?logo=python&logoColor=white)
 ![Rust](https://img.shields.io/badge/Rust-1.96-000000?logo=rust&logoColor=white)
 ![Strategy](https://img.shields.io/badge/Strategy-OBI%20Demand-44CC11)
-![Version](https://img.shields.io/badge/Version-17.2-purple)
+![Version](https://img.shields.io/badge/Version-17.11-purple)
 
 *Автономная торговая система на основе Order Book Imbalance (OBI) сигналов.*
 *Покупка предметов с высоким спросом, удержание 1-3 дня, продажа при росте цены.*
