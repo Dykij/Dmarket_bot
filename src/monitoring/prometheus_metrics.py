@@ -175,7 +175,7 @@ class PrometheusMetrics:
 
         # Counters
         for key, value in self._counters.items():
-            lines.append(f"# TYPE dmarket_trades_total counter")
+            lines.append("# TYPE dmarket_trades_total counter")
             lines.append(f"{key} {value}")
 
         # Gauges
