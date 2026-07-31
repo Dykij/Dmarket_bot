@@ -308,31 +308,35 @@ class CycleOrchestrator:
             and (it.get("offerId") or it.get("itemId"))
         ]
 
-        # v17.8: Demand strategy fallback — if no candidates from market items
-        # (e.g., time filter removed most), evaluate demand directly from agg_prices
-        if not candidates and ctx.agg_prices and Config.DEMAND_STRATEGY_ENABLED:
+        # v17.8: Demand strategy — ALWAYS evaluate on agg_prices to find
+        # demand-based candidates, even if market items are filtered by time.
+        # This ensures demand strategy sees ALL 100 aggregated items, not just
+        # the 24-40 that pass the 72h time filter.
+        if ctx.agg_prices and Config.DEMAND_STRATEGY_ENABLED:
             from src.core.target_sniping.demand_strategy import is_demand_opportunity
+            existing_titles = {get_item_title(it) for it in candidates}
             demand_opps = is_demand_opportunity(
                 ctx.agg_prices,
                 max_price=ctx.dynamic_max_price,
                 min_price=Config.MIN_PRICE_USD,
             )
-            if demand_opps:
-                logger.info(f"[DEMAND-FALLBACK] {len(demand_opps)} candidates from agg_prices (no market items)")
-                # Convert demand opportunities to candidate format for _evaluate_candidate
-                for opp in demand_opps[:5]:  # Limit to top 5
-                    title = opp["title"]
-                    # Find matching agg_price entry for full data
-                    agg = ctx.agg_prices.get(title, {})
-                    if agg:
-                        synthetic_item = {
-                            "title": title,
-                            "offerId": f"demand-{title}",
-                            "priceCents": int(opp["ask_price"] * 100),
-                            "createdAt": "",  # No createdAt for synthetic
-                            "attributes": {},
-                        }
-                        candidates.append(synthetic_item)
+            # Add demand candidates that aren't already in market items
+            added = 0
+            for opp in demand_opps[:10]:  # Limit to top 10
+                title = opp["title"]
+                if title in existing_titles:
+                    continue  # Already in candidates from market items
+                synthetic_item = {
+                    "title": title,
+                    "offerId": f"demand-{title}",
+                    "priceCents": int(opp["ask_price"] * 100),
+                    "createdAt": "",
+                    "attributes": {},
+                }
+                candidates.append(synthetic_item)
+                added += 1
+            if added > 0:
+                logger.info(f"[DEMAND-EXPAND] Added {added} demand candidates from agg_prices")
 
         if not candidates:
             return ctx
