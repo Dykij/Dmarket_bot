@@ -201,10 +201,16 @@ def queue_imbalance_signal(
 ) -> str:
     """
     Signal interpretation: "buy", "sell", "neutral".
+
+    v17.3: Explicitly handles ask_count=0 (infinite demand) as "buy".
+    Previously relied on queue_imbalance returning None, but that was
+    changed to 999.0 for consistency with normalized_obi.
     """
-    qi = queue_imbalance(bid_count, ask_count)
-    if qi is None:
+    if bid_count <= 0 and ask_count <= 0:
         return "neutral"
+    if ask_count <= 0:
+        return "buy"  # No sellers = strong buy signal
+    qi = bid_count / ask_count
     if qi > 1.5:
         return "buy"
     if qi < 0.5:

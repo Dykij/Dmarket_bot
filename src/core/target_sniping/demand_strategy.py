@@ -132,6 +132,11 @@ def calculate_demand_score(
         result["reason"] = "invalid prices"
         return result
 
+    # v17.3: Reject items with no sellers (can't buy)
+    if ask_count <= 0:
+        result["reason"] = "no sellers (ask_count=0)"
+        return result
+
     # Get adaptive thresholds
     thresholds = get_adaptive_thresholds(ask_price)
 
