@@ -387,9 +387,11 @@ class DMarketAPIClient(  # type: ignore[misc]
         timestamp = str(int(clock_sync.now()))
 
         api_path = path
+        # v17.3: Strip parentheses from path and params (DMarket API limitation)
+        # Parentheses in URLs cause 401 on signature verification
+        path = path.replace("(", "").replace(")", "")
+
         if params:
-            # v17.3: Strip parentheses from all string params (DMarket API limitation)
-            # Parentheses in query params cause 401 on signature verification
             clean_params = {}
             for k, v in params.items():
                 if isinstance(v, str):
