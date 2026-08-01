@@ -2,6 +2,76 @@
 
 All notable changes to this project will be documented in this file.
 
+## [18.0] - 2026-08-01
+
+### Added — OBI Demand Strategy (v17.0–v17.11)
+- `src/core/target_sniping/demand_strategy.py`: Order Book Imbalance demand-based strategy
+  - Normalized OBI: `(bid-ask)/(bid+ask)` in [-1,1] (Cont et al. 2014)
+  - OFI momentum: change in OBI between cycles
+  - Z-score calibration: adaptive thresholds per-item
+  - EWMA smoothing: alpha=0.3 on OBI
+  - OBI history cache: 20 observations per item
+  - Decision logging to decision_logs table
+- `src/core/target_sniping/demand_strategy.py`: Adaptive thresholds by price segment
+  - <$2: min Q=1.5, min vol=3, max hold=10d
+  - $2-10: min Q=2.0, min vol=5, max hold=7d
+  - >$10: min Q=2.5, min vol=10, max hold=5d
+- `src/core/target_sniping/demand_strategy.py`: Peak avoidance (median + trend check)
+- `src/core/target_sniping/demand_strategy.py`: Spread entropy filter (hard >20%, soft >10%)
+- `src/core/target_sniping/demand_strategy.py`: PVC trend multiplier (+20%/-20%)
+- `src/core/target_sniping/demand_strategy.py`: Demand expansion from agg_prices
+
+### Added — Dynamic Stop-Loss (v17.2)
+- `src/core/target_sniping/position_guard.py`: Instant stop (>5% drop in 24h)
+- `src/core/target_sniping/position_guard.py`: Dynamic hold (EWMA volatility → 2-6 days)
+
+### Added — Algorithm Integration (v17.7)
+- `src/core/target_sniping/filter.py`: Kelly + OFI boost (position size from momentum)
+- `src/analysis/algo_pack/garch.py`: GARCH + PVC (volatility adjustment)
+- `src/analysis/algo_pack/hmm_regime.py`: HMM + VPIN (regime shift on toxic flow)
+- `src/analysis/algo_pack/hawkes.py`: Hawkes + Spread Entropy (intensity adjustment)
+
+### Added — API Endpoints (v17.10)
+- `src/api/dmarket_api_client/market.py`: `get_targets_by_title()` — direct demand signal
+- `src/api/dmarket_api_client/core.py`: JWT mechanism (removed in v18 cleanup)
+
+### Added — Configuration
+- `src/config.py`: DEMAND_STRATEGY_ENABLED, DEMAND_MAX_HOLD_DAYS, DEMAND_ADAPTIVE_THRESHOLDS
+- `src/config.py`: ORACLE_ENABLED_FOR_DEMAND, AGE_FILTER_ENABLED, AGE_FILTER_HOURS
+- `src/config.py`: DYNAMIC_LIQUIDITY_ENABLED, SPREAD_ENTROPY_ENABLED, PVC_ENABLED
+- `src/config.py`: OFI_KELLY_BOOST, GARCH_PVC_ENABLED, HMM_VPIN_ENABLED, HAWKES_ENTROPY_ENABLED
+
+### Added — Database
+- `src/db/price_history/core.py`: strategy, demand_ratio, obi_score, hold_days columns
+- `src/db/price_history/inventory.py`: update_demand_metrics() method
+
+### Added — Telegram
+- `src/telegram/control_bot/formatters.py`: Demand metrics in inventory summary (Q, OBI, hold_days)
+
+### Added — Tests
+- `tests/unit/test_demand_strategy.py`: 19 tests (v17.0)
+- `tests/unit/test_demand_strategy_v17.py`: 31 tests (v17.7)
+
+### Added — Documentation
+- `docs/ARCHITECTURE.md`: Signal sources v18, reachability table
+- `README.md`: OBI strategy description, adaptive thresholds, monitoring guide
+
+### Fixed
+- `src/core/target_sniping/position_guard.py`: price_db UnboundLocalError (redundant import)
+- `src/core/target_sniping/demand_strategy.py`: log_decision TypeError (wrong arg count)
+- `src/core/target_sniping/core.py`: Early return preventing demand expansion (v17.11)
+- `src/core/target_sniping/cycle_orchestrator.py`: V2 title parsing, balance passing
+
+### Removed
+- JWT mechanism (62 lines): _jwt_token, _jwt_expires_at, _refresh_jwt(), Authorization header
+- JWT config: JWT_ENABLED, JWT_REFRESH_INTERVAL
+- 30 old report files
+- 12 old test files (sandbox, dry_run, v13, v14)
+
+### Deprecated
+- Oracle-based strategies: has_oracle_discount, has_cross_market, has_dmarket_underpriced
+- multi_source_oracle: stays None (demand uses only DMarket data)
+
 ## [16.2] - 2026-07-22
 
 ### Fixed — Security & Financial Safety Audit (3 rounds, 13 files)

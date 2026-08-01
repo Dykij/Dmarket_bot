@@ -1,14 +1,59 @@
-# DMarket Bot — Architecture (v16.2)
+# DMarket Bot — Architecture (v18.0)
 
 ## Overview
 
-The DMarket Bot v16.2 is a **Value Detection Scanner + Spread Sniper** for CS2 skins on the DMarket marketplace. 239 Python modules across 15+ packages, 30+ quantitative algorithms, 30+ microstructure filters.
+The DMarket Bot v18.0 is an **Order Book Imbalance (OBI) Demand-Based Trading System** for CS2 skins on the DMarket marketplace. 204 Python modules across 15+ packages, 30+ quantitative algorithms, 16 microstructure filters.
 
 Key architectural properties:
-- **Dual-signal pipeline**: VALUE (rarity-based) + SPREAD (intra-market)
-- **Multi-Source Oracle**: 4 external sources (Market.CSGO, Waxpeer, CSFloat, Steam) + DMarket real-time
+- **Primary signal**: OBI/OFI/Queue Imbalance (Gould & Bonart 2016, Cont et al. 2014)
+- **Data source**: DMarket aggregated prices only (bid_count, ask_count, best_bid, best_ask)
 - **6-stage cycle pipeline**: Prepare → Scan → Prefetch → Evaluate → Execute → Postprocess
-- **Defense-in-depth**: 30+ filter stages, slippage protection, oracle drift re-check, idempotency keys
+- **16 active filters**: Spread entropy, PVC, dynamic liquidity, time filter, OBI risk-gate, OFI momentum, Z-score, peak avoidance, dynamic stop-loss, Kelly+OFI, GARCH+PVC, HMM+VPIN, Hawkes+entropy, demand expansion, targets-by-title
+
+## Signal Sources v18
+
+| Source | Status | Used By | Notes |
+|--------|--------|---------|-------|
+| DMarket aggregated prices | **PRIMARY** | demand_strategy, filter | bid_count, ask_count, best_bid, best_ask |
+| DMarket targets-by-title | **ACTIVE** | demand_strategy | Direct demand signal (buy orders) |
+| Market.CSGO | DEPRECATED | — | oracle_discount (legacy) |
+| Waxpeer | DEPRECATED | — | oracle_discount (legacy) |
+| CSFloat | DEPRECATED | — | oracle_discount (legacy) |
+| Steam | DEPRECATED | — | oracle_discount (legacy) |
+
+**Decision:** Oracle-based strategies (has_oracle_discount, has_cross_market, has_dmarket_underpriced) are deprecated. Demand strategy uses only DMarket data. Oracle code preserved for future use.
+
+## Reachability Table v18
+
+### algo_pack (16 modules)
+
+| Module | Callers | Status |
+|--------|---------|--------|
+| ewma | 5 | **ACTIVE** |
+| hawkes | 2 | **ACTIVE** |
+| bayesian_stats | 1 | **ACTIVE** |
+| hmm_regime | 1 | **ACTIVE** |
+| trend_strength | 1 | **ACTIVE** |
+| vpin | 1 | **ACTIVE** |
+| regime_detector | 3 | **ACTIVE** |
+| garch | 0 | ORPHANED (candidate for position_guard integration) |
+| ou_process | 0 | ORPHANED (candidate for mean-reversion signal) |
+| pair_trading | 0 | UNUSED (one-asset strategy) |
+| event_driven | 0 | UNUSED (overlaps with EventShield) |
+| sell_optimizer | 0 | ORPHANED (candidate for list_price optimization) |
+| spread_optimizer | 0 | ORPHANED |
+| info_theory | 0 | ORPHANED |
+| thompson_sampling | 0 | ORPHANED |
+| sliding_window | 0 | ORPHANED |
+
+### microstructure (4 modules)
+
+| Module | Callers | Status |
+|--------|---------|--------|
+| obi | 4 | **ACTIVE** |
+| signals | 4 | **ACTIVE** |
+| volatility | 4 | **ACTIVE** |
+| volume | 3 | **ACTIVE** |
 
 ## System Architecture
 
