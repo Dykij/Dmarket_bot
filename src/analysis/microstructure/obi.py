@@ -184,10 +184,14 @@ def queue_imbalance(
     q > 1.0 -> bid queue larger -> likely upward move.
     q < 1.0 -> ask queue larger -> likely downward move.
 
-    Returns None if either count is zero.
+    Returns None if both counts are zero.
+    v17.3: Returns large value (999.0) when ask_count=0 but bid_count>0
+    (infinite demand, no supply) — consistent with normalized_obi behavior.
     """
-    if ask_count <= 0:
+    if bid_count <= 0 and ask_count <= 0:
         return None
+    if ask_count <= 0:
+        return 999.0  # Infinite demand, no supply
     return round(bid_count / ask_count, 4)
 
 

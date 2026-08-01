@@ -19,6 +19,9 @@ Academic basis:
 
 from __future__ import annotations
 
+import json
+import logging
+import statistics
 from typing import Any
 
 from src.analysis.microstructure.obi import (
@@ -27,10 +30,12 @@ from src.analysis.microstructure.obi import (
     obi_z_score,
     queue_imbalance,
     queue_imbalance_signal,
-    simple_obi,
     stoikov_micro_price,
 )
 from src.config import Config
+from src.db.price_history import price_db
+
+_logger = logging.getLogger("DemandStrategy")
 
 # v17.3: OBI history cache for OFI calculation
 _obi_history: dict[str, list[float]] = {}
@@ -163,10 +168,9 @@ def calculate_demand_score(
     historical = _obi_history.get(title, [])
     z_score = obi_z_score(obi_norm, historical)
 
-    # Legacy functions for compatibility
+    # Queue imbalance signals (Gould & Bonart 2016)
     qi = queue_imbalance(bid_count, ask_count)
     signal = queue_imbalance_signal(bid_count, ask_count)
-    obi = simple_obi(best_bid, ask_price, bid_count, ask_count)
 
     # Micro-price estimation
     mid_price = (best_bid + ask_price) / 2
@@ -202,7 +206,6 @@ def calculate_demand_score(
     # Compares price and volume changes over recent cycles
     if Config.PVC_ENABLED:
         try:
-            from src.db.price_history import price_db
             history = price_db.get_recent_prices(title, days=3)
             if len(history) >= 3:
                 prices = [p for p, _ in history if p > 0]
@@ -218,8 +221,8 @@ def calculate_demand_score(
                             score *= 1.2  # 20% boost
                         elif price_change > 0 and vol_trend < 0:
                             score *= 0.8  # 20% penalty
-        except Exception:
-            pass  # Non-critical
+        except Exception as e:
+            _logger.warning(f"PVC calculation failed for {title}: {e}")
 
     # Apply adaptive thresholds
     if demand_ratio < thresholds["min_demand_ratio"]:
@@ -256,8 +259,6 @@ def calculate_demand_score(
     # v17.2: Peak avoidance
     reason_parts = []
     try:
-        from src.db.price_history import price_db
-        import statistics
         history = price_db.get_recent_prices(title, days=7)
         prices = [p for p, _ in history if p > 0]
 
@@ -277,8 +278,8 @@ def calculate_demand_score(
                 else:
                     score *= 0.85
                     reason_parts.append("peak-penalty-15%")
-    except Exception:
-        pass
+    except Exception as e:
+        _logger.warning(f"Peak avoidance failed for {title}: {e}")
 
     result["score"] = score
     result["demand_ratio"] = demand_ratio
@@ -307,8 +308,6 @@ def _log_demand_decision(title: str, price: float, result: dict[str, Any]) -> No
     v17.5: Enables future backtest and threshold calibration.
     """
     try:
-        from src.db.price_history import price_db
-        import json
         details = json.dumps({
             "obi_norm": result.get("obi_value", 0),
             "ofi": result.get("ofi_value", 0),

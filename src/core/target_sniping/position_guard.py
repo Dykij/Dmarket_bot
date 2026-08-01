@@ -19,9 +19,9 @@ import os
 import time
 from typing import Any
 
+from src.analysis.algo_pack.ewma import ewma_volatility
 from src.config import Config
 from src.db.price_history import price_db
-# P1-1: Lazy import
 
 logger = logging.getLogger("PositionGuard")
 
@@ -91,7 +91,6 @@ class _PositionGuardMixin:
             # v17.2: Dynamic stop-loss for demand strategy items
             if Config.DEMAND_STRATEGY_ENABLED and it.get("strategy") == "demand":
                 age_days = age_hours / 24.0
-                buy_price = float(it["buy_price"] or 0)
 
                 # Instant stop: if price dropped >5% since purchase, sell immediately
                 if buy_price > 0 and current_price < buy_price * 0.95 and age_days >= 1.0:
@@ -105,7 +104,6 @@ class _PositionGuardMixin:
 
                 # Dynamic time-based stop: EWMA volatility → hold days
                 try:
-                    from src.analysis.algo_pack.ewma import ewma_volatility
                     history = price_db.get_recent_prices(it["hash_name"], days=14)
                     prices = [p for p, _ in history if p > 0]
 
