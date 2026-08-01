@@ -106,7 +106,6 @@ class _PositionGuardMixin:
                 # Dynamic time-based stop: EWMA volatility → hold days
                 try:
                     from src.analysis.algo_pack.ewma import ewma_volatility
-                    from src.db.price_history import price_db
                     history = price_db.get_recent_prices(it["hash_name"], days=14)
                     prices = [p for p, _ in history if p > 0]
 

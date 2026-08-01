@@ -319,11 +319,11 @@ def _log_demand_decision(title: str, price: float, result: dict[str, Any]) -> No
             "price": price,
         })
         decision = "pass" if result.get("score", 0) > 0 else "skip"
-        price_db.log_decision(
-            title, decision, "demand_strategy", result.get("reason", ""), details
-        )
-    except Exception:
-        pass  # Non-critical — don't break trading for logging
+        reason = f"demand: {result.get('reason', '')}"
+        price_db.log_decision(title, decision, reason, details)
+    except Exception as e:
+        import logging
+        logging.getLogger("DemandStrategy").debug(f"log_decision failed: {e}")
 
 
 def is_demand_opportunity(
