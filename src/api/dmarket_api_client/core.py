@@ -388,7 +388,15 @@ class DMarketAPIClient(  # type: ignore[misc]
 
         api_path = path
         if params:
-            query_string = urllib.parse.urlencode(params)
+            # v17.3: Strip parentheses from all string params (DMarket API limitation)
+            # Parentheses in query params cause 401 on signature verification
+            clean_params = {}
+            for k, v in params.items():
+                if isinstance(v, str):
+                    clean_params[k] = v.replace("(", "").replace(")", "")
+                else:
+                    clean_params[k] = v
+            query_string = urllib.parse.urlencode(clean_params)
             api_path = f"{path}?{query_string}"
 
         body_str = _dumps(body) if body else ""

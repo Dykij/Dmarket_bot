@@ -35,12 +35,18 @@ class _MarketMixin:
         Returns: {"items": [...], "total": N, "cursor": "..."}
         Supports: gameId, title, limit, cursor, priceFrom, priceTo,
                   orderBy, orderDir, treeFilters.
+
+        v17.3: Strip parentheses from title — DMarket API rejects
+        titles with () in the query parameter (causes 401 on signature).
         """
         params: dict[str, Any] = {"gameId": game_id, "limit": limit}
         if cursor:
             params["cursor"] = cursor
         if filters:
             params.update(filters)
+        # v17.3: Strip parentheses from title (DMarket API limitation)
+        if "title" in params and isinstance(params["title"], str):
+            params["title"] = params["title"].replace("(", "").replace(")", "")
         return await self.make_request(
             "GET", "/marketplace-api/v2/offers", params=params
         )
