@@ -249,3 +249,51 @@ class TestDemandScoreIntegration:
         assert 'ofi_value' in r
         assert 'obi_z' in r
         assert 'micro_price' in r
+
+
+class TestV18RegressionFixes:
+    """Regression tests for v18 audit fixes."""
+
+    def test_queue_imbalance_no_sellers(self):
+        """queue_imbalance(10, 0) should return 999.0 (not None)."""
+        from src.analysis.microstructure.obi import queue_imbalance
+        qi = queue_imbalance(10, 0)
+        assert qi == 999.0, f"Expected 999.0, got {qi}"
+
+    def test_queue_imbalance_both_zero(self):
+        """queue_imbalance(0, 0) should return None."""
+        from src.analysis.microstructure.obi import queue_imbalance
+        qi = queue_imbalance(0, 0)
+        assert qi is None, f"Expected None, got {qi}"
+
+    def test_normalized_obi_consistency(self):
+        """normalized_obi and queue_imbalance should handle ask_count=0 consistently."""
+        from src.analysis.microstructure.obi import normalized_obi, queue_imbalance
+        # Both should handle ask_count=0 without crashing
+        norm = normalized_obi(10, 0)
+        qi = queue_imbalance(10, 0)
+        assert norm == 1.0
+        assert qi == 999.0
+
+    def test_demand_score_with_zero_asks(self):
+        """calculate_demand_score should handle ask_count=0 gracefully."""
+        from src.core.target_sniping.demand_strategy import calculate_demand_score
+        result = calculate_demand_score("Test", 5.0, 4.8, 0, 30)
+        # Should not crash, should return valid result
+        assert "score" in result
+        assert "reason" in result
+
+    def test_demand_logging_creates_entry(self):
+        """_log_demand_decision should create a database entry."""
+        from src.core.target_sniping.demand_strategy import _log_demand_decision
+        from src.db.price_history import price_db
+        import json
+
+        before = price_db.state_conn.execute('SELECT COUNT(*) FROM decision_logs').fetchone()[0]
+        _log_demand_decision("TEST_LOG_ITEM", 5.0, {
+            "obi_value": 0.5, "ofi_value": 0.1, "obi_z": 1.0,
+            "demand_ratio": 3.0, "score": 100.0, "expected_hold_days": 2.0,
+            "reason": "test"
+        })
+        after = price_db.state_conn.execute('SELECT COUNT(*) FROM decision_logs').fetchone()[0]
+        assert after > before, f"Expected new entry, got {before} -> {after}"
