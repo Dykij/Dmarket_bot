@@ -23,7 +23,6 @@ import logging
 import os
 from typing import Any
 
-from src.analytics.rare_valuation import RareValuationEngine
 from src.analytics.stickers_evaluator import StickerEvaluator
 from src.api.dmarket_api_client import DMarketAPIClient
 from src.config import Config
@@ -64,7 +63,6 @@ class SnipingLoop(  # type: ignore[misc]
 
     def __init__(self, client: DMarketAPIClient) -> None:
         self.client = client
-        self.valuation = RareValuationEngine()
         self.stickers = StickerEvaluator()
         self.liquidity = LiquidityManager()
         self.inventory_mgr: Any = None
