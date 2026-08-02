@@ -158,7 +158,6 @@ class Config(BaseSettings):
     DEMAND_STRATEGY_ENABLED: bool = True
     DEMAND_MAX_HOLD_DAYS: float = Field(default=3.0, ge=1.0, le=14.0)
     DEMAND_ADAPTIVE_THRESHOLDS: bool = True
-    ORACLE_ENABLED_FOR_DEMAND: bool = False  # Demand uses only DMarket data
 
     # v17.5: Time-based order filter
     AGE_FILTER_ENABLED: bool = True
@@ -168,9 +167,6 @@ class Config(BaseSettings):
     DYNAMIC_LIQUIDITY_ENABLED: bool = True
 
     # v17.6: Advanced microstructure instruments
-    VOLUME_CLOCK_ENABLED: bool = False  # Volume clock resampling (future)
-    VOLUME_CLOCK_THRESHOLD: int = Field(default=10, ge=1)  # Trades before next cycle
-    VPIN_GATE_ENABLED: bool = False  # VPIN toxicity gate (future)
     SPREAD_ENTROPY_ENABLED: bool = True  # Microstructure efficiency filter
     SPREAD_ENTROPY_HARD_BLOCK: float = Field(default=0.20, ge=0.0, le=1.0)  # Block if spread > 20%
     SPREAD_ENTROPY_SOFT_PENALTY: float = Field(default=0.10, ge=0.0, le=1.0)  # Penalize if spread > 10%
@@ -178,10 +174,7 @@ class Config(BaseSettings):
 
     # v17.7: Algorithm integration parameters
     OFI_KELLY_BOOST: float = Field(default=0.5, ge=0.0, le=2.0)  # OFI boost factor for Kelly
-    GARCH_PVC_ENABLED: bool = True  # GARCH + PVC volatility adjustment
-    GARCH_PVC_FACTOR: float = Field(default=1.2, ge=1.0, le=2.0)  # PVC negative → volatility *= factor
-    HMM_VPIN_ENABLED: bool = True  # HMM + VPIN regime shift
-    HAWKES_ENTROPY_ENABLED: bool = True  # Hawkes + spread entropy
+    GARCH_PVC_FACTOR: float = Field(default=1.2, ge=1.0, le=2.0)  # PVC negative -> volatility *= factor
 
     # --- Microstructure Filter Toggle ---
     STRICT_MICROSTRUCTURE_FILTERS: bool = False

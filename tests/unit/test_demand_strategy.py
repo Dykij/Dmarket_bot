@@ -194,7 +194,6 @@ class TestDynamicStopLoss:
         from src.config import Config
         assert Config.DEMAND_MAX_HOLD_DAYS == 3.0
         assert Config.DEMAND_STRATEGY_ENABLED is True
-        assert Config.ORACLE_ENABLED_FOR_DEMAND is False
 
     def test_adaptive_hold_time(self):
         # Cheap items: longer hold
