@@ -386,3 +386,98 @@ class TestDMarketEncodingSafety:
             assert "Field-Tested" in stripped or "Minimal Wear" in stripped or \
                    "Factory New" in stripped or "Well-Worn" in stripped or \
                    "Battle-Scarred" in stripped, f"Wear lost from: {title}"
+
+
+class TestWeaponDiversity:
+    """Regression tests for weapon category diversity scanning."""
+
+    def test_category_patterns_match_correctly(self):
+        """Verify category patterns match expected titles."""
+        patterns = {
+            "Pistols": ["Glock-18 | ", "Desert Eagle | ", "USP-S | ", "P250 | ", "Five-SeveN | "],
+            "SMGs": ["MAC-10 | ", "MP9 | ", "MP7 | ", "UMP-45 | ", "P90 | "],
+            "Rifles": ["M4A4 | ", "M4A1-S | ", "FAMAS | ", "Galil AR | "],
+            "Snipers": ["AWP | ", "SSG 08 | "],
+            "Heavy": ["Nova | ", "XM1014 | ", "MAG-7 | ", "Sawed-Off | "],
+        }
+        
+        test_titles = {
+            "Pistols": ["Glock-18 | Fade", "Desert Eagle | Blaze", "USP-S | Kill Confirmed"],
+            "SMGs": ["MAC-10 | Neon Rider", "MP9 | Wild Lily"],
+            "Rifles": ["M4A4 | Howl", "M4A1-S | Hyper Beast", "FAMAS | Mecha Industries"],
+            "Snipers": ["AWP | Dragon Lore", "SSG 08 | Blood in the Water"],
+            "Heavy": ["Nova | Hyper Beast", "XM1014 | Tranquility"],
+        }
+        
+        for cat, titles in test_titles.items():
+            cat_patterns = patterns[cat]
+            for t in titles:
+                matched = any(t.startswith(p) for p in cat_patterns)
+                assert matched, f"'{t}' should match category '{cat}' patterns"
+        
+        # Verify AK-47 does NOT match any non-AK category
+        ak_title = "AK-47 | Redline"
+        for cat, pats in patterns.items():
+            if cat == "Rifles":
+                continue  # AK-47 is a rifle but not in our diversity patterns
+            matched = any(ak_title.startswith(p) for p in pats)
+            assert not matched, f"AK-47 should NOT match category '{cat}'"
+
+    def test_diversity_candidates_compete_on_score(self):
+        """Verify diversity candidates use same score as demand candidates."""
+        from src.core.target_sniping.demand_strategy import calculate_demand_score
+        
+        # AK-47 candidate (from demand expansion) — tight spread, high Q
+        ak_score = calculate_demand_score("AK-47 | Redline (FT)", 10.0, 9.5, 100, 300)
+        
+        # AWP candidate (from diversity scan) — tight spread, high Q
+        awp_score = calculate_demand_score("AWP | Asiimov (FT)", 30.0, 28.0, 50, 200)
+        
+        # Both should use the same scoring function
+        assert ak_score["score"] > 0, f"AK-47 should have positive score, got {ak_score['score']}"
+        assert awp_score["score"] > 0, f"AWP should have positive score, got {awp_score['score']}"
+        # Both use demand_ratio, obi_norm, spread_pct — same formula
+
+
+class TestLuxuryStickerRejection:
+    """Regression tests for luxury sticker rejection."""
+
+    def test_luxury_stickers_detected(self):
+        """Verify luxury stickers are correctly identified."""
+        from src.core.target_sniping.sticker_cache import StickerPremiumCache
+        cache = StickerPremiumCache()
+        
+        luxury_cases = [
+            [{"name": "Titan | Katowice 2014"}],
+            [{"name": "iBUYPOWER | Katowice 2014"}],
+            [{"name": "Crown (Foil)"}],
+            [{"name": "Howl"}],
+            [{"name": "Virtus.pro (Holo) | Katowice 2014"}],
+        ]
+        
+        for stickers in luxury_cases:
+            assert cache.should_reject_by_stickers(stickers), f"Should reject: {stickers[0]['name']}"
+
+    def test_mid_range_stickers_not_rejected(self):
+        """Verify mid-range stickers are NOT rejected."""
+        from src.core.target_sniping.sticker_cache import StickerPremiumCache
+        cache = StickerPremiumCache()
+        
+        mid_range_cases = [
+            [{"name": "Astralis (Gold) | Berlin 2019"}],
+            [{"name": "Natus Vincere (Holo) | Katowice 2015"}],
+            [{"name": "FaZe Clan (Gold) | Copenhagen 2024"}],
+            [{"name": "Headshot Guarantee"}],
+        ]
+        
+        for stickers in mid_range_cases:
+            assert not cache.should_reject_by_stickers(stickers), f"Should NOT reject: {stickers[0]['name']}"
+
+    def test_empty_stickers_not_rejected(self):
+        """Verify empty/None stickers are not rejected."""
+        from src.core.target_sniping.sticker_cache import StickerPremiumCache
+        cache = StickerPremiumCache()
+        
+        assert not cache.should_reject_by_stickers([])
+        assert not cache.should_reject_by_stickers(None)
+        assert not cache.should_reject_by_stickers([{"name": ""}])

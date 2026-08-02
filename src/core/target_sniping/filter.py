@@ -603,6 +603,17 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
         # --- Layer 4: Sticker Value + Combo Premium ---
         item_stickers = item.get("stickers", [])
         sticker_value = 0.0
+
+        # v18.1: Luxury sticker rejection — skip items with ultra-premium stickers
+        # (Katowice 2014, Crown Foil, etc.) where sticker value dominates item price.
+        if item_stickers and Config.STICKER_COMBO_ENABLED:
+            from src.core.target_sniping.sticker_cache import StickerPremiumCache
+            _sticker_cache = StickerPremiumCache()
+            if _sticker_cache.should_reject_by_stickers(item_stickers):
+                if is_sandbox:
+                    luxury_names = [s.get("name", "") for s in item_stickers if _sticker_cache._is_luxury_sticker(s.get("name", ""))]
+                    logger.info(f"[STICKER-REJECT] {title}: luxury sticker detected: {luxury_names}")
+                return None
         if item_stickers and hasattr(self, "stickers"):
             try:
                 sticker_value = self.stickers.calculate_added_value(item_stickers)
