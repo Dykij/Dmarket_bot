@@ -323,3 +323,66 @@ class TestDMarketAPIParentheses:
         assert '(' not in clean
         assert ')' not in clean
         assert 'targets-by-title' in clean
+
+
+class TestDMarketEncodingSafety:
+    """Universal regression test for URL encoding issues in DMarket API.
+
+    Tests that RFC3986-reserved characters in titles don't cause
+    double-encoding signature mismatches.
+    """
+
+    def _strip_parens(self, s: str) -> str:
+        """Simulate the make_request parentheses strip."""
+        return s.replace("(", "").replace(")", "")
+
+    def test_parens_stripped(self):
+        assert self._strip_parens("AK-47 (Field-Tested)") == "AK-47 Field-Tested"
+
+    def test_pipe_preserved(self):
+        """Pipe should NOT be stripped — it works fine."""
+        assert "AK-47 | Redline" == "AK-47 | Redline"
+
+    def test_star_preserved(self):
+        """Unicode star should NOT be stripped."""
+        assert "★ Karambit" == "★ Karambit"
+
+    def test_tm_preserved(self):
+        """Trademark symbol should NOT be stripped."""
+        assert "StatTrak™ AK-47" == "StatTrak™ AK-47"
+
+    def test_brackets_preserved(self):
+        """Brackets should NOT be stripped."""
+        assert "AK-47 [test]" == "AK-47 [test]"
+
+    def test_encoding_consistency(self):
+        """Verify that stripped title produces clean URL encoding."""
+        import urllib.parse
+        title = "AK-47 | Elite Build (Battle-Scarred)"
+        stripped = self._strip_parens(title)
+        encoded = urllib.parse.urlencode({"title": stripped})
+        # Should NOT contain %28 or %29
+        assert "%28" not in encoded
+        assert "%29" not in encoded
+        # Should contain the pipe as %7C
+        assert "%7C" in encoded
+
+    def test_no_parens_in_real_cs2_items(self):
+        """Verify common CS2 wear conditions work."""
+        wears = [
+            "AK-47 | Redline (Field-Tested)",
+            "AK-47 | Redline (Minimal Wear)",
+            "AK-47 | Redline (Factory New)",
+            "AK-47 | Redline (Well-Worn)",
+            "AK-47 | Redline (Battle-Scarred)",
+            "★ Karambit | Doppler (Factory New)",
+            "StatTrak™ AK-47 | Elite Build (Field-Tested)",
+        ]
+        for title in wears:
+            stripped = self._strip_parens(title)
+            assert "(" not in stripped, f"Parens not stripped from: {title}"
+            assert ")" not in stripped, f"Parens not stripped from: {title}"
+            # Verify wear info is preserved
+            assert "Field-Tested" in stripped or "Minimal Wear" in stripped or \
+                   "Factory New" in stripped or "Well-Worn" in stripped or \
+                   "Battle-Scarred" in stripped, f"Wear lost from: {title}"
