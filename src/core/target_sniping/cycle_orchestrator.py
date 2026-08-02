@@ -338,6 +338,60 @@ class CycleOrchestrator:
             if added > 0:
                 logger.info(f"[DEMAND-EXPAND] Added {added} demand candidates from agg_prices")
 
+            # v18.0: Wear-expansion — check all 5 wear variants for each
+            # demand candidate to find the best-scoring exterior.
+            # Uses agg_prices (already fetched) to avoid extra API calls.
+            WEAR_CONDITIONS = [
+                "Factory New", "Minimal Wear", "Field-Tested", "Well-Worn", "Battle-Scarred"
+            ]
+            wear_expanded = 0
+            for opp in demand_opps[:10]:
+                title = opp["title"]
+                # Extract base skin (strip wear condition)
+                base = title
+                for wc in WEAR_CONDITIONS:
+                    base = base.replace(f" ({wc})", "").replace(f"({wc})", "")
+                base = base.strip()
+                if base == title:
+                    continue  # No wear condition found (e.g., stickers, cases)
+                
+                # Generate wear variants and check agg_prices
+                best_variant = None
+                best_score = opp["score"]
+                checked = 0
+                for wc in WEAR_CONDITIONS:
+                    variant = f"{base} ({wc})"
+                    if variant in ctx.agg_prices:
+                        data = ctx.agg_prices[variant]
+                        ask = data.get("best_ask", 0) or 0
+                        bid = data.get("best_bid", 0) or 0
+                        ac = data.get("ask_count", 0) or 0
+                        bc = data.get("bid_count", 0) or 0
+                        if ask > 0 and bid > 0:
+                            from src.core.target_sniping.demand_strategy import calculate_demand_score
+                            vr = calculate_demand_score(variant, ask, bid, ac, bc)
+                            checked += 1
+                            if vr["score"] > best_score:
+                                best_score = vr["score"]
+                                best_variant = variant
+                
+                if best_variant and best_variant != title and best_variant not in existing_titles:
+                    # Found a better wear variant — add it
+                    agg = ctx.agg_prices[best_variant]
+                    synthetic = {
+                        "title": best_variant,
+                        "offerId": f"wear-{best_variant}",
+                        "priceCents": int((agg.get("best_ask", 0) or 0) * 100),
+                        "createdAt": "",
+                        "attributes": {},
+                    }
+                    candidates.append(synthetic)
+                    wear_expanded += 1
+                    logger.info(f"[WEAR-EXPAND] {base}: best_wear={best_variant} score={best_score:.0f} (checked {checked}/5 wears)")
+            
+            if wear_expanded > 0:
+                logger.info(f"[WEAR-EXPAND] Added {wear_expanded} wear-optimized candidates")
+
         if not candidates:
             return ctx
 
