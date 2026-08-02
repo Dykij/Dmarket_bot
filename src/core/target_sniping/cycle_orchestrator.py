@@ -423,6 +423,50 @@ class CycleOrchestrator:
             if wear_expanded > 0:
                 logger.info(f"[WEAR-EXPAND] Added {wear_expanded} wear-optimized candidates")
 
+        # v18.1: Weapon diversity — explicit category scanning beyond top-100
+        # Top-100 scan returns 92% AK-47. This adds representatives from
+        # other weapon categories so they compete on the same demand score.
+        if ctx.agg_prices and Config.DEMAND_STRATEGY_ENABLED:
+            _CATEGORY_PATTERNS = {
+                "Pistols": ["Glock-18 | ", "Desert Eagle | ", "USP-S | ", "P250 | ", "Five-SeveN | "],
+                "SMGs": ["MAC-10 | ", "MP9 | ", "MP7 | ", "UMP-45 | ", "P90 | "],
+                "Rifles": ["M4A4 | ", "M4A1-S | ", "FAMAS | ", "Galil AR | "],
+                "Snipers": ["AWP | ", "SSG 08 | "],
+                "Heavy": ["Nova | ", "XM1014 | ", "MAG-7 | ", "Sawed-Off | "],
+            }
+            existing_titles = {get_item_title(it) for it in candidates}
+            category_added = 0
+            for cat, patterns in _CATEGORY_PATTERNS.items():
+                cat_titles = [t for t in ctx.agg_prices if any(t.startswith(p) for p in patterns)]
+                from src.core.target_sniping.demand_strategy import calculate_demand_score
+                scored = []
+                for t in cat_titles:
+                    if t in existing_titles:
+                        continue
+                    d = ctx.agg_prices[t]
+                    ask = d.get("best_ask", 0) or 0
+                    bid = d.get("best_bid", 0) or 0
+                    ac = d.get("ask_count", 0) or 0
+                    bc = d.get("bid_count", 0) or 0
+                    if ask > 0 and bid > 0:
+                        r = calculate_demand_score(t, ask, bid, ac, bc)
+                        if r["score"] > 0:
+                            scored.append((t, r["score"], ask))
+                scored.sort(key=lambda x: -x[1])
+                for t, score, ask in scored[:2]:
+                    synthetic = {
+                        "title": t,
+                        "offerId": f"diversity-{t}",
+                        "priceCents": int(ask * 100),
+                        "createdAt": "",
+                        "attributes": {},
+                    }
+                    candidates.append(synthetic)
+                    existing_titles.add(t)
+                    category_added += 1
+            if category_added > 0:
+                logger.info(f"[DIVERSITY] Added {category_added} non-AK candidates from 5 categories")
+
         if not candidates:
             return ctx
 
