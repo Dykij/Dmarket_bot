@@ -530,6 +530,12 @@ class _ExecutionMixin:
                         trade_type="buy",
                         item_title=title,
                     )
+                # v18.2: Record buy in persistent trade history
+                try:
+                    from src.db.profit_tracker import db as profit_db
+                    profit_db.record_buy(title, float(base_price), offer_id=item_id)
+                except Exception as e:
+                    logger.debug(f"profit_tracker.record_buy failed: {e}")
                 # v12.5: Telegram buy notification (throttled to 1/min)
                 # v15.7 FIX: Hold task reference to prevent GC before completion
                 task = asyncio.create_task(

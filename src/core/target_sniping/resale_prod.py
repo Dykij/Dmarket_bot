@@ -182,6 +182,18 @@ class _ResaleProdMixin:
                     )
                 except Exception as e:
                     logger.debug(f"risk.record_trade_outcome (sell) failed: {e}")
+            # v18.2: Record sell in persistent trade history
+            try:
+                from src.db.profit_tracker import db as profit_db
+                result = profit_db.record_sell(it["hash_name"], float(sell_price))
+                if "error" not in result:
+                    logger.info(
+                        f"[TRADE-HISTORY] {it['hash_name']}: "
+                        f"bought ${result['buy_price']:.2f} -> sold ${result['sell_price']:.2f} "
+                        f"in {result['hold_days']:.1f}d (profit ${result['net_profit']:.2f})"
+                    )
+            except Exception as e:
+                logger.debug(f"profit_tracker.record_sell failed: {e}")
             detected += 1
         return detected
 
