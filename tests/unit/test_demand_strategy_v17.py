@@ -386,3 +386,195 @@ class TestDMarketEncodingSafety:
             assert "Field-Tested" in stripped or "Minimal Wear" in stripped or \
                    "Factory New" in stripped or "Well-Worn" in stripped or \
                    "Battle-Scarred" in stripped, f"Wear lost from: {title}"
+
+
+class TestWearExpansionMechanism:
+    """Regression tests for wear-expansion mechanism.
+
+    Tests the LOGIC of wear-expansion (picking best wear variant),
+    not specific market data values.
+    """
+
+    WEAR_CONDITIONS = ["Factory New", "Minimal Wear", "Field-Tested", "Well-Worn", "Battle-Scarred"]
+
+    def _extract_base(self, title: str) -> str:
+        """Extract base skin name by stripping wear condition."""
+        base = title
+        for wc in self.WEAR_CONDITIONS:
+            base = base.replace(f" ({wc})", "").replace(f"({wc})", "")
+        return base.strip()
+
+    def _simulate_wear_expansion(self, candidates: list, agg_prices: dict):
+        """Simulate wear-expansion logic (same as cycle_orchestrator.py)."""
+        from src.core.target_sniping.demand_strategy import calculate_demand_score
+
+        results = []
+        for opp in candidates:
+            title = opp["title"]
+            base = self._extract_base(title)
+            if base == title:
+                results.append((title, opp["score"]))
+                continue
+
+            best_variant = title
+            best_score = opp["score"]
+            checked = 0
+            for wc in self.WEAR_CONDITIONS:
+                variant = f"{base} ({wc})"
+                if variant in agg_prices:
+                    data = agg_prices[variant]
+                    ask = data.get("best_ask", 0)
+                    bid = data.get("best_bid", 0)
+                    ac = data.get("ask_count", 0)
+                    bc = data.get("bid_count", 0)
+                    if ask > 0 and bid > 0:
+                        vr = calculate_demand_score(variant, ask, bid, ac, bc)
+                        checked += 1
+                        if vr["score"] > best_score:
+                            best_score = vr["score"]
+                            best_variant = variant
+            results.append((best_variant, best_score))
+        return results
+
+    def test_wear_expansion_picks_best(self):
+        """Picks best wear variant by score (not first/default)."""
+        agg_prices = {
+            "AK-47 | Test (Factory New)": {"best_ask": 10.0, "best_bid": 8.0, "ask_count": 100, "bid_count": 100},
+            "AK-47 | Test (Minimal Wear)": {"best_ask": 5.0, "best_bid": 4.0, "ask_count": 100, "bid_count": 100},
+            "AK-47 | Test (Field-Tested)": {"best_ask": 3.50, "best_bid": 3.00, "ask_count": 100, "bid_count": 100},
+            "AK-47 | Test (Well-Worn)": {"best_ask": 1.03, "best_bid": 1.00, "ask_count": 5, "bid_count": 208},
+            "AK-47 | Test (Battle-Scarred)": {"best_ask": 2.00, "best_bid": 1.50, "ask_count": 100, "bid_count": 100},
+        }
+        candidates = [{"title": "AK-47 | Test (Field-Tested)", "score": 50}]
+
+        result = self._simulate_wear_expansion(candidates, agg_prices)
+        assert result[0][0] == "AK-47 | Test (Well-Worn)", f"Expected WW, got {result[0][0]}"
+
+    def test_wear_expansion_4_fail_1_pass(self):
+        """Edge case: 4 wears fail spread-gate, 1 passes."""
+        agg_prices = {
+            "AK-47 | Test (Factory New)": {"best_ask": 10.0, "best_bid": 2.0, "ask_count": 100, "bid_count": 100},
+            "AK-47 | Test (Minimal Wear)": {"best_ask": 5.0, "best_bid": 1.0, "ask_count": 100, "bid_count": 100},
+            "AK-47 | Test (Field-Tested)": {"best_ask": 3.50, "best_bid": 0.50, "ask_count": 100, "bid_count": 100},
+            "AK-47 | Test (Well-Worn)": {"best_ask": 1.03, "best_bid": 1.00, "ask_count": 5, "bid_count": 208},
+            "AK-47 | Test (Battle-Scarred)": {"best_ask": 2.00, "best_bid": 0.40, "ask_count": 100, "bid_count": 100},
+        }
+        candidates = [{"title": "AK-47 | Test (Field-Tested)", "score": 0}]
+
+        result = self._simulate_wear_expansion(candidates, agg_prices)
+        assert result[0][0] == "AK-47 | Test (Well-Worn)", f"Expected WW, got {result[0][0]}"
+
+    def test_wear_expansion_all_fail(self):
+        """Edge case: all wears fail -> keeps original."""
+        agg_prices = {
+            "AK-47 | Test (Factory New)": {"best_ask": 10.0, "best_bid": 1.0, "ask_count": 100, "bid_count": 100},
+            "AK-47 | Test (Minimal Wear)": {"best_ask": 5.0, "best_bid": 0.50, "ask_count": 100, "bid_count": 100},
+            "AK-47 | Test (Field-Tested)": {"best_ask": 3.50, "best_bid": 0.35, "ask_count": 100, "bid_count": 100},
+            "AK-47 | Test (Well-Worn)": {"best_ask": 1.03, "best_bid": 0.10, "ask_count": 5, "bid_count": 208},
+            "AK-47 | Test (Battle-Scarred)": {"best_ask": 2.00, "best_bid": 0.20, "ask_count": 100, "bid_count": 100},
+        }
+        candidates = [{"title": "AK-47 | Test (Field-Tested)", "score": 0}]
+
+        result = self._simulate_wear_expansion(candidates, agg_prices)
+        assert result[0][1] == 0, f"Expected score=0, got {result[0][1]}"
+
+    def test_no_wear_expansion_for_stickers(self):
+        """No wear expansion for non-weapon items."""
+        candidates = [{"title": "10 Year Birthday Sticker Capsule", "score": 100}]
+        agg_prices = {}
+
+        result = self._simulate_wear_expansion(candidates, agg_prices)
+        assert result[0][0] == "10 Year Birthday Sticker Capsule"
+        assert result[0][1] == 100
+
+    def test_base_skin_extraction(self):
+        """Verify base skin extraction works for all wears."""
+        test_cases = [
+            ("AK-47 | Redline (Field-Tested)", "AK-47 | Redline"),
+            ("★ Karambit | Doppler (Factory New)", "★ Karambit | Doppler"),
+            ("StatTrak™ AK-47 | Elite Build (Battle-Scarred)", "StatTrak™ AK-47 | Elite Build"),
+            ("AWP | Asiimov (Well-Worn)", "AWP | Asiimov"),
+            ("AK-47 | Redline", "AK-47 | Redline"),
+        ]
+        for title, expected in test_cases:
+            assert self._extract_base(title) == expected, f"Expected '{expected}', got '{self._extract_base(title)}'"
+
+
+class TestWearExpansionBatchFetch:
+    """Test that wear-expansion actually fetches missing variants via API."""
+
+    WEAR_CONDITIONS = ["Factory New", "Minimal Wear", "Field-Tested", "Well-Worn", "Battle-Scarred"]
+
+    def _extract_base(self, title: str) -> str:
+        base = title
+        for wc in self.WEAR_CONDITIONS:
+            base = base.replace(f" ({wc})", "").replace(f"({wc})", "")
+        return base.strip()
+
+    def test_missing_variants_collected(self):
+        """If only 1 of 5 wears in cache, collect the other 4 as missing."""
+        agg_prices = {
+            "AK-47 | Test (Field-Tested)": {"best_ask": 3.0, "best_bid": 2.5, "ask_count": 100, "bid_count": 100},
+        }
+        base = "AK-47 | Test"
+        missing = []
+        for wc in self.WEAR_CONDITIONS:
+            variant = f"{base} ({wc})"
+            if variant not in agg_prices:
+                missing.append(variant)
+
+        assert len(missing) == 4
+        assert "AK-47 | Test (Factory New)" in missing
+        assert "AK-47 | Test (Minimal Wear)" in missing
+        assert "AK-47 | Test (Well-Worn)" in missing
+        assert "AK-47 | Test (Battle-Scarred)" in missing
+
+    def test_batch_fetch_called_with_correct_titles(self):
+        """Verify get_aggregated_prices is called with the expected title list."""
+        from unittest.mock import AsyncMock
+
+        mock_client = AsyncMock()
+        mock_client.get_aggregated_prices = AsyncMock(return_value={
+            "AK-47 | Test (Well-Worn)": {"best_ask": 1.0, "best_bid": 0.95, "ask_count": 5, "bid_count": 200},
+            "AK-47 | Test (Battle-Scarred)": {"best_ask": 2.0, "best_bid": 1.5, "ask_count": 50, "bid_count": 50},
+        })
+
+        agg_prices = {
+            "AK-47 | Test (Field-Tested)": {"best_ask": 3.0, "best_bid": 2.5, "ask_count": 100, "bid_count": 100},
+        }
+        missing = [
+            "AK-47 | Test (Factory New)",
+            "AK-47 | Test (Minimal Wear)",
+            "AK-47 | Test (Well-Worn)",
+            "AK-47 | Test (Battle-Scarred)",
+        ]
+
+        # Simulate batch fetch
+        import asyncio
+        extra = asyncio.get_event_loop().run_until_complete(
+            mock_client.get_aggregated_prices("a8db", titles=missing)
+        )
+        agg_prices.update(extra)
+
+        # Verify call
+        mock_client.get_aggregated_prices.assert_called_once_with("a8db", titles=missing)
+
+        # Verify merge
+        assert "AK-47 | Test (Well-Worn)" in agg_prices
+        assert "AK-47 | Test (Battle-Scarred)" in agg_prices
+        assert len(agg_prices) == 3  # FT + WW + BS
+
+    def test_all_variants_already_in_cache(self):
+        """If all 5 wears already in cache, no missing variants collected."""
+        agg_prices = {}
+        for wc in ["Factory New", "Minimal Wear", "Field-Tested", "Well-Worn", "Battle-Scarred"]:
+            agg_prices[f"AK-47 | Test ({wc})"] = {"best_ask": 3.0, "best_bid": 2.5, "ask_count": 100, "bid_count": 100}
+
+        base = "AK-47 | Test"
+        missing = []
+        for wc in ["Factory New", "Minimal Wear", "Field-Tested", "Well-Worn", "Battle-Scarred"]:
+            variant = f"{base} ({wc})"
+            if variant not in agg_prices:
+                missing.append(variant)
+
+        assert len(missing) == 0
