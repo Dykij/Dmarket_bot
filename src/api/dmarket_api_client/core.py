@@ -387,8 +387,14 @@ class DMarketAPIClient(  # type: ignore[misc]
         timestamp = str(int(clock_sync.now()))
 
         api_path = path
-        # v17.3: Strip parentheses from path and params (DMarket API limitation)
-        # Parentheses in URLs cause 401 on signature verification
+        # v17.3: Strip parentheses from path and params
+        # Root cause: urllib.parse.urlencode encodes () as %28/%29,
+        # but aiohttp/yarl double-encodes to %2528/%2529 when sending.
+        # Signature is computed on %28/%29, server receives %2528/%2529 → 401.
+        # Fix: strip () before encoding. Verified safe: DMarket API does
+        # prefix/fuzzy matching, so "AK-47 Redline Field-Tested" returns
+        # same items as "AK-47 Redline (Field-Tested)" — all Field-Tested.
+        # See: ZERO_CANDIDATES_ANALYSIS_AND_FIX.md for full analysis.
         path = path.replace("(", "").replace(")", "")
 
         if params:

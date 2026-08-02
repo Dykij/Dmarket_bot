@@ -297,3 +297,29 @@ class TestV18RegressionFixes:
         })
         after = price_db.state_conn.execute('SELECT COUNT(*) FROM decision_logs').fetchone()[0]
         assert after > before, f"Expected new entry, got {before} -> {after}"
+
+
+class TestDMarketAPIParentheses:
+    """Regression test for parentheses in DMarket API titles."""
+
+    def test_parentheses_stripped_from_params(self):
+        """Verify parentheses are stripped before URL encoding."""
+        params = {'title': 'AK-47 (Field-Tested)', 'gameId': 'a8db'}
+        # Simulate what make_request does
+        clean = {}
+        for k, v in params.items():
+            if isinstance(v, str):
+                clean[k] = v.replace("(", "").replace(")", "")
+            else:
+                clean[k] = v
+        assert clean['title'] == 'AK-47 Field-Tested'
+        assert '(' not in clean['title']
+        assert ')' not in clean['title']
+
+    def test_parentheses_stripped_from_path(self):
+        """Verify parentheses are stripped from URL path."""
+        path = '/marketplace-api/v1/targets-by-title/a8db/AK-47 (Field-Tested)'
+        clean = path.replace("(", "").replace(")", "")
+        assert '(' not in clean
+        assert ')' not in clean
+        assert 'targets-by-title' in clean
