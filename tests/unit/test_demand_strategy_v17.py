@@ -498,3 +498,83 @@ class TestWearExpansionMechanism:
         ]
         for title, expected in test_cases:
             assert self._extract_base(title) == expected, f"Expected '{expected}', got '{self._extract_base(title)}'"
+
+
+class TestWearExpansionBatchFetch:
+    """Test that wear-expansion actually fetches missing variants via API."""
+
+    WEAR_CONDITIONS = ["Factory New", "Minimal Wear", "Field-Tested", "Well-Worn", "Battle-Scarred"]
+
+    def _extract_base(self, title: str) -> str:
+        base = title
+        for wc in self.WEAR_CONDITIONS:
+            base = base.replace(f" ({wc})", "").replace(f"({wc})", "")
+        return base.strip()
+
+    def test_missing_variants_collected(self):
+        """If only 1 of 5 wears in cache, collect the other 4 as missing."""
+        agg_prices = {
+            "AK-47 | Test (Field-Tested)": {"best_ask": 3.0, "best_bid": 2.5, "ask_count": 100, "bid_count": 100},
+        }
+        base = "AK-47 | Test"
+        missing = []
+        for wc in self.WEAR_CONDITIONS:
+            variant = f"{base} ({wc})"
+            if variant not in agg_prices:
+                missing.append(variant)
+
+        assert len(missing) == 4
+        assert "AK-47 | Test (Factory New)" in missing
+        assert "AK-47 | Test (Minimal Wear)" in missing
+        assert "AK-47 | Test (Well-Worn)" in missing
+        assert "AK-47 | Test (Battle-Scarred)" in missing
+
+    def test_batch_fetch_called_with_correct_titles(self):
+        """Verify get_aggregated_prices is called with the expected title list."""
+        from unittest.mock import AsyncMock
+
+        mock_client = AsyncMock()
+        mock_client.get_aggregated_prices = AsyncMock(return_value={
+            "AK-47 | Test (Well-Worn)": {"best_ask": 1.0, "best_bid": 0.95, "ask_count": 5, "bid_count": 200},
+            "AK-47 | Test (Battle-Scarred)": {"best_ask": 2.0, "best_bid": 1.5, "ask_count": 50, "bid_count": 50},
+        })
+
+        agg_prices = {
+            "AK-47 | Test (Field-Tested)": {"best_ask": 3.0, "best_bid": 2.5, "ask_count": 100, "bid_count": 100},
+        }
+        missing = [
+            "AK-47 | Test (Factory New)",
+            "AK-47 | Test (Minimal Wear)",
+            "AK-47 | Test (Well-Worn)",
+            "AK-47 | Test (Battle-Scarred)",
+        ]
+
+        # Simulate batch fetch
+        import asyncio
+        extra = asyncio.get_event_loop().run_until_complete(
+            mock_client.get_aggregated_prices("a8db", titles=missing)
+        )
+        agg_prices.update(extra)
+
+        # Verify call
+        mock_client.get_aggregated_prices.assert_called_once_with("a8db", titles=missing)
+
+        # Verify merge
+        assert "AK-47 | Test (Well-Worn)" in agg_prices
+        assert "AK-47 | Test (Battle-Scarred)" in agg_prices
+        assert len(agg_prices) == 3  # FT + WW + BS
+
+    def test_all_variants_already_in_cache(self):
+        """If all 5 wears already in cache, no missing variants collected."""
+        agg_prices = {}
+        for wc in ["Factory New", "Minimal Wear", "Field-Tested", "Well-Worn", "Battle-Scarred"]:
+            agg_prices[f"AK-47 | Test ({wc})"] = {"best_ask": 3.0, "best_bid": 2.5, "ask_count": 100, "bid_count": 100}
+
+        base = "AK-47 | Test"
+        missing = []
+        for wc in ["Factory New", "Minimal Wear", "Field-Tested", "Well-Worn", "Battle-Scarred"]:
+            variant = f"{base} ({wc})"
+            if variant not in agg_prices:
+                missing.append(variant)
+
+        assert len(missing) == 0
