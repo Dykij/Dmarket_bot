@@ -386,3 +386,108 @@ class TestDMarketEncodingSafety:
             assert "Field-Tested" in stripped or "Minimal Wear" in stripped or \
                    "Factory New" in stripped or "Well-Worn" in stripped or \
                    "Battle-Scarred" in stripped, f"Wear lost from: {title}"
+
+
+class TestProfitTracker:
+    """Regression tests for persistent trade history."""
+
+    def test_record_buy_and_sell(self):
+        """Verify buy and sell are linked, profit calculated correctly."""
+        from src.db.profit_tracker import ProfitTrackerDB
+        import tempfile, os
+        
+        # Use temp DB for test isolation
+        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as f:
+            db_path = f.name
+        
+        try:
+            db = ProfitTrackerDB(db_path=db_path)
+            
+            # Record buy
+            pos_id = db.record_buy("AK-47 | Test (FT)", 10.0, offer_id="test-1")
+            assert pos_id > 0
+            
+            # Record sell
+            result = db.record_sell("AK-47 | Test (FT)", 12.0, fee_rate=0.05)
+            assert result["buy_price"] == 10.0
+            assert result["sell_price"] == 12.0
+            assert abs(result["net_profit"] - 1.4) < 0.01  # 12 - 0.6 - 10 = 1.4
+            assert result["hold_days"] >= 0
+            
+            # Verify trades table
+            trades = db.get_recent_trades("AK-47 | Test (FT)", days=1)
+            assert len(trades) == 1
+            
+            # Verify open positions (should be empty after sell)
+            open_pos = db.get_open_positions("AK-47 | Test (FT)")
+            assert len(open_pos) == 0
+            
+            db.conn.execute('DELETE FROM trades')
+            db.conn.execute('DELETE FROM open_positions')
+            db.conn.execute('DELETE FROM daily_pnl')
+            db.conn.commit()
+            db.close()
+        finally:
+            os.unlink(db_path)
+
+    def test_record_sell_without_buy(self):
+        """Verify sell without matching buy returns error."""
+        from src.db.profit_tracker import ProfitTrackerDB
+        import tempfile, os
+        
+        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as f:
+            db_path = f.name
+        
+        try:
+            db = ProfitTrackerDB(db_path=db_path)
+            
+            # Sell without buy
+            result = db.record_sell("AK-47 | Test (FT)", 12.0)
+            assert "error" in result
+            assert result["error"] == "no_matching_buy"
+            
+            db.close()
+        finally:
+            os.unlink(db_path)
+
+    def test_open_positions_tracking(self):
+        """Verify open positions are tracked correctly."""
+        from src.db.profit_tracker import ProfitTrackerDB
+        import tempfile, os
+        
+        with tempfile.NamedTemporaryFile(suffix='.db', delete=False) as f:
+            db_path = f.name
+        
+        try:
+            db = ProfitTrackerDB(db_path=db_path)
+            
+            # Record 3 buys
+            db.record_buy("AK-47 | Test (FT)", 10.0)
+            db.record_buy("AK-47 | Test (FT)", 11.0)
+            db.record_buy("AWP | Asiimov (FT)", 30.0)
+            
+            # Check open positions
+            open_pos = db.get_open_positions()
+            assert len(open_pos) == 3
+            
+            # Sell one
+            db.record_sell("AK-47 | Test (FT)", 12.0)
+            
+            # Check open positions after sell
+            open_pos = db.get_open_positions()
+            assert len(open_pos) == 2  # 2 remaining
+            
+            # Check by title
+            ak_pos = db.get_open_positions("AK-47 | Test (FT)")
+            assert len(ak_pos) == 1  # 1 AK remaining
+            
+            awp_pos = db.get_open_positions("AWP | Asiimov (FT)")
+            assert len(awp_pos) == 1  # 1 AWP
+            
+            db.conn.execute('DELETE FROM trades')
+            db.conn.execute('DELETE FROM open_positions')
+            db.conn.execute('DELETE FROM daily_pnl')
+            db.conn.commit()
+            db.close()
+        finally:
+            os.unlink(db_path)
