@@ -320,6 +320,9 @@ class CycleOrchestrator:
                 max_price=ctx.dynamic_max_price,
                 min_price=Config.MIN_PRICE_USD,
             )
+            # P2: Build scores cache from is_demand_opportunity to avoid re-scoring
+            _scores_cache: dict[str, dict] = {opp["title"]: opp for opp in demand_opps}
+
             # Add demand candidates that aren't already in market items
             added = 0
             for opp in demand_opps[:10]:  # Limit to top 10
@@ -340,7 +343,7 @@ class CycleOrchestrator:
 
             # v18.0: Wear-expansion — check all 5 wear variants for each
             # demand candidate to find the best-scoring exterior.
-            # First collect missing variants, then batch-fetch, then score.
+            # Uses _scores_cache from is_demand_opportunity when available.
             WEAR_CONDITIONS = [
                 "Factory New", "Minimal Wear", "Field-Tested", "Well-Worn", "Battle-Scarred"
             ]
@@ -375,6 +378,7 @@ class CycleOrchestrator:
                     logger.warning(f"[WEAR-EXPAND] Batch fetch failed: {e}")
 
             # Step 3: Score all variants and pick best for each skin
+            # P2: Use _scores_cache when available, only call calculate_demand_score for new items
             wear_expanded = 0
             from src.core.target_sniping.demand_strategy import calculate_demand_score
             for opp in demand_opps[:10]:
@@ -392,17 +396,25 @@ class CycleOrchestrator:
                 for wc in WEAR_CONDITIONS:
                     variant = f"{base} ({wc})"
                     if variant in ctx.agg_prices:
-                        data = ctx.agg_prices[variant]
-                        ask = data.get("best_ask", 0) or 0
-                        bid = data.get("best_bid", 0) or 0
-                        ac = data.get("ask_count", 0) or 0
-                        bc = data.get("bid_count", 0) or 0
-                        if ask > 0 and bid > 0:
-                            vr = calculate_demand_score(variant, ask, bid, ac, bc)
+                        # P2: Check cache first
+                        if variant in _scores_cache:
+                            vr_score = _scores_cache[variant]["score"]
                             checked += 1
-                            if vr["score"] > best_score:
-                                best_score = vr["score"]
+                            if vr_score > best_score:
+                                best_score = vr_score
                                 best_variant = variant
+                        else:
+                            data = ctx.agg_prices[variant]
+                            ask = data.get("best_ask", 0) or 0
+                            bid = data.get("best_bid", 0) or 0
+                            ac = data.get("ask_count", 0) or 0
+                            bc = data.get("bid_count", 0) or 0
+                            if ask > 0 and bid > 0:
+                                vr = calculate_demand_score(variant, ask, bid, ac, bc)
+                                checked += 1
+                                if vr["score"] > best_score:
+                                    best_score = vr["score"]
+                                    best_variant = variant
 
                 if best_variant and best_variant != title and best_variant not in existing_titles:
                     agg = ctx.agg_prices[best_variant]

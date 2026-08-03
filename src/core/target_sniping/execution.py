@@ -16,6 +16,7 @@ from typing import Any
 
 from src.config import Config
 from src.db.price_history import price_db
+from src.risk.dynamic_manager import DynamicRiskManager
 from src.strategies.twap import TWAPExecutor
 # P1-1: Lazy import
 
@@ -491,6 +492,53 @@ class _ExecutionMixin:
                             "price": {"amount": str(round(risk_check.adjusted_size_usd * 100)), "currency": "USD"},
                         }
                         base_price = risk_check.adjusted_size_usd  # Update local variable
+
+                # v18.3: DynamicRiskManager — Hybrid Kelly+Volatility sizing
+                # Evaluates risk-adjusted trade size before sending buy order.
+                # Rejects if soft halt is active (drawdown >= threshold).
+                if not hasattr(self, '_dynamic_risk'):
+                    self._dynamic_risk = DynamicRiskManager()
+                drawdown_pct = 0.0
+                if hasattr(self, 'risk') and hasattr(self.risk, '_daily_realized_pnl'):
+                    peak = getattr(self.risk, '_peak_equity', available_balance) or available_balance
+                    if peak > 0:
+                        drawdown_pct = max(0.0, (peak - available_balance) / peak)
+                trade_size_result = self._dynamic_risk.evaluate_trade_size(
+                    direction="BUY",
+                    original_amount=float(base_price),
+                    current_regime=0,  # Neutral regime (no HMM data in execution path)
+                    hawkes_intensity=0.0,  # No Hawkes data in execution path
+                    current_drawdown=drawdown_pct,
+                )
+                if trade_size_result is None:
+                    logger.warning(
+                        f"[DYNAMIC-RISK] BLOCKED {title} @ ${base_price:.2f}: "
+                        f"soft halt active (drawdown={drawdown_pct*100:.1f}%)"
+                    )
+                    with contextlib.suppress(Exception):
+                        await price_db.run_in_thread(
+                            price_db.record_risk_event,
+                            "dynamic_risk_block",
+                            "warning",
+                            f"{title} @ ${base_price:.2f}: soft halt drawdown={drawdown_pct*100:.1f}%",
+                        )
+                    continue
+                if trade_size_result <= 0:
+                    logger.warning(
+                        f"[DYNAMIC-RISK] BLOCKED {title} @ ${base_price:.2f}: "
+                        f"trade_size=${trade_size_result:.2f} <= 0"
+                    )
+                    continue
+                if trade_size_result < base_price:
+                    logger.info(
+                        f"[DYNAMIC-RISK] SIZED DOWN {title}: ${base_price:.2f} -> ${trade_size_result:.2f}"
+                    )
+                    item_data["base_price"] = trade_size_result
+                    item_data["buy_offer"] = {
+                        "offerId": item_id,
+                        "price": {"amount": str(round(trade_size_result * 100)), "currency": "USD"},
+                    }
+                    base_price = trade_size_result
 
                 # v12.5: capture the new row_id so we can attach dm_item_id
                 # in production (or leave it empty in DRY).
