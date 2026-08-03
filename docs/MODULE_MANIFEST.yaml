@@ -185,15 +185,15 @@ research:
   - src/api/rust_oracle.py
   - src/api/steam_oracle.py
   - src/api/waxpeer_oracle.py
-  - src/cot_audit/core.py
-  - src/cot_audit/test_core.py
-  - src/cot_audit/test_performance.py
-  - src/reflexion/core.py
-  - src/reflexion/test_core.py
-  - src/sandbox/core.py
-  - src/sandbox/test_core.py
-  - src/workflow/chains.py
-  - src/workflow/test_chains.py
+  - research/cot_audit/core.py
+  - research/cot_audit/test_core.py
+  - research/cot_audit/test_performance.py
+  - research/reflexion/core.py
+  - research/reflexion/test_core.py
+  - research/sandbox/core.py
+  - research/sandbox/test_core.py
+  - research/workflow/chains.py
+  - research/workflow/test_chains.py
 
 archived:
   - src/_archived/pair_trading.py
