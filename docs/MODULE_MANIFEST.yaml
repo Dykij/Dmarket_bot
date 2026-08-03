@@ -179,12 +179,12 @@ research:
   - src/analysis/algo_pack/sliding_window.py
   - src/analysis/algo_pack/thompson_sampling.py
   - src/analysis/algo_pack/vpin.py
-  - src/api/csfloat_oracle.py
-  - src/api/market_csgo_oracle.py
+  - src/_archived/oracles/csfloat_oracle.py
+  - src/_archived/oracles/market_csgo_oracle.py
   - src/_archived/oracles/multi_source_oracle.py
-  - src/api/rust_oracle.py
-  - src/api/steam_oracle.py
-  - src/api/waxpeer_oracle.py
+  - src/_archived/oracles/rust_oracle.py
+  - src/_archived/oracles/steam_oracle.py
+  - src/_archived/oracles/waxpeer_oracle.py
   - research/cot_audit/core.py
   - research/cot_audit/test_core.py
   - research/cot_audit/test_performance.py
