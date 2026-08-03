@@ -182,6 +182,18 @@ class _ResaleProdMixin:
                     )
                 except Exception as e:
                     logger.debug(f"risk.record_trade_outcome (sell) failed: {e}")
+            # v18.3: Record trade outcome for DynamicRiskManager Kelly statistics
+            if not hasattr(self, '_dynamic_risk'):
+                from src.risk.dynamic_manager import DynamicRiskManager
+                self._dynamic_risk = DynamicRiskManager()
+            try:
+                self._dynamic_risk.record_trade(
+                    won=profit > 0,
+                    profit_usd=profit if profit > 0 else 0.0,
+                    loss_usd=abs(profit) if profit < 0 else 0.0,
+                )
+            except Exception as e:
+                logger.debug(f"dynamic_risk.record_trade failed: {e}")
             # v18.2: Record sell in persistent trade history
             try:
                 from src.db.profit_tracker import db as profit_db

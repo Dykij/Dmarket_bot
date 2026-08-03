@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import pytest
 
-from src.analytics.rare_valuation import RareValuationEngine
+from src._archived.rare_valuation import RareValuationEngine
 
 
 # =====================================================================

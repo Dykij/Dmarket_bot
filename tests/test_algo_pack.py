@@ -38,7 +38,7 @@ from src.analysis.algo_pack.bayesian_stats import (
     BetaDistribution,
     bayesian_kelly,
 )
-from src.analysis.algo_pack.spread_optimizer import (
+from src._archived.spread_optimizer import (
     find_optimal_min_spread,
     estimate_spread_distribution,
 )

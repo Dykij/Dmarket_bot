@@ -498,11 +498,15 @@ class _ExecutionMixin:
                 # Rejects if soft halt is active (drawdown >= threshold).
                 if not hasattr(self, '_dynamic_risk'):
                     self._dynamic_risk = DynamicRiskManager()
+                # P1d: Use equity (balance + inventory value) for drawdown, not cash alone.
+                # Cash drops on buy, but that's not a loss — inventory has value.
                 drawdown_pct = 0.0
-                if hasattr(self, 'risk') and hasattr(self.risk, '_daily_realized_pnl'):
-                    peak = getattr(self.risk, '_peak_equity', available_balance) or available_balance
+                if hasattr(self, 'risk'):
+                    # Use _current_equity if available (updated by risk_manager)
+                    equity = getattr(self.risk, '_current_equity', available_balance) or available_balance
+                    peak = getattr(self.risk, '_peak_equity', equity) or equity
                     if peak > 0:
-                        drawdown_pct = max(0.0, (peak - available_balance) / peak)
+                        drawdown_pct = max(0.0, (peak - equity) / peak)
                 trade_size_result = self._dynamic_risk.evaluate_trade_size(
                     direction="BUY",
                     original_amount=float(base_price),
@@ -530,15 +534,12 @@ class _ExecutionMixin:
                     )
                     continue
                 if trade_size_result < base_price:
+                    # P1c: REJECT rather than rewrite — skins are indivisible,
+                    # can't buy a $10 skin for $2.
                     logger.info(
-                        f"[DYNAMIC-RISK] SIZED DOWN {title}: ${base_price:.2f} -> ${trade_size_result:.2f}"
+                        f"[DYNAMIC-RISK] REJECT {title}: risk size ${trade_size_result:.2f} < item price ${base_price:.2f}"
                     )
-                    item_data["base_price"] = trade_size_result
-                    item_data["buy_offer"] = {
-                        "offerId": item_id,
-                        "price": {"amount": str(round(trade_size_result * 100)), "currency": "USD"},
-                    }
-                    base_price = trade_size_result
+                    continue
 
                 # v12.5: capture the new row_id so we can attach dm_item_id
                 # in production (or leave it empty in DRY).
