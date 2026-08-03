@@ -230,7 +230,7 @@ async def cmd_sell_top(message):
 async def cmd_prices(message):
     logger.info("cmd_prices by user %s", message.from_user.id)
     try:
-        from src.api.oracle_factory import OracleFactory
+        from src._archived.oracles.oracle_factory import OracleFactory
         idle = price_db.get_virtual_inventory(status="idle", only_unlocked=False)
         if not idle:
             await message.answer("📊 *Prices* — No items in inventory.")

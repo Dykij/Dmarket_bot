@@ -17,7 +17,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 
 from src.api.dmarket_api_client import DMarketAPIClient
-from src.api.multi_source_oracle import MultiSourceOracle
+from src._archived.oracles.multi_source_oracle import MultiSourceOracle
 from src.config import Config
 
 from ..formatters import escape_md

@@ -223,7 +223,7 @@ class _PositionGuardMixin:
             except Exception as e:
                 logger.debug(f"[POSITION-GUARD] Oracle price fetch failed for {hash_name}: {e}")
 
-        from src.api.oracle_factory import OracleFactory
+        from src._archived.oracles.oracle_factory import OracleFactory
         # P2-12: Use Config.GAME_ID instead of hardcoded "a8db"
         from src.config import Config
         oracle = OracleFactory.get_oracle(getattr(Config, 'GAME_ID', 'a8db'))

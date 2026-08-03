@@ -38,7 +38,7 @@ class OracleFactory:
                 "(Market.CSGO + Waxpeer + CSFloat + Steam)"
             )
         elif game_id == "rust":
-            from src.api.rust_oracle import RustOracle
+            from src._archived.oracles.rust_oracle import RustOracle
             cls._oracles[game_id] = RustOracle()
         else:
             return None
@@ -50,7 +50,7 @@ class OracleFactory:
     def _get_multi_source(cls) -> Any:
         """Get or create the MultiSourceOracle singleton."""
         if cls._multi_source is None:
-            from src.api.multi_source_oracle import multi_source_oracle
+            from src._archived.oracles.multi_source_oracle import multi_source_oracle
             cls._multi_source = multi_source_oracle
         return cls._multi_source
 

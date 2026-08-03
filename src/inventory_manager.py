@@ -14,7 +14,7 @@ import time
 from typing import Any
 
 from src.api.dmarket_api_client import DMarketAPIClient
-from src.api.oracle_factory import OracleFactory
+from src._archived.oracles.oracle_factory import OracleFactory
 from src.config import Config
 from src.db.price_history import price_db
 

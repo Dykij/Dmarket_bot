@@ -13,7 +13,7 @@ import random
 import time
 from typing import Any
 
-from src.api.oracle_factory import OracleFactory
+from src._archived.oracles.oracle_factory import OracleFactory
 from src.db.price_history import price_db
 # P1-1: Lazy import to break core→telegram layer coupling
 

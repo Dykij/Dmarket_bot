@@ -24,9 +24,9 @@ from typing import Any
 
 from src.api.candle_builder import Candle, candle_builder
 from src.api.fair_price_calculator import FairPriceCalculator, FairPriceResult
-from src.api.market_csgo_oracle import MarketCsgoOracle
-from src.api.steam_oracle import SteamOracle
-from src.api.waxpeer_oracle import WaxpeerOracle
+from src._archived.oracles.market_csgo_oracle import MarketCsgoOracle
+from src._archived.oracles.steam_oracle import SteamOracle
+from src._archived.oracles.waxpeer_oracle import WaxpeerOracle
 
 logger = logging.getLogger("MultiSourceOracle")
 
@@ -147,7 +147,7 @@ class MultiSourceOracle:
             try:
                 import os
 
-                from src.api.csfloat_oracle import CSFloatOracle
+                from src._archived.oracles.csfloat_oracle import CSFloatOracle
                 key = os.getenv("CSFLOAT_API_KEY", "")
                 self.csfloat = CSFloatOracle(api_key=key)
             except Exception:
