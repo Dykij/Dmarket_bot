@@ -1,0 +1,17 @@
+# Vulture Exceptions — Known false positives
+# These are NOT dead code — they are used by frameworks, type checkers, or test fixtures.
+
+# src/types/protocols.py:24 — Protocol variable, used by type checker
+params_list
+
+# src/utils/database.py:36 — SQLAlchemy settings, used by framework
+settings
+
+# tests/e2e/conftest.py:25 — Test fixture variable, used by pytest
+btn
+
+# tests/test_logging_config.py:18 — Test fixture, used by pytest
+suppress_logs
+
+# tests/test_logging_config.py:29 — Test fixture, used by pytest
+enable_debug_logs

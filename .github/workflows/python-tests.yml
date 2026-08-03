@@ -43,4 +43,3 @@ jobs:
     - name: Dead code check (vulture)
       run: |
         vulture src/ tests/ --min-confidence=80
-      continue-on-error: true
