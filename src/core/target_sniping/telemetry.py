@@ -26,7 +26,6 @@ class _TelemetryMixin:
     """Health-state, equity milestones, and per-cycle diagnostics."""
 
     client: Any
-    multi_source_oracle: Any | None
     deep_scan_counter: int
     risk: Any
     pump_detector: Any
@@ -56,9 +55,6 @@ class _TelemetryMixin:
                     blacklist_size=pd_stats["active_blacklist_size"],
                     total_detections=pd_stats["total_detections"],
                 )
-            if self.multi_source_oracle is not None:
-                self.multi_source_oracle.get_stats()
-                health_state.set_oracle_sources_active(0)  # No quota for free oracle
         except Exception as e:
             logger.debug(f"[health_state] update failed: {e}")
 
@@ -91,17 +87,9 @@ class _TelemetryMixin:
         )
 
         if self.deep_scan_counter % 10 == 0:
-            oracle_stats = (
-                self.multi_source_oracle.get_stats()
-                if self.multi_source_oracle is not None
-                else {"cached_refs": 0, "marketcsgo": {"items_cached": 0}}
-            )
             cb_stats = self.client.circuit_breaker_status()
             logger.info(
-                f"[v15.0 DIAG] MultiSource: {oracle_stats.get('cached_refs', 0)} refs, "
-                f"MCsgo={oracle_stats.get('marketcsgo', {}).get('items_cached', 0)} items, "
-                f"Waxpeer={oracle_stats.get('waxpeer', {}).get('items_cached', 0)} items | "
-                f"CB: state={cb_stats['state']}, "
+                f"[v15.0 DIAG] CB: state={cb_stats['state']}, "
                 f"opens={cb_stats['total_opens']}, "
                 f"fails={cb_stats['consecutive_failures']}"
             )

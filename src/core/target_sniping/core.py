@@ -77,7 +77,6 @@ class SnipingLoop(  # type: ignore[misc]
 
         self._prev_agg_prices: dict[str, Any] = {}
         self._prev_agg_prices_prior: dict[str, Any] = {}
-        self.multi_source_oracle: Any | None = None
         self.oracle: Any | None = None
         self._sales_cache: dict[str, Any] = {}
         self._failed_offer_ids: dict[str, float] = {}  # OfferNotFound blacklist {id: ts}

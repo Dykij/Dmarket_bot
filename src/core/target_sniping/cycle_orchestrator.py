@@ -61,7 +61,6 @@ class CycleOrchestrator:
     deep_scan_counter: int
     reprice_counter: int
     empty_page_count: int
-    multi_source_oracle: Any
     pump_detector: Any
     risk: Any
     self_reflection: Any
@@ -91,8 +90,11 @@ class CycleOrchestrator:
 
     async def _stage_prepare(self, ctx: CycleContext) -> CycleContext:
         """Stage 1: Prepare cycle — counters, balance, oracle."""
-        from src.api.oracle_factory import OracleFactory
         from src.utils.health_server import health_state
+
+        # Oracle archived — multi_source_oracle deprecated for demand strategy
+        ctx.oracle = None
+        self.oracle = None
 
         try:
             health_state.mark_cycle(0.0, 0.0, 0.0)
@@ -120,8 +122,6 @@ class CycleOrchestrator:
             ctx.dynamic_max_price = Config.MAX_SNIPING_PRICE_USD
         ctx.dynamic_max_price = min(ctx.dynamic_max_price, ctx.effective_balance)
 
-        ctx.oracle = OracleFactory.get_oracle(ctx.game_id)
-        self.oracle = ctx.oracle
         return ctx
 
     async def _stage_scan(self, ctx: CycleContext) -> CycleContext:
@@ -246,17 +246,6 @@ class CycleOrchestrator:
                 ctx.bulk_fees = await self.client.get_item_fee_bulk(ctx.game_id, candidate_ids)
             except Exception:
                 ctx.bulk_fees = {}
-
-        # MultiSource oracle
-        if self.multi_source_oracle is not None:
-            try:
-                top_titles = list(ctx.agg_prices.keys())[:Config.ORACLE_TOP_K_VALIDATE]
-                fair_prices = await self.multi_source_oracle.get_fair_prices_batch(top_titles)
-                for t, fp in fair_prices.items():
-                    if fp and fp.fair_price > 0:
-                        ctx.cs_snapshots[t] = fp
-            except Exception as e:
-                logger.debug(f"[MultiSource] batch failed: {e}")
 
         # Pump detection
         if self.pump_detector is not None:
