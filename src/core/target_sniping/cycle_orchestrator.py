@@ -560,6 +560,26 @@ class CycleOrchestrator:
         except Exception as e:
             logger.debug(f"[BALANCE] post-sell check failed: {e}")
 
+        # P1g: Update equity at end of cycle for accurate drawdown calculation
+        # equity = available balance + value of open inventory (by best_bid)
+        try:
+            if hasattr(self, 'risk') and hasattr(self.risk, '_update_equity'):
+                inventory_value = 0.0
+                if hasattr(self, 'inventory_mgr') and self.inventory_mgr:
+                    try:
+                        open_items = await price_db.run_in_thread(price_db.get_virtual_inventory)
+                        for item in open_items:
+                            title = item.get("hash_name", "")
+                            if title and title in ctx.agg_prices:
+                                bid = ctx.agg_prices[title].get("best_bid", 0) or 0
+                                inventory_value += bid
+                    except Exception:
+                        pass
+                total_equity = ctx.balance_after + inventory_value
+                self.risk._update_equity(total_equity)
+        except Exception as e:
+            logger.debug(f"[EQUITY] update failed: {e}")
+
         # Telemetry
         try:
             risk_state = self.risk.get_state()

@@ -498,6 +498,25 @@ class _ExecutionMixin:
                 # Rejects if soft halt is active (drawdown >= threshold).
                 if not hasattr(self, '_dynamic_risk'):
                     self._dynamic_risk = DynamicRiskManager()
+                    # P1f: Warm up Kelly statistics from ProfitTracker historical trades
+                    try:
+                        from src.db.profit_tracker import db as profit_db
+                        recent_trades = profit_db.get_recent_trades(days=30)
+                        if recent_trades:
+                            for t in recent_trades:
+                                net = t.get("net_profit", 0) or 0
+                                self._dynamic_risk.record_trade(
+                                    won=net > 0,
+                                    profit_usd=net if net > 0 else 0.0,
+                                    loss_usd=abs(net) if net < 0 else 0.0,
+                                )
+                            logger.info(
+                                f"[KELLY-WARMUP] Loaded {len(recent_trades)} historical trades: "
+                                f"win_rate={self._dynamic_risk.win_rate:.2f}, "
+                                f"wl_ratio={self._dynamic_risk.win_loss_ratio:.2f}"
+                            )
+                    except Exception as e:
+                        logger.debug(f"[KELLY-WARMUP] Failed to load history: {e}")
                 # P1d: Use equity (balance + inventory value) for drawdown, not cash alone.
                 # Cash drops on buy, but that's not a loss — inventory has value.
                 drawdown_pct = 0.0
