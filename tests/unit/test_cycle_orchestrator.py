@@ -19,14 +19,12 @@ def _make_orchestrator() -> MagicMock:
     orch.deep_scan_counter = 0
     orch.reprice_counter = 0
     orch.empty_page_count = 0
-    orch.multi_source_oracle = None
     orch.pump_detector = None
     orch.risk = MagicMock()
     orch.self_reflection = MagicMock()
     orch._prev_agg_prices = {}
     orch._sales_cache = {}
     orch.resale_cycle_limit = 1
-    orch._clear_oracle_cache = MagicMock()
     orch._sync_inventory_statuses = AsyncMock()
     orch._fetch_cheapest_listings = AsyncMock(return_value=[])
     orch._fetch_float_phase_listings = AsyncMock(return_value=[])
@@ -49,7 +47,6 @@ class TestCycleContext:
         assert ctx.current_balance == 0.0
         assert ctx.effective_balance == 0.0
         assert ctx.dynamic_max_price == 0.0
-        assert ctx.oracle is None
         assert ctx.agg_prices == {}
         assert ctx.items == []
         assert ctx.instant_buys == []
@@ -119,7 +116,7 @@ class TestStageScan:
         orch.client.get_aggregated_prices = AsyncMock(return_value={})
 
         ctx = _make_ctx()
-        ctx.oracle = MagicMock()
+
         result = await CycleOrchestrator._stage_scan(orch, ctx)
 
         assert result.agg_prices == {}
@@ -141,7 +138,7 @@ class TestStageScan:
         orch._run_secondary_scans = AsyncMock(side_effect=_fake_secondary)
 
         ctx = _make_ctx()
-        ctx.oracle = MagicMock()
+
         result = await CycleOrchestrator._stage_scan(orch, ctx)
 
         assert len(result.agg_prices) == 1
@@ -153,7 +150,7 @@ class TestStageScan:
         orch.client.get_aggregated_prices = AsyncMock(side_effect=Exception("API down"))
 
         ctx = _make_ctx()
-        ctx.oracle = MagicMock()
+
         result = await CycleOrchestrator._stage_scan(orch, ctx)
 
         assert result.agg_prices == {}
@@ -173,7 +170,7 @@ class TestStageScanExtended:
 
         ctx = _make_ctx()
         ctx.effective_balance = 100.0
-        ctx.oracle = MagicMock()
+
 
         with patch("src.core.target_sniping.cycle_orchestrator.Config") as mock_config:
             mock_config.CAPITAL_VELOCITY_ENABLED = True
@@ -195,7 +192,7 @@ class TestStageScanExtended:
 
         ctx = _make_ctx()
         ctx.effective_balance = 100.0
-        ctx.oracle = MagicMock()
+
 
         with patch("src.core.target_sniping.cycle_orchestrator.Config") as mock_config:
             mock_config.CAPITAL_VELOCITY_ENABLED = True
@@ -219,7 +216,7 @@ class TestStageScanExtended:
         orch._run_secondary_scans = AsyncMock(side_effect=lambda ctx, cursor: ctx.items)
 
         ctx = _make_ctx()
-        ctx.oracle = MagicMock()
+
 
         with patch("src.core.target_sniping.cycle_orchestrator.Config") as mock_config:
             mock_config.CAPITAL_VELOCITY_ENABLED = False
@@ -318,7 +315,7 @@ class TestStagePrefetch:
             {"itemId": "i2", "price": {"USD": "2000"}},
         ]
         ctx.agg_prices = {}
-        ctx.cs_snapshots = {}
+
 
         with patch("src.core.target_sniping.cycle_orchestrator.Config") as mock_config:
             mock_config.ORACLE_TOP_K_VALIDATE = 10
@@ -339,7 +336,7 @@ class TestStagePrefetch:
         ctx = _make_ctx()
         ctx.items = [{"itemId": "i1", "price": {"USD": "1000"}}]
         ctx.agg_prices = {}
-        ctx.cs_snapshots = {}
+
 
         with patch("src.core.target_sniping.cycle_orchestrator.Config") as mock_config:
             mock_config.ORACLE_TOP_K_VALIDATE = 10
@@ -352,30 +349,6 @@ class TestStagePrefetch:
 
     @pytest.mark.asyncio
     @patch("src.core.target_sniping.cycle_orchestrator.price_db")
-    async def test_prefetch_multi_source_oracle(self, mock_db):
-        """Prefetch fetches oracle prices (lines 199-207)."""
-        orch = _make_orchestrator()
-        orch.multi_source_oracle = AsyncMock()
-        snap = MagicMock()
-        snap.fair_price = 15.0
-        orch.multi_source_oracle.get_fair_prices_batch = AsyncMock(return_value={"AK-47": snap})
-
-        ctx = _make_ctx()
-        ctx.items = []
-        ctx.agg_prices = {"AK-47": {"best_ask": 10.0}}
-        ctx.cs_snapshots = {}
-
-        with patch("src.core.target_sniping.cycle_orchestrator.Config") as mock_config:
-            mock_config.ORACLE_TOP_K_VALIDATE = 10
-            mock_config.CVD_ENABLED = False
-            mock_config.VWAP_FILTER_ENABLED = False
-            mock_config.VPIN_ENABLED = False
-            result = await CycleOrchestrator._stage_prefetch(orch, ctx)
-
-        assert "AK-47" in result.cs_snapshots
-
-    @pytest.mark.asyncio
-    @patch("src.core.target_sniping.cycle_orchestrator.price_db")
     async def test_prefetch_pump_detection(self, mock_db):
         """Prefetch runs pump detection (lines 210-214)."""
         orch = _make_orchestrator()
@@ -384,7 +357,7 @@ class TestStagePrefetch:
         ctx = _make_ctx()
         ctx.items = []
         ctx.agg_prices = {"AK-47": {"best_ask": 10.0}}
-        ctx.cs_snapshots = {}
+
 
         with patch("src.core.target_sniping.cycle_orchestrator.Config") as mock_config:
             mock_config.ORACLE_TOP_K_VALIDATE = 10
@@ -405,7 +378,7 @@ class TestStagePrefetch:
         ctx = _make_ctx()
         ctx.items = []
         ctx.agg_prices = {"AK-47": {"best_ask": 10.0}}
-        ctx.cs_snapshots = {}
+
 
         with patch("src.core.target_sniping.cycle_orchestrator.Config") as mock_config:
             mock_config.ORACLE_TOP_K_VALIDATE = 10
@@ -426,7 +399,7 @@ class TestStagePrefetch:
         ctx = _make_ctx()
         ctx.items = []
         ctx.agg_prices = {}
-        ctx.cs_snapshots = {}
+
 
         with patch("src.core.target_sniping.cycle_orchestrator.Config") as mock_config:
             mock_config.ORACLE_TOP_K_VALIDATE = 10
@@ -449,7 +422,7 @@ class TestStageEvaluate:
         ctx.items = []
         ctx.agg_prices = {}
         ctx.bulk_fees = {}
-        ctx.cs_snapshots = {}
+
         ctx.current_margin = 0.05
         result = await CycleOrchestrator._stage_evaluate(orch, ctx)
 
@@ -468,7 +441,7 @@ class TestStageEvaluate:
         ctx.items = [{"itemId": "i1", "title": "AK-47", "price": {"USD": "1000"}}]
         ctx.agg_prices = {"AK-47": {"best_ask": 10.0}}
         ctx.bulk_fees = {}
-        ctx.cs_snapshots = {}
+
         ctx.current_margin = 0.05
 
         with patch("src.core.target_sniping.ranking.rank_candidates_by_spread", return_value=ctx.items):
@@ -488,7 +461,7 @@ class TestStageEvaluate:
         ctx.items = [{"itemId": "i1", "title": "AK-47", "price": {"USD": "1000"}}]
         ctx.agg_prices = {"AK-47": {"best_ask": 10.0}}
         ctx.bulk_fees = {}
-        ctx.cs_snapshots = {}
+
         ctx.current_margin = 0.05
 
         with patch("src.core.target_sniping.ranking.rank_candidates_by_spread", return_value=ctx.items):
@@ -635,7 +608,7 @@ class TestStageOrder:
         class OrderedOrchestrator(CycleOrchestrator):
             async def _stage_prepare(self, ctx):
                 call_order.append("prepare")
-                ctx.oracle = MagicMock()
+        
                 return ctx
 
             async def _stage_scan(self, ctx):
@@ -684,7 +657,6 @@ class TestPrepareExtended:
 
         with (
             patch("src.utils.health_server.health_state") as mock_hs,
-            patch("src.api.oracle_factory.OracleFactory"),
         ):
             mock_hs.mark_cycle.side_effect = Exception("health error")
             ctx = _make_ctx()
@@ -699,36 +671,13 @@ class TestPrepareExtended:
         orch.deep_scan_counter = 19  # next will be 20
         orch.client.get_real_balance = AsyncMock(return_value=100.0)
 
-        with patch("src.api.oracle_factory.OracleFactory"):
-            ctx = _make_ctx()
-            await CycleOrchestrator._stage_prepare(orch, ctx)
+        ctx = _make_ctx()
+        await CycleOrchestrator._stage_prepare(orch, ctx)
 
         orch._sync_inventory_statuses.assert_called_once()
 
 
 class TestPrefetchExtended:
-
-    @pytest.mark.asyncio
-    @patch("src.core.target_sniping.cycle_orchestrator.price_db")
-    async def test_oracle_exception_handled(self, mock_db):
-        """MultiSource oracle exception is caught (lines 206-207)."""
-        orch = _make_orchestrator()
-        orch.multi_source_oracle = AsyncMock()
-        orch.multi_source_oracle.get_fair_prices_batch = AsyncMock(side_effect=Exception("oracle error"))
-
-        ctx = _make_ctx()
-        ctx.items = []
-        ctx.agg_prices = {"AK-47": {"best_ask": 10.0}}
-        ctx.cs_snapshots = {}
-
-        with patch("src.core.target_sniping.cycle_orchestrator.Config") as mock_config:
-            mock_config.ORACLE_TOP_K_VALIDATE = 10
-            mock_config.CVD_ENABLED = False
-            mock_config.VWAP_FILTER_ENABLED = False
-            mock_config.VPIN_ENABLED = False
-            result = await CycleOrchestrator._stage_prefetch(orch, ctx)
-
-        assert result.cs_snapshots == {}
 
     @pytest.mark.asyncio
     @patch("src.core.target_sniping.cycle_orchestrator.price_db")
@@ -740,7 +689,7 @@ class TestPrefetchExtended:
         ctx = _make_ctx()
         ctx.items = []
         ctx.agg_prices = {"AK-47": {"best_ask": 10.0}}
-        ctx.cs_snapshots = {}
+
 
         with patch("src.core.target_sniping.cycle_orchestrator.Config") as mock_config:
             mock_config.ORACLE_TOP_K_VALIDATE = 10

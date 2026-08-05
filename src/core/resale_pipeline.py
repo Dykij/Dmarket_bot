@@ -22,7 +22,6 @@ from typing import Any
 
 from src.analytics.self_reflection import self_reflection
 from src.api.dmarket_api_client import DMarketAPIClient
-from src._archived.oracles.oracle_factory import OracleFactory
 from src.config import Config
 from src.db.price_history import price_db
 from src.risk.price_validator import PriceValidationError, validate_arbitrage_profit
@@ -38,7 +37,7 @@ class ResalePipeline:
     def __init__(self, api_client: DMarketAPIClient, risk=None):
         from src.risk.risk_manager import RiskManager
         self.api = api_client
-        self.oracle = OracleFactory.get_cross_market_oracle(Config.GAME_ID)
+        self.oracle = None  # Oracle removed — pipeline uses DMarket-internal data only
         self._sell_price_cache: dict[str, tuple[float, float]] = {}  # hash_name -> (price, ts)
         self._risk = risk or RiskManager()
 
@@ -132,24 +131,11 @@ class ResalePipeline:
         if price_db.has_target_been_placed(item_id):
             return None
 
-        # Check oracle for reference price
-        oracle_price = 0.0
-        cross_data = None
-
-        if self.oracle:
-            try:
-                oracle_price = await self.oracle.get_item_price(title)
-                cross_data = await self.oracle.get_cross_market_data(title)
-            except Exception as e:
-                logger.debug(f"Oracle fetch failed for {title}: {e}")
-
-        if oracle_price <= 0:
-            return None
-
-        # Calculate margin: oracle best price vs DMarket buy price
-        # We'll sell on DMarket at ~oracle price (or slightly below to undercut)
-        estimated_sell_price = oracle_price * 0.98  # Slight undercut for faster sale
+        # Estimate sell price from DMarket listing price + margin (oracle removed)
+        # Conservative: target buy_price * (1 + min_spread + fees)
         fee_rate = await self.api.get_item_fee(Config.GAME_ID, item_id, price_cents)
+        target_margin = Config.MIN_SPREAD_PCT / 100.0 + Config.FEE_RATE + Config.WITHDRAWAL_FEE_RATE
+        estimated_sell_price = buy_price * (1 + target_margin)
 
         # Turnover penalty
         turnover_penalty = self._get_turnover_penalty()
@@ -187,11 +173,10 @@ class ResalePipeline:
         price_db.add_virtual_item(title, buy_price, trade_lock_hours=Config.TRADE_LOCK_HOURS)
         price_db.record_placed_target(item_id, title, buy_price)
 
-        # Calculate sell price based on oracle
+        # Calculate sell price
         sell_price = self._calculate_sell_price(
             buy_price=buy_price,
-            oracle_price=oracle_price,
-            cross_data=cross_data,
+            reference_price=estimated_sell_price,
             fee_rate=fee_rate,
         )
 
@@ -200,7 +185,7 @@ class ResalePipeline:
 
         logger.info(
             f"{log_prefix}BOUGHT: {title} @ ${buy_price:.2f} | "
-            f"Oracle: ${oracle_price:.2f} -> Sell target: ${sell_price:.2f} | "
+            f"Sell target: ${sell_price:.2f} | "
             f"Margin: {net_margin*100:.1f}%"
         )
 
@@ -208,7 +193,7 @@ class ResalePipeline:
             "item_id": item_id,
             "title": title,
             "buy_price": buy_price,
-            "oracle_price": oracle_price,
+            "reference_price": estimated_sell_price,
             "estimated_sell_price": sell_price,
             "net_margin_pct": net_margin * 100,
             "fee_rate": fee_rate,
@@ -238,42 +223,34 @@ class ResalePipeline:
         candidates = items[:max_items]
         unique_titles = list({it['hash_name'] for it in candidates})
 
-        # --- 1. Oracle batch (1 call for all unique titles) ---
+        # --- 1. Reference prices from DMarket aggregated data (oracle removed) ---
+        # Fetch aggregated prices for unique titles
         cs_prices: dict[str, float] = {}
-        if self.oracle and unique_titles:
-            try:
-                snapshots = await self.oracle.get_prices_batch(unique_titles)
-                cs_prices = {
-                    title: snap.min_price
-                    for title, snap in snapshots.items()
-                    if snap.has_data
-                }
-            except AttributeError:
-                # Fallback for CSFloat fallback oracle (no batch endpoint)
-                for title in unique_titles:
-                    try:
-                        p = await self.oracle.get_item_price(title)
-                        if p > 0:
-                            cs_prices[title] = p
-                    except Exception as e:
-                        logger.debug(f"Oracle fallback price check failed for {title}: {e}")
-            except Exception as e:
-                logger.debug(f"Oracle batch price check failed: {e}")
+        try:
+            agg = await self.api.get_aggregated_prices(Config.GAME_ID, titles=unique_titles)
+            cs_prices = {
+                title: data.get("best_bid", 0.0)
+                for title, data in agg.items()
+                if data.get("best_bid", 0) > 0
+            }
+        except Exception as e:
+            logger.debug(f"[RESALE] Aggregated prices fetch failed: {e}")
 
         # --- 2. Build the list of (item, sell_price) that pass the
         #    profitability filter. ---
+        target_margin = Config.MIN_SPREAD_PCT / 100.0 + Config.FEE_RATE + Config.WITHDRAWAL_FEE_RATE
         ready_to_list: list[tuple[Any, float, float]] = []  # (item, sell_price, profit_pct)
         for item in candidates:
             title = item['hash_name']
             buy_price = item['buy_price']
-            oracle_price = cs_prices.get(title, 0.0)
-            if oracle_price <= 0:
-                continue
+            reference_price = cs_prices.get(title, 0.0)
+            if reference_price <= 0:
+                # Fallback: estimate from buy_price + margin
+                reference_price = buy_price * (1 + target_margin)
 
             sell_price = self._calculate_sell_price(
                 buy_price=buy_price,
-                oracle_price=oracle_price,
-                cross_data=None,
+                reference_price=reference_price,
                 fee_rate=Config.FEE_RATE,
             )
             net_after_sell = sell_price * (1 - Config.FEE_RATE)
@@ -404,34 +381,24 @@ class ResalePipeline:
     def _calculate_sell_price(
         self,
         buy_price: float,
-        oracle_price: float,
-        cross_data: Any | None,
+        reference_price: float,
         fee_rate: float,
     ) -> float:
         """
-        Calculate optimal sell price on DMarket based on oracle data.
-        Strategy: undercut oracle min by 2% for faster sale,
-        but ensure minimum profit margin.
+        Calculate optimal sell price on DMarket.
+        Strategy: use reference price, ensure minimum profit margin after fees.
         """
-        if oracle_price <= 0:
+        if reference_price <= 0:
             return buy_price * 1.10  # Fallback: 10% margin
 
-        # Base: slightly below oracle min ask
-        target_sell = oracle_price * 0.98
-
-        # Check cross-market data for better pricing
-        if cross_data and hasattr(cross_data, 'global_max_bid') and cross_data.global_max_bid > 0:
-            # If there's a buy order above our target, price to fill it
-            if cross_data.global_max_bid > target_sell * 0.95:
-                target_sell = min(target_sell, cross_data.global_max_bid * 0.99)
+        target_sell = reference_price
 
         # Ensure minimum profit after fees
         min_sell_for_profit = buy_price * (1 + float(Config.MIN_SPREAD_PCT) / 100.0) / (1 - fee_rate)
         target_sell = max(target_sell, min_sell_for_profit)
 
-        # Don't exceed oracle price (no point listing much higher)
-        # But if min margin requires higher price, allow up to 10% above oracle
-        max_allowed = oracle_price * 1.10
+        # Don't exceed reference price by more than 10%
+        max_allowed = reference_price * 1.10
         target_sell = min(target_sell, max_allowed)
 
         return round(target_sell, 2)
@@ -494,5 +461,4 @@ class ResalePipeline:
         return self._turnover_mm.calculate_turnover_penalty()
 
     async def close(self):
-        if self.oracle:
-            await self.oracle.close()
+        pass  # Oracle removed — no resources to close

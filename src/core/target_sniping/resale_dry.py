@@ -13,7 +13,6 @@ import random
 import time
 from typing import Any
 
-from src._archived.oracles.oracle_factory import OracleFactory
 from src.db.price_history import price_db
 # P1-1: Lazy import to break core→telegram layer coupling
 
@@ -30,7 +29,6 @@ class _ResaleDryMixin:
     """Simulated resale — no real DMarket API calls."""
 
     client: Any
-    oracle: Any
 
     def _dry_simulate_sales(self) -> None:
         """DRY: Mark some `listed` items as sold (40% per cycle)."""
@@ -77,14 +75,8 @@ class _ResaleDryMixin:
 
     async def _dry_list_unlocked(self, items: list[Any], game_id: str) -> None:
         """DRY: Simulate listing unlocked items at buy_price * 1.05."""
-        oracle = OracleFactory.get_oracle(game_id)
         for item in items:
-            current_price = 0.0
-            if oracle:
-                with contextlib.suppress(Exception):
-                    current_price = await oracle.get_item_price(item["hash_name"])
-            if current_price <= 0:
-                current_price = item["buy_price"] * 1.05
+            current_price = item["buy_price"] * 1.05
             buy_price = item["buy_price"]
             target_sell = round(buy_price * 1.05, 2)
             if current_price < target_sell:

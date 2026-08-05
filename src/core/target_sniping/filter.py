@@ -20,7 +20,6 @@ from src.core.target_sniping.ranking import rank_candidates_by_spread
 from src.core.target_sniping.validations import (
     check_bait_detection,
     compute_microstructure_scores,
-    evaluate_cross_market_arb,
     evaluate_fee_slippage_tod,
 )
 from src.db.price_history import price_db
@@ -46,20 +45,6 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
     @staticmethod
     def is_dirty_bs(attrs: dict[str, Any]) -> bool: ...  # type: ignore[empty-body]
 
-    # v12.7: Per-cycle oracle price cache (P1-5).
-    # Avoids duplicate HTTP calls for the same title within a single cycle.
-    # Cleared at the start of each run_cycle via _clear_oracle_cache().
-    _oracle_price_cache: dict[str, float]
-
-    def _ensure_oracle_cache(self) -> None:
-        if not hasattr(self, '_oracle_price_cache') or not isinstance(self._oracle_price_cache, dict):
-            object.__setattr__(self, '_oracle_price_cache', {})
-
-    def _clear_oracle_cache(self) -> None:
-        """Clear the per-cycle oracle price cache. Called at start of run_cycle."""
-        self._ensure_oracle_cache()
-        self._oracle_price_cache.clear()
-
     @staticmethod
     def _rank_candidates_by_spread(
         items: list[dict[str, Any]],
@@ -73,13 +58,10 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
         *,
         item: dict[str, Any],
         game_id: str,
-        oracle: Any,
         agg_prices: dict[str, dict[str, Any]],
         bulk_fees: dict[str, float],
         current_balance: float,
         current_margin: float,
-        cs_snapshots: dict[str, Any] | None = None,
-        cs_bids: dict[str, Any] | None = None,
         saturation_counts: dict[str, int] | None = None,
         effective_balance: float | None = None,
         dynamic_max_price: float | None = None,
@@ -90,10 +72,7 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
         Returns a dict {buy_offer, title, item_id, base_price, list_price,
         best_bid, best_ask} if the item passes all filters; None otherwise.
 
-        cs_snapshots: optional dict {title: PriceSnapshot} pre-populated by the
-        caller via a single oracle /prices/batch call. When supplied, the
-        oracle validation step here is a dict lookup (free) instead of a
-        per-item HTTP call. Falls back to per-item oracle.get_item_price
+        agg_prices: DMarket aggregated prices (best_bid, best_ask, counts)
         only if the title is missing from the snapshots (selective mode miss).
         """
 
@@ -236,21 +215,9 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
         if not hasattr(self, "_diag_cycle_id") or self._diag_cycle_id != getattr(self, "_cur_cycle", -1):
             self._diag_cycle_id = getattr(self, "_cur_cycle", -1)
             agg_keys = list(agg_prices.keys())[:3] if agg_prices else []
-            cs_keys = list((cs_snapshots or {}).keys())[:3]
-            cs_bid_keys = list((cs_bids or {}).keys())[:3]
             logger.info(
                 f"[DIAG] item={title!r} base=${base_price:.2f} | "
-                f"agg_titles={len(agg_prices)} (sample={agg_keys}) | "
-                f"cs_snap_titles={len(cs_snapshots or {})} (sample={cs_keys}) | "
-                f"cs_bid_titles={len(cs_bids or {})} (sample={cs_bid_keys})"
-            )
-        # Per-item diag for top-5 candidates (those in cs_snapshots)
-        if cs_snapshots and title in cs_snapshots:
-            agg_for_this = agg_prices.get(title, {})
-            logger.info(
-                f"[DIAG-TOP5] {title!r} base=${base_price:.2f} | "
-                f"DM_bid=${agg_for_this.get('best_bid', 0):.2f} "
-                f"DM_ask=${agg_for_this.get('best_ask', 0):.2f}"
+                f"agg_titles={len(agg_prices)} (sample={agg_keys})"
             )
 
         # --- Strategy A: bid-ask spread analysis (needed by cross-market threshold) ---
@@ -293,11 +260,6 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
         vpin_val = ms_result.vpin
         trade_records = ms_result.trade_records
 
-        # --- Strategy C: cross-market arb (oracle provider bids) ---
-        cross_market = evaluate_cross_market_arb(title, best_ask, cs_bids)
-        cross_market_provider = cross_market["provider"]
-        cross_market_bid = cross_market["bid"]
-
         if not self.liquidity.can_spend(base_price, game_id, current_balance):
             return None
 
@@ -305,7 +267,7 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
             return None
 
         # v12.2 Phase 2.4: Multi-level liquidity verification
-        if Config.USE_LIQUIDITY_FILTER and cross_market_provider is None:
+        if Config.USE_LIQUIDITY_FILTER:
             liquidity = price_db.get_liquidity_metrics(title)
             if not liquidity["is_liquid"]:
                 is_sandbox = Config.DRY_RUN
@@ -321,7 +283,6 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
         # v12.2 Phase 2.3: Wash trading detection (trimmed mean)
         if (
             Config.WASH_TRADING_DETECTION
-            and cross_market_provider is None
             and not price_db.detect_wash_trading(
                 title,
                 days=14,
@@ -342,8 +303,7 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
         # v15.9: Reuse early price history fetch (avoid duplicate DB call)
         history = _early_history
         prices_only = _early_prices
-        # Skip volatility validation if we have a strong cross-market signal.
-        if prices_only and cross_market_provider is None:
+        if prices_only:
             try:
                 validate_volatility(prices_only)
             except PriceValidationError:
@@ -361,39 +321,11 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
             except Exception:
                 logger.debug("Optional feature unavailable: seasonal timing", exc_info=True)
 
-        # Oracle validation (Phase 1: selective, top-K via batch).
-        # In selective mode the caller pre-fetches oracle snapshots for the
-        # top-K candidates and passes them in cs_snapshots. We do a dict
-        # lookup here (free) instead of a per-item HTTP call.
-        # v12.7: Also check per-cycle cache to avoid duplicate HTTP calls (P1-5).
+        # Reference price from DMarket aggregated data (oracle removed).
         is_sandbox = Config.DRY_RUN
-        cs_price = 0.0
-        cs_snap = (cs_snapshots or {}).get(title)
-        if cs_snap is not None and getattr(cs_snap, "has_data", False):
-            cs_price = cs_snap.min_price
-            if is_sandbox:
-                cs_price *= scenario_engine.get_price_modifier()
-        elif title in self._oracle_price_cache:
-            # v12.7: Per-cycle cache hit — avoid HTTP call (P1-5).
-            cs_price = self._oracle_price_cache[title]
-            if is_sandbox:
-                cs_price *= scenario_engine.get_price_modifier()
-        else:
-            # Title not in the pre-fetched snapshots (not in top-K) or
-            # selective mode is off — fall back to per-item call.
-            try:
-                cs_price = await oracle.get_item_price(title)
-                # v12.7: Cache the result for this cycle (P1-5).
-                if cs_price > 0:
-                    self._oracle_price_cache[title] = cs_price
-                if is_sandbox:
-                    cs_price *= scenario_engine.get_price_modifier()
-            except (RateLimitException, Exception) as e:
-                if isinstance(e, RateLimitException) or "429" in str(e):
-                    logger.error(f"Oracle rate limited during {game_id} scan.")
-                    self.empty_page_count = 5
-                    return None
-                raise e
+        cs_price = (agg_prices or {}).get(title, {}).get("best_ask", 0.0)
+        if is_sandbox and cs_price > 0:
+            cs_price *= scenario_engine.get_price_modifier()
 
         # Spread / opportunity gate.
         # Intra-DMarket spread arbitrage is rare because bid < ask on normal
@@ -401,39 +333,17 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
         # cheaper than the oracle lowest ask, so we can buy on DMarket and
         # resell at the oracle reference price.
         has_intra_spread = best_bid > best_ask * (1 + effective_min_spread / 100.0)
-        has_cross_market = cross_market_provider is not None
-
         required_margin = Config.FEE_RATE + Config.WITHDRAWAL_FEE_RATE + (Config.MIN_SPREAD_PCT / 100.0)
-        has_oracle_discount = (
+        has_reference_discount = (
             cs_price > 0
             and base_price < cs_price * (1 - required_margin)
         )
 
-        # NOV-2 FIX: When ALL oracles are down (cs_price == 0), block
-        # oracle-dependent strategies.  has_intra_spread is pure DMarket-internal
-        # (bid > ask × spread) and does NOT need oracle data — it remains allowed.
-        # has_dmarket_underpriced compares against historical sales which may be
-        # stale without oracle cross-check — block it when oracle data is absent.
-        oracle_data_available = cs_price > 0
-
         # v14.8.1: DMarket-internal underpriced check. Only call last-sales
         # when no other edge exists, to respect rate limits.
-        # NOV-2: Skip this path when oracle data is unavailable — without
-        # external price validation, historical sales may be stale/manipulated.
         has_dmarket_underpriced = False
         dm_underpriced_ref = 0.0
-        if not (has_intra_spread or has_cross_market or has_oracle_discount):
-            if not oracle_data_available:
-                logger.warning(
-                    f"[ORACLE-DOWN] {title}: all oracles unavailable, "
-                    f"blocking DMarket-underpriced strategy (no external price validation)"
-                )
-                if is_sandbox:
-                    price_db.log_decision(
-                        title, "skip", "All oracles down",
-                        "cs_price=0.0, blocking oracle-dependent strategies"
-                    )
-            else:
+        if not (has_intra_spread or has_reference_discount):
                 try:
                     from src.core.target_sniping.underpriced import is_dmarket_underpriced
                     up = await is_dmarket_underpriced(
@@ -455,7 +365,7 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
         # Strategy: buy at ask, hold until demand pushes price up
         has_demand_opportunity = False
         demand_score = 0.0
-        if Config.DEMAND_STRATEGY_ENABLED and not (has_intra_spread or has_cross_market or has_oracle_discount or has_dmarket_underpriced):
+        if Config.DEMAND_STRATEGY_ENABLED and not (has_intra_spread or has_reference_discount or has_dmarket_underpriced):
             try:
                 from src.core.target_sniping.demand_strategy import calculate_demand_score
                 agg_data = agg_prices.get(title, {})
@@ -474,7 +384,7 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
             except Exception as e:
                 logger.debug(f"Demand strategy check failed for {title}: {e}")
 
-        if not (has_intra_spread or has_cross_market or has_oracle_discount or has_dmarket_underpriced or has_demand_opportunity):
+        if not (has_intra_spread or has_reference_discount or has_dmarket_underpriced or has_demand_opportunity):
             if is_sandbox:
                 price_db.log_decision(
                     title,
@@ -499,36 +409,10 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
                 )
             return None
 
-        # Calculate profit: list at best_bid - 0.01, but use oracle ask or
-        # cross-market bid as reference when available.
-        cs_ask_price = 0.0
-        cs_snap = (cs_snapshots or {}).get(title)
-        if cs_snap is not None and getattr(cs_snap, "has_data", False):
-            cs_ask_price = cs_snap.min_price
-
-        # Base list price: prefer oracle reference. For cross-market
-        # underpriced items best_bid may be below our buy price, so listing
-        # at best_bid - 0.01 would guarantee a loss.
+        # Calculate list price from DMarket best_bid
         list_price = round(best_bid - Config.INTRA_LIST_DISCOUNT, 2)
-
-        # Use oracle lowest ask as list price reference when available
-        if cs_ask_price > 0:
-            # Don't list above oracle ask — compete with cheapest marketplace
-            cs_list_price = round(cs_ask_price * 0.97, 2)
-            # For cross-market buys, always use the oracle reference if it
-            # covers our cost. Otherwise keep the higher of the two prices.
-            min_profitable = base_price * (1 + required_margin)
-            if base_price > best_bid or cs_list_price > list_price:
-                list_price = max(cs_list_price, min_profitable)
-            else:
-                list_price = max(list_price, min_profitable)
-
-        # Cross-market bid override (highest bid across all marketplaces)
-        if cross_market_provider and cross_market_bid > best_bid:
-            list_price = round(
-                min(cross_market_bid * 0.97, cross_market_bid - Config.INTRA_LIST_DISCOUNT),
-                2,
-            )
+        min_profitable = base_price * (1 + required_margin)
+        list_price = max(list_price, min_profitable)
 
         # =================================================================
         # v14.6: Value Detection Layers (TA Site Analysis)
@@ -675,7 +559,6 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
             current_margin=current_margin,
             list_price=list_price,
             is_sandbox=is_sandbox,
-            cs_ask_price=cs_ask_price,
         )
         if not fee_result["pass"]:
             return None
@@ -784,9 +667,9 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
             "strategy": (
                 "demand" if has_demand_opportunity
                 else ("dmarket_underpriced" if has_dmarket_underpriced
-                else ("cross_market" if cross_market_provider else "intra_spread"))
+                else "intra_spread")
             ),
-            "target_platform": cross_market_provider or "dmarket",
+            "target_platform": "dmarket",
             "dm_underpriced_ref": dm_underpriced_ref,
             "is_rare": is_rare,
         }

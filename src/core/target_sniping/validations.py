@@ -246,69 +246,6 @@ def check_tod_adjustment() -> float:
     return tod_m
 
 
-def evaluate_cross_market_arb(
-    title: str,
-    best_ask: float,
-    cs_bids: dict[str, Any] | None = None,
-) -> dict:
-    """Cross-market arbitrage check (oracle provider bids vs DMarket ask).
-
-    Returns {"provider": str|None, "bid": float, "is_viable": bool}
-    """
-    logger = logging.getLogger("SnipingBot")
-    provider = None
-    bid = 0.0
-    is_viable = False
-
-    if not (Config.CROSS_MARKET_ENABLED and cs_bids):
-        return {"provider": provider, "bid": bid, "is_viable": is_viable}
-
-    bid_snap = cs_bids.get(title)
-    if bid_snap is not None and getattr(bid_snap, "has_data", False):
-        provider_bids = getattr(bid_snap, "provider_bids", {}) or {}
-        if provider_bids:
-            provider, bid = max(provider_bids.items(), key=lambda kv: kv[1])
-            # v14.8: fee-aware cross-market gate.
-            # The external bid must cover DMarket ask + DMarket sell fee +
-            # destination marketplace fee + withdrawal cost + target margin.
-            if Config.CROSS_MARKET_FEE_AWARE:
-                cm_threshold = best_ask * (
-                    1
-                    + Config.FEE_RATE
-                    + Config.CROSS_MARKET_DESTINATION_FEE
-                    + Config.WITHDRAWAL_FEE_RATE
-                    + Config.INTRA_MIN_SPREAD_PCT / 100.0
-                )
-            else:
-                cm_threshold = best_ask * (1 + Config.INTRA_MIN_SPREAD_PCT / 100.0)
-            if best_ask > 0 and bid > cm_threshold:
-                is_viable = True
-                logger.info(
-                    f"Cross-market arb HIT: {title} "
-                    f"DM_ask=${best_ask:.2f} < "
-                    f"{provider}_bid=${bid:.2f} "
-                    f"(+{((bid / best_ask) - 1) * 100:.1f}%, "
-                    f"fee-aware threshold=${cm_threshold:.2f})"
-                )
-            else:
-                if best_ask > 0:
-                    logger.debug(
-                        f"Cross-market miss: {title} "
-                        f"DM_ask=${best_ask:.2f} >= "
-                        f"{provider}_bid=${bid:.2f} "
-                        f"(threshold=${cm_threshold:.2f})"
-                    )
-                provider = None
-                bid = 0.0
-    elif cs_bids:
-        logger.debug(
-            f"Cross-market: {title} not in cs_bids "
-            f"(has_data={getattr(bid_snap, 'has_data', 'N/A')})"
-        )
-
-    return {"provider": provider, "bid": bid, "is_viable": is_viable}
-
-
 def compute_microstructure_scores(
     title: str,
     best_ask: float,

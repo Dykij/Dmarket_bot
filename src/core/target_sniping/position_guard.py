@@ -44,11 +44,10 @@ class _PositionGuardMixin:
     """Stop-loss, take-profit, and liquidation logic."""
 
     client: Any  # DMarketAPIClient
-    oracle: Any  # Oracle cache (or None)
 
     async def check_stop_losses(self, game_id: str) -> int:
         """
-        Scan all idle (unlocked) items. If current oracle price has dropped
+        Scan all idle (unlocked) items. If current price has dropped
         below the stop-loss threshold relative to buy price, force-sell.
         Returns number of items liquidated.
         """
@@ -207,35 +206,7 @@ class _PositionGuardMixin:
         return {"liquidated": count, "total_value": round(total_value, 2), "errors": len(liquidate_list) - count}
 
     async def _get_current_price(self, hash_name: str, use_bid: bool = False) -> float:
-        """Get current market price from oracle (FairPriceResult)."""
-        if self.oracle is not None:
-            try:
-                result = await self.oracle.get_fair_price(hash_name)
-                if result and result.has_data:
-                    if use_bid and result.dmarket_best_bid > 0:
-                        return result.dmarket_best_bid
-                    if result.dmarket_best_ask > 0:
-                        return result.dmarket_best_ask
-                    # Fall back to fair price if no direct bid/ask
-                    fair = result.fair_price if hasattr(result, 'fair_price') else 0.0
-                    if fair > 0:
-                        return fair
-            except Exception as e:
-                logger.debug(f"[POSITION-GUARD] Oracle price fetch failed for {hash_name}: {e}")
-
-        from src._archived.oracles.oracle_factory import OracleFactory
-        # P2-12: Use Config.GAME_ID instead of hardcoded "a8db"
-        from src.config import Config
-        oracle = OracleFactory.get_oracle(getattr(Config, 'GAME_ID', 'a8db'))
-        if oracle:
-            try:
-                result = await oracle.get_fair_price(hash_name)
-                if result and result.has_data:
-                    price = result.dmarket_best_ask if not use_bid else result.dmarket_best_bid
-                    if price > 0:
-                        return price
-            except Exception as e:
-                logger.debug(f"[POSITION-GUARD] Oracle price fetch failed for {hash_name}: {e}")
+        """Get current market price. Oracle removed — returns 0 (stop-loss/take-profit disabled)."""
         return 0.0
 
     async def _execute_liquidation(

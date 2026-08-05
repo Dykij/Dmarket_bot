@@ -77,7 +77,7 @@ class SnipingLoop(  # type: ignore[misc]
 
         self._prev_agg_prices: dict[str, Any] = {}
         self._prev_agg_prices_prior: dict[str, Any] = {}
-        self.oracle: Any | None = None
+        self._current_agg_prices: dict[str, Any] = {}  # Current cycle's agg_prices for resale
         self._sales_cache: dict[str, Any] = {}
         self._failed_offer_ids: dict[str, float] = {}  # OfferNotFound blacklist {id: ts}
         self._failure_counts: dict[str, int] = {}  # strike counter per offer_id
@@ -135,8 +135,6 @@ class SnipingLoop(  # type: ignore[misc]
         ctx = CycleContext(game_id=game_id)
         try:
             ctx = await self._stage_prepare(ctx)
-            if not ctx.oracle:
-                return
 
             ctx = await self._stage_scan(ctx)
             # v17.11: Only return early if BOTH agg_prices AND items are empty.

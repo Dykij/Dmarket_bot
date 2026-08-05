@@ -35,12 +35,9 @@ class CycleContext:
     current_balance: float = 0.0
     effective_balance: float = 0.0
     dynamic_max_price: float = 0.0
-    oracle: Any = None
     agg_prices: dict[str, Any] = field(default_factory=dict)
     items: list[dict[str, Any]] = field(default_factory=list)
     bulk_fees: dict[str, float] = field(default_factory=dict)
-    cs_snapshots: dict[str, Any] = field(default_factory=dict)
-    cs_target_snapshots: dict[str, Any] = field(default_factory=dict)
     current_margin: float = 0.0
     instant_buys: list[dict[str, Any]] = field(default_factory=list)
     is_fresh_cycle: bool = False
@@ -89,19 +86,14 @@ class CycleOrchestrator:
         return age_sec <= max_age_sec
 
     async def _stage_prepare(self, ctx: CycleContext) -> CycleContext:
-        """Stage 1: Prepare cycle — counters, balance, oracle."""
+        """Stage 1: Prepare cycle — counters, balance."""
         from src.utils.health_server import health_state
-
-        # Oracle archived — multi_source_oracle deprecated for demand strategy
-        ctx.oracle = None
-        self.oracle = None
 
         try:
             health_state.mark_cycle(0.0, 0.0, 0.0)
         except Exception as e:
             logger.debug(f"[HEALTH] mark_cycle failed: {e}")
 
-        self._clear_oracle_cache()
         self.deep_scan_counter += 1
         self.reprice_counter += 1
         ctx.is_fresh_cycle = self.deep_scan_counter % 5 == 0
@@ -150,6 +142,7 @@ class CycleOrchestrator:
             )
         except Exception:
             ctx.agg_prices = {}
+        self._current_agg_prices = ctx.agg_prices  # Expose to resale_prod mixin
 
         if not ctx.agg_prices:
             return ctx
@@ -477,9 +470,8 @@ class CycleOrchestrator:
             async with sem:
                 return await self._evaluate_candidate(
                     item=item, game_id=ctx.game_id,
-                    oracle=ctx.oracle,
                     agg_prices=ctx.agg_prices, bulk_fees=ctx.bulk_fees,
-                    cs_snapshots=ctx.cs_snapshots, current_margin=ctx.current_margin,
+                    current_margin=ctx.current_margin,
                     current_balance=ctx.current_balance,
                     effective_balance=ctx.effective_balance,
                     dynamic_max_price=ctx.dynamic_max_price,

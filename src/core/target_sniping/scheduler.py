@@ -23,7 +23,6 @@ import time
 from pathlib import Path
 from typing import Any
 
-from src._archived.oracles.oracle_factory import OracleFactory
 from src.config import Config
 from src.core.daily_briefing import DailyBriefingScheduler
 from src.risk.error_reporter import ErrorReporter
@@ -221,8 +220,6 @@ class _SchedulerMixin:
     async def _shutdown_resources(self) -> None:
         """v14.9: Clean shutdown of all resources."""
         logger.info("Shutting down resources...")
-        with contextlib.suppress(Exception):
-            await OracleFactory.close_all()
         if self.client:
             with contextlib.suppress(Exception):
                 await self.client.close()
@@ -253,17 +250,6 @@ class _SchedulerMixin:
         """Collect stats for TelegramReporter from current bot state."""
         stats: dict[str, Any] = {}
         try:
-            # Oracle status
-            if hasattr(self, 'oracle') and self.oracle:
-                oracle = self.oracle
-                if hasattr(oracle, 'get_status'):
-                    stats["oracle_status"] = str(oracle.get_status())
-                elif hasattr(oracle, '_source_failures'):
-                    sources = []
-                    for src_name, failures in oracle._source_failures.items():
-                        status = "OK" if failures == 0 else f"FAIL({failures})"
-                        sources.append(f"{src_name}:{status}")
-                    stats["oracle_status"] = " | ".join(sources)
             # Rate limiter
             if hasattr(self, 'client') and hasattr(self.client, 'rate_limiter_status'):
                 rl = self.client.rate_limiter_status()

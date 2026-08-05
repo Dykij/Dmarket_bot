@@ -81,7 +81,6 @@ def _patch_filter(ms_result=None, cross_market=None, fee_result=None, cfg=None):
         patch("src.core.target_sniping.filter.Config", mock_config),
         patch("src.core.target_sniping.filter.price_db") as mock_db,
         patch("src.core.target_sniping.filter.run_microstructure_pipeline", return_value=ms_result),
-        patch("src.core.target_sniping.filter.evaluate_cross_market_arb", return_value=cross_market),
         patch("src.core.target_sniping.filter.evaluate_fee_slippage_tod", return_value=fee_result),
         patch("src.core.target_sniping.filter.check_bait_detection", return_value={"pass": True}),
         patch("src.core.target_sniping.filter.validate_volatility"),

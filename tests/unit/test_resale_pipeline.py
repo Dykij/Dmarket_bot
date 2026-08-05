@@ -45,16 +45,12 @@ def _make_pipeline() -> tuple[ResalePipeline, MagicMock]:
     api = AsyncMock()
     api.get_item_fee = AsyncMock(return_value=0.05)
 
-    with (
-        patch("src.core.resale_pipeline.OracleFactory") as mock_factory,
-        patch("src.core.resale_pipeline.price_db") as mock_db,
-    ):
+    with patch("src.core.resale_pipeline.price_db") as mock_db:
         oracle = AsyncMock()
         oracle.get_item_price = AsyncMock(return_value=15.0)
         oracle.get_cross_market_data = AsyncMock(return_value=None)
         oracle.get_prices_batch = AsyncMock(return_value={})
         oracle.close = AsyncMock()
-        mock_factory.get_cross_market_oracle.return_value = oracle
 
         risk = MagicMock()
         risk_result = MagicMock()
@@ -70,6 +66,7 @@ def _make_pipeline() -> tuple[ResalePipeline, MagicMock]:
         mock_db.update_virtual_status = MagicMock()
 
         pipeline = ResalePipeline(api_client=api, risk=risk)
+        pipeline.oracle = oracle  # Oracle removed from constructor; set directly for testing
         pipeline._mock_db = mock_db
         pipeline._mock_oracle = oracle
         return pipeline, api

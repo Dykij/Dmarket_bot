@@ -13,11 +13,10 @@ from src.inventory_manager import InventoryManager
 def _make_manager() -> tuple[InventoryManager, MagicMock]:
     api = AsyncMock()
     oracle = AsyncMock()
-    with patch("src.inventory_manager.OracleFactory") as mock_factory:
-        mock_factory.get_cross_market_oracle.return_value = oracle
-        manager = InventoryManager(api_client=api)
-        manager._mock_oracle = oracle
-        return manager, api
+    manager = InventoryManager(api_client=api)
+    manager.oracle = oracle  # Oracle removed from constructor; set directly for testing
+    manager._mock_oracle = oracle
+    return manager, api
 
 
 class TestFetchInventory:

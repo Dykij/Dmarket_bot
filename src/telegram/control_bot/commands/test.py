@@ -1,9 +1,9 @@
 """
 test.py — /test flow with FSM (StatesGroup + receive + cancel + do_test).
 
-Runs an arbitrage test for a given item by querying DMarket + the
-free multi-source oracle. Uses aiogram FSM to ask the user for the item
-name if they pressed the button instead of using `/test <name>` directly.
+Runs an arbitrage test for a given item by querying DMarket data.
+Uses aiogram FSM to ask the user for the item name if they pressed
+the button instead of using `/test <name>` directly.
 """
 
 from __future__ import annotations
@@ -17,7 +17,6 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 
 from src.api.dmarket_api_client import DMarketAPIClient
-from src._archived.oracles.multi_source_oracle import MultiSourceOracle
 from src.config import Config
 
 from ..formatters import escape_md
@@ -102,13 +101,12 @@ async def cmd_cancel(message, state_fsm: FSMContext):
 
 
 async def _do_test(message, item_name: str) -> None:
-    """Run the actual arbitrage test (DMarket + free multi-source oracle)."""
+    """Run the actual arbitrage test (DMarket data only)."""
     safe_name = escape_md(item_name)
     await message.answer(f"⏳ Testing `{safe_name}`...")
 
     from ..resilience import get_dmarket_secret
     client = DMarketAPIClient(Config.PUBLIC_KEY, get_dmarket_secret())  # type: ignore[arg-type]
-    oracle = MultiSourceOracle()
     try:
         market = await retry_async(
             lambda: client.get_market_items_v2(Config.GAME_ID, limit=100),
@@ -134,15 +132,6 @@ async def _do_test(message, item_name: str) -> None:
         )
         ag = agg.get(item_name, {})
 
-        try:
-            fair_result = await retry_async(
-                lambda: oracle.get_fair_price(item_name),
-                operation="test.oracle",
-            )
-            cs_price = fair_result.fair_price if fair_result.has_enough_sources else 0.0
-        except Exception:
-            cs_price = 0.0
-
         best_ask = ag.get("best_ask", 0.0)
         best_bid = ag.get("best_bid", 0.0)
         spread = ((best_bid - best_ask) / best_ask * 100) if best_ask > 0 else 0
@@ -154,8 +143,6 @@ async def _do_test(message, item_name: str) -> None:
             f"   Best ask: `${best_ask:.2f}`\n"
             f"   Best bid: `${best_bid:.2f}`\n"
             f"   Spread: `{spread:+.1f}%`\n\n"
-            f"📈 *Free Oracle (multi-source):*\n"
-            f"   Reference: `${cs_price:.2f}`\n\n"
         )
 
         if best_bid > best_ask * 1.05:
@@ -171,5 +158,3 @@ async def _do_test(message, item_name: str) -> None:
     finally:
         with contextlib.suppress(Exception):
             await client.close()
-        with contextlib.suppress(Exception):
-            await oracle.close()

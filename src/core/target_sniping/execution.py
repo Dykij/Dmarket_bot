@@ -116,10 +116,6 @@ class _ExecutionMixin:
         # Re-verify listing prices haven't increased >5% since scan.
         # Uses asyncio.gather for all items instead of sequential loop.
         _MAX_SLIPPAGE_PCT = 5.0
-        # NOV-3: Oracle price drift threshold — if oracle fair price dropped
-        # more than this since evaluation, cancel the trade.  Accounts for
-        # the gap between scan (oracle fetch) and execution (now).
-        _MAX_ORACLE_DRIFT_PCT = 10.0
 
         async def _check_slippage(item_data: dict[str, Any]) -> dict[str, Any] | None:
             try:
@@ -164,40 +160,6 @@ class _ExecutionMixin:
                         f"now ${current_price:.2f} (+{slippage_pct:.1f}% > {_MAX_SLIPPAGE_PCT}%). Skipping."
                     )
                     return None
-
-                # NOV-3 FIX: Re-check oracle fair price before buy.
-                # If oracle price dropped significantly since evaluation,
-                # the trade may no longer be profitable after fees.
-                original_list_price = item_data.get("list_price", 0.0)
-                if original_list_price > 0 and hasattr(self, "oracle") and self.oracle is not None:
-                    try:
-                        fresh_result = await self.oracle.get_fair_price(title)
-                        if not fresh_result or fresh_result.source_count <= 0 or fresh_result.fair_price <= 0:
-                            # P0 FIX: fail-closed when oracle returns no data
-                            logger.warning(f"[ORACLE-DRIFT] {title}: oracle returned no data — BLOCKING buy")
-                            return None
-                        if fresh_result and fresh_result.source_count > 0 and fresh_result.fair_price > 0:
-                            fresh_fair = fresh_result.fair_price
-                            # Check if oracle price dropped below profitability threshold
-                            required_sell = expected_price * (1 + Config.FEE_RATE + Config.WITHDRAWAL_FEE_RATE + 0.02)
-                            if fresh_fair < required_sell:
-                                logger.warning(
-                                    f"[ORACLE-DRIFT] {title}: oracle fair price dropped "
-                                    f"${original_list_price:.2f} → ${fresh_fair:.2f}, "
-                                    f"below required ${required_sell:.2f}. Skipping."
-                                )
-                                return None
-                            drift_pct = abs(fresh_fair - original_list_price) / original_list_price * 100
-                            if drift_pct > _MAX_ORACLE_DRIFT_PCT:
-                                logger.warning(
-                                    f"[ORACLE-DRIFT] {title}: oracle price drifted {drift_pct:.1f}% "
-                                    f"(${original_list_price:.2f} → ${fresh_fair:.2f}). Skipping."
-                                )
-                                return None
-                    except Exception as e:
-                        # P0-3 FIX: Oracle re-check failed — fail-closed, block buy
-                        logger.warning(f"[ORACLE-DRIFT] Re-check failed for {title}: {e} — BLOCKING buy (fail-closed)")
-                        return None
 
                 return item_data
             except Exception as e:

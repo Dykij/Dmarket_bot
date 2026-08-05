@@ -370,69 +370,6 @@ class TestCheckTodAdjustment:
             _val_mod.Config.TIME_OF_DAY_WEEKEND_ENABLED = orig_we
 
 
-class TestEvaluateCrossMarketArb:
-
-    def test_disabled_returns_not_viable(self):
-        orig = _set_config("CROSS_MARKET_ENABLED", False)
-        try:
-            result = _val_mod.evaluate_cross_market_arb("AK-47", 10.0)
-            assert result["is_viable"] is False
-        finally:
-            _val_mod.Config.CROSS_MARKET_ENABLED = orig
-
-    def test_no_bids_returns_not_viable(self):
-        orig = _set_config("CROSS_MARKET_ENABLED", True)
-        try:
-            result = _val_mod.evaluate_cross_market_arb("AK-47", 10.0, cs_bids=None)
-            assert result["is_viable"] is False
-        finally:
-            _val_mod.Config.CROSS_MARKET_ENABLED = orig
-
-    def test_viable_arb(self):
-        orig = _set_config("CROSS_MARKET_ENABLED", True)
-        try:
-            snap = SimpleNamespace(has_data=True, provider_bids={"steam": 20.0})
-            result = _val_mod.evaluate_cross_market_arb("AK-47", 10.0, cs_bids={"AK-47": snap})
-            assert result["is_viable"] is True
-            assert result["provider"] == "steam"
-            assert result["bid"] == 20.0
-        finally:
-            _val_mod.Config.CROSS_MARKET_ENABLED = orig
-
-    def test_not_viable_bid_too_low(self):
-        orig = _set_config("CROSS_MARKET_ENABLED", True)
-        try:
-            snap = SimpleNamespace(has_data=True, provider_bids={"steam": 5.0})
-            result = _val_mod.evaluate_cross_market_arb("AK-47", 10.0, cs_bids={"AK-47": snap})
-            assert result["is_viable"] is False
-            assert result["provider"] is None
-        finally:
-            _val_mod.Config.CROSS_MARKET_ENABLED = orig
-
-    def test_no_data_snapshot(self):
-        orig = _set_config("CROSS_MARKET_ENABLED", True)
-        try:
-            snap = SimpleNamespace(has_data=False, provider_bids={})
-            result = _val_mod.evaluate_cross_market_arb("AK-47", 10.0, cs_bids={"AK-47": snap})
-            assert result["is_viable"] is False
-        finally:
-            _val_mod.Config.CROSS_MARKET_ENABLED = orig
-
-    def test_fee_aware_threshold(self):
-        orig_en = _set_config("CROSS_MARKET_ENABLED", True)
-        orig_fa = _set_config("CROSS_MARKET_FEE_AWARE", True)
-        try:
-            # Bid must cover ask + fees + margin
-            snap = SimpleNamespace(has_data=True, provider_bids={"steam": 12.0})
-            result = _val_mod.evaluate_cross_market_arb("AK-47", 10.0, cs_bids={"AK-47": snap})
-            # threshold = 10 * (1 + 0.05 + 0.02 + 0.005 + 0.001) ≈ 10.76
-            # 12.0 > 10.76 → viable
-            assert result["is_viable"] is True
-        finally:
-            _val_mod.Config.CROSS_MARKET_ENABLED = orig_en
-            _val_mod.Config.CROSS_MARKET_FEE_AWARE = orig_fa
-
-
 class TestComputeMicrostructureScores:
 
     def test_disabled_returns_zero(self):
@@ -682,34 +619,4 @@ class TestEvaluateFeeSlippageTodExtended:
         assert call_kwargs["min_profit_margin"] > 0.05
 
 
-class TestCrossMarketArbExtended:
 
-    def test_cs_bids_not_in_snapshots(self):
-        """Title not in cs_bids logs debug (lines 292-296)."""
-        orig = _set_config("CROSS_MARKET_ENABLED", True)
-        try:
-            snap = SimpleNamespace(has_data=True, provider_bids={"steam": 20.0})
-            result = _val_mod.evaluate_cross_market_arb("M4A4", 10.0, cs_bids={"AK-47": snap})
-            assert result["is_viable"] is False
-        finally:
-            _val_mod.Config.CROSS_MARKET_ENABLED = orig
-
-    def test_no_provider_bids(self):
-        """Empty provider_bids returns not viable."""
-        orig = _set_config("CROSS_MARKET_ENABLED", True)
-        try:
-            snap = SimpleNamespace(has_data=True, provider_bids={})
-            result = _val_mod.evaluate_cross_market_arb("AK-47", 10.0, cs_bids={"AK-47": snap})
-            assert result["is_viable"] is False
-        finally:
-            _val_mod.Config.CROSS_MARKET_ENABLED = orig
-
-    def test_zero_best_ask(self):
-        """Zero best_ask skips threshold check."""
-        orig = _set_config("CROSS_MARKET_ENABLED", True)
-        try:
-            snap = SimpleNamespace(has_data=True, provider_bids={"steam": 20.0})
-            result = _val_mod.evaluate_cross_market_arb("AK-47", 0.0, cs_bids={"AK-47": snap})
-            assert result["is_viable"] is False
-        finally:
-            _val_mod.Config.CROSS_MARKET_ENABLED = orig

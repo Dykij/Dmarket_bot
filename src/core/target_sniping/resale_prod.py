@@ -29,7 +29,6 @@ class _ResaleProdMixin:
     """Production resale — real DMarket API calls."""
 
     client: Any
-    oracle: Any
 
     async def _sync_real_inventory(self, game_id: str) -> int:
         """
@@ -273,21 +272,13 @@ class _ResaleProdMixin:
         if not listable:
             return
 
-        # Get oracle fair prices for listing
+        # Get reference prices from DMarket aggregated data (oracle removed)
         asks: dict[str, float] = {}
-        if self.oracle is not None:
-            for it in listable:
-                title = it["hash_name"]
-                if title not in asks:
-                    try:
-                        result = await self.oracle.get_fair_price(title)
-                        if result and result.source_count > 0 and result.fair_price > 0:
-                            asks[title] = result.fair_price
-                        else:
-                            asks[title] = 0.0
-                    except Exception as e:
-                        logger.debug(f"[RESALE-PROD] Oracle price failed for {title}: {e}")
-                        asks[title] = 0.0
+        agg = getattr(self, '_current_agg_prices', {})
+        for it in listable:
+            title = it["hash_name"]
+            if title not in asks:
+                asks[title] = (agg.get(title, {}) or {}).get("best_bid", 0.0)
 
         # Build payload: (row_id, dm_item_id, title, list_price, buy_price)
         payloads: list[tuple[int, str, str, float, float]] = []
@@ -304,7 +295,7 @@ class _ResaleProdMixin:
                 continue
 
             # v14.1 A-S (Avellaneda-Stoikov) — inventory-aware reservation price
-            if Config.AS_ENABLED and self.oracle is not None:
+            if Config.AS_ENABLED:
                 mid_price = cs_price  # Use oracle fair price as mid
                 same_item = len([
                     x for x in await price_db.run_in_thread(  # P2-17: async
@@ -339,7 +330,7 @@ class _ResaleProdMixin:
                 cs_price = max(target_sell * 1.01, reserv)
 
             # v14.3: VWAP Bands — list near upper band for mean-reversion target
-            if Config.VWAP_BANDS_ENABLED and self.oracle is not None:
+            if Config.VWAP_BANDS_ENABLED:
                 from src.analysis.microstructure import vwap_bands
                 item_sales_vwap = await price_db.run_in_thread(price_db.get_trade_history, title, 30, 200)  # P2-17: async
                 if item_sales_vwap and len(item_sales_vwap) >= 5:

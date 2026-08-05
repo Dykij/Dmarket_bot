@@ -14,7 +14,6 @@ import time
 from typing import Any
 
 from src.api.dmarket_api_client import DMarketAPIClient
-from src._archived.oracles.oracle_factory import OracleFactory
 from src.config import Config
 from src.db.price_history import price_db
 
@@ -29,7 +28,7 @@ class InventoryManager:
 
     def __init__(self, api_client: DMarketAPIClient):
         self.api = api_client
-        self.oracle = OracleFactory.get_cross_market_oracle(Config.GAME_ID)
+        self.oracle = None  # Oracle removed — inventory uses DMarket-internal data only
         self.cached_inventory: list[dict[str, Any]] = []
         self.cached_offers: list[dict[str, Any]] = []
 
@@ -158,27 +157,8 @@ class InventoryManager:
                 "status": "on_sale",
             })
 
-        # --- 1 oracle call for all unique titles (Phase 6 batch) ---
-        cs_prices: dict[str, float] = {}
-        if self.oracle and unique_titles:
-            try:
-                snapshots = await self.oracle.get_prices_batch(unique_titles)
-                cs_prices = {
-                    t: s.min_price for t, s in snapshots.items() if s.has_data
-                }
-            except AttributeError:
-                # Fallback for CSFloat oracle (no batch endpoint)
-                for title in unique_titles:
-                    try:
-                        p = await self.oracle.get_item_price(title)
-                        if p > 0:
-                            cs_prices[title] = p
-                    except Exception:
-                        pass
-            except Exception as e:
-                logger.debug(f"Oracle batch failed in fetch_all_with_oracle: {e}")
-
         # --- Backfill the enriched_items with the batched prices ---
+        cs_prices: dict[str, float] = {}
         for entry in enriched_items:
             title = entry.get("title", "")
             oracle_price = cs_prices.get(title, 0.0)
@@ -271,22 +251,6 @@ class InventoryManager:
 
         unique_titles = list({it['hash_name'] for it in items})
         cs_prices: dict[str, float] = {}
-        if self.oracle and unique_titles:
-            try:
-                snapshots = await self.oracle.get_prices_batch(unique_titles)
-                cs_prices = {
-                    t: s.min_price for t, s in snapshots.items() if s.has_data
-                }
-            except AttributeError:
-                for title in unique_titles:
-                    try:
-                        p = await self.oracle.get_item_price(title)
-                        if p > 0:
-                            cs_prices[title] = p
-                    except Exception:
-                        pass
-            except Exception as e:
-                logger.debug(f"Oracle batch failed in check_held_items_prices: {e}")
 
         results: list[dict[str, Any]] = []
         for item in items:

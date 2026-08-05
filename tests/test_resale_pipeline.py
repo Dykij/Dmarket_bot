@@ -356,7 +356,6 @@ class TestFullFlow:
     async def test_evaluate_item_for_purchase(self):
         from src.core.resale_pipeline import ResalePipeline
         from src.api.dmarket_api_client import DMarketAPIClient
-        from src.api.multi_source_oracle import MultiSourceOracle
         from src.api.fair_price_calculator import FairPriceResult
         from src.db.price_history import price_db
 

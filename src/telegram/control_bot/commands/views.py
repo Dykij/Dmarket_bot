@@ -230,30 +230,17 @@ async def cmd_sell_top(message):
 async def cmd_prices(message):
     logger.info("cmd_prices by user %s", message.from_user.id)
     try:
-        from src._archived.oracles.oracle_factory import OracleFactory
         idle = price_db.get_virtual_inventory(status="idle", only_unlocked=False)
         if not idle:
-            await message.answer("📊 *Prices* — No items in inventory.")
+            await message.answer("📊 *Inventory* — No items in inventory.")
             return
-        oracle = OracleFactory.get_oracle("a8db")
-        if oracle is None:
-            await message.answer("📊 *Prices* — Oracle unavailable.")
-            return
-        text = "📊 *Oracle Prices*\n\n"
+        text = "📊 *Held Items*\n\n"
         for it in list(idle)[:10]:
             title = it["hash_name"]
-            try:
-                cs_price = await oracle.get_item_price(title)
-                buy_price = it["buy_price"]
-                if cs_price > 0:
-                    margin = (cs_price - buy_price) / buy_price * 100 if buy_price > 0 else 0
-                    text += f"`{title[:25]}`\n  Buy: ${buy_price:.2f} → Oracle: ${cs_price:.2f} ({margin:+.1f}%)\n"
-                else:
-                    text += f"`{title[:25]}` — no oracle data\n"
-            except Exception:
-                text += f"`{title[:25]}` — error fetching\n"
+            buy_price = it.get("buy_price", 0)
+            text += f"`{title[:30]}`\n  Buy: ${buy_price:.2f}\n"
         await message.answer(text)
-        logger.debug("cmd_prices ok — checked %d items", len(idle[:10]))
+        logger.debug("cmd_prices ok — listed %d items", len(idle[:10]))
     except Exception as e:
         logger.exception("cmd_prices failed: %s", e)
         await message.answer("❌ Price check failed. Check logs.")
