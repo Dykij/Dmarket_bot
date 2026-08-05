@@ -183,8 +183,7 @@ class TelegramReporter:
         # Oracle status (if available)
         stats = await self._safe_get_stats()
         if stats:
-            if "oracle_status" in stats:
-                lines.append(f"Oracles: {stats['oracle_status']}")
+
             if "rate_limiter_margin" in stats:
                 lines.append(f"Rate margin: {stats['rate_limiter_margin']}")
         return "\n".join(lines)
@@ -220,8 +219,7 @@ class TelegramReporter:
         ]
         stats = await self._safe_get_stats()
         if stats:
-            if "oracle_status" in stats:
-                lines.append(f"Oracles: {stats['oracle_status']}")
+
             if "rate_limiter_margin" in stats:
                 lines.append(f"Rate margin: {stats['rate_limiter_margin']}")
         return "\n".join(lines)
@@ -252,10 +250,6 @@ class TelegramReporter:
             f"Avg cycle time: "
             f"{sum(self._session_cycle_times) / max(len(self._session_cycle_times), 1):.1f}s",
         ]
-        stats = await self._safe_get_stats()
-        if stats:
-            if "oracle_status" in stats:
-                lines.append(f"Oracles: {stats['oracle_status']}")
         return "\n".join(lines)
 
     async def _safe_get_stats(self) -> dict[str, Any] | None:

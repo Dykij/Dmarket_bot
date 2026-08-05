@@ -87,20 +87,8 @@ class TestLiquidityMetrics:
         assert Config.BOT_VERSION
 
 
-class TestOracleBatchSettings:
-    """Oracle batch and cache parameters."""
-
-    def test_oracle_batch_size_positive(self):
-        assert Config.ORACLE_BATCH_SIZE > 0
-
-    def test_oracle_top_k_validate_positive(self):
-        assert Config.ORACLE_TOP_K_VALIDATE > 0
-
-    def test_oracle_cache_ttl_positive(self):
-        assert Config.ORACLE_CACHE_TTL_SECONDS > 0
-
-    def test_oracle_cache_refresh_top_n_positive(self):
-        assert Config.ORACLE_CACHE_REFRESH_TOP_N > 0
+class TestScanSettings:
+    """Scan and fetch parameters."""
 
     def test_agg_scan_top_n_positive(self):
         assert Config.AGG_SCAN_TOP_N > 0

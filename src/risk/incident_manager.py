@@ -46,7 +46,6 @@ class IncidentType(str, Enum):
     DRAWDOWN_EVENT = "drawdown_event"
     CIRCUIT_BREAKER = "circuit_breaker"
     TRADE_FAILURE = "trade_failure"
-    ORACLE_FAILURE = "oracle_failure"
     DB_ERROR = "db_error"
     NETWORK_ERROR = "network_error"
 

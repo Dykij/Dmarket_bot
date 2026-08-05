@@ -117,13 +117,6 @@ class Config(BaseSettings):
     REPORT_INTERVAL_DAILY: int = Field(default=86400, ge=3600)
     REPORT_INTERVAL_WEEKLY: int = Field(default=604800, ge=86400)
 
-    # --- Oracle Settings ---
-    ORACLE_BATCH_SIZE: int = Field(default=100, ge=1)
-    ORACLE_TOP_K_VALIDATE: int = Field(default=50, ge=1)
-    ORACLE_SELECTIVE_MODE: bool = True
-    ORACLE_CACHE_TTL_SECONDS: int = Field(default=900, ge=0)
-    ORACLE_CACHE_REFRESH_TOP_N: int = Field(default=200, ge=1)
-    ORACLE_CACHE_REFRESH_ON_START: bool = True
     AGG_SCAN_TOP_N: int = Field(default=100, ge=1)
     LISTINGS_FETCH_LIMIT: int = Field(default=100, ge=1)
 

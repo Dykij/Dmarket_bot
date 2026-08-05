@@ -163,7 +163,6 @@ class CircuitBreakerManager:
     # Default components for the DMarket trading bot
     DEFAULT_COMPONENTS = {
         "dmarket_api": ComponentBreaker(name="dmarket_api", fail_threshold=5, base_cooldown=60.0),
-        "oracle": ComponentBreaker(name="oracle", fail_threshold=3, base_cooldown=120.0),
         "sqlite": ComponentBreaker(name="sqlite", fail_threshold=3, base_cooldown=30.0),
         "telegram": ComponentBreaker(name="telegram", fail_threshold=5, base_cooldown=60.0),
     }

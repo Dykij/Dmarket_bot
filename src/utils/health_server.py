@@ -76,7 +76,6 @@ if HAS_PROMETHEUS:
     METRIC_DAILY_HALT = Gauge("bot_daily_halt_active", "1 if daily halt is active")
     METRIC_PUMP_BLACKLIST = Gauge("bot_pump_blacklist_size", "Active pump-blacklisted items")
     METRIC_PUMP_DETECTIONS = Gauge("bot_pump_total_detections_total", "Total pump detections")
-    METRIC_ORACLE_SOURCES = Gauge("bot_oracle_sources_active", "Number of active oracle sources")
 
 
 # =====================================================================
@@ -106,11 +105,9 @@ class HealthState:
         self._daily_halt_active: bool = False
         self._pump_blacklist_size: int = 0
         self._pump_total_detections: int = 0
-        self._oracle_sources_active: float | None = None
         self._shutting_down: bool = False
         self._last_error: str | None = None
         self._dmarket_cb: dict[str, Any] | None = None
-        self._oracle_cb: dict[str, Any] | None = None
 
     # ----- setters (called by the trading loop) -----
     def mark_cycle(self, equity_usd: float, peak_equity_usd: float,
@@ -152,17 +149,9 @@ class HealthState:
             METRIC_PUMP_BLACKLIST.set(blacklist_size)
             METRIC_PUMP_DETECTIONS.set(total_detections)
 
-    def set_oracle_sources_active(self, pct: float | None) -> None:
-        self._oracle_sources_active = pct
-        # v15.2: Update prometheus metrics
-        if HAS_PROMETHEUS and pct is not None:
-            METRIC_ORACLE_SOURCES.set(pct)
-
-    def set_circuit_breakers(self, dmarket_cb: dict[str, Any] | None = None,
-                             oracle_cb: dict[str, Any] | None = None) -> None:
+    def set_circuit_breakers(self, dmarket_cb: dict[str, Any] | None = None) -> None:
         """v12.7: Track circuit breaker states for diagnostics (P4-2)."""
         self._dmarket_cb = dmarket_cb
-        self._oracle_cb = oracle_cb
 
     def record_error(self, error: str) -> None:
         """Track the most recent fatal/non-fatal error (for diagnostics)."""
@@ -203,16 +192,8 @@ class HealthState:
                 "active_blacklist_size": self._pump_blacklist_size,
                 "total_detections": self._pump_total_detections,
             },
-            "oracle": {
-                "sources_active": (
-                    round(self._oracle_sources_active, 2)
-                    if self._oracle_sources_active is not None
-                    else None
-                ),
-            },
             "circuit_breakers": {
                 "dmarket": self._dmarket_cb or {"state": "unknown"},
-                "oracle": self._oracle_cb or {"state": "unknown"},
                 "telegram": self._get_telegram_cb_status(),
             },
             "last_error": self._last_error,

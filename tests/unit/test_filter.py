@@ -107,42 +107,12 @@ class TestEvaluateCandidateFullFlow:
 
         with _patch_filter() as mock_db:
             result = await _FilterMixin._evaluate_candidate(
-                mixin, item=_make_item(), game_id="a8db", oracle=None,
+                mixin, item=_make_item(), game_id="a8db", 
                 agg_prices=agg, bulk_fees={}, current_balance=100.0,
-                current_margin=0.05, cs_snapshots=snap,
+                current_margin=0.05,
             )
         assert result is not None
         assert result["strategy"] == "intra_spread"
-
-    @pytest.mark.asyncio
-    async def test_successful_cross_market(self):
-        mixin = _make_mixin()
-        cross = {"provider": "steam", "bid": 20.0, "is_viable": True}
-        agg = {"AK-47 | Redline": {"best_bid": 8.0, "best_ask": 10.0, "ask_count": 5, "bid_count": 3}}
-        snap = {"AK-47 | Redline": SimpleNamespace(has_data=True, min_price=15.0)}
-
-        with _patch_filter(cross_market=cross):
-            result = await _FilterMixin._evaluate_candidate(
-                mixin, item=_make_item(), game_id="a8db", oracle=None,
-                agg_prices=agg, bulk_fees={}, current_balance=100.0,
-                current_margin=0.05, cs_snapshots=snap,
-            )
-        assert result is not None
-        assert result["strategy"] == "cross_market"
-
-    @pytest.mark.asyncio
-    async def test_successful_oracle_discount(self):
-        mixin = _make_mixin()
-        agg = {"AK-47 | Redline": {"best_bid": 8.0, "best_ask": 10.0, "ask_count": 5, "bid_count": 3}}
-        snap = {"AK-47 | Redline": SimpleNamespace(has_data=True, min_price=20.0)}
-
-        with _patch_filter():
-            result = await _FilterMixin._evaluate_candidate(
-                mixin, item=_make_item(), game_id="a8db", oracle=None,
-                agg_prices=agg, bulk_fees={}, current_balance=100.0,
-                current_margin=0.05, cs_snapshots=snap,
-            )
-        assert result is not None
 
     @pytest.mark.asyncio
     async def test_microstructure_fail_returns_none(self):
@@ -152,7 +122,7 @@ class TestEvaluateCandidateFullFlow:
 
         with _patch_filter(ms_result=ms):
             result = await _FilterMixin._evaluate_candidate(
-                mixin, item=_make_item(), game_id="a8db", oracle=None,
+                mixin, item=_make_item(), game_id="a8db", 
                 agg_prices=agg, bulk_fees={}, current_balance=100.0, current_margin=0.05,
             )
         assert result is None
@@ -165,7 +135,7 @@ class TestEvaluateCandidateFullFlow:
 
         with _patch_filter():
             result = await _FilterMixin._evaluate_candidate(
-                mixin, item=_make_item(), game_id="a8db", oracle=None,
+                mixin, item=_make_item(), game_id="a8db", 
                 agg_prices=agg, bulk_fees={}, current_balance=100.0, current_margin=0.05,
             )
         assert result is None
@@ -178,7 +148,7 @@ class TestEvaluateCandidateFullFlow:
         with _patch_filter() as mock_db:
             mock_db.is_crashing.return_value = True
             result = await _FilterMixin._evaluate_candidate(
-                mixin, item=_make_item(), game_id="a8db", oracle=None,
+                mixin, item=_make_item(), game_id="a8db", 
                 agg_prices=agg, bulk_fees={}, current_balance=100.0, current_margin=0.05,
             )
         assert result is None
@@ -193,9 +163,9 @@ class TestEvaluateCandidateFullFlow:
 
         with _patch_filter():
             result = await _FilterMixin._evaluate_candidate(
-                mixin, item=_make_item(), game_id="a8db", oracle=None,
+                mixin, item=_make_item(), game_id="a8db", 
                 agg_prices=agg, bulk_fees={}, current_balance=100.0,
-                current_margin=0.05, cs_snapshots=snap,
+                current_margin=0.05,
             )
         assert result is None
 
@@ -207,9 +177,9 @@ class TestEvaluateCandidateFullFlow:
 
         with _patch_filter():
             result = await _FilterMixin._evaluate_candidate(
-                mixin, item=_make_item(), game_id="a8db", oracle=None,
+                mixin, item=_make_item(), game_id="a8db", 
                 agg_prices=agg, bulk_fees={}, current_balance=100.0,
-                current_margin=0.05, cs_snapshots=snap,
+                current_margin=0.05,
             )
         assert result is None
 
@@ -220,7 +190,7 @@ class TestEvaluateCandidateFullFlow:
 
         with _patch_filter():
             result = await _FilterMixin._evaluate_candidate(
-                mixin, item=_make_item(), game_id="a8db", oracle=None,
+                mixin, item=_make_item(), game_id="a8db", 
                 agg_prices=agg, bulk_fees={}, current_balance=100.0, current_margin=0.05,
             )
         assert result is None
@@ -232,7 +202,7 @@ class TestEvaluateCandidateFullFlow:
 
         with _patch_filter():
             result = await _FilterMixin._evaluate_candidate(
-                mixin, item=_make_item(), game_id="a8db", oracle=None,
+                mixin, item=_make_item(), game_id="a8db", 
                 agg_prices=agg, bulk_fees={}, current_balance=100.0, current_margin=0.05,
             )
         assert result is None
@@ -246,9 +216,9 @@ class TestEvaluateCandidateFullFlow:
 
         with _patch_filter():
             result = await _FilterMixin._evaluate_candidate(
-                mixin, item=_make_item(), game_id="a8db", oracle=None,
+                mixin, item=_make_item(), game_id="a8db", 
                 agg_prices=agg, bulk_fees={}, current_balance=100.0,
-                current_margin=0.05, saturation_counts=sat, cs_snapshots=snap,
+                current_margin=0.05, saturation_counts=sat,
             )
         assert result is None
 
@@ -260,40 +230,11 @@ class TestEvaluateCandidateFullFlow:
 
         with _patch_filter(fee_result={"pass": False, "reason": "Spread too thin"}):
             result = await _FilterMixin._evaluate_candidate(
-                mixin, item=_make_item(), game_id="a8db", oracle=None,
+                mixin, item=_make_item(), game_id="a8db", 
                 agg_prices=agg, bulk_fees={}, current_balance=100.0,
-                current_margin=0.05, cs_snapshots=snap,
+                current_margin=0.05,
             )
         assert result is None
-
-    @pytest.mark.asyncio
-    async def test_oracle_cache_hit(self):
-        mixin = _make_mixin()
-        mixin._oracle_price_cache = {"AK-47 | Redline": 15.0}
-        agg = {"AK-47 | Redline": {"best_bid": 15.0, "best_ask": 10.0, "ask_count": 5, "bid_count": 3}}
-
-        with _patch_filter():
-            result = await _FilterMixin._evaluate_candidate(
-                mixin, item=_make_item(), game_id="a8db", oracle=None,
-                agg_prices=agg, bulk_fees={}, current_balance=100.0, current_margin=0.05,
-            )
-        assert result is not None
-
-    @pytest.mark.asyncio
-    async def test_oracle_fallback_per_item(self):
-        mixin = _make_mixin()
-        oracle = AsyncMock()
-        oracle.get_item_price = AsyncMock(return_value=15.0)
-        agg = {"AK-47 | Redline": {"best_bid": 15.0, "best_ask": 10.0, "ask_count": 5, "bid_count": 3}}
-
-        with _patch_filter():
-            result = await _FilterMixin._evaluate_candidate(
-                mixin, item=_make_item(), game_id="a8db", oracle=oracle,
-                agg_prices=agg, bulk_fees={}, current_balance=100.0, current_margin=0.05,
-                cs_snapshots={},
-            )
-        assert result is not None
-        oracle.get_item_price.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_list_price_too_thin_returns_none(self):
@@ -305,9 +246,9 @@ class TestEvaluateCandidateFullFlow:
 
         with _patch_filter():
             result = await _FilterMixin._evaluate_candidate(
-                mixin, item=_make_item(), game_id="a8db", oracle=None,
+                mixin, item=_make_item(), game_id="a8db", 
                 agg_prices=agg, bulk_fees={}, current_balance=100.0,
-                current_margin=0.05, cs_snapshots=snap,
+                current_margin=0.05,
             )
         assert result is None
 
@@ -321,9 +262,9 @@ class TestEvaluateCandidateFullFlow:
             mock_fee = AsyncMock(return_value=0.05)
             mixin.client.get_item_fee = mock_fee
             await _FilterMixin._evaluate_candidate(
-                mixin, item=_make_item(), game_id="a8db", oracle=None,
+                mixin, item=_make_item(), game_id="a8db", 
                 agg_prices=agg, bulk_fees={"item_001": 0.02}, current_balance=100.0,
-                current_margin=0.05, cs_snapshots=snap,
+                current_margin=0.05,
             )
 
     @pytest.mark.asyncio
@@ -336,9 +277,9 @@ class TestEvaluateCandidateFullFlow:
         with _patch_filter(cfg={"USE_LIQUIDITY_FILTER": True}) as mock_db:
             mock_db.get_liquidity_metrics.return_value = {"is_liquid": False, "reason": "too few sales", "total_sales": 1}
             result = await _FilterMixin._evaluate_candidate(
-                mixin, item=_make_item(), game_id="a8db", oracle=None,
+                mixin, item=_make_item(), game_id="a8db", 
                 agg_prices=agg, bulk_fees={}, current_balance=100.0,
-                current_margin=0.05, cs_snapshots=snap,
+                current_margin=0.05,
             )
         assert result is None
 
@@ -352,9 +293,9 @@ class TestEvaluateCandidateFullFlow:
         with _patch_filter(cfg={"WASH_TRADING_DETECTION": True}) as mock_db:
             mock_db.detect_wash_trading.return_value = False
             result = await _FilterMixin._evaluate_candidate(
-                mixin, item=_make_item(), game_id="a8db", oracle=None,
+                mixin, item=_make_item(), game_id="a8db", 
                 agg_prices=agg, bulk_fees={}, current_balance=100.0,
-                current_margin=0.05, cs_snapshots=snap,
+                current_margin=0.05,
             )
         assert result is None
 
@@ -368,9 +309,9 @@ class TestEvaluateCandidateFullFlow:
         with _patch_filter(cfg={"LOCK_AWARE_CAP_ENABLED": True, "LOCK_AWARE_LIQUID_FRACTION": 0.5}) as mock_db:
             mock_db.get_virtual_inventory_locked_value.return_value = 90.0
             result = await _FilterMixin._evaluate_candidate(
-                mixin, item=_make_item(), game_id="a8db", oracle=None,
+                mixin, item=_make_item(), game_id="a8db", 
                 agg_prices=agg, bulk_fees={}, current_balance=100.0,
-                current_margin=0.05, cs_snapshots=snap,
+                current_margin=0.05,
                 effective_balance=100.0,
             )
         assert result is None
@@ -384,7 +325,7 @@ class TestEarlyReturns:
         with _patch_filter():
             result = await _FilterMixin._evaluate_candidate(
                 mixin, item={"title": "", "itemId": "i1", "price": {"USD": "1000"}},
-                game_id="a8db", oracle=None, agg_prices={}, bulk_fees={},
+                game_id="a8db",  agg_prices={}, bulk_fees={},
                 current_balance=100.0, current_margin=0.05,
             )
         assert result is None
@@ -395,7 +336,7 @@ class TestEarlyReturns:
         with _patch_filter():
             result = await _FilterMixin._evaluate_candidate(
                 mixin, item={"title": "AK-47", "price": {"USD": "1000"}},
-                game_id="a8db", oracle=None, agg_prices={}, bulk_fees={},
+                game_id="a8db",  agg_prices={}, bulk_fees={},
                 current_balance=100.0, current_margin=0.05,
             )
         assert result is None
@@ -406,7 +347,7 @@ class TestEarlyReturns:
         with _patch_filter():
             result = await _FilterMixin._evaluate_candidate(
                 mixin, item={"title": "AK-47", "itemId": "i1", "price": {"USD": "0"}},
-                game_id="a8db", oracle=None, agg_prices={}, bulk_fees={},
+                game_id="a8db",  agg_prices={}, bulk_fees={},
                 current_balance=100.0, current_margin=0.05,
             )
         assert result is None
@@ -417,7 +358,7 @@ class TestEarlyReturns:
         with _patch_filter() as mock_db:
             mock_db.has_target_been_placed.return_value = True
             result = await _FilterMixin._evaluate_candidate(
-                mixin, item=_make_item(), game_id="a8db", oracle=None,
+                mixin, item=_make_item(), game_id="a8db", 
                 agg_prices={}, bulk_fees={}, current_balance=100.0, current_margin=0.05,
             )
         assert result is None
@@ -428,7 +369,7 @@ class TestEarlyReturns:
         mixin._skip_if_locked = MagicMock(return_value=True)
         with _patch_filter():
             result = await _FilterMixin._evaluate_candidate(
-                mixin, item=_make_item(), game_id="a8db", oracle=None,
+                mixin, item=_make_item(), game_id="a8db", 
                 agg_prices={}, bulk_fees={}, current_balance=100.0, current_margin=0.05,
             )
         assert result is None
@@ -438,7 +379,7 @@ class TestEarlyReturns:
         mixin = _make_mixin()
         with _patch_filter():
             result = await _FilterMixin._evaluate_candidate(
-                mixin, item=_make_item(price_cents=1), game_id="a8db", oracle=None,
+                mixin, item=_make_item(price_cents=1), game_id="a8db", 
                 agg_prices={}, bulk_fees={}, current_balance=100.0, current_margin=0.05,
             )
         assert result is None
@@ -450,7 +391,7 @@ class TestEarlyReturns:
             # Override bait detection to block
             with patch("src.core.target_sniping.filter.check_bait_detection", return_value={"pass": False}):
                 result = await _FilterMixin._evaluate_candidate(
-                    mixin, item=_make_item(), game_id="a8db", oracle=None,
+                    mixin, item=_make_item(), game_id="a8db", 
                     agg_prices={}, bulk_fees={}, current_balance=100.0, current_margin=0.05,
                 )
         assert result is None
@@ -461,7 +402,7 @@ class TestEarlyReturns:
         mixin.buy_budget = 5.0
         with _patch_filter():
             result = await _FilterMixin._evaluate_candidate(
-                mixin, item=_make_item(price_cents=1000), game_id="a8db", oracle=None,
+                mixin, item=_make_item(price_cents=1000), game_id="a8db", 
                 agg_prices={}, bulk_fees={}, current_balance=100.0, current_margin=0.05,
             )
         assert result is None
@@ -471,7 +412,7 @@ class TestEarlyReturns:
         mixin = _make_mixin()
         with _patch_filter(cfg={"MAX_SNIPING_PRICE_USD": 5.0}):
             result = await _FilterMixin._evaluate_candidate(
-                mixin, item=_make_item(price_cents=1000), game_id="a8db", oracle=None,
+                mixin, item=_make_item(price_cents=1000), game_id="a8db", 
                 agg_prices={}, bulk_fees={}, current_balance=100.0, current_margin=0.05,
                 dynamic_max_price=5.0,
             )
@@ -487,28 +428,11 @@ class TestEarlyReturns:
         mixin.risk.pre_trade_check = MagicMock(return_value=risk_result)
         with _patch_filter():
             result = await _FilterMixin._evaluate_candidate(
-                mixin, item=_make_item(), game_id="a8db", oracle=None,
+                mixin, item=_make_item(), game_id="a8db", 
                 agg_prices={}, bulk_fees={}, current_balance=100.0, current_margin=0.05,
                 dynamic_max_price=100.0,
             )
         assert result is None
-
-    @pytest.mark.asyncio
-    async def test_oracle_rate_limit_returns_none(self):
-        """Oracle rate limit → None."""
-        mixin = _make_mixin()
-        oracle = AsyncMock()
-        oracle.get_item_price = AsyncMock(side_effect=Exception("429 rate limit"))
-        agg = {"AK-47 | Redline": {"best_bid": 15.0, "best_ask": 10.0, "ask_count": 5, "bid_count": 3}}
-
-        with _patch_filter():
-            result = await _FilterMixin._evaluate_candidate(
-                mixin, item=_make_item(), game_id="a8db", oracle=oracle,
-                agg_prices=agg, bulk_fees={}, current_balance=100.0, current_margin=0.05,
-                cs_snapshots={},
-            )
-        assert result is None
-
 
 class TestValueDetectionLayers:
 
@@ -521,9 +445,9 @@ class TestValueDetectionLayers:
 
         with _patch_filter(cfg={"FLOAT_PREMIUM_ENABLED": True}):
             result = await _FilterMixin._evaluate_candidate(
-                mixin, item=_make_item(), game_id="a8db", oracle=None,
+                mixin, item=_make_item(), game_id="a8db", 
                 agg_prices=agg, bulk_fees={}, current_balance=100.0,
-                current_margin=0.05, cs_snapshots=snap,
+                current_margin=0.05,
             )
         assert result is not None
 
@@ -536,9 +460,9 @@ class TestValueDetectionLayers:
 
         with _patch_filter(cfg={"PATTERN_PREMIUM_ENABLED": True}):
             result = await _FilterMixin._evaluate_candidate(
-                mixin, item=_make_item(), game_id="a8db", oracle=None,
+                mixin, item=_make_item(), game_id="a8db", 
                 agg_prices=agg, bulk_fees={}, current_balance=100.0,
-                current_margin=0.05, cs_snapshots=snap,
+                current_margin=0.05,
             )
         assert result is not None
         assert result["is_rare"] is True
@@ -554,9 +478,9 @@ class TestValueDetectionLayers:
             patch("src.analysis.seasonal.get_timing_multiplier", return_value=2.0),
         ):
             result = await _FilterMixin._evaluate_candidate(
-                mixin, item=_make_item(), game_id="a8db", oracle=None,
+                mixin, item=_make_item(), game_id="a8db", 
                 agg_prices=agg, bulk_fees={}, current_balance=100.0,
-                current_margin=0.05, cs_snapshots=snap,
+                current_margin=0.05,
             )
         assert result is not None
 
@@ -571,9 +495,9 @@ class TestValueDetectionLayers:
             patch("src.core.target_sniping.filter.compute_microstructure_scores", return_value={"composite_score": 0.8, "components": {}}),
         ):
             result = await _FilterMixin._evaluate_candidate(
-                mixin, item=_make_item(), game_id="a8db", oracle=None,
+                mixin, item=_make_item(), game_id="a8db", 
                 agg_prices=agg, bulk_fees={}, current_balance=100.0,
-                current_margin=0.05, cs_snapshots=snap,
+                current_margin=0.05,
             )
         assert result is not None
 
@@ -589,9 +513,9 @@ class TestValueDetectionLayers:
         with _patch_filter() as mock_db:
             mock_db.get_low_fee_rate.return_value = None
             result = await _FilterMixin._evaluate_candidate(
-                mixin, item=item, game_id="a8db", oracle=None,
+                mixin, item=item, game_id="a8db", 
                 agg_prices=agg, bulk_fees={}, current_balance=100.0,
-                current_margin=0.05, cs_snapshots=snap,
+                current_margin=0.05,
             )
         assert result is not None
 
@@ -605,9 +529,9 @@ class TestValueDetectionLayers:
         with _patch_filter() as mock_db:
             mock_db.get_low_fee_rate.return_value = 0.01
             result = await _FilterMixin._evaluate_candidate(
-                mixin, item=_make_item(), game_id="a8db", oracle=None,
+                mixin, item=_make_item(), game_id="a8db", 
                 agg_prices=agg, bulk_fees={}, current_balance=100.0,
-                current_margin=0.05, cs_snapshots=snap,
+                current_margin=0.05,
             )
         assert result is not None
 
@@ -623,9 +547,9 @@ class TestKellySizing:
 
         with _patch_filter(cfg={"KELLY_ENABLED": True, "KELLY_FLOOR_PCT": 1.0, "KELLY_FRACTION": 0.5}):
             result = await _FilterMixin._evaluate_candidate(
-                mixin, item=_make_item(), game_id="a8db", oracle=None,
+                mixin, item=_make_item(), game_id="a8db", 
                 agg_prices=agg, bulk_fees={}, current_balance=100.0,
-                current_margin=0.05, cs_snapshots=snap, effective_balance=100.0,
+                current_margin=0.05, effective_balance=100.0,
                 dynamic_max_price=100.0,
             )
         # Kelly with 55% win rate and 1.5 WLR should allow the trade
@@ -641,9 +565,9 @@ class TestKellySizing:
 
         with _patch_filter(cfg={"KELLY_ENABLED": True, "MAX_POSITION_RISK_PCT": 10.0}):
             result = await _FilterMixin._evaluate_candidate(
-                mixin, item=_make_item(), game_id="a8db", oracle=None,
+                mixin, item=_make_item(), game_id="a8db", 
                 agg_prices=agg, bulk_fees={}, current_balance=100.0,
-                current_margin=0.05, cs_snapshots=snap, effective_balance=100.0,
+                current_margin=0.05, effective_balance=100.0,
                 dynamic_max_price=100.0,
             )
         # Half-cap fallback = 5% of 100 = $5 max. Item is $10 → blocked.
@@ -666,9 +590,9 @@ class TestDMarketUnderpriced:
         ):
             mock_up.return_value = {"underpriced": True, "reference_price": 15.0, "margin_pct": 30.0}
             result = await _FilterMixin._evaluate_candidate(
-                mixin, item=_make_item(), game_id="a8db", oracle=None,
+                mixin, item=_make_item(), game_id="a8db", 
                 agg_prices=agg, bulk_fees={}, current_balance=100.0,
-                current_margin=0.05, cs_snapshots=snap,
+                current_margin=0.05,
             )
         assert result is not None
         assert result["strategy"] == "dmarket_underpriced"
@@ -686,9 +610,9 @@ class TestDMarketUnderpriced:
         ):
             mock_up.side_effect = Exception("API error")
             result = await _FilterMixin._evaluate_candidate(
-                mixin, item=_make_item(), game_id="a8db", oracle=None,
+                mixin, item=_make_item(), game_id="a8db", 
                 agg_prices=agg, bulk_fees={}, current_balance=100.0,
-                current_margin=0.05, cs_snapshots=snap,
+                current_margin=0.05,
             )
         # Falls through to "no edge" → None
         assert result is None
@@ -706,9 +630,9 @@ class TestDirtyBsLayer:
 
         with _patch_filter(cfg={"DIRTY_BS_ENABLED": True}):
             result = await _FilterMixin._evaluate_candidate(
-                mixin, item=_make_item(), game_id="a8db", oracle=None,
+                mixin, item=_make_item(), game_id="a8db", 
                 agg_prices=agg, bulk_fees={}, current_balance=100.0,
-                current_margin=0.05, cs_snapshots=snap,
+                current_margin=0.05,
             )
         assert result is not None
 
@@ -722,9 +646,9 @@ class TestDirtyBsLayer:
 
         with _patch_filter(cfg={"DIRTY_BS_ENABLED": True}):
             result = await _FilterMixin._evaluate_candidate(
-                mixin, item=_make_item(), game_id="a8db", oracle=None,
+                mixin, item=_make_item(), game_id="a8db", 
                 agg_prices=agg, bulk_fees={}, current_balance=100.0,
-                current_margin=0.05, cs_snapshots=snap,
+                current_margin=0.05,
             )
         assert result is not None
 
@@ -743,9 +667,9 @@ class TestFillerLayer:
             patch("src.analytics.filler_tracker.get_filler_multiplier", return_value=1.15),
         ):
             result = await _FilterMixin._evaluate_candidate(
-                mixin, item=_make_item(), game_id="a8db", oracle=None,
+                mixin, item=_make_item(), game_id="a8db", 
                 agg_prices=agg, bulk_fees={}, current_balance=100.0,
-                current_margin=0.05, cs_snapshots=snap,
+                current_margin=0.05,
             )
         assert result is not None
 
@@ -761,9 +685,9 @@ class TestFillerLayer:
             patch("src.analytics.filler_tracker.get_filler_multiplier", side_effect=ImportError("no module")),
         ):
             result = await _FilterMixin._evaluate_candidate(
-                mixin, item=_make_item(), game_id="a8db", oracle=None,
+                mixin, item=_make_item(), game_id="a8db", 
                 agg_prices=agg, bulk_fees={}, current_balance=100.0,
-                current_margin=0.05, cs_snapshots=snap,
+                current_margin=0.05,
             )
         assert result is not None
 
@@ -784,41 +708,11 @@ class TestFloatDateLayer:
             patch("src.core.target_sniping.pricing._is_float_date", return_value=True),
         ):
             result = await _FilterMixin._evaluate_candidate(
-                mixin, item=item, game_id="a8db", oracle=None,
+                mixin, item=item, game_id="a8db", 
                 agg_prices=agg, bulk_fees={}, current_balance=100.0,
-                current_margin=0.05, cs_snapshots=snap,
+                current_margin=0.05,
             )
         assert result is not None
-
-
-class TestEnsureOracleCache:
-
-    def test_creates_cache_if_missing(self):
-        mixin = MagicMock()
-        del mixin._oracle_price_cache
-        _FilterMixin._ensure_oracle_cache(mixin)
-        assert mixin._oracle_price_cache == {}
-
-    def test_creates_cache_if_not_dict(self):
-        mixin = MagicMock()
-        mixin._oracle_price_cache = "not_a_dict"
-        _FilterMixin._ensure_oracle_cache(mixin)
-        assert mixin._oracle_price_cache == {}
-
-    def test_preserves_existing_cache(self):
-        mixin = MagicMock()
-        mixin._oracle_price_cache = {"AK-47": 15.0}
-        _FilterMixin._ensure_oracle_cache(mixin)
-        assert mixin._oracle_price_cache == {"AK-47": 15.0}
-
-
-class TestClearOracleCache:
-
-    def test_clears_cache(self):
-        mixin = MagicMock()
-        mixin._oracle_price_cache = {"AK-47": 15.0, "M4A4": 20.0}
-        _FilterMixin._clear_oracle_cache(mixin)
-        assert mixin._oracle_price_cache == {}
 
 
 class TestRankCandidatesBySpread:
