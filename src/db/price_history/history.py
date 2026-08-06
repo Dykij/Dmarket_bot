@@ -29,7 +29,7 @@ class _HistoryMixin:
     # Write (HISTORY)
     # ------------------------------------------------------------------
     @with_db_retry(operation_name="record_price")
-    def record_price(self, hash_name: str, price: float, source: str = "oracle") -> None:
+    def record_price(self, hash_name: str, price: float, source: str = "dmarket") -> None:
         """Insert a new price observation into the history DB."""
         with self.history_conn:
             self.history_conn.execute(

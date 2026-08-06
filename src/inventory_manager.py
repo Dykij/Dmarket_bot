@@ -109,15 +109,14 @@ class InventoryManager:
             logger.error(f"Failed to fetch active offers: {e}", exc_info=True)
             return []
 
-    async def fetch_all_with_oracle(self, game_id: str = "a8db") -> dict[str, Any]:
+    async def fetch_all_with_oracle(self, game_id: str = "a8db", agg_prices: dict[str, Any] | None = None) -> dict[str, Any]:
         """
-        Fetch inventory + offers + oracle prices for each item.
+        Fetch inventory + offers + DMarket prices for each item.
         Returns enriched data with current market values.
 
         Phase 6 optimization: merges the two near-identical loops over
         inventory and offers into a single pass, deduplicates titles, and
-        fetches oracle prices in one /prices/batch call (1 HTTP request
-        instead of N).
+        fetches prices in one batch call.
         """
         inventory = await self.fetch_inventory(game_id)
         offers = await self.fetch_active_offers(game_id)
@@ -158,15 +157,16 @@ class InventoryManager:
             })
 
         # --- Backfill the enriched_items with the batched prices ---
-        cs_prices: dict[str, float] = {}
+        prices = agg_prices or {}
         for entry in enriched_items:
             title = entry.get("title", "")
-            oracle_price = cs_prices.get(title, 0.0)
-            entry["oracle_price"] = oracle_price
+            price_data = prices.get(title, {})
+            market_price = float(price_data.get("best_bid", 0) or 0)
+            entry["oracle_price"] = market_price
             buy_price = entry.get("buy_price", 0.0)
-            if oracle_price > 0 and buy_price > 0:
+            if market_price > 0 and buy_price > 0:
                 entry["profit_pct"] = (
-                    (oracle_price * 0.95 - buy_price) / buy_price
+                    (market_price * 0.95 - buy_price) / buy_price
                 ) * 100
 
         return {
@@ -237,34 +237,31 @@ class InventoryManager:
     # 4. ORACLE PRICE CHECK FOR HELD ITEMS
     # =================================================================
 
-    async def check_held_items_prices(self) -> list[dict[str, Any]]:
+    async def check_held_items_prices(self, agg_prices: dict[str, Any] | None = None) -> list[dict[str, Any]]:
         """
-        Check oracle prices for all held items.
+        Check DMarket prices for all held items.
         Returns list of items with current market value.
-
-        Phase 6 optimization: uses oracle /prices/batch in 1 call instead
-        of N per-item calls.
         """
         items = price_db.get_virtual_inventory(status='idle', only_unlocked=False)
         if not items:
             return []
 
-        unique_titles = list({it['hash_name'] for it in items})
-        cs_prices: dict[str, float] = {}
+        prices = agg_prices or {}
 
         results: list[dict[str, Any]] = []
         for item in items:
             title = item['hash_name']
             buy_price = item['buy_price']
-            oracle_price = cs_prices.get(title, 0.0)
+            price_data = prices.get(title, {})
+            market_price = float(price_data.get("best_bid", 0) or 0)
             unrealized_pnl = 0.0
-            if oracle_price > 0 and buy_price > 0:
-                unrealized_pnl = ((oracle_price * 0.95 - buy_price) / buy_price) * 100
+            if market_price > 0 and buy_price > 0:
+                unrealized_pnl = ((market_price * 0.95 - buy_price) / buy_price) * 100
 
             results.append({
                 "title": title,
                 "buy_price": buy_price,
-                "oracle_price": oracle_price,
+                "oracle_price": market_price,
                 "unrealized_pnl_pct": unrealized_pnl,
                 "status": item['status'],
                 "acquired": time.ctime(item['acquired_at']),

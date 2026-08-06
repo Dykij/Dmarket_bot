@@ -492,7 +492,7 @@ class PriceHistoryDB(  # type: ignore[misc]
                     id          INTEGER PRIMARY KEY AUTOINCREMENT,
                     hash_name   TEXT    NOT NULL,
                     price       REAL    NOT NULL,
-                    source      TEXT    NOT NULL DEFAULT 'oracle',
+                    source      TEXT    NOT NULL DEFAULT 'dmarket',
                     recorded_at REAL    NOT NULL
                 )
             """

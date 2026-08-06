@@ -191,7 +191,7 @@ class LiveShadow:
                 "best_ask": ask,
                 "best_bid": bid,
                 "margin_pct": margin,
-                "strategy": "CrossMarket" if margin > 3 else "MarketMaker",
+                "strategy": "MarketMaker",
             })
         return cands
 

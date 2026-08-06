@@ -96,7 +96,7 @@ class DMarketAPIClient(  # type: ignore[misc]
     # Source: support.dmarket.com (March 2026)
     ENDPOINT_RATE_LIMITS: dict[str, int] = {
         "/marketplace-api/v2/offers": 10,           # 10 RPS (v2 marketplace)
-        "/exchange/v1/market/items": 10,             # 10 RPS (legacy)
+        # F10: removed dead endpoint /exchange/v1/market/items (never called)
         "/marketplace-api/v1/aggregated-prices": 10, # 10 RPS
         "/marketplace-api/v1/low-fee-items": 6,    # 6 RPS
         "/trade-aggregator/v1/last-sales": 6,      # 6 RPS
@@ -203,7 +203,7 @@ class DMarketAPIClient(  # type: ignore[misc]
         # herd. Protects against OfferNotFound races and rate-limit storms.
         self._breaker = CircuitBreaker(
             name="dmarket",
-            fail_threshold=3,
+            fail_threshold=5,  # F8: aligned with circuit_breaker_manager and docs
             base_cooldown=30.0,
             max_cooldown=300.0,
             jitter_pct=0.2,

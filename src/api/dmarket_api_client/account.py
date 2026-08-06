@@ -39,7 +39,14 @@ class _AccountMixin:
         """
         try:
             res = await self.make_request("GET", "/account/v1/balance")
-            usd_balance = float(res.get("usd", 0)) / 100.0
+            # New API format: "balance" is float in dollars
+            # Legacy format: "usd" is integer in cents
+            if "balance" in res:
+                usd_balance = float(res["balance"])
+            elif "usd" in res:
+                usd_balance = float(res["usd"]) / 100.0
+            else:
+                usd_balance = 0.0
             # Update cache on success
             type(self)._cached_balance = usd_balance
             type(self)._cached_balance_ts = time.monotonic()

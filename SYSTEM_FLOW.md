@@ -1,6 +1,6 @@
-# SYSTEM_FLOW — DMarket Quantitative Engine (v16.2)
+# SYSTEM_FLOW — DMarket Quantitative Engine (v17.3)
 
-Логическая цепочка работы бота в режиме **v16.2 (30+ algorithms, 30+ filters, 4-source oracle)**.
+Логическая цепочка работы бота в режиме **v17.3 (30+ algorithms, 30+ filters, DMarket-only)**.
 
 ---
 
@@ -12,7 +12,6 @@ START CYCLE (run_cycle)
   ├── 1. _stage_prepare
   │      ├── Balance check (effective = total - reserved)
   │      ├── Dynamic max price = max($5 floor, effective × 10%)
-  │      ├── Oracle initialization (MultiSourceOracle refresh)
   │      ├── State Reconciliation (every 10 cycles)
   │      └── Cycle counters reset
   │
@@ -23,8 +22,6 @@ START CYCLE (run_cycle)
   │
   ├── 3. _stage_prefetch
   │      ├── Bulk fee lookup (4 tiers)
-  │      ├── Oracle batch fetch: MultiSourceOracle.get_fair_prices_batch()
-  │      │   └── FairPriceCalculator: outlier removal → median → margin tiers
   │      ├── Pump detection scan per title
   │      ├── Sales cache (for CVD/VPIN)
   │      └── Dynamic margin calculation
@@ -42,15 +39,10 @@ START CYCLE (run_cycle)
   │           │   OBI, OFI, VWAP, CVD, VPIN, adverse selection,
   │           │   vol regime, roll spread, Hawkes, Bollinger, DEMA,
   │           │   MACD, Hurst, HMM regime, slippage-at-risk, volume profile
-  │           ├── Cross-market arbitrage evaluation
   │           ├── Liquidity gate + crash detection
   │           ├── Wash trading detection
   │           ├── Volatility validation + order book depth
-  │           ├── Oracle price resolution (batch → cache → per-item)
-  │           ├── Spread/opportunity gate
-  │           │   └─ NOV-2: ALL oracles down → block oracle-dependent;
-  │           │      intra-spread (DMarket-internal) remains allowed
-  │           ├── Oracle overpricing check (DMarket > 1.5× oracle → skip)
+  │           ├── Spread/opportunity gate (DMarket-internal only)
   │           ├── Value detection layers:
   │           │   float premium, dirty BS, filler demand,
   │           │   pattern/phase, sticker value, float-date
@@ -62,9 +54,6 @@ START CYCLE (run_cycle)
   │
   ├── 5. _stage_execute
   │      ├── Slippage protection (re-verify listing prices, abort if >5%)
-  │      ├── NOV-3: Oracle re-check before buy
-  │      │   └── Fresh fair price < profitability → cancel
-  │      │   └── Price drifted >10% from evaluation → cancel
   │      ├── Pre-trade risk check (fee-aware)
   │      ├── Inventory cap (cumulative tracking, atomic gate)
   │      ├── PATCH /exchange/v1/offers-buy
@@ -73,7 +62,7 @@ START CYCLE (run_cycle)
   │
   └── 6. _stage_postprocess
          ├── Auto-resale
-         │   ├── Oracle fair price via get_fair_price()
+         │   ├── DMarket best_bid pricing (via _current_agg_prices)
          │   ├── Avellaneda-Stoikov reservation price (if enabled)
          │   ├── VWAP bands + DOM gap-aware pricing
          │   └── POST /marketplace-api/v2/offers:batchCreate
@@ -86,40 +75,34 @@ START CYCLE (run_cycle)
 
 ---
 
-## Dual-Signal Pipeline
+## Signal Pipeline
 
 ```
-VALUE SIGNAL (primary):
-  rarity_mult × oracle_ask > ask × (1 + FEE_RATE + WITHDRAWAL_FEE + MIN_MARGIN)
-  → Float premium (1.08-1.30×)
-  → Pattern/phase premium (1.0-5.0×)
-  → Sticker combo (+50-100%)
-  → Filler demand (1.15×)
-  → est_sell = oracle_ask × rarity_mult
-  → BUY if est_sell > ask × cost
+OBI DEMAND SIGNAL (primary):
+  normalized_obi = (bid_count - ask_count) / (bid_count + ask_count)
+  OFI = OBI_current - OBI_previous (momentum)
+  demand_ratio = bid_count / ask_count (queue imbalance)
+  → BUY if demand_ratio > threshold AND OFI > -0.1 AND obi_norm > -0.3
 
 SPREAD SIGNAL (fallback):
   best_bid > best_ask × (1 + FEE_RATE + WITHDRAWAL_FEE + MIN_MARGIN)
-  → Classic intra-market spread arbitrage
-  → Does NOT require oracle data (pure DMarket-internal)
+  → Classic intra-market spread arbitrage (pure DMarket-internal)
 ```
 
 ---
 
-## Oracle Data Flow
+## DMarket Data Flow
 
 ```
-Market.CSGO ──┐
-Waxpeer ──────┤  Sequential queries with circuit breaker
-CSFloat ──────┤  Dynamic TTL cache (5/15/30 min by volatility)
-Steam ────────┘  Data Freshness Guard (excludes stale sources)
+DMarket API (Single Source of Truth)
+  /prices/v1 → agg_prices (best_bid, best_ask, bid_count, ask_count)
+  /market/items/v2 → listings (offerId, priceCents, attributes)
+  /trade-aggregator → last_sales (price, timestamp)
+  /exchange/v1/fees → bulk_fees
+  /user/inventory → owned items
        │
        ▼
-MultiSourceOracle.get_fair_price()     [multi_source_oracle.py:168]
-  │  Builds PriceReference with sources_count
-  │  Confidence: high(3+), medium(2), low(1)
-  ▼
-FairPriceCalculator.calculate()        [fair_price_calculator.py:85]
+FairPriceCalculator.calculate()        [fair_price_calculator.py]
   │  1. Filter zero/invalid prices
   │  2. Outlier removal: min < 0.3× median, max > 2.0× median
   │  3. fair_price = median(adjusted)
@@ -127,7 +110,7 @@ FairPriceCalculator.calculate()        [fair_price_calculator.py:85]
   │  5. sell_price = fair_price × (1 + margin/100)
   │  6. Min 3% profit over buy price
   ▼
-FairPriceResult { fair_price, sell_price, confidence, sources_count }
+FairPriceResult { fair_price, sell_price, confidence }
 ```
 
 ---
@@ -167,12 +150,12 @@ PUMP DETECTOR:
 
 | Control | File | Description |
 |---------|------|-------------|
-| Slippage Protection | `execution.py:93-168` | Re-verify listing prices; abort if >5% increase |
-| Oracle Re-check (NOV-3) | `execution.py:136-163` | Fresh oracle price before buy; abort if >10% drift |
-| Oracle-Down Guard (NOV-2) | `filter.py:391-414` | Block oracle-dependent strategies when ALL oracles fail |
-| Idempotency Keys | `targets.py:15-27` | SHA256(item_id + price_cents)[:16] |
-| Inventory Cap | `execution.py:213-256` | Cumulative tracking prevents intra-batch overspending |
+| Slippage Protection | `execution.py` | Re-verify listing prices; abort if >5% increase |
+| Idempotency Keys | `targets.py` | SHA256(item_id + price_cents)[:16] |
+| Inventory Cap | `execution.py` | Cumulative tracking prevents intra-batch overspending |
 | Circuit Breaker | `backoff.py` | 5 consecutive failures → circuit OPEN |
+| Stop-Loss | `position_guard.py` | Auto-sell if price drops below threshold (uses best_bid) |
+| Take-Profit | `position_guard.py` | Auto-sell if price rises above threshold (uses best_bid) |
 
 ---
 
@@ -184,9 +167,11 @@ PUMP DETECTOR:
 | Sell (batch) | POST | `/marketplace-api/v2/offers:batchCreate` |
 | Reprice (batch) | POST | `/marketplace-api/v2/offers:batchUpdate` |
 | Cancel (batch) | POST | `/marketplace-api/v2/offers:batchDelete` |
-| Market items | GET | `/exchange/v1/market/items` |
 | User offers | GET | `/exchange/v1/user-offers` |
 | User inventory | GET | `/exchange/v1/user-inventory` |
+| Aggregated prices | GET | `/marketplace-api/v1/aggregated-prices` |
+| Last sales | GET | `/trade-aggregator/v1/last-sales` |
+| Fees | GET | `/marketplace-api/v1/fee` |
 
 ---
 
@@ -200,4 +185,4 @@ PUMP DETECTOR:
 
 ---
 
-🦅 *DMarket Quantitative Engine | v16.2 | 2026-07-22*
+🦅 *DMarket Quantitative Engine | v17.3 | 2026-08-05*

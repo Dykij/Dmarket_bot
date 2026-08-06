@@ -114,7 +114,7 @@ class ThompsonStrategySelector:
     Converges faster and handles non-stationary environments.
 
     Usage:
-        selector = ThompsonStrategySelector(["MarketMaker", "CrossMarket", "MeanReversion"])
+        selector = ThompsonStrategySelector(["MarketMaker", "MeanReversion"])
         strategy = selector.select()
         # ... execute strategy ...
         selector.update(strategy, won=True, reward=profit)
@@ -282,7 +282,7 @@ class ContextualThompsonSelector:
     Different regimes may favor different strategies.
 
     Usage:
-        selector = ContextualThompsonSelector(["MarketMaker", "CrossMarket", "MeanReversion"])
+        selector = ContextualThompsonSelector(["MarketMaker", "MeanReversion"])
         regime = hmm.update(return).most_likely_state
         strategy = selector.select(context=regime)
     """
@@ -342,12 +342,12 @@ def _demo() -> None:
 
     # Create selector with 3 strategies
     selector = ThompsonStrategySelector(
-        ["MarketMaker", "CrossMarket", "MeanReversion"],
+        ["MarketMaker", "MeanReversion"],
         min_pulls_per_arm=3,
     )
 
     # Simulate: MarketMaker wins 60%, CrossMarket wins 50%, MeanReversion wins 40%
-    win_rates = {"MarketMaker": 0.6, "CrossMarket": 0.5, "MeanReversion": 0.4}
+    win_rates = {"MarketMaker": 0.6, "MeanReversion": 0.4}
 
     for _ in range(100):
         result = selector.select()
@@ -369,11 +369,11 @@ def _demo() -> None:
 
     # Test contextual
     ctx_selector = ContextualThompsonSelector(
-        ["MarketMaker", "CrossMarket"],
+        ["MarketMaker", "MeanReversion"],
         contexts=["CRISIS", "BULL"],
     )
     result = ctx_selector.select(context="CRISIS")
-    assert result.selected_strategy in ["MarketMaker", "CrossMarket"]
+    assert result.selected_strategy in ["MarketMaker", "MeanReversion"]
 
     print("[Thompson] Self-check PASSED")
 

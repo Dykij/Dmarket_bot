@@ -369,13 +369,12 @@ class BaseStrategy(ABC):
     def evaluate_opportunity_enhanced(
         self,
         market_data: dict[str, Any],
-        cross_market_data: Any | None = None,
         indicators: dict[str, float] | None = None,
         turnover_penalty: float = 1.0,
         reflection_result: Any | None = None,
     ) -> dict[str, Any]:
         """
-        Enhanced evaluation that uses oracle cross-market data + indicators.
+        Enhanced evaluation with indicators.
         Override in subclasses for strategy-specific logic.
         Default: delegate to evaluate_opportunity.
         """

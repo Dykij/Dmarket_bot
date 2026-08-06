@@ -106,40 +106,31 @@ class TestFetchAllWithOracle:
         })
         api.get_user_offers = AsyncMock(return_value={"objects": []})
 
-        snap = MagicMock()
-        snap.has_data = True
-        snap.min_price = 15.0
-        manager._mock_oracle.get_prices_batch = AsyncMock(
-            return_value={"AK-47": snap},
-        )
-
-        result = await manager.fetch_all_with_oracle("a8db")
+        agg_prices = {"AK-47": {"best_bid": 15.0, "best_ask": 16.0}}
+        result = await manager.fetch_all_with_oracle("a8db", agg_prices=agg_prices)
         assert result["inventory"][0]["oracle_price"] == 15.0
         assert result["inventory"][0]["profit_pct"] > 0
 
     @pytest.mark.asyncio
-    async def test_oracle_attribute_error_fallback(self):
+    async def test_no_agg_prices_returns_zero(self):
         manager, api = _make_manager()
         api.get_user_inventory = AsyncMock(return_value={
             "objects": [{"itemId": "i1", "title": "AK-47", "price": {"USD": "1000"}}],
         })
         api.get_user_offers = AsyncMock(return_value={"objects": []})
-        manager._mock_oracle.get_prices_batch = AsyncMock(side_effect=AttributeError("no batch"))
-        manager._mock_oracle.get_item_price = AsyncMock(return_value=15.0)
 
         result = await manager.fetch_all_with_oracle("a8db")
-        assert result["inventory"][0]["oracle_price"] == 15.0
+        assert result["inventory"][0]["oracle_price"] == 0.0
 
     @pytest.mark.asyncio
-    async def test_oracle_exception_handled(self):
+    async def test_empty_agg_prices_returns_zero(self):
         manager, api = _make_manager()
         api.get_user_inventory = AsyncMock(return_value={
             "objects": [{"itemId": "i1", "title": "AK-47", "price": {"USD": "1000"}}],
         })
         api.get_user_offers = AsyncMock(return_value={"objects": []})
-        manager._mock_oracle.get_prices_batch = AsyncMock(side_effect=Exception("timeout"))
 
-        result = await manager.fetch_all_with_oracle("a8db")
+        result = await manager.fetch_all_with_oracle("a8db", agg_prices={})
         assert result["inventory"][0]["oracle_price"] == 0.0
 
 
@@ -224,16 +215,13 @@ class TestCheckHeldItemsPrices:
         assert result == []
 
     @pytest.mark.asyncio
-    async def test_returns_oracle_prices(self):
+    async def test_returns_market_prices(self):
         manager, _ = _make_manager()
         items = [{"hash_name": "AK-47", "buy_price": 10.0, "status": "idle", "acquired_at": 1000.0}]
-        snap = MagicMock()
-        snap.has_data = True
-        snap.min_price = 15.0
-        manager._mock_oracle.get_prices_batch = AsyncMock(return_value={"AK-47": snap})
+        agg_prices = {"AK-47": {"best_bid": 15.0, "best_ask": 16.0}}
         with patch("src.inventory_manager.price_db") as mock_db:
             mock_db.get_virtual_inventory.return_value = items
-            result = await manager.check_held_items_prices()
+            result = await manager.check_held_items_prices(agg_prices=agg_prices)
 
         assert len(result) == 1
         assert result[0]["oracle_price"] == 15.0
@@ -257,87 +245,51 @@ class TestFetchAllWithOracleExtended:
 
     @pytest.mark.asyncio
     async def test_enriches_offers(self):
-        """Offers are enriched with oracle prices (lines 146-157)."""
+        """Offers are enriched with DMarket prices."""
         manager, api = _make_manager()
         api.get_user_inventory = AsyncMock(return_value={"objects": []})
         api.get_user_offers = AsyncMock(return_value={
             "objects": [{"offerId": "o1", "title": "AK-47", "price": {"USD": "1500"}}],
         })
-        snap = MagicMock()
-        snap.has_data = True
-        snap.min_price = 20.0
-        manager._mock_oracle.get_prices_batch = AsyncMock(return_value={"AK-47": snap})
+        agg_prices = {"AK-47": {"best_bid": 20.0, "best_ask": 21.0}}
 
-        result = await manager.fetch_all_with_oracle("a8db")
+        result = await manager.fetch_all_with_oracle("a8db", agg_prices=agg_prices)
         assert result["offers_count"] == 1
         assert result["inventory"][0]["status"] == "on_sale"
         assert result["inventory"][0]["oracle_price"] == 20.0
 
     @pytest.mark.asyncio
-    async def test_oracle_attribute_error_fallback(self):
-        """AttributeError triggers per-item fallback (lines 170-177)."""
+    async def test_no_agg_prices_returns_zero(self):
+        """Without agg_prices, oracle_price is 0."""
         manager, api = _make_manager()
         api.get_user_inventory = AsyncMock(return_value={
             "objects": [{"itemId": "i1", "title": "AK-47", "price": {"USD": "1000"}}],
         })
         api.get_user_offers = AsyncMock(return_value={"objects": []})
-        manager._mock_oracle.get_prices_batch = AsyncMock(side_effect=AttributeError("no batch"))
-        manager._mock_oracle.get_item_price = AsyncMock(return_value=15.0)
-
-        result = await manager.fetch_all_with_oracle("a8db")
-        assert result["inventory"][0]["oracle_price"] == 15.0
-
-    @pytest.mark.asyncio
-    async def test_oracle_per_item_exception(self):
-        """Per-item oracle exception is caught (line 176-177)."""
-        manager, api = _make_manager()
-        api.get_user_inventory = AsyncMock(return_value={
-            "objects": [{"itemId": "i1", "title": "AK-47", "price": {"USD": "1000"}}],
-        })
-        api.get_user_offers = AsyncMock(return_value={"objects": []})
-        manager._mock_oracle.get_prices_batch = AsyncMock(side_effect=AttributeError("no batch"))
-        manager._mock_oracle.get_item_price = AsyncMock(side_effect=Exception("timeout"))
 
         result = await manager.fetch_all_with_oracle("a8db")
         assert result["inventory"][0]["oracle_price"] == 0.0
 
     @pytest.mark.asyncio
-    async def test_oracle_generic_exception(self):
-        """Generic oracle exception is caught (line 178-179)."""
+    async def test_empty_agg_prices_returns_zero(self):
+        """Empty agg_prices dict returns zero prices."""
         manager, api = _make_manager()
         api.get_user_inventory = AsyncMock(return_value={
             "objects": [{"itemId": "i1", "title": "AK-47", "price": {"USD": "1000"}}],
         })
         api.get_user_offers = AsyncMock(return_value={"objects": []})
-        manager._mock_oracle.get_prices_batch = AsyncMock(side_effect=Exception("timeout"))
 
-        result = await manager.fetch_all_with_oracle("a8db")
+        result = await manager.fetch_all_with_oracle("a8db", agg_prices={})
         assert result["inventory"][0]["oracle_price"] == 0.0
 
 
 class TestCheckHeldItemsPricesExtended:
 
     @pytest.mark.asyncio
-    async def test_oracle_attribute_error_fallback(self):
-        """AttributeError triggers per-item fallback (lines 280-287)."""
+    async def test_no_agg_prices_returns_zero(self):
+        """Without agg_prices, oracle_price is 0."""
         manager, _ = _make_manager()
         items = [{"hash_name": "AK-47", "buy_price": 10.0, "status": "idle", "acquired_at": 1000.0}]
-        manager._mock_oracle.get_prices_batch = AsyncMock(side_effect=AttributeError("no batch"))
-        manager._mock_oracle.get_item_price = AsyncMock(return_value=15.0)
-
-        with patch("src.inventory_manager.price_db") as mock_db:
-            mock_db.get_virtual_inventory.return_value = items
-            result = await manager.check_held_items_prices()
-
-        assert result[0]["oracle_price"] == 15.0
-
-    @pytest.mark.asyncio
-    async def test_oracle_per_item_exception(self):
-        """Per-item exception in fallback is caught (lines 286-287)."""
-        manager, _ = _make_manager()
-        items = [{"hash_name": "AK-47", "buy_price": 10.0, "status": "idle", "acquired_at": 1000.0}]
-        manager._mock_oracle.get_prices_batch = AsyncMock(side_effect=AttributeError("no batch"))
-        manager._mock_oracle.get_item_price = AsyncMock(side_effect=Exception("timeout"))
 
         with patch("src.inventory_manager.price_db") as mock_db:
             mock_db.get_virtual_inventory.return_value = items
@@ -346,14 +298,28 @@ class TestCheckHeldItemsPricesExtended:
         assert result[0]["oracle_price"] == 0.0
 
     @pytest.mark.asyncio
-    async def test_oracle_generic_exception(self):
-        """Generic oracle exception is caught (lines 288-289)."""
+    async def test_with_agg_prices_returns_market_price(self):
+        """With agg_prices, returns best_bid as oracle_price."""
         manager, _ = _make_manager()
         items = [{"hash_name": "AK-47", "buy_price": 10.0, "status": "idle", "acquired_at": 1000.0}]
-        manager._mock_oracle.get_prices_batch = AsyncMock(side_effect=Exception("timeout"))
+        agg_prices = {"AK-47": {"best_bid": 15.0, "best_ask": 16.0}}
 
         with patch("src.inventory_manager.price_db") as mock_db:
             mock_db.get_virtual_inventory.return_value = items
-            result = await manager.check_held_items_prices()
+            result = await manager.check_held_items_prices(agg_prices=agg_prices)
+
+        assert result[0]["oracle_price"] == 15.0
+        assert result[0]["unrealized_pnl_pct"] > 0
+
+    @pytest.mark.asyncio
+    async def test_missing_title_returns_zero(self):
+        """Title not in agg_prices returns 0."""
+        manager, _ = _make_manager()
+        items = [{"hash_name": "Unknown Item", "buy_price": 10.0, "status": "idle", "acquired_at": 1000.0}]
+        agg_prices = {"AK-47": {"best_bid": 15.0, "best_ask": 16.0}}
+
+        with patch("src.inventory_manager.price_db") as mock_db:
+            mock_db.get_virtual_inventory.return_value = items
+            result = await manager.check_held_items_prices(agg_prices=agg_prices)
 
         assert result[0]["oracle_price"] == 0.0

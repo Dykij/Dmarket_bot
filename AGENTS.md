@@ -220,11 +220,10 @@ When a task requires multiple skills, use `skill-workflow-integrator` to chain t
 где реально совершаются сделки (покупка/продажа) — Dmarket
 (https://api.dmarket.com).
 
-Основная стратегия (v17.2): **Order Book Imbalance (OBI) Demand-Based Trading**.
+Основная стратегия (v17.3): **Order Book Imbalance (OBI) Demand-Based Trading**.
 Стратегия использует ТОЛЬКО данные DMarket (bid_count, ask_count, best_bid, best_ask).
-Внешние оракулы (Market.CSGO, Waxpeer, CSFloat, Steam) НЕ используются в demand-стратегии.
-Код оракулов сохранён для potential использования в других стратегиях (oracle discount, cross-market).
-Параметр `ORACLE_ENABLED_FOR_DEMAND = False` по умолчанию.
+Внешние оракулы (Market.CSGO, Waxpeer, CSFloat, Steam) ПОЛНОСТЬЮ УДАЛЕНЫ из кодовой базы.
+CrossMarketStrategy удалена (зависела от MultiSourceOracle).
 
 При анализе и ревью кода:
 - Ордера на покупку/продажу/выставление лота допустимы ТОЛЬКО через Dmarket API.
@@ -291,19 +290,23 @@ When a task requires multiple skills, use `skill-workflow-integrator` to chain t
 
 **Детали:** ANALYSIS_STAGE1.md — анализ документации, ANALYSIS_STAGE2.md — анализ кодовой базы, ANALYSIS_STAGE3.md — код-ревью, ANALYSIS_STAGE4.md — итоговый отчёт с ревалидацией.
 
-**Ключевые исправления:**
-- `steam_oracle.py` — resp.json() внутри async with контекстного менеджера
-- `fair_price_calculator.py` — outlier removal обрабатывает оба выброса
-- `position_guard.py` — import time вместо __import__
-- `filter.py`, `filter_evaluator.py`, `almgren_chriss.py`, `twap.py`, `dmarket/targets.py` — int(round()) вместо int()
-- `filter.py` — guard блокирует oracle-dependent стратегии при отказе ВСЕХ оракулов
-- `execution.py` — oracle price re-check перед buy
-- `targets.py`, `offers.py` — deterministic idempotency key
+**Ключевые исправления (oracle removal, 2026-08-04):**
+- Pipeline gate (`core.py`) — удалён `if not ctx.oracle: return`
+- `filter.py` — oracle validation заменён на DMarket agg_prices
+- `resale_prod.py` — oracle price заменён на `_current_agg_prices["best_bid"]`
+- `position_guard.py` — `_get_current_price()` теперь читает `_current_agg_prices`
+- `account.py` — fallback для нового API формата (`balance` + legacy `usd`)
+- `inventory_manager.py` — oracle_price заменён на `agg_prices` параметр
+- 18 dead code блоков удалены (Phase 6)
+- CrossMarketStrategy удалена (мёртвый код, зависел от MultiSourceOracle)
+- Circuit breaker threshold выровнен: fail_threshold=5 везде (F8)
+- Dead endpoint `/exchange/v1/market/items` удалён из rate limiter (F10)
+- DB schema source default: `'oracle'` → `'dmarket'` (F12)
 
 **Осталось как рекомендации:**
-- NOV-6: Float precision в hot path (информационно, не критично при текущих ценах CS2)
-- Steam oracle polling: рассмотреть увеличение delay до 0.3-0.5s для production
-- Веса оракулов: рассмотреть volume-weighted median вместо простой медианы
+- #28 GARCH, #29 OU Mean-Reversion — код рабочий, не интегрирован в пайплайн
+- #30 Pair Trading — не реализован
+- OBI regression — данные для калибровки порогов недостаточны (survivorship bias в decision_logs)
 
 ---
 

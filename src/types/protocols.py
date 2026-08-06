@@ -80,16 +80,7 @@ class HasItemPrice(Protocol):
     async def get_item_price(self, title: str) -> float: ...
 
 
-@runtime_checkable
-class HasCrossMarketData(Protocol):
-    """Protocol for an oracle that supports cross-market data + batch pricing."""
-
-    async def get_item_price(self, title: str) -> float: ...
-    async def get_prices_batch(
-        self, titles: list[str]
-    ) -> dict[str, Any]: ...
-    async def get_cross_market_data(self, title: str) -> Any: ...
-    async def close(self) -> None: ...
+# HasCrossMarketData removed — cross-market strategy deleted (MultiSourceOracle removed)
 
 
 # =====================================================================

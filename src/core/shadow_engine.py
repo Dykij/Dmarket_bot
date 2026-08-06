@@ -98,7 +98,6 @@ class ShadowEngine:
         # Multi-strategy comparison
         self._strategy_stats: dict[str, StrategyComparison] = {
             "MarketMaker": StrategyComparison(name="MarketMaker"),
-            "CrossMarket": StrategyComparison(name="CrossMarket"),
             "Conservative": StrategyComparison(name="Conservative"),
         }
 

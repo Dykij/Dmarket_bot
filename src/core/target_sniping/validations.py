@@ -37,10 +37,27 @@ def check_bait_detection(title: str, base_price: float) -> dict:
 def check_obi(
     ask_cnt: int, bid_cnt: int, best_ask: float, best_bid: float
 ) -> dict:
-    """Order Book Imbalance gate: bid_volume / ask_volume pressure ratio."""
+    """
+    Order Book Imbalance gate: bid_volume / ask_volume pressure ratio.
+
+    Uses volume-weighted ratio (price-dependent) rather than normalized OBI.
+    Rationale: the gate needs to account for price levels (a $10 item with
+    10 bids vs a $1 item with 10 bids have very different volume pressure).
+    Normalized OBI (price-independent, [-1,1]) is used separately in
+    demand_strategy.py for scoring — where cross-item comparability matters.
+
+    Also enforces a liquidity threshold: items with very low total order
+    count are noisy and should be skipped.
+    """
     obi_signal = 0.0
     if not Config.OBI_ENABLED or ask_cnt <= 0 or bid_cnt <= 0:
         return {"pass": True, "signal": obi_signal}
+
+    # Liquidity threshold: skip items with very low order count
+    total_orders = ask_cnt + bid_cnt
+    if total_orders < Config.MIN_BID_ASK_COUNT:
+        return {"pass": False, "signal": obi_signal}
+
     safe_bid = float(best_bid) if best_bid and float(best_bid) > 0 else 0.01
     safe_ask = float(best_ask) if best_ask and float(best_ask) > 0 else 0.01
     bid_volume = safe_bid * bid_cnt

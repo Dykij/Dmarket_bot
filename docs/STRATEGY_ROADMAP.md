@@ -1,25 +1,25 @@
-# DMarket Bot — Strategy Roadmap (v14.9)
+# DMarket Bot — Strategy Roadmap (v17.3)
 
-> **Last updated:** 2026-06-27
-> **Status:** v14.9 Value Detection Scanner — dual-signal pipeline deployed
+> **Last updated:** 2026-08-05
+> **Status:** v17.3 OBI Demand-Based Trading — DMarket-only architecture
 > **Balance:** $43.91 (real DMarket account, dynamic limits active)
-> **Tests:**ack 289 tests (unit + bottleneck + sandbox)
+> **Tests:** 190+ tests (unit + sandbox)
 
 ---
 
-## Vision (v14.9)
+## Vision (v17.3)
 
-The DMarket bot is a **Value Detection Scanner + Spread Sniper** that:
+The DMarket bot is a **Demand-Based Trading Engine** that:
 
-1. **Finds** undervalued items by rarity (float, pattern, stickers) — **even without natural spread**
-2. **Buys** at DMarket ask, sells at rarity-adjusted price (oracle ask × premium)
+1. **Finds** high-demand items via Order Book Imbalance (OBI) and Order Flow Imbalance (OFI)
+2. **Buys** at DMarket ask, sells at DMarket best_bid (via `_current_agg_prices`)
 3. **Falls back** to intra-market spread sniping for liquid items
-4. **Uses MultiSourceOracle** as external price oracle (BUFF163 + free marketplaces)
+4. **Uses only DMarket data** — external oracles (Market.CSGO, Waxpeer, CSFloat, Steam) fully removed
 5. **Compounds** capital through high-frequency, low-margin volume trading
-6. **Defends** with risk gates: drawdown freeze, Kelly sizing, lock-aware cap
+6. **Defends** with risk gates: drawdown freeze, Kelly sizing, lock-aware cap, stop-loss/take-profit
 
 The bot operates **only inside DMarket**, using a **dual-signal pipeline**:
-- **VALUE signal** (primary): rarity premium × oracle ask vs buy price
+- **OBI DEMAND signal** (primary): normalized OBI + OFI momentum + queue imbalance
 - **SPREAD signal** (secondary): best_bid > best_ask × margin
 
 ---

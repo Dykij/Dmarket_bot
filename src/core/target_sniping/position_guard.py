@@ -71,7 +71,7 @@ class _PositionGuardMixin:
             if age_hours < STOP_LOSS_MIN_AGE_HOURS:
                 continue
 
-            current_price = await self._get_current_price(it["hash_name"])
+            current_price = await self._get_current_price(it["hash_name"], use_bid=True)
             if current_price <= 0:
                 continue
 
@@ -148,7 +148,7 @@ class _PositionGuardMixin:
             if buy_price <= 0:
                 continue
 
-            current_price = await self._get_current_price(it["hash_name"])
+            current_price = await self._get_current_price(it["hash_name"], use_bid=True)
             if current_price <= 0:
                 continue
 
@@ -206,8 +206,12 @@ class _PositionGuardMixin:
         return {"liquidated": count, "total_value": round(total_value, 2), "errors": len(liquidate_list) - count}
 
     async def _get_current_price(self, hash_name: str, use_bid: bool = False) -> float:
-        """Get current market price. Oracle removed — returns 0 (stop-loss/take-profit disabled)."""
-        return 0.0
+        """Get current market price from DMarket aggregated prices."""
+        agg = getattr(self, '_current_agg_prices', {})
+        data = agg.get(hash_name, {})
+        if use_bid:
+            return float(data.get("best_bid", 0) or 0)
+        return float(data.get("best_ask", 0) or 0)
 
     async def _execute_liquidation(
         self,
