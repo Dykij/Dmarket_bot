@@ -22,6 +22,7 @@ from typing import Any
 from src.analysis.algo_pack.ewma import ewma_volatility
 from src.config import Config
 from src.db.price_history import price_db
+from src.utils.fee_utils import get_sell_fee_rate, get_total_fee_rate
 
 logger = logging.getLogger("PositionGuard")
 
@@ -77,7 +78,7 @@ class _PositionGuardMixin:
 
             loss_pct = ((buy_price - current_price) / buy_price) * 100.0
             # Include sell-side fees in loss calculation for accurate trigger
-            fee_pct = (Config.FEE_RATE + Config.WITHDRAWAL_FEE_RATE) * 100.0
+            fee_pct = get_total_fee_rate() * 100.0
             realized_loss_pct = loss_pct + fee_pct
             if realized_loss_pct >= STOP_LOSS_PCT:
                 logger.warning(
@@ -154,7 +155,7 @@ class _PositionGuardMixin:
 
             profit_pct = ((current_price - buy_price) / buy_price) * 100.0
             # Include sell-side fees in profit calculation for accurate trigger
-            fee_pct = (Config.FEE_RATE + Config.WITHDRAWAL_FEE_RATE) * 100.0
+            fee_pct = get_total_fee_rate() * 100.0
             realized_profit_pct = profit_pct - fee_pct
             if realized_profit_pct >= TAKE_PROFIT_PCT:
                 logger.info(
@@ -245,7 +246,7 @@ class _PositionGuardMixin:
         if is_dry:
             for _it_id, (item, sell_price, reason) in id_to_plan.items():
                 buy_price = float(item["buy_price"] or 0)
-                fee = round(sell_price * (Config.FEE_RATE + Config.WITHDRAWAL_FEE_RATE), 4)
+                fee = round(sell_price * get_total_fee_rate(), 4)
                 profit = sell_price - buy_price - fee
                 price_db.update_virtual_status(item["id"], "sold")
                 price_db.record_virtual_sale(
@@ -280,7 +281,7 @@ class _PositionGuardMixin:
                 for _it_id, (item, sell_price, reason) in id_to_plan.items():
                     if item.get("dm_item_id") == aid or item.get("asset_id") == aid:
                         buy_price = float(item["buy_price"] or 0)
-                        fee = round(sell_price * (Config.FEE_RATE + Config.WITHDRAWAL_FEE_RATE), 4)
+                        fee = round(sell_price * get_total_fee_rate(), 4)
                         profit = sell_price - buy_price - fee
                         price_db.update_virtual_status(item["id"], "selling")
                         logger.info(

@@ -15,6 +15,7 @@ from typing import Any
 
 from src.config import Config
 from src.db.price_history import price_db
+from src.utils.fee_utils import get_sell_fee_rate
 # P1-1: Lazy import to break core→telegram layer coupling
 
 logger = logging.getLogger("SnipingBot")
@@ -40,7 +41,7 @@ class _ResaleDryMixin:
             if random.random() < 0.40:
                 # Simulate the sale at the listed price minus 5% fee
                 sell_price = round((it["sell_price"] or it["buy_price"] * 1.05), 2)
-                fee = round(sell_price * Config.FEE_RATE, 4)
+                fee = round(sell_price * get_sell_fee_rate(), 4)
                 price_db.record_virtual_sale(int(it["id"]), sell_price, fee)
                 # v13.1: Simulate TP funds hold (7 days)
                 hold_until = time.time() + 7 * 24 * 3600

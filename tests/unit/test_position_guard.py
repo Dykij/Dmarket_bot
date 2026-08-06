@@ -134,8 +134,10 @@ class TestCheckTakeProfits:
     async def test_triggers_take_profit_when_price_rises(self):
         """When best_bid rises above take-profit threshold, items should be sold."""
         guard = FakePositionGuard()
+        # Need best_bid high enough to cover TAKE_PROFIT_PCT (15%) + fees (5.5%)
+        # buy=10, sell=13: profit=30%, realized=30%-5.5%=24.5% > 15%
         guard._current_agg_prices = {
-            "AK-47 | Redline": {"best_bid": 12.00, "best_ask": 12.50}
+            "AK-47 | Redline": {"best_bid": 13.00, "best_ask": 13.50}
         }
 
         item = _make_item(buy_price=10.0, age_hours=48.0)
@@ -147,6 +149,6 @@ class TestCheckTakeProfits:
 
             result = await guard.check_take_profits("a8db")
 
-            # profit: (12-10)/10 = 20% - fees
+            # profit: (13-10)/10 = 30% - fees (5.5%) = 24.5% > 15% threshold
             assert result == 1
             guard._execute_liquidation.assert_called_once()

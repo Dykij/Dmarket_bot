@@ -15,8 +15,8 @@ class TestNetMarginGate:
         Reproduce the exact dry-run case: AK-47 Redline bought at $10.00,
         listed at $10.19 (best_bid - $0.01 discount).
 
-        With ACTUAL Config: FEE_RATE=2.5% + WITHDRAWAL_FEE_RATE=0.5% = 3% total:
-        net_margin = ($10.19 - $10.00) / $10.00 - 0.03 = 1.9% - 3% = -1.1%
+        With ACTUAL Config (fixed): FEE_RATE=5% + WITHDRAWAL_FEE_RATE=0.5% = 5.5% total:
+        net_margin = ($10.19 - $10.00) / $10.00 - 0.055 = 1.9% - 5.5% = -3.6%
 
         This should be REJECTED by the gate (net margin < 0).
         """
@@ -26,9 +26,9 @@ class TestNetMarginGate:
 
         net_margin_pct = ((list_price - base_price) / base_price - total_fee_rate) * 100
 
-        # net_margin = (0.19/10.00 - 0.03) * 100 = (0.019 - 0.03) * 100 = -1.1%
+        # net_margin = (0.19/10.00 - 0.055) * 100 = (0.019 - 0.055) * 100 = -3.6%
         assert net_margin_pct < 0, f"Expected negative margin, got {net_margin_pct:.2f}%"
-        assert net_margin_pct == pytest.approx(-1.1, abs=0.1)
+        assert net_margin_pct == pytest.approx(-3.6, abs=0.1)
 
     def test_ak47_redline_10_to_10_19_rejected_with_legacy_5pct_fees(self):
         """
@@ -53,7 +53,7 @@ class TestNetMarginGate:
     def test_profitable_listing_passes(self):
         """
         A listing with enough margin should pass.
-        $10.00 buy → $11.00 list → net = (1.00/10.00 - 0.03) * 100 = 7%
+        $10.00 buy → $11.00 list → net = (1.00/10.00 - 0.055) * 100 = 4.5%
         """
         base_price = 10.00
         list_price = 11.00
@@ -62,12 +62,12 @@ class TestNetMarginGate:
         net_margin_pct = ((list_price - base_price) / base_price - total_fee_rate) * 100
 
         assert net_margin_pct > 0, f"Expected positive margin, got {net_margin_pct:.2f}%"
-        assert net_margin_pct == pytest.approx(7.0, abs=0.1)
+        assert net_margin_pct == pytest.approx(4.5, abs=0.1)
 
     def test_break_even_price(self):
         """
-        Break-even price for $10.00 buy with actual fees (3%):
-        sell_price = buy_price * (1 + fee_rate) = $10.00 * 1.03 = $10.30
+        Break-even price for $10.00 buy with actual fees (5.5%):
+        sell_price = buy_price * (1 + fee_rate) = $10.00 * 1.055 = $10.55
         """
         base_price = 10.00
         total_fee_rate = Config.FEE_RATE + Config.WITHDRAWAL_FEE_RATE
@@ -84,8 +84,8 @@ class TestNetMarginGate:
 
     def test_fee_rate_values_from_env(self):
         """Verify the actual fee rate constants from .env."""
-        # These are the ACTUAL values from .env, not hardcoded assumptions
-        assert Config.FEE_RATE == 0.025, f"Expected 2.5% sell fee, got {Config.FEE_RATE}"
+        # Fixed: .env FEE_RATE corrected from 0.025 to 0.05 (verified DMarket rate)
+        assert Config.FEE_RATE == 0.05, f"Expected 5% sell fee, got {Config.FEE_RATE}"
         assert Config.WITHDRAWAL_FEE_RATE == 0.005, f"Expected 0.5% withdrawal fee, got {Config.WITHDRAWAL_FEE_RATE}"
 
     def test_min_spread_from_env(self):

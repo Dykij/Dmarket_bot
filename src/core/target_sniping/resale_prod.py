@@ -14,6 +14,7 @@ from typing import Any
 
 from src.config import Config
 from src.db.price_history import price_db
+from src.utils.fee_utils import get_sell_fee_rate, get_total_fee_rate
 # P1-1: Lazy import
 
 logger = logging.getLogger("SnipingBot")
@@ -136,12 +137,12 @@ class _ResaleProdMixin:
             fee = 0.0
             sp = int(match.get("price", {}).get("USD", 0))
             sell_price = sp / 100.0
-            fee = round(sell_price * (Config.FEE_RATE + Config.WITHDRAWAL_FEE_RATE), 4)
+            fee = round(sell_price * get_total_fee_rate(), 4)
             # Fall back to our last known listed price if closed records
             # are paginated away.
             if sell_price <= 0:
                 sell_price = float(it["sell_price"] or 0)
-                fee = round(sell_price * (Config.FEE_RATE + Config.WITHDRAWAL_FEE_RATE), 4)
+                fee = round(sell_price * get_total_fee_rate(), 4)
             if sell_price <= 0:
                 continue
             await price_db.run_in_thread(price_db.record_virtual_sale, int(it["id"]), sell_price, fee)  # P2-17: async
@@ -289,7 +290,7 @@ class _ResaleProdMixin:
             if cs_price <= buy_price:
                 # Oracle says price <= what we paid; skip (no point listing)
                 continue
-            target_sell = buy_price * (1 + LIST_MIN_MARGIN_PCT / 100.0 + Config.FEE_RATE + Config.WITHDRAWAL_FEE_RATE)
+            target_sell = buy_price * (1 + LIST_MIN_MARGIN_PCT / 100.0 + get_total_fee_rate())
             if cs_price < target_sell:
                 # Not enough margin after fees
                 continue

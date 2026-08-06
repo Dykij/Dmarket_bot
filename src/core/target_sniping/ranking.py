@@ -119,7 +119,8 @@ def rank_candidates_by_spread(
 
         # Estimated cost to buy + sell + cash out. Low-fee items get a lower
         # effective cost and therefore a higher score.
-        fee_estimate = float(Config.FEE_RATE + Config.WITHDRAWAL_FEE_RATE)
+        from src.utils.fee_utils import get_total_fee_rate
+        fee_estimate = get_total_fee_rate()
         if Config.COMMISSION_OPTIMIZER_ENABLED and low_fee_titles is not None and title in low_fee_titles:
             fee_estimate *= 0.70  # ~30% cheaper fee stack (e.g. 2% vs 4.5%)
 

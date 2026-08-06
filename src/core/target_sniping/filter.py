@@ -370,7 +370,8 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
         # cheaper than the oracle lowest ask, so we can buy on DMarket and
         # resell at the oracle reference price.
         has_intra_spread = best_bid > best_ask * (1 + effective_min_spread / 100.0)
-        required_margin = Config.FEE_RATE + Config.WITHDRAWAL_FEE_RATE + (Config.MIN_SPREAD_PCT / 100.0)
+        from src.utils.fee_utils import get_sell_fee_rate, get_total_fee_rate
+        required_margin = get_total_fee_rate() + (Config.MIN_SPREAD_PCT / 100.0)
         has_reference_discount = (
             cs_price > 0
             and base_price < cs_price * (1 - required_margin)
@@ -384,7 +385,7 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
                 try:
                     from src.core.target_sniping.underpriced import is_dmarket_underpriced
                     up = await is_dmarket_underpriced(
-                        self.client, game_id, title, base_price, fee_rate=bulk_fees.get(item_id, Config.FEE_RATE)
+                        self.client, game_id, title, base_price, fee_rate=bulk_fees.get(item_id, get_sell_fee_rate())
                     )
                     if up.get("underpriced"):
                         has_dmarket_underpriced = True

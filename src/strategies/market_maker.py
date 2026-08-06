@@ -45,7 +45,8 @@ class MarketMaker(BaseStrategy):
 
         # --- Fee Calculation ---
         # DMarket charges fee on the SELL price, not the buy price
-        estimated_fee = best_ask * (Config.FEE_RATE + Config.WITHDRAWAL_FEE_RATE)
+        from src.utils.fee_utils import get_total_fee_rate
+        estimated_fee = best_ask * get_total_fee_rate()
         gross_profit = best_ask - target_price
         net_profit = gross_profit - estimated_fee
 

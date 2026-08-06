@@ -220,7 +220,8 @@ class ShadowEngine:
                 loss_pct = ((pos.buy_price - current_price) / pos.buy_price) * 100
                 profit_pct = ((current_price - pos.buy_price) / pos.buy_price) * 100
 
-                fee = current_price * Config.FEE_RATE
+                from src.utils.fee_utils import get_sell_fee_rate
+                fee = current_price * get_sell_fee_rate()
 
                 if loss_pct >= stop_loss_pct:
                     pos.status = "sold"

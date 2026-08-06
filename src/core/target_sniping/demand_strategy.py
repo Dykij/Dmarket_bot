@@ -34,6 +34,7 @@ from src.analysis.microstructure.obi import (
 )
 from src.config import Config
 from src.db.price_history import price_db
+from src.utils.fee_utils import get_total_fee_rate
 
 _logger = logging.getLogger("DemandStrategy")
 
@@ -190,7 +191,7 @@ def calculate_demand_score(
     volume = total_orders
 
     # Required appreciation to cover fees + profit
-    fees_pct = (Config.FEE_RATE + Config.WITHDRAWAL_FEE_RATE) * 100
+    fees_pct = get_total_fee_rate() * 100
     min_spread = Config.MIN_SPREAD_PCT
     required_appreciation = fees_pct + min_spread
 
