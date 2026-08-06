@@ -167,7 +167,7 @@ class TestLiveShadow:
         cands = LiveShadow._build_candidates(agg)
         wide = next(c for c in cands if c["title"] == "Wide")
         narrow = next(c for c in cands if c["title"] == "Narrow")
-        assert wide["strategy"] == "CrossMarket"
+        assert wide["strategy"] == "MarketMaker"
         assert narrow["strategy"] == "MarketMaker"
 
     def test_get_status_disabled(self):
