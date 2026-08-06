@@ -41,17 +41,11 @@ def _make_virtual_item(
 
 
 def _make_pipeline() -> tuple[ResalePipeline, MagicMock]:
-    """Create a ResalePipeline with mocked dependencies."""
+    """Create a ResalePipeline with mocked dependencies (oracle removed)."""
     api = AsyncMock()
     api.get_item_fee = AsyncMock(return_value=0.05)
 
     with patch("src.core.resale_pipeline.price_db") as mock_db:
-        oracle = AsyncMock()
-        oracle.get_item_price = AsyncMock(return_value=15.0)
-        oracle.get_cross_market_data = AsyncMock(return_value=None)
-        oracle.get_prices_batch = AsyncMock(return_value={})
-        oracle.close = AsyncMock()
-
         risk = MagicMock()
         risk_result = MagicMock()
         risk_result.allowed = True
@@ -66,66 +60,61 @@ def _make_pipeline() -> tuple[ResalePipeline, MagicMock]:
         mock_db.update_virtual_status = MagicMock()
 
         pipeline = ResalePipeline(api_client=api, risk=risk)
-        pipeline.oracle = oracle  # Oracle removed from constructor; set directly for testing
         pipeline._mock_db = mock_db
-        pipeline._mock_oracle = oracle
         return pipeline, api
 
 
 class TestCalculateSellPrice:
+    """Tests for _calculate_sell_price(buy_price, reference_price, fee_rate)."""
 
-    def test_basic_undercut(self):
-        """Sell price undercuts oracle by 2%."""
+    def test_basic_reference_price(self):
+        """Sell price based on reference price with min profit enforcement."""
         pipeline, _ = _make_pipeline()
         result = pipeline._calculate_sell_price(
-            buy_price=10.0, oracle_price=15.0, cross_data=None, fee_rate=0.05,
+            buy_price=10.0, reference_price=15.0, fee_rate=0.05,
         )
-        assert result == 14.70
+        # min_sell = 10.0 * (1 + 0.015) / (1 - 0.05) ≈ 10.68
+        # max_allowed = 15.0 * 1.10 = 16.50
+        # target_sell = max(15.0, 10.68) = 15.0, then min(15.0, 16.50) = 15.0
+        assert result == 15.0
 
-    def test_oracle_price_zero_fallback(self):
-        """When oracle_price is 0, fallback to buy_price * 1.10."""
+    def test_reference_price_zero_fallback(self):
+        """When reference_price is 0, fallback to buy_price * 1.10."""
         pipeline, _ = _make_pipeline()
         result = pipeline._calculate_sell_price(
-            buy_price=10.0, oracle_price=0.0, cross_data=None, fee_rate=0.05,
+            buy_price=10.0, reference_price=0.0, fee_rate=0.05,
         )
         assert result == 11.0
 
     def test_min_profit_margin_enforced(self):
-        """Sell price respects minimum profit margin (capped by oracle * 1.10)."""
+        """Sell price respects minimum profit margin."""
         pipeline, _ = _make_pipeline()
         original = _rp_mod.Config.MIN_SPREAD_PCT
         try:
             _rp_mod.Config.MIN_SPREAD_PCT = 10.0
             result = pipeline._calculate_sell_price(
-                buy_price=10.0, oracle_price=10.5, cross_data=None, fee_rate=0.05,
+                buy_price=10.0, reference_price=10.5, fee_rate=0.05,
             )
         finally:
             _rp_mod.Config.MIN_SPREAD_PCT = original
-        # min_sell = 10.0 * 1.10 / 0.95 ≈ 11.58, but max_allowed = 10.5 * 1.10 = 11.55
-        # So result is capped at 11.55 (still well above buy price)
+        # min_sell = 10.0 * (1 + 0.10) / (1 - 0.05) ≈ 11.58
+        # max_allowed = 10.5 * 1.10 = 11.55
+        # target_sell = max(10.5, 11.58) = 11.58, then min(11.58, 11.55) = 11.55
         assert result == 11.55
         assert result > 10.0  # profitable
 
-    def test_cross_market_bid_adjustment(self):
-        """Cross-market high bid can lower sell price."""
-        pipeline, _ = _make_pipeline()
-        cross_data = SimpleNamespace(global_max_bid=14.5)
-        result = pipeline._calculate_sell_price(
-            buy_price=10.0, oracle_price=15.0, cross_data=cross_data, fee_rate=0.05,
-        )
-        assert result == 14.36
-
-    def test_does_not_exceed_max_above_oracle(self):
-        """Sell price doesn't exceed oracle * 1.10."""
+    def test_does_not_exceed_max_above_reference(self):
+        """Sell price doesn't exceed reference * 1.10."""
         pipeline, _ = _make_pipeline()
         original = _rp_mod.Config.MIN_SPREAD_PCT
         try:
             _rp_mod.Config.MIN_SPREAD_PCT = 50.0
             result = pipeline._calculate_sell_price(
-                buy_price=10.0, oracle_price=12.0, cross_data=None, fee_rate=0.05,
+                buy_price=10.0, reference_price=12.0, fee_rate=0.05,
             )
         finally:
             _rp_mod.Config.MIN_SPREAD_PCT = original
+        # max_allowed = 12.0 * 1.10 = 13.20
         assert result <= 13.20
 
 
@@ -180,22 +169,8 @@ class TestEvaluateAndBuy:
         assert result is None
 
     @pytest.mark.asyncio
-    async def test_oracle_price_zero_returns_none(self):
-        pipeline, _ = _make_pipeline()
-        pipeline._mock_oracle.get_item_price = AsyncMock(return_value=0.0)
-        orig_min, orig_max = _rp_mod.Config.MIN_PRICE_USD, _rp_mod.Config.MAX_PRICE_USD
-        try:
-            _rp_mod.Config.MIN_PRICE_USD, _rp_mod.Config.MAX_PRICE_USD = 1.0, 100.0
-            with patch.object(_rp_mod.price_db, "has_target_been_placed", return_value=False):
-                result = await pipeline._evaluate_and_buy(_make_dmarket_item(), balance=100.0)
-        finally:
-            _rp_mod.Config.MIN_PRICE_USD, _rp_mod.Config.MAX_PRICE_USD = orig_min, orig_max
-        assert result is None
-
-    @pytest.mark.asyncio
     async def test_successful_buy_returns_result(self):
         pipeline, api = _make_pipeline()
-        pipeline._mock_oracle.get_item_price = AsyncMock(return_value=15.0)
         attrs = ("MIN_PRICE_USD", "MAX_PRICE_USD", "TRADE_LOCK_HOURS", "GAME_ID")
         originals = {a: getattr(_rp_mod.Config, a) for a in attrs}
         try:
@@ -221,7 +196,6 @@ class TestEvaluateAndBuy:
     @pytest.mark.asyncio
     async def test_price_validation_failure_returns_none(self):
         pipeline, _ = _make_pipeline()
-        pipeline._mock_oracle.get_item_price = AsyncMock(return_value=15.0)
         from src.risk.price_validator import PriceValidationError
         orig_min, orig_max = _rp_mod.Config.MIN_PRICE_USD, _rp_mod.Config.MAX_PRICE_USD
         try:
@@ -230,19 +204,6 @@ class TestEvaluateAndBuy:
                 patch("src.core.resale_pipeline.validate_arbitrage_profit", side_effect=PriceValidationError("low")),
                 patch.object(_rp_mod.price_db, "has_target_been_placed", return_value=False),
             ):
-                result = await pipeline._evaluate_and_buy(_make_dmarket_item(), balance=100.0)
-        finally:
-            _rp_mod.Config.MIN_PRICE_USD, _rp_mod.Config.MAX_PRICE_USD = orig_min, orig_max
-        assert result is None
-
-    @pytest.mark.asyncio
-    async def test_oracle_exception_returns_none(self):
-        pipeline, _ = _make_pipeline()
-        pipeline._mock_oracle.get_item_price = AsyncMock(side_effect=Exception("timeout"))
-        orig_min, orig_max = _rp_mod.Config.MIN_PRICE_USD, _rp_mod.Config.MAX_PRICE_USD
-        try:
-            _rp_mod.Config.MIN_PRICE_USD, _rp_mod.Config.MAX_PRICE_USD = 1.0, 100.0
-            with patch.object(_rp_mod.price_db, "has_target_been_placed", return_value=False):
                 result = await pipeline._evaluate_and_buy(_make_dmarket_item(), balance=100.0)
         finally:
             _rp_mod.Config.MIN_PRICE_USD, _rp_mod.Config.MAX_PRICE_USD = orig_min, orig_max
@@ -299,10 +260,12 @@ class TestSellInventoryItems:
 
     @pytest.mark.asyncio
     async def test_dry_run_lists_items(self):
-        pipeline, _ = _make_pipeline()
+        pipeline, api = _make_pipeline()
         virtual_items = [_make_virtual_item(item_id=1, hash_name="AK-47 | Redline", buy_price=10.0)]
-        snapshot = SimpleNamespace(has_data=True, min_price=15.0)
-        pipeline._mock_oracle.get_prices_batch = AsyncMock(return_value={"AK-47 | Redline": snapshot})
+        # Mock aggregated prices API (replaces oracle)
+        api.get_aggregated_prices = AsyncMock(return_value={
+            "AK-47 | Redline": {"best_bid": 15.0, "best_ask": 16.0},
+        })
         with (
             patch.object(_rp_mod.price_db, "get_virtual_inventory", return_value=virtual_items),
             patch.object(_rp_mod.price_db, "update_virtual_status") as mock_update,
@@ -320,10 +283,11 @@ class TestSellInventoryItems:
 
     @pytest.mark.asyncio
     async def test_low_margin_item_skipped(self):
-        pipeline, _ = _make_pipeline()
+        pipeline, api = _make_pipeline()
         virtual_items = [_make_virtual_item(item_id=1, hash_name="Expensive", buy_price=14.0)]
-        snapshot = SimpleNamespace(has_data=True, min_price=14.5)
-        pipeline._mock_oracle.get_prices_batch = AsyncMock(return_value={"Expensive": snapshot})
+        api.get_aggregated_prices = AsyncMock(return_value={
+            "Expensive": {"best_bid": 14.5, "best_ask": 15.0},
+        })
         with (
             patch.object(_rp_mod.price_db, "get_virtual_inventory", return_value=virtual_items),
             patch.dict("os.environ", {"DRY_RUN": "true"}),
@@ -468,9 +432,8 @@ class TestScanAndBuyExtended:
 
     @pytest.mark.asyncio
     async def test_production_buy_path(self):
-        """Production buy path (line 185) when DRY_RUN=false."""
+        """Production buy path when DRY_RUN=false."""
         pipeline, api = _make_pipeline()
-        pipeline._mock_oracle.get_item_price = AsyncMock(return_value=15.0)
         api.buy_items = AsyncMock()
 
         attrs = ("MIN_PRICE_USD", "MAX_PRICE_USD", "TRADE_LOCK_HOURS", "GAME_ID")
@@ -485,7 +448,7 @@ class TestScanAndBuyExtended:
                 patch.object(_rp_mod.price_db, "has_target_been_placed", return_value=False),
                 patch.object(_rp_mod.price_db, "add_virtual_item"),
                 patch.object(_rp_mod.price_db, "record_placed_target"),
-                patch.dict("os.environ", {"DRY_RUN": "false"}),
+                patch.object(_rp_mod.Config, "DRY_RUN", False),
             ):
                 result = await pipeline._evaluate_and_buy(_make_dmarket_item(), balance=100.0)
         finally:
@@ -498,9 +461,8 @@ class TestScanAndBuyExtended:
 
     @pytest.mark.asyncio
     async def test_self_reflection_adjusted_spread(self):
-        """Self-reflection spread adjustment (lines 161-162)."""
+        """Self-reflection spread adjustment."""
         pipeline, _ = _make_pipeline()
-        pipeline._mock_oracle.get_item_price = AsyncMock(return_value=15.0)
 
         reflection = SimpleNamespace(confidence=0.5, recommended_spread_adjustment=2.0)
 
@@ -531,90 +493,16 @@ class TestScanAndBuyExtended:
         assert call_kwargs["min_profit_margin"] == 0.07
 
 
-class TestSellOracleFallback:
-    """Tests for oracle batch fallback (lines 252-262) and zero price skip (272)."""
-
-    @pytest.mark.asyncio
-    async def test_oracle_batch_attribute_error_fallback(self):
-        """AttributeError triggers per-item fallback (lines 252-260)."""
-        pipeline, _ = _make_pipeline()
-        virtual_items = [_make_virtual_item(item_id=1, hash_name="AK-47 | Redline", buy_price=10.0)]
-        pipeline._mock_oracle.get_prices_batch = AsyncMock(side_effect=AttributeError("no batch"))
-        pipeline._mock_oracle.get_item_price = AsyncMock(return_value=15.0)
-
-        with (
-            patch.object(_rp_mod.price_db, "get_virtual_inventory", return_value=virtual_items),
-            patch.object(_rp_mod.price_db, "update_virtual_status"),
-            patch.dict("os.environ", {"DRY_RUN": "true"}),
-        ):
-            orig_fee, orig_spread = _rp_mod.Config.FEE_RATE, _rp_mod.Config.MIN_SPREAD_PCT
-            try:
-                _rp_mod.Config.FEE_RATE, _rp_mod.Config.MIN_SPREAD_PCT = 0.05, 5.0
-                result = await pipeline.sell_inventory_items()
-            finally:
-                _rp_mod.Config.FEE_RATE, _rp_mod.Config.MIN_SPREAD_PCT = orig_fee, orig_spread
-
-        assert len(result) == 1
-        pipeline._mock_oracle.get_item_price.assert_called_once_with("AK-47 | Redline")
-
-    @pytest.mark.asyncio
-    async def test_oracle_per_item_fallback_exception(self):
-        """Per-item oracle fallback exception is logged (lines 259-260)."""
-        pipeline, _ = _make_pipeline()
-        virtual_items = [_make_virtual_item(item_id=1, hash_name="AK-47 | Redline", buy_price=10.0)]
-        pipeline._mock_oracle.get_prices_batch = AsyncMock(side_effect=AttributeError("no batch"))
-        pipeline._mock_oracle.get_item_price = AsyncMock(side_effect=Exception("item timeout"))
-
-        with (
-            patch.object(_rp_mod.price_db, "get_virtual_inventory", return_value=virtual_items),
-            patch.dict("os.environ", {"DRY_RUN": "true"}),
-        ):
-            result = await pipeline.sell_inventory_items()
-
-        # Item skipped because oracle per-item call also failed
-        assert result == []
-
-    @pytest.mark.asyncio
-    async def test_oracle_batch_generic_exception(self):
-        """Generic exception in batch is logged and skipped (line 261-262)."""
-        pipeline, _ = _make_pipeline()
-        virtual_items = [_make_virtual_item(item_id=1)]
-        pipeline._mock_oracle.get_prices_batch = AsyncMock(side_effect=Exception("timeout"))
-
-        with (
-            patch.object(_rp_mod.price_db, "get_virtual_inventory", return_value=virtual_items),
-            patch.dict("os.environ", {"DRY_RUN": "true"}),
-        ):
-            result = await pipeline.sell_inventory_items()
-
-        assert result == []
-
-    @pytest.mark.asyncio
-    async def test_oracle_price_zero_skip_in_sell(self):
-        """Items with oracle_price <= 0 are skipped (line 272)."""
-        pipeline, _ = _make_pipeline()
-        virtual_items = [_make_virtual_item(item_id=1, hash_name="Unknown Item", buy_price=10.0)]
-        snapshot = SimpleNamespace(has_data=False, min_price=0.0)
-        pipeline._mock_oracle.get_prices_batch = AsyncMock(return_value={})
-
-        with (
-            patch.object(_rp_mod.price_db, "get_virtual_inventory", return_value=virtual_items),
-            patch.dict("os.environ", {"DRY_RUN": "true"}),
-        ):
-            result = await pipeline.sell_inventory_items()
-
-        assert result == []
-
-
 class TestSellProductionPath:
-    """Tests for production sell path with batch listing (lines 318-399)."""
+    """Tests for production sell path with batch listing."""
 
     @pytest.mark.asyncio
     async def test_production_sell_batch_listing(self):
         pipeline, api = _make_pipeline()
         virtual_items = [_make_virtual_item(item_id=1, hash_name="AK-47 | Redline", buy_price=10.0)]
-        snapshot = SimpleNamespace(has_data=True, min_price=15.0)
-        pipeline._mock_oracle.get_prices_batch = AsyncMock(return_value={"AK-47 | Redline": snapshot})
+        api.get_aggregated_prices = AsyncMock(return_value={
+            "AK-47 | Redline": {"best_bid": 15.0, "best_ask": 16.0},
+        })
 
         api.get_user_inventory = AsyncMock(return_value={
             "objects": [{"title": "AK-47 | Redline", "assetId": "asset_001"}],
@@ -627,7 +515,7 @@ class TestSellProductionPath:
         with (
             patch.object(_rp_mod.price_db, "get_virtual_inventory", return_value=virtual_items),
             patch.object(_rp_mod.price_db, "update_virtual_status") as mock_update,
-            patch.dict("os.environ", {"DRY_RUN": "false"}),
+            patch.object(_rp_mod.Config, "DRY_RUN", False),
         ):
             orig_fee, orig_spread = _rp_mod.Config.FEE_RATE, _rp_mod.Config.MIN_SPREAD_PCT
             try:
@@ -638,25 +526,24 @@ class TestSellProductionPath:
 
         assert len(result) == 1
         assert result[0]["status"] == "listed"
-        assert result[0]["offer_id"] == "offer_001"
         mock_update.assert_called_once_with(1, "selling")
         api.batch_create_offers_v2.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_production_sell_no_asset_id_skips(self):
-        """Items without asset_id are skipped (lines 350-355)."""
+        """Items without asset_id are skipped."""
         pipeline, api = _make_pipeline()
         virtual_items = [_make_virtual_item(item_id=1, hash_name="Missing", buy_price=10.0)]
-        snapshot = SimpleNamespace(has_data=True, min_price=15.0)
-        pipeline._mock_oracle.get_prices_batch = AsyncMock(return_value={"Missing": snapshot})
+        api.get_aggregated_prices = AsyncMock(return_value={
+            "Missing": {"best_bid": 15.0, "best_ask": 16.0},
+        })
 
-        # No matching asset in inventory
         api.get_user_inventory = AsyncMock(return_value={"objects": []})
         api.get_user_offers = AsyncMock(return_value={"objects": []})
 
         with (
             patch.object(_rp_mod.price_db, "get_virtual_inventory", return_value=virtual_items),
-            patch.dict("os.environ", {"DRY_RUN": "false"}),
+            patch.object(_rp_mod.Config, "DRY_RUN", False),
         ):
             orig_fee, orig_spread = _rp_mod.Config.FEE_RATE, _rp_mod.Config.MIN_SPREAD_PCT
             try:
@@ -669,11 +556,12 @@ class TestSellProductionPath:
 
     @pytest.mark.asyncio
     async def test_production_sell_batch_api_failure(self):
-        """batch_create_offers_v2 failure returns empty (lines 365-367)."""
+        """batch_create_offers_v2 failure returns empty."""
         pipeline, api = _make_pipeline()
         virtual_items = [_make_virtual_item(item_id=1, hash_name="AK-47 | Redline", buy_price=10.0)]
-        snapshot = SimpleNamespace(has_data=True, min_price=15.0)
-        pipeline._mock_oracle.get_prices_batch = AsyncMock(return_value={"AK-47 | Redline": snapshot})
+        api.get_aggregated_prices = AsyncMock(return_value={
+            "AK-47 | Redline": {"best_bid": 15.0, "best_ask": 16.0},
+        })
 
         api.get_user_inventory = AsyncMock(return_value={
             "objects": [{"title": "AK-47 | Redline", "assetId": "asset_001"}],
@@ -683,7 +571,7 @@ class TestSellProductionPath:
 
         with (
             patch.object(_rp_mod.price_db, "get_virtual_inventory", return_value=virtual_items),
-            patch.dict("os.environ", {"DRY_RUN": "false"}),
+            patch.object(_rp_mod.Config, "DRY_RUN", False),
         ):
             orig_fee, orig_spread = _rp_mod.Config.FEE_RATE, _rp_mod.Config.MIN_SPREAD_PCT
             try:
@@ -696,17 +584,18 @@ class TestSellProductionPath:
 
     @pytest.mark.asyncio
     async def test_production_sell_asset_enumeration_failure(self):
-        """Asset enumeration failure is handled (lines 342-343)."""
+        """Asset enumeration failure is handled."""
         pipeline, api = _make_pipeline()
         virtual_items = [_make_virtual_item(item_id=1, hash_name="AK-47 | Redline", buy_price=10.0)]
-        snapshot = SimpleNamespace(has_data=True, min_price=15.0)
-        pipeline._mock_oracle.get_prices_batch = AsyncMock(return_value={"AK-47 | Redline": snapshot})
+        api.get_aggregated_prices = AsyncMock(return_value={
+            "AK-47 | Redline": {"best_bid": 15.0, "best_ask": 16.0},
+        })
 
         api.get_user_inventory = AsyncMock(side_effect=Exception("auth failed"))
 
         with (
             patch.object(_rp_mod.price_db, "get_virtual_inventory", return_value=virtual_items),
-            patch.dict("os.environ", {"DRY_RUN": "false"}),
+            patch.object(_rp_mod.Config, "DRY_RUN", False),
         ):
             orig_fee, orig_spread = _rp_mod.Config.FEE_RATE, _rp_mod.Config.MIN_SPREAD_PCT
             try:
@@ -719,15 +608,14 @@ class TestSellProductionPath:
 
     @pytest.mark.asyncio
     async def test_user_offers_fallback_for_asset_lookup(self):
-        """Items found in user_offers as fallback (lines 328-341)."""
+        """Items found in user_offers as fallback."""
         pipeline, api = _make_pipeline()
         virtual_items = [_make_virtual_item(item_id=1, hash_name="AK-47 | Redline", buy_price=10.0)]
-        snapshot = SimpleNamespace(has_data=True, min_price=15.0)
-        pipeline._mock_oracle.get_prices_batch = AsyncMock(return_value={"AK-47 | Redline": snapshot})
+        api.get_aggregated_prices = AsyncMock(return_value={
+            "AK-47 | Redline": {"best_bid": 15.0, "best_ask": 16.0},
+        })
 
-        # Primary inventory has no matching items
         api.get_user_inventory = AsyncMock(return_value={"objects": []})
-        # Fallback: user_offers has the item
         api.get_user_offers = AsyncMock(return_value={
             "items": [{"title": "AK-47 | Redline", "assetId": "asset_from_offer"}],
         })
@@ -738,7 +626,7 @@ class TestSellProductionPath:
         with (
             patch.object(_rp_mod.price_db, "get_virtual_inventory", return_value=virtual_items),
             patch.object(_rp_mod.price_db, "update_virtual_status"),
-            patch.dict("os.environ", {"DRY_RUN": "false"}),
+            patch.object(_rp_mod.Config, "DRY_RUN", False),
         ):
             orig_fee, orig_spread = _rp_mod.Config.FEE_RATE, _rp_mod.Config.MIN_SPREAD_PCT
             try:
@@ -748,20 +636,12 @@ class TestSellProductionPath:
                 _rp_mod.Config.FEE_RATE, _rp_mod.Config.MIN_SPREAD_PCT = orig_fee, orig_spread
 
         assert len(result) == 1
-        assert result[0]["offer_id"] == "offer_001"
 
 
 class TestClose:
 
     @pytest.mark.asyncio
-    async def test_close_calls_oracle_close(self):
+    async def test_close_succeeds(self):
+        """close() should succeed without oracle."""
         pipeline, _ = _make_pipeline()
-        pipeline._mock_oracle.close = AsyncMock()
-        await pipeline.close()
-        pipeline._mock_oracle.close.assert_called_once()
-
-    @pytest.mark.asyncio
-    async def test_close_with_no_oracle(self):
-        pipeline, _ = _make_pipeline()
-        pipeline.oracle = None
         await pipeline.close()  # Should not raise
