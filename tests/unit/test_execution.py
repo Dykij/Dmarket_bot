@@ -38,6 +38,13 @@ def _make_mixin() -> MagicMock:
     mixin.client = AsyncMock()
     mixin.liquidity = MagicMock()
     mixin.risk = MagicMock()
+    mixin.risk._current_equity = 100.0
+    mixin.risk._peak_equity = 100.0
+    # _dynamic_risk must return numeric values for trade_size_result comparisons
+    mixin._dynamic_risk = MagicMock()
+    mixin._dynamic_risk.evaluate_trade_size.return_value = 10.0
+    mixin._failed_offer_ids = {}
+    mixin._failure_counts = {}
     mixin._simulate_network_latency = AsyncMock()
     mixin._maybe_inject_error = MagicMock()
     mixin._simulate_competition = MagicMock(return_value=True)
@@ -71,9 +78,14 @@ def _mock_notifier():
 @pytest.fixture()
 def _patch_execution(_mock_notifier):
     """Patch price_db and notifier at the execution module level."""
+    mock_dynamic_risk = MagicMock()
+    mock_dynamic_risk.evaluate_trade_size.return_value = MagicMock(
+        position_size=10.0, adjusted_price=10.0, kelly_fraction=0.5,
+    )
     with (
         patch("src.core.target_sniping.execution.price_db") as mock_db,
-        patch("src.core.target_sniping.execution.notifier", _mock_notifier),
+        patch("src.telegram.notifier.notifier", _mock_notifier),
+        patch("src.risk.dynamic_manager.DynamicRiskManager", return_value=mock_dynamic_risk),
     ):
         mock_db.get_total_equity.return_value = {
             "assets": 0.0, "count": 0, "frozen": 0.0,
