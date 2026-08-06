@@ -235,6 +235,43 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
         if (ask_count + bid_count) < Config.MIN_BID_ASK_COUNT:
             return None
 
+        # v17.8: Early OBI/OFI logging for ALL items (fixes survivorship bias)
+        # Previously only logged items that passed demand strategy filter.
+        # Now logs every scanned item's OBI/OFI for regression calibration.
+        if Config.DEMAND_STRATEGY_ENABLED:
+            try:
+                from src.analysis.microstructure.obi import normalized_obi, ofi as ofi_func
+                _obi_norm = normalized_obi(bid_count, ask_count)
+                _prev_obi = getattr(self, '_obi_cache', {}).get(title, 0.0)
+                _ofi_val = ofi_func(_obi_norm, _prev_obi)
+                # Update cache for next cycle (keep last 500 items)
+                if not hasattr(self, '_obi_cache'):
+                    self._obi_cache = {}
+                self._obi_cache[title] = _obi_norm
+                if len(self._obi_cache) > 500:
+                    # Evict oldest half
+                    keys = list(self._obi_cache.keys())
+                    for k in keys[:len(keys)//2]:
+                        del self._obi_cache[k]
+                # Log to decision_logs with decision="scanned"
+                # This captures the full population (pass + skip) for regression
+                import json as _json
+                _scan_details = _json.dumps({
+                    "obi_norm": _obi_norm,
+                    "ofi": _ofi_val,
+                    "bid_count": bid_count,
+                    "ask_count": ask_count,
+                    "best_bid": best_bid,
+                    "best_ask": best_ask,
+                })
+                price_db.log_decision(
+                    title, "scanned",
+                    f"obi={_obi_norm:.3f} ofi={_ofi_val:+.3f} bid={bid_count} ask={ask_count}",
+                    _scan_details
+                )
+            except Exception:
+                pass  # Non-critical — don't block evaluation
+
         # --- v15.7: Microstructure pipeline (extracted from inline checks) ---
         # v15.9: Fetch price_history early for Hawkes, Bollinger, DEMA, MACD, Hurst
         _early_history = price_db.get_recent_prices(title, days=14)

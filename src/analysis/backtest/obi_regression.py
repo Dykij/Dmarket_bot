@@ -30,7 +30,7 @@ def load_decision_logs(db_path: str = "data/dmarket_state.db") -> list[dict]:
     rows = conn.execute(
         "SELECT hash_name, decision, reason, details, timestamp "
         "FROM decision_logs "
-        "WHERE reason LIKE '%demand%' OR reason LIKE '%OBI%' "
+        "WHERE reason LIKE '%demand%' OR reason LIKE '%OBI%' OR reason LIKE '%obi=%' "
         "ORDER BY timestamp"
     ).fetchall()
     conn.close()
