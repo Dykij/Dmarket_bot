@@ -548,6 +548,18 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
             # Use the lower cached rate (it might differ slightly from dynamic)
             fee_rate = min(fee_rate, cached_low_fee)
 
+        # P0 HARD GATE: net margin after ALL fees must be positive
+        # Uses ACTUAL fee rate from DMarket API (fee_rate), not Config.FEE_RATE
+        # which may be misconfigured (e.g. Config=2.5% but DMarket charges 5%)
+        total_fee_rate = fee_rate + Config.WITHDRAWAL_FEE_RATE
+        net_margin_pct = ((list_price - base_price) / base_price - total_fee_rate) * 100
+        if net_margin_pct <= 0:
+            logger.warning(
+                f"[NET-MARGIN-GATE] {title}: list=${list_price:.2f} buy=${base_price:.2f} "
+                f"fee={fee_rate:.3f} net={net_margin_pct:.2f}% <= 0 — REJECTED"
+            )
+            return None
+
         fee_result = evaluate_fee_slippage_tod(
             title=title,
             base_price=base_price,
