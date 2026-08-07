@@ -76,20 +76,9 @@ jobs:
           if [ "$SCANNED_COUNT" -lt 100 ] && [ -f .github/seed/decision_logs_seed.sql.gz ]; then
             echo "Seeding from committed snapshot..."
             mkdir -p data
-            python -c "
-            import sqlite3
-            conn = sqlite3.connect('data/dmarket_state.db')
-            conn.execute('''CREATE TABLE IF NOT EXISTS decision_logs (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                hash_name TEXT NOT NULL,
-                decision TEXT NOT NULL,
-                reason TEXT NOT NULL,
-                details TEXT,
-                timestamp REAL NOT NULL
-            )''')
-            conn.commit()
-            conn.close()
-            "
+            # Create table if not exists (no Python needed)
+            sqlite3 data/dmarket_state.db "CREATE TABLE IF NOT EXISTS decision_logs (id INTEGER PRIMARY KEY AUTOINCREMENT, hash_name TEXT NOT NULL, decision TEXT NOT NULL, reason TEXT NOT NULL, details TEXT, timestamp REAL NOT NULL);"
+            # Import seed data with INSERT OR IGNORE to avoid duplicates
             gunzip -c .github/seed/decision_logs_seed.sql.gz | \
               sed 's/INSERT INTO/INSERT OR IGNORE INTO/g' | \
               sqlite3 data/dmarket_state.db
