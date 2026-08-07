@@ -1,0 +1,140 @@
+name: OBI/OFI Data Collection
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Action to perform'
+        required: true
+        default: 'start'
+        type: choice
+        options:
+          - start
+          - stop
+          - status
+  schedule:
+    - cron: '0 */6 * * *'  # Every 6 hours
+
+concurrency:
+  group: obi-data-collection
+  cancel-in-progress: false
+
+env:
+  DRY_RUN: "true"
+  ENVIRONMENT: "development"
+  PYTHONUNBUFFERED: "1"
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  collect:
+    name: OBI/OFI Data Collection
+    runs-on: ubuntu-latest
+    timeout-minutes: 350  # ~5.8h (6h schedule - buffer)
+
+    steps:
+      - name: Check if stop requested
+        if: github.event.inputs.action == 'stop'
+        run: echo "::notice::Stop requested. Exiting." && exit 0
+
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/remove-oracles-formula-audit
+          fetch-depth: 0
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # Restore state from cache
+      - name: Restore state from cache
+        uses: actions/cache@v4
+        id: cache-state
+        with:
+          path: |
+            data/
+            memory/
+          key: obi-data-${{ github.run_id }}
+          restore-keys: |
+            obi-data-
+
+      # Seed from committed snapshot on first run (no cache)
+      - name: Seed decision_logs from snapshot
+        if: steps.cache-state.outputs.cache-hit != 'true'
+        run: |
+          if [ -f .github/seed/decision_logs_seed.sql.gz ]; then
+            echo "No cache found — seeding from committed snapshot..."
+            mkdir -p data
+            # Create empty DB with correct schema
+            python -c "
+            import sqlite3
+            conn = sqlite3.connect('data/dmarket_state.db')
+            conn.execute('''CREATE TABLE IF NOT EXISTS decision_logs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                hash_name TEXT NOT NULL,
+                decision TEXT NOT NULL,
+                reason TEXT NOT NULL,
+                details TEXT,
+                timestamp REAL NOT NULL
+            )''')
+            conn.commit()
+            conn.close()
+            "
+            # Import seed data
+            gunzip -c .github/seed/decision_logs_seed.sql.gz | sqlite3 data/dmarket_state.db
+            COUNT=$(sqlite3 data/dmarket_state.db "SELECT COUNT(*) FROM decision_logs;")
+            echo "Seeded $COUNT decision_logs entries"
+          else
+            echo "No seed file found — starting fresh"
+          fi
+
+      # Run bot
+      - name: Run data collection
+        run: |
+          echo "Starting OBI/OFI data collection..."
+          echo "Start time: $(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+          # Run for ~5.5h (leave buffer for cache save)
+          timeout 19800 python -m src || true
+          echo "Collection cycle complete"
+
+      # Progress report
+      - name: Progress report
+        if: always()
+        run: |
+          python scripts/check_obi_progress.py || true
+          echo ""
+          echo "=== Duplicate check ==="
+          sqlite3 data/dmarket_state.db \
+            "SELECT COUNT(*) as duplicates FROM (
+              SELECT hash_name, timestamp FROM decision_logs
+              WHERE decision='scanned'
+              GROUP BY hash_name, timestamp HAVING COUNT(*) > 1
+            );" || true
+
+      # Save state
+      - name: Save state to cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            data/
+            memory/
+          key: obi-data-${{ github.run_id }}
+
+      # Update seed for future runs
+      - name: Update seed snapshot
+        if: always()
+        run: |
+          if [ -f data/dmarket_state.db ]; then
+            sqlite3 data/dmarket_state.db ".dump decision_logs" | gzip > .github/seed/decision_logs_seed.sql.gz
+            echo "Updated seed snapshot"
+          fi
