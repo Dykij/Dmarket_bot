@@ -79,7 +79,9 @@ jobs:
             # Create table if not exists (no Python needed)
             sqlite3 data/dmarket_state.db "CREATE TABLE IF NOT EXISTS decision_logs (id INTEGER PRIMARY KEY AUTOINCREMENT, hash_name TEXT NOT NULL, decision TEXT NOT NULL, reason TEXT NOT NULL, details TEXT, timestamp REAL NOT NULL);"
             # Import seed data with INSERT OR IGNORE to avoid duplicates
+            # Filter out CREATE TABLE (already created above) and BEGIN/COMMIT
             gunzip -c .github/seed/decision_logs_seed.sql.gz | \
+              grep -v "^CREATE TABLE\|^BEGIN\|^COMMIT\|^PRAGMA" | \
               sed 's/INSERT INTO/INSERT OR IGNORE INTO/g' | \
               sqlite3 data/dmarket_state.db
             COUNT=$(sqlite3 data/dmarket_state.db "SELECT COUNT(*) FROM decision_logs;")
