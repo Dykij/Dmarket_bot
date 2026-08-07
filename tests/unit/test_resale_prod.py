@@ -277,8 +277,9 @@ class TestProdListUnlocked:
 
     @pytest.mark.asyncio
     async def test_no_items_returns_early(self):
-        """Empty items list → no-op."""
+        """Empty items list → no-op, no batch API call."""
         mixin = _make_resale_mixin()
+        mixin.client.create_sell_offers_batch = AsyncMock()
 
         mock_get_inv = MagicMock(name="get_virtual_inventory")
         mock_get_inv.return_value = []
@@ -293,10 +294,13 @@ class TestProdListUnlocked:
             mock_db.get_virtual_inventory = mock_get_inv
             await _ResaleProdMixin._prod_list_unlocked(mixin, [], "a8db")
 
+        mixin.client.create_sell_offers_batch.assert_not_called()
+
     @pytest.mark.asyncio
     async def test_no_dm_item_id_skipped(self):
-        """Items without dm_item_id are skipped."""
+        """Items without dm_item_id are skipped — no batch API call."""
         mixin = _make_resale_mixin()
+        mixin.client.create_sell_offers_batch = AsyncMock()
 
         mock_get_inv = MagicMock(name="get_virtual_inventory")
 
@@ -312,10 +316,13 @@ class TestProdListUnlocked:
                 {"id": 1, "hash_name": "Item", "buy_price": 10.0, "dm_item_id": None}
             ], "a8db")
 
+        mixin.client.create_sell_offers_batch.assert_not_called()
+
     @pytest.mark.asyncio
     async def test_zero_buy_price_skipped(self):
-        """Items with buy_price=0 are skipped."""
+        """Items with buy_price=0 are skipped — no batch API call."""
         mixin = _make_resale_mixin()
+        mixin.client.create_sell_offers_batch = AsyncMock()
 
         mock_get_inv = MagicMock(name="get_virtual_inventory")
 
@@ -331,10 +338,13 @@ class TestProdListUnlocked:
                 {"id": 1, "hash_name": "Item", "buy_price": 0, "dm_item_id": "dm_001", "list_error": None}
             ], "a8db")
 
+        mixin.client.create_sell_offers_batch.assert_not_called()
+
     @pytest.mark.asyncio
     async def test_list_error_skipped(self):
-        """Items with recent list_error are skipped (cooldown)."""
+        """Items with recent list_error are skipped — no batch API call."""
         mixin = _make_resale_mixin()
+        mixin.client.create_sell_offers_batch = AsyncMock()
 
         mock_get_inv = MagicMock(name="get_virtual_inventory")
 
@@ -350,11 +360,14 @@ class TestProdListUnlocked:
                 {"id": 1, "hash_name": "Item", "buy_price": 10.0, "dm_item_id": "dm_001", "list_error": "API 500"}
             ], "a8db")
 
+        mixin.client.create_sell_offers_batch.assert_not_called()
+
     @pytest.mark.asyncio
     async def test_margin_too_low_skips(self):
-        """Items where best_bid < target_sell are skipped."""
+        """Items where best_bid < target_sell are skipped — no batch API call."""
         mixin = _make_resale_mixin()
         mixin._current_agg_prices = {"Item": {"best_bid": 10.10, "best_ask": 10.50}}
+        mixin.client.create_sell_offers_batch = AsyncMock()
 
         mock_get_inv = MagicMock(name="get_virtual_inventory")
 
@@ -369,6 +382,9 @@ class TestProdListUnlocked:
             await _ResaleProdMixin._prod_list_unlocked(mixin, [
                 {"id": 1, "hash_name": "Item", "buy_price": 10.0, "dm_item_id": "dm_001", "list_error": None}
             ], "a8db")
+
+        # best_bid (10.10) < target_sell (10.0 * 1.085 ≈ 10.85) → skipped
+        mixin.client.create_sell_offers_batch.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_successful_listing(self):
