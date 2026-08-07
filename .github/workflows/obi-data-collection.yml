@@ -67,14 +67,15 @@ jobs:
           restore-keys: |
             obi-data-
 
-      # Seed from committed snapshot on first run (no cache)
+      # Seed decision_logs with OBI/OFI data if not present
       - name: Seed decision_logs from snapshot
-        if: steps.cache-state.outputs.cache-hit != 'true'
         run: |
-          if [ -f .github/seed/decision_logs_seed.sql.gz ]; then
-            echo "No cache found — seeding from committed snapshot..."
+          # Check if scanned entries already exist
+          SCANNED_COUNT=$(sqlite3 data/dmarket_state.db "SELECT COUNT(*) FROM decision_logs WHERE decision='scanned';" 2>/dev/null || echo "0")
+          echo "Existing scanned entries: $SCANNED_COUNT"
+          if [ "$SCANNED_COUNT" -lt 100 ] && [ -f .github/seed/decision_logs_seed.sql.gz ]; then
+            echo "Seeding from committed snapshot..."
             mkdir -p data
-            # Create empty DB with correct schema
             python -c "
             import sqlite3
             conn = sqlite3.connect('data/dmarket_state.db')
@@ -89,12 +90,13 @@ jobs:
             conn.commit()
             conn.close()
             "
-            # Import seed data
-            gunzip -c .github/seed/decision_logs_seed.sql.gz | sqlite3 data/dmarket_state.db
+            gunzip -c .github/seed/decision_logs_seed.sql.gz | \
+              sed 's/INSERT INTO/INSERT OR IGNORE INTO/g' | \
+              sqlite3 data/dmarket_state.db
             COUNT=$(sqlite3 data/dmarket_state.db "SELECT COUNT(*) FROM decision_logs;")
-            echo "Seeded $COUNT decision_logs entries"
+            echo "Total decision_logs after seed: $COUNT"
           else
-            echo "No seed file found — starting fresh"
+            echo "Sufficient data exists ($SCANNED_COUNT scanned entries) — skipping seed"
           fi
 
       # Run bot
