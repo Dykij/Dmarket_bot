@@ -161,7 +161,7 @@ class TestStageScanExtended:
     @pytest.mark.asyncio
     @patch("src.core.target_sniping.cycle_orchestrator.price_db")
     async def test_capital_velocity_low_skips(self, mock_db):
-        """Capital velocity below minimum skips cycle (lines 110-118)."""
+        """Capital velocity below minimum skips cycle — but agg_prices still loaded."""
         orch = _make_orchestrator()
         orch.client.get_aggregated_prices = AsyncMock(return_value={"AK-47": {"best_ask": 10.0}})
         mock_db.get_virtual_inventory_weekly_sales.return_value = 1.0
@@ -175,10 +175,11 @@ class TestStageScanExtended:
         with patch("src.core.target_sniping.cycle_orchestrator.Config") as mock_config:
             mock_config.CAPITAL_VELOCITY_ENABLED = True
             mock_config.CAPITAL_VELOCITY_MIN = 0.5
+            mock_config.DEMAND_STRATEGY_ENABLED = False  # skip OBI/OFI logging
             result = await CycleOrchestrator._stage_scan(orch, ctx)
 
-        # Low velocity → skip, agg_prices not populated
-        assert result.agg_prices == {}
+        # Low velocity → cycle skipped, but agg_prices were loaded before gate
+        assert result.agg_prices == {"AK-47": {"best_ask": 10.0}}
 
     @pytest.mark.asyncio
     @patch("src.core.target_sniping.cycle_orchestrator.price_db")
