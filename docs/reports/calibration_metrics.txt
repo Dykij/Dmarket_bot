@@ -1,0 +1,2 @@
+Tested on 826,638 records across 10 heterogeneous titles.
+R²: 1e-6 to 0.0006, Max R²: 0.0006 (Emerald Pinstripe BS), p-value: 0.051–0.930
