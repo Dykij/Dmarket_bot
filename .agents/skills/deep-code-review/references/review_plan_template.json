@@ -1,0 +1,14 @@
+{
+  "timestamp": "2026-07-18T12:00:00Z",
+  "depth": "ultra",
+  "files": [],
+  "lines_changed": 0,
+  "estimated_tokens": 0,
+  "agents_batch1": ["correctness", "security", "performance", "architecture", "domain", "test_coverage"],
+  "agents_batch2": ["async_safety", "db_safety", "api_safety", "config_safety", "error_recovery", "duplication"],
+  "history_context": {},
+  "review_md_rules": {
+    "always_flag": [],
+    "never_flag": []
+  }
+}

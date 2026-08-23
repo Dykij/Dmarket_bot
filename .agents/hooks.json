@@ -1,0 +1,11 @@
+{
+  "session-log-reminder": {
+    "Stop": [
+      {
+        "type": "command",
+        "command": "bash .agents/scripts/check_session_log.sh",
+        "timeout": 10
+      }
+    ]
+  }
+}
