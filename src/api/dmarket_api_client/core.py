@@ -74,8 +74,8 @@ def _retry_on_transient(exc: BaseException) -> bool:
     if isinstance(exc, (asyncio.TimeoutError, aiohttp.ClientConnectionError)):
         return True
     if isinstance(exc, aiohttp.ClientResponseError):
-        # Retry on 5xx server errors, but NOT on 4xx client errors
-        return exc.status >= 500
+        # Retry on 5xx server errors and 429 Too Many Requests
+        return exc.status >= 500 or exc.status == 429
     return False
 
 # Preserve the original module-level vault import for backward compat
