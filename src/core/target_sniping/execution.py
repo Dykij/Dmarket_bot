@@ -310,18 +310,7 @@ class _ExecutionMixin:
                             item_data["buy_offer"]["offerId"] for item_data in verified_buys
                         }
             else:
-                # Inspect dmOffersStatus to find successes
-                dm_offers_status = buy_response.get("dmOffersStatus", {}) or {}
-                for offer_id, info in dm_offers_status.items():
-                    if info.get("started") or info.get("success"):
-                        # Map offer_id back to title (best effort: any offer that started)
-                        for item_data in verified_buys:
-                            if (
-                                item_data["buy_offer"].get("offerId")
-                                == offer_id
-                            ):
-                                successful_offer_ids.add(offer_id)
-                                break
+                # If TxFailed, the entire batch failed (ignore dmOffersStatus started/success)
                 fail_reason = buy_response.get("dmOffersFailReason", {}) or {}
                 if fail_reason:
                     failed_code = fail_reason.get("code", "unknown")

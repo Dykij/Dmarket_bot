@@ -366,7 +366,7 @@ class TestExecuteEdgeCases:
             mixin, instant_buys=[_make_item()], current_balance=100.0, game_id="a8db",
         )
 
-        _patch_execution.record_placed_target.assert_called_once()
+        _patch_execution.record_placed_target.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_api_500_propagates(self, _patch_execution):
