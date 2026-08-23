@@ -526,8 +526,8 @@ class TestSlippageEdgeCases:
             current_balance=100.0, game_id="a8db",
         )
 
-        # Price is same (1000 cents = $10), no slippage, should proceed
-        _patch_execution.record_placed_target.assert_called_once()
+        # Exact offer not found, should block (return None)
+        _patch_execution.record_placed_target.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_slippage_exactly_at_threshold_proceeds(self, _patch_execution):

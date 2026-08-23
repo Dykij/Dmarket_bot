@@ -142,10 +142,10 @@ class _ExecutionMixin:
                         for lst in matching
                     )
                 else:
-                    cheapest_cents = int(
-                        current_listings[0].get("priceCents", 0)
-                        or current_listings[0].get("price", {}).get("USD", 0)
+                    logger.warning(
+                        f"[SLIPPAGE] {title}: exact offer not found. Skipping."
                     )
+                    return None
                 current_price = cheapest_cents / 100.0
                 if current_price <= 0:
                     logger.warning(f"[SLIPPAGE] {title}: price is 0. Skipping.")
