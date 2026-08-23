@@ -270,7 +270,7 @@ class _ExecutionMixin:
         # `dmOffersFailReason: {code: 'OfferNotFound'}` if the listing was
         # already taken by another bot. We must check the response body
         # before recording the spend locally.
-        successful_titles = set()
+        successful_offer_ids = set()
         bought_items: list[dict[str, Any]] = []  # v12.5: [{itemId, title}, ...]
         if isinstance(buy_response, dict):
             status = buy_response.get("status", "")
@@ -301,13 +301,13 @@ class _ExecutionMixin:
                         if info.get("started") or info.get("success"):
                             for item_data in verified_buys:
                                 if item_data["buy_offer"].get("offerId") == offer_id:
-                                    successful_titles.add(item_data["title"])
+                                    successful_offer_ids.add(offer_id)
                                     break
                 else:
                     # No per-offer status — only assume success if status is not TxFailed
                     if status != "TxFailed":
-                        successful_titles = {
-                            item_data["title"] for item_data in verified_buys
+                        successful_offer_ids = {
+                            item_data["buy_offer"]["offerId"] for item_data in verified_buys
                         }
             else:
                 # Inspect dmOffersStatus to find successes
@@ -320,7 +320,7 @@ class _ExecutionMixin:
                                 item_data["buy_offer"].get("offerId")
                                 == offer_id
                             ):
-                                successful_titles.add(item_data["title"])
+                                successful_offer_ids.add(offer_id)
                                 break
                 fail_reason = buy_response.get("dmOffersFailReason", {}) or {}
                 if fail_reason:
@@ -353,7 +353,7 @@ class _ExecutionMixin:
                     logger.warning(f"Buy TxFailed: {buy_response}")
             logger.info(
                 f"Buy response: status={status} "
-                f"successful={len(successful_titles)}/{len(verified_buys)} "
+                f"successful={len(successful_offer_ids)}/{len(verified_buys)} "
                 f"bought_items={len(bought_items)}"
             )
 
@@ -584,7 +584,7 @@ class _ExecutionMixin:
             # v12.3: Only record local spend/target if the actual buy succeeded.
             # For DRY_RUN, always record (simulated). For production, gate on
             # successful_titles which is populated from the buy response.
-            if is_dry or title in successful_titles:
+            if is_dry or item_data["buy_offer"].get("offerId") in successful_offer_ids:
                 await price_db.run_in_thread(price_db.record_placed_target, item_id, title, base_price)
                 # v14.5: Ensure virtual_inventory row exists in PROD (DRY creates it earlier)
                 if not is_dry and not new_dm_item_id:
