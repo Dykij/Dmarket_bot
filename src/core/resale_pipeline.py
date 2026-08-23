@@ -25,6 +25,7 @@ from src.api.dmarket_api_client import DMarketAPIClient
 from src.config import Config
 from src.db.price_history import price_db
 from src.risk.price_validator import PriceValidationError, validate_arbitrage_profit
+from src.utils.fee_utils import get_sell_fee_rate
 
 logger = logging.getLogger("ResalePipeline")
 
@@ -134,7 +135,7 @@ class ResalePipeline:
         # Estimate sell price from DMarket listing price + margin (oracle removed)
         # Conservative: target buy_price * (1 + min_spread + fees)
         fee_rate = await self.api.get_item_fee(Config.GAME_ID, item_id, price_cents)
-        target_margin = Config.MIN_SPREAD_PCT / 100.0 + Config.FEE_RATE + Config.WITHDRAWAL_FEE_RATE
+        target_margin = Config.MIN_SPREAD_PCT / 100.0 + get_sell_fee_rate() + Config.WITHDRAWAL_FEE_RATE
         estimated_sell_price = buy_price * (1 + target_margin)
 
         # Turnover penalty
@@ -238,7 +239,7 @@ class ResalePipeline:
 
         # --- 2. Build the list of (item, sell_price) that pass the
         #    profitability filter. ---
-        target_margin = Config.MIN_SPREAD_PCT / 100.0 + Config.FEE_RATE + Config.WITHDRAWAL_FEE_RATE
+        target_margin = Config.MIN_SPREAD_PCT / 100.0 + get_sell_fee_rate() + Config.WITHDRAWAL_FEE_RATE
         ready_to_list: list[tuple[Any, float, float]] = []  # (item, sell_price, profit_pct)
         for item in candidates:
             title = item['hash_name']
@@ -251,9 +252,9 @@ class ResalePipeline:
             sell_price = self._calculate_sell_price(
                 buy_price=buy_price,
                 reference_price=reference_price,
-                fee_rate=Config.FEE_RATE,
+                fee_rate=get_sell_fee_rate(),
             )
-            net_after_sell = sell_price * (1 - Config.FEE_RATE)
+            net_after_sell = sell_price * (1 - get_sell_fee_rate())
             profit_pct = ((net_after_sell - buy_price) / buy_price) * 100
             if profit_pct < Config.MIN_SPREAD_PCT:
                 logger.debug(
