@@ -335,16 +335,12 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
         has_intra_spread = best_bid > best_ask * (1 + effective_min_spread / 100.0)
         from src.utils.fee_utils import get_sell_fee_rate, get_total_fee_rate
         required_margin = get_total_fee_rate() + (Config.MIN_SPREAD_PCT / 100.0)
-        has_reference_discount = (
-            cs_price > 0
-            and base_price < cs_price * (1 - required_margin)
-        )
 
         # v14.8.1: DMarket-internal underpriced check. Only call last-sales
         # when no other edge exists, to respect rate limits.
         has_dmarket_underpriced = False
         dm_underpriced_ref = 0.0
-        if not (has_intra_spread or has_reference_discount):
+        if not has_intra_spread:
                 try:
                     from src.core.target_sniping.underpriced import is_dmarket_underpriced
                     up = await is_dmarket_underpriced(
@@ -366,7 +362,7 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
         # Strategy: buy at ask, hold until demand pushes price up
         has_demand_opportunity = False
         demand_score = 0.0
-        if Config.DEMAND_STRATEGY_ENABLED and not (has_intra_spread or has_reference_discount or has_dmarket_underpriced):
+        if Config.DEMAND_STRATEGY_ENABLED and not (has_intra_spread or has_dmarket_underpriced):
             try:
                 from src.core.target_sniping.demand_strategy import calculate_demand_score
                 agg_data = agg_prices.get(title, {})
@@ -385,7 +381,7 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
             except Exception as e:
                 logger.debug(f"Demand strategy check failed for {title}: {e}")
 
-        if not (has_intra_spread or has_reference_discount or has_dmarket_underpriced or has_demand_opportunity):
+        if not (has_intra_spread or has_dmarket_underpriced or has_demand_opportunity):
             if is_sandbox:
                 price_db.log_decision(
                     title,
