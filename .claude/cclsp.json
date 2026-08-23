@@ -1,0 +1,30 @@
+{
+  "servers": [
+    {
+      "extensions": ["py", "pyi"],
+      "command": ["/home/deck/dmarket/Dmarket_bot-main/.venv/bin/basedpyright-langserver", "--stdio"],
+      "rootDir": ".",
+      "restartInterval": 5
+    },
+    {
+      "extensions": ["rs"],
+      "command": ["rust-analyzer"],
+      "rootDir": "."
+    },
+    {
+      "extensions": ["sh", "bash"],
+      "command": ["bash-language-server", "start"],
+      "rootDir": "."
+    },
+    {
+      "extensions": ["toml"],
+      "command": ["taplo", "lsp", "stdio"],
+      "rootDir": "."
+    },
+    {
+      "extensions": ["py"],
+      "command": ["/home/deck/dmarket/Dmarket_bot-main/.venv/bin/ruff-lsp"],
+      "rootDir": "."
+    }
+  ]
+}
