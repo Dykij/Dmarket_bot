@@ -1,0 +1,8 @@
+{
+  "userSettings": {
+    "autoExecutionPolicy": "CASCADE_COMMANDS_AUTO_EXECUTION_EAGER",
+    "enableTerminalSandbox": true,
+    "nonWorkspaceFileAccessPolicy": "AGENT_SETTING_POLICY_ALLOW",
+    "remoteControlHostname": "steamdeck-noble-aurora"
+  }
+}
