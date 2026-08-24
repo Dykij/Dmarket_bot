@@ -66,3 +66,4 @@ dead code не влияет на production.
 
 ## Risk Management (Update)
 - Soft-halt in risk_manager.py returns allowed=False (hard block), not a partial size reduction — DMarket assets are indivisible, partial sizing was found as dead/unused code twice (execution.py Kelly block + Finding A) and removed. Do not reintroduce adjusted_size_usd-based partial sizing without solving how downstream code enforces it.
+- SYSTEMIC PATTERN WARNING: If a third partial-sizing mechanism is found (after Kelly block and Finding A), treat it as a systemic pattern of architecture mismatch (continuous-math risk model vs discrete inventory) rather than an isolated bug.
