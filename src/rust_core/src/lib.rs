@@ -135,10 +135,17 @@ fn parse_market_response_rs(py: Python<'_>, raw_json: &str) -> PyResult<Vec<Pars
                 name = re.replace_all(&name, "").to_string();
             }
 
-            let price = match item.price_usd {
-                serde_json::Value::Number(n) => n.as_f64().unwrap_or(0.0),
-                serde_json::Value::String(s) => s.parse::<f64>().unwrap_or(0.0) / 100.0,
-                _ => 0.0,
+            // The API might return `{"USD": "1234"}` or `{"USD": 1234}` or directly `1234` / `"1234"`
+            let val = if let serde_json::Value::Object(map) = &item.price_usd {
+                map.get("USD").unwrap_or(&item.price_usd).clone()
+            } else {
+                item.price_usd.clone()
+            };
+
+            let price = match val {
+                serde_json::Value::Number(n) => n.as_f64().ok_or_else(|| PyValueError::new_err("Invalid price number"))? / 100.0,
+                serde_json::Value::String(s) => s.parse::<f64>().map_err(|_| PyValueError::new_err("Invalid price string"))? / 100.0,
+                _ => return Err(PyValueError::new_err("Unexpected price format")),
             };
 
             results.push(ParsedSkin {
@@ -178,10 +185,16 @@ fn validate_dmarket_response_rs(py: Python<'_>, raw_json: &str) -> PyResult<Pars
             data.name = re.replace_all(&data.name, "").to_string();
         }
 
-        let price = match data.price_usd {
-            serde_json::Value::Number(n) => n.as_f64().unwrap_or(0.0),
-            serde_json::Value::String(s) => s.parse::<f64>().unwrap_or(0.0) / 100.0,
-            _ => 0.0,
+        let val = if let serde_json::Value::Object(map) = &data.price_usd {
+            map.get("USD").unwrap_or(&data.price_usd).clone()
+        } else {
+            data.price_usd.clone()
+        };
+
+        let price = match val {
+            serde_json::Value::Number(n) => n.as_f64().ok_or_else(|| PyValueError::new_err("Invalid price number"))? / 100.0,
+            serde_json::Value::String(s) => s.parse::<f64>().map_err(|_| PyValueError::new_err("Invalid price string"))? / 100.0,
+            _ => return Err(PyValueError::new_err("Unexpected price format")),
         };
 
         Ok::<ParsedSkin, PyErr>(ParsedSkin {
@@ -359,7 +372,7 @@ mod tests {
     fn test_market_price_number() {
         let json = r#"{"objects": [{"itemId": "x", "price": {"USD": 999}, "title": "test"}]}"#;
         let parsed = Python::with_gil(|py| parse_market_response_rs(py, json)).unwrap();
-        assert!((parsed[0].price_usd - 999.0).abs() < 0.01);
+        assert!((parsed[0].price_usd - 9.99).abs() < 0.01);
     }
 
     #[test]
@@ -428,7 +441,7 @@ mod tests {
 
     #[test]
     fn test_validate_single_skin() {
-        let json = r#"{"item_id": "abc123", "price_usd": 42.99, "name": "AK-47 | Vulcan"}"#;
+        let json = r#"{"item_id": "abc123", "price_usd": 4299, "name": "AK-47 | Vulcan"}"#;
         let result = Python::with_gil(|py| validate_dmarket_response_rs(py, json)).unwrap();
         assert_eq!(result.item_id, "abc123");
         assert!((result.price_usd - 42.99).abs() < 0.01);
