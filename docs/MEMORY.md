@@ -16,3 +16,14 @@
 - **Git Push Protection:** Guardrail is active. However, its enforcement status is **SOFT** (OS-level wrapper), not HARD (no SELinux/container enforcement). Bypassing is possible but strictly forbidden without explicit reasoning logged.
 - **Destructive Commands / Virtual Inventory:** Soft enforcement, relies on AI explicit confirmation and checking rules.
 - **Terminal Sandbox:** The Antigravity built-in sandbox (`enableTerminalSandbox`) is physically broken on the host (`connection reset by peer`), meaning hard OS-level isolation is not functioning. All tools are forced to use `BypassSandbox: true`. We rely purely on the OS wrappers mentioned above.
+
+## Known Technical Debt & Test Failures (Date: 2026-08-24)
+- **test_value_pipelines_module_importable**: `tests/unit/test_core_pipeline.py::TestValuePipelines::test_value_pipelines_module_importable` fails with:
+  `ImportError: cannot import name 'value_pipelines' from 'src.core.target_sniping' (/home/deck/dmarket/Dmarket_bot-main/src/core/target_sniping/__init__.py)`
+  Command to reproduce: `.venv/bin/pytest tests/unit/test_core_pipeline.py`
+- **test_run_cycle_with_no_oracle_skips**: `tests/unit/test_core_sniping_loop.py::TestRunCycle::test_run_cycle_with_no_oracle_skips` fails with:
+  `TypeError: 'coroutine' object is not iterable` in `_stage_prefetch` iterating over `ctx.agg_prices.items()`, leading to another `TypeError: unsupported format string passed to AsyncMock.__format__`.
+  Command to reproduce: `.venv/bin/pytest tests/unit/test_core_sniping_loop.py`
+
+
+- **mcp-server-sqlite is broken**: Fails with `AttributeError: 'Server' object has no attribute 'list_resources'`. Disabled in MCP config as `_sqlite_disabled_known_broken_see_MEMORY_md`. Waiting for an upstream fix or alternative.
