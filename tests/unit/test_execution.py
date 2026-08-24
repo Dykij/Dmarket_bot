@@ -386,35 +386,6 @@ class TestExecuteEdgeCases:
             )
 
 
-class TestRiskAdjustedSize:
-    """Tests for soft-halt risk adjustment (adjusted_size_usd)."""
-
-    @pytest.mark.asyncio
-    async def test_soft_halt_adjusts_price(self, _patch_execution):
-        _exec_mod.Config.DRY_RUN = True
-        from src.core.target_sniping.execution import _ExecutionMixin
-
-        mixin = _make_mixin()
-        mixin.client.get_market_items_v2 = AsyncMock(return_value={
-            "objects": [{"itemId": "item_001", "price": {"USD": 1000}}],
-        })
-        # Soft halt: allowed=True but adjusted_size_usd < base_price
-        risk_result = MagicMock()
-        risk_result.allowed = True
-        risk_result.adjusted_size_usd = 8.0
-        mixin.risk.pre_trade_check = MagicMock(return_value=risk_result)
-
-        await _ExecutionMixin._execute_instant_buys(
-            mixin, instant_buys=[_make_item(base_price=10.0, list_price=12.0)],
-            current_balance=100.0, game_id="a8db",
-        )
-
-        # Should record with adjusted price
-        _patch_execution.record_placed_target.assert_called_once()
-        call_args = _patch_execution.record_placed_target.call_args[0]
-        assert call_args[2] == 8.0  # adjusted base_price
-
-
 class TestCircuitBreaker:
     """Tests for circuit breaker handling."""
 

@@ -431,18 +431,7 @@ class _ExecutionMixin:
                                 f"{title} @ ${base_price:.2f}: {risk_check.reason}",
                             )
                         continue
-                    if risk_check.adjusted_size_usd is not None and risk_check.adjusted_size_usd < base_price:
-                        logger.info(
-                            f"[RISK] Soft-adjusted {title}: ${base_price:.2f} → "
-                            f"${risk_check.adjusted_size_usd:.2f}"
-                        )
-                        # BUG-1 FIX: Actually apply the adjusted size to the item data
-                        item_data["base_price"] = risk_check.adjusted_size_usd
-                        item_data["buy_offer"] = {
-                            "offerId": item_id,
-                            "price": {"amount": str(round(risk_check.adjusted_size_usd * 100)), "currency": "USD"},
-                        }
-                        base_price = risk_check.adjusted_size_usd  # Update local variable
+
 
                 # v18.3: DynamicRiskManager — Hybrid Kelly+Volatility sizing
                 # Evaluates risk-adjusted trade size before sending buy order.
