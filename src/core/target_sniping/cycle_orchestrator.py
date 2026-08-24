@@ -197,7 +197,7 @@ class CycleOrchestrator:
         top_titles = sorted(
             ctx.agg_prices.keys(),
             key=lambda t: (ctx.agg_prices[t].get("best_ask", 0) or 0),
-        )[:20]  # Top 20 by lowest ask
+        )[:Config.MAX_SCAN_TITLES]  # Configurable limit
 
         ctx.items = await self._fetch_cheapest_listings(ctx.game_id, top_titles)
 
