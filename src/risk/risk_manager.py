@@ -379,13 +379,13 @@ class RiskManager:
         """
         Record a trade outcome for daily stats.
 
-        `pnl_usd` should be the realized PnL (sell - buy - fees) for sells,
-        or the spend (negative) for buys. Either way, it contributes to
-        the daily PnL total.
+        `pnl_usd` should be the realized PnL (sell - buy - fees) for sells.
+        Buy operations are an asset exchange and do not count as a realized loss.
         """
         self._maybe_roll_day()
         self._daily_trade_count += 1
-        self._daily_realized_pnl += pnl_usd
+        if trade_type != "buy":
+            self._daily_realized_pnl += pnl_usd
         self._trades_today.append({
             "type": trade_type,
             "title": item_title,

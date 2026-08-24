@@ -171,7 +171,7 @@ class TestPreTradeCheckDailyTradeLimit:
         # test we just want to count.
         # Use the path that increments trade count: record_trade_outcome
         for _ in range(3):
-            rm.record_trade_outcome(pnl_usd=-1.0, trade_type="buy")
+            rm.record_trade_outcome(pnl_usd=-1.0, trade_type="sell")
         result = rm.pre_trade_check(proposed_size_usd=1.0, current_equity_usd=50.0)
         assert result.allowed is False
         assert "Daily trade count limit reached" in result.reason
@@ -180,21 +180,21 @@ class TestPreTradeCheckDailyTradeLimit:
     def test_limit_at_exact_boundary(self) -> None:
         """At limit (count == limit), the next call must block."""
         rm = _make_manager(daily_trade_limit=2)
-        rm.record_trade_outcome(pnl_usd=-1.0)
-        rm.record_trade_outcome(pnl_usd=-1.0)
+        rm.record_trade_outcome(pnl_usd=-1.0, trade_type="sell")
+        rm.record_trade_outcome(pnl_usd=-1.0, trade_type="sell")
         # count=2, limit=2 → >= → block
         result = rm.pre_trade_check(proposed_size_usd=1.0, current_equity_usd=50.0)
         assert result.allowed is False
 
     def test_below_limit_allows(self) -> None:
         rm = _make_manager(daily_trade_limit=5)
-        rm.record_trade_outcome(pnl_usd=-1.0)
+        rm.record_trade_outcome(pnl_usd=-1.0, trade_type="sell")
         result = rm.pre_trade_check(proposed_size_usd=1.0, current_equity_usd=50.0)
         assert result.allowed is True
 
     def test_blocked_counter_increments(self) -> None:
         rm = _make_manager(daily_trade_limit=1)
-        rm.record_trade_outcome(pnl_usd=-1.0)
+        rm.record_trade_outcome(pnl_usd=-1.0, trade_type="sell")
         for _ in range(3):
             rm.pre_trade_check(proposed_size_usd=1.0, current_equity_usd=50.0)
         assert rm.get_state().blocked_count_today == 3
@@ -208,8 +208,8 @@ class TestPreTradeCheckDailyLossLimit:
     def test_blocks_at_loss_limit(self) -> None:
         rm = _make_manager(daily_loss_limit=10.0)
         # Lose $10 cumulative → pnl = -10 → block
-        rm.record_trade_outcome(pnl_usd=-5.0, trade_type="buy")
-        rm.record_trade_outcome(pnl_usd=-5.0, trade_type="buy")
+        rm.record_trade_outcome(pnl_usd=-5.0, trade_type="sell")
+        rm.record_trade_outcome(pnl_usd=-5.0, trade_type="sell")
         result = rm.pre_trade_check(proposed_size_usd=1.0, current_equity_usd=50.0)
         assert result.allowed is False
         assert "Daily loss limit hit" in result.reason
@@ -217,7 +217,7 @@ class TestPreTradeCheckDailyLossLimit:
 
     def test_just_below_loss_limit_allows(self) -> None:
         rm = _make_manager(daily_loss_limit=10.0)
-        rm.record_trade_outcome(pnl_usd=-9.99)
+        rm.record_trade_outcome(pnl_usd=-9.99, trade_type="sell")
         result = rm.pre_trade_check(proposed_size_usd=1.0, current_equity_usd=50.0)
         assert result.allowed is True
 
@@ -229,12 +229,12 @@ class TestPreTradeCheckDailyLossLimit:
 
     def test_daily_halt_active_flag(self) -> None:
         rm = _make_manager(daily_loss_limit=10.0)
-        rm.record_trade_outcome(pnl_usd=-10.0)
+        rm.record_trade_outcome(pnl_usd=-10.0, trade_type="sell")
         assert rm.get_state().daily_halt_active is True
 
     def test_daily_halt_inactive_at_break_even(self) -> None:
         rm = _make_manager(daily_loss_limit=10.0)
-        rm.record_trade_outcome(pnl_usd=0.0)
+        rm.record_trade_outcome(pnl_usd=0.0, trade_type="sell")
         assert rm.get_state().daily_halt_active is False
 
 
@@ -445,7 +445,7 @@ class TestPreTradeCheckCheckOrder:
             pump_detector=det,
             daily_trade_limit=1,
         )
-        rm.record_trade_outcome(pnl_usd=-1.0)  # count=1=limit
+        rm.record_trade_outcome(pnl_usd=-1.0, trade_type="sell")  # count=1=limit
         result = rm.pre_trade_check(
             proposed_size_usd=5.0,
             current_equity_usd=50.0,
@@ -459,8 +459,8 @@ class TestPreTradeCheckCheckOrder:
             daily_trade_limit=1,
             daily_loss_limit=10.0,
         )
-        rm.record_trade_outcome(pnl_usd=-1.0)  # count=1=limit
-        rm.record_trade_outcome(pnl_usd=-20.0)  # also over loss limit
+        rm.record_trade_outcome(pnl_usd=-1.0, trade_type="sell")  # count=1=limit
+        rm.record_trade_outcome(pnl_usd=-20.0, trade_type="sell")  # also over loss limit
         result = rm.pre_trade_check(proposed_size_usd=1.0, current_equity_usd=50.0)
         assert "Daily trade count" in result.reason
         assert "Daily loss" not in result.reason
@@ -473,7 +473,7 @@ class TestPreTradeCheckCheckOrder:
             initial_equity_usd=100.0,
         )
         # Over loss limit AND over DD
-        rm.record_trade_outcome(pnl_usd=-15.0)  # -$15 = -150% of limit
+        rm.record_trade_outcome(pnl_usd=-15.0, trade_type="sell")  # -$15 = -150% of limit
         result = rm.pre_trade_check(
             proposed_size_usd=1.0,
             current_equity_usd=80.0,  # 20% DD
@@ -491,7 +491,7 @@ class TestRecordTradeOutcome:
         rm = _make_manager()
         rm.record_trade_outcome(pnl_usd=-2.0, trade_type="buy", item_title="AK-47")
         assert rm.get_state().daily_trade_count == 1
-        assert rm.get_state().daily_loss_usd == -2.0
+        assert rm.get_state().daily_loss_usd == 0.0
 
     def test_sell_increments_count_and_pnl(self) -> None:
         rm = _make_manager()
@@ -502,7 +502,7 @@ class TestRecordTradeOutcome:
 
     def test_trades_today_log(self) -> None:
         rm = _make_manager()
-        rm.record_trade_outcome(pnl_usd=-1.0, trade_type="buy", item_title="AK-47")
+        rm.record_trade_outcome(pnl_usd=-1.0, trade_type="sell", item_title="AK-47")
         rm.record_trade_outcome(pnl_usd=+3.0, trade_type="sell", item_title="AWP")
         # We don't expose _trades_today directly, but we can verify
         # get_state() reports the totals correctly.
@@ -512,7 +512,7 @@ class TestRecordTradeOutcome:
     def test_pnl_accumulates(self) -> None:
         rm = _make_manager()
         for pnl in [-1.0, -2.0, -3.0]:
-            rm.record_trade_outcome(pnl_usd=pnl, trade_type="buy")
+            rm.record_trade_outcome(pnl_usd=pnl, trade_type="sell")
         assert rm.get_state().daily_loss_usd == -6.0
 
 
@@ -539,7 +539,7 @@ class TestGetState:
 
     def test_state_consistency_after_activity(self) -> None:
         rm = _make_manager(initial_equity_usd=100.0)
-        rm.record_trade_outcome(pnl_usd=-5.0)
+        rm.record_trade_outcome(pnl_usd=-5.0, trade_type="sell")
         rm.pre_trade_check(proposed_size_usd=1.0, current_equity_usd=92.0)
         s = rm.get_state()
         assert s.daily_trade_count == 1
@@ -575,7 +575,7 @@ class TestGetDailyBriefingLines:
 
     def test_daily_halt_warning_appended(self) -> None:
         rm = _make_manager(daily_loss_limit=5.0)
-        rm.record_trade_outcome(pnl_usd=-5.0)
+        rm.record_trade_outcome(pnl_usd=-5.0, trade_type="sell")
         lines = rm.get_daily_briefing_lines()
         assert any("Daily loss limit hit" in line for line in lines)
 
@@ -601,8 +601,8 @@ class TestGetDailyBriefingLines:
 class TestDayRollover:
     def test_rollover_resets_counters(self, monkeypatch: pytest.MonkeyPatch) -> None:
         rm = _make_manager(daily_trade_limit=10, daily_loss_limit=10.0)
-        rm.record_trade_outcome(pnl_usd=-5.0)
-        rm.record_trade_outcome(pnl_usd=-2.0)
+        rm.record_trade_outcome(pnl_usd=-5.0, trade_type="sell")
+        rm.record_trade_outcome(pnl_usd=-2.0, trade_type="sell")
         assert rm._daily_trade_count == 2
         assert rm._daily_realized_pnl == -7.0
 
@@ -632,7 +632,7 @@ class TestDayRollover:
 
     def test_no_rollover_when_same_day(self) -> None:
         rm = _make_manager()
-        rm.record_trade_outcome(pnl_usd=-5.0)
+        rm.record_trade_outcome(pnl_usd=-5.0, trade_type="sell")
         rm.pre_trade_check(proposed_size_usd=1.0, current_equity_usd=50.0)
         # Counters NOT reset (same day)
         s = rm.get_state()
