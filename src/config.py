@@ -120,7 +120,7 @@ class Config(BaseSettings):
     AGG_SCAN_TOP_N: int = Field(default=100, ge=1)
     LISTINGS_FETCH_LIMIT: int = Field(default=100, ge=1)
     MAX_SCAN_TITLES: int = Field(
-        default=20, 
+        default=100, 
         ge=1, 
         le=100,
         description="Extract of hardcoded top-20 cheapest scan limit (see commit db233788, originally a rate-limit workaround, not a business rule)"
