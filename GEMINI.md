@@ -1,3 +1,5 @@
+@docs/MEMORY.md
+@docs/SESSION_LOG.md
 @AGENTS.md
 
 # Engineering Rigor Protocol
@@ -8,6 +10,13 @@
 - **Scope discipline:** Не изменять файлы и участки кода, не относящиеся к текущей задаче. Строго следить за изменениями.
   - **Тесты — уточнение:** Обновление СУЩЕСТВУЮЩИХ тестов, проверяющих старое (исправленное) поведение — обязательная часть фикса, отдельное разрешение не требуется. Добавление НОВЫХ тестов на код, который раньше не был покрыт — отдельная работа, требует явного разрешения как расширение скоупа.
 - **Subsystem AGENTS.md:** При завершении работы над подсистемой в `src/api/` или `src/core/target_sniping/` — обновить соответствующий вложенный `AGENTS.md` новыми находками ПЕРЕД финальным отчётом (обязательный пункт чек-листа, аналогично scope-auditor).
+
+Before presenting a finding as final, cross-check it with the most
+precise tool available for that class of claim (per Section 2c) within
+THIS response — do not rely on a future verification round to catch
+gaps that a configured tool could catch now. Every additional
+verification round costs real, limited model quota; a thorough first
+pass is cheaper than three shallow ones.
 
 # Subagent Delegation
 Триггеры для делегирования задач субагентам:
@@ -62,6 +71,20 @@ assigning severity (Critical/High/Medium/Low) to any bug:
   (raw-evidence-auditor/regression-isolator/scope-auditor: flash;
   stats-skeptic/code-auditor: pro) — apply the same reasoning to the
   main agent's own task routing where the harness supports it.
+- As of Aug 2026, Gemini 3.7 Flash is the current Flash-tier model in Antigravity, with
+  substantially improved coding/debugging benchmarks over prior Flash versions — prefer it
+  explicitly for routine tasks over relying on an unspecified 'flash' tier default, if the
+  harness allows explicit model version selection at the main-agent level.
+- (Verified Aug 2026): The subagent `flash` tier automatically resolves to Gemini 3.7 Flash.
+  Однако, поскольку новые версии моделей у Google выходят каждые 2-4 недели
+  (судя по цепочке 3.5→3.6→3.7 Flash за последние 2 месяца), рекомендуется
+  периодически перепроверять актуальность под капотом, чтобы не застрять на старой версии.
+- ВАЖНО: версия тира flash НЕ подтверждена независимым
+  источником по состоянию на 2026-08-24; предыдущее подтверждение через
+  прямой вопрос субагенту 'какая ты модель' признано ненадёжным —
+  самоотчёт LLM о собственной идентичности не является RAW-доказательством, 
+  особенно при риске заражения контекстом. Требует либо документального,
+  либо ручного (UI) подтверждения.
 
 # Section 6. Mandatory reporting structure
 ## 🛠️ Actions & Changes
@@ -69,3 +92,21 @@ When citing code as evidence for a finding, include the full relevant
 block (complete function or complete conditional branch), not a
 minimal snippet — enough that severity and control-flow claims can be
 verified from the quote alone.
+
+## 2c. Tool-First Investigation (Mandatory)
+When a more precise tool is configured and applicable, using it is not
+optional — plain grep is a fallback, not a default:
+- Finding all callers/usages of a function or class → cclsp
+  find_references, not grep (grep misses aliased imports, dynamic
+  dispatch, and gives false positives on substring matches).
+- Security/vulnerability patterns (injection, unsafe eval, missing
+  bounds/sign checks, unchecked return values) → run semgrep BEFORE
+  manual code review, and report its findings alongside manual review,
+  not instead of grep alone.
+- Architecture/circular-dependency/module-coupling questions → archy,
+  not manual file-by-file tracing.
+- Library/API usage questions (is this the correct current signature)
+  → context7, not memory or assumption.
+- If a configured tool fails or is unavailable for the task, say so
+  explicitly and name which tool was skipped and why — do not silently
+  fall back to grep without disclosing the downgrade in confidence.
