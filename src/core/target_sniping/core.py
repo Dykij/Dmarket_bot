@@ -169,6 +169,14 @@ class SnipingLoop(  # type: ignore[misc]
                 f"{game_id}: {type(e).__name__}: {e}",
                 exc_info=True,
             )
+        finally:
+            # Persist risk state to SQLite (survives restarts for 24/7 operation)
+            # Moved here from cycle_orchestrator to ensure it runs even on exceptions
+            try:
+                if hasattr(self, 'risk') and self.risk:
+                    self.risk.save_state_to_db()
+            except Exception:
+                pass
 
 
 if __name__ == "__main__":

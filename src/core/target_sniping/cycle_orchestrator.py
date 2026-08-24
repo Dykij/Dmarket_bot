@@ -626,11 +626,6 @@ class CycleOrchestrator:
         except Exception:
             pass
 
-        # Persist risk state to SQLite (survives restarts for 24/7 operation)
-        try:
-            self.risk.save_state_to_db()
-        except Exception:
-            pass
 
         # Periodic SQLite maintenance (every 1000 cycles / ~8 hours at 30s/cycle)
         if self.deep_scan_counter % 1000 == 0:
