@@ -479,6 +479,7 @@ class RiskManager:
                 "daily_realized_pnl": self._daily_realized_pnl,
                 "daily_trade_count": self._daily_trade_count,
                 "drawdown_freeze_active": self._drawdown_freeze_active,
+                "max_drawdown_seen": self._max_drawdown_seen,
                 "total_wins": self._total_wins,
                 "total_losses": self._total_losses,
                 "avg_win_usd": self._avg_win_usd,
@@ -521,6 +522,7 @@ class RiskManager:
             self._peak_equity = state.get("peak_equity", self._peak_equity)
             self._current_equity = state.get("current_equity", self._current_equity)
             self._drawdown_freeze_active = state.get("drawdown_freeze_active", False)
+            self._max_drawdown_seen = state.get("max_drawdown_seen", self._max_drawdown_seen)
             self._total_wins = state.get("total_wins", 0)
             self._total_losses = state.get("total_losses", 0)
             self._avg_win_usd = state.get("avg_win_usd", 0.0)
