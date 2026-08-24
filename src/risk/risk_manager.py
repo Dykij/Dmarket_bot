@@ -260,26 +260,16 @@ class RiskManager:
                     ),
                 )
 
-        # 4.5. v14.7: Consecutive loss streak — halve position after 3+ losses
-        # Note: _last_proposed_size is set AFTER reduction to track actual size used
-        consecutive_loss_reduced = False
+        # 4.5. v14.7: Consecutive loss streak — hard block after 3+ losses
         if self._consecutive_losses >= 3 and proposed_size_usd > 0:
-            reduced = round(proposed_size_usd * 0.5, 2)
-            if reduced < 0.50:
-                self._daily_blocked += 1
-                return PreTradeCheck(
-                    allowed=False,
-                    reason=(
-                        f"Consecutive loss streak: {self._consecutive_losses} losses, "
-                        f"position ${reduced:.2f} below floor $0.50"
-                    ),
-                )
-            logger.warning(
-                f"[Risk] {self._consecutive_losses} consecutive losses — "
-                f"halving position: ${proposed_size_usd:.2f} → ${reduced:.2f}"
+            self._daily_blocked += 1
+            return PreTradeCheck(
+                allowed=False,
+                reason=(
+                    f"Consecutive loss streak ({self._consecutive_losses}); "
+                    f"treated as hard block for indivisible assets"
+                ),
             )
-            proposed_size_usd = reduced
-            consecutive_loss_reduced = True
 
         # Track actual proposed size after all reductions
         self._last_proposed_size = proposed_size_usd
@@ -314,7 +304,7 @@ class RiskManager:
             )
 
         # 7. Soft halt — hard block for indivisible assets at 5%+ drawdown
-        if self._current_drawdown_pct >= self.soft_halt_drawdown_pct and not consecutive_loss_reduced:
+        if self._current_drawdown_pct >= self.soft_halt_drawdown_pct:
             self._soft_halt_active = True
             self._daily_blocked += 1
             return PreTradeCheck(
@@ -440,7 +430,7 @@ class RiskManager:
             f"(current: {state.current_drawdown_pct:.1f}%)",
         ]
         if state.soft_halt_active:
-            lines.append("  ⚠️ Soft-halt active: size halved on next buy")
+            lines.append("  ⚠️ Soft-halt active: treated as hard block")
         if state.daily_halt_active:
             lines.append("  🔴 Daily loss limit hit — trading halted until midnight")
         # v12.6: Pump detector summary

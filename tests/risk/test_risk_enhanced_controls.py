@@ -148,21 +148,12 @@ class TestRiskState:
 class TestConsecutiveLossReduction:
     """v14.7: After 3+ consecutive losses, pre_trade_check halves position size."""
 
-    def test_three_losses_halves_position(self):
+    def test_three_losses_hard_blocks(self):
         rm = _make_manager()
         # Set up 3 consecutive losses
         rm._consecutive_losses = 3
 
         result = rm.pre_trade_check(proposed_size_usd=10.0, current_equity_usd=100.0)
-        # Reduced but not below floor — should pass with halved size
-        assert result.allowed is True
-        assert result.adjusted_size_usd is not None
-
-    def test_consecutive_losses_below_floor_blocks(self):
-        rm = _make_manager()
-        rm._consecutive_losses = 3
-
-        result = rm.pre_trade_check(proposed_size_usd=0.60, current_equity_usd=100.0)
-        # Halved = 0.30 < 0.50 floor → blocked
+        # Indivisible assets cannot be halved, so it must hard block
         assert result.allowed is False
-        assert "Consecutive loss streak" in result.reason
+        assert "treated as hard block for indivisible assets" in result.reason
