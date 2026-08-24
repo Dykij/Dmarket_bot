@@ -3,6 +3,7 @@
 @AGENTS.md
 
 # Engineering Rigor Protocol
+- **No Truncation Rule:** Never omit, summarize, or hide RAW command output for length or brevity reasons. If output is genuinely long, split it across multiple messages in full.
 - **RAW-дисциплина:** Ни один вывод отчёта не может содержать утверждение о результате команды без вставленного RAW-вывода этой команды в том же сообщении.
 - **Разделение pre-existing/introduced:** При падении тестов всегда явно проверять и указывать, было ли это падение до изменений, или оно внесено текущими правками.
 - **Статистическая честность:** При отчётах с числами/метриками указывать размер выборки (sample size), погрешность и проверять однородность.
@@ -20,12 +21,14 @@ pass is cheaper than three shallow ones.
 
 # Subagent Delegation
 Триггеры для делегирования задач субагентам:
-- Перед `git commit` в `src/core/target_sniping/` или `src/api/` → делегировать в `code-auditor`
-- При падении теста после правки → делегировать в `regression-isolator`
+- Перед `git commit` в `src/core/target_sniping/` или `src/api/` → делегировать (изменения в *.rs / src/rust_core/ → `rust-auditor`; всё остальное → `code-auditor`)
+- При падении теста после правки → делегировать в `regression-isolator` (если падение связано с async / test_run_cycle_with_no_oracle_skips или файлы содержат `async def` → `python-asyncio-auditor`)
 - Перед финальным отчётом с числовыми результатами (калибровка, метрики) → делегировать в `stats-skeptic`
-- Перед отправкой итогового отчёта пользователю → делегировать в `raw-evidence-auditor`
+- Перед показом ЛЮБОЙ находки/вывода пользователю (не только перед фиксом) → сначала `adversarial-reviewer` (если применимо), затем `raw-evidence-auditor` на скорректированной версии.
 - При завершении любой multi-file задачи → делегировать в `scope-auditor`
-- Вердикт делегированного субагента должен быть либо устранён конкретным исправлением с повторной проверкой, либо явно процитирован как неразрешённое замечание в финальном отчёте — никогда не игнорироваться при выставлении итогового статуса
+- Вердикт делегированного субагента должен быть либо устранён, либо процитирован как неразрешённое замечание.
+- **FINAL RULE**: No task may be reported complete without RAW-quoted `stop-criteria-guard` invocation as final step.
+- Track B / Agent Infrastructure: Аудит агентской инфраструктуры и конфигурации MCP-серверов → `lsp-mcp-integration-auditor`.
 
 # Section 2a. Investigation Completeness (Pipeline Context Before Severity)
 
