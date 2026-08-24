@@ -253,22 +253,22 @@ fn parse_aggregated_prices_rs(raw_json: &str) -> PyResult<Py<PyList>> {
                 title = re.replace_all(&title, "").to_string();
             }
 
-            let best_ask = entry
+            let best_bid = entry
                 .order_best_price
                 .and_then(|p| p.amount)
                 .and_then(|a| parse_amount(&a))
                 .map(|v| v / 100.0)
                 .unwrap_or(0.0);
 
-            let best_bid = entry
+            let best_ask = entry
                 .offer_best_price
                 .and_then(|p| p.amount)
                 .and_then(|a| parse_amount(&a))
                 .map(|v| v / 100.0)
                 .unwrap_or(0.0);
 
-            let ask_count = entry.order_count.unwrap_or(0);
-            let bid_count = entry.offer_count.unwrap_or(0);
+            let bid_count = entry.order_count.unwrap_or(0);
+            let ask_count = entry.offer_count.unwrap_or(0);
 
             ParsedEntry {
                 title,
