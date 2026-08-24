@@ -63,3 +63,6 @@ dead code не влияет на production.
   требуют полного бэктеста перед деплоем (см. AGENTS.md корневой).
 
 *Последнее обновление: 2026-08-23. Обновлять при каждом изменении в этой подсистеме.*
+
+## Risk Management (Update)
+- Soft-halt in risk_manager.py returns allowed=False (hard block), not a partial size reduction — DMarket assets are indivisible, partial sizing was found as dead/unused code twice (execution.py Kelly block + Finding A) and removed. Do not reintroduce adjusted_size_usd-based partial sizing without solving how downstream code enforces it.
