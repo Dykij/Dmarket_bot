@@ -46,6 +46,23 @@ assigning severity (Critical/High/Medium/Low) to any bug:
   explicitly, don't quietly patch the earlier claim without flagging
   that the severity/nature of the finding changed.
 
+## 2b. Model Tier Policy (Credit Efficiency)
+- Routine, mechanical, low-ambiguity subtasks (docstrings, formatting,
+  simple config edits, single-file grep-and-report checks) → route to
+  Flash-tier where the harness allows explicit model selection.
+- Complex reasoning (architecture decisions, multi-file trace-the-
+  pipeline analysis per Section 2a, statistical judgment, security
+  review) → Pro tier only.
+- Default reasoning effort should not be 'High' unless the task
+  genuinely requires deep multi-step reasoning — check current task
+  complexity before accepting a high-effort default.
+- Reference specific files via @file when known, rather than asking
+  the agent to scan the repository, to reduce context overhead.
+- This policy already governs subagent model assignment
+  (raw-evidence-auditor/regression-isolator/scope-auditor: flash;
+  stats-skeptic/code-auditor: pro) — apply the same reasoning to the
+  main agent's own task routing where the harness supports it.
+
 # Section 6. Mandatory reporting structure
 ## 🛠️ Actions & Changes
 When citing code as evidence for a finding, include the full relevant
