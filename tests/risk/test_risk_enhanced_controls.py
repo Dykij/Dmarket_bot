@@ -87,7 +87,7 @@ class TestConsecutiveLossTracking:
 class TestDrawdownFreezeThreshold:
     def test_decimal_threshold_converts_to_percent(self):
         """v14.7: 0.15 (decimal) correctly converts to 15% for comparison."""
-        rm = _make_manager(max_drawdown_pct=20.0, initial_equity_usd=100.0)
+        rm = _make_manager(max_drawdown_pct=20.0, soft_halt_drawdown_pct=20.0, initial_equity_usd=100.0)
         import os
         original_enabled = os.environ.get("DRAWDOWN_FREEZE_ENABLED")
         original_threshold = os.environ.get("DRAWDOWN_FREEZE_THRESHOLD")
@@ -110,7 +110,7 @@ class TestDrawdownFreezeThreshold:
 
     def test_percent_threshold_works_directly(self):
         """v14.7: 15.0 (percent) works as threshold directly."""
-        rm = _make_manager(max_drawdown_pct=20.0, initial_equity_usd=100.0)
+        rm = _make_manager(max_drawdown_pct=20.0, soft_halt_drawdown_pct=20.0, initial_equity_usd=100.0)
         import os
         original_enabled = os.environ.get("DRAWDOWN_FREEZE_ENABLED")
         original_threshold = os.environ.get("DRAWDOWN_FREEZE_THRESHOLD")

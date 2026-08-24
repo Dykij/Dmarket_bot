@@ -313,25 +313,16 @@ class RiskManager:
                 triggered_halt=True,
             )
 
-        # 7. Soft halt — reduce size by 50% at 5%+ drawdown (only for buys)
-        # Skip if already reduced by consecutive-loss halving (prevents double-halve)
+        # 7. Soft halt — hard block for indivisible assets at 5%+ drawdown
         if self._current_drawdown_pct >= self.soft_halt_drawdown_pct and not consecutive_loss_reduced:
             self._soft_halt_active = True
-            reduced = round(proposed_size_usd * 0.5, 2)
-            if reduced < 0.50:
-                self._daily_blocked += 1
-                return PreTradeCheck(
-                    allowed=False,
-                    reason=(
-                        f"Soft-halt active (drawdown {self._current_drawdown_pct:.1f}%); "
-                        f"reduced size ${reduced:.2f} below floor $0.50"
-                    ),
-                )
-            self._daily_passed += 1
+            self._daily_blocked += 1
             return PreTradeCheck(
-                allowed=True,
-                reason=f"Soft-halt: size halved to ${reduced:.2f}",
-                adjusted_size_usd=reduced,
+                allowed=False,
+                reason=(
+                    f"Soft-halt active (drawdown {self._current_drawdown_pct:.1f}%); "
+                    f"treated as hard block for indivisible assets"
+                ),
             )
 
         # 7.9. LVaR diagnostic logging (AUDIT MODE — does NOT block trades)

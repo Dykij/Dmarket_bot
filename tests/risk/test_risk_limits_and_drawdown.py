@@ -259,8 +259,8 @@ class TestPreTradeCheckDrawdown:
         assert ("Max drawdown" in result.reason or "Drawdown freeze" in result.reason)
         assert result.triggered_halt is True
 
-    def test_just_above_soft_halt_below_hard(self) -> None:
-        """5% DD < 15% hard but >= 5% soft → size halved."""
+    def test_soft_halt_triggers_hard_block(self) -> None:
+        """5% DD < 15% hard but >= 5% soft → hard block for indivisible assets."""
         rm = _make_manager(
             max_drawdown_pct=15.0,
             soft_halt_drawdown_pct=5.0,
@@ -271,40 +271,9 @@ class TestPreTradeCheckDrawdown:
             proposed_size_usd=10.0,
             current_equity_usd=94.0,
         )
-        assert result.allowed is True
-        assert result.adjusted_size_usd == 5.0  # halved
-        assert "Soft-halt" in result.reason
-        assert rm.get_state().soft_halt_active is True
-
-    def test_soft_halt_below_floor_blocks(self) -> None:
-        """If halving produces <$0.50, block entirely."""
-        rm = _make_manager(
-            max_drawdown_pct=15.0,
-            soft_halt_drawdown_pct=5.0,
-            initial_equity_usd=100.0,
-        )
-        # peak=100, current=90 → 10% DD, soft-halt active
-        result = rm.pre_trade_check(
-            proposed_size_usd=0.60,  # halved = 0.30 < 0.50
-            current_equity_usd=90.0,
-        )
         assert result.allowed is False
-        assert "below floor" in result.reason
-
-    def test_soft_halt_floor_exact(self) -> None:
-        """If halved = exactly $0.50, allow (boundary is strict <)."""
-        rm = _make_manager(
-            max_drawdown_pct=15.0,
-            soft_halt_drawdown_pct=5.0,
-            initial_equity_usd=100.0,
-        )
-        # proposed=1.00 → halved=0.50 → NOT < 0.50 → allow
-        result = rm.pre_trade_check(
-            proposed_size_usd=1.00,
-            current_equity_usd=90.0,  # 10% DD, soft-halt
-        )
-        assert result.allowed is True
-        assert result.adjusted_size_usd == 0.50
+        assert "treated as hard block for indivisible assets" in result.reason
+        assert rm.get_state().soft_halt_active is True
 
     def test_no_drawdown_no_halt(self) -> None:
         rm = _make_manager(initial_equity_usd=50.0)
@@ -538,7 +507,7 @@ class TestGetState:
         assert s.passed_count_today == 0
 
     def test_state_consistency_after_activity(self) -> None:
-        rm = _make_manager(initial_equity_usd=100.0)
+        rm = _make_manager(initial_equity_usd=100.0, soft_halt_drawdown_pct=20.0)
         rm.record_trade_outcome(pnl_usd=-5.0, trade_type="sell")
         rm.pre_trade_check(proposed_size_usd=1.0, current_equity_usd=92.0)
         s = rm.get_state()
