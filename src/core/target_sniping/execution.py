@@ -441,7 +441,7 @@ class _ExecutionMixin:
                     # P1f: Warm up Kelly statistics from ProfitTracker historical trades
                     try:
                         from src.db.profit_tracker import db as profit_db
-                        recent_trades = profit_db.get_recent_trades(days=30)
+                        recent_trades = await asyncio.to_thread(profit_db.get_recent_trades, days=30)
                         if recent_trades:
                             for t in recent_trades:
                                 net = t.get("net_profit", 0) or 0
@@ -541,7 +541,7 @@ class _ExecutionMixin:
                 # v18.2: Record buy in persistent trade history
                 try:
                     from src.db.profit_tracker import db as profit_db
-                    profit_db.record_buy(title, float(base_price), offer_id=item_id)
+                    await asyncio.to_thread(profit_db.record_buy, title, float(base_price), offer_id=item_id)
                 except Exception as e:
                     logger.debug(f"profit_tracker.record_buy failed: {e}")
                 # v12.5: Telegram buy notification (throttled to 1/min)
