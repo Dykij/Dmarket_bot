@@ -72,6 +72,8 @@ class TestStagePrepare:
     @pytest.mark.asyncio
     @patch("src.core.target_sniping.cycle_orchestrator.price_db")
     async def test_prepare_sets_balance(self, mock_db):
+        async def _fake_run(func, *a, **kw): return func(*a, **kw)
+        mock_db.run_in_thread = AsyncMock(side_effect=_fake_run)
         orch = _make_orchestrator()
         orch.client.get_real_balance = AsyncMock(return_value=150.0)
 
@@ -84,6 +86,8 @@ class TestStagePrepare:
     @pytest.mark.asyncio
     @patch("src.core.target_sniping.cycle_orchestrator.price_db")
     async def test_prepare_increments_counter(self, mock_db):
+        async def _fake_run(func, *a, **kw): return func(*a, **kw)
+        mock_db.run_in_thread = AsyncMock(side_effect=_fake_run)
         orch = _make_orchestrator()
         orch.deep_scan_counter = 4
         orch.client.get_real_balance = AsyncMock(return_value=100.0)
@@ -97,6 +101,8 @@ class TestStagePrepare:
     @pytest.mark.asyncio
     @patch("src.core.target_sniping.cycle_orchestrator.price_db")
     async def test_prepare_dynamic_max_price(self, mock_db):
+        async def _fake_run(func, *a, **kw): return func(*a, **kw)
+        mock_db.run_in_thread = AsyncMock(side_effect=_fake_run)
         orch = _make_orchestrator()
         orch.client.get_real_balance = AsyncMock(return_value=200.0)
 
@@ -112,6 +118,8 @@ class TestStageScan:
     @pytest.mark.asyncio
     @patch("src.core.target_sniping.cycle_orchestrator.price_db")
     async def test_scan_with_empty_prices_returns_empty(self, mock_db):
+        async def _fake_run(func, *a, **kw): return func(*a, **kw)
+        mock_db.run_in_thread = AsyncMock(side_effect=_fake_run)
         orch = _make_orchestrator()
         orch.client.get_aggregated_prices = AsyncMock(return_value={})
 
@@ -124,6 +132,8 @@ class TestStageScan:
     @pytest.mark.asyncio
     @patch("src.core.target_sniping.cycle_orchestrator.price_db")
     async def test_scan_collects_items(self, mock_db):
+        async def _fake_run(func, *a, **kw): return func(*a, **kw)
+        mock_db.run_in_thread = AsyncMock(side_effect=_fake_run)
         orch = _make_orchestrator()
         orch.client.get_aggregated_prices = AsyncMock(return_value={
             "AK-47 | Redline": {"best_ask": 10.0, "best_bid": 12.0},
@@ -146,6 +156,8 @@ class TestStageScan:
     @pytest.mark.asyncio
     @patch("src.core.target_sniping.cycle_orchestrator.price_db")
     async def test_scan_handles_api_error(self, mock_db):
+        async def _fake_run(func, *a, **kw): return func(*a, **kw)
+        mock_db.run_in_thread = AsyncMock(side_effect=_fake_run)
         orch = _make_orchestrator()
         orch.client.get_aggregated_prices = AsyncMock(side_effect=Exception("API down"))
 
@@ -161,6 +173,8 @@ class TestStageScanExtended:
     @pytest.mark.asyncio
     @patch("src.core.target_sniping.cycle_orchestrator.price_db")
     async def test_capital_velocity_low_skips(self, mock_db):
+        async def _fake_run(func, *a, **kw): return func(*a, **kw)
+        mock_db.run_in_thread = AsyncMock(side_effect=_fake_run)
         """Capital velocity below minimum skips cycle — but agg_prices still loaded."""
         orch = _make_orchestrator()
         orch.client.get_aggregated_prices = AsyncMock(return_value={"AK-47": {"best_ask": 10.0}})
@@ -184,6 +198,8 @@ class TestStageScanExtended:
     @pytest.mark.asyncio
     @patch("src.core.target_sniping.cycle_orchestrator.price_db")
     async def test_capital_velocity_exception_handled(self, mock_db):
+        async def _fake_run(func, *a, **kw): return func(*a, **kw)
+        mock_db.run_in_thread = AsyncMock(side_effect=_fake_run)
         """Capital velocity exception is caught (lines 119-120)."""
         orch = _make_orchestrator()
         orch.client.get_aggregated_prices = AsyncMock(return_value={"AK-47": {"best_ask": 10.0}})
@@ -206,6 +222,8 @@ class TestStageScanExtended:
     @pytest.mark.asyncio
     @patch("src.core.target_sniping.cycle_orchestrator.price_db")
     async def test_scan_collects_items_from_listings(self, mock_db):
+        async def _fake_run(func, *a, **kw): return func(*a, **kw)
+        mock_db.run_in_thread = AsyncMock(side_effect=_fake_run)
         """Scan populates items from cheapest listings (lines 133-142)."""
         orch = _make_orchestrator()
         orch.client.get_aggregated_prices = AsyncMock(return_value={
@@ -306,6 +324,8 @@ class TestStagePrefetch:
     @pytest.mark.asyncio
     @patch("src.core.target_sniping.cycle_orchestrator.price_db")
     async def test_prefetch_bulk_fees(self, mock_db):
+        async def _fake_run(func, *a, **kw): return func(*a, **kw)
+        mock_db.run_in_thread = AsyncMock(side_effect=_fake_run)
         """Prefetch fetches bulk fees for candidates (lines 191-196)."""
         orch = _make_orchestrator()
         orch.client.get_item_fee_bulk = AsyncMock(return_value={"i1": 0.02, "i2": 0.03})
@@ -330,6 +350,8 @@ class TestStagePrefetch:
     @pytest.mark.asyncio
     @patch("src.core.target_sniping.cycle_orchestrator.price_db")
     async def test_prefetch_bulk_fees_exception(self, mock_db):
+        async def _fake_run(func, *a, **kw): return func(*a, **kw)
+        mock_db.run_in_thread = AsyncMock(side_effect=_fake_run)
         """Bulk fees exception is caught (lines 195-196)."""
         orch = _make_orchestrator()
         orch.client.get_item_fee_bulk = AsyncMock(side_effect=Exception("API error"))
@@ -351,6 +373,8 @@ class TestStagePrefetch:
     @pytest.mark.asyncio
     @patch("src.core.target_sniping.cycle_orchestrator.price_db")
     async def test_prefetch_pump_detection(self, mock_db):
+        async def _fake_run(func, *a, **kw): return func(*a, **kw)
+        mock_db.run_in_thread = AsyncMock(side_effect=_fake_run)
         """Prefetch runs pump detection (lines 210-214)."""
         orch = _make_orchestrator()
         orch.pump_detector = MagicMock()
@@ -372,6 +396,8 @@ class TestStagePrefetch:
     @pytest.mark.asyncio
     @patch("src.core.target_sniping.cycle_orchestrator.price_db")
     async def test_prefetch_sales_cache(self, mock_db):
+        async def _fake_run(func, *a, **kw): return func(*a, **kw)
+        mock_db.run_in_thread = AsyncMock(side_effect=_fake_run)
         """Prefetch fetches sales cache for CVD/VPIN (lines 217-226)."""
         orch = _make_orchestrator()
         orch.client.get_last_sales = AsyncMock(return_value=[{"price": 10.0}])
@@ -394,6 +420,8 @@ class TestStagePrefetch:
     @pytest.mark.asyncio
     @patch("src.core.target_sniping.cycle_orchestrator.price_db")
     async def test_prefetch_no_items_skips(self, mock_db):
+        async def _fake_run(func, *a, **kw): return func(*a, **kw)
+        mock_db.run_in_thread = AsyncMock(side_effect=_fake_run)
         """Prefetch with no items skips bulk fees (line 191)."""
         orch = _make_orchestrator()
 
@@ -417,6 +445,8 @@ class TestStageEvaluate:
     @pytest.mark.asyncio
     @patch("src.core.target_sniping.cycle_orchestrator.price_db")
     async def test_evaluate_empty_candidates(self, mock_db):
+        async def _fake_run(func, *a, **kw): return func(*a, **kw)
+        mock_db.run_in_thread = AsyncMock(side_effect=_fake_run)
         orch = _make_orchestrator()
 
         ctx = _make_ctx()
@@ -432,6 +462,8 @@ class TestStageEvaluate:
     @pytest.mark.asyncio
     @patch("src.core.target_sniping.cycle_orchestrator.price_db")
     async def test_evaluate_filters_buy_actions(self, mock_db):
+        async def _fake_run(func, *a, **kw): return func(*a, **kw)
+        mock_db.run_in_thread = AsyncMock(side_effect=_fake_run)
         orch = _make_orchestrator()
         mock_db.get_virtual_inventory.return_value = []
 
@@ -454,6 +486,8 @@ class TestStageEvaluate:
     @pytest.mark.asyncio
     @patch("src.core.target_sniping.cycle_orchestrator.price_db")
     async def test_evaluate_handles_exception_in_candidate(self, mock_db):
+        async def _fake_run(func, *a, **kw): return func(*a, **kw)
+        mock_db.run_in_thread = AsyncMock(side_effect=_fake_run)
         orch = _make_orchestrator()
         mock_db.get_virtual_inventory.return_value = []
         orch._evaluate_candidate = AsyncMock(side_effect=Exception("eval boom"))
@@ -536,6 +570,8 @@ class TestStagePostprocess:
     @pytest.mark.asyncio
     @patch("src.core.target_sniping.cycle_orchestrator.price_db")
     async def test_postprocess_calls_resale(self, mock_db):
+        async def _fake_run(func, *a, **kw): return func(*a, **kw)
+        mock_db.run_in_thread = AsyncMock(side_effect=_fake_run)
         orch = _make_orchestrator()
         orch.deep_scan_counter = 1
         orch.reprice_counter = 60
@@ -553,6 +589,8 @@ class TestStagePostprocess:
     @pytest.mark.asyncio
     @patch("src.core.target_sniping.cycle_orchestrator.price_db")
     async def test_postprocess_calls_reprice(self, mock_db):
+        async def _fake_run(func, *a, **kw): return func(*a, **kw)
+        mock_db.run_in_thread = AsyncMock(side_effect=_fake_run)
         orch = _make_orchestrator()
         orch.deep_scan_counter = 1
         orch.reprice_counter = 60
@@ -569,6 +607,8 @@ class TestStagePostprocess:
     @pytest.mark.asyncio
     @patch("src.core.target_sniping.cycle_orchestrator.price_db")
     async def test_postprocess_tracks_balance_after(self, mock_db):
+        async def _fake_run(func, *a, **kw): return func(*a, **kw)
+        mock_db.run_in_thread = AsyncMock(side_effect=_fake_run)
         orch = _make_orchestrator()
         orch.deep_scan_counter = 1
         orch.reprice_counter = 1
@@ -587,6 +627,8 @@ class TestStagePostprocess:
     @pytest.mark.asyncio
     @patch("src.core.target_sniping.cycle_orchestrator.price_db")
     async def test_postprocess_handles_resale_error(self, mock_db):
+        async def _fake_run(func, *a, **kw): return func(*a, **kw)
+        mock_db.run_in_thread = AsyncMock(side_effect=_fake_run)
         orch = _make_orchestrator()
         orch.deep_scan_counter = 1
         orch.reprice_counter = 1
@@ -652,6 +694,8 @@ class TestPrepareExtended:
     @pytest.mark.asyncio
     @patch("src.core.target_sniping.cycle_orchestrator.price_db")
     async def test_health_state_exception_handled(self, mock_db):
+        async def _fake_run(func, *a, **kw): return func(*a, **kw)
+        mock_db.run_in_thread = AsyncMock(side_effect=_fake_run)
         """health_state.mark_cycle exception is caught (lines 76-77)."""
         orch = _make_orchestrator()
         orch.client.get_real_balance = AsyncMock(return_value=100.0)
@@ -667,6 +711,8 @@ class TestPrepareExtended:
     @pytest.mark.asyncio
     @patch("src.core.target_sniping.cycle_orchestrator.price_db")
     async def test_sync_inventory_every_20_cycles(self, mock_db):
+        async def _fake_run(func, *a, **kw): return func(*a, **kw)
+        mock_db.run_in_thread = AsyncMock(side_effect=_fake_run)
         """_sync_inventory_statuses called every 20 cycles (line 86)."""
         orch = _make_orchestrator()
         orch.deep_scan_counter = 19  # next will be 20
@@ -683,6 +729,8 @@ class TestPrefetchExtended:
     @pytest.mark.asyncio
     @patch("src.core.target_sniping.cycle_orchestrator.price_db")
     async def test_sales_cache_exception_handled(self, mock_db):
+        async def _fake_run(func, *a, **kw): return func(*a, **kw)
+        mock_db.run_in_thread = AsyncMock(side_effect=_fake_run)
         """Sales cache fetch exception is caught (lines 225-226)."""
         orch = _make_orchestrator()
         orch.client.get_last_sales = AsyncMock(side_effect=Exception("api error"))

@@ -63,6 +63,8 @@ class TestOBIOFILoggingBeforeVelocityGate:
             mock_config.CAPITAL_VELOCITY_ENABLED = True
             mock_config.CAPITAL_VELOCITY_MIN = 0.5
 
+            async def _fake_run(func, *a, **kw): return func(*a, **kw)
+            mock_db.run_in_thread = AsyncMock(side_effect=_fake_run)
             mock_db.get_state.return_value = ""
             mock_db.log_decision = MagicMock(side_effect=_capture_log)
             # Velocity gate: low sales → low velocity → skip
@@ -124,6 +126,8 @@ class TestOBIOFILoggingBeforeVelocityGate:
             mock_config.MIN_BID_ASK_COUNT = 5
             mock_config.CAPITAL_VELOCITY_ENABLED = False  # Don't block
 
+            async def _fake_run(func, *a, **kw): return func(*a, **kw)
+            mock_db.run_in_thread = AsyncMock(side_effect=_fake_run)
             mock_db.get_state.return_value = ""
             mock_db.log_decision = MagicMock(side_effect=_capture_log)
 

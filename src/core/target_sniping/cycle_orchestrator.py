@@ -119,7 +119,7 @@ class CycleOrchestrator:
     async def _stage_scan(self, ctx: CycleContext) -> CycleContext:
         """Stage 2: Market scan — aggregated prices + secondary scans."""
 
-        cursor = "" if ctx.is_fresh_cycle else (price_db.get_state(ctx.cursor_key) or "")
+        cursor = "" if ctx.is_fresh_cycle else (await price_db.run_in_thread(price_db.get_state, ctx.cursor_key) or "")
 
         # Aggregated prices (moved BEFORE velocity gate so OBI/OFI logging works)
         try:
@@ -168,7 +168,8 @@ class CycleOrchestrator:
                         "best_bid": best_bid,
                         "best_ask": best_ask,
                     })
-                    price_db.log_decision(
+                    await price_db.run_in_thread(
+                        price_db.log_decision,
                         title, "scanned",
                         f"obi={_obi_norm:.3f} ofi={_ofi_val:+.3f} bid={bid_count} ask={ask_count}",
                         _scan_details,
@@ -179,10 +180,10 @@ class CycleOrchestrator:
         # Capital velocity check (AFTER agg_prices fetch and OBI/OFI logging)
         if Config.CAPITAL_VELOCITY_ENABLED and ctx.effective_balance > 0:
             try:
-                weekly_sales = price_db.get_virtual_inventory_weekly_sales()
-                locked_value = price_db.get_virtual_inventory_locked_value()
+                weekly_sales = await price_db.run_in_thread(price_db.get_virtual_inventory_weekly_sales)
+                locked_value = await price_db.run_in_thread(price_db.get_virtual_inventory_locked_value)
                 if weekly_sales > 0 or locked_value > 0:
-                    avg_balance = float(price_db.get_state("avg_balance") or str(ctx.effective_balance))
+                    avg_balance = float(await price_db.run_in_thread(price_db.get_state, "avg_balance") or str(ctx.effective_balance))
                     velocity = weekly_sales / max(avg_balance, 0.01)
                     if velocity < Config.CAPITAL_VELOCITY_MIN:
                         logger.info(f"[VELOCITY] {velocity:.2f}x < {Config.CAPITAL_VELOCITY_MIN}x. Skipping.")
@@ -301,7 +302,7 @@ class CycleOrchestrator:
                     sales = await self.client.get_last_sales(ctx.game_id, t, days=7, limit=30)
                     if sales:
                         self._sales_cache[t] = sales
-                        price_db.save_trades_batch(t, sales)
+                        await price_db.run_in_thread(price_db.save_trades_batch, t, sales)
                 except Exception:
                     pass
 
@@ -324,7 +325,7 @@ class CycleOrchestrator:
             except (ValueError, TypeError):
                 pass  # ranked format unexpected, skip sorting
 
-        raw_inv = price_db.get_virtual_inventory(status="idle", only_unlocked=False)
+        raw_inv = await price_db.run_in_thread(price_db.get_virtual_inventory, status="idle", only_unlocked=False)
         sat_counts: dict[str, int] = {}
         for inv in raw_inv:
             hn = inv["hash_name"]
@@ -630,10 +631,10 @@ class CycleOrchestrator:
         # Periodic SQLite maintenance (every 1000 cycles / ~8 hours at 30s/cycle)
         if self.deep_scan_counter % 1000 == 0:
             try:
-                price_db.wal_checkpoint()
-                price_db.optimize()
-                price_db.cleanup_old_prices(days=30)
-                price_db.cleanup_old_trades(days=90)
+                await price_db.run_in_thread(price_db.wal_checkpoint)
+                await price_db.run_in_thread(price_db.optimize)
+                await price_db.run_in_thread(price_db.cleanup_old_prices, days=30)
+                await price_db.run_in_thread(price_db.cleanup_old_trades, days=90)
                 logger.info(f"[DB] WAL checkpoint + optimize + cleanup at cycle {self.deep_scan_counter}")
             except Exception:
                 pass
