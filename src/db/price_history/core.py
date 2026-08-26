@@ -189,7 +189,8 @@ class PriceHistoryDB(  # type: ignore[misc]
         """Executes an INSERT query and returns the lastrowid synchronously.
         Designed to be passed to run_in_thread to avoid cross-thread cursor passing.
         """
-        return self.state_conn.execute(query, params).lastrowid
+        with self.state_conn:
+            return self.state_conn.execute(query, params).lastrowid
 
     def _init_schemas(self) -> None:
         """Initialize appropriate tables in each database.

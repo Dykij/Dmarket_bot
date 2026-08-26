@@ -66,24 +66,20 @@ class _ResaleProdMixin:
                 # fall back to 0.0 (PnL will be wrong but listing still works).
                 inferred_price = 0.0
                 avg_row = await price_db.run_in_thread(
-                    price_db.state_conn.execute,
+                    price_db.execute_and_fetchone,
                     "SELECT AVG(buy_price) as p FROM virtual_inventory "
                     "WHERE hash_name = ? AND status IN ('sold','listed')",
                     (title,),
                 )
-                avg_row = await price_db.run_in_thread(avg_row.fetchone)
                 if avg_row and avg_row["p"]:
                     inferred_price = float(avg_row["p"])
                 # v15.10: Single INSERT with dm_item_id to avoid phantom rows on crash
-                cursor_obj = await price_db.run_in_thread(
-                    price_db.state_conn.execute,
+                new_id = await price_db.run_in_thread(
+                    price_db.execute_and_get_lastrowid,
                     "INSERT INTO virtual_inventory "
                     "(hash_name, buy_price, status, acquired_at, unlock_at, dm_item_id) "
                     "VALUES (?, ?, 'idle', ?, ?, ?)",
                     (title, inferred_price, time.time(), time.time(), dm_item_id),
-                )
-                new_id = await price_db.run_in_thread(
-                    lambda c: c.lastrowid, cursor_obj
                 )
                 new_count += 1
             cursor = resp.get("cursor")
