@@ -520,7 +520,7 @@ class _ExecutionMixin:
                 vwap = float(vwap_raw) if isinstance(vwap_raw, (int, float)) else 0.0
                 logger.info(
                     f"[SIM] SNIPED! {title} @ ${base_price} → list ${list_price} "
-                    f"(spread: {item_data.get('best_bid', 0)-item_data.get('best_ask', 0):.2f}, "
+                    f"(spread: {item_data.get('best_ask', 0)-item_data.get('best_bid', 0):.2f}, "
                     f"VWAP: ${vwap:.2f}, rare={is_rare})"
                 )
                 # v12.2 Phase 2.1: Track asset status (trade_protected for N hours)
