@@ -58,7 +58,7 @@ jobs:
 
       # Restore state from cache
       - name: Restore state from cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         id: cache-state
         with:
           path: |
@@ -124,7 +124,7 @@ jobs:
       # Save state
       - name: Save state to cache
         if: always()
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@v6
         with:
           path: |
             data/
