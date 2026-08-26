@@ -504,13 +504,12 @@ class _ExecutionMixin:
                 # in production (or leave it empty in DRY).
                 await price_db.run_in_thread(price_db.add_virtual_item, title, base_price, Config.TRADE_LOCK_HOURS, is_rare)
                 row = await price_db.run_in_thread(
-                    price_db.state_conn.execute,
+                    price_db.execute_and_fetchone,
                     "SELECT id FROM virtual_inventory "
                     "WHERE hash_name = ? AND status = 'idle' "
                     "ORDER BY id DESC LIMIT 1",
                     (title,),
                 )
-                row = await price_db.run_in_thread(row.fetchone)
                 if row and new_dm_item_id:
                     await price_db.run_in_thread(price_db.attach_dm_item_id, int(row["id"]), new_dm_item_id)
                 if is_rare and row:
@@ -594,14 +593,13 @@ class _ExecutionMixin:
                     # Find the most recent virtual_inventory row for this
                     # title that has no dm_item_id and attach it.
                     row = await price_db.run_in_thread(
-                        price_db.state_conn.execute,
+                        price_db.execute_and_fetchone,
                         "SELECT id FROM virtual_inventory "
                         "WHERE hash_name = ? AND status = 'idle' "
                         "AND (dm_item_id IS NULL OR dm_item_id = '') "
                         "ORDER BY id DESC LIMIT 1",
                         (title,),
                     )
-                    row = await price_db.run_in_thread(row.fetchone)
                     if row:
                         await price_db.run_in_thread(price_db.attach_dm_item_id, int(row["id"]), new_dm_item_id)
                 # v14.5: Track trade protection status immediately in PROD
