@@ -227,55 +227,57 @@ src/
 └── integration/                   # Agent facade (unified interface)
 ```
 
-## Data Flow (Verified v16.2)
+## Data Flow Pipeline & Module Boundaries
 
+```mermaid
+flowchart TD
+    API[DMarket API] -->|Raw JSON| Parser[dmarket_parser_rs (Rust FFI)]
+    Parser -->|Parsed Data| AggDict[aggregated_prices dict]
+    AggDict -->|Prices| Filter[filter.py]
+    
+    subgraph Target Sniping Core
+        Filter -->|has_intra_spread, velocity gate| Strategy[demand_strategy.py]
+        Strategy -->|OBI/OFI| Risk[risk_manager.py]
+        Risk -.->|pre/post trade checks| Exec
+        Strategy -->|Approved Offers| Exec[execution.py]
+        Exec -->|buy| API
+    end
+
+    Exec -->|Trade Results| Orch[cycle_orchestrator.py]
+    Orch -->|оркестрация| DB[price_history/core.py]
+    DB -->|persistence| SQLite[(SQLite)]
 ```
-Oracle Sources
-  │  Market.CSGO ──┐
-  │  Waxpeer ──────┤  [circuit breaker per source]
-  │  CSFloat ──────┤  [dynamic TTL cache 5-30min]
-  │  Steam ────────┘  [Data Freshness Guard: excludes stale]
-  ▼
-MultiSourceOracle.get_fair_price()         [multi_source_oracle.py:168]
-  │  Sequential queries with circuit breaker protection
-  │  Builds PriceReference with sources_count
-  ▼
-FairPriceCalculator.calculate()            [fair_price_calculator.py:85]
-  │  1. Filter zero/invalid prices
-  │  2. Outlier removal (min < 0.3× median, max > 2.0× median)
-  │  3. fair_price = median(adjusted)
-  │  4. Margin tiers: vol≥100→3%, ≥50→5%, ≥20→7%, ≥5→10%, else 15%
-  │  5. Confidence: high(3+ sources), medium(2), low(1)
-  ▼
-CycleOrchestrator._stage_prefetch()        [cycle_orchestrator.py:190]
-  │  Batch oracle fetch for top-K titles → cs_snapshots
-  ▼
-_FilterMixin._evaluate_candidate()         [filter.py:71]
-  │  30+ filter stages (see Filter Pipeline below)
-  │  NOV-2: blocks oracle-dependent strategies when ALL oracles fail
-  ▼
-ExecutionMixin._execute_instant_buys()     [execution.py:50]
-  │  1. Slippage protection — re-verify listing prices
-  │  2. NOV-3: Oracle re-check before buy (10% drift threshold)
-  │  3. Pre-trade risk check
-  │  4. Inventory cap (cumulative tracking)
-  ▼
-DMarketAPIClient.buy_items()               [targets.py:73]
-  │  PATCH /exchange/v1/offers-buy
-  │  Idempotency: SHA256(item_id + price_cents)[:16]
-  ▼
-Response parsing → virtual inventory recording
-  ▼
-auto_resale()                              [resale.py:54]
-  │  Oracle pricing → Avellaneda-Stoikov reservation
-  │  → VWAP bands → DOM gap-aware pricing
-  ▼
-create_sell_offers_batch()                 [offers.py:123]
-  │  POST /marketplace-api/v2/offers:batchCreate
-  ▼
-Reprice stale listings (every 200 cycles)
-  │  POST /marketplace-api/v2/offers:batchUpdate
-```
+
+### Module Boundaries & Data Handled
+
+| Module | Purpose | Key Data Handled (Reads/Writes) |
+|---|---|---|
+| **DMarket API** | External marketplace endpoints | JSON responses containing `best_bid` / `best_ask` |
+| **dmarket_parser_rs** | Fast JSON parsing (Rust) | Reads raw JSON, writes Rust structs -> Python dicts (`best_bid`, `best_ask`) |
+| **aggregated_prices** | In-memory cache | Holds current parsed prices (`best_bid`, `best_ask`) |
+| **filter.py** | Pre-trade filtering | Reads `best_bid`/`best_ask`, filters via `has_intra_spread`, `velocity gate` |
+| **demand_strategy.py** | OBI/OFI logic & selection | Reads filtered prices, outputs target items to snipe |
+| **execution.py** | API execution (buy, batch) | Reads targets, calls API, writes trade results to orchestrator |
+| **risk_manager.py** | Safety gates | Binary pass/block on pre-trade, halts on post-trade limits |
+| **cycle_orchestrator.py**| Orchestration | Reads trade results, orchestrates cycles and persistence |
+| **price_history/core.py**| Persistence layer | Writes successful trades and analytics to DB |
+
+### Technical Boundaries & Crossings
+- **Rust → Python**: `dmarket_parser_rs` via PyO3. JSON strings are parsed in Rust, outputting Python dictionaries (`best_bid` / `best_ask` types cross here).
+- **Network (sync/async) → Application**: `DMarket API` interactions are wrapped via HTTP clients returning payloads that enter the synchronous or asynchronous processing pipeline.
+- **Memory → DB**: `cycle_orchestrator.py` hands off results to `price_history/core.py`, moving data from transient memory (dict lists) to persistent SQLite storage.
+
+## Known & Fixed Bugs (Historical Record)
+
+### `src/rust_core` (Parser)
+- **[P0] Bid/Ask Inversion**: `best_bid` and `best_ask` were inverted during parsing, causing catastrophic strategy failures. (Fixed)
+- **[P1] $0.00 on Parse Failure**: Missing/malformed price data caused parser to return `$0.00` via `unwrap_or(0.0)` anti-pattern. (Open/Systemic Issue)
+
+### `src/core/target_sniping` (Execution)
+- **Tracking by Title (72e25da)**: Purchases were tracked by `title` instead of `offerId`. Batch failures with identical titles recorded false successes. Fixed by using unique `offerId`.
+- **TxFailed + dmOffersStatus (67f3124)**: When whole transaction failed (`TxFailed`), code still parsed sub-offers as "started" = true, recording false positives. Fixed by failing whole batch on `TxFailed`.
+- **Slippage Fallback (50edab6)**: Fallback to `current_listings[0]` allowed wrong prices to slip through. Fixed via fail-closed (`return None`).
+- **DRY_RUN Risk Code**: `adjusted_size_usd` continuous-math soft adjustments are dead code in PROD, as assets are indivisible and PROD `pre_trade_check` is a binary block.
 
 ## Filter Pipeline (30+ stages)
 

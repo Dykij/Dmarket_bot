@@ -183,14 +183,23 @@ class PriceHistoryDB(  # type: ignore[misc]
         """Executes a query and fetches one row synchronously.
         Designed to be passed to run_in_thread to avoid cross-thread cursor passing.
         """
-        return self.state_conn.execute(query, params).fetchone()
+        cursor = self.state_conn.cursor()
+        try:
+            return cursor.execute(query, params).fetchone()
+        finally:
+            cursor.close()
 
     def execute_and_get_lastrowid(self, query: str, params: tuple = ()) -> int:
         """Executes an INSERT query and returns the lastrowid synchronously.
         Designed to be passed to run_in_thread to avoid cross-thread cursor passing.
         """
         with self.state_conn:
-            return self.state_conn.execute(query, params).lastrowid
+            cursor = self.state_conn.cursor()
+            try:
+                cursor.execute(query, params)
+                return cursor.lastrowid
+            finally:
+                cursor.close()
 
     def _init_schemas(self) -> None:
         """Initialize appropriate tables in each database.

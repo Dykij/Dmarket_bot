@@ -17,5 +17,6 @@
 - Do NOT remove `DRY_RUN` without explicit confirmation.
 - `git push` requires manual user review (raw push is forbidden).
 - Do NOT seed `virtual_inventory`.
+- **Check Call Sites First:** Before deep auditing/refactoring, verify the code is actually called in prod (e.g. via grep & logs) to avoid fixing dead code.
 
 *Note: This file must be kept under ~150 lines. Granular details should be placed in `skills/`.*

@@ -1,6 +1,7 @@
 # Target Sniping — Subsystem Knowledge
 
 ## Архитектура
+- **Flow Данных:** См. `docs/ARCHITECTURE.md` для полной картины потока данных (API -> Parser -> Strategy -> Execution -> DB).
 - `execution.py` — _ExecutionMixin: мгновенные покупки, батч-отправка,
   парсинг ответов DMarket, запись в price_db.
 - `filter.py` — фильтрация и pre-trade checks (upstream от execution).

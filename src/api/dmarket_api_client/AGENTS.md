@@ -1,6 +1,7 @@
 # DMarket API Client — Subsystem Knowledge
 
 ## Documentation Source of Truth
+- **Архитектура:** Обязательно ознакомьтесь с `docs/ARCHITECTURE.md` для понимания потока данных.
 - **Актуальная спецификация:** `https://docs.dmarket.com/v1/swagger.html`
   (HTML/Redoc, `__redoc_state`, версия API v2.0.0)
 - **НЕ использовать:** ранее скачанный `swagger.json` — неполон,

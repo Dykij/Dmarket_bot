@@ -28,6 +28,7 @@ pass is cheaper than three shallow ones.
 - При завершении любой multi-file задачи → делегировать в `scope-auditor`
 - Вердикт делегированного субагента должен быть либо устранён, либо процитирован как неразрешённое замечание.
 - **FINAL RULE**: No task may be reported complete without RAW-quoted `stop-criteria-guard` invocation as final step.
+  - When invoking `stop-criteria-guard`, ALWAYS pass the absolute artifact path (`.gemini/antigravity/brain/<session_id>/task.md`) explicitly in the delegation message — do not rely on the subagent to locate it via find/grep from its own working directory.
 - Track B / Agent Infrastructure: Аудит агентской инфраструктуры и конфигурации MCP-серверов → `lsp-mcp-integration-auditor`.
 
 # Section 2a. Investigation Completeness (Pipeline Context Before Severity)
@@ -57,6 +58,7 @@ assigning severity (Critical/High/Medium/Low) to any bug:
   code was DRY_RUN-only dead code) — report the corrected version
   explicitly, don't quietly patch the earlier claim without flagging
   that the severity/nature of the finding changed.
+- **Check Call Sites First (Dead Code Prevention):** Before performing a deep audit or refactoring of a module or function (especially optimized paths like Rust extensions), you MUST first confirm via `grep` or `cclsp find_references` AND production logs that the code is actually invoked in the runtime path, not just present in the codebase.
 
 ## 2b. Model Tier Policy (Credit Efficiency)
 - Routine, mechanical, low-ambiguity subtasks (docstrings, formatting,
