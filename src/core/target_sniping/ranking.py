@@ -112,7 +112,7 @@ def rank_candidates_by_spread(
             except Exception:
                 pass
 
-        spread = best_bid - best_ask
+        spread = best_ask - best_bid
         spread_pct = spread / best_ask if best_ask > 0 else 0.0
         if spread_pct < float(effective_min_spread) / 100.0 * regime_mult:
             continue
