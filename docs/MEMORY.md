@@ -116,3 +116,7 @@ Isolated via regression-isolator and confirmed to exist on commit 935ba8d (befor
 ## Dead Code Investigation: Rust Parser (Date: 2026-08-26)
 - **Rust `parse_aggregated_prices_rs` is dead code**: Conclusive RAW evidence shows `market.py` explicitly uses `parse_aggregated_prices_from_dict` instead of the Rust function. `grep -rn "parse_aggregated_prices_rs" logs/bot_24_7.log` confirms zero usage in production logs.
 - **Process Lesson**: Весь цикл фиксов lib.rs (P0 bid/ask, GIL release, zeroize, price parsing) применялся к коду, который не исполнялся в бою. Урок: перед глубоким аудитом конкретного модуля стоит сначала подтвердить (grep call sites + логи), что модуль реально используется в runtime path, а не только существует в дереве кода.
+
+## Resolved Architectural Debates
+- **SQLite Cross-Thread Segfault Risk**: A multi-agent audit initially flagged cross-thread cursor usage (with `check_same_thread=False`) as a critical risk leading to `sqlite3.ProgrammingError` or segfaults/memory corruption.
+  - **Resolution**: Risk was severely overestimated. Tests with `sqlite3.threadsafety == 3` (Serialized mode) and `THREADSAFE=1` show Python fully disables thread checks, and the underlying SQLite engine handles interleaved fetch/insert without crashing or data corruption. The `execute_and_fetchone` helper is safe but not strictly necessary for preventing crashes.
