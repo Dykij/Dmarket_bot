@@ -178,6 +178,19 @@ class PriceHistoryDB(  # type: ignore[misc]
         with self._db_lock:
             return fn(*args, **kwargs)
 
+
+    def execute_and_fetchone(self, query: str, params: tuple = ()) -> sqlite3.Row | None:
+        """Executes a query and fetches one row synchronously.
+        Designed to be passed to run_in_thread to avoid cross-thread cursor passing.
+        """
+        return self.state_conn.execute(query, params).fetchone()
+
+    def execute_and_get_lastrowid(self, query: str, params: tuple = ()) -> int:
+        """Executes an INSERT query and returns the lastrowid synchronously.
+        Designed to be passed to run_in_thread to avoid cross-thread cursor passing.
+        """
+        return self.state_conn.execute(query, params).lastrowid
+
     def _init_schemas(self) -> None:
         """Initialize appropriate tables in each database.
         
