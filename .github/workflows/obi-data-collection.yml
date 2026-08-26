@@ -39,7 +39,7 @@ jobs:
         if: github.event.inputs.action == 'stop'
         run: echo "::notice::Stop requested. Exiting." && exit 0
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: feature/remove-oracles-formula-audit
           fetch-depth: 0
