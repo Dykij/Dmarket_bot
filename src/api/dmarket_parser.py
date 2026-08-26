@@ -126,6 +126,7 @@ def parse_aggregated_prices(raw_json: str) -> list[dict[str, Any]]:
 
     Speed: 5-10x faster with Rust (serde + direct PyList construction).
     """
+    # UNUSED IN PRODUCTION: market.py never calls this Rust path — see docs/MEMORY.md 'Dead Code Investigation' (2026-08-26). Kept as tested groundwork, not wired into runtime. Do not assume this executes.
     if HAS_RUST_PARSER:
         try:
             return list(dmarket_parser_rs.parse_aggregated_prices_rs(raw_json))

@@ -218,6 +218,7 @@ fn validate_dmarket_response_rs(py: Python<'_>, raw_json: &str) -> PyResult<Pars
 /// v14.9.1: Optimized to do parsing in pure Rust, then construct Python
 /// objects in a single GIL acquisition (was holding GIL during loop).
 #[pyfunction]
+// UNUSED IN PRODUCTION: market.py never calls this Rust path — see docs/MEMORY.md 'Dead Code Investigation' (2026-08-26). Kept as tested groundwork, not wired into runtime. Do not assume this executes.
 fn parse_aggregated_prices_rs(raw_json: &str) -> PyResult<Py<PyList>> {
     let re = INJECTION_REGEX.get_or_init(|| {
         Regex::new(r"[<>{}$`\\]").expect("Invalid regex pattern")
