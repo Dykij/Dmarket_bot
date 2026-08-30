@@ -1,20 +1,11 @@
 {
-  "session-log-reminder": {
-    "Stop": [
-      {
-        "type": "command",
-        "command": "bash .agents/scripts/check_session_log.sh",
-        "timeout": 10
-      }
-    ]
-  },
-  "verdict-gate": {
-    "PreInvocation": [
-      {
-        "type": "command",
-        "command": "bash .agents/scripts/verdict_gate.sh",
-        "timeout": 10
-      }
-    ]
-  }
+  "session-log-reminder": { "Stop": [ { "type": "command", "command": "bash scripts/check_session_log.sh", "timeout": 10 } ] },
+  "verdict-gate": { "PreInvocation": [ { "type": "command", "command": "bash scripts/verdict_gate.sh", "timeout": 10 } ] },
+  "raw-output-logger": { "PostToolUse": [ { "matcher": "run_command", "hooks": [ { "type": "command", "command": "bash scripts/raw_output_logger.sh", "timeout": 10 } ] } ] },
+  "pre-danger-gate": { "PreToolUse": [ { "matcher": "run_command", "hooks": [ { "type": "command", "command": "bash scripts/pre_danger_gate.sh", "timeout": 10 } ] } ] },
+  "implementation-plan-guard": { "PreToolUse": [ { "matcher": "write_to_file|replace_file_content", "hooks": [ { "type": "command", "command": "bash scripts/implementation_plan_guard.sh", "timeout": 5 } ] } ] },
+  "task-md-guard": { "PreToolUse": [ { "matcher": "write_to_file|replace_file_content", "hooks": [ { "type": "command", "command": "bash pre_tool_use.sh", "timeout": 5 } ] } ] },
+  "walkthrough-md-guard": { "Stop": [ { "type": "command", "command": "bash stop_hook.sh", "timeout": 5 } ] },
+  "stop-verification-gate": { "Stop": [ { "type": "command", "command": "bash scripts/stop_verification_gate.sh", "timeout": 15 } ] },
+  "lazy-work-guard": { "Stop": [ { "type": "command", "command": "bash scripts/lazy_work_guard.sh", "timeout": 10 } ] }
 }

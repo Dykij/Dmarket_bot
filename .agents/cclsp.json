@@ -1,0 +1,6 @@
+{
+  "languages": {
+    "python": ["pylsp"],
+    "rust": ["rust-analyzer"]
+  }
+}

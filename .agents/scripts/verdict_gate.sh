@@ -1,12 +1,12 @@
 #!/bin/bash
 TRANSCRIPT=$(jq -r '.transcriptPath' -)
-
 if [ ! -f "$TRANSCRIPT" ]; then
     echo "{}"
     exit 0
 fi
 
-RESULT=$(grep -oE '\[[a-zA-Z0-9_-]+\] FINAL_VERDICT: (PASS|FAIL)' "$TRANSCRIPT" | awk '{
+# Filter out context summaries at the JSON level using jq
+RESULT=$(tail -n 100 "$TRANSCRIPT" | jq -r 'select(.source != "MODEL") | select(.content | contains("this summary is just for your reference") | not) | .content' 2>/dev/null | grep -oE '\[[a-zA-Z0-9_-]+\] FINAL_VERDICT: (PASS|FAIL)' | awk '{
   agent = $1
   verdict = $3
   verdicts[agent] = verdict
@@ -24,7 +24,7 @@ if [ "$RESULT" = "FAIL" ]; then
 {
   "injectSteps": [
     {
-      "ephemeralMessage": "WARNING: You have an unresolved [Agent] FINAL_VERDICT: FAIL from at least one subagent! You MUST fix the issue and get a PASS before you can finish your task or output the final report. DO NOT ignore this."
+      "ephemeralMessage": "WARNING: Subagent check failed. Unresolved fail found."
     }
   ]
 }

@@ -115,3 +115,24 @@ optional — plain grep is a fallback, not a default:
 - If a configured tool fails or is unavailable for the task, say so
   explicitly and name which tool was skipped and why — do not silently
   fall back to grep without disclosing the downgrade in confidence.
+
+# Strictly Enforced Proceed Protocol
+- **MANDATORY**: No `git commit`, `git push`, or modifying commands (outside of sandbox temporary files) are allowed without EXPLICIT TEXTUAL "Proceed" typed by the user in the chat.
+- **WORKING TREE MUTATIONS**: Any `git checkout`, `git reset`, `git rebase`, or `git merge` ALSO requires an explicit textual "Proceed" IF there are uncommitted changes in the working tree (`git status --porcelain` is not empty).
+- **UI BUTTON IS INSUFFICIENT**: The UI "Approve" button on `implementation_plan.md` DOES NOT count as a "Proceed" for git operations. You must wait for a written text response from the user explicitly confirming the action.
+- **MULTI-REVISION BACKGROUND TASKS**: When running regression testing or multi-revision analysis (e.g. regression-isolator across multiple commits):
+  - You MUST check `git status --porcelain` before starting any background task that might touch HEAD. If the working tree is not empty, the task MUST NOT be started in the main working copy.
+  - Multi-revision tests must ONLY be done via `git worktree add <path> <ref>` to a separate directory, rather than checking out different commits in the main working copy. This prevents detached HEAD issues and doesn't require full copying.
+
+## Anti-Laziness Rule
+- Не сокращать объём реализации относительно того, что зафиксировано в task.md.
+- Не оставлять функции с заглушками (pass/TODO/NotImplementedError/todo!()) в затронутых задачей файлах.
+- Если пункт task.md технически невозможно закрыть полностью в рамках сессии — явно пометить его как BLOCKED с причиной, а не молча занизить объём или закрыть частично выполненный пункт как [x].
+- **Известный edge case (lazy-work-guard):** Хук опирается на `git diff --name-only HEAD` по всему рабочему дереву. Если в дереве есть посторонние незакоммиченные правки, он может ложно заблокировать Stop по чужим файлам.
+
+## MCP Usage Contract
+- **context7**: Обязателен к использованию перед применением любой внешней библиотеки, которой нет в `requirements.txt` или `Cargo.toml`.
+- **semgrep**: Обязателен для запуска `code-auditor` при аудите безопасности перед коммитом (поиск инъекций, утечек).
+- **archy**: Использовать для проверки циклических зависимостей при рефакторинге.
+- **cclsp**: `lsp-mcp-integration-auditor` обязан через него подтвердить, что символ/функция реально существует в проекте, прежде чем `code-auditor` одобрит правку.
+- **sequential-thinking**: Инструмент для структурирования рассуждения на этапе Implementation Plan при неоднозначных многофакторных задачах. Его вывод — внутренний scratchpad модели, НЕ RAW-доказательство. Не может использоваться как замена вставке реального вывода команды/теста в отчёте.

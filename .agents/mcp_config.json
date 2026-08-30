@@ -1,32 +1,48 @@
 {
   "mcpServers": {
-    "sqlite": {
-      "command": "uvx",
-      "args": ["mcp-server-sqlite", "--db-path", "data/dmarket_state.db"]
-    },
-    "sqlite_history": {
-      "command": "uvx",
-      "args": ["mcp-server-sqlite", "--db-path", "data/dmarket_history.db"]
-    },
-    "sqlite_trading": {
-      "command": "uvx",
-      "args": ["mcp-server-sqlite", "--db-path", "data/dmarket_trading.db"]
-    },
     "archy": {
       "command": ".venv/bin/archy",
-      "args": ["mcp"]
+      "args": [
+        "mcp"
+      ]
     },
     "context7": {
       "command": "npx",
-      "args": ["-y", "@upstash/context7-mcp"]
+      "args": [
+        "-y",
+        "@upstash/context7-mcp"
+      ]
     },
     "semgrep": {
       "command": ".venv/bin/semgrep",
-      "args": ["mcp"]
+      "args": [
+        "mcp"
+      ]
+    },
+    "sequential-thinking": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-sequential-thinking"
+      ]
+    },
+    "cclsp": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "cclsp"
+      ],
+      "env": {
+        "CCLSP_CONFIG_PATH": "/home/deck/dmarket/Dmarket_bot-main/.agents/cclsp.json"
+      }
     },
     "shellcheck": {
-      "command": "npx",
-      "args": ["-y", "github:Ev3lynx727/mcp-shellcheck"]
+      "command": "uvx",
+      "args": [
+        "--from",
+        "git+https://github.com/Ev3lynx727/mcp-shellcheck.git@89e0b7c086dc61c5993f418cdaadd449231735da",
+        "mcp-shellcheck"
+      ]
     }
   }
 }
