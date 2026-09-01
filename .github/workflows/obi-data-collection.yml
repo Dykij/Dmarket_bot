@@ -98,6 +98,12 @@ jobs:
 
       # Run bot
       - name: Run data collection
+        env:
+          DMARKET_PUBLIC_KEY: ${{ secrets.DMARKET_PUBLIC_KEY }}
+          DMARKET_SECRET_KEY: ${{ secrets.DMARKET_SECRET_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          DEBUG: "true"
         run: |
           echo "Starting OBI/OFI data collection..."
           echo "Start time: $(date -u '+%Y-%m-%dT%H:%M:%SZ')"
