@@ -1,8 +1,8 @@
 #!/bin/bash
-INPUT=$(cat)
-CMD=$(echo "$INPUT" | jq -r '.toolCall.args.CommandLine // empty')
-if [[ "$CMD" == *"git push"* || "$CMD" == *"rm "* || "$CMD" == *"--force"* ]]; then
-    echo '{"decision":"ask","reason":"Destructive command detected. Requires explicit user approval."}'
+PAYLOAD=$(cat)
+CMD=$(echo "$PAYLOAD" | jq -r '.toolCall.args.CommandLine')
+if [[ "$CMD" == *"git push"* || "$CMD" == *"rm "* || "$CMD" == *"--force"* || "$CMD" == *"sudo"* || "$CMD" == *"chattr"* ]]; then
+    echo '{"decision": "ask", "reason": "⚠ Destructive/privileged command detected. Requires explicit user approval."}'
 else
-    echo '{"decision":"allow"}'
+    echo '{"decision": "allow"}'
 fi

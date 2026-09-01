@@ -20,3 +20,6 @@
 - Added 4 new specialized subagents (`lsp-mcp-integration-auditor`, `python-asyncio-auditor`, `rust-auditor`, `stop-criteria-guard`).
 - Restructured `cclsp.json` with absolute paths.
 - Committed all infrastructure v2 changes to `feature/rust-core-fixes` (Commit: 3b0f39f).
+
+## 2026-08-31
+- Added `Message Regeneration Integrity` rule to `GEMINI.md` to prevent content loss upon stop hook triggers.

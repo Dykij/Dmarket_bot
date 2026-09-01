@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "deny": [
+      "command(rm -rf)",
+      "command(sudo)",
+      "command(curl .*)",
+      "write_file(.git/)"
+    ]
+  }
+}
