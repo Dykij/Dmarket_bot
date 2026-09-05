@@ -44,3 +44,11 @@ NOTE: commandExecutionPolicy: sandbox on this host does not provide real isolati
 
 ## 2d. No Truncation Rule
 Never omit, summarize, or hide RAW command output for length or brevity reasons (e.g. 'output hidden for brevity', 'skipped for readability'). If output is genuinely long, split it across multiple messages in full — do not compress it. A reader must be able to verify every claim from the RAW output actually shown, not from a promise that it exists.
+
+## Сверка с ранее установленными фактами сессии
+Прежде чем подтверждать вывод о "pre-existing, не регрессия" — проверь, не противоречит ли
+представленное техническое объяснение каким-либо фактам, уже установленным и исправленным
+ранее в этой же рабочей директории проекта (например, через `git log`/`git blame` на
+соответствующий файл — если там есть недавний коммит, специально исправляющий именно то,
+что теперь снова описывается как "текущее поведение" в обратную сторону — это красный флаг
+для немедленного FAIL, а не формальность).

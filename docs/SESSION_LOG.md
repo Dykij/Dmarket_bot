@@ -31,3 +31,4 @@
 - Removed dead synthetic candidate generators (`wear-`, `demand-`, `diversity-`) from `cycle_orchestrator.py`.
 - Updated subagent rules for `stop-criteria-guard` (checking `git log` to catch historical regressions) and others (independent recalculation).
 - Committed agent infrastructure scripts, rules, and hooks to enforce anti-hallucination protocols.
+- (Pending) Subagent prompts (code-auditor, raw-evidence-auditor, stats-skeptic, stop-criteria-guard) updated with recalculation rules, pending commit.
