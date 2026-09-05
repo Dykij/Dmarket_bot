@@ -24,3 +24,10 @@
 ## 2026-08-31
 - Added `Message Regeneration Integrity` rule to `GEMINI.md` to prevent content loss upon stop hook triggers.
 - [WARNING] Code is NOT ready for production. TRACKED_TITLES requires backtesting.
+
+## 2026-09-05
+- Fixed regression in `ranking.py` by restoring `spread = best_bid - best_ask` formula for target-sniping logic.
+- Updated `Config.TRACKED_TITLES` to use a curated list of 40 liquid CS2 items instead of blind top-100 scan.
+- Removed dead synthetic candidate generators (`wear-`, `demand-`, `diversity-`) from `cycle_orchestrator.py`.
+- Updated subagent rules for `stop-criteria-guard` (checking `git log` to catch historical regressions) and others (independent recalculation).
+- Committed agent infrastructure scripts, rules, and hooks to enforce anti-hallucination protocols.

@@ -1,0 +1,16 @@
+{
+  "artifact-check": {
+    "PreToolUse": [
+      {
+        "matcher": "replace_file_content|write_to_file",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .agents/hooks/check_artifacts.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}
