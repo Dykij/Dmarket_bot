@@ -75,6 +75,49 @@ class Config(BaseSettings):
     MIN_PRICE_USD: float = Field(default=0.50, ge=0.0)
     MAX_PRICE_USD: float = Field(default=20.00, ge=0.0)
 
+    TRACKED_TITLES: list[str] = [
+        "AK-47 | Redline (Field-Tested)",
+        "AK-47 | Slate (Field-Tested)",
+        "M4A4 | Neo-Noir (Field-Tested)",
+        "M4A4 | The Emperor (Field-Tested)",
+        "M4A1-S | Printstream (Field-Tested)",
+        "M4A1-S | Decimator (Field-Tested)",
+        "Galil AR | Chromatic Aberration (Field-Tested)",
+        "FAMAS | Mecha Industries (Field-Tested)",
+        "AWP | Asiimov (Field-Tested)",
+        "AWP | Atheris (Field-Tested)",
+        "SSG 08 | Dragonfire (Field-Tested)",
+        "SCAR-20 | Bloodsport (Field-Tested)",
+        "G3SG1 | The Executioner (Field-Tested)",
+        "AUG | Chameleon (Field-Tested)",
+        "SG 553 | Cyrex (Field-Tested)",
+        "Desert Eagle | Printstream (Field-Tested)",
+        "Desert Eagle | Mecha Industries (Field-Tested)",
+        "USP-S | Neo-Noir (Field-Tested)",
+        "USP-S | Cortex (Field-Tested)",
+        "Glock-18 | Water Elemental (Field-Tested)",
+        "P250 | Asiimov (Field-Tested)",
+        "Five-SeveN | Monkey Business (Field-Tested)",
+        "CZ75-Auto | Red Astor (Factory New)",
+        "Dual Berettas | Melondrama (Field-Tested)",
+        "Tec-9 | Decimator (Field-Tested)",
+        "P2000 | Fire Elemental (Field-Tested)",
+        "R8 Revolver | Fade (Factory New)",
+        "MP9 | Food Chain (Field-Tested)",
+        "MAC-10 | Neon Rider (Field-Tested)",
+        "MP7 | Bloodsport (Field-Tested)",
+        "UMP-45 | Primal Saber (Field-Tested)",
+        "P90 | Asiimov (Field-Tested)",
+        "PP-Bizon | Judgement of Anubis (Field-Tested)",
+        "MP5-SD | Phosphor (Factory New)",
+        "Nova | Hyper Beast (Field-Tested)",
+        "XM1014 | Seasons (Factory New)",
+        "MAG-7 | Justice (Field-Tested)",
+        "Sawed-Off | The Kraken (Field-Tested)",
+        "Negev | Power Loader (Factory New)",
+        "M249 | Nebula Crusader (Factory New)",
+    ]
+
     # --- Dynamic Balance-Aware Position Sizing ---
     BALANCE_RESERVE_USD: float = Field(default=5.00, ge=0.0)
 
