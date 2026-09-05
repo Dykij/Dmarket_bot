@@ -112,7 +112,16 @@ def rank_candidates_by_spread(
             except Exception:
                 pass
 
-        spread = best_ask - best_bid
+        # ВАЖНО: spread = best_bid - best_ask (НЕ best_ask - best_bid).
+        # Стратегия "Target Sniping": бот покупает по best_ask, продаёт мгновенно
+        # в существующий best_bid target. Эмпирически подтверждено на 826k
+        # исторических наблюдений (2026-09-03): только 3240 из них показывают
+        # прибыльный best_bid > best_ask после комиссии — редкие, но реальные
+        # моменты рыночной неэффективности. Если это выглядит "неправильно"
+        # интуитивно (ask обычно > bid в здоровом рынке) — это НАМЕРЕННО,
+        # не баг. НЕ меняй направление без повторной эмпирической проверки,
+        # см. историю коммита, откатившего этот фикс: 7b27593.
+        spread = best_bid - best_ask
         spread_pct = spread / best_ask if best_ask > 0 else 0.0
         if spread_pct < float(effective_min_spread) / 100.0 * regime_mult:
             continue
@@ -124,7 +133,7 @@ def rank_candidates_by_spread(
         if Config.COMMISSION_OPTIMIZER_ENABLED and low_fee_titles is not None and title in low_fee_titles:
             fee_estimate *= 0.70  # ~30% cheaper fee stack (e.g. 2% vs 4.5%)
 
-        net_margin = spread_pct - fee_estimate
+        net_margin = (best_bid * (1.0 - fee_estimate) - best_ask) / best_ask
         if net_margin <= 0:
             continue
 

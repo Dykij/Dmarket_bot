@@ -16,7 +16,9 @@ class TestNetMarginGate:
         listed at $10.19 (best_bid - $0.01 discount).
 
         With ACTUAL Config (fixed): FEE_RATE=5% + WITHDRAWAL_FEE_RATE=0.5% = 5.5% total:
-        net_margin = ($10.19 - $10.00) / $10.00 - 0.055 = 1.9% - 5.5% = -3.6%
+        net_received = $10.19 * (1 - 0.055) = $9.62955
+        profit = $9.62955 - $10.00 = -$0.37045
+        net_margin = (-0.37045 / 10.00) * 100 = -3.7%
 
         This should be REJECTED by the gate (net margin < 0).
         """
@@ -24,62 +26,63 @@ class TestNetMarginGate:
         list_price = 10.19
         total_fee_rate = Config.FEE_RATE + Config.WITHDRAWAL_FEE_RATE
 
-        net_margin_pct = ((list_price - base_price) / base_price - total_fee_rate) * 100
+        net_margin_pct = (((list_price * (1.0 - total_fee_rate)) - base_price) / base_price) * 100
 
-        # net_margin = (0.19/10.00 - 0.055) * 100 = (0.019 - 0.055) * 100 = -3.6%
         assert net_margin_pct < 0, f"Expected negative margin, got {net_margin_pct:.2f}%"
-        assert net_margin_pct == pytest.approx(-3.6, abs=0.1)
+        assert net_margin_pct == pytest.approx(-3.7, abs=0.1)
 
     def test_ak47_redline_10_to_10_19_rejected_with_legacy_5pct_fees(self):
         """
         Same case but with 5% fee (the rate that was actually applied in dry run).
-        net_margin = ($10.19 - $10.00) / $10.00 - 0.05 = 1.9% - 5% = -3.1%
-
-        This confirms the systematic loss regardless of which fee rate was used.
+        net_received = $10.19 * (1 - 0.05) = $9.6805
+        profit = $9.6805 - $10.00 = -$0.3195
+        net_margin = (-0.3195 / 10.00) * 100 = -3.2%
         """
         base_price = 10.00
         list_price = 10.19
 
         # With 5% fee (legacy/hardcoded)
-        net_margin_pct_legacy = ((list_price - base_price) / base_price - 0.05) * 100
+        net_margin_pct_legacy = (((list_price * (1.0 - 0.05)) - base_price) / base_price) * 100
         assert net_margin_pct_legacy < 0
-        assert net_margin_pct_legacy == pytest.approx(-3.1, abs=0.1)
+        assert net_margin_pct_legacy == pytest.approx(-3.2, abs=0.1)
 
-        # With 3% fee (actual Config)
+        # With actual fee
         total_fee_rate = Config.FEE_RATE + Config.WITHDRAWAL_FEE_RATE
-        net_margin_pct_actual = ((list_price - base_price) / base_price - total_fee_rate) * 100
+        net_margin_pct_actual = (((list_price * (1.0 - total_fee_rate)) - base_price) / base_price) * 100
         assert net_margin_pct_actual < 0
 
     def test_profitable_listing_passes(self):
         """
         A listing with enough margin should pass.
-        $10.00 buy → $11.00 list → net = (1.00/10.00 - 0.055) * 100 = 4.5%
+        $10.00 buy → $11.00 list
+        net_received = $11.00 * (1 - 0.055) = $10.395
+        net_margin = (0.395 / 10.00) * 100 = 3.95%
         """
         base_price = 10.00
         list_price = 11.00
         total_fee_rate = Config.FEE_RATE + Config.WITHDRAWAL_FEE_RATE
 
-        net_margin_pct = ((list_price - base_price) / base_price - total_fee_rate) * 100
+        net_margin_pct = (((list_price * (1.0 - total_fee_rate)) - base_price) / base_price) * 100
 
         assert net_margin_pct > 0, f"Expected positive margin, got {net_margin_pct:.2f}%"
-        assert net_margin_pct == pytest.approx(4.5, abs=0.1)
+        assert net_margin_pct == pytest.approx(3.95, abs=0.1)
 
     def test_break_even_price(self):
         """
         Break-even price for $10.00 buy with actual fees (5.5%):
-        sell_price = buy_price * (1 + fee_rate) = $10.00 * 1.055 = $10.55
+        sell_price = buy_price / (1 - fee_rate) = $10.00 / (1 - 0.055) = $10.582
         """
         base_price = 10.00
         total_fee_rate = Config.FEE_RATE + Config.WITHDRAWAL_FEE_RATE
 
-        break_even = base_price * (1 + total_fee_rate)
+        break_even = base_price / (1.0 - total_fee_rate)
 
         # At break-even, net margin should be ~0
-        net_at_breakeven = ((break_even - base_price) / base_price - total_fee_rate) * 100
+        net_at_breakeven = (((break_even * (1.0 - total_fee_rate)) - base_price) / base_price) * 100
         assert net_at_breakeven == pytest.approx(0.0, abs=0.01)
 
         # Just below break-even should be negative
-        net_below = ((break_even - 0.01 - base_price) / base_price - total_fee_rate) * 100
+        net_below = ((((break_even - 0.01) * (1.0 - total_fee_rate)) - base_price) / base_price) * 100
         assert net_below < 0
 
     def test_fee_rate_values_from_env(self):
@@ -96,24 +99,13 @@ class TestNetMarginGate:
         """
         Investigate the discrepancy between recorded profit (-$0.3195) and
         expected profit with actual fees.
-
-        Recorded: buy $10.00, sell $10.19, profit = -$0.3195
-        This implies fee = $10.19 - $10.00 + $0.3195 = $0.5095
-        fee_rate = $0.5095 / $10.19 = 4.9995% ≈ 5%
-
-        But Config.FEE_RATE = 2.5%. So either:
-        1. The code used a hardcoded 5% instead of Config.FEE_RATE
-        2. The Config was different when trades happened (different .env)
-        3. DMarket charged a higher fee than configured
         """
         sell_price = 10.19
         buy_price = 10.00
         recorded_profit = -0.3195
 
         # Back-calculate the fee rate from recorded profit
-        # profit = sell - buy - fee => fee = sell - buy - profit
-        actual_fee = sell_price - buy_price - recorded_profit
-        actual_fee_rate = actual_fee / sell_price
+        actual_fee_rate = 1.0 - (recorded_profit + buy_price) / sell_price
 
         # Should be ~5%
         assert actual_fee_rate == pytest.approx(0.05, abs=0.001), (

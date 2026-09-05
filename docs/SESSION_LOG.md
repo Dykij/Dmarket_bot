@@ -23,3 +23,4 @@
 
 ## 2026-08-31
 - Added `Message Regeneration Integrity` rule to `GEMINI.md` to prevent content loss upon stop hook triggers.
+- [WARNING] Code is NOT ready for production. TRACKED_TITLES requires backtesting.
