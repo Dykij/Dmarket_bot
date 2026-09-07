@@ -32,3 +32,19 @@
 - Updated subagent rules for `stop-criteria-guard` (checking `git log` to catch historical regressions) and others (independent recalculation).
 - Committed agent infrastructure scripts, rules, and hooks to enforce anti-hallucination protocols.
 - (Pending) Subagent prompts (code-auditor, raw-evidence-auditor, stats-skeptic, stop-criteria-guard) updated with recalculation rules, pending commit.
+- Успешная консолидация веток: безопасно удалены 14 локальных и удалённых (GitHub) веток. Оставлены только `main` и новая синхронизированная `testing/backtest-validation`. Ни один коммит не утерян.
+- Проведен полный аудит всех 9 суб-агентов. Добавлен универсальный preamble во все файлы (строгие RAW-правила, защита от слепого доверия). 
+- Внедрены 5 профильных ролевых улучшений для ключевых агентов (regression-isolator, scope-auditor, lsp-mcp-integration-auditor, raw-evidence-auditor, stop-criteria-guard) на основе реальных уроков этой сессии.
+- 2026-09-05: Completed architecture analysis, cross-validation with code-graph-mcp and archy, and prepared decomposition plans for filter.py, execution.py, and resale.py.
+- 2026-09-05: Fully updated `docs/otsebyatina_patterns_registry.md` with complete catalog of patterns A-H (including H1-H7) from the multi-round audit session.
+
+## Терминальная песочница — известный рецидивирующий баг
+Ошибка "sbox: installing certificate: open /etc/ssl/cert.pem: read-only file system"
+повторяется независимо от прав chrome-sandbox (подтверждено корректными -rwsr-xr-x
+root root при повторном сбое 2026-09-06). SUID-фикс либо решил проблему тогда
+случайно, либо это два независимых механизма (chrome-sandbox — Chromium sandbox,
+sbox — собственный слой Antigravity для terminal). Дальнейшая диагностика прав
+файлов бесполезна. Принято решение: использовать pre_bypass_gate.sh с ежедневным
+файлом-одобрением от пользователя вместо повторной диагностики каждый раз.
+- 2026-09-07: Fixed stop_gate.sh Walkthrough Guard for subagents and tested Phase 6.
+- 2026-09-07: Investigated native `SubagentStop` lifecycle event support in Antigravity. Confirmed it is NOT supported natively in the current version. We must continue using the `IS_SUBAGENT` heuristic based on the absence of `task.md`.
