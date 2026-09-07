@@ -6,6 +6,7 @@ Mixed into `SnipingLoop` (see `core.py`).
 """
 
 from __future__ import annotations
+import asyncio
 
 import logging
 from typing import Any
@@ -162,7 +163,8 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
                     beta_dist = BetaDistribution(alpha=2.0 + total_wins, beta=2.0 + total_losses)
 
                     # Get price history for volatility estimation
-                    price_hist = price_db.get_recent_prices(title, days=7)
+                    loop = asyncio.get_event_loop()
+                    price_hist = await loop.run_in_executor(None, price_db.get_recent_prices, title, 7)
                     prices = [p for p, _ in price_hist] if price_hist else []
 
                     # Adaptive Kelly: Bayesian win rate + EWMA volatility
@@ -237,7 +239,8 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
 
         # --- v15.7: Microstructure pipeline (extracted from inline checks) ---
         # v15.9: Fetch price_history early for Hawkes, Bollinger, DEMA, MACD, Hurst
-        _early_history = price_db.get_recent_prices(title, days=14)
+        loop = asyncio.get_event_loop()
+        _early_history = await loop.run_in_executor(None, price_db.get_recent_prices, title, 14)
         _early_prices = [p for p, _ in _early_history] if _early_history else []
         ms_result = run_microstructure_pipeline(
             title=title,
