@@ -78,11 +78,10 @@ Security Preset оставлен на Full Machine (не Turbo Mode) — Turbo M
 выстроенному сегодня (реестр паттернов отсебятины H1-H13).
 
 ## Крипто-контент в телах квант-скиллов — временная мера + план
-market-microstructure и correlation-analysis: description чист, но тело документа
-(находка lsp-mcp-integration-auditor, CRITICAL) содержит исходный крипто-контент
-(Solana/AMM/USDC/BTC/ETH). Добавлен явный баннер-предупреждение сразу после frontmatter
-как временная защита от галлюцинаций при реальном использовании. Полная переработка тела
-под предметную область DMarket — отдельная, самостоятельная задача на будущее.
+market-microstructure и correlation-analysis: description чист, ТЕЛО ПЕРЕПИСАНО ПОД КОД БОТА (CRITICAL УСТРАНЁН).
 Остальные скиллы (volatility-modeling, cointegration-analysis, mean-reversion,
 market-microstructure-traditional) требуют такой же проверки тела, не только description —
 не проверено в этой сессии.
+
+## 2026-09-09: Адаптация квант-скиллов под предметную область DMarket
+Полностью переписаны тела скиллов `market-microstructure` и `correlation-analysis`. Убран крипто-контент (Solana/DEX/AMM), добавлены реальные примеры из кодовой базы бота (VPIN, CVD, HMM, CS2 collections). Устранен CRITICAL замечание от lsp-mcp-integration-auditor.
