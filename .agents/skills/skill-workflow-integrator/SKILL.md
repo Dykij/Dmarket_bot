@@ -1,6 +1,6 @@
 ---
 name: skill-workflow-integrator
-description: Use when orchestrating multiple existing skills for a complex task. Trigger keywords: "pipeline", "orchestrate skills", "run gate", "execute workflow", "все проверки", "запусти pipeline". Automatically chains skills in the correct order based on task type.
+description: "Use when orchestrating multiple existing skills for a complex task. Trigger keywords: pipeline, orchestrate skills, run gate, execute workflow, все проверки, запусти pipeline. Automatically chains skills in the correct order based on task type."
 license: MIT
 ---
 
@@ -94,6 +94,24 @@ Step 4: git-gate commit + push
 ```
 
 **Trigger phrases:** "validate strategy", "check strategy", "стратегия", "profitability", "sandbox"
+
+### Workflow: Strategy Calibration
+
+Use when the user wants to adapt the strategy based on the current market volatility regime, cointegration candidates, and trend strength.
+
+```
+Step 1: volatility-modeling (GARCH/EWMA calibration)
+        ↓
+Step 2: cointegration-analysis (pair validity check)
+        ↓
+Step 3: mean-reversion (Hurst/half-life on candidate pairs)
+        ↓
+Step 4: quant-analyst (существующий, Kelly sizing)
+        ↓
+Step 5: strategy-validate (существующий тест)
+```
+
+**Trigger phrases:** "calibrate strategy", "market regime calibration", "калибровка"
 
 ## Rules for Workflow Execution
 

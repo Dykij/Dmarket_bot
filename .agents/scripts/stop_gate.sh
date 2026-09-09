@@ -81,7 +81,8 @@ if [ "$IS_SUBAGENT" -eq 0 ]; then
 fi
 
 # 4. Lazy Work Guard (from lazy_work_guard.sh)
-for file in $CHANGED_FILES; do
+echo "$CHANGED_FILES" | while IFS= read -r file; do
+    [ -z "$file" ] && continue
     if [[ "$file" == *.md ]]; then continue; fi
     if [[ "$file" == .agents/* ]]; then continue; fi
     if [ -f "$file" ]; then
@@ -92,12 +93,12 @@ for file in $CHANGED_FILES; do
         fi
 
         if echo "$ADDED_LINES" | grep -qE "TODO|FIXME|NotImplementedError|placeholder|todo\!\(\)|unimplemented\!\(\)|unreachable\!\(\)"; then
-            echo "{\"decision\":\"continue\",\"reason\":\"Lazy marker (TODO/FIXME/NotImplementedError) found in added lines of $file. Please implement fully or mark task as BLOCKED.\"}"
+            jq -n --arg file "$file" '{"decision":"continue","reason":("Lazy marker (TODO/FIXME/NotImplementedError) found in added lines of " + $file + ". Please implement fully or mark task as BLOCKED.")}'
             exit 0
         fi
 
         if echo "$ADDED_LINES" | grep -qE '^\+\s*pass\s*$|^\+\s*\.\.\.\s*(#.*)?$'; then
-            echo "{\"decision\":\"continue\",\"reason\":\"Lazy marker: bare \`pass\` or \`...\` as function body in added lines of $file.\"}"
+            jq -n --arg file "$file" '{"decision":"continue","reason":("Lazy marker: bare `pass` or `...` as function body in added lines of " + $file + ".")}'
             exit 0
         fi
     fi
