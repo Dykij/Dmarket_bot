@@ -85,3 +85,9 @@ market-microstructure-traditional) требуют такой же проверк
 
 ## 2026-09-09: Адаптация квант-скиллов под предметную область DMarket
 Полностью переписаны тела скиллов `market-microstructure` и `correlation-analysis`. Убран крипто-контент (Solana/DEX/AMM), добавлены реальные примеры из кодовой базы бота (VPIN, CVD, HMM, CS2 collections). Устранен CRITICAL замечание от lsp-mcp-integration-auditor.
+
+## 2026-09-09: Адаптация остальных 4 квант-скиллов и консолидация
+- Полностью переписаны тела скиллов `volatility-modeling`, `cointegration-analysis`, `mean-reversion`, `market-microstructure-traditional` под предметную область CS2 (DMarket).
+- За основу взяты реальные алгоритмы из `src/analysis/algo_pack/` (GARCH, PairTrading, OUProcess) и `src/analysis/microstructure/` (Roll's spread).
+- Пройдена повторная верификация `lsp-mcp-integration-auditor`.
+- Удалены устаревшие файлы гейтов (`check_session_log.sh`, `lazy_work_guard.sh`, `stop_verification_gate.sh`), их логика корректно перенесена и консолидирована в единый `stop_gate.sh` (в рамках очистки от H14).
