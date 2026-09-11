@@ -1,4 +1,3 @@
-echo "[HEARTBEAT] stop_gate.sh triggered at $(date)" >> /tmp/hook_heartbeat.log
 #!/bin/bash
 echo "$(date -Iseconds) CALLED: stop_gate.sh" >> /tmp/hooks_called.log
 WORKSPACE_DIR=$(git rev-parse --show-toplevel)
