@@ -110,3 +110,23 @@ market-microstructure-traditional) требуют такой же проверк
 
 ПОСТОЯННОЕ ПРАВИЛО (начиная с 2026-09-09): никаких rm/git rm без явного показа списка
 и подтверждения пользователем. Действует для всех последующих задач и сессий.
+
+## 2026-09-11: Checklist implementation: API v1->v2, stubbing, and infrastructure hooks
+- Verified complete absence of DMarket API v1 endpoints (`/exchange/v1/offers`, `user-offers/create`, `user-offers/edit`) usage in the codebase.
+- Removed dead configuration key `"/exchange/v1/offers"` from `src/api/dmarket_api_client/rate_limiter.py`.
+- Replaced 408 lines of `src/analytics/historical_data.py` with a 10-line deprecation docstring stub.
+- Addressed 7 bare `except Exception: pass` clauses in `src/core/target_sniping/ranking.py` by converting them to `except Exception as e: logger.warning(...)`.
+- Conducted clean regression check via temp-branch method: 15 baseline failures matched 15 post-fix failures precisely (test execution time diff only). No new regressions introduced.
+- Verified hooks via heartbeat logging in `pre_bypass_gate.sh` and `stop_gate.sh`.
+- Fixed exit code in `pre_bypass_gate.sh`: shifted from `exit 2` (which swallowed the JSON reason) to `exit 0` for correctly propagating denial reasons back to the agent.
+- Installed `difftastic` and `libcst`. Documented the failure to install `comby` (missing `libev.so.4`, no sudo access).
+- Created a design plan for the `PostToolUse` gate against homoglyphs (H5) and empty edits (H14).
+- Added plan to log `BypassSandbox` directly inside `pre_bypass_gate.sh`.
+
+## Отдельная находка: offers.py использует устаревший /exchange/v1/user-offers
+src/api/dmarket_api_client/offers.py (строки 27, 33, 148, 155) вызывает
+GET /exchange/v1/user-offers. AGENTS.md проекта уже помечает этот путь как
+устаревший, миграция на /marketplace-api/v2/user/offers. Не мигрировано.
+Требует отдельной задачи: сверить формат ответа v2 (может отличаться от v1),
+мигрировать, протестировать. Не входит в объём сегодняшней задачи (миграция
+DMarket API v1→v2 касалась других путей: user-offers/create|edit, exchange/v1/offers).
