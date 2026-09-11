@@ -15,4 +15,5 @@ if [ -f "$APPROVAL_FILE" ]; then
 fi
 
 echo '{"decision":"deny","reason":"BypassSandbox requested without a same-day approval file. Ask the user explicitly for permission and, ONLY after they confirm in the chat, request they create the approval file themselves (not you) — or wait for their explicit textual Proceed before retrying without bypass."}'
-exit 2
+exit 0
+

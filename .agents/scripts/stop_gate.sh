@@ -1,4 +1,6 @@
+echo "[HEARTBEAT] stop_gate.sh triggered at $(date)" >> /tmp/hook_heartbeat.log
 #!/bin/bash
+echo "$(date -Iseconds) CALLED: stop_gate.sh" >> /tmp/hooks_called.log
 WORKSPACE_DIR=$(git rev-parse --show-toplevel)
 INPUT=$(cat)
 ARTIFACT_DIR=$(echo "$INPUT" | jq -r '.artifactDirectoryPath')
@@ -86,7 +88,7 @@ echo "$CHANGED_FILES" | while IFS= read -r file; do
     if [[ "$file" == *.md ]]; then continue; fi
     if [[ "$file" == .agents/* ]]; then continue; fi
     if [ -f "$file" ]; then
-        if git ls-files --error-unmatch "$file" >/dev/null 2>&1; then
+        if git ls-files --error-unmatch "$file" > /dev/null 2>&1; then
             ADDED_LINES=$(git diff HEAD -- "$file" 2>/dev/null | grep -E '^\+[^+]')
         else
             ADDED_LINES=$(sed 's/^/+/' "$file" 2>/dev/null)
