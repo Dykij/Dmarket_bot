@@ -95,7 +95,7 @@ class EndpointRateLimiter:
         "/trade-aggregator/v1/last-sales": 6.0,
         "/marketplace-api/v1/fee": 110.0,
         "/marketplace-api/v1/user-targets": 20.0,
-        "/exchange/v1/offers": 20.0,
+
     }
     DEFAULT_LIMIT = 20.0  # 20 RPS for other endpoints
     SAFETY_MARGIN = 0.5  # Use 50% of documented limit (conservative)
