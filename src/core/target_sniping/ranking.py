@@ -8,7 +8,10 @@ v15.8: Algo-pack integration — trend strength (LIS) and regime-adjusted scorin
 from __future__ import annotations
 
 import math
+import logging
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 from src.config import Config
 from src.core.target_sniping.item_utils import get_item_title
@@ -26,8 +29,8 @@ def _get_regime_detector():
         try:
             from src.analysis.algo_pack.regime_detector import MarkovRegimeDetector
             _regime_detector = MarkovRegimeDetector()
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"[RANKING] Init MarkovRegimeDetector: {e}")
     return _regime_detector
 
 
@@ -96,8 +99,8 @@ def rank_candidates_by_spread(
             try:
                 from src.analysis.seasonal import get_timing_multiplier
                 effective_min_spread *= get_timing_multiplier()
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning(f"[RANKING] get_timing_multiplier: {e}")
 
         # v15.8: Regime-adjusted spread threshold
         regime_mult = 1.0
@@ -109,8 +112,8 @@ def rank_candidates_by_spread(
                 regime = detector.update(price_change, abs(price_change) * 0.5)
                 params = detector.get_params()
                 regime_mult = params.min_spread_mult
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning(f"[RANKING] regime update: {e}")
 
         # ВАЖНО: spread = best_bid - best_ask (НЕ best_ask - best_bid).
         # Стратегия "Target Sniping": бот покупает по best_ask, продаёт мгновенно
@@ -149,8 +152,8 @@ def rank_candidates_by_spread(
                 from src.analytics.filler_tracker import is_filler
                 if is_filler(title):
                     score *= 1.08  # +8% for filler skins (faster turnover)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning(f"[RANKING] filler_tracker: {e}")
 
         # v15.8: Trend boost — items in uptrend get +10% score (LIS algorithm)
         if price_histories and title in price_histories:
@@ -161,8 +164,8 @@ def rank_candidates_by_spread(
                     score *= 1.10  # +10% for uptrend
                 elif ts < 0.3:
                     score *= 0.85  # -15% for downtrend
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning(f"[RANKING] trend_strength: {e}")
 
         # v15.9: Bollinger Squeeze — volatility contraction = breakout imminent
         if price_histories and title in price_histories:
@@ -193,8 +196,8 @@ def rank_candidates_by_spread(
                             score *= 1.10  # +10% for oversold (below lower band)
                         elif pctb > 1.0:
                             score *= 0.85  # -15% for overbought (above upper band)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning(f"[RANKING] volatility_bands: {e}")
 
         # v15.9: Hurst Exponent — regime strength confirmation
         if price_histories and title in price_histories:
@@ -210,8 +213,8 @@ def rank_candidates_by_spread(
                         elif hurst < 0.4:
                             # Mean-reverting — boost reversion score
                             score *= 1.05  # +5% for mean-reversion regime
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning(f"[RANKING] hurst_exponent: {e}")
 
         ranked.append((title, score))
     ranked.sort(key=lambda x: x[1], reverse=True)
