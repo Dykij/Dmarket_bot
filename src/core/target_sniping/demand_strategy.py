@@ -331,50 +331,6 @@ def _log_demand_decision(title: str, price: float, result: dict[str, Any]) -> No
         logging.getLogger("DemandStrategy").debug(f"log_decision failed: {e}")
 
 
-def is_demand_opportunity(
-    agg_data: dict[str, Any],
-    max_price: float = 15.0,
-    min_price: float = 0.50,
-) -> list[dict[str, Any]]:
-    """
-    Find demand-based opportunities from aggregated prices.
-
-    Returns list of opportunities sorted by score (best first).
-    """
-    opportunities = []
-
-    for title, data in agg_data.items():
-        ask = data.get("best_ask", 0) or 0
-        bid = data.get("best_bid", 0) or 0
-        ask_count = data.get("ask_count", 0) or 0
-        bid_count = data.get("bid_count", 0) or 0
-
-        if ask < min_price or ask > max_price or bid <= 0:
-            continue
-
-        result = calculate_demand_score(title, ask, bid, ask_count, bid_count)
-
-        if result["score"] > 0:
-            opportunities.append({
-                "title": title,
-                "ask_price": ask,
-                "best_bid": bid,
-                "demand_ratio": result["demand_ratio"],
-                "obi_signal": result["obi_signal"],
-                "obi_value": result["obi_value"],
-                "ofi_value": result["ofi_value"],
-                "obi_z": result["obi_z"],
-                "micro_price": result["micro_price"],
-                "expected_hold_days": result["expected_hold_days"],
-                "score": result["score"],
-                "reason": result["reason"],
-            })
-
-    # Sort by score (best first)
-    opportunities.sort(key=lambda x: x["score"], reverse=True)
-
-    return opportunities
-
 
 def clear_obi_history() -> None:
     """Clear OBI history cache (call between cycles if needed)."""
