@@ -143,3 +143,14 @@ DMarket API v1→v2 касалась других путей: user-offers/create
 - **baseline:** Тестирование подтвердило, что после устранения конфликтов ветка возвращена в консистентное состояние (одно нерелевантное падение `test_returns_multiplier`, ожидающее фикса мока).
 - **Фикс market_maker.py:** Заменена ошибочная логика расчета `target_price`. Старый вариант (`best_ask - undercut`) устанавливал заявку на покупку почти по цене продажи, уничтожая спред. Новый вариант (`best_bid + undercut`) корректно "перебивает" конкурентов на величину undercut, оставляя маржу. Фикс проверен через isolation run (исправил тест `test_spread_calculation`) и подтвержден `code-auditor`.
 - Отказ от установки libev/comby без sudo (Часть Д). Установка через conda/nix теоретически возможна, но признана нецелесообразной, так как связка ast-grep + difftastic полностью перекрывает потребности проекта в структурном анализе. Bypass Sandbox работает исправно.
+
+## Session: Backtest Prep & Decomposition (libcst adoption)
+- **Date:** 2026-09-12
+- **Key Actions:**
+  1. Fixed API client: Added backward-compatibility wrappers (`get_sales_history`, `get_aggregated_prices_bulk`) to `DMarketAPIClient` (`_MarketMixin`). Added missing `src/interfaces.py` for `IDMarketAPI` protocol.
+  2. Extracted `_parse_buy_response` from `_execute_instant_buys` via `libcst`, reducing CC from 88 to 61.
+  3. Extracted `_apply_value_detection_layers` from `_evaluate_candidate` via `libcst`, reducing CC from 101 to 60.
+  4. Formally documented the `libcst` requirement for Python structural edits in `.agents/VERIFICATION_STANDARDS.md`.
+  5. Addressed edge cases identified by `code-auditor` (missing exception types, state mutation flaw, unpassed payload parameters).
+  6. Full test suite passes against baseline (1784 tests).
+- **Status:** Done. Ready for backtest phase.

@@ -179,7 +179,7 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
                     list_price = round(list_price * filler_mult, 2)
                     if is_sandbox:
                         logger.debug(f"[FILLER] {title}: demand multiplier {filler_mult:.2f}x → list=${list_price:.2f}")
-            except Exception as e:
+            except (ImportError, KeyError, TypeError) as e:
                 logger.debug(f"[FILLER] {title}: lookup failed: {e}")
 
         pattern_premium = 1.0
@@ -196,7 +196,7 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
                                 f"→ list=${list_price:.2f}"
                             )
                         is_rare = True
-            except Exception as e:
+            except (ValueError, TypeError, AttributeError) as e:
                 logger.debug(f"[PATTERN] {title}: premium calc failed: {e}")
 
         item_stickers = item.get("stickers", [])
@@ -222,7 +222,7 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
                     is_rare = True
                     if is_sandbox:
                         logger.info(f"[RARE] {title}: sticker value ${sticker_value:.2f} → exclusive keep")
-            except Exception as e:
+            except (ValueError, TypeError, AttributeError) as e:
                 logger.debug(f"[STICKER] {title}: value calc failed: {e}")
 
         if getattr(Config, "FLOAT_DATE_ENABLED", False) and not is_rare:
@@ -233,7 +233,7 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
                     list_price = round(list_price * 1.08, 2)
                     if is_sandbox:
                         logger.info(f"[FLOAT-DATE] {title}: date float → 1.08x → list=${list_price:.2f}")
-            except Exception as e:
+            except (ValueError, TypeError, ImportError) as e:
                 logger.debug(f"[FLOAT-DATE] {title}: detection failed: {e}")
 
         return list_price, is_rare
