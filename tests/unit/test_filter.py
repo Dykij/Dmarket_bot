@@ -33,6 +33,7 @@ def _make_mixin() -> MagicMock:
     mixin.client = AsyncMock()
     mixin.client.get_item_fee = AsyncMock(return_value=0.05)
     mixin.buy_budget = 100.0
+    mixin._extract_and_validate_base_data = _FilterMixin._extract_and_validate_base_data.__get__(mixin)
     mixin.liquidity = MagicMock()
     mixin.liquidity.can_spend = MagicMock(return_value=True)
     mixin._diag_cycle_id = -1

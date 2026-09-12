@@ -54,6 +54,31 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
     ) -> list[tuple[str, float]]:
         return rank_candidates_by_spread(items, agg_prices, max_price_usd)
 
+    def _extract_and_validate_base_data(self, item: dict) -> tuple[str, str, int, float] | None:
+        title = get_item_title(item)
+        # v2 uses "offerId"/"priceCents", v1 uses "itemId"/"price.USD"
+        item_id = item.get("offerId", "") or item.get("itemId", "")
+        base_price_cents = int(
+            item.get("priceCents", 0)
+            or item.get("price", {}).get("USD", 0)
+        )
+        base_price = base_price_cents / 100.0
+
+        if not title or not item_id or base_price <= 0:
+            return None
+
+        if price_db.has_target_been_placed(item_id):
+            return None
+
+        # v12.2 Phase 2.1: Skip if asset is reverted or trade_protected
+        if self._skip_if_locked(item_id, title):
+            return None
+
+        if base_price < Config.MIN_PRICE_USD:
+            return None
+
+        return title, item_id, base_price_cents, base_price
+
     async def _evaluate_candidate(
         self,
         *,
@@ -77,27 +102,10 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
         only if the title is missing from the snapshots (selective mode miss).
         """
 
-        title = get_item_title(item)
-        # v2 uses "offerId"/"priceCents", v1 uses "itemId"/"price.USD"
-        item_id = item.get("offerId", "") or item.get("itemId", "")
-        base_price_cents = int(
-            item.get("priceCents", 0)
-            or item.get("price", {}).get("USD", 0)
-        )
-        base_price = base_price_cents / 100.0
-
-        if not title or not item_id or base_price <= 0:
+        base_data = self._extract_and_validate_base_data(item)
+        if not base_data:
             return None
-
-        if price_db.has_target_been_placed(item_id):
-            return None
-
-        # v12.2 Phase 2.1: Skip if asset is reverted or trade_protected
-        if self._skip_if_locked(item_id, title):
-            return None
-
-        if base_price < Config.MIN_PRICE_USD:
-            return None
+        title, item_id, base_price_cents, base_price = base_data
 
         # --- v14.0 Bait/Spoof Detection ---
         bait_result = check_bait_detection(title, base_price)
