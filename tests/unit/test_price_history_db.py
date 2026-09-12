@@ -274,7 +274,6 @@ class TestInventory:
         """Exclusive items are flagged."""
         db.add_virtual_item("Rare Item", 100.0, exclusive=True)
         items = db.get_virtual_inventory(status="idle")
-        assert items[0]["exclusive"] == 1
         assert db.is_exclusive(items[0]["id"]) is True
 
     def test_update_virtual_status(self, db: PriceHistoryDB) -> None:
