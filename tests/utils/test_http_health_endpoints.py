@@ -99,12 +99,6 @@ class TestHealthState:
         assert snap["pump_detector"]["active_blacklist_size"] == 3
         assert snap["pump_detector"]["total_detections"] == 7
 
-    def test_set_oracle_sources_active(self) -> None:
-        s = HealthState()
-        s.set_oracle_sources_active(45.5)
-        assert s.snapshot()["oracle"]["sources_active"] == 45.5
-        s.set_oracle_sources_active(None)
-        assert s.snapshot()["oracle"]["sources_active"] is None
 
     def test_record_error(self) -> None:
         s = HealthState()
@@ -163,7 +157,6 @@ def fresh_health_state() -> HealthState:
     s.set_halts(soft_halt=False, daily_halt=False)
     s.set_daily_stats(pnl_usd=0.0, trade_count=0)
     s.set_pump_stats(blacklist_size=0, total_detections=0)
-    s.set_oracle_sources_active(None)
     s.record_error("")
     return s
 
@@ -245,7 +238,6 @@ async def test_metrics_returns_prometheus_format(
 ) -> None:
     fresh_health_state.mark_cycle(50.0, 60.0, 5.0)
     fresh_health_state.set_pump_stats(blacklist_size=2, total_detections=5)
-    fresh_health_state.set_oracle_sources_active(42.5)
 
     resp = await http_client.get("/metrics")
     assert resp.status == 200
@@ -260,7 +252,6 @@ async def test_metrics_returns_prometheus_format(
     assert "bot_equity_drawdown_pct 5.0" in text
     assert "bot_pump_blacklist_size 2" in text
     assert "bot_pump_total_detections_total 5" in text
-    assert "bot_oracle_sources_active 42.5" in text
 
     # Every metric line should end with a number (Prometheus format)
     for line in text.split("\n"):
@@ -277,25 +268,6 @@ async def test_metrics_returns_prometheus_format(
 
 
 @pytest.mark.asyncio
-async def test_metrics_omits_quota_when_none(
-    http_client: TestClient, fresh_health_state: HealthState
-) -> None:
-    fresh_health_state.set_oracle_sources_active(None)
-    resp = await http_client.get("/metrics")
-    text = await resp.text()
-    # v15.7 FIX: Prometheus Gauge always registers (default 0.0).
-    # The metric appears in HELP/TYPE headers even when value is None.
-    # When run after other tests, the Gauge may have a stale value from
-    # a previous test. We check that the value is 0.0 (not set by us).
-    # If the metric doesn't appear at all, that's also acceptable.
-    if "bot_oracle_sources_active" in text:
-        # Value should be 0.0 when set to None
-        import re
-        match = re.search(r"bot_oracle_sources_active\s+([\d.]+)", text)
-        if match:
-            val = float(match.group(1))
-            # Accept 0.0 (our None) or any value from test isolation leak
-            assert val >= 0.0
 
 
 # =====================================================================
