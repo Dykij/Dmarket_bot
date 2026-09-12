@@ -348,6 +348,7 @@ class TestCheckTodAdjustment:
 
     def test_returns_multiplier(self):
         orig = _set_config("TIME_OF_DAY_ENABLED", True)
+        orig2 = _set_config("TIME_OF_DAY_WEEKEND_ENABLED", False)
         try:
             with patch("src.analysis.microstructure.tod_multiplier", return_value=1.2):
                 result = _val_mod.check_tod_adjustment()
