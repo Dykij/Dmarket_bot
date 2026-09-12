@@ -168,7 +168,7 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
                     list_price = round(list_price * 1.10, 2)
                     if is_sandbox:
                         logger.info(f"[DIRTY-BS] {title}: dirty BS premium 1.10x → list=${list_price:.2f}")
-            except Exception as e:
+            except (ValueError, TypeError, AttributeError) as e:
                 logger.debug(f"[DIRTY-BS] {title}: detection failed: {e}")
 
         if getattr(Config, "FILLER_TRACKING_ENABLED", False):

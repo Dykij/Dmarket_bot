@@ -226,7 +226,9 @@ class _MarketMixin:
             return {"orders": [], "total_demand": 0, "best_bid": 0.0, "order_count": 0}
     async def get_sales_history(self, game: str, title: str, period: str) -> dict[str, Any]:
         """Backward-compatibility wrapper for sources.py"""
-        days = int(period.replace("d", "")) if "d" in period else 30
+        import re
+        match = re.search(r'\d+', period)
+        days = int(match.group()) if match else 30
         return await self.make_request(
             "GET", 
             "/trade-aggregator/v1/last-sales", 
@@ -238,5 +240,5 @@ class _MarketMixin:
         return await self.make_request(
             "POST",
             "/marketplace-api/v1/aggregated-prices",
-            body={"limit": limit, "filter": {"game": game}}
+            body={"limit": limit, "filter": {"game": game, "titles": titles}}
         )

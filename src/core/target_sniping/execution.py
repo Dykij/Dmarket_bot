@@ -107,6 +107,7 @@ class _ExecutionMixin:
                         self._failed_offer_ids[failed_offer_id] = time.monotonic()
                         counts: dict[str, int] = getattr(self, "_failure_counts", {})
                         counts[failed_offer_id] = counts.get(failed_offer_id, 0) + 1
+                        setattr(self, "_failure_counts", counts)
                         if counts[failed_offer_id] >= 3:
                             if hasattr(self, "_permanent_failures"):
                                 self._permanent_failures.add(failed_offer_id)
