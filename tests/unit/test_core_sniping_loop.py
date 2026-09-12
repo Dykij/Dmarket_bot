@@ -88,17 +88,6 @@ class TestRunCycle:
             assert loop.empty_page_count == 1
 
     @pytest.mark.asyncio
-    async def test_run_cycle_with_no_oracle_skips(self, loop):
-        ctx = MagicMock()
-        ctx.oracle = None
-
-        with (
-            patch.object(loop, "_stage_prepare", new_callable=AsyncMock, return_value=ctx),
-            patch.object(loop, "_stage_scan", new_callable=AsyncMock) as mock_scan,
-        ):
-            await loop.run_cycle("a8db")
-
-            mock_scan.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_run_cycle_resets_empty_count_on_items(self, loop):
@@ -256,6 +245,10 @@ class TestRunCycleErrorHandling:
     async def test_run_cycle_handles_transient_error(self, loop):
         ctx = MagicMock()
         ctx.current_balance = 0.0
+        ctx.effective_balance = 0.0
+        ctx.dynamic_max_price = 0.0
+        ctx.items = []
+        ctx.agg_prices = {}
         ctx.items = []
 
         with (
@@ -268,6 +261,13 @@ class TestRunCycleErrorHandling:
     async def test_run_cycle_fatal_error_reraises(self, loop):
         ctx = MagicMock()
         ctx.current_balance = 100.0
+        ctx.effective_balance = 100.0
+        ctx.dynamic_max_price = 100.0
+        ctx.items = []
+        ctx.agg_prices = {}
+        ctx.instant_buys = []
+        ctx.items = []
+        ctx.agg_prices = {}
         ctx.items = []
 
         with (

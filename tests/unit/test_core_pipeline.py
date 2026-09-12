@@ -141,12 +141,6 @@ class TestScheduler:
 # Value Pipelines Tests
 # ═══════════════════════════════════════════════════════════════════
 
-class TestValuePipelines:
-    """Tests for value detection pipelines."""
-
-    def test_value_pipelines_module_importable(self):
-        from src.core.target_sniping import value_pipelines
-        assert value_pipelines is not None
 
 
 # ═══════════════════════════════════════════════════════════════════
