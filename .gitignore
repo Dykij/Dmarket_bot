@@ -83,3 +83,4 @@ HEAD_GEMINI.md
 data/watchdog_heartbeat.txt
 *.bak
 .qartez/
+src/.tgrep/
