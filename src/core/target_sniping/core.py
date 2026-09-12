@@ -82,6 +82,7 @@ class SnipingLoop(  # type: ignore[misc]
         self._failed_offer_ids: dict[str, float] = {}  # OfferNotFound blacklist {id: ts}
         self._failure_counts: dict[str, int] = {}  # strike counter per offer_id
         self._permanent_failures: set[str] = set()  # 3-strike permanent blacklist
+        self._background_tasks: set[asyncio.Task] = set()
 
         from src.analytics.self_reflection import self_reflection
         from src.risk.pump_detector import PumpDetector

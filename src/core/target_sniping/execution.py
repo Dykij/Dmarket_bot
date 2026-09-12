@@ -35,6 +35,10 @@ class _ExecutionMixin:
     # These attributes are set on the instance by SnipingLoop.__init__
     client: Any  # DMarketAPIClient
     liquidity: Any  # LiquidityManager
+    _failed_offer_ids: dict[str, float]
+    _permanent_failures: set[str]
+    _failure_counts: dict[str, int]
+    _background_tasks: set[asyncio.Task[Any]]
 
     # v15.10: TWAP executor for anti-slippage on large orders
     _twap_executor: TWAPExecutor | None = None
@@ -89,8 +93,8 @@ class _ExecutionMixin:
         # same execution batch — avoids wasted API calls and 30s retry loops.
         _STALE_TTL = 300.0  # 5 minutes
         _now = time.monotonic()
-        failed_map: dict[str, float] = getattr(self, "_failed_offer_ids", {})
-        perm_failures: set[str] = getattr(self, "_permanent_failures", set())
+        failed_map: dict[str, float] = self._failed_offer_ids
+        perm_failures: set[str] = self._permanent_failures
         # Prune expired entries
         if failed_map:
             expired = [k for k, ts in failed_map.items() if _now - ts > _STALE_TTL]
@@ -323,9 +327,8 @@ class _ExecutionMixin:
                     if failed_code == "OfferNotFound" and failed_offer_id and hasattr(self, "_failed_offer_ids"):
                         self._failed_offer_ids[failed_offer_id] = time.monotonic()
                         # 3-strike permanent blacklist — prevents zombie retry cycles
-                        counts: dict[str, int] = getattr(self, "_failure_counts", {})
+                        counts: dict[str, int] = self._failure_counts
                         counts[failed_offer_id] = counts.get(failed_offer_id, 0) + 1
-                        self._failure_counts = counts
                         if counts[failed_offer_id] >= 3:
                             self._permanent_failures.add(failed_offer_id)
                             self._failed_offer_ids.pop(failed_offer_id, None)
@@ -553,7 +556,6 @@ class _ExecutionMixin:
                         strategy=item_data.get("strategy", "intra_spread"),
                     )
                 )
-                self._background_tasks = getattr(self, '_background_tasks', set())
                 self._background_tasks.add(task)
                 task.add_done_callback(self._background_tasks.discard)
                 # P2-11: Removed duplicate decrement — line 570 handles both DRY and PROD
@@ -620,7 +622,6 @@ class _ExecutionMixin:
                             strategy=item_data.get("strategy", "intra_spread"),
                         )
                     )
-                    self._background_tasks = getattr(self, '_background_tasks', set())
                     self._background_tasks.add(task)
                     task.add_done_callback(self._background_tasks.discard)
             else:

@@ -29,9 +29,21 @@ class _OffersMixin:
         params = {"gameId": game_id, "limit": limit}
         if cursor:
             params["cursor"] = cursor
-        return await self.make_request(
-            "GET", "/exchange/v1/user-offers", params=params
+        resp = await self.make_request(
+            "GET", "/marketplace-api/v2/user/offers", params=params
         )
+        if "items" in resp and "objects" not in resp:
+            objects = []
+            for item in resp["items"]:
+                obj = dict(item)
+                if "attributes" in item:
+                    obj["title"] = item["attributes"].get("title", "")
+                    obj["itemId"] = item["attributes"].get("id", "")
+                if "priceCents" in item:
+                    obj["price"] = {"USD": str(item["priceCents"])}
+                objects.append(obj)
+            resp["objects"] = objects
+        return resp
 
     # ------------------------------------------------------------------
     # March 2026: Official v2 Batch Endpoints (Marketplace API v2)
@@ -143,13 +155,25 @@ class _OffersMixin:
         status: str | None = None,
     ) -> dict[str, Any]:
         """
-        v2: List active offers with optional status filter.
+        v2: List active offers.
 
-        Endpoint: GET /exchange/v1/user-offers?gameId=a8db&status=active&limit=100
+        Endpoint: GET /marketplace-api/v2/user/offers
         """
         params = {"gameId": game_id, "limit": limit}
         if cursor:
             params["cursor"] = cursor
-        if status:
-            params["status"] = status
-        return await self.make_request("GET", "/exchange/v1/user-offers", params=params)
+        if status and status != "active":
+            pass # /marketplace-api/v2/user/offers implicitly returns active offers
+        resp = await self.make_request("GET", "/marketplace-api/v2/user/offers", params=params)
+        if "items" in resp and "objects" not in resp:
+            objects = []
+            for item in resp["items"]:
+                obj = dict(item)
+                if "attributes" in item:
+                    obj["title"] = item["attributes"].get("title", "")
+                    obj["itemId"] = item["attributes"].get("id", "")
+                if "priceCents" in item:
+                    obj["price"] = {"USD": str(item["priceCents"])}
+                objects.append(obj)
+            resp["objects"] = objects
+        return resp
