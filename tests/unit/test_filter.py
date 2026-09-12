@@ -34,6 +34,7 @@ def _make_mixin() -> MagicMock:
     mixin.client.get_item_fee = AsyncMock(return_value=0.05)
     mixin.buy_budget = 100.0
     mixin._extract_and_validate_base_data = _FilterMixin._extract_and_validate_base_data.__get__(mixin)
+    mixin._passes_hard_filters = _FilterMixin._passes_hard_filters.__get__(mixin)
     mixin.liquidity = MagicMock()
     mixin.liquidity.can_spend = MagicMock(return_value=True)
     mixin._diag_cycle_id = -1
@@ -56,7 +57,7 @@ def _make_mixin() -> MagicMock:
 
 _DEFAULT_CFG = {
     "MIN_PRICE_USD": 0.10, "DRY_RUN": True, "MAX_SNIPING_PRICE_USD": 100.0,
-    "MAX_POSITION_RISK_PCT": 10.0, "KELLY_ENABLED": False,
+    "MAX_POSITION_RISK_PCT": 10.0, "KELLY_ENABLED": False, "OFI_KELLY_BOOST": 0.0,
     "FLOAT_PREMIUM_ENABLED": False, "DIRTY_BS_ENABLED": False,
     "FILLER_TRACKING_ENABLED": False, "PATTERN_PREMIUM_ENABLED": False,
     "FLOAT_DATE_ENABLED": False, "STRICT_MICROSTRUCTURE_FILTERS": False,

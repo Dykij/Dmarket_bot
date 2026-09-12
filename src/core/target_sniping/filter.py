@@ -79,6 +79,57 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
 
         return title, item_id, base_price_cents, base_price
 
+    def _passes_hard_filters(
+        self,
+        title: str,
+        base_price: float,
+        current_balance: float,
+        effective_balance: float | None,
+        dynamic_max_price: float | None,
+        game_id: str,
+    ) -> bool:
+        # --- v14.0 Bait/Spoof Detection ---
+        bait_result = check_bait_detection(title, base_price)
+        if not bait_result["pass"]:
+            return False
+
+        if base_price > self.buy_budget or base_price > current_balance:
+            return False
+
+        # v14.4: Dynamic snipe price cap (Half Kelly based on effective balance)
+        # Balances $43 → max $5.00 floor. $500 → max $50. $2000 → max $200.
+        _dyn_max = dynamic_max_price or Config.MAX_SNIPING_PRICE_USD
+        if base_price > _dyn_max:
+            if Config.DRY_RUN:
+                price_db.log_decision(
+                    title,
+                    "skip",
+                    "Above balance-aware cap",
+                    f"${base_price:.2f} > ${_dyn_max:.2f} "
+                    f"(eff_balance={effective_balance or current_balance:.2f})",
+                )
+            return False
+
+        # v14.9: Drawdown freeze + daily loss gate (pre-trade risk check)
+        # This is the CRITICAL safety gate: blocks buys during drawdown freeze,
+        # daily loss limit, consecutive loss streak, and pump-blacklist.
+        if hasattr(self, "risk") and self.risk is not None:
+            risk_check = self.risk.pre_trade_check(
+                proposed_size_usd=base_price,
+                current_equity_usd=current_balance,
+                game_id=game_id,
+                item_title=title,
+            )
+            if not risk_check.allowed:
+                if Config.DRY_RUN:
+                    price_db.log_decision(
+                        title, "skip", "Risk blocked",
+                        risk_check.reason,
+                    )
+                return False
+
+        return True
+
     async def _evaluate_candidate(
         self,
         *,
@@ -107,45 +158,15 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
             return None
         title, item_id, base_price_cents, base_price = base_data
 
-        # --- v14.0 Bait/Spoof Detection ---
-        bait_result = check_bait_detection(title, base_price)
-        if not bait_result["pass"]:
+        if not self._passes_hard_filters(
+            title=title,
+            base_price=base_price,
+            current_balance=current_balance,
+            effective_balance=effective_balance,
+            dynamic_max_price=dynamic_max_price,
+            game_id=game_id,
+        ):
             return None
-
-        if base_price > self.buy_budget or base_price > current_balance:
-            return None
-
-        # v14.4: Dynamic snipe price cap (Half Kelly based on effective balance)
-        # Balances $43 → max $5.00 floor. $500 → max $50. $2000 → max $200.
-        _dyn_max = dynamic_max_price or Config.MAX_SNIPING_PRICE_USD
-        if base_price > _dyn_max:
-            if Config.DRY_RUN:
-                price_db.log_decision(
-                    title,
-                    "skip",
-                    "Above balance-aware cap",
-                    f"${base_price:.2f} > ${_dyn_max:.2f} "
-                    f"(eff_balance={effective_balance or current_balance:.2f})",
-                )
-            return None
-
-        # v14.9: Drawdown freeze + daily loss gate (pre-trade risk check)
-        # This is the CRITICAL safety gate: blocks buys during drawdown freeze,
-        # daily loss limit, consecutive loss streak, and pump-blacklist.
-        if hasattr(self, "risk") and self.risk is not None:
-            risk_check = self.risk.pre_trade_check(
-                proposed_size_usd=base_price,
-                current_equity_usd=current_balance,
-                game_id=game_id,
-                item_title=title,
-            )
-            if not risk_check.allowed:
-                if Config.DRY_RUN:
-                    price_db.log_decision(
-                        title, "skip", "Risk blocked",
-                        risk_check.reason,
-                    )
-                return None
 
         # v14.4: Fractional Kelly position sizing
         # Kelly formula: f* = win_rate - (1 - win_rate) / win_loss_ratio
