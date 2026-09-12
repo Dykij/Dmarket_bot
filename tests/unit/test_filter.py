@@ -35,6 +35,8 @@ def _make_mixin() -> MagicMock:
     mixin.buy_budget = 100.0
     mixin._extract_and_validate_base_data = _FilterMixin._extract_and_validate_base_data.__get__(mixin)
     mixin._passes_hard_filters = _FilterMixin._passes_hard_filters.__get__(mixin)
+    mixin._calculate_financial_viability = _FilterMixin._calculate_financial_viability.__get__(mixin)
+    mixin._calculate_position_sizing = _FilterMixin._calculate_position_sizing.__get__(mixin)
     mixin.liquidity = MagicMock()
     mixin.liquidity.can_spend = MagicMock(return_value=True)
     mixin._diag_cycle_id = -1

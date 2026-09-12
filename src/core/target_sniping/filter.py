@@ -169,77 +169,13 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
             return None
 
         # v14.4: Fractional Kelly position sizing
-        # Kelly formula: f* = win_rate - (1 - win_rate) / win_loss_ratio
-        # Half Kelly = 0.5 * f* (reduced drawdown, same growth direction)
-        # v15.8: Bayesian win rate + EWMA volatility adjustment
-        kelly_risk_pct = float(Config.MAX_POSITION_RISK_PCT)
-        if Config.KELLY_ENABLED and hasattr(self, "risk") and self.risk is not None:
-            try:
-                risk_state = self.risk.get_state()
-                wr = getattr(risk_state, "win_rate", 0.55) or 0.55
-                wlr = getattr(risk_state, "win_loss_ratio", 1.5) or 1.5
-                win_rate = max(0.30, min(0.80, wr))
-                win_loss_ratio = max(1.0, wlr)
-
-                # v15.8: Try Bayesian Kelly with EWMA volatility adjustment
-                try:
-                    from src.analysis.algo_pack.bayesian_stats import BetaDistribution
-                    from src.analysis.algo_pack.ewma import adaptive_kelly_fraction
-
-                    # Build Beta distribution from risk state
-                    total_wins = getattr(risk_state, "total_wins", 0) or 0
-                    total_losses = getattr(risk_state, "total_losses", 0) or 0
-                    beta_dist = BetaDistribution(alpha=2.0 + total_wins, beta=2.0 + total_losses)
-
-                    # Get price history for volatility estimation
-                    loop = asyncio.get_event_loop()
-                    price_hist = await loop.run_in_executor(None, price_db.get_recent_prices, title, 7)
-                    prices = [p for p, _ in price_hist] if price_hist else []
-
-                    # Adaptive Kelly: Bayesian win rate + EWMA volatility
-                    kelly_f = adaptive_kelly_fraction(
-                        win_rate=beta_dist.mean,
-                        win_loss_ratio=win_loss_ratio,
-                        prices=prices,
-                        base_fraction=float(Config.KELLY_FRACTION),
-                    )
-                    kelly_risk_pct = max(
-                        float(Config.KELLY_FLOOR_PCT),
-                        kelly_f * 100.0,
-                    )
-                except Exception:
-                    # Fallback to standard Kelly (consistent with Bayesian path)
-                    kelly_f = win_rate - (1.0 - win_rate) / win_loss_ratio
-                    kelly_f = max(0.0, min(0.25, kelly_f))  # Clamp same as adaptive_kelly_fraction
-                    kelly_risk_pct = max(
-                        float(Config.KELLY_FLOOR_PCT),
-                        kelly_f * 100.0 * float(Config.KELLY_FRACTION),
-                    )
-
-                # v17.7: Kelly + OFI integration — boost position size when OFI is positive
-                # Higher OFI = stronger buyer momentum = higher confidence in trade
-                if Config.OFI_KELLY_BOOST > 0:
-                    ofi_val = 0.0
-                    try:
-                        from src.core.target_sniping.demand_strategy import _obi_ewma
-                        ofi_val = _obi_ewma.get(title, 0.0)
-                    except Exception:
-                        pass
-                    if ofi_val > 0:
-                        ofi_boost = 1.0 + Config.OFI_KELLY_BOOST * min(ofi_val, 1.0)
-                        kelly_risk_pct *= ofi_boost
-                        logger.debug(f"[KELLY+OFI] {title}: OFI={ofi_val:+.2f} boost={ofi_boost:.2f}x")
-
-                # Cap by the hard position limit and the dynamic item price cap
-                kelly_risk_pct = min(kelly_risk_pct, float(Config.MAX_POSITION_RISK_PCT))
-            except Exception as e:
-                # Kelly sizing failed — use CONSERVATIVE fallback (half-cap)
-                # to avoid over-sizing when risk state is unavailable.
-                logger.warning(f"[KELLY] Risk state unavailable, using half-cap fallback: {e}")
-                kelly_risk_pct = float(Config.MAX_POSITION_RISK_PCT) * 0.5
-        max_risk_price = (effective_balance or current_balance) * (kelly_risk_pct / 100.0)
-        max_risk_price = min(max_risk_price, dynamic_max_price or Config.MAX_SNIPING_PRICE_USD)
-        if base_price > max_risk_price:
+        if not await self._calculate_position_sizing(
+            title=title,
+            base_price=base_price,
+            effective_balance=effective_balance,
+            current_balance=current_balance,
+            dynamic_max_price=dynamic_max_price,
+        ):
             return None
 
         # Per-cycle diag (one log per cycle)
@@ -558,137 +494,31 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
             except (ValueError, TypeError, ImportError) as e:
                 logger.debug(f"[FLOAT-DATE] {title}: detection failed: {e}")
 
-        if list_price < base_price * 1.02:
-            # Less than 2% gross — too thin after fees
-            return None
-
-        # v12.0 Phase 1.1: Low-Fee Filter (prefer low-fee items)
-        # v12.2 Phase 2.2: Use bulk fee instead of per-item API call
-        # v14.8.1: Use reduced fee from low-fee scan if available.
-        fee_rate = bulk_fees.get(item_id, 0.05)
-        low_fee_override = item.get("_low_fee_rate")
-        if low_fee_override is not None and low_fee_override < fee_rate:
-            fee_rate = low_fee_override
-        if fee_rate == 0.05:
-            # Fall back to per-item call only if bulk missed this item
-            fee_rate = await self.client.get_item_fee(game_id, item_id, base_price_cents)
-        cached_low_fee = price_db.get_low_fee_rate(title)
-        if cached_low_fee is not None and cached_low_fee < fee_rate:
-            # Use the lower cached rate (it might differ slightly from dynamic)
-            fee_rate = min(fee_rate, cached_low_fee)
-
-        # P0 HARD GATE: net margin after ALL fees must be positive
-        # Uses ACTUAL fee rate from DMarket API (fee_rate), not Config.FEE_RATE
-        # which may be misconfigured (e.g. Config=2.5% but DMarket charges 5%)
-        total_fee_rate = fee_rate + Config.WITHDRAWAL_FEE_RATE
-        net_margin_pct = ((list_price - base_price) / base_price - total_fee_rate) * 100
-        if net_margin_pct <= 0:
-            logger.warning(
-                f"[NET-MARGIN-GATE] {title}: list=${list_price:.2f} buy=${base_price:.2f} "
-                f"fee={fee_rate:.3f} net={net_margin_pct:.2f}% <= 0 — REJECTED"
-            )
-            return None
-
-        fee_result = evaluate_fee_slippage_tod(
+        if not await self._calculate_financial_viability(
+            item=item,
             title=title,
+            item_id=item_id,
             base_price=base_price,
-            best_ask=best_ask,
+            base_price_cents=base_price_cents,
+            list_price=list_price,
             best_bid=best_bid,
+            best_ask=best_ask,
             ask_count=ask_count,
             bid_count=bid_count,
-            fee_rate=fee_rate,
+            game_id=game_id,
+            bulk_fees=bulk_fees,
             current_margin=current_margin,
-            list_price=list_price,
+            saturation_counts=saturation_counts,
+            effective_balance=effective_balance,
+            current_balance=current_balance,
             is_sandbox=is_sandbox,
-        )
-        if not fee_result["pass"]:
+            trade_records=trade_records,
+            vwap_signal_val=vwap_signal_val,
+            cvd_val=cvd_val,
+            vpin_val=vpin_val,
+            ms_result=ms_result,
+        ):
             return None
-
-        # v12.7: Inventory saturation check (P2-4).
-        # Limits concentration risk: max N units of same hash_name.
-        # Uses Config.MAX_SAME_ITEM_HOLDINGS (env-configurable, default 3).
-        # v12.8: Uses pre-computed saturation_counts (O(1) lookup) when available,
-        # avoiding N separate DB calls for each candidate in the parallel loop.
-        if saturation_counts is not None:
-            held_count = saturation_counts.get(title, 0)
-        else:
-            held_count = len(
-                [
-                    x
-                    for x in price_db.get_virtual_inventory(status="idle", only_unlocked=False)
-                    if x["hash_name"] == title
-                ]
-            )
-        if held_count >= Config.MAX_SAME_ITEM_HOLDINGS:
-            if is_sandbox:
-                price_db.record_missed_opportunity(
-                    title, base_price, list_price, f"Saturation Limit ({held_count})"
-                )
-            else:
-                logger.debug(
-                    f"[SATURATION] {title}: already holding {held_count} units, "
-                    f"max={Config.MAX_SAME_ITEM_HOLDINGS}. Skipping."
-                )
-            return None
-
-        # v14.4: Lock-aware inventory cap — prevent over-concentration during trade-lock
-        # At $43 with $5 items: max ~6 simultaneous holdings (80% liquid fraction)
-        if Config.LOCK_AWARE_CAP_ENABLED:
-            _eff_bal = effective_balance or current_balance
-            total_locked = price_db.get_virtual_inventory_locked_value()
-            liquid_remaining = _eff_bal * Config.LOCK_AWARE_LIQUID_FRACTION
-            if total_locked + base_price > liquid_remaining:
-                if is_sandbox:
-                    price_db.record_missed_opportunity(
-                        title, base_price, list_price,
-                        f"Lock-Aware Cap (locked=${total_locked:.2f} + "
-                        f"${base_price:.2f} > ${liquid_remaining:.2f} liquid)"
-                    )
-                else:
-                    logger.debug(
-                        f"[LOCK-CAP] {title}: ${total_locked:.2f} locked + "
-                        f"${base_price:.2f} exceeds ${liquid_remaining:.2f} liquid buffer. Skipping."
-                    )
-                return None
-
-        if is_sandbox and base_price > current_balance:
-            price_db.record_missed_opportunity(
-                title, base_price, list_price, "Insufficient Balance"
-            )
-
-        # --- v14.3 Composite Score ---
-        if Config.STRICT_MICROSTRUCTURE_FILTERS:
-            micro = compute_microstructure_scores(
-                title=title,
-                best_ask=best_ask,
-                best_bid=best_bid,
-                ask_count=ask_count,
-                bid_count=bid_count,
-                trade_records=trade_records,
-                vwap_signal_val=vwap_signal_val,
-                cvd_val=cvd_val,
-                vpin_val=vpin_val,
-                adverse_pass=True,
-                vol_regime=ms_result.vol_regime,
-                prev_agg_prices=getattr(self, '_prev_agg_prices', None),
-                # v15.9: New algorithm signals from microstructure pipeline
-                hawkes_activity=ms_result.hawkes_activity,
-                bollinger_squeeze=ms_result.bollinger_squeeze,
-                bollinger_pctb=ms_result.bollinger_pctb,
-                dema_crossover=ms_result.dema_crossover,
-                macd_signal_val=ms_result.macd_signal,
-                hurst_exponent=ms_result.hurst_exponent,
-                hmm_regime=ms_result.hmm_regime,
-            )
-            composite_score = micro["composite_score"]
-            # Reject items with very poor microstructure scores
-            if composite_score < 0.2:
-                if is_sandbox:
-                    price_db.log_decision(
-                        title, "skip", "Microstructure score too low",
-                        f"composite={composite_score:.2f} < 0.2",
-                    )
-                return None
 
         # --- Decide: instant buy vs target ---
         # For intra-spread strategy, we typically instant-buy
@@ -714,3 +544,228 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
             "dm_underpriced_ref": dm_underpriced_ref,
             "is_rare": is_rare,
         }
+
+    async def _calculate_financial_viability(
+        self,
+        *,
+        item: dict[str, Any],
+        title: str,
+        item_id: str,
+        base_price: float,
+        base_price_cents: int,
+        list_price: float,
+        best_bid: float,
+        best_ask: float,
+        ask_count: int,
+        bid_count: int,
+        game_id: str,
+        bulk_fees: dict[str, float],
+        current_margin: float,
+        saturation_counts: dict[str, int] | None,
+        effective_balance: float | None,
+        current_balance: float,
+        is_sandbox: bool,
+        trade_records: list[dict],
+        vwap_signal_val: float,
+        cvd_val: float,
+        vpin_val: float,
+        ms_result: Any,
+    ) -> bool:
+        if list_price < base_price * 1.02:
+            return False
+
+        fee_rate = bulk_fees.get(item_id, 0.05)
+        low_fee_override = item.get("_low_fee_rate")
+        if low_fee_override is not None and low_fee_override < fee_rate:
+            fee_rate = low_fee_override
+        if fee_rate == 0.05:
+            fee_rate = await self.client.get_item_fee(game_id, item_id, base_price_cents)
+        cached_low_fee = price_db.get_low_fee_rate(title)
+        if cached_low_fee is not None and cached_low_fee < fee_rate:
+            fee_rate = min(fee_rate, cached_low_fee)
+
+        total_fee_rate = fee_rate + Config.WITHDRAWAL_FEE_RATE
+        net_margin_pct = ((list_price - base_price) / base_price - total_fee_rate) * 100
+        if net_margin_pct <= 0:
+            logger.warning(
+                f"[NET-MARGIN-GATE] {title}: list=${list_price:.2f} buy=${base_price:.2f} "
+                f"fee={fee_rate:.3f} net={net_margin_pct:.2f}% <= 0 — REJECTED"
+            )
+            return False
+
+        fee_result = evaluate_fee_slippage_tod(
+            title=title,
+            base_price=base_price,
+            best_ask=best_ask,
+            best_bid=best_bid,
+            ask_count=ask_count,
+            bid_count=bid_count,
+            fee_rate=fee_rate,
+            current_margin=current_margin,
+            list_price=list_price,
+            is_sandbox=is_sandbox,
+        )
+        if not fee_result["pass"]:
+            return False
+
+        if saturation_counts is not None:
+            held_count = saturation_counts.get(title, 0)
+        else:
+            held_count = len(
+                [
+                    x
+                    for x in price_db.get_virtual_inventory(status="idle", only_unlocked=False)
+                    if x["hash_name"] == title
+                ]
+            )
+        if held_count >= Config.MAX_SAME_ITEM_HOLDINGS:
+            if is_sandbox:
+                price_db.record_missed_opportunity(
+                    title, base_price, list_price, f"Saturation Limit ({held_count})"
+                )
+            else:
+                logger.debug(
+                    f"[SATURATION] {title}: already holding {held_count} units, "
+                    f"max={Config.MAX_SAME_ITEM_HOLDINGS}. Skipping."
+                )
+            return False
+
+        if Config.LOCK_AWARE_CAP_ENABLED:
+            _eff_bal = effective_balance or current_balance
+            total_locked = price_db.get_virtual_inventory_locked_value()
+            liquid_remaining = _eff_bal * Config.LOCK_AWARE_LIQUID_FRACTION
+            if total_locked + base_price > liquid_remaining:
+                if is_sandbox:
+                    price_db.record_missed_opportunity(
+                        title, base_price, list_price,
+                        f"Lock-Aware Cap (locked=${total_locked:.2f} + "
+                        f"${base_price:.2f} > ${liquid_remaining:.2f} liquid)"
+                    )
+                else:
+                    logger.debug(
+                        f"[LOCK-CAP] {title}: ${total_locked:.2f} locked + "
+                        f"${base_price:.2f} exceeds ${liquid_remaining:.2f} liquid buffer. Skipping."
+                    )
+                return False
+
+        if is_sandbox and base_price > current_balance:
+            price_db.record_missed_opportunity(
+                title, base_price, list_price, "Insufficient Balance"
+            )
+
+        if Config.STRICT_MICROSTRUCTURE_FILTERS:
+            micro = compute_microstructure_scores(
+                title=title,
+                best_ask=best_ask,
+                best_bid=best_bid,
+                ask_count=ask_count,
+                bid_count=bid_count,
+                trade_records=trade_records,
+                vwap_signal_val=vwap_signal_val,
+                cvd_val=cvd_val,
+                vpin_val=vpin_val,
+                adverse_pass=True,
+                vol_regime=ms_result.vol_regime,
+                prev_agg_prices=getattr(self, '_prev_agg_prices', None),
+                hawkes_activity=ms_result.hawkes_activity,
+                bollinger_squeeze=ms_result.bollinger_squeeze,
+                bollinger_pctb=ms_result.bollinger_pctb,
+                dema_crossover=ms_result.dema_crossover,
+                macd_signal_val=ms_result.macd_signal,
+                hurst_exponent=ms_result.hurst_exponent,
+                hmm_regime=ms_result.hmm_regime,
+            )
+            composite_score = micro["composite_score"]
+            if composite_score < 0.2:
+                if is_sandbox:
+                    price_db.log_decision(
+                        title, "skip", "Microstructure score too low",
+                        f"composite={composite_score:.2f} < 0.2",
+                    )
+                return False
+
+        return True
+
+    async def _calculate_position_sizing(
+        self,
+        *,
+        title: str,
+        base_price: float,
+        effective_balance: float | None,
+        current_balance: float,
+        dynamic_max_price: float | None,
+    ) -> bool:
+        # v14.4: Fractional Kelly position sizing
+        # Kelly formula: f* = win_rate - (1 - win_rate) / win_loss_ratio
+        # Half Kelly = 0.5 * f* (reduced drawdown, same growth direction)
+        # v15.8: Bayesian win rate + EWMA volatility adjustment
+        kelly_risk_pct = float(Config.MAX_POSITION_RISK_PCT)
+        if Config.KELLY_ENABLED and hasattr(self, "risk") and self.risk is not None:
+            try:
+                risk_state = self.risk.get_state()
+                wr = getattr(risk_state, "win_rate", 0.55) or 0.55
+                wlr = getattr(risk_state, "win_loss_ratio", 1.5) or 1.5
+                win_rate = max(0.30, min(0.80, wr))
+                win_loss_ratio = max(1.0, wlr)
+
+                # v15.8: Try Bayesian Kelly with EWMA volatility adjustment
+                try:
+                    from src.analysis.algo_pack.bayesian_stats import BetaDistribution
+                    from src.analysis.algo_pack.ewma import adaptive_kelly_fraction
+
+                    # Build Beta distribution from risk state
+                    total_wins = getattr(risk_state, "total_wins", 0) or 0
+                    total_losses = getattr(risk_state, "total_losses", 0) or 0
+                    beta_dist = BetaDistribution(alpha=2.0 + total_wins, beta=2.0 + total_losses)
+
+                    # Get price history for volatility estimation
+                    loop = asyncio.get_event_loop()
+                    price_hist = await loop.run_in_executor(None, price_db.get_recent_prices, title, 7)
+                    prices = [p for p, _ in price_hist] if price_hist else []
+
+                    # Adaptive Kelly: Bayesian win rate + EWMA volatility
+                    kelly_f = adaptive_kelly_fraction(
+                        win_rate=beta_dist.mean,
+                        win_loss_ratio=win_loss_ratio,
+                        prices=prices,
+                        base_fraction=float(Config.KELLY_FRACTION),
+                    )
+                    kelly_risk_pct = max(
+                        float(Config.KELLY_FLOOR_PCT),
+                        kelly_f * 100.0,
+                    )
+                except Exception:
+                    # Fallback to standard Kelly (consistent with Bayesian path)
+                    kelly_f = win_rate - (1.0 - win_rate) / win_loss_ratio
+                    kelly_f = max(0.0, min(0.25, kelly_f))  # Clamp same as adaptive_kelly_fraction
+                    kelly_risk_pct = max(
+                        float(Config.KELLY_FLOOR_PCT),
+                        kelly_f * 100.0 * float(Config.KELLY_FRACTION),
+                    )
+
+                # v17.7: Kelly + OFI integration — boost position size when OFI is positive
+                # Higher OFI = stronger buyer momentum = higher confidence in trade
+                if Config.OFI_KELLY_BOOST > 0:
+                    ofi_val = 0.0
+                    try:
+                        from src.core.target_sniping.demand_strategy import _obi_ewma
+                        ofi_val = _obi_ewma.get(title, 0.0)
+                    except Exception:
+                        pass
+                    if ofi_val > 0:
+                        ofi_boost = 1.0 + Config.OFI_KELLY_BOOST * min(ofi_val, 1.0)
+                        kelly_risk_pct *= ofi_boost
+                        logger.debug(f"[KELLY+OFI] {title}: OFI={ofi_val:+.2f} boost={ofi_boost:.2f}x")
+
+                # Cap by the hard position limit and the dynamic item price cap
+                kelly_risk_pct = min(kelly_risk_pct, float(Config.MAX_POSITION_RISK_PCT))
+            except Exception as e:
+                # Kelly sizing failed — use CONSERVATIVE fallback (half-cap)
+                # to avoid over-sizing when risk state is unavailable.
+                logger.warning(f"[KELLY] Risk state unavailable, using half-cap fallback: {e}")
+                kelly_risk_pct = float(Config.MAX_POSITION_RISK_PCT) * 0.5
+        max_risk_price = (effective_balance or current_balance) * (kelly_risk_pct / 100.0)
+        max_risk_price = min(max_risk_price, dynamic_max_price or Config.MAX_SNIPING_PRICE_USD)
+        if base_price > max_risk_price:
+            return False
+        return True
