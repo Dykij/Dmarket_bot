@@ -69,193 +69,12 @@ class _ExecutionMixin:
         if not instant_buys:
             return
 
-        # v13.1: Calculate available balance (excludes frozen TP-held funds)
-        available_balance = current_balance
-        _cached_equity = None  # BUG-15 FIX: Cache equity to avoid redundant DB calls
-        if hasattr(self, "risk"):
-            try:
-                await price_db.run_in_thread(price_db.release_expired_funds)
-                equity_now = await price_db.run_in_thread(price_db.get_total_equity, current_balance)
-                if isinstance(equity_now, dict):
-                    _cached_equity = equity_now  # Cache for pre-buy cap check below
-                    self.risk._update_equity(equity_now["total"])
-                    available_balance = equity_now["available"]
-                    if equity_now["frozen"] > 0:
-                        logger.info(
-                            f"[FUNDS] ${available_balance:.2f} available / "
-                            f"${current_balance:.2f} total (${equity_now['frozen']:.2f} frozen in TP holds)"
-                        )
-            except Exception as e:
-                logger.warning(f"Risk equity update failed (using raw balance): {e}")
-
-        # v15.11: Pre-filter offers already blacklisted as stale (OfferNotFound).
-        # Prevents retrying offers that failed in a previous cycle within the
-        # same execution batch — avoids wasted API calls and 30s retry loops.
-        _STALE_TTL = 300.0  # 5 minutes
-        _now = time.monotonic()
-        failed_map: dict[str, float] = self._failed_offer_ids
-        perm_failures: set[str] = self._permanent_failures
-        # Prune expired entries
-        if failed_map:
-            expired = [k for k, ts in failed_map.items() if _now - ts > _STALE_TTL]
-            for k in expired:
-                del failed_map[k]
-        failed_ids = failed_map.keys()
-        all_blocked = failed_ids | perm_failures
-        if all_blocked:
-            _before = len(instant_buys)
-            instant_buys = [
-                d for d in instant_buys
-                if d.get("item_id") not in all_blocked
-            ]
-            skipped = _before - len(instant_buys)
-            if skipped:
-                logger.info(f"[STALE] Pre-filtered {skipped} blacklisted offers before buy")
-
-        logger.info(
-            f"Executing INSTANT BUY for {len(instant_buys)} items (Strategy A)..."
+        verified_buys, available_balance = await self._prepare_execution_batch(
+            instant_buys=instant_buys,
+            current_balance=current_balance,
+            game_id=game_id,
         )
-
-        # v12.9: Parallel slippage protection.
-        # Re-verify listing prices haven't increased >5% since scan.
-        # Uses asyncio.gather for all items instead of sequential loop.
-        _MAX_SLIPPAGE_PCT = 5.0
-
-        async def _check_slippage(item_data: dict[str, Any]) -> dict[str, Any] | None:
-            try:
-                title = item_data["title"]
-                expected_price = item_data["base_price"]
-                resp = await self.client.get_market_items_v2(
-                    game_id, limit=5, title=title
-                )
-                current_listings = resp.get("objects", [])
-                if not current_listings:
-                    # Listing disappeared — item was already sold or removed.
-                    # Don't proceed with a stale price.
-                    logger.warning(
-                        f"[SLIPPAGE] {title}: listing no longer available. Skipping."
-                    )
-                    return None
-                matching = [
-                    lst for lst in current_listings
-                    if (lst.get("offerId", "") or lst.get("itemId", "")) == item_data["item_id"]
-                ]
-                if matching:
-                    cheapest_cents = min(
-                        int(lst.get("priceCents", 0) or lst.get("price", {}).get("USD", 0))
-                        for lst in matching
-                    )
-                else:
-                    logger.warning(
-                        f"[SLIPPAGE] {title}: exact offer not found. Skipping."
-                    )
-                    return None
-                current_price = cheapest_cents / 100.0
-                if current_price <= 0:
-                    logger.warning(f"[SLIPPAGE] {title}: price is 0. Skipping.")
-                    return None
-                slippage_pct = (
-                    ((current_price - expected_price) / expected_price) * 100
-                    if expected_price > 0 else 0
-                )
-                if slippage_pct > _MAX_SLIPPAGE_PCT:
-                    logger.warning(
-                        f"[SLIPPAGE] {title}: expected ${expected_price:.2f}, "
-                        f"now ${current_price:.2f} (+{slippage_pct:.1f}% > {_MAX_SLIPPAGE_PCT}%). Skipping."
-                    )
-                    return None
-
-                return item_data
-            except Exception as e:
-                logger.warning(f"Slippage check failed for {item_data.get('title', '?')}: {e}")
-                return None  # fail-closed: block buy when verification fails
-
-        results = await asyncio.gather(
-            *[_check_slippage(d) for d in instant_buys], return_exceptions=True
-        )
-        verified_buys: list[dict[str, Any]] = [
-            r for r in results
-            if r is not None and isinstance(r, dict)
-        ]
-
         if not verified_buys:
-            logger.info("[SLIPPAGE] All buys filtered by slippage protection.")
-            return
-
-        # v14.9: Pre-trade risk check (PROD path, runs before purchase)
-        is_dry = Config.DRY_RUN
-        if not is_dry:
-            pre_checked = []
-            for item_data in verified_buys:
-                if hasattr(self, "risk"):
-                    risk_check = self.risk.pre_trade_check(
-                        proposed_size_usd=item_data["base_price"],
-                        current_equity_usd=available_balance,
-                        game_id=game_id,
-                        item_title=item_data["title"],
-                    )
-                    if not risk_check.allowed:
-                        logger.warning(
-                            f"[RISK] BLOCKED {item_data['title']} @ ${item_data['base_price']:.2f}: "
-                            f"{risk_check.reason}"
-                        )
-                        with contextlib.suppress(Exception):
-                            await price_db.run_in_thread(
-                                price_db.record_risk_event,
-                                "pre_trade_block", "warning",
-                                f"{item_data['title']} @ ${item_data['base_price']:.2f}: {risk_check.reason}",
-                            )
-                        continue
-                pre_checked.append(item_data)
-            verified_buys = pre_checked
-            if not verified_buys:
-                logger.info("[RISK] All buys blocked by pre-trade check.")
-                return
-
-        # FIX: Inventory cap checks BEFORE buy API call with cumulative tracking
-        # Query equity ONCE, then track cumulative spend to prevent TOCTOU
-        _pre_buy_filtered = []
-        # BUG-15 FIX: Use cached equity from risk update above (avoid redundant DB call)
-        if isinstance(_cached_equity, dict):
-            _total_equity = _cached_equity
-        else:
-            _total_equity = await price_db.run_in_thread(price_db.get_total_equity, 0.0)
-            if not isinstance(_total_equity, dict):
-                _total_equity = {"count": 0, "assets": 0.0}
-        _cumulative_count = _total_equity["count"]
-        _cumulative_value = _total_equity["assets"]
-        # FIX: Fetch existing inventory ONCE before loop (eliminates N+1 DB query)
-        _existing_held_all = await price_db.run_in_thread(price_db.get_virtual_inventory, "idle")
-        for item_data in verified_buys:
-            if _cumulative_count >= Config.MAX_TOTAL_INVENTORY_ITEMS:
-                logger.warning(
-                    f"[INV-CAP] Already holding {_cumulative_count}/{Config.MAX_TOTAL_INVENTORY_ITEMS} items. "
-                    f"Skipping {item_data['title']}."
-                )
-                continue
-            if _cumulative_value + item_data["base_price"] > Config.MAX_TOTAL_INVENTORY_VALUE:
-                logger.warning(
-                    f"[INV-CAP] Inventory value ${_cumulative_value:.2f} + "
-                    f"${item_data['base_price']:.2f} > ${Config.MAX_TOTAL_INVENTORY_VALUE:.2f} cap. "
-                    f"Skipping {item_data['title']}."
-                )
-                continue
-            # Saturation check: limit same-item holdings
-            _held_count = len([x for x in _pre_buy_filtered if x["title"] == item_data["title"]])
-            # Also count existing holdings from DB (uses pre-fetched inventory)
-            _existing_count = len([x for x in _existing_held_all if x["hash_name"] == item_data["title"]])
-            if _held_count + _existing_count >= Config.MAX_SAME_ITEM_HOLDINGS:
-                logger.warning(
-                    f"[SATURATION] Already holding {_existing_count}x {item_data['title']} "
-                    f"(cap: {Config.MAX_SAME_ITEM_HOLDINGS}). Skipping."
-                )
-                continue
-            _cumulative_count += 1
-            _cumulative_value += item_data["base_price"]
-            _pre_buy_filtered.append(item_data)
-        verified_buys = _pre_buy_filtered
-        if not verified_buys:
-            logger.info("[INV-CAP] All buys filtered by inventory cap.")
             return
 
         await self._simulate_network_latency()
@@ -350,6 +169,7 @@ class _ExecutionMixin:
             )
 
         is_dry = Config.DRY_RUN
+        _existing_held_all = await price_db.run_in_thread(price_db.get_virtual_inventory, "idle")
 
         for item_data in verified_buys:
             title = item_data["title"]
@@ -628,3 +448,202 @@ class _ExecutionMixin:
                 logger.info(
                     f"Skipping local record for {title!r} — buy did not succeed"
                 )
+
+    async def _prepare_execution_batch(
+        self,
+        *,
+        instant_buys: list[dict[str, Any]],
+        current_balance: float,
+        game_id: str,
+    ) -> tuple[list[dict[str, Any]], float]:
+        # v13.1: Calculate available balance (excludes frozen TP-held funds)
+        available_balance = current_balance
+        _cached_equity = None  # BUG-15 FIX: Cache equity to avoid redundant DB calls
+        if hasattr(self, "risk"):
+            try:
+                await price_db.run_in_thread(price_db.release_expired_funds)
+                equity_now = await price_db.run_in_thread(price_db.get_total_equity, current_balance)
+                if isinstance(equity_now, dict):
+                    _cached_equity = equity_now  # Cache for pre-buy cap check below
+                    self.risk._update_equity(equity_now["total"])
+                    available_balance = equity_now["available"]
+                    if equity_now["frozen"] > 0:
+                        logger.info(
+                            f"[FUNDS] ${available_balance:.2f} available / "
+                            f"${current_balance:.2f} total (${equity_now['frozen']:.2f} frozen in TP holds)"
+                        )
+            except Exception as e:
+                logger.warning(f"Risk equity update failed (using raw balance): {e}")
+
+        # v15.11: Pre-filter offers already blacklisted as stale (OfferNotFound).
+        # Prevents retrying offers that failed in a previous cycle within the
+        # same execution batch — avoids wasted API calls and 30s retry loops.
+        _STALE_TTL = 300.0  # 5 minutes
+        _now = time.monotonic()
+        failed_map: dict[str, float] = self._failed_offer_ids
+        perm_failures: set[str] = self._permanent_failures
+        # Prune expired entries
+        if failed_map:
+            expired = [k for k, ts in failed_map.items() if _now - ts > _STALE_TTL]
+            for k in expired:
+                del failed_map[k]
+        failed_ids = failed_map.keys()
+        all_blocked = failed_ids | perm_failures
+        if all_blocked:
+            _before = len(instant_buys)
+            instant_buys = [
+                d for d in instant_buys
+                if d.get("item_id") not in all_blocked
+            ]
+            skipped = _before - len(instant_buys)
+            if skipped:
+                logger.info(f"[STALE] Pre-filtered {skipped} blacklisted offers before buy")
+
+        logger.info(
+            f"Executing INSTANT BUY for {len(instant_buys)} items (Strategy A)..."
+        )
+
+        # v12.9: Parallel slippage protection.
+        # Re-verify listing prices haven't increased >5% since scan.
+        # Uses asyncio.gather for all items instead of sequential loop.
+        _MAX_SLIPPAGE_PCT = 5.0
+
+        async def _check_slippage(item_data: dict[str, Any]) -> dict[str, Any] | None:
+            try:
+                title = item_data["title"]
+                expected_price = item_data["base_price"]
+                resp = await self.client.get_market_items_v2(
+                    game_id, limit=5, title=title
+                )
+                current_listings = resp.get("objects", [])
+                if not current_listings:
+                    # Listing disappeared — item was already sold or removed.
+                    # Don't proceed with a stale price.
+                    logger.warning(
+                        f"[SLIPPAGE] {title}: listing no longer available. Skipping."
+                    )
+                    return None
+                matching = [
+                    lst for lst in current_listings
+                    if (lst.get("offerId", "") or lst.get("itemId", "")) == item_data["item_id"]
+                ]
+                if matching:
+                    cheapest_cents = min(
+                        int(lst.get("priceCents", 0) or lst.get("price", {}).get("USD", 0))
+                        for lst in matching
+                    )
+                else:
+                    logger.warning(
+                        f"[SLIPPAGE] {title}: exact offer not found. Skipping."
+                    )
+                    return None
+                current_price = cheapest_cents / 100.0
+                if current_price <= 0:
+                    logger.warning(f"[SLIPPAGE] {title}: price is 0. Skipping.")
+                    return None
+                slippage_pct = (
+                    ((current_price - expected_price) / expected_price) * 100
+                    if expected_price > 0 else 0
+                )
+                if slippage_pct > _MAX_SLIPPAGE_PCT:
+                    logger.warning(
+                        f"[SLIPPAGE] {title}: expected ${expected_price:.2f}, "
+                        f"now ${current_price:.2f} (+{slippage_pct:.1f}% > {_MAX_SLIPPAGE_PCT}%). Skipping."
+                    )
+                    return None
+
+                return item_data
+            except Exception as e:
+                logger.warning(f"Slippage check failed for {item_data.get('title', '?')}: {e}")
+                return None  # fail-closed: block buy when verification fails
+
+        results = await asyncio.gather(
+            *[_check_slippage(d) for d in instant_buys], return_exceptions=True
+        )
+        verified_buys: list[dict[str, Any]] = [
+            r for r in results
+            if r is not None and isinstance(r, dict)
+        ]
+
+        if not verified_buys:
+            logger.info("[SLIPPAGE] All buys filtered by slippage protection.")
+            return [], available_balance
+
+        # v14.9: Pre-trade risk check (PROD path, runs before purchase)
+        is_dry = Config.DRY_RUN
+        _existing_held_all = await price_db.run_in_thread(price_db.get_virtual_inventory, "idle")
+        if not is_dry:
+            pre_checked = []
+            for item_data in verified_buys:
+                if hasattr(self, "risk"):
+                    risk_check = self.risk.pre_trade_check(
+                        proposed_size_usd=item_data["base_price"],
+                        current_equity_usd=available_balance,
+                        game_id=game_id,
+                        item_title=item_data["title"],
+                    )
+                    if not risk_check.allowed:
+                        logger.warning(
+                            f"[RISK] BLOCKED {item_data['title']} @ ${item_data['base_price']:.2f}: "
+                            f"{risk_check.reason}"
+                        )
+                        with contextlib.suppress(Exception):
+                            await price_db.run_in_thread(
+                                price_db.record_risk_event,
+                                "pre_trade_block", "warning",
+                                f"{item_data['title']} @ ${item_data['base_price']:.2f}: {risk_check.reason}",
+                            )
+                        continue
+                pre_checked.append(item_data)
+            verified_buys = pre_checked
+            if not verified_buys:
+                logger.info("[RISK] All buys blocked by pre-trade check.")
+                return [], available_balance
+
+        # FIX: Inventory cap checks BEFORE buy API call with cumulative tracking
+        # Query equity ONCE, then track cumulative spend to prevent TOCTOU
+        _pre_buy_filtered = []
+        # BUG-15 FIX: Use cached equity from risk update above (avoid redundant DB call)
+        if isinstance(_cached_equity, dict):
+            _total_equity = _cached_equity
+        else:
+            _total_equity = await price_db.run_in_thread(price_db.get_total_equity, 0.0)
+            if not isinstance(_total_equity, dict):
+                _total_equity = {"count": 0, "assets": 0.0}
+        _cumulative_count = _total_equity["count"]
+        _cumulative_value = _total_equity["assets"]
+        # FIX: Fetch existing inventory ONCE before loop (eliminates N+1 DB query)
+        _existing_held_all = await price_db.run_in_thread(price_db.get_virtual_inventory, "idle")
+        for item_data in verified_buys:
+            if _cumulative_count >= Config.MAX_TOTAL_INVENTORY_ITEMS:
+                logger.warning(
+                    f"[INV-CAP] Already holding {_cumulative_count}/{Config.MAX_TOTAL_INVENTORY_ITEMS} items. "
+                    f"Skipping {item_data['title']}."
+                )
+                continue
+            if _cumulative_value + item_data["base_price"] > Config.MAX_TOTAL_INVENTORY_VALUE:
+                logger.warning(
+                    f"[INV-CAP] Inventory value ${_cumulative_value:.2f} + "
+                    f"${item_data['base_price']:.2f} > ${Config.MAX_TOTAL_INVENTORY_VALUE:.2f} cap. "
+                    f"Skipping {item_data['title']}."
+                )
+                continue
+            # Saturation check: limit same-item holdings
+            _held_count = len([x for x in _pre_buy_filtered if x["title"] == item_data["title"]])
+            # Also count existing holdings from DB (uses pre-fetched inventory)
+            _existing_count = len([x for x in _existing_held_all if x["hash_name"] == item_data["title"]])
+            if _held_count + _existing_count >= Config.MAX_SAME_ITEM_HOLDINGS:
+                logger.warning(
+                    f"[SATURATION] Already holding {_existing_count}x {item_data['title']} "
+                    f"(cap: {Config.MAX_SAME_ITEM_HOLDINGS}). Skipping."
+                )
+                continue
+            _cumulative_count += 1
+            _cumulative_value += item_data["base_price"]
+            _pre_buy_filtered.append(item_data)
+        verified_buys = _pre_buy_filtered
+        if not verified_buys:
+            logger.info("[INV-CAP] All buys filtered by inventory cap.")
+            return [], available_balance
+        
+        return verified_buys, available_balance
