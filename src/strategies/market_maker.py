@@ -41,7 +41,7 @@ class MarketMaker(BaseStrategy):
         if spread <= 0:
             return {"action": "none"}
         undercut = max(0.01, spread * 0.05)  # 5% of spread, min $0.01
-        target_price = round(best_ask - undercut, 2)
+        target_price = round(best_bid + undercut, 2)
 
         # --- Fee Calculation ---
         # DMarket charges fee on the SELL price, not the buy price
