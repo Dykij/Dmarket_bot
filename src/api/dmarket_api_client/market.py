@@ -224,3 +224,21 @@ class _MarketMixin:
         except Exception as e:
             logger.debug(f"Targets by title failed for {title}: {e}")
             return {"orders": [], "total_demand": 0, "best_bid": 0.0, "order_count": 0}
+    async def get_sales_history(self, game: str, title: str, period: str) -> dict[str, Any]:
+        """Backward-compatibility wrapper for sources.py"""
+        import re
+        match = re.search(r'\d+', period)
+        days = int(match.group()) if match else 30
+        return await self.make_request(
+            "GET", 
+            "/trade-aggregator/v1/last-sales", 
+            params={"gameId": game, "title": title, "days": days, "limit": 20}
+        )
+
+    async def get_aggregated_prices_bulk(self, game: str, titles: list[str], limit: int = 1) -> dict[str, Any]:
+        """Backward-compatibility wrapper for sources.py"""
+        return await self.make_request(
+            "POST",
+            "/marketplace-api/v1/aggregated-prices",
+            body={"limit": limit, "filter": {"game": game, "titles": titles}}
+        )

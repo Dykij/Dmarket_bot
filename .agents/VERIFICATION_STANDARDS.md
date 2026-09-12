@@ -111,3 +111,54 @@ Heartbeat-логирование, временные print/echo для диаг�
 *Инцидент: пропущенный `sudo chattr +i` был обоснован фразой "флага
 изначально не было на файле", хотя реальная причина — недоступность
 интерактивного пароля.*
+
+## 14. Модификация Python-кода: конвенция libcst
+
+Любые структурные изменения Python-кода сложнее простой замены строк (например, извлечение блока кода в отдельный метод, добавление методов в классы) должны выполняться через `libcst`. Не допускается использование `sed` или скриптов на основе `.replace()` для многострочных замен.
+
+Пример `libcst` трансформации для извлечения блока кода:
+
+```python
+import libcst as cst
+from libcst.metadata import PositionProvider
+
+class ExtractMethodTransformer(cst.CSTTransformer):
+    METADATA_DEPENDENCIES = (PositionProvider,)
+
+    def __init__(self):
+        super().__init__()
+        # 1. Подготавливаем узел с новым методом
+        method_code = """
+    def _extracted_method(self, arg1: int) -> bool:
+        # Извлечённый код
+        return True
+"""
+        dummy_tree = cst.parse_module(f"class Dummy:\n{method_code}")
+        self.new_method = dummy_tree.body[0].body.body[0]
+
+    def leave_FunctionDef(self, original_node: cst.FunctionDef, updated_node: cst.FunctionDef) -> cst.FunctionDef:
+        if original_node.name.value == "_original_method":
+            new_body = []
+            skip = False
+            for stmt in updated_node.body.body:
+                code = cst.Module(body=[stmt]).code.strip()
+                if "block_start_signature()" in code:
+                    skip = True
+                    # ВАЖНО: cst.parse_statement не терпит ведущих пробелов!
+                    call_stmt = cst.parse_statement("result = self._extracted_method(arg1)")
+                    new_body.append(call_stmt)
+                    continue
+                if skip and "block_end_signature()" in code:
+                    skip = False
+                if not skip:
+                    new_body.append(stmt)
+            return updated_node.with_changes(body=updated_node.body.with_changes(body=new_body))
+        return updated_node
+
+    def leave_ClassDef(self, original_node: cst.ClassDef, updated_node: cst.ClassDef) -> cst.ClassDef:
+        if original_node.name.value == "TargetClass":
+            new_body = list(updated_node.body.body)
+            new_body.append(self.new_method)
+            return updated_node.with_changes(body=updated_node.body.with_changes(body=new_body))
+        return updated_node
+```

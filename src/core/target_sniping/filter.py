@@ -130,6 +130,114 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
 
         return True
 
+    def _apply_value_detection_layers(
+        self,
+        item: dict[str, Any],
+        title: str,
+        list_price: float,
+        is_sandbox: bool,
+    ) -> tuple[float, bool] | None:
+        """Apply value detection layers to list price and determine if rare."""
+        attrs_list = item.get("attributes", [])
+        if isinstance(attrs_list, list):
+            attrs = {}
+            for a in attrs_list:
+                if isinstance(a, dict):
+                    k = a.get("key") or a.get("name", "")
+                    v = a.get("value", "")
+                    if k:
+                        attrs[k] = v
+        elif isinstance(attrs_list, dict):
+            attrs = attrs_list
+        else:
+            attrs = {}
+        is_rare = False
+
+        float_premium = 1.0
+        if getattr(Config, "FLOAT_PREMIUM_ENABLED", False):
+            float_premium = self._calculate_float_premium(attrs) if hasattr(self, "_calculate_float_premium") else 1.0
+            if float_premium > 1.0:
+                list_price = round(list_price * float_premium, 2)
+                if is_sandbox:
+                    logger.debug(f"[FLOAT] {title}: premium {float_premium:.2f}x → list=${list_price:.2f}")
+                is_rare = float_premium >= 1.20
+
+        if getattr(Config, "DIRTY_BS_ENABLED", False) and not is_rare:
+            try:
+                if hasattr(self, "is_dirty_bs") and self.is_dirty_bs(attrs):
+                    list_price = round(list_price * 1.10, 2)
+                    if is_sandbox:
+                        logger.info(f"[DIRTY-BS] {title}: dirty BS premium 1.10x → list=${list_price:.2f}")
+            except (ValueError, TypeError, AttributeError) as e:
+                logger.debug(f"[DIRTY-BS] {title}: detection failed: {e}")
+
+        if getattr(Config, "FILLER_TRACKING_ENABLED", False):
+            try:
+                from src.analytics.filler_tracker import get_filler_multiplier
+                filler_mult = get_filler_multiplier(title)
+                if filler_mult > 1.0:
+                    list_price = round(list_price * filler_mult, 2)
+                    if is_sandbox:
+                        logger.debug(f"[FILLER] {title}: demand multiplier {filler_mult:.2f}x → list=${list_price:.2f}")
+            except (ImportError, KeyError, TypeError) as e:
+                logger.debug(f"[FILLER] {title}: lookup failed: {e}")
+
+        pattern_premium = 1.0
+        if getattr(Config, "PATTERN_PREMIUM_ENABLED", False):
+            try:
+                if hasattr(self, "_calculate_pattern_premium"):
+                    pattern_premium = self._calculate_pattern_premium(attrs)
+                    if pattern_premium > 1.0:
+                        list_price = round(list_price * pattern_premium, 2)
+                        if is_sandbox:
+                            logger.info(
+                                f"[PATTERN] {title}: premium {pattern_premium:.2f}x "
+                                f"(phase={attrs.get('phase', '?')} seed={attrs.get('paintSeed', '?')}) "
+                                f"→ list=${list_price:.2f}"
+                            )
+                        is_rare = True
+            except (ValueError, TypeError, AttributeError) as e:
+                logger.debug(f"[PATTERN] {title}: premium calc failed: {e}")
+
+        item_stickers = item.get("stickers", [])
+        if item_stickers and getattr(Config, "STICKER_COMBO_ENABLED", False):
+            from src.core.target_sniping.sticker_cache import StickerPremiumCache
+            _sticker_cache = StickerPremiumCache()
+            if _sticker_cache.should_reject_by_stickers(item_stickers):
+                if is_sandbox:
+                    luxury_names = [s.get("name", "") for s in item_stickers if _sticker_cache._is_luxury_sticker(s.get("name", ""))]
+                    logger.info(f"[STICKER-REJECT] {title}: luxury sticker detected: {luxury_names}")
+                return None
+        if item_stickers and hasattr(self, "stickers"):
+            try:
+                sticker_value = self.stickers.calculate_added_value(item_stickers)
+                if sticker_value > 1.0:
+                    list_price = round(list_price + sticker_value * 0.5, 2)
+                    if is_sandbox:
+                        logger.info(
+                            f"[STICKER] {title}: value ${sticker_value:.2f} "
+                            f"(applied 50% = ${sticker_value*0.5:.2f}) → list=${list_price:.2f}"
+                        )
+                if sticker_value > 2.0:
+                    is_rare = True
+                    if is_sandbox:
+                        logger.info(f"[RARE] {title}: sticker value ${sticker_value:.2f} → exclusive keep")
+            except (ValueError, TypeError, AttributeError) as e:
+                logger.debug(f"[STICKER] {title}: value calc failed: {e}")
+
+        if getattr(Config, "FLOAT_DATE_ENABLED", False) and not is_rare:
+            try:
+                from src.core.target_sniping.pricing import _is_float_date
+                float_str = attrs.get("floatPartValue", "")
+                if float_str and _is_float_date(float(float_str)):
+                    list_price = round(list_price * 1.08, 2)
+                    if is_sandbox:
+                        logger.info(f"[FLOAT-DATE] {title}: date float → 1.08x → list=${list_price:.2f}")
+            except (ValueError, TypeError, ImportError) as e:
+                logger.debug(f"[FLOAT-DATE] {title}: detection failed: {e}")
+
+        return list_price, is_rare
+
     async def _evaluate_candidate(
         self,
         *,
@@ -378,121 +486,10 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
         list_price = round(best_bid - Config.INTRA_LIST_DISCOUNT, 2)
         min_profitable = base_price * (1 + required_margin)
         list_price = max(list_price, min_profitable)
-
-        # =================================================================
-        # v14.6: Value Detection Layers (TA Site Analysis)
-        # =================================================================
-        # Parse attributes once for all detectors
-        attrs_list = item.get("attributes", [])
-        # V2 API uses "key"/"value" pairs; handle both "name" and "key" conventions
-        if isinstance(attrs_list, list):
-            attrs = {}
-            for a in attrs_list:
-                if isinstance(a, dict):
-                    k = a.get("key") or a.get("name", "")
-                    v = a.get("value", "")
-                    if k:
-                        attrs[k] = v
-        elif isinstance(attrs_list, dict):
-            attrs = attrs_list
-        else:
-            attrs = {}
-        is_rare = False  # auto-detect rare items for exclusive flag
-
-        # --- Layer 1: Float Premium (enhanced: dirty BS, round float, float dates) ---
-        float_premium = 1.0
-        if Config.FLOAT_PREMIUM_ENABLED:
-            float_premium = self._calculate_float_premium(attrs)
-            if float_premium > 1.0:
-                list_price = round(list_price * float_premium, 2)
-                if is_sandbox:
-                    logger.debug(f"[FLOAT] {title}: premium {float_premium:.2f}x → list=${list_price:.2f}")
-                is_rare = float_premium >= 1.20
-
-        # --- Layer 1b: Dirty BS bonus (float > 0.95, appearance-changing skins) ---
-        if Config.DIRTY_BS_ENABLED and not is_rare:
-            try:
-                if self.is_dirty_bs(attrs):
-                    list_price = round(list_price * 1.10, 2)
-                    if is_sandbox:
-                        logger.info(f"[DIRTY-BS] {title}: dirty BS premium 1.10x → list=${list_price:.2f}")
-            except (ValueError, TypeError, AttributeError) as e:
-                logger.debug(f"[DIRTY-BS] {title}: detection failed: {e}")
-
-        # --- Layer 2: Filler demand multiplier ---
-        if Config.FILLER_TRACKING_ENABLED:
-            try:
-                from src.analytics.filler_tracker import get_filler_multiplier
-                filler_mult = get_filler_multiplier(title)
-                if filler_mult > 1.0:
-                    list_price = round(list_price * filler_mult, 2)
-                    if is_sandbox:
-                        logger.debug(f"[FILLER] {title}: demand multiplier {filler_mult:.2f}x → list=${list_price:.2f}")
-            except (ImportError, KeyError, TypeError) as e:
-                logger.debug(f"[FILLER] {title}: lookup failed: {e}")
-
-        # --- Layer 3: Pattern/Phase/Paint Premium (Doppler, Blue Gem, Fire & Ice, etc.) ---
-        pattern_premium = 1.0
-        if Config.PATTERN_PREMIUM_ENABLED:
-            try:
-                if hasattr(self, "_calculate_pattern_premium"):
-                    pattern_premium = self._calculate_pattern_premium(attrs)
-                    if pattern_premium > 1.0:
-                        list_price = round(list_price * pattern_premium, 2)
-                        if is_sandbox:
-                            logger.info(
-                                f"[PATTERN] {title}: premium {pattern_premium:.2f}x "
-                                f"(phase={attrs.get('phase', '?')} seed={attrs.get('paintSeed', '?')}) "
-                                f"→ list=${list_price:.2f}"
-                            )
-                        is_rare = True
-            except (ValueError, TypeError, AttributeError) as e:
-                logger.debug(f"[PATTERN] {title}: premium calc failed: {e}")
-
-        # --- Layer 4: Sticker Value + Combo Premium ---
-        item_stickers = item.get("stickers", [])
-        sticker_value = 0.0
-
-        # v18.1: Luxury sticker rejection — skip items with ultra-premium stickers
-        # (Katowice 2014, Crown Foil, etc.) where sticker value dominates item price.
-        if item_stickers and Config.STICKER_COMBO_ENABLED:
-            from src.core.target_sniping.sticker_cache import StickerPremiumCache
-            _sticker_cache = StickerPremiumCache()
-            if _sticker_cache.should_reject_by_stickers(item_stickers):
-                if is_sandbox:
-                    luxury_names = [s.get("name", "") for s in item_stickers if _sticker_cache._is_luxury_sticker(s.get("name", ""))]
-                    logger.info(f"[STICKER-REJECT] {title}: luxury sticker detected: {luxury_names}")
-                return None
-        if item_stickers and hasattr(self, "stickers"):
-            try:
-                sticker_value = self.stickers.calculate_added_value(item_stickers)
-                if sticker_value > 1.0:
-                    # Add sticker value to list price (market pays extra for stickered items)
-                    list_price = round(list_price + sticker_value * 0.5, 2)
-                    if is_sandbox:
-                        logger.info(
-                            f"[STICKER] {title}: value ${sticker_value:.2f} "
-                            f"(applied 50% = ${sticker_value*0.5:.2f}) → list=${list_price:.2f}"
-                        )
-                if sticker_value > 2.0:
-                    is_rare = True
-                    if is_sandbox:
-                        logger.info(f"[RARE] {title}: sticker value ${sticker_value:.2f} → exclusive keep")
-            except (ValueError, TypeError, AttributeError) as e:
-                logger.debug(f"[STICKER] {title}: value calc failed: {e}")
-
-        # --- Layer 5: Float-date bonus ---
-        if Config.FLOAT_DATE_ENABLED and not is_rare:
-            try:
-                from src.core.target_sniping.pricing import _is_float_date
-                float_str = attrs.get("floatPartValue", "")
-                if float_str:
-                    if _is_float_date(float(float_str)):
-                        list_price = round(list_price * 1.08, 2)
-                        if is_sandbox:
-                            logger.info(f"[FLOAT-DATE] {title}: date float → 1.08x → list=${list_price:.2f}")
-            except (ValueError, TypeError, ImportError) as e:
-                logger.debug(f"[FLOAT-DATE] {title}: detection failed: {e}")
+        value_result = self._apply_value_detection_layers(item, title, list_price, is_sandbox)
+        if value_result is None:
+            return None
+        list_price, is_rare = value_result
 
         if not await self._calculate_financial_viability(
             item=item,

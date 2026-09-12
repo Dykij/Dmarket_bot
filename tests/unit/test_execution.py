@@ -46,6 +46,7 @@ def _make_mixin() -> MagicMock:
     mixin._failed_offer_ids = {}
     from src.core.target_sniping.execution import _ExecutionMixin
     mixin._prepare_execution_batch = _ExecutionMixin._prepare_execution_batch.__get__(mixin)
+    mixin._parse_buy_response = _ExecutionMixin._parse_buy_response.__get__(mixin)
     mixin._failure_counts = {}
     mixin._simulate_network_latency = AsyncMock()
     mixin._maybe_inject_error = MagicMock()
