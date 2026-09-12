@@ -58,6 +58,77 @@ class _ExecutionMixin:
     def _maybe_inject_error(self, method_name: str) -> None: ...  # type: ignore[empty-body]
     def _simulate_competition(self, margin: float) -> bool: ...  # type: ignore[empty-body]
 
+    def _parse_buy_response(
+        self,
+        buy_response: Any,
+        verified_buys: list[dict[str, Any]],
+    ) -> tuple[set[str], list[dict[str, Any]]]:
+        """Parse the buy response to extract successful offers and acquired items."""
+        successful_offer_ids = set()
+        bought_items: list[dict[str, Any]] = []
+        if isinstance(buy_response, dict):
+            status = buy_response.get("status", "")
+            for key in ("Items", "items", "AcquiredItems"):
+                raw = buy_response.get(key)
+                if isinstance(raw, list):
+                    for it in raw:
+                        if isinstance(it, dict) and (it.get("offerId") or it.get("itemId")):
+                            bought_items.append({
+                                "itemId": str(it.get("offerId", "") or it.get("itemId", "")),
+                                "title": it.get("title", ""),
+                                "offerId": it.get("offerId", ""),
+                            })
+                    if bought_items:
+                        break
+            if status and status != "TxFailed":
+                dm_offers_status = buy_response.get("dmOffersStatus", {}) or {}
+                if dm_offers_status:
+                    for offer_id, info in dm_offers_status.items():
+                        if info.get("started") or info.get("success"):
+                            for item_data in verified_buys:
+                                if item_data["buy_offer"].get("offerId") == offer_id:
+                                    successful_offer_ids.add(offer_id)
+                                    break
+                else:
+                    if status != "TxFailed":
+                        successful_offer_ids = {
+                            item_data["buy_offer"]["offerId"] for item_data in verified_buys
+                        }
+            else:
+                fail_reason = buy_response.get("dmOffersFailReason", {}) or {}
+                if fail_reason:
+                    failed_code = fail_reason.get("code", "unknown")
+                    failed_offer_id = fail_reason.get("offerId", "")
+                    logger.warning(
+                        f"Buy failed: {failed_code} "
+                        f"for {failed_offer_id[:12]}..."
+                    )
+                    if failed_code == "OfferNotFound" and failed_offer_id and hasattr(self, "_failed_offer_ids"):
+                        self._failed_offer_ids[failed_offer_id] = time.monotonic()
+                        counts: dict[str, int] = getattr(self, "_failure_counts", {})
+                        counts[failed_offer_id] = counts.get(failed_offer_id, 0) + 1
+                        if counts[failed_offer_id] >= 3:
+                            if hasattr(self, "_permanent_failures"):
+                                self._permanent_failures.add(failed_offer_id)
+                            self._failed_offer_ids.pop(failed_offer_id, None)
+                            logger.warning(
+                                f"[STALE] Permanently blacklisted offer "
+                                f"{failed_offer_id[:12]}... (3 failures)"
+                            )
+                        else:
+                            logger.info(
+                                f"[STALE] Blacklisted offer {failed_offer_id[:12]}... "
+                                f"(total blacklisted: {len(self._failed_offer_ids)})"
+                            )
+                elif status == "TxFailed":
+                    logger.warning(f"Buy TxFailed: {buy_response}")
+            logger.info(
+                f"Buy response: status={status} "
+                f"successful={len(successful_offer_ids)}/{len(verified_buys)} "
+                f"bought_items={len(bought_items)}"
+            )
+        return successful_offer_ids, bought_items
+
     async def _execute_instant_buys(
         self,
         *,
@@ -88,85 +159,7 @@ class _ExecutionMixin:
                 logger.warning("[CB] Buy blocked by circuit breaker — skipping cycle")
                 return
             raise
-
-        # v12.3: DMarket returns 200 OK with `status: 'TxFailed'` and
-        # `dmOffersFailReason: {code: 'OfferNotFound'}` if the listing was
-        # already taken by another bot. We must check the response body
-        # before recording the spend locally.
-        successful_offer_ids = set()
-        bought_items: list[dict[str, Any]] = []  # v12.5: [{itemId, title}, ...]
-        if isinstance(buy_response, dict):
-            status = buy_response.get("status", "")
-            # v12.5: DMarket's /exchange/v1/market/buy response usually
-            # contains an `Items` array with the newly-acquired assets,
-            # each with their new itemId. We need those to list them
-            # for sale later. Shape (per DMarket API v1.1):
-            #   {"Items": [{"itemId": "abc", "title": "...", "price": {...}}]}
-            for key in ("Items", "items", "AcquiredItems"):
-                raw = buy_response.get(key)
-                if isinstance(raw, list):
-                    for it in raw:
-                        if isinstance(it, dict) and (it.get("offerId") or it.get("itemId")):
-                            bought_items.append({
-                                "itemId": str(it.get("offerId", "") or it.get("itemId", "")),
-                                "title": it.get("title", ""),
-                                "offerId": it.get("offerId", ""),
-                            })
-                    if bought_items:
-                        break
-            if status and status != "TxFailed":
-                # v15.10: Always check per-offer status, not just top-level.
-                # DMarket can return partial success with non-TxFailed status.
-                dm_offers_status = buy_response.get("dmOffersStatus", {}) or {}
-                if dm_offers_status:
-                    # Per-offer granularity available — use it
-                    for offer_id, info in dm_offers_status.items():
-                        if info.get("started") or info.get("success"):
-                            for item_data in verified_buys:
-                                if item_data["buy_offer"].get("offerId") == offer_id:
-                                    successful_offer_ids.add(offer_id)
-                                    break
-                else:
-                    # No per-offer status — only assume success if status is not TxFailed
-                    if status != "TxFailed":
-                        successful_offer_ids = {
-                            item_data["buy_offer"]["offerId"] for item_data in verified_buys
-                        }
-            else:
-                # If TxFailed, the entire batch failed (ignore dmOffersStatus started/success)
-                fail_reason = buy_response.get("dmOffersFailReason", {}) or {}
-                if fail_reason:
-                    failed_code = fail_reason.get("code", "unknown")
-                    failed_offer_id = fail_reason.get("offerId", "")
-                    logger.warning(
-                        f"Buy failed: {failed_code} "
-                        f"for {failed_offer_id[:12]}..."
-                    )
-                    # Blacklist stale offers to prevent retrying them next cycle
-                    if failed_code == "OfferNotFound" and failed_offer_id and hasattr(self, "_failed_offer_ids"):
-                        self._failed_offer_ids[failed_offer_id] = time.monotonic()
-                        # 3-strike permanent blacklist — prevents zombie retry cycles
-                        counts: dict[str, int] = self._failure_counts
-                        counts[failed_offer_id] = counts.get(failed_offer_id, 0) + 1
-                        if counts[failed_offer_id] >= 3:
-                            self._permanent_failures.add(failed_offer_id)
-                            self._failed_offer_ids.pop(failed_offer_id, None)
-                            logger.warning(
-                                f"[STALE] Permanently blacklisted offer "
-                                f"{failed_offer_id[:12]}... (3 failures)"
-                            )
-                        else:
-                            logger.info(
-                                f"[STALE] Blacklisted offer {failed_offer_id[:12]}... "
-                                f"(total blacklisted: {len(self._failed_offer_ids)})"
-                            )
-                elif status == "TxFailed":
-                    logger.warning(f"Buy TxFailed: {buy_response}")
-            logger.info(
-                f"Buy response: status={status} "
-                f"successful={len(successful_offer_ids)}/{len(verified_buys)} "
-                f"bought_items={len(bought_items)}"
-            )
+        successful_offer_ids, bought_items = self._parse_buy_response(buy_response, verified_buys)
 
         is_dry = Config.DRY_RUN
         _existing_held_all = await price_db.run_in_thread(price_db.get_virtual_inventory, "idle")
