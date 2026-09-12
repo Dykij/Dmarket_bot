@@ -529,7 +529,8 @@ class TestWearExpansionBatchFetch:
         assert "AK-47 | Test (Well-Worn)" in missing
         assert "AK-47 | Test (Battle-Scarred)" in missing
 
-    def test_batch_fetch_called_with_correct_titles(self):
+    @pytest.mark.asyncio
+    async def test_batch_fetch_called_with_correct_titles(self):
         """Verify get_aggregated_prices is called with the expected title list."""
         from unittest.mock import AsyncMock
 
@@ -550,10 +551,8 @@ class TestWearExpansionBatchFetch:
         ]
 
         # Simulate batch fetch
-        import asyncio
-        extra = asyncio.get_event_loop().run_until_complete(
-            mock_client.get_aggregated_prices("a8db", titles=missing)
-        )
+        
+        extra = await mock_client.get_aggregated_prices("a8db", titles=missing)
         agg_prices.update(extra)
 
         # Verify call
