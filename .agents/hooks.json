@@ -95,5 +95,19 @@
         ]
       }
     ]
+  },
+  "difftastic-gate": {
+    "PostToolUse": [
+      {
+        "matcher": "write_to_file|replace_file_content",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash scripts/difftastic_gate.sh",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
   }
 }
