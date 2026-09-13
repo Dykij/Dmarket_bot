@@ -72,9 +72,26 @@ run_checks() {
             return
         fi
 
-        if ! grep -qE "[0-9]+ passed|[0-9]+ failed|test result: (ok|FAILED)" "$WORKSPACE_DIR/.agents/logs/RAW_OUTPUT.log" 2>/dev/null; then
-            echo '{"decision":"continue","reason":"RAW_OUTPUT.log does not contain a real test run result (e.g. X passed, Y failed)."}'
-            return
+        # Determine if there are actual code changes
+        HAS_CODE_CHANGES=0
+        for file in $CHANGED_FILES; do
+            if [[ "$file" != *.md ]] && [[ "$file" != .agents/* ]]; then
+                HAS_CODE_CHANGES=1
+                break
+            fi
+        done
+
+        if [ "$HAS_CODE_CHANGES" -eq 1 ]; then
+            if ! grep -qE "[0-9]+ passed|[0-9]+ failed|test result: (ok|FAILED)" "$WORKSPACE_DIR/.agents/logs/RAW_OUTPUT.log" 2>/dev/null; then
+                echo '{"decision":"continue","reason":"RAW_OUTPUT.log does not contain a real test run result (e.g. X passed, Y failed)."}'
+                return
+            fi
+        else
+            # No code changes. Require explicit marker in walkthrough.md
+            if ! grep -q "CODE_UNCHANGED_SESSION: true" "$WT_FILE"; then
+                echo '{"decision":"continue","reason":"No code changes detected, but CODE_UNCHANGED_SESSION: true marker is missing in walkthrough.md. If this was an analytical session, add the marker. Otherwise, you must run tests."}'
+                return
+            fi
         fi
 
         # 3. Session Log Reminder (from check_session_log.sh)
