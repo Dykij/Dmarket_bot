@@ -154,3 +154,24 @@ DMarket API v1→v2 касалась других путей: user-offers/create
   5. Addressed edge cases identified by `code-auditor` (missing exception types, state mutation flaw, unpassed payload parameters).
   6. Full test suite passes against baseline (1784 tests).
 - **Status:** Done. Ready for backtest phase.
+
+## 2026-09-13: Инфраструктура Antigravity, H16 и сбои сбора данных
+- **Инфраструктура Antigravity (Блок А)**:
+  - Создан файл `.agents/rules/tooling.md` для регламентации `ast-grep`, `libcst`, `difftastic`, `tgrep`.
+  - Добавлен реестр паттернов отсебятины `.agents/rules/otsebyatina-registry.md` (H1-H17).
+  - Написаны `SKILL.md` файлы для `libcst`, `difftastic`, `tgrep` с точными description (в `.agents/skills/`).
+  - Добавлена логика Loop Guard (по `conversationId` с лимитом 15 `continue` подряд) в хук `stop_gate.sh`.
+  - В `stop_gate.sh` интегрирована проверка Git-hygiene (сообщает о несмёрженных локальных ветках относительно текущей).
+- **Блок Б**:
+  - Устранен паттерн H16: в `execution.py` `getattr` и `setattr` для `_failure_counts` успешно заменены на прямой вызов `self._failure_counts` с помощью `libcst` скрипта, тесты прошли.
+  - При проверке сбора данных `HistoricalDataCollector.collect_batch()` вернул 0 точек для популярных предметов (AK-47 Redline и Slate). Проблема в том, что `collect_from_aggregated` пытается вызвать `int()` на словаре (api.get_aggregated_prices_bulk возвращает `{'Currency': 'USD', 'Amount': '2714'}`). Ошибка логируется через `logger.debug` и данные не собираются.
+  - Из-за неработоспособности сбора данных запуск бэктеста отложен (BLOCKED).
+  - Зафиксировано дублирование коммита `Phase 3: Extract _apply_value_detection_layers` (их два в истории, как показал `git log`). История ветки не изменялась во избежание последствий для push-ов.
+- Зафиксировано замечание субагента-аудитора (`stop-criteria-guard`):
+  - Произведен коммит файлов инфраструктуры (`.agents/rules`, `.agents/skills`) и исправления `execution.py`.
+  - Обновлен `AGENTS.md` (добавлены ссылки на `tooling.md` и `otsebyatina-registry.md`).
+
+## 2026-09-13: Усиление субагентов и фикс сбора данных
+- **Сбор данных**: Исправлена ошибка `TypeError` в `sources.py` (сбор `offerBestPrice` / `orderBestPrice`). Теперь скрипт корректно извлекает цену из поля `Amount` вложенного словаря. Парсинг успешно собирает точки (протестировано локальным скриптом).
+- **Субагенты**: Проверена реальная схема `agent.md`. Убедились, что поля `tools:`, `model:`, `commandExecutionPolicy:` действительно работают per-агент. В инструкции четырех аудиторов добавлен явный "Definition-of-Done" (требование RAW вывода терминала) и "Правило 3 сбоев".
+- **Least Privilege**: Подтверждено, что `raw-evidence-auditor` уже имеет минимальный набор прав (`[view_file, grep_search]`).
