@@ -126,7 +126,7 @@ async def collect_from_aggregated(
             for price_data in aggregated["aggregatedPrices"]:
                 if price_data.get("title") == title:
                     # Best offer price
-                    offer_price = int(price_data.get("offerBestPrice", 0))
+                    offer_price = int(price_data.get("offerBestPrice", {}).get("Amount", 0))
                     if offer_price > 0:
                         points.append(
                             PricePoint(
@@ -139,7 +139,7 @@ async def collect_from_aggregated(
                         )
 
                     # Best order price (buy orders)
-                    order_price = int(price_data.get("orderBestPrice", 0))
+                    order_price = int(price_data.get("orderBestPrice", {}).get("Amount", 0))
                     if order_price > 0:
                         points.append(
                             PricePoint(
