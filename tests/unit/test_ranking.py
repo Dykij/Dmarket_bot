@@ -337,7 +337,7 @@ class TestRankCandidatesBySpread:
             mock_config.FILLER_TRACKING_ENABLED = False
             ranked_no_h = rank_candidates_by_spread(items, agg)
             ranked_with_h = rank_candidates_by_spread(items, agg, price_histories=price_histories)
-        # assert ranked_with_h[0][1] > ranked_no_h[0][1]
+        assert ranked_with_h[0][1] > ranked_no_h[0][1]
 
     def test_hurst_mean_reversion_boost(self):
         """Hurst < 0.4 (mean-reverting) gives +5% boost."""
@@ -356,7 +356,7 @@ class TestRankCandidatesBySpread:
             mock_config.FILLER_TRACKING_ENABLED = False
             ranked_no_h = rank_candidates_by_spread(items, agg)
             ranked_with_h = rank_candidates_by_spread(items, agg, price_histories=price_histories)
-        # assert ranked_with_h[0][1] > ranked_no_h[0][1]
+        assert ranked_with_h[0][1] > ranked_no_h[0][1]
 
     def test_filler_exception_handled(self):
         """Filler tracker import failure is caught."""
