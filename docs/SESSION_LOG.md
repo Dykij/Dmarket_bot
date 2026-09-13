@@ -183,3 +183,9 @@ DMarket API v1→v2 касалась других путей: user-offers/create
 - Triggered full regression via `pytest tests/unit/`.
 
 - **FUTURE TASK**: Backtester не может дать честный результат для арбитражных стратегий, пока `PricePoint`/`PriceHistory` не будут расширены раздельными полями bid/ask вместо единой `price`. Это отдельная, самостоятельная задача, не решённая в рамках сегодняшней сессии.
+
+### Part 1: bid/ask in PricePoint
+- Converted `PricePoint.price` to `Decimal | None` and added `best_bid` / `best_ask` fields via `libcst`.
+- Updated `PriceHistory` properties (`average_price`, etc.) to fallback to `(best_bid + best_ask) / 2` when dealing with orderbook snapshots without actual sales price.
+- Fixed `Backtester.run` order book inversion by passing `best_ask` to `should_buy` and `best_bid` to `should_sell`.
+- Triggered full regression via `pytest tests/unit/ -n auto` (RAW outcome will be provided in final message).

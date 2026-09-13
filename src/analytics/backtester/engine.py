@@ -75,52 +75,48 @@ class Backtester:
                 price_point = self._get_price_at_date(history, current_date)
                 if not price_point:
                     continue
-
-                # Use bid/ask if available, fallback to price
-                market_price = price_point.price if price_point.price is not None else (price_point.best_bid or Decimal(0))
                 
-                if title in positions:
+                market_sell_price = price_point.best_bid if price_point.best_bid is not None else price_point.price
+                if market_sell_price is not None and title in positions:
                     should_sell, _, quantity = strategy.should_sell(
-                        history, market_price, positions[title]
+                        history, market_sell_price, positions[title]
                     )
 
                     if should_sell and quantity > 0:
-                        sell_price = price_point.best_bid if price_point.best_bid is not None else price_point.price
-                        if sell_price is not None:
-                            trade = self._execute_sell(
-                                title, sell_price, quantity, current_date, positions[title]
-                            )
-                            trades.append(trade)
-                            balance += trade.net_amount
+                        trade = self._execute_sell(
+                            title, market_sell_price, quantity, current_date, positions[title]
+                        )
+                        trades.append(trade)
+                        balance += trade.net_amount
 
-                            profit = sell_price - positions[title].average_cost
-                            if profit > 0:
-                                profitable_trades += 1
+                        profit = trade.net_amount - (positions[title].average_cost * quantity)
+                        if profit > 0:
+                            profitable_trades += 1
 
-                            positions[title].quantity -= quantity
-                            if positions[title].quantity <= 0:
-                                del positions[title]
-                                positions_closed += 1
+                        positions[title].quantity -= quantity
+                        if positions[title].quantity <= 0:
+                            del positions[title]
+                            positions_closed += 1
 
-                should_buy, _, quantity = strategy.should_buy(
-                    history, market_price, balance, positions
-                )
+                market_buy_price = price_point.best_ask if price_point.best_ask is not None else price_point.price
+                if market_buy_price is not None:
+                    should_buy, _, quantity = strategy.should_buy(
+                        history, market_buy_price, balance, positions
+                    )
 
-                if should_buy and quantity > 0:
-                    buy_price = price_point.best_ask if price_point.best_ask is not None else price_point.price
-                    if buy_price is not None:
-                        trade = self._execute_buy(title, buy_price, quantity, current_date)
+                    if should_buy and quantity > 0:
+                        trade = self._execute_buy(title, market_buy_price, quantity, current_date)
                         if trade.total_cost <= balance:
                             trades.append(trade)
-                            balance += trade.net_amount
+                            balance -= trade.total_cost
 
                             if title in positions:
-                                positions[title].update(quantity, buy_price)
+                                positions[title].update(quantity, market_buy_price)
                             else:
                                 positions[title] = Position(
                                     item_title=title,
                                     quantity=quantity,
-                                    average_cost=buy_price,
+                                    average_cost=market_buy_price,
                                     created_at=current_date,
                                 )
 

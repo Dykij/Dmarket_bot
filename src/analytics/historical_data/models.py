@@ -82,29 +82,36 @@ class PriceHistory:
     points: list[PricePoint] = field(default_factory=list)
     collected_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
+    def _get_price_val(self, p: PricePoint) -> Decimal | None:
+        if p.price is not None:
+            return p.price
+        if p.best_bid is not None and p.best_ask is not None:
+            return (p.best_bid + p.best_ask) / Decimal(2)
+        return p.best_ask or p.best_bid
+
     @property
     def average_price(self) -> Decimal:
         """Calculate average price across all points."""
-        valid_points = [p for p in self.points if p.price is not None]
-        if not valid_points:
+        prices = [val for p in self.points if (val := self._get_price_val(p)) is not None]
+        if not prices:
             return Decimal(0)
-        return Decimal(sum(p.price for p in valid_points)) / Decimal(len(valid_points))
+        return Decimal(sum(prices)) / Decimal(len(prices))
 
     @property
     def min_price(self) -> Decimal:
         """Get minimum price."""
-        valid_points = [p for p in self.points if p.price is not None]
-        if not valid_points:
+        prices = [val for p in self.points if (val := self._get_price_val(p)) is not None]
+        if not prices:
             return Decimal(0)
-        return min(p.price for p in valid_points)
+        return min(prices)
 
     @property
     def max_price(self) -> Decimal:
         """Get maximum price."""
-        valid_points = [p for p in self.points if p.price is not None]
-        if not valid_points:
+        prices = [val for p in self.points if (val := self._get_price_val(p)) is not None]
+        if not prices:
             return Decimal(0)
-        return max(p.price for p in valid_points)
+        return max(prices)
 
     @property
     def total_volume(self) -> int:
@@ -114,11 +121,10 @@ class PriceHistory:
     @property
     def price_volatility(self) -> float:
         """Calculate price volatility (standard deviation / mean)."""
-        valid_points = [p for p in self.points if p.price is not None]
-        if len(valid_points) < 2:
+        prices = [float(val) for p in self.points if (val := self._get_price_val(p)) is not None]
+        if len(prices) < 2:
             return 0.0
 
-        prices = [float(p.price) for p in valid_points]
         mean = sum(prices) / len(prices)
         if mean == 0:
             return 0.0
