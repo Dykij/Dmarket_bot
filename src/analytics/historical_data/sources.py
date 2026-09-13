@@ -95,8 +95,6 @@ async def collect_from_sales_history(
         )
 
     return points
-
-
 async def collect_from_aggregated(
     api: IDMarketAPI,
     game: str,
@@ -125,29 +123,18 @@ async def collect_from_aggregated(
         if aggregated and "aggregatedPrices" in aggregated:
             for price_data in aggregated["aggregatedPrices"]:
                 if price_data.get("title") == title:
-                    # Best offer price
                     offer_price = int(price_data.get("offerBestPrice", {}).get("Amount", 0))
-                    if offer_price > 0:
-                        points.append(
-                            PricePoint(
-                                game=game,
-                                title=title,
-                                price=Decimal(offer_price) / 100,
-                                timestamp=datetime.now(UTC),
-                                source="aggregated_offer",
-                            )
-                        )
-
-                    # Best order price (buy orders)
                     order_price = int(price_data.get("orderBestPrice", {}).get("Amount", 0))
-                    if order_price > 0:
+                    
+                    if offer_price > 0 or order_price > 0:
                         points.append(
                             PricePoint(
                                 game=game,
                                 title=title,
-                                price=Decimal(order_price) / 100,
                                 timestamp=datetime.now(UTC),
-                                source="aggregated_order",
+                                best_bid=Decimal(order_price) / 100 if order_price > 0 else None,
+                                best_ask=Decimal(offer_price) / 100 if offer_price > 0 else None,
+                                source="aggregated",
                             )
                         )
 

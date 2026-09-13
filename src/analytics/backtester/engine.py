@@ -43,27 +43,15 @@ class Backtester:
             fee_rate: Trading fee rate
         """
         self.fee_rate = fee_rate
-
     async def run(
-        self,
-        strategy: TradingStrategy,
-        price_histories: dict[str, PriceHistory],
-        start_date: datetime,
-        end_date: datetime,
-        initial_balance: Decimal,
-    ) -> BacktestResult:
-        """Run backtest on historical data.
-
-        Args:
-            strategy: Trading strategy to test
-            price_histories: Historical price data by item title
-            start_date: Start of backtest period
-            end_date: End of backtest period
-            initial_balance: Starting balance
-
-        Returns:
-            BacktestResult with performance metrics
-        """
+            self,
+            strategy: TradingStrategy,
+            price_histories: dict[str, "PriceHistory"],
+            start_date: datetime,
+            end_date: datetime,
+            initial_balance: Decimal,
+        ) -> BacktestResult:
+        """Run backtest on historical data."""
         logger.info(
             "starting_backtest",
             extra={
@@ -81,77 +69,72 @@ class Backtester:
         profitable_trades = 0
         positions_closed = 0
 
-        # Simulate each day in the period
         current_date = start_date
         while current_date <= end_date:
             for title, history in price_histories.items():
-                # Find price point for current date
                 price_point = self._get_price_at_date(history, current_date)
                 if not price_point:
                     continue
 
-                current_price = price_point.price
-
-                # Check sell signals first
+                # Use bid/ask if available, fallback to price
+                market_price = price_point.price if price_point.price is not None else (price_point.best_bid or Decimal(0))
+                
                 if title in positions:
-                    should_sell, sell_price, quantity = strategy.should_sell(
-                        history, current_price, positions[title]
+                    should_sell, _, quantity = strategy.should_sell(
+                        history, market_price, positions[title]
                     )
 
                     if should_sell and quantity > 0:
-                        trade = self._execute_sell(
-                            title, sell_price, quantity, current_date, positions[title]
-                        )
-                        trades.append(trade)
-                        balance += trade.net_amount
+                        sell_price = price_point.best_bid if price_point.best_bid is not None else price_point.price
+                        if sell_price is not None:
+                            trade = self._execute_sell(
+                                title, sell_price, quantity, current_date, positions[title]
+                            )
+                            trades.append(trade)
+                            balance += trade.net_amount
 
-                        # Track profit
-                        profit = sell_price - positions[title].average_cost
-                        if profit > 0:
-                            profitable_trades += 1
+                            profit = sell_price - positions[title].average_cost
+                            if profit > 0:
+                                profitable_trades += 1
 
-                        # Close position
-                        positions[title].quantity -= quantity
-                        if positions[title].quantity <= 0:
-                            del positions[title]
-                            positions_closed += 1
+                            positions[title].quantity -= quantity
+                            if positions[title].quantity <= 0:
+                                del positions[title]
+                                positions_closed += 1
 
-                # Check buy signals
-                should_buy, buy_price, quantity = strategy.should_buy(
-                    history, current_price, balance, positions
+                should_buy, _, quantity = strategy.should_buy(
+                    history, market_price, balance, positions
                 )
 
                 if should_buy and quantity > 0:
-                    trade = self._execute_buy(title, buy_price, quantity, current_date)
-                    if trade.total_cost <= balance:
-                        trades.append(trade)
-                        balance += trade.net_amount
+                    buy_price = price_point.best_ask if price_point.best_ask is not None else price_point.price
+                    if buy_price is not None:
+                        trade = self._execute_buy(title, buy_price, quantity, current_date)
+                        if trade.total_cost <= balance:
+                            trades.append(trade)
+                            balance += trade.net_amount
 
-                        # Update or create position
-                        if title in positions:
-                            positions[title].update(quantity, buy_price)
-                        else:
-                            positions[title] = Position(
-                                item_title=title,
-                                quantity=quantity,
-                                average_cost=buy_price,
-                                created_at=current_date,
-                            )
+                            if title in positions:
+                                positions[title].update(quantity, buy_price)
+                            else:
+                                positions[title] = Position(
+                                    item_title=title,
+                                    quantity=quantity,
+                                    average_cost=buy_price,
+                                    created_at=current_date,
+                                )
 
-            # Track balance at end of day
             balance_history.append(balance)
             current_date += timedelta(days=1)
 
-        # Calculate final balance including open positions
         final_balance = balance
         for position in positions.values():
-            # Estimate value at last known price
-            pos_history = price_histories.get(position.item_title)
-            if pos_history is not None and pos_history.points:
-                last_price = pos_history.points[-1].price
+            history = price_histories.get(position.item_title)
+            if history is not None and history.points:
+                last_point = history.points[-1]
+                last_price = last_point.best_bid if last_point.best_bid is not None else (last_point.price or Decimal(0))
                 final_balance += last_price * position.quantity
 
-        # Calculate metrics
         total_profit = final_balance - initial_balance
         max_drawdown = calculate_max_drawdown(balance_history)
         sharpe_ratio = calculate_sharpe_ratio(balance_history)

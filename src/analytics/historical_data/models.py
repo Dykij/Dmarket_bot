@@ -16,8 +16,6 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Any
-
-
 @dataclass
 class PricePoint:
     """A single price point in historical data.
@@ -25,16 +23,20 @@ class PricePoint:
     Attributes:
         game: Game code (csgo, dota2, etc.)
         title: Item name
-        price: Price in USD
-        volume: Number of sales (if avAlgolable)
         timestamp: When this price was recorded
+        price: Price in USD (None for orderbook snapshots)
+        best_bid: Best bid price in USD
+        best_ask: Best ask price in USD
+        volume: Number of sales (if avAlgolable)
         source: Data source (market, sales_history, aggregated)
     """
 
     game: str
     title: str
-    price: Decimal
     timestamp: datetime
+    price: Decimal | None = None
+    best_bid: Decimal | None = None
+    best_ask: Decimal | None = None
     volume: int = 0
     source: str = "market"
 
@@ -43,7 +45,9 @@ class PricePoint:
         return {
             "game": self.game,
             "title": self.title,
-            "price": float(self.price),
+            "price": float(self.price) if self.price is not None else None,
+            "best_bid": float(self.best_bid) if self.best_bid is not None else None,
+            "best_ask": float(self.best_ask) if self.best_ask is not None else None,
             "volume": self.volume,
             "timestamp": self.timestamp.isoformat(),
             "source": self.source,
@@ -55,13 +59,13 @@ class PricePoint:
         return cls(
             game=data["game"],
             title=data["title"],
-            price=Decimal(str(data["price"])),
-            volume=data.get("volume", 0),
             timestamp=datetime.fromisoformat(data["timestamp"]),
+            price=Decimal(str(data["price"])) if data.get("price") is not None else None,
+            best_bid=Decimal(str(data["best_bid"])) if data.get("best_bid") is not None else None,
+            best_ask=Decimal(str(data["best_ask"])) if data.get("best_ask") is not None else None,
+            volume=data.get("volume", 0),
             source=data.get("source", "market"),
         )
-
-
 @dataclass
 class PriceHistory:
     """Historical price data for an item.
@@ -81,23 +85,26 @@ class PriceHistory:
     @property
     def average_price(self) -> Decimal:
         """Calculate average price across all points."""
-        if not self.points:
+        valid_points = [p for p in self.points if p.price is not None]
+        if not valid_points:
             return Decimal(0)
-        return Decimal(sum(p.price for p in self.points)) / Decimal(len(self.points))
+        return Decimal(sum(p.price for p in valid_points)) / Decimal(len(valid_points))
 
     @property
     def min_price(self) -> Decimal:
         """Get minimum price."""
-        if not self.points:
+        valid_points = [p for p in self.points if p.price is not None]
+        if not valid_points:
             return Decimal(0)
-        return min(p.price for p in self.points)
+        return min(p.price for p in valid_points)
 
     @property
     def max_price(self) -> Decimal:
         """Get maximum price."""
-        if not self.points:
+        valid_points = [p for p in self.points if p.price is not None]
+        if not valid_points:
             return Decimal(0)
-        return max(p.price for p in self.points)
+        return max(p.price for p in valid_points)
 
     @property
     def total_volume(self) -> int:
@@ -107,10 +114,11 @@ class PriceHistory:
     @property
     def price_volatility(self) -> float:
         """Calculate price volatility (standard deviation / mean)."""
-        if len(self.points) < 2:
+        valid_points = [p for p in self.points if p.price is not None]
+        if len(valid_points) < 2:
             return 0.0
 
-        prices = [float(p.price) for p in self.points]
+        prices = [float(p.price) for p in valid_points]
         mean = sum(prices) / len(prices)
         if mean == 0:
             return 0.0
