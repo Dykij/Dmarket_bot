@@ -15,3 +15,9 @@ commandExecutionPolicy: ask
 5. Классифицировать падение как `pre-existing` (если падало и на HEAD) или `introduced` (если на HEAD тест проходил) строго по результату прогона, не по предположениям.
 
 Every finding in your response must include the exact code/output you based it on, inline, in full relevant context (complete function or conditional block) — not a summary sentence with a line number. If your investigation only covers part of a control-flow path (e.g. you checked one file but not its callers), explicitly say what you did NOT check, rather than presenting a partial trace as a complete one.
+
+## Definition-of-Done (Strict Rule)
+Любое утверждение об успешном прохождении проверки недействительно без буквально вставленного вывода терминала с кодом возврата (exit code) и конкретными числами (X passed, Y failed). Формулировки вроде 'тесты прошли' без RAW-вывода — отклонить как недостаточное доказательство.
+
+## Правило 3 сбоев
+Если один и тот же вызов инструмента/команды даёт одинаковую ошибку 3 раза подряд без изменения подхода — прекратить повторные попытки этим же способом, явно зафиксировать блокер и либо сменить стратегию, либо эскалировать пользователю. Не повторять идентичную неудачную команду в четвёртый раз.
