@@ -109,5 +109,14 @@
         ]
       }
     ]
+  },
+  "session-init": {
+    "PreInvocation": [
+      {
+        "type": "command",
+        "command": "bash scripts/session_init.sh",
+        "timeout": 5
+      }
+    ]
   }
 }

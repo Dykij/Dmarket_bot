@@ -189,3 +189,8 @@ DMarket API v1→v2 касалась других путей: user-offers/create
 - Updated `PriceHistory` properties (`average_price`, etc.) to fallback to `(best_bid + best_ask) / 2` when dealing with orderbook snapshots without actual sales price.
 - Fixed `Backtester.run` order book inversion by passing `best_ask` to `should_buy` and `best_bid` to `should_sell`.
 - Triggered full regression via `pytest tests/unit/ -n auto` (RAW outcome will be provided in final message).
+
+## 2026-09-13 (Part 3): SessionStart Hook Implementation
+- Created `session_init.sh` hook on `PreInvocation` to inject a contextual brief (task list, standing rules, git state) on the first execution loop of a session (`invocationNum == 0`).
+- Validated PreInvocation payload structure via real capture (bypassing documentation assumptions).
+- Fixed issues reported by `lsp-mcp-integration-auditor` (newline rendering with jq, unbounded git log limits, detached HEAD edge cases).
