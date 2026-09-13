@@ -175,3 +175,11 @@ DMarket API v1→v2 касалась других путей: user-offers/create
 - **Сбор данных**: Исправлена ошибка `TypeError` в `sources.py` (сбор `offerBestPrice` / `orderBestPrice`). Теперь скрипт корректно извлекает цену из поля `Amount` вложенного словаря. Парсинг успешно собирает точки (протестировано локальным скриптом).
 - **Субагенты**: Проверена реальная схема `agent.md`. Убедились, что поля `tools:`, `model:`, `commandExecutionPolicy:` действительно работают per-агент. В инструкции четырех аудиторов добавлен явный "Definition-of-Done" (требование RAW вывода терминала) и "Правило 3 сбоев".
 - **Least Privilege**: Подтверждено, что `raw-evidence-auditor` уже имеет минимальный набор прав (`[view_file, grep_search]`).
+
+## 2026-09-13 (Part 2)
+- Rebased commits to logically separate Execution and Sources fixes (H16 & PricePoint extraction).
+- Verified `libcst` skill: `code-modifier` autonomously created `CSTTransformer` via `MetadataWrapper` to rename parameter safely, ignoring global scope, proving skill efficacy.
+- Integrated `Backtester`: collected real aggregated data, identified critical missing feature (engine treats bid/ask as unified flat price point, invalidating arbitrage strategies). Blocked full data injection until model schema supports bid/ask spread.
+- Triggered full regression via `pytest tests/unit/`.
+
+- **FUTURE TASK**: Backtester не может дать честный результат для арбитражных стратегий, пока `PricePoint`/`PriceHistory` не будут расширены раздельными полями bid/ask вместо единой `price`. Это отдельная, самостоятельная задача, не решённая в рамках сегодняшней сессии.
