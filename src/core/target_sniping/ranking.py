@@ -34,11 +34,6 @@ def _get_regime_detector():
     return _regime_detector
 
 
-def clear_trend_cache() -> None:
-    """Clear trend cache between cycles."""
-    _trend_cache.clear()
-
-
 def rank_candidates_by_spread(
     items: list[dict[str, Any]],
     agg_prices: dict[str, dict[str, Any]],
@@ -109,7 +104,7 @@ def rank_candidates_by_spread(
             try:
                 # Use a simple price change estimate from best_bid/best_ask
                 price_change = (best_bid - best_ask) / max(best_ask, 0.01)
-                regime = detector.update(price_change, abs(price_change) * 0.5)
+                _ = detector.update(price_change, abs(price_change) * 0.5)
                 params = detector.get_params()
                 regime_mult = params.min_spread_mult
             except Exception as e:

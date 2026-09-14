@@ -6,7 +6,7 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 from src.core.target_sniping.ranking import (
-    clear_trend_cache,
+    
     rank_candidates_by_spread,
 )
 
@@ -105,9 +105,6 @@ class TestRankCandidatesBySpread:
         }
         ranked = rank_candidates_by_spread(items, agg)
         assert ranked[0][0] == "B"  # Higher volume ranks first
-
-    def test_clear_trend_cache(self):
-        clear_trend_cache()  # Should not raise
 
     def test_filler_skin_boost(self):
         """Filler skins get +8% boost."""

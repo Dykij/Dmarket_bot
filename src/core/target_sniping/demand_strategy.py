@@ -168,7 +168,7 @@ def calculate_demand_score(
     obi_norm = normalized_obi(bid_count, ask_count)
 
     # v17.3: OFI + EWMA smoothing
-    ofi_value, ewma_obi = _update_obi_history(title, obi_norm)
+    ofi_value, _ = _update_obi_history(title, obi_norm)
 
     # v17.3: Z-score calibration
     historical = _obi_history.get(title, [])
@@ -329,11 +329,3 @@ def _log_demand_decision(title: str, price: float, result: dict[str, Any]) -> No
     except Exception as e:
         import logging
         logging.getLogger("DemandStrategy").debug(f"log_decision failed: {e}")
-
-
-
-def clear_obi_history() -> None:
-    """Clear OBI history cache (call between cycles if needed)."""
-    global _obi_history, _obi_ewma
-    _obi_history.clear()
-    _obi_ewma.clear()

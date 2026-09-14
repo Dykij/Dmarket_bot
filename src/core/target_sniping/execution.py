@@ -43,17 +43,6 @@ class _ExecutionMixin:
     # v15.10: TWAP executor for anti-slippage on large orders
     _twap_executor: TWAPExecutor | None = None
 
-    def _get_twap_executor(self) -> TWAPExecutor:
-        """Lazy-init TWAP executor."""
-        if self._twap_executor is None:
-            self._twap_executor = TWAPExecutor(
-                client=self.client,
-                max_slices=int(os.getenv("TWAP_MAX_SLICES", "5")),
-                min_interval_seconds=float(os.getenv("TWAP_MIN_INTERVAL_S", "30")),
-                max_slippage_pct=float(os.getenv("TWAP_MAX_SLIPPAGE_PCT", "5.0")),
-            )
-        return self._twap_executor
-
     async def _simulate_network_latency(self, client_type: str = "dmarket") -> None: ...  # type: ignore[empty-body]
     def _maybe_inject_error(self, method_name: str) -> None: ...  # type: ignore[empty-body]
     def _simulate_competition(self, margin: float) -> bool: ...  # type: ignore[empty-body]

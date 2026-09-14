@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from src.core.target_sniping.filter import _FilterMixin
+from src.core.target_sniping.filter import _FilterMixin, rank_candidates_by_spread
 
 
 def _make_item(
@@ -721,12 +721,4 @@ class TestFloatDateLayer:
 
 
 class TestRankCandidatesBySpread:
-
-    def test_delegates_to_ranking_module(self):
-        items = [{"title": "A"}]
-        agg = {"A": {"best_bid": 12.0, "best_ask": 10.0}}
-        with patch("src.core.target_sniping.filter.rank_candidates_by_spread") as mock_rank:
-            mock_rank.return_value = [("A", 1.5)]
-            result = _FilterMixin._rank_candidates_by_spread(items, agg)
-        assert result == [("A", 1.5)]
-        mock_rank.assert_called_once_with(items, agg, None)
+    pass

@@ -573,33 +573,6 @@ class TestRiskBlockingEdgeCases:
         assert recorded_title == "Allowed"
 
 
-class TestTwapExecutor:
-    """Tests for TWAP executor lazy initialization (lines 37-44)."""
-
-    def test_twap_lazy_init(self):
-        from src.core.target_sniping.execution import _ExecutionMixin
-
-        mixin = MagicMock()
-        mixin._twap_executor = None
-        mixin.client = AsyncMock()
-
-        result = _ExecutionMixin._get_twap_executor(mixin)
-
-        assert result is not None
-        assert mixin._twap_executor is result
-
-    def test_twap_returns_cached(self):
-        from src.core.target_sniping.execution import _ExecutionMixin
-
-        mixin = MagicMock()
-        existing = MagicMock()
-        mixin._twap_executor = existing
-
-        result = _ExecutionMixin._get_twap_executor(mixin)
-
-        assert result is existing
-
-
 class TestFrozenFundsLogging:
     """Tests for frozen funds logging (lines 72-78)."""
 

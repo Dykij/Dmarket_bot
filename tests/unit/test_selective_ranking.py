@@ -9,7 +9,7 @@ Run: python -m pytest tests/unit/test_v12_selective_oracle.py -v
 import pytest
 from decimal import Decimal
 from src.config import Config
-from src.core.target_sniping.filter import _FilterMixin
+from src.core.target_sniping.filter import _FilterMixin, rank_candidates_by_spread
 
 
 @pytest.fixture(autouse=True)
@@ -27,7 +27,7 @@ class TestRankCandidatesBySpread:
     """_FilterMixin._rank_candidates_by_spread behaviour."""
 
     def test_empty_input(self):
-        result = _FilterMixin._rank_candidates_by_spread([], {})
+        result = rank_candidates_by_spread([], {})
         assert result == []
 
     def test_sorts_by_net_margin_descending(self):
@@ -51,7 +51,7 @@ class TestRankCandidatesBySpread:
                 "best_bid": 24.0, "best_ask": 21.0, "ask_count": 1, "bid_count": 1,
             },
         }
-        result = _FilterMixin._rank_candidates_by_spread(items, agg)
+        result = rank_candidates_by_spread(items, agg)
         # AK has highest net margin% -> ranks first with equal liquidity
         assert [t for t, _ in result] == [
             "AK-47 | Redline (Field-Tested)",
@@ -67,7 +67,7 @@ class TestRankCandidatesBySpread:
             "Y": {"best_bid": 0.0, "best_ask": 9.0, "ask_count": 1, "bid_count": 1},  # no bid
             "Z": {"best_bid": 10.0, "best_ask": 0.0, "ask_count": 1, "bid_count": 1},  # no ask
         }
-        result = _FilterMixin._rank_candidates_by_spread(items, agg)
+        result = rank_candidates_by_spread(items, agg)
         assert [t for t, _ in result] == ["X"]
 
     def test_filters_unprofitable_after_fees(self):
@@ -79,7 +79,7 @@ class TestRankCandidatesBySpread:
             # 20% spread leaves positive net margin after fees.
             "Wide": {"best_bid": 12.0, "best_ask": 10.0, "ask_count": 1, "bid_count": 1},
         }
-        result = _FilterMixin._rank_candidates_by_spread(items, agg)
+        result = rank_candidates_by_spread(items, agg)
         # v14.8: fee-aware ranking drops Flat because it cannot cover fees + target margin.
         assert [t for t, _ in result] == ["Wide"]
 
@@ -89,7 +89,7 @@ class TestRankCandidatesBySpread:
             "Known": {"best_bid": 12.0, "best_ask": 10.0, "ask_count": 1, "bid_count": 1},
             # "Unknown" intentionally missing
         }
-        result = _FilterMixin._rank_candidates_by_spread(items, agg)
+        result = rank_candidates_by_spread(items, agg)
         assert [t for t, _ in result] == ["Known"]
 
     def test_top_k_selection(self):
@@ -103,7 +103,7 @@ class TestRankCandidatesBySpread:
                 "ask_count": 1,
                 "bid_count": 1,
             }
-        result = _FilterMixin._rank_candidates_by_spread(items, agg)
+        result = rank_candidates_by_spread(items, agg)
         top_5 = [t for t, _ in result[:5]]
         # Sorted by spread desc: Item 9 has biggest spread (109.0)
         assert top_5[0] == "Item 9"

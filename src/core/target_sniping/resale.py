@@ -45,7 +45,6 @@ class _ResaleMixin(_ResaleDryMixin, _ResaleProdMixin, _PositionGuardMixin):
 
     # These attributes are set on the instance by SnipingLoop.__init__
     client: Any  # DMarketAPIClient
-    oracle: Any  # Oracle cache (or None)
 
     # ----------------------------------------------------------------
     # auto_resale — DRY + PROD paths

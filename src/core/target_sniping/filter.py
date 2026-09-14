@@ -46,14 +46,6 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
     @staticmethod
     def is_dirty_bs(attrs: dict[str, Any]) -> bool: ...  # type: ignore[empty-body]
 
-    @staticmethod
-    def _rank_candidates_by_spread(
-        items: list[dict[str, Any]],
-        agg_prices: dict[str, dict[str, Any]],
-        max_price_usd: float | None = None,
-    ) -> list[tuple[str, float]]:
-        return rank_candidates_by_spread(items, agg_prices, max_price_usd)
-
     def _extract_and_validate_base_data(self, item: dict) -> tuple[str, str, int, float] | None:
         title = get_item_title(item)
         # v2 uses "offerId"/"priceCents", v1 uses "itemId"/"price.USD"
