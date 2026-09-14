@@ -62,7 +62,8 @@ def setup_logging() -> None:
 logger = logging.getLogger("AutonomousScanner")
 
 # Phase 1: Feature-flag selection between v12.0 and legacy v10.0 loops.
-_USE_V12 = os.getenv("USE_V12_LOOP", "true").lower() == "true"
+from src.config import Config
+_USE_V12 = Config.USE_V12_LOOP
 if _USE_V12:
     from src.core.target_sniping.core import SnipingLoop
     logger.info("🔀 Using SnipingLoop v12.0 (batched endpoints + selective oracle)")

@@ -194,3 +194,12 @@ DMarket API v1→v2 касалась других путей: user-offers/create
 - Created `session_init.sh` hook on `PreInvocation` to inject a contextual brief (task list, standing rules, git state) on the first execution loop of a session (`invocationNum == 0`).
 - Validated PreInvocation payload structure via real capture (bypassing documentation assumptions).
 - Fixed issues reported by `lsp-mcp-integration-auditor` (newline rendering with jq, unbounded git log limits, detached HEAD edge cases).
+
+## 2026-09-13 (Part 4): DRY_RUN & Assert Investigation
+- **DRY_RUN**: Investigated all usages (15+ occurrences). It acts as the primary safety mechanism mocking POST/PUT requests and enforcing encryption in production (`vault.py`). Removing it would break simulation and security. Decided to keep the flag unchanged.
+- **Duplicate Commit**: Confirmed the existence of a duplicate commit (`Phase 3: Extract _apply_value_detection_layers`). Logged and verified history remains intact.
+- **Commented Assert in test_ranking.py**: Found that `assert ranked_with_h[0][1] > ranked_no_h[0][1]` in `hurst` tests was commented out during a bid/ask swap bug (`935ba8d`). The mocks were fixed later (`c2632b4`) but the asserts remained commented. Restored the asserts as `hurst_exponent` logic is still actively used in `ranking.py`. Full regression passed successfully.
+
+## [2026-09-13] Аналитическая сессия: Архитектурные темы
+- Проведён анализ 7 архитектурных тем (Контейнеризация, Крипто-подпись, Tamper-evident, Semgrep Guardian, A/B harness, Mem0, Диспетчеры хуков).
+- Код не менялся. Написан отчет в `architectural_analysis.md`.

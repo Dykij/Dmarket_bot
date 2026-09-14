@@ -164,39 +164,6 @@ class _AccountMixin:
 
         return all_items
 
-    async def get_transaction_history(
-        self,
-        days: int = 30,
-        limit: int = 100,
-        transaction_type: str | None = None,
-    ) -> list[dict[str, Any]]:
-        """
-        Get recent transactions to detect rollbacks (reverted status).
-
-        Returns list of transactions:
-        [{
-            "type": "buy" | "sell" | "reverted",
-            "itemId": "...",
-            "amount": 100.0,  # USD value
-            "status": "completed" | "reverted" | "trade_protected",
-            "timestamp": 1234567890.0,
-        }]
-
-        Endpoint: GET /exchange/v1/transactions?days=30&limit=100
-        """
-        params: dict[str, Any] = {
-            "days": days,
-            "limit": limit,
-        }
-        if transaction_type:
-            params["type"] = transaction_type
-        try:
-            res = await self.make_request(
-                "GET", "/exchange/v1/transactions", params=params
-            )
-        except Exception as e:
-            logger.debug(f"Transaction history fetch failed: {e}")
-            return []
 
         txs = res.get("transactions", res.get("items", []))
         normalized = []

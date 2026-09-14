@@ -90,20 +90,20 @@ class _InventoryMixin:
             if phantom_count > 0:
                 logger.warning(f"[RECONCILE] {phantom_count} phantom items detected")
 
-            # 3. Cross-check with transaction history for rollbacks
-            txs = await self.client.get_transaction_history(days=7, limit=50)
-            reverted_count = 0
-            for tx in txs:
-                if tx.get("type") == "reverted" or tx.get("status") == "reverted":
-                    item_id = tx.get("itemId", "")
-                    if item_id and await price_db.run_in_thread(price_db.is_known_item, item_id):  # P2-17: async
-                        if await price_db.run_in_thread(price_db.get_asset_status, item_id):  # P2-17: async
-                            await price_db.run_in_thread(price_db.mark_reverted, item_id)  # P2-17: async
-                            reverted_count += 1
-            if reverted_count > 0:
-                logger.warning(
-                    f"[STATUS-SYNC] {reverted_count} newly-reverted items detected"
-                )
+#             # 3. Cross-check with transaction history for rollbacks
+#             txs = await self.client.get_transaction_history(days=7, limit=50)
+#             reverted_count = 0
+#             for tx in txs:
+#                 if tx.get("type") == "reverted" or tx.get("status") == "reverted":
+#                     item_id = tx.get("itemId", "")
+#                     if item_id and await price_db.run_in_thread(price_db.is_known_item, item_id):  # P2-17: async
+#                         if await price_db.run_in_thread(price_db.get_asset_status, item_id):  # P2-17: async
+#                             await price_db.run_in_thread(price_db.mark_reverted, item_id)  # P2-17: async
+#                             reverted_count += 1
+#             if reverted_count > 0:
+#                 logger.warning(
+#                     f"[STATUS-SYNC] {reverted_count} newly-reverted items detected"
+#                 )
 
         except Exception as e:
             logger.debug(f"Inventory status sync failed: {e}")

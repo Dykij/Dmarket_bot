@@ -21,11 +21,13 @@ Public API:
 
 from __future__ import annotations
 
+import json
 import logging
 import os
-import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from pathlib import Path
+from src.config import Config
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
@@ -114,7 +116,7 @@ class RiskManager:
             os.getenv("MAX_DAILY_LOSS_USD", "10.00")
         )
         self.daily_trade_limit = daily_trade_limit if daily_trade_limit is not None else int(
-            os.getenv("MAX_DAILY_TRADES", "200")
+            Config.MAX_DAILY_TRADES
         )
         self.max_drawdown_pct = max_drawdown_pct
         self.soft_halt_drawdown_pct = soft_halt_drawdown_pct

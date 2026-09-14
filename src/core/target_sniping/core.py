@@ -22,6 +22,7 @@ from __future__ import annotations
 import logging
 import os
 from typing import Any
+from src.config import Config
 
 from src.analytics.stickers_evaluator import StickerEvaluator
 from src.api.dmarket_api_client import DMarketAPIClient
@@ -101,7 +102,7 @@ class SnipingLoop(  # type: ignore[misc]
 
         self.risk = RiskManager(
             daily_loss_limit_usd=float(os.getenv("MAX_DAILY_LOSS_USD", "10.00")),
-            daily_trade_limit=int(os.getenv("MAX_DAILY_TRADES", "200")),
+            daily_trade_limit=int(Config.MAX_DAILY_TRADES),
             max_drawdown_pct=float(os.getenv("MAX_DRAWDOWN_PCT", "15.0")),
             soft_halt_drawdown_pct=float(os.getenv("SOFT_HALT_DRAWDOWN_PCT", "5.0")),
             pump_detector=self.pump_detector,
