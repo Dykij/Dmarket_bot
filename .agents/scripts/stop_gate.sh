@@ -72,9 +72,18 @@ run_checks() {
             return
         fi
 
-        # Determine if there are actual code changes
+        # Determine if there are actual code changes (across the entire session)
+        SESSION_START_FILE="$ARTIFACT_DIR/session_start_commit.txt"
+        if [ -f "$SESSION_START_FILE" ]; then
+            SESSION_START=$(cat "$SESSION_START_FILE")
+            ALL_SESSION_FILES=$(git diff --name-only "$SESSION_START" HEAD 2>/dev/null)
+        else
+            # Fallback for sub-agents or old sessions
+            ALL_SESSION_FILES="$CHANGED_FILES"
+        fi
+
         HAS_CODE_CHANGES=0
-        for file in $CHANGED_FILES; do
+        for file in $ALL_SESSION_FILES $CHANGED_FILES; do
             if [[ "$file" != *.md ]] && [[ "$file" != .agents/* ]]; then
                 HAS_CODE_CHANGES=1
                 break

@@ -59,6 +59,12 @@ if [ -n "$WORKSPACE_DIR" ] && [ -d "$WORKSPACE_DIR/.git" ]; then
     if [ -n "$UNMERGED_INFO" ]; then
         BRIEF="${BRIEF}Unmerged local branches:\n${UNMERGED_INFO}"
     fi
+
+    # Save starting commit for stop_gate.sh
+    if [ -n "$ARTIFACTS_DIR" ]; then
+        git rev-parse HEAD > "$ARTIFACTS_DIR/session_start_commit.txt" 2>/dev/null
+    fi
+
     popd > /dev/null 2>&1
 fi
 
