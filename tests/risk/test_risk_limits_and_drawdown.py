@@ -100,6 +100,8 @@ class TestRiskManagerConstructor:
     def test_env_override_loss_limit(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setenv("MAX_DAILY_LOSS_USD", "5.50")
         monkeypatch.setenv("MAX_DAILY_TRADES", "50")
+        import src.risk.risk_manager
+        monkeypatch.setattr(src.risk.risk_manager.Config, "MAX_DAILY_TRADES", 50)
         rm = RiskManager()  # picks up env vars
         assert rm.daily_loss_limit_usd == 5.50
         assert rm.daily_trade_limit == 50
