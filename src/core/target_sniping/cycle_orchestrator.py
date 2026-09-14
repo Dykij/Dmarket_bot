@@ -317,7 +317,6 @@ class CycleOrchestrator:
         ranked = rank_candidates_by_spread(ctx.items, ctx.agg_prices, max_price_usd=max_price_cap)
         if ranked:
             try:
-                ranked_titles = {t for t, _ in ranked}
                 ctx.items.sort(key=lambda it: next(
                     (i for i, (t, _) in enumerate(ranked) if t == get_item_title(it)),
                     len(ranked)
