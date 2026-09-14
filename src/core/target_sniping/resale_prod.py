@@ -334,8 +334,7 @@ class _ResaleProdMixin:
                     _, lower, upper = vwap_bands(item_sales_vwap, num_std=2.0)
                     if upper > cs_price and lower < cs_price:
                         cs_price = max(cs_price, upper * 0.98)  # list near upper band
-
-            # v14.0: DOM Gap-aware listing price
+            list_price = round(min(cs_price * 0.97, cs_price - LIST_PRICE_DISCOUNT), 2)
             if Config.DOM_GAP_ENABLED and hasattr(self, '_dom_cache'):
                 dom_listings = self._dom_cache.get(title, [])
                 if dom_listings and len(dom_listings) > 1:
@@ -343,12 +342,6 @@ class _ResaleProdMixin:
                     gap_price = find_gap_price(dom_listings, target_sell)
                     if gap_price > target_sell:
                         list_price = gap_price
-                    else:
-                        list_price = round(min(cs_price * 0.97, cs_price - LIST_PRICE_DISCOUNT), 2)
-                else:
-                    list_price = round(min(cs_price * 0.97, cs_price - LIST_PRICE_DISCOUNT), 2)
-            else:
-                list_price = round(min(cs_price * 0.97, cs_price - LIST_PRICE_DISCOUNT), 2)
             payloads.append((int(it["id"]), it["dm_item_id"], title, list_price, buy_price))
 
         if not payloads:
