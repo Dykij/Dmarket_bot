@@ -216,3 +216,23 @@ DMarket API v1→v2 касалась других путей: user-offers/create
 
 ### Инцидент (H16: Tooling Hallucination)
 В коммите `bdef460` (при замене `os.getenv` на `Config.MAX_DAILY_TRADES` в `risk_manager.py`) из-за ошибки в ручном задании ReplacementContent (пропуск строки `import time`) произошла поломка импорта (name 'time' is not defined). Это чистый пример паттерна **H16** — баг, внесенный и исправленный в той же сессии из-за невнимательности при ручном обходе AST-скриптов. Исправлено через повторный патч и восстановление импорта.
+
+## 2026-09-14 (вечер): Аудит и очистка src/analytics/
+
+### Аудит
+- Полный аудит `src/analytics/` через `vulture src/`, `pydeps --show-deps`, `radon cc`, `pylint --enable=duplicate-code`.
+- Найдено: 1 файл-сирота (`walk_forward.py`), 7 мёртвых методов/функций в 3 файлах, 1 `except Exception: pass` (класс Б), 10 broad `except Exception` (классы В/А).
+- Дублирования логики нет (pylint 10.00/10).
+- Осиротевший код после bid/ask рефакторинга: не найден. DB-схема `price_history` корректно сохраняет `price` колонку; `PricePoint.best_bid/best_ask` работают на уровне in-memory модели.
+
+### Изменения (2 коммита)
+- `89a8078` — удалён `walk_forward.py` целиком (332 строки).
+- `8784772` — `event_calendar.py`: удалены 6 мёртвых методов/property, исправлен `except Exception: pass → (json.JSONDecodeError, OSError)`, обновлён docstring. `collector.py`: удалены 3 мёртвых метода, обновлён docstring. `stickers_evaluator.py`: удалены `_is_katowice_2014` и `is_undervalued`.
+- Итого: -494 строк мёртвого кода.
+- 80/80 unit tests passed.
+
+### Расследование БД (Часть Б, без изменений)
+- Схема `price_history`: 5 колонок (`id, hash_name, price, source, recorded_at`), **1 854 477 строк**, период Jun 16 – Sep 14 2026 (~90 дней).
+- Писатель таблицы: **один** (`src/db/price_history/history.py`, метод `save_price`).
+- Читателей: 40+ файлов через `price_db`, из них реальных SELECT к `price_history` — только `history.py`.
+- Вывод: рекомендация **(б)** — отложить добавление bid/ask в схему БД. Аргументы в SESSION_LOG ниже.
