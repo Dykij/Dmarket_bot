@@ -60,6 +60,7 @@ class _SchedulerMixin:
         # All background tasks managed in a single group for clean shutdown
         try:
             async with asyncio.TaskGroup() as tg:
+                tg.create_task(self._run_maintenance_loop())
                 # Launch daily briefing scheduler
                 try:
                     self.briefing_scheduler = DailyBriefingScheduler(
@@ -264,4 +265,67 @@ class _SchedulerMixin:
         except Exception as e:
             logger.debug(f"[Reporter] stats collection error: {e}")
         return stats
+    async def _run_maintenance_loop(self) -> None:
+        """Periodic SQLite maintenance and state backup (every 8 hours)."""
+        from src.db.price_history import price_db
+        from pathlib import Path
+        import subprocess
+        
+        while self.running:
+            await asyncio.sleep(8 * 3600)  # ~8 hours
+            
+            # 1. DB Maintenance
+            try:
+                await price_db.run_in_thread(price_db.wal_checkpoint)
+                await price_db.run_in_thread(price_db.optimize)
+                await price_db.run_in_thread(price_db.cleanup_old_prices, days=30)
+                await price_db.run_in_thread(price_db.cleanup_old_trades, days=90)
+                logger.info("[DB] Background WAL checkpoint + optimize + cleanup complete")
+            except Exception as e:
+                logger.warning(f"[DB] Background maintenance failed: {e}")
+
+            # 2. Git state backup using worktree (safe for concurrent running bot)
+            def _do_backup() -> None:
+                branch = "dryrun-state"
+                worktree_dir = "/tmp/dmarket-dryrun-state-worktree"
+                try:
+                    import shutil
+                    if Path(worktree_dir).exists():
+                        shutil.rmtree(worktree_dir, ignore_errors=True)
+                        subprocess.run(["git", "worktree", "prune"], capture_output=True)
+
+                    res = subprocess.run(["git", "worktree", "add", "-B", branch, worktree_dir, "origin/master"], capture_output=True)
+                    if res.returncode != 0:
+                        subprocess.run(["git", "worktree", "add", "-B", branch, worktree_dir], capture_output=True)
+
+                    wt_data = Path(worktree_dir) / "data"
+                    wt_data.mkdir(parents=True, exist_ok=True)
+                    
+                    db_files = ["data/dmarket_state.db", "data/dmarket_history.db", "data/dmarket_trading.db"]
+                    for f in db_files:
+                        src = Path(f)
+                        if src.exists():
+                            shutil.copy2(src, wt_data / src.name)
+                            if Path(f"{src}-wal").exists():
+                                shutil.copy2(f"{src}-wal", wt_data / f"{src.name}-wal")
+                            if Path(f"{src}-shm").exists():
+                                shutil.copy2(f"{src}-shm", wt_data / f"{src.name}-shm")
+
+                    import time
+                    msg = f"state-backup ts={int(time.time())}"
+                    subprocess.run(["git", "add", "data/*.db*"], cwd=worktree_dir, capture_output=True)
+                    subprocess.run(["git", "commit", "-m", msg, "--allow-empty"], cwd=worktree_dir, capture_output=True)
+                    subprocess.run(["git", "push", "origin", branch, "--force"], cwd=worktree_dir, capture_output=True)
+                    logger.info("[STATE-BACKUP] Background commit successful")
+                except Exception as e:
+                    logger.warning(f"[STATE-BACKUP] Background commit failed: {e}")
+                finally:
+                    if Path(worktree_dir).exists():
+                        shutil.rmtree(worktree_dir, ignore_errors=True)
+                    subprocess.run(["git", "worktree", "prune"], capture_output=True)
+
+            try:
+                await asyncio.get_event_loop().run_in_executor(None, _do_backup)
+            except Exception as e:
+                logger.warning(f"[STATE-BACKUP] Executor failed: {e}")
 

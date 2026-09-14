@@ -101,7 +101,7 @@ class TestGetCandles:
 
     def test_single_candle(self, builder):
         """Single bucket → one candle with OHLC all equal."""
-        ts = time.time()
+        ts = 1600000000.0
         builder._buffer["Item"] = [
             (ts, 10.0, 5),
             (ts + 1, 12.0, 3),
@@ -142,7 +142,7 @@ class TestGetCandles:
 
     def test_vwap_calculation(self, builder):
         """VWAP = sum(price*vol) / sum(vol)."""
-        ts = time.time()
+        ts = 1600000000.0
         builder._buffer["Item"] = [
             (ts, 10.0, 2),
             (ts + 1, 20.0, 8),
@@ -153,7 +153,7 @@ class TestGetCandles:
 
     def test_candle_to_dict(self, builder):
         """Candle.to_dict returns expected keys."""
-        ts = time.time()
+        ts = 1600000000.0
         builder._buffer["Item"] = [(ts, 10.0, 1)]
         candle = builder.get_candles("Item", interval="1h")[0]
         d = candle.to_dict()
@@ -171,7 +171,7 @@ class TestGetVolatility:
 
     def test_insufficient_candles(self, builder):
         """Less than 3 candles → volatility=0, regime=unknown."""
-        ts = time.time()
+        ts = 1600000000.0
         builder._buffer["Item"] = [(ts, 10.0, 1)]
         result = builder.get_volatility("Item", interval="1h", periods=20)
         assert result["volatility"] == 0.0
@@ -184,7 +184,7 @@ class TestGetVolatility:
 
     def test_low_volatility(self, builder):
         """Very stable prices → low regime."""
-        ts = time.time()
+        ts = 1600000000.0
         for i in range(10):
             builder._buffer.setdefault("Item", []).append(
                 (ts + i * 60, 10.0, 1)  # all same price
@@ -208,7 +208,7 @@ class TestGetVolatility:
 
     def test_atr_present(self, builder):
         """ATR calculated for multi-candle data."""
-        ts = time.time()
+        ts = 1600000000.0
         for i in range(5):
             builder._buffer.setdefault("Item", []).append(
                 (ts + i * 3600, 10.0 + i, 1)
