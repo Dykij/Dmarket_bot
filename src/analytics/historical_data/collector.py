@@ -1,10 +1,8 @@
 """
-collector.py — Orchestrator: cache + per-source fan-out + batch API.
+collector.py — Orchestrator: cache + per-source fan-out.
 
 `HistoricalDataCollector` ties the source collectors together and adds
-an in-memory TTL cache keyed by `game:title:days`. It also exposes a
-`collect_batch` helper that fans out across titles and a `clear_cache`
-+ `get_cache_stats` pair for the admin tooling (Telegram, CLI).
+an in-memory TTL cache keyed by `game:title:days`.
 
 v15.2: Uses cachetools.TTLCache for O(1) eviction instead of manual dict.
 """
@@ -123,55 +121,6 @@ class HistoricalDataCollector:
         )
 
         return history
-
-    async def collect_batch(
-        self,
-        game: str,
-        titles: list[str],
-        days: int = 30,
-    ) -> dict[str, PriceHistory]:
-        """Collect price history for multiple items.
-
-        Args:
-            game: Game code
-            titles: List of item names
-            days: Number of days
-
-        Returns:
-            Dictionary mapping title -> PriceHistory
-        """
-        results: dict[str, PriceHistory] = {}
-
-        for title in titles:
-            try:
-                history = await self.collect_price_history(game, title, days)
-                results[title] = history
-            except Exception as e:
-                logger.warning(
-                    "batch_collect_error",
-                    extra={"title": title, "error": str(e)},
-                )
-
-        return results
-
-    def clear_cache(self) -> None:
-        """Clear the in-memory cache."""
-        self._cache.clear()
-        logger.info("cache_cleared")
-
-    def get_cache_stats(self) -> dict[str, Any]:
-        """Get cache statistics.
-
-        Returns:
-            Dictionary with cache stats
-        
-        v15.2: Simplified — cachetools handles TTL internally.
-        """
-        return {
-            "total_entries": len(self._cache),
-            "maxsize": self._cache.maxsize,
-            "ttl_seconds": self._cache.ttl,
-        }
 
 
 __all__ = ["HistoricalDataCollector"]

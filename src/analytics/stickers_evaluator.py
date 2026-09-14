@@ -198,10 +198,6 @@ def _extract_year(sticker_name: str) -> int | None:
     return int(match.group()) if match else None
 
 
-def _is_katowice_2014(name: str) -> bool:
-    return "Katowice 2014" in name
-
-
 def _get_sticker_base_price(name: str) -> float:
     """Get sticker base price from all databases."""
     # 1. Ultra-premium
@@ -394,8 +390,3 @@ class StickerEvaluator:
         total_added_value += self.calculate_streak_bonus(stickers)
 
         return round(total_added_value, 2)
-
-    def is_undervalued(self, item_price: float, base_price: float, stickers: list[dict[str, Any]]) -> bool:
-        """Validates if item is undervalued compared to baseline + SPP value."""
-        sticker_value = self.calculate_added_value(stickers)
-        return item_price < (base_price + sticker_value) * 0.95

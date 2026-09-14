@@ -9,9 +9,6 @@ Usage:
 
     # Get upcoming events
     events = await event_calendar.get_upcoming_events(days_ahead=90)
-
-    # Check if any event is imminent
-    is_imminent = await event_calendar.is_event_imminent(days=7)
 """
 
 from __future__ import annotations
@@ -65,12 +62,6 @@ class CalendarEvent:
     def days_until_start(self) -> float:
         now = datetime.now(timezone.utc)
         delta = self.start_date - now
-        return max(0.0, delta.total_seconds() / 86400)
-
-    @property
-    def days_until_end(self) -> float:
-        now = datetime.now(timezone.utc)
-        delta = self.end_date - now
         return max(0.0, delta.total_seconds() / 86400)
 
     def to_dict(self) -> dict[str, Any]:
@@ -164,40 +155,6 @@ class EventCalendar:
         events.sort(key=lambda e: e.start_date)
         return events
 
-    async def is_event_imminent(self, days: int = 7) -> bool:
-        """Check if any high-impact event is within N days."""
-        events = await self.get_upcoming_events(days_ahead=days)
-        return any(e.impact == EventImpact.HIGH for e in events)
-
-    async def get_accumulation_signal(self) -> float:
-        """Get accumulation signal based on upcoming events.
-
-        Returns:
-            Signal in [-1, 1]: positive = accumulate, negative = distribute.
-        """
-        events = await self.get_upcoming_events(days_ahead=60)
-
-        if not events:
-            return 0.0
-
-        signal = 0.0
-        for event in events:
-            days = event.days_until_start
-            if days <= 0:
-                # Event is active — distribute
-                signal -= 0.3 * event.confidence
-            elif days <= 7:
-                # Peak accumulation
-                signal += 0.5 * event.confidence
-            elif days <= 30:
-                # Accumulation window
-                signal += 0.3 * event.confidence * (1.0 - days / 30.0)
-            elif days <= 60:
-                # Early accumulation
-                signal += 0.1 * event.confidence * (1.0 - days / 60.0)
-
-        return max(-1.0, min(1.0, signal))
-
     async def _ensure_fresh(self) -> None:
         """Ensure event data is fresh."""
         now = time.time()
@@ -228,42 +185,6 @@ class EventCalendar:
 
         except Exception as e:
             logger.debug(f"[EventCalendar] Web fetch failed: {e}")
-
-    def _parse_search_result(self, result: dict) -> CalendarEvent | None:
-        """Parse a search result into a CalendarEvent."""
-        try:
-            title = result.get("title", "")
-            snippet = result.get("snippet", "")
-
-            # Simple heuristic parsing
-            if "major" in title.lower() or "major" in snippet.lower():
-                return CalendarEvent(
-                    name=title[:100],
-                    event_type=EventType.MAJOR,
-                    start_date=datetime.now(timezone.utc) + timedelta(days=30),
-                    end_date=datetime.now(timezone.utc) + timedelta(days=37),
-                    impact=EventImpact.HIGH,
-                    price_impact_pct=25.0,
-                    source=result.get("url", ""),
-                    confidence=0.6,
-                )
-
-            if "sale" in title.lower() or "sale" in snippet.lower():
-                return CalendarEvent(
-                    name=title[:100],
-                    event_type=EventType.STEAM_SALE,
-                    start_date=datetime.now(timezone.utc) + timedelta(days=14),
-                    end_date=datetime.now(timezone.utc) + timedelta(days=28),
-                    impact=EventImpact.HIGH,
-                    price_impact_pct=-15.0,
-                    source=result.get("url", ""),
-                    confidence=0.5,
-                )
-
-        except Exception:
-            pass
-
-        return None
 
     def _add_recurring_events(self) -> None:
         """Add known recurring events as fallback."""
@@ -322,7 +243,7 @@ class EventCalendar:
                         f"[EventCalendar] Loaded {len(self._events)} events from cache"
                     )
                     return True
-        except Exception as e:
+        except (json.JSONDecodeError, OSError) as e:
             logger.debug(f"[EventCalendar] Cache load failed: {e}")
         return False
 
@@ -336,27 +257,8 @@ class EventCalendar:
                 "events": [e.to_dict() for e in self._events],
             }
             price_db.set_state(self._cache_key, json.dumps(data))
-        except Exception as e:
+        except OSError as e:
             logger.debug(f"[EventCalendar] Cache save failed: {e}")
-
-    def add_event(self, event: CalendarEvent) -> None:
-        """Manually add an event."""
-        self._events.append(event)
-        self._save_to_cache()
-
-    def get_stats(self) -> dict[str, Any]:
-        """Get calendar statistics."""
-        now = datetime.now(timezone.utc)
-        active = [e for e in self._events if e.is_active]
-        upcoming = [e for e in self._events if e.start_date > now]
-
-        return {
-            "total_events": len(self._events),
-            "active_events": len(active),
-            "upcoming_events": len(upcoming),
-            "last_fetch": self._last_fetch,
-            "next_fetch_in": max(0, self._fetch_interval - (time.time() - self._last_fetch)),
-        }
 
 
 # Global singleton
