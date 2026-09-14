@@ -62,7 +62,9 @@ if [ -n "$WORKSPACE_DIR" ] && [ -d "$WORKSPACE_DIR/.git" ]; then
 
     # Save starting commit for stop_gate.sh
     if [ -n "$ARTIFACTS_DIR" ]; then
-        git rev-parse HEAD > "$ARTIFACTS_DIR/session_start_commit.txt" 2>/dev/null
+        if [ ! -f "$ARTIFACTS_DIR/session_start_commit.txt" ]; then
+            git rev-parse HEAD > "$ARTIFACTS_DIR/session_start_commit.txt" 2>/dev/null
+        fi
     fi
 
     popd > /dev/null 2>&1
