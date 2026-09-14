@@ -17,7 +17,7 @@ hex = "0.4"
 
 # v15.5: Optional simd-json for large payload parsing (2-4x faster)
 [dependencies.simd-json]
-version = "0.14"
+version = "0.18"
 optional = true
 
 [features]
