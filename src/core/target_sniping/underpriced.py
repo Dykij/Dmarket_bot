@@ -5,6 +5,7 @@ sales history, even when no external marketplace (oracle) edge exists.
 """
 
 from __future__ import annotations
+from src.core.target_sniping.item_utils import get_item_title
 
 from typing import Any
 
@@ -105,7 +106,7 @@ async def fetch_low_fee_titles(client, game_id: str) -> dict[str, float]:
     items = await client.get_low_fee_items(game_id, limit=Config.LOW_FEE_ITEMS_SCAN_LIMIT)
     result: dict[str, float] = {}
     for it in items[: Config.LOW_FEE_ITEMS_SCAN_LIMIT]:
-        title = it.get("title", "")
+        title = get_item_title(it)
         fee = it.get("fee_rate", 0.05)
         if title:
             result[title] = fee

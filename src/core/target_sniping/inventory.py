@@ -6,6 +6,7 @@ Mixin with the inventory-status helpers. Mixed into `SnipingLoop`
 """
 
 from __future__ import annotations
+from src.core.target_sniping.item_utils import get_item_title
 
 from src.config import Config  # P1-20: centralized DRY_RUN
 import logging
@@ -54,7 +55,7 @@ class _InventoryMixin:
                 real_item_ids.add(item_id)
                 status = item.get("status", "active")
                 finalization_time = item.get("FinalizationTime", 0.0)
-                title = item.get("title", "")
+                title = get_item_title(item)
 
                 old_status = await price_db.run_in_thread(price_db.get_asset_status, item_id)  # P2-17: async
                 if not old_status or old_status["status"] != status:
