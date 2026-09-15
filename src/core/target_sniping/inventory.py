@@ -109,15 +109,15 @@ class _InventoryMixin:
         except Exception as e:
             logger.debug(f"Inventory status sync failed: {e}")
 
-    def _skip_if_locked(self, item_id: str, title: str) -> bool:
+    async def _skip_if_locked(self, item_id: str, title: str) -> bool:
         """
         Returns True if the item should be SKIPPED due to:
         - We already own it (would double-buy)
         - It's currently trade_protected
         - It's been reverted
         """
-        if price_db.is_known_item(item_id):
-            asset = price_db.get_asset_status(item_id)
+        if await price_db.run_in_thread(price_db.is_known_item, item_id):
+            asset = await price_db.run_in_thread(price_db.get_asset_status, item_id)
             if asset:
                 if asset["status"] == "reverted":
                     logger.debug(f"[SKIP] {title} was reverted, skipping")

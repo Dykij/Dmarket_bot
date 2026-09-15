@@ -129,7 +129,7 @@ class ResalePipeline:
             return None
         if buy_price > balance:
             return None
-        if price_db.has_target_been_placed(item_id):
+        if await price_db.run_in_thread(price_db.has_target_been_placed, item_id):
             return None
 
         # Estimate sell price from DMarket listing price + margin (oracle removed)

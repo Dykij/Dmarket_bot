@@ -53,7 +53,7 @@ def _make_pipeline() -> tuple[ResalePipeline, MagicMock]:
         risk.pre_trade_check = MagicMock(return_value=risk_result)
         risk.record_trade_outcome = MagicMock()
 
-        mock_db.has_target_been_placed.return_value = False
+        mock_db.run_in_thread.return_value = False
         mock_db.get_virtual_inventory.return_value = []
         mock_db.add_virtual_item = MagicMock()
         mock_db.record_placed_target = MagicMock()
@@ -126,7 +126,7 @@ class TestEvaluateAndBuy:
         orig_min, orig_max = _rp_mod.Config.MIN_PRICE_USD, _rp_mod.Config.MAX_PRICE_USD
         try:
             _rp_mod.Config.MIN_PRICE_USD, _rp_mod.Config.MAX_PRICE_USD = 5.0, 100.0
-            with patch.object(_rp_mod.price_db, "has_target_been_placed", return_value=False):
+            with patch.object(_rp_mod.price_db, "run_in_thread", new_callable=AsyncMock, return_value=False):
                 result = await pipeline._evaluate_and_buy(_make_dmarket_item(price_cents=100), balance=100.0)
         finally:
             _rp_mod.Config.MIN_PRICE_USD, _rp_mod.Config.MAX_PRICE_USD = orig_min, orig_max
@@ -138,7 +138,7 @@ class TestEvaluateAndBuy:
         orig_min, orig_max = _rp_mod.Config.MIN_PRICE_USD, _rp_mod.Config.MAX_PRICE_USD
         try:
             _rp_mod.Config.MIN_PRICE_USD, _rp_mod.Config.MAX_PRICE_USD = 1.0, 50.0
-            with patch.object(_rp_mod.price_db, "has_target_been_placed", return_value=False):
+            with patch.object(_rp_mod.price_db, "run_in_thread", new_callable=AsyncMock, return_value=False):
                 result = await pipeline._evaluate_and_buy(_make_dmarket_item(price_cents=6000), balance=100.0)
         finally:
             _rp_mod.Config.MIN_PRICE_USD, _rp_mod.Config.MAX_PRICE_USD = orig_min, orig_max
@@ -150,7 +150,7 @@ class TestEvaluateAndBuy:
         orig_min, orig_max = _rp_mod.Config.MIN_PRICE_USD, _rp_mod.Config.MAX_PRICE_USD
         try:
             _rp_mod.Config.MIN_PRICE_USD, _rp_mod.Config.MAX_PRICE_USD = 1.0, 100.0
-            with patch.object(_rp_mod.price_db, "has_target_been_placed", return_value=False):
+            with patch.object(_rp_mod.price_db, "run_in_thread", new_callable=AsyncMock, return_value=False):
                 result = await pipeline._evaluate_and_buy(_make_dmarket_item(price_cents=5000), balance=30.0)
         finally:
             _rp_mod.Config.MIN_PRICE_USD, _rp_mod.Config.MAX_PRICE_USD = orig_min, orig_max
@@ -159,7 +159,7 @@ class TestEvaluateAndBuy:
     @pytest.mark.asyncio
     async def test_already_placed_target_returns_none(self):
         pipeline, _ = _make_pipeline()
-        with patch.object(_rp_mod.price_db, "has_target_been_placed", return_value=True):
+        with patch.object(_rp_mod.price_db, "run_in_thread", new_callable=AsyncMock, return_value=True):
             orig_min, orig_max = _rp_mod.Config.MIN_PRICE_USD, _rp_mod.Config.MAX_PRICE_USD
             try:
                 _rp_mod.Config.MIN_PRICE_USD, _rp_mod.Config.MAX_PRICE_USD = 1.0, 100.0
@@ -180,7 +180,7 @@ class TestEvaluateAndBuy:
             _rp_mod.Config.GAME_ID = "a8db"
             with (
                 patch("src.core.resale_pipeline.validate_arbitrage_profit", return_value=0.20),
-                patch.object(_rp_mod.price_db, "has_target_been_placed", return_value=False),
+                patch.object(_rp_mod.price_db, "run_in_thread", new_callable=AsyncMock, return_value=False),
                 patch.object(_rp_mod.price_db, "add_virtual_item"),
                 patch.object(_rp_mod.price_db, "record_placed_target"),
             ):
@@ -202,7 +202,7 @@ class TestEvaluateAndBuy:
             _rp_mod.Config.MIN_PRICE_USD, _rp_mod.Config.MAX_PRICE_USD = 1.0, 100.0
             with (
                 patch("src.core.resale_pipeline.validate_arbitrage_profit", side_effect=PriceValidationError("low")),
-                patch.object(_rp_mod.price_db, "has_target_been_placed", return_value=False),
+                patch.object(_rp_mod.price_db, "run_in_thread", new_callable=AsyncMock, return_value=False),
             ):
                 result = await pipeline._evaluate_and_buy(_make_dmarket_item(), balance=100.0)
         finally:
@@ -445,7 +445,7 @@ class TestScanAndBuyExtended:
             _rp_mod.Config.GAME_ID = "a8db"
             with (
                 patch("src.core.resale_pipeline.validate_arbitrage_profit", return_value=0.20),
-                patch.object(_rp_mod.price_db, "has_target_been_placed", return_value=False),
+                patch.object(_rp_mod.price_db, "run_in_thread", new_callable=AsyncMock, return_value=False),
                 patch.object(_rp_mod.price_db, "add_virtual_item"),
                 patch.object(_rp_mod.price_db, "record_placed_target"),
                 patch.object(_rp_mod.Config, "DRY_RUN", False),
@@ -477,7 +477,7 @@ class TestScanAndBuyExtended:
             with (
                 patch("src.core.resale_pipeline.self_reflection") as mock_sr,
                 patch("src.core.resale_pipeline.validate_arbitrage_profit", return_value=0.20) as mock_validate,
-                patch.object(_rp_mod.price_db, "has_target_been_placed", return_value=False),
+                patch.object(_rp_mod.price_db, "run_in_thread", new_callable=AsyncMock, return_value=False),
                 patch.object(_rp_mod.price_db, "add_virtual_item"),
                 patch.object(_rp_mod.price_db, "record_placed_target"),
                 patch.dict("os.environ", {"DRY_RUN": "true"}),

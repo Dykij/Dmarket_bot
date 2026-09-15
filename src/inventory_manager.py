@@ -197,9 +197,9 @@ class InventoryManager:
         price_db.record_virtual_sale(item_db_id, sell_price, fee)
         logger.info(f"💰 Marked as sold: item#{item_db_id} @ ${sell_price:.2f}")
 
-    def is_item_purchased(self, item_id: str) -> bool:
+    async def is_item_purchased(self, item_id: str) -> bool:
         """Check if an item has already been purchased."""
-        return price_db.has_target_been_placed(item_id)
+        return await price_db.run_in_thread(price_db.has_target_been_placed, item_id)
 
     # =================================================================
     # 3. P&L TRACKING

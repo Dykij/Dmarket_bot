@@ -41,12 +41,12 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
     liquidity: Any  # LiquidityManager
     _diag_cycle_id: int
 
-    def _skip_if_locked(self, item_id: str, title: str) -> bool: ...  # type: ignore[empty-body]
+    async def _skip_if_locked(self, item_id: str, title: str) -> bool: ...  # type: ignore[empty-body]
     def _calculate_float_premium(self, attrs: dict[str, Any]) -> float: ...  # type: ignore[empty-body]
     @staticmethod
     def is_dirty_bs(attrs: dict[str, Any]) -> bool: ...  # type: ignore[empty-body]
 
-    def _extract_and_validate_base_data(self, item: dict) -> tuple[str, str, int, float] | None:
+    async def _extract_and_validate_base_data(self, item: dict) -> tuple[str, str, int, float] | None:
         title = get_item_title(item)
         # v2 uses "offerId"/"priceCents", v1 uses "itemId"/"price.USD"
         item_id = item.get("offerId", "") or item.get("itemId", "")
@@ -59,11 +59,11 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
         if not title or not item_id or base_price <= 0:
             return None
 
-        if price_db.has_target_been_placed(item_id):
+        if await price_db.run_in_thread(price_db.has_target_been_placed, item_id):
             return None
 
         # v12.2 Phase 2.1: Skip if asset is reverted or trade_protected
-        if self._skip_if_locked(item_id, title):
+        if await self._skip_if_locked(item_id, title):
             return None
 
         if base_price < Config.MIN_PRICE_USD:
@@ -253,7 +253,7 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
         only if the title is missing from the snapshots (selective mode miss).
         """
 
-        base_data = self._extract_and_validate_base_data(item)
+        base_data = await self._extract_and_validate_base_data(item)
         if not base_data:
             return None
         title, item_id, base_price_cents, base_price = base_data

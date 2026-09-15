@@ -171,17 +171,19 @@ class TestMarkItemSold:
 
 class TestIsItemPurchased:
 
-    def test_returns_true(self):
+    @pytest.mark.asyncio
+    async def test_returns_true(self):
         manager, _ = _make_manager()
         with patch("src.inventory_manager.price_db") as mock_db:
-            mock_db.has_target_been_placed.return_value = True
-            assert manager.is_item_purchased("item_001") is True
+            mock_db.run_in_thread = AsyncMock(return_value=True)
+            assert await manager.is_item_purchased("item_001") is True
 
-    def test_returns_false(self):
+    @pytest.mark.asyncio
+    async def test_returns_false(self):
         manager, _ = _make_manager()
         with patch("src.inventory_manager.price_db") as mock_db:
-            mock_db.has_target_been_placed.return_value = False
-            assert manager.is_item_purchased("item_001") is False
+            mock_db.run_in_thread = AsyncMock(return_value=False)
+            assert await manager.is_item_purchased("item_001") is False
 
 
 class TestGetPortfolioSummary:

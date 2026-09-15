@@ -42,7 +42,7 @@ def _make_mixin() -> MagicMock:
     mixin.liquidity.can_spend = MagicMock(return_value=True)
     mixin._diag_cycle_id = -1
     mixin._oracle_price_cache = {}
-    mixin._skip_if_locked = MagicMock(return_value=False)
+    mixin._skip_if_locked = AsyncMock(return_value=False)
     mixin._calculate_float_premium = MagicMock(return_value=1.0)
     mixin._calculate_pattern_premium = MagicMock(return_value=1.0)
     mixin.is_dirty_bs = MagicMock(return_value=False)
@@ -85,12 +85,13 @@ def _patch_filter(ms_result=None, cross_market=None, fee_result=None, cfg=None):
     with (
         patch("src.core.target_sniping.filter.Config", mock_config),
         patch("src.core.target_sniping.filter.price_db") as mock_db,
+        patch("src.core.target_sniping.filter.price_db.run_in_thread", new_callable=AsyncMock, return_value=False),
         patch("src.core.target_sniping.filter.run_microstructure_pipeline", return_value=ms_result),
         patch("src.core.target_sniping.filter.evaluate_fee_slippage_tod", return_value=fee_result),
         patch("src.core.target_sniping.filter.check_bait_detection", return_value={"pass": True}),
         patch("src.core.target_sniping.filter.validate_volatility"),
     ):
-        mock_db.has_target_been_placed.return_value = False
+        mock_db.run_in_thread.return_value = False
         mock_db.is_crashing.return_value = False
         mock_db.get_recent_prices.return_value = [(10.0, 1000)] * 20
         mock_db.get_low_fee_rate.return_value = None
@@ -361,7 +362,7 @@ class TestEarlyReturns:
     async def test_already_placed_returns_none(self):
         mixin = _make_mixin()
         with _patch_filter() as mock_db:
-            mock_db.has_target_been_placed.return_value = True
+            mock_db.run_in_thread.return_value = True
             result = await _FilterMixin._evaluate_candidate(
                 mixin, item=_make_item(), game_id="a8db", 
                 agg_prices={}, bulk_fees={}, current_balance=100.0, current_margin=0.05,
@@ -371,7 +372,7 @@ class TestEarlyReturns:
     @pytest.mark.asyncio
     async def test_locked_item_returns_none(self):
         mixin = _make_mixin()
-        mixin._skip_if_locked = MagicMock(return_value=True)
+        mixin._skip_if_locked = AsyncMock(return_value=True)
         with _patch_filter():
             result = await _FilterMixin._evaluate_candidate(
                 mixin, item=_make_item(), game_id="a8db", 
