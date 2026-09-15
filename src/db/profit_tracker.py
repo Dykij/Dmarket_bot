@@ -1,6 +1,7 @@
 import contextlib
 import logging
 import sqlite3
+from src.db.sqlite_helpers import apply_sqlite_pragmas
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
@@ -17,13 +18,7 @@ class ProfitTrackerDB:
             str(self.db_path), check_same_thread=False
         )
         # v12.8: WAL mode for concurrent read/write (P-3).
-        self.conn.execute("PRAGMA journal_mode=WAL")
-        self.conn.execute("PRAGMA busy_timeout=5000")
-        # v15.2: Performance PRAGMAs (matching price_history DB)
-        self.conn.execute("PRAGMA synchronous=NORMAL")   # Balance speed/reliability
-        self.conn.execute("PRAGMA cache_size=-64000")    # 64MB cache
-        self.conn.execute("PRAGMA temp_store=MEMORY")    # Temp tables in memory
-        self.conn.execute("PRAGMA mmap_size=268435456")  # 256MB memory-mapped I/O
+        apply_sqlite_pragmas(self.conn)
         self.conn.row_factory = sqlite3.Row
         self._init_db()
 

@@ -250,3 +250,19 @@ DMarket API v1→v2 касалась других путей: user-offers/create
 - **Concrete utility gap**: `self_reflection.py` uses `price_history` to calculate daily volatility to adjust the `MIN_SPREAD_PCT` parameter. By using a single flat `price` column (which mixes best_ask or just execution prices), it measures the volatility of the *offer side* rather than the true spread liquidity. This could mislead the adaptive spread logic if best_bids drop while asks remain stable.
 - **Recommendation**: The benefit is moderate but the migration volume (1.85M rows, 2 indexes) is high for the live database. It should be planned as a separate migration project with a shadow schema, not done in-place during standard tasks.
 
+
+## 2026-09-15: Database Audit & Cross-Thread Risk Fix
+- **Part 0 (DMarket API Endpoints)**: Tested potential PnL/Accounting endpoints. The old `/trading/v1/...` and guessed `/exchange/v1/report/...` returned 404. `/account/v1/user/accounting/balance` returned 400 Bad Request indicating it's for fiat deposit/withdrawal (requires Action/Provider), not trading PnL. Conclusion: No native DMarket PnL endpoint exists.
+- **Part 1 (Cross-Thread Risk)**: Fixed the critical `check_same_thread=False` risk. `get_asset_status` in `inventory.py` and `has_target_been_placed` (used in `filter.py`, `inventory_manager.py`, `resale_pipeline.py`) were making synchronous SQLite calls from within the `asyncio` event loop. Made intermediate functions async and correctly wrapped DB calls in `run_in_thread`.
+- **Part 2 (Dead Code Cleanup)**: Safely deleted 27 confirmed dead database methods from `src/db/` via `libcst` and stripped out their 23 corresponding unit tests.
+- **Part 3 (Exception Narrowing)**: Narrowed `except Exception:` to `except (ValueError, TypeError):` in `profit_tracker.py`.
+- **Part 4 (PRAGMA Deduplication)**: Extracted identical `PRAGMA` setup blocks from `core.py` and `shadow_engine.py` into a shared `apply_sqlite_pragmas` helper in `src/db/sqlite_helpers.py`.
+- **Note**: The architectural question of migrating the DB schema to a Bid/Ask spread (1D `price` limitation) remains an deferred separate task.
+
+## 2026-09-15: Database Audit & Cross-Thread Risk Fix
+- **Part 0 (DMarket API Endpoints)**: Tested potential PnL/Accounting endpoints. The old `/trading/v1/...` and guessed `/exchange/v1/report/...` returned 404. `/account/v1/user/accounting/balance` returned 400 Bad Request indicating it's for fiat deposit/withdrawal (requires Action/Provider), not trading PnL. Conclusion: No native DMarket PnL endpoint exists.
+- **Part 1 (Cross-Thread Risk)**: Fixed the critical `check_same_thread=False` risk. `get_asset_status` in `inventory.py` and `has_target_been_placed` (used in `filter.py`, `inventory_manager.py`, `resale_pipeline.py`) were making synchronous SQLite calls from within the `asyncio` event loop. Made intermediate functions async and correctly wrapped DB calls in `run_in_thread`.
+- **Part 2 (Dead Code Cleanup)**: Safely deleted 27 confirmed dead database methods from `src/db/` via `libcst` and stripped out their 17 corresponding unit tests.
+- **Part 3 (Exception Narrowing)**: Narrowed `except Exception:` to `except (ValueError, TypeError):` in `profit_tracker.py`.
+- **Part 4 (PRAGMA Deduplication)**: Extracted identical `PRAGMA` setup blocks from `core.py` and `shadow_engine.py` into a shared `apply_sqlite_pragmas` helper in `src/db/sqlite_helpers.py`.
+- **Note**: The architectural question of migrating the DB schema to a Bid/Ask spread (1D `price` limitation) remains an deferred separate task.
