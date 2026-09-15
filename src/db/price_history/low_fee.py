@@ -48,12 +48,6 @@ class _LowFeeMixin:
         ).fetchone()
         return row["fee_rate"] if row else None
 
-    def low_fee_cache_size(self) -> int:
-        row = self.state_conn.execute(
-            "SELECT COUNT(*) as c FROM low_fee_cache"
-        ).fetchone()
-        return row["c"] or 0
-
     def low_fee_cache_age_seconds(self) -> float | None:
         """Returns the age (seconds) of the oldest entry, or None if cache is empty."""
         row = self.state_conn.execute(

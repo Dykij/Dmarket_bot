@@ -28,6 +28,7 @@ import logging
 import os
 import sqlite3
 import threading
+from src.db.sqlite_helpers import apply_sqlite_pragmas
 import time as _time
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
@@ -83,23 +84,11 @@ class PriceHistoryDB(  # type: ignore[misc]
         # v12.7: Enable WAL mode for better concurrent read/write (P0-4).
         # WAL allows readers and one writer simultaneously, reducing
         # "database is locked" errors in async contexts.
-        self.state_conn.execute("PRAGMA journal_mode=WAL")
-        self.state_conn.execute("PRAGMA busy_timeout=5000")
-        # v14.9: Performance PRAGMAs
-        self.state_conn.execute("PRAGMA synchronous=NORMAL")  # Balance speed/reliability
-        self.state_conn.execute("PRAGMA cache_size=-64000")   # 64MB cache
-        self.state_conn.execute("PRAGMA temp_store=MEMORY")   # Temp tables in memory
-        self.state_conn.execute("PRAGMA mmap_size=268435456") # 256MB memory-mapped I/O
+        apply_sqlite_pragmas(self.state_conn)
 
         self.history_conn = sqlite3.connect(str(self.history_path), check_same_thread=False)
         self.history_conn.row_factory = sqlite3.Row
-        self.history_conn.execute("PRAGMA journal_mode=WAL")
-        self.history_conn.execute("PRAGMA busy_timeout=5000")
-        # v14.9: Performance PRAGMAs
-        self.history_conn.execute("PRAGMA synchronous=NORMAL")
-        self.history_conn.execute("PRAGMA cache_size=-64000")   # 64MB cache
-        self.history_conn.execute("PRAGMA temp_store=MEMORY")
-        self.history_conn.execute("PRAGMA mmap_size=268435456") # 256MB memory-mapped I/O
+        apply_sqlite_pragmas(self.history_conn)
 
         # Thread safety: one lock per connection to prevent concurrent
         # access from the ThreadPoolExecutor workers (SQLite connections
@@ -146,14 +135,6 @@ class PriceHistoryDB(  # type: ignore[misc]
             self.state_conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
             self.history_conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
             logger.debug("[WAL] Checkpoint completed")
-
-    def get_thread_pool_stats(self) -> dict[str, Any]:
-        """v15.1: Thread pool monitoring for health checks."""
-        return {
-            "max_workers": _db_executor._max_workers,
-            "active_threads": len(_db_executor._threads),
-            "pending_tasks": _db_executor._work_queue.qsize() if hasattr(_db_executor, '_work_queue') else 0,
-        }
 
     async def run_in_thread(self, fn: Callable[..., Any], *args: Any, **kwargs: Any) -> Any:
         """Run a synchronous DB operation in the thread pool to avoid
@@ -221,27 +202,6 @@ class PriceHistoryDB(  # type: ignore[misc]
         def _get_version(conn: sqlite3.Connection) -> int:
             row = conn.execute("SELECT MAX(version) FROM schema_version").fetchone()
             return row[0] if row and row[0] else 0
-
-        def _apply_migration(conn: sqlite3.Connection, version: int, desc: str, sql: str) -> None:
-            current = _get_version(conn)
-            if version <= current:
-                return
-            try:
-                conn.execute(sql)
-                conn.execute(
-                    "INSERT INTO schema_version (version, description, applied_at) VALUES (?, ?, ?)",
-                    (version, desc, _time.time()),
-                )
-                logger.info(f"[DB] Migration v{version}: {desc}")
-            except sqlite3.OperationalError as e:
-                if "already exists" in str(e).lower():
-                    # Column/table already exists — record as applied
-                    conn.execute(
-                        "INSERT OR IGNORE INTO schema_version (version, description, applied_at) VALUES (?, ?, ?)",
-                        (version, desc, _time.time()),
-                    )
-                else:
-                    raise
 
         # --- STATE DB (OLTP) ---
         with self.state_conn:
@@ -503,9 +463,7 @@ class PriceHistoryDB(  # type: ignore[misc]
             # (the bot's worst-case loss is a missed oracle
             # observation, not data corruption — the WAL is still
             # crash-safe on power loss).
-            self.state_conn.execute("PRAGMA journal_mode = WAL")
-            self.state_conn.execute("PRAGMA synchronous = normal")
-            self.state_conn.execute("PRAGMA temp_store = memory")
+            apply_sqlite_pragmas(self.state_conn)
 
         # --- HISTORY DB (OLAP) ---
         with self.history_conn:
@@ -580,9 +538,7 @@ class PriceHistoryDB(  # type: ignore[misc]
             # a big write-throughput win (bot's worst-case loss is a
             # missed oracle observation, not data corruption — the WAL
             # is still crash-safe on power loss).
-            self.history_conn.execute("PRAGMA journal_mode = WAL")
-            self.history_conn.execute("PRAGMA synchronous = normal")
-            self.history_conn.execute("PRAGMA temp_store = memory")
+            apply_sqlite_pragmas(self.history_conn)
 
         logger.info(
             f"💾 Engine v8.0 Bifurcation: State@{self.state_path.name}, "

@@ -70,13 +70,6 @@ class _InventoryMixin:
             f"strategy={strategy}, demand_ratio={demand_ratio:.1f})"
         )
 
-    def is_exclusive(self, row_id: int) -> bool:
-        """Check if a virtual_inventory row is marked exclusive."""
-        row = self.state_conn.execute(
-            "SELECT exclusive FROM virtual_inventory WHERE id = ?", (row_id,)
-        ).fetchone()
-        return bool(row and row["exclusive"])
-
     def mark_exclusive(self, row_id: int) -> None:
         """Mark a virtual_inventory row as exclusive (keep-forever)."""
         with self.state_conn:
@@ -84,32 +77,6 @@ class _InventoryMixin:
                 "UPDATE virtual_inventory SET exclusive = 1 WHERE id = ?",
                 (row_id,),
             )
-
-    @with_db_retry(operation_name="update_demand_metrics")
-    def update_demand_metrics(
-        self, row_id: int, strategy: str, demand_ratio: float, obi_score: float, hold_days: float
-    ) -> None:
-        """Update demand strategy metrics for a virtual_inventory row.
-
-        v17.2: Stores OBI metrics for performance tracking.
-        """
-        with self.state_conn:
-            self.state_conn.execute(
-                "UPDATE virtual_inventory SET strategy = ?, demand_ratio = ?, "
-                "obi_score = ?, hold_days = ? WHERE id = ?",
-                (strategy, demand_ratio, obi_score, hold_days, row_id),
-            )
-
-    def get_non_exclusive_inventory(
-        self, status: str = "idle", only_unlocked: bool = False
-    ) -> list[sqlite3.Row]:
-        """Fetch virtual items that are NOT marked exclusive."""
-        query = "SELECT id, hash_name, buy_price, sell_price, fee_paid, profit, status, acquired_at, unlock_at, sold_at, dm_item_id, dm_offer_id, listed_at, list_error, funds_hold_until, rollback_refund FROM virtual_inventory WHERE status = ? AND (exclusive IS NULL OR exclusive = 0)"
-        params = [status]
-        if only_unlocked:
-            query += " AND unlock_at <= ?"
-            params.append(time.time())
-        return self.state_conn.execute(query, params).fetchall()
 
     def get_virtual_inventory(
         self, status: str = "idle", only_unlocked: bool = False
@@ -201,37 +168,6 @@ class _InventoryMixin:
         if sanitized != tag:
             logger.warning(f"Sanitized backup tag '{tag}' → '{sanitized}'")
         return sanitized[:128]
-
-    def backup_state(self, tag: str = "snapshot") -> None:
-        """Creates a snapshot of the current trading state."""
-        import shutil
-
-        tag = self._sanitize_tag(tag)
-        dest = self.data_dir / f"state_{tag}.db"
-        self.state_conn.commit()
-        shutil.copy2(self.state_path, dest)
-        logger.info(f"💾 [DB] State snapshot saved: {dest.name}")
-
-    def restore_state(self, tag: str = "snapshot") -> None:
-        """Restores the trading state from a snapshot."""
-        import shutil
-        import sqlite3
-
-        tag = self._sanitize_tag(tag)
-        src = self.data_dir / f"state_{tag}.db"
-        if not src.exists():
-            logger.error(f"❌ [DB] Snapshot {tag} not found!")
-            return
-        self.state_conn.close()
-        shutil.copy2(src, self.state_path)
-        # Reconnect
-        self.state_conn = sqlite3.connect(str(self.state_path), check_same_thread=False)
-        self.state_conn.row_factory = sqlite3.Row
-        self.state_conn.execute("PRAGMA journal_mode=WAL")
-        self.state_conn.execute("PRAGMA busy_timeout=5000")
-        self.state_conn.execute("PRAGMA synchronous=NORMAL")
-        self.state_conn.execute("PRAGMA temp_store=MEMORY")
-        logger.info(f"🔄 [DB] State restored from: {src.name}")
 
     @with_db_retry(operation_name="update_virtual_status")
     def update_virtual_status(self, item_id: int, new_status: str) -> None:
@@ -354,22 +290,6 @@ class _InventoryMixin:
                ORDER BY sold_at DESC""",
             (since_ts,),
         ).fetchall()
-
-    def get_daily_realized_pnl(self, since_ts: float) -> float:
-        """Sum of profit on items sold since timestamp (for daily briefing)."""
-        row = self.state_conn.execute(
-            "SELECT COALESCE(SUM(profit), 0) as pnl "
-            "FROM virtual_inventory WHERE status = 'sold' AND sold_at > ?",
-            (since_ts,),
-        ).fetchone()
-        return float(row["pnl"] or 0.0)
-
-    def has_dm_item_id(self, row_id: int) -> bool:
-        """Check if a virtual_inventory row already has its dm_item_id linked."""
-        row = self.state_conn.execute(
-            "SELECT dm_item_id FROM virtual_inventory WHERE id = ?", (row_id,)
-        ).fetchone()
-        return bool(row and row["dm_item_id"])
 
     def get_virtual_inventory_locked_value(self) -> float:
         """v14.4: Total USD value of idle-but-trade-locked items."""

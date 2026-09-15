@@ -72,53 +72,12 @@ class _AssetStatusMixin:
             "updated_at": row["updated_at"],
         }
 
-    def get_active_assets(self) -> list[dict[str, Any]]:
-        """Return all assets with status='active' (tradable)."""
-        rows = self.state_conn.execute(
-            "SELECT item_id, title, status, finalization_time, created_at, updated_at FROM asset_status WHERE status = 'active' ORDER BY updated_at DESC"
-        ).fetchall()
-        return [dict(r) for r in rows]
-
-    def get_trade_protected_assets(self) -> list[dict[str, Any]]:
-        """Return all assets that are still in trade_protected status."""
-        rows = self.state_conn.execute(
-            "SELECT item_id, title, status, finalization_time, created_at, updated_at FROM asset_status WHERE status = 'trade_protected' "
-            "ORDER BY finalization_time ASC"
-        ).fetchall()
-        return [dict(r) for r in rows]
-
-    def get_reverted_assets(self) -> list[dict[str, Any]]:
-        """Return all assets that have been reverted (DMarket rolled back the transaction)."""
-        rows = self.state_conn.execute(
-            "SELECT item_id, title, status, finalization_time, created_at, updated_at FROM asset_status WHERE status = 'reverted' ORDER BY updated_at DESC"
-        ).fetchall()
-        return [dict(r) for r in rows]
-
     def mark_reverted(self, item_id: str) -> None:
         """Convenience: mark an asset as reverted."""
         existing = self.get_asset_status(item_id)
         title = existing["title"] if existing else ""
         self.update_asset_status(item_id, title, "reverted", finalization_time=0.0)
         logger.warning(f"[DB] Asset {item_id} ({title}) marked as REVERTED")
-
-    def is_trade_locked(self, item_id: str) -> bool:
-        """
-        Returns True if the asset is currently trade_protected (locked).
-        An asset is locked if:
-        - status='trade_protected' AND finalization_time > now (still locked)
-        - status='reverted' (always)
-        """
-        asset = self.get_asset_status(item_id)
-        if not asset:
-            return False
-        if asset["status"] == "reverted":
-            return True
-        if asset["status"] == "trade_protected":
-            fin = asset["finalization_time"]
-            if fin <= 0:
-                return True  # No end time, assume locked
-            return fin > time.time()
-        return False
 
     def is_known_item(self, item_id: str) -> bool:
         """Returns True if we've ever tracked this item_id."""

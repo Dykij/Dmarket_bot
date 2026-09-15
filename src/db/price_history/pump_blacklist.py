@@ -97,19 +97,3 @@ class _PumpBlacklistMixin:
                 (now,),
             )
         return cur.rowcount
-
-    def count_active_pump_blacklist(self) -> int:
-        """Cheap count of active entries (used by health endpoint)."""
-        now = time.time()
-        row = self.state_conn.execute(
-            "SELECT COUNT(*) as n FROM pump_blacklist WHERE expires_at > ?",
-            (now,),
-        ).fetchone()
-        return int(row["n"] or 0)
-
-    def get_pump_blacklist_total_detections(self) -> int:
-        """Count of all detections ever (including expired). For /status."""
-        row = self.state_conn.execute(
-            "SELECT COUNT(*) as n FROM pump_blacklist"
-        ).fetchone()
-        return int(row["n"] or 0)

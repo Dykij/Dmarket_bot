@@ -25,67 +25,6 @@ class _HistoryMixin:
     # These attributes are set on the instance by PriceHistoryDB.__init__
     history_conn: Any
 
-    # ------------------------------------------------------------------
-    # Write (HISTORY)
-    # ------------------------------------------------------------------
-    @with_db_retry(operation_name="record_price")
-    def record_price(self, hash_name: str, price: float, source: str = "dmarket") -> None:
-        """Insert a new price observation into the history DB."""
-        with self.history_conn:
-            self.history_conn.execute(
-                "INSERT INTO price_history (hash_name, price, source, recorded_at) "
-                "VALUES (?, ?, ?, ?)",
-                (hash_name, price, source, time.time()),
-            )
-
-    @with_db_retry(operation_name="record_prices_batch")
-    def record_prices_batch(self, prices: list[tuple[str, float, str]]) -> int:
-        """P2-5: Bulk-insert price observations using executemany.
-        
-        Args:
-            prices: list of (hash_name, price, source) tuples
-            
-        Returns:
-            Number of rows inserted.
-        """
-        now = time.time()
-        rows = [(h, p, s, now) for h, p, s in prices if p > 0]
-        if not rows:
-            return 0
-        with self.history_conn:
-            self.history_conn.executemany(
-                "INSERT INTO price_history (hash_name, price, source, recorded_at) "
-                "VALUES (?, ?, ?, ?)",
-                rows,
-            )
-        return len(rows)
-
-    # ------------------------------------------------------------------
-    # Read (HISTORY)
-    # ------------------------------------------------------------------
-    def get_latest_price(
-        self, hash_name: str, max_age_seconds: int = 10800
-    ) -> float | None:
-        cutoff = time.time() - max_age_seconds
-        row = self.history_conn.execute(
-            "SELECT price FROM price_history WHERE hash_name = ? AND recorded_at > ? "
-            "ORDER BY recorded_at DESC LIMIT 1",
-            (hash_name, cutoff),
-        ).fetchone()
-        return row["price"] if row else None
-
-    def get_latest_price_timestamp(
-        self, hash_name: str, max_age_seconds: int = 10800
-    ) -> float | None:
-        """v12.7: Get timestamp of most recent price for staleness check (P4-3)."""
-        cutoff = time.time() - max_age_seconds
-        row = self.history_conn.execute(
-            "SELECT recorded_at FROM price_history WHERE hash_name = ? AND recorded_at > ? "
-            "ORDER BY recorded_at DESC LIMIT 1",
-            (hash_name, cutoff),
-        ).fetchone()
-        return row["recorded_at"] if row else None
-
     def get_recent_prices(self, hash_name: str, days: int = 7) -> list[tuple[float, float]]:
         cutoff = time.time() - (days * 86400)
         rows = self.history_conn.execute(
@@ -173,13 +112,6 @@ class _HistoryMixin:
             )
 
         return metrics
-
-    def passes_liquidity_filter(self, hash_name: str) -> bool:
-        """
-        Returns True if asset passes all liquidity thresholds from Config.
-        """
-        metrics = self.get_liquidity_metrics(hash_name)
-        return metrics["is_liquid"]
 
     def get_avg_price(self, hash_name: str, days: int = 7) -> float | None:
         cutoff = time.time() - (days * 86400)

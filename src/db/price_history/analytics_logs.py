@@ -81,24 +81,6 @@ class _AnalyticsLogsMixin:
             )
             return int(cur.lastrowid)
 
-    def get_equity_snapshot_today(self) -> dict | None:
-        """Get today's equity snapshot (or None)."""
-        today = time.strftime("%Y-%m-%d", time.gmtime())
-        row = self.state_conn.execute(
-            "SELECT id, snapshot_date, cash, assets, total, realized_pnl, note, taken_at FROM equity_snapshots WHERE snapshot_date = ? ORDER BY id DESC LIMIT 1",
-            (today,),
-        ).fetchone()
-        if not row:
-            return None
-        return {
-            "cash": row["cash"],
-            "assets": row["assets"],
-            "total": row["total"],
-            "realized_pnl": row["realized_pnl"],
-            "note": row["note"] or "",
-            "taken_at": row["taken_at"],
-        }
-
     def get_equity_snapshots(self, days: int = 30) -> list[dict]:
         """Get last N days of equity snapshots (oldest first)."""
         cutoff = time.time() - days * 86400

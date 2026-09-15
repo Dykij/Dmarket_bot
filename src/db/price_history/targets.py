@@ -43,19 +43,3 @@ class _TargetsMixin:
             (item_id, cutoff),
         ).fetchone()
         return row is not None
-
-    @with_db_retry(operation_name="cleanup_old_targets")
-    def cleanup_old_targets(self, max_age_seconds: int = 7776000) -> int:
-        """
-        Remove active_targets entries older than max_age_seconds (default 90 days).
-        Keeps the DB clean of stale records.
-        """
-        cutoff = time.time() - max_age_seconds
-        with self.state_conn:
-            cur = self.state_conn.execute(
-                "DELETE FROM active_targets WHERE created_at < ?", (cutoff,)
-            )
-            deleted = cur.rowcount
-            if deleted:
-                logger.info(f"[DB] Cleaned up {deleted} stale active_targets entries")
-            return deleted

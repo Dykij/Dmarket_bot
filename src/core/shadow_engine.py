@@ -27,6 +27,7 @@ import logging
 import os
 import random
 import sqlite3
+from src.db.sqlite_helpers import apply_sqlite_pragmas
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -113,8 +114,7 @@ class ShadowEngine:
         SHADOW_DB.parent.mkdir(parents=True, exist_ok=True)
         self._conn = sqlite3.connect(str(SHADOW_DB), check_same_thread=False)
         self._conn.row_factory = sqlite3.Row
-        self._conn.execute("PRAGMA journal_mode=WAL")
-        self._conn.execute("PRAGMA busy_timeout=5000")
+        apply_sqlite_pragmas(self._conn)
         with self._conn:
             self._conn.execute("""
                 CREATE TABLE IF NOT EXISTS shadow_inventory (
