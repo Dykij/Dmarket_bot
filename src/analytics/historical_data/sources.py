@@ -90,7 +90,7 @@ async def collect_from_sales_history(
                     )
                 )
 
-    except (aiohttp.ClientError, json.JSONDecodeError) as e:
+    except (aiohttp.ClientError, json.JSONDecodeError, ValueError, TypeError, AttributeError) as e:
         logger.debug(
             "sales_history_fetch_error",
             extra={"error": str(e)},
@@ -140,7 +140,7 @@ async def collect_from_aggregated(
                             )
                         )
 
-    except (aiohttp.ClientError, json.JSONDecodeError) as e:
+    except (aiohttp.ClientError, json.JSONDecodeError, ValueError, TypeError, AttributeError) as e:
         logger.debug(
             "aggregated_prices_fetch_error",
             extra={"error": str(e)},
