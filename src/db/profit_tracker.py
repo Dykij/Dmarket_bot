@@ -98,15 +98,6 @@ class ProfitTrackerDB:
 
         logger.info(f"✅ Trade Recorded [{item_name}]: PnL = ${net_profit:.2f}")
 
-    def get_today_pnl(self):
-        """Get today's total profit."""
-        today = datetime.now().date().isoformat()
-        cursor = self.conn.execute('SELECT total_profit, trades_count FROM daily_pnl WHERE date = ?', (today,))
-        row = cursor.fetchone()
-        if row:
-            return {"profit": row["total_profit"], "trades": row["trades_count"]}
-        return {"profit": 0.0, "trades": 0}
-
     @with_db_retry(operation_name="profit_tracker.record_buy")
     def record_buy(self, item_name: str, buy_price: float, offer_id: str = "") -> int:
         """Record a buy event. Returns the open_positions row id."""
@@ -147,7 +138,7 @@ class ProfitTrackerDB:
         try:
             buy_dt = datetime.fromisoformat(buy_date)
             hold_days = (datetime.now() - buy_dt).total_seconds() / 86400
-        except Exception:
+        except (ValueError, TypeError):
             hold_days = 0.0
 
         with self.conn:
@@ -191,20 +182,6 @@ class ProfitTrackerDB:
             WHERE item_name = ? AND trade_date >= datetime(?, '-' || ? || ' days')
             ORDER BY trade_date DESC
         ''', (item_name, cutoff, days)).fetchall()
-        return [dict(r) for r in rows]
-
-    def get_open_positions(self, item_name: str = None) -> list[dict]:
-        """Get all open (unsold) positions, optionally filtered by title."""
-        if item_name:
-            rows = self.conn.execute('''
-                SELECT id, item_name, buy_price, buy_date FROM open_positions
-                WHERE item_name = ? AND sold = 0 ORDER BY buy_date DESC
-            ''', (item_name,)).fetchall()
-        else:
-            rows = self.conn.execute('''
-                SELECT id, item_name, buy_price, buy_date FROM open_positions
-                WHERE sold = 0 ORDER BY buy_date DESC
-            ''').fetchall()
         return [dict(r) for r in rows]
 
     def close(self):
