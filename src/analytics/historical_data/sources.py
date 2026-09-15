@@ -12,6 +12,8 @@ testable in isolation.
 """
 
 from __future__ import annotations
+import json
+import aiohttp
 
 import logging
 from datetime import UTC, datetime
@@ -88,7 +90,7 @@ async def collect_from_sales_history(
                     )
                 )
 
-    except Exception as e:
+    except (aiohttp.ClientError, json.JSONDecodeError) as e:
         logger.debug(
             "sales_history_fetch_error",
             extra={"error": str(e)},
@@ -138,7 +140,7 @@ async def collect_from_aggregated(
                             )
                         )
 
-    except Exception as e:
+    except (aiohttp.ClientError, json.JSONDecodeError) as e:
         logger.debug(
             "aggregated_prices_fetch_error",
             extra={"error": str(e)},

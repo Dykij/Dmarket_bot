@@ -236,3 +236,17 @@ DMarket API v1→v2 касалась других путей: user-offers/create
 - Писатель таблицы: **один** (`src/db/price_history/history.py`, метод `save_price`).
 - Читателей: 40+ файлов через `price_db`, из них реальных SELECT к `price_history` — только `history.py`.
 - Вывод: рекомендация **(б)** — отложить добавление bid/ask в схему БД. Аргументы в SESSION_LOG ниже.
+
+## 2026-09-15 — Analytics Audit & DB Investigation
+
+**Part A: Fixes**
+- `is_undervalued` and other dead code (`event_calendar`, `collector`, `stickers_evaluator`, `walk_forward`) were confirmed **already removed** in previous commits (`89a8078`, `8784772`).
+- Narrowed `except Exception` blocks in `historical_data/sources.py` using `libcst`. (Rule H17/H18 defense: verified other cases were already fixed).
+- Full regression tests passed.
+
+**Part B: DB Schema Investigation (No changes made)**
+- `price_history` is written by `history.py`, read by `history.py` and `self_reflection.py`.
+- It currently holds ~1.85M rows (from June to Sept 2026).
+- **Concrete utility gap**: `self_reflection.py` uses `price_history` to calculate daily volatility to adjust the `MIN_SPREAD_PCT` parameter. By using a single flat `price` column (which mixes best_ask or just execution prices), it measures the volatility of the *offer side* rather than the true spread liquidity. This could mislead the adaptive spread logic if best_bids drop while asks remain stable.
+- **Recommendation**: The benefit is moderate but the migration volume (1.85M rows, 2 indexes) is high for the live database. It should be planned as a separate migration project with a shadow schema, not done in-place during standard tasks.
+
