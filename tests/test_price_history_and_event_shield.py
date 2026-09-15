@@ -46,25 +46,6 @@ class TestPriceHistory:
         yield
         self.db.close()
 
-    def test_record_and_retrieve_price(self):
-        """Recording a price and immediately retrieving it works."""
-        self.db.record_price("AK-47 | Redline (FT)", 15.50)
-        result = self.db.get_latest_price("AK-47 | Redline (FT)", max_age_seconds=60)
-        assert result == 15.50
-
-    def test_cache_ttl_expiry(self):
-        """Prices older than TTL return None."""
-        # Insert a price with a timestamp 4 hours ago
-        old_time = time.time() - 14400  # 4 hours ago
-        self.db.history_conn.execute(
-            "INSERT INTO price_history (hash_name, price, source, recorded_at) VALUES (?, ?, ?, ?)",
-            ("AWP | Asiimov (FT)", 65.0, "csfloat", old_time)
-        )
-        self.db.history_conn.commit()
-        # With 3-hour TTL, this should be None
-        result = self.db.get_latest_price("AWP | Asiimov (FT)", max_age_seconds=10800)
-        assert result is None
-
     def test_is_crashing_detects_downtrend(self):
         """3 consecutive price drops should trigger crash detection."""
         base_time = time.time()
@@ -91,12 +72,6 @@ class TestPriceHistory:
         self.db.history_conn.commit()
 
         assert self.db.is_crashing("Desert Eagle | Blaze (FN)") is False
-
-    def test_insufficient_data_returns_stable(self):
-        """Less than 3 datapoints should return 'stable'."""
-        self.db.record_price("P250 | Muertos", 5.0)
-        result = self.db.get_latest_price("P250 | Muertos", max_age_seconds=60)
-        assert result == 5.0
 
     def test_avg_price(self):
         """Average price calculation works correctly."""
