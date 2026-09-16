@@ -1,122 +1,136 @@
 {
-  "validate-skills-frontmatter": {
-    "SessionStart": [
-      {
-        "type": "command",
-        "command": "bash scripts/validate_skills_frontmatter.sh",
-        "timeout": 5
-      }
-    ]
-  },
-  "verdict-gate": {
-    "PreInvocation": [
-      {
-        "type": "command",
-        "command": "bash scripts/verdict_gate.sh",
-        "timeout": 10
-      }
-    ]
-  },
-  "raw-output-logger": {
-    "PostToolUse": [
-      {
-        "matcher": "run_command",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash scripts/raw_output_logger.sh",
-            "timeout": 10
-          }
+    "validate-skills-frontmatter": {
+        "SessionStart": [
+            {
+                "type": "command",
+                "command": "bash scripts/validate_skills_frontmatter.sh",
+                "timeout": 5
+            }
         ]
-      }
-    ]
-  },
-  "pre-danger-gate": {
-    "PreToolUse": [
-      {
-        "matcher": "run_command",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash scripts/pre_danger_gate.sh",
-            "timeout": 10
-          }
+    },
+    "verdict-gate": {
+        "PreInvocation": [
+            {
+                "type": "command",
+                "command": "bash scripts/verdict_gate.sh",
+                "timeout": 10
+            }
         ]
-      }
-    ]
-  },
-  "implementation-plan-guard": {
-    "PreToolUse": [
-      {
-        "matcher": "write_to_file|replace_file_content",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash scripts/implementation_plan_guard.sh",
-            "timeout": 5
-          }
+    },
+    "raw-output-logger": {
+        "PostToolUse": [
+            {
+                "matcher": "run_command",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "bash scripts/raw_output_logger.sh",
+                        "timeout": 10
+                    }
+                ]
+            }
         ]
-      }
-    ]
-  },
-  "task-md-guard": {
-    "PreToolUse": [
-      {
-        "matcher": "write_to_file|replace_file_content",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash pre_tool_use.sh",
-            "timeout": 5
-          }
+    },
+    "pre-danger-gate": {
+        "PreToolUse": [
+            {
+                "matcher": "run_command",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "bash scripts/pre_danger_gate.sh",
+                        "timeout": 10
+                    }
+                ]
+            }
         ]
-      }
-    ]
-  },
-  "stop-gate": {
-    "Stop": [
-      {
-        "type": "command",
-        "command": "bash scripts/stop_gate.sh",
-        "timeout": 15
-      }
-    ]
-  },
-  "pre-bypass-gate": {
-    "PreToolUse": [
-      {
-        "matcher": "run_command",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash scripts/pre_bypass_gate.sh",
-            "timeout": 5
-          }
+    },
+    "implementation-plan-guard": {
+        "PreToolUse": [
+            {
+                "matcher": "write_to_file|replace_file_content",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "bash scripts/implementation_plan_guard.sh",
+                        "timeout": 5
+                    }
+                ]
+            }
         ]
-      }
-    ]
-  },
-  "difftastic-gate": {
-    "PostToolUse": [
-      {
-        "matcher": "write_to_file|replace_file_content",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash scripts/difftastic_gate.sh",
-            "timeout": 15
-          }
+    },
+    "task-md-guard": {
+        "PreToolUse": [
+            {
+                "matcher": "write_to_file|replace_file_content",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "bash pre_tool_use.sh",
+                        "timeout": 5
+                    }
+                ]
+            }
         ]
-      }
-    ]
-  },
-  "session-init": {
-    "PreInvocation": [
-      {
-        "type": "command",
-        "command": "bash scripts/session_init.sh",
-        "timeout": 5
-      }
-    ]
-  }
+    },
+    "stop-gate": {
+        "Stop": [
+            {
+                "type": "command",
+                "command": "bash scripts/stop_gate.sh",
+                "timeout": 15
+            }
+        ]
+    },
+    "pre-bypass-gate": {
+        "PreToolUse": [
+            {
+                "matcher": "run_command",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "bash scripts/pre_bypass_gate.sh",
+                        "timeout": 5
+                    }
+                ]
+            }
+        ]
+    },
+    "difftastic-gate": {
+        "PostToolUse": [
+            {
+                "matcher": "write_to_file|replace_file_content",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "bash scripts/difftastic_gate.sh",
+                        "timeout": 15
+                    }
+                ]
+            }
+        ]
+    },
+    "session-init": {
+        "PreInvocation": [
+            {
+                "type": "command",
+                "command": "bash scripts/session_init.sh",
+                "timeout": 5
+            }
+        ]
+    },
+    "checkpoint-guard": {
+        "PreToolUse": [
+            {
+                "matcher": "write_to_file|replace_file_content|run_command",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "bash scripts/checkpoint_guard.sh",
+                        "timeout": 5
+                    }
+                ]
+            }
+        ]
+    }
 }
