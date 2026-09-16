@@ -21,18 +21,6 @@ class MenuCallback(CallbackData, prefix="menu"):
     action: str
 
 
-class SettingsCallback(CallbackData, prefix="settings"):
-    """Settings menu callbacks.
-
-    Usage:
-        cb = SettingsCallback(action="set", key="min_spread", value="5")
-        cb.pack()  # "settings:set:min_spread:5"
-    """
-    action: str
-    key: str = ""
-    value: str = ""
-
-
 class ConfirmCallback(CallbackData, prefix="confirm"):
     """Confirmation dialog callbacks.
 
@@ -42,14 +30,3 @@ class ConfirmCallback(CallbackData, prefix="confirm"):
     """
     action: str  # "yes" or "no"
     context: str = ""  # what we're confirming
-
-
-class ItemCallback(CallbackData, prefix="item"):
-    """Item-specific callbacks (for future inventory management).
-
-    Usage:
-        cb = ItemCallback(action="sell", item_id="abc123")
-        cb.pack()  # "item:sell:abc123"
-    """
-    action: str
-    item_id: str = ""

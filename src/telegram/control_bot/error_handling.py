@@ -224,48 +224,6 @@ class ErrorHandler:
                 logger.error("Failed to notify admin about critical error")
 
 
-def safe_call_v2(
-    func: Callable[..., Awaitable[Any]],
-) -> Callable[..., Awaitable[Any]]:
-    """Enhanced decorator with error categorization and structured handling.
-
-    Improvements over basic safe_call:
-    1. Error categorization (API, DB, Auth, Network, etc.)
-    2. User-friendly messages based on error type
-    3. Structured logging with context
-    4. Automatic admin notification for critical errors
-
-    Usage:
-        @safe_call_v2
-        async def my_handler(message: types.Message):
-            ...
-    """
-
-    @functools.wraps(func)
-    async def wrapper(*args, **kwargs):
-        try:
-            return await func(*args, **kwargs)
-        except UserFriendlyError as e:
-            # UserFriendlyError already has a safe message
-            await ErrorHandler.handle_error(
-                error=e,
-                handler_name=func.__name__,
-                message=_extract_message(args),
-                callback=_extract_callback(args),
-                context=e.context,
-            )
-        except Exception as e:
-            # Unknown error — categorize and handle
-            await ErrorHandler.handle_error(
-                error=e,
-                handler_name=func.__name__,
-                message=_extract_message(args),
-                callback=_extract_callback(args),
-            )
-
-    return wrapper
-
-
 def _extract_message(args: tuple) -> types.Message | None:
     """Extract Message object from handler arguments."""
     for a in args:

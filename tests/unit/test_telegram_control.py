@@ -105,25 +105,6 @@ class TestControlBotCommands:
 
 
 # ═══════════════════════════════════════════════════════════════════
-# Settings FSM Tests
-# ═══════════════════════════════════════════════════════════════════
-
-class TestSettingsFSM:
-    """Tests for settings state machine."""
-
-    def test_fsm_states_defined(self):
-        """Test that FSM states are defined."""
-        from src.telegram.control_bot import settings_fsm
-        assert settings_fsm is not None
-
-    def test_fsm_module_importable(self):
-        """Test FSM module is importable."""
-        import importlib
-        mod = importlib.import_module("src.telegram.control_bot.settings_fsm")
-        assert mod is not None
-
-
-# ═══════════════════════════════════════════════════════════════════
 # Keyboards Tests
 # ═══════════════════════════════════════════════════════════════════
 
