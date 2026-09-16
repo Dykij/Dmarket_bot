@@ -156,28 +156,24 @@ async def cmd_daily(message):
 @safe_call
 async def cmd_analyze(message):
     logger.info("cmd_analyze by user %s", message.from_user.id)
-    try:
-        from src.analytics.self_reflection import self_reflection
-        report = await self_reflection.analyze_recent_trades()
-        if report:
-            text = (
-                f"🧠 *Strategy Analysis*\n\n"
-                f"Sharpe: {getattr(report, 'sharpe_ratio', 0):.2f}\n"
-                f"Sortino: {getattr(report, 'sortino_ratio', 0):.2f}\n"
-                f"Max Drawdown: {getattr(report, 'max_drawdown_pct', 0):.1f}%\n"
-                f"Win Rate: {getattr(report, 'win_rate', 0):.1f}%\n"
-                f"Total Trades: {getattr(report, 'total_trades', 0)}\n"
-                f"Avg Profit/Trade: {getattr(report, 'avg_profit', 0):+.2f}\n\n"
-                f"Recommendations:\n{getattr(report, 'recommendations', 'None')}\n\n"
-                f"_Minimum 10 trades for adjustments._"
-            )
-        else:
-            text = "🧠 *Strategy Analysis* — Not enough trade data yet.\nMinimum 10 trades required."
-        await message.answer(text, reply_markup=get_inline_analyze_kb())
-        logger.debug("cmd_analyze ok — report=%s", bool(report))
-    except Exception as e:
-        logger.exception("cmd_analyze failed: %s", e)
-        await message.answer("❌ Analysis failed. Check logs.")
+    from src.analytics.self_reflection import self_reflection
+    report = await self_reflection.analyze_recent_trades()
+    if report:
+        text = (
+            f"🧠 *Strategy Analysis*\n\n"
+            f"Sharpe: {getattr(report, 'sharpe_ratio', 0):.2f}\n"
+            f"Sortino: {getattr(report, 'sortino_ratio', 0):.2f}\n"
+            f"Max Drawdown: {getattr(report, 'max_drawdown_pct', 0):.1f}%\n"
+            f"Win Rate: {getattr(report, 'win_rate', 0):.1f}%\n"
+            f"Total Trades: {getattr(report, 'total_trades', 0)}\n"
+            f"Avg Profit/Trade: {getattr(report, 'avg_profit', 0):+.2f}\n\n"
+            f"Recommendations:\n{getattr(report, 'recommendations', 'None')}\n\n"
+            f"_Minimum 10 trades for adjustments._"
+        )
+    else:
+        text = "🧠 *Strategy Analysis* — Not enough trade data yet.\nMinimum 10 trades required."
+    await message.answer(text, reply_markup=get_inline_analyze_kb())
+    logger.debug("cmd_analyze ok — report=%s", bool(report))
 
 
 # ============================================================
@@ -203,22 +199,17 @@ async def cmd_sell_top(message):
                 "The bot will auto-sell when recovery threshold is reached."
             )
             return
-
-    try:
-        from src.core.resale_pipeline import ResalePipeline
-        async with dmarket_client() as client:
-            pipeline = ResalePipeline(client)
-            result = await pipeline.sell_inventory_items(max_items=5)
-            listed_count = len(result) if isinstance(result, list) else (result if isinstance(result, int) else 0)
-            if listed_count > 0:
-                text = f"🔍 *Sell Complete*\n\nListed {listed_count} item(s) for sale."
-            else:
-                text = "🔍 *Sell* — No idle items to list or all are trade-locked."
-            await message.answer(text)
-            logger.info("cmd_sell_top ok — listed=%s items", result)
-    except Exception as e:
-        logger.exception("cmd_sell_top failed: %s", e)
-        await message.answer("❌ Sell failed. Check logs.")
+    from src.core.resale_pipeline import ResalePipeline
+    async with dmarket_client() as client:
+        pipeline = ResalePipeline(client)
+        result = await pipeline.sell_inventory_items(max_items=5)
+        listed_count = len(result) if isinstance(result, list) else (result if isinstance(result, int) else 0)
+        if listed_count > 0:
+            text = f"🔍 *Sell Complete*\n\nListed {listed_count} item(s) for sale."
+        else:
+            text = "🔍 *Sell* — No idle items to list or all are trade-locked."
+        await message.answer(text)
+        logger.info("cmd_sell_top ok — listed=%s items", result)
 
 
 # ============================================================
@@ -229,21 +220,17 @@ async def cmd_sell_top(message):
 @safe_call
 async def cmd_prices(message):
     logger.info("cmd_prices by user %s", message.from_user.id)
-    try:
-        idle = price_db.get_virtual_inventory(status="idle", only_unlocked=False)
-        if not idle:
-            await message.answer("📊 *Inventory* — No items in inventory.")
-            return
-        text = "📊 *Held Items*\n\n"
-        for it in list(idle)[:10]:
-            title = it["hash_name"]
-            buy_price = it.get("buy_price", 0)
-            text += f"`{title[:30]}`\n  Buy: ${buy_price:.2f}\n"
-        await message.answer(text)
-        logger.debug("cmd_prices ok — listed %d items", len(idle[:10]))
-    except Exception as e:
-        logger.exception("cmd_prices failed: %s", e)
-        await message.answer("❌ Price check failed. Check logs.")
+    idle = price_db.get_virtual_inventory(status="idle", only_unlocked=False)
+    if not idle:
+        await message.answer("📊 *Inventory* — No items in inventory.")
+        return
+    text = "📊 *Held Items*\n\n"
+    for it in list(idle)[:10]:
+        title = it["hash_name"]
+        buy_price = it.get("buy_price", 0)
+        text += f"`{title[:30]}`\n  Buy: ${buy_price:.2f}\n"
+    await message.answer(text)
+    logger.debug("cmd_prices ok — listed %d items", len(idle[:10]))
 
 
 # ============================================================
@@ -254,20 +241,16 @@ async def cmd_prices(message):
 @safe_call
 async def cmd_chart(message):
     """Send equity curve chart."""
-    try:
-        from src.utils.charts import generate_equity_chart
-        buf = generate_equity_chart(days=30)
-        if buf is None:
-            await message.answer("📈 Not enough data for equity chart yet. Build some trade history first.")
-            return
-        from aiogram.types import BufferedInputFile
-        await message.answer_photo(
-            BufferedInputFile(buf.read(), "equity_chart.png"),
-            caption="📈 *Equity Curve* (30 days)",
-        )
-    except Exception as e:
-        logger.exception("cmd_chart failed: %s", e)
-        await message.answer("❌ Chart generation failed. Check matplotlib availability.")
+    from src.utils.charts import generate_equity_chart
+    buf = generate_equity_chart(days=30)
+    if buf is None:
+        await message.answer("📈 Not enough data for equity chart yet. Build some trade history first.")
+        return
+    from aiogram.types import BufferedInputFile
+    await message.answer_photo(
+        BufferedInputFile(buf.read(), "equity_chart.png"),
+        caption="📈 *Equity Curve* (30 days)",
+    )
 
 
 @router.message(Command("pnl"))
@@ -275,20 +258,16 @@ async def cmd_chart(message):
 @safe_call
 async def cmd_pnl_chart(message):
     """Send daily P&L chart."""
-    try:
-        from src.utils.charts import generate_pnl_chart
-        buf = generate_pnl_chart(days=30)
-        if buf is None:
-            await message.answer("📊 Not enough P&L history yet.")
-            return
-        from aiogram.types import BufferedInputFile
-        await message.answer_photo(
-            BufferedInputFile(buf.read(), "pnl_chart.png"),
-            caption="📊 *Daily P&L* (30 days)",
-        )
-    except Exception as e:
-        logger.exception("cmd_pnl_chart failed: %s", e)
-        await message.answer("❌ Chart generation failed.")
+    from src.utils.charts import generate_pnl_chart
+    buf = generate_pnl_chart(days=30)
+    if buf is None:
+        await message.answer("📊 Not enough P&L history yet.")
+        return
+    from aiogram.types import BufferedInputFile
+    await message.answer_photo(
+        BufferedInputFile(buf.read(), "pnl_chart.png"),
+        caption="📊 *Daily P&L* (30 days)",
+    )
 
 
 # ============================================================
@@ -298,29 +277,25 @@ async def cmd_pnl_chart(message):
 @safe_call
 async def cmd_shadow(message):
     """Show live shadow trading status + real-vs-shadow comparison."""
-    try:
-        from src.core.live_shadow import live_shadow
+    from src.core.live_shadow import live_shadow
 
-        if not live_shadow.enabled:
-            await message.answer("🕶️ *Shadow mode is disabled.* Set `LIVE_SHADOW_ENABLED=true` in `.env`")
-            return
+    if not live_shadow.enabled:
+        await message.answer("🕶️ *Shadow mode is disabled.* Set `LIVE_SHADOW_ENABLED=true` in `.env`")
+        return
 
-        status = live_shadow.get_status()
-        text = (
-            f"🕶️ *Live Shadow Trading*\n\n"
-            f"Cycles: {status['cycles']} | Balance: ${status['balance']:.2f}\n"
-            f"Total Equity: ${status['total_equity']:.2f}\n"
-            f"Shadow P&L: ${status['total_pnl']:+.2f} "
-            f"(ROI {status['roi_pct']:+.1f}%)\n"
-            f"Drawdown: {status['drawdown_pct']:.1f}%\n"
-            f"Trades: {status['total_trades']} | WR: {status['win_rate']:.0f}%\n"
-            f"Avg Profit: ${status['avg_profit']:.2f} | "
-            f"Avg Loss: ${status['avg_loss']:.2f}\n\n"
-            f"📦 Positions: idle={status['positions']['idle']} | "
-            f"selling={status['positions']['selling']} | "
-            f"sold={status['positions']['sold']}"
-        )
-        await message.answer(text)
-    except Exception as e:
-        logger.exception("cmd_shadow failed: %s", e)
-        await message.answer("❌ Shadow status unavailable.")
+    status = live_shadow.get_status()
+    text = (
+        f"🕶️ *Live Shadow Trading*\n\n"
+        f"Cycles: {status['cycles']} | Balance: ${status['balance']:.2f}\n"
+        f"Total Equity: ${status['total_equity']:.2f}\n"
+        f"Shadow P&L: ${status['total_pnl']:+.2f} "
+        f"(ROI {status['roi_pct']:+.1f}%)\n"
+        f"Drawdown: {status['drawdown_pct']:.1f}%\n"
+        f"Trades: {status['total_trades']} | WR: {status['win_rate']:.0f}%\n"
+        f"Avg Profit: ${status['avg_profit']:.2f} | "
+        f"Avg Loss: ${status['avg_loss']:.2f}\n\n"
+        f"📦 Positions: idle={status['positions']['idle']} | "
+        f"selling={status['positions']['selling']} | "
+        f"sold={status['positions']['sold']}"
+    )
+    await message.answer(text)
