@@ -22,6 +22,23 @@ from typing import TYPE_CHECKING
 
 from .models import PricePoint
 
+from pydantic import BaseModel, Field, ValidationError
+from typing import Optional
+
+class PriceAmount(BaseModel):
+    Currency: str = "USD"
+    Amount: str
+
+class AggregatedPriceItem(BaseModel):
+    title: str
+    offerBestPrice: Optional[PriceAmount] = None
+    orderBestPrice: Optional[PriceAmount] = None
+
+class AggregatedPriceResponse(BaseModel):
+    aggregatedPrices: list[AggregatedPriceItem] = Field(default_factory=list)
+
+
+
 if TYPE_CHECKING:
     from src.interfaces import IDMarketAPI
 
@@ -123,22 +140,26 @@ async def collect_from_aggregated(
         )
 
         if aggregated and "aggregatedPrices" in aggregated:
-            for price_data in aggregated["aggregatedPrices"]:
-                if price_data.get("title") == title:
-                    offer_price = int(price_data.get("offerBestPrice", {}).get("Amount", 0))
-                    order_price = int(price_data.get("orderBestPrice", {}).get("Amount", 0))
-                    
-                    if offer_price > 0 or order_price > 0:
-                        points.append(
-                            PricePoint(
-                                game=game,
-                                title=title,
-                                timestamp=datetime.now(UTC),
-                                best_bid=Decimal(order_price) / 100 if order_price > 0 else None,
-                                best_ask=Decimal(offer_price) / 100 if offer_price > 0 else None,
-                                source="aggregated",
+            try:
+                response_model = AggregatedPriceResponse(**aggregated)
+                for price_data in response_model.aggregatedPrices:
+                    if price_data.title == title:
+                        offer_price = int(price_data.offerBestPrice.Amount) if price_data.offerBestPrice else 0
+                        order_price = int(price_data.orderBestPrice.Amount) if price_data.orderBestPrice else 0
+                        
+                        if offer_price > 0 or order_price > 0:
+                            points.append(
+                                PricePoint(
+                                    game=game,
+                                    title=title,
+                                    timestamp=datetime.now(UTC),
+                                    best_bid=Decimal(order_price) / 100 if order_price > 0 else None,
+                                    best_ask=Decimal(offer_price) / 100 if offer_price > 0 else None,
+                                    source="aggregated",
+                                )
                             )
-                        )
+            except ValidationError as ve:
+                logger.error("DMarket API Schema changed: %s", ve)
 
     except (aiohttp.ClientError, json.JSONDecodeError, ValueError, TypeError, AttributeError) as e:
         logger.debug(

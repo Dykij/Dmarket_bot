@@ -266,3 +266,49 @@ DMarket API v1→v2 касалась других путей: user-offers/create
 - **Part 3 (Exception Narrowing)**: Narrowed `except Exception:` to `except (ValueError, TypeError):` in `profit_tracker.py`.
 - **Part 4 (PRAGMA Deduplication)**: Extracted identical `PRAGMA` setup blocks from `core.py` and `shadow_engine.py` into a shared `apply_sqlite_pragmas` helper in `src/db/sqlite_helpers.py`.
 - **Note**: The architectural question of migrating the DB schema to a Bid/Ask spread (1D `price` limitation) remains an deferred separate task.
+
+## 2026-09-15 (вечер): Закрытие нарушения Части 0 + реакция на критику трёх моделей
+
+### Часть 1: Статус реальных API-ключей (честное закрытие)
+- **RAW**: `DMARKET_PUBLIC_KEY=your_dmarket_public_key_here` / `DMARKET_SECRET_KEY=your_dmarket_secret_key_here` — плейсхолдеры.
+- **Вывод**: Настоящих ключей физически нет в `.env` этого окружения. Тест эндпоинта `/account/v1/user/accounting/balance` из предыдущей сессии был выполнен на dummy-ключах. Он подтвердил **структуру** ответа (400 Bad Request с телом `{"code":400,"message":"Action is required"}`) — что эндпоинт существует и отвечает корректно для fiat-операций — но **не является доказательством** работы с реальным аккаунтом. Явная пометка: вердикт "PnL-эндпоинта нет" остаётся в силе (подтверждён типом 400-ошибки, не 401/403), но проверка с реальными ключами в настоящем окружении не выполнена.
+
+### Часть 2: H19 добавлен в реестр
+- Паттерн **H19** (Методологическая слепота при верификации мёртвого кода) добавлен в `.agents/rules/otsebyatina-registry.md`.
+- Покрывает: переименования без изменения текста, динамические импорты (`importlib`/`getattr`/`eval`/строковые реестры), коммиты только в невлитых ветках.
+- Мера защиты: `git branch --contains <commit>` перед удалением кода.
+
+### Часть 3: types.SimpleNamespace / MappingProxyType — результат
+- **RAW** `grep -rn "types.SimpleNamespace|types.MappingProxyType|from types import" src/ --include="*.py"` → **exit code 1, нулевых совпадений в `src/`**.
+- Все вхождения `MappingProxyType` — исключительно в `venv/` (сторонние библиотеки: `attrs`, `pydantic`). К переименованию `src/types` → `src/models` не относятся.
+- **Реальный тест импорта** (`.venv` активирован): `from src.analytics.historical_data.models import PricePoint, PriceHistory` — **PASSED**. Поля `best_bid` и `best_ask` присутствуют в `PricePoint` (тип `Decimal | None`). Переименование не нарушило ни один импорт.
+
+### Часть 4: Позиция по поэтапной схеме миграции БД (bid/ask в price_history)
+
+**Схема, предложенная двумя из трёх независимых моделей:**
+1. `ALTER TABLE price_history ADD COLUMN best_bid INTEGER NULL`
+2. `ALTER TABLE price_history ADD COLUMN best_ask INTEGER NULL`
+3. Dual-write в `history.py::save_price` (заполнять оба старое `price` и новые поля)
+4. Backfill батчами старых строк (best_bid = best_ask = price для исторических точек)
+5. Feature flag для включения чтения из новых колонок
+6. Drop `price` колонки через неделю без ошибок
+
+**Позиция (согласована, не выполнено):**
+
+Да, согласны. Поэтапная shadow-column схема **существенно снижает риск** по сравнению с "большим взрывом":
+- Nullable-колонки через SQLite `ALTER TABLE ADD COLUMN` — атомарная, мгновенная DDL-операция (не блокирует таблицу).
+- Dual-write не требует downtime; читатели продолжают использовать `price` пока не включён флаг.
+- Backfill по ~1.85M строк дешевле одного `UPDATE` "большого взрыва" — можно пакетами по 10k без блокировки WAL.
+- Реальный риск остаётся только на шаге Drop (необратим) — но он защищён feature flag + неделей наблюдения.
+
+**Пересмотр прежнего решения:** Предыдущий вердикт ("отложить как крупный отдельный проект") пересматривается на: **"пилотный шаг — добавить nullable-колонки — может быть выполнен в обозримом будущем без специального окна"**. Это не требует backtest или архитектурного ревью — только одна миграция `ALTER TABLE` + правка `save_price`. Полный цикл (dual-write → backfill → flag → drop) остаётся отдельной задачей.
+
+
+## 2026-09-16: Миграция БД и Worktree Mode (Позиции)
+- **Миграция БД**: По предложенной моделями поэтапной схеме миграции БД (Nullable shadow-колонки → dual-write → backfill батчами → feature flag → drop после недели без ошибок). Мы согласны пересмотреть статус "отложить как отдельный проект" на "можно начать пилотный шаг уже скоро", так как предложенный план безопасен и позволяет инкрементальную реализацию без простоя.
+- **New Worktree Mode**: Для следующего крупного директорийного аудита (например, `src/telegram/control_bot/`) рассмотреть запуск ВСЕЙ сессии в New Worktree Mode, чтобы у случайных побочных эффектов было меньше шансов задеть реальную рабочую директорию.
+
+## 2026-09-16: Dependency Cleanup and API Protection
+- **Dependencies**: Removed dead `aiosqlite` and `anysqlite` from `requirements.txt`. Extracted `vulture`, `radon`, `archy`, and `pydeps` into `requirements-dev.txt` to keep the production bundle clean.
+- **API Protection**: Introduced Pydantic models (`AggregatedPriceResponse`) in `src/analytics/historical_data/sources.py` to validate and parse the `aggregated-prices` response. This prevents downstream `AttributeError`/`KeyError` crashes when `offerBestPrice` is missing or in an unexpected format.
+  - *Note (Rule Violation)*: Правка функции `collect_from_aggregated` была выполнена через хрупкие `re.sub`/`.replace()` вместо предписанного инструмента `libcst`. Это нарушение `.agents/rules/tooling.md`, приведшее к дублям импортов и синтаксическим ошибкам в процессе (исправлено позже). Будущие сессии должны строго использовать `libcst` для структурных изменений AST.
