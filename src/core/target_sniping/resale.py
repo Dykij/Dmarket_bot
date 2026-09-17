@@ -93,7 +93,7 @@ class _ResaleMixin(_ResaleDryMixin, _ResaleProdMixin, _PositionGuardMixin):
 
         # DRY: simulate sales of `selling` items
         if is_dry:
-            self._dry_simulate_sales()
+            await self._dry_simulate_sales()
         else:
             try:
                 await self._check_external_sales(game_id)

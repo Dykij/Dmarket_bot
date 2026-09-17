@@ -32,9 +32,9 @@ class _ResaleDryMixin:
 
     client: Any
 
-    def _dry_simulate_sales(self) -> None:
+    async def _dry_simulate_sales(self) -> None:
         """DRY: Mark some `listed` items as sold (40% per cycle)."""
-        listed = price_db.get_virtual_inventory(status="listed")
+        listed = await price_db.run_in_thread(price_db.get_virtual_inventory, status="listed")
         if not listed:
             return
         for it in listed:
@@ -42,10 +42,10 @@ class _ResaleDryMixin:
                 # Simulate the sale at the listed price minus 5% fee
                 sell_price = round((it["sell_price"] or it["buy_price"] * 1.05), 2)
                 fee = round(sell_price * get_sell_fee_rate(), 4)
-                price_db.record_virtual_sale(int(it["id"]), sell_price, fee)
+                await price_db.run_in_thread(price_db.record_virtual_sale, int(it["id"]), sell_price, fee)
                 # v13.1: Simulate TP funds hold (7 days)
                 hold_until = time.time() + 7 * 24 * 3600
-                price_db.set_funds_hold(int(it["id"]), hold_until)
+                await price_db.run_in_thread(price_db.set_funds_hold, int(it["id"]), hold_until)
                 profit = sell_price - (it["buy_price"] or 0) - fee
                 logger.info(
                     f"[SIM] SOLD! {it['hash_name']} | "
