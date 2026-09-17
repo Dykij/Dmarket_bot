@@ -14,6 +14,10 @@ elif [[ "$CMD" == *"rm "* && "$CMD" == *"*"* ]]; then
     TARGETS=$(echo "$CMD" | sed 's/.*rm \(-[a-zA-Z]* \)*//')
     NEW_CMD="ls -la $TARGETS"
     echo "{\"decision\": \"ask\", \"reason\": \"⚠ Mass deletion (rm with wildcard) is blocked (H19). Converted to ls -la.\", \"overwrite\": {\"CommandLine\": \"$NEW_CMD\"}}"
+elif [[ "$CMD" == *"cat "*".env"* || "$CMD" == *"grep "*".env"* || "$CMD" == *"less "*".env"* ]]; then
+    # Overwrite .env reads
+    NEW_CMD="echo '⚠ .env access blocked'"
+    echo "{\"decision\": \"ask\", \"reason\": \"⚠ Reading .env is dangerous. Converted to echo.\", \"overwrite\": {\"CommandLine\": \"$NEW_CMD\"}}"
 elif [[ "$CMD" == *"rm "* || "$CMD" == *"--force"* ]]; then
     echo '{"decision": "ask", "reason": "⚠ Destructive command detected. Requires explicit user approval."}'
 else

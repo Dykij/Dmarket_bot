@@ -48,7 +48,7 @@
     "implementation-plan-guard": {
         "PreToolUse": [
             {
-                "matcher": "write_to_file|replace_file_content",
+                "matcher": "write_to_file|replace_file_content|multi_replace_file_content",
                 "hooks": [
                     {
                         "type": "command",
@@ -62,7 +62,7 @@
     "task-md-guard": {
         "PreToolUse": [
             {
-                "matcher": "write_to_file|replace_file_content",
+                "matcher": "write_to_file|replace_file_content|multi_replace_file_content",
                 "hooks": [
                     {
                         "type": "command",
@@ -99,7 +99,7 @@
     "difftastic-gate": {
         "PostToolUse": [
             {
-                "matcher": "write_to_file|replace_file_content",
+                "matcher": "write_to_file|replace_file_content|multi_replace_file_content",
                 "hooks": [
                     {
                         "type": "command",
@@ -122,7 +122,7 @@
     "checkpoint-guard": {
         "PreToolUse": [
             {
-                "matcher": "write_to_file|replace_file_content|run_command",
+                "matcher": "write_to_file|replace_file_content|multi_replace_file_content|run_command",
                 "hooks": [
                     {
                         "type": "command",
