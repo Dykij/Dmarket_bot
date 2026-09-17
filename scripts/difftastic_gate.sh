@@ -1,5 +1,4 @@
 #!/bin/bash
-# Reads JSON from stdin
 PAYLOAD=$(cat)
 
 # Extract tool name and target file
@@ -16,17 +15,20 @@ fi
 # получить состояние файла за миллисекунду до вызова тула без стейт-трекинга в PreToolUse.
 # Сравнение с HEAD означает, что если в файле уже были незакоммиченные содержательные правки,
 # пустая правка сверху пройдёт (difftastic увидит старые правки относительно HEAD). Это приемлемый
-# компромисс для stateless скрипта: он надёжно блокирует пустые правки на чистом файле.
-TMP_BEFORE="/tmp/difft_before_$(basename "$TARGET_FILE")"
+# компромисс для stateless скрипта: он надёжно блокирует пустые правки на чистом файле (наиболее частый H18).
+TMP_BEFORE=$(mktemp /tmp/difft_before_XXXXXX_$(basename "$TARGET_FILE"))
 
 if ! git show "HEAD:$TARGET_FILE" > "$TMP_BEFORE" 2>/dev/null; then
     # Файла нет в HEAD (новый файл) -> считаем содержательным
     echo '{"decision": "allow"}'
+    rm -f "$TMP_BEFORE"
     exit 0
 fi
 
 difft --check-only --exit-code "$TMP_BEFORE" "$TARGET_FILE" > /dev/null 2>&1
 DIFF_EXIT=$?
+
+rm -f "$TMP_BEFORE"
 
 if [[ $DIFF_EXIT -eq 0 ]]; then
     # 0 = No semantic/syntactic changes
