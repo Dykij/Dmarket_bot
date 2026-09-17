@@ -3,7 +3,7 @@ PAYLOAD=$(cat)
 
 # Extract tool name and target file
 TOOL_NAME=$(echo "$PAYLOAD" | jq -r '.toolCall.name // empty')
-TARGET_FILE=$(echo "$PAYLOAD" | jq -r '.toolCall.args.TargetFile // empty')
+TARGET_FILE=$(echo "$PAYLOAD" | jq -r '.toolCall.args.TargetFile // empty' | sed 's/^"//;s/"$//')
 
 if [[ -z "$TARGET_FILE" || "$TARGET_FILE" == "null" ]]; then
     echo '{"decision": "allow"}'
@@ -20,6 +20,9 @@ TMP_BEFORE=$(mktemp /tmp/difft_before_XXXXXX_$(basename "$TARGET_FILE"))
 
 if ! git show "HEAD:$TARGET_FILE" > "$TMP_BEFORE" 2>/dev/null; then
     # Файла нет в HEAD (новый файл) -> считаем содержательным
+    if [[ -f "$TARGET_FILE" ]]; then
+        echo "WARNING: difftastic_gate.sh: git show failed but file exists on disk. Possible parsing issue with TARGET_FILE='$TARGET_FILE'" >&2
+    fi
     echo '{"decision": "allow"}'
     rm -f "$TMP_BEFORE"
     exit 0
