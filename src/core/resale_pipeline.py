@@ -56,7 +56,7 @@ class ResalePipeline:
           1. Oracle /prices/batch for all unique titles in 1 call
           2. DMarket batch_create_offers_v2 for all items in 1 call
         """
-        items = price_db.get_virtual_inventory(status='idle', only_unlocked=True)
+        items = await price_db.run_in_thread(price_db.get_virtual_inventory, status='idle', only_unlocked=True)
         if not items:
             return []
 
@@ -115,7 +115,7 @@ class ResalePipeline:
             for item, sell_price, profit_pct in ready_to_list:
                 title = item['hash_name']
                 buy_price = item['buy_price']
-                price_db.update_virtual_status(item['id'], 'selling')
+                await price_db.run_in_thread(price_db.update_virtual_status, item['id'], 'selling')
                 logger.info(
                     f"[SIM] LISTED: {title} @ ${sell_price:.2f} | "
                     f"Bought: ${buy_price:.2f} | Oracle: ${cs_prices.get(title, 0):.2f} | "
@@ -199,7 +199,7 @@ class ResalePipeline:
             title = item['hash_name']
             buy_price = item['buy_price']
             asset_id = asset_by_title.get(title, "")
-            price_db.update_virtual_status(item['id'], 'selling')
+            await price_db.run_in_thread(price_db.update_virtual_status, item['id'], 'selling')
             offer_id = offer_id_by_asset.get(asset_id, "")
             logger.info(
                 f"LISTED: {title} @ ${sell_price:.2f} | "
@@ -254,9 +254,9 @@ class ResalePipeline:
         Get full inventory status: virtual + real DMarket inventory.
         """
         # Virtual inventory (tracked items)
-        virtual_idle = price_db.get_virtual_inventory(status='idle', only_unlocked=False)
-        virtual_selling = price_db.get_virtual_inventory(status='selling')
-        virtual_sold = price_db.get_virtual_inventory(status='sold')
+        virtual_idle = await price_db.run_in_thread(price_db.get_virtual_inventory, status='idle', only_unlocked=False)
+        virtual_selling = await price_db.run_in_thread(price_db.get_virtual_inventory, status='selling')
+        virtual_sold = await price_db.run_in_thread(price_db.get_virtual_inventory, status='sold')
 
         # Real DMarket inventory
         real_inventory = []
