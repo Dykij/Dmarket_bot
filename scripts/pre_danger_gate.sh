@@ -1,6 +1,12 @@
 #!/bin/bash
 PAYLOAD=$(cat)
-CMD=$(echo "$PAYLOAD" | jq -r '.toolCall.args.CommandLine')
+CMD=$(echo "$PAYLOAD" | jq -r '.toolCall.args.CommandLine' 2>/dev/null)
+JQ_EXIT_CODE=$?
+
+if [ $JQ_EXIT_CODE -ne 0 ] || [[ -z "$CMD" || "$CMD" == "null" ]]; then
+    echo '{"decision": "ask", "reason": "⚠ Invalid payload or empty command. Gate fails closed for safety."}'
+    exit 0
+fi
 
 if [[ "$CMD" == *"git push"* || "$CMD" == *"sudo "* || "$CMD" == *"chattr "* ]]; then
     # Hard rules: ask as-is (no overwrite)
@@ -14,10 +20,8 @@ elif [[ "$CMD" == *"rm "* && "$CMD" == *"*"* ]]; then
     TARGETS=$(echo "$CMD" | sed 's/.*rm \(-[a-zA-Z]* \)*//')
     NEW_CMD="ls -la $TARGETS"
     echo "{\"decision\": \"ask\", \"reason\": \"⚠ Mass deletion (rm with wildcard) is blocked (H19). Converted to ls -la.\", \"overwrite\": {\"CommandLine\": \"$NEW_CMD\"}}"
-elif [[ "$CMD" == *"cat "*".env"* || "$CMD" == *"grep "*".env"* || "$CMD" == *"less "*".env"* ]]; then
-    # Overwrite .env reads
-    NEW_CMD="echo '⚠ .env access blocked'"
-    echo "{\"decision\": \"ask\", \"reason\": \"⚠ Reading .env is dangerous. Converted to echo.\", \"overwrite\": {\"CommandLine\": \"$NEW_CMD\"}}"
+elif [[ "$CMD" == *".env"* ]]; then
+    echo '{"decision": "deny", "reason": "⛔ Access to .env files is strictly forbidden across all commands."}'
 elif [[ "$CMD" == *"rm "* || "$CMD" == *"--force"* ]]; then
     echo '{"decision": "ask", "reason": "⚠ Destructive command detected. Requires explicit user approval."}'
 else
