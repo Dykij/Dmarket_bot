@@ -41,3 +41,9 @@ NOTE: commandExecutionPolicy: sandbox on this host does not provide real isolati
 
 ## 2d. No Truncation Rule
 Never omit, summarize, or hide RAW command output for length or brevity reasons (e.g. 'output hidden for brevity', 'skipped for readability'). If output is genuinely long, split it across multiple messages in full — do not compress it. A reader must be able to verify every claim from the RAW output actually shown, not from a promise that it exists.
+
+## Формат риск-гейта
+ОБЯЗАТЕЛЬНО: в первом же ответе используй строгий формат отчёта:
+Если найден баг/риск: `RISK: <файл>:<строка> — <механизм>`
+Если всё безопасно: `SAFE: <что именно проверено>`
+Не жди уточняющих вопросов, выводи этот формат сразу.
