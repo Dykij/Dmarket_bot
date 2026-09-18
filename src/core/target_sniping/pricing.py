@@ -242,27 +242,6 @@ class _PricingMixin:
 
         return multiplier
 
-    @staticmethod
-    def has_rare_phase_or_pattern(attrs: dict[str, Any]) -> bool:
-        """Check if item has rare phase or pattern worth exclusive keeping."""
-        try:
-            phase = attrs.get("phase", "")
-            paint_seed_str = attrs.get("paintSeed", "0")
-            paint_seed = int(paint_seed_str)
-        except (ValueError, TypeError):
-            return False
-        rare_phases = (
-            "Ruby", "Sapphire", "Black Pearl", "Emerald",
-            "Phase 2", "Phase 4", "P2", "P4",
-        )
-        rare_sets = _BLUE_GEM_SEEDS | _FIRE_ICE_SEEDS | _CRIMSON_WEB_3WEB_SEEDS
-        generic_rare = {661, 955, 151, 321, 268, 131, 202, 760, 437, 569}
-        return (
-            phase in rare_phases
-            or paint_seed in rare_sets
-            or paint_seed in generic_rare
-        )
-
     # ------------------------------------------------------------------
     # Dirty BS detection
     # ------------------------------------------------------------------
@@ -276,24 +255,6 @@ class _PricingMixin:
             return float(float_str) > 0.95
         except (ValueError, TypeError):
             return False
-
-    # ------------------------------------------------------------------
-    # Low-fee cache
-    # ------------------------------------------------------------------
-    async def _refresh_low_fee_cache(self, game_id: str) -> None:
-        """Refresh the low-fee items cache from DMarket (24h TTL)."""
-        age = price_db.low_fee_cache_age_seconds()
-        if age is not None and age < 86400:
-            return  # Fresh enough
-        try:
-            await self._simulate_network_latency()
-            self._maybe_inject_error("get_low_fee_items")
-            items = await self.client.get_low_fee_items(game_id)
-            if items:
-                price_db.save_low_fee_items(items)
-                logger.info(f"[LOW-FEE] Cached {len(items)} low-fee items (refreshed)")
-        except Exception as e:
-            logger.debug(f"Low-fee cache refresh failed: {e}")
 
 
 # ------------------------------------------------------------------
@@ -327,13 +288,3 @@ def _estimate_fade_pct(paint_seed: int) -> int:
     if 900 <= paint_seed <= 1000:
         fade = 95 + (paint_seed % 5)
     return min(fade, 100)
-
-
-def get_float_premium(attrs: dict[str, Any]) -> float:
-    """Standalone float premium calculator (for use outside mixin)."""
-    return _PricingMixin._calculate_float_premium(attrs)
-
-
-def get_pattern_premium(attrs: dict[str, Any]) -> float:
-    """Standalone pattern premium calculator (for use outside mixin)."""
-    return _PricingMixin._calculate_pattern_premium(attrs)

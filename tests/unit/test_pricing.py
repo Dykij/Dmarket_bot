@@ -136,33 +136,6 @@ class TestCalculatePatternPremium:
         assert result >= 1.0
 
 
-class TestHasRarePhaseOrPattern:
-
-    def test_ruby_phase(self):
-        assert _PricingMixin.has_rare_phase_or_pattern({"phase": "Ruby"}) is True
-
-    def test_sapphire_phase(self):
-        assert _PricingMixin.has_rare_phase_or_pattern({"phase": "Sapphire"}) is True
-
-    def test_blue_gem_seed(self):
-        assert _PricingMixin.has_rare_phase_or_pattern({"paintSeed": "661"}) is True
-
-    def test_fire_ice_seed(self):
-        assert _PricingMixin.has_rare_phase_or_pattern({"paintSeed": "412"}) is True
-
-    def test_normal_item(self):
-        assert _PricingMixin.has_rare_phase_or_pattern({"phase": "Phase 3", "paintSeed": "500"}) is False
-
-    def test_invalid_seed(self):
-        assert _PricingMixin.has_rare_phase_or_pattern({"paintSeed": "abc"}) is False
-
-    def test_phase_2(self):
-        assert _PricingMixin.has_rare_phase_or_pattern({"phase": "Phase 2"}) is True
-
-    def test_phase_4(self):
-        assert _PricingMixin.has_rare_phase_or_pattern({"phase": "P4"}) is True
-
-
 class TestIsDirtyBs:
 
     def test_dirty_bs(self):
@@ -185,19 +158,6 @@ class TestIsDirtyBs:
 
     def test_boundary_096(self):
         assert _PricingMixin.is_dirty_bs({"floatPartValue": "0.96"}) is True
-
-
-class TestStandaloneHelpers:
-
-    def test_get_float_premium(self):
-        """Standalone float premium calculator (line 334)."""
-        from src.core.target_sniping.pricing import get_float_premium
-        assert get_float_premium({"floatPartValue": "0.0005"}) == 1.25
-
-    def test_get_pattern_premium(self):
-        """Standalone pattern premium calculator (line 339)."""
-        from src.core.target_sniping.pricing import get_pattern_premium
-        assert get_pattern_premium({"phase": "Ruby"}) == 5.0
 
 
 class TestIsFloatDate:
