@@ -384,3 +384,5 @@ DMarket API v1→v2 касалась других путей: user-offers/create
   - Успешный прогон всех 1142 юнит-тестов подтвердил отсутствие побочных эффектов.
 - Refactor execution.py: extract _check_post_buy_advisory, _simulate_dry_run_execution, _record_execution_outcome from _execute_instant_buys, remove dead code
 - feat(hooks): add git_status_freshness_gate, rm_visibility_gate, and scratch-file guards to stop_gate
+- fix(hooks): update hooks.json paths to relative ../scripts to resolve CWD mismatch during execution
+- Подтверждено эмпирически 2026-09-18 через /tmp/hooks_called.log: CWD хуков — корень проекта, не `.agents/`. Все команды в hooks.json резолвятся относительно корня.
