@@ -382,3 +382,4 @@ DMarket API v1→v2 касалась других путей: user-offers/create
 - **Удаление мёртвого кода в telemetry.py (Коммит 3):**
   - Выявлены и удалены 3 неиспользуемых метода (`_update_health_metrics`, `_send_equity_milestone`, `_log_cycle_diag`) и хелпер `_get_notifier`.
   - Успешный прогон всех 1142 юнит-тестов подтвердил отсутствие побочных эффектов.
+- Refactor execution.py: extract _check_post_buy_advisory, _simulate_dry_run_execution, _record_execution_outcome from _execute_instant_buys, remove dead code

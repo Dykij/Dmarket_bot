@@ -10,7 +10,6 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import logging
-import os
 import time
 from typing import Any
 
@@ -159,8 +158,6 @@ class _ExecutionMixin:
             base_price = item_data["base_price"]
             list_price = item_data["list_price"]
             is_rare = item_data.get("is_rare", False)
-            best_bid = item_data.get("best_bid", 0.0)
-            best_ask = item_data.get("best_ask", 0.0)
             # v15.10: Use actual buy→sell spread, not bid-ask (which is negative)
             item_margin = (
                 (list_price - base_price) / base_price
@@ -180,256 +177,18 @@ class _ExecutionMixin:
                     if bi["title"] == title and bi.get("itemId"):
                         new_dm_item_id = bi["itemId"]
                         break
-
-            # BUG-11 FIX: Post-buy inventory check — WARNING ONLY (items already bought).
-            # Pre-buy cap check (lines 167-188) already enforced. Skipping local
-            # recording here would create phantom inventory (bought on DMarket but untracked).
-            try:
-                total_equity = await price_db.run_in_thread(price_db.get_total_equity, 0.0)
-                if isinstance(total_equity, dict):
-                    current_held_value = total_equity.get("assets", 0.0)
-                    current_held_count = total_equity.get("count", 0)
-                    if current_held_count >= Config.MAX_TOTAL_INVENTORY_ITEMS:
-                        logger.warning(
-                            f"[INV-CAP] Post-buy: holding {current_held_count}/{Config.MAX_TOTAL_INVENTORY_ITEMS} items. "
-                            f"Item {title} already bought — recording anyway."
-                        )
-                    if current_held_value + base_price > Config.MAX_TOTAL_INVENTORY_VALUE:
-                        logger.warning(
-                            f"[INV-CAP] Post-buy: inventory value ${current_held_value:.2f} + ${base_price:.2f} > "
-                            f"${Config.MAX_TOTAL_INVENTORY_VALUE:.2f} cap. Item {title} already bought — recording anyway."
-                        )
-            except Exception as e:
-                logger.debug(f"[EXEC] Post-buy advisory check failed: {e}")
-
-            # Reuse pre-fetched inventory (already loaded at line 182)
-            held_count = len([x for x in _existing_held_all if x["hash_name"] == title])
-            if held_count >= Config.MAX_SAME_ITEM_HOLDINGS:
-                logger.warning(
-                    f"[SATURATION] Post-buy: already holding {held_count}x {title}. Already bought — recording anyway."
-                )
-
+            await self._check_post_buy_advisory(title, base_price, _existing_held_all)
             if is_dry:
-                if not self._simulate_competition(item_margin):
-                    logger.warning(
-                        f"[SIM] COMPETITION! {title} was sniped by another bot first."
-                    )
+                should_continue = await self._simulate_dry_run_execution(
+                    item_data, title, base_price, list_price, item_id,
+                    is_rare, item_margin, game_id, available_balance, new_dm_item_id
+                )
+                if not should_continue:
                     continue
-
-                # v12.5: Risk manager pre-trade check (soft/hard halts)
-                if hasattr(self, "risk"):
-                    risk_check = self.risk.pre_trade_check(
-                        proposed_size_usd=base_price,
-                        current_equity_usd=available_balance,
-                        game_id=game_id,
-                        item_title=title,
-                    )
-                    if not risk_check.allowed:
-                        logger.warning(
-                            f"[RISK] BLOCKED {title} @ ${base_price:.2f}: {risk_check.reason}"
-                        )
-                        with contextlib.suppress(Exception):
-                            await price_db.run_in_thread(
-                                price_db.record_risk_event,
-                                "pre_trade_block",
-                                "warning",
-                                f"{title} @ ${base_price:.2f}: {risk_check.reason}",
-                            )
-                        continue
-
-
-                # v18.3: DynamicRiskManager — Hybrid Kelly+Volatility sizing
-                # Evaluates risk-adjusted trade size before sending buy order.
-                # Rejects if soft halt is active (drawdown >= threshold).
-                if not hasattr(self, '_dynamic_risk'):
-                    self._dynamic_risk = DynamicRiskManager()
-                    # P1f: Warm up Kelly statistics from ProfitTracker historical trades
-                    try:
-                        from src.db.profit_tracker import db as profit_db
-                        recent_trades = await asyncio.to_thread(profit_db.get_recent_trades, days=30)
-                        if recent_trades:
-                            for t in recent_trades:
-                                net = t.get("net_profit", 0) or 0
-                                self._dynamic_risk.record_trade(
-                                    won=net > 0,
-                                    profit_usd=net if net > 0 else 0.0,
-                                    loss_usd=abs(net) if net < 0 else 0.0,
-                                )
-                            logger.info(
-                                f"[KELLY-WARMUP] Loaded {len(recent_trades)} historical trades: "
-                                f"win_rate={self._dynamic_risk.win_rate:.2f}, "
-                                f"wl_ratio={self._dynamic_risk.win_loss_ratio:.2f}"
-                            )
-                    except Exception as e:
-                        logger.debug(f"[KELLY-WARMUP] Failed to load history: {e}")
-                # P1d: Use equity (balance + inventory value) for drawdown, not cash alone.
-                # Cash drops on buy, but that's not a loss — inventory has value.
-                drawdown_pct = 0.0
-                if hasattr(self, 'risk'):
-                    # Use _current_equity if available (updated by risk_manager)
-                    equity = getattr(self.risk, '_current_equity', available_balance) or available_balance
-                    peak = getattr(self.risk, '_peak_equity', equity) or equity
-                    if peak > 0:
-                        drawdown_pct = max(0.0, (peak - equity) / peak)
-                trade_size_result = self._dynamic_risk.evaluate_trade_size(
-                    direction="BUY",
-                    original_amount=float(base_price),
-                    current_regime=0,  # Neutral regime (no HMM data in execution path)
-                    hawkes_intensity=0.0,  # No Hawkes data in execution path
-                    current_drawdown=drawdown_pct,
-                )
-                if trade_size_result is None:
-                    logger.warning(
-                        f"[DYNAMIC-RISK] BLOCKED {title} @ ${base_price:.2f}: "
-                        f"soft halt active (drawdown={drawdown_pct*100:.1f}%)"
-                    )
-                    with contextlib.suppress(Exception):
-                        await price_db.run_in_thread(
-                            price_db.record_risk_event,
-                            "dynamic_risk_block",
-                            "warning",
-                            f"{title} @ ${base_price:.2f}: soft halt drawdown={drawdown_pct*100:.1f}%",
-                        )
-                    continue
-                if trade_size_result <= 0:
-                    logger.warning(
-                        f"[DYNAMIC-RISK] BLOCKED {title} @ ${base_price:.2f}: "
-                        f"trade_size=${trade_size_result:.2f} <= 0"
-                    )
-                    continue
-                if trade_size_result < base_price:
-                    # P1c: REJECT rather than rewrite — skins are indivisible,
-                    # can't buy a $10 skin for $2.
-                    logger.info(
-                        f"[DYNAMIC-RISK] REJECT {title}: risk size ${trade_size_result:.2f} < item price ${base_price:.2f}"
-                    )
-                    continue
-
-                # v12.5: capture the new row_id so we can attach dm_item_id
-                # in production (or leave it empty in DRY).
-                await price_db.run_in_thread(price_db.add_virtual_item, title, base_price, Config.TRADE_LOCK_HOURS, is_rare)
-                row = await price_db.run_in_thread(
-                    price_db.execute_and_fetchone,
-                    "SELECT id FROM virtual_inventory "
-                    "WHERE hash_name = ? AND status = 'idle' "
-                    "ORDER BY id DESC LIMIT 1",
-                    (title,),
-                )
-                if row and new_dm_item_id:
-                    await price_db.run_in_thread(price_db.attach_dm_item_id, int(row["id"]), new_dm_item_id)
-                if is_rare and row:
-                    await price_db.run_in_thread(price_db.mark_exclusive, int(row["id"]))
-
-                vwap_raw = await price_db.run_in_thread(price_db.calculate_vwap, title)
-                vwap = float(vwap_raw) if isinstance(vwap_raw, (int, float)) else 0.0
-                logger.info(
-                    f"[SIM] SNIPED! {title} @ ${base_price} → list ${list_price} "
-                    f"(spread: {item_data.get('best_ask', 0)-item_data.get('best_bid', 0):.2f}, "
-                    f"VWAP: ${vwap:.2f}, rare={is_rare})"
-                )
-                # v12.2 Phase 2.1: Track asset status (trade_protected for N hours)
-                await price_db.run_in_thread(
-                    price_db.update_asset_status,
-                    item_id,
-                    title,
-                    "trade_protected",
-                    time.time() + Config.TRADE_LOCK_HOURS * 3600,
-                )
-                # v12.5: Record trade outcome (negative PnL = cost)
-                if hasattr(self, "risk"):
-                    self.risk.record_trade_outcome(
-                        pnl_usd=-base_price,  # spend is a negative PnL event
-                        trade_type="buy",
-                        item_title=title,
-                    )
-                # v18.2: Record buy in persistent trade history
-                try:
-                    from src.db.profit_tracker import db as profit_db
-                    await asyncio.to_thread(profit_db.record_buy, title, float(base_price), offer_id=item_id)
-                except Exception as e:
-                    logger.debug(f"profit_tracker.record_buy failed: {e}")
-                # v12.5: Telegram buy notification (throttled to 1/min)
-                # v15.7 FIX: Hold task reference to prevent GC before completion
-                task = asyncio.create_task(
-                    _get_notifier().buy(
-                        title=title,
-                        price_usd=base_price,
-                        expected_sell_usd=list_price,
-                        strategy=item_data.get("strategy", "intra_spread"),
-                    )
-                )
-                self._background_tasks.add(task)
-                task.add_done_callback(self._background_tasks.discard)
-                # P2-11: Removed duplicate decrement — line 570 handles both DRY and PROD
-
-            # v12.3: Only record local spend/target if the actual buy succeeded.
-            # For DRY_RUN, always record (simulated). For production, gate on
-            # successful_titles which is populated from the buy response.
-            if is_dry or item_data["buy_offer"].get("offerId") in successful_offer_ids:
-                await price_db.run_in_thread(price_db.record_placed_target, item_id, title, base_price)
-                # v14.5: Ensure virtual_inventory row exists in PROD (DRY creates it earlier)
-                if not is_dry and not new_dm_item_id:
-                    await price_db.run_in_thread(price_db.add_virtual_item, title, base_price, Config.TRADE_LOCK_HOURS, is_rare)
-                # BUG-2 FIX: Use atomic can_spend_and_record to prevent TOCTOU
-                # (filter.py can_spend() is advisory; this is the real gate)
-                try:
-                    if not await self.liquidity.can_spend_and_record(base_price, game_id, available_balance):
-                        logger.warning(f"[LIQUIDITY] Spend rejected at execution for {title} ${base_price:.2f}")
-                        continue
-                except (TypeError, AttributeError):
-                    # Fallback for mocks or missing method
-                    self.liquidity.record_spend(base_price)
-                # v14.5: record_trade_outcome already called in DRY block above
-                if not is_dry and hasattr(self, "risk"):
-                    self.risk.record_trade_outcome(
-                        pnl_usd=-base_price,
-                        trade_type="buy",
-                        item_title=title,
-                    )
-                # FIX: Decrement available balance after each successful buy
-                # to prevent overspending within a batch
-                available_balance -= base_price
-                # v12.5: Production-side dm_item_id attach. If we didn't
-                # capture it from the buy response above (e.g. the response
-                # didn't include Items), the inventory sync will pick it up
-                # within the next cycle.
-                if not is_dry and new_dm_item_id:
-                    # Find the most recent virtual_inventory row for this
-                    # title that has no dm_item_id and attach it.
-                    row = await price_db.run_in_thread(
-                        price_db.execute_and_fetchone,
-                        "SELECT id FROM virtual_inventory "
-                        "WHERE hash_name = ? AND status = 'idle' "
-                        "AND (dm_item_id IS NULL OR dm_item_id = '') "
-                        "ORDER BY id DESC LIMIT 1",
-                        (title,),
-                    )
-                    if row:
-                        await price_db.run_in_thread(price_db.attach_dm_item_id, int(row["id"]), new_dm_item_id)
-                # v14.5: Track trade protection status immediately in PROD
-                if not is_dry:
-                    await price_db.run_in_thread(
-                        price_db.update_asset_status,
-                        item_id, title, "trade_protected",
-                        time.time() + Config.TRADE_LOCK_HOURS * 3600,
-                    )
-                # v12.5: Production-side buy notification (in addition to the
-                # DRY notification above; one will no-op because of the throttle)
-                if not is_dry:
-                    task = asyncio.create_task(
-                        _get_notifier().buy(
-                            title=title,
-                            price_usd=base_price,
-                            expected_sell_usd=list_price,
-                            strategy=item_data.get("strategy", "intra_spread"),
-                        )
-                    )
-                    self._background_tasks.add(task)
-                    task.add_done_callback(self._background_tasks.discard)
-            else:
-                logger.info(
-                    f"Skipping local record for {title!r} — buy did not succeed"
-                )
+            available_balance = await self._record_execution_outcome(
+                is_dry, item_data, successful_offer_ids, item_id, title,
+                base_price, new_dm_item_id, is_rare, game_id, available_balance, list_price
+            )
 
     async def _prepare_execution_batch(
         self,
@@ -629,3 +388,507 @@ class _ExecutionMixin:
             return [], available_balance
         
         return verified_buys, available_balance
+    async def _check_post_buy_advisory(self, title: str, base_price: float, existing_held_all: list) -> None:
+        try:
+            total_equity = await price_db.run_in_thread(price_db.get_total_equity, 0.0)
+            if isinstance(total_equity, dict):
+                current_held_value = total_equity.get("assets", 0.0)
+                current_held_count = total_equity.get("count", 0)
+                if current_held_count >= Config.MAX_TOTAL_INVENTORY_ITEMS:
+                    logger.warning(
+                        f"[INV-CAP] Post-buy: holding {current_held_count}/{Config.MAX_TOTAL_INVENTORY_ITEMS} items. "
+                        f"Item {title} already bought — recording anyway."
+                    )
+                if current_held_value + base_price > Config.MAX_TOTAL_INVENTORY_VALUE:
+                    logger.warning(
+                        f"[INV-CAP] Post-buy: inventory value ${current_held_value:.2f} + ${base_price:.2f} > "
+                        f"${Config.MAX_TOTAL_INVENTORY_VALUE:.2f} cap. Item {title} already bought — recording anyway."
+                    )
+        except Exception as e:
+            logger.debug(f"[EXEC] Post-buy advisory check failed: {e}")
+
+        # Reuse pre-fetched inventory (already loaded at line 182)
+        held_count = len([x for x in existing_held_all if x["hash_name"] == title])
+        if held_count >= Config.MAX_SAME_ITEM_HOLDINGS:
+            logger.warning(
+                f"[SATURATION] Post-buy: already holding {held_count}x {title}. Already bought — recording anyway."
+            )
+    
+    async def _simulate_dry_run_execution(
+        self,
+        item_data: dict,
+        title: str,
+        base_price: float,
+        list_price: float,
+        item_id: str,
+        is_rare: bool,
+        item_margin: float,
+        game_id: str,
+        available_balance: float,
+        new_dm_item_id: str
+    ) -> bool:
+        if not self._simulate_competition(item_margin):
+            logger.warning(
+                f"[SIM] COMPETITION! {title} was sniped by another bot first."
+            )
+            return False
+
+        if hasattr(self, "risk"):
+            risk_check = self.risk.pre_trade_check(
+                proposed_size_usd=base_price,
+                current_equity_usd=available_balance,
+                game_id=game_id,
+                item_title=title,
+            )
+            if not risk_check.allowed:
+                logger.warning(
+                    f"[RISK] BLOCKED {title} @ ${base_price:.2f}: {risk_check.reason}"
+                )
+                with contextlib.suppress(Exception):
+                    await price_db.run_in_thread(
+                        price_db.record_risk_event,
+                        "pre_trade_block",
+                        "warning",
+                        f"{title} @ ${base_price:.2f}: {risk_check.reason}",
+                    )
+                return False
+
+        if not hasattr(self, '_dynamic_risk'):
+            self._dynamic_risk = DynamicRiskManager()
+            try:
+                from src.db.profit_tracker import db as profit_db
+                recent_trades = await asyncio.to_thread(profit_db.get_recent_trades, days=30)
+                if recent_trades:
+                    for t in recent_trades:
+                        net = t.get("net_profit", 0) or 0
+                        self._dynamic_risk.record_trade(
+                            won=net > 0,
+                            profit_usd=net if net > 0 else 0.0,
+                            loss_usd=abs(net) if net < 0 else 0.0,
+                        )
+                    logger.info(
+                        f"[KELLY-WARMUP] Loaded {len(recent_trades)} historical trades: "
+                        f"win_rate={self._dynamic_risk.win_rate:.2f}, "
+                        f"wl_ratio={self._dynamic_risk.win_loss_ratio:.2f}"
+                    )
+            except Exception as e:
+                logger.debug(f"[KELLY-WARMUP] Failed to load history: {e}")
+                
+        drawdown_pct = 0.0
+        if hasattr(self, 'risk'):
+            equity = getattr(self.risk, '_current_equity', available_balance) or available_balance
+            peak = getattr(self.risk, '_peak_equity', equity) or equity
+            if peak > 0:
+                drawdown_pct = max(0.0, (peak - equity) / peak)
+                
+        trade_size_result = self._dynamic_risk.evaluate_trade_size(
+            direction="BUY",
+            original_amount=float(base_price),
+            current_regime=0,
+            hawkes_intensity=0.0,
+            current_drawdown=drawdown_pct,
+        )
+        
+        if trade_size_result is None:
+            logger.warning(
+                f"[DYNAMIC-RISK] BLOCKED {title} @ ${base_price:.2f}: "
+                f"soft halt active (drawdown={drawdown_pct*100:.1f}%)"
+            )
+            with contextlib.suppress(Exception):
+                await price_db.run_in_thread(
+                    price_db.record_risk_event,
+                    "dynamic_risk_block",
+                    "warning",
+                    f"{title} @ ${base_price:.2f}: soft halt drawdown={drawdown_pct*100:.1f}%",
+                )
+            return False
+            
+        if trade_size_result <= 0:
+            logger.warning(
+                f"[DYNAMIC-RISK] BLOCKED {title} @ ${base_price:.2f}: "
+                f"trade_size=${trade_size_result:.2f} <= 0"
+            )
+            return False
+            
+        if trade_size_result < base_price:
+            logger.info(
+                f"[DYNAMIC-RISK] REJECT {title}: risk size ${trade_size_result:.2f} < item price ${base_price:.2f}"
+            )
+            return False
+
+        await price_db.run_in_thread(price_db.add_virtual_item, title, base_price, Config.TRADE_LOCK_HOURS, is_rare)
+        row = await price_db.run_in_thread(
+            price_db.execute_and_fetchone,
+            "SELECT id FROM virtual_inventory "
+            "WHERE hash_name = ? AND status = 'idle' "
+            "ORDER BY id DESC LIMIT 1",
+            (title,),
+        )
+        if row and new_dm_item_id:
+            await price_db.run_in_thread(price_db.attach_dm_item_id, int(row["id"]), new_dm_item_id)
+        if is_rare and row:
+            await price_db.run_in_thread(price_db.mark_exclusive, int(row["id"]))
+
+        vwap_raw = await price_db.run_in_thread(price_db.calculate_vwap, title)
+        vwap = float(vwap_raw) if isinstance(vwap_raw, (int, float)) else 0.0
+        logger.info(
+            f"[SIM] SNIPED! {title} @ ${base_price} → list ${list_price} "
+            f"(spread: {item_data.get('best_ask', 0)-item_data.get('best_bid', 0):.2f}, "
+            f"VWAP: ${vwap:.2f}, rare={is_rare})"
+        )
+        
+        await price_db.run_in_thread(
+            price_db.update_asset_status,
+            item_id,
+            title,
+            "trade_protected",
+            time.time() + Config.TRADE_LOCK_HOURS * 3600,
+        )
+        
+        if hasattr(self, "risk"):
+            self.risk.record_trade_outcome(
+                pnl_usd=-base_price,
+                trade_type="buy",
+                item_title=title,
+            )
+            
+        try:
+            from src.db.profit_tracker import db as profit_db
+            await asyncio.to_thread(profit_db.record_buy, title, float(base_price), offer_id=item_id)
+        except Exception as e:
+            logger.debug(f"profit_tracker.record_buy failed: {e}")
+            
+        task = asyncio.create_task(
+            _get_notifier().buy(
+                title=title,
+                price_usd=base_price,
+                expected_sell_usd=list_price,
+                strategy=item_data.get("strategy", "intra_spread"),
+            )
+        )
+        self._background_tasks.add(task)
+        task.add_done_callback(self._background_tasks.discard)
+        return True
+    
+    async def _record_execution_outcome(
+        self,
+        is_dry: bool,
+        item_data: dict,
+        successful_offer_ids: set,
+        item_id: str,
+        title: str,
+        base_price: float,
+        new_dm_item_id: str,
+        is_rare: bool,
+        game_id: str,
+        available_balance: float,
+        list_price: float
+    ) -> float:
+        if is_dry or item_data["buy_offer"].get("offerId") in successful_offer_ids:
+            await price_db.run_in_thread(price_db.record_placed_target, item_id, title, base_price)
+            if not is_dry and not new_dm_item_id:
+                await price_db.run_in_thread(price_db.add_virtual_item, title, base_price, Config.TRADE_LOCK_HOURS, is_rare)
+            try:
+                if not await self.liquidity.can_spend_and_record(base_price, game_id, available_balance):
+                    logger.warning(f"[LIQUIDITY] Spend rejected at execution for {title} ${base_price:.2f}")
+                    return available_balance
+            except (TypeError, AttributeError):
+                self.liquidity.record_spend(base_price)
+                
+            if not is_dry and hasattr(self, "risk"):
+                self.risk.record_trade_outcome(
+                    pnl_usd=-base_price,
+                    trade_type="buy",
+                    item_title=title,
+                )
+                
+            available_balance -= base_price
+            
+            if not is_dry and new_dm_item_id:
+                row = await price_db.run_in_thread(
+                    price_db.execute_and_fetchone,
+                    "SELECT id FROM virtual_inventory "
+                    "WHERE hash_name = ? AND status = 'idle' "
+                    "AND (dm_item_id IS NULL OR dm_item_id = '') "
+                    "ORDER BY id DESC LIMIT 1",
+                    (title,),
+                )
+                if row:
+                    await price_db.run_in_thread(price_db.attach_dm_item_id, int(row["id"]), new_dm_item_id)
+                    
+            if not is_dry:
+                await price_db.run_in_thread(
+                    price_db.update_asset_status,
+                    item_id, title, "trade_protected",
+                    time.time() + Config.TRADE_LOCK_HOURS * 3600,
+                )
+                
+            if not is_dry:
+                task = asyncio.create_task(
+                    _get_notifier().buy(
+                        title=title,
+                        price_usd=base_price,
+                        expected_sell_usd=list_price,
+                        strategy=item_data.get("strategy", "intra_spread"),
+                    )
+                )
+                self._background_tasks.add(task)
+                task.add_done_callback(self._background_tasks.discard)
+        else:
+            logger.info(
+                f"Skipping local record for {title!r} — buy did not succeed"
+            )
+            
+        return available_balance
+    async def _check_post_buy_advisory(self, title: str, base_price: float, existing_held_all: list) -> None:
+        try:
+            total_equity = await price_db.run_in_thread(price_db.get_total_equity, 0.0)
+            if isinstance(total_equity, dict):
+                current_held_value = total_equity.get("assets", 0.0)
+                current_held_count = total_equity.get("count", 0)
+                if current_held_count >= Config.MAX_TOTAL_INVENTORY_ITEMS:
+                    logger.warning(
+                        f"[INV-CAP] Post-buy: holding {current_held_count}/{Config.MAX_TOTAL_INVENTORY_ITEMS} items. "
+                        f"Item {title} already bought — recording anyway."
+                    )
+                if current_held_value + base_price > Config.MAX_TOTAL_INVENTORY_VALUE:
+                    logger.warning(
+                        f"[INV-CAP] Post-buy: inventory value ${current_held_value:.2f} + ${base_price:.2f} > "
+                        f"${Config.MAX_TOTAL_INVENTORY_VALUE:.2f} cap. Item {title} already bought — recording anyway."
+                    )
+        except Exception as e:
+            logger.debug(f"[EXEC] Post-buy advisory check failed: {e}")
+
+        # Reuse pre-fetched inventory (already loaded at line 182)
+        held_count = len([x for x in existing_held_all if x["hash_name"] == title])
+        if held_count >= Config.MAX_SAME_ITEM_HOLDINGS:
+            logger.warning(
+                f"[SATURATION] Post-buy: already holding {held_count}x {title}. Already bought — recording anyway."
+            )
+    
+    async def _simulate_dry_run_execution(
+        self,
+        item_data: dict,
+        title: str,
+        base_price: float,
+        list_price: float,
+        item_id: str,
+        is_rare: bool,
+        item_margin: float,
+        game_id: str,
+        available_balance: float,
+        new_dm_item_id: str
+    ) -> bool:
+        if not self._simulate_competition(item_margin):
+            logger.warning(
+                f"[SIM] COMPETITION! {title} was sniped by another bot first."
+            )
+            return False
+
+        if hasattr(self, "risk"):
+            risk_check = self.risk.pre_trade_check(
+                proposed_size_usd=base_price,
+                current_equity_usd=available_balance,
+                game_id=game_id,
+                item_title=title,
+            )
+            if not risk_check.allowed:
+                logger.warning(
+                    f"[RISK] BLOCKED {title} @ ${base_price:.2f}: {risk_check.reason}"
+                )
+                with contextlib.suppress(Exception):
+                    await price_db.run_in_thread(
+                        price_db.record_risk_event,
+                        "pre_trade_block",
+                        "warning",
+                        f"{title} @ ${base_price:.2f}: {risk_check.reason}",
+                    )
+                return False
+
+        if not hasattr(self, '_dynamic_risk'):
+            self._dynamic_risk = DynamicRiskManager()
+            try:
+                from src.db.profit_tracker import db as profit_db
+                recent_trades = await asyncio.to_thread(profit_db.get_recent_trades, days=30)
+                if recent_trades:
+                    for t in recent_trades:
+                        net = t.get("net_profit", 0) or 0
+                        self._dynamic_risk.record_trade(
+                            won=net > 0,
+                            profit_usd=net if net > 0 else 0.0,
+                            loss_usd=abs(net) if net < 0 else 0.0,
+                        )
+                    logger.info(
+                        f"[KELLY-WARMUP] Loaded {len(recent_trades)} historical trades: "
+                        f"win_rate={self._dynamic_risk.win_rate:.2f}, "
+                        f"wl_ratio={self._dynamic_risk.win_loss_ratio:.2f}"
+                    )
+            except Exception as e:
+                logger.debug(f"[KELLY-WARMUP] Failed to load history: {e}")
+                
+        drawdown_pct = 0.0
+        if hasattr(self, 'risk'):
+            equity = getattr(self.risk, '_current_equity', available_balance) or available_balance
+            peak = getattr(self.risk, '_peak_equity', equity) or equity
+            if peak > 0:
+                drawdown_pct = max(0.0, (peak - equity) / peak)
+                
+        trade_size_result = self._dynamic_risk.evaluate_trade_size(
+            direction="BUY",
+            original_amount=float(base_price),
+            current_regime=0,
+            hawkes_intensity=0.0,
+            current_drawdown=drawdown_pct,
+        )
+        
+        if trade_size_result is None:
+            logger.warning(
+                f"[DYNAMIC-RISK] BLOCKED {title} @ ${base_price:.2f}: "
+                f"soft halt active (drawdown={drawdown_pct*100:.1f}%)"
+            )
+            with contextlib.suppress(Exception):
+                await price_db.run_in_thread(
+                    price_db.record_risk_event,
+                    "dynamic_risk_block",
+                    "warning",
+                    f"{title} @ ${base_price:.2f}: soft halt drawdown={drawdown_pct*100:.1f}%",
+                )
+            return False
+            
+        if trade_size_result <= 0:
+            logger.warning(
+                f"[DYNAMIC-RISK] BLOCKED {title} @ ${base_price:.2f}: "
+                f"trade_size=${trade_size_result:.2f} <= 0"
+            )
+            return False
+            
+        if trade_size_result < base_price:
+            logger.info(
+                f"[DYNAMIC-RISK] REJECT {title}: risk size ${trade_size_result:.2f} < item price ${base_price:.2f}"
+            )
+            return False
+
+        await price_db.run_in_thread(price_db.add_virtual_item, title, base_price, Config.TRADE_LOCK_HOURS, is_rare)
+        row = await price_db.run_in_thread(
+            price_db.execute_and_fetchone,
+            "SELECT id FROM virtual_inventory "
+            "WHERE hash_name = ? AND status = 'idle' "
+            "ORDER BY id DESC LIMIT 1",
+            (title,),
+        )
+        if row and new_dm_item_id:
+            await price_db.run_in_thread(price_db.attach_dm_item_id, int(row["id"]), new_dm_item_id)
+        if is_rare and row:
+            await price_db.run_in_thread(price_db.mark_exclusive, int(row["id"]))
+
+        vwap_raw = await price_db.run_in_thread(price_db.calculate_vwap, title)
+        vwap = float(vwap_raw) if isinstance(vwap_raw, (int, float)) else 0.0
+        logger.info(
+            f"[SIM] SNIPED! {title} @ ${base_price} → list ${list_price} "
+            f"(spread: {item_data.get('best_ask', 0)-item_data.get('best_bid', 0):.2f}, "
+            f"VWAP: ${vwap:.2f}, rare={is_rare})"
+        )
+        
+        await price_db.run_in_thread(
+            price_db.update_asset_status,
+            item_id,
+            title,
+            "trade_protected",
+            time.time() + Config.TRADE_LOCK_HOURS * 3600,
+        )
+        
+        if hasattr(self, "risk"):
+            self.risk.record_trade_outcome(
+                pnl_usd=-base_price,
+                trade_type="buy",
+                item_title=title,
+            )
+            
+        try:
+            from src.db.profit_tracker import db as profit_db
+            await asyncio.to_thread(profit_db.record_buy, title, float(base_price), offer_id=item_id)
+        except Exception as e:
+            logger.debug(f"profit_tracker.record_buy failed: {e}")
+            
+        task = asyncio.create_task(
+            _get_notifier().buy(
+                title=title,
+                price_usd=base_price,
+                expected_sell_usd=list_price,
+                strategy=item_data.get("strategy", "intra_spread"),
+            )
+        )
+        self._background_tasks.add(task)
+        task.add_done_callback(self._background_tasks.discard)
+        return True
+    
+    async def _record_execution_outcome(
+        self,
+        is_dry: bool,
+        item_data: dict,
+        successful_offer_ids: set,
+        item_id: str,
+        title: str,
+        base_price: float,
+        new_dm_item_id: str,
+        is_rare: bool,
+        game_id: str,
+        available_balance: float,
+        list_price: float
+    ) -> float:
+        if is_dry or item_data["buy_offer"].get("offerId") in successful_offer_ids:
+            await price_db.run_in_thread(price_db.record_placed_target, item_id, title, base_price)
+            if not is_dry and not new_dm_item_id:
+                await price_db.run_in_thread(price_db.add_virtual_item, title, base_price, Config.TRADE_LOCK_HOURS, is_rare)
+            try:
+                if not await self.liquidity.can_spend_and_record(base_price, game_id, available_balance):
+                    logger.warning(f"[LIQUIDITY] Spend rejected at execution for {title} ${base_price:.2f}")
+                    return available_balance
+            except (TypeError, AttributeError):
+                self.liquidity.record_spend(base_price)
+                
+            if not is_dry and hasattr(self, "risk"):
+                self.risk.record_trade_outcome(
+                    pnl_usd=-base_price,
+                    trade_type="buy",
+                    item_title=title,
+                )
+                
+            available_balance -= base_price
+            
+            if not is_dry and new_dm_item_id:
+                row = await price_db.run_in_thread(
+                    price_db.execute_and_fetchone,
+                    "SELECT id FROM virtual_inventory "
+                    "WHERE hash_name = ? AND status = 'idle' "
+                    "AND (dm_item_id IS NULL OR dm_item_id = '') "
+                    "ORDER BY id DESC LIMIT 1",
+                    (title,),
+                )
+                if row:
+                    await price_db.run_in_thread(price_db.attach_dm_item_id, int(row["id"]), new_dm_item_id)
+                    
+            if not is_dry:
+                await price_db.run_in_thread(
+                    price_db.update_asset_status,
+                    item_id, title, "trade_protected",
+                    time.time() + Config.TRADE_LOCK_HOURS * 3600,
+                )
+                
+            if not is_dry:
+                task = asyncio.create_task(
+                    _get_notifier().buy(
+                        title=title,
+                        price_usd=base_price,
+                        expected_sell_usd=list_price,
+                        strategy=item_data.get("strategy", "intra_spread"),
+                    )
+                )
+                self._background_tasks.add(task)
+                task.add_done_callback(self._background_tasks.discard)
+        else:
+            logger.info(
+                f"Skipping local record for {title!r} — buy did not succeed"
+            )
+            
+        return available_balance
