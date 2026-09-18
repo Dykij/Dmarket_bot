@@ -379,3 +379,6 @@ DMarket API v1→v2 касалась других путей: user-offers/create
   - Выявлены и удалены 4 неиспользуемых в production метода (`has_rare_phase_or_pattern`, `_refresh_low_fee_cache`, `get_float_premium`, `get_pattern_premium`).
   - Вместе с ними безопасно удалены классы изолированных unit-тестов из `test_pricing.py` и `test_pricing_v15_3.py` (через скрипты `libcst`).
   - Исправлена вызванная удалением `ImportError`, успешный прогон всех тестов. Изменения закоммичены.
+- **Удаление мёртвого кода в telemetry.py (Коммит 3):**
+  - Выявлены и удалены 3 неиспользуемых метода (`_update_health_metrics`, `_send_equity_milestone`, `_log_cycle_diag`) и хелпер `_get_notifier`.
+  - Успешный прогон всех 1142 юнит-тестов подтвердил отсутствие побочных эффектов.
