@@ -132,5 +132,45 @@
                 ]
             }
         ]
+    },
+    "git-status-freshness-gate": {
+        "PreToolUse": [
+            {
+                "matcher": "run_command",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "bash scripts/git_status_freshness_gate.sh",
+                        "timeout": 10
+                    }
+                ]
+            }
+        ],
+        "PostToolUse": [
+            {
+                "matcher": "run_command",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "bash scripts/git_status_freshness_gate.sh",
+                        "timeout": 5
+                    }
+                ]
+            }
+        ]
+    },
+    "rm-visibility-gate": {
+        "PreToolUse": [
+            {
+                "matcher": "run_command",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "bash scripts/rm_visibility_gate.sh",
+                        "timeout": 10
+                    }
+                ]
+            }
+        ]
     }
 }
