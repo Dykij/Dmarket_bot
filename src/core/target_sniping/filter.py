@@ -11,7 +11,7 @@ import asyncio
 import logging
 from typing import Any
 
-from src.api.exceptions import RateLimitException
+
 from src.config import Config
 from src.core.sandbox_scenarios import scenario_engine
 from src.core.target_sniping.item_utils import get_item_title
@@ -229,6 +229,113 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
                 logger.debug(f"[FLOAT-DATE] {title}: detection failed: {e}")
 
         return list_price, is_rare
+    def _check_advanced_market_risks(
+            self, title: str, early_history: list, early_prices: list
+        ) -> bool:
+        """
+        v12.2 Phase 2.4/2.3, v15.9: Advanced market risk checks
+        (liquidity, wash trading, volatility). Returns True if the
+        candidate should be skipped due to a detected risk.
+        """
+        # v12.2 Phase 2.4: Multi-level liquidity verification
+        if Config.USE_LIQUIDITY_FILTER:
+            liquidity = price_db.get_liquidity_metrics(title)
+            if not liquidity["is_liquid"]:
+                if Config.DRY_RUN:
+                    price_db.log_decision(
+                        title,
+                        "skip",
+                        "Low liquidity",
+                        f"{liquidity['reason']} (sales={liquidity['total_sales']})",
+                    )
+                return True
+
+        # v12.2 Phase 2.3: Wash trading detection (trimmed mean)
+        if (
+            Config.WASH_TRADING_DETECTION
+            and not price_db.detect_wash_trading(
+                title,
+                days=14,
+                boost_pct=Config.TRIMMED_MEAN_BOOST_PCT,
+                max_outliers=Config.TRIMMED_MEAN_MAX_OUTLIERS,
+            )
+        ):
+            if Config.DRY_RUN:
+                price_db.log_decision(
+                    title,
+                    "skip",
+                    "Wash trading detected",
+                    "Raw mean >> trimmed mean — price inflated by anomalies",
+                )
+            return True
+
+        # v15.9: Reuse early price history fetch (avoid duplicate DB call)
+        if early_prices:
+            try:
+                validate_volatility(early_prices)
+            except PriceValidationError:
+                return True
+
+        return False
+    
+    async def _evaluate_edge_strategies(
+            self,
+            has_intra_spread: bool,
+            game_id: str,
+            title: str,
+            base_price: float,
+            bulk_fees: dict,
+            item_id: str,
+            is_sandbox: bool,
+            agg_prices: dict,
+            best_bid: float,
+        ) -> tuple[bool, float, bool]:
+        """
+        v14.8.1/v17.0: DMarket-internal underpriced check + demand-based
+        strategy. Returns (has_dmarket_underpriced, dm_underpriced_ref,
+        has_demand_opportunity).
+        """
+        has_dmarket_underpriced = False
+        dm_underpriced_ref = 0.0
+        if not has_intra_spread:
+            try:
+                from src.utils.fee_utils import get_sell_fee_rate
+                from src.core.target_sniping.underpriced import is_dmarket_underpriced
+                up = await is_dmarket_underpriced(
+                    self.client, game_id, title, base_price, fee_rate=bulk_fees.get(item_id, get_sell_fee_rate())
+                )
+                if up.get("underpriced"):
+                    has_dmarket_underpriced = True
+                    dm_underpriced_ref = up.get("reference_price", 0.0)
+                    if is_sandbox:
+                        price_db.log_decision(
+                            title, "pass", "DMarket underpriced vs sales",
+                            f"base={base_price:.2f} ref={dm_underpriced_ref:.2f} margin={up.get('margin_pct', 0):.1f}%"
+                        )
+            except Exception as e:
+                logger.debug(f"DMarket underpriced check failed for {title}: {e}")
+
+        has_demand_opportunity = False
+        if Config.DEMAND_STRATEGY_ENABLED and not (has_intra_spread or has_dmarket_underpriced):
+            try:
+                from src.core.target_sniping.demand_strategy import calculate_demand_score
+                agg_data = agg_prices.get(title, {})
+                if agg_data:
+                    ask_count = agg_data.get("ask_count", 0) or 0
+                    bid_count = agg_data.get("bid_count", 0) or 0
+                    ds = calculate_demand_score(title, base_price, best_bid, ask_count, bid_count)
+                    if ds["score"] > 0:
+                        has_demand_opportunity = True
+                        if is_sandbox:
+                            price_db.log_decision(
+                                title, "pass", "Demand opportunity",
+                                f"score={ds['score']:.0f} {ds['reason']}"
+                            )
+            except Exception as e:
+                logger.debug(f"Demand strategy check failed for {title}: {e}")
+
+        return has_dmarket_underpriced, dm_underpriced_ref, has_demand_opportunity
+    
 
     async def _evaluate_candidate(
         self,
@@ -333,49 +440,8 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
 
         if price_db.is_crashing(title):
             return None
-
-        # v12.2 Phase 2.4: Multi-level liquidity verification
-        if Config.USE_LIQUIDITY_FILTER:
-            liquidity = price_db.get_liquidity_metrics(title)
-            if not liquidity["is_liquid"]:
-                is_sandbox = Config.DRY_RUN
-                if is_sandbox:
-                    price_db.log_decision(
-                        title,
-                        "skip",
-                        "Low liquidity",
-                        f"{liquidity['reason']} (sales={liquidity['total_sales']})",
-                    )
-                return None
-
-        # v12.2 Phase 2.3: Wash trading detection (trimmed mean)
-        if (
-            Config.WASH_TRADING_DETECTION
-            and not price_db.detect_wash_trading(
-                title,
-                days=14,
-                boost_pct=Config.TRIMMED_MEAN_BOOST_PCT,
-                max_outliers=Config.TRIMMED_MEAN_MAX_OUTLIERS,
-            )
-        ):
-            is_sandbox = Config.DRY_RUN
-            if is_sandbox:
-                price_db.log_decision(
-                    title,
-                    "skip",
-                    "Wash trading detected",
-                    "Raw mean >> trimmed mean — price inflated by anomalies",
-                )
+        if self._check_advanced_market_risks(title, _early_history, _early_prices):
             return None
-
-        # v15.9: Reuse early price history fetch (avoid duplicate DB call)
-        history = _early_history
-        prices_only = _early_prices
-        if prices_only:
-            try:
-                validate_volatility(prices_only)
-            except PriceValidationError:
-                return None
 
         # P1-16: Cheap guards moved before microstructure pipeline (see line 249)
 
@@ -403,51 +469,9 @@ class _FilterMixin:  # P1-17: removed _FilterEvaluatorMixin inheritance (dead co
         has_intra_spread = best_bid > best_ask * (1 + effective_min_spread / 100.0)
         from src.utils.fee_utils import get_sell_fee_rate, get_total_fee_rate
         required_margin = get_total_fee_rate() + (Config.MIN_SPREAD_PCT / 100.0)
-
-        # v14.8.1: DMarket-internal underpriced check. Only call last-sales
-        # when no other edge exists, to respect rate limits.
-        has_dmarket_underpriced = False
-        dm_underpriced_ref = 0.0
-        if not has_intra_spread:
-                try:
-                    from src.core.target_sniping.underpriced import is_dmarket_underpriced
-                    up = await is_dmarket_underpriced(
-                        self.client, game_id, title, base_price, fee_rate=bulk_fees.get(item_id, get_sell_fee_rate())
-                    )
-                    if up.get("underpriced"):
-                        has_dmarket_underpriced = True
-                        dm_underpriced_ref = up.get("reference_price", 0.0)
-                        if is_sandbox:
-                            price_db.log_decision(
-                                title, "pass", "DMarket underpriced vs sales",
-                                f"base={base_price:.2f} ref={dm_underpriced_ref:.2f} margin={up.get('margin_pct', 0):.1f}%"
-                            )
-                except Exception as e:
-                    logger.debug(f"DMarket underpriced check failed for {title}: {e}")
-
-        # v17.0: Demand-based strategy for low balance
-        # Find items with high buyer-to-seller ratios (demand > supply)
-        # Strategy: buy at ask, hold until demand pushes price up
-        has_demand_opportunity = False
-        demand_score = 0.0
-        if Config.DEMAND_STRATEGY_ENABLED and not (has_intra_spread or has_dmarket_underpriced):
-            try:
-                from src.core.target_sniping.demand_strategy import calculate_demand_score
-                agg_data = agg_prices.get(title, {})
-                if agg_data:
-                    ask_count = agg_data.get("ask_count", 0) or 0
-                    bid_count = agg_data.get("bid_count", 0) or 0
-                    ds = calculate_demand_score(title, base_price, best_bid, ask_count, bid_count)
-                    if ds["score"] > 0:
-                        has_demand_opportunity = True
-                        demand_score = ds["score"]
-                        if is_sandbox:
-                            price_db.log_decision(
-                                title, "pass", "Demand opportunity",
-                                f"score={ds['score']:.0f} {ds['reason']}"
-                            )
-            except Exception as e:
-                logger.debug(f"Demand strategy check failed for {title}: {e}")
+        has_dmarket_underpriced, dm_underpriced_ref, has_demand_opportunity = await self._evaluate_edge_strategies(
+                    has_intra_spread, game_id, title, base_price, bulk_fees, item_id, is_sandbox, agg_prices, best_bid
+                )
 
         if not (has_intra_spread or has_dmarket_underpriced or has_demand_opportunity):
             if is_sandbox:

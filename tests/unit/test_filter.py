@@ -38,6 +38,8 @@ def _make_mixin() -> MagicMock:
     mixin._calculate_financial_viability = _FilterMixin._calculate_financial_viability.__get__(mixin)
     mixin._calculate_position_sizing = _FilterMixin._calculate_position_sizing.__get__(mixin)
     mixin._apply_value_detection_layers = _FilterMixin._apply_value_detection_layers.__get__(mixin)
+    mixin._check_advanced_market_risks = _FilterMixin._check_advanced_market_risks.__get__(mixin)
+    mixin._evaluate_edge_strategies = _FilterMixin._evaluate_edge_strategies.__get__(mixin)
     mixin.liquidity = MagicMock()
     mixin.liquidity.can_spend = MagicMock(return_value=True)
     mixin._diag_cycle_id = -1
