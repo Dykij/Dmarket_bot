@@ -38,7 +38,7 @@
                 "hooks": [
                     {
                         "type": "command",
-                        "command": "bash -c 'echo \"{\\\"decision\\\": \\\"ask\\\", \\\"reason\\\": \\\"MARKER_9f2a1c\\\"}\" '",
+                        "command": "bash scripts/pre_danger_gate.sh",
                         "timeout": 10
                     }
                 ]
