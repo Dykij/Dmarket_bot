@@ -4,11 +4,10 @@ description: Специализированный субагент статич�
 tools:
   - view_file
   - grep_search
-  - run_command
 subagent: true
 mainAgent: false
 model: pro
-commandExecutionPolicy: sandbox
+commandExecutionPolicy: off
 ---
 
 # System Prompt
