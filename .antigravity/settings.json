@@ -3,7 +3,7 @@
         "deny": [
             "command(rm -rf)",
             "command(sudo)",
-            "command(curl .*)",
+            "command(regex:curl .*)",
             "write_file(.git/)",
             "read_file(/home/deck/dmarket/Dmarket_bot-main/.env)"
         ],
