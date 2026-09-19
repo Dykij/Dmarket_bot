@@ -6,6 +6,8 @@ Mixed into SnipingLoop via _ResaleMixin (see resale.py).
 
 from __future__ import annotations
 
+from src.core.target_sniping.resale_pricing import calculate_list_price
+
 import asyncio
 import logging
 import math
@@ -24,6 +26,32 @@ def _get_notifier():
     from src.telegram.notifier import notifier
     return notifier
 
+def _parse_sell_offer_result(resp: dict, idx: int, dm_id: str) -> tuple[str | None, str | None]:
+    offer_id = None
+    err = None
+    if isinstance(resp, dict):
+        # v2 format
+        v2_offers = resp.get("offers", [])
+        if idx < len(v2_offers):
+            item_info = v2_offers[idx]
+            if isinstance(item_info, dict):
+                offer_id = item_info.get("id") or item_info.get("offerId") or item_info.get("OfferID")
+        if not offer_id:
+            item_status = resp.get("Items", []) or resp.get("items", [])
+            if idx < len(item_status):
+                item_info = item_status[idx]
+                if isinstance(item_info, dict):
+                    offer_id = item_info.get("offerId") or item_info.get("OfferID")
+                    err = item_info.get("error") or item_info.get("Error")
+        if not offer_id:
+            v2_failed = resp.get("failed", [])
+            for fail in v2_failed:
+                if fail.get("assetId") == dm_id:
+                    err = fail.get("message") or fail.get("code")
+                    break
+        if not offer_id and resp.get("status") == "error":
+            err = resp.get("message", "unknown error")
+    return offer_id, err
 
 
 class _ResaleProdMixin:
@@ -290,58 +318,7 @@ class _ResaleProdMixin:
             if cs_price < target_sell:
                 # Not enough margin after fees
                 continue
-
-            # v14.1 A-S (Avellaneda-Stoikov) — inventory-aware reservation price
-            if Config.AS_ENABLED:
-                mid_price = cs_price  # Use oracle fair price as mid
-                same_item = len([
-                    x for x in await price_db.run_in_thread(  # P2-17: async
-                        price_db.get_virtual_inventory, "idle", False,
-                    ) if x["hash_name"] == title
-                ])
-                vol_est = 0.40  # default CS2 skin annualized vol
-                try:
-                    hist = await price_db.run_in_thread(price_db.get_recent_prices, title, 14)  # P2-17: async
-                    if hist and len(hist) >= 3:
-                        log_returns = []
-                        for i in range(1, len(hist)):
-                            prev_p = hist[i - 1][0]
-                            curr_p = hist[i][0]
-                            if prev_p > 0:
-                                log_returns.append(abs(math.log(curr_p / prev_p)))
-                        if log_returns:
-                            daily_vol = sum(log_returns) / len(log_returns)
-                            vol_est = daily_vol * math.sqrt(365)
-                except Exception as e:
-                    logger.warning(f"[Resale] Volume estimation failed for {title}: {e}")
-                from src.analysis.microstructure import reservation_price
-                reserv = reservation_price(
-                    mid_price=mid_price,
-                    inventory_qty=same_item,
-                    target_qty=0,
-                    max_qty=max(1, Config.MAX_SAME_ITEM_HOLDINGS),
-                    volatility=vol_est,
-                    gamma=Config.AS_RISK_AVERSION,
-                    T_days=Config.AS_TIME_HORIZON_DAYS,
-                )
-                cs_price = max(target_sell * 1.01, reserv)
-
-            # v14.3: VWAP Bands — list near upper band for mean-reversion target
-            if Config.VWAP_BANDS_ENABLED:
-                from src.analysis.microstructure import vwap_bands
-                item_sales_vwap = await price_db.run_in_thread(price_db.get_trade_history, title, 30, 200)  # P2-17: async
-                if item_sales_vwap and len(item_sales_vwap) >= 5:
-                    _, lower, upper = vwap_bands(item_sales_vwap, num_std=2.0)
-                    if upper > cs_price and lower < cs_price:
-                        cs_price = max(cs_price, upper * 0.98)  # list near upper band
-            list_price = round(min(cs_price * 0.97, cs_price - LIST_PRICE_DISCOUNT), 2)
-            if Config.DOM_GAP_ENABLED and hasattr(self, '_dom_cache'):
-                dom_listings = self._dom_cache.get(title, [])
-                if dom_listings and len(dom_listings) > 1:
-                    from src.analysis.orderbook import find_gap_price
-                    gap_price = find_gap_price(dom_listings, target_sell)
-                    if gap_price > target_sell:
-                        list_price = gap_price
+            list_price = await calculate_list_price(title, buy_price, cs_price, target_sell, dom_cache=getattr(self, '_dom_cache', None))
             payloads.append((int(it["id"]), it["dm_item_id"], title, list_price, buy_price))
 
         if not payloads:
@@ -377,33 +354,7 @@ class _ResaleProdMixin:
             # v2 endpoint format: {"offers": [{"id": "...", "assetId": "..."}], "failed": [...]}
             success_count = 0
             for idx, (row_id, dm_id, title, lp, bp) in enumerate(chunk):
-                offer_id = None
-                err = None
-                if isinstance(resp, dict):
-                    # v2 format: "offers" array with "id" and "assetId"
-                    v2_offers = resp.get("offers", [])
-                    if idx < len(v2_offers):
-                        item_info = v2_offers[idx]
-                        if isinstance(item_info, dict):
-                            offer_id = item_info.get("id") or item_info.get("offerId") or item_info.get("OfferID")
-                    # Fallback to old format: "Items" or "items" array
-                    if not offer_id:
-                        item_status = resp.get("Items", []) or resp.get("items", [])
-                        if idx < len(item_status):
-                            item_info = item_status[idx]
-                            if isinstance(item_info, dict):
-                                offer_id = item_info.get("offerId") or item_info.get("OfferID")
-                                err = item_info.get("error") or item_info.get("Error")
-                    # Check failed array (v2 format)
-                    if not offer_id:
-                        v2_failed = resp.get("failed", [])
-                        for fail in v2_failed:
-                            if fail.get("assetId") == dm_id:
-                                err = fail.get("message") or fail.get("code")
-                                break
-                    # Top-level error check
-                    if not offer_id and resp.get("status") == "error":
-                        err = resp.get("message", "unknown error")
+                offer_id, err = _parse_sell_offer_result(resp, idx, dm_id)
                 if offer_id:
                     await price_db.run_in_thread(price_db.mark_listed, row_id, offer_id, lp)  # P2-17: async
                     success_count += 1

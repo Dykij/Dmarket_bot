@@ -395,3 +395,7 @@ The `run_command` paralysis was caused by the hook runner executing local `.agen
 - Tested `trigger: always_on` injection by adding frontmatter to `.agents/rules/tooling.md`.
 - Documented H18 violation in `.agents/rules/otsebyatina-registry.md`.
 - 2026-09-19: часть самодельной hook-инфраструктуры (Proceed-гейтинг, security-денилист) заменена нативными механизмами Antigravity 2.0 (Artifact Review policy, Permission Engine) после повторных deadlock’ов. RAW-дисциплина и запрет на преждевременные заявления о готовности остаются вне hook-покрытия — платформа не даёт хукам доступа к тексту ответа модели, это подтверждённое архитектурное ограничение, закрывается только правилами в .agents/rules/, не автоматически.
+
+## 2026-09-19
+- Refactored resale_prod.py: Extracted calculate_list_price into src/core/target_sniping/resale_pricing.py to simplify _prod_list_unlocked (complexity dropped from F(62) to D(26)).
+- Extracted _parse_sell_offer_result as a helper function.
