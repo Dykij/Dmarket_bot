@@ -1,29 +1,42 @@
 #!/bin/bash
-WORKSPACE_DIR=$(git rev-parse --show-toplevel)
-INPUT=$(cat)
-TARGET_FILE=$(echo "$INPUT" | jq -r '.toolCall.args.TargetFile // empty')
+PAYLOAD=$(cat)
 
-if [[ -z "$TARGET_FILE" || ! -f "$WORKSPACE_DIR/$TARGET_FILE" ]]; then
-    echo "{}"
+# Extract tool name and target file
+TOOL_NAME=$(echo "$PAYLOAD" | jq -r '.toolCall.name // empty')
+TARGET_FILE=$(echo "$PAYLOAD" | jq -r '.toolCall.args.TargetFile // empty' | sed 's/^"//;s/"$//')
+
+if [[ -z "$TARGET_FILE" || "$TARGET_FILE" == "null" ]]; then
+    echo '{"decision": "allow"}'
     exit 0
 fi
 
-OLD_FILE=$(mktemp)
-# If file exists in HEAD, get it. Otherwise it's a new file.
-if git ls-tree -r HEAD --name-only | grep -qx "$TARGET_FILE"; then
-    git show "HEAD:$TARGET_FILE" > "$OLD_FILE"
+# Обоснование выбора: Сравниваем с git HEAD, а не с временной копией до правки.
+# Почему: PostToolUse запускается ПОСЛЕ выполнения инструмента. У нас нет встроенного способа
+# получить состояние файла за миллисекунду до вызова тула без стейт-трекинга в PreToolUse.
+# Сравнение с HEAD означает, что если в файле уже были незакоммиченные содержательные правки,
+# пустая правка сверху пройдёт (difftastic увидит старые правки относительно HEAD). Это приемлемый
+# компромисс для stateless скрипта: он надёжно блокирует пустые правки на чистом файле (наиболее частый H18).
+TMP_BEFORE=$(mktemp /tmp/difft_before_XXXXXX_$(basename "$TARGET_FILE"))
+
+if ! git show "HEAD:$TARGET_FILE" > "$TMP_BEFORE" 2>/dev/null; then
+    # Файла нет в HEAD (новый файл) -> считаем содержательным
+    if [[ -f "$TARGET_FILE" ]]; then
+        echo "WARNING: difftastic_gate.sh: git show failed but file exists on disk. Possible parsing issue with TARGET_FILE='$TARGET_FILE'" >&2
+    fi
+    echo '{"decision": "allow"}'
+    rm -f "$TMP_BEFORE"
+    exit 0
+fi
+
+difft --check-only --exit-code "$TMP_BEFORE" "$TARGET_FILE" > /dev/null 2>&1
+DIFF_EXIT=$?
+
+rm -f "$TMP_BEFORE"
+
+if [[ $DIFF_EXIT -eq 0 ]]; then
+    # 0 = No semantic/syntactic changes
+    echo '{"decision": "deny", "reason": "Difftastic: Семантически пустой дифф (нет синтаксических изменений относительно HEAD). Правка отклонена (H18 prevention)."}'
 else
-    touch "$OLD_FILE"
+    # 1 = Has changes
+    echo '{"decision": "allow"}'
 fi
-
-# Run difft
-if difft --check-only --exit-code "$OLD_FILE" "$WORKSPACE_DIR/$TARGET_FILE" > /dev/null 2>&1; then
-    # difft exits 0 if NO changes were detected
-    echo "No structural/syntactic changes detected by difftastic in $TARGET_FILE." >&2
-    rm -f "$OLD_FILE"
-    exit 1
-fi
-
-rm -f "$OLD_FILE"
-echo "{}"
-exit 0
