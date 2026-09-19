@@ -1,3 +1,8 @@
+---
+name: Tooling Directives
+description: Enforces the use of specific tools like ast-grep, libcst, difftastic, and tgrep.
+trigger: always_on
+---
 # Tooling Directives
 
 - Для структурного поиска по коду — **ast-grep**, НЕ plain-text grep, если не попросили явно.

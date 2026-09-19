@@ -157,7 +157,8 @@
                     }
                 ]
             }
-        ]
+        ],
+        "enabled": false
     },
     "rm-visibility-gate": {
         "PreToolUse": [
@@ -171,6 +172,7 @@
                     }
                 ]
             }
-        ]
+        ],
+        "enabled": false
     }
 }

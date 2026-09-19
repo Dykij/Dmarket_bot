@@ -389,3 +389,8 @@ DMarket API v1→v2 касалась других путей: user-offers/create
 
 ## 2026-09-19: Hook Paralysis Root Cause Identified
 The `run_command` paralysis was caused by the hook runner executing local `.agents/hooks.json` commands with a different CWD than the workspace root. The hooks `git_status_freshness_gate.sh` and `rm_visibility_gate.sh` were defined with relative paths (`bash scripts/...`). Because the hook runner's CWD was not `/home/deck/dmarket/Dmarket_bot-main`, it could not find `scripts/rm_visibility_gate.sh`, causing `run_command` to fail entirely with `exit status 127`. The immediate fix was to disable both hooks in `.agents/hooks.json` via `"enabled": false`.
+
+## 2026-09-19: Infrastructure Audit (Part 1)
+- Verified hook runner CWD is `.agents/`.
+- Tested `trigger: always_on` injection by adding frontmatter to `.agents/rules/tooling.md`.
+- Documented H18 violation in `.agents/rules/otsebyatina-registry.md`.
