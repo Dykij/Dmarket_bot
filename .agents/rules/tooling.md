@@ -18,3 +18,6 @@ trigger: always_on
 - **Тесты**: Полный `pytest tests/` (не только `tests/unit/`). Сравнивать с фактическим последним известным baseline (проверять `git log -1`, не полагаться на память).
 - **except Exception**: НИКОГДА не сужать без показа реального тела `try`.
 - **Правки Python сложнее одной строки**: ТОЛЬКО `libcst`.
+
+### YAML boolean coercion (H20 Prevention)
+Любая программная правка YAML-frontmatter через `pyyaml` обязана либо явно квотить строки-литералы, входящие в список YAML 1.1 булевых токенов (`y|Y|yes|Yes|YES|n|N|no|No|NO|true|True|TRUE|false|False|FALSE|on|On|ON|off|Off|OFF`), либо использовать `ruamel.yaml` с сохранением стиля, либо не парсить YAML вообще, а точечно редактировать текстовые строки (например, через `sed` или `str_replace`). Игнорирование этого правила приводит к тихой порче полей вроде `commandExecutionPolicy: off` -> `false`.
