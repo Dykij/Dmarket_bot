@@ -400,3 +400,4 @@ The `run_command` paralysis was caused by the hook runner executing local `.agen
 - Refactored resale_prod.py: Extracted calculate_list_price into src/core/target_sniping/resale_pricing.py to simplify _prod_list_unlocked (complexity dropped from F(62) to D(26)).
 - Extracted _parse_sell_offer_result as a helper function.
 - Refactored ranking.py: Decomposed `rank_candidates_by_spread` into helper functions, reducing complexity from F(48) to C(15). Spread formula intentionally unmodified.
+- восстановлен checkpoint-guard отдельно от task-md-guard/implementation-plan-guard — устраняет пробел, оставшийся после вчерашнего удаления всей группы одним решением
