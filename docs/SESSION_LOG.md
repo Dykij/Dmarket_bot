@@ -401,3 +401,4 @@ The `run_command` paralysis was caused by the hook runner executing local `.agen
 - Extracted _parse_sell_offer_result as a helper function.
 - Refactored ranking.py: Decomposed `rank_candidates_by_spread` into helper functions, reducing complexity from F(48) to C(15). Spread formula intentionally unmodified.
 - восстановлен checkpoint-guard отдельно от task-md-guard/implementation-plan-guard — устраняет пробел, оставшийся после вчерашнего удаления всей группы одним решением
+- microstructure_pipeline.py F(56): отложено — топ-левел pipeline-диспетчер с 17 линейными early-exit шагами, шаги 1-11 уже вынесены в validations.py; шаги 12-17 (Hawkes/BB/DEMA/MACD/Hurst/HMM) требуют покрытия перед декомпозицией
