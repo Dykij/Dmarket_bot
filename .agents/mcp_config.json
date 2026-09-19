@@ -26,16 +26,6 @@
         "@modelcontextprotocol/server-sequential-thinking"
       ]
     },
-    "cclsp": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "cclsp"
-      ],
-      "env": {
-        "CCLSP_CONFIG_PATH": "/home/deck/dmarket/Dmarket_bot-main/.agents/cclsp.json"
-      }
-    },
     "shellcheck": {
       "command": "uvx",
       "args": [
