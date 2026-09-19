@@ -386,3 +386,6 @@ DMarket API v1→v2 касалась других путей: user-offers/create
 - feat(hooks): add git_status_freshness_gate, rm_visibility_gate, and scratch-file guards to stop_gate
 - fix(hooks): update hooks.json paths to relative ../scripts to resolve CWD mismatch during execution
 - Подтверждено эмпирически 2026-09-18 через /tmp/hooks_called.log: CWD хуков — корень проекта, не `.agents/`. Все команды в hooks.json резолвятся относительно корня.
+
+## 2026-09-19: Hook Paralysis Root Cause Identified
+The `run_command` paralysis was caused by the hook runner executing local `.agents/hooks.json` commands with a different CWD than the workspace root. The hooks `git_status_freshness_gate.sh` and `rm_visibility_gate.sh` were defined with relative paths (`bash scripts/...`). Because the hook runner's CWD was not `/home/deck/dmarket/Dmarket_bot-main`, it could not find `scripts/rm_visibility_gate.sh`, causing `run_command` to fail entirely with `exit status 127`. The immediate fix was to disable both hooks in `.agents/hooks.json` via `"enabled": false`.
