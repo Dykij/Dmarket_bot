@@ -1,9 +1,9 @@
 {
     "validate-skills-frontmatter": {
-        "SessionStart": [
+        "PreInvocation": [
             {
                 "type": "command",
-                "command": "bash scripts/validate_skills_frontmatter.sh",
+                "command": "bash .agents/scripts/validate_skills_frontmatter.sh",
                 "timeout": 5
             }
         ]
@@ -12,7 +12,7 @@
         "PreInvocation": [
             {
                 "type": "command",
-                "command": "bash scripts/verdict_gate.sh",
+                "command": "bash .agents/scripts/verdict_gate.sh",
                 "timeout": 10
             }
         ]
@@ -24,7 +24,7 @@
                 "hooks": [
                     {
                         "type": "command",
-                        "command": "bash scripts/raw_output_logger.sh",
+                        "command": "bash .agents/scripts/raw_output_logger.sh",
                         "timeout": 10
                     }
                 ]
@@ -38,7 +38,7 @@
                 "hooks": [
                     {
                         "type": "command",
-                        "command": "bash scripts/pre_danger_gate.sh",
+                        "command": "bash .agents/scripts/pre_danger_gate.sh",
                         "timeout": 10
                     }
                 ]
@@ -49,7 +49,7 @@
         "Stop": [
             {
                 "type": "command",
-                "command": "bash scripts/stop_gate.sh",
+                "command": "bash .agents/scripts/stop_gate.sh",
                 "timeout": 15
             }
         ]
@@ -61,7 +61,7 @@
                 "hooks": [
                     {
                         "type": "command",
-                        "command": "bash scripts/pre_bypass_gate.sh",
+                        "command": "bash .agents/scripts/pre_bypass_gate.sh",
                         "timeout": 5
                     }
                 ]
@@ -75,7 +75,7 @@
                 "hooks": [
                     {
                         "type": "command",
-                        "command": "bash scripts/difftastic_gate.sh",
+                        "command": "bash .agents/scripts/difftastic_gate.sh",
                         "timeout": 15
                     }
                 ]
@@ -86,7 +86,7 @@
         "PreInvocation": [
             {
                 "type": "command",
-                "command": "bash scripts/session_init.sh",
+                "command": "bash .agents/scripts/session_init.sh",
                 "timeout": 5
             }
         ]
@@ -98,7 +98,7 @@
                 "hooks": [
                     {
                         "type": "command",
-                        "command": "bash scripts/checkpoint_guard.sh",
+                        "command": "bash .agents/scripts/checkpoint_guard.sh",
                         "timeout": 5
                     }
                 ]

@@ -1,6 +1,13 @@
 #!/bin/bash
 WORKSPACE_DIR=$(git -C "$(dirname "${BASH_SOURCE[0]}")" rev-parse --show-toplevel 2>/dev/null || echo "/home/deck/dmarket/Dmarket_bot-main")
-cd "$WORKSPACE_DIR"
+cd "$WORKSPACE_DIR" || exit 1
+
+PAYLOAD=$(cat)
+INVOCATION_NUM=$(echo "$PAYLOAD" | jq -r '.invocationNum // empty')
+if [ "$INVOCATION_NUM" != "0" ] && [ -n "$INVOCATION_NUM" ]; then
+    echo "{}"
+    exit 0
+fi
 
 BROKEN=0
 for f in .agents/skills/*/SKILL.md; do
@@ -23,7 +30,7 @@ except Exception as e:
 " "$f" || BROKEN=1
 done
 if [ "$BROKEN" -eq 1 ]; then
-    echo '{"decision":"allow","hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"WARNING: some SKILL.md files have broken frontmatter — see stderr above."}}'
+    jq -n '{"injectSteps": [{"ephemeralMessage": "WARNING: some SKILL.md files have broken frontmatter — see stderr above."}]}'
 else
-    echo '{"decision":"allow"}'
+    echo "{}"
 fi
