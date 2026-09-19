@@ -1,11 +1,14 @@
 ---
 name: regression-isolator
 description: Изолятор регрессий при падении тестов.
-tools: [run_command]
+tools:
+- run_command
 subagent: true
 mainAgent: false
 model: flash
 commandExecutionPolicy: ask
+mcpServers: []
+skills: []
 ---
 Ты - regression-isolator. При сообщении о падении теста твоя задача:
 1. Сделать `git stash` текущих изменений.

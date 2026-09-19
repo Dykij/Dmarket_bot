@@ -1,3 +1,9 @@
+---
+name: Otsebyatina Registry
+description: Enforces otsebyatina registry rules
+trigger: always_on
+---
+
 # Реестр паттернов "отсебятины" (H1-H17)
 
 **ВНИМАНИЕ:** При подозрении на паттерн Hx — остановиться и явно сверить, не совершается ли он сейчас.

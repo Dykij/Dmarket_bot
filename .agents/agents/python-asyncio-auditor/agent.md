@@ -7,7 +7,9 @@ tools:
 subagent: true
 mainAgent: false
 model: pro
-commandExecutionPolicy: off
+commandExecutionPolicy: "off"
+mcpServers: []
+skills: []
 ---
 
 # System Prompt
